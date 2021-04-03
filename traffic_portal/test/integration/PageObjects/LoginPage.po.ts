@@ -19,13 +19,8 @@
 import { browser, by, element} from 'protractor';
 
 import { randomize } from "../config";
+import { LoginData } from '../Data';
 import { BasePage } from './BasePage.po'
-
-interface LoginData {
-    password: string;
-    username: string;
-    validationMessage: string;
-}
 
 export class LoginPage extends BasePage{
     private txtUserName = element(by.id("loginUsername"))
@@ -36,7 +31,7 @@ export class LoginPage extends BasePage{
     private randomize = randomize;
 
 
-    async Login(login:LoginData){
+    async Login(login: LoginData){
         let result = false;
         const basePage = new BasePage();
         if(login.username === 'admin'){
