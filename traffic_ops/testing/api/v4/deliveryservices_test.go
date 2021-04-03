@@ -1247,7 +1247,7 @@ func GetTestDeliveryServicesURLSigKeys(t *testing.T) {
 		t.Fatal("couldn't get the xml ID of test DS")
 	}
 
-	_, _, err := TOSession.GetDeliveryServiceURLSigKeysWithHdr(*firstDS.XMLID, nil)
+	_, _, err := TOSession.GetDeliveryServiceURLSigKeys(*firstDS.XMLID, nil)
 	if err != nil {
 		t.Error("failed to get url sig keys: " + err.Error())
 	}

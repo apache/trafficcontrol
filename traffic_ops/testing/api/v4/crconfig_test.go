@@ -42,12 +42,9 @@ func SnapshotWithReadOnlyUser(t *testing.T) {
 	if len(testData.CDNs) == 0 {
 		t.Fatalf("expected one or more valid CDNs, but got none")
 	}
-	resp, _, err := TOSession.TenantByNameWithHdr("root", nil)
+	resp, _, err := TOSession.GetTenantByName("root", nil)
 	if err != nil {
 		t.Fatalf("couldn't get the root tenant ID: %v", err)
-	}
-	if resp == nil {
-		t.Fatalf("expected a valid tenant response, but got nothing")
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
@@ -62,7 +59,7 @@ func SnapshotWithReadOnlyUser(t *testing.T) {
 	user.TenantID = util.IntPtr(resp.ID)
 	user.FullName = util.StrPtr("firstName LastName")
 
-	u, _, err := TOSession.CreateUser(&user)
+	u, _, err := TOSession.CreateUser(user)
 	if err != nil {
 		t.Fatalf("could not create read-only user: %v", err)
 	}
@@ -77,7 +74,7 @@ func SnapshotWithReadOnlyUser(t *testing.T) {
 	if reqInf.StatusCode != http.StatusForbidden {
 		t.Errorf("expected a 403 forbidden status code, but got %d", reqInf.StatusCode)
 	}
-	if u != nil && u.Response.Username != nil {
+	if u.Response.Username != nil {
 		ForceDeleteTestUsersByUsernames(t, []string{"test_user"})
 	}
 }
