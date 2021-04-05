@@ -64,22 +64,22 @@ func TestFetchObjectValues(t *testing.T) {
 		Running: true,
 	}
 
-	_, err := FetchObjectValues("myobject", "bucket", cluster)
+	_, err := fetchObjectValues("myobject", "bucket", cluster)
 	if err != nil {
 		t.Error("expected nil error got ", err)
 	}
 
-	_, err = FetchObjectValues("", "bucket", cluster)
+	_, err = fetchObjectValues("", "bucket", cluster)
 	if err == nil {
 		t.Error("expected an error because key is empty but got no error")
 	}
 
-	_, err = FetchObjectValues("myobject", "", cluster)
+	_, err = fetchObjectValues("myobject", "", cluster)
 	if err == nil {
 		t.Error("expected an error because the bucket name is empty but got no error")
 	}
 
-	_, err = FetchObjectValues("myobject", "mybucket", nil)
+	_, err = fetchObjectValues("myobject", "mybucket", nil)
 	if err == nil {
 		t.Error("expected an error because the cluster is nil but got no error")
 	}
@@ -92,22 +92,22 @@ func TestSaveObject(t *testing.T) {
 
 	obj := riak.Object{}
 
-	err := SaveObject(&obj, "bucket", cluster)
+	err := saveObject(&obj, "bucket", cluster)
 	if err != nil {
 		t.Error("expected nil error got ", err)
 	}
 
-	err = SaveObject(&obj, "", cluster)
+	err = saveObject(&obj, "", cluster)
 	if err == nil {
 		t.Error("expected an error due to empty bucket name but got a nil error")
 	}
 
-	err = SaveObject(nil, "bucket", cluster)
+	err = saveObject(nil, "bucket", cluster)
 	if err == nil {
 		t.Error("expected an error because the obj is nil but go no error", err)
 	}
 
-	err = SaveObject(&obj, "bucket", nil)
+	err = saveObject(&obj, "bucket", nil)
 	if err == nil {
 		t.Error("expected an error because the cluster is nil but go no error", err)
 	}
@@ -118,22 +118,22 @@ func TestDeleteObject(t *testing.T) {
 		Running: true,
 	}
 
-	err := DeleteObject("myobject", "bucket", cluster)
+	err := deleteObject("myobject", "bucket", cluster)
 	if err != nil {
 		t.Error("expected nil error got ", err)
 	}
 
-	err = DeleteObject("", "bucket", cluster)
+	err = deleteObject("", "bucket", cluster)
 	if err == nil {
 		t.Error("expected an empty key error but got nil error", err)
 	}
 
-	err = DeleteObject("myobject", "", cluster)
+	err = deleteObject("myobject", "", cluster)
 	if err == nil {
 		t.Error("expected an empty bucket error but got nil error", err)
 	}
 
-	err = DeleteObject("myobject", "bucket", nil)
+	err = deleteObject("myobject", "bucket", nil)
 	if err == nil {
 		t.Error("expected an nil cluster error but got nil error", err)
 	}
@@ -190,17 +190,17 @@ func TestGetRiakCluster(t *testing.T) {
 	defer tx.Commit()
 
 	mock.ExpectQuery("SELECT").WillReturnError(errors.New("foo"))
-	if _, err := GetRiakServers(tx, nil); err == nil {
+	if _, err := getRiakServers(tx, nil); err == nil {
 		t.Errorf("expected an error retrieving nil servers.")
 	}
 
 	mock.ExpectQuery("SELECT").WillReturnRows(rows1)
-	servers, err := GetRiakServers(tx, nil)
+	servers, err := getRiakServers(tx, nil)
 	if err != nil {
 		t.Errorf("expected to receive servers: %v", err)
 	}
 
-	if _, err := GetRiakCluster(servers, nil); err == nil {
+	if _, err := getRiakCluster(servers, nil); err == nil {
 		t.Errorf("expected an error due to nil RiakAuthoptions in the config but, go no error.")
 	}
 
@@ -210,14 +210,14 @@ func TestGetRiakCluster(t *testing.T) {
 		TlsConfig: &tls.Config{},
 	}
 
-	if _, err := GetRiakCluster(servers, &authOptions); err != nil {
+	if _, err := getRiakCluster(servers, &authOptions); err != nil {
 		t.Errorf("expected no errors, actual: %v", err)
 	}
 
 	rows2 := sqlmock.NewRows([]string{"s.host_name", "s.domain_name"})
 	mock.ExpectQuery("SELECT").WillReturnRows(rows2)
 
-	if _, err := GetPooledCluster(tx, &authOptions, nil); err == nil {
+	if _, err := getPooledCluster(tx, &authOptions, nil); err == nil {
 		t.Errorf("expected an error due to no available riak servers.")
 	}
 }

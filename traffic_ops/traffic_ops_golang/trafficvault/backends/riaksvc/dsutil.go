@@ -31,28 +31,28 @@ import (
 	"github.com/basho/riak-go-client"
 )
 
-const DeliveryServiceSSLKeysBucket = "ssl"
-const DNSSECKeysBucket = "dnssec"
-const DSSSLKeyVersionLatest = "latest"
-const DefaultDSSSLKeyVersion = DSSSLKeyVersionLatest
-const URLSigKeysBucket = "url_sig_keys"
+const deliveryServiceSSLKeysBucket = "ssl"
+const dnssecKeysBucket = "dnssec"
+const dsSSLKeyVersionLatest = "latest"
+const defaultDSSSLKeyVersion = dsSSLKeyVersionLatest
+const urlSigKeysBucket = "url_sig_keys"
 
-// CDNURIKeysBucket is the namespace or bucket used for CDN URI signing keys.
-const CDNURIKeysBucket = "cdn_uri_sig_keys"
+// cdnURIKeysBucket is the namespace or bucket used for CDN URI signing keys.
+const cdnURIKeysBucket = "cdn_uri_sig_keys"
 
-func MakeDSSSLKeyKey(dsName, version string) string {
+func makeDSSSLKeyKey(dsName, version string) string {
 	if version == "" {
-		version = DefaultDSSSLKeyVersion
+		version = defaultDSSSLKeyVersion
 	}
 	return dsName + "-" + version
 }
 
-func GetDeliveryServiceSSLKeysObjV15(xmlID string, version string, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.DeliveryServiceSSLKeysV15, bool, error) {
+func getDeliveryServiceSSLKeysObjV15(xmlID string, version string, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.DeliveryServiceSSLKeysV15, bool, error) {
 	key := tc.DeliveryServiceSSLKeysV15{}
 	found := false
-	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+	err := withCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
 		// get the deliveryservice ssl keys by xmlID and version
-		ro, err := FetchObjectValues(MakeDSSSLKeyKey(xmlID, version), DeliveryServiceSSLKeysBucket, cluster)
+		ro, err := fetchObjectValues(makeDSSSLKeyKey(xmlID, version), deliveryServiceSSLKeysBucket, cluster)
 		if err != nil {
 			return err
 		}
@@ -72,24 +72,24 @@ func GetDeliveryServiceSSLKeysObjV15(xmlID string, version string, tx *sql.Tx, a
 	return key, found, nil
 }
 
-func PutDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) error {
+func putDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) error {
 	keyJSON, err := json.Marshal(&key)
 	if err != nil {
 		return errors.New("marshalling key: " + err.Error())
 	}
-	err = WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+	err = withCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
 		obj := &riak.Object{
 			ContentType:     "application/json",
 			Charset:         "utf-8",
 			ContentEncoding: "utf-8",
-			Key:             MakeDSSSLKeyKey(key.DeliveryService, key.Version.String()),
+			Key:             makeDSSSLKeyKey(key.DeliveryService, key.Version.String()),
 			Value:           []byte(keyJSON),
 		}
-		if err := SaveObject(obj, DeliveryServiceSSLKeysBucket, cluster); err != nil {
+		if err := saveObject(obj, deliveryServiceSSLKeysBucket, cluster); err != nil {
 			return errors.New("saving Riak object: " + err.Error())
 		}
-		obj.Key = MakeDSSSLKeyKey(key.DeliveryService, DSSSLKeyVersionLatest)
-		if err := SaveObject(obj, DeliveryServiceSSLKeysBucket, cluster); err != nil {
+		obj.Key = makeDSSSLKeyKey(key.DeliveryService, dsSSLKeyVersionLatest)
+		if err := saveObject(obj, deliveryServiceSSLKeysBucket, cluster); err != nil {
 			return errors.New("saving Riak object: " + err.Error())
 		}
 		return nil
@@ -97,13 +97,13 @@ func PutDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, aut
 	return err
 }
 
-func Ping(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.RiakPingResp, error) {
-	servers, err := GetRiakServers(tx, riakPort)
+func ping(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.RiakPingResp, error) {
+	servers, err := getRiakServers(tx, riakPort)
 	if err != nil {
 		return tc.RiakPingResp{}, errors.New("getting riak servers: " + err.Error())
 	}
 	for _, server := range servers {
-		cluster, err := GetRiakStorageCluster([]ServerAddr{server}, authOpts)
+		cluster, err := getRiakStorageCluster([]ServerAddr{server}, authOpts)
 		if err != nil {
 			log.Errorf("RiakServersToCluster error for server %+v: %+v\n", server, err.Error())
 			continue // try another server
@@ -112,11 +112,11 @@ func Ping(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.RiakPingRe
 			log.Errorln("starting Riak cluster (for ping): " + err.Error())
 			continue
 		}
-		if err := PingCluster(cluster); err != nil {
+		if err := pingCluster(cluster); err != nil {
 			if err := cluster.Stop(); err != nil {
 				log.Errorln("stopping Riak cluster (after ping error): " + err.Error())
 			}
-			log.Errorf("Riak PingCluster error for server %+v: %+v\n", server, err.Error())
+			log.Errorf("Riak pingCluster error for server %+v: %+v\n", server, err.Error())
 			continue
 		}
 		if err := cluster.Stop(); err != nil {
@@ -127,11 +127,11 @@ func Ping(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.RiakPingRe
 	return tc.RiakPingResp{}, errors.New("failed to ping any Riak server")
 }
 
-func GetDNSSECKeys(cdnName string, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.DNSSECKeysRiak, bool, error) {
+func getDNSSECKeys(cdnName string, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.DNSSECKeysRiak, bool, error) {
 	key := tc.DNSSECKeysRiak{}
 	found := false
-	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
-		ro, err := FetchObjectValues(cdnName, DNSSECKeysBucket, cluster)
+	err := withCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+		ro, err := fetchObjectValues(cdnName, dnssecKeysBucket, cluster)
 		if err != nil {
 			return err
 		}
@@ -150,13 +150,13 @@ func GetDNSSECKeys(cdnName string, tx *sql.Tx, authOpts *riak.AuthOptions, riakP
 	return key, found, nil
 }
 
-func PutDNSSECKeys(keys tc.DNSSECKeysRiak, cdnName string, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) error {
+func putDNSSECKeys(keys tc.DNSSECKeysRiak, cdnName string, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) error {
 	keyJSON, err := json.Marshal(&keys)
 	if err != nil {
 		return errors.New("marshalling keys: " + err.Error())
 	}
 
-	err = WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+	err = withCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
 		obj := &riak.Object{
 			ContentType:     "application/json",
 			Charset:         "utf-8",
@@ -164,7 +164,7 @@ func PutDNSSECKeys(keys tc.DNSSECKeysRiak, cdnName string, tx *sql.Tx, authOpts 
 			Key:             cdnName,
 			Value:           []byte(keyJSON),
 		}
-		if err = SaveObject(obj, DNSSECKeysBucket, cluster); err != nil {
+		if err = saveObject(obj, dnssecKeysBucket, cluster); err != nil {
 			return errors.New("saving Riak object: " + err.Error())
 		}
 		return nil
@@ -172,23 +172,23 @@ func PutDNSSECKeys(keys tc.DNSSECKeysRiak, cdnName string, tx *sql.Tx, authOpts 
 	return err
 }
 
-func DeleteDNSSECKeys(cdnName string, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) error {
-	cluster, err := GetPooledCluster(tx, authOpts, riakPort)
+func deleteDNSSECKeys(cdnName string, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) error {
+	cluster, err := getPooledCluster(tx, authOpts, riakPort)
 	if err != nil {
 		return errors.New("getting riak cluster: " + err.Error())
 	}
-	if err := DeleteObject(cdnName, DNSSECKeysBucket, cluster); err != nil {
+	if err := deleteObject(cdnName, dnssecKeysBucket, cluster); err != nil {
 		return errors.New("deleting riak object: " + err.Error())
 	}
 	return nil
 }
 
-func GetBucketKey(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, bucket string, key string) ([]byte, bool, error) {
+func getBucketKey(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, bucket string, key string) ([]byte, bool, error) {
 	val := []byte{}
 	found := false
-	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+	err := withCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
 		// get the deliveryservice ssl keys by xmlID and version
-		ro, err := FetchObjectValues(key, bucket, cluster)
+		ro, err := fetchObjectValues(key, bucket, cluster)
 		if err != nil {
 			return err
 		}
@@ -205,9 +205,9 @@ func GetBucketKey(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, bucket
 	return val, found, nil
 }
 
-func DeleteDSSSLKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, xmlID string, version string) error {
-	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
-		if err := DeleteObject(MakeDSSSLKeyKey(xmlID, version), DeliveryServiceSSLKeysBucket, cluster); err != nil {
+func deleteDSSSLKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, xmlID string, version string) error {
+	err := withCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+		if err := deleteObject(makeDSSSLKeyKey(xmlID, version), deliveryServiceSSLKeysBucket, cluster); err != nil {
 			return errors.New("deleting SSL keys: " + err.Error())
 		}
 		return nil
@@ -215,12 +215,12 @@ func DeleteDSSSLKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, xml
 	return err
 }
 
-// DeleteDeliveryServicesSSLKey deletes a Delivery Service SSL key.
-// This should almost never be used directly, prefer DeleteDSSSLKeys instead.
-// This should only be used to delete keys, which may not conform to the MakeDSSSLKeyKey format. For example when deleting all keys on a delivery service, and some may have been created manually outside Traffic Ops, or are otherwise malformed.
-func DeleteDeliveryServicesSSLKey(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, key string) error {
-	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
-		if err := DeleteObject(key, DeliveryServiceSSLKeysBucket, cluster); err != nil {
+// deleteDeliveryServicesSSLKey deletes a Delivery Service SSL key.
+// This should almost never be used directly, prefer deleteDSSSLKeys instead.
+// This should only be used to delete keys, which may not conform to the makeDSSSLKeyKey format. For example when deleting all keys on a delivery service, and some may have been created manually outside Traffic Ops, or are otherwise malformed.
+func deleteDeliveryServicesSSLKey(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, key string) error {
+	err := withCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+		if err := deleteObject(key, deliveryServiceSSLKeysBucket, cluster); err != nil {
 			return errors.New("deleting SSL keys: " + err.Error())
 		}
 		return nil
@@ -228,12 +228,12 @@ func DeleteDeliveryServicesSSLKey(tx *sql.Tx, authOpts *riak.AuthOptions, riakPo
 	return err
 }
 
-func GetURISigningKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, xmlID string) ([]byte, bool, error) {
-	cluster, err := GetPooledCluster(tx, authOpts, riakPort)
+func getURISigningKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, xmlID string) ([]byte, bool, error) {
+	cluster, err := getPooledCluster(tx, authOpts, riakPort)
 	if err != nil {
 		return nil, false, errors.New("getting pooled Riak cluster: " + err.Error())
 	}
-	ro, err := FetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
+	ro, err := fetchObjectValues(xmlID, cdnURIKeysBucket, cluster)
 	if err != nil {
 		return nil, false, errors.New("fetching riak objects: " + err.Error())
 	}
@@ -250,19 +250,19 @@ func GetURISigningKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, x
 	return ro[0].Value, true, nil
 }
 
-func DeleteURISigningKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, xmlID string) error {
-	cluster, err := GetPooledCluster(tx, authOpts, riakPort)
+func deleteURISigningKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, xmlID string) error {
+	cluster, err := getPooledCluster(tx, authOpts, riakPort)
 	if err != nil {
 		return errors.New("getting pooled Riak cluster: " + err.Error())
 	}
-	if err := DeleteObject(xmlID, CDNURIKeysBucket, cluster); err != nil {
+	if err := deleteObject(xmlID, cdnURIKeysBucket, cluster); err != nil {
 		return errors.New("deleting object: " + err.Error())
 	}
 	return nil
 }
 
-func PutURISigningKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, xmlID string, keysJson []byte) error {
-	cluster, err := GetPooledCluster(tx, authOpts, riakPort)
+func putURISigningKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, xmlID string, keysJson []byte) error {
+	cluster, err := getPooledCluster(tx, authOpts, riakPort)
 	if err != nil {
 		return errors.New("getting pooled Riak cluster: " + err.Error())
 	}
@@ -273,24 +273,24 @@ func PutURISigningKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, x
 		Key:             xmlID,
 		Value:           keysJson,
 	}
-	if err = SaveObject(obj, CDNURIKeysBucket, cluster); err != nil {
+	if err = saveObject(obj, cdnURIKeysBucket, cluster); err != nil {
 		return errors.New("saving riak object: " + err.Error())
 	}
 	return nil
 }
 
-// GetURLSigConfigFileName returns the filename of the Apache Traffic Server URLSig config file
+// getURLSigConfigFileName returns the filename of the Apache Traffic Server URLSig config file
 // TODO move to ats config directory/file
-func GetURLSigConfigFileName(ds tc.DeliveryServiceName) string {
+func getURLSigConfigFileName(ds tc.DeliveryServiceName) string {
 	return "url_sig_" + string(ds) + ".config"
 }
 
-func GetURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc.DeliveryServiceName) (tc.URLSigKeys, bool, error) {
+func getURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc.DeliveryServiceName) (tc.URLSigKeys, bool, error) {
 	val := tc.URLSigKeys{}
 	found := false
-	key := GetURLSigConfigFileName(ds)
-	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
-		ro, err := FetchObjectValues(key, URLSigKeysBucket, cluster)
+	key := getURLSigConfigFileName(ds)
+	err := withCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+		ro, err := fetchObjectValues(key, urlSigKeysBucket, cluster)
 		if err != nil {
 			return err
 		}
@@ -309,20 +309,20 @@ func GetURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc
 	return val, found, nil
 }
 
-func PutURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc.DeliveryServiceName, keys tc.URLSigKeys) error {
+func putURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc.DeliveryServiceName, keys tc.URLSigKeys) error {
 	keyJSON, err := json.Marshal(&keys)
 	if err != nil {
 		return errors.New("marshalling keys: " + err.Error())
 	}
-	err = WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+	err = withCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
 		obj := &riak.Object{
 			ContentType:     "application/json",
 			Charset:         "utf-8",
 			ContentEncoding: "utf-8",
-			Key:             GetURLSigConfigFileName(ds),
+			Key:             getURLSigConfigFileName(ds),
 			Value:           []byte(keyJSON),
 		}
-		if err = SaveObject(obj, URLSigKeysBucket, cluster); err != nil {
+		if err = saveObject(obj, urlSigKeysBucket, cluster); err != nil {
 			return errors.New("saving Riak object: " + err.Error())
 		}
 		return nil
@@ -330,24 +330,24 @@ func PutURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc
 	return err
 }
 
-const SSLKeysIndex = "sslkeys"
-const CDNSSLKeysLimit = 1000 // TODO: emulates Perl; reevaluate?
+const sslKeysIndex = "sslkeys"
+const cdnSSLKeysLimit = 1000 // TODO: emulates Perl; reevaluate?
 
-func GetCDNSSLKeysObj(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, cdnName string) ([]tc.CDNSSLKey, error) {
+func getCDNSSLKeysObj(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, cdnName string) ([]tc.CDNSSLKey, error) {
 	keys := []tc.CDNSSLKey{}
-	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+	err := withCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
 		// get the deliveryservice ssl keys by xmlID and version
 		query := `cdn:` + cdnName
 		filterQuery := `_yz_rk:*latest`
 		fields := []string{"deliveryservice", "hostname", "certificate.crt", "certificate.key"}
-		searchDocs, err := Search(cluster, SSLKeysIndex, query, filterQuery, CDNSSLKeysLimit, fields)
+		searchDocs, err := search(cluster, sslKeysIndex, query, filterQuery, cdnSSLKeysLimit, fields)
 		if err != nil {
 			return errors.New("riak search error: " + err.Error())
 		}
 		if len(searchDocs) == 0 {
 			return nil // no error, and leave keys empty
 		}
-		keys = SearchDocsToCDNSSLKeys(searchDocs)
+		keys = searchDocsToCDNSSLKeys(searchDocs)
 		return nil
 	})
 	if err != nil {
@@ -356,8 +356,8 @@ func GetCDNSSLKeysObj(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, cd
 	return keys, nil
 }
 
-// SearchDocsToCDNSSLKeys converts the SearchDoc array returned by Riak into a CDNSSLKey slice. If a SearchDoc doesn't contain expected fields, it creates the key with those fields defaulted to empty strings.
-func SearchDocsToCDNSSLKeys(docs []*riak.SearchDoc) []tc.CDNSSLKey {
+// searchDocsToCDNSSLKeys converts the SearchDoc array returned by Riak into a CDNSSLKey slice. If a SearchDoc doesn't contain expected fields, it creates the key with those fields defaulted to empty strings.
+func searchDocsToCDNSSLKeys(docs []*riak.SearchDoc) []tc.CDNSSLKey {
 	keys := []tc.CDNSSLKey{}
 	for _, doc := range docs {
 		key := tc.CDNSSLKey{}
@@ -378,15 +378,15 @@ func SearchDocsToCDNSSLKeys(docs []*riak.SearchDoc) []tc.CDNSSLKey {
 	return keys
 }
 
-// DeleteOldDeliveryServiceSSLKeys deletes all the SSL keys in Riak for delivery services in the given CDN that are not in the given existingXMLIDs.
-func DeleteOldDeliveryServiceSSLKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, cdn tc.CDNName, existingXMLIDs map[string]struct{}) error {
+// deleteOldDeliveryServiceSSLKeys deletes all the SSL keys in Riak for delivery services in the given CDN that are not in the given existingXMLIDs.
+func deleteOldDeliveryServiceSSLKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, cdn tc.CDNName, existingXMLIDs map[string]struct{}) error {
 	dsVersions := map[string][]string{}
-	err := WithCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
+	err := withCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
 		// get the deliveryservice ssl keys by xmlID and version
 		query := `cdn:` + string(cdn)
 		filterQuery := ""
 		fields := []string{"_yz_rk", "deliveryservice"} // '_yz_rk' is the magic Riak field that populates the key. Without this, doc.Key would be empty.
-		searchDocs, err := Search(cluster, SSLKeysIndex, query, filterQuery, CDNSSLKeysLimit, fields)
+		searchDocs, err := search(cluster, sslKeysIndex, query, filterQuery, cdnSSLKeysLimit, fields)
 		if err != nil {
 			return errors.New("riak search error: " + err.Error())
 		}
@@ -420,7 +420,7 @@ func DeleteOldDeliveryServiceSSLKeys(tx *sql.Tx, authOpts *riak.AuthOptions, ria
 			continue
 		}
 		for _, riakKey := range riakKeys {
-			err := DeleteDeliveryServicesSSLKey(tx, authOpts, riakPort, riakKey)
+			err := deleteDeliveryServicesSSLKey(tx, authOpts, riakPort, riakKey)
 			if err != nil {
 				log.Errorln("deleting Traffic Vault SSL keys for Delivery Service '" + ds + "' key '" + riakKey + "': " + err.Error())
 				failures = append(failures, ds)

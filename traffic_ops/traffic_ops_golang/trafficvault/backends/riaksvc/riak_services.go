@@ -39,11 +39,11 @@ import (
 )
 
 const (
-	// DefaultRiakPort is the port RIAK is listening on, if no port is configured.
-	DefaultRiakPort                    = uint(8087)
-	TimeOut                            = time.Second * 5
-	DefaultHealthCheckInterval         = time.Second * 5
-	DefaultMaxCommandExecutionAttempts = 5
+	// defaultRiakPort is the port RIAK is listening on, if no port is configured.
+	defaultRiakPort                    = uint(8087)
+	defaultTimeOut                     = time.Second * 5
+	defaultHealthCheckInterval         = time.Second * 5
+	defaultMaxCommandExecutionAttempts = 5
 )
 
 var (
@@ -114,7 +114,7 @@ type Config struct {
 	Port uint
 }
 
-func UnmarshalRiakConfig(riakConfBytes json.RawMessage) (bool, Config, error) {
+func unmarshalRiakConfig(riakConfBytes json.RawMessage) (bool, Config, error) {
 	conf := Config{}
 	rconf := &TOAuthOptions{}
 	rconf.TlsConfig = &tls.Config{}
@@ -140,7 +140,7 @@ func UnmarshalRiakConfig(riakConfBytes json.RawMessage) (bool, Config, error) {
 	}
 
 	if healthCheckInterval <= 0 {
-		healthCheckInterval = DefaultHealthCheckInterval
+		healthCheckInterval = defaultHealthCheckInterval
 		log.Infoln("HeathCheckInterval override")
 	}
 
@@ -149,13 +149,13 @@ func UnmarshalRiakConfig(riakConfBytes json.RawMessage) (bool, Config, error) {
 	conf.AuthOptions = rconf.AuthOptions
 	conf.Port = rconf.Port
 	if conf.Port == 0 {
-		conf.Port = DefaultRiakPort
+		conf.Port = defaultRiakPort
 	}
 	return true, conf, nil
 }
 
 // deletes an object from riak storage
-func DeleteObject(key string, bucket string, cluster StorageCluster) error {
+func deleteObject(key string, bucket string, cluster StorageCluster) error {
 	if cluster == nil {
 		return errors.New("ERROR: No valid cluster on which to execute a command")
 	}
@@ -164,7 +164,7 @@ func DeleteObject(key string, bucket string, cluster StorageCluster) error {
 	cmd, err := riak.NewDeleteValueCommandBuilder().
 		WithBucket(bucket).
 		WithKey(key).
-		WithTimeout(TimeOut).
+		WithTimeout(defaultTimeOut).
 		Build()
 	if err != nil {
 		return err
@@ -173,8 +173,8 @@ func DeleteObject(key string, bucket string, cluster StorageCluster) error {
 	return cluster.Execute(cmd)
 }
 
-// PingCluster pings the given Riak cluster, and returns nil on success, or any error
-func PingCluster(cluster StorageCluster) error {
+// pingCluster pings the given Riak cluster, and returns nil on success, or any error
+func pingCluster(cluster StorageCluster) error {
 	if cluster == nil {
 		return errors.New("ERROR: No valid cluster on which to execute a command")
 	}
@@ -200,7 +200,7 @@ func PingCluster(cluster StorageCluster) error {
 }
 
 // fetch an object from riak storage
-func FetchObjectValues(key string, bucket string, cluster StorageCluster) ([]*riak.Object, error) {
+func fetchObjectValues(key string, bucket string, cluster StorageCluster) ([]*riak.Object, error) {
 	if cluster == nil {
 		return nil, errors.New("ERROR: No valid cluster on which to execute a command")
 	}
@@ -208,7 +208,7 @@ func FetchObjectValues(key string, bucket string, cluster StorageCluster) ([]*ri
 	cmd, err := riak.NewFetchValueCommandBuilder().
 		WithBucket(bucket).
 		WithKey(key).
-		WithTimeout(TimeOut).
+		WithTimeout(defaultTimeOut).
 		Build()
 	if err != nil {
 		return nil, err
@@ -226,7 +226,7 @@ func FetchObjectValues(key string, bucket string, cluster StorageCluster) ([]*ri
 	return fvc.Response.Values, nil
 }
 
-func SaveObject(obj *riak.Object, bucket string, cluster StorageCluster) error {
+func saveObject(obj *riak.Object, bucket string, cluster StorageCluster) error {
 	if cluster == nil {
 		return errors.New("ERROR: No valid cluster on which to execute a command")
 	}
@@ -237,7 +237,7 @@ func SaveObject(obj *riak.Object, bucket string, cluster StorageCluster) error {
 	cmd, err := riak.NewStoreValueCommandBuilder().
 		WithBucket(bucket).
 		WithContent(obj).
-		WithTimeout(TimeOut).
+		WithTimeout(defaultTimeOut).
 		Build()
 	if err != nil {
 		return err
@@ -251,8 +251,8 @@ type ServerAddr struct {
 	Port string
 }
 
-// GetRiakServers returns the riak servers from the database. The riakPort may be nil, in which case the default port is returned.
-func GetRiakServers(tx *sql.Tx, riakPort *uint) ([]ServerAddr, error) {
+// getRiakServers returns the riak servers from the database. The riakPort may be nil, in which case the default port is returned.
+func getRiakServers(tx *sql.Tx, riakPort *uint) ([]ServerAddr, error) {
 	rows, err := tx.Query(`
 SELECT CONCAT(s.host_name, '.', s.domain_name) FROM server s
 JOIN type t ON s.type = t.id
@@ -265,7 +265,7 @@ WHERE t.name = 'RIAK' AND st.name = 'ONLINE'
 	defer rows.Close()
 	servers := []ServerAddr{}
 	if riakPort == nil {
-		riakPort = util.UIntPtr(DefaultRiakPort)
+		riakPort = util.UIntPtr(defaultRiakPort)
 	}
 	portStr := strconv.Itoa(int(*riakPort))
 	for rows.Next() {
@@ -279,7 +279,7 @@ WHERE t.name = 'RIAK' AND st.name = 'ONLINE'
 	return servers, nil
 }
 
-func GetRiakCluster(servers []ServerAddr, authOptions *riak.AuthOptions) (*riak.Cluster, error) {
+func getRiakCluster(servers []ServerAddr, authOptions *riak.AuthOptions) (*riak.Cluster, error) {
 	if authOptions == nil {
 		return nil, errors.New("ERROR: no riak auth information from riak.conf, cannot authenticate to any riak servers")
 	}
@@ -302,7 +302,7 @@ func GetRiakCluster(servers []ServerAddr, authOptions *riak.AuthOptions) (*riak.
 	}
 	opts := &riak.ClusterOptions{
 		Nodes:             nodes,
-		ExecutionAttempts: DefaultMaxCommandExecutionAttempts,
+		ExecutionAttempts: defaultMaxCommandExecutionAttempts,
 	}
 	cluster, err := riak.NewCluster(opts)
 	if err != nil {
@@ -311,24 +311,22 @@ func GetRiakCluster(servers []ServerAddr, authOptions *riak.AuthOptions) (*riak.
 	return cluster, err
 }
 
-func GetRiakStorageCluster(servers []ServerAddr, authOptions *riak.AuthOptions) (StorageCluster, error) {
-	// NOTE: GetRiakStorageCluster is only used by Ping, which I assume is because it tests creating
-	// a new cluster, starting, and stopping it (as opposed to using GetPooledCluster)
-	cluster, err := GetRiakCluster(servers, authOptions)
+func getRiakStorageCluster(servers []ServerAddr, authOptions *riak.AuthOptions) (StorageCluster, error) {
+	cluster, err := getRiakCluster(servers, authOptions)
 	if err != nil {
 		return nil, err
 	}
 	return RiakStorageCluster{Cluster: cluster}, nil
 }
 
-func GetPooledCluster(tx *sql.Tx, authOptions *riak.AuthOptions, riakPort *uint) (StorageCluster, error) {
+func getPooledCluster(tx *sql.Tx, authOptions *riak.AuthOptions, riakPort *uint) (StorageCluster, error) {
 	clusterMutex.Lock()
 	defer clusterMutex.Unlock()
 
 	tryLoad := false
 
 	// should we try to reload the cluster?
-	newservers, err := GetRiakServers(tx, riakPort)
+	newservers, err := getRiakServers(tx, riakPort)
 
 	if err == nil {
 		if 0 < len(newservers) {
@@ -350,7 +348,7 @@ func GetPooledCluster(tx *sql.Tx, authOptions *riak.AuthOptions, riakPort *uint)
 	}
 
 	if tryLoad {
-		newcluster, err := GetRiakCluster(newservers, authOptions)
+		newcluster, err := getRiakCluster(newservers, authOptions)
 		if err == nil {
 			if err := newcluster.Start(); err == nil {
 				log.Infof("New riak cluster started: %p\n", newcluster)
@@ -377,24 +375,24 @@ func GetPooledCluster(tx *sql.Tx, authOptions *riak.AuthOptions, riakPort *uint)
 	cluster := sharedCluster
 
 	if cluster == nil {
-		log.Errorln("GetPooledCluster failed, returning nil cluster")
-		return nil, errors.New("GetPooledCluster unable to return cluster")
+		log.Errorln("getPooledCluster failed, returning nil cluster")
+		return nil, errors.New("getPooledCluster unable to return cluster")
 	}
 
 	return RiakStorageCluster{Cluster: cluster}, nil
 }
 
-func WithCluster(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, f func(StorageCluster) error) error {
-	cluster, err := GetPooledCluster(tx, authOpts, riakPort)
+func withCluster(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, f func(StorageCluster) error) error {
+	cluster, err := getPooledCluster(tx, authOpts, riakPort)
 	if err != nil {
 		return errors.New("getting riak pooled cluster: " + err.Error())
 	}
 	return f(cluster)
 }
 
-// Search searches Riak for the given query. Returns nil and a nil error if no object was found.
+// search searches Riak for the given query. Returns nil and a nil error if no object was found.
 // If fields is empty, all fields will be returned.
-func Search(cluster StorageCluster, index string, query string, filterQuery string, numRows int, fields []string) ([]*riak.SearchDoc, error) {
+func search(cluster StorageCluster, index string, query string, filterQuery string, numRows int, fields []string) ([]*riak.SearchDoc, error) {
 	riakCmd := riak.NewSearchCommandBuilder().
 		WithIndexName(index).
 		WithQuery(query).
