@@ -22,9 +22,14 @@ package riaksvc
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 const RiakBackendName = "riak"
@@ -100,23 +105,23 @@ func init() {
 }
 
 func riakConfigLoad(b json.RawMessage) (trafficvault.TrafficVault, error) {
-	_, riakCfg, err := unmarshalRiakConfig(b)
+	riakCfg, err := unmarshalRiakConfig(b)
 	if err != nil {
 		return nil, err
 	}
-	// TODO: validate the config
+	if err := validateConfig(riakCfg); err != nil {
+		return nil, errors.New("validating Riak config: " + err.Error())
+	}
 	return &Riak{cfg: riakCfg}, nil
 }
 
-// TODO: add unit test with:
-// goodRiakConfig = `
-// 	   {
-// 	       "user": "riakuser",
-// 	       "password": "password",
-// 	       "port": 8087,
-// 	       "MaxTLSVersion": "1.1",
-// 	       "tlsConfig": {
-// 	           "insecureSkipVerify": true
-// 	       }
-// 	   }
-// 	   	`
+func validateConfig(cfg Config) error {
+	errs := tovalidate.ToErrors(validation.Errors{
+		"user":     validation.Validate(cfg.User, validation.Required),
+		"password": validation.Validate(cfg.Password, validation.Required),
+	})
+	if len(errs) == 0 {
+		return nil
+	}
+	return util.JoinErrs(errs)
+}

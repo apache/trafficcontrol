@@ -114,15 +114,17 @@ type Config struct {
 	Port uint
 }
 
-func unmarshalRiakConfig(riakConfBytes json.RawMessage) (bool, Config, error) {
+func unmarshalRiakConfig(riakConfBytes json.RawMessage) (Config, error) {
 	conf := Config{}
 	rconf := &TOAuthOptions{}
 	rconf.TlsConfig = &tls.Config{}
 	err := json.Unmarshal(riakConfBytes, &rconf)
 	if err != nil {
-		return false, conf, err
+		return conf, err
 	}
-	setMaxTLSVersion(rconf)
+	if err := setMaxTLSVersion(rconf); err != nil {
+		return conf, err
+	}
 
 	type config struct {
 		Hci string `json:"HealthCheckInterval"`
@@ -151,7 +153,7 @@ func unmarshalRiakConfig(riakConfBytes json.RawMessage) (bool, Config, error) {
 	if conf.Port == 0 {
 		conf.Port = defaultRiakPort
 	}
-	return true, conf, nil
+	return conf, nil
 }
 
 // deletes an object from riak storage
