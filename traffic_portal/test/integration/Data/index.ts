@@ -75,3 +75,4 @@ export * from "./origins";
 export * from "./parameters";
 export * from "./physlocations";
 export * from "./profiles";
+export * from "./regions";
