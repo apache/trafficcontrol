@@ -21,6 +21,7 @@ import { resolve } from "path";
 
 import { emptyDir } from "fs-extra";
 import { Config, browser } from 'protractor';
+import { JUnitXmlReporter } from 'jasmine-reporters'
 import HtmlReporter from "protractor-beautiful-reporter";
 
 import { API } from './CommonUtils/API';
@@ -39,17 +40,27 @@ config.onPrepare = async function () {
       console.log(err);
     });
 
-    jasmine.getEnv().addReporter(new HtmlReporter({
-      baseDirectory: './Reports/',
-      clientDefaults: {
-        showTotalDurationIn: "header",
-        totalDurationFormat: "hms"
-      },
-      jsonsSubfolder: 'jsons',
-      screenshotsSubfolder: 'images',
-      takeScreenShotsOnlyForFailedSpecs: true,
-      docTitle: 'Traffic Portal Test Cases'
-    }).getJasmine2Reporter());
+    if (config.params.junitReporter === true) {
+        jasmine.getEnv().addReporter(
+            new JUnitXmlReporter({
+                savePath: '/portaltestresults',
+                filePrefix: 'portaltestresults',
+                consolidateAll: true
+            }));
+    }
+//    else {
+        jasmine.getEnv().addReporter(new HtmlReporter({
+            baseDirectory: './Reports/',
+            clientDefaults: {
+                showTotalDurationIn: "header",
+                totalDurationFormat: "hms"
+            },
+            jsonsSubfolder: 'jsons',
+            screenshotsSubfolder: 'images',
+            takeScreenShotsOnlyForFailedSpecs: true,
+            docTitle: 'Traffic Portal Test Cases'
+        }).getJasmine2Reporter());
+ //   }
 
     try {
       let api = new API();
