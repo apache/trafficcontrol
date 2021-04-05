@@ -88,7 +88,7 @@ export class CacheGroupPage extends BasePage {
         }
         return false;
     }
-    async UpdateCacheGroups(cachegroup, outputMessage: string): Promise<boolean | undefined> {
+    async UpdateCacheGroups(cachegroup, outputMessage: string | undefined): Promise<boolean | undefined> {
         let result: boolean | undefined = false;
         let basePage = new BasePage();
         let snp = new SideNavigationPage();
@@ -106,7 +106,7 @@ export class CacheGroupPage extends BasePage {
         if(result != undefined)
         {
             await basePage.GetOutputMessage().then(function (value) {
-                if (outputMessage == value) {
+                if (outputMessage === value) {
                     result = true;
                 } else {
                     result = false;

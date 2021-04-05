@@ -41,7 +41,7 @@ type SetupData<T = unknown> = Record<string | symbol, T> & {
 }
 
 export interface LoginData {
-	description: string;
+	description?: string;
 	password: string;
 	username: string;
 	validationMessage?: string;
@@ -66,3 +66,4 @@ export interface Test {
 }
 
 export * from "./asns";
+export * from "./cachegroup";

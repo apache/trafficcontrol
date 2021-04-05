@@ -16,26 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { readFileSync } from "fs";
-
 import { browser } from 'protractor';
-import using from "jasmine-data-provider";
 
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { CacheGroupPage } from '../PageObjects/CacheGroup.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
+import { cachegroups } from "../Data";
 
 
-let filename = 'Data/CacheGroup/TestCases.json';
-let testData = JSON.parse(readFileSync(filename, "utf8"));
 
 let loginPage = new LoginPage();
 let topNavigation = new TopNavigationPage();
 let cacheGroupPage = new CacheGroupPage();
 
-using(testData.CacheGroup, function (cacheGroupData) {
-    describe('Traffic Portal - CacheGroup - ' + cacheGroupData.TestName, function () {
-        using(cacheGroupData.Login, function (login) {
+cachegroups.tests.forEach(cacheGroupData => {
+    describe(`Traffic Portal - CacheGroup - ${cacheGroupData.testName}`, () => {
+        cacheGroupData.logins.forEach(login => {
             it('can login', async function(){
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
@@ -45,32 +41,32 @@ using(testData.CacheGroup, function (cacheGroupData) {
                 await cacheGroupPage.OpenTopologyMenu();
                 await cacheGroupPage.OpenCacheGroupsPage();
             })
-            using(cacheGroupData.Create, function (create) {
+            cacheGroupData.create.forEach(create => {
                 it(create.description, async function () {
                     expect(await cacheGroupPage.CreateCacheGroups(create, create.validationMessage)).toBeTruthy();
                     await cacheGroupPage.OpenCacheGroupsPage();
                 })
             })
-            using(cacheGroupData.Update, function (update) {
+            cacheGroupData.update.forEach(update => {
                 if(update.description.includes("cannot")){
                     it(update.description, async function () {
-                        await cacheGroupPage.SearchCacheGroups(update.Name)
+                        await cacheGroupPage.SearchCacheGroups(update.name)
                         expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeUndefined();
                         await cacheGroupPage.OpenCacheGroupsPage();
                     })
                 }else{
                     it(update.description, async function () {
-                        await cacheGroupPage.SearchCacheGroups(update.Name)
+                        await cacheGroupPage.SearchCacheGroups(update.name)
                         expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeTruthy();
                         await cacheGroupPage.OpenCacheGroupsPage();
                     })
                 }
 
             })
-            using(cacheGroupData.Remove, function (remove) {
+            cacheGroupData.remove.forEach(remove => {
                 it(remove.description, async function () {
-                    await cacheGroupPage.SearchCacheGroups(remove.Name)
-                    expect(await cacheGroupPage.DeleteCacheGroups(remove.Name, remove.validationMessage)).toBeTruthy();
+                    await cacheGroupPage.SearchCacheGroups(remove.name)
+                    expect(await cacheGroupPage.DeleteCacheGroups(remove.name, remove.validationMessage)).toBeTruthy();
                 })
             })
             it('can logout', async function () {
