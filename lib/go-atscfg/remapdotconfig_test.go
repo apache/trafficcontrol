@@ -8267,3 +8267,146 @@ func makeTestRemapServer() *Server {
 	server.Type = "MID"
 	return server
 }
+
+func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
+	hdr := "myHeaderComment"
+
+	server := makeTestRemapServer()
+	server.Type = "MID"
+
+	ds := DeliveryService{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_NO_CACHE")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(314159)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	// non-nil default values should not trigger header rewrite plugin directive
+	ds.EdgeHeaderRewrite = util.StrPtr("")
+	ds.MidHeaderRewrite = util.StrPtr("mid-header-rewrite")
+	ds.ServiceCategory = util.StrPtr("")
+	ds.MaxOriginConnections = util.IntPtr(0)
+
+	dses := []DeliveryService{ds}
+
+	dss := []tc.DeliveryServiceServer{
+		tc.DeliveryServiceServer{
+			Server:          util.IntPtr(*server.ID),
+			DeliveryService: util.IntPtr(*ds.ID),
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(*server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(*server.Profile),
+		},
+	}
+
+	cacheKeyParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "shouldnotexist",
+			ConfigFile: "cacheurl.config",
+			Value:      "shouldnotexisteither",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cacheurl.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cacheurl.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.Topology{}
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, cacheKeyParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	txt = strings.TrimSpace(txt)
+
+	testComment(t, txt, hdr)
+
+	txtLines := strings.Split(txt, "\n")
+
+	if len(txtLines) != 1 {
+		t.Fatalf("expected 0 remaps from HTTP_NO_CACHE DS on Mid, actual: '%v' count %v", txt, len(txtLines))
+	}
+
+	remapLine := txtLines[0]
+
+	if strings.Contains(remapLine, "hdr_rw_mid_mydsname.config") {
+		t.Errorf("expected remap line for HTTP_NO_CACHE to not exist on Mid server, regardless of Mid Header Rewrite, actual '%v'", txt)
+	}
+}
