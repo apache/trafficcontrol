@@ -68,3 +68,4 @@ export interface Test {
 export * from "./asns";
 export * from "./cachegroup";
 export * from "./cdn";
+export * from "./coordinates";
