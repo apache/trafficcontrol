@@ -3879,6 +3879,10 @@ dl_ds_default_ds_template:
     longDesc: A basic DNS routed Delivery Service
     typeName: DNS
     uniqueKey: simple-dns
+  - displayName: Simple HTTP DS for Federation
+    longDesc: A basic DNS routed Delivery Service for use with a Federation
+    typeName: DNS
+    uniqueKey: simple-dns-for-federation
   - displayName: Simple DNS Live DS
     longDesc: A basic DNS Live routed Delivery Service
     typeName: DNS_LIVE
@@ -4046,7 +4050,7 @@ dl_ds_default_ds_template:
 # Federations
 dl_ds_merged_federation: "{{ dl_ds_default_federation }}"
 dl_ds_default_federation:
-  deliveryService: simple-dns-{{ Target_cdn_delegation | lower }}
+  deliveryService: simple-dns-for-federation-{{ Target_cdn_delegation | lower }}
   mappings:
     cname: 'foo.kabletown.net.'
     resolve4:
