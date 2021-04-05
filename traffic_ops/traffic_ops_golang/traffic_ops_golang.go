@@ -41,6 +41,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/riaksvc"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -246,7 +247,7 @@ func setupTrafficVault(riakConfigFileName string, cfg *config.Config) trafficvau
 			os.Exit(1)
 		}
 		cfg.TrafficVaultEnabled = true
-		trafficVaultBackend = trafficvault.RiakBackendName
+		trafficVaultBackend = riaksvc.RiakBackendName
 	}
 	if len(cfg.TrafficVaultBackend) > 0 {
 		if len(cfg.TrafficVaultConfig) == 0 {
@@ -258,7 +259,7 @@ func setupTrafficVault(riakConfigFileName string, cfg *config.Config) trafficvau
 		trafficVaultConfigBytes = cfg.TrafficVaultConfig
 		trafficVaultBackend = cfg.TrafficVaultBackend
 	}
-	if trafficVaultBackend == trafficvault.RiakBackendName && cfg.RiakPort != nil {
+	if trafficVaultBackend == riaksvc.RiakBackendName && cfg.RiakPort != nil {
 		// inject riak_port into traffic_vault_config.port if unset there
 		log.Warnln("using deprecated field 'riak_port', use 'port' field in traffic_vault_config instead")
 		tmp := make(map[string]interface{})

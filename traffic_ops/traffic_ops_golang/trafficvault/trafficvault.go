@@ -118,7 +118,7 @@ var backends = make(map[string]LoadFunc)
 
 type LoadFunc func(json.RawMessage) (TrafficVault, error)
 
-func addBackend(name string, loadConfig LoadFunc) {
+func AddBackend(name string, loadConfig LoadFunc) {
 	backends[name] = loadConfig
 }
 
