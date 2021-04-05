@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5604](https://github.com/apache/trafficcontrol/issues/5604) - traffic_monitor.log is no longer truncated when restarting Traffic Monitor
 - [#1624](https://github.com/apache/trafficcontrol/issues/1624) - Fixed ORT to reload Traffic Server if LUA scripts are added or changed.
 - #5554 - TM UI overflows screen width and hides table data
+- Fixed the return error for GET api `cdns/routing` to avoid incorrect success response.
 
 
 ## [5.1.0] - 2021-02-21
