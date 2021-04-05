@@ -74,3 +74,4 @@ export * from "./login";
 export * from "./origins";
 export * from "./parameters";
 export * from "./physlocations";
+export * from "./profiles";
