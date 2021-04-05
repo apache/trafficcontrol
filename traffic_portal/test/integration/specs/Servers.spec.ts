@@ -16,75 +16,66 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { readFileSync } from "fs";
-
 import { browser } from 'protractor';
-import using from "jasmine-data-provider";
 
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { ServersPage } from '../PageObjects/ServersPage.po';
 import { API } from '../CommonUtils/API';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
+import { servers } from "../Data";
 
-let api = new API();
-let loginPage = new LoginPage();
-let topNavigation = new TopNavigationPage();
-let serversPage = new ServersPage();
+const api = new API();
+const loginPage = new LoginPage();
+const topNavigation = new TopNavigationPage();
+const serversPage = new ServersPage();
 
-let setupFile = 'Data/Servers/Setup.json';
-let cleanupFile = 'Data/Servers/Cleanup.json';
-let filename = 'Data/Servers/TestCases.json';
-let testData = JSON.parse(readFileSync(filename, "utf8"));
+describe('Setup API call for Servers Test', () =>{
+    it('Setup', async () => {
+        await api.UseAPI(servers.setup);
+    });
+});
 
-describe('Setup API call for Servers Test', function(){
-    it('Setup', async function(){
-        let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        await api.UseAPI(setupData);
-    })
-})
-
-using(testData.Servers, async function(serversData){
-    using(serversData.Login, function(login){
-        describe('Traffic Portal - Servers - ' + login.description, function(){
-            it('can login', async function(){
+servers.tests.forEach(async serversData => {
+    serversData.logins.forEach(login => {
+        describe(`Traffic Portal - Servers - ${login.description}`, () =>{
+            it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            })
-            it('can open servers page', async function(){
+            });
+            it('can open servers page', async () => {
                 await serversPage.OpenConfigureMenu();
                 await serversPage.OpenServerPage();
-            })
-            using(serversData.Add, function (add) {
-                it(add.description, async function () {
+            });
+            serversData.add.forEach(add => {
+                it(add.description, async () => {
                     expect(await serversPage.CreateServer(add)).toBeTruthy();
                     await serversPage.OpenServerPage();
-                })
-            })
-            using(serversData.Update, function (update) {
-                it(update.description, async function () {
+                });
+            });
+            serversData.update.forEach(update => {
+                it(update.description, async () => {
                     await serversPage.SearchServer(update.Name);
                     expect(await serversPage.UpdateServer(update)).toBeTruthy();
                     await serversPage.OpenServerPage();
-                })
-            })
-            using(serversData.Remove, function (remove) {
-                it(remove.description, async function () {
+                });
+            });
+            serversData.remove.forEach(remove => {
+                it(remove.description, async () => {
                     await serversPage.SearchServer(remove.Name);
                     expect(await serversPage.DeleteServer(remove)).toBeTruthy();
                     await serversPage.OpenServerPage();
-                })
-            })
-            it('can logout', async function(){
+                });
+            });
+            it('can logout', async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
-            })
+            });
         })
     })
 })
 
-describe('API Clean Up for Servers Test', function () {
-    it('Cleanup', async function () {
-        let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        await api.UseAPI(cleanupData);
-    })
-})
+describe('API Clean Up for Servers Test', () => {
+    it('Cleanup', async () => {
+        await api.UseAPI(servers.cleanup);
+    });
+});

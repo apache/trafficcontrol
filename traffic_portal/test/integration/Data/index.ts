@@ -77,3 +77,4 @@ export * from "./physlocations";
 export * from "./profiles";
 export * from "./regions";
 export * from "./servercapabilities";
+export * from "./servers";
