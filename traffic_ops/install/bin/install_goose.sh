@@ -20,6 +20,6 @@ echo "Now installing goose"
 export GOPATH=/opt/traffic_ops/go
 mkdir -p $GOPATH
 
-go get -v github.com/kevinburke/goose/cmd/goose
+GO111MODULE=off go get -v github.com/kevinburke/goose/cmd/goose
 
 echo "Successfully installed goose to $GOPATH/bin/goose"
