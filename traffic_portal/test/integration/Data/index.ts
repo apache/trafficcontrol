@@ -81,3 +81,4 @@ export * from "./servers";
 export * from "./serverservercapabilities";
 export * from "./servicecategories";
 export * from "./statuses";
+export * from "./types";
