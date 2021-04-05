@@ -18,104 +18,104 @@
  */
 export const divisions = {
 	cleanup: [
-        {
-            action: "DeleteDivisions",
-            route : "/divisions",
-            method : "delete",
-            data: [
-                {
-                    route: "/divisions/",
-                    getRequest: [
-                        {
-                            route: "/divisions",
-                            queryKey: "name",
-                            queryValue: "TPDivision2",
-                            replace: "route"
-                        }
-                    ]
-                }
-            ]
-        }
-    ],
+		{
+			action: "DeleteDivisions",
+			route : "/divisions",
+			method : "delete",
+			data: [
+				{
+					route: "/divisions/",
+					getRequest: [
+						{
+							route: "/divisions",
+							queryKey: "name",
+							queryValue: "TPDivision2",
+							replace: "route"
+						}
+					]
+				}
+			]
+		}
+	],
 	setup: [
-        {
-            action: "CreateDivisions",
-            route: "/divisions",
-            method: "post",
-            data: [
-                {
-                    name: "TPDivision2"
-                }
-            ]
-        }
-    ],
+		{
+			action: "CreateDivisions",
+			route: "/divisions",
+			method: "post",
+			data: [
+				{
+					name: "TPDivision2"
+				}
+			]
+		}
+	],
 	tests: [
-        {
-            logins: [
-                {
-                    description: "Admin Role",
-                    username: "TPAdmin",
-                    password: "pa$$word"
-                },
-                {
-                    description: "Operation Role",
-                    username: "TPOperator",
-                    password: "pa$$word"
-                }
-            ],
-            add: [
-                {
-                    description: "create a Divisions",
-                    Name: "TPDivision1",
-                    validationMessage: "division was created."
-                }
-            ],
-            update: [
-                {
-                    description: "update Division's name",
-                    Name: "TPDivision1",
-                    NewName: "NewDivision1",
-                    validationMessage: "division was updated."
-                }
-            ],
-            remove: [
-                {
-                    description: "delete Division",
-                    Name: "NewDivision1",
-                    validationMessage: "division was deleted."
-                }
-            ]
-        },
-        {
-            logins: [
-                {
-                    description: "Read Only Role",
-                    username: "TPReadOnly",
-                    password: "pa$$word"
-                }
-            ],
-            add: [
-                {
-                    description: "create a Divisions",
-                    Name: "TPDivision1",
-                    validationMessage: "Forbidden."
-                }
-            ],
-            update: [
-                {
-                    description: "update Division's name",
-                    Name: "TPDivision2",
-                    NewName: "NewDivision2",
-                    validationMessage: "Forbidden."
-                }
-            ],
-            remove: [
-                {
-                    description: "delete Division",
-                    Name: "TPDivision2",
-                    validationMessage: "Forbidden."
-                }
-            ]
-        }
-    ]
+		{
+			logins: [
+				{
+					description: "Admin Role",
+					username: "TPAdmin",
+					password: "pa$$word"
+				},
+				{
+					description: "Operation Role",
+					username: "TPOperator",
+					password: "pa$$word"
+				}
+			],
+			add: [
+				{
+					description: "create a Divisions",
+					Name: "TPDivision1",
+					validationMessage: "division was created."
+				}
+			],
+			update: [
+				{
+					description: "update Division's name",
+					Name: "TPDivision1",
+					NewName: "NewDivision1",
+					validationMessage: "division was updated."
+				}
+			],
+			remove: [
+				{
+					description: "delete Division",
+					Name: "NewDivision1",
+					validationMessage: "division was deleted."
+				}
+			]
+		},
+		{
+			logins: [
+				{
+					description: "Read Only Role",
+					username: "TPReadOnly",
+					password: "pa$$word"
+				}
+			],
+			add: [
+				{
+					description: "create a Divisions",
+					Name: "TPDivision1",
+					validationMessage: "Forbidden."
+				}
+			],
+			update: [
+				{
+					description: "update Division's name",
+					Name: "TPDivision2",
+					NewName: "NewDivision2",
+					validationMessage: "Forbidden."
+				}
+			],
+			remove: [
+				{
+					description: "delete Division",
+					Name: "TPDivision2",
+					validationMessage: "Forbidden."
+				}
+			]
+		}
+	]
 };
