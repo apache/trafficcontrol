@@ -24,7 +24,7 @@ import (
 	"encoding/json"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/riaksvc"
 )
 
 const RiakBackendName = "riak"
