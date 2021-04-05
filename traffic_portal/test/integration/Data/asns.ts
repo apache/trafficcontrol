@@ -17,9 +17,7 @@
  * under the License.
  */
 
-import type { Test } from "./index";
-
-export const ASNs: Test = {
+export const ASNs = {
 	cleanup: [
 		{
 			action: "DeleteCacheGroup",
