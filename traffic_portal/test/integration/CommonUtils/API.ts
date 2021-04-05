@@ -29,11 +29,11 @@ import { config, randomize } from '../config';
 interface GetRequest {
     queryKey: string;
     queryValue: string | number | boolean;
-    replace: PropertyKey;
+    replace: string | number;
     route: string;
 }
 
-export interface IDData {
+export interface IDData extends Record<string | number, unknown> {
     getRequests?: Array<GetRequest>;
     route?: string;
 }

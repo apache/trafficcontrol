@@ -52,10 +52,12 @@ export class LoginPage extends BasePage{
         }
         return result;
     }
-    ClickResetPassword(){
+
+    public async ClickResetPassword(): Promise<void> {
         this.lnkResetPassword.click()
     }
-    async CheckUserName(login) {
+
+    public async CheckUserName(login: LoginData): Promise<boolean> {
         if(await this.lblUserName.getText() === 'admin' || await this.lblUserName.getText() === login.username+this.randomize){
             return true;
         }else{

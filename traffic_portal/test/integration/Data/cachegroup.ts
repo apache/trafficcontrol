@@ -29,77 +29,77 @@ export const cachegroups = {
 			],
 			create: [
 				{
-					description: "create a EDGE_LOC cachegroup with FailOver CacheGroup Field",
-					name: "TP_Cache1",
-					shortName: "TPC1",
-					type: "EDGE_LOC",
-					latitude: 0,
-					longitude: 0,
-					parentCacheGroup: "infrastructure",
-					secondaryParentCG: "infrastructure",
-					failoverCG: "albany-ny-usa",
+					Description: "create a EDGE_LOC cachegroup with FailOver CacheGroup Field",
+					Name: "TP_Cache1",
+					ShortName: "TPC1",
+					Type: "EDGE_LOC",
+					Latitude: "0",
+					Longitude: "0",
+					ParentCacheGroup: "infrastructure",
+					SecondaryParentCG: "infrastructure",
+					FailoverCG: "albany-ny-usa",
 					validationMessage: "cachegroup was created."
 				},
 				{
-					description: "create multiple EDGE_LOC cachegroup",
-					name: "TP_Cache2",
-					shortName: "TPC2",
-					type: "EDGE_LOC",
-					latitude: "0",
-					longitude: "0",
-					parentCacheGroup: "infrastructure",
-					secondaryParentCG: "infrastructure",
-					failoverCG: "",
+					Description: "create multiple EDGE_LOC cachegroup",
+					Name: "TP_Cache2",
+					ShortName: "TPC2",
+					Type: "EDGE_LOC",
+					Latitude: "0",
+					Longitude: "0",
+					ParentCacheGroup: "infrastructure",
+					SecondaryParentCG: "infrastructure",
+					FailoverCG: "",
 					validationMessage: "cachegroup was created."
 				},
 				{
-					description: "create a MID_LOC cachegroup",
-					name: "TP_Cache3",
-					shortName: "TPC3",
-					type: "MID_LOC",
-					latitude: "0",
-					longitude: "0",
-					parentCacheGroup: "infrastructure",
-					secondaryParentCG: "infrastructure",
+					Description: "create a MID_LOC cachegroup",
+					Name: "TP_Cache3",
+					ShortName: "TPC3",
+					Type: "MID_LOC",
+					Latitude: "0",
+					Longitude: "0",
+					ParentCacheGroup: "infrastructure",
+					SecondaryParentCG: "infrastructure",
 					validationMessage: "cachegroup was created."
 				}
 			],
 			update: [
 				{
-					description: "add more Failover Cache Groups to EDGE_LOC type cachegroup",
-					name: "TP_Cache1",
-					type: "EDGE_LOC",
-					failoverCG: "TP_Cache2",
+					Description: "add more Failover Cache Groups to EDGE_LOC Type cachegroup",
+					Name: "TP_Cache1",
+					Type: "EDGE_LOC",
+					FailoverCG: "TP_Cache2",
 					validationMessage: "cachegroup was updated."
 				},
 				{
-					description: "Validate cannot add cache group fallback if the cache group fall back is a different type",
-					name:"TP_Cache1",
-					type:"EDGE_LOC",
-					failoverCG: "TP_Cache3"
+					Description: "Validate cannot add cache group fallback if the cache group fall back is a different Type",
+					Name:"TP_Cache1",
+					Type:"EDGE_LOC",
+					FailoverCG: "TP_Cache3"
 				},
 				{
-					description: "Validate cannot add an empty cache group fall back",
-					name:"TP_Cache1",
-					type:"EDGE_LOC",
-					failoverCG: " "
+					Description: "Validate cannot add an empty cache group fall back",
+					Name:"TP_Cache1",
+					Type:"EDGE_LOC",
+					FailoverCG: " "
 				},
 				{
-					description: "change type of the Cache Groups",
-					name: "TP_Cache1",
-					type: "MID_LOC",
+					Description: "change Type of the Cache Groups",
+					Name: "TP_Cache1",
+					Type: "MID_LOC",
 					validationMessage: "cachegroup was updated."
 				}
 			],
 			remove: [
 				{
-					description: "delete a cachegroup",
-					name: "TP_Cache1",
+					Description: "delete a cachegroup",
+					Name: "TP_Cache1",
 					validationMessage: "cachegroup was deleted."
 				},
 				{
-					description: "delete a cachegroup",
-					name: "TP_Cache3",
+					Description: "delete a cachegroup",
+					Name: "TP_Cache3",
 					validationMessage: "cachegroup was deleted."
 				}
 			]
@@ -114,30 +114,30 @@ export const cachegroups = {
 			],
 			create: [
 				{
-					description: "create a CacheGroup",
-					name: "TP_Cache1",
-					shortName: "TPC1",
-					type: "EDGE_LOC",
-					latitude: "0",
-					longitude: "0",
-					parentCacheGroup: "infrastructure",
-					secondaryParentCG: "infrastructure",
-					failoverCG: "albany-ny-usa",
+					Description: "create a CacheGroup",
+					Name: "TP_Cache1",
+					ShortName: "TPC1",
+					Type: "EDGE_LOC",
+					Latitude: "0",
+					Longitude: "0",
+					ParentCacheGroup: "infrastructure",
+					SecondaryParentCG: "infrastructure",
+					FailoverCG: "albany-ny-usa",
 					validationMessage: "Forbidden."
 				}
 			],
 			update: [
 				{
-					description: "update CacheGroup",
-					name: "TP_Cache2",
-					type: "MID_LOC",
+					Description: "update CacheGroup",
+					Name: "TP_Cache2",
+					Type: "MID_LOC",
 					validationMessage: "Forbidden."
 				}
 			],
 			remove: [
 				{
-					description: "delete a cachegroup",
-					name: "TP_Cache2",
+					Description: "delete a cachegroup",
+					Name: "TP_Cache2",
 					validationMessage: "Forbidden."
 				}
 			]
@@ -152,87 +152,87 @@ export const cachegroups = {
 			],
 			create: [
 				{
-					description: "create a EDGE_LOC cachegroup with FailOver CacheGroup Field",
-					name: "TP_Cache4",
-					shortName: "TPC4",
-					type: "EDGE_LOC",
-					latitude: "0",
-					longitude: "0",
-					parentCacheGroup: "infrastructure",
-					secondaryParentCG: "infrastructure",
-					failoverCG: "albany-ny-usa",
+					Description: "create a EDGE_LOC cachegroup with FailOver CacheGroup Field",
+					Name: "TP_Cache4",
+					ShortName: "TPC4",
+					Type: "EDGE_LOC",
+					Latitude: "0",
+					Longitude: "0",
+					ParentCacheGroup: "infrastructure",
+					SecondaryParentCG: "infrastructure",
+					FailoverCG: "albany-ny-usa",
 					validationMessage: "cachegroup was created."
 				},
 				{
-					description: "create multiple EDGE_LOC cachegroup",
-					name: "TP_Cache5",
-					shortName: "TPC5",
-					type: "EDGE_LOC",
-					latitude: "0",
-					longitude: "0",
-					parentCacheGroup: "infrastructure",
-					secondaryParentCG: "infrastructure",
-					failoverCG: "",
+					Description: "create multiple EDGE_LOC cachegroup",
+					Name: "TP_Cache5",
+					ShortName: "TPC5",
+					Type: "EDGE_LOC",
+					Latitude: "0",
+					Longitude: "0",
+					ParentCacheGroup: "infrastructure",
+					SecondaryParentCG: "infrastructure",
+					FailoverCG: "",
 					validationMessage: "cachegroup was created."
 				},
 				{
-					description: "create a MID_LOC cachegroup",
-					name: "TP_Cache6",
-					shortName: "TPC6",
-					type: "MID_LOC",
-					latitude: "0",
-					longitude: "0",
-					parentCacheGroup: "infrastructure",
-					secondaryParentCG: "infrastructure",
+					Description: "create a MID_LOC cachegroup",
+					Name: "TP_Cache6",
+					ShortName: "TPC6",
+					Type: "MID_LOC",
+					Latitude: "0",
+					Longitude: "0",
+					ParentCacheGroup: "infrastructure",
+					SecondaryParentCG: "infrastructure",
 					validationMessage: "cachegroup was created."
 				}
 			],
 			update: [
 				{
-					description: "add more Failover Cache Groups to EDGE_LOC type cachegroup",
-					name: "TP_Cache4",
-					type: "EDGE_LOC",
-					failoverCG: "TP_Cache5",
+					Description: "add more Failover Cache Groups to EDGE_LOC Type cachegroup",
+					Name: "TP_Cache4",
+					Type: "EDGE_LOC",
+					FailoverCG: "TP_Cache5",
 					validationMessage: "cachegroup was updated."
 				},
 				{
-					description: "Validate cannot add cache group fallback if the cache group fall back is a different type",
-					name:"TP_Cache4",
-					type:"EDGE_LOC",
-					failoverCG: "TP_Cache6"
+					Description: "Validate cannot add cache group fallback if the cache group fall back is a different Type",
+					Name:"TP_Cache4",
+					Type:"EDGE_LOC",
+					FailoverCG: "TP_Cache6"
 				},
 				{
-					description: "Validate cannot add an empty cache group fall back",
-					name:"TP_Cache4",
-					type:"EDGE_LOC",
-					failoverCG: " "
+					Description: "Validate cannot add an empty cache group fall back",
+					Name:"TP_Cache4",
+					Type:"EDGE_LOC",
+					FailoverCG: " "
 				},
 				{
-					description: "change type of the Cache Groups",
-					name: "TP_Cache4",
-					type: "MID_LOC",
+					Description: "change Type of the Cache Groups",
+					Name: "TP_Cache4",
+					Type: "MID_LOC",
 					validationMessage: "cachegroup was updated."
 				}
 			],
 			remove: [
 				{
-					description: "delete a cachegroup",
-					name: "TP_Cache2",
+					Description: "delete a cachegroup",
+					Name: "TP_Cache2",
 					validationMessage: "cachegroup was deleted."
 				},
 				{
-					description: "delete a cachegroup",
-					name: "TP_Cache4",
+					Description: "delete a cachegroup",
+					Name: "TP_Cache4",
 					validationMessage: "cachegroup was deleted."
 				},
 				{
-					description: "delete a cachegroup",
-					name: "TP_Cache5",
+					Description: "delete a cachegroup",
+					Name: "TP_Cache5",
 					validationMessage: "cachegroup was deleted."
 				},
 				{
-					description: "delete a cachegroup",
-					name: "TP_Cache6",
+					Description: "delete a cachegroup",
+					Name: "TP_Cache6",
 					validationMessage: "cachegroup was deleted."
 				}
 			]

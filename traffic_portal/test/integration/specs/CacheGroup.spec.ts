@@ -42,21 +42,21 @@ cachegroups.tests.forEach(cacheGroupData => {
                 await cacheGroupPage.OpenCacheGroupsPage();
             })
             cacheGroupData.create.forEach(create => {
-                it(create.description, async function () {
+                it(create.Description, async function () {
                     expect(await cacheGroupPage.CreateCacheGroups(create, create.validationMessage)).toBeTruthy();
                     await cacheGroupPage.OpenCacheGroupsPage();
                 })
             })
             cacheGroupData.update.forEach(update => {
-                if(update.description.includes("cannot")){
-                    it(update.description, async function () {
-                        await cacheGroupPage.SearchCacheGroups(update.name)
+                if(update.Description.includes("cannot")){
+                    it(update.Description, async function () {
+                        await cacheGroupPage.SearchCacheGroups(update.Name)
                         expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeUndefined();
                         await cacheGroupPage.OpenCacheGroupsPage();
                     })
                 }else{
-                    it(update.description, async function () {
-                        await cacheGroupPage.SearchCacheGroups(update.name)
+                    it(update.Description, async function () {
+                        await cacheGroupPage.SearchCacheGroups(update.Name)
                         expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeTruthy();
                         await cacheGroupPage.OpenCacheGroupsPage();
                     })
@@ -64,9 +64,9 @@ cachegroups.tests.forEach(cacheGroupData => {
 
             })
             cacheGroupData.remove.forEach(remove => {
-                it(remove.description, async function () {
-                    await cacheGroupPage.SearchCacheGroups(remove.name)
-                    expect(await cacheGroupPage.DeleteCacheGroups(remove.name, remove.validationMessage)).toBeTruthy();
+                it(remove.Description, async function () {
+                    await cacheGroupPage.SearchCacheGroups(remove.Name)
+                    expect(await cacheGroupPage.DeleteCacheGroups(remove.Name, remove.validationMessage)).toBeTruthy();
                 })
             })
             it('can logout', async function () {
