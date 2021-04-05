@@ -78,3 +78,4 @@ export * from "./profiles";
 export * from "./regions";
 export * from "./servercapabilities";
 export * from "./servers";
+export * from "./serverservercapabilities";
