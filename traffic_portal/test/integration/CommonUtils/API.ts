@@ -107,9 +107,18 @@ export class API {
         this.Randomize(data)
 
         if(data.hasOwnProperty('getRequest')){
-            let response = await this.GetId(data);
-            if (response != null) {
-                throw new Error('Failed to get id:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data)
+            let response;
+            try {
+                response = await this.GetId(data);
+            } catch (e) {
+                let msg = e instanceof Error ? e.message : String(e);
+                if (response) {
+                    msg = `response status: ${response.statusText}, response data: ${response.data} - ${msg}`;
+                }
+                throw new Error(`Failed to get id: ${msg}`);
+            }
+            if (data.route) {
+                route = data.route;
             }
         }
 
@@ -142,6 +151,7 @@ export class API {
                 if((route).includes('/service_categories/')){
                     route = route + randomize
                 }
+                console.debug("deleting:", method, this.config.params.apiUrl + route);
                 response = await axios({
                     method: method,
                     url: this.config.params.apiUrl + route,
@@ -254,13 +264,15 @@ export class API {
         if (response.status === 200) {
             for(let i = 0; i < data.length; i++){
                 for(let j = 0; j < data[i].data.length; j++){
+                    const route = data[i].data[j].route ?? data[i].route;
                     try {
-                        const route = data[i].data[j].route ?? data[i].route;
                         await this.SendRequest(route, data[i].method, data[i].data[j]);
                     } catch (output) {
                         if (output instanceof Error) {
                             output = output.message;
                         }
+                        console.debug(`${data[i].method} ${route}`);
+                        console.debug("DATA:", data[i].data[j]);
                         throw new Error(`UseAPI failed on Action ${data[i].action} with index ${i}, and Data index ${j}: ${output}`);
                     }
                 }

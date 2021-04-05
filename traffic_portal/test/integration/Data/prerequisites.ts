@@ -311,7 +311,7 @@ export const prerequisites = [
 			{
 				name: "testProfile",
 				description: "A test profile for API examples",
-				cdn: 0,
+				cdn: 1,
 				type: "ATS_PROFILE",
 				routingDisabled: false,
 				getRequest: [
