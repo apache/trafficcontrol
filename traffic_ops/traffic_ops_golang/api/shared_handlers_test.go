@@ -33,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -137,7 +138,7 @@ func TestCreateHandler(t *testing.T) {
 	ctx = context.WithValue(ctx, ConfigContextKey, &cfg)
 	ctx = context.WithValue(ctx, ReqIDContextKey, uint64(0))
 	ctx = context.WithValue(ctx, PathParamsKey, map[string]string{"id": "1"})
-	var tv trafficvault.TrafficVault = &trafficvault.Disabled{}
+	var tv trafficvault.TrafficVault = &disabled.Disabled{}
 	ctx = context.WithValue(ctx, TrafficVaultContextKey, tv)
 
 	// Add our context to the request
@@ -185,7 +186,7 @@ func TestReadHandler(t *testing.T) {
 	ctx = context.WithValue(ctx, DBContextKey, db)
 	ctx = context.WithValue(ctx, ConfigContextKey, &cfg)
 	ctx = context.WithValue(ctx, ReqIDContextKey, uint64(0))
-	var tv trafficvault.TrafficVault = &trafficvault.Disabled{}
+	var tv trafficvault.TrafficVault = &disabled.Disabled{}
 	ctx = context.WithValue(ctx, TrafficVaultContextKey, tv)
 
 	// Add our context to the request
@@ -230,7 +231,7 @@ func TestReadHandlerIMS(t *testing.T) {
 	ctx = context.WithValue(ctx, DBContextKey, db)
 	ctx = context.WithValue(ctx, ConfigContextKey, &cfg)
 	ctx = context.WithValue(ctx, ReqIDContextKey, uint64(0))
-	var tv trafficvault.TrafficVault = &trafficvault.Disabled{}
+	var tv trafficvault.TrafficVault = &disabled.Disabled{}
 	ctx = context.WithValue(ctx, TrafficVaultContextKey, tv)
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
@@ -275,7 +276,7 @@ func TestUpdateHandler(t *testing.T) {
 	ctx = context.WithValue(ctx, DBContextKey, db)
 	ctx = context.WithValue(ctx, ConfigContextKey, &cfg)
 	ctx = context.WithValue(ctx, ReqIDContextKey, uint64(0))
-	var tv trafficvault.TrafficVault = &trafficvault.Disabled{}
+	var tv trafficvault.TrafficVault = &disabled.Disabled{}
 	ctx = context.WithValue(ctx, TrafficVaultContextKey, tv)
 
 	// Add our context to the request
@@ -324,7 +325,7 @@ func TestDeleteHandler(t *testing.T) {
 	ctx = context.WithValue(ctx, DBContextKey, db)
 	ctx = context.WithValue(ctx, ConfigContextKey, &cfg)
 	ctx = context.WithValue(ctx, ReqIDContextKey, uint64(0))
-	var tv trafficvault.TrafficVault = &trafficvault.Disabled{}
+	var tv trafficvault.TrafficVault = &disabled.Disabled{}
 	ctx = context.WithValue(ctx, TrafficVaultContextKey, tv)
 	// Add our context to the request
 	r = r.WithContext(ctx)

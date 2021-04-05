@@ -46,6 +46,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/jmoiron/sqlx"
@@ -840,7 +841,7 @@ func GetTrafficVault(ctx context.Context) (trafficvault.TrafficVault, error) {
 		}
 	}
 	// this return should never be reached because a non-nil TrafficVault should always be included in the request context
-	return &trafficvault.Disabled{}, errors.New("no Traffic Vault found in Context")
+	return &disabled.Disabled{}, errors.New("no Traffic Vault found in Context")
 }
 
 func getReqID(ctx context.Context) (uint64, error) {

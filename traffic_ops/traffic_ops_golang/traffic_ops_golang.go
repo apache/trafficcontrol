@@ -41,6 +41,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/riaksvc"
 
 	"github.com/jmoiron/sqlx"
@@ -286,7 +287,7 @@ func setupTrafficVault(riakConfigFileName string, cfg *config.Config) trafficvau
 		}
 		return trafficVault
 	}
-	return &trafficvault.Disabled{}
+	return &disabled.Disabled{}
 }
 
 func setNewProfilingInfo(configFileName string, currentProfilingEnabled *bool, currentProfilingLocation *string, version string) {

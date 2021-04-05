@@ -34,6 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -317,7 +318,7 @@ func mockHTTPReq(t *testing.T, path string, db *sqlx.DB) *http.Request {
 	ctx = context.WithValue(ctx, "db", db)
 	ctx = context.WithValue(ctx, "context", &cfg)
 	ctx = context.WithValue(ctx, "reqid", uint64(0))
-	var tv trafficvault.TrafficVault = &trafficvault.Disabled{}
+	var tv trafficvault.TrafficVault = &disabled.Disabled{}
 	ctx = context.WithValue(ctx, api.TrafficVaultContextKey, tv)
 	ctx = context.WithValue(ctx, "pathParams", map[string]string{"existing_profile": "existingProfile", "new_profile": "newProfile"})
 

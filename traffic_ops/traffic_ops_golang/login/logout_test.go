@@ -31,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -93,7 +94,7 @@ func TestLogout(t *testing.T) {
 	ctx = context.WithValue(ctx, api.APIRespWrittenKey, false)
 	ctx = context.WithValue(ctx, auth.CurrentUserKey, testUser)
 	ctx = context.WithValue(ctx, api.PathParamsKey, map[string]string{})
-	var tv trafficvault.TrafficVault = &trafficvault.Disabled{}
+	var tv trafficvault.TrafficVault = &disabled.Disabled{}
 	ctx = context.WithValue(ctx, api.TrafficVaultContextKey, tv)
 	ctx, _ = context.WithDeadline(ctx, time.Now().Add(24*time.Hour))
 	req = req.WithContext(ctx)
