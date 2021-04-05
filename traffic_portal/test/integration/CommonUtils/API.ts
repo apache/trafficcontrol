@@ -34,8 +34,8 @@ interface GetRequest {
 }
 
 export interface IDData {
-    getRequests: Array<GetRequest>;
-    route: string;
+    getRequests?: Array<GetRequest>;
+    route?: string;
 }
 
 interface APIDataData extends Record<PropertyKey, unknown>, IDData {
@@ -161,7 +161,10 @@ export class API {
     }
 
     public async GetId(data: IDData): Promise<null | AxiosResponse<unknown>> {
-        for(const request of data.getRequests) {
+        if (!data.getRequests) {
+            return null;
+        }
+        for (const request of data.getRequests) {
             const query = `?${encodeURIComponent(request.queryKey)}=${encodeURIComponent(request.queryValue)}${randomize}`;
             const response = await axios({
                 method: 'get',
@@ -178,6 +181,7 @@ export class API {
                     data[request.replace] = await response.data.response[0].id;
                 }
             } else {
+                // todo: should this be getting cut short like this?
                 return response
             }
         }
