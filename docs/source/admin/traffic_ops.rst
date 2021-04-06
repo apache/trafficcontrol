@@ -282,7 +282,8 @@ traffic_ops_golang
 
 .. option:: --riakcfg RIAK_CONFIG_PATH
 
-	This optional, **deprecated** (since ATC 6.0) command line flag specifies the absolute or relative path to a configuration file used by Traffic Ops to establish connections to Riak when used as the Traffic Vault backend - `riak.conf`_. Please use ``traffic_vault_backend: riak`` and ``traffic_vault_config`` (with the contents of `riak.conf`_) instead.
+	.. deprecated:: 6.0
+		This optional command line flag specifies the absolute or relative path to a configuration file used by Traffic Ops to establish connections to Riak when used as the Traffic Vault backend - `riak.conf`_. Please use ``"traffic_vault_backend": "riak"`` and ``"traffic_vault_config": {...}`` (with the contents of `riak.conf`_) instead.
 
 	.. impl-detail:: The name of this flag is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
 
@@ -437,6 +438,9 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:request_timeout: An optional timeout in seconds that serves as the maximum time each Traffic Ops middleware can take to execute. If it is exceeded, the text "server timed out" is served in place of a response. If set to :code:`0`, :code:`60` is used instead. Default if not specified is :code:`60`.
 	:riak_port: An optional field that sets the port on which Traffic Ops will try to contact Traffic Vault for storage and retrieval of sensitive encryption keys.
 
+		.. deprecated:: 6.0
+			Please use a ``"port"`` field in ``traffic_vault_config`` instead when using ``"traffic_vault_backend": "riak"``.
+
 		.. impl-detail:: The name of this field is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
 
 
@@ -445,6 +449,16 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 		.. warning:: OAuth support in Traffic Ops is still in its infancy, so most users are advised to avoid defining this field without good cause.
 
 	:write_timeout: An optional timeout in seconds set on handlers. After reading a request's header, the server will have this long to send back a response. If set to zero, there is no timeout. Default if not specified is zero.
+
+	:traffic_vault_backend:
+
+	    .. versionadded:: 6.0
+		    Optional. The name of which backend to use for Traffic Vault. Currently, the only supported backend is "riak".
+
+	:traffic_vault_config:
+
+	    .. versionadded:: 6.0
+		    Optional. The JSON configuration which is unique to the chosen Traffic Vault backend. See :ref:`traffic_vault_admin` for the configuration options for each supported backend.
 
 	.. _admin-routing-blacklist:
 
@@ -466,16 +480,6 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
     .. versionadded:: 5.0
 	    This is an optional boolean value to enable the handling of the "If-Modified-Since" HTTP request header. Default: false
-
-:traffic_vault_backend:
-
-    .. versionadded:: 6.0
-	    The name of which backend to use for Traffic Vault. Currently, the only supported backend is "riak".
-
-:traffic_vault_config:
-
-    .. versionadded:: 6.0
-	    The JSON configuration which is unique to the chosen Traffic Vault backend. See :ref:`traffic_vault_admin` for the configuration options for each supported backend.
 
 Example cdn.conf
 ''''''''''''''''
@@ -549,17 +553,11 @@ Example ldap.conf
 riak.conf
 """""""""
 .. deprecated:: 6.0
-	The ``riak.conf`` configuration file and associated :option:`--riakcfg` flag have been deprecated and will be removed from Traffic Control in the future. Please use ``traffic_vault_backend`` = "riak" and put the existing contents of ``riak.conf`` into ``traffic_vault_config`` in `cdn.conf`_ instead.
+	The ``riak.conf`` configuration file and associated :option:`--riakcfg` flag have been deprecated and will be removed from Traffic Control in the future. Please use ``"traffic_vault_backend": "riak"`` and put the existing contents of ``riak.conf`` into ``"traffic_vault_config": {...}`` in `cdn.conf`_ instead.
 
 This file sets authentication options for connections to Riak when used as the Traffic Vault backend. `traffic_ops_golang`_ will look for this file at the path given by the value of the :option:`--riakcfg` flag as passed on startup. The contents of ``riak.conf`` are encoded as a JSON object, the keys of which are described in :ref:`traffic_vault_riak_backend`.
 
 .. impl-detail:: The name of this file is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
-
-Example riak.conf
-'''''''''''''''''
-.. include:: ../../../traffic_ops/app/conf/production/riak.conf
-	:code: json
-	:tab-width: 4
 
 Installing the SSL Certificate
 ------------------------------

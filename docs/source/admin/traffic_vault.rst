@@ -28,12 +28,30 @@ Riak
 
 In order to use the Riak backend for Traffic Vault, you will need to set the ``traffic_vault_backend`` option to ``"riak"`` and include the necessary configuration in the ``traffic_vault_config`` section in :file:`cdn.conf`. The ``traffic_vault_config`` options for the Riak backend are as follows:
 
-:password:      The password to use when authenticating with Traffic Vault
-:user:          The username to use when authenticating with Traffic Vault
+:password:      The password to use when authenticating with Riak
+:user:          The username to use when authenticating with Riak
+:port:          The Riak protobuf port to connect to. Default: 8087
 :tlsConfig:     Optional. Certain TLS options from `the tls.Config struct options <https://golang.org/pkg/crypto/tls/#Config>`_ may be included here, such as ``insecureSkipVerify: true`` to disable certificate validation in order to use self-signed certificates for test/development purposes.
 :MaxTLSVersion: Optional. This is the highest TLS version that Traffic Ops is allowed to use to connect to Traffic Vault. Valid values are "1.0", "1.1", "1.2", and "1.3". The default is "1.1".
 
-.. note:: Enabling TLS 1.1 in Traffic Vault itself is required for Traffic Ops to communicate with Traffic Vault. See :ref:`Enabling TLS 1.1 <tv-admin-enable-tlsv1.1>` for details.
+.. note:: Enabling TLS 1.1 in Riak itself is required for Traffic Ops to communicate with Riak. See :ref:`Enabling TLS 1.1 <tv-admin-enable-tlsv1.1>` for details.
+
+Example cdn.conf snippet:
+-------------------------
+
+.. code-block:: json
+
+	{
+		"traffic_ops_golang": {
+			"traffic_vault_backend": "riak",
+			"traffic_vault_config": {
+				"user": "riakuser",
+				"password": "password",
+				"MaxTLSVersion": "1.1",
+				"port": 8087
+			}
+		}
+	}
 
 Installing the Riak backend for Traffic Vault
 ---------------------------------------------
