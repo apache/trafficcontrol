@@ -34,7 +34,7 @@ interface GetRequest {
 }
 
 export interface IDData extends Record<string | number, unknown> {
-    getRequests?: Array<GetRequest>;
+    getRequest?: Array<GetRequest>;
     route?: string;
 }
 
@@ -117,9 +117,6 @@ export class API {
                 }
                 throw new Error(`Failed to get id: ${msg}`);
             }
-            if (data.route) {
-                route = data.route;
-            }
         }
 
         switch (method) {
@@ -139,22 +136,24 @@ export class API {
                 });
                 break;
             case "delete":
-                if ((route).includes('?name')){
-                    route = route + randomize
+                if (!data.route) {
+                    throw new Error("DELETE requests must include a 'route' data property")
                 }
-                if ((route).includes('?id')){
+                if ((data.route).includes('?name')){
+                    data.route = data.route + randomize
+                }
+                if ((data.route).includes('?id')){
                     if (!Object.prototype.hasOwnProperty.call(data, "id")) {
                         throw new Error("route specified an 'id' query parameter, but data had no 'id' property");
                     }
-                    route = route + (data as T & {id: unknown}).id;
+                    data.route = data.route + (data as T & {id: unknown}).id;
                 }
-                if((route).includes('/service_categories/')){
-                    route = route + randomize
+                if((data.route).includes('/service_categories/')){
+                    data.route = data.route + randomize
                 }
-                console.debug("deleting:", method, this.config.params.apiUrl + route);
                 response = await axios({
                     method: method,
-                    url: this.config.params.apiUrl + route,
+                    url: this.config.params.apiUrl + data.route,
                     headers: { Cookie: this.cookie},
                 });
                 break;
@@ -171,10 +170,10 @@ export class API {
     }
 
     public async GetId(data: IDData): Promise<null | AxiosResponse<unknown>> {
-        if (!data.getRequests) {
+        if (!data.getRequest) {
             return null;
         }
-        for (const request of data.getRequests) {
+        for (const request of data.getRequest) {
             const query = `?${encodeURIComponent(request.queryKey)}=${encodeURIComponent(request.queryValue)}${randomize}`;
             const response = await axios({
                 method: 'get',
@@ -185,8 +184,8 @@ export class API {
             if (response.status == 200) {
                 if(request.hasOwnProperty('isArray')){
                     data[request.replace] = [await response.data.response[0].id];
-                } else if (request.replace == "route") {
-                    data[request.replace] = data.route + response.data.response[0].id;
+                } else if (request.replace === "route") {
+                    data.route = data.route + response.data.response[0].id;
                 } else {
                     data[request.replace] = await response.data.response[0].id;
                 }

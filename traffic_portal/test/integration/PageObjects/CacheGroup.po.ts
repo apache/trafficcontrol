@@ -66,7 +66,7 @@ export class CacheGroupPage extends BasePage {
         let result = false
         let basePage = new BasePage();
         if (cachegroup.Type == "EDGE_LOC") {
-            if (!cachegroup.FailoverCG) {
+            if (cachegroup.FailoverCG === undefined) {
                 throw new Error(`cachegroups with Type 'EDGE_LOC' must have FailoverCG`);
             }
             await this.btnCreateCacheGroups.click();
@@ -116,9 +116,6 @@ export class CacheGroupPage extends BasePage {
         let snp = new SideNavigationPage();
         if (cachegroup.Type == "EDGE_LOC") {
             const name = cachegroup.FailoverCG + this.randomize;
-            if (!cachegroup.FailoverCG) {
-                throw new Error(`cachegroups with Type 'EDGE_LOC' must have FailoverCG`);
-            }
             await this.txtFailoverCG.click();
             if(await browser.isElementPresent(element(by.xpath(`//select[@name="fallbackOptions"]//option[@label="`+ name + `"]`)))){
                 await element(by.xpath(`//select[@name="fallbackOptions"]//option[@label="`+ name + `"]`)).click();
