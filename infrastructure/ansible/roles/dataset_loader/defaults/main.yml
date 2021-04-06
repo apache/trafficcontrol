@@ -108,6 +108,11 @@ dl_ds_default_users:
     email: userB+userA@kabletown.invalid
     fullName: A local account with RO rights
     role: read-only
+  - username: '{{ federation_user }}'
+    password: '{{ to_admin_user_password }}'
+    email: '{{ federation_user }@kabletown.invalid'
+    fullName: A local account with admin rights
+    role: admin
 
 # TO Cachegroups
 dl_ds_merged_cachegroups: "{{ dl_ds_default_cachegroups }}"
@@ -4058,3 +4063,4 @@ dl_ds_default_federation:
     resolve6:
       - '::/0'
     ttl: 60
+  user: '{{ federation_user }}'
