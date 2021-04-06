@@ -42,7 +42,7 @@ timeout_in_seconds=30
 start_time="$(date +%s)"
 date_in_seconds="$start_time"
 TP_URL="https://$TP_FQDN:$TP_PORT"
-until curl -sk "${TP_URL}/api/3.0/ping" || (( time - start_time >= timeout_in_seconds )); do
+until curl -sk "${TP_URL}/api/4.0/ping" || (( time - start_time >= timeout_in_seconds )); do
 	echo "waiting for Traffic Portal at '$TP_URL' fqdn '$TP_FQDN' host '$TP_HOST'"
 	time="$(date +%s)"
 	sleep 3;
@@ -63,16 +63,23 @@ while ! curl -Lvsk "${selenium_fqdn}" 2>/dev/null >/dev/null; do
 done
 
 jq "$(<<JQ_FILTERS cat
-	.baseUrl = "https://$TP_FQDN" |
-	.params.adminUser = "$TO_ADMIN_USER" |
-	.params.adminPassword = "$TO_ADMIN_PASSWORD"
+	.params.baseUrl = "https://$TP_FQDN" |
+	.params.apiUrl = "https://$TP_FQDN/api/4.0" |
+	.capabilities.chromeOptions.args = [
+    "--headless",
+    "--no-sandbox",
+    "--ignore-certificate-errors"
+  ] |
+	.params.login.username = "$TO_ADMIN_USER" |
+	.params.login.password = "$TO_ADMIN_PASSWORD"
 JQ_FILTERS
-)" conf.json > conf.json.tmp
-mv conf.json.tmp conf.json
+)" config.json > conf.json.tmp
+mv conf.json.tmp config.json
 
-cat conf.json
+cat config.json
 
-protractor conf.js
+./node_modules/.bin/tsc
+./node_modules/.bin/protractor ./GeneratedCode/config.js
 rc=$?
 
 cp /portaltestresults/* /junit/
