@@ -4053,14 +4053,14 @@ dl_ds_default_ds_template:
     uniqueKey: simple-http-anon-block
 
 # Federations
-dl_ds_merged_federation: "{{ dl_ds_default_federation }}"
-dl_ds_default_federation:
-  deliveryService: simple-dns-for-federation-{{ Target_cdn_delegation | lower }}
-  mappings:
-    cname: 'foo.kabletown.net.'
-    resolve4:
-      - '0.0.0.0/0'
-    resolve6:
-      - '::/0'
-    ttl: 60
-  user: '{{ federation_user }}'
+dl_ds_merged_federations: "{{ dl_ds_default_federations }}"
+dl_ds_default_federations:
+  - deliveryService: simple-dns-for-federation-{{ Target_cdn_delegation | lower }}
+    mappings:
+      cname: 'foo.kabletown.net.'
+      resolve4:
+        - '0.0.0.0/0'
+      resolve6:
+        - '::/0'
+      ttl: 60
+    user: '{{ federation_user }}'
