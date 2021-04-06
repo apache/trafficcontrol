@@ -654,10 +654,14 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 	if err != nil {
 		errHndlr(err, ERROR)
 	}
+
 	for cacheName, cacheData := range jData.Caches {
 		cache := cacheMap[string(cacheName)]
 
 		for statName, statData := range cacheData {
+			if len(statData) == 0 {
+				continue
+			}
 			//Get the stat time and make sure it's greater than the time 24 hours ago.  If not, skip it so influxdb doesn't throw retention policy errors.
 			validTime := time.Now().AddDate(0, 0, -1)
 			if statData[0].Time.Before(validTime) {
@@ -669,10 +673,16 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 			dataKey = strings.Replace(dataKey, "-", "_", -1)
 
 			//Get the stat value and convert to float
-			statFloatValue, ok := statData[0].Val.(float64)
-			if !ok {
-				statFloatValue = 0.00
+			statFloatValue := 0.0
+			if statsValue, ok := statData[0].Val.(string); !ok {
+				log.Warnf("stat data %s with value %v couldn't be converted into string", statName, statData[0].Val)
+			} else {
+				statFloatValue, err = strconv.ParseFloat(statsValue, 64)
+				if err != nil {
+					log.Warnf("stat %s with value %v couldn't be converted into a float", statName, statsValue)
+				}
 			}
+
 			tags := map[string]string{
 				"cachegroup": cache.Cachegroup,
 				"hostname":   string(cacheName),
