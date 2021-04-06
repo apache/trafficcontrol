@@ -1,3 +1,7 @@
+// Package disabled provides a TrafficVault implementation that simply returns an
+// error for every method stating that Traffic Vault is disabled. This is used instead
+// of passing around a nil TrafficVault instance when Traffic Vault is not enabled, in
+// order to reduce the likelihood of accidentally de-referencing a nil pointer.
 package disabled
 
 /*

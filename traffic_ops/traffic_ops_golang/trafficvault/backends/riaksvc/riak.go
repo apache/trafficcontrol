@@ -1,3 +1,4 @@
+// Package riaksvc provides a TrafficVault implementation which uses Riak as the backend.
 package riaksvc
 
 /*
