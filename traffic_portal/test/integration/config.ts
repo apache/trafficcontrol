@@ -21,7 +21,7 @@ import { resolve } from "path";
 
 import { emptyDir } from "fs-extra";
 import { Config, browser } from 'protractor';
-import { JUnitXmlReporter } from 'jasmine-reporters'
+import { JUnitXmlReporter } from 'jasmine-reporters';
 import HtmlReporter from "protractor-beautiful-reporter";
 
 import { API } from './CommonUtils/API';
