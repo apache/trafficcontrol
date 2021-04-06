@@ -687,6 +687,12 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		return
 	}
 
+	if dsr.ChangeType != tc.DSRChangeTypeDelete {
+		dsr.Original = nil
+	} else {
+		dsr.Requested = nil
+	}
+
 	authorized, err := isTenantAuthorized(dsr, inf)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
