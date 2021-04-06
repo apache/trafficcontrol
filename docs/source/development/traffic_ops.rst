@@ -161,7 +161,7 @@ Traffic Ops Project Tree Overview
 		- config/ - Defines configuration structures and methods for reading them in from files
 		- dbhelpers/ - Assorted utilities that provide functionality for common database tasks, e.g. "Get a user by email"
 		- plugin/ - The Traffic Ops plugin system, with examples
-		- riaksvc/ - In addition to handling routes that deal with storing secrets in or retrieving secrets from Traffic Vault, this package provides a library of functions for interacting with Traffic Vault for other handlers to use.
+		- trafficvault/ - This package provides the Traffic Vault interface and associated backend implementations for other handlers to interact with Traffic Vault.
 		- routing/ - Contains logic for mapping all of the :ref:`to-api` endpoints to their handlers, as well as proxying requests back to the Perl implementation and managing plugins, and also provides some wrappers around registered handlers that set common HTTP headers and connection options
 		- swaggerdocs/ A currently abandoned attempt at defining the :ref:`to-api` using `Swagger <https://swagger.io/>`_ - it may be picked up again at some point in the (distant) future
 		- tenant/ - Contains utilities for dealing with :term:`Tenantable <Tenant>` resources, particularly for checking for permissions
