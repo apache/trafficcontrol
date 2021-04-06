@@ -48,7 +48,7 @@ config.onPrepare = async function () {
                 consolidateAll: true
             }));
     }
-//    else {
+    else {
         jasmine.getEnv().addReporter(new HtmlReporter({
             baseDirectory: './Reports/',
             clientDefaults: {
@@ -60,7 +60,7 @@ config.onPrepare = async function () {
             takeScreenShotsOnlyForFailedSpecs: true,
             docTitle: 'Traffic Portal Test Cases'
         }).getJasmine2Reporter());
- //   }
+    }
 
     try {
       let api = new API();
