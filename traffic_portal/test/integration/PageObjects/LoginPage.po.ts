@@ -19,8 +19,26 @@
 import { browser, by, element} from 'protractor';
 
 import { randomize } from "../config";
-import { LoginData } from '../Data';
 import { BasePage } from './BasePage.po'
+
+/**
+ * LoginData is all the data needed to authenticate with Traffic Ops (and some
+ * that isn't).
+ */
+interface LoginData {
+    /** Optional human-readable description for the login. This is not used.  */
+	description?: string;
+    /** The password used for authentication. */
+	password: string;
+    /** The username of the user as whom to authenticate. */
+	username: string;
+    /**
+     * If present, the content of this string is matched against the alert that
+     * is showing. A value of `undefined` indicates that there should be no
+     * alert.
+     */
+	validationMessage?: string;
+}
 
 export class LoginPage extends BasePage{
     private txtUserName = element(by.id("loginUsername"))

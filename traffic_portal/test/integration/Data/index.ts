@@ -17,54 +17,6 @@
  * under the License.
  */
 
-interface GetRequest {
-	route: string;
-	queryKey: string;
-	queryValue: string,
-	replace: "route"
-}
-
-interface CleanupData {
-	route: string;
-	getRequest?: Array<GetRequest>;
-}
-
-interface Cleanup {
-	action: string;
-	route: string;
-	method: "post" | "get" | "delete";
-	data: Array<CleanupData>;
-}
-
-type SetupData<T = unknown> = Record<string | symbol, T> & {
-	getRequest?: Array<GetRequest>;
-}
-
-export interface LoginData {
-	description?: string;
-	password: string;
-	username: string;
-	validationMessage?: string;
-}
-
-interface TestData extends Record<string | symbol, string> {
-	description: string;
-	validationMessage: string;
-}
-
-interface TestCases {
-	logins: Array<LoginData>;
-	add: Array<TestData>;
-	remove: Array<TestData>;
-	update: Array<TestData>;
-}
-
-export interface Test {
-	cleanup: Array<Cleanup>;
-	setup: Array<SetupData>;
-	tests: Array<TestCases>;
-}
-
 export * from "./asns";
 export * from "./cachegroup";
 export * from "./cdn";
