@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [5.1.2] - 2021-04-07
+### Fixed
+- Fixed the return error for GET api `cdns/routing` to avoid incorrect success response.
+- [#5712](https://github.com/apache/trafficcontrol/issues/5712) - Ensure that 5.x Traffic Stats is compatible with 5.x Traffic Monitor and 5.x Traffic Ops, and that it doesn't log all 0's for `cache_stats`
+- Fixed ORT being unable to update URLSIG keys for Delivery Services
+- Fixed an issue where Traffic Ops becoming unavailable caused Traffic Monitor to segfault and crash
+
 ## [5.1.1] - 2021-03-19
 ### Added
 - Atscfg: Added a rule to ip_allow such that PURGE requests are allowed over localhost
@@ -16,7 +23,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5604](https://github.com/apache/trafficcontrol/issues/5604) - traffic_monitor.log is no longer truncated when restarting Traffic Monitor
 - [#1624](https://github.com/apache/trafficcontrol/issues/1624) - Fixed ORT to reload Traffic Server if LUA scripts are added or changed.
 - #5554 - TM UI overflows screen width and hides table data
-- Fixed the return error for GET api `cdns/routing` to avoid incorrect success response.
 
 
 ## [5.1.0] - 2021-02-21
