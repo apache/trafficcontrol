@@ -119,7 +119,7 @@ func getSortedRouteVersions(rs []Route) []api.Version {
 	for _, major := range sortedMajors {
 		sort.Slice(majorsToMinors[major], func(i, j int) bool { return majorsToMinors[major][i] < majorsToMinors[major][j] })
 		for _, minor := range majorsToMinors[major] {
-			version := api.Version{major, minor}
+			version := api.Version{Major: major, Minor: minor}
 			versions = append(versions, version)
 		}
 	}
@@ -328,7 +328,7 @@ func stringVersionToApiVersion(version string) (api.Version, error) {
 	if err != nil {
 		return api.Version{}, errors.New("error parsing version " + version)
 	}
-	return api.Version{major, minor}, nil
+	return api.Version{Major: major, Minor: minor}, nil
 }
 
 // RegisterRoutes - parses the routes and registers the handlers with the Go Router

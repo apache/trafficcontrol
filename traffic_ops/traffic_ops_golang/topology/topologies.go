@@ -80,7 +80,7 @@ func (topology *TOTopology) SetLastUpdated(time tc.TimeNoMod) { topology.LastUpd
 
 // GetKeyFieldsInfo is a requirement of the api.Updater interface.
 func (topology TOTopology) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"name", api.GetStringKey}}
+	return []api.KeyFieldInfo{{Field: "name", Func: api.GetStringKey}}
 }
 
 // GetType returns the human-readable type of TOTopology as a string.

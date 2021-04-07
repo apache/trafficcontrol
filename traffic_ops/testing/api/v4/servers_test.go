@@ -53,6 +53,7 @@ func TestServers(t *testing.T) {
 		UniqueIPProfileTestServers(t)
 		UpdateTestServerStatus(t)
 		LastServerInTopologyCacheGroup(t)
+		GetServersForNonExistentDeliveryService(t)
 	})
 }
 
@@ -1073,5 +1074,20 @@ func DeleteTestServers(t *testing.T) {
 				t.Errorf("expected Server hostname: %s to be deleted", *server.HostName)
 			}
 		}
+	}
+}
+
+func GetServersForNonExistentDeliveryService(t *testing.T) {
+	params := url.Values{}
+	params.Set("dsId", "999999")
+	resp, reqInf, err := TOSession.GetServersWithHdr(&params, nil)
+	if err != nil {
+		t.Errorf("error getting the servers for DS with ID %d: %v", 999999, err.Error())
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("expected status code of 200, but got %d", reqInf.StatusCode)
+	}
+	if len(resp.Response) != 0 {
+		t.Errorf("expected an empty list of servers associated with a non existent DS, but got %d servers", len(resp.Response))
 	}
 }

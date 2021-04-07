@@ -46,20 +46,20 @@ Guide
 
 		yum update -y
 		yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-		yum install -y postgresql96-server
-		su - postgres -c '/usr/pgsql-9.6/bin/initdb -A md5 -W' #-W forces the user to provide a superuser (postgres) password
+		yum install -y postgresql13-server
+		su - postgres -c '/usr/pgsql-13/bin/initdb -A md5 -W' #-W forces the user to provide a superuser (postgres) password
 
 
-#. Edit :file:`/var/lib/pgsql/9.6/data/pg_hba.conf` to allow the Traffic Ops instance to access the PostgreSQL server. For example, if the IP address of the machine to be used as the Traffic Ops host is ``192.0.2.1`` add the line ``host  all   all     192.0.2.1/32 md5`` to the appropriate section of this file.
+#. Edit :file:`/var/lib/pgsql/13/data/pg_hba.conf` to allow the Traffic Ops instance to access the PostgreSQL server. For example, if the IP address of the machine to be used as the Traffic Ops host is ``192.0.2.1`` add the line ``host  all   all     192.0.2.1/32 md5`` to the appropriate section of this file.
 
-#. Edit the :file:`/var/lib/pgsql/9.6/data/postgresql.conf` file to add the appropriate listen_addresses or ``listen_addresses = '*'``, set ``timezone = 'UTC'``, and start the database
+#. Edit the :file:`/var/lib/pgsql/13/data/postgresql.conf` file to add the appropriate listen_addresses or ``listen_addresses = '*'``, set ``timezone = 'UTC'``, and start the database
 
 	.. code-block:: shell
 		:caption: Starting PostgreSQL with :manpage:`systemd(1)`
 
-		systemctl enable postgresql-9.6
-		systemctl start postgresql-9.6
-		systemctl status postgresql-9.6 # Prints the status of the PostgreSQL service, to prove it's running
+		systemctl enable postgresql-13
+		systemctl start postgresql-13
+		systemctl status postgresql-13 # Prints the status of the PostgreSQL service, to prove it's running
 
 
 #. Build a :file:`traffic_ops-{version string}.rpm` file using the instructions under the :ref:`dev-building` page - or download a pre-built release from `the Apache Continuous Integration server <https://builds.apache.org/view/S-Z/view/TrafficControl/>`_.
@@ -87,7 +87,7 @@ Guide
 
 		to-# psql -h pg -U postgres
 		Password for user postgres:
-		psql (9.6.3)
+		psql (13.2)
 		Type "help" for help.
 
 		postgres=#
@@ -105,7 +105,7 @@ Guide
 		Password:
 		to-#
 
-#. Now, run the following command as the root user (or with :manpage:`sudo(8)`): :file:`/opt/traffic_ops/install/bin/postinstall`. The :program:`postinstall` script will first get all required Perl packages from :abbr:`CPAN (The Comprehensive Perl Archive Network)`. This may take a while, expect up to 30 minutes on the first install. If there are any prompts in this phase, please just answer with the defaults (some :abbr:`CPAN (The Comprehensive Perl Archive Network)` installs can prompt for install questions). When this phase is complete, you will see ``Complete! Modules were installed into /opt/traffic_ops/app/local``. Some additional files will be installed, and then it will proceed with the next phase of the install, where it will ask you about the local environment for your CDN. Please make sure you remember all your answers and verify that the database answers match the information previously used to create the database.
+#. Now, run the following command as the root user (or with :manpage:`sudo(8)`): :file:`/opt/traffic_ops/install/bin/postinstall`. Some additional files will be installed, and then it will proceed with the next phase of the install, where it will ask you about the local environment for your CDN. Please make sure you remember all your answers and verify that the database answers match the information previously used to create the database.
 
 	.. code-block:: console
 		:caption: Example Output
@@ -214,7 +214,17 @@ Guide
 		| Password for the admin user                        | The password for the administrative Traffic Ops user.                                          |
 		+----------------------------------------------------+------------------------------------------------------------------------------------------------+
 
-.. note:: A Python postinstall script also exists, and, unlike the Perl postinstall script, has no dependencies besides the interpreter itself. To use it, run ``/opt/traffic_ops/install/bin/postinstall.py`` with the same arguments you would have passed to ``/opt/traffic_ops/install/bin/postinstall`` (runs under either Python 3 or Python 2).
+.. deprecated:: ATCv6
+	The postinstall script is now written in Python. If you run into issues with the postinstall script, you are encouraged to file an issue at https://github.com/apache/trafficcontrol/issues/new/choose. The original Perl postinstall script is deprecated and will be removed in a future ATC release. To use the deprecated version anyway, run ``/opt/traffic_ops/install/bin/_postinstall.pl`` directly instead of ``/opt/traffic_ops/install/bin/postinstall``.
+
+The postinstall script can also be run non-interactively using :atc-file:`traffic_ops/install/bin/input.json`. To use it, first change the values to match your environment, then pass it to the ``postinstall`` script:
+	.. code-block:: console
+		:caption: Postinstall in Automatic (-a) mode
+
+		/opt/traffic_ops/install/bin/postinstall -a --cfile /opt/traffic_ops/install/bin/input.json
+
+.. deprecated:: ATCv6
+	Once the Perl script is removed, the values in ``input.json`` for the ``"hidden"`` properties will be changed from ``"1"`` and ``"0"`` to ``true`` and ``false``.
 
 .. _to-upgrading:
 
@@ -236,6 +246,11 @@ To upgrade from older Traffic Ops versions, stop the service, use :manpage:`yum(
 	popd
 
 After this completes, see Guide_ for instructions on running the :program:`postinstall` script. Once the :program:`postinstall` script, has finished, run the following command as the root user (or with :manpage:`sudo(8)`): ``systemctl start traffic_ops`` to start the service.
+
+Upgrading to 6.0
+----------------
+
+As of Apache Traffic Control 6.0, Traffic Ops supports PostgreSQL version 13.2. In order to migrate from the prior PostgreSQL version 9.6, it is recommended to use the `pg_upgrade <https://www.postgresql.org/docs/13/pgupgrade.html>`_ tool.
 
 .. _to-running:
 

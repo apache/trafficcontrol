@@ -98,7 +98,7 @@ func TestGetPhysLocations(t *testing.T) {
 
 	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 	obj := TOPhysLocation{
-		api.APIInfoImpl{&reqInfo},
+		api.APIInfoImpl{ReqInfo: &reqInfo},
 		tc.PhysLocationNullable{},
 	}
 	physLocations, userErr, sysErr, _, _ := obj.Read(nil, false)

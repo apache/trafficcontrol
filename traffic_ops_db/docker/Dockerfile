@@ -11,12 +11,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-FROM postgres:9.6.6
+FROM postgres:13.2
 
 MAINTAINER dev@trafficcontrol.apache.org
 
 # Postgres Access
 ENV POSTGRES_USER=$POSTGRES_USER
+ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
 ENV POSTGRES_HOST=$POSTGRES_HOST
 ENV POSTGRES_PORT=$POSTGRES_PORT
 ENV POSTGRES_DATABASE=$POSTGRES_DATABASE

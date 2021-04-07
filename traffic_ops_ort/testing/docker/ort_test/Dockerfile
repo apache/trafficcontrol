@@ -33,7 +33,7 @@ MAINTAINER dev@trafficcontrol.apache.org
 
 RUN yum install -y \
   https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm \
-  epel-release initscripts postgresql96.x86_64 git gcc lua-5.1.4-15.el7 lua-devel-5.1.4-15.el7 \
+  epel-release initscripts postgresql13.x86_64 git gcc lua-5.1.4-15.el7 lua-devel-5.1.4-15.el7 \
   ImageMagick-c++-devel
 
 ARG RPM=traffic_ops_ort.rpm

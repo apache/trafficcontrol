@@ -46,8 +46,8 @@ func (v *TOCoordinate) NewReadObj() interface{}       { return &tc.CoordinateNul
 func (v *TOCoordinate) SelectQuery() string           { return selectQuery() }
 func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"id":   dbhelpers.WhereColumnInfo{"id", api.IsInt},
-		"name": dbhelpers.WhereColumnInfo{"name", nil},
+		"id":   dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt},
+		"name": dbhelpers.WhereColumnInfo{Column: "name"},
 	}
 }
 
@@ -58,7 +58,7 @@ func (v *TOCoordinate) GetLastUpdated() (*time.Time, bool, error) {
 func (v *TOCoordinate) UpdateQuery() string { return updateQuery() }
 func (v *TOCoordinate) DeleteQuery() string { return deleteQuery() }
 func (coordinate TOCoordinate) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions

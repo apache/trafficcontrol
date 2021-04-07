@@ -38,8 +38,7 @@ func TestMakeHeaderRewriteDotConfig(t *testing.T) {
 
 	server.HostName = util.StrPtr("my-edge")
 	server.ID = util.IntPtr(990)
-	serverStatus := string(tc.CacheStatusReported)
-	server.Status = &serverStatus
+	server.Status = util.StrPtr(string(tc.CacheStatusReported))
 	server.CDNName = &cdnName
 
 	ds := makeGenericDS()
@@ -72,7 +71,13 @@ func TestMakeHeaderRewriteDotConfig(t *testing.T) {
 
 	dss := makeDSS(servers, dses)
 
-	cfg, err := MakeHeaderRewriteDotConfig(fileName, dses, dss, server, servers, hdr)
+	topologies := []tc.Topology{}
+	serverParams := makeHdrRwServerParams()
+	cgs := []tc.CacheGroupNullable{}
+	serverCaps := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCaps := map[int]map[ServerCapability]struct{}{}
+
+	cfg, err := MakeHeaderRewriteDotConfig(fileName, dses, dss, server, servers, cgs, serverParams, serverCaps, dsRequiredCaps, topologies, hdr)
 
 	if err != nil {
 		t.Errorf("error expected nil, actual '%v'\n", err)
@@ -146,7 +151,13 @@ func TestMakeHeaderRewriteDotConfigNoMaxOriginConnections(t *testing.T) {
 
 	dss := makeDSS(servers, dses)
 
-	cfg, err := MakeHeaderRewriteDotConfig(fileName, dses, dss, server, servers, hdr)
+	topologies := []tc.Topology{}
+	serverParams := makeHdrRwServerParams()
+	cgs := []tc.CacheGroupNullable{}
+	serverCaps := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCaps := map[int]map[ServerCapability]struct{}{}
+
+	cfg, err := MakeHeaderRewriteDotConfig(fileName, dses, dss, server, servers, cgs, serverParams, serverCaps, dsRequiredCaps, topologies, hdr)
 
 	if err != nil {
 		t.Errorf("error expected nil, actual '%v'\n", err)
@@ -157,4 +168,186 @@ func TestMakeHeaderRewriteDotConfigNoMaxOriginConnections(t *testing.T) {
 	if strings.Contains(txt, "origin_max_connections") {
 		t.Errorf("expected no origin_max_connections on DS that uses the mid, actual '%v'\n", txt)
 	}
+}
+
+func TestMakeHeaderRewriteMidDotConfig(t *testing.T) {
+	cdnName := "mycdn"
+	hdr := "myHeaderComment"
+
+	server := makeGenericServer()
+	server.CDNName = util.StrPtr(cdnName)
+	server.Cachegroup = util.StrPtr("edgeCG")
+	server.HostName = util.StrPtr("myserver")
+	server.Status = util.StrPtr(string(tc.CacheStatusReported))
+	server.Type = string(tc.CacheTypeMid)
+
+	ds := makeGenericDS()
+	ds.EdgeHeaderRewrite = util.StrPtr("edgerewrite")
+	ds.ID = util.IntPtr(24)
+	ds.XMLID = util.StrPtr("ds0")
+	ds.MaxOriginConnections = util.IntPtr(42)
+	ds.MidHeaderRewrite = util.StrPtr("midrewrite")
+	ds.CDNName = &cdnName
+	dsType := tc.DSTypeHTTP
+	ds.Type = &dsType
+	ds.ServiceCategory = util.StrPtr("servicecategory")
+
+	mid0 := makeGenericServer()
+	mid0.CDNName = &cdnName
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0Status := string(tc.CacheStatusReported)
+	mid0.Status = &mid0Status
+
+	mid1 := makeGenericServer()
+	mid1.CDNName = &cdnName
+	mid1.Cachegroup = util.StrPtr("midCG")
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1Status := string(tc.CacheStatusOnline)
+	mid1.Status = &mid1Status
+
+	mid2 := makeGenericServer()
+	mid2.CDNName = &cdnName
+	mid2.Cachegroup = util.StrPtr("midCG")
+	mid2.HostName = util.StrPtr("mymid2")
+	mid2Status := string(tc.CacheStatusOffline)
+	mid2.Status = &mid2Status
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
+	servers := []Server{*server, *mid0, *mid1, *mid2}
+	dses := []DeliveryService{*ds}
+	dss := makeDSS(servers, dses)
+
+	fileName := "hdr_rw_mid_" + *ds.XMLID + ".config"
+
+	topologies := []tc.Topology{}
+	serverParams := makeHdrRwServerParams()
+	serverCaps := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCaps := map[int]map[ServerCapability]struct{}{}
+
+	cfg, err := MakeHeaderRewriteDotConfig(fileName, dses, dss, server, servers, cgs, serverParams, serverCaps, dsRequiredCaps, topologies, hdr)
+	if err != nil {
+		t.Error(err)
+	}
+
+	txt := cfg.Text
+
+	if !strings.Contains(txt, "midrewrite") {
+		t.Errorf("expected no 'midrewrite' actual '%v'\n", txt)
+	}
+
+	if strings.Contains(txt, "edgerewrite") {
+		t.Errorf("expected 'edgerewrite' actual '%v'\n", txt)
+	}
+
+	if !strings.Contains(txt, "origin_max_connections") {
+		t.Errorf("expected origin_max_connections on edge header rewrite that uses the mids, actual '%v'\n", txt)
+	}
+
+	if !strings.Contains(txt, "21") { // 21, because max is 42, and there are 2 not-offline mids, so 42/2=21
+		t.Errorf("expected origin_max_connections of 21, actual '%v'\n", txt)
+	}
+}
+
+func TestMakeHeaderRewriteMidDotConfigNoMaxConns(t *testing.T) {
+	cdnName := "mycdn"
+	hdr := "myHeaderComment"
+
+	server := makeGenericServer()
+	server.CDNName = util.StrPtr(cdnName)
+	server.Cachegroup = util.StrPtr("edgeCG")
+	server.HostName = util.StrPtr("myserver")
+	server.Status = util.StrPtr(string(tc.CacheStatusReported))
+	server.Type = string(tc.CacheTypeMid)
+
+	ds := makeGenericDS()
+	ds.EdgeHeaderRewrite = util.StrPtr("edgerewrite")
+	ds.ID = util.IntPtr(24)
+	ds.XMLID = util.StrPtr("ds0")
+	ds.MidHeaderRewrite = util.StrPtr("midrewrite")
+	ds.CDNName = &cdnName
+	dsType := tc.DSTypeHTTP
+	ds.Type = &dsType
+	ds.ServiceCategory = util.StrPtr("servicecategory")
+
+	mid0 := makeGenericServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0Status := string(tc.CacheStatusReported)
+	mid0.Status = &mid0Status
+
+	mid1 := makeGenericServer()
+	mid1.Cachegroup = util.StrPtr("midCG")
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1Status := string(tc.CacheStatusOnline)
+	mid1.Status = &mid1Status
+
+	mid2 := makeGenericServer()
+	mid2.Cachegroup = util.StrPtr("midCG")
+	mid2.HostName = util.StrPtr("mymid2")
+	mid2Status := string(tc.CacheStatusOffline)
+	mid2.Status = &mid2Status
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
+	servers := []Server{*server, *mid0, *mid1, *mid2}
+	dses := []DeliveryService{*ds}
+	dss := makeDSS(servers, dses)
+
+	fileName := "hdr_rw_mid_" + *ds.XMLID + ".config"
+
+	topologies := []tc.Topology{}
+	serverParams := makeHdrRwServerParams()
+	serverCaps := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCaps := map[int]map[ServerCapability]struct{}{}
+
+	cfg, err := MakeHeaderRewriteDotConfig(fileName, dses, dss, mid0, servers, cgs, serverParams, serverCaps, dsRequiredCaps, topologies, hdr)
+	if err != nil {
+		t.Error(err)
+	}
+
+	txt := cfg.Text
+
+	if strings.Contains(txt, "origin_max_connections") {
+		t.Errorf("expected no origin_max_connections on edge-only DS, actual '%v'\n", txt)
+	}
+}
+
+func makeHdrRwServerParams() []tc.Parameter {
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+	return serverParams
 }

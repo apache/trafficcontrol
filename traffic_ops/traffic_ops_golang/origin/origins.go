@@ -54,7 +54,7 @@ func (origin *TOOrigin) SetID(i int) {
 }
 
 func (origin TOOrigin) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
@@ -155,14 +155,14 @@ func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"cachegroup":      dbhelpers.WhereColumnInfo{"o.cachegroup", api.IsInt},
-		"coordinate":      dbhelpers.WhereColumnInfo{"o.coordinate", api.IsInt},
-		"deliveryservice": dbhelpers.WhereColumnInfo{"o.deliveryservice", api.IsInt},
-		"id":              dbhelpers.WhereColumnInfo{"o.id", api.IsInt},
-		"name":            dbhelpers.WhereColumnInfo{"o.name", nil},
-		"primary":         dbhelpers.WhereColumnInfo{"o.is_primary", api.IsBool},
-		"profileId":       dbhelpers.WhereColumnInfo{"o.profile", api.IsInt},
-		"tenant":          dbhelpers.WhereColumnInfo{"o.tenant", api.IsInt},
+		"cachegroup":      dbhelpers.WhereColumnInfo{Column: "o.cachegroup", Checker: api.IsInt},
+		"coordinate":      dbhelpers.WhereColumnInfo{Column: "o.coordinate", Checker: api.IsInt},
+		"deliveryservice": dbhelpers.WhereColumnInfo{Column: "o.deliveryservice", Checker: api.IsInt},
+		"id":              dbhelpers.WhereColumnInfo{Column: "o.id", Checker: api.IsInt},
+		"name":            dbhelpers.WhereColumnInfo{Column: "o.name"},
+		"primary":         dbhelpers.WhereColumnInfo{Column: "o.is_primary", Checker: api.IsBool},
+		"profileId":       dbhelpers.WhereColumnInfo{Column: "o.profile", Checker: api.IsInt},
+		"tenant":          dbhelpers.WhereColumnInfo{Column: "o.tenant", Checker: api.IsInt},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)

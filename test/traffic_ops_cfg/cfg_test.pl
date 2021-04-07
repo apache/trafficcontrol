@@ -239,6 +239,8 @@ sub get_crconfigs {
 	my $result     = &curl_me($to_cdn_url);
 	my $cdn_json   = decode_json($result);
 
+	my $old_ops = $CURL_OPTS;
+
 	foreach my $cdn ( @{ $cdn_json->{response} } ) {
 		next unless $cdn->{name} ne "ALL";
 		my $dir = $outpath . '/cdn-' . $cdn->{name};
@@ -246,13 +248,15 @@ sub get_crconfigs {
 		if ($perform_snapshot) {
 			print "Generating CRConfig for " . $cdn->{name};
 			my $start = [gettimeofday];
-			&curl_me( $to_url . "/tools/write_crconfig/" . $cdn->{name} );
+			$CURL_OPTS = $CURL_OPTS . ' -X PUT';
+			&curl_me( $to_url . "/api/2.0/snapshot/" . $cdn->{name} );
+			$CURL_OPTS = $old_ops;
 			my $load_time = tv_interval($start);
 			print " time: " . $load_time . "\n";
 		}
 		print "Getting CRConfig for " . $cdn->{name};
 		my $start = [gettimeofday];
-		my $fcontents = &curl_me( $to_url . '/CRConfig-Snapshots/' . $cdn->{name} . '/CRConfig.json' );
+		my $fcontents = &curl_me( $to_url . '/api/2.0/cdns/' . $cdn->{name} . '/snapshot' );
 		open( my $fh, '>', $dir . '/CRConfig.json' );
 		my $load_time = tv_interval($start);
 		print " time: " . $load_time . "\n";

@@ -14,7 +14,23 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-results
-compare
-__pycache__
+
+name: 'tp-integration-tests'
+description: 'Runs Traffic Portal Integration tests'
+inputs:
+  smtp_address:
+    description: 'Address of an SMTP server to use for the Traffic Ops API tests'
+    required: true
+  smtp_port:
+    description: 'Port of an SMTP server to use for the Traffic Ops API tests'
+    required: true
+    default: '25'
+  smtp_user:
+    description: 'The user to authenticate with for the SMTP server.'
+    required: false
+  smtp_password:
+    description: 'The user to authenticate with for the SMTP server.'
+    required: false
+runs:
+  using: 'node12'
+  main: 'dist/tp-integration-tests.js'

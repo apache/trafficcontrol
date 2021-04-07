@@ -165,7 +165,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqTime := time.Now()
 	reqID := atomic.AddUint64(&h.requestID, 1)
 	pluginContext := copyPluginContext(h.pluginContext) // must give each request a copy, because they can modify in parallel
-	srvrData := cachedata.SrvrData{h.hostname, h.port, h.scheme}
+	srvrData := cachedata.SrvrData{Hostname: h.hostname, Port: h.port, Scheme: h.scheme}
 	onReqData := plugin.OnRequestData{W: w, R: r, Stats: h.stats, StatRules: h.remapper.StatRules(), HTTPConns: h.httpConns, HTTPSConns: h.httpsConns, InterfaceName: h.interfaceName, SrvrData: srvrData, RequestID: reqID}
 	stop := h.plugins.OnRequest(h.remapper.PluginCfg(), pluginContext, onReqData)
 	if stop {
@@ -199,7 +199,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		pluginCfg = remappingProducer.PluginCfg()
 	}
 
-	reqData := cachedata.ReqData{r, conn, clientIP, reqTime, toFQDN}
+	reqData := cachedata.ReqData{Req: r, Conn: conn, ClientIP: clientIP, ReqTime: reqTime, ToFQDN: toFQDN}
 	responder := NewResponder(w, pluginCfg, pluginContext, srvrData, reqData, h.plugins, h.stats, reqID)
 
 	if err != nil {

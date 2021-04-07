@@ -54,7 +54,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cols := map[string]dbhelpers.WhereColumnInfo{
-		"name": dbhelpers.WhereColumnInfo{"capability.name", nil},
+		"name": dbhelpers.WhereColumnInfo{Column: "capability.name"},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)

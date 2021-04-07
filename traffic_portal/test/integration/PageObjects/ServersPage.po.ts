@@ -16,11 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ElementFinder, browser, by, element, ExpectedConditions } from 'protractor'
-import { async, delay } from 'q';
+import { browser, by, element, ExpectedConditions } from 'protractor';
+
+import randomIpv6 from "random-ipv6";
+
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
-import { ServerCapabilitiesPage } from './ServerCapabilitiesPage.po';
+import { config, randomize } from '../config';
 
 export class ServersPage extends BasePage {
 
@@ -104,9 +106,9 @@ export class ServersPage extends BasePage {
   private btnMoreCreateServer = element(by.name("moreBtn"))
   private btnCreateServer = element(by.name("createServerMenuItem"))
   private txtQuickSearch = element(by.id("quickSearch"));
-  private config = require('../config');
-  private randomize = this.config.randomize;
-  private randomIpv6 = require('random-ipv6');
+  private readonly config = config;
+  private randomize = randomize;
+
   async OpenServerPage(){
     let snp = new SideNavigationPage();
     await snp.NavigateToServersPage();
@@ -122,30 +124,32 @@ export class ServersPage extends BasePage {
   IsServersItemPresent(serversName: string) {
     return element(by.xpath("//table[@id='serversTable']//tr/td[text()='" + "']")).isPresent()
   }
-  
+
   async ClickAddServer() {
     await this.btnCreateServer.click()
   }
-  
+
   async CreateServer(server){
-    let result = false; 
+    let result = false;
     let basePage = new BasePage();
     let networkIp = Math.round(Math.random() * 100).toString()+ "." + Math.round(Math.random() * 100).toString() + "." + Math.round(Math.random() * 100).toString() +
     "." + Math.round(Math.random() * 100).toString();
-    let ipv6 = this.randomIpv6();
+    let ipv6 = randomIpv6();
     await this.btnMoreCreateServer.click();
     await this.btnCreateServer.click();
     await this.txtStatus.sendKeys(server.Status);
     await this.txtHostname.sendKeys(server.Hostname+this.randomize);
     await this.txtDomainName.sendKeys(server.Domainname);
-    await this.txtCDN.sendKeys(server.CDN);
-    await this.txtCacheGroup.sendKeys(server.CacheGroup);
+    await this.txtCDN.sendKeys("ALL");
+    await this.txtCDN.sendKeys(server.CDN + this.randomize);
+    await this.txtCacheGroup.sendKeys(server.CacheGroup + this.randomize);
     await this.txtType.sendKeys(server.Type);
-    await this.txtProfile.sendKeys(server.Profile);
+    await this.txtProfile.sendKeys(server.Profile + this.randomize);
     await this.txtPhysLocation.sendKeys(server.PhysLocation);
     await this.txtInterfaceName.sendKeys(server.InterfaceName);
     await element(by.id(""+server.InterfaceName+"-")).sendKeys(ipv6.toString());
-    await basePage.ClickCreate();
+    if (!await basePage.ClickCreate())
+        result = false;
     await basePage.GetOutputMessage().then(function(value){
       if(server.validationMessage == value){
         result = true;
@@ -153,8 +157,8 @@ export class ServersPage extends BasePage {
         result = false;
       }
     })
-  await this.OpenServerPage();
-  return result;
+    await this.OpenServerPage();
+    return result;
   }
 
   async SearchServer(nameServer:string){
@@ -165,7 +169,7 @@ export class ServersPage extends BasePage {
     await browser.actions().mouseMove(element(by.xpath("//span[text()='"+name+"']"))).perform();
     await browser.actions().doubleClick(element(by.xpath("//span[text()='"+name+"']"))).perform();
   }
-  
+
   async SearchDeliveryServiceFromServerPage(name:string){
     let result = false;
     await this.txtDSSearch.clear();
@@ -178,7 +182,7 @@ export class ServersPage extends BasePage {
     }
     return result;
   }
- 
+
   async AddDeliveryServiceToServer(deliveryServiceName:string,outputMessage:string){
     let result = false;
     let basePage = new BasePage();
@@ -242,7 +246,7 @@ export class ServersPage extends BasePage {
     await this.OpenServerPage();
     return result;
    }
-   
+
    async SearchServerServerCapabilities(name:string){
     let result = false;
     await this.searchFilter.clear();
@@ -261,7 +265,7 @@ export class ServersPage extends BasePage {
     return result;
    }
 
- 
+
    async RemoveServerCapabilitiesFromServer(serverCapabilities:string,outputMessage:string){
     let result = false;
     let basePage = new BasePage();
