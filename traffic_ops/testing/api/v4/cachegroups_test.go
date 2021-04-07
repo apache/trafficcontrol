@@ -529,7 +529,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	}
 	cg = resp[0]
 	if cg.TypeID == nil {
-		t.Error("Cache Group returned by Traffic Ops had null or undefined typeId")
+		t.Fatal("Cache Group returned by Traffic Ops had null or undefined typeId")
 	}
 	if cg.ID == nil {
 		t.Fatal("Cache Group returned by Traffic Ops had null or undefined ID")
