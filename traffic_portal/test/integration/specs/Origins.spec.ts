@@ -16,19 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser } from 'protractor'
+import { readFileSync } from "fs";
+
+import { browser } from 'protractor';
+import using from "jasmine-data-provider";
+
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { OriginsPage } from '../PageObjects/OriginsPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { API } from '../CommonUtils/API';
 
-let fs = require('fs')
-let using = require('jasmine-data-provider');
-
 let setupFile = 'Data/Origins/Setup.json';
 let cleanupFile = 'Data/Origins/Cleanup.json';
 let filename = 'Data/Origins/TestCases.json';
-let testData = JSON.parse(fs.readFileSync(filename));
+let testData = JSON.parse(readFileSync(filename, "utf8"));
 
 let api = new API();
 let loginPage = new LoginPage();
@@ -37,7 +38,7 @@ let originsPage = new OriginsPage();
 
 describe('Setup Origin Delivery Service', function () {
     it('Setup', async function () {
-        let setupData = JSON.parse(fs.readFileSync(setupFile));
+        let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
         let output = await api.UseAPI(setupData);
         expect(output).toBeNull();
     })
@@ -91,7 +92,7 @@ using(testData.Origins, async function (originsData) {
 
 describe('Clean up Origin Delivery Service', function () {
     it('Cleanup', async function () {
-        let cleanupData = JSON.parse(fs.readFileSync(cleanupFile));
+        let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
         let output = await api.UseAPI(cleanupData);
         expect(output).toBeNull();
     })

@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ElementFinder, browser, by, element } from 'protractor'
-import { async, delay } from 'q';
+import { browser, by, element } from 'protractor'
+
+import { config, twoNumberRandomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -28,9 +29,8 @@ export class ASNsPage extends BasePage {
     private txtCacheGroup = element(by.name("cachegroup"))
     private btnDelete = element(by.xpath("//button[text()='Delete']"));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private config = require('../config');
-    private randomize = this.config.randomize;
-    private twoNumberRandomize = this.config.twoNumberRandomize;
+    private config = config;
+    private twoNumberRandomize = twoNumberRandomize;
 
     async OpenASNsPage() {
         let snp = new SideNavigationPage();
@@ -114,4 +114,3 @@ export class ASNsPage extends BasePage {
 
 
 }
-

@@ -24,11 +24,10 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreq"
+	"github.com/apache/trafficcontrol/traffic_ops_ort/t3clib"
 	"github.com/pborman/getopt/v2"
 )
 
@@ -42,18 +41,7 @@ type Cfg struct {
 	LogLocationError string
 	LogLocationInfo  string
 	LoginDispersion  time.Duration
-	CacheHostName    string
-	GetData          string
-	TOInsecure       bool
-	TOTimeoutMS      time.Duration
-	TOUser           string
-	TOPass           string
-	TOURL            *url.URL
-}
-
-type TCCfg struct {
-	Cfg
-	TOClient *toreq.TOClient
+	t3clib.TCCfg
 }
 
 func (cfg Cfg) DebugLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationDebug) }
@@ -76,18 +64,22 @@ func InitConfig() (Cfg, error) {
 	logLocationInfoPtr := getopt.StringLong("log-location-info", 'i', "stderr", "Where to log infos. May be a file path, stdout, stderr")
 	dispersionPtr := getopt.IntLong("login-dispersion", 'l', 0, "[seconds] wait a random number of seconds between 0 and [seconds] before login to traffic ops, default 0")
 	cacheHostNamePtr := getopt.StringLong("cache-host-name", 'H', "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
-	getDataPtr := getopt.StringLong("get-data", 'D', "system-info", "non-config-file Traffic Ops Data to get. Valid values are all, update-status, packages, chkconfig, system-info, and statuses")
+	getDataPtr := getopt.StringLong("get-data", 'D', "system-info", "non-config-file Traffic Ops Data to get. Valid values are update-status, packages, chkconfig, system-info, and statuses")
 	toInsecurePtr := getopt.BoolLong("traffic-ops-insecure", 'I', "[true | false] ignore certificate errors from Traffic Ops")
 	toTimeoutMSPtr := getopt.IntLong("traffic-ops-timeout-milliseconds", 't', 30000, "Timeout in milli-seconds for Traffic Ops requests, default is 30000")
 	toURLPtr := getopt.StringLong("traffic-ops-url", 'u', "", "Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with     the environment variable TO_URL")
 	toUserPtr := getopt.StringLong("traffic-ops-user", 'U', "", "Traffic Ops username. Required. May also be set with the environment variable TO_USER")
 	toPassPtr := getopt.StringLong("traffic-ops-password", 'P', "", "Traffic Ops password. Required. May also be set with the environment variable TO_PASS    ")
 	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
+	versionPtr := getopt.BoolLong("version", 'v', "Print the to_requester version")
 
 	getopt.Parse()
 
 	if *helpPtr == true {
 		Usage()
+	}
+	if *versionPtr == true {
+		fmt.Println(AppName + " v" + Version)
 	}
 
 	dispersion := time.Second * time.Duration(*dispersionPtr)
@@ -111,7 +103,7 @@ func InitConfig() (Cfg, error) {
 	toURLParsed, err := url.Parse(toURL)
 	if err != nil {
 		return Cfg{}, errors.New("parsing Traffic Ops URL from " + urlSourceStr + " '" + toURL + "': " + err.Error())
-	} else if err := ValidateURL(toURLParsed); err != nil {
+	} else if err := t3clib.ValidateURL(toURLParsed); err != nil {
 		return Cfg{}, errors.New("invalid Traffic Ops URL from " + urlSourceStr + " '" + toURL + "': " + err.Error())
 	}
 
@@ -131,13 +123,16 @@ func InitConfig() (Cfg, error) {
 		LogLocationError: *logLocationErrorPtr,
 		LogLocationInfo:  *logLocationInfoPtr,
 		LoginDispersion:  dispersion,
-		CacheHostName:    cacheHostName,
-		GetData:          *getDataPtr,
-		TOInsecure:       *toInsecurePtr,
-		TOTimeoutMS:      toTimeoutMS,
-		TOUser:           toUser,
-		TOPass:           toPass,
-		TOURL:            toURLParsed,
+		TCCfg: t3clib.TCCfg{
+			CacheHostName: cacheHostName,
+			GetData:       *getDataPtr,
+			TOInsecure:    *toInsecurePtr,
+			TOTimeoutMS:   toTimeoutMS,
+			TOUser:        toUser,
+			TOPass:        toPass,
+			TOURL:         toURLParsed,
+			UserAgent:     UserAgent,
+		},
 	}
 
 	if err := log.InitCfg(cfg); err != nil {
@@ -145,19 +140,6 @@ func InitConfig() (Cfg, error) {
 	}
 
 	return cfg, nil
-}
-
-func ValidateURL(u *url.URL) error {
-	if u == nil {
-		return errors.New("nil url")
-	}
-	if u.Scheme != "http" && u.Scheme != "https" {
-		return errors.New("scheme expected 'http' or 'https', actual '" + u.Scheme + "'")
-	}
-	if strings.TrimSpace(u.Host) == "" {
-		return errors.New("no host")
-	}
-	return nil
 }
 
 func (cfg Cfg) PrintConfig() {

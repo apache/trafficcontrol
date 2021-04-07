@@ -102,10 +102,9 @@ func getRoutersRouting(tx *sql.Tx, routers map[tc.CDNName][]string, statType *st
 	close(resp)
 
 	dat := RouterData{}
-
 	for r := range resp {
 		if r.Error != nil {
-			return tc.Routing{}, err
+			return tc.Routing{}, r.Error
 		}
 		dat = addCRSStats(dat, r.Stats, statType, hostRegex)
 	}

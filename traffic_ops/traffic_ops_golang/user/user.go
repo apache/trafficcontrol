@@ -85,10 +85,10 @@ func (user *TOUser) NewReadObj() interface{} {
 
 func (user *TOUser) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"id":       dbhelpers.WhereColumnInfo{"u.id", api.IsInt},
-		"role":     dbhelpers.WhereColumnInfo{"r.name", nil},
-		"tenant":   dbhelpers.WhereColumnInfo{"t.name", nil},
-		"username": dbhelpers.WhereColumnInfo{"u.username", nil},
+		"id":       dbhelpers.WhereColumnInfo{Column: "u.id", Checker: api.IsInt},
+		"role":     dbhelpers.WhereColumnInfo{Column: "r.name"},
+		"tenant":   dbhelpers.WhereColumnInfo{Column: "t.name"},
+		"username": dbhelpers.WhereColumnInfo{Column: "u.username"},
 	}
 }
 

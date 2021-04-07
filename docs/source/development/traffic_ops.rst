@@ -26,12 +26,21 @@ Traffic Ops at its core is mainly a PostgreSQL database used to store configurat
 
 Software Requirements
 =====================
-Traffic Ops is only supported on CentOS 7+ systems (although many developers do use Mac OS with some success).
+Traffic Ops is only supported on CentOS 7+ systems (although many developers do use Mac OS with some success). Here are the requirements:
 
-The two different implementations have different requirements, but they do share a few:
+- `Goose <https://bitbucket.org/liamstask/goose/>`_ (although the ``postinstall`` script will install this)
+- `PostgreSQL 13.2 <https://www.postgresql.org/download/>`_ - the machine where Traffic Ops is running must have the client tool set (e.g. :manpage:`psql(1)`), but the actual database can be run anywhere so long as it is accessible.
 
-- `Goose <https://bitbucket.org/liamstask/goose/>`_ (although the ``postinstall`` Perl script will install this if desired)
-- `PostgreSQL 9.6.6 <https://www.postgresql.org/download/>`_ - the machine where (either implementation of) Traffic Ops is running must have the client tool set (e.g. :manpage:`psql(1)`), but the actual database can be run anywhere so long as it is accessible.
+	.. note:: Prior to version 13.2, Traffic Ops used version 9.6. For upgrading an existing Mac OS Homebrew-based PostgreSQL instance, you can use `Homebrew <https://brew.sh/>`_ to easily upgrade from 9.6 to 13.2:
+
+		.. code-block:: shell
+
+			brew services stop postgresql
+			brew upgrade postgresql
+			brew postgresql-upgrade-database
+			brew cleanup postgresql@9.6
+			brew services start postgresql
+
 - :manpage:`openssl(1SSL)` is recommended to generate server certificates, though not strictly required if certificates can be obtained by other means.
 - Some kind of SMTP server is required for certain :ref:`to-api` endpoints to work, but for purposes unrelated to them an SMTP server is not required. :ref:`ciab` comes with a relayless SMTP server for testing (you can view the emails that Traffic Ops sends, but they aren't sent anywhere outside CDN-in-a-Box).
 
@@ -140,7 +149,6 @@ Traffic Ops Project Tree Overview
 	- testing/ - Holds utilities for testing the :ref:`to-api`
 
 		- api/ - Integration testing for the `Traffic Ops Go client <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/client>`_ and Traffic Ops
-		- compare/ - Contains :ref:`compare-tool`
 
 	- traffic_ops_golang/ - The root of the Go implementation's code-base
 
@@ -257,7 +265,7 @@ To install the Traffic Ops Developer environment:
 
 
 #. Use the ``reset`` and ``upgrade`` :option:`command`\ s of :program:`admin` (see :ref:`database-management` for usage) to set up the ``traffic_ops`` database(s).
-#. Run the :atc-file:`traffic_ops/install/bin/postinstall` script, it will prompt for information like the default user login credentials
+#. Run the :atc-file:`traffic_ops/install/bin/postinstall` script, it will prompt for information like the default user login credentials.
 #. To run Traffic Ops, follow the instructions in :ref:`to-running`.
 
 Test Cases

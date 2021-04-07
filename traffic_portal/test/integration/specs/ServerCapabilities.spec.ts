@@ -16,16 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+import { readFileSync } from "fs";
+
 import { browser } from 'protractor';
+import using from "jasmine-data-provider";
+
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { ServerCapabilitiesPage } from '../PageObjects/ServerCapabilitiesPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 
-let fs = require('fs')
-let using = require('jasmine-data-provider');
-
 let filename = 'Data/ServerCapabilities/TestCases.json';
-let testData = JSON.parse(fs.readFileSync(filename));
+let testData = JSON.parse(readFileSync(filename, "utf8"));
 
 let loginPage = new LoginPage();
 let topNavigation = new TopNavigationPage();
@@ -53,7 +54,7 @@ using(testData.ServerCapabilities, function(serverCapabilitiesData) {
                 if(remove.description.includes("invalid")){
                     it(remove.description, async function(){
                         await serverCapabilitiesPage.SearchServerCapabilities(remove.Name)
-                        expect(await serverCapabilitiesPage.DeleteServerCapabilities(remove.InvalidName, remove.validationMessage)).toBeFalsy();  
+                        expect(await serverCapabilitiesPage.DeleteServerCapabilities(remove.InvalidName, remove.validationMessage)).toBeFalsy();
                         await serverCapabilitiesPage.OpenServerCapabilityPage();
                     })
                 } else {

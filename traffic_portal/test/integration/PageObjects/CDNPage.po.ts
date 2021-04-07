@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ElementFinder, browser, by, element, ExpectedConditions, protractor } from 'protractor';
-import { async, delay } from 'q';
+import { browser, by, element } from 'protractor';
+
+import { config, randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -34,8 +35,8 @@ export class CDNPage extends BasePage {
   private btnDiffSnapshot = element(by.xpath("//button[@title='Diff CDN Snapshot']"));
   private btnYes = element((by.xpath("//button[text()='Yes']")));
   private btnQueueUpdates = element((by.xpath("//button[contains(text(),'Queue Updates')]")));
-  private config = require('../config');
-  private randomize = this.config.randomize;
+  private readonly config = config;
+  private randomize = randomize;
   async OpenCDNsPage() {
     let snp = new SideNavigationPage();
     await snp.NavigateToCDNPage();

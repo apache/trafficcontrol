@@ -65,7 +65,7 @@
     content: PATH=$PATH:{{ pg_bin_path }}
 
 - name: Install psycopg2 python module
-  easy_install:
+  pip:
     name: psycopg2
   environment:
     PATH: "{{ pg_bin_path }}:{{ lookup('env', 'PATH') }}"

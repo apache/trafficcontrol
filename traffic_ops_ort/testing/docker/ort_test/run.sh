@@ -77,5 +77,4 @@ ping_to
 sleep 2
 
 (touch test.log && tail -f test.log)&
-go test -cfg=conf/docker-edge-cache.conf 2>&1 >> test.log
-
+go test -v -failfast -cfg=conf/docker-edge-cache.conf 2>&1 >> test.log

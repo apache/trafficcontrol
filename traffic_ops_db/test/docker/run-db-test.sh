@@ -20,9 +20,10 @@
 #
 DB_SERVER=db
 DB_PORT=5432
-DB_USER=traffic_ops
+DB_USER=postgres
 DB_USER_PASS=twelve
 DB_NAME=traffic_ops
+export PGHOST="$DB_SERVER" PGPORT="$DB_PORT" PGUSER="$DB_USER" PGDATABASE="$DB_NAME"
 
 # Write config files
 set -x
@@ -32,16 +33,23 @@ if [[ ! -r /goose-config.sh ]]; then
 fi
 . /goose-config.sh
 
-pg_isready=$(rpm -ql postgresql96 | grep bin/pg_isready)
-if [[ ! -x $pg_isready ]] ; then
-    echo "Can't find pg_ready in postgresql96"
+postgresql_package="$(<<<"postgresql${POSTGRES_VERSION}" sed 's/\.//g' |
+	sed -E 's/([0-9]{2})[0-9]+/\1/g'
+)"
+pg_isready=$(rpm -ql "$postgresql_package" | grep bin/pg_isready)
+if [[ ! -x "$pg_isready" ]] ; then
+    echo "Can't find pg_ready in ${postgresql_package}"
     exit 1
 fi
 
-while ! $pg_isready -h$DB_SERVER -p$DB_PORT -d $DB_NAME; do
+while ! $pg_isready -h"$DB_SERVER" -p"$DB_PORT" -d "$DB_NAME"; do
         echo "waiting for db on $DB_SERVER $DB_PORT"
         sleep 3
 done
+
+echo "*:*:*:postgres:$DB_USER_PASS" > "${HOME}/.pgpass"
+echo "*:*:*:traffic_ops:$DB_USER_PASS" >> "${HOME}/.pgpass"
+chmod 0600 "${HOME}/.pgpass"
 
 export TO_DIR=/opt/traffic_ops/app
 
@@ -67,15 +75,21 @@ get_db_dumps() {
     find /db_dumps -name '*.dump'
 }
 
+db_is_empty=true
+
 for d in $(get_db_dumps); do
+    db_is_empty=false
     echo "checking integrity of DB dump: $d"
     pg_restore -l "$d" > /dev/null || { echo "invalid DB dump: $d. Unable to list contents"; exit 1; }
 done
 
-cd $TO_DIR
-db_is_empty=false
-old_db_version=$(get_current_db_version)
-[[ "$old_db_version" =~ ^failed ]] && { echo "get_current_db_version failed: $old_db_version"; exit 1; }
+cd "$TO_DIR"
+old_db_version=0
+
+if [[ "$db_is_empty" = false ]]; then
+  old_db_version=$(get_current_db_version)
+  [[ "$old_db_version" =~ ^failed ]] && { echo "get_current_db_version failed: $old_db_version"; exit 1; }
+fi
 
 # reset the DB if it is empty (i.e. no db.dump was provided)
 if [[ "$old_db_version" -eq 0 ]]; then
@@ -118,6 +132,8 @@ fi
 # test full restoration of the initial DB dump
 for d in $(get_db_dumps); do
     echo "testing restoration of DB dump: $d"
-    pg_restore --verbose --clean --if-exists --create -h $DB_SERVER -p $DB_PORT -U postgres < "$d" > /dev/null || { echo "DB restoration failed: $d"; exit 1; }
+    dropdb --echo --if-exists < "$d" > /dev/null || echo "Dropping DB ${DB_NAME} failed: $d"
+    createdb --echo < "$d" > /dev/null || echo "Creating DB ${DB_NAME} failed: $d"
+    pg_restore --verbose --clean --if-exists --exit-on-error -d "$DB_NAME" < "$d" > /dev/null || { echo "DB restoration failed: $d"; exit 1; }
 done
 

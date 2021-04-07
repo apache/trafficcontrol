@@ -24,8 +24,7 @@
 To run `traffic_ops_golang` proxy locally the following prerequisites are needed:
 
 * Golang version greater or equal to the Go version found in the `GO_VERSION` file at the base of this repository. See: [https://golang.org/doc/install](https://golang.org/doc/install)
-* Postgres 9.6 or greater
-* Because the Golang proxy is fronting Mojolicious Perl you need to have that service setup and running as well [TO Perl Setup Here](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/INSTALL.md)
+* Postgres 13.2 or greater
 
 
 ## Vendoring and Building
@@ -39,16 +38,6 @@ To download the remaining `golang.org/x` dependencies you need to:
 `$ go mod vendor -v`
 
 ## Configuration
-
-To run the Golang TO API locally the following represents a typical sequence flow.  */api/1.x* will proxy through to Mojo Perl if the given route is not found or the route is blacklisted else it will serve the response from the Golang API. */api/2.0* will always serve the response from the Golang directly and/or interact with Postgres accordingly.
-
-**/api/1.x** routes:
-
-`TO Golang API (port 8443)`<-->`TO Mojo Perl`(if route not found or blacklisted)<-->`TO Database (Postgres)`
-
-**/api/2.0** routes:
-
-`TO Golang API (port 8443)`<-->`TO Database (Postgres)`
 
 ### cdn.conf changes
 

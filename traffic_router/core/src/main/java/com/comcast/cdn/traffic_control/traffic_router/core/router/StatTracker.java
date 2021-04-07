@@ -318,32 +318,32 @@ public class StatTracker {
 	public Map<String, Tallies> getHttpMap() {
 		return httpMap;
 	}
-	public int getTotalDnsCount() {
+	public long getTotalDnsCount() {
 		return totalDnsCount;
 	}
 	public long getAverageDnsTime() {
 		if(totalDnsCount==0) { return 0; }
 		return totalDnsTime/totalDnsCount;
 	}
-	public int getTotalHttpCount() {
+	public long getTotalHttpCount() {
 		return totalHttpCount;
 	}
 	public long getAverageHttpTime() {
 		if(totalHttpCount==0) { return 0; }
 		return totalHttpTime/totalHttpCount;
 	}
-	public int getTotalDsMissCount() {
+	public long getTotalDsMissCount() {
 		return totalDsMissCount;
 	}
-	public void setTotalDsMissCount(final int totalDsMissCount) {
+	public void setTotalDsMissCount(final long totalDsMissCount) {
 		this.totalDsMissCount = totalDsMissCount;
 	}
 
-	private int totalDnsCount;
+	private long totalDnsCount;
 	private long totalDnsTime;
-	private int totalHttpCount;
+	private long totalHttpCount;
 	private long totalHttpTime;
-	private int totalDsMissCount = 0;
+	private long totalDsMissCount = 0;
 	public Map<String,Long> getUpdateTracker() {
 		return TrafficRouterManager.getTimeTracker();
 	}

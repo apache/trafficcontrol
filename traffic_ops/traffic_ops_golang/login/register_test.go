@@ -27,13 +27,13 @@ import "github.com/apache/trafficcontrol/lib/go-rfc"
 
 func TestRegistrationTemplateRender(t *testing.T) {
 	to := rfc.EmailAddress{
-		mail.Address{
+		Address: mail.Address{
 			Address: "em@i.l",
 			Name:    "",
 		},
 	}
 	from := rfc.EmailAddress{
-		mail.Address{
+		Address: mail.Address{
 			Address: "no-reply@test.quest",
 			Name:    "",
 		},

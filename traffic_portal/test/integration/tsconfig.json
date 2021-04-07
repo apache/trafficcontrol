@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
     "target": "es6",
+    "esModuleInterop": true,
     "module": "commonjs",
     "moduleResolution": "node",
     "inlineSourceMap": true,
     "declaration": false,
     "noImplicitAny": false,
-    "outDir": "GeneratedCode"
+    "outDir": "GeneratedCode",
+    "resolveJsonModule": true
   },
   "exclude": [
     "node_modules"

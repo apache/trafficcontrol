@@ -44,6 +44,7 @@ func TestDeliveryServices(t *testing.T) {
 
 		if includeSystemTests {
 			SSLDeliveryServiceCDNUpdateTest(t)
+			GetTestDeliveryServicesURLSigKeys(t)
 		}
 
 		GetTestDeliveryServicesIMS(t)
@@ -1517,5 +1518,19 @@ func SortTestDeliveryServicesDesc(t *testing.T) {
 	}
 	if !reflect.DeepEqual(respDesc[0].XMLID, respAsc[0].XMLID) {
 		t.Errorf("Role responses are not equal after reversal: %v - %v", *respDesc[0].XMLID, *respAsc[0].XMLID)
+	}
+}
+func GetTestDeliveryServicesURLSigKeys(t *testing.T) {
+	if len(testData.DeliveryServices) == 0 {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+	firstDS := testData.DeliveryServices[0]
+	if firstDS.XMLID == nil {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+
+	_, _, err := TOSession.GetDeliveryServiceURLSigKeysWithHdr(*firstDS.XMLID, nil)
+	if err != nil {
+		t.Error("failed to get url sig keys: " + err.Error())
 	}
 }

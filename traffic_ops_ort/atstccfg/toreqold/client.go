@@ -47,13 +47,17 @@ const isFallback = true
 func New(url *url.URL, user string, pass string, insecure bool, timeout time.Duration, userAgent string) (*TOClient, error) {
 	log.Infoln("URL: '" + url.String() + "' User: '" + user + "' Pass len: '" + strconv.Itoa(len(pass)) + "'")
 
-	toFQDN := url.Scheme + "://" + url.Host
-	log.Infoln("TO FQDN: '" + toFQDN + "'")
+	toURLStr := url.Scheme + "://" + url.Host
+	log.Infoln("TO URL string: '" + toURLStr + "'")
 	log.Infoln("TO URL: '" + url.String() + "'")
 
-	toClient, toIP, err := toclient.LoginWithAgent(toFQDN, user, pass, insecure, userAgent, false, timeout)
+	opts := toclient.ClientOpts{}
+	opts.Insecure = insecure
+	opts.UserAgent = userAgent
+	opts.RequestTimeout = timeout
+	toClient, inf, err := toclient.Login(toURLStr, user, pass, opts)
 	if err != nil {
-		return nil, errors.New("Logging in to Traffic Ops '" + torequtil.MaybeIPStr(toIP) + "': " + err.Error())
+		return nil, errors.New("Logging in to Traffic Ops '" + torequtil.MaybeIPStr(inf.RemoteAddr) + "': " + err.Error())
 	}
 
 	return &TOClient{C: toClient}, nil
