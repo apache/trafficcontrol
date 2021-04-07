@@ -220,12 +220,12 @@ type TrafficVaultPingResponse struct {
 // DNSSECKeys is the DNSSEC keys as stored in Riak, plus the DS record text.
 type DNSSECKeys map[string]DNSSECKeySet
 
-// DNSSECKeysV11 is the DNSSEC keys object stored in Riak. The map key strings are both DeliveryServiceNames and CDNNames.
-
 // Deprecated: use DNSSECKeysTrafficVault instead
 type DNSSECKeysRiak DNSSECKeysV11
+
 type DNSSECKeysTrafficVault DNSSECKeysV11
 
+// DNSSECKeysV11 is the DNSSEC keys object stored in Riak. The map key strings are both DeliveryServiceNames and CDNNames.
 type DNSSECKeysV11 map[string]DNSSECKeySetV11
 
 type DNSSECKeySet struct {
