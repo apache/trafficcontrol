@@ -1,5 +1,5 @@
-// Type definitions for random-ipv6
-// Project: https://github.com/mock-end/random-ipv6
+// Type definitions for protractor-beautiful-reporter
+// Project: https://github.com/Evilweed/protractor-beautiful-reporter
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
