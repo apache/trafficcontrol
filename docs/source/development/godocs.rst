@@ -20,7 +20,7 @@ Godocs
 Linking to Godocs
 =================
 
-As mentioned in :ref:`docs-guide`, you can use the ``:docs-godoc:`` role, the ``:docs-atc-godoc:`` role, and the ``:docs-to-godoc:`` role to link to Godocs from the ATC documentation.
+As mentioned in :ref:`docs-guide`, you can use the ``:godoc:`` role, the ``:atc-godoc:`` role, and the ``:to-godoc:`` role to link to Godocs from the ATC documentation.
 
 Keeping pkg.go.dev from hiding the Apache Traffic Control Godocs
 ================================================================
