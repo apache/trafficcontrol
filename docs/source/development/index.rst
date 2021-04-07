@@ -26,6 +26,7 @@ Use this guide to start developing applications that consume the Traffic Control
 	building
 	debugging
 	documentation_guidelines
+	godocs
 	ort/traffic_ops_ort
 	traffic_monitor
 	traffic_ops

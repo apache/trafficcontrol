@@ -1,0 +1,85 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: License File Coverage Check for pkg.go.dev
+
+env:
+  ACTION_DIR: .github/actions/license-file-coverage
+  BLOB_URL: ${{ github.server_url }}/${{ github.repository }}/raw/${{ github.sha }}
+  COVERAGE_TEST_NAME: atc_coverage_test
+  GOPATH: ${{ github.workspace }}
+  PKGSITE_DIR: ${{ github.workspace }}/src/golang.org/x/pkgsite
+  PKGSITE_REPO: golang.org/x/pkgsite
+
+on:
+  push:
+    paths:
+      - .github/workflows/license-file-coverage.yml
+      - .github/actions/license-file-coverage
+      - LICENSE
+  create:
+  pull_request:
+    paths:
+      - .github/workflows/license-file-coverage.yml
+      - .github/actions/license-file-coverage
+      - LICENSE
+    types: [opened, reopened, ready_for_review, synchronize]
+
+jobs:
+  check-coverage:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: go-version
+        run: |
+          go_version="$(curl -L "${BLOB_URL}/GO_VERSION")" &&
+          echo "::set-output name=value::${go_version}"
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ steps.go-version.outputs.value }} # The Go version to download (if necessary) and use.
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          repository: golang/pkgsite
+          path: ${{ env.PKGSITE_DIR }}
+      - name: Place ATC license detection test
+        run: |
+          set -o errexit -o nounset -o xtrace
+          cd "$PKGSITE_DIR"
+          mkdir "$COVERAGE_TEST_NAME"
+          cd "$COVERAGE_TEST_NAME"
+          curl -LO "${BLOB_URL}/${ACTION_DIR}/${COVERAGE_TEST_NAME}.go"
+          curl -LO "${BLOB_URL}/LICENSE"
+      - name: Cache Go modules for ${{ env.PKGSITE_REPO }}
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.PKGSITE_DIR }}/vendor
+          key: ${{ runner.os }}-go-${{ steps.go-version.outputs.value }}-${{ hashFiles('**/go.sum') }}-${{ hashFiles(format('{0}/{1}/{2}', env.PKGSITE_DIR, env.COVERAGE_TEST_NAME, format('{0}.go', env.COVERAGE_TEST_NAME))) }}
+      - name: Download Go modules for ${{ env.PKGSITE_REPO }}
+        run: |
+          set -o errexit -o nounset -o xtrace
+          cd "$PKGSITE_DIR"
+          if [[ ! -e vendor/modules.txt ]]; then
+            go mod vendor
+          else
+            echo "Modules are already downloaded."
+          fi
+      - name: Run the License file coverage check
+        run: |
+          set -o errexit -o nounset -o xtrace
+          cd "$PKGSITE_DIR"
+          go test -test.v "./${COVERAGE_TEST_NAME}" -licensepath LICENSE -packagename "${GITHUB_REPOSITORY}"
