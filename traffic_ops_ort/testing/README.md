@@ -62,7 +62,7 @@ Docker containers you will need to provide the following resources:
       ort-tests/tc-fixtures.json to match the $VERSION.$COMMIT-HASH used in the name
       of your RPM.  Search for 'CHANGEME' in the ort-tests/tc-fixtures.json 
       and change the value to match the RPM version you choose to use.
-      For example, '8.0.8-19.77cb23a' and therefore the rpm file expected in 
+      For example, '8.0.8-19.77cb23a.el7.x86_64' and therefore the rpm file expected in 
       'docker/yumserver/test-rpms' is 'trafficserver-8.0.8-19.77cb23a.el7.x86_64.rpm'.
   6.  The container Docker files have the usernames and passwords used in the various
       containers ie, postgresql db, traffic_ops, and traffic_ops_ort.  The usernames

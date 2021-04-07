@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 	"strings"
@@ -590,7 +591,7 @@ func CheckCacheGroupsAuthentication(t *testing.T) {
 func VerifyPaginationSupportCg(t *testing.T) {
 	qparams := url.Values{}
 	qparams.Set("orderby", "id")
-	cachegroup, _, err := TOSession.GetCacheGroupsByQueryParams(qparams)
+	cachegroup, _, err := TOSession.GetCacheGroupsByQueryParamsWithHdr(qparams, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Cachegroup: %v", err)
 	}
@@ -598,7 +599,7 @@ func VerifyPaginationSupportCg(t *testing.T) {
 	qparams = url.Values{}
 	qparams.Set("orderby", "id")
 	qparams.Set("limit", "1")
-	cachegroupWithLimit, _, err := TOSession.GetCacheGroupsByQueryParams(qparams)
+	cachegroupWithLimit, _, err := TOSession.GetCacheGroupsByQueryParamsWithHdr(qparams, nil)
 	if !reflect.DeepEqual(cachegroup[:1], cachegroupWithLimit) {
 		t.Error("expected GET Cachegroups with limit = 1 to return first result")
 	}
@@ -607,7 +608,7 @@ func VerifyPaginationSupportCg(t *testing.T) {
 	qparams.Set("orderby", "id")
 	qparams.Set("limit", "1")
 	qparams.Set("offset", "1")
-	cachegroupsWithOffset, _, err := TOSession.GetCacheGroupsByQueryParams(qparams)
+	cachegroupsWithOffset, _, err := TOSession.GetCacheGroupsByQueryParamsWithHdr(qparams, nil)
 	if !reflect.DeepEqual(cachegroup[1:2], cachegroupsWithOffset) {
 		t.Error("expected GET cachegroup with limit = 1, offset = 1 to return second result")
 	}
@@ -616,14 +617,14 @@ func VerifyPaginationSupportCg(t *testing.T) {
 	qparams.Set("orderby", "id")
 	qparams.Set("limit", "1")
 	qparams.Set("page", "2")
-	cachegroupWithPage, _, err := TOSession.GetCacheGroupsByQueryParams(qparams)
+	cachegroupWithPage, _, err := TOSession.GetCacheGroupsByQueryParamsWithHdr(qparams, nil)
 	if !reflect.DeepEqual(cachegroup[1:2], cachegroupWithPage) {
 		t.Error("expected GET cachegroup with limit = 1, page = 2 to return second result")
 	}
 
 	qparams = url.Values{}
 	qparams.Set("limit", "-2")
-	_, _, err = TOSession.GetCacheGroupsByQueryParams(qparams)
+	_, _, err = TOSession.GetCacheGroupsByQueryParamsWithHdr(qparams, nil)
 	if err == nil {
 		t.Error("expected GET cachegroup to return an error when limit is not bigger than -1")
 	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
@@ -633,7 +634,7 @@ func VerifyPaginationSupportCg(t *testing.T) {
 	qparams = url.Values{}
 	qparams.Set("limit", "1")
 	qparams.Set("offset", "0")
-	_, _, err = TOSession.GetCacheGroupsByQueryParams(qparams)
+	_, _, err = TOSession.GetCacheGroupsByQueryParamsWithHdr(qparams, nil)
 	if err == nil {
 		t.Error("expected GET cachegroup to return an error when offset is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {
@@ -643,7 +644,7 @@ func VerifyPaginationSupportCg(t *testing.T) {
 	qparams = url.Values{}
 	qparams.Set("limit", "1")
 	qparams.Set("page", "0")
-	_, _, err = TOSession.GetCacheGroupsByQueryParams(qparams)
+	_, _, err = TOSession.GetCacheGroupsByQueryParamsWithHdr(qparams, nil)
 	if err == nil {
 		t.Error("expected GET cachegroup to return an error when page is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {

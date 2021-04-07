@@ -15,8 +15,11 @@ package util
 */
 
 import (
+	"bytes"
 	"errors"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -57,20 +60,24 @@ func filterOutComments(body []string) []string {
 		if strings.HasPrefix(line, "#") {
 			continue
 		}
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
 		newlines = append(newlines, line)
 	}
 
 	return newlines
 }
 
-func DiffFiles(firstFile string, secondFile string) (bool, error) {
+// DiffFiles returns the empty string if there was no diff or the diff if there was, and any error.
+func DiffFiles(firstFile string, secondFile string) (string, error) {
 	d1, err := readFile(firstFile)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 	d2, err := readFile(secondFile)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
 	d1Data := strings.Split(string(d1), "\n")
@@ -80,10 +87,46 @@ func DiffFiles(firstFile string, secondFile string) (bool, error) {
 	str2 := strings.Join(filterOutComments(d2Data), "\n")
 
 	if str1 == str2 {
-		return true, nil
-	} else {
-		return false, nil
+		return "", nil
 	}
+
+	return gitDiffFiles(firstFile, secondFile)
+}
+
+func gitDiffFiles(firstFile string, secondFile string) (string, error) {
+	cmd := exec.Command("git", "diff", "--no-index", firstFile, secondFile)
+	//	cmd.Dir = atsConfigDir
+
+	errOutput, err := cmd.CombinedOutput()
+	if err != nil {
+		if _, ok := err.(*exec.ExitError); !ok {
+			// this means Go failed to run the command, not that the command returned an error.
+			return "", errors.New("git status returned: " + err.Error())
+		}
+	}
+
+	errOutput = bytes.ToLower(errOutput)
+
+	if len(errOutput) == 0 {
+		return "", nil // no diff, files match
+	}
+
+	if !bytes.HasPrefix(errOutput, []byte("diff")) {
+		return "", errors.New("git diff returned error: " + string(errOutput)) // some other error
+	}
+
+	return string(errOutput), nil // diff, files don't match
+}
+
+// RMGit attemps to remove the .git directory in the given dir, and returns any error.
+func RMGit(dir string) error {
+	// use filepath to normalize, e.g. `/././` will be normalized to `/`.
+	if filepath.Dir(strings.TrimSpace(dir)) == filepath.FromSlash("/") {
+		return errors.New("refusing to delete / for safety")
+	}
+	cmd := exec.Command("rm", "-rf", ".git")
+	cmd.Dir = dir
+	return cmd.Run()
 }
 
 func FileExists(filename string) bool {

@@ -55,16 +55,16 @@ func (v *TOType) SelectMaxLastUpdatedQuery(where string, orderBy string, paginat
 }
 func (v *TOType) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"name":       dbhelpers.WhereColumnInfo{"typ.name", nil},
-		"id":         dbhelpers.WhereColumnInfo{"typ.id", api.IsInt},
-		"useInTable": dbhelpers.WhereColumnInfo{"typ.use_in_table", nil},
+		"name":       dbhelpers.WhereColumnInfo{Column: "typ.name"},
+		"id":         dbhelpers.WhereColumnInfo{Column: "typ.id", Checker: api.IsInt},
+		"useInTable": dbhelpers.WhereColumnInfo{Column: "typ.use_in_table"},
 	}
 }
 func (v *TOType) UpdateQuery() string { return updateQuery() }
 func (v *TOType) DeleteQuery() string { return deleteQuery() }
 
 func (typ TOType) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions

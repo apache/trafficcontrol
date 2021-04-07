@@ -803,8 +803,8 @@ func ExpectedGetParams() []parameter.TOParameter {
 	value := "3000"
 	return []parameter.TOParameter{
 		{
-			api.APIInfoImpl{ReqInfo: nil},
-			tc.ParameterNullable{
+			APIInfoImpl: api.APIInfoImpl{ReqInfo: nil},
+			ParameterNullable: tc.ParameterNullable{
 				ConfigFile:  nil,
 				ID:          nil,
 				LastUpdated: nil,

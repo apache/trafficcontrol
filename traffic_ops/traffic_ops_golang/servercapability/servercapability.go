@@ -81,12 +81,12 @@ DELETE FROM server_capability WHERE name=:name
 
 func (v *TOServerCapability) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"name": {"sc.name", nil},
+		"name": {Column: "sc.name"},
 	}
 }
 
 func (v TOServerCapability) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"name", api.GetStringKey}}
+	return []api.KeyFieldInfo{{Field: "name", Func: api.GetStringKey}}
 }
 
 // Implementation of the Identifier, Validator interface functions

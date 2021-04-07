@@ -75,9 +75,9 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	cdnNotifications := []tc.CDNNotification{}
 
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":   dbhelpers.WhereColumnInfo{"cn.id", api.IsInt},
-		"cdn":  dbhelpers.WhereColumnInfo{"cdn.name", nil},
-		"user": dbhelpers.WhereColumnInfo{"tm_user.username", nil},
+		"id":   dbhelpers.WhereColumnInfo{Column: "cn.id", Checker: api.IsInt},
+		"cdn":  dbhelpers.WhereColumnInfo{Column: "cdn.name"},
+		"user": dbhelpers.WhereColumnInfo{Column: "tm_user.username"},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)

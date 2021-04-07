@@ -709,7 +709,7 @@ func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
 	if inf.Config.ConfigInflux != nil && *inf.Config.ConfigInflux.Secure {
 		if !httpsPort.Valid {
 			log.Warnf("INFLUXDB Server %s has no secure ports, assuming default of 8086!", fqdn)
-			httpsPort = sql.NullInt64{8086, true}
+			httpsPort = sql.NullInt64{Int64: 8086, Valid: true}
 		}
 		port, err := httpsPort.Value()
 		if err != nil {

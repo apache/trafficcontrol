@@ -55,11 +55,11 @@ func getAPICapabilities(tx *sqlx.Tx, params map[string]string) ([]tc.APICapabili
 	var err error
 	selectQuery := `SELECT id, http_method, route, capability, last_updated FROM api_capability`
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":          dbhelpers.WhereColumnInfo{"id", api.IsInt},
-		"capability":  dbhelpers.WhereColumnInfo{"capability", nil},
-		"httpMethod":  dbhelpers.WhereColumnInfo{"http_method", nil},
-		"route":       dbhelpers.WhereColumnInfo{"route", nil},
-		"lastUpdated": dbhelpers.WhereColumnInfo{"last_updated", nil},
+		"id":          dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt},
+		"capability":  dbhelpers.WhereColumnInfo{Column: "capability"},
+		"httpMethod":  dbhelpers.WhereColumnInfo{Column: "http_method"},
+		"route":       dbhelpers.WhereColumnInfo{Column: "route"},
+		"lastUpdated": dbhelpers.WhereColumnInfo{Column: "last_updated"},
 	}
 
 	where, orderBy, pagination, queryValues, errs :=

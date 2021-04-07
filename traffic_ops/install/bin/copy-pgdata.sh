@@ -51,7 +51,7 @@ to-auth () {
     [[ -z $TO_URL ]] && read -p 'Traffic Ops URL: ' TO_URL
     [[ -z $TO_USER ]] && read -p 'Traffic Ops user: ' TO_USER
     [[ -z $TO_PASSWORD ]] && read -s -p "Traffic Ops password for $TO_USER: " TO_PASSWORD
-    
+
     COOKIEJAR=/tmp/cookiejar.$(echo $TO_URL $TO_USER | md5sum | awk '{print $1}')
     cookie_current $COOKIEJAR && return
     local datadir=$(mktemp -d)
@@ -120,7 +120,7 @@ EOF
 
 # write cr-config
 write_crconfig() {
-    to-get "tools/write_crconfig/$1" >/dev/null
+    to-put "/api/4.0/snapshot/$1" >/dev/null
 }
 
 
@@ -138,7 +138,7 @@ usage() {
  db using the psql command with the postgres user.
 
  The script prompts for all needed information unless the corresponding env var is
- set for each piece: 
+ set for each piece:
 
      TO_URL       - Source URL for traffic_ops
 

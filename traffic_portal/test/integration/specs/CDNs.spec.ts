@@ -16,18 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser } from 'protractor'
+import { readFileSync } from "fs";
+
+import { browser } from 'protractor';
+import using from "jasmine-data-provider";
+
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { CDNPage } from '../PageObjects/CDNPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-import { API } from '../CommonUtils/API';
-
-
-let fs = require('fs')
-let using = require('jasmine-data-provider');
 
 let filename = 'Data/CDN/TestCases.json';
-let testData = JSON.parse(fs.readFileSync(filename));
+let testData = JSON.parse(readFileSync(filename, "utf8"));
 
 let loginPage = new LoginPage();
 let topNavigation = new TopNavigationPage();
@@ -56,7 +55,7 @@ using(testData.CDN, async function(cdnsData){
                     await cdnsPage.SearchCDN(update.Name);
                     expect(await cdnsPage.UpdateCDN(update)).toBeTruthy();
                 })
-            
+
             })
             using(cdnsData.Remove, function(remove){
                 it(remove.description, async function(){

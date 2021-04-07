@@ -87,13 +87,13 @@ func TestVerifyUrlOnWhiteList(t *testing.T) {
 
 func TestTemplateRender(t *testing.T) {
 	to := rfc.EmailAddress{
-		mail.Address{
+		Address: mail.Address{
 			Address: "em@i.l",
 			Name:    "",
 		},
 	}
 	from := rfc.EmailAddress{
-		mail.Address{
+		Address: mail.Address{
 			Address: "no-reply@test.quest",
 			Name:    "",
 		},

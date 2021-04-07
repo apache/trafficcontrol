@@ -1,3 +1,5 @@
+package t3clib
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,12 +18,44 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-exports.config.onPrepare = () => {
-  const jasmineReporters = require('jasmine-reporters');
-  jasmine.getEnv().addReporter(
-    new jasmineReporters.JUnitXmlReporter({
-      savePath: '/portaltestresults',
-      filePrefix: 'portaltestresults',
-      consolidateAll: true
-    }))
+
+// Utility functions.
+
+import (
+	"errors"
+	"net/url"
+	"strings"
+
+	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreq"
+)
+
+func TOConnect(tccfg *TCCfg) (*TCCfg, error) {
+	_toClient, err := toreq.New(
+		tccfg.TOURL,
+		tccfg.TOUser,
+		tccfg.TOPass,
+		tccfg.TOInsecure,
+		tccfg.TOTimeoutMS,
+		tccfg.UserAgent)
+
+	if err != nil {
+		return nil, errors.New("failed to connect to traffic ops: " + err.Error())
+	}
+
+	tccfg.TOClient = _toClient
+
+	return tccfg, nil
+}
+
+func ValidateURL(u *url.URL) error {
+	if u == nil {
+		return errors.New("nil url")
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return errors.New("scheme expected 'http' or 'https', actual '" + u.Scheme + "'")
+	}
+	if strings.TrimSpace(u.Host) == "" {
+		return errors.New("no host")
+	}
+	return nil
 }

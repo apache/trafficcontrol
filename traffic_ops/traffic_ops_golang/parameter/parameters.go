@@ -88,7 +88,7 @@ func (v *TOParameter) UpdateQuery() string { return updateQuery() }
 func (v *TOParameter) DeleteQuery() string { return deleteQuery() }
 
 func (param TOParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{IDQueryParam, api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: IDQueryParam, Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions

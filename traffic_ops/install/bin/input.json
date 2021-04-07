@@ -1,179 +1,151 @@
 {
-  "/opt/traffic_ops/app/conf/production/database.conf":[
+  "/opt/traffic_ops/app/conf/cdn.conf": [
     {
-      "Database type":"Pg",
-      "config_var":"type"
+      "Generate a new secret?": "yes",
+      "config_var": "genSecret"
     },
     {
-      "Database name":"traffic_ops_db",
-      "config_var":"dbname"
+      "Number of secrets to keep?": "10",
+      "config_var": "keepSecrets"
     },
     {
-      "Database server hostname IP or FQDN":"localhost",
-      "config_var":"hostname"
+      "Number of workers?": "12",
+      "config_var": "workers"
     },
     {
-      "Database port number":"5432",
-      "config_var":"port"
-    },
-    {
-      "Traffic Ops database user":"traffic_ops",
-      "config_var":"user"
-    },
-    {
-      "Traffic Ops database password":"default",
-      "config_var":"password",
-      "hidden":"1"
+      "Traffic Ops url?": "https://[::]",
+      "config_var": "base_url"
     }
   ],
-  "/opt/traffic_ops/app/db/dbconf.yml":[
+  "/opt/traffic_ops/app/conf/ldap.conf": [
     {
-      "Database server root (admin) user":"root",
-      "config_var":"dbAdminUser"
+      "Do you want to set up LDAP?": "no",
+      "config_var": "setupLdap"
     },
     {
-      "Database server admin password":"default",
-      "config_var":"dbAdminPw",
-      "hidden":"1"
+      "LDAP server hostname": "",
+      "config_var": "hostname"
     },
     {
-      "Download Maxmind Database?":"yes",
-      "config_var":"maxmind"
+      "LDAP Admin DN": "",
+      "config_var": "admin_dn"
+    },
+    {
+      "LDAP Admin Password": "",
+      "config_var": "password",
+      "hidden": "1"
+    },
+    {
+      "LDAP Search Base": "",
+      "config_var": "search_base"
     }
   ],
-  "/opt/traffic_ops/app/conf/cdn.conf":[
+  "/opt/traffic_ops/app/conf/production/database.conf": [
     {
-      "Generate a new secret?":"yes",
-      "config_var":"genSecret"
+      "Database type": "Pg",
+      "config_var": "type"
     },
     {
-      "Number of secrets to keep?":"10",
-      "config_var":"keepSecrets"
+      "Database name": "traffic_ops_db",
+      "config_var": "dbname"
     },
     {
-      "Port to serve on?":"443",
-      "config_var":"port"
+      "Database server hostname IP or FQDN": "localhost",
+      "config_var": "hostname"
+    },
+    {
+      "Database port number": "5432",
+      "config_var": "port"
+    },
+    {
+      "Traffic Ops database user": "dbuser",
+      "config_var": "user"
+    },
+    {
+      "Traffic Ops database password": "dbpass",
+      "config_var": "password",
+      "hidden": "1"
     }
   ],
-  "/opt/traffic_ops/app/conf/ldap.conf":[
+  "/opt/traffic_ops/app/db/dbconf.yml": [
     {
-      "Do you want to set up LDAP?":"no",
-      "config_var":"setupLdap"
+      "Database server root (admin) username": "dbuser",
+      "config_var": "pgUser"
     },
     {
-      "LDAP server hostname":"",
-      "config_var":"hostname"
+      "Database server admin password": "dbpass",
+      "config_var": "pgPassword",
+      "hidden": "1"
     },
     {
-      "LDAP Admin DN":"",
-      "config_var":"admin_dn"
-    },
-    {
-      "LDAP Admin Password":"",
-      "config_var":"password",
-      "hidden":"1"
-    },
-    {
-      "LDAP Search Base":"",
-      "config_var":"search_base"
+      "Download Maxmind Database?": "no",
+      "config_var": "maxmind"
     }
   ],
-  "/opt/traffic_ops/install/data/json/users.json":[
+  "/opt/traffic_ops/install/data/json/openssl_configuration.json": [
     {
-      "Administration username for Traffic Ops":"root",
-      "config_var":"tmAdminUser"
+      "Do you want to generate a certificate?": "yes",
+      "config_var": "genCert"
     },
     {
-      "Password for the admin user":"default",
-      "config_var":"tmAdminPw",
-      "hidden":"1"
+      "Country Name (2 letter code)": "XX",
+      "config_var": "country"
+    },
+    {
+      "State or Province Name (full name)": "Default State",
+      "config_var": "state"
+    },
+    {
+      "Locality Name (eg, city)": "Default City",
+      "config_var": "locality"
+    },
+    {
+      "Organization Name (eg, company)": "Default Company Ltd",
+      "config_var": "company"
+    },
+    {
+      "Organizational Unit Name (eg, section)": "",
+      "config_var": "org_unit"
+    },
+    {
+      "Common Name (eg, your name or your server's hostname)": "example.com",
+      "config_var": "common_name"
+    },
+    {
+      "RSA Passphrase": "password",
+      "config_var": "rsaPassword",
+      "hidden": "1"
     }
   ],
-  "/opt/traffic_ops/install/data/profiles/":[
+  "/opt/traffic_ops/install/data/json/profiles.json": [
     {
-      "Add custom profiles?":"no",
-      "config_var":"custom_profiles"
+      "Traffic Ops url": "https://[::]",
+      "config_var": "tm.url"
+    },
+    {
+      "Human-readable CDN Name.  (No whitespace, please)": "kabletown_cdn",
+      "config_var": "cdn_name"
+    },
+    {
+      "DNS sub-domain for which your CDN is authoritative": "cdn1.kabletown.net",
+      "config_var": "dns_subdomain"
     }
   ],
-  "/opt/traffic_ops/install/data/json/openssl_configuration.json":[
+  "/opt/traffic_ops/install/data/json/users.json": [
     {
-      "Do you want to generate a certificate?":"yes",
-      "config_var":"genCert"
+      "Administration username for Traffic Ops": "admin",
+      "config_var": "tmAdminUser"
     },
     {
-      "Country Name (2 letter code)":"XX",
-      "config_var":"country"
-    },
-    {
-      "State or Province Name (full name)":"Default State",
-      "config_var":"state"
-    },
-    {
-      "Locality Name (eg, city)":"Default City",
-      "config_var":"locality"
-    },
-    {
-      "Organization Name (eg, company)":"Default Company Ltd",
-      "config_var":"company"
-    },
-    {
-      "Organizational Unit Name (eg, section)":"",
-      "config_var":"org_unit"
-    },
-    {
-      "Common Name (eg, your name or your server's hostname)":"example.com",
-      "config_var":"common_name"
-    },
-    {
-      "RSA Passphrase":"password",
-      "config_var":"rsaPassword",
-      "hidden":"1"
+      "Password for the admin user": "twelve",
+      "config_var": "tmAdminPw",
+      "hidden": "1"
     }
   ],
-  "/opt/traffic_ops/install/data/json/profiles.json":[
+  "/opt/traffic_ops/install/data/profiles/": [
     {
-      "Traffic Ops url":"https://localhost",
-      "config_var":"tm.url"
-    },
-    {
-      "Human-readable CDN Name.  (No whitespace, please)":"kabletown_cdn",
-      "config_var":"cdn_name"
-    },
-    {
-      "Health Polling Interval (milliseconds)":"8000",
-      "config_var":"health_polling_int"
-    },
-    {
-      "DNS sub-domain for which your CDN is authoritative":"cdn1.kabletown.net",
-      "config_var":"dns_subdomain"
-    },
-    {
-      "TLD SOA admin":"traffic_ops",
-      "config_var":"soa_admin"
-    },
-    {
-      "TrafficServer Drive Prefix":"/dev/sd",
-      "config_var":"driver_prefix"
-    },
-    {
-      "TrafficServer RAM Drive Prefix":"/dev/ram",
-      "config_var":"ram_drive_prefix"
-    },
-    {
-      "TrafficServer RAM Drive Letters (comma separated)":"0,1,2,3,4,5,6,7",
-      "config_var":"ram_drive_letters"
-    },
-    {
-      "Health Threshold Load Average":"25",
-      "config_var":"health_thresh_load_avg"
-    },
-    {
-      "Health Threshold Available Bandwidth in Kbps":"1750000",
-      "config_var":"health_thresh_kbps"
-    },
-    {
-      "Traffic Server Health Connection Timeout (milliseconds)":"2000",
-      "config_var":"health_connect_timeout"
+      "Add custom profiles?": "no",
+      "config_var": "custom_profiles"
     }
   ]
 }

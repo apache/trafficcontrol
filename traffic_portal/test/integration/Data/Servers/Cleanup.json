@@ -112,6 +112,55 @@
             ]
         },
         {
+            "Action": "DeletePhysLocations",
+            "Route" : "/phys_locations",
+            "Method" : "delete",
+            "Data": [
+                {
+                    "route": "/phys_locations/",
+                    "getRequest": [
+                        {
+                            "route": "/phys_locations",
+                            "queryKey": "name",
+                            "queryValue": "TPPhysLocation2",
+                            "replace": "route"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Action": "DeleteRegions",
+            "Route" : "/regions",
+            "Method" : "delete",
+            "Data": [
+                {
+                    "route": "/regions?name=PhysTest"
+                },
+                {
+                    "route": "/regions?name=PhysTest2"
+                }
+            ]
+        },
+        {
+            "Action": "DeleteDivisions",
+            "Route" : "/divisions",
+            "Method" : "delete",
+            "Data": [
+                {
+                    "route": "/divisions/",
+                    "getRequest": [
+                        {
+                            "route": "/divisions",
+                            "queryKey": "name",
+                            "queryValue": "PhysTest",
+                            "replace": "route"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "Action": "DeleteCDN",
             "Route" : "/cdns",
             "Method" : "delete",

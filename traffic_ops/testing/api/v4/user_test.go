@@ -214,7 +214,7 @@ func UserRegistrationTest(t *testing.T) {
 		if err != nil {
 			t.Fatalf("could not get tenant %v: %v", *user.Tenant, err)
 		}
-		resp, _, err := TOSession.RegisterNewUser(uint(tenant.ID), uint(*user.Role), rfc.EmailAddress{mail.Address{Address: *user.Email}})
+		resp, _, err := TOSession.RegisterNewUser(uint(tenant.ID), uint(*user.Role), rfc.EmailAddress{Address: mail.Address{Address: *user.Email}})
 		if err != nil {
 			t.Fatalf("could not register user: %v", err)
 		}
@@ -493,6 +493,34 @@ func ForceDeleteTestUsers(t *testing.T) {
 		usernames = append(usernames, `'`+*user.Username+`'`)
 	}
 
+	// there is a constraint that prevents users from being deleted when they have a log
+	q := `DELETE FROM log WHERE NOT tm_user = (SELECT id FROM tm_user WHERE username = 'admin')`
+	err = execSQL(db, q)
+	if err != nil {
+		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
+	}
+
+	q = `DELETE FROM tm_user WHERE username IN (` + strings.Join(usernames, ",") + `)`
+	err = execSQL(db, q)
+	if err != nil {
+		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
+	}
+}
+
+func ForceDeleteTestUsersByUsernames(t *testing.T, usernames []string) {
+
+	// NOTE: Special circumstances!  This should *NOT* be done without a really good reason!
+	//  Connects directly to the DB to remove users rather than going thru the client.
+	//  This is required here because the DeleteUser action does not really delete users,  but disables them.
+	db, err := OpenConnection()
+	if err != nil {
+		t.Error("cannot open db")
+	}
+	defer db.Close()
+
+	for i, u := range usernames {
+		usernames[i] = `'` + u + `'`
+	}
 	// there is a constraint that prevents users from being deleted when they have a log
 	q := `DELETE FROM log WHERE NOT tm_user = (SELECT id FROM tm_user WHERE username = 'admin')`
 	err = execSQL(db, q)

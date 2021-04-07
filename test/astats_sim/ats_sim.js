@@ -20,7 +20,7 @@
 
 var myip = "127.0.0.1";
 var myport = 80;
-var config_url = "https://traffic-ops.com/CRConfig-Snapshots/cdn-name/CRConfig.json";
+var config_url = "https://traffic-ops.com/api/4.0/cdns/cdn-name/snapshot";
 var to_user = "";
 var to_password = "";
 var to_login_api = "/api/2.0/user/login";
@@ -52,7 +52,7 @@ var to_credentials = JSON.stringify({
 var errorRateDenominator = 0;
 var debug = 0;
 
-// https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.json
+// https://${tmHostname}/api/${apiVersion}/cdns/${cdnName}/snapshot
 if (debug) console.log("point traffic_monitor::tm.crConfig.json.polling.url to: " + config_url);
 
 var date = new Date();
@@ -172,8 +172,8 @@ http.createServer(function (request, response) {
 		return;
 	}
 
-	// https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.json
-	if (request.url.indexOf("/CRConfig.json") != -1) {
+	// https://${tmHostname}/api/${apiVersion}/cdns/${cdnName}/snapshot
+	if (request.url.indexOf("/snapshot") != -1) {
 		console.log("Delivering CRConfig.json");
 		response.end(JSON.stringify(cr_config, null, 4));
 		return;

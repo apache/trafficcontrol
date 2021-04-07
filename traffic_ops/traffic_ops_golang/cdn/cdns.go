@@ -58,17 +58,17 @@ func (v *TOCDN) NewReadObj() interface{}       { return &tc.CDNNullable{} }
 func (v *TOCDN) SelectQuery() string           { return selectQuery() }
 func (v *TOCDN) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"domainName":    dbhelpers.WhereColumnInfo{"domain_name", nil},
-		"dnssecEnabled": dbhelpers.WhereColumnInfo{"dnssec_enabled", nil},
-		"id":            dbhelpers.WhereColumnInfo{"id", api.IsInt},
-		"name":          dbhelpers.WhereColumnInfo{"name", nil},
+		"domainName":    dbhelpers.WhereColumnInfo{Column: "domain_name"},
+		"dnssecEnabled": dbhelpers.WhereColumnInfo{Column: "dnssec_enabled"},
+		"id":            dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt},
+		"name":          dbhelpers.WhereColumnInfo{Column: "name"},
 	}
 }
 func (v *TOCDN) UpdateQuery() string { return updateQuery() }
 func (v *TOCDN) DeleteQuery() string { return deleteQuery() }
 
 func (cdn TOCDN) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
