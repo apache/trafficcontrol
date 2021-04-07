@@ -132,7 +132,7 @@ def atc_file_role(unused_typ,
 	return [refnode], []
 
 # -- GoDoc role (absolute) ---------------------------------------------------
-GODOC_URI = "https://godoc.org/"
+GODOC_URI = "https://pkg.go.dev/"
 def godoc_role(unused_typ,
                unused_rawtext,
                text,
