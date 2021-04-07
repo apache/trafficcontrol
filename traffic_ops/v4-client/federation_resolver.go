@@ -14,29 +14,21 @@ package client
    limitations under the License.
 */
 
-import "fmt"
-import "net/http"
-import "net/url"
-import "strconv"
+import (
+	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
-import "github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+)
 
-func (to *Session) getFederationResolvers(id *uint, ip *string, t *string, header http.Header) ([]tc.FederationResolver, toclientlib.ReqInf, error) {
-	var vals = url.Values{}
-	if id != nil {
-		vals.Set("id", strconv.FormatUint(uint64(*id), 10))
-	}
-	if ip != nil {
-		vals.Set("ipAddress", *ip)
-	}
-	if t != nil {
-		vals.Set("type", *t)
-	}
-
-	path := "/federation_resolvers"
-	if len(vals) > 0 {
-		path = fmt.Sprintf("%s?%s", path, vals.Encode())
+// GetFederationResolvers retrieves Federation Resolvers from Traffic Ops.
+func (to *Session) GetFederationResolvers(params url.Values, header http.Header) ([]tc.FederationResolver, toclientlib.ReqInf, error) {
+	var path = "federation_resolvers/"
+	if len(params) > 0 {
+		path = fmt.Sprintf("%s?%s", path, params.Encode())
 	}
 
 	var data struct {
@@ -46,61 +38,24 @@ func (to *Session) getFederationResolvers(id *uint, ip *string, t *string, heade
 	return data.Response, inf, err
 }
 
-func (to *Session) GetFederationResolversWithHdr(header http.Header) ([]tc.FederationResolver, toclientlib.ReqInf, error) {
-	return to.getFederationResolvers(nil, nil, nil, header)
-}
-
-// GetFederationResolvers retrieves all Federation Resolvers from Traffic Ops
-// Deprecated: GetFederationResolvers will be removed in 6.0. Use GetFederationResolversWithHdr.
-func (to *Session) GetFederationResolvers() ([]tc.FederationResolver, toclientlib.ReqInf, error) {
-	return to.GetFederationResolversWithHdr(nil)
-}
-
-func (to *Session) GetFederationResolverByIDWithHdr(ID uint, header http.Header) (tc.FederationResolver, toclientlib.ReqInf, error) {
-	var fr tc.FederationResolver
-	frs, inf, err := to.getFederationResolvers(&ID, nil, nil, header)
-	if len(frs) > 0 {
-		fr = frs[0]
-	}
-	return fr, inf, err
-}
-
 // GetFederationResolverByID retrieves a single Federation Resolver identified by ID.
-// Deprecated: GetFederationResolverByID will be removed in 6.0. Use GetFederationResolverByIDWithHdr.
-func (to *Session) GetFederationResolverByID(ID uint) (tc.FederationResolver, toclientlib.ReqInf, error) {
-	return to.GetFederationResolverByIDWithHdr(ID, nil)
-}
-
-func (to *Session) GetFederationResolverByIPAddressWithHdr(ip string, header http.Header) (tc.FederationResolver, toclientlib.ReqInf, error) {
-	var fr tc.FederationResolver
-	frs, inf, err := to.getFederationResolvers(nil, &ip, nil, header)
-	if len(frs) > 0 {
-		fr = frs[0]
+func (to *Session) GetFederationResolverByID(ID uint, header http.Header) (tc.FederationResolver, toclientlib.ReqInf, error) {
+	vals := url.Values{}
+	vals.Set("id", strconv.FormatUint(uint64(ID), 10))
+	feds, reqInf, err := to.GetFederationResolvers(vals, nil)
+	if err != nil {
+		return tc.FederationResolver{}, reqInf, err
 	}
-	return fr, inf, err
-}
-
-// GetFederationResolverByIPAddress retrieves the Federation Resolver that uses the IP address or
-// CIDR-notation subnet 'ip'.
-// Deprecated: GetFederationResolverByIPAddress will be removed in 6.0. Use GetFederationResolverByIPAddressWithHdr.
-func (to *Session) GetFederationResolverByIPAddress(ip string) (tc.FederationResolver, toclientlib.ReqInf, error) {
-	return to.GetFederationResolverByIPAddressWithHdr(ip, nil)
-}
-
-func (to *Session) GetFederationResolversByTypeWithHdr(t string, header http.Header) ([]tc.FederationResolver, toclientlib.ReqInf, error) {
-	return to.getFederationResolvers(nil, nil, &t, header)
-}
-
-// GetFederationResolversByType gets all Federation Resolvers that are of the Type named 't'.
-// Deprecated: GetFederationResolversByType will be removed in 6.0. Use GetFederationResolversByTypeWithHdr.
-func (to *Session) GetFederationResolversByType(t string) ([]tc.FederationResolver, toclientlib.ReqInf, error) {
-	return to.GetFederationResolversByTypeWithHdr(t, nil)
+	if len(feds) != 1 {
+		return tc.FederationResolver{}, reqInf, fmt.Errorf("Traffic Ops returned %d Federation Resolvers with ID '%d'", len(feds), ID)
+	}
+	return feds[0], reqInf, nil
 }
 
 // CreateFederationResolver creates the Federation Resolver 'fr'.
-func (to *Session) CreateFederationResolver(fr tc.FederationResolver) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateFederationResolver(fr tc.FederationResolver, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post("/federation_resolvers", fr, nil, &alerts)
+	reqInf, err := to.post("federation_resolvers/", fr, header, &alerts)
 	return alerts, reqInf, err
 }
 

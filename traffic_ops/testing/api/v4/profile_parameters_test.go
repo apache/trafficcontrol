@@ -16,9 +16,10 @@
 package v4
 
 import (
-	"fmt"
 	"net/http"
+	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -26,8 +27,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
-
-const queryParamFormat = "?profileId=%d&parameterId=%d"
 
 func TestProfileParameters(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, ProfileParameters}, func() {
@@ -44,9 +43,11 @@ func GetTestProfileParametersIMS(t *testing.T) {
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
+	queryParams := url.Values{}
 	for _, pp := range testData.ProfileParameters {
-		queryParams := fmt.Sprintf(queryParamFormat, pp.ProfileID, pp.ParameterID)
-		_, reqInf, err := TOSession.GetProfileParameterByQueryParamsWithHdr(queryParams, header)
+		queryParams.Set("profileId", strconv.Itoa(pp.ProfileID))
+		queryParams.Set("parameterId", strconv.Itoa(pp.ParameterID))
+		_, reqInf, err := TOSession.GetProfileParameters(queryParams, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -59,13 +60,15 @@ func GetTestProfileParametersIMS(t *testing.T) {
 func CreateTestProfileParameters(t *testing.T) {
 
 	firstProfile := testData.Profiles[0]
-	profileResp, _, err := TOSession.GetProfileByNameWithHdr(firstProfile.Name, nil)
+	profileResp, _, err := TOSession.GetProfileByName(firstProfile.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
 	}
 
 	firstParameter := testData.Parameters[0]
-	paramResp, _, err := TOSession.GetParameterByNameWithHdr(firstParameter.Name, nil)
+	params := url.Values{}
+	params.Set("name", firstParameter.Name)
+	paramResp, _, err := TOSession.GetParameters(nil, params)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
@@ -106,11 +109,11 @@ func InvalidCreateTestProfileParameters(t *testing.T) {
 func SortTestProfileParameters(t *testing.T) {
 	var header http.Header
 	var sortedList []string
-	resp, _, err := TOSession.GetProfileParametersWithHdr(header)
+	resp, _, err := TOSession.GetProfileParameters(nil, header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
-	for i, _ := range resp {
+	for i := range resp {
 		sortedList = append(sortedList, resp[i].Parameter)
 	}
 
@@ -123,10 +126,11 @@ func SortTestProfileParameters(t *testing.T) {
 }
 
 func GetTestProfileParameters(t *testing.T) {
-
+	queryParams := url.Values{}
 	for _, pp := range testData.ProfileParameters {
-		queryParams := fmt.Sprintf(queryParamFormat, pp.ProfileID, pp.ParameterID)
-		resp, _, err := TOSession.GetProfileParameterByQueryParamsWithHdr(queryParams, nil)
+		queryParams.Set("profileId", strconv.Itoa(pp.ProfileID))
+		queryParams.Set("parameterId", strconv.Itoa(pp.ParameterID))
+		resp, _, err := TOSession.GetProfileParameters(queryParams, nil)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by name: %v - %v", err, resp)
 		}
@@ -141,23 +145,24 @@ func DeleteTestProfileParameters(t *testing.T) {
 }
 
 func DeleteTestProfileParameter(t *testing.T, pp tc.ProfileParameter) {
-
-	queryParams := fmt.Sprintf(queryParamFormat, pp.ProfileID, pp.ParameterID)
+	queryParams := url.Values{}
+	queryParams.Set("profileId", strconv.Itoa(pp.ProfileID))
+	queryParams.Set("parameterId", strconv.Itoa(pp.ParameterID))
 	// Retrieve the PtofileParameter by profile so we can get the id for the Update
-	resp, _, err := TOSession.GetProfileParameterByQueryParamsWithHdr(queryParams, nil)
+	resp, _, err := TOSession.GetProfileParameters(queryParams, nil)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by profile: %v - %v", pp.Profile, err)
 	}
 	if len(resp) > 0 {
 		respPP := resp[0]
 
-		delResp, _, err := TOSession.DeleteParameterByProfileParameter(respPP.ProfileID, respPP.ParameterID)
+		delResp, _, err := TOSession.DeleteProfileParameter(respPP.ProfileID, respPP.ParameterID)
 		if err != nil {
 			t.Errorf("cannot DELETE Parameter by profile: %v - %v", err, delResp)
 		}
 
 		// Retrieve the Parameter to see if it got deleted
-		pps, _, err := TOSession.GetProfileParameterByQueryParamsWithHdr(queryParams, nil)
+		pps, _, err := TOSession.GetProfileParameters(queryParams, nil)
 		if err != nil {
 			t.Errorf("error deleting Parameter name: %s", err.Error())
 		}

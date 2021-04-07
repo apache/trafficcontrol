@@ -32,27 +32,27 @@ import (
 // These capabilities are defined during the setup process in todb.go.
 // ANY TIME THOSE ARE CHANGED THIS MUST BE UPDATED.
 var staticCapabilities = []tc.Capability{
-	tc.Capability{
+	{
 		Name:        "all-read",
 		Description: "Full read access",
 	},
-	tc.Capability{
+	{
 		Name:        "all-write",
 		Description: "Full write access",
 	},
-	tc.Capability{
+	{
 		Name:        "cdn-read",
 		Description: "View CDN configuration",
 	},
-	tc.Capability{
+	{
 		Name:        "asns-read",
 		Description: "Read ASNs",
 	},
-	tc.Capability{
+	{
 		Name:        "asns-write",
 		Description: "Write ASNs",
 	},
-	tc.Capability{
+	{
 		Name:        "cache-groups-read",
 		Description: "Read CGs",
 	},
@@ -91,7 +91,7 @@ func GetTestCapabilitiesIMS(t *testing.T) {
 
 	for _, c := range testData.Capabilities {
 		capMap[c.Name] = c.Description
-		_, reqInf, err := TOSession.GetCapabilityWithHdr(c.Name, header)
+		_, reqInf, err := TOSession.GetCapability(c.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -107,7 +107,7 @@ func GetTestCapabilities(t *testing.T) {
 
 	for _, c := range testData.Capabilities {
 		capMap[c.Name] = c.Description
-		cap, _, err := TOSession.GetCapability(c.Name)
+		cap, _, err := TOSession.GetCapability(c.Name, nil)
 		if err != nil {
 			t.Errorf("could not get capability '%s': %v", c.Name, err)
 			continue
@@ -126,7 +126,7 @@ func GetTestCapabilities(t *testing.T) {
 		capMap[c.Name] = c.Description
 	}
 
-	caps, _, err := TOSession.GetCapabilities()
+	caps, _, err := TOSession.GetCapabilities(nil)
 	if err != nil {
 		t.Fatalf("could not get all capabilities: %v", err)
 	}
@@ -145,7 +145,7 @@ func GetTestCapabilities(t *testing.T) {
 		}
 	}
 
-	for c, _ := range capMap {
+	for c := range capMap {
 		t.Errorf("Capability '%s' existed in the test data but didn't appear in the response!", c)
 	}
 }

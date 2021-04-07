@@ -25,6 +25,7 @@ import (
 )
 
 const (
+	// APIAbout is the API version-relative path for the /about API endpoint.
 	APIAbout = "/about"
 )
 

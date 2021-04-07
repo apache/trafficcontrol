@@ -25,69 +25,50 @@ import (
 )
 
 const (
+	// APIStatuses is the API version-relative path to the /statuses API endpoint.
 	APIStatuses = "/statuses"
 )
 
-// CreateStatusNullable creates a new status, using the tc.StatusNullable structure.
-func (to *Session) CreateStatusNullable(status tc.StatusNullable) (tc.Alerts, toclientlib.ReqInf, error) {
+// CreateStatus creates the given Status.
+func (to *Session) CreateStatus(status tc.StatusNullable) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(APIStatuses, status, nil, &alerts)
 	return alerts, reqInf, err
 }
 
-func (to *Session) UpdateStatusByIDWithHdr(id int, status tc.Status, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+// UpdateStatus replaces the Status identified by 'id' with the one provided.
+func (to *Session) UpdateStatus(id int, status tc.Status, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", APIStatuses, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, status, header, &alerts)
 	return alerts, reqInf, err
 }
 
-// UpdateStatusByID updates a Status by ID.
-// Deprecated: UpdateStatusByID will be removed in 6.0. Use UpdateStatusByIDWithHdr.
-func (to *Session) UpdateStatusByID(id int, status tc.Status) (tc.Alerts, toclientlib.ReqInf, error) {
-	return to.UpdateStatusByIDWithHdr(id, status, nil)
-}
-
-func (to *Session) GetStatusesWithHdr(header http.Header) ([]tc.Status, toclientlib.ReqInf, error) {
+// GetStatuses retrieves all Statuses stored in Traffic Ops.
+func (to *Session) GetStatuses(header http.Header) ([]tc.Status, toclientlib.ReqInf, error) {
 	var data tc.StatusesResponse
 	reqInf, err := to.get(APIStatuses, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GetStatuses returns a list of Statuses.
-// Deprecated: GetStatuses will be removed in 6.0. Use GetStatusesWithHdr.
-func (to *Session) GetStatuses() ([]tc.Status, toclientlib.ReqInf, error) {
-	return to.GetStatusesWithHdr(nil)
-}
-
-func (to *Session) GetStatusByIDWithHdr(id int, header http.Header) ([]tc.Status, toclientlib.ReqInf, error) {
+// GetStatusByID returns the Status with the given ID.
+func (to *Session) GetStatusByID(id int, header http.Header) ([]tc.Status, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", APIStatuses, id)
 	var data tc.StatusesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GetStatusByID GETs a Status by the Status ID.
-// Deprecated: GetStatusByID will be removed in 6.0. Use GetStatusByIDWithHdr.
-func (to *Session) GetStatusByID(id int) ([]tc.Status, toclientlib.ReqInf, error) {
-	return to.GetStatusByIDWithHdr(id, nil)
-}
-
-func (to *Session) GetStatusByNameWithHdr(name string, header http.Header) ([]tc.Status, toclientlib.ReqInf, error) {
+// GetStatusByName returns the Status with the given Name.
+func (to *Session) GetStatusByName(name string, header http.Header) ([]tc.Status, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?name=%s", APIStatuses, url.QueryEscape(name))
 	var data tc.StatusesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GetStatusByName GETs a Status by the Status name.
-// Deprecated: GetStatusByName will be removed in 6.0. Use GetStatusByNameWithHdr.
-func (to *Session) GetStatusByName(name string) ([]tc.Status, toclientlib.ReqInf, error) {
-	return to.GetStatusByNameWithHdr(name, nil)
-}
-
-// DeleteStatusByID DELETEs a Status by ID.
-func (to *Session) DeleteStatusByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
+// DeleteStatus deletes the Status wtih the given ID.
+func (to *Session) DeleteStatus(id int) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", APIStatuses, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)

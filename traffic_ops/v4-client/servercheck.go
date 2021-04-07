@@ -23,9 +23,11 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
+// APIServercheck is the API version-relative path to the /servercheck API endpoint.
 const APIServercheck = "/servercheck"
 
-// InsertServerCheckStatus Will insert/update the servercheck value based on if it already exists or not.
+// InsertServerCheckStatus will insert/update the Servercheck value based on if
+// it already exists or not.
 func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable) (*tc.ServercheckPostResponse, toclientlib.ReqInf, error) {
 	uri := APIServercheck
 	resp := tc.ServercheckPostResponse{}
@@ -36,22 +38,17 @@ func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable)
 	return &resp, reqInf, nil
 }
 
-// GetServersChecks fetches check and meta information about servers from /servercheck.
+// GetServersChecks fetches check and meta information about servers from
+// /servercheck.
 func (to *Session) GetServersChecks(params url.Values, header http.Header) ([]tc.GenericServerCheck, tc.Alerts, toclientlib.ReqInf, error) {
-	data := struct {
+	var response struct {
 		tc.Alerts
 		Response []tc.GenericServerCheck `json:"response"`
-	}{}
+	}
 	route := APIServercheck
 	if params != nil {
 		route += "?" + params.Encode()
 	}
-	reqInf, err := to.get(route, header, &data)
-	if err != nil {
-		return nil, data.Alerts, reqInf, err
-	}
-	if len(data.Response) == 0 {
-		return nil, data.Alerts, reqInf, nil
-	}
-	return data.Response, data.Alerts, reqInf, nil
+	reqInf, err := to.get(route, header, &response)
+	return response.Response, response.Alerts, reqInf, err
 }

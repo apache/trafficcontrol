@@ -19,16 +19,19 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
+// APITOExtension is the API version-relative path to the /servercheck/extensions API
+// endpoint.
 const APITOExtension = "/servercheck/extensions"
 
-// CreateServerCheckExtension creates a servercheck extension.
+// CreateServerCheckExtension creates the given Servercheck Extension.
 func (to *Session) CreateServerCheckExtension(ServerCheckExtension tc.ServerCheckExtensionNullable) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(APITOExtension, ServerCheckExtension, nil, &alerts)
 	return alerts, reqInf, err
 }
 
-// DeleteServerCheckExtension deletes a servercheck extension.
+// DeleteServerCheckExtension deletes the Servercheck Extension identified by
+// 'id'.
 func (to *Session) DeleteServerCheckExtension(id int) (tc.Alerts, toclientlib.ReqInf, error) {
 	URI := fmt.Sprintf("%s/%d", APITOExtension, id)
 	var alerts tc.Alerts
@@ -36,7 +39,7 @@ func (to *Session) DeleteServerCheckExtension(id int) (tc.Alerts, toclientlib.Re
 	return alerts, reqInf, err
 }
 
-// GetServerCheckExtensions gets all servercheck extensions.
+// GetServerCheckExtensions gets all Servercheck Extensions in Traffic Ops.
 func (to *Session) GetServerCheckExtensions() (tc.ServerCheckExtensionResponse, toclientlib.ReqInf, error) {
 	var toExtResp tc.ServerCheckExtensionResponse
 	reqInf, err := to.get(APITOExtension, nil, &toExtResp)

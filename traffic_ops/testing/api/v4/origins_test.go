@@ -17,6 +17,7 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 	"testing"
@@ -70,7 +71,7 @@ func UpdateTestOriginsWithHeaders(t *testing.T, header http.Header) {
 			// update port and FQDN values on origin
 			remoteOrigin.Port = &updatedPort
 			remoteOrigin.FQDN = &updatedFQDN
-			_, reqInf, err := TOSession.UpdateOriginByIDWithHdr(*remoteOrigin.ID, remoteOrigin, header)
+			_, reqInf, err := TOSession.UpdateOrigin(*remoteOrigin.ID, remoteOrigin, header)
 			if err == nil {
 				t.Errorf("Expected error about precondition failed, but got none")
 			}
@@ -92,7 +93,7 @@ func CreateTestOrigins(t *testing.T) {
 }
 
 func NotFoundDeleteTest(t *testing.T) {
-	_, _, err := TOSession.DeleteOriginByID(2020)
+	_, _, err := TOSession.DeleteOrigin(2020)
 	if err == nil {
 		t.Error("deleting origin with what should be a non-existent id - expected: error, actual: nil error")
 	} else if !strings.Contains(err.Error(), "not found") {
@@ -101,7 +102,7 @@ func NotFoundDeleteTest(t *testing.T) {
 }
 
 func GetTestOrigins(t *testing.T) {
-	_, _, err := TOSession.GetOrigins()
+	_, _, err := TOSession.GetOrigins(nil)
 	if err != nil {
 		t.Errorf("cannot GET origins: %v", err)
 	}
@@ -129,7 +130,7 @@ func UpdateTestOrigins(t *testing.T) {
 		// update port and FQDN values on origin
 		remoteOrigin.Port = &updatedPort
 		remoteOrigin.FQDN = &updatedFQDN
-		updResp, _, err := TOSession.UpdateOriginByID(*remoteOrigin.ID, remoteOrigin)
+		updResp, _, err := TOSession.UpdateOrigin(*remoteOrigin.ID, remoteOrigin, nil)
 		if err != nil && updResp != nil {
 			t.Errorf("cannot UPDATE Origin by name: %v - %v", err, updResp.Alerts)
 		}
@@ -153,7 +154,7 @@ func UpdateTestOrigins(t *testing.T) {
 }
 
 func OriginTenancyTest(t *testing.T) {
-	origins, _, err := TOSession.GetOrigins()
+	origins, _, err := TOSession.GetOrigins(nil)
 	if err != nil {
 		t.Errorf("cannot GET origins: %v", err)
 	}
@@ -175,7 +176,7 @@ func OriginTenancyTest(t *testing.T) {
 		t.Fatalf("failed to log in with tenant4user: %v", err.Error())
 	}
 
-	originsReadableByTenant4, _, err := tenant4TOClient.GetOrigins()
+	originsReadableByTenant4, _, err := tenant4TOClient.GetOrigins(nil)
 	if err != nil {
 		t.Error("tenant4user cannot GET origins")
 	}
@@ -188,12 +189,12 @@ func OriginTenancyTest(t *testing.T) {
 	}
 
 	// assert that tenant4user cannot update tenant3user's origin
-	if _, _, err = tenant4TOClient.UpdateOriginByID(*tenant3Origin.ID, tenant3Origin); err == nil {
+	if _, _, err = tenant4TOClient.UpdateOrigin(*tenant3Origin.ID, tenant3Origin, nil); err == nil {
 		t.Error("expected tenant4user to be unable to update tenant3's origin")
 	}
 
 	// assert that tenant4user cannot delete an origin outside of its tenant
-	if _, _, err = tenant4TOClient.DeleteOriginByID(*origins[0].ID); err == nil {
+	if _, _, err = tenant4TOClient.DeleteOrigin(*origins[0].ID); err == nil {
 		t.Errorf("expected tenant4user to be unable to delete an origin outside of its tenant (origin %s)", *origins[0].Name)
 	}
 
@@ -205,39 +206,54 @@ func OriginTenancyTest(t *testing.T) {
 }
 
 func VerifyPaginationSupport(t *testing.T) {
-	origins, _, err := TOSession.GetOriginsByQueryParams("?orderby=id")
+	params := url.Values{}
+	params.Set("orderby", "id")
+	origins, _, err := TOSession.GetOrigins(params)
 	if err != nil {
 		t.Fatalf("cannot GET origins: %v", err)
 	}
 
-	originsWithLimit, _, err := TOSession.GetOriginsByQueryParams("?orderby=id&limit=1")
+	params.Set("limit", "1")
+	originsWithLimit, _, err := TOSession.GetOrigins(params)
 	if !reflect.DeepEqual(origins[:1], originsWithLimit) {
 		t.Error("expected GET origins with limit = 1 to return first result")
 	}
 
-	originsWithOffset, _, err := TOSession.GetOriginsByQueryParams("?orderby=id&limit=1&offset=1")
+	params.Set("offset", "1")
+	originsWithOffset, _, err := TOSession.GetOrigins(params)
 	if !reflect.DeepEqual(origins[1:2], originsWithOffset) {
 		t.Error("expected GET origins with limit = 1, offset = 1 to return second result")
 	}
 
-	originsWithPage, _, err := TOSession.GetOriginsByQueryParams("?orderby=id&limit=1&page=2")
+	params.Del("offset")
+	params.Set("page", "2")
+	originsWithPage, _, err := TOSession.GetOrigins(params)
 	if !reflect.DeepEqual(origins[1:2], originsWithPage) {
 		t.Error("expected GET origins with limit = 1, page = 2 to return second result")
 	}
 
-	_, _, err = TOSession.GetOriginsByQueryParams("?limit=-2")
+	params.Del("page")
+	params.Del("orderby")
+	params.Set("limit", "-2")
+	_, _, err = TOSession.GetOrigins(params)
 	if err == nil {
 		t.Error("expected GET origins to return an error when limit is not bigger than -1")
 	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
 		t.Errorf("expected GET origins to return an error for limit is not bigger than -1, actual error: " + err.Error())
 	}
-	_, _, err = TOSession.GetOriginsByQueryParams("?limit=1&offset=0")
+
+	params.Set("limit", "1")
+	params.Set("offset", "0")
+	_, _, err = TOSession.GetOrigins(params)
 	if err == nil {
 		t.Error("expected GET origins to return an error when offset is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {
 		t.Errorf("expected GET origins to return an error for offset is not a positive integer, actual error: " + err.Error())
 	}
-	_, _, err = TOSession.GetOriginsByQueryParams("?limit=1&page=0")
+
+	params.Del("offset")
+	params.Set("page", "0")
+	_, _, err = TOSession.GetOrigins(params)
 	if err == nil {
 		t.Error("expected GET origins to return an error when page is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {
@@ -254,7 +270,7 @@ func DeleteTestOrigins(t *testing.T) {
 		if len(resp) > 0 {
 			respOrigin := resp[0]
 
-			delResp, _, err := TOSession.DeleteOriginByID(*respOrigin.ID)
+			delResp, _, err := TOSession.DeleteOrigin(*respOrigin.ID)
 			if err != nil {
 				t.Errorf("cannot DELETE Origin by ID: %v - %v", err, delResp)
 			}

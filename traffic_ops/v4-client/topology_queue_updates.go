@@ -26,6 +26,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
+// TopologiesQueueUpdate queues updates for the Topology with the given Name.
 func (to *Session) TopologiesQueueUpdate(topologyName tc.TopologyName, req tc.TopologiesQueueUpdateRequest) (tc.TopologiesQueueUpdateResponse, toclientlib.ReqInf, error) {
 	path := fmt.Sprintf(APITopologies+"/%s/queue_update", topologyName)
 	var resp tc.TopologiesQueueUpdateResponse
