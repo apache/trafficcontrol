@@ -21,11 +21,11 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
-	"sort"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -41,11 +41,11 @@ func TestDeliveryServices(t *testing.T) {
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, ti)
 		header.Set(rfc.IfUnmodifiedSince, ti)
-		
+
 		if includeSystemTests {
 			SSLDeliveryServiceCDNUpdateTest(t)
 		}
-		
+
 		GetTestDeliveryServicesIMS(t)
 		GetAccessibleToTest(t)
 		UpdateTestDeliveryServices(t)
@@ -1253,7 +1253,7 @@ func VerifyPaginationSupportDS(t *testing.T) {
 	}
 }
 
-func GetDeliveryServiceByCdn(t *testing.T){
+func GetDeliveryServiceByCdn(t *testing.T) {
 
 	if len(testData.DeliveryServices) > 0 {
 		firstDS := testData.DeliveryServices[0]
@@ -1272,17 +1272,17 @@ func GetDeliveryServiceByCdn(t *testing.T){
 		if err != nil {
 			t.Fatalf("Error in Getting DeliveryServices by CDN ID: %v - %v", err, resp)
 		}
-		if(len(resp) == 0 ){
+		if len(resp) == 0 {
 			t.Errorf("No delivery service available for the CDN %v", *firstDS.CDNName)
 		} else {
 			if *resp[0].CDNName != *firstDS.CDNName {
 				t.Fatalf("CDN Name expected: %s, actual: %s", *firstDS.CDNName, *resp[0].CDNName)
-			}										
+			}
 		}
 	}
 }
 
-func GetDeliveryServiceByInvalidCdn(t *testing.T){
+func GetDeliveryServiceByInvalidCdn(t *testing.T) {
 	resp, _, err := TOSession.GetDeliveryServicesByCDNIDWithHdr(10000, nil)
 	if err != nil {
 		t.Fatalf("Error!! Getting CDN by Invalid ID %v", err)
@@ -1292,27 +1292,27 @@ func GetDeliveryServiceByInvalidCdn(t *testing.T){
 	}
 }
 
-func GetDeliveryServiceByLogsEnabled(t *testing.T){
+func GetDeliveryServiceByLogsEnabled(t *testing.T) {
 	if len(testData.DeliveryServices) > 0 {
 		firstDS := testData.DeliveryServices[0]
 
 		qparams := url.Values{}
 		qparams.Set("logsEnabled", strconv.FormatBool(*firstDS.LogsEnabled))
-		resp, _, err := TOSession.GetDeliveryServicesV4(nil,qparams)
+		resp, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
 		if err != nil {
 			t.Fatalf("Error in Getting deliveryservice by logsEnabled: %v - %v", err, resp)
 		}
-		if(len(resp) == 0 ){
+		if len(resp) == 0 {
 			t.Errorf("No delivery service available for the Logs Enabled %v", *firstDS.LogsEnabled)
 		} else {
 			if *resp[0].LogsEnabled != *firstDS.LogsEnabled {
 				t.Fatalf("name expected: %t, actual: %t", *firstDS.LogsEnabled, *resp[0].LogsEnabled)
-			}										
+			}
 		}
 	}
 }
 
-func GetDeliveryServiceByValidProfile(t *testing.T){
+func GetDeliveryServiceByValidProfile(t *testing.T) {
 	if len(testData.DeliveryServices) > 0 {
 		firstDS := testData.DeliveryServices[0]
 
@@ -1327,11 +1327,11 @@ func GetDeliveryServiceByValidProfile(t *testing.T){
 			firstDS.ProfileID = &profile[0].ID
 			qparams := url.Values{}
 			qparams.Set("profile", strconv.Itoa(*firstDS.ProfileID))
-			resp, _, err := TOSession.GetDeliveryServicesV4(nil,qparams)
+			resp, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
 			if err != nil {
 				t.Fatalf("Error in Getting deliveryservice by Profile: %v - %v", err, resp)
 			}
-			if(len(resp) == 0 ){
+			if len(resp) == 0 {
 				t.Errorf("No delivery service available for the Profile %v", *firstDS.ProfileName)
 			} else {
 				if *resp[0].ProfileName != *firstDS.ProfileName {
@@ -1342,10 +1342,10 @@ func GetDeliveryServiceByValidProfile(t *testing.T){
 	}
 }
 
-func GetDeliveryServiceByInvalidProfile(t *testing.T){
+func GetDeliveryServiceByInvalidProfile(t *testing.T) {
 	qparams := url.Values{}
 	qparams.Set("profile", "10000")
-	resp, _, err := TOSession.GetDeliveryServicesV4(nil,qparams)
+	resp, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
 	if err != nil {
 		t.Fatalf("Error!! Getting deliveryservice by Invalid Profile ID %v", err)
 	}
@@ -1354,10 +1354,10 @@ func GetDeliveryServiceByInvalidProfile(t *testing.T){
 	}
 }
 
-func GetDeliveryServiceByValidTenant(t *testing.T){
+func GetDeliveryServiceByValidTenant(t *testing.T) {
 	if len(testData.DeliveryServices) > 0 {
 		firstDS := testData.DeliveryServices[0]
-		
+
 		if firstDS.TenantID == nil && firstDS.Tenant != nil {
 			tenant, _, err := TOSession.TenantByNameWithHdr(*firstDS.Tenant, nil)
 			if err != nil {
@@ -1369,11 +1369,11 @@ func GetDeliveryServiceByValidTenant(t *testing.T){
 			firstDS.TenantID = &tenant.ID
 			qparams := url.Values{}
 			qparams.Set("tenant", strconv.Itoa(*firstDS.TenantID))
-			resp, _, err := TOSession.GetDeliveryServicesV4(nil,qparams)
+			resp, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
 			if err != nil {
 				t.Fatalf("Error in Getting Deliveryservice by Tenant:%v - %v", err, resp)
 			}
-			if(len(resp) == 0 ){
+			if len(resp) == 0 {
 				t.Errorf("No delivery service available for the Tenant %v", *firstDS.CDNName)
 			} else {
 				if *resp[0].Tenant != *firstDS.Tenant {
@@ -1384,10 +1384,10 @@ func GetDeliveryServiceByValidTenant(t *testing.T){
 	}
 }
 
-func GetDeliveryServiceByInvalidTenant(t *testing.T){
+func GetDeliveryServiceByInvalidTenant(t *testing.T) {
 	qparams := url.Values{}
 	qparams.Set("tenant", "10000")
-	resp, _, err := TOSession.GetDeliveryServicesV4(nil,qparams)
+	resp, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
 	if err != nil {
 		t.Fatalf("Error!! Getting Deliveryservice by Invalid Tenant ID %v", err)
 	}
@@ -1396,7 +1396,7 @@ func GetDeliveryServiceByInvalidTenant(t *testing.T){
 	}
 }
 
-func GetDeliveryServiceByValidType(t *testing.T){
+func GetDeliveryServiceByValidType(t *testing.T) {
 	if len(testData.DeliveryServices) > 0 {
 		firstDS := testData.DeliveryServices[0]
 
@@ -1411,11 +1411,11 @@ func GetDeliveryServiceByValidType(t *testing.T){
 			firstDS.TypeID = &ty[0].ID
 			qparams := url.Values{}
 			qparams.Set("type", strconv.Itoa(*firstDS.TypeID))
-			resp, _, err := TOSession.GetDeliveryServicesV4(nil,qparams)
+			resp, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
 			if err != nil {
 				t.Fatalf("Error in Getting Deliveryservice by Type:%v - %v", err, resp)
 			}
-			if(len(resp) == 0 ){
+			if len(resp) == 0 {
 				t.Errorf("No delivery service available for the Type %v", *firstDS.CDNName)
 			} else {
 				if *resp[0].Type != *firstDS.Type {
@@ -1426,10 +1426,10 @@ func GetDeliveryServiceByValidType(t *testing.T){
 	}
 }
 
-func GetDeliveryServiceByInvalidType(t *testing.T){
+func GetDeliveryServiceByInvalidType(t *testing.T) {
 	qparams := url.Values{}
 	qparams.Set("type", "10000")
-	resp, _, err := TOSession.GetDeliveryServicesV4(nil,qparams)
+	resp, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
 	if err != nil {
 		t.Fatalf("Error!! Getting Deliveryservice by Invalid Type ID %v", err)
 	}
@@ -1438,10 +1438,10 @@ func GetDeliveryServiceByInvalidType(t *testing.T){
 	}
 }
 
-func GetDeliveryServiceByInvalidAccessibleTo(t *testing.T){
+func GetDeliveryServiceByInvalidAccessibleTo(t *testing.T) {
 	qparams := url.Values{}
 	qparams.Set("accessibleTo", "10000")
-	resp, _, err := TOSession.GetDeliveryServicesV4(nil,qparams)
+	resp, _, err := TOSession.GetDeliveryServicesV4(nil, qparams)
 	if err != nil {
 		t.Fatalf("Error!! Getting Deliveryservice by Invalid AccessibleTo %v", err)
 	}
@@ -1450,7 +1450,7 @@ func GetDeliveryServiceByInvalidAccessibleTo(t *testing.T){
 	}
 }
 
-func GetDeliveryServiceByValidXmlId(t *testing.T){
+func GetDeliveryServiceByValidXmlId(t *testing.T) {
 	if len(testData.DeliveryServices) > 0 {
 		firstDS := testData.DeliveryServices[0]
 
@@ -1458,17 +1458,17 @@ func GetDeliveryServiceByValidXmlId(t *testing.T){
 		if err != nil {
 			t.Fatalf("Error in Getting DeliveryServices by XML ID: %v - %v", err, resp)
 		}
-		if(len(resp) == 0 ){
+		if len(resp) == 0 {
 			t.Errorf("No delivery service available for the XML ID %v", *firstDS.XMLID)
 		} else {
 			if *resp[0].XMLID != *firstDS.XMLID {
 				t.Fatalf("Delivery Service Name expected: %s, actual: %s", *firstDS.XMLID, *resp[0].XMLID)
-			}										
+			}
 		}
 	}
 }
 
-func GetDeliveryServiceByInvalidXmlId(t *testing.T){
+func GetDeliveryServiceByInvalidXmlId(t *testing.T) {
 	resp, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr("test", nil)
 	if err != nil {
 		t.Fatalf("Error!! Getting Delivery service by Invalid ID %v", err)
@@ -1481,7 +1481,7 @@ func GetDeliveryServiceByInvalidXmlId(t *testing.T){
 func SortTestDeliveryServices(t *testing.T) {
 	var header http.Header
 	var sortedList []string
-	resp, _, err := TOSession.GetDeliveryServicesV4(header,nil)
+	resp, _, err := TOSession.GetDeliveryServicesV4(header, nil)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -1500,10 +1500,10 @@ func SortTestDeliveryServices(t *testing.T) {
 func SortTestDeliveryServicesDesc(t *testing.T) {
 
 	var header http.Header
-	respAsc, _, err1 := TOSession.GetDeliveryServicesV4(header,nil)
+	respAsc, _, err1 := TOSession.GetDeliveryServicesV4(header, nil)
 	params := url.Values{}
 	params.Set("sortOrder", "desc")
-	respDesc, _, err2 := TOSession.GetDeliveryServicesV4(header,params)
+	respDesc, _, err2 := TOSession.GetDeliveryServicesV4(header, params)
 
 	if err1 != nil {
 		t.Fatalf("Expected no error, but got error in DS Ascending %v", err1.Error())
