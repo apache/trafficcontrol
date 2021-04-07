@@ -47,7 +47,7 @@ const KEY_DELIM = ":"
 
 // The SCRYPT functionality defined in this package is derived based upon the following
 // references:
-// https://godoc.org/golang.org/x/crypto/scrypt
+// https://pkg.go.dev/golang.org/x/crypto/scrypt
 // https://www.tarsnap.com/scrypt/scrypt.pdf
 var DefaultParams = SCRYPTComponents{
 	Algorithm: "SCRYPT",
@@ -57,7 +57,7 @@ var DefaultParams = SCRYPTComponents{
 	SaltLen:   16,
 	DKLen:     64}
 
-// DerivePassword uses the https://godoc.org/golang.org/x/crypto/scrypt package to
+// DerivePassword uses the https://pkg.go.dev/golang.org/x/crypto/scrypt package to
 // return an encrypted password that is compatible with the
 // Perl CPAN library Crypt::ScryptKDF for backward compatibility
 // to authenticate through the Perl API the same way.
