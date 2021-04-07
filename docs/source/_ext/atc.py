@@ -147,7 +147,10 @@ def godoc_role(unused_typ,
 
 	text = utils.unescape(text)
 	litnode = nodes.literal(text, text)
-	refnode = nodes.reference(text, '', litnode, refuri=GODOC_URI + text.replace('.', '#', 1))
+	last_period_index = text.rfind('.')
+	if last_period_index != -1 and text.rfind('/') < last_period_index:
+		text = text[:last_period_index] + '#' + text[last_period_index + 1:]
+	refnode = nodes.reference(text, '', litnode, refuri=GODOC_URI + text)
 	return [refnode], []
 
 # -- GoDoc role (atc-relative) ----------------------------------------------
