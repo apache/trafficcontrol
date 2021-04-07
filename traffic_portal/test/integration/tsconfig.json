@@ -8,7 +8,11 @@
     "declaration": false,
     "noImplicitAny": false,
     "outDir": "GeneratedCode",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitThis": true
   },
   "exclude": [
     "node_modules"

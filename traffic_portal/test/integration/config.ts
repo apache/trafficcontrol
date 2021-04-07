@@ -32,7 +32,11 @@ export const randomize = Math.random().toString(36).substring(3, 7);
 export const twoNumberRandomize = Math.floor(Math.random() * 101);
 
 export let config: Config = conf;
-config.capabilities.chromeOptions.prefs.download.default_directory = downloadsPath;
+if (config.capabilities) {
+  config.capabilities.chromeOptions.prefs.download.default_directory = downloadsPath;
+} else {
+  config.capabilities = {chromeOptions: {prefs: {download: {default_directory: downloadsPath}}}};
+}
 config.onPrepare = async function () {
     await browser.waitForAngularEnabled(true);
 
@@ -62,15 +66,8 @@ config.onPrepare = async function () {
         }).getJasmine2Reporter());
     }
 
-    try {
-      let api = new API();
-      let setupFile = 'Data/Prerequisites/user.setup.json';
-      let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-      let output = await api.UseAPI(setupData);
-      if (output != null){
-        throw new Error(output)
-      }
-    } catch (error) {
-      throw error
-    }
+    let api = new API();
+    let setupFile = 'Data/Prerequisites/user.setup.json';
+    let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
+    await api.UseAPI(setupData);
 }

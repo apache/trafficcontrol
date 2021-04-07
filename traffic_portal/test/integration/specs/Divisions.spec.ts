@@ -39,8 +39,7 @@ let divisionsPage = new DivisionsPage();
 describe('Setup API for Divisions Test', function(){
     it('Setup', async function(){
         let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        let output = await api.UseAPI(setupData);
-        expect(output).toBeNull();
+        await api.UseAPI(setupData);
     })
 })
 
@@ -87,7 +86,6 @@ using(testData.Divisions, async function(divisionsData){
 describe('Clean Up API for Divisions Test', function () {
     it('Cleanup', async function () {
         let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        let output = await api.UseAPI(cleanupData);
-        expect(output).toBeNull();
+        await api.UseAPI(cleanupData);
     })
 })

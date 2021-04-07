@@ -39,8 +39,7 @@ let profilesPage = new ProfilesPage();
 describe('Setup API for Profiles', function () {
     it('Setup', async function () {
         let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        let output = await api.UseAPI(setupData);
-        expect(output).toBeNull();
+        await api.UseAPI(setupData);
     })
 })
 using(testData.Profiles, async function(profilesData){
@@ -84,7 +83,6 @@ using(testData.Profiles, async function(profilesData){
 describe('Clean up API for Profiles', function () {
     it('Cleanup', async function () {
         let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        let output = await api.UseAPI(cleanupData);
-        expect(output).toBeNull();
+        await api.UseAPI(cleanupData);
     })
 })

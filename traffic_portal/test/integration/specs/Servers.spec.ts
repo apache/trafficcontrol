@@ -39,8 +39,7 @@ let testData = JSON.parse(readFileSync(filename, "utf8"));
 describe('Setup API call for Servers Test', function(){
     it('Setup', async function(){
         let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        let output = await api.UseAPI(setupData);
-        expect(output).toBeNull();
+        await api.UseAPI(setupData);
     })
 })
 
@@ -86,7 +85,6 @@ using(testData.Servers, async function(serversData){
 describe('API Clean Up for Servers Test', function () {
     it('Cleanup', async function () {
         let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        let output = await api.UseAPI(cleanupData);
-        expect(output).toBeNull();
+        await api.UseAPI(cleanupData);
     })
 })
