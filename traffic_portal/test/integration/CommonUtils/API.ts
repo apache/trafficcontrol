@@ -64,11 +64,7 @@ export interface APIData {
  * @throws {Error} when the type check fails.
  */
  export function hasProperty<T extends object, K extends PropertyKey, S>(o: T, k: K): o is T & Record<K, S | unknown> {
-	if (!Object.prototype.hasOwnProperty.call(o, k)) {
-		return false;
-	}
-
-	return true;
+	return Object.prototype.hasOwnProperty.call(o, k);
 }
 
 export class API {
@@ -143,10 +139,10 @@ export class API {
                     data.route = data.route + randomize
                 }
                 if ((data.route).includes('?id')){
-                    if (!Object.prototype.hasOwnProperty.call(data, "id")) {
+                    if (!hasProperty(data, "id")) {
                         throw new Error("route specified an 'id' query parameter, but data had no 'id' property");
                     }
-                    data.route = data.route + (data as T & {id: unknown}).id;
+                    data.route = data.route + data.id;
                 }
                 if((data.route).includes('/service_categories/')){
                     data.route = data.route + randomize
