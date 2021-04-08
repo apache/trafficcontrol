@@ -15,8 +15,7 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-CREATE EXTENSION pgcrypto; /* Loads pgcrypto if gen_random_uuid() does not already exist */
-UPDATE "server" s set xmpp_id = gen_random_uuid() WHERE s.xmpp_id IS NULL OR s.xmpp_id = '';
+UPDATE "server" s set xmpp_id = host_name WHERE s.xmpp_id IS NULL OR s.xmpp_id = '';
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
