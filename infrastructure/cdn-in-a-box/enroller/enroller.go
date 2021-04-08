@@ -127,7 +127,7 @@ func enrollASN(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, _, err := toSession.CreateASN(s)
+	alerts, _, err := toSession.CreateASN(s, client.RequestOptions{})
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("asn %d already exists\n", s.ASN)
