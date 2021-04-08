@@ -28,7 +28,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptrace"
-	"strconv"
 	"strings"
 	"time"
 
@@ -241,7 +240,7 @@ func (to *TOClient) login() (net.Addr, error) {
 func (to *TOClient) loginWithToken(token []byte) (net.Addr, error) {
 	path := to.APIBase() + "/user/login/token"
 	resp, remoteAddr, err := to.RawRequestWithHdr(http.MethodPost, path, token, nil)
-	resp, remoteAddr, err = to.errUnlessOKOrNotModified(resp, remoteAddr, err, path)
+	err = to.errorFromStatusCode(resp, err, path)
 	if err != nil {
 		return remoteAddr, fmt.Errorf("requesting: %v", err)
 	}
@@ -270,7 +269,7 @@ func (to *TOClient) logout() (net.Addr, error) {
 
 	path := to.APIBase() + "/user/logout"
 	resp, remoteAddr, err := to.RawRequestWithHdr("POST", path, credentials, nil)
-	resp, remoteAddr, err = to.errUnlessOKOrNotModified(resp, remoteAddr, err, path)
+	err = to.errorFromStatusCode(resp, err, path)
 	if err != nil {
 		return remoteAddr, errors.New("requesting: " + err.Error())
 	}
@@ -438,28 +437,28 @@ func ErrIsNotImplemented(err error) bool {
 // Users should check ErrIsNotImplemented rather than comparing directly, in case context was added.
 var ErrNotImplemented = errors.New("Traffic Ops Server returned 'Not Implemented', this client is probably newer than Traffic Ops, and you probably need to either upgrade Traffic Ops, or use a client whose version matches your Traffic Ops version.")
 
-// errUnlessOKOrNotModified returns the response, the remote address, and an error if the given Response's status code is anything
-// but 200 OK/ 304 Not Modified. This includes reading the Response.Body and Closing it. Otherwise, the given response, the remote
-// address, and a nil error are returned.
-func (to *TOClient) errUnlessOKOrNotModified(resp *http.Response, remoteAddr net.Addr, err error, path string) (*http.Response, net.Addr, error) {
+// errorFromStatusCode returns an error if and when the response status code of
+// `resp` warrants it. Specifically, it checks that the response code is either
+// in the < 300 range, but with a special exception for Not Modified.
+// The error given is any network-level error that might have occurred, which is
+// used in lieu of an HTTP-based error being unavailable. Path is the request
+// path, used for informational purposes in the error message text.
+func (to *TOClient) errorFromStatusCode(resp *http.Response, err error, path string) error {
 	if err != nil {
-		return resp, remoteAddr, err
+		return err
 	}
-	if resp.StatusCode < 300 || resp.StatusCode == 304 {
-		return resp, remoteAddr, err
+	if resp == nil {
+		return errors.New("error requesting Traffic Ops: empty/invalid response")
 	}
-
-	defer resp.Body.Close()
+	if resp.StatusCode < 300 || resp.StatusCode == http.StatusNotModified {
+		return nil
+	}
 
 	if resp.StatusCode == http.StatusNotImplemented {
-		return resp, remoteAddr, ErrNotImplemented
+		return ErrNotImplemented
 	}
 
-	body, readErr := ioutil.ReadAll(resp.Body)
-	if readErr != nil {
-		return resp, remoteAddr, readErr
-	}
-	return resp, remoteAddr, errors.New(resp.Status + "[" + strconv.Itoa(resp.StatusCode) + "] - Error requesting Traffic Ops " + to.getURL(path) + " " + string(body))
+	return fmt.Errorf("error requesting Traffic Ops: path '%s' gave HTTP error %s", resp.Status, to.getURL(path))
 }
 
 // getURL constructs a full URL from the given path, relative to the
@@ -609,24 +608,28 @@ func makeRequestWithHeader(to *TOClient, method, path string, body interface{}, 
 			return reqInf, nil
 		}
 		defer log.Close(resp.Body, "unable to close response body")
-	}
-	if err != nil {
-		return reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
-	}
 
-	if btsPtr, isBytes := response.(*[]byte); isBytes {
-		bts, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return reqInf, errors.New("reading response body: " + err.Error())
+		if btsPtr, isBytes := response.(*[]byte); isBytes {
+			bts, readErr := ioutil.ReadAll(resp.Body)
+			if readErr != nil {
+				if err != nil {
+					err = fmt.Errorf("failed to read response (%v) after request error: %v", readErr, err)
+				} else {
+					err = errors.New("failed to read response: " + readErr.Error())
+				}
+			} else {
+				*btsPtr = bts
+			}
+		} else if decodeErr := json.NewDecoder(resp.Body).Decode(response); decodeErr != nil {
+			if err != nil {
+				err = fmt.Errorf("failed to decode response body (%v) after request error: %v", decodeErr, err)
+			} else {
+				err = errors.New("decoding response body: " + decodeErr.Error())
+			}
 		}
-		*btsPtr = bts
-		return reqInf, nil
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(response); err != nil {
-		return reqInf, errors.New("decoding response body: " + err.Error())
-	}
-	return reqInf, nil
+	return reqInf, err
 }
 
 func (to *TOClient) Req(method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
@@ -643,15 +646,18 @@ func (to *TOClient) request(method, path string, body []byte, header http.Header
 		return r, remoteAddr, err
 	}
 	if r.StatusCode != http.StatusUnauthorized && r.StatusCode != http.StatusForbidden {
-		return to.errUnlessOKOrNotModified(r, remoteAddr, err, path)
+		err = to.errorFromStatusCode(r, err, path)
+		return r, remoteAddr, err
 	}
 	if _, lerr := to.login(); lerr != nil {
-		return to.errUnlessOKOrNotModified(r, remoteAddr, err, path) // if re-logging-in fails, return the original request's response
+		err = to.errorFromStatusCode(r, err, path) // if re-logging-in fails, return the original request's response
+		return r, remoteAddr, err
 	}
 
 	// return second request, even if it's another Unauthorized or Forbidden.
 	r, remoteAddr, err = to.RawRequestWithHdr(method, path, body, header)
-	return to.errUnlessOKOrNotModified(r, remoteAddr, err, path)
+	err = to.errorFromStatusCode(r, err, path)
+	return r, remoteAddr, err
 }
 
 func (to *TOClient) RawRequestWithHdr(method, path string, body []byte, header http.Header) (*http.Response, net.Addr, error) {
@@ -699,6 +705,8 @@ func (to *TOClient) RawRequest(method, path string, body []byte) (*http.Response
 	return to.RawRequestWithHdr(method, path, body, nil)
 }
 
+// ReqInf contains information about a request - specifically it is primarily
+// regarding the outcome of making the request.
 type ReqInf struct {
 	// CacheHitStatus is deprecated and will be removed in the next major version.
 	CacheHitStatus CacheHitStatus
