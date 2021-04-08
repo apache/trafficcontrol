@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
@@ -49,12 +50,17 @@ type DeliveryServicesResponseV30 struct {
 	Alerts
 }
 
-// DeliveryServicesResponseV4 is the type of a response from the
+// DeliveryServicesResponseV40 is the type of a response from the
 // /api/4.0/deliveryservices Traffic Ops endpoint.
-type DeliveryServicesResponseV4 struct {
-	Response []DeliveryServiceV4 `json:"response"`
+type DeliveryServicesResponseV40 struct {
+	Response []DeliveryServiceV40 `json:"response"`
 	Alerts
 }
+
+// DeliveryServicesResponseV4 is the type of a response from the
+// /api/4.x/deliveryservices Traffic Ops endpoint.
+// It always points to the type for the latest minor version of APIv4.
+type DeliveryServicesResponseV4 = DeliveryServicesResponseV40
 
 // DeliveryServicesNullableResponse ...
 // Deprecated: Please only use the versioned structures.
@@ -173,15 +179,6 @@ type DeliveryServiceV11 struct {
 	XMLID                    string                 `json:"xmlId"`
 }
 
-type DeliveryServiceV40 struct {
-	DeliveryServiceFieldsV31
-	DeliveryServiceFieldsV30
-	DeliveryServiceFieldsV15
-	DeliveryServiceFieldsV14
-	DeliveryServiceFieldsV13
-	DeliveryServiceNullableFieldsV11
-}
-
 type DeliveryServiceV31 struct {
 	DeliveryServiceV30
 	DeliveryServiceFieldsV31
@@ -191,6 +188,21 @@ type DeliveryServiceV31 struct {
 type DeliveryServiceFieldsV31 struct {
 	MaxRequestHeaderBytes *int `json:"maxRequestHeaderBytes" db:"max_request_header_bytes"`
 }
+
+// DeliveryServiceV40 is a Delivery Service as it appears in version 4.0 of the
+// Traffic Ops API.
+type DeliveryServiceV40 struct {
+	DeliveryServiceFieldsV31
+	DeliveryServiceFieldsV30
+	DeliveryServiceFieldsV15
+	DeliveryServiceFieldsV14
+	DeliveryServiceFieldsV13
+	DeliveryServiceNullableFieldsV11
+}
+
+// DeliveryServiceV4 is a Delivery Service as it appears in version 4 of the
+// Traffic Ops API - it always points to the highest minor version in APIv4.
+type DeliveryServiceV4 = DeliveryServiceV40
 
 type DeliveryServiceV30 struct {
 	DeliveryServiceNullableV15
@@ -211,9 +223,6 @@ type DeliveryServiceFieldsV30 struct {
 // type DeliveryServiceNullableV30 DeliveryServiceV32
 // DeliveryServiceV32 = DeliveryServiceV31 + the new fields
 type DeliveryServiceNullableV30 DeliveryServiceV31
-
-// DeliveryServiceV4 is the aliased structure that we should be using for all api 4.x delivery structure operations
-type DeliveryServiceV4 DeliveryServiceV40
 
 // Deprecated: Use versioned structures only from now on.
 type DeliveryServiceNullable DeliveryServiceNullableV15
@@ -324,8 +333,8 @@ type DeliveryServiceNullableFieldsV11 struct {
 	ExampleURLs              []string                `json:"exampleURLs"`
 }
 
-// Deprecated: used for backwards compatibility  with ATC <v5.1
 // DeliveryServiceRemovedFieldsV11 contains additions to delivery services in api v1.1 that were later removed
+// Deprecated: used for backwards compatibility  with ATC <v5.1
 type DeliveryServiceRemovedFieldsV11 struct {
 	CacheURL *string `json:"cacheurl" db:"cacheurl"`
 }
@@ -583,7 +592,7 @@ type DeliveryServiceSafeUpdateResponse struct {
 	Response []DeliveryServiceNullable `json:"response"`
 }
 
-// DeliveryServiceSafeUpdateResponse represents Traffic Ops's response to a PUT
+// DeliveryServiceSafeUpdateResponseV30 represents Traffic Ops's response to a PUT
 // request to its /api/3.0/deliveryservices/{{ID}}/safe endpoint.
 type DeliveryServiceSafeUpdateResponseV30 struct {
 	Alerts
@@ -591,3 +600,18 @@ type DeliveryServiceSafeUpdateResponseV30 struct {
 	// been updated.
 	Response []DeliveryServiceNullableV30 `json:"response"`
 }
+
+// DeliveryServiceSafeUpdateResponseV40 represents Traffic Ops's response to a PUT
+// request to its /api/4.0/deliveryservices/{{ID}}/safe endpoint.
+type DeliveryServiceSafeUpdateResponseV40 struct {
+	Alerts
+	// Response contains the representation of the Delivery Service after it has
+	// been updated.
+	Response []DeliveryServiceV40 `json:"response"`
+}
+
+// DeliveryServiceSafeUpdateResponseV4 represents TrafficOps's response to a
+// PUT request to its /api/4.x/deliveryservices/{{ID}}/safe endpoint.
+// This is always a type alias for the structure of a response in the latest
+// minor APIv4 version.
+type DeliveryServiceSafeUpdateResponseV4 = DeliveryServiceSafeUpdateResponseV40

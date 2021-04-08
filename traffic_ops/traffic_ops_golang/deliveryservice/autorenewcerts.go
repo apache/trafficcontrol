@@ -33,7 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 )
 
 type DsKey struct {
@@ -80,8 +80,8 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 	}
 	defer inf.Close()
 
-	if inf.Config.RiakEnabled == false {
-		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by xml id: Riak is not configured"), deprecated, deprecation)
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Traffic Vault service is unavailable"), errors.New("getting SSL keys from Traffic Vault by xml id: Traffic Vault is not configured"), deprecated, deprecation)
 		return
 	}
 
@@ -104,7 +104,12 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 
 	ctx, _ := context.WithTimeout(r.Context(), LetsEncryptTimeout*time.Duration(len(existingCerts)))
 
-	go RunAutorenewal(existingCerts, inf.Config, ctx, inf.User)
+	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(inf.Tx.Tx, "ACME async job has started.")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+	}
+
+	go RunAutorenewal(existingCerts, inf.Config, ctx, inf.User, asyncStatusId, inf.Vault)
 
 	var alerts tc.Alerts
 	if deprecated {
@@ -112,32 +117,46 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 	}
 
 	alerts.AddAlert(tc.Alert{
-		Text:  "Beginning async call to renew certificates. This may take a few minutes.",
+		Text:  "Beginning async call to renew certificates. This may take a few minutes. Status updates can be found here: " + api.CurrentAsyncEndpoint + strconv.Itoa(asyncStatusId),
 		Level: tc.SuccessLevel.String(),
 	})
+
+	w.Header().Add("Location", api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusId))
 	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
 
 }
-func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx context.Context, currentUser *auth.CurrentUser) {
+func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx context.Context, currentUser *auth.CurrentUser, asyncStatusId int, tv trafficvault.TrafficVault) {
 	db, err := api.GetDB(ctx)
 	if err != nil {
 		log.Errorf("Error getting db: %s", err.Error())
+		if err = api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); err != nil {
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
+		}
 		return
 	}
 	tx, err := db.Begin()
 	if err != nil {
 		log.Errorf("Error getting tx: %s", err.Error())
+		if err = api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); err != nil {
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
+		}
 		return
 	}
 
 	logTx, err := db.Begin()
 	if err != nil {
 		log.Errorf("Error getting logTx: %s", err.Error())
+		if err = api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); err != nil {
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
+		}
 		return
 	}
 	defer logTx.Commit()
 
 	keysFound := ExpirationSummary{}
+
+	renewedCount := 0
+	errorCount := 0
 
 	for _, ds := range existingCerts {
 		if !ds.Version.Valid || ds.Version.Int64 == 0 {
@@ -145,7 +164,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 		}
 
 		dsExpInfo := DsExpirationInfo{}
-		keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObjV15(ds.XmlId, strconv.Itoa(int(ds.Version.Int64)), tx, cfg.RiakAuthOptions, cfg.RiakPort)
+		keyObj, ok, err := tv.GetDeliveryServiceSSLKeys(ds.XmlId, strconv.Itoa(int(ds.Version.Int64)), tx)
 		if err != nil {
 			log.Errorf("getting ssl keys for xmlId: %s and version: %d : %s", ds.XmlId, ds.Version.Int64, err.Error())
 			dsExpInfo.XmlId = ds.XmlId
@@ -166,13 +185,21 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 		err = base64DecodeCertificate(&keyObj.Certificate)
 		if err != nil {
 			log.Errorf("cert autorenewal: error getting SSL keys for XMLID '%s': %s", ds.XmlId, err.Error())
-			return
+			dsExpInfo.XmlId = ds.XmlId
+			dsExpInfo.Version = util.JSONIntStr(int(ds.Version.Int64))
+			dsExpInfo.Error = errors.New("decoding the certificate for xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)))
+			keysFound.OtherExpirations = append(keysFound.OtherExpirations, dsExpInfo)
+			continue
 		}
 
 		expiration, err := parseExpirationFromCert([]byte(keyObj.Certificate.Crt))
 		if err != nil {
 			log.Errorf("cert autorenewal: %s: %s", ds.XmlId, err.Error())
-			return
+			dsExpInfo.XmlId = ds.XmlId
+			dsExpInfo.Version = util.JSONIntStr(int(ds.Version.Int64))
+			dsExpInfo.Error = errors.New("parsing the expiration for xmlId: " + ds.XmlId + " and version: " + strconv.Itoa(int(ds.Version.Int64)))
+			keysFound.OtherExpirations = append(keysFound.OtherExpirations, dsExpInfo)
+			continue
 		}
 
 		// Renew only certificates within configured limit. Default is 30 days.
@@ -202,8 +229,11 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 				},
 			}
 
-			if error := GetLetsEncryptCertificates(cfg, req, ctx, currentUser); error != nil {
-				dsExpInfo.Error = error
+			if err := GetLetsEncryptCertificates(cfg, req, ctx, currentUser, tv); err != nil {
+				dsExpInfo.Error = err
+				errorCount++
+			} else {
+				renewedCount++
 			}
 			keysFound.LetsEncryptExpirations = append(keysFound.LetsEncryptExpirations, dsExpInfo)
 
@@ -214,19 +244,37 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 			if acmeAccount == nil {
 				keysFound.OtherExpirations = append(keysFound.OtherExpirations, dsExpInfo)
 			} else {
-				userErr, sysErr, statusCode := renewAcmeCerts(cfg, keyObj.DeliveryService, ctx, currentUser)
+				userErr, sysErr, statusCode := renewAcmeCerts(cfg, keyObj.DeliveryService, ctx, currentUser, tv)
 				if userErr != nil {
+					errorCount++
 					dsExpInfo.Error = userErr
 				} else if sysErr != nil {
+					errorCount++
 					dsExpInfo.Error = sysErr
 				} else if statusCode != http.StatusOK {
+					errorCount++
 					dsExpInfo.Error = errors.New("Status code not 200: " + strconv.Itoa(statusCode))
+				} else {
+					renewedCount++
 				}
 				keysFound.AcmeExpirations = append(keysFound.AcmeExpirations, dsExpInfo)
 			}
 
 		}
 
+		if err = api.UpdateAsyncStatus(db, api.AsyncPending, "ACME renewal in progress. "+strconv.Itoa(renewedCount)+" certs renewed, "+strconv.Itoa(errorCount)+" errors.", asyncStatusId, false); err != nil {
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
+		}
+
+	}
+
+	// put status as succeeded if any certs were successfully renewed
+	asyncStatus := api.AsyncSucceeded
+	if errorCount > 0 && renewedCount == 0 {
+		asyncStatus = api.AsyncFailed
+	}
+	if err = api.UpdateAsyncStatus(db, asyncStatus, "ACME renewal complete. "+strconv.Itoa(renewedCount)+" certs renewed, "+strconv.Itoa(errorCount)+" errors.", asyncStatusId, true); err != nil {
+		log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
 	}
 
 	if cfg.SMTP.Enabled && cfg.ConfigAcmeRenewal.SummaryEmail != "" {

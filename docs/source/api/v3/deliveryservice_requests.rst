@@ -31,37 +31,43 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-----------+----------+------------------------------------------------------------------------------------------+
-	| Name      | Required | Description                                                                              |
-	+===========+==========+==========================================================================================+
-	| assignee  | no       | Filter for :ref:`ds_requests` that are assigned to the user                              |
-	|           |          | identified by this username.                                                             |
-	+-----------+----------+------------------------------------------------------------------------------------------+
-	| assigneeId| no       | Filter for :ref:`ds_requests` that are assigned to the user                              |
-	|           |          | identified by this integral, unique identifier                                           |
-	+-----------+----------+------------------------------------------------------------------------------------------+
-	| author    | no       | Filter for :ref:`ds_requests` submitted by the user                                      |
-	|           |          | identified by this username                                                              |
-	+-----------+----------+------------------------------------------------------------------------------------------+
-	| authorId  | no       | Filter for :ref:`ds_requests` submitted by the user                                      |
-	|           |          | identified by this integral, unique identifier                                           |
-	+-----------+----------+------------------------------------------------------------------------------------------+
-	| changeType| no       | Filter for :ref:`ds_requests` of the change type specified.                              |
-	|           |          | Can be ``create``, ``update``, or ``delete``.                                            |
-	+-----------+----------+------------------------------------------------------------------------------------------+
-	| createdAt | no       | Filter for :ref:`ds_requests` created on a certain date/time.                            |
-	|           |          | Value must be :rfc:`3339` compliant. Eg. 2019-09-19T19:35:38.828535Z                     |
-	+-----------+----------+------------------------------------------------------------------------------------------+
-	| id        | no       | Filter for the :ref:`Delivery Service Request <ds_requests>` identified by this          |
-	|           |          | integral, unique identifier.                                                             |
-	+-----------+----------+------------------------------------------------------------------------------------------+
-	| status    | no       | Filter for :ref:`ds_requests` whose status is the status                                 |
-	|           |          | specified. The status can be ``draft``, ``submitted``, ``pending``, ``rejected``, or     |
-	|           |          | ``complete``.                                                                            |
-	+-----------+----------+------------------------------------------------------------------------------------------+
-	| xmlId     | no       | Filter for :ref:`ds_requests` that have the given                                        |
-	|           |          | :ref:`ds-xmlid`.                                                                         |
-	+-----------+----------+------------------------------------------------------------------------------------------+
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| Name      | Required | Description                                                                                                                             |
+	+===========+==========+=========================================================================================================================================+
+	| assignee  | no       | Filter for :ref:`ds_requests` that are assigned to the user identified by this username.                                                |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| assigneeId| no       | Filter for :ref:`ds_requests` that are assigned to the user identified by this integral, unique identifier                              |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| author    | no       | Filter for :ref:`ds_requests` submitted by the user identified by this username                                                         |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| authorId  | no       | Filter for :ref:`ds_requests` submitted by the user identified by this integral, unique identifier                                      |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| changeType| no       | Filter for :ref:`ds_requests` of the change type specified. Can be ``create``, ``update``, or ``delete``.                               |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| createdAt | no       | Filter for :ref:`ds_requests` created on a certain date/time. Value must be :rfc:`3339` compliant. Eg. ``2019-09-19T19:35:38.828535Z``  |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| id        | no       | Filter for the :ref:`Delivery Service Request <ds_requests>` identified by this integral, unique identifier.                            |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| status    | no       | Filter for :ref:`ds_requests` whose status is the status specified. The status can be ``draft``, ``submitted``, ``pending``,            |
+	|           |          | ``rejected``, or ``complete``.                                                                                                          |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| xmlId     | no       | Filter for :ref:`ds_requests` that have the given :ref:`ds-xmlid`.                                                                      |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                           |
+	|           |          | array                                                                                                                                   |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| limit     | no       | Choose the maximum number of results to return                                                                                          |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                    |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1.    |
+	|           |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                       |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+
+.. versionadded:: ATCv6
+	The ``createdAt`` query parameter was added to this in endpoint across all API versions in :abbr:`ATC (Apache Traffic Control)` version 6.0.0.
 
 .. code-block:: http
 	:caption: Request Example

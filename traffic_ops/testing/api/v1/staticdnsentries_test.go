@@ -74,7 +74,7 @@ func UpdateTestStaticDNSEntries(t *testing.T) {
 
 func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 
-	expectedAlerts := []tc.Alerts{tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv4 address", "error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid DNS name", "error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv6 address", "error"}}}}
+	expectedAlerts := []tc.Alerts{tc.Alerts{Alerts: []tc.Alert{tc.Alert{Text: "'address' must be a valid IPv4 address", Level: "error"}}}, tc.Alerts{Alerts: []tc.Alert{tc.Alert{Text: "'address' must be a valid DNS name", Level: "error"}}}, tc.Alerts{Alerts: []tc.Alert{tc.Alert{Text: "'address' must be a valid IPv6 address", Level: "error"}}}}
 
 	// A_RECORD
 	firstStaticDNSEntry := testData.StaticDNSEntries[0]

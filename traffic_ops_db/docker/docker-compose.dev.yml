@@ -23,6 +23,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_DATABASE=traffic_ops
       - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=twelve
       - POSTGRES_USER_UID=9999
       - POSTGRES_USER_GID=9999
       - PGDATA=./pgdata

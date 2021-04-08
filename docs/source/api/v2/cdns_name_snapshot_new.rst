@@ -541,7 +541,7 @@ Response Structure
 			"CDN_name": "CDN-in-a-Box",
 			"date": 1544650908,
 			"tm_host": "ipcdn-cache-51.cdnlab.comcast.net:6443",
-			"tm_path": "/tools/write_crconfig/CDN-in-a-Box",
+			"tm_path": "api/2.0/snapshot/CDN-in-a-Box",
 			"tm_user": "admin",
 			"tm_version": "traffic_ops-3.0.0-9813.8ad7bd8e.el7"
 		}

@@ -27,7 +27,6 @@ import (
 	"github.com/apache/trafficcontrol/test/fakeOrigin/endpoint"
 	"github.com/apache/trafficcontrol/test/fakeOrigin/httpService"
 	"github.com/apache/trafficcontrol/test/fakeOrigin/transcode"
-	"github.com/apache/trafficcontrol/test/fakeOrigin/version"
 )
 
 func printUsage() {
@@ -42,7 +41,7 @@ func main() {
 	flag.Parse()
 
 	if *printVersion {
-		fmt.Println(version.VerFull)
+		fmt.Println(Version)
 		os.Exit(0)
 	}
 

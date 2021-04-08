@@ -35,34 +35,58 @@ RUN set -o nounset -o errexit && \
 	if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 		use_repo=''; \
 		enable_repo=''; \
+		llvm_version=5.0; \
+		# needed for llvm-toolset-7-clang, which is needed for postgresql13-devel-13.2-1PGDG, required by TO rpm
+		dnf -y install gcc centos-release-scl-rh; \
 	else \
-		use_repo='--repo=pgdg96'; \
+		use_repo='--repo=pgdg13'; \
 		enable_repo='--enablerepo=powertools'; \
+		llvm_version=''; \
 	fi; \
 	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
-	dnf -y $use_repo -- install postgresql96; \
 	dnf -y install epel-release; \
-	dnf -y $enable_repo install      \
+	dnf -y install \
+		# libicu is required by postgresql13
+		libicu \
+		# libicu-devel, clang-devel, and llvm-devel are required by postgresql13-devel
+		libicu-devel clang-devel llvm${llvm_version}-devel; \
+	dnf -y $use_repo -- install postgresql13 postgresql13-devel; \
+	dnf -y $enable_repo install \
 		bind-utils           \
 		gettext              \
 		git                  \
-		golang               \
 		# ip commands is used in set-to-ips-from-dns.sh
 		iproute              \
 		isomd5sum            \
 		jq                   \
-		libidn-devel         \
-		libpcap-devel        \
-		mkisofs              \
 		net-tools            \
 		nmap-ncat            \
 		openssl              \
-		perl-Crypt-ScryptKDF \
-		perl-Digest-SHA1     \
-		perl-JSON-PP         \
-		python3              \
 		# rsync is used to copy certs in "Shared SSL certificate generation" step
-		rsync;               \
+		rsync                \
+
+		# Traffic Ops dependencies (Not all needed for CDN in a Box, but all
+		# required by the Traffic Ops RPM)
+		cpanminus            \
+		expat-devel          \
+		gcc-c++              \
+		golang               \
+		libcap               \
+		libcurl-devel        \
+		libidn-devel         \
+		libpcap-devel        \
+		mkisofs              \
+		openssl-devel        \
+		perl-core            \
+		perl-Crypt-ScryptKDF \
+		perl-DBD-Pg          \
+		perl-DBI             \
+		perl-Digest-SHA1     \
+		perl-JSON            \
+		perl-libwww-perl     \
+		perl-TermReadKey     \
+		perl-Test-CPAN-Meta  \
+		perl-WWW-Curl;       \
 	dnf clean all
 
 EXPOSE 443
@@ -71,7 +95,7 @@ ADD traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz /opt/traffi
 
 WORKDIR /opt/traffic_ops/app
 ADD traffic_ops/install/bin/install_goose.sh ./
-RUN ./install_goose.sh && rm ./install_goose.sh && dnf -y remove git && dnf clean all
+RUN ./install_goose.sh && rm ./install_goose.sh
 
 ADD infrastructure/cdn-in-a-box/traffic_ops_data /traffic_ops_data
 
@@ -80,7 +104,7 @@ ADD infrastructure/cdn-in-a-box/traffic_ops_data /traffic_ops_data
 ARG TRAFFIC_OPS_RPM=infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
 
 COPY $TRAFFIC_OPS_RPM /traffic_ops.rpm
-RUN yum -y install /traffic_ops.rpm && \
+RUN rpm -Uvh /traffic_ops.rpm && \
 	rm /traffic_ops.rpm
 
 COPY infrastructure/cdn-in-a-box/enroller/server_template.json \

@@ -14,28 +14,27 @@ package client
  * limitations under the License.
  */
 
-import "errors"
-import "net/http"
-import "net/url"
+import (
+	"errors"
+	"net/http"
+	"net/url"
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
-import "github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+)
 
+// APICapabilities is the API version-relative path for the /capabilities API endpoint.
 const APICapabilities = "/capabilities"
 
-func (to *Session) GetCapabilitiesWithHdr(header http.Header) ([]tc.Capability, toclientlib.ReqInf, error) {
+// GetCapabilities retrieves all capabilities.
+func (to *Session) GetCapabilities(header http.Header) ([]tc.Capability, toclientlib.ReqInf, error) {
 	var data tc.CapabilitiesResponse
 	reqInf, err := to.get(APICapabilities, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GetCapabilities retrieves all capabilities.
-// Deprecated: GetCapabilities will be removed in 6.0. Use GetCapabilitiesWithHdr.
-func (to *Session) GetCapabilities() ([]tc.Capability, toclientlib.ReqInf, error) {
-	return to.GetCapabilitiesWithHdr(nil)
-}
-
-func (to *Session) GetCapabilityWithHdr(c string, header http.Header) (tc.Capability, toclientlib.ReqInf, error) {
+// GetCapability retrieves only the capability named 'c'.
+func (to *Session) GetCapability(c string, header http.Header) (tc.Capability, toclientlib.ReqInf, error) {
 	v := url.Values{}
 	v.Add("name", c)
 	endpoint := APICapabilities + "?" + v.Encode()
@@ -48,10 +47,4 @@ func (to *Session) GetCapabilityWithHdr(c string, header http.Header) (tc.Capabi
 	}
 
 	return data.Response[0], reqInf, nil
-}
-
-// GetCapability retrieves only the capability named 'c'.
-// Deprecated: GetCapability will be removed in 6.0. Use GetCapabilityWithHdr.
-func (to *Session) GetCapability(c string) (tc.Capability, toclientlib.ReqInf, error) {
-	return to.GetCapabilityWithHdr(c, nil)
 }

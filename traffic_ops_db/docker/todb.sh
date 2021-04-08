@@ -36,10 +36,10 @@ elif [[ "$ACTION" == "stop" ]];then
   echo "Stopping Docker container: $CONTAINER_NAME"
 
 elif [[ "$ACTION" == "clean" ]];then
-  rm -rf pgdata
   docker stop $CONTAINER_NAME
   docker rm $CONTAINER_NAME
   docker rmi $PROJECT_NAME
+  rm -rf pgdata
 
 elif [[ "$ACTION" == "seed" ]];then
   docker-compose -f docker-compose.dev.yml -p $PROJECT_NAME down -v

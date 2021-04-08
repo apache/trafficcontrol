@@ -56,7 +56,7 @@ type TODeliveryServiceServer struct {
 }
 
 func (dss TODeliveryServiceServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"deliveryservice", api.GetIntKey}, {"server", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "deliveryservice", Func: api.GetIntKey}, {Field: "server", Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
@@ -273,7 +273,7 @@ func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *au
 		}
 		servers = append(servers, s)
 	}
-	return &tc.DeliveryServiceServerResponse{orderby, servers, page, limit}, nil, &maxTime
+	return &tc.DeliveryServiceServerResponse{Orderby: orderby, Response: servers, Size: page, Limit: limit}, nil, &maxTime
 }
 
 func selectQuery(orderBy string, limit string, offset string, dsIDs []int64, serverIDs []int64, getMaxQuery bool) (string, error) {
@@ -483,7 +483,7 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+ds.Name+", ID: "+strconv.Itoa(*dsId)+", ACTION: Replace existing servers assigned to delivery service", inf.User, inf.Tx.Tx)
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server assignments complete", tc.DSSMapResponse{*dsId, *payload.Replace, respServers})
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server assignments complete", tc.DSSMapResponse{DsId: *dsId, Replace: *payload.Replace, Servers: respServers})
 }
 
 type TODeliveryServiceServers tc.DeliveryServiceServers
@@ -560,7 +560,7 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(ds.ID)+", ACTION: Assigned servers "+strings.Join(serverNames, ", ")+" to delivery service", inf.User, inf.Tx.Tx)
-	api.WriteResp(w, r, tc.DeliveryServiceServers{payload.ServerNames, payload.XmlId})
+	api.WriteResp(w, r, tc.DeliveryServiceServers{ServerNames: payload.ServerNames, XmlId: payload.XmlId})
 }
 
 // validateDSSAssignments returns an error if the given servers cannot be assigned to the given delivery service.
@@ -937,8 +937,8 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"xml_id": dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
-		"xmlId":  dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
+		"xml_id": dbhelpers.WhereColumnInfo{Column: "ds.xml_id"},
+		"xmlId":  dbhelpers.WhereColumnInfo{Column: "ds.xml_id"},
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
 	if len(errs) > 0 {

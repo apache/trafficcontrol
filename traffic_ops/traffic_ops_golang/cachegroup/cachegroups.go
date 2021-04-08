@@ -48,7 +48,7 @@ type TOCacheGroup struct {
 }
 
 func (cg TOCacheGroup) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
@@ -508,11 +508,11 @@ func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":        {"cachegroup.id", api.IsInt},
-		"name":      {"cachegroup.name", nil},
-		"shortName": {"cachegroup.short_name", nil},
-		"type":      {"cachegroup.type", nil},
-		"topology":  {"topology_cachegroup.topology", nil},
+		"id":        {Column: "cachegroup.id", Checker: api.IsInt},
+		"name":      {Column: "cachegroup.name"},
+		"shortName": {Column: "cachegroup.short_name"},
+		"type":      {Column: "cachegroup.type"},
+		"topology":  {Column: "topology_cachegroup.topology"},
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(cg.ReqInfo.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {

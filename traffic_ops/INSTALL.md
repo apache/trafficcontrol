@@ -22,7 +22,7 @@
 ## Disable selinux:
 ### change `/etc/selinux/config` to `SELINUX=disabled`
 
-## Add access to Postgreql 9.6 yum repository 
+## Add access to PostgreSQL yum repository 
 
 Instructions are here: https://yum.postgresql.org/
 
@@ -30,21 +30,21 @@ Instructions are here: https://yum.postgresql.org/
 
     `$ sudo yum install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm`
     
-## Install Postgres 9.6 server (in a container or on the host)
+## Install Postgres 13.2 server (in a container or on the host)
 
 ### on the host:
 
     $ sudo su -
-    # yum install postgresql96-server
+    # yum install postgresql13-server
     $ su - postgres
-    $ /usr/pgsql-9.6/bin/initdb -A md5 -W #-W forces the user to provide a superuser (postgres) password
+    $ /usr/pgsql-13/bin/initdb -A md5 -W #-W forces the user to provide a superuser (postgres) password
     $ exit
-    # systemctl start postgresql-9.6
-    # systemctl status postgresql-9.6
+    # systemctl start postgresql-13
+    # systemctl status postgresql-13
 
 ### -or- in a container
 
-NOTE: you do *not* need postgresql96-server if running postgres within a `docker` container.
+NOTE: you do *not* need postgresql13-server if running postgres within a `docker` container.
 
 Install `docker` and `docker-compose` using instructions here:
 

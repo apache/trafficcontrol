@@ -160,8 +160,8 @@ func getMockDSServers() []tc.DSServerV4 {
 		DomainName:   util.StrPtr("domain"),
 	}
 	srv := tc.DSServerV4{
-		base,
-		&[]tc.ServerInterfaceInfoV40{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
+		DSServerBaseV4:   base,
+		ServerInterfaces: &[]tc.ServerInterfaceInfoV40{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
 	}
 	srvsExpected := []tc.DSServerV4{srv}
 	return srvsExpected

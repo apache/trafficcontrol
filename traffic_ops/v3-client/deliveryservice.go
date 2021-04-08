@@ -154,7 +154,7 @@ const (
 	APIDeliveryServiceXmlidSslKeys    = APIDeliveryServices + "/xmlId/%s/sslkeys"
 	APIDeliveryServiceGenerateSslKeys = APIDeliveryServices + "/sslkeys/generate"
 	APIDeliveryServicesUriSigningKeys = APIDeliveryServices + "/%s/urisignkeys"
-	APIDeliveryServicesUrlSigningKeys = APIDeliveryServices + "/xmlid/%s/urlkeys"
+	APIDeliveryServicesUrlSigningKeys = APIDeliveryServices + "/xmlId/%s/urlkeys"
 	APIDeliveryServicesRegexes        = "/deliveryservices_regexes"
 	APIServerDeliveryServices         = "/servers/%d/deliveryservices"
 	APIDeliveryServiceServer          = "/deliveryserviceserver"

@@ -21,9 +21,6 @@ volumes:
   traffic_ops_golang:
 
 services:
-  db:
-    image: postgres:9.6
-
   unit_golang:
     build:
       context: ../../../..

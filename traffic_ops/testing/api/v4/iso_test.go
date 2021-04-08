@@ -20,6 +20,7 @@ package v4
  */
 
 import (
+	"net/url"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -81,7 +82,11 @@ func TestGetOSVersions(t *testing.T) {
 		}
 		// Cleanup DB entry
 		defer func() {
-			resp, _, err := TOSession.GetParameterByNameAndConfigFileAndValue(p.Name, p.ConfigFile, p.Value)
+			params := url.Values{}
+			params.Set("name", p.Name)
+			params.Set("configFile", p.ConfigFile)
+			params.Set("value", p.Value)
+			resp, _, err := TOSession.GetParameters(nil, params)
 			if err != nil {
 				t.Fatalf("cannot GET Parameter by name: %v - %v\n", p.Name, err)
 			}
@@ -89,7 +94,7 @@ func TestGetOSVersions(t *testing.T) {
 				t.Fatalf("unexpected response length %d", len(resp))
 			}
 
-			if delResp, _, err := TOSession.DeleteParameterByID(resp[0].ID); err != nil {
+			if delResp, _, err := TOSession.DeleteParameter(resp[0].ID); err != nil {
 				t.Fatalf("cannot DELETE Parameter by name: %v - %v\n", err, delResp)
 			}
 		}()

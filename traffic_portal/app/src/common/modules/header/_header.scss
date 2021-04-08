@@ -129,6 +129,10 @@ body.nav-sm .main_container .top_nav {
   background: #B22222;
 }
 
+.notification.btn-link:hover {
+  text-decoration: none;
+}
+
 @media (max-width: 991px) {
 
   body.nav-md .container.body .top_nav {

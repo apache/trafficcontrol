@@ -25,4 +25,13 @@ services:
       args:
         RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
-      - ../../../traffic_server/tsb:/opt/tsb-ats:z
+      - ../../../traffic_server/_tsb:/opt/tsb-ats:z
+  fakeorigin_build:
+    image: apache/traffic_fakeorigin_builder:master
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-fakeOrigin
+      context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+    volumes:
+      - ../../..:/trafficcontrol:z

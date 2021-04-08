@@ -29,7 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	client "github.com/apache/trafficcontrol/traffic_ops/v1-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/config"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/atstccfg/toreq"
 )
@@ -79,14 +79,12 @@ func TestPreprocessConfigFile(t *testing.T) {
 	{
 		server := &atscfg.Server{}
 		server.TCPPort = util.IntPtr(8080)
-		server.Interfaces = []tc.ServerInterfaceInfoV40{
-			tc.ServerInterfaceInfoV40{
-				ServerInterfaceInfo: tc.ServerInterfaceInfo{
-					IPAddresses: []tc.ServerIPAddress{
-						tc.ServerIPAddress{
-							Address:        "127.0.2.1",
-							ServiceAddress: true,
-						},
+		server.Interfaces = []tc.ServerInterfaceInfo{
+			tc.ServerInterfaceInfo{
+				IPAddresses: []tc.ServerIPAddress{
+					tc.ServerIPAddress{
+						Address:        "127.0.2.1",
+						ServiceAddress: true,
 					},
 				},
 			},
@@ -107,14 +105,12 @@ func TestPreprocessConfigFile(t *testing.T) {
 	{
 		server := &atscfg.Server{}
 		server.TCPPort = util.IntPtr(80)
-		server.Interfaces = []tc.ServerInterfaceInfoV40{
-			tc.ServerInterfaceInfoV40{
-				ServerInterfaceInfo: tc.ServerInterfaceInfo{
-					IPAddresses: []tc.ServerIPAddress{
-						tc.ServerIPAddress{
-							Address:        "127.0.2.1",
-							ServiceAddress: true,
-						},
+		server.Interfaces = []tc.ServerInterfaceInfo{
+			tc.ServerInterfaceInfo{
+				IPAddresses: []tc.ServerIPAddress{
+					tc.ServerIPAddress{
+						Address:        "127.0.2.1",
+						ServiceAddress: true,
 					},
 				},
 			},
@@ -337,25 +333,21 @@ func randServer() *atscfg.Server {
 	sv.ILOPassword = randStr()
 	sv.ILOUsername = randStr()
 
-	sv.Interfaces = []tc.ServerInterfaceInfoV40{
-		tc.ServerInterfaceInfoV40{
-			ServerInterfaceInfo: tc.ServerInterfaceInfo{
-				Name: *randStr(),
-				IPAddresses: []tc.ServerIPAddress{
-					tc.ServerIPAddress{
-						Address:        *randStr(),
-						Gateway:        randStr(),
-						ServiceAddress: true,
-					},
-					tc.ServerIPAddress{
-						Address:        *randStr(),
-						Gateway:        randStr(),
-						ServiceAddress: true,
-					},
+	sv.Interfaces = []tc.ServerInterfaceInfo{
+		tc.ServerInterfaceInfo{
+			Name: *randStr(),
+			IPAddresses: []tc.ServerIPAddress{
+				tc.ServerIPAddress{
+					Address:        *randStr(),
+					Gateway:        randStr(),
+					ServiceAddress: true,
+				},
+				tc.ServerIPAddress{
+					Address:        *randStr(),
+					Gateway:        randStr(),
+					ServiceAddress: true,
 				},
 			},
-			RouterHostName: *randStr(),
-			RouterPortName: *randStr(),
 		},
 	}
 

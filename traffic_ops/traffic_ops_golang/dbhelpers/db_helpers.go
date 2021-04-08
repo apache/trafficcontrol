@@ -438,6 +438,28 @@ func GetServerCapabilitiesFromName(name string, tx *sql.Tx) ([]string, error) {
 	return caps, nil
 }
 
+const dsrExistsQuery = `
+SELECT EXISTS(
+	SELECT id
+	FROM deliveryservice_request
+	WHERE status <> 'complete' AND
+		status <> 'rejected' AND
+		deliveryservice ->> 'xmlId' = $1
+)
+`
+
+// DSRExistsWithXMLID returns whether or not an **open** Delivery Service
+// Request with the given xmlid exists, and any error that occurred.
+func DSRExistsWithXMLID(xmlid string, tx *sql.Tx) (bool, error) {
+	if tx == nil {
+		return false, errors.New("checking for DSR with nil transaction")
+	}
+
+	var exists bool
+	err := tx.QueryRow(dsrExistsQuery, xmlid).Scan(&exists)
+	return exists, err
+}
+
 // ScanCachegroupsServerCapabilities, given rows of (server ID, CDN ID, cachegroup name, server capabilities),
 // returns a map of cachegroup names to server IDs, a map of server IDs to a map of their capabilities,
 // a map of server IDs to CDN IDs, and an error (if one occurs).
@@ -757,8 +779,8 @@ func GetServerInfo(serverID int, tx *sql.Tx) (tc.ServerInfo, bool, error) {
 	return servers[0], true, nil
 }
 
-func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]struct{}, error) {
-	dses := map[tc.DeliveryServiceName]struct{}{}
+func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[string]struct{}, error) {
+	dses := map[string]struct{}{}
 	qry := `SELECT xml_id from deliveryservice where cdn_id = (select id from cdn where name = $1)`
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
@@ -767,7 +789,7 @@ func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]struct{}
 	defer rows.Close()
 
 	for rows.Next() {
-		ds := tc.DeliveryServiceName("")
+		ds := ""
 		if err := rows.Scan(&ds); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}
@@ -1105,7 +1127,7 @@ GROUP BY t.name, ds.topology
 func CheckOriginServerInDSCG(tx *sql.Tx, dsID int, dsTopology string) (error, error, int) {
 	// get servers and respective cachegroup name that have ORG type in a delivery service
 	q := `
-		SELECT s.host_name, c.name 
+		SELECT s.host_name, c.name
 		FROM server s
 			INNER JOIN deliveryservice_server ds ON ds.server = s.id
 			INNER JOIN type t ON t.id = s.type

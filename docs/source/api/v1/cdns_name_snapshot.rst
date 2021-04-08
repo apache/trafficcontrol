@@ -544,7 +544,7 @@ Response Structure
 			"CDN_name": "CDN-in-a-Box",
 			"date": 1544635937,
 			"tm_host": "trafficops.infra.ciab.test",
-			"tm_path": "/tools/write_crconfig/CDN-in-a-Box",
+			"tm_path": "/api/1.2/snapshot/CDN-in-a-Box",
 			"tm_user": "admin",
 			"tm_version": "traffic_ops-3.0.0-9813.8ad7bd8e.el7"
 		}

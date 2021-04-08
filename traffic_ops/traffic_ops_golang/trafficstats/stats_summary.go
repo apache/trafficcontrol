@@ -52,7 +52,7 @@ func GetStatsSummary(w http.ResponseWriter, r *http.Request) {
 
 func getLastSummaryDate(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"statName": dbhelpers.WhereColumnInfo{"stat_name", nil},
+		"statName": dbhelpers.WhereColumnInfo{Column: "stat_name"},
 	}
 	where, _, _, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToSQLCols)
 	if len(errs) > 0 {
@@ -74,9 +74,9 @@ func getLastSummaryDate(w http.ResponseWriter, r *http.Request, inf *api.APIInfo
 
 func getStatsSummary(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"statName":            dbhelpers.WhereColumnInfo{"stat_name", nil},
-		"cdnName":             dbhelpers.WhereColumnInfo{"cdn_name", nil},
-		"deliveryServiceName": dbhelpers.WhereColumnInfo{"deliveryservice_name", nil},
+		"statName":            dbhelpers.WhereColumnInfo{Column: "stat_name"},
+		"cdnName":             dbhelpers.WhereColumnInfo{Column: "cdn_name"},
+		"deliveryServiceName": dbhelpers.WhereColumnInfo{Column: "deliveryservice_name"},
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToSQLCols)
 	if len(errs) > 0 {

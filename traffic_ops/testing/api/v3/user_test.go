@@ -214,7 +214,7 @@ func UserRegistrationTest(t *testing.T) {
 		if err != nil {
 			t.Fatalf("could not get tenant %v: %v", *user.Tenant, err)
 		}
-		resp, _, err := TOSession.RegisterNewUser(uint(tenant.ID), uint(*user.Role), rfc.EmailAddress{mail.Address{Address: *user.Email}})
+		resp, _, err := TOSession.RegisterNewUser(uint(tenant.ID), uint(*user.Role), rfc.EmailAddress{Address: mail.Address{Address: *user.Email}})
 		if err != nil {
 			t.Fatalf("could not register user: %v", err)
 		}

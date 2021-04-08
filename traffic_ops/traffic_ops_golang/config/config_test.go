@@ -20,17 +20,13 @@ package config
  */
 
 import (
-	"crypto/tls"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
-	"github.com/basho/riak-go-client"
 )
 
 const (
@@ -116,6 +112,10 @@ const (
 			"ignore_unknown_routes": true,
 			"disabled_routes": [4, 5, 6]
 		},
+		"traffic_vault_backend": "something",
+		"traffic_vault_config": {
+			"foo": "bar"
+		},
 		"log_location_error": "stderr",
 		"log_location_warning": "stdout",
 		"log_location_info": "stdout",
@@ -157,17 +157,6 @@ const (
 	"type": "Pg"
 }
 `
-
-	goodRiakConfig = `
-	   {
-	       "user": "riakuser",
-	       "password": "password",
-	       "MaxTLSVersion": "1.1",
-	       "tlsConfig": {
-	           "insecureSkipVerify": true
-	       }
-	   }
-	   	`
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -195,14 +184,8 @@ func TestLoadConfig(t *testing.T) {
 	}
 	defer os.Remove(goodDbCfg) // clean up
 
-	goodRiakCfg, err := tempFileWith([]byte(goodRiakConfig))
-	if err != nil {
-		t.Errorf("cannot create temp file: %v", err)
-	}
-	defer os.Remove(goodRiakCfg) // clean up
-
 	// test bad paths
-	_, errs, blockStartup := LoadConfig(badPath, badPath, badPath, version)
+	_, errs, blockStartup := LoadConfig(badPath, badPath, version)
 	exp = fmt.Sprintf("Loading cdn config from '%s'", badPath)
 	if !strings.HasPrefix(errs[0].Error(), exp) {
 		t.Error("expected", exp, "got", errs[0].Error())
@@ -212,7 +195,7 @@ func TestLoadConfig(t *testing.T) {
 	}
 
 	// bad json in cdn.conf
-	_, errs, blockStartup = LoadConfig(badCfg, badCfg, badPath, version)
+	_, errs, blockStartup = LoadConfig(badCfg, badCfg, version)
 	exp = fmt.Sprintf("Loading cdn config from '%s': unmarshalling '%s'", badCfg, badCfg)
 	if !strings.HasPrefix(errs[0].Error(), exp) {
 		t.Error("expected", exp, "got", errs[0].Error())
@@ -222,7 +205,7 @@ func TestLoadConfig(t *testing.T) {
 	}
 
 	// good cdn.conf, bad db conf
-	_, errs, blockStartup = LoadConfig(goodCfg, badPath, badPath, version)
+	_, errs, blockStartup = LoadConfig(goodCfg, badPath, version)
 	exp = fmt.Sprintf("reading db conf '%s'", badPath)
 	if !strings.HasPrefix(errs[0].Error(), exp) {
 		t.Error("expected", exp, "got", errs[0].Error())
@@ -232,7 +215,7 @@ func TestLoadConfig(t *testing.T) {
 	}
 
 	// good cdn.conf,  bad json in database.conf
-	_, errs, blockStartup = LoadConfig(goodCfg, badCfg, badPath, version)
+	_, errs, blockStartup = LoadConfig(goodCfg, badCfg, version)
 	exp = fmt.Sprintf("unmarshalling '%s'", badCfg)
 	if !strings.HasPrefix(errs[0].Error(), exp) {
 		t.Error("expected", exp, "got", errs[0].Error())
@@ -242,7 +225,7 @@ func TestLoadConfig(t *testing.T) {
 	}
 
 	// good cdn.conf,  good database.conf
-	cfg, errs, blockStartup = LoadConfig(goodCfg, goodDbCfg, goodRiakCfg, version)
+	cfg, errs, blockStartup = LoadConfig(goodCfg, goodDbCfg, version)
 	if len(errs) != 0 {
 		t.Error("Good config -- unexpected errors: ", errs)
 	}
@@ -250,10 +233,16 @@ func TestLoadConfig(t *testing.T) {
 		t.Error("expected blockStartup to be false but it was ", blockStartup)
 	}
 
-	expectedRiak := riaksvc.TOAuthOptions{AuthOptions: riak.AuthOptions{User: "riakuser", Password: "password", TlsConfig: &tls.Config{InsecureSkipVerify: true, MaxVersion: tls.VersionTLS11}}}
-
-	if cfg.RiakAuthOptions.User != expectedRiak.User || cfg.RiakAuthOptions.Password != expectedRiak.Password || !reflect.DeepEqual(cfg.RiakAuthOptions.TlsConfig, expectedRiak.TlsConfig) {
-		t.Error(fmt.Printf("Error parsing riak conf expected: %++v but got: %++v\n", expectedRiak, cfg.RiakAuthOptions))
+	if cfg.TrafficVaultBackend != "something" {
+		t.Errorf("expected traffic_vault_backend to be 'something', actual: '%s'", cfg.TrafficVaultBackend)
+	}
+	tvConfig := make(map[string]string)
+	err = json.Unmarshal(cfg.TrafficVaultConfig, &tvConfig)
+	if err != nil {
+		t.Errorf("unmarshalling traffic_vault_config - expected: no error, actual: %s", err.Error())
+	}
+	if tvConfig["foo"] != "bar" {
+		t.Errorf("unmarshalling traffic_vault_config - expected: foo = bar, actual: foo = %s", tvConfig["foo"])
 	}
 
 	if *debugLogging {

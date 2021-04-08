@@ -62,15 +62,15 @@ func (v *TORole) NewReadObj() interface{}       { return &TORole{} }
 func (v *TORole) SelectQuery() string           { return selectQuery() }
 func (v *TORole) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"name":      dbhelpers.WhereColumnInfo{"name", nil},
-		"id":        dbhelpers.WhereColumnInfo{"id", api.IsInt},
-		"privLevel": dbhelpers.WhereColumnInfo{"priv_level", api.IsInt}}
+		"name":      dbhelpers.WhereColumnInfo{Column: "name"},
+		"id":        dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt},
+		"privLevel": dbhelpers.WhereColumnInfo{Column: "priv_level", Checker: api.IsInt}}
 }
 func (v *TORole) UpdateQuery() string { return updateQuery() }
 func (v *TORole) DeleteQuery() string { return deleteQuery() }
 
 func (role TORole) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions

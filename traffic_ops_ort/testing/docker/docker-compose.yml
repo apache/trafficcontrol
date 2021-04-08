@@ -21,7 +21,6 @@
 #   Copy an ATS rpm to yumserver/test-rpms and update the 
 #     ../ort-tests/tc-fixtures.json to match the rpm version
 #     string you've chosen
-#   Copy the riak-2.2.3-1.el7.centos.x86_64.rpm to traffic_vault/
 #
 #   Run: docker-compose build
 #   Run: docker-compose run ort_test
@@ -37,7 +36,9 @@ volumes:
 
 services:
   db:
-    image: postgres:9.6.6
+    image: postgres:13.2
+    env_file:
+      - variables.env
     ports: 
       - "5432:5432"
 
@@ -56,10 +57,8 @@ services:
     ports: 
       - "443:443"
     build:
-      context: .
-      dockerfile: traffic_ops/Dockerfile
-      args:
-        RPM: traffic_ops.rpm 
+      context: ../../..
+      dockerfile: traffic_ops_ort/testing/docker/traffic_ops/Dockerfile
     volumes:
       - ../../../GO_VERSION:/GO_VERSION
     depends_on:

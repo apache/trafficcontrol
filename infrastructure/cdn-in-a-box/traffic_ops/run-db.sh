@@ -19,7 +19,7 @@
 set-dns.sh
 insert-self-into-dns.sh
 set -o monitor #enable job control
-/docker-entrypoint.sh postgres &
+docker-entrypoint.sh postgres &
 
 source /to-access.sh
 # Enroll with traffic ops

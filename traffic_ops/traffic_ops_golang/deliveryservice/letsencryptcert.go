@@ -37,8 +37,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
 	"github.com/go-acme/lego/certificate"
 	"github.com/go-acme/lego/challenge/dns01"
@@ -121,8 +121,8 @@ func (d *DNSProviderTrafficRouter) CleanUp(domain, token, keyAuth string) error 
 			return errors.New("Determining rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
 		}
 		if rows == 0 {
-			log.Errorf("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
-			return errors.New("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+			log.Errorf("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value)
+			return errors.New("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value)
 		}
 	}
 
@@ -136,6 +136,11 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
+
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateLetsEncryptCertificates: Traffic Vault is not configured"))
+		return
+	}
 
 	ctx, _ := context.WithTimeout(r.Context(), LetsEncryptTimeout)
 
@@ -177,13 +182,13 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go GetLetsEncryptCertificates(inf.Config, req, ctx, inf.User)
+	go GetLetsEncryptCertificates(inf.Config, req, ctx, inf.User, inf.Vault)
 
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Beginning async call to Let's Encrypt for "+*req.DeliveryService+". This may take a few minutes.")
 
 }
 
-func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEncryptSSLKeysReq, ctx context.Context, currentUser *auth.CurrentUser) error {
+func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEncryptSSLKeysReq, ctx context.Context, currentUser *auth.CurrentUser, tv trafficvault.TrafficVault) error {
 
 	db, err := api.GetDB(ctx)
 	if err != nil {
@@ -293,10 +298,10 @@ func GetLetsEncryptCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEn
 		CSR: string(EncodePEMToLegacyPerlRiakFormat([]byte("Lets Encrypt Generated"))),
 	}
 
-	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
-		log.Errorf("Error posting lets encrypt certificate to riak: %s", err.Error())
+	if err := tv.PutDeliveryServiceSSLKeys(dsSSLKeys, tx); err != nil {
+		log.Errorf("Error putting lets encrypt certificate in Traffic Vault: %s", err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with Lets Encrypt", currentUser, logTx)
-		return errors.New(deliveryService + ": putting riak keys: " + err.Error())
+		return errors.New(deliveryService + ": putting keys in Traffic Vault: " + err.Error())
 	}
 
 	tx2, err := db.Begin()

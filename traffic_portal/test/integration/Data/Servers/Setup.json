@@ -1,13 +1,84 @@
 {
     "Prerequisites": [
         {
+            "Action": "CreateDivisions",
+            "Route": "/divisions",
+            "Method": "post",
+            "Data": [
+                {
+                    "name": "PhysTest"
+                }
+            ]
+        },
+        {
+            "Action": "CreateRegions",
+            "Route": "/regions",
+            "Method": "post",
+            "Data": [
+                {
+                    "name": "PhysTest",
+                    "division": "4",
+                    "divisionName": "PhysTest",
+                    "getRequest": [
+                        {
+                            "route": "/divisions",
+                            "queryKey": "name",
+                            "queryValue": "PhysTest",
+                            "replace": "division"
+                        }
+                    ]
+                },
+                {
+                    "name": "PhysTest2",
+                    "division": "4",
+                    "divisionName": "PhysTest",
+                    "getRequest": [
+                        {
+                            "route": "/divisions",
+                            "queryKey": "name",
+                            "queryValue": "PhysTest",
+                            "replace": "division"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Action": "CreatePhysLocation",
+            "Route": "/phys_locations",
+            "Method": "post",
+            "Data": [
+                {
+                    "address": "Buckingham Palace",
+                    "city": "London",
+                    "comments": "Buckingham Palace",
+                    "email": "steve.kingstone@royal.gsx.gov.uk",
+                    "name": "TPPhysLocation2",
+                    "phone": "0-843-816-6276",
+                    "poc": "Her Majesty The Queen Elizabeth Alexandra Mary Windsor II",
+                    "regionId": 3,
+                    "shortName": "tpphys2",
+                    "state": "NA",
+                    "zip": "99999",
+                    "getRequest": [
+                        {
+                            "route": "/regions",
+                            "queryKey": "name",
+                            "queryValue": "PhysTest",
+                            "replace": "regionId"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "Action": "CreateServers",
             "Route": "/servers",
             "Method": "post",
             "Data": [
                 {
-                    "cachegroupId": 8,
-                    "cdnId": 2,
+                    "cachegroupId": 0,
+                    "cdnId": 0,
                     "domainName": "test.net",
                     "hostName": "servertestremove2",
                     "httpsPort": 443,
@@ -42,18 +113,44 @@
                     "mgmtIpGateway": "",
                     "mgmtIpNetmask": "",
                     "offlineReason": "",
-                    "physLocationId": 2,
-                    "profileId": 9,
+                    "physLocationId": 0,
+                    "profileId": 0,
                     "routerHostName": "",
                     "routerPortName": "",
                     "statusId": 3,
                     "tcpPort": 80,
                     "typeId": 12,
-                    "updPending": false
+                    "updPending": false,
+                    "getRequest": [
+                        {
+                            "route": "/phys_locations",
+                            "queryKey": "name",
+                            "queryValue": "TPPhysLocation2",
+                            "replace": "physLocationId"
+                        },
+                        {
+                            "route": "/cdns",
+                            "queryKey": "name",
+                            "queryValue": "dummycdn",
+                            "replace": "cdnId"
+                        },
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "testCG",
+                            "replace": "cachegroupId"
+                        },
+                        {
+                            "route": "/profiles",
+                            "queryKey": "name",
+                            "queryValue": "testProfile",
+                            "replace": "profileId"
+                        }
+                    ]
                 },
                 {
-                    "cachegroupId": 8,
-                    "cdnId": 2,
+                    "cachegroupId": 0,
+                    "cdnId": 0,
                     "domainName": "test.net",
                     "hostName": "servertestremoveop2",
                     "httpsPort": 443,
@@ -88,18 +185,44 @@
                     "mgmtIpGateway": "",
                     "mgmtIpNetmask": "",
                     "offlineReason": "",
-                    "physLocationId": 2,
-                    "profileId": 9,
+                    "physLocationId": 0,
+                    "profileId": 0,
                     "routerHostName": "",
                     "routerPortName": "",
                     "statusId": 3,
                     "tcpPort": 80,
                     "typeId": 12,
-                    "updPending": false
+                    "updPending": false,
+                    "getRequest": [
+                        {
+                            "route": "/phys_locations",
+                            "queryKey": "name",
+                            "queryValue": "TPPhysLocation2",
+                            "replace": "physLocationId"
+                        },
+                        {
+                            "route": "/cdns",
+                            "queryKey": "name",
+                            "queryValue": "dummycdn",
+                            "replace": "cdnId"
+                        },
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "testCG",
+                            "replace": "cachegroupId"
+                        },
+                        {
+                            "route": "/profiles",
+                            "queryKey": "name",
+                            "queryValue": "testProfile",
+                            "replace": "profileId"
+                        }
+                    ]
                 },
                 {
-                    "cachegroupId": 8,
-                    "cdnId": 2,
+                    "cachegroupId": 0,
+                    "cdnId": 0,
                     "domainName": "test.net",
                     "hostName": "servertestremove3",
                     "httpsPort": 443,
@@ -134,18 +257,44 @@
                     "mgmtIpGateway": "",
                     "mgmtIpNetmask": "",
                     "offlineReason": "",
-                    "physLocationId": 2,
-                    "profileId": 9,
+                    "physLocationId": 0,
+                    "profileId": 0,
                     "routerHostName": "",
                     "routerPortName": "",
                     "statusId": 3,
                     "tcpPort": 80,
                     "typeId": 11,
-                    "updPending": false
+                    "updPending": false,
+                    "getRequest": [
+                        {
+                            "route": "/phys_locations",
+                            "queryKey": "name",
+                            "queryValue": "TPPhysLocation2",
+                            "replace": "physLocationId"
+                        },
+                        {
+                            "route": "/cdns",
+                            "queryKey": "name",
+                            "queryValue": "dummycdn",
+                            "replace": "cdnId"
+                        },
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "testCG",
+                            "replace": "cachegroupId"
+                        },
+                        {
+                            "route": "/profiles",
+                            "queryKey": "name",
+                            "queryValue": "testProfile",
+                            "replace": "profileId"
+                        }
+                    ]
                 },
                 {
-                    "cachegroupId": 8,
-                    "cdnId": 2,
+                    "cachegroupId": 0,
+                    "cdnId": 0,
                     "domainName": "test.net",
                     "hostName": "servertestremoveop3",
                     "httpsPort": 443,
@@ -180,14 +329,40 @@
                     "mgmtIpGateway": "",
                     "mgmtIpNetmask": "",
                     "offlineReason": "",
-                    "physLocationId": 2,
-                    "profileId": 9,
+                    "physLocationId": 0,
+                    "profileId": 0,
                     "routerHostName": "",
                     "routerPortName": "",
                     "statusId": 3,
                     "tcpPort": 80,
                     "typeId": 11,
-                    "updPending": false
+                    "updPending": false,
+                    "getRequest": [
+                        {
+                            "route": "/phys_locations",
+                            "queryKey": "name",
+                            "queryValue": "TPPhysLocation2",
+                            "replace": "physLocationId"
+                        },
+                        {
+                            "route": "/cdns",
+                            "queryKey": "name",
+                            "queryValue": "dummycdn",
+                            "replace": "cdnId"
+                        },
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "testCG",
+                            "replace": "cachegroupId"
+                        },
+                        {
+                            "route": "/profiles",
+                            "queryKey": "name",
+                            "queryValue": "testProfile",
+                            "replace": "profileId"
+                        }
+                    ]
                 }
             ]
         },
@@ -210,7 +385,7 @@
             "Method": "post",
             "Data": [
                 {
-                    "serverId": 1,
+                    "serverId": 0,
                     "serverCapability": "servertestcap1",
                     "getRequest": [
                         {
@@ -222,7 +397,7 @@
                     ]
                 },
                 {
-                    "serverId": 1,
+                    "serverId": 0,
                     "serverCapability": "servertestcapop1",
                     "getRequest": [
                         {
@@ -242,7 +417,7 @@
             "Data": [
                 {
                     "active": true,
-                    "cdnId": 2,
+                    "cdnId": 0,
                     "displayName": "servertestds1",
                     "dscp": 0,
                     "geoLimit": 0,
@@ -258,7 +433,7 @@
                     "qstringIgnore": 0,
                     "rangeRequestHandling": 0,
                     "regionalGeoBlocking": false,
-                    "tenantId": 6,
+                    "tenantId": 0,
                     "typeId": 1,
                     "xmlId": "servertds1",
                     "getRequest": [
@@ -267,12 +442,18 @@
                             "queryKey": "name",
                             "queryValue": "tenantSame",
                             "replace": "tenantId"
+                        },
+                        {
+                            "route": "/cdns",
+                            "queryKey": "name",
+                            "queryValue": "dummycdn",
+                            "replace": "cdnId"
                         }
                     ]
                 },
                 {
                     "active": true,
-                    "cdnId": 2,
+                    "cdnId": 0,
                     "displayName": "servertestdsop1",
                     "dscp": 0,
                     "geoLimit": 0,
@@ -288,7 +469,7 @@
                     "qstringIgnore": 0,
                     "rangeRequestHandling": 0,
                     "regionalGeoBlocking": false,
-                    "tenantId": 6,
+                    "tenantId": 0,
                     "typeId": 1,
                     "xmlId": "servertdsop1",
                     "getRequest": [
@@ -297,6 +478,12 @@
                             "queryKey": "name",
                             "queryValue": "tenantSame",
                             "replace": "tenantId"
+                        },
+                        {
+                            "route": "/cdns",
+                            "queryKey": "name",
+                            "queryValue": "dummycdn",
+                            "replace": "cdnId"
                         }
                     ]
                 }

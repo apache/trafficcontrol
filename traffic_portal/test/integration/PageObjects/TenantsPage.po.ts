@@ -16,22 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ElementFinder, browser, by, element } from 'protractor'
-import { async, delay } from 'q';
+import { by, element } from 'protractor';
+
+import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from './SideNavigationPage.po';
 export class TenantsPage extends BasePage {
-  
+
     private btnCreateNewTenant = element(by.xpath("//button[@title='Create New Tenant']"));
     private txtName = element(by.name('name'));
     private txtActive = element(by.name('active'));
     private txtParentTenant = element(by.name('parentId'));
     private txtSearch = element(by.id('tenantsTable_filter')).element(by.css('label input'));
-    private mnuTenantTable = element(by.id('tenantsTable'));
     private btnDelete = element(by.buttonText('Delete'));
     private txtConfirmTenantName = element(by.name('confirmWithNameInput'));
-    private config = require('../config');
-    private randomize = this.config.randomize;
+    private randomize = randomize;
 
     async OpenTenantPage(){
       let snp = new SideNavigationPage();
@@ -48,7 +47,7 @@ export class TenantsPage extends BasePage {
         if(tenant.ParentTenant == '- root'){
           await this.txtParentTenant.sendKeys(tenant.ParentTenant);
         }else{
-          await this.txtParentTenant.sendKeys(tenant.ParentTenant+this.randomize);   
+          await this.txtParentTenant.sendKeys(tenant.ParentTenant+this.randomize);
         }
         await basePage.ClickCreate();
         if(await basePage.GetOutputMessage() == tenant.existsMessage){
@@ -62,7 +61,6 @@ export class TenantsPage extends BasePage {
         return result;
     }
     async SearchTenant(name:string){
-        let result = false;
         let snp = new SideNavigationPage();
         await snp.NavigateToTenantsPage();
         await this.txtSearch.clear();

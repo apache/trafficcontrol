@@ -74,8 +74,8 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 		);
 	};
 
-	this.assignDeliveryServiceRequest = function(id, userId) {
-		return $http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/assign", { id: id, assigneeId: userId }).then(
+	this.assignDeliveryServiceRequest = function(id, username) {
+		return $http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/assign", { assignee: username }).then(
 			function(result) {
 				return result;
 			},
@@ -87,7 +87,7 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 	};
 
 	this.updateDeliveryServiceRequestStatus = function(id, status) {
-		return $http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/status", { id: id, status: status }).then(
+		return $http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/status", { status: status }).then(
 			function(result) {
 				return result;
 			},

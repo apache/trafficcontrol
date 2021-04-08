@@ -31,15 +31,12 @@
 # ADMIN_PASS
 # TO_HOST
 # TO_PORT
-# TO_PERL_HOST
-# TO_PERL_PORT
 # TP_HOST
 #
 # Check that env vars are set
 envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_HOST TO_PORT TP_HOST)
-for v in $envvars
-do
-	if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
+for v in $envvars; do
+  if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
 
 until [[ -f "$X509_CA_ENV_FILE" ]]; do
@@ -49,8 +46,7 @@ done
 
 # these expected to be stored in $X509_CA_ENV_FILE, but a race condition could render the contents
 # blank until it gets sync'd.  Ensure vars defined before writing cdn.conf.
-until [[ -v X509_GENERATION_COMPLETE && -n "$X509_GENERATION_COMPLETE" ]]
-do
+until [[ -v X509_GENERATION_COMPLETE && -n "$X509_GENERATION_COMPLETE" ]]; do
   echo "Waiting on X509 vars to be defined"
   sleep 1
   source "$X509_CA_ENV_FILE"
@@ -70,24 +66,20 @@ if [[ "$TO_DEBUG_ENABLE" == true ]]; then
   DEBUGGING_TIMEOUT=$(( 60 * 60 * 24 )); # Timing out debugging after 1 day seems fair
 fi;
 
-cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
+
+echo "$(<postinstall.json envsubst)" >postinstall.json
+
+cdn_conf=/opt/traffic_ops/app/conf/cdn.conf
+>"$cdn_conf" echo "$(jq -s '.[0] * .[1]' "$cdn_conf" <(cat <<-EOF
 {
     "hypnotoad" : {
         "listen" : [
             "https://[::]?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
-        ],
-        "user" : "trafops",
-        "group" : "trafops",
-        "heartbeat_timeout" : 20,
-        "pid_file" : "/var/run/traffic_ops.pid",
-        "workers" : 12
+        ]
     },
     "use_ims": true,
     "traffic_ops_golang" : {
-        "insecure": true,
-        "port" : "$TO_PORT",
         "proxy_timeout" : ${DEBUGGING_TIMEOUT:-60},
-        "proxy_keep_alive" : 60,
         "proxy_tls_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_read_header_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "read_timeout" : ${DEBUGGING_TIMEOUT:-60},
@@ -100,108 +92,103 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "log_location_info": "$TO_LOG_INFO",
         "log_location_debug": "$TO_LOG_DEBUG",
         "log_location_event": "$TO_LOG_EVENT",
-        "max_db_connections": 20,
         "db_conn_max_lifetime_seconds": ${DEBUGGING_TIMEOUT:-60},
-        "db_query_timeout_seconds": ${DEBUGGING_TIMEOUT:-20},
-        "backend_max_connections": {
-            "mojolicious": 4
-        },
-        "whitelisted_oauth_urls": [],
-        "oauth_client_secret": "",
-        "routing_blacklist": {
-            "ignore_unknown_routes": false,
-            "disabled_routes": []
-        },
-        "supported_ds_metrics": [ "kbps", "tps_total", "tps_2xx", "tps_3xx", "tps_4xx", "tps_5xx" ]
-    },
-    "cors" : {
-        "access_control_allow_origin" : "*"
+        "db_query_timeout_seconds": ${DEBUGGING_TIMEOUT:-20}
     },
     "to" : {
-        "base_url" : "https://$TO_FQDN",
-        "email_from" : "no-reply@$INFRA_SUBDOMAIN.$TLD_DOMAIN",
-        "no_account_found_msg" : "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator."
+        "email_from" : "no-reply@$INFRA_SUBDOMAIN.$TLD_DOMAIN"
     },
     "portal" : {
         "base_url" : "https://$TP_HOST.$INFRA_SUBDOMAIN.$TLD_DOMAIN/#!/",
-        "email_from" : "no-reply@$INFRA_SUBDOMAIN.$TLD_DOMAIN",
-        "pass_reset_path" : "user",
-        "user_register_path" : "user"
+        "email_from" : "no-reply@$INFRA_SUBDOMAIN.$TLD_DOMAIN"
     },
-    "secrets" : [
-        "$TO_SECRET"
-    ],
-    "geniso" : {
-        "iso_root_path" : "/opt/traffic_ops/app/public"
-    },
-    "inactivity_timeout" : 60,
     "smtp" : {
         "enabled" : true,
-        "user" : "",
-        "password" : "",
         "address" : "${SMTP_FQDN}:${SMTP_PORT}"
     },
     "InfluxEnabled": true,
     "influxdb_conf_path": "/opt/traffic_ops/app/conf/production/influx.conf",
     "lets_encrypt" : {
-        "user_email" : "",
-        "send_expiration_email": false,
-        "convert_self_signed": false,
-        "renew_days_before_expiration": 30,
         "environment": "staging"
-    },
-    "acme_renewal": {
-        "summary_email": "",
-        "renew_days_before_expiration": 30
-    },
-    "acme_accounts": [
-        {
-            "acme_provider" : "",
-            "user_email" : "",
-            "acme_url" : "",
-            "kid" : "",
-            "hmac_encoded" : ""
-        }
-    ]
+    }
 }
 EOF
+))"
 
-cat <<-EOF >/opt/traffic_ops/app/conf/production/database.conf
+<<RIAK_CONF cat >/opt/traffic_ops/app/conf/production/riak.conf
 {
-        "description": "Local PostgreSQL database on port 5432",
-        "dbname": "$DB_NAME",
-        "hostname": "$DB_FQDN",
-        "user": "$DB_USER",
-        "password": "$DB_USER_PASS",
-        "port": "$DB_PORT",
-        "ssl": false,
-        "type": "Pg"
-}
-EOF
-
-cat <<-EOF >/opt/traffic_ops/app/db/dbconf.yml
-version: "1.0"
-name: dbconf.yml
-
-production:
-  driver: postgres
-  open: host=$DB_FQDN port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=$DB_NAME sslmode=disable
-test:
-  driver: postgres
-  open: host=$DB_FQDN port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=to_test sslmode=disable
-EOF
-
-cat <<-EOF >/opt/traffic_ops/app/conf/production/riak.conf
-{     "user": "$TV_RIAK_USER",
+  "MaxTLSVersion": "1.1",
   "password": "$TV_RIAK_PASSWORD",
-  "MaxTLSVersion": "1.1"
+  "user": "$TV_RIAK_USER"
 }
-EOF
+RIAK_CONF
 
-cat <<-EOF >/opt/traffic_ops/app/conf/production/influx.conf
+<<INFLUX_CONF cat >/opt/traffic_ops/app/conf/production/influx.conf
 {
-    "user": "$INFLUXDB_ADMIN_USER",
-    "password": "$INFLUXDB_ADMIN_PASSWORD",
-    "secure": false
+  "password": "$INFLUXDB_ADMIN_PASSWORD",
+  "secure": false,
+  "user": "$INFLUXDB_ADMIN_USER"
 }
-EOF
+INFLUX_CONF
+
+install_bin=/opt/traffic_ops/install/bin
+input_json="${install_bin}/input.json"
+echo "$(jq "$(<<'JQ_FILTER' envsubst
+  ."/opt/traffic_ops/app/conf/cdn.conf"[] |= (
+    (select(.config_var == "base_url") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${TO_URL}"
+    else . end))
+  ) |
+  ."/opt/traffic_ops/app/conf/production/database.conf"[] |= (
+    (select(.config_var == "dbname") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${DB_NAME}"
+    else . end)) |
+    (select(.config_var == "hostname") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${DB_FQDN}"
+    else . end)) |
+    (select(.config_var == "user") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${DB_USER}"
+    else . end)) |
+    (select(.config_var == "password") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${DB_USER_PASS}"
+    else . end))
+  ) |
+  ."/opt/traffic_ops/app/db/dbconf.yml"[] |= (
+    (select(.config_var == "pgUser") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${DB_USER}"
+    else . end)) |
+    (select(.config_var == "pgPassword") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${DB_USER_PASS}"
+    else . end))
+  ) |
+  ."/opt/traffic_ops/install/data/json/openssl_configuration.json"[] |= (
+    (select(.config_var == "genCert") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "no"
+    else . end)) |
+    (select(.config_var == "pgPassword") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${DB_USER_PASS}"
+    else . end))
+  ) |
+  ."/opt/traffic_ops/install/data/json/profiles.json"[] |= (
+    (select(.config_var == "tm.url") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${TO_URL}"
+    else . end)) |
+    (select(.config_var == "cdn_name") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${CDN_NAME}"
+    else . end)) |
+    (select(.config_var == "dns_subdomain") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${CDN_SUBDOMAIN}.${TLD_DOMAIN}"
+    else . end))
+  ) |
+  ."/opt/traffic_ops/install/data/json/users.json"[] |= (
+    (select(.config_var == "tmAdminUser") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${TO_ADMIN_USER}"
+    else . end)) |
+    (select(.config_var == "tmAdminPw") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${TO_ADMIN_PASSWORD}"
+    else . end))
+  )
+JQ_FILTER
+)" "$input_json")" >"$input_json"
+
+"${install_bin}/postinstall" -a --cfile "$input_json" -n --no-restart-to

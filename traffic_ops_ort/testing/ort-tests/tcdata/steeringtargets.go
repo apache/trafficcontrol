@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 var SteeringUserSession *client.Session
@@ -38,7 +38,7 @@ func (r *TCData) CreateTestSteeringTargets(t *testing.T) {
 		}
 
 		{
-			respTypes, _, err := SteeringUserSession.GetTypeByName(*st.Type)
+			respTypes, _, err := SteeringUserSession.GetTypeByName(*st.Type, nil)
 			if err != nil {
 				t.Fatalf("creating steering target: getting type: %v", err)
 			} else if len(respTypes) < 1 {
@@ -47,7 +47,7 @@ func (r *TCData) CreateTestSteeringTargets(t *testing.T) {
 			st.TypeID = util.IntPtr(respTypes[0].ID)
 		}
 		{
-			respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService))
+			respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService), nil)
 			if err != nil {
 				t.Fatalf("creating steering target: getting ds: %v", err)
 			} else if len(respDS) < 1 {
@@ -59,7 +59,7 @@ func (r *TCData) CreateTestSteeringTargets(t *testing.T) {
 			st.DeliveryServiceID = &dsID
 		}
 		{
-			respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.Target))
+			respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.Target), nil)
 			if err != nil {
 				t.Fatalf("creating steering target: getting target ds: %v", err)
 			} else if len(respTarget) < 1 {
@@ -89,7 +89,7 @@ func (r *TCData) DeleteTestSteeringTargets(t *testing.T) {
 			t.Fatal("deleting steering target: test data missing target")
 		}
 
-		respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.DeliveryService))
+		respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService), nil)
 		if err != nil {
 			t.Fatalf("deleting steering target: getting ds: %v", err)
 		} else if len(respDS) < 1 {
@@ -102,7 +102,7 @@ func (r *TCData) DeleteTestSteeringTargets(t *testing.T) {
 
 		dsIDs = append(dsIDs, dsID)
 
-		respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLIDNullable(string(*st.Target))
+		respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.Target), nil)
 		if err != nil {
 			t.Fatalf("deleting steering target: getting target ds: %v", err)
 		} else if len(respTarget) < 1 {

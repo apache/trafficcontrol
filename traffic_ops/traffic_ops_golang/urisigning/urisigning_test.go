@@ -22,6 +22,8 @@ package urisigning
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const (
@@ -127,7 +129,7 @@ const (
 )
 
 func TestValidateURIKeyset(t *testing.T) {
-	var keyset map[string]URISignerKeyset
+	var keyset map[string]tc.URISignerKeyset
 
 	// unmarshal a good URISignerKeyset
 	if err := json.Unmarshal([]byte(goodKeyset), &keyset); err != nil {

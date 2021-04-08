@@ -57,8 +57,8 @@ func (v *TODivision) NewReadObj() interface{} { return &tc.Division{} }
 func (v *TODivision) SelectQuery() string     { return selectQuery() }
 func (v *TODivision) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"id":   dbhelpers.WhereColumnInfo{"id", api.IsInt},
-		"name": dbhelpers.WhereColumnInfo{"name", nil},
+		"id":   dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt},
+		"name": dbhelpers.WhereColumnInfo{Column: "name"},
 	}
 }
 func (v *TODivision) UpdateQuery() string { return updateQuery() }
@@ -75,7 +75,7 @@ func (division TODivision) GetAuditName() string {
 }
 
 func (division TODivision) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions

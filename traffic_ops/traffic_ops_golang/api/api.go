@@ -45,18 +45,40 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
+type errorConstant string
+
+func (e errorConstant) Error() string {
+	return string(e)
+}
+
+// NilRequestError is returned by APIInfo methods when the request internally
+// referred to by the APIInfo cannot be found.
+const NilRequestError = errorConstant("method called on APIInfo with nil request")
+
+// NilTransactionError is returned by APIInfo methods when the transaction
+// internally referred to by the APIInfo cannot be found.
+const NilTransactionError = errorConstant("method called on APIInfo with nil transaction")
+
+// ResourceModifiedError is a user-safe error that indicates a precondition
+// failure.
+const ResourceModifiedError = errorConstant("resource was modified since the time specified by the request headers")
+
 // Common context.Context value keys.
 const (
-	DBContextKey      = "db"
-	ConfigContextKey  = "context"
-	ReqIDContextKey   = "reqid"
-	APIRespWrittenKey = "respwritten"
+	DBContextKey           = "db"
+	ConfigContextKey       = "context"
+	ReqIDContextKey        = "reqid"
+	APIRespWrittenKey      = "respwritten"
+	PathParamsKey          = "pathParams"
+	TrafficVaultContextKey = "tv"
 )
 
 const influxServersQuery = `
@@ -145,6 +167,19 @@ func WriteRespVals(w http.ResponseWriter, r *http.Request, v interface{}, vals m
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(append(respBts, '\n'))
+}
+
+// WriteIMSHitResp writes a response to 'w' for an IMS request "hit", using the
+// passed time as the Last-Modified date.
+func WriteIMSHitResp(w http.ResponseWriter, r *http.Request, t time.Time) {
+	if respWritten(r) {
+		log.Errorf("WriteIMSHitResp called after a write already occurred! Not double-writing! Path %s", r.URL.Path)
+		return
+	}
+	setRespWritten(r)
+
+	w.Header().Add(rfc.LastModified, t.Format(rfc.LastModifiedFormat))
+	w.WriteHeader(http.StatusNotModified)
 }
 
 // HandleErr handles an API error, rolling back the transaction, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
@@ -457,7 +492,9 @@ type APIInfo struct {
 	ReqID     uint64
 	Version   *Version
 	Tx        *sqlx.Tx
+	Vault     trafficvault.TrafficVault
 	Config    *config.Config
+	request   *http.Request
 }
 
 // NewInfo get and returns the context info needed by handlers. It also returns any user error, any system error, and the status code which should be returned to the client if an error occurred.
@@ -498,6 +535,10 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	if err != nil {
 		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting config: " + err.Error()), nil, http.StatusInternalServerError
 	}
+	tv, err := GetTrafficVault(r.Context())
+	if err != nil {
+		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting TrafficVault: " + err.Error()), nil, http.StatusInternalServerError
+	}
 	reqID, err := getReqID(r.Context())
 	if err != nil {
 		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
@@ -525,7 +566,88 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 		IntParams: intParams,
 		User:      user,
 		Tx:        tx,
+		Vault:     tv,
+		request:   r,
 	}, nil, nil, http.StatusOK
+}
+
+const createChangeLogQuery = `
+INSERT INTO log (
+	level,
+	message,
+	tm_user
+) VALUES (
+	$1,
+	$2,
+	$3
+)
+`
+
+// CreateChangeLog creates a new changelog message at the APICHANGE level for
+// the current user.
+func (inf APIInfo) CreateChangeLog(msg string) {
+	_, err := inf.Tx.Tx.Exec(createChangeLogQuery, ApiChange, msg, inf.User.ID)
+	if err != nil {
+		log.Errorf("Inserting chage log level '%s' message '%s' for user '%s': %v", ApiChange, msg, inf.User.UserName, err)
+	}
+}
+
+// UseIMS returns whether or not If-Modified-Since constraints should be used to
+// service the given request.
+func (inf APIInfo) UseIMS() bool {
+	if inf.request == nil || inf.Config == nil {
+		return false
+	}
+	return inf.Config.UseIMS && inf.request.Header.Get(rfc.IfModifiedSince) != ""
+}
+
+// CheckPrecondition checks a request's "preconditions" - its If-Match and
+// If-Unmodified-Since headers versus the last updated time of the requested
+// object(s), and returns (in order), an HTTP response code appropriate for the
+// precondition check results, a user-safe error that should be returned to
+// clients, and a server-side error that should be logged.
+// Callers must pass in a query that will return one row containing one column
+// that is the representative date/time of the last update of the requested
+// object(s), and optionally any values for placeholder arguments in the query.
+func (inf APIInfo) CheckPrecondition(query string, args ...interface{}) (int, error, error) {
+	if inf.request == nil {
+		return http.StatusInternalServerError, nil, NilRequestError
+	}
+
+	ius := inf.request.Header.Get(rfc.IfUnmodifiedSince)
+	etag := inf.request.Header.Get(rfc.IfMatch)
+	if ius == "" && etag == "" {
+		return http.StatusOK, nil, nil
+	}
+
+	if inf.Tx == nil || inf.Tx.Tx == nil {
+		return http.StatusInternalServerError, nil, NilTransactionError
+	}
+
+	var lastUpdated time.Time
+	if err := inf.Tx.Tx.QueryRow(query, args...).Scan(&lastUpdated); err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("scanning for lastUpdated: %v", err)
+	}
+
+	if etag != "" {
+		if et, ok := rfc.ParseETags(strings.Split(etag, ",")); ok {
+			if lastUpdated.After(et) {
+				return http.StatusPreconditionFailed, ResourceModifiedError, nil
+			}
+		}
+	}
+
+	if ius == "" {
+		return http.StatusOK, nil, nil
+	}
+
+	if tm, ok := rfc.ParseHTTPDate(ius); ok {
+		if lastUpdated.After(tm) {
+			return http.StatusPreconditionFailed, ResourceModifiedError, nil
+		}
+	}
+
+	return http.StatusOK, nil, nil
 }
 
 // Close implements the io.Closer interface. It should be called in a defer immediately after NewInfo().
@@ -597,7 +719,7 @@ func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
 	if inf.Config.ConfigInflux != nil && *inf.Config.ConfigInflux.Secure {
 		if !httpsPort.Valid {
 			log.Warnf("INFLUXDB Server %s has no secure ports, assuming default of 8086!", fqdn)
-			httpsPort = sql.NullInt64{8086, true}
+			httpsPort = sql.NullInt64{Int64: 8086, Valid: true}
 		}
 		port, err := httpsPort.Value()
 		if err != nil {
@@ -706,6 +828,20 @@ func GetConfig(ctx context.Context) (*config.Config, error) {
 		}
 	}
 	return nil, errors.New("No config found in Context")
+}
+
+func GetTrafficVault(ctx context.Context) (trafficvault.TrafficVault, error) {
+	val := ctx.Value(TrafficVaultContextKey)
+	if val != nil {
+		switch v := val.(type) {
+		case trafficvault.TrafficVault:
+			return v, nil
+		default:
+			return nil, fmt.Errorf("TrafficVault found with bad type: %T", v)
+		}
+	}
+	// this return should never be reached because a non-nil TrafficVault should always be included in the request context
+	return &disabled.Disabled{}, errors.New("no Traffic Vault found in Context")
 }
 
 func getReqID(ctx context.Context) (uint64, error) {
@@ -1017,6 +1153,11 @@ func CreateDeprecationAlerts(alternative *string) tc.Alerts {
 // In case it was, the 412 error code is returned. If some other error was encountered while checking, the appropriate error code along with
 // error details is returned. If the resource was not modified since the specified time, the UPDATE proceeds in the normal fashion.
 func CheckIfUnModified(h http.Header, tx *sqlx.Tx, ID int, tableName string) (error, error, int) {
+	_, okIUS := h[rfc.IfUnmodifiedSince]
+	_, okIM := h[rfc.IfMatch]
+	if !okIUS && !okIM {
+		return nil, nil, http.StatusOK
+	}
 	existingLastUpdated, found, err := GetLastUpdated(tx, ID, tableName)
 	if err == nil && found == false {
 		return errors.New("no " + tableName + " found with this id"), nil, http.StatusNotFound
@@ -1025,7 +1166,29 @@ func CheckIfUnModified(h http.Header, tx *sqlx.Tx, ID int, tableName string) (er
 		return nil, errors.New("error getting last updated: " + err.Error()), http.StatusInternalServerError
 	}
 	if !IsUnmodified(h, *existingLastUpdated) {
-		return errors.New("resource was modified"), nil, http.StatusPreconditionFailed
+		return ResourceModifiedError, nil, http.StatusPreconditionFailed
+	}
+	return nil, nil, http.StatusOK
+}
+
+// CheckIfUnModifiedByName checks to see if the resource was modified since the "If-Unmodified-Since" header value in the request.
+// In case it was, the 412 error code is returned. If some other error was encountered while checking, the appropriate error code along with
+// error details is returned. If the resource was not modified since the specified time, the UPDATE proceeds in the normal fashion.
+func CheckIfUnModifiedByName(h http.Header, tx *sqlx.Tx, name string, tableName string) (error, error, int) {
+	_, okIUS := h[rfc.IfUnmodifiedSince]
+	_, okIM := h[rfc.IfMatch]
+	if !okIUS && !okIM {
+		return nil, nil, http.StatusOK
+	}
+	existingLastUpdated, found, err := GetLastUpdatedByName(tx, name, tableName)
+	if err == nil && found == false {
+		return errors.New("no " + tableName + " found with this name"), nil, http.StatusNotFound
+	}
+	if err != nil {
+		return nil, errors.New(tableName + "update: querying: " + err.Error()), http.StatusInternalServerError
+	}
+	if !IsUnmodified(h, *existingLastUpdated) {
+		return ResourceModifiedError, nil, http.StatusPreconditionFailed
 	}
 	return nil, nil, http.StatusOK
 }

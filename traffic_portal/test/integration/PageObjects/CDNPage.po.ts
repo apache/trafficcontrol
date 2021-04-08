@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ElementFinder, browser, by, element, ExpectedConditions, protractor } from 'protractor';
-import { async, delay } from 'q';
+import { browser, by, element } from 'protractor';
+
+import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -28,14 +29,12 @@ export class CDNPage extends BasePage {
   private txtDomain = element(by.name('domainName'));
   private selectDNSSEC = element(by.name('dnssecEnabled'));
   private txtSearch = element(by.id('cdnsTable_filter')).element(by.css('label input'));
-  private mnuCDNTable = element(by.id('cdnsTable'));
   private btnDelete = element(by.buttonText('Delete'));
   private txtConfirmName = element(by.name('confirmWithNameInput'));
   private btnDiffSnapshot = element(by.xpath("//button[@title='Diff CDN Snapshot']"));
   private btnYes = element((by.xpath("//button[text()='Yes']")));
   private btnQueueUpdates = element((by.xpath("//button[contains(text(),'Queue Updates')]")));
-  private config = require('../config');
-  private randomize = this.config.randomize;
+  private randomize = randomize;
   async OpenCDNsPage() {
     let snp = new SideNavigationPage();
     await snp.NavigateToCDNPage();
@@ -61,7 +60,6 @@ export class CDNPage extends BasePage {
   }
 
   async SearchCDN(nameCDN: string) {
-    let result = false;
     let snp = new SideNavigationPage();
     let name = nameCDN + this.randomize;
     await snp.NavigateToCDNPage();
@@ -74,9 +72,8 @@ export class CDNPage extends BasePage {
     }).first().click();
   }
 
-  async UpdateCDN(cdn) {
-    let result = false;
-    let snp = new SideNavigationPage();
+  public async UpdateCDN(cdn): Promise<boolean | undefined> {
+    let result: boolean | undefined = false;
     let basePage = new BasePage();
     switch (cdn.description) {
       case 'perform snapshot':

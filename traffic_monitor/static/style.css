@@ -21,7 +21,6 @@ body {
 	font-family: "Lato", sans-serif;
 	font-size: 14px;
 	margin: 0;
-	max-width: 100vw;
 }
 
 /*****************/
@@ -34,7 +33,11 @@ table {
 }
 
 th, td {
-	padding:5px 20px 5px 5px;
+	padding: 5px 20px 5px 5px;
+}
+
+td {
+	white-space: normal;
 }
 
 tbody#cache-states tr.server-status:nth-child(4n+3) {
@@ -90,10 +93,10 @@ div.sub-table-indicator.down {
 	background-color: #f80!important;
 }
 
-#cache-states .text-entry {
+#cache-states-content .text-entry {
 	text-align: left;
 }
-#cache-states .number-entry {
+#cache-states-content .number-entry {
 	text-align: right;
 }
 
@@ -237,11 +240,23 @@ label:hover {
 	background-color: #f1f1f1;
 	position: relative;
 }
+
+@media(max-width: 1499) {
+	table {
+		table-layout: auto;
+	}
+}
+
+@media(min-width: 1500) {
+	table {
+		table-layout: fixed;
+	}
+}
+
 .tabcontent {
 	z-index: 2;
 	display: none;
 	visibility: hidden;
-	overflow: hidden;
 	width: 100%;
 	position: absolute;
 	top: 53px;

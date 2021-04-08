@@ -19,6 +19,16 @@
 
 var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel, propertiesModel) {
 
+    let getCDNs = function(notifications) {
+        cdnService.getCDNs(true)
+            .then(function(cdns) {
+                cdns.forEach(function(cdn) {
+                    cdn.hasNotifications = notifications.find(function(notification){ return cdn.name === notification.cdn });
+                });
+                $scope.cdns = cdns;
+            });
+    };
+
     $scope.isCollapsed = true;
 
     $scope.userLoaded = userModel.loaded;
@@ -52,6 +62,16 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
             });
     };
 
+    $scope.getNotifications = function(cdn) {
+        $scope.loadingNotifications = true;
+        $scope.notifications = [];
+        cdnService.getNotifications({ cdn: cdn.name })
+            .then(function(response) {
+                $scope.loadingNotifications = false;
+                $scope.notifications = response;
+            });
+    };
+
     $scope.getRelativeTime = function(date) {
         return moment(date).fromNow();
     };
@@ -77,8 +97,8 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
                 params: function () {
                     return params;
                 },
-                collection: function(cdnService) {
-                    return cdnService.getCDNs();
+                collection: function() {
+                    return $scope.cdns;
                 }
             }
         });
@@ -102,8 +122,8 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
                 params: function () {
                     return params;
                 },
-                collection: function(cdnService) {
-                    return cdnService.getCDNs();
+                collection: function() {
+                    return $scope.cdns;
                 }
             }
         });
@@ -157,6 +177,10 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
 
     $scope.$on('userModel::userUpdated', function() {
         $scope.user = angular.copy(userModel.user);
+    });
+
+    $rootScope.$on('notificationsController::refreshNotifications', function(event, options) {
+        getCDNs(options.notifications);
     });
 
     var init = function () {

@@ -51,6 +51,23 @@ for file in "$(ls)"; do
 	fi
 done
 
+# Files added must have date and name later than all existing file
+LATEST_FILE="$(git log -1 --name-status --format="%ct" . | tail -n 1 | awk '{print $2}' | cut -d / -f5)"
+LATEST_FILE_TIME="$(git log -1 --name-status --format="%ct" . | head -n 1 )"
+
+# Get modified times in an array
+mtime_array=()
+arr=($(ls))
+for file in "${arr[@]}"; do
+  mtime_array+=( "$(git log -1 --format=%ct  $file)" )
+done
+mtime_length=${#mtime_array[@]}
+
+if [[ $LATEST_FILE_TIME != ${mtime_array[$mtime_length-1]} ]]; then
+  echo "ERROR: latest added/modified file: $LATEST_FILE is not in the right order" >&2;
+  CODE=1;
+fi
+
 set +e;
 # All new migrations must use 16-digit timestamps.
 VIOLATING_FILES="$(ls | sort | cut -d _ -f 1 | sed -n -e '/2020061622101648/,$p' | tr '[:space:]' '\n' | grep -vE '^[0-9]{16}$')";
