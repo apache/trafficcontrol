@@ -24,10 +24,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added functionality to automatically renew ACME certificates.
 - Added ORT flag to set local.dns bind address from server service addresses
 - Added an endpoint for statuses on asynchronous jobs and applied it to the ACME renewal endpoint.
+- Added two new cdn.conf options to make Traffic Vault configuration more backend-agnostic: `traffic_vault_backend` and `traffic_vault_config`
 - Traffic Ops API version 4.0
 - `GET` request method for `/deliveryservices/{{ID}}/assign`
 - `GET` request method for `/deliveryservices/{{ID}}/status`
-- [#5644](https://github.com/apache/trafficcontrol/issues/5644) ORT config generation: Added ATS9 ip_allow.yaml support, and automatic generation if the server's package Parameter is 9.*
+- [#5644](https://github.com/apache/trafficcontrol/issues/5644) ORT config generation: Added ATS9 ip_allow.yaml support, and automatic generation if the server's package Parameter is 9.\*
 - t3c: Added option to track config changes in git.
 - ORT config generation: Added a rule to ip_allow such that PURGE requests are allowed over localhost
 
@@ -53,7 +54,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [apache/trafficcontrol](https://github.com/apache/trafficcontrol) is now a Go module
 - Updated Traffic Ops supported database version from PostgreSQL 9.6 to 13.2
 - Set Traffic Router to also accept TLSv1.3 protocols by default in server.xml
+- Refactored the Traffic Ops - Traffic Vault integration to more easily support the development of new Traffic Vault backends
 - Updated Apache Tomcat from 8.5.63 to 9.0.43
+
+### Deprecated
+- The `riak.conf` config file and its corresponding `--riakcfg` option in `traffic_ops_golang` have been deprecated. Please use `"traffic_vault_backend": "riak"` and `"traffic_vault_config"` (with the existing contents of riak.conf) instead.
+- The `riak_port` option in cdn.conf is now deprecated. Please use the `"port"` field in `traffic_vault_config` instead.
 
 ### Removed
 - The Perl implementation of Traffic Ops has been stripped out, along with the Go implementation's "fall-back to Perl" behavior.

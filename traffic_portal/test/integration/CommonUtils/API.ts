@@ -21,6 +21,7 @@
 import { Agent } from "https";
 
 import axios from 'axios';
+import type {AxiosResponse} from "axios";
 import randomIpv6 from "random-ipv6";
 
 import { config, randomize } from '../config';
@@ -37,81 +38,79 @@ export class API {
         axios.defaults.httpsAgent = new Agent({ rejectUnauthorized: false })
     }
 
-    Login = async function () {
-        try {
-            const response = await axios({
-                method: 'post',
-                url: this.config.params.apiUrl + '/user/login',
-                data: {
-                    u: this.config.params.login.username,
-                    p: this.config.params.login.password
+    /**
+     * Logs the API client into Traffic Ops.
+     *
+     * @returns The API response from logging in.
+     * @throws {Error} when login fails, or when Traffic Ops doesn't return a cookie.
+     */
+    public async Login(): Promise<AxiosResponse<unknown>> {
+        const response = await axios({
+            method: 'post',
+            url: this.config.params.apiUrl + '/user/login',
+            data: {
+                u: this.config.params.login.username,
+                p: this.config.params.login.password
+            }
+        });
+        this.cookie = await response.headers["set-cookie"][0];
+        return response
+    }
+
+    public async SendRequest(route: string, method: "post" | "get" | "delete", data): Promise<void> {
+        let response
+        this.Randomize(data)
+
+        if(data.hasOwnProperty('getRequest')){
+            let response = await this.GetId(data);
+            if (response != null) {
+                throw new Error('Failed to get id:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data)
+            }
+        }
+
+        switch (method) {
+            case "post":
+                response = await axios({
+                    method: method,
+                    url: this.config.params.apiUrl + route,
+                    headers: { Cookie: this.cookie},
+                    data: data
+                });
+                break;
+            case "get":
+                response = await axios({
+                    method: method,
+                    url: this.config.params.apiUrl + route,
+                    headers: { Cookie: this.cookie},
+                });
+                break;
+            case "delete":
+                if ((data.route).includes('?name')){
+                    data.route = data.route + randomize
                 }
-            });
-            this.cookie = await response.headers["set-cookie"][0];
-            return response
-        } catch (error) {
-            return error;
+                if ((data.route).includes('?id')){
+                    data.route = data.route + data.id;
+                }
+                if((data.route).includes('/service_categories/')){
+                    data.route = data.route + randomize
+                }
+                response = await axios({
+                    method: method,
+                    url: this.config.params.apiUrl + data.route,
+                    headers: { Cookie: this.cookie},
+                });
+                break;
+        }
+        if (response.status == 200 || response.status == 201) {
+            return;
+        } else {
+            console.log("Reponse Data: " , response.data);
+            console.log("Response: " , response);
+            throw new Error('Request Failed:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data);
         }
     }
 
-    SendRequest = async function (route, method, data) {
-        try {
-            let response
-            this.Randomize(data)
-
-            if(data.hasOwnProperty('getRequest')){
-                let response = await this.GetId(data);
-                if (response != null) {
-                    throw new Error('Failed to get id:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data)
-                }
-            }
-
-            switch (method) {
-                case "post":
-                    response = await axios({
-                        method: method,
-                        url: this.config.params.apiUrl + route,
-                        headers: { Cookie: this.cookie},
-                        data: data
-                    });
-                    break;
-                case "get":
-                    response = await axios({
-                        method: method,
-                        url: this.config.params.apiUrl + route,
-                        headers: { Cookie: this.cookie},
-                    });
-                    break;
-                case "delete":
-                    if ((data.route).includes('?name')){
-                        data.route = data.route + randomize
-                    }
-                    if ((data.route).includes('?id')){
-                        data.route = data.route + data.id;
-                    }
-                    if((data.route).includes('/service_categories/')){
-                        data.route = data.route + randomize
-                    }
-                    response = await axios({
-                        method: method,
-                        url: this.config.params.apiUrl + data.route,
-                        headers: { Cookie: this.cookie},
-                    });
-                    break;
-            }
-            if (response.status == 200 || response.status == 201) {
-                return null
-            } else {
-                console.log("Reponse Data: " , response.data);
-                console.log("Response: " , response);
-                throw new Error('Request Failed:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data);
-            }
-        } catch (error) {
-            return error;
-        }
-    }
-
-    GetId = async function (data) {
+    public async GetId(data): Promise<null | AxiosResponse<unknown>> {
         for(var i = 0; i < data.getRequest.length; i++) {
             var query = '?' + data.getRequest[i].queryKey  + '=' + data.getRequest[i].queryValue + randomize;
             try {
@@ -139,7 +138,7 @@ export class API {
         return null
     }
 
-   Randomize = function(data) {
+   public Randomize(data): void {
         if(data.hasOwnProperty('email')) {
             data['email'] = data.fullName + randomize + data.email;
         }
@@ -191,27 +190,23 @@ export class API {
         }
     }
 
-    UseAPI = async function(data) {
-        try {
-            let response = await this.Login();
-            if (response.status == 200) {
-                for(var i = 0; i < data.Prerequisites.length; i++){
-                    for(var j = 0; j < data.Prerequisites[i].Data.length; j++){
-                        let output = await this.SendRequest(data.Prerequisites[i].Route, data.Prerequisites[i].Method, data.Prerequisites[i].Data[j]);
-                        if (output != null) {
-                            console.error(`UseAPI failed on Action ${data.Prerequisites[i].Action} with index ${i}, and Data index ${j}`);
-                            throw new Error(output);
-                        }
+    public async UseAPI(data): Promise<void> {
+        let response = await this.Login();
+        if (response.status == 200) {
+            for(var i = 0; i < data.Prerequisites.length; i++){
+                for(var j = 0; j < data.Prerequisites[i].Data.length; j++){
+                    try {
+                        await this.SendRequest(data.Prerequisites[i].Route, data.Prerequisites[i].Method, data.Prerequisites[i].Data[j]);
+                    } catch (output) {
+                        console.error(`UseAPI failed on Action ${data.Prerequisites[i].Action} with index ${i}, and Data index ${j}`);
+                        throw new Error(output);
                     }
                 }
-                return null
-            } else if (response.status == undefined) {
-                throw new Error(`Error requesting ${this.config.params.apiUrl}: ${response}`);
-            } else {
-                throw new Error('Login failed:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data)
             }
-        } catch (error) {
-            return error;
+        } else if (response.status == undefined) {
+            throw new Error(`Error requesting ${this.config.params.apiUrl}: ${response}`);
+        } else {
+            throw new Error('Login failed:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data)
         }
     }
 }

@@ -20,7 +20,6 @@ import { browser, by, element, ExpectedConditions } from 'protractor';
 import { BasePage } from './BasePage.po';
 
 export class SideNavigationPage extends BasePage{
-    private lnkDashboard = element(by.xpath("//div[@id='sidebar-menu']//a[contains(text(),'Dashboard')]"))
     //Navigation for Configure
     private propConfigure  = "//div[@id='sidebar-menu']//a[contains(text(),'Configure')]";
     private mnuConfigure = element(by.xpath( this.propConfigure ))

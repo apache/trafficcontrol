@@ -18,7 +18,7 @@
  */
 import { by, element } from 'protractor';
 
-import { config, randomize } from "../config";
+import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -31,11 +31,9 @@ export class ParametersPage extends BasePage {
   private txtSecure = element(by.name('secure'));
 
   private txtSearch = element(by.id('parametersTable_filter')).element(by.css('label input'));
-  private mnuParametersTable = element(by.id('parametersTable'));
   private btnDelete = element(by.buttonText('Delete'));
   private btnYes = element(by.buttonText('Yes'));
   private txtConfirmName = element(by.name('confirmWithNameInput'));
-  private readonly config = config;
   private randomize = randomize;
 
   async OpenParametersPage() {
@@ -74,8 +72,7 @@ export class ParametersPage extends BasePage {
       });
     }).first().click();
   }
-  async UpdateParameter(parameter) {
-    let result = false;
+  public async UpdateParameter(parameter): Promise<boolean | undefined> {
     let basePage = new BasePage();
     switch (parameter.description) {
       case "update parameter configfile":
@@ -85,19 +82,9 @@ export class ParametersPage extends BasePage {
         await this.btnYes.click();
         break;
       default:
-        result = undefined;
+        return undefined;
     }
-    if (result = !undefined) {
-      result = await basePage.GetOutputMessage().then(function (value) {
-        if (parameter.validationMessage == value) {
-          return true;
-        } else {
-          return false;
-        }
-      })
-
-    }
-    return result;
+    return await basePage.GetOutputMessage().then(value => parameter.validationMessage === value);
   }
   async DeleteParameter(parameter) {
     let result = false;

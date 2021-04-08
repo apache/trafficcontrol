@@ -18,7 +18,7 @@
  */
 import { browser, by, element} from 'protractor';
 
-import { config, randomize } from "../config";
+import { randomize } from "../config";
 import { BasePage } from './BasePage.po'
 
 interface LoginData {
@@ -33,7 +33,6 @@ export class LoginPage extends BasePage{
     private btnLogin = element(by.name("loginSubmit"))
     private lnkResetPassword= element (by.xpath("//button[text()='Reset Password']"))
     private lblUserName = element(by.xpath("//span[@id='headerUsername']"))
-    private readonly config = config;
     private randomize = randomize;
 
 

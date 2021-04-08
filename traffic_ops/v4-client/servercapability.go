@@ -25,10 +25,12 @@ import (
 )
 
 const (
+	// APIServerCapabilities is the full path to the /server_capabilities API
+	// endpoint.
 	APIServerCapabilities = "/server_capabilities"
 )
 
-// CreateServerCapability creates a server capability and returns the response.
+// CreateServerCapability creates the given Server Capability.
 func (to *Session) CreateServerCapability(sc tc.ServerCapability) (*tc.ServerCapabilityDetailResponse, toclientlib.ReqInf, error) {
 	var scResp tc.ServerCapabilityDetailResponse
 	reqInf, err := to.post(APIServerCapabilities, sc, nil, &scResp)
@@ -38,22 +40,18 @@ func (to *Session) CreateServerCapability(sc tc.ServerCapability) (*tc.ServerCap
 	return &scResp, reqInf, nil
 }
 
-func (to *Session) GetServerCapabilitiesWithHdr(header http.Header) ([]tc.ServerCapability, toclientlib.ReqInf, error) {
+// GetServerCapabilities returns all the Server Capabilities in Traffic Ops.
+func (to *Session) GetServerCapabilities(header http.Header) ([]tc.ServerCapability, toclientlib.ReqInf, error) {
 	var data tc.ServerCapabilitiesResponse
 	reqInf, err := to.get(APIServerCapabilities, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GetServerCapabilities returns all the server capabilities.
-// Deprecated: GetServerCapabilities will be removed in 6.0. Use GetServerCapabilitiesWithHdr.
-func (to *Session) GetServerCapabilities() ([]tc.ServerCapability, toclientlib.ReqInf, error) {
-	return to.GetServerCapabilitiesWithHdr(nil)
-}
-
-func (to *Session) GetServerCapabilityWithHdr(name string, header http.Header) (*tc.ServerCapability, toclientlib.ReqInf, error) {
-	reqUrl := fmt.Sprintf("%s?name=%s", APIServerCapabilities, url.QueryEscape(name))
+// GetServerCapability retrieves the Server Capability with the given Name.
+func (to *Session) GetServerCapability(name string, header http.Header) (*tc.ServerCapability, toclientlib.ReqInf, error) {
+	reqURL := fmt.Sprintf("%s?name=%s", APIServerCapabilities, url.QueryEscape(name))
 	var data tc.ServerCapabilitiesResponse
-	reqInf, err := to.get(reqUrl, header, &data)
+	reqInf, err := to.get(reqURL, header, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -61,12 +59,6 @@ func (to *Session) GetServerCapabilityWithHdr(name string, header http.Header) (
 		return &data.Response[0], reqInf, nil
 	}
 	return nil, reqInf, fmt.Errorf("expected one server capability in response, instead got: %+v", data.Response)
-}
-
-// GetServerCapability returns the given server capability by name.
-// Deprecated: GetServerCapability will be removed in 6.0. Use GetServerCapabilityWithHdr.
-func (to *Session) GetServerCapability(name string) (*tc.ServerCapability, toclientlib.ReqInf, error) {
-	return to.GetServerCapabilityWithHdr(name, nil)
 }
 
 // UpdateServerCapability updates a Server Capability by name.
@@ -82,8 +74,8 @@ func (to *Session) UpdateServerCapability(name string, sc *tc.ServerCapability, 
 
 // DeleteServerCapability deletes the given server capability by name.
 func (to *Session) DeleteServerCapability(name string) (tc.Alerts, toclientlib.ReqInf, error) {
-	reqUrl := fmt.Sprintf("%s?name=%s", APIServerCapabilities, url.QueryEscape(name))
+	reqURL := fmt.Sprintf("%s?name=%s", APIServerCapabilities, url.QueryEscape(name))
 	var alerts tc.Alerts
-	reqInf, err := to.del(reqUrl, nil, &alerts)
+	reqInf, err := to.del(reqURL, nil, &alerts)
 	return alerts, reqInf, err
 }

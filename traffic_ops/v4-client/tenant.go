@@ -25,107 +25,74 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
+// APITenants is the API version-relative path to the /tenants API endpoint.
 const APITenants = "/tenants"
-const APITenantID = APITenants + "/%s"
 
-func (to *Session) TenantsWithHdr(header http.Header) ([]tc.Tenant, toclientlib.ReqInf, error) {
+// APITenantID is the API version-relative path to the /tenants/{{ID}} API endpoint.
+const APITenantID = APITenants + "/%d"
+
+// GetTenants retrieves all Tenants stored in Traffic Ops.
+func (to *Session) GetTenants(header http.Header) ([]tc.Tenant, toclientlib.ReqInf, error) {
 	var data tc.GetTenantsResponse
 	reqInf, err := to.get(APITenants, header, &data)
 	return data.Response, reqInf, err
 }
 
-// Tenants gets an array of Tenants.
-// Deprecated: Tenants will be removed in 6.0. Use TenantsWithHdr.
-func (to *Session) Tenants() ([]tc.Tenant, toclientlib.ReqInf, error) {
-	return to.TenantsWithHdr(nil)
-}
-
-func (to *Session) TenantWithHdr(id string, header http.Header) (*tc.Tenant, toclientlib.ReqInf, error) {
+// GetTenantByID retrieves the Tenant with the given ID.
+func (to *Session) GetTenantByID(id int, header http.Header) (tc.Tenant, toclientlib.ReqInf, error) {
 	var data tc.GetTenantsResponse
 	reqInf, err := to.get(fmt.Sprintf("%s?id=%v", APITenants, id), header, &data)
 	if err != nil {
-		return nil, reqInf, err
+		return tc.Tenant{}, reqInf, err
 	}
 	if reqInf.StatusCode == http.StatusNotModified {
-		return nil, reqInf, nil
+		return tc.Tenant{}, reqInf, nil
 	}
-	return &data.Response[0], reqInf, nil
+	return data.Response[0], reqInf, nil
 }
 
-// Tenant gets the Tenant identified by the passed integral, unique identifer - which
-// must be passed as a string.
-// Deprecated: Tenant will be removed in 6.0. Use TenantWithHdr.
-func (to *Session) Tenant(id string) (*tc.Tenant, toclientlib.ReqInf, error) {
-	return to.TenantWithHdr(id, nil)
-}
-
-func (to *Session) TenantByNameWithHdr(name string, header http.Header) (*tc.Tenant, toclientlib.ReqInf, error) {
+// GetTenantByName retrieves the Tenant with the given Name
+func (to *Session) GetTenantByName(name string, header http.Header) (tc.Tenant, toclientlib.ReqInf, error) {
 	var data tc.GetTenantsResponse
 	query := APITenants + "?name=" + url.QueryEscape(name)
 	reqInf, err := to.get(query, header, &data)
 	if err != nil {
-		return nil, reqInf, err
+		return tc.Tenant{}, reqInf, err
 	}
 	if reqInf.StatusCode == http.StatusNotModified {
-		return nil, reqInf, nil
+		return tc.Tenant{}, reqInf, nil
 	}
 	if len(data.Response) > 0 {
-		return &data.Response[0], reqInf, nil
-	} else {
-		return nil, reqInf, errors.New("no tenant found with name " + name)
+		return data.Response[0], reqInf, nil
 	}
-}
-
-// TenantByName gets the Tenant with the name it's passed.
-// Deprecated: TenantByName will be removed in 6.0. Use TenantByNameWithHdr.
-func (to *Session) TenantByName(name string) (*tc.Tenant, toclientlib.ReqInf, error) {
-	return to.TenantByNameWithHdr(name, nil)
+	return tc.Tenant{}, reqInf, errors.New("no tenant found with name " + name)
 }
 
 // CreateTenant creates the Tenant it's passed.
-func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
+func (to *Session) CreateTenant(t tc.Tenant) (tc.TenantResponse, error) {
 	if t.ParentID == 0 && t.ParentName != "" {
-		tenant, _, err := to.TenantByNameWithHdr(t.ParentName, nil)
+		tenant, _, err := to.GetTenantByName(t.ParentName, nil)
 		if err != nil {
-			return nil, err
-		}
-		if tenant == nil {
-			return nil, errors.New("no tenant with name " + t.ParentName)
+			return tc.TenantResponse{}, err
 		}
 		t.ParentID = tenant.ID
 	}
 
 	var data tc.TenantResponse
 	_, err := to.post(APITenants, t, nil, &data)
-	if err != nil {
-		return nil, err
-	}
-	return &data, nil
-}
-
-func (to *Session) UpdateTenantWithHdr(id string, t *tc.Tenant, header http.Header) (*tc.TenantResponse, toclientlib.ReqInf, error) {
-	var data tc.TenantResponse
-	reqInf, err := to.put(fmt.Sprintf(APITenantID, id), t, header, &data)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	return &data, reqInf, nil
-}
-
-// UpdateTenant updates the Tenant matching the ID it's passed with
-// the Tenant it is passed.
-// Deprecated: UpdateTenant will be removed in 6.0. Use UpdateTenantWithHdr.
-func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, error) {
-	data, _, err := to.UpdateTenantWithHdr(id, t, nil)
 	return data, err
 }
 
+// UpdateTenant replaces the Tenant identified by 'id' with the one provided.
+func (to *Session) UpdateTenant(id int, t tc.Tenant, header http.Header) (tc.TenantResponse, toclientlib.ReqInf, error) {
+	var data tc.TenantResponse
+	reqInf, err := to.put(fmt.Sprintf(APITenantID, id), t, header, &data)
+	return data, reqInf, err
+}
+
 // DeleteTenant deletes the Tenant matching the ID it's passed.
-func (to *Session) DeleteTenant(id string) (*tc.DeleteTenantResponse, error) {
+func (to *Session) DeleteTenant(id int) (tc.DeleteTenantResponse, error) {
 	var data tc.DeleteTenantResponse
 	_, err := to.del(fmt.Sprintf(APITenantID, id), nil, &data)
-	if err != nil {
-		return nil, err
-	}
-	return &data, nil
+	return data, err
 }

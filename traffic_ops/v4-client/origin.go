@@ -21,18 +21,20 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
+	// APIOrigins is the full path to the /origins API route.
 	APIOrigins = "/origins"
 )
 
 func originIDs(to *Session, origin *tc.Origin) error {
 	if origin.CachegroupID == nil && origin.Cachegroup != nil {
-		p, _, err := to.GetCacheGroupNullableByNameWithHdr(*origin.Cachegroup, nil)
+		p, _, err := to.GetCacheGroupByName(*origin.Cachegroup, nil)
 		if err != nil {
 			return err
 		}
@@ -43,7 +45,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.DeliveryServiceID == nil && origin.DeliveryService != nil {
-		dses, _, err := to.GetDeliveryServiceByXMLIDNullableWithHdr(*origin.DeliveryService, nil)
+		dses, _, err := to.GetDeliveryServiceByXMLID(*origin.DeliveryService, nil)
 		if err != nil {
 			return err
 		}
@@ -54,7 +56,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.ProfileID == nil && origin.Profile != nil {
-		profiles, _, err := to.GetProfileByNameWithHdr(*origin.Profile, nil)
+		profiles, _, err := to.GetProfileByName(*origin.Profile, nil)
 		if err != nil {
 			return err
 		}
@@ -65,7 +67,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.CoordinateID == nil && origin.Coordinate != nil {
-		coordinates, _, err := to.GetCoordinateByNameWithHdr(*origin.Coordinate, nil)
+		coordinates, _, err := to.GetCoordinateByName(*origin.Coordinate, nil)
 		if err != nil {
 			return err
 		}
@@ -76,7 +78,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	}
 
 	if origin.TenantID == nil && origin.Tenant != nil {
-		tenant, _, err := to.TenantByNameWithHdr(*origin.Tenant, nil)
+		tenant, _, err := to.GetTenantByName(*origin.Tenant, nil)
 		if err != nil {
 			return err
 		}
@@ -86,7 +88,7 @@ func originIDs(to *Session, origin *tc.Origin) error {
 	return nil
 }
 
-// Create an Origin
+// CreateOrigin creates the given Origin.
 func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, toclientlib.ReqInf, error) {
 	var remoteAddr net.Addr
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -100,7 +102,8 @@ func (to *Session) CreateOrigin(origin tc.Origin) (*tc.OriginDetailResponse, toc
 	return &originResp, reqInf, err
 }
 
-func (to *Session) UpdateOriginByIDWithHdr(id int, origin tc.Origin, header http.Header) (*tc.OriginDetailResponse, toclientlib.ReqInf, error) {
+// UpdateOrigin replaces the Origin identified by 'id' with the passed Origin.
+func (to *Session) UpdateOrigin(id int, origin tc.Origin, header http.Header) (*tc.OriginDetailResponse, toclientlib.ReqInf, error) {
 	var remoteAddr net.Addr
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
@@ -114,42 +117,41 @@ func (to *Session) UpdateOriginByIDWithHdr(id int, origin tc.Origin, header http
 	return &originResp, reqInf, err
 }
 
-// Update an Origin by ID
-// Deprecated: UpdateOriginByID will be removed in 6.0. Use UpdateOriginByIDWithHdr.
-func (to *Session) UpdateOriginByID(id int, origin tc.Origin) (*tc.OriginDetailResponse, toclientlib.ReqInf, error) {
-	return to.UpdateOriginByIDWithHdr(id, origin, nil)
-}
-
-// GET a list of Origins by a query parameter string
-func (to *Session) GetOriginsByQueryParams(queryParams string) ([]tc.Origin, toclientlib.ReqInf, error) {
-	URI := APIOrigins + queryParams
+// GetOrigins retrieves Origins from Traffic Ops.
+func (to *Session) GetOrigins(queryParams url.Values) ([]tc.Origin, toclientlib.ReqInf, error) {
+	URI := APIOrigins
+	if len(queryParams) > 0 {
+		URI += "?" + queryParams.Encode()
+	}
 	var data tc.OriginsResponse
 	reqInf, err := to.get(URI, nil, &data)
 	return data.Response, reqInf, err
 }
 
-// Returns a list of Origins
-func (to *Session) GetOrigins() ([]tc.Origin, toclientlib.ReqInf, error) {
-	return to.GetOriginsByQueryParams("")
-}
-
-// GET an Origin by the Origin ID
+// GetOriginByID retrieves the Origin with the given ID.
 func (to *Session) GetOriginByID(id int) ([]tc.Origin, toclientlib.ReqInf, error) {
-	return to.GetOriginsByQueryParams(fmt.Sprintf("?id=%d", id))
+	params := url.Values{}
+	params.Set("id", strconv.Itoa(id))
+	return to.GetOrigins(params)
 }
 
-// GET an Origin by the Origin name
+// GetOriginByName retrieves the Origin with the given Name.
 func (to *Session) GetOriginByName(name string) ([]tc.Origin, toclientlib.ReqInf, error) {
-	return to.GetOriginsByQueryParams(fmt.Sprintf("?name=%s", url.QueryEscape(name)))
+	params := url.Values{}
+	params.Set("name", name)
+	return to.GetOrigins(params)
 }
 
-// GET a list of Origins by Delivery Service ID
+// GetOriginsByDeliveryServiceID retrieves all Origins assigned to the Delivery
+// Service with the given ID.
 func (to *Session) GetOriginsByDeliveryServiceID(id int) ([]tc.Origin, toclientlib.ReqInf, error) {
-	return to.GetOriginsByQueryParams(fmt.Sprintf("?deliveryservice=%d", id))
+	params := url.Values{}
+	params.Set("deliveryservice", strconv.Itoa(id))
+	return to.GetOrigins(params)
 }
 
-// DELETE an Origin by ID
-func (to *Session) DeleteOriginByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
+// DeleteOrigin deletes the Origin with the given ID.
+func (to *Session) DeleteOrigin(id int) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", APIOrigins, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)

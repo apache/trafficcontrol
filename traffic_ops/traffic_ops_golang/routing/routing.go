@@ -38,6 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -76,9 +77,10 @@ type RawRoute struct {
 // ServerData ...
 type ServerData struct {
 	config.Config
-	DB        *sqlx.DB
-	Profiling *bool // Yes this is a field in the config but we want to live reload this value and NOT the entire config
-	Plugins   plugin.Plugins
+	DB           *sqlx.DB
+	Profiling    *bool // Yes this is a field in the config but we want to live reload this value and NOT the entire config
+	Plugins      plugin.Plugins
+	TrafficVault trafficvault.TrafficVault
 }
 
 // CompiledRoute ...
@@ -235,6 +237,7 @@ func Handler(
 	cfg *config.Config,
 	getReqID func() uint64,
 	plugins plugin.Plugins,
+	tv trafficvault.TrafficVault,
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
@@ -251,6 +254,7 @@ func Handler(
 	ctx = context.WithValue(ctx, api.DBContextKey, db)
 	ctx = context.WithValue(ctx, api.ConfigContextKey, cfg)
 	ctx = context.WithValue(ctx, api.ReqIDContextKey, reqID)
+	ctx = context.WithValue(ctx, api.TrafficVaultContextKey, tv)
 
 	// plugins have no pre-parsed path params, but add an empty map so they can use the api helper funcs that require it.
 	pluginCtx := context.WithValue(ctx, api.PathParamsKey, map[string]string{})
@@ -344,7 +348,7 @@ func RegisterRoutes(d ServerData) error {
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, w, r)
+		Handler(compiledRoutes, versions, catchall, d.DB, &d.Config, getReqID, d.Plugins, d.TrafficVault, w, r)
 	})
 	return nil
 }

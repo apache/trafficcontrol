@@ -24,7 +24,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 )
 
 const API_VAULT_PING = "/vault/ping"
@@ -37,7 +36,7 @@ func Keys(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	pingResp, err := riaksvc.Ping(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
+	pingResp, err := inf.Vault.Ping(inf.Tx.Tx)
 	if err != nil {
 		api.HandleDeprecatedErr(w, r, nil, http.StatusInternalServerError, err, nil, util.StrPtr(API_VAULT_PING))
 		return

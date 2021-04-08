@@ -24,9 +24,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/asaskevich/govalidator"
-	validation "github.com/go-ozzo/ozzo-validation"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -35,6 +32,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -42,6 +40,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
+	"github.com/asaskevich/govalidator"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -332,7 +332,6 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 t
 func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 tc.DeliveryServiceV40) (*tc.DeliveryServiceV40, int, error, error) {
 	user := inf.User
 	tx := inf.Tx.Tx
-	cfg := inf.Config
 	ds := tc.DeliveryServiceV4(dsV40)
 	if err := Validate(tx, &ds); err != nil {
 		return nil, http.StatusBadRequest, errors.New("invalid request: " + err.Error()), nil
@@ -480,7 +479,10 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 	}
 
 	if dnssecEnabled && ds.Type.UsesDNSSECKeys() {
-		if userErr, sysErr, statusCode := PutDNSSecKeys(tx, cfg, *ds.XMLID, cdnName, ds.ExampleURLs); userErr != nil || sysErr != nil {
+		if !inf.Config.TrafficVaultEnabled {
+			return nil, http.StatusInternalServerError, nil, errors.New("cannot create DNSSEC keys for delivery service: Traffic Vault is not configured")
+		}
+		if userErr, sysErr, statusCode := PutDNSSecKeys(tx, *ds.XMLID, cdnName, ds.ExampleURLs, inf.Vault); userErr != nil || sysErr != nil {
 			return nil, statusCode, userErr, sysErr
 		}
 	}

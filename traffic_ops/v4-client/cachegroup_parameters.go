@@ -18,58 +18,37 @@ package client
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
+	// APICachegroupParameters is the API version-relative path for the /cachegroupparameters API endpoint.
 	APICachegroupParameters = "/cachegroupparameters"
 )
 
-func (to *Session) GetCacheGroupParametersWithHdr(cacheGroupID int, header http.Header) ([]tc.CacheGroupParameter, toclientlib.ReqInf, error) {
+// GetCacheGroupParameters gets all Parameters for the identified Cache Group.
+func (to *Session) GetCacheGroupParameters(cacheGroupID int, queryParameters url.Values, header http.Header) ([]tc.CacheGroupParameter, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d/parameters", APICachegroups, cacheGroupID)
-	return to.getCacheGroupParameters(route, "", header)
-}
-
-// GetCacheGroupParameters Gets a Cache Group's Parameters
-// Deprecated: GetCacheGroupParameters will be removed in 6.0. Use GetCacheGroupParametersWithHdr.
-func (to *Session) GetCacheGroupParameters(cacheGroupID int) ([]tc.CacheGroupParameter, toclientlib.ReqInf, error) {
-	return to.GetCacheGroupParametersWithHdr(cacheGroupID, nil)
-}
-
-func (to *Session) GetCacheGroupParametersByQueryParamsWithHdr(cacheGroupID int, queryParams string, header http.Header) ([]tc.CacheGroupParameter, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/parameters", APICachegroups, cacheGroupID)
-	return to.getCacheGroupParameters(route, queryParams, header)
-}
-
-// GetCacheGroupParametersByQueryParams Gets a Cache Group's Parameters with query parameters
-// Deprecated: GetCacheGroupParametersByQueryParams will be removed in 6.0. Use GetCacheGroupParametersByQueryParamsWithHdr.
-func (to *Session) GetCacheGroupParametersByQueryParams(cacheGroupID int, queryParams string) ([]tc.CacheGroupParameter, toclientlib.ReqInf, error) {
-	return to.GetCacheGroupParametersByQueryParamsWithHdr(cacheGroupID, queryParams, nil)
-}
-
-func (to *Session) getCacheGroupParameters(route, queryParams string, header http.Header) ([]tc.CacheGroupParameter, toclientlib.ReqInf, error) {
-	r := fmt.Sprintf("%s%s", route, queryParams)
+	if len(queryParameters) > 0 {
+		route = fmt.Sprintf("%s?%s", route, queryParameters.Encode())
+	}
 	var data tc.CacheGroupParametersResponse
-	reqInf, err := to.get(r, header, &data)
+	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
 }
 
-func (to *Session) GetAllCacheGroupParametersWithHdr(header http.Header) ([]tc.CacheGroupParametersResponseNullable, toclientlib.ReqInf, error) {
+// GetAllCacheGroupParameters Gets all Cachegroup-to-Parameter associations.
+func (to *Session) GetAllCacheGroupParameters(header http.Header) ([]tc.CacheGroupParametersResponseNullable, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/", APICachegroupParameters)
 	var data tc.AllCacheGroupParametersResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response.CacheGroupParameters, reqInf, err
 }
 
-// GetAllCacheGroupParameters Gets all Cachegroup Parameter associations
-// Deprecated: GetAllCacheGroupParameters will be removed in 6.0. Use GetAllCacheGroupParametersWithHdr.
-func (to *Session) GetAllCacheGroupParameters() ([]tc.CacheGroupParametersResponseNullable, toclientlib.ReqInf, error) {
-	return to.GetAllCacheGroupParametersWithHdr(nil)
-}
-
-// DeleteCacheGroupParameter Deassociates a Parameter with a Cache Group
+// DeleteCacheGroupParameter de-associates a Parameter with a Cache Group.
 func (to *Session) DeleteCacheGroupParameter(cacheGroupID, parameterID int) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d/%d", APICachegroupParameters, cacheGroupID, parameterID)
 	var alerts tc.Alerts
@@ -77,7 +56,7 @@ func (to *Session) DeleteCacheGroupParameter(cacheGroupID, parameterID int) (tc.
 	return alerts, reqInf, err
 }
 
-// CreateCacheGroupParameter Associates a Parameter with a Cache Group
+// CreateCacheGroupParameter associates a Parameter with a Cache Group.
 func (to *Session) CreateCacheGroupParameter(cacheGroupID, parameterID int) (*tc.CacheGroupParametersPostResponse, toclientlib.ReqInf, error) {
 	cacheGroupParameterReq := tc.CacheGroupParameterRequest{
 		CacheGroupID: cacheGroupID,

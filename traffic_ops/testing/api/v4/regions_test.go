@@ -52,14 +52,14 @@ func UpdateTestRegionsWithHeaders(t *testing.T, header http.Header) {
 	if len(testData.Regions) > 0 {
 		firstRegion := testData.Regions[0]
 		// Retrieve the Region by region so we can get the id for the Update
-		resp, _, err := TOSession.GetRegionByNameWithHdr(firstRegion.Name, header)
+		resp, _, err := TOSession.GetRegionByName(firstRegion.Name, header)
 		if err != nil {
 			t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
 		}
 		if len(resp) > 0 {
 			remoteRegion := resp[0]
 			remoteRegion.Name = "OFFLINE-TEST"
-			_, reqInf, err := TOSession.UpdateRegionByIDWithHdr(remoteRegion.ID, remoteRegion, header)
+			_, reqInf, err := TOSession.UpdateRegion(remoteRegion.ID, remoteRegion, header)
 			if err == nil {
 				t.Errorf("Expected error about precondition failed, but got none")
 			}
@@ -77,7 +77,7 @@ func GetTestRegionsIMS(t *testing.T) {
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, region := range testData.Regions {
-		_, reqInf, err := TOSession.GetRegionByNameWithHdr(region.Name, header)
+		_, reqInf, err := TOSession.GetRegionByName(region.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -89,7 +89,7 @@ func GetTestRegionsIMS(t *testing.T) {
 
 func GetTestRegionsIMSAfterChange(t *testing.T, header http.Header) {
 	for _, region := range testData.Regions {
-		_, reqInf, err := TOSession.GetRegionByNameWithHdr(region.Name, header)
+		_, reqInf, err := TOSession.GetRegionByName(region.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -102,7 +102,7 @@ func GetTestRegionsIMSAfterChange(t *testing.T, header http.Header) {
 	timeStr := currentTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, region := range testData.Regions {
-		_, reqInf, err := TOSession.GetRegionByNameWithHdr(region.Name, header)
+		_, reqInf, err := TOSession.GetRegionByName(region.Name, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -126,11 +126,11 @@ func CreateTestRegions(t *testing.T) {
 func SortTestRegions(t *testing.T) {
 	var header http.Header
 	var sortedList []string
-	resp, _, err := TOSession.GetRegionsWithHdr(header)
+	resp, _, err := TOSession.GetRegions(header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
-	for i, _ := range resp {
+	for i := range resp {
 		sortedList = append(sortedList, resp[i].Name)
 	}
 
@@ -146,7 +146,7 @@ func UpdateTestRegions(t *testing.T) {
 
 	firstRegion := testData.Regions[0]
 	// Retrieve the Region by region so we can get the id for the Update
-	resp, _, err := TOSession.GetRegionByName(firstRegion.Name)
+	resp, _, err := TOSession.GetRegionByName(firstRegion.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
 	}
@@ -154,13 +154,13 @@ func UpdateTestRegions(t *testing.T) {
 	expectedRegion := "OFFLINE-TEST"
 	remoteRegion.Name = expectedRegion
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion)
+	alert, _, err = TOSession.UpdateRegion(remoteRegion.ID, remoteRegion, nil)
 	if err != nil {
 		t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
 	}
 
 	// Retrieve the Region to check region got updated
-	resp, _, err = TOSession.GetRegionByID(remoteRegion.ID)
+	resp, _, err = TOSession.GetRegionByID(remoteRegion.ID, nil)
 	if err != nil {
 		t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
 	}
@@ -171,7 +171,7 @@ func UpdateTestRegions(t *testing.T) {
 
 	// Set the name back to the fixture value so we can delete it after
 	remoteRegion.Name = firstRegion.Name
-	alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion)
+	alert, _, err = TOSession.UpdateRegion(remoteRegion.ID, remoteRegion, nil)
 	if err != nil {
 		t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
 	}
@@ -180,7 +180,7 @@ func UpdateTestRegions(t *testing.T) {
 
 func GetTestRegions(t *testing.T) {
 	for _, region := range testData.Regions {
-		resp, _, err := TOSession.GetRegionByName(region.Name)
+		resp, _, err := TOSession.GetRegionByName(region.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET Region by region: %v - %v", err, resp)
 		}
@@ -206,7 +206,7 @@ func DeleteTestRegionsByName(t *testing.T) {
 		}
 
 		// Retrieve the Region to see if it got deleted
-		regionResp, _, err := TOSession.GetRegionByName(region.Name)
+		regionResp, _, err := TOSession.GetRegionByName(region.Name, nil)
 		if err != nil {
 			t.Errorf("error deleting Region region: %s", err.Error())
 		}
@@ -222,19 +222,19 @@ func DeleteTestRegions(t *testing.T) {
 
 	for _, region := range testData.Regions {
 		// Retrieve the Region by name so we can get the id
-		resp, _, err := TOSession.GetRegionByName(region.Name)
+		resp, _, err := TOSession.GetRegionByName(region.Name, nil)
 		if err != nil {
 			t.Errorf("cannot GET Region by name: %v - %v", region.Name, err)
 		}
 		respRegion := resp[0]
 
-		delResp, _, err := TOSession.DeleteRegionByID(respRegion.ID)
+		delResp, _, err := TOSession.DeleteRegion(&respRegion.ID, nil)
 		if err != nil {
 			t.Errorf("cannot DELETE Region by region: %v - %v", err, delResp)
 		}
 
 		// Retrieve the Region to see if it got deleted
-		regionResp, _, err := TOSession.GetRegionByName(region.Name)
+		regionResp, _, err := TOSession.GetRegionByName(region.Name, nil)
 		if err != nil {
 			t.Errorf("error deleting Region region: %s", err.Error())
 		}

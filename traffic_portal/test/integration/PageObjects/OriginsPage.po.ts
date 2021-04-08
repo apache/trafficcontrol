@@ -18,7 +18,7 @@
  */
 import { browser, by, element } from 'protractor';
 
-import { config, randomize } from "../config";
+import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -32,7 +32,6 @@ export class OriginsPage extends BasePage {
     private txtDeliveryService = element(by.name("deliveryServiceId"));
     private btnDelete = element(by.xpath("//button[text()='Delete']"));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private readonly config = config;
     private randomize = randomize;
     async OpenOriginsPage() {
         let snp = new SideNavigationPage();
@@ -64,23 +63,20 @@ export class OriginsPage extends BasePage {
         })
         return result;
     }
-    async SearchOrigins(nameOrigins: string) {
+    public async SearchOrigins(nameOrigins: string): Promise<boolean> {
         let name = nameOrigins + this.randomize;
-        let result = false;
         let snp = new SideNavigationPage();
         await snp.NavigateToOriginsPage();
         await this.txtSearch.clear();
         await this.txtSearch.sendKeys(name);
         if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
             await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-            result = true;
-        } else {
-            result = undefined;
+            return true;
         }
-        return result;
+        return false;
     }
-    async UpdateOrigins(origins) {
-        let result = false;
+    async UpdateOrigins(origins): Promise<boolean | undefined> {
+        let result: boolean | undefined = false;
         let basePage = new BasePage();
         if (origins.NewDeliveryService != null || origins.NewDeliveryService != undefined) {
             if (await browser.isElementPresent(element(by.xpath(`//select[@name="deliveryServiceId"]//option[@label="` + origins.NewDeliveryService + this.randomize + `"]`)))) {

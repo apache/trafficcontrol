@@ -20,26 +20,15 @@ import { ExpectedConditions, browser, by, element } from 'protractor';
 
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
-import { config, randomize } from '../config';
+import { randomize } from '../config';
 
 export class ServerCapabilitiesPage extends BasePage{
 
      private btnCreateServerCapabilities = element(by.name('createServerCapabilityButton'));
      private txtSCName = element(by.id("name"))
-     private btnYesRemoveSC = element(by.buttonText("Yes"))
-     private lblSuccessFailureMessage= element(by.xpath("//div[@class='ng-binding']"))
-     private tblServerCapabilities= element (by.xpath("//table[@id='serverCapabilitiesTable']//tr"))
-     private txtFilterServerCapabilties= element(by.xpath("//div[@id='serverCapabilitiesTable_filter']//input"))
      private searchFilter = element(by.id('serverCapabilitiesTable_filter')).element(by.css('label input'));
-     private serverCapabilitiesName = element(by.id('serverCapabilitiesTable')).element(by.css('tbody tr'));
      private btnDelete = element(by.buttonText('Delete'))
      private txtConfirmCapabilitiesName = element(by.name('confirmWithNameInput'));
-     private btnMore = element(by.name('moreBtn'));
-     private btnManageCapabilities = element(by.linkText('Manage Capabilities'));
-     private btnAddCapabilities = element(by.name('addCapabilityBtn'));
-     private selectCapabilities = element(by.name('selectFormDropdown'));
-     private lnkToggleLeftNavigationView = element(by.id('menu_toggle'));
-     private readonly config = config;
      private randomize = randomize;
 
 
@@ -93,7 +82,6 @@ export class ServerCapabilitiesPage extends BasePage{
      async DeleteServerCapabilities(nameSC:string, outputMessage:string){
       let result = false;
       let basePage = new BasePage();
-      let snp= new SideNavigationPage();
       let name = nameSC+this.randomize;
       await this.btnDelete.click();
       await browser.wait(ExpectedConditions.visibilityOf(this.txtConfirmCapabilitiesName), 1000);

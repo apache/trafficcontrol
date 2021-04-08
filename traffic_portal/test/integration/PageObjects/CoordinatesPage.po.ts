@@ -18,7 +18,7 @@
  */
 import { by, element, browser } from 'protractor';
 
-import { config, randomize } from "../config";
+import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -30,9 +30,7 @@ export class CoordinatesPage extends BasePage {
     private txtLongitude = element(by.name('longitude'))
     private txtSearch = element(by.id('coordinatesTable_filter')).element(by.css('label input'));
     private btnDelete = element(by.buttonText('Delete'));
-    private btnYes = element(by.buttonText('Yes'));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private readonly config = config;
     private randomize = randomize;
 
     async OpenCoordinatesPage() {
@@ -63,8 +61,7 @@ export class CoordinatesPage extends BasePage {
 
     }
 
-    async SearchCoordinates(nameCoordinates: string) {
-        let result = false;
+    public async SearchCoordinates(nameCoordinates: string): Promise<boolean> {
         let snp = new SideNavigationPage();
         let name = nameCoordinates + this.randomize;
         await snp.NavigateToCoordinatesPage();
@@ -72,14 +69,12 @@ export class CoordinatesPage extends BasePage {
         await this.txtSearch.sendKeys(name);
         if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
             await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-            result = true;
-        } else {
-            result = undefined;
+            return true;
         }
-        return result;
+        return false;
     }
-    async UpdateCoordinates(coordinates) {
-        let result = false;
+    async UpdateCoordinates(coordinates): Promise<boolean | undefined> {
+        let result: boolean | undefined = false;
         let basePage = new BasePage();
         switch (coordinates.description) {
             case "update coordinates latitude":
