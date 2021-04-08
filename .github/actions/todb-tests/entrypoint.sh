@@ -59,7 +59,7 @@ LATEST_FILE_TIME="$(git log -1 --name-status --format="%ct" . | head -n 1 )"
 mtime_array=()
 arr=($(ls))
 for file in "${arr[@]}"; do
-  mtime_array+=( "$(git log --format=%ct  $file)" )
+  mtime_array+=( "$(git log -1 --format=%ct  $file)" )
 done
 mtime_length=${#mtime_array[@]}
 
