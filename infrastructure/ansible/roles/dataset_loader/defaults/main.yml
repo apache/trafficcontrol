@@ -109,7 +109,6 @@ dl_ds_default_users:
     fullName: A local account with RO rights
     role: read-only
   - username: '{{ federation_user }}'
-    password: '{{ to_admin_user_password }}'
     email: '{{ federation_user }}@kabletown.invalid'
     fullName: A local account with admin rights
     role: admin
