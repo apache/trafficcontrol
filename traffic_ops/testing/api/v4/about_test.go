@@ -17,16 +17,18 @@ package v4
 
 import (
 	"testing"
+
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestAbout(t *testing.T) {
-	m, _, err := TOSession.GetAbout()
+	m, _, err := TOSession.GetAbout(client.RequestOptions{})
 	if err != nil {
 		t.Errorf("error from GetAbout(): %v", err)
 	}
 	t.Logf("about: %v", m)
 
-	m, _, err = NoAuthTOSession.GetAbout()
+	m, _, err = NoAuthTOSession.GetAbout(client.RequestOptions{})
 	if err == nil {
 		t.Error("expected error from GetAbout() when unauthenticated")
 	}
