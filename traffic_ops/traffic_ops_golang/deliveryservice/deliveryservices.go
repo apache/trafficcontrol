@@ -30,10 +30,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/asaskevich/govalidator"
-	validation "github.com/go-ozzo/ozzo-validation"
-
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
