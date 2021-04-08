@@ -34,6 +34,15 @@ type RequestOptions struct {
 	QueryParameters url.Values
 }
 
+// NewOptions returns a RequestOptions object with initialized, empty Header
+// and QueryParameters.
+func NewOptions() RequestOptions {
+	return RequestOptions{
+		Header:          http.Header{},
+		QueryParameters: url.Values{},
+	}
+}
+
 // Login authenticates with Traffic Ops and returns the client object.
 //
 // Returns the logged in client, the remote address of Traffic Ops which was translated and used to log in, and any error. If the error is not nil, the remote address may or may not be nil, depending whether the error occurred before the login request.
