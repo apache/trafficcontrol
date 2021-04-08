@@ -16,7 +16,10 @@ package v4
 */
 
 import (
+	"net/url"
 	"testing"
+
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestAPICapabilities(t *testing.T) {
@@ -56,7 +59,12 @@ func TestAPICapabilities(t *testing.T) {
 
 	for _, c := range testCases {
 		t.Run(c.description, func(t *testing.T) {
-			caps, _, err := TOSession.GetAPICapabilities(c.capability, c.order)
+			opts := client.RequestOptions{
+				QueryParameters: url.Values{},
+			}
+			opts.QueryParameters.Set("capability", c.capability)
+			opts.QueryParameters.Set("orderby", c.order)
+			caps, _, err := TOSession.GetAPICapabilities(opts)
 
 			if err != nil {
 				t.Fatalf("error retrieving API capabilities: %s", err.Error())
