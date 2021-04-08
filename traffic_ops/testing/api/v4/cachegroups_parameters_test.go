@@ -1,3 +1,5 @@
+package v4
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +15,6 @@
    limitations under the License.
 */
 
-package v4
-
 import (
 	"net/http"
 	"net/url"
@@ -24,6 +24,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestCacheGroupParameters(t *testing.T) {
@@ -34,11 +35,17 @@ func TestCacheGroupParameters(t *testing.T) {
 }
 
 func CreateTestCacheGroupParameters(t *testing.T) {
-	// Get Cache Group to assign parameter to
+	if len(testData.CacheGroups) < 1 || len(testData.Parameters) < 1 {
+		t.Fatal("Need at least one Cache Group and one Parameter to test associating Parameters to Cache Groups")
+	}
 	firstCacheGroup := testData.CacheGroups[0]
+	if firstCacheGroup.Name == nil {
+		t.Fatal("Found Cache Group with null or undefined name in test data")
+	}
+
 	cacheGroupResp, _, err := TOSession.GetCacheGroupByName(*firstCacheGroup.Name, nil)
 	if err != nil {
-		t.Errorf("cannot GET Cache Group by name: %v - %v", firstCacheGroup.Name, err)
+		t.Fatalf("cannot GET Cache Group by name: %v - %v", firstCacheGroup.Name, err)
 	}
 	if cacheGroupResp == nil {
 		t.Fatal("Cache Groups response should not be nil")
@@ -58,12 +65,15 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 
 	// Assign Parameter to Cache Group
 	cacheGroupID := cacheGroupResp[0].ID
-	parameterID := paramResp[0].ID
-	resp, _, err := TOSession.CreateCacheGroupParameter(*cacheGroupID, parameterID)
-	if err != nil {
-		t.Errorf("could not CREATE cache group parameter: %v", err)
+	if cacheGroupID == nil {
+		t.Fatalf("Traffic Ops returned Cache Group '%s' with null or undefined ID", *firstCacheGroup.Name)
 	}
-	if resp == nil {
+	parameterID := paramResp[0].ID
+	resp, _, err := TOSession.CreateCacheGroupParameter(*cacheGroupID, parameterID, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("could not create cache group parameter: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if resp.Response == nil {
 		t.Fatal("Cache Group Parameter response should not be nil")
 	}
 	testData.CacheGroupParameterRequests = append(testData.CacheGroupParameterRequests, resp.Response...)
@@ -71,29 +81,30 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 
 func GetTestCacheGroupParameters(t *testing.T) {
 	for _, cgp := range testData.CacheGroupParameterRequests {
-		resp, _, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID, nil, nil)
+		resp, _, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("cannot GET Parameter by cache group: %v - %v", err, resp)
+			t.Errorf("cannot get Parameter by Cache Group #%d: %v - alerts: %+v", cgp.CacheGroupID, err, resp.Alerts)
 		}
-		if resp == nil {
-			t.Fatal("Cache Group Parameters response should not be nil")
+		if len(resp.Response) < 1 {
+			t.Errorf("Expected Cache Group #%d to have at least one associated Parameter, but found none", cgp.CacheGroupID)
 		}
 	}
 }
 
 func GetTestCacheGroupParametersIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
+
+	opts := client.NewOptions()
+	opts.Header.Set(rfc.IfModifiedSince, time)
+
 	for _, cgp := range testData.CacheGroupParameterRequests {
-		_, reqInf, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID, nil, header)
+		resp, reqInf, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID, opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Errorf("Expected no error fetching Parameters for a Cache Group, but got %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+			t.Errorf("Expected 304 status code, got %v", reqInf.StatusCode)
 		}
 	}
 }
@@ -106,40 +117,40 @@ func DeleteTestCacheGroupParameters(t *testing.T) {
 
 func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterRequest) {
 
-	delResp, _, err := TOSession.DeleteCacheGroupParameter(cgp.CacheGroupID, cgp.ParameterID)
+	delResp, _, err := TOSession.DeleteCacheGroupParameter(cgp.CacheGroupID, cgp.ParameterID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot DELETE Parameter by cache group: %v - %v", err, delResp)
+		t.Fatalf("cannot delete Parameter by Cache Group ID: %v - alerts: %+v", err, delResp)
 	}
 
 	// Retrieve the Cache Group Parameter to see if it got deleted
-	queryParams := url.Values{}
-	queryParams.Add("parameterId", strconv.Itoa(cgp.ParameterID))
+	opts := client.NewOptions()
+	opts.QueryParameters.Add("parameterId", strconv.Itoa(cgp.ParameterID))
 
-	parameters, _, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID, queryParams, nil)
+	parameters, _, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID, opts)
 	if err != nil {
-		t.Errorf("error deleting Parameter name: %s", err.Error())
+		t.Errorf("error getting Parameters by Cache Group ID after dissociation: %s - alerts: %+v", err, parameters.Alerts)
 	}
-	if parameters == nil {
+	if parameters.Response == nil {
 		t.Fatal("Cache Group Parameters response should not be nil")
 	}
-	if len(parameters) > 0 {
+	if len(parameters.Response) > 0 {
 		t.Errorf("expected Parameter: %d to be to be disassociated from Cache Group: %d", cgp.ParameterID, cgp.CacheGroupID)
 	}
 
 	// Attempt to delete it again and it should return an error now
-	_, _, err = TOSession.DeleteCacheGroupParameter(cgp.CacheGroupID, cgp.ParameterID)
+	_, _, err = TOSession.DeleteCacheGroupParameter(cgp.CacheGroupID, cgp.ParameterID, client.RequestOptions{})
 	if err == nil {
 		t.Error("expected error when deleting unassociated cache group parameter")
 	}
 
 	// Attempt to delete using a non existing cache group
-	_, _, err = TOSession.DeleteCacheGroupParameter(-1, cgp.ParameterID)
+	_, _, err = TOSession.DeleteCacheGroupParameter(-1, cgp.ParameterID, client.RequestOptions{})
 	if err == nil {
 		t.Error("expected error when deleting cache group parameter with non existing cache group")
 	}
 
 	// Attempt to delete using a non existing parameter
-	_, _, err = TOSession.DeleteCacheGroupParameter(cgp.CacheGroupID, -1)
+	_, _, err = TOSession.DeleteCacheGroupParameter(cgp.CacheGroupID, -1, client.RequestOptions{})
 	if err == nil {
 		t.Error("expected error when deleting cache group parameter with non existing parameter")
 	}
