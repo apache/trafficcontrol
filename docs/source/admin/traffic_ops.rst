@@ -262,7 +262,7 @@ While this section contains instructions for running Traffic Ops manually, the o
 
 traffic_ops_golang
 ------------------
-``traffic_ops_golang [--version] [--plugins] [--api-routes] --cfg CONFIG_PATH --dbcfg DB_CONFIG_PATH --riakcfg TRAFFIC_VAULT_CONFIG_PATH``
+``traffic_ops_golang [--version] [--plugins] [--api-routes] --cfg CONFIG_PATH --dbcfg DB_CONFIG_PATH [--riakcfg RIAK_CONFIG_PATH]``
 
 .. option:: --cfg CONFIG_PATH
 
@@ -280,9 +280,10 @@ traffic_ops_golang
 
 	Print information about all API routes and exit. If also used with the :option:`--cfg` option, also print out the configured routing blacklist information from `cdn.conf`_.
 
-.. option:: --riakcfg TRAFFIC_VAULT_CONFIG_PATH
+.. option:: --riakcfg RIAK_CONFIG_PATH
 
-	This **mandatory** command line flag specifies the absolute or relative path to a configuration file used by Traffic Ops to establish connections to Traffic Vault - `riak.conf`_
+	.. deprecated:: 6.0
+		This optional command line flag specifies the absolute or relative path to a configuration file used by Traffic Ops to establish connections to Riak when used as the Traffic Vault backend - `riak.conf`_. Please use ``"traffic_vault_backend": "riak"`` and ``"traffic_vault_config": {...}`` (with the contents of `riak.conf`_) instead.
 
 	.. impl-detail:: The name of this flag is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
 
@@ -372,12 +373,6 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:pass_reset_path: A path to be added to ``base_url`` that is the URL of the UI's password reset interface. For Traffic Portal instances, this should always be set to "user".
 	:user_register_path: A path to be added to ``base_url`` that is the URL of the UI's new user registration interface. For Traffic Portal instances, this should always be set to "user".
 
-:riak_conf_path: An optional absolute or relative path to `riak.conf`_. If this field is not defined, is ``null``, or is an empty string (``""``), Traffic Ops will not be able to connect to Traffic Vault.
-
-	.. caution:: If Traffic Ops is unable to connect to Traffic Vault, many of its core features will not function. In particular, it will be impossible to create :term:`Delivery Services` that use HTTPS or DNSSEC.
-
-	.. impl-detail:: The name of this field is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
-
 :secrets: This is an array of strings, which cannot be empty. The first secret in the array is used to encrypt Traffic Ops authentication cookies - multiple Traffic Ops instances serving the same CDN need to share secrets in order for users logged into one to be able to use their cookie as authentication with other instances.
 :smtp:    This optional section contains options for connecting to and authenticating with an :abbr:`SMTP (Simple Mail Transfer Protocol)` server for sending emails. If this section is undefined (or if ``enabled`` is explicitly ``false``), Traffic Ops will not be able to send emails and certain :ref:`to-api` endpoints that depend on that functionality will fail to operate.
 
@@ -443,6 +438,9 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:request_timeout: An optional timeout in seconds that serves as the maximum time each Traffic Ops middleware can take to execute. If it is exceeded, the text "server timed out" is served in place of a response. If set to :code:`0`, :code:`60` is used instead. Default if not specified is :code:`60`.
 	:riak_port: An optional field that sets the port on which Traffic Ops will try to contact Traffic Vault for storage and retrieval of sensitive encryption keys.
 
+		.. deprecated:: 6.0
+			Please use a ``"port"`` field in ``traffic_vault_config`` instead when using ``"traffic_vault_backend": "riak"``.
+
 		.. impl-detail:: The name of this field is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
 
 
@@ -451,6 +449,16 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 		.. warning:: OAuth support in Traffic Ops is still in its infancy, so most users are advised to avoid defining this field without good cause.
 
 	:write_timeout: An optional timeout in seconds set on handlers. After reading a request's header, the server will have this long to send back a response. If set to zero, there is no timeout. Default if not specified is zero.
+
+	:traffic_vault_backend:
+
+	    .. versionadded:: 6.0
+		    Optional. The name of which backend to use for Traffic Vault. Currently, the only supported backend is "riak".
+
+	:traffic_vault_config:
+
+	    .. versionadded:: 6.0
+		    Optional. The JSON configuration which is unique to the chosen Traffic Vault backend. See :ref:`traffic_vault_admin` for the configuration options for each supported backend.
 
 	.. _admin-routing-blacklist:
 
@@ -544,21 +552,12 @@ Example ldap.conf
 
 riak.conf
 """""""""
-This file sets authentication options for connections to Traffic Vault. `traffic_ops_golang`_ will look for this file at the path given by the value of the :option:`--riakcfg` flag as passed on startup. The contents of ``riak.conf`` are encoded as a JSON object, the keys of which are described below.
+.. deprecated:: 6.0
+	The ``riak.conf`` configuration file and associated :option:`--riakcfg` flag have been deprecated and will be removed from Traffic Control in the future. Please use ``"traffic_vault_backend": "riak"`` and put the existing contents of ``riak.conf`` into ``"traffic_vault_config": {...}`` in `cdn.conf`_ instead.
+
+This file sets authentication options for connections to Riak when used as the Traffic Vault backend. `traffic_ops_golang`_ will look for this file at the path given by the value of the :option:`--riakcfg` flag as passed on startup. The contents of ``riak.conf`` are encoded as a JSON object, the keys of which are described in :ref:`traffic_vault_riak_backend`.
 
 .. impl-detail:: The name of this file is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
-
-:password:      The password to use when authenticating with Traffic Vault
-:user:          The username to use when authenticating with Traffic Vault
-:MaxTLSVersion: Optional. This is the highest TLS version that Traffic Ops is allowed to use to connect to Traffic Vault. Valid values are "1.0", "1.1", "1.2", and "1.3". The default is "1.1".
-
-.. note:: Enabling TLS 1.1 in Traffic Vault itself is required for Traffic Ops to communicate with Traffic Vault. See :ref:`Enabling TLS 1.1 <tv-admin-enable-tlsv1.1>` for details.
-
-Example riak.conf
-'''''''''''''''''
-.. include:: ../../../traffic_ops/app/conf/production/riak.conf
-	:code: json
-	:tab-width: 4
 
 Installing the SSL Certificate
 ------------------------------

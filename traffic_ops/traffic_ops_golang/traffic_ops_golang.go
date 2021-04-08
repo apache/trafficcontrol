@@ -21,15 +21,16 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"runtime/pprof"
-	"strconv"
 	"strings"
 	"time"
 
@@ -39,6 +40,9 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/riaksvc"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -58,7 +62,7 @@ func main() {
 	showRoutes := flag.Bool("api-routes", false, "Show the list of API routes and exit")
 	configFileName := flag.String("cfg", "", "The config file path")
 	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
-	riakConfigFileName := flag.String("riakcfg", "", "The riak config file path")
+	riakConfigFileName := flag.String("riakcfg", "", "The riak config file path (DEPRECATED: use traffic_vault_backend = riak and traffic_vault_config in cdn.conf instead)")
 	flag.Parse()
 
 	if *showVersion {
@@ -95,7 +99,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	cfg, errsToLog, blockStart := config.LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName, version)
+	cfg, errsToLog, blockStart := config.LoadConfig(*configFileName, *dbConfigFileName, version)
 	for _, err := range errsToLog {
 		fmt.Fprintf(os.Stderr, "Loading Config: %v\n", err)
 	}
@@ -138,6 +142,8 @@ func main() {
 	db.SetMaxIdleConns(cfg.DBMaxIdleConnections)
 	db.SetConnMaxLifetime(time.Duration(cfg.DBConnMaxLifetimeSeconds) * time.Second)
 
+	trafficVault := setupTrafficVault(*riakConfigFileName, &cfg)
+
 	// TODO combine
 	plugins := plugin.Get(cfg)
 	profiling := cfg.ProfilingEnabled
@@ -155,7 +161,7 @@ func main() {
 		log.Errorln(debugServer.ListenAndServe())
 	}()
 
-	if err := routing.RegisterRoutes(routing.ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins}); err != nil {
+	if err := routing.RegisterRoutes(routing.ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins, TrafficVault: trafficVault}); err != nil {
 		log.Errorf("registering routes: %v\n", err)
 		os.Exit(1)
 	}
@@ -227,6 +233,61 @@ func main() {
 		setNewProfilingInfo(*configFileName, &profiling, &profilingLocation, cfg.Version)
 	}
 	signalReloader(unix.SIGHUP, reloadProfilingConfig)
+}
+
+func setupTrafficVault(riakConfigFileName string, cfg *config.Config) trafficvault.TrafficVault {
+	var err error
+	trafficVaultConfigBytes := []byte{}
+	trafficVaultBackend := ""
+	if len(riakConfigFileName) > 0 {
+		// use legacy riak config if given
+		log.Warnln("using deprecated --riakcfg flag, use traffic_vault_backend = riak and traffic_vault_config in cdn.conf instead")
+		trafficVaultConfigBytes, err = ioutil.ReadFile(riakConfigFileName)
+		if err != nil {
+			log.Errorf("reading riak conf '%s': %s", riakConfigFileName, err.Error())
+			os.Exit(1)
+		}
+		cfg.TrafficVaultEnabled = true
+		trafficVaultBackend = riaksvc.RiakBackendName
+	}
+	if len(cfg.TrafficVaultBackend) > 0 {
+		if len(cfg.TrafficVaultConfig) == 0 {
+			log.Errorln("traffic_vault_backend is non-empty but traffic_vault_config is empty")
+			os.Exit(1)
+		}
+		cfg.TrafficVaultEnabled = true
+		// traffic_vault_config should override legacy riak config if both are used
+		trafficVaultConfigBytes = cfg.TrafficVaultConfig
+		trafficVaultBackend = cfg.TrafficVaultBackend
+	}
+	if trafficVaultBackend == riaksvc.RiakBackendName && cfg.RiakPort != nil {
+		// inject riak_port into traffic_vault_config.port if unset there
+		log.Warnln("using deprecated field 'riak_port', use 'port' field in traffic_vault_config instead")
+		tmp := make(map[string]interface{})
+		err := json.Unmarshal(trafficVaultConfigBytes, &tmp)
+		if err != nil {
+			log.Errorf("failed to unmarshal riak config: %s", err.Error())
+			os.Exit(1)
+		}
+		if _, ok := tmp["port"]; !ok {
+			tmp["port"] = *cfg.RiakPort
+		}
+		trafficVaultConfigBytes, err = json.Marshal(tmp)
+		if err != nil {
+			log.Errorf("failed to marshal riak config: %s", err.Error())
+			os.Exit(1)
+		}
+	}
+
+	if cfg.TrafficVaultEnabled {
+		trafficVault, err := trafficvault.GetBackend(trafficVaultBackend, trafficVaultConfigBytes)
+		if err != nil {
+			log.Errorf("failed to get Traffic Vault backend '%s': %s", cfg.TrafficVaultBackend, err.Error())
+			os.Exit(1)
+		}
+		return trafficVault
+	}
+	return &disabled.Disabled{}
 }
 
 func setNewProfilingInfo(configFileName string, currentProfilingEnabled *bool, currentProfilingLocation *string, version string) {
@@ -321,10 +382,6 @@ func signalReloader(sig os.Signal, f func()) {
 }
 
 func logConfig(cfg config.Config) {
-	logRiakPort := "<nil>"
-	if cfg.RiakPort != nil {
-		logRiakPort = strconv.Itoa(int(*cfg.RiakPort))
-	}
 	log.Infof(`Using Config values:
 		Port:                 %s
 		Db Server:            %s
@@ -349,7 +406,6 @@ func logConfig(cfg config.Config) {
 		Info Log:             %s
 		Debug Log:            %s
 		Event Log:            %s
-		Riak Port:            %v
 		LDAP Enabled:         %v
-		InfluxDB Enabled:     %v`, cfg.Port, cfg.DB.Hostname, cfg.DB.User, cfg.DB.DBName, cfg.DB.SSL, cfg.MaxDBConnections, cfg.Listen[0], cfg.Insecure, cfg.CertPath, cfg.KeyPath, time.Duration(cfg.ProxyTimeout)*time.Second, time.Duration(cfg.ProxyKeepAlive)*time.Second, time.Duration(cfg.ProxyTLSTimeout)*time.Second, time.Duration(cfg.ProxyReadHeaderTimeout)*time.Second, time.Duration(cfg.ReadTimeout)*time.Second, time.Duration(cfg.ReadHeaderTimeout)*time.Second, time.Duration(cfg.WriteTimeout)*time.Second, time.Duration(cfg.IdleTimeout)*time.Second, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug, cfg.LogLocationEvent, logRiakPort, cfg.LDAPEnabled, cfg.InfluxEnabled)
+		InfluxDB Enabled:     %v`, cfg.Port, cfg.DB.Hostname, cfg.DB.User, cfg.DB.DBName, cfg.DB.SSL, cfg.MaxDBConnections, cfg.Listen[0], cfg.Insecure, cfg.CertPath, cfg.KeyPath, time.Duration(cfg.ProxyTimeout)*time.Second, time.Duration(cfg.ProxyKeepAlive)*time.Second, time.Duration(cfg.ProxyTLSTimeout)*time.Second, time.Duration(cfg.ProxyReadHeaderTimeout)*time.Second, time.Duration(cfg.ReadTimeout)*time.Second, time.Duration(cfg.ReadHeaderTimeout)*time.Second, time.Duration(cfg.WriteTimeout)*time.Second, time.Duration(cfg.IdleTimeout)*time.Second, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug, cfg.LogLocationEvent, cfg.LDAPEnabled, cfg.InfluxEnabled)
 }

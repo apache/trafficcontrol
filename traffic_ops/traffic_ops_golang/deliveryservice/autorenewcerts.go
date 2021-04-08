@@ -33,7 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 )
 
 type DsKey struct {
@@ -80,8 +80,8 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 	}
 	defer inf.Close()
 
-	if inf.Config.RiakEnabled == false {
-		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by xml id: Riak is not configured"), deprecated, deprecation)
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Traffic Vault service is unavailable"), errors.New("getting SSL keys from Traffic Vault by xml id: Traffic Vault is not configured"), deprecated, deprecation)
 		return
 	}
 
@@ -109,7 +109,7 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 	}
 
-	go RunAutorenewal(existingCerts, inf.Config, ctx, inf.User, asyncStatusId)
+	go RunAutorenewal(existingCerts, inf.Config, ctx, inf.User, asyncStatusId, inf.Vault)
 
 	var alerts tc.Alerts
 	if deprecated {
@@ -125,7 +125,7 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
 
 }
-func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx context.Context, currentUser *auth.CurrentUser, asyncStatusId int) {
+func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx context.Context, currentUser *auth.CurrentUser, asyncStatusId int, tv trafficvault.TrafficVault) {
 	db, err := api.GetDB(ctx)
 	if err != nil {
 		log.Errorf("Error getting db: %s", err.Error())
@@ -164,7 +164,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 		}
 
 		dsExpInfo := DsExpirationInfo{}
-		keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObjV15(ds.XmlId, strconv.Itoa(int(ds.Version.Int64)), tx, cfg.RiakAuthOptions, cfg.RiakPort)
+		keyObj, ok, err := tv.GetDeliveryServiceSSLKeys(ds.XmlId, strconv.Itoa(int(ds.Version.Int64)), tx)
 		if err != nil {
 			log.Errorf("getting ssl keys for xmlId: %s and version: %d : %s", ds.XmlId, ds.Version.Int64, err.Error())
 			dsExpInfo.XmlId = ds.XmlId
@@ -229,8 +229,8 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 				},
 			}
 
-			if error := GetLetsEncryptCertificates(cfg, req, ctx, currentUser); error != nil {
-				dsExpInfo.Error = error
+			if err := GetLetsEncryptCertificates(cfg, req, ctx, currentUser, tv); err != nil {
+				dsExpInfo.Error = err
 				errorCount++
 			} else {
 				renewedCount++
@@ -244,7 +244,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 			if acmeAccount == nil {
 				keysFound.OtherExpirations = append(keysFound.OtherExpirations, dsExpInfo)
 			} else {
-				userErr, sysErr, statusCode := renewAcmeCerts(cfg, keyObj.DeliveryService, ctx, currentUser)
+				userErr, sysErr, statusCode := renewAcmeCerts(cfg, keyObj.DeliveryService, ctx, currentUser, tv)
 				if userErr != nil {
 					errorCount++
 					dsExpInfo.Error = userErr
