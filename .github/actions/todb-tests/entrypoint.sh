@@ -64,7 +64,7 @@ done
 mtime_length=${#mtime_array[@]}
 
 if [[ $LATEST_FILE_TIME != ${mtime_array[$mtime_length-1]} ]]; then
-  echo "ERROR: latest added file: $LATEST_FILE is not in the right order" >&2;
+  echo "ERROR: latest added/modified file: $LATEST_FILE is not in the right order" >&2;
   CODE=1;
 fi
 
