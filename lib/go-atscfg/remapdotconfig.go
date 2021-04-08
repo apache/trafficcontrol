@@ -138,7 +138,8 @@ func getServerConfigRemapDotConfigForMid(
 				continue
 			}
 		}
-		if ds.Type.IsLive() && !ds.Type.IsNational() && !hasTopology {
+
+		if !ds.Type.UsesMidCache() && (!hasTopology || *ds.Topology == "") {
 			continue // Live local delivery services skip mids (except Topologies ignore DS types)
 		}
 
@@ -163,7 +164,7 @@ func getServerConfigRemapDotConfigForMid(
 				return "", warnings, err
 			}
 			midRemap += topoTxt
-		} else if ds.MidHeaderRewrite != nil && *ds.MidHeaderRewrite != "" {
+		} else if (ds.MidHeaderRewrite != nil && *ds.MidHeaderRewrite != "") || (ds.MaxOriginConnections != nil && *ds.MaxOriginConnections > 0) || (ds.ServiceCategory != nil && *ds.ServiceCategory != "") {
 			midRemap += ` @plugin=header_rewrite.so @pparam=` + midHeaderRewriteConfigFileName(*ds.XMLID)
 		}
 
@@ -323,7 +324,7 @@ func buildEdgeRemapLine(
 			return "", warnings, err
 		}
 		text += topoTxt
-	} else if ds.EdgeHeaderRewrite != nil && *ds.EdgeHeaderRewrite != "" {
+	} else if (ds.EdgeHeaderRewrite != nil && *ds.EdgeHeaderRewrite != "") || (ds.ServiceCategory != nil && *ds.ServiceCategory != "") || (ds.MaxOriginConnections != nil && *ds.MaxOriginConnections != 0) {
 		text += ` @plugin=header_rewrite.so @pparam=` + edgeHeaderRewriteConfigFileName(*ds.XMLID)
 	}
 
@@ -419,13 +420,13 @@ func makeDSTopologyHeaderRewriteTxt(ds DeliveryService, cg tc.CacheGroupName, to
 	}
 	txt := ""
 	const pluginTxt = ` @plugin=header_rewrite.so @pparam=`
-	if placement.IsFirstCacheTier && ds.FirstHeaderRewrite != nil && *ds.FirstHeaderRewrite != "" {
+	if placement.IsFirstCacheTier && ((ds.FirstHeaderRewrite != nil && *ds.FirstHeaderRewrite != "") || (ds.ServiceCategory != nil && *ds.ServiceCategory != "")) {
 		txt += pluginTxt + FirstHeaderRewriteConfigFileName(*ds.XMLID) + ` `
 	}
-	if placement.IsInnerCacheTier && ds.InnerHeaderRewrite != nil && *ds.InnerHeaderRewrite != "" {
+	if placement.IsInnerCacheTier && ((ds.InnerHeaderRewrite != nil && *ds.InnerHeaderRewrite != "") || (ds.ServiceCategory != nil && *ds.ServiceCategory != "")) {
 		txt += pluginTxt + InnerHeaderRewriteConfigFileName(*ds.XMLID) + ` `
 	}
-	if placement.IsLastCacheTier && ds.LastHeaderRewrite != nil && *ds.LastHeaderRewrite != "" {
+	if placement.IsLastCacheTier && ((ds.LastHeaderRewrite != nil && *ds.LastHeaderRewrite != "") || (ds.ServiceCategory != nil && *ds.ServiceCategory != "") || (ds.MaxOriginConnections != nil && *ds.MaxOriginConnections != 0)) {
 		txt += pluginTxt + LastHeaderRewriteConfigFileName(*ds.XMLID) + ` `
 	}
 	return txt, nil

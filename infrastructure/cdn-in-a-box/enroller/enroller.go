@@ -33,7 +33,7 @@ import (
 
 	log "github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 	"github.com/fsnotify/fsnotify"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -52,7 +52,7 @@ func newSession(reqTimeout time.Duration, toURL string, toUser string, toPass st
 func (s session) getParameter(m tc.Parameter, header http.Header) (tc.Parameter, error) {
 	// TODO: s.GetParameterByxxx() does not seem to work with values with spaces --
 	// doing this the hard way for now
-	parameters, _, err := s.GetParametersWithHdr(header)
+	parameters, _, err := s.GetParameters(header, nil)
 	if err != nil {
 		return m, err
 	}
@@ -154,7 +154,7 @@ func enrollCachegroup(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, _, err := toSession.CreateCacheGroupNullable(s)
+	alerts, _, err := toSession.CreateCacheGroup(s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("cachegroup %s already exists\n", *s.Name)
@@ -199,14 +199,14 @@ func enrollTopology(toSession *session, r io.Reader) error {
 
 func enrollDeliveryService(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
-	var s tc.DeliveryServiceNullableV30
+	var s tc.DeliveryServiceV4
 	err := dec.Decode(&s)
 	if err != nil {
 		log.Infof("error decoding DeliveryService: %s\n", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateDeliveryServiceV30(s)
+	alerts, _, err := toSession.CreateDeliveryService(s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("deliveryservice %s already exists\n", *s.XMLID)
@@ -233,7 +233,7 @@ func enrollDeliveryServicesRequiredCapability(toSession *session, r io.Reader) e
 		return err
 	}
 
-	dses, _, err := toSession.GetDeliveryServiceByXMLIDNullableWithHdr(*dsrc.XMLID, nil)
+	dses, _, err := toSession.GetDeliveryServiceByXMLID(*dsrc.XMLID, nil)
 	if err != nil {
 		log.Infof("getting Delivery Service by XMLID %s: %s", *dsrc.XMLID, err.Error())
 		return err
@@ -270,7 +270,7 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	}
 
 	params := url.Values{"xmlId": []string{dss.XmlId}}
-	dses, _, err := toSession.GetDeliveryServicesV4(nil, params)
+	dses, _, err := toSession.GetDeliveryServices(nil, params)
 	if err != nil {
 		return err
 	}
@@ -286,7 +286,7 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	var serverIDs []int
 	for _, sn := range dss.ServerNames {
 		params.Set("hostName", sn)
-		servers, _, err := toSession.GetServersWithHdr(&params, nil)
+		servers, _, err := toSession.GetServers(params, nil)
 		if err != nil {
 			return err
 		}
@@ -369,7 +369,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 		var alerts tc.Alerts
 		if err == nil {
 			// existing param -- update
-			alerts, _, err = toSession.UpdateParameterByID(eparam.ID, p)
+			alerts, _, err = toSession.UpdateParameter(eparam.ID, p, nil)
 			if err != nil {
 				log.Infof("error updating parameter %d: %s with %+v ", eparam.ID, err.Error(), p)
 				break
@@ -396,7 +396,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 			}
 
 			for _, n := range profiles {
-				profiles, _, err := toSession.GetProfileByNameWithHdr(n, nil)
+				profiles, _, err := toSession.GetProfileByName(n, nil)
 				if err != nil {
 					return err
 				}
@@ -481,7 +481,7 @@ func enrollStatus(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, _, err := toSession.CreateStatusNullable(s)
+	alerts, _, err := toSession.CreateStatus(s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("status %s already exists\n", s.Name)
@@ -507,7 +507,7 @@ func enrollTenant(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, err := toSession.CreateTenant(&s)
+	alerts, err := toSession.CreateTenant(s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("tenant %s already exists\n", s.Name)
@@ -534,7 +534,7 @@ func enrollUser(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, _, err := toSession.CreateUser(&s)
+	alerts, _, err := toSession.CreateUser(s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("user %s already exists\n", *s.Username)
@@ -573,7 +573,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		return errors.New("missing name on profile")
 	}
 
-	profiles, _, err := toSession.GetProfileByNameWithHdr(profile.Name, nil)
+	profiles, _, err := toSession.GetProfileByName(profile.Name, nil)
 
 	createProfile := false
 	if err != nil || len(profiles) == 0 {
@@ -595,7 +595,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 				log.Infof("error creating profile from %+v: %s\n", profile, err.Error())
 			}
 		}
-		profiles, _, err = toSession.GetProfileByNameWithHdr(profile.Name, nil)
+		profiles, _, err = toSession.GetProfileByName(profile.Name, nil)
 		if err != nil {
 			log.Infof("error getting profile ID from %+v: %s\n", profile, err.Error())
 		}
@@ -605,7 +605,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		profile = profiles[0]
 		action = "creating"
 	} else {
-		alerts, _, err = toSession.UpdateProfileByID(profile.ID, profile)
+		alerts, _, err = toSession.UpdateProfile(profile.ID, profile, nil)
 		action = "updating"
 	}
 
@@ -723,7 +723,7 @@ func enrollServerServerCapability(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	resp, _, err := toSession.GetServersWithHdr(&url.Values{"hostName": []string{*s.Server}}, nil)
+	resp, _, err := toSession.GetServers(url.Values{"hostName": []string{*s.Server}}, nil)
 	if err != nil {
 		log.Infof("getting server %s: %s\n", *s.Server, err.Error())
 		return err

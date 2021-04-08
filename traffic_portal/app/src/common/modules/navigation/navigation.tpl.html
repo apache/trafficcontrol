@@ -73,6 +73,7 @@ under the License.
                         <li class="side-menu-category-item" ng-if="hasCapability('users-read')" ng-class="{'current-page': isState('trafficPortal.private.users')}"><a href="/#!/users">Users</a></li>
                         <li class="side-menu-category-item" ng-if="hasCapability('tenants-read')" ng-class="{'current-page': isState('trafficPortal.private.tenants')}"><a href="/#!/tenants">Tenants</a></li>
                         <li class="side-menu-category-item" ng-if="hasCapability('roles-read')" ng-class="{'current-page': isState('trafficPortal.private.roles')}"><a href="/#!/roles">Roles</a></li>
+                        <li class="side-menu-category-item" ng-if="hasCapability('notifications-read')" ng-class="{'current-page': isState('trafficPortal.private.notifications')}"><a href="/#!/notifications">Notifications</a></li>
                         <li class="side-menu-category-item" ng-if="enforceCapabilities && hasCapability('capabilities-read')" ng-class="{'current-page': isState('trafficPortal.private.capabilities')}"><a href="/#!/capabilities">Capabilities</a></li>
                         <li class="side-menu-category-item" ng-if="enforceCapabilities && hasCapability('api-endpoints-read')" ng-class="{'current-page': isState('trafficPortal.private.endpoints')}"><a href="/#!/endpoints">API Endpoints</a></li>
                     </ul>

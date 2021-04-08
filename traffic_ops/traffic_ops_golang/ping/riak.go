@@ -26,7 +26,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 )
 
 func Riak(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +41,7 @@ func Riak(w http.ResponseWriter, r *http.Request) {
 
 	defer inf.Close()
 
-	pingResp, err := riaksvc.Ping(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
+	pingResp, err := inf.Vault.Ping(inf.Tx.Tx)
 
 	if err != nil {
 		userErr = api.LogErr(r, http.StatusInternalServerError, nil, errors.New("error pinging Riak: "+err.Error()))

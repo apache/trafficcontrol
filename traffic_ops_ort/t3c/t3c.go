@@ -64,6 +64,26 @@ func main() {
 	} else if cfg == (config.Cfg{}) { // user used the --help option
 		os.Exit(Success)
 	}
+
+	if cfg.UseGit == config.UseGitYes {
+		err := util.EnsureConfigDirIsGitRepo(config.TSConfigDir)
+		if err != nil {
+			log.Errorln("Ensuring config directory '" + config.TSConfigDir + "' is a git repo - config may not be a git repo! " + err.Error())
+		} else {
+			log.Infoln("Successfully ensured ATS config directory '" + config.TSConfigDir + "' is a git repo")
+		}
+	} else {
+		log.Infoln("UseGit not 'yes', not creating git repo")
+	}
+
+	if cfg.UseGit == config.UseGitYes || cfg.UseGit == config.UseGitAuto {
+		// commit anything someone else changed when we weren't looking,
+		// with a keyword indicating it wasn't our change
+		if err := util.MakeGitCommitAll(config.TSConfigDir, util.GitChangeNotSelf, cfg.RunMode, true); err != nil {
+			log.Errorln("git committing existing changes, dir '" + config.TSConfigDir + "': " + err.Error())
+		}
+	}
+
 	trops := torequest.NewTrafficOpsReq(cfg)
 
 	// if doing os checks, insure there is a 'systemctl' or 'service' and 'chkconfig' commands.
@@ -100,16 +120,16 @@ func main() {
 			if err != nil {
 				log.Errorln(err)
 			}
-			os.Exit(RevalidationError)
+			GitCommitAndExit(RevalidationError, cfg)
 		}
 	} else {
 		syncdsUpdate, err = trops.CheckSyncDSState()
 		if err != nil {
 			log.Errorln(err)
-			os.Exit(SyncDSError)
+			GitCommitAndExit(SyncDSError, cfg)
 		}
 		if cfg.RunMode == config.SyncDS && syncdsUpdate == torequest.UpdateTropsNotNeeded {
-			os.Exit(Success)
+			GitCommitAndExit(Success, cfg)
 		}
 	}
 
@@ -120,14 +140,14 @@ func main() {
 		err = trops.ProcessPackages()
 		if err != nil {
 			log.Errorf("Error processing packages: %s\n", err)
-			os.Exit(PackagingError)
+			GitCommitAndExit(PackagingError, cfg)
 		}
 
 		// check and make sure packages are enabled for startup
 		err = trops.CheckSystemServices()
 		if err != nil {
 			log.Errorf("Error verifying system services: %s\n", err.Error())
-			os.Exit(ServicesError)
+			GitCommitAndExit(ServicesError, cfg)
 		}
 	}
 
@@ -135,7 +155,7 @@ func main() {
 	err = trops.GetConfigFileList()
 	if err != nil {
 		log.Errorf("Unable to continue: %s\n", err)
-		os.Exit(ConfigFilesError)
+		GitCommitAndExit(ConfigFilesError, cfg)
 	}
 	syncdsUpdate, err = trops.ProcessConfigFiles()
 	if err != nil {
@@ -156,7 +176,7 @@ func main() {
 	result := trops.StartServices(&syncdsUpdate)
 	if !result {
 		log.Errorf("failed to start services.\n")
-		os.Exit(ServicesError)
+		GitCommitAndExit(ServicesError, cfg)
 	}
 
 	// start 'teakd' if installed.
@@ -188,4 +208,21 @@ func main() {
 	} else if result {
 		log.Infoln("Traffic Ops has been updated.")
 	}
+
+	GitCommitAndExit(Success, cfg)
+}
+
+// TODO change code to always create git commits, if the dir is a repo
+// We only want --use-git to init the repo. If someone init'd the repo, t3c should _always_ commit.
+// We don't want someone doing manual badass's and not having that log
+
+// GitCommitAndExit attempts to git commit all changes, logs any error, and calls os.Exit with the given code.
+func GitCommitAndExit(exitCode int, cfg config.Cfg) {
+	success := exitCode == Success
+	if cfg.UseGit == config.UseGitYes || cfg.UseGit == config.UseGitAuto {
+		if err := util.MakeGitCommitAll(config.TSConfigDir, util.GitChangeIsSelf, cfg.RunMode, success); err != nil {
+			log.Errorln("git committing existing changes, dir '" + config.TSConfigDir + "': " + err.Error())
+		}
+	}
+	os.Exit(exitCode)
 }

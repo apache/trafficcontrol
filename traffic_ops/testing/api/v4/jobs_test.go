@@ -40,7 +40,7 @@ func TestJobs(t *testing.T) {
 }
 
 func CreateTestJobs(t *testing.T) {
-	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
+	toDSes, _, err := TOSession.GetDeliveryServices(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
 	}
@@ -154,7 +154,7 @@ func JobCollisionWarningTest(t *testing.T) {
 }
 
 func CreateTestInvalidationJobs(t *testing.T) {
-	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
+	toDSes, _, err := TOSession.GetDeliveryServices(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Services: %v - %v", err, toDSes)
 	}
@@ -175,7 +175,7 @@ func CreateTestInvalidationJobs(t *testing.T) {
 }
 
 func CreateTestInvalidJob(t *testing.T) {
-	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
+	toDSes, _, err := TOSession.GetDeliveryServices(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Delivery Services: %v - %v", err, toDSes)
 	}
@@ -216,8 +216,8 @@ func CreateTestInvalidJob(t *testing.T) {
 }
 
 func GetTestJobsQueryParams(t *testing.T) {
-	var xmlId interface{} = "ds2"
-	toJobs, _, err := TOSession.GetInvalidationJobs(&xmlId, nil)
+	var xmlID interface{} = "ds2"
+	toJobs, _, err := TOSession.GetInvalidationJobs(&xmlID, nil)
 	if err != nil {
 		t.Fatalf("error getting jobs: %v", err)
 	}
@@ -242,7 +242,7 @@ func GetTestJobs(t *testing.T) {
 		t.Fatalf("error getting jobs: %v", err)
 	}
 
-	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
+	toDSes, _, err := TOSession.GetDeliveryServices(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
 	}
@@ -291,7 +291,7 @@ func GetTestInvalidationJobs(t *testing.T) {
 		t.Fatalf("error getting invalidation jobs: %v", err)
 	}
 
-	toDSes, _, err := TOSession.GetDeliveryServicesNullable()
+	toDSes, _, err := TOSession.GetDeliveryServices(nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
 	}

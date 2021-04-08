@@ -17,6 +17,7 @@ package orttest
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/testing/ort-tests/util"
 	"os"
@@ -42,7 +43,7 @@ var (
 )
 
 func TestT3cBadassAndSyncDs(t *testing.T) {
-	t.Logf("------------- Starting TestT3cBadassAndSyncDs ---------------")
+	fmt.Println("------------- Starting TestT3cBadassAndSyncDs ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -65,16 +66,31 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 				t.Fatalf("ERROR: missing the expected config file, %s", tfn)
 			}
 
-			result, err := util.DiffFiles(bfn, tfn)
-			if err != nil || !result {
-				t.Fatalf("ERROR: the contents of '%s' does not match those in %s",
-					tfn, bfn)
+			diffStr, err := util.DiffFiles(bfn, tfn)
+			if err != nil {
+				t.Fatalf("diffing %s and %s: %v", tfn, bfn, err)
+			} else if diffStr != "" {
+				t.Errorf("%s and %s differ: %v", tfn, bfn, diffStr)
+			} else {
+				t.Logf("%s and %s diff clean", tfn, bfn)
 			}
 		}
 
 		time.Sleep(time.Second * 5)
 
-		t.Logf("------------------------ running SYNCDS Test ------------------")
+		fmt.Println("------------------------ Verify Plugin Configs ----------------")
+		err = verify_plugin_config("/opt/trafficserver/etc/trafficserver/remap.config")
+		if err != nil {
+			t.Errorf("Plugin verification failed for remap.config")
+		}
+		err = verify_plugin_config("/opt/trafficserver/etc/trafficserver/plugin.config")
+		if err != nil {
+			t.Errorf("Plugin verification failed for plugin.config")
+		}
+
+		fmt.Println("----------------- End of Verify Plugin Configs ----------------")
+
+		fmt.Println("------------------------ running SYNCDS Test ------------------")
 		// remove the remap.config in preparation for running syncds
 		remap := test_config_dir + "/remap.config"
 		err = os.Remove(remap)
@@ -97,10 +113,10 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		if !util.FileExists(remap) {
 			t.Fatalf("ERROR: syncds failed to pull down %s\n", remap)
 		}
-		t.Logf("------------------------ end SYNCDS Test ------------------")
+		fmt.Println("------------------------ end SYNCDS Test ------------------")
 
 	})
-	t.Logf("------------- End of TestT3cBadassAndSyncDs ---------------")
+	fmt.Println("------------- End of TestT3cBadassAndSyncDs ---------------")
 }
 
 func setQueueUpdateStatus(host_name string, update string) error {
@@ -120,6 +136,23 @@ func setQueueUpdateStatus(host_name string, update string) error {
 		"--set-reval-status=false",
 	}
 	cmd := exec.Command("/opt/ort/atstccfg", args...)
+	var out bytes.Buffer
+	var errOut bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errOut
+	err := cmd.Run()
+	if err != nil {
+		return errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+	}
+	return nil
+}
+
+func verify_plugin_config(config_file string) error {
+	args := []string{
+		"--log-location-debug=test.log",
+		config_file,
+	}
+	cmd := exec.Command("/opt/ort/plugin_verifier", args...)
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 	cmd.Stdout = &out

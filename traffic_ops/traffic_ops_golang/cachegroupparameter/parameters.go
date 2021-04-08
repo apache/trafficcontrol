@@ -57,8 +57,8 @@ type TOCacheGroupParameter struct {
 
 func (cgparam *TOCacheGroupParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		CacheGroupIDQueryParam: dbhelpers.WhereColumnInfo{"cgp.cachegroup", api.IsInt},
-		ParameterIDQueryParam:  dbhelpers.WhereColumnInfo{"p.id", api.IsInt},
+		CacheGroupIDQueryParam: dbhelpers.WhereColumnInfo{Column: "cgp.cachegroup", Checker: api.IsInt},
+		ParameterIDQueryParam:  dbhelpers.WhereColumnInfo{Column: "p.id", Checker: api.IsInt},
 	}
 }
 
@@ -235,8 +235,8 @@ func GetAllCacheGroupParameters(tx *sqlx.Tx, parameters map[string]string) (tc.C
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"cachegroup": dbhelpers.WhereColumnInfo{"cgp.cachegroup", api.IsInt},
-		"parameter":  dbhelpers.WhereColumnInfo{"cgp.parameter", api.IsInt},
+		"cachegroup": dbhelpers.WhereColumnInfo{Column: "cgp.cachegroup", Checker: api.IsInt},
+		"parameter":  dbhelpers.WhereColumnInfo{Column: "cgp.parameter", Checker: api.IsInt},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)

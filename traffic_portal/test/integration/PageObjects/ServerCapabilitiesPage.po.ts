@@ -16,34 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ExpectedConditions, ElementFinder, browser, by, element } from 'protractor'
-import { async, delay } from 'q';
+import { ExpectedConditions, browser, by, element } from 'protractor';
+
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
-import {ServersPage} from '../PageObjects/ServersPage.po';
-import { protractor } from 'protractor/built/ptor';
+import { randomize } from '../config';
 
 export class ServerCapabilitiesPage extends BasePage{
-     
+
      private btnCreateServerCapabilities = element(by.name('createServerCapabilityButton'));
      private txtSCName = element(by.id("name"))
-     private btnYesRemoveSC = element(by.buttonText("Yes"))
-     private lblSuccessFailureMessage= element(by.xpath("//div[@class='ng-binding']"))
-     private tblServerCapabilities= element (by.xpath("//table[@id='serverCapabilitiesTable']//tr"))
-     private txtFilterServerCapabilties= element(by.xpath("//div[@id='serverCapabilitiesTable_filter']//input"))
      private searchFilter = element(by.id('serverCapabilitiesTable_filter')).element(by.css('label input'));
-     private serverCapabilitiesName = element(by.id('serverCapabilitiesTable')).element(by.css('tbody tr'));
      private btnDelete = element(by.buttonText('Delete'))
      private txtConfirmCapabilitiesName = element(by.name('confirmWithNameInput'));
-     private btnMore = element(by.name('moreBtn'));
-     private btnManageCapabilities = element(by.linkText('Manage Capabilities'));
-     private btnAddCapabilities = element(by.name('addCapabilityBtn'));
-     private selectCapabilities = element(by.name('selectFormDropdown'));
-     private lnkToggleLeftNavigationView = element(by.id('menu_toggle'));
-     private config = require('../config');
-     private randomize = this.config.randomize;
-     
-  
+     private randomize = randomize;
+
+
      async OpenServerCapabilityPage(){
       let snp = new SideNavigationPage();
       await snp.NavigateToServerCapabilitiesPage();
@@ -52,7 +40,7 @@ export class ServerCapabilitiesPage extends BasePage{
       let snp = new SideNavigationPage();
       await snp.ClickConfigureMenu();
      }
- 
+
       async CreateServerCapabilities(nameSC: string, outputMessage:string){
         let result = false
         let basePage = new BasePage();
@@ -74,12 +62,12 @@ export class ServerCapabilitiesPage extends BasePage{
             result = true;
           }else{
             result = false;
-          } 
+          }
         }
         return result;
       }
 
- 
+
     async SearchServerCapabilities(nameSC:string){
       let name = nameSC+this.randomize;
       await this.searchFilter.clear();
@@ -94,7 +82,6 @@ export class ServerCapabilitiesPage extends BasePage{
      async DeleteServerCapabilities(nameSC:string, outputMessage:string){
       let result = false;
       let basePage = new BasePage();
-      let snp= new SideNavigationPage();
       let name = nameSC+this.randomize;
       await this.btnDelete.click();
       await browser.wait(ExpectedConditions.visibilityOf(this.txtConfirmCapabilitiesName), 1000);

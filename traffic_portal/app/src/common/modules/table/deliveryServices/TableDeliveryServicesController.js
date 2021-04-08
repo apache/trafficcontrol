@@ -533,7 +533,7 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
                                         function() {
                                             var promises = [];
                                             // assign the ds request
-                                            promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.id));
+                                            promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.username));
                                             // set the status to 'complete'
                                             promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'complete'));
                                             // and finally refresh the delivery services table

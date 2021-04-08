@@ -21,10 +21,12 @@ import (
 )
 
 const (
+	// APIStatsSummary is the full path to the /stats_summary API endpoint.
 	APIStatsSummary = "/stats_summary"
 )
 
-// GetSummaryStats gets a list of summary stats with the ability to filter on cdn,deliveryService and/or stat
+// GetSummaryStats gets a list of Summary Stats with the ability to filter on
+// CDN, Delivery Service, and/or stat name.
 func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.StatsSummaryResponse, toclientlib.ReqInf, error) {
 	resp := tc.StatsSummaryResponse{}
 
@@ -47,7 +49,10 @@ func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.S
 	return resp, reqInf, err
 }
 
-// GetSummaryStatsLastUpdated time of the last summary for a given stat
+// GetSummaryStatsLastUpdated gets the time at which Stat Summaries were last
+// updated.
+// If 'statName' isn't nil, the response will be limited to the stat thereby
+// named.
 func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummaryLastUpdatedResponse, toclientlib.ReqInf, error) {
 	resp := tc.StatsSummaryLastUpdatedResponse{}
 
@@ -62,7 +67,7 @@ func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummary
 	return resp, reqInf, err
 }
 
-// CreateSummaryStats creates a stats summary
+// CreateSummaryStats creates the given Stats Summary.
 func (to *Session) CreateSummaryStats(statsSummary tc.StatsSummary) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(APIStatsSummary, statsSummary, nil, &alerts)

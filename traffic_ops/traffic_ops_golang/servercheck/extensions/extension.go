@@ -193,11 +193,11 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":          dbhelpers.WhereColumnInfo{"e.id", api.IsInt},
-		"name":        dbhelpers.WhereColumnInfo{"e.name", nil},
-		"script_file": dbhelpers.WhereColumnInfo{"e.script_file", nil},
-		"isactive":    dbhelpers.WhereColumnInfo{"e.isactive", api.IsBool},
-		"type":        dbhelpers.WhereColumnInfo{"t.name", nil},
+		"id":          dbhelpers.WhereColumnInfo{Column: "e.id", Checker: api.IsInt},
+		"name":        dbhelpers.WhereColumnInfo{Column: "e.name"},
+		"script_file": dbhelpers.WhereColumnInfo{Column: "e.script_file"},
+		"isactive":    dbhelpers.WhereColumnInfo{Column: "e.isactive", Checker: api.IsBool},
+		"type":        dbhelpers.WhereColumnInfo{Column: "t.name"},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToSQLCols)

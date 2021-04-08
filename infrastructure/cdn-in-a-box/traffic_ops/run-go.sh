@@ -99,9 +99,9 @@ chmod -R a+rw "$X509_CA_PERSIST_DIR";
 # Write config files
 . /config.sh;
 
-pg_isready=$(rpm -ql postgresql96 | grep bin/pg_isready);
+pg_isready=$(rpm -ql postgresql13 | grep bin/pg_isready);
 if [[ ! -x $pg_isready ]]; then
-	echo "Can't find pg_ready in postgresql96" >&2;
+	echo "Can't find pg_ready in postgresql13" >&2;
 	echo "PATH: $PATH" >&2;
 	find / -name "*postgresql*";
 	exit 1;
@@ -113,8 +113,6 @@ while ! $pg_isready -h "$DB_SERVER" -p "$DB_PORT" -d "$DB_NAME"; do
 done
 
 cd /opt/traffic_ops/app;
-./db/admin --env=production reset;
-./db/admin --env=production upgrade;
 
 # Add admin user -- all other users should be created using the API
 /adduser.pl "$TO_ADMIN_USER" "$TO_ADMIN_PASSWORD" "admin" "root" | psql -v ON_ERROR_STOP=1 -U "$DB_USER" -h "$DB_SERVER" -d "$DB_NAME";

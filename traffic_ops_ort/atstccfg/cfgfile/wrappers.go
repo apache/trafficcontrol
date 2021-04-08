@@ -90,6 +90,17 @@ func MakeIPAllowDotConfig(toData *config.TOData, fileName string, hdrCommentTxt 
 	)
 }
 
+func MakeIPAllowDotYAML(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+	return atscfg.MakeIPAllowDotYAML(
+		toData.ServerParams,
+		toData.Server,
+		toData.Servers,
+		toData.CacheGroups,
+		toData.Topologies,
+		hdrCommentTxt,
+	)
+}
+
 func MakeLoggingDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
 	return atscfg.MakeLoggingDotConfig(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
@@ -136,7 +147,8 @@ func MakeRecordsDotConfig(toData *config.TOData, fileName string, hdrCommentTxt 
 		toData.ServerParams,
 		hdrCommentTxt,
 		atscfg.RecordsConfigOpts{
-			ReleaseViaStr: cfg.ViaRelease,
+			ReleaseViaStr:           cfg.ViaRelease,
+			DNSLocalBindServiceAddr: cfg.SetDNSLocalBind,
 		},
 	)
 }
@@ -178,25 +190,20 @@ func MakeVolumeDotConfig(toData *config.TOData, fileName string, hdrCommentTxt s
 	return atscfg.MakeVolumeDotConfig(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
 
-func MakeHeaderRewriteMid(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
-	return atscfg.MakeHeaderRewriteMidDotConfig(fileName, toData.DeliveryServices, toData.DeliveryServiceServers, toData.Server, toData.Servers, toData.CacheGroups, hdrCommentTxt)
-}
-
-func MakeTopologyHeaderRewrite(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
-	return atscfg.MakeTopologyHeaderRewriteDotConfig(
+func MakeHeaderRewrite(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+	return atscfg.MakeHeaderRewriteDotConfig(
 		fileName,
+		toData.DeliveryServices,
+		toData.DeliveryServiceServers,
 		toData.Server,
 		toData.Servers,
-		toData.DeliveryServices,
-		toData.Topologies,
+		toData.CacheGroups,
+		toData.ServerParams,
 		toData.ServerCapabilities,
 		toData.DSRequiredCapabilities,
+		toData.Topologies,
 		hdrCommentTxt,
 	)
-}
-
-func MakeHeaderRewrite(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
-	return atscfg.MakeHeaderRewriteDotConfig(fileName, toData.DeliveryServices, toData.DeliveryServiceServers, toData.Server, toData.Servers, hdrCommentTxt)
 }
 
 func MakeRegexRemap(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {

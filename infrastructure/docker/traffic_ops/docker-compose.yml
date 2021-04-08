@@ -39,14 +39,17 @@ volumes:
 
 services:
   db:
-    image: postgres:9.6.6
+    image: postgres:13.2
+    environment:
+      POSTGRES_PASSWORD: secretrootpass
     ports: 
       - "5432:5432"
 
   db_init:
     environment:
-      POSTGRES_HOME: /usr/pgsql-9.6
+      POSTGRES_HOME: /usr/pgsql-13
       PGPASSWORD: secretrootpass
+      POSTGRES_PASSWORD: secretrootpass
       DB_USERNAME: traffic_ops
       DB_NAME: traffic_ops
       DB_USER_PASS: twelve

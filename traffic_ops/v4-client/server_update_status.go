@@ -25,9 +25,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-// UpdateServerStatus updates a server's status and returns the response.
+// UpdateServerStatus updates the Status of the server identified by
+// 'serverID'.
 func (to *Session) UpdateServerStatus(serverID int, req tc.ServerPutStatus) (*tc.Alerts, toclientlib.ReqInf, error) {
-	path := fmt.Sprintf("/servers/%d/status", serverID)
+	path := fmt.Sprintf("servers/%d/status", serverID)
 	alerts := tc.Alerts{}
 	reqInf, err := to.put(path, req, nil, &alerts)
 	if err != nil {
@@ -41,7 +42,9 @@ var queueUpdateActions = map[bool]string{
 	true:  "queue",
 }
 
-// SetServerQueueUpdate updates a server's status and returns the response.
+// SetServerQueueUpdate set the "updPending" field of th eserver identified by
+// 'serverID' to the value of 'queueUpdate - and properly queues updates on
+// parents/children as necessary.
 func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool) (tc.ServerQueueUpdateResponse, toclientlib.ReqInf, error) {
 	req := tc.ServerQueueUpdateRequest{Action: queueUpdateActions[queueUpdate]}
 	resp := tc.ServerQueueUpdateResponse{}
@@ -50,8 +53,9 @@ func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool) (tc.Serv
 	return resp, reqInf, err
 }
 
-// UpdateServerStatus updates a server's queue status and/or reval status.
-// Either updateStatus or revalStatus may be nil, in which case that status isn't updated (but not both, because that wouldn't do anything).
+// SetUpdateServerStatuses updates a server's queue status and/or reval status.
+// Either updateStatus or revalStatus may be nil, in which case that status
+// isn't updated (but not both, because that wouldn't do anything).
 func (to *Session) SetUpdateServerStatuses(serverName string, updateStatus *bool, revalStatus *bool) (toclientlib.ReqInf, error) {
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
 	if updateStatus == nil && revalStatus == nil {

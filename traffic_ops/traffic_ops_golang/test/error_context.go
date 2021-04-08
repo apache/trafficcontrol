@@ -76,7 +76,7 @@ func (e errorImpl) Prepend(fmtStr string, fmtArgs ...interface{}) Error {
 // Cause returns the original error made, without extra context. It implements
 // the causer interface defined in the errors package.
 // see:
-//  https://godoc.org/github.com/pkg/errors#Cause
+//  https://pkg.go.dev/github.com/pkg/errors#Cause
 func (e errorImpl) Cause() error {
 	return e.cause
 }

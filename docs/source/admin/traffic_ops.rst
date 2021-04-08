@@ -46,20 +46,20 @@ Guide
 
 		yum update -y
 		yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-		yum install -y postgresql96-server
-		su - postgres -c '/usr/pgsql-9.6/bin/initdb -A md5 -W' #-W forces the user to provide a superuser (postgres) password
+		yum install -y postgresql13-server
+		su - postgres -c '/usr/pgsql-13/bin/initdb -A md5 -W' #-W forces the user to provide a superuser (postgres) password
 
 
-#. Edit :file:`/var/lib/pgsql/9.6/data/pg_hba.conf` to allow the Traffic Ops instance to access the PostgreSQL server. For example, if the IP address of the machine to be used as the Traffic Ops host is ``192.0.2.1`` add the line ``host  all   all     192.0.2.1/32 md5`` to the appropriate section of this file.
+#. Edit :file:`/var/lib/pgsql/13/data/pg_hba.conf` to allow the Traffic Ops instance to access the PostgreSQL server. For example, if the IP address of the machine to be used as the Traffic Ops host is ``192.0.2.1`` add the line ``host  all   all     192.0.2.1/32 md5`` to the appropriate section of this file.
 
-#. Edit the :file:`/var/lib/pgsql/9.6/data/postgresql.conf` file to add the appropriate listen_addresses or ``listen_addresses = '*'``, set ``timezone = 'UTC'``, and start the database
+#. Edit the :file:`/var/lib/pgsql/13/data/postgresql.conf` file to add the appropriate listen_addresses or ``listen_addresses = '*'``, set ``timezone = 'UTC'``, and start the database
 
 	.. code-block:: shell
 		:caption: Starting PostgreSQL with :manpage:`systemd(1)`
 
-		systemctl enable postgresql-9.6
-		systemctl start postgresql-9.6
-		systemctl status postgresql-9.6 # Prints the status of the PostgreSQL service, to prove it's running
+		systemctl enable postgresql-13
+		systemctl start postgresql-13
+		systemctl status postgresql-13 # Prints the status of the PostgreSQL service, to prove it's running
 
 
 #. Build a :file:`traffic_ops-{version string}.rpm` file using the instructions under the :ref:`dev-building` page - or download a pre-built release from `the Apache Continuous Integration server <https://builds.apache.org/view/S-Z/view/TrafficControl/>`_.
@@ -87,7 +87,7 @@ Guide
 
 		to-# psql -h pg -U postgres
 		Password for user postgres:
-		psql (9.6.3)
+		psql (13.2)
 		Type "help" for help.
 
 		postgres=#
@@ -105,7 +105,7 @@ Guide
 		Password:
 		to-#
 
-#. Now, run the following command as the root user (or with :manpage:`sudo(8)`): :file:`/opt/traffic_ops/install/bin/postinstall`. The :program:`postinstall` script will first get all required Perl packages from :abbr:`CPAN (The Comprehensive Perl Archive Network)`. This may take a while, expect up to 30 minutes on the first install. If there are any prompts in this phase, please just answer with the defaults (some :abbr:`CPAN (The Comprehensive Perl Archive Network)` installs can prompt for install questions). When this phase is complete, you will see ``Complete! Modules were installed into /opt/traffic_ops/app/local``. Some additional files will be installed, and then it will proceed with the next phase of the install, where it will ask you about the local environment for your CDN. Please make sure you remember all your answers and verify that the database answers match the information previously used to create the database.
+#. Now, run the following command as the root user (or with :manpage:`sudo(8)`): :file:`/opt/traffic_ops/install/bin/postinstall`. Some additional files will be installed, and then it will proceed with the next phase of the install, where it will ask you about the local environment for your CDN. Please make sure you remember all your answers and verify that the database answers match the information previously used to create the database.
 
 	.. code-block:: console
 		:caption: Example Output
@@ -214,7 +214,17 @@ Guide
 		| Password for the admin user                        | The password for the administrative Traffic Ops user.                                          |
 		+----------------------------------------------------+------------------------------------------------------------------------------------------------+
 
-.. note:: A Python postinstall script also exists, and, unlike the Perl postinstall script, has no dependencies besides the interpreter itself. To use it, run ``/opt/traffic_ops/install/bin/postinstall.py`` with the same arguments you would have passed to ``/opt/traffic_ops/install/bin/postinstall`` (runs under either Python 3 or Python 2).
+.. deprecated:: ATCv6
+	The postinstall script is now written in Python. If you run into issues with the postinstall script, you are encouraged to file an issue at https://github.com/apache/trafficcontrol/issues/new/choose. The original Perl postinstall script is deprecated and will be removed in a future ATC release. To use the deprecated version anyway, run ``/opt/traffic_ops/install/bin/_postinstall.pl`` directly instead of ``/opt/traffic_ops/install/bin/postinstall``.
+
+The postinstall script can also be run non-interactively using :atc-file:`traffic_ops/install/bin/input.json`. To use it, first change the values to match your environment, then pass it to the ``postinstall`` script:
+	.. code-block:: console
+		:caption: Postinstall in Automatic (-a) mode
+
+		/opt/traffic_ops/install/bin/postinstall -a --cfile /opt/traffic_ops/install/bin/input.json
+
+.. deprecated:: ATCv6
+	Once the Perl script is removed, the values in ``input.json`` for the ``"hidden"`` properties will be changed from ``"1"`` and ``"0"`` to ``true`` and ``false``.
 
 .. _to-upgrading:
 
@@ -237,6 +247,11 @@ To upgrade from older Traffic Ops versions, stop the service, use :manpage:`yum(
 
 After this completes, see Guide_ for instructions on running the :program:`postinstall` script. Once the :program:`postinstall` script, has finished, run the following command as the root user (or with :manpage:`sudo(8)`): ``systemctl start traffic_ops`` to start the service.
 
+Upgrading to 6.0
+----------------
+
+As of Apache Traffic Control 6.0, Traffic Ops supports PostgreSQL version 13.2. In order to migrate from the prior PostgreSQL version 9.6, it is recommended to use the `pg_upgrade <https://www.postgresql.org/docs/13/pgupgrade.html>`_ tool.
+
 .. _to-running:
 
 Running
@@ -247,7 +262,7 @@ While this section contains instructions for running Traffic Ops manually, the o
 
 traffic_ops_golang
 ------------------
-``traffic_ops_golang [--version] [--plugins] [--api-routes] --cfg CONFIG_PATH --dbcfg DB_CONFIG_PATH --riakcfg TRAFFIC_VAULT_CONFIG_PATH``
+``traffic_ops_golang [--version] [--plugins] [--api-routes] --cfg CONFIG_PATH --dbcfg DB_CONFIG_PATH [--riakcfg RIAK_CONFIG_PATH]``
 
 .. option:: --cfg CONFIG_PATH
 
@@ -265,9 +280,10 @@ traffic_ops_golang
 
 	Print information about all API routes and exit. If also used with the :option:`--cfg` option, also print out the configured routing blacklist information from `cdn.conf`_.
 
-.. option:: --riakcfg TRAFFIC_VAULT_CONFIG_PATH
+.. option:: --riakcfg RIAK_CONFIG_PATH
 
-	This **mandatory** command line flag specifies the absolute or relative path to a configuration file used by Traffic Ops to establish connections to Traffic Vault - `riak.conf`_
+	.. deprecated:: 6.0
+		This optional command line flag specifies the absolute or relative path to a configuration file used by Traffic Ops to establish connections to Riak when used as the Traffic Vault backend - `riak.conf`_. Please use ``"traffic_vault_backend": "riak"`` and ``"traffic_vault_config": {...}`` (with the contents of `riak.conf`_) instead.
 
 	.. impl-detail:: The name of this flag is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
 
@@ -357,12 +373,6 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:pass_reset_path: A path to be added to ``base_url`` that is the URL of the UI's password reset interface. For Traffic Portal instances, this should always be set to "user".
 	:user_register_path: A path to be added to ``base_url`` that is the URL of the UI's new user registration interface. For Traffic Portal instances, this should always be set to "user".
 
-:riak_conf_path: An optional absolute or relative path to `riak.conf`_. If this field is not defined, is ``null``, or is an empty string (``""``), Traffic Ops will not be able to connect to Traffic Vault.
-
-	.. caution:: If Traffic Ops is unable to connect to Traffic Vault, many of its core features will not function. In particular, it will be impossible to create :term:`Delivery Services` that use HTTPS or DNSSEC.
-
-	.. impl-detail:: The name of this field is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
-
 :secrets: This is an array of strings, which cannot be empty. The first secret in the array is used to encrypt Traffic Ops authentication cookies - multiple Traffic Ops instances serving the same CDN need to share secrets in order for users logged into one to be able to use their cookie as authentication with other instances.
 :smtp:    This optional section contains options for connecting to and authenticating with an :abbr:`SMTP (Simple Mail Transfer Protocol)` server for sending emails. If this section is undefined (or if ``enabled`` is explicitly ``false``), Traffic Ops will not be able to send emails and certain :ref:`to-api` endpoints that depend on that functionality will fail to operate.
 
@@ -394,9 +404,9 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 		.. deprecated:: 3.0
 			Future versions of Traffic Ops will not support this legacy configuration option, and will always use the global "tm.url" :term:`Parameter`.
 
-	:db_conn_max_lifetime_seconds: An optional field that sets the maximum lifetime in seconds of any given connection to the Traffic Ops Database. If set to zero, connections are held open until explicitly closed. Default if not specified is the value of `DBConnMaxLifetimeSecondsDefault <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config#pkg-constants>`_.
-	:db_max_idle_connections: An optional limit on the number of connections to the Traffic Ops Database to keep alive while idle. If this is less than ``max_db_connections``, that number will be used instead - *even if this field is unset and using its default*. Default if not specified is the value of `DBMaxIdleConnectionsDefault <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config#pkg-constants>`_.
-	:db_query_timeout_seconds: An optional field specifying a timeout on database *transactions* (not actually single queries in most cases) within API route handlers. Effectively this is a timeout on a single handler's ability to interact with the Traffic Ops Database. Default if not specified is the value of `DefaultDBQueryTimeoutSecs <https://godoc.org/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config#pkg-constants>`_.
+	:db_conn_max_lifetime_seconds: An optional field that sets the maximum lifetime in seconds of any given connection to the Traffic Ops Database. If set to zero, connections are held open until explicitly closed. Default if not specified is the value of `DBConnMaxLifetimeSecondsDefault <https://pkg.go.dev/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config#pkg-constants>`_.
+	:db_max_idle_connections: An optional limit on the number of connections to the Traffic Ops Database to keep alive while idle. If this is less than ``max_db_connections``, that number will be used instead - *even if this field is unset and using its default*. Default if not specified is the value of `DBMaxIdleConnectionsDefault <https://pkg.go.dev/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config#pkg-constants>`_.
+	:db_query_timeout_seconds: An optional field specifying a timeout on database *transactions* (not actually single queries in most cases) within API route handlers. Effectively this is a timeout on a single handler's ability to interact with the Traffic Ops Database. Default if not specified is the value of `DefaultDBQueryTimeoutSecs <https://pkg.go.dev/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config#pkg-constants>`_.
 	:idle_timeout: An optional timeout in seconds for idle client connections to Traffic Ops. If set to zero, the value of ``read_timeout`` will be used instead. If both are zero, then the value of ``read_header_timeout`` will be used. If all three fields are zero, there is no timeout and connections will be kept alive indefinitely - **not** recommended. Default if not specified is zero.
 	:insecure: An optional boolean which, if set to ``true`` will cause Traffic Ops to skip verification of client certificates whenever necessary/possible. If set to ``false``, the normal verification behavior is exhibited. Default if not specified is ``false``.
 
@@ -428,6 +438,9 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:request_timeout: An optional timeout in seconds that serves as the maximum time each Traffic Ops middleware can take to execute. If it is exceeded, the text "server timed out" is served in place of a response. If set to :code:`0`, :code:`60` is used instead. Default if not specified is :code:`60`.
 	:riak_port: An optional field that sets the port on which Traffic Ops will try to contact Traffic Vault for storage and retrieval of sensitive encryption keys.
 
+		.. deprecated:: 6.0
+			Please use a ``"port"`` field in ``traffic_vault_config`` instead when using ``"traffic_vault_backend": "riak"``.
+
 		.. impl-detail:: The name of this field is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
 
 
@@ -436,6 +449,16 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 		.. warning:: OAuth support in Traffic Ops is still in its infancy, so most users are advised to avoid defining this field without good cause.
 
 	:write_timeout: An optional timeout in seconds set on handlers. After reading a request's header, the server will have this long to send back a response. If set to zero, there is no timeout. Default if not specified is zero.
+
+	:traffic_vault_backend:
+
+	    .. versionadded:: 6.0
+		    Optional. The name of which backend to use for Traffic Vault. Currently, the only supported backend is "riak".
+
+	:traffic_vault_config:
+
+	    .. versionadded:: 6.0
+		    Optional. The JSON configuration which is unique to the chosen Traffic Vault backend. See :ref:`traffic_vault_admin` for the configuration options for each supported backend.
 
 	.. _admin-routing-blacklist:
 
@@ -529,21 +552,12 @@ Example ldap.conf
 
 riak.conf
 """""""""
-This file sets authentication options for connections to Traffic Vault. `traffic_ops_golang`_ will look for this file at the path given by the value of the :option:`--riakcfg` flag as passed on startup. The contents of ``riak.conf`` are encoded as a JSON object, the keys of which are described below.
+.. deprecated:: 6.0
+	The ``riak.conf`` configuration file and associated :option:`--riakcfg` flag have been deprecated and will be removed from Traffic Control in the future. Please use ``"traffic_vault_backend": "riak"`` and put the existing contents of ``riak.conf`` into ``"traffic_vault_config": {...}`` in `cdn.conf`_ instead.
+
+This file sets authentication options for connections to Riak when used as the Traffic Vault backend. `traffic_ops_golang`_ will look for this file at the path given by the value of the :option:`--riakcfg` flag as passed on startup. The contents of ``riak.conf`` are encoded as a JSON object, the keys of which are described in :ref:`traffic_vault_riak_backend`.
 
 .. impl-detail:: The name of this file is derived from the current database used in the implementation of Traffic Vault - `Riak KV <https://riak.com/products/riak-kv/index.html>`_.
-
-:password:      The password to use when authenticating with Traffic Vault
-:user:          The username to use when authenticating with Traffic Vault
-:MaxTLSVersion: Optional. This is the highest TLS version that Traffic Ops is allowed to use to connect to Traffic Vault. Valid values are "1.0", "1.1", "1.2", and "1.3". The default is "1.1".
-
-.. note:: Enabling TLS 1.1 in Traffic Vault itself is required for Traffic Ops to communicate with Traffic Vault. See :ref:`Enabling TLS 1.1 <tv-admin-enable-tlsv1.1>` for details.
-
-Example riak.conf
-'''''''''''''''''
-.. include:: ../../../traffic_ops/app/conf/production/riak.conf
-	:code: json
-	:tab-width: 4
 
 Installing the SSL Certificate
 ------------------------------

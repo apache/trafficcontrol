@@ -27,9 +27,8 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 )
 
 // GenerateSSLKeys generates a new private key, certificate signing request and
@@ -42,6 +41,11 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
+
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateSSLKeys: Traffic Vault is not configured"))
+		return
+	}
 
 	req := tc.DeliveryServiceGenSSLKeysReq{}
 	if err := api.Parse(r.Body, inf.Tx.Tx, &req); err != nil {
@@ -60,7 +64,7 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+*req.DeliveryService), nil)
 		return
 	}
-	if err := generatePutRiakKeys(req, inf.Tx.Tx, inf.Config); err != nil {
+	if err := generatePutRiakKeys(req, inf.Tx.Tx, inf.Vault); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and putting SSL keys: "+err.Error()))
 		return
 	}
@@ -74,7 +78,7 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 
 // generatePutRiakKeys generates a certificate, csr, and key from the given request, and insert it into the Riak key database.
 // The req MUST be validated, ensuring required fields exist.
-func generatePutRiakKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql.Tx, cfg *config.Config) error {
+func generatePutRiakKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql.Tx, tv trafficvault.TrafficVault) error {
 	dsSSLKeys := tc.DeliveryServiceSSLKeys{
 		CDN:             *req.CDN,
 		DeliveryService: *req.DeliveryService,
@@ -95,8 +99,8 @@ func generatePutRiakKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql.Tx, cfg *c
 
 	dsSSLKeys.AuthType = tc.SelfSignedCertAuthType
 
-	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
-		return errors.New("putting riak keys: " + err.Error())
+	if err := tv.PutDeliveryServiceSSLKeys(dsSSLKeys, tx); err != nil {
+		return errors.New("putting keys in Traffic Vault: " + err.Error())
 	}
 	return nil
 }

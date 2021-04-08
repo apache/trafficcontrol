@@ -253,6 +253,60 @@
                     ]
                 }
             ]
+        },
+        {
+            "Action": "CreateCDN",
+            "Route": "/cdns",
+            "Method": "post",
+            "Data": [
+                {
+                    "name": "dummycdn",
+                    "domainName": "cdnp3",
+                    "dnssecEnabled": false
+                }
+            ]
+        },
+        {
+            "Action": "CreateCacheGroups",
+            "Route": "/cachegroups",
+            "Method": "post",
+            "Data": [
+                {
+                    "name": "testCG",
+                    "shortName": "tCG",
+                    "latitude": 0,
+                    "longitude": 0,
+                    "fallbackToClosest": true,
+                    "localizationMethods": [
+                        "DEEP_CZ",
+                        "CZ",
+                        "GEO"
+                    ],
+                    "typeId": 23
+                }
+            ]
+        },
+        {
+            "Action": "CreateProfile",
+            "Route": "/profiles",
+            "Method": "post",
+            "Data": [
+                {
+                    "name": "testProfile",
+                    "description": "A test profile for API examples",
+                    "cdn": 0,
+                    "type": "ATS_PROFILE",
+                    "routingDisabled": false,
+                    "getRequest": [
+                        {
+                            "route": "/cdns",
+                            "queryKey": "name",
+                            "queryValue": "dummycdn",
+                            "replace": "cdn"
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }

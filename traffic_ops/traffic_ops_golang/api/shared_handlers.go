@@ -36,10 +36,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const PathParamsKey = "pathParams"
-const DBKey = "db"
-const ConfigKey = "cfg"
-
 type KeyFieldInfo struct {
 	Field string
 	Func  func(string) (interface{}, error)
@@ -179,8 +175,7 @@ func ReadHandler(reader Reader) http.HandlerFunc {
 			return
 		}
 		if maxTime != nil && SetLastModifiedHeader(r, useIMS) {
-			// RFC1123
-			date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
+			date := maxTime.Format(rfc.LastModifiedFormat)
 			w.Header().Add(rfc.LastModified, date)
 		}
 		w.WriteHeader(errCode)

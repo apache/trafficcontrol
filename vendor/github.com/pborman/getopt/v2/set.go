@@ -46,6 +46,7 @@ type Set struct {
 	shortOptions map[rune]*option
 	longOptions  map[string]*option
 	options      optionList
+	requiredGroups []string
 }
 
 // New returns a newly created option set.
@@ -290,4 +291,19 @@ func (s *Set) Reset() {
 	for _, opt := range s.options {
 		opt.Reset()
 	}
+}
+
+// RequiredGroup marks the group set with Option.SetGroup as required.  At least
+// one option in the group must be seen by parse.  Calling RequiredGroup with a
+// group name that has no options will cause parsing to always fail.
+func (s *Set) RequiredGroup(group string) {
+	s.requiredGroups = append(s.requiredGroups, group)
+}
+
+// RequiredGroup marks the group set with Option.SetGroup as required on the
+// command line.  At least one option in the group must be seen by parse.
+// Calling RequiredGroup with a group name that has no options will cause
+// parsing to always fail.
+func RequiredGroup(group string) {
+	CommandLine.requiredGroups = append(CommandLine.requiredGroups, group)
 }

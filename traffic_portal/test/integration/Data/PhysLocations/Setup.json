@@ -77,8 +77,8 @@
             "Method": "post",
             "Data": [
                 {
-                    "cachegroupId": 8,
-                    "cdnId": 2,
+                    "cachegroupId": 0,
+                    "cdnId": 0,
                     "domainName": "test.net",
                     "hostName": "PhysTest",
                     "httpsPort": 443,
@@ -113,8 +113,8 @@
                     "mgmtIpGateway": "",
                     "mgmtIpNetmask": "",
                     "offlineReason": "",
-                    "physLocationId": 2,
-                    "profileId": 9,
+                    "physLocationId": 0,
+                    "profileId": 0,
                     "routerHostName": "",
                     "routerPortName": "",
                     "statusId": 3,
@@ -127,6 +127,24 @@
                             "queryKey": "name",
                             "queryValue": "TPPhysLocation2",
                             "replace": "physLocationId"
+                        },
+                        {
+                            "route": "/cdns",
+                            "queryKey": "name",
+                            "queryValue": "dummycdn",
+                            "replace": "cdnId"
+                        },
+                        {
+                            "route": "/cachegroups",
+                            "queryKey": "name",
+                            "queryValue": "testCG",
+                            "replace": "cachegroupId"
+                        },
+                        {
+                            "route": "/profiles",
+                            "queryKey": "name",
+                            "queryValue": "testProfile",
+                            "replace": "profileId"
                         }
                     ]
                 }

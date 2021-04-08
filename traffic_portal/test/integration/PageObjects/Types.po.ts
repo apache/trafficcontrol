@@ -16,10 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ElementFinder, browser, by, element } from 'protractor'
-import { async, delay } from 'q';
+import { browser, by, element } from 'protractor';
+
+import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
+
 export class TypesPage extends BasePage {
     private btnCreateNewType = element(by.xpath("//button[@title='Create Type']//i[1]"));
     private txtName = element(by.id('name'));
@@ -27,8 +29,8 @@ export class TypesPage extends BasePage {
     private txtSearch = element(by.id('typesTable_filter')).element(by.css('label input'));
     private btnDelete = element(by.buttonText('Delete'));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private config = require('../config');
-    private randomize = this.config.randomize;
+    private randomize = randomize;
+
     async OpenTypesPage() {
         let snp = new SideNavigationPage();
         await snp.NavigateToTypesPage();
@@ -53,8 +55,7 @@ export class TypesPage extends BasePage {
         })
         return result;
     }
-    async SearchType(nameTypes: string) {
-        let result = false;
+    public async SearchType(nameTypes: string): Promise<boolean> {
         let snp = new SideNavigationPage();
         let name = nameTypes + this.randomize;
         await snp.NavigateToTypesPage();
@@ -62,14 +63,11 @@ export class TypesPage extends BasePage {
         await this.txtSearch.sendKeys(name);
         if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
             await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-            result = true;
-        } else {
-            result = undefined;
+            return true;
         }
-        return result;
+        return false;
     }
-    async UpdateType(type) {
-        let result = false;
+    public async UpdateType(type): Promise<boolean | undefined> {
         let basePage = new BasePage();
         switch (type.description) {
             case "update description type":
@@ -78,16 +76,9 @@ export class TypesPage extends BasePage {
                 await basePage.ClickUpdate();
                 break;
             default:
-                result = undefined;
+                return undefined;
         }
-        result = await basePage.GetOutputMessage().then(function (value) {
-            if (type.validationMessage == value) {
-                return true;
-            } else {
-                return false;
-            }
-        })
-        return result;
+        return await basePage.GetOutputMessage().then(value => type.validationMessage === value);
     }
     async DeleteTypes(type) {
         let name = type.Name + this.randomize;
