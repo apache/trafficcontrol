@@ -36,10 +36,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const PathParamsKey = "pathParams"
-const DBKey = "db"
-const ConfigKey = "cfg"
-
 type KeyFieldInfo struct {
 	Field string
 	Func  func(string) (interface{}, error)

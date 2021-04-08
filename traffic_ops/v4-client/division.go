@@ -25,69 +25,51 @@ import (
 )
 
 const (
+	// APIDivisions is the API version-relative path to the /divisions API route.
 	APIDivisions = "/divisions"
 )
 
-// Create a Division
+// CreateDivision creates the given Division.
 func (to *Session) CreateDivision(division tc.Division) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(APIDivisions, division, nil, &alerts)
 	return alerts, reqInf, err
 }
 
-func (to *Session) UpdateDivisionByIDWithHdr(id int, division tc.Division, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+// UpdateDivision replaces the Division identified by 'id' with the one
+// provided.
+func (to *Session) UpdateDivision(id int, division tc.Division, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", APIDivisions, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, division, header, &alerts)
 	return alerts, reqInf, err
 }
 
-// Update a Division by ID
-// Deprecated: UpdateDivisionByID will be removed in 6.0. Use UpdateDivisionByIDWithHdr.
-func (to *Session) UpdateDivisionByID(id int, division tc.Division) (tc.Alerts, toclientlib.ReqInf, error) {
-	return to.UpdateDivisionByIDWithHdr(id, division, nil)
-}
-
-func (to *Session) GetDivisionsWithHdr(header http.Header) ([]tc.Division, toclientlib.ReqInf, error) {
+// GetDivisions returns all Divisions in Traffic Ops.
+func (to *Session) GetDivisions(header http.Header) ([]tc.Division, toclientlib.ReqInf, error) {
 	var data tc.DivisionsResponse
 	reqInf, err := to.get(APIDivisions, header, &data)
 	return data.Response, reqInf, err
 }
 
-// Returns a list of Divisions
-// Deprecated: GetDivisions will be removed in 6.0. Use GetDivisionsWithHdr.
-func (to *Session) GetDivisions() ([]tc.Division, toclientlib.ReqInf, error) {
-	return to.GetDivisionsWithHdr(nil)
-}
-
-func (to *Session) GetDivisionByIDWithHdr(id int, header http.Header) ([]tc.Division, toclientlib.ReqInf, error) {
+// GetDivisionByID retrieves the Division with the given ID.
+func (to *Session) GetDivisionByID(id int, header http.Header) ([]tc.Division, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", APIDivisions, id)
 	var data tc.DivisionsResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GET a Division by the Division id
-// Deprecated: GetDivisionByID will be removed in 6.0. Use GetDivisionByIDWithHdr.
-func (to *Session) GetDivisionByID(id int) ([]tc.Division, toclientlib.ReqInf, error) {
-	return to.GetDivisionByIDWithHdr(id, nil)
-}
-
-func (to *Session) GetDivisionByNameWithHdr(name string, header http.Header) ([]tc.Division, toclientlib.ReqInf, error) {
+// GetDivisionByName retrieves the Division with the given Name.
+func (to *Session) GetDivisionByName(name string, header http.Header) ([]tc.Division, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?name=%s", APIDivisions, url.QueryEscape(name))
 	var data tc.DivisionsResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GET a Division by the Division name
-// Deprecated: GetDivisionByName will be removed in 6.0. Use GetDivisionByNameWithHdr.
-func (to *Session) GetDivisionByName(name string) ([]tc.Division, toclientlib.ReqInf, error) {
-	return to.GetDivisionByNameWithHdr(name, nil)
-}
-
-// DELETE a Division by Division id
-func (to *Session) DeleteDivisionByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
+// DeleteDivision deletes the Division identified by 'id'.
+func (to *Session) DeleteDivision(id int) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", APIDivisions, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)

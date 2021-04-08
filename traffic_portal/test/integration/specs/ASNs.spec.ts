@@ -39,8 +39,7 @@ let asnsPage = new ASNsPage();
 describe('Setup API for ASNs Test', function(){
     it('Setup', async function(){
         let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        let output = await api.UseAPI(setupData);
-        expect(output).toBeNull();
+        await api.UseAPI(setupData);
     })
 })
 
@@ -87,7 +86,6 @@ using(testData.ASNs, async function(asnsData){
 describe('Clean Up API for ASNs Test', function () {
     it('Cleanup', async function () {
         let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        let output = await api.UseAPI(cleanupData);
-        expect(output).toBeNull();
+        await api.UseAPI(cleanupData);
     })
 })

@@ -46,7 +46,7 @@ func GetTestFederationsIMS(t *testing.T) {
 		t.Error("no federations test data")
 	}
 
-	_, reqInf, err := TOSession.AllFederationsWithHdr(header)
+	_, reqInf, err := TOSession.AllFederations(header)
 	if err != nil {
 		t.Fatalf("No error expected, but got: %v", err)
 	}
@@ -60,7 +60,7 @@ func GetTestFederations(t *testing.T) {
 		t.Error("no federations test data")
 	}
 
-	feds, _, err := TOSession.AllFederations()
+	feds, _, err := TOSession.AllFederations(nil)
 	if err != nil {
 		t.Errorf("getting federations: " + err.Error())
 	}
@@ -105,13 +105,13 @@ func GetTestFederations(t *testing.T) {
 	}
 }
 
-func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryServiceNullable, tc.DeliveryServiceNullable, error) {
-	dses, _, err := TOSession.GetDeliveryServicesNullable()
+func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryServiceV4, tc.DeliveryServiceV4, error) {
+	dses, _, err := TOSession.GetDeliveryServices(nil, nil)
 	if err != nil {
-		return -1, tc.DeliveryServiceNullable{}, tc.DeliveryServiceNullable{}, fmt.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
+		return -1, tc.DeliveryServiceV4{}, tc.DeliveryServiceV4{}, fmt.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 	if len(dses) == 0 {
-		return -1, tc.DeliveryServiceNullable{}, tc.DeliveryServiceNullable{}, errors.New("no delivery services, must have at least 1 ds to test federations deliveryservices")
+		return -1, tc.DeliveryServiceV4{}, tc.DeliveryServiceV4{}, errors.New("no delivery services, must have at least 1 ds to test federations deliveryservices")
 	}
 	ds := dses[0]
 	ds1 := dses[1]
@@ -137,7 +137,7 @@ func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 	}
 
 	// Test get created Federation Delivery Services
-	fedDSes, _, err := TOSession.GetFederationDeliveryServices(fedID)
+	fedDSes, _, err := TOSession.GetFederationDeliveryServices(fedID, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Federation DeliveryServices: %v", err)
 	}
@@ -154,7 +154,7 @@ func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 	// Make sure it is deleted
 
 	// Test get created Federation Delivery Services
-	fedDSes, _, err = TOSession.GetFederationDeliveryServices(fedID)
+	fedDSes, _, err = TOSession.GetFederationDeliveryServices(fedID, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Federation DeliveryServices: %v", err)
 	}
@@ -202,7 +202,7 @@ func AddFederationResolversForCurrentUserTest(t *testing.T) {
 	}
 
 	// need to assign myself the federation to set its mappings
-	me, _, err := TOSession.GetUserCurrent()
+	me, _, err := TOSession.GetUserCurrent(nil)
 	if err != nil {
 		t.Fatalf("Couldn't figure out who I am: %v", err)
 	}

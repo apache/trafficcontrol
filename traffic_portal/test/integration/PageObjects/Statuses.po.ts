@@ -18,7 +18,7 @@
  */
 import { browser, by, element } from 'protractor';
 
-import { config, randomize } from '../config';
+import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -29,7 +29,6 @@ export class StatusesPage extends BasePage {
     private txtSearch = element(by.id('statusesTable_filter')).element(by.css('label input'));
     private btnDelete = element(by.buttonText('Delete'));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private config = config;
     private randomize = randomize;
 
     async OpenStatusesPage() {
@@ -56,8 +55,7 @@ export class StatusesPage extends BasePage {
         })
         return result;
     }
-    async SearchStatus(nameStatus: string) {
-        let result = false;
+    public async SearchStatus(nameStatus: string): Promise<boolean> {
         let snp = new SideNavigationPage();
         let name = nameStatus + this.randomize;
         await snp.NavigateToStatusesPage();
@@ -65,14 +63,11 @@ export class StatusesPage extends BasePage {
         await this.txtSearch.sendKeys(name);
         if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
             await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-            result = true;
-        } else {
-            result = undefined;
+            return true;
         }
-        return result;
+        return false;
     }
-    async UpdateStatus(status) {
-        let result = false;
+    public async UpdateStatus(status): Promise<boolean | undefined> {
         let basePage = new BasePage();
         switch (status.description) {
             case "update Status description":
@@ -81,16 +76,9 @@ export class StatusesPage extends BasePage {
                 await basePage.ClickUpdate();
                 break;
             default:
-                result = undefined;
+                return undefined;
         }
-        result = await basePage.GetOutputMessage().then(function (value) {
-            if (status.validationMessage == value) {
-                return true;
-            } else {
-                return false;
-            }
-        })
-        return result;
+        return await basePage.GetOutputMessage().then(value => status.validationMessage === value);
     }
     async DeleteStatus(status) {
         let name = status.Name + this.randomize;

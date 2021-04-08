@@ -39,8 +39,7 @@ let testData = JSON.parse(readFileSync(filename, "utf8"));
 describe('Setup API for physlocation test', function () {
     it('Setup', async function () {
         let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        let output = await api.UseAPI(setupData);
-        expect(output).toBeNull();
+        await api.UseAPI(setupData);
     })
 })
 
@@ -88,7 +87,6 @@ using(testData.PhysLocations, async function(physlocationsData){
 describe('Clean up API for physlocation test', function () {
     it('Cleanup', async function () {
         let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        let output = await api.UseAPI(cleanupData);
-        expect(output).toBeNull();
+        await api.UseAPI(cleanupData);
     })
 })

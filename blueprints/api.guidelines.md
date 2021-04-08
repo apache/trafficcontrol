@@ -98,7 +98,7 @@ properties of `response` directly whenever that makes sense.
 #### Alerts
 Alerts should be presented as an array containing objects which each conform to
 the object definition laid out by
-[the ATC library's Alert structure](https://godoc.org/github.com/apache/trafficcontrol/lib/go-tc#Alert).
+[the ATC library's Alert structure](https://pkg.go.dev/github.com/apache/trafficcontrol/lib/go-tc#Alert).
 The allowable `level`s of an Alert are:
 
 - `error` - This level MUST be used to indicate conditions that caused a request

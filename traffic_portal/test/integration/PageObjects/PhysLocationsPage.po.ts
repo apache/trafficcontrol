@@ -18,7 +18,7 @@
  */
 import { by, element } from 'protractor';
 
-import { config, randomize } from '../config';
+import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -37,10 +37,8 @@ export class PhysLocationsPage extends BasePage {
   private txtRegion = element(by.name('region'));
   private txtComments = element(by.name('comments'));
   private txtSearch = element(by.id('physLocationsTable_filter')).element(by.css('label input'));
-  private mnuPhysLocationsTable = element(by.id('physLocationsTable'));
   private btnDelete = element(by.buttonText('Delete'));
   private txtConfirmName = element(by.name('confirmWithNameInput'));
-  private readonly config = config;
   private randomize = randomize;
 
   async OpenPhysLocationPage() {
@@ -79,7 +77,6 @@ export class PhysLocationsPage extends BasePage {
     return result;
   }
   async SearchPhysLocation(physlocationName) {
-    let result = false;
     let snp = new SideNavigationPage();
     let name = physlocationName + this.randomize;
     await snp.NavigateToPhysLocation();
@@ -91,8 +88,7 @@ export class PhysLocationsPage extends BasePage {
       });
     }).first().click();
   }
-  async UpdatePhysLocation(physlocation) {
-    let result = false;
+  public async UpdatePhysLocation(physlocation): Promise<boolean | undefined> {
     let basePage = new BasePage();
 
     switch (physlocation.description) {
@@ -101,19 +97,9 @@ export class PhysLocationsPage extends BasePage {
         await basePage.ClickUpdate();
         break;
       default:
-        result = undefined;
+        return undefined;
     }
-    if (result = !undefined) {
-        result = await basePage.GetOutputMessage().then(function (value) {
-          if (physlocation.validationMessage == value) {
-            return true;
-          } else {
-            return false;
-          }
-        })
-
-      }
-    return result;
+    return await basePage.GetOutputMessage().then(value => physlocation.validationMessage === value);
   }
   async DeletePhysLocation(physlocation) {
     let result = false;
