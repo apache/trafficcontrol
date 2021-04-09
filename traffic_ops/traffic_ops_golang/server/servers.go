@@ -1460,7 +1460,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	original := originals[0]
 	if original.XMPPID == nil || *original.XMPPID == "" {
-		log.Warnln("original server had no XMPPID")
+		log.Warnf("original server %s had no XMPPID\n", *original.HostName)
 	}
 	if original.StatusID == nil {
 		sysErr = errors.New("original server had no status ID")
