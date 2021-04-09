@@ -16,7 +16,6 @@ package v4
 */
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -25,7 +24,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -993,36 +991,6 @@ func UpdateTestServers(t *testing.T) {
 	resp, _, err = TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Errorf("cannot GET Server by hostName: %v - %v", originalHostname, err)
-	}
-
-	//Verify that XMPPID is generated if not set
-	var db *sql.DB
-	if db, err = OpenConnection(); err != nil {
-		t.Fatalf("opening db: %s", err.Error())
-	}
-	defer log.Close(db, "cannot close db")
-	err = execSQL(db, fmt.Sprintf(`
-		UPDATE server s set xmpp_id = NULL
-		WHERE s.id = %d
-	`, *remoteServer.ID))
-	if err != nil {
-		t.Fatalf("Executing SQL to set XMPPID for server with id %d to NULL: %s", *remoteServer.ID, err.Error())
-	}
-	remoteServer.XMPPID = nil
-	al, _, err = TOSession.UpdateServer(*remoteServer.ID, remoteServer, nil)
-	if err != nil {
-		t.Fatalf("Updating server with id %d: %s", *remoteServer.ID, err.Error())
-	}
-	servers, _, err := TOSession.GetServers(url.Values{"id": []string{strconv.Itoa(*remoteServer.ID)}}, nil)
-	if err != nil {
-		t.Fatalf("Getting servers with ID %d (hostname %s): %s", *remoteServer.ID, *remoteServer.HostName, err.Error())
-	}
-	if len(servers.Response) != 1 {
-		t.Fatalf("Expected to get exactly 1 server for ID %d but got %d servers", *remoteServer.ID, len(servers.Response))
-	}
-	remoteServer = servers.Response[0]
-	if remoteServer.XMPPID == nil || *remoteServer.XMPPID == "" {
-		t.Fatalf("Expected server %s to have a non-empty XMPPID but XMPPID was empty", *remoteServer.HostName)
 	}
 
 	// Assign server to DS and then attempt to update to a different type

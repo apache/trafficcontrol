@@ -1640,11 +1640,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if server.XMPPID == nil || *server.XMPPID == "" {
-		log.Infof("Found empty XMPPID for server %s, setting random XMPPID", *server.HostName)
-		server.XMPPID = newUUID()
-	}
-	if originalXMPPID != "" && *server.XMPPID != originalXMPPID {
+	if server.XMPPID != nil && *server.XMPPID != "" && originalXMPPID != "" && *server.XMPPID != originalXMPPID {
 		api.WriteAlerts(w, r, http.StatusBadRequest, tc.CreateAlerts(tc.ErrorLevel, fmt.Sprintf("server cannot be updated due to requested XMPPID change. XMPIDD is immutable")))
 		return
 	}
