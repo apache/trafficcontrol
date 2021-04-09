@@ -58,6 +58,10 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
 	$scope.navigateToPath = locationUtils.navigateToPath;
 	$scope.sslRequest = setSSLRequest(sslRequest);
 
+	$scope.hasAcmeProviderError = function() {
+		return $scope.acmeProvider === null || $scope.acmeProvider === '';
+	};
+
 	$scope.deliveryService = deliveryService;
 	$scope.countries = [
 		{code:"US", name:"United States (US)"},
