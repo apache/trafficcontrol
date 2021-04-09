@@ -43,12 +43,14 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 		t.Fatal("Found Cache Group with null or undefined name in test data")
 	}
 
-	cacheGroupResp, _, err := TOSession.GetCacheGroupByName(*firstCacheGroup.Name, nil)
+	opts := client.NewOptions()
+	opts.QueryParameters.Set("name", *firstCacheGroup.Name)
+	cacheGroupResp, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
-		t.Fatalf("cannot GET Cache Group by name: %v - %v", firstCacheGroup.Name, err)
+		t.Fatalf("cannot get Cache Group '%s': %v - alerts: %+v", *firstCacheGroup.Name, err, cacheGroupResp.Alerts)
 	}
-	if cacheGroupResp == nil {
-		t.Fatal("Cache Groups response should not be nil")
+	if len(cacheGroupResp.Response) != 1 {
+		t.Fatalf("Expected exactly one Cache Group named '%s' to exist, but found %d", *firstCacheGroup.Name, len(cacheGroupResp.Response))
 	}
 
 	// Get Parameter to assign to Cache Group
@@ -64,7 +66,7 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 	}
 
 	// Assign Parameter to Cache Group
-	cacheGroupID := cacheGroupResp[0].ID
+	cacheGroupID := cacheGroupResp.Response[0].ID
 	if cacheGroupID == nil {
 		t.Fatalf("Traffic Ops returned Cache Group '%s' with null or undefined ID", *firstCacheGroup.Name)
 	}

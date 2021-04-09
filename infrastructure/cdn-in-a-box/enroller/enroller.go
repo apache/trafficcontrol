@@ -154,7 +154,7 @@ func enrollCachegroup(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, _, err := toSession.CreateCacheGroup(s)
+	alerts, _, err := toSession.CreateCacheGroup(s, client.RequestOptions{})
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("cachegroup %s already exists\n", *s.Name)

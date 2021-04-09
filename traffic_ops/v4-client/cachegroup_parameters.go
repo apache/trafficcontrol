@@ -27,7 +27,7 @@ const apiCachegroupParameters = "/cachegroupparameters"
 
 // GetCacheGroupParameters gets all Parameters for the identified Cache Group.
 func (to *Session) GetCacheGroupParameters(cacheGroupID int, opts RequestOptions) (tc.CacheGroupParametersResponse, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/parameters", APICachegroups, cacheGroupID)
+	route := fmt.Sprintf("%s/%d/parameters", apiCachegroups, cacheGroupID)
 	var data tc.CacheGroupParametersResponse
 	reqInf, err := to.get(route, opts, &data)
 	return data, reqInf, err

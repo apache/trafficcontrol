@@ -97,17 +97,19 @@ func CreateTestASNs(t *testing.T) {
 		t.Fatal("Cache Group found in the test data with null or undefined name")
 	}
 
-	resp, _, err := TOSession.GetCacheGroupByName(*cg.Name, nil)
+	opts := client.NewOptions()
+	opts.QueryParameters.Set("name", *cg.Name)
+	resp, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
-		t.Fatalf("unable to get cachgroup ID: %v", err)
+		t.Fatalf("unable to get cachgroup ID: %v - alerts: %+v", err, resp.Alerts)
 	}
-	if len(resp) < 1 {
-		t.Fatalf("Expected exactly one Cache Group with Name '%s', got: %d", *cg.Name, len(resp))
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Cache Group with Name '%s', got: %d", *cg.Name, len(resp.Response))
 	}
-	if resp[0].ID == nil {
+	if resp.Response[0].ID == nil {
 		t.Fatalf("Cache Group '%s' had no ID in Traffic Ops response", *cg.Name)
 	}
-	id := *resp[0].ID
+	id := *resp.Response[0].ID
 	for _, asn := range testData.ASNs {
 		asn.CachegroupID = id
 		resp, _, err := TOSession.CreateASN(asn, client.RequestOptions{})

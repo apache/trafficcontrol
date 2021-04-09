@@ -49,17 +49,19 @@ func (to *Session) CreateServer(server tc.ServerV40, hdr http.Header) (tc.Alerts
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
 	if needAndCanFetch(server.CachegroupID, server.Cachegroup) {
-		cg, _, err := to.GetCacheGroupByName(*server.Cachegroup, nil)
+		opts := NewOptions()
+		opts.QueryParameters.Set("name", *server.Cachegroup)
+		cg, _, err := to.GetCacheGroups(opts)
 		if err != nil {
 			return alerts, reqInf, fmt.Errorf("no cachegroup named %s: %v", *server.Cachegroup, err)
 		}
-		if len(cg) == 0 {
+		if len(cg.Response) == 0 {
 			return alerts, reqInf, fmt.Errorf("no cachegroup named %s", *server.Cachegroup)
 		}
-		if cg[0].ID == nil {
+		if cg.Response[0].ID == nil {
 			return alerts, reqInf, fmt.Errorf("Cachegroup named %s has a nil ID", *server.Cachegroup)
 		}
-		server.CachegroupID = cg[0].ID
+		server.CachegroupID = cg.Response[0].ID
 	}
 	if needAndCanFetch(server.CDNID, server.CDNName) {
 		c, _, err := to.GetCDNByName(*server.CDNName, nil)

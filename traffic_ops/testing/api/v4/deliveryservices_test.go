@@ -31,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -877,14 +878,19 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	}
 	cdn1 := cdns[0]
 	const cacheGroupName = "dtrc1"
-	cachegroups, _, err := TOSession.GetCacheGroups(url.Values{"name": {cacheGroupName}}, nil)
+	opts := client.RequestOptions{
+		QueryParameters: url.Values{
+			"name": {cacheGroupName},
+		},
+	}
+	cachegroups, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
 		t.Fatalf("getting Cache Group %s: %s", cacheGroupName, err.Error())
 	}
-	if len(cachegroups) != expectedSize {
-		t.Fatalf("expected %d Cache Group with name %s but instead received %d Cache Groups", expectedSize, cacheGroupName, len(cachegroups))
+	if len(cachegroups.Response) != expectedSize {
+		t.Fatalf("expected %d Cache Group with name %s but instead received %d Cache Groups", expectedSize, cacheGroupName, len(cachegroups.Response))
 	}
-	cachegroup := cachegroups[0]
+	cachegroup := cachegroups.Response[0]
 	params = url.Values{"cdn": {strconv.Itoa(*ds.CDNID)}, "cachegroup": {strconv.Itoa(*cachegroup.ID)}}
 	servers, _, err := TOSession.GetServers(params, nil)
 	if err != nil {

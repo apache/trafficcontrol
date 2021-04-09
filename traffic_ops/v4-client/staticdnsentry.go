@@ -33,17 +33,19 @@ const (
 
 func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 	if sdns.CacheGroupID == 0 && sdns.CacheGroupName != "" {
-		p, _, err := to.GetCacheGroupByName(sdns.CacheGroupName, nil)
+		opts := NewOptions()
+		opts.QueryParameters.Set("name", sdns.CacheGroupName)
+		p, _, err := to.GetCacheGroups(opts)
 		if err != nil {
 			return err
 		}
-		if len(p) == 0 {
+		if len(p.Response) == 0 {
 			return errors.New("no CacheGroup named " + sdns.CacheGroupName)
 		}
-		if p[0].ID == nil {
+		if p.Response[0].ID == nil {
 			return errors.New("CacheGroup named " + sdns.CacheGroupName + " has a nil ID")
 		}
-		sdns.CacheGroupID = *p[0].ID
+		sdns.CacheGroupID = *p.Response[0].ID
 	}
 
 	if sdns.DeliveryServiceID == 0 && sdns.DeliveryService != "" {

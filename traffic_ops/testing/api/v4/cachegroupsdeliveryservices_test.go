@@ -21,6 +21,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestCacheGroupsDeliveryServices(t *testing.T) {
@@ -47,15 +49,17 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 
-	clientCGs, _, err := TOSession.GetCacheGroupByName(TestEdgeServerCacheGroupName, nil)
+	opts := client.NewOptions()
+	opts.QueryParameters.Set("name", TestEdgeServerCacheGroupName)
+	clientCGs, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
 		t.Fatalf("getting cachegroup: %v", err)
 	}
-	if len(clientCGs) != 1 {
-		t.Fatalf("getting cachegroup expected 1, got %v", len(clientCGs))
+	if len(clientCGs.Response) != 1 {
+		t.Fatalf("getting cachegroup expected 1, got %v", len(clientCGs.Response))
 	}
 
-	clientCG := clientCGs[0]
+	clientCG := clientCGs.Response[0]
 
 	if clientCG.ID == nil {
 		t.Fatalf("Cachegroup has a nil ID")
@@ -79,7 +83,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatal("No Topology-based Delivery Services found in CDN 'cdn1', cannot continue.")
 	}
 
-	_, reqInf, err := TOSession.SetCacheGroupDeliveryServices(cgID, topologyDsIDs)
+	_, reqInf, err := TOSession.SetCacheGroupDeliveryServices(cgID, topologyDsIDs, client.RequestOptions{})
 	if err == nil {
 		t.Fatal("assigning Topology-based delivery service to cachegroup - expected: error, actual: nil")
 	}
@@ -87,7 +91,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("assigning Topology-based delivery service to cachegroup - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 
-	resp, _, err := TOSession.SetCacheGroupDeliveryServices(cgID, dsIDs)
+	resp, _, err := TOSession.SetCacheGroupDeliveryServices(cgID, dsIDs, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("setting cachegroup delivery services returned error: %v", err)
 	}
@@ -98,7 +102,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	// Note this second post of the same cg-dses specifically tests a previous bug, where the query
 	// failed if any servers with location parameters were already assigned, due to a foreign key
 	// violation. See https://github.com/apache/trafficcontrol/pull/3199
-	resp, _, err = TOSession.SetCacheGroupDeliveryServices(cgID, dsIDs)
+	resp, _, err = TOSession.SetCacheGroupDeliveryServices(cgID, dsIDs, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("setting cachegroup delivery services returned error: %v", err)
 	}

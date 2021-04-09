@@ -32,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -280,15 +281,20 @@ func UpdateTestTopologies(t *testing.T) {
 	if !foundCDN1 || !foundCDN2 {
 		t.Fatalf("expected delivery services assigned to topology top-used-by-cdn1-and-cdn2 to be assigned to cdn1 and cdn2")
 	}
-	cgs, _, err := TOSession.GetCacheGroupByName("cdn1-only", nil)
+	opts := client.NewOptions()
+	opts.QueryParameters.Set("name", "cdn1-only")
+	cgs, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
 		t.Fatalf("unable to GET cachegroup by name: %v", err)
 	}
-	if len(cgs) != 1 {
-		t.Fatalf("expected: to get 1 cachegroup named 'cdn1-only', actual: got %d", len(cgs))
+	if len(cgs.Response) != 1 {
+		t.Fatalf("expected: to get 1 cachegroup named 'cdn1-only', actual: got %d", len(cgs.Response))
+	}
+	if cgs.Response[0].ID == nil {
+		t.Fatal("Traffic Ops returned a representation for Cache Group 'cdn1-only' that had a null or undefined ID")
 	}
 	params = url.Values{}
-	params.Add("cachegroup", strconv.Itoa(*cgs[0].ID))
+	params.Add("cachegroup", strconv.Itoa(*cgs.Response[0].ID))
 	servers, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("unable to GET servers by cachegroup: %v", err)
@@ -457,18 +463,17 @@ func CreateTopologyWithInvalidCacheGroup(t *testing.T) {
 }
 
 func CreateTopologyWithInvalidParentNumber(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
-	if len(cacheGroups) == 0 {
+	if len(cacheGroups.Response) == 0 {
 		t.Fatalf("no cachegroups in response")
 	}
-	nodes := make([]tc.TopologyNode, 0)
 
 	cachegroupName := ""
 	params := url.Values{}
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -478,10 +483,14 @@ func CreateTopologyWithInvalidParentNumber(t *testing.T) {
 			}
 		}
 	}
+	if cachegroupName == "" {
+		t.Fatal("No servers could be found in any Cache Groups - need at least one valid server to test creating a topology with an invalid parent number")
+	}
 	node := tc.TopologyNode{
 		Cachegroup: cachegroupName,
 		Parents:    []int{100},
 	}
+	nodes := make([]tc.TopologyNode, 1)
 	nodes = append(nodes, node)
 	top := tc.Topology{
 		Description: "blah",
@@ -498,18 +507,17 @@ func CreateTopologyWithInvalidParentNumber(t *testing.T) {
 }
 
 func CreateTopologyWithoutDescription(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
-	if len(cacheGroups) == 0 {
+	if len(cacheGroups.Response) == 0 {
 		t.Fatalf("no cachegroups in response")
 	}
-	nodes := make([]tc.TopologyNode, 0)
 
 	cachegroupName := ""
 	params := url.Values{}
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -519,10 +527,12 @@ func CreateTopologyWithoutDescription(t *testing.T) {
 			}
 		}
 	}
+
 	node := tc.TopologyNode{
 		Cachegroup: cachegroupName,
 		Parents:    nil,
 	}
+	nodes := make([]tc.TopologyNode, 1)
 	nodes = append(nodes, node)
 	top := tc.Topology{
 		Name:  "topology-without-description",
@@ -542,18 +552,17 @@ func CreateTopologyWithoutDescription(t *testing.T) {
 }
 
 func CreateTopologyWithoutName(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
-	if len(cacheGroups) == 0 {
+	if len(cacheGroups.Response) == 0 {
 		t.Fatalf("no cachegroups in response")
 	}
-	nodes := make([]tc.TopologyNode, 0)
 
 	cachegroupName := ""
 	params := url.Values{}
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -563,10 +572,12 @@ func CreateTopologyWithoutName(t *testing.T) {
 			}
 		}
 	}
+
 	node := tc.TopologyNode{
 		Cachegroup: cachegroupName,
 		Parents:    nil,
 	}
+	nodes := make([]tc.TopologyNode, 1)
 	nodes = append(nodes, node)
 	top := tc.Topology{
 		Description: "description",
@@ -582,18 +593,17 @@ func CreateTopologyWithoutName(t *testing.T) {
 }
 
 func CreateTopologyWithoutServers(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
-	if len(cacheGroups) == 0 {
+	if len(cacheGroups.Response) == 0 {
 		t.Fatalf("no cachegroups in response")
 	}
-	nodes := make([]tc.TopologyNode, 0)
 
 	cachegroupName := ""
 	params := url.Values{}
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) == 0 {
@@ -603,10 +613,12 @@ func CreateTopologyWithoutServers(t *testing.T) {
 			}
 		}
 	}
+
 	node := tc.TopologyNode{
 		Cachegroup: cachegroupName,
 		Parents:    nil,
 	}
+	nodes := make([]tc.TopologyNode, 1)
 	nodes = append(nodes, node)
 	top := tc.Topology{
 		Name:        "topology_without_servers",
@@ -623,18 +635,18 @@ func CreateTopologyWithoutServers(t *testing.T) {
 }
 
 func CreateTopologyWithDuplicateParents(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
-	if len(cacheGroups) == 0 {
+	if len(cacheGroups.Response) == 0 {
 		t.Fatalf("no cachegroups in response")
 	}
 
 	cachegroupName := ""
 	parentName := ""
 	params := url.Values{}
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -645,7 +657,7 @@ func CreateTopologyWithDuplicateParents(t *testing.T) {
 		}
 	}
 
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -681,18 +693,18 @@ func CreateTopologyWithDuplicateParents(t *testing.T) {
 }
 
 func CreateTopologyWithNodeAsParentOfItself(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
-	if len(cacheGroups) == 0 {
+	if len(cacheGroups.Response) == 0 {
 		t.Fatalf("no cachegroups in response")
 	}
 
 	cachegroupName := ""
 	parentName := ""
 	params := url.Values{}
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -703,7 +715,7 @@ func CreateTopologyWithNodeAsParentOfItself(t *testing.T) {
 		}
 	}
 
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -739,18 +751,18 @@ func CreateTopologyWithNodeAsParentOfItself(t *testing.T) {
 }
 
 func CreateTopologyWithOrgLocAsChildNode(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
-	if len(cacheGroups) == 0 {
+	if len(cacheGroups.Response) == 0 {
 		t.Fatalf("no cachegroups in response")
 	}
 
 	cachegroupName := ""
 	parentName := ""
 	params := url.Values{}
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -761,7 +773,7 @@ func CreateTopologyWithOrgLocAsChildNode(t *testing.T) {
 		}
 	}
 
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -814,17 +826,17 @@ func CreateTopologyWithExistingName(t *testing.T) {
 }
 
 func CreateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
-	if len(cacheGroups) == 0 {
+	if len(cacheGroups.Response) == 0 {
 		t.Fatalf("no cachegroups in response")
 	}
 
 	parentName := ""
 	params := url.Values{}
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -973,18 +985,18 @@ func UpdateTopologyWithCachegroupAssignedToBecomeParentOfItself(t *testing.T) {
 }
 
 func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
-	if len(cacheGroups) == 0 {
+	if len(cacheGroups.Response) == 0 {
 		t.Fatalf("no cachegroups in response")
 	}
 
 	cachegroupName := ""
 	parentName := ""
 	params := url.Values{}
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -995,7 +1007,7 @@ func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
 		}
 	}
 
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -1040,18 +1052,18 @@ func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
 }
 
 func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
-	if len(cacheGroups) == 0 {
+	if len(cacheGroups.Response) == 0 {
 		t.Fatalf("no cachegroups in response")
 	}
 
 	cachegroupName := ""
 	parentName := ""
 	params := url.Values{}
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -1062,7 +1074,7 @@ func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
 		}
 	}
 
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -1106,17 +1118,17 @@ func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
 }
 
 func UpdateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
-	if len(cacheGroups) == 0 {
+	if len(cacheGroups.Response) == 0 {
 		t.Fatalf("no cachegroups in response")
 	}
 
 	parentName := ""
 	params := url.Values{}
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
@@ -1180,18 +1192,18 @@ func UpdateTopologyWithInvalidParentNumber(t *testing.T) {
 }
 
 func UpdateTopologyWithNoServers(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
-	if len(cacheGroups) == 0 {
+	if len(cacheGroups.Response) == 0 {
 		t.Fatalf("no cachegroups in response")
 	}
 	nodes := make([]tc.TopologyNode, 0)
 
 	cachegroupName := ""
 	params := url.Values{}
-	for _, cg := range cacheGroups {
+	for _, cg := range cacheGroups.Response {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
 		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) == 0 {

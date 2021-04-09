@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestServers(t *testing.T) {
@@ -110,14 +111,17 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	server.CDNID = &oldCDNID
 	server.ProfileID = &oldProfile
 
-	params = url.Values{}
-	params.Add("name", moveToCacheGroup)
-	cgs, _, err := TOSession.GetCacheGroups(params, nil)
+	opts := client.NewOptions()
+	opts.QueryParameters.Add("name", moveToCacheGroup)
+	cgs, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
-		t.Fatalf("getting cachegroup with hostname %s: %s", moveToCacheGroup, err.Error())
+		t.Fatalf("getting cachegroup with hostname %s: %v - alerts: %+v", moveToCacheGroup, err, cgs.Alerts)
 	}
-	if len(cgs) != expectedLength {
-		t.Fatalf("expected %d cachegroup with hostname %s, received %d cachegroups", expectedLength, moveToCacheGroup, len(cgs))
+	if len(cgs.Response) != expectedLength {
+		t.Fatalf("expected %d cachegroup with hostname %s, received %d cachegroups", expectedLength, moveToCacheGroup, len(cgs.Response))
+	}
+	if cgs.Response[0].ID == nil {
+		t.Fatal("Traffic Ops responded with Cache Group '%s' that had null or undefined ID", moveToCacheGroup)
 	}
 
 	_, _, err = TOSession.UpdateServer(*server.ID, server, nil)
@@ -125,7 +129,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 		t.Fatalf("error updating server with hostname %s without moving it to a different cachegroup: %s", *server.HostName, err.Error())
 	}
 
-	*server.CachegroupID = *cgs[0].ID
+	*server.CachegroupID = *cgs.Response[0].ID
 	_, _, err = TOSession.UpdateServer(*server.ID, server, nil)
 	if err == nil {
 		t.Fatalf("expected an error moving server with id %s to a different cachegroup, received no error", *server.HostName)
@@ -761,18 +765,18 @@ func GetTestServersQueryParameters(t *testing.T) {
 		params.Del("profileId")
 	}
 
-	cgs, _, err := TOSession.GetCacheGroups(nil, nil)
+	cgs, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("Failed to get Cache Groups: %v", err)
 	}
-	if len(cgs) < 1 {
+	if len(cgs.Response) < 1 {
 		t.Fatal("Failed to get at least one Cache Group")
 	}
-	if cgs[0].ID == nil {
+	if cgs.Response[0].ID == nil {
 		t.Fatal("Cache Group found with no ID")
 	}
 
-	params.Add("parentCacheGroup", strconv.Itoa(*cgs[0].ID))
+	params.Add("parentCacheGroup", strconv.Itoa(*cgs.Response[0].ID))
 	if _, _, err = TOSession.GetServers(params, nil); err != nil {
 		t.Errorf("Error getting servers by parentCacheGroup: %v", err)
 	}

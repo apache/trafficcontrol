@@ -25,6 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestServerUpdateStatus(t *testing.T) {
@@ -407,14 +408,16 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 				t.Fatalf("unable to find topology node with cachegroup %s", cacheGroupName)
 			}
 
-			cacheGroups, _, err := TOSession.GetCacheGroupByName(cacheGroupName, nil)
+			opts := client.NewOptions()
+			opts.QueryParameters.Set("name", cacheGroupName)
+			cacheGroups, _, err := TOSession.GetCacheGroups(opts)
 			if err != nil {
 				t.Fatalf("unable to get cachegroup %s: %s", cacheGroupName, err.Error())
 			}
-			if len(cacheGroups) != 1 {
-				t.Fatalf("incorrect number of cachegroups. expected: %d actual: %d", 1, len(cacheGroups))
+			if len(cacheGroups.Response) != 1 {
+				t.Fatalf("incorrect number of cachegroups. expected: 1 actual: %d", len(cacheGroups.Response))
 			}
-			cacheGroup := cacheGroups[0]
+			cacheGroup := cacheGroups.Response[0]
 
 			params := url.Values{"cachegroup": []string{strconv.Itoa(*cacheGroup.ID)}}
 			srvs, _, err := TOSession.GetServers(params, nil)

@@ -34,14 +34,16 @@ const (
 
 func originIDs(to *Session, origin *tc.Origin) error {
 	if origin.CachegroupID == nil && origin.Cachegroup != nil {
-		p, _, err := to.GetCacheGroupByName(*origin.Cachegroup, nil)
+		opts := NewOptions()
+		opts.QueryParameters.Set("name", *origin.Cachegroup)
+		p, _, err := to.GetCacheGroups(opts)
 		if err != nil {
 			return err
 		}
-		if len(p) == 0 {
+		if len(p.Response) == 0 {
 			return errors.New("no cachegroup named " + *origin.Cachegroup)
 		}
-		origin.CachegroupID = p[0].ID
+		origin.CachegroupID = p.Response[0].ID
 	}
 
 	if origin.DeliveryServiceID == nil && origin.DeliveryService != nil {
