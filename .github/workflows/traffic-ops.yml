@@ -22,7 +22,7 @@ on:
     paths:
       - .github/actions/todb-init/**
       - .github/actions/to-integration-tests/**
-      - '.github/workflows/traffic ops.yml'
+      - '.github/workflows/traffic-ops.yml'
       - GO_VERSION
       - infrastructure/cdn-in-a-box/traffic_vault/**
       - traffic_ops/*client/**.go
@@ -33,7 +33,7 @@ on:
     paths:
       - .github/actions/todb-init/**
       - .github/actions/to-integration-tests/**
-      - '.github/workflows/traffic ops.yml'
+      - '.github/workflows/traffic-ops.yml'
       - GO_VERSION
       - infrastructure/cdn-in-a-box/traffic_vault/**
       - traffic_ops/*client/**.go
