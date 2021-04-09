@@ -32,21 +32,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-
-	"github.com/basho/riak-go-client"
-	"github.com/lestrrat/go-jwx/jwk"
 )
-
-// CDNURIKeysBucket is the namespace or bucket used for CDN URI signing keys.
-const CDNURIKeysBucket = "cdn_uri_sig_keys"
-
-// URISignerKeyset is the container for the CDN URI signing keys
-type URISignerKeyset struct {
-	RenewalKid *string               `json:"renewal_kid"`
-	Keys       []jwk.EssentialHeader `json:"keys"`
-}
 
 // endpoint handler for fetching uri signing keys from riak
 func GetURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
@@ -57,8 +44,8 @@ func GetURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("The RIAK service is unavailable"), errors.New("getting Riak SSL keys by host name: riak is not configured"))
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("the Traffic Vault service is unavailable"), errors.New("getting Traffic Vault SSL keys by host name: Traffic Vault is not configured"))
 		return
 	}
 
@@ -68,24 +55,13 @@ func GetURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-
-	cluster, err := riaksvc.GetPooledCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
+	ro, _, err := inf.Vault.GetURISigningKeys(xmlID, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("starting riak cluster: "+err.Error()))
-		return
-	}
-
-	ro, err := riaksvc.FetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("fetching riak objects: "+err.Error()))
-		return
-	}
-	if len(ro) == 0 {
-		api.WriteRespRaw(w, r, URISignerKeyset{})
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting URI signing keys: "+err.Error()))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(ro[0].Value)
+	w.Write(ro)
 }
 
 // removeDeliveryServiceURIKeysHandler is the HTTP DELETE handler used to remove urisigning keys assigned to a delivery service.
@@ -97,8 +73,8 @@ func RemoveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request)
 	}
 	defer inf.Close()
 
-	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("The RIAK service is unavailable"), errors.New("getting Riak SSL keys by host name: riak is not configured"))
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("rhe Traffic Vault service is unavailable"), errors.New("getting Traffic Vault SSL keys by host name: Traffic Vault is not configured"))
 		return
 	}
 
@@ -116,24 +92,18 @@ func RemoveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	cluster, err := riaksvc.GetPooledCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
+	_, found, err := inf.Vault.GetURISigningKeys(xmlID, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("starting riak cluster: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("removing URI signing keys: "+err.Error()))
 		return
 	}
 
-	ro, err := riaksvc.FetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("fetching riak objects: "+err.Error()))
-		return
-	}
-
-	if len(ro) == 0 || ro[0].Value == nil {
+	if !found {
 		api.WriteRespAlert(w, r, tc.InfoLevel, "not deleted, no object found to delete")
 		return
 	}
-	if err := riaksvc.DeleteObject(xmlID, CDNURIKeysBucket, cluster); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting riak object: "+err.Error()))
+	if err := inf.Vault.DeleteURISigningKeys(xmlID, inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("removing URI signing keys: "+err.Error()))
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+xmlID+", ID: "+strconv.Itoa(dsID)+", ACTION: Removed URI signing keys", inf.User, inf.Tx.Tx)
@@ -150,8 +120,8 @@ func SaveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("The RIAK service is unavailable"), errors.New("getting Riak SSL keys by host name: riak is not configured"))
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("the Traffic Vault service is unavailable"), errors.New("getting Traffic Vault SSL keys by host name: Traffic Vault is not configured"))
 		return
 	}
 
@@ -174,7 +144,7 @@ func SaveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("failed to read body"), errors.New("failed to read body: "+err.Error()))
 		return
 	}
-	keySet := map[string]URISignerKeyset{}
+	keySet := map[string]tc.URISignerKeyset{}
 	if err := json.Unmarshal(data, &keySet); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON"), nil)
 		return
@@ -184,22 +154,8 @@ func SaveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cluster, err := riaksvc.GetPooledCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("starting riak cluster: "+err.Error()))
-		return
-	}
-
-	obj := &riak.Object{
-		ContentType:     "text/json",
-		Charset:         "utf-8",
-		ContentEncoding: "utf-8",
-		Key:             xmlID,
-		Value:           []byte(data),
-	}
-
-	if err = riaksvc.SaveObject(obj, CDNURIKeysBucket, cluster); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("saving riak object: "+err.Error()))
+	if err := inf.Vault.PutURISigningKeys(xmlID, data, inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("saving URI signing keys: "+err.Error()))
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+xmlID+", ID: "+strconv.Itoa(dsID)+", ACTION: Stored URI signing keys to a delivery service", inf.User, inf.Tx.Tx)
@@ -220,7 +176,7 @@ func getDSIDFromName(tx *sql.Tx, xmlID string) (int, bool, error) {
 }
 
 // validateURIKeyset validates URISigingKeyset json.
-func validateURIKeyset(msg map[string]URISignerKeyset) error {
+func validateURIKeyset(msg map[string]tc.URISignerKeyset) error {
 	var renewalKidFound int
 	var renewalKidMatched = false
 

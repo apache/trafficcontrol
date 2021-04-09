@@ -27,102 +27,74 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-func (to *Session) GetUsersWithHdr(header http.Header) ([]tc.User, toclientlib.ReqInf, error) {
+// GetUsers retrieves all (Tenant-accessible) Users stored in Traffic Ops.
+func (to *Session) GetUsers(header http.Header) ([]tc.User, toclientlib.ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := "/users"
 	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
 
-// GetUsers returns all users accessible from current user
-// Deprecated: GetUsers will be removed in 6.0. Use GetUsersWithHdr.
-func (to *Session) GetUsers() ([]tc.User, toclientlib.ReqInf, error) {
-	return to.GetUsersWithHdr(nil)
-}
-
-func (to *Session) GetUsersByRoleWithHdr(roleName string, header http.Header) ([]tc.User, toclientlib.ReqInf, error) {
+// GetUsersByRole retrieves all (Tenant-accessible) with the Role that has the
+// given Name.
+func (to *Session) GetUsersByRole(roleName string, header http.Header) ([]tc.User, toclientlib.ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := "/users?role=" + url.QueryEscape(roleName)
 	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
 
-// GetUsersByRole returns all users accessible from current user for a given role
-// Deprecated: GetUsersByRole will be removed in 6.0. Use GetUsersByRoleWithHdr.
-func (to *Session) GetUsersByRole(roleName string) ([]tc.User, toclientlib.ReqInf, error) {
-	return to.GetUsersByRoleWithHdr(roleName, nil)
-}
-
-func (to *Session) GetUserByIDWithHdr(id int, header http.Header) ([]tc.User, toclientlib.ReqInf, error) {
+// GetUserByID retrieves the User with the given ID.
+func (to *Session) GetUserByID(id int, header http.Header) ([]tc.User, toclientlib.ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := fmt.Sprintf("/users/%d", id)
 	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
 
-// Deprecated: GetUserByID will be removed in 6.0. Use GetUserByIDWithHdr.
-func (to *Session) GetUserByID(id int) ([]tc.User, toclientlib.ReqInf, error) {
-	return to.GetUserByIDWithHdr(id, nil)
-}
-
-func (to *Session) GetUserByUsernameWithHdr(username string, header http.Header) ([]tc.User, toclientlib.ReqInf, error) {
+// GetUserByUsername retrieves the User with the given Username.
+func (to *Session) GetUserByUsername(username string, header http.Header) ([]tc.User, toclientlib.ReqInf, error) {
 	data := tc.UsersResponse{}
 	route := "/users?username=" + url.QueryEscape(username)
 	inf, err := to.get(route, header, &data)
 	return data.Response, inf, err
 }
 
-// Deprecated: GetUserByUsername will be removed in 6.0. Use GetUserByUsernameWithHdr.
-func (to *Session) GetUserByUsername(username string) ([]tc.User, toclientlib.ReqInf, error) {
-	return to.GetUserByUsernameWithHdr(username, nil)
-}
-
-func (to *Session) GetUserCurrentWithHdr(header http.Header) (*tc.UserCurrent, toclientlib.ReqInf, error) {
+// GetUserCurrent retrieves the currently authenticated User.
+func (to *Session) GetUserCurrent(header http.Header) (tc.UserCurrent, toclientlib.ReqInf, error) {
 	route := `/user/current`
 	resp := tc.UserCurrentResponse{}
 	reqInf, err := to.get(route, header, &resp)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	return &resp.Response, reqInf, nil
-}
-
-// GetUserCurrent gets information about the current user
-// Deprecated: GetUserCurrent will be removed in 6.0. Use GetUserCurrentWithHdr.
-func (to *Session) GetUserCurrent() (*tc.UserCurrent, toclientlib.ReqInf, error) {
-	return to.GetUserCurrentWithHdr(nil)
+	return resp.Response, reqInf, err
 }
 
 // UpdateCurrentUser replaces the current user data with the provided tc.User structure.
-func (to *Session) UpdateCurrentUser(u tc.User) (*tc.UpdateUserResponse, toclientlib.ReqInf, error) {
+func (to *Session) UpdateCurrentUser(u tc.User) (tc.UpdateUserResponse, toclientlib.ReqInf, error) {
 	user := struct {
 		User tc.User `json:"user"`
 	}{u}
 	var clientResp tc.UpdateUserResponse
 	reqInf, err := to.put("/user/current", user, nil, &clientResp)
-	return &clientResp, reqInf, err
+	return clientResp, reqInf, err
 }
 
-// CreateUser creates a user
-func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, toclientlib.ReqInf, error) {
+// CreateUser creates the given user
+func (to *Session) CreateUser(user tc.User) (tc.CreateUserResponse, toclientlib.ReqInf, error) {
 	if user.TenantID == nil && user.Tenant != nil {
-		tenant, _, err := to.TenantByNameWithHdr(*user.Tenant, nil)
+		tenant, _, err := to.GetTenantByName(*user.Tenant, nil)
 		if err != nil {
-			return nil, toclientlib.ReqInf{}, err
-		}
-		if tenant == nil {
-			return nil, toclientlib.ReqInf{}, errors.New("no tenant with name " + *user.Tenant)
+			return tc.CreateUserResponse{}, toclientlib.ReqInf{}, err
 		}
 		user.TenantID = &tenant.ID
 	}
 
 	if user.RoleName != nil && *user.RoleName != "" {
-		roles, _, _, err := to.GetRoleByNameWithHdr(*user.RoleName, nil)
+		roles, _, _, err := to.GetRoleByName(*user.RoleName, nil)
 		if err != nil {
-			return nil, toclientlib.ReqInf{}, err
+			return tc.CreateUserResponse{}, toclientlib.ReqInf{}, err
 		}
 		if len(roles) == 0 || roles[0].ID == nil {
-			return nil, toclientlib.ReqInf{}, errors.New("no role with name " + *user.RoleName)
+			return tc.CreateUserResponse{}, toclientlib.ReqInf{}, errors.New("no role with name " + *user.RoleName)
 		}
 		user.Role = roles[0].ID
 	}
@@ -130,19 +102,19 @@ func (to *Session) CreateUser(user *tc.User) (*tc.CreateUserResponse, toclientli
 	route := "/users"
 	var clientResp tc.CreateUserResponse
 	reqInf, err := to.post(route, user, nil, &clientResp)
-	return &clientResp, reqInf, err
+	return clientResp, reqInf, err
 }
 
-// UpdateUserByID updates user with the given id
-func (to *Session) UpdateUserByID(id int, u *tc.User) (*tc.UpdateUserResponse, toclientlib.ReqInf, error) {
+// UpdateUser replaces the User identified by 'id' with the one provided.
+func (to *Session) UpdateUser(id int, u tc.User) (tc.UpdateUserResponse, toclientlib.ReqInf, error) {
 	route := "/users/" + strconv.Itoa(id)
 	var clientResp tc.UpdateUserResponse
 	reqInf, err := to.put(route, u, nil, &clientResp)
-	return &clientResp, reqInf, err
+	return clientResp, reqInf, err
 }
 
-// DeleteUserByID updates user with the given id
-func (to *Session) DeleteUserByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
+// DeleteUser deletes the User with the given ID.
+func (to *Session) DeleteUser(id int) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := "/users/" + strconv.Itoa(id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)

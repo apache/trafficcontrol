@@ -56,7 +56,7 @@ func GetTestServiceCategoriesIMS(t *testing.T) {
 	params := url.Values{}
 	for _, sc := range testData.ServiceCategories {
 		params.Add("name", sc.Name)
-		_, reqInf, err := TOSession.GetServiceCategoriesWithHdr(&params, header)
+		_, reqInf, err := TOSession.GetServiceCategories(params, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -70,7 +70,7 @@ func GetTestServiceCategoriesIMSAfterChange(t *testing.T, header http.Header) {
 	params := url.Values{}
 	for _, sc := range testData.ServiceCategories {
 		params.Add("name", sc.Name)
-		_, reqInf, err := TOSession.GetServiceCategoriesWithHdr(&params, header)
+		_, reqInf, err := TOSession.GetServiceCategories(params, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -85,7 +85,7 @@ func GetTestServiceCategoriesIMSAfterChange(t *testing.T, header http.Header) {
 	params = url.Values{}
 	for _, sc := range testData.ServiceCategories {
 		params.Add("name", sc.Name)
-		_, reqInf, err := TOSession.GetServiceCategoriesWithHdr(&params, header)
+		_, reqInf, err := TOSession.GetServiceCategories(params, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -110,7 +110,7 @@ func GetTestServiceCategories(t *testing.T) {
 	params := url.Values{}
 	for _, sc := range testData.ServiceCategories {
 		params.Add("name", sc.Name)
-		resp, _, err := TOSession.GetServiceCategories(&params)
+		resp, _, err := TOSession.GetServiceCategories(params, nil)
 		if err != nil {
 			t.Errorf("cannot GET Service Category by name: %v - %v", err, resp)
 		}
@@ -121,11 +121,11 @@ func SortTestServiceCategories(t *testing.T) {
 	var header http.Header
 	params := url.Values{}
 	var sortedList []string
-	resp, _, err := TOSession.GetServiceCategoriesWithHdr(&params, header)
+	resp, _, err := TOSession.GetServiceCategories(params, header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
-	for i, _ := range resp {
+	for i := range resp {
 		sortedList = append(sortedList, resp[i].Name)
 	}
 
@@ -144,7 +144,7 @@ func UpdateTestServiceCategoriesWithHeaders(t *testing.T, h http.Header) {
 	} else {
 		t.Fatalf("cannot UPDATE Service Category, test data does not have service categories")
 	}
-	_, reqInf, err := TOSession.UpdateServiceCategoryByName(firstServiceCategory.Name, firstServiceCategory, h)
+	_, reqInf, err := TOSession.UpdateServiceCategory(firstServiceCategory.Name, firstServiceCategory, h)
 	if err == nil {
 		t.Errorf("attempting to update service category with headers - expected: error, actual: nil")
 	}
@@ -164,7 +164,7 @@ func UpdateTestServiceCategories(t *testing.T) {
 	// Retrieve the Service Category by service category so we can get the id for the Update
 	params := url.Values{}
 	params.Add("name", firstServiceCategory.Name)
-	resp, _, err := TOSession.GetServiceCategories(&params)
+	resp, _, err := TOSession.GetServiceCategories(params, nil)
 	if err != nil {
 		t.Errorf("cannot GET Service Category by name: %v - %v", firstServiceCategory.Name, err)
 	}
@@ -173,7 +173,7 @@ func UpdateTestServiceCategories(t *testing.T) {
 		remoteServiceCategory.Name = "ServiceCategory2"
 
 		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateServiceCategoryByName(firstServiceCategory.Name, remoteServiceCategory, nil)
+		alert, _, err = TOSession.UpdateServiceCategory(firstServiceCategory.Name, remoteServiceCategory, nil)
 		if err != nil {
 			t.Errorf("cannot UPDATE Service Category by name: %v - %v", err, alert)
 		}
@@ -182,7 +182,7 @@ func UpdateTestServiceCategories(t *testing.T) {
 		// Retrieve the Service Category to check service category got updated
 		params := url.Values{}
 		params.Add("name", remoteServiceCategory.Name)
-		resp, _, err = TOSession.GetServiceCategories(&params)
+		resp, _, err = TOSession.GetServiceCategories(params, nil)
 		if err != nil {
 			t.Errorf("cannot GET Service Category by service category: %v - %v", remoteServiceCategory.Name, err)
 		}
@@ -193,7 +193,7 @@ func UpdateTestServiceCategories(t *testing.T) {
 		}
 
 		// revert back to original name
-		alert, _, err = TOSession.UpdateServiceCategoryByName(remoteServiceCategory.Name, firstServiceCategory, nil)
+		alert, _, err = TOSession.UpdateServiceCategory(remoteServiceCategory.Name, firstServiceCategory, nil)
 		if err != nil {
 			t.Errorf("cannot UPDATE Service Category by name: %v - %v", err, alert)
 		}
@@ -202,7 +202,7 @@ func UpdateTestServiceCategories(t *testing.T) {
 		// Retrieve the Service Category to check service category got updated
 		params = url.Values{}
 		params.Add("name", firstServiceCategory.Name)
-		resp, _, err = TOSession.GetServiceCategories(&params)
+		resp, _, err = TOSession.GetServiceCategories(params, nil)
 		if err != nil {
 			t.Errorf("cannot GET Service Category by service category: %v - %v", firstServiceCategory.Name, err)
 		}
@@ -219,20 +219,20 @@ func DeleteTestServiceCategories(t *testing.T) {
 		// Retrieve the Service Category by name so we can get the id
 		params := url.Values{}
 		params.Add("name", sc.Name)
-		resp, _, err := TOSession.GetServiceCategories(&params)
+		resp, _, err := TOSession.GetServiceCategories(params, nil)
 		if err != nil {
 			t.Errorf("cannot GET Service Category by name: %v - %v", sc.Name, err)
 		}
 		if len(resp) > 0 {
 			respServiceCategory := resp[0]
 
-			delResp, _, err := TOSession.DeleteServiceCategoryByName(respServiceCategory.Name)
+			delResp, _, err := TOSession.DeleteServiceCategory(respServiceCategory.Name)
 			if err != nil {
 				t.Errorf("cannot DELETE Service Category by service category: %v - %v", err, delResp)
 			}
 
 			// Retrieve the Service Category to see if it got deleted
-			respDelServiceCategory, _, err := TOSession.GetServiceCategories(&params)
+			respDelServiceCategory, _, err := TOSession.GetServiceCategories(params, nil)
 			if err != nil {
 				t.Errorf("error deleting Service Category: %s", err.Error())
 			}

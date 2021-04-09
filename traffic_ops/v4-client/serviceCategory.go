@@ -25,40 +25,37 @@ import (
 )
 
 const (
+	// APIServiceCategories is the API version-relative path to the /service_categories API
+	// endpoints.
 	APIServiceCategories = "/service_categories"
 )
 
-// CreateServiceCategory performs a post to create a service category.
+// CreateServiceCategory creates the given Service Category.
 func (to *Session) CreateServiceCategory(serviceCategory tc.ServiceCategory) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(APIServiceCategories, serviceCategory, nil, &alerts)
 	return alerts, reqInf, err
 }
 
-// UpdateServiceCategoryByName updates a service category by its unique name.
-func (to *Session) UpdateServiceCategoryByName(name string, serviceCategory tc.ServiceCategory, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+// UpdateServiceCategory replaces the Service Category with the given Name with
+// the one provided.
+func (to *Session) UpdateServiceCategory(name string, serviceCategory tc.ServiceCategory, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%s", APIServiceCategories, name)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, serviceCategory, header, &alerts)
 	return alerts, reqInf, err
 }
 
-// GetServiceCategoriesWithHdr gets a list of service categories by the passed in url values and http headers.
-func (to *Session) GetServiceCategoriesWithHdr(values *url.Values, header http.Header) ([]tc.ServiceCategory, toclientlib.ReqInf, error) {
+// GetServiceCategories retrieves Service Categories from Traffic Ops.
+func (to *Session) GetServiceCategories(values url.Values, header http.Header) ([]tc.ServiceCategory, toclientlib.ReqInf, error) {
 	path := fmt.Sprintf("%s?%s", APIServiceCategories, values.Encode())
 	var data tc.ServiceCategoriesResponse
 	reqInf, err := to.get(path, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GetServiceCategories gets a list of service categories by the passed in url values.
-func (to *Session) GetServiceCategories(values *url.Values) ([]tc.ServiceCategory, toclientlib.ReqInf, error) {
-	return to.GetServiceCategoriesWithHdr(values, nil)
-}
-
-// DeleteServiceCategoryByName deletes a service category by the service
-// category's unique name.
-func (to *Session) DeleteServiceCategoryByName(name string) (tc.Alerts, toclientlib.ReqInf, error) {
+// DeleteServiceCategory deletes the Service Category with the given Name.
+func (to *Session) DeleteServiceCategory(name string) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%s", APIServiceCategories, name)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)

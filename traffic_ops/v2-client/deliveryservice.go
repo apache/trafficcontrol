@@ -85,7 +85,7 @@ const (
 	// by its XMLID. It is intended to be used with fmt.Sprintf to insert its required path parameter
 	// (namely the XMLID of the Delivery Service of interest).
 	// See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v2/deliveryservices_xmlid_xmlid_urlkeys.html
-	API_DELIVERY_SERVICES_URL_SIGNING_KEYS = API_DELIVERY_SERVICES + "/xmlid/%s/urlkeys"
+	API_DELIVERY_SERVICES_URL_SIGNING_KEYS = API_DELIVERY_SERVICES + "/xmlId/%s/urlkeys"
 
 	// API_DELIVERY_SERVICES_REGEXES is the API path on which Traffic Ops serves Delivery Service
 	// 'regex' (Regular Expression) information.

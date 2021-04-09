@@ -25,14 +25,15 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-// Creates a new Content Invalidation Job
+// CreateInvalidationJob creates the passed Content Invalidation Job.
 func (to *Session) CreateInvalidationJob(job tc.InvalidationJobInput) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(`/jobs`, job, nil, &alerts)
 	return alerts, reqInf, err
 }
 
-// Deletes a Content Invalidation Job
+// DeleteInvalidationJob deletes the Content Invalidation Job identified by
+// 'jobID'.
 func (to *Session) DeleteInvalidationJob(jobID uint64) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.del(fmt.Sprintf("/jobs?id=%d", jobID), nil, &alerts)
@@ -40,36 +41,16 @@ func (to *Session) DeleteInvalidationJob(jobID uint64) (tc.Alerts, toclientlib.R
 
 }
 
-// Updates a Content Invalidation Job
+// UpdateInvalidationJob updates the passed Content Invalidation Job (it is
+// expected to have an ID).
 func (to *Session) UpdateInvalidationJob(job tc.InvalidationJob) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.put(fmt.Sprintf(`/jobs?id=%d`, *job.ID), job, nil, &alerts)
 	return alerts, reqInf, err
 }
 
-// GetJobs returns a list of Jobs.
-// If deliveryServiceID or userID are not nil, only jobs for that delivery service or belonging to
-// that user are returned. Both deliveryServiceID and userID may be nil.
-//
-// Deprecated, use GetInvalidationJobs instead
-func (to *Session) GetJobs(deliveryServiceID *int, userID *int) ([]tc.Job, toclientlib.ReqInf, error) {
-	params := url.Values{}
-	if deliveryServiceID != nil {
-		params.Add("dsId", strconv.Itoa(*deliveryServiceID))
-	}
-	if userID != nil {
-		params.Add("userId", strconv.Itoa(*userID))
-	}
-	path := "/jobs?" + params.Encode()
-	data := struct {
-		Response []tc.Job `json:"response"`
-	}{}
-	reqInf, err := to.get(path, nil, &data)
-	return data.Response, reqInf, err
-}
-
-// Returns a list of Content Invalidation Jobs visible to your Tenant, filtered according to
-// ds and user
+// GetInvalidationJobs returns a list of Content Invalidation Jobs visible to
+// your Tenant, filtered according to 'ds' and user
 //
 // Either or both of ds and user may be nil, but when they are not they cause filtering of the
 // returned jobs by Delivery Service and Traffic Ops user, respectively.

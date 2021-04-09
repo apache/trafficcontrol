@@ -33,8 +33,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
-	"github.com/basho/riak-go-client"
 )
 
 // Config reflects the structure of the cdn.conf file
@@ -52,17 +50,15 @@ type Config struct {
 	AcmeAccounts           []ConfigAcmeAccount `json:"acme_accounts"`
 	DB                     ConfigDatabase      `json:"db"`
 	Secrets                []string            `json:"secrets"`
-	// NOTE: don't care about any other fields for now..
-	RiakAuthOptions  *riak.AuthOptions
-	RiakEnabled      bool
-	ConfigLDAP       *ConfigLDAP
-	LDAPEnabled      bool
-	LDAPConfPath     string `json:"ldap_conf_location"`
-	ConfigInflux     *ConfigInflux
-	InfluxEnabled    bool
-	InfluxDBConfPath string `json:"influxdb_conf_path"`
-	Version          string
-	UseIMS           bool `json:"use_ims"`
+	TrafficVaultEnabled    bool
+	ConfigLDAP             *ConfigLDAP
+	LDAPEnabled            bool
+	LDAPConfPath           string `json:"ldap_conf_location"`
+	ConfigInflux           *ConfigInflux
+	InfluxEnabled          bool
+	InfluxDBConfPath       string `json:"influxdb_conf_path"`
+	Version                string
+	UseIMS                 bool `json:"use_ims"`
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -101,12 +97,15 @@ type ConfigTrafficOpsGolang struct {
 	PluginSharedConfig       map[string]interface{}     `json:"plugin_shared_config"`
 	ProfilingEnabled         bool                       `json:"profiling_enabled"`
 	ProfilingLocation        string                     `json:"profiling_location"`
-	RiakPort                 *uint                      `json:"riak_port"`
-	WhitelistedOAuthUrls     []string                   `json:"whitelisted_oauth_urls"`
-	OAuthClientSecret        string                     `json:"oauth_client_secret"`
-	RoutingBlacklist         `json:"routing_blacklist"`
-	SupportedDSMetrics       []string    `json:"supported_ds_metrics"`
-	TLSConfig                *tls.Config `json:"tls_config"`
+	// Deprecated: use 'port' in traffic_vault_config instead.
+	RiakPort             *uint    `json:"riak_port"`
+	WhitelistedOAuthUrls []string `json:"whitelisted_oauth_urls"`
+	OAuthClientSecret    string   `json:"oauth_client_secret"`
+	RoutingBlacklist     `json:"routing_blacklist"`
+	SupportedDSMetrics   []string        `json:"supported_ds_metrics"`
+	TLSConfig            *tls.Config     `json:"tls_config"`
+	TrafficVaultBackend  string          `json:"traffic_vault_backend"`
+	TrafficVaultConfig   json.RawMessage `json:"traffic_vault_config"`
 
 	// CRConfigUseRequestHost is whether to use the client request host header in the CRConfig. If false, uses the tm.url parameter.
 	// This defaults to false. Traffic Ops used to always use the host header, setting this true will resume that legacy behavior.
@@ -263,7 +262,7 @@ func LoadCdnConfig(cdnConfPath string) (Config, error) {
 
 // LoadConfig - reads the config file into the Config struct
 
-func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appVersion string) (Config, []error, bool) {
+func LoadConfig(cdnConfPath string, dbConfPath string, appVersion string) (Config, []error, bool) {
 	// load cdn.conf
 	cfg, err := LoadCdnConfig(cdnConfPath)
 	if err != nil {
@@ -285,12 +284,6 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appV
 		return Config{}, []error{fmt.Errorf("parsing config '%s': %v", cdnConfPath, err)}, BlockStartup
 	}
 
-	if riakConfPath != "" {
-		cfg.RiakEnabled, cfg.RiakAuthOptions, err = riaksvc.GetRiakConfig(riakConfPath)
-		if err != nil {
-			return Config{}, []error{fmt.Errorf("parsing config '%s': %v", riakConfPath, err)}, BlockStartup
-		}
-	}
 	// check for and load ldap.conf
 	if cfg.LDAPConfPath != "" {
 		cfg.LDAPEnabled, cfg.ConfigLDAP, err = GetLDAPConfig(cfg.LDAPConfPath)

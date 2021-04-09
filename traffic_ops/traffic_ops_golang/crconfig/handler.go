@@ -241,7 +241,7 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		return
 	}
 
-	if err := deliveryservice.DeleteOldCerts(db.DB, inf.Tx.Tx, inf.Config, tc.CDNName(cdn)); err != nil {
+	if err := deliveryservice.DeleteOldCerts(db.DB, inf.Tx.Tx, inf.Config, tc.CDNName(cdn), inf.Vault); err != nil {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" snapshotting CRConfig and Monitoring: starting old certificate deletion job: "+err.Error()), deprecated, &alt)
 		return
 	}
@@ -293,7 +293,7 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := deliveryservice.DeleteOldCerts(db.DB, inf.Tx.Tx, inf.Config, tc.CDNName(cdn)); err != nil {
+	if err := deliveryservice.DeleteOldCerts(db.DB, inf.Tx.Tx, inf.Config, tc.CDNName(cdn), inf.Vault); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" old snapshotting CRConfig and Monitoring: starting old certificate deletion job: "+err.Error()))
 		return
 	}

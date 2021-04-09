@@ -22,15 +22,12 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-func (to *Session) SteeringWithHdr(header http.Header) ([]tc.Steering, toclientlib.ReqInf, error) {
+// Steering retrieves information about all (Tenant-accessible) Steering
+// Delivery Services stored in Traffic Ops.
+func (to *Session) Steering(header http.Header) ([]tc.Steering, toclientlib.ReqInf, error) {
 	data := struct {
 		Response []tc.Steering `json:"response"`
 	}{}
 	reqInf, err := to.get(`/steering`, header, &data)
 	return data.Response, reqInf, err
-}
-
-// Deprecated: Steering will be removed in 6.0. Use SteeringWithHdr.
-func (to *Session) Steering() ([]tc.Steering, toclientlib.ReqInf, error) {
-	return to.SteeringWithHdr(nil)
 }
