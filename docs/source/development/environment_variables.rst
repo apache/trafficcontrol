@@ -45,7 +45,6 @@ Various :abbr:`ATC (Apache Traffic Control)` components and tools use specific e
 
 	- :atc-file:`infrastructure/cdn-in-a-box/traffic_ops/to-access.sh` expects this password to authenticate the administrative-level user given by :envvar:`TO_USER`.
 	- :ref:`atstccfg` uses this variable to authenticate the user used for fetching configuration information.
-	- :ref:`compare-tool` uses this variable to specify the password of the user of the *reference* Traffic Ops instance. It will also be used to authenticate the test user if that user's password is not separately defined.
 	- :ref:`toaccess-module` uses this variable to authenticate with the Traffic Ops instance before sending requests.
 	- The Python :ref:`ort.py` will use this variable to specify the password of the user as whom to authenticate when fetching configuration information - but only when using the "new calling convention".
 
@@ -58,7 +57,6 @@ Various :abbr:`ATC (Apache Traffic Control)` components and tools use specific e
 	- :atc-file:`infrastructure/cdn-in-a-box/traffic_ops/to-access.sh` uses this variable to connect to the :ref:`ciab` Traffic Ops instance. It is passed directly to :manpage:`curl(1)` after path portions are appended, and so is subject to the restrictions and assumptions thereof.
 	- The Traffic Ops :ref:`to-go-tests` for integration with the Go client use this to define the URL at which the Traffic Ops instance is running. It will override configuration file settings that specify the instance location.
 	- :ref:`atstccfg` uses this variable to specify the Traffic Ops instance used to fetch configuration information.
-	- :ref:`compare-tool` uses this variable to specify the *reference* Traffic Ops instance's location. Be aware, though, that :program:`genConfigRoutes.py` doesn't respect the scheme if provided; it will always attempt to use HTTPS.
 	- :ref:`toaccess-module` uses this variable to identify the Traffic Ops instance to which requests will be sent.
 	- The Python :ref:`ort.py` will use this variable to specify the Traffic Ops instance used to fetch configuration information - but only when using the "new calling convention".
 
@@ -70,6 +68,5 @@ Various :abbr:`ATC (Apache Traffic Control)` components and tools use specific e
 
 	- :atc-file:`infrastructure/cdn-in-a-box/traffic_ops/to-access.sh` expects this to be the name of an administrative-level user.
 	- :ref:`atstccfg` uses this variable to name the user as whom to authenticate for fetching configuration information.
-	- :ref:`compare-tool` uses this variable to specify the user of the *reference* Traffic Ops instance. It will also be used to identify the test user if that user is not separately defined.
 	- :ref:`toaccess-module` uses this variable to authenticate with the Traffic Ops instance before sending requests.
 	- The Python :ref:`ort.py` will use this variable to specify the user as whom to authenticate when fetching configuration information - but only when using the "new calling convention".

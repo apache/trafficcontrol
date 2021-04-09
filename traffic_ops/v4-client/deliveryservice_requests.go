@@ -34,7 +34,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40
 	var alerts tc.Alerts
 	var created tc.DeliveryServiceRequestV40
 	if dsr.AssigneeID == nil && dsr.Assignee != nil {
-		res, reqInf, err := to.GetUserByUsernameWithHdr(*dsr.Assignee, nil)
+		res, reqInf, err := to.GetUserByUsername(*dsr.Assignee, nil)
 		if err != nil {
 			return created, alerts, reqInf, err
 		}
@@ -45,7 +45,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40
 	}
 
 	if dsr.AuthorID == nil && dsr.Author != "" {
-		res, reqInf, err := to.GetUserByUsernameWithHdr(dsr.Author, nil)
+		res, reqInf, err := to.GetUserByUsername(dsr.Author, nil)
 		if err != nil {
 			return created, alerts, reqInf, err
 		}
@@ -56,7 +56,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40
 	}
 
 	if dsr.DeliveryService.TypeID == nil && dsr.DeliveryService.Type.String() != "" {
-		ty, reqInf, err := to.GetTypeByNameWithHdr(dsr.DeliveryService.Type.String(), nil)
+		ty, reqInf, err := to.GetTypeByName(dsr.DeliveryService.Type.String(), nil)
 		if err != nil || len(ty) == 0 {
 			return created, alerts, reqInf, errors.New("no type named " + dsr.DeliveryService.Type.String())
 		}
@@ -64,7 +64,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40
 	}
 
 	if dsr.DeliveryService.CDNID == nil && dsr.DeliveryService.CDNName != nil {
-		cdns, reqInf, err := to.GetCDNByNameWithHdr(*dsr.DeliveryService.CDNName, nil)
+		cdns, reqInf, err := to.GetCDNByName(*dsr.DeliveryService.CDNName, nil)
 		if err != nil || len(cdns) == 0 {
 			return created, alerts, reqInf, fmt.Errorf("no CDN named '%s'", *dsr.DeliveryService.CDNName)
 		}
@@ -72,7 +72,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40
 	}
 
 	if dsr.DeliveryService.ProfileID == nil && dsr.DeliveryService.ProfileName != nil {
-		profiles, reqInf, err := to.GetProfileByNameWithHdr(*dsr.DeliveryService.ProfileName, nil)
+		profiles, reqInf, err := to.GetProfileByName(*dsr.DeliveryService.ProfileName, nil)
 		if err != nil || len(profiles) == 0 {
 			return created, alerts, reqInf, fmt.Errorf("no Profile named '%s'", *dsr.DeliveryService.ProfileName)
 		}
@@ -80,8 +80,8 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40
 	}
 
 	if dsr.DeliveryService.TenantID == nil && dsr.DeliveryService.Tenant != nil {
-		ten, reqInf, err := to.TenantByNameWithHdr(*dsr.DeliveryService.Tenant, nil)
-		if err != nil || ten == nil {
+		ten, reqInf, err := to.GetTenantByName(*dsr.DeliveryService.Tenant, nil)
+		if err != nil {
 			return created, alerts, reqInf, fmt.Errorf("no Tenant named '%s'", *dsr.DeliveryService.Tenant)
 		}
 		dsr.DeliveryService.TenantID = &ten.ID

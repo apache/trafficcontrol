@@ -14,7 +14,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-results
-compare
-__pycache__
+
+name: 'to-ort-integration-tests'
+description: 'Runs Traffic Ops ORT integration tests'
+runs:
+  using: 'node12'
+  main: 'main.js'

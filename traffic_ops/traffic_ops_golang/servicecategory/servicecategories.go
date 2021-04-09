@@ -58,7 +58,7 @@ func (serviceCategory TOServiceCategory) GetAuditName() string {
 }
 
 func (serviceCategory TOServiceCategory) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"name", api.GetStringKey}}
+	return []api.KeyFieldInfo{{Field: "name", Func: api.GetStringKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
@@ -80,7 +80,7 @@ func (serviceCategory TOServiceCategory) GetType() string {
 
 func (serviceCategory *TOServiceCategory) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"name": dbhelpers.WhereColumnInfo{"sc.name", nil},
+		"name": dbhelpers.WhereColumnInfo{Column: "sc.name"},
 	}
 }
 

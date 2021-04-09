@@ -25,34 +25,30 @@ import (
 )
 
 const (
+	// APITypes is the API version-relative path to the /types API endpoint.
 	APITypes = "/types"
 )
 
-// CreateType creates a Type. There should be a very good reason for doing this.
+// CreateType creates the given Type. There should be a very good reason for doing this.
 func (to *Session) CreateType(typ tc.Type) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(APITypes, typ, nil, &alerts)
 	return alerts, reqInf, err
 }
 
-func (to *Session) UpdateTypeByIDWithHdr(id int, typ tc.Type, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+// UpdateType replaces the Type identified by 'id' with the one provided.
+func (to *Session) UpdateType(id int, typ tc.Type, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", APITypes, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, typ, header, &alerts)
 	return alerts, reqInf, err
 }
 
-// UpdateTypeByID updates a Type by ID.
-// Deprecated: UpdateTypeByID will be removed in 6.0. Use UpdateTypeByIDWithHdr.
-func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, toclientlib.ReqInf, error) {
-	return to.UpdateTypeByIDWithHdr(id, typ, nil)
-}
-
-// GetTypesWithHdr returns a list of Types, with an http header and 'useInTable' parameters.
+// GetTypes returns a list of Types, with an http header and 'useInTable' parameters.
 // If a 'useInTable' parameter is passed, the returned Types are restricted to those with
 // that exact 'useInTable' property. Only exactly 1 or exactly 0 'useInTable' parameters may
 // be passed; passing more will result in an error being returned.
-func (to *Session) GetTypesWithHdr(header http.Header, useInTable ...string) ([]tc.Type, toclientlib.ReqInf, error) {
+func (to *Session) GetTypes(header http.Header, useInTable ...string) ([]tc.Type, toclientlib.ReqInf, error) {
 	if len(useInTable) > 1 {
 		return nil, toclientlib.ReqInf{}, errors.New("please pass in a single value for the 'useInTable' parameter")
 	}
@@ -76,43 +72,24 @@ func (to *Session) GetTypesWithHdr(header http.Header, useInTable ...string) ([]
 	return types, reqInf, nil
 }
 
-// GetTypes returns a list of Types. If a 'useInTable' parameter is passed, the returned Types
-// are restricted to those with that exact 'useInTable' property. Only exactly 1 or exactly 0
-// 'useInTable' parameters may be passed; passing more will result in an error being returned.
-// Deprecated: GetTypes will be removed in 6.0. Use GetTypesWithHdr.
-func (to *Session) GetTypes(useInTable ...string) ([]tc.Type, toclientlib.ReqInf, error) {
-	return to.GetTypesWithHdr(nil, useInTable...)
-}
-
-// GetTypeByID GETs a Type by the Type ID, and filters by http header params in the request.
-func (to *Session) GetTypeByIDWithHdr(id int, header http.Header) ([]tc.Type, toclientlib.ReqInf, error) {
+// GetTypeByID retrieves the Type with the given ID.
+func (to *Session) GetTypeByID(id int, header http.Header) ([]tc.Type, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", APITypes, id)
 	var data tc.TypesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GetTypeByID GETs a Type by the Type ID.
-// Deprecated: GetTypeByID will be removed in 6.0. Use GetTypeByIDWithHdr.
-func (to *Session) GetTypeByID(id int) ([]tc.Type, toclientlib.ReqInf, error) {
-	return to.GetTypeByIDWithHdr(id, nil)
-}
-
-func (to *Session) GetTypeByNameWithHdr(name string, header http.Header) ([]tc.Type, toclientlib.ReqInf, error) {
+// GetTypeByName retrieves the Type with the given Name.
+func (to *Session) GetTypeByName(name string, header http.Header) ([]tc.Type, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?name=%s", APITypes, name)
 	var data tc.TypesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GetTypeByName GETs a Type by the Type name.
-// Deprecated: GetTypeByName will be removed in 6.0. Use GetTypeByNameWithHdr.
-func (to *Session) GetTypeByName(name string) ([]tc.Type, toclientlib.ReqInf, error) {
-	return to.GetTypeByNameWithHdr(name, nil)
-}
-
-// DeleteTypeByID DELETEs a Type by ID.
-func (to *Session) DeleteTypeByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
+// DeleteType deletes the Type with the given ID.
+func (to *Session) DeleteType(id int) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", APITypes, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)

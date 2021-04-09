@@ -779,8 +779,8 @@ func GetServerInfo(serverID int, tx *sql.Tx) (tc.ServerInfo, bool, error) {
 	return servers[0], true, nil
 }
 
-func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]struct{}, error) {
-	dses := map[tc.DeliveryServiceName]struct{}{}
+func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[string]struct{}, error) {
+	dses := map[string]struct{}{}
 	qry := `SELECT xml_id from deliveryservice where cdn_id = (select id from cdn where name = $1)`
 	rows, err := tx.Query(qry, cdn)
 	if err != nil {
@@ -789,7 +789,7 @@ func GetCDNDSes(tx *sql.Tx, cdn tc.CDNName) (map[tc.DeliveryServiceName]struct{}
 	defer rows.Close()
 
 	for rows.Next() {
-		ds := tc.DeliveryServiceName("")
+		ds := ""
 		if err := rows.Scan(&ds); err != nil {
 			return nil, errors.New("scanning: " + err.Error())
 		}

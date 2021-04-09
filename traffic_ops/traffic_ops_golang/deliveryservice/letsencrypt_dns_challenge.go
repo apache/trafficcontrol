@@ -46,7 +46,7 @@ func GetDnsChallengeRecords(w http.ResponseWriter, r *http.Request) {
 	getQuery := `SELECT fqdn, record FROM dnschallenges`
 
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"fqdn": dbhelpers.WhereColumnInfo{"fqdn", nil},
+		"fqdn": dbhelpers.WhereColumnInfo{Column: "fqdn"},
 	}
 
 	where, _, _, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)

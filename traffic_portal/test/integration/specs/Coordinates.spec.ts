@@ -16,14 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+import { readFileSync } from "fs";
+
 import { browser } from 'protractor';
+import using from "jasmine-data-provider";
+
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { CoordinatesPage } from '../PageObjects/CoordinatesPage.po';
 import { API } from '../CommonUtils/API';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-
-let fs = require('fs')
-let using = require('jasmine-data-provider');
 
 let api = new API();
 let loginPage = new LoginPage();
@@ -34,13 +35,12 @@ let coordinatesPage = new CoordinatesPage();
 let setupFile = 'Data/Coordinates/Setup.json';
 let cleanupFile = 'Data/Coordinates/Cleanup.json';
 let filename = 'Data/Coordinates/TestCases.json';
-let testData = JSON.parse(fs.readFileSync(filename));
+let testData = JSON.parse(readFileSync(filename, "utf8"));
 
 describe('Setup API for coordinates test', function () {
     it('Setup', async function () {
-        let setupData = JSON.parse(fs.readFileSync(setupFile));
-        let output = await api.UseAPI(setupData);
-        expect(output).toBeNull();
+        let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
+        await api.UseAPI(setupData);
     })
 })
 
@@ -70,7 +70,7 @@ using(testData.Coordinates, async function(coordinatesData){
                     await coordinatesPage.OpenCoordinatesPage();
                 })
             })
-          
+
             using(coordinatesData.Remove, function (remove) {
                 it(remove.description, async function () {
                     await coordinatesPage.SearchCoordinates(remove.Name);
@@ -89,8 +89,7 @@ using(testData.Coordinates, async function(coordinatesData){
 
 describe('Clean up API for coordinates test', function () {
     it('Cleanup', async function () {
-        let cleanupData = JSON.parse(fs.readFileSync(cleanupFile));
-        let output = await api.UseAPI(cleanupData);
-        expect(output).toBeNull();
+        let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
+        await api.UseAPI(cleanupData);
     })
 })

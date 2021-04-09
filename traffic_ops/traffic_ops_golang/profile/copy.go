@@ -142,10 +142,9 @@ func copyParameters(inf *api.APIInfo, p *tc.ProfileCopy) errorDetails {
 	}
 
 	toParam := &profileparameter.TOProfileParameter{
-		api.APIInfoImpl{
+		APIInfoImpl: api.APIInfoImpl{
 			ReqInfo: inf,
 		},
-		tc.ProfileParameterNullable{},
 	}
 
 	parameters, userErr, sysErr, errCode, _ := toParam.Read(nil, false)

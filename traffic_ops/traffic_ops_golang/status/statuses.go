@@ -59,16 +59,16 @@ func (v *TOStatus) NewReadObj() interface{}       { return &TOStatus{} }
 func (v *TOStatus) SelectQuery() string           { return selectQuery() }
 func (v *TOStatus) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"id":          dbhelpers.WhereColumnInfo{"id", api.IsInt},
-		"description": dbhelpers.WhereColumnInfo{"description", nil},
-		"name":        dbhelpers.WhereColumnInfo{"name", nil},
+		"id":          dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt},
+		"description": dbhelpers.WhereColumnInfo{Column: "description"},
+		"name":        dbhelpers.WhereColumnInfo{Column: "name"},
 	}
 }
 func (v *TOStatus) UpdateQuery() string { return updateQuery() }
 func (v *TOStatus) DeleteQuery() string { return deleteQuery() }
 
 func (status TOStatus) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions

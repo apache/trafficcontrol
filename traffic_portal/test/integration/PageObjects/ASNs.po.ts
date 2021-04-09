@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ElementFinder, browser, by, element } from 'protractor'
-import { async, delay } from 'q';
+import { browser, by, element } from 'protractor'
+
+import { twoNumberRandomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -28,9 +29,6 @@ export class ASNsPage extends BasePage {
     private txtCacheGroup = element(by.name("cachegroup"))
     private btnDelete = element(by.xpath("//button[text()='Delete']"));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private config = require('../config');
-    private randomize = this.config.randomize;
-    private twoNumberRandomize = this.config.twoNumberRandomize;
 
     async OpenASNsPage() {
         let snp = new SideNavigationPage();
@@ -40,38 +38,27 @@ export class ASNsPage extends BasePage {
         let snp = new SideNavigationPage();
         await snp.ClickTopologyMenu();
     }
-    async CreateASNs(asns) {
-        let result = false;
+    public async CreateASNs(asns): Promise<boolean> {
         let basePage = new BasePage();
         let snp = new SideNavigationPage();
         await snp.NavigateToASNsPage();
         await this.btnCreateNewASNs.click();
-        await this.txtASN.sendKeys(asns.ASNs + this.twoNumberRandomize);
+        await this.txtASN.sendKeys(asns.ASNs + twoNumberRandomize);
         await this.txtCacheGroup.sendKeys(asns.CacheGroup)
         await basePage.ClickCreate();
-        result = await basePage.GetOutputMessage().then(function (value) {
-            if (asns.validationMessage == value) {
-                return true;
-            } else {
-                return false;
-            }
-        })
-        return result;
+        return await basePage.GetOutputMessage().then(v => asns.validationMessage === v);
     }
-    async SearchASNs(nameASNs: string) {
-        let name = nameASNs + this.twoNumberRandomize;
-        let result = false;
+    public async SearchASNs(nameASNs: string): Promise<boolean> {
+        let name = nameASNs + twoNumberRandomize;
         let snp = new SideNavigationPage();
         await snp.NavigateToASNsPage();
         await this.txtSearch.clear();
         await this.txtSearch.sendKeys(name);
         if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
             await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-            result = true;
-        } else {
-            result = undefined;
+            return true;
         }
-        return result;
+        return false;
     }
     async UpdateASNs(asns) {
         let result = false;
@@ -81,7 +68,7 @@ export class ASNsPage extends BasePage {
             await basePage.ClickUpdate();
         }else if(asns.description.includes("update an ASN")){
             await this,this.txtASN.clear();
-            await this.txtASN.sendKeys(asns.NewASNs + this.twoNumberRandomize);
+            await this.txtASN.sendKeys(asns.NewASNs + twoNumberRandomize);
             await basePage.ClickUpdate();
         }else{
             result = false;
@@ -96,7 +83,7 @@ export class ASNsPage extends BasePage {
         return result;
     }
     async DeleteASNs(asns){
-        let name = asns.ASNs + this.twoNumberRandomize;
+        let name = asns.ASNs + twoNumberRandomize;
         let result = false;
         let basePage = new BasePage();
         await this.btnDelete.click();
@@ -114,4 +101,3 @@ export class ASNsPage extends BasePage {
 
 
 }
-

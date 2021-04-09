@@ -49,16 +49,16 @@ func (v *TOPhysLocation) NewReadObj() interface{}       { return &tc.PhysLocatio
 func (v *TOPhysLocation) SelectQuery() string           { return selectQuery() }
 func (v *TOPhysLocation) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"name":   dbhelpers.WhereColumnInfo{"pl.name", nil},
-		"id":     dbhelpers.WhereColumnInfo{"pl.id", api.IsInt},
-		"region": dbhelpers.WhereColumnInfo{"pl.region", api.IsInt},
+		"name":   dbhelpers.WhereColumnInfo{Column: "pl.name"},
+		"id":     dbhelpers.WhereColumnInfo{Column: "pl.id", Checker: api.IsInt},
+		"region": dbhelpers.WhereColumnInfo{Column: "pl.region", Checker: api.IsInt},
 	}
 }
 func (v *TOPhysLocation) UpdateQuery() string { return updateQuery() }
 func (v *TOPhysLocation) DeleteQuery() string { return deleteQuery() }
 
 func (pl TOPhysLocation) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions

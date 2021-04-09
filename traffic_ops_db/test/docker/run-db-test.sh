@@ -75,15 +75,21 @@ get_db_dumps() {
     find /db_dumps -name '*.dump'
 }
 
+db_is_empty=true
+
 for d in $(get_db_dumps); do
+    db_is_empty=false
     echo "checking integrity of DB dump: $d"
     pg_restore -l "$d" > /dev/null || { echo "invalid DB dump: $d. Unable to list contents"; exit 1; }
 done
 
 cd "$TO_DIR"
-db_is_empty=false
-old_db_version=$(get_current_db_version)
-[[ "$old_db_version" =~ ^failed ]] && { echo "get_current_db_version failed: $old_db_version"; exit 1; }
+old_db_version=0
+
+if [[ "$db_is_empty" = false ]]; then
+  old_db_version=$(get_current_db_version)
+  [[ "$old_db_version" =~ ^failed ]] && { echo "get_current_db_version failed: $old_db_version"; exit 1; }
+fi
 
 # reset the DB if it is empty (i.e. no db.dump was provided)
 if [[ "$old_db_version" -eq 0 ]]; then

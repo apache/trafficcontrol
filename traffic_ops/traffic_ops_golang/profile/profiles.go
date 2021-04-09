@@ -64,7 +64,7 @@ func (v *TOProfile) UpdateQuery() string           { return updateQuery() }
 func (v *TOProfile) DeleteQuery() string           { return deleteQuery() }
 
 func (prof TOProfile) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{IDQueryParam, api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: IDQueryParam, Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
@@ -113,9 +113,9 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		CDNQueryParam:  dbhelpers.WhereColumnInfo{"c.id", nil},
-		NameQueryParam: dbhelpers.WhereColumnInfo{"prof.name", nil},
-		IDQueryParam:   dbhelpers.WhereColumnInfo{"prof.id", api.IsInt},
+		CDNQueryParam:  dbhelpers.WhereColumnInfo{Column: "c.id"},
+		NameQueryParam: dbhelpers.WhereColumnInfo{Column: "prof.name"},
+		IDQueryParam:   dbhelpers.WhereColumnInfo{Column: "prof.id", Checker: api.IsInt},
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(prof.APIInfo().Params, queryParamsToQueryCols)
 

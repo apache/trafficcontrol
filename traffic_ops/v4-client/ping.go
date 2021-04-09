@@ -20,10 +20,11 @@ import (
 )
 
 const (
+	// APIPing is the full path to the /ping API endpoint.
 	APIPing = "/ping"
 )
 
-// Ping returns a static json object to show that traffic_ops is responsive
+// Ping returns a static json object to show that traffic_ops is responsive.
 func (to *Session) Ping() (map[string]string, toclientlib.ReqInf, error) {
 	var data map[string]string
 	reqInf, err := to.get(APIPing, nil, &data)

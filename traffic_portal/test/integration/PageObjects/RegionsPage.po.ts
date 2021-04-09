@@ -16,10 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ElementFinder, browser, by, element } from 'protractor'
-import { async, delay } from 'q';
+import { browser, by, element } from 'protractor';
+
+import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
+
 export class RegionsPage extends BasePage {
     private btnCreateNewRegions = element(by.name('createRegionButton'));
     private txtSearch = element(by.id('regionsTable_filter')).element(by.css('label input'));
@@ -27,8 +29,7 @@ export class RegionsPage extends BasePage {
     private txtDivision = element(by.name('division'));
     private btnDelete = element(by.xpath("//button[text()='Delete']"));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private config = require('../config');
-    private randomize = this.config.randomize;
+    private randomize = randomize;
     async OpenRegionsPage(){
         let snp = new SideNavigationPage();
         await snp.NavigateToRegionsPage();
@@ -56,23 +57,19 @@ export class RegionsPage extends BasePage {
         })
         return result;
     }
-    async SearchRegions(nameRegions:string){
+    public async SearchRegions(nameRegions:string): Promise<boolean> {
         let name = nameRegions + this.randomize;
-        let result = false;
         let snp = new SideNavigationPage();
         await snp.NavigateToRegionsPage();
         await this.txtSearch.clear();
         await this.txtSearch.sendKeys(name);
         if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
             await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-            result = true;
-        } else {
-            result = undefined;
+            return true;
         }
-        return result;
+        return false;
     }
-    async UpdateRegions(regions){
-        let result = false;
+    public async UpdateRegions(regions): Promise<boolean | undefined> {
         let basePage = new BasePage();
         switch(regions.description){
             case "update Region's Division":
@@ -80,17 +77,9 @@ export class RegionsPage extends BasePage {
                 await basePage.ClickUpdate();
                 break;
             default:
-                result = undefined;
+                return undefined;
         }
-        result = await basePage.GetOutputMessage().then(function (value) {
-            if (regions.validationMessage == value) {
-              return true;
-            } else {
-              return false;
-            }
-          })
-          return result;
-
+        return await basePage.GetOutputMessage().then(value => regions.validationMessage === value);
     }
     async DeleteRegions(regions){
         let name = regions.Name + this.randomize;

@@ -138,7 +138,8 @@ func getServerConfigRemapDotConfigForMid(
 				continue
 			}
 		}
-		if ds.Type.IsLive() && !ds.Type.IsNational() && !hasTopology {
+
+		if !ds.Type.UsesMidCache() && (!hasTopology || *ds.Topology == "") {
 			continue // Live local delivery services skip mids (except Topologies ignore DS types)
 		}
 

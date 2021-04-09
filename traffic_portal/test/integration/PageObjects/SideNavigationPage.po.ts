@@ -16,12 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ElementFinder, browser, by, element, ExpectedConditions, protractor, until } from 'protractor';
-import { async, delay } from 'q';
+import { browser, by, element, ExpectedConditions } from 'protractor';
 import { BasePage } from './BasePage.po';
 
 export class SideNavigationPage extends BasePage{
-    private lnkDashboard = element(by.xpath("//div[@id='sidebar-menu']//a[contains(text(),'Dashboard')]"))
     //Navigation for Configure
     private propConfigure  = "//div[@id='sidebar-menu']//a[contains(text(),'Configure')]";
     private mnuConfigure = element(by.xpath( this.propConfigure ))
@@ -45,7 +43,7 @@ export class SideNavigationPage extends BasePage{
     private lnkUsers = element(by.xpath("//a[@href='/#!/users']"));
     //Navigation for CDNs
     private propCDN  = "//div[@id='sidebar-menu']//a[contains(text(),'CDNs')]";
-    private mnuCDN = element(by.xpath(this.propCDN)) 
+    private mnuCDN = element(by.xpath(this.propCDN))
     //Navigation for Topology
     private propTopology  = "//div[@id='sidebar-menu']//a[contains(text(),'Topology')]"
     private mnuTopology = element(by.xpath( this.propTopology ))
@@ -115,61 +113,61 @@ export class SideNavigationPage extends BasePage{
     async NavigateToOriginsPage(){
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkOrigins), 2000);
         await browser.actions().mouseMove(this.lnkOrigins).perform();
-        await browser.actions().click(this.lnkOrigins).perform();    
+        await browser.actions().click(this.lnkOrigins).perform();
     }
     async NavigateToProfilesPage() {
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkProfiles), 2000);
         await browser.actions().mouseMove(this.lnkProfiles).perform();
-        await browser.actions().click(this.lnkProfiles).perform();    
+        await browser.actions().click(this.lnkProfiles).perform();
     }
     async NavigateToParametersPage() {
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkParameters), 2000);
         await browser.actions().mouseMove(this.lnkParameters).perform();
-        await browser.actions().click(this.lnkParameters).perform();    
-    } 
+        await browser.actions().click(this.lnkParameters).perform();
+    }
     async NavigateToTypesPage(){
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkTypes), 2000);
         await browser.actions().mouseMove(this.lnkTypes).perform();
-        await browser.actions().click(this.lnkTypes).perform(); 
+        await browser.actions().click(this.lnkTypes).perform();
     }
     async NavigateToStatusesPage(){
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkStatuses), 2000);
         await browser.actions().mouseMove(this.lnkStatuses).perform();
-        await browser.actions().click(this.lnkStatuses).perform(); 
+        await browser.actions().click(this.lnkStatuses).perform();
     }
     async NavigateToDeliveryServicesPage() {
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkDeliveryServices), 2000);
         await browser.actions().mouseMove(this.lnkDeliveryServices).perform();
-        await browser.actions().click(this.lnkDeliveryServices).perform();    
+        await browser.actions().click(this.lnkDeliveryServices).perform();
     }
     async NavigateToDeliveryServicesRequestsPage(){
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkDeliveryServiceRequest), 2000);
         await browser.actions().mouseMove(this.lnkDeliveryServiceRequest).perform();
-        await browser.actions().click(this.lnkDeliveryServiceRequest).perform();    
+        await browser.actions().click(this.lnkDeliveryServiceRequest).perform();
     }
     async NavigateToServiceCategoriesPage(){
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkServiceCategories), 2000);
         await browser.actions().mouseMove(this.lnkServiceCategories).perform();
-        await browser.actions().click(this.lnkServiceCategories).perform();    
+        await browser.actions().click(this.lnkServiceCategories).perform();
     }
     async NavigateToUsersPage(){
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkUsers), 2000);
         await browser.actions().mouseMove(this.lnkUsers).perform();
-        await browser.actions().click(this.lnkUsers).perform();    
+        await browser.actions().click(this.lnkUsers).perform();
     }
     async NavigateToTenantsPage(){
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkTenants), 2000);
         await browser.actions().mouseMove(this.lnkTenants).perform();
-        await browser.actions().click(this.lnkTenants).perform();    
+        await browser.actions().click(this.lnkTenants).perform();
     }
     async NavigateToCDNPage(){
         await browser.wait(ExpectedConditions.visibilityOf(this.mnuCDN), 2000);
         await browser.actions().mouseMove(this.mnuCDN).perform();
-        await browser.actions().click(this.mnuCDN).perform();   
+        await browser.actions().click(this.mnuCDN).perform();
     }
     async NavigateToPhysLocation(){
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkPhysLocations), 2000);
         await browser.actions().mouseMove(this.lnkPhysLocations).perform();
-        await browser.actions().click(this.lnkPhysLocations).perform();   
+        await browser.actions().click(this.lnkPhysLocations).perform();
     }
 }

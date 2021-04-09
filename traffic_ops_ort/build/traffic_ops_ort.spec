@@ -71,6 +71,13 @@ go_toupd_dir=src/github.com/apache/trafficcontrol/traffic_ops_ort/to_updater
 	cp "$TC_DIR"/traffic_ops_ort/to_updater/to_updater .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
+# copy plugin_verifier binary
+go_plugin_dir=src/github.com/apache/trafficcontrol/traffic_ops_ort/plugin_verifier
+( mkdir -p "$go_plugin_dir" && \
+	cd "$go_plugin_dir" && \
+	cp "$TC_DIR"/traffic_ops_ort/plugin_verifier/plugin_verifier .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
+
 %install
 mkdir -p ${RPM_BUILD_ROOT}/opt/ort
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
@@ -93,6 +100,9 @@ cp -p "$to_req_src"/to_requester ${RPM_BUILD_ROOT}/opt/ort
 to_upd_src=src/github.com/apache/trafficcontrol/traffic_ops_ort/to_updater
 cp -p "$to_upd_src"/to_updater ${RPM_BUILD_ROOT}/opt/ort
 
+plugin_vfy_src=src/github.com/apache/trafficcontrol/traffic_ops_ort/plugin_verifier
+cp -p "$plugin_vfy_src"/plugin_verifier ${RPM_BUILD_ROOT}/opt/ort
+
 %clean
 rm -rf ${RPM_BUILD_ROOT}
 
@@ -107,6 +117,7 @@ rm -rf ${RPM_BUILD_ROOT}
 /opt/ort/t3c
 /opt/ort/to_requester
 /opt/ort/to_updater
+/opt/ort/plugin_verifier
 
 %config(noreplace) /etc/logrotate.d/atstccfg
 %config(noreplace) /var/log/ort/atstccfg.log

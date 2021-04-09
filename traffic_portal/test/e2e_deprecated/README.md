@@ -17,7 +17,8 @@
 	under the License.
 -->
 
-# UI Tests
+# Deprecated TP UI Tests
+*Use /traffic_portal/integration for new tests*
 
 The Traffic Portal UI tests use [Protractor](https://www.protractortest.org/#/tutorial), which thus must be installed prior to their execution. To run them, follow these steps:
 

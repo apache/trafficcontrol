@@ -36,8 +36,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
 	"github.com/go-acme/lego/certcrypto"
 	"github.com/go-acme/lego/certificate"
@@ -57,8 +57,8 @@ func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured"))
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.RenewAcmeCertificate: Traffic Vault is not configured"))
 		return
 	}
 	xmlID := inf.Params["xmlid"]
@@ -70,7 +70,7 @@ func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 
 	ctx, _ := context.WithTimeout(r.Context(), LetsEncryptTimeout)
 
-	userErr, sysErr, statusCode := renewAcmeCerts(inf.Config, xmlID, ctx, inf.User)
+	userErr, sysErr, statusCode := renewAcmeCerts(inf.Config, xmlID, ctx, inf.User, inf.Vault)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 	}
@@ -79,7 +79,7 @@ func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, currentUser *auth.CurrentUser) (error, error, int) {
+func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, currentUser *auth.CurrentUser, tv trafficvault.TrafficVault) (error, error, int) {
 	db, err := api.GetDB(ctx)
 	if err != nil {
 		log.Errorf(dsName+": Error getting db: %s", err.Error())
@@ -120,7 +120,7 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, curr
 	if cfg == nil {
 		return nil, errors.New("acme: config was nil"), http.StatusInternalServerError
 	}
-	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObjV15(dsName, strconv.Itoa(int(*certVersion)), tx, cfg.RiakAuthOptions, cfg.RiakPort)
+	keyObj, ok, err := tv.GetDeliveryServiceSSLKeys(dsName, strconv.Itoa(int(*certVersion)), tx)
 	if err != nil {
 		return nil, errors.New("getting ssl keys for xmlId: " + dsName + " and version: " + strconv.Itoa(int(*certVersion)) + " : " + err.Error()), http.StatusInternalServerError
 	}
@@ -169,10 +169,10 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, curr
 		CSR: string(EncodePEMToLegacyPerlRiakFormat([]byte("ACME Generated"))),
 	}
 
-	if err := riaksvc.PutDeliveryServiceSSLKeysObj(newCertObj, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
-		log.Errorf("Error posting acme certificate to riak: %s", err.Error())
+	if err := tv.PutDeliveryServiceSSLKeys(newCertObj, tx); err != nil {
+		log.Errorf("Error putting acme certificate in Traffic Vault: %s", err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: FAILED to add SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
-		return nil, errors.New(dsName + ": putting riak keys: " + err.Error()), http.StatusInternalServerError
+		return nil, errors.New(dsName + ": putting keys in Traffic Vault: " + err.Error()), http.StatusInternalServerError
 	}
 
 	tx2, err := db.Begin()

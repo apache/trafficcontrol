@@ -23,6 +23,7 @@ import (
 )
 
 const (
+	// APILogs is the API version-relative path to the /logs API endpoint.
 	APILogs = "/logs"
 )
 

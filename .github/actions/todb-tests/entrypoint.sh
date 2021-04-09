@@ -59,12 +59,12 @@ LATEST_FILE_TIME="$(git log -1 --name-status --format="%ct" . | head -n 1 )"
 mtime_array=()
 arr=($(ls))
 for file in "${arr[@]}"; do
-  mtime_array+=( "$(git log --format=%ct  $file)" )
+  mtime_array+=( "$(git log -1 --format=%ct  $file)" )
 done
 mtime_length=${#mtime_array[@]}
 
 if [[ $LATEST_FILE_TIME != ${mtime_array[$mtime_length-1]} ]]; then
-  echo "ERROR: latest added file: $LATEST_FILE is not in the right order" >&2;
+  echo "ERROR: latest added/modified file: $LATEST_FILE is not in the right order" >&2;
   CODE=1;
 fi
 

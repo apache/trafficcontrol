@@ -25,6 +25,7 @@ import (
 )
 
 const (
+	// APIASNs is the API version-relative path for the /asns API endpoint.
 	APIASNs = "/asns"
 )
 
@@ -43,8 +44,8 @@ func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, toclientlib.
 	return alerts, reqInf, err
 }
 
-// GetASNsWithHeader Returns a list of ASNs matching query params
-func (to *Session) GetASNsWithHeader(params *url.Values, header http.Header) ([]tc.ASN, toclientlib.ReqInf, error) {
+// GetASNs returns a list of ASNs matching query params
+func (to *Session) GetASNs(params *url.Values, header http.Header) ([]tc.ASN, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?%s", APIASNs, params.Encode())
 	var data tc.ASNsResponse
 	reqInf, err := to.get(route, header, &data)

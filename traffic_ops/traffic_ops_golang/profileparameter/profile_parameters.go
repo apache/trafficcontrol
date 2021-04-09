@@ -51,15 +51,15 @@ func (v *TOProfileParameter) NewReadObj() interface{}    { return &tc.ProfilePar
 func (v *TOProfileParameter) SelectQuery() string        { return selectQuery() }
 func (v *TOProfileParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"profileId":   dbhelpers.WhereColumnInfo{"pp.profile", nil},
-		"parameterId": dbhelpers.WhereColumnInfo{"pp.parameter", nil},
-		"lastUpdated": dbhelpers.WhereColumnInfo{"pp.last_updated", nil},
+		"profileId":   dbhelpers.WhereColumnInfo{Column: "pp.profile"},
+		"parameterId": dbhelpers.WhereColumnInfo{Column: "pp.parameter"},
+		"lastUpdated": dbhelpers.WhereColumnInfo{Column: "pp.last_updated"},
 	}
 }
 func (v *TOProfileParameter) DeleteQuery() string { return deleteQuery() }
 
 func (pp TOProfileParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{ProfileIDQueryParam, api.GetIntKey}, {ParameterIDQueryParam, api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: ProfileIDQueryParam, Func: api.GetIntKey}, {Field: ParameterIDQueryParam, Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions

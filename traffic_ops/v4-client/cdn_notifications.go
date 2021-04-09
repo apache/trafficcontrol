@@ -26,6 +26,8 @@ import (
 )
 
 const (
+	// APICDNNotifications is the API version-relative path to the
+	// /cdn_notifications API endpoint.
 	APICDNNotifications = "/cdn_notifications"
 )
 

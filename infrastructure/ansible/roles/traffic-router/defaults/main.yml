@@ -104,7 +104,7 @@ tr_connectors:
     SSLEnabled: true
     clientAuth: false
     sslProtocol: 'TLS'
-    protocols: '+TLSv1.1,+TLSv1.2,+TLSv1.3'
+    protocols: '+TLSv1.2,+TLSv1.3'
     sslImplementationName: 'com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslImplementation'
 
 # dns.properties

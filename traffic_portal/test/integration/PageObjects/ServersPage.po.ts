@@ -16,75 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ElementFinder, browser, by, element, ExpectedConditions } from 'protractor'
-import { async, delay } from 'q';
+import { browser, by, element, ExpectedConditions } from 'protractor';
+
+import randomIpv6 from "random-ipv6";
+
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
-import { ServerCapabilitiesPage } from './ServerCapabilitiesPage.po';
+import { randomize } from '../config';
 
 export class ServersPage extends BasePage {
 
-  private btnSelectFormSubmit = element(by.buttonText('Submit'));
-  private lnkExportAsCSV = element(by.xpath("//button[@title='Export as CSV']"));
-  private btnrefresh = element(by.xpath("//button[@title='Refresh']"));
-  private selectTableColumns = element(by.xpath("//div[@id='toggleColumns']"));
   private btnMore = element(by.xpath("//button[contains(text(),'More')]"));
-  private lnkQueueCDN = element(by.xpath("//a[text()='Queue CDN Server Updates']"));
-  private lnkClearCDN = element(by.xpath("//a[text()='Clear CDN Server Updates']"));
-  private btnShowEntries = element(by.name('serversTable_length'));
 
-  //private btnCreate = element(by.buttonText('Create'));
   private btnDelete = element(by.buttonText('Delete'));
-  private txtUpdateStatus = element(by.xpath("//a[text()='Update Status']"));
-  private lnkQueueServerUpdates = element(by.xpath("//a[text()='Queue Server Updates']"));
-  private lnkClearServerUpdates = element(by.xpath("//a[text()='Clear Server Updates']"));
-  private ViewConfigFiles = element(by.xpath("//a[text()='View Config Files']"));
-
-  private lnkcacheGroupHeading = element(by.xpath("//th[text()='Cache Group']"));
-  private lnkCDNHeading = element(by.xpath("//th[text()='CDN']"));
-  private lnkDomainHeading = element(by.xpath("//th[text()='Domain']"));
-  private lnkHostHeading = element(by.xpath("//th[text()='Host']"));
-  private lnkILOIPHeading = element(by.xpath("//th[text()='ILO IP Address']"));
-  private lnkIPv6AddressHeading = element(by.xpath("//th[text()='IPv6 Address']"));
-  private lnknetworkIPHeading = element(by.xpath("//th[text()='Network IP']"));
-  private lnkphysLocationHeading = element(by.xpath("//th[text()='Phys Location']"));
-  private lnkstatusHeading = element(by.xpath("//th[text()='Status']"));
-  private lnktypeHeading = element(by.xpath("//th[text()='Type']"));
-  private lnkupdatePendingHeading = element(by.xpath("//th[text()='Update Pending']"));
 
   private txtStatus = element(by.name('status'));
-  private txtUpdatePending = element(by.name('updPending'));
   private txtHostName = element(by.xpath("//ol[@class='breadcrumb pull-left']//li[@class='active ng-binding']"))
   private txtDomainName = element(by.name('domainName'));
   private txtProfile = element(by.name('profile'));
-  private txtNetworkGateway = element(by.id("--gateway"));
-  private txtNetworkMTU = element(by.id("-mtu"));
   private txtPhysLocation = element(by.name('physLocation'));
-  private txtIp6Address = element(by.name('ip6Address'));
-  private txtIp6Gateway = element(by.name('ip6Gateway'));
-  private txtTcpPort = element(by.name('tcpPort'));
-  private txtHttpsPort = element(by.name('httpsPort'));
-  private txtRack = element(by.name('rack'));
-  private txtMgmtIpAddress = element(by.name('mgmtIpAddress'));
-  private txtMgmtIpNetmask = element(by.name('mgmtIpNetmask'));
-  private txtMgmtIpGateway = element(by.name('mgmtIpGateway'));
-  private txtIloIpAddress = element(by.name('iloIpAddress'));
-  private txtIloIpNetmask = element(by.name('iloIpNetmask'));
-  private txtIloIpGateway = element(by.name('iloIpGateway'));
-  private txtIloUsername = element(by.name('iloUsername'));
-  private txtIloPassword = element(by.name('iloPassword'));
-  private txtRouterHostName = element(by.name('routerHostName'));
-  private txtRouterPortName = element(by.name('routerPortName'));
   private lblInputError = element(by.className("input-error"));
 
   private txtHostname = element(by.name('hostName'));
   private txtCDN = element(by.name('cdn'));
   private txtCacheGroup = element(by.name('cachegroup'));
   private txtType = element(by.name('type'));
-  private txtNetworkIP= element(by.id("-"));
-  private txtNetworkSubnet = element(by.name('ipNetmask'));
-  private txtSearch = element(by.id('serversTable_filter')).element(by.css('label input'));
-  private mnuServerTable = element(by.id('serversTable'));
   private txtConfirmServerName = element(by.name('confirmWithNameInput'));
 
   private btnYesRemoveSC = element(by.buttonText("Yes"))
@@ -95,18 +51,12 @@ export class ServersPage extends BasePage {
   private btnManageDeliveryService = element(by.linkText('Manage Delivery Services'));
   private btnLinkDStoServer = element(by.xpath("//button[@title='Link Delivery Services to Server']"));
   private txtDSSearch = element(by.id('assignDSTable_filter')).element(by.css('label input'));
-  private btnIpIsService = element(by.xpath("//input[@ng-model='ip.serviceAddress']"))
-  private btnHostSearch = element(by.xpath("(//span[@class='ag-header-icon ag-header-cell-menu-button']//span)[4]"));
-  private txtFilter= element(by.xpath("(//input[@placeholder='Filter...'])[1]"));
-  private btnAddInterfaces = element(by.xpath("//button[@title='add a new interface']//i[1]"));
   private txtInterfaceName = element(by.id("-name"));
-  private btnAddIp = element(by.name('addIPBtn'));
   private btnMoreCreateServer = element(by.name("moreBtn"))
   private btnCreateServer = element(by.name("createServerMenuItem"))
   private txtQuickSearch = element(by.id("quickSearch"));
-  private config = require('../config');
-  private randomize = this.config.randomize;
-  private randomIpv6 = require('random-ipv6');
+  private randomize = randomize;
+
   async OpenServerPage(){
     let snp = new SideNavigationPage();
     await snp.NavigateToServersPage();
@@ -119,7 +69,7 @@ export class ServersPage extends BasePage {
     return this.lblInputError.getText()
   }
 
-  IsServersItemPresent(serversName: string) {
+  public IsServersItemPresent(): PromiseLike<boolean> {
     return element(by.xpath("//table[@id='serversTable']//tr/td[text()='" + "']")).isPresent()
   }
 
@@ -130,9 +80,7 @@ export class ServersPage extends BasePage {
   async CreateServer(server){
     let result = false;
     let basePage = new BasePage();
-    let networkIp = Math.round(Math.random() * 100).toString()+ "." + Math.round(Math.random() * 100).toString() + "." + Math.round(Math.random() * 100).toString() +
-    "." + Math.round(Math.random() * 100).toString();
-    let ipv6 = this.randomIpv6();
+    let ipv6 = randomIpv6();
     await this.btnMoreCreateServer.click();
     await this.btnCreateServer.click();
     await this.txtStatus.sendKeys(server.Status);
@@ -160,7 +108,6 @@ export class ServersPage extends BasePage {
   }
 
   async SearchServer(nameServer:string){
-    let result = false;
     let name = nameServer+this.randomize;
     await this.txtQuickSearch.clear();
     await this.txtQuickSearch.sendKeys(name);
@@ -168,21 +115,18 @@ export class ServersPage extends BasePage {
     await browser.actions().doubleClick(element(by.xpath("//span[text()='"+name+"']"))).perform();
   }
 
-  async SearchDeliveryServiceFromServerPage(name:string){
-    let result = false;
+  public async SearchDeliveryServiceFromServerPage(name:string): Promise<boolean> {
     await this.txtDSSearch.clear();
     await this.txtDSSearch.sendKeys(name);
     if(await browser.isElementPresent(element(by.xpath("//td[@data-search='^"+name+"$']"))) == true){
       await element(by.xpath("//td[@data-search='^"+name+"$']")).click();
-      result = true;
-    }else{
-      result = undefined;
+      return true;
     }
-    return result;
+    return false;
   }
 
-  async AddDeliveryServiceToServer(deliveryServiceName:string,outputMessage:string){
-    let result = false;
+  public async AddDeliveryServiceToServer(deliveryServiceName:string,outputMessage:string): Promise<boolean | undefined> {
+    let result: boolean | undefined = false;
     let basePage = new BasePage();
     let deliveryService = deliveryServiceName+this.randomize;
     let serverNameRandomized;
@@ -219,9 +163,8 @@ export class ServersPage extends BasePage {
 
   }
 
-  async AddServerCapabilitiesToServer(serverCapabilities){
-    let result = false;
-    let serverPage = new ServersPage();
+  public async AddServerCapabilitiesToServer(serverCapabilities): Promise<boolean | undefined> {
+    let result: boolean | undefined = false;
     let basePage = new BasePage();
     let serverCapabilitiesName = serverCapabilities.ServerCapability + this.randomize;
     await this.btnMore.click();
@@ -264,8 +207,8 @@ export class ServersPage extends BasePage {
    }
 
 
-   async RemoveServerCapabilitiesFromServer(serverCapabilities:string,outputMessage:string){
-    let result = false;
+   public async RemoveServerCapabilitiesFromServer(serverCapabilities:string,outputMessage:string): Promise<boolean | undefined> {
+    let result: boolean | undefined = false;
     let basePage = new BasePage();
     let serverCapabilitiesname = serverCapabilities+this.randomize;
     let url;

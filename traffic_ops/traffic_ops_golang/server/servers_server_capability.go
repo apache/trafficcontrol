@@ -65,17 +65,17 @@ func (ssc *TOServerServerCapability) NewReadObj() interface{} {
 func (ssc *TOServerServerCapability) SelectQuery() string { return scSelectQuery() }
 func (ssc *TOServerServerCapability) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		ServerCapabilityQueryParam: dbhelpers.WhereColumnInfo{"sc.server_capability", nil},
-		ServerQueryParam:           dbhelpers.WhereColumnInfo{"s.id", api.IsInt},
-		ServerHostNameQueryParam:   dbhelpers.WhereColumnInfo{"s.host_name", nil},
+		ServerCapabilityQueryParam: dbhelpers.WhereColumnInfo{Column: "sc.server_capability"},
+		ServerQueryParam:           dbhelpers.WhereColumnInfo{Column: "s.id", Checker: api.IsInt},
+		ServerHostNameQueryParam:   dbhelpers.WhereColumnInfo{Column: "s.host_name"},
 	}
 
 }
 func (ssc *TOServerServerCapability) DeleteQuery() string { return scDeleteQuery() }
 func (ssc TOServerServerCapability) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{
-		{ServerQueryParam, api.GetIntKey},
-		{ServerCapabilityQueryParam, api.GetStringKey},
+		{Field: ServerQueryParam, Func: api.GetIntKey},
+		{Field: ServerCapabilityQueryParam, Func: api.GetStringKey},
 	}
 }
 
