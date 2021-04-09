@@ -76,7 +76,7 @@ Traffic Monitor
 
 * Use the debugging configuration you created to start debugging Traffic Monitor. It should connect without first breaking at any line.
 
-For an example of usage, set a breakpoint at `the o.m.RLock() call in ThreadsafeEvents.Get() <https://github.com/apache/trafficcontrol/blob/RELEASE-4.0.0-RC3/traffic_monitor/health/event.go#L69>`_, then visit http://trafficmonitor.infra.ciab.test/publish/EventLog (see :ref:`Traffic Monitor APIs: /publish/EventLog <tm-publish-EventLog>`).
+For an example of usage, set a breakpoint at `the o.m.RLock() call in ThreadsafeEvents.Get() <https://github.com/apache/trafficcontrol/blob/RELEASE-5.1.1/traffic_monitor/health/event.go#L71>`_, then visit http://trafficmonitor.infra.ciab.test/publish/EventLog (see :ref:`Traffic Monitor APIs: /publish/EventLog <tm-publish-EventLog>`).
 
 Traffic Ops
 ===========
@@ -125,7 +125,7 @@ Traffic Ops
 
 * Use the debugging configuration you created to start debugging Traffic Ops. It should connect without first breaking at any line.
 
-For an example of usage, set a breakpoint at `the log.Debugln() call in TOProfile.Read() <https://github.com/apache/trafficcontrol/blob/RELEASE-4.0.0-RC3/traffic_ops/traffic_ops_golang/profile/profiles.go#L129>`_, then visit https://trafficportal.infra.ciab.test/api/1.5/profiles (after logging into :ref:`tp-overview`).
+For an example of usage, set a breakpoint at `the log.Debugln() call in TOProfile.Read() <https://github.com/apache/trafficcontrol/blob/RELEASE-5.1.1/traffic_ops/traffic_ops_golang/profile/profiles.go#L148>`_, then visit https://trafficportal.infra.ciab.test/api/1.5/profiles (after logging into :ref:`tp-overview`).
 
 Traffic Router
 ==============
@@ -273,7 +273,7 @@ Traffic Stats
 
 * Use the debugging configuration you created to start debugging Traffic Stats. It should connect without first breaking at any line.
 
-For an example of usage, set a breakpoint at `the http.Get() call in main.getURL() <https://github.com/apache/trafficcontrol/blob/RELEASE-4.1.0/traffic_stats/traffic_stats.go#L727>`_, then wait 10 seconds for the breakpoint to be hit.
+For an example of usage, set a breakpoint at `the http.Get() call in main.getURL() <https://github.com/apache/trafficcontrol/blob/RELEASE-5.1.1/traffic_stats/traffic_stats.go#L706>`_, then wait 10 seconds for the breakpoint to be hit.
 
 Troubleshooting
 ===============
