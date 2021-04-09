@@ -29,7 +29,6 @@ import (
 	"database/sql"
 	"encoding/pem"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"net/http"
 	"strconv"
 	"strings"
@@ -37,6 +36,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
@@ -198,7 +198,7 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go GetAcmeCertificates(inf.Config, req, ctx, inf.User)
+	go GetAcmeCertificates(inf.Config, req, ctx, inf.User, inf.Vault)
 
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Beginning async ACME call for "+*req.DeliveryService+" using "+*req.AuthType+". This may take a few minutes.")
 }
@@ -257,7 +257,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go GetAcmeCertificates(inf.Config, req, ctx, inf.User)
+	go GetAcmeCertificates(inf.Config, req, ctx, inf.User, inf.Vault)
 
 	var alerts tc.Alerts
 
@@ -272,7 +272,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAcmeCertificates gets or creates an ACME account based on the provider, then gets new certificates for the delivery service requested and saves them to Vault.
-func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEncryptSSLKeysReq, ctx context.Context, currentUser *auth.CurrentUser) error {
+func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEncryptSSLKeysReq, ctx context.Context, currentUser *auth.CurrentUser, tv trafficvault.TrafficVault) error {
 
 	db, err := api.GetDB(ctx)
 	if err != nil {
@@ -395,7 +395,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEncryptSS
 		CSR: string(EncodePEMToLegacyPerlRiakFormat([]byte("ACME Generated"))),
 	}
 
-	if err := tv.PutDeliveryServiceSSLKeysObj(dsSSLKeys, tx); err != nil {
+	if err := tv.PutDeliveryServiceSSLKeys(dsSSLKeys, tx); err != nil {
 		log.Errorf("Error putting ACME certificate in Traffic Vault: %s", err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 		return errors.New(deliveryService + ": putting keys in Traffic Vault: " + err.Error())
