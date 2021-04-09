@@ -75,11 +75,7 @@ WORKDIR /opt/traffic_ops/app
 ADD traffic_ops/install/bin/install_goose.sh ./
 RUN ./install_goose.sh && rm ./install_goose.sh && dnf -y remove git && dnf clean all
 
-# Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
-#
-ARG TRAFFIC_OPS_RPM=traffic_ops_ort/testing/docker/traffic_ops/traffic_ops.rpm
-
-COPY $TRAFFIC_OPS_RPM /traffic_ops.rpm
+ADD traffic_ops_ort/testing/docker/traffic_ops/traffic_ops*.rpm /traffic_ops.rpm
 RUN yum -y install /traffic_ops.rpm && \
 	rm /traffic_ops.rpm
 
