@@ -713,6 +713,125 @@ func enrollServerCapability(toSession *session, r io.Reader) error {
 	return err
 }
 
+// enrollFederation takes a json file and creates a Federation object using the TO API.
+// It also assigns a Delivery Service, the CDN in a Box admin user, IPv4 resolvers,
+// and IPv6 resolvers to that Federation.
+func enrollFederation(toSession *session, r io.Reader) error {
+	dec := json.NewDecoder(r)
+	var federation tc.AllDeliveryServiceFederationsMapping
+	err := dec.Decode(&federation)
+	if err != nil {
+		log.Infof("error decoding Server Capability: %s\n", err)
+		return err
+	}
+	mapping := federation.Mappings[0]
+	var cdnFederation tc.CDNFederation
+	var cdnName string
+	{
+		xmlID := string(federation.DeliveryService)
+		deliveryServices, _, err := toSession.GetDeliveryServiceByXMLID(xmlID, nil)
+		if err != nil {
+			log.Infof("getting Delivery Service %s: %s", xmlID, err.Error())
+			return err
+		}
+		if len(deliveryServices) != 1 {
+			log.Infof("wanted 1 Delivery Service with XMLID %s but received %d Delivery Services", xmlID, len(deliveryServices))
+			return err
+		}
+		deliveryService := deliveryServices[0]
+		cdnName = *deliveryService.CDNName
+		cdnFederation = tc.CDNFederation{
+			CName: mapping.CName,
+			TTL:   mapping.TTL,
+		}
+		resp, _, err := toSession.CreateCDNFederation(cdnFederation, cdnName)
+		if err != nil {
+			log.Infof("creating CDN Federation: %s", err.Error())
+			return err
+		}
+		cdnFederation = resp.Response
+		if _, err = toSession.CreateFederationDeliveryServices(*resp.Response.ID, []int{*deliveryService.ID}, true); err != nil {
+			log.Infof("assigning Delivery Service %s to Federation with ID %d: %s", *deliveryService.XMLID, *cdnFederation.ID, err.Error())
+			return err
+		}
+	}
+	{
+		user, _, err := toSession.GetUserCurrent(nil)
+		if err != nil {
+			log.Infof("getting the Current User: %s", err.Error())
+			return err
+		}
+		_, _, err = toSession.CreateFederationUsers(*cdnFederation.ID, []int{*user.ID}, true)
+		if err != nil {
+			log.Infof("assigning User %s to Federation with ID %d: %s", *user.UserName, *cdnFederation.ID, err.Error())
+			return err
+		}
+	}
+	var allResolverIDs []int
+	{
+		resolverTypes := []tc.FederationResolverType{tc.FederationResolverType4, tc.FederationResolverType6}
+		resolverArrays := [][]string{mapping.Resolve4, mapping.Resolve6}
+		for index, resolvers := range resolverArrays {
+			resolverIDs, err := createFederationResolversOfType(toSession, resolverTypes[index], resolvers)
+			if err != nil {
+				return err
+			}
+			allResolverIDs = append(allResolverIDs, resolverIDs...)
+		}
+	}
+	if _, _, err = toSession.AssignFederationFederationResolver(*cdnFederation.ID, allResolverIDs, true); err != nil {
+		log.Infof("assigning Federation Resolvers to Federation with ID %d: %s", *cdnFederation.ID, err.Error())
+		return err
+	}
+	response, _, err := toSession.GetCDNFederationsByID(cdnName, *cdnFederation.ID, nil)
+	if err != nil {
+		log.Infof("getting CDN Federation with ID %d: %s", *cdnFederation.ID, err.Error())
+		return err
+	}
+	if len(response.Response) < 1 {
+		err = fmt.Errorf("unable to GET a CDN Federation ID %d in CDN %s", *cdnFederation.ID, cdnName)
+		log.Infof(err.Error())
+		return err
+	}
+	cdnFederation = response.Response[0]
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&cdnFederation)
+	return err
+}
+
+// createFederationResolversOfType creates Federation Resolvers of either RESOLVE4 type or RESOLVE6 type.
+func createFederationResolversOfType(toSession *session, resolverTypeName tc.FederationResolverType, ipAddresses []string) ([]int, error) {
+	typeNameString := string(resolverTypeName)
+	types, _, err := toSession.GetTypeByName(typeNameString, nil)
+	if err != nil {
+		log.Infof("getting resolver type %s: %s", typeNameString, err.Error())
+		return nil, err
+	}
+	if len(types) < 1 {
+		err := fmt.Errorf("unable to get a type with name %s", typeNameString)
+		log.Infof(err.Error())
+		return nil, err
+	}
+	typeID := uint(types[0].ID)
+
+	var resolverIDs []int
+	for _, ipAddress := range ipAddresses {
+		resolver := tc.FederationResolver{
+			IPAddress: &ipAddress,
+			TypeID:    &typeID,
+		}
+		response, _, err := toSession.CreateFederationResolver(resolver, nil)
+		if err != nil {
+			log.Infof("creating Federation Resolver with IP address %s: %s", ipAddress, err.Error())
+			return nil, err
+		}
+		resolverIDs = append(resolverIDs, int(*response.Response.ID))
+	}
+	return resolverIDs, nil
+}
+
 // enrollServerServerCapability takes a json file and creates a ServerServerCapability object using the TO API
 func enrollServerServerCapability(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
@@ -981,6 +1100,7 @@ func main() {
 		"deliveryservices_required_capabilities": enrollDeliveryServicesRequiredCapability,
 		"deliveryservice_servers":                enrollDeliveryServiceServer,
 		"divisions":                              enrollDivision,
+		"federations":                            enrollFederation,
 		"origins":                                enrollOrigin,
 		"phys_locations":                         enrollPhysLocation,
 		"regions":                                enrollRegion,
