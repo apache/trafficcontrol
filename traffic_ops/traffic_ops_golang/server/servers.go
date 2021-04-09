@@ -443,7 +443,6 @@ UPDATE server SET
 	tcp_port=:tcp_port,
 	type=:server_type_id,
 	upd_pending=:upd_pending,
-	xmpp_id=:xmpp_id,
 	xmpp_passwd=:xmpp_passwd,
 	status_last_updated=:status_last_updated
 WHERE id=:id
