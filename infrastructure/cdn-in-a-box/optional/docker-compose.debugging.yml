@@ -21,6 +21,14 @@
 version: '2.1'
 
 services:
+  enroller:
+    build:
+      target: enroller-debug
+      args:
+        ENROLLER_DEBUG_BUILD: 'true'
+    image: enroller-debug
+    ports:
+      - "2343:2343" #Delve debugging port
   trafficmonitor:
     build:
       target: trafficmonitor-debug

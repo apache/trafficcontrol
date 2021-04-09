@@ -24,10 +24,48 @@ Debugging inside CDN-in-a-Box
 
 Some CDN-in-a-Box components can be used with a debugger to step through lines of code, set breakpoints, see the state of all variables in each scope, etc. at runtime. Components that support debugging:
 
+* `Enroller`_
 * `Traffic Monitor`_
 * `Traffic Ops`_
 * `Traffic Router`_
 * `Traffic Stats`_
+
+Enroller
+========
+
+* Stop CDN-in-a-Box if it is running and remove any existing volumes. Build/rebuild the ``enroller-debug`` image each time you have changed :atc-file:`infrastructure/cdn-in-a-box/enroller/enroller.go`. Then, start CDN-in-a-Box.
+
+.. code-block:: shell
+	:caption: docker-compose command for debugging the CDN in a Box Enroller
+
+	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml optional/docker-compose.debugging.yml'
+	mydc down -v
+	mydc build enroller
+	mydc up
+
+* Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2343. If you are using VS Code, the configuration should look like this:
+
+.. code-block:: json
+	:caption: VS Code launch.json for debugging the CDN in a Box Enrolle
+
+	{
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Enroller",
+				"type": "go",
+				"request": "attach",
+				"mode": "remote",
+				"port": 2343,
+				"cwd": "${workspaceRoot}/",
+				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol/",
+			}
+		]
+	}
+
+* Use the debugging configuration you created to start debugging Traffic Monitor. It should connect without first breaking at any line.
+
+For an example of usage, set a breakpoint at `the toSession.CreateDeliveryServiceV30() call in enrollDeliveryService() <https://github.com/apache/trafficcontrol/blob/RELEASE-5.1.1/infrastructure/cdn-in-a-box/enroller/enroller.go#L209>`_, then wait for the Enroller to process a file from ``/shared/enroller/deliveryservices/`` (only exists within the Docker container).
 
 Traffic Monitor
 ===============
