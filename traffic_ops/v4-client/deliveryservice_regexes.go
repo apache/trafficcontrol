@@ -18,39 +18,42 @@ package client
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
-	// See: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/deliveryservices_id_regexes.html
+	// APIDSRegexes is the full API route to the
+	// /deliveryservices/{{ID}}/regexes endpoint.
 	APIDSRegexes = "/deliveryservices/%d/regexes"
 )
 
 // GetDeliveryServiceRegexesByDSID gets DeliveryServiceRegexes by a DS id
 // also accepts an optional map of query parameters
-func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, params map[string]string) ([]tc.DeliveryServiceIDRegex, toclientlib.ReqInf, error) {
+func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, params url.Values) ([]tc.DeliveryServiceIDRegex, toclientlib.ReqInf, error) {
 	response := struct {
 		Response []tc.DeliveryServiceIDRegex `json:"response"`
 	}{}
-	reqInf, err := to.get(fmt.Sprintf(APIDSRegexes, dsID)+mapToQueryParameters(params), nil, &response)
+	route := fmt.Sprintf(APIDSRegexes, dsID)
+	if len(params) > 0 {
+		route += "?" + params.Encode()
+	}
+	reqInf, err := to.get(route, nil, &response)
 	return response.Response, reqInf, err
 }
 
-// GetDeliveryServiceRegexes returns the "Regexes" (Regular Expressions) used by all (tenant-visible)
-// Delivery Services.
-// Deprecated: GetDeliveryServiceRegexes will be removed in 6.0. Use GetDeliveryServiceRegexesWithHdr.
-func (to *Session) GetDeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, toclientlib.ReqInf, error) {
-	return to.GetDeliveryServiceRegexesWithHdr(nil)
-}
-
-func (to *Session) GetDeliveryServiceRegexesWithHdr(header http.Header) ([]tc.DeliveryServiceRegexes, toclientlib.ReqInf, error) {
+// GetDeliveryServiceRegexes retrieves all Delivery Service Regexes in Traffic
+// Ops.
+func (to *Session) GetDeliveryServiceRegexes(header http.Header) ([]tc.DeliveryServiceRegexes, toclientlib.ReqInf, error) {
 	var data tc.DeliveryServiceRegexResponse
 	reqInf, err := to.get(APIDeliveryServicesRegexes, header, &data)
 	return data.Response, reqInf, err
 }
 
+// PostDeliveryServiceRegexesByDSID adds the given Regex to the identified
+// Delivery Service.
 func (to *Session) PostDeliveryServiceRegexesByDSID(dsID int, regex tc.DeliveryServiceRegexPost) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	route := fmt.Sprintf(APIDSRegexes, dsID)

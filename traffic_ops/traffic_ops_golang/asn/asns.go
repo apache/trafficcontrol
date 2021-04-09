@@ -53,16 +53,16 @@ func (v *TOASNV11) NewReadObj() interface{}       { return &tc.ASNNullable{} }
 func (v *TOASNV11) SelectQuery() string           { return selectQuery() }
 func (v *TOASNV11) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"asn":            dbhelpers.WhereColumnInfo{"a.asn", api.IsInt},
-		"cachegroup":     dbhelpers.WhereColumnInfo{"c.id", api.IsInt},
-		"id":             dbhelpers.WhereColumnInfo{"a.id", api.IsInt},
-		"cachegroupName": dbhelpers.WhereColumnInfo{"c.name", nil},
+		"asn":            dbhelpers.WhereColumnInfo{Column: "a.asn", Checker: api.IsInt},
+		"cachegroup":     dbhelpers.WhereColumnInfo{Column: "c.id", Checker: api.IsInt},
+		"id":             dbhelpers.WhereColumnInfo{Column: "a.id", Checker: api.IsInt},
+		"cachegroupName": dbhelpers.WhereColumnInfo{Column: "c.name"},
 	}
 }
 func (v *TOASNV11) UpdateQuery() string { return updateQuery() }
 func (v *TOASNV11) DeleteQuery() string { return deleteQuery() }
 func (asn TOASNV11) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 // func (asn TOASNV12) GetKeyFieldsInfo() []api.KeyFieldInfo { return TOASNV11(asn).GetKeyFieldsInfo() }
@@ -178,7 +178,7 @@ func V11ReadAll(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	api.WriteResp(w, r, tc.ASNsV11{asns})
+	api.WriteResp(w, r, tc.ASNsV11{ASNs: asns})
 }
 
 func selectQuery() string {

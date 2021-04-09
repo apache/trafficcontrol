@@ -49,20 +49,16 @@ FROM os-dependencies AS node-dependencies
 RUN curl -Lo node.tar.xz https://nodejs.org/dist/v12.16.3/node-v12.16.3-linux-x64.tar.xz && \
     tar --strip-components=1 -C /usr/local -xf node.tar.xz && \
     rm node.tar.xz && \
-    npm install -g protractor@^7.0.0
+    npm i -g webdriver-manager
 
 FROM node-dependencies
 
 COPY    traffic_portal/ /lang/traffic_portal/
-WORKDIR /lang/traffic_portal/test/end_to_end
-COPY    infrastructure/cdn-in-a-box/traffic_portal_integration_test/junit-jasmine-onprepare.js .
+WORKDIR /lang/traffic_portal/test/integration
 
-RUN npm install --save-dev jasmine-reporters@^2.0.0
+RUN npm ci
 
-# Sets the exports.config.onPrepare handler, which cannot be stored in JSON
-RUN mkdir /portaltestresults && \
-    cat junit-jasmine-onprepare.js >> conf.js && \
-    rm junit-jasmine-onprepare.js
+RUN mkdir /portaltestresults
 
 RUN jq ' \
         .capabilities.chromeOptions.args = [ \
@@ -72,9 +68,10 @@ RUN jq ' \
             "--ignore-certificate-errors", \
             "--no-sandbox", \
             "--whitelisted-ips=" \
-        ] ' \
-        conf.json > conf.json.tmp && \
-    mv conf.json.tmp conf.json
+        ] | \
+        .params.junitReporter = true' \
+        config.json > conf.json.tmp && \
+    mv conf.json.tmp config.json
 
 RUN webdriver-manager clean && \
     repoquery --installed --qf='%{version}' google-chrome-stable | \

@@ -143,7 +143,7 @@ func TestGetDetailServers(t *testing.T) {
 	mock.ExpectQuery("SELECT serverid").WillReturnRows(hwInfoRows)
 	mock.ExpectCommit()
 
-	actualSrvs, err := getDetailServers(db.MustBegin().Tx, &auth.CurrentUser{PrivLevel: 30}, "test", 1, "id", 10, api.Version{3, 0})
+	actualSrvs, err := getDetailServers(db.MustBegin().Tx, &auth.CurrentUser{PrivLevel: 30}, "test", 1, "id", 10, api.Version{Major: 3})
 	if err != nil {
 		t.Fatalf("an error '%s' occurred during read", err)
 	}
@@ -170,10 +170,10 @@ func TestGetDetailServers(t *testing.T) {
 
 func getMockServerDetails() []tc.ServerDetailV40 {
 	srvData := tc.ServerDetailV40{
-		tc.ServerDetail{
+		ServerDetail: tc.ServerDetail{
 			ID: util.IntPtr(1),
 		},
-		[]tc.ServerInterfaceInfoV40{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
+		ServerInterfaces: []tc.ServerInterfaceInfoV40{}, // left empty because it must be written as json above since sqlmock does not support nested arrays
 	}
 	return []tc.ServerDetailV40{srvData}
 }

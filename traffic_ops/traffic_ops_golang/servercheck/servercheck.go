@@ -240,8 +240,8 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 
 	// Query Parameters to Database Query column mappings
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":       dbhelpers.WhereColumnInfo{"servercheck.server", api.IsInt},
-		"hostName": dbhelpers.WhereColumnInfo{"server.host_name", nil},
+		"id":       dbhelpers.WhereColumnInfo{Column: "servercheck.server", Checker: api.IsInt},
+		"hostName": dbhelpers.WhereColumnInfo{Column: "server.host_name"},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)

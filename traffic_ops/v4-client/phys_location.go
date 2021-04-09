@@ -26,13 +26,14 @@ import (
 )
 
 const (
+	// APIPhysLocations is the full path to the /phys_locations API route.
 	APIPhysLocations = "/phys_locations"
 )
 
-// CreatePhysLocation creates a PhysLocation.
+// CreatePhysLocation creates the passed Physical Location.
 func (to *Session) CreatePhysLocation(pl tc.PhysLocation) (tc.Alerts, toclientlib.ReqInf, error) {
 	if pl.RegionID == 0 && pl.RegionName != "" {
-		regions, _, err := to.GetRegionByNameWithHdr(pl.RegionName, nil)
+		regions, _, err := to.GetRegionByName(pl.RegionName, nil)
 		if err != nil {
 			return tc.Alerts{}, toclientlib.ReqInf{}, err
 		}
@@ -46,60 +47,44 @@ func (to *Session) CreatePhysLocation(pl tc.PhysLocation) (tc.Alerts, toclientli
 	return alerts, reqInf, err
 }
 
-func (to *Session) UpdatePhysLocationByIDWithHdr(id int, pl tc.PhysLocation, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+// UpdatePhysLocation replaces the Physical Location identified by 'id' with
+// the given Physical Location structure.
+func (to *Session) UpdatePhysLocation(id int, pl tc.PhysLocation, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", APIPhysLocations, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, pl, header, &alerts)
 	return alerts, reqInf, err
 }
 
-// Update a PhysLocation by ID
-// Deprecated: UpdatePhysLocationByID will be removed in 6.0. Use UpdatePhysLocationByIDWithHdr.
-func (to *Session) UpdatePhysLocationByID(id int, pl tc.PhysLocation) (tc.Alerts, toclientlib.ReqInf, error) {
-	return to.UpdatePhysLocationByIDWithHdr(id, pl, nil)
-}
-
-func (to *Session) GetPhysLocationsWithHdr(params map[string]string, header http.Header) ([]tc.PhysLocation, toclientlib.ReqInf, error) {
-	path := APIPhysLocations + mapToQueryParameters(params)
+// GetPhysLocations retrieves Physical Locations from Traffic Ops.
+func (to *Session) GetPhysLocations(params url.Values, header http.Header) ([]tc.PhysLocation, toclientlib.ReqInf, error) {
+	path := APIPhysLocations
+	if len(params) > 0 {
+		path += "?" + params.Encode()
+	}
 	var data tc.PhysLocationsResponse
 	reqInf, err := to.get(path, header, &data)
 	return data.Response, reqInf, err
 }
 
-// Returns a list of PhysLocations with optional query parameters applied
-// Deprecated: GetPhysLocations will be removed in 6.0. Use GetPhysLocationsWithHdr.
-func (to *Session) GetPhysLocations(params map[string]string) ([]tc.PhysLocation, toclientlib.ReqInf, error) {
-	return to.GetPhysLocationsWithHdr(params, nil)
-}
-
-func (to *Session) GetPhysLocationByIDWithHdr(id int, header http.Header) ([]tc.PhysLocation, toclientlib.ReqInf, error) {
+// GetPhysLocationByID returns the Physical Location with the given ID.
+func (to *Session) GetPhysLocationByID(id int, header http.Header) ([]tc.PhysLocation, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?id=%d", APIPhysLocations, id)
 	var data tc.PhysLocationsResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GET a PhysLocation by the PhysLocation ID
-// Deprecated: GetPhysLocationByID will be removed in 6.0. Use GetPhysLocationByIDWithHdr.
-func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, toclientlib.ReqInf, error) {
-	return to.GetPhysLocationByIDWithHdr(id, nil)
-}
-
-func (to *Session) GetPhysLocationByNameWithHdr(name string, header http.Header) ([]tc.PhysLocation, toclientlib.ReqInf, error) {
+// GetPhysLocationByName returns the Physical Location with the given Name.
+func (to *Session) GetPhysLocationByName(name string, header http.Header) ([]tc.PhysLocation, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?name=%s", APIPhysLocations, url.QueryEscape(name))
 	var data tc.PhysLocationsResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GET a PhysLocation by the PhysLocation name
-// Deprecated: GetPhysLocationByName will be removed in 6.0. Use GetPhysLocationByNameWithHdr.
-func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, toclientlib.ReqInf, error) {
-	return to.GetPhysLocationByNameWithHdr(name, nil)
-}
-
-// DELETE a PhysLocation by ID
-func (to *Session) DeletePhysLocationByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
+// DeletePhysLocation deletes the Physical Location with the given ID.
+func (to *Session) DeletePhysLocation(id int) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", APIPhysLocations, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)

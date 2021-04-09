@@ -24,58 +24,49 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
+// APITopologies is the API version-relative path to the /topologies API endpoint.
 const APITopologies = "/topologies"
 
-// CreateTopology creates a topology and returns the response.
-func (to *Session) CreateTopology(top tc.Topology) (*tc.TopologyResponse, toclientlib.ReqInf, error) {
-	resp := new(tc.TopologyResponse)
-	reqInf, err := to.post(APITopologies, top, nil, resp)
+// CreateTopology creates the passed Topology.
+func (to *Session) CreateTopology(top tc.Topology) (tc.TopologyResponse, toclientlib.ReqInf, error) {
+	var resp tc.TopologyResponse
+	reqInf, err := to.post(APITopologies, top, nil, &resp)
 	return resp, reqInf, err
 }
 
-func (to *Session) GetTopologiesWithHdr(header http.Header) ([]tc.Topology, toclientlib.ReqInf, error) {
+// GetTopologies returns all Topologies stored in Traffic Ops.
+func (to *Session) GetTopologies(header http.Header) ([]tc.Topology, toclientlib.ReqInf, error) {
 	var data tc.TopologiesResponse
 	reqInf, err := to.get(APITopologies, header, &data)
 	return data.Response, reqInf, err
 }
 
-// GetTopologies returns all topologies.
-// Deprecated: GetTopologies will be removed in 6.0. Use GetTopologiesWithHdr.
-func (to *Session) GetTopologies() ([]tc.Topology, toclientlib.ReqInf, error) {
-	return to.GetTopologiesWithHdr(nil)
-}
-
-func (to *Session) GetTopologyWithHdr(name string, header http.Header) (*tc.Topology, toclientlib.ReqInf, error) {
-	reqUrl := fmt.Sprintf("%s?name=%s", APITopologies, url.QueryEscape(name))
+// GetTopology returns the Topology with the given Name.
+func (to *Session) GetTopology(name string, header http.Header) (tc.Topology, toclientlib.ReqInf, error) {
+	reqURL := fmt.Sprintf("%s?name=%s", APITopologies, url.QueryEscape(name))
 	var data tc.TopologiesResponse
-	reqInf, err := to.get(reqUrl, header, &data)
+	reqInf, err := to.get(reqURL, header, &data)
 	if err != nil {
-		return nil, reqInf, err
+		return tc.Topology{}, reqInf, err
 	}
 	if len(data.Response) == 1 {
-		return &data.Response[0], reqInf, nil
+		return data.Response[0], reqInf, nil
 	}
-	return nil, reqInf, fmt.Errorf("expected one topology in response, instead got %d", len(data.Response))
-}
-
-// GetTopology returns the given topology by name.
-// Deprecated: GetTopology will be removed in 6.0. Use GetTopologyWithHdr.
-func (to *Session) GetTopology(name string) (*tc.Topology, toclientlib.ReqInf, error) {
-	return to.GetTopologyWithHdr(name, nil)
+	return tc.Topology{}, reqInf, fmt.Errorf("expected one topology in response, instead got %d", len(data.Response))
 }
 
 // UpdateTopology updates a Topology by name.
-func (to *Session) UpdateTopology(name string, t tc.Topology, header http.Header) (*tc.TopologyResponse, toclientlib.ReqInf, error) {
+func (to *Session) UpdateTopology(name string, t tc.Topology, header http.Header) (tc.TopologyResponse, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?name=%s", APITopologies, name)
-	var response = new(tc.TopologyResponse)
+	var response tc.TopologyResponse
 	reqInf, err := to.put(route, t, header, &response)
 	return response, reqInf, err
 }
 
-// DeleteTopology deletes the given topology by name.
+// DeleteTopology deletes the Topology with the given name.
 func (to *Session) DeleteTopology(name string) (tc.Alerts, toclientlib.ReqInf, error) {
-	reqUrl := fmt.Sprintf("%s?name=%s", APITopologies, url.QueryEscape(name))
+	reqURL := fmt.Sprintf("%s?name=%s", APITopologies, url.QueryEscape(name))
 	var alerts tc.Alerts
-	reqInf, err := to.del(reqUrl, nil, &alerts)
+	reqInf, err := to.del(reqURL, nil, &alerts)
 	return alerts, reqInf, err
 }

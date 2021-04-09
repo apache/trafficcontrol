@@ -26,6 +26,8 @@ import (
 )
 
 const (
+	// APIDeliveryServicesRequiredCapabilities is the API version-relative
+	// route to the /deliveryservices_required_capabilities endpoint.
 	APIDeliveryServicesRequiredCapabilities = "/deliveryservices_required_capabilities"
 )
 
@@ -47,7 +49,9 @@ func (to *Session) DeleteDeliveryServicesRequiredCapability(deliveryserviceID in
 	return alerts, reqInf, err
 }
 
-func (to *Session) GetDeliveryServicesRequiredCapabilitiesWithHdr(deliveryServiceID *int, xmlID, capability *string, header http.Header) ([]tc.DeliveryServicesRequiredCapability, toclientlib.ReqInf, error) {
+// GetDeliveryServicesRequiredCapabilities retrieves a list of Required Capabilities that are assigned to a Delivery Service
+// Callers can filter the results by delivery service id, xml id and/or required capability via the optional parameters
+func (to *Session) GetDeliveryServicesRequiredCapabilities(deliveryServiceID *int, xmlID, capability *string, header http.Header) ([]tc.DeliveryServicesRequiredCapability, toclientlib.ReqInf, error) {
 	param := url.Values{}
 	if deliveryServiceID != nil {
 		param.Add("deliveryServiceID", strconv.Itoa(*deliveryServiceID))
@@ -69,11 +73,4 @@ func (to *Session) GetDeliveryServicesRequiredCapabilitiesWithHdr(deliveryServic
 	}{}
 	reqInf, err := to.get(route, header, &resp)
 	return resp.Response, reqInf, err
-}
-
-// GetDeliveryServicesRequiredCapabilities retrieves a list of Required Capabilities that are assigned to a Delivery Service
-// Callers can filter the results by delivery service id, xml id and/or required capability via the optional parameters
-// Deprecated: GetDeliveryServicesRequiredCapabilities will be removed in 6.0. Use GetDeliveryServicesRequiredCapabilitiesWithHdr.
-func (to *Session) GetDeliveryServicesRequiredCapabilities(deliveryServiceID *int, xmlID, capability *string) ([]tc.DeliveryServicesRequiredCapability, toclientlib.ReqInf, error) {
-	return to.GetDeliveryServicesRequiredCapabilitiesWithHdr(deliveryServiceID, xmlID, capability, nil)
 }

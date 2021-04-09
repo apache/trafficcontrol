@@ -81,16 +81,16 @@ JOIN role r ON u.role = r.id
 
 func (v *TOUsers) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		userQueryParam:     {"u.id", api.IsInt},
-		userRoleQueryParam: {"r.name", nil},
-		fedQueryParam:      {"fedu.federation", api.IsInt},
+		userQueryParam:     {Column: "u.id", Checker: api.IsInt},
+		userRoleQueryParam: {Column: "r.name"},
+		fedQueryParam:      {Column: "fedu.federation", Checker: api.IsInt},
 	}
 }
 
 func (v TOUsers) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{
-		{userQueryParam, api.GetIntKey},
-		{fedQueryParam, api.GetIntKey},
+		{Field: userQueryParam, Func: api.GetIntKey},
+		{Field: fedQueryParam, Func: api.GetIntKey},
 	}
 }
 

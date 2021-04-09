@@ -26,9 +26,12 @@ import (
 )
 
 const (
-	APISnapshot = "/snapshot"
+	// APISnaphost is the API version-relative path for the /snapshot API endpoint.
+	APISnaphost = "/snapshot"
 )
 
+// OuterResponse is the most basic type of a Traffic Ops API response,
+// containing some kind of JSON-encoded 'response' object.
 type OuterResponse struct {
 	Response json.RawMessage `json:"response"`
 }
@@ -49,8 +52,10 @@ func (to *Session) GetCRConfig(cdn string) ([]byte, toclientlib.ReqInf, error) {
 	return resp.Response, reqInf, nil
 }
 
-func (to *Session) SnapshotCRConfigWithHdr(cdn string, header http.Header) (toclientlib.ReqInf, error) {
-	uri := fmt.Sprintf("%s?cdn=%s", APISnapshot, url.QueryEscape(cdn))
+// SnapshotCRConfig creates a new Snapshot for the CDN with the given Name -
+// NOT just a new CRConfig!
+func (to *Session) SnapshotCRConfig(cdn string, header http.Header) (toclientlib.ReqInf, error) {
+	uri := fmt.Sprintf("%s?cdn=%s", APISnaphost, url.QueryEscape(cdn))
 	resp := OuterResponse{}
 	reqInf, err := to.put(uri, nil, header, &resp)
 	return reqInf, err
@@ -72,15 +77,10 @@ func (to *Session) GetCRConfigNew(cdn string) ([]byte, toclientlib.ReqInf, error
 	return resp.Response, reqInf, nil
 }
 
-// SnapshotCRConfig snapshots a CDN by name.
-// Deprecated: SnapshotCRConfig will be removed in 6.0. Use SnapshotCRConfigWithHdr.
-func (to *Session) SnapshotCRConfig(cdn string) (toclientlib.ReqInf, error) {
-	return to.SnapshotCRConfigWithHdr(cdn, nil)
-}
-
-// SnapshotCDNByID snapshots a CDN by ID.
+// SnapshotCRConfigByID creates a new Snapshot for the CDN with the given ID -
+// NOT just a new CRConfig!
 func (to *Session) SnapshotCRConfigByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
-	url := fmt.Sprintf("%s?cdnID=%d", APISnapshot, id)
+	url := fmt.Sprintf("%s?cdnID=%d", APISnaphost, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(url, nil, nil, &alerts)
 	return alerts, reqInf, err

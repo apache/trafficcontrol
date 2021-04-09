@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element } from 'protractor'
+import { browser, by, element } from 'protractor';
+
+import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -27,8 +29,7 @@ export class DivisionsPage extends BasePage {
     private txtName = element(by.id('name'));
     private btnDelete = element(by.xpath("//button[text()='Delete']"));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private config = require('../config');
-    private randomize = this.config.randomize;
+    private randomize = randomize;
 
     async OpenDivisionsPage(){
         let snp = new SideNavigationPage();
@@ -55,20 +56,17 @@ export class DivisionsPage extends BasePage {
         })
         return result;
     }
-    async SearchDivisions(nameDivisions: string){
+    public async SearchDivisions(nameDivisions: string): Promise<boolean> {
         let name = nameDivisions + this.randomize;
-        let result = false;
         let snp = new SideNavigationPage();
         await snp.NavigateToDivisionsPage();
         await this.txtSearch.clear();
         await this.txtSearch.sendKeys(name);
         if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
             await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-            result = true;
-        } else {
-            result = undefined;
+            return true;
         }
-        return result;
+        return false;
     }
     async UpdateDivisions(divisions){
         let result = false;

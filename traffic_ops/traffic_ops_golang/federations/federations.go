@@ -552,7 +552,7 @@ func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *h
 	}
 
 	alerts := tc.Alerts{
-		[]tc.Alert{
+		Alerts: []tc.Alert{
 			tc.Alert{
 				Level: tc.SuccessLevel.String(),
 				Text:  deletedMsg,

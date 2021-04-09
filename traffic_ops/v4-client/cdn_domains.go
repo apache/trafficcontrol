@@ -22,13 +22,9 @@ import (
    limitations under the License.
 */
 
-func (to *Session) GetDomainsWithHdr(header http.Header) ([]tc.Domain, toclientlib.ReqInf, error) {
+// GetDomains gets all CDN Domains.
+func (to *Session) GetDomains(header http.Header) ([]tc.Domain, toclientlib.ReqInf, error) {
 	var data tc.DomainsResponse
 	inf, err := to.get("/cdns/domains", header, &data)
 	return data.Response, inf, err
-}
-
-// Deprecated: GetDomains will be removed in 6.0. Use GetDomainsWithHdr.
-func (to *Session) GetDomains() ([]tc.Domain, toclientlib.ReqInf, error) {
-	return to.GetDomainsWithHdr(nil)
 }

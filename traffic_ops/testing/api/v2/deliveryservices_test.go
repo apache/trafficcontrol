@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -32,6 +33,9 @@ import (
 func TestDeliveryServices(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
 		GetAccessibleToTest(t)
+		if includeSystemTests {
+			GetTestDeliveryServicesURLSigKeys(t)
+		}
 		UpdateTestDeliveryServices(t)
 		UpdateNullableTestDeliveryServices(t)
 		UpdateDeliveryServiceWithInvalidRemapText(t)
@@ -548,4 +552,22 @@ func DeliveryServiceTenancyTest(t *testing.T) {
 		t.Error("expected tenant4user to be unable to create a deliveryservice outside of its tenant")
 	}
 
+}
+
+func GetTestDeliveryServicesURLSigKeys(t *testing.T) {
+	if len(testData.DeliveryServices) == 0 {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+	firstDS := testData.DeliveryServices[0]
+	if firstDS.XMLID == nil {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+
+	_, _, err := TOSession.GetDeliveryServiceURLSigKeys(*firstDS.XMLID)
+	if err != nil {
+		// The v2 tests don't support Riak, so the only thing we can test is that the endpoint exists.
+		if errStr := strings.ToLower(err.Error()); strings.Contains(errStr, "not found") || strings.Contains(errStr, "404") {
+			t.Error("Expected URL Sig path to exist, actual: " + err.Error())
+		}
+	}
 }

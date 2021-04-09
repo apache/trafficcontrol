@@ -135,8 +135,8 @@ func (v *TOFedDSes) NewReadObj() interface{} { return &tc.FederationDeliveryServ
 func (v *TOFedDSes) SelectQuery() string     { return selectQuery() }
 func (v *TOFedDSes) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"id":   dbhelpers.WhereColumnInfo{"fds.federation", api.IsInt},
-		"dsID": dbhelpers.WhereColumnInfo{"fds.deliveryservice", api.IsInt},
+		"id":   dbhelpers.WhereColumnInfo{Column: "fds.federation", Checker: api.IsInt},
+		"dsID": dbhelpers.WhereColumnInfo{Column: "fds.deliveryservice", Checker: api.IsInt},
 	}
 }
 func (v *TOFedDSes) GetType() string {
@@ -164,7 +164,7 @@ func (v *TOFedDSes) GetAuditName() string {
 
 func (v *TOFedDSes) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{
-		{"id", api.GetIntKey},
+		{Field: "id", Func: api.GetIntKey},
 	}
 }
 

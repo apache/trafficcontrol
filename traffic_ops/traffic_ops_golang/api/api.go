@@ -45,6 +45,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/jmoiron/sqlx"
@@ -71,10 +73,12 @@ const ResourceModifiedError = errorConstant("resource was modified since the tim
 
 // Common context.Context value keys.
 const (
-	DBContextKey      = "db"
-	ConfigContextKey  = "context"
-	ReqIDContextKey   = "reqid"
-	APIRespWrittenKey = "respwritten"
+	DBContextKey           = "db"
+	ConfigContextKey       = "context"
+	ReqIDContextKey        = "reqid"
+	APIRespWrittenKey      = "respwritten"
+	PathParamsKey          = "pathParams"
+	TrafficVaultContextKey = "tv"
 )
 
 const influxServersQuery = `
@@ -488,6 +492,7 @@ type APIInfo struct {
 	ReqID     uint64
 	Version   *Version
 	Tx        *sqlx.Tx
+	Vault     trafficvault.TrafficVault
 	Config    *config.Config
 	request   *http.Request
 }
@@ -530,6 +535,10 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	if err != nil {
 		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting config: " + err.Error()), nil, http.StatusInternalServerError
 	}
+	tv, err := GetTrafficVault(r.Context())
+	if err != nil {
+		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting TrafficVault: " + err.Error()), nil, http.StatusInternalServerError
+	}
 	reqID, err := getReqID(r.Context())
 	if err != nil {
 		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
@@ -557,6 +566,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 		IntParams: intParams,
 		User:      user,
 		Tx:        tx,
+		Vault:     tv,
 		request:   r,
 	}, nil, nil, http.StatusOK
 }
@@ -709,7 +719,7 @@ func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
 	if inf.Config.ConfigInflux != nil && *inf.Config.ConfigInflux.Secure {
 		if !httpsPort.Valid {
 			log.Warnf("INFLUXDB Server %s has no secure ports, assuming default of 8086!", fqdn)
-			httpsPort = sql.NullInt64{8086, true}
+			httpsPort = sql.NullInt64{Int64: 8086, Valid: true}
 		}
 		port, err := httpsPort.Value()
 		if err != nil {
@@ -818,6 +828,20 @@ func GetConfig(ctx context.Context) (*config.Config, error) {
 		}
 	}
 	return nil, errors.New("No config found in Context")
+}
+
+func GetTrafficVault(ctx context.Context) (trafficvault.TrafficVault, error) {
+	val := ctx.Value(TrafficVaultContextKey)
+	if val != nil {
+		switch v := val.(type) {
+		case trafficvault.TrafficVault:
+			return v, nil
+		default:
+			return nil, fmt.Errorf("TrafficVault found with bad type: %T", v)
+		}
+	}
+	// this return should never be reached because a non-nil TrafficVault should always be included in the request context
+	return &disabled.Disabled{}, errors.New("no Traffic Vault found in Context")
 }
 
 func getReqID(ctx context.Context) (uint64, error) {

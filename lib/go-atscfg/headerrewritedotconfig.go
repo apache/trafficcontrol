@@ -21,7 +21,6 @@ package atscfg
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"net/url"
 	"regexp"
@@ -167,16 +166,6 @@ func MakeHeaderRewriteDotConfig(
 	}
 
 	text := makeHdrComment(hdrComment)
-
-	hdrRwTxtStr := ""
-	if headerRewriteTxt != nil {
-		hdrRwTxtStr = *headerRewriteTxt
-	}
-	maxConns := 0
-	if ds.MaxOriginConnections != nil {
-		maxConns = *ds.MaxOriginConnections
-	}
-	warnings = append(warnings, fmt.Sprintf("DEBUG ds '"+*ds.XMLID+"' headerRewriteTxt '''%v''' serverIsLastTier %v numLastTierServers %v atsMajorVersion %v maxConns %v", hdrRwTxtStr, serverIsLastTier, numLastTierServers, atsMajorVersion, maxConns))
 
 	// Add the TC directives (which may be empty).
 	// NOTE!! Custom TC injections MUST NOT EVER have a `[L]`. Doing so will break custom header rewrites!

@@ -50,7 +50,7 @@ func PostTestLoginFail(t *testing.T) {
 		t.Fatal("cannot test login: must have at least 1 test data cdn")
 	}
 	expectedCDN := testData.CDNs[0]
-	actualCDNs, _, err := uninitializedTOClient.GetCDNByName(expectedCDN.Name)
+	actualCDNs, _, err := uninitializedTOClient.GetCDNByName(expectedCDN.Name, nil)
 	if err != nil {
 		t.Fatalf("GetCDNByName err expected nil, actual '%+v'", err)
 	}

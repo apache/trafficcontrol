@@ -18,6 +18,7 @@ package v4
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"testing"
 	"time"
@@ -100,7 +101,7 @@ func DeleteTestDeliveryServicesRegexes(t *testing.T) {
 
 func CreateTestDSRegexWithMissingPattern(t *testing.T) {
 	var regex = testData.DeliveryServicesRegexes[3]
-	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr(regex.DSName, nil)
+	ds, _, err := TOSession.GetDeliveryServiceByXMLID(regex.DSName, nil)
 	if err != nil {
 		t.Fatalf("unable to get ds %v: %v", regex.DSName, err)
 	}
@@ -124,7 +125,7 @@ func CreateTestDSRegexWithMissingPattern(t *testing.T) {
 }
 
 func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
-	dsTypes, _, err := TOSession.GetTypeByName(test.TypeName)
+	dsTypes, _, err := TOSession.GetTypeByName(test.TypeName, nil)
 	if err != nil {
 		t.Fatalf("unable to get type by name %v: %v", test.TypeName, err)
 	}
@@ -133,7 +134,7 @@ func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
 	}
 	test.Type = dsTypes[0].ID
 
-	dses, _, err := TOSession.GetDeliveryServiceByXMLIDNullable(test.DSName)
+	dses, _, err := TOSession.GetDeliveryServiceByXMLID(test.DSName, nil)
 	if err != nil {
 		t.Fatalf("unable to ds by xmlid %v: %v", test.DSName, err)
 	}
@@ -149,7 +150,7 @@ func QueryDSRegexTestIMS(t *testing.T) {
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr("ds1", header)
+	_, reqInf, err := TOSession.GetDeliveryServiceByXMLID("ds1", header)
 	if err != nil {
 		t.Fatalf("could not GET delivery services regex: %v", err)
 	}
@@ -159,7 +160,7 @@ func QueryDSRegexTestIMS(t *testing.T) {
 }
 
 func QueryDSRegexTest(t *testing.T) {
-	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds1")
+	ds, _, err := TOSession.GetDeliveryServiceByXMLID("ds1", nil)
 	if err != nil {
 		t.Fatalf("unable to get ds ds1: %v", err)
 	}
@@ -181,8 +182,8 @@ func QueryDSRegexTest(t *testing.T) {
 		t.Fatal("expected to get 4 ds_regex, got " + strconv.Itoa(len(dsRegexes)))
 	}
 
-	params := make(map[string]string)
-	params["id"] = strconv.Itoa(dsRegexes[0].ID)
+	params := url.Values{}
+	params.Set("id", strconv.Itoa(dsRegexes[0].ID))
 	dsRegexes, _, err = TOSession.GetDeliveryServiceRegexesByDSID(dsID, params)
 	if err != nil {
 		t.Fatalf("unable to get ds_regex by id %v with query param %v", dsID, params["id"])
