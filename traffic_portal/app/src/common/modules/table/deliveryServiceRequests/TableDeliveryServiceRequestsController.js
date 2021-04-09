@@ -142,10 +142,15 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		onRowClicked: function(params) {
 			const selection = window.getSelection().toString();
 			if(selection === "" || selection === $scope.mouseDownSelectionText) {
-				let type = (params.data.requested) ? params.data.requested.type : params.data.original.type,
-					path = '/delivery-service-requests/' + params.data.id + '?type=' + type;
+				let path = '/delivery-service-requests/' + params.data.id + '?type=',
+					typeId = (params.data.requested) ? params.data.requested.typeId : params.data.original.typeId;
 
-				locationUtils.navigateToPath(path);
+				typeService.getType(typeId)
+					.then(function (result) {
+						path += result.name;
+						locationUtils.navigateToPath(path);
+					});
+
 				$scope.$apply();
 			}
 			$scope.mouseDownSelectionText = "";
@@ -534,10 +539,15 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 
 	$scope.fulfillRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		let type = (request.requested) ? request.requested.type : request.original.type,
-			path = '/delivery-service-requests/' + request.id + '?type=' + type;
 
-		locationUtils.navigateToPath(path);
+		let path = '/delivery-service-requests/' + request.id + '?type=',
+			typeId = (request.requested) ? request.requested.typeId : request.original.typeId;
+
+		typeService.getType(typeId)
+			.then(function (result) {
+				path += result.name;
+				locationUtils.navigateToPath(path);
+			});
 	};
 
 	$scope.refresh = function () {
