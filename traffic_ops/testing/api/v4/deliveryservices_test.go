@@ -1259,7 +1259,7 @@ func GetDeliveryServiceByCdn(t *testing.T) {
 	if len(testData.DeliveryServices) > 0 {
 		firstDS := testData.DeliveryServices[0]
 
-		if firstDS.CDNName != nil{
+		if firstDS.CDNName != nil {
 			if firstDS.CDNID == nil {
 				cdns, _, err := TOSession.GetCDNByName(*firstDS.CDNName, nil)
 				if err != nil {
@@ -1305,7 +1305,7 @@ func GetDeliveryServiceByLogsEnabled(t *testing.T) {
 	if len(testData.DeliveryServices) > 0 {
 		firstDS := testData.DeliveryServices[0]
 
-		if firstDS.LogsEnabled != nil{
+		if firstDS.LogsEnabled != nil {
 			qparams := url.Values{}
 			qparams.Set("logsEnabled", strconv.FormatBool(*firstDS.LogsEnabled))
 			resp, _, err := TOSession.GetDeliveryServices(nil, qparams)
@@ -1333,7 +1333,7 @@ func GetDeliveryServiceByValidProfile(t *testing.T) {
 	if len(testData.DeliveryServices) > 0 {
 		firstDS := testData.DeliveryServices[0]
 
-		if firstDS.ProfileName != nil{
+		if firstDS.ProfileName != nil {
 			if firstDS.ProfileID == nil {
 				profile, _, err := TOSession.GetProfileByName(*firstDS.ProfileName, nil)
 				if err != nil {
@@ -1383,8 +1383,8 @@ func GetDeliveryServiceByValidTenant(t *testing.T) {
 	if len(testData.DeliveryServices) > 0 {
 		firstDS := testData.DeliveryServices[0]
 
-		if firstDS.Tenant != nil{
-			if firstDS.TenantID == nil{
+		if firstDS.Tenant != nil {
+			if firstDS.TenantID == nil {
 				tenant, _, err := TOSession.GetTenantByName(*firstDS.Tenant, nil)
 				if err != nil {
 					t.Errorf("Error in Getting Tenant by Name: %v", err)
@@ -1430,7 +1430,7 @@ func GetDeliveryServiceByValidType(t *testing.T) {
 	if len(testData.DeliveryServices) > 0 {
 		firstDS := testData.DeliveryServices[0]
 
-		if firstDS.Type != nil{
+		if firstDS.Type != nil {
 			if firstDS.TypeID == nil {
 				ty, _, err := TOSession.GetTypeByName(firstDS.Type.String(), nil)
 				if err != nil {
@@ -1492,7 +1492,7 @@ func GetDeliveryServiceByValidXmlId(t *testing.T) {
 	if len(testData.DeliveryServices) > 0 {
 		firstDS := testData.DeliveryServices[0]
 
-		if firstDS.XMLID != nil{
+		if firstDS.XMLID != nil {
 			resp, _, err := TOSession.GetDeliveryServiceByXMLID(*firstDS.XMLID, nil)
 			if err != nil {
 				t.Errorf("Error in Getting DeliveryServices by XML ID: %v - %v", err, resp)
@@ -1558,12 +1558,12 @@ func SortTestDeliveryServicesDesc(t *testing.T) {
 		t.Errorf("Expected no error, but got error in DS Descending %v", err2)
 	}
 
-	if len(respAsc) > 0 && len(respDesc) > 0 {	
+	if len(respAsc) > 0 && len(respDesc) > 0 {
 		// reverse the descending-sorted response and compare it to the ascending-sorted one
-		for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 { 
+		for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
 			respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
 		}
-		if( respDesc[0].XMLID != nil && respAsc[0].XMLID != nil){
+		if respDesc[0].XMLID != nil && respAsc[0].XMLID != nil {
 			if !reflect.DeepEqual(respDesc[0].XMLID, respAsc[0].XMLID) {
 				t.Errorf("Role responses are not equal after reversal: %v - %v", *respDesc[0].XMLID, *respAsc[0].XMLID)
 			}
