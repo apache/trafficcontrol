@@ -112,8 +112,8 @@ func (d *DNSProviderTrafficRouter) Present(domain, token, keyAuth string) error 
 			return errors.New("Determining rows affected dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
 		}
 		if rows == 0 {
-			log.Errorf("Zero rows affected when inserting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
-			return errors.New("Zero rows affected when inserting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+			log.Errorf("Zero rows affected when inserting dns txt record for fqdn '" + fqdn + "' record '" + value)
+			return errors.New("Zero rows affected when inserting dns txt record for fqdn '" + fqdn + "' record '" + value)
 		}
 	}
 
@@ -304,7 +304,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEncryptSS
 
 	dsID, ok, err := getDSIDFromName(tx, *req.DeliveryService)
 	if err != nil {
-		log.Errorf("deliveryservice.GenerateSSLKeys: getting DS ID from name " + err.Error() + " " + ctx.Err().Error())
+		log.Errorf("deliveryservice.GenerateSSLKeys: getting DS ID from name " + err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 		return errors.New("deliveryservice.GenerateSSLKeys: getting DS ID from name " + err.Error())
 	} else if !ok {
@@ -352,7 +352,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEncryptSS
 
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		log.Errorf(deliveryService + ": Error generating private key")
+		log.Errorf(deliveryService + ": Error generating private key: " + err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 		return err
 	}
@@ -369,7 +369,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEncryptSS
 		return err
 	}
 
-	// Save certs into Riak
+	// Save certs into Traffic Vault
 	dsSSLKeys := tc.DeliveryServiceSSLKeys{
 		AuthType:        provider,
 		CDN:             *req.CDN,
@@ -381,7 +381,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEncryptSS
 
 	keyPem, err := ConvertPrivateKeyToKeyPem(priv)
 	if err != nil {
-		log.Errorf(err.Error())
+		log.Errorf(deliveryService + ": Error converting private key to PEM: " + err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 		return err
 	}

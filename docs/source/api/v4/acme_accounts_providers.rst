@@ -19,7 +19,7 @@
 ``acme_accounts/providers``
 ***************************
 
-.. versionadded:: 4.1
+.. versionadded:: 4.0
 
 ``GET``
 =======

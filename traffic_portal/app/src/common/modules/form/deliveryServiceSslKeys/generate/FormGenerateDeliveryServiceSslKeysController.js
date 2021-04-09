@@ -352,7 +352,7 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
             }
         });
         modalInstance.result.then(function() {
-			sslKeys.authType = $scope.acmeProvider;
+            sslKeys.authType = $scope.acmeProvider;
             deliveryServiceSslKeysService.generateSslKeysWithAcme(deliveryService, sslKeys, sslRequest, $scope.acmeProvider).then(
                 function() {
                     locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys');

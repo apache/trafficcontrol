@@ -46,7 +46,7 @@ func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 	if !inf.Config.TrafficVaultEnabled {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Traffic Vault is not configured"))
 		return
 	}
 	xmlID := inf.Params["xmlid"]
@@ -138,9 +138,13 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, curr
 	}
 
 	cert, err := client.Certificate.Renew(renewRequest, true, false)
-	if err != nil || cert == nil {
+	if err != nil {
 		log.Errorf("Error obtaining acme certificate: %s", err.Error())
 		return nil, err, http.StatusInternalServerError
+	}
+	if cert == nil {
+		log.Errorf("Error obtaining acme certificate: certificate was nil")
+		return nil, errors.New("certificate was nil"), http.StatusInternalServerError
 	}
 
 	newCertObj := tc.DeliveryServiceSSLKeys{
@@ -159,9 +163,9 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, curr
 	}
 
 	if err := tv.PutDeliveryServiceSSLKeys(newCertObj, tx); err != nil {
-		log.Errorf("Error posting acme certificate to riak: %s", err.Error())
+		log.Errorf("Error posting acme certificate to Traffic Vault: %s", err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: FAILED to add SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
-		return nil, errors.New(dsName + ": putting riak keys: " + err.Error()), http.StatusInternalServerError
+		return nil, errors.New(dsName + ": putting keys in Traffic Vault: " + err.Error()), http.StatusInternalServerError
 	}
 
 	tx2, err := db.Begin()

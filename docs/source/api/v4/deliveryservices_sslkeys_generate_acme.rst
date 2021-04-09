@@ -19,7 +19,7 @@
 ``deliveryservices/sslkeys/generate/acme``
 ******************************************
 
-.. versionadded:: 4.1
+.. versionadded:: 4.0
 
 ``POST``
 ========
@@ -44,7 +44,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/4.0/deliveryservices/sslkeys/generate/letsencrypt HTTP/1.1
+	POST /api/4.0/deliveryservices/sslkeys/generate/acme HTTP/1.1
 	Content-Type: application/json
 
 	{
