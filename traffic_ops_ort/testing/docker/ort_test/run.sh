@@ -38,7 +38,6 @@ function ping_to {
 		"--run-mode=badass" 
 }
 
-set -x
 GOPATH=/root/go; export GOPATH
 PATH=$PATH:/usr/local/go/bin:; export PATH
 TERM=xterm; export TERM
@@ -55,26 +54,48 @@ if [ -f /trafficcontrol/GO_VERSION ]; then
         rm go.tar.gz
 else
   echo "no GO_VERSION file, unable to install go"
-  exit 0
+  exit 1
 fi
 
 # fetch dependent packages for tests
 go mod vendor -v
 
-if [ -f /systemctl.sh ]; then
+if [[ -f /systemctl.sh ]]; then
   mv /bin/systemctl /bin/systemctl.save
   cp /systemctl.sh /bin/systemctl
   chmod 0755 /bin/systemctl
 fi
 
 cd /ort-tests
-echo "Sleeping for $WAIT seconds to ensure all containers have initialized" >> test.log
-sleep $WAIT
-echo "Running tests" >> test.log
+go get -u ./...
+cp /ort-tests/tc-fixtures.json /tc-fixtures.json
+ATS_RPM=`basename /yumserver/test-rpms/trafficserver-*.rpm |
+  gawk 'match($0, /trafficserver\-(.+)\.rpm$/, arr) {print arr[1]}'`
+
+echo "ATS_RPM: $ATS_RPM"
+
+if [[ -z $ATS_RPM ]]; then
+  echo "ERROR: No ATS RPM was found"
+  exit 2
+else
+  sed -i -e "s/CHANGEME/$ATS_RPM/" /ort-tests/tc-fixtures.json
+fi
 
 # wake up the to_server
 ping_to
-sleep 2
 
+echo "waiting $WAIT seconds for all containers to initialize."
+sleep $WAIT
+
+cp /ort-tests/tc-fixtures.json /tc-fixtures.json
 (touch test.log && tail -f test.log)&
+
 go test -v -failfast -cfg=conf/docker-edge-cache.conf 2>&1 >> test.log
+if [[ $? != 0 ]]; then
+  echo "ERROR: ORT tests failure"
+  exit 3
+fi
+
+cp /tc-fixtures.json /ort-tests/tc-fixtures.json
+
+exit 0

@@ -13,17 +13,17 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-sslkeys-generate-letsencrypt:
+.. _to-api-deliveryservices-sslkeys-generate-acme:
 
-*************************************************
-``deliveryservices/sslkeys/generate/letsencrypt``
-*************************************************
+******************************************
+``deliveryservices/sslkeys/generate/acme``
+******************************************
 
-.. deprecated:: ATCv6
+.. versionadded:: 4.0
 
 ``POST``
 ========
-Generates an SSL certificate and private key using Let's Encrypt for a :term:`Delivery Service`
+Generates an SSL certificate and private key using :abbr:`ACME (Automatic Certificate Management Environment)` protocol for a :term:`Delivery Service`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -31,6 +31,7 @@ Generates an SSL certificate and private key using Let's Encrypt for a :term:`De
 
 Request Structure
 -----------------
+:authType:        The certificate provider correlating to an :abbr:`ACME (Automatic Certificate Management Environment)` account in :ref:`cdn.conf` or Let's Encrypt.
 :key:             The :ref:`ds-xmlid` of the :term:`Delivery Service` for which keys will be generated [#needOne]_
 :deliveryservice: The :ref:`ds-xmlid` of the :term:`Delivery Service` for which keys will be generated [#needOne]_
 :version:         An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
@@ -43,10 +44,11 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/4.0/deliveryservices/sslkeys/generate/letsencrypt HTTP/1.1
+	POST /api/4.0/deliveryservices/sslkeys/generate/acme HTTP/1.1
 	Content-Type: application/json
 
 	{
+		"authType": "Let's Encrypt",
 		"key": "ds-01",
 		"deliveryservice": "ds-01",
 		"version": "3",
@@ -61,11 +63,8 @@ Response Structure
 	:caption: Response Example
 
 	{ "alerts": [{
-		"level": "warning",
-		"text": "This endpoint is deprecated, please use /deliveryservices/sslkeys/generate/acme instead."
-	},{
 		"level": "success",
-		"text": "Beginning async call to Let's Encrypt for ds-01. This may take a few minutes."
+		"text": "Beginning async ACME call for ds-01 using Let's Encrypt. This may take a few minutes."
 	}]}
 
 .. [#needOne] Either the ``key`` or the ``deliveryservice`` field must be provided. If both are provided, then they must match.
