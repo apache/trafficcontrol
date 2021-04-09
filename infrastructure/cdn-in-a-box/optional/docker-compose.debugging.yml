@@ -23,23 +23,13 @@ version: '2.1'
 services:
   trafficmonitor:
     build:
-      context: .
-      dockerfile: traffic_monitor/Dockerfile
       target: trafficmonitor-debug
-      args:
-        RHEL_VERSION: ${RHEL_VERSION:-8}
-        TRAFFIC_MONITOR_RPM: traffic_monitor/traffic_monitor.rpm
     image: trafficmonitor-debug
     ports:
       - "2344:2344" #Delve debugging port
   trafficops:
     build:
-      context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/traffic_ops/Dockerfile
       target: trafficops-debug
-      args:
-        RHEL_VERSION: ${RHEL_VERSION:-8}
-        TRAFFIC_OPS_RPM: infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
     image: trafficops-debug
     ports:
       - "2345:2345" #Delve debugging port
@@ -48,12 +38,7 @@ services:
       - "5005:5005" # JPDA debugging port
   trafficstats:
     build:
-      context: .
-      dockerfile: traffic_stats/Dockerfile
       target: trafficstats-debug
-      args:
-        RHEL_VERSION: ${RHEL_VERSION:-8}
-        TRAFFIC_TS_RPM: traffic_stats/traffic_stats.rpm
     image: trafficstats-debug
     ports:
       - "2346:2346" #Delve debugging port

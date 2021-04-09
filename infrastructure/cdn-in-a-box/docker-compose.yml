@@ -137,6 +137,7 @@ services:
       dockerfile: traffic_stats/Dockerfile
       args:
         RHEL_VERSION: ${RHEL_VERSION:-8}
+        TRAFFIC_TS_RPM: traffic_stats/traffic_stats.rpm
     image: trafficstats
     depends_on:
       - enroller
