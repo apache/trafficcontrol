@@ -209,14 +209,14 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
 	var maxTime time.Time
 	var runSecond bool
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":              dbhelpers.WhereColumnInfo{"job.id", api.IsInt},
-		"keyword":         dbhelpers.WhereColumnInfo{"job.keyword", nil},
-		"assetUrl":        dbhelpers.WhereColumnInfo{"job.asset_url", nil},
-		"startTime":       dbhelpers.WhereColumnInfo{"job.start_time", nil},
-		"userId":          dbhelpers.WhereColumnInfo{"job.job_user", api.IsInt},
-		"createdBy":       dbhelpers.WhereColumnInfo{`(SELECT tm_user.username FROM tm_user WHERE tm_user.id=job.job_user)`, nil},
-		"deliveryService": dbhelpers.WhereColumnInfo{`(SELECT deliveryservice.xml_id FROM deliveryservice WHERE deliveryservice.id=job.job_deliveryservice)`, nil},
-		"dsId":            dbhelpers.WhereColumnInfo{"job.job_deliveryservice", api.IsInt},
+		"id":              dbhelpers.WhereColumnInfo{Column: "job.id", Checker: api.IsInt},
+		"keyword":         dbhelpers.WhereColumnInfo{Column: "job.keyword"},
+		"assetUrl":        dbhelpers.WhereColumnInfo{Column: "job.asset_url"},
+		"startTime":       dbhelpers.WhereColumnInfo{Column: "job.start_time"},
+		"userId":          dbhelpers.WhereColumnInfo{Column: "job.job_user", Checker: api.IsInt},
+		"createdBy":       dbhelpers.WhereColumnInfo{Column: `(SELECT tm_user.username FROM tm_user WHERE tm_user.id=job.job_user)`},
+		"deliveryService": dbhelpers.WhereColumnInfo{Column: `(SELECT deliveryservice.xml_id FROM deliveryservice WHERE deliveryservice.id=job.job_deliveryservice)`},
+		"dsId":            dbhelpers.WhereColumnInfo{Column: "job.job_deliveryservice", Checker: api.IsInt},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(job.APIInfo().Params, queryParamsToSQLCols)
@@ -299,7 +299,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	if err := job.Validate(inf.Tx.Tx); err != nil {
 		response := tc.Alerts{
-			[]tc.Alert{
+			Alerts: []tc.Alert{
 				tc.Alert{
 					Text:  err.Error(),
 					Level: tc.ErrorLevel.String(),
@@ -388,9 +388,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	response.Alerts[len(conflicts)] = tc.Alert{
-		fmt.Sprintf("Invalidation request created for %v, start:%v end %v", *result.AssetURL, job.StartTime.Time,
+		Text: fmt.Sprintf("Invalidation request created for %v, start:%v end %v", *result.AssetURL, job.StartTime.Time,
 			job.StartTime.Add(time.Hour*time.Duration(ttl))),
-		tc.SuccessLevel.String(),
+		Level: tc.SuccessLevel.String(),
 	}
 	resp, err := json.Marshal(response)
 
@@ -560,9 +560,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	response.Alerts[len(conflicts)] = tc.Alert{
-		fmt.Sprintf("Invalidation request created for %v, start:%v end %v", *job.AssetURL, job.StartTime.Time,
+		Text: fmt.Sprintf("Invalidation request created for %v, start:%v end %v", *job.AssetURL, job.StartTime.Time,
 			job.StartTime.Add(time.Hour*time.Duration(ttlHours))),
-		tc.SuccessLevel.String(),
+		Level: tc.SuccessLevel.String(),
 	}
 
 	resp, err := json.Marshal(response)
@@ -650,7 +650,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := apiResponse{[]tc.Alert{tc.Alert{"Content invalidation job was deleted", tc.SuccessLevel.String()}}, result}
+	response := apiResponse{[]tc.Alert{tc.Alert{Text: "Content invalidation job was deleted", Level: tc.SuccessLevel.String()}}, result}
 	resp, err := json.Marshal(response)
 	if err != nil {
 		sysErr = fmt.Errorf("encoding response: %v", err)

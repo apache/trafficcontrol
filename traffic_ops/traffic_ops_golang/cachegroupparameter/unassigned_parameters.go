@@ -45,7 +45,7 @@ type TOCacheGroupUnassignedParameter struct {
 // ParamColumns Parameter Where Column definitions
 func (cgunparam *TOCacheGroupUnassignedParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		ParameterIDQueryParam: dbhelpers.WhereColumnInfo{"p.id", api.IsInt},
+		ParameterIDQueryParam: dbhelpers.WhereColumnInfo{Column: "p.id", Checker: api.IsInt},
 	}
 }
 

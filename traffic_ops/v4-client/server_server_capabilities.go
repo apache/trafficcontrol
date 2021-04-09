@@ -26,17 +26,19 @@ import (
 )
 
 const (
+	// APIServerServerCapabilities is the API version-relative path to the
+	// /server_server_capabilities API endpoint.
 	APIServerServerCapabilities = "/server_server_capabilities"
 )
 
-// CreateServerServerCapability assigns a Server Capability to a Server
+// CreateServerServerCapability assigns a Server Capability to a Server.
 func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapability) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(APIServerServerCapabilities, ssc, nil, &alerts)
 	return alerts, reqInf, err
 }
 
-// DeleteServerServerCapability unassigns a Server Capability from a Server
+// DeleteServerServerCapability unassigns a Server Capability from a Server.
 func (to *Session) DeleteServerServerCapability(serverID int, serverCapability string) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	v := url.Values{}
@@ -48,7 +50,11 @@ func (to *Session) DeleteServerServerCapability(serverID int, serverCapability s
 	return alerts, reqInf, err
 }
 
-func (to *Session) GetServerServerCapabilitiesWithHdr(serverID *int, serverHostName, serverCapability *string, header http.Header) ([]tc.ServerServerCapability, toclientlib.ReqInf, error) {
+// GetServerServerCapabilities retrieves a list of Server Capabilities that are
+// assigned to a Server.
+// Callers can filter the results by server id, server host name and/or server
+// capability via the optional parameters.
+func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, serverCapability *string, header http.Header) ([]tc.ServerServerCapability, toclientlib.ReqInf, error) {
 	v := url.Values{}
 	if serverID != nil {
 		v.Add("serverId", strconv.Itoa(*serverID))
@@ -69,11 +75,4 @@ func (to *Session) GetServerServerCapabilitiesWithHdr(serverID *int, serverHostN
 	}{}
 	reqInf, err := to.get(queryURL, header, &resp)
 	return resp.Response, reqInf, err
-}
-
-// GetServerServerCapabilities retrieves a list of Server Capabilities that are assigned to a Server
-// Callers can filter the results by server id, server host name and/or server capability via the optional parameters
-// Deprecated: GetServerServerCapabilities will be removed in 6.0. Use GetServerServerCapabilitiesWithHdr.
-func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, serverCapability *string) ([]tc.ServerServerCapability, toclientlib.ReqInf, error) {
-	return to.GetServerServerCapabilitiesWithHdr(serverID, serverHostName, serverCapability, nil)
 }

@@ -55,7 +55,7 @@ func init() {
 // }
 
 func TestDNSSEC(t *testing.T) {
-	d = &dnssec.DnssecClient{new(dns.Client)}
+	d = &dnssec.DnssecClient{Client: new(dns.Client)}
 	d.Net = "udp"
 
 	if nameserver == "changeit" {

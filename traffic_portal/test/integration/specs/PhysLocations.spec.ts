@@ -16,16 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+import { readFileSync } from "fs";
+
 import { browser } from 'protractor';
+import using from "jasmine-data-provider";
+
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { PhysLocationsPage } from '../PageObjects/PhysLocationsPage.po';
 import { API } from '../CommonUtils/API';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-
-
-let fs = require('fs')
-let using = require('jasmine-data-provider');
-
 
 let api = new API();
 let loginPage = new LoginPage();
@@ -35,13 +34,12 @@ let physlocationsPage = new PhysLocationsPage();
 let setupFile = 'Data/PhysLocations/Setup.json';
 let cleanupFile = 'Data/PhysLocations/Cleanup.json';
 let filename = 'Data/PhysLocations/TestCases.json';
-let testData = JSON.parse(fs.readFileSync(filename));
+let testData = JSON.parse(readFileSync(filename, "utf8"));
 
 describe('Setup API for physlocation test', function () {
     it('Setup', async function () {
-        let setupData = JSON.parse(fs.readFileSync(setupFile));
-        let output = await api.UseAPI(setupData);
-        expect(output).toBeNull();
+        let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
+        await api.UseAPI(setupData);
     })
 })
 
@@ -71,7 +69,7 @@ using(testData.PhysLocations, async function(physlocationsData){
                     await physlocationsPage.OpenPhysLocationPage();
                 })
             })
-          
+
             using(physlocationsData.Remove, function (remove) {
                 it(remove.description, async function () {
                     await physlocationsPage.SearchPhysLocation(remove.Name);
@@ -88,8 +86,7 @@ using(testData.PhysLocations, async function(physlocationsData){
 
 describe('Clean up API for physlocation test', function () {
     it('Cleanup', async function () {
-        let cleanupData = JSON.parse(fs.readFileSync(cleanupFile));
-        let output = await api.UseAPI(cleanupData);
-        expect(output).toBeNull();
+        let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
+        await api.UseAPI(cleanupData);
     })
 })

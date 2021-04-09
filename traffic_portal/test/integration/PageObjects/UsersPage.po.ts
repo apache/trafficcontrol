@@ -16,9 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { by, element } from 'protractor'
+import { by, element } from 'protractor';
+
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
+import { randomize } from '../config';
 
 export class UsersPage extends BasePage {
 
@@ -31,8 +33,7 @@ export class UsersPage extends BasePage {
     private txtPassword = element(by.name('uPass'));
     private txtConfirmPassword = element(by.name('confirmPassword'));
     private txtPublicSSHKey = element(by.name('publicSshKey'));
-    private config = require('../config');
-    private randomize = this.config.randomize;
+    private randomize = randomize;
 
     async OpenUserPage(){
       let snp = new SideNavigationPage();

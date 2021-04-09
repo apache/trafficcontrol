@@ -32,9 +32,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
 	"github.com/lib/pq"
 )
@@ -54,6 +53,17 @@ func RefreshDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 			unsetInDNSSECKeyRefresh()
 			return
 		}
+		if !cfg.TrafficVaultEnabled {
+			api.HandleErr(w, r, noTx, http.StatusInternalServerError, nil, errors.New("refreshing DNSSEC keys: Traffic Vault not enabled"))
+			unsetInDNSSECKeyRefresh()
+			return
+		}
+		tv, err := api.GetTrafficVault(r.Context())
+		if err != nil {
+			api.HandleErr(w, r, noTx, http.StatusInternalServerError, nil, errors.New("RefresHDNSSECKeys getting Traffic Vault from context: "+err.Error()))
+			unsetInDNSSECKeyRefresh()
+			return
+		}
 
 		tx, err := db.Begin()
 		if err != nil {
@@ -61,7 +71,7 @@ func RefreshDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 			unsetInDNSSECKeyRefresh()
 			return
 		}
-		go doDNSSECKeyRefresh(tx, cfg) // doDNSSECKeyRefresh takes ownership of tx and MUST close it.
+		go doDNSSECKeyRefresh(tx, tv) // doDNSSECKeyRefresh takes ownership of tx and MUST close it.
 	} else {
 		log.Infoln("RefreshDNSSECKeys called, while server was concurrently executing a refresh, doing nothing")
 	}
@@ -78,7 +88,7 @@ const DNSSECKeyRefreshDefaultZSKExpiration = time.Duration(30) * time.Hour * 24
 // doDNSSECKeyRefresh refreshes the CDN's DNSSEC keys, as necessary.
 // This takes ownership of tx, and MUST call `tx.Close()`.
 // This SHOULD only be called if setInDNSSECKeyRefresh() returned true, in which case this MUST call unsetInDNSSECKeyRefresh() before returning.
-func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
+func doDNSSECKeyRefresh(tx *sql.Tx, tv trafficvault.TrafficVault) {
 	doCommit := true
 	defer func() {
 		if doCommit {
@@ -127,13 +137,13 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 	}
 
 	for _, cdnInf := range cdnDNSSECKeyParams {
-		keys, ok, err := riaksvc.GetDNSSECKeys(string(cdnInf.CDNName), tx, cfg.RiakAuthOptions, cfg.RiakPort) // TODO get all in a map beforehand
+		keys, ok, err := tv.GetDNSSECKeys(string(cdnInf.CDNName), tx) // TODO get all in a map beforehand
 		if err != nil {
-			log.Warnln("refreshing DNSSEC Keys: getting cdn '" + string(cdnInf.CDNName) + "' keys from Riak, skipping: " + err.Error())
+			log.Warnln("refreshing DNSSEC Keys: getting cdn '" + string(cdnInf.CDNName) + "' keys from Traffic Vault, skipping: " + err.Error())
 			continue
 		}
 		if !ok {
-			log.Warnln("refreshing DNSSEC Keys: cdn '" + string(cdnInf.CDNName) + "' has no keys in Riak, skipping")
+			log.Warnln("refreshing DNSSEC Keys: cdn '" + string(cdnInf.CDNName) + "' has no keys in Traffic Vault, skipping")
 			continue
 		}
 
@@ -202,12 +212,12 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 
 				cdnKeys, ok := keys[string(ds.CDNName)]
 				if !ok {
-					log.Errorln("refreshing DNSSEC Keys: cdn has no keys, cannot create ds keys: " + err.Error())
+					log.Errorln("refreshing DNSSEC Keys: cdn has no keys, cannot create ds keys")
 					continue
 				}
 
 				overrideTTL := false
-				dsKeys, err := deliveryservice.CreateDNSSECKeys(tx, cfg, string(ds.DSName), exampleURLs[ds.DSName], cdnKeys, defaultKSKExpiration, defaultZSKExpiration, ttl, overrideTTL)
+				dsKeys, err := deliveryservice.CreateDNSSECKeys(exampleURLs[ds.DSName], cdnKeys, defaultKSKExpiration, defaultZSKExpiration, ttl, overrideTTL)
 				if err != nil {
 					log.Errorln("refreshing DNSSEC Keys: creating missing ds keys: " + err.Error())
 				}
@@ -261,8 +271,8 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 			}
 		}
 		if updatedAny {
-			if err := riaksvc.PutDNSSECKeys(keys, string(cdnInf.CDNName), tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
-				log.Errorln("refreshing DNSSEC Keys: putting keys into Riak for cdn '" + string(cdnInf.CDNName) + "': " + err.Error())
+			if err := tv.PutDNSSECKeys(string(cdnInf.CDNName), keys, tx); err != nil {
+				log.Errorln("refreshing DNSSEC Keys: putting keys into Traffic Vault for cdn '" + string(cdnInf.CDNName) + "': " + err.Error())
 			}
 		}
 	}

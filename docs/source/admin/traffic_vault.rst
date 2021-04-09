@@ -13,19 +13,56 @@
 .. limitations under the License.
 ..
 
+.. _traffic_vault_admin:
+
 ****************************
 Traffic Vault Administration
 ****************************
-Installing Traffic Vault
-========================
+
+Currently, the only supported backend for Traffic Vault is Riak, but more backends may be supported in the future.
+
+.. _traffic_vault_riak_backend:
+
+Riak
+====
+
+In order to use the Riak backend for Traffic Vault, you will need to set the ``traffic_vault_backend`` option to ``"riak"`` and include the necessary configuration in the ``traffic_vault_config`` section in :file:`cdn.conf`. The ``traffic_vault_config`` options for the Riak backend are as follows:
+
+:password:      The password to use when authenticating with Riak
+:user:          The username to use when authenticating with Riak
+:port:          The Riak protobuf port to connect to. Default: 8087
+:tlsConfig:     Optional. Certain TLS options from `the tls.Config struct options <https://golang.org/pkg/crypto/tls/#Config>`_ may be included here, such as ``insecureSkipVerify: true`` to disable certificate validation in order to use self-signed certificates for test/development purposes.
+:MaxTLSVersion: Optional. This is the highest TLS version that Traffic Ops is allowed to use to connect to Traffic Vault. Valid values are "1.0", "1.1", "1.2", and "1.3". The default is "1.1".
+
+.. note:: Enabling TLS 1.1 in Riak itself is required for Traffic Ops to communicate with Riak. See :ref:`Enabling TLS 1.1 <tv-admin-enable-tlsv1.1>` for details.
+
+Example cdn.conf snippet:
+-------------------------
+
+.. code-block:: json
+
+	{
+		"traffic_ops_golang": {
+			"traffic_vault_backend": "riak",
+			"traffic_vault_config": {
+				"user": "riakuser",
+				"password": "password",
+				"MaxTLSVersion": "1.1",
+				"port": 8087
+			}
+		}
+	}
+
+Installing the Riak backend for Traffic Vault
+---------------------------------------------
 In order to successfully store private keys you will need to install Riak. The latest version of Riak can be downloaded on `the Riak website <https://docs.riak.com/riak/latest/downloads/>`_. The installation instructions for Riak can be found `here <https://docs.riak.com/riak/kv/latest/setup/installing/index.html>`__. Based on experience, version 2.0.5 of Riak is recommended, but the latest version should suffice.
 
-Configuring Traffic Vault
-=========================
-The following steps were taken to configure Riak in Comcast production environments.
+Configuring Riak
+----------------
+Follow these steps to configure Riak in a production environment.
 
 Self Signed Certificate configuration
--------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. note:: Self-signed certificates are not recommended for production use. Intended for development or learning purposes only. Modify subject as necessary.
 
 .. code-block:: shell
@@ -47,7 +84,7 @@ Self Signed Certificate configuration
 
 
 Riak Configuration File
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 The following steps need to be performed on each Riak server in the cluster:
 
 #. Log into Riak server as root
@@ -74,7 +111,7 @@ Enabling TLS 1.1 (required)
 #. Consult the `Riak documentation <https://docs.riak.com/riak/kv/latest/setup/installing/verify/>`_ for instructions on how to verify the installed service
 
 ``riak-admin`` Configuration
-----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``riak-admin`` is a command line utility used to configure Riak that needs to be run as root on a server in the Riak cluster.
 
 .. seealso:: `The riak-admin documentation <https://docs.riak.com/riak/kv/latest/using/admin/riak-admin/>`_
@@ -89,9 +126,8 @@ Enabling TLS 1.1 (required)
 	riak-admin security add-group admins
 	riak-admin security add-group keysusers
 
-	# User name and password should be stored in
-	# /opt/traffic_ops/app/conf/<environment>/riak.conf on the Traffic Ops
-	# server
+	# User name and password should be stored in the traffic_vault_config section in
+	# /opt/traffic_ops/app/conf/cdn.conf on the Traffic Ops server (with traffic_vault_backend = riak)
 	# In this example, we assume the usernames 'admin' and 'riakuser' with
 	# respective passwords stored in the ADMIN_PASSWORD and RIAK_USER_PASSWORD
 	# environment variables
@@ -113,15 +149,15 @@ Enabling TLS 1.1 (required)
 
 
 Traffic Ops Configuration
--------------------------
-Before a fully set-up Traffic Vault instance may be used, it must be added as a server to Traffic Ops. The easiest way to accomplish this is via Traffic Portal at :menuselection:`Configure --> Servers`, though :ref:`to-api-servers` may also be used by low-level tools and/or scripts. The Traffic Ops configuration file :file:`/opt/traffic_ops/app/conf/{environment}/riak.conf` for the appropriate environment must also be updated to reflect the correct username and password for accessing the Riak database.
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Before a fully set-up Riak instance may be used as the Traffic Vault backend, it must be added as a server to Traffic Ops. The easiest way to accomplish this is via Traffic Portal at :menuselection:`Configure --> Servers`, though :ref:`to-api-servers` may also be used by low-level tools and/or scripts. The Traffic Ops configuration file :file:`/opt/traffic_ops/app/conf/cdn.conf` must be updated to set ``traffic_vault_backend`` to ``"riak"`` and the ``traffic_vault_config`` to include the correct username and password for accessing the Riak database.
 
 Configuring Riak Search
-=======================
-In order to more effectively support retrieval of SSL certificates by Traffic Router and :term:`ORT`, Traffic Vault uses `Riak search <https://docs.riak.com/riak/kv/latest/using/reference/search/>`_. Riak Search uses `Apache Solr <https://lucene.apache.org/solr>`_ for indexing and searching of records. This section explains how to enable, configure, and validate Riak Search.
+-----------------------
+In order to more effectively support retrieval of SSL certificates by Traffic Router and :term:`ORT`, the Riak backend for Traffic Vault uses `Riak search <https://docs.riak.com/riak/kv/latest/using/reference/search/>`_. Riak Search uses `Apache Solr <https://lucene.apache.org/solr>`_ for indexing and searching of records. This section explains how to enable, configure, and validate Riak Search.
 
 Riak Configuration
-------------------
+^^^^^^^^^^^^^^^^^^
 On each Traffic Vault server follow these steps.
 
 #. If Java (JDKv1.8+) is not already installed on your Riak server, install Java

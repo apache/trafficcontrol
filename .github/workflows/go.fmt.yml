@@ -35,7 +35,7 @@ on:
       - .github/workflows/go.fmt.yml
       - GO_VERSION
       - "**.go"
-    types: [opened, reopened, read_for_review, synchronize]
+    types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
   format:

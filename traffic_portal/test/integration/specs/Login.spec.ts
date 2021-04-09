@@ -18,7 +18,7 @@
  */
 import { browser } from 'protractor';
 import { LoginPage } from '../PageObjects/LoginPage.po';
-import  * as using  from "jasmine-data-provider";
+import  using  from "jasmine-data-provider";
 import { readFileSync } from "fs"
 
 const filename = 'Data/Login/TestCases.json';

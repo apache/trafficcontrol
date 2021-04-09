@@ -100,7 +100,7 @@ func (r *Responder) Do() {
 	web.TryFlush(r.W) // TODO remove? Let plugins do it, if they need to?
 
 	respSuccess := err != nil
-	respData := cachedata.RespData{*r.ResponseCode, bytesSent, respSuccess, isCacheHit(r.Reuse, r.OriginCode)}
+	respData := cachedata.RespData{RespCode: *r.ResponseCode, BytesWritten: bytesSent, RespSuccess: respSuccess, CacheHit: isCacheHit(r.Reuse, r.OriginCode)}
 	arData := plugin.AfterRespondData{W: r.W, Stats: r.Stats, ReqData: r.ReqData, SrvrData: r.SrvrData, ParentRespData: r.ParentRespData, RespData: respData, RequestID: r.RequestID}
 	r.Plugins.OnAfterRespond(r.PluginCfg, r.PluginContext, arData)
 }

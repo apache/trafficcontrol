@@ -51,7 +51,7 @@ func TestTopologyBasedDeliveryServicesRequiredCapabilities(t *testing.T) {
 }
 
 func OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t *testing.T) {
-	resp, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr("ds-top-req-cap2", nil)
+	resp, _, err := TOSession.GetDeliveryServiceByXMLID("ds-top-req-cap2", nil)
 	if err != nil {
 		t.Errorf("getting delivery service by xml ID: %v", err.Error())
 	}
@@ -69,7 +69,7 @@ func OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t *testing
 	}
 	params.Add("dsId", strconv.Itoa(dsID))
 	params.Add("type", tc.OriginTypeName)
-	responseServers, _, err := TOSession.GetServersWithHdr(&params, nil)
+	responseServers, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("getting servers for ds-top-req-cap2 delivery service: %v", err.Error())
 	}
@@ -117,7 +117,7 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMSAfterChange(t *testing.T, hea
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
+			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
 			if err != nil {
 				t.Fatalf("Expected no error, but got %v", err.Error())
 			}
@@ -132,7 +132,7 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMSAfterChange(t *testing.T, hea
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
+			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
 			if err != nil {
 				t.Fatalf("Expected no error, but got %v", err.Error())
 			}
@@ -203,7 +203,7 @@ func GetTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, nil)
+			capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, nil)
 			if err != nil {
 				t.Fatalf("%s; got err= %v; expected err= nil", tc.description, err)
 			}
@@ -250,7 +250,7 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMS(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
+			_, reqInf, err := TOSession.GetDeliveryServicesRequiredCapabilities(tc.capability.DeliveryServiceID, tc.capability.XMLID, tc.capability.RequiredCapability, header)
 			if err != nil {
 				t.Fatalf("Expected no error, but got %v", err.Error())
 			}
@@ -383,7 +383,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	// Tests that a capability cannot be made required if the DS's services do not have it assigned
 
 	// Get Delivery Capability for a DS
-	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(nil, util.StrPtr("ds1"), nil, nil)
+	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, util.StrPtr("ds1"), nil, nil)
 	if err != nil {
 		t.Fatalf("cannot GET delivery service required capabilities: %v", err)
 	}
@@ -395,7 +395,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	// TODO: DON'T hard-code hostnames!
 	params := url.Values{}
 	params.Add("hostName", "atlanta-edge-01")
-	resp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	resp, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Server by hostname: %v", err)
 	}
@@ -472,7 +472,7 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 
 func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	// Get Required Capabilities to delete them
-	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(nil, nil, nil, nil)
+	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -487,7 +487,7 @@ func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	}
 
 	testCases := []testCase{
-		testCase{
+		{
 			description: fmt.Sprintf("delete a deliveryservices required capability with an invalid delivery service id; deliveryServiceID: -1, requiredCapability: %s", *capabilities[0].RequiredCapability),
 			capability: tc.DeliveryServicesRequiredCapability{
 				DeliveryServiceID:  util.IntPtr(-1),
@@ -495,7 +495,7 @@ func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 			},
 			err: "no deliveryservice.RequiredCapability with that key found",
 		},
-		testCase{
+		{
 			description: fmt.Sprintf("delete a deliveryservices required capability with an invalid required capability; deliveryServiceID: %d, requiredCapability: bogus", *capabilities[0].DeliveryServiceID),
 			capability: tc.DeliveryServicesRequiredCapability{
 				DeliveryServiceID:  capabilities[0].DeliveryServiceID,
@@ -528,7 +528,7 @@ func helperGetDeliveryServiceID(t *testing.T, xmlID *string) *int {
 	if xmlID == nil {
 		t.Fatal("xml id must not be nil")
 	}
-	ds, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr(*xmlID, nil)
+	ds, _, err := TOSession.GetDeliveryServiceByXMLID(*xmlID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

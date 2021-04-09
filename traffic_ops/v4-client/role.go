@@ -25,83 +25,54 @@ import (
 )
 
 const (
+	// APIRoles is the full path to the /roles API endpoint.
 	APIRoles = "/roles"
 )
 
-// CreateRole creates a Role.
+// CreateRole creates the given Role.
 func (to *Session) CreateRole(role tc.Role) (tc.Alerts, toclientlib.ReqInf, int, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(APIRoles, role, nil, &alerts)
 	return alerts, reqInf, reqInf.StatusCode, err
 }
 
-func (to *Session) UpdateRoleByIDWithHdr(id int, role tc.Role, header http.Header) (tc.Alerts, toclientlib.ReqInf, int, error) {
+// UpdateRole replaces the Role identified by 'id' with the one provided.
+func (to *Session) UpdateRole(id int, role tc.Role, header http.Header) (tc.Alerts, toclientlib.ReqInf, int, error) {
 	route := fmt.Sprintf("%s/?id=%d", APIRoles, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, role, header, &alerts)
 	return alerts, reqInf, reqInf.StatusCode, err
 }
 
-// UpdateRoleByID updates a Role by ID.
-// Deprecated: UpdateRoleByID will be removed in 6.0. Use UpdateRoleByIDWithHdr.
-func (to *Session) UpdateRoleByID(id int, role tc.Role) (tc.Alerts, toclientlib.ReqInf, int, error) {
-
-	return to.UpdateRoleByIDWithHdr(id, role, nil)
-}
-
-func (to *Session) GetRolesWithHdr(header http.Header) ([]tc.Role, toclientlib.ReqInf, int, error) {
-	var data tc.RolesResponse
-	reqInf, err := to.get(APIRoles, header, &data)
-	return data.Response, reqInf, reqInf.StatusCode, err
-}
-
-// GetRoles returns a list of roles.
-// Deprecated: GetRoles will be removed in 6.0. Use GetRolesWithHdr.
-func (to *Session) GetRoles() ([]tc.Role, toclientlib.ReqInf, int, error) {
-	return to.GetRolesWithHdr(nil)
-}
-
-func (to *Session) GetRoleByIDWithHdr(id int, header http.Header) ([]tc.Role, toclientlib.ReqInf, int, error) {
+// GetRoleByID returns the Role with the given ID.
+func (to *Session) GetRoleByID(id int, header http.Header) ([]tc.Role, toclientlib.ReqInf, int, error) {
 	route := fmt.Sprintf("%s/?id=%d", APIRoles, id)
 	var data tc.RolesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, reqInf.StatusCode, err
 }
 
-// GetRoleByID GETs a Role by the Role ID.
-// Deprecated: GetRoleByID will be removed in 6.0. Use GetRoleByIDWithHdr.
-func (to *Session) GetRoleByID(id int) ([]tc.Role, toclientlib.ReqInf, int, error) {
-	return to.GetRoleByIDWithHdr(id, nil)
-}
-
-func (to *Session) GetRoleByNameWithHdr(name string, header http.Header) ([]tc.Role, toclientlib.ReqInf, int, error) {
+// GetRoleByName returns the Role with the given Name.
+func (to *Session) GetRoleByName(name string, header http.Header) ([]tc.Role, toclientlib.ReqInf, int, error) {
 	route := fmt.Sprintf("%s?name=%s", APIRoles, url.QueryEscape(name))
 	var data tc.RolesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, reqInf.StatusCode, err
 }
 
-// GetRoleByName GETs a Role by the Role name.
-// Deprecated: GetRoleByName will be removed in 6.0. Use GetRoleByNameWithHdr.
-func (to *Session) GetRoleByName(name string) ([]tc.Role, toclientlib.ReqInf, int, error) {
-	return to.GetRoleByNameWithHdr(name, nil)
-}
-
-func (to *Session) GetRoleByQueryParamsWithHdr(queryParams map[string]string, header http.Header) ([]tc.Role, toclientlib.ReqInf, int, error) {
-	route := fmt.Sprintf("%s%s", APIRoles, mapToQueryParameters(queryParams))
+// GetRoles retrieves Roles from Traffic Ops.
+func (to *Session) GetRoles(queryParams url.Values, header http.Header) ([]tc.Role, toclientlib.ReqInf, int, error) {
+	route := APIRoles
+	if len(queryParams) > 0 {
+		route += "?" + queryParams.Encode()
+	}
 	var data tc.RolesResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, reqInf.StatusCode, err
 }
 
-// GetRoleByQueryParams gets a Role by the Role query parameters.
-// Deprecated: GetRoleByQueryParams will be removed in 6.0. Use GetRoleByQueryParamsWithHdr.
-func (to *Session) GetRoleByQueryParams(queryParams map[string]string) ([]tc.Role, toclientlib.ReqInf, int, error) {
-	return to.GetRoleByQueryParamsWithHdr(queryParams, nil)
-}
-
-// DeleteRoleByID DELETEs a Role by ID.
-func (to *Session) DeleteRoleByID(id int) (tc.Alerts, toclientlib.ReqInf, int, error) {
+// DeleteRole deletes the Role with the given ID.
+func (to *Session) DeleteRole(id int) (tc.Alerts, toclientlib.ReqInf, int, error) {
 	route := fmt.Sprintf("%s/?id=%d", APIRoles, id)
 	var alerts tc.Alerts
 	reqInf, err := to.del(route, nil, &alerts)

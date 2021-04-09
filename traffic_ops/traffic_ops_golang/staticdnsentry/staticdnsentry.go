@@ -49,23 +49,23 @@ func (v *TOStaticDNSEntry) NewReadObj() interface{}       { return &tc.StaticDNS
 func (v *TOStaticDNSEntry) SelectQuery() string           { return selectQuery() }
 func (v *TOStaticDNSEntry) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"address":           dbhelpers.WhereColumnInfo{"sde.address", nil},
-		"cachegroup":        dbhelpers.WhereColumnInfo{"cg.name", nil},
-		"cachegroupId":      dbhelpers.WhereColumnInfo{"cg.id", nil},
-		"deliveryservice":   dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
-		"deliveryserviceId": dbhelpers.WhereColumnInfo{"sde.deliveryservice", nil},
-		"host":              dbhelpers.WhereColumnInfo{"sde.host", nil},
-		"id":                dbhelpers.WhereColumnInfo{"sde.id", nil},
-		"ttl":               dbhelpers.WhereColumnInfo{"sde.ttl", nil},
-		"type":              dbhelpers.WhereColumnInfo{"tp.name", nil},
-		"typeId":            dbhelpers.WhereColumnInfo{"tp.id", nil},
+		"address":           dbhelpers.WhereColumnInfo{Column: "sde.address"},
+		"cachegroup":        dbhelpers.WhereColumnInfo{Column: "cg.name"},
+		"cachegroupId":      dbhelpers.WhereColumnInfo{Column: "cg.id"},
+		"deliveryservice":   dbhelpers.WhereColumnInfo{Column: "ds.xml_id"},
+		"deliveryserviceId": dbhelpers.WhereColumnInfo{Column: "sde.deliveryservice"},
+		"host":              dbhelpers.WhereColumnInfo{Column: "sde.host"},
+		"id":                dbhelpers.WhereColumnInfo{Column: "sde.id"},
+		"ttl":               dbhelpers.WhereColumnInfo{Column: "sde.ttl"},
+		"type":              dbhelpers.WhereColumnInfo{Column: "tp.name"},
+		"typeId":            dbhelpers.WhereColumnInfo{Column: "tp.id"},
 	}
 }
 func (v *TOStaticDNSEntry) UpdateQuery() string { return updateQuery() }
 func (v *TOStaticDNSEntry) DeleteQuery() string { return deleteQuery() }
 
 func (staticDNSEntry TOStaticDNSEntry) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions

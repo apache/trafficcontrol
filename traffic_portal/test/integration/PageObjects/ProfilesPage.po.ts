@@ -16,9 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element } from 'protractor'
+import { browser, by, element } from 'protractor';
+
+import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
+
 export class ProfilesPage extends BasePage {
 
     private btnCreateNewProfile = element(by.name('createProfileButton'));
@@ -28,7 +31,6 @@ export class ProfilesPage extends BasePage {
     private txtRoutingDisable = element(by.name('routingDisabled'));
     private txtDescription = element(by.id('description'));
     private txtSearch = element(by.id('profilesTable_filter')).element(by.css('label input'));
-    private mnuProfilesTable = element(by.id('profilesTable'));
     private btnDelete = element(by.buttonText('Delete'));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
     private btnMore = element(by.name('moreBtn'));
@@ -37,8 +39,7 @@ export class ProfilesPage extends BasePage {
     private txtCompareDropdown2 = element(by.name('compareDropdown2'));
     private btnCompareSubmit = element(by.name('compareSubmit'));
     private mnuCompareTable = element(by.id('profilesParamsCompareTable_wrapper'));
-    private config = require('../config');
-    private randomize = this.config.randomize;
+    private randomize = randomize;
     async OpenProfilesPage() {
         let snp = new SideNavigationPage();
         await snp.NavigateToProfilesPage();
@@ -68,8 +69,7 @@ export class ProfilesPage extends BasePage {
         })
         return result;
     }
-    async SearchProfile(nameProfiles: string) {
-        let result = false;
+    public async SearchProfile(nameProfiles: string): Promise<boolean> {
         let snp = new SideNavigationPage();
         let name = nameProfiles + this.randomize;
         await snp.NavigateToProfilesPage();
@@ -77,11 +77,9 @@ export class ProfilesPage extends BasePage {
         await this.txtSearch.sendKeys(name);
         if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
             await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-            result = true;
-        } else {
-            result = undefined;
+            return true;
         }
-        return result;
+        return false;
     }
     async CompareProfile(profile1: string, profile2: string) {
         let result = false;
@@ -97,8 +95,7 @@ export class ProfilesPage extends BasePage {
             return result;
         }
     }
-    async UpdateProfile(profile) {
-        let result = false;
+    public async UpdateProfile(profile): Promise<boolean | undefined> {
         let basePage = new BasePage();
         switch (profile.description) {
             case "update profile type":
@@ -106,19 +103,9 @@ export class ProfilesPage extends BasePage {
                 await basePage.ClickUpdate();
                 break;
             default:
-                result = undefined;
+                return undefined;
         }
-        if (result =! undefined) {
-            result = await basePage.GetOutputMessage().then(function (value) {
-                if (profile.validationMessage == value) {
-                    return true;
-                } else {
-                    return false;
-                }
-            })
-
-        }
-        return result;
+        return await basePage.GetOutputMessage().then(value => profile.validationMessage === value);
     }
     async DeleteProfile(profile) {
         let result = false;

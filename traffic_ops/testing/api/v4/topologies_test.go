@@ -84,7 +84,7 @@ func TestTopologies(t *testing.T) {
 
 func CreateTestTopologies(t *testing.T) {
 	var (
-		postResponse *tc.TopologyResponse
+		postResponse tc.TopologyResponse
 		err          error
 	)
 	for _, topology := range testData.Topologies {
@@ -103,7 +103,7 @@ func GetTestTopologies(t *testing.T) {
 	if len(testData.Topologies) < 1 {
 		t.Fatalf("test data has no topologies, can't test")
 	}
-	topos, _, err := TOSession.GetTopologiesWithHdr(nil)
+	topos, _, err := TOSession.GetTopologies(nil)
 	if err != nil {
 		t.Fatalf("expected GET error to be nil, actual: %v", err)
 	}
@@ -117,19 +117,17 @@ func UpdateTestTopologiesWithHeaders(t *testing.T, header http.Header) {
 	newName := "blah"
 
 	// Retrieve the Topology by name so we can get the id for Update()
-	resp, _, err := TOSession.GetTopologyWithHdr(originalName, nil)
+	resp, _, err := TOSession.GetTopology(originalName, nil)
 	if err != nil {
 		t.Errorf("cannot GET Topology by name: '%s', %v", originalName, err)
 	}
-	if (resp) != nil {
-		resp.Name = newName
-		_, reqInf, err := TOSession.UpdateTopology(originalName, *resp, header)
-		if err == nil {
-			t.Errorf("Expected error about Precondition Failed, got none")
-		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-		}
+	resp.Name = newName
+	_, reqInf, err := TOSession.UpdateTopology(originalName, resp, header)
+	if err == nil {
+		t.Errorf("Expected error about Precondition Failed, got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
 	}
 }
 
@@ -246,24 +244,24 @@ func UpdateTestTopologies(t *testing.T) {
 	}
 
 	// attempt to add cachegroup that doesn't meet DS required capabilities
-	top, _, err := TOSession.GetTopologyWithHdr("top-for-ds-req", nil)
+	top, _, err := TOSession.GetTopology("top-for-ds-req", nil)
 	if err != nil {
 		t.Fatalf("cannot GET topology: %v", err)
 	}
 	top.Nodes = append(top.Nodes, tc.TopologyNode{Cachegroup: "cachegroup1", Parents: []int{0}})
-	_, _, err = TOSession.UpdateTopology(top.Name, *top, nil)
+	_, _, err = TOSession.UpdateTopology(top.Name, top, nil)
 	if err == nil {
 		t.Errorf("making invalid update to topology - expected: error, actual: nil")
 	}
 
 	// attempt to add a cachegroup that only has caches in one CDN while the topology is assigned to DSes from multiple CDNs
-	top, _, err = TOSession.GetTopologyWithHdr("top-used-by-cdn1-and-cdn2", nil)
+	top, _, err = TOSession.GetTopology("top-used-by-cdn1-and-cdn2", nil)
 	if err != nil {
 		t.Fatalf("cannot GET topology: %v", err)
 	}
 	params := url.Values{}
 	params.Add("topology", "top-used-by-cdn1-and-cdn2")
-	dses, _, err := TOSession.GetDeliveryServicesV4(nil, params)
+	dses, _, err := TOSession.GetDeliveryServices(nil, params)
 	if err != nil {
 		t.Fatalf("cannot GET delivery services: %v", err)
 	}
@@ -282,7 +280,7 @@ func UpdateTestTopologies(t *testing.T) {
 	if !foundCDN1 || !foundCDN2 {
 		t.Fatalf("expected delivery services assigned to topology top-used-by-cdn1-and-cdn2 to be assigned to cdn1 and cdn2")
 	}
-	cgs, _, err := TOSession.GetCacheGroupNullableByNameWithHdr("cdn1-only", nil)
+	cgs, _, err := TOSession.GetCacheGroupByName("cdn1-only", nil)
 	if err != nil {
 		t.Fatalf("unable to GET cachegroup by name: %v", err)
 	}
@@ -291,7 +289,7 @@ func UpdateTestTopologies(t *testing.T) {
 	}
 	params = url.Values{}
 	params.Add("cachegroup", strconv.Itoa(*cgs[0].ID))
-	servers, _, err := TOSession.GetServersWithHdr(&params, nil)
+	servers, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
 		t.Fatalf("unable to GET servers by cachegroup: %v", err)
 	}
@@ -307,7 +305,7 @@ func UpdateTestTopologies(t *testing.T) {
 		Cachegroup: "cdn1-only",
 		Parents:    []int{0},
 	})
-	_, _, err = TOSession.UpdateTopology(top.Name, *top, nil)
+	_, _, err = TOSession.UpdateTopology(top.Name, top, nil)
 	if err == nil {
 		t.Errorf("making invalid update to topology (cachegroup contains only servers from cdn1 while the topology is assigned to delivery services in cdn1 and cdn2) - expected: error, actual: nil")
 	}
@@ -318,7 +316,7 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	params.Set("xmlId", "ds-top")
 
 	//Get the correct DS
-	remoteDS, _, err := TOSession.GetDeliveryServicesV4(nil, params)
+	remoteDS, _, err := TOSession.GetDeliveryServices(nil, params)
 	if err != nil {
 		t.Errorf("cannot GET Delivery Services: %v", err)
 	}
@@ -332,7 +330,7 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 
 	//Get Topology node to update and remove ORG server nodes
 	origTopo := *remoteDS[0].Topology
-	resp, _, err := TOSession.GetTopologyWithHdr(origTopo, nil)
+	resp, _, err := TOSession.GetTopology(origTopo, nil)
 	if err != nil {
 		t.Fatalf("couldn't find any topologies: %v", err)
 	}
@@ -343,7 +341,7 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	if *remoteDS[0].Topology == resp.Name {
 		resp.Nodes = newNodes
 	}
-	_, _, err = TOSession.UpdateTopology(*remoteDS[0].Topology, *resp, nil)
+	_, _, err = TOSession.UpdateTopology(*remoteDS[0].Topology, resp, nil)
 	if err == nil {
 		t.Fatalf("shouldnot UPDATE topology:%v to %v, but update was a success", *remoteDS[0].Topology, newNodes[0].Cachegroup)
 	} else if !strings.Contains(err.Error(), "ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed:") {
@@ -353,7 +351,7 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 
 	//Remove org server assignment and reset DS back to as it was for further testing
 	params.Set("hostName", "denver-mso-org-01")
-	serverResp, _, err := TOSession.GetServersWithHdr(&params, nil)
+	serverResp, _, err := TOSession.GetServers(params, nil)
 	if len(serverResp.Response) == 0 {
 		t.Fatal("no servers in response, quitting")
 	}
@@ -370,7 +368,7 @@ func UpdateTopologyName(t *testing.T) {
 	currentTopologyName := "top-used-by-cdn1-and-cdn2"
 
 	// Get details on existing topology
-	resp, _, err := TOSession.GetTopologyWithHdr(currentTopologyName, nil)
+	resp, _, err := TOSession.GetTopology(currentTopologyName, nil)
 	if err != nil {
 		t.Errorf("unable to get topology with name: %v", currentTopologyName)
 	}
@@ -378,7 +376,7 @@ func UpdateTopologyName(t *testing.T) {
 	resp.Name = newTopologyName
 
 	// Update topology with new name
-	updateResponse, _, err := TOSession.UpdateTopology(currentTopologyName, *resp, nil)
+	updateResponse, _, err := TOSession.UpdateTopology(currentTopologyName, resp, nil)
 	if err != nil {
 		t.Errorf("cannot PUT topology: %v - %v", err, updateResponse)
 	}
@@ -387,7 +385,7 @@ func UpdateTopologyName(t *testing.T) {
 	}
 
 	//To check whether the primary key change trickled down to DS table
-	resp1, _, err := TOSession.GetDeliveryServiceByXMLIDNullableWithHdr("top-ds-in-cdn2", nil)
+	resp1, _, err := TOSession.GetDeliveryServiceByXMLID("top-ds-in-cdn2", nil)
 	if err != nil {
 		t.Errorf("failed to get details on DS: %v", err)
 	}
@@ -397,7 +395,7 @@ func UpdateTopologyName(t *testing.T) {
 
 	// Set everything back as it was for further testing.
 	resp.Name = currentTopologyName
-	r, _, err := TOSession.UpdateTopology(newTopologyName, *resp, nil)
+	r, _, err := TOSession.UpdateTopology(newTopologyName, resp, nil)
 	if err != nil {
 		t.Errorf("cannot PUT topology: %v - %v", err, r)
 	}
@@ -420,19 +418,16 @@ func DeleteTestTopologies(t *testing.T) {
 			t.Errorf("topology deletion audit log entry - expected: message containing topology name '%s', actual: %s", top.Name, *deleteLog[0].Message)
 		}
 
-		topology, _, err := TOSession.GetTopology(top.Name)
+		_, _, err = TOSession.GetTopology(top.Name, nil)
 		if err == nil {
 			t.Fatalf("expected error trying to GET deleted topology: %s, actual: nil", top.Name)
-		}
-		if topology != nil {
-			t.Fatalf("expected nil trying to GET deleted topology: %s, actual: non-nil", top.Name)
 		}
 	}
 }
 
 func GetTopologyWithNonExistentName(t *testing.T) {
-	resp, reqInf, _ := TOSession.GetTopologyWithHdr("non-existent-topology", nil)
-	if resp != nil {
+	resp, reqInf, _ := TOSession.GetTopology("non-existent-topology", nil)
+	if resp.Name != "" {
 		t.Errorf("expected nothing in the response, but got a topology with name %s", resp.Name)
 	}
 	if reqInf.StatusCode != http.StatusOK {
@@ -462,7 +457,7 @@ func CreateTopologyWithInvalidCacheGroup(t *testing.T) {
 }
 
 func CreateTopologyWithInvalidParentNumber(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -475,7 +470,7 @@ func CreateTopologyWithInvalidParentNumber(t *testing.T) {
 	params := url.Values{}
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -503,7 +498,7 @@ func CreateTopologyWithInvalidParentNumber(t *testing.T) {
 }
 
 func CreateTopologyWithoutDescription(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -516,7 +511,7 @@ func CreateTopologyWithoutDescription(t *testing.T) {
 	params := url.Values{}
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -547,7 +542,7 @@ func CreateTopologyWithoutDescription(t *testing.T) {
 }
 
 func CreateTopologyWithoutName(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -560,7 +555,7 @@ func CreateTopologyWithoutName(t *testing.T) {
 	params := url.Values{}
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -587,7 +582,7 @@ func CreateTopologyWithoutName(t *testing.T) {
 }
 
 func CreateTopologyWithoutServers(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -600,7 +595,7 @@ func CreateTopologyWithoutServers(t *testing.T) {
 	params := url.Values{}
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) == 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -628,7 +623,7 @@ func CreateTopologyWithoutServers(t *testing.T) {
 }
 
 func CreateTopologyWithDuplicateParents(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -641,7 +636,7 @@ func CreateTopologyWithDuplicateParents(t *testing.T) {
 	params := url.Values{}
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && parentName != *cg.Name && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -652,7 +647,7 @@ func CreateTopologyWithDuplicateParents(t *testing.T) {
 
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil {
 				parentName = *cg.Name
@@ -686,7 +681,7 @@ func CreateTopologyWithDuplicateParents(t *testing.T) {
 }
 
 func CreateTopologyWithNodeAsParentOfItself(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -699,7 +694,7 @@ func CreateTopologyWithNodeAsParentOfItself(t *testing.T) {
 	params := url.Values{}
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -710,7 +705,7 @@ func CreateTopologyWithNodeAsParentOfItself(t *testing.T) {
 
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && parentName != *cg.Name {
 				parentName = *cg.Name
@@ -744,7 +739,7 @@ func CreateTopologyWithNodeAsParentOfItself(t *testing.T) {
 }
 
 func CreateTopologyWithOrgLocAsChildNode(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -757,7 +752,7 @@ func CreateTopologyWithOrgLocAsChildNode(t *testing.T) {
 	params := url.Values{}
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				parentName = *cg.Name
@@ -768,7 +763,7 @@ func CreateTopologyWithOrgLocAsChildNode(t *testing.T) {
 
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && parentName != *cg.Name && cg.Type != nil && *cg.Type == tc.CacheGroupOriginTypeName {
 				cachegroupName = *cg.Name
@@ -802,7 +797,7 @@ func CreateTopologyWithOrgLocAsChildNode(t *testing.T) {
 }
 
 func CreateTopologyWithExistingName(t *testing.T) {
-	resp, _, err := TOSession.GetTopologiesWithHdr(nil)
+	resp, _, err := TOSession.GetTopologies(nil)
 	if err != nil {
 		t.Fatalf("could not GET topologies: %v", err)
 	}
@@ -819,7 +814,7 @@ func CreateTopologyWithExistingName(t *testing.T) {
 }
 
 func CreateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -831,7 +826,7 @@ func CreateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
 	params := url.Values{}
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupMidTypeName {
 				parentName = *cg.Name
@@ -861,12 +856,9 @@ func CreateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
 }
 
 func CRUDTopologyReadOnlyUser(t *testing.T) {
-	resp, _, err := TOSession.TenantByNameWithHdr("root", nil)
+	resp, _, err := TOSession.GetTenantByName("root", nil)
 	if err != nil {
 		t.Fatalf("couldn't get the root tenant ID: %v", err)
-	}
-	if resp == nil {
-		t.Fatalf("expected a valid tenant response, but got nothing")
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
@@ -881,7 +873,7 @@ func CRUDTopologyReadOnlyUser(t *testing.T) {
 	user.TenantID = util.IntPtr(resp.ID)
 	user.FullName = util.StrPtr("firstName LastName")
 
-	u, _, err := TOSession.CreateUser(&user)
+	u, _, err := TOSession.CreateUser(user)
 	if err != nil {
 		t.Fatalf("could not create read-only user: %v", err)
 	}
@@ -914,7 +906,7 @@ func CRUDTopologyReadOnlyUser(t *testing.T) {
 	}
 
 	// Read
-	tops, _, err := client.GetTopologiesWithHdr(nil)
+	tops, _, err := client.GetTopologies(nil)
 	if err != nil {
 		t.Fatalf("couldn't get topologies: %v", err)
 	}
@@ -942,13 +934,13 @@ func CRUDTopologyReadOnlyUser(t *testing.T) {
 		t.Errorf("expected error about Read-Only users not being able to delete topologies, but got nothing")
 	}
 
-	if u != nil && u.Response.Username != nil {
+	if u.Response.Username != nil {
 		ForceDeleteTestUsersByUsernames(t, []string{"test_user"})
 	}
 }
 
 func UpdateTopologyWithCachegroupAssignedToBecomeParentOfItself(t *testing.T) {
-	tops, _, err := TOSession.GetTopologiesWithHdr(nil)
+	tops, _, err := TOSession.GetTopologies(nil)
 	if err != nil {
 		t.Fatalf("couldn't get topologies: %v", err)
 	}
@@ -961,11 +953,11 @@ func UpdateTopologyWithCachegroupAssignedToBecomeParentOfItself(t *testing.T) {
 	// create a list of indices consisting of all the node indices,
 	// so that when we assign this parent list wile updating,
 	// TO complains about the parent of a node being the same as itself
-	for i, _ := range tp.Nodes {
+	for i := range tp.Nodes {
 		parents = append(parents, i)
 	}
 	nodes := tp.Nodes
-	for i, _ := range nodes {
+	for i := range nodes {
 		nodes[i].Parents = parents
 	}
 	tp.Nodes = nodes
@@ -981,7 +973,7 @@ func UpdateTopologyWithCachegroupAssignedToBecomeParentOfItself(t *testing.T) {
 }
 
 func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -994,7 +986,7 @@ func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
 	params := url.Values{}
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				parentName = *cg.Name
@@ -1005,7 +997,7 @@ func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
 
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && parentName != *cg.Name && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -1025,7 +1017,7 @@ func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
 		},
 	}
 
-	tops, _, err := TOSession.GetTopologiesWithHdr(nil)
+	tops, _, err := TOSession.GetTopologies(nil)
 	if err != nil {
 		t.Fatalf("couldn't get topologies: %v", err)
 	}
@@ -1048,7 +1040,7 @@ func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
 }
 
 func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -1061,7 +1053,7 @@ func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
 	params := url.Values{}
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				parentName = *cg.Name
@@ -1072,7 +1064,7 @@ func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
 
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && parentName != *cg.Name && cg.Type != nil && *cg.Type == tc.CacheGroupOriginTypeName {
 				cachegroupName = *cg.Name
@@ -1092,7 +1084,7 @@ func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
 		},
 	}
 
-	tops, _, err := TOSession.GetTopologiesWithHdr(nil)
+	tops, _, err := TOSession.GetTopologies(nil)
 	if err != nil {
 		t.Fatalf("couldn't get topologies: %v", err)
 	}
@@ -1114,7 +1106,7 @@ func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
 }
 
 func UpdateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -1126,7 +1118,7 @@ func UpdateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
 	params := url.Values{}
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupMidTypeName {
 				parentName = *cg.Name
@@ -1141,7 +1133,7 @@ func UpdateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
 			Parents:    []int{},
 		},
 	}
-	tops, _, err := TOSession.GetTopologiesWithHdr(nil)
+	tops, _, err := TOSession.GetTopologies(nil)
 	if err != nil {
 		t.Fatalf("couldn't get topologies: %v", err)
 	}
@@ -1165,7 +1157,7 @@ func UpdateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
 }
 
 func UpdateTopologyWithInvalidParentNumber(t *testing.T) {
-	tops, _, err := TOSession.GetTopologiesWithHdr(nil)
+	tops, _, err := TOSession.GetTopologies(nil)
 	if err != nil {
 		t.Fatalf("couldn't get topologies: %v", err)
 	}
@@ -1175,7 +1167,7 @@ func UpdateTopologyWithInvalidParentNumber(t *testing.T) {
 	tp := tops[0]
 	parents := make([]int, 0)
 	parents = append(parents, len(tp.Nodes)+1)
-	for i, _ := range tp.Nodes {
+	for i := range tp.Nodes {
 		tp.Nodes[i].Parents = parents
 	}
 	_, reqInf, err := TOSession.UpdateTopology(tp.Name, tp, nil)
@@ -1188,7 +1180,7 @@ func UpdateTopologyWithInvalidParentNumber(t *testing.T) {
 }
 
 func UpdateTopologyWithNoServers(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroupsNullableWithHdr(nil)
+	cacheGroups, _, err := TOSession.GetCacheGroups(nil, nil)
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -1201,7 +1193,7 @@ func UpdateTopologyWithNoServers(t *testing.T) {
 	params := url.Values{}
 	for _, cg := range cacheGroups {
 		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServersWithHdr(&params, nil)
+		resp, _, _ := TOSession.GetServers(params, nil)
 		if len(resp.Response) == 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -1215,7 +1207,7 @@ func UpdateTopologyWithNoServers(t *testing.T) {
 	}
 	nodes = append(nodes, node)
 
-	tops, _, err := TOSession.GetTopologiesWithHdr(nil)
+	tops, _, err := TOSession.GetTopologies(nil)
 	if err != nil {
 		t.Fatalf("error getting topologies: %v", err)
 	}
@@ -1233,7 +1225,7 @@ func UpdateTopologyWithNoServers(t *testing.T) {
 }
 
 func DeleteTopologyBeingUsedByDeliveryService(t *testing.T) {
-	ds, _, err := TOSession.GetDeliveryServicesV4(nil, nil)
+	ds, _, err := TOSession.GetDeliveryServices(nil, nil)
 	if err != nil {
 		t.Fatalf("couldn't get deliveryservices: %v", err)
 	}

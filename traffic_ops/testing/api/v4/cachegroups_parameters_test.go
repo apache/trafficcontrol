@@ -16,8 +16,9 @@
 package v4
 
 import (
-	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
@@ -35,7 +36,7 @@ func TestCacheGroupParameters(t *testing.T) {
 func CreateTestCacheGroupParameters(t *testing.T) {
 	// Get Cache Group to assign parameter to
 	firstCacheGroup := testData.CacheGroups[0]
-	cacheGroupResp, _, err := TOSession.GetCacheGroupNullableByName(*firstCacheGroup.Name)
+	cacheGroupResp, _, err := TOSession.GetCacheGroupByName(*firstCacheGroup.Name, nil)
 	if err != nil {
 		t.Errorf("cannot GET Cache Group by name: %v - %v", firstCacheGroup.Name, err)
 	}
@@ -45,7 +46,9 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 
 	// Get Parameter to assign to Cache Group
 	firstParameter := testData.Parameters[0]
-	paramResp, _, err := TOSession.GetParameterByName(firstParameter.Name)
+	params := url.Values{}
+	params.Set("name", firstParameter.Name)
+	paramResp, _, err := TOSession.GetParameters(nil, params)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
@@ -68,7 +71,7 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 
 func GetTestCacheGroupParameters(t *testing.T) {
 	for _, cgp := range testData.CacheGroupParameterRequests {
-		resp, _, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID)
+		resp, _, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID, nil, nil)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by cache group: %v - %v", err, resp)
 		}
@@ -85,7 +88,7 @@ func GetTestCacheGroupParametersIMS(t *testing.T) {
 	time := futureTime.Format(time.RFC1123)
 	header.Set(rfc.IfModifiedSince, time)
 	for _, cgp := range testData.CacheGroupParameterRequests {
-		_, reqInf, err := TOSession.GetCacheGroupParametersWithHdr(cgp.CacheGroupID, header)
+		_, reqInf, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID, nil, header)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -109,9 +112,10 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterReque
 	}
 
 	// Retrieve the Cache Group Parameter to see if it got deleted
-	queryParams := fmt.Sprintf("?parameterId=%d", cgp.ParameterID)
+	queryParams := url.Values{}
+	queryParams.Add("parameterId", strconv.Itoa(cgp.ParameterID))
 
-	parameters, _, err := TOSession.GetCacheGroupParametersByQueryParams(cgp.CacheGroupID, queryParams)
+	parameters, _, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID, queryParams, nil)
 	if err != nil {
 		t.Errorf("error deleting Parameter name: %s", err.Error())
 	}

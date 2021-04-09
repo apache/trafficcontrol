@@ -48,8 +48,8 @@ type TOSteeringTargetV11 struct {
 
 func (st TOSteeringTargetV11) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{
-		{"deliveryservice", api.GetIntKey},
-		{"target", api.GetIntKey},
+		{Field: "deliveryservice", Func: api.GetIntKey},
+		{Field: "target", Func: api.GetIntKey},
 	}
 }
 
@@ -114,8 +114,8 @@ func read(h http.Header, tx *sqlx.Tx, parameters map[string]string, user *auth.C
 	var maxTime time.Time
 	var runSecond bool
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"deliveryservice": dbhelpers.WhereColumnInfo{"st.deliveryservice", api.IsInt},
-		"target":          dbhelpers.WhereColumnInfo{"st.target", api.IsInt},
+		"deliveryservice": dbhelpers.WhereColumnInfo{Column: "st.deliveryservice", Checker: api.IsInt},
+		"target":          dbhelpers.WhereColumnInfo{Column: "st.target", Checker: api.IsInt},
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
