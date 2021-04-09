@@ -27,13 +27,14 @@ under the License.
         </ol>
         <div class="pull-right" role="group" ng-if="settings.isRequest">
             <div class="btn-group" role="group" uib-dropdown is-open="status.isopen">
-                <button ng-disabled="dsRequest.status == 'rejected' || dsRequest.status == 'pending' || dsRequest.status == 'complete'" type="button" class="btn btn-link dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                <button ng-disabled="dsRequest.status == 'rejected' || dsRequest.status == 'complete'" type="button" class="btn btn-link dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     {{dsRequest.status | uppercase }}&nbsp;
-                    <span ng-show="dsRequest.status == 'draft' || dsRequest.status == 'submitted'" class="caret"></span>
+                    <span ng-show="dsRequest.status == 'draft' || dsRequest.status == 'submitted' || dsRequest.status == 'pending'" class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li role="menuitem"><a ng-if="dsRequest.status == 'submitted'" ng-click="editStatus('draft')">Change status to: DRAFT</a></li>
                     <li role="menuitem"><a ng-if="dsRequest.status == 'draft'" ng-click="editStatus('submitted')">Change status to: SUBMITTED</a></li>
+                    <li role="menuitem"><a ng-if="dsRequest.status == 'pending'" ng-click="editStatus('complete')">Change status to: COMPLETE</a></li>
                 </ul>
             </div>
         </div>
@@ -1195,6 +1196,7 @@ under the License.
                 <button type="button" class="btn btn-danger" ng-if="!settings.isNew" ng-disabled="!deletable()" ng-click="confirmDelete(deliveryService)">{{settings.deleteLabel}}</button>
                 <button class="btn btn-success" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid || !saveable()" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
                 <button class="btn btn-primary" ng-if="settings.isRequest && fulfillable()" ng-disabled="deliveryServiceForm.$invalid || deliveryServiceForm.$dirty" ng-click="fulfillRequest(deliveryService)">Fulfill Request</button>
+                <button class="btn btn-primary" ng-if="settings.isRequest && dsRequest.status == 'pending'" ng-click="editStatus('complete')">Complete Request</button>
             </div>
         </form>
     </div>
