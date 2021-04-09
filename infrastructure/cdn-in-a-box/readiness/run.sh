@@ -30,10 +30,11 @@ while ! to-ping; do
     sleep 3
 done
 
+xmlID="$(<<<$DS_HOSTS sed 's/ .*//g')" # Only get the first xmlID
 while true; do
     sleep 3
-    exampleURLs=($(to-get /api/${TO_API_VERSION}/deliveryservices | jq -r '.response[].exampleURLs[]' || true))
-    if ! exampeURLs=($(to-get "/api/${TO_API_VERSION}/deliveryservices" | jq -r '.response[].exampleURLs[]')) \
+    exampleURLs=($(to-get "/api/${TO_API_VERSION}/deliveryservices?xmlId=${xmlID}" | jq -r '.response[].exampleURLs[]' || true))
+    if ! exampeURLs=($(to-get "/api/${TO_API_VERSION}/deliveryservices?xmlId=${xmlID}" | jq -r '.response[].exampleURLs[]')) \
             || [[ "${#exampleURLs[@]}" -eq 0 ]]; then
         echo waiting for delivery service example URLs
         continue
