@@ -512,12 +512,12 @@ set-header ` + ServiceCategoryHeader + ` "` + *ds.XMLID + `|` + escapedServiceCa
 }
 
 func makeATCHeaderRewriteDirectiveMaxRequestHeaderSize(ds *DeliveryService, serverIsLastTier bool, atsRqstMaxHdrSize int) string {
-	hdrTxt := "cond %{REMAP_PSEUDO_HOOK}\ncond % cqhl > " + strconv.Itoa(*ds.MaxRequestHeaderBytes) + "\nset-status 400"
-	warnTxt := "#TO Max Request Header Size: " + strconv.Itoa(*ds.MaxRequestHeaderBytes) +
-		",is larger than global setting of " + strconv.Itoa(atsRqstMaxHdrSize) + ", header rw will be ignored."
 	if serverIsLastTier || ds.MaxRequestHeaderBytes == nil || *ds.MaxRequestHeaderBytes < 1 {
 		return ""
 	}
+	hdrTxt := "cond %{REMAP_PSEUDO_HOOK}\ncond % cqhl > " + strconv.Itoa(*ds.MaxRequestHeaderBytes) + "\nset-status 400"
+	warnTxt := "#TO Max Request Header Size: " + strconv.Itoa(*ds.MaxRequestHeaderBytes) +
+		",is larger than global setting of " + strconv.Itoa(atsRqstMaxHdrSize) + ", header rw will be ignored."
 	if *ds.MaxRequestHeaderBytes >= atsRqstMaxHdrSize {
 		return warnTxt + hdrTxt
 	} else {
