@@ -4063,3 +4063,4 @@ dl_ds_default_federations:
         resolve6:
           - '::/0'
       ttl: 60
+    user: '{{ federation_user }}'

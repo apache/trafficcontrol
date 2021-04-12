@@ -27,6 +27,15 @@
     federation_id: "{{ create_federation_out.json.response.id }}"
     federation_cname: "{{ create_federation_out.json.response.cname }}"
 
+- name: "Assign User to Federation {{ federation_cname }}"
+  vars:
+    federation_user_query: "response[?username == `{{ federation_user }}`].id | [0]"
+    federation_user_id: "{{ get_all_users.json | json_query(federation_user_query) }}"
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federations/{{ federation_id }}/users"
+    method: POST
+    body: '{"userIds":[{{ federation_user_id }}],"replace":false}'
+
 - name: "Assign Delivery Service to Federation {{ federation_cname }}"
   vars:
     federation_ds_id_query: 'response[?xmlId == `{{ federation.deliveryService | to_json }}`].id | [0]'

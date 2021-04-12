@@ -39,6 +39,7 @@ ts_url: "https://{{ hostvars[groups['traffic_stats'][0]].additional_dns_names | 
 to_admin_user: admin
 riak_admin_user: admin
 riak_user_user: riakuser
+federation_user: federationuser
 
 environment_name: groups['traffic_ops'][0].split('.')[1:2]
 
