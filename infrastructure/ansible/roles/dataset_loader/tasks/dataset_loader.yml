@@ -845,10 +845,13 @@
   register: get_all_ds
 
 - name: Create Federations
+  vars:
+    Target_cdn_delegation: "{{ item[0] }}"
+    federation: "{{ item[1] }}"
+  with_nested:
+    - "{{ cdnDelegationList }}"
+    - "{{ dl_ds_merged_federations }}"
   include_tasks: federation_loader.yml
-  with_items: "{{ dl_ds_merged_federations }}"
-  loop_control:
-    loop_var: federation
 
 - name: Ensure SSL info directory exists
   file:
