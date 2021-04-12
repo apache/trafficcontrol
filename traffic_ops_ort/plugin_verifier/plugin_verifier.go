@@ -14,8 +14,8 @@ Description
   absolute or relative plugin filename.
 
   In addition, any plugin parameters that end in '.config', '.cfg', '.txt',
-  'yml' or 'yaml' are considered to be plugin configuration files and there 
-  existence in the filesystem or relative to the ATS configuration files 
+  'yml' or 'yaml' are considered to be plugin configuration files and there
+  existence in the filesystem or relative to the ATS configuration files
   directory is verified.
 
   The configuration file argument is optional.  If no config file argument is
@@ -82,9 +82,9 @@ var (
 // that any specified plugin exists in the file system at the
 // complete file path or relative to the ATS plugins installation
 // directory. Also, any plugin arguments or plugin parameters that
-// end in '.config', '.cfg', '.txt', '.yml', or '.yaml'  are assumed 
-// to be plugin configuration files and they will be verified 
-// that the exist at the absolute path in the file name or 
+// end in '.config', '.cfg', '.txt', '.yml', or '.yaml'  are assumed
+// to be plugin configuration files and they will be verified
+// that the exist at the absolute path in the file name or
 // relative to the ATS configuration files directory.
 //
 // Returns '0' if all plugins on the config line successfully verify
@@ -133,15 +133,15 @@ func checkConfigLine(line string, lineNumber int) int {
 					}
 				}
 			} else if strings.HasPrefix(fields[ii], "@pparam") {
-				// any plugin parameters that end in '.config | .cfg | .txt | yml | .yaml' 
-        // are assumed to be configuration files and are checked that they
+				// any plugin parameters that end in '.config | .cfg | .txt | yml | .yaml'
+				// are assumed to be configuration files and are checked that they
 				// exist in the filesystem at the absolute location in the name
 				// or relative to the ATS configuration files directory.
 				m := regexp.MustCompile(`^*(\.config|\.cfg|\.txt|\.yml|\.yaml)+`)
 				sa := strings.Split(fields[ii], "=")
 				if len(sa) != 2 && len(sa) != 3 {
-          log.Errorf("malformed @pparam definition on line '%d': %v\n", lineNumber, fields)
-          pluginErrorCount++
+					log.Errorf("malformed @pparam definition on line '%d': %v\n", lineNumber, fields)
+					pluginErrorCount++
 				} else {
 					param := strings.TrimSpace(sa[1])
 					if m.MatchString(param) {
