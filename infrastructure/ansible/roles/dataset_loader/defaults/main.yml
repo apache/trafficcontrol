@@ -110,8 +110,8 @@ dl_ds_default_users:
     role: read-only
   - username: '{{ federation_user }}'
     email: '{{ federation_user }}@kabletown.invalid'
-    fullName: A local account with admin rights
-    role: admin
+    fullName: A dedicated user to assign existing Resolvers to and remove existing Resolvers from Federations
+    role: operations
 
 # TO Cachegroups
 dl_ds_merged_cachegroups: "{{ dl_ds_default_cachegroups }}"
