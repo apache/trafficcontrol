@@ -76,9 +76,6 @@ func TestDeliveryServices(t *testing.T) {
 		GetDeliveryServiceByInvalidType(t)
 		GetDeliveryServiceByInvalidAccessibleTo(t)
 		GetDeliveryServiceByInvalidXmlId(t)
-		GetDeliveryServiceByValidTenant(t)
-		GetDeliveryServiceByValidType(t)
-		GetDeliveryServiceByValidXmlId(t)
 		SortTestDeliveryServices(t)
 		SortTestDeliveryServicesDesc(t)
 	})
@@ -1369,105 +1366,6 @@ func GetTestDeliveryServicesURLSigKeys(t *testing.T) {
 	_, _, err := TOSession.GetDeliveryServiceURLSigKeys(*firstDS.XMLID, nil)
 	if err != nil {
 		t.Error("failed to get url sig keys: " + err.Error())
-	}
-}
-
-func GetDeliveryServiceByValidTenant(t *testing.T) {
-	if len(testData.DeliveryServices) > 0 {
-		firstDS := testData.DeliveryServices[0]
-
-		if firstDS.Tenant != nil {
-			if firstDS.TenantID == nil {
-				tenant, _, err := TOSession.GetTenantByName(*firstDS.Tenant, nil)
-				if err != nil {
-					t.Errorf("Error in Getting Tenant by Name: %v", err)
-				}
-				firstDS.TenantID = &tenant.ID
-			}
-			qparams := url.Values{}
-			qparams.Set("tenant", strconv.Itoa(*firstDS.TenantID))
-			resp, _, err := TOSession.GetDeliveryServices(nil, qparams)
-			if err != nil {
-				t.Errorf("Error in Getting Deliveryservice by Tenant:%v - %v", err, resp)
-			}
-			if len(resp) == 0 {
-				t.Errorf("No delivery service available for the Tenant %v", *firstDS.CDNName)
-			} else {
-				if resp[0].Tenant == nil {
-					t.Errorf("Tenant Name is not available in response")
-				} else {
-					if *resp[0].Tenant != *firstDS.Tenant {
-						t.Errorf("name expected: %s, actual: %s", *firstDS.Tenant, *resp[0].Tenant)
-					}
-				}
-			}
-		} else {
-			t.Errorf("Tenant name is nil in the Pre-requisites")
-		}
-	}
-}
-
-func GetDeliveryServiceByValidType(t *testing.T) {
-	if len(testData.DeliveryServices) > 0 {
-		firstDS := testData.DeliveryServices[0]
-
-		if firstDS.Type != nil {
-			if firstDS.TypeID == nil {
-				ty, _, err := TOSession.GetTypeByName(firstDS.Type.String(), nil)
-				if err != nil {
-					t.Errorf("Error in Getting Type by Name: %v", err)
-				}
-				if len(ty) == 0 {
-					t.Errorf("no Type named %v" + firstDS.Type.String())
-				}
-				firstDS.TypeID = &ty[0].ID
-			}
-			qparams := url.Values{}
-			qparams.Set("type", strconv.Itoa(*firstDS.TypeID))
-			resp, _, err := TOSession.GetDeliveryServices(nil, qparams)
-			if err != nil {
-				t.Errorf("Error in Getting Deliveryservice by Type:%v - %v", err, resp)
-			}
-			if len(resp) == 0 {
-				t.Errorf("No delivery service available for the Type %v", *firstDS.CDNName)
-			} else {
-				if resp[0].Type == nil {
-					t.Errorf("Type is not available in response")
-				} else {
-					if *resp[0].Type != *firstDS.Type {
-						t.Errorf("Type expected: %s, actual: %s", *firstDS.Type, *resp[0].Type)
-					}
-				}
-			}
-		} else {
-			t.Errorf("Type name is nil in the Pre-requisites")
-		}
-	}
-}
-
-func GetDeliveryServiceByValidXmlId(t *testing.T) {
-	if len(testData.DeliveryServices) > 0 {
-		firstDS := testData.DeliveryServices[0]
-
-		if firstDS.XMLID != nil {
-			resp, _, err := TOSession.GetDeliveryServiceByXMLID(*firstDS.XMLID, nil)
-			if err != nil {
-				t.Errorf("Error in Getting DeliveryServices by XML ID: %v - %v", err, resp)
-			}
-			if len(resp) == 0 {
-				t.Errorf("No delivery service available for the XML ID %v", *firstDS.XMLID)
-			} else {
-				if resp[0].XMLID == nil {
-					t.Errorf("XML ID is not available in response")
-				} else {
-					if *resp[0].XMLID != *firstDS.XMLID {
-						t.Errorf("Delivery Service Name expected: %s, actual: %s", *firstDS.XMLID, *resp[0].XMLID)
-					}
-				}
-			}
-		} else {
-			t.Errorf("XML ID is nil in the Pre-requisites")
-		}
 	}
 }
 
