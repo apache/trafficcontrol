@@ -52,7 +52,6 @@ func (to *Session) GetDivisions(header http.Header) ([]tc.Division, toclientlib.
 	return data.Response, reqInf, err
 }
 
-
 // GetDivisions with Params returns all Divisions with matching params in Traffic Ops
 func (to *Session) GetDivisionsWithParams(header http.Header, params url.Values) ([]tc.Division, toclientlib.ReqInf, error) {
 	uri := APIDivisions

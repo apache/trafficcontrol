@@ -17,13 +17,13 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
+	"reflect"
 	"sort"
 	"strings"
 	"testing"
 	"time"
-	"net/url"
-	"reflect"
-	
+
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
