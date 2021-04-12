@@ -75,6 +75,8 @@ func TestDeliveryServices(t *testing.T) {
 		GetDeliveryServiceByInvalidType(t)
 		GetDeliveryServiceByInvalidAccessibleTo(t)
 		GetDeliveryServiceByInvalidXmlId(t)
+		GetDeliveryServiceByLogsEnabled(t)
+		GetDeliveryServiceByValidProfile(t)
 
 	})
 }
@@ -1364,5 +1366,71 @@ func GetTestDeliveryServicesURLSigKeys(t *testing.T) {
 	_, _, err := TOSession.GetDeliveryServiceURLSigKeys(*firstDS.XMLID, nil)
 	if err != nil {
 		t.Error("failed to get url sig keys: " + err.Error())
+	}
+}
+
+func GetDeliveryServiceByLogsEnabled(t *testing.T) {
+	if len(testData.DeliveryServices) > 0 {
+		firstDS := testData.DeliveryServices[0]
+
+		if firstDS.LogsEnabled != nil {
+			qparams := url.Values{}
+			qparams.Set("logsEnabled", strconv.FormatBool(*firstDS.LogsEnabled))
+			resp, _, err := TOSession.GetDeliveryServices(nil, qparams)
+			if err != nil {
+				t.Errorf("Error in Getting deliveryservice by logsEnabled: %v - %v", err, resp)
+			}
+			if len(resp) == 0 {
+				t.Errorf("No delivery service available for the Logs Enabled %v", *firstDS.LogsEnabled)
+			} else {
+				if resp[0].LogsEnabled == nil {
+					t.Errorf("Logs Enabled is not available in response")
+				} else {
+					if *resp[0].LogsEnabled != *firstDS.LogsEnabled {
+						t.Errorf("Logs enabled status expected: %t, actual: %t", *firstDS.LogsEnabled, *resp[0].LogsEnabled)
+					}
+				}
+			}
+		} else {
+			t.Errorf("Logs Enabled is nil in the pre-requisites ")
+		}
+	}
+}
+
+func GetDeliveryServiceByValidProfile(t *testing.T) {
+	if len(testData.DeliveryServices) > 0 {
+		firstDS := testData.DeliveryServices[0]
+
+		if firstDS.ProfileName != nil {
+			if firstDS.ProfileID == nil {
+				profile, _, err := TOSession.GetProfileByName(*firstDS.ProfileName, nil)
+				if err != nil {
+					t.Errorf("Error in Getting Profile by Name: %v", err)
+				}
+				if len(profile) == 0 {
+					t.Errorf("no Profile named %v" + *firstDS.ProfileName)
+				}
+				firstDS.ProfileID = &profile[0].ID
+			}
+			qparams := url.Values{}
+			qparams.Set("profile", strconv.Itoa(*firstDS.ProfileID))
+			resp, _, err := TOSession.GetDeliveryServices(nil, qparams)
+			if err != nil {
+				t.Errorf("Error in Getting deliveryservice by Profile: %v - %v", err, resp)
+			}
+			if len(resp) == 0 {
+				t.Errorf("No delivery service available for the Profile %v", *firstDS.ProfileName)
+			} else {
+				if resp[0].ProfileName == nil {
+					t.Errorf("Profile Name is not available in response")
+				} else {
+					if *resp[0].ProfileName != *firstDS.ProfileName {
+						t.Errorf("Profile name expected: %s, actual: %s", *firstDS.ProfileName, *resp[0].ProfileName)
+					}
+				}
+			}
+		} else {
+			t.Errorf("Profile name is nil in the Pre-requisites")
+		}
 	}
 }
