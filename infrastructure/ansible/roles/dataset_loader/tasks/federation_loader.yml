@@ -45,40 +45,36 @@
     method: POST
     body: '{"dsIds":[{{ federation_ds_id }}],"replace":false}'
 
-- name: "Create Federation Resolvers for Federation {{ federation_cname }}"
-  with_items: "{{ federation.mappings.resolve4 }}"
+- name: "Create Federation Resolvers of type {{ resolver_type_name }}"
+  with_dict: "{{ resolvers }}"
+  loop_control:
+    loop_var: resolver
   vars:
-    type_name: RESOLVE4
-    type_query: "[?name == `{{ type_name }}`].id | [0]"
-    resolve4_type_id: "{{ get_all_types.json.response | json_query(type_query) }}"
+    resolvers: |
+      {
+        {%- for resolver_type, resolvers in federation.mappings.resolvers.items() -%}
+          {%- set resolver_type_loop = loop -%}
+          {%- for resolver in resolvers -%}
+            {{ resolver | to_json }}: {{ resolver_type | upper | to_json }}
+            {%- if not (loop.last and resolver_type_loop.last) -%},{%- endif -%}
+          {%- endfor -%}
+        {%- endfor -%}
+      }
+    resolver_type_name: "{{ resolver.value }}"
+    type_query: "[?name == `{{ resolver_type_name }}`].id | [0]"
+    resolver_type_id: "{{ get_all_types.json.response | json_query(type_query) }}"
+    ip_address: "{{ resolver.key }}"
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federation_resolvers"
     method: POST
-    body: '{"ipAddress":{{ item | to_json }},"typeId":{{ resolve4_type_id }}}'
-  register: ipv4_federation_resolver_out
+    body: '{"ipAddress":{{ ip_address | to_json }},"typeId":{{ resolver_type_id }}}'
+  register: federation_resolver_out
 
-- name: Create IPv6 Federation Resolvers
-  with_items: "{{ federation.mappings.resolve6 }}"
-  vars:
-    type_name: RESOLVE6
-    type_query: "[?name == `{{ type_name }}`].id | [0]"
-    resolve6_type_id: "{{ get_all_types.json.response | json_query(type_query) }}"
-  uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federation_resolvers"
-    method: POST
-    body: '{"ipAddress":{{ item | to_json }},"typeId":{{ resolve6_type_id }}}'
-  register: ipv6_federation_resolver_out
-
-- name: Get Federation Resolver IDs
-  uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federation_resolvers"
-    method: GET
-  register: federation_resolver_ids_out
-
-- name: Assign Federation Resolvers to Federation
-  vars:
-    federation_resolver_ids_query: 'response[].id'
+- name: "Assign Federation Resolvers of type {{ resolver_type_name }} to Federation {{ federation_cname }}"
+  with_items: "{{ federation_resolver_out.results }}"
+  loop_control:
+    loop_var: resolver_post_response
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federations/{{ federation_id }}/federation_resolvers"
     method: POST
-    body: '{"fedResolverIds":{{ federation_resolver_ids_out.json | json_query(federation_resolver_ids_query) }},"replace":true}'
+    body: '{"fedResolverIds":[{{ resolver_post_response.json.response.id }}],"replace":false}'
