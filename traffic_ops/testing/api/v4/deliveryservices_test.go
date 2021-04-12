@@ -77,7 +77,6 @@ func TestDeliveryServices(t *testing.T) {
 		GetDeliveryServiceByInvalidAccessibleTo(t)
 		GetDeliveryServiceByInvalidXmlId(t)
 		SortTestDeliveryServices(t)
-		SortTestDeliveryServicesDesc(t)
 	})
 }
 
