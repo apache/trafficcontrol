@@ -38,6 +38,7 @@ const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
 const ContentTypeTextASCII = `text/plain; charset=us-ascii`
 const LineCommentHash = "#"
 const ConfigSuffix = ".config"
+const TsDefaultRequestHeaderMaxSize = 131072
 
 type DeliveryServiceID int
 type ProfileID int
@@ -616,6 +617,25 @@ func getATSMajorVersion(serverParams []tc.Parameter) (int, []string) {
 		}
 	}
 	return atsMajorVer, warnings
+}
+
+// getMaxRequestHeaderParam returns the 'CONFIG proxy.config.http.request_header_max_size' if configured in the Server Profile Parameters.
+// If the parameter is not configured it will return the traffic server default request header max size.
+func getMaxRequestHeaderParam(serverParams []tc.Parameter) (int, []string) {
+	warnings := []string{}
+	globalRequestHeaderMaxSize := TsDefaultRequestHeaderMaxSize
+	params, paramWarns := paramsToMap(filterParams(serverParams, RecordsFileName, "", "", "location"))
+	warnings = append(warnings, strings.Join(paramWarns, " "))
+	if val, ok := params["CONFIG proxy.config.http.request_header_max_size"]; ok {
+		size := strings.Fields(val)
+		sizeI, err := strconv.Atoi(size[1])
+		if err != nil {
+			warnings = append(warnings, "Couldn't convert string to int for max_req_header_size")
+		} else {
+			globalRequestHeaderMaxSize = sizeI
+		}
+	}
+	return globalRequestHeaderMaxSize, warnings
 }
 
 // hasRequiredCapabilities returns whether the given caps has all the required capabilities in the given reqCaps.
