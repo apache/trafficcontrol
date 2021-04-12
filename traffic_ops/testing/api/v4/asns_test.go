@@ -32,7 +32,7 @@ func TestASN(t *testing.T) {
 		GetTestASNsIMS(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
-		opts := client.NewOptions()
+		opts := client.NewRequestOptions()
 		opts.Header.Set(rfc.IfModifiedSince, time)
 		SortTestASNs(t)
 		UpdateTestASNs(t)
@@ -72,7 +72,7 @@ func GetTestASNsIMSAfterChange(t *testing.T, opts client.RequestOptions) {
 }
 
 func GetTestASNsIMS(t *testing.T) {
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	for _, asn := range testData.ASNs {
 		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
 		futureTime := time.Now().AddDate(0, 0, 1)
@@ -97,7 +97,7 @@ func CreateTestASNs(t *testing.T) {
 		t.Fatal("Cache Group found in the test data with null or undefined name")
 	}
 
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", *cg.Name)
 	resp, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
@@ -147,7 +147,7 @@ func UpdateTestASNs(t *testing.T) {
 	}
 	firstASN := testData.ASNs[0]
 
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("asn", strconv.Itoa(firstASN.ASN))
 
 	resp, _, err := TOSession.GetASNs(opts)
@@ -187,7 +187,7 @@ func UpdateTestASNs(t *testing.T) {
 }
 
 func GetTestASNs(t *testing.T) {
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	for _, asn := range testData.ASNs {
 		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
 		resp, _, err := TOSession.GetASNs(opts)
@@ -198,7 +198,7 @@ func GetTestASNs(t *testing.T) {
 }
 
 func DeleteTestASNs(t *testing.T) {
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	for _, asn := range testData.ASNs {
 		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
 		resp, _, err := TOSession.GetASNs(opts)

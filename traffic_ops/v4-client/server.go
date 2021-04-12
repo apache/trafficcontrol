@@ -49,7 +49,7 @@ func (to *Session) CreateServer(server tc.ServerV40, hdr http.Header) (tc.Alerts
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
 	if needAndCanFetch(server.CachegroupID, server.Cachegroup) {
-		opts := NewOptions()
+		opts := NewRequestOptions()
 		opts.QueryParameters.Set("name", *server.Cachegroup)
 		cg, _, err := to.GetCacheGroups(opts)
 		if err != nil {

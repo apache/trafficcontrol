@@ -34,9 +34,9 @@ type RequestOptions struct {
 	QueryParameters url.Values
 }
 
-// NewOptions returns a RequestOptions object with initialized, empty Header
+// NewRequestOptions returns a RequestOptions object with initialized, empty Header
 // and QueryParameters.
-func NewOptions() RequestOptions {
+func NewRequestOptions() RequestOptions {
 	return RequestOptions{
 		Header:          http.Header{},
 		QueryParameters: url.Values{},

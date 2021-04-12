@@ -135,7 +135,7 @@ func GetTestCacheGroupsAfterChangeIMS(t *testing.T, header http.Header) {
 }
 
 func GetTestCacheGroupsByShortNameIMS(t *testing.T) {
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	opts.Header.Set(rfc.IfModifiedSince, time)
@@ -156,7 +156,7 @@ func GetTestCacheGroupsByShortNameIMS(t *testing.T) {
 }
 
 func GetTestCacheGroupsByNameIMS(t *testing.T) {
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	opts.Header.Set(rfc.IfModifiedSince, time)
@@ -177,7 +177,7 @@ func GetTestCacheGroupsByNameIMS(t *testing.T) {
 }
 
 func GetTestCacheGroupsIMS(t *testing.T) {
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	opts.Header.Set(rfc.IfModifiedSince, time)
@@ -250,7 +250,7 @@ func GetTestCacheGroups(t *testing.T) {
 }
 
 func GetTestCacheGroupsByName(t *testing.T) {
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	for _, cg := range testData.CacheGroups {
 		if cg.Name == nil {
 			t.Error("found Cache Group with null or undefined name in test data")
@@ -280,7 +280,7 @@ func GetTestCacheGroupsByName(t *testing.T) {
 }
 
 func GetTestCacheGroupsByShortName(t *testing.T) {
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	for _, cg := range testData.CacheGroups {
 		if cg.ShortName == nil {
 			t.Error("found Cache Group with null or undefined 'short name' in test data")
@@ -306,7 +306,7 @@ func GetTestCacheGroupsByShortName(t *testing.T) {
 }
 
 func GetTestCacheGroupsByTopology(t *testing.T) {
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	for _, top := range testData.Topologies {
 		opts.QueryParameters.Set("topology", top.Name)
 		resp, _, err := TOSession.GetCacheGroups(opts)
@@ -342,7 +342,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	if firstCG.Name == nil {
 		t.Fatal("Cache Group selected for testing had a null or undefined name")
 	}
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", *firstCG.Name)
 	resp, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
@@ -625,7 +625,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 
 func DeleteTestCacheGroups(t *testing.T) {
 	var parentlessCacheGroups []tc.CacheGroupNullable
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 
 	// delete the edge caches.
 	for _, cg := range testData.CacheGroups {
@@ -677,7 +677,7 @@ func DeleteTestCacheGroups(t *testing.T) {
 		}
 	}
 
-	opts = client.NewOptions()
+	opts = client.NewRequestOptions()
 	// now delete the parentless cachegroups
 	for _, cg := range parentlessCacheGroups {
 		// nil check for cg.Name occurs prior to insertion into parentlessCacheGroups
@@ -723,7 +723,7 @@ func CheckCacheGroupsAuthentication(t *testing.T) {
 		t.Fatal("Cache Group selected from testing data had null or undefined name")
 	}
 
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", *cg.Name)
 	resp, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
@@ -769,7 +769,7 @@ func CheckCacheGroupsAuthentication(t *testing.T) {
 }
 
 func GetTestPaginationSupportCg(t *testing.T) {
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("orderby", "id")
 	resp, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {

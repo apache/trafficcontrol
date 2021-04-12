@@ -82,7 +82,7 @@ func CreateTestCapabilities(t *testing.T) {
 }
 
 func GetTestCapabilitiesIMS(t *testing.T) {
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	opts.Header.Set(rfc.IfModifiedSince, time)
@@ -105,7 +105,7 @@ func GetTestCapabilitiesIMS(t *testing.T) {
 func GetTestCapabilities(t *testing.T) {
 	testDataLen := len(testData.Capabilities) + len(staticCapabilities)
 	capMap := make(map[string]string, testDataLen)
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 
 	for _, c := range testData.Capabilities {
 		capMap[c.Name] = c.Description

@@ -49,7 +49,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", TestEdgeServerCacheGroupName)
 	clientCGs, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {

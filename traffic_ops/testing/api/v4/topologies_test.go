@@ -281,7 +281,7 @@ func UpdateTestTopologies(t *testing.T) {
 	if !foundCDN1 || !foundCDN2 {
 		t.Fatalf("expected delivery services assigned to topology top-used-by-cdn1-and-cdn2 to be assigned to cdn1 and cdn2")
 	}
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", "cdn1-only")
 	cgs, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {

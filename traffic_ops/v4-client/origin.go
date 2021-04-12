@@ -34,7 +34,7 @@ const (
 
 func originIDs(to *Session, origin *tc.Origin) error {
 	if origin.CachegroupID == nil && origin.Cachegroup != nil {
-		opts := NewOptions()
+		opts := NewRequestOptions()
 		opts.QueryParameters.Set("name", *origin.Cachegroup)
 		p, _, err := to.GetCacheGroups(opts)
 		if err != nil {

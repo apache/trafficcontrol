@@ -41,7 +41,7 @@ func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroupNullable, opts Reque
 	}
 
 	if cachegroup.ParentCachegroupID == nil && cachegroup.ParentName != nil {
-		opts := NewOptions()
+		opts := NewRequestOptions()
 		opts.QueryParameters.Set("name", *cachegroup.ParentName)
 		p, _, err := to.GetCacheGroups(opts)
 		if err != nil {
@@ -56,7 +56,7 @@ func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroupNullable, opts Reque
 	}
 
 	if cachegroup.SecondaryParentCachegroupID == nil && cachegroup.SecondaryParentName != nil {
-		opts := NewOptions()
+		opts := NewRequestOptions()
 		opts.QueryParameters.Set("name", *cachegroup.SecondaryParentName)
 		p, _, err := to.GetCacheGroups(opts)
 		if err != nil {

@@ -43,7 +43,7 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 		t.Fatal("Found Cache Group with null or undefined name in test data")
 	}
 
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", *firstCacheGroup.Name)
 	cacheGroupResp, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
@@ -97,7 +97,7 @@ func GetTestCacheGroupParametersIMS(t *testing.T) {
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	opts.Header.Set(rfc.IfModifiedSince, time)
 
 	for _, cgp := range testData.CacheGroupParameterRequests {
@@ -125,7 +125,7 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterReque
 	}
 
 	// Retrieve the Cache Group Parameter to see if it got deleted
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	opts.QueryParameters.Add("parameterId", strconv.Itoa(cgp.ParameterID))
 
 	parameters, _, err := TOSession.GetCacheGroupParameters(cgp.CacheGroupID, opts)

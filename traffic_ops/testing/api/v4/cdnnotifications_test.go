@@ -32,7 +32,7 @@ func TestCDNNotifications(t *testing.T) {
 // data that isn't exactly `test notification: {{CDN Name}}` (where {{CDN Name}}
 // is the name of the associated CDN).
 func GetTestCDNotifications(t *testing.T) {
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	for _, cdn := range testData.CDNs {
 		opts.QueryParameters.Set("cdn", cdn.Name)
 		resp, _, err := TOSession.GetCDNNotifications(opts)
@@ -60,7 +60,7 @@ func CreateTestCDNNotifications(t *testing.T) {
 }
 
 func DeleteTestCDNNotifications(t *testing.T) {
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	for _, cdn := range testData.CDNs {
 		// Retrieve the notifications for a cdn
 		resp, _, err := TOSession.GetCDNNotifications(opts)

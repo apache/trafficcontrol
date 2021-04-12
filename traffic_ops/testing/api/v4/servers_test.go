@@ -111,7 +111,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	server.CDNID = &oldCDNID
 	server.ProfileID = &oldProfile
 
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	opts.QueryParameters.Add("name", moveToCacheGroup)
 	cgs, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {

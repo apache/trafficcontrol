@@ -32,7 +32,7 @@ func GetTestDomains(t *testing.T) {
 }
 
 func GetTestDomainsIMS(t *testing.T) {
-	opts := client.NewOptions()
+	opts := client.NewRequestOptions()
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
 	opts.Header.Set(rfc.IfModifiedSince, time)

@@ -33,7 +33,7 @@ const (
 
 func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 	if sdns.CacheGroupID == 0 && sdns.CacheGroupName != "" {
-		opts := NewOptions()
+		opts := NewRequestOptions()
 		opts.QueryParameters.Set("name", sdns.CacheGroupName)
 		p, _, err := to.GetCacheGroups(opts)
 		if err != nil {
