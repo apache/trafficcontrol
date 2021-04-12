@@ -25,6 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -211,15 +212,14 @@ func MonitoringConfig(t *testing.T) {
 	}
 	const cdnName = "cdn1"
 	const profileName = "EDGE1"
-	cdns, _, err := TOSession.GetCDNByName(cdnName, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", cdnName)
+	cdns, _, err := TOSession.GetCDNs(opts)
 	if err != nil {
-		t.Fatalf("getting CDNs with name '%s': %s", cdnName, err.Error())
+		t.Fatalf("getting CDNs with name '%s': %v - alerts: %+v", cdnName, err)
 	}
-	if len(cdns) < 1 {
-		t.Fatalf("expected to find a CDN named %s", cdnName)
-	}
-	if len(cdns) > 1 {
-		t.Fatalf("expected exactly 1 CDN named %s but found %d CDNs", cdnName, len(cdns))
+	if len(cdns.Response) != 1 {
+		t.Fatalf("expected exactly 1 CDN named '%s' to exist, found: %d", cdnName, len(cdns.Response))
 	}
 	profiles, _, err := TOSession.GetProfileByName(profileName, nil)
 	if err != nil {
@@ -304,14 +304,21 @@ func SnapshotTestCDNbyInvalidName(t *testing.T) {
 }
 
 func SnapshotTestCDNbyID(t *testing.T) {
-
-	firstCDN := testData.CDNs[0]
-	// Retrieve the CDN by name so we can get the id for the snapshot
-	resp, _, err := TOSession.GetCDNByName(firstCDN.Name, nil)
-	if err != nil {
-		t.Errorf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
+	if len(testData.CDNs) < 1 {
+		t.Fatal("Need at least one CDN to test Snapshotting CDNs")
 	}
-	remoteCDN := resp[0]
+	firstCDN := testData.CDNs[0]
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstCDN.Name)
+	// Retrieve the CDN by name so we can get the id for the snapshot
+	resp, _, err := TOSession.GetCDNs(opts)
+	if err != nil {
+		t.Errorf("cannot get CDN '%s': %v - alerts: %+v", firstCDN.Name, err, resp.Alerts)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one CDN to exist with name '%s', found: %d", firstCDN.Name, len(resp.Response))
+	}
+	remoteCDN := resp.Response[0]
 	alert, _, err := TOSession.SnapshotCRConfigByID(remoteCDN.ID)
 	if err != nil {
 		t.Errorf("failed to snapshot CDN by id: %v - %v", err, alert)

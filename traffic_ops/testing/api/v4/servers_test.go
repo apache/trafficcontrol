@@ -64,11 +64,16 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	const topologyName = "forked-topology"
 	const cdnName = "cdn2"
 	const expectedLength = 1
-	cdns, _, err := TOSession.GetCDNByName(cdnName, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", cdnName)
+	cdns, _, err := TOSession.GetCDNs(opts)
 	if err != nil {
-		t.Fatalf("unable to GET CDN: %v", err)
+		t.Fatalf("unable to get CDN '%s': %v - alerts: %+v", cdnName, err, cdns.Alerts)
 	}
-	cdnID := cdns[0].ID
+	if len(cdns.Response) < 1 {
+		t.Fatalf("Expected exactly one CDN to exist with name '%s', found: %d", cdnName, len(cdns.Response))
+	}
+	cdnID := cdns.Response[0].ID
 	params := url.Values{}
 	params.Add("cachegroupName", cacheGroupName)
 	params.Add("topology", topologyName)
@@ -90,11 +95,15 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	}
 
 	// attempt to move it to another CDN while it's the last server in the cachegroup in its CDN
-	cdns, _, err = TOSession.GetCDNByName("cdn1", nil)
+	opts.QueryParameters.Set("name", "cdn1")
+	cdns, _, err = TOSession.GetCDNs(opts)
 	if err != nil {
-		t.Fatalf("unable to GET CDN: %v", err)
+		t.Fatalf("unable to get CDN 'cdn1': %v - alerts: %+v", err, cdns.Alerts)
 	}
-	newCDNID := cdns[0].ID
+	if len(cdns.Response) < 1 {
+		t.Fatalf("Expected exactly one CDN to exist with name 'cdn1', found: %d", len(cdns.Response))
+	}
+	newCDNID := cdns.Response[0].ID
 	oldCDNID := *server.CDNID
 	server.CDNID = &newCDNID
 	profiles, _, err := TOSession.GetProfileByName("MID1", nil)
@@ -111,8 +120,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	server.CDNID = &oldCDNID
 	server.ProfileID = &oldProfile
 
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Add("name", moveToCacheGroup)
+	opts.QueryParameters.Set("name", moveToCacheGroup)
 	cgs, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
 		t.Fatalf("getting cachegroup with hostname %s: %v - alerts: %+v", moveToCacheGroup, err, cgs.Alerts)
@@ -121,7 +129,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 		t.Fatalf("expected %d cachegroup with hostname %s, received %d cachegroups", expectedLength, moveToCacheGroup, len(cgs.Response))
 	}
 	if cgs.Response[0].ID == nil {
-		t.Fatal("Traffic Ops responded with Cache Group '%s' that had null or undefined ID", moveToCacheGroup)
+		t.Fatalf("Traffic Ops responded with Cache Group '%s' that had null or undefined ID", moveToCacheGroup)
 	}
 
 	_, _, err = TOSession.UpdateServer(*server.ID, server, nil)

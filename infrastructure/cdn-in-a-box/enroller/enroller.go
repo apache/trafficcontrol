@@ -101,7 +101,7 @@ func enrollCDN(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, _, err := toSession.CreateCDN(s)
+	alerts, _, err := toSession.CreateCDN(s, client.RequestOptions{})
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("cdn %s already exists\n", s.Name)

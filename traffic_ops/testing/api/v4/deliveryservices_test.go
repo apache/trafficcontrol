@@ -141,31 +141,33 @@ func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
 		DNSSECEnabled: false,
 		DomainName:    cdnName + ".ai",
 		Name:          cdnName,
-	})
+	}, client.RequestOptions{})
 	if err != nil {
 		t.Fatal("unable to create cdn: " + err.Error())
 	}
 
-	originalKeys, _, err := TOSession.GetCDNSSLKeys(cdnName, nil)
+	originalKeys, _, err := TOSession.GetCDNSSLKeys(cdnName, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("unable to get keys on cdn %v: %v", cdnName, err)
+		t.Fatalf("unable to get keys on cdn %v: %v - alerts: %+v", cdnName, err, originalKeys.Alerts)
 	}
 
-	cdns, _, err := TOSession.GetCDNByName(cdnName, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", cdnName)
+	cdns, _, err := TOSession.GetCDNs(opts)
 	if err != nil {
-		t.Fatalf("unable to get cdn %v: %v", cdnName, err)
+		t.Fatalf("unable to get cdn %v: %v - alerts: %+v", cdnName, err, cdns.Alerts)
 	}
-	if len(cdns) < 1 {
+	if len(cdns.Response) < 1 {
 		t.Fatal("expected more than 0 cdns")
 	}
-	keys, _, err := TOSession.GetCDNSSLKeys(cdnName, nil)
+	keys, _, err := TOSession.GetCDNSSLKeys(cdnName, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("unable to get keys on cdn %v: %v", cdnName, err)
 	}
-	if len(keys) != len(originalKeys) {
-		t.Fatalf("expected %v ssl keys on cdn %v, got %v", len(originalKeys), cdnName, len(keys))
+	if len(keys.Response) != len(originalKeys.Response) {
+		t.Fatalf("expected %v ssl keys on cdn %v, got %v", len(originalKeys.Response), cdnName, len(keys.Response))
 	}
-	return cdns[0]
+	return cdns.Response[0]
 }
 
 func cleanUp(t *testing.T, ds tc.DeliveryServiceV4, oldCDNID int, newCDNID int, sslKeyVersions []string) {
@@ -186,13 +188,13 @@ func cleanUp(t *testing.T, ds tc.DeliveryServiceV4, oldCDNID int, newCDNID int, 
 		t.Error(err)
 	}
 	if oldCDNID != -1 {
-		_, _, err = TOSession.DeleteCDN(oldCDNID)
+		_, _, err = TOSession.DeleteCDN(oldCDNID, client.RequestOptions{})
 		if err != nil {
 			t.Error(err)
 		}
 	}
 	if newCDNID != -1 {
-		_, _, err = TOSession.DeleteCDN(newCDNID)
+		_, _, err = TOSession.DeleteCDN(newCDNID, client.RequestOptions{})
 		if err != nil {
 			t.Error(err)
 		}
@@ -453,7 +455,8 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	var oldCDNKeys []tc.CDNSSLKeys
 	for tries := 0; tries < 5; tries++ {
 		time.Sleep(time.Second)
-		oldCDNKeys, _, err = TOSession.GetCDNSSLKeys(oldCdn.Name, nil)
+		resp, _, err := TOSession.GetCDNSSLKeys(oldCdn.Name, client.RequestOptions{})
+		oldCDNKeys = resp.Response
 		if err == nil && len(oldCDNKeys) > 0 {
 			break
 		}
@@ -465,7 +468,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 		t.Fatal("expected at least 1 key")
 	}
 
-	newCDNKeys, _, err := TOSession.GetCDNSSLKeys(newCdn.Name, nil)
+	newCDNKeys, _, err := TOSession.GetCDNSSLKeys(newCdn.Name, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("unable to get cdn %v keys: %v", newCdn.Name, err)
 	}
@@ -485,21 +488,21 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	}
 
 	// Check new CDN still has an ssl key
-	keys, _, err := TOSession.GetCDNSSLKeys(newCdn.Name, nil)
+	keys, _, err := TOSession.GetCDNSSLKeys(newCdn.Name, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("unable to get cdn %v keys: %v", newCdn.Name, err)
+		t.Fatalf("unable to get cdn %v keys: %v - alerts: %+v", newCdn.Name, err, keys.Alerts)
 	}
-	if len(keys) != len(newCDNKeys) {
-		t.Fatalf("expected %v keys, got %v", len(newCDNKeys), len(keys))
+	if len(keys.Response) != len(newCDNKeys.Response) {
+		t.Fatalf("expected %v keys, got %v", len(newCDNKeys.Response), len(keys.Response))
 	}
 
 	// Check old CDN does not have ssl key
-	keys, _, err = TOSession.GetCDNSSLKeys(oldCdn.Name, nil)
+	keys, _, err = TOSession.GetCDNSSLKeys(oldCdn.Name, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("unable to get cdn %v keys: %v", oldCdn.Name, err)
+		t.Fatalf("unable to get cdn %v keys: %v - %+v", oldCdn.Name, err, keys.Alerts)
 	}
-	if len(keys) != len(oldCDNKeys) {
-		t.Fatalf("expected %v key, got %v", len(oldCDNKeys), len(keys))
+	if len(keys.Response) != len(oldCDNKeys) {
+		t.Fatalf("expected %v key, got %v", len(oldCDNKeys), len(keys.Response))
 	}
 }
 
@@ -869,16 +872,18 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		t.Fatalf("updating Delivery Service %s: %s", xmlID, err.Error())
 	}
 	const cdn1Name = "cdn1"
-	cdns, _, err := TOSession.GetCDNByName(cdn1Name, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", cdn1Name)
+	cdns, _, err := TOSession.GetCDNs(opts)
 	if err != nil {
-		t.Fatalf("getting CDN %s: %s", cdn1Name, err.Error())
+		t.Fatalf("getting CDN %s: %v - alerts: %+v", cdn1Name, err, cdns.Alerts)
 	}
-	if len(cdns) != expectedSize {
-		t.Fatalf("expected %d CDN with name %s but instead received %d CDNs", expectedSize, cdn1Name, len(cdns))
+	if len(cdns.Response) != expectedSize {
+		t.Fatalf("expected %d CDN with name %s but instead received %d CDNs", expectedSize, cdn1Name, len(cdns.Response))
 	}
-	cdn1 := cdns[0]
+	cdn1 := cdns.Response[0]
 	const cacheGroupName = "dtrc1"
-	opts := client.RequestOptions{
+	opts = client.RequestOptions{
 		QueryParameters: url.Values{
 			"name": {cacheGroupName},
 		},
@@ -1477,14 +1482,17 @@ func GetDeliveryServiceByCdn(t *testing.T) {
 
 		if firstDS.CDNName != nil {
 			if firstDS.CDNID == nil {
-				cdns, _, err := TOSession.GetCDNByName(*firstDS.CDNName, nil)
+				opts := client.NewRequestOptions()
+				opts.QueryParameters.Set("name", *firstDS.CDNName)
+				cdns, _, err := TOSession.GetCDNs(opts)
 				if err != nil {
-					t.Errorf("Error in Getting CDN by Name: %v", err)
+					t.Errorf("Error in Getting CDN by Name: %v - alerts: %+v", err, cdns.Alerts)
 				}
-				if len(cdns) == 0 {
-					t.Errorf("no CDN named %v" + *firstDS.CDNName)
+				if len(cdns.Response) == 0 {
+					t.Fatalf("no CDN named '%s' found in Traffic Ops", *firstDS.CDNName)
 				}
-				firstDS.CDNID = &cdns[0].ID
+				firstDS.CDNID = new(int)
+				*firstDS.CDNID = cdns.Response[0].ID
 			}
 			resp, _, err := TOSession.GetDeliveryServicesByCDNID(*firstDS.CDNID, nil)
 			if err != nil {

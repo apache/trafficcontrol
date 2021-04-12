@@ -24,6 +24,7 @@ import (
 
 	"golang.org/x/net/publicsuffix"
 
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -50,16 +51,18 @@ func PostTestLoginFail(t *testing.T) {
 		t.Fatal("cannot test login: must have at least 1 test data cdn")
 	}
 	expectedCDN := testData.CDNs[0]
-	actualCDNs, _, err := uninitializedTOClient.GetCDNByName(expectedCDN.Name, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", expectedCDN.Name)
+	actualCDNs, _, err := uninitializedTOClient.GetCDNs(opts)
 	if err != nil {
-		t.Fatalf("GetCDNByName err expected nil, actual '%+v'", err)
+		t.Fatalf("failed to request CDN '%s': %v - alerts: %+v", expectedCDN.Name, err, actualCDNs.Alerts)
 	}
-	if len(actualCDNs) < 1 {
+	if len(actualCDNs.Response) < 1 {
 		t.Fatal("uninitialized client should have retried login (possibly login failed with a 200, so it didn't try again, and the CDN request returned an auth failure with a 200, which the client reasonably thought was success, and deserialized with no matching keys, resulting in an empty object); len(actualCDNs) expected >1, actual 0")
 	}
-	actualCDN := actualCDNs[0]
+	actualCDN := actualCDNs.Response[0]
 	if expectedCDN.Name != actualCDN.Name {
-		t.Fatalf("cdn.Name expected '%+v' actual '%+v'", expectedCDN.Name, actualCDN.Name)
+		t.Fatalf("cdn.Name expected '%s' actual '%s'", expectedCDN.Name, actualCDN.Name)
 	}
 }
 
