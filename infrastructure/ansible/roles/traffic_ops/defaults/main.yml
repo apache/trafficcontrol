@@ -112,6 +112,8 @@ to_go_supported_ds_metrics:
 
 to_plugin_config: {}
 
+to_traffic_vault_backend: "riak"
+
 to_smtp_enabled: false
 to_smtp_username: ""
 to_smtp_password: ""

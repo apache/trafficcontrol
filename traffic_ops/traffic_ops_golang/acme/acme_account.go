@@ -30,12 +30,14 @@ import (
 )
 
 const readQuery = `SELECT email, private_key, uri, provider FROM acme_account`
+const readProvidersQuery = `SELECT DISTINCT provider FROM acme_account`
 const createQuery = `INSERT INTO acme_account (email, private_key, uri, provider) VALUES (:email, :private_key, :uri, :provider) RETURNING email, provider`
 const updateQuery = `UPDATE acme_account SET private_key=:private_key, uri=:uri WHERE email=:email and provider=:provider RETURNING email, provider`
 const deleteQuery = `DELETE FROM acme_account WHERE email=$1 and provider=$2`
 const selectByProviderAndEmailQuery = `SELECT email, private_key, uri, provider from acme_account where email = $1 and provider = $2`
 const selectLimitedQuery = `SELECT email, provider from acme_account where email = $1 and provider = $2`
 
+// Read handles GET requests for all information about the ACME accounts.
 func Read(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
@@ -65,6 +67,49 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, acmeAccounts)
 }
 
+// ReadProviders returns a list of unique ACME provider both from the database and cdn.conf
+func ReadProviders(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	acmeProviders := []string{}
+	rows, err := tx.Query(readProvidersQuery)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("querying acme account providers: "+err.Error()))
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var provider string
+		if err = rows.Scan(&provider); err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning acme account providers: "+err.Error()))
+			return
+		}
+		acmeProviders = append(acmeProviders, provider)
+	}
+
+	for _, acmeCfg := range inf.Config.AcmeAccounts {
+		alreadyInList := false
+		for _, acmeProvider := range acmeProviders {
+			if acmeCfg.AcmeProvider == acmeProvider {
+				alreadyInList = true
+			}
+		}
+		if !alreadyInList {
+			acmeProviders = append(acmeProviders, acmeCfg.AcmeProvider)
+		}
+	}
+
+	api.WriteResp(w, r, acmeProviders)
+}
+
+// Create handles POST requests to add a new ACME provider.
 func Create(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -169,6 +214,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
+// Delete removes the information about an ACME account.
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"provider", "email"}, nil)
 	if userErr != nil || sysErr != nil {

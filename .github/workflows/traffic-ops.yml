@@ -26,7 +26,7 @@ on:
     paths:
       - .github/actions/todb-init/**
       - .github/actions/to-integration-tests/**
-      - .github/workflows/traffic ops.yml
+      - .github/workflows/traffic-ops.yml
       - go.mod
       - go.sum
       - GO_VERSION
@@ -41,7 +41,7 @@ on:
     paths:
       - .github/actions/todb-init/**
       - .github/actions/to-integration-tests/**
-      - .github/workflows/traffic ops.yml
+      - .github/workflows/traffic-ops.yml
       - go.mod
       - go.sum
       - GO_VERSION
