@@ -201,7 +201,7 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if err := tx.QueryRow(updateStatusQuery, req.Status, dsr.LastEditedByID, *dsr.ID).Scan(&dsr.LastUpdated); err == nil {
-		if dsr.ChangeType != tc.DSRChangeTypeCreate {
+		if dsr.IsOpen() && dsr.ChangeType != tc.DSRChangeTypeCreate {
 			query := deliveryservice.SelectDeliveryServicesQuery + " WHERE ds.xml_id = :xmlid"
 			original, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"xmlid": dsr.XMLID}, inf.Tx)
 			if userErr != nil || sysErr != nil {
