@@ -108,10 +108,10 @@ dl_ds_default_users:
     email: userB+userA@kabletown.invalid
     fullName: A local account with RO rights
     role: read-only
-  - username: '{{ federation_user }}'
-    email: '{{ federation_user }}@kabletown.invalid'
+  - username: '{{ dl_ds_default_federation_user }}'
+    email: '{{ dl_ds_default_federation_user }}@kabletown.invalid'
     fullName: A dedicated user to assign existing Resolvers to and remove existing Resolvers from Federations
-    role: operations
+    role: operations # TODO: Reduce role to federations level once a federations role (privilege level 15) exists
 
 # TO Cachegroups
 dl_ds_merged_cachegroups: "{{ dl_ds_default_cachegroups }}"
@@ -4052,6 +4052,7 @@ dl_ds_default_ds_template:
     uniqueKey: simple-http-anon-block
 
 # Federations
+dl_ds_default_federation_user: "{{ federation_user }}"
 dl_ds_merged_federations: "{{ dl_ds_default_federations }}"
 dl_ds_default_federations:
   - deliveryService: simple-dns-for-federation-{{ Target_cdn_delegation | lower }}
@@ -4063,4 +4064,4 @@ dl_ds_default_federations:
         resolve6:
           - '::/0'
       ttl: 60
-    user: '{{ federation_user }}'
+    user: '{{ dl_ds_default_federation_user }}'
