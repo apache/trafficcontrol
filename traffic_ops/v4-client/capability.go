@@ -15,36 +15,16 @@ package client
  */
 
 import (
-	"errors"
-	"net/http"
-	"net/url"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-// APICapabilities is the API version-relative path for the /capabilities API endpoint.
-const APICapabilities = "/capabilities"
+// apiCapabilities is the API version-relative path for the /capabilities API endpoint.
+const apiCapabilities = "/capabilities"
 
-// GetCapabilities retrieves all capabilities.
-func (to *Session) GetCapabilities(header http.Header) ([]tc.Capability, toclientlib.ReqInf, error) {
+// GetCapabilities retrieves capabilities.
+func (to *Session) GetCapabilities(opts RequestOptions) (tc.CapabilitiesResponse, toclientlib.ReqInf, error) {
 	var data tc.CapabilitiesResponse
-	reqInf, err := to.get(APICapabilities, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetCapability retrieves only the capability named 'c'.
-func (to *Session) GetCapability(c string, header http.Header) (tc.Capability, toclientlib.ReqInf, error) {
-	v := url.Values{}
-	v.Add("name", c)
-	endpoint := APICapabilities + "?" + v.Encode()
-	var data tc.CapabilitiesResponse
-	reqInf, err := to.get(endpoint, header, &data)
-	if err != nil {
-		return tc.Capability{}, reqInf, err
-	} else if data.Response == nil || len(data.Response) < 1 {
-		return tc.Capability{}, reqInf, errors.New("invalid response - no capability returned")
-	}
-
-	return data.Response[0], reqInf, nil
+	reqInf, err := to.get(apiCapabilities, opts, &data)
+	return data, reqInf, err
 }
