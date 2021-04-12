@@ -69,6 +69,13 @@ func TestDeliveryServices(t *testing.T) {
 		UpdateTestDeliveryServicesWithHeaders(t, header)
 		VerifyPaginationSupportDS(t)
 		GetDeliveryServiceByCdn(t)
+		GetDeliveryServiceByInvalidCdn(t)
+		GetDeliveryServiceByInvalidProfile(t)
+		GetDeliveryServiceByInvalidTenant(t)
+		GetDeliveryServiceByInvalidType(t)
+		GetDeliveryServiceByInvalidAccessibleTo(t)
+		GetDeliveryServiceByInvalidXmlId(t)
+
 	})
 }
 
@@ -1274,6 +1281,74 @@ func GetDeliveryServiceByCdn(t *testing.T) {
 		} else {
 			t.Errorf("CDN Name is nil in the pre-requisites")
 		}
+	}
+}
+
+func GetDeliveryServiceByInvalidCdn(t *testing.T) {
+	resp, _, err := TOSession.GetDeliveryServicesByCDNID(10000, nil)
+	if err != nil {
+		t.Errorf("Error!! Getting CDN by Invalid ID %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Error!! Invalid CDN shouldn't have any response %v Error %v", resp, err)
+	}
+}
+
+func GetDeliveryServiceByInvalidProfile(t *testing.T) {
+	qparams := url.Values{}
+	qparams.Set("profile", "10000")
+	resp, _, err := TOSession.GetDeliveryServices(nil, qparams)
+	if err != nil {
+		t.Errorf("Error!! Getting deliveryservice by Invalid Profile ID %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Error!! Invalid Profile shouldn't have any response %v Error %v", resp, err)
+	}
+}
+
+func GetDeliveryServiceByInvalidTenant(t *testing.T) {
+	qparams := url.Values{}
+	qparams.Set("tenant", "10000")
+	resp, _, err := TOSession.GetDeliveryServices(nil, qparams)
+	if err != nil {
+		t.Errorf("Error!! Getting Deliveryservice by Invalid Tenant ID %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Error!! Invalid Tenant shouldn't have any response %v Error %v", resp, err)
+	}
+}
+
+func GetDeliveryServiceByInvalidType(t *testing.T) {
+	qparams := url.Values{}
+	qparams.Set("type", "10000")
+	resp, _, err := TOSession.GetDeliveryServices(nil, qparams)
+	if err != nil {
+		t.Errorf("Error!! Getting Deliveryservice by Invalid Type ID %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Error!! Invalid Type shouldn't have any response %v Error %v", resp, err)
+	}
+}
+
+func GetDeliveryServiceByInvalidAccessibleTo(t *testing.T) {
+	qparams := url.Values{}
+	qparams.Set("accessibleTo", "10000")
+	resp, _, err := TOSession.GetDeliveryServices(nil, qparams)
+	if err != nil {
+		t.Errorf("Error!! Getting Deliveryservice by Invalid AccessibleTo %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Error!! Invalid AccessibleTo shouldn't have any response %v Error %v", resp, err)
+	}
+}
+
+func GetDeliveryServiceByInvalidXmlId(t *testing.T) {
+	resp, _, err := TOSession.GetDeliveryServiceByXMLID("test", nil)
+	if err != nil {
+		t.Errorf("Error!! Getting Delivery service by Invalid ID %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Error!! Invalid Xml Id shouldn't have any response %v Error %v", resp, err)
 	}
 }
 
