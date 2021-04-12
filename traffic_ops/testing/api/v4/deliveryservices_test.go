@@ -1387,33 +1387,3 @@ func SortTestDeliveryServices(t *testing.T) {
 		t.Errorf("list is not sorted by their XML Id: %v", sortedList)
 	}
 }
-
-func SortTestDeliveryServicesDesc(t *testing.T) {
-
-	var header http.Header
-	respAsc, _, err1 := TOSession.GetDeliveryServices(header, nil)
-	params := url.Values{}
-	params.Set("sortOrder", "desc")
-	respDesc, _, err2 := TOSession.GetDeliveryServices(header, params)
-
-	if err1 != nil {
-		t.Errorf("Expected no error, but got error in DS Ascending %v", err1)
-	}
-	if err2 != nil {
-		t.Errorf("Expected no error, but got error in DS Descending %v", err2)
-	}
-
-	if len(respAsc) > 0 && len(respDesc) > 0 {
-		// reverse the descending-sorted response and compare it to the ascending-sorted one
-		for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
-			respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
-		}
-		if respDesc[0].XMLID != nil && respAsc[0].XMLID != nil {
-			if !reflect.DeepEqual(respDesc[0].XMLID, respAsc[0].XMLID) {
-				t.Errorf("Role responses are not equal after reversal: %v - %v", *respDesc[0].XMLID, *respAsc[0].XMLID)
-			}
-		}
-	} else {
-		t.Errorf("No Response returned from GET Delivery Service using SortOrder")
-	}
-}
