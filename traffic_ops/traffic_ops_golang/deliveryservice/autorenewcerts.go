@@ -230,7 +230,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 				},
 			}
 
-			if err := GetAcmeCertificates(cfg, req, ctx, currentUser, tv); err != nil {
+			if err := GetAcmeCertificates(cfg, req, ctx, currentUser, 0, tv); err != nil {
 				dsExpInfo.Error = err
 				errorCount++
 			} else {
