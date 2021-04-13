@@ -1365,5 +1365,3 @@ func GetTestDeliveryServicesURLSigKeys(t *testing.T) {
 		t.Error("failed to get url sig keys: " + err.Error())
 	}
 }
-
-
