@@ -517,7 +517,7 @@ func makeATCHeaderRewriteDirectiveMaxRequestHeaderSize(ds *DeliveryService, serv
 	}
 	hdrTxt := "cond %{REMAP_PSEUDO_HOOK}\ncond % cqhl > " + strconv.Itoa(*ds.MaxRequestHeaderBytes) + "\nset-status 400"
 	warnTxt := "#TO Max Request Header Size: " + strconv.Itoa(*ds.MaxRequestHeaderBytes) +
-		",is larger than or equal to global setting of " + strconv.Itoa(atsRqstMaxHdrSize) + ", header rw will be ignored.\n"
+		",is larger than or equal to the global setting of " + strconv.Itoa(atsRqstMaxHdrSize) + ", header rw will be ignored.\n"
 	if *ds.MaxRequestHeaderBytes >= atsRqstMaxHdrSize {
 		return warnTxt + hdrTxt
 	} else {
