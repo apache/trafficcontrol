@@ -844,13 +844,20 @@
     method: GET
   register: get_all_ds
 
+- name: Render Federations Lists
+  with_items: "{{ cdnDelegationList }}"
+  loop_control:
+    loop_var: Target_cdn_delegation
+  set_fact:
+    federations_for_cdn_delegation: "{{ dl_ds_default_federations }}"
+  register: federations_out
+
 - name: Create Federations
   vars:
-    Target_cdn_delegation: "{{ item[0] }}"
-    federation: "{{ item[1] }}"
-  with_nested:
-    - "{{ cdnDelegationList }}"
-    - "{{ dl_ds_merged_federations }}"
+    federations_query: 'results[].ansible_facts[].federations_for_cdn_delegation[]'
+  with_items: "{{ federations_out | json_query(federations_query) }}"
+  loop_control:
+    loop_var: federation
   include_tasks: federation_loader.yml
 
 - name: Ensure SSL info directory exists
