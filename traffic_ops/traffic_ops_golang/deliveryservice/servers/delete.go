@@ -53,7 +53,7 @@ WHERE s.id = $2)
 AND
 (SELECT COUNT(*) = 0 AS available
 FROM deliveryservice_server
-JOIN server s ON deliveryservice_server.server = s.id 
+JOIN server s ON deliveryservice_server.server = s.id
 JOIN type t ON t.id = s.type
 JOIN status st ON st.id = s.status
 WHERE (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
@@ -110,7 +110,7 @@ func delete(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		return
 	}
 
-	query := deliveryservice.GetDSSelectQuery() + " WHERE ds.id=:dsid"
+	query := deliveryservice.SelectDeliveryServicesQuery + " WHERE ds.id=:dsid"
 	vals := map[string]interface{}{"dsid": dsID}
 	dses, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, vals, inf.Tx)
 	if userErr != nil || sysErr != nil {
