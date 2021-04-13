@@ -16,82 +16,73 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { readFileSync } from "fs";
-
 import { browser } from 'protractor';
-import using from "jasmine-data-provider";
 
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { OriginsPage } from '../PageObjects/OriginsPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { API } from '../CommonUtils/API';
+import { origins } from "../Data";
 
-let setupFile = 'Data/Origins/Setup.json';
-let cleanupFile = 'Data/Origins/Cleanup.json';
-let filename = 'Data/Origins/TestCases.json';
-let testData = JSON.parse(readFileSync(filename, "utf8"));
-
-let api = new API();
-let loginPage = new LoginPage();
-let topNavigation = new TopNavigationPage();
-let originsPage = new OriginsPage();
+const api = new API();
+const loginPage = new LoginPage();
+const topNavigation = new TopNavigationPage();
+const originsPage = new OriginsPage();
 
 describe('Setup Origin Delivery Service', function () {
     it('Setup', async function () {
-        let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        await api.UseAPI(setupData);
-    })
-})
-using(testData.Origins, async function (originsData) {
-    using(originsData.Login, function (login) {
-        describe('Traffic Portal - Origins - ' + login.description, function () {
-            it('can login', async function(){
+        await api.UseAPI(origins.setup);
+    });
+});
+origins.tests.forEach(async originsData => {
+    originsData.logins.forEach(login => {
+        describe(`Traffic Portal - Origins - ${login.description}`, () => {
+            it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            })
-            it('can open origins page', async function () {
+            });
+            it('can open origins page', async () => {
                 await originsPage.OpenConfigureMenu();
                 await originsPage.OpenOriginsPage();
-            })
-            using(originsData.Add, function (add) {
+            });
+            originsData.add.forEach(add => {
                 it(add.description, async function () {
                     expect(await originsPage.CreateOrigins(add)).toBeTruthy();
                     await originsPage.OpenOriginsPage();
-                })
-            })
-            using(originsData.Update, function (update) {
-                if (update.validationMessage == undefined) {
-                    it(update.description, async function () {
+                });
+            });
+            originsData.update.forEach(update => {
+                if (!update.validationMessage) {
+                    it(update.description, async () => {
                         await originsPage.SearchOrigins(update.Name);
                         expect(await originsPage.UpdateOrigins(update)).toBeUndefined();
                         await originsPage.OpenOriginsPage();
-                    })
+                    });
                 } else {
-                    it(update.description, async function () {
+                    it(update.description, async () => {
                         await originsPage.SearchOrigins(update.Name);
                         expect(await originsPage.UpdateOrigins(update)).toBeTruthy();
                         await originsPage.OpenOriginsPage();
-                    })
+                    });
                 }
-            })
-            using(originsData.Remove, function (remove) {
-                it(remove.description, async function () {
+            });
+            originsData.remove.forEach(remove => {
+                it(remove.description, async () => {
                     await originsPage.SearchOrigins(remove.Name);
                     expect(await originsPage.DeleteOrigins(remove)).toBeTruthy();
                     await originsPage.OpenOriginsPage();
-                })
-            })
-            it('can logout', async function () {
+                });
+            });
+            it('can logout', async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
-            })
-        })
-    })
-})
+            });
+        });
+    });
+});
 
-describe('Clean up Origin Delivery Service', function () {
-    it('Cleanup', async function () {
-        let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        await api.UseAPI(cleanupData);
+describe('Clean up Origin Delivery Service', () => {
+    it('Cleanup', async () => {
+        await api.UseAPI(origins.cleanup);
     })
 })

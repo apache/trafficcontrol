@@ -1,3 +1,6 @@
+// Type definitions for random-ipv6
+// Project: https://github.com/mock-end/random-ipv6
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,22 +19,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser } from 'protractor';
+interface Options {
+	compressed?: boolean;
+	max?: number | string;
+	min?: number | string;
+	padded?: boolean;
+}
 
-import { LoginPage } from '../PageObjects/LoginPage.po';
-import { login } from "../Data";
-
-const loginPage = new LoginPage();
-
-login.tests.forEach(async loginData => {
-    loginData.logins.forEach(login => {
-        describe(`Traffic Portal - Login - ${login.description}`, () => {
-            it('can open login page', async () => {
-                browser.get(browser.params.baseUrl);
-            });
-            it(login.description, async () => {
-                expect(await loginPage.Login(login)).toBeTruthy();
-            });
-        });
-    });
-});
+declare module "random-ipv6" {
+	function randomIPv6(schema?: Options): string;
+	function randomIPv6(schema: string, options?: Options): string;
+	export = randomIPv6;
+}

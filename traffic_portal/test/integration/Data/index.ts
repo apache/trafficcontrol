@@ -16,22 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser } from 'protractor';
 
-import { LoginPage } from '../PageObjects/LoginPage.po';
-import { login } from "../Data";
-
-const loginPage = new LoginPage();
-
-login.tests.forEach(async loginData => {
-    loginData.logins.forEach(login => {
-        describe(`Traffic Portal - Login - ${login.description}`, () => {
-            it('can open login page', async () => {
-                browser.get(browser.params.baseUrl);
-            });
-            it(login.description, async () => {
-                expect(await loginPage.Login(login)).toBeTruthy();
-            });
-        });
-    });
-});
+export * from "./asns";
+export * from "./cachegroup";
+export * from "./cdn";
+export * from "./coordinates";
+export * from "./divisions";
+export * from "./login";
+export * from "./origins";
+export * from "./parameters";
+export * from "./physlocations";
+export * from "./prerequisites";
+export * from "./profiles";
+export * from "./regions";
+export * from "./servercapabilities";
+export * from "./servers";
+export * from "./serverservercapabilities";
+export * from "./servicecategories";
+export * from "./statuses";
+export * from "./types";

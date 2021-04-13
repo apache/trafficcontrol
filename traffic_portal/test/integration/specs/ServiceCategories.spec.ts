@@ -16,75 +16,66 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { readFileSync } from "fs";
-
 import { browser } from 'protractor';
-import using from "jasmine-data-provider";
 
 import { LoginPage } from '../PageObjects/LoginPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { API } from '../CommonUtils/API';
 import { ServiceCategoriesPage } from '../PageObjects/ServiceCategories.po';
+import { serviceCategories } from "../Data";
 
-let setupFile = 'Data/ServiceCategories/Setup.json';
-let cleanupFile = 'Data/ServiceCategories/Cleanup.json';
-let filename = 'Data/ServiceCategories/TestCases.json';
-let testData = JSON.parse(readFileSync(filename, "utf8"));
+const api = new API();
+const loginPage = new LoginPage();
+const topNavigation = new TopNavigationPage();
+const serviceCategoriesPage = new ServiceCategoriesPage();
 
-let api = new API();
-let loginPage = new LoginPage();
-let topNavigation = new TopNavigationPage();
-let serviceCategoriesPage = new ServiceCategoriesPage();
-
-describe('Setup API for Service Categories Test', function(){
-    it('Setup', async function(){
-        let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        await api.UseAPI(setupData);
-    })
-})
-using(testData.ServiceCategories, async function(serviceCategoriesData){
-    using(serviceCategoriesData.Login, function(login){
-        describe('Traffic Portal - ServiceCategories - ' + login.description, function(){
-            it('can login', async function(){
+describe('Setup API for Service Categories Test', () => {
+    it('Setup', async () => {
+        await api.UseAPI(serviceCategories.setup);
+    });
+});
+serviceCategories.tests.forEach(async serviceCategoriesData => {
+    serviceCategoriesData.logins.forEach(login => {
+        describe(`Traffic Portal - ServiceCategories - ${login.description}`, () => {
+            it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            })
-            it('can open service categories page', async function(){
+            });
+            it('can open service categories page', async () => {
                 await serviceCategoriesPage.OpenServicesMenu();
                 await serviceCategoriesPage.OpenServiceCategoriesPage();
-            })
+            });
 
-            using(serviceCategoriesData.Add, function (add) {
-                it(add.description, async function () {
+            serviceCategoriesData.add.forEach(add => {
+                it(add.description, async () => {
                     expect(await serviceCategoriesPage.CreateServiceCategories(add)).toBeTruthy();
                     await serviceCategoriesPage.OpenServiceCategoriesPage();
-                })
-            })
-            using(serviceCategoriesData.Update, function (update) {
-                it(update.description, async function () {
+                });
+            });
+            serviceCategoriesData.update.forEach(update => {
+                it(update.description, async () => {
                     await serviceCategoriesPage.SearchServiceCategories(update.Name);
                     expect(await serviceCategoriesPage.UpdateServiceCategories(update)).toBeTruthy();
                     await serviceCategoriesPage.OpenServiceCategoriesPage();
-                })
-            })
-            using(serviceCategoriesData.Remove, function (remove) {
-                it(remove.description, async function () {
+                });
+            });
+            serviceCategoriesData.remove.forEach(remove => {
+                it(remove.description, async () => {
                     await serviceCategoriesPage.SearchServiceCategories(remove.Name);
                     expect(await serviceCategoriesPage.DeleteServiceCategories(remove)).toBeTruthy();
                     await serviceCategoriesPage.OpenServiceCategoriesPage();
-                })
-            })
-            it('can logout', async function () {
+                });
+            });
+            it('can logout', async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
-            })
-        })
-    })
-})
+            });
+        });
+    });
+});
 
-describe('Clean Up API for Service Categories Test', function () {
-    it('Cleanup', async function () {
-        let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        await api.UseAPI(cleanupData);
-    })
-})
+describe('Clean Up API for Service Categories Test', () => {
+    it('Cleanup', async () => {
+        await api.UseAPI(serviceCategories.cleanup);
+    });
+});

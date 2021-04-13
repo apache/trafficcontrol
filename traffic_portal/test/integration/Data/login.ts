@@ -16,22 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser } from 'protractor';
-
-import { LoginPage } from '../PageObjects/LoginPage.po';
-import { login } from "../Data";
-
-const loginPage = new LoginPage();
-
-login.tests.forEach(async loginData => {
-    loginData.logins.forEach(login => {
-        describe(`Traffic Portal - Login - ${login.description}`, () => {
-            it('can open login page', async () => {
-                browser.get(browser.params.baseUrl);
-            });
-            it(login.description, async () => {
-                expect(await loginPage.Login(login)).toBeTruthy();
-            });
-        });
-    });
-});
+export const login = {
+	tests: [
+		{
+			logins: [
+				{
+					description: "cannot login with wrong password",
+					username: "TPAdmin",
+					password: "wrong",
+					validationMessage: "Invalid username or password."
+				},
+				{
+					description: "cannot login with wrong username",
+					username: "wrong",
+					password: "pa$$word",
+					validationMessage: "Invalid username or password."
+				}
+			]
+		}
+	]
+};
