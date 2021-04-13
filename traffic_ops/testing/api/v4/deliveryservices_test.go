@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
