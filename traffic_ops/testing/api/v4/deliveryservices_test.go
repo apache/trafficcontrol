@@ -76,7 +76,6 @@ func TestDeliveryServices(t *testing.T) {
 		GetDeliveryServiceByInvalidType(t)
 		GetDeliveryServiceByInvalidAccessibleTo(t)
 		GetDeliveryServiceByInvalidXmlId(t)
-		SortTestDeliveryServices(t)
 	})
 }
 
@@ -1368,21 +1367,4 @@ func GetTestDeliveryServicesURLSigKeys(t *testing.T) {
 	}
 }
 
-func SortTestDeliveryServices(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetDeliveryServices(header, nil)
-	if err != nil {
-		t.Errorf("Expected no error, but got %v", err)
-	}
-	for i, _ := range resp {
-		sortedList = append(sortedList, *resp[i].XMLID)
-	}
 
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their XML Id: %v", sortedList)
-	}
-}
