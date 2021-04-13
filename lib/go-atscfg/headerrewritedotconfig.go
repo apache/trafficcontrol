@@ -40,7 +40,6 @@ const LineCommentHeaderRewriteDotConfig = LineCommentHash
 const ServiceCategoryHeader = "@CDN-SVC"
 
 const MaxOriginConnectionsNoMax = 0 // 0 indicates no limit on origin connections
-const MaxRequestHeaderNoBytes = 0
 
 const HeaderRewriteFirstPrefix = HeaderRewritePrefix + "first_"
 const HeaderRewriteInnerPrefix = HeaderRewritePrefix + "inner_"
