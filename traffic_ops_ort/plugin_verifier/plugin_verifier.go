@@ -127,9 +127,11 @@ func checkConfigLine(line string, lineNumber int) int {
 						pluginChecks[key] = verified
 					}
 					if !verified {
-						log.Errorf("the plugin '%s' on line '%d' or near continuation line '%d' is not available to the installed trafficserver.\n", key,
-							lineNumber, lineNumber)
+						log.Errorf("the plugin '%s' in remap.config on line '%d' is not available to the installed trafficserver\n",
+							key, lineNumber)
 						pluginErrorCount++
+					} else {
+						log.Infof("then plugin DSO '%s' in remap.config on line '%d' has been verified\n", key, lineNumber)
 					}
 				}
 			} else if strings.HasPrefix(fields[ii], "@pparam") {
@@ -140,7 +142,7 @@ func checkConfigLine(line string, lineNumber int) int {
 				m := regexp.MustCompile(`^*(\.config|\.cfg|\.txt|\.yml|\.yaml)+`)
 				sa := strings.Split(fields[ii], "=")
 				if len(sa) != 2 && len(sa) != 3 {
-					log.Errorf("malformed @pparam definition on line '%d': %v\n", lineNumber, fields)
+					log.Errorf("malformed @pparam definition in remap.config on line '%d': %v\n", lineNumber, fields)
 					pluginErrorCount++
 				} else {
 					param := strings.TrimSpace(sa[1])
@@ -151,9 +153,12 @@ func checkConfigLine(line string, lineNumber int) int {
 							pluginParams[param] = verified
 						}
 						if !verified {
-							log.Errorf("the plugin config file '%s' on line '%d' or near continuation line '%d' is not available to the installed trafficserver.\n", param,
-								lineNumber, lineNumber)
+							log.Errorf("the plugin config file '%s' on line '%d' of remap.config does not exist or is empty\n",
+								param, lineNumber)
 							pluginErrorCount++
+						} else {
+							log.Infof("the plugin config file '%s' on line '%d' of remap.config has been verified\n",
+								param, lineNumber)
 						}
 					}
 				}
@@ -170,9 +175,11 @@ func checkConfigLine(line string, lineNumber int) int {
 				pluginChecks[key] = verified
 			}
 			if !verified {
-				log.Errorf("the plugin '%s' on line '%d' is not available to the the installed trafficserver.\n", key,
-					lineNumber)
+				log.Errorf("the plugin '%s' on line '%d' of plugin.config is not available to the the installed trafficserver\n",
+					key, lineNumber)
 				pluginErrorCount++
+			} else {
+				log.Infof("the plugin '%s' on line '%d' of plugin.config has been verified\n", key, lineNumber)
 			}
 		}
 		// Check the arguments in a plugin.config file for possible plugin config files.
@@ -180,19 +187,22 @@ func checkConfigLine(line string, lineNumber int) int {
 		// assumed to be configuration files and are checked that they
 		// exist in the filesystem at the absolute location in the name
 		// or relative to the ATS configuration files directory.
-		m := regexp.MustCompile(`^*(\.config|\.cfg|\.txt|\.yml|\.yaml)+`)
+		m := regexp.MustCompile(`([^=]+\.config$|[^=]\.cfg$|[^=]+\.txt$|[^=]+\.yml$|[^=]+\.yaml$)`)
 		for ii := 1; ii < length; ii++ {
 			param := strings.TrimSpace(fields[ii])
-			if m.MatchString(param) {
-				verified, exists = pluginParams[param]
+			cfg := m.FindStringSubmatch(param)
+			if len(cfg) == 2 {
+				verified, exists = pluginParams[cfg[0]]
 				if !exists {
-					verified = verifyPluginConfigfile(param)
-					pluginParams[param] = verified
+					verified = verifyPluginConfigfile(cfg[0])
+					pluginParams[cfg[0]] = verified
 				}
 				if !verified {
-					log.Errorf("the plugin config file '%s' on line '%d' or near continuation line '%d' is not available to the installed trafficserver.\n", param,
-						lineNumber, lineNumber)
+					log.Errorf("the plugin config file '%s' on line '%d' of plugin.config does not exist or is empty\n",
+						cfg[0], lineNumber)
 					pluginErrorCount++
+				} else {
+					log.Infof("the plugin config file '%s' on line '%d' of plugin.config has been verified\n", cfg[0], lineNumber)
 				}
 			}
 		}
@@ -323,10 +333,10 @@ func main() {
 	}
 
 	if pluginErrorCount > 0 {
-		log.Errorf("there are '%d' plugins that could not be verified.\n", pluginErrorCount)
+		log.Errorf("there are '%d' plugins that could not be verified\n", pluginErrorCount)
 		os.Exit(pluginErrorCount)
 	} else {
-		log.Infoln("All configured plugins have successfully been verified.")
+		log.Infoln("All configured plugins have successfully been verified")
 	}
 	os.Exit(0)
 }
