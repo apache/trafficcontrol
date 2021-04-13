@@ -27,6 +27,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 )
 
@@ -200,6 +201,26 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 	dsr.Assignee = req.Assignee
 	dsr.AssigneeID = req.AssigneeID
 
+	if dsr.ChangeType == tc.DSRChangeTypeUpdate {
+		query := deliveryservice.SelectDeliveryServicesQuery + `WHERE xml_id=:XMLID`
+		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+		if len(originals) < 1 {
+			userErr = fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+			return
+		}
+		if len(originals) > 1 {
+			sysErr = fmt.Errorf("too many Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+		dsr.Original = new(tc.DeliveryServiceV4)
+		*dsr.Original = originals[0]
+	}
 	var resp interface{}
 	if inf.Version.Major >= 4 {
 		resp = dsr

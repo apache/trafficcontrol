@@ -88,22 +88,28 @@ func GetTestDeliveryServiceRequestCommentsIMSAfterChange(t *testing.T, header ht
 func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 
 	// Retrieve a delivery service request by xmlId so we can get the ID needed to create a dsr comment
-	dsr := testData.DeliveryServiceRequests[0].DeliveryService
-	resetDS(dsr)
-	if dsr == nil || dsr.XMLID == nil {
+	dsr := testData.DeliveryServiceRequests[0]
+	var ds *tc.DeliveryServiceV4
+	if dsr.ChangeType == tc.DSRChangeTypeDelete {
+		ds = dsr.Original
+	} else {
+		ds = dsr.Requested
+	}
+	resetDS(ds)
+	if ds == nil || ds.XMLID == nil {
 		t.Fatal("first DSR in the test data had a nil DeliveryService or one with no XMLID")
 	}
 
-	resp, _, _, err := TOSession.GetDeliveryServiceRequestsByXMLID(*dsr.XMLID, nil)
+	resp, _, _, err := TOSession.GetDeliveryServiceRequestsByXMLID(*ds.XMLID, nil)
 	if err != nil {
-		t.Fatalf("cannot GET delivery service request by xml id: %v - %v", dsr.XMLID, err)
+		t.Fatalf("cannot GET delivery service request by xml id: %v - %v", ds.XMLID, err)
 	}
 	if len(resp) != 1 {
-		t.Fatalf("found %d delivery service request by xml id, expected %d: %s", len(resp), 1, *dsr.XMLID)
+		t.Fatalf("found %d delivery service request by xml id, expected %d: %s", len(resp), 1, *ds.XMLID)
 	}
 	respDSR := resp[0]
 	if respDSR.ID == nil {
-		t.Fatalf("got Delivery Service Request with xml_id '%s' that had a null ID", *dsr.XMLID)
+		t.Fatalf("got Delivery Service Request with xml_id '%s' that had a null ID", *ds.XMLID)
 	}
 
 	for _, comment := range testData.DeliveryServiceRequestComments {

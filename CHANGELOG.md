@@ -60,6 +60,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Disabled TLSv1.1 for Traffic Router in Ansible role by default
 - Refactored the Traffic Ops - Traffic Vault integration to more easily support the development of new Traffic Vault backends
 - Updated Apache Tomcat from 8.5.63 to 9.0.43
+- Delivery Service Requests now keep a record of the changes they make.
 
 ### Deprecated
 - The `riak.conf` config file and its corresponding `--riakcfg` option in `traffic_ops_golang` have been deprecated. Please use `"traffic_vault_backend": "riak"` and `"traffic_vault_config"` (with the existing contents of riak.conf) instead.

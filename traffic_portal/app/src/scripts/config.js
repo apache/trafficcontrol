@@ -23,6 +23,4 @@
 
 angular.module('config', [])
 
-.constant('ENV', { api: { root:'/api/4.0/', legacy: '/api/1.5/' } })
-
-;
+.constant('ENV', { api: { root:'/api/4.0/', legacy: '/api/1.5/', stable: "/api/3.1/" } });
