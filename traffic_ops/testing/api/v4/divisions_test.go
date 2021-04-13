@@ -155,7 +155,7 @@ func CreateTestDivisions(t *testing.T) {
 func SortTestDivisions(t *testing.T) {
 	var header http.Header
 	var sortedList []string
-	resp, _, err := TOSession.GetDivisions(header)
+	resp, _, err := TOSession.GetDivisions(nil, header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -246,7 +246,7 @@ func DeleteTestDivisions(t *testing.T) {
 func VerifyPaginationSupportDivision(t *testing.T) {
 	qparams := url.Values{}
 	qparams.Set("orderby", "id")
-	divisions, _, err := TOSession.GetDivisionsWithParams(nil, qparams)
+	divisions, _, err := TOSession.GetDivisions(qparams, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Divisions: %v", err)
 	}
@@ -254,7 +254,7 @@ func VerifyPaginationSupportDivision(t *testing.T) {
 	qparams = url.Values{}
 	qparams.Set("orderby", "id")
 	qparams.Set("limit", "1")
-	divisionsWithLimit, _, err := TOSession.GetDivisionsWithParams(nil, qparams)
+	divisionsWithLimit, _, err := TOSession.GetDivisions(qparams, nil)
 	if !reflect.DeepEqual(divisions[:1], divisionsWithLimit) {
 		t.Error("expected GET Divisions with limit = 1 to return first result")
 	}
@@ -263,7 +263,7 @@ func VerifyPaginationSupportDivision(t *testing.T) {
 	qparams.Set("orderby", "id")
 	qparams.Set("limit", "1")
 	qparams.Set("offset", "1")
-	divisionsWithOffset, _, err := TOSession.GetDivisionsWithParams(nil, qparams)
+	divisionsWithOffset, _, err := TOSession.GetDivisions(qparams, nil)
 	if !reflect.DeepEqual(divisions[1:2], divisionsWithOffset) {
 		t.Error("expected GET Divisions with limit = 1, offset = 1 to return second result")
 	}
@@ -272,14 +272,14 @@ func VerifyPaginationSupportDivision(t *testing.T) {
 	qparams.Set("orderby", "id")
 	qparams.Set("limit", "1")
 	qparams.Set("page", "2")
-	divisionsWithPage, _, err := TOSession.GetDivisionsWithParams(nil, qparams)
+	divisionsWithPage, _, err := TOSession.GetDivisions(qparams, nil)
 	if !reflect.DeepEqual(divisions[1:2], divisionsWithPage) {
 		t.Error("expected GET Divisions with limit = 1, page = 2 to return second result")
 	}
 
 	qparams = url.Values{}
 	qparams.Set("limit", "-2")
-	_, _, err = TOSession.GetDivisionsWithParams(nil, qparams)
+	_, _, err = TOSession.GetDivisions(qparams, nil)
 	if err == nil {
 		t.Error("expected GET Divisions to return an error when limit is not bigger than -1")
 	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
@@ -289,7 +289,7 @@ func VerifyPaginationSupportDivision(t *testing.T) {
 	qparams = url.Values{}
 	qparams.Set("limit", "1")
 	qparams.Set("offset", "0")
-	_, _, err = TOSession.GetDivisionsWithParams(nil, qparams)
+	_, _, err = TOSession.GetDivisions(qparams, nil)
 	if err == nil {
 		t.Error("expected GET Divisions to return an error when offset is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {
@@ -299,7 +299,7 @@ func VerifyPaginationSupportDivision(t *testing.T) {
 	qparams = url.Values{}
 	qparams.Set("limit", "1")
 	qparams.Set("page", "0")
-	_, _, err = TOSession.GetDivisionsWithParams(nil, qparams)
+	_, _, err = TOSession.GetDivisions(qparams, nil)
 	if err == nil {
 		t.Error("expected GET Divisions to return an error when page is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {

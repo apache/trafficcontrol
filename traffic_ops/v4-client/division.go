@@ -46,20 +46,9 @@ func (to *Session) UpdateDivision(id int, division tc.Division, header http.Head
 }
 
 // GetDivisions returns all Divisions in Traffic Ops.
-func (to *Session) GetDivisions(header http.Header) ([]tc.Division, toclientlib.ReqInf, error) {
+func (to *Session) GetDivisions(params url.Values, header http.Header) ([]tc.Division, toclientlib.ReqInf, error) {
 	var data tc.DivisionsResponse
 	reqInf, err := to.get(APIDivisions, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetDivisions with Params returns all Divisions with matching params in Traffic Ops
-func (to *Session) GetDivisionsWithParams(header http.Header, params url.Values) ([]tc.Division, toclientlib.ReqInf, error) {
-	uri := APIDivisions
-	if params != nil {
-		uri += "?" + params.Encode()
-	}
-	var data tc.DivisionsResponse
-	reqInf, err := to.get(uri, header, &data)
 	return data.Response, reqInf, err
 }
 
