@@ -191,7 +191,7 @@ A table showing the results of the periodic :ref:`to-check-ext` that are run. Th
 
 Services
 ========
-:guilabel:`Services` groups the functionality to modify :term:`Delivery Services` - for those users with the necessary permissions - or make Delivery Service Requests for such changes - for users without necessary permissions. Delivery Services can also be grouped by :term:`Service Category`.
+:guilabel:`Services` groups the functionality to modify :term:`Delivery Services` - for those users with the necessary permissions - or make :term:`Delivery Service Requests` for such changes - for users without necessary permissions. Delivery Services can also be grouped by :term:`Service Category`.
 
 
 .. figure:: ./images/tp_menu_services.png
@@ -294,7 +294,7 @@ Use the `Select Columns` menu to select the delivery service columns to view and
 
 Delivery Service Requests
 -------------------------
-If enabled in the :file:`traffic_portal_properties.json` configuration file, all :term:`Delivery Service` changes (create, update and delete) are captured as a Delivery Service Request and must be reviewed before fulfillment/deployment.
+If enabled in the :file:`traffic_portal_properties.json` configuration file, all :term:`Delivery Service` changes (create, update and delete) are captured as a :term:`Delivery Service Request` and must be reviewed before fulfillment/deployment.
 
 .. figure:: images/tp_table_ds_requests.png
 	:align: center
@@ -303,43 +303,43 @@ If enabled in the :file:`traffic_portal_properties.json` configuration file, all
 	Table of Delivery Service Requests
 
 :term:`Delivery Service`: A unique string that identifies the :term:`Delivery Service` with which the request is associated. This unique string is also known (and ofter referred to within documentation and source code) as a :term:`Delivery Service` key' or 'XML ID'/'xml_id'/'xmlid'
-:Type:             The type of Delivery Service Request: 'create', 'update', or 'delete' according to what was requested
-:Status:           The status of the Delivery Service Request. Has the following possible values:
+:Type:             The type of :term:`Delivery Service Request`: 'create', 'update', or 'delete' according to what was requested
+:Status:           The status of the :term:`Delivery Service Request`. Has the following possible values:
 
 	draft
-		The Delivery Service Request is *not* ready for review and fulfillment
+		The :term:`Delivery Service Request` is *not* ready for review and fulfillment
 	submitted
-		The Delivery Service Request is ready for review and fulfillment
+		The :term:`Delivery Service Request` is ready for review and fulfillment
 	rejected
-		The Delivery Service Request has been rejected and cannot be modified
+		The :term:`Delivery Service Request` has been rejected and cannot be modified
 	pending
-		The Delivery Service Request has been fulfilled but the changes have yet to be deployed
+		The :term:`Delivery Service Request` has been fulfilled but the changes have yet to be deployed
 	complete
-		The Delivery Service Request has been fulfilled and the changes have been deployed
+		The :term:`Delivery Service Request` has been fulfilled and the changes have been deployed
 
-:Author:         The user responsible for creating the Delivery Service Request
-:Assignee:       The user responsible for fulfilling the Delivery Service Request. Currently, the operations role or above is required to assign Delivery Service Requests
-:Last Edited By: The last user to edit the Delivery Service Request
-:Created:        Relative time indicating when the Delivery Service Request was created
-:Actions:        Actions that can be performed on a Delivery Service Request. The following actions are provided:
+:Author:         The user responsible for creating the :term:`Delivery Service Request`
+:Assignee:       The user responsible for fulfilling the :term:`Delivery Service Request`. Currently, the operations role or above is required to assign :term:`Delivery Service Requests`
+:Last Edited By: The last user to edit the :term:`Delivery Service Request`
+:Created:        Relative time indicating when the :term:`Delivery Service Request` was created
+:Actions:        Actions that can be performed on a :term:`Delivery Service Request`. The following actions are provided:
 
 	fulfill
-		Implement the changes captured in the Delivery Service Request
+		Implement the changes captured in the :term:`Delivery Service Request`
 	reject
-		Reject the changes captured in the Delivery Service Request
+		Reject the changes captured in the :term:`Delivery Service Request`
 	delete
-		Delete the Delivery Service Request
+		Delete the :term:`Delivery Service Request`
 
-Delivery Service Request management includes the ability to (where applicable):
+:term:`Delivery Service Request` management includes the ability to (where applicable):
 
-- create a new Delivery Service Request
-- update an existing Delivery Service Request
-- delete an existing Delivery Service Request
-- update the status of a Delivery Service Request
-- assign a Delivery Service Request
-- reject a Delivery Service Request
-- fulfill a Delivery Service Request
-- complete a Delivery Service Request
+- create a new :term:`Delivery Service Request`
+- update an existing :term:`Delivery Service Request`
+- delete an existing :term:`Delivery Service Request`
+- update the status of a :term:`Delivery Service Request`
+- assign a :term:`Delivery Service Request`
+- reject a :term:`Delivery Service Request`
+- fulfill a :term:`Delivery Service Request`
+- complete a :term:`Delivery Service Request`
 
 .. seealso:: :ref:`ds_requests`
 
