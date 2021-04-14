@@ -220,7 +220,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 		dsExpInfo.AuthType = keyObj.AuthType
 
 		if keyObj.AuthType == tc.LetsEncryptAuthType || (keyObj.AuthType == tc.SelfSignedCertAuthType && cfg.ConfigLetsEncrypt.ConvertSelfSigned) {
-			req := tc.DeliveryServiceLetsEncryptSSLKeysReq{
+			req := tc.DeliveryServiceAcmeSSLKeysReq{
 				DeliveryServiceSSLKeysReq: tc.DeliveryServiceSSLKeysReq{
 					HostName:        &keyObj.Hostname,
 					DeliveryService: &keyObj.DeliveryService,
