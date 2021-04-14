@@ -16,9 +16,9 @@ package v4
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -70,7 +70,9 @@ func SnapshotWithReadOnlyUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to log in with test_user: %v", err.Error())
 	}
-	reqInf, err := client.SnapshotCRConfig(testData.CDNs[0].Name, nil)
+	opts := toclient.NewRequestOptions()
+	opts.QueryParameters.Set("cdn", testData.CDNs[0].Name)
+	_, reqInf, err := client.SnapshotCRConfig(opts)
 	if err == nil {
 		t.Errorf("expected to get an error about a read-only client trying to snap a CDN, but got none")
 	}
@@ -131,18 +133,17 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 		t.Errorf("POST delivery service servers: %v", err)
 	}
 
-	_, err = TOSession.SnapshotCRConfig(cdn, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("cdn", cdn)
+	snapshotResp, _, err := TOSession.SnapshotCRConfig(opts)
 	if err != nil {
-		t.Errorf("SnapshotCRConfig err expected nil, actual %+v", err)
+		t.Errorf("Unexpected error taking Snapshot of CDN '%s': %v - alerts: %+v", cdn, err, snapshotResp.Alerts)
 	}
-	crcBts, _, err := TOSession.GetCRConfig(cdn)
+	crcResp, _, err := TOSession.GetCRConfig(cdn, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("GetCRConfig err expected nil, actual %+v", err)
+		t.Errorf("Unexpected error retrieving Snapshot of CDN '%s': %v - alerts: %+v", cdn, err, crcResp.Alerts)
 	}
-	crc := tc.CRConfig{}
-	if err := json.Unmarshal(crcBts, &crc); err != nil {
-		t.Errorf("GetCRConfig bytes expected: valid tc.CRConfig, actual JSON unmarshal err: %+v", err)
-	}
+	crc := crcResp.Response
 
 	if len(crc.DeliveryServices) == 0 {
 		t.Error("GetCRConfig len(crc.DeliveryServices) expected: >0, actual: 0")
@@ -188,14 +189,11 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 		t.Fatalf("cannot DELETE Parameter by name: %v - %v", err, delResp)
 	}
 
-	crcBtsNew, _, err := TOSession.GetCRConfigNew(cdn)
+	crcResp, _, err = TOSession.GetCRConfigNew(cdn, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("GetCRConfig err expected nil, actual %+v", err)
+		t.Errorf("Unexpected error getting new Snapshot for CDN '%s': %v - alerts: %+v", cdn, err, crcResp.Alerts)
 	}
-	crcNew := tc.CRConfig{}
-	if err := json.Unmarshal(crcBtsNew, &crcNew); err != nil {
-		t.Errorf("GetCRConfig bytes expected: valid tc.CRConfig, actual JSON unmarshal err: %+v", err)
-	}
+	crcNew := crcResp.Response
 
 	if len(crcNew.DeliveryServices) != len(crc.DeliveryServices) {
 		t.Errorf("/new endpoint returned a different snapshot. DeliveryServices length expected %v, was %v", len(crc.DeliveryServices), len(crcNew.DeliveryServices))
@@ -212,30 +210,42 @@ func MonitoringConfig(t *testing.T) {
 	}
 	const cdnName = "cdn1"
 	const profileName = "EDGE1"
+<<<<<<< HEAD
+=======
+
+>>>>>>> c75b14c0d (Update 'CRConfig Snapshot'-related methods and tests to use standard request options)
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", cdnName)
 	cdns, _, err := TOSession.GetCDNs(opts)
 	if err != nil {
+<<<<<<< HEAD
 		t.Fatalf("getting CDNs with name '%s': %v - alerts: %+v", cdnName, err)
 	}
 	if len(cdns.Response) != 1 {
 		t.Fatalf("expected exactly 1 CDN named '%s' to exist, found: %d", cdnName, len(cdns.Response))
+=======
+		t.Fatalf("getting CDNs with name '%s': %v - alerts: %+v", cdnName, err, cdns.Alerts)
 	}
-	profiles, _, err := TOSession.GetProfileByName(profileName, nil)
+	if len(cdns.Response) != 1 {
+		t.Fatalf("expected exactly 1 CDN named %s but found %d CDNs", cdnName, len(cdns.Response))
+>>>>>>> c75b14c0d (Update 'CRConfig Snapshot'-related methods and tests to use standard request options)
+	}
+	opts.QueryParameters.Set("name", profileName)
+	profiles, _, err := TOSession.GetProfiles(opts)
 	if err != nil {
-		t.Fatalf("getting Profiles with name '%s': %s", profileName, err.Error())
+		t.Fatalf("getting Profiles with name '%s': %v - alerts: %+v", profileName, err, profiles.Alerts)
 	}
-	if len(profiles) != 1 {
-		t.Fatalf("expected exactly 1 Profiles named %s but found %d Profiles", profileName, len(profiles))
+	if len(profiles.Response) != 1 {
+		t.Fatalf("expected exactly 1 Profiles named %s but found %d Profiles", profileName, len(profiles.Response))
 	}
-	parameters, _, err := TOSession.GetParametersByProfileName(profileName, nil)
+	parameters, _, err := TOSession.GetParametersByProfileName(profileName, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("getting Parameters by Profile name '%s': %s", profileName, err.Error())
+		t.Fatalf("getting Parameters by Profile name '%s': %v - alerts: %+v", profileName, err, parameters.Alerts)
 	}
 	parameterMap := map[string]tc.HealthThreshold{}
 	parameterFound := map[string]bool{}
 	const thresholdPrefixLength = len(tc.ThresholdPrefix)
-	for _, parameter := range parameters {
+	for _, parameter := range parameters.Response {
 		if !strings.HasPrefix(parameter.Name, tc.ThresholdPrefix) {
 			continue
 		}
@@ -286,20 +296,27 @@ func MonitoringConfig(t *testing.T) {
 }
 
 func SnapshotTestCDNbyName(t *testing.T) {
-
-	firstCDN := testData.CDNs[0]
-	_, err := TOSession.SnapshotCRConfig(firstCDN.Name, nil)
+	if len(testData.CDNs) < 1 {
+		t.Fatal("Need at least one CDN to test taking CDN Snapshot using CDN name")
+	}
+	firstCDN := testData.CDNs[0].Name
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("cdn", firstCDN)
+	resp, _, err := TOSession.SnapshotCRConfig(opts)
 	if err != nil {
-		t.Errorf("failed to snapshot CDN by name: %v", err)
+		t.Errorf("failed to snapshot CDN '%s' by name: %v - alerts: %+v", firstCDN, err, resp.Alerts)
 	}
 }
 
+// Note that this test will break if anyone adds a CDN to the fixture data with
+// the name "cdn-invalid".
 func SnapshotTestCDNbyInvalidName(t *testing.T) {
-
 	invalidCDNName := "cdn-invalid"
-	_, err := TOSession.SnapshotCRConfig(invalidCDNName, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("cdn", invalidCDNName)
+	_, _, err := TOSession.SnapshotCRConfig(opts)
 	if err == nil {
-		t.Errorf("snapshot occurred on invalid cdn name: %v - %v", invalidCDNName, err)
+		t.Errorf("snapshot occurred without error on (presumed) invalid CDN '%s'", invalidCDNName)
 	}
 }
 
@@ -307,29 +324,36 @@ func SnapshotTestCDNbyID(t *testing.T) {
 	if len(testData.CDNs) < 1 {
 		t.Fatal("Need at least one CDN to test Snapshotting CDNs")
 	}
-	firstCDN := testData.CDNs[0]
+	firstCDNName := testData.CDNs[0].Name
 	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", firstCDN.Name)
+	opts.QueryParameters.Set("name", firstCDNName)
 	// Retrieve the CDN by name so we can get the id for the snapshot
 	resp, _, err := TOSession.GetCDNs(opts)
 	if err != nil {
-		t.Errorf("cannot get CDN '%s': %v - alerts: %+v", firstCDN.Name, err, resp.Alerts)
+		t.Errorf("cannot get CDN '%s': %v - alerts: %+v", firstCDNName, err, resp.Alerts)
 	}
 	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one CDN to exist with name '%s', found: %d", firstCDN.Name, len(resp.Response))
+		t.Fatalf("Expected exactly one CDN to exist with name '%s', found: %d", firstCDNName, len(resp.Response))
 	}
-	remoteCDN := resp.Response[0]
-	alert, _, err := TOSession.SnapshotCRConfigByID(remoteCDN.ID)
+	remoteCDNID := resp.Response[0].ID
+	opts.QueryParameters.Del("name")
+	opts.QueryParameters.Set("cdnID", strconv.Itoa(remoteCDNID))
+	alert, _, err := TOSession.SnapshotCRConfig(opts)
 	if err != nil {
-		t.Errorf("failed to snapshot CDN by id: %v - %v", err, alert)
+		t.Errorf("failed to snapshot CDN '%s' (#%d) by id: %v - alerts: %+v", firstCDNName, remoteCDNID, err, alert.Alerts)
 	}
 }
 
+// Note that this test will break in the event that 1,000,000 CDNs are created
+// in the TO instance at any time (they don't need to exist concurrently, just
+// that many successful CDN creations have to happen, even if they are
+// all immediately deleted except the 999999th one).
 func SnapshotTestCDNbyInvalidID(t *testing.T) {
-
+	opts := client.NewRequestOptions()
 	invalidCDNID := 999999
-	alert, _, err := TOSession.SnapshotCRConfigByID(invalidCDNID)
+	opts.QueryParameters.Set("cdnID", strconv.Itoa(invalidCDNID))
+	alert, _, err := TOSession.SnapshotCRConfig(opts)
 	if err == nil {
-		t.Errorf("snapshot occurred on invalid cdn id: %v - %v - %v", invalidCDNID, err, alert)
+		t.Errorf("snapshot occurred on (presumed) invalid CDN #%d: %v - alerts: %+v", invalidCDNID, err, alert.Alerts)
 	}
 }

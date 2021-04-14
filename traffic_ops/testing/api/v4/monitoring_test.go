@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestMonitoring(t *testing.T) {
@@ -54,16 +55,22 @@ func GetTestMonitoringConfigNoSnapshotOnTheFly(t *testing.T) {
 
 func AllCDNsCanSnapshot(t *testing.T) {
 
-	serversByHost := make(map[string]tc.ServerV40)
+	serversByHost := make(map[string]tc.ServerV40, len(testData.Servers))
 
 	for _, server := range testData.Servers {
+		if server.HostName == nil {
+			t.Error("Found server in test data with null or undefined hostName")
+			continue
+		}
 		serversByHost[*server.HostName] = server
 	}
 
+	opts := client.NewRequestOptions()
 	for _, cdn := range testData.CDNs {
-		_, err := TOSession.SnapshotCRConfig(cdn.Name, nil)
+		opts.QueryParameters.Set("cdn", cdn.Name)
+		resp, _, err := TOSession.SnapshotCRConfig(opts)
 		if err != nil {
-			t.Error(err)
+			t.Errorf("Unexpected error making Snapshot for CDN '%s': %v - alerts: %+v", cdn.Name, err, resp.Alerts)
 			continue
 		}
 
