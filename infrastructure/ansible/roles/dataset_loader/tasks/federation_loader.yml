@@ -78,4 +78,4 @@
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federations/{{ federation_id }}/federation_resolvers"
     method: POST
-    body: '{"fedResolverIds":[{{ resolver_post_response.json.response.id }}],"replace":false}'
+    body: '{"fedResolverIds":[{{ resolver_post_response.json | json_query("response.id") }}],"replace":false}'
