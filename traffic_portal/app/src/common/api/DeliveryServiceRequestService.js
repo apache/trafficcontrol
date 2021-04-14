@@ -20,7 +20,7 @@
 var DeliveryServiceRequestService = function($http, locationUtils, messageModel, ENV) {
 
 	this.getDeliveryServiceRequests = function(queryParams) {
-		return $http.get(ENV.api['root'] + 'deliveryservice_requests', {params: queryParams}).then(
+		return $http.get(ENV.api.stable + 'deliveryservice_requests', {params: queryParams}).then(
 			function(result) {
 				return result.data.response;
 			},
@@ -35,7 +35,7 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 		// strip out any falsy values or duplicates from consistentHashQueryParams
 		dsRequest.deliveryService.consistentHashQueryParams = Array.from(new Set(dsRequest.deliveryService.consistentHashQueryParams)).filter(function(i){return i;});
 
-		return $http.post(ENV.api['root'] + "deliveryservice_requests", dsRequest).then(
+		return $http.post(ENV.api.stable + "deliveryservice_requests", dsRequest).then(
 			function(result) {
 				return result.data.response;
 			},
@@ -51,7 +51,7 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 		// strip out any falsy values or duplicates from consistentHashQueryParams
 		dsRequest.deliveryService.consistentHashQueryParams = Array.from(new Set(dsRequest.deliveryService.consistentHashQueryParams)).filter(function(i){return i;});
 
-		return $http.put(ENV.api['root'] + "deliveryservice_requests", dsRequest, {params: {id: id}}).then(
+		return $http.put(ENV.api.stable + "deliveryservice_requests", dsRequest, {params: {id: id}}).then(
 			function(result) {
 				return result;
 			},
@@ -63,7 +63,7 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 	};
 
 	this.deleteDeliveryServiceRequest = function(id, delay) {
-		return $http.delete(ENV.api['root'] + "deliveryservice_requests", {params: {id: id}}).then(
+		return $http.delete(ENV.api.stable + "deliveryservice_requests", {params: {id: id}}).then(
 			function(response) {
 				return response;
 			},
@@ -75,7 +75,7 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 	};
 
 	this.assignDeliveryServiceRequest = function(id, username) {
-		return $http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/assign", { assignee: username }).then(
+		return $http.put(ENV.api.stable + "deliveryservice_requests/" + id + "/assign", { assignee: username }).then(
 			function(result) {
 				return result;
 			},
@@ -87,7 +87,7 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 	};
 
 	this.updateDeliveryServiceRequestStatus = function(id, status) {
-		return $http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/status", { status: status }).then(
+		return $http.put(ENV.api.stable + "deliveryservice_requests/" + id + "/status", { status: status }).then(
 			function(result) {
 				return result;
 			},
@@ -99,7 +99,7 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 	};
 
 	this.getDeliveryServiceRequestComments = function(queryParams) {
-		return $http.get(ENV.api['root'] + 'deliveryservice_request_comments', {params: queryParams}).then(
+		return $http.get(ENV.api.stable + 'deliveryservice_request_comments', {params: queryParams}).then(
 			function(result) {
 				return result.data.response;
 			},
@@ -110,7 +110,7 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 	};
 
 	this.createDeliveryServiceRequestComment = function(comment) {
-		return $http.post(ENV.api['root'] + "deliveryservice_request_comments", comment).then(
+		return $http.post(ENV.api.stable + "deliveryservice_request_comments", comment).then(
 			function(response) {
 				return response;
 			},
@@ -121,7 +121,7 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 	};
 
 	this.updateDeliveryServiceRequestComment = function(comment) {
-		return $http.put(ENV.api['root'] + "deliveryservice_request_comments", comment, {params: {id: comment.id}}).then(
+		return $http.put(ENV.api.stable + "deliveryservice_request_comments", comment, {params: {id: comment.id}}).then(
 				function(result) {
 					return result;
 				},
@@ -133,7 +133,7 @@ var DeliveryServiceRequestService = function($http, locationUtils, messageModel,
 	};
 
 	this.deleteDeliveryServiceRequestComment = function(comment) {
-		return $http.delete(ENV.api['root'] + "deliveryservice_request_comments", {params: {id: comment.id}}).then(
+		return $http.delete(ENV.api.stable + "deliveryservice_request_comments", {params: {id: comment.id}}).then(
 			function(response) {
 				return response;
 			},

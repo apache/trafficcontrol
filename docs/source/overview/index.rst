@@ -20,14 +20,6 @@ Introduces the Traffic Control architecture, components, and their integration.
 
 .. toctree::
 	:maxdepth: 3
+	:glob:
 
-	introduction
-	traffic_ops
-	traffic_router
-	traffic_monitor
-	traffic_stats
-	traffic_portal
-	traffic_vault
-	delivery_services
-	cache_groups
-	profiles_and_parameters
+	./*

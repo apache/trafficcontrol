@@ -226,7 +226,7 @@
             "status": "draft"
         },
         {
-            "changeType": "update",
+            "changeType": "create",
             "deliveryService": {
                 "active": false,
                 "cdnName": "cdn1",
