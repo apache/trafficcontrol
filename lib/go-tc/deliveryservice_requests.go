@@ -455,8 +455,13 @@ func (dsr DeliveryServiceRequestNullable) Upgrade() DeliveryServiceRequestV40 {
 		upgraded.CreatedAt = dsr.CreatedAt.Time
 	}
 	if dsr.DeliveryService != nil {
-		upgraded.DeliveryService = new(DeliveryServiceV4)
-		*upgraded.DeliveryService = dsr.DeliveryService.UpgradeToV4()
+		if upgraded.ChangeType == DSRChangeTypeDelete {
+			upgraded.Original = new(DeliveryServiceV4)
+			*upgraded.Original = dsr.DeliveryService.UpgradeToV4()
+		} else {
+			upgraded.Requested = new(DeliveryServiceV4)
+			*upgraded.Requested = dsr.DeliveryService.UpgradeToV4()
+		}
 	}
 	if dsr.ID != nil {
 		upgraded.ID = new(int)
@@ -684,13 +689,13 @@ type DeliveryServiceRequestV40 struct {
 	Assignee *string `json:"assignee"`
 	// AssigneeID is the integral, unique identifier of the user assigned to the
 	// Delivery Service Request, if any.
-	AssigneeID *int `json:"assigneeId" db:"assignee_id"`
+	AssigneeID *int `json:"-" db:"assignee_id"`
 	// Author is the username of the user who created the Delivery Service
 	// Request.
 	Author string `json:"author"`
 	// AuthorID is the integral, unique identifier of the user who created the
 	// Delivery Service Request, if/when it is known.
-	AuthorID *int `json:"authorId" db:"author_id"`
+	AuthorID *int `json:"-" db:"author_id"`
 	// ChangeType represents the type of change being made, must be one of
 	// "create", "change" or "delete".
 	ChangeType DSRChangeType `json:"changeType" db:"change_type"`
@@ -705,19 +710,26 @@ type DeliveryServiceRequestV40 struct {
 	LastEditedBy string `json:"lastEditedBy"`
 	// LastEditedByID is the integral, unique identifier of the user by whom the
 	// Delivery Service Request was last edited, if/when it is known.
-	LastEditedByID *int `json:"lastEditedById" db:"last_edited_by_id"`
+	LastEditedByID *int `json:"-" db:"last_edited_by_id"`
 	// LastUpdated is the date/time at which the Delivery Service was last
 	// modified.
 	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
-	// DeliveryService is the requested Delivery Service; its exact meaning is
-	// dependent on 'ChangeType'.
-	DeliveryService *DeliveryServiceV4 `json:"deliveryService" db:"deliveryservice"`
+	// Original is the original Delivery Service for which changes are
+	// requested. This is present in responses only for ChangeTypes 'change' and
+	// 'delete', and is only required in requests where ChangeType is 'delete'.
+	Original *DeliveryServiceV4 `json:"original,omitempty" db:"original"`
+	// Requested is the set of requested changes. This is present in responses
+	// only for ChangeTypes 'change' and 'create', and is only required in
+	// requests in those cases.
+	Requested *DeliveryServiceV4 `json:"requested,omitempty" db:"deliveryservice"`
 	// Status is the status of the Delivery Service Request.
 	Status RequestStatus `json:"status" db:"status"`
 	// Used internally to define the affected Delivery Service.
 	XMLID string `json:"-"`
 }
 
+// DeliveryServiceRequestV4 is the type of a Delivery Service Request as it
+// appears in API version 4.
 type DeliveryServiceRequestV4 = DeliveryServiceRequestV40
 
 // IsOpen returns whether or not the Delivery Service Request is still "open" -
@@ -765,9 +777,12 @@ func (dsr DeliveryServiceRequestV40) Downgrade() DeliveryServiceRequestNullable 
 	}
 	*downgraded.ChangeType = dsr.ChangeType.String()
 	downgraded.CreatedAt = TimeNoModFromTime(dsr.CreatedAt)
-	if dsr.DeliveryService != nil {
+	if dsr.Requested != nil {
 		downgraded.DeliveryService = new(DeliveryServiceNullableV30)
-		*downgraded.DeliveryService = dsr.DeliveryService.DowngradeToV3()
+		*downgraded.DeliveryService = dsr.Requested.DowngradeToV3()
+	} else if dsr.Original != nil {
+		downgraded.DeliveryService = new(DeliveryServiceNullableV30)
+		*downgraded.DeliveryService = dsr.Original.DowngradeToV3()
 	}
 	if dsr.ID != nil {
 		downgraded.ID = new(int)
@@ -783,9 +798,12 @@ func (dsr DeliveryServiceRequestV40) Downgrade() DeliveryServiceRequestNullable 
 	if dsr.XMLID != "" {
 		downgraded.XMLID = new(string)
 		*downgraded.XMLID = dsr.XMLID
-	} else if dsr.DeliveryService != nil && dsr.DeliveryService.XMLID != nil {
+	} else if dsr.Original != nil && dsr.Original.XMLID != nil {
 		downgraded.XMLID = new(string)
-		*downgraded.XMLID = *dsr.DeliveryService.XMLID
+		*downgraded.XMLID = *dsr.Original.XMLID
+	} else if dsr.Requested.XMLID != nil {
+		downgraded.XMLID = new(string)
+		*downgraded.XMLID = *dsr.Requested.XMLID
 	}
 	return downgraded
 }
@@ -851,8 +869,14 @@ func (dsr *DeliveryServiceRequestV40) SetXMLID() {
 	if dsr == nil {
 		return
 	}
-	if dsr.DeliveryService != nil && dsr.DeliveryService.XMLID != nil {
-		dsr.XMLID = *dsr.DeliveryService.XMLID
+
+	if dsr.ChangeType == DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.XMLID != nil {
+		dsr.XMLID = *dsr.Original.XMLID
+		return
+	}
+
+	if dsr.Requested != nil && dsr.Requested.XMLID != nil {
+		dsr.XMLID = *dsr.Requested.XMLID
 	}
 }
 

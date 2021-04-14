@@ -22,6 +22,15 @@ import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
+interface Division {
+    Name: string;
+    validationMessage?: string;
+}
+
+interface UpdateDivision {
+    NewName: string;
+    validationMessage?: string;
+}
 
 export class DivisionsPage extends BasePage {
     private btnCreateNewDivisions = element(by.name('createDivisionButton'));
@@ -39,7 +48,8 @@ export class DivisionsPage extends BasePage {
         let snp = new SideNavigationPage();
         await snp.ClickTopologyMenu();
     }
-    async CreateDivisions(divisions){
+
+    public async CreateDivisions(divisions: Division): Promise<boolean> {
         let result = false;
         let basePage = new BasePage();
         let snp = new SideNavigationPage();
@@ -48,7 +58,7 @@ export class DivisionsPage extends BasePage {
         await this.txtName.sendKeys(divisions.Name + this.randomize);
         await basePage.ClickCreate();
         result = await basePage.GetOutputMessage().then(function (value) {
-            if (divisions.validationMessage == value) {
+            if (divisions.validationMessage === value) {
                 return true;
             } else {
                 return false;
@@ -56,6 +66,7 @@ export class DivisionsPage extends BasePage {
         })
         return result;
     }
+
     public async SearchDivisions(nameDivisions: string): Promise<boolean> {
         let name = nameDivisions + this.randomize;
         let snp = new SideNavigationPage();
@@ -68,7 +79,8 @@ export class DivisionsPage extends BasePage {
         }
         return false;
     }
-    async UpdateDivisions(divisions){
+
+    public async UpdateDivisions(divisions: UpdateDivision): Promise<boolean> {
         let result = false;
         let basePage = new BasePage();
         await this.txtName.clear();
@@ -83,7 +95,8 @@ export class DivisionsPage extends BasePage {
           })
           return result;
     }
-    async DeleteDivisions(divisions){
+
+    public async DeleteDivisions(divisions: Division): Promise<boolean> {
         let name = divisions.Name + this.randomize;
         let result = false;
         let basePage = new BasePage();

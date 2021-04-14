@@ -22,6 +22,26 @@ import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
+interface CreateProfile {
+    CDN: string;
+    Description: string;
+    Name: string;
+    RoutingDisable: string;
+    Type: string;
+    validationMessage?: string;
+}
+
+interface UpdateProfile {
+    description: string;
+    Type: string;
+    validationMessage?: string;
+}
+
+interface DeleteProfile {
+    Name: string;
+    validationMessage?: string;
+}
+
 export class ProfilesPage extends BasePage {
 
     private btnCreateNewProfile = element(by.name('createProfileButton'));
@@ -40,15 +60,18 @@ export class ProfilesPage extends BasePage {
     private btnCompareSubmit = element(by.name('compareSubmit'));
     private mnuCompareTable = element(by.id('profilesParamsCompareTable_wrapper'));
     private randomize = randomize;
+
     async OpenProfilesPage() {
         let snp = new SideNavigationPage();
         await snp.NavigateToProfilesPage();
     }
+
     async OpenConfigureMenu() {
         let snp = new SideNavigationPage();
         await snp.ClickConfigureMenu();
     }
-    async CreateProfile(profile) {
+
+    public async CreateProfile(profile: CreateProfile): Promise<boolean> {
         let result = false;
         let basePage = new BasePage();
         let snp = new SideNavigationPage();
@@ -69,6 +92,7 @@ export class ProfilesPage extends BasePage {
         })
         return result;
     }
+
     public async SearchProfile(nameProfiles: string): Promise<boolean> {
         let snp = new SideNavigationPage();
         let name = nameProfiles + this.randomize;
@@ -81,6 +105,7 @@ export class ProfilesPage extends BasePage {
         }
         return false;
     }
+
     async CompareProfile(profile1: string, profile2: string) {
         let result = false;
         let snp = new SideNavigationPage();
@@ -95,7 +120,8 @@ export class ProfilesPage extends BasePage {
             return result;
         }
     }
-    public async UpdateProfile(profile): Promise<boolean | undefined> {
+
+    public async UpdateProfile(profile: UpdateProfile): Promise<boolean | undefined> {
         let basePage = new BasePage();
         switch (profile.description) {
             case "update profile type":
@@ -107,7 +133,8 @@ export class ProfilesPage extends BasePage {
         }
         return await basePage.GetOutputMessage().then(value => profile.validationMessage === value);
     }
-    async DeleteProfile(profile) {
+
+    public async DeleteProfile(profile: DeleteProfile): Promise<boolean> {
         let result = false;
         let basePage = new BasePage();
         await this.btnDelete.click();
