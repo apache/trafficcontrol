@@ -893,3 +893,28 @@ type StatusChangeRequest struct {
 func (*StatusChangeRequest) Validate(*sql.Tx) error {
 	return nil
 }
+
+// DeliveryServiceRequestCUDResponseV40 is the type of a response from
+// Traffic Ops when creating, updating, or deleting a Delivery Service Request
+// using API version 4.0.
+type DeliveryServiceRequestCUDResponseV40 struct {
+	Response DeliveryServiceRequestV40 `json:"response"`
+	Alerts
+}
+
+// DeliveryServiceRequestCUDResponseV4 is the type of a response from
+// Traffic Ops when creating, updating, or deleting a Delivery Service Request
+// using the latest minor version of API version 4.
+type DeliveryServiceRequestCUDResponseV4 = DeliveryServiceRequestCUDResponseV40
+
+// DeliveryServiceRequestResponseV40 is the type of a response from Traffic Ops
+// for Delivery Service Requests using API version 4.0.
+type DeliveryServiceRequestResponseV40 struct {
+	Response []DeliveryServiceRequestV40 `json:"response"`
+	Alerts
+}
+
+// DeliveryServiceRequestResponseV4 is the type of a response from Traffic Ops
+// for Delivery Service Requests using the latest minor version of API version
+// 4.
+type DeliveryServiceRequestResponseV4 = DeliveryServiceRequestResponseV40
