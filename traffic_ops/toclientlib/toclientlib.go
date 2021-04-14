@@ -218,7 +218,7 @@ func (to *TOClient) login() (net.Addr, error) {
 	// Can't use req() because it retries login failures, which would be an infinite loop.
 	reqF := composeReqFuncs(makeRequestWithHeader, []MidReqF{reqTryLatest, reqFallback, reqAPI})
 
-	reqInf, err := reqF(to, http.MethodPost, path, body, nil, &alerts)
+	reqInf, err := reqF(to, http.MethodPost, path, body, nil, &alerts, true)
 	if err != nil {
 		return reqInf.RemoteAddr, fmt.Errorf("Login error %v, alerts string: %+v", err, alerts)
 	}
@@ -468,7 +468,7 @@ func (to *TOClient) getURL(path string) string {
 	return strings.TrimSuffix(to.URL, "/") + "/" + strings.TrimPrefix(path, "/")
 }
 
-type ReqF func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error)
+type ReqF func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error)
 
 type MidReqF func(ReqF) ReqF
 
@@ -485,7 +485,7 @@ func composeReqFuncs(reqF ReqF, middleware []MidReqF) ReqF {
 // reqTryLatest will re-set to.latestSupportedAPI to the latest, if it's less than the latest and to.apiVerCheckInterval has passed.
 // This does not fallback, so it should generally be composed with reqFallback.
 func reqTryLatest(reqF ReqF) ReqF {
-	return func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
+	return func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error) {
 		if to.apiVerCheckInterval == 0 {
 			// Client could have been default-initialized rather than created with a func, so we need to check here, not just in login funcs.
 			to.apiVerCheckInterval = DefaultAPIVersionCheckInterval
@@ -503,7 +503,7 @@ func reqTryLatest(reqF ReqF) ReqF {
 			to.lastAPIVerCheck = time.Now().Add(time.Hour * 24 * 365)
 			defer func() { to.lastAPIVerCheck = time.Now() }()
 		}
-		return reqF(to, method, path, body, header, response)
+		return reqF(to, method, path, body, header, response, false)
 	}
 }
 
@@ -513,15 +513,15 @@ func reqTryLatest(reqF ReqF) ReqF {
 // This is designed to handle expired sessions, when the time between requests is longer than the session expiration;
 // it does not do perpetual retry.
 func reqLogin(reqF ReqF) ReqF {
-	return func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
-		inf, err := reqF(to, method, path, body, header, response)
+	return func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error) {
+		inf, err := reqF(to, method, path, body, header, response, raw)
 		if inf.StatusCode != http.StatusUnauthorized && inf.StatusCode != http.StatusForbidden {
 			return inf, err
 		}
 		if _, lerr := to.login(); lerr != nil {
 			return inf, err
 		}
-		return reqF(to, method, path, body, header, response)
+		return reqF(to, method, path, body, header, response, raw)
 	}
 }
 
@@ -529,9 +529,9 @@ func reqLogin(reqF ReqF) ReqF {
 // falls back to the previous and retries, recursively.
 // If all supported versions fail, the last response error is returned.
 func reqFallback(reqF ReqF) ReqF {
-	var fallbackFunc func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error)
-	fallbackFunc = func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
-		inf, err := reqF(to, method, path, body, header, response)
+	var fallbackFunc func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error)
+	fallbackFunc = func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error) {
+		inf, err := reqF(to, method, path, body, header, response, false)
 		if err == nil {
 			return inf, err
 		}
@@ -555,7 +555,7 @@ func reqFallback(reqF ReqF) ReqF {
 		}
 		to.latestSupportedAPI = apiVersions[nextAPIVerI]
 
-		return fallbackFunc(to, method, path, body, header, response)
+		return fallbackFunc(to, method, path, body, header, response, false)
 	}
 	return fallbackFunc
 }
@@ -567,9 +567,9 @@ func reqFallback(reqF ReqF) ReqF {
 // and this will request '/api/3.1/deliveryservices'.
 //
 func reqAPI(reqF ReqF) ReqF {
-	return func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
+	return func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error) {
 		path = strings.TrimSuffix(to.APIBase(), "/") + "/" + strings.TrimPrefix(path, "/")
-		return reqF(to, method, path, body, header, response)
+		return reqF(to, method, path, body, header, response, raw)
 	}
 }
 
@@ -586,18 +586,23 @@ func reqAPI(reqF ReqF) ReqF {
 //
 // To request the bytes without deserializing, pass a *[]byte response.
 //
-func makeRequestWithHeader(to *TOClient, method, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
+func makeRequestWithHeader(to *TOClient, method, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error) {
 	var remoteAddr net.Addr
+	var resp *http.Response
+	var err error
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	var reqBody []byte
-	var err error
 	if body != nil {
 		reqBody, err = json.Marshal(body)
 		if err != nil {
 			return reqInf, errors.New("marshalling request body: " + err.Error())
 		}
 	}
-	resp, remoteAddr, err := to.request(method, path, reqBody, header)
+	if raw {
+		resp, remoteAddr, err = to.RawRequestWithHdr(method, path, reqBody, header)
+	} else {
+		resp, remoteAddr, err = to.request(method, path, reqBody, header)
+	}
 	reqInf.RemoteAddr = remoteAddr
 	if resp != nil {
 		reqInf.StatusCode = resp.StatusCode
@@ -627,7 +632,7 @@ func makeRequestWithHeader(to *TOClient, method, path string, body interface{}, 
 
 func (to *TOClient) Req(method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
 	reqF := composeReqFuncs(makeRequestWithHeader, []MidReqF{reqTryLatest, reqFallback, reqAPI, reqLogin})
-	return reqF(to, method, path, body, header, response)
+	return reqF(to, method, path, body, header, response, false)
 }
 
 // request performs the HTTP request to Traffic Ops, trying to refresh the cookie if an Unauthorized or Forbidden code is received. It only tries once. If the login fails, the original Unauthorized/Forbidden response is returned. If the login succeeds and the subsequent re-request fails, the re-request's response is returned even if it's another Unauthorized/Forbidden.
