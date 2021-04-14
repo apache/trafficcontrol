@@ -744,7 +744,7 @@ dl_ds_default_profile_cdntemplates:
         secure: 0
       - name: federationmapping.polling.url
         configFile: CRConfig.json
-        value: https://${toHostname}/internal/api/1.3/federations.json
+        value: https://${toHostname}/api/1.4/federations/all.json
         secure: 0
       - name: geolocation.polling.interval
         configFile: CRConfig.json
