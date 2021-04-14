@@ -18,13 +18,13 @@ package v4
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestDeliveryServicesRegexes(t *testing.T) {
@@ -118,7 +118,7 @@ func CreateTestDSRegexWithMissingPattern(t *testing.T) {
 
 	regexPost := tc.DeliveryServiceRegexPost{Type: regex.Type, SetNumber: regex.SetNumber, Pattern: regex.Pattern}
 
-	_, reqInfo, _ := TOSession.PostDeliveryServiceRegexesByDSID(dsID, regexPost)
+	_, reqInfo, _ := TOSession.PostDeliveryServiceRegexesByDSID(dsID, regexPost, client.RequestOptions{})
 	if reqInfo.StatusCode != http.StatusBadRequest {
 		t.Errorf("Expected: %v, but got: %v", http.StatusBadRequest, reqInfo.StatusCode)
 	}
@@ -159,6 +159,9 @@ func QueryDSRegexTestIMS(t *testing.T) {
 	}
 }
 
+// Note that this test will break if the Delivery Service in the test data with
+// the XMLID 'ds1' is removed or altered such that its regular expressions are
+// different than at the time of this writing.
 func QueryDSRegexTest(t *testing.T) {
 	ds, _, err := TOSession.GetDeliveryServiceByXMLID("ds1", nil)
 	if err != nil {
@@ -174,21 +177,21 @@ func QueryDSRegexTest(t *testing.T) {
 		dsID = *ds[0].ID
 	}
 
-	dsRegexes, _, err := TOSession.GetDeliveryServiceRegexesByDSID(dsID, nil)
+	dsRegexes, _, err := TOSession.GetDeliveryServiceRegexesByDSID(dsID, client.RequestOptions{})
 	if err != nil {
-		t.Fatal("unable to get ds_regex by id " + strconv.Itoa(dsID))
+		t.Errorf("Unexpected error fetching Regular Expressions for Delivery Service 'ds1' (#%d): %v - alerts: %+v", dsID, err, dsRegexes.Alerts)
 	}
-	if len(dsRegexes) != 4 {
-		t.Fatal("expected to get 4 ds_regex, got " + strconv.Itoa(len(dsRegexes)))
+	if len(dsRegexes.Response) != 4 {
+		t.Fatalf("expected to get 4 Regular Expressions for Delivery Service 'ds1' (#%d), got: %d", dsID, len(dsRegexes.Response))
 	}
-
-	params := url.Values{}
-	params.Set("id", strconv.Itoa(dsRegexes[0].ID))
-	dsRegexes, _, err = TOSession.GetDeliveryServiceRegexesByDSID(dsID, params)
+	regExpID := dsRegexes.Response[0].ID
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("id", strconv.Itoa(regExpID))
+	dsRegexes, _, err = TOSession.GetDeliveryServiceRegexesByDSID(dsID, opts)
 	if err != nil {
-		t.Fatalf("unable to get ds_regex by id %v with query param %v", dsID, params["id"])
+		t.Errorf("Unexpected error getting Regular Expressions for Delivery Service 'ds1' (#%d) filtered by Regular Expression ID %d: %v - alerts: %+v", dsID, regExpID, err, dsRegexes.Alerts)
 	}
-	if len(dsRegexes) != 1 {
-		t.Fatal("expected to get 1 ds_regex, got " + strconv.Itoa(len(dsRegexes)))
+	if len(dsRegexes.Response) != 1 {
+		t.Fatalf("expected to get 1 Regular Expression for Delivery Service 'ds1' (#%d) that has ID %d, got: %d", dsID, regExpID, len(dsRegexes.Response))
 	}
 }
