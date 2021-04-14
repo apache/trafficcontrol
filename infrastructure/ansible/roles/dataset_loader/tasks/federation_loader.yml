@@ -29,6 +29,7 @@
 
 - name: "Assign User to Federation {{ federation_cname }}"
   vars:
+    federation_user: "{{ federation.user }}"
     federation_user_query: "response[?username == `{{ federation_user }}`].id | [0]"
     federation_user_id: "{{ get_all_users.json | json_query(federation_user_query) }}"
   uri:
