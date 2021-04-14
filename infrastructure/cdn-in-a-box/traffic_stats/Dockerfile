@@ -63,5 +63,5 @@ RUN dnf -y install golang git && \
 FROM trafficstats AS trafficstats-debug
 COPY --from=get-delve /root/go/bin /usr/bin
 
-# Makes trafficstats-debug the last/default stage in the Dockerfile
+# Makes trafficstats the last/default stage in the Dockerfile
 FROM trafficstats AS trafficstats

@@ -84,5 +84,5 @@ CMD /run.sh
 FROM enroller AS enroller-debug
 COPY --from=get-delve /go/bin /usr/bin
 
-# Makes trafficops the last/default stage in the Dockerfile
+# Makes enroller the last/default stage in the Dockerfile
 FROM enroller AS enroller

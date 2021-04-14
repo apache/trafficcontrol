@@ -131,7 +131,7 @@ Traffic Ops
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TO_DEBUG_ENABLE`` to ``true``.
 
-* Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``trafficops-debug`` image to make sure it uses our fresh ``traffic_ops.rpm``. Then start CDN-in-a-Box:
+* Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``trafficops-debug`` image to make sure it uses our fresh ``traffic_ops.rpm``. Then, start CDN-in-a-Box:
 
 .. code-block:: shell
 	:caption: docker-compose command for debugging Traffic Ops
