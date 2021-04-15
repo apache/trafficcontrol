@@ -22,6 +22,25 @@ import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
+interface CDN {
+  description?: string;
+  DNSSEC: string;
+  Domain: string;
+  Name: string;
+  validationMessage?: string;
+}
+
+interface UpdateCDN {
+  description: string;
+  Name: string;
+  validationMessage?: string;
+}
+
+interface DeleteCDN {
+  Name: string;
+  validationMessage?: string;
+}
+
 export class CDNPage extends BasePage {
 
   private btnNewCDN = element(by.name('createCdnButton'));
@@ -35,11 +54,13 @@ export class CDNPage extends BasePage {
   private btnYes = element((by.xpath("//button[text()='Yes']")));
   private btnQueueUpdates = element((by.xpath("//button[contains(text(),'Queue Updates')]")));
   private randomize = randomize;
-  async OpenCDNsPage() {
+
+  public async OpenCDNsPage(): Promise<void> {
     let snp = new SideNavigationPage();
     await snp.NavigateToCDNPage();
   }
-  async CreateCDN(cdn) {
+
+  public async CreateCDN(cdn: CDN): Promise<boolean> {
     let result = false;
     let snp = new SideNavigationPage();
     let basePage = new BasePage();
@@ -50,7 +71,7 @@ export class CDNPage extends BasePage {
     await this.selectDNSSEC.sendKeys(cdn.DNSSEC);
     await basePage.ClickCreate();
     result = await basePage.GetOutputMessage().then(function (value) {
-      if (cdn.validationMessage == value) {
+      if (cdn.validationMessage === value) {
         return true;
       } else {
         return false;
@@ -72,7 +93,7 @@ export class CDNPage extends BasePage {
     }).first().click();
   }
 
-  public async UpdateCDN(cdn): Promise<boolean | undefined> {
+  public async UpdateCDN(cdn: UpdateCDN): Promise<boolean | undefined> {
     let result: boolean | undefined = false;
     let basePage = new BasePage();
     switch (cdn.description) {
@@ -114,9 +135,9 @@ export class CDNPage extends BasePage {
       }
     })
     return result;
-
   }
-  async DeleteCDN(cdn) {
+
+  public async DeleteCDN(cdn: DeleteCDN): Promise<boolean> {
     let name = cdn.Name + this.randomize;
     let result = false;
     let basePage = new BasePage();
