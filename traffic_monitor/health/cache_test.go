@@ -115,45 +115,9 @@ func TestNoMonitoredInterfacesGetVitals(t *testing.T) {
 		t.Errorf("Vitals should have zero values. expected: %v actual: %v:", zeroValueVitals, firstResult.Vitals)
 	}
 
-	// multiple interfaces, plus extras
-	secondResult := cache.Result{
-		ID:            serverID,
-		Error:         nil,
-		Miscellaneous: map[string]interface{}{},
-		Statistics: cache.Statistics{
-			Interfaces: map[string]cache.Interface{
-				"bond0": {
-					Speed:    100000,
-					BytesIn:  570791700709,
-					BytesOut: 4212211168526,
-				},
-				"bond1": {
-					Speed:    100000,
-					BytesIn:  1989352297218,
-					BytesOut: 10630690813,
-				},
-				"lo": {
-					Speed:    0,
-					BytesIn:  181882394,
-					BytesOut: 181882394,
-				},
-				"em5": {
-					Speed:    0,
-					BytesIn:  0,
-					BytesOut: 0,
-				},
-			},
-		},
-		Time:            fakeRequestTime.Add(5 * time.Second),
-		RequestTime:     time.Second,
-		Vitals:          cache.Vitals{},
-		InterfaceVitals: map[string]cache.Vitals{},
-		PollID:          42,
-		PollFinished:    make(chan uint64, 1),
-		PrecomputedData: cache.PrecomputedData{},
-		Available:       true,
-		UsingIPv4:       false,
-	}
+	secondResult := firstResult
+	secondResult.Time = fakeRequestTime.Add(5 * time.Second)
+
 	GetVitals(&secondResult, &firstResult, &tmcm)
 
 	// No interfaces were selected to be monitored so none
@@ -279,60 +243,47 @@ func TestDualHomingMonitoredInterfacesGetVitals(t *testing.T) {
 		t.Errorf("Vitals do not match expected output. expected: %v actual: %v:", expectedFirstVitals, firstResult.Vitals)
 	}
 
-	// multiple interfaces, plus extras
-	secondResult := cache.Result{
-		ID:            serverID,
-		Error:         nil,
-		Miscellaneous: map[string]interface{}{},
-		Statistics: cache.Statistics{
-			Interfaces: map[string]cache.Interface{
-				"bond0": {
-					Speed:    100000,
-					BytesIn:  572608907987,
-					BytesOut: 4227149141326,
-				},
-				"bond1": {
-					Speed:    100000,
-					BytesIn:  1996376171468,
-					BytesOut: 10630696953,
-				},
-				"p1p1": {
-					Speed:    100000,
-					BytesIn:  572609282353,
-					BytesOut: 4227157881921,
-				},
-				"p3p1": {
-					Speed:    100000,
-					BytesIn:  1996378204692,
-					BytesOut: 10630696953,
-				},
-				"lo": {
-					Speed:    0,
-					BytesIn:  181882394,
-					BytesOut: 181882394,
-				},
-				"em5": {
-					Speed:    0,
-					BytesIn:  0,
-					BytesOut: 0,
-				},
-				"em6": {
-					Speed:    0,
-					BytesIn:  0,
-					BytesOut: 0,
-				},
-			},
+	secondResult := firstResult
+	secondResult.Statistics.Interfaces = map[string]cache.Interface{
+		"bond0": {
+			Speed:    100000,
+			BytesIn:  572608907987,
+			BytesOut: 4227149141326,
 		},
-		Time:            fakeRequestTime.Add(5 * time.Second),
-		RequestTime:     time.Second,
-		Vitals:          cache.Vitals{},
-		InterfaceVitals: map[string]cache.Vitals{},
-		PollID:          42,
-		PollFinished:    make(chan uint64, 1),
-		PrecomputedData: cache.PrecomputedData{},
-		Available:       true,
-		UsingIPv4:       false,
+		"bond1": {
+			Speed:    100000,
+			BytesIn:  1996376171468,
+			BytesOut: 10630696953,
+		},
+		"p1p1": {
+			Speed:    100000,
+			BytesIn:  572609282353,
+			BytesOut: 4227157881921,
+		},
+		"p3p1": {
+			Speed:    100000,
+			BytesIn:  1996378204692,
+			BytesOut: 10630696953,
+		},
+		"lo": {
+			Speed:    0,
+			BytesIn:  181882394,
+			BytesOut: 181882394,
+		},
+		"em5": {
+			Speed:    0,
+			BytesIn:  0,
+			BytesOut: 0,
+		},
+		"em6": {
+			Speed:    0,
+			BytesIn:  0,
+			BytesOut: 0,
+		},
 	}
+	secondResult.Time = fakeRequestTime.Add(5 * time.Second)
+	secondResult.Vitals = cache.Vitals{}
+
 	GetVitals(&secondResult, &firstResult, &tmcm)
 
 	// Two interfaces were selected to be monitored so they

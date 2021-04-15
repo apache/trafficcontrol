@@ -54,7 +54,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 	}
 
 	if mc == nil {
-		log.Errorf("mc TrafficMonitorConfigMap cannot be nil")
+		log.Errorf("TrafficMonitorConfigMap must not be nil")
 		return
 	}
 
@@ -65,8 +65,13 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 	// proc.loadavg -- we're using the 1 minute average (!?)
 	newResult.Vitals.LoadAvg = newResult.Statistics.Loadavg.One
 
-	if mc.TrafficServer[newResult.ID].Interfaces == nil {
-		log.Debugf("no interfaces reported in config map to be monitored")
+	ts, exists := mc.TrafficServer[newResult.ID]
+	if !exists {
+		log.Errorf("cache server not found in config map for cache: %s", newResult.ID)
+		return
+	}
+	if ts.Interfaces == nil {
+		log.Warnf("no interfaces reported in config map for cache: %s", newResult.ID)
 		return
 	}
 
@@ -78,7 +83,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 	}
 
 	if len(monitoredInterfaces) == 0 {
-		log.Debugf("no interfaces selected to be monitored for %v", newResult.ID)
+		log.Warnf("no interfaces selected to be monitored for %v", newResult.ID)
 		return
 	}
 
@@ -87,7 +92,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 		iface, exists := newResult.Interfaces()[ifaceName]
 		if !exists {
 			// monitored interface doesn't exist in Result interfaces, skip
-			log.Warnf("monitored interface %v does not exist in %v cache.Result.Interfaces()", ifaceName, newResult.ID)
+			log.Warnf("monitored interface %v does not exist in cache %v", ifaceName, newResult.ID)
 			continue
 		}
 
