@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -77,6 +78,11 @@ func TestDeliveryServices(t *testing.T) {
 		GetDeliveryServiceByInvalidXmlId(t)
 		GetDeliveryServiceByLogsEnabled(t)
 		GetDeliveryServiceByValidProfile(t)
+		GetDeliveryServiceByValidTenant(t)
+		GetDeliveryServiceByValidType(t)
+		GetDeliveryServiceByValidXmlId(t)
+		SortTestDeliveryServicesDesc(t)
+		SortTestDeliveryServices(t)
 	})
 }
 
@@ -1431,5 +1437,153 @@ func GetDeliveryServiceByValidProfile(t *testing.T) {
 				}
 			}
 		}
+	}
+}
+
+func GetDeliveryServiceByValidTenant(t *testing.T) {
+	if len(testData.DeliveryServices) > 0 {
+		firstDS := testData.DeliveryServices[0]
+
+		if firstDS.Tenant != nil {
+			if firstDS.TenantID == nil {
+				tenant, _, err := TOSession.GetTenantByName(*firstDS.Tenant, nil)
+				if err != nil {
+					t.Errorf("Error in Getting Tenant by Name: %v", err)
+				}
+				firstDS.TenantID = &tenant.ID
+			}
+			qparams := url.Values{}
+			qparams.Set("tenant", strconv.Itoa(*firstDS.TenantID))
+			resp, _, err := TOSession.GetDeliveryServices(nil, qparams)
+			if err != nil {
+				t.Errorf("Error in Getting Deliveryservice by Tenant:%v - %v", err, resp)
+			}
+			if len(resp) == 0 {
+				t.Errorf("No delivery service available for the Tenant %v", *firstDS.CDNName)
+			} else {
+				if resp[0].Tenant == nil {
+					t.Errorf("Tenant Name is not available in response")
+				} else {
+					if *resp[0].Tenant != *firstDS.Tenant {
+						t.Errorf("name expected: %s, actual: %s", *firstDS.Tenant, *resp[0].Tenant)
+					}
+				}
+			}
+		} else {
+			t.Errorf("Tenant name is nil in the Pre-requisites")
+		}
+	}
+}
+
+func GetDeliveryServiceByValidType(t *testing.T) {
+	if len(testData.DeliveryServices) > 0 {
+		firstDS := testData.DeliveryServices[0]
+
+		if firstDS.Type != nil {
+			if firstDS.TypeID == nil {
+				ty, _, err := TOSession.GetTypeByName(firstDS.Type.String(), nil)
+				if err != nil {
+					t.Errorf("Error in Getting Type by Name: %v", err)
+				}
+				if len(ty) == 0 {
+					t.Errorf("no Type named %v" + firstDS.Type.String())
+				}
+				firstDS.TypeID = &ty[0].ID
+			}
+			qparams := url.Values{}
+			qparams.Set("type", strconv.Itoa(*firstDS.TypeID))
+			resp, _, err := TOSession.GetDeliveryServices(nil, qparams)
+			if err != nil {
+				t.Errorf("Error in Getting Deliveryservice by Type:%v - %v", err, resp)
+			}
+			if len(resp) == 0 {
+				t.Errorf("No delivery service available for the Type %v", *firstDS.CDNName)
+			} else {
+				if resp[0].Type == nil {
+					t.Errorf("Type is not available in response")
+				} else {
+					if *resp[0].Type != *firstDS.Type {
+						t.Errorf("Type expected: %s, actual: %s", *firstDS.Type, *resp[0].Type)
+					}
+				}
+			}
+		} else {
+			t.Errorf("Type name is nil in the Pre-requisites")
+		}
+	}
+}
+
+func GetDeliveryServiceByValidXmlId(t *testing.T) {
+	if len(testData.DeliveryServices) > 0 {
+		firstDS := testData.DeliveryServices[0]
+
+		if firstDS.XMLID != nil {
+			resp, _, err := TOSession.GetDeliveryServiceByXMLID(*firstDS.XMLID, nil)
+			if err != nil {
+				t.Errorf("Error in Getting DeliveryServices by XML ID: %v - %v", err, resp)
+			}
+			if len(resp) == 0 {
+				t.Errorf("No delivery service available for the XML ID %v", *firstDS.XMLID)
+			} else {
+				if resp[0].XMLID == nil {
+					t.Errorf("XML ID is not available in response")
+				} else {
+					if *resp[0].XMLID != *firstDS.XMLID {
+						t.Errorf("Delivery Service Name expected: %s, actual: %s", *firstDS.XMLID, *resp[0].XMLID)
+					}
+				}
+			}
+		} else {
+			t.Errorf("XML ID is nil in the Pre-requisites")
+		}
+	}
+}
+
+func SortTestDeliveryServicesDesc(t *testing.T) {
+
+	var header http.Header
+	respAsc, _, err1 := TOSession.GetDeliveryServices(header, nil)
+	params := url.Values{}
+	params.Set("sortOrder", "desc")
+	respDesc, _, err2 := TOSession.GetDeliveryServices(header, params)
+
+	if err1 != nil {
+		t.Errorf("Expected no error, but got error in DS Ascending %v", err1)
+	}
+	if err2 != nil {
+		t.Errorf("Expected no error, but got error in DS Descending %v", err2)
+	}
+
+	if len(respAsc) > 0 && len(respDesc) > 0 {
+		// reverse the descending-sorted response and compare it to the ascending-sorted one
+		for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+			respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
+		}
+		if respDesc[0].XMLID != nil && respAsc[0].XMLID != nil {
+			if !reflect.DeepEqual(respDesc[0].XMLID, respAsc[0].XMLID) {
+				t.Errorf("Role responses are not equal after reversal: %v - %v", *respDesc[0].XMLID, *respAsc[0].XMLID)
+			}
+		}
+	} else {
+		t.Errorf("No Response returned from GET Delivery Service using SortOrder")
+	}
+}
+
+func SortTestDeliveryServices(t *testing.T) {
+	var header http.Header
+	var sortedList []string
+	resp, _, err := TOSession.GetDeliveryServices(header, nil)
+	if err != nil {
+		t.Errorf("Expected no error, but got %v", err)
+	}
+	for i, _ := range resp {
+		sortedList = append(sortedList, *resp[i].XMLID)
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their XML Id: %v", sortedList)
 	}
 }
