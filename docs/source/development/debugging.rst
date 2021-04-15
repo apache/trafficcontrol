@@ -46,7 +46,7 @@ Enroller
 * Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2343. If you are using VS Code, the configuration should look like this:
 
 .. code-block:: json
-	:caption: VS Code launch.json for debugging the CDN in a Box Enrolle
+	:caption: VS Code launch.json for debugging the CDN in a Box Enroller
 
 	{
 		"version": "0.2.0",
