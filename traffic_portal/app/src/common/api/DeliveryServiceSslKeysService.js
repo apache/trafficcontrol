@@ -19,15 +19,19 @@
 
 var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel, ENV) {
     this.successMessage = 'SSL Keys generated and updated for ';
-    this.letsEncryptSuccessMessage = 'Call to Lets Encrypt has been made successfully. This may take a few minutes. Please watch for a notification in the Change Log. Delivery Service = ';
+    this.acmeSuccessMessage = 'ACME call has been made successfully. This may take a few minutes. Please watch for a notification in the Change Log. Delivery Service = ';
 
 	this.generateSslKeys = function(deliveryService, sslKeys, generateSslKeyForm) {
 		 return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, 'deliveryservices/sslkeys/generate', this.successMessage);
 	};
 
     this.generateSslKeysWithLetsEncrypt = function(deliveryService, sslKeys, generateSslKeyForm) {
-        return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, 'deliveryservices/sslkeys/generate/letsencrypt', this.letsEncryptSuccessMessage);
+        return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, 'deliveryservices/sslkeys/generate/acme', 'Lets Encrypt: ' + this.acmeSuccessMessage);
     };
+
+	this.generateSslKeysWithAcme = function(deliveryService, sslKeys, generateSslKeyForm, provider) {
+		return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, 'deliveryservices/sslkeys/generate/acme', provider + ": " + this.acmeSuccessMessage);
+	};
 
 	this.generateSslKeysBase = function(deliveryService, sslKeys, generateSslKeyForm, endpoint, message) {
         if (sslKeys.hasOwnProperty('version')){
@@ -39,6 +43,7 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
 		generateSslKeyForm.cdn = deliveryService.cdnName;
 		generateSslKeyForm.deliveryservice = deliveryService.xmlId;
 		generateSslKeyForm.key = deliveryService.xmlId;
+		generateSslKeyForm.authType = sslKeys.authType;
 
         return $http.post(ENV.api['root'] + endpoint, generateSslKeyForm).then(
             function(result) {
@@ -107,6 +112,17 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
                 throw err;
             }
         );
+	};
+
+	this.getAcmeProviders = function() {
+		return $http.get(ENV.api['root'] + 'acme_accounts/providers').then(
+			function (result) {
+				return result.data.response;
+			},
+			function (err) {
+				throw err;
+			}
+		);
 	};
 };
 

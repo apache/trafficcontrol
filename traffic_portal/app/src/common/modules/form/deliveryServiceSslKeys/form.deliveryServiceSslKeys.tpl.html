@@ -64,7 +64,7 @@ under the License.
 			<div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.authType), 'has-feedback': hasError(dsSslKeyForm.authType)}">
 				<label for="authType" class="control-label col-md-2 col-sm-2 col-xs-12">Certificate Source (Self Signed, CA, etc) *</label>
 				<div class="col-md-10 col-sm-10 col-xs-12">
-					<input id="authType" name="authType" type="text" class="form-control" ng-model="sslKeys.authType" required>
+					<select id="authType" name="authType" type="text" class="form-control" ng-model="acmeProvider" ng-options="acmeProviderOption as acmeProviderOption for acmeProviderOption in acmeProviders" ng-change="updateProvider()" required></select>
 					<small class="input-error" ng-show="hasPropertyError(dsSslKeyForm.authType, 'required')">Required</small>
 					<span ng-show="hasError(dsSslKeyForm.authType)" class="form-control-feedback"><i class="fa fa-times"></i></span>
 				</div>

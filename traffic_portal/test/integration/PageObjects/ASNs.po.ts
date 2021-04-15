@@ -22,6 +22,24 @@ import { twoNumberRandomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
+interface CreateASN {
+    ASNs: string;
+    CacheGroup: string;
+    validationMessage?: string;
+}
+
+interface DeleteASN {
+    ASNs: string;
+    validationMessage?: string;
+}
+
+interface UpdateASN {
+    CacheGroup?: string;
+    description: string;
+    NewASNs?: string;
+    validationMessage?: string;
+}
+
 export class ASNsPage extends BasePage {
     private btnCreateNewASNs = element(by.xpath("//button[@title='Create ASN']"));
     private txtSearch = element(by.id('asnsTable_filter')).element(by.css('label input'));
@@ -38,7 +56,8 @@ export class ASNsPage extends BasePage {
         let snp = new SideNavigationPage();
         await snp.ClickTopologyMenu();
     }
-    public async CreateASNs(asns): Promise<boolean> {
+
+    public async CreateASNs(asns: CreateASN): Promise<boolean> {
         let basePage = new BasePage();
         let snp = new SideNavigationPage();
         await snp.NavigateToASNsPage();
@@ -48,6 +67,7 @@ export class ASNsPage extends BasePage {
         await basePage.ClickCreate();
         return await basePage.GetOutputMessage().then(v => asns.validationMessage === v);
     }
+
     public async SearchASNs(nameASNs: string): Promise<boolean> {
         let name = nameASNs + twoNumberRandomize;
         let snp = new SideNavigationPage();
@@ -60,13 +80,22 @@ export class ASNsPage extends BasePage {
         }
         return false;
     }
-    async UpdateASNs(asns) {
+
+    public async UpdateASNs(asns: UpdateASN): Promise<boolean> {
         let result = false;
         let basePage = new BasePage();
         if(asns.description.includes("update cachegroup")){
+            // preserves old behavior, but with a better error message
+            if (!asns.CacheGroup) {
+                throw new Error("ASN update data indicated in the description that it was for updating cachegroup linking, but data included no CacheGroup");
+            }
             await this.txtCacheGroup.sendKeys(asns.CacheGroup);
             await basePage.ClickUpdate();
         }else if(asns.description.includes("update an ASN")){
+            // preserves old behavior, but with a better error message
+            if (!asns.NewASNs) {
+                throw new Error("ASN update data indicated in the description that it was NOT for updating cachegroup linking, but data included no NewASNs");
+            }
             await this,this.txtASN.clear();
             await this.txtASN.sendKeys(asns.NewASNs + twoNumberRandomize);
             await basePage.ClickUpdate();
@@ -82,7 +111,8 @@ export class ASNsPage extends BasePage {
         })
         return result;
     }
-    async DeleteASNs(asns){
+
+    public async DeleteASNs(asns: DeleteASN): Promise<boolean> {
         let name = asns.ASNs + twoNumberRandomize;
         let result = false;
         let basePage = new BasePage();

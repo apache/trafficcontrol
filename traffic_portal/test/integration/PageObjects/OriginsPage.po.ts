@@ -22,6 +22,25 @@ import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
+interface Origin {
+    deliveryServiceId: string;
+    Name: string;
+    Tenant: string;
+    FQDN: string;
+    Protocol: string;
+    validationMessage?: string;
+}
+
+interface UpdateOrigin {
+    NewDeliveryService: string;
+    validationMessage?: string;
+}
+
+interface DeleteOrigin {
+    Name: string;
+    validationMessage?: string;
+}
+
 export class OriginsPage extends BasePage {
     private btnCreateNewOrigins = element(by.xpath("//button[@title='Create Origin']"));
     private txtSearch = element(by.id('originsTable_filter')).element(by.css('label input'));
@@ -33,15 +52,18 @@ export class OriginsPage extends BasePage {
     private btnDelete = element(by.xpath("//button[text()='Delete']"));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
     private randomize = randomize;
+
     async OpenOriginsPage() {
         let snp = new SideNavigationPage();
         await snp.NavigateToOriginsPage();
     }
+
     async OpenConfigureMenu() {
         let snp = new SideNavigationPage();
         await snp.ClickConfigureMenu();
     }
-    async CreateOrigins(origins) {
+
+    public async CreateOrigins(origins: Origin): Promise<boolean> {
         let result = false;
         let basePage = new BasePage();
         let snp = new SideNavigationPage();
@@ -55,7 +77,7 @@ export class OriginsPage extends BasePage {
         await element(by.xpath("//option[@label='" + origins.deliveryServiceId + this.randomize + "']")).click();
         await basePage.ClickCreate();
         result = await basePage.GetOutputMessage().then(function (value) {
-            if (origins.validationMessage == value) {
+            if (origins.validationMessage === value) {
                 return true;
             } else {
                 return false;
@@ -63,6 +85,7 @@ export class OriginsPage extends BasePage {
         })
         return result;
     }
+
     public async SearchOrigins(nameOrigins: string): Promise<boolean> {
         let name = nameOrigins + this.randomize;
         let snp = new SideNavigationPage();
@@ -75,7 +98,8 @@ export class OriginsPage extends BasePage {
         }
         return false;
     }
-    async UpdateOrigins(origins): Promise<boolean | undefined> {
+
+    async UpdateOrigins(origins: UpdateOrigin): Promise<boolean | undefined> {
         let result: boolean | undefined = false;
         let basePage = new BasePage();
         if (origins.NewDeliveryService != null || origins.NewDeliveryService != undefined) {
@@ -97,7 +121,8 @@ export class OriginsPage extends BasePage {
         }
         return result;
     }
-    async DeleteOrigins(origins) {
+
+    public async DeleteOrigins(origins: DeleteOrigin): Promise<boolean> {
         let name = origins.Name + this.randomize;
         let result = false;
         let basePage = new BasePage();

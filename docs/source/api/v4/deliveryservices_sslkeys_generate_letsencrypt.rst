@@ -19,6 +19,8 @@
 ``deliveryservices/sslkeys/generate/letsencrypt``
 *************************************************
 
+.. deprecated:: ATCv6
+
 ``POST``
 ========
 Generates an SSL certificate and private key using Let's Encrypt for a :term:`Delivery Service`
@@ -59,6 +61,9 @@ Response Structure
 	:caption: Response Example
 
 	{ "alerts": [{
+		"level": "warning",
+		"text": "This endpoint is deprecated, please use /deliveryservices/sslkeys/generate/acme instead."
+	},{
 		"level": "success",
 		"text": "Beginning async call to Let's Encrypt for ds-01. This may take a few minutes."
 	}]}
