@@ -29,7 +29,6 @@ import (
 	"database/sql"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -204,23 +203,6 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 	}
 
-	defer func() {
-		if err := recover(); err != nil {
-			db, dbErr := api.GetDB(ctx)
-			if dbErr != nil {
-				log.Errorf(*req.DeliveryService+": Error getting db for recover async update: %s", dbErr.Error())
-				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("panic: (err: %v) stacktrace:\n%s\n", err, util.Stacktrace()))
-				return
-			}
-
-			if asyncErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asyncErr != nil {
-				log.Errorf("updating async status for id %v: %v", asyncStatusId, asyncErr)
-			}
-			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("panic: (err: %v) stacktrace:\n%s\n", err, util.Stacktrace()))
-			return
-		}
-	}()
-
 	go GetAcmeCertificates(inf.Config, req, ctx, inf.User, asyncStatusId, inf.Vault)
 
 	var alerts tc.Alerts
@@ -251,6 +233,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 
 	req := tc.DeliveryServiceAcmeSSLKeysReq{}
 	if req.AuthType == nil {
+		req.AuthType = new(string)
 		*req.AuthType = tc.LetsEncryptAuthType
 	}
 
@@ -296,23 +279,6 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 	}
 
-	defer func() {
-		if err := recover(); err != nil {
-			db, dbErr := api.GetDB(ctx)
-			if dbErr != nil {
-				log.Errorf(*req.DeliveryService+": Error getting db for recover async update: %s", dbErr.Error())
-				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("panic: (err: %v) stacktrace:\n%s\n", err, util.Stacktrace()))
-				return
-			}
-
-			if asyncErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asyncErr != nil {
-				log.Errorf("updating async status for id %v: %v", asyncStatusId, asyncErr)
-			}
-			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("panic: (err: %v) stacktrace:\n%s\n", err, util.Stacktrace()))
-			return
-		}
-	}()
-
 	go GetAcmeCertificates(inf.Config, req, ctx, inf.User, asyncStatusId, inf.Vault)
 
 	var alerts tc.Alerts
@@ -328,6 +294,22 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 
 // GetAcmeCertificates gets or creates an ACME account based on the provider, then gets new certificates for the delivery service requested and saves them to Vault.
 func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysReq, ctx context.Context, currentUser *auth.CurrentUser, asyncStatusId int, tv trafficvault.TrafficVault) error {
+	defer func() {
+		if err := recover(); err != nil {
+			db, dbErr := api.GetDB(ctx)
+			if dbErr != nil {
+				log.Errorf(*req.DeliveryService+": Error getting db for recover async update: %s", dbErr.Error())
+				log.Errorf("panic: (err: %v) stacktrace:\n%s\n", err, util.Stacktrace())
+				return
+			}
+
+			if asyncErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asyncErr != nil {
+				log.Errorf("updating async status for id %v: %v", asyncStatusId, asyncErr)
+			}
+			log.Errorf("panic: (err: %v) stacktrace:\n%s\n", err, util.Stacktrace())
+			return
+		}
+	}()
 
 	db, err := api.GetDB(ctx)
 	if err != nil {

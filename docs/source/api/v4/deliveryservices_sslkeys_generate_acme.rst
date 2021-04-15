@@ -48,7 +48,7 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"authType": "Let's Encrypt",
+		"authType": "Lets Encrypt",
 		"key": "ds-01",
 		"deliveryservice": "ds-01",
 		"version": "3",
