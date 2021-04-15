@@ -63,7 +63,7 @@ Enroller
 		]
 	}
 
-* Use the debugging configuration you created to start debugging Traffic Monitor. It should connect without first breaking at any line.
+* Use the debugging configuration you created to start debugging the Enroller. It should connect without first breaking at any line.
 
 For an example of usage, set a breakpoint at `the toSession.CreateDeliveryServiceV30() call in enrollDeliveryService() <https://github.com/apache/trafficcontrol/blob/RELEASE-5.1.1/infrastructure/cdn-in-a-box/enroller/enroller.go#L209>`_, then wait for the Enroller to process a file from ``/shared/enroller/deliveryservices/`` (only exists within the Docker container).
 
