@@ -314,17 +314,19 @@ func enrollDivision(toSession *session, r io.Reader) error {
 	var s tc.Division
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Division: %s\n", err)
+		log.Infof("error decoding Division: %s", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateDivision(s)
+	alerts, _, err := toSession.CreateDivision(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("division %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts {
+			if strings.Contains(alert.Text, "already exists") {
+				log.Infof("division %s already exists", s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Division: %s\n", err)
+		log.Infof("error creating Division: %v - alerts: %+v", err, alerts.Alerts)
 		return err
 	}
 
