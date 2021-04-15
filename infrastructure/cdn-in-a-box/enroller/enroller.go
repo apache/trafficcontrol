@@ -251,7 +251,7 @@ func enrollDeliveryServicesRequiredCapability(toSession *session, r io.Reader) e
 	}
 	dsrc.DeliveryServiceID = dses.Response[0].ID
 
-	alerts, _, err := toSession.CreateDeliveryServicesRequiredCapability(dsrc)
+	alerts, _, err := toSession.CreateDeliveryServicesRequiredCapability(dsrc, client.RequestOptions{})
 	if err != nil {
 		log.Infof("error creating Delivery Services Required Capability: %v", err)
 		return err

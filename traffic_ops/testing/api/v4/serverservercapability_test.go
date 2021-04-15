@@ -314,21 +314,35 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 	// Used to make sure we block server server_capability DELETE in that case
 	dsServers := []tc.DeliveryServiceServer{}
 	assignedServers := make(map[int]bool)
+	opts := client.NewRequestOptions()
 	for _, ssc := range sscs {
-
-		dsReqCapResp, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, nil, ssc.ServerCapability, nil)
-		if err != nil {
-			t.Fatalf("cannot GET delivery service required capabilities: %v", err)
+		if ssc.ServerCapability == nil {
+			t.Error("Traffic Ops returned a representation of a Server/Capability relationship with null or undefined Capability")
+			continue
 		}
-		if len(dsReqCapResp) == 0 {
+		opts.QueryParameters.Set("requiredCapability", *ssc.ServerCapability)
+
+		dsReqCapResp, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(opts)
+		if err != nil {
+			t.Fatalf("Unexpected error retrieving relationships between Delivery Services and the Capabilities they require filtered by Capability '%s': %v - alerts: %+v", *ssc.ServerCapability, err, dsReqCapResp.Alerts)
+		}
+		if len(dsReqCapResp.Response) == 0 {
 			// capability is not required by any delivery service
 			continue
 		}
 		var dsReqCap tc.DeliveryServicesRequiredCapability
-		for _, dsrc := range dsReqCapResp {
-			if dsIDtoDS[*dsrc.DeliveryServiceID].Topology == nil {
-				dsReqCap = dsrc
-				break
+		for _, dsrc := range dsReqCapResp.Response {
+			if dsrc.DeliveryServiceID == nil {
+				t.Error("Traffic Ops returned a representation of a Delivery Service/Required Capability relationship with null or undefined Delivery Service ID")
+				continue
+			}
+			if ds, ok := dsIDtoDS[*dsrc.DeliveryServiceID]; ok {
+				if ds.Topology == nil {
+					dsReqCap = dsrc
+					break
+				}
+			} else {
+				t.Errorf("Traffic Ops reports that Delivery Service #%d requires one or more capabilities, but also does not report that said Delivery Service exists", *dsrc.DeliveryServiceID)
 			}
 		}
 		if dsReqCap.DeliveryServiceID == nil {
@@ -512,7 +526,7 @@ func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
 		DeliveryServiceID:  ds.ID,
 		RequiredCapability: util.StrPtr("blah"),
 	}
-	_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(reqCap)
+	_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(reqCap, client.RequestOptions{})
 	// this should fail because the mid doesn't have the reqd capability
 	if err == nil {
 		t.Fatalf("expected error creating DS reqd capability, but got nothing")
@@ -526,10 +540,10 @@ func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
 	if err != nil {
 		t.Fatalf("couldn't assign server capability to server with ID %d, err: %s", midID, err.Error())
 	}
-	_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(reqCap)
+	resp, _, err := TOSession.CreateDeliveryServicesRequiredCapability(reqCap, client.RequestOptions{})
 	// this should pass now because the mid has the reqd capability
 	if err != nil {
-		t.Fatalf("expected no error creating DS reqd capability, but got %s", err.Error())
+		t.Fatalf("expected no error creating DS reqd capability, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
 
 	params = url.Values{}

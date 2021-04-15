@@ -991,9 +991,9 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		DeliveryServiceID:  ds.ID,
 		RequiredCapability: util.StrPtr("asdf"),
 	}
-	_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(reqCap)
+	dsrcResp, _, err := TOSession.CreateDeliveryServicesRequiredCapability(reqCap, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("adding 'asdf' required capability to '%s', expected: no error, actual: %v", *ds.XMLID, err)
+		t.Fatalf("adding 'asdf' required capability to '%s', expected: no error, actual: %v - alerts: %+v", *ds.XMLID, err, dsrcResp.Alerts)
 	}
 	ds.Topology = &top
 	_, reqInf, err := TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
@@ -1003,9 +1003,9 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
 		t.Errorf("updating DS topology which doesn't meet the DS required capabilities - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
-	_, _, err = TOSession.DeleteDeliveryServicesRequiredCapability(*ds.ID, "asdf")
+	dsrcResp, _, err = TOSession.DeleteDeliveryServicesRequiredCapability(*ds.ID, "asdf", client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("removing 'asdf' required capability from '%s', expected: no error, actual: %v", *ds.XMLID, err)
+		t.Fatalf("removing 'asdf' required capability from '%s', expected: no error, actual: %v - alerts: %+v", *ds.XMLID, err, dsrcResp.Alerts)
 	}
 	_, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
 	if err != nil {

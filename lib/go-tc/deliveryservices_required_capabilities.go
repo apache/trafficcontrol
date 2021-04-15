@@ -26,3 +26,17 @@ type DeliveryServicesRequiredCapability struct {
 	RequiredCapability *string    `json:"requiredCapability" db:"required_capability"`
 	XMLID              *string    `json:"xmlID,omitempty" db:"xml_id"`
 }
+
+// DeliveryServicesRequiredCapabilitiesResponseV40 is the type of a response
+// from Traffic Ops to a request for relationships between Delivery Services
+// and Capabilities which they require, as it appears in API version 4.0.
+type DeliveryServicesRequiredCapabilitiesResponseV40 struct {
+	Response []DeliveryServicesRequiredCapability `json:"response"`
+	Alerts
+}
+
+// DeliveryServicesRequiredCapabilitiesResponseV4 is the type of a response
+// from Traffic Ops to a request for relationships between Delivery Services
+// and Capabilities which they require, as it appears in the latest minor
+// version of API version 4.
+type DeliveryServicesRequiredCapabilitiesResponseV4 = DeliveryServicesRequiredCapabilitiesResponseV40

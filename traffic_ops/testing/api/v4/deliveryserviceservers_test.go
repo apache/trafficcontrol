@@ -417,6 +417,10 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 	}
 
 	for _, ctc := range testCases {
+		if ctc.capability.DeliveryServiceID == nil || ctc.capability.RequiredCapability == nil {
+			t.Errorf("Bad hard-coded test case '%s' - MUST include non-nil DeliveryServiceID and RequiredCapability", ctc.description)
+			continue
+		}
 		t.Run(ctc.description, func(t *testing.T) {
 			params := url.Values{}
 			params.Add("hostName", ctc.serverName)
@@ -425,14 +429,17 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 				t.Fatalf("cannot GET Server by hostname: %v", err)
 			}
 			servers := resp.Response
+			if len(servers) < 1 {
+				t.Fatalf("Expected at least one server to exist with Host Name '%s', found none", ctc.serverName)
+			}
 			server := servers[0]
 			if server.ID == nil {
 				t.Fatalf("server %s had nil ID", ctc.serverName)
 			}
 
-			_, _, err = TOSession.CreateDeliveryServicesRequiredCapability(ctc.capability)
+			alerts, _, err := TOSession.CreateDeliveryServicesRequiredCapability(ctc.capability, client.RequestOptions{})
 			if err != nil {
-				t.Fatalf("*POST delivery service required capability: %v", err)
+				t.Fatalf("Unexpected error creating a relationship between a Delivery Service and a Capability it requires: %v - alerts: %+v", err, alerts.Alerts)
 			}
 
 			ctc.ssc.ServerID = server.ID
@@ -446,22 +453,28 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 				t.Fatalf("expected ctc.err to contain %v, got %v", ctc.err, got)
 			}
 
-			_, _, err = TOSession.DeleteDeliveryServicesRequiredCapability(*ctc.capability.DeliveryServiceID, *ctc.capability.RequiredCapability)
+			alerts, _, err = TOSession.DeleteDeliveryServicesRequiredCapability(*ctc.capability.DeliveryServiceID, *ctc.capability.RequiredCapability, client.RequestOptions{})
 			if err != nil {
-				t.Fatalf("*DELETE delivery service required capability: %v", err)
+				t.Fatalf("Unexpected error deleting a relationship between a Delivery Service and a Capability it requires: %v - alerts: %+v", err, alerts.Alerts)
 			}
 		})
 	}
 }
 
 func CreateTestMSODSServerWithReqCap(t *testing.T) {
-	dsReqCap, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(nil, util.StrPtr("msods1"), nil, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlID", "msods1")
+	dsReqCap, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(opts)
 	if err != nil {
-		t.Fatalf("GET delivery service required capabilites: %v", err)
+		t.Fatalf("Unexpected error retrieving relationships between Delivery Services and Capabilities they require: %v - alerts: %+v", err, dsReqCap.Alerts)
 	}
 
-	if len(dsReqCap) == 0 {
+	if len(dsReqCap.Response) == 0 {
 		t.Fatal("no delivery service required capabilites found for ds msods1")
+	}
+	dsrc := dsReqCap.Response[0]
+	if dsrc.DeliveryServiceID == nil {
+		t.Fatal("Traffic Ops returned a representation of a Delivery Service/Required Capability relationship with null or undefined Delivery Service ID")
 	}
 
 	// Associate origin server to msods1 even though it does not have req cap
@@ -492,7 +505,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	}
 
 	// Is origin included in eligible servers even though it doesnt have required capability
-	eServers, _, err := TOSession.GetDeliveryServicesEligible(*dsReqCap[0].DeliveryServiceID, client.RequestOptions{})
+	eServers, _, err := TOSession.GetDeliveryServicesEligible(*dsrc.DeliveryServiceID, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("get delivery service msods1 eligible servers: %v - alerts: %+v", err, eServers.Alerts)
 	}
@@ -507,7 +520,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 		t.Fatal("expected to find origin server denver-mso-org-01 to be in eligible server return even though it is missing a required capability")
 	}
 
-	if _, _, err = TOSession.CreateDeliveryServiceServers(*dsReqCap[0].DeliveryServiceID, []int{*s.ID}, true); err != nil {
+	if _, _, err = TOSession.CreateDeliveryServiceServers(*dsrc.DeliveryServiceID, []int{*s.ID}, true); err != nil {
 		t.Fatalf("POST delivery service origin servers without capabilities: %v", err)
 	}
 
@@ -517,16 +530,16 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	}
 
 	// Attempt to assign to DS should not fail
-	if _, _, err = TOSession.CreateDeliveryServicesRequiredCapability(tc.DeliveryServicesRequiredCapability{
-		DeliveryServiceID:  dsReqCap[0].DeliveryServiceID,
+	if alerts, _, err := TOSession.CreateDeliveryServicesRequiredCapability(tc.DeliveryServicesRequiredCapability{
+		DeliveryServiceID:  dsrc.DeliveryServiceID,
 		RequiredCapability: util.StrPtr("newfun"),
-	}); err != nil {
-		t.Fatalf("POST required capability newfun to ds msods1: %v", err)
+	}, client.RequestOptions{}); err != nil {
+		t.Fatalf("Unexpected error adding Capability 'newfun' as requirement to Delivery Service 'msods1' (#%d): %v - alerts: %+v", *dsrc.DeliveryServiceID, err, alerts.Alerts)
 	}
 
 	// Remove required capablity
-	if _, _, err = TOSession.DeleteDeliveryServicesRequiredCapability(*dsReqCap[0].DeliveryServiceID, "newfun"); err != nil {
-		t.Fatalf("DELETE delivery service required capability: %v", err)
+	if alerts, _, err := TOSession.DeleteDeliveryServicesRequiredCapability(*dsrc.DeliveryServiceID, "newfun", client.RequestOptions{}); err != nil {
+		t.Fatalf("Unexpected error removing Capability 'newfun' as requirement from Delivery Service 'msods1' (#%d): %v - alerts: %+v", *dsrc.DeliveryServiceID, err, alerts.Alerts)
 	}
 
 	// Delete server capability
