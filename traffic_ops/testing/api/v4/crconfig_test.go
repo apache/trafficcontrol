@@ -130,9 +130,9 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 		t.Fatal("Traffic Ops returned a representation of Delivery Service 'anymap-ds' that had a null or undefined ID")
 	}
 	anymapDSID := *res.Response[0].ID
-	_, _, err = TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true)
+	alerts, _, err := TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("POST delivery service servers: %v", err)
+		t.Fatalf("Unexpected error assigning server #%d to Delivery Service #%d: %v - alerts: %+v", serverID, anymapDSID, err, alerts.Alerts)
 	}
 
 	opts = client.NewRequestOptions()

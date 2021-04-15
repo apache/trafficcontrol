@@ -340,9 +340,9 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 
 	//Assign ORG server to DS
 	assignServer := []string{"denver-mso-org-01"}
-	_, _, err = TOSession.AssignServersToDeliveryService(assignServer, *remoteDS.XMLID)
+	assignResponse, _, err := TOSession.AssignServersToDeliveryService(assignServer, *remoteDS.XMLID, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot assign server to Delivery Services: %v", err)
+		t.Errorf("Unexpected error assigning server 'denver-mso-org-01' to Delivery Service '%s': %v - alerts: %+v", *remoteDS.XMLID, err, assignResponse.Alerts)
 	}
 
 	//Get Topology node to update and remove ORG server nodes
@@ -376,9 +376,9 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	if serverResp.Response[0].ID == nil {
 		t.Fatal("ID of the response server is nil, quitting")
 	}
-	_, _, err = TOSession.DeleteDeliveryServiceServer(*remoteDS.ID, *serverResp.Response[0].ID)
+	alerts, _, err := TOSession.DeleteDeliveryServiceServer(*remoteDS.ID, *serverResp.Response[0].ID, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot delete assigned server from Delivery Services: %v", err)
+		t.Errorf("cannot remove server #%d from Delivery Service #%d: %v - alerts: %+v", *serverResp.Response[0].ID, *remoteDS.ID, err, alerts.Alerts)
 	}
 }
 

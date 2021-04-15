@@ -27,6 +27,21 @@ type DeliveryServiceServerResponse struct {
 	Limit    int                     `json:"limit"`
 }
 
+// DeliveryServiceServerResponseV40 is the type of a response from Traffic Ops
+// to a GET request to the /deliveryserviceserver endpoint in API version 4.0.
+type DeliveryServiceServerResponseV40 struct {
+	Orderby  string                  `json:"orderby"`
+	Response []DeliveryServiceServer `json:"response"`
+	Size     int                     `json:"size"`
+	Limit    int                     `json:"limit"`
+	Alerts
+}
+
+// DeliveryServiceServerResponseV4 is the type of a response from Traffic Ops
+// to a GET request to the /deliveryserviceserver endpoint in the latest minor
+// version in API version 4.
+type DeliveryServiceServerResponseV4 = DeliveryServiceServerResponseV40
+
 type DSSMapResponse struct {
 	DsId    int   `json:"dsId"`
 	Replace bool  `json:"replace"`

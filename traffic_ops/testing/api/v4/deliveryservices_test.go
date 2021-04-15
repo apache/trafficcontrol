@@ -1328,9 +1328,9 @@ func UpdateValidateORGServerCacheGroup(t *testing.T) {
 
 	//Assign ORG server to DS
 	assignServer := []string{"denver-mso-org-01"}
-	_, _, err = TOSession.AssignServersToDeliveryService(assignServer, *remoteDS.XMLID)
+	alerts, _, err := TOSession.AssignServersToDeliveryService(assignServer, *remoteDS.XMLID, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot assign server to Delivery Services: %v", err)
+		t.Errorf("cannot assign server to Delivery Services: %v - alerts: %+v", err, alerts)
 	}
 
 	//Update DS's Topology to a non-ORG server's cachegroup

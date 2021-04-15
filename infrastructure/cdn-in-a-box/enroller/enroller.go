@@ -301,9 +301,9 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 		}
 		serverIDs = append(serverIDs, *servers.Response[0].ID)
 	}
-	_, _, err = toSession.CreateDeliveryServiceServers(dsID, serverIDs, true)
+	resp, _, err := toSession.CreateDeliveryServiceServers(dsID, serverIDs, true, client.RequestOptions{})
 	if err != nil {
-		log.Infof("error creating DeliveryServiceServer: %s\n", err)
+		log.Infof("error assigning servers %v to Delivery Service #%d: %v - alerts: %+v", serverIDs, dsID, err, resp.Alerts)
 	}
 
 	return err

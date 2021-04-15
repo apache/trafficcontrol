@@ -609,9 +609,9 @@ func GetTestServersQueryParameters(t *testing.T) {
 	if ds.ID == nil {
 		t.Fatal("Traffic Ops returned a representation of a Delivery Service that had null or undefined ID")
 	}
-	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*otherServer.ID}, false)
+	assignResp, _, err := TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*otherServer.ID}, false, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("unable to assign server %s to deliveryservice %s: %s", *otherServer.HostName, topDSXmlID, err)
+		t.Fatalf("unable to assign server '%s' to Delivery Service '%s': %v - alerts: %+v", *otherServer.HostName, topDSXmlID, err, assignResp.Alerts)
 	}
 	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = &dsTopologyField, &dsFirstHeaderRewriteField, &innerHeaderRewriteField, &lastHeaderRewriteField
 	updResp, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
@@ -651,8 +651,8 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Fatalf("%d servers missing from the response: %s", len(notInResponse), strings.Join(notInResponse, ", "))
 	}
 	const originHostname = "denver-mso-org-01"
-	if _, _, err = TOSession.AssignServersToDeliveryService([]string{originHostname}, topDSXmlID); err != nil {
-		t.Fatalf("assigning origin server %s to delivery service %s: %s", originHostname, topDSXmlID, err.Error())
+	if resp, _, err := TOSession.AssignServersToDeliveryService([]string{originHostname}, topDSXmlID, client.RequestOptions{}); err != nil {
+		t.Fatalf("assigning origin server '%s' to Delivery Service '%s': %v - alerts: %+v", originHostname, topDSXmlID, err, resp.Alerts)
 	}
 	response, _, err = TOSession.GetServers(params, nil)
 	if err != nil {
@@ -1047,9 +1047,9 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Assign server to DS
-	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*remoteServer.ID}, true)
+	assignResp, _, err := TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*remoteServer.ID}, true, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("POST delivery service servers: %v", err)
+		t.Fatalf("Unexpected error creating server-to-Delivery-Service assignments: %v - alerts: %+v", err, assignResp.Alerts)
 	}
 
 	// Attempt Update - should fail

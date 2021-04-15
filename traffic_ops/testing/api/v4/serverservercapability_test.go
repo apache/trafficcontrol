@@ -351,9 +351,9 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 		}
 
 		// Assign server to ds
-		_, _, err = TOSession.CreateDeliveryServiceServers(*dsReqCap.DeliveryServiceID, []int{*ssc.ServerID}, false)
+		assignResp, _, err := TOSession.CreateDeliveryServiceServers(*dsReqCap.DeliveryServiceID, []int{*ssc.ServerID}, false, client.RequestOptions{})
 		if err != nil {
-			t.Fatalf("cannot CREATE server delivery service assignment: %v", err)
+			t.Fatalf("Unexpected error retrieving server-to-Delivery-Service assignments: %v - alerts: %+v", err, assignResp.Alerts)
 		}
 		dsServers = append(dsServers, tc.DeliveryServiceServer{
 			Server:          ssc.ServerID,
@@ -377,9 +377,9 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 
 	for _, dsServer := range dsServers {
 		setInactive(t, *dsServer.DeliveryService)
-		_, _, err := TOSession.DeleteDeliveryServiceServer(*dsServer.DeliveryService, *dsServer.Server)
+		alerts, _, err := TOSession.DeleteDeliveryServiceServer(*dsServer.DeliveryService, *dsServer.Server, client.RequestOptions{})
 		if err != nil {
-			t.Fatalf("could not DELETE the server %v from ds %v: %v", *dsServer.Server, *dsServer.DeliveryService, err)
+			t.Fatalf("could not remove server #%d from Delivery Service #%d: %v - alerts: %+v", *dsServer.Server, *dsServer.DeliveryService, err, alerts.Alerts)
 		}
 	}
 
@@ -507,9 +507,9 @@ func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
 	}
 	midID := *rs.Response[0].ID
 	// assign edge and mid
-	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{edgeID, midID}, true)
+	assignResp, _, err := TOSession.CreateDeliveryServiceServers(*ds.ID, []int{edgeID, midID}, true, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("expected no error while assigning servers to DS, but got %s", err.Error())
+		t.Fatalf("expected no error while assigning servers to Delivery Service, but got: %v - alerts: %+v", err, assignResp.Alerts)
 	}
 	params = url.Values{}
 	params.Add("dsId", strconv.Itoa(*ds.ID))
@@ -555,12 +555,12 @@ func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
 	if len(servers.Response) != 2 {
 		t.Fatalf("expected to get 2 servers for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
 	}
-	_, _, err = TOSession.DeleteDeliveryServiceServer(*ds.ID, edgeID)
+	alerts, _, err := TOSession.DeleteDeliveryServiceServer(*ds.ID, edgeID, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("error trying to delete delivery service server: %s", err.Error())
+		t.Errorf("Unexpected error removing server #%d from Delivery Service #%d: %v - alerts: %+v", edgeID, *ds.ID, err, alerts.Alerts)
 	}
-	_, _, err = TOSession.DeleteDeliveryServiceServer(*ds.ID, midID)
+	alerts, _, err = TOSession.DeleteDeliveryServiceServer(*ds.ID, midID, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("error trying to delete delivery service server: %s", err.Error())
+		t.Errorf("Unexpected error removing server #%d from Delivery Service #%d: %v - alerts: %+v", midID, *ds.ID, err, alerts.Alerts)
 	}
 }

@@ -66,9 +66,9 @@ func OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t *testing
 	}
 	dsID := *resp.Response[0].ID
 	params := url.Values{}
-	_, _, err = TOSession.AssignServersToDeliveryService([]string{"denver-mso-org-01"}, "ds-top-req-cap2")
+	alerts, _, err := TOSession.AssignServersToDeliveryService([]string{"denver-mso-org-01"}, "ds-top-req-cap2", client.RequestOptions{})
 	if err != nil {
-		t.Errorf("assigning ORG server to ds-top delivery service: %v", err.Error())
+		t.Errorf("assigning server 'denver-mso-org-01' to Delivery Service 'ds-top-req-cap2': %v - alerts: %+v", err, alerts)
 	}
 	params.Add("dsId", strconv.Itoa(dsID))
 	params.Add("type", tc.OriginTypeName)
@@ -510,9 +510,9 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	}
 
 	// Assign server to ds
-	_, _, err = TOSession.CreateDeliveryServiceServers(*dsID, []int{sID}, false)
+	alerts, _, err := TOSession.CreateDeliveryServiceServers(*dsID, []int{sID}, false, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot CREATE server delivery service assignement: %v", err)
+		t.Fatalf("Unexpected error assigning server #%d to Delivery Service #%d: %v - alerts: %+v", sID, *dsID, err, alerts.Alerts)
 	}
 
 	// Create new bogus server capability
@@ -534,9 +534,9 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 
 	// Disassociate server from DS
 	setInactive(t, *dsID)
-	_, _, err = TOSession.DeleteDeliveryServiceServer(*dsID, sID)
+	deleteResp, _, err := TOSession.DeleteDeliveryServiceServer(*dsID, sID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("could not DELETE the server %v from ds %d: %v", sID, *dsID, err)
+		t.Fatalf("could not remove server #%d from Delivery Service #%d: %v - alerts: %+v", sID, *dsID, err, deleteResp.Alerts)
 	}
 
 	// Remove server capabilities from server

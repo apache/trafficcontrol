@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 	"testing"
 
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -36,9 +35,9 @@ func TestCacheGroupsDeliveryServices(t *testing.T) {
 const TestEdgeServerCacheGroupName = "cachegroup3"
 
 func CreateTestCachegroupsDeliveryServices(t *testing.T) {
-	dss, _, err := TOSession.GetDeliveryServiceServers(nil, nil)
+	dss, _, err := TOSession.GetDeliveryServiceServers(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET DeliveryServiceServers: %v", err)
+		t.Fatalf("Unexpected error retrieving server-to-Delivery-Service assignments: %v - alerts: %+v", err, dss.Alerts)
 	}
 	if len(dss.Response) > 0 {
 		t.Fatalf("cannot test cachegroups delivery services: expected no initial delivery service servers, actual %v", len(dss.Response))
@@ -175,11 +174,11 @@ func setInactive(t *testing.T, dsID int) {
 }
 
 func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
-	params := url.Values{}
-	params.Set("limit", "1000000")
-	dss, _, err := TOSession.GetDeliveryServiceServers(params, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("limit", "1000000")
+	dss, _, err := TOSession.GetDeliveryServiceServers(opts)
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceServers: %v", err)
+		t.Fatalf("Unexpected error retrieving server-to-Delivery-Service assignments: %v - alerts: %+v", err, dss.Alerts)
 	}
 	for _, ds := range dss.Response {
 		if ds.DeliveryService == nil {
@@ -193,16 +192,15 @@ func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
 
 		setInactive(t, *ds.DeliveryService)
 
-		alerts, _, err := TOSession.DeleteDeliveryServiceServer(*ds.DeliveryService, *ds.Server)
-		t.Logf("Alerts from deleting deliveryserviceserver: %s", strings.Join(alerts.ToStrings(), ", "))
+		alerts, _, err := TOSession.DeleteDeliveryServiceServer(*ds.DeliveryService, *ds.Server, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("deleting delivery service servers: %v", err)
+			t.Errorf("deleting delivery service servers: %v - alerts: %+v", err, alerts.Alerts)
 		}
 	}
 
-	dss, _, err = TOSession.GetDeliveryServiceServers(nil, nil)
+	dss, _, err = TOSession.GetDeliveryServiceServers(client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceServers: %v", err)
+		t.Fatalf("Unexpected error retrieving server-to-Delivery-Service assignments: %v - alerts: %+v", err, dss.Alerts)
 	}
 	if len(dss.Response) > 0 {
 		t.Errorf("deleting delivery service servers: delete succeeded, expected empty subsequent get, actual %v", len(dss.Response))
