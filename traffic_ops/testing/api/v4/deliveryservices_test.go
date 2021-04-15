@@ -1400,7 +1400,9 @@ func GetDeliveryServiceByValidProfile(t *testing.T) {
 	if len(testData.DeliveryServices) > 0 {
 		firstDS := testData.DeliveryServices[0]
 
-		if firstDS.ProfileName != nil {
+		if firstDS.ProfileName == nil {
+			t.Errorf("Profile name is nil in the Pre-requisites")
+		} else {
 			if firstDS.ProfileID == nil {
 				profile, _, err := TOSession.GetProfileByName(*firstDS.ProfileName, nil)
 				if err != nil {
@@ -1428,8 +1430,6 @@ func GetDeliveryServiceByValidProfile(t *testing.T) {
 					}
 				}
 			}
-		} else {
-			t.Errorf("Profile name is nil in the Pre-requisites")
 		}
 	}
 }

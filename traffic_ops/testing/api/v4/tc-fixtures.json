@@ -462,7 +462,7 @@
             "orgServerFqdn": "http://origin.example.net",
             "originShield": null,
             "profileDescription": null,
-            "profileName": null,
+            "profileName": "ATS_EDGE_TIER_CACHE",
             "protocol": 2,
             "qstringIgnore": 1,
             "rangeRequestHandling": 0,
