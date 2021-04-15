@@ -35,6 +35,7 @@ import (
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
@@ -56,6 +57,7 @@ SELECT
 	r.last_edited_by_id,
 	r.last_updated,
 	r.deliveryservice,
+	r.original,
 	r.status
 FROM deliveryservice_request r
 JOIN tm_user a ON r.author_id = a.id
@@ -70,14 +72,16 @@ INSERT INTO deliveryservice_request (
 	change_type,
 	last_edited_by_id,
 	deliveryservice,
+	original,
 	status
 ) VALUES (
 	$1,
 	$2,
 	$3,
 	$2,
-	$4,
-	$5
+	NULLIF($4, 'null'::jsonb),
+	NULLIF($5, 'null'::jsonb),
+	$6
 )
 RETURNING
 	id,
@@ -91,9 +95,10 @@ SET
 	assignee_id = $1,
 	change_type = $2,
 	last_edited_by_id = $3,
-	deliveryservice = $4,
-	status = $5
-WHERE id = $6
+	deliveryservice = NULLIF($4, 'null'::jsonb),
+	original = NULLIF($5, 'null'::jsonb),
+	status = $6
+WHERE id = $7
 RETURNING
 	last_updated,
 	created_at
@@ -107,8 +112,15 @@ WHERE id=$1
 
 //TODO: figure out how to modify 'AddTenancyCheck' so this isn't necessary
 const customTenancyCheck = `(
-	CAST(r.deliveryservice->>'tenantId' AS BIGINT) = ANY(CAST(:accessibleTenants AS BIGINT[]))
+	CASE r.change_type
+	WHEN 'delete' THEN CAST(r.original->>'tenantId' AS BIGINT) = ANY(CAST(:accessibleTenants AS BIGINT[]))
+	ELSE CAST(r.deliveryservice->>'tenantId' AS BIGINT) = ANY(CAST(:accessibleTenants AS BIGINT[]))
+	END
 )`
+
+const originalsQuery = deliveryservice.SelectDeliveryServicesQuery + `
+WHERE ds.id = ANY(:ids)
+`
 
 func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(t) FROM (
@@ -118,6 +130,33 @@ func selectMaxLastUpdatedQuery(where string) string {
 	LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id ` + where +
 		` UNION ALL
 	SELECT MAX(last_updated) AS t FROM last_deleted l WHERE l.table_name='deliveryservice_request') AS res`
+}
+
+// getOriginals fetches the Delivery Services identified in 'ids' and sets
+// them as originals on the Delivery Services to which each ID maps in
+// needOriginals. It returns a response code to use if an error occurred, in
+// which case it also returns a user error and a system error.
+func getOriginals(ids []int, tx *sqlx.Tx, needOriginals map[int][]*tc.DeliveryServiceRequestV4) (int, error, error) {
+	if len(ids) > 0 {
+		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(originalsQuery, map[string]interface{}{"ids": pq.Array(ids)}, tx)
+		if userErr != nil || sysErr != nil {
+			return errCode, userErr, sysErr
+		}
+
+		for _, original := range originals {
+			if original.ID == nil {
+				log.Warnf("Trying to fill in originals: found Delivery Service with no ID")
+			} else if need, ok := needOriginals[*original.ID]; ok {
+				for _, n := range need {
+					n.Original = new(tc.DeliveryServiceV4)
+					*n.Original = original
+				}
+			} else {
+				log.Warnf("Trying to fill in originals: found Delivery Service that wasn't identified by a DSR (#%d)", *original.ID)
+			}
+		}
+	}
+	return http.StatusOK, nil, nil
 }
 
 // Get is the GET handler for /deliveryservice_requests.
@@ -165,7 +204,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		} else {
 			where = "WHERE "
 		}
-		where += "(r.deliveryservice->>'xmlId' = :xmlId)"
+		where += "(r.deliveryservice->>'xmlId' = :xmlId) OR (r.original->>'xmlId' = :xmlId)"
 	}
 
 	var maxTime *time.Time
@@ -210,6 +249,8 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	dsrs := []tc.DeliveryServiceRequestV40{}
+	needOriginals := map[int][]*tc.DeliveryServiceRequestV40{}
+	var originalIDs []int
 	for rows.Next() {
 		var dsr tc.DeliveryServiceRequestV40
 		if err = rows.StructScan(&dsr); err != nil {
@@ -217,6 +258,26 @@ func Get(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		dsrs = append(dsrs, dsr)
+
+		if dsr.IsOpen() && dsr.ChangeType != tc.DSRChangeTypeCreate {
+			if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
+				id := *dsr.Requested.ID
+				if _, ok := needOriginals[id]; !ok {
+					needOriginals[id] = []*tc.DeliveryServiceRequestV40{&dsrs[len(dsrs)-1]}
+				} else {
+					needOriginals[id] = append(needOriginals[id], &dsrs[len(dsrs)-1])
+				}
+				originalIDs = append(originalIDs, id)
+			} else if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
+				id := *dsr.Original.ID
+				if _, ok := needOriginals[id]; !ok {
+					needOriginals[id] = []*tc.DeliveryServiceRequestV40{&dsrs[len(dsrs)-1]}
+				} else {
+					needOriginals[id] = append(needOriginals[id], &dsrs[len(dsrs)-1])
+				}
+				originalIDs = append(originalIDs, id)
+			}
+		}
 	}
 
 	if maxTime != nil {
@@ -224,7 +285,13 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if version.Major >= 4 {
-		api.WriteResp(w, r, dsrs)
+		errCode, userErr, sysErr = getOriginals(originalIDs, inf.Tx, needOriginals)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		} else {
+			api.WriteResp(w, r, dsrs)
+		}
+		return
 	}
 
 	downgraded := make([]tc.DeliveryServiceRequestNullable, 0, len(dsrs))
@@ -238,28 +305,69 @@ func Get(w http.ResponseWriter, r *http.Request) {
 // isTenantAuthorized ensures the user is authorized on the DSR's
 // DeliveryService's Tenant, as appropriate to the change type.
 func isTenantAuthorized(dsr tc.DeliveryServiceRequestV40, inf *api.APIInfo) (bool, error) {
-	if dsr.DeliveryService != nil && (dsr.ChangeType == tc.DSRChangeTypeUpdate || dsr.ChangeType == tc.DSRChangeTypeCreate) {
-		if dsr.DeliveryService.TenantID == nil {
-			return false, errors.New("deliveryService.tenantID is nil")
+	if dsr.Requested != nil && (dsr.ChangeType == tc.DSRChangeTypeUpdate || dsr.ChangeType == tc.DSRChangeTypeCreate) {
+		if dsr.Requested.TenantID == nil {
+			log.Debugf("requested.tenantID is nil")
+			return false, errors.New("requested.tenantID is nil")
 		}
-		ok, err := tenant.IsResourceAuthorizedToUserTx(*dsr.DeliveryService.TenantID, inf.User, inf.Tx.Tx)
+		ok, err := tenant.IsResourceAuthorizedToUserTx(*dsr.Requested.TenantID, inf.User, inf.Tx.Tx)
+		if err != nil {
+			err = fmt.Errorf("requested: %v", err)
+		}
 		if !ok || err != nil {
 			return ok, err
 		}
 	}
 
-	return true, nil
+	ds := dsr.Original
+	if ds == nil || dsr.ChangeType == tc.DSRChangeTypeCreate {
+		// No deliveryservice applied yet or change type doesn't require an original
+		return true, nil
+	}
+
+	if ds.TenantID == nil {
+		log.Debugf("original.tenantID is nil")
+		return false, errors.New("original.tenantID is nil")
+	}
+	ok, err := tenant.IsResourceAuthorizedToUserTx(*ds.TenantID, inf.User, inf.Tx.Tx)
+	if err != nil {
+		err = fmt.Errorf("original: %v", err)
+	}
+	return ok, err
 }
 
 // Warning: this assumes inf isn't nil, and neither is dsr, inf.Tx or inf.User or inf.Tx.Tx.
 func insert(dsr *tc.DeliveryServiceRequestV40, inf *api.APIInfo) (int, error, error) {
 	dsr.Author = inf.User.UserName
 	dsr.LastEditedBy = inf.User.UserName
+	if dsr.ChangeType != tc.DSRChangeTypeDelete {
+		dsr.Original = nil
+	} else {
+		dsr.Requested = nil
+	}
 
 	dsr.ID = new(int)
-	if err := inf.Tx.Tx.QueryRow(insertQuery, dsr.AssigneeID, inf.User.ID, dsr.ChangeType, dsr.DeliveryService, dsr.Status).Scan(dsr.ID, &dsr.LastUpdated, &dsr.CreatedAt); err != nil {
+	if err := inf.Tx.Tx.QueryRow(insertQuery, dsr.AssigneeID, inf.User.ID, dsr.ChangeType, dsr.Requested, dsr.Original, dsr.Status).Scan(dsr.ID, &dsr.LastUpdated, &dsr.CreatedAt); err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
 		return errCode, userErr, sysErr
+	}
+
+	if dsr.ChangeType == tc.DSRChangeTypeUpdate {
+		query := deliveryservice.SelectDeliveryServicesQuery + `WHERE xml_id=:XMLID`
+		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
+		if userErr != nil || sysErr != nil {
+			return errCode, userErr, sysErr
+		}
+		if len(originals) < 1 {
+			userErr = fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)
+			return http.StatusBadRequest, userErr, nil
+		}
+		if len(originals) > 1 {
+			sysErr = fmt.Errorf("too many Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
+			return http.StatusInternalServerError, nil, sysErr
+		}
+		dsr.Original = new(tc.DeliveryServiceV4)
+		*dsr.Original = originals[0]
 	}
 	return http.StatusOK, nil, nil
 }
@@ -529,6 +637,19 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if dsr.IsOpen() && dsr.ChangeType != tc.DSRChangeTypeCreate {
+		if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Original.ID: {&dsr}})
+		} else if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}})
+		}
+
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+	}
+
 	var resp interface{}
 	if inf.Version.Major >= 4 {
 		resp = dsr
@@ -566,6 +687,12 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		return
 	}
 
+	if dsr.ChangeType != tc.DSRChangeTypeDelete {
+		dsr.Original = nil
+	} else {
+		dsr.Requested = nil
+	}
+
 	authorized, err := isTenantAuthorized(dsr, inf)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
@@ -584,7 +711,8 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		dsr.AssigneeID,
 		dsr.ChangeType,
 		inf.User.ID,
-		dsr.DeliveryService,
+		dsr.Requested,
+		dsr.Original,
 		dsr.Status,
 		inf.IntParams["id"],
 	}
@@ -602,6 +730,27 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		return
 	}
 	dsr.SetXMLID()
+
+	if dsr.ChangeType == tc.DSRChangeTypeUpdate {
+		query := deliveryservice.SelectDeliveryServicesQuery + `WHERE xml_id=:XMLID`
+		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, map[string]interface{}{"XMLID": dsr.XMLID}, inf.Tx)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+		if len(originals) < 1 {
+			userErr = fmt.Errorf("cannot update non-existent Delivery Service '%s'", dsr.XMLID)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
+			return
+		}
+		if len(originals) > 1 {
+			sysErr = fmt.Errorf("too many Delivery Services with XMLID '%s'; want: 1, got: %d", dsr.XMLID, len(originals))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+			return
+		}
+		dsr.Original = new(tc.DeliveryServiceV4)
+		*dsr.Original = originals[0]
+	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d updated", inf.IntParams["id"]), dsr)
 	result.Successful = true
@@ -652,7 +801,8 @@ func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result
 		upgraded.AssigneeID,
 		upgraded.ChangeType,
 		inf.User.ID,
-		upgraded.DeliveryService,
+		upgraded.Requested,
+		upgraded.Original,
 		upgraded.Status,
 		inf.IntParams["id"],
 	}

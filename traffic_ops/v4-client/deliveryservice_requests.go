@@ -55,36 +55,43 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40
 		dsr.AuthorID = res[0].ID
 	}
 
-	if dsr.DeliveryService.TypeID == nil && dsr.DeliveryService.Type.String() != "" {
-		ty, reqInf, err := to.GetTypeByName(dsr.DeliveryService.Type.String(), nil)
+	var ds *tc.DeliveryServiceV4
+	if dsr.ChangeType == tc.DSRChangeTypeDelete {
+		ds = dsr.Original
+	} else {
+		ds = dsr.Requested
+	}
+
+	if ds.TypeID == nil && ds.Type.String() != "" {
+		ty, reqInf, err := to.GetTypeByName(ds.Type.String(), nil)
 		if err != nil || len(ty) == 0 {
-			return created, alerts, reqInf, errors.New("no type named " + dsr.DeliveryService.Type.String())
+			return created, alerts, reqInf, errors.New("no type named " + ds.Type.String())
 		}
-		dsr.DeliveryService.TypeID = &ty[0].ID
+		ds.TypeID = &ty[0].ID
 	}
 
-	if dsr.DeliveryService.CDNID == nil && dsr.DeliveryService.CDNName != nil {
-		cdns, reqInf, err := to.GetCDNByName(*dsr.DeliveryService.CDNName, nil)
+	if ds.CDNID == nil && ds.CDNName != nil {
+		cdns, reqInf, err := to.GetCDNByName(*ds.CDNName, nil)
 		if err != nil || len(cdns) == 0 {
-			return created, alerts, reqInf, fmt.Errorf("no CDN named '%s'", *dsr.DeliveryService.CDNName)
+			return created, alerts, reqInf, fmt.Errorf("no CDN named '%s'", *ds.CDNName)
 		}
-		dsr.DeliveryService.CDNID = &cdns[0].ID
+		ds.CDNID = &cdns[0].ID
 	}
 
-	if dsr.DeliveryService.ProfileID == nil && dsr.DeliveryService.ProfileName != nil {
-		profiles, reqInf, err := to.GetProfileByName(*dsr.DeliveryService.ProfileName, nil)
+	if ds.ProfileID == nil && ds.ProfileName != nil {
+		profiles, reqInf, err := to.GetProfileByName(*ds.ProfileName, nil)
 		if err != nil || len(profiles) == 0 {
-			return created, alerts, reqInf, fmt.Errorf("no Profile named '%s'", *dsr.DeliveryService.ProfileName)
+			return created, alerts, reqInf, fmt.Errorf("no Profile named '%s'", *ds.ProfileName)
 		}
-		dsr.DeliveryService.ProfileID = &profiles[0].ID
+		ds.ProfileID = &profiles[0].ID
 	}
 
-	if dsr.DeliveryService.TenantID == nil && dsr.DeliveryService.Tenant != nil {
-		ten, reqInf, err := to.GetTenantByName(*dsr.DeliveryService.Tenant, nil)
+	if ds.TenantID == nil && ds.Tenant != nil {
+		ten, reqInf, err := to.GetTenantByName(*ds.Tenant, nil)
 		if err != nil {
-			return created, alerts, reqInf, fmt.Errorf("no Tenant named '%s'", *dsr.DeliveryService.Tenant)
+			return created, alerts, reqInf, fmt.Errorf("no Tenant named '%s'", *ds.Tenant)
 		}
-		dsr.DeliveryService.TenantID = &ten.ID
+		ds.TenantID = &ten.ID
 	}
 
 	var resp struct {

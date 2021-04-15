@@ -138,20 +138,20 @@ func ExampleDeliveryServiceRequestV40_String() {
 func TestDeliveryServiceRequestV40_Downgrade(t *testing.T) {
 	xmlid := "xmlid"
 	dsr := DeliveryServiceRequestV40{
-		Assignee:        nil,
-		AssigneeID:      nil,
-		Author:          "author",
-		AuthorID:        nil,
-		ChangeType:      DSRChangeTypeCreate,
-		CreatedAt:       time.Time{},
-		ID:              nil,
-		LastEditedBy:    "last edited by",
-		LastEditedByID:  nil,
-		LastUpdated:     time.Now(),
-		DeliveryService: &DeliveryServiceV4{},
-		Status:          RequestStatusComplete,
+		Assignee:       nil,
+		AssigneeID:     nil,
+		Author:         "author",
+		AuthorID:       nil,
+		ChangeType:     DSRChangeTypeCreate,
+		CreatedAt:      time.Time{},
+		ID:             nil,
+		LastEditedBy:   "last edited by",
+		LastEditedByID: nil,
+		LastUpdated:    time.Now(),
+		Requested:      &DeliveryServiceV4{},
+		Status:         RequestStatusComplete,
 	}
-	dsr.DeliveryService.XMLID = &xmlid
+	dsr.Requested.XMLID = &xmlid
 
 	downgraded := dsr.Downgrade()
 	if downgraded.Assignee != nil {
@@ -213,9 +213,9 @@ func ExampleDeliveryServiceRequestV40_SetXMLID() {
 	var dsr DeliveryServiceRequestV40
 	fmt.Println(dsr.XMLID == "")
 
-	dsr.DeliveryService = new(DeliveryServiceV4)
-	dsr.DeliveryService.XMLID = new(string)
-	*dsr.DeliveryService.XMLID = "test"
+	dsr.Requested = new(DeliveryServiceV4)
+	dsr.Requested.XMLID = new(string)
+	*dsr.Requested.XMLID = "test"
 	dsr.SetXMLID()
 
 	fmt.Println(dsr.XMLID)

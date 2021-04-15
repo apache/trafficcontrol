@@ -22,6 +22,23 @@ import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
+interface CreateStatus {
+    Name: string;
+    DescriptionData: string;
+    validationMessage: string;
+}
+
+interface UpdateStatus {
+    description: string;
+    DescriptionData: string;
+    validationMessage?: string;
+}
+
+interface DeleteStatus {
+    Name: string;
+    validationMessage?: string;
+}
+
 export class StatusesPage extends BasePage {
     private btnCreateNewStatus = element(by.xpath("//button[@title='Create Status']"))
     private txtName = element(by.id('name'));
@@ -39,7 +56,8 @@ export class StatusesPage extends BasePage {
         let snp = new SideNavigationPage();
         await snp.ClickConfigureMenu();
     }
-    async CreateStatus(status) {
+
+    public async CreateStatus(status: CreateStatus): Promise<boolean> {
         let result = false;
         let basePage = new BasePage();
         await this.btnCreateNewStatus.click();
@@ -55,6 +73,7 @@ export class StatusesPage extends BasePage {
         })
         return result;
     }
+
     public async SearchStatus(nameStatus: string): Promise<boolean> {
         let snp = new SideNavigationPage();
         let name = nameStatus + this.randomize;
@@ -67,7 +86,8 @@ export class StatusesPage extends BasePage {
         }
         return false;
     }
-    public async UpdateStatus(status): Promise<boolean | undefined> {
+
+    public async UpdateStatus(status: UpdateStatus): Promise<boolean | undefined> {
         let basePage = new BasePage();
         switch (status.description) {
             case "update Status description":
@@ -80,7 +100,8 @@ export class StatusesPage extends BasePage {
         }
         return await basePage.GetOutputMessage().then(value => status.validationMessage === value);
     }
-    async DeleteStatus(status) {
+
+    public async DeleteStatus(status: DeleteStatus): Promise<boolean> {
         let name = status.Name + this.randomize;
         let result = false;
         let basePage = new BasePage();

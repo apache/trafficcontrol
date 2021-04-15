@@ -958,7 +958,7 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 		return nil, nil, err, http.StatusInternalServerError, nil
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
-	query := deliveryservice.GetDSSelectQuery() + where + orderBy + pagination
+	query := deliveryservice.SelectDeliveryServicesQuery + where + orderBy + pagination
 	queryValues["server"] = dss.APIInfo().Params["id"]
 
 	if useIMS {

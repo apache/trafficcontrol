@@ -22,6 +22,7 @@ package deliveryservice
 import (
 	"bytes"
 	"context"
+	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -30,187 +31,413 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
 	"github.com/go-acme/lego/certcrypto"
 	"github.com/go-acme/lego/certificate"
 	"github.com/go-acme/lego/challenge"
+	"github.com/go-acme/lego/challenge/dns01"
 	"github.com/go-acme/lego/lego"
 	"github.com/go-acme/lego/registration"
 	"github.com/jmoiron/sqlx"
 )
 
 const validAccountStatus = "valid"
+const AcmeTimeout = time.Minute * 20
+const API_ACME_GENERATE_LE = "/deliveryservices/sslkeys/generate/acme"
 
-// RenewAcmeCertificate renews the SSL certificate for a delivery service if possible through ACME protocol.
-func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
+// MyUser stores the user's information for use in ACME protocol.
+type MyUser struct {
+	Email        string
+	Registration *registration.Resource
+	key          crypto.PrivateKey
+}
+
+// GetEmail returns a user's email for use in ACME protocol.
+func (u *MyUser) GetEmail() string {
+	return u.Email
+}
+
+// GetRegistration returns a user's registration for use in ACME protocol.
+func (u MyUser) GetRegistration() *registration.Resource {
+	return u.Registration
+}
+
+// GetPrivateKey returns a user's private key for use in ACME protocol.
+func (u *MyUser) GetPrivateKey() crypto.PrivateKey {
+	return u.key
+}
+
+// DNSProviderTrafficRouter is used in the lego library and contains a database in order to store the DNS challenges for ACME protocol.
+type DNSProviderTrafficRouter struct {
+	db *sqlx.DB
+}
+
+// NewDNSProviderTrafficRouter returns a new DNSProviderTrafficRouter object.
+func NewDNSProviderTrafficRouter() *DNSProviderTrafficRouter {
+	return &DNSProviderTrafficRouter{}
+}
+
+// Timeout returns timeout information for the lego library including the timeout duration and the interval between checks.
+func (d *DNSProviderTrafficRouter) Timeout() (timeout, interval time.Duration) {
+	return AcmeTimeout, time.Second * 30
+}
+
+// Present inserts the DNS challenge record into the database to be used by Traffic Router. This is used in the lego library.
+func (d *DNSProviderTrafficRouter) Present(domain, token, keyAuth string) error {
+	tx, err := d.db.Begin()
+	fqdn, value := dns01.GetRecord(domain, keyAuth)
+
+	q := `INSERT INTO dnschallenges (fqdn, record) VALUES ($1, $2)`
+	response, err := tx.Exec(q, fqdn, value)
+	tx.Commit()
+	if err != nil {
+		log.Errorf("Inserting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+		return errors.New("Inserting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+	} else {
+		rows, err := response.RowsAffected()
+		if err != nil {
+			log.Errorf("Determining rows affected dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+			return errors.New("Determining rows affected dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+		}
+		if rows == 0 {
+			log.Errorf("Zero rows affected when inserting dns txt record for fqdn '" + fqdn + "' record '" + value)
+			return errors.New("Zero rows affected when inserting dns txt record for fqdn '" + fqdn + "' record '" + value)
+		}
+	}
+
+	return nil
+}
+
+// CleanUp removes the DNS challenge record from the database after the challenge has completed. This is used in the lego library.
+func (d *DNSProviderTrafficRouter) CleanUp(domain, token, keyAuth string) error {
+	fqdn, value := dns01.GetRecord(domain, keyAuth)
+	tx, err := d.db.Begin()
+
+	q := `DELETE FROM dnschallenges WHERE fqdn = $1 and record = $2`
+	response, err := tx.Exec(q, fqdn, value)
+	tx.Commit()
+	if err != nil {
+		log.Errorf("Deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+		return errors.New("Deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+	} else {
+		rows, err := response.RowsAffected()
+		if err != nil {
+			log.Errorf("Determining rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+			return errors.New("Determining rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
+		}
+		if rows == 0 {
+			log.Errorf("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value)
+			return errors.New("Zero rows affected when deleting dns txt record for fqdn '" + fqdn + "' record '" + value)
+		}
+	}
+
+	return nil
+}
+
+// GenerateAcmeCertificates gets and saves certificates using ACME protocol from a give ACME provider.
+func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 	if !inf.Config.TrafficVaultEnabled {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.RenewAcmeCertificate: Traffic Vault is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateAcmeCertificates: Traffic Vault is not configured"))
 		return
 	}
-	xmlID := inf.Params["xmlid"]
+	ctx, _ := context.WithTimeout(r.Context(), AcmeTimeout)
 
-	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
+	req := tc.DeliveryServiceLetsEncryptSSLKeysReq{}
+	if err := api.Parse(r.Body, nil, &req); err != nil {
+		api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
+		return
+	}
+	if *req.DeliveryService == "" {
+		req.DeliveryService = req.Key
+	}
+
+	dsID, cdnName, ok, err := dbhelpers.GetDSIDAndCDNFromName(inf.Tx.Tx, *req.DeliveryService)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateLetsEncryptCertificates: getting DS ID from name "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+*req.DeliveryService), nil)
+		return
+	}
+
+	userErr, sysErr, errCode = tenant.CheckID(inf.Tx.Tx, inf.User, dsID)
+	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
-	ctx, _ := context.WithTimeout(r.Context(), LetsEncryptTimeout)
-
-	userErr, sysErr, statusCode := renewAcmeCerts(inf.Config, xmlID, ctx, inf.User, inf.Vault)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+	_, ok, err = dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(*req.CDN))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking CDN existence: "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("cdn not found with name "+*req.CDN), nil)
+		return
 	}
 
-	api.WriteRespAlert(w, r, tc.SuccessLevel, "Certificate for "+xmlID+" successfully renewed.")
+	if cdnName != tc.CDNName(*req.CDN) {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("delivery service not in cdn"), nil)
+		return
+	}
 
+	go GetAcmeCertificates(inf.Config, req, ctx, inf.User, inf.Vault)
+
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "Beginning async ACME call for "+*req.DeliveryService+" using "+*req.AuthType+". This may take a few minutes.")
 }
 
-func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, currentUser *auth.CurrentUser, tv trafficvault.TrafficVault) (error, error, int) {
+// GenerateLetsEncryptCertificates gets and saves new certificates from Let's Encrypt.
+func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateLetsEncryptCertificates: Traffic Vault is not configured"))
+		return
+	}
+
+	ctx, _ := context.WithTimeout(r.Context(), AcmeTimeout)
+
+	req := tc.DeliveryServiceLetsEncryptSSLKeysReq{}
+	if err := api.Parse(r.Body, nil, &req); err != nil {
+		api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
+		return
+	}
+	if *req.DeliveryService == "" {
+		req.DeliveryService = req.Key
+	}
+
+	dsID, cdnName, ok, err := dbhelpers.GetDSIDAndCDNFromName(inf.Tx.Tx, *req.DeliveryService)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateLetsEncryptCertificates: getting DS ID from name "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+*req.DeliveryService), nil)
+		return
+	}
+
+	userErr, sysErr, errCode = tenant.CheckID(inf.Tx.Tx, inf.User, dsID)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	_, ok, err = dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(*req.CDN))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking CDN existence: "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("cdn not found with name "+*req.CDN), nil)
+		return
+	}
+
+	if cdnName != tc.CDNName(*req.CDN) {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("delivery service not in cdn"), nil)
+		return
+	}
+
+	go GetAcmeCertificates(inf.Config, req, ctx, inf.User, inf.Vault)
+
+	var alerts tc.Alerts
+
+	alerts.AddAlerts(api.CreateDeprecationAlerts(util.StrPtr(API_ACME_GENERATE_LE)))
+
+	alerts.AddAlert(tc.Alert{
+		Text:  "Beginning async call to Let's Encrypt for " + *req.DeliveryService + ". This may take a few minutes.",
+		Level: tc.SuccessLevel.String(),
+	})
+
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
+}
+
+// GetAcmeCertificates gets or creates an ACME account based on the provider, then gets new certificates for the delivery service requested and saves them to Vault.
+func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceLetsEncryptSSLKeysReq, ctx context.Context, currentUser *auth.CurrentUser, tv trafficvault.TrafficVault) error {
+
 	db, err := api.GetDB(ctx)
 	if err != nil {
-		log.Errorf(dsName+": Error getting db: %s", err.Error())
-		return nil, err, http.StatusInternalServerError
+		log.Errorf(*req.DeliveryService+": Error getting db: %s", err.Error())
+		return err
 	}
-
 	tx, err := db.Begin()
 	if err != nil {
-		log.Errorf(dsName+": Error getting tx: %s", err.Error())
-		return nil, err, http.StatusInternalServerError
+		log.Errorf(*req.DeliveryService+": Error getting tx: %s", err.Error())
+		return err
 	}
-
 	userTx, err := db.Begin()
 	if err != nil {
-		log.Errorf(dsName+": Error getting userTx: %s", err.Error())
-		return nil, err, http.StatusInternalServerError
+		log.Errorf(*req.DeliveryService+": Error getting userTx: %s", err.Error())
+		return err
 	}
 	defer userTx.Commit()
 
 	logTx, err := db.Begin()
 	if err != nil {
-		log.Errorf(dsName+": Error getting logTx: %s", err.Error())
-		return nil, err, http.StatusInternalServerError
+		log.Errorf(*req.DeliveryService+": Error getting logTx: %s", err.Error())
+		return err
 	}
 	defer logTx.Commit()
 
-	dsID, certVersion, err := getDSIdAndVersionFromName(db, dsName)
+	domainName := *req.HostName
+	deliveryService := *req.DeliveryService
+	provider := *req.AuthType
+
+	dsID, ok, err := getDSIDFromName(tx, *req.DeliveryService)
 	if err != nil {
-		return nil, errors.New("querying DS info: " + err.Error()), http.StatusInternalServerError
+		log.Errorf("deliveryservice.GenerateSSLKeys: getting DS ID from name " + err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		return errors.New("deliveryservice.GenerateSSLKeys: getting DS ID from name " + err.Error())
+	} else if !ok {
+		log.Errorf("no DS with name " + *req.DeliveryService)
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		return errors.New("no DS with name " + *req.DeliveryService)
 	}
-	if dsID == nil || *dsID == 0 {
-		return errors.New("DS id for " + dsName + " was nil or 0"), nil, http.StatusBadRequest
-	}
-	if certVersion == nil || *certVersion == 0 {
-		return errors.New("certificate for " + dsName + " could not be renewed because version was nil or 0"), nil, http.StatusBadRequest
-	}
+	tx.Commit()
 
 	if cfg == nil {
-		return nil, errors.New("acme: config was nil"), http.StatusInternalServerError
+		log.Errorf("acme: config was nil for provider %s", provider)
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		return errors.New("acme: config was nil")
 	}
-	keyObj, ok, err := tv.GetDeliveryServiceSSLKeys(dsName, strconv.Itoa(int(*certVersion)), tx)
+
+	var account *config.ConfigAcmeAccount
+	if provider == tc.LetsEncryptAuthType {
+		letsEncryptAccount := config.ConfigAcmeAccount{
+			UserEmail:    cfg.ConfigLetsEncrypt.Email,
+			AcmeProvider: tc.LetsEncryptAuthType,
+		}
+
+		if strings.EqualFold(cfg.ConfigLetsEncrypt.Environment, "staging") {
+			letsEncryptAccount.AcmeUrl = lego.LEDirectoryStaging // provides certificate signed by invalid authority for testing purposes
+		} else {
+			letsEncryptAccount.AcmeUrl = lego.LEDirectoryProduction // provides certificate signed by valid LE authority
+		}
+		account = &letsEncryptAccount
+	} else {
+		acmeAccount := GetAcmeAccountConfig(cfg, provider)
+		if acmeAccount == nil {
+			log.Errorf("acme: no account information found for %s" + provider)
+			api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+			return errors.New("No acme account information in cdn.conf for " + provider)
+		}
+		account = acmeAccount
+	}
+
+	client, err := GetAcmeClient(account, userTx, db)
 	if err != nil {
-		return nil, errors.New("getting ssl keys for xmlId: " + dsName + " and version: " + strconv.Itoa(int(*certVersion)) + " : " + err.Error()), http.StatusInternalServerError
-	}
-	if !ok {
-		return nil, errors.New("no object found for the specified key with xmlId: " + dsName + " and version: " + strconv.Itoa(int(*certVersion))), http.StatusInternalServerError
+		log.Errorf("acme: getting acme client for provider %s", provider)
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		return errors.New("getting acme client: " + err.Error())
 	}
 
-	err = base64DecodeCertificate(&keyObj.Certificate)
+	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		return nil, errors.New("decoding cert for XMLID " + dsName + " : " + err.Error()), http.StatusInternalServerError
+		log.Errorf(deliveryService + ": Error generating private key: " + err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		return err
+	}
+	request := certificate.ObtainRequest{
+		Domains:    []string{domainName},
+		Bundle:     true,
+		PrivateKey: priv,
 	}
 
-	acmeAccount := GetAcmeAccountConfig(cfg, keyObj.AuthType)
-	if acmeAccount == nil {
-		return nil, errors.New("No acme account information in cdn.conf for " + keyObj.AuthType), http.StatusInternalServerError
-	}
-
-	client, err := GetAcmeClient(acmeAccount, userTx, db)
+	certificates, err := client.Certificate.Obtain(request)
 	if err != nil {
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: FAILED to add SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
-		return nil, errors.New("getting acme client: " + err.Error()), http.StatusInternalServerError
+		log.Errorf(deliveryService+": Error obtaining acme certificate from %s: %s", provider, err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		return err
 	}
 
-	renewRequest := certificate.Resource{
-		Certificate: []byte(keyObj.Certificate.Crt),
+	// Save certs into Traffic Vault
+	dsSSLKeys := tc.DeliveryServiceSSLKeys{
+		AuthType:        provider,
+		CDN:             *req.CDN,
+		DeliveryService: *req.DeliveryService,
+		Key:             *req.DeliveryService,
+		Hostname:        *req.HostName,
+		Version:         *req.Version,
 	}
 
-	cert, err := client.Certificate.Renew(renewRequest, true, false)
-	if err != nil || cert == nil {
-		log.Errorf("Error obtaining acme certificate: %s", err.Error())
-		return nil, err, http.StatusInternalServerError
+	keyPem, err := ConvertPrivateKeyToKeyPem(priv)
+	if err != nil {
+		log.Errorf(deliveryService + ": Error converting private key to PEM: " + err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		return err
 	}
 
-	newCertObj := tc.DeliveryServiceSSLKeys{
-		AuthType:        keyObj.AuthType,
-		CDN:             keyObj.CDN,
-		DeliveryService: keyObj.DeliveryService,
-		Key:             keyObj.DeliveryService,
-		Hostname:        keyObj.Hostname,
-		Version:         keyObj.Version + 1,
-	}
+	// remove extra line if LE returns it
+	trimmedCert := bytes.ReplaceAll(certificates.Certificate, []byte("\n\n"), []byte("\n"))
 
-	newCertObj.Certificate = tc.DeliveryServiceSSLKeysCertificate{
-		Crt: string(EncodePEMToLegacyPerlRiakFormat(cert.Certificate)),
-		Key: string(EncodePEMToLegacyPerlRiakFormat(cert.PrivateKey)),
+	dsSSLKeys.Certificate = tc.DeliveryServiceSSLKeysCertificate{
+		Crt: string(EncodePEMToLegacyPerlRiakFormat(trimmedCert)),
+		Key: string(EncodePEMToLegacyPerlRiakFormat(keyPem)),
 		CSR: string(EncodePEMToLegacyPerlRiakFormat([]byte("ACME Generated"))),
 	}
 
-	if err := tv.PutDeliveryServiceSSLKeys(newCertObj, tx); err != nil {
-		log.Errorf("Error putting acme certificate in Traffic Vault: %s", err.Error())
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: FAILED to add SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
-		return nil, errors.New(dsName + ": putting keys in Traffic Vault: " + err.Error()), http.StatusInternalServerError
+	if err := tv.PutDeliveryServiceSSLKeys(dsSSLKeys, tx); err != nil {
+		log.Errorf("Error putting ACME certificate in Traffic Vault: %s", err.Error())
+		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		return errors.New(deliveryService + ": putting keys in Traffic Vault: " + err.Error())
 	}
 
 	tx2, err := db.Begin()
 	if err != nil {
-		log.Errorf("starting sql transaction for delivery service " + dsName + ": " + err.Error())
-		return nil, errors.New("starting sql transaction for delivery service " + dsName + ": " + err.Error()), http.StatusInternalServerError
+		log.Errorf("starting sql transaction for delivery service " + *req.DeliveryService + ": " + err.Error())
+		return errors.New("starting sql transaction for delivery service " + *req.DeliveryService + ": " + err.Error())
 	}
 
-	if err := updateSSLKeyVersion(dsName, *certVersion+1, tx2); err != nil {
-		log.Errorf("updating SSL key version for delivery service '" + dsName + "': " + err.Error())
-		return nil, errors.New("updating SSL key version for delivery service '" + dsName + "': " + err.Error()), http.StatusInternalServerError
+	if err := updateSSLKeyVersion(*req.DeliveryService, req.Version.ToInt64(), tx2); err != nil {
+		log.Errorf("updating SSL key version for delivery service '" + *req.DeliveryService + "': " + err.Error())
+		return errors.New("updating SSL key version for delivery service '" + *req.DeliveryService + "': " + err.Error())
 	}
 	tx2.Commit()
 
-	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: Added SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: Added SSL keys with "+provider, currentUser, logTx)
 
-	return nil, nil, http.StatusOK
+	return nil
 }
 
 // GetAcmeAccountConfig returns the ACME account information from cdn.conf for a given provider.
 func GetAcmeAccountConfig(cfg *config.Config, acmeProvider string) *config.ConfigAcmeAccount {
+	if acmeProvider == tc.LetsEncryptAuthType {
+		letsEncryptAccount := config.ConfigAcmeAccount{
+			UserEmail:    cfg.ConfigLetsEncrypt.Email,
+			AcmeProvider: tc.LetsEncryptAuthType,
+		}
+		if strings.EqualFold(cfg.ConfigLetsEncrypt.Environment, "staging") {
+			letsEncryptAccount.AcmeUrl = lego.LEDirectoryStaging // provides certificate signed by invalid authority for testing purposes
+		} else {
+			letsEncryptAccount.AcmeUrl = lego.LEDirectoryProduction // provides certificate signed by valid LE authority
+		}
+		return &letsEncryptAccount
+	}
 	for _, acmeCfg := range cfg.AcmeAccounts {
 		if acmeCfg.AcmeProvider == acmeProvider {
 			return &acmeCfg
 		}
 	}
 	return nil
-}
-
-func getDSIdAndVersionFromName(db *sqlx.DB, xmlId string) (*int, *int64, error) {
-	var dsID int
-	var certVersion int64
-
-	if err := db.QueryRow(`SELECT id, ssl_key_version FROM deliveryservice WHERE xml_id = $1`, xmlId).Scan(&dsID, &certVersion); err != nil {
-		return nil, nil, err
-	}
-
-	return &dsID, &certVersion, nil
 }
 
 // GetAcmeClient uses the ACME account information in either cdn.conf or the database to create and register an ACME client.
@@ -337,6 +564,14 @@ func ConvertPrivateKeyToKeyPem(userPrivateKey *rsa.PrivateKey) ([]byte, error) {
 	return userKeyBuf.Bytes(), nil
 }
 
+// AcmeInfo contains the information that will be stored for an ACME account.
+type AcmeInfo struct {
+	Email      string `db:"email"`
+	Key        string `db:"private_key"`
+	URI        string `db:"uri"`
+	PrivateKey rsa.PrivateKey
+}
+
 func getStoredAcmeAccountInfo(tx *sql.Tx, email string, provider string) (*AcmeInfo, error) {
 	acmeInfo := AcmeInfo{}
 	selectQuery := `SELECT email, private_key, uri FROM acme_account WHERE email = $1 AND provider = $2 LIMIT 1`
@@ -344,7 +579,7 @@ func getStoredAcmeAccountInfo(tx *sql.Tx, email string, provider string) (*AcmeI
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, errors.New("getting lets encrypt account record: " + err.Error())
+		return nil, errors.New("getting ACME account record: " + err.Error())
 	}
 
 	decodedKeyBlock, _ := pem.Decode([]byte(acmeInfo.Key))
@@ -373,11 +608,4 @@ func storeAcmeAccountInfo(tx *sql.Tx, email string, privateKey string, uri strin
 	}
 
 	return nil
-}
-
-type AcmeInfo struct {
-	Email      string `db:"email"`
-	Key        string `db:"private_key"`
-	URI        string `db:"uri"`
-	PrivateKey rsa.PrivateKey
 }
