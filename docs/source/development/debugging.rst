@@ -38,7 +38,7 @@ Enroller
 .. code-block:: shell
 	:caption: docker-compose command for debugging the CDN in a Box Enroller
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml optional/docker-compose.debugging.yml'
+	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 	mydc down -v
 	mydc build enroller
 	mydc up
@@ -87,7 +87,7 @@ Traffic Monitor
 .. code-block:: shell
 	:caption: docker-compose command for debugging Traffic Monitor
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml optional/docker-compose.debugging.yml'
+	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 	mydc down -v
 	mydc build trafficmonitor
 	mydc up
@@ -136,7 +136,7 @@ Traffic Ops
 .. code-block:: shell
 	:caption: docker-compose command for debugging Traffic Ops
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml optional/docker-compose.debugging.yml'
+	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 	mydc down -v
 	mydc build trafficops
 	mydc up
@@ -284,7 +284,7 @@ Traffic Stats
 .. code-block:: shell
 	:caption: docker-compose command for debugging Traffic Stats
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml optional/docker-compose.debugging.yml'
+	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 	mydc down -v
 	mydc build trafficstats
 	mydc up
