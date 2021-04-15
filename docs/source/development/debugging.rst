@@ -33,6 +33,8 @@ Some CDN-in-a-Box components can be used with a debugger to step through lines o
 Enroller
 ========
 
+* In ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``ENROLLER_DEBUG_ENABLE`` to ``true``.
+
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build/rebuild the ``enroller-debug`` image each time you have changed :atc-file:`infrastructure/cdn-in-a-box/enroller/enroller.go`. Then, start CDN-in-a-Box.
 
 .. code-block:: shell
