@@ -260,18 +260,22 @@ func UpdateTestTopologies(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cannot GET topology: %v", err)
 	}
-	params := url.Values{}
-	params.Add("topology", "top-used-by-cdn1-and-cdn2")
-	dses, _, err := TOSession.GetDeliveryServices(nil, params)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("topology", "top-used-by-cdn1-and-cdn2")
+	dses, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("cannot GET delivery services: %v", err)
+		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 	}
-	if len(dses) < 2 {
-		t.Fatalf("expected at least 2 delivery services assigned to topology top-used-by-cdn1-and-cdn2, actual: %d", len(dses))
+	if len(dses.Response) < 2 {
+		t.Fatalf("expected at least 2 delivery services assigned to topology top-used-by-cdn1-and-cdn2, actual: %d", len(dses.Response))
 	}
 	foundCDN1 := false
 	foundCDN2 := false
-	for _, ds := range dses {
+	for _, ds := range dses.Response {
+		if ds.CDNName == nil {
+			t.Error("Traffic Ops returned a representation of a Delivery Service that had null or undefined CDN Name")
+			continue
+		}
 		if *ds.CDNName == "cdn1" {
 			foundCDN1 = true
 		} else if *ds.CDNName == "cdn2" {
@@ -281,7 +285,7 @@ func UpdateTestTopologies(t *testing.T) {
 	if !foundCDN1 || !foundCDN2 {
 		t.Fatalf("expected delivery services assigned to topology top-used-by-cdn1-and-cdn2 to be assigned to cdn1 and cdn2")
 	}
-	opts := client.NewRequestOptions()
+	opts = client.NewRequestOptions()
 	opts.QueryParameters.Set("name", "cdn1-only")
 	cgs, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
@@ -293,7 +297,7 @@ func UpdateTestTopologies(t *testing.T) {
 	if cgs.Response[0].ID == nil {
 		t.Fatal("Traffic Ops returned a representation for Cache Group 'cdn1-only' that had a null or undefined ID")
 	}
-	params = url.Values{}
+	params := url.Values{}
 	params.Add("cachegroup", strconv.Itoa(*cgs.Response[0].ID))
 	servers, _, err := TOSession.GetServers(params, nil)
 	if err != nil {
@@ -318,25 +322,32 @@ func UpdateTestTopologies(t *testing.T) {
 }
 
 func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
-	params := url.Values{}
-	params.Set("xmlId", "ds-top")
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", "ds-top")
 
 	//Get the correct DS
-	remoteDS, _, err := TOSession.GetDeliveryServices(nil, params)
+	resp, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Errorf("cannot GET Delivery Services: %v", err)
+		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("Expected exactly one Delivery Service to exist with XMLID 'ds-top', found: %d", len(resp.Response))
+	}
+	remoteDS := resp.Response[0]
+	if remoteDS.XMLID == nil || remoteDS.Topology == nil || remoteDS.ID == nil {
+		t.Fatal("Traffic Ops returned a representation of a Delivery Service that had null or undefined Topology and/or XMLID and/or ID")
 	}
 
 	//Assign ORG server to DS
 	assignServer := []string{"denver-mso-org-01"}
-	_, _, err = TOSession.AssignServersToDeliveryService(assignServer, *remoteDS[0].XMLID)
+	_, _, err = TOSession.AssignServersToDeliveryService(assignServer, *remoteDS.XMLID)
 	if err != nil {
 		t.Errorf("cannot assign server to Delivery Services: %v", err)
 	}
 
 	//Get Topology node to update and remove ORG server nodes
-	origTopo := *remoteDS[0].Topology
-	resp, _, err := TOSession.GetTopology(origTopo, nil)
+	origTopo := *remoteDS.Topology
+	topo, _, err := TOSession.GetTopology(origTopo, nil)
 	if err != nil {
 		t.Fatalf("couldn't find any topologies: %v", err)
 	}
@@ -344,18 +355,19 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	// remove org server cachegroup
 	var p []int
 	newNodes := []tc.TopologyNode{{Id: 0, Cachegroup: "topology-edge-cg-01", Parents: p, LastUpdated: nil}}
-	if *remoteDS[0].Topology == resp.Name {
-		resp.Nodes = newNodes
+	if *remoteDS.Topology == topo.Name {
+		topo.Nodes = newNodes
 	}
-	_, _, err = TOSession.UpdateTopology(*remoteDS[0].Topology, resp, nil)
+	_, _, err = TOSession.UpdateTopology(*remoteDS.Topology, topo, nil)
 	if err == nil {
-		t.Fatalf("shouldnot UPDATE topology:%v to %v, but update was a success", *remoteDS[0].Topology, newNodes[0].Cachegroup)
+		t.Fatalf("shouldnot UPDATE topology:%v to %v, but update was a success", *remoteDS.Topology, newNodes[0].Cachegroup)
 	} else if !strings.Contains(err.Error(), "ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed:") {
-		t.Errorf("expected error messsage containing: \"ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed\", got:%s", err.Error())
+		t.Errorf("expected error messsage containing: \"ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed\", got: %v", err)
 
 	}
 
 	//Remove org server assignment and reset DS back to as it was for further testing
+	params := url.Values{}
 	params.Set("hostName", "denver-mso-org-01")
 	serverResp, _, err := TOSession.GetServers(params, nil)
 	if len(serverResp.Response) == 0 {
@@ -364,7 +376,7 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	if serverResp.Response[0].ID == nil {
 		t.Fatal("ID of the response server is nil, quitting")
 	}
-	_, _, err = TOSession.DeleteDeliveryServiceServer(*remoteDS[0].ID, *serverResp.Response[0].ID)
+	_, _, err = TOSession.DeleteDeliveryServiceServer(*remoteDS.ID, *serverResp.Response[0].ID)
 	if err != nil {
 		t.Errorf("cannot delete assigned server from Delivery Services: %v", err)
 	}
@@ -391,12 +403,20 @@ func UpdateTopologyName(t *testing.T) {
 	}
 
 	//To check whether the primary key change trickled down to DS table
-	resp1, _, err := TOSession.GetDeliveryServiceByXMLID("top-ds-in-cdn2", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", "top-ds-in-cdn2")
+	resp1, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Errorf("failed to get details on DS: %v", err)
+		t.Errorf("failed to get details on DS: %v - alerts: %+v", err, resp1.Alerts)
 	}
-	if *resp1[0].Topology != newTopologyName {
-		t.Errorf("topology name change failed to trickle to delivery service table, expected: %v but got:%v", newTopologyName, *resp1[0].Topology)
+	if len(resp1.Response) != 1 {
+		t.Fatalf("Expected exactly one Delivery Service to exist with XMLID 'top-ds-in-cdn2', found: %d", len(resp1.Response))
+	}
+	if resp1.Response[0].Topology == nil {
+		t.Fatal("Expected Delivery Service 'top-ds-in-cdn2' to have a Topology, but it was null or undefined in response from Traffic Ops")
+	}
+	if *resp1.Response[0].Topology != newTopologyName {
+		t.Errorf("topology name change failed to trickle to delivery service table, expected: %s but got: %s", newTopologyName, *resp1.Response[0].Topology)
 	}
 
 	// Set everything back as it was for further testing.
@@ -1237,19 +1257,22 @@ func UpdateTopologyWithNoServers(t *testing.T) {
 }
 
 func DeleteTopologyBeingUsedByDeliveryService(t *testing.T) {
-	ds, _, err := TOSession.GetDeliveryServices(nil, nil)
+	ds, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("couldn't get deliveryservices: %v", err)
+		t.Fatalf("couldn't get Delivery Services: %v - alerts: %+v", err, ds.Alerts)
 	}
-	if len(ds) == 0 {
+	if len(ds.Response) == 0 {
 		t.Fatalf("expected one or more ds's in the response, got none")
 	}
 	topologyName := ""
-	for _, d := range ds {
+	for _, d := range ds.Response {
 		if d.Topology != nil && *d.Topology != "" {
 			topologyName = *d.Topology
 			break
 		}
+	}
+	if topologyName == "" {
+		t.Error("Expected at least one Delivery Service to have a Topology, but none did")
 	}
 	_, reqInf, err := TOSession.DeleteTopology(topologyName)
 	if reqInf.StatusCode != http.StatusBadRequest {

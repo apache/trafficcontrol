@@ -688,7 +688,7 @@ func DeleteTestCacheGroups(t *testing.T) {
 			t.Errorf("cannot get Cache Group by name '%s': %v - alerts: %+v", *cg.Name, err, resp.Alerts)
 		}
 		if len(resp.Response) < 1 {
-			t.Error("Cache Group '%s' somehow stopped existing since the last time we ask Traffic Ops about it", *cg.Name)
+			t.Errorf("Cache Group '%s' somehow stopped existing since the last time we ask Traffic Ops about it", *cg.Name)
 			continue
 		}
 

@@ -117,23 +117,25 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	if serverID == 0 {
 		t.Errorf("GetServers expected EDGE server in cdn1, actual: %+v", servers)
 	}
-	res, _, err := TOSession.GetDeliveryServiceByXMLID("anymap-ds", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", "anymap-ds")
+	res, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Errorf("GetDeliveryServiceByXMLIDNullable err expected nil, actual %+v", err)
+		t.Errorf("Unexpected error getting Delivery Services filtered by XMLID 'anymap-ds': %v - alerts: %+v", err, res.Alerts)
 	}
-	if len(res) != 1 {
-		t.Error("GetDeliveryServiceByXMLIDNullable expected 1 DS, actual 0")
+	if len(res.Response) != 1 {
+		t.Fatalf("Expected exactly 1 Delivery Service to exist with XMLID 'anymap-ds', actual %d", len(res.Response))
 	}
-	if res[0].ID == nil {
-		t.Error("GetDeliveryServiceByXMLIDNullable got unknown delivery service id")
+	if res.Response[0].ID == nil {
+		t.Fatal("Traffic Ops returned a representation of Delivery Service 'anymap-ds' that had a null or undefined ID")
 	}
-	anymapDSID := *res[0].ID
+	anymapDSID := *res.Response[0].ID
 	_, _, err = TOSession.CreateDeliveryServiceServers(anymapDSID, []int{serverID}, true)
 	if err != nil {
 		t.Errorf("POST delivery service servers: %v", err)
 	}
 
-	opts := client.NewRequestOptions()
+	opts = client.NewRequestOptions()
 	opts.QueryParameters.Set("cdn", cdn)
 	snapshotResp, _, err := TOSession.SnapshotCRConfig(opts)
 	if err != nil {
@@ -210,25 +212,14 @@ func MonitoringConfig(t *testing.T) {
 	}
 	const cdnName = "cdn1"
 	const profileName = "EDGE1"
-<<<<<<< HEAD
-=======
-
->>>>>>> c75b14c0d (Update 'CRConfig Snapshot'-related methods and tests to use standard request options)
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", cdnName)
 	cdns, _, err := TOSession.GetCDNs(opts)
 	if err != nil {
-<<<<<<< HEAD
-		t.Fatalf("getting CDNs with name '%s': %v - alerts: %+v", cdnName, err)
-	}
-	if len(cdns.Response) != 1 {
-		t.Fatalf("expected exactly 1 CDN named '%s' to exist, found: %d", cdnName, len(cdns.Response))
-=======
 		t.Fatalf("getting CDNs with name '%s': %v - alerts: %+v", cdnName, err, cdns.Alerts)
 	}
 	if len(cdns.Response) != 1 {
-		t.Fatalf("expected exactly 1 CDN named %s but found %d CDNs", cdnName, len(cdns.Response))
->>>>>>> c75b14c0d (Update 'CRConfig Snapshot'-related methods and tests to use standard request options)
+		t.Fatalf("expected exactly 1 CDN named '%s' but found %d CDNs", cdnName, len(cdns.Response))
 	}
 	opts.QueryParameters.Set("name", profileName)
 	profiles, _, err := TOSession.GetProfiles(opts)

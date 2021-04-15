@@ -39,7 +39,7 @@ func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, opts RequestOptions
 // Ops.
 func (to *Session) GetDeliveryServiceRegexes(opts RequestOptions) (tc.DeliveryServiceRegexResponse, toclientlib.ReqInf, error) {
 	var data tc.DeliveryServiceRegexResponse
-	reqInf, err := to.get(APIDeliveryServicesRegexes, opts, &data)
+	reqInf, err := to.get(apiDeliveryServicesRegexes, opts, &data)
 	return data, reqInf, err
 }
 

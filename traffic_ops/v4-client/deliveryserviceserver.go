@@ -29,7 +29,7 @@ import (
 // Delivery Services. If replace is true, it deletes any existing associations
 // for the given Delivery Service.
 func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, replace bool) (*tc.DSServerIDs, toclientlib.ReqInf, error) {
-	path := APIDeliveryServiceServer
+	path := apiDeliveryServiceServer
 	req := tc.DSServerIDs{
 		DeliveryServiceID: util.IntPtr(dsID),
 		ServerIDs:         serverIDs,
@@ -48,7 +48,7 @@ func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, repla
 // DeleteDeliveryServiceServer removes the association between the Delivery
 // Service identified by dsID and the server identified by serverID.
 func (to *Session) DeleteDeliveryServiceServer(dsID int, serverID int) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/%d", APIDeliveryServiceServer, dsID, serverID)
+	route := fmt.Sprintf("%s/%d/%d", apiDeliveryServiceServer, dsID, serverID)
 	resp := tc.Alerts{}
 	reqInf, err := to.del(route, nil, &resp)
 	return resp, reqInf, err
@@ -57,7 +57,7 @@ func (to *Session) DeleteDeliveryServiceServer(dsID int, serverID int) (tc.Alert
 // AssignServersToDeliveryService assigns the given list of servers to the
 // Delivery Service with the given xmlID.
 func (to *Session) AssignServersToDeliveryService(servers []string, xmlID string) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf(APIDeliveryServicesServers, url.QueryEscape(xmlID))
+	route := fmt.Sprintf(apiDeliveryServicesServers, url.QueryEscape(xmlID))
 	dss := tc.DeliveryServiceServers{ServerNames: servers, XmlId: xmlID}
 	resp := tc.Alerts{}
 	reqInf, err := to.post(route, dss, nil, &resp)
@@ -67,7 +67,7 @@ func (to *Session) AssignServersToDeliveryService(servers []string, xmlID string
 // GetDeliveryServiceServers returns associations between Delivery Services and
 // servers.
 func (to *Session) GetDeliveryServiceServers(urlQuery url.Values, h http.Header) (tc.DeliveryServiceServerResponse, toclientlib.ReqInf, error) {
-	route := APIDeliveryServiceServer
+	route := apiDeliveryServiceServer
 	if qry := urlQuery.Encode(); qry != "" {
 		route += `?` + qry
 	}

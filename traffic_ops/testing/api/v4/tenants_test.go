@@ -260,10 +260,12 @@ func UpdateTestTenantsActive(t *testing.T) {
 	setTenantActive(t, "tenant3", false)
 
 	// ds3 has tenant3. Even though tenant3 is inactive, we should still be able to get it, because our user is tenant1, which is active.
-	dses, _, err := TOSession.GetDeliveryServiceByXMLID("ds3", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", "ds3")
+	resp, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatal("failed to get delivery service, when the DS's tenant was inactive (even though our user's tenant was active)")
-	} else if len(dses) != 1 {
+		t.Fatalf("failed to get delivery service, when the DS's tenant was inactive (even though our user's tenant was active): %v - alerts: %+v", err, resp.Alerts)
+	} else if len(resp.Response) != 1 {
 		t.Error("admin user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
 	}
 
@@ -272,9 +274,9 @@ func UpdateTestTenantsActive(t *testing.T) {
 	setTenantActive(t, "tenant3", true)
 
 	// ds3 has tenant3. Even though tenant3's parent, tenant2, is inactive, we should still be able to get it, because our user is tenant1, which is active.
-	_, _, err = TOSession.GetDeliveryServiceByXMLID("ds3", nil)
+	resp, _, err = TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatal("failed to get delivery service, when a parent tenant was inactive (even though our user's tenant was active)")
+		t.Fatalf("failed to get delivery service, when a parent tenant was inactive (even though our user's tenant was active): %v - alerts: %+v", err, resp.Alerts)
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
@@ -289,9 +291,12 @@ func UpdateTestTenantsActive(t *testing.T) {
 	}
 
 	// tenant3user with tenant3 has no access to ds3 with tenant3 when parent tenant2 is inactive
-	dses, _, err = tenant3Session.GetDeliveryServiceByXMLID("ds3", nil)
-	for _, ds := range dses {
-		t.Errorf("tenant3user got delivery service %+v with tenant3 but tenant3 parent tenant2 is inactive, expected: no ds", ExtractXMLID(&ds))
+	resp, _, err = tenant3Session.GetDeliveryServices(opts)
+	if err != nil {
+		t.Errorf("Unexpected error fetching Delivery Services filtered by XMLID 'ds3': %v - alerts: %+v", err, resp.Alerts)
+	}
+	for _, ds := range resp.Response {
+		t.Errorf("tenant3user got delivery service %s with tenant3 but tenant3 parent tenant2 is inactive, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	setTenantActive(t, "tenant1", true)
@@ -299,9 +304,12 @@ func UpdateTestTenantsActive(t *testing.T) {
 	setTenantActive(t, "tenant3", false)
 
 	// tenant3user with tenant3 has no access to ds3 with tenant3 when tenant3 is inactive
-	dses, _, err = tenant3Session.GetDeliveryServiceByXMLID("ds3", nil)
-	for _, ds := range dses {
-		t.Errorf("tenant3user got delivery service %+v with tenant3 but tenant3 is inactive, expected: no ds", ExtractXMLID(&ds))
+	resp, _, err = tenant3Session.GetDeliveryServices(opts)
+	if err != nil {
+		t.Errorf("Unexpected error fetching Delivery Services filtered by XMLID 'ds3': %v - alerts: %+v", err, resp.Alerts)
+	}
+	for _, ds := range resp.Response {
+		t.Errorf("tenant3user got delivery service %s with tenant3 but tenant3 is inactive, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	setTenantActive(t, "tenant1", true)
@@ -309,10 +317,10 @@ func UpdateTestTenantsActive(t *testing.T) {
 	setTenantActive(t, "tenant3", true)
 
 	// tenant3user with tenant3 has access to ds3 with tenant3
-	dses, _, err = tenant3Session.GetDeliveryServiceByXMLID("ds3", nil)
+	resp, _, err = tenant3Session.GetDeliveryServices(opts)
 	if err != nil {
 		t.Errorf("tenant3user getting delivery service ds3 error expected: nil, actual: %+v", err)
-	} else if len(dses) == 0 {
+	} else if len(resp.Response) == 0 {
 		t.Error("tenant3user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
 	}
 
@@ -320,24 +328,36 @@ func UpdateTestTenantsActive(t *testing.T) {
 	// 2. tenant3user has tenant3.
 	// 3. tenant2 is not a child of tenant3 (tenant3 is a child of tenant2)
 	// 4. Therefore, tenant3user should not have access to ds2
-	dses, _, _ = tenant3Session.GetDeliveryServiceByXMLID("ds2", nil)
-	for _, ds := range dses {
-		t.Errorf("tenant3user got delivery service %+v with tenant2, expected: no ds", ExtractXMLID(&ds))
+	opts.QueryParameters.Set("xmlId", "ds2")
+	resp, _, err = tenant3Session.GetDeliveryServices(opts)
+	if err != nil {
+		t.Errorf("Unexpected error fetching Delivery Services filtered by XMLID 'ds2': %v - alerts: %+v", err, resp.Alerts)
+	}
+	for _, ds := range resp.Response {
+		t.Errorf("tenant3user got delivery service %s with tenant2, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	// 1. ds1 has tenant1.
 	// 2. tenant4user has tenant4.
 	// 3. tenant1 is not a child of tenant4 (tenant4 is unrelated to tenant1)
 	// 4. Therefore, tenant4user should not have access to ds1
-	dses, _, _ = tenant4Session.GetDeliveryServiceByXMLID("ds1", nil)
-	for _, ds := range dses {
-		t.Errorf("tenant4user got delivery service %+v with tenant1, expected: no ds", ExtractXMLID(&ds))
+	opts.QueryParameters.Set("xmlId", "ds1")
+	resp, _, err = tenant4Session.GetDeliveryServices(opts)
+	if err != nil {
+		t.Errorf("Unexpected error fetching Delivery Services filtered by XMLID 'ds1': %v - alerts: %+v", err, resp.Alerts)
+	}
+	for _, ds := range resp.Response {
+		t.Errorf("tenant4user got delivery service %s with tenant1, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	setTenantActive(t, "tenant3", false)
-	dses, _, _ = tenant3Session.GetDeliveryServiceByXMLID("ds3", nil)
-	for _, ds := range dses {
-		t.Errorf("tenant3user was inactive, but got delivery service %+v with tenant3, expected: no ds", ExtractXMLID(&ds))
+	opts.QueryParameters.Set("xmlId", "ds3")
+	resp, _, err = tenant3Session.GetDeliveryServices(opts)
+	if err != nil {
+		t.Errorf("Unexpected error fetching Delivery Services filtered by XMLID 'ds3': %v - alerts: %+v", err, resp.Alerts)
+	}
+	for _, ds := range resp.Response {
+		t.Errorf("tenant3user was inactive, but got delivery service %s with tenant3, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	for _, tn := range originalTenants {

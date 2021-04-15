@@ -44,7 +44,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot test cachegroups delivery services: expected no initial delivery service servers, actual %v", len(dss.Response))
 	}
 
-	dses, _, err := TOSession.GetDeliveryServices(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
@@ -68,7 +68,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 
 	dsIDs := []int{}
 	topologyDsIDs := []int{}
-	for _, ds := range dses {
+	for _, ds := range dses.Response {
 		if *ds.CDNName == "cdn1" && ds.Topology == nil {
 			dsIDs = append(dsIDs, *ds.ID)
 		} else if *ds.CDNName == "cdn1" && ds.Topology != nil {
@@ -127,11 +127,14 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		if serverID == nil {
 			t.Fatalf("got a nil server ID in response, quitting")
 		}
-		serverDSes, _, err := TOSession.GetDeliveryServicesByServer(*serverID, nil)
+		serverDSes, _, err := TOSession.GetDeliveryServicesByServer(*serverID, client.RequestOptions{})
+		if err != nil {
+			t.Errorf("Unexpected error getting servers for Delivery Service #%d: %v - alerts: %+v", *serverID, err, serverDSes.Alerts)
+		}
 
 		for _, dsID := range dsIDs {
 			found := false
-			for _, serverDS := range serverDSes {
+			for _, serverDS := range serverDSes.Response {
 				if *serverDS.ID == int(dsID) {
 					found = true
 					break
@@ -145,22 +148,26 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 }
 
 func setInactive(t *testing.T, dsID int) {
-	ds, _, err := TOSession.GetDeliveryServiceByID(strconv.Itoa(dsID), nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("id", strconv.Itoa(dsID))
+	resp, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Errorf("Failed to fetch details for Delivery Service #%d", dsID)
+		t.Errorf("Failed to fetch details for Delivery Service #%d: %v - alerts: %+v", dsID, err, resp.Alerts)
 		return
 	}
-	if ds == nil {
-		t.Errorf("Got null or undefined Delivery Service for #%d", dsID)
+	if len(resp.Response) != 1 {
+		t.Errorf("Expected exactly one Delivery Service to exist with ID %d, found: %d", dsID, len(resp.Response))
 		return
 	}
+
+	ds := resp.Response[0]
 	if ds.Active == nil {
 		t.Errorf("Deliver Service #%d had null or undefined 'active'", dsID)
 		ds.Active = new(bool)
 	}
 	if *ds.Active {
 		*ds.Active = false
-		_, _, err = TOSession.UpdateDeliveryService(dsID, *ds, nil)
+		_, _, err = TOSession.UpdateDeliveryService(dsID, ds, client.RequestOptions{})
 		if err != nil {
 			t.Errorf("Failed to set Delivery Service #%d to inactive: %v", dsID, err)
 		}

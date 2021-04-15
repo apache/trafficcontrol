@@ -206,7 +206,7 @@ func enrollDeliveryService(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, _, err := toSession.CreateDeliveryService(s)
+	alerts, _, err := toSession.CreateDeliveryService(s, client.RequestOptions{})
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Infof("deliveryservice %s already exists\n", *s.XMLID)
@@ -233,21 +233,27 @@ func enrollDeliveryServicesRequiredCapability(toSession *session, r io.Reader) e
 		return err
 	}
 
-	dses, _, err := toSession.GetDeliveryServiceByXMLID(*dsrc.XMLID, nil)
+	if dsrc.XMLID == nil {
+		return errors.New("required capability had no XMLID")
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", *dsrc.XMLID)
+	dses, _, err := toSession.GetDeliveryServices(opts)
 	if err != nil {
 		log.Infof("getting Delivery Service by XMLID %s: %s", *dsrc.XMLID, err.Error())
 		return err
 	}
-	if len(dses) < 1 {
-		err = errors.New("could not find a Delivey Service with XMLID %s")
+	if len(dses.Response) < 1 {
+		err = fmt.Errorf("could not find a Delivey Service with XMLID %s", *dsrc.XMLID)
 		log.Infoln(err)
 		return err
 	}
-	dsrc.DeliveryServiceID = dses[0].ID
+	dsrc.DeliveryServiceID = dses.Response[0].ID
 
 	alerts, _, err := toSession.CreateDeliveryServicesRequiredCapability(dsrc)
 	if err != nil {
-		log.Infof("error creating Delivery Services Required Capability: %s\n", err)
+		log.Infof("error creating Delivery Services Required Capability: %v", err)
 		return err
 	}
 
@@ -269,24 +275,24 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	params := url.Values{"xmlId": []string{dss.XmlId}}
-	dses, _, err := toSession.GetDeliveryServices(nil, params)
+	opts := client.RequestOptions{QueryParameters: url.Values{"xmlId": []string{dss.XmlId}}}
+	dses, _, err := toSession.GetDeliveryServices(opts)
 	if err != nil {
 		return err
 	}
-	if len(dses) == 0 {
+	if len(dses.Response) == 0 {
 		return errors.New("no deliveryservice with name " + dss.XmlId)
 	}
-	if dses[0].ID == nil {
+	if dses.Response[0].ID == nil {
 		return errors.New("Deliveryservice with name " + dss.XmlId + " has a nil ID")
 	}
-	dsID := *dses[0].ID
+	dsID := *dses.Response[0].ID
 
-	params = url.Values{}
+	opts.QueryParameters = url.Values{}
 	var serverIDs []int
 	for _, sn := range dss.ServerNames {
-		params.Set("hostName", sn)
-		servers, _, err := toSession.GetServers(params, nil)
+		opts.QueryParameters.Set("hostName", sn)
+		servers, _, err := toSession.GetServers(opts.QueryParameters, nil)
 		if err != nil {
 			return err
 		}

@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -40,7 +41,7 @@ func TestJobs(t *testing.T) {
 }
 
 func CreateTestJobs(t *testing.T) {
-	toDSes, _, err := TOSession.GetDeliveryServices(nil, nil)
+	toDSes, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
 	}
@@ -154,16 +155,23 @@ func JobCollisionWarningTest(t *testing.T) {
 }
 
 func CreateTestInvalidationJobs(t *testing.T) {
-	toDSes, _, err := TOSession.GetDeliveryServices(nil, nil)
+	toDSes, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET Delivery Services: %v - %v", err, toDSes)
+		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, toDSes.Alerts)
 	}
-	dsNameIDs := map[string]int64{}
-	for _, ds := range toDSes {
+	dsNameIDs := make(map[string]int64, len(toDSes.Response))
+	for _, ds := range toDSes.Response {
+		if ds.XMLID == nil || ds.ID == nil {
+			t.Error("Traffic Ops returned a representation of a Delivery Service that had null or undefined XMLID and/or ID")
+			continue
+		}
 		dsNameIDs[*ds.XMLID] = int64(*ds.ID)
 	}
 
 	for _, job := range testData.InvalidationJobs {
+		if job.DeliveryService == nil {
+			t.Error("Found a Job in the test data that has null or undefined Delivery Service")
+		}
 		_, ok := dsNameIDs[(*job.DeliveryService).(string)]
 		if !ok {
 			t.Fatalf("can't create test data job: delivery service '%v' not found in Traffic Ops", job.DeliveryService)
@@ -175,16 +183,26 @@ func CreateTestInvalidationJobs(t *testing.T) {
 }
 
 func CreateTestInvalidJob(t *testing.T) {
-	toDSes, _, err := TOSession.GetDeliveryServices(nil, nil)
+	toDSes, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET Delivery Services: %v - %v", err, toDSes)
+		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, toDSes.Alerts)
 	}
-	dsNameIDs := map[string]int64{}
-	for _, ds := range toDSes {
+	dsNameIDs := make(map[string]int64, len(toDSes.Response))
+	for _, ds := range toDSes.Response {
+		if ds.XMLID == nil || ds.ID == nil {
+			t.Error("Traffic Ops returned a representation of a Delivery Service that had null or undefined XMLID and/or ID")
+			continue
+		}
 		dsNameIDs[*ds.XMLID] = int64(*ds.ID)
 	}
 
+	if len(testData.InvalidationJobs) < 1 {
+		t.Fatal("Need at least one Invalidation Job to test creating an invalid Job")
+	}
 	job := testData.InvalidationJobs[0]
+	if job.DeliveryService == nil {
+		t.Fatal("Found a Job in the testing data that has null or undefined Delivery Service")
+	}
 	_, ok := dsNameIDs[(*job.DeliveryService).(string)]
 	if !ok {
 		t.Fatalf("can't create test data job: delivery service '%v' not found in Traffic Ops", job.DeliveryService)
@@ -242,9 +260,9 @@ func GetTestJobs(t *testing.T) {
 		t.Fatalf("error getting jobs: %v", err)
 	}
 
-	toDSes, _, err := TOSession.GetDeliveryServices(nil, nil)
+	toDSes, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
+		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, toDSes.Alerts)
 	}
 
 	for i, testJob := range testData.InvalidationJobs {
@@ -291,14 +309,17 @@ func GetTestInvalidationJobs(t *testing.T) {
 		t.Fatalf("error getting invalidation jobs: %v", err)
 	}
 
-	toDSes, _, err := TOSession.GetDeliveryServices(nil, nil)
+	toDSes, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
 	}
 
-	for _, ds := range toDSes {
+	for _, ds := range toDSes.Response {
+		if ds.ID == nil {
+			t.Fatal("Erroneous Delivery Service - has invalid ID: <nil>")
+		}
 		if *ds.ID <= 0 {
-			t.Fatalf("Erroneous Delivery Service - has invalid ID: %+v", ds)
+			t.Fatalf("Erroneous Delivery Service - has invalid ID: %d", *ds.ID)
 		}
 	}
 

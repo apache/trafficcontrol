@@ -24,6 +24,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestFederations(t *testing.T) {
@@ -106,15 +107,20 @@ func GetTestFederations(t *testing.T) {
 }
 
 func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryServiceV4, tc.DeliveryServiceV4, error) {
-	dses, _, err := TOSession.GetDeliveryServices(nil, nil)
+	var ds tc.DeliveryServiceV4
+	var ds1 tc.DeliveryServiceV4
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
-		return -1, tc.DeliveryServiceV4{}, tc.DeliveryServiceV4{}, fmt.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
+		return -1, ds, ds1, fmt.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 	}
-	if len(dses) == 0 {
-		return -1, tc.DeliveryServiceV4{}, tc.DeliveryServiceV4{}, errors.New("no delivery services, must have at least 1 ds to test federations deliveryservices")
+	if len(dses.Response) < 2 {
+		return -1, ds, ds1, errors.New("no delivery services, must have at least 2 Delivery Services to test federations deliveryservices")
 	}
-	ds := dses[0]
-	ds1 := dses[1]
+	ds = dses.Response[0]
+	ds1 = dses.Response[1]
+	if ds.ID == nil || ds1.ID == nil {
+		return -1, ds, ds1, errors.New("Traffic Ops returned at least one representation of a Delivery Service that had a null or undefined ID")
+	}
 
 	if len(fedIDs) == 0 {
 		return -1, ds, ds1, errors.New("no federations, must have at least 1 federation to test federations deliveryservices")
@@ -133,7 +139,7 @@ func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryServiceV4, 
 func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 	fedID, ds, ds1, err := createFederationToDeliveryServiceAssociation()
 	if err != nil {
-		t.Fatalf("%v", err)
+		t.Fatal(err.Error())
 	}
 
 	// Test get created Federation Delivery Services

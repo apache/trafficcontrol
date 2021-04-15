@@ -61,17 +61,20 @@ func UpdateTestSteeringTargetsWithHeaders(t *testing.T, header http.Header) {
 		t.Fatal("updating steering target: test data missing target")
 	}
 
-	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService), header)
+	opts := client.NewRequestOptions()
+	opts.Header = header
+	opts.QueryParameters.Set("xmlId", string(*st.DeliveryService))
+	respDS, _, err := SteeringUserSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("updating steering target: getting ds: %v", err)
+		t.Fatalf("updating steering target: getting ds: %v - alerts: %+v", err, respDS.Alerts)
 	}
-	if len(respDS) < 1 {
+	if len(respDS.Response) < 1 {
 		t.Fatal("updating steering target: getting ds: not found")
 	}
-	if respDS[0].ID == nil {
+	if respDS.Response[0].ID == nil {
 		t.Fatal("updating steering target: getting ds: nil id returned")
 	}
-	dsID := *respDS[0].ID
+	dsID := *respDS.Response[0].ID
 
 	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID)
 	if err != nil {
@@ -105,20 +108,25 @@ func GetTestSteeringTargetsIMSAfterChange(t *testing.T, header http.Header) {
 	if st.DeliveryService == nil {
 		t.Fatal("updating steering target: test data missing ds")
 	}
-	_, reqInf, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService), header)
+	opts := client.NewRequestOptions()
+	opts.Header = header
+	opts.QueryParameters.Set("xmlId", string(*st.DeliveryService))
+	respDS, reqInf, err := SteeringUserSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, respDS.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusOK {
 		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
 	}
+
 	currentTime := time.Now().UTC()
 	currentTime = currentTime.Add(1 * time.Second)
 	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
-	_, reqInf, err = SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService), header)
+
+	opts.Header.Set(rfc.IfModifiedSince, timeStr)
+	respDS, reqInf, err = SteeringUserSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, respDS.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusNotModified {
 		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -133,14 +141,16 @@ func GetTestSteeringTargetsIMS(t *testing.T) {
 	if st.DeliveryService == nil {
 		t.Fatal("updating steering target: test data missing ds")
 	}
-	var header http.Header
-	header = make(map[string][]string)
+
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService), header)
+
+	opts := client.NewRequestOptions()
+	opts.Header.Set(rfc.IfModifiedSince, time)
+	opts.QueryParameters.Set("xmlId", string(*st.DeliveryService))
+	respDS, reqInf, err := SteeringUserSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, respDS.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusNotModified {
 		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -183,34 +193,37 @@ func CreateTestSteeringTargets(t *testing.T) {
 			st.TypeID = util.IntPtr(respTypes[0].ID)
 		}
 		{
-			respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService), nil)
+			opts := client.NewRequestOptions()
+			opts.QueryParameters.Set("xmlId", string(*st.DeliveryService))
+			respDS, _, err := SteeringUserSession.GetDeliveryServices(opts)
 			if err != nil {
-				t.Fatalf("creating steering target: getting ds: %v", err)
-			} else if len(respDS) < 1 {
+				t.Fatalf("creating steering target: getting ds: %v - alerts: %+v", err, respDS.Alerts)
+			} else if len(respDS.Response) < 1 {
 				t.Fatal("creating steering target: getting ds: not found")
-			} else if respDS[0].ID == nil {
+			} else if respDS.Response[0].ID == nil {
 				t.Fatal("creating steering target: getting ds: nil ID returned")
 			}
-			dsID := uint64(*respDS[0].ID)
+			dsID := uint64(*respDS.Response[0].ID)
 			st.DeliveryServiceID = &dsID
 		}
 		{
-			respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.Target), nil)
+			opts := client.NewRequestOptions()
+			opts.QueryParameters.Set("xmlId", string(*st.Target))
+			respTarget, _, err := SteeringUserSession.GetDeliveryServices(opts)
 			if err != nil {
-				t.Fatalf("creating steering target: getting target ds: %v", err)
-			} else if len(respTarget) < 1 {
+				t.Fatalf("creating steering target: getting target ds: %v - alerts: %+v", err, respTarget.Alerts)
+			} else if len(respTarget.Response) < 1 {
 				t.Fatal("creating steering target: getting target ds: not found")
-			} else if respTarget[0].ID == nil {
+			} else if respTarget.Response[0].ID == nil {
 				t.Fatal("creating steering target: getting target ds: nil ID returned")
 			}
-			targetID := uint64(*respTarget[0].ID)
+			targetID := uint64(*respTarget.Response[0].ID)
 			st.TargetID = &targetID
 		}
 
 		resp, _, err := SteeringUserSession.CreateSteeringTarget(st)
-		t.Log("Response: ", resp)
 		if err != nil {
-			t.Fatalf("creating steering target: %v", err)
+			t.Fatalf("creating steering target: %v - alerts: %+v", err, resp.Alerts)
 		}
 	}
 }
@@ -227,17 +240,19 @@ func UpdateTestSteeringTargets(t *testing.T) {
 		t.Fatal("updating steering target: test data missing target")
 	}
 
-	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService), nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", string(*st.DeliveryService))
+	respDS, _, err := SteeringUserSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("updating steering target: getting ds: %v", err)
+		t.Fatalf("updating steering target: getting ds: %v - alerts: %+v", err, respDS.Alerts)
 	}
-	if len(respDS) < 1 {
+	if len(respDS.Response) < 1 {
 		t.Fatal("updating steering target: getting ds: not found")
 	}
-	if respDS[0].ID == nil {
+	if respDS.Response[0].ID == nil {
 		t.Fatal("updating steering target: getting ds: nil id returned")
 	}
-	dsID := *respDS[0].ID
+	dsID := *respDS.Response[0].ID
 
 	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID)
 	if err != nil {
@@ -314,15 +329,17 @@ func GetTestSteeringTargets(t *testing.T) {
 		t.Fatal("updating steering target: test data missing ds")
 	}
 
-	respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService), nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", string(*st.DeliveryService))
+	respDS, _, err := SteeringUserSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("creating steering target: getting ds: %v", err)
-	} else if len(respDS) < 1 {
+		t.Fatalf("creating steering target: getting ds: %v - alerts: %+v", err, respDS.Alerts)
+	} else if len(respDS.Response) < 1 {
 		t.Fatal("steering target get: getting ds: not found")
-	} else if respDS[0].ID == nil {
+	} else if respDS.Response[0].ID == nil {
 		t.Fatal("steering target get: getting ds: nil id returned")
 	}
-	dsID := *respDS[0].ID
+	dsID := *respDS.Response[0].ID
 
 	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID)
 	if err != nil {
@@ -373,33 +390,36 @@ func DeleteTestSteeringTargets(t *testing.T) {
 			t.Fatal("deleting steering target: test data missing target")
 		}
 
-		respDS, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.DeliveryService), nil)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("xmlId", string(*st.DeliveryService))
+		respDS, _, err := SteeringUserSession.GetDeliveryServices(opts)
 		if err != nil {
-			t.Fatalf("deleting steering target: getting ds: %v", err)
-		} else if len(respDS) < 1 {
+			t.Fatalf("deleting steering target: getting ds: %v - alerts: %+v", err, respDS.Alerts)
+		} else if len(respDS.Response) < 1 {
 			t.Fatal("deleting steering target: getting ds: not found")
-		} else if respDS[0].ID == nil {
+		} else if respDS.Response[0].ID == nil {
 			t.Fatal("deleting steering target: getting ds: nil ID returned")
 		}
-		dsID := uint64(*respDS[0].ID)
+		dsID := uint64(*respDS.Response[0].ID)
 		st.DeliveryServiceID = &dsID
 
 		dsIDs = append(dsIDs, dsID)
 
-		respTarget, _, err := SteeringUserSession.GetDeliveryServiceByXMLID(string(*st.Target), nil)
+		opts.QueryParameters.Set("xmlId", string(*st.Target))
+		respTarget, _, err := SteeringUserSession.GetDeliveryServices(opts)
 		if err != nil {
-			t.Fatalf("deleting steering target: getting target ds: %v", err)
-		} else if len(respTarget) < 1 {
+			t.Fatalf("deleting steering target: getting target ds: %v - alerts: %+v", err, respTarget.Alerts)
+		} else if len(respTarget.Response) < 1 {
 			t.Fatal("deleting steering target: getting target ds: not found")
-		} else if respTarget[0].ID == nil {
+		} else if respTarget.Response[0].ID == nil {
 			t.Fatal("deleting steering target: getting target ds: not found")
 		}
-		targetID := uint64(*respTarget[0].ID)
+		targetID := uint64(*respTarget.Response[0].ID)
 		st.TargetID = &targetID
 
-		_, _, err = SteeringUserSession.DeleteSteeringTarget(int(*st.DeliveryServiceID), int(*st.TargetID))
+		resp, _, err := SteeringUserSession.DeleteSteeringTarget(int(*st.DeliveryServiceID), int(*st.TargetID))
 		if err != nil {
-			t.Fatalf("deleting steering target: deleting: %+v", err)
+			t.Fatalf("deleting steering target: deleting: %v - alerts: %+v", err, resp.Alerts)
 		}
 	}
 

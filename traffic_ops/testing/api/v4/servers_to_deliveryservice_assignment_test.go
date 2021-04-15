@@ -22,6 +22,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestAssignments(t *testing.T) {
@@ -34,8 +35,8 @@ func TestAssignments(t *testing.T) {
 }
 
 func AssignTestDeliveryService(t *testing.T) {
-	if len(testData.Servers) < 1 {
-		t.Fatal("Need at least one test server to test delivery service assignment")
+	if len(testData.Servers) < 1 || len(testData.DeliveryServices) < 1 {
+		t.Fatal("Need at least one test server and one Delivery Service to test Delivery Service assignment")
 	}
 
 	server := testData.Servers[0]
@@ -57,13 +58,18 @@ func AssignTestDeliveryService(t *testing.T) {
 		t.Fatalf("Server '%s' had nil ID", *server.HostName)
 	}
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLID(*testData.DeliveryServices[0].XMLID, nil)
+	if testData.DeliveryServices[0].XMLID == nil {
+		t.Fatal("Found Delivery Service in testing data with null or undefined XMLID")
+	}
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", *testData.DeliveryServices[0].XMLID)
+	rd, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch DS information: %v", err)
-	} else if len(rd) == 0 {
+		t.Fatalf("Failed to fetch DS information: %v - alerts: %+v", err, rd.Alerts)
+	} else if len(rd.Response) == 0 {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
-	firstDS := rd[0]
+	firstDS := rd.Response[0]
 
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
@@ -139,13 +145,15 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 		t.Fatal("Delivery Service selected for testing had null or undefined XMLID")
 	}
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLID(*testData.DeliveryServices[0].XMLID, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", *testData.DeliveryServices[0].XMLID)
+	rd, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch DS information: %v", err)
-	} else if len(rd) == 0 {
+		t.Fatalf("Failed to fetch DS information: %v - alerts: %+v", err, rd.Alerts)
+	} else if len(rd.Response) == 0 {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
-	firstDS := rd[0]
+	firstDS := rd.Response[0]
 
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
@@ -200,13 +208,15 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatal("Server had nil ID")
 	}
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLID("ds-top", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", "ds-top")
+	rd, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch DS information: %v", err)
-	} else if len(rd) == 0 {
+		t.Fatalf("Failed to fetch DS information: %v - alerts: %+v", err, rd.Alerts)
+	} else if len(rd.Response) == 0 {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
-	firstDS := rd[0]
+	firstDS := rd.Response[0]
 
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
@@ -253,13 +263,15 @@ func OriginAssignTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatal("Server had nil ID")
 	}
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLID("ds-top-req-cap", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", "ds-top-req-cap")
+	rd, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch DS information: %v", err)
-	} else if len(rd) == 0 {
+		t.Fatalf("Failed to fetch DS information: %v - alerts: %+v", err, rd.Alerts)
+	} else if len(rd.Response) == 0 {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
-	firstDS := rd[0]
+	firstDS := rd.Response[0]
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}
@@ -274,13 +286,14 @@ func OriginAssignTopologyBasedDeliveryService(t *testing.T) {
 	}
 
 	// valid assignment ORG server cachegroup belongs to the topology
-	rd, _, err = TOSession.GetDeliveryServiceByXMLID("ds-top", nil)
+	opts.QueryParameters.Set("xmlId", "ds-top")
+	rd, _, err = TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch DS information: %v", err)
-	} else if len(rd) == 0 {
+		t.Fatalf("Failed to fetch DS information: %v - alerts: %+v", err, rd.Alerts)
+	} else if len(rd.Response) == 0 {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
-	firstDS = rd[0]
+	firstDS = rd.Response[0]
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}

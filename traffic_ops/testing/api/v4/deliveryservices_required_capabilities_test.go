@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
@@ -51,17 +52,19 @@ func TestTopologyBasedDeliveryServicesRequiredCapabilities(t *testing.T) {
 }
 
 func OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t *testing.T) {
-	resp, _, err := TOSession.GetDeliveryServiceByXMLID("ds-top-req-cap2", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", "ds-top-req-cap2")
+	resp, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Errorf("getting delivery service by xml ID: %v", err.Error())
+		t.Errorf("getting Delivery Service 'ds-top-req-cap2': %v - alerts: %+v", err, resp.Alerts)
 	}
-	if len(resp) != 1 {
-		t.Fatalf("expected to get only one delivery service in the response, but got %d", len(resp))
+	if len(resp.Response) != 1 {
+		t.Fatalf("expected to get only one Delivery Service with XMLID 'ds-top-req-cap2', but got %d", len(resp.Response))
 	}
-	if resp[0].ID == nil {
-		t.Fatalf("no ID in the resulting delivery service")
+	if resp.Response[0].ID == nil {
+		t.Fatal("no ID in the resulting delivery service")
 	}
-	dsID := *resp[0].ID
+	dsID := *resp.Response[0].ID
 	params := url.Values{}
 	_, _, err = TOSession.AssignServersToDeliveryService([]string{"denver-mso-org-01"}, "ds-top-req-cap2")
 	if err != nil {
@@ -526,14 +529,19 @@ func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 func helperGetDeliveryServiceID(t *testing.T, xmlID *string) *int {
 	t.Helper()
 	if xmlID == nil {
-		t.Fatal("xml id must not be nil")
+		t.Error("xml id must not be nil")
+		return nil
 	}
-	ds, _, err := TOSession.GetDeliveryServiceByXMLID(*xmlID, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", *xmlID)
+	ds, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatal(err)
+		t.Errorf("Unexpected error getting Delivery Services filtered by XMLID '%s': %v - alerts: %+v", *xmlID, err, ds.Alerts)
+		return nil
 	}
-	if len(ds) < 1 {
-		t.Fatalf("cannot GET deliveyservice by xml id: %v. Response did not include record.", *xmlID)
+	if len(ds.Response) != 1 {
+		t.Errorf("Expected exactly one Delivery Service to have XMLID '%s', found: %d", *xmlID, len(ds.Response))
+		return nil
 	}
-	return ds[0].ID
+	return ds.Response[0].ID
 }

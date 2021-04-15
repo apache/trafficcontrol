@@ -521,15 +521,15 @@ func GetTestServersDetails(t *testing.T) {
 }
 
 func GetTestServersQueryParameters(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServices(nil, url.Values{"xmlId": []string{"ds1"}})
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{QueryParameters: url.Values{"xmlId": []string{"ds1"}}})
 	if err != nil {
-		t.Fatalf("Failed to get Delivery Services: %v", err)
+		t.Fatalf("Failed to get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 	}
-	if len(dses) < 1 {
+	if len(dses.Response) < 1 {
 		t.Fatal("Failed to get at least one Delivery Service")
 	}
 
-	ds := dses[0]
+	ds := dses.Response[0]
 	if ds.ID == nil {
 		t.Fatal("Got Delivery Service with nil ID")
 	}
@@ -555,9 +555,9 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Errorf("Expected a status code of 304, got %v", reqInf.StatusCode)
 	}
 
-	dses, _, err = TOSession.GetDeliveryServices(nil, nil)
+	dses, _, err = TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Failed to get Delivery Services: %v", err)
+		t.Fatalf("Failed to get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 	}
 
 	foundTopDs := false
@@ -565,8 +565,12 @@ func GetTestServersQueryParameters(t *testing.T) {
 		topDSXmlID = "ds-top"
 		topology   = "mso-topology"
 	)
-	for _, ds = range dses {
-		if ds.XMLID == nil || *ds.XMLID != topDSXmlID {
+	for _, ds = range dses.Response {
+		if ds.XMLID == nil || ds.ID == nil {
+			t.Error("Traffic Ops returned a representation of a Delivery Service that had a null or undefined XMLID and/or ID")
+			continue
+		}
+		if *ds.XMLID != topDSXmlID {
 			continue
 		}
 		foundTopDs = true
@@ -588,21 +592,31 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Fatalf("unable to find server with hostname %s", otherServerHostname)
 	}
 	otherServer := serverResponse.Response[0]
+	if otherServer.ID == nil || otherServer.HostName == nil {
+		t.Fatal("Traffic Ops returned a representation of a Server that had a null or undefined ID and/or Host Name")
+	}
 
 	dsTopologyField, dsFirstHeaderRewriteField, innerHeaderRewriteField, lastHeaderRewriteField := *ds.Topology, *ds.FirstHeaderRewrite, *ds.InnerHeaderRewrite, *ds.LastHeaderRewrite
 	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = nil, nil, nil, nil
-	ds, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, nil)
+	updResp, _, err := TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("unable to temporary remove topology-related fields from deliveryservice %s: %s", topDSXmlID, err)
+		t.Fatalf("unable to temporary remove topology-related fields from deliveryservice '%s': %v - alerts: %+v", topDSXmlID, err, updResp.Alerts)
+	}
+	if len(updResp.Response) != 1 {
+		t.Fatalf("Expected updating a Delivery Service to update exactly one Delivery Service, but Traffic Ops indicates that %d were updated", len(updResp.Response))
+	}
+	ds = updResp.Response[0]
+	if ds.ID == nil {
+		t.Fatal("Traffic Ops returned a representation of a Delivery Service that had null or undefined ID")
 	}
 	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*otherServer.ID}, false)
 	if err != nil {
 		t.Fatalf("unable to assign server %s to deliveryservice %s: %s", *otherServer.HostName, topDSXmlID, err)
 	}
 	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = &dsTopologyField, &dsFirstHeaderRewriteField, &innerHeaderRewriteField, &lastHeaderRewriteField
-	ds, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, nil)
+	updResp, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("unable to re-add topology-related fields to deliveryservice %s: %s", topDSXmlID, err)
+		t.Fatalf("unable to re-add topology-related fields to deliveryservice %s: %v - alerts: %+v", topDSXmlID, err, updResp.Alerts)
 	}
 
 	params.Set("dsId", strconv.Itoa(*ds.ID))
@@ -660,15 +674,15 @@ func GetTestServersQueryParameters(t *testing.T) {
 	}
 
 	const topDsWithNoMids = "ds-based-top-with-no-mids"
-	dses, _, err = TOSession.GetDeliveryServices(nil, url.Values{"xmlId": []string{topDsWithNoMids}})
+	dses, _, err = TOSession.GetDeliveryServices(client.RequestOptions{QueryParameters: url.Values{"xmlId": []string{topDsWithNoMids}}})
 	if err != nil {
-		t.Fatalf("Failed to get Delivery Services: %v", err)
+		t.Fatalf("Failed to get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 	}
-	if len(dses) < 1 {
+	if len(dses.Response) < 1 {
 		t.Fatal("Failed to get at least one Delivery Service")
 	}
 
-	ds = dses[0]
+	ds = dses.Response[0]
 	if ds.ID == nil {
 		t.Fatal("Got Delivery Service with nil ID")
 	}
@@ -1006,12 +1020,16 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Assign server to DS and then attempt to update to a different type
-	dses, _, err := TOSession.GetDeliveryServices(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET DeliveryServices: %v", err)
+		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 	}
-	if len(dses) < 1 {
+	if len(dses.Response) < 1 {
 		t.Fatal("GET DeliveryServices returned no dses, must have at least 1 to test invalid type server update")
+	}
+	ds := dses.Response[0]
+	if ds.ID == nil {
+		t.Fatal("Traffic Ops returned a representation of a Delivery Servvice with a null or undefined ID")
 	}
 
 	serverTypes, _, err := TOSession.GetTypes(nil, "server")
@@ -1029,7 +1047,7 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Assign server to DS
-	_, _, err = TOSession.CreateDeliveryServiceServers(*dses[0].ID, []int{*remoteServer.ID}, true)
+	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*remoteServer.ID}, true)
 	if err != nil {
 		t.Fatalf("POST delivery service servers: %v", err)
 	}

@@ -35,7 +35,7 @@ const (
 	// APIServerAssignDeliveryServices is the API version-relative path to the
 	// /servers/{{ID}}/deliveryservices API endpoint with the 'replace' query
 	// string parameter.
-	APIServerAssignDeliveryServices = APIServerDeliveryServices + "?replace=%t"
+	APIServerAssignDeliveryServices = apiServerDeliveryServices + "?replace=%t"
 )
 
 func needAndCanFetch(id *int, name *string) bool {
@@ -199,7 +199,7 @@ func (to *Session) AssignDeliveryServiceIDsToServerID(server int, dsIDs []int, r
 // GetServerIDDeliveryServices returns all of the Delivery Services assigned to the server identified
 // by the integral, unique identifier 'server'.
 func (to *Session) GetServerIDDeliveryServices(server int, header http.Header) ([]tc.DeliveryServiceNullable, toclientlib.ReqInf, error) {
-	endpoint := fmt.Sprintf(APIServerDeliveryServices, server)
+	endpoint := fmt.Sprintf(apiServerDeliveryServices, server)
 	var data tc.DeliveryServicesNullableResponse
 	reqInf, err := to.get(endpoint, header, &data)
 	return data.Response, reqInf, err

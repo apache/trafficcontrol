@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 type topologiesQueueUpdateTestCase struct {
@@ -46,16 +47,19 @@ func TestTopologiesQueueUpdate(t *testing.T) {
 
 func getCDNIDAndDSID(t *testing.T) (int64, int) {
 	xmlID := "ds-top"
-	params := url.Values{}
-	params.Set("xmlId", xmlID)
-	dses, _, err := TOSession.GetDeliveryServices(nil, params)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", xmlID)
+	dses, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("unable to get deliveryservice %s: %s", xmlID, err)
+		t.Fatalf("unable to get Delivery Service '%s': %v - alerts: %+v", xmlID, err, dses.Alerts)
 	}
-	if len(dses) < 1 {
-		t.Fatalf("deliveryservice with xmlId %s not found!", xmlID)
+	if len(dses.Response) < 1 {
+		t.Fatalf("deliveryservice with xmlId '%s' not found!", xmlID)
 	}
-	ds := dses[0]
+	ds := dses.Response[0]
+	if ds.CDNID == nil || ds.ID == nil {
+		t.Fatalf("Traffic Ops returned a representation of a Delivery Service that had null or undefined CDN ID and/or ID")
+	}
 	return int64(*ds.CDNID), *ds.ID
 }
 

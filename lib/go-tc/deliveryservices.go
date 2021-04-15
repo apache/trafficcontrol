@@ -448,7 +448,8 @@ type DeliveryServiceDestination struct {
 	Type     string `json:"type"`
 }
 
-// DeliveryServiceHealthResponse ...
+// DeliveryServiceHealthResponse is the type of a response from Traffic Ops to
+// a request for a Delivery Service's "health" - in API versions less than 4.
 type DeliveryServiceHealthResponse struct {
 	Response DeliveryServiceHealth `json:"response"`
 }
@@ -460,6 +461,18 @@ type DeliveryServiceHealth struct {
 	CacheGroups  []DeliveryServiceCacheGroup `json:"cacheGroups"`
 }
 
+// DeliveryServiceHealthResponseV40 is the type of a response from Traffic Ops
+// to a request for a Delivery Service's "health" - in API version 4.0.
+type DeliveryServiceHealthResponseV40 struct {
+	Response DeliveryServiceHealth `json:"response"`
+	Alerts
+}
+
+// DeliveryServiceHealthResponseV4 is the type of a response from Traffic Ops
+// to a request for a Delivery Service's "health" - in the current latest minor
+// version of API version 4.
+type DeliveryServiceHealthResponseV4 = DeliveryServiceHealthResponseV40
+
 // DeliveryServiceCacheGroup ...
 type DeliveryServiceCacheGroup struct {
 	Online  int    `json:"online"`
@@ -467,10 +480,23 @@ type DeliveryServiceCacheGroup struct {
 	Name    string `json:"name"`
 }
 
-// DeliveryServiceCapacityResponse ...
+// DeliveryServiceCapacityResponse is the type of a response from Traffic Ops to
+// a request for a Delivery Service's "capacity" - in API versions less than 4.
 type DeliveryServiceCapacityResponse struct {
 	Response DeliveryServiceCapacity `json:"response"`
 }
+
+// DeliveryServiceCapacityResponseV40 is the type of a response from Traffic
+// Ops to a request for a Delivery Service's "capacity" - in API version 4.0.
+type DeliveryServiceCapacityResponseV40 struct {
+	Response DeliveryServiceCapacity `json:"response"`
+	Alerts
+}
+
+// DeliveryServiceCapacityResponseV4 is the type of a response from Traffic Ops
+// to a request for a Delivery Service's "capacity" - in the current latest
+// minor version of API version 4.
+type DeliveryServiceCapacityResponseV4 = DeliveryServiceCapacityResponseV40
 
 // DeliveryServiceCapacity ...
 type DeliveryServiceCapacity struct {

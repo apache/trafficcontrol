@@ -26,6 +26,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestServerServerCapabilities(t *testing.T) {
@@ -293,15 +294,19 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 		t.Fatalf("cannot GET server capabilities assigned to servers: %v", err)
 	}
 	if sscs == nil {
-		t.Fatal("returned server capabilities assigned to servers was nil\n")
+		t.Fatal("returned server capabilities assigned to servers was nil")
 	}
 
-	dses, _, err := TOSession.GetDeliveryServices(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET delivery services: %v", err)
+		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 	}
-	dsIDtoDS := make(map[int]tc.DeliveryServiceV4, len(dses))
-	for _, ds := range dses {
+	dsIDtoDS := make(map[int]tc.DeliveryServiceV4, len(dses.Response))
+	for _, ds := range dses.Response {
+		if ds.ID == nil {
+			t.Error("Traffic Ops responded with a representation of a Delivery Service that had null or undefined ID")
+			continue
+		}
 		dsIDtoDS[*ds.ID] = ds
 	}
 
@@ -453,15 +458,15 @@ func DeleteTestServerServerCapabilitiesForTopologies(t *testing.T) {
 }
 
 func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServices(nil, url.Values{"xmlId": []string{"ds4"}})
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{QueryParameters: url.Values{"xmlId": []string{"ds4"}}})
 	if err != nil {
-		t.Fatalf("Failed to get Delivery Services: %v", err)
+		t.Fatalf("Failed to get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 	}
-	if len(dses) < 1 {
+	if len(dses.Response) < 1 {
 		t.Fatal("Failed to get at least one Delivery Service")
 	}
 
-	ds := dses[0]
+	ds := dses.Response[0]
 	if ds.ID == nil {
 		t.Fatal("Got Delivery Service with nil ID")
 	}

@@ -163,6 +163,18 @@ type DSServerV4 struct {
 	ServerInterfaces *[]ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
 }
 
+// DSServerResponseV40 is the type of a response from Traffic Ops to a request
+// for servers assigned to a Delivery Service - in API version 4.0.
+type DSServerResponseV40 struct {
+	Response []DSServerV4 `json:"response"`
+	Alerts
+}
+
+// DSServerResponseV4 is the type of a response from Traffic Ops to a request
+// for servers assigned to a Delivery Service - in the latest minor version of
+// API version 4.
+type DSServerResponseV4 = DSServerResponseV40
+
 func (oldBase DSServerBase) ToDSServerBaseV4() DSServerBaseV4 {
 	var dsServerBaseV4 DSServerBaseV4
 	dsServerBaseV4.Cachegroup = oldBase.Cachegroup
