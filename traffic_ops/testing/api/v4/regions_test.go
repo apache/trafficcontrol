@@ -51,6 +51,8 @@ func TestRegions(t *testing.T) {
 		UpdateTestRegionsWithHeaders(t, header)
 		DeleteTestRegionsByInvalidId(t)
 		DeleteTestRegionsByInvalidName(t)
+		GetRegionByInvalidId(t)
+		GetRegionByInvalidName(t)
 	})
 }
 
@@ -355,5 +357,25 @@ func DeleteTestRegionsByInvalidName(t *testing.T) {
 	delResp, _, err := TOSession.DeleteRegion(nil, &i)
 	if err == nil {
 		t.Errorf("cannot DELETE Regions by Invalid ID: %v - %v", err, delResp)
+	}
+}
+
+func GetRegionByInvalidId(t *testing.T) {
+	regionResp, _, err := TOSession.GetRegionByID(10000, nil)
+	if err != nil {
+		t.Errorf("Error!! Getting Region by Invalid ID %v", err)
+	}
+	if len(regionResp) >= 1 {
+		t.Errorf("Error!! Invalid ID shouldn't have any response %v Error %v", regionResp, err)
+	}
+}
+
+func GetRegionByInvalidName(t *testing.T) {
+	regionResp, _, err := TOSession.GetRegionByName("abcd", nil)
+	if err != nil {
+		t.Errorf("Error!! Getting Region by Invalid Name %v", err)
+	}
+	if len(regionResp) >= 1 {
+		t.Errorf("Error!! Invalid Name shouldn't have any response %v Error %v", regionResp, err)
 	}
 }
