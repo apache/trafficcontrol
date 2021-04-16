@@ -107,7 +107,7 @@ func getFRByIPTest(testFr tc.FederationResolver) func(*testing.T) {
 		opts.QueryParameters.Set("ipAddress", ip)
 		frs, _, err := TOSession.GetFederationResolvers(opts)
 		if err != nil {
-			t.Fatalf("Unexpected error getting Federation Resolver by IP %s: %v", ip, err, frs.Alerts)
+			t.Fatalf("Unexpected error getting Federation Resolver by IP %s: %v - alerts: %+v", ip, err, frs.Alerts)
 		}
 
 		if len(frs.Response) != 1 {

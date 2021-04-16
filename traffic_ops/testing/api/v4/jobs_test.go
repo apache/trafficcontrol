@@ -22,10 +22,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestJobs(t *testing.T) {
@@ -43,7 +42,7 @@ func TestJobs(t *testing.T) {
 func CreateTestJobs(t *testing.T) {
 	toDSes, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
+		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, toDSes.Alerts)
 	}
 
 	for i, job := range testData.InvalidationJobs {
@@ -61,28 +60,36 @@ func CreateTestJobs(t *testing.T) {
 			StartTime:       job.StartTime,
 			TTL:             job.TTL,
 		}
-		_, _, err := TOSession.CreateInvalidationJob(request)
+		resp, _, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not CREATE job: %v", err)
+			t.Errorf("could not create job: %v - alerts: %+v", err, resp.Alerts)
 		}
 	}
 }
 
 func JobCollisionWarningTest(t *testing.T) {
+	if len(testData.DeliveryServices) < 1 {
+		t.Fatal("Need at least one Delivery Service to test Invalidation Job collisions")
+	}
+	if testData.DeliveryServices[0].XMLID == nil {
+		t.Fatal("Found a Delivery Service in the testing data with null or undefined XMLID")
+	}
+	xmlID := *testData.DeliveryServices[0].XMLID
+
 	startTime := tc.Time{
 		Time:  time.Now().Add(time.Hour),
 		Valid: true,
 	}
 	firstJob := tc.InvalidationJobInput{
-		DeliveryService: util.InterfacePtr(testData.DeliveryServices[0].XMLID),
+		DeliveryService: util.InterfacePtr(&xmlID),
 		Regex:           util.StrPtr(`/\.*([A-Z]0?)`),
 		TTL:             util.InterfacePtr(16),
 		StartTime:       &startTime,
 	}
 
-	_, _, err := TOSession.CreateInvalidationJob(firstJob)
+	resp, _, err := TOSession.CreateInvalidationJob(firstJob, client.RequestOptions{})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("Unexpected error creating a content invalidation Job: %v - alerts: %+v", err, resp.Alerts)
 	}
 
 	newTime := tc.Time{
@@ -96,61 +103,68 @@ func JobCollisionWarningTest(t *testing.T) {
 		StartTime:       &newTime,
 	}
 
-	alerts, _, err := TOSession.CreateInvalidationJob(newJob)
+	alerts, _, err := TOSession.CreateInvalidationJob(newJob, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("expected invalidation job create to succeed: %v", err)
+		t.Fatalf("expected invalidation job create to succeed: %v - %+v", err, alerts.Alerts)
 	}
 
-	if len(alerts.Alerts) != 2 {
-		t.Fatalf("expected 2 alerts on creation, got %v", len(alerts.Alerts))
+	if len(alerts.Alerts) < 2 {
+		t.Fatalf("expected at least 2 alerts on creation, got %v", len(alerts.Alerts))
 	}
 
-	if alerts.Alerts[0].Level != tc.WarnLevel.String() {
-		t.Fatalf("expected first alert to be a warning, got %v", alerts.Alerts[0].Level)
+	found := false
+	for _, alert := range alerts.Alerts {
+		if alert.Level == tc.WarnLevel.String() && strings.Contains(alert.Text, *firstJob.Regex) {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("Expected a warning-level error about the regular expression, but couldn't find one")
 	}
 
-	if !strings.Contains(alerts.Alerts[0].Text, *firstJob.Regex) {
-		t.Fatalf("expected first alert to be about the first job, got: %v", alerts.Alerts[0].Text)
-	}
-
-	jobs, _, err := TOSession.GetInvalidationJobs(util.InterfacePtr(*testData.DeliveryServices[0].XMLID), nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("deliveryService", xmlID)
+	jobs, _, err := TOSession.GetInvalidationJobs(opts)
 	if err != nil {
-		t.Fatalf("unable to get invalidation jobs: %v", err)
+		t.Fatalf("unable to get invalidation jobs: %v - alerts: %+v", err, jobs.Alerts)
 	}
 
 	var realJob *tc.InvalidationJob
-	for i, job := range jobs {
-		d := (*newJob.DeliveryService)
-		y := d.(*string)
+	for i, job := range jobs.Response {
+		if job.StartTime == nil || job.DeliveryService == nil || job.CreatedBy == nil {
+			t.Error("Traffic Ops returned a representation of a content invalidation Job that had null or undefined Start Time and/or Delivery Service and/or Created By")
+			continue
+		}
 		diff := newJob.StartTime.Time.Sub(job.StartTime.Time)
-		if *job.DeliveryService == *y && *job.CreatedBy == "admin" &&
-			diff < time.Second {
-			realJob = &jobs[i]
+		if *job.DeliveryService == xmlID && *job.CreatedBy == "admin" && diff < time.Second {
+			realJob = &jobs.Response[i]
 			break
 		}
 	}
 
-	if realJob == nil || *realJob.ID == 0 {
+	if realJob == nil || realJob.ID == nil || *realJob.ID == 0 {
 		t.Fatal("could not find new job")
 	}
 
 	newTime.Time = startTime.Time.Add(time.Hour * 2)
 	realJob.StartTime = &newTime
-	alerts, _, err = TOSession.UpdateInvalidationJob(*realJob)
+	alerts, _, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("expected invalidation job update to succeed: %v", err)
+		t.Fatalf("expected invalidation job update to succeed: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
-	if len(alerts.Alerts) != 2 {
-		t.Fatalf("expected 2 alerts on update, got %v", len(alerts.Alerts))
+	if len(alerts.Alerts) < 2 {
+		t.Fatalf("expected at least 2 alerts on update, got %v", len(alerts.Alerts))
 	}
 
-	if alerts.Alerts[0].Level != tc.WarnLevel.String() {
-		t.Fatalf("expected first alert to be a warning, got %v", alerts.Alerts[0].Level)
+	found = false
+	for _, alert := range alerts.Alerts {
+		if alert.Level == tc.WarnLevel.String() && strings.Contains(alert.Text, *firstJob.Regex) {
+			found = true
+		}
 	}
-
-	if !strings.Contains(alerts.Alerts[0].Text, *firstJob.Regex) {
-		t.Fatalf("expected first alert to be about the first job, got: %v", alerts.Alerts[0].Text)
+	if !found {
+		t.Error("Expected a warning-level error about the regular expression, but couldn't find one")
 	}
 }
 
@@ -176,8 +190,8 @@ func CreateTestInvalidationJobs(t *testing.T) {
 		if !ok {
 			t.Fatalf("can't create test data job: delivery service '%v' not found in Traffic Ops", job.DeliveryService)
 		}
-		if _, _, err := TOSession.CreateInvalidationJob(job); err != nil {
-			t.Errorf("could not CREATE job: %v", err)
+		if alerts, _, err := TOSession.CreateInvalidationJob(job, client.RequestOptions{}); err != nil {
+			t.Errorf("could not create job: %v - alerts: %+v", err, alerts)
 		}
 	}
 }
@@ -224,7 +238,7 @@ func CreateTestInvalidJob(t *testing.T) {
 	}
 	tooHigh := interface{}((maxRevalDays * 24) + 1)
 	job.TTL = &tooHigh
-	_, reqInf, err := TOSession.CreateInvalidationJob(job)
+	_, reqInf, err := TOSession.CreateInvalidationJob(job, client.RequestOptions{})
 	if err == nil {
 		t.Error("creating invalid job (TTL higher than maxRevalDurationDays) - expected: error, actual: nil error")
 	}
@@ -234,13 +248,14 @@ func CreateTestInvalidJob(t *testing.T) {
 }
 
 func GetTestJobsQueryParams(t *testing.T) {
-	var xmlID interface{} = "ds2"
-	toJobs, _, err := TOSession.GetInvalidationJobs(&xmlID, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("deliveryService", "ds2")
+	toJobs, _, err := TOSession.GetInvalidationJobs(opts)
 	if err != nil {
-		t.Fatalf("error getting jobs: %v", err)
+		t.Fatalf("error getting jobs for Delivery Service 'ds2': %v - alerts: %+v", err, toJobs.Alerts)
 	}
 	foundOne := false
-	for _, j := range toJobs {
+	for _, j := range toJobs.Response {
 		if j.DeliveryService == nil {
 			t.Error("expected: non-nil DeliveryService pointer, actual: nil")
 		} else if *j.DeliveryService != "ds2" {
@@ -255,9 +270,9 @@ func GetTestJobsQueryParams(t *testing.T) {
 }
 
 func GetTestJobs(t *testing.T) {
-	toJobs, _, err := TOSession.GetInvalidationJobs(nil, nil)
+	toJobs, _, err := TOSession.GetInvalidationJobs(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("error getting jobs: %v", err)
+		t.Fatalf("error getting jobs: %v - alerts: %+v", err, toJobs.Alerts)
 	}
 
 	toDSes, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
@@ -274,11 +289,12 @@ func GetTestJobs(t *testing.T) {
 			t.Errorf("test job (index %v) has nil regex", i)
 			continue
 		}
-		for j, toJob := range toJobs {
+		for j, toJob := range toJobs.Response {
 			if toJob.DeliveryService == nil {
 				t.Errorf("to job (index %v) has nil delivery service", j)
 				continue
-			} else if toJob.AssetURL == nil {
+			}
+			if toJob.AssetURL == nil {
 				t.Errorf("to job (index %v) has nil asset url", j)
 				continue
 			}
@@ -291,27 +307,27 @@ func GetTestJobs(t *testing.T) {
 			toJobTime := toJob.StartTime.Round(time.Minute)
 			testJobTime := testJob.StartTime.Round(time.Minute)
 			if !toJobTime.Equal(testJobTime) {
-				t.Errorf("test job ds %v regex %v start time expected '%+v' actual '%+v'", *testJob.DeliveryService, *testJob.Regex, testJobTime, toJobTime)
+				t.Errorf("test job ds %v regex %s start time expected '%+v' actual '%+v'", *testJob.DeliveryService, *testJob.Regex, testJobTime, toJobTime)
 				continue
 			}
 			found = true
 			break
 		}
 		if !found {
-			t.Errorf("test job ds %v regex %v expected: exists, actual: not found", *testJob.DeliveryService, *testJob.Regex)
+			t.Errorf("test job ds %v regex %s expected: exists, actual: not found", *testJob.DeliveryService, *testJob.Regex)
 		}
 	}
 }
 
 func GetTestInvalidationJobs(t *testing.T) {
-	jobs, _, err := TOSession.GetInvalidationJobs(nil, nil)
+	jobs, _, err := TOSession.GetInvalidationJobs(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("error getting invalidation jobs: %v", err)
+		t.Fatalf("error getting invalidation jobs: %v - alerts: %+v", err, jobs.Alerts)
 	}
 
 	toDSes, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, toDSes)
+		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, toDSes.Alerts)
 	}
 
 	for _, ds := range toDSes.Response {
@@ -325,7 +341,7 @@ func GetTestInvalidationJobs(t *testing.T) {
 
 	for _, testJob := range testData.InvalidationJobs {
 		found := false
-		for _, toJob := range jobs {
+		for _, toJob := range jobs.Response {
 			if *toJob.DeliveryService != (*testJob.DeliveryService).(string) {
 				continue
 			}

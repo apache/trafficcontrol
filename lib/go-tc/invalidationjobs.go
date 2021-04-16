@@ -38,7 +38,7 @@ import (
 // internally by InvalidationJobInput objects to store the TTL.
 const MaxTTL = math.MaxInt64 / 3600000000000
 
-var twoDays = time.Hour * 48
+const twoDays = time.Hour * 48
 
 // ValidJobRegexPrefix matches the only valid prefixes for a relative-path Content Invalidation Job regex
 var ValidJobRegexPrefix = regexp.MustCompile(`^\?/.*$`)
@@ -56,6 +56,18 @@ type InvalidationJob struct {
 	// fail to Validate if it is further in the future than two days.
 	StartTime *Time `json:"startTime"`
 }
+
+// InvalidationJobsResponseV40 is the type of a response from Traffic Ops to a
+// request made to its /jobs API endpoint in API version 4.0.
+type InvalidationJobsResponseV40 struct {
+	Response []InvalidationJob `json:"response"`
+	Alerts
+}
+
+// InvalidationJobsResponseV4 is the type of a response from Traffic Ops to a
+// request made to its /jobs API endpoint in the latest minor version of API
+// version 4.
+type InvalidationJobsResponseV4 = InvalidationJobsResponseV40
 
 // InvalidationJobInput represents user input intending to create or modify a content invalidation job.
 type InvalidationJobInput struct {

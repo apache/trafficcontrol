@@ -314,7 +314,7 @@ func AssignOriginsToTopologyBasedDeliveryServices(t *testing.T) {
 	}
 	alerts, reqInf, err := TOSession.CreateDeliveryServiceServers(*d.ID, []int{*orgServer.ID}, true, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("assigning Origin server #%d to Topology-based Delivery Service #%d while the server's Cache Group belongs to the Topology - expected: no error, actual: %v - alerts: %+v", *d.ID, err, alerts.Alerts)
+		t.Fatalf("assigning Origin server #%d to Topology-based Delivery Service #%d while the server's Cache Group belongs to the Topology - expected: no error, actual: %v - alerts: %+v", *orgServer.ID, *d.ID, err, alerts.Alerts)
 	}
 	if reqInf.StatusCode < http.StatusOK || reqInf.StatusCode >= http.StatusMultipleChoices {
 		t.Fatalf("creating deliveryserviceserver assignment for ORG server to topology-based delivery service while the ORG server's cachegroup belongs to the topology - expected: 200-level status code, actual: %d", reqInf.StatusCode)
