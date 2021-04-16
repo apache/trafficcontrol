@@ -71,7 +71,7 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, err)
 		return
 	}
-	
+
 	ok, err := queueUpdate(inf.Tx.Tx, serverID, queue)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("queueing updates: %v", err))
