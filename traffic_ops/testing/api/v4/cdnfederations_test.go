@@ -207,16 +207,16 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 		t.Fatal("not enough federation resolvers to test")
 	}
 
-	frs, _, err := TOSession.GetFederationResolvers(nil, nil)
+	frs, _, err := TOSession.GetFederationResolvers(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Unexpected error getting Federation Resolvers: %v", err)
+		t.Fatalf("Unexpected error getting Federation Resolvers: %v - alerts: %+v", err, frs.Alerts)
 	}
-	if len(frs) != frCnt {
-		t.Fatalf("Wrong number of Federation Resolvers from GET, want %d got %d", frCnt, len(frs))
+	if len(frs.Response) != frCnt {
+		t.Fatalf("Wrong number of Federation Resolvers from GET, want %d got %d", frCnt, len(frs.Response))
 	}
 
-	frIDs := make([]int, 0, len(frs))
-	for _, fr := range frs {
+	frIDs := make([]int, 0, len(frs.Response))
+	for _, fr := range frs.Response {
 		if fr.ID == nil {
 			// Because we need 'frCnt' resolver ids, this is not recoverable
 			t.Fatal("Traffic Ops returned a representation for a Federation Resolver with null or undefined ID")
