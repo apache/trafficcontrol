@@ -111,7 +111,10 @@ To test the demo1 Delivery Service:
 
 To test the ``foo.kabletown.net.`` Federation:
 
-	[user@computer cdn-in-a-box]$ sudo docker-compose exec trafficrouter dig +short @trafficrouter.infra.ciab.test -t CNAME video.demo2.mycdn.ciab.test
+.. code-block:: shell
+	:caption: Query the Federation CNAME using the Delivery Service hostname
+
+	sudo docker-compose exec trafficrouter dig +short @trafficrouter.infra.ciab.test -t CNAME video.demo2.mycdn.ciab.test
 
 	# Expected response:
 	foo.kabletown.net.
