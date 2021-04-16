@@ -60,7 +60,7 @@ Enroller
 				"mode": "remote",
 				"port": 2343,
 				"cwd": "${workspaceRoot}/",
-				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol/",
+				"remotePath": "/go/src/github.com/apache/trafficcontrol/",
 			}
 		]
 	}
@@ -108,8 +108,8 @@ Traffic Monitor
 				"request": "attach",
 				"mode": "remote",
 				"port": 2344,
-				"cwd": "${workspaceRoot}/traffic_monitor",
-				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol/traffic_monitor",
+				"cwd": "${workspaceRoot}",
+				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
 			}
 		]
 	}
@@ -157,8 +157,8 @@ Traffic Ops
 				"request": "attach",
 				"mode": "remote",
 				"port": 2345,
-				"cwd": "${workspaceRoot}/traffic_ops/traffic_ops_golang",
-				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang",
+				"cwd": "${workspaceRoot}",
+				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
 			}
 		]
 	}
@@ -305,8 +305,8 @@ Traffic Stats
 				"request": "attach",
 				"mode": "remote",
 				"port": 2346,
-				"cwd": "${workspaceRoot}/traffic_stats",
-				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol/traffic_stats",
+				"cwd": "${workspaceRoot}",
+				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
 			}
 		]
 	}
