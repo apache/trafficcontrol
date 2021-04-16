@@ -33,11 +33,32 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 		return sslKeys;
 	};
 
+	var getAcmeProviders = function() {
+		deliveryServiceSslKeysService.getAcmeProviders()
+			.then(function(result) {
+				$scope.acmeProviders = result;
+				if (!$scope.acmeProviders.includes('Lets Encrypt')) {
+					$scope.acmeProviders.push('Lets Encrypt');
+				}
+				if (!$scope.acmeProviders.includes('Self Signed')) {
+					$scope.acmeProviders.push('Self Signed');
+				}
+				if (!$scope.acmeProviders.includes('Not Assigned')) {
+					$scope.acmeProviders.push('Not Assigned');
+				}
+				if (!$scope.acmeProviders.includes('Provided Manually')) {
+					$scope.acmeProviders.push('Provided Manually');
+				}
+			});
+	};
+
+	$scope.acmeProviders = [];
 	$scope.deliveryService = deliveryService;
 	$scope.sslKeys = setSSLKeys(sslKeys);
 	if ($scope.sslKeys.authType === undefined || $scope.sslKeys.authType === '') {
         $scope.sslKeys.authType = 'Not Assigned';
     }
+	$scope.acmeProvider = sslKeys.authType;
 
 	$scope.hasError = formUtils.hasError;
 	$scope.hasPropertyError = formUtils.hasPropertyError;
@@ -94,6 +115,16 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
                 });
 		});
 	};
+
+	$scope.updateProvider = function() {
+		sslKeys.authType = $scope.acmeProvider;
+	};
+
+	var init = function () {
+		getAcmeProviders();
+	};
+	init();
+
 
 };
 

@@ -37,11 +37,14 @@ on:
       - '!.github/actions/build-rpms/*'
       - '!.github/actions/run-ciab/*'
       - '!.github/workflows/ciab.yaml'
+      - 'infrastructure/ansible/**'
       - 'LICENSE'
       - 'licenses/**'
       - 'misc/**'
       - 'NOTICE'
-      - 'traffic_control/java'
+      - 'traffic_control/java/**'
+      - 'traffic_ops_ort/testing/**'
+      - 'traffic_ops/testing/**'
   create:
   pull_request:
     paths-ignore:
@@ -57,11 +60,14 @@ on:
       - '!.github/actions/build-rpms/*'
       - '!.github/actions/run-ciab/*'
       - '!.github/workflows/ciab.yaml'
+      - 'infrastructure/ansible/**'
       - 'LICENSE'
       - 'licenses/**'
       - 'misc/**'
       - 'NOTICE'
-      - 'traffic_control/java'
+      - 'traffic_control/java/**'
+      - 'traffic_ops_ort/testing/**'
+      - 'traffic_ops/testing/**'
     types: [ opened, reopened, ready_for_review, synchronize ]
 
 jobs:

@@ -89,6 +89,7 @@ services:
       - traffic_vault
     volumes:
       - ../../..:/root/go/src/github.com/apache/trafficcontrol
+      - ./yumserver:/yumserver
 
   yumserver:
     build:

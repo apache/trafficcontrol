@@ -77,6 +77,12 @@
       "write_timeout" : {{ to_go_write_timeout }},
       "supported_ds_metrics" : {{ to_go_supported_ds_metrics | to_json }},
       "plugins": {{ to_plugin_config.keys() | list | to_json }},
-      "plugin_config" : {{ to_plugin_config | to_nice_json(indent=2) }}
+      "plugin_config" : {{ to_plugin_config | to_nice_json(indent=2) }},
+      "traffic_vault_backend": "{{ to_traffic_vault_backend }}",
+      "traffic_vault_config": {
+         "user": "{{ to_riak_username }}",
+         "password": "{{ to_riak_username_password }}",
+         "MaxTLSVersion": "{{ to_riak_tls_max_version }}"
+      }
    }
 }

@@ -17,6 +17,8 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
+	"reflect"
 	"sort"
 	"strings"
 	"testing"
@@ -37,6 +39,7 @@ func TestDivisions(t *testing.T) {
 		header.Set(rfc.IfModifiedSince, time)
 		header.Set(rfc.IfUnmodifiedSince, time)
 		SortTestDivisions(t)
+		SortTestDivisionDesc(t)
 		UpdateTestDivisions(t)
 		UpdateTestDivisionsWithHeaders(t, header)
 		GetTestDivisionsIMSAfterChange(t, header)
@@ -45,6 +48,10 @@ func TestDivisions(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestDivisionsWithHeaders(t, header)
+		VerifyPaginationSupportDivision(t)
+		GetDivisionByInvalidId(t)
+		GetDivisionByInvalidName(t)
+		DeleteTestDivisionsByInvalidId(t)
 	})
 }
 
@@ -152,7 +159,7 @@ func CreateTestDivisions(t *testing.T) {
 func SortTestDivisions(t *testing.T) {
 	var header http.Header
 	var sortedList []string
-	resp, _, err := TOSession.GetDivisions(header)
+	resp, _, err := TOSession.GetDivisions(nil, header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -165,6 +172,36 @@ func SortTestDivisions(t *testing.T) {
 	})
 	if res != true {
 		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
+}
+
+func SortTestDivisionDesc(t *testing.T) {
+
+	var header http.Header
+	respAsc, _, err1 := TOSession.GetDivisions(nil, header)
+	params := url.Values{}
+	params.Set("sortOrder", "desc")
+	respDesc, _, err2 := TOSession.GetDivisions(params, header)
+
+	if err1 != nil {
+		t.Errorf("Expected no error, but got error in Division Ascending %v", err1)
+	}
+	if err2 != nil {
+		t.Errorf("Expected no error, but got error in Division Descending %v", err2)
+	}
+
+	if len(respAsc) > 0 && len(respDesc) > 0 {
+		// reverse the descending-sorted response and compare it to the ascending-sorted one
+		for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+			respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
+		}
+		if respDesc[0].Name != "" && respAsc[0].Name != "" {
+			if !reflect.DeepEqual(respDesc[0].Name, respAsc[0].Name) {
+				t.Errorf("Division responses are not equal after reversal: %s - %s", *&respDesc[0].Name, *&respAsc[0].Name)
+			}
+		}
+	} else {
+		t.Errorf("No Response returned from GET Delivery Service using SortOrder")
 	}
 }
 
@@ -237,5 +274,96 @@ func DeleteTestDivisions(t *testing.T) {
 		if len(divisionResp) > 0 {
 			t.Errorf("expected Division : %s to be deleted", division.Name)
 		}
+	}
+}
+
+func VerifyPaginationSupportDivision(t *testing.T) {
+	qparams := url.Values{}
+	qparams.Set("orderby", "id")
+	divisions, _, err := TOSession.GetDivisions(qparams, nil)
+	if err != nil {
+		t.Fatalf("cannot GET Divisions: %v", err)
+	}
+
+	qparams = url.Values{}
+	qparams.Set("orderby", "id")
+	qparams.Set("limit", "1")
+	divisionsWithLimit, _, err := TOSession.GetDivisions(qparams, nil)
+	if !reflect.DeepEqual(divisions[:1], divisionsWithLimit) {
+		t.Error("expected GET Divisions with limit = 1 to return first result")
+	}
+
+	qparams = url.Values{}
+	qparams.Set("orderby", "id")
+	qparams.Set("limit", "1")
+	qparams.Set("offset", "1")
+	divisionsWithOffset, _, err := TOSession.GetDivisions(qparams, nil)
+	if !reflect.DeepEqual(divisions[1:2], divisionsWithOffset) {
+		t.Error("expected GET Divisions with limit = 1, offset = 1 to return second result")
+	}
+
+	qparams = url.Values{}
+	qparams.Set("orderby", "id")
+	qparams.Set("limit", "1")
+	qparams.Set("page", "2")
+	divisionsWithPage, _, err := TOSession.GetDivisions(qparams, nil)
+	if !reflect.DeepEqual(divisions[1:2], divisionsWithPage) {
+		t.Error("expected GET Divisions with limit = 1, page = 2 to return second result")
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "-2")
+	_, _, err = TOSession.GetDivisions(qparams, nil)
+	if err == nil {
+		t.Error("expected GET Divisions to return an error when limit is not bigger than -1")
+	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
+		t.Errorf("expected GET Divisions to return an error for limit is not bigger than -1, actual error: " + err.Error())
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "1")
+	qparams.Set("offset", "0")
+	_, _, err = TOSession.GetDivisions(qparams, nil)
+	if err == nil {
+		t.Error("expected GET Divisions to return an error when offset is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET Divisions to return an error for offset is not a positive integer, actual error: " + err.Error())
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "1")
+	qparams.Set("page", "0")
+	_, _, err = TOSession.GetDivisions(qparams, nil)
+	if err == nil {
+		t.Error("expected GET Divisions to return an error when page is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET Divisions to return an error for page is not a positive integer, actual error: " + err.Error())
+	}
+}
+
+func GetDivisionByInvalidId(t *testing.T) {
+	resp, _, err := TOSession.GetDivisionByID(10000, nil)
+	if err != nil {
+		t.Errorf("Error!! Getting Division by Invalid ID %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Error!! Invalid ID shouldn't have any response %v Error %v", resp, err)
+	}
+}
+
+func GetDivisionByInvalidName(t *testing.T) {
+	resp, _, err := TOSession.GetDivisionByName("abcd", nil)
+	if err != nil {
+		t.Errorf("Error!! Getting Division by Invalid Name %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Error!! Invalid Name shouldn't have any response %v Error %v", resp, err)
+	}
+}
+
+func DeleteTestDivisionsByInvalidId(t *testing.T) {
+	delResp, _, err := TOSession.DeleteDivision(10000)
+	if err == nil {
+		t.Errorf("cannot DELETE Division by Invalid ID: %v - %v", err, delResp)
 	}
 }
