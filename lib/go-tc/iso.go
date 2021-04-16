@@ -22,3 +22,18 @@ package tc
 // OSVersionsResponse is the JSON representation of the
 // OS versions data for ISO generation.
 type OSVersionsResponse map[string]string
+
+// OSVersionsResponseV40 is the type of a response from Traffic Ops to a
+// request to its /osversions endpoint in API version 4.0.
+type OSVersionsResponseV40 struct {
+	// Structure of this map:
+	//  key:   Name of OS
+	//  value: Directory where the ISO source can be found
+	Response map[string]string `json:"response"`
+	Alerts
+}
+
+// OSVersionsResponseV4 is the type of a response from Traffic Ops to a
+// request to its /osversions endpoint in the latest minor version of API
+// version 4.
+type OSVersionsResponseV4 = OSVersionsResponseV40

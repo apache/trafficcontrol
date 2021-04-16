@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestGetOSVersions(t *testing.T) {
@@ -38,18 +39,16 @@ func TestGetOSVersions(t *testing.T) {
 
 	// Ensure request with an authenticated client returns expected data.
 	t.Run("authenticated", func(t *testing.T) {
-		got, _, err := TOSession.GetOSVersions()
+		got, _, err := TOSession.GetOSVersions(client.RequestOptions{})
 		if err != nil {
-			t.Fatalf("unexpected error from authenticated GetOSVersions(): %v", err)
+			t.Fatalf("unexpected error from authenticated GetOSVersions(): %v - alerts: %+v", err, got.Alerts)
 		}
 
-		t.Logf("GetOSVersions() response: %#v", got)
-
-		if lenGot, lenExp := len(got), len(expected); lenGot != lenExp {
+		if lenGot, lenExp := len(got.Response), len(expected); lenGot != lenExp {
 			t.Fatalf("incorrect map length: got %d map entries, expected %d", lenGot, lenExp)
 		}
 		for k, expectedVal := range expected {
-			if gotVal := got[k]; gotVal != expectedVal {
+			if gotVal := got.Response[k]; gotVal != expectedVal {
 				t.Fatalf("incorrect map entry for key %q: got %q, expected %q", k, gotVal, expectedVal)
 			}
 		}
@@ -57,11 +56,10 @@ func TestGetOSVersions(t *testing.T) {
 
 	// Ensure request with an un-authenticated client returns an error.
 	t.Run("un-authenticated", func(t *testing.T) {
-		_, _, err := NoAuthTOSession.GetOSVersions()
+		_, _, err := NoAuthTOSession.GetOSVersions(client.RequestOptions{})
 		if err == nil {
-			t.Fatalf("expected error from unauthenticated GetOSVersions(), got: %v", err)
+			t.Fatal("expected error from unauthenticated GetOSVersions(), got: <nil>")
 		}
-		t.Logf("unauthenticated GetOSVersions() error (expected): %v", err)
 	})
 
 	// Update database with a Parameter entry. This should cause the endpoint
@@ -99,10 +97,9 @@ func TestGetOSVersions(t *testing.T) {
 			}
 		}()
 
-		_, _, err := TOSession.GetOSVersions()
+		_, _, err := TOSession.GetOSVersions(client.RequestOptions{})
 		if err == nil {
-			t.Fatalf("expected error from GetOSVersions() after adding invalid Parameter DB entry, got: %v", err)
+			t.Fatal("expected error from GetOSVersions() after adding invalid Parameter DB entry, got: <nil>")
 		}
-		t.Logf("got expected error from GetOSVersions() after adding Parameter DB entry with config directory %q: %v", p.Value, err)
 	})
 }
