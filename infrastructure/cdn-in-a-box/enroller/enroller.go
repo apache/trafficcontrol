@@ -342,17 +342,22 @@ func enrollOrigin(toSession *session, r io.Reader) error {
 	var s tc.Origin
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Origin: %s\n", err)
+		log.Infof("error decoding Origin: %v", err)
 		return err
 	}
+	if s.Name == nil {
+		return errors.New("cannot create an Origin with no name")
+	}
 
-	alerts, _, err := toSession.CreateOrigin(s)
+	alerts, _, err := toSession.CreateOrigin(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("origin %s already exists\n", *s.Name)
-			return nil
+		for _, alert := range alerts.Alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("Origin '%s' already exists", *s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Origin: %s\n", err)
+		log.Infof("error creating Origin: %v - alerts: %+v", err, alerts.Alerts)
 		return err
 	}
 
