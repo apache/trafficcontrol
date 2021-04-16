@@ -17,12 +17,12 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
+	"reflect"
 	"sort"
 	"strings"
 	"testing"
 	"time"
-	"net/url"
-	"reflect"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -44,7 +44,7 @@ func TestRegions(t *testing.T) {
 		GetTestRegions(t)
 		GetTestRegionsIMSAfterChange(t, header)
 		DeleteTestRegionsByName(t)
-		VerifyPaginationSupportRegion(t)	
+		VerifyPaginationSupportRegion(t)
 		header = make(map[string][]string)
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
@@ -343,7 +343,7 @@ func DeleteTestRegions(t *testing.T) {
 }
 
 func DeleteTestRegionsByInvalidId(t *testing.T) {
-    i := 10000
+	i := 10000
 	delResp, _, err := TOSession.DeleteRegion(&i, nil)
 	if err == nil {
 		t.Errorf("cannot DELETE Regions by Invalid ID: %v - %v", err, delResp)
@@ -351,7 +351,7 @@ func DeleteTestRegionsByInvalidId(t *testing.T) {
 }
 
 func DeleteTestRegionsByInvalidName(t *testing.T) {
-    i := "invalid"
+	i := "invalid"
 	delResp, _, err := TOSession.DeleteRegion(nil, &i)
 	if err == nil {
 		t.Errorf("cannot DELETE Regions by Invalid ID: %v - %v", err, delResp)
