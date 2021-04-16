@@ -57,9 +57,13 @@ func (to *Session) UpdateRegion(id int, region tc.Region, header http.Header) (t
 }
 
 // GetRegions returns all Regions in Traffic Ops.
-func (to *Session) GetRegions(header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
+func (to *Session) GetRegions(params url.Values, header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
+	uri := APIRegions
+	if params != nil {
+		uri += "?" + params.Encode()
+	}
 	var data tc.RegionsResponse
-	reqInf, err := to.get(APIRegions, header, &data)
+	reqInf, err := to.get(uri, header, &data)
 	return data.Response, reqInf, err
 }
 

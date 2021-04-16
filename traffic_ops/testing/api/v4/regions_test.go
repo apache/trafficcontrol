@@ -21,6 +21,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"net/url"
+	"reflect"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -36,15 +38,19 @@ func TestRegions(t *testing.T) {
 		header.Set(rfc.IfModifiedSince, time)
 		header.Set(rfc.IfUnmodifiedSince, time)
 		SortTestRegions(t)
+		SortTestRegionsDesc(t)
 		UpdateTestRegions(t)
 		UpdateTestRegionsWithHeaders(t, header)
 		GetTestRegions(t)
 		GetTestRegionsIMSAfterChange(t, header)
 		DeleteTestRegionsByName(t)
+		VerifyPaginationSupportRegion(t)	
 		header = make(map[string][]string)
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestRegionsWithHeaders(t, header)
+		DeleteTestRegionsByInvalidId(t)
+		DeleteTestRegionsByInvalidName(t)
 	})
 }
 
@@ -112,6 +118,15 @@ func GetTestRegionsIMSAfterChange(t *testing.T, header http.Header) {
 	}
 }
 
+func GetTestRegions(t *testing.T) {
+	for _, region := range testData.Regions {
+		resp, _, err := TOSession.GetRegionByName(region.Name, nil)
+		if err != nil {
+			t.Errorf("cannot GET Region by region: %v - %v", err, resp)
+		}
+	}
+}
+
 func CreateTestRegions(t *testing.T) {
 
 	for _, region := range testData.Regions {
@@ -126,7 +141,7 @@ func CreateTestRegions(t *testing.T) {
 func SortTestRegions(t *testing.T) {
 	var header http.Header
 	var sortedList []string
-	resp, _, err := TOSession.GetRegions(header)
+	resp, _, err := TOSession.GetRegions(nil, header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -139,6 +154,36 @@ func SortTestRegions(t *testing.T) {
 	})
 	if res != true {
 		t.Errorf("list is not sorted by their names: %v", sortedList)
+	}
+}
+
+func SortTestRegionsDesc(t *testing.T) {
+
+	var header http.Header
+	respAsc, _, err1 := TOSession.GetRegions(nil, header)
+	params := url.Values{}
+	params.Set("sortOrder", "desc")
+	respDesc, _, err2 := TOSession.GetRegions(params, header)
+
+	if err1 != nil {
+		t.Errorf("Expected no error, but got error in Regions Ascending %v", err1)
+	}
+	if err2 != nil {
+		t.Errorf("Expected no error, but got error in Regions Descending %v", err2)
+	}
+
+	if len(respAsc) > 0 && len(respDesc) > 0 {
+		// reverse the descending-sorted response and compare it to the ascending-sorted one
+		for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+			respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
+		}
+		if respDesc[0].Name != "" && respAsc[0].Name != "" {
+			if !reflect.DeepEqual(respDesc[0].Name, respAsc[0].Name) {
+				t.Errorf("Regions responses are not equal after reversal: %s - %s", *&respDesc[0].Name, *&respAsc[0].Name)
+			}
+		}
+	} else {
+		t.Errorf("No Response returned from GET Regions using SortOrder")
 	}
 }
 
@@ -175,15 +220,69 @@ func UpdateTestRegions(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
 	}
-
 }
 
-func GetTestRegions(t *testing.T) {
-	for _, region := range testData.Regions {
-		resp, _, err := TOSession.GetRegionByName(region.Name, nil)
-		if err != nil {
-			t.Errorf("cannot GET Region by region: %v - %v", err, resp)
-		}
+func VerifyPaginationSupportRegion(t *testing.T) {
+	qparams := url.Values{}
+	qparams.Set("orderby", "id")
+	regions, _, err := TOSession.GetRegions(qparams, nil)
+	if err != nil {
+		t.Fatalf("cannot GET Regions: %v", err)
+	}
+
+	qparams = url.Values{}
+	qparams.Set("orderby", "id")
+	qparams.Set("limit", "1")
+	regionsWithLimit, _, err := TOSession.GetRegions(qparams, nil)
+	if !reflect.DeepEqual(regions[:1], regionsWithLimit) {
+		t.Error("expected GET Regions with limit = 1 to return first result")
+	}
+
+	qparams = url.Values{}
+	qparams.Set("orderby", "id")
+	qparams.Set("limit", "1")
+	qparams.Set("offset", "1")
+	regionsWithOffset, _, err := TOSession.GetRegions(qparams, nil)
+	if !reflect.DeepEqual(regions[1:2], regionsWithOffset) {
+		t.Error("expected GET Regions with limit = 1, offset = 1 to return second result")
+	}
+
+	qparams = url.Values{}
+	qparams.Set("orderby", "id")
+	qparams.Set("limit", "1")
+	qparams.Set("page", "2")
+	regionsWithPage, _, err := TOSession.GetRegions(qparams, nil)
+	if !reflect.DeepEqual(regions[1:2], regionsWithPage) {
+		t.Error("expected GET Regions with limit = 1, page = 2 to return second result")
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "-2")
+	_, _, err = TOSession.GetRegions(qparams, nil)
+	if err == nil {
+		t.Error("expected GET Regions to return an error when limit is not bigger than -1")
+	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
+		t.Errorf("expected GET Regions to return an error for limit is not bigger than -1, actual error: " + err.Error())
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "1")
+	qparams.Set("offset", "0")
+	_, _, err = TOSession.GetRegions(qparams, nil)
+	if err == nil {
+		t.Error("expected GET Regions to return an error when offset is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET Regions to return an error for offset is not a positive integer, actual error: " + err.Error())
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "1")
+	qparams.Set("page", "0")
+	_, _, err = TOSession.GetRegions(qparams, nil)
+	if err == nil {
+		t.Error("expected GET Regions to return an error when page is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET Regions to return an error for page is not a positive integer, actual error: " + err.Error())
 	}
 }
 
@@ -214,7 +313,6 @@ func DeleteTestRegionsByName(t *testing.T) {
 			t.Errorf("expected Region : %s to be deleted", region.Name)
 		}
 	}
-
 	CreateTestRegions(t)
 }
 
@@ -241,5 +339,21 @@ func DeleteTestRegions(t *testing.T) {
 		if len(regionResp) > 0 {
 			t.Errorf("expected Region : %s to be deleted", region.Name)
 		}
+	}
+}
+
+func DeleteTestRegionsByInvalidId(t *testing.T) {
+    i := 10000
+	delResp, _, err := TOSession.DeleteRegion(&i, nil)
+	if err == nil {
+		t.Errorf("cannot DELETE Regions by Invalid ID: %v - %v", err, delResp)
+	}
+}
+
+func DeleteTestRegionsByInvalidName(t *testing.T) {
+    i := "invalid"
+	delResp, _, err := TOSession.DeleteRegion(nil, &i)
+	if err == nil {
+		t.Errorf("cannot DELETE Regions by Invalid ID: %v - %v", err, delResp)
 	}
 }
