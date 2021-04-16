@@ -225,8 +225,7 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		}
 	}
 	// Check if the current user has the lock on this cdn, if yes -> proceed
-	// if no, try to post the lock for this CDN and then go on to snap it
-	lockexists, err, errCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, cdn, inf.User.UserName)
+	_, err, errCode = dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, cdn, inf.User.UserName)
 	if errCode != http.StatusOK {
 		if errCode == http.StatusForbidden {
 			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, err, nil, deprecated, &alt)
@@ -235,14 +234,7 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, nil, err, deprecated, &alt)
 		return
 	}
-	if !lockexists {
-		// POST to get a lock here
-		err = dbhelpers.AcquireCdnLock(inf.Tx.Tx, cdn, inf.User.UserName)
-		if err != nil {
-			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err, deprecated, &alt)
-			return
-		}
-	}
+
 	// We never store tm_path, even though low API versions show it in responses.
 	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, inf.Config.Version, inf.Config.CRConfigUseRequestHost, false)
 	if err != nil {

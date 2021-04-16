@@ -62,8 +62,7 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Check if the current user has the lock on this cdn, if yes -> proceed
-	// if no, try to post the lock for this CDN and then go on to snap it
-	lockexists, err, errCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, cdn, inf.User.UserName)
+	_, err, errCode = dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, cdn, inf.User.UserName)
 	if errCode != http.StatusOK {
 		if errCode == http.StatusForbidden {
 			api.HandleErr(w, r, inf.Tx.Tx, errCode, err, nil)
@@ -72,14 +71,7 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, err)
 		return
 	}
-	if !lockexists {
-		// POST to get a lock here
-		err = dbhelpers.AcquireCdnLock(inf.Tx.Tx, cdn, inf.User.UserName)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-	}
+	
 	ok, err := queueUpdate(inf.Tx.Tx, serverID, queue)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("queueing updates: %v", err))
