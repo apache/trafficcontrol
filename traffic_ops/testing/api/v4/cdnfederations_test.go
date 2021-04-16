@@ -217,6 +217,10 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 
 	frIDs := make([]int, 0, len(frs))
 	for _, fr := range frs {
+		if fr.ID == nil {
+			// Because we need 'frCnt' resolver ids, this is not recoverable
+			t.Fatal("Traffic Ops returned a representation for a Federation Resolver with null or undefined ID")
+		}
 		frIDs = append(frIDs, int(*fr.ID))
 	}
 
@@ -260,10 +264,23 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 
 	for _, c := range testCases {
 		t.Run(c.description, func(t *testing.T) {
-			_, _, err := TOSession.AssignFederationFederationResolver(c.fedID, c.resolverIDs, c.replace)
-
-			if err != nil && !strings.Contains(err.Error(), c.err) {
-				t.Fatalf("error: expected error result %v, want: %v", err, c.err)
+			resp, _, err := TOSession.AssignFederationFederationResolver(c.fedID, c.resolverIDs, c.replace, client.RequestOptions{})
+			if err != nil {
+				if c.err == "" {
+					t.Errorf("Unexpected error assigning Federation Resolvers to Federation: %v - alerts: %+v", err, resp.Alerts)
+					return
+				}
+				found := false
+				for _, alert := range resp.Alerts.Alerts {
+					if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, c.err) {
+						found = true
+					}
+				}
+				if !found {
+					t.Errorf("Expected to find an error-level alert relating to '%s', but didn't - err: %v - alerts: %+v", c.err, err, resp.Alerts)
+				}
+			} else if c.err != "" {
+				t.Errorf("Expected to get an error assigning Federation Resolvers to Federation, but didn't - alerts: %+v", resp.Alerts)
 			}
 		})
 	}
@@ -294,9 +311,9 @@ func GetTestFederationFederationResolvers(t *testing.T) {
 
 	for _, c := range testCases {
 		t.Run(c.description, func(t *testing.T) {
-			resp, _, err := TOSession.GetFederationFederationResolversByID(c.fedID)
+			resp, _, err := TOSession.GetFederationFederationResolvers(c.fedID, client.RequestOptions{})
 			if err != nil {
-				t.Fatalf("Error getting federation federation resolvers by federation id: %d, err: %s", c.fedID, err.Error())
+				t.Fatalf("Error getting federation federation resolvers by federation id %d: %v - alerts: %+v", c.fedID, err, resp.Alerts)
 			}
 			if len(resp.Response) == 0 && c.hasRecords {
 				t.Fatalf("expected federation of ID %d to have associated federation resolvers, but had 0", c.fedID)

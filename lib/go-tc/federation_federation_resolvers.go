@@ -24,6 +24,18 @@ type FederationFederationResolversResponse struct {
 	Response []FederationResolver `json:"response"`
 }
 
+// FederationFederationResolversResponseV40 represents an API response
+// containing Federation Resolvers for a given Federation in API version 4.0.
+type FederationFederationResolversResponseV40 struct {
+	Response []FederationResolver `json:"response"`
+	Alerts
+}
+
+// FederationFederationResolversResponseV4 represents an API response
+// containing Federation Resolvers for a given Federation in the latest minor
+// version of API version 4.
+type FederationFederationResolversResponseV4 = FederationFederationResolversResponseV40
+
 // AssignFederationFederationResolversResponse represents an API response for assigning a Federation Resolver to a Federation.
 type AssignFederationFederationResolversResponse struct {
 	Response AssignFederationResolversRequest `json:"response"`
