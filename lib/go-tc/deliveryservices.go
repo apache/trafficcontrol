@@ -549,6 +549,19 @@ type FederationDeliveryServiceNullable struct {
 	XMLID *string `json:"xmlId" db:"xml_id"`
 }
 
+// FederationDeliveryServicesResponseV40 is the type of a response from Traffic
+// Ops to a request made to its /federations/{{ID}}/deliveryservices endpoint
+// in API version 4.0.
+type FederationDeliveryServicesResponseV40 struct {
+	Response []FederationDeliveryServiceNullable `json:"response"`
+	Alerts
+}
+
+// FederationDeliveryServicesResponseV4 is the type of a response from Traffic
+// Ops to a request made to its /federations/{{ID}}/deliveryservices endpoint
+// in the latest minor version of API version 4.
+type FederationDeliveryServicesResponseV4 = FederationDeliveryServicesResponseV40
+
 type DeliveryServiceUserPost struct {
 	UserID           *int   `json:"userId"`
 	DeliveryServices *[]int `json:"deliveryServices"`

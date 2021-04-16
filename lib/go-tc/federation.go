@@ -94,6 +94,19 @@ type AllDeliveryServiceFederationsMapping struct {
 // IsAllFederations implements the IAllFederation interface. Always returns true.
 func (a AllDeliveryServiceFederationsMapping) IsAllFederations() bool { return true }
 
+// FederationsResponseV40 is the type of a response from Traffic Ops to
+// requests to its /federations/all and /federations endpoints in API version
+// 4.0.
+type FederationsResponseV40 struct {
+	Response []AllDeliveryServiceFederationsMapping `json:"response"`
+	Alerts
+}
+
+// FederationsResponseV4 is the type of a response from Traffic Ops to
+// requests to its /federations/all and /federations endpoints in the latest
+// minor version of API version 4.
+type FederationsResponseV4 = FederationsResponseV40
+
 // AllFederationCDN is the JSON object returned by
 // /api/1.x/federations?all&cdnName=my-cdn-name.
 type AllFederationCDN struct {
@@ -170,7 +183,7 @@ func (f *FederationDSPost) Validate(tx *sql.Tx) error {
 	return nil
 }
 
-// FederationUser represents Federation Users
+// FederationUser represents Federation Users.
 type FederationUser struct {
 	Company  *string `json:"company" db:"company"`
 	Email    *string `json:"email" db:"email"`
@@ -179,6 +192,18 @@ type FederationUser struct {
 	Role     *string `json:"role" db:"role_name"`
 	Username *string `json:"username" db:"username"`
 }
+
+// FederationUsersResponseV40 is the type of a response from Traffic Ops to a
+// request made to its /federations/{{ID}}/users endpoint in API version 4.0.
+type FederationUsersResponseV40 struct {
+	Response []FederationUser `json:"response"`
+	Alerts
+}
+
+// FederationUsersResponseV4 is the type of a response from Traffic Ops to a
+// request made to its /federations/{{ID}}/users endpoint in the latest minor
+// version of API version 4.
+type FederationUsersResponseV4 = FederationUsersResponseV40
 
 // FederationUserPost represents POST body for assigning Users to Federations
 type FederationUserPost struct {
