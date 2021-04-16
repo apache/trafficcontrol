@@ -26,6 +26,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestRegions(t *testing.T) {
@@ -317,18 +318,23 @@ func DeleteTestRegionsByName(t *testing.T) {
 	for _, region := range testData.Regions {
 		delResp, _, err := TOSession.DeleteRegion(nil, &region.Name)
 		if err != nil {
-			t.Errorf("cannot DELETE Region by name: %v - %v", err, delResp)
+			t.Errorf("cannot delete Region '%s': %v - alerts: %+v", region.Name, err, delResp.Alerts)
 		}
 
-		deleteLog, _, err := TOSession.GetLogsByLimit(1)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("limit", "1")
+		deleteLog, _, err := TOSession.GetLogs(opts)
 		if err != nil {
 			t.Fatalf("unable to get latest audit log entry")
 		}
-		if len(deleteLog) != 1 {
-			t.Fatalf("log entry length - expected: 1, actual: %d", len(deleteLog))
+		if len(deleteLog.Response) != 1 {
+			t.Fatalf("log entry length - expected: 1, actual: %d", len(deleteLog.Response))
 		}
-		if !strings.Contains(*deleteLog[0].Message, region.Name) {
-			t.Errorf("region deletion audit log entry - expected: message containing region name '%s', actual: %s", region.Name, *deleteLog[0].Message)
+		if deleteLog.Response[0].Message == nil {
+			t.Fatal("Traffic Ops returned a representation for a log entry with null or undefined message")
+		}
+		if !strings.Contains(*deleteLog.Response[0].Message, region.Name) {
+			t.Errorf("region deletion audit log entry - expected: message containing region name '%s', actual: %s", region.Name, *deleteLog.Response[0].Message)
 		}
 
 		// Retrieve the Region to see if it got deleted

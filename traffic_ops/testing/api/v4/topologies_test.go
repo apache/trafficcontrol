@@ -431,17 +431,22 @@ func DeleteTestTopologies(t *testing.T) {
 	for _, top := range testData.Topologies {
 		delResp, _, err := TOSession.DeleteTopology(top.Name)
 		if err != nil {
-			t.Fatalf("cannot DELETE topology: %v - %v", err, delResp)
+			t.Fatalf("cannot delete Topology: %v - alerts: %+v", err, delResp.Alerts)
 		}
-		deleteLog, _, err := TOSession.GetLogsByLimit(1)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("limit", "1")
+		deleteLog, _, err := TOSession.GetLogs(opts)
 		if err != nil {
-			t.Fatalf("unable to get latest audit log entry")
+			t.Fatalf("unable to get latest audit log entry: %v - alerts: %+v", err, deleteLog.Alerts)
 		}
-		if len(deleteLog) != 1 {
-			t.Fatalf("log entry length - expected: 1, actual: %d", len(deleteLog))
+		if len(deleteLog.Response) != 1 {
+			t.Fatalf("log entry length - expected: 1, actual: %d", len(deleteLog.Response))
 		}
-		if !strings.Contains(*deleteLog[0].Message, top.Name) {
-			t.Errorf("topology deletion audit log entry - expected: message containing topology name '%s', actual: %s", top.Name, *deleteLog[0].Message)
+		if deleteLog.Response[0].Message == nil {
+			t.Fatal("Traffic Ops responded with a representation of a log entry with null or undefined message")
+		}
+		if !strings.Contains(*deleteLog.Response[0].Message, top.Name) {
+			t.Errorf("topology deletion audit log entry - expected: message containing topology name '%s', actual: %s", top.Name, *deleteLog.Response[0].Message)
 		}
 
 		_, _, err = TOSession.GetTopology(top.Name, nil)
