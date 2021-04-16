@@ -763,7 +763,11 @@ func enrollFederation(toSession *session, r io.Reader) error {
 			}
 			_, _, err = toSession.CreateFederationUsers(*cdnFederation.ID, []int{*user.ID}, true)
 			if err != nil {
-				log.Infof("assigning User %s to Federation with ID %d: %s", *user.UserName, *cdnFederation.ID, err.Error())
+				var username string
+				if user.UserName != nil {
+					username = *user.UserName
+				}
+				log.Infof("assigning User %s to Federation with ID %d: %s", username, *cdnFederation.ID, err.Error())
 				return err
 			}
 		}
