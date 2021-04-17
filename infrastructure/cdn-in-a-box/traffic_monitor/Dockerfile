@@ -71,5 +71,5 @@ RUN dnf -y install golang git && \
 FROM trafficmonitor as trafficmonitor-debug
 COPY --from=get-delve /root/go/bin /usr/bin
 
-# Makes trafficmonitor the last/default stage in the Dockerfile
-FROM trafficmonitor as trafficmonitor
+# Makes the default target skip the trafficmonitor-debug stage
+FROM trafficmonitor

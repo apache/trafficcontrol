@@ -84,5 +84,5 @@ CMD /run.sh
 FROM enroller AS enroller-debug
 COPY --from=get-delve /go/bin /usr/bin
 
-# Makes enroller the last/default stage in the Dockerfile
-FROM enroller AS enroller
+# Makes the default target skip the enroller-debug stage
+FROM enroller
