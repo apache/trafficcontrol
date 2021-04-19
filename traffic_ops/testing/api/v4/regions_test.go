@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 	"time"
-
+	
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -51,8 +51,11 @@ func TestRegions(t *testing.T) {
 		UpdateTestRegionsWithHeaders(t, header)
 		DeleteTestRegionsByInvalidId(t)
 		DeleteTestRegionsByInvalidName(t)
-		GetRegionByInvalidId(t)
-		GetRegionByInvalidName(t)
+		GetTestRegionByInvalidId(t)
+		GetTestRegionByInvalidName(t)
+		GetTestRegionByDivision(t)
+		GetTestRegionByInvalidDivision(t)
+		CreateTestRegionsInvalidDivision(t)
 	})
 }
 
@@ -360,7 +363,7 @@ func DeleteTestRegionsByInvalidName(t *testing.T) {
 	}
 }
 
-func GetRegionByInvalidId(t *testing.T) {
+func GetTestRegionByInvalidId(t *testing.T) {
 	regionResp, _, err := TOSession.GetRegionByID(10000, nil)
 	if err != nil {
 		t.Errorf("Error!! Getting Region by Invalid ID %v", err)
@@ -370,12 +373,52 @@ func GetRegionByInvalidId(t *testing.T) {
 	}
 }
 
-func GetRegionByInvalidName(t *testing.T) {
+func GetTestRegionByInvalidName(t *testing.T) {
 	regionResp, _, err := TOSession.GetRegionByName("abcd", nil)
 	if err != nil {
 		t.Errorf("Error!! Getting Region by Invalid Name %v", err)
 	}
 	if len(regionResp) >= 1 {
 		t.Errorf("Error!! Invalid Name shouldn't have any response %v Error %v", regionResp, err)
+	}
+}
+
+func GetTestRegionByDivision(t *testing.T){
+	for _, region := range testData.Regions {
+
+		resp, _, err := TOSession.GetDivisionByName(region.DivisionName, nil)
+		if err != nil {
+			t.Errorf("cannot GET Division by name: %v - %v", region.DivisionName, err)
+		}
+		respDivision := resp[0]
+
+		_, reqInf, err := TOSession.GetRegionByDivision(respDivision.ID, nil)
+		if err != nil {
+			t.Fatalf("Expected no error, but got %v", err.Error())
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func GetTestRegionByInvalidDivision(t *testing.T){
+	regionResp, _, err := TOSession.GetRegionByDivision(100000, nil)
+	if err != nil {
+		t.Errorf("Error!! Getting Region by Invalid Divisions %v", err)
+	}
+	if len(regionResp) >= 1 {
+		t.Errorf("Error!! Invalid Division shouldn't have any response %v Error %v", regionResp, err)
+	}
+}
+
+func CreateTestRegionsInvalidDivision(t *testing.T) {
+
+	firstRegion := testData.Regions[0]
+	firstRegion.Division = 100
+	firstRegion.Name = "abcd"
+	_, _, err := TOSession.CreateRegion(firstRegion)
+	if err == nil {
+		t.Errorf("Expected division not found Error %v", err)
 	}
 }

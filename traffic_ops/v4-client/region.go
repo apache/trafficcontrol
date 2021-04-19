@@ -83,6 +83,14 @@ func (to *Session) GetRegionByName(name string, header http.Header) ([]tc.Region
 	return data.Response, reqInf, err
 }
 
+// GetRegionByDivision retrieves the Region with the given Name.
+func (to *Session) GetRegionByDivision(id int, header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s?division=%d", APIRegions, id)
+	var data tc.RegionsResponse
+	reqInf, err := to.get(route, header, &data)
+	return data.Response, reqInf, err
+}
+
 // DeleteRegion lets you DELETE a Region. Only 1 parameter is required, not both.
 func (to *Session) DeleteRegion(id *int, name *string) (tc.Alerts, toclientlib.ReqInf, error) {
 	v := url.Values{}
