@@ -444,11 +444,11 @@ func (t HealthThreshold) String() string {
 	return fmt.Sprintf("%s%f", t.Comparator, t.Val)
 }
 
-// strToThreshold takes a string like ">=42" and returns a HealthThreshold with
+// StrToThreshold takes a string like ">=42" and returns a HealthThreshold with
 // a Val of `42` and a Comparator of `">="`. If no comparator exists,
 // `DefaultHealthThresholdComparator` is used. If the string does not match
 // "(>|<|)(=|)\d+" an error is returned.
-func strToThreshold(s string) (HealthThreshold, error) {
+func StrToThreshold(s string) (HealthThreshold, error) {
 	// The order of these is important - don't re-order without considering the
 	// consequences.
 	comparators := []string{">=", "<=", ">", "<", "="}
@@ -521,7 +521,7 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 		if strings.HasPrefix(k, ThresholdPrefix) {
 			stat := k[len(ThresholdPrefix):]
 			vStr := fmt.Sprintf("%v", v) // allows string or numeric JSON types. TODO check if a type switch is faster.
-			if t, err := strToThreshold(vStr); err != nil {
+			if t, err := StrToThreshold(vStr); err != nil {
 				return fmt.Errorf("Unmarshalling TMParameters `%s` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v': %v", ThresholdPrefix, k, v, err)
 			} else {
 				params.Thresholds[stat] = t
