@@ -89,27 +89,6 @@ func SnapshotGetHandler(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, decoded)
 }
 
-func SnapshotGetMonitoringLegacyHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	snapshot, cdnExists, err := GetSnapshotMonitoringLegacy(inf.Tx.Tx, inf.Params["cdn"])
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
-		return
-	}
-	if !cdnExists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
-		return
-	}
-
-	api.WriteResp(w, r, snapshot)
-}
-
 // SnapshotGetMonitoringHandler gets and serves the CRConfig from the snapshot table.
 func SnapshotGetMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
@@ -129,7 +108,7 @@ func SnapshotGetMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	w.Write([]byte(`{"response":` + snapshot + `}`))
+	api.WriteResp(w, r, snapshot)
 }
 
 // SnapshotOldGetHandler gets and serves the CRConfig from the snapshot table, not wrapped in response to match the old non-API CRConfig-Snapshots endpoint
