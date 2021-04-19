@@ -229,6 +229,7 @@ func UpdateTestRegions(t *testing.T) {
 }
 
 func VerifyPaginationSupportRegion(t *testing.T) {
+
 	qparams := url.Values{}
 	qparams.Set("orderby", "id")
 	regions, _, err := TOSession.GetRegions(qparams, nil)
@@ -236,30 +237,50 @@ func VerifyPaginationSupportRegion(t *testing.T) {
 		t.Fatalf("cannot GET Regions: %v", err)
 	}
 
-	qparams = url.Values{}
-	qparams.Set("orderby", "id")
-	qparams.Set("limit", "1")
-	regionsWithLimit, _, err := TOSession.GetRegions(qparams, nil)
-	if !reflect.DeepEqual(regions[:1], regionsWithLimit) {
-		t.Error("expected GET Regions with limit = 1 to return first result")
-	}
+	if len(regions) > 0 {
+		qparams = url.Values{}
+		qparams.Set("orderby", "id")
+		qparams.Set("limit", "1")
+		regionsWithLimit, _, err := TOSession.GetRegions(qparams, nil)
+		if err == nil {
+			if !reflect.DeepEqual(regions[:1], regionsWithLimit) {
+				t.Error("expected GET Regions with limit = 1 to return first result")
+			}
+		} else {
+			t.Error("Error in getting regions by limit")
+		}
 
-	qparams = url.Values{}
-	qparams.Set("orderby", "id")
-	qparams.Set("limit", "1")
-	qparams.Set("offset", "1")
-	regionsWithOffset, _, err := TOSession.GetRegions(qparams, nil)
-	if !reflect.DeepEqual(regions[1:2], regionsWithOffset) {
-		t.Error("expected GET Regions with limit = 1, offset = 1 to return second result")
-	}
+		if len(regions) > 1 {
+			qparams = url.Values{}
+			qparams.Set("orderby", "id")
+			qparams.Set("limit", "1")
+			qparams.Set("offset", "1")
+			regionsWithOffset, _, err := TOSession.GetRegions(qparams, nil)
+			if err == nil {
+				if !reflect.DeepEqual(regions[1:2], regionsWithOffset) {
+					t.Error("expected GET Regions with limit = 1, offset = 1 to return second result")
+				}
+			} else {
+				t.Error("Error in getting regions by limit and offset")
+			}
 
-	qparams = url.Values{}
-	qparams.Set("orderby", "id")
-	qparams.Set("limit", "1")
-	qparams.Set("page", "2")
-	regionsWithPage, _, err := TOSession.GetRegions(qparams, nil)
-	if !reflect.DeepEqual(regions[1:2], regionsWithPage) {
-		t.Error("expected GET Regions with limit = 1, page = 2 to return second result")
+			qparams = url.Values{}
+			qparams.Set("orderby", "id")
+			qparams.Set("limit", "1")
+			qparams.Set("page", "2")
+			regionsWithPage, _, err := TOSession.GetRegions(qparams, nil)
+			if err == nil {
+				if !reflect.DeepEqual(regions[1:2], regionsWithPage) {
+					t.Error("expected GET Regions with limit = 1, page = 2 to return second result")
+				}
+			} else {
+				t.Error("Error in getting regions by limit and page")
+			}
+		} else {
+			t.Errorf("only one region found, so offset functionality can't test")
+		}
+	} else {
+		t.Errorf("No region found to check pagination")
 	}
 
 	qparams = url.Values{}
