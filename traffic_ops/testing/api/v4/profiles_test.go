@@ -26,6 +26,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestProfiles(t *testing.T) {
@@ -200,33 +201,40 @@ func CreateTestProfiles(t *testing.T) {
 		}
 		profileID := profiles[0].ID
 
-		params := url.Values{}
+		opts := client.NewRequestOptions()
 		for _, param := range pr.Parameters {
 			if param.Name == nil || param.Value == nil || param.ConfigFile == nil {
 				t.Errorf("invalid parameter specification: %+v", param)
 				continue
 			}
-			_, _, err := TOSession.CreateParameter(tc.Parameter{Name: *param.Name, Value: *param.Value, ConfigFile: *param.ConfigFile})
+			alerts, _, err := TOSession.CreateParameter(tc.Parameter{Name: *param.Name, Value: *param.Value, ConfigFile: *param.ConfigFile}, client.RequestOptions{})
 			if err != nil {
+				found := false
+				for _, alert := range alerts.Alerts {
+					if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+						found = true
+						break
+					}
+				}
 				// ok if already exists
-				if !strings.Contains(err.Error(), "already exists") {
-					t.Errorf("could not CREATE parameter %+v: %s", param, err)
+				if !found {
+					t.Errorf("Unexpected error creating Parameter %+v: %v - alerts: %+v", param, err, alerts.Alerts)
 					continue
 				}
 			}
-			params.Set("name", *param.Name)
-			params.Set("configFile", *param.ConfigFile)
-			params.Set("value", *param.Value)
-			p, _, err := TOSession.GetParameters(nil, params)
+			opts.QueryParameters.Set("name", *param.Name)
+			opts.QueryParameters.Set("configFile", *param.ConfigFile)
+			opts.QueryParameters.Set("value", *param.Value)
+			p, _, err := TOSession.GetParameters(opts)
 			if err != nil {
-				t.Errorf("could not GET parameter %+v: %s", param, err)
+				t.Errorf("could not get Parameter %+v: %v - alerts: %+v", param, err, p.Alerts)
 			}
-			if len(p) == 0 {
-				t.Errorf("could not GET parameter %+v: not found", param)
+			if len(p.Response) == 0 {
+				t.Fatalf("could not get parameter %+v: not found", param)
 			}
-			_, _, err = TOSession.CreateProfileParameter(tc.ProfileParameter{ProfileID: profileID, ParameterID: p[0].ID})
+			alerts, _, err = TOSession.CreateProfileParameter(tc.ProfileParameter{ProfileID: profileID, ParameterID: p.Response[0].ID})
 			if err != nil {
-				t.Errorf("could not CREATE profile_parameter %+v: %s", param, err)
+				t.Errorf("could not associate Parameter %+v with Profile #%d: %v - alerts: %+v", param, profileID, err, alerts.Alerts)
 			}
 		}
 
@@ -447,9 +455,13 @@ func DeleteTestProfiles(t *testing.T) {
 		// delete any profile_parameter associations first
 		// the parameter is what's being deleted, but the delete is cascaded to profile_parameter
 		for _, param := range resp[0].Parameters {
-			_, _, err := TOSession.DeleteParameter(*param.ID)
+			if param.ID == nil {
+				t.Error("Traffic Ops responded with a representation of a Parameter with null or undefined ID")
+				continue
+			}
+			alerts, _, err := TOSession.DeleteParameter(*param.ID, client.RequestOptions{})
 			if err != nil {
-				t.Errorf("cannot DELETE parameter with parameterID %d: %s", *param.ID, err)
+				t.Errorf("cannot delete Parameter #%d: %v - alerts: %+v", *param.ID, err, alerts.Alerts)
 			}
 		}
 		delResp, _, err := TOSession.DeleteProfile(profileID)

@@ -17,7 +17,6 @@ package v4
 
 import (
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"testing"
@@ -92,13 +91,13 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 
 	tmURLParamName := "tm.url"
 	tmURLExpected := "crconfig.tm.url.test.invalid"
-	_, _, err := TOSession.CreateParameter(tc.Parameter{
+	paramAlerts, _, err := TOSession.CreateParameter(tc.Parameter{
 		ConfigFile: "global",
 		Name:       tmURLParamName,
 		Value:      "https://crconfig.tm.url.test.invalid",
-	})
+	}, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("GetCRConfig CreateParameter error expected: nil, actual: " + err.Error())
+		t.Fatalf("GetCRConfig CreateParameter error expected: nil, actual: %v - alerts: %+v", err, paramAlerts.Alerts)
 	}
 
 	// create an ANY_MAP DS assignment to verify that it doesn't show up in the CRConfig
@@ -175,18 +174,18 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 		t.Errorf("GetCRConfig crc.Stats.Path expected: '"+tmURLExpected+"', actual: %+v", *crc.Stats.TMHost)
 	}
 
-	params := url.Values{}
-	params.Set("name", tmURLParamName)
-	paramResp, _, err := TOSession.GetParameters(nil, params)
+	opts.QueryParameters.Del("cdn")
+	opts.QueryParameters.Set("name", tmURLParamName)
+	paramResp, _, err := TOSession.GetParameters(opts)
 	if err != nil {
-		t.Fatalf("cannot GET Parameter by name: %v - %v", tmURLParamName, err)
+		t.Fatalf("cannot get Parameter by name '%s': %v - alerts: %+v", tmURLParamName, err, paramResp.Alerts)
 	}
-	if len(paramResp) == 0 {
+	if len(paramResp.Response) == 0 {
 		t.Fatal("CRConfig create tm.url parameter was successful, but GET returned no parameters")
 	}
-	tmURLParam := paramResp[0]
+	tmURLParam := paramResp.Response[0]
 
-	delResp, _, err := TOSession.DeleteParameter(tmURLParam.ID)
+	delResp, _, err := TOSession.DeleteParameter(tmURLParam.ID, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("cannot DELETE Parameter by name: %v - %v", err, delResp)
 	}

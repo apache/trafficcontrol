@@ -17,7 +17,6 @@ package v4
 
 import (
 	"net/http"
-	"net/url"
 	"strconv"
 	"testing"
 	"time"
@@ -55,14 +54,13 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 
 	// Get Parameter to assign to Cache Group
 	firstParameter := testData.Parameters[0]
-	params := url.Values{}
-	params.Set("name", firstParameter.Name)
-	paramResp, _, err := TOSession.GetParameters(nil, params)
+	opts.QueryParameters.Set("name", firstParameter.Name)
+	paramResp, _, err := TOSession.GetParameters(opts)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		t.Errorf("cannot get Parameter '%s': %v - alerts: %+v", firstParameter.Name, err, paramResp.Alerts)
 	}
-	if paramResp == nil {
-		t.Fatal("Parameter response should not be nil")
+	if len(paramResp.Response) < 1 {
+		t.Fatalf("Expected at least one Parameter to exist with Name '%s'", firstParameter.Name)
 	}
 
 	// Assign Parameter to Cache Group
@@ -70,7 +68,7 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 	if cacheGroupID == nil {
 		t.Fatalf("Traffic Ops returned Cache Group '%s' with null or undefined ID", *firstCacheGroup.Name)
 	}
-	parameterID := paramResp[0].ID
+	parameterID := paramResp.Response[0].ID
 	resp, _, err := TOSession.CreateCacheGroupParameter(*cacheGroupID, parameterID, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("could not create cache group parameter: %v - alerts: %+v", err, resp.Alerts)

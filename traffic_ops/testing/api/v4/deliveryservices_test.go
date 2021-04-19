@@ -654,9 +654,9 @@ func CreateTestDeliveryServices(t *testing.T) {
 		Name:       "location",
 		Value:      "/remap/config/location/parameter/",
 	}
-	_, _, err := TOSession.CreateParameter(pl)
+	alerts, _, err := TOSession.CreateParameter(pl, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot create parameter: %v", err)
+		t.Errorf("cannot create parameter: %v - alerts: %+v", err, alerts.Alerts)
 	}
 	for _, ds := range testData.DeliveryServices {
 		resp, _, err := TOSession.CreateDeliveryService(ds, client.RequestOptions{})
@@ -1478,11 +1478,14 @@ func DeleteTestDeliveryServices(t *testing.T) {
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", "location")
 	opts.QueryParameters.Set("configFile", "remap.config")
-	params, _, err := TOSession.GetParameters(nil, opts.QueryParameters)
-	for _, param := range params {
-		deleted, _, err := TOSession.DeleteParameter(param.ID)
+	params, _, err := TOSession.GetParameters(opts)
+	if err != nil {
+		t.Errorf("Unexpected error getting Parameters with name 'location' and configFile 'remap.config': %v - alerts: %+v", err, params.Alerts)
+	}
+	for _, param := range params.Response {
+		deleted, _, err := TOSession.DeleteParameter(param.ID, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("cannot DELETE parameter by ID (%d): %v - %v", param.ID, err, deleted)
+			t.Errorf("cannot delete Parameter by ID (%d): %v - alerts: %+v", param.ID, err, deleted.Alerts)
 		}
 	}
 }

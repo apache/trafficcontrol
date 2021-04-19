@@ -26,6 +26,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestProfileParameters(t *testing.T) {
@@ -58,32 +59,40 @@ func GetTestProfileParametersIMS(t *testing.T) {
 }
 
 func CreateTestProfileParameters(t *testing.T) {
+	if len(testData.Parameters) < 1 || len(testData.Profiles) < 1 {
+		t.Fatal("Need at least one Profile and one Parameter to test associating a Parameter with a Profile")
+	}
 
 	firstProfile := testData.Profiles[0]
 	profileResp, _, err := TOSession.GetProfileByName(firstProfile.Name, nil)
 	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
+		t.Errorf("cannot get Profile by name: %v - %v", firstProfile.Name, err)
+	}
+	if len(profileResp) < 1 {
+		t.Fatalf("Expected at least one Profile to exist with name '%s'", firstProfile.Name)
 	}
 
 	firstParameter := testData.Parameters[0]
-	params := url.Values{}
-	params.Set("name", firstParameter.Name)
-	paramResp, _, err := TOSession.GetParameters(nil, params)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstParameter.Name)
+	paramResp, _, err := TOSession.GetParameters(opts)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		t.Errorf("cannot get Parameter by name '%s': %v - alerts: %+v", firstParameter.Name, err, paramResp.Alerts)
+	}
+	if len(paramResp.Response) < 1 {
+		t.Fatalf("Expected at least one Parameter to exist with name '%s'", firstParameter.Name)
 	}
 
 	profileID := profileResp[0].ID
-	parameterID := paramResp[0].ID
+	parameterID := paramResp.Response[0].ID
 
 	pp := tc.ProfileParameter{
 		ProfileID:   profileID,
 		ParameterID: parameterID,
 	}
 	resp, _, err := TOSession.CreateProfileParameter(pp)
-	t.Log("Response: ", resp)
 	if err != nil {
-		t.Errorf("could not CREATE profile parameters: %v", err)
+		t.Errorf("could not associate parameters to profile: %v - alerts: %+v", err, resp.Alerts)
 	}
 
 }

@@ -20,7 +20,6 @@ package v4
  */
 
 import (
-	"net/url"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -75,25 +74,25 @@ func TestGetOSVersions(t *testing.T) {
 			Name:       "kickstart.files.location",
 			Value:      "/DOES/NOT/EXIST",
 		}
-		if _, _, err := TOSession.CreateParameter(p); err != nil {
-			t.Fatalf("could not CREATE parameter: %v\n", err)
+		if alerts, _, err := TOSession.CreateParameter(p, client.RequestOptions{}); err != nil {
+			t.Fatalf("could not create Parameter: %v - alerts: %+v", err, alerts.Alerts)
 		}
 		// Cleanup DB entry
 		defer func() {
-			params := url.Values{}
-			params.Set("name", p.Name)
-			params.Set("configFile", p.ConfigFile)
-			params.Set("value", p.Value)
-			resp, _, err := TOSession.GetParameters(nil, params)
+			opts := client.NewRequestOptions()
+			opts.QueryParameters.Set("name", p.Name)
+			opts.QueryParameters.Set("configFile", p.ConfigFile)
+			opts.QueryParameters.Set("value", p.Value)
+			resp, _, err := TOSession.GetParameters(opts)
 			if err != nil {
-				t.Fatalf("cannot GET Parameter by name: %v - %v\n", p.Name, err)
+				t.Fatalf("cannot GET Parameter by name '%s', configFile '%s' and value '%s': %v - alerts: %+v", p.Name, p.ConfigFile, p.Value, err, resp.Alerts)
 			}
-			if len(resp) != 1 {
-				t.Fatalf("unexpected response length %d", len(resp))
+			if len(resp.Response) != 1 {
+				t.Fatalf("unexpected response length %d", len(resp.Response))
 			}
 
-			if delResp, _, err := TOSession.DeleteParameter(resp[0].ID); err != nil {
-				t.Fatalf("cannot DELETE Parameter by name: %v - %v\n", err, delResp)
+			if delResp, _, err := TOSession.DeleteParameter(resp.Response[0].ID, client.RequestOptions{}); err != nil {
+				t.Fatalf("cannot delete Parameter #%d: %v - alerts: %+v", resp.Response[0].ID, err, delResp.Alerts)
 			}
 		}()
 

@@ -34,6 +34,7 @@ import (
 	log "github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -52,11 +53,12 @@ func newSession(reqTimeout time.Duration, toURL string, toUser string, toPass st
 func (s session) getParameter(m tc.Parameter, header http.Header) (tc.Parameter, error) {
 	// TODO: s.GetParameterByxxx() does not seem to work with values with spaces --
 	// doing this the hard way for now
-	parameters, _, err := s.GetParameters(header, nil)
+	opts := client.RequestOptions{Header: header}
+	parameters, _, err := s.GetParameters(opts)
 	if err != nil {
-		return m, err
+		return m, fmt.Errorf("getting Parameters: %v - alerts: %+v", err, parameters.Alerts)
 	}
-	for _, p := range parameters {
+	for _, p := range parameters.Response {
 		if p.Name == m.Name && p.Value == m.Value && p.ConfigFile == m.ConfigFile {
 			return p, nil
 		}
@@ -382,15 +384,15 @@ func enrollParameter(toSession *session, r io.Reader) error {
 		var alerts tc.Alerts
 		if err == nil {
 			// existing param -- update
-			alerts, _, err = toSession.UpdateParameter(eparam.ID, p, nil)
+			alerts, _, err = toSession.UpdateParameter(eparam.ID, p, client.RequestOptions{})
 			if err != nil {
-				log.Infof("error updating parameter %d: %s with %+v ", eparam.ID, err.Error(), p)
+				log.Infof("error updating parameter %d: %v with %+v - alerts: %+v ", eparam.ID, err, p, alerts.Alerts)
 				break
 			}
 		} else {
-			alerts, _, err = toSession.CreateParameter(p)
+			alerts, _, err = toSession.CreateParameter(p, client.RequestOptions{})
 			if err != nil {
-				log.Infof("error creating parameter: %s from %+v\n", err.Error(), p)
+				log.Infof("error creating parameter: %v from %+v - alerts: %+v", err, p, alerts.Alerts)
 				return err
 			}
 			eparam, err = toSession.getParameter(p, nil)
@@ -643,10 +645,10 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		eparam, err := toSession.getParameter(param, nil)
 		if err != nil {
 			// create it
-			log.Infof("creating param %+v\n", param)
-			_, _, err = toSession.CreateParameter(param)
+			log.Infof("creating param %+v", param)
+			newAlerts, _, err := toSession.CreateParameter(param, client.RequestOptions{})
 			if err != nil {
-				log.Infof("can't create parameter %+v: %s\n", param, err.Error())
+				log.Infof("can't create parameter %+v: %v", param, err, newAlerts.Alerts)
 				continue
 			}
 			eparam, err = toSession.getParameter(param, nil)
