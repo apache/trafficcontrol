@@ -825,20 +825,6 @@
     "parameters": [
         {
             "configFile": "rascal.properties",
-            "lastUpdated": "2018-01-19T19:01:21.455131+00:00",
-            "name": "health.threshold.loadavg",
-            "secure": false,
-            "value": "25.0"
-        },
-        {
-            "configFile": "rascal.properties",
-            "lastUpdated": "2018-01-19T19:01:21.472279+00:00",
-            "name": "health.threshold.availableBandwidthInKbps",
-            "secure": false,
-            "value": ">1750000"
-        },
-        {
-            "configFile": "rascal.properties",
             "lastUpdated": "2018-01-19T19:01:21.489534+00:00",
             "name": "history.count",
             "secure": false,
