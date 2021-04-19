@@ -176,7 +176,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 					deliveryServiceService.deleteDeliveryService(ds).
 						then(
 							function() {
-								let promises = updateDeliveryServiceRequest('pending'); // after a successful delete, update the ds request, assignee and status and navigate to ds requests page
+								const promises = updateDeliveryServiceRequest('pending'); // after a successful delete, update the ds request, assignee and status and navigate to ds requests page
 								$q.all(promises)
 									.then(
 										function() {
@@ -234,7 +234,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 						deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
 							then(
 								function() {
-									let xmlId = ($scope.dsRequest.requested) ? $scope.dsRequest.requested.xmlId : $scope.dsRequest.original.xmlId;
+									const xmlId = ($scope.dsRequest.requested) ? $scope.dsRequest.requested.xmlId : $scope.dsRequest.original.xmlId;
 									messageModel.setMessages([ { level: 'success', text: 'Updated delivery service request for ' + xmlId + ' and set status to ' + $scope.dsRequest.status } ], false);
 									$anchorScroll(); // scrolls window to top
 									$state.reload();

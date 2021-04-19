@@ -142,9 +142,9 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		onRowClicked: function(params) {
 			const selection = window.getSelection().toString();
 			if(selection === "" || selection === $scope.mouseDownSelectionText) {
-				let path = '/delivery-service-requests/' + params.data.id + '?type=',
-					typeId = (params.data.requested) ? params.data.requested.typeId : params.data.original.typeId;
+				const typeId = (params.data.requested) ? params.data.requested.typeId : params.data.original.typeId;
 
+				let path = '/delivery-service-requests/' + params.data.id + '?type=';
 				typeService.getType(typeId)
 					.then(function (result) {
 						path += result.name;
@@ -512,12 +512,12 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 
 	$scope.deleteRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		let xmlId = (request.requested) ? request.requested.xmlId : request.original.xmlId;
-		var params = {
+		const xmlId = (request.requested) ? request.requested.xmlId : request.original.xmlId;
+		const params = {
 			title: 'Delete the ' + xmlId + ' ' + request.changeType + ' request?',
 			key: xmlId + ' ' + request.changeType + ' request'
 		};
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
 			controller: 'DialogDeleteController',
 			size: 'md',
@@ -535,14 +535,14 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		}, function () {
 			// do nothing
 		});
-	};
+	}
 
 	$scope.fulfillRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 
-		let path = '/delivery-service-requests/' + request.id + '?type=',
-			typeId = (request.requested) ? request.requested.typeId : request.original.typeId;
+		const typeId = (request.requested) ? request.requested.typeId : request.original.typeId;
 
+		let path = '/delivery-service-requests/' + request.id + '?type=';
 		typeService.getType(typeId)
 			.then(function (result) {
 				path += result.name;
