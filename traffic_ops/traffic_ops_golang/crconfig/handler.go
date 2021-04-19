@@ -97,7 +97,7 @@ func SnapshotGetMonitoringLegacyHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	defer inf.Close()
 
-	snapshot, cdnExists, err := GetSnapshotMonitoring(inf.Tx.Tx, inf.Params["cdn"])
+	snapshot, cdnExists, err := GetSnapshotMonitoringLegacy(inf.Tx.Tx, inf.Params["cdn"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
 		return
@@ -107,12 +107,7 @@ func SnapshotGetMonitoringLegacyHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var data tc.TrafficMonitorConfig
-	if err := json.Unmarshal([]byte(snapshot), &data); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
-		return
-	}
-	api.WriteResp(w, r, data.ToLegacyConfig())
+	api.WriteResp(w, r, snapshot)
 }
 
 // SnapshotGetMonitoringHandler gets and serves the CRConfig from the snapshot table.
