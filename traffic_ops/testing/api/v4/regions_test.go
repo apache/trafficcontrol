@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 	"time"
-	
+
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -383,7 +383,7 @@ func GetTestRegionByInvalidName(t *testing.T) {
 	}
 }
 
-func GetTestRegionByDivision(t *testing.T){
+func GetTestRegionByDivision(t *testing.T) {
 	for _, region := range testData.Regions {
 
 		resp, _, err := TOSession.GetDivisionByName(region.DivisionName, nil)
@@ -402,7 +402,7 @@ func GetTestRegionByDivision(t *testing.T){
 	}
 }
 
-func GetTestRegionByInvalidDivision(t *testing.T){
+func GetTestRegionByInvalidDivision(t *testing.T) {
 	regionResp, _, err := TOSession.GetRegionByDivision(100000, nil)
 	if err != nil {
 		t.Errorf("Error!! Getting Region by Invalid Divisions %v", err)
