@@ -144,9 +144,8 @@ func CreateTestRegions(t *testing.T) {
 }
 
 func SortTestRegions(t *testing.T) {
-	var header http.Header
 	var sortedList []string
-	resp, _, err := TOSession.GetRegions(nil, header)
+	resp, _, err := TOSession.GetRegions(nil, nil)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -164,11 +163,10 @@ func SortTestRegions(t *testing.T) {
 
 func SortTestRegionsDesc(t *testing.T) {
 
-	var header http.Header
-	respAsc, _, err1 := TOSession.GetRegions(nil, header)
+	respAsc, _, err1 := TOSession.GetRegions(nil, nil)
 	params := url.Values{}
 	params.Set("sortOrder", "desc")
-	respDesc, _, err2 := TOSession.GetRegions(params, header)
+	respDesc, _, err2 := TOSession.GetRegions(params, nil)
 
 	if err1 != nil {
 		t.Errorf("Expected no error, but got error in Regions Ascending %v", err1)
@@ -176,19 +174,22 @@ func SortTestRegionsDesc(t *testing.T) {
 	if err2 != nil {
 		t.Errorf("Expected no error, but got error in Regions Descending %v", err2)
 	}
-
-	if len(respAsc) > 0 && len(respDesc) > 0 {
-		// reverse the descending-sorted response and compare it to the ascending-sorted one
-		for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
-			respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
-		}
-		if respDesc[0].Name != "" && respAsc[0].Name != "" {
-			if !reflect.DeepEqual(respDesc[0].Name, respAsc[0].Name) {
-				t.Errorf("Regions responses are not equal after reversal: %s - %s", *&respDesc[0].Name, *&respAsc[0].Name)
+	if len(respAsc) == len(respAsc) {
+		if len(respAsc) > 0 && len(respDesc) > 0 {
+			// reverse the descending-sorted response and compare it to the ascending-sorted one
+			for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+				respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
 			}
+			if respDesc[0].Name != "" && respAsc[0].Name != "" {
+				if !reflect.DeepEqual(respDesc[0].Name, respAsc[0].Name) {
+					t.Errorf("Regions responses are not equal after reversal: %s - %s", respDesc[0].Name, respAsc[0].Name)
+				}
+			}
+		} else {
+			t.Errorf("No Response returned from GET Regions using SortOrder")
 		}
 	} else {
-		t.Errorf("No Response returned from GET Regions using SortOrder")
+		t.Fatalf("Region response length are not equal %v %v", respAsc, respAsc)
 	}
 }
 
@@ -405,10 +406,10 @@ func GetTestRegionByDivision(t *testing.T) {
 func GetTestRegionByInvalidDivision(t *testing.T) {
 	regionResp, _, err := TOSession.GetRegionByDivision(100000, nil)
 	if err != nil {
-		t.Errorf("Error!! Getting Region by Invalid Divisions %v", err)
+		t.Errorf("Getting Region by Invalid Divisions %v", err)
 	}
 	if len(regionResp) >= 1 {
-		t.Errorf("Error!! Invalid Division shouldn't have any response %v Error %v", regionResp, err)
+		t.Errorf("Invalid Division shouldn't have any response %v Error %v", regionResp, err)
 	}
 }
 

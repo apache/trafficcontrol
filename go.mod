@@ -33,7 +33,6 @@ require (
 	github.com/basho/riak-go-client v1.7.1-0.20170327205844-5587c16e0b8b
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cihub/seelog v0.0.0-20170110094445-7bfb7937d106
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dchest/siphash v1.1.0
 	github.com/dgrijalva/jwt-go v3.2.1-0.20190620180102-5e25c22bd5d6+incompatible
 	github.com/fsnotify/fsnotify v1.4.9
@@ -60,7 +59,7 @@ require (
 	github.com/onsi/gomega v1.10.3
 	github.com/pborman/getopt/v2 v2.1.0
 	github.com/pkg/errors v0.8.2-0.20190227000051-27936f6d90f9
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.6.1 // indirect
 	go.etcd.io/bbolt v1.3.5
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c
@@ -72,5 +71,4 @@ require (
 	gopkg.in/ldap.v2 v2.5.1
 	gopkg.in/square/go-jose.v2 v2.3.1 // indirect
 	gopkg.in/yaml.v2 v2.3.0
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
