@@ -395,7 +395,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysRe
 	} else {
 		acmeAccount := GetAcmeAccountConfig(cfg, provider)
 		if acmeAccount == nil {
-			log.Errorf("acme: no account information found for %s" + provider)
+			log.Errorf("acme: no account information found for %s", provider)
 			api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 			if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
 				log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
@@ -407,7 +407,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysRe
 
 	client, err := GetAcmeClient(account, userTx, db)
 	if err != nil {
-		log.Errorf("acme: getting acme client for provider %s", provider)
+		log.Errorf("acme: getting acme client for provider %s: %v", provider, err)
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 		if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
 			log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
