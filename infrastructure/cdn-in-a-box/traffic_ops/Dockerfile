@@ -132,5 +132,5 @@ RUN go get -u github.com/go-delve/delve/cmd/dlv
 FROM trafficops AS trafficops-debug
 COPY --from=get-delve /root/go/bin /usr/bin
 
-# Makes trafficops the last/default stage in the Dockerfile
-FROM trafficops AS trafficops
+# Makes the default target skip the trafficops-debug stage
+FROM trafficops
