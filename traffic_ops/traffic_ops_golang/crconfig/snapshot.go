@@ -92,7 +92,7 @@ WHERE c.name = $1
 // Because all snapshotting is handled by the crconfig endpoints we have to also do the monitoring one
 // here as well
 func GetSnapshotMonitoring(tx *sql.Tx, cdn string) (*monitoring.Monitoring, bool, error) {
-	log.Debugln("calling GetSnapshotMonitoringLegacy")
+	log.Debugln("calling GetSnapshotMonitoring")
 
 	monitorSnapshot := sql.NullString{}
 	// cdn left join snapshot, so we get a row with null if the CDN exists but the snapshot doesn't, and no rows if the CDN doesn't exist.
