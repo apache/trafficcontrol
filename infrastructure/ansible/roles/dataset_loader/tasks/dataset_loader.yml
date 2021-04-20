@@ -739,7 +739,7 @@
     ip6Gateway: "{{ hostvars[item].ansible_default_ipv6.gateway | default(omit) }}"
     interfaceMtu: "{{ hostvars[item].ansible_default_ipv4.mtu | default('9000') }}"
     default_inventory_hostname: "{{ hostvars[item].component | default('server') }}.kabletown.invalid"
-    merged_server_attrs: (( dl_ds_merged_servers['server.kabletown.invalid'] | combine(dl_ds_merged_servers[default_inventory_hostname] | default({}) ) | combine(dl_ds_merged_servers[item] | default({}) ) )
+    merged_server_attrs: "{{ dl_ds_merged_servers['server.kabletown.invalid'] | combine(dl_ds_merged_servers[default_inventory_hostname] | default({}) ) | combine(dl_ds_merged_servers[item] | default({}) ) }}"
     tcpPort: "{{ merged_server_attrs.tcpPort | default(omit) }}"
     httpsPort: "{{ merged_server_attrs.httpsPort | default(omit) }}"
     xmppId: "{{ merged_server_attrs.xmppId | default(omit) }}"
@@ -814,7 +814,7 @@
     ip6Gateway: "{{ omit }}"
     interfaceMtu: "9000"
     default_inventory_hostname: "{{ hostvars[item].component | default('server') }}.kabletown.invalid"
-    merged_server_attrs: (( dl_ds_merged_servers['server.kabletown.invalid'] | combine(dl_ds_merged_servers[default_inventory_hostname] | default({}) ) | combine(dl_ds_merged_servers[item] | default({}) ) )
+    merged_server_attrs: "{{ dl_ds_merged_servers['server.kabletown.invalid'] | combine(dl_ds_merged_servers[default_inventory_hostname] | default({}) ) | combine(dl_ds_merged_servers[item] | default({}) ) }}"
     tcpPort: "{{ merged_server_attrs.tcpPort | default(omit) }}"
     httpsPort: "{{ merged_server_attrs.httpsPort | default(omit) }}"
     xmppId: "{{ merged_server_attrs.xmppId | default(omit) }}"
