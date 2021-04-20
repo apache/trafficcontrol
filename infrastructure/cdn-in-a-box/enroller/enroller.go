@@ -441,17 +441,22 @@ func enrollPhysLocation(toSession *session, r io.Reader) error {
 	var s tc.PhysLocation
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding PhysLocation: %s\n", err)
+		err = fmt.Errorf("error decoding Physical Location: %v", err)
+		log.Infoln(err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreatePhysLocation(s)
+	alerts, _, err := toSession.CreatePhysLocation(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("physLocation %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("Physical Location %s already exists", s.Name)
+				return nil
+			}
+
 		}
-		log.Infof("error creating PhysLocation: %s\n", err)
+		err = fmt.Errorf("error creating Physical Location '%s': %v - alerts: %+v", s.Name, err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -832,7 +837,7 @@ func enrollFederation(toSession *session, r io.Reader) error {
 		response, _, err := toSession.GetCDNFederationsByName(cdnName, opts)
 		opts.QueryParameters.Del("id")
 		if err != nil {
-			err = fmt.Errorf("getting CDN Federation with ID %d: %s", *cdnFederation.ID, err, response.Alerts)
+			err = fmt.Errorf("getting CDN Federation with ID %d: %v - alerts: %+v", *cdnFederation.ID, err, response.Alerts)
 			return err
 		}
 		if len(response.Response) < 1 {
