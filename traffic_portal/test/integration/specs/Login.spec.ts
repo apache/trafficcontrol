@@ -17,23 +17,21 @@
  * under the License.
  */
 import { browser } from 'protractor';
-import { LoginPage } from '../PageObjects/LoginPage.po';
-import  using  from "jasmine-data-provider";
-import { readFileSync } from "fs"
 
-const filename = 'Data/Login/TestCases.json';
-const testData = JSON.parse(readFileSync(filename,'utf-8'));
+import { LoginPage } from '../PageObjects/LoginPage.po';
+import { login } from "../Data";
+
 const loginPage = new LoginPage();
 
-using(testData.LoginTest, async function(loginData){
-    using(loginData.Login, function(login){
-        describe('Traffic Portal - Login - '+ login.description, function(){
-            it('can open login page', async function(){
+login.tests.forEach(async loginData => {
+    loginData.logins.forEach(login => {
+        describe(`Traffic Portal - Login - ${login.description}`, () => {
+            it('can open login page', async () => {
                 browser.get(browser.params.baseUrl);
-            })
-            it(login.description, async function(){
+            });
+            it(login.description, async () => {
                 expect(await loginPage.Login(login)).toBeTruthy();
-            })
-        })
-    })
-})
+            });
+        });
+    });
+});

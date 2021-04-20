@@ -33,8 +33,8 @@ export TO_PASSWORD=$TO_ADMIN_PASSWORD
 # Wait on SSL certificate generation
 until [[ -f "$X509_CA_ENV_FILE" ]]
 do
-     echo "Waiting on Shared SSL certificate generation"
-     sleep 3
+  echo "Waiting on Shared SSL certificate generation"
+  sleep 3
 done
 
 # Source the CIAB-CA shared SSL environment
@@ -51,20 +51,25 @@ update-ca-certificates
 
 # Traffic Ops must be accepting connections before enroller can start
 until nc -z $TO_FQDN $TO_PORT </dev/null >/dev/null && to-ping; do
-    echo "Waiting for $TO_URL"
-    sleep 5
+  echo "Waiting for $TO_URL"
+  sleep 5
 done
 
 mkdir -p "$ENROLLER_DIR"
 if [[ ! -d $ENROLLER_DIR ]]; then
-     echo "enroller dir ${ENROLLER_DIR} not found or not a directory"
-     exit 1
+  echo "enroller dir ${ENROLLER_DIR} not found or not a directory"
+  exit 1
 fi
 
 # clear out the enroller dir first so no files left from previous run
 rm -rf ${ENROLLER_DIR}/*
 
-/enroller -dir "$ENROLLER_DIR" &
+enroller_command=(/enroller -dir "$ENROLLER_DIR");
+if [[ "$ENROLLER_DEBUG_ENABLE" == true ]]; then
+  enroller_command=(dlv '--continue' '--listen=:2343' '--accept-multiclient=true' '--headless=true' '--api-version=2' exec \
+  "${enroller_command[0]}" -- "${enroller_command[@]:1}")
+fi;
+"${enroller_command[@]}" &
 
 source /to-access.sh
 # Enroll with traffic ops
