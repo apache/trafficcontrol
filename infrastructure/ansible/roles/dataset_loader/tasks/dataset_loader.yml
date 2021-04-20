@@ -846,15 +846,10 @@
   delay: 10
   until: get_all_servers['status']|default(0) == 200
 
-- name: Collect All CDN delegations assigned to Fake Origins
-  set_fact:
-    cdnDelegationList: "{{ (cdnDelegationList | default([]) ) + [hostvars[item]['cdn'] | lower] }}"
-  with_items: "{{ dl_hosts_fakeorigin }}"
-
 - name: Convert the CDN Delegation list into an index
   set_fact:
     cdnDelegationIndex: "{{ (cdnDelegationIndex | default({}) ) | combine( { item.1: item.0 } ) }}"
-  with_indexed_items: "{{ cdnDelegationList | sort | unique }}"
+  with_indexed_items: "{{ cdnDelegationList }}"
 
 - name: Create Index of Fake Origins
   set_fact:
@@ -878,7 +873,7 @@
     Target_cdn_id: "{{ get_all_cdns.json | to_json | from_json | json_query(cdn_query) }}"
     cdnName_query: "response[?starts_with(domainName,`{{ Target_cdn_delegation }}`) == `true`].name | [0]"
     cdn_query: "response[?starts_with(domainName,`{{ Target_cdn_delegation }}`) == `true`].id | [0]"
-  with_items: "{{ cdnDelegationList | sort | unique }}"
+  with_items: "{{ cdnDelegationList }}"
   loop_control:
     loop_var: Target_cdn_delegation
 
@@ -893,7 +888,7 @@
   until: get_all_ds['status']|default(0) == 200
 
 - name: Render Federations Lists
-  with_items: "{{ cdnDelegationList | sort | unique }}"
+  with_items: "{{ cdnDelegationList }}"
   loop_control:
     loop_var: Target_cdn_delegation
   set_fact:
