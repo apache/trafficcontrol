@@ -61,10 +61,8 @@ RUN npm ci
 RUN mkdir /portaltestresults
 
 RUN jq ' \
-        .capabilities.chromeOptions.args = [ \
+        .capabilities.chromeOptions.args += [ \
             "--disable-extensions", \
-            "--disable-gpu", \
-            "--headless", \
             "--ignore-certificate-errors", \
             "--no-sandbox", \
             "--whitelisted-ips=" \
