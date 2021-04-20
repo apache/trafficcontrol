@@ -91,8 +91,47 @@ WHERE c.name = $1
 // An error is only returned on database error, never if the CDN or snapshot does not exist.
 // Because all snapshotting is handled by the crconfig endpoints we have to also do the monitoring one
 // here as well
-func GetSnapshotMonitoring(tx *sql.Tx, cdn string) (*monitoring.Monitoring, bool, error) {
+func GetSnapshotMonitoring(tx *sql.Tx, cdn string) (string, bool, error) {
 	log.Debugln("calling GetSnapshotMonitoring")
+
+	monitorSnapshot := sql.NullString{}
+	// cdn left join snapshot, so we get a row with null if the CDN exists but the snapshot doesn't, and no rows if the CDN doesn't exist.
+	q := `
+SELECT s.monitoring AS snapshot
+FROM cdn AS c
+LEFT JOIN snapshot AS s ON s.cdn = c.name
+WHERE c.name = $1
+`
+	if err := tx.QueryRow(q, cdn).Scan(&monitorSnapshot); err != nil {
+		if err == sql.ErrNoRows {
+			// CDN doesn't exist
+			return "", false, nil
+		}
+		return "", false, errors.New("Error querying monitor snapshot: " + err.Error())
+	}
+	if !monitorSnapshot.Valid || monitorSnapshot.String == "{}" {
+		log.Errorln("Monitoring Snapshot didn't exist! Generating on-the-fly! This will cause race conditions in Traffic Monitor until a Snapshot is created!")
+		monitoringJSON, err := monitoring.GetMonitoringJSON(tx, cdn)
+		if err != nil {
+			return "", false, errors.New("creating monitor snapshot (none existed): " + err.Error())
+		}
+		bts, err := json.Marshal(monitoringJSON)
+		if err != nil {
+			return "", false, errors.New("marshalling monitor snapshot (none existed): " + err.Error())
+		}
+		return string(bts), true, nil
+	}
+	return monitorSnapshot.String, true, nil
+}
+
+// GetSnapshotMonitoringLegacy gets the monitor snapshot for the given CDN.
+// If the CDN does not exist, false is returned.
+// If the CDN exists, but the snapshot does not, the string for an empty JSON object "{}" is returned.
+// An error is only returned on database error, never if the CDN or snapshot does not exist.
+// Because all snapshotting is handled by the crconfig endpoints we have to also do the monitoring one
+// here as well
+func GetSnapshotMonitoringLegacy(tx *sql.Tx, cdn string) (*monitoring.Monitoring, bool, error) {
+	log.Debugln("calling GetSnapshotMonitoringLegacy")
 
 	monitorSnapshot := sql.NullString{}
 	// cdn left join snapshot, so we get a row with null if the CDN exists but the snapshot doesn't, and no rows if the CDN doesn't exist.
