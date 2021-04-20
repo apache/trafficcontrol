@@ -201,7 +201,7 @@ func SortTestDivisionDesc(t *testing.T) {
 			}
 		}
 	} else {
-		t.Errorf("No Response returned from GET Delivery Service using SortOrder")
+		t.Errorf("No Response returned from GET Division using SortOrder")
 	}
 }
 
