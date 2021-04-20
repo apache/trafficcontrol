@@ -27,8 +27,8 @@ import (
 const apiFederationResolvers = "/federation_resolvers"
 
 // GetFederationResolvers retrieves Federation Resolvers from Traffic Ops.
-func (to *Session) GetFederationResolvers(opts RequestOptions) (tc.FederationResolverResponseV4, toclientlib.ReqInf, error) {
-	var data tc.FederationResolverResponseV4
+func (to *Session) GetFederationResolvers(opts RequestOptions) (tc.FederationResolversResponseV4, toclientlib.ReqInf, error) {
+	var data tc.FederationResolversResponseV4
 	inf, err := to.get(apiFederationResolvers, opts, &data)
 	return data, inf, err
 }
@@ -36,17 +36,17 @@ func (to *Session) GetFederationResolvers(opts RequestOptions) (tc.FederationRes
 // CreateFederationResolver creates the Federation Resolver 'fr'.
 func (to *Session) CreateFederationResolver(fr tc.FederationResolver, opts RequestOptions) (tc.FederationResolverResponseV4, toclientlib.ReqInf, error) {
 	var response tc.FederationResolverResponseV4
-	reqInf, err := to.post("federation_resolvers/", opts, fr, &response)
+	reqInf, err := to.post(apiFederationResolvers, opts, fr, &response)
 	return response, reqInf, err
 }
 
 // DeleteFederationResolver deletes the Federation Resolver identified by 'id'.
-func (to *Session) DeleteFederationResolver(id uint, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) DeleteFederationResolver(id uint, opts RequestOptions) (tc.FederationResolverResponseV4, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
 	opts.QueryParameters.Set("id", strconv.FormatUint(uint64(id), 10))
-	var alerts tc.Alerts
+	var alerts tc.FederationResolverResponseV4
 	reqInf, err := to.del(apiFederationResolvers, opts, &alerts)
 	return alerts, reqInf, err
 }

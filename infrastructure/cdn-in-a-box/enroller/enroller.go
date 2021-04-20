@@ -28,6 +28,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -739,50 +740,74 @@ func enrollFederation(toSession *session, r io.Reader) error {
 		log.Infof("error decoding Server Capability: %s\n", err)
 		return err
 	}
+	opts := client.NewRequestOptions()
 	for _, mapping := range federation.Mappings {
 		var cdnFederation tc.CDNFederation
 		var cdnName string
 		{
 			xmlID := string(federation.DeliveryService)
-			deliveryServices, _, err := toSession.GetDeliveryServiceByXMLID(xmlID, nil)
+			opts.QueryParameters.Set("xmlId", xmlID)
+			deliveryServices, _, err := toSession.GetDeliveryServices(opts)
+			opts.QueryParameters.Del("xmlId")
 			if err != nil {
-				log.Infof("getting Delivery Service %s: %s", xmlID, err.Error())
+				err = fmt.Errorf("getting Delivery Service '%s': %v - alerts: %+v", xmlID, err, deliveryServices.Alerts)
+				log.Infoln(err)
 				return err
 			}
-			if len(deliveryServices) != 1 {
-				log.Infof("wanted 1 Delivery Service with XMLID %s but received %d Delivery Services", xmlID, len(deliveryServices))
+			if len(deliveryServices.Response) != 1 {
+				err = fmt.Errorf("wanted 1 Delivery Service with XMLID %s but received %d Delivery Services", xmlID, len(deliveryServices.Response))
+				log.Infoln(err)
 				return err
 			}
-			deliveryService := deliveryServices[0]
+			deliveryService := deliveryServices.Response[0]
+			if deliveryService.CDNName == nil || deliveryService.ID == nil || deliveryService.XMLID == nil {
+				err = fmt.Errorf("Delivery Service '%s' as returned from Traffic Ops had null or undefined CDN name and/or ID", xmlID)
+				log.Infoln(err)
+				return err
+			}
 			cdnName = *deliveryService.CDNName
 			cdnFederation = tc.CDNFederation{
 				CName: mapping.CName,
 				TTL:   mapping.TTL,
 			}
-			resp, _, err := toSession.CreateCDNFederation(cdnFederation, cdnName)
+			resp, _, err := toSession.CreateCDNFederation(cdnFederation, cdnName, client.RequestOptions{})
 			if err != nil {
-				log.Infof("creating CDN Federation: %s", err.Error())
+				err = fmt.Errorf("creating CDN Federation: %v - alerts: %+v", err, resp.Alerts)
+				log.Infoln(err)
 				return err
 			}
 			cdnFederation = resp.Response
-			if _, err = toSession.CreateFederationDeliveryServices(*resp.Response.ID, []int{*deliveryService.ID}, true); err != nil {
-				log.Infof("assigning Delivery Service %s to Federation with ID %d: %s", *deliveryService.XMLID, *cdnFederation.ID, err.Error())
+			if cdnFederation.ID == nil {
+				err = fmt.Errorf("Federation returned from creation through Traffic Ops with null or undefined ID")
+				log.Infoln(err)
+				return err
+			}
+			if alerts, _, err := toSession.CreateFederationDeliveryServices(*cdnFederation.ID, []int{*deliveryService.ID}, true, client.RequestOptions{}); err != nil {
+				err = fmt.Errorf("assigning Delivery Service %s to Federation with ID %d: %v - alerts: %+v", xmlID, *cdnFederation.ID, err, alerts.Alerts)
+				log.Infoln(err)
 				return err
 			}
 		}
 		{
 			user, _, err := toSession.GetUserCurrent(nil)
 			if err != nil {
-				log.Infof("getting the Current User: %s", err.Error())
+				err = fmt.Errorf("getting the Current User: %v", err)
+				log.Infoln(err)
 				return err
 			}
-			_, _, err = toSession.CreateFederationUsers(*cdnFederation.ID, []int{*user.ID}, true)
+			if user.ID == nil {
+				err = errors.New("current user returned from Traffic Ops had null or undefined ID")
+				log.Infoln(err)
+				return err
+			}
+			resp, _, err := toSession.CreateFederationUsers(*cdnFederation.ID, []int{*user.ID}, true, client.RequestOptions{})
 			if err != nil {
 				var username string
 				if user.UserName != nil {
 					username = *user.UserName
 				}
-				log.Infof("assigning User %s to Federation with ID %d: %s", username, *cdnFederation.ID, err.Error())
+				err = fmt.Errorf("assigning User '%s' to Federation with ID %d: %v - alerts: %+v", username, *cdnFederation.ID, err, resp.Alerts)
+				log.Infoln(err)
 				return err
 			}
 		}
@@ -798,18 +823,21 @@ func enrollFederation(toSession *session, r io.Reader) error {
 				allResolverIDs = append(allResolverIDs, resolverIDs...)
 			}
 		}
-		if _, _, err = toSession.AssignFederationFederationResolver(*cdnFederation.ID, allResolverIDs, true); err != nil {
-			log.Infof("assigning Federation Resolvers to Federation with ID %d: %s", *cdnFederation.ID, err.Error())
+		if resp, _, err := toSession.AssignFederationFederationResolver(*cdnFederation.ID, allResolverIDs, true, client.RequestOptions{}); err != nil {
+			err = fmt.Errorf("assigning Federation Resolvers to Federation with ID %d: %v - alerts: %+v", *cdnFederation.ID, err, resp.Alerts)
+			log.Infoln(err)
 			return err
 		}
-		response, _, err := toSession.GetCDNFederationsByID(cdnName, *cdnFederation.ID, nil)
+		opts.QueryParameters.Set("id", strconv.Itoa(*cdnFederation.ID))
+		response, _, err := toSession.GetCDNFederationsByName(cdnName, opts)
+		opts.QueryParameters.Del("id")
 		if err != nil {
-			log.Infof("getting CDN Federation with ID %d: %s", *cdnFederation.ID, err.Error())
+			err = fmt.Errorf("getting CDN Federation with ID %d: %s", *cdnFederation.ID, err, response.Alerts)
 			return err
 		}
 		if len(response.Response) < 1 {
 			err = fmt.Errorf("unable to GET a CDN Federation ID %d in CDN %s", *cdnFederation.ID, cdnName)
-			log.Infof(err.Error())
+			log.Infoln(err)
 			return err
 		}
 		cdnFederation = response.Response[0]
@@ -818,8 +846,8 @@ func enrollFederation(toSession *session, r io.Reader) error {
 		enc.SetIndent("", "  ")
 		err = enc.Encode(&cdnFederation)
 		if err != nil {
-			err = fmt.Errorf("encoding CDNFederation %s with ID %d: %s", *cdnFederation.CName, *cdnFederation.ID, err.Error())
-			log.Infof(err.Error())
+			err = fmt.Errorf("encoding CDNFederation %s with ID %d: %v", *cdnFederation.CName, *cdnFederation.ID, err)
+			log.Infoln(err)
 			return err
 		}
 	}
@@ -847,10 +875,13 @@ func createFederationResolversOfType(toSession *session, resolverTypeName tc.Fed
 			IPAddress: &ipAddress,
 			TypeID:    &typeID,
 		}
-		response, _, err := toSession.CreateFederationResolver(resolver, nil)
+		response, _, err := toSession.CreateFederationResolver(resolver, client.RequestOptions{})
 		if err != nil {
-			log.Infof("creating Federation Resolver with IP address %s: %s", ipAddress, err.Error())
+			err = fmt.Errorf("creating Federation Resolver with IP address %s: %v - alerts: %+v", ipAddress, err, response.Alerts)
 			return nil, err
+		}
+		if response.Response.ID == nil {
+
 		}
 		resolverIDs = append(resolverIDs, int(*response.Response.ID))
 	}

@@ -237,9 +237,9 @@ func DeleteTestFederationResolvers(t *testing.T) {
 		}
 		alerts, _, err := TOSession.DeleteFederationResolver(*fr.ID, client.RequestOptions{})
 		if err != nil {
-			t.Fatalf("failed to delete Federation Resolver %+v: %v - alerts: %+v", fr, err, alerts)
+			t.Fatalf("failed to delete Federation Resolver %+v: %v - alerts: %+v", fr, err, alerts.Alerts)
 		}
-		for _, a := range alerts.Alerts {
+		for _, a := range alerts.Alerts.Alerts {
 			if a.Level == tc.ErrorLevel.String() {
 				t.Errorf("Unexpected error-level alert deleting a federation resolver: %s", a.Text)
 			}
@@ -250,7 +250,7 @@ func DeleteTestFederationResolvers(t *testing.T) {
 	if err == nil {
 		t.Error("Expected an error deleting a non-existent Federation Resolver, but didn't get one")
 	}
-	for _, a := range alerts.Alerts {
+	for _, a := range alerts.Alerts.Alerts {
 		if a.Level == tc.SuccessLevel.String() {
 			t.Errorf("Unexpected success deleting a non-existent Federation Resolver: %s", a.Text)
 		}
