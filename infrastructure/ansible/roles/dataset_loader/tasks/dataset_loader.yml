@@ -701,7 +701,7 @@
     body: "{{ lookup('template', 'server.j2') }}"
   with_items: "{{ dl_hosts_all | difference(dl_hosts_mso_alias) }}"
   vars:
-    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    error_query: "alerts[?level=='error'].text[?!(contains(@,'already exists') || contains(@,'ipAddress is not unique across the server'))]"
     status_name: "{{ status_assignment[item] | default('ONLINE') }}"
     status_query: "[?name == `{{ status_name }}`].id | [0]"
     status_id: "{{ get_all_statuses.json.response | to_json | from_json | json_query(status_query) }}"
@@ -776,7 +776,7 @@
     body: "{{ lookup('template', 'server.j2') }}"
   with_items: "{{ dl_hosts_mso_alias }}"
   vars:
-    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    error_query: "alerts[?level=='error'].text[?!(contains(@,'already exists') || contains(@,'ipAddress is not unique across the server'))]"
     status_name: "{{ status_assignment[item] | default('ONLINE') }}"
     status_query: "[?name == `{{ status_name }}`].id | [0]"
     status_id: "{{ get_all_statuses.json.response | to_json | from_json | json_query(status_query) }}"
