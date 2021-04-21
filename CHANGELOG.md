@@ -56,6 +56,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5724](https://github.com/apache/trafficcontrol/issues/5724) - Set XMPPID to hostname if the server had none, don't error on server update when XMPPID is empty
 - [#5744](https://github.com/apache/trafficcontrol/issues/5744) - Sort TM Delivery Service States page by DS name
 - Fixed server creation through legacy API versions to default `monitor` to `true`.
+- Fixed Traffic Monitor to report `ONLINE` caches as available.
 
 ### Changed
 - Updated the Traffic Ops Python client to 3.0

@@ -240,7 +240,7 @@ func monitorConfigListen(
 
 			srvStatus := tc.CacheStatusFromString(srv.ServerStatus)
 			if srvStatus == tc.CacheStatusOnline {
-				localStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: true})
+				localStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: true, Ipv6Available: srv.IPv6() != "", Ipv4Available: srv.IPv4() != ""})
 				continue
 			}
 			if srvStatus == tc.CacheStatusOffline {
