@@ -112,14 +112,18 @@
 
 - name: Ensure ATS is listening - 80
   wait_for:
+    host: 0.0.0.0
     port: 80
-    delay: 10
+  when: hostvars[inventory_hostname].component == "atsec"
 
 - name: Ensure ATS is listening - 443
   wait_for:
+    host: 0.0.0.0
     port: 443
+  when: hostvars[inventory_hostname].component == "atsec"
 
 - name: Ensure Astats responds
   uri:
     url: http://localhost/_astats
     validate_certs: false
+  when: hostvars[inventory_hostname].component == "atsec"
