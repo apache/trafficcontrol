@@ -255,6 +255,47 @@ type ProfileParametersNullableResponse struct {
 	Response []ProfileParametersNullable `json:"response"`
 }
 
+// ProfileParameterV40 is a relationship between a Profile and some Parameter
+// assigned to it as it appears in version 4.0 of the Traffic Ops API's
+// responses to the /profileparameters endpoint.
+type ProfileParameterV40 struct {
+	// Parameter is the ID of the Parameter.
+	Parameter int `json:"parameter"`
+	// Profile is the name of the Profile to which the Parameter is assigned.
+	Profile     string     `json:"profile"`
+	LastUpdated *TimeNoMod `json:"lastUpdated"`
+}
+
+// ProfileParameterV4 is a relationship between a Profile and some Parameter
+// assigned to it as it appears in the latest minor version of API version 4.0
+//  of the Traffic Ops API's responses to the /profileparameters endpoint.
+type ProfileParameterV4 = ProfileParameterV40
+
+// ProfileParameterCreationRequestV40 is the type of data accepted by Traffic
+// Ops as payloads in POST requests to its /profileparameters endpoint in
+// version 4.0 of its API.
+type ProfileParameterCreationRequestV40 struct {
+	ParameterID int `json:"parameterId"`
+	ProfileID   int `json:"profileId"`
+}
+
+// ProfileParameterCreationRequestV4 is the type of data accepted by Traffic
+// Ops as payloads in POST requests to its /profileparameters endpoint in
+// the latest minor version of its API version 4.
+type ProfileParameterCreationRequestV4 = ProfileParameterCreationRequestV40
+
+// ProfileParametersResponseV40 is the type of a response from Traffic Ops to
+// requests made to its /profileparameters endpoint in version 4.0 of its API.
+type ProfileParametersResponseV40 struct {
+	Response []ProfileParameterV40 `json:"response"`
+	Alerts
+}
+
+// ProfileParametersResponseV4 is the type of a response from Traffic Ops to
+// requests made to its /profileparameters endpoint in the latest minor version
+// of its API version 4.
+type ProfileParametersResponseV4 = ProfileParametersResponseV40
+
 // ProfileExportImportParameterNullable is an object of the form used by Traffic Ops
 // to represent parameters for exported and imported profiles.
 type ProfileExportImportParameterNullable struct {

@@ -412,13 +412,18 @@ func GetTestRegionByInvalidName(t *testing.T) {
 }
 
 func GetTestRegionByDivision(t *testing.T) {
+	opts := client.NewRequestOptions()
 	for _, region := range testData.Regions {
-
-		resp, _, err := TOSession.GetDivisionByName(region.DivisionName, nil)
+		opts.QueryParameters.Set("name", region.DivisionName)
+		resp, _, err := TOSession.GetDivisions(opts)
 		if err != nil {
-			t.Errorf("cannot GET Division by name: %v - %v", region.DivisionName, err)
+			t.Errorf("cannot get Division '%s' by name: %v - alerts: %+v", region.DivisionName, err, resp.Alerts)
 		}
-		respDivision := resp[0]
+		if len(resp.Response) != 1 {
+			t.Errorf("Expected exactly one Division to exist with name '%s', found: %d", region.DivisionName, len(resp.Response))
+			continue
+		}
+		respDivision := resp.Response[0]
 
 		_, reqInf, err := TOSession.GetRegionByDivision(respDivision.ID, nil)
 		if err != nil {

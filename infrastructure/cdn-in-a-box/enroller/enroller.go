@@ -420,12 +420,22 @@ func enrollParameter(toSession *session, r io.Reader) error {
 					return errors.New("no profile with name " + n)
 				}
 
-				pp := tc.ProfileParameter{ParameterID: eparam.ID, ProfileID: profiles[0].ID}
-				_, _, err = toSession.CreateProfileParameter(pp)
+				pp := tc.ProfileParameterCreationRequestV4{ParameterID: eparam.ID, ProfileID: profiles[0].ID}
+				resp, _, err := toSession.CreateProfileParameter(pp, client.RequestOptions{})
 				if err != nil {
-					if strings.Contains(err.Error(), "already exists") {
+					found := false
+					for _, alert := range resp.Alerts {
+						if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+							found = true
+							break
+						}
+					}
+					if found {
 						continue
 					}
+					// the original code didn't actually do anything if the error wasn't that the
+					// Profile/Parameter association already exists.
+					// TODO: handle other errors?
 				}
 			}
 		}
@@ -672,12 +682,18 @@ func enrollProfile(toSession *session, r io.Reader) error {
 			continue
 		}
 		pp := tc.ProfileParameter{ProfileID: profile.ID, ParameterID: eparam.ID}
-		_, _, err = toSession.CreateProfileParameter(pp)
+		resp, _, err := toSession.CreateProfileParameter(pp, client.RequestOptions{})
 		if err != nil {
-			if !strings.Contains(err.Error(), "already exists") {
-				log.Infof("error creating profileparameter %+v: %s\n", pp, err.Error())
+			found := false
+			for _, alert := range resp.Alerts {
+				if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+					found = true
+					break
+				}
 			}
-			continue
+			if !found {
+				log.Infof("error creating profileparameter %+v: %v - alerts: %+v", pp, err, resp.Alerts)
+			}
 		}
 	}
 
