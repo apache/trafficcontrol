@@ -71,7 +71,7 @@ A Profile's :dfn:`Type` determines how its configured Parameters_ are treated by
 ATS_PROFILE
 	A Profile that can be used with either an Edge-tier or Mid-tier :term:`cache server` (but not both, in general). This is the only Profile type that will ultimately pass its Parameters_ on to :term:`ORT` in the form of generated configuration files. For this reason, it can make use of the :ref:`ort-special-strings` in the values of some of its Parameters_.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``EDGE`` or ``MID``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
+	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``EDGE`` or ``MID``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise! This includes :ref:`to-api-caches-stats`.
 
 DS_PROFILE
 	A Profile that, rather than applying to a server, is instead :ref:`used by a Delivery Service <ds-profile>`.
