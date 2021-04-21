@@ -156,14 +156,16 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOp
 	}
 
 	if ds.ProfileID == nil && ds.ProfileName != nil {
-		profiles, _, err := to.GetProfileByName(*ds.ProfileName, nil)
+		profileOpts := NewRequestOptions()
+		profileOpts.QueryParameters.Set("name", *ds.ProfileName)
+		profiles, _, err := to.GetProfiles(opts)
 		if err != nil {
-			return resp, reqInf, err
+			return resp, reqInf, fmt.Errorf("attempting to resolve Profile name '%s' to an ID: %v", *ds.ProfileName, err)
 		}
-		if len(profiles) == 0 {
+		if len(profiles.Response) == 0 {
 			return resp, reqInf, errors.New("no Profile named " + *ds.ProfileName)
 		}
-		ds.ProfileID = &profiles[0].ID
+		ds.ProfileID = &profiles.Response[0].ID
 	}
 
 	if ds.TenantID == nil && ds.Tenant != nil {

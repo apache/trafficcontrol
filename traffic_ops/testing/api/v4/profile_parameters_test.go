@@ -63,16 +63,17 @@ func CreateTestProfileParameters(t *testing.T) {
 	}
 
 	firstProfile := testData.Profiles[0]
-	profileResp, _, err := TOSession.GetProfileByName(firstProfile.Name, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstProfile.Name)
+	profileResp, _, err := TOSession.GetProfiles(opts)
 	if err != nil {
-		t.Errorf("cannot get Profile by name: %v - %v", firstProfile.Name, err)
+		t.Errorf("cannot get Profile '%s' by name: %v - alerts: %+v", firstProfile.Name, err, profileResp.Alerts)
 	}
-	if len(profileResp) < 1 {
-		t.Fatalf("Expected at least one Profile to exist with name '%s'", firstProfile.Name)
+	if len(profileResp.Response) != 1 {
+		t.Fatalf("Expected exactly one Profile to exist with name '%s', found: %d", firstProfile.Name, len(profileResp.Response))
 	}
 
 	firstParameter := testData.Parameters[0]
-	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", firstParameter.Name)
 	paramResp, _, err := TOSession.GetParameters(opts)
 	if err != nil {
@@ -82,7 +83,7 @@ func CreateTestProfileParameters(t *testing.T) {
 		t.Fatalf("Expected at least one Parameter to exist with name '%s'", firstParameter.Name)
 	}
 
-	profileID := profileResp[0].ID
+	profileID := profileResp.Response[0].ID
 	parameterID := paramResp.Response[0].ID
 
 	pp := tc.ProfileParameterCreationRequestV4{

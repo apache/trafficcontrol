@@ -62,14 +62,15 @@ func (to *Session) originIDs(origin *tc.Origin) error {
 	}
 
 	if origin.ProfileID == nil && origin.Profile != nil {
-		profiles, _, err := to.GetProfileByName(*origin.Profile, nil)
+		opts.QueryParameters.Set("name", *origin.Profile)
+		profiles, _, err := to.GetProfiles(opts)
 		if err != nil {
-			return err
+			return fmt.Errorf("resolving Profile name '%s' to an ID: %v - alerts: %+v", *origin.Profile, err, profiles.Alerts)
 		}
-		if len(profiles) == 0 {
+		if len(profiles.Response) == 0 {
 			return errors.New("no profile with name " + *origin.Profile)
 		}
-		origin.ProfileID = &profiles[0].ID
+		origin.ProfileID = &profiles.Response[0].ID
 	}
 
 	if origin.CoordinateID == nil && origin.Coordinate != nil {

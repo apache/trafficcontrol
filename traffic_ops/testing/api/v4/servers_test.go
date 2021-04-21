@@ -106,11 +106,15 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	newCDNID := cdns.Response[0].ID
 	oldCDNID := *server.CDNID
 	server.CDNID = &newCDNID
-	profiles, _, err := TOSession.GetProfileByName("MID1", nil)
+	opts.QueryParameters.Set("name", "MID1")
+	profiles, _, err := TOSession.GetProfiles(opts)
 	if err != nil {
-		t.Fatalf("unable to GET profile: %v", err)
+		t.Errorf("unable to get Profile 'MID1': %v - alerts: %+v", err, profiles.Alerts)
 	}
-	newProfile := profiles[0].ID
+	if len(profiles.Response) != 1 {
+		t.Fatalf("Expected exactly one Profile to exist with name 'MID1', found: %d", len(profiles.Response))
+	}
+	newProfile := profiles.Response[0].ID
 	oldProfile := *server.ProfileID
 	server.ProfileID = &newProfile
 	_, _, err = TOSession.UpdateServer(*server.ID, server, nil)

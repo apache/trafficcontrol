@@ -411,16 +411,18 @@ func enrollParameter(toSession *session, r io.Reader) error {
 				return err
 			}
 
+			opts := client.NewRequestOptions()
 			for _, n := range profiles {
-				profiles, _, err := toSession.GetProfileByName(n, nil)
+				opts.QueryParameters.Set("name", n)
+				profiles, _, err := toSession.GetProfiles(opts)
 				if err != nil {
 					return err
 				}
-				if len(profiles) == 0 {
+				if len(profiles.Response) == 0 {
 					return errors.New("no profile with name " + n)
 				}
 
-				pp := tc.ProfileParameterCreationRequestV4{ParameterID: eparam.ID, ProfileID: profiles[0].ID}
+				pp := tc.ProfileParameterCreationRequestV4{ParameterID: eparam.ID, ProfileID: profiles.Response[0].ID}
 				resp, _, err := toSession.CreateProfileParameter(pp, client.RequestOptions{})
 				if err != nil {
 					found := false
@@ -604,44 +606,55 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		return errors.New("missing name on profile")
 	}
 
-	profiles, _, err := toSession.GetProfileByName(profile.Name, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", profile.Name)
+	profiles, _, err := toSession.GetProfiles(opts)
 
 	createProfile := false
-	if err != nil || len(profiles) == 0 {
+	if err != nil || len(profiles.Response) == 0 {
 		// no profile by that name -- need to create it
 		createProfile = true
 	} else {
 		// updating - ID needs to match
-		profile = profiles[0]
+		profile = profiles.Response[0]
 	}
 
 	var alerts tc.Alerts
 	var action string
 	if createProfile {
-		alerts, _, err = toSession.CreateProfile(profile)
+		alerts, _, err = toSession.CreateProfile(profile, client.RequestOptions{})
 		if err != nil {
-			if strings.Contains(err.Error(), "already exists") {
-				log.Infof("profile %s already exists\n", profile.Name)
+			found := false
+			for _, alert := range alerts.Alerts {
+				if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+					found = true
+					break
+				}
+			}
+			if found {
+				log.Infof("profile %s already exists", profile.Name)
 			} else {
-				log.Infof("error creating profile from %+v: %s\n", profile, err.Error())
+				log.Infof("error creating profile from %+v: %v - alerts: %+v", profile, err, alerts.Alerts)
 			}
 		}
-		profiles, _, err = toSession.GetProfileByName(profile.Name, nil)
+		profiles, _, err = toSession.GetProfiles(opts)
 		if err != nil {
-			log.Infof("error getting profile ID from %+v: %s\n", profile, err.Error())
+			log.Infof("error getting profile ID from %+v: %v - alerts: %+v", profile, err, profiles.Alerts)
 		}
-		if len(profiles) == 0 {
-			log.Infof("no results returned for getting profile ID from %+v", profile)
+		if len(profiles.Response) == 0 {
+			err = fmt.Errorf("no results returned for getting profile ID from %+v", profile)
+			log.Infoln(err)
+			return err
 		}
-		profile = profiles[0]
+		profile = profiles.Response[0]
 		action = "creating"
 	} else {
-		alerts, _, err = toSession.UpdateProfile(profile.ID, profile, nil)
+		alerts, _, err = toSession.UpdateProfile(profile.ID, profile, client.RequestOptions{})
 		action = "updating"
 	}
 
 	if err != nil {
-		log.Infof("error "+action+" from %s: %s\n", err)
+		log.Infof("error "+action+" from %s: %s", err)
 		return err
 	}
 
@@ -681,7 +694,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 			log.Infof("param ID not found for %v", eparam)
 			continue
 		}
-		pp := tc.ProfileParameter{ProfileID: profile.ID, ParameterID: eparam.ID}
+		pp := tc.ProfileParameterCreationRequestV4{ProfileID: profile.ID, ParameterID: eparam.ID}
 		resp, _, err := toSession.CreateProfileParameter(pp, client.RequestOptions{})
 		if err != nil {
 			found := false

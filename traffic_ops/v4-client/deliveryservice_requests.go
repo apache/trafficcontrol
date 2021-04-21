@@ -79,11 +79,13 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV4,
 	}
 
 	if ds.ProfileID == nil && ds.ProfileName != nil {
-		profiles, reqInf, err := to.GetProfileByName(*ds.ProfileName, nil)
-		if err != nil || len(profiles) == 0 {
+		profileOpts := NewRequestOptions()
+		profileOpts.QueryParameters.Set("name", *ds.ProfileName)
+		profiles, reqInf, err := to.GetProfiles(opts)
+		if err != nil || len(profiles.Response) == 0 {
 			return resp, reqInf, fmt.Errorf("no Profile named '%s'", *ds.ProfileName)
 		}
-		ds.ProfileID = &profiles[0].ID
+		ds.ProfileID = &profiles.Response[0].ID
 	}
 
 	if ds.TenantID == nil && ds.Tenant != nil {

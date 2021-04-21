@@ -1082,8 +1082,8 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	}
 	*server.CDNID = cdn1.ID
 
-	if server.Profile == nil || server.ProfileID == nil || server.ProfileDesc == nil {
-		t.Fatal("Traffic Ops returned a representation for a Server that had null or undefined Profile and/or Profile ID and/or Profile Description")
+	if server.Profile == nil || server.ProfileID == nil || server.ProfileDesc == nil || server.ID == nil || server.HostName == nil {
+		t.Fatal("Traffic Ops returned a representation for a Server that had null or undefined Profile and/or Profile ID and/or Profile Description and/or ID and/or Host Name")
 	}
 	// A profile specific to CDN 1 is required
 	profileCopy := tc.ProfileCopy{
@@ -1092,23 +1092,25 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		ExistingName: *server.Profile,
 		Description:  *server.ProfileDesc,
 	}
-	copyResp, _, err := TOSession.CopyProfile(profileCopy)
+	copyResp, _, err := TOSession.CopyProfile(profileCopy, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("copying Profile %s: %v - alerts: %+v", *server.Profile, err, copyResp.Alerts)
 	}
 
-	profiles, _, err := TOSession.GetProfileByName(profileCopy.Name, nil)
+	profileOpts := client.NewRequestOptions()
+	profileOpts.QueryParameters.Set("name", profileCopy.Name)
+	profiles, _, err := TOSession.GetProfiles(opts)
 	if err != nil {
-		t.Fatalf("getting Profile %s: %s", profileCopy.Name, err.Error())
+		t.Fatalf("getting Profile %s: %v - alerts: %+v", profileCopy.Name, err, profiles.Alerts)
 	}
-	if len(profiles) != expectedSize {
-		t.Fatalf("expected %d Profile with name %s but instead received %d Profiles", expectedSize, profileCopy.Name, len(profiles))
+	if len(profiles.Response) != expectedSize {
+		t.Fatalf("expected %d Profile with name %s but instead received %d Profiles", expectedSize, profileCopy.Name, len(profiles.Response))
 	}
-	profile := profiles[0]
+	profile := profiles.Response[0]
 	profile.CDNID = cdn1.ID
-	_, _, err = TOSession.UpdateProfile(profile.ID, profile, nil)
+	alerts, _, err := TOSession.UpdateProfile(profile.ID, profile, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("updating Profile %s: %s", profile.Name, err.Error())
+		t.Fatalf("updating Profile %s: %v - alerts: %+v", profile.Name, err, alerts.Alerts)
 	}
 	*server.ProfileID = profile.ID
 
@@ -1134,9 +1136,9 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		t.Fatalf("updating Server %s: %s", *server.HostName, err.Error())
 	}
 
-	_, _, err = TOSession.DeleteProfile(profile.ID)
+	alerts, _, err = TOSession.DeleteProfile(profile.ID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("deleting Profile %s: %s", profile.Name, err.Error())
+		t.Fatalf("deleting Profile %s: %v - alerts: %+v", profile.Name, err, alerts.Alerts)
 	}
 
 	resp, reqInf, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})

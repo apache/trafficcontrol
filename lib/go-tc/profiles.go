@@ -115,6 +115,19 @@ type ProfileExportResponse struct {
 	Parameters []ProfileExportImportParameterNullable `json:"parameters"`
 }
 
+// ProfileExportResponseV40 is the type of a response from Traffic Ops to a
+// request to its /profiles/{{ID}}/export endpoint in API version 4.0.
+type ProfileExportResponseV40 struct {
+	Profile    ProfileExportImportNullable            `json:"profile"`
+	Parameters []ProfileExportImportParameterNullable `json:"parameters"`
+	Alerts
+}
+
+// ProfileExportResponseV4 is the type of a response from Traffic Ops to a
+// request to its /profiles/{{ID}}/export endpoint in the latest minor version
+// of API version 4.
+type ProfileExportResponseV4 = ProfileExportResponseV40
+
 // ProfileImportRequest is an object of the form used by Traffic Ops
 // to represent a request to import a profile
 type ProfileImportRequest struct {

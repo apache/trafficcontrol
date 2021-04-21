@@ -60,14 +60,14 @@ func UpdateTestParametersWithHeaders(t *testing.T, header http.Header) {
 	// Retrieve the Parameter by name so we can get the id for the Update
 	opts := client.NewRequestOptions()
 	opts.Header = header
-	resp, _, err := TOSession.GetParametersByProfileName(firstParameter.Name, opts.Header)
+	resp, _, err := TOSession.GetParametersByProfileName(firstParameter.Name, opts)
 	if err != nil {
-		t.Errorf("cannot get Parameter by name '%s': %v", firstParameter.Name, err)
+		t.Errorf("cannot get Parameter by name '%s': %v - alerts: %+v", firstParameter.Name, err, resp.Alerts)
 	}
-	if len(resp) < 1 {
+	if len(resp.Response) < 1 {
 		t.Fatalf("Expected at least one Parameter to exist with name '%s'", firstParameter.Name)
 	}
-	remoteParameter := resp[0]
+	remoteParameter := resp.Response[0]
 	expectedParameterValue := "UPDATED"
 	remoteParameter.Value = expectedParameterValue
 	_, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
