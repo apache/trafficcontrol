@@ -279,7 +279,7 @@ dl_ds_default_divisions:
 # Mapping of eligible TO Profile prefixes to inventory hostvar component name
 dl_ds_merged_profile_prefix_ansible_component_map: "{{ dl_ds_default_profile_prefix_ansible_component_map }}"
 dl_ds_default_profile_prefix_ansible_component_map:
-  grove: GROVE_EDGE_
+  grove: EDGE_GROVE_
   atsec: EDGE_ATS_
   atsmid: MID_ATS_
   fakeorigin: MSO_
@@ -894,7 +894,7 @@ dl_ds_default_profile_cdntemplates:
         configFile: parent.config
         value: '1'
         secure: 0
-  - name: "Grove_Edge_{{ Target_cdn_delegation }}"
+  - name: "{{ dl_ds_merged_profile_prefix_ansible_component_map.grove }}{{ Target_cdn_delegation }}"
     description: "Edge cache({{ Target_cdn_delegation }}) - Grove"
     cdn: "{{ Target_cdn_delegation }}"
     type: GROVE_PROFILE
