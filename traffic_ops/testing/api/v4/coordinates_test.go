@@ -17,12 +17,12 @@ package v4
 
 import (
 	"net/http"
-	"sort"
-	"testing"
-	"time"
 	"net/url"
 	"reflect"
+	"sort"
 	"strings"
+	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
@@ -142,7 +142,7 @@ func GetTestCoordinates(t *testing.T) {
 
 func SortTestCoordinates(t *testing.T) {
 	var sortedList []string
-	resp, _, err := TOSession.GetCoordinates(nil,nil)
+	resp, _, err := TOSession.GetCoordinates(nil, nil)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
