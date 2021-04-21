@@ -509,7 +509,7 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
             var dsRequest = {
                 changeType: 'delete',
                 status: status,
-                deliveryService: deliveryService
+                original: deliveryService
             };
 
             // if the user chooses to complete/fulfill the delete request immediately, the ds will be deleted and behind the
@@ -560,7 +560,8 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
                             deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
                                 then(
                                     function() {
-                                        messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + dsRequest.deliveryService.xmlId + ' delivery service' } ], true);
+                                        const xmlId = (dsRequest.requested) ? dsRequest.requested.xmlId : dsRequest.original.xmlId;
+                                        messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + xmlId + ' delivery service' } ], true);
                                         locationUtils.navigateToPath('/delivery-service-requests');
                                     }
                                 );

@@ -53,10 +53,10 @@ func (to *Session) GetFederationResolverByID(ID uint, header http.Header) (tc.Fe
 }
 
 // CreateFederationResolver creates the Federation Resolver 'fr'.
-func (to *Session) CreateFederationResolver(fr tc.FederationResolver, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
-	var alerts tc.Alerts
-	reqInf, err := to.post("federation_resolvers/", fr, header, &alerts)
-	return alerts, reqInf, err
+func (to *Session) CreateFederationResolver(fr tc.FederationResolver, header http.Header) (tc.FederationResolverResponseV4, toclientlib.ReqInf, error) {
+	var response tc.FederationResolverResponseV4
+	reqInf, err := to.post("federation_resolvers/", fr, header, &response)
+	return response, reqInf, err
 }
 
 // DeleteFederationResolver deletes the Federation Resolver identified by 'id'.

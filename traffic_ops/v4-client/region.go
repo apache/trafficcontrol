@@ -57,9 +57,13 @@ func (to *Session) UpdateRegion(id int, region tc.Region, header http.Header) (t
 }
 
 // GetRegions returns all Regions in Traffic Ops.
-func (to *Session) GetRegions(header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
+func (to *Session) GetRegions(params url.Values, header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
+	uri := APIRegions
+	if params != nil {
+		uri += "?" + params.Encode()
+	}
 	var data tc.RegionsResponse
-	reqInf, err := to.get(APIRegions, header, &data)
+	reqInf, err := to.get(uri, header, &data)
 	return data.Response, reqInf, err
 }
 
@@ -74,6 +78,14 @@ func (to *Session) GetRegionByID(id int, header http.Header) ([]tc.Region, tocli
 // GetRegionByName retrieves the Region with the given Name.
 func (to *Session) GetRegionByName(name string, header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s?name=%s", APIRegions, url.QueryEscape(name))
+	var data tc.RegionsResponse
+	reqInf, err := to.get(route, header, &data)
+	return data.Response, reqInf, err
+}
+
+// GetRegionByDivision retrieves the Region with the given Name.
+func (to *Session) GetRegionByDivision(id int, header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s?division=%d", APIRegions, id)
 	var data tc.RegionsResponse
 	reqInf, err := to.get(route, header, &data)
 	return data.Response, reqInf, err

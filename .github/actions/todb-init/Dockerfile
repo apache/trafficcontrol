@@ -23,7 +23,7 @@ RUN architecture=$(uname -m) && \
     # Use musl libc where the go binary expects glibc
     # Less-generalized: ln -s /lib/ld-musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
     ln -s /lib/ld-musl-${architecture}.so.[0-9] /lib64/ld-linux-${architecture//_/-}.so.2
-# Do not disable CGO, bitbucket.org/liamstask/goose needs it
+# Do not disable CGO, github.com/kevinburke/goose needs it
 ENV GOROOT=/usr/local/go
 
 RUN apk add --no-cache git

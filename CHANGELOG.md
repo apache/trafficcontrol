@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Python client: [#5611](https://github.com/apache/trafficcontrol/pull/5611) Added server_detail endpoint
 - Ported the Postinstall script to Python. The Perl version has been moved to `install/bin/_postinstall.pl` and has been deprecated, pending removal in a future release.
 - CDN-in-a-Box: Generate config files using the Postinstall script
+- CDN-in-a-Box: Add Federation with CNAME foo.kabletown.net.
 - Apache Traffic Server: [#5627](https://github.com/apache/trafficcontrol/pull/5627) - Added the creation of Centos8 RPMs for Apache Traffic Server
 - Traffic Ops/Traffic Portal: [#5479](https://github.com/apache/trafficcontrol/issues/5479) - Added the ability to change a server capability name
 - Traffic Ops: [#3577](https://github.com/apache/trafficcontrol/issues/3577) - Added a query param (server host_name or ID) for servercheck API
@@ -43,6 +44,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5284](https://github.com/apache/trafficcontrol/issues/5284) - Fixed error message when creating a server with non-existent profile
 - Fixed a NullPointerException in TR when a client passes a null SNI hostname in a TLS request
 - Fixed a logging bug in Traffic Monitor where it wouldn't log errors in certain cases where a backup file could be used instead. Also, Traffic Monitor now rejects monitoring snapshots that have no delivery services.
+- [#5739](https://github.com/apache/trafficcontrol/issues/5739) - Prevent looping in case of a failed login attempt
 - [#5407](https://github.com/apache/trafficcontrol/issues/5407) - Make sure that you cannot add two servers with identical content
 - [#5712](https://github.com/apache/trafficcontrol/issues/5712) - Ensure that 5.x Traffic Stats is compatible with 5.x Traffic Monitor and 5.x Traffic Ops, and that it doesn't log all 0's for `cache_stats`  
 - [#2881](https://github.com/apache/trafficcontrol/issues/2881) - Some API endpoints have incorrect Content-Types
@@ -50,6 +52,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5405](https://github.com/apache/trafficcontrol/issues/5405) - Prevent Tenant update from choosing child as new parent
 - [#5384](https://github.com/apache/trafficcontrol/issues/5384) - New grids will now properly remember the current page number.
 - [#5548](https://github.com/apache/trafficcontrol/issues/5548) - Don't return a `403 Forbidden` when the user tries to get servers of a non-existent DS using `GET /servers?dsId={{nonexistent DS ID}}`
+- [#5695](https://github.com/apache/trafficcontrol/issues/5695) - Ensure vitals are calculated only against monitored interfaces
 - [#5724](https://github.com/apache/trafficcontrol/issues/5724) - Set XMPPID to hostname if the server had none, don't error on server update when XMPPID is empty
 - [#5744](https://github.com/apache/trafficcontrol/issues/5744) - Sort TM Delivery Service States page by DS name
 
@@ -63,9 +66,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Refactored the Traffic Ops - Traffic Vault integration to more easily support the development of new Traffic Vault backends
 - Updated Apache Tomcat from 8.5.63 to 9.0.43
 - Delivery Service Requests now keep a record of the changes they make.
+- Changed the `goose` provider to the maintained fork [`github.com/kevinburke/goose`](https://github.com/kevinburke/goose)
 
 ### Deprecated
 - The `riak.conf` config file and its corresponding `--riakcfg` option in `traffic_ops_golang` have been deprecated. Please use `"traffic_vault_backend": "riak"` and `"traffic_vault_config"` (with the existing contents of riak.conf) instead.
+- The Traffic Ops API route `GET /api/{version}/vault/bucket/{bucket}/key/{key}/values` has been deprecated and will no longer be available as of Traffic Ops API v4
 - The `riak_port` option in cdn.conf is now deprecated. Please use the `"port"` field in `traffic_vault_config` instead.
 
 ### Removed
