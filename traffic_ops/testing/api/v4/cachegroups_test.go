@@ -23,10 +23,9 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"	
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestCacheGroups(t *testing.T) {
@@ -52,7 +51,7 @@ func TestCacheGroups(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestCacheGroupsWithHeaders(t, header)
-		VerifyPaginationSupportCg(t)
+		GetTestPaginationSupportCg(t)
 	})
 }
 
@@ -654,7 +653,7 @@ func CheckCacheGroupsAuthentication(t *testing.T) {
 	}
 }
 
-func VerifyPaginationSupportCg(t *testing.T) {
+func GetTestPaginationSupportCg(t *testing.T) {
 	qparams := url.Values{}
 	qparams.Set("orderby", "id")
 	cachegroup, _, err := TOSession.GetCacheGroups(qparams, nil)
