@@ -70,7 +70,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			fmt.Println("Failed to proxy authentication to traffic ops", err.Error())
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
@@ -144,7 +144,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			fmt.Println("Failed to proxy ", r.URL, "to host", r.URL.Query().Get("opsHost"))
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
