@@ -98,11 +98,11 @@ func TestServerUpdateStatus(t *testing.T) {
 		}
 
 		// update status of MID server to OFFLINE
-		_, _, err := TOSession.UpdateServerStatus(*mid1cdn1.ID, tc.ServerPutStatus{
+		alerts, _, err := TOSession.UpdateServerStatus(*mid1cdn1.ID, tc.ServerPutStatus{
 			Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
-			OfflineReason: util.StrPtr("testing")})
+			OfflineReason: util.StrPtr("testing")}, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("cannot update server status: %v", err)
+			t.Errorf("cannot update server status: %v - alerts: %+v", err, alerts)
 		}
 
 		// assert that updates were queued for the proper EDGE servers
@@ -135,15 +135,16 @@ func TestServerUpdateStatus(t *testing.T) {
 		if err != nil {
 			t.Fatalf("cannot GET status by name: %v", err)
 		}
-		_, _, err = TOSession.UpdateServerStatus(
+		alerts, _, err = TOSession.UpdateServerStatus(
 			*mid1cdn1.ID,
 			tc.ServerPutStatus{
 				Status:        util.JSONNameOrIDStr{ID: util.IntPtr(status[0].ID)},
 				OfflineReason: util.StrPtr("testing"),
 			},
+			client.RequestOptions{},
 		)
 		if err != nil {
-			t.Errorf("cannot update server status: %v", err)
+			t.Errorf("cannot update server status: %v - alerts: %+v", err, alerts.Alerts)
 		}
 
 		// negative cases:
@@ -154,6 +155,7 @@ func TestServerUpdateStatus(t *testing.T) {
 				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
 				OfflineReason: util.StrPtr("testing"),
 			},
+			client.RequestOptions{},
 		)
 		if err == nil {
 			t.Error("update server status exected: err, actual: nil")
@@ -166,6 +168,7 @@ func TestServerUpdateStatus(t *testing.T) {
 				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("NOT_A_REAL_STATUS")},
 				OfflineReason: util.StrPtr("testing"),
 			},
+			client.RequestOptions{},
 		)
 		if err == nil {
 			t.Error("update server status exected: err, actual: nil")
@@ -178,6 +181,7 @@ func TestServerUpdateStatus(t *testing.T) {
 				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
 				OfflineReason: nil,
 			},
+			client.RequestOptions{},
 		)
 		if err == nil {
 			t.Error("update server status exected: err, actual: nil")
@@ -190,6 +194,7 @@ func TestServerUpdateStatus(t *testing.T) {
 				Status:        util.JSONNameOrIDStr{Name: util.StrPtr("ADMIN_DOWN")},
 				OfflineReason: nil,
 			},
+			client.RequestOptions{},
 		)
 		if err == nil {
 			t.Error("update server status exected: err, actual: nil")
@@ -238,9 +243,9 @@ func TestServerQueueUpdate(t *testing.T) {
 		for _, setVal := range [...]bool{true, false} {
 			t.Run(fmt.Sprint(setVal), func(t *testing.T) {
 				// queue update and check response
-				quResp, _, err := TOSession.SetServerQueueUpdate(*s.ID, setVal)
+				quResp, _, err := TOSession.SetServerQueueUpdate(*s.ID, setVal, client.RequestOptions{})
 				if err != nil {
-					t.Fatalf("failed to set queue update for server with ID %v to %v: %v", s.ID, setVal, err)
+					t.Fatalf("failed to set queue update for server with ID %d to %t: %v - alerts: %+v", s.ID, setVal, err, quResp.Alerts)
 				}
 				if got, want := int(quResp.Response.ServerID), *s.ID; got != want {
 					t.Errorf("wrong serverId in response, got: %v, want: %v", got, want)
@@ -273,7 +278,7 @@ func TestServerQueueUpdate(t *testing.T) {
 
 		t.Run("validations", func(t *testing.T) {
 			// server doesn't exist
-			_, _, err = TOSession.SetServerQueueUpdate(-1, true)
+			_, _, err = TOSession.SetServerQueueUpdate(-1, true, client.RequestOptions{})
 			if err == nil {
 				t.Error("update server status expected: error, actual: nil")
 			}
@@ -326,8 +331,8 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 				t.Fatalf("Server '%s' had nil RevalPending before update status change", *testServer.HostName)
 			}
 
-			if _, err := TOSession.SetUpdateServerStatuses(*testServer.HostName, queue, reval); err != nil {
-				t.Fatalf("UpdateServerStatuses error expected: nil, actual: %v", err)
+			if alerts, _, err := TOSession.SetUpdateServerStatuses(*testServer.HostName, queue, reval, client.RequestOptions{}); err != nil {
+				t.Fatalf("UpdateServerStatuses error expected: nil, actual: %v - alerts: %+v", err, alerts.Alerts)
 			}
 
 			resp, _, err = TOSession.GetServers(params, nil)
@@ -374,7 +379,7 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 		testVals(util.BoolPtr(true), nil)
 		testVals(util.BoolPtr(false), nil)
 
-		if _, err := TOSession.SetUpdateServerStatuses(*testServer.HostName, nil, nil); err == nil {
+		if _, _, err := TOSession.SetUpdateServerStatuses(*testServer.HostName, nil, nil, client.RequestOptions{}); err == nil {
 			t.Errorf("UpdateServerStatuses with (nil,nil) expected error, actual nil")
 		}
 	})
@@ -431,11 +436,11 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 		}
 
 		// update status of MID server to OFFLINE
-		_, _, err = TOSession.UpdateServerStatus(*cachesByCacheGroup[midCacheGroup].ID, tc.ServerPutStatus{
+		resp, _, err := TOSession.UpdateServerStatus(*cachesByCacheGroup[midCacheGroup].ID, tc.ServerPutStatus{
 			Status:        util.JSONNameOrIDStr{Name: util.StrPtr("OFFLINE")},
-			OfflineReason: util.StrPtr("testing")})
+			OfflineReason: util.StrPtr("testing")}, client.RequestOptions{})
 		if err != nil {
-			t.Fatalf("cannot update server status: %s", err.Error())
+			t.Fatalf("cannot update server status: %v - alerts: %+v", err, resp.Alerts)
 		}
 
 		for _, cacheGroupName := range cacheGroupNames {
@@ -479,9 +484,9 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			t.Fatalf("expected UpdPending: %t, actual: %t", false, updateStatusByCacheGroup[otherEdgeCacheGroup].UpdatePending)
 		}
 
-		_, _, err = TOSession.SetServerQueueUpdate(*cachesByCacheGroup[midCacheGroup].ID, true)
+		squResp, _, err := TOSession.SetServerQueueUpdate(*cachesByCacheGroup[midCacheGroup].ID, true, client.RequestOptions{})
 		if err != nil {
-			t.Fatalf("cannot update server status on %s: %s", *cachesByCacheGroup[midCacheGroup].HostName, err.Error())
+			t.Fatalf("cannot update server status on %s: %v - alerts: %+v", *cachesByCacheGroup[midCacheGroup].HostName, err, squResp.Alerts)
 		}
 		for _, cacheGroupName := range cacheGroupNames {
 			updResp, _, err := TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName, nil)

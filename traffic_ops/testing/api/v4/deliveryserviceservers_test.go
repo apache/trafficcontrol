@@ -136,14 +136,11 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		Status:        util.JSONNameOrIDStr{ID: &badStatusID},
 		OfflineReason: util.StrPtr("test"),
 	}
-	alertsPtr, _, err := TOSession.UpdateServerStatus(*server.ID, putRequest)
-	if alertsPtr != nil {
-		t.Logf("Alerts from updating server status: %s", strings.Join(alertsPtr.ToStrings(), ", "))
-	}
+	alerts, _, err = TOSession.UpdateServerStatus(*server.ID, putRequest, client.RequestOptions{})
 	if err == nil {
 		t.Error("Didn't get expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service")
 	} else {
-		t.Logf("Got expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service: %v", err)
+		t.Logf("Got expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
 	alerts, _, err = TOSession.UpdateServer(*server.ID, server, nil)
