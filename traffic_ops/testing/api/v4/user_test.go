@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -106,12 +107,15 @@ func CreateTestUsers(t *testing.T) {
 
 func RolenameCapitalizationTest(t *testing.T) {
 
-	roles, _, _, err := TOSession.GetRoles(nil, nil)
+	roles, _, err := TOSession.GetRoles(client.RequestOptions{})
 	if err != nil {
-		t.Errorf("could not get roles: %v", err)
+		t.Errorf("could not get roles: %v - alerts: %+v", err, roles.Alerts)
 	}
-	if len(roles) == 0 {
+	if len(roles.Response) == 0 {
 		t.Fatal("there should be at least one role to test the user")
+	}
+	if roles.Response[0].ID == nil {
+		t.Fatal("Traffic Ops returned a representation of a Role that had null or undefined ID")
 	}
 
 	tenants, _, err := TOSession.GetTenants(nil)
@@ -132,7 +136,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 		"confirmLocalPasswd": "better_twelve",
 		"role": %d,
 		"tenantId": %d
-	}`, *roles[0].ID, tenants[0].ID)
+	}`, *roles.Response[0].ID, tenants[0].ID)
 
 	reader := strings.NewReader(blob)
 	request, err := http.NewRequest("POST", fmt.Sprintf("%v%s/users", TOSession.URL, TestAPIBase), reader)
@@ -152,7 +156,10 @@ func RolenameCapitalizationTest(t *testing.T) {
 	}
 
 	request, err = http.NewRequest("GET", fmt.Sprintf("%v%s/users?username=test_user", TOSession.URL, TestAPIBase), nil)
-	resp, err = TOSession.Client.Do(request)
+	if err != nil {
+		t.Fatalf("Failed to create HTTP request: %v", err)
+	}
+	resp, _ = TOSession.Client.Do(request)
 
 	buf = new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
