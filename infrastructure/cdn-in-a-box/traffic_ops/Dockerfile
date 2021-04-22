@@ -112,7 +112,6 @@ COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
 	infrastructure/cdn-in-a-box/dns/set-dns.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/set-to-ips-from-dns.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/generate-certs.sh \
-	infrastructure/cdn-in-a-box/traffic_ops/adduser.pl \
 	infrastructure/cdn-in-a-box/traffic_ops/trafficops-init.sh \
 	infrastructure/cdn-in-a-box/variables.env \
 	/
