@@ -177,18 +177,22 @@ func SortTestCoordinatesDesc(t *testing.T) {
 		t.Errorf("Expected no error, but got error in Coordinates Descending %v", err2)
 	}
 
-	if len(respAsc) > 0 && len(respDesc) > 0 {
-		// reverse the descending-sorted response and compare it to the ascending-sorted one
-		for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
-			respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
-		}
-		if respDesc[0].Name != "" && respAsc[0].Name != "" {
-			if !reflect.DeepEqual(respDesc[0].Name, respAsc[0].Name) {
-				t.Errorf("Coordinates responses are not equal after reversal: %s - %s", respDesc[0].Name, respAsc[0].Name)
+	if len(respAsc) == len(respDesc) {
+		if len(respAsc) > 0 && len(respDesc) > 0 {
+			// reverse the descending-sorted response and compare it to the ascending-sorted one
+			for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+				respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
 			}
+			if respDesc[0].Name != "" && respAsc[0].Name != "" {
+				if !reflect.DeepEqual(respDesc[0].Name, respAsc[0].Name) {
+					t.Errorf("Coordinates responses are not equal after reversal: %s - %s", respDesc[0].Name, respAsc[0].Name)
+				}
+			}
+		} else {
+			t.Errorf("No Response returned from GET Coordinates using SortOrder")
 		}
 	} else {
-		t.Errorf("No Response returned from GET Coordinates using SortOrder")
+		t.Fatalf("Coordinates response length are not equal Asc: %d Desc: %d", len(respAsc), len(respDesc))
 	}
 }
 
