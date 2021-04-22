@@ -488,13 +488,16 @@ func enrollRegion(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, _, err := toSession.CreateRegion(s)
+	alerts, _, err := toSession.CreateRegion(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("region %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("a Region named '%s' already exists", s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Region: %s\n", err)
+		err = fmt.Errorf("error creating Region '%s': %v - alerts: %+v", s.Name, err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 

@@ -28,15 +28,17 @@ const apiPhysLocations = "/phys_locations"
 // CreatePhysLocation creates the passed Physical Location.
 func (to *Session) CreatePhysLocation(pl tc.PhysLocation, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	if pl.RegionID == 0 && pl.RegionName != "" {
-		regions, _, err := to.GetRegionByName(pl.RegionName, nil)
+		regionOpts := NewRequestOptions()
+		regionOpts.QueryParameters.Set("name", pl.RegionName)
+		regions, reqInf, err := to.GetRegions(opts)
 		if err != nil {
 			err = fmt.Errorf("resolving Region name '%s' to an ID", pl.RegionName)
-			return tc.Alerts{}, toclientlib.ReqInf{}, err
+			return regions.Alerts, reqInf, err
 		}
-		if len(regions) == 0 {
-			return tc.Alerts{}, toclientlib.ReqInf{}, fmt.Errorf("no region with name '%s'", pl.RegionName)
+		if len(regions.Response) == 0 {
+			return regions.Alerts, reqInf, fmt.Errorf("no region with name '%s'", pl.RegionName)
 		}
-		pl.RegionID = regions[0].ID
+		pl.RegionID = regions.Response[0].ID
 	}
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiPhysLocations, opts, pl, &alerts)
