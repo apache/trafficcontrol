@@ -1,8 +1,26 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 import { browser, by, element } from 'protractor'
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
-interface TopologiesData {
+interface Topologies {
     description: string;
     Name:string;
     DescriptionData: string;
@@ -30,7 +48,7 @@ export class TopologiesPage extends BasePage {
         let snp = new SideNavigationPage();
         await snp.ClickTopologyMenu();
     }
-    async CreateTopologies(topologies:TopologiesData){
+    public async CreateTopologies(topologies: Topologies): Promise<boolean> {
         let result = false;
         let basePage = new BasePage();
         let snp = new SideNavigationPage();
@@ -49,131 +67,25 @@ export class TopologiesPage extends BasePage {
         if(await browser.isElementPresent(by.xpath("//td[@data-search='^" + topologies.CacheGroup + this.randomize + "$']")) === true){
             await element(by.xpath("//td[@data-search='^" + topologies.CacheGroup + this.randomize + "$']")).click();
         }
-        if(await basePage.ClickSubmit() == false){
-            result = undefined;
-            await snp.NavigateToTopologiesPage();
-            throw new Error('Test '+topologies.description+' Failed because cannot click on Submit button');
-        }
-        if(result != undefined){
-            if(await basePage.ClickCreate() == false){
-                result = undefined;
-                await snp.NavigateToTopologiesPage();
-                throw new Error('Test '+topologies.description+' Failed because cannot click on Create button');
-            }else{
-                result = await basePage.GetOutputMessage().then(value => value === topologies.validationMessage);
-                if (topologies.description == 'create a Topologies with empty cachegroup (no server)'){
-                    result = await basePage.GetOutputMessage().then(value => value.includes(topologies.validationMessage));
-                }
-            }
-            return result;
-        }
+        await basePage.ClickSubmit();
+        await basePage.ClickCreate();
+        return await basePage.GetOutputMessage().then(value => value === topologies.validationMessage);
+        
     }
        
-    async SearchTopologies(nameTopologies:string){
+    async SearchTopologies(nameTopologies:string): Promise<boolean>{
         let name = nameTopologies + this.randomize;
-        let result = false;
         let snp = new SideNavigationPage();
         await snp.NavigateToTopologiesPage();
         await this.txtSearch.clear();
         await this.txtSearch.sendKeys(name);
         if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
             await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-            result = true;
-        } else {
-            result = undefined;
-        }
-        return result;
+            return true;
+        } 
+        return false;
     }
-    async UpdateTopologies(topologies){
-        let result = false;
-        let basePage = new BasePage();
-        let snp = new SideNavigationPage();
-        if(topologies.Type != undefined){
-             //click add cache group +
-            await this.btnAddCacheGroup.click();
-            //choose type
-            await this.txtCacheGroupType.sendKeys(topologies.Type);
-            await basePage.ClickSubmit();
-            await this.txtSearchCacheGroup.sendKeys(topologies.CacheGroup + this.randomize)
-            await element(by.xpath("//td[@data-search='^" + topologies.CacheGroup + this.randomize + "$']")).click();
-            if(await basePage.ClickSubmit() == false){
-                result = undefined;
-            }
-        }
-        //if TypeChild is not empty
-        if(topologies.TypeChild != undefined){
-            //add cachegroup child to cachegroup
-            await element(by.xpath("//a[@title='Add child cache groups to " + topologies.CacheGroup + this.randomize + "']//i[1]")).click();
-            //choose type
-            await this.txtCacheGroupType.sendKeys(topologies.TypeChild);
-            //if cannot click submit return undefined
-            if(await basePage.ClickSubmit() == false ){
-                result = undefined;
-            }else{
-                //search and send in cachegroup child then click submit
-                await this.txtSearchCacheGroup.sendKeys(topologies.CacheGroupChild + this.randomize)
-                await element(by.xpath("//td[@data-search='^" + topologies.CacheGroupChild + this.randomize + "$']")).click();
-                await basePage.ClickSubmit(); 
-                if(topologies.TypeGrandChild != undefined){
-                    //add grandchild to cachegroup
-                    await element(by.xpath("//a[@title='Add child cache groups to " + topologies.CacheGroupChild + this.randomize + "']//i[1]")).click();
-                    //choose type
-                    await this.txtCacheGroupType.sendKeys(topologies.TypeGrandChild);
-                      //if cannot click submit return undefined
-                    if(await basePage.ClickSubmit() == false ){
-                        result = undefined;
-                    }else{
-                        //search and send in cachegroup grandchild then click submit
-                        await this.txtSearchCacheGroup.sendKeys(topologies.CacheGroupGrandChild + this.randomize)
-                        await element(by.xpath("//td[@data-search='^" + topologies.CacheGroupGrandChild + this.randomize + "$']")).click();
-                        await basePage.ClickSubmit(); 
-                        await basePage.ClickNo();
-                    }
-                }
-            }
-        }
-        if(topologies.CacheGroupNeedSP != undefined){
-            if(await element(by.xpath("//a[@title='Set Secondary Parent Cache Group for " + topologies.CacheGroupNeedSP + this.randomize + "']")).isDisplayed() == true){
-                await element(by.xpath("//a[@title='Set Secondary Parent Cache Group for " + topologies.CacheGroupNeedSP + this.randomize + "']")).click();
-                await this.txtCacheGroupType.sendKeys(topologies.SecondaryParent + this.randomize );
-                if(await basePage.ClickSubmit() == false){
-                    result = undefined;
-                }
-            }else{
-                result = undefined;
-            }
-        }
-         //message check
-        //if result in the beginning is not undefined
-        if(result != undefined){
-            if(await basePage.ClickUpdate() == false){
-                result = undefined;
-                await snp.NavigateToTopologiesPage();
-            }else{
-                result = await basePage.GetOutputMessage().then(function (value) {
-                    if (topologies.validationMessage == value) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                })
-                if(topologies.validationWarning == true){
-                    let warningMessage = ""+topologies.Type+"-typed cachegroup "+topologies.CacheGroup+this.randomize+" is a parent of "+topologies.CacheGroupChild+this.randomize+", unexpected behavior may result"
-                    result = await basePage.GetOutputWarning().then(function (value) {
-                        if ( warningMessage == value) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    })
-
-                }
-            }
-            return result;
-        }
-        
-    }
-    async DeleteTopologies(topologies){
+    async DeleteTopologies(topologies: Topologies):Promise<Boolean>{
         let name = topologies.Name + this.randomize;
         let result = false;
         let basePage = new BasePage();

@@ -19,43 +19,36 @@
 
 import { browser } from 'protractor';
 import { LoginPage } from '../PageObjects/LoginPage.po';
-import { TopologiesPage } from '../PageObjects/TopologiesPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-import  * as using  from "jasmine-data-provider";
-import { readFileSync } from "fs"
 import { API } from '../CommonUtils/API';
+import { TopologiesPage } from '../PageObjects/TopologiesPage.po';
+import { topologies } from "../Data/topologies";
 
 const api = new API();
-const testFile = 'Data/Topologies/TestCases.json';
-const setupFile = 'Data/Topologies/Setup.json';
-const cleanupFile = 'Data/Topologies/Cleanup.json';
-const testData = JSON.parse(readFileSync(testFile,'utf-8'));
 const loginPage = new LoginPage();
 const topologiesPage = new TopologiesPage();
 const topNavigation = new TopNavigationPage();
 
-describe('Setup prereq for Topologies Test', function(){
-    it('Setup', async function(){
-        let setupData = JSON.parse(readFileSync(setupFile,'utf-8'));
-        let output = await api.UseAPI(setupData);
-        expect(output).toBeNull();
-    })
-})
+describe('Setup API for Topologies Test', () => {
+    it('Setup', async () => {
+        await api.UseAPI(topologies.setup);
+    });
+});
 
-using(testData.Topologies, async function(topologiesData){
-    using(topologiesData.Login, function(login){
-        describe('Traffic Portal - Topologies - ' + login.description, function(){
-            it('can login', async function(){
+topologies.tests.forEach(async  topologiesData =>{
+    topologiesData.logins.forEach(login =>{
+        describe(`Traffic Portal - Topologies - ${login.description}`, () => {
+            it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            })
-            it('can open topologies page', async function(){
+            });
+            it('can open topologies page', async () => {
                 await topologiesPage.OpenTopologyMenu();
                 await topologiesPage.OpenTopologiesPage();
-            })
-            using(topologiesData.Add, function (add) {
-                it(add.description, async function () {
+            });
+            topologiesData.add.forEach(add => {
+                it(add.description, async () => {
                     expect(await topologiesPage.CreateTopologies(add)).toBeTruthy();
                     await topologiesPage.OpenTopologiesPage();
                 })
@@ -68,10 +61,8 @@ using(testData.Topologies, async function(topologiesData){
     })
 })
 
-describe('Clean up prereq and test data for Topologies Test', function () {
-    it('Cleanup', async function () {
-        let cleanupData = JSON.parse(readFileSync(cleanupFile,'utf-8'));
-        let output = await api.UseAPI(cleanupData);
-        expect(output).toBeNull();
-    })
-})
+describe('Clean Up API for Topologies Test', () => {
+    it('Cleanup', async () => {
+        await api.UseAPI(topologies.cleanup);
+    });
+});

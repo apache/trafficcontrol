@@ -18,7 +18,7 @@
     }
   },
   "specs": [
-    "specs/*.spec.js"
+    "specs/Topologies.spec.js"
   ],
   "framework": "jasmine",
   "getPageTimeout": 60000,
