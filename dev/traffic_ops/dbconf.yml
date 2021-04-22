@@ -18,4 +18,4 @@ name: dbconf.yml
 
 development:
   driver: postgres
-  open: host=db port=5432 user=traffic_ops password=twelve12 dbname=traffic_ops_development sslmode=disable
+  open: host=db port=5432 user=traffic_ops password=twelve dbname=traffic_ops_development sslmode=disable

@@ -19,7 +19,7 @@
 			"query_timeout_seconds": 86400,
 			"hostname": "db",
 			"user": "traffic_vault",
-			"password": "twelve12",
+			"password": "twelve",
 			"port": 5432
 		},
 		"read_timeout": 86400,

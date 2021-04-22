@@ -20,4 +20,4 @@
 
 export TO_URL="https://trafficops.infra.ciab.test:443"
 export TO_USER="admin"
-export TO_PASS="twelve12"
+export TO_PASS="twelve"

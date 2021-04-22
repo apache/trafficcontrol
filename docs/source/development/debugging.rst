@@ -136,7 +136,7 @@ Wait for Traffic Monitor to start, which will indicate that the SSL keys have be
 .. code-block:: shell
 	:caption: Run ``t3c-apply`` with debugging enabled
 
-	[user@computer cdn-in-a-box]$ mydc exec edge t3c apply --run-mode=badass --traffic-ops-url=https://trafficops.infra.ciab.test --traffic-ops-user=admin --traffic-ops-password=twelve12 --git=yes --dispersion=0 --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout all
+	[user@computer cdn-in-a-box]$ mydc exec edge t3c apply --run-mode=badass --traffic-ops-url=https://trafficops.infra.ciab.test --traffic-ops-user=admin --traffic-ops-password=twelve --git=yes --dispersion=0 --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout all
 	API server listening at: [::]:2347
 
 The *API server listening* message is from ``dlv``, indicating it is ready to accept a connection from your IDE. Note that, unlike the other components, execution of ``t3c`` does not begin until your IDE connects to ``dlv``.
@@ -203,7 +203,7 @@ Wait for Traffic Monitor to start, which will indicate that the SSL keys have be
 .. code-block:: shell
 	:caption: Run ``t3c-apply`` with debugging enabled
 
-	[user@computer cdn-in-a-box]$ mydc exec mid-01 t3c apply --run-mode=badass --traffic-ops-url=https://trafficops.infra.ciab.test --traffic-ops-user=admin --traffic-ops-password=twelve12 --git=yes --dispersion=0 --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout all
+	[user@computer cdn-in-a-box]$ mydc exec mid-01 t3c apply --run-mode=badass --traffic-ops-url=https://trafficops.infra.ciab.test --traffic-ops-user=admin --traffic-ops-password=twelve --git=yes --dispersion=0 --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout all
 	API server listening at: [::]:2348
 
 The *API server listening* message is from ``dlv``, indicating it is ready to accept a connection from your IDE. Note that, unlike the other components, execution of ``t3c`` does not begin until your IDE connects to ``dlv``.
@@ -270,7 +270,7 @@ Wait for Traffic Monitor to start, which will indicate that the SSL keys have be
 .. code-block:: shell
 	:caption: Run ``t3c-apply`` with debugging enabled
 
-	[user@computer cdn-in-a-box]$ mydc exec mid-02 t3c apply --run-mode=badass --traffic-ops-url=https://trafficops.infra.ciab.test --traffic-ops-user=admin --traffic-ops-password=twelve12 --git=yes --dispersion=0 --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout all
+	[user@computer cdn-in-a-box]$ mydc exec mid-02 t3c apply --run-mode=badass --traffic-ops-url=https://trafficops.infra.ciab.test --traffic-ops-user=admin --traffic-ops-password=twelve --git=yes --dispersion=0 --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout all
 	API server listening at: [::]:2349
 
 The *API server listening* message is from ``dlv``, indicating it is ready to accept a connection from your IDE. Note that, unlike the other components, execution of ``t3c`` does not begin until your IDE connects to ``dlv``.

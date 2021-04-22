@@ -32,7 +32,7 @@ self-signed certificate, so `curl` commands to the API will need to use
 debugger for Go listens on port 6444 for connections to debug Traffic Ops.
 
 The login credentials for the "admin" user are the same as those for the user of
-the same name in CDN-in-a-Box - password is `twelve12`.
+the same name in CDN-in-a-Box - password is `twelve`.
 
 ## Traffic Portal
 The current version of Traffic Portal serves using HTTPS on port 444. The
@@ -60,9 +60,9 @@ for running Postgres, so any Postgres servers running on the host machine may
 need to be stopped before running ATC) and houses the Traffic Ops database as
 `traffic_ops_development`, and the Traffic Vault database as
 `traffic_vault_development`. To connect as the Traffic Ops user to the Traffic
-Ops database, use the username `traffic_ops` and the password `twelve12`. To
+Ops database, use the username `traffic_ops` and the password `twelve`. To
 connect as the Traffic Ops Vault user to the Traffic Vault database, use the
-username `traffic_vault` and the password `twelve12`.
+username `traffic_vault` and the password `twelve`.
 
 ## T3C
 An edge-tier cache server listens for HTTP (HTTPS not supported) connections on

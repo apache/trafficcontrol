@@ -34,14 +34,14 @@ describe("LoginComponent", () => {
 
 	beforeEach(() => {
 		mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
-		mockCurrentUserService.login.and.callFake(async (u, p)=>u === "test-admin" && p === "twelve12!");
+		mockCurrentUserService.login.and.callFake(async (u, p)=>u === "test-admin" && p === "twelve!");
 		mockCurrentUserService.login.withArgs("tok").and.returnValue(new Promise(r=>r(true)));
 		mockCurrentUserService.login.withArgs("badToken").and.callFake(
 			async () => {
 				throw new Error("bad token");
 			}
 		);
-		mockCurrentUserService.login.withArgs("server error", "twelve12!").and.callFake(
+		mockCurrentUserService.login.withArgs("server error", "twelve!").and.callFake(
 			async () => {
 				throw new Error("some kind of server error occurred");
 			}
@@ -91,7 +91,7 @@ describe("LoginComponent", () => {
 		await expectAsync(component.submitLogin()).toBeRejected();
 		expect(mockCurrentUserService.login).not.toHaveBeenCalled();
 		component.u = "test-admin";
-		component.p = "twelve12!";
+		component.p = "twelve!";
 		component.submitLogin();
 		expect(mockCurrentUserService.login).toHaveBeenCalled();
 		component.u = "server error";

@@ -177,4 +177,4 @@ function tm-health-client {
 
 export TO_URL="https://localhost:6443"
 export TO_USER="admin"
-export TO_PASSWORD="twelve12"
+export TO_PASSWORD="twelve"
