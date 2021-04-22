@@ -24,10 +24,50 @@ Debugging inside CDN-in-a-Box
 
 Some CDN-in-a-Box components can be used with a debugger to step through lines of code, set breakpoints, see the state of all variables in each scope, etc. at runtime. Components that support debugging:
 
+* `Enroller`_
 * `Traffic Monitor`_
 * `Traffic Ops`_
 * `Traffic Router`_
 * `Traffic Stats`_
+
+Enroller
+========
+
+* In ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``ENROLLER_DEBUG_ENABLE`` to ``true``.
+
+* Stop CDN-in-a-Box if it is running and remove any existing volumes. Build/rebuild the ``enroller-debug`` image each time you have changed :atc-file:`infrastructure/cdn-in-a-box/enroller/enroller.go`. Then, start CDN-in-a-Box.
+
+.. code-block:: shell
+	:caption: docker-compose command for debugging the CDN in a Box Enroller
+
+	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+	mydc down -v
+	mydc build enroller
+	mydc up
+
+* Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2343. If you are using VS Code, the configuration should look like this:
+
+.. code-block:: json
+	:caption: VS Code launch.json for debugging the CDN in a Box Enroller
+
+	{
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Enroller",
+				"type": "go",
+				"request": "attach",
+				"mode": "remote",
+				"port": 2343,
+				"cwd": "${workspaceRoot}/",
+				"remotePath": "/go/src/github.com/apache/trafficcontrol/",
+			}
+		]
+	}
+
+* Use the debugging configuration you created to start debugging the Enroller. It should connect without first breaking at any line.
+
+For an example of usage, set a breakpoint at `the toSession.CreateDeliveryServiceV30() call in enrollDeliveryService() <https://github.com/apache/trafficcontrol/blob/RELEASE-5.1.1/infrastructure/cdn-in-a-box/enroller/enroller.go#L209>`_, then wait for the Enroller to process a file from ``/shared/enroller/deliveryservices/`` (only exists within the Docker container).
 
 Traffic Monitor
 ===============
@@ -44,14 +84,14 @@ Traffic Monitor
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TM_DEBUG_ENABLE`` to ``true``.
 
-* Stop CDN-in-a-Box if it is running and remove any existing volumes. Rebuild the ``trafficmonitor`` image to make sure it uses our fresh ``traffic_monitor.rpm``. Then, start CDN-in-a-Box.
+* Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``trafficmonitor-debug`` image to make sure it uses our fresh ``traffic_monitor.rpm``. Then, start CDN-in-a-Box:
 
 .. code-block:: shell
 	:caption: docker-compose command for debugging Traffic Monitor
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml optional/docker-compose.debugging.yml'
+	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 	mydc down -v
-	mydc build trafficmonitor-nondebug trafficmonitor
+	mydc build trafficmonitor
 	mydc up
 
 * Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2344. If you are using VS Code, the configuration should look like this:
@@ -68,15 +108,15 @@ Traffic Monitor
 				"request": "attach",
 				"mode": "remote",
 				"port": 2344,
-				"cwd": "${workspaceRoot}/traffic_monitor",
-				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol/traffic_monitor",
+				"cwd": "${workspaceRoot}",
+				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
 			}
 		]
 	}
 
 * Use the debugging configuration you created to start debugging Traffic Monitor. It should connect without first breaking at any line.
 
-For an example of usage, set a breakpoint at `the o.m.RLock() call in ThreadsafeEvents.Get() <https://github.com/apache/trafficcontrol/blob/RELEASE-4.0.0-RC3/traffic_monitor/health/event.go#L69>`_, then visit http://trafficmonitor.infra.ciab.test/publish/EventLog (see :ref:`Traffic Monitor APIs: /publish/EventLog <tm-publish-EventLog>`).
+For an example of usage, set a breakpoint at `the o.m.RLock() call in ThreadsafeEvents.Get() <https://github.com/apache/trafficcontrol/blob/RELEASE-5.1.1/traffic_monitor/health/event.go#L71>`_, then visit http://trafficmonitor.infra.ciab.test/publish/EventLog (see :ref:`Traffic Monitor APIs: /publish/EventLog <tm-publish-EventLog>`).
 
 Traffic Ops
 ===========
@@ -93,14 +133,14 @@ Traffic Ops
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TO_DEBUG_ENABLE`` to ``true``.
 
-* Stop CDN-in-a-Box if it is running and remove any existing volumes. Rebuild the ``trafficops-go`` image to make sure it uses our fresh ``traffic_ops.rpm``. Then, start CDN-in-a-Box.
+* Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``trafficops-debug`` image to make sure it uses our fresh ``traffic_ops.rpm``. Then, start CDN-in-a-Box:
 
 .. code-block:: shell
 	:caption: docker-compose command for debugging Traffic Ops
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml optional/docker-compose.debugging.yml'
+	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 	mydc down -v
-	mydc build trafficops-nondebug trafficops
+	mydc build trafficops
 	mydc up
 
 * Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2345. If you are using VS Code, the configuration should look like this:
@@ -117,15 +157,15 @@ Traffic Ops
 				"request": "attach",
 				"mode": "remote",
 				"port": 2345,
-				"cwd": "${workspaceRoot}/traffic_ops/traffic_ops_golang",
-				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang",
+				"cwd": "${workspaceRoot}",
+				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
 			}
 		]
 	}
 
 * Use the debugging configuration you created to start debugging Traffic Ops. It should connect without first breaking at any line.
 
-For an example of usage, set a breakpoint at `the log.Debugln() call in TOProfile.Read() <https://github.com/apache/trafficcontrol/blob/RELEASE-4.0.0-RC3/traffic_ops/traffic_ops_golang/profile/profiles.go#L129>`_, then visit https://trafficportal.infra.ciab.test/api/1.5/profiles (after logging into :ref:`tp-overview`).
+For an example of usage, set a breakpoint at `the log.Debugln() call in TOProfile.Read() <https://github.com/apache/trafficcontrol/blob/RELEASE-5.1.1/traffic_ops/traffic_ops_golang/profile/profiles.go#L148>`_, then visit https://trafficportal.infra.ciab.test/api/1.5/profiles (after logging into :ref:`tp-overview`).
 
 Traffic Router
 ==============
@@ -241,14 +281,14 @@ Traffic Stats
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TS_DEBUG_ENABLE`` to ``true``.
 
-* Stop CDN-in-a-Box if it is running and remove any existing volumes. Rebuild the ``trafficstats`` image to make sure it uses our fresh ``traffic_stats.rpm``. Then, start CDN-in-a-Box.
+* Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``trafficstats-debug`` image to make sure it uses our fresh ``traffic_stats.rpm``. Then, start CDN-in-a-Box:
 
 .. code-block:: shell
 	:caption: docker-compose command for debugging Traffic Stats
 
-	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml optional/docker-compose.debugging.yml'
+	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 	mydc down -v
-	mydc build trafficstats-nondebug trafficstats
+	mydc build trafficstats
 	mydc up
 
 * Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2346. If you are using VS Code, the configuration should look like this:
@@ -265,15 +305,15 @@ Traffic Stats
 				"request": "attach",
 				"mode": "remote",
 				"port": 2346,
-				"cwd": "${workspaceRoot}/traffic_stats",
-				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol/traffic_stats",
+				"cwd": "${workspaceRoot}",
+				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
 			}
 		]
 	}
 
 * Use the debugging configuration you created to start debugging Traffic Stats. It should connect without first breaking at any line.
 
-For an example of usage, set a breakpoint at `the http.Get() call in main.getURL() <https://github.com/apache/trafficcontrol/blob/RELEASE-4.1.0/traffic_stats/traffic_stats.go#L727>`_, then wait 10 seconds for the breakpoint to be hit.
+For an example of usage, set a breakpoint at `the http.Get() call in main.getURL() <https://github.com/apache/trafficcontrol/blob/RELEASE-5.1.1/traffic_stats/traffic_stats.go#L706>`_, then wait 10 seconds for the breakpoint to be hit.
 
 Troubleshooting
 ===============

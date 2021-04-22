@@ -1,7 +1,7 @@
 {
 	"cdnName": "$CDN_NAME",
 	"description": "Mid Cache - Apache Traffic Server",
-	"name": "ATS_MID_TIER_CACHE",
+	"name": "MID_TIER_ATS_CACHE",
 	"routingDisabled": false,
 	"type": "ATS_PROFILE",
 	"params": [

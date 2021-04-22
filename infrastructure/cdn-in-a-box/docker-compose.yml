@@ -137,6 +137,7 @@ services:
       dockerfile: traffic_stats/Dockerfile
       args:
         RHEL_VERSION: ${RHEL_VERSION:-8}
+        TRAFFIC_TS_RPM: traffic_stats/traffic_stats.rpm
     image: trafficstats
     depends_on:
       - enroller
@@ -185,7 +186,11 @@ services:
     privileged: True
     build:
       context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/edge/Dockerfile
+      dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
+      target: edge
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+        ORT_RPM: infrastructure/cdn-in-a-box/cache/traffic_ops_ort.rpm
     domainname: infra.ciab.test
     env_file:
       - variables.env
@@ -198,7 +203,11 @@ services:
     privileged: True
     build:
       context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/mid/Dockerfile
+      dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
+      target: mid
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+        ORT_RPM: infrastructure/cdn-in-a-box/cache/traffic_ops_ort.rpm
     domainname: infra.ciab.test
     env_file:
       - variables.env
@@ -211,7 +220,11 @@ services:
     privileged: True
     build:
       context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/mid/Dockerfile
+      dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
+      target: mid
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+        ORT_RPM: infrastructure/cdn-in-a-box/cache/traffic_ops_ort.rpm
     domainname: infra.ciab.test
     env_file:
       - variables.env

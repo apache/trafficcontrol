@@ -203,12 +203,12 @@ to-enroll() {
 			;;
 		"edge" )
 			export MY_TYPE="EDGE"
-			export MY_PROFILE="ATS_EDGE_TIER_CACHE"
+			export MY_PROFILE="EDGE_TIER_ATS_CACHE"
 			export MY_STATUS="REPORTED"
 			;;
 		"mid" )
 			export MY_TYPE="MID"
-			export MY_PROFILE="ATS_MID_TIER_CACHE"
+			export MY_PROFILE="MID_TIER_ATS_CACHE"
 			export MY_STATUS="REPORTED"
 			;;
 		"origin" )

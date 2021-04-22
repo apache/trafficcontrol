@@ -20,7 +20,7 @@
 ############################################################
 
 ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION}
+FROM centos:${RHEL_VERSION} as trafficmonitor
 ARG RHEL_VERSION=8
 
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
@@ -62,3 +62,14 @@ ADD traffic_monitor/run.sh /
 CMD /run.sh
 HEALTHCHECK --interval=10s --timeout=1s \
     CMD bash -c 'source /to-access.sh && [[ "$(curl -s http://trafficmonitor.infra.ciab.test/api/traffic-ops-uri)" == "$TO_URL" ]]'
+
+FROM trafficmonitor as get-delve
+
+RUN dnf -y install golang git && \
+    go get -u github.com/go-delve/delve/cmd/dlv
+
+FROM trafficmonitor as trafficmonitor-debug
+COPY --from=get-delve /root/go/bin /usr/bin
+
+# Makes the default target skip the trafficmonitor-debug stage
+FROM trafficmonitor

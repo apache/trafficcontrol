@@ -67,13 +67,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		url := fmt.Sprintf("https://%v/api/1.2/user/login", r.URL.Query().Get("opsHost"))
 
 		resp, err := client.Post(url, "application/json", r.Body)
-		defer resp.Body.Close()
 
 		if err != nil {
 			fmt.Println("Failed to proxy authentication to traffic ops", err.Error())
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+
+		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
 			fmt.Println("Dangit!!!! got non 200", resp)
@@ -140,13 +141,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(client.Jar)
 
 		resp, err := client.Get(urlString)
-		defer resp.Body.Close()
 
 		if err != nil {
 			fmt.Println("Failed to proxy ", r.URL, "to host", r.URL.Query().Get("opsHost"))
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+
+		defer resp.Body.Close()
 
 		buf, err := ioutil.ReadAll(resp.Body)
 

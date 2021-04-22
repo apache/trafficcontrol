@@ -1,7 +1,7 @@
 {
 	"cdnName": "$CDN_NAME",
 	"description": "Edge Cache - Apache Traffic Server",
-	"name": "ATS_EDGE_TIER_CACHE",
+	"name": "EDGE_TIER_ATS_CACHE",
 	"routingDisabled": false,
 	"type": "ATS_PROFILE",
 	"params": [

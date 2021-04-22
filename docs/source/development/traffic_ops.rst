@@ -28,7 +28,7 @@ Software Requirements
 =====================
 Traffic Ops is only supported on CentOS 7+ systems (although many developers do use Mac OS with some success). Here are the requirements:
 
-- `Goose <https://bitbucket.org/liamstask/goose/>`_ (although the ``postinstall`` script will install this)
+- `Goose <https://github.com/kevinburke/goose>`_ (although the ``postinstall`` script will install this)
 - `PostgreSQL 13.2 <https://www.postgresql.org/download/>`_ - the machine where Traffic Ops is running must have the client tool set (e.g. :manpage:`psql(1)`), but the actual database can be run anywhere so long as it is accessible.
 
 	.. note:: Prior to version 13.2, Traffic Ops used version 9.6. For upgrading an existing Mac OS Homebrew-based PostgreSQL instance, you can use `Homebrew <https://brew.sh/>`_ to easily upgrade from 9.6 to 13.2:
@@ -180,7 +180,7 @@ Traffic Ops Project Tree Overview
 
 app/db/admin
 ============
-The :program:`app/db/admin` binary is for use in managing the Traffic Ops database tables. This essentially serves as a front-end for `Goose <https://bitbucket.org/liamstask/goose/>`_.
+The :program:`app/db/admin` binary is for use in managing the Traffic Ops database tables. This essentially serves as a front-end for `Goose <https://github.com/kevinburke/goose>`_.
 
 .. note:: For proper resolution of configuration and SOL statement files, it's recommended that this binary be run from the ``app`` directory
 
