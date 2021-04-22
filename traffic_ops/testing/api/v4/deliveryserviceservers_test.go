@@ -437,9 +437,9 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 			}
 
 			ctc.ssc.ServerID = server.ID
-			_, _, err = TOSession.CreateServerServerCapability(ctc.ssc)
+			sscResp, _, err := TOSession.CreateServerServerCapability(ctc.ssc, client.RequestOptions{})
 			if err != nil {
-				t.Fatalf("could not POST the server capability %v to server %v: %v", *ctc.ssc.ServerCapability, *ctc.ssc.Server, err)
+				t.Fatalf("could not associate Capability '%s' to server #%d: %v - alerts: %+v", *ctc.ssc.ServerCapability, *ctc.ssc.ServerID, err, sscResp.Alerts)
 			}
 
 			assignResp, _, got := TOSession.CreateDeliveryServiceServers(*ctc.capability.DeliveryServiceID, []int{*server.ID}, true, client.RequestOptions{})
@@ -500,11 +500,13 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	}
 
 	// Make sure server has no caps to ensure test correctness
-	sccs, _, err := TOSession.GetServerServerCapabilities(s.ID, nil, nil, nil)
+	sccsOpts := client.NewRequestOptions()
+	sccsOpts.QueryParameters.Set("serverId", strconv.Itoa(*s.ID))
+	sccs, _, err := TOSession.GetServerServerCapabilities(opts)
 	if err != nil {
-		t.Fatalf("GET server server capabilities for denver-mso-org-01: %v", err)
+		t.Fatalf("Unexpected error getting Capabilities for server #%d ('denver-mso-org-01'): %v - alerts: %+v", *s.ID, err, sccs.Alerts)
 	}
-	if len(sccs) != 0 {
+	if len(sccs.Response) != 0 {
 		t.Fatal("expected 0 server server capabilities for server denver-mso-org-01")
 	}
 

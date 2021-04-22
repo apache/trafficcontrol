@@ -46,14 +46,13 @@ func TestServerServerCapabilitiesForTopologies(t *testing.T) {
 }
 
 func GetTestServerServerCapabilitiesIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
 	futureTime := time.Now().AddDate(0, 0, 1)
 	rfcTime := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, rfcTime)
-	_, reqInf, err := TOSession.GetServerServerCapabilities(nil, nil, nil, header)
+	opts := client.NewRequestOptions()
+	opts.Header.Set(rfc.IfModifiedSince, rfcTime)
+	resp, reqInf, err := TOSession.GetServerServerCapabilities(opts)
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusNotModified {
 		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -66,8 +65,8 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	// loop through server ServerCapabilities, assign FKs and create
 	params := url.Values{}
 	for _, ssc := range testData.ServerServerCapabilities {
-		if ssc.Server == nil {
-			t.Fatalf("server-server-capability structure had nil server")
+		if ssc.Server == nil || ssc.ServerCapability == nil {
+			t.Fatalf("server-server-capability structure had nil server and/or Capability")
 		}
 		params.Set("hostName", *ssc.Server)
 		resp, _, err := TOSession.GetServers(params, nil)
@@ -80,11 +79,10 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 		}
 		server := servResp[0]
 		ssc.ServerID = server.ID
-		createResp, _, err := TOSession.CreateServerServerCapability(ssc)
+		createResp, _, err := TOSession.CreateServerServerCapability(ssc, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not POST the server capability %v to server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
+			t.Errorf("could not associate Capability '%s' with server '%s': %v - alerts: %+v", *ssc.ServerCapability, *ssc.Server, err, createResp.Alerts)
 		}
-		t.Log("Response: ", *ssc.Server, " ", createResp)
 	}
 
 	// Invalid POSTs
@@ -92,27 +90,27 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	ssc := testData.ServerServerCapabilities[0]
 
 	// Attempt to assign already assigned server capability
-	_, _, err := TOSession.CreateServerServerCapability(ssc)
+	_, _, err := TOSession.CreateServerServerCapability(ssc, client.RequestOptions{})
 	if err == nil {
-		t.Error("expected to receive error when assigning a already assigned server capability\n")
+		t.Error("expected to receive error when assigning a already assigned server capability")
 	}
 
 	// Attempt to assign a server capability with no ID
 	sscNilID := tc.ServerServerCapability{
 		ServerCapability: ssc.ServerCapability,
 	}
-	_, _, err = TOSession.CreateServerServerCapability(sscNilID)
+	_, _, err = TOSession.CreateServerServerCapability(sscNilID, client.RequestOptions{})
 	if err == nil {
-		t.Error("expected to receive error when assigning a server capability without a server ID\n")
+		t.Error("expected to receive error when assigning a server capability without a server ID")
 	}
 
 	// Attempt to assign a server capability with no server capability
 	sscNilCapability := tc.ServerServerCapability{
 		ServerID: ssc.ServerID,
 	}
-	_, _, err = TOSession.CreateServerServerCapability(sscNilCapability)
+	_, _, err = TOSession.CreateServerServerCapability(sscNilCapability, client.RequestOptions{})
 	if err == nil {
-		t.Error("expected to receive error when assigning a server capability to a server without a server capability\n")
+		t.Error("expected to receive error when assigning a server capability to a server without a server capability")
 	}
 
 	// Attempt to assign a server capability with invalid server capability
@@ -120,9 +118,9 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 		ServerID:         ssc.ServerID,
 		ServerCapability: util.StrPtr("bogus"),
 	}
-	_, _, err = TOSession.CreateServerServerCapability(sscInvalidCapability)
+	_, _, err = TOSession.CreateServerServerCapability(sscInvalidCapability, client.RequestOptions{})
 	if err == nil {
-		t.Error("expected to receive error when assigning a non existent server capability to a server\n")
+		t.Error("expected to receive error when assigning a non existent server capability to a server")
 	}
 
 	// Attempt to assign a server capability with invalid server capability
@@ -130,9 +128,9 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 		ServerID:         util.IntPtr(-1),
 		ServerCapability: ssc.ServerCapability,
 	}
-	_, _, err = TOSession.CreateServerServerCapability(sscInvalidID)
+	_, _, err = TOSession.CreateServerServerCapability(sscInvalidID, client.RequestOptions{})
 	if err == nil {
-		t.Error("expected to receive error when assigning a server capability to a non existent server ID\n")
+		t.Error("expected to receive error when assigning a server capability to a non existent server ID")
 	}
 
 	// Attempt to assign a server capability to a non MID/EDGE server
@@ -151,73 +149,89 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 		ServerID:         servers[0].ID,
 		ServerCapability: ssc.ServerCapability,
 	}
-	_, _, err = TOSession.CreateServerServerCapability(sscInvalidType)
+	_, _, err = TOSession.CreateServerServerCapability(sscInvalidType, client.RequestOptions{})
 	if err == nil {
-		t.Error("expected to receive error when assigning a server capability to a server with incorrect type\n")
+		t.Error("expected to receive error when assigning a server capability to a server with incorrect type")
 	}
 }
 
 func SortTestServerServerCapabilities(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetServerServerCapabilities(nil, nil, nil, header)
+	resp, _, err := TOSession.GetServerServerCapabilities(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	for i := range resp {
-		sortedList = append(sortedList, *resp[i].Server)
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
+	sortedList := make([]string, 0, len(resp.Response))
+	for _, ssc := range resp.Response {
+		if ssc.Server == nil {
+			t.Error("Traffic Ops returned a representation of a relationship between a Server and one of its Capabilities with null or undefined server")
+			continue
+		}
+		sortedList = append(sortedList, *ssc.Server)
+	}
+
+	if !sort.StringsAreSorted(sortedList) {
 		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 
 func GetTestServerServerCapabilities(t *testing.T) {
 	// Get All Server Capabilities
-	sscs, _, err := TOSession.GetServerServerCapabilities(nil, nil, nil, nil)
+	sscs, _, err := TOSession.GetServerServerCapabilities(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET server capabilities assigned to servers: %v", err)
+		t.Fatalf("cannot server capability/server relationships: %v - alerts: %+v", err, sscs.Alerts)
 	}
-	if sscs == nil {
-		t.Fatal("returned server capabilities assigned to servers was nil\n")
-	}
-	if len(sscs) != len(testData.ServerServerCapabilities) {
-		t.Errorf("expect %v server capabilities assigned to servers received %v ", len(testData.ServerServerCapabilities), len(sscs))
+	if len(sscs.Response) != len(testData.ServerServerCapabilities) {
+		t.Errorf("expect %v server capabilities assigned to servers received %v ", len(testData.ServerServerCapabilities), len(sscs.Response))
 	}
 
-	for _, ssc := range sscs {
-		// Get assigned Server Capabilities by server id
-		sscs, _, err := TOSession.GetServerServerCapabilities(ssc.ServerID, nil, nil, nil)
-		if err != nil {
-			t.Fatalf("cannot GET server capabilities assigned to servers by server ID %v: %v", *ssc.ServerID, err)
+	opts := client.NewRequestOptions()
+	for _, ssc := range sscs.Response {
+		if ssc.Server == nil || ssc.ServerID == nil || ssc.ServerCapability == nil {
+			t.Error("Traffic Ops returned a representation of a relationship between a Server and one of its Capabilities with null or undefined server and/or server ID and/or Capability")
+			continue
 		}
-		for _, s := range sscs {
-			if *s.ServerID != *ssc.ServerID {
+		// Get assigned Server Capabilities by server id
+		opts.QueryParameters.Set("serverId", strconv.Itoa(*ssc.ServerID))
+		sscs, _, err := TOSession.GetServerServerCapabilities(opts)
+		opts.QueryParameters.Del("serverId")
+		if err != nil {
+			t.Fatalf("cannot get Capabilities assigned to server #%d: %v - alerts: %+v", *ssc.ServerID, err, sscs.Alerts)
+		}
+		for _, s := range sscs.Response {
+			if s.ServerID == nil {
+				t.Error("Traffic Ops returned a representation of a relationship between a Server and one of its Capabilities with null or undefined server ID")
+			} else if *s.ServerID != *ssc.ServerID {
 				t.Errorf("GET server server capabilities by serverID returned non-matching server ID: %d", *s.ServerID)
 			}
 		}
+
 		// Get assigned Server Capabilities by host name
-		sscs, _, err = TOSession.GetServerServerCapabilities(nil, ssc.Server, nil, nil)
+		opts.QueryParameters.Set("serverHostName", *ssc.Server)
+		sscs, _, err = TOSession.GetServerServerCapabilities(opts)
+		opts.QueryParameters.Del("serverHostName")
 		if err != nil {
-			t.Fatalf("cannot GET server capabilities assigned to servers by server host name %v: %v", *ssc.Server, err)
+			t.Fatalf("cannot get Capabilities assigned server '%s': %v alerts: %+v", *ssc.Server, err, sscs.Alerts)
 		}
-		for _, s := range sscs {
-			if *s.Server != *ssc.Server {
+		for _, s := range sscs.Response {
+			if s.Server == nil {
+				t.Error("Traffic Ops returned a representation of a relationship between a Server and one of its Capabilities with null or undefined server")
+			} else if *s.Server != *ssc.Server {
 				t.Errorf("GET server server capabilities by serverHostName returned non-matching server hostname: %s", *s.Server)
 			}
 		}
 
 		// Get assigned Server Capabilities by server capability
-		sscs, _, err = TOSession.GetServerServerCapabilities(nil, nil, ssc.ServerCapability, nil)
+		opts.QueryParameters.Set("serverCapability", *ssc.ServerCapability)
+		sscs, _, err = TOSession.GetServerServerCapabilities(opts)
+		opts.QueryParameters.Del("serverCapability")
 		if err != nil {
-			t.Fatalf("cannot GET server capabilities assigned to servers by server capability %v: %v", *ssc.ServerCapability, err)
+			t.Fatalf("cannot get Capability/server associations for Capability '%s': %v alerts: %+v", *ssc.ServerCapability, err, sscs.Alerts)
 		}
-		for _, s := range sscs {
-			if *s.ServerCapability != *ssc.ServerCapability {
+		for _, s := range sscs.Response {
+			if s.ServerCapability == nil {
+				t.Error("Traffic Ops returned a representation of a relationship between a Server and one of its Capabilities with null or undefined Capability")
+			} else if *s.ServerCapability != *ssc.ServerCapability {
 				t.Errorf("GET server server capabilities by server capability returned non-matching server capability: %s", *s.ServerCapability)
 			}
 		}
@@ -225,10 +239,8 @@ func GetTestServerServerCapabilities(t *testing.T) {
 }
 
 func UpdateTestServerServerCapabilities(t *testing.T) {
-	var header http.Header
-
 	// Get server capability name and edit it to a new name
-	resp, _, err := TOSession.GetServerCapabilities(header)
+	resp, _, err := TOSession.GetServerCapabilities(nil)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -240,15 +252,21 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	resp[0].Name = newSCName
 
 	// Get all servers related to original sever capability name
-	servOrigResp, _, err := TOSession.GetServerServerCapabilities(nil, nil, &originalName, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("serverCapability", originalName)
+	servOrigResp, _, err := TOSession.GetServerServerCapabilities(opts)
 	if err != nil {
-		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", originalName, err)
+		t.Fatalf("cannot get Capability/server associations for Capability '%s': %v alerts: %+v", originalName, err, servOrigResp.Alerts)
 	}
-	if len(servOrigResp) == 0 {
+	if len(servOrigResp.Response) == 0 {
 		t.Fatalf("no servers associated with server capability name: %v", originalName)
 	}
-	mapOrigServ := make(map[string]string)
-	for _, s := range servOrigResp {
+	mapOrigServ := make(map[string]string, len(servOrigResp.Response))
+	for _, s := range servOrigResp.Response {
+		if s.Server == nil || s.ServerCapability == nil {
+			t.Error("Traffic Ops returned a representation of a relationship between a Server and one of its Capabilities with null or undefined server and/or Capability")
+			continue
+		}
 		mapOrigServ[*s.Server] = *s.ServerCapability
 	}
 
@@ -259,19 +277,24 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	//To check whether the primary key change trickled down to server table
-	servUpdatedResp, _, err := TOSession.GetServerServerCapabilities(nil, nil, &newSCName, nil)
+	opts.QueryParameters.Set("serverCapability", newSCName)
+	servUpdatedResp, _, err := TOSession.GetServerServerCapabilities(opts)
 	if err != nil {
-		t.Fatalf("cannot GET server capabilities assigned to servers by server capability name %v: %v", newSCName, err)
+		t.Fatalf("cannot get Capability/server associations for Capability '%s': %v alerts: %+v", newSCName, err, servUpdatedResp.Alerts)
 	}
-	if len(servUpdatedResp) == 0 {
-		t.Fatalf("no server associated with server capability name:%v", newSCName)
+	if len(servUpdatedResp.Response) == 0 {
+		t.Fatalf("no server associated with server capability '%s'", newSCName)
 	}
-	if len(servOrigResp) != len(servUpdatedResp) {
-		t.Fatalf("length of servers for a given server capability name is different, expected: %v-%v, got: %v-%v", originalName, len(servOrigResp), newSCName, len(servUpdatedResp))
+	if len(servOrigResp.Response) != len(servUpdatedResp.Response) {
+		t.Fatalf("length of servers for a given server capability name is different, expected: %s-%d, got: %s-%d", originalName, len(servOrigResp.Response), newSCName, len(servUpdatedResp.Response))
 	}
-	for _, s := range servUpdatedResp {
+	for _, s := range servUpdatedResp.Response {
+		if s.ServerCapability == nil {
+			t.Error("Traffic Ops returned a representation of a relationship between a Server and one of its Capabilities with null or undefined server")
+			continue
+		}
 		if newSCName != *s.ServerCapability {
-			t.Errorf("GET server server capabilities by server capability returned non-matching server capability: %v", *s.ServerCapability)
+			t.Errorf("GET server server capabilities by server capability returned non-matching server capability: %s", *s.ServerCapability)
 		}
 		_, ok := mapOrigServ[*s.Server]
 		if !ok {
@@ -289,12 +312,9 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 
 func DeleteTestServerServerCapabilities(t *testing.T) {
 	// Get Server Capabilities to delete them
-	sscs, _, err := TOSession.GetServerServerCapabilities(nil, nil, nil, nil)
+	sscs, _, err := TOSession.GetServerServerCapabilities(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET server capabilities assigned to servers: %v", err)
-	}
-	if sscs == nil {
-		t.Fatal("returned server capabilities assigned to servers was nil")
+		t.Fatalf("cannot get server/Capability associations: %v - alerts: %+v", err, sscs.Alerts)
 	}
 
 	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
@@ -315,7 +335,7 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 	dsServers := []tc.DeliveryServiceServer{}
 	assignedServers := make(map[int]bool)
 	opts := client.NewRequestOptions()
-	for _, ssc := range sscs {
+	for _, ssc := range sscs.Response {
 		if ssc.ServerCapability == nil {
 			t.Error("Traffic Ops returned a representation of a Server/Capability relationship with null or undefined Capability")
 			continue
@@ -366,11 +386,15 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 	}
 
 	// Delete should fail as their delivery services now require the capabilities
-	for _, ssc := range sscs {
+	for _, ssc := range sscs.Response {
+		if ssc.ServerID == nil || ssc.ServerCapability == nil || ssc.Server == nil {
+			t.Error("Traffic Ops returned a representation of a relationship between a Server and one of its Capabilities with null or undefined server and/or server ID and/or Capability")
+			continue
+		}
 		if assignedServers[*ssc.ServerID] {
-			_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
+			_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability, client.RequestOptions{})
 			if err == nil {
-				t.Fatalf("should have gotten error when using DELETE on the server capability %v from server %v as it is required by associated dses", *ssc.ServerCapability, *ssc.Server)
+				t.Fatalf("should have gotten error when removing Capability '%s' from server '%s' (#%d) as it is required by associated Delivery Services", *ssc.ServerCapability, *ssc.Server, *ssc.ServerID)
 			}
 		}
 	}
@@ -385,10 +409,14 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 
 	// Remove the requirement so we can actually delete them
 
-	for _, ssc := range sscs {
-		_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
+	for _, ssc := range sscs.Response {
+		if ssc.ServerID == nil || ssc.ServerCapability == nil || ssc.Server == nil {
+			t.Error("Traffic Ops returned a representation of a relationship between a Server and one of its Capabilities with null or undefined server and/or server ID and/or Capability")
+			continue
+		}
+		alerts, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not DELETE the server capability %v from server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
+			t.Errorf("could not remove Capability '%s' from server '%s' (#%d): %v - alerts: %+v", *ssc.ServerCapability, *ssc.Server, *ssc.ServerID, err, alerts.Alerts)
 		}
 	}
 
@@ -419,14 +447,14 @@ func DeleteTestServerServerCapabilitiesForTopologiesValidation(t *testing.T) {
 
 	// delete should succeed because dtrc-edge-02 still has the required capabilities
 	// for ds-top-req-cap and ds-top-req-cap2 within the cachegroup
-	_, _, err = TOSession.DeleteServerServerCapability(*edge1.ID, "ram")
+	alerts, _, err := TOSession.DeleteServerServerCapability(*edge1.ID, "ram", client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("when deleting server server capability, expected: nil error, actual: %v", err)
+		t.Fatalf("when deleting server server capability, expected: nil error, actual: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
 	// delete should fail because dtrc-edge-02 is the last server in the cachegroup that
 	// has ds-top-req-cap's required capabilities
-	_, reqInf, err := TOSession.DeleteServerServerCapability(*edge2.ID, "ram")
+	_, reqInf, err := TOSession.DeleteServerServerCapability(*edge2.ID, "ram", client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("when deleting server server capability, expected: error, actual: nil")
 	}
@@ -436,7 +464,7 @@ func DeleteTestServerServerCapabilitiesForTopologiesValidation(t *testing.T) {
 
 	// delete should fail because dtrc-edge-02 is the last server in the cachegroup that
 	// has ds-top-req-cap's required capabilities
-	_, r, err := TOSession.DeleteServerServerCapability(*edge2.ID, "disk")
+	_, r, err := TOSession.DeleteServerServerCapability(*edge2.ID, "disk", client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("when deleting required server server capability, expected: error, actual: nil")
 	}
@@ -446,26 +474,27 @@ func DeleteTestServerServerCapabilitiesForTopologiesValidation(t *testing.T) {
 
 	// delete should succeed because dtrc-edge-02 still has the required capabilities
 	// for ds-top-req-cap and ds-top-req-cap2 within the cachegroup
-	_, _, err = TOSession.DeleteServerServerCapability(*edge1.ID, "disk")
+	alerts, _, err = TOSession.DeleteServerServerCapability(*edge1.ID, "disk", client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("when deleting server server capability, expected: nil error, actual: %v", err)
+		t.Fatalf("when deleting server server capability, expected: nil error, actual: %v - alerts: %+v", err, alerts.Alerts)
 	}
 }
 
 func DeleteTestServerServerCapabilitiesForTopologies(t *testing.T) {
 	// Get Server Capabilities to delete them
-	sscs, _, err := TOSession.GetServerServerCapabilities(nil, nil, nil, nil)
+	sscs, _, err := TOSession.GetServerServerCapabilities(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET server capabilities assigned to servers: %v", err)
-	}
-	if sscs == nil {
-		t.Fatal("returned server capabilities assigned to servers was nil\n")
+		t.Fatalf("cannot get server/Capability associations: %v - alerts: %+v", err, sscs.Alerts)
 	}
 
-	for _, ssc := range sscs {
-		_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
+	for _, ssc := range sscs.Response {
+		if ssc.ServerID == nil || ssc.ServerCapability == nil || ssc.Server == nil {
+			t.Error("Traffic Ops returned a representation of a relationship between a Server and one of its Capabilities with null or undefined server and/or server ID and/or Capability")
+			continue
+		}
+		resp, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not DELETE the server capability %v from server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
+			t.Errorf("could not remove Capability '%s' from server '%s': %v - alerts: %+v", *ssc.ServerCapability, *ssc.Server, err, resp.Alerts)
 		}
 	}
 
@@ -536,7 +565,7 @@ func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
 		ServerCapability: util.StrPtr("blah"),
 	}
 	// assign the capability to the mid
-	_, _, err = TOSession.CreateServerServerCapability(ssc)
+	_, _, err = TOSession.CreateServerServerCapability(ssc, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("couldn't assign server capability to server with ID %d, err: %s", midID, err.Error())
 	}

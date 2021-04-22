@@ -26,3 +26,16 @@ type ServerServerCapability struct {
 	ServerID         *int       `json:"serverId" db:"server"`
 	ServerCapability *string    `json:"serverCapability" db:"server_capability"`
 }
+
+// ServerServerCapabilitiesResponseV40 is the type of a response from Traffic
+// Ops to a request made to its /server_server_capabilities endpoint in API
+// version 4.0.
+type ServerServerCapabilitiesResponseV40 struct {
+	Response []ServerServerCapability `json:"response"`
+	Alerts
+}
+
+// ServerServerCapabilitiesResponseV4 is the type of a response from Traffic
+// Ops to a request made to its /server_server_capabilities endpoint in the
+// latest minor version of API version 4.
+type ServerServerCapabilitiesResponseV4 = ServerServerCapabilitiesResponseV40

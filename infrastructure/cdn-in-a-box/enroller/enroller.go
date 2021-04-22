@@ -952,9 +952,10 @@ func enrollServerServerCapability(toSession *session, r io.Reader) error {
 	}
 	s.ServerID = resp.Response[0].ID
 
-	alerts, _, err := toSession.CreateServerServerCapability(s)
+	alerts, _, err := toSession.CreateServerServerCapability(s, client.RequestOptions{})
 	if err != nil {
-		log.Infof("error creating Server Server Capability: %s\n", err)
+		err = fmt.Errorf("error creating Server Server Capability: %v - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err.Error())
 		return err
 	}
 

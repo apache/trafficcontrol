@@ -170,7 +170,7 @@ func CopyProfile(t *testing.T) {
 					}
 				}
 				if !found {
-					t.Fatalf("Didn't find expected error-level alert", err, c.err)
+					t.Fatalf("Didn't find expected error-level alert '%s': %v - alerts: %+v", c.err, err, resp.Alerts)
 				}
 			} else if err != nil {
 				t.Fatalf("Unexpected error: %v - alerts: %+v", err, resp.Alerts)
@@ -200,7 +200,7 @@ func CopyProfile(t *testing.T) {
 		}
 		alerts, _, err := TOSession.DeleteProfile(profiles.Response[0].ID, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("Unexpected error deleting Profile '%s' (#%d): %v - alerts: %+v", name, profiles.Response[0], err, alerts.Alerts)
+			t.Errorf("Unexpected error deleting Profile '%s' (#%d): %v - alerts: %+v", name, profiles.Response[0].ID, err, alerts.Alerts)
 		}
 	}
 }

@@ -73,7 +73,7 @@ func UpdateTestRolesWithHeaders(t *testing.T, header http.Header) {
 	opts.QueryParameters.Set("name", *firstRole.Name)
 	resp, _, err := TOSession.GetRoles(opts)
 	if err != nil {
-		t.Errorf("cannot get Role '%s' by name: %v - alerts: %+v", firstRole.Name, err, resp.Alerts)
+		t.Errorf("cannot get Role '%s' by name: %v - alerts: %+v", *firstRole.Name, err, resp.Alerts)
 	}
 	if len(resp.Response) != 1 {
 		t.Fatalf("Expected exactly one Role to exist with name '%s', found: %d", *firstRole.Name, len(resp.Response))
@@ -212,7 +212,7 @@ func UpdateTestRoles(t *testing.T) {
 		t.Errorf("cannot get Role '%s' by name: %v - alerts: %+v", *firstRole.Name, err, resp.Alerts)
 	}
 	if len(resp.Response) != 1 {
-		t.Fatalf("Expected exactly one Role to exist with name '%s', found: %d", len(resp.Response))
+		t.Fatalf("Expected exactly one Role to exist with name '%s', found: %d", *firstRole.Name, len(resp.Response))
 	}
 	remoteRole := resp.Response[0]
 	if remoteRole.ID == nil {
@@ -318,7 +318,7 @@ func DeleteTestRoles(t *testing.T) {
 	opts.QueryParameters.Set("name", *role.Name)
 	resp, _, err := TOSession.GetRoles(opts)
 	if err != nil {
-		t.Errorf("cannot get Role '%s' by name: %v - alerts: %+v", role.Name, err, resp.Alerts)
+		t.Errorf("cannot get Role '%s' by name: %v - alerts: %+v", *role.Name, err, resp.Alerts)
 	}
 	if len(resp.Response) != 1 {
 		t.Fatalf("Expected exactly one Role to exist with name '%s', found: %d", *role.Name, len(resp.Response))

@@ -502,9 +502,9 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 			ServerID:         &sID,
 			ServerCapability: cap.RequiredCapability,
 		}
-		_, _, err := TOSession.CreateServerServerCapability(sCap)
+		resp, _, err := TOSession.CreateServerServerCapability(sCap, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not POST the server capability %v to server %v: %v", *cap.RequiredCapability, sID, err)
+			t.Errorf("could not associate Capability %s with server #%d: %v - alerts: %+v", *cap.RequiredCapability, sID, err, resp.Alerts)
 		}
 		serverCaps = append(serverCaps, sCap)
 	}
@@ -541,9 +541,9 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 
 	// Remove server capabilities from server
 	for _, ssc := range serverCaps {
-		_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
+		resp, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not DELETE the server capability %v from server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
+			t.Errorf("could not remove Capability '%s' from server #%d: %v - alerts: %+v", *ssc.ServerCapability, *ssc.ServerID, err, resp.Alerts)
 		}
 	}
 
