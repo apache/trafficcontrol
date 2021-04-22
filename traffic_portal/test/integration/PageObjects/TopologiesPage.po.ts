@@ -68,8 +68,10 @@ export class TopologiesPage extends BasePage {
         }
         await basePage.ClickSubmit();
         await basePage.ClickCreate();
+        if(topologies.description == "create a Topologies with empty cachegroup (no server)"){
+            topologies.validationMessage = topologies.validationMessage + this.randomize;
+        }
         return await basePage.GetOutputMessage().then(value => value === topologies.validationMessage);
-        
     }
        
     async SearchTopologies(nameTopologies:string): Promise<boolean>{
