@@ -112,13 +112,12 @@
 
 - name: Ensure ATS is listening - 80
   wait_for:
-    host: 0.0.0.0
+    host: "{{ hostvars[inventory_hostname].ansible_host }}"
     port: 80
-  when: hostvars[inventory_hostname].component == "atsec"
 
 - name: Ensure ATS is listening - 443
   wait_for:
-    host: 0.0.0.0
+    host: "{{ hostvars[inventory_hostname].ansible_host }}"
     port: 443
   when: hostvars[inventory_hostname].component == "atsec"
 
