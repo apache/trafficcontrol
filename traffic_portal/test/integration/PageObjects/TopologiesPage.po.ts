@@ -49,7 +49,6 @@ export class TopologiesPage extends BasePage {
         await snp.ClickTopologyMenu();
     }
     public async CreateTopologies(topologies: Topologies): Promise<boolean> {
-        let result = false;
         let basePage = new BasePage();
         let snp = new SideNavigationPage();
         await snp.NavigateToTopologiesPage();
