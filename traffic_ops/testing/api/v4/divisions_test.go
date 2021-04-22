@@ -157,9 +157,8 @@ func CreateTestDivisions(t *testing.T) {
 }
 
 func SortTestDivisions(t *testing.T) {
-	var header http.Header
 	var sortedList []string
-	resp, _, err := TOSession.GetDivisions(nil, header)
+	resp, _, err := TOSession.GetDivisions(nil, nil)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -177,11 +176,10 @@ func SortTestDivisions(t *testing.T) {
 
 func SortTestDivisionDesc(t *testing.T) {
 
-	var header http.Header
-	respAsc, _, err1 := TOSession.GetDivisions(nil, header)
+	respAsc, _, err1 := TOSession.GetDivisions(nil, nil)
 	params := url.Values{}
 	params.Set("sortOrder", "desc")
-	respDesc, _, err2 := TOSession.GetDivisions(params, header)
+	respDesc, _, err2 := TOSession.GetDivisions(params, nil)
 
 	if err1 != nil {
 		t.Errorf("Expected no error, but got error in Division Ascending %v", err1)
@@ -190,18 +188,22 @@ func SortTestDivisionDesc(t *testing.T) {
 		t.Errorf("Expected no error, but got error in Division Descending %v", err2)
 	}
 
-	if len(respAsc) > 0 && len(respDesc) > 0 {
-		// reverse the descending-sorted response and compare it to the ascending-sorted one
-		for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
-			respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
-		}
-		if respDesc[0].Name != "" && respAsc[0].Name != "" {
-			if !reflect.DeepEqual(respDesc[0].Name, respAsc[0].Name) {
-				t.Errorf("Division responses are not equal after reversal: %s - %s", respDesc[0].Name, respAsc[0].Name)
+	if len(respAsc) == len(respDesc) {
+		if len(respAsc) > 0 && len(respDesc) > 0 {
+			// reverse the descending-sorted response and compare it to the ascending-sorted one
+			for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+				respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
 			}
+			if respDesc[0].Name != "" && respAsc[0].Name != "" {
+				if !reflect.DeepEqual(respDesc[0].Name, respAsc[0].Name) {
+					t.Errorf("Division responses are not equal after reversal: Asc: %s - Desc: %s", respDesc[0].Name, respAsc[0].Name)
+				}
+			}
+		} else {
+			t.Errorf("No Response returned from GET Division using SortOrder")
 		}
 	} else {
-		t.Errorf("No Response returned from GET Division using SortOrder")
+		t.Fatalf("Division response length are not equal Asc: %d Desc: %d", len(respAsc), len(respDesc))
 	}
 }
 
@@ -285,30 +287,49 @@ func GetTestPaginationSupportDivision(t *testing.T) {
 		t.Fatalf("cannot GET Divisions: %v", err)
 	}
 
-	qparams = url.Values{}
-	qparams.Set("orderby", "id")
-	qparams.Set("limit", "1")
-	divisionsWithLimit, _, err := TOSession.GetDivisions(qparams, nil)
-	if !reflect.DeepEqual(divisions[:1], divisionsWithLimit) {
-		t.Error("expected GET Divisions with limit = 1 to return first result")
-	}
+	if len(divisions) > 0 {
+		qparams = url.Values{}
+		qparams.Set("orderby", "id")
+		qparams.Set("limit", "1")
+		divisionsWithLimit, _, err := TOSession.GetDivisions(qparams, nil)
+		if err == nil {
+			if !reflect.DeepEqual(divisions[:1], divisionsWithLimit) {
+				t.Error("expected GET Divisions with limit = 1 to return first result")
+			}
+		} else {
+			t.Error("Error in getting division by limit")
+		}
+		if len(divisions) > 1 {
+			qparams = url.Values{}
+			qparams.Set("orderby", "id")
+			qparams.Set("limit", "1")
+			qparams.Set("offset", "1")
+			divisionsWithOffset, _, err := TOSession.GetDivisions(qparams, nil)
+			if err == nil {
+				if !reflect.DeepEqual(divisions[1:2], divisionsWithOffset) {
+					t.Error("expected GET Divisions with limit = 1, offset = 1 to return second result")
+				}
+			} else {
+				t.Error("Error in getting division by limit and offset")
+			}
 
-	qparams = url.Values{}
-	qparams.Set("orderby", "id")
-	qparams.Set("limit", "1")
-	qparams.Set("offset", "1")
-	divisionsWithOffset, _, err := TOSession.GetDivisions(qparams, nil)
-	if !reflect.DeepEqual(divisions[1:2], divisionsWithOffset) {
-		t.Error("expected GET Divisions with limit = 1, offset = 1 to return second result")
-	}
-
-	qparams = url.Values{}
-	qparams.Set("orderby", "id")
-	qparams.Set("limit", "1")
-	qparams.Set("page", "2")
-	divisionsWithPage, _, err := TOSession.GetDivisions(qparams, nil)
-	if !reflect.DeepEqual(divisions[1:2], divisionsWithPage) {
-		t.Error("expected GET Divisions with limit = 1, page = 2 to return second result")
+			qparams = url.Values{}
+			qparams.Set("orderby", "id")
+			qparams.Set("limit", "1")
+			qparams.Set("page", "2")
+			divisionsWithPage, _, err := TOSession.GetDivisions(qparams, nil)
+			if err == nil {
+				if !reflect.DeepEqual(divisions[1:2], divisionsWithPage) {
+					t.Error("expected GET Divisions with limit = 1, page = 2 to return second result")
+				}
+			} else {
+				t.Error("Error in getting divisions by limit and page")
+			}
+		} else {
+			t.Errorf("only one division found, so offset functionality can't test")
+		}
+	} else {
+		t.Errorf("No division found to check pagination")
 	}
 
 	qparams = url.Values{}

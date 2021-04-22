@@ -17,6 +17,11 @@
   with_items: "{{ dl_ds_merged_ds_template }}"
   loop_control:
     loop_var: Target_ds
+  when: ( fixed_profile_name is defined or ds_suffix is defined )
+  vars:
+    fixed_profile_name: "{{ Target_ds.profileName | default(dl_ds_default_ds.profileName) | default() }}"
+    ds_suffix: "{{ Target_ds.profileNameSuffix | default(dl_ds_default_ds.profileNameSuffix) | default() }}"
+
 
 - name: Get All Profiles
   uri:

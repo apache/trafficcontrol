@@ -25,16 +25,12 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
+// Deprecated
 func GetBucketKeyDeprecated(w http.ResponseWriter, r *http.Request) {
-	getBucketKey(w, r, api.CreateDeprecationAlerts(util.StrPtr("/vault/bucket/:bucket/key/:key/values")))
-}
-
-func GetBucketKey(w http.ResponseWriter, r *http.Request) {
-	getBucketKey(w, r, tc.Alerts{})
+	getBucketKey(w, r, api.CreateDeprecationAlerts(nil))
 }
 
 func getBucketKey(w http.ResponseWriter, r *http.Request, a tc.Alerts) {

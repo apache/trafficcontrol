@@ -102,10 +102,22 @@ In a typical scenario, if the steps in `Building`_ have been followed, all that'
 
 While the components may be interacted with by the host using these ports, the true operation of the CDN can only truly be seen from within the Docker network. To see the CDN in action, connect to a container within the CDN in a Box project and use cURL to request the URL ``http://video.demo1.mycdn.ciab.test`` which will be resolved by the DNS container to the IP of the Traffic Router, which will provide a ``302 FOUND`` response pointing to the Edge-Tier cache. A typical choice for this is the "enroller" service, which has a very nuanced purpose not discussed here but already has the :manpage:`curl(1)` command line tool installed. For a more user-friendly interface into the CDN network, see `VNC Server`_.
 
+To test the demo1 Delivery Service:
+
 .. code-block:: shell
 	:caption: Example Command to See the CDN in Action
 
-	sudo docker-compose exec enroller /usr/bin/curl -L "http://video.demo1.mycdn.ciab.test"
+	sudo docker-compose exec enroller curl -L "http://video.demo1.mycdn.ciab.test"
+
+To test the ``foo.kabletown.net.`` Federation:
+
+.. code-block:: shell
+	:caption: Query the Federation CNAME using the Delivery Service hostname
+
+	sudo docker-compose exec trafficrouter dig +short @trafficrouter.infra.ciab.test -t CNAME video.demo2.mycdn.ciab.test
+
+	# Expected response:
+	foo.kabletown.net.
 
 When the CDN is to be shut down, it is often best to do so using ``sudo docker-compose down -v`` due to the use of shared volumes in the system which might interfere with a proper initialization upon the next run.
 
