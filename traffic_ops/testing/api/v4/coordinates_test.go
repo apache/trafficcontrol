@@ -59,23 +59,29 @@ func TestCoordinates(t *testing.T) {
 }
 
 func UpdateTestCoordinatesWithHeaders(t *testing.T, header http.Header) {
-	firstCoord := testData.Coordinates[0]
-	resp, _, err := TOSession.GetCoordinateByName(firstCoord.Name, header)
-	if err != nil {
-		t.Errorf("cannot GET Coordinate by name: %v - %v", firstCoord.Name, err)
-	}
-	if len(resp) > 0 {
-		coord := resp[0]
-		expectedLat := 12.34
-		coord.Latitude = expectedLat
+	if len(testData.Coordinates) > 0 {
+		firstCoord := testData.Coordinates[0]
+		resp, _, err := TOSession.GetCoordinateByName(firstCoord.Name, header)
+		if err != nil {
+			t.Errorf("cannot GET Coordinate by name: %v - %v", firstCoord.Name, err)
+		}
+		if len(resp) > 0 {
+			coord := resp[0]
+			expectedLat := 12.34
+			coord.Latitude = expectedLat
 
-		_, reqInf, err := TOSession.UpdateCoordinate(coord.ID, coord, header)
-		if err == nil {
-			t.Errorf("Expected error about precondition failed, but got none")
+			_, reqInf, err := TOSession.UpdateCoordinate(coord.ID, coord, header)
+			if err == nil {
+				t.Errorf("Expected error about precondition failed, but got none")
+			}
+			if reqInf.StatusCode != http.StatusPreconditionFailed {
+				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
+			}
+		} else {
+			t.Errorf("No coordinates available")
 		}
-		if reqInf.StatusCode != http.StatusPreconditionFailed {
-			t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-		}
+	} else {
+		t.Errorf("No Coordinates available to update")
 	}
 }
 
@@ -123,7 +129,6 @@ func GetTestCoordinatesIMS(t *testing.T) {
 
 func CreateTestCoordinates(t *testing.T) {
 	for _, coord := range testData.Coordinates {
-
 		_, _, err := TOSession.CreateCoordinate(coord)
 		if err != nil {
 			t.Errorf("could not CREATE coordinates: %v", err)
@@ -179,7 +184,7 @@ func SortTestCoordinatesDesc(t *testing.T) {
 		}
 		if respDesc[0].Name != "" && respAsc[0].Name != "" {
 			if !reflect.DeepEqual(respDesc[0].Name, respAsc[0].Name) {
-				t.Errorf("Coordinates responses are not equal after reversal: %s - %s", *&respDesc[0].Name, *&respAsc[0].Name)
+				t.Errorf("Coordinates responses are not equal after reversal: %s - %s", respDesc[0].Name, respAsc[0].Name)
 			}
 		}
 	} else {
@@ -188,29 +193,41 @@ func SortTestCoordinatesDesc(t *testing.T) {
 }
 
 func UpdateTestCoordinates(t *testing.T) {
-	firstCoord := testData.Coordinates[0]
-	resp, _, err := TOSession.GetCoordinateByName(firstCoord.Name, nil)
-	if err != nil {
-		t.Errorf("cannot GET Coordinate by name: %v - %v", firstCoord.Name, err)
-	}
-	coord := resp[0]
-	expectedLat := 12.34
-	coord.Latitude = expectedLat
+	if len(testData.Coordinates) > 0 {
+		firstCoord := testData.Coordinates[0]
+		resp, _, err := TOSession.GetCoordinateByName(firstCoord.Name, nil)
+		if err != nil {
+			t.Errorf("cannot GET Coordinate by name: %v - %v", firstCoord.Name, err)
+		}
+		if len(resp) > 0 {
+			coord := resp[0]
+			expectedLat := 12.34
+			coord.Latitude = expectedLat
 
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateCoordinate(coord.ID, coord, nil)
-	if err != nil {
-		t.Errorf("cannot UPDATE Coordinate by id: %v - %v", err, alert)
-	}
+			var alert tc.Alerts
+			alert, _, err = TOSession.UpdateCoordinate(coord.ID, coord, nil)
+			if err != nil {
+				t.Errorf("cannot UPDATE Coordinate by id: %v - %v", err, alert)
+			}
 
-	// Retrieve the Coordinate to check Coordinate name got updated
-	resp, _, err = TOSession.GetCoordinateByID(coord.ID, nil)
-	if err != nil {
-		t.Errorf("cannot GET Coordinate by name: '$%s', %v", firstCoord.Name, err)
-	}
-	coord = resp[0]
-	if coord.Latitude != expectedLat {
-		t.Errorf("results do not match actual: %s, expected: %f", coord.Name, expectedLat)
+			// Retrieve the Coordinate to check Coordinate name got updated
+			resp, _, err = TOSession.GetCoordinateByID(coord.ID, nil)
+			if err != nil {
+				t.Errorf("cannot GET Coordinate by name: '$%s', %v", firstCoord.Name, err)
+			}
+			if len(resp) > 0 {
+				coord = resp[0]
+				if coord.Latitude != expectedLat {
+					t.Errorf("results do not match actual: %s, expected: %f", coord.Name, expectedLat)
+				}
+			} else {
+				t.Errorf("Can't retrieve coordinates to check the updated value")
+			}
+		} else {
+			t.Errorf("No Coordinates available to update")
+		}
+	} else {
+		t.Errorf("No Coordinates available to update")
 	}
 }
 
@@ -235,6 +252,8 @@ func DeleteTestCoordinates(t *testing.T) {
 			if len(coords) > 0 {
 				t.Errorf("expected Coordinate name: %s to be deleted", coord.Name)
 			}
+		} else {
+			t.Errorf("No Coordinates available to delete")
 		}
 	}
 }
@@ -340,70 +359,90 @@ func GetTestPaginationSupportCoordinates(t *testing.T) {
 	if err == nil {
 		t.Error("expected GET Coordinates to return an error when page is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET Coordinates to return an error for page is not a positive integer, actual error: " + err.Error())
+		t.Errorf("expected GET Coordinates to return an error for page is not a positive integer, actual error: %v" + err.Error())
 	}
 }
 
 func CreateTestCoordinatesWithInvalidName(t *testing.T) {
-	firstCoordinates := testData.Coordinates[0]
-	firstCoordinates.Name = ""
-	_, reqInf, err := TOSession.CreateCoordinate(firstCoordinates)
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
-	}
-	if err == nil {
-		t.Errorf("Getting Coordinates by Invalid Name %v", err)
+	if len(testData.Coordinates) > 0 {
+		firstCoordinates := testData.Coordinates[0]
+		firstCoordinates.Name = ""
+		_, reqInf, err := TOSession.CreateCoordinate(firstCoordinates)
+		if reqInf.StatusCode != http.StatusBadRequest {
+			t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
+		}
+		if err == nil {
+			t.Errorf("Getting Coordinates by Invalid Name")
+		}
+	} else {
+		t.Errorf("No Coordinates available to fetch")
 	}
 }
 
 func CreateTestCoordinatesWithInvalidLatitude(t *testing.T) {
-	firstCoordinates := testData.Coordinates[0]
-	firstCoordinates.Latitude = 20000
-	_, reqInf, err := TOSession.CreateCoordinate(firstCoordinates)
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
-	}
-	if err == nil {
-		t.Errorf("Getting Coordinates by Invalid Latitude %v", err)
+	if len(testData.Coordinates) > 0 {
+		firstCoordinates := testData.Coordinates[0]
+		firstCoordinates.Latitude = 20000
+		_, reqInf, err := TOSession.CreateCoordinate(firstCoordinates)
+		if reqInf.StatusCode != http.StatusBadRequest {
+			t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
+		}
+		if err == nil {
+			t.Errorf("Getting Coordinates by Invalid Latitude %v", err)
+		}
+	} else {
+		t.Errorf("No Coordinates available to fetch")
 	}
 }
 
 func CreateTestCoordinatesWithInvalidLogitude(t *testing.T) {
-	firstCoordinates := testData.Coordinates[0]
-	firstCoordinates.Longitude = 20000
-	_, reqInf, err := TOSession.CreateCoordinate(firstCoordinates)
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
-	}
-	if err == nil {
-		t.Errorf("Getting Coordinates by Invalid Longitude %v", err)
+	if len(testData.Coordinates) > 0 {
+		firstCoordinates := testData.Coordinates[0]
+		firstCoordinates.Longitude = 20000
+		_, reqInf, err := TOSession.CreateCoordinate(firstCoordinates)
+		if reqInf.StatusCode != http.StatusBadRequest {
+			t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
+		}
+		if err == nil {
+			t.Errorf("Getting Coordinates by Invalid Longitude ")
+		}
+	} else {
+		t.Errorf("No Coordinates available to fetch")
 	}
 }
 
 func UpdateTestCoordinatesByInvalidId(t *testing.T) {
-	firstCoord := testData.Coordinates[0]
-	resp, reqInf, err := TOSession.GetCoordinateByName(firstCoord.Name, nil)
-	if err != nil {
-		t.Errorf("cannot GET Coordinate by name: %v - %v", firstCoord.Name, err)
-	}
-	coord := resp[0]
-	expectedLat := 12.34
-	coord.Latitude = expectedLat
+	if len(testData.Coordinates) > 0 {
+		firstCoord := testData.Coordinates[0]
+		resp, reqInf, err := TOSession.GetCoordinateByName(firstCoord.Name, nil)
+		if err != nil {
+			t.Errorf("cannot GET Coordinate by name: %v - %v", firstCoord.Name, err)
+		}
+		if len(resp) > 0 {
+			coord := resp[0]
+			expectedLat := 12.34
+			coord.Latitude = expectedLat
 
-	var alert tc.Alerts
-	alert, reqInf, err = TOSession.UpdateCoordinate(10000, coord, nil)
-	if err == nil {
-		t.Errorf("Updating Coordinate by invalid id: %v - %v", err, alert)
-	}
-	if reqInf.StatusCode != http.StatusNotFound {
-		t.Fatalf("Expected 404 status code, got %v", reqInf.StatusCode)
+			var alert tc.Alerts
+			alert, reqInf, err = TOSession.UpdateCoordinate(10000, coord, nil)
+			if err == nil {
+				t.Errorf("Updating Coordinate by invalid id: %v - %v", err, alert)
+			}
+			if reqInf.StatusCode != http.StatusNotFound {
+				t.Fatalf("Expected 404 status code, got %v", reqInf.StatusCode)
+			}
+		} else {
+			t.Errorf("No coordinates available to update")
+		}
+	} else {
+		t.Errorf("No Coordinates available to update")
 	}
 }
 
 func DeleteTestCoordinatesByInvalidId(t *testing.T) {
 	_, reqInf, err := TOSession.DeleteCoordinate(12345)
 	if err == nil {
-		t.Errorf("Deleting coordinate by invalid Id %v", err)
+		t.Errorf("Deleting coordinate by invalid Id")
 	}
 	if reqInf.StatusCode != http.StatusNotFound {
 		t.Fatalf("Expected 404 status code, got %v", reqInf.StatusCode)

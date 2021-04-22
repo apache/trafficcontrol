@@ -197,7 +197,7 @@ func SortTestDivisionDesc(t *testing.T) {
 		}
 		if respDesc[0].Name != "" && respAsc[0].Name != "" {
 			if !reflect.DeepEqual(respDesc[0].Name, respAsc[0].Name) {
-				t.Errorf("Division responses are not equal after reversal: %s - %s", *&respDesc[0].Name, *&respAsc[0].Name)
+				t.Errorf("Division responses are not equal after reversal: %s - %s", respDesc[0].Name, respAsc[0].Name)
 			}
 		}
 	} else {
