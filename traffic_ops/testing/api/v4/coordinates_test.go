@@ -388,7 +388,7 @@ func CreateTestCoordinatesWithInvalidLatitude(t *testing.T) {
 			t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
 		}
 		if err == nil {
-			t.Errorf("Getting Coordinates by Invalid Latitude %v", err)
+			t.Errorf("Getting Coordinates by Invalid Latitude")
 		}
 	} else {
 		t.Errorf("No Coordinates available to fetch")
@@ -426,7 +426,7 @@ func UpdateTestCoordinatesByInvalidId(t *testing.T) {
 			var alert tc.Alerts
 			alert, reqInf, err = TOSession.UpdateCoordinate(10000, coord, nil)
 			if err == nil {
-				t.Errorf("Updating Coordinate by invalid id: %v - %v", err, alert)
+				t.Errorf("Updating Coordinate by invalid id: %v", alert)
 			}
 			if reqInf.StatusCode != http.StatusNotFound {
 				t.Fatalf("Expected 404 status code, got %v", reqInf.StatusCode)
