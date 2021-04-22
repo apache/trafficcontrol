@@ -1208,7 +1208,7 @@ func CheckIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (bool, error, in
 	rows, err := tx.Query(query, cdn)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return false, nil, http.StatusOK
+			return false, errors.New("user " + user + " currently does not have the lock on cdn " + cdn), http.StatusForbidden
 		}
 		return false, errors.New("querying cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
 	}
@@ -1220,7 +1220,7 @@ func CheckIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (bool, error, in
 		}
 	}
 	if userName == "" {
-		return false, nil, http.StatusOK
+		return false, errors.New("user " + user + " currently does not have the lock on cdn " + cdn), http.StatusForbidden
 	}
 	if user == userName {
 		return true, nil, http.StatusOK
