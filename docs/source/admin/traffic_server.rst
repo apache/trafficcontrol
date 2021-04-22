@@ -97,6 +97,7 @@ The cache-side config generation provides several benefits. Primarily, it reduce
 
 Installing the Cache Config Tool
 --------------------------------
+
 #. Build the RPM by following the instructions in :ref:`dev-building` and install it with :manpage:`rpm(8)` or :manpage:`yum(8)`.
 #. Install modules required by the RPM if needed
 
