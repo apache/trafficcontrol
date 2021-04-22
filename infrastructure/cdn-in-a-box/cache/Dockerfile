@@ -150,9 +150,10 @@ ARG ORT_RPM=infrastructure/cdn-in-a-box/cache/traffic_ops_ort.rpm
 ADD $ORT_RPM /
 RUN rpm -Uvh --nodeps /$(basename $ORT_RPM) &&\
     rm /$(basename $ORT_RPM)
+CMD /run.sh
 
 FROM common-cache-server-layers AS mid
-
 COPY infrastructure/cdn-in-a-box/mid/init.d/ /opt/init.d/
 
-CMD /run.sh
+FROM common-cache-server-layers AS edge
+COPY infrastructure/cdn-in-a-box/edge/init.d/ /opt/init.d/

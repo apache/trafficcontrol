@@ -185,8 +185,8 @@ type LegacyInterfaceDetails struct {
 }
 
 // ToInterfaces converts a LegacyInterfaceDetails to a slice of
-// ServerInterfaceInfo structures. No interfaces will be marked for monitoring,
-// and it will generate service addresses according to the passed indicators
+// ServerInterfaceInfo structures. Only one interface is expected and will be marked for monitoring.
+// It will generate service addresses according to the passed indicators
 // for each address family.
 func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService bool) ([]ServerInterfaceInfo, error) {
 	var iface ServerInterfaceInfo
@@ -200,6 +200,10 @@ func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService boo
 		return nil, errors.New("interfaceName is null")
 	}
 	iface.Name = *lid.InterfaceName
+
+	// default to true since there should only be one interface from legacy API versions
+	// if Monitor is false on all interfaces, then TM will see the server as unhealthy
+	iface.Monitor = true
 
 	var ips []ServerIPAddress
 	if lid.IPAddress != nil && *lid.IPAddress != "" {
@@ -267,6 +271,10 @@ func (lid *LegacyInterfaceDetails) ToInterfacesV4(ipv4IsService, ipv6IsService b
 		return nil, errors.New("interfaceName is null")
 	}
 	iface.Name = *lid.InterfaceName
+
+	// default to true since there should only be one interface from legacy API versions
+	// if Monitor is false on all interfaces, then TM will see the server as unhealthy
+	iface.Monitor = true
 
 	var ips []ServerIPAddress
 	if lid.IPAddress != nil && *lid.IPAddress != "" {

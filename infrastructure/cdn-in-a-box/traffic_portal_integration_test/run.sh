@@ -65,11 +65,6 @@ done
 jq "$(<<JQ_FILTERS cat
 	.params.baseUrl = "https://$TP_FQDN" |
 	.params.apiUrl = "https://$TP_FQDN/api/4.0" |
-	.capabilities.chromeOptions.args = [
-    "--headless",
-    "--no-sandbox",
-    "--ignore-certificate-errors"
-  ] |
 	.params.login.username = "$TO_ADMIN_USER" |
 	.params.login.password = "$TO_ADMIN_PASSWORD"
 JQ_FILTERS

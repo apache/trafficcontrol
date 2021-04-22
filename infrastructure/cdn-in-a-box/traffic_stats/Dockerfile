@@ -20,7 +20,7 @@
 ############################################################
 
 ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION}
+FROM centos:${RHEL_VERSION} AS trafficstats
 ARG RHEL_VERSION=8
 
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
@@ -54,3 +54,14 @@ COPY dns/set-dns.sh \
      /usr/local/sbin/
 
 ENTRYPOINT /run.sh
+
+FROM trafficstats AS get-delve
+
+RUN dnf -y install golang git && \
+    go get -u github.com/go-delve/delve/cmd/dlv
+
+FROM trafficstats AS trafficstats-debug
+COPY --from=get-delve /root/go/bin /usr/bin
+
+# Makes the default target skip the trafficstats-debug stage
+FROM trafficstats

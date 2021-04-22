@@ -66,9 +66,6 @@ if [[ "$TO_DEBUG_ENABLE" == true ]]; then
   DEBUGGING_TIMEOUT=$(( 60 * 60 * 24 )); # Timing out debugging after 1 day seems fair
 fi;
 
-
-echo "$(<postinstall.json envsubst)" >postinstall.json
-
 cdn_conf=/opt/traffic_ops/app/conf/cdn.conf
 >"$cdn_conf" echo "$(jq -s '.[0] * .[1]' "$cdn_conf" <(cat <<-EOF
 {
