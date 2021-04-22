@@ -206,15 +206,9 @@ func (to *Session) GetServerIDDeliveryServices(server int, header http.Header) (
 
 // GetServerUpdateStatus retrieves the Server Update Status of the Server with
 // the given (short) hostname.
-func (to *Session) GetServerUpdateStatus(hostName string, header http.Header) (tc.ServerUpdateStatus, toclientlib.ReqInf, error) {
-	path := APIServers + `/` + hostName + `/update_status`
-	data := []tc.ServerUpdateStatus{}
+func (to *Session) GetServerUpdateStatus(hostName string, header http.Header) (tc.ServerUpdateStatusResponseV4, toclientlib.ReqInf, error) {
+	path := APIServers + `/` + url.PathEscape(hostName) + `/update_status`
+	var data tc.ServerUpdateStatusResponseV4
 	reqInf, err := to.get(path, header, &data)
-	if err != nil {
-		return tc.ServerUpdateStatus{}, reqInf, err
-	}
-	if len(data) == 0 {
-		return tc.ServerUpdateStatus{}, reqInf, errors.New("Traffic Ops returned no update statuses for that server")
-	}
-	return data[0], reqInf, nil
+	return data, reqInf, err
 }
