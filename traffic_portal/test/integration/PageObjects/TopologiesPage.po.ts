@@ -68,7 +68,7 @@ export class TopologiesPage extends BasePage {
         }
         await basePage.ClickSubmit();
         await basePage.ClickCreate();
-        if(topologies.description == "create a Topologies with empty cachegroup (no server)"){
+        if(topologies.description === "create a Topologies with empty cachegroup (no server)"){
             topologies.validationMessage = topologies.validationMessage + this.randomize;
         }
         return await basePage.GetOutputMessage().then(value => value === topologies.validationMessage);
@@ -88,18 +88,10 @@ export class TopologiesPage extends BasePage {
     }
     async DeleteTopologies(topologies: Topologies):Promise<Boolean>{
         let name = topologies.Name + this.randomize;
-        let result = false;
         let basePage = new BasePage();
         await this.btnDelete.click();
         await this.txtConfirmName.sendKeys(name);
         await basePage.ClickDeletePermanently();
-        result = await basePage.GetOutputMessage().then(function (value) {
-            if (topologies.validationMessage == value) {
-                return true;
-            } else {
-                return false;
-            }
-        })
-        return result;
+        return await basePage.GetOutputMessage().then(value => value === topologies.validationMessage);
     }
 }
