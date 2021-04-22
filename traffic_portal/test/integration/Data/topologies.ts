@@ -43,6 +43,17 @@ export const topologies = {
                             replace: "route"                           
                         }
                     ]
+                },
+                {
+                    route: "/servers/",
+                    getRequest: [
+                        {
+                            route: "/servers",
+                            queryKey: "hostName",
+                            queryValue: "topologieserver3",
+                            replace: "route"   
+                        }
+                    ]
                 }
             ]
         },
@@ -74,9 +85,183 @@ export const topologies = {
                     ]
                 }
             ]
-        }
+        },
+		{
+			action: "DeleteProfile",
+			route: "/profiles",
+			method: "delete",
+			data: [
+				{
+					route: "/profiles/",
+					getRequest: [
+						{
+							route: "/profiles",
+							queryKey: "name",
+							queryValue: "TopTestPf",
+							replace: "route"
+						}
+					]
+				}
+			]
+		},
+		{
+			action: "DeletePhysLocations",
+			route: "/phys_locations",
+			method: "delete",
+			data: [
+				{
+					route: "/phys_locations/",
+					getRequest: [
+						{
+							route: "/phys_locations",
+							queryKey: "name",
+							queryValue: "TopTestPhys",
+							replace: "route"
+						}
+					]
+				}
+			]
+		},
+		{
+			action: "DeleteRegions",
+			route: "/regions",
+			method: "delete",
+			data: [
+				{
+					route: "/regions?name=TopTestReg"
+				}
+			]
+		},
+		{
+			action: "DeleteDivisions",
+			route: "/divisions",
+			method: "delete",
+			data: [
+				{
+					route: "/divisions/",
+					getRequest: [
+						{
+							route: "/divisions",
+							queryKey: "name",
+							queryValue: "TopTestDiv",
+							replace: "route"
+						}
+					]
+				}
+			]
+		},
+		{
+			action: "DeleteCDN",
+			route: "/cdns",
+			method: "delete",
+			data: [
+				{
+					route: "/cdns/",
+					getRequest: [
+						{
+							route: "/cdns",
+							queryKey: "name",
+							queryValue: "TopTestCDN",
+							replace: "route"
+						}
+					]
+				}
+			]
+		}
     ],
     setup: [
+        {
+			action: "CreateDivisions",
+			route: "/divisions",
+			method: "post",
+			data: [
+				{
+					name: "TopTestDiv"
+				}
+			]
+		},
+		{
+			action: "CreateRegions",
+			route: "/regions",
+			method: "post",
+			data: [
+				{
+					name: "TopTestReg",
+					division: "4",
+					divisionName: "TopTestDiv",
+					getRequest: [
+						{
+							route: "/divisions",
+							queryKey: "name",
+							queryValue: "TopTestDiv",
+							replace: "division"
+						}
+					]
+				}
+			]
+		},
+		{
+			action: "CreatePhysLocation",
+			route: "/phys_locations",
+			method: "post",
+			data: [
+				{
+					address: "Buckingham Palace",
+					city: "London",
+					comments: "Buckingham Palace",
+					email: "steve.kingstone@royal.gsx.gov.uk",
+					name: "TopTestPhys",
+					phone: "0-843-816-6276",
+					poc: "Her Majesty The Queen Elizabeth Alexandra Mary Windsor II",
+					regionId: 3,
+					shortName: "ttphys",
+					state: "NA",
+					zip: "99999",
+					getRequest: [
+						{
+							route: "/regions",
+							queryKey: "name",
+							queryValue: "TopTestReg",
+							replace: "regionId"
+						}
+					]
+				}
+			]
+		},
+        {
+			action: "CreateCDN",
+			route: "/cdns",
+			method: "post",
+			data: [
+				{
+					name: "TopTestCDN",
+					domainName: "ttcdn",
+					dnssecEnabled: false
+				}
+			]
+		},
+		{
+			action: "CreateProfile",
+			route: "/profiles",
+			method: "post",
+			data: [
+				{
+					name: "TopTestPf",
+					description: "A test profile for API examples",
+					cdn: 2,
+					type: "UNK_PROFILE",
+					routingDisabled: true,
+					getRequest: [
+						{
+							route: "/cdns",
+							queryKey: "name",
+							queryValue: "TopTestCDN",
+							replace: "cdn"
+						}
+					]
+				}
+			]
+		},
         {
             action: "CreateCacheGroup",
             route: "/cachegroups",
@@ -130,14 +315,7 @@ export const topologies = {
             data: [
                 {
                     cachegroupId: 0,
-                    getRequest: [
-                        {
-                            route: "/cachegroups",
-                            queryKey: "name",
-                            queryValue: "TopoTestCGE2",
-                            replace: "cachegroupId"
-                        }
-                    ],
+                    
                     cdnId: 2,
                     domainName: "test.net",
                     hostName: "topologieserver1",
@@ -180,18 +358,36 @@ export const topologies = {
                     statusId: 3,
                     tcpPort: 80,
                     typeId: 12,
-                    updPending: false
-                },
-                {
-                    cachegroupId: 0,
                     getRequest: [
                         {
                             route: "/cachegroups",
                             queryKey: "name",
-                            queryValue: "TopoTestCGE3",
+                            queryValue: "TopoTestCGE2",
                             replace: "cachegroupId"
-                        }
+                        },
+                        {
+							route: "/phys_locations",
+							queryKey: "name",
+							queryValue: "TopTestPhys",
+							replace: "physLocationId"
+						},
+                        {
+							route: "/cdns",
+							queryKey: "name",
+							queryValue: "TopTestCDN",
+							replace: "cdnId"
+						},
+						{
+							route: "/profiles",
+							queryKey: "name",
+							queryValue: "TopTestPf",
+							replace: "profileId"
+						}
                     ],
+                    updPending: false
+                },
+                {
+                    cachegroupId: 0,
                     cdnId: 2,
                     domainName: "test.net",
                     hostName: "topologieserver3",
@@ -234,6 +430,32 @@ export const topologies = {
                     statusId: 3,
                     tcpPort: 80,
                     typeId: 12,
+                    getRequest: [
+                        {
+                            route: "/cachegroups",
+                            queryKey: "name",
+                            queryValue: "TopoTestCGE3",
+                            replace: "cachegroupId"
+                        },
+                        {
+							route: "/phys_locations",
+							queryKey: "name",
+							queryValue: "TopTestPhys",
+							replace: "physLocationId"
+						},
+                        {
+							route: "/cdns",
+							queryKey: "name",
+							queryValue: "TopTestCDN",
+							replace: "cdnId"
+						},
+						{
+							route: "/profiles",
+							queryKey: "name",
+							queryValue: "TopTestPf",
+							replace: "profileId"
+						}
+                    ],
                     updPending: false
                 }
             ]
@@ -272,22 +494,6 @@ export const topologies = {
                     Type: "EDGE_LOC",
                     CacheGroup: "wrong",
                     validationMessage: "'length' must provide 1 or more node, 0 found"
-                }
-            ],
-            update: [
-                {
-                    description: "change a Topologies name",
-                    Name: "topologieserver3",
-                    NewName: "NewTopoServer3",
-                    validationMessage: "topology was created."
-                }
-            ],
-            remove: [
-                {
-                    description: "delete a Topology",
-                    Name: "topologieserver3",
-                    NewName: "NewTopoServer3",
-                    validationMessage: "topology was created."
                 }
             ]
         }

@@ -28,6 +28,10 @@ interface Topologies {
     CacheGroup: string;
     validationMessage: string;
 }
+interface DeleteTopologies{
+    Name: string;
+    validationMessage?: string;
+}
 export class TopologiesPage extends BasePage {
     private btnCreateNewTopologies = element(by.xpath("//button[@title='Create Topology']"));
     private txtCacheGroupType = element(by.name('selectFormDropdown'));
@@ -86,7 +90,7 @@ export class TopologiesPage extends BasePage {
         } 
         return false;
     }
-    async DeleteTopologies(topologies: Topologies):Promise<boolean>{
+    async DeleteTopologies(topologies: DeleteTopologies):Promise<boolean>{
         let name = topologies.Name + this.randomize;
         let basePage = new BasePage();
         await this.btnDelete.click();
