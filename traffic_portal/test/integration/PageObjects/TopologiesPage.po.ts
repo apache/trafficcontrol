@@ -86,7 +86,7 @@ export class TopologiesPage extends BasePage {
         } 
         return false;
     }
-    async DeleteTopologies(topologies: Topologies):Promise<Boolean>{
+    async DeleteTopologies(topologies: Topologies):Promise<boolean>{
         let name = topologies.Name + this.randomize;
         let basePage = new BasePage();
         await this.btnDelete.click();
