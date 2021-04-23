@@ -18,6 +18,7 @@ package client
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -45,9 +46,13 @@ func (to *Session) UpdateCoordinate(id int, coordinate tc.Coordinate, header htt
 }
 
 // GetCoordinates returns all Coordinates in Traffic Ops.
-func (to *Session) GetCoordinates(header http.Header) ([]tc.Coordinate, toclientlib.ReqInf, error) {
+func (to *Session) GetCoordinates(params url.Values, header http.Header) ([]tc.Coordinate, toclientlib.ReqInf, error) {
+	uri := APICoordinates
+	if params != nil {
+		uri += "?" + params.Encode()
+	}
 	var data tc.CoordinatesResponse
-	reqInf, err := to.get(APICoordinates, header, &data)
+	reqInf, err := to.get(uri, header, &data)
 	return data.Response, reqInf, err
 }
 
