@@ -45,6 +45,10 @@ var logStream = fs.createWriteStream(config.log.stream, { flags: 'a' }),
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = config.reject_unauthorized;
 
 var app = express();
+app.use(function(_, resp, next) {
+    resp.setHeader("Permissions-Policy", "interest-cohort=()")
+    next();
+});
 
 app.use(function(req, res, next) {
     var err = null;
@@ -57,8 +61,6 @@ app.use(function(req, res, next) {
     if (err){
         console.log(err, req.url);
     }
-
-    res.setHeader("Permissions-Policy", "interest-cohort=()")
     next();
 });
 
