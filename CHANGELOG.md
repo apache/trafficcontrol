@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5712](https://github.com/apache/trafficcontrol/issues/5712) - Ensure that 5.x Traffic Stats is compatible with 5.x Traffic Monitor and 5.x Traffic Ops, and that it doesn't log all 0's for `cache_stats`
 - Fixed ORT being unable to update URLSIG keys for Delivery Services
 - Fixed an issue where Traffic Ops becoming unavailable caused Traffic Monitor to segfault and crash
+- [#5754](https://github.com/apache/trafficcontrol/issues/5754) - Ensure Health Threshold Parameters use legacy format for legacy Monitoring Config handler
 
 ## [5.1.1] - 2021-03-19
 ### Added
