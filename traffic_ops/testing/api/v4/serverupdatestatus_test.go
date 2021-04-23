@@ -31,12 +31,12 @@ import (
 func TestServerUpdateStatus(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
 		//TODO: DON'T hard-code server hostnames!
-		var edge1cdn1 tc.ServerV40
-		var edge2cdn1 tc.ServerV40
-		var mid1cdn1 tc.ServerV40
-		var edge1cdn2 tc.ServerV40
+		var edge1cdn1 tc.ServerV4
+		var edge2cdn1 tc.ServerV4
+		var mid1cdn1 tc.ServerV4
+		var edge1cdn2 tc.ServerV4
 
-		params := url.Values{}
+		opts := client.NewRequestOptions()
 
 		getServers := func() {
 			for _, s := range []struct {
@@ -60,10 +60,10 @@ func TestServerUpdateStatus(t *testing.T) {
 					&edge1cdn2,
 				},
 			} {
-				params.Set("hostName", s.name)
-				resp, _, err := TOSession.GetServers(params, nil)
+				opts.QueryParameters.Set("hostName", s.name)
+				resp, _, err := TOSession.GetServers(opts)
 				if err != nil {
-					t.Errorf("cannot GET Server by hostname '%s': %v - %v", s.name, err, resp.Alerts)
+					t.Errorf("cannot get Server by hostname '%s': %v - alerts: %+v", s.name, err, resp.Alerts)
 				}
 				if len(resp.Response) < 1 {
 					t.Fatalf("Expected a server named '%s' to exist", s.name)
@@ -84,7 +84,7 @@ func TestServerUpdateStatus(t *testing.T) {
 		getServers()
 
 		// assert that servers don't have updates pending
-		for _, s := range []tc.ServerV40{
+		for _, s := range []tc.ServerV4{
 			edge1cdn1,
 			edge2cdn1,
 			mid1cdn1,
@@ -212,12 +212,12 @@ func TestServerQueueUpdate(t *testing.T) {
 			true:  "queue",
 		}
 
-		var s tc.ServerV40
-		params := url.Values{}
-		params.Add("hostName", serverName)
-		resp, _, err := TOSession.GetServers(params, nil)
+		var s tc.ServerV4
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Add("hostName", serverName)
+		resp, _, err := TOSession.GetServers(opts)
 		if err != nil {
-			t.Fatalf("failed to GET Server by hostname '%s': %v - %v", serverName, err, resp.Alerts)
+			t.Fatalf("failed to get Server by hostname '%s': %v - alerts: %+v", serverName, err, resp.Alerts)
 		}
 		if len(resp.Response) < 1 {
 			t.Fatalf("Expected a server named '%s' to exist", serverName)
@@ -255,7 +255,7 @@ func TestServerQueueUpdate(t *testing.T) {
 				}
 
 				// assert that the server has updates queued
-				resp, _, err = TOSession.GetServers(params, nil)
+				resp, _, err = TOSession.GetServers(opts)
 				if err != nil {
 					t.Fatalf("failed to GET Server by hostname '%s': %v - %v", serverName, err, resp.Alerts)
 				}
@@ -312,12 +312,12 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 			t.Fatalf("First test server had nil hostname: %+v", testServer)
 		}
 
-		params := url.Values{}
-		params.Add("hostName", *testServer.HostName)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Add("hostName", *testServer.HostName)
 		testVals := func(queue *bool, reval *bool) {
-			resp, _, err := TOSession.GetServers(params, nil)
+			resp, _, err := TOSession.GetServers(opts)
 			if err != nil {
-				t.Errorf("cannot GET Server by name '%s': %v - %v", *testServer.HostName, err, resp.Alerts)
+				t.Errorf("cannot get Server by name '%s': %v - alerts: %+v", *testServer.HostName, err, resp.Alerts)
 			} else if len(resp.Response) != 1 {
 				t.Fatalf("GET Server expected 1, actual %v", len(resp.Response))
 			}
@@ -335,9 +335,9 @@ func TestSetServerUpdateStatuses(t *testing.T) {
 				t.Fatalf("UpdateServerStatuses error expected: nil, actual: %v - alerts: %+v", err, alerts.Alerts)
 			}
 
-			resp, _, err = TOSession.GetServers(params, nil)
+			resp, _, err = TOSession.GetServers(opts)
 			if err != nil {
-				t.Errorf("cannot GET Server by name '%s': %v - %v", *testServer.HostName, err, resp.Alerts)
+				t.Errorf("cannot GET Server by name '%s': %v - alerts: %+v", *testServer.HostName, err, resp.Alerts)
 			} else if len(resp.Response) != 1 {
 				t.Fatalf("GET Server expected 1, actual %v", len(resp.Response))
 			}
@@ -424,10 +424,10 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			}
 			cacheGroup := cacheGroups.Response[0]
 
-			params := url.Values{"cachegroup": []string{strconv.Itoa(*cacheGroup.ID)}}
-			srvs, _, err := TOSession.GetServers(params, nil)
+			opts.QueryParameters = url.Values{"cachegroup": []string{strconv.Itoa(*cacheGroup.ID)}}
+			srvs, _, err := TOSession.GetServers(opts)
 			if err != nil {
-				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
+				t.Fatalf("unable to get a server from cachegroup %s: %v - alerts: %+v", cacheGroupName, err, srvs.Alerts)
 			}
 			if len(srvs.Response) < 1 {
 				t.Fatalf("Expected at least one server in Cache Group #%d - found none", *cacheGroup.ID)
@@ -443,20 +443,25 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			t.Fatalf("cannot update server status: %v - alerts: %+v", err, resp.Alerts)
 		}
 
+		opts := client.NewRequestOptions()
 		for _, cacheGroupName := range cacheGroupNames {
 			cgID := *cachesByCacheGroup[cacheGroupName].CachegroupID
-			params := url.Values{"cachegroup": []string{strconv.Itoa(cgID)}}
-			srvs, _, err := TOSession.GetServers(params, nil)
+			opts.QueryParameters.Set("cachegroup", strconv.Itoa(cgID))
+			srvs, _, err := TOSession.GetServers(opts)
 			if err != nil {
-				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
+				t.Fatalf("unable to get a server from cachegroup %s: %v - alerts: %+v", cacheGroupName, err, srvs.Alerts)
 			}
 			if len(srvs.Response) < 1 {
-				t.Fatalf("Expected at least one Server in CacheGroup #%d, found none", cgID)
+				t.Fatalf("Expected at least one Server in Cache Group #%d, found none", cgID)
+			}
+			srv := srvs.Response[0]
+			if srv.HostName == nil || srv.UpdPending == nil || srv.ID == nil {
+				t.Fatal("Traffic Ops returned a representation of a server with null or undefined Host Name and/or ID and/or Update Pending flag")
 			}
 			cachesByCacheGroup[cacheGroupName] = srvs.Response[0]
 		}
 		for _, cacheGroupName := range cacheGroupNames {
-			updResp, _, err := TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName, nil)
+			updResp, _, err := TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName, client.RequestOptions{})
 			if err != nil {
 				t.Fatalf("unable to get update status for a server from Cache Group '%s': %v - alerts: %+v", cacheGroupName, err, updResp.Alerts)
 			}
@@ -489,7 +494,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			t.Fatalf("cannot update server status on %s: %v - alerts: %+v", *cachesByCacheGroup[midCacheGroup].HostName, err, squResp.Alerts)
 		}
 		for _, cacheGroupName := range cacheGroupNames {
-			updResp, _, err := TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName, nil)
+			updResp, _, err := TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName, client.RequestOptions{})
 			if err != nil {
 				t.Fatalf("unable to get an update status for a server from Cache Group '%s': %v - alerts: %+v", cacheGroupName, err, updResp.Alerts)
 			}
@@ -510,18 +515,18 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 
 		edgeHostName := *cachesByCacheGroup[edgeCacheGroup].HostName
 		*cachesByCacheGroup[edgeCacheGroup].HostName = *cachesByCacheGroup[midCacheGroup].HostName
-		_, _, err = TOSession.UpdateServer(*cachesByCacheGroup[edgeCacheGroup].ID, cachesByCacheGroup[edgeCacheGroup], nil)
+		_, _, err = TOSession.UpdateServer(*cachesByCacheGroup[edgeCacheGroup].ID, cachesByCacheGroup[edgeCacheGroup], client.RequestOptions{})
 		if err != nil {
 			t.Fatalf("unable to update %s's hostname to %s: %s", edgeHostName, *cachesByCacheGroup[midCacheGroup].HostName, err)
 		}
 
-		updResp, _, err := TOSession.GetServerUpdateStatus(*cachesByCacheGroup[midCacheGroup].HostName, nil)
+		updResp, _, err := TOSession.GetServerUpdateStatus(*cachesByCacheGroup[midCacheGroup].HostName, client.RequestOptions{})
 		if err != nil {
 			t.Fatalf("expected no error getting server updates for a non-unique hostname %s, got: %v - alerts: %+v", *cachesByCacheGroup[midCacheGroup].HostName, err, updResp.Alerts)
 		}
 
 		*cachesByCacheGroup[edgeCacheGroup].HostName = edgeHostName
-		_, _, err = TOSession.UpdateServer(*cachesByCacheGroup[edgeCacheGroup].ID, cachesByCacheGroup[edgeCacheGroup], nil)
+		_, _, err = TOSession.UpdateServer(*cachesByCacheGroup[edgeCacheGroup].ID, cachesByCacheGroup[edgeCacheGroup], client.RequestOptions{})
 		if err != nil {
 			t.Fatalf("unable to revert %s's hostname back to %s: %s", edgeHostName, edgeHostName, err)
 		}

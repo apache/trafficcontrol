@@ -33,7 +33,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 type topologyTestCase struct {
@@ -297,13 +296,17 @@ func UpdateTestTopologies(t *testing.T) {
 	if cgs.Response[0].ID == nil {
 		t.Fatal("Traffic Ops returned a representation for Cache Group 'cdn1-only' that had a null or undefined ID")
 	}
-	params := url.Values{}
-	params.Add("cachegroup", strconv.Itoa(*cgs.Response[0].ID))
-	servers, _, err := TOSession.GetServers(params, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Add("cachegroup", strconv.Itoa(*cgs.Response[0].ID))
+	servers, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("unable to GET servers by cachegroup: %v", err)
+		t.Fatalf("unable to get servers by Cache Group ID: %v - alerts: %+v", err, servers.Alerts)
 	}
 	for _, s := range servers.Response {
+		if s.Cachegroup == nil || s.CDNName == nil {
+			t.Error("Traffic Ops returned a representation of a server with null or undefined Cache Group and/or CDN name")
+			continue
+		}
 		if *s.Cachegroup != "cdn1-only" {
 			t.Fatalf("GET servers by cachegroup 'cdn1-only' - expected: only servers in cachegroup 'cdn1-only', actual: got server in %s", *s.Cachegroup)
 		}
@@ -367,9 +370,12 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	}
 
 	//Remove org server assignment and reset DS back to as it was for further testing
-	params := url.Values{}
-	params.Set("hostName", "denver-mso-org-01")
-	serverResp, _, err := TOSession.GetServers(params, nil)
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("hostName", "denver-mso-org-01")
+	serverResp, _, err := TOSession.GetServers(opts)
+	if err != nil {
+		t.Errorf("Unexpected error getting servers filtered by Host Name 'denver-mso-org-01': %v - alerts: %+v", err, serverResp.Alerts)
+	}
 	if len(serverResp.Response) == 0 {
 		t.Fatal("no servers in response, quitting")
 	}
@@ -497,10 +503,14 @@ func CreateTopologyWithInvalidParentNumber(t *testing.T) {
 	}
 
 	cachegroupName := ""
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -541,10 +551,14 @@ func CreateTopologyWithoutDescription(t *testing.T) {
 	}
 
 	cachegroupName := ""
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -586,10 +600,14 @@ func CreateTopologyWithoutName(t *testing.T) {
 	}
 
 	cachegroupName := ""
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -627,10 +645,14 @@ func CreateTopologyWithoutServers(t *testing.T) {
 	}
 
 	cachegroupName := ""
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) == 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -670,10 +692,14 @@ func CreateTopologyWithDuplicateParents(t *testing.T) {
 
 	cachegroupName := ""
 	parentName := ""
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && parentName != *cg.Name && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -683,8 +709,12 @@ func CreateTopologyWithDuplicateParents(t *testing.T) {
 	}
 
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil {
 				parentName = *cg.Name
@@ -728,10 +758,14 @@ func CreateTopologyWithNodeAsParentOfItself(t *testing.T) {
 
 	cachegroupName := ""
 	parentName := ""
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -741,8 +775,12 @@ func CreateTopologyWithNodeAsParentOfItself(t *testing.T) {
 	}
 
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && parentName != *cg.Name {
 				parentName = *cg.Name
@@ -786,10 +824,14 @@ func CreateTopologyWithOrgLocAsChildNode(t *testing.T) {
 
 	cachegroupName := ""
 	parentName := ""
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				parentName = *cg.Name
@@ -799,8 +841,12 @@ func CreateTopologyWithOrgLocAsChildNode(t *testing.T) {
 	}
 
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && parentName != *cg.Name && cg.Type != nil && *cg.Type == tc.CacheGroupOriginTypeName {
 				cachegroupName = *cg.Name
@@ -860,10 +906,14 @@ func CreateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
 	}
 
 	parentName := ""
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupMidTypeName {
 				parentName = *cg.Name
@@ -914,7 +964,7 @@ func CRUDTopologyReadOnlyUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not create read-only user: %v", err)
 	}
-	client, _, err := toclient.LoginWithAgent(TOSession.URL, "test_user", "test_pa$$word", true, "to-api-v4-client-tests/tenant4user", true, toReqTimeout)
+	client, _, err := client.LoginWithAgent(TOSession.URL, "test_user", "test_pa$$word", true, "to-api-v4-client-tests/tenant4user", true, toReqTimeout)
 	if err != nil {
 		t.Fatalf("failed to log in with test_user: %v", err.Error())
 	}
@@ -1020,10 +1070,14 @@ func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
 
 	cachegroupName := ""
 	parentName := ""
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				parentName = *cg.Name
@@ -1033,8 +1087,12 @@ func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
 	}
 
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && parentName != *cg.Name && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name
@@ -1087,10 +1145,14 @@ func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
 
 	cachegroupName := ""
 	parentName := ""
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				parentName = *cg.Name
@@ -1100,8 +1162,12 @@ func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
 	}
 
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && parentName != *cg.Name && cg.Type != nil && *cg.Type == tc.CacheGroupOriginTypeName {
 				cachegroupName = *cg.Name
@@ -1152,10 +1218,14 @@ func UpdateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
 	}
 
 	parentName := ""
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) != 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupMidTypeName {
 				parentName = *cg.Name
@@ -1227,10 +1297,14 @@ func UpdateTopologyWithNoServers(t *testing.T) {
 	nodes := make([]tc.TopologyNode, 0)
 
 	cachegroupName := ""
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
-		params["cachegroup"] = []string{strconv.Itoa(*cg.ID)}
-		resp, _, _ := TOSession.GetServers(params, nil)
+		if cg.ID == nil {
+			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
+			continue
+		}
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(*cg.ID))
+		resp, _, _ := TOSession.GetServers(opts)
 		if len(resp.Response) == 0 {
 			if cg.Name != nil && cg.Type != nil && *cg.Type == tc.CacheGroupEdgeTypeName {
 				cachegroupName = *cg.Name

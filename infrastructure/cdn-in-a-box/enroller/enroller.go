@@ -295,12 +295,15 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 	var serverIDs []int
 	for _, sn := range dss.ServerNames {
 		opts.QueryParameters.Set("hostName", sn)
-		servers, _, err := toSession.GetServers(opts.QueryParameters, nil)
+		servers, _, err := toSession.GetServers(opts)
 		if err != nil {
 			return err
 		}
 		if len(servers.Response) == 0 {
 			return errors.New("no server with hostName " + sn)
+		}
+		if servers.Response[0].ID == nil {
+			return fmt.Errorf("Traffic Ops gave back a representation for server '%s' with null or undefined ID", sn)
 		}
 		serverIDs = append(serverIDs, *servers.Response[0].ID)
 	}
@@ -726,13 +729,14 @@ func enrollServer(toSession *session, r io.Reader) error {
 	var s tc.ServerV40
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Server: %s\n", err)
+		log.Infof("error decoding Server: %v", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateServer(s, nil)
+	alerts, _, err := toSession.CreateServer(s, client.RequestOptions{})
 	if err != nil {
-		log.Infof("error creating Server: %s\n", err)
+		err = fmt.Errorf("error creating Server: %v - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -931,13 +935,19 @@ func enrollServerServerCapability(toSession *session, r io.Reader) error {
 	var s tc.ServerServerCapability
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Server: %s\n", err)
+		err = fmt.Errorf("error decoding Server/Capability relationship: %s", err)
+		log.Infoln(err)
+		return err
+	}
+	if s.Server == nil {
+		err = errors.New("server/Capability relationship did not specify a server")
 		return err
 	}
 
-	resp, _, err := toSession.GetServers(url.Values{"hostName": []string{*s.Server}}, nil)
+	resp, _, err := toSession.GetServers(client.RequestOptions{QueryParameters: url.Values{"hostName": []string{*s.Server}}})
 	if err != nil {
-		log.Infof("getting server %s: %s\n", *s.Server, err.Error())
+		err = fmt.Errorf("getting server '%s': %v - alerts: %+v", *s.Server, err, resp.Alerts)
+		log.Infoln(err)
 		return err
 	}
 	if len(resp.Response) < 1 {

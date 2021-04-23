@@ -63,15 +63,15 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	// Valid POSTs
 
 	// loop through server ServerCapabilities, assign FKs and create
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, ssc := range testData.ServerServerCapabilities {
 		if ssc.Server == nil || ssc.ServerCapability == nil {
 			t.Fatalf("server-server-capability structure had nil server and/or Capability")
 		}
-		params.Set("hostName", *ssc.Server)
-		resp, _, err := TOSession.GetServers(params, nil)
+		opts.QueryParameters.Set("hostName", *ssc.Server)
+		resp, _, err := TOSession.GetServers(opts)
 		if err != nil {
-			t.Fatalf("cannot GET Server by hostname '%s': %v - %v", *ssc.Server, err, resp.Alerts)
+			t.Fatalf("cannot get Servers filtered by Host Name '%s': %v - alerts: %+v", *ssc.Server, err, resp.Alerts)
 		}
 		servResp := resp.Response
 		if len(servResp) != 1 {
@@ -86,7 +86,9 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	// Invalid POSTs
-
+	if len(testData.ServerServerCapabilities) < 1 {
+		t.Fatal("Need at least one server/Capability relationship to test creating server/Capability associations")
+	}
 	ssc := testData.ServerServerCapabilities[0]
 
 	// Attempt to assign already assigned server capability
@@ -135,10 +137,10 @@ func CreateTestServerServerCapabilities(t *testing.T) {
 
 	// Attempt to assign a server capability to a non MID/EDGE server
 	// TODO: DON'T hard-code server hostnames!
-	params.Set("hostName", "trafficvault")
-	resp, _, err := TOSession.GetServers(params, nil)
+	opts.QueryParameters.Set("hostName", "trafficvault")
+	resp, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("cannot GET Server by hostname 'trafficvault': %v - %v", err, resp.Alerts)
+		t.Fatalf("cannot get Servers filtered by hostname 'trafficvault': %v - alerts: %+v", err, resp.Alerts)
 	}
 	servers := resp.Response
 	if len(servers) < 1 {
@@ -426,14 +428,17 @@ func DeleteTestServerServerCapabilitiesForTopologiesValidation(t *testing.T) {
 	// dtrc-edge-01 and dtrc-edge-02 (capabilities = ram, disk) are assigned to
 	// ds-top-req-cap (topology = top-for-ds-req; required capabilities = ram, disk) and
 	// ds-top-req-cap2 (topology = top-for-ds-req2; required capabilities = ram)
-	var edge1 tc.ServerV40
-	var edge2 tc.ServerV40
+	var edge1 tc.ServerV4
+	var edge2 tc.ServerV4
 
-	servers, _, err := TOSession.GetServers(nil, nil)
+	servers, _, err := TOSession.GetServers(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET servers: %v", err)
+		t.Fatalf("cannot get servers: %v - alerts: %+v", err, servers.Alerts)
 	}
 	for _, s := range servers.Response {
+		if s.HostName == nil || s.ID == nil {
+			t.Fatal("Traffic Ops returned a representation for a server with null or undefined ID and/or Host Name")
+		}
 		if *s.HostName == "dtrc-edge-01" {
 			edge1 = s
 		}
@@ -515,20 +520,19 @@ func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
 	}
 
 	// Get an edge
-	params := url.Values{}
-	params.Add("hostName", "atlanta-edge-16")
-	rs, _, err := TOSession.GetServers(params, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("hostName", "atlanta-edge-16")
+	rs, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch server information: %v", err)
+		t.Fatalf("Failed to fetch server information: %v - alerts: %+v", err, rs.Alerts)
 	} else if len(rs.Response) == 0 {
 		t.Fatalf("Failed to fetch server information: No results returned!")
 	}
 	edgeID := *rs.Response[0].ID
 
 	// Get a MID
-	params = url.Values{}
-	params.Add("hostName", "atlanta-mid-02")
-	rs, _, err = TOSession.GetServers(params, nil)
+	opts.QueryParameters.Set("hostName", "atlanta-mid-02")
+	rs, _, err = TOSession.GetServers(opts)
 	if err != nil {
 		t.Fatalf("Failed to fetch server information: %v", err)
 	} else if len(rs.Response) == 0 {
@@ -540,11 +544,11 @@ func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error while assigning servers to Delivery Service, but got: %v - alerts: %+v", err, assignResp.Alerts)
 	}
-	params = url.Values{}
-	params.Add("dsId", strconv.Itoa(*ds.ID))
-	servers, _, err := TOSession.GetServers(params, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Add("dsId", strconv.Itoa(*ds.ID))
+	servers, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
+		t.Fatalf("Failed to get server by Delivery Service ID: %v - alerts: %+v", err, servers.Alerts)
 	}
 	if len(servers.Response) != 2 {
 		t.Fatalf("expected to get 2 servers for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
@@ -575,9 +579,8 @@ func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
 		t.Fatalf("expected no error creating DS reqd capability, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	params = url.Values{}
-	params.Add("dsId", strconv.Itoa(*ds.ID))
-	servers, _, err = TOSession.GetServers(params, nil)
+	opts.QueryParameters.Set("dsId", strconv.Itoa(*ds.ID))
+	servers, _, err = TOSession.GetServers(opts)
 	if err != nil {
 		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
 	}

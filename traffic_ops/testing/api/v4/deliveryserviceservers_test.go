@@ -85,12 +85,12 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 
 	// TODO: this isn't sufficient to define a single server, so there might be
 	// a better way to do this.
-	params := url.Values{}
-	params.Set("hostName", dssaTestingXMLID)
-	params.Set("domainName", dssaTestingXMLID)
-	servers, _, err := TOSession.GetServers(params, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("hostName", dssaTestingXMLID)
+	opts.QueryParameters.Set("domainName", dssaTestingXMLID)
+	servers, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("Unexpected error fetching server '%s.%s': %v", dssaTestingXMLID, dssaTestingXMLID, err)
+		t.Fatalf("Unexpected error fetching server '%s.%s': %v - alerts: %+v", dssaTestingXMLID, dssaTestingXMLID, err, servers.Alerts)
 	}
 	if len(servers.Response) != 1 {
 		t.Fatalf("Expected exactly one server with FQDN '%s.%s', got: %d", dssaTestingXMLID, dssaTestingXMLID, len(servers.Response))
@@ -115,20 +115,18 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		t.Error("Didn't get expected error trying to remove the only server assigned to a Delivery Service")
 	}
 
-	alerts, _, err := TOSession.DeleteServer(*server.ID, nil)
-	t.Logf("Alerts from deleting server: %s", strings.Join(alerts.ToStrings(), ", "))
+	alerts, _, err := TOSession.DeleteServer(*server.ID, client.RequestOptions{})
 	if err == nil {
 		t.Error("Didn't get expected error trying to delete the only server assigned to a Delivery Service")
 	} else {
-		t.Logf("Got expected error trying to delete the only server assigned to a Delivery Service: %v", err)
+		t.Logf("Got expected error trying to delete the only server assigned to a Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
-	alerts, _, err = TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{}, true, nil)
-	t.Logf("Alerts from removing Delivery Service from server: %s", strings.Join(alerts.ToStrings(), ", "))
+	alerts, _, err = TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{}, true, client.RequestOptions{})
 	if err == nil {
 		t.Error("Didn't get expected error trying to remove a Delivery Service from the only server to which it is assigned")
 	} else {
-		t.Logf("Got expected error trying to remove a Delivery Service from the only server to which it is assigned: %v", err)
+		t.Logf("Got expected error trying to remove a Delivery Service from the only server to which it is assigned: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
 	server.StatusID = &badStatusID
@@ -143,12 +141,11 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		t.Logf("Got expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
-	alerts, _, err = TOSession.UpdateServer(*server.ID, server, nil)
-	t.Logf("Alerts from updating server status: %s", strings.Join(alerts.ToStrings(), ", "))
+	alerts, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
 	if err == nil {
 		t.Error("Didn't get expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service")
 	} else {
-		t.Logf("Got expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service: %v", err)
+		t.Logf("Got expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
 	server.HostName = util.StrPtr(dssaTestingXMLID + "-quest")
@@ -166,14 +163,14 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		interfaces[interfaceIndex].IPAddresses = ipAddresses
 	}
 	server.Interfaces = interfaces
-	alerts, _, err = TOSession.CreateServer(server, nil)
+	alerts, _, err = TOSession.CreateServer(server, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Failed to create server: %v - alerts: %s", err, strings.Join(alerts.ToStrings(), ", "))
+		t.Fatalf("Failed to create server: %v - alerts: %+v", err, alerts.Alerts)
 	}
-	params.Set("hostName", *server.HostName)
-	servers, _, err = TOSession.GetServers(params, nil)
+	opts.QueryParameters.Set("hostName", *server.HostName)
+	servers, _, err = TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("Could not fetch server after creation: %v", err)
+		t.Fatalf("Could not fetch server after creation: %v - alerts: %+v", err, servers.Alerts)
 	}
 	if len(servers.Response) != 1 {
 		t.Fatalf("Expected exactly 1 server with hostname '%s'; got: %d", *server.HostName, len(servers.Response))
@@ -190,10 +187,9 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 
 	// Cleanup
 	setInactive(t, *ds.ID)
-	alerts, _, err = TOSession.DeleteServer(*server.ID, nil)
-	t.Logf("Alerts from deleting a server: %s", strings.Join(alerts.ToStrings(), ", "))
+	alerts, _, err = TOSession.DeleteServer(*server.ID, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("Failed to delete server: %v", err)
+		t.Errorf("Failed to delete server: %v - alerts: %+v", err, alerts.Alerts)
 	}
 }
 
@@ -211,8 +207,8 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 	if d.Topology == nil || d.ID == nil || d.CDNID == nil || d.CDNName == nil {
 		t.Fatal("Traffic Ops returned a representation of a Delivery Service that had null or undefined Topology and/or CDN ID and/or CDN Name and/or ID")
 	}
-	serversResp, _, err := TOSession.GetServers(nil, nil)
-	servers := []tc.ServerV40{}
+	serversResp, _, err := TOSession.GetServers(client.RequestOptions{})
+	servers := []tc.ServerV4{}
 	for _, s := range serversResp.Response {
 		if s.CDNID != nil && *s.CDNID == *d.CDNID && s.Type == tc.CacheTypeEdge.String() {
 			servers = append(servers, s)
@@ -251,14 +247,14 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 
 func AssignOriginsToTopologyBasedDeliveryServices(t *testing.T) {
 	// attempt to assign ORG server to a topology-based DS while the ORG server's cachegroup doesn't belong to the topology
-	params := url.Values{}
-	params.Add("hostName", "denver-mso-org-01")
-	resp, _, err := TOSession.GetServers(params, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Add("hostName", "denver-mso-org-01")
+	resp, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("unable to GET server: %v", err)
+		t.Fatalf("unable to get server 'denver-mso-org-01': %v - alerts: %+v", err, resp.Alerts)
 	}
 	if len(resp.Response) != 1 {
-		t.Fatalf("GET server expected length: 1, actual: %d", len(resp.Response))
+		t.Fatalf("Expected exactly one server to exist with Host Name 'denver-mso-org-01': %d", len(resp.Response))
 	}
 	orgServer := resp.Response[0]
 	_, reqInf, err := TOSession.AssignServersToDeliveryService([]string{*orgServer.HostName}, "ds-top-req-cap", client.RequestOptions{})
@@ -268,7 +264,7 @@ func AssignOriginsToTopologyBasedDeliveryServices(t *testing.T) {
 	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
 		t.Fatalf("assigning ORG server to topology-based delivery service while the ORG server's cachegroup does not belong to the topology - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
-	opts := client.NewRequestOptions()
+	opts.QueryParameters.Del("hostName")
 	opts.QueryParameters.Set("xmlId", "ds-top-req-cap")
 	ds, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
@@ -335,9 +331,9 @@ func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T)
 	if dsWithMid.CDNID == nil || dsWithMid.CDNName == nil || dsWithMid.ID == nil {
 		t.Fatal("Traffic Ops returned a representation of a Delivery Service that had null or undefined CDN ID and/or CDN Name and/or ID")
 	}
-	serversResp, _, err := TOSession.GetServers(nil, nil)
+	serversResp, _, err := TOSession.GetServers(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("unable to fetch all servers: %v", err)
+		t.Fatalf("unable to fetch all servers: %v - alerts: %+v", err, serversResp.Alerts)
 	}
 	serversIds := []int{}
 	for _, s := range serversResp.Response {
@@ -354,10 +350,10 @@ func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T)
 		t.Fatalf("Unexpected error assigning servers %v to Delivery Service #%d: %v - alerts: %+v", serversIds, *dsWithMid.ID, err, assignResp.Alerts)
 	}
 
-	params := url.Values{"dsId": []string{strconv.Itoa(*dsWithMid.ID)}}
-	dsServersResp, _, err := TOSession.GetServers(params, nil)
+	opts.QueryParameters = url.Values{"dsId": []string{strconv.Itoa(*dsWithMid.ID)}}
+	dsServersResp, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("unable to fetch delivery service servers: %v", err)
+		t.Fatalf("unable to fetch Delivery Service #%d servers: %v - alerts: %+v", *dsWithMid.ID, err, dsServersResp.Alerts)
 	}
 	dsServerIds := []int{}
 	for _, dss := range dsServersResp.Response {
@@ -413,11 +409,11 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 			continue
 		}
 		t.Run(ctc.description, func(t *testing.T) {
-			params := url.Values{}
-			params.Add("hostName", ctc.serverName)
-			resp, _, err := TOSession.GetServers(params, nil)
+			opts := client.NewRequestOptions()
+			opts.QueryParameters.Set("hostName", ctc.serverName)
+			resp, _, err := TOSession.GetServers(opts)
 			if err != nil {
-				t.Fatalf("cannot GET Server by hostname: %v", err)
+				t.Fatalf("cannot get Server '%s' by hostname: %v - alerts: %+v", ctc.serverName, err, resp.Alerts)
 			}
 			servers := resp.Response
 			if len(servers) < 1 {
@@ -480,11 +476,11 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 
 	// Associate origin server to msods1 even though it does not have req cap
 	// TODO: DON'T hard-code server hostnames!
-	params := url.Values{}
-	params.Add("hostName", "denver-mso-org-01")
-	resp, _, err := TOSession.GetServers(params, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("hostName", "denver-mso-org-01")
+	resp, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("GET server denver-mso-org-01: %v", err)
+		t.Fatalf("getting server denver-mso-org-01: %v - alerts: %+v", err, resp.Alerts)
 	}
 	servers := resp.Response
 	if len(servers) != 1 {
@@ -499,7 +495,7 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	// Make sure server has no caps to ensure test correctness
 	sccsOpts := client.NewRequestOptions()
 	sccsOpts.QueryParameters.Set("serverId", strconv.Itoa(*s.ID))
-	sccs, _, err := TOSession.GetServerServerCapabilities(opts)
+	sccs, _, err := TOSession.GetServerServerCapabilities(sccsOpts)
 	if err != nil {
 		t.Fatalf("Unexpected error getting Capabilities for server #%d ('denver-mso-org-01'): %v - alerts: %+v", *s.ID, err, sccs.Alerts)
 	}
@@ -613,7 +609,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	}
 }
 
-func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceV4, tc.ServerV40) {
+func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceV4, tc.ServerV4) {
 	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v", err)
@@ -622,9 +618,9 @@ func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceV4, tc.ServerV40) 
 		t.Fatal("GET DeliveryServices returned no dses, must have at least 1 to test ds-servers")
 	}
 
-	resp, _, err := TOSession.GetServers(nil, nil)
+	resp, _, err := TOSession.GetServers(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET Servers: %v", err)
+		t.Fatalf("cannot get Servers: %v - alerts: %+v", err, resp.Alerts)
 	}
 	servers := resp.Response
 	if len(servers) < 1 {
@@ -640,5 +636,5 @@ func getServerAndDSofSameCDN(t *testing.T) (tc.DeliveryServiceV4, tc.ServerV40) 
 	}
 	t.Fatal("expected at least one delivery service and server in the same CDN")
 
-	return tc.DeliveryServiceV4{}, tc.ServerV40{}
+	return tc.DeliveryServiceV4{}, tc.ServerV4{}
 }

@@ -65,16 +65,16 @@ func OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t *testing
 		t.Fatal("no ID in the resulting delivery service")
 	}
 	dsID := *resp.Response[0].ID
-	params := url.Values{}
+	opts.QueryParameters = url.Values{}
 	alerts, _, err := TOSession.AssignServersToDeliveryService([]string{"denver-mso-org-01"}, "ds-top-req-cap2", client.RequestOptions{})
 	if err != nil {
 		t.Errorf("assigning server 'denver-mso-org-01' to Delivery Service 'ds-top-req-cap2': %v - alerts: %+v", err, alerts)
 	}
-	params.Add("dsId", strconv.Itoa(dsID))
-	params.Add("type", tc.OriginTypeName)
-	responseServers, _, err := TOSession.GetServers(params, nil)
+	opts.QueryParameters.Set("dsId", strconv.Itoa(dsID))
+	opts.QueryParameters.Set("type", tc.OriginTypeName)
+	responseServers, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("getting servers for ds-top-req-cap2 delivery service: %v", err.Error())
+		t.Fatalf("getting servers for the 'ds-top-req-cap2' Delivery Service: %v - alerts: %+v", err, responseServers.Alerts)
 	}
 	if len(responseServers.Response) != 1 {
 		t.Fatalf("expected just one ORG server in the response, but got %d", len(responseServers.Response))
@@ -475,11 +475,11 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 
 	// First assign current capabilities to edge server so we can assign it to the DS
 	// TODO: DON'T hard-code hostnames!
-	params := url.Values{}
-	params.Add("hostName", "atlanta-edge-01")
-	resp, _, err := TOSession.GetServers(params, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("hostName", "atlanta-edge-01")
+	resp, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("cannot GET Server by hostname: %v", err)
+		t.Fatalf("cannot get Server by Host Name 'atlanta-edge-01': %v - alerts: %+v", err, resp.Alerts)
 	}
 	servers := resp.Response
 	if len(servers) < 1 {

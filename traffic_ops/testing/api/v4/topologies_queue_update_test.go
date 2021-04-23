@@ -21,7 +21,6 @@ package v4
 
 import (
 	"net/http"
-	"net/url"
 	"strconv"
 	"testing"
 
@@ -116,15 +115,20 @@ func UpdatesAreQueued(t *testing.T, topologyName tc.TopologyName, cdnID int64, d
 	if topologyName != resp.Topology {
 		t.Fatalf("expected topology %s, received topology %s", topologyName, resp.Topology)
 	}
-	params := url.Values{}
+
+	opts := client.NewRequestOptions()
 	dsIDString := strconv.Itoa(dsID)
-	params.Set("dsId", dsIDString)
-	serversResponse, _, err := TOSession.GetServers(params, nil)
+	opts.QueryParameters.Set("dsId", dsIDString)
+	serversResponse, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("getting servers for delivery service with id %s: %s", dsIDString, err)
+		t.Fatalf("getting servers for Delivery Service with id %d: %v - alerts: %+v", dsID, err, serversResponse.Alerts)
 	}
 	servers := serversResponse.Response
 	for _, server := range servers {
+		if server.CDNID == nil || server.HostName == nil || server.UpdPending == nil {
+			t.Error("Traffic Ops returned a representation of a server with null or undefined CDN ID and/or HostName and/or Update Pending flag")
+			continue
+		}
 		if *server.CDNID != int(cdnID) {
 			continue
 		}

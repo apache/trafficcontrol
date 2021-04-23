@@ -1068,7 +1068,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 		t.Fatalf("Traffic Ops returned a representation for Cache Group '%s' that had null or undefined ID", cacheGroupName)
 	}
 	opts.QueryParameters = url.Values{"cdn": {strconv.Itoa(*ds.CDNID)}, "cachegroup": {strconv.Itoa(*cachegroup.ID)}}
-	servers, _, err := TOSession.GetServers(opts.QueryParameters, nil)
+	servers, _, err := TOSession.GetServers(opts)
 	if err != nil {
 		t.Fatalf("getting Server with params %v: %v - alerts: %+v", opts.QueryParameters, err, servers.Alerts)
 	}
@@ -1115,9 +1115,9 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	*server.ProfileID = profile.ID
 
 	// Empty Cache Group dtrc1 with respect to CDN 2
-	_, _, err = TOSession.UpdateServer(*server.ID, server, nil)
+	alerts, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("updating Server %s: %s", *server.HostName, err.Error())
+		t.Fatalf("updating Server '%s': %v - alerts: %+v", *server.HostName, err, alerts.Alerts)
 	}
 	ds.Topology = dsTopology
 	_, reqInf, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
@@ -1131,9 +1131,9 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 	*server.ProfileID = profileCopy.ExistingID
 
 	// Put things back the way they were
-	_, _, err = TOSession.UpdateServer(*server.ID, server, nil)
+	alerts, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("updating Server %s: %s", *server.HostName, err.Error())
+		t.Fatalf("updating Server '%s': %v - alerts: %+v", *server.HostName, err, alerts.Alerts)
 	}
 
 	alerts, _, err = TOSession.DeleteProfile(profile.ID, client.RequestOptions{})

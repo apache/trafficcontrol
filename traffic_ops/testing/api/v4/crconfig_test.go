@@ -101,13 +101,17 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 	}
 
 	// create an ANY_MAP DS assignment to verify that it doesn't show up in the CRConfig
-	resp, _, err := TOSession.GetServers(nil, nil)
+	resp, _, err := TOSession.GetServers(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("GetServers err expected nil, actual %+v", err)
+		t.Fatalf("GetServers err expected nil, actual: %v - alerts: %+v", err, resp.Alerts)
 	}
 	servers := resp.Response
 	serverID := 0
 	for _, server := range servers {
+		if server.CDNName == nil || server.ID == nil {
+			t.Error("Traffic Ops returned a representation for a servver with null or undefined ID and/or CDN name")
+			continue
+		}
 		if server.Type == "EDGE" && *server.CDNName == "cdn1" {
 			serverID = *server.ID
 			break
