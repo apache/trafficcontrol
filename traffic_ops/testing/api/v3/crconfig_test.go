@@ -176,10 +176,7 @@ func MonitoringConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("getting Profiles with name '%s': %s", profileName, err.Error())
 	}
-	if len(cdns) < 1 {
-		t.Fatalf("expected to find a Profile named %s", profileName)
-	}
-	if len(profiles) > 1 {
+	if len(profiles) != 1 {
 		t.Fatalf("expected exactly 1 Profiles named %s but found %d Profiles", profileName, len(profiles))
 	}
 	parameters, _, err := TOSession.GetParametersByProfileNameWithHdr(profileName, nil)
