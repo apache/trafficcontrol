@@ -16,7 +16,6 @@
 package client
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
