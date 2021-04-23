@@ -516,11 +516,11 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	}
 
 	// Create new bogus server capability
-	_, _, err = TOSession.CreateServerCapability(tc.ServerCapability{
+	scResp, _, err := TOSession.CreateServerCapability(tc.ServerCapability{
 		Name: "newcap",
-	})
+	}, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot CREATE newcap server capability: %v", err)
+		t.Fatalf("cannot create 'newcap' Server Capability: %v - alerts: %+v", err, scResp.Alerts)
 	}
 
 	// Attempt to assign to DS should fail
@@ -548,9 +548,9 @@ func InvalidDeliveryServicesRequiredCapabilityAddition(t *testing.T) {
 	}
 
 	// Delete server capability
-	_, _, err = TOSession.DeleteServerCapability("newcap")
+	deleteAlerts, _, err := TOSession.DeleteServerCapability("newcap", client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot DELETE newcap server capability: %v", err)
+		t.Fatalf("cannot delete 'newcap' Server Capability: %v - alerts: %+v", err, deleteAlerts.Alerts)
 	}
 
 }

@@ -524,8 +524,8 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	}
 
 	// Create new bogus server capability
-	if _, _, err = TOSession.CreateServerCapability(tc.ServerCapability{Name: "newfun"}); err != nil {
-		t.Fatalf("cannot CREATE newfun server capability: %v", err)
+	if alerts, _, err := TOSession.CreateServerCapability(tc.ServerCapability{Name: "newfun"}, client.RequestOptions{}); err != nil {
+		t.Fatalf("cannot create 'newfun' Server Capability: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
 	// Attempt to assign to DS should not fail
@@ -542,8 +542,8 @@ func CreateTestMSODSServerWithReqCap(t *testing.T) {
 	}
 
 	// Delete server capability
-	if _, _, err = TOSession.DeleteServerCapability("newfun"); err != nil {
-		t.Fatalf("DELETE newfun server capability: %v", err)
+	if alerts, _, err := TOSession.DeleteServerCapability("newfun", client.RequestOptions{}); err != nil {
+		t.Fatalf("Unexpected error deleteing the 'newfun' Server Capability: %v - alerts: %+v", err, alerts.Alerts)
 	}
 }
 

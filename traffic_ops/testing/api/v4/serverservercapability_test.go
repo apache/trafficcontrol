@@ -242,16 +242,16 @@ func GetTestServerServerCapabilities(t *testing.T) {
 
 func UpdateTestServerServerCapabilities(t *testing.T) {
 	// Get server capability name and edit it to a new name
-	resp, _, err := TOSession.GetServerCapabilities(nil)
+	resp, _, err := TOSession.GetServerCapabilities(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
-	if len(resp) == 0 {
+	if len(resp.Response) == 0 {
 		t.Fatal("no server capability in response, quitting")
 	}
-	originalName := resp[0].Name
+	originalName := resp.Response[0].Name
 	newSCName := "sc-test"
-	resp[0].Name = newSCName
+	resp.Response[0].Name = newSCName
 
 	// Get all servers related to original sever capability name
 	opts := client.NewRequestOptions()
@@ -273,9 +273,9 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	// Update server capability with new name
-	updateResponse, _, err := TOSession.UpdateServerCapability(originalName, &resp[0], nil)
+	updateResponse, _, err := TOSession.UpdateServerCapability(originalName, resp.Response[0], client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot PUT server capability: %v - %v", err, updateResponse)
+		t.Errorf("cannot update Server Capability: %v - alerts: %+v", err, updateResponse.Alerts)
 	}
 
 	//To check whether the primary key change trickled down to server table
@@ -305,10 +305,10 @@ func UpdateTestServerServerCapabilities(t *testing.T) {
 	}
 
 	// Set everything back as it was for further testing.
-	resp[0].Name = originalName
-	r, _, err := TOSession.UpdateServerCapability(newSCName, &resp[0], nil)
+	resp.Response[0].Name = originalName
+	r, _, err := TOSession.UpdateServerCapability(newSCName, resp.Response[0], client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot PUT seerver capability: %v - %v", err, r)
+		t.Errorf("cannot update Server Capability: %v - alerts: %+v", err, r.Alerts)
 	}
 }
 

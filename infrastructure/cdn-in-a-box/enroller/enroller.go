@@ -753,13 +753,15 @@ func enrollServerCapability(toSession *session, r io.Reader) error {
 	var s tc.ServerCapability
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Server Capability: %s\n", err)
+		err = fmt.Errorf("error decoding Server Capability: %v", err)
+		log.Infoln(err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateServerCapability(s)
+	alerts, _, err := toSession.CreateServerCapability(s, client.RequestOptions{})
 	if err != nil {
-		log.Infof("error creating Server Capability: %s\n", err)
+		err = fmt.Errorf("error creating Server Capability: %v - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
