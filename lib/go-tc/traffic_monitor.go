@@ -448,7 +448,7 @@ type TMParameters struct {
 	// HealthThresholdJSONParameters contains the Parameters contained in the
 	// Thresholds field, formatted as individual string Parameters, rather than as
 	// a JSON object.
-	Thresholds              map[string]HealthThreshold `json:"health_threshold,omitempty"`
+	Thresholds map[string]HealthThreshold `json:"health_threshold,omitempty"`
 	HealthThresholdJSONParameters
 }
 
@@ -460,10 +460,10 @@ type HealthThresholdJSONParameters struct {
 	// ranges, e.g. ">10" means "more than 10 kbps".
 	AvailableBandwidthInKbps string `json:"health.threshold.availableBandwidthInKbps,omitempty"`
 	// LoadAverage is the UNIX loadavg at which the server should be marked "unhealthy".
-	LoadAverage              string `json:"health.threshold.loadavg,omitempty"`
+	LoadAverage string `json:"health.threshold.loadavg,omitempty"`
 	// QueryTime is the highest allowed length of time for completing health queries (after
 	// connection has been established) in milliseconds.
-	QueryTime                string `json:"health.threshold.queryTime,omitempty"`
+	QueryTime string `json:"health.threshold.queryTime,omitempty"`
 }
 
 const DefaultHealthThresholdComparator = "<"
