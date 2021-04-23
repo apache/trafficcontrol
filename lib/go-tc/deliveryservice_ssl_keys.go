@@ -186,17 +186,29 @@ func (r *DeliveryServiceGenSSLKeysReq) Validate(tx *sql.Tx) error {
 	return nil
 }
 
-type DeliveryServiceLetsEncryptSSLKeysReq struct {
+type DeliveryServiceAcmeSSLKeysReq struct {
 	DeliveryServiceSSLKeysReq
 }
 
-func (r *DeliveryServiceLetsEncryptSSLKeysReq) Validate(tx *sql.Tx) error {
+func (r *DeliveryServiceAcmeSSLKeysReq) Validate(tx *sql.Tx) error {
 	r.Sanitize()
 	errs := r.validateSharedRequiredRequestFields()
 	if len(errs) > 0 {
 		return errors.New("missing fields: " + strings.Join(errs, "; "))
 	}
+	errs = r.validateAcmeSpecificFields()
+	if len(errs) > 0 {
+		return errors.New("missing fields: " + strings.Join(errs, "; "))
+	}
 	return nil
+}
+
+func (r *DeliveryServiceAcmeSSLKeysReq) validateAcmeSpecificFields() []string {
+	errs := []string{}
+	if checkNilOrEmpty(r.AuthType) {
+		errs = append(errs, "authType required")
+	}
+	return errs
 }
 
 func checkNilOrEmpty(s *string) bool {

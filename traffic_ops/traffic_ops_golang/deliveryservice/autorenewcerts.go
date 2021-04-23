@@ -129,16 +129,16 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 	db, err := api.GetDB(ctx)
 	if err != nil {
 		log.Errorf("Error getting db: %s", err.Error())
-		if err = api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); err != nil {
-			log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
+		if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 		}
 		return
 	}
 	tx, err := db.Begin()
 	if err != nil {
 		log.Errorf("Error getting tx: %s", err.Error())
-		if err = api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); err != nil {
-			log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
+		if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 		}
 		return
 	}
@@ -146,8 +146,8 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 	logTx, err := db.Begin()
 	if err != nil {
 		log.Errorf("Error getting logTx: %s", err.Error())
-		if err = api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); err != nil {
-			log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
+		if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 		}
 		return
 	}
@@ -220,7 +220,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 		dsExpInfo.AuthType = keyObj.AuthType
 
 		if keyObj.AuthType == tc.LetsEncryptAuthType || (keyObj.AuthType == tc.SelfSignedCertAuthType && cfg.ConfigLetsEncrypt.ConvertSelfSigned) {
-			req := tc.DeliveryServiceLetsEncryptSSLKeysReq{
+			req := tc.DeliveryServiceAcmeSSLKeysReq{
 				DeliveryServiceSSLKeysReq: tc.DeliveryServiceSSLKeysReq{
 					HostName:        &keyObj.Hostname,
 					DeliveryService: &keyObj.DeliveryService,
@@ -230,7 +230,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 				},
 			}
 
-			if err := GetAcmeCertificates(cfg, req, ctx, currentUser, tv); err != nil {
+			if err := GetAcmeCertificates(cfg, req, ctx, currentUser, 0, tv); err != nil {
 				dsExpInfo.Error = err
 				errorCount++
 			} else {
@@ -263,8 +263,8 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 
 		}
 
-		if err = api.UpdateAsyncStatus(db, api.AsyncPending, "ACME renewal in progress. "+strconv.Itoa(renewedCount)+" certs renewed, "+strconv.Itoa(errorCount)+" errors.", asyncStatusId, false); err != nil {
-			log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
+		if asycErr := api.UpdateAsyncStatus(db, api.AsyncPending, "ACME renewal in progress. "+strconv.Itoa(renewedCount)+" certs renewed, "+strconv.Itoa(errorCount)+" errors.", asyncStatusId, false); asycErr != nil {
+			log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 		}
 
 	}
@@ -274,8 +274,8 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 	if errorCount > 0 && renewedCount == 0 {
 		asyncStatus = api.AsyncFailed
 	}
-	if err = api.UpdateAsyncStatus(db, asyncStatus, "ACME renewal complete. "+strconv.Itoa(renewedCount)+" certs renewed, "+strconv.Itoa(errorCount)+" errors.", asyncStatusId, true); err != nil {
-		log.Errorf("updating async status for id %v: %v", asyncStatusId, err)
+	if asycErr := api.UpdateAsyncStatus(db, asyncStatus, "ACME renewal complete. "+strconv.Itoa(renewedCount)+" certs renewed, "+strconv.Itoa(errorCount)+" errors.", asyncStatusId, true); asycErr != nil {
+		log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 	}
 
 	if cfg.SMTP.Enabled && cfg.ConfigAcmeRenewal.SummaryEmail != "" {

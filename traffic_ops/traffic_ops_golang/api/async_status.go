@@ -117,6 +117,9 @@ func InsertAsyncStatus(tx *sql.Tx, message string) (int, int, error, error) {
 
 // UpdateAsyncStatus updates the status table for an asynchronous job.
 func UpdateAsyncStatus(db *sqlx.DB, newStatus string, newMessage string, asyncStatusId int, finished bool) error {
+	if asyncStatusId == 0 {
+		return nil
+	}
 	tx, err := db.Begin()
 	if err != nil {
 		return err

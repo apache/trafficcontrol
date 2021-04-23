@@ -21,33 +21,33 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
     this.successMessage = 'SSL Keys generated and updated for ';
     this.acmeSuccessMessage = 'ACME call has been made successfully. This may take a few minutes. Please watch for a notification in the Change Log. Delivery Service = ';
 
-	this.generateSslKeys = function(deliveryService, sslKeys, generateSslKeyForm) {
-		 return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, 'deliveryservices/sslkeys/generate', this.successMessage);
-	};
-
-    this.generateSslKeysWithLetsEncrypt = function(deliveryService, sslKeys, generateSslKeyForm) {
-        return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, 'deliveryservices/sslkeys/generate/acme', 'Lets Encrypt: ' + this.acmeSuccessMessage);
+    this.generateSslKeys = function(deliveryService, sslKeys, generateSslKeyForm) {
+        return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, 'deliveryservices/sslkeys/generate', this.successMessage);
     };
 
-	this.generateSslKeysWithAcme = function(deliveryService, sslKeys, generateSslKeyForm, provider) {
-		return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, 'deliveryservices/sslkeys/generate/acme', provider + ": " + this.acmeSuccessMessage);
-	};
+    this.generateSslKeysWithAcme = function(deliveryService, sslKeys, generateSslKeyForm) {
+        return this.generateSslKeysBase(deliveryService, sslKeys, generateSslKeyForm, 'deliveryservices/sslkeys/generate/acme', null);
+    };
 
-	this.generateSslKeysBase = function(deliveryService, sslKeys, generateSslKeyForm, endpoint, message) {
+    this.generateSslKeysBase = function(deliveryService, sslKeys, generateSslKeyForm, endpoint, message) {
         if (sslKeys.hasOwnProperty('version')){
             generateSslKeyForm.version = parseInt(sslKeys.version, 10) + 1;
         } else {
             generateSslKeyForm.version = 1;
         }
 
-		generateSslKeyForm.cdn = deliveryService.cdnName;
-		generateSslKeyForm.deliveryservice = deliveryService.xmlId;
-		generateSslKeyForm.key = deliveryService.xmlId;
-		generateSslKeyForm.authType = sslKeys.authType;
+        generateSslKeyForm.cdn = deliveryService.cdnName;
+        generateSslKeyForm.deliveryservice = deliveryService.xmlId;
+        generateSslKeyForm.key = deliveryService.xmlId;
+        generateSslKeyForm.authType = sslKeys.authType;
 
         return $http.post(ENV.api['root'] + endpoint, generateSslKeyForm).then(
             function(result) {
-            	messageModel.setMessages([{level: 'success', text: message + deliveryService.xmlId}], true);
+                if (message === null) {
+                    messageModel.setMessages(result.data.alerts, true);
+                } else {
+                    messageModel.setMessages([{level: 'success', text: message + deliveryService.xmlId}], true);
+                }
                 return result.data.response;
             },
             function(err) {
@@ -57,24 +57,24 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
                 throw err;
             }
         );
-	};
+    };
 
-	this.renewCert = function(deliveryService) {
-		return $http.post(ENV.api['root'] + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys/renew").then(
-			function(result) {
-				messageModel.setMessages(result.data.alerts, false);
-				return result.data.response;
-			},
-			function(err) {
-				if (err.data && err.data.alerts) {
-					messageModel.setMessages(err.data.alerts, false);
-				}
-				throw err;
-			}
-		);
-	};
+    this.renewCert = function(deliveryService) {
+        return $http.post(ENV.api['root'] + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys/renew").then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, false);
+                return result.data.response;
+            },
+            function(err) {
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
+                }
+                throw err;
+            }
+        );
+    };
 
-	this.addSslKeys = function(sslKeys, deliveryService) {
+    this.addSslKeys = function(sslKeys, deliveryService) {
 
         sslKeys.key = deliveryService.xmlId;
         if (sslKeys.hasOwnProperty('version')){
@@ -98,9 +98,9 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
                 throw err;
             }
         );
-	};
+    };
 
-	this.getSslKeys = function(deliveryService) {
+    this.getSslKeys = function(deliveryService) {
         return $http.get(ENV.api['root'] + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys", {params: {decode: "true"}}).then(
             function(result) {
                 return result.data.response;
@@ -112,18 +112,18 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
                 throw err;
             }
         );
-	};
+    };
 
-	this.getAcmeProviders = function() {
-		return $http.get(ENV.api['root'] + 'acme_accounts/providers').then(
-			function (result) {
-				return result.data.response;
-			},
-			function (err) {
-				throw err;
-			}
-		);
-	};
+    this.getAcmeProviders = function() {
+        return $http.get(ENV.api['root'] + 'acme_accounts/providers').then(
+            function (result) {
+                return result.data.response;
+            },
+            function (err) {
+                throw err;
+            }
+        );
+    };
 };
 
 DeliveryServiceSslKeysService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
