@@ -426,7 +426,7 @@ without disrupting any existing processes or data.
 
 ## Documentation Impact
 Tags will need to be documented in the data model, both themselves and on the
-modeled objects which now contain them. Also, API endpoints will need to updated
+modeled objects which now contain them. Also, API endpoints will need to be updated
 to reflect the new return structures, where applicable.
 
 ## Testing Impact
