@@ -80,11 +80,32 @@ type TrafficMonitorConfig struct {
 	Profiles []TMProfile `json:"profiles,omitempty"`
 }
 
+const healthThresholdAvailableBandwidthInKbps = "availableBandwidthInKbps"
+const healthThresholdLoadAverage = "loadavg"
+const healthThresholdQueryTime = "queryTime"
+
 // ToLegacyConfig converts TrafficMonitorConfig to LegacyTrafficMonitorConfig.
 func (tmc *TrafficMonitorConfig) ToLegacyConfig() LegacyTrafficMonitorConfig {
 	var servers []LegacyTrafficServer
 	for _, s := range tmc.TrafficServers {
 		servers = append(servers, s.ToLegacyServer())
+	}
+
+	for profileIndex, profile := range tmc.Profiles {
+		thresholds := profile.Parameters.Thresholds
+		if _, exists := thresholds[healthThresholdAvailableBandwidthInKbps]; exists {
+			tmc.Profiles[profileIndex].Parameters.AvailableBandwidthInKbps = thresholds[healthThresholdAvailableBandwidthInKbps].String()
+			delete(tmc.Profiles[profileIndex].Parameters.Thresholds, healthThresholdAvailableBandwidthInKbps)
+		}
+		if _, exists := thresholds[healthThresholdLoadAverage]; exists {
+			tmc.Profiles[profileIndex].Parameters.LoadAverage = thresholds[healthThresholdLoadAverage].String()
+			delete(tmc.Profiles[profileIndex].Parameters.Thresholds, healthThresholdLoadAverage)
+		}
+		if _, exists := thresholds[healthThresholdQueryTime]; exists {
+			//tmc.Profiles[profileIndex].Parameters.QueryTime = int(thresholds[healthThresholdQueryTime].Val)
+			tmc.Profiles[profileIndex].Parameters.QueryTime = thresholds[healthThresholdQueryTime].String()
+			delete(tmc.Profiles[profileIndex].Parameters.Thresholds, healthThresholdQueryTime)
+		}
 	}
 
 	legacy := LegacyTrafficMonitorConfig{
@@ -424,7 +445,14 @@ type TMParameters struct {
 	HealthPollingType       string `json:"health.polling.type"`
 	HistoryCount            int    `json:"history.count"`
 	MinFreeKbps             int64
-	Thresholds              map[string]HealthThreshold `json:"health_threshold"`
+	Thresholds              map[string]HealthThreshold `json:"health_threshold,omitempty"`
+	HealthThresholdJSONParameters
+}
+
+type HealthThresholdJSONParameters struct {
+	AvailableBandwidthInKbps string `json:"health.threshold.availableBandwidthInKbps,omitempty"`
+	LoadAverage              string `json:"health.threshold.loadavg,omitempty"`
+	QueryTime                string `json:"health.threshold.queryTime,omitempty"`
 }
 
 const DefaultHealthThresholdComparator = "<"
