@@ -58,6 +58,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5744](https://github.com/apache/trafficcontrol/issues/5744) - Sort TM Delivery Service States page by DS name
 - Fixed server creation through legacy API versions to default `monitor` to `true`.
 - Fixed Traffic Monitor to report `ONLINE` caches as available.
+- [#5754](https://github.com/apache/trafficcontrol/issues/5754) - Ensure Health Threshold Parameters use legacy format for legacy Monitoring Config handler
 
 ### Changed
 - Updated the Traffic Ops Python client to 3.0
