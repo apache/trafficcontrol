@@ -445,13 +445,24 @@ type TMParameters struct {
 	HealthPollingType       string `json:"health.polling.type"`
 	HistoryCount            int    `json:"history.count"`
 	MinFreeKbps             int64
+	// HealthThresholdJSONParameters contains the Parameters contained in the
+	// Thresholds field, formatted as individual string Parameters, rather than as
+	// a JSON object.
 	Thresholds              map[string]HealthThreshold `json:"health_threshold,omitempty"`
 	HealthThresholdJSONParameters
 }
 
+// HealthThresholdJSONParameters contains Parameters whose Thresholds must be met in order for
+// Caches using the Profile containing these Parameters to be marked as Healthy.
 type HealthThresholdJSONParameters struct {
+	// AvailableBandwidthInKbps is The total amount of bandwidth that servers using this profile are
+	// allowed, in Kilobits per second. This is a string and using comparison operators to specify
+	// ranges, e.g. ">10" means "more than 10 kbps".
 	AvailableBandwidthInKbps string `json:"health.threshold.availableBandwidthInKbps,omitempty"`
+	// LoadAverage is the UNIX loadavg at which the server should be marked "unhealthy".
 	LoadAverage              string `json:"health.threshold.loadavg,omitempty"`
+	// QueryTime is the highest allowed length of time for completing health queries (after
+	// connection has been established) in milliseconds.
 	QueryTime                string `json:"health.threshold.queryTime,omitempty"`
 }
 
