@@ -178,7 +178,7 @@ func MonitoringConfig(t *testing.T) {
 	if len(cdns) < 1 {
 		t.Fatalf("expected to find a Profile named %s", profileName)
 	}
-	if len(cdns) > 1 {
+	if len(profiles) > 1 {
 		t.Fatalf("expected exactly 1 Profiles named %s but found %d Profiles", profileName, len(profiles))
 	}
 	parameters, _, err := TOSession.GetParametersByProfileName(profileName)
