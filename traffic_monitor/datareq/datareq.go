@@ -286,6 +286,7 @@ func wrapUnpolledCheck(unpolledCaches threadsafe.UnpolledCaches, errorCount thre
 			return
 		}
 		polledAll = true
+		w.Header().Set(rfc.PermissionsPolicy, "interest-cohort=()")
 		f(w, r)
 	}
 }
