@@ -48,7 +48,7 @@ func TestDivisions(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestDivisionsWithHeaders(t, header)
-		VerifyPaginationSupportDivision(t)
+		GetTestPaginationSupportDivision(t)
 		GetDivisionByInvalidId(t)
 		GetDivisionByInvalidName(t)
 		DeleteTestDivisionsByInvalidId(t)
@@ -279,7 +279,7 @@ func DeleteTestDivisions(t *testing.T) {
 	}
 }
 
-func VerifyPaginationSupportDivision(t *testing.T) {
+func GetTestPaginationSupportDivision(t *testing.T) {
 	qparams := url.Values{}
 	qparams.Set("orderby", "id")
 	divisions, _, err := TOSession.GetDivisions(qparams, nil)
@@ -375,10 +375,10 @@ func GetDivisionByInvalidId(t *testing.T) {
 func GetDivisionByInvalidName(t *testing.T) {
 	resp, _, err := TOSession.GetDivisionByName("abcd", nil)
 	if err != nil {
-		t.Errorf("Error!! Getting Division by Invalid Name %v", err)
+		t.Errorf("Getting Division by Invalid Name %v", err)
 	}
 	if len(resp) >= 1 {
-		t.Errorf("Error!! Invalid Name shouldn't have any response %v Error %v", resp, err)
+		t.Errorf("Invalid Name shouldn't have any response %v Error %v", resp, err)
 	}
 }
 
