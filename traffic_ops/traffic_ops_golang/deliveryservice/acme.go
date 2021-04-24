@@ -469,7 +469,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysRe
 		CSR: string(EncodePEMToLegacyPerlRiakFormat([]byte("ACME Generated"))),
 	}
 
-	if err := tv.PutDeliveryServiceSSLKeys(dsSSLKeys, tx); err != nil {
+	if err := tv.PutDeliveryServiceSSLKeys(dsSSLKeys, tx, context.Background()); err != nil {
 		log.Errorf("Error putting ACME certificate in Traffic Vault: %s", err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 		if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
