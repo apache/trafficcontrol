@@ -179,6 +179,21 @@ type GenericServerCheck struct {
 	Checks map[string]*int `json:"checks,omitempty"`
 }
 
+// ServercheckResponseV40 (not to be confused with ServerchecksResponse) is the
+// type of a response from Traffic Ops to a request to its /servercheck
+// endpoint (not to be confused with its /servers/checks endpoint) in version
+// 4.0 of the Traffic Ops API.
+type ServercheckResponseV40 struct {
+	Response []GenericServerCheck `json:"response"`
+	Alerts
+}
+
+// ServercheckResponseV4 (not to be confused with ServerchecksResponse) is the
+// type of a response from Traffic Ops to a request to its /servercheck
+// endpoint (not to be confused with its /servers/checks endpoint) in the
+// latest minor version of version 4 of the Traffic Ops API.
+type ServercheckResponseV4 = ServercheckResponseV40
+
 // ServerCheckColumns is a collection of columns associated with a particular
 // server's "checks". The meaning of the column names is unknown.
 type ServerCheckColumns struct {
