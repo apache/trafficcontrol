@@ -63,14 +63,13 @@ while ! curl -Lvsk "${selenium_fqdn}" 2>/dev/null >/dev/null; do
    sleep 1
 done
 
-jq "$(<<JQ_FILTERS cat
+echo "$(jq "$(<<JQ_FILTERS cat
 	.params.baseUrl = "https://$TP_FQDN" |
 	.params.apiUrl = "https://$TP_FQDN/api/4.0" |
 	.params.login.username = "$TO_ADMIN_USER" |
 	.params.login.password = "$TO_ADMIN_PASSWORD"
 JQ_FILTERS
-)" config.json > conf.json.tmp
-mv conf.json.tmp config.json
+)" config.json)" > config.json
 
 cat config.json
 
