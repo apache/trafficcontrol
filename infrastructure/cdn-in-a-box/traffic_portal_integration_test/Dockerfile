@@ -23,9 +23,6 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
 
-# Installs the Google Chrome dnf repo
-COPY infrastructure/cdn-in-a-box/traffic_portal_integration_test/etc etc
-
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         utils_package=yum-utils; \
     else \
@@ -33,15 +30,15 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
     fi && \
     dnf install -y \
         bind-utils \
-        # jq is in EPEL
+        # chromium and jq are in EPEL
         epel-release \
         GConf2 \
         git \
-        google-chrome-stable \
         java-1.8.0-openjdk \
         net-tools \
         $utils_package && \
-    dnf -y install jq && \
+    set -o pipefail && \
+    dnf -y install chromium jq && \
     dnf -y clean all
 
 FROM os-dependencies AS node-dependencies
@@ -70,6 +67,9 @@ RUN jq ' \
         .params.junitReporter = true' \
         config.json > conf.json.tmp && \
     mv conf.json.tmp config.json
+
+# Install chromium
+RUN dnf -y install chromium
 
 RUN webdriver-manager clean && \
     repoquery --installed --qf='%{version}' google-chrome-stable | \
