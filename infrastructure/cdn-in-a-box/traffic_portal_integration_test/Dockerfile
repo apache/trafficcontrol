@@ -71,9 +71,11 @@ RUN jq ' \
 # Install chromium
 RUN dnf -y install chromium
 
-RUN webdriver-manager clean && \
-    repoquery --installed --qf='%{version}' google-chrome-stable | \
-        xargs webdriver-manager update --versions.chrome
+RUN set -o pipefail && \
+    webdriver-manager clean && \
+    chromium-browser --version | \
+        grep -o '[0-9.]\+' | \
+        xargs webdriver-manager update --gecko false --versions.chrome
 
 COPY infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
      infrastructure/cdn-in-a-box/traffic_portal_integration_test/run.sh \

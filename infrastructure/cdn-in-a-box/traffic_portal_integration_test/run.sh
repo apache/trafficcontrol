@@ -53,7 +53,7 @@ if (( time - start_time >= timeout_in_seconds )); then
 	echo "Warning: Traffic Portal did not start after ${timeout_in_seconds} seconds.";
 fi;
 
-chrome_version="$(repoquery --installed --qf='%{version}' google-chrome-stable)"
+chrome_version="$(chromium-browser --version | grep -o '[0-9.]\+')"
 nohup webdriver-manager start --versions.chrome "$chrome_version" &
 
 selenium_port=4444
