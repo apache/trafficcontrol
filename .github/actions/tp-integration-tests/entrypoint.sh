@@ -143,9 +143,9 @@ start_traffic_vault &
 
 sudo apt-get install -y --no-install-recommends gettext \
 	ruby ruby-dev libc-dev curl \
-	gcc musl-dev
+	gcc
 
-sudo gem update --system && sudo gem install sass compass
+sudo gem install sass compass
 sudo npm i -g forever bower grunt
 
 CHROME_CONTAINER=$(docker ps | grep "selenium/node-chrome" | awk '{print $1}')
