@@ -20,8 +20,8 @@ import (
 )
 
 // GetCurrentStats gets current stats for each CDNs and a total across them
-func (to *Session) GetCurrentStats() (tc.TrafficStatsCDNStatsResponse, toclientlib.ReqInf, error) {
-	resp := tc.TrafficStatsCDNStatsResponse{}
-	reqInf, err := to.get("/current_stats", nil, &resp)
+func (to *Session) GetCurrentStats(opts RequestOptions) (tc.CurrentStatsResponseV4, toclientlib.ReqInf, error) {
+	var resp tc.CurrentStatsResponseV4
+	reqInf, err := to.get("/current_stats", opts, &resp)
 	return resp, reqInf, err
 }
