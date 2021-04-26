@@ -74,17 +74,17 @@ func CreateTestFederationUsers(t *testing.T) {
 	fedID := fedIDs[0]
 
 	// Get Users
-	users, _, err := TOSession.GetUsers(nil)
+	users, _, err := TOSession.GetUsers(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("getting users: " + err.Error())
+		t.Fatalf("getting users: %v - alerts: %+v", err, users.Alerts)
 	}
-	if len(users) < 3 {
+	if len(users.Response) < 3 {
 		t.Fatal("need > 3 users to create federation users")
 	}
 
-	u1 := users[0].ID
-	u2 := users[1].ID
-	u3 := users[2].ID
+	u1 := users.Response[0].ID
+	u2 := users.Response[1].ID
+	u3 := users.Response[2].ID
 	if u1 == nil || u2 == nil || u3 == nil {
 		t.Fatal("Traffic Ops returned at least one representation of a relationship between a user and a Federation that had a null or undefined ID")
 	}
@@ -150,16 +150,16 @@ func CreateTestValidFederationUsers(t *testing.T) {
 	fedID := fedIDs[0]
 
 	// Get Users
-	users, _, err := TOSession.GetUsers(nil)
+	users, _, err := TOSession.GetUsers(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("getting users: %v", err)
+		t.Fatalf("getting users: %v - alerts: %+v", err, users.Alerts)
 	}
-	if len(users) == 0 {
+	if len(users.Response) == 0 {
 		t.Fatal("need at least 1 user to test invalid federation user create")
 	}
 
 	// Associate with invalid federdation id
-	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*users[0].ID}, false, client.RequestOptions{})
+	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*users.Response[0].ID}, false, client.RequestOptions{})
 	if err == nil {
 		t.Error("expected to get error back from associating non existent federation id")
 	}
@@ -175,19 +175,19 @@ func CreateTestInvalidFederationUsers(t *testing.T) {
 	fedID := fedIDs[0]
 
 	// Get Users
-	users, _, err := TOSession.GetUsers(nil)
+	users, _, err := TOSession.GetUsers(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("getting users: " + err.Error())
+		t.Fatalf("getting users: %v - alerts: %+v", err, users.Alerts)
 	}
-	if len(users) == 0 {
+	if len(users.Response) == 0 {
 		t.Fatal("need at least 1 user to test invalid federation user create")
 	}
-	if users[0].ID == nil {
+	if users.Response[0].ID == nil {
 		t.Fatal("Traffic Ops returned a representation of a user with null or undefined ID")
 	}
 
 	// Associate with invalid federdation id
-	_, _, err = TOSession.CreateFederationUsers(-1, []int{*users[0].ID}, false, client.RequestOptions{})
+	_, _, err = TOSession.CreateFederationUsers(-1, []int{*users.Response[0].ID}, false, client.RequestOptions{})
 	if err == nil {
 		t.Error("expected to get error back from associating non existent federation id")
 	}

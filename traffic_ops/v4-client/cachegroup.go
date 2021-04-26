@@ -47,7 +47,7 @@ func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroupNullable, opts Reque
 		opts.QueryParameters.Set("name", *cachegroup.ParentName)
 		p, _, err := to.GetCacheGroups(opts)
 		if err != nil {
-			resp.Alerts = resp.Alerts
+			resp.Alerts = p.Alerts
 			return resp, toclientlib.ReqInf{}, err
 		}
 		if len(p.Response) == 0 {

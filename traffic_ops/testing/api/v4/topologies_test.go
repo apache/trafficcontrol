@@ -32,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -998,9 +999,9 @@ func CRUDTopologyReadOnlyUser(t *testing.T) {
 	user.TenantID = util.IntPtr(resp.Response[0].ID)
 	user.FullName = util.StrPtr("firstName LastName")
 
-	u, _, err := TOSession.CreateUser(user)
+	u, _, err := TOSession.CreateUser(user, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("could not create read-only user: %v", err)
+		t.Fatalf("could not create read-only user: %v - alerts: %+v", err, u.Alerts)
 	}
 	client, _, err := toclient.LoginWithAgent(TOSession.URL, "test_user", "test_pa$$word", true, "to-api-v4-client-tests/tenant4user", true, toReqTimeout)
 	if err != nil {

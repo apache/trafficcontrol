@@ -580,17 +580,20 @@ func enrollUser(toSession *session, r io.Reader) error {
 	err := dec.Decode(&s)
 	log.Infof("User is %++v\n", s)
 	if err != nil {
-		log.Infof("error decoding User: %s\n", err)
+		log.Infof("error decoding User: %v", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateUser(s)
+	alerts, _, err := toSession.CreateUser(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("user %s already exists\n", *s.Username)
-			return nil
+		for _, alert := range alerts.Alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("user %s already exists\n", *s.Username)
+				return nil
+			}
 		}
-		log.Infof("error creating User: %s\n", err)
+		err = fmt.Errorf("error creating User: %v - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -843,22 +846,22 @@ func enrollFederation(toSession *session, r io.Reader) error {
 			}
 		}
 		{
-			user, _, err := toSession.GetUserCurrent(nil)
+			user, _, err := toSession.GetUserCurrent(client.RequestOptions{})
 			if err != nil {
-				err = fmt.Errorf("getting the Current User: %v", err)
+				err = fmt.Errorf("getting the Current User: %v - alerts: %+v", err, user.Alerts)
 				log.Infoln(err)
 				return err
 			}
-			if user.ID == nil {
+			if user.Response.ID == nil {
 				err = errors.New("current user returned from Traffic Ops had null or undefined ID")
 				log.Infoln(err)
 				return err
 			}
-			resp, _, err := toSession.CreateFederationUsers(*cdnFederation.ID, []int{*user.ID}, true, client.RequestOptions{})
+			resp, _, err := toSession.CreateFederationUsers(*cdnFederation.ID, []int{*user.Response.ID}, true, client.RequestOptions{})
 			if err != nil {
 				var username string
-				if user.UserName != nil {
-					username = *user.UserName
+				if user.Response.UserName != nil {
+					username = *user.Response.UserName
 				}
 				err = fmt.Errorf("assigning User '%s' to Federation with ID %d: %v - alerts: %+v", username, *cdnFederation.ID, err, resp.Alerts)
 				log.Infoln(err)

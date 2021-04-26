@@ -32,25 +32,29 @@ const apiDSRequests = "/deliveryservice_requests"
 func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV4, opts RequestOptions) (tc.DeliveryServiceRequestCUDResponseV4, toclientlib.ReqInf, error) {
 	var resp tc.DeliveryServiceRequestCUDResponseV4
 	if dsr.AssigneeID == nil && dsr.Assignee != nil {
-		res, reqInf, err := to.GetUserByUsername(*dsr.Assignee, nil)
+		assigneeOpts := NewRequestOptions()
+		assigneeOpts.QueryParameters.Set("username", *dsr.Assignee)
+		res, reqInf, err := to.GetUsers(opts)
 		if err != nil {
 			return resp, reqInf, err
 		}
-		if len(res) == 0 {
+		if len(res.Response) == 0 {
 			return resp, reqInf, fmt.Errorf("no user with username '%s'", *dsr.Assignee)
 		}
-		dsr.AssigneeID = res[0].ID
+		dsr.AssigneeID = res.Response[0].ID
 	}
 
 	if dsr.AuthorID == nil && dsr.Author != "" {
-		res, reqInf, err := to.GetUserByUsername(dsr.Author, nil)
+		authorOpts := NewRequestOptions()
+		authorOpts.QueryParameters.Set("username", dsr.Author)
+		res, reqInf, err := to.GetUsers(opts)
 		if err != nil {
 			return resp, reqInf, err
 		}
-		if len(res) == 0 {
+		if len(res.Response) == 0 {
 			return resp, reqInf, fmt.Errorf("no user with name '%s'", dsr.Author)
 		}
-		dsr.AuthorID = res[0].ID
+		dsr.AuthorID = res.Response[0].ID
 	}
 
 	var ds *tc.DeliveryServiceV4

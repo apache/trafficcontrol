@@ -208,15 +208,15 @@ func AddFederationResolversForCurrentUserTest(t *testing.T) {
 	}
 
 	// need to assign myself the federation to set its mappings
-	me, _, err := TOSession.GetUserCurrent(nil)
+	me, _, err := TOSession.GetUserCurrent(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Couldn't figure out who I am: %v", err)
+		t.Fatalf("Couldn't figure out who I am: %v - alerts: %+v", err, me.Alerts)
 	}
-	if me.ID == nil {
+	if me.Response.ID == nil {
 		t.Fatal("Current user has no ID, cannot continue.")
 	}
 
-	alerts, _, err := TOSession.CreateFederationUsers(fedID, []int{*me.ID}, false, client.RequestOptions{})
+	alerts, _, err := TOSession.CreateFederationUsers(fedID, []int{*me.Response.ID}, false, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("Failed to assign Federation to current user: %v - alerts: %+v", err, alerts.Alerts)
 	}
