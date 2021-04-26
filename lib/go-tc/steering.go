@@ -27,6 +27,17 @@ type Steering struct {
 	Filters         []SteeringFilter         `json:"filters"`
 }
 
+// SteeringResponseV40 is the type of a response from Traffic Ops to a request
+// to its /steering endpoint in API version 4.0.
+type SteeringResponseV40 struct {
+	Response []Steering `json:"response"`
+	Alerts
+}
+
+// SteeringResponseV4 is the type of a response from Traffic Ops to a request
+// to its /steering endpoint in the latest minor version of API version 4.
+type SteeringResponseV4 = SteeringResponseV40
+
 // SteeringFilter is a filter for a target delivery service.
 type SteeringFilter struct {
 	DeliveryService DeliveryServiceName `json:"deliveryService"`

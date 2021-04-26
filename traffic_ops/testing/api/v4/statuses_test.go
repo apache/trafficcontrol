@@ -63,7 +63,7 @@ func UpdateTestStatusesWithHeaders(t *testing.T, header http.Header) {
 	opts.QueryParameters.Set("name", *firstStatus.Name)
 	resp, _, err := TOSession.GetStatuses(opts)
 	if err != nil {
-		t.Errorf("cannot get Status by name '%s': %v - alerts %+v", firstStatus.Name, err, resp.Alerts)
+		t.Errorf("cannot get Status by name '%s': %v - alerts %+v", *firstStatus.Name, err, resp.Alerts)
 	}
 	if len(resp.Response) > 0 {
 		remoteStatus := resp.Response[0]
@@ -181,7 +181,7 @@ func UpdateTestStatuses(t *testing.T) {
 	opts.QueryParameters.Set("name", *firstStatus.Name)
 	resp, _, err := TOSession.GetStatuses(opts)
 	if err != nil {
-		t.Errorf("cannot get Status by name '%s': %v - alerts: %+v", firstStatus.Name, err, resp.Alerts)
+		t.Errorf("cannot get Status by name '%s': %v - alerts: %+v", *firstStatus.Name, err, resp.Alerts)
 	}
 	if len(resp.Response) != 1 {
 		t.Fatalf("Expected exactly one Status to exist with name '%s', found: %d", *firstStatus.Name, len(resp.Response))
