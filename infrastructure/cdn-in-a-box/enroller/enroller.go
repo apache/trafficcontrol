@@ -179,17 +179,20 @@ func enrollTopology(toSession *session, r io.Reader) error {
 	var s tc.Topology
 	err := dec.Decode(&s)
 	if err != nil && err != io.EOF {
-		log.Infof("error decoding Topology: %s\n", err)
+		log.Infof("error decoding Topology: %s", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateTopology(s)
+	alerts, _, err := toSession.CreateTopology(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("topology %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("topology %s already exists", s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Topology: %s\n", err)
+		err = fmt.Errorf("error creating Topology: %v - alerts: %+v", err, alerts.Alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 

@@ -402,13 +402,18 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 		cachesByCacheGroup := map[string]tc.ServerV40{}
 		updateStatusByCacheGroup := map[string]tc.ServerUpdateStatus{}
 
-		forkedTopology, _, err := TOSession.GetTopology(topologyName, nil)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", topologyName)
+		forkedTopology, _, err := TOSession.GetTopologies(opts)
 		if err != nil {
-			t.Fatalf("topology %s was not found", topologyName)
+			t.Fatalf("Topology '%s' was not found: %v - alerts: %+v", topologyName, err, forkedTopology.Alerts)
+		}
+		if len(forkedTopology.Response) != 1 {
+			t.Fatalf("Expected exactly one Topology to exist with name '%s', found: %d", topologyName, len(forkedTopology.Response))
 		}
 		for _, cacheGroupName := range cacheGroupNames {
 			foundNode := false
-			for _, node := range forkedTopology.Nodes {
+			for _, node := range forkedTopology.Response[0].Nodes {
 				if node.Cachegroup == cacheGroupName {
 					foundNode = true
 					break
@@ -418,7 +423,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 				t.Fatalf("unable to find topology node with cachegroup %s", cacheGroupName)
 			}
 
-			opts := client.NewRequestOptions()
+			opts = client.NewRequestOptions()
 			opts.QueryParameters.Set("name", cacheGroupName)
 			cacheGroups, _, err := TOSession.GetCacheGroups(opts)
 			if err != nil {
@@ -448,7 +453,7 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			t.Fatalf("cannot update server status: %v - alerts: %+v", err, resp.Alerts)
 		}
 
-		opts := client.NewRequestOptions()
+		opts = client.NewRequestOptions()
 		for _, cacheGroupName := range cacheGroupNames {
 			cgID := *cachesByCacheGroup[cacheGroupName].CachegroupID
 			opts.QueryParameters.Set("cachegroup", strconv.Itoa(cgID))

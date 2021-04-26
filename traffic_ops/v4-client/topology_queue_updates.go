@@ -29,7 +29,7 @@ import (
 
 // TopologiesQueueUpdate queues updates for the Topology with the given Name.
 func (to *Session) TopologiesQueueUpdate(topologyName string, req tc.TopologiesQueueUpdateRequest, opts RequestOptions) (tc.TopologiesQueueUpdateResponse, toclientlib.ReqInf, error) {
-	path := fmt.Sprintf(APITopologies+"/%s/queue_update", url.PathEscape(topologyName))
+	path := fmt.Sprintf(apiTopologies+"/%s/queue_update", url.PathEscape(topologyName))
 	var resp tc.TopologiesQueueUpdateResponse
 	reqInf, err := to.post(path, opts, req, &resp)
 	return resp, reqInf, err

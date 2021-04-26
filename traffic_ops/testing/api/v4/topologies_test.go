@@ -32,7 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 type topologyTestCase struct {
@@ -83,19 +83,15 @@ func TestTopologies(t *testing.T) {
 }
 
 func CreateTestTopologies(t *testing.T) {
-	var (
-		postResponse tc.TopologyResponse
-		err          error
-	)
 	for _, topology := range testData.Topologies {
-		if postResponse, _, err = TOSession.CreateTopology(topology); err != nil {
-			t.Fatalf("could not CREATE topology: %v", err)
+		postResponse, _, err := TOSession.CreateTopology(topology, toclient.RequestOptions{})
+		if err != nil {
+			t.Fatalf("could not create Topology: %v - alerts: %+v", err, postResponse.Alerts)
 		}
 		postResponse.Response.LastUpdated = nil
 		if !reflect.DeepEqual(topology, postResponse.Response) {
 			t.Fatalf("Topology in response should be the same as the one POSTed. expected: %v\nactual: %v", topology, postResponse.Response)
 		}
-		t.Log("Response: ", postResponse)
 	}
 }
 
@@ -103,12 +99,12 @@ func GetTestTopologies(t *testing.T) {
 	if len(testData.Topologies) < 1 {
 		t.Fatalf("test data has no topologies, can't test")
 	}
-	topos, _, err := TOSession.GetTopologies(nil)
+	topos, _, err := TOSession.GetTopologies(toclient.RequestOptions{})
 	if err != nil {
-		t.Fatalf("expected GET error to be nil, actual: %v", err)
+		t.Fatalf("expected error to be nil, actual: %v - alerts: %+v", err, topos.Alerts)
 	}
-	if len(topos) != len(testData.Topologies) {
-		t.Errorf("expected topologies GET to return %v topologies, actual %v", len(testData.Topologies), len(topos))
+	if len(topos.Response) != len(testData.Topologies) {
+		t.Errorf("expected %d Topologies to exist in Traffic Ops, actual: %d", len(testData.Topologies), len(topos.Response))
 	}
 }
 
@@ -117,12 +113,17 @@ func UpdateTestTopologiesWithHeaders(t *testing.T, header http.Header) {
 	newName := "blah"
 
 	// Retrieve the Topology by name so we can get the id for Update()
-	resp, _, err := TOSession.GetTopology(originalName, nil)
+	opts := toclient.NewRequestOptions()
+	opts.QueryParameters.Set("name", originalName)
+	resp, _, err := TOSession.GetTopologies(opts)
 	if err != nil {
-		t.Errorf("cannot GET Topology by name: '%s', %v", originalName, err)
+		t.Errorf("cannot get Topology by name '%s': %v - alerts: %+v", originalName, err, resp.Alerts)
 	}
-	resp.Name = newName
-	_, reqInf, err := TOSession.UpdateTopology(originalName, resp, header)
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Topology to exist with name '%s', found: %d", originalName, len(resp.Response))
+	}
+	resp.Response[0].Name = newName
+	_, reqInf, err := TOSession.UpdateTopology(originalName, resp.Response[0], toclient.RequestOptions{Header: header})
 	if err == nil {
 		t.Errorf("Expected error about Precondition Failed, got none")
 	}
@@ -139,22 +140,22 @@ func EdgeParentOfEdgeSucceedsWithWarning(t *testing.T) {
 			{Cachegroup: "cachegroup1", Parents: []int{1}},
 			{Cachegroup: "cachegroup2", Parents: []int{}},
 		}}}
-	response, _, err := TOSession.CreateTopology(testCase.Topology)
+	response, _, err := TOSession.CreateTopology(testCase.Topology, toclient.RequestOptions{})
 	if err != nil {
-		t.Fatalf("expected POST with %v to succeed, actual: nil", testCase.testCaseDescription)
+		t.Fatalf("Unexpected error creating Topology for '%s': %v - alerts: %+v", testCase.testCaseDescription, err, response.Alerts)
 	}
 	containsWarning := false
 	for _, alert := range response.Alerts.Alerts {
-		if alert.Level == "warning" {
+		if alert.Level == tc.WarnLevel.String() {
 			containsWarning = true
 		}
 	}
 	if !containsWarning {
 		t.Fatalf("expected a warning-level alert message in the response, actual: %v", response.Alerts)
 	}
-	delResp, _, err := TOSession.DeleteTopology(testCase.Topology.Name)
+	delResp, _, err := TOSession.DeleteTopology(testCase.Topology.Name, toclient.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot DELETE topology: %v - %v", err, delResp)
+		t.Fatalf("cannot delete Topology: %v - alerts: %+v", err, delResp.Alerts)
 	}
 }
 
@@ -211,13 +212,13 @@ func ValidationTestTopologies(t *testing.T) {
 			{Cachegroup: "fallback3", Parents: []int{0, 1}},
 		}}},
 	}
-	var statusCode int
+
 	for _, testCase := range invalidTopologyTestCases {
-		_, reqInf, err := TOSession.CreateTopology(testCase.Topology)
+		_, reqInf, err := TOSession.CreateTopology(testCase.Topology, toclient.RequestOptions{})
 		if err == nil {
 			t.Fatalf("expected POST with %v to return an error, actual: nil", testCase.testCaseDescription)
 		}
-		statusCode = reqInf.StatusCode
+		statusCode := reqInf.StatusCode
 		if statusCode < 400 || statusCode >= 500 {
 			t.Fatalf("Expected a 400-level status code for topology %s but got %d", testCase.Topology.Name, statusCode)
 		}
@@ -225,9 +226,9 @@ func ValidationTestTopologies(t *testing.T) {
 }
 
 func updateSingleTopology(topology tc.Topology) error {
-	updateResponse, _, err := TOSession.UpdateTopology(topology.Name, topology, nil)
+	updateResponse, _, err := TOSession.UpdateTopology(topology.Name, topology, toclient.RequestOptions{})
 	if err != nil {
-		return fmt.Errorf("cannot PUT topology: %v - %v", err, updateResponse)
+		return fmt.Errorf("cannot put Topology: %v - alerts: %+v", err, updateResponse.Alerts)
 	}
 	updateResponse.Response.LastUpdated = nil
 	if !reflect.DeepEqual(topology, updateResponse.Response) {
@@ -243,23 +244,37 @@ func UpdateTestTopologies(t *testing.T) {
 		}
 	}
 
+	opts := toclient.NewRequestOptions()
+
 	// attempt to add cachegroup that doesn't meet DS required capabilities
-	top, _, err := TOSession.GetTopology("top-for-ds-req", nil)
+	opts.QueryParameters.Set("name", "top-for-ds-req")
+	resp, _, err := TOSession.GetTopologies(opts)
 	if err != nil {
-		t.Fatalf("cannot GET topology: %v", err)
+		t.Fatalf("cannot get Topology: %v - alerts: %+v", err, resp.Alerts)
 	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Topology to exist with name 'top-for-ds-req', found: %d", len(resp.Response))
+	}
+	top := resp.Response[0]
+
 	top.Nodes = append(top.Nodes, tc.TopologyNode{Cachegroup: "cachegroup1", Parents: []int{0}})
-	_, _, err = TOSession.UpdateTopology(top.Name, top, nil)
+	_, _, err = TOSession.UpdateTopology(top.Name, top, toclient.RequestOptions{})
 	if err == nil {
 		t.Errorf("making invalid update to topology - expected: error, actual: nil")
 	}
 
 	// attempt to add a cachegroup that only has caches in one CDN while the topology is assigned to DSes from multiple CDNs
-	top, _, err = TOSession.GetTopology("top-used-by-cdn1-and-cdn2", nil)
+	opts.QueryParameters.Set("name", "top-used-by-cdn1-and-cdn2")
+	resp, _, err = TOSession.GetTopologies(opts)
 	if err != nil {
-		t.Fatalf("cannot GET topology: %v", err)
+		t.Fatalf("cannot get Topology: %v - alerts: %+v", err, resp.Alerts)
 	}
-	opts := client.NewRequestOptions()
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Topology to exist with name 'top-for-ds-req', found: %d", len(resp.Response))
+	}
+	top = resp.Response[0]
+
+	opts = toclient.NewRequestOptions()
 	opts.QueryParameters.Set("topology", "top-used-by-cdn1-and-cdn2")
 	dses, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
@@ -284,7 +299,7 @@ func UpdateTestTopologies(t *testing.T) {
 	if !foundCDN1 || !foundCDN2 {
 		t.Fatalf("expected delivery services assigned to topology top-used-by-cdn1-and-cdn2 to be assigned to cdn1 and cdn2")
 	}
-	opts = client.NewRequestOptions()
+	opts = toclient.NewRequestOptions()
 	opts.QueryParameters.Set("name", "cdn1-only")
 	cgs, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
@@ -318,14 +333,14 @@ func UpdateTestTopologies(t *testing.T) {
 		Cachegroup: "cdn1-only",
 		Parents:    []int{0},
 	})
-	_, _, err = TOSession.UpdateTopology(top.Name, top, nil)
+	_, _, err = TOSession.UpdateTopology(top.Name, top, toclient.RequestOptions{})
 	if err == nil {
 		t.Errorf("making invalid update to topology (cachegroup contains only servers from cdn1 while the topology is assigned to delivery services in cdn1 and cdn2) - expected: error, actual: nil")
 	}
 }
 
 func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
-	opts := client.NewRequestOptions()
+	opts := toclient.NewRequestOptions()
 	opts.QueryParameters.Set("xmlId", "ds-top")
 
 	//Get the correct DS
@@ -343,17 +358,23 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 
 	//Assign ORG server to DS
 	assignServer := []string{"denver-mso-org-01"}
-	assignResponse, _, err := TOSession.AssignServersToDeliveryService(assignServer, *remoteDS.XMLID, client.RequestOptions{})
+	assignResponse, _, err := TOSession.AssignServersToDeliveryService(assignServer, *remoteDS.XMLID, toclient.RequestOptions{})
 	if err != nil {
 		t.Errorf("Unexpected error assigning server 'denver-mso-org-01' to Delivery Service '%s': %v - alerts: %+v", *remoteDS.XMLID, err, assignResponse.Alerts)
 	}
 
 	//Get Topology node to update and remove ORG server nodes
 	origTopo := *remoteDS.Topology
-	topo, _, err := TOSession.GetTopology(origTopo, nil)
+	opts = toclient.NewRequestOptions()
+	opts.QueryParameters.Set("name", origTopo)
+	topResp, _, err := TOSession.GetTopologies(opts)
 	if err != nil {
-		t.Fatalf("couldn't find any topologies: %v", err)
+		t.Fatalf("couldn't find any Topologies: %v - alerts: %+v", err, topResp.Alerts)
 	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Topology to exist with name '%s', found: %d", origTopo, len(resp.Response))
+	}
+	topo := topResp.Response[0]
 
 	// remove org server cachegroup
 	var p []int
@@ -361,16 +382,15 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	if *remoteDS.Topology == topo.Name {
 		topo.Nodes = newNodes
 	}
-	_, _, err = TOSession.UpdateTopology(*remoteDS.Topology, topo, nil)
+	updTopResp, _, err := TOSession.UpdateTopology(*remoteDS.Topology, topo, toclient.RequestOptions{})
 	if err == nil {
-		t.Fatalf("shouldnot UPDATE topology:%v to %v, but update was a success", *remoteDS.Topology, newNodes[0].Cachegroup)
-	} else if !strings.Contains(err.Error(), "ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed:") {
-		t.Errorf("expected error messsage containing: \"ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed\", got: %v", err)
-
+		t.Fatalf("should not update Topology: %s to %s, but update was a success", *remoteDS.Topology, newNodes[0].Cachegroup)
+	} else if !alertsHaveError(updTopResp.Alerts.Alerts, "ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed:") {
+		t.Errorf("expected error messsage containing: \"ORG servers are assigned to delivery services that use this topology, and their cachegroups cannot be removed\", got: %v - alets: %+v", err, updTopResp.Alerts)
 	}
 
 	//Remove org server assignment and reset DS back to as it was for further testing
-	opts = client.NewRequestOptions()
+	opts = toclient.NewRequestOptions()
 	opts.QueryParameters.Set("hostName", "denver-mso-org-01")
 	serverResp, _, err := TOSession.GetServers(opts)
 	if err != nil {
@@ -382,7 +402,7 @@ func UpdateValidateTopologyORGServerCacheGroup(t *testing.T) {
 	if serverResp.Response[0].ID == nil {
 		t.Fatal("ID of the response server is nil, quitting")
 	}
-	alerts, _, err := TOSession.DeleteDeliveryServiceServer(*remoteDS.ID, *serverResp.Response[0].ID, client.RequestOptions{})
+	alerts, _, err := TOSession.DeleteDeliveryServiceServer(*remoteDS.ID, *serverResp.Response[0].ID, toclient.RequestOptions{})
 	if err != nil {
 		t.Errorf("cannot remove server #%d from Delivery Service #%d: %v - alerts: %+v", *serverResp.Response[0].ID, *remoteDS.ID, err, alerts.Alerts)
 	}
@@ -392,24 +412,29 @@ func UpdateTopologyName(t *testing.T) {
 	currentTopologyName := "top-used-by-cdn1-and-cdn2"
 
 	// Get details on existing topology
-	resp, _, err := TOSession.GetTopology(currentTopologyName, nil)
+	opts := toclient.NewRequestOptions()
+	opts.QueryParameters.Set("name", currentTopologyName)
+	resp, _, err := TOSession.GetTopologies(opts)
 	if err != nil {
-		t.Errorf("unable to get topology with name: %v", currentTopologyName)
+		t.Errorf("unable to get Topology filtered by name '%s': %v - alerts: %+v", currentTopologyName, err, resp.Alerts)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Topology to exist with name '%s', found: %d", currentTopologyName, len(resp.Response))
 	}
 	newTopologyName := "test-topology"
-	resp.Name = newTopologyName
+	resp.Response[0].Name = newTopologyName
 
 	// Update topology with new name
-	updateResponse, _, err := TOSession.UpdateTopology(currentTopologyName, resp, nil)
+	updateResponse, _, err := TOSession.UpdateTopology(currentTopologyName, resp.Response[0], toclient.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot PUT topology: %v - %v", err, updateResponse)
+		t.Errorf("cannot updated Topology: %v - alerts: %+v", err, updateResponse.Alerts)
 	}
 	if updateResponse.Response.Name != newTopologyName {
 		t.Errorf("update topology name failed, expected: %v but got:%v", newTopologyName, updateResponse.Response.Name)
 	}
 
 	//To check whether the primary key change trickled down to DS table
-	opts := client.NewRequestOptions()
+	opts = toclient.NewRequestOptions()
 	opts.QueryParameters.Set("xmlId", "top-ds-in-cdn2")
 	resp1, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
@@ -426,20 +451,20 @@ func UpdateTopologyName(t *testing.T) {
 	}
 
 	// Set everything back as it was for further testing.
-	resp.Name = currentTopologyName
-	r, _, err := TOSession.UpdateTopology(newTopologyName, resp, nil)
+	resp.Response[0].Name = currentTopologyName
+	r, _, err := TOSession.UpdateTopology(newTopologyName, resp.Response[0], toclient.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot PUT topology: %v - %v", err, r)
+		t.Errorf("cannot update Topology: %v - alerts: %+v", err, r.Alerts)
 	}
 }
 
 func DeleteTestTopologies(t *testing.T) {
 	for _, top := range testData.Topologies {
-		delResp, _, err := TOSession.DeleteTopology(top.Name)
+		delResp, _, err := TOSession.DeleteTopology(top.Name, toclient.RequestOptions{})
 		if err != nil {
 			t.Fatalf("cannot delete Topology: %v - alerts: %+v", err, delResp.Alerts)
 		}
-		opts := client.NewRequestOptions()
+		opts := toclient.NewRequestOptions()
 		opts.QueryParameters.Set("limit", "1")
 		deleteLog, _, err := TOSession.GetLogs(opts)
 		if err != nil {
@@ -455,17 +480,24 @@ func DeleteTestTopologies(t *testing.T) {
 			t.Errorf("topology deletion audit log entry - expected: message containing topology name '%s', actual: %s", top.Name, *deleteLog.Response[0].Message)
 		}
 
-		_, _, err = TOSession.GetTopology(top.Name, nil)
-		if err == nil {
-			t.Fatalf("expected error trying to GET deleted topology: %s, actual: nil", top.Name)
+		opts.QueryParameters.Del("limit")
+		opts.QueryParameters.Set("name", top.Name)
+		resp, _, err := TOSession.GetTopologies(opts)
+		if err != nil {
+			t.Errorf("Unexpected error trying to fetch Topologies after deletion: %v - alerts: %+v", err, resp.Alerts)
+		}
+		if len(resp.Response) != 0 {
+			t.Fatalf("expected not to find deleted Topology '%s' in Traffic Ops, but %d Topologies were found by that name", top.Name, len(resp.Response))
 		}
 	}
 }
 
 func GetTopologyWithNonExistentName(t *testing.T) {
-	resp, reqInf, _ := TOSession.GetTopology("non-existent-topology", nil)
-	if resp.Name != "" {
-		t.Errorf("expected nothing in the response, but got a topology with name %s", resp.Name)
+	opts := toclient.NewRequestOptions()
+	opts.QueryParameters.Set("name", "non-existent-topology")
+	resp, reqInf, _ := TOSession.GetTopologies(opts)
+	if len(resp.Response) != 0 {
+		t.Errorf("expected nothing in the response, but got %d Topologies", len(resp.Response))
 	}
 	if reqInf.StatusCode != http.StatusOK {
 		t.Errorf("expected a 200 response code, but got %d", reqInf.StatusCode)
@@ -484,7 +516,7 @@ func CreateTopologyWithInvalidCacheGroup(t *testing.T) {
 		Name:        "invalid-cachegroup-topology",
 		Nodes:       nodes,
 	}
-	_, reqInf, err := TOSession.CreateTopology(top)
+	_, reqInf, err := TOSession.CreateTopology(top, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a '400 Bad Request' response code, but got %d", reqInf.StatusCode)
 	}
@@ -494,7 +526,7 @@ func CreateTopologyWithInvalidCacheGroup(t *testing.T) {
 }
 
 func CreateTopologyWithInvalidParentNumber(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
+	cacheGroups, _, err := TOSession.GetCacheGroups(toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -503,7 +535,7 @@ func CreateTopologyWithInvalidParentNumber(t *testing.T) {
 	}
 
 	cachegroupName := ""
-	opts := client.NewRequestOptions()
+	opts := toclient.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
 		if cg.ID == nil {
 			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
@@ -532,7 +564,7 @@ func CreateTopologyWithInvalidParentNumber(t *testing.T) {
 		Name:        "invalid-parent-topology",
 		Nodes:       nodes,
 	}
-	_, reqInf, err := TOSession.CreateTopology(top)
+	_, reqInf, err := TOSession.CreateTopology(top, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a '400 Bad Request' response code, but got %d", reqInf.StatusCode)
 	}
@@ -542,7 +574,7 @@ func CreateTopologyWithInvalidParentNumber(t *testing.T) {
 }
 
 func CreateTopologyWithoutDescription(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
+	cacheGroups, _, err := TOSession.GetCacheGroups(toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -551,7 +583,7 @@ func CreateTopologyWithoutDescription(t *testing.T) {
 	}
 
 	cachegroupName := ""
-	opts := client.NewRequestOptions()
+	opts := toclient.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
 		if cg.ID == nil {
 			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
@@ -577,21 +609,21 @@ func CreateTopologyWithoutDescription(t *testing.T) {
 		Name:  "topology-without-description",
 		Nodes: nodes,
 	}
-	_, reqInf, err := TOSession.CreateTopology(top)
+	resp, reqInf, err := TOSession.CreateTopology(top, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusOK {
 		t.Errorf("expected a 200 response code, but got %d", reqInf.StatusCode)
 	}
 	if err != nil {
-		t.Errorf("no error expected about description being empty, but got %v", err)
+		t.Errorf("no error expected about description being empty, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
-	_, _, err = TOSession.DeleteTopology(top.Name)
+	alerts, _, err := TOSession.DeleteTopology(top.Name, toclient.RequestOptions{})
 	if err != nil {
-		t.Errorf("couldn't delete topology with name %s: %v", top.Name, err)
+		t.Errorf("couldn't delete Topology with name '%s': %v - alerts: %+v", top.Name, err, alerts.Alerts)
 	}
 }
 
 func CreateTopologyWithoutName(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
+	cacheGroups, _, err := TOSession.GetCacheGroups(toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -600,7 +632,7 @@ func CreateTopologyWithoutName(t *testing.T) {
 	}
 
 	cachegroupName := ""
-	opts := client.NewRequestOptions()
+	opts := toclient.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
 		if cg.ID == nil {
 			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
@@ -626,7 +658,8 @@ func CreateTopologyWithoutName(t *testing.T) {
 		Description: "description",
 		Nodes:       nodes,
 	}
-	_, reqInf, err := TOSession.CreateTopology(top)
+
+	_, reqInf, err := TOSession.CreateTopology(top, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
 	}
@@ -636,7 +669,7 @@ func CreateTopologyWithoutName(t *testing.T) {
 }
 
 func CreateTopologyWithoutServers(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
+	cacheGroups, _, err := TOSession.GetCacheGroups(toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -645,7 +678,7 @@ func CreateTopologyWithoutServers(t *testing.T) {
 	}
 
 	cachegroupName := ""
-	opts := client.NewRequestOptions()
+	opts := toclient.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
 		if cg.ID == nil {
 			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
@@ -672,7 +705,7 @@ func CreateTopologyWithoutServers(t *testing.T) {
 		Description: "description",
 		Nodes:       nodes,
 	}
-	_, reqInf, err := TOSession.CreateTopology(top)
+	_, reqInf, err := TOSession.CreateTopology(top, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
 	}
@@ -682,7 +715,7 @@ func CreateTopologyWithoutServers(t *testing.T) {
 }
 
 func CreateTopologyWithDuplicateParents(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
+	cacheGroups, _, err := TOSession.GetCacheGroups(toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -692,7 +725,7 @@ func CreateTopologyWithDuplicateParents(t *testing.T) {
 
 	cachegroupName := ""
 	parentName := ""
-	opts := client.NewRequestOptions()
+	opts := toclient.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
 		if cg.ID == nil {
 			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
@@ -738,7 +771,7 @@ func CreateTopologyWithDuplicateParents(t *testing.T) {
 		Description: "description",
 		Nodes:       nodes,
 	}
-	_, reqInf, err := TOSession.CreateTopology(top)
+	_, reqInf, err := TOSession.CreateTopology(top, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
 	}
@@ -748,7 +781,7 @@ func CreateTopologyWithDuplicateParents(t *testing.T) {
 }
 
 func CreateTopologyWithNodeAsParentOfItself(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
+	cacheGroups, _, err := TOSession.GetCacheGroups(toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -758,7 +791,7 @@ func CreateTopologyWithNodeAsParentOfItself(t *testing.T) {
 
 	cachegroupName := ""
 	parentName := ""
-	opts := client.NewRequestOptions()
+	opts := toclient.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
 		if cg.ID == nil {
 			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
@@ -804,7 +837,7 @@ func CreateTopologyWithNodeAsParentOfItself(t *testing.T) {
 		Description: "description",
 		Nodes:       nodes,
 	}
-	_, reqInf, err := TOSession.CreateTopology(top)
+	_, reqInf, err := TOSession.CreateTopology(top, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
 	}
@@ -814,7 +847,7 @@ func CreateTopologyWithNodeAsParentOfItself(t *testing.T) {
 }
 
 func CreateTopologyWithOrgLocAsChildNode(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
+	cacheGroups, _, err := TOSession.GetCacheGroups(toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -824,7 +857,7 @@ func CreateTopologyWithOrgLocAsChildNode(t *testing.T) {
 
 	cachegroupName := ""
 	parentName := ""
-	opts := client.NewRequestOptions()
+	opts := toclient.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
 		if cg.ID == nil {
 			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
@@ -870,7 +903,7 @@ func CreateTopologyWithOrgLocAsChildNode(t *testing.T) {
 		Description: "description",
 		Nodes:       nodes,
 	}
-	_, reqInf, err := TOSession.CreateTopology(top)
+	_, reqInf, err := TOSession.CreateTopology(top, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
 	}
@@ -880,14 +913,14 @@ func CreateTopologyWithOrgLocAsChildNode(t *testing.T) {
 }
 
 func CreateTopologyWithExistingName(t *testing.T) {
-	resp, _, err := TOSession.GetTopologies(nil)
+	resp, _, err := TOSession.GetTopologies(toclient.RequestOptions{})
 	if err != nil {
-		t.Fatalf("could not GET topologies: %v", err)
+		t.Fatalf("could not get Topologies: %v - alerts: %+v", err, resp.Alerts)
 	}
-	if len(resp) == 0 {
+	if len(resp.Response) == 0 {
 		t.Fatalf("expected 1 or more topologies in response, but got 0")
 	}
-	_, reqInf, err := TOSession.CreateTopology(resp[0])
+	_, reqInf, err := TOSession.CreateTopology(resp.Response[0], toclient.RequestOptions{})
 	if err == nil {
 		t.Errorf("expected error about creating topology with same name, but got none")
 	}
@@ -897,16 +930,16 @@ func CreateTopologyWithExistingName(t *testing.T) {
 }
 
 func CreateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
+	cacheGroups, _, err := TOSession.GetCacheGroups(toclient.RequestOptions{})
 	if err != nil {
-		t.Fatalf("error while getting cachegroups: %v", err)
+		t.Fatalf("error while getting Cache Groups: %v - alerts: %+v", err, cacheGroups.Alerts)
 	}
 	if len(cacheGroups.Response) == 0 {
-		t.Fatalf("no cachegroups in response")
+		t.Fatal("no cachegroups in response")
 	}
 
 	parentName := ""
-	opts := client.NewRequestOptions()
+	opts := toclient.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
 		if cg.ID == nil {
 			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
@@ -933,7 +966,7 @@ func CreateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
 		Description: "description",
 		Nodes:       nodes,
 	}
-	_, reqInf, err := TOSession.CreateTopology(top)
+	_, reqInf, err := TOSession.CreateTopology(top, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
 	}
@@ -943,7 +976,7 @@ func CreateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
 }
 
 func CRUDTopologyReadOnlyUser(t *testing.T) {
-	opts := client.NewRequestOptions()
+	opts := toclient.NewRequestOptions()
 	opts.QueryParameters.Set("name", "root")
 	resp, _, err := TOSession.GetTenants(opts)
 	if err != nil {
@@ -969,7 +1002,7 @@ func CRUDTopologyReadOnlyUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not create read-only user: %v", err)
 	}
-	client, _, err := client.LoginWithAgent(TOSession.URL, "test_user", "test_pa$$word", true, "to-api-v4-client-tests/tenant4user", true, toReqTimeout)
+	client, _, err := toclient.LoginWithAgent(TOSession.URL, "test_user", "test_pa$$word", true, "to-api-v4-client-tests/tenant4user", true, toReqTimeout)
 	if err != nil {
 		t.Fatalf("failed to log in with test_user: %v", err.Error())
 	}
@@ -985,31 +1018,31 @@ func CRUDTopologyReadOnlyUser(t *testing.T) {
 		Nodes:       nodes,
 	}
 	// Create
-	_, reqInf, err := client.CreateTopology(top)
+	_, reqInf, err := client.CreateTopology(top, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusForbidden {
 		t.Errorf("expected a 403 Forbidden error, but got %d", reqInf.StatusCode)
 	}
 	if err == nil {
 		t.Errorf("expected error about Read-Only users not being able to create topologies, but got nothing")
-		_, _, err = client.DeleteTopology(top.Name)
+		alerts, _, err := client.DeleteTopology(top.Name, toclient.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not delete topology %s: %v", top.Name, err)
+			t.Errorf("could not delete Topology '%s': %v - alerts: %+v", top.Name, err, alerts.Alerts)
 		}
 	}
 
 	// Read
-	tops, _, err := client.GetTopologies(nil)
+	tops, _, err := client.GetTopologies(toclient.RequestOptions{})
 	if err != nil {
-		t.Fatalf("couldn't get topologies: %v", err)
+		t.Fatalf("couldn't get Topologies: %v - alerts: %+v", err, tops.Alerts)
 	}
-	if len(tops) == 0 {
+	if len(tops.Response) == 0 {
 		t.Fatal("expected to get one or more topologies in the response, but got none")
 	}
 
 	// Update
-	updatedTop := tops[0]
+	updatedTop := tops.Response[0]
 	updatedTop.Description = "updated description"
-	_, reqInf, err = client.UpdateTopology(updatedTop.Name, updatedTop, nil)
+	_, reqInf, err = client.UpdateTopology(updatedTop.Name, updatedTop, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusForbidden {
 		t.Errorf("expected a 403 Forbidden error, but got %d", reqInf.StatusCode)
 	}
@@ -1018,7 +1051,7 @@ func CRUDTopologyReadOnlyUser(t *testing.T) {
 	}
 
 	// Delete
-	_, reqInf, err = client.DeleteTopology(tops[0].Name)
+	_, reqInf, err = client.DeleteTopology(tops.Response[0].Name, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusForbidden {
 		t.Errorf("expected a 403 Forbidden error, but got %d", reqInf.StatusCode)
 	}
@@ -1032,19 +1065,19 @@ func CRUDTopologyReadOnlyUser(t *testing.T) {
 }
 
 func UpdateTopologyWithCachegroupAssignedToBecomeParentOfItself(t *testing.T) {
-	tops, _, err := TOSession.GetTopologies(nil)
+	tops, _, err := TOSession.GetTopologies(toclient.RequestOptions{})
 	if err != nil {
-		t.Fatalf("couldn't get topologies: %v", err)
+		t.Fatalf("couldn't get Topologies: %v - alerts: %+v", err, tops.Alerts)
 	}
-	if len(tops) == 0 {
+	if len(tops.Response) == 0 {
 		t.Fatal("expected to get one or more topologies in the response, but got none")
 	}
-	tp := tops[0]
-	parents := make([]int, 0)
+	tp := tops.Response[0]
 
 	// create a list of indices consisting of all the node indices,
 	// so that when we assign this parent list wile updating,
 	// TO complains about the parent of a node being the same as itself
+	parents := make([]int, 0, len(tp.Nodes))
 	for i := range tp.Nodes {
 		parents = append(parents, i)
 	}
@@ -1054,8 +1087,8 @@ func UpdateTopologyWithCachegroupAssignedToBecomeParentOfItself(t *testing.T) {
 	}
 	tp.Nodes = nodes
 
-	tops[0] = tp
-	_, reqInf, err := TOSession.UpdateTopology(tops[0].Name, tops[0], nil)
+	tops.Response[0] = tp
+	_, reqInf, err := TOSession.UpdateTopology(tops.Response[0].Name, tops.Response[0], toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
 	}
@@ -1065,7 +1098,7 @@ func UpdateTopologyWithCachegroupAssignedToBecomeParentOfItself(t *testing.T) {
 }
 
 func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
+	cacheGroups, _, err := TOSession.GetCacheGroups(toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -1075,7 +1108,7 @@ func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
 
 	cachegroupName := ""
 	parentName := ""
-	opts := client.NewRequestOptions()
+	opts := toclient.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
 		if cg.ID == nil {
 			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
@@ -1117,20 +1150,20 @@ func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
 		},
 	}
 
-	tops, _, err := TOSession.GetTopologies(nil)
+	tops, _, err := TOSession.GetTopologies(toclient.RequestOptions{})
 	if err != nil {
-		t.Fatalf("couldn't get topologies: %v", err)
+		t.Fatalf("couldn't get Topologies: %v - alerts: %+v", err, tops.Alerts)
 	}
-	if len(tops) == 0 {
+	if len(tops.Response) == 0 {
 		t.Fatal("expected to get one or more topologies in the response, but got none")
 	}
 
 	top := tc.Topology{
-		Description: tops[0].Description,
-		Name:        tops[0].Name,
+		Description: tops.Response[0].Description,
+		Name:        tops.Response[0].Name,
 		Nodes:       nodes,
 	}
-	_, reqInf, err := TOSession.UpdateTopology(tops[0].Name, top, nil)
+	_, reqInf, err := TOSession.UpdateTopology(top.Name, top, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
 	}
@@ -1140,7 +1173,7 @@ func UpdateTopologyWithSameParentAndSecondaryParent(t *testing.T) {
 }
 
 func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
+	cacheGroups, _, err := TOSession.GetCacheGroups(toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -1150,7 +1183,7 @@ func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
 
 	cachegroupName := ""
 	parentName := ""
-	opts := client.NewRequestOptions()
+	opts := toclient.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
 		if cg.ID == nil {
 			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
@@ -1192,11 +1225,11 @@ func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
 		},
 	}
 
-	tops, _, err := TOSession.GetTopologies(nil)
+	tops, _, err := TOSession.GetTopologies(toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("couldn't get topologies: %v", err)
 	}
-	if len(tops) == 0 {
+	if len(tops.Response) == 0 {
 		t.Fatal("expected to get one or more topologies in the response, but got none")
 	}
 	top := tc.Topology{
@@ -1204,7 +1237,7 @@ func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
 		Description: "description",
 		Nodes:       nodes,
 	}
-	_, reqInf, err := TOSession.UpdateTopology(tops[0].Name, top, nil)
+	_, reqInf, err := TOSession.UpdateTopology(tops.Response[0].Name, top, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
 	}
@@ -1214,7 +1247,7 @@ func UpdateTopologyWithOrgLocAsChildNode(t *testing.T) {
 }
 
 func UpdateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
+	cacheGroups, _, err := TOSession.GetCacheGroups(toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -1223,7 +1256,7 @@ func UpdateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
 	}
 
 	parentName := ""
-	opts := client.NewRequestOptions()
+	opts := toclient.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
 		if cg.ID == nil {
 			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
@@ -1245,21 +1278,21 @@ func UpdateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
 			Parents:    []int{},
 		},
 	}
-	tops, _, err := TOSession.GetTopologies(nil)
+	tops, _, err := TOSession.GetTopologies(toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("couldn't get topologies: %v", err)
 	}
-	if len(tops) == 0 {
+	if len(tops.Response) == 0 {
 		t.Fatal("expected to get one or more topologies in the response, but got none")
 	}
 
 	top := tc.Topology{
-		Name:        tops[0].Name,
-		Description: tops[0].Description,
+		Name:        tops.Response[0].Name,
+		Description: tops.Response[0].Description,
 		Nodes:       nodes,
 	}
 
-	_, reqInf, err := TOSession.UpdateTopology(tops[0].Name, top, nil)
+	_, reqInf, err := TOSession.UpdateTopology(tops.Response[0].Name, top, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
 	}
@@ -1269,20 +1302,20 @@ func UpdateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
 }
 
 func UpdateTopologyWithInvalidParentNumber(t *testing.T) {
-	tops, _, err := TOSession.GetTopologies(nil)
+	tops, _, err := TOSession.GetTopologies(toclient.RequestOptions{})
 	if err != nil {
-		t.Fatalf("couldn't get topologies: %v", err)
+		t.Fatalf("couldn't get Topologies: %v - alerts: %+v", err, tops.Alerts)
 	}
-	if len(tops) == 0 {
+	if len(tops.Response) == 0 {
 		t.Fatal("expected to get one or more topologies in the response, but got none")
 	}
-	tp := tops[0]
+	tp := tops.Response[0]
 	parents := make([]int, 0)
 	parents = append(parents, len(tp.Nodes)+1)
 	for i := range tp.Nodes {
 		tp.Nodes[i].Parents = parents
 	}
-	_, reqInf, err := TOSession.UpdateTopology(tp.Name, tp, nil)
+	_, reqInf, err := TOSession.UpdateTopology(tp.Name, tp, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a '400 Bad Request' response code, but got %d", reqInf.StatusCode)
 	}
@@ -1292,7 +1325,7 @@ func UpdateTopologyWithInvalidParentNumber(t *testing.T) {
 }
 
 func UpdateTopologyWithNoServers(t *testing.T) {
-	cacheGroups, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
+	cacheGroups, _, err := TOSession.GetCacheGroups(toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error while getting cachegroups: %v", err)
 	}
@@ -1302,7 +1335,7 @@ func UpdateTopologyWithNoServers(t *testing.T) {
 	nodes := make([]tc.TopologyNode, 0)
 
 	cachegroupName := ""
-	opts := client.NewRequestOptions()
+	opts := toclient.NewRequestOptions()
 	for _, cg := range cacheGroups.Response {
 		if cg.ID == nil {
 			t.Error("Traffic Ops returned a representation for a Cache Group with null or undefined ID")
@@ -1323,15 +1356,15 @@ func UpdateTopologyWithNoServers(t *testing.T) {
 	}
 	nodes = append(nodes, node)
 
-	tops, _, err := TOSession.GetTopologies(nil)
+	tops, _, err := TOSession.GetTopologies(toclient.RequestOptions{})
 	if err != nil {
-		t.Fatalf("error getting topologies: %v", err)
+		t.Fatalf("error getting Topologies: %v - alerts: %+v", err, tops.Alerts)
 	}
-	if len(tops) == 0 {
+	if len(tops.Response) == 0 {
 		t.Fatalf("expected 1 or more topologies in response, but got none")
 	}
-	tops[0].Nodes = nodes
-	_, reqInf, err := TOSession.UpdateTopology(tops[0].Name, tops[0], nil)
+	tops.Response[0].Nodes = nodes
+	_, reqInf, err := TOSession.UpdateTopology(tops.Response[0].Name, tops.Response[0], toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
 	}
@@ -1341,7 +1374,7 @@ func UpdateTopologyWithNoServers(t *testing.T) {
 }
 
 func DeleteTopologyBeingUsedByDeliveryService(t *testing.T) {
-	ds, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
+	ds, _, err := TOSession.GetDeliveryServices(toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("couldn't get Delivery Services: %v - alerts: %+v", err, ds.Alerts)
 	}
@@ -1358,7 +1391,7 @@ func DeleteTopologyBeingUsedByDeliveryService(t *testing.T) {
 	if topologyName == "" {
 		t.Error("Expected at least one Delivery Service to have a Topology, but none did")
 	}
-	_, reqInf, err := TOSession.DeleteTopology(topologyName)
+	_, reqInf, err := TOSession.DeleteTopology(topologyName, toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
 	}
@@ -1368,7 +1401,7 @@ func DeleteTopologyBeingUsedByDeliveryService(t *testing.T) {
 }
 
 func DeleteTopologyWithNonExistentName(t *testing.T) {
-	_, reqInf, err := TOSession.DeleteTopology("non existent name")
+	_, reqInf, err := TOSession.DeleteTopology("non existent name", toclient.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a 400 response code, but got %d", reqInf.StatusCode)
 	}
