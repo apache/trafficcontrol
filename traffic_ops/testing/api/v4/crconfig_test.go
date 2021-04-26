@@ -260,13 +260,13 @@ func MonitoringConfig(t *testing.T) {
 	if len(parameterMap) != expectedThresholdParameters {
 		t.Fatalf("expected Profile '%s' to contain %d Parameters with names starting with '%s' but %d such Parameters were found", profileName, expectedThresholdParameters, tc.ThresholdPrefix, len(parameterMap))
 	}
-	tmConfig, _, err := TOSession.GetTrafficMonitorConfig(cdnName)
+	tmConfig, _, err := TOSession.GetTrafficMonitorConfig(cdnName, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("getting Traffic Monitor Config: %s", err.Error())
+		t.Fatalf("getting Traffic Monitor Config: %v - alerts: %+v", err, tmConfig.Alerts)
 	}
 	profileFound := false
 	var profile tc.TMProfile
-	for _, profile = range tmConfig.Profiles {
+	for _, profile = range tmConfig.Response.Profiles {
 		if profile.Name == profileName {
 			profileFound = true
 			break

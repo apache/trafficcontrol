@@ -1,3 +1,5 @@
+package v4
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +14,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-
-package v4
 
 import (
 	"testing"
@@ -45,11 +45,11 @@ func GetTestMonitoringConfigNoSnapshotOnTheFly(t *testing.T) {
 		t.Fatal("No edge server found in test data, cannot test")
 	}
 
-	tmConfig, _, err := TOSession.GetTrafficMonitorConfigMap(*server.CDNName)
+	resp, _, err := TOSession.GetTrafficMonitorConfig(*server.CDNName, client.RequestOptions{})
 	if err != nil {
-		t.Error("getting monitoring: " + err.Error())
-	} else if len(tmConfig.TrafficServer) == 0 {
-		t.Error("Expected Monitoring without a snapshot to generate on-the-fly, actual: empty monitoring object for cdn '" + *server.CDNName + "'")
+		t.Errorf("getting monitoring: %v - alerts: %+v", err, resp.Alerts)
+	} else if len(resp.Response.TrafficServers) == 0 {
+		t.Errorf("Expected Monitoring without a snapshot to generate on-the-fly, actual: empty monitoring object for CDN '%s'", *server.CDNName)
 	}
 }
 
@@ -74,19 +74,19 @@ func AllCDNsCanSnapshot(t *testing.T) {
 			continue
 		}
 
-		tmConfig, _, err := TOSession.GetTrafficMonitorConfigMap(cdn.Name)
-		if err != nil && tmConfig == nil {
-			t.Error(err)
+		tmConfig, _, err := TOSession.GetTrafficMonitorConfig(cdn.Name, client.RequestOptions{})
+		if err != nil {
+			t.Errorf("Unexpected error fetching Traffic Monitor Config for CDN '%s': %v - alerts: %+v", cdn.Name, err, tmConfig.Alerts)
 			continue
 		}
 
-		for hostName, server := range tmConfig.TrafficServer {
-			if _, ok := serversByHost[hostName]; !ok {
-				t.Errorf("Server %v not found in test data", hostName)
+		for _, server := range tmConfig.Response.TrafficServers {
+			if _, ok := serversByHost[server.HostName]; !ok {
+				t.Errorf("Server '%s' not found in test data", server.HostName)
 				continue
 			}
 			if len(server.Interfaces) < 1 {
-				t.Errorf("Server %v expected to get more than 1 interface(s), got %v", hostName, len(server.Interfaces))
+				t.Errorf("Server '%s' expected to get more than 1 interface(s), got %d", server.HostName, len(server.Interfaces))
 			}
 		}
 	}
