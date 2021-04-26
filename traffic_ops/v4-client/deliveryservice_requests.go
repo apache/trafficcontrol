@@ -89,11 +89,13 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV4,
 	}
 
 	if ds.TenantID == nil && ds.Tenant != nil {
-		ten, reqInf, err := to.GetTenantByName(*ds.Tenant, nil)
-		if err != nil {
+		tenantOpts := NewRequestOptions()
+		tenantOpts.QueryParameters.Set("name", *ds.Tenant)
+		ten, reqInf, err := to.GetTenants(tenantOpts)
+		if err != nil || len(ten.Response) == 0 {
 			return resp, reqInf, fmt.Errorf("no Tenant named '%s'", *ds.Tenant)
 		}
-		ds.TenantID = &ten.ID
+		ds.TenantID = &ten.Response[0].ID
 	}
 
 	reqInf, err := to.post(apiDSRequests, opts, dsr, &resp)

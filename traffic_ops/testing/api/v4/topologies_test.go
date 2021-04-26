@@ -943,9 +943,14 @@ func CreateTopologyWithMidLocTypeWithoutChild(t *testing.T) {
 }
 
 func CRUDTopologyReadOnlyUser(t *testing.T) {
-	resp, _, err := TOSession.GetTenantByName("root", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "root")
+	resp, _, err := TOSession.GetTenants(opts)
 	if err != nil {
-		t.Fatalf("couldn't get the root tenant ID: %v", err)
+		t.Fatalf("couldn't get the root tenant ID: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Tenant to have the name 'root', found: %d", len(resp.Response))
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
@@ -957,7 +962,7 @@ func CRUDTopologyReadOnlyUser(t *testing.T) {
 		RoleName:             util.StrPtr("read-only user"),
 	}
 	user.Email = util.StrPtr("email@domain.com")
-	user.TenantID = util.IntPtr(resp.ID)
+	user.TenantID = util.IntPtr(resp.Response[0].ID)
 	user.FullName = util.StrPtr("firstName LastName")
 
 	u, _, err := TOSession.CreateUser(user)

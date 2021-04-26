@@ -86,11 +86,15 @@ func (to *Session) originIDs(origin *tc.Origin) error {
 	}
 
 	if origin.TenantID == nil && origin.Tenant != nil {
-		tenant, _, err := to.GetTenantByName(*origin.Tenant, nil)
+		opts.QueryParameters.Set("name", *origin.Tenant)
+		tenant, _, err := to.GetTenants(opts)
 		if err != nil {
-			return err
+			return fmt.Errorf("resolving Tenant name '%s' to an ID: %v - alerts: %+v", *origin.Tenant, err, tenant.Alerts)
 		}
-		origin.TenantID = &tenant.ID
+		if len(tenant.Response) == 0 {
+			return fmt.Errorf("no Tenant with name '%s'", *origin.Tenant)
+		}
+		origin.TenantID = &tenant.Response[0].ID
 	}
 
 	return nil

@@ -169,11 +169,16 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOp
 	}
 
 	if ds.TenantID == nil && ds.Tenant != nil {
-		ten, _, err := to.GetTenantByName(*ds.Tenant, nil)
+		tenantOpts := NewRequestOptions()
+		tenantOpts.QueryParameters.Set("name", *ds.Tenant)
+		ten, _, err := to.GetTenants(opts)
 		if err != nil {
-			return resp, reqInf, err
+			return resp, reqInf, fmt.Errorf("attempting to resolve Tenant '%s' to an ID: %v", *ds.Tenant, err)
 		}
-		ds.TenantID = &ten.ID
+		if len(ten.Response) == 0 {
+			return resp, reqInf, fmt.Errorf("no Tenant named '%s'", *ds.Tenant)
+		}
+		ds.TenantID = &ten.Response[0].ID
 	}
 
 	reqInf, err := to.post(apiDeliveryServices, RequestOptions{Header: opts.Header}, nil, &resp)

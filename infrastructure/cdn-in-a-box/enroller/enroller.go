@@ -544,17 +544,20 @@ func enrollTenant(toSession *session, r io.Reader) error {
 	var s tc.Tenant
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Tenant: %s\n", err)
+		log.Infof("error decoding Tenant: %s", err)
 		return err
 	}
 
-	alerts, err := toSession.CreateTenant(s)
+	alerts, _, err := toSession.CreateTenant(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("tenant %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("tenant %s already exists", s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Tenant: %s\n", err)
+		err = fmt.Errorf("error creating Tenant: %v - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 

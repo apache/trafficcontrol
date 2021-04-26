@@ -1391,9 +1391,9 @@ func GetAccessibleToTest(t *testing.T) {
 		ParentName: "root",
 	}
 
-	resp, err := TOSession.CreateTenant(tenant)
+	resp, _, err := TOSession.CreateTenant(tenant, client.RequestOptions{})
 	if err != nil {
-		t.Fatal(err.Error())
+		t.Fatalf("Unexpected error creating a tenant: %v - alerts: %+v", err, resp.Alerts)
 	}
 	tenant = resp.Response
 
@@ -1404,20 +1404,26 @@ func GetAccessibleToTest(t *testing.T) {
 	}
 
 	//First and only child tenant, no access to root
-	childTenant, _, err := TOSession.GetTenantByName("tenant1", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "tenant1")
+	childTenant, _, err := TOSession.GetTenants(opts)
 	if err != nil {
-		t.Fatal("unable to get tenant " + err.Error())
+		t.Fatalf("unable to get tenant: %v - alerts: %+v", err, childTenant.Alerts)
 	}
+	if len(childTenant.Response) != 1 {
+		t.Fatalf("Expected exactly one Tenant to exist with the name 'tenant1', found: %d", len(childTenant.Response))
+	}
+
 	// TODO: document that all DSes added to the fixture data need to have the
 	// Tenant 'tenant1' unless you change this code
-	err = getByTenants(childTenant.ID, len(testData.DeliveryServices)-1)
+	err = getByTenants(childTenant.Response[0].ID, len(testData.DeliveryServices)-1)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
-	_, err = TOSession.DeleteTenant(tenant.ID)
+	alerts, _, err := TOSession.DeleteTenant(tenant.ID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("unable to clean up tenant %v", err.Error())
+		t.Fatalf("unable to clean up Tenant: %v - alerts: %+v", err, alerts.Alerts)
 	}
 }
 

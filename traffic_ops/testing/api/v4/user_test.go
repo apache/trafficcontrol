@@ -118,11 +118,11 @@ func RolenameCapitalizationTest(t *testing.T) {
 		t.Fatal("Traffic Ops returned a representation of a Role that had null or undefined ID")
 	}
 
-	tenants, _, err := TOSession.GetTenants(nil)
+	tenants, _, err := TOSession.GetTenants(client.RequestOptions{})
 	if err != nil {
 		t.Errorf("could not get tenants: %v", err)
 	}
-	if len(tenants) == 0 {
+	if len(tenants.Response) == 0 {
 		t.Fatal("there should be at least one tenant to test the user")
 	}
 
@@ -136,7 +136,7 @@ func RolenameCapitalizationTest(t *testing.T) {
 		"confirmLocalPasswd": "better_twelve",
 		"role": %d,
 		"tenantId": %d
-	}`, *roles.Response[0].ID, tenants[0].ID)
+	}`, *roles.Response[0].ID, tenants.Response[0].ID)
 
 	reader := strings.NewReader(blob)
 	request, err := http.NewRequest("POST", fmt.Sprintf("%v%s/users", TOSession.URL, TestAPIBase), reader)
@@ -216,16 +216,26 @@ func SortTestUsers(t *testing.T) {
 func UserRegistrationTest(t *testing.T) {
 	ForceDeleteTestUsers(t)
 	var emails []string
+	opts := client.NewRequestOptions()
 	for _, user := range testData.Users {
-		tenant, _, err := TOSession.GetTenantByName(*user.Tenant, nil)
-		if err != nil {
-			t.Fatalf("could not get tenant %v: %v", *user.Tenant, err)
+		if user.Tenant == nil || user.Role == nil || user.Email == nil {
+			t.Error("Found User in the testing data with null or undefined Tenant and/or Role ID and/or Email address")
+			continue
 		}
-		resp, _, err := TOSession.RegisterNewUser(uint(tenant.ID), uint(*user.Role), rfc.EmailAddress{Address: mail.Address{Address: *user.Email}})
+		opts.QueryParameters.Set("name", *user.Tenant)
+		resp, _, err := TOSession.GetTenants(opts)
 		if err != nil {
-			t.Fatalf("could not register user: %v", err)
+			t.Fatalf("could not get Tenants filtered by name '%s': %v - alerts: %+v", *user.Tenant, err, resp.Alerts)
 		}
-		t.Log("Response: ", resp.Alerts)
+		if len(resp.Response) != 1 {
+			t.Fatalf("Expected exactly one Tenant to exist with the name '%s', found: %d", *user.Tenant, len(resp.Response))
+		}
+		tenant := resp.Response[0]
+
+		regResp, _, err := TOSession.RegisterNewUser(uint(tenant.ID), uint(*user.Role), rfc.EmailAddress{Address: mail.Address{Address: *user.Email}})
+		if err != nil {
+			t.Fatalf("could not register user: %v - alerts: %+v", err, regResp.Alerts)
+		}
 		emails = append(emails, fmt.Sprintf(`'%v'`, *user.Email))
 	}
 
@@ -470,9 +480,19 @@ func UserTenancyTest(t *testing.T) {
 	}
 
 	// assert that tenant4user cannot create a user outside of its tenant
-	rootTenant, _, err := TOSession.GetTenantByName("root", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "root")
+	resp, _, err := TOSession.GetTenants(opts)
 	if err != nil {
-		t.Error("expected to be able to GET the root tenant")
+		t.Errorf("Unexpected error getting the root Tenant: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Tenant to exist with the name 'root', found: %d", len(resp.Response))
+	}
+	rootTenant := resp.Response[0]
+
+	if len(testData.Users) < 1 {
+		t.Fatal("Need at least one User to continue testing User Tenancy")
 	}
 	newUser := testData.Users[0]
 	newUser.Email = util.StrPtr("testusertenancy@example.com")
