@@ -96,14 +96,16 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 		server.ProfileID = &pr.Response[0].ID
 	}
 	if needAndCanFetch(server.StatusID, server.Status) {
-		st, _, err := to.GetStatusByName(*server.Status, nil)
+		innerOpts := NewRequestOptions()
+		innerOpts.QueryParameters.Set("name", *server.Status)
+		st, reqInf, err := to.GetStatuses(opts)
 		if err != nil {
-			return alerts, reqInf, fmt.Errorf("no status named %s: %v", *server.Status, err)
+			return st.Alerts, reqInf, fmt.Errorf("no status named %s: %v", *server.Status, err)
 		}
-		if len(st) == 0 {
+		if len(st.Response) == 0 {
 			return alerts, reqInf, fmt.Errorf("no status named %s", *server.Status)
 		}
-		server.StatusID = &st[0].ID
+		server.StatusID = &st.Response[0].ID
 	}
 	if (server.TypeID == nil || *server.TypeID == 0) && server.Type != "" {
 		ty, _, err := to.GetTypeByName(server.Type, nil)

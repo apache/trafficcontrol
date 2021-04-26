@@ -516,17 +516,19 @@ func enrollStatus(toSession *session, r io.Reader) error {
 	var s tc.StatusNullable
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Status: %s\n", err)
+		log.Infof("error decoding Status: %s", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateStatus(s)
+	alerts, _, err := toSession.CreateStatus(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("status %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("status %s already exists", s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Status: %s\n", err)
+		err = fmt.Errorf("error creating Status: %v - alerts: %+v", err, alerts.Alerts)
 		return err
 	}
 

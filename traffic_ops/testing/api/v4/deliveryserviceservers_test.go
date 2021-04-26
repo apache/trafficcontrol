@@ -62,17 +62,17 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		t.Fatalf("Delivery Service '%s' has no ID", dssaTestingXMLID)
 	}
 
-	statuses, _, err := TOSession.GetStatuses(nil)
+	statuses, _, err := TOSession.GetStatuses(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Could not fetch Statuses: %v", err)
+		t.Fatalf("Could not fetch Statuses: %v - alerts: %+v", err, statuses.Alerts)
 	}
-	if len(statuses) < 1 {
+	if len(statuses.Response) < 1 {
 		t.Fatal("Need at least one Status")
 	}
 
 	var badStatusID int
 	found := false
-	for _, status := range statuses {
+	for _, status := range statuses.Response {
 		if status.Name != tc.CacheStatusOnline.String() && status.Name != tc.CacheStatusReported.String() {
 			badStatusID = status.ID
 			found = true

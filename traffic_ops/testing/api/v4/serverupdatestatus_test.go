@@ -131,14 +131,19 @@ func TestServerUpdateStatus(t *testing.T) {
 		}
 
 		// update status of MID server to OFFLINE via status ID
-		status, _, err := TOSession.GetStatusByName("OFFLINE", nil)
+		opts = client.NewRequestOptions()
+		opts.QueryParameters.Set("name", "OFFLINE")
+		status, _, err := TOSession.GetStatuses(opts)
 		if err != nil {
-			t.Fatalf("cannot GET status by name: %v", err)
+			t.Fatalf("cannot get Status 'OFFLINE': %v - alerts: %+v", err, status.Alerts)
+		}
+		if len(status.Response) != 1 {
+			t.Fatalf("Expected exactly one Status to exist with name 'OFFLINE', found: %d", len(status.Response))
 		}
 		alerts, _, err = TOSession.UpdateServerStatus(
 			*mid1cdn1.ID,
 			tc.ServerPutStatus{
-				Status:        util.JSONNameOrIDStr{ID: util.IntPtr(status[0].ID)},
+				Status:        util.JSONNameOrIDStr{ID: util.IntPtr(status.Response[0].ID)},
 				OfflineReason: util.StrPtr("testing"),
 			},
 			client.RequestOptions{},

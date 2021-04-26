@@ -190,11 +190,11 @@ func UpdateTestServerStatus(t *testing.T) {
 	originalStatusID := 0
 	updatedStatusID := 0
 
-	statuses, _, err := TOSession.GetStatuses(nil)
+	statuses, _, err := TOSession.GetStatuses(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot get statuses: %v", err.Error())
+		t.Fatalf("cannot get Statuses: %v - alerts: %+v", err, statuses.Alerts)
 	}
-	for _, status := range statuses {
+	for _, status := range statuses.Response {
 		if status.Name == "REPORTED" {
 			originalStatusID = status.ID
 		}
