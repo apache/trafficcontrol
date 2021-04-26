@@ -76,14 +76,14 @@ func UpdateTestSteeringTargetsWithHeaders(t *testing.T, header http.Header) {
 	}
 	dsID := *respDS.Response[0].ID
 
-	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID)
+	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("updating steering targets: getting steering target: %v", err)
+		t.Fatalf("updating steering targets: getting steering target: %v - alerts: %+v", err, sts.Alerts)
 	}
-	if len(sts) < 1 {
+	if len(sts.Response) < 1 {
 		t.Fatal("updating steering targets: getting steering target: got 0")
 	}
-	st = sts[0]
+	st = sts.Response[0]
 
 	expected := util.JSONIntStr(-12345)
 	if st.Value != nil && *st.Value == expected {
@@ -91,7 +91,8 @@ func UpdateTestSteeringTargetsWithHeaders(t *testing.T, header http.Header) {
 	}
 	st.Value = &expected
 
-	_, reqInf, err := SteeringUserSession.UpdateSteeringTarget(st, header)
+	opts.QueryParameters.Del("xmlId")
+	_, reqInf, err := SteeringUserSession.UpdateSteeringTarget(st, opts)
 	if err == nil {
 		t.Errorf("Expected error about precondition failed, but got none")
 	}
@@ -221,7 +222,7 @@ func CreateTestSteeringTargets(t *testing.T) {
 			st.TargetID = &targetID
 		}
 
-		resp, _, err := SteeringUserSession.CreateSteeringTarget(st)
+		resp, _, err := SteeringUserSession.CreateSteeringTarget(st, client.RequestOptions{})
 		if err != nil {
 			t.Fatalf("creating steering target: %v - alerts: %+v", err, resp.Alerts)
 		}
@@ -254,14 +255,14 @@ func UpdateTestSteeringTargets(t *testing.T) {
 	}
 	dsID := *respDS.Response[0].ID
 
-	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID)
+	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("updating steering targets: getting steering target: %v", err)
+		t.Fatalf("updating steering targets: getting steering target: %v - alerts: %+v", err, sts.Alerts)
 	}
-	if len(sts) < 1 {
+	if len(sts.Response) < 1 {
 		t.Fatal("updating steering targets: getting steering target: got 0")
 	}
-	st = sts[0]
+	st = sts.Response[0]
 
 	expected := util.JSONIntStr(-12345)
 	if st.Value != nil && *st.Value == expected {
@@ -269,19 +270,19 @@ func UpdateTestSteeringTargets(t *testing.T) {
 	}
 	st.Value = &expected
 
-	_, _, err = SteeringUserSession.UpdateSteeringTarget(st, nil)
+	alerts, _, err := SteeringUserSession.UpdateSteeringTarget(st, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("updating steering targets: updating: %+v", err)
+		t.Fatalf("updating steering targets: updating: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
-	sts, _, err = SteeringUserSession.GetSteeringTargets(dsID)
+	sts, _, err = SteeringUserSession.GetSteeringTargets(dsID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("updating steering targets: getting updated steering target: %v", err)
+		t.Fatalf("updating steering targets: getting updated steering target: %v - alerts: %+v", err, sts.Alerts)
 	}
-	if len(sts) < 1 {
+	if len(sts.Response) < 1 {
 		t.Fatal("updating steering targets: getting updated steering target: got 0")
 	}
-	actual := sts[0]
+	actual := sts.Response[0]
 
 	if actual.DeliveryServiceID == nil {
 		t.Fatalf("steering target update: ds id expected %v actual %v", dsID, nil)
@@ -341,17 +342,17 @@ func GetTestSteeringTargets(t *testing.T) {
 	}
 	dsID := *respDS.Response[0].ID
 
-	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID)
+	sts, _, err := SteeringUserSession.GetSteeringTargets(dsID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("steering target get: getting steering target: %v", err)
+		t.Fatalf("steering target get: getting steering target: %v - alerts: %+v", err, sts.Alerts)
 	}
 
-	if len(sts) != len(testData.SteeringTargets) {
-		t.Fatalf("steering target get: expected %v actual %v", len(testData.SteeringTargets), len(sts))
+	if len(sts.Response) != len(testData.SteeringTargets) {
+		t.Fatalf("steering target get: expected %d actual %d", len(testData.SteeringTargets), len(sts.Response))
 	}
 
 	expected := testData.SteeringTargets[0]
-	actual := sts[0]
+	actual := sts.Response[0]
 
 	if actual.DeliveryServiceID == nil {
 		t.Fatalf("steering target get: ds id expected %v actual %v", dsID, nil)
@@ -417,19 +418,19 @@ func DeleteTestSteeringTargets(t *testing.T) {
 		targetID := uint64(*respTarget.Response[0].ID)
 		st.TargetID = &targetID
 
-		resp, _, err := SteeringUserSession.DeleteSteeringTarget(int(*st.DeliveryServiceID), int(*st.TargetID))
+		resp, _, err := SteeringUserSession.DeleteSteeringTarget(int(*st.DeliveryServiceID), int(*st.TargetID), client.RequestOptions{})
 		if err != nil {
 			t.Fatalf("deleting steering target: deleting: %v - alerts: %+v", err, resp.Alerts)
 		}
 	}
 
 	for _, dsID := range dsIDs {
-		sts, _, err := SteeringUserSession.GetSteeringTargets(int(dsID))
+		sts, _, err := SteeringUserSession.GetSteeringTargets(int(dsID), client.RequestOptions{})
 		if err != nil {
-			t.Fatalf("deleting steering targets: getting steering target: %v", err)
+			t.Fatalf("deleting steering targets: getting steering target: %v - alerts: %+v", err, sts.Alerts)
 		}
-		if len(sts) != 0 {
-			t.Fatalf("deleting steering targets: after delete, getting steering target: expected 0 actual %+v", len(sts))
+		if len(sts.Response) != 0 {
+			t.Fatalf("deleting steering targets: after delete, getting steering target: expected 0 actual %d", len(sts.Response))
 		}
 	}
 }
