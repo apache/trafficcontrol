@@ -95,7 +95,7 @@ export class TopologiesPage extends BasePage {
         let basePage = new BasePage();
         await this.btnDelete.click();
         await this.txtConfirmName.sendKeys(name);
-        await basePage.ClickDeletePermanently();
+        await this.ClickDeletePermanently();
         return await basePage.GetOutputMessage().then(value => value === topologies.validationMessage);
     }
 }
