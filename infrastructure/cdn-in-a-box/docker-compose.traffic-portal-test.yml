@@ -21,7 +21,7 @@
 # example of how to run the main compose with this file:
 #
 # docker-compose -f docker-compose.yml -f docker-compose.traffic-portal-test.yml up -d db edge trafficportal trafficops trafficvault portal-integration-test
-# docker-compose -f docker-compose.yml -f docker-compose.traffic-portal-test.yml logs -f portal-integration-test
+# docker-compose -f docker-compose.traffic-portal-test.yml logs -f portal-integration-test
 
 ---
 version: '2.1'
@@ -33,19 +33,15 @@ services:
       dockerfile: infrastructure/cdn-in-a-box/traffic_portal_integration_test/Dockerfile
       args:
         RHEL_VERSION: ${RHEL_VERSION:-8}
-    depends_on:
-      - edge
     env_file:
       - variables.env
+    environment:
+      SKIP_DIG_IP: 'true'
     hostname: portal-integration
     domainname: infra.ciab.test
     volumes:
       - shared:/shared
       - ../../junit:/junit
-
-  trafficops:
-    environment:
-      DIG_IP_RETRY: ${DIG_IP_RETRY:-0}
 
 volumes:
   shared:
