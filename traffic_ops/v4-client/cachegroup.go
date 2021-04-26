@@ -30,14 +30,16 @@ const apiCachegroups = "/cachegroups"
 func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroupNullable, opts RequestOptions) (tc.CacheGroupDetailResponse, toclientlib.ReqInf, error) {
 	var resp tc.CacheGroupDetailResponse
 	if cachegroup.TypeID == nil && cachegroup.Type != nil {
-		ty, _, err := to.GetTypeByName(*cachegroup.Type, nil)
+		opts := NewRequestOptions()
+		opts.QueryParameters.Set("name", *cachegroup.Type)
+		ty, _, err := to.GetTypes(opts)
 		if err != nil {
-			return resp, toclientlib.ReqInf{}, err
+			return resp, toclientlib.ReqInf{}, fmt.Errorf("resolving Type name '%s' to an ID: %v - alerts: %+v", *cachegroup.Name, err, ty.Alerts)
 		}
-		if len(ty) == 0 {
+		if len(ty.Response) == 0 {
 			return resp, toclientlib.ReqInf{}, errors.New("no type named " + *cachegroup.Type)
 		}
-		cachegroup.TypeID = &ty[0].ID
+		cachegroup.TypeID = &ty.Response[0].ID
 	}
 
 	if cachegroup.ParentCachegroupID == nil && cachegroup.ParentName != nil {

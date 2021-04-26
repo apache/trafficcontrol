@@ -88,10 +88,10 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 		innerOpts.QueryParameters.Set("name", *server.Profile)
 		pr, reqInf, err := to.GetProfiles(opts)
 		if err != nil {
-			return pr.Alerts, reqInf, fmt.Errorf("no profile named %s: %v", *server.Profile, err)
+			return pr.Alerts, reqInf, fmt.Errorf("no Profile named %s: %v", *server.Profile, err)
 		}
 		if len(pr.Response) == 0 {
-			return pr.Alerts, reqInf, fmt.Errorf("no profile named %s", *server.Profile)
+			return pr.Alerts, reqInf, fmt.Errorf("no Profile named %s", *server.Profile)
 		}
 		server.ProfileID = &pr.Response[0].ID
 	}
@@ -100,22 +100,24 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 		innerOpts.QueryParameters.Set("name", *server.Status)
 		st, reqInf, err := to.GetStatuses(opts)
 		if err != nil {
-			return st.Alerts, reqInf, fmt.Errorf("no status named %s: %v", *server.Status, err)
+			return st.Alerts, reqInf, fmt.Errorf("no Status named %s: %v", *server.Status, err)
 		}
 		if len(st.Response) == 0 {
-			return alerts, reqInf, fmt.Errorf("no status named %s", *server.Status)
+			return alerts, reqInf, fmt.Errorf("no Status named %s", *server.Status)
 		}
 		server.StatusID = &st.Response[0].ID
 	}
 	if (server.TypeID == nil || *server.TypeID == 0) && server.Type != "" {
-		ty, _, err := to.GetTypeByName(server.Type, nil)
+		innerOpts := NewRequestOptions()
+		innerOpts.QueryParameters.Set("name", server.Type)
+		ty, _, err := to.GetTypes(opts)
 		if err != nil {
-			return alerts, reqInf, fmt.Errorf("no type named %s: %v", server.Type, err)
+			return ty.Alerts, reqInf, fmt.Errorf("no Type named '%s': %v", server.Type, err)
 		}
-		if len(ty) == 0 {
-			return alerts, reqInf, fmt.Errorf("no type named %s", server.Type)
+		if len(ty.Response) == 0 {
+			return ty.Alerts, reqInf, fmt.Errorf("no type named %s", server.Type)
 		}
-		server.TypeID = &ty[0].ID
+		server.TypeID = &ty.Response[0].ID
 	}
 
 	reqInf, err := to.post(apiServers, opts, server, &alerts)

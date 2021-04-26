@@ -91,15 +91,18 @@ func UpdateTestCacheGroupsWithHeaders(t *testing.T, h http.Header) {
 	cg.ShortName = &expectedShortName
 
 	// fix the type id for test
-	typeResp, _, err := TOSession.GetTypeByID(*cg.TypeID, h)
+	typeOpts := client.NewRequestOptions()
+	typeOpts.QueryParameters.Set("id", strconv.Itoa(*cg.TypeID))
+	typeOpts.Header = h
+	typeResp, _, err := TOSession.GetTypes(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch Type #%d: %v", *cg.TypeID, err)
+		t.Fatalf("Failed to fetch Type #%d: %v - alerts: %+v", *cg.TypeID, err, typeResp.Alerts)
 	}
-	if len(typeResp) != 1 {
-		t.Fatalf("Expected exactly one Type to exist with ID %d, but got: %d", *cg.TypeID, len(typeResp))
+	if len(typeResp.Response) != 1 {
+		t.Fatalf("Expected exactly one Type to exist with ID %d, but got: %d", *cg.TypeID, len(typeResp.Response))
 	}
 
-	cg.TypeID = &typeResp[0].ID
+	cg.TypeID = &typeResp.Response[0].ID
 	_, reqInf, err := TOSession.UpdateCacheGroup(*cg.ID, cg, opts)
 	if err == nil {
 		t.Errorf("Expected an error showing Precondition Failed, got none")
@@ -362,18 +365,20 @@ func UpdateTestCacheGroups(t *testing.T) {
 	cg.ShortName = &expectedShortName
 
 	// fix the type id for test
-	typeResp, _, err := TOSession.GetTypeByID(*cg.TypeID, nil)
+	typeOpts := client.NewRequestOptions()
+	typeOpts.QueryParameters.Set("id", strconv.Itoa(*cg.TypeID))
+	typeResp, _, err := TOSession.GetTypes(opts)
 	if err != nil {
-		t.Error("could not lookup a typeID for this cachegroup")
+		t.Errorf("could not lookup an ID for the Type of this Cache Group: %v - alerts: %+v", err, typeResp.Alerts)
 	}
-	if len(typeResp) == 0 {
+	if len(typeResp.Response) == 0 {
 		t.Fatal("got an empty response for types")
 	}
-	cg.TypeID = &typeResp[0].ID
+	cg.TypeID = &typeResp.Response[0].ID
 	opts.QueryParameters = url.Values{}
 	updResp, _, err := TOSession.UpdateCacheGroup(*cg.ID, cg, opts)
 	if err != nil {
-		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v", err, updResp)
+		t.Errorf("cannot update Cache Group: %v - alerts: %+v", err, updResp.Alerts)
 	}
 
 	// Check response to make sure fields aren't null
@@ -597,11 +602,11 @@ func UpdateTestCacheGroups(t *testing.T) {
 	}
 
 	var cacheGroupEdgeType, cacheGroupMidType tc.Type
-	types, _, err := TOSession.GetTypes(nil)
+	types, _, err := TOSession.GetTypes(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("unable to get types: %s", err.Error())
+		t.Fatalf("unable to get Types: %v - alerts: %+v", err, types.Alerts)
 	}
-	for _, typeObject := range types {
+	for _, typeObject := range types.Response {
 		switch typeObject.Name {
 		case tc.CacheGroupEdgeTypeName:
 			cacheGroupEdgeType = typeObject

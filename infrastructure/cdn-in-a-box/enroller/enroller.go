@@ -73,17 +73,20 @@ func enrollType(toSession *session, r io.Reader) error {
 	var s tc.Type
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Type: %s\n", err)
+		log.Infof("error decoding Type: %s", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateType(s)
+	alerts, _, err := toSession.CreateType(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("type %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("Type '%s' already exists", s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Type: %s\n", err)
+		err = fmt.Errorf("error creating Type: %v - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -908,17 +911,20 @@ func enrollFederation(toSession *session, r io.Reader) error {
 // createFederationResolversOfType creates Federation Resolvers of either RESOLVE4 type or RESOLVE6 type.
 func createFederationResolversOfType(toSession *session, resolverTypeName tc.FederationResolverType, ipAddresses []string) ([]int, error) {
 	typeNameString := string(resolverTypeName)
-	types, _, err := toSession.GetTypeByName(typeNameString, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", typeNameString)
+	types, _, err := toSession.GetTypes(opts)
 	if err != nil {
-		log.Infof("getting resolver type %s: %s", typeNameString, err.Error())
+		err = fmt.Errorf("getting resolver type '%s': %v - alerts: %+v", typeNameString, err, types.Alerts)
+		log.Infoln(err)
 		return nil, err
 	}
-	if len(types) < 1 {
+	if len(types.Response) < 1 {
 		err := fmt.Errorf("unable to get a type with name %s", typeNameString)
 		log.Infof(err.Error())
 		return nil, err
 	}
-	typeID := uint(types[0].ID)
+	typeID := uint(types.Response[0].ID)
 
 	var resolverIDs []int
 	for _, ipAddress := range ipAddresses {

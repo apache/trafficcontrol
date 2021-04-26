@@ -65,14 +65,16 @@ func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
 	}
 
 	if sdns.TypeID == 0 && sdns.Type != "" {
-		types, _, err := to.GetTypeByName(sdns.Type, nil)
+		opts := NewRequestOptions()
+		opts.QueryParameters.Set("name", sdns.Type)
+		types, _, err := to.GetTypes(opts)
 		if err != nil {
 			return err
 		}
-		if len(types) == 0 {
+		if len(types.Response) == 0 {
 			return errors.New("no type with name " + sdns.Type)
 		}
-		sdns.TypeID = types[0].ID
+		sdns.TypeID = types.Response[0].ID
 	}
 
 	return nil

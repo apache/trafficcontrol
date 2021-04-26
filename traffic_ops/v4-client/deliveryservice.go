@@ -131,14 +131,16 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOp
 	var reqInf toclientlib.ReqInf
 	var resp tc.DeliveryServicesResponseV4
 	if ds.TypeID == nil && ds.Type != nil {
-		ty, _, err := to.GetTypeByName(ds.Type.String(), nil)
+		typeOpts := NewRequestOptions()
+		typeOpts.QueryParameters.Set("name", ds.Type.String())
+		ty, _, err := to.GetTypes(opts)
 		if err != nil {
 			return resp, reqInf, err
 		}
-		if len(ty) == 0 {
-			return resp, reqInf, fmt.Errorf("no type named %s", ds.Type)
+		if len(ty.Response) == 0 {
+			return resp, reqInf, fmt.Errorf("no Type named '%s'", ds.Type)
 		}
-		ds.TypeID = &ty[0].ID
+		ds.TypeID = &ty.Response[0].ID
 	}
 
 	if ds.CDNID == nil && ds.CDNName != nil {

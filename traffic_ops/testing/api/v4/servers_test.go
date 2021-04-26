@@ -1075,14 +1075,16 @@ func UpdateTestServers(t *testing.T) {
 		t.Fatal("Traffic Ops returned a representation of a Delivery Servvice with a null or undefined ID")
 	}
 
-	serverTypes, _, err := TOSession.GetTypes(nil, "server")
+	typeOpts := client.NewRequestOptions()
+	typeOpts.QueryParameters.Set("useInTable", "server")
+	serverTypes, _, err := TOSession.GetTypes(opts)
 	if err != nil {
-		t.Fatalf("cannot GET Server Types: %v", err)
+		t.Fatalf("cannot get Server Types: %v - alerts: %+v", err, serverTypes.Alerts)
 	}
-	if len(serverTypes) < 2 {
+	if len(serverTypes.Response) < 2 {
 		t.Fatal("GET Server Types returned less then 2 types, must have at least 2 to test invalid type server update")
 	}
-	for _, t := range serverTypes {
+	for _, t := range serverTypes.Response {
 		if t.ID != *remoteServer.TypeID {
 			remoteServer.TypeID = &t.ID
 			break

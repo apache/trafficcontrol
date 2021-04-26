@@ -136,18 +136,20 @@ func loadDSRegexIDs(t *testing.T, test *tc.DeliveryServiceRegexesTest) {
 		t.Error("loadDSRegexIDs called with nil test")
 		return
 	}
-	dsTypes, _, err := TOSession.GetTypeByName(test.TypeName, nil)
-	if err != nil {
-		t.Errorf("unable to get type by name %v: %v", test.TypeName, err)
-		return
-	}
-	if len(dsTypes) < 1 {
-		t.Errorf("could not find any types by name %v", test.TypeName)
-		return
-	}
-	test.Type = dsTypes[0].ID
-
 	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", test.TypeName)
+	dsTypes, _, err := TOSession.GetTypes(opts)
+	if err != nil {
+		t.Errorf("unable to get Types filtered by name '%s': %v - alerts: %+v", test.TypeName, err, dsTypes.Alerts)
+		return
+	}
+	if len(dsTypes.Response) < 1 {
+		t.Errorf("could not find any types by name '%s'", test.TypeName)
+		return
+	}
+	test.Type = dsTypes.Response[0].ID
+
+	opts = client.NewRequestOptions()
 	opts.QueryParameters.Set("xmlId", test.DSName)
 	dses, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {

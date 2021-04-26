@@ -268,16 +268,18 @@ func getCustomDS(cdnID, typeID int, displayName, routingName, orgFQDN, dsID stri
 func DeleteCDNOldSSLKeys(t *testing.T) {
 	cdn := createBlankCDN("sslkeytransfer", t)
 
-	types, _, err := TOSession.GetTypeByName("HTTP", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "HTTP")
+	types, _, err := TOSession.GetTypes(opts)
 	if err != nil {
-		t.Fatal("unable to get types: " + err.Error())
+		t.Fatalf("unable to get Types: %v - alerts: %+v", err, types.Alerts)
 	}
-	if len(types) < 1 {
+	if len(types.Response) < 1 {
 		t.Fatal("expected at least one type")
 	}
 
 	// First DS creation
-	customDS := getCustomDS(cdn.ID, types[0].ID, "displayName", "routingName", "https://test.com", "dsID")
+	customDS := getCustomDS(cdn.ID, types.Response[0].ID, "displayName", "routingName", "https://test.com", "dsID")
 
 	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
 	if err != nil {
@@ -307,7 +309,7 @@ func DeleteCDNOldSSLKeys(t *testing.T) {
 	defer cleanUp(t, ds, cdn.ID, -1, []string{"1"})
 
 	// Second DS creation
-	customDS2 := getCustomDS(cdn.ID, types[0].ID, "displayName2", "routingName2", "https://test2.com", "dsID2")
+	customDS2 := getCustomDS(cdn.ID, types.Response[0].ID, "displayName2", "routingName2", "https://test2.com", "dsID2")
 
 	resp, _, err = TOSession.CreateDeliveryService(customDS2, client.RequestOptions{})
 	if err != nil {
@@ -354,7 +356,7 @@ func DeleteCDNOldSSLKeys(t *testing.T) {
 		t.Errorf("Unexpected error deleting Delivery Service #%d: %v - alerts: %+v", *ds2.ID, err, delResp.Alerts)
 	}
 
-	opts := client.NewRequestOptions()
+	opts = client.NewRequestOptions()
 	opts.QueryParameters.Set("cdnID", strconv.Itoa(cdn.ID))
 	snapResp, _, err := TOSession.SnapshotCRConfig(opts)
 	if err != nil {
@@ -382,15 +384,17 @@ func DeleteCDNOldSSLKeys(t *testing.T) {
 func DeliveryServiceSSLKeys(t *testing.T) {
 	cdn := createBlankCDN("sslkeytransfer", t)
 
-	types, _, err := TOSession.GetTypeByName("HTTP", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "HTTP")
+	types, _, err := TOSession.GetTypes(opts)
 	if err != nil {
-		t.Fatal("unable to get types: " + err.Error())
+		t.Fatalf("unable to get Types: %v - alerts: %+v", err, types.Alerts)
 	}
-	if len(types) < 1 {
+	if len(types.Response) < 1 {
 		t.Fatal("expected at least one type")
 	}
 
-	customDS := getCustomDS(cdn.ID, types[0].ID, "displayName", "routingName", "https://test.com", "dsID")
+	customDS := getCustomDS(cdn.ID, types.Response[0].ID, "displayName", "routingName", "https://test.com", "dsID")
 
 	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
 	if err != nil {
@@ -497,15 +501,17 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	cdnNameNew := "sslkeytransfer1"
 	newCdn := createBlankCDN(cdnNameNew, t)
 
-	types, _, err := TOSession.GetTypeByName("HTTP", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "HTTP")
+	types, _, err := TOSession.GetTypes(opts)
 	if err != nil {
-		t.Fatal("unable to get types: " + err.Error())
+		t.Fatalf("unable to get Types: %v - alerts: %+v", err, types.Alerts)
 	}
-	if len(types) < 1 {
+	if len(types.Response) < 1 {
 		t.Fatal("expected at least one type")
 	}
 
-	customDS := getCustomDS(oldCdn.ID, types[0].ID, "displayName", "routingName", "https://test.com", "dsID")
+	customDS := getCustomDS(oldCdn.ID, types.Response[0].ID, "displayName", "routingName", "https://test.com", "dsID")
 
 	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
 	if err != nil {
@@ -2066,15 +2072,17 @@ func GetDeliveryServiceByValidProfile(t *testing.T) {
 	}
 
 	if firstDS.ProfileID == nil {
-		profile, _, err := TOSession.GetProfileByName(*firstDS.ProfileName, nil)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", *firstDS.ProfileName)
+		profile, _, err := TOSession.GetProfiles(opts)
 		if err != nil {
-			t.Errorf("Error in Getting Profile by Name: %v", err)
+			t.Errorf("Unexpected error getting Profile by Name: %v - alerts: %+v", err, profile.Alerts)
 		}
-		if len(profile) != 1 {
-			t.Fatalf("Expected exactly one Profile to exist with name '%s', found:", *firstDS.ProfileName, len(profile))
+		if len(profile.Response) != 1 {
+			t.Fatalf("Expected exactly one Profile to exist with name '%s', found: %d", *firstDS.ProfileName, len(profile.Response))
 		}
 		firstDS.ProfileID = new(int)
-		*firstDS.ProfileID = profile[0].ID
+		*firstDS.ProfileID = profile.Response[0].ID
 	}
 
 	opts := client.NewRequestOptions()
@@ -2104,12 +2112,17 @@ func GetDeliveryServiceByValidTenant(t *testing.T) {
 	}
 
 	if firstDS.TenantID == nil {
-		tenant, _, err := TOSession.GetTenantByName(*firstDS.Tenant, nil)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", *firstDS.Tenant)
+		tenant, _, err := TOSession.GetTenants(opts)
 		if err != nil {
-			t.Errorf("Error in Getting Tenant by Name: %v", err)
+			t.Errorf("Unexpected error getting Tenant by Name: %v - alerts: %+v", err, tenant.Alerts)
+		}
+		if len(tenant.Response) != 1 {
+			t.Fatalf("Expected exactly one Tenant to exist with name '%s', found: %d", *firstDS.Tenant, len(tenant.Response))
 		}
 		firstDS.TenantID = new(int)
-		*firstDS.TenantID = tenant.ID
+		*firstDS.TenantID = tenant.Response[0].ID
 	}
 
 	opts := client.NewRequestOptions()
@@ -2139,15 +2152,17 @@ func GetDeliveryServiceByValidType(t *testing.T) {
 	}
 
 	if firstDS.TypeID == nil {
-		ty, _, err := TOSession.GetTypeByName(firstDS.Type.String(), nil)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", firstDS.Type.String())
+		ty, _, err := TOSession.GetTypes(opts)
 		if err != nil {
-			t.Errorf("Error in Getting Type by Name: %v", err)
+			t.Errorf("Unexpected error getting Type by Name: %v - alerts: %+v", err, ty.Alerts)
 		}
-		if len(ty) == 0 {
-			t.Errorf("no Type named %v" + firstDS.Type.String())
+		if len(ty.Response) != 1 {
+			t.Errorf("Expected exactly one Type to exist with name '%s', found: %d", firstDS.Type, len(ty.Response))
 		}
 		firstDS.TypeID = new(int)
-		*firstDS.TypeID = ty[0].ID
+		*firstDS.TypeID = ty.Response[0].ID
 	}
 
 	opts := client.NewRequestOptions()

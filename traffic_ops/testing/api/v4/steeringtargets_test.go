@@ -185,13 +185,15 @@ func CreateTestSteeringTargets(t *testing.T) {
 		}
 
 		{
-			respTypes, _, err := SteeringUserSession.GetTypeByName(*st.Type, nil)
+			opts := client.NewRequestOptions()
+			opts.QueryParameters.Set("name", *st.Type)
+			respTypes, _, err := SteeringUserSession.GetTypes(opts)
 			if err != nil {
-				t.Fatalf("creating steering target: getting type: %v", err)
-			} else if len(respTypes) < 1 {
-				t.Fatal("creating steering target: getting type: not found")
+				t.Fatalf("creating steering target: getting Type: %v - alerts: %+v", err, respTypes.Alerts)
+			} else if len(respTypes.Response) < 1 {
+				t.Fatal("creating steering target: getting Type: not found")
 			}
-			st.TypeID = util.IntPtr(respTypes[0].ID)
+			st.TypeID = util.IntPtr(respTypes.Response[0].ID)
 		}
 		{
 			opts := client.NewRequestOptions()

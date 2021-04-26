@@ -61,11 +61,13 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV4,
 	}
 
 	if ds.TypeID == nil && ds.Type.String() != "" {
-		ty, reqInf, err := to.GetTypeByName(ds.Type.String(), nil)
-		if err != nil || len(ty) == 0 {
+		typeOpts := NewRequestOptions()
+		typeOpts.QueryParameters.Set("name", ds.Type.String())
+		ty, reqInf, err := to.GetTypes(opts)
+		if err != nil || len(ty.Response) == 0 {
 			return resp, reqInf, errors.New("no type named " + ds.Type.String())
 		}
-		ds.TypeID = &ty[0].ID
+		ds.TypeID = &ty.Response[0].ID
 	}
 
 	if ds.CDNID == nil && ds.CDNName != nil {

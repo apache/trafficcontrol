@@ -173,20 +173,22 @@ func cmpr(testFr, apiFr tc.FederationResolver, t *testing.T) {
 }
 
 func CreateTestFederationResolvers(t *testing.T) {
+	opts := client.NewRequestOptions()
 	for _, fr := range testData.FederationResolvers {
 		if fr.Type == nil {
 			t.Fatal("testData Federation Resolver has nil Type")
 		}
 
-		tid, _, err := TOSession.GetTypeByName(*fr.Type, nil)
+		opts.QueryParameters.Set("name", *fr.Type)
+		tid, _, err := TOSession.GetTypes(opts)
 		if err != nil {
-			t.Fatalf("Couldn't get an ID for type %s", *fr.Type)
+			t.Fatalf("Couldn't get an ID for Type '%s': %v - alerts: %+v", *fr.Type, err, tid.Alerts)
 		}
-		if len(tid) != 1 {
-			t.Fatalf("Expected exactly one Type by name %s, got %d", *fr.Type, len(tid))
+		if len(tid.Response) != 1 {
+			t.Fatalf("Expected exactly one Type by name %s, got %d", *fr.Type, len(tid.Response))
 		}
 
-		fr.TypeID = util.UIntPtr(uint(tid[0].ID))
+		fr.TypeID = util.UIntPtr(uint(tid.Response[0].ID))
 
 		alerts, _, err := TOSession.CreateFederationResolver(fr, client.RequestOptions{})
 		if err != nil {
