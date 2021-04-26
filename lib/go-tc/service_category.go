@@ -24,6 +24,18 @@ type ServiceCategoriesResponse struct {
 	Response []ServiceCategory `json:"response"`
 }
 
+// ServiceCategoriesResponseV40 is the type of a response from Traffic Ops to a
+// request to its /service_categories endpoint in API version 4.0.
+type ServiceCategoriesResponseV40 struct {
+	Response []ServiceCategory `json:"response"`
+	Alerts
+}
+
+// ServiceCategoriesResponseV4 is the type of a response from Traffic Ops to a
+// request to its /service_categories endpoint in the latest minor version of
+// API version 4.
+type ServiceCategoriesResponseV4 = ServiceCategoriesResponseV40
+
 // ServiceCategoryResponse is a single Service Category response for Update and Create to
 // depict what changed.
 type ServiceCategoryResponse struct {
