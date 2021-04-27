@@ -21,9 +21,11 @@ import (
 
 func TestTrafficVaultPing(t *testing.T) {
 	if includeSystemTests {
-		_, _, err := TOSession.TrafficVaultPing()
-		if err != nil {
-			t.Errorf("could not ping Traffic Vault: %v", err)
-		}
+		WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
+			_, _, err := TOSession.TrafficVaultPing()
+			if err != nil {
+				t.Errorf("could not ping Traffic Vault: %v", err)
+			}
+		})
 	}
 }
