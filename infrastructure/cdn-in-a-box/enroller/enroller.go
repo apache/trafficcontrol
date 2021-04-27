@@ -103,17 +103,19 @@ func enrollCDN(toSession *session, r io.Reader) error {
 	var s tc.CDN
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding CDN: %s\n", err)
+		log.Infof("error decoding CDN: %v", err)
 		return err
 	}
 
 	alerts, _, err := toSession.CreateCDN(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("cdn %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts {
+			if strings.Contains(alert.Text, "already exists") {
+				log.Infof("CDN '%s' already exists", s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating CDN: %s\n", err)
+		log.Infof("error creating CDN: %v - alerts: %+v", err, alerts.Alerts)
 		return err
 	}
 
@@ -135,11 +137,14 @@ func enrollASN(toSession *session, r io.Reader) error {
 
 	alerts, _, err := toSession.CreateASN(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("asn %d already exists\n", s.ASN)
-			return nil
+		for _, alert := range alerts.Alerts {
+			if strings.Contains(alert.Text, "already exists") {
+				log.Infof("asn %d already exists", s.ASN)
+				return nil
+			}
 		}
-		log.Infof("error creating ASN: %s\n", err)
+		err = fmt.Errorf("error creating ASN: %s - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -156,17 +161,20 @@ func enrollCachegroup(toSession *session, r io.Reader) error {
 	var s tc.CacheGroupNullable
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Cachegroup: %s\n", err)
+		log.Infof("error decoding Cache Group: '%s'", err)
 		return err
 	}
 
 	alerts, _, err := toSession.CreateCacheGroup(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("cachegroup %s already exists\n", *s.Name)
-			return nil
+		for _, alert := range alerts.Alerts.Alerts {
+			if strings.Contains(alert.Text, "already exists") {
+				log.Infof("Cache Group '%s' already exists", *s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Cachegroup: %s\n", err)
+		err = fmt.Errorf("error creating Cache Group: %v - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -211,17 +219,19 @@ func enrollDeliveryService(toSession *session, r io.Reader) error {
 	var s tc.DeliveryServiceV4
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding DeliveryService: %s\n", err)
+		log.Infof("error decoding DeliveryService: %v", err)
 		return err
 	}
 
 	alerts, _, err := toSession.CreateDeliveryService(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("deliveryservice %s already exists\n", *s.XMLID)
-			return nil
+		for _, alert := range alerts.Alerts.Alerts {
+			if strings.Contains(alert.Text, "already exists") {
+				log.Infof("Delivery Service '%s' already exists", *s.XMLID)
+				return nil
+			}
 		}
-		log.Infof("error creating DeliveryService: %s\n", err)
+		log.Infof("error creating Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
 		return err
 	}
 

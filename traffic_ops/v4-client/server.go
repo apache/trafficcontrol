@@ -74,7 +74,7 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 	if needAndCanFetch(server.PhysLocationID, server.PhysLocation) {
 		innerOpts := NewRequestOptions()
 		innerOpts.QueryParameters.Set("name", *server.PhysLocation)
-		ph, reqInf, err := to.GetPhysLocations(opts)
+		ph, reqInf, err := to.GetPhysLocations(innerOpts)
 		if err != nil {
 			return ph.Alerts, reqInf, fmt.Errorf("no physlocation named %s: %v", *server.PhysLocation, err)
 		}
@@ -86,7 +86,7 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 	if needAndCanFetch(server.ProfileID, server.Profile) {
 		innerOpts := NewRequestOptions()
 		innerOpts.QueryParameters.Set("name", *server.Profile)
-		pr, reqInf, err := to.GetProfiles(opts)
+		pr, reqInf, err := to.GetProfiles(innerOpts)
 		if err != nil {
 			return pr.Alerts, reqInf, fmt.Errorf("no Profile named %s: %v", *server.Profile, err)
 		}
@@ -98,7 +98,7 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 	if needAndCanFetch(server.StatusID, server.Status) {
 		innerOpts := NewRequestOptions()
 		innerOpts.QueryParameters.Set("name", *server.Status)
-		st, reqInf, err := to.GetStatuses(opts)
+		st, reqInf, err := to.GetStatuses(innerOpts)
 		if err != nil {
 			return st.Alerts, reqInf, fmt.Errorf("no Status named %s: %v", *server.Status, err)
 		}
@@ -110,7 +110,7 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 	if (server.TypeID == nil || *server.TypeID == 0) && server.Type != "" {
 		innerOpts := NewRequestOptions()
 		innerOpts.QueryParameters.Set("name", server.Type)
-		ty, _, err := to.GetTypes(opts)
+		ty, _, err := to.GetTypes(innerOpts)
 		if err != nil {
 			return ty.Alerts, reqInf, fmt.Errorf("no Type named '%s': %v", server.Type, err)
 		}

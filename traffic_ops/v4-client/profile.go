@@ -56,7 +56,7 @@ func (to *Session) CreateProfile(pl tc.Profile, opts RequestOptions) (tc.Alerts,
 	}
 
 	var alerts tc.Alerts
-	reqInf, err := to.post(apiProfiles, opts, pl, nil)
+	reqInf, err := to.post(apiProfiles, opts, pl, &alerts)
 	return alerts, reqInf, err
 }
 

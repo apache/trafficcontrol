@@ -458,7 +458,7 @@ func (to *TOClient) errorFromStatusCode(resp *http.Response, err error, path str
 		return ErrNotImplemented
 	}
 
-	return fmt.Errorf("error requesting Traffic Ops: path '%s' gave HTTP error %s", resp.Status, to.getURL(path))
+	return fmt.Errorf("error requesting Traffic Ops: path '%s' gave HTTP error %s", to.getURL(path), resp.Status)
 }
 
 // getURL constructs a full URL from the given path, relative to the

@@ -133,7 +133,7 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOp
 	if ds.TypeID == nil && ds.Type != nil {
 		typeOpts := NewRequestOptions()
 		typeOpts.QueryParameters.Set("name", ds.Type.String())
-		ty, _, err := to.GetTypes(opts)
+		ty, _, err := to.GetTypes(typeOpts)
 		if err != nil {
 			return resp, reqInf, err
 		}
@@ -160,7 +160,7 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOp
 	if ds.ProfileID == nil && ds.ProfileName != nil {
 		profileOpts := NewRequestOptions()
 		profileOpts.QueryParameters.Set("name", *ds.ProfileName)
-		profiles, _, err := to.GetProfiles(opts)
+		profiles, _, err := to.GetProfiles(profileOpts)
 		if err != nil {
 			return resp, reqInf, fmt.Errorf("attempting to resolve Profile name '%s' to an ID: %v", *ds.ProfileName, err)
 		}
@@ -173,7 +173,7 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOp
 	if ds.TenantID == nil && ds.Tenant != nil {
 		tenantOpts := NewRequestOptions()
 		tenantOpts.QueryParameters.Set("name", *ds.Tenant)
-		ten, _, err := to.GetTenants(opts)
+		ten, _, err := to.GetTenants(tenantOpts)
 		if err != nil {
 			return resp, reqInf, fmt.Errorf("attempting to resolve Tenant '%s' to an ID: %v", *ds.Tenant, err)
 		}
@@ -183,7 +183,7 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOp
 		ds.TenantID = &ten.Response[0].ID
 	}
 
-	reqInf, err := to.post(apiDeliveryServices, RequestOptions{Header: opts.Header}, nil, &resp)
+	reqInf, err := to.post(apiDeliveryServices, RequestOptions{Header: opts.Header}, ds, &resp)
 	if err != nil {
 		return resp, reqInf, err
 	}
