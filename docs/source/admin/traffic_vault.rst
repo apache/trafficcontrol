@@ -48,9 +48,9 @@ Example cdn.conf snippet:
 		"traffic_ops_golang": {
 			"traffic_vault_backend": "postgres",
 			"traffic_vault_config": {
-				"dbname": "to_development",
+				"dbname": "tv_development",
 				"hostname": "localhost",
-				"user": "traffic_ops",
+				"user": "traffic_vault",
 				"password": "twelve",
 				"port": 5432,
 				"ssl": false,
