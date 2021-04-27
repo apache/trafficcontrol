@@ -24,7 +24,7 @@ func TestLetsEncrypt(t *testing.T) {
 	PostTestAutoRenew(t)
 }
 
-func PostTestAutoRenew(t *testing.T){
+func PostTestAutoRenew(t *testing.T) {
 	reqInf, err := TOSession.AutoRenew()
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err)
