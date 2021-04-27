@@ -96,6 +96,8 @@ var configFileLiteralFuncs = []ConfigFileLiteralFunc{
 	{"regex_revalidate.config", MakeRegexRevalidateDotConfig},
 	{"remap.config", MakeRemapDotConfig},
 	{"ssl_multicert.config", MakeSSLMultiCertDotConfig},
+	{"ssl_server_name.yaml", MakeSSLServerNameYAML},
+	{"sni.yaml", MakeSNIDotYAML},
 	{"storage.config", MakeStorageDotConfig},
 	{"sysctl.conf", MakeSysCtlDotConf},
 	{"volume.config", MakeVolumeDotConfig},

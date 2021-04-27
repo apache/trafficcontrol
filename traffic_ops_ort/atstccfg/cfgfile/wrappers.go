@@ -109,6 +109,48 @@ func MakeLoggingDotYAML(toData *config.TOData, fileName string, hdrCommentTxt st
 	return atscfg.MakeLoggingDotYAML(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
 
+func MakeSSLServerNameYAML(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+	return atscfg.MakeSSLServerNameYAML(
+		toData.Server,
+		toData.DeliveryServices,
+		toData.DeliveryServiceServers,
+		toData.DeliveryServiceRegexes,
+		toData.ParentConfigParams,
+		toData.CDN,
+		toData.Topologies,
+		toData.CacheGroups,
+		toData.ServerCapabilities,
+		toData.DSRequiredCapabilities,
+		atscfg.SSLServerNameYAMLOpts{
+			HdrComment:         hdrCommentTxt,
+			VerboseComments:    true, // TODO add a CLI flag
+			DefaultTLSVersions: cfg.DefaultTLSVersions,
+			DefaultEnableH2:    cfg.DefaultEnableH2,
+		},
+	)
+}
+
+func MakeSNIDotYAML(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+	return atscfg.MakeSNIDotYAML(
+		toData.Server,
+		toData.DeliveryServices,
+		toData.DeliveryServiceServers,
+		toData.DeliveryServiceRegexes,
+		toData.ParentConfigParams,
+		toData.CDN,
+		toData.Topologies,
+		toData.CacheGroups,
+		toData.ServerCapabilities,
+		toData.DSRequiredCapabilities,
+		atscfg.SNIDotYAMLOpts{
+			HdrComment:         hdrCommentTxt,
+			VerboseComments:    true, // TODO add a CLI flag
+			DefaultTLSVersions: cfg.DefaultTLSVersions,
+			DefaultEnableH2:    cfg.DefaultEnableH2,
+		},
+	)
+}
+
 func MakeLogsXMLDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
 	return atscfg.MakeLogsXMLDotConfig(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
