@@ -23,7 +23,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"	
