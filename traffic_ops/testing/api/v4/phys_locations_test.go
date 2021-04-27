@@ -236,7 +236,7 @@ func GetDefaultSortPhysLocationsTest(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error getting Physical Locations: %v - alerts: %+v", err, resp.Alerts)
 	}
-	sorted := sort.SliceIsSorted(resp, func(i, j int) bool {
+	sorted := sort.SliceIsSorted(resp.Response, func(i, j int) bool {
 		return resp.Response[i].Name < resp.Response[j].Name
 	})
 	if !sorted {

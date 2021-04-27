@@ -16,6 +16,7 @@ package client
 */
 
 import (
+	"net/url"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -36,8 +37,9 @@ func (to *Session) CreateCoordinate(coordinate tc.Coordinate, opts RequestOption
 // provided.
 func (to *Session) UpdateCoordinate(id int, coordinate tc.Coordinate, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
-		opts.QueryParameters.Set("id", strconv.Itoa(id))
+		opts.QueryParameters = url.Values{}
 	}
+	opts.QueryParameters.Set("id", strconv.Itoa(id))
 	var alerts tc.Alerts
 	reqInf, err := to.put(apiCoordinates, opts, coordinate, &alerts)
 	return alerts, reqInf, err
@@ -53,8 +55,9 @@ func (to *Session) GetCoordinates(opts RequestOptions) (tc.CoordinatesResponse, 
 // DeleteCoordinateByID deletes the Coordinate with the given ID.
 func (to *Session) DeleteCoordinate(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
-		opts.QueryParameters.Set("id", strconv.Itoa(id))
+		opts.QueryParameters = url.Values{}
 	}
+	opts.QueryParameters.Set("id", strconv.Itoa(id))
 	var alerts tc.Alerts
 	reqInf, err := to.del(apiCoordinates, opts, &alerts)
 	return alerts, reqInf, err

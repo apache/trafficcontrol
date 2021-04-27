@@ -74,7 +74,7 @@ func TestAPICapabilities(t *testing.T) {
 				t.Fatalf("error: expected capability %s to have records, but found 0", c.capability)
 			}
 
-			if c.order != "" {
+			if c.order != "" && c.hasRecords {
 				if c.first != caps.Response[0].HTTPMethod {
 					t.Fatalf("error: expected first element to be %s, got %s", c.first, caps.Response[0].HTTPMethod)
 				}

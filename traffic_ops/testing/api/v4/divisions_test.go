@@ -307,6 +307,7 @@ func DeleteTestDivisions(t *testing.T) {
 		}
 		if len(resp.Response) != 1 {
 			t.Errorf("Expected exactly one Division to exist with the name '%s', found: %d", division.Name, len(resp.Response))
+			continue
 		}
 		respDivision := resp.Response[0]
 
