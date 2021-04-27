@@ -29,11 +29,11 @@ ort_crontab:
   syncds:
     schedule: '0,20,40 * * * *'
     user: root
-    job:  "traffic_ops_ort.pl syncds warn {{ ort_traffic_ops_url }} '{{ ort_traffic_ops_username }}:{{ ort_traffic_ops_password }}' --login_dispersion=35 --dispersion=420 &>/tmp/ort/syncds.log"
+    job: "t3c --run-mode=syncds --traffic-ops-timeout-milliseconds=30000 --cache-host-name=\\\"$(hostname -s)\\\"  --log-location-error=stderr --log-location-warning=stderr --log-location-info=stderr --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' --login-dispersion=35 --dispersion=420 >> /var/log/ort/syncds.log 2>&1"
   # Perform a check for user requested content invalidations every minute
   reval:
     schedule: '1-19,21-39,41-59 * * * *'
     user: root
-    job:  "traffic_ops_ort.pl revalidate warn {{ ort_traffic_ops_url }} '{{ ort_traffic_ops_username }}:{{ ort_traffic_ops_password }}' --login_dispersion=35 &>/tmp/ort/reval.log"
+    job: "t3c --run-mode=revalidate --traffic-ops-timeout-milliseconds=30000 --cache-host-name=\\\"$(hostname -s)\\\"  --log-location-error=stderr --log-location-warning=stderr --log-location-info=stderr --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' --login-dispersion=35 --dispersion=420 >> /var/log/ort/reval.log 2>&1"
 
 ats_clear_data: false
