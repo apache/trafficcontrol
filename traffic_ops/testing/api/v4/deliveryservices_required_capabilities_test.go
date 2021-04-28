@@ -248,20 +248,17 @@ func GetTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 		},
 	}
 
-	opts := client.NewRequestOptions()
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
+			opts := client.NewRequestOptions()
 			if tc.capability.XMLID != nil {
 				opts.QueryParameters.Set("xmlID", *tc.capability.XMLID)
-				defer opts.QueryParameters.Del("xmlID")
 			}
 			if tc.capability.RequiredCapability != nil {
 				opts.QueryParameters.Set("requiredCapability", *tc.capability.RequiredCapability)
-				defer opts.QueryParameters.Del("requiredCapability")
 			}
 			if tc.capability.DeliveryServiceID != nil {
-				opts.QueryParameters.Set("deliveryServiceId", strconv.Itoa(*tc.capability.DeliveryServiceID))
-				defer opts.QueryParameters.Del("deliveryServiceId")
+				opts.QueryParameters.Set("deliveryServiceID", strconv.Itoa(*tc.capability.DeliveryServiceID))
 			}
 			capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(opts)
 			if err != nil {

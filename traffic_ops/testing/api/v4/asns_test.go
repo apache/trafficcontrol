@@ -165,10 +165,11 @@ func UpdateTestASNs(t *testing.T) {
 		t.Fatalf("cannot update ASN by id: %v - alerts: %+v", err, alert)
 	}
 
+	opts.QueryParameters.Del("asn")
 	opts.QueryParameters.Set("id", strconv.Itoa(remoteASN.ID))
 	resp, _, err = TOSession.GetASNs(opts)
 	if err != nil {
-		t.Errorf("cannot GET ANS by number: '$%v', %v", firstASN.ASN, err)
+		t.Errorf("cannot get ANS by ID %d: %v - alerts: %+v", firstASN.ASN, err, resp.Alerts)
 	}
 	if len(resp.Response) < 1 {
 		t.Fatalf("Expected ASN with ID %d to exist after update, but Traffic Ops returned no such ASN", remoteASN.ID)
