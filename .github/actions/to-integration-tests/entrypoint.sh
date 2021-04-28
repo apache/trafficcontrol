@@ -189,6 +189,7 @@ go test -test.v --cfg traffic-ops-test.conf || code="$?" && code="$?"
 # TODO - Make these logs build artifacts
 # 2>&1 makes terminal output go faster, even though stderr will not contain anything
 echo "------------ TRAFFIC OPS LOGS ------------"
+cd -
 color_and_prefix "${yellow_bg}" 'Traffic Ops' <warning.log 2>&1
 color_and_prefix "${red_bg}" 'Traffic Ops' <error.log 2>&1
 
