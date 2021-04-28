@@ -115,7 +115,7 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMSAfterChange(t *testing.T, hea
 		{
 			description: fmt.Sprintf("get all deliveryservices required capabilities by deliveryServiceID: %d", *ds1),
 			params: url.Values{
-				"deliveryServiceId": {strconv.Itoa(*ds1)},
+				"deliveryServiceID": {strconv.Itoa(*ds1)},
 			},
 		},
 		{
@@ -303,7 +303,7 @@ func GetTestDeliveryServicesRequiredCapabilitiesIMS(t *testing.T) {
 		{
 			description: fmt.Sprintf("get all deliveryservices required capabilities by deliveryServiceID: %d", *ds1),
 			params: url.Values{
-				"deliveryServiceId": {strconv.Itoa(*ds1)},
+				"deliveryServiceID": {strconv.Itoa(*ds1)},
 			},
 		},
 		{
