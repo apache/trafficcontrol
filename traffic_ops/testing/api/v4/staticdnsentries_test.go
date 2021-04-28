@@ -281,8 +281,7 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	remoteStaticDNSEntry = resp.Response[0]
 	expectedAddress = "192.168.0.1"
 	remoteStaticDNSEntry.Address = expectedAddress
-
-	_, _, err = TOSession.UpdateStaticDNSEntry(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, client.RequestOptions{})
+	alerts, _, err = TOSession.UpdateStaticDNSEntry(remoteStaticDNSEntry.ID, remoteStaticDNSEntry, client.RequestOptions{})
 	if err == nil {
 		t.Errorf("making invalid update to static DNS entry - expected: error, actual: nil")
 	} else if !alertsHaveError(alerts.Alerts, expectedAlerts[3]) {
