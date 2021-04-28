@@ -42,8 +42,8 @@ type Event struct {
 	Hostname      string `json:"hostname"`
 	Type          string `json:"type"`
 	Available     bool   `json:"isAvailable"`
-	IPv4Available bool   `json:"isAvailable"`
-	IPv6Available bool   `json:"isAvailable"`
+	IPv4Available bool   `json:"isIPv4Available"`
+	IPv6Available bool   `json:"isIPv6Available"`
 }
 
 // Events provides safe access for multiple goroutines readers and a single writer to a stored Events slice.
