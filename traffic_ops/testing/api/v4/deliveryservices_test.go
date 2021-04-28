@@ -1105,7 +1105,7 @@ func UpdateDeliveryServiceWithInvalidTopology(t *testing.T) {
 
 	profileOpts := client.NewRequestOptions()
 	profileOpts.QueryParameters.Set("name", profileCopy.Name)
-	profiles, _, err := TOSession.GetProfiles(opts)
+	profiles, _, err := TOSession.GetProfiles(profileOpts)
 	if err != nil {
 		t.Fatalf("getting Profile %s: %v - alerts: %+v", profileCopy.Name, err, profiles.Alerts)
 	}

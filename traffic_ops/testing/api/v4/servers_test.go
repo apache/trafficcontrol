@@ -79,7 +79,7 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	serverOpts.QueryParameters.Add("cachegroupName", cacheGroupName)
 	serverOpts.QueryParameters.Add("topology", topologyName)
 	serverOpts.QueryParameters.Add("cdn", strconv.Itoa(cdnID))
-	servers, _, err := TOSession.GetServers(opts)
+	servers, _, err := TOSession.GetServers(serverOpts)
 	if err != nil {
 		t.Fatalf("getting server from CDN '%s', from Cache Group '%s', and in Topology '%s': %v - alerts: %+v", cdnName, cacheGroupName, topologyName, err, servers.Alerts)
 	}

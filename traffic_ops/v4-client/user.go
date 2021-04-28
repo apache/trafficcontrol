@@ -55,7 +55,7 @@ func (to *Session) CreateUser(user tc.User, opts RequestOptions) (tc.CreateUserR
 	if user.TenantID == nil && user.Tenant != nil {
 		innerOpts := NewRequestOptions()
 		innerOpts.QueryParameters.Set("name", *user.Tenant)
-		tenant, _, err := to.GetTenants(opts)
+		tenant, _, err := to.GetTenants(innerOpts)
 		if err != nil {
 			return tc.CreateUserResponse{Alerts: tenant.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("resolving Tenant name '%s' to an ID: %v", *user.Tenant, err)
 		}
@@ -68,7 +68,7 @@ func (to *Session) CreateUser(user tc.User, opts RequestOptions) (tc.CreateUserR
 	if user.RoleName != nil && *user.RoleName != "" {
 		innerOpts := NewRequestOptions()
 		innerOpts.QueryParameters.Set("name", *user.RoleName)
-		roles, _, err := to.GetRoles(opts)
+		roles, _, err := to.GetRoles(innerOpts)
 		if err != nil {
 			return tc.CreateUserResponse{Alerts: roles.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("resolving Role name '%s' to an ID: %v", *user.RoleName, err)
 		}

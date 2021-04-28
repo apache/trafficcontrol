@@ -40,7 +40,7 @@ func (to *Session) CreateTenant(t tc.Tenant, opts RequestOptions) (tc.TenantResp
 	if t.ParentID == 0 && t.ParentName != "" {
 		parentOpts := NewRequestOptions()
 		parentOpts.QueryParameters.Set("name", t.ParentName)
-		tenant, reqInf, err := to.GetTenants(opts)
+		tenant, reqInf, err := to.GetTenants(parentOpts)
 		if err != nil {
 			return tc.TenantResponseV4{Alerts: tenant.Alerts}, reqInf, err
 		}

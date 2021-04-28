@@ -34,7 +34,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV4,
 	if dsr.AssigneeID == nil && dsr.Assignee != nil {
 		assigneeOpts := NewRequestOptions()
 		assigneeOpts.QueryParameters.Set("username", *dsr.Assignee)
-		res, reqInf, err := to.GetUsers(opts)
+		res, reqInf, err := to.GetUsers(assigneeOpts)
 		if err != nil {
 			return resp, reqInf, err
 		}
@@ -47,7 +47,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV4,
 	if dsr.AuthorID == nil && dsr.Author != "" {
 		authorOpts := NewRequestOptions()
 		authorOpts.QueryParameters.Set("username", dsr.Author)
-		res, reqInf, err := to.GetUsers(opts)
+		res, reqInf, err := to.GetUsers(authorOpts)
 		if err != nil {
 			return resp, reqInf, err
 		}
@@ -67,7 +67,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV4,
 	if ds.TypeID == nil && ds.Type.String() != "" {
 		typeOpts := NewRequestOptions()
 		typeOpts.QueryParameters.Set("name", ds.Type.String())
-		ty, reqInf, err := to.GetTypes(opts)
+		ty, reqInf, err := to.GetTypes(typeOpts)
 		if err != nil || len(ty.Response) == 0 {
 			return resp, reqInf, errors.New("no type named " + ds.Type.String())
 		}
@@ -87,7 +87,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV4,
 	if ds.ProfileID == nil && ds.ProfileName != nil {
 		profileOpts := NewRequestOptions()
 		profileOpts.QueryParameters.Set("name", *ds.ProfileName)
-		profiles, reqInf, err := to.GetProfiles(opts)
+		profiles, reqInf, err := to.GetProfiles(profileOpts)
 		if err != nil || len(profiles.Response) == 0 {
 			return resp, reqInf, fmt.Errorf("no Profile named '%s'", *ds.ProfileName)
 		}

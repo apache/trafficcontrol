@@ -32,7 +32,7 @@ func (to *Session) CreateRegion(region tc.Region, opts RequestOptions) (tc.Alert
 	if region.Division == 0 && region.DivisionName != "" {
 		divisionOpts := NewRequestOptions()
 		divisionOpts.QueryParameters.Set("name", region.DivisionName)
-		divisions, reqInf, err := to.GetDivisions(opts)
+		divisions, reqInf, err := to.GetDivisions(divisionOpts)
 		if err != nil {
 			return divisions.Alerts, reqInf, err
 		}

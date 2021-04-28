@@ -93,8 +93,7 @@ func UpdateTestCacheGroupsWithHeaders(t *testing.T, h http.Header) {
 	// fix the type id for test
 	typeOpts := client.NewRequestOptions()
 	typeOpts.QueryParameters.Set("id", strconv.Itoa(*cg.TypeID))
-	typeOpts.Header = h
-	typeResp, _, err := TOSession.GetTypes(opts)
+	typeResp, _, err := TOSession.GetTypes(typeOpts)
 	if err != nil {
 		t.Fatalf("Failed to fetch Type #%d: %v - alerts: %+v", *cg.TypeID, err, typeResp.Alerts)
 	}
@@ -367,7 +366,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	// fix the type id for test
 	typeOpts := client.NewRequestOptions()
 	typeOpts.QueryParameters.Set("id", strconv.Itoa(*cg.TypeID))
-	typeResp, _, err := TOSession.GetTypes(opts)
+	typeResp, _, err := TOSession.GetTypes(typeOpts)
 	if err != nil {
 		t.Errorf("could not lookup an ID for the Type of this Cache Group: %v - alerts: %+v", err, typeResp.Alerts)
 	}
