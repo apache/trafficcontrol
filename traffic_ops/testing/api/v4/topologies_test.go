@@ -599,12 +599,15 @@ func CreateTopologyWithoutDescription(t *testing.T) {
 			}
 		}
 	}
+	if cachegroupName == "" {
+		t.Fatal("Failed to find a single Cache Group with any Servers in it")
+	}
 
 	node := tc.TopologyNode{
 		Cachegroup: cachegroupName,
 		Parents:    nil,
 	}
-	nodes := make([]tc.TopologyNode, 1)
+	nodes := make([]tc.TopologyNode, 0, 1)
 	nodes = append(nodes, node)
 	top := tc.Topology{
 		Name:  "topology-without-description",

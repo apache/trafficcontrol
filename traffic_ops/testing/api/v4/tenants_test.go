@@ -95,9 +95,8 @@ func TestTenantsActive(t *testing.T) {
 func CreateTestTenants(t *testing.T) {
 	for _, ten := range testData.Tenants {
 		resp, _, err := TOSession.CreateTenant(ten, client.RequestOptions{})
-
 		if err != nil {
-			t.Errorf("could not Tenant '%s': %v - alerts: %+v", ten.Name, err, resp.Alerts)
+			t.Errorf("could not create Tenant '%s': %v - alerts: %+v", ten.Name, err, resp.Alerts)
 		} else if resp.Response.Name != ten.Name {
 			t.Errorf("expected tenant '%s'; got '%s'", ten.Name, resp.Response.Name)
 		}
