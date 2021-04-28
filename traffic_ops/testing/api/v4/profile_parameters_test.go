@@ -17,7 +17,6 @@ package v4
 
 import (
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -30,7 +29,6 @@ import (
 
 func TestProfileParameters(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, ProfileParameters}, func() {
-		SortTestProfileParameters(t)
 		GetTestProfileParametersIMS(t)
 		GetTestProfileParameters(t)
 		InvalidCreateTestProfileParameters(t)
@@ -130,25 +128,6 @@ func InvalidCreateTestProfileParameters(t *testing.T) {
 		t.Errorf("expected: error message to contain 'parameterId', actual: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-}
-
-func SortTestProfileParameters(t *testing.T) {
-	resp, _, err := TOSession.GetProfileParameters(client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	sortedList := make([]int, 0, len(resp.Response))
-	for _, pp := range resp.Response {
-		sortedList = append(sortedList, pp.Parameter)
-	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their IDs: %v", sortedList)
-	}
 }
 
 func GetTestProfileParameters(t *testing.T) {
