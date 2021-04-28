@@ -558,8 +558,8 @@ func GetTestServersQueryParameters(t *testing.T) {
 	}
 
 	ds := dses.Response[0]
-	if ds.ID == nil || ds.Topology == nil || ds.FirstHeaderRewrite == nil || ds.InnerHeaderRewrite == nil || ds.LastHeaderRewrite == nil {
-		t.Fatal("Traffic Ops returned a representation of a Delivery Service with null or undefined ID and/or Topology and/or First Header Rewrite text and/or Inner Header Rewrite text and/or Last Header Rewrite text")
+	if ds.ID == nil {
+		t.Fatal("Traffic Ops returned a representation of a Delivery Service with null or undefined ID")
 	}
 
 	AssignTestDeliveryService(t)
