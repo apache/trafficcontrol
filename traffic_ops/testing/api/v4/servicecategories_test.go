@@ -125,7 +125,7 @@ func SortTestServiceCategories(t *testing.T) {
 		sortedList = append(sortedList, sc.Name)
 	}
 
-	if sort.StringsAreSorted(sortedList) {
+	if !sort.StringsAreSorted(sortedList) {
 		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
