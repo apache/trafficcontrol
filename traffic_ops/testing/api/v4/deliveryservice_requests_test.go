@@ -404,7 +404,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Errorf("Expected a success-level alert updating a DSR, got none")
+			t.Errorf("Expected a success-level alert updating a DSR, got none: %v", alerts.Alerts)
 		}
 
 		if alerts.Response.Status != tc.RequestStatus("submitted") {
@@ -421,9 +421,9 @@ func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequ
 		return resp
 	}
 	dsr.Status = tc.RequestStatus("submitted")
-	updResp, _, err := TOSession.UpdateDeliveryServiceRequest(*ID, dsr, client.RequestOptions{Header: header})
+	resp, _, err := TOSession.UpdateDeliveryServiceRequest(*ID, dsr, client.RequestOptions{Header: header})
 	if err != nil {
-		t.Errorf("Unexpected error updating Delivery Service Request: %v - alerts: %+v", err, updResp.Alerts)
+		t.Errorf("Unexpected error updating Delivery Service Request: %v - alerts: %+v", err, resp.Alerts)
 		return resp
 	}
 
