@@ -1669,7 +1669,7 @@ func VerifyPaginationSupportDS(t *testing.T) {
 	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
 	deliveryserviceWithLimit, _, err := TOSession.GetDeliveryServices(opts)
-	if !reflect.DeepEqual(deliveryservice.Response[:1], deliveryserviceWithLimit) {
+	if !reflect.DeepEqual(deliveryservice.Response[:1], deliveryserviceWithLimit.Response) {
 		t.Error("expected GET deliveryservice with limit = 1 to return first result")
 	}
 
@@ -1678,7 +1678,7 @@ func VerifyPaginationSupportDS(t *testing.T) {
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("offset", "1")
 	deliveryserviceWithOffset, _, err := TOSession.GetDeliveryServices(opts)
-	if !reflect.DeepEqual(deliveryservice.Response[1:2], deliveryserviceWithOffset) {
+	if !reflect.DeepEqual(deliveryservice.Response[1:2], deliveryserviceWithOffset.Response) {
 		t.Error("expected GET deliveryservice with limit = 1, offset = 1 to return second result")
 	}
 
@@ -1687,37 +1687,37 @@ func VerifyPaginationSupportDS(t *testing.T) {
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("page", "2")
 	deliveryserviceWithPage, _, err := TOSession.GetDeliveryServices(opts)
-	if !reflect.DeepEqual(deliveryservice.Response[1:2], deliveryserviceWithPage) {
+	if !reflect.DeepEqual(deliveryservice.Response[1:2], deliveryserviceWithPage.Response) {
 		t.Error("expected GET deliveryservice with limit = 1, page = 2 to return second result")
 	}
 
 	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("limit", "-2")
-	_, _, err = TOSession.GetDeliveryServices(opts)
+	resp, _, err := TOSession.GetDeliveryServices(opts)
 	if err == nil {
 		t.Error("expected GET deliveryservice to return an error when limit is not bigger than -1")
-	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
-		t.Errorf("expected GET deliveryservice to return an error for limit is not bigger than -1, actual error: " + err.Error())
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
+		t.Errorf("expected GET deliveryservice to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 
 	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("offset", "0")
-	_, _, err = TOSession.GetDeliveryServices(opts)
+	resp, _, err = TOSession.GetDeliveryServices(opts)
 	if err == nil {
 		t.Error("expected GET deliveryservice to return an error when offset is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET deliveryservice to return an error for offset is not a positive integer, actual error: " + err.Error())
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET deliveryservice to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 
 	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("page", "0")
-	_, _, err = TOSession.GetDeliveryServices(opts)
+	resp, _, err = TOSession.GetDeliveryServices(opts)
 	if err == nil {
 		t.Error("expected GET deliveryservice to return an error when page is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET deliveryservice to return an error for page is not a positive integer, actual error: " + err.Error())
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET deliveryservice to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
@@ -2075,21 +2075,21 @@ func GetDeliveryServiceByValidProfile(t *testing.T) {
 		t.Fatal("Profile name is nil in the Pre-requisites")
 	}
 
+	opts := client.NewRequestOptions()
 	if firstDS.ProfileID == nil {
-		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("name", *firstDS.ProfileName)
 		profile, _, err := TOSession.GetProfiles(opts)
 		if err != nil {
-			t.Errorf("Unexpected error getting Profile by Name: %v - alerts: %+v", err, profile.Alerts)
+			t.Errorf("Unexpected error getting Profiles filtered by name: %v - alerts: %+v", err, profile.Alerts)
 		}
 		if len(profile.Response) != 1 {
-			t.Fatalf("Expected exactly one Profile to exist with name '%s', found: %d", *firstDS.ProfileName, len(profile.Response))
+			t.Fatalf("Expected exactly one Profile to exist with name '%s', found %d:", *firstDS.ProfileName, len(profile.Response))
 		}
 		firstDS.ProfileID = new(int)
 		*firstDS.ProfileID = profile.Response[0].ID
+		opts.QueryParameters.Del("name")
 	}
 
-	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("profile", strconv.Itoa(*firstDS.ProfileID))
 	resp, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
@@ -2115,21 +2115,21 @@ func GetDeliveryServiceByValidTenant(t *testing.T) {
 		t.Fatal("Tenant name is nil in the Pre-requisites")
 	}
 
+	opts := client.NewRequestOptions()
 	if firstDS.TenantID == nil {
-		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("name", *firstDS.Tenant)
-		tenant, _, err := TOSession.GetTenants(opts)
+		tenants, _, err := TOSession.GetTenants(opts)
 		if err != nil {
-			t.Errorf("Unexpected error getting Tenant by Name: %v - alerts: %+v", err, tenant.Alerts)
+			t.Errorf("Unexpected error getting Tenants filtered by name: %v - alerts: %+v", err, tenants.Alerts)
 		}
-		if len(tenant.Response) != 1 {
-			t.Fatalf("Expected exactly one Tenant to exist with name '%s', found: %d", *firstDS.Tenant, len(tenant.Response))
+		if len(tenants.Response) != 1 {
+			t.Fatalf("Expected exactly one Tenant to exist with name '%s', found %d:", *firstDS.Tenant, len(tenants.Response))
 		}
 		firstDS.TenantID = new(int)
-		*firstDS.TenantID = tenant.Response[0].ID
+		*firstDS.TenantID = tenants.Response[0].ID
+		opts.QueryParameters.Del("name")
 	}
 
-	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("tenant", strconv.Itoa(*firstDS.TenantID))
 	resp, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
@@ -2155,21 +2155,21 @@ func GetDeliveryServiceByValidType(t *testing.T) {
 		t.Fatal("Type name is nil in the Pre-requisites")
 	}
 
+	opts := client.NewRequestOptions()
 	if firstDS.TypeID == nil {
-		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("name", firstDS.Type.String())
-		ty, _, err := TOSession.GetTypes(opts)
+		types, _, err := TOSession.GetTypes(opts)
 		if err != nil {
-			t.Errorf("Unexpected error getting Type by Name: %v - alerts: %+v", err, ty.Alerts)
+			t.Errorf("Unexpected error getting Types filtered by name: %v - alerts: %+v", err, types.Alerts)
 		}
-		if len(ty.Response) != 1 {
-			t.Errorf("Expected exactly one Type to exist with name '%s', found: %d", firstDS.Type, len(ty.Response))
+		if len(types.Response) != 1 {
+			t.Fatalf("Expected exactly one Type to exist with name '%s', found %d:", *firstDS.Type, len(types.Response))
 		}
 		firstDS.TypeID = new(int)
-		*firstDS.TypeID = ty.Response[0].ID
+		*firstDS.TypeID = types.Response[0].ID
+		opts.QueryParameters.Del("name")
 	}
 
-	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("type", strconv.Itoa(*firstDS.TypeID))
 	resp, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {

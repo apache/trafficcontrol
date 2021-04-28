@@ -21,7 +21,6 @@ import (
 	"net/url"
 	"reflect"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -788,7 +787,7 @@ func GetTestPaginationSupportCg(t *testing.T) {
 	opts.QueryParameters.Set("limit", "1")
 	cachegroupWithLimit, _, err := TOSession.GetCacheGroups(opts)
 
-	if !reflect.DeepEqual(cachegroup[:1], cachegroupWithLimit) {
+	if !reflect.DeepEqual(cachegroup[:1], cachegroupWithLimit.Response) {
 		t.Error("expected GET Cachegroups with limit = 1 to return first result")
 	}
 
@@ -796,7 +795,7 @@ func GetTestPaginationSupportCg(t *testing.T) {
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("offset", "1")
 	cachegroupsWithOffset, _, err := TOSession.GetCacheGroups(opts)
-	if !reflect.DeepEqual(cachegroup[1:2], cachegroupsWithOffset) {
+	if !reflect.DeepEqual(cachegroup[1:2], cachegroupsWithOffset.Response) {
 		t.Error("expected GET cachegroup with limit = 1, offset = 1 to return second result")
 	}
 
@@ -804,35 +803,35 @@ func GetTestPaginationSupportCg(t *testing.T) {
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("page", "2")
 	cachegroupWithPage, _, err := TOSession.GetCacheGroups(opts)
-	if !reflect.DeepEqual(cachegroup[1:2], cachegroupWithPage) {
+	if !reflect.DeepEqual(cachegroup[1:2], cachegroupWithPage.Response) {
 		t.Error("expected GET cachegroup with limit = 1, page = 2 to return second result")
 	}
 
 	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("limit", "-2")
-	_, _, err = TOSession.GetCacheGroups(opts)
+	resp, _, err = TOSession.GetCacheGroups(opts)
 	if err == nil {
 		t.Error("expected GET cachegroup to return an error when limit is not bigger than -1")
-	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
-		t.Errorf("expected GET cachegroup to return an error for limit is not bigger than -1, actual error: " + err.Error())
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
+		t.Errorf("expected GET cachegroup to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("offset", "0")
-	_, _, err = TOSession.GetCacheGroups(opts)
+	resp, _, err = TOSession.GetCacheGroups(opts)
 	if err == nil {
 		t.Error("expected GET cachegroup to return an error when offset is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET cachegroup to return an error for offset is not a positive integer, actual error: " + err.Error())
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET cachegroup to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 
 	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("page", "0")
-	_, _, err = TOSession.GetCacheGroups(opts)
+	resp, _, err = TOSession.GetCacheGroups(opts)
 	if err == nil {
 		t.Error("expected GET cachegroup to return an error when page is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET cachegroup to return an error for page is not a positive integer, actual error: " + err.Error())
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET cachegroup to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 }

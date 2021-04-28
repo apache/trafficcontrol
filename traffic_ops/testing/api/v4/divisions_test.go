@@ -370,52 +370,28 @@ func GetTestPaginationSupportDivision(t *testing.T) {
 	resp, _, err = TOSession.GetDivisions(opts)
 	if err == nil {
 		t.Error("expected GET Divisions to return an error when limit is not bigger than -1")
-	} else {
-		found := false
-		for _, alert := range resp.Alerts.Alerts {
-			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "must be bigger than -1") {
-				found = true
-			}
-		}
-		if !found {
-			t.Errorf("expected GET Divisions to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
-		}
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
+		t.Errorf("expected GET Divisions to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 
 	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("offset", "0")
-	_, _, err = TOSession.GetDivisions(opts)
+	resp, _, err = TOSession.GetDivisions(opts)
 	if err == nil {
 		t.Error("expected GET Divisions to return an error when offset is not a positive integer")
-	} else {
-		found := false
-		for _, alert := range resp.Alerts.Alerts {
-			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "must be a positive integer") {
-				found = true
-			}
-		}
-		if !found {
-			t.Errorf("expected GET Divisions to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-		}
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET Divisions to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 
 	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("page", "0")
-	_, _, err = TOSession.GetDivisions(opts)
+	resp, _, err = TOSession.GetDivisions(opts)
 	if err == nil {
 		t.Error("expected GET Divisions to return an error when page is not a positive integer")
-	} else {
-		found := false
-		for _, alert := range resp.Alerts.Alerts {
-			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "must be a positive integer") {
-				found = true
-			}
-		}
-		if !found {
-			t.Errorf("expected GET Divisions to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
-		}
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET Divisions to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 

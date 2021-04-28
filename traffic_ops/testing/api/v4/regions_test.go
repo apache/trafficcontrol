@@ -281,7 +281,7 @@ func VerifyPaginationSupportRegion(t *testing.T) {
 	opts.QueryParameters.Set("limit", "1")
 	regionsWithLimit, _, err := TOSession.GetRegions(opts)
 	if err == nil {
-		if !reflect.DeepEqual(regions[:1], regionsWithLimit) {
+		if !reflect.DeepEqual(regions[:1], regionsWithLimit.Response) {
 			t.Error("expected GET Regions with limit = 1 to return first result")
 		}
 	} else {
@@ -294,7 +294,7 @@ func VerifyPaginationSupportRegion(t *testing.T) {
 	opts.QueryParameters.Set("offset", "1")
 	regionsWithOffset, _, err := TOSession.GetRegions(opts)
 	if err == nil {
-		if !reflect.DeepEqual(regions[1:2], regionsWithOffset) {
+		if !reflect.DeepEqual(regions[1:2], regionsWithOffset.Response) {
 			t.Error("expected GET Regions with limit = 1, offset = 1 to return second result")
 		}
 	} else {
@@ -307,7 +307,7 @@ func VerifyPaginationSupportRegion(t *testing.T) {
 	opts.QueryParameters.Set("page", "2")
 	regionsWithPage, _, err := TOSession.GetRegions(opts)
 	if err == nil {
-		if !reflect.DeepEqual(regions[1:2], regionsWithPage) {
+		if !reflect.DeepEqual(regions[1:2], regionsWithPage.Response) {
 			t.Error("expected GET Regions with limit = 1, page = 2 to return second result")
 		}
 	} else {
