@@ -600,6 +600,10 @@ func GetTestServersQueryParameters(t *testing.T) {
 		if *ds.XMLID != topDSXmlID {
 			continue
 		}
+		if ds.Topology == nil || ds.FirstHeaderRewrite == nil || ds.InnerHeaderRewrite == nil || ds.LastHeaderRewrite == nil {
+			t.Errorf("Traffic Ops returned a representation of Delivery Service '%s' that had a null or undefined Topology and/or First Header Rewrite text and/or Inner Header Rewrite text and/or Last Header Rewrite text", topDSXmlID)
+			continue
+		}
 		foundTopDs = true
 		break
 	}

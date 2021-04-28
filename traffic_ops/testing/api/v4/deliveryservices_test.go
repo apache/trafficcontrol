@@ -1459,7 +1459,11 @@ func DeleteTestDeliveryServices(t *testing.T) {
 		var ds tc.DeliveryServiceV4
 		found := false
 		for _, realDS := range dses.Response {
-			if realDS.XMLID != nil && ds.ID != nil && *realDS.XMLID == *testDS.XMLID {
+			if realDS.XMLID == nil || realDS.ID == nil {
+				t.Errorf("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID and/or ID")
+				continue
+			}
+			if *realDS.XMLID == *testDS.XMLID {
 				ds = realDS
 				found = true
 				break
