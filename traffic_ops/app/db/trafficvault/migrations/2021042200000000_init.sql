@@ -15,8 +15,8 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-SELECT 1;
+SELECT;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-SELECT 1;
+SELECT;

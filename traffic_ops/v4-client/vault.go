@@ -1,5 +1,6 @@
-/*
+package client
 
+/*
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -13,15 +14,13 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
-	// APIPing is the full path to the /ping API endpoint.
+	// APIVaultPing is the partial path (excluding the /api/<version> prefix) to the /vault/ping API endpoint.
 	APIVaultPing = "/vault/ping"
 )
 

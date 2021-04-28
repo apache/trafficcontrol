@@ -163,6 +163,9 @@ func (p *Postgres) Ping(tx *sql.Tx, ctx context.Context) (tc.TrafficVaultPing, e
 		e := checkErrWithContext("Traffic Vault PostgreSQL: executing ping query", err, dbCtx.Err())
 		return tc.TrafficVaultPing{}, e
 	}
+	if n != 1 {
+		return tc.TrafficVaultPing{}, fmt.Errorf("Traffic Vault PostgreSQL: executing ping query: expected scanned value 1 but got %d instead", n)
+	}
 	return tc.TrafficVaultPing{Status: "OK", Server: p.cfg.Hostname + ":" + strconv.Itoa(p.cfg.Port)}, nil
 }
 
