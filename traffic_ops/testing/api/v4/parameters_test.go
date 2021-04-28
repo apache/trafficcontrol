@@ -36,8 +36,7 @@ func TestParameters(t *testing.T) {
 		GetTestParametersIMS(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
+		var header http.Header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
 		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestParameters(t)
@@ -60,7 +59,8 @@ func UpdateTestParametersWithHeaders(t *testing.T, header http.Header) {
 	// Retrieve the Parameter by name so we can get the id for the Update
 	opts := client.NewRequestOptions()
 	opts.Header = header
-	resp, _, err := TOSession.GetParametersByProfileName(firstParameter.Name, opts)
+	opts.QueryParameters.Set("name", firstParameter.Name)
+	resp, _, err := TOSession.GetParameters(opts)
 	if err != nil {
 		t.Errorf("cannot get Parameter by name '%s': %v - alerts: %+v", firstParameter.Name, err, resp.Alerts)
 	}
