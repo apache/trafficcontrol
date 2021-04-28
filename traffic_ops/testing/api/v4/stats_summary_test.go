@@ -38,6 +38,8 @@ func TestStatsSummary(t *testing.T) {
 	GetTestStatsSummariesLastUpdated(t)
 }
 
+// Note that these stats summaries are never cleaned up, and will be left in
+// the TODB after the tests complete
 func CreateTestStatsSummaries(t *testing.T) {
 	tmpTime := latestTime
 	for _, ss := range testData.StatsSummaries {
@@ -122,8 +124,8 @@ func GetTestStatsSummaries(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Unexpected error getting Stats Summary: %v - alerts: %+v", err, tsr.Alerts)
 			}
-			if len(tc.expectedStatsSummaries) != len(tsr.Response) {
-				t.Fatalf("expected to recieve %d stats summaries but received %d", len(tc.expectedStatsSummaries), len(tsr.Response))
+			if len(tc.expectedStatsSummaries) == 0 && len(tsr.Response) != 0 {
+				t.Fatalf("expected to recieve no stats summaries but received %d", len(tsr.Response))
 			}
 			for _, ess := range tc.expectedStatsSummaries {
 				if ess.StatName == nil {
