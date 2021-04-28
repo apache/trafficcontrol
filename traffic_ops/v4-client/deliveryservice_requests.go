@@ -18,6 +18,7 @@ package client
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -118,8 +119,9 @@ func (to *Session) GetDeliveryServiceRequests(opts RequestOptions) (tc.DeliveryS
 // DeleteDeliveryServiceRequest deletes the Delivery Service Request with the given ID.
 func (to *Session) DeleteDeliveryServiceRequest(id int, opts RequestOptions) (tc.DeliveryServiceRequestCUDResponseV4, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
-		opts.QueryParameters.Set("id", strconv.Itoa(id))
+		opts.QueryParameters = url.Values{}
 	}
+	opts.QueryParameters.Set("id", strconv.Itoa(id))
 	var resp tc.DeliveryServiceRequestCUDResponseV4
 	reqInf, err := to.del(apiDSRequests, opts, &resp)
 	return resp, reqInf, err
@@ -129,8 +131,9 @@ func (to *Session) DeleteDeliveryServiceRequest(id int, opts RequestOptions) (tc
 // ID with the DSR passed.
 func (to *Session) UpdateDeliveryServiceRequest(id int, dsr tc.DeliveryServiceRequestV4, opts RequestOptions) (tc.DeliveryServiceRequestCUDResponseV4, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
-		opts.QueryParameters.Set("id", strconv.Itoa(id))
+		opts.QueryParameters = url.Values{}
 	}
+	opts.QueryParameters.Set("id", strconv.Itoa(id))
 
 	var payload tc.DeliveryServiceRequestCUDResponseV4
 	reqInf, err := to.put(apiDSRequests, opts, dsr, &payload)
