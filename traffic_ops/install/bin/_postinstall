@@ -231,8 +231,7 @@ DEFAULTS = {
 	],
 	DB_CONF_FILE: [
 		Question("Database server root (admin) user", "postgres", "pgUser"),
-		Question("Password for database server admin", "", "pgPassword", hidden=True),
-		Question("Download Maxmind Database?", "yes", "maxmind")
+		Question("Password for database server admin", "", "pgPassword", hidden=True)
 	],
 	CDN_CONF_FILE: [
 		Question("Generate a new secret?", "yes", "genSecret"),
@@ -710,50 +709,6 @@ def unmarshal_config(dct): # type: (dict) -> dict[str, list[Question]]
 		ret[file] = qstns
 
 	return ret
-
-def setup_maxmind(maxmind_answer, root, download_tool = '/usr/bin/wget'): # type: (str, str, str) -> None
-	"""
-	If 'maxmind_answer' is a truthy response ('y' or 'yes' (case-insensitive), sets up a Maxmind
-	database using `wget`.
-	"""
-	if maxmind_answer.lower() not in {'y', 'yes'}:
-		logging.info("Not downloading Maxmind data")
-		return
-
-	os.chdir(os.path.join(root, 'opt/traffic_ops/app/public/routing'))
-
-	def failed_download(e, ip_version):  # type: (Exception, int) -> None
-		logging.error("Failed to download MaxMind data")
-		logging.debug("(ipv%d) Exception: %s", ip_version, e)
-
-	cmd = [download_tool, "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"]
-	# Perl ignored errors downloading the databases, so we do too
-	try:
-		subprocess.check_call(
-			cmd,
-			stderr=subprocess.PIPE,
-			stdout=subprocess.PIPE,
-			universal_newlines=True
-		)
-	except (subprocess.CalledProcessError, OSError) as e:
-		failed_download(e, 4)
-	except subprocess.SubprocessError as e:
-		failed_download(e, 4)
-
-	cmd[1] = (
-		"https://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz"
-	)
-	try:
-		subprocess.check_call(
-			cmd,
-			stderr=subprocess.PIPE,
-			stdout=subprocess.PIPE,
-			universal_newlines=True
-		)
-	except (subprocess.CalledProcessError, OSError) as e:
-		failed_download(e, 6)
-	except subprocess.SubprocessError as e:
-		failed_download(e, 6)
 
 def exec_openssl(description, *cmd_args): # type: (str, ...) -> bool
 	"""
@@ -1309,12 +1264,6 @@ no_database, # type: bool
 		return 1
 	except ValueError as e:
 		logging.critical("Generating configuration: %s", e)
-		return 1
-
-	try:
-		setup_maxmind(todbconf.get("maxmind", "no"), root_dir)
-	except OSError as e:
-		logging.critical("Setting up MaxMind: %s", e)
 		return 1
 
 	try:

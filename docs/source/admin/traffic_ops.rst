@@ -133,8 +133,6 @@ Guide
 		Database server root (admin) user: postgres
 		Password for database server admin:
 		Re-Enter Password for database server admin:
-		Download Maxmind Database? [yes]:
-		Download Maxmind Database?: yes
 		===========/opt/traffic_ops/app/conf/cdn.conf===========
 		Generate a new secret? [yes]:
 		Generate a new secret?: yes
@@ -165,10 +163,6 @@ Guide
 		DNS sub-domain for which your CDN is authoritative [cdn1.kabletown.net]: blue-cdn.supercdn.net
 		DNS sub-domain for which your CDN is authoritative: blue-cdn.supercdn.net
 		Writing json to /opt/traffic_ops/install/data/json/profiles.json
-		Downloading Maxmind data
-		--2017-06-11 15:32:41--  http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz
-		Resolving geolite.maxmind.com (geolite.maxmind.com)... 2400:cb00:2048:1::6810:262f, 2400:cb00:2048:1::6810:252f, 104.16.38.47, ...
-		Connecting to geolite.maxmind.com (geolite.maxmind.com)|2400:cb00:2048:1::6810:262f|:80... connected.
 
 		... much SQL output skipped
 
