@@ -34,9 +34,9 @@ import (
 const apiCDNMonitoringConfig = "/cdns/%s/configs/monitoring"
 
 // GetTrafficMonitorConfig returns the monitoring configuration for the CDN named by 'cdn'.
-func (to *Session) GetTrafficMonitorConfig(cdn string, opts RequestOptions) (tc.TMConfigResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) GetTrafficMonitorConfig(cdn string, opts RequestOptions) (tc.TMConfigResponse, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf(apiCDNMonitoringConfig, url.PathEscape(cdn))
-	var data tc.TMConfigResponseV4
+	var data tc.TMConfigResponse
 	reqInf, err := to.get(route, opts, &data)
 	return data, reqInf, err
 }

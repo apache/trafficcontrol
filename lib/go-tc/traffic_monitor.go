@@ -43,20 +43,8 @@ const (
 // cdns/{{Name}}/configs/monitoring endpoint of the Traffic Ops API.
 type TMConfigResponse struct {
 	Response TrafficMonitorConfig `json:"response"`
-}
-
-// TMConfigResponseV40 is the response to requests made to the
-// cdns/{{Name}}/configs/monitoring endpoint of the Traffic Ops API in API
-// version 4.0.
-type TMConfigResponseV40 struct {
-	Response TrafficMonitorConfig `json:"response"`
 	Alerts
 }
-
-// TMConfigResponseV4 is the response to requests made to the
-// cdns/{{Name}}/configs/monitoring endpoint of the Traffic Ops API in the
-// latest minor version of API version 4.
-type TMConfigResponseV4 = TMConfigResponseV40
 
 // LegacyTMConfigResponse was the response to requests made to the
 // cdns/{{Name}}/configs/montoring endpoint of the Traffic Ops API in older API

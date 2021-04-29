@@ -49,19 +49,8 @@ type ServerCheckExtensionNullable struct {
 // ServerCheckExtensionResponse represents the response from Traffic Ops when getting ServerCheckExtension.
 type ServerCheckExtensionResponse struct {
 	Response []ServerCheckExtensionNullable `json:"response"`
-}
-
-// ServercheckExtensionResponseV40 is the type of a response to the Traffic Ops
-// API's /servercheck/extensions endpoint in API version 4.0.
-type ServercheckExtensionResponseV40 struct {
-	Response []ServerCheckExtensionNullable `json:"response"`
 	Alerts
 }
-
-// ServercheckExtensionResponseV4 is the type of a response to the Traffic Ops
-// API's /servercheck/extensions endpoint in the latest minor version of API
-// version 4.
-type ServercheckExtensionResponseV4 = ServercheckExtensionResponseV40
 
 // ServerCheckExtensionPostResponse represents the response from Traffic Ops when creating ServerCheckExtension.
 type ServerCheckExtensionPostResponse struct {

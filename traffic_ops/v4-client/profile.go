@@ -93,9 +93,9 @@ func (to *Session) DeleteProfile(id int, opts RequestOptions) (tc.Alerts, toclie
 }
 
 // ExportProfile Returns an exported Profile.
-func (to *Session) ExportProfile(id int, opts RequestOptions) (tc.ProfileExportResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) ExportProfile(id int, opts RequestOptions) (tc.ProfileExportResponse, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d/export", apiProfiles, id)
-	var data tc.ProfileExportResponseV4
+	var data tc.ProfileExportResponse
 	reqInf, err := to.get(route, opts, &data)
 	return data, reqInf, err
 }

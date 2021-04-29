@@ -57,9 +57,9 @@ func (to *Session) DeleteCDN(id int, opts RequestOptions) (tc.Alerts, toclientli
 }
 
 // GetCDNSSLKeys retrieves the SSL keys for the CDN with the given name.
-func (to *Session) GetCDNSSLKeys(name string, opts RequestOptions) (tc.CDNSSLKeysResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) GetCDNSSLKeys(name string, opts RequestOptions) (tc.CDNSSLKeysResponse, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/name/%s/sslkeys", apiCDNs, url.PathEscape(name))
-	var data tc.CDNSSLKeysResponseV4
+	var data tc.CDNSSLKeysResponse
 	reqInf, err := to.get(route, opts, &data)
 	return data, reqInf, err
 }

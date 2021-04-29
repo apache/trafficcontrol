@@ -211,16 +211,16 @@ func (to *Session) DeleteDeliveryService(id int, opts RequestOptions) (tc.Delete
 
 // GetDeliveryServiceHealth gets the 'health' of the Delivery Service identified by the
 // integral, unique identifier 'id'.
-func (to *Session) GetDeliveryServiceHealth(id int, opts RequestOptions) (tc.DeliveryServiceHealthResponseV4, toclientlib.ReqInf, error) {
-	var data tc.DeliveryServiceHealthResponseV4
+func (to *Session) GetDeliveryServiceHealth(id int, opts RequestOptions) (tc.DeliveryServiceHealthResponse, toclientlib.ReqInf, error) {
+	var data tc.DeliveryServiceHealthResponse
 	reqInf, err := to.get(fmt.Sprintf(apiDeliveryServiceHealth, id), opts, &data)
 	return data, reqInf, err
 }
 
 // GetDeliveryServiceCapacity gets the 'capacity' of the Delivery Service identified by the
 // integral, unique identifier 'id'.
-func (to *Session) GetDeliveryServiceCapacity(id int, opts RequestOptions) (tc.DeliveryServiceCapacityResponseV4, toclientlib.ReqInf, error) {
-	var data tc.DeliveryServiceCapacityResponseV4
+func (to *Session) GetDeliveryServiceCapacity(id int, opts RequestOptions) (tc.DeliveryServiceCapacityResponse, toclientlib.ReqInf, error) {
+	var data tc.DeliveryServiceCapacityResponse
 	reqInf, err := to.get(fmt.Sprintf(apiDeliveryServiceCapacity, id), opts, &data)
 	return data, reqInf, err
 }

@@ -1,13 +1,5 @@
 package tc
 
-import (
-	"database/sql"
-	"errors"
-	"strings"
-
-	"github.com/apache/trafficcontrol/lib/go-util"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -26,6 +18,14 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"database/sql"
+	"errors"
+	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
+)
 
 // ServerchecksResponse is a list of Serverchecks as a response.
 // swagger:response ServerchecksResponse

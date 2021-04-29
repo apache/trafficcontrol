@@ -40,8 +40,8 @@ func (to *Session) DeleteServerCheckExtension(id int, opts RequestOptions) (tc.A
 }
 
 // GetServerCheckExtensions gets all Servercheck Extensions in Traffic Ops.
-func (to *Session) GetServerCheckExtensions(opts RequestOptions) (tc.ServercheckExtensionResponseV4, toclientlib.ReqInf, error) {
-	var toExtResp tc.ServercheckExtensionResponseV4
+func (to *Session) GetServerCheckExtensions(opts RequestOptions) (tc.ServerCheckExtensionResponse, toclientlib.ReqInf, error) {
+	var toExtResp tc.ServerCheckExtensionResponse
 	reqInf, err := to.get(apiTOExtension, opts, &toExtResp)
 	return toExtResp, reqInf, err
 }

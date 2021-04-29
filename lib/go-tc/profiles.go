@@ -1,18 +1,5 @@
 package tc
 
-import (
-	"database/sql"
-	"errors"
-	"fmt"
-	"strconv"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/lib/pq"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -31,6 +18,20 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"strconv"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
+
+	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/lib/pq"
+)
 
 // ProfilesResponse is a list of profiles returned by GET requests.
 type ProfilesResponse struct {
@@ -113,20 +114,9 @@ type ProfileExportResponse struct {
 	// Parameters associated to the profile
 	//
 	Parameters []ProfileExportImportParameterNullable `json:"parameters"`
-}
 
-// ProfileExportResponseV40 is the type of a response from Traffic Ops to a
-// request to its /profiles/{{ID}}/export endpoint in API version 4.0.
-type ProfileExportResponseV40 struct {
-	Profile    ProfileExportImportNullable            `json:"profile"`
-	Parameters []ProfileExportImportParameterNullable `json:"parameters"`
 	Alerts
 }
-
-// ProfileExportResponseV4 is the type of a response from Traffic Ops to a
-// request to its /profiles/{{ID}}/export endpoint in the latest minor version
-// of API version 4.
-type ProfileExportResponseV4 = ProfileExportResponseV40
 
 // ProfileImportRequest is an object of the form used by Traffic Ops
 // to represent a request to import a profile

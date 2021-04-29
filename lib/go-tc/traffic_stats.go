@@ -314,22 +314,15 @@ type TrafficStatsTotalStats struct {
 	Connnections *float64 `json:"connections"`
 }
 
-// TrafficStatsCDNStatsResponse contains response for getting current stats
+// TrafficStatsCDNStatsResponse contains response for getting current stats.
 type TrafficStatsCDNStatsResponse struct {
-	Response []TrafficStatsCDNsStats `json:"response"`
-}
-
-// CurrentStatsResponseV40 is the type of a response from Traffic Ops
-// to a request to its /current_stats endpoint in API version 4.0.
-type CurrentStatsResponseV40 struct {
 	Response []TrafficStatsCDNsStats `json:"response"`
 	Alerts
 }
 
-// CurrentStatsResponseV4 is the type of a response from Traffic Ops
-// to a request to its /current_stats endpoint in the latest minor
-// version of API version 4.
-type CurrentStatsResponseV4 = CurrentStatsResponseV40
+// CurrentStatsResponse is the type of a response from Traffic Ops
+// to a request to its /current_stats endpoint.
+type CurrentStatsResponse = TrafficStatsCDNStatsResponse
 
 // TrafficStatsCDNsStats contains a list of CDN summary statistics
 type TrafficStatsCDNsStats struct {

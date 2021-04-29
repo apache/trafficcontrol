@@ -22,6 +22,7 @@ package tc
 // LogsResponse is a list of Logs as a response.
 type LogsResponse struct {
 	Response []Log `json:"response"`
+	Alerts
 }
 
 // Log contains a change that has been made to the Traffic Control system.
@@ -33,17 +34,6 @@ type Log struct {
 	TicketNum   *int    `json:"ticketNum"`
 	User        *string `json:"user"`
 }
-
-// LogsResponseV40 is the type of a response from Traffic Ops to a request made
-// to its /logs endpoint in API version 4.0.
-type LogsResponseV40 struct {
-	Response []Log `json:"response"`
-	Alerts
-}
-
-// LogsResponseV4 is the type of a response from Traffic Ops to a request made
-// to its /logs endpoint in the latest minor version of API version 4.
-type LogsResponseV4 = LogsResponseV40
 
 // NewLogCountResp is the response returned when the total number of new changes
 // made to the Traffic Control system is requested. "New" means since the last

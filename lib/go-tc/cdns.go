@@ -106,19 +106,8 @@ type CDNNullable struct {
 // requests made to its /cdns/name/{{name}}/sslkeys endpoint.
 type CDNSSLKeysResponse struct {
 	Response []CDNSSLKeys `json:"response"`
-}
-
-// CDNSSLKeysResponseV40 is the structure of the Traffic Ops API's response to
-// requests made to its /cdns/name/{{name}}/sslkeys endpoint in API version 4.0.
-type CDNSSLKeysResponseV40 struct {
-	Response []CDNSSLKeys `json:"response"`
 	Alerts
 }
-
-// CDNSSLKeysResponseV40 is the structure of the Traffic Ops API's response to
-// requests made to its /cdns/name/{{name}}/sslkeys endpoint in the latest
-// minor API version for API v4.
-type CDNSSLKeysResponseV4 = CDNSSLKeysResponseV40
 
 // CDNSSLKeys ...
 type CDNSSLKeys struct {

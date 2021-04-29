@@ -21,9 +21,9 @@ import (
 )
 
 // GetFederationFederationResolvers retrieves all Federation Resolvers belonging to Federation of ID.
-func (to *Session) GetFederationFederationResolvers(id int, opts RequestOptions) (tc.FederationFederationResolversResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) GetFederationFederationResolvers(id int, opts RequestOptions) (tc.FederationFederationResolversResponse, toclientlib.ReqInf, error) {
 	path := fmt.Sprintf("/federations/%d/federation_resolvers", id)
-	var resp tc.FederationFederationResolversResponseV4
+	var resp tc.FederationFederationResolversResponse
 	reqInf, err := to.get(path, opts, &resp)
 	return resp, reqInf, err
 }

@@ -44,8 +44,8 @@ func (to *Session) UpdateServiceCategory(name string, serviceCategory tc.Service
 }
 
 // GetServiceCategories retrieves Service Categories from Traffic Ops.
-func (to *Session) GetServiceCategories(opts RequestOptions) (tc.ServiceCategoriesResponseV4, toclientlib.ReqInf, error) {
-	var data tc.ServiceCategoriesResponseV4
+func (to *Session) GetServiceCategories(opts RequestOptions) (tc.ServiceCategoriesResponse, toclientlib.ReqInf, error) {
+	var data tc.ServiceCategoriesResponse
 	reqInf, err := to.get(apiServiceCategories, opts, &data)
 	return data, reqInf, err
 }
