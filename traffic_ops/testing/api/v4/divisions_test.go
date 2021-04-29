@@ -365,10 +365,10 @@ func GetTestPaginationSupportDivision(t *testing.T) {
 func GetDivisionByInvalidId(t *testing.T) {
 	resp, _, err := TOSession.GetDivisionByID(10000, nil)
 	if err != nil {
-		t.Errorf("Error!! Getting Division by Invalid ID %v", err)
+		t.Errorf("Getting Division by Invalid ID %v", err)
 	}
 	if len(resp) >= 1 {
-		t.Errorf("Error!! Invalid ID shouldn't have any response %v Error %v", resp, err)
+		t.Errorf("Invalid ID shouldn't have any response %v Error %v", resp, err)
 	}
 }
 

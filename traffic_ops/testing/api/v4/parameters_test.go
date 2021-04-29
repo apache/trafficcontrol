@@ -50,6 +50,13 @@ func TestParameters(t *testing.T) {
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestParametersWithHeaders(t, header)
 		GetTestPaginationSupportParameters(t)
+		GetTestParametersByConfigfile(t)
+		GetTestParametersByValue(t)
+		GetTestParametersByName(t)
+		GetParametersByInvalidId(t)
+		GetParametersByInvalidName(t)
+		GetParametersByInvalidConfigfile(t)
+		GetParametersByInvalidValue(t)
 	})
 }
 
@@ -315,5 +322,87 @@ func GetTestPaginationSupportParameters(t *testing.T) {
 		t.Error("expected GET Parameters to return an error when page is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {
 		t.Errorf("expected GET Parameters to return an error for page is not a positive integer, actual error: " + err.Error())
+	}
+}
+
+func GetTestParametersByConfigfile(t *testing.T) {
+	for _, parameters := range testData.Parameters {
+		resp, reqInf, err := TOSession.GetParametersByConfigFile(parameters.ConfigFile, nil)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by Config File: %v - %v", parameters.ConfigFile, err)
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+		if len(resp) <= 0 {
+			t.Errorf("No data available for Get Parameters by Config file")
+		}
+	}
+}
+
+func GetTestParametersByValue(t *testing.T) {
+	for _, parameters := range testData.Parameters {
+		_, reqInf, err := TOSession.GetParametersByValue(parameters.Value, nil)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by Value: %v - %v", parameters.Value, err)
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func GetTestParametersByName(t *testing.T) {
+	for _, parameters := range testData.Parameters {
+		resp, reqInf, err := TOSession.GetParametersByName(parameters.Name, nil)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by Name: %v - %v", parameters.Name, err)
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+		if len(resp) <= 0 {
+			t.Errorf("No data available for Get Parameters by Name")
+		}
+	}
+}
+
+func GetParametersByInvalidId(t *testing.T) {
+	resp, _, err := TOSession.GetParameterByID(10000, nil)
+	if err != nil {
+		t.Errorf("Getting Parameters by Invalid ID %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Invalid ID shouldn't have any response %v Error %v", resp, err)
+	}
+}
+
+func GetParametersByInvalidName(t *testing.T) {
+	resp, _, err := TOSession.GetParametersByName("abcd", nil)
+	if err != nil {
+		t.Errorf("Getting Parameters by Invalid Name %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Invalid name shouldn't have any response %v Error %v", resp, err)
+	}
+}
+
+func GetParametersByInvalidConfigfile(t *testing.T) {
+	resp, _, err := TOSession.GetParametersByConfigFile("abcd", nil)
+	if err != nil {
+		t.Errorf("Getting Parameters by Invalid ConfigFile %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Invalid config file shouldn't have any response %v Error %v", resp, err)
+	}
+}
+
+func GetParametersByInvalidValue(t *testing.T) {
+	resp, _, err := TOSession.GetParametersByValue("abcd", nil)
+	if err != nil {
+		t.Errorf("Getting Parameters by Invalid value %v", err)
+	}
+	if len(resp) >= 1 {
+		t.Errorf("Invalid value shouldn't have any response %v Error %v", resp, err)
 	}
 }
