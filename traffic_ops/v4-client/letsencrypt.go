@@ -26,8 +26,8 @@ const (
 )
 
 // AcmeAutorenew renews the certificates.
-func (to *Session) AutoRenew() (toclientlib.ReqInf, error) {
+func (to *Session) AutoRenew() (*tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(APIAcmeAutorenew, nil, nil, &alerts)
-	return reqInf, err
+	return &alerts,reqInf, err
 }
