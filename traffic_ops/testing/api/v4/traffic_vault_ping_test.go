@@ -17,12 +17,14 @@ package v4
 
 import (
 	"testing"
+
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestTrafficVaultPing(t *testing.T) {
 	if includeSystemTests {
 		WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
-			_, _, err := TOSession.TrafficVaultPing()
+			_, _, err := TOSession.TrafficVaultPing(client.RequestOptions{})
 			if err != nil {
 				t.Errorf("could not ping Traffic Vault: %v", err)
 			}
