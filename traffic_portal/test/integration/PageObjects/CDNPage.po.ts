@@ -17,7 +17,7 @@
  * under the License.
  */
 import { browser, by, element } from 'protractor';
-
+import { existsSync, readdirSync, unlink } from "fs";
 import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
@@ -33,12 +33,16 @@ interface CDN {
 interface UpdateCDN {
   description: string;
   Name: string;
+  NewName: string;
   validationMessage?: string;
 }
 
 interface DeleteCDN {
   Name: string;
   validationMessage?: string;
+}
+interface DownloadCSV {
+  Name: string;
 }
 
 export class CDNPage extends BasePage {
@@ -53,6 +57,7 @@ export class CDNPage extends BasePage {
   private btnDiffSnapshot = element(by.xpath("//button[@title='Diff CDN Snapshot']"));
   private btnYes = element((by.xpath("//button[text()='Yes']")));
   private btnQueueUpdates = element((by.xpath("//button[contains(text(),'Queue Updates')]")));
+  private btnDownloadCSV = element((by.xpath("//span[text()='Export as CSV']")));
   private randomize = randomize;
 
   public async OpenCDNsPage(): Promise<void> {
@@ -61,7 +66,6 @@ export class CDNPage extends BasePage {
   }
 
   public async CreateCDN(cdn: CDN): Promise<boolean> {
-    let result = false;
     let snp = new SideNavigationPage();
     let basePage = new BasePage();
     await snp.NavigateToCDNPage();
@@ -70,14 +74,7 @@ export class CDNPage extends BasePage {
     await this.txtDomain.sendKeys(cdn.Domain);
     await this.selectDNSSEC.sendKeys(cdn.DNSSEC);
     await basePage.ClickCreate();
-    result = await basePage.GetOutputMessage().then(function (value) {
-      if (cdn.validationMessage === value) {
-        return true;
-      } else {
-        return false;
-      }
-    })
-    return result;
+    return await basePage.GetOutputMessage().then(value => cdn.validationMessage === value);
   }
 
   async SearchCDN(nameCDN: string) {
@@ -99,31 +96,35 @@ export class CDNPage extends BasePage {
     switch (cdn.description) {
       case 'perform snapshot':
         await this.btnDiffSnapshot.click();
-        if(await browser.isElementPresent(element(by.xpath('//button[@title="Perform ' + cdn.Name + this.randomize + ' Snapshot"]')))){
+        if (await browser.isElementPresent(element(by.xpath('//button[@title="Perform ' + cdn.Name + this.randomize + ' Snapshot"]')))) {
           await element(by.xpath('//button[@title="Perform ' + cdn.Name + this.randomize + ' Snapshot"]')).click();
-        }else{
+        } else {
           throw new Error("Cannot find Perform Snapshot button")
         }
         await this.btnYes.click();
         break;
       case 'queue CDN updates':
         await this.btnQueueUpdates.click();
-        if(await browser.isElementPresent(element(by.linkText('Queue ' + cdn.Name + this.randomize + ' Server Updates')))){
+        if (await browser.isElementPresent(element(by.linkText('Queue ' + cdn.Name + this.randomize + ' Server Updates')))) {
           await element(by.linkText('Queue ' + cdn.Name + this.randomize + ' Server Updates')).click();
-        }else{
+        } else {
           throw new Error("Cannot find Queue CDN updates button")
         }
         await this.btnYes.click();
         break;
       case 'clear CDN updates':
         await this.btnQueueUpdates.click();
-        if(await browser.isElementPresent(element(by.linkText('Clear ' + cdn.Name + this.randomize + ' Server Updates')))){
+        if (await browser.isElementPresent(element(by.linkText('Clear ' + cdn.Name + this.randomize + ' Server Updates')))) {
           await element(by.linkText('Clear ' + cdn.Name + this.randomize + ' Server Updates')).click();
-        }else{
+        } else {
           throw new Error("Cannot find Clear CDN updates button")
         }
         await this.btnYes.click();
         break;
+      case 'update cdn name':
+        await this.txtCDNName.clear();
+        await this.txtCDNName.sendKeys(cdn.NewName + this.randomize);
+        await this.ClickUpdate();
       default:
         result = undefined;
     }
@@ -139,18 +140,35 @@ export class CDNPage extends BasePage {
 
   public async DeleteCDN(cdn: DeleteCDN): Promise<boolean> {
     let name = cdn.Name + this.randomize;
-    let result = false;
     let basePage = new BasePage();
     await this.btnDelete.click();
     await this.txtConfirmName.sendKeys(name);
     await basePage.ClickDeletePermanently();
-    result = await basePage.GetOutputMessage().then(function (value) {
-      if (cdn.validationMessage == value) {
-        return true;
-      } else {
-        return false;
+    return await basePage.GetOutputMessage().then(value => cdn.validationMessage === value);
+  }
+  public async DownloadCSV(cdn: DownloadCSV): Promise<boolean> {
+    let filename = cdn.Name;
+    let result = false;
+    let readme = 'Readme.md';
+    const folder = 'Downloads';
+    await this.btnDownloadCSV.click();
+    await browser.wait(async function () {
+      await readdirSync(folder).forEach(file => {
+        if (file != readme) {
+          //read file name just download
+          filename = file;
+        }
+      });
+    }, 30 * 1000, 'File has not downloaded within 30 seconds').catch(function () {
+      if (existsSync(`Downloads/${filename}`)) {
+        //if file exist result will be true
+        result = true;
+        //delete the file
+        unlink(`Downloads/${filename}`, (err) => {
+          if (err) throw err;
+        });
       }
-    })
+    });
     return result;
   }
 }
