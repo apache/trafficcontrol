@@ -608,19 +608,33 @@ func makeRequestWithHeader(to *TOClient, method, path string, body interface{}, 
 			return reqInf, nil
 		}
 		defer log.Close(resp.Body, "unable to close response body")
+		bts, readErr := ioutil.ReadAll(resp.Body)
+		if readErr != nil {
+			if err != nil {
+				err = fmt.Errorf("failed to read response (%v) after request error: %v", readErr, err)
+			} else {
+				err = errors.New("failed to read response: " + readErr.Error())
+			}
+			return reqInf, err
+		}
+
+		// Don't bother checking for alerts if there's no error; we wouldn't do
+		// anything with them in that case anyway
+		if err != nil {
+			var alerts tc.Alerts
+			// ignore errors; some responses may not be regularly-formed, and if
+			// it's a problem later steps will uncover it.
+			if e := json.Unmarshal(bts, &alerts); e == nil {
+				errStr := alerts.ErrorString()
+				if errStr != "" {
+					err = fmt.Errorf("%v - error-level alerts: %s", err, errStr)
+				}
+			}
+		}
 
 		if btsPtr, isBytes := response.(*[]byte); isBytes {
-			bts, readErr := ioutil.ReadAll(resp.Body)
-			if readErr != nil {
-				if err != nil {
-					err = fmt.Errorf("failed to read response (%v) after request error: %v", readErr, err)
-				} else {
-					err = errors.New("failed to read response: " + readErr.Error())
-				}
-			} else {
-				*btsPtr = bts
-			}
-		} else if decodeErr := json.NewDecoder(resp.Body).Decode(response); decodeErr != nil {
+			*btsPtr = bts
+		} else if decodeErr := json.Unmarshal(bts, response); decodeErr != nil {
 			if err != nil {
 				err = fmt.Errorf("failed to decode response body (%v) after request error: %v", decodeErr, err)
 			} else {
