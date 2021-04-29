@@ -527,18 +527,12 @@ type FederationDeliveryServiceNullable struct {
 	XMLID *string `json:"xmlId" db:"xml_id"`
 }
 
-// FederationDeliveryServicesResponseV40 is the type of a response from Traffic
-// Ops to a request made to its /federations/{{ID}}/deliveryservices endpoint
-// in API version 4.0.
-type FederationDeliveryServicesResponseV40 struct {
+// FederationDeliveryServicesResponse is the type of a response from Traffic
+// Ops to a request made to its /federations/{{ID}}/deliveryservices endpoint.
+type FederationDeliveryServicesResponse struct {
 	Response []FederationDeliveryServiceNullable `json:"response"`
 	Alerts
 }
-
-// FederationDeliveryServicesResponseV4 is the type of a response from Traffic
-// Ops to a request made to its /federations/{{ID}}/deliveryservices endpoint
-// in the latest minor version of API version 4.
-type FederationDeliveryServicesResponseV4 = FederationDeliveryServicesResponseV40
 
 type DeliveryServiceUserPost struct {
 	UserID           *int   `json:"userId"`
@@ -561,20 +555,14 @@ type DSServerIDs struct {
 	Replace           *bool `json:"replace"`
 }
 
-// DeliveryserviceserverResponseV40 - not to be confused with
-// DSServerResponseV40 - is the type of a response from Traffic Ops to a
-// request to the /deliveryserviceserver endpoint to associate servers with a
-// Delivery Service in API version 4.0.
-type DeliveryserviceserverResponseV40 struct {
+// DeliveryserviceserverResponse - not to be confused with DSServerResponseV40
+// or DSServerResponse- is the type of a response from Traffic Ops to a request
+// to the /deliveryserviceserver endpoint to associate servers with a Delivery
+// Service.
+type DeliveryserviceserverResponse struct {
 	Response DSServerIDs `json:"response"`
 	Alerts
 }
-
-// DeliveryserviceserverResponseV40 - not to be confused with
-// DSServerResponseV4 - is the type of a response from Traffic Ops to a request
-// to the /deliveryserviceserver endpoint to associate servers with a Delivery
-// Service in the current latest minor version of API version 4.
-type DeliveryserviceserverResponseV4 = DeliveryserviceserverResponseV40
 
 type CachegroupPostDSReq struct {
 	DeliveryServices []int `json:"deliveryServices"`

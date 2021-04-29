@@ -441,7 +441,7 @@ func enrollParameter(toSession *session, r io.Reader) error {
 					return errors.New("no profile with name " + n)
 				}
 
-				pp := tc.ProfileParameterCreationRequestV4{ParameterID: eparam.ID, ProfileID: profiles.Response[0].ID}
+				pp := tc.ProfileParameterCreationRequest{ParameterID: eparam.ID, ProfileID: profiles.Response[0].ID}
 				resp, _, err := toSession.CreateProfileParameter(pp, client.RequestOptions{})
 				if err != nil {
 					found := false
@@ -724,7 +724,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 			log.Infof("param ID not found for %v", eparam)
 			continue
 		}
-		pp := tc.ProfileParameterCreationRequestV4{ProfileID: profile.ID, ParameterID: eparam.ID}
+		pp := tc.ProfileParameterCreationRequest{ProfileID: profile.ID, ParameterID: eparam.ID}
 		resp, _, err := toSession.CreateProfileParameter(pp, client.RequestOptions{})
 		if err != nil {
 			found := false

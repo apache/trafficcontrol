@@ -27,13 +27,13 @@ import (
 // CreateDeliveryServiceServers associates the given servers with the given
 // Delivery Services. If replace is true, it deletes any existing associations
 // for the given Delivery Service.
-func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, replace bool, opts RequestOptions) (tc.DeliveryserviceserverResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, replace bool, opts RequestOptions) (tc.DeliveryserviceserverResponse, toclientlib.ReqInf, error) {
 	req := tc.DSServerIDs{
 		DeliveryServiceID: util.IntPtr(dsID),
 		ServerIDs:         serverIDs,
 		Replace:           util.BoolPtr(replace),
 	}
-	var resp tc.DeliveryserviceserverResponseV4
+	var resp tc.DeliveryserviceserverResponse
 	reqInf, err := to.post(apiDeliveryServiceServer, opts, req, &resp)
 	return resp, reqInf, err
 }
@@ -59,8 +59,8 @@ func (to *Session) AssignServersToDeliveryService(servers []string, xmlID string
 
 // GetDeliveryServiceServers returns associations between Delivery Services and
 // servers.
-func (to *Session) GetDeliveryServiceServers(opts RequestOptions) (tc.DeliveryServiceServerResponseV4, toclientlib.ReqInf, error) {
-	var resp tc.DeliveryServiceServerResponseV4
+func (to *Session) GetDeliveryServiceServers(opts RequestOptions) (tc.DeliveryServiceServerResponse, toclientlib.ReqInf, error) {
+	var resp tc.DeliveryServiceServerResponse
 	reqInf, err := to.get(apiDeliveryServiceServer, opts, &resp)
 	return resp, reqInf, err
 }

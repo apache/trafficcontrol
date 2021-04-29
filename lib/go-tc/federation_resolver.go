@@ -27,29 +27,19 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-// FederationResolversResponseV40 represents a Traffic Ops API response to a
-// GET request to its /api/4.0/federation_resolvers/ endpoint.
-type FederationResolversResponseV40 struct {
+// FederationResolversResponse represents a Traffic Ops API response to a
+// GET request to its /federation_resolvers endpoint.
+type FederationResolversResponse struct {
 	Alerts
 	Response []FederationResolver `json:"response"`
 }
 
-// FederationResolversResponseV4 represents a Traffic Ops API response to a GET
-// request to its /api/4.x/federation_resolvers/ endpoint. It always points to
-// the type for the latest minor version of APIv4.
-type FederationResolversResponseV4 = FederationResolversResponseV40
-
-// FederationResolverResponseV40 represents a Traffic Ops API response to a
-// POST or DELETE request to its /api/4.0/federation_resolvers/ endpoint.
-type FederationResolverResponseV40 struct {
+// FederationResolverResponse represents a Traffic Ops API response to a
+// POST or DELETE request to its /federation_resolvers endpoint.
+type FederationResolverResponse struct {
 	Alerts
 	Response FederationResolver `json:"response"`
 }
-
-// FederationResolverResponseV4 represents a Traffic Ops API response to a POST
-// or DELETE request to its /api/4.x/federation_resolvers/ endpoint. It always
-// points to the type for the latest minor version of APIv4.
-type FederationResolverResponseV4 = FederationResolverResponseV40
 
 // FederationResolver represents a resolver record for a CDN Federation.
 type FederationResolver struct {

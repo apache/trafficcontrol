@@ -59,16 +59,11 @@ type InvalidationJob struct {
 }
 
 // InvalidationJobsResponseV40 is the type of a response from Traffic Ops to a
-// request made to its /jobs API endpoint in API version 4.0.
-type InvalidationJobsResponseV40 struct {
+// request made to its /jobs API endpoint.
+type InvalidationJobsResponse struct {
 	Response []InvalidationJob `json:"response"`
 	Alerts
 }
-
-// InvalidationJobsResponseV4 is the type of a response from Traffic Ops to a
-// request made to its /jobs API endpoint in the latest minor version of API
-// version 4.
-type InvalidationJobsResponseV4 = InvalidationJobsResponseV40
 
 // InvalidationJobInput represents user input intending to create or modify a content invalidation job.
 type InvalidationJobInput struct {

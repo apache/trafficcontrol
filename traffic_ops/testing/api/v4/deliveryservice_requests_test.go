@@ -413,8 +413,8 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 	})
 }
 
-func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequestV4, newstate string, header http.Header) tc.DeliveryServiceRequestCUDResponseV4 {
-	var resp tc.DeliveryServiceRequestCUDResponseV4
+func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequestV4, newstate string, header http.Header) tc.DeliveryServiceRequestResponseV4 {
+	var resp tc.DeliveryServiceRequestResponseV4
 	ID := dsr.ID
 	if ID == nil {
 		t.Error("updateDeliveryServiceRequestStatus called with a DSR that has a nil ID")

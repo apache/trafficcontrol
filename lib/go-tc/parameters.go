@@ -271,18 +271,12 @@ type ProfileParameterV40 struct {
 //  of the Traffic Ops API's responses to the /profileparameters endpoint.
 type ProfileParameterV4 = ProfileParameterV40
 
-// ProfileParameterCreationRequestV40 is the type of data accepted by Traffic
-// Ops as payloads in POST requests to its /profileparameters endpoint in
-// version 4.0 of its API.
-type ProfileParameterCreationRequestV40 struct {
+// ProfileParameterCreationRequest is the type of data accepted by Traffic
+// Ops as payloads in POST requests to its /profileparameters endpoint.
+type ProfileParameterCreationRequest struct {
 	ParameterID int `json:"parameterId"`
 	ProfileID   int `json:"profileId"`
 }
-
-// ProfileParameterCreationRequestV4 is the type of data accepted by Traffic
-// Ops as payloads in POST requests to its /profileparameters endpoint in
-// the latest minor version of its API version 4.
-type ProfileParameterCreationRequestV4 = ProfileParameterCreationRequestV40
 
 // ProfileParametersResponseV40 is the type of a response from Traffic Ops to
 // requests made to its /profileparameters endpoint in version 4.0 of its API.

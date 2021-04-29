@@ -32,16 +32,16 @@ const apiFederationsAll = "/federations/all"
 
 // Federations gets all Delivery Service-to-Federation mappings in Traffic Ops
 // that are assigned to the current user.
-func (to *Session) Federations(opts RequestOptions) (tc.FederationsResponseV4, toclientlib.ReqInf, error) {
-	var data tc.FederationsResponseV4
+func (to *Session) Federations(opts RequestOptions) (tc.FederationsResponse, toclientlib.ReqInf, error) {
+	var data tc.FederationsResponse
 	inf, err := to.get(apiFederations, opts, &data)
 	return data, inf, err
 }
 
 // AllFederations gets all Delivery Service-to-Federation mappings in Traffic
 // Ops.
-func (to *Session) AllFederations(opts RequestOptions) (tc.FederationsResponseV4, toclientlib.ReqInf, error) {
-	var data tc.FederationsResponseV4
+func (to *Session) AllFederations(opts RequestOptions) (tc.FederationsResponse, toclientlib.ReqInf, error) {
+	var data tc.FederationsResponse
 	inf, err := to.get("/federations/all", opts, &data)
 	return data, inf, err
 }
@@ -63,8 +63,8 @@ func (to *Session) CreateFederationDeliveryServices(
 
 // GetFederationDeliveryServices returns the Delivery Services assigned to the
 // Federation identified by 'federationID'.
-func (to *Session) GetFederationDeliveryServices(federationID int, opts RequestOptions) (tc.FederationDeliveryServicesResponseV4, toclientlib.ReqInf, error) {
-	var data tc.FederationDeliveryServicesResponseV4
+func (to *Session) GetFederationDeliveryServices(federationID int, opts RequestOptions) (tc.FederationDeliveryServicesResponse, toclientlib.ReqInf, error) {
+	var data tc.FederationDeliveryServicesResponse
 	inf, err := to.get(fmt.Sprintf("federations/%d/deliveryservices", federationID), opts, &data)
 	return data, inf, err
 }
@@ -90,8 +90,8 @@ func (to *Session) CreateFederationUsers(federationID int, userIDs []int, replac
 
 // GetFederationUsers retrieves all users to whom the Federation identified by
 // 'federationID' is assigned.
-func (to *Session) GetFederationUsers(federationID int, opts RequestOptions) (tc.FederationUsersResponseV4, toclientlib.ReqInf, error) {
-	var data tc.FederationUsersResponseV4
+func (to *Session) GetFederationUsers(federationID int, opts RequestOptions) (tc.FederationUsersResponse, toclientlib.ReqInf, error) {
+	var data tc.FederationUsersResponse
 	inf, err := to.get(fmt.Sprintf("federations/%d/users", federationID), opts, &data)
 	return data, inf, err
 }

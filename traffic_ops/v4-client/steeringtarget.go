@@ -54,9 +54,9 @@ func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable, opts Reque
 
 // GetSteeringTargets retrieves all Targets for the Steering Delivery Service
 // with the given ID.
-func (to *Session) GetSteeringTargets(dsID int, opts RequestOptions) (tc.SteeringTargetsResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) GetSteeringTargets(dsID int, opts RequestOptions) (tc.SteeringTargetsResponse, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("steering/%d/targets", dsID)
-	var data tc.SteeringTargetsResponseV4
+	var data tc.SteeringTargetsResponse
 	reqInf, err := to.get(route, opts, &data)
 	return data, reqInf, err
 }

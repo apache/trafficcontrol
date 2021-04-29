@@ -48,8 +48,8 @@ func (to *Session) DeleteDeliveryServicesRequiredCapability(deliveryserviceID in
 
 // GetDeliveryServicesRequiredCapabilities retrieves a list of relationships
 // between Delivery Services and the Capabilities they require.
-func (to *Session) GetDeliveryServicesRequiredCapabilities(opts RequestOptions) (tc.DeliveryServicesRequiredCapabilitiesResponseV4, toclientlib.ReqInf, error) {
-	var resp tc.DeliveryServicesRequiredCapabilitiesResponseV4
+func (to *Session) GetDeliveryServicesRequiredCapabilities(opts RequestOptions) (tc.DeliveryServicesRequiredCapabilitiesResponse, toclientlib.ReqInf, error) {
+	var resp tc.DeliveryServicesRequiredCapabilitiesResponse
 	reqInf, err := to.get(apiDeliveryServicesRequiredCapabilities, opts, &resp)
 	return resp, reqInf, err
 }

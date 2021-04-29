@@ -255,7 +255,7 @@ func CreateTestProfiles(t *testing.T) {
 			if len(p.Response) == 0 {
 				t.Fatalf("could not get parameter %+v: not found", param)
 			}
-			req := tc.ProfileParameterCreationRequestV4{ProfileID: profileID, ParameterID: p.Response[0].ID}
+			req := tc.ProfileParameterCreationRequest{ProfileID: profileID, ParameterID: p.Response[0].ID}
 			alerts, _, err = TOSession.CreateProfileParameter(req, client.RequestOptions{})
 			if err != nil {
 				t.Errorf("could not associate Parameter %+v with Profile #%d: %v - alerts: %+v", param, profileID, err, alerts.Alerts)

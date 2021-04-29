@@ -30,8 +30,8 @@ import (
 const apiDSRequests = "/deliveryservice_requests"
 
 // CreateDeliveryServiceRequest creates the given Delivery Service Request.
-func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV4, opts RequestOptions) (tc.DeliveryServiceRequestCUDResponseV4, toclientlib.ReqInf, error) {
-	var resp tc.DeliveryServiceRequestCUDResponseV4
+func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV4, opts RequestOptions) (tc.DeliveryServiceRequestResponseV4, toclientlib.ReqInf, error) {
+	var resp tc.DeliveryServiceRequestResponseV4
 	if dsr.AssigneeID == nil && dsr.Assignee != nil {
 		assigneeOpts := NewRequestOptions()
 		assigneeOpts.QueryParameters.Set("username", *dsr.Assignee)
@@ -110,32 +110,32 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV4,
 }
 
 // GetDeliveryServiceRequests retrieves Delivery Service Requests available to session user.
-func (to *Session) GetDeliveryServiceRequests(opts RequestOptions) (tc.DeliveryServiceRequestResponseV4, toclientlib.ReqInf, error) {
-	var data tc.DeliveryServiceRequestResponseV4
+func (to *Session) GetDeliveryServiceRequests(opts RequestOptions) (tc.DeliveryServiceRequestsResponseV4, toclientlib.ReqInf, error) {
+	var data tc.DeliveryServiceRequestsResponseV4
 	reqInf, err := to.get(apiDSRequests, opts, &data)
 	return data, reqInf, err
 }
 
 // DeleteDeliveryServiceRequest deletes the Delivery Service Request with the given ID.
-func (to *Session) DeleteDeliveryServiceRequest(id int, opts RequestOptions) (tc.DeliveryServiceRequestCUDResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) DeleteDeliveryServiceRequest(id int, opts RequestOptions) (tc.DeliveryServiceRequestResponseV4, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
 	opts.QueryParameters.Set("id", strconv.Itoa(id))
-	var resp tc.DeliveryServiceRequestCUDResponseV4
+	var resp tc.DeliveryServiceRequestResponseV4
 	reqInf, err := to.del(apiDSRequests, opts, &resp)
 	return resp, reqInf, err
 }
 
 // UpdateDeliveryServiceRequest replaces the existing DSR that has the given
 // ID with the DSR passed.
-func (to *Session) UpdateDeliveryServiceRequest(id int, dsr tc.DeliveryServiceRequestV4, opts RequestOptions) (tc.DeliveryServiceRequestCUDResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) UpdateDeliveryServiceRequest(id int, dsr tc.DeliveryServiceRequestV4, opts RequestOptions) (tc.DeliveryServiceRequestResponseV4, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
 	opts.QueryParameters.Set("id", strconv.Itoa(id))
 
-	var payload tc.DeliveryServiceRequestCUDResponseV4
+	var payload tc.DeliveryServiceRequestResponseV4
 	reqInf, err := to.put(apiDSRequests, opts, dsr, &payload)
 
 	return payload, reqInf, err

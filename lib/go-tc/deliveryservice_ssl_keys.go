@@ -92,17 +92,11 @@ type DeliveryServiceSSLKeysReq struct {
 }
 
 // DeliveryServiceSSLKeysGenerationResponseV40 is the type of a response from
-// Traffic Ops to a request for generation of SSL Keys for a Delivery Service -
-// in API version 4.0.
-type DeliveryServiceSSLKeysGenerationResponseV40 struct {
+// Traffic Ops to a request for generation of SSL Keys for a Delivery Service.
+type DeliveryServiceSSLKeysGenerationResponse struct {
 	Response string `json:"response"`
 	Alerts
 }
-
-// DeliveryServiceSSLKeysGenerationResponseV4 is the type of a response from
-// Traffic Ops to a request for generation of SSL Keys for a Delivery Service -
-// in the current latest minor version of API version 4.
-type DeliveryServiceSSLKeysGenerationResponseV4 = DeliveryServiceSSLKeysGenerationResponseV40
 
 // DeliveryServiceSSLKeysCertificate ...
 type DeliveryServiceSSLKeysCertificate struct {

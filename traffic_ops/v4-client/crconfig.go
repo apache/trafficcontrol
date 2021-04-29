@@ -33,17 +33,17 @@ type OuterResponse struct {
 }
 
 // GetCRConfig returns the Snapshot for the given CDN from Traffic Ops.
-func (to *Session) GetCRConfig(cdn string, opts RequestOptions) (tc.SnapshotResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) GetCRConfig(cdn string, opts RequestOptions) (tc.SnapshotResponse, toclientlib.ReqInf, error) {
 	uri := `/cdns/` + cdn + `/snapshot`
-	var resp tc.SnapshotResponseV4
+	var resp tc.SnapshotResponse
 	reqInf, err := to.get(uri, opts, &resp)
 	return resp, reqInf, err
 }
 
 // SnapshotCRConfig creates a new Snapshot for the CDN with the given Name -
 // NOT just a new CRConfig!
-func (to *Session) SnapshotCRConfig(opts RequestOptions) (tc.PutSnapshotResponseV4, toclientlib.ReqInf, error) {
-	var resp tc.PutSnapshotResponseV4
+func (to *Session) SnapshotCRConfig(opts RequestOptions) (tc.PutSnapshotResponse, toclientlib.ReqInf, error) {
+	var resp tc.PutSnapshotResponse
 	if opts.QueryParameters == nil || (opts.QueryParameters.Get("cdn") == "" && opts.QueryParameters.Get("cdnID") == "") {
 		return resp, toclientlib.ReqInf{}, errors.New("cannot take Snapshot of unidentified CDN - set 'cdn' or 'cdnID' query parameter")
 	}
@@ -53,9 +53,9 @@ func (to *Session) SnapshotCRConfig(opts RequestOptions) (tc.PutSnapshotResponse
 
 // GetCRConfigNew returns the *new* Snapshot for the given CDN from Traffic
 // Ops.
-func (to *Session) GetCRConfigNew(cdn string, opts RequestOptions) (tc.SnapshotResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) GetCRConfigNew(cdn string, opts RequestOptions) (tc.SnapshotResponse, toclientlib.ReqInf, error) {
 	uri := `/cdns/` + cdn + `/snapshot/new`
-	var resp tc.SnapshotResponseV4
+	var resp tc.SnapshotResponse
 	reqInf, err := to.get(uri, opts, &resp)
 	return resp, reqInf, err
 }

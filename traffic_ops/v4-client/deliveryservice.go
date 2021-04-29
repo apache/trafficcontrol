@@ -231,7 +231,7 @@ func (to *Session) GenerateSSLKeysForDS(
 	CDNName string,
 	sslFields tc.SSLKeyRequestFields,
 	opts RequestOptions,
-) (tc.DeliveryServiceSSLKeysGenerationResponseV4, toclientlib.ReqInf, error) {
+) (tc.DeliveryServiceSSLKeysGenerationResponse, toclientlib.ReqInf, error) {
 	version := util.JSONIntStr(1)
 	request := tc.DeliveryServiceSSLKeysReq{
 		BusinessUnit:    sslFields.BusinessUnit,
@@ -245,7 +245,7 @@ func (to *Session) GenerateSSLKeysForDS(
 		State:           sslFields.State,
 		Version:         &version,
 	}
-	var response tc.DeliveryServiceSSLKeysGenerationResponseV4
+	var response tc.DeliveryServiceSSLKeysGenerationResponse
 	reqInf, err := to.post(apiDeliveryServiceGenerateSSLKeys, opts, request, &response)
 	return response, reqInf, err
 }
@@ -259,8 +259,8 @@ func (to *Session) AddSSLKeysForDS(request tc.DeliveryServiceAddSSLKeysReq, opts
 
 // DeleteDeliveryServiceSSLKeys deletes the SSL Keys used by the Delivery
 // Service identified by the passed XMLID.
-func (to *Session) DeleteDeliveryServiceSSLKeys(XMLID string, opts RequestOptions) (tc.DeliveryServiceSSLKeysGenerationResponseV4, toclientlib.ReqInf, error) {
-	var resp tc.DeliveryServiceSSLKeysGenerationResponseV4
+func (to *Session) DeleteDeliveryServiceSSLKeys(XMLID string, opts RequestOptions) (tc.DeliveryServiceSSLKeysGenerationResponse, toclientlib.ReqInf, error) {
+	var resp tc.DeliveryServiceSSLKeysGenerationResponse
 	reqInf, err := to.del(fmt.Sprintf(apiAPIDeliveryServiceXMLIDSSLKeys, url.QueryEscape(XMLID)), opts, &resp)
 	return resp, reqInf, err
 }

@@ -64,8 +64,8 @@ func (to *Session) UpdateInvalidationJob(job tc.InvalidationJob, opts RequestOpt
 
 // GetInvalidationJobs returns a list of Content Invalidation Jobs visible to
 // your Tenant.
-func (to *Session) GetInvalidationJobs(opts RequestOptions) (tc.InvalidationJobsResponseV4, toclientlib.ReqInf, error) {
-	var data tc.InvalidationJobsResponseV4
+func (to *Session) GetInvalidationJobs(opts RequestOptions) (tc.InvalidationJobsResponse, toclientlib.ReqInf, error) {
+	var data tc.InvalidationJobsResponse
 	reqInf, err := to.get(apiJobs, opts, &data)
 	return data, reqInf, err
 }

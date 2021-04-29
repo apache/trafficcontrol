@@ -84,7 +84,7 @@ func CreateTestProfileParameters(t *testing.T) {
 	profileID := profileResp.Response[0].ID
 	parameterID := paramResp.Response[0].ID
 
-	pp := tc.ProfileParameterCreationRequestV4{
+	pp := tc.ProfileParameterCreationRequest{
 		ProfileID:   profileID,
 		ParameterID: parameterID,
 	}
@@ -96,7 +96,7 @@ func CreateTestProfileParameters(t *testing.T) {
 }
 
 func InvalidCreateTestProfileParameters(t *testing.T) {
-	pp := tc.ProfileParameterCreationRequestV4{
+	pp := tc.ProfileParameterCreationRequest{
 		ProfileID:   0,
 		ParameterID: 0,
 	}

@@ -22,8 +22,8 @@ import (
 
 // Steering retrieves information about all (Tenant-accessible) Steering
 // Delivery Services stored in Traffic Ops assigned to the requesting user.
-func (to *Session) Steering(opts RequestOptions) (tc.SteeringResponseV4, toclientlib.ReqInf, error) {
-	var data tc.SteeringResponseV4
+func (to *Session) Steering(opts RequestOptions) (tc.SteeringResponse, toclientlib.ReqInf, error) {
+	var data tc.SteeringResponse
 	reqInf, err := to.get(`/steering`, opts, &data)
 	return data, reqInf, err
 }
