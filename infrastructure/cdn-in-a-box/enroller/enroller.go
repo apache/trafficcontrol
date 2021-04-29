@@ -52,7 +52,7 @@ func newSession(reqTimeout time.Duration, toURL string, toUser string, toPass st
 func (s session) getParameter(m tc.Parameter, header http.Header) (tc.Parameter, error) {
 	// TODO: s.GetParameterByxxx() does not seem to work with values with spaces --
 	// doing this the hard way for now
-	parameters, _, err := s.GetParameters(header, nil)
+	parameters, _, err := s.GetParameters(nil, header)
 	if err != nil {
 		return m, err
 	}
