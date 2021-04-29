@@ -18,6 +18,8 @@ package v4
 import (
 	"net/http"
 	"net/url"
+	"reflect"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -47,6 +49,7 @@ func TestParameters(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestParametersWithHeaders(t, header)
+		GetTestPaginationSupportParameters(t)
 	})
 }
 
@@ -77,12 +80,12 @@ func GetTestParametersIMSAfterChange(t *testing.T, header http.Header) {
 	params := url.Values{}
 	for _, pl := range testData.Parameters {
 		params.Set("name", pl.Name)
-		_, reqInf, err := TOSession.GetParameters(header, params)
+		_, reqInf, err := TOSession.GetParameters(params, header)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Errorf("Expected no error, but got %v", err.Error())
 		}
 		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
 		}
 	}
 	currentTime := time.Now().UTC()
@@ -91,12 +94,12 @@ func GetTestParametersIMSAfterChange(t *testing.T, header http.Header) {
 	header.Set(rfc.IfModifiedSince, timeStr)
 	for _, pl := range testData.Parameters {
 		params.Set("name", pl.Name)
-		_, reqInf, err := TOSession.GetParameters(header, params)
+		_, reqInf, err := TOSession.GetParameters(params, header)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Errorf("Expected no error, but got %v", err.Error())
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+			t.Errorf("Expected 304 status code, got %v", reqInf.StatusCode)
 		}
 	}
 }
@@ -119,7 +122,7 @@ func UpdateTestParameters(t *testing.T) {
 	// Retrieve the Parameter by name so we can get the id for the Update
 	params := url.Values{}
 	params.Set("name", firstParameter.Name)
-	resp, _, err := TOSession.GetParameters(nil, params)
+	resp, _, err := TOSession.GetParameters(params, nil)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
@@ -153,12 +156,12 @@ func GetTestParametersIMS(t *testing.T) {
 	params := url.Values{}
 	for _, pl := range testData.Parameters {
 		params.Set("name", pl.Name)
-		_, reqInf, err := TOSession.GetParameters(header, params)
+		_, reqInf, err := TOSession.GetParameters(params, header)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Errorf("Expected no error, but got %v", err.Error())
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+			t.Errorf("Expected 304 status code, got %v", reqInf.StatusCode)
 		}
 	}
 }
@@ -167,7 +170,7 @@ func GetTestParameters(t *testing.T) {
 	params := url.Values{}
 	for _, pl := range testData.Parameters {
 		params.Set("name", pl.Name)
-		resp, _, err := TOSession.GetParameters(nil, params)
+		resp, _, err := TOSession.GetParameters(params, nil)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by name: %v - %v", err, resp)
 		}
@@ -202,7 +205,7 @@ func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
 	params := url.Values{}
 	params.Set("name", pl.Name)
 	params.Set("configFile", pl.ConfigFile)
-	resp, _, err := TOSession.GetParameters(nil, params)
+	resp, _, err := TOSession.GetParameters(params, nil)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v", pl.Name, err)
 	}
@@ -229,5 +232,88 @@ func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
 		if len(pls) > 0 {
 			t.Errorf("expected Parameter Name: %s and ConfigFile: %s to be deleted", pl.Name, pl.ConfigFile)
 		}
+	}
+}
+
+func GetTestPaginationSupportParameters(t *testing.T) {
+	qparams := url.Values{}
+	qparams.Set("orderby", "id")
+	parameters, _, err := TOSession.GetParameters(qparams, nil)
+	if err != nil {
+		t.Errorf("cannot GET Parameters: %v", err)
+	}
+
+	if len(parameters) > 0 {
+		qparams = url.Values{}
+		qparams.Set("orderby", "id")
+		qparams.Set("limit", "1")
+		parametersWithLimit, _, err := TOSession.GetParameters(qparams, nil)
+		if err == nil {
+			if !reflect.DeepEqual(parameters[:1], parametersWithLimit) {
+				t.Error("expected GET Parameters with limit = 1 to return first result")
+			}
+		} else {
+			t.Error("Error in getting parameter by limit")
+		}
+		if len(parameters) > 1 {
+			qparams = url.Values{}
+			qparams.Set("orderby", "id")
+			qparams.Set("limit", "1")
+			qparams.Set("offset", "1")
+			parametersWithOffset, _, err := TOSession.GetParameters(qparams, nil)
+			if err == nil {
+				if !reflect.DeepEqual(parameters[1:2], parametersWithOffset) {
+					t.Error("expected GET Parameters with limit = 1, offset = 1 to return second result")
+				}
+			} else {
+				t.Error("Error in getting parameter by limit and offset")
+			}
+
+			qparams = url.Values{}
+			qparams.Set("orderby", "id")
+			qparams.Set("limit", "1")
+			qparams.Set("page", "2")
+			parametersWithPage, _, err := TOSession.GetParameters(qparams, nil)
+			if err == nil {
+				if !reflect.DeepEqual(parameters[1:2], parametersWithPage) {
+					t.Error("expected GET Parameters with limit = 1, page = 2 to return second result")
+				}
+			} else {
+				t.Error("Error in getting parameters by limit and page")
+			}
+		} else {
+			t.Errorf("only one parameters found, so offset functionality can't test")
+		}
+	} else {
+		t.Errorf("No parameters found to check pagination")
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "-2")
+	_, _, err = TOSession.GetParameters(qparams, nil)
+	if err == nil {
+		t.Error("expected GET Parameters to return an error when limit is not bigger than -1")
+	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
+		t.Errorf("expected GET Parameters to return an error for limit is not bigger than -1, actual error: " + err.Error())
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "1")
+	qparams.Set("offset", "0")
+	_, _, err = TOSession.GetParameters(qparams, nil)
+	if err == nil {
+		t.Error("expected GET Parameters to return an error when offset is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET Parameters to return an error for offset is not a positive integer, actual error: " + err.Error())
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "1")
+	qparams.Set("page", "0")
+	_, _, err = TOSession.GetParameters(qparams, nil)
+	if err == nil {
+		t.Error("expected GET Parameters to return an error when page is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET Parameters to return an error for page is not a positive integer, actual error: " + err.Error())
 	}
 }

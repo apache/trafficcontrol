@@ -214,7 +214,7 @@ func CreateTestProfiles(t *testing.T) {
 			params.Set("name", *param.Name)
 			params.Set("configFile", *param.ConfigFile)
 			params.Set("value", *param.Value)
-			p, _, err := TOSession.GetParameters(nil, params)
+			p, _, err := TOSession.GetParameters(params, nil)
 			if err != nil {
 				t.Errorf("could not GET parameter %+v: %s", param, err.Error())
 			}

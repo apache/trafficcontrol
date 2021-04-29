@@ -1028,7 +1028,7 @@ func DeleteTestDeliveryServices(t *testing.T) {
 	qParams := url.Values{}
 	qParams.Set("name", "location")
 	qParams.Set("configFile", "remap.config")
-	params, _, err := TOSession.GetParameters(nil, qParams)
+	params, _, err := TOSession.GetParameters(qParams, nil)
 	for _, param := range params {
 		deleted, _, err := TOSession.DeleteParameter(param.ID)
 		if err != nil {

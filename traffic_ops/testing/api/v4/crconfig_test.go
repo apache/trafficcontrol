@@ -173,7 +173,7 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 
 	params := url.Values{}
 	params.Set("name", tmURLParamName)
-	paramResp, _, err := TOSession.GetParameters(nil, params)
+	paramResp, _, err := TOSession.GetParameters(params, nil)
 	if err != nil {
 		t.Fatalf("cannot GET Parameter by name: %v - %v", tmURLParamName, err)
 	}

@@ -86,7 +86,7 @@ func TestGetOSVersions(t *testing.T) {
 			params.Set("name", p.Name)
 			params.Set("configFile", p.ConfigFile)
 			params.Set("value", p.Value)
-			resp, _, err := TOSession.GetParameters(nil, params)
+			resp, _, err := TOSession.GetParameters(params, nil)
 			if err != nil {
 				t.Fatalf("cannot GET Parameter by name: %v - %v\n", p.Name, err)
 			}

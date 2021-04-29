@@ -53,7 +53,7 @@ func (to *Session) UpdateParameter(id int, pl tc.Parameter, header http.Header) 
 }
 
 // GetParameters returns all Parameters in Traffic Ops.
-func (to *Session) GetParameters(header http.Header, params url.Values) ([]tc.Parameter, toclientlib.ReqInf, error) {
+func (to *Session) GetParameters(params url.Values, header http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
 	route := APIParameters
 	if len(params) > 0 {
 		route += "?" + params.Encode()
