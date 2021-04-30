@@ -14,7 +14,7 @@ limitations under the License.
 <tp-header [title]="deliveryService && deliveryService.displayName ? deliveryService.displayName : 'New Delivery Service'"></tp-header>
 <mat-horizontal-stepper [linear]="true" aria-label="New Delivery Service Form" #stepper>
 	<mat-step [stepControl]="form1.control" label="Origin Server" aria-label="Origin Server">
-		<form #form1="ngForm" ngNativeValidate (ngSubmit)="setOriginURL(stepper)">
+		<form #form1="ngForm" ngNativeValidate ngDefaultControl (ngSubmit)="setOriginURL()">
 			<h2>Step 1 - Origin Server</h2>
 			<div class="form-content">
 				<label for="origin">I want to create a Delivery Service for:</label>
@@ -29,7 +29,7 @@ limitations under the License.
 		</form>
 	</mat-step>
 	<mat-step [stepControl]="form2.control" label="Meta Information" aria-label="Meta Information">
-		<form #form2="ngForm" ngNativeValidate (ngSubmit)="setMetaInformation(stepper)">
+		<form #form2="ngForm" ngNativeValidate ngDefaultControl (ngSubmit)="setMetaInformation()">
 			<h2>Step 2 - Meta Information</h2>
 			<div class="form-content">
 				<label for="displayName">This Delivery Service's name will be:</label>
@@ -46,13 +46,13 @@ limitations under the License.
 				</div>
 			</div>
 			<div class="buttons-holder">
-				<button mat-raised-button type="reset" (click)="previous(stepper)">Previous</button>
+				<button mat-raised-button type="reset" matStepperPrevious>Previous</button>
 				<button mat-raised-button>Next</button>
 			</div>
 		</form>
 	</mat-step>
 	<mat-step label="Infrastructure" aria-label="Infrastructure">
-		<form ngNativeValidate (ngSubmit)="setInfrastructureInformation()">
+		<form ngNativeValidate ngDefaultControl (ngSubmit)="setInfrastructureInformation()">
 			<h2>Step 3 - Infrastructure</h2>
 			<div class="form-content">
 				<label for="cdnObject">This Delivery Service will be a part of this CDN:</label>
@@ -82,7 +82,7 @@ limitations under the License.
 				</div>
 			</div>
 			<div class="buttons-holder">
-				<button mat-raised-button type="reset" (click)="previous(stepper)">Previous</button>
+				<button mat-raised-button type="reset" matStepperPrevious>Previous</button>
 				<button mat-raised-button>Submit</button>
 			</div>
 		</form>

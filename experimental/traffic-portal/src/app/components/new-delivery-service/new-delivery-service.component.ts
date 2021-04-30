@@ -114,6 +114,13 @@ export class NewDeliveryServiceComponent implements OnInit {
 	public bypassable = bypassable;
 
 	/**
+	 * A reference to the stepper used in the form - this is never actually
+	 * undefined, but the value is set by the decorator, so to satisfy the
+	 * compiler we need to mark it as optional.
+	 */
+	@ViewChild("stepper") public stepper?: MatStepper;
+
+	/**
 	 * Constructor.
 	 */
 	constructor(
@@ -233,7 +240,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 *
 	 * @param stepper The stepper controlling the form flow - used to advance to the next step.
 	 */
-	public setOriginURL(stepper: MatStepper): void {
+	public setOriginURL(): void {
 		const parser = document.createElement("a");
 		parser.href = this.originURL.value;
 		this.deliveryService.orgServerFqdn = parser.origin;
@@ -262,7 +269,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 
 		this.deliveryService.displayName = `Delivery Service for ${parser.hostname}`;
 		this.displayName.setValue(this.deliveryService.displayName);
-		stepper.next();
+		this.stepper?.next();
 	}
 
 	/**
@@ -273,7 +280,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * name value to a placeholder while making the actual value an empty
 	 * string.
 	 */
-	public setMetaInformation(stepper: MatStepper): void {
+	public setMetaInformation(): void {
 		this.deliveryService.displayName = this.displayName.value;
 		this.deliveryService.xmlId = this.deliveryService.displayName.toLocaleLowerCase().replace(XML_ID_SANITIZE, "-");
 		if (! VALID_XML_ID.test(this.deliveryService.xmlId)) {
@@ -294,7 +301,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 		if (this.infoURL.value) {
 			this.deliveryService.infoUrl = this.infoURL.value;
 		}
-		stepper.next();
+		this.stepper?.next();
 	}
 
 	/**
@@ -376,7 +383,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	/**
 	 * Allows a user to return to the previous step.
 	 */
-	public previous(stepper: MatStepper): void {
-		stepper.previous();
+	public previous(): void {
+		this.stepper?.previous();
 	}
 }
