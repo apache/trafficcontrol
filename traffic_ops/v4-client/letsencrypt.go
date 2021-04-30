@@ -29,5 +29,5 @@ const (
 func (to *Session) AutoRenew() (*tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(APIAcmeAutorenew, nil, nil, &alerts)
-	return &alerts,reqInf, err
+	return &alerts, reqInf, err
 }

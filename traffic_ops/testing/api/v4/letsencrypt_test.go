@@ -25,11 +25,11 @@ func TestLetsEncrypt(t *testing.T) {
 }
 
 func PostTestAutoRenew(t *testing.T) {
-	reqInf, err := TOSession.AutoRenew()
+	_, reqInf, err := TOSession.AutoRenew()
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err)
 	}
-	if 100 != http.StatusAccepted {
+	if reqInf.StatusCode != http.StatusAccepted {
 		t.Fatalf("Expected 202 status code, got %v", reqInf.StatusCode)
 	}
 }
