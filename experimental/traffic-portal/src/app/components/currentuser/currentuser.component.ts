@@ -13,8 +13,7 @@
 */
 import { Component, OnInit, OnDestroy } from "@angular/core";
 
-import { Subscription } from "rxjs";
-import { first } from "rxjs/operators";
+// import { Subscription } from "rxjs";
 
 import { User } from "../../models";
 import { AuthenticationService } from "../../services";
@@ -32,12 +31,18 @@ export class CurrentuserComponent implements OnInit, OnDestroy {
 	/** The currently logged-in user - or 'null' if not logged-in. */
 	public currentUser: User | null = null;
 	/** A subscription for the authentication service's currentUser value. */
-	private subscription: Subscription | null = null;
+	// private readonly subscription: Subscription;
 
 	/**
 	 * Constructor.
 	 */
 	constructor(private readonly auth: AuthenticationService) {
+		// this.subscription = this.auth.currentUser.subscribe(
+		// 	u => {
+		// 		this.currentUser = u;
+		// 	}
+		// );
+		this.currentUser = this.auth.currentUser;
 	}
 
 	/**
@@ -45,29 +50,21 @@ export class CurrentuserComponent implements OnInit, OnDestroy {
 	 * authentication service.
 	 */
 	public ngOnInit(): void {
-		this.currentUser = this.auth.currentUserValue;
 		if (this.currentUser === null) {
-			this.auth.updateCurrentUser().pipe(first()).subscribe(
-				(r: boolean) => {
+			this.auth.updateCurrentUser().then(
+				r => {
 					if (r) {
-						this.currentUser = this.auth.currentUserValue;
+						this.currentUser = this.auth.currentUser;
 					}
 				}
 			);
 		}
-		this.subscription = this.auth.currentUser.subscribe(
-			u => {
-				this.currentUser = u;
-			}
-		);
 	}
 
 	/**
 	 * Runs when the component is destroyed - cleans up active subscriptions.
 	 */
 	public ngOnDestroy(): void {
-		if (this.subscription) {
-			this.subscription.unsubscribe();
-		}
+		// this.subscription.unsubscribe();
 	}
 }

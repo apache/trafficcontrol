@@ -15,7 +15,6 @@ import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 
 import { BehaviorSubject, Observable } from "rxjs";
-import { first } from "rxjs/operators";
 
 import { Role, User } from "../../models";
 import { AuthenticationService } from "../../services";
@@ -50,6 +49,7 @@ export class UsersComponent implements OnInit {
 	/** Maps role IDs to role Names. */
 	public rolesMap: Observable<Map<number, string>>;
 
+
 	/**
 	 * Constructor.
 	 */
@@ -66,16 +66,16 @@ export class UsersComponent implements OnInit {
 	 */
 	public ngOnInit(): void {
 		// User may have navigated directly with a valid cookie - in which case current user is null
-		if (this.auth.currentUserValue === null) {
-			this.auth.updateCurrentUser().subscribe(
+		if (!this.auth.currentUser) {
+			this.auth.updateCurrentUser().then(
 				v => {
-					if (v && this.auth.currentUserValue) {
-						this.myId = this.auth.currentUserValue.id;
+					if (v && this.auth.currentUser) {
+						this.myId = this.auth.currentUser.id;
 					}
 				}
 			);
 		} else {
-			this.myId = this.auth.currentUserValue.id;
+			this.myId = this.auth.currentUser.id;
 		}
 
 		this.api.getUsers().then(

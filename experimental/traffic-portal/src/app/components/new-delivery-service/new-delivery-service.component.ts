@@ -11,23 +11,18 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ViewChild } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import type { MatStepper } from "@angular/material/stepper";
 import { Router } from "@angular/router";
 
-import { first } from "rxjs/operators";
-
 import {
 	bypassable,
 	CDN,
+	defaultDeliveryService,
 	DeliveryService,
-	GeoLimit,
-	GeoProvider,
 	Protocol,
 	protocolToString,
-	QStringHandling,
-	RangeRequestHandling,
 	Type
 } from "../../models";
 import { User } from "../../models/user";
@@ -72,29 +67,7 @@ const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])*(\.[A-z\d]([A-z0-9\-]*[A-z
 export class NewDeliveryServiceComponent implements OnInit {
 
 	/** The Delivery Service being created */
-	public deliveryService: DeliveryService = {
-		active: false,
-		anonymousBlockingEnabled: false,
-		cdnId: -1,
-		deepCachingType: "NEVER",
-		displayName: "",
-		dscp: 0,
-		geoLimit: GeoLimit.NONE,
-		geoProvider: GeoProvider.MAX_MIND,
-		initialDispersion: 1,
-		ipv6RoutingEnabled: true,
-		logsEnabled: true,
-		longDesc: "",
-		missLat: 0,
-		missLong: 0,
-		multiSiteOrigin: false,
-		qstringIgnore: QStringHandling.USE,
-		rangeRequestHandling: RangeRequestHandling.NONE,
-		regionalGeoBlocking: false,
-		routingName: "cdn",
-		typeId: -1,
-		xmlId: ""
-	};
+	public deliveryService: DeliveryService = {...defaultDeliveryService};
 
 	/** Allows the user to set 'active' */
 	public activeImmediately = new FormControl();
@@ -155,12 +128,12 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * (types, cdns, etc).
 	 */
 	public ngOnInit(): void {
-		this.auth.updateCurrentUser().subscribe( success => {
-			if (!success || this.auth.currentUserValue === null) {
+		this.auth.updateCurrentUser().then( success => {
+			if (!success || this.auth.currentUser === null) {
 				return;
 			}
-			this.deliveryService.tenant = this.auth.currentUserValue.tenant;
-			this.deliveryService.tenantId = this.auth.currentUserValue.tenantId;
+			this.deliveryService.tenant = this.auth.currentUser.tenant;
+			this.deliveryService.tenantId = this.auth.currentUser.tenantId;
 			this.dsAPI.getDSTypes().then(
 				(types: Array<Type>) => {
 					this.dsTypes = types;
@@ -174,7 +147,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 					}
 				}
 			);
-			if (!this.auth.currentUserValue || !this.auth.currentUserValue.tenantId) {
+			if (!this.auth.currentUser || !this.auth.currentUser.tenantId) {
 				console.error("Cannot set default CDN - user has no tenant");
 				return;
 			}
@@ -186,7 +159,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 							console.warn("Delivery Service has no tenant:", ds);
 							continue;
 						}
-						if (ds.tenantId === (this.auth.currentUserValue as User).tenantId) {
+						if (ds.tenantId === (this.auth.currentUser as User).tenantId) {
 							const usedCDNs = cdnsInUse.get(ds.tenantId);
 							if (!usedCDNs) {
 								cdnsInUse.set(ds.tenantId, 1);

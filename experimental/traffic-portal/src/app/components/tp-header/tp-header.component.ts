@@ -11,8 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Input, OnDestroy, OnInit } from "@angular/core";
-import { Subscription } from "rxjs";
+import { Component, Input, OnInit } from "@angular/core";
 import { AuthenticationService } from "src/app/services";
 
 /**
@@ -23,7 +22,7 @@ import { AuthenticationService } from "src/app/services";
 	styleUrls: ["./tp-header.component.scss"],
 	templateUrl: "./tp-header.component.html"
 })
-export class TpHeaderComponent implements OnInit, OnDestroy {
+export class TpHeaderComponent implements OnInit {
 
 	/**
 	 * The set of permissions available to the authenticated user.
@@ -33,7 +32,7 @@ export class TpHeaderComponent implements OnInit, OnDestroy {
 	/**
 	 * Holds a continuous subscription for the current user's permissions, in case they change.
 	 */
-	private permissionSubscription: Subscription | undefined;
+	// private permissionSubscription: Subscription | undefined;
 
 	/**
 	 * The title to be used in the header.
@@ -48,17 +47,6 @@ export class TpHeaderComponent implements OnInit, OnDestroy {
 
 	/** Sets up data dependencies. */
 	public ngOnInit(): void {
-		this.permissionSubscription = this.auth.currentUserCapabilities.subscribe(
-			x => {
-				this.permissions = x;
-			}
-		);
-	}
-
-	/** Cleans up data dependencies. */
-	public ngOnDestroy(): void {
-		if (this.permissionSubscription) {
-			this.permissionSubscription.unsubscribe();
-		}
+		this.permissions = this.auth.capabilities;
 	}
 }

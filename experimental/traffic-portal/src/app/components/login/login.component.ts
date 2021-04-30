@@ -15,8 +15,6 @@ import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { Router, ActivatedRoute } from "@angular/router";
 
-import { first } from "rxjs/operators";
-
 import { AuthenticationService } from "../../services";
 
 /**
@@ -58,13 +56,13 @@ export class LoginComponent implements OnInit {
 	 * `/`
 	 */
 	public submitLogin(): void {
-		this.auth.login(this.u.value, this.p.value).pipe(first()).subscribe(
-			(response) => {
+		this.auth.login(this.u.value, this.p.value).then(
+			response => {
 				if (response) {
 					this.router.navigate([this.returnURL]);
 				}
 			},
-			(err: Error) => {
+			err => {
 				console.error("login failed:", err);
 			}
 		);

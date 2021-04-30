@@ -37,7 +37,7 @@ export class AppComponent implements OnInit {
 	 * Constructor.
 	 */
 	constructor(private readonly router: Router, private readonly auth: AuthenticationService) {
-		this.auth.currentUser.subscribe(x => this.currentUser = x);
+		// this.auth.currentUser.subscribe(x => this.currentUser = x);
 	}
 
 	/**
@@ -52,7 +52,13 @@ export class AppComponent implements OnInit {
 	 * Sets up the current user.
 	 */
 	public ngOnInit(): void {
-		this.auth.updateCurrentUser().subscribe();
+		this.auth.updateCurrentUser().then(
+			success =>  {
+				if (success) {
+					this.currentUser = this.auth.currentUser;
+				}
+			}
+		);
 	}
 
 }
