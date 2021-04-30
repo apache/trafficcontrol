@@ -25,23 +25,12 @@ type GetTenantsResponse struct {
 	Alerts
 }
 
-// TenantResponse is the response to a create/update.
+// TenantResponse is the type of a response from Traffic Ops to a PUT, POST,
+// or DELETE request made to its /tenants.
 type TenantResponse struct {
-	Response Tenant        `json:"response"`
-	Alerts   []TenantAlert `json:"alerts"`
-}
-
-// TenantResponseV40 is the type of a response from Traffic Ops to a PUT, POST,
-// or DELETE request made to its /tenants endpoint in API version 4.0.
-type TenantResponseV40 struct {
 	Response Tenant `json:"response"`
 	Alerts
 }
-
-// TenantResponseV4 is the type of a response from Traffic Ops to a PUT, POST,
-// or DELETE request made to its /tenants endpoint in the latest minor version
-// of API version 4.
-type TenantResponseV4 = TenantResponseV40
 
 // Tenant ...
 type Tenant struct {

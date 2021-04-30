@@ -29,8 +29,8 @@ const apiOSVersions = "/osversions"
 
 // GetOSVersions GETs all available Operating System (OS) versions for ISO generation,
 // as well as the name of the directory where the "kickstarter" files are found.
-func (to *Session) GetOSVersions(opts RequestOptions) (tc.OSVersionsResponseV4, toclientlib.ReqInf, error) {
-	var data tc.OSVersionsResponseV4
+func (to *Session) GetOSVersions(opts RequestOptions) (tc.OSVersionsAPIResponse, toclientlib.ReqInf, error) {
+	var data tc.OSVersionsAPIResponse
 	reqInf, err := to.get(apiOSVersions, opts, &data)
 	return data, reqInf, err
 }

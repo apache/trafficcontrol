@@ -48,8 +48,8 @@ func (to *Session) DeleteServerServerCapability(serverID int, serverCapability s
 
 // GetServerServerCapabilities retrieves a list of Server Capabilities that are
 // assigned to Servers.
-func (to *Session) GetServerServerCapabilities(opts RequestOptions) (tc.ServerServerCapabilitiesResponseV4, toclientlib.ReqInf, error) {
-	var resp tc.ServerServerCapabilitiesResponseV4
+func (to *Session) GetServerServerCapabilities(opts RequestOptions) (tc.ServerServerCapabilitiesResponse, toclientlib.ReqInf, error) {
+	var resp tc.ServerServerCapabilitiesResponse
 	reqInf, err := to.get(apiServerServerCapabilities, opts, &resp)
 	return resp, reqInf, err
 }

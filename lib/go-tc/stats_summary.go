@@ -165,16 +165,10 @@ type StatsSummaryLastUpdatedResponse struct {
 	Response StatsSummaryLastUpdated `json:"response"`
 }
 
-// StatsSummaryLastUpdatedResponseV40 is the type of a response from Traffic
+// StatsSummaryLastUpdatedAPIResponse is the type of a response from Traffic
 // Ops to a request to its /stats_summary endpoint with the 'lastSummaryDate'
-// query string parameter set to 'true' in API version 4.0.
-type StatsSummaryLastUpdatedResponseV40 struct {
+// query string parameter set to 'true'.
+type StatsSummaryLastUpdatedAPIResponse struct {
 	Response StatsSummaryLastUpdated `json:"response"`
 	Alerts
 }
-
-// StatsSummaryLastUpdatedResponseV4 is the type of a response from Traffic
-// Ops to a request to its /stats_summary endpoint with the 'lastSummaryDate'
-// query string parameter set to 'true' in the latest minor version of  API
-// version 4.
-type StatsSummaryLastUpdatedResponseV4 = StatsSummaryLastUpdatedResponseV40

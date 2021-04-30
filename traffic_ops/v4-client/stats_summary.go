@@ -34,13 +34,13 @@ func (to *Session) GetSummaryStats(opts RequestOptions) (tc.StatsSummaryResponse
 // updated.
 // If 'statName' isn't nil, the response will be limited to the stat thereby
 // named.
-func (to *Session) GetSummaryStatsLastUpdated(opts RequestOptions) (tc.StatsSummaryLastUpdatedResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) GetSummaryStatsLastUpdated(opts RequestOptions) (tc.StatsSummaryLastUpdatedAPIResponse, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
 	opts.QueryParameters.Set("lastSummaryDate", "true")
 
-	var resp tc.StatsSummaryLastUpdatedResponseV4
+	var resp tc.StatsSummaryLastUpdatedAPIResponse
 	reqInf, err := to.get(apiStatsSummary, opts, &resp)
 	return resp, reqInf, err
 }

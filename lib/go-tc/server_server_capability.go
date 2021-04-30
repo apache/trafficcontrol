@@ -19,7 +19,7 @@ package tc
  * under the License.
  */
 
-// ServerServerCapability represents an association between a server capability and a server
+// ServerServerCapability represents an association between a server capability and a server.
 type ServerServerCapability struct {
 	LastUpdated      *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Server           *string    `json:"serverHostName,omitempty" db:"host_name"`
@@ -27,15 +27,9 @@ type ServerServerCapability struct {
 	ServerCapability *string    `json:"serverCapability" db:"server_capability"`
 }
 
-// ServerServerCapabilitiesResponseV40 is the type of a response from Traffic
-// Ops to a request made to its /server_server_capabilities endpoint in API
-// version 4.0.
-type ServerServerCapabilitiesResponseV40 struct {
+// ServerServerCapabilitiesResponse is the type of a response from Traffic
+// Ops to a request made to its /server_server_capabilities.
+type ServerServerCapabilitiesResponse struct {
 	Response []ServerServerCapability `json:"response"`
 	Alerts
 }
-
-// ServerServerCapabilitiesResponseV4 is the type of a response from Traffic
-// Ops to a request made to its /server_server_capabilities endpoint in the
-// latest minor version of API version 4.
-type ServerServerCapabilitiesResponseV4 = ServerServerCapabilitiesResponseV40

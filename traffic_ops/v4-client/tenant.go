@@ -36,28 +36,28 @@ func (to *Session) GetTenants(opts RequestOptions) (tc.GetTenantsResponse, tocli
 }
 
 // CreateTenant creates the Tenant it's passed.
-func (to *Session) CreateTenant(t tc.Tenant, opts RequestOptions) (tc.TenantResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) CreateTenant(t tc.Tenant, opts RequestOptions) (tc.TenantResponse, toclientlib.ReqInf, error) {
 	if t.ParentID == 0 && t.ParentName != "" {
 		parentOpts := NewRequestOptions()
 		parentOpts.QueryParameters.Set("name", t.ParentName)
 		tenant, reqInf, err := to.GetTenants(parentOpts)
 		if err != nil {
-			return tc.TenantResponseV4{Alerts: tenant.Alerts}, reqInf, err
+			return tc.TenantResponse{Alerts: tenant.Alerts}, reqInf, err
 		}
 		if len(tenant.Response) < 1 {
-			return tc.TenantResponseV4{Alerts: tenant.Alerts}, reqInf, fmt.Errorf("no Tenant could be found for Parent Tenant '%s'", t.ParentName)
+			return tc.TenantResponse{Alerts: tenant.Alerts}, reqInf, fmt.Errorf("no Tenant could be found for Parent Tenant '%s'", t.ParentName)
 		}
 		t.ParentID = tenant.Response[0].ID
 	}
 
-	var data tc.TenantResponseV4
+	var data tc.TenantResponse
 	reqInf, err := to.post(apiTenants, opts, t, &data)
 	return data, reqInf, err
 }
 
 // UpdateTenant replaces the Tenant identified by 'id' with the one provided.
-func (to *Session) UpdateTenant(id int, t tc.Tenant, opts RequestOptions) (tc.TenantResponseV4, toclientlib.ReqInf, error) {
-	var data tc.TenantResponseV4
+func (to *Session) UpdateTenant(id int, t tc.Tenant, opts RequestOptions) (tc.TenantResponse, toclientlib.ReqInf, error) {
+	var data tc.TenantResponse
 	reqInf, err := to.put(fmt.Sprintf(apiTenantID, id), opts, t, &data)
 	return data, reqInf, err
 }

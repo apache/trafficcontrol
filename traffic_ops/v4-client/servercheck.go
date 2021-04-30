@@ -33,8 +33,8 @@ func (to *Session) InsertServerCheckStatus(status tc.ServercheckRequestNullable,
 
 // GetServersChecks fetches check and meta information about servers from
 // /servercheck.
-func (to *Session) GetServersChecks(opts RequestOptions) (tc.ServercheckResponseV4, toclientlib.ReqInf, error) {
-	var response tc.ServercheckResponseV4
+func (to *Session) GetServersChecks(opts RequestOptions) (tc.ServercheckAPIResponse, toclientlib.ReqInf, error) {
+	var response tc.ServercheckAPIResponse
 	reqInf, err := to.get(apiServercheck, opts, &response)
 	return response, reqInf, err
 }
