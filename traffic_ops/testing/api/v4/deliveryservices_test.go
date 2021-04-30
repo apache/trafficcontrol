@@ -44,7 +44,9 @@ func TestDeliveryServices(t *testing.T) {
 
 		if includeSystemTests {
 			SSLDeliveryServiceCDNUpdateTest(t)
+			CreateTestDeliveryServicesURLSigKeys(t)
 			GetTestDeliveryServicesURLSigKeys(t)
+			DeleteTestDeliveryServicesURLSigKeys(t)
 		}
 
 		GetTestDeliveryServicesIMS(t)
@@ -1372,6 +1374,45 @@ func GetTestDeliveryServicesURLSigKeys(t *testing.T) {
 	if err != nil {
 		t.Error("failed to get url sig keys: " + err.Error())
 	}
+}
+
+func CreateTestDeliveryServicesURLSigKeys(t *testing.T) {
+	if len(testData.DeliveryServices) == 0 {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+	firstDS := testData.DeliveryServices[0]
+	if firstDS.XMLID == nil {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+
+	_, _, err := TOSession.CreateDeliveryServiceURLSigKeys(*firstDS.XMLID, nil)
+	if err != nil {
+		t.Error("failed to create url sig keys: " + err.Error())
+	}
+
+	newKeys, _, err := TOSession.GetDeliveryServiceURLSigKeys(*firstDS.XMLID, nil)
+	if err != nil {
+		t.Error("failed to get url sig keys: " + err.Error())
+	}
+	if len(newKeys) == 0 {
+		t.Errorf("failed to create url sig keys")
+	}
+}
+
+func DeleteTestDeliveryServicesURLSigKeys(t *testing.T) {
+	if len(testData.DeliveryServices) == 0 {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+	firstDS := testData.DeliveryServices[0]
+	if firstDS.XMLID == nil {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+
+	_, _, err := TOSession.DeleteDeliveryServiceURLSigKeys(*firstDS.XMLID, nil)
+	if err != nil {
+		t.Error("failed to delete url sig keys: " + err.Error())
+	}
+
 }
 
 func GetDeliveryServiceByLogsEnabled(t *testing.T) {

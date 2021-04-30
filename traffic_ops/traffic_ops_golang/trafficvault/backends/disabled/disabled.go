@@ -81,6 +81,10 @@ func (d *Disabled) PutURLSigKeys(xmlID string, keys tc.URLSigKeys, tx *sql.Tx, c
 	return disabledErr
 }
 
+func (d *Disabled) DeleteURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Context) error {
+	return disabledErr
+}
+
 func (d *Disabled) GetURISigningKeys(xmlID string, tx *sql.Tx, ctx context.Context) ([]byte, bool, error) {
 	return nil, false, disabledErr
 }

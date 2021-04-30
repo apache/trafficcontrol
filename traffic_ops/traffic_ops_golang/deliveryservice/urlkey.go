@@ -33,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 )
 
+// GetURLKeysByID returns the URL sig keys for a delivery service identified by the id in the path parameter.
 func GetURLKeysByID(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
@@ -85,6 +86,7 @@ func GetURLKeysByID(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, keys)
 }
 
+// GetURLKeysByName returns the URL sig keys for a delivery service identified by the xmlId in the path parameter.
 func GetURLKeysByName(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -129,6 +131,8 @@ func GetURLKeysByName(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, keys)
 }
 
+// CopyURLKeys copies the URL sig keys from a delivery service in the 'copy-name' path parameter
+// to the delivery service in the 'name' path parameter.
 func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name", "copy-name"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -208,6 +212,7 @@ func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully copied and stored keys")
 }
 
+// GenerateURLKeys generates new URL sig keys for the delivery service identified by the xmlId in the path parameter.
 func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -263,6 +268,7 @@ func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully generated and stored keys")
 }
 
+// GenerateURLSigKeys generates new URL sig keys.
 func GenerateURLSigKeys() (tc.URLSigKeys, error) {
 	chars := `abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_`
 	numKeys := 16
@@ -288,4 +294,94 @@ func GenerateURLSigKeys() (tc.URLSigKeys, error) {
 		keys[key] = v
 	}
 	return keys, nil
+}
+
+// DeleteURLKeysByID deletes the URL sig keys for the delivery service identified by the id in the path parameter.
+func DeleteURLKeysByID(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteURLKeysByID: Traffic Vault is not configured"))
+		return
+	}
+
+	ds, ok, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, inf.IntParams["id"])
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from ID: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("delivery service "+inf.Params["id"]+" not found"), nil)
+		return
+	}
+
+	dsTenantID, ok, err := getDSTenantIDByID(inf.Tx.Tx, inf.IntParams["id"])
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("delivery service "+inf.Params["id"]+" not found"), nil)
+		return
+	}
+	if authorized, err := tenant.IsResourceAuthorizedToUserTx(*dsTenantID, inf.User, inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+		return
+	} else if !authorized {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+
+	err = inf.Vault.DeleteURLSigKeys(string(ds), inf.Tx.Tx, r.Context())
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting URL Sig keys from Traffic Vault: "+err.Error()))
+		return
+	}
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "successfully deleted URL Sig keys from Traffic Vault")
+}
+
+// DeleteURLKeysByName deletes the URL sig keys for the delivery service identified by the xmlId in the path parameter.
+func DeleteURLKeysByName(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	if !inf.Config.TrafficVaultEnabled {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteURLKeysByName: Traffic Vault is not configured"))
+		return
+	}
+
+	ds := tc.DeliveryServiceName(inf.Params["name"])
+
+	dsTenantID, ok, err := getDSTenantIDByName(inf.Tx.Tx, ds)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("delivery service "+string(ds)+" not found"), nil)
+		return
+	}
+	if authorized, err := tenant.IsResourceAuthorizedToUserTx(*dsTenantID, inf.User, inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+		return
+	} else if !authorized {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+
+	err = inf.Vault.DeleteURLSigKeys(string(ds), inf.Tx.Tx, r.Context())
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting URL Sig keys from Traffic Vault: "+err.Error()))
+		return
+	}
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "successfully deleted URL Sig keys from Traffic Vault")
 }
