@@ -377,6 +377,30 @@ export interface DeliveryService {
 	xmlId:                      string;
 }
 
+export const defaultDeliveryService: DeliveryService ={
+	active: false,
+	anonymousBlockingEnabled: false,
+	cdnId: -1,
+	deepCachingType: "NEVER",
+	displayName: "",
+	dscp: 0,
+	geoLimit: GeoLimit.NONE,
+	geoProvider: GeoProvider.MAX_MIND,
+	initialDispersion: 1,
+	ipv6RoutingEnabled: true,
+	logsEnabled: true,
+	longDesc: "",
+	missLat: 0,
+	missLong: 0,
+	multiSiteOrigin: false,
+	qstringIgnore: QStringHandling.USE,
+	rangeRequestHandling: RangeRequestHandling.NONE,
+	regionalGeoBlocking: false,
+	routingName: "cdn",
+	typeId: -1,
+	xmlId: ""
+};
+
 /**
  * Determines if the Delivery Service is a candidate for bypassing.
  *
