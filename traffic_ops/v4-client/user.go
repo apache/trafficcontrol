@@ -57,7 +57,7 @@ func (to *Session) CreateUser(user tc.User, opts RequestOptions) (tc.CreateUserR
 		innerOpts.QueryParameters.Set("name", *user.Tenant)
 		tenant, _, err := to.GetTenants(innerOpts)
 		if err != nil {
-			return tc.CreateUserResponse{Alerts: tenant.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("resolving Tenant name '%s' to an ID: %v", *user.Tenant, err)
+			return tc.CreateUserResponse{Alerts: tenant.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("resolving Tenant name '%s' to an ID: %w", *user.Tenant, err)
 		}
 		if len(tenant.Response) < 1 {
 			return tc.CreateUserResponse{Alerts: tenant.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("no such Tenant: '%s'", *user.Tenant)
@@ -70,7 +70,7 @@ func (to *Session) CreateUser(user tc.User, opts RequestOptions) (tc.CreateUserR
 		innerOpts.QueryParameters.Set("name", *user.RoleName)
 		roles, _, err := to.GetRoles(innerOpts)
 		if err != nil {
-			return tc.CreateUserResponse{Alerts: roles.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("resolving Role name '%s' to an ID: %v", *user.RoleName, err)
+			return tc.CreateUserResponse{Alerts: roles.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("resolving Role name '%s' to an ID: %w", *user.RoleName, err)
 		}
 		if len(roles.Response) == 0 || roles.Response[0].ID == nil {
 			return tc.CreateUserResponse{Alerts: roles.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("no such Role: '%s'", *user.RoleName)

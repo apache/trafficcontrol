@@ -39,7 +39,7 @@ func (to *Session) originIDs(origin *tc.Origin) error {
 		opts.QueryParameters.Set("name", *origin.Cachegroup)
 		p, _, err := to.GetCacheGroups(opts)
 		if err != nil {
-			return fmt.Errorf("resolving Cache Group name '%s' to an ID: %v - alerts: %+v", *origin.Cachegroup, err, p.Alerts)
+			return fmt.Errorf("resolving Cache Group name '%s' to an ID: %w - alerts: %+v", *origin.Cachegroup, err, p.Alerts)
 		}
 		if len(p.Response) == 0 {
 			return fmt.Errorf("no Cache Group named '%s'", *origin.Cachegroup)
@@ -52,7 +52,7 @@ func (to *Session) originIDs(origin *tc.Origin) error {
 		opts.QueryParameters.Set("xmlId", *origin.DeliveryService)
 		dses, _, err := to.GetDeliveryServices(opts)
 		if err != nil {
-			return fmt.Errorf("resolving Delivery Service XMLID '%s' to an ID: %v - alerts: %+v", *origin.DeliveryService, err, dses.Alerts)
+			return fmt.Errorf("resolving Delivery Service XMLID '%s' to an ID: %w - alerts: %+v", *origin.DeliveryService, err, dses.Alerts)
 		}
 		if len(dses.Response) == 0 {
 			return fmt.Errorf("no Delivery Service with XMLID '%s'", *origin.DeliveryService)
@@ -65,7 +65,7 @@ func (to *Session) originIDs(origin *tc.Origin) error {
 		opts.QueryParameters.Set("name", *origin.Profile)
 		profiles, _, err := to.GetProfiles(opts)
 		if err != nil {
-			return fmt.Errorf("resolving Profile name '%s' to an ID: %v - alerts: %+v", *origin.Profile, err, profiles.Alerts)
+			return fmt.Errorf("resolving Profile name '%s' to an ID: %w - alerts: %+v", *origin.Profile, err, profiles.Alerts)
 		}
 		if len(profiles.Response) == 0 {
 			return errors.New("no profile with name " + *origin.Profile)
@@ -77,7 +77,7 @@ func (to *Session) originIDs(origin *tc.Origin) error {
 		opts.QueryParameters.Set("name", *origin.Coordinate)
 		coordinates, _, err := to.GetCoordinates(opts)
 		if err != nil {
-			return fmt.Errorf("resolving Coordinates name '%s' to an ID: %v - alerts: %+v", *origin.Coordinate, err, coordinates.Alerts)
+			return fmt.Errorf("resolving Coordinates name '%s' to an ID: %w - alerts: %+v", *origin.Coordinate, err, coordinates.Alerts)
 		}
 		if len(coordinates.Response) == 0 {
 			return fmt.Errorf("no coordinate with name '%s'", *origin.Coordinate)
@@ -89,7 +89,7 @@ func (to *Session) originIDs(origin *tc.Origin) error {
 		opts.QueryParameters.Set("name", *origin.Tenant)
 		tenant, _, err := to.GetTenants(opts)
 		if err != nil {
-			return fmt.Errorf("resolving Tenant name '%s' to an ID: %v - alerts: %+v", *origin.Tenant, err, tenant.Alerts)
+			return fmt.Errorf("resolving Tenant name '%s' to an ID: %w - alerts: %+v", *origin.Tenant, err, tenant.Alerts)
 		}
 		if len(tenant.Response) == 0 {
 			return fmt.Errorf("no Tenant with name '%s'", *origin.Tenant)

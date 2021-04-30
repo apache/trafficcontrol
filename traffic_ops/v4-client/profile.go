@@ -38,7 +38,7 @@ func (to *Session) CreateProfile(pl tc.Profile, opts RequestOptions) (tc.Alerts,
 		cdnOpts.QueryParameters.Set("name", pl.CDNName)
 		cdns, _, err := to.GetCDNs(cdnOpts)
 		if err != nil {
-			return tc.Alerts{}, toclientlib.ReqInf{}, fmt.Errorf("resolving Profile's CDN Name '%s' to an ID: %v", pl.CDNName, err)
+			return tc.Alerts{}, toclientlib.ReqInf{}, fmt.Errorf("resolving Profile's CDN Name '%s' to an ID: %w", pl.CDNName, err)
 		}
 		if len(cdns.Response) == 0 {
 			return tc.Alerts{

@@ -152,7 +152,7 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOp
 		cdnOpts.QueryParameters.Set("name", *ds.CDNName)
 		cdns, _, err := to.GetCDNs(cdnOpts)
 		if err != nil {
-			err = fmt.Errorf("attempting to resolve CDN name '%s' to an ID: %v", *ds.CDNName, err)
+			err = fmt.Errorf("attempting to resolve CDN name '%s' to an ID: %w", *ds.CDNName, err)
 			return resp, reqInf, err
 		}
 		if len(cdns.Response) == 0 {
@@ -166,7 +166,7 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOp
 		profileOpts.QueryParameters.Set("name", *ds.ProfileName)
 		profiles, _, err := to.GetProfiles(profileOpts)
 		if err != nil {
-			return resp, reqInf, fmt.Errorf("attempting to resolve Profile name '%s' to an ID: %v", *ds.ProfileName, err)
+			return resp, reqInf, fmt.Errorf("attempting to resolve Profile name '%s' to an ID: %w", *ds.ProfileName, err)
 		}
 		if len(profiles.Response) == 0 {
 			return resp, reqInf, errors.New("no Profile named " + *ds.ProfileName)
@@ -179,7 +179,7 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV4, opts RequestOp
 		tenantOpts.QueryParameters.Set("name", *ds.Tenant)
 		ten, _, err := to.GetTenants(tenantOpts)
 		if err != nil {
-			return resp, reqInf, fmt.Errorf("attempting to resolve Tenant '%s' to an ID: %v", *ds.Tenant, err)
+			return resp, reqInf, fmt.Errorf("attempting to resolve Tenant '%s' to an ID: %w", *ds.Tenant, err)
 		}
 		if len(ten.Response) == 0 {
 			return resp, reqInf, fmt.Errorf("no Tenant named '%s'", *ds.Tenant)

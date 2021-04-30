@@ -49,7 +49,7 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 		innerOpts.QueryParameters.Set("name", *server.Cachegroup)
 		cg, reqInf, err := to.GetCacheGroups(innerOpts)
 		if err != nil {
-			return cg.Alerts, reqInf, fmt.Errorf("no cachegroup named %s: %v", *server.Cachegroup, err)
+			return cg.Alerts, reqInf, fmt.Errorf("no cachegroup named %s: %w", *server.Cachegroup, err)
 		}
 		if len(cg.Response) == 0 {
 			return cg.Alerts, reqInf, fmt.Errorf("no cachegroup named %s", *server.Cachegroup)
@@ -64,7 +64,7 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 		innerOpts.QueryParameters.Set("name", *server.CDNName)
 		c, reqInf, err := to.GetCDNs(innerOpts)
 		if err != nil {
-			return c.Alerts, reqInf, fmt.Errorf("no CDN named %s: %v", *server.CDNName, err)
+			return c.Alerts, reqInf, fmt.Errorf("no CDN named %s: %w", *server.CDNName, err)
 		}
 		if len(c.Response) == 0 {
 			return c.Alerts, reqInf, fmt.Errorf("no CDN named %s", *server.CDNName)
@@ -76,7 +76,7 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 		innerOpts.QueryParameters.Set("name", *server.PhysLocation)
 		ph, reqInf, err := to.GetPhysLocations(innerOpts)
 		if err != nil {
-			return ph.Alerts, reqInf, fmt.Errorf("no physlocation named %s: %v", *server.PhysLocation, err)
+			return ph.Alerts, reqInf, fmt.Errorf("no physlocation named %s: %w", *server.PhysLocation, err)
 		}
 		if len(ph.Response) == 0 {
 			return ph.Alerts, reqInf, fmt.Errorf("no physlocation named %s", *server.PhysLocation)
@@ -88,7 +88,7 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 		innerOpts.QueryParameters.Set("name", *server.Profile)
 		pr, reqInf, err := to.GetProfiles(innerOpts)
 		if err != nil {
-			return pr.Alerts, reqInf, fmt.Errorf("no Profile named %s: %v", *server.Profile, err)
+			return pr.Alerts, reqInf, fmt.Errorf("no Profile named %s: %w", *server.Profile, err)
 		}
 		if len(pr.Response) == 0 {
 			return pr.Alerts, reqInf, fmt.Errorf("no Profile named %s", *server.Profile)
@@ -100,7 +100,7 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 		innerOpts.QueryParameters.Set("name", *server.Status)
 		st, reqInf, err := to.GetStatuses(innerOpts)
 		if err != nil {
-			return st.Alerts, reqInf, fmt.Errorf("no Status named %s: %v", *server.Status, err)
+			return st.Alerts, reqInf, fmt.Errorf("no Status named %s: %w", *server.Status, err)
 		}
 		if len(st.Response) == 0 {
 			return alerts, reqInf, fmt.Errorf("no Status named %s", *server.Status)
@@ -112,7 +112,7 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 		innerOpts.QueryParameters.Set("name", server.Type)
 		ty, _, err := to.GetTypes(innerOpts)
 		if err != nil {
-			return ty.Alerts, reqInf, fmt.Errorf("no Type named '%s': %v", server.Type, err)
+			return ty.Alerts, reqInf, fmt.Errorf("no Type named '%s': %w", server.Type, err)
 		}
 		if len(ty.Response) == 0 {
 			return ty.Alerts, reqInf, fmt.Errorf("no type named %s", server.Type)

@@ -34,7 +34,7 @@ func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroupNullable, opts Reque
 		opts.QueryParameters.Set("name", *cachegroup.Type)
 		ty, _, err := to.GetTypes(opts)
 		if err != nil {
-			return resp, toclientlib.ReqInf{}, fmt.Errorf("resolving Type name '%s' to an ID: %v - alerts: %+v", *cachegroup.Name, err, ty.Alerts)
+			return resp, toclientlib.ReqInf{}, fmt.Errorf("resolving Type name '%s' to an ID: %w - alerts: %+v", *cachegroup.Name, err, ty.Alerts)
 		}
 		if len(ty.Response) == 0 {
 			return resp, toclientlib.ReqInf{}, errors.New("no type named " + *cachegroup.Type)
