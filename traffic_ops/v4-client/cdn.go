@@ -33,7 +33,7 @@ func (to *Session) CreateCDN(cdn tc.CDN, opts RequestOptions) (tc.Alerts, toclie
 	return alerts, reqInf, err
 }
 
-// UpdateCDNByID replaces the identified CDN with the provided CDN.
+// UpdateCDN replaces the identified CDN with the provided CDN.
 func (to *Session) UpdateCDN(id int, cdn tc.CDN, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", apiCDNs, id)
 	var alerts tc.Alerts
@@ -48,7 +48,7 @@ func (to *Session) GetCDNs(opts RequestOptions) (tc.CDNsResponse, toclientlib.Re
 	return data, reqInf, err
 }
 
-// DeleteCDNByID deletes the CDN with the given ID.
+// DeleteCDN deletes the CDN with the given ID.
 func (to *Session) DeleteCDN(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", apiCDNs, id)
 	var alerts tc.Alerts

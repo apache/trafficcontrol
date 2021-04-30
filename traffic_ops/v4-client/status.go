@@ -47,7 +47,7 @@ func (to *Session) GetStatuses(opts RequestOptions) (tc.StatusesResponse, toclie
 	return data, reqInf, err
 }
 
-// DeleteStatus deletes the Status wtih the given ID.
+// DeleteStatus deletes the Status with the given ID.
 func (to *Session) DeleteStatus(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", apiStatuses, id)
 	var alerts tc.Alerts

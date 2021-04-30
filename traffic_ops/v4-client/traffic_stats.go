@@ -19,7 +19,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-// GetCurrentStats gets current stats for each CDNs and a total across them
+// GetCurrentStats gets current stats for each CDNs and a total across them.
 func (to *Session) GetCurrentStats(opts RequestOptions) (tc.CurrentStatsResponse, toclientlib.ReqInf, error) {
 	var resp tc.CurrentStatsResponse
 	reqInf, err := to.get("/current_stats", opts, &resp)

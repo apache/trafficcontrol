@@ -42,7 +42,7 @@ func (to *Session) Federations(opts RequestOptions) (tc.FederationsResponse, toc
 // Ops.
 func (to *Session) AllFederations(opts RequestOptions) (tc.FederationsResponse, toclientlib.ReqInf, error) {
 	var data tc.FederationsResponse
-	inf, err := to.get("/federations/all", opts, &data)
+	inf, err := to.get(apiFederationsAll, opts, &data)
 	return data, inf, err
 }
 

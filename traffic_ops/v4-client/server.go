@@ -139,8 +139,8 @@ func (to *Session) GetServers(opts RequestOptions) (tc.ServersV4Response, toclie
 	return data, reqInf, err
 }
 
-// GetServerDetailsByHostName retrieves the Server Details of the Server with
-// the given (short) Hostname.
+// GetServersDetails retrieves the Server Details of the Server with the given
+// (short) Hostname.
 func (to *Session) GetServersDetails(opts RequestOptions) (tc.ServersV4DetailResponse, toclientlib.ReqInf, error) {
 	var data tc.ServersV4DetailResponse
 	reqInf, err := to.get(apiServersDetails, opts, &data)

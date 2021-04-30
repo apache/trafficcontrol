@@ -44,7 +44,6 @@ func (to *Session) DeleteInvalidationJob(jobID uint64, opts RequestOptions) (tc.
 	var alerts tc.Alerts
 	reqInf, err := to.del(apiJobs, opts, &alerts)
 	return alerts, reqInf, err
-
 }
 
 // UpdateInvalidationJob updates the passed Content Invalidation Job (it is

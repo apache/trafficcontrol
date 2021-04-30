@@ -50,7 +50,7 @@ func (to *Session) UpdateCurrentUser(u tc.User, opts RequestOptions) (tc.UpdateU
 	return clientResp, reqInf, err
 }
 
-// CreateUser creates the given user
+// CreateUser creates the given user.
 func (to *Session) CreateUser(user tc.User, opts RequestOptions) (tc.CreateUserResponse, toclientlib.ReqInf, error) {
 	if user.TenantID == nil && user.Tenant != nil {
 		innerOpts := NewRequestOptions()

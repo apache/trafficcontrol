@@ -229,7 +229,7 @@ func (to *Session) GetDeliveryServiceCapacity(id int, opts RequestOptions) (tc.D
 	return data, reqInf, err
 }
 
-// GenerateSSLKeysForDS generates ssl keys for a given cdn
+// GenerateSSLKeysForDS generates ssl keys for a given cdn.
 func (to *Session) GenerateSSLKeysForDS(
 	xmlid string,
 	cdnName string,

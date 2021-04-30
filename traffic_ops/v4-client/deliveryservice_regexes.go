@@ -27,7 +27,7 @@ import (
 const apiDSRegexes = "/deliveryservices/%d/regexes"
 
 // GetDeliveryServiceRegexesByDSID gets DeliveryServiceRegexes by a DS id
-// also accepts an optional map of query parameters
+// also accepts an optional map of query parameters.
 func (to *Session) GetDeliveryServiceRegexesByDSID(dsID int, opts RequestOptions) (tc.DeliveryServiceIDRegexResponse, toclientlib.ReqInf, error) {
 	var response tc.DeliveryServiceIDRegexResponse
 	route := fmt.Sprintf(apiDSRegexes, dsID)

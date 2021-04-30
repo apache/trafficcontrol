@@ -23,6 +23,8 @@ import (
 // apiPing is the full path to the /ping API endpoint.
 const apiPing = "/ping"
 
+// PingResponse is the type of a response from Traffic Ops to a requestt made
+// to its /ping API endpoint.
 type PingResponse struct {
 	Ping string `json:"ping"`
 	tc.Alerts

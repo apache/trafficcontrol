@@ -28,8 +28,8 @@ import (
  * `/cdns/:name/federations`. Although the behavior is odd, it is kept to
  * keep the same behavior from perl. */
 
-// CreateCDNFederationByName creates the given Federation in the CDN with the
-// given name.
+// CreateCDNFederation creates the given Federation in the CDN with the given
+// name.
 func (to *Session) CreateCDNFederation(f tc.CDNFederation, CDNName string, opts RequestOptions) (tc.CreateCDNFederationResponse, toclientlib.ReqInf, error) {
 	var data tc.CreateCDNFederationResponse
 	route := "/cdns/" + url.PathEscape(CDNName) + "/federations"
@@ -55,7 +55,7 @@ func (to *Session) UpdateCDNFederation(f tc.CDNFederation, CDNName string, ID in
 	return data, inf, err
 }
 
-// DeleteCDNFederationByID deletes the Federation with the given ID in the CDN
+// DeleteCDNFederation deletes the Federation with the given ID in the CDN
 // with the given name.
 func (to *Session) DeleteCDNFederation(CDNName string, ID int, opts RequestOptions) (tc.DeleteCDNFederationResponse, toclientlib.ReqInf, error) {
 	var data tc.DeleteCDNFederationResponse

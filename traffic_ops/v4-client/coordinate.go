@@ -52,7 +52,7 @@ func (to *Session) GetCoordinates(opts RequestOptions) (tc.CoordinatesResponse, 
 	return data, reqInf, err
 }
 
-// DeleteCoordinateByID deletes the Coordinate with the given ID.
+// DeleteCoordinate deletes the Coordinate with the given ID.
 func (to *Session) DeleteCoordinate(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}

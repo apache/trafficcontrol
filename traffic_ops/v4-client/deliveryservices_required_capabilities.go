@@ -27,14 +27,14 @@ import (
 // route to the /deliveryservices_required_capabilities endpoint.
 const apiDeliveryServicesRequiredCapabilities = "/deliveryservices_required_capabilities"
 
-// CreateDeliveryServicesRequiredCapability assigns a Required Capability to a Delivery Service
+// CreateDeliveryServicesRequiredCapability assigns a Required Capability to a Delivery Service.
 func (to *Session) CreateDeliveryServicesRequiredCapability(capability tc.DeliveryServicesRequiredCapability, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiDeliveryServicesRequiredCapabilities, opts, capability, &alerts)
 	return alerts, reqInf, err
 }
 
-// DeleteDeliveryServicesRequiredCapability unassigns a Required Capability from a Delivery Service
+// DeleteDeliveryServicesRequiredCapability unassigns a Required Capability from a Delivery Service.
 func (to *Session) DeleteDeliveryServicesRequiredCapability(deliveryserviceID int, capability string, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	if opts.QueryParameters == nil {
