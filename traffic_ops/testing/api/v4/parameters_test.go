@@ -57,6 +57,9 @@ func TestParameters(t *testing.T) {
 		GetParametersByInvalidName(t)
 		GetParametersByInvalidConfigfile(t)
 		GetParametersByInvalidValue(t)
+		CreateTestParametersAlreadyExist(t)
+		CreateTestParametersMissingName(t)
+		CreateTestParametersMissingconfigFile(t)
 	})
 }
 
@@ -120,7 +123,6 @@ func CreateTestParameters(t *testing.T) {
 			t.Errorf("could not CREATE parameters: %v", err)
 		}
 	}
-
 }
 
 func UpdateTestParameters(t *testing.T) {
@@ -404,5 +406,31 @@ func GetParametersByInvalidValue(t *testing.T) {
 	}
 	if len(resp) >= 1 {
 		t.Errorf("Invalid value shouldn't have any response %v Error %v", resp, err)
+	}
+}
+
+func CreateTestParametersAlreadyExist(t *testing.T) {
+	resp, _, _ := TOSession.GetParameters(nil, nil)
+	_, reqInf, _ := TOSession.CreateParameter(resp[0])
+	if reqInf.StatusCode != http.StatusBadRequest{
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func CreateTestParametersMissingName(t *testing.T) {
+	firstParameter := testData.Parameters[0]
+	firstParameter.Name = ""
+	_, reqInf, _ := TOSession.CreateParameter(firstParameter)
+	if reqInf.StatusCode != http.StatusBadRequest{
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func CreateTestParametersMissingconfigFile(t *testing.T) {
+	firstParameter := testData.Parameters[0]
+	firstParameter.ConfigFile = ""
+	_, reqInf, _ := TOSession.CreateParameter(firstParameter)
+	if reqInf.StatusCode != http.StatusBadRequest{
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 	}
 }
