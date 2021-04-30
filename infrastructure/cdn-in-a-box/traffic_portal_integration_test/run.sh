@@ -23,6 +23,7 @@ do
 done
 
 source to-access.sh
+check-skips
 
 set-dns.sh
 insert-self-into-dns.sh
@@ -52,7 +53,7 @@ if (( time - start_time >= timeout_in_seconds )); then
 	echo "Warning: Traffic Portal did not start after ${timeout_in_seconds} seconds.";
 fi;
 
-chrome_version="$(repoquery --installed --qf='%{version}' google-chrome-stable)"
+chrome_version="$(chromium-browser --version | grep -o '[0-9.]\+')"
 nohup webdriver-manager start --versions.chrome "$chrome_version" &
 
 selenium_port=4444
@@ -62,14 +63,13 @@ while ! curl -Lvsk "${selenium_fqdn}" 2>/dev/null >/dev/null; do
    sleep 1
 done
 
-jq "$(<<JQ_FILTERS cat
+echo "$(jq "$(<<JQ_FILTERS cat
 	.params.baseUrl = "https://$TP_FQDN" |
 	.params.apiUrl = "https://$TP_FQDN/api/4.0" |
 	.params.login.username = "$TO_ADMIN_USER" |
 	.params.login.password = "$TO_ADMIN_PASSWORD"
 JQ_FILTERS
-)" config.json > conf.json.tmp
-mv conf.json.tmp config.json
+)" config.json)" > config.json
 
 cat config.json
 

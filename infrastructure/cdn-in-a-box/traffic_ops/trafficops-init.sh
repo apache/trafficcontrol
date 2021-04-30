@@ -145,7 +145,7 @@ traffic_router_zonemanager_timeout() {
   mv "$modified_crconfig" $crconfig_path;
 }
 
-if [[ "$LOAD_TRAFFIC_OPS_DATA" == true ]]; then
+if [[ ! -e /shared/SKIP_TRAFFIC_OPS_DATA ]]; then
 	traffic_router_zonemanager_timeout
 
 	# Load required data at the top level
