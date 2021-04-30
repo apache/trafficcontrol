@@ -85,6 +85,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - The Perl implementation of Traffic Ops has been stripped out, along with the Go implementation's "fall-back to Perl" behavior.
 - Traffic Ops no longer includes an `app/public` directory, as the static webserver has been removed along with the Perl Traffic Ops implementation.
 - The `compare` tool stack has been removed, as it no longer serves a purpose.
+- Removed the Perl-only `cdn.conf` option `geniso.iso_root_path`
 
 ## [5.1.1] - 2021-03-19
 ### Added

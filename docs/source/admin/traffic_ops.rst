@@ -325,6 +325,9 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 	:iso_root_path: Sets the filesystem path to the root of the ISO generation directory. For default installations, this should usually be set to :file:`/opt/traffic_ops/app/public`.
 
+	.. deprecated:: ATCv6
+		The ``geniso.iso_root_path`` configuration option is unused now that Traffic Ops is rewritten from Perl to Golang and will be removed in a future ATC release.
+
 	.. seealso:: :ref:`tp-tools-generate-iso`
 
 :hypnotoad: This is a group of options that mainly no longer have any meaning..
