@@ -91,7 +91,7 @@ type DeliveryServiceSSLKeysReq struct {
 	Certificate *DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
 }
 
-// DeliveryServiceSSLKeysGenerationResponseV40 is the type of a response from
+// DeliveryServiceSSLKeysGenerationResponse is the type of a response from
 // Traffic Ops to a request for generation of SSL Keys for a Delivery Service.
 type DeliveryServiceSSLKeysGenerationResponse struct {
 	Response string `json:"response"`
