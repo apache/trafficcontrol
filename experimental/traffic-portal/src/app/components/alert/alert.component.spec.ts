@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
+import {MatSnackBarModule} from "@angular/material/snack-bar";
 
 import { AlertComponent } from "./alert.component";
 
@@ -21,7 +22,8 @@ describe("AlertComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ AlertComponent ]
+			declarations: [ AlertComponent ],
+			imports: [MatSnackBarModule]
 		})
 			.compileComponents();
 	}));
