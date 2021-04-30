@@ -58,7 +58,7 @@ const (
 
 	// apiDeliveryServicesSafeUpdate is the API path on which Traffic Ops provides the functionality to
 	// update the "safe" subset of properties of a Delivery Service identified by an integral, unique
-	// identifer. It is intended to be used with fmt.Sprintf to insert its required path parameter
+	// identifier. It is intended to be used with fmt.Sprintf to insert its required path parameter
 	// (namely the ID of the Delivery Service of interest).
 	apiDeliveryServicesSafeUpdate = apiDeliveryServiceID + "/safe"
 
@@ -68,7 +68,7 @@ const (
 	// of the Delivery Service of interest).
 	apiAPIDeliveryServiceXMLIDSSLKeys = apiDeliveryServices + "/xmlId/%s/sslkeys"
 
-	// apiDeliveryServiceGenerateSSLKeys is the API path on which Traffic Ops will generate new SSL keys
+	// apiDeliveryServiceGenerateSSLKeys is the API path on which Traffic Ops will generate new SSL keys.
 	apiDeliveryServiceGenerateSSLKeys = apiDeliveryServices + "/sslkeys/generate"
 
 	// apiDeliveryServiceAddSSLKeys is the API path on which Traffic Ops will add SSL keys
@@ -227,20 +227,20 @@ func (to *Session) GetDeliveryServiceCapacity(id int, opts RequestOptions) (tc.D
 
 // GenerateSSLKeysForDS generates ssl keys for a given cdn
 func (to *Session) GenerateSSLKeysForDS(
-	XMLID string,
-	CDNName string,
+	xmlid string,
+	cdnName string,
 	sslFields tc.SSLKeyRequestFields,
 	opts RequestOptions,
 ) (tc.DeliveryServiceSSLKeysGenerationResponse, toclientlib.ReqInf, error) {
 	version := util.JSONIntStr(1)
 	request := tc.DeliveryServiceSSLKeysReq{
 		BusinessUnit:    sslFields.BusinessUnit,
-		CDN:             util.StrPtr(CDNName),
+		CDN:             util.StrPtr(cdnName),
 		City:            sslFields.City,
 		Country:         sslFields.Country,
-		DeliveryService: util.StrPtr(XMLID),
+		DeliveryService: util.StrPtr(xmlid),
 		HostName:        sslFields.HostName,
-		Key:             util.StrPtr(XMLID),
+		Key:             util.StrPtr(xmlid),
 		Organization:    sslFields.Organization,
 		State:           sslFields.State,
 		Version:         &version,
@@ -259,9 +259,9 @@ func (to *Session) AddSSLKeysForDS(request tc.DeliveryServiceAddSSLKeysReq, opts
 
 // DeleteDeliveryServiceSSLKeys deletes the SSL Keys used by the Delivery
 // Service identified by the passed XMLID.
-func (to *Session) DeleteDeliveryServiceSSLKeys(XMLID string, opts RequestOptions) (tc.DeliveryServiceSSLKeysGenerationResponse, toclientlib.ReqInf, error) {
+func (to *Session) DeleteDeliveryServiceSSLKeys(xmlid string, opts RequestOptions) (tc.DeliveryServiceSSLKeysGenerationResponse, toclientlib.ReqInf, error) {
 	var resp tc.DeliveryServiceSSLKeysGenerationResponse
-	reqInf, err := to.del(fmt.Sprintf(apiAPIDeliveryServiceXMLIDSSLKeys, url.QueryEscape(XMLID)), opts, &resp)
+	reqInf, err := to.del(fmt.Sprintf(apiAPIDeliveryServiceXMLIDSSLKeys, url.QueryEscape(xmlid)), opts, &resp)
 	return resp, reqInf, err
 }
 
