@@ -414,7 +414,12 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	 */
 	public toggleVisibility(col: string): void {
 		if (this.columnAPI) {
-			const visible = this.columnAPI.getColumn(col).isVisible();
+			const column = this.columnAPI.getColumn(col);
+			if (!column) {
+				console.error(`Failed to set visibility for column '${col}': no such column`);
+				return;
+			}
+			const visible = column.isVisible();
 			this.columnAPI.setColumnVisible(col, !visible);
 		}
 	}
