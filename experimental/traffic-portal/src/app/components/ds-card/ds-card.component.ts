@@ -17,7 +17,6 @@ import { trigger, style, animate, transition } from "@angular/animations";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { Subject } from "rxjs";
-import { first } from "rxjs/operators";
 
 import { DataPoint, DataSet, DeliveryService, GeoProvider, protocolToString } from "../../models";
 import { DeliveryServiceService } from "../../services/api";
@@ -205,7 +204,7 @@ export class DsCardComponent implements OnInit {
 		if (!this.open) {
 			if (!this.loaded) {
 				this.loaded = true;
-				this.dsAPI.getDSCapacity(this.deliveryService.id).pipe(first()).subscribe(
+				this.dsAPI.getDSCapacity(this.deliveryService.id).then(
 					r => {
 						if (r) {
 							this.available = r.availablePercent;
@@ -214,7 +213,7 @@ export class DsCardComponent implements OnInit {
 						}
 					}
 				);
-				this.dsAPI.getDSHealth(this.deliveryService.id).pipe(first()).subscribe(
+				this.dsAPI.getDSHealth(this.deliveryService.id).then(
 					r => {
 						if (r) {
 							if (r.totalOnline === 0) {
@@ -241,7 +240,7 @@ export class DsCardComponent implements OnInit {
 	 */
 	private loadChart(): void {
 		const xmlID = this.deliveryService.xmlId;
-		this.dsAPI.getDSKBPS(xmlID, this.today, this.now, "1m", false, true).pipe(first()).subscribe(
+		this.dsAPI.getDSKBPS(xmlID, this.today, this.now, "1m", false, true).then(
 			data => {
 				for (const d of data) {
 					if (d.y === null) {
@@ -252,15 +251,15 @@ export class DsCardComponent implements OnInit {
 				this.chartData.next([this.edgeBandwidthData, this.midBandwidthData]);
 				this.graphDataLoaded = true;
 			},
-			(e: Error) => {
+			e => {
 				this.graphDataLoaded = true;
 				this.chartData.next([null, this.midBandwidthData]);
 				console.error(`Failed getting edge KBPS for DS '${xmlID}':`, e);
 			}
 		);
 
-		this.dsAPI.getDSKBPS(xmlID, this.today, this.now, "1m", true, true).pipe(first()).subscribe(
-			(data: Array<DataPoint>) => {
+		this.dsAPI.getDSKBPS(xmlID, this.today, this.now, "1m", true, true).then(
+			data => {
 				for (const d of data) {
 					if (d.y === null) {
 						continue;
@@ -270,7 +269,7 @@ export class DsCardComponent implements OnInit {
 				this.chartData.next([this.edgeBandwidthData, this.midBandwidthData]);
 				this.graphDataLoaded = true;
 			},
-			(e: Error) => {
+			e => {
 				this.chartData.next([this.edgeBandwidthData, null]);
 				this.graphDataLoaded = true;
 				console.error(`Failed getting mid KBPS for DS '${xmlID}':`, e);

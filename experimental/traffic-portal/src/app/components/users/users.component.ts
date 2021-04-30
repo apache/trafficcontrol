@@ -78,14 +78,14 @@ export class UsersComponent implements OnInit {
 			this.myId = this.auth.currentUserValue.id;
 		}
 
-		this.api.getUsers().pipe(first()).subscribe(
+		this.api.getUsers().then(
 			r => {
 				this.users = orderBy(r, "fullName");
 				this.loading = false;
 			}
 		);
 
-		this.api.getRoles().pipe(first()).subscribe(
+		this.api.getRoles().then(
 			(roles: Array<Role>) => {
 				const roleMap = new Map<number, string>();
 				for (const r of roles) {

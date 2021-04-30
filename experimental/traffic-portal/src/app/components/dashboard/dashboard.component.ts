@@ -93,14 +93,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 		this.now = new Date();
 		this.now.setUTCMilliseconds(0);
 		this.today = new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate());
-	}
-
-	/**
-	 * Runs initialization, fetching the list of (visible) Delivery Services and
-	 * setting the search test from the query parameters, if applicable.
-	 */
-	public ngOnInit(): void {
-		this.dsAPI.getDeliveryServices().pipe(first()).subscribe(
+		this.dsAPI.getDeliveryServices().then(
 			r => {
 				// these annoying typecasts are necessary because of how object property indexing works.
 				// look at 'orderBy' to understand.
@@ -110,8 +103,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 				this.loading = false;
 			}
 		);
+	}
 
-		this.route.queryParamMap.pipe(first()).subscribe(
+	/**
+	 * Runs initialization, fetching the list of (visible) Delivery Services and
+	 * setting the search test from the query parameters, if applicable.
+	 */
+	public ngOnInit(): void {
+		this.route.queryParamMap.toPromise().then(
 			m => {
 				const search = m.get("search");
 				if (search) {

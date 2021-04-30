@@ -18,7 +18,7 @@ import { faBroom } from "@fortawesome/free-solid-svg-icons";
 
 import { Subject } from "rxjs";
 
-import { DataPoint, DataSet, DeliveryService, TPSData } from "../../models";
+import { DataPoint, DataSet, DeliveryService } from "../../models";
 import { AlertService } from "../../services";
 import { DeliveryServiceService } from "../../services/api";
 
@@ -137,8 +137,8 @@ export class DeliveryserviceComponent implements OnInit {
 		const timeStr = String(this.to.getHours()).padStart(2, "0").concat(":", String(this.to.getMinutes()).padStart(2, "0"));
 		this.toTime = new FormControl(timeStr);
 
-		this.api.getDeliveryServices(parseInt(DSID, 10)).subscribe(
-			(d: DeliveryService) => {
+		this.api.getDeliveryServices(parseInt(DSID, 10)).then(
+			d => {
 				this.deliveryservice = d;
 				this.loaded.set("main", true);
 				this.loadBandwidth();
@@ -179,7 +179,7 @@ export class DeliveryserviceComponent implements OnInit {
 		const xmlID = this.deliveryservice.xmlId;
 
 		// Edge-tier data
-		this.api.getDSKBPS(xmlID, this.from, this.to, interval, false).subscribe(
+		this.api.getDSKBPS(xmlID, this.from, this.to, interval, false).then(
 			data => {
 				const va = new Array<DataPoint>();
 				for (const v of data.series.values) {
@@ -191,14 +191,14 @@ export class DeliveryserviceComponent implements OnInit {
 				this.edgeBandwidth.data = va;
 				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
 			},
-			(e: Error) => {
+			e => {
 				this.alerts.newAlert("warning", "Edge-Tier bandwidth data not found!");
 				console.error(`Failed to get edge KBPS data for '${xmlID}':`, e);
 			}
 		);
 
 		// Mid-tier data
-		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, interval, true).subscribe(
+		this.api.getDSKBPS(this.deliveryservice.xmlId, this.from, this.to, interval, true).then(
 			data => {
 				const va = new Array<DataPoint>();
 				for (const v of data.series.values) {
@@ -210,7 +210,7 @@ export class DeliveryserviceComponent implements OnInit {
 				this.midBandwidth.data = va;
 				this.bandwidthData.next([this.edgeBandwidth, this.midBandwidth]);
 			},
-			(e: Error) => {
+			e => {
 				this.alerts.newAlert("warning", "Mid-Tier bandwidth data not found!");
 				console.error(`Failed to get mid KBPS data for '${xmlID}':`, e);
 			}
@@ -228,8 +228,8 @@ export class DeliveryserviceComponent implements OnInit {
 			interval = `${Math.round(this.bucketSize)}m`;
 		}
 
-		this.api.getAllDSTPSData(this.deliveryservice.xmlId, this.from, this.to, interval, false).subscribe(
-			(data: TPSData) => {
+		this.api.getAllDSTPSData(this.deliveryservice.xmlId, this.from, this.to, interval, false).then(
+			data => {
 				data.total.dataSet.label = "Total";
 				data.total.dataSet.borderColor = "#3C96BA";
 				data.success.dataSet.label = "Successful Responses";
@@ -249,7 +249,7 @@ export class DeliveryserviceComponent implements OnInit {
 					data.serverError.dataSet
 				]);
 			},
-			(e: Error) => {
+			e => {
 				console.error(`Failed to get edge TPS data for '${this.deliveryservice.xmlId}':`, e);
 				this.alerts.newAlert("warning", "Edge-Tier transaction data not found!");
 			}

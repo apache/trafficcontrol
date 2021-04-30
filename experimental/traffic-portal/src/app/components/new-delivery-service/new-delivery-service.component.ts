@@ -161,7 +161,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 			}
 			this.deliveryService.tenant = this.auth.currentUserValue.tenant;
 			this.deliveryService.tenantId = this.auth.currentUserValue.tenantId;
-			this.dsAPI.getDSTypes().pipe(first()).subscribe(
+			this.dsAPI.getDSTypes().then(
 				(types: Array<Type>) => {
 					this.dsTypes = types;
 					for (const t of types) {
@@ -178,7 +178,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 				console.error("Cannot set default CDN - user has no tenant");
 				return;
 			}
-			this.dsAPI.getDeliveryServices().pipe(first()).subscribe(
+			this.dsAPI.getDeliveryServices().then(
 				d => {
 					const cdnsInUse = new Map<number, number>();
 					for (const ds of d) {
@@ -222,7 +222,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * in lexigraphical order by name.
 	 */
 	private setDefaultCDN(id: number): void {
-		this.cdnAPI.getCDNs().pipe(first()).subscribe(
+		this.cdnAPI.getCDNs().then(
 			cdns => {
 				if (!cdns) {
 					console.warn("No CDNs found in the API");
@@ -369,7 +369,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 			}
 		}
 
-		this.dsAPI.createDeliveryService(this.deliveryService).pipe(first()).subscribe(
+		this.dsAPI.createDeliveryService(this.deliveryService).then(
 			v => {
 				if (v) {
 					console.log("New Delivery Service '%s' created", this.deliveryService.displayName);

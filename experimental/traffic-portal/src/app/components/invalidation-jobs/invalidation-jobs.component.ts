@@ -87,7 +87,7 @@ export class InvalidationJobsComponent implements OnInit {
 			return;
 		}
 		this.dsId = parseInt(idParam, 10);
-		this.jobAPI.getInvalidationJobs({dsID: this.dsId}).subscribe(
+		this.jobAPI.getInvalidationJobs({dsID: this.dsId}).then(
 			r => {
 				// The values returned by the API are not RFC-compliant at the time of this writing,
 				// so we need to do some pre-processing on them.
@@ -99,8 +99,8 @@ export class InvalidationJobsComponent implements OnInit {
 				}
 			}
 		);
-		this.dsAPI.getDeliveryServices(this.dsId).subscribe(
-			(r: DeliveryService) => {
+		this.dsAPI.getDeliveryServices(this.dsId).then(
+			r => {
 				this.deliveryservice = r;
 			}
 		);
@@ -189,10 +189,10 @@ export class InvalidationJobsComponent implements OnInit {
 			ttl: this.ttl.value
 		};
 
-		this.jobAPI.createInvalidationJob(job).subscribe(
+		this.jobAPI.createInvalidationJob(job).then(
 			r => {
 				if (r) {
-					this.jobAPI.getInvalidationJobs({dsID: this.dsId}).subscribe(
+					this.jobAPI.getInvalidationJobs({dsID: this.dsId}).then(
 						resp => {
 							this.jobs = new Array<InvalidationJob>();
 							for (const j of resp) {
