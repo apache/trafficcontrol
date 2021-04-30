@@ -246,17 +246,12 @@ type TrafficVaultPingResponse struct {
 
 type URLSigKeys map[string]string
 
-// DSServerResponseV40 is the type of a response from Traffic Ops to a request
+// URLSignatureKeysResponse is the type of a response from Traffic Ops to a request
 // for the URL Signing keys of a Delivery Service - in API version 4.0.
-type URLSignatureKeysResponseV40 struct {
+type URLSignatureKeysResponse struct {
 	Response URLSigKeys `json:"response"`
 	Alerts
 }
-
-// DSServerResponseV4 is the type of a response from Traffic Ops to a request
-// for the URL Signing keys of a Delivery Service - in the latest minor version
-// of API version 4.
-type URLSignatureKeysResponseV4 = URLSignatureKeysResponseV40
 
 type CDNSSLKeysResp []CDNSSLKey
 

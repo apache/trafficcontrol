@@ -267,9 +267,9 @@ func (to *Session) DeleteDeliveryServiceSSLKeys(XMLID string, opts RequestOption
 
 // GetDeliveryServiceSSLKeys retrieves the SSL keys of the Delivery Service
 // with the given XMLID.
-func (to *Session) GetDeliveryServiceSSLKeys(XMLID string, opts RequestOptions) (tc.DeliveryServiceSSLKeysResponse, toclientlib.ReqInf, error) {
+func (to *Session) GetDeliveryServiceSSLKeys(xmlid string, opts RequestOptions) (tc.DeliveryServiceSSLKeysResponse, toclientlib.ReqInf, error) {
 	var data tc.DeliveryServiceSSLKeysResponse
-	reqInf, err := to.get(fmt.Sprintf(apiAPIDeliveryServiceXMLIDSSLKeys, url.QueryEscape(XMLID)), opts, &data)
+	reqInf, err := to.get(fmt.Sprintf(apiAPIDeliveryServiceXMLIDSSLKeys, url.QueryEscape(xmlid)), opts, &data)
 	return data, reqInf, err
 }
 
@@ -283,8 +283,8 @@ func (to *Session) GetDeliveryServicesEligible(dsID int, opts RequestOptions) (t
 
 // GetDeliveryServiceURLSignatureKeys returns the URL-signing keys used by the Delivery Service
 // identified by the XMLID 'dsName'.
-func (to *Session) GetDeliveryServiceURLSignatureKeys(dsName string, opts RequestOptions) (tc.URLSignatureKeysResponseV4, toclientlib.ReqInf, error) {
-	var data tc.URLSignatureKeysResponseV4
+func (to *Session) GetDeliveryServiceURLSignatureKeys(dsName string, opts RequestOptions) (tc.URLSignatureKeysResponse, toclientlib.ReqInf, error) {
+	var data tc.URLSignatureKeysResponse
 	reqInf, err := to.get(fmt.Sprintf(apiDeliveryServicesURLSignatureKeys, dsName), opts, &data)
 	return data, reqInf, err
 }
