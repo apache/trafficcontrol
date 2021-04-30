@@ -12,7 +12,8 @@
 * limitations under the License.
 */
 import { MatSnackBar } from "@angular/material/snack-bar";
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy } from "@angular/core";
+import { Subscription } from "rxjs";
 
 import { AlertService } from "../../services";
 
@@ -24,27 +25,19 @@ import { AlertService } from "../../services";
 	styleUrls: ["./alert.component.scss"],
 	templateUrl: "./alert.component.html"
 })
-export class AlertComponent implements OnInit {
+export class AlertComponent implements OnDestroy {
+
+	/** Internal subscription to the AlertService's alerts observable. */
+	private readonly subscription: Subscription;
 
 	/**
 	 * Constructor.
 	 */
 	constructor(
 		private readonly alerts: AlertService,
-		// @Inject(PLATFORM_ID) private readonly platform: object,
 		private readonly snackBar: MatSnackBar
-	) { }
-
-	/**
-	 * Runs initialization code, setting up the current alert from the alerts
-	 * service.
-	 */
-	public ngOnInit(): void {
-		// if (!isPlatformBrowser(this.platform)) {
-		// 	return;
-		// }
-		// this.dialogElement = document.getElementById("alert") as HTMLDialogElement;
-		this.alerts.alerts.subscribe(
+	) {
+		this.subscription = this.alerts.alerts.subscribe(
 			a => {
 				if (a) {
 					if (a.text === "") {
@@ -69,7 +62,17 @@ export class AlertComponent implements OnInit {
 					}
 					this.snackBar.open(a.text, "dismiss", {duration: 10000, verticalPosition: "top"});
 				}
+			},
+			e => {
+				console.error("Error in alerts subscription:", e);
 			}
 		);
+	}
+
+	/**
+	 * Cleans up persistent resources in the component.
+	 */
+	public ngOnDestroy(): void {
+		this.subscription.unsubscribe();
 	}
 }
