@@ -14,6 +14,7 @@
 import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
 import { Subject } from "rxjs";
 
@@ -60,6 +61,8 @@ export class InvalidationJobsComponent implements OnInit {
 	 */
 	public regexpIsValid: Subject<string>;
 
+	/** The icon for the "Create a new Job" FAB. */
+	public readonly addIcon = faPlus;
 
 	/**
 	 * Constructor.
