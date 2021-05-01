@@ -52,6 +52,22 @@ export class UserService extends APIService {
 	}
 
 	/**
+	 * Ends the current user's session - but does *not* affect the
+	 * AuthenticationService's user data, which must be separately cleared.
+	 *
+	 * @returns The entire HTTP response on succes, or `null` on failure.
+	 */
+	public async logout(): Promise<HttpResponse<object> | null> {
+		const path = `/api/${this.apiVersion}/user/logout`;
+		return this.http.post(path, undefined, this.defaultOptions).toPromise().catch(
+			e => {
+				console.error("Failed to logout:", e);
+				return null;
+			}
+		);
+	}
+
+	/**
 	 * Fetches the current user from Traffic Ops.
 	 *
 	 * @returns A `User` object representing the current user.

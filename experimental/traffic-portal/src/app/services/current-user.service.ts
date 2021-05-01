@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { Router } from "@angular/router";
 import { Capability, User } from "../models";
 
 /**
@@ -32,6 +33,8 @@ export class CurrentUserService {
 		return this.currentUser !== null;
 	}
 
+	constructor(private readonly router: Router) {}
+
 	/**
 	 * Sets the currently authenticated user.
 	 *
@@ -57,5 +60,6 @@ export class CurrentUserService {
 	public logout(): void {
 		this.user = null;
 		this.caps.clear();
+		this.router.navigate(["/login"]);
 	}
 }

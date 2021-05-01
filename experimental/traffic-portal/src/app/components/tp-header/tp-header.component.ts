@@ -13,6 +13,7 @@
 */
 import { Component, Input, OnInit } from "@angular/core";
 import { AuthenticationService } from "src/app/services";
+import { UserService } from "src/app/services/api";
 
 /**
  * TpHeaderComponent is the controller for the standard Traffic Portal header.
@@ -42,11 +43,26 @@ export class TpHeaderComponent implements OnInit {
 	@Input() public title?: string;
 
 	/** Constructor */
-	constructor(private readonly auth: AuthenticationService) {
+	constructor(private readonly auth: AuthenticationService, private readonly api: UserService) {
 	}
 
 	/** Sets up data dependencies. */
 	public ngOnInit(): void {
 		this.permissions = this.auth.capabilities;
+	}
+
+	/**
+	 * Handles when the user clicks the "Logout" button by using the API to
+	 * invalidate their session before redirecting them to the login page.
+	 */
+	public logout(): void {
+		this.api.logout().then(
+			r => {
+				if (!r) {
+					console.warn("Failed to log out - clearing user data anyway!");
+				}
+				this.auth.logout();
+			}
+		);
 	}
 }

@@ -13,7 +13,6 @@
 */
 import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { Router } from "@angular/router";
 
 import { Observable, throwError } from "rxjs";
 import { catchError } from "rxjs/operators";
@@ -30,7 +29,6 @@ export class ErrorInterceptor implements HttpInterceptor {
 
 	constructor(
 		private readonly currentUserService: CurrentUserService,
-		private readonly router: Router,
 		private readonly alerts: AlertService
 	) {}
 
@@ -54,7 +52,6 @@ export class ErrorInterceptor implements HttpInterceptor {
 			}
 			if (err.status === 401 || err.status === 403) {
 				this.currentUserService.logout();
-				this.router.navigate(["/login"]);
 			}
 
 			return throwError(err);
