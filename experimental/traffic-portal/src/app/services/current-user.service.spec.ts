@@ -1,4 +1,6 @@
 import { TestBed } from "@angular/core/testing";
+import { RouterTestingModule } from "@angular/router/testing";
+import { LoginComponent } from "../components/login/login.component";
 
 import { CurrentUserService } from "./current-user.service";
 
@@ -6,7 +8,9 @@ describe("CurrentUserService", () => {
 	let service: CurrentUserService;
 
 	beforeEach(() => {
-		TestBed.configureTestingModule({});
+		TestBed.configureTestingModule({
+			imports: [RouterTestingModule.withRoutes([{component: LoginComponent, path: "login"}])]
+		});
 		service = TestBed.inject(CurrentUserService);
 	});
 

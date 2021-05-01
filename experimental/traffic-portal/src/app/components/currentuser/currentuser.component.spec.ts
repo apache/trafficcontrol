@@ -13,6 +13,8 @@
 */
 import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
+import { RouterTestingModule } from "@angular/router/testing";
+
 import { of } from "rxjs";
 import { UserService } from "src/app/services/api";
 
@@ -40,7 +42,8 @@ describe("CurrentuserComponent", () => {
 				TpHeaderComponent
 			],
 			imports: [
-				HttpClientModule
+				HttpClientModule,
+				RouterTestingModule
 			]
 		});
 		TestBed.overrideProvider(UserService, { useValue: mockAPIService });
