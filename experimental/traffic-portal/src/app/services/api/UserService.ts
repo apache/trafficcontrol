@@ -91,6 +91,20 @@ export class UserService extends APIService {
 		);
 	}
 
+	/**
+	 * Updates the current user to match the one passed in.
+	 *
+	 * @param user The new form of the user.
+	 * @returns whether or not the request was successful.
+	 */
+	public async updateCurrentUser(user: User): Promise<boolean> {
+		const path = "user/current";
+		return this.put<User>(path, {user}).toPromise().then(
+			() => true,
+			() => false
+		);
+	}
+
 	public async getUsers(nameOrID: string | number): Promise<User>;
 	public async getUsers(): Promise<Array<User>>;
 	/**
