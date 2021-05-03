@@ -56,7 +56,9 @@ func putURLSigKeys(xmlID string, tvTx *sqlx.Tx, keys tc.URLSigKeys, ctx context.
 	}
 
 	// Delete old keys first if they exist
-	deleteURLSigKeys(xmlID, tvTx, ctx)
+	if err = deleteURLSigKeys(xmlID, tvTx, ctx); err != nil {
+		return err
+	}
 
 	res, err := tvTx.Exec("INSERT INTO url_sig_key (deliveryservice, data) VALUES ($1, $2)", xmlID, keyJSON)
 	if err != nil {
