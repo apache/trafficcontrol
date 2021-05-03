@@ -687,19 +687,23 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 		}
 		cfg.ChangeApplied = true
 
-		r.TrafficCtlReload = r.TrafficCtlReload ||
-			strings.HasSuffix(cfg.Dir, "trafficserver") ||
-			cfg.RemapPluginConfig ||
+		r.RemapConfigReload = cfg.RemapPluginConfig ||
 			cfg.Name == "remap.config" ||
-			cfg.Name == "ssl_multicert.config" ||
 			strings.HasPrefix(cfg.Name, "url_sig_") ||
 			strings.HasPrefix(cfg.Name, "uri_signing") ||
 			strings.HasPrefix(cfg.Name, "hdr_rw_") ||
+			strings.HasPrefix(cfg.Name, "regex_remap_") ||
+			strings.HasPrefix(cfg.Name, "bg_fetch") ||
+			strings.HasSuffix(cfg.Name, ".lua")
+
+		r.TrafficCtlReload = r.TrafficCtlReload ||
+			strings.HasSuffix(cfg.Dir, "trafficserver") ||
+			r.RemapConfigReload ||
+			cfg.Name == "ssl_multicert.config" ||
 			(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".cer")) ||
 			(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".key"))
 
 		r.TrafficServerRestart = cfg.Name == "plugin.config"
-		r.RemapConfigReload = cfg.RemapPluginConfig || cfg.Name == "remap.config"
 		r.NtpdRestart = cfg.Name == "ntpd.conf"
 		r.SysCtlReload = cfg.Name == "sysctl.conf"
 
