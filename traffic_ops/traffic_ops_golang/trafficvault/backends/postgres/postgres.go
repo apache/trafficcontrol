@@ -101,11 +101,62 @@ func (p *Postgres) commitTransaction(tx *sqlx.Tx, ctx context.Context, cancelFun
 }
 
 func (p *Postgres) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *sql.Tx, ctx context.Context) (tc.DeliveryServiceSSLKeysV15, bool, error) {
-	return tc.DeliveryServiceSSLKeysV15{}, false, notImplementedErr
+	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
+	if err != nil {
+		return tc.DeliveryServiceSSLKeysV15{}, false, notImplementedErr
+	}
+	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
+	var jsonKeys string
+	query := "SELECT data FROM sslkey WHERE deliveryservice=$1"
+	if version != "" {
+		query += " AND version=$2"
+		err = tvTx.QueryRow(query, xmlID, version).Scan(&jsonKeys)
+	} else {
+		err = tvTx.QueryRow(query, xmlID).Scan(&jsonKeys)
+	}
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DeliveryServiceSSLKeysV15{}, false, nil
+		}
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing SELECT SSL Keys query", err, ctx.Err())
+		return tc.DeliveryServiceSSLKeysV15{}, false, e
+	}
+	sslKey := tc.DeliveryServiceSSLKeysV15{}
+	err = json.Unmarshal([]byte(jsonKeys), &sslKey)
+	if err != nil {
+		return tc.DeliveryServiceSSLKeysV15{}, false, errors.New("unmarshalling ssl keys: " + err.Error())
+	}
+	return sslKey, true, nil
 }
 
 func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, ctx context.Context) error {
-	return notImplementedErr
+	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
+	if err != nil {
+		return err
+	}
+	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
+
+	keyJSON, err := json.Marshal(&key)
+	if err != nil {
+		return errors.New("marshalling keys: " + err.Error())
+	}
+
+	// delete the old ssl keys first
+	_, err = tvTx.Exec("DELETE FROM sslkey WHERE deliveryservice=$1", key.DeliveryService)
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
+	res, err := tvTx.Exec("INSERT INTO sslkey (deliveryservice, data, cdn, version) VALUES ($1, $2, $3, $4)", key.DeliveryService, keyJSON, key.CDN, key.Version)
+	if err != nil {
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing INSERT SSL Key query", err, ctx.Err())
+		return e
+	}
+	if rowsAffected, err := res.RowsAffected(); err != nil {
+		return err
+	} else if rowsAffected == 0 {
+		return errors.New("SSL Key: no keys were inserted")
+	}
+	return nil
 }
 
 func (p *Postgres) DeleteDeliveryServiceSSLKeys(xmlID string, version string, tx *sql.Tx, ctx context.Context) error {
