@@ -26,7 +26,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3clib"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/pborman/getopt/v2"
 )
@@ -46,7 +46,7 @@ type Cfg struct {
 	GetData          string
 	UpdatePending    bool
 	RevalPending     bool
-	t3clib.TCCfg
+	t3cutil.TCCfg
 }
 
 func (cfg Cfg) DebugLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationDebug) }
@@ -110,7 +110,7 @@ func InitConfig() (Cfg, error) {
 	toURLParsed, err := url.Parse(toURL)
 	if err != nil {
 		return Cfg{}, errors.New("parsing Traffic Ops URL from " + urlSourceStr + " '" + toURL + "': " + err.Error())
-	} else if err := t3clib.ValidateURL(toURLParsed); err != nil {
+	} else if err := t3cutil.ValidateURL(toURLParsed); err != nil {
 		return Cfg{}, errors.New("invalid Traffic Ops URL from " + urlSourceStr + " '" + toURL + "': " + err.Error())
 	}
 
@@ -132,7 +132,7 @@ func InitConfig() (Cfg, error) {
 		LoginDispersion:  dispersion,
 		UpdatePending:    updatePendingPtr,
 		RevalPending:     revalPendingPtr,
-		TCCfg: t3clib.TCCfg{
+		TCCfg: t3cutil.TCCfg{
 			CacheHostName: cacheHostName,
 			GetData:       "update-status",
 			TOInsecure:    *toInsecurePtr,

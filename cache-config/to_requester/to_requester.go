@@ -77,7 +77,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/apache/trafficcontrol/cache-config/t3clib"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/cache-config/to_requester/config"
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
@@ -99,14 +99,14 @@ func main() {
 	}
 
 	// login to traffic ops.
-	tccfg, err := t3clib.TOConnect(&cfg.TCCfg)
+	tccfg, err := t3cutil.TOConnect(&cfg.TCCfg)
 	if err != nil {
 		log.Errorf("%s\n", err)
 		os.Exit(2)
 	}
 
 	if cfg.GetData != "" {
-		if err := t3clib.WriteData(*tccfg); err != nil {
+		if err := t3cutil.WriteData(*tccfg); err != nil {
 			log.Errorf("writing data: %s\n", err.Error())
 			os.Exit(3)
 		}

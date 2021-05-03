@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/apache/trafficcontrol/cache-config/t3clib"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/cache-config/to_updater/config"
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
@@ -44,19 +44,19 @@ func main() {
 	}
 
 	// login to TrafficOps
-	tccfg, err := t3clib.TOConnect(&cfg.TCCfg)
+	tccfg, err := t3cutil.TOConnect(&cfg.TCCfg)
 	if err != nil {
 		log.Errorf("%s\n", err)
 		os.Exit(2)
 	}
 
-	err = t3clib.SetUpdateStatus(*tccfg, cfg.TCCfg.CacheHostName, cfg.UpdatePending, cfg.RevalPending)
+	err = t3cutil.SetUpdateStatus(*tccfg, cfg.TCCfg.CacheHostName, cfg.UpdatePending, cfg.RevalPending)
 	if err != nil {
 		log.Errorf("%s, %s\n", err, cfg.TCCfg.CacheHostName)
 		os.Exit(3)
 	}
 
-	cur_status, err := t3clib.GetServerUpdateStatus(*tccfg)
+	cur_status, err := t3cutil.GetServerUpdateStatus(*tccfg)
 	if err != nil {
 		log.Errorf("%s, %s\n", err, cfg.TCCfg.CacheHostName)
 		os.Exit(4)

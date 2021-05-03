@@ -1,3 +1,5 @@
+package t3cutil
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,10 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-// package getdata gets and posts non-config data from Traffic Ops which is related to config generation and needed by ORT.
-// For example, the --get-data, --set-queue-status, and --set-reval-status arguments.
-package t3clib
 
 import (
 	"encoding/json"
