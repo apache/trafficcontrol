@@ -23,7 +23,6 @@ import { MatStepperModule } from "@angular/material/stepper";
 import {MatStepperHarness} from "@angular/material/stepper/testing";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
-import { of } from "rxjs";
 
 import { UserService } from "src/app/services/api";
 
@@ -37,19 +36,15 @@ describe("NewDeliveryServiceComponent", () => {
 	let fixture: ComponentFixture<NewDeliveryServiceComponent>;
 	let loader: HarnessLoader;
 
-	// beforeAll(() => {
-	// 	TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
-	// });
-
 	beforeEach(async () => {
 		// mock the API
 		const mockAPIService = jasmine.createSpyObj(["getRoles", "getCurrentUser"]);
-		mockAPIService.getRoles.and.returnValue(of([]));
-		mockAPIService.getCurrentUser.and.returnValue(of({
+		mockAPIService.getRoles.and.returnValue(new Promise(resolve => resolve([])));
+		mockAPIService.getCurrentUser.and.returnValue(new Promise(resolve => resolve({
 			id: 0,
 			newUser: false,
 			username: "test"
-		}));
+		})));
 
 		await TestBed.configureTestingModule({
 			declarations: [

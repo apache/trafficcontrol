@@ -30,6 +30,9 @@ export class AlertComponent implements OnDestroy {
 	/** Internal subscription to the AlertService's alerts observable. */
 	private readonly subscription: Subscription;
 
+	/** The duration for which Alerts will linger until dismissed. `undefined` means forever. */
+	public duration: number | undefined = 10000;
+
 	/**
 	 * Constructor.
 	 */
@@ -60,13 +63,20 @@ export class AlertComponent implements OnDestroy {
 							console.log("unknown alert: ", a.text);
 							break;
 					}
-					this.snackBar.open(a.text, "dismiss", {duration: 10000, verticalPosition: "top"});
+					this.snackBar.open(a.text, "dismiss", {duration: this.duration, verticalPosition: "top"});
 				}
 			},
 			e => {
 				console.error("Error in alerts subscription:", e);
 			}
 		);
+	}
+
+	/**
+	 * Clears away the currently visible Alert.
+	 */
+	public clear(): void {
+		this.snackBar.dismiss();
 	}
 
 	/**
