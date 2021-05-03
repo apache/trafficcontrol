@@ -147,7 +147,8 @@ export class CDNPage extends BasePage {
     return await basePage.GetOutputMessage().then(value => cdn.validationMessage === value);
   }
   public async DownloadCSV(cdn: DownloadCSV): Promise<boolean> {
-    let filename = cdn.Name;
+    let fileName = cdn.Name;
+    let readFile = '';
     let result = false;
     let readme = 'Readme.md';
     const folder = 'Downloads';
@@ -156,15 +157,15 @@ export class CDNPage extends BasePage {
       await readdirSync(folder).forEach(file => {
         if (file != readme) {
           //read file name just download
-          filename = file;
+          readFile = file;
         }
       });
     }, 30 * 1000, 'File has not downloaded within 30 seconds').catch(function () {
-      if (existsSync(`Downloads/${filename}`)) {
+      if (existsSync(`Downloads/${fileName}`) && fileName === readFile ) {
         //if file exist result will be true
         result = true;
         //delete the file
-        unlink(`Downloads/${filename}`, (err) => {
+        unlink(`Downloads/${fileName}`, (err) => {
           if (err) throw err;
         });
       }
