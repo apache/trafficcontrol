@@ -17,9 +17,7 @@ import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 import { ITooltipParams } from "ag-grid-community";
 
-import { BehaviorSubject, Observable } from "rxjs";
-import { merge } from "rxjs/index";
-import { map, mergeAll } from "rxjs/operators";
+import { BehaviorSubject } from "rxjs";
 
 import { Interface, Server } from "../../../models/server";
 import { ServerService } from "../../../services/api";
@@ -95,7 +93,7 @@ function serverIsCache(data: AugmentedServer): boolean {
 export class ServersTableComponent implements OnInit {
 
 	/** All of the servers which should appear in the table. */
-	public servers: Observable<Array<AugmentedServer>> | null = null;
+	public servers: Promise<Array<AugmentedServer>> | null = null;
 	// public servers: Array<Server>;
 
 	/** Definitions of the table's columns according to the ag-grid API */
@@ -361,7 +359,12 @@ export class ServersTableComponent implements OnInit {
 
 	/** Reloads the servers table data. */
 	private reloadServers(): void {
-		this.servers = this.api.getServers().pipe(map(x=>x.map(augment)));
+		this.servers = this.api.getServers().then(x=>x.map(augment)).catch(
+			e => {
+				console.error("Failed to reload servers:", e);
+				return [];
+			}
+		);
 	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */
@@ -386,16 +389,16 @@ export class ServersTableComponent implements OnInit {
 				this.changeStatusOpen = true;
 				break;
 			case "queue":
-				observables = (action.data as Array<AugmentedServer>).map(s=>this.api.queueUpdates(s));
-				merge(observables).pipe(mergeAll()).subscribe(
+				observables = (action.data as Array<AugmentedServer>).map(async s=>this.api.queueUpdates(s));
+				Promise.all(observables).then(
 					() => {
 						this.reloadServers();
 					}
 				);
 				break;
 			case "dequeue":
-				observables = (action.data as Array<AugmentedServer>).map(s=>this.api.clearUpdates(s));
-				merge(observables).pipe(mergeAll()).subscribe(
+				observables = (action.data as Array<AugmentedServer>).map(async s=>this.api.clearUpdates(s));
+				Promise.all(observables).then(
 					() => {
 						this.reloadServers();
 					}

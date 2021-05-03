@@ -11,28 +11,56 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
+import {TestBed, ComponentFixture} from "@angular/core/testing";
+import {TestbedHarnessEnvironment} from "@angular/cdk/testing/testbed";
+import {MatSnackBarHarness} from "@angular/material/snack-bar/testing";
+import {HarnessLoader} from "@angular/cdk/testing";
+import {MatSnackBarModule} from "@angular/material/snack-bar";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 
+import { AlertService } from "src/app/services";
+import { AlertLevel } from "src/app/models";
 import { AlertComponent } from "./alert.component";
 
 describe("AlertComponent", () => {
 	let component: AlertComponent;
 	let fixture: ComponentFixture<AlertComponent>;
+	let loader: HarnessLoader;
+	let service: AlertService;
 
-	beforeEach(waitForAsync(() => {
-		TestBed.configureTestingModule({
-			declarations: [ AlertComponent ]
-		})
-			.compileComponents();
-	}));
-
-	beforeEach(() => {
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			declarations: [ AlertComponent ],
+			imports: [MatSnackBarModule, NoopAnimationsModule]
+		}).compileComponents();
 		fixture = TestBed.createComponent(AlertComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
+		fixture.componentInstance.duration = undefined;
+		loader = TestbedHarnessEnvironment.documentRootLoader(fixture);
+		service = TestBed.inject(AlertService);
 	});
 
 	it("should exist", () => {
 		expect(component).toBeTruthy();
+		expect(service).toBeTruthy();
+	});
+
+	it("should load simple alerts", async () => {
+		const levels: Array<AlertLevel> = ["error", "warning", "info", "success"];
+		for (const errLevel of levels) {
+			const msg = `An alert at the '${errLevel}' level`;
+			service.newAlert(errLevel, msg);
+
+			let snackBars = await loader.getAllHarnesses(MatSnackBarHarness);
+			expect(snackBars.length).toBe(1);
+
+			const snackBar = await loader.getHarness(MatSnackBarHarness);
+			expect(await snackBar.getMessage()).toBe(msg);
+
+			fixture.componentInstance.clear();
+			snackBars = await loader.getAllHarnesses(MatSnackBarHarness);
+			expect(snackBars.length).toBe(0);
+		}
 	});
 });
