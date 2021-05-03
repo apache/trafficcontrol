@@ -69,10 +69,22 @@ export class CurrentUserService {
 		return this.user ? this.caps.has(perm) : false;
 	}
 
-	/** Clears authentication data associated with the current user. */
-	public logout(): void {
+	/**
+	 * Clears authentication data associated with the current user, and
+	 * redirects to login.
+	 *
+	 * @param withRedirect If given and `true`, will redirect with the
+	 * `returnUrl` query string parameter set to the current route.
+	 */
+	public logout(withRedirect?: boolean): void {
 		this.user = null;
 		this.caps.clear();
-		this.router.navigate(["/login"], {queryParamsHandling: "preserve"});
+
+		const queryParams: Record<string | symbol, string> = {};
+		if (withRedirect) {
+			queryParams.returnUrl = this.router.url;
+		}
+		console.log("query params:", queryParams);
+		this.router.navigate(["/login"], {queryParams});
 	}
 }

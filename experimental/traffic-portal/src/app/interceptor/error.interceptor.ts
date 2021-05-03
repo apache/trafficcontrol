@@ -51,7 +51,7 @@ export class ErrorInterceptor implements HttpInterceptor {
 				}
 			}
 			if (err.status === 401 || err.status === 403) {
-				this.currentUserService.logout();
+				this.currentUserService.logout(true);
 			}
 
 			return throwError(err);
