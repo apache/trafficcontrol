@@ -70,7 +70,8 @@ limitations under the License.
 		<input matInput [(ngModel)]="editUser.postalCode" name="postalCode" type="text"/>
 	</mat-form-field>
 	<button mat-raised-button style="grid-area: k;">Submit</button>
-	<button type="button" mat-raised-button color="warn" (click)="cancelEdit()" style="grid-area: l;">Cancel</button>
+	<button mat-raised-button color="accent" style="grid-area: l;" type="button" (click)="updatePassword()">Update Password</button>
+	<button type="button" mat-raised-button color="warn" (click)="cancelEdit()" style="grid-area: m;">Cancel</button>
 </form>
 
 <button mat-fab id="edit" title="Edit Profile" type="button" (click)="edit()" *ngIf="!editMode"><fa-icon [icon]="editIcon"></fa-icon></button>

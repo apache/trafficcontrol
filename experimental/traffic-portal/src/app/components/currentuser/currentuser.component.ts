@@ -12,11 +12,14 @@
 * limitations under the License.
 */
 import { Component, OnInit } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
+import { ActivatedRoute, Router } from "@angular/router";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { UserService } from "src/app/services/api";
 
-import { User } from "../../models";
-import { AuthenticationService } from "../../services";
+import { User } from "src/app/models";
+import { AuthenticationService } from "src/app/services";
+import { UpdatePasswordDialogComponent } from "./update-password-dialog/update-password-dialog.component";
 
 /**
  * CurrentuserComponent is the controller for the current user's profile page.
@@ -44,7 +47,13 @@ export class CurrentuserComponent implements OnInit {
 	 */
 	public editUser: User | null = null;
 
-	constructor(private readonly auth: AuthenticationService, private readonly api: UserService) {
+	constructor(
+		private readonly auth: AuthenticationService,
+		private readonly api: UserService,
+		private readonly dialog: MatDialog,
+		private readonly route: ActivatedRoute,
+		private readonly router: Router
+	) {
 		this.currentUser = this.auth.currentUser;
 	}
 
@@ -61,6 +70,14 @@ export class CurrentuserComponent implements OnInit {
 					}
 				}
 			);
+		}
+		const edit = this.route.snapshot.queryParamMap.get("edit");
+		if (edit === "true") {
+			this.edit();
+			const updPasswd = this.route.snapshot.queryParamMap.get("updatePassword");
+			if (updPasswd === "true") {
+				this.updatePassword();
+			}
 		}
 	}
 
@@ -84,7 +101,20 @@ export class CurrentuserComponent implements OnInit {
 	public cancelEdit(): void {
 		// It's impossible to be in edit mode with a null user
 		this.editUser = {...(this.currentUser as User)};
+		this.router.navigate(["."], {queryParams: {}, relativeTo: this.route});
 		this.editing = false;
+	}
+
+	/**
+	 * Opens the password change dialog box/form.
+	 */
+	public updatePassword(): void {
+		this.router.navigate(["."], {queryParams: {edit: true, updatePassword: true}, relativeTo: this.route});
+		this.dialog.open(UpdatePasswordDialogComponent).afterClosed().subscribe(
+			() => {
+				this.router.navigate(["."], {queryParams: {edit: true}, relativeTo: this.route});
+			}
+		);
 	}
 
 	/**
@@ -95,6 +125,10 @@ export class CurrentuserComponent implements OnInit {
 	public submitEdit(e: Event): void {
 		e.preventDefault();
 		e.stopPropagation();
+
+		// There's a separate form for editing passwords, we don't intend to do that here.
+		(this.editUser as User).localPasswd = undefined;
+		(this.editUser as User).confirmLocalPasswd = undefined;
 
 		this.api.updateCurrentUser(this.editUser as User).then(
 			success => {

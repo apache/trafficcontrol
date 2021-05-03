@@ -13,6 +13,7 @@
 */
 import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
+import { MatDialogModule } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { UserService } from "src/app/services/api";
@@ -41,7 +42,8 @@ describe("CurrentuserComponent", () => {
 			],
 			imports: [
 				HttpClientModule,
-				RouterTestingModule
+				RouterTestingModule,
+				MatDialogModule
 			]
 		});
 		TestBed.overrideProvider(UserService, { useValue: mockAPIService });

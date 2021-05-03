@@ -37,7 +37,6 @@ export class AppComponent implements OnInit {
 	 * Constructor.
 	 */
 	constructor(private readonly router: Router, private readonly auth: AuthenticationService) {
-		// this.auth.currentUser.subscribe(x => this.currentUser = x);
 	}
 
 	/**
