@@ -1,6 +1,17 @@
 {
   "name": "traffic-portal",
-  "version": "0.2.0",
+  "version": "0.3.0",
+  "homepage": "https://github.com/apache/trafficcontrol",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apache/trafficcontrol.git"
+  },
+  "author": "Apache Software Foundation",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=12"
+  },
+  "engineStrict": true,
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
