@@ -60,6 +60,6 @@ export class CurrentUserService {
 	public logout(): void {
 		this.user = null;
 		this.caps.clear();
-		this.router.navigate(["/login"]);
+		this.router.navigate(["/login"], {queryParamsHandling: "preserve"});
 	}
 }

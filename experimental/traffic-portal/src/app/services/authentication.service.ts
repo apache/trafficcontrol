@@ -50,9 +50,16 @@ export class AuthenticationService {
 	/**
 	 * Updates the current user, and provides a way for callers to check if the update was succesful.
 	 *
+	 * @param token If given, the service will first attempt to login using this token.
 	 * @returns A boolean value indicating the success of the update
 	 */
-	public async updateCurrentUser(): Promise<boolean> {
+	public async updateCurrentUser(token?: string): Promise<boolean> {
+		if (token) {
+			if (!(await this.api.login(token))) {
+				console.error("invalid token");
+				return false;
+			}
+		}
 		return this.api.getCurrentUser().then(
 			async u => {
 				if (u.role === undefined) {
@@ -73,12 +80,13 @@ export class AuthenticationService {
 	/**
 	 * Logs in a user and, on successful login, updates the current user.
 	 *
-	 * @param u The user's username.
+	 * @param uOrT The user's username, if `p` is given. If `p` is *not* given,
+	 * this is treated as a login token.
 	 * @param p The user's password.
 	 * @returns An observable that emits whether or not login succeeded.
 	 */
-	public async login(u: string, p: string): Promise<boolean> {
-		return this.api.login(u, p).then(
+	public async login(uOrT: string, p?: string): Promise<boolean> {
+		return this.api.login(uOrT, p).then(
 			async resp => {
 				if (resp && resp.status === 200) {
 					return this.updateCurrentUser();

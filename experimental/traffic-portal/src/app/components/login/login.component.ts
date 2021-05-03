@@ -48,6 +48,19 @@ export class LoginComponent implements OnInit {
 	 */
 	public ngOnInit(): void {
 		this.returnURL = this.route.snapshot.queryParams.returnUrl || "/";
+		const token = this.route.snapshot.queryParams.token;
+		if (token) {
+			this.auth.login(token).then(
+				response => {
+					if (response) {
+						this.router.navigate(["/me"], {queryParams: {edit: true, updatePassword: true}});
+					}
+				},
+				err => {
+					console.error("login with token failed:", err);
+				}
+			);
+		}
 	}
 
 	/**

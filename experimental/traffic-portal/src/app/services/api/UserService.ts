@@ -37,15 +37,25 @@ export class UserService extends APIService {
 	/**
 	 * Performs authentication with the Traffic Ops server.
 	 *
-	 * @param u The username to be used for authentication
+	 * @param uOrT The username to be used for authentication, if `p` is
+	 * provided. If `p` is **not** provided, then this is used as a token.
 	 * @param p The password of user `u`
 	 * @returns The entire HTTP response on success, or `null` on failure.
 	 */
-	public async login(u: string, p: string): Promise<HttpResponse<object> | null> {
-		const path = `/api/${this.apiVersion}/user/login`;
-		return this.http.post(path, {p, u}, this.defaultOptions).toPromise().catch(
+	public async login(uOrT: string, p?: string): Promise<HttpResponse<object> | null> {
+		let path = `/api/${this.apiVersion}/user/login`;
+		if (p !== undefined) {
+			return this.http.post(path, {p, u: uOrT}, this.defaultOptions).toPromise().catch(
+				e => {
+					console.error("Failed to login:", e);
+					return null;
+				}
+			);
+		}
+		path += "/token";
+		return this.http.post(path, {t: uOrT}, this.defaultOptions).toPromise().catch(
 			e => {
-				console.error("Failed to login:", e);
+				console.error("Failed to login with token:", e);
 				return null;
 			}
 		);
