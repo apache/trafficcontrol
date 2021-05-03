@@ -20,6 +20,7 @@ package postgres
  */
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -29,13 +30,14 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func getURLSigKeys(xmlID string, tvTx *sqlx.Tx) (tc.URLSigKeys, bool, error) {
+func getURLSigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context) (tc.URLSigKeys, bool, error) {
 	var jsonUrlKeys string
 	if err := tvTx.QueryRow("SELECT data FROM url_sig_key WHERE deliveryservice = $1", xmlID).Scan(&jsonUrlKeys); err != nil {
 		if err == sql.ErrNoRows {
-			return tc.URLSigKeys{}, true, nil
+			return tc.URLSigKeys{}, false, nil
 		}
-		return tc.URLSigKeys{}, false, err
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing SELECT URL Sig Keys query", err, ctx.Err())
+		return tc.URLSigKeys{}, false, e
 	}
 
 	urlSignKey := tc.URLSigKeys{}
@@ -47,15 +49,19 @@ func getURLSigKeys(xmlID string, tvTx *sqlx.Tx) (tc.URLSigKeys, bool, error) {
 	return urlSignKey, true, nil
 }
 
-func putURLSigKeys(xmlID string, tvTx *sqlx.Tx, keys tc.URLSigKeys) error {
+func putURLSigKeys(xmlID string, tvTx *sqlx.Tx, keys tc.URLSigKeys, ctx context.Context) error {
 	keyJSON, err := json.Marshal(&keys)
 	if err != nil {
 		return errors.New("marshalling keys: " + err.Error())
 	}
 
+	// Delete old keys first if they exist
+	deleteURLSigKeys(xmlID, tvTx, ctx)
+
 	res, err := tvTx.Exec("INSERT INTO url_sig_key (deliveryservice, data) VALUES ($1, $2)", xmlID, keyJSON)
 	if err != nil {
-		return err
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing INSERT URL Sig Keys query", err, ctx.Err())
+		return e
 	}
 	if rowsAffected, err := res.RowsAffected(); err != nil {
 		return err
@@ -65,9 +71,10 @@ func putURLSigKeys(xmlID string, tvTx *sqlx.Tx, keys tc.URLSigKeys) error {
 	return nil
 }
 
-func deleteURLSigKeys(xmlID string, tvTx *sqlx.Tx) error {
+func deleteURLSigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context) error {
 	if _, err := tvTx.Exec("DELETE FROM url_sig_key WHERE deliveryservice = $1", xmlID); err != nil {
-		return err
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing DELETE URL Sig Keys query", err, ctx.Err())
+		return e
 	}
 	return nil
 }

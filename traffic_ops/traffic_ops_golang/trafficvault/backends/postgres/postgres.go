@@ -138,7 +138,7 @@ func (p *Postgres) GetURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Context) 
 		return tc.URLSigKeys{}, false, err
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
-	return getURLSigKeys(xmlID, tvTx)
+	return getURLSigKeys(xmlID, tvTx, ctx)
 }
 
 func (p *Postgres) PutURLSigKeys(xmlID string, keys tc.URLSigKeys, tx *sql.Tx, ctx context.Context) error {
@@ -148,7 +148,7 @@ func (p *Postgres) PutURLSigKeys(xmlID string, keys tc.URLSigKeys, tx *sql.Tx, c
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
 
-	return putURLSigKeys(xmlID, tvTx, keys)
+	return putURLSigKeys(xmlID, tvTx, keys, ctx)
 }
 
 func (p *Postgres) DeleteURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Context) error {
@@ -158,7 +158,7 @@ func (p *Postgres) DeleteURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Contex
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
 
-	return deleteURLSigKeys(xmlID, tvTx)
+	return deleteURLSigKeys(xmlID, tvTx, ctx)
 }
 
 func (p *Postgres) GetURISigningKeys(xmlID string, tx *sql.Tx, ctx context.Context) ([]byte, bool, error) {

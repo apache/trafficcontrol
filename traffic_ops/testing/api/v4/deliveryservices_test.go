@@ -1390,12 +1390,30 @@ func CreateTestDeliveryServicesURLSigKeys(t *testing.T) {
 		t.Error("failed to create url sig keys: " + err.Error())
 	}
 
-	newKeys, _, err := TOSession.GetDeliveryServiceURLSigKeys(*firstDS.XMLID, nil)
+	firstKeys, _, err := TOSession.GetDeliveryServiceURLSigKeys(*firstDS.XMLID, nil)
 	if err != nil {
 		t.Error("failed to get url sig keys: " + err.Error())
 	}
-	if len(newKeys) == 0 {
+	if len(firstKeys) == 0 {
 		t.Errorf("failed to create url sig keys")
+	}
+
+	// Create new keys again and check that they are different
+	_, _, err = TOSession.CreateDeliveryServiceURLSigKeys(*firstDS.XMLID, nil)
+	if err != nil {
+		t.Error("failed to create url sig keys: " + err.Error())
+	}
+
+	secondKeys, _, err := TOSession.GetDeliveryServiceURLSigKeys(*firstDS.XMLID, nil)
+	if err != nil {
+		t.Error("failed to get url sig keys: " + err.Error())
+	}
+	if len(secondKeys) == 0 {
+		t.Errorf("failed to create url sig keys")
+	}
+
+	if secondKeys["key0"] == firstKeys["key0"] {
+		t.Errorf("second create did not generate new url sig keys")
 	}
 }
 

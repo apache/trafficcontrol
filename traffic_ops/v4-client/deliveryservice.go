@@ -340,10 +340,7 @@ func (to *Session) GetDeliveryServiceURLSigKeys(dsName string, header http.Heade
 func (to *Session) CreateDeliveryServiceURLSigKeys(dsName string, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(fmt.Sprintf(APIDeliveryServicesURLSigKeysGenerate, dsName), nil, header, &alerts)
-	if err != nil {
-		return alerts, reqInf, err
-	}
-	return alerts, reqInf, nil
+	return alerts, reqInf, err
 }
 
 // DeleteDeliveryServiceURLSigKeys deletes the URL-signing keys used by the Delivery Service
