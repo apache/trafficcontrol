@@ -15,9 +15,7 @@ import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import { of } from "rxjs";
 import { UserService } from "src/app/services/api";
-
 
 import { User } from "../../models";
 import { TpHeaderComponent } from "../tp-header/tp-header.component";
@@ -29,12 +27,12 @@ describe("CurrentuserComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		const mockAPIService = jasmine.createSpyObj(["getRoles", "getCurrentUser"]);
-		mockAPIService.getRoles.and.returnValue(of([]));
-		mockAPIService.getCurrentUser.and.returnValue(of({
+		mockAPIService.getRoles.and.returnValue(new Promise(resolve => resolve([])));
+		mockAPIService.getCurrentUser.and.returnValue(new Promise(resolve => resolve({
 			id: 0,
 			newUser: false,
 			username: "test"
-		}));
+		})));
 
 		TestBed.configureTestingModule({
 			declarations: [

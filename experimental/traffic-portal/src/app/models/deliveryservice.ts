@@ -95,8 +95,6 @@ export function protocolToString(p: Protocol): string {
 			return "Serve both unsecured HTTP requests and secured HTTPS requests";
 		case Protocol.HTTP_TO_HTTPS:
 			return "Serve secured HTTPS requests normally, but redirect unsecured HTTP requests to use HTTPS";
-		default:
-			return "UNKNOWN";
 	}
 }
 
