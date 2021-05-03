@@ -17,6 +17,7 @@
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
+    "test:ci": "ng test --watch=false --browsers=ChromeHeadlessCustom",
     "lint": "ng lint",
     "e2e": "ng e2e",
     "dev:ssr": "ng run traffic-portal:serve-ssr",
