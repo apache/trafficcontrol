@@ -1028,7 +1028,8 @@ A text-based unique identifier for a Delivery Service. Many :ref:`to-api` endpoi
 .. _ds-parameters:
 
 Delivery Service Parameters
-----------
+---------------------------
+
 Features which are new, experimental, or not significant enough to be first-class Delivery Service fields are often added as Parameters. To use these, add a Profile to the Delivery Service, with the given Parameter assigned.
 
 parent.config
