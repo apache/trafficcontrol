@@ -54,10 +54,16 @@ jobs:
           npm ci
 
       - name: Build
-        run: npm run build:ssr
+        run: |
+          cd experimental/traffic-portal/
+          npm run build:ssr
 
       - name: Lint
-        run: npm run lint
+        run: |
+          cd experimental/traffic-portal/
+          npm run lint
 
       - name: Test
-        run: npm run test:ci
+        run: |
+          cd experimental/traffic-portal/
+          npm run test:ci
