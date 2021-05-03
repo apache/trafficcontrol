@@ -21,7 +21,7 @@
 # example of how to run the main compose with this file:
 #
 # docker-compose -f docker-compose.yml -f docker-compose.traffic-ops-test.yml up -d edge enroller dns db smtp trafficops trafficvault integration
-# docker-compose -f docker-compose.yml -f docker-compose.traffic-ops-test.yml logs -f integration
+# docker-compose -f docker-compose.traffic-ops-test.yml logs -f integration
 
 ---
 version: '2.1'
@@ -33,16 +33,14 @@ services:
       dockerfile: infrastructure/cdn-in-a-box/traffic_ops_integration_test/Dockerfile
     env_file:
       - variables.env
+    environment:
+      SKIP_DIG_IP: 'true'
+      SKIP_TRAFFIC_OPS_DATA: 'true'
     hostname: integration
     domainname: infra.ciab.test
     volumes:
       - shared:/shared
       - ../../junit:/junit
-
-  trafficops:
-    environment:
-      DIG_IP_RETRY: ${DIG_IP_RETRY:-0}
-      LOAD_TRAFFIC_OPS_DATA: ${LOAD_TRAFFIC_OPS_DATA:-false}
 
 volumes:
   junit:

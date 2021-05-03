@@ -76,7 +76,7 @@ func main() {
 	// Because logs will be appended, we want a "start" message, so individual runs are easily distinguishable.
 	// log the "start" message to each distinct logger.
 	startMsg := "Starting atstccfg"
-	log.Errorln(startMsg)
+	log.Infoln(startMsg)
 	if cfg.WarningLog() != cfg.ErrorLog() {
 		log.Warnln(startMsg)
 	}

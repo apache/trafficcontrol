@@ -1,4 +1,5 @@
-package ping
+// Package backends is simply for importing the traffic vault backend packages so they can initialize.
+package backends
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,24 +21,5 @@ package ping
  */
 
 import (
-	"errors"
-	"net/http"
-
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	_ "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres"
 )
-
-func Vault(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	pingResp, err := inf.Vault.Ping(inf.Tx.Tx, r.Context())
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("error pinging Traffic Vault: "+err.Error()))
-		return
-	}
-	api.WriteResp(w, r, pingResp)
-}

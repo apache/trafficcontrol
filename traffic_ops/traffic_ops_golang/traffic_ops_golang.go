@@ -41,6 +41,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+	_ "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends" // init traffic vault backends
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/riaksvc"
 

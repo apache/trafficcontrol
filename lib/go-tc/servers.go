@@ -1110,6 +1110,19 @@ type ServerUpdateStatus struct {
 	ParentRevalPending bool   `json:"parent_reval_pending"`
 }
 
+// ServerUpdateStatusResponseV40 is the type of a response from the Traffic
+// Ops API to a request to its /servers/{{host name}}/update_status endpoint
+// in API version 4.0.
+type ServerUpdateStatusResponseV40 struct {
+	Response []ServerUpdateStatus `json:"response"`
+	Alerts
+}
+
+// ServerUpdateStatusResponseV4 is the type of a response from the Traffic
+// Ops API to a request to its /servers/{{host name}}/update_status endpoint
+// in the latest minor version of API version 4.
+type ServerUpdateStatusResponseV4 = ServerUpdateStatusResponseV40
+
 type ServerPutStatus struct {
 	Status        util.JSONNameOrIDStr `json:"status"`
 	OfflineReason *string              `json:"offlineReason"`

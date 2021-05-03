@@ -448,10 +448,14 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			cachesByCacheGroup[cacheGroupName] = srvs.Response[0]
 		}
 		for _, cacheGroupName := range cacheGroupNames {
-			updateStatusByCacheGroup[cacheGroupName], _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName, nil)
+			updResp, _, err := TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName, nil)
 			if err != nil {
-				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
+				t.Fatalf("unable to get update status for a server from Cache Group '%s': %v - alerts: %+v", cacheGroupName, err, updResp.Alerts)
 			}
+			if len(updResp.Response) < 1 {
+				t.Fatalf("Expected at least one server with Host Name '%s' to have an update status", *cachesByCacheGroup[cacheGroupName].HostName)
+			}
+			updateStatusByCacheGroup[cacheGroupName] = updResp.Response[0]
 		}
 		// updating the server status does not queue updates within the same cachegroup
 		if *cachesByCacheGroup[midCacheGroup].UpdPending {
@@ -477,10 +481,14 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			t.Fatalf("cannot update server status on %s: %s", *cachesByCacheGroup[midCacheGroup].HostName, err.Error())
 		}
 		for _, cacheGroupName := range cacheGroupNames {
-			updateStatusByCacheGroup[cacheGroupName], _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName, nil)
+			updResp, _, err := TOSession.GetServerUpdateStatus(*cachesByCacheGroup[cacheGroupName].HostName, nil)
 			if err != nil {
-				t.Fatalf("unable to get a server from cachegroup %s: %s", cacheGroupName, err.Error())
+				t.Fatalf("unable to get an update status for a server from Cache Group '%s': %v - alerts: %+v", cacheGroupName, err, updResp.Alerts)
 			}
+			if len(updResp.Response) < 1 {
+				t.Fatalf("Expected at least one server with Host Name '%s' to have an update status", *cachesByCacheGroup[cacheGroupName].HostName)
+			}
+			updateStatusByCacheGroup[cacheGroupName] = updResp.Response[0]
 		}
 
 		// edgeCacheGroup is a descendant of midCacheGroup
@@ -499,9 +507,9 @@ func TestSetTopologiesServerUpdateStatuses(t *testing.T) {
 			t.Fatalf("unable to update %s's hostname to %s: %s", edgeHostName, *cachesByCacheGroup[midCacheGroup].HostName, err)
 		}
 
-		_, _, err = TOSession.GetServerUpdateStatus(*cachesByCacheGroup[midCacheGroup].HostName, nil)
+		updResp, _, err := TOSession.GetServerUpdateStatus(*cachesByCacheGroup[midCacheGroup].HostName, nil)
 		if err != nil {
-			t.Fatalf("expected no error getting server updates for a non-unique hostname %s, got %s", *cachesByCacheGroup[midCacheGroup].HostName, err)
+			t.Fatalf("expected no error getting server updates for a non-unique hostname %s, got: %v - alerts: %+v", *cachesByCacheGroup[midCacheGroup].HostName, err, updResp.Alerts)
 		}
 
 		*cachesByCacheGroup[edgeCacheGroup].HostName = edgeHostName

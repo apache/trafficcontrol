@@ -41,10 +41,10 @@ func Riak(w http.ResponseWriter, r *http.Request) {
 
 	defer inf.Close()
 
-	pingResp, err := inf.Vault.Ping(inf.Tx.Tx)
+	pingResp, err := inf.Vault.Ping(inf.Tx.Tx, r.Context())
 
 	if err != nil {
-		userErr = api.LogErr(r, http.StatusInternalServerError, nil, errors.New("error pinging Riak: "+err.Error()))
+		userErr = api.LogErr(r, http.StatusInternalServerError, nil, errors.New("error pinging Traffic Vault: "+err.Error()))
 		alerts.AddAlerts(tc.CreateErrorAlerts(userErr))
 		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
