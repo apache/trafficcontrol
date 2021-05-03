@@ -15,7 +15,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { DeliveryService, InvalidationJob, User } from "../../models";
+import { DeliveryService, InvalidationJob, NewInvalidationJob, User } from "../../models";
 
 import { APIService } from "./apiservice";
 
@@ -90,8 +90,8 @@ export class InvalidationJobService extends APIService {
 	 * @param job The Job to create.
 	 * @returns whether or not creation succeeded.
 	 */
-	public async createInvalidationJob(job: InvalidationJob): Promise<boolean> {
-		const path = "user/current/jobs";
+	public async createInvalidationJob(job: NewInvalidationJob): Promise<boolean> {
+		const path = "jobs";
 		return this.post(path, job).toPromise().then(
 			() => true,
 			() => false

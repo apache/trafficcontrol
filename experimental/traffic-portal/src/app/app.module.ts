@@ -25,6 +25,7 @@ import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { MatButtonModule } from "@angular/material/button";
 import { MatCardModule } from "@angular/material/card";
+import { MatNativeDateModule } from "@angular/material/core";
 import { MatDividerModule } from "@angular/material/divider";
 import { MatExpansionModule } from "@angular/material/expansion";
 import { MatInputModule } from "@angular/material/input";
@@ -33,6 +34,8 @@ import { MatRadioModule } from "@angular/material/radio";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatDialogModule } from "@angular/material/dialog";
+import { MatDatepickerModule } from "@angular/material/datepicker";
 
 import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { AgGridModule } from "ag-grid-angular";
@@ -65,6 +68,9 @@ import { BooleanFilterComponent } from "./components/table-components/boolean-fi
 import { ServerDetailsComponent } from "./components/servers/server-details/server-details.component";
 import { UpdateCellRendererComponent } from "./components/table-components/update-cell-renderer/update-cell-renderer.component";
 import { UpdateStatusComponent } from "./components/servers/update-status/update-status.component";
+import {
+	NewInvalidationJobDialogComponent
+} from "./components/invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 
 // TODO: Figure out the actual typing here.
 Chart.plugins.register({
@@ -113,7 +119,8 @@ Chart.plugins.register({
 		BooleanFilterComponent,
 		ServerDetailsComponent,
 		UpdateCellRendererComponent,
-		UpdateStatusComponent
+		UpdateStatusComponent,
+		NewInvalidationJobDialogComponent
 	],
 	entryComponents: [
 		SSHCellRendererComponent
@@ -137,6 +144,9 @@ Chart.plugins.register({
 		MatSnackBarModule,
 		MatStepperModule,
 		MatToolbarModule,
+		MatDialogModule,
+		MatDatepickerModule,
+		MatNativeDateModule,
 	],
 	providers: [
 		{multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor},

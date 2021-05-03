@@ -20,7 +20,7 @@ import { Observable, of, Subscription } from "rxjs";
  * them.
  */
 @Directive({
-	selector: "input[customvalidity]"
+	selector: "input[customvalidity][valid]"
 })
 export class CustomvalidityDirective implements AfterViewInit, OnDestroy {
 	/**
@@ -28,7 +28,7 @@ export class CustomvalidityDirective implements AfterViewInit, OnDestroy {
 	 * the input changes. An empty string signifies "valid", whereas any other
 	 * string should be a description of why the input is invalid.
 	 */
-	@Input() public validity: Observable<string> = of("");
+	@Input() public valid: Observable<string> = of("");
 
 	/** A subscription for the 'validity' input. */
 	private subscription: Subscription | null = null;
@@ -45,7 +45,7 @@ export class CustomvalidityDirective implements AfterViewInit, OnDestroy {
 			return;
 		}
 
-		this.subscription = this.validity.subscribe(
+		this.subscription = this.valid.subscribe(
 			s => {
 				if (s) {
 					this.element.nativeElement.setCustomValidity(s);

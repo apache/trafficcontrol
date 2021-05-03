@@ -12,14 +12,13 @@
 * limitations under the License.
 */
 import { Component, OnInit } from "@angular/core";
-import { FormControl } from "@angular/forms";
+import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
-import { Subject } from "rxjs";
-
-import { DeliveryService, InvalidationJob } from "../../models";
+import { defaultDeliveryService, DeliveryService, InvalidationJob } from "../../models";
 import { DeliveryServiceService, InvalidationJobService } from "../../services/api";
+import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 
 /**
  * InvalidationJobsComponent is the controller for the page that displays the
@@ -41,25 +40,8 @@ export class InvalidationJobsComponent implements OnInit {
 	/** The current date/time when the page loads */
 	public now: Date = new Date();
 
-	/** Whether or not to show the dialog for creating a new job. */
-	public showDialog: Subject<boolean>;
-
 	/** The ID of the Delivery Service to which the displayed Jobs belong. */
 	private dsId = -1;
-
-	/** Control for users to enter new content invalidation jobs. */
-	public regexp = new FormControl("/");
-	/** Control for users to enter a new job's TTL. */
-	public ttl = new FormControl(178);
-	/** Control for users to enter the starting date for a new job. */
-	public startDate = new FormControl("");
-	/** Control for users to enter the starting time for a new job. */
-	public startTime = new FormControl("");
-	/**
-	 * Sets a customvalidity message when the user-entered regular expression is
-	 * not valid.
-	 */
-	public regexpIsValid: Subject<string>;
 
 	/** The icon for the "Create a new Job" FAB. */
 	public readonly addIcon = faPlus;
@@ -70,12 +52,11 @@ export class InvalidationJobsComponent implements OnInit {
 	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly jobAPI: InvalidationJobService,
-		private readonly dsAPI: DeliveryServiceService
+		private readonly dsAPI: DeliveryServiceService,
+		private readonly dialog: MatDialog
 	) {
-		this.deliveryservice = {active: true} as DeliveryService;
+		this.deliveryservice = {...defaultDeliveryService};
 		this.jobs = new Array<InvalidationJob>();
-		this.showDialog = new Subject<boolean>();
-		this.regexpIsValid = new Subject<string>();
 	}
 
 	/**
@@ -135,66 +116,11 @@ export class InvalidationJobsComponent implements OnInit {
 	 *
 	 * @param e The DOM event that triggered the creation.
 	 */
-	public newJob(e?: Event): void {
-		if (e) {
-			e.preventDefault();
-			e.stopPropagation();
-		}
-
-		const now = new Date();
-		now.setUTCMilliseconds(0);
-
-		const year = String(now.getFullYear()).padStart(4, "0");
-		const month = String(now.getMonth()+1).padStart(2, "0");
-		const day = String(now.getDate()).padStart(2, "0");
-		this.startDate.setValue(`${year}-${month}-${day}`);
-
-		const hours = String(now.getHours()).padStart(2, "0");
-		const minutes = String(now.getMinutes()).padStart(2, "0");
-		this.startTime.setValue(`${hours}:${minutes}`);
-
-		this.showDialog.next(true);
-	}
-
-	/**
-	 * Closes the "new content invalidation job" dialog, canceling the creation.
-	 *
-	 * @param e The DOM event that triggered closing - default behavior is prevented and its propagation is stopped.
-	 */
-	public closeDialog(e: Event): void {
-		e.preventDefault();
-		e.stopPropagation();
-		this.showDialog.next(false);
-	}
-
-	/**
-	 * Closes the "new content invalidation job" dialog, creating the new job.
-	 *
-	 * @param e The DOM event that triggered submission - default behavior is prevented and its propagation is stopped.
-	 */
-	public submitDialog(e: Event): void {
-		e.preventDefault();
-		e.stopPropagation();
-
-		let re: RegExp;
-		try {
-			re = new RegExp(this.regexp.value);
-		} catch (err) {
-			this.regexpIsValid.next(`Must be a valid regular expression! (${err})`);
-			return;
-		}
-
-		const job = {
-			dsId: this.deliveryservice.id,
-			parameters: `TTL:${this.ttl.value}`,
-			regex: re.toString().replace(/^\/|\/$/g, "").replace("\\/", "/"),
-			startTime: this.startDate.value.concat(" ", `${this.startTime.value}:00`),
-			ttl: this.ttl.value
-		};
-
-		this.jobAPI.createInvalidationJob(job).then(
-			r => {
-				if (r) {
+	public newJob(): void {
+		const dialogRef = this.dialog.open(NewInvalidationJobDialogComponent, {data: this.dsId});
+		dialogRef.afterClosed().subscribe(
+			(created) => {
+				if (created) {
 					this.jobAPI.getInvalidationJobs({dsID: this.dsId}).then(
 						resp => {
 							this.jobs = new Array<InvalidationJob>();
@@ -206,15 +132,8 @@ export class InvalidationJobsComponent implements OnInit {
 							}
 						}
 					);
-					this.showDialog.next(false);
-				} else {
-					console.warn("failure");
 				}
-			},
-			err => {
-				console.error("error: ", err);
 			}
 		);
 	}
-
 }

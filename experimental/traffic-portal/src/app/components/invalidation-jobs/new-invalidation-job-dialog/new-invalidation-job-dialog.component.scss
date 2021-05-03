@@ -1,0 +1,13 @@
+div {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-column-gap: 3em;
+	min-width: 40em;
+	max-width: 95vw;
+	min-height: 15em;
+}
+
+footer {
+	justify-content: space-around;
+	align-content: space-between;
+}
