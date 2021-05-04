@@ -131,6 +131,7 @@ func CreateTestParameters(t *testing.T) {
 }
 
 func CreateMultipleTestParameters(t *testing.T) {
+	//To avoid duplicate issue, deleting and creating new parameters
 	DeleteTestParameters(t)
 
 	pls := []tc.Parameter{}
@@ -178,8 +179,7 @@ func UpdateTestParameters(t *testing.T) {
 	if respParameter.Value != expectedParameterValue {
 		t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
 	}
-		//update back to old value for safe deletion in pre-requisite
-
+	//update back to old value for safe deletion in pre-requisite
 	alert, _, err = TOSession.UpdateParameter(remoteParameter.ID, old, nil)
 	if err != nil {
 		t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
@@ -196,6 +196,7 @@ func UpdateParametersInvalidValue(t *testing.T){
 		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 	}
 	remoteParameter := resp[0]
+	//Parameters can be updated with empty value, so no error while updating
 	remoteParameter.Value = ""
 
 	var alert tc.Alerts
@@ -341,9 +342,12 @@ func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
 }
 
 func DeleteTestParametersByInvalidId(t *testing.T) {
-	delResp, _, err := TOSession.DeleteParameter(10000)
+	delResp, reqInf, err := TOSession.DeleteParameter(10000)
 	if err == nil {
 		t.Errorf("cannot DELETE Parameters by Invalid ID: %v - %v", err, delResp)
+	}
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected 404 status code, got %v", reqInf.StatusCode)
 	}
 }
 
