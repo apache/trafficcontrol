@@ -101,7 +101,7 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating CDN DNSSEC keys: getting DB from request context for changelog: "+err.Error()))
 		return
 	}
-	logCtx, logCancel := context.WithTimeout(r.Context(), time.Duration(30)*time.Second)
+	logCtx, logCancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer logCancel()
 	logTx, err := db.BeginTxx(logCtx, nil)
 	if err != nil {

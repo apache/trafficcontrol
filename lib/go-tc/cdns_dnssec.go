@@ -18,10 +18,12 @@ import (
 	"database/sql"
 	"errors"
 	"strconv"
-	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
+
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 const (
@@ -142,22 +144,12 @@ type CDNDNSSECGenerateReq struct {
 }
 
 func (r CDNDNSSECGenerateReq) Validate(tx *sql.Tx) error {
-	errs := []string{}
-	if r.Key == nil {
-		errs = append(errs, "key (cdn name) must be set")
+	validateErrs := validation.Errors{
+		"key (CDN name)":    validation.Validate(r.Key, validation.NotNil),
+		"ttl":               validation.Validate(r.TTL, validation.NotNil),
+		"kskExpirationDays": validation.Validate(r.KSKExpirationDays, validation.NotNil),
+		"zskExpirationDays": validation.Validate(r.ZSKExpirationDays, validation.NotNil),
+		// effective date is optional
 	}
-	if r.TTL == nil {
-		errs = append(errs, "ttl must be set")
-	}
-	if r.KSKExpirationDays == nil {
-		errs = append(errs, "kskExpirationDays must be set")
-	}
-	if r.ZSKExpirationDays == nil {
-		errs = append(errs, "zskExpirationDays must be set")
-	}
-	// effective date is optional
-	if len(errs) > 0 {
-		return errors.New("missing fields: " + strings.Join(errs, "; "))
-	}
-	return nil
+	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
 }
