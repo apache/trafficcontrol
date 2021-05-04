@@ -101,6 +101,9 @@ func (p *Postgres) commitTransaction(tx *sqlx.Tx, ctx context.Context, cancelFun
 	cancelFunc()
 }
 
+// GetDeliveryServiceSSLKeys retrieves the SSL keys of the given version for
+// the delivery service identified by the given xmlID. If version is empty,
+// the implementation should return the latest version.
 func (p *Postgres) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *sql.Tx, ctx context.Context) (tc.DeliveryServiceSSLKeysV15, bool, error) {
 	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
 	if err != nil {
@@ -130,6 +133,7 @@ func (p *Postgres) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *s
 	return sslKey, true, nil
 }
 
+// PutDeliveryServiceSSLKeys stores the given SSL keys for a delivery service.
 func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, ctx context.Context) error {
 	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
 	if err != nil {
@@ -160,6 +164,8 @@ func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *
 	return nil
 }
 
+// DeleteDeliveryServiceSSLKeys removes the SSL keys of the given version (or latest
+// if version is empty) for the delivery service identified by the given xmlID.
 func (p *Postgres) DeleteDeliveryServiceSSLKeys(xmlID string, version string, tx *sql.Tx, ctx context.Context) error {
 	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
 	if err != nil {
@@ -180,6 +186,11 @@ func (p *Postgres) DeleteDeliveryServiceSSLKeys(xmlID string, version string, tx
 	return nil
 }
 
+// DeleteOldDeliveryServiceSSLKeys takes a set of existingXMLIDs as input and will remove
+// all SSL keys for delivery services in the CDN identified by the given cdnName that
+// do not contain an xmlID in the given set of existingXMLIDs. This method is called
+// during a snapshot operation in order to delete SSL keys for delivery services that
+// no longer exist.
 func (p *Postgres) DeleteOldDeliveryServiceSSLKeys(existingXMLIDs map[string]struct{}, cdnName string, tx *sql.Tx, ctx context.Context) error {
 	var keys []string
 	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
@@ -199,6 +210,8 @@ func (p *Postgres) DeleteOldDeliveryServiceSSLKeys(existingXMLIDs map[string]str
 	return nil
 }
 
+// GetCDNSSLKeys retrieves all the SSL keys for delivery services in the CDN identified
+// by the given cdnName.
 func (p *Postgres) GetCDNSSLKeys(cdnName string, tx *sql.Tx, ctx context.Context) ([]tc.CDNSSLKey, error) {
 	var keys []tc.CDNSSLKey
 	var key tc.CDNSSLKey
