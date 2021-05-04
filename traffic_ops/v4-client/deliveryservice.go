@@ -85,6 +85,12 @@ const (
 	// (namely the XMLID of the Delivery Service of interest).
 	APIDeliveryServicesURLSigKeys = APIDeliveryServices + "/xmlId/%s/urlkeys"
 
+	// APIDeliveryServicesURLSigKeysGenerate is the API path on which Traffic Ops provides
+	// functionality to generate new URL-signing keys used by a Delivery Service identified
+	// by its XMLID. It is intended to be used with fmt.Sprintf to insert its required path parameter
+	// (namely the XMLID of the Delivery Service of interest).
+	APIDeliveryServicesURLSigKeysGenerate = APIDeliveryServices + "/xmlId/%s/urlkeys/generate"
+
 	// APIDeliveryServicesRegexes is the API path on which Traffic Ops serves Delivery Service
 	// 'regex' (Regular Expression) information.
 	APIDeliveryServicesRegexes = "/deliveryservices_regexes"
@@ -327,6 +333,22 @@ func (to *Session) GetDeliveryServiceURLSigKeys(dsName string, header http.Heade
 		return tc.URLSigKeys{}, reqInf, err
 	}
 	return data.Response, reqInf, nil
+}
+
+// CreateDeliveryServiceURLSigKeys creates new URL-signing keys used by the Delivery Service
+// identified by the XMLID 'dsName'
+func (to *Session) CreateDeliveryServiceURLSigKeys(dsName string, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+	var alerts tc.Alerts
+	reqInf, err := to.post(fmt.Sprintf(APIDeliveryServicesURLSigKeysGenerate, dsName), nil, header, &alerts)
+	return alerts, reqInf, err
+}
+
+// DeleteDeliveryServiceURLSigKeys deletes the URL-signing keys used by the Delivery Service
+// identified by the XMLID 'dsName'
+func (to *Session) DeleteDeliveryServiceURLSigKeys(dsName string, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+	var alerts tc.Alerts
+	reqInf, err := to.del(fmt.Sprintf(APIDeliveryServicesURLSigKeys, dsName), header, &alerts)
+	return alerts, reqInf, err
 }
 
 // GetDeliveryServiceURISigningKeys returns the URI-signing keys used by the Delivery Service
