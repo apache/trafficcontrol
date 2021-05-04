@@ -95,7 +95,7 @@ Response Structure
 
 ``DELETE``
 ==========
-.. seealso:: :ref:`to-api-deliveryservices-id-urlkeys`
+.. seealso:: :ref:`to-api-deliveryservices-xmlid-xmlid-urlkeys`
 
 Deletes URL signing keys for a :term:`Delivery Service`.
 
