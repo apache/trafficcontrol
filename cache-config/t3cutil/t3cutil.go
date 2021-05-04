@@ -85,3 +85,45 @@ func UnencodeFilter(body []string) []string {
 
 	return newlines
 }
+
+// Do executes the given command and returns the stdout, stderr, and exit code.
+
+// This is a convenience wrapper around os/exec.
+// Since t3c only needs to make simple calls and get the stdout, stderr, and code, this provides a simpler and terser interface.
+//
+// If you need anything more complex, or don't find this simpler, you should probably use os/exec directly.
+//
+// Each arg must be passed as its own string. Unfortunately, Go doesn't have a way to pass multiple args as a single string, and splitting on spaces would require complex quote parsing.
+//
+// Note each arg must be passed without quotes. Go calls the app with args as if they were quoted. if you add quotes, they'll be passed to the command literally, as if you called 'mycommand "\"escaped-quotes\""`.
+//
+// Note if Go fails to run the command, the error from Go will be returned as the stderr and the code -1,
+// which will differ from what would have been returned by a command line.
+//
+func Do(cmdStr string, args ...string) ([]byte, []byte, int) {
+	// cmdArgs := strings.Split(fullCmdStr, " ")
+	// cmdStr := cmdArgs[0]
+	// args := ([]string)(nil)
+	// if len(cmdArgs) > 1 {
+	// 	args = cmdArgs[1:]
+	// }
+	cmd := exec.Command(cmdStr, args...)
+
+	var outbuf bytes.Buffer
+	var errbuf bytes.Buffer
+
+	cmd.Stdout = &outbuf
+	cmd.Stderr = &errbuf
+
+	code := 0
+	err := cmd.Run()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); !ok {
+			return nil, []byte(err.Error()), -1
+		} else {
+			code = exitErr.ExitCode()
+		}
+	}
+
+	return outbuf.Bytes(), errbuf.Bytes(), code
+}
