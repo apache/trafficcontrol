@@ -342,7 +342,7 @@ func DeleteURLKeysByID(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting URL Sig keys from Traffic Vault: "+err.Error()))
 		return
 	}
-	api.WriteRespAlert(w, r, tc.SuccessLevel, "successfully deleted URL Sig keys from Traffic Vault")
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully deleted URL Sig keys from Traffic Vault")
 }
 
 // DeleteURLKeysByName deletes the URL sig keys for the delivery service identified by the xmlId in the path parameter.
@@ -383,5 +383,5 @@ func DeleteURLKeysByName(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting URL Sig keys from Traffic Vault: "+err.Error()))
 		return
 	}
-	api.WriteRespAlert(w, r, tc.SuccessLevel, "successfully deleted URL Sig keys from Traffic Vault")
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully deleted URL Sig keys from Traffic Vault")
 }
