@@ -310,7 +310,8 @@ func DeleteURLKeysByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ds, ok, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, inf.IntParams["id"])
+	dsId := inf.IntParams["id"]
+	ds, ok, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsId)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from ID: "+err.Error()))
 		return
@@ -342,6 +343,7 @@ func DeleteURLKeysByID(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting URL Sig keys from Traffic Vault: "+err.Error()))
 		return
 	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(ds)+", ID: "+strconv.Itoa(dsId)+", ACTION: Deleted URL sig keys", inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully deleted URL Sig keys from Traffic Vault")
 }
 
@@ -378,10 +380,21 @@ func DeleteURLKeysByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dsId, ok, err := getDSIDFromName(inf.Tx.Tx, string(ds))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteURLKeysByName: getting DS ID from name "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+string(ds)), nil)
+		return
+	}
+
 	err = inf.Vault.DeleteURLSigKeys(string(ds), inf.Tx.Tx, r.Context())
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting URL Sig keys from Traffic Vault: "+err.Error()))
 		return
 	}
+
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(ds)+", ID: "+strconv.Itoa(dsId)+", ACTION: Deleted URL sig keys", inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully deleted URL Sig keys from Traffic Vault")
 }
