@@ -40,6 +40,4 @@ Traffic Vault is a data store used for storing the following types of sensitive 
 
 * URL Signing Keys
 
-As the name suggests, Traffic Vault is meant to be a "vault" of private keys that only certain users are allowed to access. In order to create, add, and retrieve keys a user must have administrative privileges. Keys can be created via the :ref:`tp-overview` UI, but they can only be retrieved via the :ref:`to-api`. Currently, the only supported data store used by Traffic Vault is `Riak <http://basho.com/products/riak-kv/>`_. :ref:`to-overview` accesses Riak via HTTPS on port 8088. :ref:`to-overview` uses Riak's REST API with username/password authentication.
-
-.. seealso:: Information on the Riak API can be found in `their documentation <http://docs.riak.com/riak/latest/dev/references/http/>`_.
+As the name suggests, Traffic Vault is meant to be a "vault" of private keys that only certain users are allowed to access. In order to create, add, and retrieve keys a user must have administrative privileges. Keys can be created via the :ref:`tp-overview` UI, but they can only be retrieved via the :ref:`to-api`. Currently, the supported data stores used by Traffic Vault are `PostgreSQL <https://www.postgresql.org/>`_ and  `Riak (deprecated) <https://basho.com/products/riak-kv/>`_. Support for Riak may be removed in a future release.

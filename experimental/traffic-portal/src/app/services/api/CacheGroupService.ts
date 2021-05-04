@@ -14,9 +14,6 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
-
 import { CacheGroup } from "src/app/models";
 import { APIService } from "./apiservice";
 
@@ -26,17 +23,17 @@ import { APIService } from "./apiservice";
  */
 @Injectable({providedIn: "root"})
 export class CacheGroupService extends APIService {
-	public getCacheGroups(idOrName: number | string): Observable<CacheGroup>;
-	public getCacheGroups(): Observable<Array<CacheGroup>>;
+	public async getCacheGroups(idOrName: number | string): Promise<CacheGroup>;
+	public async getCacheGroups(): Promise<Array<CacheGroup>>;
 	/**
 	 * Gets one or all CDNs from Traffic Ops
 	 *
 	 * @param idOrName Optionally either the name or integral, unique identifier of a single Cache Group to be returned.
-	 * @returns An Observable that will emit either an Array of CacheGroup objects, or a single CacheGroup, depending on whether
+	 * @returns Either an Array of CacheGroup objects, or a single CacheGroup, depending on whether
 	 * `idOrName` was 	passed.
 	 * @throws {Error} In the event that `idOrName` is passed but does not match any CacheGroup.
 	 */
-	public getCacheGroups(idOrName?: number | string): Observable<Array<CacheGroup> | CacheGroup> {
+	public async getCacheGroups(idOrName?: number | string): Promise<Array<CacheGroup> | CacheGroup> {
 		const path = "cachegroups";
 		if (idOrName !== undefined) {
 			let params;
@@ -47,7 +44,7 @@ export class CacheGroupService extends APIService {
 				case "number":
 					params = {id: String(idOrName)};
 			}
-			return this.get<[CacheGroup]>(path, undefined, params).pipe(map(
+			return this.get<[CacheGroup]>(path, undefined, params).toPromise().then(
 				r => {
 					const cg = r[0];
 					if (cg.id !== idOrName) {
@@ -57,16 +54,40 @@ export class CacheGroupService extends APIService {
 					cg.lastUpdated = cg.lastUpdated ? new Date((cg.lastUpdated as unknown as string).replace("+00", "Z")) : undefined;
 					return cg;
 				}
-			));
+			).catch(
+				e => {
+					console.error("Failed to get Cache Group with identifier", idOrName, ":", e);
+					return {
+						fallbackToClosest: false,
+						fallbacks: [],
+						latitude: 0,
+						localizationMethods: [],
+						longitude: 0,
+						name: "",
+						parentCacheGroupID: -1,
+						parentCacheGroupName: "",
+						secondaryParentCacheGroupID: -1,
+						secondaryParentCacheGroupName: "",
+						shortName: "",
+						typeId: -1,
+						typeName: ""
+					};
+				}
+			);
 		}
-		return this.get<Array<CacheGroup>>(path).pipe(map(r => r.map(
+		return this.get<Array<CacheGroup>>(path).toPromise().then(r => r.map(
 			cg => {
 				if (cg.lastUpdated) {
 					cg.lastUpdated = new Date((cg.lastUpdated as unknown as string).replace("+00", "Z"));
 				}
 				return cg;
 			}
-		)));
+		)).catch(
+			e => {
+				console.error("Failed to get Cache Groups:", e);
+				return [];
+			}
+		);
 	}
 
 	/**

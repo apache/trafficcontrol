@@ -375,3 +375,13 @@ to-auto-snapqueue() {
 		sleep $AUTO_SNAPQUEUE_POLL_INTERVAL
 	done
 }
+
+check-skips() {
+	if [[ "$SKIP_TRAFFIC_OPS_DATA" == true ]]; then
+		touch /shared/SKIP_TRAFFIC_OPS_DATA
+	fi
+	if [[ "$SKIP_DIG_IP" == true ]]; then
+		touch /shared/SKIP_DIG_IP
+	fi
+	sync
+}

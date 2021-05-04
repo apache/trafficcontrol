@@ -11,10 +11,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { isPlatformBrowser } from "@angular/common";
-import { Component, Inject, OnInit, PLATFORM_ID } from "@angular/core";
+import { MatSnackBar } from "@angular/material/snack-bar";
+import { Component, OnDestroy } from "@angular/core";
+import { Subscription } from "rxjs";
 
-import { Alert } from "../../models";
 import { AlertService } from "../../services";
 
 /**
@@ -25,32 +25,24 @@ import { AlertService } from "../../services";
 	styleUrls: ["./alert.component.scss"],
 	templateUrl: "./alert.component.html"
 })
-export class AlertComponent implements OnInit {
+export class AlertComponent implements OnDestroy {
 
-	/** The raw HTML element that serves as the base of the component. */
-	public dialogElement: HTMLDialogElement | null = null;
+	/** Internal subscription to the AlertService's alerts observable. */
+	private readonly subscription: Subscription;
 
-	/** The Alert being displayed. */
-	public alert: Alert | null = null;
+	/** The duration for which Alerts will linger until dismissed. `undefined` means forever. */
+	public duration: number | undefined = 10000;
 
 	/**
 	 * Constructor.
 	 */
-	constructor(private readonly alerts: AlertService, @Inject(PLATFORM_ID) private readonly platform: object) { }
-
-	/**
-	 * Runs initialization code, setting up the current alert from the alerts
-	 * service.
-	 */
-	public ngOnInit(): void {
-		if (!isPlatformBrowser(this.platform)) {
-			return;
-		}
-		this.dialogElement = document.getElementById("alert") as HTMLDialogElement;
-		this.alerts.alerts.subscribe(
+	constructor(
+		private readonly alerts: AlertService,
+		private readonly snackBar: MatSnackBar
+	) {
+		this.subscription = this.alerts.alerts.subscribe(
 			a => {
 				if (a) {
-					this.alert = a;
 					if (a.text === "") {
 						a.text = "Unknown";
 					}
@@ -71,22 +63,26 @@ export class AlertComponent implements OnInit {
 							console.log("unknown alert: ", a.text);
 							break;
 					}
-					// This shouldn't be possibly false, but Typescript disagrees.
-					if (this.dialogElement) {
-						this.dialogElement.showModal();
-					}
+					this.snackBar.open(a.text, "dismiss", {duration: this.duration, verticalPosition: "top"});
 				}
+			},
+			e => {
+				console.error("Error in alerts subscription:", e);
 			}
 		);
 	}
 
 	/**
-	 * Closes the dialog.
+	 * Clears away the currently visible Alert.
 	 */
-	public close(): void {
-		if (this.dialogElement) {
-			this.dialogElement.close();
-		}
-		this.alert = null;
+	public clear(): void {
+		this.snackBar.dismiss();
+	}
+
+	/**
+	 * Cleans up persistent resources in the component.
+	 */
+	public ngOnDestroy(): void {
+		this.subscription.unsubscribe();
 	}
 }

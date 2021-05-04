@@ -140,6 +140,10 @@ func IsGreaterThanZero(value interface{}) error {
 
 func IsValidPortNumber(value interface{}) error {
 	switch v := value.(type) {
+	case int:
+		if v > 0 && v <= 65535 {
+			return nil
+		}
 	case *int:
 		if v == nil || *v > 0 && *v <= 65535 {
 			return nil

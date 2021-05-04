@@ -15,8 +15,8 @@ limitations under the License.
 <main>
 	<div><input type="search" role="search" aria-label="Fuzzy Search Delivery Service(s)" autofocus inputmode="search" name="fuzzControl" [formControl]="fuzzControl" (input)="updateURL($event)" accesskey="/" placeholder="Fuzzy Search"/></div>
 	<article id="deliveryservices" [hidden]="loading">
-		<ds-card *ngFor="let ds of filteredDSes; trackBy: tracker" [deliveryService]="ds" [now]="now" [today]="today"></ds-card>
+		<ds-card *ngFor="let ds of filteredDSes; trackBy: tracker; let first=first; let last=last;" [deliveryService]="ds" [now]="now" [today]="today" [first]=first [last]=last></ds-card>
 	</article>
 	<div id="loading" *ngIf="loading"><tp-loading></tp-loading></div>
 </main>
-<a id="new" *ngIf=canCreateDeliveryServices title="Create a new Delivery Service" routerLink="/new.Delivery.Service">+</a>
+<a mat-fab id="new" *ngIf="canCreateDeliveryServices" title="Create a new Delivery Service" routerLink="/new.Delivery.Service">+</a>

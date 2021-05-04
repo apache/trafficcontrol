@@ -20,6 +20,7 @@ package cdn
  */
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"net/http"
@@ -81,7 +82,7 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := generateStoreDNSSECKeys(inf.Tx.Tx, cdnName, cdnDomain, uint64(*req.TTL), uint64(*req.KSKExpirationDays), uint64(*req.ZSKExpirationDays), int64(*req.EffectiveDateUnix), inf.Vault); err != nil {
+	if err := generateStoreDNSSECKeys(inf.Tx.Tx, cdnName, cdnDomain, uint64(*req.TTL), uint64(*req.KSKExpirationDays), uint64(*req.ZSKExpirationDays), int64(*req.EffectiveDateUnix), inf.Vault, r.Context()); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and storing DNSSEC CDN keys: "+err.Error()))
 		return
 	}
@@ -113,7 +114,7 @@ func GetDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 
 	cdnName := inf.Params["name"]
 
-	tvKeys, keysExist, err := inf.Vault.GetDNSSECKeys(cdnName, inf.Tx.Tx)
+	tvKeys, keysExist, err := inf.Vault.GetDNSSECKeys(cdnName, inf.Tx.Tx, r.Context())
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DNSSEC CDN keys: "+err.Error()))
 		return
@@ -148,7 +149,7 @@ func GetDNSSECKeysV11(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cdnName := inf.Params["name"]
-	riakKeys, keysExist, err := inf.Vault.GetDNSSECKeys(cdnName, inf.Tx.Tx)
+	riakKeys, keysExist, err := inf.Vault.GetDNSSECKeys(cdnName, inf.Tx.Tx, r.Context())
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DNSSEC CDN keys: "+err.Error()))
 		return
@@ -178,13 +179,14 @@ func generateStoreDNSSECKeys(
 	zExpDays uint64,
 	effectiveDateUnix int64,
 	tv trafficvault.TrafficVault,
+	ctx context.Context,
 ) error {
 
 	zExp := time.Duration(zExpDays) * time.Hour * 24
 	kExp := time.Duration(kExpDays) * time.Hour * 24
 	ttl := time.Duration(ttlSeconds) * time.Second
 
-	oldKeys, oldKeysExist, err := tv.GetDNSSECKeys(cdnName, tx)
+	oldKeys, oldKeysExist, err := tv.GetDNSSECKeys(cdnName, tx, ctx)
 	if err != nil {
 		return errors.New("getting old dnssec keys: " + err.Error())
 	}
@@ -264,7 +266,7 @@ func generateStoreDNSSECKeys(
 		}
 		newKeys[ds.Name] = dsKeys
 	}
-	if err := tv.PutDNSSECKeys(cdnName, newKeys, tx); err != nil {
+	if err := tv.PutDNSSECKeys(cdnName, newKeys, tx, ctx); err != nil {
 		return errors.New("putting CDN DNSSEC keys in Traffic Vault: " + err.Error())
 	}
 	return nil
@@ -348,7 +350,7 @@ func deleteDNSSECKeys(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		writeError(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil, deprecated)
 		return
 	}
-	if err := inf.Vault.DeleteDNSSECKeys(key, inf.Tx.Tx); err != nil {
+	if err := inf.Vault.DeleteDNSSECKeys(key, inf.Tx.Tx, r.Context()); err != nil {
 		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting CDN DNSSEC keys: "+err.Error()), deprecated)
 		return
 	}

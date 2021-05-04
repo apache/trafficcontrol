@@ -221,12 +221,19 @@ type URISignerKeyset struct {
 	Keys       []jwk.EssentialHeader `json:"keys"`
 }
 
-// Deprecated: use TrafficVaultPingResponse instead.
-type RiakPingResp TrafficVaultPingResponse
+// Deprecated: use TrafficVaultPing instead.
+type RiakPingResp TrafficVaultPing
 
-type TrafficVaultPingResponse struct {
+// TrafficVaultPing represents the status of a given Traffic Vault server.
+type TrafficVaultPing struct {
 	Status string `json:"status"`
 	Server string `json:"server"`
+}
+
+// TrafficVaultPingResponse represents the JSON HTTP response returned by the /vault/ping route.
+type TrafficVaultPingResponse struct {
+	Response TrafficVaultPing `json:"response"`
+	Alerts
 }
 
 // DNSSECKeys is the DNSSEC keys as stored in Riak, plus the DS record text.

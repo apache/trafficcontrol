@@ -40,19 +40,22 @@ service_ips="${gateway_ip}"
 service_ip6s="${gateway_ip6}"
 INTERFACE=$(ip link | awk '/\<UP\>/ && !/LOOPBACK/ {sub(/@.*/, "", $2); print $2}')
 NETMASK=$(route | awk -v INTERFACE=$INTERFACE '$8 ~ INTERFACE && $1 !~ "default"  {print $3}')
+DIG_IP_RETRY=10
 
 for service_name in $service_names; do
 	service_fqdn="${service_name}.${service_domain}"
 
-	for (( i=1; i<=DIG_IP_RETRY; i++ )); do
-		service_ip="$(dig +short ${service_fqdn} A)"
-		if [ -z "${service_ip}" ]; then
-			printf "service \"${service_fqdn}\" not found in dns, count=$i, waiting ...\n"
-			sleep 3
-		else
-			break
-		fi
-	done
+	if [[ ! -e /shared/SKIP_DIG_IP ]]; then
+		for (( i=1; i<=DIG_IP_RETRY; i++ )); do
+			service_ip="$(dig +short ${service_fqdn} A)"
+			if [ -z "${service_ip}" ]; then
+				printf "service \"${service_fqdn}\" not found in dns, count=$i, waiting ...\n"
+				sleep 3
+			else
+				break
+			fi
+		done
+	fi
 
   #
 	# TODO add a way to determine if a service wasn't built in the Compose,

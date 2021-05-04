@@ -51,17 +51,17 @@ export class SSHCellRendererComponent implements ICellRendererAngularComp {
 	 * Constructor.
 	 */
 	constructor(private readonly auth: AuthenticationService, private readonly sanitizer: DomSanitizer) {
-		this.auth.updateCurrentUser().subscribe(
+		this.auth.updateCurrentUser().then(
 			success => {
 				if (success) {
-					const cu = this.auth.currentUserValue;
+					const cu = this.auth.currentUser;
 					if (cu) {
 						this.username = cu.username;
 					}
 				}
 			}
 		);
-		const u = this.auth.currentUserValue;
+		const u = this.auth.currentUser;
 		if (u) {
 			this.username = u.username;
 		}
