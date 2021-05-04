@@ -13,6 +13,7 @@
 */
 import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
+import { RouterTestingModule } from "@angular/router/testing";
 
 import { SSHCellRendererComponent } from "./ssh-cell-renderer.component";
 
@@ -23,7 +24,7 @@ describe("SshCellRendererComponent", () => {
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
 			declarations: [ SSHCellRendererComponent ],
-			imports: [HttpClientModule]
+			imports: [HttpClientModule, RouterTestingModule]
 		})
 			.compileComponents();
 	}));

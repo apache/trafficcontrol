@@ -15,7 +15,6 @@ import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 
 import { BehaviorSubject, Observable } from "rxjs";
-import { first } from "rxjs/operators";
 
 import { Role, User } from "../../models";
 import { AuthenticationService } from "../../services";
@@ -50,6 +49,7 @@ export class UsersComponent implements OnInit {
 	/** Maps role IDs to role Names. */
 	public rolesMap: Observable<Map<number, string>>;
 
+
 	/**
 	 * Constructor.
 	 */
@@ -66,26 +66,26 @@ export class UsersComponent implements OnInit {
 	 */
 	public ngOnInit(): void {
 		// User may have navigated directly with a valid cookie - in which case current user is null
-		if (this.auth.currentUserValue === null) {
-			this.auth.updateCurrentUser().subscribe(
+		if (!this.auth.currentUser) {
+			this.auth.updateCurrentUser().then(
 				v => {
-					if (v && this.auth.currentUserValue) {
-						this.myId = this.auth.currentUserValue.id;
+					if (v && this.auth.currentUser) {
+						this.myId = this.auth.currentUser.id;
 					}
 				}
 			);
 		} else {
-			this.myId = this.auth.currentUserValue.id;
+			this.myId = this.auth.currentUser.id;
 		}
 
-		this.api.getUsers().pipe(first()).subscribe(
+		this.api.getUsers().then(
 			r => {
 				this.users = orderBy(r, "fullName");
 				this.loading = false;
 			}
 		);
 
-		this.api.getRoles().pipe(first()).subscribe(
+		this.api.getRoles().then(
 			(roles: Array<Role>) => {
 				const roleMap = new Map<number, string>();
 				for (const r of roles) {
@@ -118,4 +118,48 @@ export class UsersComponent implements OnInit {
 		return true;
 	}
 
+	/**
+	 * Checks if the user has any render-able address piece(s).
+	 *
+	 * @param user The user to check.
+	 * @returns 'true' if the user has at least one populated "location" field (city,
+	 * stateOrProvince etc.), 'false' otherwise.
+	 */
+	public userHasLocation(user: User): boolean {
+		return user.city !== null || user.stateOrProvince !== null || user.country !== null || user.postalCode !== null;
+	}
+
+	/**
+	 * Gets a string representing a user's address.
+	 *
+	 * @param user The user for whom to fetch a location string.
+	 * @returns The user's address, or 'null' if one cannot be
+	 * constructed because no relevant information exists.
+	 */
+	public userLocationString(user: User): string | null {
+		let ret = "";
+		if (user.city) {
+			ret += user.city;
+		}
+		if (user.stateOrProvince) {
+			if (ret.length !== 0) {
+				ret += ", ";
+			}
+			ret += user.stateOrProvince;
+		}
+		if (user.country) {
+			if (ret.length !== 0) {
+				ret += ", ";
+			}
+			ret += user.country;
+		}
+		if (user.postalCode) {
+			if (ret.length !== 0) {
+				ret += ", ";
+			}
+			ret += user.postalCode;
+		}
+
+		return ret.length === 0 ? null : ret;
+	}
 }

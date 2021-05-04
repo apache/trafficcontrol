@@ -15,6 +15,7 @@
 import { HttpClientModule } from "@angular/common/http";
 import { TestBed, waitForAsync } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
+import { MatSnackBarModule } from "@angular/material/snack-bar";
 
 import { AppComponent } from "./app.component";
 import { AlertComponent } from "./components/alert/alert.component";
@@ -28,7 +29,8 @@ describe("AppComponent", () => {
 			],
 			imports: [
 				HttpClientModule,
-				RouterTestingModule
+				RouterTestingModule,
+				MatSnackBarModule
 			],
 		}).compileComponents();
 	}));

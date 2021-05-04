@@ -19,12 +19,61 @@
 Traffic Vault Administration
 ****************************
 
-Currently, the only supported backend for Traffic Vault is Riak, but more backends may be supported in the future.
+Currently, the supported backends for Traffic Vault are PostgreSQL and Riak, but Riak support is deprecated and may be removed in a future release. More backends may be supported in the future.
+
+.. _traffic_vault_postgresql_backend:
+
+PostgreSQL
+==========
+
+In order to use the PostgreSQL backend for Traffic Vault, you will need to set the ``traffic_vault_backend`` option to ``"postgres"`` and include the necessary configuration in the ``traffic_vault_config`` section in :file:`cdn.conf`. The ``traffic_vault_config`` options for the PostgreSQL backend are as follows:
+
+:dbname:                    The name of the database to use
+:hostname:                  The hostname of the database server to connect to
+:password:                  The password to use when connecting to the database
+:port:                      The port number that the database listens for new connections on (NOTE: the PostgreSQL default is 5432)
+:user:                      The username to use when connecting to the database
+:conn_max_lifetime_seconds: Optional. The maximum amount of time (in seconds) a connection may be reused. If negative, connections are not closed due to a connection's age. If 0 or unset, the default of 60 is used.
+:max_connections:           Optional. The maximum number of open connections to the database. Default: 0 (unlimited)
+:max_idle_connections:      Optional. The maximum number of connections in the idle connection pool. If negative, no idle connections are retained. If 0 or unset, the default of 30 is used.
+:query_timeout_seconds:     Optional. The duration (in seconds) after which database queries will time out and be cancelled. Default: 30
+:ssl:                       Optional. Whether or not to use SSL to connect to the database. Default: false
+
+Example cdn.conf snippet:
+-------------------------
+
+.. code-block:: json
+
+	{
+		"traffic_ops_golang": {
+			"traffic_vault_backend": "postgres",
+			"traffic_vault_config": {
+				"dbname": "tv_development",
+				"hostname": "localhost",
+				"user": "traffic_vault",
+				"password": "twelve",
+				"port": 5432,
+				"ssl": false,
+				"conn_max_lifetime_seconds": 60,
+				"max_connections": 500,
+				"max_idle_connections": 30,
+				"query_timeout_seconds": 10
+			}
+		}
+	}
+
+Administration of the PostgreSQL database for Traffic Vault
+-----------------------------------------------------------
+
+Similar to administering the Traffic Ops database, the :ref:`admin <database-management>` tool should be used for administering the PostgreSQL Traffic Vault backend.
 
 .. _traffic_vault_riak_backend:
 
-Riak
-====
+Riak (deprecated)
+=================
+
+.. deprecated:: ATCv6
+	The Riak Traffic Vault backend is deprecated and support may be removed in a future release. It is highly recommended to use the PostgreSQL Traffic Vault backend instead.
 
 In order to use the Riak backend for Traffic Vault, you will need to set the ``traffic_vault_backend`` option to ``"riak"`` and include the necessary configuration in the ``traffic_vault_config`` section in :file:`cdn.conf`. The ``traffic_vault_config`` options for the Riak backend are as follows:
 

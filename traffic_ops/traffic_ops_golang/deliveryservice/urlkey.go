@@ -73,7 +73,7 @@ func GetURLKeysByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys, ok, err := inf.Vault.GetURLSigKeys(string(ds), inf.Tx.Tx)
+	keys, ok, err := inf.Vault.GetURLSigKeys(string(ds), inf.Tx.Tx, r.Context())
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting URL Sig keys from Traffic Vault: "+err.Error()))
 		return
@@ -117,7 +117,7 @@ func GetURLKeysByName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys, ok, err := inf.Vault.GetURLSigKeys(string(ds), inf.Tx.Tx)
+	keys, ok, err := inf.Vault.GetURLSigKeys(string(ds), inf.Tx.Tx, r.Context())
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting URL Sig keys from Traffic Vault: "+err.Error()))
 		return
@@ -190,7 +190,7 @@ func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys, ok, err := inf.Vault.GetURLSigKeys(string(copyDS), inf.Tx.Tx)
+	keys, ok, err := inf.Vault.GetURLSigKeys(string(copyDS), inf.Tx.Tx, r.Context())
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting URL Sig keys from Traffic Vault: "+err.Error()))
 		return
@@ -200,7 +200,7 @@ func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := inf.Vault.PutURLSigKeys(string(ds), keys, inf.Tx.Tx); err != nil {
+	if err := inf.Vault.PutURLSigKeys(string(ds), keys, inf.Tx.Tx, r.Context()); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+" copied from "+string(copyDS)+": "+err.Error()))
 		return
 	}
@@ -255,7 +255,7 @@ func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := inf.Vault.PutURLSigKeys(string(ds), keys, inf.Tx.Tx); err != nil {
+	if err := inf.Vault.PutURLSigKeys(string(ds), keys, inf.Tx.Tx, r.Context()); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+": "+err.Error()))
 		return
 	}

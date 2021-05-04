@@ -288,7 +288,7 @@ func MakeParentDotConfig(
 		}
 		if ds.OrgServerFQDN == nil || *ds.OrgServerFQDN == "" {
 			// this check needs to be after the HTTP|DNS check, because Steering DSes without origins are ok'
-			warnings = append(warnings, "ds  '"+*ds.XMLID+"' has no origin server! Skipping!")
+			warnings = append(warnings, "DS '"+*ds.XMLID+"' has no origin server! Skipping!")
 			continue
 		}
 
@@ -298,7 +298,7 @@ func MakeParentDotConfig(
 		warnings = append(warnings, dsParamsWarnings...)
 
 		if existingDS, ok := processedOriginsToDSNames[*ds.OrgServerFQDN]; ok {
-			warnings = append(warnings, "duplicate origin! services '"+*ds.XMLID+"' and '"+string(existingDS)+"' share origin '"+*ds.OrgServerFQDN+"': skipping '"+*ds.XMLID+"'!")
+			warnings = append(warnings, "duplicate origin! DS '"+*ds.XMLID+"' and '"+string(existingDS)+"' share origin '"+*ds.OrgServerFQDN+"': skipping '"+*ds.XMLID+"'!")
 			continue
 		}
 
@@ -338,7 +338,7 @@ func MakeParentDotConfig(
 			orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN)
 			warnings = append(warnings, orgWarns...)
 			if err != nil {
-				warnings = append(warnings, "malformed ds '"+*ds.XMLID+"' origin  URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
+				warnings = append(warnings, "DS '"+*ds.XMLID+"' has malformed origin URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
 				continue
 			}
 
@@ -359,7 +359,7 @@ func MakeParentDotConfig(
 
 				if len(parentInfos[OriginHost(orgURI.Hostname())]) == 0 {
 					// TODO error? emulates Perl
-					warnings = append(warnings, "delivery service "+*ds.XMLID+" has no parent servers")
+					warnings = append(warnings, "DS "+*ds.XMLID+" has no parent servers")
 				}
 
 				parents, secondaryParents, parentWarns := getMSOParentStrs(&ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVer, dsParams.Algorithm, dsParams.TryAllPrimariesBeforeSecondary)
@@ -384,7 +384,7 @@ func MakeParentDotConfig(
 			orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN)
 			warnings = append(warnings, orgWarns...)
 			if err != nil {
-				warnings = append(warnings, "malformed ds '"+*ds.XMLID+"' origin  URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
+				warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
 				continue
 			}
 
@@ -691,7 +691,7 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 		}
 		if v, ok := dsParams[ParentConfigParamMSOUnavailableServerRetryResponses]; ok {
 			if v != "" && !unavailableServerRetryResponsesValid(v) {
-				warnings = append(warnings, "malformed "+ParentConfigParamMSOUnavailableServerRetryResponses+" parameter '"+v+"', not using!")
+				warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed "+ParentConfigParamMSOUnavailableServerRetryResponses+" parameter '"+v+"', not using!")
 			} else if v != "" {
 				params.UnavailableServerRetryResponses = v
 			}
@@ -713,7 +713,7 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 	}
 	if v, ok := dsParams[ParentConfigParamUnavailableServerRetryResponses]; ok {
 		if v != "" && !unavailableServerRetryResponsesValid(v) {
-			warnings = append(warnings, "malformed "+ParentConfigParamUnavailableServerRetryResponses+" parameter '"+v+"', not using!")
+			warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed "+ParentConfigParamUnavailableServerRetryResponses+" parameter '"+v+"', not using!")
 		} else if v != "" {
 			params.UnavailableServerRetryResponses = v
 		}
@@ -760,7 +760,7 @@ func getTopologyParentConfigLine(
 	orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN)
 	warnings = append(warnings, orgWarns...)
 	if err != nil {
-		return "", warnings, errors.New("Malformed ds '" + *ds.XMLID + "' origin  URI: '" + *ds.OrgServerFQDN + "': skipping!" + err.Error())
+		return "", warnings, errors.New("DS '" + *ds.XMLID + "' has malformed origin URI: '" + *ds.OrgServerFQDN + "': skipping!" + err.Error())
 	}
 
 	topology := nameTopologies[TopologyName(*ds.Topology)]
@@ -843,7 +843,7 @@ func getSecondaryModeStr(tryAllPrimariesBeforeSecondary bool, atsMajorVer int, d
 		return "", warnings
 	}
 	if atsMajorVer < 8 {
-		warnings = append(warnings, "Delivery Service '"+string(ds)+"' had Parameter "+ParentConfigParamSecondaryMode+" but this cache is "+strconv.Itoa(atsMajorVer)+" and secondary_mode isn't supported in ATS until 8. Not using!")
+		warnings = append(warnings, "DS '"+string(ds)+"' had Parameter "+ParentConfigParamSecondaryMode+" but this cache is "+strconv.Itoa(atsMajorVer)+" and secondary_mode isn't supported in ATS until 8. Not using!")
 		return "", warnings
 	}
 	return ` secondary_mode=2`, warnings // See https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/files/parent.config.en.html

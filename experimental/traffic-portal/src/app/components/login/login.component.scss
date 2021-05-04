@@ -47,10 +47,12 @@ form {
 		margin-left: 5px;
 		text-align: left;
 	}
+
 	div {
-		margin: auto;
-		button {
-			cursor: pointer;
-		}
+		grid-column: span 2;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		justify-content: space-between;
+		grid-column-gap: 60%;
 	}
 }
