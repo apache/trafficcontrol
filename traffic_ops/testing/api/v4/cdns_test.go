@@ -17,12 +17,14 @@ package v4
 
 import (
 	"net/http"
+	"reflect"
 	"sort"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestCDNs(t *testing.T) {
@@ -44,6 +46,68 @@ func TestCDNs(t *testing.T) {
 		GetTestCDNs(t)
 		GetTestCDNsIMSAfterChange(t, header)
 	})
+}
+
+func TestCDNsDNSSEC(t *testing.T) {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, DeliveryServices}, func() {
+		if includeSystemTests {
+			GenerateDNSSECKeys(t)
+		}
+	})
+}
+
+func GenerateDNSSECKeys(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatalf("need at least one CDN to test updating CDNs")
+	}
+	firstCDN := testData.CDNs[0]
+	resp, _, err := TOSession.GetCDNByName(firstCDN.Name, nil)
+	if err != nil {
+		t.Fatalf("cannot GET CDN by name: '%s', %v", firstCDN.Name, err)
+	}
+	if len(resp) != 1 {
+		t.Fatalf("expected: 1 CDN, actual: %d", len(resp))
+	}
+
+	ttl := util.JSONIntStr(60)
+	req := tc.CDNDNSSECGenerateReq{
+		Key:               util.StrPtr(firstCDN.Name),
+		TTL:               &ttl,
+		KSKExpirationDays: &ttl,
+		ZSKExpirationDays: &ttl,
+	}
+	_, _, err = TOSession.GenerateCDNDNSSECKeys(req, nil)
+	if err != nil {
+		t.Fatalf("generating CDN DNSSEC keys - expected: nil error, actual: %s", err.Error())
+	}
+
+	res, _, err := TOSession.GetCDNDNSSECKeys(firstCDN.Name, nil)
+	if err != nil {
+		t.Fatalf("getting CDN DNSSEC keys - expected: nil error, actual: %s", err.Error())
+	}
+	if _, ok := res.Response[firstCDN.Name]; !ok {
+		t.Errorf("getting CDN DNSSEC keys - expected: key %s, actual: missing", firstCDN.Name)
+	}
+	originalKeys := res.Response
+
+	_, _, err = TOSession.GenerateCDNDNSSECKeys(req, nil)
+	if err != nil {
+		t.Fatalf("generating CDN DNSSEC keys - expected: nil error, actual: %s", err.Error())
+	}
+	res, _, err = TOSession.GetCDNDNSSECKeys(firstCDN.Name, nil)
+	if err != nil {
+		t.Fatalf("getting CDN DNSSEC keys - expected: nil error, actual: %s", err.Error())
+	}
+	newKeys := res.Response
+
+	if reflect.DeepEqual(originalKeys, newKeys) {
+		t.Errorf("generating CDN DNSSEC keys - expected: original keys to differ from new keys, actual: they are the same")
+	}
+
+	_, _, err = TOSession.DeleteCDNDNSSECKeys(firstCDN.Name, nil)
+	if err != nil {
+		t.Errorf("deleting CDN DNSSEC keys - expected: nil error, actual: %s", err.Error())
+	}
 }
 
 func UpdateTestCDNsWithHeaders(t *testing.T, header http.Header) {
