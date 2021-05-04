@@ -41,6 +41,12 @@ cachegroups.tests.forEach(cacheGroupData => {
                 await cacheGroupPage.OpenTopologyMenu();
                 await cacheGroupPage.OpenCacheGroupsPage();
             })
+            cacheGroupData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await cacheGroupPage.CheckCSV(check)).toBeTruthy();
+                    await cacheGroupPage.OpenCacheGroupsPage();
+                });
+           });
             cacheGroupData.create.forEach(create => {
                 it(create.Description, async function () {
                     expect(await cacheGroupPage.CreateCacheGroups(create, create.validationMessage)).toBeTruthy();

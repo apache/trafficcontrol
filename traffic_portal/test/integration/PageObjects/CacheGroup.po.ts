@@ -37,7 +37,9 @@ interface UpdateCacheGroup {
     Type: string;
     FailoverCG?: string;
 }
-
+interface CheckCSV {
+    Name: string;
+  }
 export class CacheGroupPage extends BasePage {
     private btnCreateCacheGroups = element(by.name('createCacheGroupButton'));
     private txtName = element(by.name("name"))
@@ -137,7 +139,7 @@ export class CacheGroupPage extends BasePage {
         }
         return result;
     }
-    async DeleteCacheGroups(nameCG: string, outputMessage: string) {
+    public async DeleteCacheGroups(nameCG: string, outputMessage: string) {
         let result = false;
         let basePage = new BasePage();
         let snp = new SideNavigationPage();
@@ -158,6 +160,14 @@ export class CacheGroupPage extends BasePage {
         await snp.NavigateToCacheGroupsPage();
         return result;
     }
+    public async CheckCSV(cg: CheckCSV): Promise<boolean> {
+        let linkName = cg.Name;
+        if (await browser.isElementPresent(element(by.xpath("//span[text()='" + linkName + "']"))) == true) {
+          return true;
+        }else{
+          return false;
+        }
+      }
 
 
 

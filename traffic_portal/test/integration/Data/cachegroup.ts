@@ -27,6 +27,12 @@ export const cachegroups = {
 					"password": "pa$$word"
 				}
 			],
+			check: [
+				{
+					description: "check CSV link from CacheGroup page",
+					Name: "Export as CSV"
+				}
+			],
 			create: [
 				{
 					Description: "create a EDGE_LOC cachegroup with FailOver CacheGroup Field",
@@ -112,6 +118,12 @@ export const cachegroups = {
 					"password": "pa$$word"
 				}
 			],
+			check: [
+				{
+					description: "check CSV link from CacheGroup page",
+					Name: "Export as CSV"
+				}
+			],
 			create: [
 				{
 					Description: "create a CacheGroup",
@@ -148,6 +160,12 @@ export const cachegroups = {
 				{
 					"username": "TPOperator",
 					"password": "pa$$word"
+				}
+			],
+			check: [
+				{
+					description: "check CSV link from CacheGroup page",
+					Name: "Export as CSV"
 				}
 			],
 			create: [
