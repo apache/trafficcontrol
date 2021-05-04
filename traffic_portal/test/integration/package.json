@@ -4,6 +4,7 @@
   "description": "Traffic Portal Testing",
   "main": "config.ts",
   "dependencies": {
+    "@types/random-ipv6": "^1.0.0",
     "axios": "^0.21.1",
     "chromedriver": "^78.0.1",
     "constants": "0.0.2",

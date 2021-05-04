@@ -1,4 +1,5 @@
 dependencies:
+  '@types/random-ipv6': 1.0.0
   axios: 0.21.1
   chromedriver: 78.0.1
   constants: 0.0.2
@@ -54,6 +55,10 @@ packages:
     dev: false
     resolution:
       integrity: sha1-vShOV8hPEyXacCur/IKlMoGQwMU=
+  /@types/random-ipv6/1.0.0:
+    dev: false
+    resolution:
+      integrity: sha512-E+g5NxJrj8COIeAIVdzJiuVIlzAwerEQxJfegPVB+WSFAmwBVCGIfaJ0P+GSJaQdEBraTLje9vqZh6jq7YSqLQ==
   /@types/selenium-webdriver/3.0.17:
     dev: false
     resolution:
@@ -1861,6 +1866,7 @@ specifiers:
   '@types/fs-extra': ^9.0.9
   '@types/jasmine': ^3.4.6
   '@types/node': ^12.12.0
+  '@types/random-ipv6': ^1.0.0
   axios: ^0.21.1
   chromedriver: ^78.0.1
   constants: 0.0.2
