@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added headers to Traffic Portal, Traffic Ops, and Traffic Monitor to opt out of tracking users via Google FLoC.
 - `DELETE` request method for `deliveryservices/xmlId/{name}/urlkeys` and `deliveryservices/{id}/urlkeys`.
 - t3c: bug fix to consider plugin config files for reloading remap.config
+- t3c: Change syncds so that it only warns on package version mismatch.
 
 ### Fixed
 - [#5690](https://github.com/apache/trafficcontrol/issues/5690) - Fixed github action for added/modified db migration file.

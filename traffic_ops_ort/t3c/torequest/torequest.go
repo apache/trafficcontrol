@@ -1194,7 +1194,7 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 		if strings.Contains(cfg.Path, "/opt/trafficserver/") || strings.Contains(cfg.Dir, "udev") {
 			cfg.Service = "trafficserver"
 			if r.Cfg.RunMode == config.SyncDS && !r.IsPackageInstalled("trafficserver") {
-				return UpdateTropsFailed, errors.New("In syncds mode, but trafficserver isn't installed. Bailing.")
+				log.Errorln("In syncds mode, but trafficserver isn't installed. Continuing.")
 			}
 		} else if strings.Contains(cfg.Path, "/opt/ort") && strings.Contains(cfg.Name, "12M_facts") {
 			cfg.Service = "puppet"
@@ -1285,83 +1285,101 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 		// check if the full package version is installed
 		fullPackage := pkgs[ii].Name + "-" + pkgs[ii].Version
 
-		if instpkg == fullPackage {
-			log.Infof("%s Currently installed and not marked for removal\n", reqpkg)
-			r.pkgs[fullPackage] = true
-			continue
-		} else if instpkg != "" { // the installed package needs upgrading.
-			log.Infof("%s Currently installed and marked for removal\n", instpkg)
-			uninstall = append(uninstall, instpkg)
-			// the required package needs installing.
-			log.Infof("%s is Not installed and is marked for installation.\n", fullPackage)
-			install = append(install, fullPackage)
-			// get a list of packages that depend on this one and mark dependencies
-			// for deletion.
-			arr, err = util.PackageInfo("pkg-requires", instpkg)
-			if err != nil {
-				return err
-			}
-			if len(arr) > 0 {
-				for jj := range arr {
-					log.Infof("%s is Currently installed and depends on %s and needs to be removed.", arr[jj], instpkg)
-					uninstall = append(uninstall, arr[jj])
-				}
-			}
-		} else {
-			// the required package needs installing.
-			log.Infof("%s is Not installed and is marked for installation.\n", fullPackage)
-			log.Errorf("%s is Not installed and is marked for installation.\n", fullPackage)
-			install = append(install, fullPackage)
-		}
-	}
-	log.Debugf("number of packages requiring installation: %d\n", len(install))
-	if r.Cfg.RunMode == config.Report {
-		log.Errorf("number of packages requiring installation: %d\n", len(install))
-	}
-	log.Debugf("number of packages requiring removal: %d\n", len(uninstall))
-	if r.Cfg.RunMode == config.Report {
-		log.Errorf("number of packages requiring removal: %d\n", len(uninstall))
-	}
-
-	if len(install) > 0 {
-		for ii := range install {
-			result, err := util.PackageAction("info", install[ii])
-			if err != nil || result != true {
-				return errors.New("Package " + install[ii] + " is not available to install: " + err.Error())
-			}
-		}
-		log.Infoln("All packages available.. proceding..")
-
-		// uninstall packages marked for removal
-		if len(install) > 0 && r.Cfg.RunMode == config.BadAss {
-			for jj := range uninstall {
-				log.Infof("Uninstalling %s\n", install[jj])
-				r, err := util.PackageAction("remove", uninstall[jj])
+		if r.Cfg.RunMode == config.BadAss {
+			if instpkg == fullPackage {
+				log.Infof("%s Currently installed and not marked for removal\n", reqpkg)
+				r.pkgs[fullPackage] = true
+				continue
+			} else if instpkg != "" { // the installed package needs upgrading.
+				log.Infof("%s Currently installed and marked for removal\n", instpkg)
+				uninstall = append(uninstall, instpkg)
+				// the required package needs installing.
+				log.Infof("%s is Not installed and is marked for installation.\n", fullPackage)
+				install = append(install, fullPackage)
+				// get a list of packages that depend on this one and mark dependencies
+				// for deletion.
+				arr, err = util.PackageInfo("pkg-requires", instpkg)
 				if err != nil {
-					return errors.New("Unable to uninstall " + uninstall[jj] + " : " + err.Error())
-				} else if r == true {
-					log.Infof("Package %s was uninstalled\n", uninstall[jj])
+					return err
 				}
+				if len(arr) > 0 {
+					for jj := range arr {
+						log.Infof("%s is Currently installed and depends on %s and needs to be removed.", arr[jj], instpkg)
+						uninstall = append(uninstall, arr[jj])
+					}
+				}
+			} else {
+				// the required package needs installing.
+				log.Infof("%s is Not installed and is marked for installation.\n", fullPackage)
+				log.Errorf("%s is Not installed and is marked for installation.\n", fullPackage)
+				install = append(install, fullPackage)
 			}
-
-			// install the required packages
-			for jj := range install {
-				pkg := install[jj]
-				log.Infof("Installing %s\n", pkg)
-				result, err := util.PackageAction("install", pkg)
-				if err != nil {
-					return errors.New("Unable to install " + pkg + " : " + err.Error())
-				} else if result == true {
-					r.pkgs[pkg] = true
-					log.Infof("Package %s was installed\n", pkg)
-				}
+		} else if r.Cfg.RunMode == config.SyncDS {
+			// Only check if packages exist and complain if they are wrong.
+			if instpkg == fullPackage {
+				log.Infof("%s Currently installed.\n", reqpkg)
+				r.pkgs[fullPackage] = true
+				continue
+			} else if instpkg != "" { // the installed package needs upgrading.
+				log.Errorf("%s Wrong version currently installed.\n", instpkg)
+				r.pkgs[instpkg] = true
+			} else {
+				// the required package needs installing.
+				log.Errorf("%s is Not installed.\n", fullPackage)
 			}
 		}
 	}
-	if r.Cfg.RunMode == config.Report && len(install) > 0 {
-		for ii := range install {
-			log.Errorf("\nIn Report mode and %s needs installation.\n", install[ii])
-			return errors.New("In Report mode and packages need installation")
+
+	if r.Cfg.RunMode == config.BadAss {
+		log.Debugf("number of packages requiring installation: %d\n", len(install))
+		if r.Cfg.RunMode == config.Report {
+			log.Errorf("number of packages requiring installation: %d\n", len(install))
+		}
+		log.Debugf("number of packages requiring removal: %d\n", len(uninstall))
+		if r.Cfg.RunMode == config.Report {
+			log.Errorf("number of packages requiring removal: %d\n", len(uninstall))
+		}
+
+		if len(install) > 0 {
+			for ii := range install {
+				result, err := util.PackageAction("info", install[ii])
+				if err != nil || result != true {
+					return errors.New("Package " + install[ii] + " is not available to install: " + err.Error())
+				}
+			}
+			log.Infoln("All packages available.. proceding..")
+
+			// uninstall packages marked for removal
+			if len(install) > 0 && r.Cfg.RunMode == config.BadAss {
+				for jj := range uninstall {
+					log.Infof("Uninstalling %s\n", install[jj])
+					r, err := util.PackageAction("remove", uninstall[jj])
+					if err != nil {
+						return errors.New("Unable to uninstall " + uninstall[jj] + " : " + err.Error())
+					} else if r == true {
+						log.Infof("Package %s was uninstalled\n", uninstall[jj])
+					}
+				}
+
+				// install the required packages
+				for jj := range install {
+					pkg := install[jj]
+					log.Infof("Installing %s\n", pkg)
+					result, err := util.PackageAction("install", pkg)
+					if err != nil {
+						return errors.New("Unable to install " + pkg + " : " + err.Error())
+					} else if result == true {
+						r.pkgs[pkg] = true
+						log.Infof("Package %s was installed\n", pkg)
+					}
+				}
+			}
+		}
+		if r.Cfg.RunMode == config.Report && len(install) > 0 {
+			for ii := range install {
+				log.Errorf("\nIn Report mode and %s needs installation.\n", install[ii])
+				return errors.New("In Report mode and packages need installation")
+			}
 		}
 	}
 	return nil
