@@ -17,7 +17,6 @@
  * under the License.
  */
 import { browser, by, element } from 'protractor';
-import { existsSync, readdirSync, unlink } from "fs";
 import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
@@ -41,7 +40,7 @@ interface DeleteCDN {
   Name: string;
   validationMessage?: string;
 }
-interface DownloadCSV {
+interface CheckCSV {
   Name: string;
 }
 
@@ -57,7 +56,6 @@ export class CDNPage extends BasePage {
   private btnDiffSnapshot = element(by.xpath("//button[@title='Diff CDN Snapshot']"));
   private btnYes = element((by.xpath("//button[text()='Yes']")));
   private btnQueueUpdates = element((by.xpath("//button[contains(text(),'Queue Updates')]")));
-  private btnDownloadCSV = element((by.xpath("//span[text()='Export as CSV']")));
   private randomize = randomize;
 
   public async OpenCDNsPage(): Promise<void> {
@@ -146,30 +144,12 @@ export class CDNPage extends BasePage {
     await basePage.ClickDeletePermanently();
     return await basePage.GetOutputMessage().then(value => cdn.validationMessage === value);
   }
-  public async DownloadCSV(cdn: DownloadCSV): Promise<boolean> {
-    let fileName = cdn.Name;
-    let readFile = '';
-    let result = false;
-    let readme = 'Readme.md';
-    const folder = 'Downloads';
-    await this.btnDownloadCSV.click();
-    await browser.wait(async function () {
-      await readdirSync(folder).forEach(file => {
-        if (file != readme) {
-          //read file name just download
-          readFile = file;
-        }
-      });
-    }, 30 * 1000, 'File has not downloaded within 30 seconds').catch(function () {
-      if (existsSync(`Downloads/${fileName}`) && fileName === readFile ) {
-        //if file exist result will be true
-        result = true;
-        //delete the file
-        unlink(`Downloads/${fileName}`, (err) => {
-          if (err) throw err;
-        });
-      }
-    });
-    return result;
+  public async CheckCSV(cdn: CheckCSV): Promise<boolean> {
+    let linkName = cdn.Name;
+    if (await browser.isElementPresent(element(by.xpath("//span[text()='" + linkName + "']"))) == true) {
+      return true;
+    }else{
+      return false;
+    }
   }
 }

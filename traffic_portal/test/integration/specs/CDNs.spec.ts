@@ -39,9 +39,9 @@ cdns.tests.forEach(async cdnsData =>{
             it('can open CDN page', async () => {
                 await cdnsPage.OpenCDNsPage();
             });
-             cdnsData.download.forEach(download => {
-                 it(download.description, async () => {
-                     expect(await cdnsPage.DownloadCSV(download)).toBeTruthy();
+             cdnsData.check.forEach(check => {
+                 it(check.description, async () => {
+                     expect(await cdnsPage.CheckCSV(check)).toBeTruthy();
                      await cdnsPage.OpenCDNsPage();
                  });
             });

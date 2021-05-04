@@ -26,10 +26,10 @@ export const cdns = {
 					password: "pa$$word"
 				}
 			],
-			download: [
+			check: [
 				{
-					description: "download CSV file from CDN page",
-					Name: "Traffic Portal.csv"
+					description: "check CSV link from CDN page",
+					Name: "Export as CSV"
 				}
 			],
 			add: [
@@ -98,10 +98,10 @@ export const cdns = {
 					password: "pa$$word"
 				}
 			],
-			download: [
+			check: [
 				{
-					description: "download CSV file from CDN page",
-					Name: "Traffic Portal.csv"
+					description: "check CSV link from CDN page",
+					Name: "Export as CSV"
 				}
 			],
 			add: [
@@ -155,10 +155,10 @@ export const cdns = {
 					password: "pa$$word"
 				}
 			],
-			download: [
+			check: [
 				{
-					description: "download CSV file from CDN page",
-					Name: "Traffic Portal.csv"
+					description: "check CSV link from CDN page",
+					Name: "Export as CSV"
 				}
 			],
 			add: [
