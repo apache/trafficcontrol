@@ -186,7 +186,7 @@ func UpdateTestParameters(t *testing.T) {
 	}
 }
 
-func UpdateParametersInvalidValue(t *testing.T){
+func UpdateParametersInvalidValue(t *testing.T) {
 	firstParameter := testData.Parameters[0]
 	// Retrieve the Parameter by name so we can get the id for the Update
 	params := url.Values{}
@@ -209,7 +209,7 @@ func UpdateParametersInvalidValue(t *testing.T){
 	}
 }
 
-func UpdateParametersInvalidName(t *testing.T){
+func UpdateParametersInvalidName(t *testing.T) {
 	firstParameter := testData.Parameters[0]
 	// Retrieve the Parameter by name so we can get the id for the Update
 	params := url.Values{}
@@ -231,7 +231,7 @@ func UpdateParametersInvalidName(t *testing.T){
 	}
 }
 
-func UpdateParametersInvalidConfigFile(t *testing.T){
+func UpdateParametersInvalidConfigFile(t *testing.T) {
 	firstParameter := testData.Parameters[0]
 	// Retrieve the Parameter by name so we can get the id for the Update
 	params := url.Values{}
@@ -519,7 +519,7 @@ func GetParametersByInvalidValue(t *testing.T) {
 func CreateTestParametersAlreadyExist(t *testing.T) {
 	resp, _, _ := TOSession.GetParameters(nil, nil)
 	_, reqInf, _ := TOSession.CreateParameter(resp[0])
-	if reqInf.StatusCode != http.StatusBadRequest{
+	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 	}
 }
@@ -528,7 +528,7 @@ func CreateTestParametersMissingName(t *testing.T) {
 	firstParameter := testData.Parameters[0]
 	firstParameter.Name = ""
 	_, reqInf, _ := TOSession.CreateParameter(firstParameter)
-	if reqInf.StatusCode != http.StatusBadRequest{
+	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 	}
 }
@@ -537,7 +537,7 @@ func CreateTestParametersMissingconfigFile(t *testing.T) {
 	firstParameter := testData.Parameters[0]
 	firstParameter.ConfigFile = ""
 	_, reqInf, _ := TOSession.CreateParameter(firstParameter)
-	if reqInf.StatusCode != http.StatusBadRequest{
+	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 	}
 }
