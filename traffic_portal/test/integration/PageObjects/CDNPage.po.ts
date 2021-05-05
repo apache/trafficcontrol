@@ -40,9 +40,6 @@ interface DeleteCDN {
   Name: string;
   validationMessage?: string;
 }
-interface CheckCSV {
-  Name: string;
-}
 
 export class CDNPage extends BasePage {
 
@@ -144,12 +141,12 @@ export class CDNPage extends BasePage {
     await basePage.ClickDeletePermanently();
     return await basePage.GetOutputMessage().then(value => cdn.validationMessage === value);
   }
-  public async CheckCSV(cdn: CheckCSV): Promise<boolean> {
-    let linkName = cdn.Name;
+  public async CheckCSV(name:string): Promise<boolean> {
+    let result = false;
+    let linkName = name;
     if (await browser.isElementPresent(element(by.xpath("//span[text()='" + linkName + "']"))) == true) {
-      return true;
-    }else{
-      return false;
+      result = true;
     }
+    return result;
   }
 }
