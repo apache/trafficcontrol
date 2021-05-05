@@ -330,6 +330,18 @@ func putURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc
 	return err
 }
 
+func deleteURLSigningKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc.DeliveryServiceName) error {
+	cluster, err := getPooledCluster(tx, authOpts, riakPort)
+	if err != nil {
+		return errors.New("getting pooled Riak cluster: " + err.Error())
+	}
+	key := getURLSigConfigFileName(ds)
+	if err := deleteObject(key, urlSigKeysBucket, cluster); err != nil {
+		return errors.New("deleting object: " + err.Error())
+	}
+	return nil
+}
+
 const sslKeysIndex = "sslkeys"
 const cdnSSLKeysLimit = 1000 // TODO: emulates Perl; reevaluate?
 

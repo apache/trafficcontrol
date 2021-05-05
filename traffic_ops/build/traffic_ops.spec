@@ -106,10 +106,6 @@ echo "go rming $RPM_BUILD_ROOT/%{PACKAGEDIR}/{pkg,src,bin}"
 %__mkdir -p $RPM_BUILD_ROOT/var/www/files
 %__cp install/data/json/osversions.json $RPM_BUILD_ROOT/var/www/files/.
 
-if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing ]; then
-	%__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing
-fi
-
 # install traffic_ops_golang binary
 if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/bin ]; then
 	%__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/bin
@@ -134,7 +130,7 @@ echo -e "\nBacking up config files.\n"
 if [ -f /var/tmp/traffic_ops-backup.tar ]; then
 	%__rm /var/tmp/traffic_ops-backup.tar
 fi
-cd %{PACKAGEDIR} && tar cf /var/tmp/traffic_ops-backup.tar app/public/routing  app/conf app/db/dbconf.yml app/local app/cpanfile.snapshot
+cd %{PACKAGEDIR} && tar cf /var/tmp/traffic_ops-backup.tar app/conf app/db/dbconf.yml app/local app/cpanfile.snapshot
 fi
 
 # upgrade
@@ -222,6 +218,5 @@ fi
 %{PACKAGEDIR}/app/bin/checks
 %{PACKAGEDIR}/app/bin/tests
 %{PACKAGEDIR}/app/db
-%{PACKAGEDIR}/app/public
 %{PACKAGEDIR}/app/templates
 %{PACKAGEDIR}/install

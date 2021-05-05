@@ -42,7 +42,6 @@ RUN cd /go/src/github.com/jstemmer/go-junit-report && go build
 COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
 
 # integration source and dependencies
-COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
 COPY ./traffic_ops/toclientlib/ /go/src/github.com/apache/trafficcontrol/traffic_ops/toclientlib/
 COPY ./traffic_ops/v1-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v1-client/

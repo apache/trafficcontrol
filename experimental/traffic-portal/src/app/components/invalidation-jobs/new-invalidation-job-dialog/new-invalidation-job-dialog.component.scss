@@ -11,45 +11,16 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-@import '../../../theme.scss';
-
-details {
-	border: 2px solid gray;
-
-	&[open] {
-		border-radius: 12px;
-		& > summary {
-			border-radius: 10px 10px 0 0;
-		}
-	}
-
-	pre {
-		white-space: normal;
-		margin: 10px 20px;
-	}
-
-	& > summary {
-		cursor: pointer;
-		background-color: $theme_main;
-		color: white;
-		padding: 10px;
-	}
-}
-
-div.card-content {
+div {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	column-gap: 15px;
-	width: 100%;
-	padding: 10px;
-
-	h2 {
-		color: $theme_tertiary;
-	}
+	grid-column-gap: 3em;
+	min-width: 40em;
+	max-width: 95vw;
+	min-height: 15em;
 }
 
-@media (max-width: 630px) {
-	div.card-content {
-		grid-template-columns: 1fr;
-	}
+footer {
+	justify-content: space-around;
+	align-content: space-between;
 }

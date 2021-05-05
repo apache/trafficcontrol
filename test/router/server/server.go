@@ -37,7 +37,7 @@ var resultChan chan data.HttpResult
 var results []data.HttpResult
 
 type credentials struct {
-	User     string `json: "u"`
+	User     string `json:"u"`
 	Password string `json:"p"`
 }
 

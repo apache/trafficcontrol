@@ -109,7 +109,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		AuthType:        authType,
 	}
 
-	if err := inf.Vault.PutDeliveryServiceSSLKeys(dsSSLKeys, inf.Tx.Tx); err != nil {
+	if err := inf.Vault.PutDeliveryServiceSSLKeys(dsSSLKeys, inf.Tx.Tx, r.Context()); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("putting SSL keys in Traffic Vault for delivery service '"+*req.DeliveryService+"': "+err.Error()))
 		return
 	}
@@ -242,7 +242,7 @@ func getSSLKeysByXMLIDHelper(xmlID string, tv trafficvault.TrafficVault, alerts 
 		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
-	keyObjV15, ok, err := tv.GetDeliveryServiceSSLKeys(xmlID, version, inf.Tx.Tx)
+	keyObjV15, ok, err := tv.GetDeliveryServiceSSLKeys(xmlID, version, inf.Tx.Tx, r.Context())
 	if err != nil {
 		userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
 		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
@@ -295,7 +295,7 @@ func getSSLKeysByXMLIDHelperV15(xmlID string, alerts tc.Alerts, inf *api.APIInfo
 		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
-	keyObj, ok, err := inf.Vault.GetDeliveryServiceSSLKeys(xmlID, version, inf.Tx.Tx)
+	keyObj, ok, err := inf.Vault.GetDeliveryServiceSSLKeys(xmlID, version, inf.Tx.Tx, r.Context())
 	if err != nil {
 		userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
 		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
@@ -410,7 +410,7 @@ func deleteSSLKeys(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated, &alt)
 		return
 	}
-	if err := inf.Vault.DeleteDeliveryServiceSSLKeys(xmlID, inf.Params["version"], inf.Tx.Tx); err != nil {
+	if err := inf.Vault.DeleteDeliveryServiceSSLKeys(xmlID, inf.Params["version"], inf.Tx.Tx, r.Context()); err != nil {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: deleting SSL keys: "+err.Error()), deprecated, &alt)
 		return
 	}

@@ -21,6 +21,7 @@ package riaksvc
  */
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -39,62 +40,66 @@ type Riak struct {
 	cfg Config
 }
 
-func (r *Riak) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *sql.Tx) (tc.DeliveryServiceSSLKeysV15, bool, error) {
+func (r *Riak) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *sql.Tx, ctx context.Context) (tc.DeliveryServiceSSLKeysV15, bool, error) {
 	return getDeliveryServiceSSLKeysObjV15(xmlID, version, tx, &r.cfg.AuthOptions, &r.cfg.Port)
 }
 
-func (r *Riak) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *sql.Tx) error {
+func (r *Riak) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, ctx context.Context) error {
 	return putDeliveryServiceSSLKeysObj(key, tx, &r.cfg.AuthOptions, &r.cfg.Port)
 }
 
-func (r *Riak) DeleteDeliveryServiceSSLKeys(xmlID string, version string, tx *sql.Tx) error {
+func (r *Riak) DeleteDeliveryServiceSSLKeys(xmlID string, version string, tx *sql.Tx, ctx context.Context) error {
 	return deleteDSSSLKeys(tx, &r.cfg.AuthOptions, &r.cfg.Port, xmlID, version)
 }
 
-func (r *Riak) DeleteOldDeliveryServiceSSLKeys(existingXMLIDs map[string]struct{}, cdnName string, tx *sql.Tx) error {
+func (r *Riak) DeleteOldDeliveryServiceSSLKeys(existingXMLIDs map[string]struct{}, cdnName string, tx *sql.Tx, ctx context.Context) error {
 	return deleteOldDeliveryServiceSSLKeys(tx, &r.cfg.AuthOptions, &r.cfg.Port, tc.CDNName(cdnName), existingXMLIDs)
 }
 
-func (r *Riak) GetCDNSSLKeys(cdnName string, tx *sql.Tx) ([]tc.CDNSSLKey, error) {
+func (r *Riak) GetCDNSSLKeys(cdnName string, tx *sql.Tx, ctx context.Context) ([]tc.CDNSSLKey, error) {
 	return getCDNSSLKeysObj(tx, &r.cfg.AuthOptions, &r.cfg.Port, cdnName)
 }
 
-func (r *Riak) GetDNSSECKeys(cdnName string, tx *sql.Tx) (tc.DNSSECKeysTrafficVault, bool, error) {
+func (r *Riak) GetDNSSECKeys(cdnName string, tx *sql.Tx, ctx context.Context) (tc.DNSSECKeysTrafficVault, bool, error) {
 	keys, exists, err := getDNSSECKeys(cdnName, tx, &r.cfg.AuthOptions, &r.cfg.Port)
 	return tc.DNSSECKeysTrafficVault(keys), exists, err
 }
 
-func (r *Riak) PutDNSSECKeys(cdnName string, keys tc.DNSSECKeysTrafficVault, tx *sql.Tx) error {
+func (r *Riak) PutDNSSECKeys(cdnName string, keys tc.DNSSECKeysTrafficVault, tx *sql.Tx, ctx context.Context) error {
 	return putDNSSECKeys(tc.DNSSECKeysRiak(keys), cdnName, tx, &r.cfg.AuthOptions, &r.cfg.Port)
 }
 
-func (r *Riak) DeleteDNSSECKeys(cdnName string, tx *sql.Tx) error {
+func (r *Riak) DeleteDNSSECKeys(cdnName string, tx *sql.Tx, ctx context.Context) error {
 	return deleteDNSSECKeys(cdnName, tx, &r.cfg.AuthOptions, &r.cfg.Port)
 }
 
-func (r *Riak) GetURLSigKeys(xmlID string, tx *sql.Tx) (tc.URLSigKeys, bool, error) {
+func (r *Riak) GetURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Context) (tc.URLSigKeys, bool, error) {
 	return getURLSigKeys(tx, &r.cfg.AuthOptions, &r.cfg.Port, tc.DeliveryServiceName(xmlID))
 }
 
-func (r *Riak) PutURLSigKeys(xmlID string, keys tc.URLSigKeys, tx *sql.Tx) error {
+func (r *Riak) PutURLSigKeys(xmlID string, keys tc.URLSigKeys, tx *sql.Tx, ctx context.Context) error {
 	return putURLSigKeys(tx, &r.cfg.AuthOptions, &r.cfg.Port, tc.DeliveryServiceName(xmlID), keys)
 }
 
-func (r *Riak) GetURISigningKeys(xmlID string, tx *sql.Tx) ([]byte, bool, error) {
+func (r *Riak) DeleteURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Context) error {
+	return deleteURLSigningKeys(tx, &r.cfg.AuthOptions, &r.cfg.Port, tc.DeliveryServiceName(xmlID))
+}
+
+func (r *Riak) GetURISigningKeys(xmlID string, tx *sql.Tx, ctx context.Context) ([]byte, bool, error) {
 	return getURISigningKeys(tx, &r.cfg.AuthOptions, &r.cfg.Port, xmlID)
 }
 
-func (r *Riak) PutURISigningKeys(xmlID string, keysJson []byte, tx *sql.Tx) error {
+func (r *Riak) PutURISigningKeys(xmlID string, keysJson []byte, tx *sql.Tx, ctx context.Context) error {
 	return putURISigningKeys(tx, &r.cfg.AuthOptions, &r.cfg.Port, xmlID, keysJson)
 }
 
-func (r *Riak) DeleteURISigningKeys(xmlID string, tx *sql.Tx) error {
+func (r *Riak) DeleteURISigningKeys(xmlID string, tx *sql.Tx, ctx context.Context) error {
 	return deleteURISigningKeys(tx, &r.cfg.AuthOptions, &r.cfg.Port, xmlID)
 }
 
-func (r *Riak) Ping(tx *sql.Tx) (tc.TrafficVaultPingResponse, error) {
+func (r *Riak) Ping(tx *sql.Tx, ctx context.Context) (tc.TrafficVaultPing, error) {
 	resp, err := ping(tx, &r.cfg.AuthOptions, &r.cfg.Port)
-	return tc.TrafficVaultPingResponse(resp), err
+	return tc.TrafficVaultPing(resp), err
 }
 
 func (r *Riak) GetBucketKey(bucket string, key string, tx *sql.Tx) ([]byte, bool, error) {

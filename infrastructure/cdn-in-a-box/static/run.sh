@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,9 +16,31 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-[google-chrome]
-name=google-chrome
-baseurl=https://dl.google.com/linux/chrome/rpm/stable/x86_64
-enabled=1
-gpgcheck=1
-gpgkey=https://dl.google.com/linux/linux_signing_key.pub
+
+set -eux
+
+. /to-access.sh
+set-dns.sh
+insert-self-into-dns.sh
+
+# Wait on SSL certificate generation
+until [[ -f "$X509_CA_ENV_FILE" ]]
+do
+     echo "Waiting on Shared SSL certificate generation"
+     sleep 3
+done
+
+# Source the CIAB-CA shared SSL environment
+until [[ -n "${X509_GENERATION_COMPLETE:-}" ]]; do
+  echo "Waiting on X509 vars to be defined"
+  sleep 1
+  source "$X509_CA_ENV_FILE"
+done
+
+source /to-access.sh
+cat "$X509_INFRA_KEY_FILE" "$X509_INFRA_CERT_FILE" > "/etc/lighttpd/${INFRA_FQDN}.pem"
+
+conf_file=/etc/lighttpd/lighttpd.conf
+echo "$(<"$conf_file" envsubst)" > "$conf_file"
+lighttpd -t -f "$conf_file"
+exec lighttpd -D -f "$conf_file"

@@ -373,7 +373,7 @@ func (o *OriginHeaders) UnmarshalJSON(data []byte) error {
 	}
 
 	headers := []string{}
-	if err := json.Unmarshal(data, headers); err == nil {
+	if err := json.Unmarshal(data, &headers); err == nil {
 		*o = OriginHeaders(headers)
 		return nil
 	}

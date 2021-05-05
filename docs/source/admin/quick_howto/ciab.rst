@@ -146,7 +146,7 @@ There also exist TP and TO integration tests containers. Both of these container
 
 	sudo docker-compose -f docker-compose.traffic-ops-test.yml up
 
-.. note:: If all CDN in a Box containers are started at once (example: ``docker-compose -f docker-compose.yml -f docker-compose.traffic-ops-test.yml up integration``), the :ref:`Enroller <ciab-enroller>` initial data load is skipped to prevent data conflicts with the :ref:`Traffic Ops API tests fixtures <dev-traffic-ops-fixtures>`.
+.. note:: If all CDN in a Box containers are started at once (example: ``docker-compose -f docker-compose.yml -f docker-compose.traffic-ops-test.yml up -d edge enroller dns db smtp trafficops trafficvault integration``), the :ref:`Enroller <ciab-enroller>` initial data load is skipped to prevent data conflicts with the :ref:`Traffic Ops API tests fixtures <dev-traffic-ops-fixtures>`.
 
 variables.env
 """""""""""""
@@ -191,7 +191,7 @@ Trusting the Certificate Authority
 ----------------------------------
 For developer and testing use-cases, it may be necessary to have full x509 :abbr:`CA (Certificate Authority)` validation by HTTPS clients\ [6]_\ [7]_. For x509 validation to work properly, the self-signed x509 :abbr:`CA (Certificate Authority)` certificate must be trusted either at the system level or by the client application itself.
 
-.. note:: HTTP Client applications such as Google Chrome, Firefox, :manpage:`curl(1)`, and :manpage:`wget(1)` can also be individually configured to trust the :abbr:`CA (Certificate Authority)` certificate. Review each program's respective documentation for instructions.
+.. note:: HTTP Client applications such as Chromium, Firefox, :manpage:`curl(1)`, and :manpage:`wget(1)` can also be individually configured to trust the :abbr:`CA (Certificate Authority)` certificate. Review each program's respective documentation for instructions.
 
 Importing the :abbr:`CA (Certificate Authority)` Certificate on OSX
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -326,7 +326,7 @@ Dante's socks proxy is an optional container that can be used to provide browser
 
 #. Start the CDN-in-a-Box stack at least once so that the x.509 self-signed :abbr:`CA (Certificate Authority)` is created.
 #. On the host, import and Trust the :abbr:`CA (Certificate Authority)` for your target Operating System. See `Trusting the Certificate Authority`_
-#. On the host, using either Firefox or Chrome, download the `FoxyProxy browser plugin <https://getfoxyproxy.org/>`_ which enables dynamic proxy support via URL regular expression
+#. On the host, using either Firefox or Chromium, download the `FoxyProxy browser plugin <https://getfoxyproxy.org/>`_ which enables dynamic proxy support via URL regular expression
 #. Once FoxyProxy is installed, click the Fox icon on the upper right hand of the browser window, select :guilabel:`Options`
 #. Once in Options Dialog, Click :guilabel:`Add New Proxy` and navigate to the General tab:
 #. Fill in the General tab according to the table

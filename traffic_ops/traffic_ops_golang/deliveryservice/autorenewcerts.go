@@ -164,7 +164,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 		}
 
 		dsExpInfo := DsExpirationInfo{}
-		keyObj, ok, err := tv.GetDeliveryServiceSSLKeys(ds.XmlId, strconv.Itoa(int(ds.Version.Int64)), tx)
+		keyObj, ok, err := tv.GetDeliveryServiceSSLKeys(ds.XmlId, strconv.Itoa(int(ds.Version.Int64)), tx, ctx)
 		if err != nil {
 			log.Errorf("getting ssl keys for xmlId: %s and version: %d : %s", ds.XmlId, ds.Version.Int64, err.Error())
 			dsExpInfo.XmlId = ds.XmlId
@@ -245,7 +245,9 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 			if acmeAccount == nil {
 				keysFound.OtherExpirations = append(keysFound.OtherExpirations, dsExpInfo)
 			} else {
-				userErr, sysErr, statusCode := renewAcmeCerts(cfg, keyObj.DeliveryService, ctx, currentUser, tv)
+				// background httpCtx since this is run in a goroutine spawned off the original http request
+				// so the context isn't cancelled when the http connection is closed
+				userErr, sysErr, statusCode := renewAcmeCerts(cfg, keyObj.DeliveryService, ctx, context.Background(), currentUser, tv)
 				if userErr != nil {
 					errorCount++
 					dsExpInfo.Error = userErr

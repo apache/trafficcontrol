@@ -11,12 +11,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit, OnDestroy } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
-
-import { Subscription } from "rxjs";
-import { first } from "rxjs/operators";
 
 import { DeliveryService } from "../../models";
 import { AuthenticationService } from "../../services";
@@ -32,7 +29,7 @@ import { orderBy, fuzzyScore } from "../../utils";
 	styleUrls: ["./dashboard.component.scss"],
 	templateUrl: "./dashboard.component.html"
 })
-export class DashboardComponent implements OnInit, OnDestroy {
+export class DashboardComponent implements OnInit {
 	/**
 	 * The set of all Delivery Services (visible to the Tenant).
 	 */
@@ -60,9 +57,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
 	/** Whether or not the page is still loading. */
 	public loading = true;
-
-	/** A subscription for the Capabilities of the user. */
-	private capabilitiesSubscription: Subscription | null = null;
 
 	/**
 	 * Whether or not the currently logged-in user has permission to create
@@ -93,14 +87,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 		this.now = new Date();
 		this.now.setUTCMilliseconds(0);
 		this.today = new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate());
-	}
-
-	/**
-	 * Runs initialization, fetching the list of (visible) Delivery Services and
-	 * setting the search test from the query parameters, if applicable.
-	 */
-	public ngOnInit(): void {
-		this.dsAPI.getDeliveryServices().pipe(first()).subscribe(
+		this.dsAPI.getDeliveryServices().then(
 			r => {
 				// these annoying typecasts are necessary because of how object property indexing works.
 				// look at 'orderBy' to understand.
@@ -110,8 +97,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 				this.loading = false;
 			}
 		);
+	}
 
-		this.route.queryParamMap.pipe(first()).subscribe(
+	/**
+	 * Runs initialization, fetching the list of (visible) Delivery Services and
+	 * setting the search test from the query parameters, if applicable.
+	 */
+	public ngOnInit(): void {
+		this.route.queryParamMap.toPromise().then(
 			m => {
 				const search = m.get("search");
 				if (search) {
@@ -120,11 +113,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 			}
 		);
 
-		this.capabilitiesSubscription = this.auth.currentUserCapabilities.subscribe(
-			v => {
-				this.canCreateDeliveryServices = v.has("ds-create");
-			}
-		);
+		this.canCreateDeliveryServices = this.auth.capabilities.has("ds-create");
 	}
 
 	/**
@@ -151,15 +140,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 	 */
 	public tracker(_: number, d: DeliveryService): number {
 		return d.id || 0;
-	}
-
-	/**
-	 * Cleans up subscriptions when the component is destroyed.
-	 */
-	public ngOnDestroy(): void {
-		if (this.capabilitiesSubscription) {
-			this.capabilitiesSubscription.unsubscribe();
-		}
 	}
 
 }

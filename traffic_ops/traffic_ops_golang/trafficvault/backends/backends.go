@@ -1,5 +1,5 @@
-// Type definitions for random-ipv6
-// Project: https://github.com/mock-end/random-ipv6
+// Package backends is simply for importing the traffic vault backend packages so they can initialize.
+package backends
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,15 +19,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-interface Options {
-	compressed?: boolean;
-	max?: number | string;
-	min?: number | string;
-	padded?: boolean;
-}
 
-declare module "random-ipv6" {
-	function randomIPv6(schema?: Options): string;
-	function randomIPv6(schema: string, options?: Options): string;
-	export = randomIPv6;
-}
+import (
+	_ "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres"
+)

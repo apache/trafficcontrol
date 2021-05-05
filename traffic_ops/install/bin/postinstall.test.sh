@@ -124,33 +124,10 @@ from os.path import dirname, join
 module_name = '_postinstall'
 download_tool = '/does/not/exist'
 root = '${ROOT_DIR}'
-unexpected_exception_message = 'Unexpected exception type {exception_type} raised from setup_maxmind()'
-uncaught_exception_message = 'Expected exception of type {exception_type} to be caught for download_tool "{download_tool}" within setup_maxmind(), but none was raised.'
 if sys.version_info.major >= 3:
 	import importlib
 	from importlib.machinery import SourceFileLoader
 	_postinstall = SourceFileLoader(module_name, join(dirname(__file__), module_name)).load_module(module_name)
-
-	try:
-		_postinstall.setup_maxmind('yes', root, download_tool)
-	except subprocess.SubprocessError as e:
-		print(uncaught_exception_message.format(exception_type=type(e).__name, download_tool=download_tool), file=sys.stderr)
-		exit(1)
-	except Exception as e:
-		print(unexpected_exception_message.format(exception_type=type(e).__name__), file=sys.stderr)
-		exit(1)
-else:
-	import imp
-	_postinstall = imp.load_source(module_name, join(dirname(__file__), module_name))
-
-	try:
-		_postinstall.setup_maxmind('yes', root, download_tool)
-	except (subprocess.CalledProcessError, OSError) as e:
-		print(uncaught_exception_message.format(exception_type=type(e).__name, download_tool=download_tool), file=sys.stderr)
-		exit(1)
-	except Exception as e:
-		print(unexpected_exception_message.format(exception_type=type(e).__name__), file=sys.stderr)
-		exit(1)
 
 _postinstall.exec_psql('N/A', 'N/A', '--version')
 TESTS
@@ -204,11 +181,6 @@ cat <<- EOF > "$ROOT_DIR/defaults.json"
 			"Password for database server admin": "${TO_PASSWORD}",
 			"config_var": "pgPassword",
 			"hidden": true
-		},
-		{
-			"Download Maxmind Database?": "no",
-			"config_var": "maxmind",
-			"hidden": false
 		}
 	],
 	"/opt/traffic_ops/app/conf/cdn.conf": [

@@ -66,7 +66,7 @@ func deleteOldDSCerts(tx *sql.Tx, cdn tc.CDNName, tv trafficvault.TrafficVault) 
 		return errors.New("getting ds names: " + err.Error())
 	}
 
-	if err := tv.DeleteOldDeliveryServiceSSLKeys(dses, string(cdn), tx); err != nil {
+	if err := tv.DeleteOldDeliveryServiceSSLKeys(dses, string(cdn), tx, context.Background()); err != nil {
 		return errors.New("getting ds keys from Traffic Vault: " + err.Error())
 	}
 	return nil

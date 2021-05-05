@@ -82,7 +82,7 @@ initBuildArea() {
 
 	rsync -av etc install "$dest"/ || \
 		 { echo "Could not copy to $dest: $?"; return 1; }
-	if ! (cd app; rsync -av bin conf db public script templates "${dest}/app"); then
+	if ! (cd app; rsync -av bin conf db script templates "${dest}/app"); then
 		echo "Could not copy to $dest/app"
 		return 1
 	fi

@@ -11,22 +11,18 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ViewChild } from "@angular/core";
 import { FormControl } from "@angular/forms";
+import type { MatStepper } from "@angular/material/stepper";
 import { Router } from "@angular/router";
-
-import { first } from "rxjs/operators";
 
 import {
 	bypassable,
 	CDN,
+	defaultDeliveryService,
 	DeliveryService,
-	GeoLimit,
-	GeoProvider,
 	Protocol,
 	protocolToString,
-	QStringHandling,
-	RangeRequestHandling,
 	Type
 } from "../../models";
 import { User } from "../../models/user";
@@ -71,29 +67,7 @@ const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])*(\.[A-z\d]([A-z0-9\-]*[A-z
 export class NewDeliveryServiceComponent implements OnInit {
 
 	/** The Delivery Service being created */
-	public deliveryService: DeliveryService = {
-		active: false,
-		anonymousBlockingEnabled: false,
-		cdnId: -1,
-		deepCachingType: "NEVER",
-		displayName: "",
-		dscp: 0,
-		geoLimit: GeoLimit.NONE,
-		geoProvider: GeoProvider.MAX_MIND,
-		initialDispersion: 1,
-		ipv6RoutingEnabled: true,
-		logsEnabled: true,
-		longDesc: "",
-		missLat: 0,
-		missLong: 0,
-		multiSiteOrigin: false,
-		qstringIgnore: QStringHandling.USE,
-		rangeRequestHandling: RangeRequestHandling.NONE,
-		regionalGeoBlocking: false,
-		routingName: "cdn",
-		typeId: -1,
-		xmlId: ""
-	};
+	public deliveryService: DeliveryService = {...defaultDeliveryService};
 
 	/** Allows the user to set 'active' */
 	public activeImmediately = new FormControl();
@@ -117,7 +91,15 @@ export class NewDeliveryServiceComponent implements OnInit {
 	public protocol = new FormControl();
 
 	/** Need This to be a property for template access. */
-	public protocolToString = protocolToString;
+	public readonly protocolToString = protocolToString;
+
+	/** The available Delivery Service protocols. */
+	public readonly protocols = [
+		Protocol.HTTP,
+		Protocol.HTTPS,
+		Protocol.HTTP_AND_HTTPS,
+		Protocol.HTTP_TO_HTTPS
+	];
 
 	/** The available CDNs from which for the user to choose. */
 	public cdns: Array<CDN> = [];
@@ -128,10 +110,15 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 */
 	public dsTypes: Array<Type> = [];
 
-	/** Controls what "step" the user is on; controls which fields are shown. */
-	public step = 0;
 	/** Need public access to models.bypassable in the template. */
 	public bypassable = bypassable;
+
+	/**
+	 * A reference to the stepper used in the form - this is never actually
+	 * undefined, but the value is set by the decorator, so to satisfy the
+	 * compiler we need to mark it as optional.
+	 */
+	@ViewChild("stepper") public stepper?: MatStepper;
 
 	/**
 	 * Constructor.
@@ -148,13 +135,13 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * (types, cdns, etc).
 	 */
 	public ngOnInit(): void {
-		this.auth.updateCurrentUser().subscribe( success => {
-			if (!success || this.auth.currentUserValue === null) {
+		this.auth.updateCurrentUser().then( success => {
+			if (!success || this.auth.currentUser === null) {
 				return;
 			}
-			this.deliveryService.tenant = this.auth.currentUserValue.tenant;
-			this.deliveryService.tenantId = this.auth.currentUserValue.tenantId;
-			this.dsAPI.getDSTypes().pipe(first()).subscribe(
+			this.deliveryService.tenant = this.auth.currentUser.tenant;
+			this.deliveryService.tenantId = this.auth.currentUser.tenantId;
+			this.dsAPI.getDSTypes().then(
 				(types: Array<Type>) => {
 					this.dsTypes = types;
 					for (const t of types) {
@@ -167,11 +154,11 @@ export class NewDeliveryServiceComponent implements OnInit {
 					}
 				}
 			);
-			if (!this.auth.currentUserValue || !this.auth.currentUserValue.tenantId) {
+			if (!this.auth.currentUser || !this.auth.currentUser.tenantId) {
 				console.error("Cannot set default CDN - user has no tenant");
 				return;
 			}
-			this.dsAPI.getDeliveryServices().pipe(first()).subscribe(
+			this.dsAPI.getDeliveryServices().then(
 				d => {
 					const cdnsInUse = new Map<number, number>();
 					for (const ds of d) {
@@ -179,7 +166,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 							console.warn("Delivery Service has no tenant:", ds);
 							continue;
 						}
-						if (ds.tenantId === (this.auth.currentUserValue as User).tenantId) {
+						if (ds.tenantId === (this.auth.currentUser as User).tenantId) {
 							const usedCDNs = cdnsInUse.get(ds.tenantId);
 							if (!usedCDNs) {
 								cdnsInUse.set(ds.tenantId, 1);
@@ -215,7 +202,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * in lexigraphical order by name.
 	 */
 	private setDefaultCDN(id: number): void {
-		this.cdnAPI.getCDNs().pipe(first()).subscribe(
+		this.cdnAPI.getCDNs().then(
 			cdns => {
 				if (!cdns) {
 					console.warn("No CDNs found in the API");
@@ -249,7 +236,9 @@ export class NewDeliveryServiceComponent implements OnInit {
 
 	/**
 	 * When a user submits their origin URL, this parses that out into the
-	 * related DS fields
+	 * related DS fields.
+	 *
+	 * @param stepper The stepper controlling the form flow - used to advance to the next step.
 	 */
 	public setOriginURL(): void {
 		const parser = document.createElement("a");
@@ -280,7 +269,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 
 		this.deliveryService.displayName = `Delivery Service for ${parser.hostname}`;
 		this.displayName.setValue(this.deliveryService.displayName);
-		++this.step;
+		this.stepper?.next();
 	}
 
 	/**
@@ -312,7 +301,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 		if (this.infoURL.value) {
 			this.deliveryService.infoUrl = this.infoURL.value;
 		}
-		++this.step;
+		this.stepper?.next();
 	}
 
 	/**
@@ -360,7 +349,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 			}
 		}
 
-		this.dsAPI.createDeliveryService(this.deliveryService).pipe(first()).subscribe(
+		this.dsAPI.createDeliveryService(this.deliveryService).then(
 			v => {
 				if (v) {
 					console.log("New Delivery Service '%s' created", this.deliveryService.displayName);
@@ -395,6 +384,6 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * Allows a user to return to the previous step.
 	 */
 	public previous(): void {
-		--this.step;
+		this.stepper?.previous();
 	}
 }

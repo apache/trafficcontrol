@@ -139,9 +139,6 @@ const (
 	"secrets" : [
 		"mONKEYDOmONKEYSEE."
 	],
-	"geniso" : {
-		"iso_root_path" : "/opt/traffic_ops/app/public"
-	},
 	"inactivity_timeout" : 60
 }
 `
