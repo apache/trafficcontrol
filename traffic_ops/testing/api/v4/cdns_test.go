@@ -60,9 +60,9 @@ func TestCDNsDNSSEC(t *testing.T) {
 }
 
 func RefreshDNSSECKeys(t *testing.T) {
-	_, _, err := TOSession.RefreshDNSSECKeys(nil)
+	resp, _, err := TOSession.RefreshDNSSECKeys(client.RequestOptions{})
 	if err != nil {
-		t.Errorf("unable to refresh DNSSEC keys: %v", err)
+		t.Errorf("unable to refresh DNSSEC keys: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
@@ -89,27 +89,27 @@ func GenerateDNSSECKeys(t *testing.T) {
 		KSKExpirationDays: &ttl,
 		ZSKExpirationDays: &ttl,
 	}
-	_, _, err = TOSession.GenerateCDNDNSSECKeys(req, nil)
+	resp, _, err := TOSession.GenerateCDNDNSSECKeys(req, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("generating CDN DNSSEC keys - expected: nil error, actual: %s", err.Error())
+		t.Fatalf("Unexpected error generating CDN DNSSEC keys: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	res, _, err := TOSession.GetCDNDNSSECKeys(firstCDN.Name, nil)
+	res, _, err := TOSession.GetCDNDNSSECKeys(firstCDN.Name, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("getting CDN DNSSEC keys - expected: nil error, actual: %s", err.Error())
+		t.Fatalf("Unexpected error getting CDN DNSSEC keys: %v - alerts: %+v", err, res.Alerts)
 	}
 	if _, ok := res.Response[firstCDN.Name]; !ok {
 		t.Errorf("getting CDN DNSSEC keys - expected: key %s, actual: missing", firstCDN.Name)
 	}
 	originalKeys := res.Response
 
-	_, _, err = TOSession.GenerateCDNDNSSECKeys(req, nil)
+	resp, _, err = TOSession.GenerateCDNDNSSECKeys(req, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("generating CDN DNSSEC keys - expected: nil error, actual: %s", err.Error())
+		t.Fatalf("Unexpected error generating CDN DNSSEC keys: %v - alerts: %+v", err, resp.Alerts)
 	}
-	res, _, err = TOSession.GetCDNDNSSECKeys(firstCDN.Name, nil)
+	res, _, err = TOSession.GetCDNDNSSECKeys(firstCDN.Name, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("getting CDN DNSSEC keys - expected: nil error, actual: %s", err.Error())
+		t.Fatalf("Unexpected error getting CDN DNSSEC keys: %v - alerts: %+v", err, res.Alerts)
 	}
 	newKeys := res.Response
 
@@ -121,13 +121,13 @@ func GenerateDNSSECKeys(t *testing.T) {
 		ExpirationDays: util.Uint64Ptr(30),
 	}
 	originalKSK := newKeys
-	_, _, err = TOSession.GenerateCDNDNSSECKSK(firstCDN.Name, kskReq, nil)
+	resp, _, err = TOSession.GenerateCDNDNSSECKSK(firstCDN.Name, kskReq, client.RequestOptions{})
 	if err != nil {
-		t.Error("unable to generate DNSSEC KSK")
+		t.Errorf("Unexpected error generating DNSSEC KSK: %v - alerts: %+v", err, resp.Alerts)
 	}
-	res, _, err = TOSession.GetCDNDNSSECKeys(firstCDN.Name, nil)
+	res, _, err = TOSession.GetCDNDNSSECKeys(firstCDN.Name, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("getting CDN DNSSEC keys - expected: nil error, actual: %s", err.Error())
+		t.Fatalf("Unexpected error getting CDN DNSSEC keys: %v - alerts: %+v", err, res.Alerts)
 	}
 	newKSK := res.Response
 	if reflect.DeepEqual(originalKSK[firstCDN.Name].KSK, newKSK[firstCDN.Name].KSK) {
@@ -152,34 +152,42 @@ func GenerateDNSSECKeys(t *testing.T) {
 			}
 		}()
 	}
-	types, _, err := TOSession.GetTypeByName("HTTP", nil)
+
+	opts.QueryParameters.Set("name", "HTTP")
+	types, _, err := TOSession.GetTypes(opts)
 	if err != nil {
-		t.Fatalf("unable to get types: %v", err)
+		t.Fatalf("Unexpected error getting Types filteed by name 'HTTP': %v - alerts: %+v", err, types.Alerts)
 	}
-	if len(types) != 1 {
-		t.Fatalf("expected one type, got %d", len(types))
+	if len(types.Response) != 1 {
+		t.Fatalf("Expected exactly one Type to exist with name 'HTTP', found: %d", len(types.Response))
 	}
 	dsXMLID := "testdnssecgen"
-	customDS := getCustomDS(cdn.ID, types[0].ID, dsXMLID, "cdn", "https://testdnssecgen.example.com", dsXMLID)
-	ds, _, err := TOSession.CreateDeliveryService(customDS)
+	customDS := getCustomDS(cdn.ID, types.Response[0].ID, dsXMLID, "cdn", "https://testdnssecgen.example.com", dsXMLID)
+	ds, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("unable to create delivery service: %v", err)
+		t.Errorf("Unexpected error creating Delivery Service: %v - alerts: %+v", err, ds.Alerts)
 	}
-	res, _, err = TOSession.GetCDNDNSSECKeys(firstCDN.Name, nil)
+	if len(ds.Response) != 1 {
+		t.Fatalf("Expected creating a Delivery Service to create exactly one Delivery Service, Traffic Ops returned: %d", len(ds.Response))
+	}
+	if ds.Response[0].ID == nil {
+		t.Fatal("Traffic Ops returned a representation for a created Delivery Service with null or undefined ID")
+	}
+	res, _, err = TOSession.GetCDNDNSSECKeys(firstCDN.Name, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("getting CDN DNSSEC keys - expected: nil error, actual: %s", err.Error())
+		t.Fatalf("Unexpected error getting CDN DNSSEC keys: %v - alerts: %+v", err, res.Alerts)
 	}
 	if _, ok := res.Response[dsXMLID]; !ok {
 		t.Error("after creating a new delivery service for a DNSSEC-enabled CDN - expected: DNSSEC keys to be found for the delivery service, actual: no DNSSEC keys found for the delivery service")
 	}
-	_, err = TOSession.DeleteDeliveryService(*ds.ID)
+	alerts, _, err := TOSession.DeleteDeliveryService(*ds.Response[0].ID, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("unable to delete delivery service: %v", err)
+		t.Errorf("Unexpected error deleting Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
-	_, _, err = TOSession.DeleteCDNDNSSECKeys(firstCDN.Name, nil)
+	delResp, _, err := TOSession.DeleteCDNDNSSECKeys(firstCDN.Name, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("deleting CDN DNSSEC keys - expected: nil error, actual: %s", err.Error())
+		t.Errorf("Unexpected error deleting CDN DNSSEC keys: %v - alerts: %+v", err, delResp.Alerts)
 	}
 }
 

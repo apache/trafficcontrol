@@ -293,8 +293,8 @@ func (to *Session) GetDeliveryServiceURLSignatureKeys(dsName string, opts Reques
 	return data, reqInf, err
 }
 
-// CreateDeliveryServiceURLSignatureKeys creates new URL-signing keys used by the Delivery Service
-// identified by the XMLID 'dsName'
+// CreateDeliveryServiceURLSignatureKeys creates new URL-signing keys used by
+// the Delivery Service identified by the XMLID 'dsName'.
 func (to *Session) CreateDeliveryServiceURLSignatureKeys(dsName string, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(fmt.Sprintf(apiDeliveryServicesURLSignatureKeysGenerate, url.PathEscape(dsName)), opts, nil, &alerts)
