@@ -55,9 +55,9 @@ func TestTOUpdater(t *testing.T) {
 		}
 
 		// change the server update status
-		err = runTOUpdater("atlanta-edge-03", false, true)
+		err = ExecTOUpdater("atlanta-edge-03", false, true)
 		if err != nil {
-			t.Fatalf("ERROR: to_updater run failed: %v\n", err)
+			t.Fatalf("ERROR: to-update Exec failed: %v\n", err)
 		}
 		// verify the update status is now 'true'
 		output, err = runTORequester("atlanta-edge-03", "update-status")
@@ -76,9 +76,9 @@ func TestTOUpdater(t *testing.T) {
 		}
 
 		// now change the reval stat and put server update status back
-		err = runTOUpdater("atlanta-edge-03", true, false)
+		err = ExecTOUpdater("atlanta-edge-03", true, false)
 		if err != nil {
-			t.Fatalf("ERROR: to_updater run failed: %v\n", err)
+			t.Fatalf("ERROR: to-update Exec failed: %v\n", err)
 		}
 		// verify the change
 		output, err = runTORequester("atlanta-edge-03", "update-status")
@@ -98,4 +98,32 @@ func TestTOUpdater(t *testing.T) {
 
 	})
 	fmt.Println("------------- End of TestTOUpdater tests ---------------")
+}
+
+func ExecTOUpdater(host string, reval_status bool, update_status bool) error {
+	args := []string{
+		"--traffic-ops-insecure=true",
+		"--login-dispersion=0",
+		"--traffic-ops-timeout-milliseconds=3000",
+		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
+		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
+		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
+		"--cache-host-name=" + host,
+		"--log-location-error=test.log",
+		"--log-location-info=test.log",
+		"--log-location-debug=test.log",
+		"--set-reval-status=" + strconv.FormatBool(reval_status),
+		"--set-update-status=" + strconv.FormatBool(update_status),
+	}
+	cmd := exec.Command("/usr/bin/to-update", args...)
+	var out bytes.Buffer
+	var errOut bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errOut
+	err := cmd.Run()
+	if err != nil {
+		return errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+	}
+
+	return nil
 }

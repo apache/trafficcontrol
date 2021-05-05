@@ -17,14 +17,14 @@
     under the License.
 -->
 
-# Traffic Ops Updater
+# t3c-update
 
 ## Synopsis
-	to_updater [-h] [-a value] [-d value] [-e value] [-H value] [-i value] \
+	t3c-update [-h] [-a value] [-d value] [-e value] [-H value] [-i value] \
 		[-l value] [-P value] [-q value] [-t value] [-u value] [-U value]
 
 ## Description
-  The to_requester is used to set the update and reval status, 
+  The t3c-update app is used to set the update and reval status,
   on Traffic Ops.
 
 ## Options

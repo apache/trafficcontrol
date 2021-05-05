@@ -23,8 +23,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/apache/trafficcontrol/cache-config/t3c-update/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/cache-config/to_updater/config"
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 

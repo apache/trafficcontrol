@@ -31,7 +31,7 @@ import (
 	"github.com/pborman/getopt/v2"
 )
 
-const AppName = "to_updater"
+const AppName = "t3c-update"
 const Version = "0.1"
 const UserAgent = AppName + "/" + Version
 
@@ -78,7 +78,7 @@ func InitConfig() (Cfg, error) {
 	toUserPtr := getopt.StringLong("traffic-ops-user", 'U', "", "Traffic Ops username. Required. May also be set with the environment variable TO_USER")
 	toPassPtr := getopt.StringLong("traffic-ops-password", 'P', "", "Traffic Ops password. Required. May also be set with the environment variable TO_PASS    ")
 	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
-	versionPtr := getopt.BoolLong("version", 'v', "Print the to_updater version")
+	versionPtr := getopt.BoolLong("version", 'v', "Print the version")
 
 	getopt.Parse()
 

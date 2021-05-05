@@ -67,11 +67,11 @@ go_toreq_dir="$ccpath"/to_requester
 	cp "$TC_DIR"/"$ccdir"/to_requester/to_requester .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
-# copy to_updater binary
-go_toupd_dir="$ccpath"/to_updater
+# copy t3c-update binary
+go_toupd_dir="$ccpath"/t3c-update
 ( mkdir -p "$go_toupd_dir" && \
 	cd "$go_toupd_dir" && \
-	cp "$TC_DIR"/"$ccdir"/to_updater/to_updater .
+	cp "$TC_DIR"/"$ccdir"/t3c-update/t3c-update .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 # copy plugin_verifier binary
@@ -103,8 +103,8 @@ cp -p "$t3csrc"/t3c ${RPM_BUILD_ROOT}/"$installdir"
 to_req_src=src/github.com/apache/trafficcontrol/"$ccdir"/to_requester
 cp -p "$to_req_src"/to_requester ${RPM_BUILD_ROOT}/"$installdir"
 
-to_upd_src=src/github.com/apache/trafficcontrol/"$ccdir"/to_updater
-cp -p "$to_upd_src"/to_updater ${RPM_BUILD_ROOT}/"$installdir"
+to_upd_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-update
+cp -p "$to_upd_src"/t3c-update ${RPM_BUILD_ROOT}/"$installdir"
 
 plugin_vfy_src=src/github.com/apache/trafficcontrol/"$ccdir"/plugin_verifier
 cp -p "$plugin_vfy_src"/plugin_verifier ${RPM_BUILD_ROOT}/"$installdir"
@@ -122,7 +122,7 @@ rm -rf ${RPM_BUILD_ROOT}
 /usr/bin/atstccfg
 /usr/bin/t3c
 /usr/bin/to_requester
-/usr/bin/to_updater
+/usr/bin/t3c-update
 /usr/bin/plugin_verifier
 
 %config(noreplace) /etc/logrotate.d/atstccfg
