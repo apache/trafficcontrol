@@ -122,8 +122,7 @@ func GetTestParametersIMSAfterChange(t *testing.T, header http.Header) {
 func CreateTestParameters(t *testing.T) {
 
 	for _, pl := range testData.Parameters {
-		resp, _, err := TOSession.CreateParameter(pl)
-		t.Log("Response: ", resp)
+		_, _, err := TOSession.CreateParameter(pl)
 		if err != nil {
 			t.Errorf("could not CREATE parameters: %v", err)
 		}
@@ -133,123 +132,129 @@ func CreateTestParameters(t *testing.T) {
 func CreateMultipleTestParameters(t *testing.T) {
 	//To avoid duplicate issue, deleting and creating new parameters
 	DeleteTestParameters(t)
-
-	pls := []tc.Parameter{}
-	for _, pl := range testData.Parameters {
-		pls = append(pls, pl)
-	}
-	resp, _, err := TOSession.CreateMultipleParameters(pls)
-	t.Log("Response: ", resp)
+	_, _, err := TOSession.CreateMultipleParameters(testData.Parameters)
 	if err != nil {
 		t.Errorf("could not CREATE parameters: %v", err)
 	}
-
 }
 
 func UpdateTestParameters(t *testing.T) {
+	if len(testData.Parameters) > 0 {
+		firstParameter := testData.Parameters[0]
+		// Retrieve the Parameter by name so we can get the id for the Update
+		params := url.Values{}
+		params.Set("name", firstParameter.Name)
+		resp, _, err := TOSession.GetParameters(params, nil)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		}
+		remoteParameter := resp[0]
+		old := resp[0]
+		expectedParameterValue := "UPDATED"
+		expectedParameterConfigFile := "updatedConfigFile"
+		expectedParameterName := "updateName"
+		remoteParameter.Value = expectedParameterValue
+		remoteParameter.ConfigFile = expectedParameterConfigFile
+		remoteParameter.Name = expectedParameterName
+		var alert tc.Alerts
+		alert, _, err = TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, nil)
+		if err != nil {
+			t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
+		}
 
-	firstParameter := testData.Parameters[0]
-	// Retrieve the Parameter by name so we can get the id for the Update
-	params := url.Values{}
-	params.Set("name", firstParameter.Name)
-	resp, _, err := TOSession.GetParameters(params, nil)
-	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
-	}
-	remoteParameter := resp[0]
-	old := resp[0]
-	expectedParameterValue := "UPDATED"
-	expectedParameterConfigFile := "updatedConfigFile"
-	expectedParameterName := "updateName"
-	remoteParameter.Value = expectedParameterValue
-	remoteParameter.ConfigFile = expectedParameterConfigFile
-	remoteParameter.Name = expectedParameterName
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, nil)
-	if err != nil {
-		t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
-	}
-
-	// Retrieve the Parameter to check Parameter name got updated
-	resp, _, err = TOSession.GetParameterByID(remoteParameter.ID, nil)
-	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
-	}
-	respParameter := resp[0]
-	if respParameter.Value != expectedParameterValue {
-		t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
-	}
-	//update back to old value for safe deletion in pre-requisite
-	alert, _, err = TOSession.UpdateParameter(remoteParameter.ID, old, nil)
-	if err != nil {
-		t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
+		// Retrieve the Parameter to check Parameter name got updated
+		resp, _, err = TOSession.GetParameterByID(remoteParameter.ID, nil)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		}
+		respParameter := resp[0]
+		if respParameter.Value != expectedParameterValue {
+			t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
+		}
+		if respParameter.ConfigFile != expectedParameterConfigFile {
+			t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
+		}
+		if respParameter.Name != expectedParameterName {
+			t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
+		}
+		//update back to old value for safe deletion in pre-requisite
+		alert, _, err = TOSession.UpdateParameter(remoteParameter.ID, old, nil)
+		if err != nil {
+			t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
+		}
 	}
 }
 
 func UpdateParametersInvalidValue(t *testing.T) {
-	firstParameter := testData.Parameters[0]
-	// Retrieve the Parameter by name so we can get the id for the Update
-	params := url.Values{}
-	params.Set("name", firstParameter.Name)
-	resp, _, err := TOSession.GetParameters(params, nil)
-	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
-	}
-	remoteParameter := resp[0]
-	//Parameters can be updated with empty value, so no error while updating
-	remoteParameter.Value = ""
+	if len(testData.Parameters) > 0 {
+		firstParameter := testData.Parameters[0]
+		// Retrieve the Parameter by name so we can get the id for the Update
+		params := url.Values{}
+		params.Set("name", firstParameter.Name)
+		resp, _, err := TOSession.GetParameters(params, nil)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		}
+		remoteParameter := resp[0]
+		//Parameters can be updated with empty value, so no error while updating
+		remoteParameter.Value = ""
 
-	var alert tc.Alerts
-	alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, nil)
-	if err != nil {
-		t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
-	}
-	if reqInf.StatusCode != http.StatusOK {
-		t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
+		var alert tc.Alerts
+		alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, nil)
+		if err != nil {
+			t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
 	}
 }
 
 func UpdateParametersInvalidName(t *testing.T) {
-	firstParameter := testData.Parameters[0]
-	// Retrieve the Parameter by name so we can get the id for the Update
-	params := url.Values{}
-	params.Set("name", firstParameter.Name)
-	resp, _, err := TOSession.GetParameters(params, nil)
-	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
-	}
-	remoteParameter := resp[0]
-	remoteParameter.Name = ""
+	if len(testData.Parameters) > 0 {
+		firstParameter := testData.Parameters[0]
+		// Retrieve the Parameter by name so we can get the id for the Update
+		params := url.Values{}
+		params.Set("name", firstParameter.Name)
+		resp, _, err := TOSession.GetParameters(params, nil)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		}
+		remoteParameter := resp[0]
+		remoteParameter.Name = ""
 
-	var alert tc.Alerts
-	alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, nil)
-	if err == nil {
-		t.Errorf("Invalid name has been updated by ID: %v - %v", err, alert)
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+		var alert tc.Alerts
+		alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, nil)
+		if err == nil {
+			t.Errorf("Invalid name has been updated by ID: %v - %v", err, alert)
+		}
+		if reqInf.StatusCode != http.StatusBadRequest {
+			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+		}
 	}
 }
 
 func UpdateParametersInvalidConfigFile(t *testing.T) {
-	firstParameter := testData.Parameters[0]
-	// Retrieve the Parameter by name so we can get the id for the Update
-	params := url.Values{}
-	params.Set("name", firstParameter.Name)
-	resp, _, err := TOSession.GetParameters(params, nil)
-	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
-	}
-	remoteParameter := resp[0]
-	remoteParameter.ConfigFile = ""
+	if len(testData.Parameters) > 0 {
+		firstParameter := testData.Parameters[0]
+		// Retrieve the Parameter by name so we can get the id for the Update
+		params := url.Values{}
+		params.Set("name", firstParameter.Name)
+		resp, _, err := TOSession.GetParameters(params, nil)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		}
+		remoteParameter := resp[0]
+		remoteParameter.ConfigFile = ""
 
-	var alert tc.Alerts
-	alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, nil)
-	if err == nil {
-		t.Errorf("Invalid Config File has been updated by ID: %v - %v", err, alert)
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+		var alert tc.Alerts
+		alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, nil)
+		if err == nil {
+			t.Errorf("Invalid Config File has been updated by ID: %v - %v", err, alert)
+		}
+		if reqInf.StatusCode != http.StatusBadRequest {
+			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+		}
 	}
 }
 
@@ -284,7 +289,6 @@ func GetTestParameters(t *testing.T) {
 }
 
 func DeleteTestParametersParallel(t *testing.T) {
-
 	var wg sync.WaitGroup
 	for _, pl := range testData.Parameters {
 
@@ -293,13 +297,11 @@ func DeleteTestParametersParallel(t *testing.T) {
 			defer wg.Done()
 			DeleteTestParameter(t, p)
 		}(pl)
-
 	}
 	wg.Wait()
 }
 
 func DeleteTestParameters(t *testing.T) {
-
 	for _, pl := range testData.Parameters {
 		DeleteTestParameter(t, pl)
 	}
@@ -525,19 +527,23 @@ func CreateTestParametersAlreadyExist(t *testing.T) {
 }
 
 func CreateTestParametersMissingName(t *testing.T) {
-	firstParameter := testData.Parameters[0]
-	firstParameter.Name = ""
-	_, reqInf, _ := TOSession.CreateParameter(firstParameter)
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	if len(testData.Parameters) > 0 {
+		firstParameter := testData.Parameters[0]
+		firstParameter.Name = ""
+		_, reqInf, _ := TOSession.CreateParameter(firstParameter)
+		if reqInf.StatusCode != http.StatusBadRequest {
+			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+		}
 	}
 }
 
 func CreateTestParametersMissingconfigFile(t *testing.T) {
-	firstParameter := testData.Parameters[0]
-	firstParameter.ConfigFile = ""
-	_, reqInf, _ := TOSession.CreateParameter(firstParameter)
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	if len(testData.Parameters) > 0 {
+		firstParameter := testData.Parameters[0]
+		firstParameter.ConfigFile = ""
+		_, reqInf, _ := TOSession.CreateParameter(firstParameter)
+		if reqInf.StatusCode != http.StatusBadRequest {
+			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+		}
 	}
 }
