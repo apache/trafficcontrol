@@ -41,7 +41,7 @@ cdns.tests.forEach(async cdnsData =>{
             });
              cdnsData.check.forEach(check => {
                  it(check.description, async () => {
-                     expect(await cdnsPage.CheckCSV(check.Name)).toBeTrue();
+                     expect(await cdnsPage.CheckCSV(check.Name)).toBe(true);
                      await cdnsPage.OpenCDNsPage();
                  });
             });
