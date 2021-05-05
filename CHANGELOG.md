@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Add a Federation to the Ansible Dataset Loader
 - Added asynchronous status to ACME certificate generation.
 - Added headers to Traffic Portal, Traffic Ops, and Traffic Monitor to opt out of tracking users via Google FLoC.
+- Add logging scope for logging.yaml generation for ATS 9 support
 - `DELETE` request method for `deliveryservices/xmlId/{name}/urlkeys` and `deliveryservices/{id}/urlkeys`.
 - t3c: bug fix to consider plugin config files for reloading remap.config
 - t3c: Change syncds so that it only warns on package version mismatch.
