@@ -379,6 +379,22 @@ func (to *Session) GetDeliveryServiceURISigningKeys(dsName string, header http.H
 	return []byte(data), reqInf, nil
 }
 
+// CreateDeliveryServiceURISigKeys creates new URI-signing keys used by the Delivery Service
+// identified by the XMLID 'dsName'
+func (to *Session) CreateDeliveryServiceURISigKeys(dsName string, header http.Header, body map[string]tc.URISignerKeyset) (tc.Alerts, toclientlib.ReqInf, error) {
+	var alerts tc.Alerts
+	reqInf, err := to.post(fmt.Sprintf(APIDeliveryServicesURISigningKeys, dsName), body, header, &alerts)
+	return alerts, reqInf, err
+}
+
+// DeleteDeliveryServiceURISigKeys deletes the URI-signing keys used by the Delivery Service
+// identified by the XMLID 'dsName'
+func (to *Session) DeleteDeliveryServiceURISigKeys(dsName string, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+	var alerts tc.Alerts
+	reqInf, err := to.del(fmt.Sprintf(APIDeliveryServicesURISigningKeys, dsName), header, &alerts)
+	return alerts, reqInf, err
+}
+
 // SafeDeliveryServiceUpdate updates the "safe" fields of the Delivery
 // Service identified by the integral, unique identifier 'id'.
 func (to *Session) SafeDeliveryServiceUpdate(id int, r tc.DeliveryServiceSafeUpdateRequest, header http.Header) (tc.DeliveryServiceV4, toclientlib.ReqInf, error) {

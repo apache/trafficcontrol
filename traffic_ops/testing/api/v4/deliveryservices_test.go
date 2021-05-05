@@ -47,6 +47,9 @@ func TestDeliveryServices(t *testing.T) {
 			CreateTestDeliveryServicesURLSigKeys(t)
 			GetTestDeliveryServicesURLSigKeys(t)
 			DeleteTestDeliveryServicesURLSigKeys(t)
+			CreateTestDeliveryServicesURISigKeys(t)
+			GetTestDeliveryServicesURISigKeys(t)
+			DeleteTestDeliveryServicesURISigKeys(t)
 			DeleteCDNOldSSLKeys(t)
 			DeliveryServiceSSLKeys(t)
 		}
@@ -1634,6 +1637,133 @@ func DeleteTestDeliveryServicesURLSigKeys(t *testing.T) {
 	_, _, err := TOSession.DeleteDeliveryServiceURLSigKeys(*firstDS.XMLID, nil)
 	if err != nil {
 		t.Error("failed to delete url sig keys: " + err.Error())
+	}
+
+}
+
+func GetTestDeliveryServicesURISigKeys(t *testing.T) {
+	if len(testData.DeliveryServices) == 0 {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+	firstDS := testData.DeliveryServices[0]
+	if firstDS.XMLID == nil {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+
+	_, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, nil)
+	if err != nil {
+		t.Error("failed to get uri sig keys: " + err.Error())
+	}
+}
+
+const (
+	keySet1 = `
+{
+  "Kabletown URI Authority 1": {
+    "renewal_kid": "First Key",
+    "keys": [
+      {
+        "alg": "HS256",
+        "kid": "First Key",
+        "kty": "oct",
+        "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
+      }
+    ]
+  }
+}`
+	keySet2 = `
+{
+"Kabletown URI Authority 1": {
+    "renewal_kid": "New First Key",
+    "keys": [
+      {
+        "alg": "HS256",
+        "kid": "New First Key",
+        "kty": "oct",
+        "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
+      }
+    ]
+  }
+}`
+)
+
+func CreateTestDeliveryServicesURISigKeys(t *testing.T) {
+	if len(testData.DeliveryServices) == 0 {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+	firstDS := testData.DeliveryServices[0]
+	if firstDS.XMLID == nil {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+
+	var keyset map[string]tc.URISignerKeyset
+
+	if err := json.Unmarshal([]byte(keySet1), &keyset); err != nil {
+		t.Errorf("json.UnMarshal(): expected nil error, actual: %v", err)
+	}
+
+	_, _, err := TOSession.CreateDeliveryServiceURISigKeys(*firstDS.XMLID, nil, keyset)
+	if err != nil {
+		t.Error("failed to create uri sig keys: " + err.Error())
+	}
+
+	firstKeysBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, nil)
+	if err != nil {
+		t.Error("failed to get uri sig keys: " + err.Error())
+	}
+
+	firstKeys := map[string]tc.URISignerKeyset{}
+	if err := json.Unmarshal(firstKeysBytes, &firstKeys); err != nil {
+		t.Errorf("failed to unmarshal uri sig keys")
+	}
+
+	if len(firstKeys) == 0 {
+		t.Errorf("failed to create uri sig keys")
+	}
+
+	// Create new keys again and check that they are different
+	var keyset2 map[string]tc.URISignerKeyset
+
+	if err := json.Unmarshal([]byte(keySet2), &keyset2); err != nil {
+		t.Errorf("json.UnMarshal(): expected nil error, actual: %v", err)
+	}
+
+	_, _, err = TOSession.CreateDeliveryServiceURISigKeys(*firstDS.XMLID, nil, keyset2)
+	if err != nil {
+		t.Error("failed to create uri sig keys: " + err.Error())
+	}
+
+	secondKeysBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, nil)
+	if err != nil {
+		t.Error("failed to get uri sig keys: " + err.Error())
+	}
+
+	secondKeys := map[string]tc.URISignerKeyset{}
+	if err := json.Unmarshal(secondKeysBytes, &secondKeys); err != nil {
+		t.Errorf("failed to unmarshal uri sig keys")
+	}
+
+	if len(secondKeys) == 0 {
+		t.Errorf("failed to create uri sig keys")
+	}
+
+	if secondKeys["Kabletown URI Authority 1"].Keys[0].KeyID == firstKeys["Kabletown URI Authority 1"].Keys[0].KeyID {
+		t.Errorf("second create did not generate new uri sig keys")
+	}
+}
+
+func DeleteTestDeliveryServicesURISigKeys(t *testing.T) {
+	if len(testData.DeliveryServices) == 0 {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+	firstDS := testData.DeliveryServices[0]
+	if firstDS.XMLID == nil {
+		t.Fatal("couldn't get the xml ID of test DS")
+	}
+
+	_, _, err := TOSession.DeleteDeliveryServiceURISigKeys(*firstDS.XMLID, nil)
+	if err != nil {
+		t.Error("failed to delete uri sig keys: " + err.Error())
 	}
 
 }
