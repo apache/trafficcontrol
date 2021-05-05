@@ -43,7 +43,7 @@ cachegroups.tests.forEach(cacheGroupData => {
             })
             cacheGroupData.check.forEach(check => {
                 it(check.description, async () => {
-                    expect(await cacheGroupPage.CheckCSV(check)).toBeTruthy();
+                    expect(await cacheGroupPage.CheckCSV(check.Name)).toBeTruthy();
                     await cacheGroupPage.OpenCacheGroupsPage();
                 });
            });

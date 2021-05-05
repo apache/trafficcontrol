@@ -160,13 +160,13 @@ export class CacheGroupPage extends BasePage {
         await snp.NavigateToCacheGroupsPage();
         return result;
     }
-    public async CheckCSV(cg: CheckCSV): Promise<boolean> {
-        let linkName = cg.Name;
+    public async CheckCSV(name:string): Promise<boolean> {
+        let linkName = name;
+        let result = false;
         if (await browser.isElementPresent(element(by.xpath("//span[text()='" + linkName + "']"))) == true) {
-          return true;
-        }else{
-          return false;
+          result = true;
         }
+        return result;
       }
 
 
