@@ -1025,7 +1025,9 @@ A text-based unique identifier for a Delivery Service. Many :ref:`to-api` endpoi
 .. [#httpOnlyRegex] These regular expression types can only appear in the Match List of HTTP-:ref:`Routed <ds-types>` Delivery Services.
 
 
-Parameters
+.. _ds-parameters:
+
+Delivery Service Parameters
 ----------
 Features which are new, experimental, or not significant enough to be first-class Delivery Service fields are often added as Parameters. To use these, add a Profile to the Delivery Service, with the given Parameter assigned.
 

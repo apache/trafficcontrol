@@ -21,6 +21,8 @@ Profiles and Parameters
 ***********************
 :dfn:`Profiles` are a collection of configuration options, defined partially by the Profile's Type_ (not to be confused with the more general ":term:`Type`" used by many other things in Traffic Control) and partially by the :dfn:`Parameters` set on them. Mainly, Profiles and Parameters are used to configure :term:`cache servers`, but they can also be used to configure parts of (nearly) any Traffic Control component, and can even be linked with more abstract concepts like :ref:`Delivery Services <ds-profile>` and :term:`Cache Groups`. The vast majority of configuration done within a Traffic Control CDN must be done through Profiles_ and Parameters_, which can be achieved either through the :ref:`to-api` or in the :ref:`tp-configure-profiles` view of Traffic Portal. For ease of use, Traffic Portal allows for duplication, comparison, import and export of Profiles_ including all of their associated Parameters_.
 
+.. seealso:: For Delivery Service Profile Parameters, see :ref:`ds-parameters`.
+
 .. _profiles:
 
 Profiles
