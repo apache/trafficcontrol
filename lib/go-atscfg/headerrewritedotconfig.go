@@ -21,7 +21,6 @@ package atscfg
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"regexp"
 	"strconv"
@@ -133,23 +132,18 @@ func MakeHeaderRewriteDotConfig(
 
 		if dsOnlineEdgeCount > 0 {
 			maxOriginConnectionsPerEdge := int(math.Round(float64(ds.MaxOriginConnections) / float64(dsOnlineEdgeCount)))
-			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerEdge)
-			if ds.EdgeHeaderRewrite == "" {
-				text += " [L]"
-			} else {
-				text += "\n"
-			}
+			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerEdge) + "\n"
 		}
+	}
+
+	if !strings.Contains(ds.EdgeHeaderRewrite, ServiceCategoryHeader) && ds.ServiceCategory != "" {
+		text += "cond %{REMAP_PSEUDO_HOOK}\nset-header " + ServiceCategoryHeader + ` "` + dsName + "|" + ds.ServiceCategory + `"` + "\n"
 	}
 
 	// write the contents of ds.EdgeHeaderRewrite to hdr_rw_xml-id.config replacing any instances of __RETURN__ (surrounded by spaces or not) with \n
 	if ds.EdgeHeaderRewrite != "" {
 		re := regexp.MustCompile(`\s*__RETURN__\s*`)
 		text += re.ReplaceAllString(ds.EdgeHeaderRewrite, "\n")
-	}
-
-	if !strings.Contains(text, ServiceCategoryHeader) && ds.ServiceCategory != "" {
-		text += fmt.Sprintf("\nset-header %s \"%s|%s\"", ServiceCategoryHeader, dsName, ds.ServiceCategory)
 	}
 
 	text += "\n"

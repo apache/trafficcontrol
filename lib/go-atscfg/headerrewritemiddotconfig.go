@@ -157,13 +157,12 @@ func MakeHeaderRewriteMidDotConfig(
 		}
 		if dsOnlineMidCount > 0 {
 			maxOriginConnectionsPerMid := int(math.Round(float64(ds.MaxOriginConnections) / float64(dsOnlineMidCount)))
-			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerMid)
-			if ds.MidHeaderRewrite == "" {
-				text += " [L]"
-			} else {
-				text += "\n"
-			}
+			text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerMid) + "\n"
 		}
+	}
+
+	if !strings.Contains(ds.MidHeaderRewrite, ServiceCategoryHeader) && ds.ServiceCategory != "" {
+		text += "cond %{REMAP_PSEUDO_HOOK}\nset-header " + ServiceCategoryHeader + ` "` + dsName + "|" + ds.ServiceCategory + `"` + "\n"
 	}
 
 	// write the contents of ds.MidHeaderRewrite to hdr_rw_mid_xml-id.config replacing any instances of __RETURN__ (surrounded by spaces or not) with \n

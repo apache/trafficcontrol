@@ -205,4 +205,7 @@ func TestMakeHeaderRewriteMidDotConfigNoMaxConns(t *testing.T) {
 	if strings.Contains(txt, "origin_max_connections") {
 		t.Errorf("expected no origin_max_connections on edge-only DS, actual '%v'\n", txt)
 	}
+	if !strings.Contains(txt, "ds0|servicecategory") {
+		t.Errorf("expected 'ds0|servicecategory' actual '%v'\n", txt)
+	}
 }

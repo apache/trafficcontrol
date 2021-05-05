@@ -144,12 +144,11 @@ func MakeTopologyHeaderRewriteDotConfig(
 			maxOriginConnectionsPerServer = 1
 		}
 
-		text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerServer)
-		if headerRewrite == nil || *headerRewrite == "" {
-			text += " [L]"
-		} else {
-			text += "\n"
-		}
+		text += "cond %{REMAP_PSEUDO_HOOK}\nset-config proxy.config.http.origin_max_connections " + strconv.Itoa(maxOriginConnectionsPerServer) + "\n"
+	}
+
+	if (headerRewrite == nil || !strings.Contains(*headerRewrite, ServiceCategoryHeader)) && ds.ServiceCategory != nil && *ds.ServiceCategory != "" {
+		text += "cond %{REMAP_PSEUDO_HOOK}\nset-header " + ServiceCategoryHeader + ` "` + dsName + "|" + *ds.ServiceCategory + `"` + "\n"
 	}
 
 	if headerRewrite != nil && *headerRewrite != "" {
