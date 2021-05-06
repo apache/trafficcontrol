@@ -17,26 +17,26 @@
     under the License.
 -->
 
-# ATS plugin readiness verifier
+# t3c-verify
 
 This implements the ATS plugin readiness verifier as defined in the
 blueprint #4628, see https://github.com/apache/trafficcontrol/pull/4628
 
 ## Synopsis
-  plugin_verifier [options] [optional_config_file]
+  t3c-verify [options] [optional_config_file]
 
 ## Description
-  The plugin_verifier will read an ATS formatted plugin.config or remap.config
+  The t3c-verify app will read an ATS formatted plugin.config or remap.config
   file line by line and verify that the plugin '.so' files are available in the
-  filesystem or relative to the ATS plugin installation directory by the 
+  filesystem or relative to the ATS plugin installation directory by the
   absolute or relative plugin filename.
 
   In addition, any plugin parameters that end in '.config', '.cfg', or '.txt'
   are considered to be plugin configuration files and there existence in the
   filesystem or relative to the ATS configuration files directory is verified.
 
-  The configuration file argument is optional.  If no config file argument is 
-  supplied, the plugin_verifier reads its config file input from 'stdin'
+  The configuration file argument is optional.  If no config file argument is
+  supplied, t3c-verify reads its config file input from 'stdin'
 
 ## Options
   --log-location-debug=[value] | -d [value], where to log debugs, default is empty

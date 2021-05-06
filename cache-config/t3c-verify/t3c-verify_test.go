@@ -26,16 +26,16 @@ import (
 	"testing"
 )
 
-func plugin_verifier_exec(filename string, t *testing.T) (int, error) {
-	if !fileExists("./plugin_verifier") {
-		t.Fatalf("You must first build the plugin_verifier before running tests")
+func t3c_verify_exec(filename string, t *testing.T) (int, error) {
+	if !fileExists("./t3c-verify") {
+		t.Fatalf("You must first build t3c-verify before running tests")
 	}
 	args := []string{
 		"--trafficserver-config-dir=./test-files/etc",
 		"--trafficserver-plugin-dir=./test-files/libexec",
 	}
 	args = append(args, filename)
-	cmd := exec.Command("./plugin_verifier", args...)
+	cmd := exec.Command("./t3c-verify", args...)
 	var outbuf bytes.Buffer
 	var errbuf bytes.Buffer
 
@@ -44,14 +44,14 @@ func plugin_verifier_exec(filename string, t *testing.T) (int, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return -1, errors.New("error from plugin_verifier: " + err.Error() + ": " + errbuf.String())
+		return -1, errors.New("error from t3c-verify: " + err.Error() + ": " + errbuf.String())
 	}
 
 	return cmd.ProcessState.ExitCode(), nil
 }
 
 func TestRemapConfig(t *testing.T) {
-	rc, err := plugin_verifier_exec("./test-files/etc/remap.config", t)
+	rc, err := t3c_verify_exec("./test-files/etc/remap.config", t)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v\n", err)
 	}
@@ -61,14 +61,14 @@ func TestRemapConfig(t *testing.T) {
 }
 
 func TestBadRemapConfig(t *testing.T) {
-	rc, _ := plugin_verifier_exec("./test-files/etc/bad-remap.config", t)
+	rc, _ := t3c_verify_exec("./test-files/etc/bad-remap.config", t)
 	if rc != -1 {
 		t.Errorf("expected 2 errors got %d errors\n", rc)
 	}
 }
 
 func TestMultiRemapConfig(t *testing.T) {
-	rc, err := plugin_verifier_exec("./test-files/etc/remap-multiline.config", t)
+	rc, err := t3c_verify_exec("./test-files/etc/remap-multiline.config", t)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v\n", err)
 	}
@@ -78,14 +78,14 @@ func TestMultiRemapConfig(t *testing.T) {
 }
 
 func TestBadRemapMultilineConfig(t *testing.T) {
-	rc, _ := plugin_verifier_exec("./test-files/etc/bad-remap-multiline.config", t)
+	rc, _ := t3c_verify_exec("./test-files/etc/bad-remap-multiline.config", t)
 	if rc != -1 {
 		t.Errorf("expected 0 errors got %d errors\n", rc)
 	}
 }
 
 func TestPluConfig(t *testing.T) {
-	rc, err := plugin_verifier_exec("./test-files/etc/plugin.config", t)
+	rc, err := t3c_verify_exec("./test-files/etc/plugin.config", t)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v\n", err)
 	}
@@ -95,7 +95,7 @@ func TestPluConfig(t *testing.T) {
 }
 
 func TestBadPluConfig(t *testing.T) {
-	rc, _ := plugin_verifier_exec("./test-files/etc/bad-plugin.config", t)
+	rc, _ := t3c_verify_exec("./test-files/etc/bad-plugin.config", t)
 	if rc != -1 {
 		t.Errorf("expected 0 errors got %d errors\n", rc)
 	}

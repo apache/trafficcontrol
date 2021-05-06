@@ -81,11 +81,11 @@ go_toupd_dir="$ccpath"/t3c-update
 	cp "$TC_DIR"/"$ccdir"/t3c-update/t3c-update .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
-# copy plugin_verifier binary
-go_plugin_dir="$ccpath"/plugin_verifier
-( mkdir -p "$go_plugin_dir" && \
-	cd "$go_plugin_dir" && \
-	cp "$TC_DIR"/"$ccdir"/plugin_verifier/plugin_verifier .
+# copy t3c-verify binary
+go_t3c_verify_dir="$ccpath"/t3c-verify
+( mkdir -p "$go_t3c_verify_dir" && \
+	cd "$go_t3c_verify_dir" && \
+	cp "$TC_DIR"/"$ccdir"/t3c-verify/t3c-verify .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 %install
@@ -117,8 +117,8 @@ cp -p "$to_req_src"/to_requester ${RPM_BUILD_ROOT}/"$installdir"
 to_upd_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-update
 cp -p "$to_upd_src"/t3c-update ${RPM_BUILD_ROOT}/"$installdir"
 
-plugin_vfy_src=src/github.com/apache/trafficcontrol/"$ccdir"/plugin_verifier
-cp -p "$plugin_vfy_src"/plugin_verifier ${RPM_BUILD_ROOT}/"$installdir"
+t3c_verify_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-verify
+cp -p "$t3c_verify_src"/t3c-verify ${RPM_BUILD_ROOT}/"$installdir"
 
 %clean
 rm -rf ${RPM_BUILD_ROOT}
@@ -135,7 +135,7 @@ rm -rf ${RPM_BUILD_ROOT}
 /usr/bin/t3c-generate
 /usr/bin/to_requester
 /usr/bin/t3c-update
-/usr/bin/plugin_verifier
+/usr/bin/t3c-verify
 
 %config(noreplace) /etc/logrotate.d/atstccfg
 %config(noreplace) /var/log/trafficcontrol-cache-config/atstccfg.log
