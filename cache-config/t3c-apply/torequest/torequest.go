@@ -24,11 +24,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
-	"github.com/apache/trafficcontrol/cache-config/t3c-apply/util"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -36,7 +31,6 @@ import (
 	"net/mail"
 	"net/textproto"
 	"os"
-	"os/exec"
 	"os/user"
 	"path/filepath"
 	"regexp"
@@ -44,6 +38,13 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
+	"github.com/apache/trafficcontrol/cache-config/t3c-apply/util"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 type UpdateStatus int
@@ -182,115 +183,6 @@ func NewTrafficOpsReq(cfg config.Cfg) *TrafficOpsReq {
 		baseBackupDir: config.TmpBase + "/" + unixTimeString,
 		unixTimeStr:   unixTimeString,
 	}
-}
-
-// atsTcExec is a wrapper to run a t3c-generate command.
-func (r *TrafficOpsReq) atsTcExec(cmdstr string) ([]byte, error) {
-	log.Debugf("cmdstr: %s\n", cmdstr)
-	result, err := r.atsTcExecCommand(cmdstr, -1, -1)
-	return result, err
-}
-
-// atsTcExecCommand is used to run the t3c-generate command.
-func (r *TrafficOpsReq) atsTcExecCommand(cmdstr string, queueState int, revalState int) ([]byte, error) {
-	// adjust log locations used for t3c-generate
-	// cannot use stdout as this will cause json parsing errors.
-	errorLocation := r.Cfg.LogLocationErr
-	if errorLocation == "stdout" {
-		errorLocation = "stderr"
-		log.Infoln("t3c-generate error logging has been re-directed to 'stderr'")
-	}
-	infoLocation := r.Cfg.LogLocationInfo
-	if infoLocation == "stdout" {
-		infoLocation = "stderr"
-		log.Infoln("t3c-generate info logging has been re-directed to 'stderr'")
-	}
-	warningLocation := r.Cfg.LogLocationWarn
-	if warningLocation == "stdout" {
-		warningLocation = "stderr"
-		log.Infoln("t3c-generate warning logging has been re-directed to 'stderr'")
-	}
-
-	args := []string{
-		"--dir=" + config.TSConfigDir,
-		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(r.Cfg.TOTimeoutMS), 10),
-		"--traffic-ops-disable-proxy=" + strconv.FormatBool(r.Cfg.ReverseProxyDisable),
-		"--traffic-ops-user=" + r.Cfg.TOUser,
-		"--traffic-ops-password=" + r.Cfg.TOPass,
-		"--traffic-ops-url=" + r.Cfg.TOURL,
-		"--cache-host-name=" + r.Cfg.CacheHostName,
-		"--log-location-error=" + errorLocation,
-		"--log-location-info=" + infoLocation,
-		"--log-location-warning=" + warningLocation,
-	}
-
-	if r.Cfg.TOInsecure == true {
-		args = append(args, "--traffic-ops-insecure")
-	}
-	if r.Cfg.DNSLocalBind {
-		args = append(args, "--dns-local-bind")
-	}
-	if r.Cfg.DefaultClientEnableH2 != nil {
-		args = append(args, "--default-client-enable-h2="+strconv.FormatBool(*r.Cfg.DefaultClientEnableH2))
-	}
-	if r.Cfg.DefaultClientTLSVersions != nil {
-		args = append(args, "--default-client-tls-versions="+*r.Cfg.DefaultClientTLSVersions+"")
-	}
-
-	switch cmdstr {
-	case "chkconfig":
-		args = append(args, "--get-data=chkconfig")
-	case "packages":
-		args = append(args, "--get-data=packages")
-	case "statuses":
-		args = append(args, "--get-data=statuses")
-	case "system-info":
-		args = append(args, "--get-data=system-info")
-	case "update-status":
-		args = append(args, "--get-data=update-status")
-	case "send-update":
-		var queueStatus string = "false"
-		var revalStatus string = "false"
-		if queueState > 0 {
-			queueStatus = "true"
-		}
-		if revalState > 0 {
-			revalStatus = "true"
-		}
-		args = append(args, "--set-queue-status="+queueStatus)
-		args = append(args, "--set-reval-status="+revalStatus)
-	case "get-config-files":
-		if r.Cfg.RunMode == config.Revalidate {
-			args = append(args, "--revalidate-only")
-		}
-		args = append(args, "--via-string-release="+strconv.FormatBool(!r.Cfg.OmitViaStringRelease))
-		args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(r.Cfg.DisableParentConfigComments))
-
-	default:
-		return nil, errors.New("invalid command '" + cmdstr + "'")
-	}
-
-	cmd := exec.Command(config.AtsTcConfig, args...)
-	var outbuf bytes.Buffer
-	var errbuf bytes.Buffer
-
-	cmd.Stdout = &outbuf
-	cmd.Stderr = &errbuf
-
-	err := cmd.Run()
-	if err != nil {
-		return nil, errors.New("Error from t3c-generate: " + err.Error() + ": " + errbuf.String())
-	}
-
-	if errStr := errbuf.String(); len(errStr) != 0 {
-		log.Warnln(`t3c-generate stderr start
-` + errStr + `
-t3c-generate stderr end`)
-	} else {
-		log.Warnln(`t3c-generate stderr was empty`)
-	}
-
-	return outbuf.Bytes(), nil
 }
 
 // backUpFile makes a backup of a config file.
@@ -452,7 +344,7 @@ func (r *TrafficOpsReq) checkPlugin(plugin string) error {
 	return nil
 }
 
-// checkStatusFiles insures that the cache status files reflect
+// checkStatusFiles ensures that the cache status files reflect
 // the status retrieved from Traffic Ops.
 func (r *TrafficOpsReq) checkStatusFiles(svrStatus string) error {
 	if svrStatus == "" {
@@ -465,7 +357,7 @@ func (r *TrafficOpsReq) checkStatusFiles(svrStatus string) error {
 	if !fileExists {
 		log.Errorf("status file %s does not exist.\n", statusFile)
 	}
-	statuses, err := r.getStatuses()
+	statuses, err := getStatuses(r.Cfg)
 	if err != nil {
 		return fmt.Errorf("could not retrieves a statuses list from Traffic Ops: %s\n", err)
 	}
@@ -500,43 +392,150 @@ func (r *TrafficOpsReq) checkStatusFiles(svrStatus string) error {
 	return nil
 }
 
-// getStatuses fetches a list of cache statuses from Traffic ops.
-func (r *TrafficOpsReq) getStatuses() ([]string, error) {
-	var statuses []tc.StatusNullable
-	sl := []string{}
-	out, err := r.atsTcExec("statuses")
-	if err != nil {
-		log.Errorln(err)
-		return nil, err
+// generate runs t3c-generate and returns the result.
+func generate(cfg config.Cfg) ([]byte, error) {
+	args := []string{
+		"--dir=" + config.TSConfigDir,
+		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
+		"--traffic-ops-disable-proxy=" + strconv.FormatBool(cfg.ReverseProxyDisable),
+		"--traffic-ops-user=" + cfg.TOUser,
+		"--traffic-ops-password=" + cfg.TOPass,
+		"--traffic-ops-url=" + cfg.TOURL,
+		"--cache-host-name=" + cfg.CacheHostName,
+		"--log-location-error=" + outToErr(cfg.LogLocationErr),
+		"--log-location-info=" + outToErr(cfg.LogLocationInfo),
+		"--log-location-warning=" + outToErr(cfg.LogLocationWarn),
 	}
-	if err = json.Unmarshal(out, &statuses); err != nil {
-		log.Errorln(err)
-		return nil, err
-	} else {
-		for val := range statuses {
-			if statuses[val].Name != nil {
-				sl = append(sl, *statuses[val].Name)
-			}
+	if cfg.TOInsecure == true {
+		args = append(args, "--traffic-ops-insecure")
+	}
+	if cfg.DNSLocalBind {
+		args = append(args, "--dns-local-bind")
+	}
+	if cfg.DefaultClientEnableH2 != nil {
+		args = append(args, "--default-client-enable-h2="+strconv.FormatBool(*cfg.DefaultClientEnableH2))
+	}
+	if cfg.DefaultClientTLSVersions != nil {
+		args = append(args, "--default-client-tls-versions="+*cfg.DefaultClientTLSVersions+"")
+	}
+	if cfg.RunMode == config.Revalidate {
+		args = append(args, "--revalidate-only")
+	}
+	args = append(args, "--via-string-release="+strconv.FormatBool(!cfg.OmitViaStringRelease))
+	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))
+
+	stdOut, stdErr, code := t3cutil.Do(config.GenerateCmd, args...)
+	if code != 0 {
+		return nil, fmt.Errorf("t3c-generate returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+	}
+	if len(bytes.TrimSpace(stdErr)) > 0 {
+		log.Warnln(`t3c-generate stderr start` + "\n" + string(stdErr))
+		log.Warnln(`t3c-generate stderr end`)
+	}
+	return stdOut, nil
+}
+
+// requestJSON calls t3c-request with the given command, and deserializes the result as JSON into obj.
+func requestJSON(cfg config.Cfg, command string, obj interface{}) error {
+	stdOut, stdErr, code := t3cutil.Do(`t3c-request`,
+		"--traffic-ops-timeout-milliseconds="+strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
+		"--traffic-ops-user="+cfg.TOUser,
+		"--traffic-ops-password="+cfg.TOPass,
+		"--traffic-ops-url="+cfg.TOURL,
+		"--cache-host-name="+cfg.CacheHostName,
+		"--log-location-error="+outToErr(cfg.LogLocationErr),
+		"--log-location-info="+outToErr(cfg.LogLocationInfo),
+		`--get-data=`+command,
+	)
+	if code != 0 {
+		return fmt.Errorf("t3c-request returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+	}
+	if len(bytes.TrimSpace(stdErr)) > 0 {
+		log.Warnf("t3c-request returned code 0 but stderr '%v'", string(stdErr)) // usually warnings
+	}
+	if err := json.Unmarshal(stdOut, obj); err != nil {
+		return errors.New("unmarshalling '" + string(stdOut) + "': " + err.Error())
+	}
+	return nil
+}
+
+// outToErr returns stderr if logLocation is stdout, otherwise returns logLocation unchanged.
+// This is a helper to avoid logging to stdout for commands whose output is on stdout.
+func outToErr(logLocation string) string {
+	if logLocation == "stdout" {
+		return "stderr"
+	}
+	return logLocation
+}
+
+func getStatuses(cfg config.Cfg) ([]string, error) {
+	statuses := []tc.StatusNullable{}
+	if err := requestJSON(cfg, "statuses", &statuses); err != nil {
+		return nil, errors.New("requesting json: " + err.Error())
+	}
+	sl := []string{}
+	for val := range statuses {
+		if statuses[val].Name != nil {
+			sl = append(sl, *statuses[val].Name)
 		}
 	}
-
 	return sl, nil
 }
 
-// getUpdateStatus retrieves the update statuse for a cache from Traffic Ops.
-func (r *TrafficOpsReq) getUpdateStatus() (*tc.ServerUpdateStatus, error) {
-	var status tc.ServerUpdateStatus
-	out, err := r.atsTcExec("update-status")
-	if err != nil {
-		log.Errorln(err)
-		return nil, err
+func getChkconfig(cfg config.Cfg) ([]map[string]string, error) {
+	result := []map[string]string{}
+	if err := requestJSON(cfg, "chkconfig", &result); err != nil {
+		return nil, errors.New("requesting json: " + err.Error())
 	}
-	if err = json.Unmarshal(out, &status); err != nil {
-		log.Errorln(err)
-		return nil, err
+	return result, nil
+}
+
+func getUpdateStatus(cfg config.Cfg) (*tc.ServerUpdateStatus, error) {
+	status := tc.ServerUpdateStatus{}
+	if err := requestJSON(cfg, "update-status", &status); err != nil {
+		return nil, errors.New("requesting json: " + err.Error())
 	}
-	log.Debugf("ServerUpdateStatus: %#v\n", status)
 	return &status, nil
+}
+
+func getSystemInfo(cfg config.Cfg) (map[string]interface{}, error) {
+	result := map[string]interface{}{}
+	if err := requestJSON(cfg, "system-info", &result); err != nil {
+		return nil, errors.New("requesting json: " + err.Error())
+	}
+	return result, nil
+}
+
+func getPackages(cfg config.Cfg) ([]Package, error) {
+	pkgs := []Package{}
+	if err := requestJSON(cfg, "packages", &pkgs); err != nil {
+		return nil, errors.New("requesting json: " + err.Error())
+	}
+	return pkgs, nil
+}
+
+// sendUpdate updates the given cache's queue update and reval status in Traffic Ops.
+// Note the statuses are the value to be set, not whether to set the value.
+func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
+	stdOut, stdErr, code := t3cutil.Do(`t3c-update`,
+		"--traffic-ops-timeout-milliseconds="+strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
+		"--traffic-ops-user="+cfg.TOUser,
+		"--traffic-ops-password="+cfg.TOPass,
+		"--traffic-ops-url="+cfg.TOURL,
+		"--log-location-error="+outToErr(cfg.LogLocationErr),
+		"--log-location-info="+outToErr(cfg.LogLocationInfo),
+		"--cache-host-name="+cfg.CacheHostName,
+		"--set-update-status="+strconv.FormatBool(updateStatus),
+		"--set-reval-status="+strconv.FormatBool(revalStatus),
+	)
+	if code != 0 {
+		return fmt.Errorf("t3c-update returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+	}
+	if len(bytes.TrimSpace(stdErr)) > 0 {
+		log.Warnf("t3c-request returned code 0 but stderr '%v'", string(stdErr)) // usually warnings
+	}
+	log.Infoln("t3c-update succeeded")
+	return nil
 }
 
 // processRemapOverrides processes remap overrides found from Traffic Ops.
@@ -915,53 +914,50 @@ func (r *TrafficOpsReq) verifyPlugins(cfg *ConfigFile) error {
 // CheckSystemServices is used to verify that packages installed
 // are enabled for startup.
 func (r *TrafficOpsReq) CheckSystemServices() error {
-	if r.Cfg.RunMode == config.BadAss {
-		out, err := r.atsTcExec("chkconfig")
-		if err != nil {
-			log.Errorln(err)
-			return err
+	if r.Cfg.RunMode != config.BadAss {
+		return nil
+	}
+	result, err := getChkconfig(r.Cfg)
+	if err != nil {
+		log.Errorln(err)
+		return err
+	}
+	for ii := range result {
+		name := result[ii]["name"]
+		value := result[ii]["value"]
+		arrv := strings.Fields(value)
+		level := []string{}
+		enabled := false
+		for jj := range arrv {
+			nv := strings.Split(arrv[jj], ":")
+			if len(nv) == 2 && strings.Contains(nv[1], "on") {
+				level = append(level, nv[0])
+				enabled = true
+			}
+		}
+		if !enabled {
+			continue
+		}
+		if r.Cfg.SvcManagement == config.SystemD {
+			out, rc, err := util.ExecCommand("/bin/systemctl", "enable", name)
+			if err != nil {
+				log.Errorf(string(out))
+				return errors.New("Unable to enable service " + name + ": " + err.Error())
+			}
+			if rc == 0 {
+				log.Infof("The %s service has been enabled\n", name)
+			}
+		} else if r.Cfg.SvcManagement == config.SystemV {
+			levelValue := strings.Join(level, "")
+			_, rc, err := util.ExecCommand("/bin/chkconfig", "--level", levelValue, name, "on")
+			if err != nil {
+				return errors.New("Unable to enable service " + name + ": " + err.Error())
+			}
+			if rc == 0 {
+				log.Infof("The %s service has been enabled\n", name)
+			}
 		} else {
-			var result []map[string]string
-			if err = json.Unmarshal(out, &result); err != nil {
-				return err
-			}
-			for ii := range result {
-				name := result[ii]["name"]
-				value := result[ii]["value"]
-				arrv := strings.Fields(value)
-				var level []string
-				var enabled bool = false
-				for jj := range arrv {
-					nv := strings.Split(arrv[jj], ":")
-					if len(nv) == 2 && strings.Contains(nv[1], "on") {
-						level = append(level, nv[0])
-						enabled = true
-					}
-				}
-				if enabled == true {
-					if r.Cfg.SvcManagement == config.SystemD {
-						out, rc, err := util.ExecCommand("/bin/systemctl", "enable", name)
-						if err != nil {
-							log.Errorf(string(out))
-							return errors.New("Unable to enable service " + name + ": " + err.Error())
-						}
-						if rc == 0 {
-							log.Infof("The %s service has been enabled\n", name)
-						}
-					} else if r.Cfg.SvcManagement == config.SystemV {
-						levelValue := strings.Join(level, "")
-						_, rc, err := util.ExecCommand("/bin/chkconfig", "--level", levelValue, name, "on")
-						if err != nil {
-							return errors.New("Unable to enable service " + name + ": " + err.Error())
-						}
-						if rc == 0 {
-							log.Infof("The %s service has been enabled\n", name)
-						}
-					} else {
-						log.Errorf("Unable to insure %s service is enabled, SvcMananagement type is %s\n", name, r.Cfg.SvcManagement)
-					}
-				}
-			}
+			log.Errorf("Unable to ensure %s service is enabled, SvcMananagement type is %s\n", name, r.Cfg.SvcManagement)
 		}
 	}
 	return nil
@@ -1007,7 +1003,7 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 		}
 	}
 
-	fBytes, err := r.atsTcExec("get-config-files")
+	fBytes, err := generate(r.Cfg)
 	if err != nil {
 		return err
 	}
@@ -1077,25 +1073,18 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 
 // GetHeaderComment looks up the tm.toolname parameter from traffic ops.
 func (r *TrafficOpsReq) GetHeaderComment() string {
-	var toolName string = ""
-	out, err := r.atsTcExec("system-info")
+	result, err := getSystemInfo(r.Cfg)
 	if err != nil {
-		log.Errorln(err)
-	} else {
-		var result map[string]interface{}
-		if err = json.Unmarshal(out, &result); err != nil {
-			log.Errorln(err)
-		} else {
-			tn := result["tm.toolname"]
-			if tn, ok := tn.(string); ok {
-				toolName = tn
-				log.Infof("Found tm.toolname: %v\n", toolName)
-			} else {
-				log.Errorln("Did not find tm.toolname!")
-			}
-		}
+		log.Errorln("getting system info: " + err.Error())
+		return "" // failing to get the toolname is an error, but not fatal
 	}
-	return toolName
+	toolName := result["tm.toolname"]
+	if toolName, ok := toolName.(string); ok {
+		log.Infof("Found tm.toolname: %v\n", toolName)
+		return toolName
+	}
+	log.Errorln("Did not find tm.toolname!")
+	return "" // not having a tm.toolname Parameter is an error, but not fatal
 }
 
 // CheckRevalidateState retrieves and returns the revalidate status from Traffic Ops.
@@ -1104,7 +1093,7 @@ func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, 
 	log.Infoln("Checking revalidate state.")
 
 	if r.Cfg.RunMode == config.Revalidate || sleepOverride {
-		serverStatus, err := r.getUpdateStatus()
+		serverStatus, err := getUpdateStatus(r.Cfg)
 		log.Infof("my status: %s\n", serverStatus.Status)
 		if err != nil {
 			log.Errorln(err)
@@ -1149,7 +1138,7 @@ func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 	}
 	log.Debugln("Checking syncds state.")
 	if r.Cfg.RunMode == config.SyncDS || r.Cfg.RunMode == config.BadAss || r.Cfg.RunMode == config.Report {
-		serverStatus, err := r.getUpdateStatus()
+		serverStatus, err := getUpdateStatus(r.Cfg)
 		if err != nil {
 			log.Errorln(err)
 			return updateStatus, err
@@ -1168,7 +1157,7 @@ func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 				if r.Cfg.RunMode == config.SyncDS {
 					log.Infof("In syncds mode, sleeping for %ds to see if the update my parents need is cleared.", randDispSec/time.Second)
 					r.sleepTimer(serverStatus)
-					serverStatus, err = r.getUpdateStatus()
+					serverStatus, err = getUpdateStatus(r.Cfg)
 					if err != nil {
 						return updateStatus, err
 					}
@@ -1271,20 +1260,14 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 // ProcessPackages retrievies a list of required RPM's from Traffic Ops
 // and determines which need to be installed or removed on the cache.
 func (r *TrafficOpsReq) ProcessPackages() error {
-	var pkgs []Package
+	// get the package list for this cache from Traffic Ops.
+	pkgs, err := getPackages(r.Cfg)
+	if err != nil {
+		return errors.New("getting packages: " + err.Error())
+	}
+
 	var install []string   // install package list.
 	var uninstall []string // uninstall package list
-
-	// get the package list for this cache from Traffic Ops.
-	out, err := r.atsTcExec("packages")
-	if err != nil {
-		return err
-	}
-
-	if err = json.Unmarshal(out, &pkgs); err != nil {
-		return err
-	}
-
 	// loop through the package list to build an install and uninstall list.
 	for ii := range pkgs {
 		var instpkg string // installed package
@@ -1520,7 +1503,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) bool {
 func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) (bool, error) {
 	var updateResult bool
 
-	serverStatus, err := r.getUpdateStatus()
+	serverStatus, err := getUpdateStatus(r.Cfg)
 	if err != nil {
 		return false, errors.New("failed to update Traffic Ops: " + err.Error())
 	}
@@ -1539,31 +1522,34 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) (bool, erro
 		log.Errorln("Traffic Ops requires an update and it was applied successfully.  Clearing update state in Traffic Ops.")
 	}
 
-	if updateResult {
-		switch r.Cfg.RunMode {
-		case config.Report:
-			log.Errorln("In Report mode and Traffic Ops needs updated you should probably do that manually.")
-			break
-		case config.BadAss:
-			fallthrough
-		case config.SyncDS:
-			if serverStatus.RevalPending {
-				_, err = r.atsTcExecCommand("send-update", 0, 1)
-			} else {
-				_, err = r.atsTcExecCommand("send-update", 0, 0)
-			}
-		case config.Revalidate:
-			if serverStatus.UpdatePending {
-				_, err = r.atsTcExecCommand("send-update", 1, 0)
-			} else {
-				_, err = r.atsTcExecCommand("send-update", 0, 0)
-			}
-		}
-		if err != nil {
-			return false, errors.New("Traffic Ops Update failed: " + err.Error())
+	if !updateResult {
+		return true, nil
+	}
+	if r.Cfg.RunMode == config.Report {
+		log.Errorln("In Report mode and Traffic Ops needs updated you should probably do that manually.")
+		return true, nil
+	}
+
+	switch r.Cfg.RunMode {
+	case config.BadAss:
+		fallthrough
+	case config.SyncDS:
+		if serverStatus.RevalPending {
+			err = sendUpdate(r.Cfg, false, true)
 		} else {
-			log.Errorln("Traffic Ops has been updated.")
+			err = sendUpdate(r.Cfg, false, false)
+		}
+	case config.Revalidate:
+		if serverStatus.UpdatePending {
+			_, err = sendUpdate(r.Cfg, true, false)
+		} else {
+			_, err = sendUpdate(r.Cfg, false, false)
 		}
 	}
+	if err != nil {
+		return false, errors.New("Traffic Ops Update failed: " + err.Error())
+	}
+
+	log.Errorln("Traffic Ops has been updated.")
 	return true, nil
 }

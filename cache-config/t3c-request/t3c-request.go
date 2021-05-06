@@ -95,7 +95,7 @@ func main() {
 		os.Exit(1)
 	} else {
 		log.Infoln("configuration initialized")
-		cfg.PrintConfig()
+		// cfg.PrintConfig()
 	}
 
 	// login to traffic ops.

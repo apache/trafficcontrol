@@ -37,7 +37,7 @@ var TSConfigDir string = "/opt/trafficserver/etc/trafficserver"
 
 const (
 	StatusDir          = "/var/lib/trafficcontrol-cache-config/status"
-	AtsTcConfig        = "/usr/bin/t3c-generate" // TODO don't make absolute?
+	GenerateCmd        = "/usr/bin/t3c-generate" // TODO don't make absolute?
 	Chkconfig          = "/sbin/chkconfig"
 	Service            = "/sbin/service"
 	SystemCtl          = "/bin/systemctl"
