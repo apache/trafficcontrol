@@ -49,20 +49,15 @@ init() {
   wait_for_endpoint "${TM_URI}"
 	TESTCACHES_ADDRESS=$(ping testcaches -4 -c 1 | head -n 1 |  grep -Eo '[0-9]+.[0-9]+.[0-9]+.[0-9]+')
 	TESTCACHES_GATEWAY=$(echo $TESTCACHES_ADDRESS | sed "s/\([0-9]\+.[0-9]\+.[0-9]\+.\)[0-9]/\11/")
-#	TESTTO_ADDRESS=$(ping testto -4 -c 1 | head -n 1 | grep -Eo '[0-9]+.[0-9]+.[0-9]+.[0-9]+')
-#	TESTTO_GATEWAY=$(echo $TESTTO_ADDRESS | sed "s/\([0-9]\+.[0-9]\+.[0-9]\+.\)[0-9]/\11/")
 
   jq "(.. | .address?) |= \"$TESTCACHES_ADDRESS\" | (.. | .gateway?) |= \"$TESTCACHES_GATEWAY\"" \
     /monitoring.json > /monitoring.json.tmp && mv /monitoring.json.tmp /monitoring.json
-
-#  jq "(.. | .address?) |= \"$TESTTO_ADDRESS\" | (.. | .gateway?) |= \"$TESTTO_GATEWAY\"" \
-#    /snapshot.json > /snapshot.json.tmp && mv /snapshot.json.tmp /snapshot.json
 
 	curl -Lvsk ${TESTTO_URI}/api/4.0/cdns/fake/snapshot -X POST -d "@/snapshot.json"
 
 	curl -Lvsk ${TESTTO_URI}/api/4.0/cdns/fake/configs/monitoring -X POST -d '@/monitoring.json'
 
-	curl -Lvsk ${TESTTO_URI}/api/3.0/servers -X POST -d '
+	curl -Lvsk ${TESTTO_URI}/api/4.0/servers -X POST -d '
 [
   {
     "cachegroup": "foo",
@@ -131,10 +126,6 @@ init() {
   }
 ]
 '
-
-	# DEBUG
-	printf "\n\ntestto:\n"
-	curl -Lk ${TESTTO_URI}/api/4.0/cdns/fake/snapshot
 
 	cat > $CFG_FILE <<- EOF
 {
