@@ -339,13 +339,13 @@ func (to *Session) GetDeliveryServicesEligible(dsID int, header http.Header) ([]
 }
 
 // GetDeliveryServiceURLSigKeys returns the URL-signing keys used by the Delivery Service
-// identified by the XMLID 'dsName'.
-func (to *Session) GetDeliveryServiceURLSigKeys(dsName string, header http.Header) (tc.URLSigKeys, toclientlib.ReqInf, error) {
+// identified by the XMLID 'dsXMLID'.
+func (to *Session) GetDeliveryServiceURLSigKeys(dsXMLID string, header http.Header) (tc.URLSigKeys, toclientlib.ReqInf, error) {
 	data := struct {
 		Response tc.URLSigKeys `json:"response"`
 	}{}
 
-	reqInf, err := to.get(fmt.Sprintf(APIDeliveryServicesURLSigKeys, dsName), header, &data)
+	reqInf, err := to.get(fmt.Sprintf(APIDeliveryServicesURLSigKeys, dsXMLID), header, &data)
 	if err != nil {
 		return tc.URLSigKeys{}, reqInf, err
 	}
@@ -353,26 +353,26 @@ func (to *Session) GetDeliveryServiceURLSigKeys(dsName string, header http.Heade
 }
 
 // CreateDeliveryServiceURLSigKeys creates new URL-signing keys used by the Delivery Service
-// identified by the XMLID 'dsName'
-func (to *Session) CreateDeliveryServiceURLSigKeys(dsName string, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+// identified by the XMLID 'dsXMLID'
+func (to *Session) CreateDeliveryServiceURLSigKeys(dsXMLID string, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(fmt.Sprintf(APIDeliveryServicesURLSigKeysGenerate, dsName), nil, header, &alerts)
+	reqInf, err := to.post(fmt.Sprintf(APIDeliveryServicesURLSigKeysGenerate, dsXMLID), nil, header, &alerts)
 	return alerts, reqInf, err
 }
 
 // DeleteDeliveryServiceURLSigKeys deletes the URL-signing keys used by the Delivery Service
-// identified by the XMLID 'dsName'
-func (to *Session) DeleteDeliveryServiceURLSigKeys(dsName string, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+// identified by the XMLID 'dsXMLID'
+func (to *Session) DeleteDeliveryServiceURLSigKeys(dsXMLID string, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.del(fmt.Sprintf(APIDeliveryServicesURLSigKeys, dsName), header, &alerts)
+	reqInf, err := to.del(fmt.Sprintf(APIDeliveryServicesURLSigKeys, dsXMLID), header, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetDeliveryServiceURISigningKeys returns the URI-signing keys used by the Delivery Service
-// identified by the XMLID 'dsName'. The result is not parsed.
-func (to *Session) GetDeliveryServiceURISigningKeys(dsName string, header http.Header) ([]byte, toclientlib.ReqInf, error) {
+// identified by the XMLID 'dsXMLID'. The result is not parsed.
+func (to *Session) GetDeliveryServiceURISigningKeys(dsXMLID string, header http.Header) ([]byte, toclientlib.ReqInf, error) {
 	data := json.RawMessage{}
-	reqInf, err := to.get(fmt.Sprintf(APIDeliveryServicesURISigningKeys, url.QueryEscape(dsName)), header, &data)
+	reqInf, err := to.get(fmt.Sprintf(APIDeliveryServicesURISigningKeys, url.QueryEscape(dsXMLID)), header, &data)
 	if err != nil {
 		return []byte{}, reqInf, err
 	}
@@ -380,18 +380,18 @@ func (to *Session) GetDeliveryServiceURISigningKeys(dsName string, header http.H
 }
 
 // CreateDeliveryServiceURISigKeys creates new URI-signing keys used by the Delivery Service
-// identified by the XMLID 'dsName'
-func (to *Session) CreateDeliveryServiceURISigKeys(dsName string, header http.Header, body map[string]tc.URISignerKeyset) (tc.Alerts, toclientlib.ReqInf, error) {
+// identified by the XMLID 'dsXMLID'
+func (to *Session) CreateDeliveryServiceURISigKeys(dsXMLID string, header http.Header, body map[string]tc.URISignerKeyset) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(fmt.Sprintf(APIDeliveryServicesURISigningKeys, dsName), body, header, &alerts)
+	reqInf, err := to.post(fmt.Sprintf(APIDeliveryServicesURISigningKeys, dsXMLID), body, header, &alerts)
 	return alerts, reqInf, err
 }
 
 // DeleteDeliveryServiceURISigKeys deletes the URI-signing keys used by the Delivery Service
-// identified by the XMLID 'dsName'
-func (to *Session) DeleteDeliveryServiceURISigKeys(dsName string, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
+// identified by the XMLID 'dsXMLID'
+func (to *Session) DeleteDeliveryServiceURISigKeys(dsXMLID string, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.del(fmt.Sprintf(APIDeliveryServicesURISigningKeys, dsName), header, &alerts)
+	reqInf, err := to.del(fmt.Sprintf(APIDeliveryServicesURISigningKeys, dsXMLID), header, &alerts)
 	return alerts, reqInf, err
 }
 
