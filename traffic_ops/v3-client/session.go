@@ -488,7 +488,7 @@ func reqLogin(reqF ReqF) ReqF {
 func reqFallback(reqF ReqF) ReqF {
 	var fallbackFunc func(to *Session, method string, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error)
 	fallbackFunc = func(to *Session, method string, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error) {
-		inf, err := reqF(to, method, path, body, header, response, false)
+		inf, err := reqF(to, method, path, body, header, response, raw)
 		if err == nil {
 			return inf, err
 		}
@@ -512,7 +512,7 @@ func reqFallback(reqF ReqF) ReqF {
 		}
 		to.latestSupportedAPI = apiVersions[nextAPIVerI]
 
-		return fallbackFunc(to, method, path, body, header, response, false)
+		return fallbackFunc(to, method, path, body, header, response, raw)
 	}
 	return fallbackFunc
 }
