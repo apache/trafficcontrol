@@ -22,7 +22,7 @@ package torequest
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c/config"
+	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
 )
 
 var testCfg config.Cfg = config.Cfg{

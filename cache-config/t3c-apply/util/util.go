@@ -23,7 +23,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/cache-config/t3c/config"
+	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/gofrs/flock"
 	"io/ioutil"

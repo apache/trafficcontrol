@@ -21,9 +21,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/cache-config/t3c/config"
-	"github.com/apache/trafficcontrol/cache-config/t3c/torequest"
-	"github.com/apache/trafficcontrol/cache-config/t3c/util"
+	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
+	"github.com/apache/trafficcontrol/cache-config/t3c-apply/torequest"
+	"github.com/apache/trafficcontrol/cache-config/t3c-apply/util"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"os"
 	"time"
@@ -213,7 +213,7 @@ func main() {
 }
 
 // TODO change code to always create git commits, if the dir is a repo
-// We only want --use-git to init the repo. If someone init'd the repo, t3c should _always_ commit.
+// We only want --use-git to init the repo. If someone init'd the repo, t3c-apply should _always_ commit.
 // We don't want someone doing manual badass's and not having that log
 
 // GitCommitAndExit attempts to git commit all changes, logs any error, and calls os.Exit with the given code.

@@ -53,11 +53,11 @@ godir="$ccpath"/atstccfg
 	cp "$TC_DIR"/"$ccdir"/atstccfg/atstccfg .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
-# copy t3c binary
-got3cdir="$ccpath"/t3c
+# copy t3c-apply binary
+got3cdir="$ccpath"/t3c-apply
 ( mkdir -p "$got3cdir" && \
 	cd "$got3cdir" && \
-	cp "$TC_DIR"/"$ccdir"/t3c/t3c .
+	cp "$TC_DIR"/"$ccdir"/t3c-apply/t3c-apply .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 # copy to_requester binary
@@ -97,8 +97,8 @@ cp -p ${RPM_SOURCE_DIR}/trafficcontrol-cache-config-%{version}/build/atstccfg.lo
 touch ${RPM_BUILD_ROOT}/var/log/trafficcontrol-cache-config/atstccfg.log
 cp -p "$src"/atstccfg/atstccfg ${RPM_BUILD_ROOT}/"$installdir"
 
-t3csrc=src/github.com/apache/trafficcontrol/"$ccdir"/t3c
-cp -p "$t3csrc"/t3c ${RPM_BUILD_ROOT}/"$installdir"
+t3csrc=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-apply
+cp -p "$t3csrc"/t3c-apply ${RPM_BUILD_ROOT}/"$installdir"
 
 to_req_src=src/github.com/apache/trafficcontrol/"$ccdir"/to_requester
 cp -p "$to_req_src"/to_requester ${RPM_BUILD_ROOT}/"$installdir"
@@ -120,7 +120,7 @@ rm -rf ${RPM_BUILD_ROOT}
 /usr/bin/traffic_ops_ort.pl
 /usr/bin/supermicro_udev_mapper.pl
 /usr/bin/atstccfg
-/usr/bin/t3c
+/usr/bin/t3c-apply
 /usr/bin/to_requester
 /usr/bin/t3c-update
 /usr/bin/plugin_verifier

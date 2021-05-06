@@ -323,7 +323,7 @@ func GetCfg() (Cfg, error) {
 		fmt.Printf("TSHome: %s, TSConfigDir: %s\n", TSHome, TSConfigDir)
 	}
 
-	usageStr := "basic usage: t3c  --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache"
+	usageStr := "basic usage: t3c-apply --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache"
 	if strings.TrimSpace(toURL) == "" {
 		return Cfg{}, errors.New("Missing required argument --traffic-ops-url or TO_URL environment variable. " + usageStr)
 	}
