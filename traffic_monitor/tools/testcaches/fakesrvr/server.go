@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"html"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -79,7 +80,7 @@ func astatsHandler(fakeSrvrDataThs fakesrvrdata.Ths) http.HandlerFunc {
 
 func cmdHandler(fakeSrvrDataThs fakesrvrdata.Ths) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
+		path := html.EscapeString(r.URL.Path)
 		path = strings.ToLower(path)
 		path = strings.TrimLeft(path, "/cmd")
 		for cmd, cmdF := range cmds {

@@ -166,7 +166,7 @@ func cmdSetSystem(w http.ResponseWriter, r *http.Request, fakeSrvrDataThs fakesr
 	urlQry := r.URL.Query()
 
 	if newSpeedStr := urlQry.Get("speed"); newSpeedStr != "" {
-		newSpeed, err := strconv.ParseInt(newSpeedStr, 10, 64)
+		newSpeed, err := strconv.ParseInt(newSpeedStr, 10, 32)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("error parsing query parameter 'speed': must be a non-negative integer: " + err.Error() + "\n"))
