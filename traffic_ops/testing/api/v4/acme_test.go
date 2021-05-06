@@ -20,7 +20,7 @@ import (
 	"testing"
 )
 
-func TestLetsEncrypt(t *testing.T) {
+func TestAcmeAutoRenew(t *testing.T) {
 	PostTestAutoRenew(t)
 }
 
