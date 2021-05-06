@@ -53,7 +53,6 @@ export class TopologiesPage extends BasePage {
         await snp.ClickTopologyMenu();
     }
     public async CreateTopologies(topologies: Topologies): Promise<boolean> {
-        let basePage = new BasePage();
         let snp = new SideNavigationPage();
         await snp.NavigateToTopologiesPage();
         //click '+'
@@ -64,18 +63,18 @@ export class TopologiesPage extends BasePage {
         await this.btnAddCacheGroup.click();
         //choose type
         await this.txtCacheGroupType.sendKeys(topologies.Type);
-        await basePage.ClickSubmit();
+        await this.ClickSubmit();
         //choose Cachegroup
         await this.txtSearchCacheGroup.sendKeys(topologies.CacheGroup + this.randomize)
         if(await browser.isElementPresent(by.xpath("//td[@data-search='^" + topologies.CacheGroup + this.randomize + "$']")) === true){
             await element(by.xpath("//td[@data-search='^" + topologies.CacheGroup + this.randomize + "$']")).click();
         }
-        await basePage.ClickSubmit();
-        await basePage.ClickCreate();
+        await this.ClickSubmit();
+        await this.ClickCreate();
         if(topologies.description === "create a Topologies with empty cachegroup (no server)"){
             topologies.validationMessage = topologies.validationMessage + this.randomize;
         }
-        return await basePage.GetOutputMessage().then(value => value === topologies.validationMessage);
+        return await this.GetOutputMessage().then(value => value === topologies.validationMessage);
     }
        
     async SearchTopologies(nameTopologies:string): Promise<boolean>{
@@ -92,10 +91,9 @@ export class TopologiesPage extends BasePage {
     }
     async DeleteTopologies(topologies: DeleteTopologies):Promise<boolean>{
         let name = topologies.Name + this.randomize;
-        let basePage = new BasePage();
         await this.btnDelete.click();
         await this.txtConfirmName.sendKeys(name);
         await this.ClickDeletePermanently();
-        return await basePage.GetOutputMessage().then(value => value === topologies.validationMessage);
+        return await this.GetOutputMessage().then(value => value === topologies.validationMessage);
     }
 }
