@@ -69,7 +69,7 @@ func LoadConfig(confPath string) (Config, error) {
 	if _, err := os.Stat(confPath); !os.IsNotExist(err) {
 		confBytes, err := ioutil.ReadFile(confPath)
 		if err != nil {
-			return Config{}, fmt.Errorf("Reading CDN conf '%s': %v", confPath, err)
+			return Config{}, fmt.Errorf("reading CDN conf '%s': %v", confPath, err)
 		}
 
 		err = json.Unmarshal(confBytes, &cfg)
@@ -87,7 +87,7 @@ func LoadConfig(confPath string) (Config, error) {
 	}
 	err := envconfig.Process("traffic-ops-client-tests", &cfg)
 	if err != nil {
-		fmt.Errorf("cannot parse config: %v\n", err)
+		log.Errorln(fmt.Errorf("cannot parse config: %v\n", err))
 		os.Exit(0)
 	}
 

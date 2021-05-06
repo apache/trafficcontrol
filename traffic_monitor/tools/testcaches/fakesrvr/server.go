@@ -53,7 +53,7 @@ func astatsHandler(fakeSrvrDataThs fakesrvrdata.Ths) http.HandlerFunc {
 		if maxDelayMS != 0 {
 			delayMS := minDelayMS
 			if minDelayMS != maxDelayMS {
-				delayMS += uint64(rand.Int63n(int64((maxDelayMS - minDelayMS))))
+				delayMS += uint64(rand.Int63n(int64(maxDelayMS - minDelayMS)))
 			}
 			delay := time.Duration(delayMS) * time.Millisecond
 			time.Sleep(delay)

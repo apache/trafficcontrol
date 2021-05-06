@@ -174,7 +174,7 @@ func cmdSetSystem(w http.ResponseWriter, r *http.Request, fakeSrvrDataThs fakesr
 
 		srvr := (*fakesrvrdata.FakeServerData)(fakeSrvrDataThs.Get())
 		srvr.System.Speed = int(newSpeed)
-		fakeSrvrDataThs.Set(fakesrvrdata.ThsT(srvr))
+		fakeSrvrDataThs.Set(srvr)
 	}
 
 	if newLoadAvg1MStr := urlQry.Get("loadavg1m"); newLoadAvg1MStr != "" {
@@ -187,7 +187,7 @@ func cmdSetSystem(w http.ResponseWriter, r *http.Request, fakeSrvrDataThs fakesr
 
 		srvr := (*fakesrvrdata.FakeServerData)(fakeSrvrDataThs.Get())
 		srvr.System.ProcLoadAvg.CPU1m = newLoadAvg1M
-		fakeSrvrDataThs.Set(fakesrvrdata.ThsT(srvr))
+		fakeSrvrDataThs.Set(srvr)
 	}
 
 	if newLoadAvg5MStr := urlQry.Get("loadavg5m"); newLoadAvg5MStr != "" {
@@ -200,7 +200,7 @@ func cmdSetSystem(w http.ResponseWriter, r *http.Request, fakeSrvrDataThs fakesr
 
 		srvr := (*fakesrvrdata.FakeServerData)(fakeSrvrDataThs.Get())
 		srvr.System.ProcLoadAvg.CPU5m = newLoadAvg5M
-		fakeSrvrDataThs.Set(fakesrvrdata.ThsT(srvr))
+		fakeSrvrDataThs.Set(srvr)
 	}
 
 	if newLoadAvg10MStr := urlQry.Get("loadavg10m"); newLoadAvg10MStr != "" {
@@ -213,7 +213,7 @@ func cmdSetSystem(w http.ResponseWriter, r *http.Request, fakeSrvrDataThs fakesr
 
 		srvr := (*fakesrvrdata.FakeServerData)(fakeSrvrDataThs.Get())
 		srvr.System.ProcLoadAvg.CPU10m = newLoadAvg10M
-		fakeSrvrDataThs.Set(fakesrvrdata.ThsT(srvr))
+		fakeSrvrDataThs.Set(srvr)
 	}
 
 	w.WriteHeader(http.StatusNoContent)

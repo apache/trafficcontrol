@@ -51,44 +51,16 @@ func TestMain(m *testing.M) {
 	log.Infof(`Using Config values:
 			   TM Config File:       %s
 			   TM URL:               %s
-			   TM Session Timeout:   %ds
-`, *configFileName, Config.TrafficMonitor.URL, Config.Default.Session.TimeoutInSecs)
-
-	// //Load the test data
-	// LoadFixtures(*tcFixturesFileName)
-
-	// var db *sql.DB
-	// db, err = OpenConnection()
-	// if err != nil {
-	// 	fmt.Printf("\nError opening connection to %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOpsDB.User, err)
-	// 	os.Exit(1)
-	// }
-	// defer db.Close()
-
-	// err = Teardown(db)
-	// if err != nil {
-	// 	fmt.Printf("\nError tearingdown data %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOpsDB.User, err)
-	// 	os.Exit(1)
-	// }
-
-	// err = SetupTestData(db)
-	// if err != nil {
-	// 	fmt.Printf("\nError setting up data %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOpsDB.User, err)
-	// 	os.Exit(1)
-	// }
+			   TM Session Timeout:   %d\n`,
+		*configFileName, Config.TrafficMonitor.URL, Config.Default.Session.TimeoutInSecs)
 
 	tmReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-
-	// err = SetupSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
-	// if err != nil {
-	// 	fmt.Printf("\nError creating session to %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOpsDB.User, err)
-	// 	os.Exit(1)
-	// }
 
 	monitorWaitSpan := 30 * time.Second // TODO make configurable?
 
 	if !WaitForMonitor(Config.TrafficMonitor.URL, monitorWaitSpan) {
-		fmt.Printf("\nError communicating with Monitor '%v' - didn't return a 200 OK in %v\n", Config.TrafficMonitor.URL, monitorWaitSpan)
+		fmt.Printf("\nError communicating with Monitor '%v' - didn't return a 200 OK in %v\n",
+			Config.TrafficMonitor.URL, monitorWaitSpan)
 		os.Exit(1)
 	}
 
