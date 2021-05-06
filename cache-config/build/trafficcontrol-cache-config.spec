@@ -88,6 +88,14 @@ go_t3c_verify_dir="$ccpath"/t3c-verify
 	cp "$TC_DIR"/"$ccdir"/t3c-verify/t3c-verify .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
+# copy t3c-diff binary
+go_t3c_diff_dir="$ccpath"/t3c-diff
+( mkdir -p "$go_t3c_diff_dir" && \
+	cd "$go_t3c_diff_dir" && \
+	cp "$TC_DIR"/"$ccdir"/t3c-diff/t3c-diff .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
+
+
 %install
 ccdir="cache-config/"
 installdir="/usr/bin"
@@ -120,6 +128,9 @@ cp -p "$to_upd_src"/t3c-update ${RPM_BUILD_ROOT}/"$installdir"
 t3c_verify_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-verify
 cp -p "$t3c_verify_src"/t3c-verify ${RPM_BUILD_ROOT}/"$installdir"
 
+t3c_diff_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-diff
+cp -p "$t3c_diff_src"/t3c-diff ${RPM_BUILD_ROOT}/"$installdir"
+
 %clean
 rm -rf ${RPM_BUILD_ROOT}
 
@@ -132,6 +143,7 @@ rm -rf ${RPM_BUILD_ROOT}
 /usr/bin/supermicro_udev_mapper.pl
 /usr/bin/t3c
 /usr/bin/t3c-apply
+/usr/bin/t3c-diff
 /usr/bin/t3c-generate
 /usr/bin/t3c-request
 /usr/bin/t3c-update
