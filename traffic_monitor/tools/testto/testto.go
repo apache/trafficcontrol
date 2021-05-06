@@ -43,11 +43,11 @@ func main() {
 	}
 
 	toDataThs := NewThs()
-	toDataThs.Set(ThsT(&FakeTOData{Servers: []tc.ServerV30{}}))
+	toDataThs.Set(&FakeTOData{Servers: []tc.ServerV30{}})
 
-	server := Serve(*port, toDataThs)
+	Serve(*port, toDataThs)
 	fmt.Printf("Serving on %v\n", *port)
-	server = server // debug
+
 	for {
 		// TODO handle sighup to die
 		time.Sleep(time.Hour)
