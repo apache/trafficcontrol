@@ -486,7 +486,7 @@ func (r *TrafficOpsReq) checkStatusFiles(svrStatus string) error {
 	}
 
 	if r.Cfg.RunMode != config.Report {
-		if !util.MkDir(config.StatusDir, r.Cfg) {
+		if !util.MkDirAll(config.StatusDir, r.Cfg) {
 			return fmt.Errorf("unable to create '%s'\n", config.StatusDir)
 		}
 		fileExists, _ := util.FileExists(statusFile)

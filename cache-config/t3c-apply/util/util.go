@@ -378,6 +378,14 @@ func CleanTmpDir() bool {
 }
 
 func MkDir(name string, cfg config.Cfg) bool {
+	return doMkDir(name, cfg, false)
+}
+
+func MkDirAll(name string, cfg config.Cfg) bool {
+	return doMkDir(name, cfg, true)
+}
+
+func doMkDir(name string, cfg config.Cfg, all bool) bool {
 	fileInfo, err := os.Stat(name)
 	if err == nil && fileInfo.Mode().IsDir() {
 		log.Debugf("the directory '%s' already exists", name)
@@ -386,7 +394,11 @@ func MkDir(name string, cfg config.Cfg) bool {
 	if err != nil {
 		if cfg.RunMode != config.Report {
 			if err != nil { // the path does not exist.
-				err = os.Mkdir(name, 0755)
+				if all {
+					err = os.MkdirAll(name, 0755)
+				} else {
+					err = os.Mkdir(name, 0755)
+				}
 				if err != nil {
 					log.Errorf("unable to create the directory '%s': %v", name, err)
 					return false

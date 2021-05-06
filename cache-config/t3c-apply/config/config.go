@@ -36,12 +36,12 @@ var TSHome string = "/opt/trafficserver"
 var TSConfigDir string = "/opt/trafficserver/etc/trafficserver"
 
 const (
-	StatusDir          = "/opt/ort/status"
-	AtsTcConfig        = "/opt/ort/atstccfg"
+	StatusDir          = "/var/lib/trafficcontrol-cache-config/status"
+	AtsTcConfig        = "/usr/bin/atstccfg" // TODO don't make absolute?
 	Chkconfig          = "/sbin/chkconfig"
 	Service            = "/sbin/service"
 	SystemCtl          = "/bin/systemctl"
-	TmpBase            = "/tmp/ort"
+	TmpBase            = "/tmp/trafficcontrol-cache-config"
 	TrafficCtl         = "/bin/traffic_ctl"
 	TrafficServerOwner = "ats"
 )
