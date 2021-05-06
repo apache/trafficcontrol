@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed the return error for GET api `cdns/routing` to avoid incorrect success response.
 - [#5712](https://github.com/apache/trafficcontrol/issues/5712) - Ensure that 5.x Traffic Stats is compatible with 5.x Traffic Monitor and 5.x Traffic Ops, and that it doesn't log all 0's for `cache_stats`
 - Fixed ORT being unable to update URLSIG keys for Delivery Services
+- Fixed ORT service category header rewrite for mids and topologies.
 - Fixed an issue where Traffic Ops becoming unavailable caused Traffic Monitor to segfault and crash
 - [#5754](https://github.com/apache/trafficcontrol/issues/5754) - Ensure Health Threshold Parameters use legacy format for legacy Monitoring Config handler
 - [#5695](https://github.com/apache/trafficcontrol/issues/5695) - Ensure vitals are calculated only against monitored interfaces
