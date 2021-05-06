@@ -87,7 +87,11 @@ func UpdateTestParametersWithHeaders(t *testing.T, header http.Header) {
 			if reqInf.StatusCode != http.StatusPreconditionFailed {
 				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
 			}
+		} else {
+			t.Errorf("Error in getting parameters for update")
 		}
+	} else {
+		t.Errorf("No Parameters available to update")
 	}
 }
 
@@ -120,7 +124,6 @@ func GetTestParametersIMSAfterChange(t *testing.T, header http.Header) {
 }
 
 func CreateTestParameters(t *testing.T) {
-
 	for _, pl := range testData.Parameters {
 		_, _, err := TOSession.CreateParameter(pl)
 		if err != nil {
@@ -185,9 +188,13 @@ func UpdateTestParameters(t *testing.T) {
 					t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
 				}
 			} else {
-				t.Errorf("Not able to GET the parameter to test the updated value")
+				t.Errorf("Error in getting parameters for update")
 			}
+		} else {
+			t.Errorf("Error in getting parameters for update")
 		}
+	} else {
+		t.Errorf("No Parameters available to update")
 	}
 }
 
@@ -213,7 +220,11 @@ func UpdateParametersEmptyValue(t *testing.T) {
 			if reqInf.StatusCode != http.StatusOK {
 				t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
 			}
+		} else {
+			t.Errorf("Error in getting parameters for update")
 		}
+	} else {
+		t.Errorf("No Parameters available to update")
 	}
 }
 
@@ -238,7 +249,11 @@ func UpdateParametersEmptyName(t *testing.T) {
 			if reqInf.StatusCode != http.StatusBadRequest {
 				t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 			}
+		} else {
+			t.Errorf("Error in getting parameters for update")
 		}
+	} else {
+		t.Errorf("No Parameters available to update")
 	}
 }
 
@@ -263,7 +278,11 @@ func UpdateParametersEmptyConfigFile(t *testing.T) {
 			if reqInf.StatusCode != http.StatusBadRequest {
 				t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 			}
+		} else {
+			t.Errorf("Error in getting parameters for update")
 		}
+	} else {
+		t.Errorf("No Parameters available to update")
 	}
 }
 
@@ -535,6 +554,8 @@ func CreateTestParametersAlreadyExist(t *testing.T) {
 		if reqInf.StatusCode != http.StatusBadRequest {
 			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 		}
+	} else {
+		t.Errorf("Error in getting parameters")
 	}
 }
 
@@ -546,6 +567,8 @@ func CreateTestParametersMissingName(t *testing.T) {
 		if reqInf.StatusCode != http.StatusBadRequest {
 			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 		}
+	} else {
+		t.Errorf("Error in getting parameters")
 	}
 }
 
@@ -557,5 +580,7 @@ func CreateTestParametersMissingconfigFile(t *testing.T) {
 		if reqInf.StatusCode != http.StatusBadRequest {
 			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 		}
+	} else {
+		t.Errorf("Error in getting parameters")
 	}
 }
