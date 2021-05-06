@@ -184,31 +184,31 @@ func NewTrafficOpsReq(cfg config.Cfg) *TrafficOpsReq {
 	}
 }
 
-// atsTcExec is a wrapper to run an atstccfg command.
+// atsTcExec is a wrapper to run a t3c-generate command.
 func (r *TrafficOpsReq) atsTcExec(cmdstr string) ([]byte, error) {
 	log.Debugf("cmdstr: %s\n", cmdstr)
 	result, err := r.atsTcExecCommand(cmdstr, -1, -1)
 	return result, err
 }
 
-// atsTcExecCommand is used to run the atstccfg command.
+// atsTcExecCommand is used to run the t3c-generate command.
 func (r *TrafficOpsReq) atsTcExecCommand(cmdstr string, queueState int, revalState int) ([]byte, error) {
-	// adjust log locations used for atstccfg
+	// adjust log locations used for t3c-generate
 	// cannot use stdout as this will cause json parsing errors.
 	errorLocation := r.Cfg.LogLocationErr
 	if errorLocation == "stdout" {
 		errorLocation = "stderr"
-		log.Infoln("atstccfg error logging has been re-directed to 'stderr'")
+		log.Infoln("t3c-generate error logging has been re-directed to 'stderr'")
 	}
 	infoLocation := r.Cfg.LogLocationInfo
 	if infoLocation == "stdout" {
 		infoLocation = "stderr"
-		log.Infoln("atstccfg info logging has been re-directed to 'stderr'")
+		log.Infoln("t3c-generate info logging has been re-directed to 'stderr'")
 	}
 	warningLocation := r.Cfg.LogLocationWarn
 	if warningLocation == "stdout" {
 		warningLocation = "stderr"
-		log.Infoln("atstccfg warning logging has been re-directed to 'stderr'")
+		log.Infoln("t3c-generate warning logging has been re-directed to 'stderr'")
 	}
 
 	args := []string{
@@ -279,15 +279,15 @@ func (r *TrafficOpsReq) atsTcExecCommand(cmdstr string, queueState int, revalSta
 
 	err := cmd.Run()
 	if err != nil {
-		return nil, errors.New("Error from atstccfg: " + err.Error() + ": " + errbuf.String())
+		return nil, errors.New("Error from t3c-generate: " + err.Error() + ": " + errbuf.String())
 	}
 
 	if errStr := errbuf.String(); len(errStr) != 0 {
-		log.Warnln(`atstccfg stderr start
+		log.Warnln(`t3c-generate stderr start
 ` + errStr + `
-atstccfg stderr end`)
+t3c-generate stderr end`)
 	} else {
-		log.Warnln(`atstccfg stderr was empty`)
+		log.Warnln(`t3c-generate stderr was empty`)
 	}
 
 	return outbuf.Bytes(), nil

@@ -61,13 +61,13 @@ initBuildArea() {
 	fi;
 	set -o nounset; }
 
-	(cd atstccfg;
-	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" -tags "$tags")
-
 	(cd t3c;
 	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" -tags "$tags")
 
 	(cd t3c-apply;
+	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" -tags "$tags")
+
+	(cd t3c-generate;
 	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" -tags "$tags")
 
 	(cd to_requester;
@@ -88,8 +88,6 @@ initBuildArea() {
 	ls -lah ./build;
 
 	cp -p build/atstccfg.logrotate "$dest"/build;
-	mkdir -p "${dest}/atstccfg";
-	cp -a atstccfg/* "${dest}/atstccfg";
 
 	# include LICENSE in the tarball
 	cp "${TC_DIR}/LICENSE" "$dest"

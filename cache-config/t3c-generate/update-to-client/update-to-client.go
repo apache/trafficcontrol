@@ -58,21 +58,21 @@ func main() {
 }
 
 func usageStr() string {
-	return `usage: go run update-to-client.go /path/to/cache-config/atstccfg branch-to-vendor
+	return `usage: go run update-to-client.go /path/to/cache-config/t3c-generate branch-to-vendor
 
 Example: go run update-to-client/update-to-client.go . 5.0.x
 
-This script updates cache-config/atstccfg after a Traffic Ops release is made.
+This script updates cache-config/t3c-generate after a Traffic Ops release is made.
 
 Be aware! It can and will modify all .go files in the given directory! Back up any uncommitted changes!
 
 Also be aware! This is very specific to the current code. If symbols or patterns are changed around how the master vs vendored client are used, this script will have to be updated.
 
 Expecations:
-- atstccfg is at github.com/apache/trafficcontrol/cache-config/atstccfg
+- t3c-generate is at github.com/apache/trafficcontrol/cache-config/t3c-generate
 - The master TO client is at github.com/apache/trafficcontrol/traffic_ops/client
-- The previous major version client is vendored at atstccfg/toreq/vendor
-- The master client wrapper for atstccfg is at atstccfg/toreqnew
+- The previous major version client is vendored at t3c-generate/toreq/vendor
+- The master client wrapper for t3c-generate is at t3c-generate/toreqnew
 - The clients are stored in config.TCCfg.TOClient and config.TCCfg.TOClientNew
 - Every func in toreqnew.TOClient has a corresponding func with the same name in toreq.TOClient
 - Every func in toreqnew.TOClient returns 3 variables: the object, boolean whether the request was unsupported, and an error.
@@ -80,14 +80,14 @@ Expecations:
 - Every usage of config.TOClientNew is immediately followed by a check 'if err == nil && unsupported', whose block calls the old client and sets defaults for the unsupported new feature.
 - The script is running on a POSIX-like environment. Namely, cp and gofmt exist.
 
-The arguments are the atstccfg directory, and the name of the branch to vendor from.
+The arguments are the t3c-generate directory, and the name of the branch to vendor from.
 
-This script should always be called from trafficcontrol/cache-config/atstccfg.
+This script should always be called from trafficcontrol/cache-config/t3c-generate.
 
 It copies the traffic_ops/client from that branch into toreq/vendor,
 and then updates all references to cfg.TOClientNew to cfg.TOClient.
 
-This must be done as soon as a release is made, before any new features are added to ort/atstccfg.
+This must be done as soon as a release is made, before any new features are added to t3c-generate.
 Thus, all existing toreqnew.TOClient function calls should exist in master.
 
 If any new features were added after a release, before you ran this script,

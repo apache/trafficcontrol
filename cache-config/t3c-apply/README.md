@@ -6,8 +6,6 @@ configuration from Traffic Control, stored in Traffic Ops, to the cache.
 
 Typical usage is to install `t3c` on the cache machine, and then run it periodically via a CRON job.
 
-**NOTE** `t3c` requires and uses /opt/ort/atstccfg
-
 ## Options
 
 The `t3c-apply` app has the following command-line options:
@@ -62,7 +60,7 @@ When `t3c-apply` is run, it will:
 1. Delete all of its temporary directories over a week old. Currently, the base temp directory is hard-coded to /tmp/ort.
 1. Determine if Updates have been Queued on the server (by checking the Server's Update Pending or Revalidate Pending flag in Traffic Ops).
     1. If Updates were not queued and the script is running in syncds mode (the normal mode), exit.
-1. Get the config files from Traffic Ops, via atstccfg.
+1. Get the config files from Traffic Ops, via t3c-generate.
 1. Process CentOS Yum packages.
     1. These are specified via Parameters on the Server's Profile, with the Config File 'package', where the Parameter Name is the package name, and the Parameter Value is the package version.
     1. Uninstall any packages which are installed but whose version does not match.
@@ -90,7 +88,7 @@ Certain config files perform extra processing.
 
 ## Global replacements
 
-All config files have certain text directives replaced. This is done by the atstccfg config generator before the file is returned to `t3c-apply`.
+All config files have certain text directives replaced. This is done by the t3c-generate config generator before the file is returned to `t3c-apply`.
 
 * `__SERVER_TCP_PORT__` is replaced with the Server's Port from Traffic Ops; unless the server's port is 80, 0, or null, in which case any occurrences preceded by a colon are removed.
 * `__CACHE_IPV4__` is replaced with the Server's IP address from Traffic Ops.

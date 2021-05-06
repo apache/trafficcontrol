@@ -15,7 +15,7 @@ package plugin
 */
 
 import (
-	"github.com/apache/trafficcontrol/cache-config/atstccfg/config"
+	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
 )
 
 func init() {
@@ -24,7 +24,7 @@ func init() {
 
 const HelloPath = "/_hello_world"
 
-// hello is an example "hello world" plugin. To test, create a Parameter assigned to the server you're running ORT/atstccfg on, named "enable_hello_world", with the Config File "hello_world" and the value "true"
+// hello is an example "hello world" plugin. To test, create a Parameter assigned to the server you're running t3c-generate on, named "enable_hello_world", with the Config File "hello_world" and the value "true"
 func hello(d ModifyFilesData) []config.ATSConfigFile {
 	hasHelloParam := false
 	for _, param := range d.TOData.ServerParams {

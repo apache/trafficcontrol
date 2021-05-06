@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/atstccfg/toreq"
+	"github.com/apache/trafficcontrol/cache-config/t3c-generate/toreq"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -35,8 +35,8 @@ import (
 	flag "github.com/ogier/pflag"
 )
 
-const AppName = "atstccfg"
-const Version = "0.2"
+const AppName = "t3c-generate"
+const Version = "0.3"
 const UserAgent = AppName + "/" + Version
 
 const ExitCodeSuccess = 0
@@ -80,8 +80,8 @@ type TCCfg struct {
 func (cfg Cfg) ErrorLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationErr) }
 func (cfg Cfg) WarningLog() log.LogLocation { return log.LogLocation(cfg.LogLocationWarn) }
 func (cfg Cfg) InfoLog() log.LogLocation    { return log.LogLocation(cfg.LogLocationInfo) }
-func (cfg Cfg) DebugLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // atstccfg doesn't use the debug logger, use Info instead.
-func (cfg Cfg) EventLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // atstccfg doesn't use the event logger.
+func (cfg Cfg) DebugLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // app doesn't use the debug logger, use Info instead.
+func (cfg Cfg) EventLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // app doesn't use the event logger.
 
 // GetCfg gets the application configuration, from arguments and environment variables.
 func GetCfg() (Cfg, error) {

@@ -26,7 +26,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/apache/trafficcontrol/cache-config/atstccfg/toreq"
+	"github.com/apache/trafficcontrol/cache-config/t3c-generate/toreq"
 )
 
 func TOConnect(tccfg *TCCfg) (*TCCfg, error) {

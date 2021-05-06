@@ -46,13 +46,6 @@ cp "${TC_DIR}/LICENSE" %{_builddir}
 ccdir="cache-config"
 ccpath="src/github.com/apache/trafficcontrol/${ccdir}/"
 
-# copy atstccfg binary
-godir="$ccpath"/atstccfg
-( mkdir -p "$godir" && \
-	cd "$godir" && \
-	cp "$TC_DIR"/"$ccdir"/atstccfg/atstccfg .
-) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
-
 # copy t3c binary
 got3cdir="$ccpath"/t3c
 ( mkdir -p "$got3cdir" && \
@@ -65,6 +58,13 @@ go_t3c_apply_dir="$ccpath"/t3c-apply
 ( mkdir -p "$go_t3c_apply_dir" && \
 	cd "$go_t3c_apply_dir" && \
 	cp "$TC_DIR"/"$ccdir"/t3c-apply/t3c-apply .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
+
+# copy t3c-generate binary
+godir="$ccpath"/t3c-generate
+( mkdir -p "$godir" && \
+	cd "$godir" && \
+	cp "$TC_DIR"/"$ccdir"/t3c-generate/t3c-generate .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 # copy to_requester binary
@@ -102,7 +102,8 @@ cp -p ${RPM_SOURCE_DIR}/trafficcontrol-cache-config-%{version}/supermicro_udev_m
 src=src/github.com/apache/trafficcontrol/cache-config
 cp -p ${RPM_SOURCE_DIR}/trafficcontrol-cache-config-%{version}/build/atstccfg.logrotate "${RPM_BUILD_ROOT}"/etc/logrotate.d/atstccfg
 touch ${RPM_BUILD_ROOT}/var/log/trafficcontrol-cache-config/atstccfg.log
-cp -p "$src"/atstccfg/atstccfg ${RPM_BUILD_ROOT}/"$installdir"
+
+cp -p "$src"/t3c-generate/t3c-generate ${RPM_BUILD_ROOT}/"$installdir"
 
 t3csrc=src/github.com/apache/trafficcontrol/"$ccdir"/t3c
 cp -p "$t3csrc"/t3c ${RPM_BUILD_ROOT}/"$installdir"
@@ -129,9 +130,9 @@ rm -rf ${RPM_BUILD_ROOT}
 %attr(755, root, root)
 /usr/bin/traffic_ops_ort.pl
 /usr/bin/supermicro_udev_mapper.pl
-/usr/bin/atstccfg
 /usr/bin/t3c
 /usr/bin/t3c-apply
+/usr/bin/t3c-generate
 /usr/bin/to_requester
 /usr/bin/t3c-update
 /usr/bin/plugin_verifier

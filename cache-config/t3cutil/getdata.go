@@ -30,8 +30,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/atstccfg/toreq"
-	"github.com/apache/trafficcontrol/cache-config/atstccfg/torequtil"
+	"github.com/apache/trafficcontrol/cache-config/t3c-generate/toreq"
+	"github.com/apache/trafficcontrol/cache-config/t3c-generate/torequtil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"

@@ -31,7 +31,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/atstccfg/torequtil"
+	"github.com/apache/trafficcontrol/cache-config/t3c-generate/torequtil"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 )

@@ -16,20 +16,20 @@
     specific language governing permissions and limitations
     under the License.
 -->
-# atstccfg
-atstccfg is a tool for generating configuration files server-side on ATC cache servers.
+# t3c-generate
+The `t3c-generate` app generates configuration files server-side on ATC cache servers.
 
 !!! Warning !!!
-    <strong>atstccfg does not have a stable command-line interface, it can and will change without warning. Scripts should avoid calling it for the time being.</strong>
+    <strong>t3c-generate does not have a stable command-line interface, it can and will change without warning. Scripts should avoid calling it for the time being.</strong>
 
 ## Usage
 ```
-atstccfg -h
-atstccfg -v
-atstccfg -l
-atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [-y] [--dir TSROOT] -n CACHE_NAME
-atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [--dir TSROOT] -n CACHE_NAME -d DATA
-atstccfg [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [--dir TSROOT] -n CACHE_NAME -a REVAL_STATUS -q QUEUE_STATUS
+t3c-generate -h
+t3c-generate -v
+t3c-generate -l
+t3c-generate [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [-y] [--dir TSROOT] -n CACHE_NAME
+t3c-generate [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [--dir TSROOT] -n CACHE_NAME -d DATA
+t3c-generate [-e ERROR_LOCATION] [-i INFO_LOCATION] [-p] [-P TO_PASSWORD] [-r N] [-s] [-t TIMEOUT] [-u TO_URL] [-U TO_USER] [-w WARNING_LOCATION] [--dir TSROOT] -n CACHE_NAME -a REVAL_STATUS -q QUEUE_STATUS
 ```
 The available options are:
 ```
@@ -51,7 +51,7 @@ The available options are:
     Specifies a directory path in which to place Trafficserver configuration
     files in the event that "location" Parameters aren't found for them. If this
     is not given and location Parameters aren't found for required files,
-    atstccfg will exit with an error.
+    t3c-generate will exit with an error.
 -h, --help
     Print usage information and exit.
 -i, --log-location-info string
@@ -101,7 +101,7 @@ The available options are:
     logging, and anything else is treated as a path to a file which will contain
     the logs. (Default: stderr)
 -y, --revalidate-only
-    When given, atstccfg will only emit files relevant for updating content
+    When given, t3c-generate will only emit files relevant for updating content
     invalidation jobs. For Apache Traffic Server implementations, this limits
     the output to be only files named 'regex_revalidate.config'. Has no effect
     if --get-data or --set-queue-status/--set-reval-status is/are used.
@@ -122,6 +122,6 @@ After a new Traffic Control release, the Traffic Ops client from the new release
 branch should be vendored at `toreq/vendor`, and all usages of
 `config.TOClientNew` should be changed to `config.TOClient`.
 
-There's a "script" to do this at
+There's a script to do this at
 [`./update-to-client/update-to-client.go`](./update-to-client). Run the "script"
 with no arguments for usage information.
