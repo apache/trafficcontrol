@@ -67,11 +67,11 @@ godir="$ccpath"/t3c-generate
 	cp "$TC_DIR"/"$ccdir"/t3c-generate/t3c-generate .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
-# copy to_requester binary
-go_toreq_dir="$ccpath"/to_requester
+# copy t3c-request binary
+go_toreq_dir="$ccpath"/t3c-request
 ( mkdir -p "$go_toreq_dir" && \
 	cd "$go_toreq_dir" && \
-	cp "$TC_DIR"/"$ccdir"/to_requester/to_requester .
+	cp "$TC_DIR"/"$ccdir"/t3c-request/t3c-request .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 # copy t3c-update binary
@@ -111,8 +111,8 @@ cp -p "$t3csrc"/t3c ${RPM_BUILD_ROOT}/"$installdir"
 t3c_apply_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-apply
 cp -p "$t3c_apply_src"/t3c-apply ${RPM_BUILD_ROOT}/"$installdir"
 
-to_req_src=src/github.com/apache/trafficcontrol/"$ccdir"/to_requester
-cp -p "$to_req_src"/to_requester ${RPM_BUILD_ROOT}/"$installdir"
+to_req_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-request
+cp -p "$to_req_src"/t3c-request ${RPM_BUILD_ROOT}/"$installdir"
 
 to_upd_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-update
 cp -p "$to_upd_src"/t3c-update ${RPM_BUILD_ROOT}/"$installdir"
@@ -133,7 +133,7 @@ rm -rf ${RPM_BUILD_ROOT}
 /usr/bin/t3c
 /usr/bin/t3c-apply
 /usr/bin/t3c-generate
-/usr/bin/to_requester
+/usr/bin/t3c-request
 /usr/bin/t3c-update
 /usr/bin/t3c-verify
 

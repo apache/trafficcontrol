@@ -37,7 +37,7 @@ func TestTOUpdater(t *testing.T) {
 		// retrieve the current server status
 		output, err := runTORequester("atlanta-edge-03", "update-status")
 		if err != nil {
-			t.Fatalf("ERROR: to_requester run failed: %v\n", err)
+			t.Fatalf("ERROR: t3c-request Exec failed: %v\n", err)
 		}
 		var serverStatus tc.ServerUpdateStatus
 		err = json.Unmarshal([]byte(output), &serverStatus)
@@ -62,7 +62,7 @@ func TestTOUpdater(t *testing.T) {
 		// verify the update status is now 'true'
 		output, err = runTORequester("atlanta-edge-03", "update-status")
 		if err != nil {
-			t.Fatalf("ERROR: to_requester run failed: %v\n", err)
+			t.Fatalf("ERROR: t3c-request Exec failed: %v\n", err)
 		}
 		err = json.Unmarshal([]byte(output), &serverStatus)
 		if err != nil {
@@ -83,7 +83,7 @@ func TestTOUpdater(t *testing.T) {
 		// verify the change
 		output, err = runTORequester("atlanta-edge-03", "update-status")
 		if err != nil {
-			t.Fatalf("ERROR: to_requester run failed: %v\n", err)
+			t.Fatalf("ERROR: t3c-request Exec failed: %v\n", err)
 		}
 		err = json.Unmarshal([]byte(output), &serverStatus)
 		if err != nil {

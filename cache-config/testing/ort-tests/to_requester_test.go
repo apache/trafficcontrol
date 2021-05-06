@@ -40,9 +40,9 @@ func TestTORequester(t *testing.T) {
 		tcdata.DeliveryServices}, func() {
 
 		// chkconfig test
-		output, err := runTORequester("atlanta-edge-03", "chkconfig")
+		output, err := ExecTORequester("atlanta-edge-03", "chkconfig")
 		if err != nil {
-			t.Fatalf("ERROR: to_requester exec failed: %v\n", err)
+			t.Fatalf("ERROR: t3c-request exec failed: %v\n", err)
 		}
 		var chkConfig []map[string]interface{}
 		err = json.Unmarshal([]byte(output), &chkConfig)
@@ -54,9 +54,9 @@ func TestTORequester(t *testing.T) {
 		}
 
 		// get system-info test
-		output, err = runTORequester("atlanta-edge-03", "system-info")
+		output, err = ExecTORequester("atlanta-edge-03", "system-info")
 		if err != nil {
-			t.Fatalf("ERROR: to_requester exec failed: %v\n", err)
+			t.Fatalf("ERROR: t3c-request exec failed: %v\n", err)
 		}
 		var sysInfo map[string]interface{}
 		err = json.Unmarshal([]byte(output), &sysInfo)
@@ -68,9 +68,9 @@ func TestTORequester(t *testing.T) {
 		}
 
 		// statuses test
-		output, err = runTORequester("atlanta-edge-03", "statuses")
+		output, err = ExecTORequester("atlanta-edge-03", "statuses")
 		if err != nil {
-			t.Fatalf("ERROR: to_requester exec failed: %v\n", err)
+			t.Fatalf("ERROR: t3c-request exec failed: %v\n", err)
 		}
 		// should parse json to an array of 'tc.Status'
 		var statuses []tc.Status
@@ -80,9 +80,9 @@ func TestTORequester(t *testing.T) {
 		}
 
 		// packages test
-		output, err = runTORequester("atlanta-edge-03", "packages")
+		output, err = ExecTORequester("atlanta-edge-03", "packages")
 		if err != nil {
-			t.Fatalf("ERROR: to_requester exec failed: %v\n", err)
+			t.Fatalf("ERROR: t3c-request exec failed: %v\n", err)
 		}
 		// should parse to an array of 'Package'
 		var packages []Package
@@ -95,9 +95,9 @@ func TestTORequester(t *testing.T) {
 		}
 
 		// update-status test
-		output, err = runTORequester("atlanta-edge-03", "update-status")
+		output, err = ExecTORequester("atlanta-edge-03", "update-status")
 		if err != nil {
-			t.Fatalf("ERROR: to_requester exec failed: %v\n", err)
+			t.Fatalf("ERROR: t3c-request exec failed: %v\n", err)
 		}
 		var serverStatus tc.ServerUpdateStatus
 		err = json.Unmarshal([]byte(output), &serverStatus)
@@ -110,4 +110,35 @@ func TestTORequester(t *testing.T) {
 
 	})
 	fmt.Println("------------- End of TestTORequester tests ---------------")
+}
+
+func ExecTORequester(host string, data_req string) (string, error) {
+	args := []string{
+		"--traffic-ops-insecure=true",
+		"--login-dispersion=0",
+		"--traffic-ops-timeout-milliseconds=3000",
+		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
+		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
+		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
+		"--cache-host-name=" + host,
+		"--log-location-error=test.log",
+		"--log-location-info=test.log",
+		"--log-location-debug=test.log",
+		"--get-data=" + data_req,
+	}
+	cmd := exec.Command("/usr/bin/t3c-request", args...)
+	var out bytes.Buffer
+	var errOut bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errOut
+	err := cmd.Run()
+	if err != nil {
+		return "", errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+	}
+
+	// capture the last line of JSON in the 'Stdout' buffer 'out'
+	output := strings.Split(strings.TrimSpace(strings.Replace(out.String(), "\r\n", "\n", -1)), "\n")
+	lastLine := output[len(output)-1]
+
+	return lastLine, nil
 }

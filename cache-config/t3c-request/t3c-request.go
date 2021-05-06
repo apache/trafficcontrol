@@ -1,13 +1,13 @@
 /*
 Name
-	to_requester - ORT Traffic Ops Requestor
+	t3c-request - Traffic Control cache config Traffic Ops requestor
 
 Synopsis
-	to_requester [-hI] [-D value] [-d value] [-e value] [-H value] [-i value] \
+	t3c-request [-hI] [-D value] [-d value] [-e value] [-H value] [-i value] \
 		[-l value] [-P value] [-t value] [-u value] [-U value]
 
 Description
-  The to_requester is used get update status, package information, linux
+  The t3c-request app is used get update status, package information, linux
   chkconfig status, system info and status from Traffic Ops, see the
   --get-data option.  If no --get-data option is specified, the servers
   system-info is fetched and returned.
@@ -77,8 +77,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/apache/trafficcontrol/cache-config/t3c-request/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/cache-config/to_requester/config"
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 

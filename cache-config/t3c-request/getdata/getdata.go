@@ -31,7 +31,7 @@ import (
 	"os"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/torequtil"
-	"github.com/apache/trafficcontrol/cache-config/to_requester/config"
+	"github.com/apache/trafficcontrol/cache-config/t3c-request/config"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
