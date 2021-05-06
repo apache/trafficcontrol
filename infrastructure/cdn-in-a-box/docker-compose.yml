@@ -286,6 +286,18 @@ services:
       - shared:/shared
     domainname: infra.ciab.test
 
+  # static provides the MaxMind databases and coverage-zone.json, which used to be served by Traffic Ops Perl.
+  static:
+    build:
+      context: ../..
+      dockerfile: infrastructure/cdn-in-a-box/static/Dockerfile
+    domainname: infra.ciab.test
+    hostname: static
+    env_file:
+      - variables.env
+    volumes:
+      - shared:/shared
+
 volumes:
   schemas:
     external: false

@@ -133,11 +133,32 @@ func (p *Postgres) DeleteDNSSECKeys(cdnName string, tx *sql.Tx, ctx context.Cont
 }
 
 func (p *Postgres) GetURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Context) (tc.URLSigKeys, bool, error) {
-	return tc.URLSigKeys{}, false, notImplementedErr
+	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
+	if err != nil {
+		return tc.URLSigKeys{}, false, err
+	}
+	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
+	return getURLSigKeys(xmlID, tvTx, ctx)
 }
 
 func (p *Postgres) PutURLSigKeys(xmlID string, keys tc.URLSigKeys, tx *sql.Tx, ctx context.Context) error {
-	return notImplementedErr
+	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
+	if err != nil {
+		return err
+	}
+	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
+
+	return putURLSigKeys(xmlID, tvTx, keys, ctx)
+}
+
+func (p *Postgres) DeleteURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Context) error {
+	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
+	if err != nil {
+		return err
+	}
+	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
+
+	return deleteURLSigKeys(xmlID, tvTx, ctx)
 }
 
 func (p *Postgres) GetURISigningKeys(xmlID string, tx *sql.Tx, ctx context.Context) ([]byte, bool, error) {

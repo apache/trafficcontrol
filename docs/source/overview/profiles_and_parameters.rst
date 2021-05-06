@@ -188,8 +188,6 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| tm.infourl               | global                  | This is the "for more information go here" URL, which used to be visible in the "About" page of the now-deprecated Traffic Ops UI.    |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| tm.logourl               | global                  | This is the URL of the logo for Traffic Ops and can be relative if the logo is under :file:`traffic_ops/app/public`.                  |
-	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| tm.instance_name         | global                  | The name of the Traffic Ops instance - typically to distinguish instances when multiple are active.                                   |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| tm.traffic_mon_fwd_proxy | global                  | When collecting stats from Traffic Monitor, Traffic Ops will use this forward proxy instead of the actual Traffic Monitor host.       |
@@ -223,8 +221,6 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	|                          |                         | configuration file.**                                                                                                                 |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 
-
-.. note:: Since the Traffic Ops UI has been removed, the tm.logourl has no real meaning, and in fact most Traffic Ops distributions neither set this :ref:`Parameter <parameters>`, nor provide a logo.
 
 Some of these Parameters_ have the `Config File`_ value global_, while others have `CRConfig.json`_. This is not a typo, and the distinction is that those that use global_ are typically configuration options relating to Traffic Control as a whole or to Traffic Ops itself, whereas `CRConfig.json`_ is used by configuration options that are set globally, but pertain mainly to routing and are thus communicated to Traffic Routers through :term:`CDN Snapshots` (which historically were called "CRConfig Snapshots" or simply "the CRConfig").
 When a :ref:`Parameter <parameters>` has a `Config File`_ value that *isn't* one of global_ or `CRConfig.json`_, it refers to the global configuration of said `Config File`_ across all servers that use it across all CDNs configured in Traffic Control. This can be used to easily apply extremely common configuration to a great many servers in one place.

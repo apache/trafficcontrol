@@ -81,6 +81,10 @@ func (r *Riak) PutURLSigKeys(xmlID string, keys tc.URLSigKeys, tx *sql.Tx, ctx c
 	return putURLSigKeys(tx, &r.cfg.AuthOptions, &r.cfg.Port, tc.DeliveryServiceName(xmlID), keys)
 }
 
+func (r *Riak) DeleteURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Context) error {
+	return deleteURLSigningKeys(tx, &r.cfg.AuthOptions, &r.cfg.Port, tc.DeliveryServiceName(xmlID))
+}
+
 func (r *Riak) GetURISigningKeys(xmlID string, tx *sql.Tx, ctx context.Context) ([]byte, bool, error) {
 	return getURISigningKeys(tx, &r.cfg.AuthOptions, &r.cfg.Port, xmlID)
 }

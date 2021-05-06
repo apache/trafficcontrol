@@ -43,6 +43,7 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
         userModel.resetUser();
         return $http.post(ENV.api['root'] + "user/login/token", { t: token }).then(
             function(result) {
+                $rootScope.$broadcast('authService::login');
                 return result;
             },
             function(err) {

@@ -445,10 +445,6 @@ sub getDefaults {
                 "Password for database server admin" => "",
                 "config_var"                         => "pgPassword",
                 "hidden"                             => "true"
-            },
-            {
-                "Download Maxmind Database?" => "yes",
-                "config_var"                 => "maxmind"
             }
         ],
         $cdnConfFile => [
@@ -649,30 +645,6 @@ sub invoke_db_admin_pl {
     }
 
     return $result;
-}
-
-sub setupMaxMind {
-    my $setupMaxmind     = shift;
-
-    my $result;
-
-    if ( $setupMaxmind =~ /^y(?:es)?/ ) {
-        InstallUtils::logger( "Downloading Maxmind data", "info" );
-        chdir("/opt/traffic_ops/app/public/routing");
-        $result = InstallUtils::execCommand("/usr/bin/wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz");
-        if ( $result != 0 ) {
-            InstallUtils::logger( "Failed to download MaxMind data", "error" );
-        }
-
-        $result = InstallUtils::execCommand("/usr/bin/wget https://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz");
-        if ( $result != 0 ) {
-            InstallUtils::logger( "Failed to download MaxMind data", "error" );
-        }
-    }
-    else {
-        InstallUtils::logger("Not downloading Maxmind data");
-    }
-
 }
 
 sub setupCertificates {
@@ -918,7 +890,6 @@ sub main {
         InstallUtils::writeJson( $post_install_cfg, {} );
     }
 
-    setupMaxMind( $todbconf->{"maxmind"} );
     setupCertificates( $opensslconf );
     generateCdnConf( \%userInput, $cdnConfFile );
 
