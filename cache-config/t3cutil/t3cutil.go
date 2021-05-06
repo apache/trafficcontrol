@@ -103,12 +103,6 @@ func UnencodeFilter(body []string) []string {
 // which will differ from what would have been returned by a command line.
 //
 func Do(cmdStr string, args ...string) ([]byte, []byte, int) {
-	// cmdArgs := strings.Split(fullCmdStr, " ")
-	// cmdStr := cmdArgs[0]
-	// args := ([]string)(nil)
-	// if len(cmdArgs) > 1 {
-	// 	args = cmdArgs[1:]
-	// }
 	cmd := exec.Command(cmdStr, args...)
 
 	var outbuf bytes.Buffer
@@ -116,6 +110,30 @@ func Do(cmdStr string, args ...string) ([]byte, []byte, int) {
 
 	cmd.Stdout = &outbuf
 	cmd.Stderr = &errbuf
+
+	code := 0
+	err := cmd.Run()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); !ok {
+			return nil, []byte(err.Error()), -1
+		} else {
+			code = exitErr.ExitCode()
+		}
+	}
+
+	return outbuf.Bytes(), errbuf.Bytes(), code
+}
+
+// DoInput is like Do but takes the stdin to pass to the command.
+func DoInput(input string, cmdStr string, args ...string) ([]byte, []byte, int) {
+	cmd := exec.Command(cmdStr, args...)
+
+	var outbuf bytes.Buffer
+	var errbuf bytes.Buffer
+
+	cmd.Stdout = &outbuf
+	cmd.Stderr = &errbuf
+	cmd.Stdin = bytes.NewBufferString(input)
 
 	code := 0
 	err := cmd.Run()

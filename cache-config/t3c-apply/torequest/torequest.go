@@ -185,51 +185,6 @@ func NewTrafficOpsReq(cfg config.Cfg) *TrafficOpsReq {
 	}
 }
 
-// backUpFile makes a backup of a config file.
-func (r *TrafficOpsReq) backUpFile(cfg *ConfigFile) error {
-
-	// init backup directories
-	configBkupDir := filepath.Join(r.baseBackupDir, cfg.Service, "/config_bkp")
-	cfg.CfgBackup = filepath.Join(configBkupDir, cfg.Name)
-	tropsBkupDir := filepath.Join(r.baseBackupDir, cfg.Service, "/config_trops")
-	cfg.TropsBackup = filepath.Join(tropsBkupDir, cfg.Name)
-
-	fileExists, _ := util.FileExists(cfg.Path)
-	if fileExists {
-		// create config file backup directory
-		err := os.MkdirAll(configBkupDir, 0755)
-		if err != nil {
-			return errors.New("Unable to create config backup directory '" + configBkupDir + "': " + err.Error())
-		}
-
-		// backup the config file
-		data, err := r.readCfgFile(cfg, "")
-		if err != nil {
-			return errors.New("Unable to read the config file '" + cfg.Path + "': " + err.Error())
-		}
-		_, err = r.writeCfgFile(cfg, configBkupDir, data)
-		if err != nil {
-			return errors.New("Failed to write the config file: " + err.Error())
-		}
-
-	} else {
-		log.Debugf("Config file: %s doesn't exist. No need to back up.\n", cfg.Name)
-	}
-
-	// backup the traffic ops file.
-	err := os.MkdirAll(tropsBkupDir, 0755)
-	if err != nil {
-		return errors.New("Unable to create Trops backup directory '" + tropsBkupDir + "': " + err.Error())
-	}
-	_, err = r.writeCfgFile(cfg, tropsBkupDir, cfg.Body)
-	if err != nil {
-		return errors.New("Failed to write the config file from traffic ops: " + err.Error())
-	}
-
-	// backup the current config file.
-	return nil
-}
-
 // checkConfigFile checks and audits config files.
 func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile) error {
 	if cfg.Name == "" {
@@ -266,49 +221,12 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile) error {
 		}
 	}
 
-	// apply traffic ops data filters in preparation for comparison
-	// to data on disk.
-	tropsData := strings.Split(string(cfg.Body), "\n")
-	tropsData = unencodeFilter(tropsData)
-	tropsData = commentsFilter(tropsData)
-
-	var diskData []string
-	fileExists, _ := util.FileExists(cfg.Path)
-	if fileExists {
-		data, err := r.readCfgFile(cfg, "")
-		if err != nil {
-			return errors.New("reading from '" + cfg.Path + "' failed: " + err.Error())
-		}
-		diskData = strings.Split(string(data), "\n")
-	} else { // file doesn't exist on, it's new from Traffic Ops.
-		cfg.AuditComplete = true
-		cfg.ChangeNeeded = true
-		log.Infof("No such file on disk, '%s'\n", cfg.Path)
+	changeNeeded, err := diff(r.Cfg, string(cfg.Body), cfg.Path)
+	if err != nil {
+		return errors.New("getting diff: " + err.Error())
 	}
-
-	// apply disk file data filters in preparation for comparison
-	// to data from traffic ops
-	diskData = unencodeFilter(diskData)
-	diskData = commentsFilter(diskData)
-
-	// apply final new line filters disk and traffic ops data for comparison
-	disk := strings.Join(diskData, "\n")
-	disk = newLineFilter(disk)
-
-	trops := strings.Join(tropsData, "\n")
-	trops = newLineFilter(trops)
-
-	if disk != trops {
-		cfg.ChangeNeeded = true
-		log.Infof("change needed to %s\n", cfg.Name)
-		err := r.backUpFile(cfg)
-		if err != nil {
-			return errors.New("unable to back up '" + cfg.Name + "': " + err.Error())
-		}
-	} else {
-		cfg.ChangeNeeded = false
-		log.Infof("All lines match TrOps for config file: %s\n", cfg.Name)
-	}
+	cfg.ChangeNeeded = changeNeeded
+	cfg.AuditComplete = true
 
 	if cfg.Name == "50-ats.rules" {
 		err := r.processUdevRules(cfg)
@@ -318,8 +236,6 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile) error {
 	}
 
 	log.Infof("======== End processing config file: %s for service: %s ========\n", cfg.Name, cfg.Service)
-	cfg.AuditComplete = true
-
 	return nil
 }
 
@@ -538,6 +454,35 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 	return nil
 }
 
+// diff calls t3c-diff to diff the given new file and the file on disk. Returns whether they're different.
+// Logs the difference.
+// If the file on disk doesn't exist, returns true and logs the entire file as a diff.
+func diff(cfg config.Cfg, newFile string, fileLocation string) (bool, error) {
+	log.Warnf("DEBUG diff calling location '" + fileLocation + "'")
+	stdOut, stdErr, code := t3cutil.DoInput(newFile, `t3c-diff`, `stdin`, fileLocation)
+	if code > 1 {
+		return false, fmt.Errorf("t3c-update returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+	}
+	if len(bytes.TrimSpace(stdErr)) > 0 {
+		log.Warnf("t3c-request returned non-error code %v but stderr '%v'", code, string(stdErr))
+	}
+
+	if code == 0 {
+		log.Infof("All lines match TrOps for config file: %s\n", fileLocation)
+		return false, nil // 0 is only returned if there's no diff
+	}
+	// code 1 means a diff, difference text will be on stdout
+
+	lines := strings.Split(string(stdOut), "\n")
+	log.Infoln("file '" + fileLocation + "' changes begin")
+	for _, line := range lines {
+		log.Infoln("diff: " + line)
+	}
+	log.Infoln("file '" + fileLocation + "' changes end")
+
+	return true, nil
+}
+
 // processRemapOverrides processes remap overrides found from Traffic Ops.
 func (r *TrafficOpsReq) processRemapOverrides(cfg *ConfigFile) error {
 	from := ""
@@ -687,47 +632,57 @@ func (r *TrafficOpsReq) readCfgFile(cfg *ConfigFile, dir string) ([]byte, error)
 	return data, nil
 }
 
+const configFileTempSuffix = `.tmp`
+
 // replaceCfgFile replaces an ATS configuration file with one from Traffic Ops.
 func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
-	if r.Cfg.RunMode == config.BadAss || r.Cfg.RunMode == config.SyncDS || r.Cfg.RunMode == config.Revalidate {
-
-		log.Infof("Copying '%s' to '%s'\n", cfg.TropsBackup, cfg.Path)
-		data, err := util.ReadFile(cfg.TropsBackup)
-		if err != nil {
-			return errors.New("Unable to read the config file '" + cfg.TropsBackup + "': " + err.Error())
-		}
-		_, err = r.writeCfgFile(cfg, "", data)
-		if err != nil {
-			return errors.New("Failed to write the new config file: " + err.Error())
-		}
-		cfg.ChangeApplied = true
-
-		r.RemapConfigReload = cfg.RemapPluginConfig ||
-			cfg.Name == "remap.config" ||
-			strings.HasPrefix(cfg.Name, "url_sig_") ||
-			strings.HasPrefix(cfg.Name, "uri_signing") ||
-			strings.HasPrefix(cfg.Name, "hdr_rw_") ||
-			strings.HasPrefix(cfg.Name, "regex_remap_") ||
-			strings.HasPrefix(cfg.Name, "bg_fetch") ||
-			strings.HasSuffix(cfg.Name, ".lua")
-
-		r.TrafficCtlReload = r.TrafficCtlReload ||
-			strings.HasSuffix(cfg.Dir, "trafficserver") ||
-			r.RemapConfigReload ||
-			cfg.Name == "ssl_multicert.config" ||
-			(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".cer")) ||
-			(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".key"))
-
-		r.TrafficServerRestart = cfg.Name == "plugin.config"
-		r.NtpdRestart = cfg.Name == "ntpd.conf"
-		r.SysCtlReload = cfg.Name == "sysctl.conf"
-
-		log.Debugf("Setting change applied for '%s'\n", cfg.Name)
-
-	} else {
+	if r.Cfg.RunMode != config.BadAss &&
+		r.Cfg.RunMode != config.SyncDS &&
+		r.Cfg.RunMode != config.Revalidate {
 		log.Infof("You elected not to replace %s with the version from Traffic Ops.\n", cfg.Name)
 		cfg.ChangeApplied = false
+		return nil
 	}
+
+	tmpFileName := cfg.Path + configFileTempSuffix
+	log.Infof("Writing temp file '%s'\n", tmpFileName)
+
+	// write a new file, then move to the real location
+	// because moving is atomic but writing is not.
+	// If we just wrote to the real location and the app or OS or anything crashed,
+	// we'd end up with malformed files.
+
+	if err := ioutil.WriteFile(tmpFileName, cfg.Body, 0644); err != nil {
+		return errors.New("Failed to write temp config file '" + tmpFileName + "': " + err.Error())
+	}
+
+	log.Infof("Copying temp file '%s' to real '%s'\n", tmpFileName, cfg.Path)
+	if err := os.Rename(tmpFileName, cfg.Path); err != nil {
+		return errors.New("Failed to move temp '" + tmpFileName + "' to real '" + cfg.Path + "': " + err.Error())
+	}
+	cfg.ChangeApplied = true
+
+	r.RemapConfigReload = cfg.RemapPluginConfig ||
+		cfg.Name == "remap.config" ||
+		strings.HasPrefix(cfg.Name, "url_sig_") ||
+		strings.HasPrefix(cfg.Name, "uri_signing") ||
+		strings.HasPrefix(cfg.Name, "hdr_rw_") ||
+		strings.HasPrefix(cfg.Name, "regex_remap_") ||
+		strings.HasPrefix(cfg.Name, "bg_fetch") ||
+		strings.HasSuffix(cfg.Name, ".lua")
+
+	r.TrafficCtlReload = r.TrafficCtlReload ||
+		strings.HasSuffix(cfg.Dir, "trafficserver") ||
+		r.RemapConfigReload ||
+		cfg.Name == "ssl_multicert.config" ||
+		(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".cer")) ||
+		(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".key"))
+
+	r.TrafficServerRestart = cfg.Name == "plugin.config"
+	r.NtpdRestart = cfg.Name == "ntpd.conf"
+	r.SysCtlReload = cfg.Name == "sysctl.conf"
+
+	log.Debugf("Setting change applied for '%s'\n", cfg.Name)
 	return nil
 }
 
@@ -787,39 +742,6 @@ func (r *TrafficOpsReq) sleepTimer(serverStatus *tc.ServerUpdateStatus) {
 		randDispSec--
 	}
 	fmt.Printf("\n")
-}
-
-// writeCfgFile writes the 'data' from Traffic Ops to an ATS config file.
-func (r *TrafficOpsReq) writeCfgFile(cfg *ConfigFile, dir string, data []byte) (int, error) {
-	var fullFileName string
-
-	if dir == "" {
-		fullFileName = cfg.Path
-	} else {
-		fullFileName = dir + "/" + cfg.Name
-	}
-
-	fd, err := os.OpenFile(fullFileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, cfg.Perm)
-	if err != nil {
-		return 0, errors.New("unable to open '" + fullFileName + "' for writing: " + err.Error())
-	}
-
-	c, err := fd.Write(data)
-	if err != nil {
-		return 0, errors.New("error writing to '" + fullFileName + "': " + err.Error())
-	}
-	fd.Close()
-
-	if cfg.Service == "trafficserver" {
-		err = os.Chown(fullFileName, cfg.Uid, cfg.Gid)
-	} else {
-		err = os.Chown(fullFileName, 0, 0)
-	}
-	if err != nil {
-		return 0, errors.New("error changing ownership on '" + fullFileName + "': " + err.Error())
-	}
-
-	return c, nil
 }
 
 // verifyPlugins is used to verify that the plugin found
@@ -1257,7 +1179,7 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 	return updateStatus, nil
 }
 
-// ProcessPackages retrievies a list of required RPM's from Traffic Ops
+// ProcessPackages retrieves a list of required RPM's from Traffic Ops
 // and determines which need to be installed or removed on the cache.
 func (r *TrafficOpsReq) ProcessPackages() error {
 	// get the package list for this cache from Traffic Ops.

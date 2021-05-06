@@ -20,7 +20,9 @@ package main
  */
 
 import (
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -31,41 +33,80 @@ import (
 )
 
 func main() {
-	tropsFile := getopt.StringLong("trops-file", 't', "", "Required: Config file name in Traffic Ops")
-	diskFile := getopt.StringLong("disk-file", 'd', "", "Required: Config file on disk")
 	help := getopt.BoolLong("help", 'h', "Print usage info and exit")
 	getopt.ParseV2()
-
 	if *help {
-		getopt.PrintUsage(os.Stdout)
+		fmt.Println(usageStr)
 		os.Exit(0)
 	}
-	if len(strings.TrimSpace(*tropsFile)) == 0 || len(strings.TrimSpace(*diskFile)) == 0 {
-		getopt.PrintUsage(os.Stdout)
-		os.Exit(1)
+
+	if len(os.Args) < 3 {
+		fmt.Println(usageStr)
+		os.Exit(3)
 	}
-	trafOpsInput := t3cutil.ReadFile(*tropsFile)
-	diskInput := t3cutil.ReadFile(*diskFile)
 
-	trOpsData := strings.Split(string(trafOpsInput), "\n")
-	trOpsData = t3cutil.UnencodeFilter(trOpsData)
-	trOpsData = t3cutil.CommentsFilter(trOpsData)
-	trOps := strings.Join(trOpsData, "\n")
-	trOps = t3cutil.NewLineFilter(trOps)
+	fileNameA := strings.TrimSpace(os.Args[1])
+	fileNameB := strings.TrimSpace(os.Args[2])
 
-	diskData := strings.Split(string(diskInput), "\n")
-	diskData = t3cutil.UnencodeFilter(diskData)
-	diskData = t3cutil.CommentsFilter(diskData)
-	disk := strings.Join(diskData, "\n")
-	disk = t3cutil.NewLineFilter(disk)
+	if len(fileNameA) == 0 || len(fileNameB) == 0 {
+		fmt.Println(usageStr)
+		os.Exit(4)
+	}
 
-	if trOps != disk {
+	fileA, err := readFileOrStdin(fileNameA)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error reading first: "+err.Error())
+		os.Exit(5)
+	}
+	fileB, err := readFileOrStdin(fileNameB)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error reading second: "+err.Error())
+		os.Exit(6)
+	}
+
+	fileALines := strings.Split(string(fileA), "\n")
+	fileALines = t3cutil.UnencodeFilter(fileALines)
+	fileALines = t3cutil.CommentsFilter(fileALines)
+	fileA = strings.Join(fileALines, "\n")
+	fileA = t3cutil.NewLineFilter(fileA)
+
+	fileBLines := strings.Split(string(fileB), "\n")
+	fileBLines = t3cutil.UnencodeFilter(fileBLines)
+	fileBLines = t3cutil.CommentsFilter(fileBLines)
+	fileB = strings.Join(fileBLines, "\n")
+	fileB = t3cutil.NewLineFilter(fileB)
+
+	if fileA != fileB {
 		match := regexp.MustCompile(`(?m)^\+.*|^-.*`)
-		changes := diff.Diff(disk, trOps)
+		changes := diff.Diff(fileA, fileB)
 		for _, change := range match.FindAllString(changes, -1) {
 			fmt.Println(change)
 		}
-	} else {
-		os.Exit(0)
+		os.Exit(1)
 	}
+	os.Exit(0)
+
+}
+
+const usageStr = `usage: t3c-diff file-a file-b
+Either file may be stdin, in which case that file is read from stdin.
+Either file may be empty, in which case it's treated as if it were empty.
+`
+
+func readFileOrStdin(fileOrStdin string) (string, error) {
+	if strings.ToLower(fileOrStdin) == "stdin" {
+		bts, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return "", errors.New("reading stdin: " + err.Error())
+		}
+		return string(bts), nil
+	}
+	bts, err := ioutil.ReadFile(fileOrStdin)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil // treat nonexistent file as the empty string for diff
+		}
+		return "", errors.New("reading file: " + err.Error())
+	}
+	return string(bts), nil
 }
