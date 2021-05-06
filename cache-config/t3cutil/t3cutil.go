@@ -20,10 +20,12 @@ package t3cutil
  */
 
 import (
+	"bytes"
 	"fmt"
 	"html"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 )
