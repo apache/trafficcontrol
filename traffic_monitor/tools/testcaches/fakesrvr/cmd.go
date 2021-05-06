@@ -20,6 +20,7 @@ package fakesrvr
  */
 
 import (
+	"html"
 	"net/http"
 	"strconv"
 	"strings"
@@ -48,7 +49,7 @@ var cmds = map[string]CmdFunc{
 func cmdSetStat(w http.ResponseWriter, r *http.Request, fakeSrvrDataThs fakesrvrdata.Ths) {
 	urlQry := r.URL.Query()
 
-	newMinStr := urlQry.Get("min")
+	newMinStr := html.EscapeString(urlQry.Get("min"))
 	newMin, err := strconv.ParseUint(newMinStr, 10, 64)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -56,7 +57,7 @@ func cmdSetStat(w http.ResponseWriter, r *http.Request, fakeSrvrDataThs fakesrvr
 		return
 	}
 
-	newMaxStr := urlQry.Get("max")
+	newMaxStr := html.EscapeString(urlQry.Get("max"))
 	newMax, err := strconv.ParseUint(newMaxStr, 10, 64)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -64,14 +65,14 @@ func cmdSetStat(w http.ResponseWriter, r *http.Request, fakeSrvrDataThs fakesrvr
 		return
 	}
 
-	remap := urlQry.Get("remap")
+	remap := html.EscapeString(urlQry.Get("remap"))
 	if remap == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("missing query parameter 'remap': must specify a remap to set\n"))
 		return
 	}
 
-	stat := urlQry.Get("stat")
+	stat := html.EscapeString(urlQry.Get("stat"))
 
 	validStats := map[string]struct{}{
 		"in_bytes":   {},
@@ -165,7 +166,7 @@ func cmdSetSystem(w http.ResponseWriter, r *http.Request, fakeSrvrDataThs fakesr
 	urlQry := r.URL.Query()
 
 	if newSpeedStr := urlQry.Get("speed"); newSpeedStr != "" {
-		newSpeed, err := strconv.ParseUint(newSpeedStr, 10, 64)
+		newSpeed, err := strconv.ParseInt(newSpeedStr, 10, 64)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("error parsing query parameter 'speed': must be a non-negative integer: " + err.Error() + "\n"))
