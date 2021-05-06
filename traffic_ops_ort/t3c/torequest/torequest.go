@@ -1534,7 +1534,11 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) (bool, erro
 				_, err = r.atsTcExecCommand("send-update", 0, 0)
 			}
 		case config.Revalidate:
-			_, err = r.atsTcExecCommand("send-update", 1, 0)
+			if serverStatus.UpdatePending {
+				_, err = r.atsTcExecCommand("send-update", 1, 0)
+			} else {
+				_, err = r.atsTcExecCommand("send-update", 0, 0)
+			}
 		}
 		if err != nil {
 			return false, errors.New("Traffic Ops Update failed: " + err.Error())

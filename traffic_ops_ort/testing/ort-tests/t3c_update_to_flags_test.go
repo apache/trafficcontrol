@@ -22,8 +22,8 @@ import (
 	"testing"
 )
 
-func TestTOUpdater(t *testing.T) {
-	fmt.Println("------------- Starting TestTOUpdater tests ---------------")
+func TestT3cTOUpdates(t *testing.T) {
+	fmt.Println("------------- Starting TestT3cTOUpdates tests ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -52,7 +52,7 @@ func TestTOUpdater(t *testing.T) {
 		}
 
 		// change the server update status
-		err = runTOUpdater("atlanta-edge-03", false, true)
+		err = runTOUpdater("atlanta-edge-03", true, true)
 		if err != nil {
 			t.Fatalf("ERROR: to_updater run failed: %v\n", err)
 		}
@@ -65,19 +65,18 @@ func TestTOUpdater(t *testing.T) {
 		if err != nil {
 			t.Fatalf("ERROR unmarshalling json output: " + err.Error())
 		}
-		if serverStatus.RevalPending != false {
-			t.Fatal("ERROR unexpected result, expected RevalPending is 'false'")
+		if serverStatus.RevalPending != true {
+			t.Fatal("ERROR unexpected result, expected RevalPending is 'true'")
 		}
 		if serverStatus.UpdatePending != true {
 			t.Fatal("ERROR unexpected result, expected UpdatePending is 'true'")
 		}
 
-		// now change the reval stat and put server update status back
-		err = runTOUpdater("atlanta-edge-03", true, false)
+		// run t3c syncds and verify only the queue update flag is reset to 'false'
+		err = runT3cUpdate("atlanta-edge-03", "syncds")
 		if err != nil {
-			t.Fatalf("ERROR: to_updater run failed: %v\n", err)
+			t.Fatalf("ERROR: t3c syncds failed: %v\n", err)
 		}
-		// verify the change
 		output, err = runTORequester("atlanta-edge-03", "update-status")
 		if err != nil {
 			t.Fatalf("ERROR: to_requester run failed: %v\n", err)
@@ -87,12 +86,32 @@ func TestTOUpdater(t *testing.T) {
 			t.Fatalf("ERROR unmarshalling json output: " + err.Error())
 		}
 		if serverStatus.RevalPending != true {
+			t.Fatal("ERROR unexpected result, expected RevalPending is 'true'")
+		}
+		if serverStatus.UpdatePending != false {
+			t.Fatal("ERROR unexpected result, expected UpdatePending is 'false'")
+		}
+
+		// run t3c revalidate and verify only the queue update flag is still 'false'
+		// and that the revalidate flag is now 'false'
+		err = runT3cUpdate("atlanta-edge-03", "revalidate")
+		if err != nil {
+			t.Fatalf("ERROR: t3c syncds failed: %v\n", err)
+		}
+		output, err = runTORequester("atlanta-edge-03", "update-status")
+		if err != nil {
+			t.Fatalf("ERROR: to_requester run failed: %v\n", err)
+		}
+		err = json.Unmarshal([]byte(output), &serverStatus)
+		if err != nil {
+			t.Fatalf("ERROR unmarshalling json output: " + err.Error())
+		}
+		if serverStatus.RevalPending != false {
 			t.Fatal("ERROR unexpected result, expected RevalPending is 'false'")
 		}
 		if serverStatus.UpdatePending != false {
-			t.Fatal("ERROR unexpected result, expected UpdatePending is 'true'")
+			t.Fatal("ERROR unexpected result, expected UpdatePending is 'false'")
 		}
-
 	})
-	fmt.Println("------------- End of TestTOUpdater tests ---------------")
+	fmt.Println("------------- End of TestT3cTOUpdates tests ---------------")
 }

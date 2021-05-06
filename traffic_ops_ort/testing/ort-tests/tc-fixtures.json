@@ -1338,6 +1338,13 @@
             "name": "tm.instance_name",
             "secure": false,
             "value": "Traffic Ops ORT Tests"
+        },
+        {
+            "configFile": "global",
+            "lastUpdated": "2020-04-21T05:19:43.853831+00:00",
+            "name": "use_reval_pending",
+            "secure": false,
+            "value": "1"
         }
     ],
     "physLocations": [

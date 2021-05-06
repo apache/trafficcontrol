@@ -15,14 +15,10 @@ package orttest
 */
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/testing/ort-tests/tcdata"
-	"os/exec"
-	"strings"
 	"testing"
 )
 
@@ -41,7 +37,7 @@ func TestTORequester(t *testing.T) {
 		tcdata.DeliveryServices}, func() {
 
 		// chkconfig test
-		output, err := ExecTORequester("atlanta-edge-03", "chkconfig")
+		output, err := runTORequester("atlanta-edge-03", "chkconfig")
 		if err != nil {
 			t.Fatalf("ERROR: to_requester exec failed: %v\n", err)
 		}
@@ -55,7 +51,7 @@ func TestTORequester(t *testing.T) {
 		}
 
 		// get system-info test
-		output, err = ExecTORequester("atlanta-edge-03", "system-info")
+		output, err = runTORequester("atlanta-edge-03", "system-info")
 		if err != nil {
 			t.Fatalf("ERROR: to_requester exec failed: %v\n", err)
 		}
@@ -69,7 +65,7 @@ func TestTORequester(t *testing.T) {
 		}
 
 		// statuses test
-		output, err = ExecTORequester("atlanta-edge-03", "statuses")
+		output, err = runTORequester("atlanta-edge-03", "statuses")
 		if err != nil {
 			t.Fatalf("ERROR: to_requester exec failed: %v\n", err)
 		}
@@ -81,7 +77,7 @@ func TestTORequester(t *testing.T) {
 		}
 
 		// packages test
-		output, err = ExecTORequester("atlanta-edge-03", "packages")
+		output, err = runTORequester("atlanta-edge-03", "packages")
 		if err != nil {
 			t.Fatalf("ERROR: to_requester exec failed: %v\n", err)
 		}
@@ -96,7 +92,7 @@ func TestTORequester(t *testing.T) {
 		}
 
 		// update-status test
-		output, err = ExecTORequester("atlanta-edge-03", "update-status")
+		output, err = runTORequester("atlanta-edge-03", "update-status")
 		if err != nil {
 			t.Fatalf("ERROR: to_requester exec failed: %v\n", err)
 		}
@@ -111,35 +107,4 @@ func TestTORequester(t *testing.T) {
 
 	})
 	fmt.Println("------------- End of TestTORequester tests ---------------")
-}
-
-func ExecTORequester(host string, data_req string) (string, error) {
-	args := []string{
-		"--traffic-ops-insecure=true",
-		"--login-dispersion=0",
-		"--traffic-ops-timeout-milliseconds=3000",
-		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
-		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
-		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
-		"--cache-host-name=" + host,
-		"--log-location-error=test.log",
-		"--log-location-info=test.log",
-		"--log-location-debug=test.log",
-		"--get-data=" + data_req,
-	}
-	cmd := exec.Command("/opt/ort/to_requester", args...)
-	var out bytes.Buffer
-	var errOut bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &errOut
-	err := cmd.Run()
-	if err != nil {
-		return "", errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
-	}
-
-	// capture the last line of JSON in the 'Stdout' buffer 'out'
-	output := strings.Split(strings.TrimSpace(strings.Replace(out.String(), "\r\n", "\n", -1)), "\n")
-	lastLine := output[len(output)-1]
-
-	return lastLine, nil
 }
