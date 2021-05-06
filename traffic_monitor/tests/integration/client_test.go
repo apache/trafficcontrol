@@ -92,6 +92,12 @@ func TestClient(t *testing.T) {
 		t.Errorf("client len(CacheStats.Caches) expected !=0, actual %v\n", actual)
 	}
 
+	if actual, err := TMClient.CacheStatsNew(); err != nil {
+		t.Errorf("client CacheStatsNew error expected nil, actual %v\n", err)
+	} else if len(actual.Caches) == 0 {
+		t.Errorf("client len(CacheStatsNew.Caches) expected !=0, actual %v\n", actual)
+	}
+
 	if actual, err := TMClient.DSStats(); err != nil {
 		t.Errorf("client DSStats error expected nil, actual %v\n", err)
 	} else if len(actual.DeliveryService) == 0 {

@@ -97,11 +97,20 @@ func (c *TMClient) EventLog() (datareq.JSONEvents, error) {
 	return obj, nil
 }
 
-func (c *TMClient) CacheStats() (tc.Stats, error) {
+func (c *TMClient) CacheStatsNew() (tc.Stats, error) {
 	path := "/publish/CacheStats"
 	obj := tc.Stats{}
 	if err := c.GetJSON(path, &obj); err != nil {
 		return tc.Stats{}, err // GetJSON adds context
+	}
+	return obj, nil
+}
+
+func (c *TMClient) CacheStats() (tc.LegacyStats, error) {
+	path := "/publish/CacheStats"
+	obj := tc.LegacyStats{}
+	if err := c.GetJSON(path, &obj); err != nil {
+		return tc.LegacyStats{}, err // GetJSON adds context
 	}
 	return obj, nil
 }
