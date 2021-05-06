@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM alpine:3.11 AS integration-builder
+FROM alpine:3.13 AS integration-builder
 
 COPY GO_VERSION /
 RUN set -o errexit; \
@@ -58,7 +58,7 @@ RUN CGO_ENABLED=0 go test -c ./v1* -ldflags="-w -s" -o traffic_ops_v1_integratio
 RUN CGO_ENABLED=0 go test -c ./v2* -ldflags="-w -s" -o traffic_ops_v2_integration_test
 RUN CGO_ENABLED=0 go test -c ./v3* -ldflags="-w -s" -o traffic_ops_v3_integration_test
 
-FROM alpine:3.11
+FROM alpine:3.13
 
 RUN apk add --no-cache --update \
   curl \

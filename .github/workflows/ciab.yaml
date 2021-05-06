@@ -19,6 +19,8 @@ name: CDN-in-a-Box CI
 
 env:
   RHEL_VERSION: 8
+  # alpine:3.13
+  ALPINE_VERSION: sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
 
 on:
   push:
@@ -211,6 +213,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+      - name: Cache Alpine Docker image
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/docker-images
+          key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
+      - name: Import cached Alpine Docker image
+        run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
       - name: Download RPMs
         uses: actions/download-artifact@v2
         with:
@@ -234,3 +243,5 @@ jobs:
           name: ciab-logs
           path: infrastructure/cdn-in-a-box/logs/*.log
         if: ${{ failure() }}
+      - name: Save Alpine Docker image
+        run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
