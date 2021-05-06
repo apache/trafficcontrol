@@ -1,4 +1,4 @@
-package integration
+package _integration
 
 /*
 
@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_monitor/tests/integration/config"
+	"github.com/apache/trafficcontrol/traffic_monitor/tests/_integration/config"
 	"github.com/apache/trafficcontrol/traffic_monitor/tmclient"
 )
 

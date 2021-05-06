@@ -25,7 +25,7 @@ rm testcaches
 go build
 cd - > /dev/null
 
-cd tests/integration
+cd tests/_integration
 rm traffic_monitor_integration_test
 go test -c -o traffic_monitor_integration_test
 cd - > /dev/null

@@ -17,6 +17,6 @@
 #
 #TM binary
 traffic_monitor
-tests/integration/traffic_monitor_integration_test
+tests/_integration/traffic_monitor_integration_test
 tools/testcaches/testcaches
 tools/testto/testto

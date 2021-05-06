@@ -83,7 +83,7 @@ services:
 
   tmintegrationtest:
     build:
-      context: ./tests/integration
+      context: ./tests/_integration
       dockerfile: ./Dockerfile
     depends_on:
       - testto
