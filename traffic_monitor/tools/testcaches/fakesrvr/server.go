@@ -22,6 +22,7 @@ package fakesrvr
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -42,6 +43,7 @@ func reqIsApplicationSystem(r *http.Request) bool {
 
 func astatsHandler(fakeSrvrDataThs fakesrvrdata.Ths) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add(rfc.ContentType, rfc.ApplicationJSON)
 		srvr := (*fakesrvrdata.FakeServerData)(fakeSrvrDataThs.Get())
 
 		delayMSPtr := (*fakesrvrdata.MinMaxUint64)(atomic.LoadPointer(fakeSrvrDataThs.DelayMS))

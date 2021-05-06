@@ -28,21 +28,16 @@
 FROM centos/systemd
 MAINTAINER dev@trafficcontrol.apache.org
 
-# ARG RPM=traffic_monitor.rpm
-# ADD $RPM /
-
-RUN yum install -y initscripts
-RUN yum install -y epel-release
-RUN yum install -y golang
-# RUN yum install -y /$(basename $RPM)
-# RUN rm /$(basename $RPM)
+RUN yum install -y initscripts epel-release golang glibc jq
 
 COPY traffic_monitor_integration_test /
 
 # TODO build go test here, instead of requiring it manually be built beforehand
 #      See /infrastructure/cdn-in-a-box/traffic_ops_integration_test/Dockerfile
 
-RUN curl -L jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 > /usr/sbin/jq && chmod +x /usr/sbin/jq
+RUN curl -L jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 > /usr/sbin/jq && chmod +x /usr/sbin/jq
 
 COPY Dockerfile_run.sh /
+COPY monitoring.json /
+COPY snapshot.json /
 ENTRYPOINT /Dockerfile_run.sh

@@ -1,0 +1,124 @@
+{
+  "trafficServers": [
+    {
+      "profile": "Edge0",
+      "status": "REPORTED",
+      "cacheGroup": "cg0",
+      "port": 30000,
+      "hostName": "server0",
+      "fqdn": "server0.monitor-integration.test",
+      "interfaces": [
+        {
+          "ipAddresses": [
+            {
+              "address": "172.31.0.2",
+              "gateway": "172.31.0.1",
+              "serviceAddress": true
+            }
+          ],
+          "maxBandwidth": 10000000,
+          "monitor": true,
+          "mtu": 1500,
+          "name": "bond0"
+        }
+      ],
+      "type": "EDGE",
+      "hashId": "server0",
+      "deliveryServices": [{
+        "xmlId": "ds0",
+        "remaps": ["ds0.monitor-integration.test"]
+      }]
+    },
+    {
+      "profile": "Edge0",
+      "status": "REPORTED",
+      "cacheGroup": "cg0",
+      "port": 30001,
+      "hostName": "server1",
+      "fqdn": "server1.monitor-integration.test",
+      "interfaces": [
+        {
+          "ipAddresses": [
+            {
+              "address": "172.31.0.2",
+              "gateway": "172.31.0.1",
+              "serviceAddress": true
+            }
+          ],
+          "maxBandwidth": 10000000,
+          "monitor": true,
+          "mtu": 1500,
+          "name": "bond0"
+        }
+      ],
+      "type": "EDGE",
+      "hashId": "server1",
+      "deliveryServices": [{
+        "xmlId": "ds0",
+        "remaps": ["ds0.monitor-integration.test"]
+      }]
+    }
+  ],
+  "cacheGroups": [
+    {
+      "cg0": {
+        "name": "cg0",
+        "coordinates": {"latitude": 0, "longitude": 0}
+      }
+    }
+  ],
+  "config": {
+    "peers.polling.interval": 30,
+    "health.polling.interval": 2000,
+    "heartbeat.polling.interval": 2000,
+    "tm.polling.interval": 30
+  },
+  "trafficMonitors": [
+    {
+      "port": 80,
+      "ip6": "",
+      "ip": "trafficmonitor",
+      "hostName": "trafficmonitor",
+      "fqdn": "trafficmonitor.traffic-monitor-integration.test",
+      "profile": "Monitor0",
+      "location": "cg0",
+      "status": "REPORTED"
+    }
+  ],
+  "deliveryServices": [
+    {
+      "xmlId": "ds0",
+      "TotalTpsThreshold": 1000000,
+      "status": "Available",
+      "TotalKbpsThreshold": 10000000
+    }
+  ],
+  "profiles": [
+    {
+      "parameters": {
+        "health.connection.timeout": 10,
+        "health.polling.url": "http://${hostname}/_astats?application=&inf.name=bond0",
+        "health.polling.format": "",
+        "health.polling.type": "",
+        "history.count": 0,
+        "MinFreeKbps": 20000,
+        "health_threshold": {}
+      },
+      "name": "Edge0",
+      "type": "EDGE"
+    },
+    {
+      "parameters": {
+        "health.connection.timeout": 10,
+        "health.polling.url": "",
+        "health.polling.format": "",
+        "health.polling.type": "",
+        "history.count": 5,
+        "MinFreeKbps": 20000,
+        "health_threshold": {}
+      },
+      "name": "Monitor0",
+      "type": "RASCAL"
+    }
+  ]
+}

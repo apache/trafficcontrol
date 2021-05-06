@@ -23,6 +23,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"log"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -41,7 +43,7 @@ func main() {
 	}
 
 	toDataThs := NewThs()
-	toDataThs.Set(ThsT(&FakeTOData{Servers: []tc.Server{}}))
+	toDataThs.Set(ThsT(&FakeTOData{Servers: []tc.ServerV30{}}))
 
 	server := Serve(*port, toDataThs)
 	fmt.Printf("Serving on %v\n", *port)
@@ -55,7 +57,7 @@ func main() {
 type FakeTOData struct {
 	Monitoring tc.TrafficMonitorConfig
 	CRConfig   tc.CRConfig
-	Servers    []tc.Server
+	Servers    []tc.ServerV30
 }
 
 // TODO make timeouts configurable?
@@ -97,10 +99,11 @@ func GetRoutes(fakeTOData Ths) []Route {
 type MakeHandlerFunc func(fakeTOData Ths) http.HandlerFunc
 
 var Routes = map[string]MakeHandlerFunc{
-	`/api/(.*)/user/login/?(\.json)?$`:                   loginHandler,
-	`/api/(.*)/cdns/(.*)/configs/monitoring/?(\.json)?$`: monitoringHandler,
-	`/api/(.*)/servers/?(\.json)?$`:                      serversHandler,
-	`/api/(.*)/cdns/(.*)/snapshot/?(\.json)?$`:           crConfigHandler,
+	`/api/(.*)/user/login/?(\.json)?$`:          loginHandler,
+	`/api/(.*)/cdns/(.*)/configs/monitoring/?$`: monitoringHandler,
+	`/api/(.*)/servers/?(\.json)?$`:             serversHandler,
+	`/api/(.*)/cdns/(.*)/snapshot/?(\.json)?$`:  crConfigHandler,
+	`/api/(.*)/ping`:                            pingHandler,
 }
 
 func RouteHandler(fakeTOData Ths) http.HandlerFunc {
@@ -113,6 +116,17 @@ func RouteHandler(fakeTOData Ths) http.HandlerFunc {
 			}
 		}
 		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+func pingHandler(fakeTOData Ths) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+			w.Write(append([]byte(`{"ping":"pong"}`), '\n'))
+		} else {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
 	}
 }
 
@@ -175,7 +189,13 @@ func serversHandlerPost(fakeTOData Ths) http.HandlerFunc {
 
 func crConfigHandlerGet(fakeTOData Ths) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		writeJSONObj(w, ((*FakeTOData)(fakeTOData.Get())).CRConfig)
+		crConfig := ((*FakeTOData)(fakeTOData.Get())).CRConfig
+		if crConfig.Stats.CDNName == nil && crConfig.Stats.TMHost == nil {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write(append([]byte(http.StatusText(http.StatusNotFound)), '\n'))
+			return
+		}
+		writeJSONObj(w, crConfig)
 	}
 }
 
@@ -202,6 +222,7 @@ func writeJSONObj(w http.ResponseWriter, obj interface{}) {
 
 func postJSONObj(w http.ResponseWriter, r *http.Request, obj interface{}, fakeTOData ThsT, fakeTODataThs Ths) {
 	if err := json.NewDecoder(r.Body).Decode(obj); err != nil {
+		log.Println("unmarshall:" + err.Error() + ", " + r.URL.String())
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"error": "unmarshalling posted body: ` + err.Error() + `"}`))
 		return

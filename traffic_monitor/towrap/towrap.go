@@ -442,7 +442,7 @@ func (s TrafficOpsSessionThreadsafe) fetchLegacyTMConfig(cdn string) (*tc.Traffi
 }
 
 // trafficMonitorConfigMapRaw returns the Traffic Monitor config map from the
-// Traffic Ops, directly from the monitoring.json endpoint. This is not usually
+// Traffic Ops, directly from the monitoring endpoint. This is not usually
 // what is needed, rather monitoring needs the snapshotted CRConfig data, which
 // is filled in by `LegacyTrafficMonitorConfigMap`. This is safe for multiple
 // goroutines.

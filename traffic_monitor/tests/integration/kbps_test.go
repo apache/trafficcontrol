@@ -69,7 +69,7 @@ func TestKBPS(t *testing.T) {
 		t.Fatalf("getting monitor bandwidth kbps: %v\n", err)
 	}
 
-	if kbps < float64(expectedKbps)*0.9 || kbps > float64(expectedKbps)*1.1 {
-		t.Errorf("monitor bandwidth kbps expected %v actual %v\n", expectedKbps, kbps)
+	if kbps < float64(expectedKbps/2) || kbps > float64(expectedKbps*2) {
+		t.Errorf("monitor bandwidth kbps expected %v-%v actual %v\n", expectedKbps/2, expectedKbps*2, kbps)
 	}
 }

@@ -1,0 +1,146 @@
+{
+  "config": {
+    "api.cache-control.max_age": "30",
+    "consistent.dns.routing": "true",
+    "coveragezone.polling.interval": "30",
+    "coveragezone.polling.url": "30",
+    "dnssec.dynamic.response.expiration": "60",
+    "dnssec.enabled": "false",
+    "domain_name": "monitor-integration.test",
+    "federationmapping.polling.interval": "60",
+    "federationmapping.polling.url": "foo",
+    "geolocation.polling.interval": "30",
+    "geolocation.polling.url": "foo",
+    "keystore.maintenance.interval": "30",
+    "neustar.polling.interval": "30",
+    "neustar.polling.url": "foo",
+    "soa": {
+
+    },
+    "dnssec.inception": "0",
+    "ttls": {
+      "admin":   "30",
+      "expire":  "30",
+      "minimum": "30",
+      "refresh": "30",
+      "retry":   "30"
+    },
+    "weight": "1",
+    "zonemanager.cache.maintenance.interval": "30",
+    "zonemanager.threadpool.scale": "1"
+  },
+  "contentServers": {
+    "server0": {
+      "cacheGroup": "cg0",
+      "profile": "Edge0",
+      "fqdn": "server0.monitor-integration.test",
+      "hashCount": 1,
+      "hashId": "server0",
+      "ip": "testcaches",
+      "ip6": null,
+      "locationId": "",
+      "port" : 30000,
+      "status": "REPORTED",
+      "type": "EDGE",
+      "interfaceName": "bond0",
+      "deliveryServices": {"ds0":["ds0.monitor-integration.test"]},
+      "routingDisabled": 0
+    },
+    "server1": {
+      "cacheGroup": "cg0",
+      "profile": "Edge0",
+      "fqdn": "server1.monitor-integration.test",
+      "hashCount": 1,
+      "hashId": "server1",
+      "ip": "testcaches",
+      "ip6": null,
+      "locationId": "",
+      "port" : 30001,
+      "status": "REPORTED",
+      "type": "EDGE",
+      "interfaceName": "bond0",
+      "deliveryServices": {"ds0":["ds0.monitor-integration.test"]},
+      "routingDisabled": 0
+    }
+  },
+  "deliveryServices": {
+    "ds0": {
+      "anonymousBlockingEnabled": "false",
+      "consistentHashQueryParams": [],
+      "consistentHashRegex": "",
+      "coverageZoneOnly": "false",
+      "dispersion": {
+        "limit": 1,
+        "shuffled": "false"
+      },
+      "domains": ["ds0.monitor-integration.test"],
+      "matchsets": [
+        {
+          "protocol": "HTTP",
+          "matchlist": [
+            {
+              "regex": "\\.*ds0\\.*",
+              "match-type": "regex"
+            }
+          ]
+        }
+      ],
+      "missLocation": {"lat": 0, "lon": 0},
+      "protocol": {
+        "acceptHttp": "true",
+        "acceptHttps": "false",
+        "redirectToHttps": "false"
+      },
+      "regionalGeoBlocking": "false",
+      "responseHeaders": {},
+      "requestHeaders": [],
+      "soa": {
+        "admin": "60",
+        "expire": "60",
+        "minimum": "60",
+        "refresh": "60",
+        "retry": "60"
+      },
+      "sslEnabled": "false",
+      "ttl": 60,
+      "ttls": {
+        "A": "60",
+        "AAAA": "60",
+        "DNSKEY": "60",
+        "DS": "60",
+        "NS": "60",
+        "SOA": "60"
+      },
+      "maxDnsIpsForLocation": 3,
+      "ip6RoutingEnabled": "false",
+      "routingName": "ccr",
+      "deepCachingType": "",
+      "staticDnsEntries": []
+    }
+  },
+  "edgeLocations": {
+    "cg0": {"latitude":0, "longitude":0}
+  },
+  "trafficRouterLocations": {
+    "tr0": {"latitude":0, "longitude":0}
+  },
+  "monitors": {
+    "trafficmonitor": {
+      "fqdn": "trafficmonitor.monitor-integration.test",
+      "ip": "trafficmonitor",
+      "ip6": null,
+      "location": "cg0",
+      "port": 80,
+      "profile": "Monitor0",
+      "status": "REPORTED"
+    }
+  },
+  "stats": {
+    "CDN_name": "fake",
+    "date": 1561000000,
+    "tm_host": "testto",
+    "tm_path": "/fake",
+    "tm_user": "fake",
+    "tm_version": "integrationtest/0.fake"
+  }
+}

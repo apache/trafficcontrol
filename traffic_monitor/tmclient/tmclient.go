@@ -30,7 +30,6 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/trafficcontrol/traffic_monitor/datareq"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	"github.com/apache/trafficcontrol/traffic_monitor/handler"
@@ -98,11 +97,11 @@ func (c *TMClient) EventLog() (datareq.JSONEvents, error) {
 	return obj, nil
 }
 
-func (c *TMClient) CacheStats() (cache.Stats, error) {
+func (c *TMClient) CacheStats() (tc.Stats, error) {
 	path := "/publish/CacheStats"
-	obj := cache.Stats{}
+	obj := tc.Stats{}
 	if err := c.GetJSON(path, &obj); err != nil {
-		return cache.Stats{}, err // GetJSON adds context
+		return tc.Stats{}, err // GetJSON adds context
 	}
 	return obj, nil
 }
