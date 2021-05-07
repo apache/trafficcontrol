@@ -30,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -41,12 +42,13 @@ func TestDeliveryServices(t *testing.T) {
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, ti)
 		header.Set(rfc.IfUnmodifiedSince, ti)
-
 		if includeSystemTests {
 			SSLDeliveryServiceCDNUpdateTest(t)
 			CreateTestDeliveryServicesURLSigKeys(t)
 			GetTestDeliveryServicesURLSigKeys(t)
 			DeleteTestDeliveryServicesURLSigKeys(t)
+			DeleteCDNOldSSLKeys(t)
+			DeliveryServiceSSLKeys(t)
 		}
 
 		GetTestDeliveryServicesIMS(t)
@@ -171,13 +173,232 @@ func cleanUp(t *testing.T, ds tc.DeliveryServiceV4, oldCDNID int, newCDNID int) 
 	if err != nil {
 		t.Error(err)
 	}
-	_, _, err = TOSession.DeleteCDN(oldCDNID)
-	if err != nil {
-		t.Error(err)
+	if oldCDNID != -1 {
+		_, _, err = TOSession.DeleteCDN(oldCDNID)
+		if err != nil {
+			t.Error(err)
+		}
 	}
-	_, _, err = TOSession.DeleteCDN(newCDNID)
+	if newCDNID != -1 {
+		_, _, err = TOSession.DeleteCDN(newCDNID)
+		if err != nil {
+			t.Error(err)
+		}
+	}
+}
+
+func getCustomDS(cdnID, typeID int, displayName, routingName, orgFQDN, dsID string) tc.DeliveryServiceV4 {
+	customDS := tc.DeliveryServiceV4{}
+	customDS.Active = util.BoolPtr(true)
+	customDS.CDNID = util.IntPtr(cdnID)
+	customDS.DSCP = util.IntPtr(0)
+	customDS.DisplayName = util.StrPtr(displayName)
+	customDS.RoutingName = util.StrPtr(routingName)
+	customDS.GeoLimit = util.IntPtr(0)
+	customDS.GeoProvider = util.IntPtr(0)
+	customDS.IPV6RoutingEnabled = util.BoolPtr(false)
+	customDS.InitialDispersion = util.IntPtr(1)
+	customDS.LogsEnabled = util.BoolPtr(true)
+	customDS.MissLat = util.FloatPtr(0)
+	customDS.MissLong = util.FloatPtr(0)
+	customDS.MultiSiteOrigin = util.BoolPtr(false)
+	customDS.OrgServerFQDN = util.StrPtr(orgFQDN)
+	customDS.Protocol = util.IntPtr(2)
+	customDS.QStringIgnore = util.IntPtr(0)
+	customDS.RangeRequestHandling = util.IntPtr(0)
+	customDS.RegionalGeoBlocking = util.BoolPtr(false)
+	customDS.TenantID = util.IntPtr(1)
+	customDS.TypeID = util.IntPtr(typeID)
+	customDS.XMLID = util.StrPtr(dsID)
+	customDS.MaxRequestHeaderBytes = nil
+	return customDS
+}
+
+func DeleteCDNOldSSLKeys(t *testing.T) {
+	cdn := createBlankCDN("sslkeytransfer", t)
+
+	types, _, err := TOSession.GetTypeByName("HTTP", nil)
 	if err != nil {
-		t.Error(err)
+		t.Fatal("unable to get types: " + err.Error())
+	}
+	if len(types) < 1 {
+		t.Fatal("expected at least one type")
+	}
+
+	// First DS creation
+	customDS := getCustomDS(cdn.ID, types[0].ID, "displayName", "routingName", "https://test.com", "dsID")
+
+	ds, _, err := TOSession.CreateDeliveryService(customDS)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ds.CDNName = &cdn.Name
+	sslKeyRequestFields := tc.SSLKeyRequestFields{
+		BusinessUnit: util.StrPtr("BU"),
+		City:         util.StrPtr("CI"),
+		Organization: util.StrPtr("OR"),
+		HostName:     util.StrPtr("*.test.com"),
+		Country:      util.StrPtr("CO"),
+		State:        util.StrPtr("ST"),
+	}
+	_, _, err = TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, sslKeyRequestFields)
+	if err != nil {
+		t.Fatalf("unable to generate sslkeys for DS %v: %v", *customDS.XMLID, err)
+	}
+	defer cleanUp(t, ds, cdn.ID, -1)
+
+	// Second DS creation
+	customDS2 := getCustomDS(cdn.ID, types[0].ID, "displayName2", "routingName2", "https://test2.com", "dsID2")
+
+	ds2, _, err := TOSession.CreateDeliveryService(customDS2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ds2.CDNName = &cdn.Name
+	sslKeyRequestFields.HostName = util.StrPtr("*.test2.com")
+	_, _, err = TOSession.GenerateSSLKeysForDS(*ds2.XMLID, *ds2.CDNName, sslKeyRequestFields)
+	if err != nil {
+		t.Fatalf("unable to generate sslkeys for DS %v: %v", *customDS2.XMLID, err)
+	}
+
+	var cdnKeys []tc.CDNSSLKeys
+	for tries := 0; tries < 5; tries++ {
+		time.Sleep(time.Second)
+		cdnKeys, _, err = TOSession.GetCDNSSLKeys(cdn.Name, nil)
+		if err == nil && len(cdnKeys) != 0 {
+			break
+		}
+	}
+
+	if err != nil {
+		t.Fatalf("unable to get CDN %v SSL keys: %v", cdn.Name, err)
+	}
+	if len(cdnKeys) != 2 {
+		t.Errorf("expected two ssl keys for CDN %v, got %d instead", cdn.Name, len(cdnKeys))
+	}
+
+	_, err = TOSession.DeleteDeliveryService(*ds2.ID)
+	if err != nil {
+		t.Errorf("could not delete delivery service %v", *ds.XMLID)
+	}
+	_, _, err = TOSession.SnapshotCRConfigByID(cdn.ID)
+	if err != nil {
+		t.Fatalf("couldn't snap CDN: %v", err)
+	}
+	var newCdnKeys []tc.CDNSSLKeys
+	for tries := 0; tries < 5; tries++ {
+		time.Sleep(time.Second)
+		newCdnKeys, _, err = TOSession.GetCDNSSLKeys(cdn.Name, nil)
+		if err == nil && len(newCdnKeys) != 0 {
+			break
+		}
+	}
+
+	if err != nil {
+		t.Fatalf("unable to get CDN %v SSL keys: %v", cdn.Name, err)
+	}
+	if len(newCdnKeys) != 1 {
+		t.Errorf("expected 1 ssl keys for CDN %v, got %d instead", cdn.Name, len(newCdnKeys))
+	}
+}
+
+func DeliveryServiceSSLKeys(t *testing.T) {
+	cdn := createBlankCDN("sslkeytransfer", t)
+
+	types, _, err := TOSession.GetTypeByName("HTTP", nil)
+	if err != nil {
+		t.Fatal("unable to get types: " + err.Error())
+	}
+	if len(types) < 1 {
+		t.Fatal("expected at least one type")
+	}
+
+	customDS := getCustomDS(cdn.ID, types[0].ID, "displayName", "routingName", "https://test.com", "dsID")
+
+	ds, _, err := TOSession.CreateDeliveryService(customDS)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ds.CDNName = &cdn.Name
+	_, _, err = TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
+		BusinessUnit: util.StrPtr("BU"),
+		City:         util.StrPtr("CI"),
+		Organization: util.StrPtr("OR"),
+		HostName:     util.StrPtr("*.test2.com"),
+		Country:      util.StrPtr("CO"),
+		State:        util.StrPtr("ST"),
+	})
+	if err != nil {
+		t.Fatalf("unable to generate sslkeys for DS %v: %v", *customDS.XMLID, err)
+	}
+	defer cleanUp(t, ds, cdn.ID, -1)
+
+	if ds.XMLID == nil {
+		t.Fatalf("got a DS with an invalid xml ID")
+	}
+
+	var dsSSLKey *tc.DeliveryServiceSSLKeys
+	for tries := 0; tries < 5; tries++ {
+		time.Sleep(time.Second)
+		dsSSLKey, _, err = TOSession.GetDeliveryServiceSSLKeys(*ds.XMLID, nil)
+		if err == nil && dsSSLKey != nil {
+			break
+		}
+	}
+
+	if err != nil || dsSSLKey == nil {
+		t.Fatalf("unable to get DS %v SSL key: %v", *ds.XMLID, err)
+	}
+	if dsSSLKey.Certificate.Key == "" {
+		t.Errorf("expected a valid key but got nothing")
+	}
+	if dsSSLKey.Certificate.Crt == "" {
+		t.Errorf("expected a valid certificate, but got nothing")
+	}
+	if dsSSLKey.Certificate.CSR == "" {
+		t.Errorf("expected a valid CSR, but got nothing")
+	}
+
+	err = deliveryservice.Base64DecodeCertificate(&dsSSLKey.Certificate)
+	if err != nil {
+		t.Fatalf("couldn't decode certificate: %v", err)
+	}
+
+	dsSSLKeyReq := tc.DeliveryServiceSSLKeysReq{
+		AuthType:        &dsSSLKey.AuthType,
+		CDN:             &dsSSLKey.CDN,
+		DeliveryService: &dsSSLKey.DeliveryService,
+		BusinessUnit:    &dsSSLKey.BusinessUnit,
+		City:            &dsSSLKey.City,
+		Organization:    &dsSSLKey.Organization,
+		HostName:        &dsSSLKey.Hostname,
+		Country:         &dsSSLKey.Country,
+		State:           &dsSSLKey.State,
+		Key:             &dsSSLKey.Key,
+		Version:         &dsSSLKey.Version,
+		Certificate:     &dsSSLKey.Certificate,
+	}
+	_, _, err = TOSession.AddSSLKeysForDS(tc.DeliveryServiceAddSSLKeysReq{DeliveryServiceSSLKeysReq: dsSSLKeyReq}, nil)
+
+	for tries := 0; tries < 5; tries++ {
+		time.Sleep(time.Second)
+		dsSSLKey, _, err = TOSession.GetDeliveryServiceSSLKeys(*ds.XMLID, nil)
+		if err == nil && dsSSLKey != nil {
+			break
+		}
+	}
+
+	if err != nil || dsSSLKey == nil {
+		t.Fatalf("unable to get DS %v SSL key: %v", *ds.XMLID, err)
+	}
+	if dsSSLKey.Certificate.Key == "" {
+		t.Errorf("expected a valid key but got nothing")
+	}
+	if dsSSLKey.Certificate.Crt == "" {
+		t.Errorf("expected a valid certificate, but got nothing")
+	}
+	if dsSSLKey.Certificate.CSR == "" {
+		t.Errorf("expected a valid CSR, but got nothing")
 	}
 }
 
@@ -195,29 +416,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 		t.Fatal("expected at least one type")
 	}
 
-	customDS := tc.DeliveryServiceV4{}
-	customDS.Active = util.BoolPtr(true)
-	customDS.CDNID = util.IntPtr(oldCdn.ID)
-	customDS.DSCP = util.IntPtr(0)
-	customDS.DisplayName = util.StrPtr("displayName")
-	customDS.RoutingName = util.StrPtr("routingName")
-	customDS.GeoLimit = util.IntPtr(0)
-	customDS.GeoProvider = util.IntPtr(0)
-	customDS.IPV6RoutingEnabled = util.BoolPtr(false)
-	customDS.InitialDispersion = util.IntPtr(1)
-	customDS.LogsEnabled = util.BoolPtr(true)
-	customDS.MissLat = util.FloatPtr(0)
-	customDS.MissLong = util.FloatPtr(0)
-	customDS.MultiSiteOrigin = util.BoolPtr(false)
-	customDS.OrgServerFQDN = util.StrPtr("https://test.com")
-	customDS.Protocol = util.IntPtr(2)
-	customDS.QStringIgnore = util.IntPtr(0)
-	customDS.RangeRequestHandling = util.IntPtr(0)
-	customDS.RegionalGeoBlocking = util.BoolPtr(false)
-	customDS.TenantID = util.IntPtr(1)
-	customDS.TypeID = util.IntPtr(types[0].ID)
-	customDS.XMLID = util.StrPtr("dsID")
-	customDS.MaxRequestHeaderBytes = nil
+	customDS := getCustomDS(oldCdn.ID, types[0].ID, "displayName", "routingName", "https://test.com", "dsID")
 
 	ds, _, err := TOSession.CreateDeliveryService(customDS)
 	if err != nil {
@@ -239,15 +438,13 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 		t.Fatalf("unable to generate sslkeys for cdn %v: %v", oldCdn.Name, err)
 	}
 
-	tries := 0
 	var oldCDNKeys []tc.CDNSSLKeys
-	for tries < 5 {
+	for tries := 0; tries < 5; tries++ {
 		time.Sleep(time.Second)
 		oldCDNKeys, _, err = TOSession.GetCDNSSLKeys(oldCdn.Name, nil)
 		if err == nil && len(oldCDNKeys) > 0 {
 			break
 		}
-		tries++
 	}
 	if err != nil {
 		t.Fatalf("unable to get cdn %v keys: %v", oldCdn.Name, err)
