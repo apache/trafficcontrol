@@ -503,7 +503,7 @@ func reqTryLatest(reqF ReqF) ReqF {
 			to.lastAPIVerCheck = time.Now().Add(time.Hour * 24 * 365)
 			defer func() { to.lastAPIVerCheck = time.Now() }()
 		}
-		return reqF(to, method, path, body, header, response, false)
+		return reqF(to, method, path, body, header, response, raw)
 	}
 }
 
@@ -531,7 +531,7 @@ func reqLogin(reqF ReqF) ReqF {
 func reqFallback(reqF ReqF) ReqF {
 	var fallbackFunc func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error)
 	fallbackFunc = func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error) {
-		inf, err := reqF(to, method, path, body, header, response, false)
+		inf, err := reqF(to, method, path, body, header, response, raw)
 		if err == nil {
 			return inf, err
 		}
@@ -554,8 +554,7 @@ func reqFallback(reqF ReqF) ReqF {
 			return inf, err // we're already on the oldest minor supported, and the server doesn't support it.
 		}
 		to.latestSupportedAPI = apiVersions[nextAPIVerI]
-
-		return fallbackFunc(to, method, path, body, header, response, false)
+		return fallbackFunc(to, method, path, body, header, response, raw)
 	}
 	return fallbackFunc
 }
