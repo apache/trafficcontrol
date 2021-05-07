@@ -257,8 +257,6 @@ func verifyPlugin(filename string) bool {
 	} else {
 		return fileExists(filepath.Join(cfg.TrafficServerPluginDir, filename))
 	}
-
-	return true
 }
 
 func main() {

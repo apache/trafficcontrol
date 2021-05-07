@@ -129,10 +129,10 @@ func TestLogout(t *testing.T) {
 
 		if time.Second < time.Since(c.Expires) || -time.Second > time.Since(c.Expires) {
 			t.Errorf("Expected cookie expiration to be within one second of now, but was %s", time.Since(c.Expires))
+			break
 		}
-		break
 
-		parsedCookie, err := tocookie.Parse("secret", c.Value)
+		parsedCookie, err := tocookie.Parse("test", c.Value)
 		if err != nil {
 			t.Errorf("Failed to parse cookie value: %v", err)
 			break
