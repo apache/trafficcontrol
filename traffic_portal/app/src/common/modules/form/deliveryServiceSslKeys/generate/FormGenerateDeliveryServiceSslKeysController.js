@@ -34,11 +34,33 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
 		return sslRequest;
 	};
 
-	$scope.useLetsEncrypt = false;
+	var getAcmeProviders = function() {
+		deliveryServiceSslKeysService.getAcmeProviders()
+			.then(function(result) {
+				$scope.acmeProviders = result;
+				if (!$scope.acmeProviders.includes('Lets Encrypt')) {
+					$scope.acmeProviders.push('Lets Encrypt');
+				}
+			});
+	};
+
+	$scope.loadAcmeProviders = function() {
+		if ($scope.useAcme) {
+			getAcmeProviders();
+		}
+	};
+
+	$scope.useAcme = false;
+	$scope.acmeProviders = [];
+	$scope.acmeProvider = "";
 	$scope.hasError = formUtils.hasError;
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 	$scope.navigateToPath = locationUtils.navigateToPath;
 	$scope.sslRequest = setSSLRequest(sslRequest);
+
+	$scope.hasAcmeProviderError = function() {
+		return $scope.acmeProvider === null || $scope.acmeProvider === '';
+	};
 
 	$scope.deliveryService = deliveryService;
 	$scope.countries = [
@@ -318,7 +340,7 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
         });
     };
 
-    $scope.confirmGenerateLetsEncrypt = function(sslRequest) {
+    $scope.confirmGenerateAcme = function(sslRequest) {
         var params = {
             title: 'Generate New SSL Keys Using Let\'s Encrypt for Delivery Service: ' + deliveryService.xmlId,
             message: ' (replacing any previous keys)'
@@ -334,7 +356,8 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
             }
         });
         modalInstance.result.then(function() {
-            deliveryServiceSslKeysService.generateSslKeysWithLetsEncrypt(deliveryService, sslKeys, sslRequest).then(
+            sslKeys.authType = $scope.acmeProvider;
+            deliveryServiceSslKeysService.generateSslKeysWithAcme(deliveryService, sslKeys, sslRequest).then(
                 function() {
                     locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys');
                 });

@@ -62,7 +62,7 @@ Response Structure
 
 	{ "alerts": [{
 		"level": "success",
-		"text": "Beginning async call to Let's Encrypt for ds-01. This may take a few minutes."
+		"text": "Beginning async ACME call for demo1 using Lets Encrypt. This may take a few minutes. Status updates can be found here: /api/4.0/async_status/1"
 	}]}
 
 .. [#needOne] Either the ``key`` or the ``deliveryservice`` field must be provided. If both are provided, then they must match.

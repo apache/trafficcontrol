@@ -16,35 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { readFileSync } from "fs";
-
 import { browser } from 'protractor';
-import using from "jasmine-data-provider";
 
 import { LoginPage } from '../PageObjects/LoginPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { API } from '../CommonUtils/API';
 import { ASNsPage } from '../PageObjects/ASNs.po';
+import { ASNs } from "../Data";
 
-let setupFile = 'Data/ASNs/Setup.json';
-let cleanupFile = 'Data/ASNs/Cleanup.json';
-let filename = 'Data/ASNs/TestCases.json';
-let testData = JSON.parse(readFileSync(filename, "utf8"));
+const api = new API();
+const loginPage = new LoginPage();
+const topNavigation = new TopNavigationPage();
+const asnsPage = new ASNsPage();
 
-let api = new API();
-let loginPage = new LoginPage();
-let topNavigation = new TopNavigationPage();
-let asnsPage = new ASNsPage();
+describe('Setup API for ASNs Test', () => {
+    it('Setup', () => {
+        api.UseAPI(ASNs.setup);
+    });
+});
 
-describe('Setup API for ASNs Test', function(){
-    it('Setup', async function(){
-        let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        await api.UseAPI(setupData);
-    })
-})
-
-using(testData.ASNs, async function(asnsData){
-    using(asnsData.Login, function(login){
+ASNs.tests.forEach(async asnsData => {
+    asnsData.logins.forEach( login => {
         describe('Traffic Portal - ASNs - ' + login.description, function(){
             it('can login', async function(){
                 browser.get(browser.params.baseUrl);
@@ -56,20 +48,20 @@ using(testData.ASNs, async function(asnsData){
                 await asnsPage.OpenASNsPage();
             })
 
-            using(asnsData.Add, function (add) {
+            asnsData.add.forEach( add => {
                 it(add.description, async function () {
                     expect(await asnsPage.CreateASNs(add)).toBeTruthy();
                     await asnsPage.OpenASNsPage();
                 })
-            })
-            using(asnsData.Update, function (update) {
+            });
+            asnsData.update.forEach( update => {
                 it(update.description, async function () {
                     await asnsPage.SearchASNs(update.ASNs);
                     expect(await asnsPage.UpdateASNs(update)).toBeTruthy();
                     await asnsPage.OpenASNsPage();
                 })
-            })
-            using(asnsData.Remove, function (remove) {
+            });
+            asnsData.remove.forEach( remove => {
                 it(remove.description, async function () {
                     await asnsPage.SearchASNs(remove.ASNs);
                     expect(await asnsPage.DeleteASNs(remove)).toBeTruthy();
@@ -83,9 +75,8 @@ using(testData.ASNs, async function(asnsData){
     })
 })
 
-describe('Clean Up API for ASNs Test', function () {
-    it('Cleanup', async function () {
-        let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        await api.UseAPI(cleanupData);
+describe('Clean Up API for ASNs Test', () => {
+    it('Cleanup', () => {
+        api.UseAPI(ASNs.cleanup);
     })
 })

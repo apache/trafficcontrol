@@ -203,12 +203,12 @@ to-enroll() {
 			;;
 		"edge" )
 			export MY_TYPE="EDGE"
-			export MY_PROFILE="ATS_EDGE_TIER_CACHE"
+			export MY_PROFILE="EDGE_TIER_ATS_CACHE"
 			export MY_STATUS="REPORTED"
 			;;
 		"mid" )
 			export MY_TYPE="MID"
-			export MY_PROFILE="ATS_MID_TIER_CACHE"
+			export MY_PROFILE="MID_TIER_ATS_CACHE"
 			export MY_STATUS="REPORTED"
 			;;
 		"origin" )
@@ -374,4 +374,14 @@ to-auto-snapqueue() {
 
 		sleep $AUTO_SNAPQUEUE_POLL_INTERVAL
 	done
+}
+
+check-skips() {
+	if [[ "$SKIP_TRAFFIC_OPS_DATA" == true ]]; then
+		touch /shared/SKIP_TRAFFIC_OPS_DATA
+	fi
+	if [[ "$SKIP_DIG_IP" == true ]]; then
+		touch /shared/SKIP_DIG_IP
+	fi
+	sync
 }

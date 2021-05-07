@@ -14,9 +14,6 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
-
 import { PhysicalLocation } from "../../models";
 import { APIService } from "./apiservice";
 
@@ -25,16 +22,17 @@ import { APIService } from "./apiservice";
  */
 @Injectable({providedIn: "root"})
 export class PhysicalLocationService extends APIService {
-	public getPhysicalLocations(idOrName: number | string): Observable<PhysicalLocation>;
-	public getPhysicalLocations(): Observable<Array<PhysicalLocation>>;
+	public async getPhysicalLocations(idOrName: number | string): Promise<PhysicalLocation>;
+	public async getPhysicalLocations(): Promise<Array<PhysicalLocation>>;
 	/**
 	 * Gets one or all PhysicalLocations from Traffic Ops
 	 *
 	 * @param idOrName Either the integral, unique identifier (number) or name (string) of a single PhysicalLocation to be returned.
-	 * @returns An Observable that will emit the requested PhysicalLocation(s).
+	 * @returns The requested PhysicalLocation(s).
 	 */
-	public getPhysicalLocations(idOrName?: number | string): Observable<PhysicalLocation | Array<PhysicalLocation>> {
+	public async getPhysicalLocations(idOrName?: number | string): Promise<PhysicalLocation | Array<PhysicalLocation>> {
 		const path = "phys_locations";
+		let prom;
 		if (idOrName !== undefined) {
 			let params;
 			switch (typeof idOrName) {
@@ -44,11 +42,13 @@ export class PhysicalLocationService extends APIService {
 				case "number":
 					params = {id: String(idOrName)};
 			}
-			return this.get<[PhysicalLocation]>(path, undefined, params).pipe(map(
+			prom = this.get<[PhysicalLocation]>(path, undefined, params).toPromise().then(
 				r => r[0]
-			));
+			);
+		} else {
+			prom = this.get<Array<PhysicalLocation>>(path).toPromise();
 		}
-		return this.get<Array<PhysicalLocation>>(path);
+		return prom;
 	}
 
 	/**

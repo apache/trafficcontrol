@@ -36,6 +36,8 @@ const (
 	ContentDisposition = "Content-Disposition" // RFC6266
 	ContentEncoding    = "Content-Encoding"    // RFC7231§3.1.2.2
 	ContentType        = "Content-Type"        // RFC7231§3.1.1.5
+	PermissionsPolicy  = "Permissions-Policy"  // W3C "Permissions Policy"
+	Server             = "Server"              // RFC7231§7.4.2
 	Vary               = "Vary"                // RFC7231§7.1.4
 )
 

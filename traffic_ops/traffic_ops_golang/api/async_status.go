@@ -37,11 +37,11 @@ const (
 const CurrentAsyncEndpoint = "/api/4.0/async_status/"
 
 type AsyncStatus struct {
-	Id        int        `json:"id, omitempty" db:"id"`
-	Status    string     `json:"status, omitempty" db:"status"`
-	StartTime time.Time  `json:"start_time, omitempty" db:"start_time"`
-	EndTime   *time.Time `json:"end_time, omitempty" db:"end_time"`
-	Message   *string    `json:"message, omitempty" db:"message"`
+	Id        int        `json:"id,omitempty" db:"id"`
+	Status    string     `json:"status,omitempty" db:"status"`
+	StartTime time.Time  `json:"start_time,omitempty" db:"start_time"`
+	EndTime   *time.Time `json:"end_time,omitempty" db:"end_time"`
+	Message   *string    `json:"message,omitempty" db:"message"`
 }
 
 const selectAsyncStatusQuery = `SELECT id, status, message, start_time, end_time from async_status WHERE id = $1`
@@ -117,6 +117,9 @@ func InsertAsyncStatus(tx *sql.Tx, message string) (int, int, error, error) {
 
 // UpdateAsyncStatus updates the status table for an asynchronous job.
 func UpdateAsyncStatus(db *sqlx.DB, newStatus string, newMessage string, asyncStatusId int, finished bool) error {
+	if asyncStatusId == 0 {
+		return nil
+	}
 	tx, err := db.Begin()
 	if err != nil {
 		return err

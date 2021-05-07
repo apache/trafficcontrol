@@ -11,38 +11,33 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<details [ngClass]="{'inactive': !deliveryService.active}" (toggle)="toggle($event)">
-	<summary><span>{{deliveryService.displayName}}{{deliveryService.active ? '' : ' (inactive)'}}</span><a href="{{deliveryService.infoUrl}}" *ngIf="deliveryService.infoUrl" class="info" rel="noopener" target="_blank" title="More Information"><svg xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" font-size="12px" font-family="Dialog" stroke-linecap="square" version="1.1" stroke-miterlimit="10" xmlns:cc="http://creativecommons.org/ns#" viewBox="0 0 230.3438 230.20309">
-	<g transform="translate(-28.8281,-168.3281)">
-		<g>
-			<path d="m259.1719 283.5q0 47.9531-33.6094 81.4922-33.6094 33.539-81.5625 33.539t-81.5625-33.539q-33.6094-33.5391-33.6094-81.4922t33.6094-81.5625 81.5625-33.6094 81.5625 33.6094 33.6094 81.5625zm-18.8438 0q0-40.2188-28.0547-68.3438-28.0546-28.125-68.2734-28.125t-68.3438 28.125-28.125 68.3438 28.125 68.2734q28.125 28.0547 68.3438 28.0547t68.2734-28.0547q28.0547-28.0546 28.0547-68.2734zm-72.7031-59.3438q0 9.4219-7.0312 15.75-7.0313 6.3282-16.5938 6.3282t-16.5938-6.3282q-7.0312-6.3281-7.0312-15.75 0-9.4218 7.0312-15.75 7.0313-6.3281 16.5938-6.3281t16.5938 6.3281q7.0312 6.3282 7.0312 15.75zm-4.3594 145.4063h-38.6718v-109.6875h38.6718v109.6875z"/>
-		</g>
-	</g>
-</svg>
-</a><span>{{deliveryService.type ? deliveryService.type : ''}}</span></summary>
-	<div class="card-content" *ngIf="open">
+<mat-card [ngClass]="{'inactive': !deliveryService.active, 'open': open, 'first': first, 'last': last}">
+	<mat-card-title-group (click)="toggle()">
+		<mat-card-title>{{deliveryService.displayName}}{{deliveryService.active ? '' : ' (inactive)'}}
+			<a href="{{deliveryService.infoUrl}}" *ngIf="deliveryService.infoUrl" class="color-accent-inverted info" rel="noopener" target="_blank" title="More Information"><fa-icon [icon]="infoIcon"></fa-icon></a>
+		</mat-card-title>
+		<mat-card-subtitle>{{deliveryService.type ? deliveryService.type : ''}}</mat-card-subtitle>
+	</mat-card-title-group>
+	<mat-card-content class="card-content" *ngIf="open" [@enterAnimation]>
 		<div>
 			<span>Key:&nbsp;{{deliveryService.xmlId}}&nbsp;({{deliveryService.id}})</span><br/>
-			<span *ngIf="deliveryService.protocol">Protocol:&nbsp;{{Protocol.toString(deliveryService.protocol)}}</span>
-			<hr/>
+			<span *ngIf="deliveryService.protocol">Protocol:&nbsp;{{protocolString}}</span>
+			<mat-divider></mat-divider>
 			<p>{{deliveryService.longDesc ? deliveryService.longDesc : 'NO DESCRIPTION'}}</p>
-			<hr *ngIf="deliveryService.longDesc1"/>
+			<mat-divider *ngIf="deliveryService.longDesc1"></mat-divider>
 			<p *ngIf="deliveryService.longDesc1">{{deliveryService.longDesc1}}</p>
-			<hr *ngIf="deliveryService.longDesc2"/>
+			<mat-divider *ngIf="deliveryService.longDesc2"></mat-divider>
 			<p *ngIf="deliveryService.longDesc2">{{deliveryService.longDesc2}}</p>
-			<hr/>
-			<h3>URLs</h3>
-			<ul *ngIf="deliveryService.exampleURLs">
-				<li *ngFor="let url of deliveryService.exampleURLs"><a href="{{url}}">{{url}}</a></li>
-			</ul>
-			<span class="warning" *ngIf="!deliveryService.exampleURLs">No URLs configured!</span>
-			<a class="view-details" routerLink="/deliveryservice/{{deliveryService.id}}" title="View Details">
-				<img src="assets/view-details.svg">
-			</a>
+			<mat-divider></mat-divider>
+			<h3 *ngIf="deliveryService.exampleURLs">URLs</h3>
+			<mat-nav-list *ngIf="deliveryService.exampleURLs">
+				<a mat-list-item *ngFor="let url of deliveryService.exampleURLs" href="{{url}}">{{url}}</a>
+			</mat-nav-list>
+			<span class="warning" *ngIf="!deliveryService.exampleURLs || deliveryService.exampleURLs.length < 1">No URLs configured!</span>
 		</div>
 		<div>
 			<div class="canvas-container" [ngClass]="{'graph-loading': !graphDataLoaded}">
-				<canvas linechart chartTitle="Today's Bandwidth" [chartDataSets]="chartData" chartYAxisLabel="Bandwidth (Kilobytes per second)" [chartDisplayLegend]="true" chartType="time">
+				<canvas *ngIf="open" linechart chartTitle="Today's Bandwidth" [chartDataSets]="chartData" chartYAxisLabel="Bandwidth (Kilobytes per second)" [chartDisplayLegend]="true" chartType="time">
 					Your browser does not support canvases or Javascript. Normally, this would be a graph of the bandwidth data so far today.
 				</canvas>
 				<div class="loading" *ngIf="!graphDataLoaded"><tp-loading></tp-loading></div>
@@ -60,5 +55,10 @@ limitations under the License.
 				<meter low="0.5" high="0.8" optimum="1" value="{{healthy}}" title="{{healthy*100}} percent">{{healthy*100}}%</meter>
 			</fieldset>
 		</div>
-	</div>
-</details>
+	</mat-card-content>
+	<mat-card-actions *ngIf="open">
+		<a mat-raised-button color="accent" class="view-details" routerLink="/deliveryservice/{{deliveryService.id}}" title="View Details" aria-label="View Details">
+			View Details
+		</a>
+	</mat-card-actions>
+</mat-card>

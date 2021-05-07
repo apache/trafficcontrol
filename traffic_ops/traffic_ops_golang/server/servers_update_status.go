@@ -44,7 +44,11 @@ func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	api.WriteRespRaw(w, r, serverUpdateStatus)
+	if inf.Version == nil || inf.Version.Major < 4 {
+		api.WriteRespRaw(w, r, serverUpdateStatus)
+	} else {
+		api.WriteResp(w, r, serverUpdateStatus)
+	}
 }
 
 func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]tc.ServerUpdateStatus, error) {

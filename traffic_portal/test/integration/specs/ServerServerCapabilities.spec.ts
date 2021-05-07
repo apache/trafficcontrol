@@ -16,87 +16,78 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { readFileSync } from "fs";
-
 import { browser } from 'protractor';
-import using from "jasmine-data-provider";
 
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { ServerCapabilitiesPage } from '../PageObjects/ServerCapabilitiesPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { ServersPage } from '../PageObjects/ServersPage.po';
 import { API } from '../CommonUtils/API';
+import { serverServerCapabilities } from "../Data";
 
-let setupFile = 'Data/ServerServerCapabilities/Setup.json';
-let cleanupFile = 'Data/ServerServerCapabilities/Cleanup.json';
-let filename = 'Data/ServerServerCapabilities/TestCases.json';
-let testData = JSON.parse(readFileSync(filename, "utf8"));
+const api = new API();
+const loginPage = new LoginPage();
+const topNavigation = new TopNavigationPage();
+const serverCapabilitiesPage = new ServerCapabilitiesPage();
+const serverPage = new  ServersPage();
 
-let api = new API();
-let loginPage = new LoginPage();
-let topNavigation = new TopNavigationPage();
-let serverCapabilitiesPage = new ServerCapabilitiesPage();
-let serverPage = new  ServersPage();
-
-describe("Setup Server Capabilities and Server for prereq", function(){
-    it('Setup', async function(){
-        let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        await api.UseAPI(setupData);
-    })
-})
-using(testData.ServerServerCapabilities, async function(serverServerCapData){
-    using(serverServerCapData.Login, function(login){
-        describe('Traffic Portal - Server Server Capabilities - ' + login.description, function(){
-            it('can login', async function(){
+describe("Setup Server Capabilities and Server for prereq", () => {
+    it('Setup', async () => {
+        await api.UseAPI(serverServerCapabilities.setup);
+    });
+});
+serverServerCapabilities.tests.forEach(async serverServerCapData => {
+    serverServerCapData.logins.forEach(login => {
+        describe(`Traffic Portal - Server Server Capabilities - ${login.description}`, () => {
+            it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            })
-            it('can open server page', async function(){
+            });
+            it('can open server page', async () => {
                 await serverPage.OpenConfigureMenu();
                 await serverPage.OpenServerPage();
-            })
-            using(serverServerCapData.Link, function(link){
+            });
+            serverServerCapData.link.forEach(link => {
                 if(link.description.includes("cannot")){
-                    it(link.description, async function(){
+                    it(link.description, async () => {
                         await serverPage.SearchServer(link.Server);
                         expect(await serverPage.AddServerCapabilitiesToServer(link)).toBeUndefined();
                         await serverPage.OpenServerPage();
-                    })
-                }else{
-                    it(link.description, async function(){
+                    });
+                } else {
+                    it(link.description, async () => {
                         await serverPage.SearchServer(link.Server);
                         expect(await serverPage.AddServerCapabilitiesToServer(link)).toBeTruthy();
                         await serverPage.OpenServerPage();
-                    })
+                    });
                 }
-            })
-            using(serverServerCapData.Remove, function(remove){
-                it(remove.description, async function(){
+            });
+            serverServerCapData.remove.forEach(remove => {
+                it(remove.description, async () => {
                     await serverPage.SearchServer(remove.Server);
                     expect(await serverPage.RemoveServerCapabilitiesFromServer(remove.ServerCapability, remove.validationMessage)).toBeTruthy();
                     await serverPage.OpenServerPage();
-                })
-            })
-            it('can open server capabilities page', async function(){
+                });
+            });
+            it('can open server capabilities page', async () => {
                 await serverCapabilitiesPage.OpenServerCapabilityPage();
-            })
-            using(serverServerCapData.DeleteServerCapability, function(deleteSC){
-                it(deleteSC.description, async function(){
+            });
+            serverServerCapData.deleteServerCapability.forEach(deleteSC => {
+                it(deleteSC.description, async () => {
                     await serverCapabilitiesPage.SearchServerCapabilities(deleteSC.ServerCapability);
                     expect(await serverCapabilitiesPage.DeleteServerCapabilities(deleteSC.ServerCapability, deleteSC.validationMessage)).toBeTruthy();
                     await serverCapabilitiesPage.OpenServerCapabilityPage();
-                })
-            })
-            it('can logout', async function () {
+                });
+            });
+            it('can logout', async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
-            })
-        })
-    })
-})
-describe("Clean up prereq", function(){
-    it('Clean up', async function(){
-        let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        await api.UseAPI(cleanupData);
-    })
-})
+            });
+        });
+    });
+});
+describe("Clean up prereq", () => {
+    it('Clean up', async () => {
+        await api.UseAPI(serverServerCapabilities.cleanup);
+    });
+});

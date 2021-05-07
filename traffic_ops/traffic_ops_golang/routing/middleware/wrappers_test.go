@@ -72,6 +72,7 @@ func TestWrapHeaders(t *testing.T) {
 		"Content-Type":                     nil,
 		"Whole-Content-Sha512":             nil,
 		"X-Server-Name":                    nil,
+		rfc.PermissionsPolicy:              {"interest-cohort=()"},
 	}
 
 	if len(expected) != len(w.HeaderMap) {

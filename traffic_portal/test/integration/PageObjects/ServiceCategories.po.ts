@@ -22,6 +22,22 @@ import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
+interface CreateServiceCategory {
+    Name: string;
+    validationMessage?: string;
+}
+
+interface UpdateServiceCategory {
+    description: string;
+    NewName: string;
+    validationMessage?: string;
+}
+
+interface DeleteServiceCategory {
+    Name: string;
+    validationMessage?: string;
+}
+
 export class ServiceCategoriesPage extends BasePage {
 
     private btnCreateServiceCategories = element(by.name("createServiceCategoryButton"));
@@ -41,7 +57,8 @@ export class ServiceCategoriesPage extends BasePage {
         let snp = new SideNavigationPage();
         await snp.NavigateToServiceCategoriesPage();
     }
-    async CreateServiceCategories(serviceCategories) {
+
+    public async CreateServiceCategories(serviceCategories: CreateServiceCategory): Promise<boolean> {
         let result = false;
         let basePage = new BasePage();
         await this.btnCreateServiceCategories.click();
@@ -56,6 +73,7 @@ export class ServiceCategoriesPage extends BasePage {
         })
         return result;
     }
+
     public async SearchServiceCategories(nameServiceCategories: string): Promise<boolean> {
         let name = nameServiceCategories + this.randomize;
         await this.txtSearch.clear();
@@ -66,7 +84,8 @@ export class ServiceCategoriesPage extends BasePage {
         }
         return false;
     }
-    public async UpdateServiceCategories(serviceCategories): Promise<boolean | undefined> {
+
+    public async UpdateServiceCategories(serviceCategories: UpdateServiceCategory): Promise<boolean | undefined> {
         let basePage = new BasePage();
         switch (serviceCategories.description) {
             case "update service categories name":
@@ -77,9 +96,10 @@ export class ServiceCategoriesPage extends BasePage {
             default:
                 return undefined;
         }
-        return await basePage.GetOutputMessage().then(value => serviceCategories.validationMessage === value || value.includes(serviceCategories.validationMessage));
+        return await basePage.GetOutputMessage().then(value => serviceCategories.validationMessage === value || (serviceCategories.validationMessage !== undefined && value.includes(serviceCategories.validationMessage)));
     }
-    async DeleteServiceCategories(serviceCategories) {
+
+    public async DeleteServiceCategories(serviceCategories: DeleteServiceCategory): Promise<boolean> {
         let name = serviceCategories.Name + this.randomize;
         let result = false;
         let basePage = new BasePage();

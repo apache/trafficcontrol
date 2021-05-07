@@ -44,7 +44,8 @@ const routes: Routes = [
 @NgModule({
 	exports: [RouterModule],
 	imports: [RouterModule.forRoot(routes, {
-		initialNavigation: "enabled"
+		initialNavigation: "enabled",
+		relativeLinkResolution: "legacy"
 	})],
 })
 // This is a necessary empty class. All of its data/logic come from the decorator.

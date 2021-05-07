@@ -67,8 +67,8 @@ services:
     env_file:
       - variables.env
     environment:
-      DIG_IP_RETRY: ${DIG_IP_RETRY:-10}
-      LOAD_TRAFFIC_OPS_DATA: ${LOAD_TRAFFIC_OPS_DATA:-true}
+      SKIP_DIG_IP: ${SKIP_DIG_IP:-false}
+      SKIP_TRAFFIC_OPS_DATA: ${SKIP_TRAFFIC_OPS_DATA:-false}
     hostname: trafficops
     image: trafficops
     volumes:
@@ -137,6 +137,7 @@ services:
       dockerfile: traffic_stats/Dockerfile
       args:
         RHEL_VERSION: ${RHEL_VERSION:-8}
+        TRAFFIC_TS_RPM: traffic_stats/traffic_stats.rpm
     image: trafficstats
     depends_on:
       - enroller
@@ -185,7 +186,11 @@ services:
     privileged: True
     build:
       context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/edge/Dockerfile
+      dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
+      target: edge
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+        ORT_RPM: infrastructure/cdn-in-a-box/cache/traffic_ops_ort.rpm
     domainname: infra.ciab.test
     env_file:
       - variables.env
@@ -198,7 +203,11 @@ services:
     privileged: True
     build:
       context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/mid/Dockerfile
+      dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
+      target: mid
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+        ORT_RPM: infrastructure/cdn-in-a-box/cache/traffic_ops_ort.rpm
     domainname: infra.ciab.test
     env_file:
       - variables.env
@@ -211,7 +220,11 @@ services:
     privileged: True
     build:
       context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/mid/Dockerfile
+      dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
+      target: mid
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+        ORT_RPM: infrastructure/cdn-in-a-box/cache/traffic_ops_ort.rpm
     domainname: infra.ciab.test
     env_file:
       - variables.env
@@ -272,6 +285,18 @@ services:
     volumes:
       - shared:/shared
     domainname: infra.ciab.test
+
+  # static provides the MaxMind databases and coverage-zone.json, which used to be served by Traffic Ops Perl.
+  static:
+    build:
+      context: ../..
+      dockerfile: infrastructure/cdn-in-a-box/static/Dockerfile
+    domainname: infra.ciab.test
+    hostname: static
+    env_file:
+      - variables.env
+    volumes:
+      - shared:/shared
 
 volumes:
   schemas:

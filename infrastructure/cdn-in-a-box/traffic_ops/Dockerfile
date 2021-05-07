@@ -21,7 +21,7 @@
 ############################################################
 
 ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION}
+FROM centos:${RHEL_VERSION} as trafficops
 ARG RHEL_VERSION=8
 # Makes RHEL_VERSION available in later layers without needing to specify it again
 ENV RHEL_VERSION=$RHEL_VERSION
@@ -91,8 +91,6 @@ RUN set -o nounset -o errexit && \
 
 EXPOSE 443
 
-ADD traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz /opt/traffic_ops/app/public/
-
 WORKDIR /opt/traffic_ops/app
 ADD traffic_ops/install/bin/install_goose.sh ./
 RUN ./install_goose.sh && rm ./install_goose.sh
@@ -124,3 +122,13 @@ EXPOSE 443
 CMD /run-go.sh
 HEALTHCHECK --interval=10s --timeout=1s \
 	CMD bash -c 'source /to-access.sh && [[ "$(curl -sk "https://${TO_FQDN}/api/${TO_API_VERSION}/ping" | jq .ping)" == \"pong\" ]]'
+
+FROM trafficops as get-delve
+
+RUN go get -u github.com/go-delve/delve/cmd/dlv
+
+FROM trafficops AS trafficops-debug
+COPY --from=get-delve /root/go/bin /usr/bin
+
+# Makes the default target skip the trafficops-debug stage
+FROM trafficops

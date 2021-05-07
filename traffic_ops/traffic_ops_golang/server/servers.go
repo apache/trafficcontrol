@@ -492,6 +492,11 @@ const deleteServerQuery = `DELETE FROM server WHERE id=$1`
 const deleteInterfacesQuery = `DELETE FROM interface WHERE server=$1`
 const deleteIPsQuery = `DELETE FROM ip_address WHERE server = $1`
 
+func newUUID() *string {
+	uuidReference := uuid.New().String()
+	return &uuidReference
+}
+
 func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
@@ -512,11 +517,6 @@ func validateCommon(s *tc.CommonServerProperties, tx *sql.Tx) []error {
 
 	if len(errs) > 0 {
 		return errs
-	}
-
-	if s.XMPPID == nil || *s.XMPPID == "" {
-		hostName := *s.HostName
-		s.XMPPID = &hostName
 	}
 
 	if _, err := tc.ValidateTypeID(tx, s.TypeID, "server"); err != nil {
@@ -1459,10 +1459,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	original := originals[0]
-	if original.XMPPID == nil {
-		sysErr = errors.New("original server had no XMPPID")
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-		return
+	if original.XMPPID == nil || *original.XMPPID == "" {
+		log.Warnf("original server %s had no XMPPID\n", *original.HostName)
 	}
 	if original.StatusID == nil {
 		sysErr = errors.New("original server had no status ID")
@@ -1489,7 +1487,10 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		original.StatusLastUpdated = &original.LastUpdated.Time
 	}
 
-	originalXMPPID := *original.XMPPID
+	var originalXMPPID string
+	if original.XMPPID != nil {
+		originalXMPPID = *original.XMPPID
+	}
 	originalStatusID := *original.StatusID
 
 	var server tc.ServerV40
@@ -1638,7 +1639,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if server.XMPPID != nil && *server.XMPPID != originalXMPPID {
+	if server.XMPPID != nil && *server.XMPPID != "" && originalXMPPID != "" && *server.XMPPID != originalXMPPID {
 		api.WriteAlerts(w, r, http.StatusBadRequest, tc.CreateAlerts(tc.ErrorLevel, fmt.Sprintf("server cannot be updated due to requested XMPPID change. XMPIDD is immutable")))
 		return
 	}
@@ -1801,8 +1802,7 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	str := uuid.New().String()
-	server.XMPPID = &str
+	server.XMPPID = newUUID()
 
 	if err := validateV2(&server, tx); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1872,8 +1872,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	str := uuid.New().String()
-	server.XMPPID = &str
+	server.XMPPID = newUUID()
 	_, err := validateV3(&server, tx)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)

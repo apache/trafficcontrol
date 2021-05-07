@@ -102,10 +102,22 @@ In a typical scenario, if the steps in `Building`_ have been followed, all that'
 
 While the components may be interacted with by the host using these ports, the true operation of the CDN can only truly be seen from within the Docker network. To see the CDN in action, connect to a container within the CDN in a Box project and use cURL to request the URL ``http://video.demo1.mycdn.ciab.test`` which will be resolved by the DNS container to the IP of the Traffic Router, which will provide a ``302 FOUND`` response pointing to the Edge-Tier cache. A typical choice for this is the "enroller" service, which has a very nuanced purpose not discussed here but already has the :manpage:`curl(1)` command line tool installed. For a more user-friendly interface into the CDN network, see `VNC Server`_.
 
+To test the demo1 Delivery Service:
+
 .. code-block:: shell
 	:caption: Example Command to See the CDN in Action
 
-	sudo docker-compose exec enroller /usr/bin/curl -L "http://video.demo1.mycdn.ciab.test"
+	sudo docker-compose exec enroller curl -L "http://video.demo1.mycdn.ciab.test"
+
+To test the ``foo.kabletown.net.`` Federation:
+
+.. code-block:: shell
+	:caption: Query the Federation CNAME using the Delivery Service hostname
+
+	sudo docker-compose exec trafficrouter dig +short @trafficrouter.infra.ciab.test -t CNAME video.demo2.mycdn.ciab.test
+
+	# Expected response:
+	foo.kabletown.net.
 
 When the CDN is to be shut down, it is often best to do so using ``sudo docker-compose down -v`` due to the use of shared volumes in the system which might interfere with a proper initialization upon the next run.
 
@@ -134,7 +146,7 @@ There also exist TP and TO integration tests containers. Both of these container
 
 	sudo docker-compose -f docker-compose.traffic-ops-test.yml up
 
-.. note:: If all CDN in a Box containers are started at once (example: ``docker-compose -f docker-compose.yml -f docker-compose.traffic-ops-test.yml up integration``), the :ref:`Enroller <ciab-enroller>` initial data load is skipped to prevent data conflicts with the :ref:`Traffic Ops API tests fixtures <dev-traffic-ops-fixtures>`.
+.. note:: If all CDN in a Box containers are started at once (example: ``docker-compose -f docker-compose.yml -f docker-compose.traffic-ops-test.yml up -d edge enroller dns db smtp trafficops trafficvault integration``), the :ref:`Enroller <ciab-enroller>` initial data load is skipped to prevent data conflicts with the :ref:`Traffic Ops API tests fixtures <dev-traffic-ops-fixtures>`.
 
 variables.env
 """""""""""""
@@ -179,7 +191,7 @@ Trusting the Certificate Authority
 ----------------------------------
 For developer and testing use-cases, it may be necessary to have full x509 :abbr:`CA (Certificate Authority)` validation by HTTPS clients\ [6]_\ [7]_. For x509 validation to work properly, the self-signed x509 :abbr:`CA (Certificate Authority)` certificate must be trusted either at the system level or by the client application itself.
 
-.. note:: HTTP Client applications such as Google Chrome, Firefox, :manpage:`curl(1)`, and :manpage:`wget(1)` can also be individually configured to trust the :abbr:`CA (Certificate Authority)` certificate. Review each program's respective documentation for instructions.
+.. note:: HTTP Client applications such as Chromium, Firefox, :manpage:`curl(1)`, and :manpage:`wget(1)` can also be individually configured to trust the :abbr:`CA (Certificate Authority)` certificate. Review each program's respective documentation for instructions.
 
 Importing the :abbr:`CA (Certificate Authority)` Certificate on OSX
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -314,7 +326,7 @@ Dante's socks proxy is an optional container that can be used to provide browser
 
 #. Start the CDN-in-a-Box stack at least once so that the x.509 self-signed :abbr:`CA (Certificate Authority)` is created.
 #. On the host, import and Trust the :abbr:`CA (Certificate Authority)` for your target Operating System. See `Trusting the Certificate Authority`_
-#. On the host, using either Firefox or Chrome, download the `FoxyProxy browser plugin <https://getfoxyproxy.org/>`_ which enables dynamic proxy support via URL regular expression
+#. On the host, using either Firefox or Chromium, download the `FoxyProxy browser plugin <https://getfoxyproxy.org/>`_ which enables dynamic proxy support via URL regular expression
 #. Once FoxyProxy is installed, click the Fox icon on the upper right hand of the browser window, select :guilabel:`Options`
 #. Once in Options Dialog, Click :guilabel:`Add New Proxy` and navigate to the General tab:
 #. Fill in the General tab according to the table

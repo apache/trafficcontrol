@@ -4,6 +4,7 @@
   "description": "Traffic Portal Testing",
   "main": "config.ts",
   "dependencies": {
+    "@types/random-ipv6": "^1.0.0",
     "axios": "^0.21.1",
     "chromedriver": "^78.0.1",
     "constants": "0.0.2",
@@ -25,7 +26,6 @@
     "@types/jasmine": "^3.4.6",
     "@types/node": "^12.12.0",
     "jasmine": "^3.5.0",
-    "jasmine-data-provider": "^2.2.0",
     "typescript": "^3.6.4"
   },
   "scripts": {

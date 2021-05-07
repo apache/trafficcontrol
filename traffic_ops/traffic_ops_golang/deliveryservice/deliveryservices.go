@@ -482,7 +482,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 		if !inf.Config.TrafficVaultEnabled {
 			return nil, http.StatusInternalServerError, nil, errors.New("cannot create DNSSEC keys for delivery service: Traffic Vault is not configured")
 		}
-		if userErr, sysErr, statusCode := PutDNSSecKeys(tx, *ds.XMLID, cdnName, ds.ExampleURLs, inf.Vault); userErr != nil || sysErr != nil {
+		if userErr, sysErr, statusCode := PutDNSSecKeys(tx, *ds.XMLID, cdnName, ds.ExampleURLs, inf.Vault, r.Context()); userErr != nil || sysErr != nil {
 			return nil, statusCode, userErr, sysErr
 		}
 	}
@@ -1263,7 +1263,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		where += " AND ds.tenant_id = ANY(CAST(:accessibleTo AS bigint[])) "
 		queryValues["accessibleTo"] = pq.Array(accessibleTenants)
 	}
-	query := selectQuery() + where + orderBy + pagination
+	query := SelectDeliveryServicesQuery + where + orderBy + pagination
 	log.Debugln("generated deliveryServices query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
 
@@ -1975,11 +1975,6 @@ func deleteLocationParam(tx *sql.Tx, configFile string) error {
 	return nil
 }
 
-// export the selectQuery for the 'deliveryservice' package.
-func GetDSSelectQuery() string {
-	return selectQuery()
-}
-
 // getTenantID returns the tenant Id of the given delivery service. Note it may return a nil id and nil error, if the tenant ID in the database is nil.
 func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceV4) (*int, error) {
 	if ds.ID == nil && ds.XMLID == nil {
@@ -2117,90 +2112,90 @@ func sanitize(ds *tc.DeliveryServiceV4) {
 	}
 }
 
-func selectQuery() string {
-	return `
+// SelectDeliveryServicesQuery is a PostgreSQL query used to fetch Delivery
+// Services from the Traffic Ops Database.
+const SelectDeliveryServicesQuery = `
 SELECT
 ds.active,
-ds.anonymous_blocking_enabled,
-ds.ccr_dns_ttl,
-ds.cdn_id,
-cdn.name as cdnName,
-ds.check_path,
-ds.consistent_hash_regex,
-CAST(ds.deep_caching_type AS text) as deep_caching_type,
-ds.display_name,
-ds.dns_bypass_cname,
-ds.dns_bypass_ip,
-ds.dns_bypass_ip6,
-ds.dns_bypass_ttl,
-ds.dscp,
-ds.ecs_enabled,
-ds.edge_header_rewrite,
-ds.first_header_rewrite,
-ds.geolimit_redirect_url,
-ds.geo_limit,
-ds.geo_limit_countries,
-ds.geo_provider,
-ds.global_max_mbps,
-ds.global_max_tps,
-ds.fq_pacing_rate,
-ds.http_bypass_fqdn,
-ds.id,
-ds.info_url,
-ds.initial_dispersion,
-ds.inner_header_rewrite,
-ds.ipv6_routing_enabled,
-ds.last_header_rewrite,
-ds.last_updated,
-ds.logs_enabled,
-ds.long_desc,
-ds.long_desc_1,
-ds.long_desc_2,
-ds.max_dns_answers,
-ds.max_origin_connections,
-ds.max_request_header_bytes,
-ds.mid_header_rewrite,
-COALESCE(ds.miss_lat, 0.0),
-COALESCE(ds.miss_long, 0.0),
-ds.multi_site_origin,
-(SELECT o.protocol::::text || ':://' || o.fqdn || rtrim(concat('::', o.port::::text), '::')
-	FROM origin o
-	WHERE o.deliveryservice = ds.id
-	AND o.is_primary) as org_server_fqdn,
-ds.origin_shield,
-ds.profile as profileID,
-profile.name as profile_name,
-profile.description  as profile_description,
-ds.protocol,
-ds.qstring_ignore,
-(SELECT ARRAY_AGG(name ORDER BY name)
-	FROM deliveryservice_consistent_hash_query_param
-			WHERE deliveryservice_id = ds.id) AS query_keys,
-ds.range_request_handling,
-ds.regex_remap,
-ds.regional_geo_blocking,
-ds.remap_text,
-ds.routing_name,
-ds.service_category,
-ds.signing_algorithm,
-ds.range_slice_block_size,
-ds.ssl_key_version,
-ds.tenant_id,
-tenant.name,
-ds.topology,
-ds.tr_request_headers,
-ds.tr_response_headers,
-type.name,
-ds.type as type_id,
-ds.xml_id,
-cdn.domain_name as cdn_domain
-from deliveryservice as ds
+	ds.anonymous_blocking_enabled,
+	ds.ccr_dns_ttl,
+	ds.cdn_id,
+	cdn.name AS cdnName,
+	ds.check_path,
+	ds.consistent_hash_regex,
+	CAST(ds.deep_caching_type AS text) AS deep_caching_type,
+	ds.display_name,
+	ds.dns_bypass_cname,
+	ds.dns_bypass_ip,
+	ds.dns_bypass_ip6,
+	ds.dns_bypass_ttl,
+	ds.dscp,
+	ds.ecs_enabled,
+	ds.edge_header_rewrite,
+	ds.first_header_rewrite,
+	ds.geolimit_redirect_url,
+	ds.geo_limit,
+	ds.geo_limit_countries,
+	ds.geo_provider,
+	ds.global_max_mbps,
+	ds.global_max_tps,
+	ds.fq_pacing_rate,
+	ds.http_bypass_fqdn,
+	ds.id,
+	ds.info_url,
+	ds.initial_dispersion,
+	ds.inner_header_rewrite,
+	ds.ipv6_routing_enabled,
+	ds.last_header_rewrite,
+	ds.last_updated,
+	ds.logs_enabled,
+	ds.long_desc,
+	ds.long_desc_1,
+	ds.long_desc_2,
+	ds.max_dns_answers,
+	ds.max_origin_connections,
+	ds.max_request_header_bytes,
+	ds.mid_header_rewrite,
+	COALESCE(ds.miss_lat, 0.0),
+	COALESCE(ds.miss_long, 0.0),
+	ds.multi_site_origin,
+	(SELECT o.protocol::::text || ':://' || o.fqdn || rtrim(concat('::', o.port::::text), '::')
+		FROM origin o
+		WHERE o.deliveryservice = ds.id
+		AND o.is_primary) AS org_server_fqdn,
+	ds.origin_shield,
+	ds.profile AS profileID,
+	profile.name AS profile_name,
+	profile.description  AS profile_description,
+	ds.protocol,
+	ds.qstring_ignore,
+	(SELECT ARRAY_AGG(name ORDER BY name)
+		FROM deliveryservice_consistent_hash_query_param
+				WHERE deliveryservice_id = ds.id) AS query_keys,
+	ds.range_request_handling,
+	ds.regex_remap,
+	ds.regional_geo_blocking,
+	ds.remap_text,
+	ds.routing_name,
+	ds.service_category,
+	ds.signing_algorithm,
+	ds.range_slice_block_size,
+	ds.ssl_key_version,
+	ds.tenant_id,
+	tenant.name,
+	ds.topology,
+	ds.tr_request_headers,
+	ds.tr_response_headers,
+	type.name,
+	ds.type AS type_id,
+	ds.xml_id,
+	cdn.domain_name AS cdn_domain
+FROM deliveryservice AS ds
 JOIN type ON ds.type = type.id
 JOIN cdn ON ds.cdn_id = cdn.id
 LEFT JOIN profile ON ds.profile = profile.id
 LEFT JOIN tenant ON ds.tenant_id = tenant.id
 `
-}
 
 func updateDSQuery() string {
 	return `

@@ -31,15 +31,15 @@ under the License.
         <br>
         <form name="dsGenerateSslKeyForm" class="form-horizontal form-label-left" novalidate>
             <div class="form-group">
-                <label for="leSlider" class="control-label col-md-2 col-sm-2 col-xs-12">Use Let's Encrypt</label>
+                <label for="acmeSlider" class="control-label col-md-2 col-sm-2 col-xs-12">Use ACME</label>
                 <div class="col-md-10 col-sm-10 col-xs-12" style="padding-top: 10px">
                     <label class="switch">
-                        <input id="leSlider" type="checkbox" ng-model="useLetsEncrypt">
+                        <input id="acmeSlider" type="checkbox" ng-model="useAcme" ng-change="loadAcmeProviders()">
                         <span class="slider round"></span>
                     </label>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.country), 'has-feedback': hasError(dsGenerateSslKeyForm.country)}" ng-show="!useLetsEncrypt">
+            <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.country), 'has-feedback': hasError(dsGenerateSslKeyForm.country)}" ng-show="!useAcme">
                 <label for="country" class="control-label col-md-2 col-sm-2 col-xs-12">Country *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select id="country" name="country" type="text" class="form-control" ng-model="sslRequest.country" ng-required="true" ng-maxlength="2" ng-options="country.code as country.name for country in countries" required>
@@ -48,14 +48,14 @@ under the License.
                      <small class="input-error" ng-show="hasPropertyError(dsGenerateSslKeyForm.country, 'required')">Required</small>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.state), 'has-feedback': hasError(dsGenerateSslKeyForm.state)}" ng-show="!useLetsEncrypt">
+            <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.state), 'has-feedback': hasError(dsGenerateSslKeyForm.state)}" ng-show="!useAcme">
                 <label for="state" class="control-label col-md-2 col-sm-2 col-xs-12">State *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="state" name="state" class="form-control" ng-model="sslRequest.state" required>
                     <small class="input-error" ng-show="hasPropertyError(dsGenerateSslKeyForm.state, 'required')">Required</small>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.city), 'has-feedback': hasError(dsGenerateSslKeyForm.city)}" ng-show="!useLetsEncrypt">
+            <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.city), 'has-feedback': hasError(dsGenerateSslKeyForm.city)}" ng-show="!useAcme">
                 <label for="city" class="control-label col-md-2 col-sm-2 col-xs-12">City *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="city" name="city" type="text" class="form-control" ng-model="sslRequest.city" ng-maxlength="256" required autofocus>
@@ -64,7 +64,7 @@ under the License.
                     <span ng-show="hasError(dsGenerateSslKeyForm.city)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.organization), 'has-feedback': hasError(dsGenerateSslKeyForm.organization)}" ng-show="!useLetsEncrypt">
+            <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.organization), 'has-feedback': hasError(dsGenerateSslKeyForm.organization)}" ng-show="!useAcme">
                 <label for="organization" class="control-label col-md-2 col-sm-2 col-xs-12">Organization Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="organization" name="organization" type="text" class="form-control" ng-model="sslRequest.organization" ng-maxlength="256" required autofocus>
@@ -73,7 +73,7 @@ under the License.
                     <span ng-show="hasError(dsGenerateSslKeyForm.organization)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.organizationUnit), 'has-feedback': hasError(dsGenerateSslKeyForm.organizationUnit)}" ng-show="!useLetsEncrypt">
+            <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.organizationUnit), 'has-feedback': hasError(dsGenerateSslKeyForm.organizationUnit)}" ng-show="!useAcme">
                 <label for="organizationUnit" class="control-label col-md-2 col-sm-2 col-xs-12">Organization Unit Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input id="organizationUnit" name="organizationUnit" type="text" class="form-control" ng-model="sslRequest.businessUnit" ng-maxlength="256" required autofocus>
@@ -91,9 +91,17 @@ under the License.
                     <span ng-show="hasError(dsGenerateSslKeyForm.commonName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
+            <div class="form-group" ng-class="{'has-error': hasAcmeProviderError()}" ng-show="useAcme">
+                <label for="acmeProviderDropdown" class="control-label col-md-2 col-sm-2 col-xs-12">ACME Provider *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select id="acmeProviderDropdown" name="acmeProviderDropdown" type="text" class="form-control" ng-model="acmeProvider" ng-required="false" ng-options="acmeProviderOption as acmeProviderOption for acmeProviderOption in acmeProviders" required>
+                        <option value="">Select...</option>
+                    </select>
+                </div>
+            </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" ng-disabled="dsGenerateSslKeyForm.$pristine || dsGenerateSslKeyForm.$invalid" ng-click="confirmGenerate(sslRequest)" ng-show="!useLetsEncrypt">Generate Keys</button>
-                <button type="button" class="btn btn-success" ng-click="confirmGenerateLetsEncrypt(sslRequest)" ng-show="useLetsEncrypt">Generate Keys With Let's Encrypt</button>
+                <button type="button" class="btn btn-success" ng-disabled="dsGenerateSslKeyForm.$pristine || dsGenerateSslKeyForm.$invalid" ng-click="confirmGenerate(sslRequest)" ng-show="!useAcme">Generate Keys</button>
+                <button type="button" class="btn btn-success" ng-disabled="hasAcmeProviderError()" ng-click="confirmGenerateAcme(sslRequest)" ng-show="useAcme">Generate Keys With ACME</button>
             </div>
         </form>
     </div>

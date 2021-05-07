@@ -15,9 +15,6 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
-
 import { Parameter, Profile } from "../../models";
 
 import { APIService } from "./apiservice";
@@ -31,6 +28,22 @@ import { APIService } from "./apiservice";
 function paramMap(p: Parameter): Parameter {
 	if (p.lastUpdated) {
 		p.lastUpdated = new Date((p.lastUpdated as unknown as string).replace("+00", "Z"));
+	}
+	return p;
+}
+
+/**
+ * Shared mapping function for converting Profile 'lastUpdated' fields to
+ * actual dates, as well as the `lastUpdated` property of any and all
+ * constituent Parameters thereof.
+ *
+ * @param p The Profile being converted.
+ * @returns the converted Profile.
+ */
+function profileMap(p: Profile): Profile {
+	p.lastUpdated = new Date((p.lastUpdated as unknown as string).replace("+00", "Z"));
+	if (p.params) {
+		p.params.map(paramMap);
 	}
 	return p;
 }
@@ -50,16 +63,17 @@ export class ProfileService extends APIService {
 		super(http);
 	}
 
-	public getProfiles(idOrName: number | string): Observable<Profile>;
-	public getProfiles(): Observable<Array<Profile>>;
+	public async getProfiles(idOrName: number | string): Promise<Profile>;
+	public async getProfiles(): Promise<Array<Profile>>;
 	/**
 	 * Retrieves Profiles from the API.
 	 *
 	 * @param idOrName Specify either the integral, unique identifier (number) of a specific Profile to retrieve, or its name (string).
-	 * @returns An Observable that will emit the requested Profile(s).
+	 * @returns The requested Profile(s).
 	 */
-	public getProfiles(idOrName?: number | string): Observable<Array<Profile> | Profile> {
+	public async getProfiles(idOrName?: number | string): Promise<Array<Profile> | Profile> {
 		const path = "profiles";
+		let prom;
 		if (idOrName !== undefined) {
 			let params;
 			switch (typeof idOrName) {
@@ -69,27 +83,10 @@ export class ProfileService extends APIService {
 				case "string":
 					params = {name: idOrName};
 			}
-			return this.get<[Profile]>(path, undefined, params).pipe(map(
-				r => {
-					const p = r[0];
-					p.lastUpdated = new Date((p.lastUpdated as unknown as string).replace("+00", "Z"));
-					if (p.params) {
-						p.params.map(paramMap);
-					}
-					return p;
-				}
-			));
+			prom = this.get<[Profile]>(path, undefined, params).toPromise().then(r=>r[0]).then(profileMap);
+		} else {
+			prom = this.get<Array<Profile>>(path).toPromise().then(r=>r.map(profileMap));
 		}
-		return this.get<Array<Profile>>(path).pipe(map(
-			r => r.map(
-				profile => {
-					profile.lastUpdated = new Date(profile.lastUpdated as unknown as string);
-					if (profile.params) {
-						profile.params.map(paramMap);
-					}
-					return profile;
-				}
-			)
-		));
+		return prom;
 	}
 }

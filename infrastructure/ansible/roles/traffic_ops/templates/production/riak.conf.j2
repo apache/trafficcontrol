@@ -10,6 +10,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+#
+# NOTE: riak.conf is DEPRECATED! This template should not be updated anymore
+# and is kept only for backwards-compatibility until ATC 6.1. Riak is now
+# configured via the "traffic_vault_backend" and "traffic_vault_config" fields
+# in cdn.conf.
 #}
 {
 	"user": "{{ to_riak_username }}",

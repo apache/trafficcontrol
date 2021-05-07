@@ -22,6 +22,19 @@ import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
 import { randomize } from '../config';
 
+interface User {
+  FullName: string;
+  Username: string;
+  Email: string;
+  Role: string;
+  Tenant: string;
+  Password: string;
+  ConfirmPassword: string;
+  PublicSSHKey: string;
+  existsMessage?: string;
+  validationMessage?: string;
+}
+
 export class UsersPage extends BasePage {
 
     private btnCreateNewUser = element(by.css('[title="Create New User"]'));
@@ -41,7 +54,7 @@ export class UsersPage extends BasePage {
       await snp.NavigateToUsersPage();
      }
 
-    async CreateUser(user) {
+    public async CreateUser(user: User): Promise<boolean> {
       let result = false;
       let basePage = new BasePage();
       let snp = new SideNavigationPage();
