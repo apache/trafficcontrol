@@ -32,6 +32,13 @@ const (
 	LetsEncryptAuthType              = "Lets Encrypt"
 )
 
+// SSLKeysAddResponse is a struct to store the response of addition of ssl keys for a DS,
+// along with any alert messages
+type SSLKeysAddResponse struct {
+	Response string `json:"response"`
+	Alerts
+}
+
 // DeliveryServiceSSLKeysResponse ...
 type DeliveryServiceSSLKeysResponse struct {
 	Response DeliveryServiceSSLKeys `json:"response"`

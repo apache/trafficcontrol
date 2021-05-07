@@ -30,13 +30,6 @@ const DefaultMaxRequestHeaderBytes = 0
 const MinRangeSliceBlockSize = 262144   // 265Kib
 const MaxRangeSliceBlockSize = 33554432 // 32Mib
 
-// SSLKeysAddResponse is a struct to store the response of addition of ssl keys for a DS,
-// along with any alert messages
-type SSLKeysAddResponse struct {
-	Response string `json:"response"`
-	Alerts
-}
-
 // GetDeliveryServiceResponse is deprecated use DeliveryServicesResponse...
 type GetDeliveryServiceResponse struct {
 	Response []DeliveryService `json:"response"`

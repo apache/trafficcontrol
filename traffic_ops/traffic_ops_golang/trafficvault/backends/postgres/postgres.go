@@ -146,25 +146,14 @@ func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *
 	}
 
 	// delete the old ssl keys first
-	_, err = tvTx.Exec("DELETE FROM sslkey WHERE deliveryservice=$1 and version=$2", key.DeliveryService, strconv.FormatInt(int64(key.Version), 10))
+	oldVersions := []string{strconv.FormatInt(int64(key.Version), 10), latestVersion}
+	_, err = tvTx.Exec("DELETE FROM sslkey WHERE deliveryservice=$1 and version=ANY($2)", key.DeliveryService, pq.Array(oldVersions))
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
-	_, err = tvTx.Exec("DELETE FROM sslkey WHERE deliveryservice=$1 and version=$2", key.DeliveryService, latestVersion)
-	if err != nil && err != sql.ErrNoRows {
-		return err
-	}
-	res, err := tvTx.Exec("INSERT INTO sslkey (deliveryservice, data, cdn, version) VALUES ($1, $2, $3, $4)", key.DeliveryService, keyJSON, key.CDN, strconv.FormatInt(int64(key.Version), 10))
-	if err != nil {
-		e := checkErrWithContext("Traffic Vault PostgreSQL: executing INSERT SSL Key query", err, ctx.Err())
-		return e
-	}
-	if rowsAffected, err := res.RowsAffected(); err != nil {
-		return err
-	} else if rowsAffected == 0 {
-		return errors.New("SSL Key: no keys were inserted")
-	}
-	res, err = tvTx.Exec("INSERT INTO sslkey (deliveryservice, data, cdn, version) VALUES ($1, $2, $3, $4)", key.DeliveryService, keyJSON, key.CDN, latestVersion)
+
+	// insert the new ssl keys now
+	res, err := tvTx.Exec("INSERT INTO sslkey (deliveryservice, data, cdn, version) VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)", key.DeliveryService, keyJSON, key.CDN, strconv.FormatInt(int64(key.Version), 10), key.DeliveryService, keyJSON, key.CDN, latestVersion)
 	if err != nil {
 		e := checkErrWithContext("Traffic Vault PostgreSQL: executing INSERT SSL Key query", err, ctx.Err())
 		return e
