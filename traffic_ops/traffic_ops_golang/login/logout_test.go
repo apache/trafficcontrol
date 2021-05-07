@@ -96,7 +96,8 @@ func TestLogout(t *testing.T) {
 	ctx = context.WithValue(ctx, api.PathParamsKey, map[string]string{})
 	var tv trafficvault.TrafficVault = &disabled.Disabled{}
 	ctx = context.WithValue(ctx, api.TrafficVaultContextKey, tv)
-	ctx, _ = context.WithDeadline(ctx, time.Now().Add(24*time.Hour))
+	ctx, cancelTx := context.WithDeadline(ctx, time.Now().Add(24*time.Hour))
+	defer cancelTx()
 	req = req.WithContext(ctx)
 
 	req.AddCookie(cookie)

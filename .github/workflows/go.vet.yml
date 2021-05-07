@@ -51,7 +51,6 @@ jobs:
       run: |
         skip_analyzers=(
           -copylocks=false
-          -lostcancel=false
           -printf=false
           -tests=false
         )

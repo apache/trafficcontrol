@@ -102,7 +102,8 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 		existingCerts = append(existingCerts, ExistingCerts{Version: ds.Version, XmlId: ds.XmlId})
 	}
 
-	ctx, _ := context.WithTimeout(r.Context(), AcmeTimeout*time.Duration(len(existingCerts)))
+	ctx, cancelTx := context.WithTimeout(r.Context(), AcmeTimeout*time.Duration(len(existingCerts)))
+	defer cancelTx()
 
 	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(inf.Tx.Tx, "ACME async job has started.")
 	if userErr != nil || sysErr != nil {

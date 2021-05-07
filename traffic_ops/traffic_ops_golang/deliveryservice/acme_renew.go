@@ -56,7 +56,8 @@ func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, _ := context.WithTimeout(r.Context(), AcmeTimeout)
+	ctx, cancelTx := context.WithTimeout(r.Context(), AcmeTimeout)
+	defer cancelTx()
 
 	userErr, sysErr, statusCode := renewAcmeCerts(inf.Config, xmlID, ctx, r.Context(), inf.User, inf.Vault)
 	if userErr != nil || sysErr != nil {
