@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"	
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestCacheGroups(t *testing.T) {
