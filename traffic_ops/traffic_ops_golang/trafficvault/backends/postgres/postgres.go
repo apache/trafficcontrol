@@ -149,7 +149,8 @@ func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *
 	oldVersions := []string{strconv.FormatInt(int64(key.Version), 10), latestVersion}
 	_, err = tvTx.Exec("DELETE FROM sslkey WHERE deliveryservice=$1 and version=ANY($2)", key.DeliveryService, pq.Array(oldVersions))
 	if err != nil && err != sql.ErrNoRows {
-		return err
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing DELETE SSL Key query for INSERT", err, ctx.Err())
+		return e
 	}
 
 	// insert the new ssl keys now
@@ -234,7 +235,8 @@ func (p *Postgres) GetCDNSSLKeys(cdnName string, tx *sql.Tx, ctx context.Context
 	for rows.Next() {
 		jsonKey := ""
 		if err := rows.Scan(&jsonKey); err != nil {
-			return keys, errors.New("scanning cdn ssl keys: " + err.Error())
+			e := checkErrWithContext("Traffic Vault PostgreSQL: scanning CDN SSL keys", err, ctx.Err())
+			return keys, e
 		}
 		err = json.Unmarshal([]byte(jsonKey), &key)
 		if err != nil {
