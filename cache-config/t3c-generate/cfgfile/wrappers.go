@@ -21,6 +21,7 @@ package cfgfile
 
 import (
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 )
 
@@ -33,7 +34,7 @@ import (
 //
 
 // MakeConfigFilesList returns the list of config files, any warnings, and any error.
-func MakeConfigFilesList(toData *config.TOData, dir string) ([]atscfg.CfgMeta, []string, error) {
+func MakeConfigFilesList(toData *t3cutil.ConfigData, dir string) ([]atscfg.CfgMeta, []string, error) {
 	configFiles, warnings, err := atscfg.MakeConfigFilesList(
 		dir,
 		toData.Server,
@@ -47,39 +48,39 @@ func MakeConfigFilesList(toData *config.TOData, dir string) ([]atscfg.CfgMeta, [
 	return configFiles, warnings, err
 }
 
-func Make12MFacts(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func Make12MFacts(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.Make12MFacts(toData.Server, hdrCommentTxt)
 }
 
-func MakeATSDotRules(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeATSDotRules(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeATSDotRules(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
 
-func MakeAstatsDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeAstatsDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeAStatsDotConfig(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
 
-func MakeBGFetchDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeBGFetchDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeBGFetchDotConfig(toData.Server, hdrCommentTxt)
 }
 
-func MakeCacheDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeCacheDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeCacheDotConfig(toData.Server, toData.Servers, toData.DeliveryServices, toData.DeliveryServiceServers, hdrCommentTxt)
 }
 
-func MakeChkconfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeChkconfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeChkconfig(toData.ServerParams)
 }
 
-func MakeDropQStringDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeDropQStringDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeDropQStringDotConfig(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
 
-func MakeHostingDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeHostingDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeHostingDotConfig(toData.Server, toData.Servers, toData.ServerParams, toData.DeliveryServices, toData.DeliveryServiceServers, toData.Topologies, hdrCommentTxt)
 }
 
-func MakeIPAllowDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeIPAllowDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeIPAllowDotConfig(
 		toData.ServerParams,
 		toData.Server,
@@ -90,7 +91,7 @@ func MakeIPAllowDotConfig(toData *config.TOData, fileName string, hdrCommentTxt 
 	)
 }
 
-func MakeIPAllowDotYAML(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeIPAllowDotYAML(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeIPAllowDotYAML(
 		toData.ServerParams,
 		toData.Server,
@@ -101,15 +102,15 @@ func MakeIPAllowDotYAML(toData *config.TOData, fileName string, hdrCommentTxt st
 	)
 }
 
-func MakeLoggingDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeLoggingDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeLoggingDotConfig(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
 
-func MakeLoggingDotYAML(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeLoggingDotYAML(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeLoggingDotYAML(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
 
-func MakeSSLServerNameYAML(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeSSLServerNameYAML(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeSSLServerNameYAML(
 		toData.Server,
 		toData.DeliveryServices,
@@ -130,7 +131,7 @@ func MakeSSLServerNameYAML(toData *config.TOData, fileName string, hdrCommentTxt
 	)
 }
 
-func MakeSNIDotYAML(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeSNIDotYAML(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeSNIDotYAML(
 		toData.Server,
 		toData.DeliveryServices,
@@ -151,15 +152,15 @@ func MakeSNIDotYAML(toData *config.TOData, fileName string, hdrCommentTxt string
 	)
 }
 
-func MakeLogsXMLDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeLogsXMLDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeLogsXMLDotConfig(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
 
-func MakePackages(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakePackages(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakePackages(toData.ServerParams)
 }
 
-func MakeParentDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeParentDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeParentDotConfig(
 		toData.DeliveryServices,
 		toData.Server,
@@ -179,11 +180,11 @@ func MakeParentDotConfig(toData *config.TOData, fileName string, hdrCommentTxt s
 	)
 }
 
-func MakePluginDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakePluginDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakePluginDotConfig(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
 
-func MakeRecordsDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeRecordsDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeRecordsDotConfig(
 		toData.Server,
 		toData.ServerParams,
@@ -195,11 +196,11 @@ func MakeRecordsDotConfig(toData *config.TOData, fileName string, hdrCommentTxt 
 	)
 }
 
-func MakeRegexRevalidateDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeRegexRevalidateDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeRegexRevalidateDotConfig(toData.Server, toData.DeliveryServices, toData.GlobalParams, toData.Jobs, hdrCommentTxt)
 }
 
-func MakeRemapDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeRemapDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeRemapDotConfig(
 		toData.Server,
 		toData.DeliveryServices,
@@ -216,23 +217,23 @@ func MakeRemapDotConfig(toData *config.TOData, fileName string, hdrCommentTxt st
 	)
 }
 
-func MakeSSLMultiCertDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeSSLMultiCertDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeSSLMultiCertDotConfig(toData.Server, toData.DeliveryServices, hdrCommentTxt)
 }
 
-func MakeStorageDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeStorageDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeStorageDotConfig(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
 
-func MakeSysCtlDotConf(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeSysCtlDotConf(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeSysCtlDotConf(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
 
-func MakeVolumeDotConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeVolumeDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeVolumeDotConfig(toData.Server, toData.ServerParams, hdrCommentTxt)
 }
 
-func MakeHeaderRewrite(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeHeaderRewrite(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeHeaderRewriteDotConfig(
 		fileName,
 		toData.DeliveryServices,
@@ -248,22 +249,22 @@ func MakeHeaderRewrite(toData *config.TOData, fileName string, hdrCommentTxt str
 	)
 }
 
-func MakeRegexRemap(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeRegexRemap(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeRegexRemapDotConfig(fileName, toData.Server, toData.DeliveryServices, hdrCommentTxt)
 }
 
-func MakeSetDSCP(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeSetDSCP(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeSetDSCPDotConfig(fileName, toData.Server, hdrCommentTxt)
 }
 
-func MakeURLSigConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeURLSigConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeURLSigConfig(fileName, toData.Server, toData.ServerParams, toData.URLSigKeys, hdrCommentTxt)
 }
 
-func MakeURISigningConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeURISigningConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeURISigningConfig(fileName, toData.URISigningKeys)
 }
 
-func MakeUnknownConfig(toData *config.TOData, fileName string, hdrCommentTxt string, cfg config.TCCfg) (atscfg.Cfg, error) {
+func MakeUnknownConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeServerUnknown(fileName, toData.Server, toData.ServerParams, hdrCommentTxt)
 }

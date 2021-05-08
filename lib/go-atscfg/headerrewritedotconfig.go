@@ -63,7 +63,7 @@ func LastHeaderRewriteConfigFileName(dsName string) string {
 func MakeHeaderRewriteDotConfig(
 	fileName string,
 	deliveryServices []DeliveryService,
-	deliveryServiceServers []tc.DeliveryServiceServer,
+	deliveryServiceServers []DeliveryServiceServer,
 	server *Server,
 	servers []Server,
 	cacheGroupsArr []tc.CacheGroupNullable,
@@ -272,7 +272,7 @@ func getAssignedTierPeers(
 	server *Server,
 	ds *DeliveryService,
 	servers []Server,
-	deliveryServiceServers []tc.DeliveryServiceServer,
+	deliveryServiceServers []DeliveryServiceServer,
 	cacheGroups []tc.CacheGroupNullable,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[ServerCapability]struct{},
@@ -292,7 +292,7 @@ func getAssignedTierPeers(
 func getAssignedEdges(
 	ds *DeliveryService,
 	servers []Server,
-	deliveryServiceServers []tc.DeliveryServiceServer,
+	deliveryServiceServers []DeliveryServiceServer,
 ) ([]Server, []string) {
 	warnings := []string{}
 
@@ -300,14 +300,10 @@ func getAssignedEdges(
 
 	dsServerIDs := map[int]struct{}{}
 	for _, dss := range dsServers {
-		if dss.Server == nil || dss.DeliveryService == nil {
-			warnings = append(warnings, "deliveryservice-servers had entry with nil values, skipping!")
+		if dss.DeliveryService != *ds.ID {
 			continue
 		}
-		if *dss.DeliveryService != *ds.ID {
-			continue
-		}
-		dsServerIDs[*dss.Server] = struct{}{}
+		dsServerIDs[dss.Server] = struct{}{}
 	}
 
 	assignedEdges := []Server{}
@@ -338,19 +334,16 @@ func getAssignedMids(
 	server *Server,
 	ds *DeliveryService,
 	servers []Server,
-	deliveryServiceServers []tc.DeliveryServiceServer,
+	deliveryServiceServers []DeliveryServiceServer,
 	cacheGroups []tc.CacheGroupNullable,
 ) ([]Server, []string) {
 	warnings := []string{}
 	assignedServers := map[int]struct{}{}
 	for _, dss := range deliveryServiceServers {
-		if dss.Server == nil || dss.DeliveryService == nil {
+		if dss.DeliveryService != *ds.ID {
 			continue
 		}
-		if *dss.DeliveryService != *ds.ID {
-			continue
-		}
-		assignedServers[*dss.Server] = struct{}{}
+		assignedServers[dss.Server] = struct{}{}
 	}
 
 	serverCGs := map[tc.CacheGroupName]struct{}{}

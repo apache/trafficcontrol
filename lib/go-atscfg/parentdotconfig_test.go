@@ -111,12 +111,12 @@ func TestMakeParentDotConfig(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds0.ID),
 		},
-		tc.DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},
@@ -237,8 +237,8 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds0.ID),
 		},
@@ -378,8 +378,8 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG1}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds0.ID),
 		},
@@ -507,12 +507,12 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds0.ID),
 		},
-		tc.DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},
@@ -645,12 +645,12 @@ func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds0.ID),
 		},
-		tc.DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},
@@ -796,16 +796,16 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds0.ID),
 		},
-		tc.DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},
-		tc.DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds2.ID),
 		},
@@ -939,12 +939,12 @@ func TestMakeParentDotConfigTopologiesOmitOfflineParents(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds0.ID),
 		},
-		tc.DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},
@@ -1083,12 +1083,12 @@ func TestMakeParentDotConfigTopologiesOmitDifferentCDNParents(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds0.ID),
 		},
-		tc.DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},
@@ -1223,8 +1223,8 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *oCG}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*origin0.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},
@@ -1364,8 +1364,8 @@ func TestMakeParentDotConfigTopologiesMSOWithCapabilities(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *oCG}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*origin0.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},
@@ -1490,8 +1490,8 @@ func TestMakeParentDotConfigMSOWithCapabilities(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*midCG, *oCG}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*origin0.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},
@@ -1655,8 +1655,8 @@ func TestMakeParentDotConfigTopologiesMSOParams(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *oCG}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*origin0.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},
@@ -1831,8 +1831,8 @@ func TestMakeParentDotConfigTopologiesParams(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *oCG}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*origin0.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},
@@ -1998,12 +1998,12 @@ func TestMakeParentDotConfigSecondaryMode(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds0.ID),
 		},
-		tc.DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},
@@ -2153,12 +2153,12 @@ func TestMakeParentDotConfigNoSecondaryMode(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds0.ID),
 		},
-		tc.DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},
@@ -2281,7 +2281,7 @@ func TestMakeParentDotConfigComments(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
 
-	dss := []tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
 		{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds0.ID),
@@ -2436,7 +2436,7 @@ func TestMakeParentDotConfigCommentTopology(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
 
-	dss := []tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
 		{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds0.ID),

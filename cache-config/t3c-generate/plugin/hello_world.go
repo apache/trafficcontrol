@@ -15,7 +15,7 @@ package plugin
 */
 
 import (
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 )
 
 func init() {
@@ -25,7 +25,7 @@ func init() {
 const HelloPath = "/_hello_world"
 
 // hello is an example "hello world" plugin. To test, create a Parameter assigned to the server you're running t3c-generate on, named "enable_hello_world", with the Config File "hello_world" and the value "true"
-func hello(d ModifyFilesData) []config.ATSConfigFile {
+func hello(d ModifyFilesData) []t3cutil.ATSConfigFile {
 	hasHelloParam := false
 	for _, param := range d.TOData.ServerParams {
 		if param.Name == "enable_hello_world" && param.ConfigFile == "hello_world" && param.Value == "true" {
@@ -37,7 +37,7 @@ func hello(d ModifyFilesData) []config.ATSConfigFile {
 		return d.Files
 	}
 
-	fi := config.ATSConfigFile{}
+	fi := t3cutil.ATSConfigFile{}
 
 	fi.Text = "Hello, World!\n"
 	fi.ContentType = "text/plain"

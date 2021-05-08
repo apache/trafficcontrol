@@ -20,15 +20,9 @@ package torequest
  */
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"mime"
-	"mime/multipart"
-	"net/mail"
-	"net/textproto"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -41,7 +35,6 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/util"
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -75,7 +68,6 @@ type TrafficOpsReq struct {
 }
 
 type ConfigFile struct {
-	Header            textproto.MIMEHeader
 	Name              string // file name
 	Dir               string // install directory
 	Path              string // full path
@@ -213,13 +205,13 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile) error {
 
 	// perform plugin verification
 	if cfg.Name == "remap.config" || cfg.Name == "plugin.config" {
-		if err := verify(r.Cfg, string(cfg.Body)); err != nil {
+		if err := verify(r.Cfg, cfg.Body); err != nil {
 			return errors.New("failed to verify '" + cfg.Name + "': " + err.Error())
 		}
 		log.Infoln("Successfully verified plugins used by '" + cfg.Name + "'")
 	}
 
-	changeNeeded, err := diff(r.Cfg, string(cfg.Body), cfg.Path)
+	changeNeeded, err := diff(r.Cfg, cfg.Body, cfg.Path)
 	if err != nil {
 		return errors.New("getting diff: " + err.Error())
 	}
@@ -659,69 +651,21 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 		}
 	}
 
-	fBytes, err := generate(r.Cfg)
+	allFiles, err := generate(r.Cfg)
 	if err != nil {
-		return err
+		return errors.New("requesting data generating config files: " + err.Error())
 	}
-	buf := bytes.NewBuffer(fBytes)
-	var hdr string
-	for {
-		hdr, err = buf.ReadString('\n')
-		if err != nil {
-			return err
-		} else {
-			if strings.HasPrefix(hdr, "Content-Type: multipart/mixed") {
-				break
-			}
-		}
-	}
-	// split on the ": " to trim off the leading space
-	har := strings.Split(hdr, ": ")
-	if len(har) > 1 && (har[0] != rfc.ContentType || !strings.HasPrefix(har[1], rfc.ContentTypeMultiPartMixed)) {
-		return errors.New("invalid config file data received from Traffic Ops, not in multipart format.")
-	}
-	msg := &mail.Message{
-		Header: map[string][]string{har[0]: {har[1]}},
-		Body:   bytes.NewReader(buf.Bytes()),
-	}
-	mediaType, params, err := mime.ParseMediaType(msg.Header.Get(rfc.ContentType))
-	if err != nil {
-		return err
-	}
-	if strings.HasPrefix(mediaType, rfc.ContentTypeMultiPartMixed) {
-		mr := multipart.NewReader(msg.Body, params["boundary"])
-		// if the configFiles map is not empty, create a new map
-		// and the old map will be garbage collected.
-		if len(r.configFiles) > 0 {
-			log.Infoln("intializing a new configFiles map")
-			r.configFiles = make(map[string]*ConfigFile)
-		}
-		for {
-			p, err := mr.NextPart()
-			if err == io.EOF {
-				return nil
-			}
-			if err != nil {
-				return err
-			}
-			dataBytes, err := ioutil.ReadAll(p)
-			if err != nil {
-				return err
-			}
-			path := p.Header.Get("Path")
-			if path != "" {
-				cf := &ConfigFile{
-					Header: p.Header,
-					Name:   filepath.Base(path),
-					Path:   path,
-					Dir:    filepath.Dir(path),
-					Body:   dataBytes,
-					Uid:    atsUid,
-					Gid:    atsGid,
-					Perm:   0644,
-				}
-				r.configFiles[cf.Name] = cf
-			}
+
+	r.configFiles = map[string]*ConfigFile{}
+	for _, file := range allFiles {
+		r.configFiles[file.Name] = &ConfigFile{
+			Name: file.Name,
+			Path: filepath.Join(file.Path, file.Name),
+			Dir:  file.Path,
+			Body: []byte(file.Text),
+			Uid:  atsUid,
+			Gid:  atsGid,
+			Perm: 0644,
 		}
 	}
 	return nil

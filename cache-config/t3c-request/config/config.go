@@ -69,7 +69,10 @@ func InitConfig() (Cfg, error) {
 	toTimeoutMSPtr := getopt.IntLong("traffic-ops-timeout-milliseconds", 't', 30000, "Timeout in milli-seconds for Traffic Ops requests, default is 30000")
 	toURLPtr := getopt.StringLong("traffic-ops-url", 'u', "", "Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with     the environment variable TO_URL")
 	toUserPtr := getopt.StringLong("traffic-ops-user", 'U', "", "Traffic Ops username. Required. May also be set with the environment variable TO_USER")
+	revalOnlyPtr := getopt.BoolLong("reval-only", 'r', "[true | false] whether to only fetch data needed to revalidate, versus all config data. Only used if get-data is config")
+	disableProxyPtr := getopt.BoolLong("traffic-ops-disable-proxy", 'p', "[true | false] whether to not use any configure Traffic Ops proxy parameter. Only used if get-data is config")
 	toPassPtr := getopt.StringLong("traffic-ops-password", 'P', "", "Traffic Ops password. Required. May also be set with the environment variable TO_PASS    ")
+
 	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	versionPtr := getopt.BoolLong("version", 'v', "Print the app version")
 
@@ -124,14 +127,16 @@ func InitConfig() (Cfg, error) {
 		LogLocationInfo:  *logLocationInfoPtr,
 		LoginDispersion:  dispersion,
 		TCCfg: t3cutil.TCCfg{
-			CacheHostName: cacheHostName,
-			GetData:       *getDataPtr,
-			TOInsecure:    *toInsecurePtr,
-			TOTimeoutMS:   toTimeoutMS,
-			TOUser:        toUser,
-			TOPass:        toPass,
-			TOURL:         toURLParsed,
-			UserAgent:     UserAgent,
+			CacheHostName:  cacheHostName,
+			GetData:        *getDataPtr,
+			TOInsecure:     *toInsecurePtr,
+			TOTimeoutMS:    toTimeoutMS,
+			TOUser:         toUser,
+			TOPass:         toPass,
+			TOURL:          toURLParsed,
+			UserAgent:      UserAgent,
+			RevalOnly:      *revalOnlyPtr,
+			TODisableProxy: *disableProxyPtr,
 		},
 	}
 

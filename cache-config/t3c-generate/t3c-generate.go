@@ -22,6 +22,7 @@ package main
  */
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -29,9 +30,8 @@ import (
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/cfgfile"
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/getdata"
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/plugin"
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/toreq"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
@@ -50,7 +50,7 @@ func main() {
 	// Because logs will be appended, we want a "start" message, so individual runs are easily distinguishable.
 	// log the "start" message to each distinct logger.
 	startMsg := "Starting t3c-generate"
-	log.Infoln(startMsg)
+	log.Errorln(startMsg)
 	if cfg.WarningLog() != cfg.ErrorLog() {
 		log.Warnln(startMsg)
 	}
@@ -61,53 +61,38 @@ func main() {
 	plugins := plugin.Get(cfg)
 	plugins.OnStartup(plugin.StartupData{Cfg: cfg})
 
-	toClient, err := toreq.New(cfg.TOURL, cfg.TOUser, cfg.TOPass, cfg.TOInsecure, cfg.TOTimeout, config.UserAgent)
-	if err != nil {
-		log.Errorln(err)
+	log.Infoln("reading Traffic Ops data from stdin")
+
+	toData := &t3cutil.ConfigData{}
+	if err := json.NewDecoder(os.Stdin).Decode(toData); err != nil {
+		log.Errorln("reading and parsing input Traffic Ops data: " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	if toClient.FellBack() {
-		log.Warnln("Traffic Ops does not support the latest version supported by this app! Falling back to previous major Traffic Ops API version!")
-	}
-
-	tccfg := config.TCCfg{Cfg: cfg, TOClient: toClient}
-
-	if tccfg.GetData != "" {
-		if err := getdata.WriteData(tccfg); err != nil {
-			log.Errorln("writing data: " + err.Error())
-			os.Exit(config.ExitCodeErrGeneric)
-		}
-		os.Exit(config.ExitCodeSuccess)
-	}
-
-	if tccfg.SetRevalStatus != "" || tccfg.SetQueueStatus != "" {
-		if err := getdata.SetQueueRevalStatuses(tccfg); err != nil {
-			log.Errorln("writing queue and reval statuses: " + err.Error())
-			os.Exit(config.ExitCodeErrGeneric)
-		}
-		os.Exit(config.ExitCodeSuccess)
-	}
-
-	toData, toIPs, err := cfgfile.GetTOData(tccfg)
-	if err != nil {
-		log.Errorln("getting data from traffic ops: " + err.Error())
+	if toData.Server.HostName == nil {
+		log.Errorln("input server had no host name")
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	configs, err := cfgfile.GetAllConfigs(toData, config.UserAgent, toIPs, tccfg)
+	// toData, toIPs, err := cfgfile.GetTOData(tccfg)
+	// if err != nil {
+	// 	log.Errorln("getting data from traffic ops: " + err.Error())
+	// 	os.Exit(config.ExitCodeErrGeneric)
+	// }
+
+	configs, err := cfgfile.GetAllConfigs(toData, config.AppVersion, cfg)
 	if err != nil {
-		log.Errorln("Getting config for'" + cfg.CacheHostName + "': " + err.Error())
+		log.Errorln("Getting config for'" + *toData.Server.HostName + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
-	modifyFilesData := plugin.ModifyFilesData{Cfg: tccfg, TOData: toData, Files: configs}
+	modifyFilesData := plugin.ModifyFilesData{Cfg: cfg, TOData: toData, Files: configs}
 	configs = plugins.ModifyFiles(modifyFilesData)
 
 	sort.Sort(config.ATSConfigFiles(configs))
 
 	if err := cfgfile.WriteConfigs(configs, os.Stdout); err != nil {
-		log.Errorln("Writing configs for '" + cfg.CacheHostName + "': " + err.Error())
+		log.Errorln("Writing configs for '" + *toData.Server.HostName + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 

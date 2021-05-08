@@ -40,7 +40,7 @@ const RemapConfigRangeDirective = `__RANGE_DIRECTIVE__`
 func MakeRemapDotConfig(
 	server *Server,
 	unfilteredDSes []DeliveryService,
-	dss []tc.DeliveryServiceServer,
+	dss []DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
 	serverParams []tc.Parameter,
 	cdn *tc.CDN,
@@ -539,7 +539,7 @@ func makeServerPackageParamData(server *Server, serverParams []tc.Parameter) (ma
 // Returned DSes are guaranteed to have a non-nil XMLID, Type, DSCP, ID, Active, and Topology.
 // If a DS has a nil Topology, OrgServerFQDN, FirstHeaderRewrite, InnerHeaderRewrite, or LastHeaderRewrite, "" is assigned.
 // Returns the filtered delivery services, and any warnings
-func remapFilterDSes(server *Server, dss []tc.DeliveryServiceServer, dses []DeliveryService, cacheKeyParams []tc.Parameter) ([]DeliveryService, []string) {
+func remapFilterDSes(server *Server, dss []DeliveryServiceServer, dses []DeliveryService, cacheKeyParams []tc.Parameter) ([]DeliveryService, []string) {
 	warnings := []string{}
 	isMid := strings.HasPrefix(server.Type, string(tc.CacheTypeMid))
 
@@ -562,13 +562,10 @@ func remapFilterDSes(server *Server, dss []tc.DeliveryServiceServer, dses []Deli
 
 	dssMap := map[int]map[int]struct{}{} // set of map[dsID][serverID]
 	for _, dss := range dsServers {
-		if dss.Server == nil || dss.DeliveryService == nil {
-			continue // TODO log?
+		if dssMap[dss.DeliveryService] == nil {
+			dssMap[dss.DeliveryService] = map[int]struct{}{}
 		}
-		if dssMap[*dss.DeliveryService] == nil {
-			dssMap[*dss.DeliveryService] = map[int]struct{}{}
-		}
-		dssMap[*dss.DeliveryService][*dss.Server] = struct{}{}
+		dssMap[dss.DeliveryService][dss.Server] = struct{}{}
 	}
 
 	useInactive := false

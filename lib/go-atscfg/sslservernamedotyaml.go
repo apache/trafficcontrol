@@ -107,7 +107,7 @@ type SSLServerNameYAMLOpts struct {
 func MakeSSLServerNameYAML(
 	server *Server,
 	dses []DeliveryService,
-	dss []tc.DeliveryServiceServer,
+	dss []DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
 	tcParentConfigParams []tc.Parameter,
 	cdn *tc.CDN,
@@ -194,7 +194,7 @@ type SSLData struct {
 func GetServerSSLData(
 	server *Server,
 	dses []DeliveryService,
-	dss []tc.DeliveryServiceServer,
+	dss []DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
 	tcParentConfigParams []tc.Parameter,
 	cdn *tc.CDN,
@@ -318,7 +318,7 @@ func GetServerSSLData(
 func dsUsesServer(
 	ds *DeliveryService,
 	server *Server,
-	dss []tc.DeliveryServiceServer,
+	dss []DeliveryServiceServer,
 	nameTopologies map[TopologyName]tc.Topology,
 	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
 	serverCapabilities map[int]map[ServerCapability]struct{},
@@ -370,12 +370,9 @@ func dsUsesServer(
 
 // dsAssignedServer returns whether the Delivery Service Servers has an assignment between the server and the DS.
 // Does not check Topologies, or parentage. Only useful for Edges and pre-topology DSS.
-func dsAssignedServer(dsID int, serverID int, dsses []tc.DeliveryServiceServer) bool {
+func dsAssignedServer(dsID int, serverID int, dsses []DeliveryServiceServer) bool {
 	for _, dss := range dsses {
-		if dss.Server == nil || dss.DeliveryService == nil {
-			continue // TODO warn?
-		}
-		if *dss.Server == serverID && *dss.DeliveryService == dsID {
+		if dss.Server == serverID && dss.DeliveryService == dsID {
 			return true
 		}
 	}

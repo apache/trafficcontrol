@@ -14,10 +14,15 @@ Description
 
 Options
 	-D, --get-data=value
-      	non-config-file Traffic Ops Data to get. Valid values are
-        update-status, packages, chkconfig, system-info, and
-        statuses
-				Default is system-info
+        non-config-file Traffic Ops Data to get. Valid values are
+        update-status, packages, chkconfig, system-info, statuses,
+        and config.
+        Default is system-info
+
+        Note config is not versioned between t3c versions. Callers
+        should only pass config to other t3c commands of the same
+        version as the t3c-request used to produce it.
+
 	-d, --log-location-debug=value
         Where to log debugs. May be a file path, stdout or stderr.
         Default is no debug logging.
@@ -82,21 +87,13 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
-var (
-	cfg config.Cfg
-)
-
 func main() {
-	var err error
-
-	cfg, err = config.InitConfig()
+	cfg, err := config.InitConfig()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: %s\n", err.Error())
 		os.Exit(1)
-	} else {
-		log.Infoln("configuration initialized")
-		// cfg.PrintConfig()
 	}
+	log.Infoln("configuration initialized")
 
 	// login to traffic ops.
 	tccfg, err := t3cutil.TOConnect(&cfg.TCCfg)

@@ -20,13 +20,11 @@ package cfgfile
  */
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
-	"mime/multipart"
 	"net"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -34,18 +32,17 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 // GetAllConfigs gets all config files for cfg.CacheHostName.
 func GetAllConfigs(
-	toData *config.TOData,
+	toData *t3cutil.ConfigData,
 	appVersion string,
-	toIPs []net.Addr,
-	cfg config.TCCfg,
-) ([]config.ATSConfigFile, error) {
+	cfg config.Cfg,
+) ([]t3cutil.ATSConfigFile, error) {
 	if toData.Server.HostName == nil {
 		return nil, errors.New("server hostname is nil")
 	}
@@ -57,10 +54,10 @@ func GetAllConfigs(
 	}
 
 	genTime := time.Now()
-	hdrCommentTxt := makeHeaderComment(*toData.Server.HostName, appVersion, cfg.TOClient.C.URL, toIPs, genTime)
+	hdrCommentTxt := makeHeaderComment(*toData.Server.HostName, appVersion, toData.TrafficOpsURL, toData.TrafficOpsAddresses, genTime)
 
 	hasSSLMultiCertConfig := false
-	configs := []config.ATSConfigFile{}
+	configs := []t3cutil.ATSConfigFile{}
 	for _, fi := range configFiles {
 		if cfg.RevalOnly && fi.Name != atscfg.RegexRevalidateFileName {
 			continue
@@ -73,7 +70,7 @@ func GetAllConfigs(
 			hasSSLMultiCertConfig = true
 		}
 		txt = PreprocessConfigFile(toData.Server, txt)
-		configs = append(configs, config.ATSConfigFile{Name: fi.Name, Path: fi.Path, Text: txt, ContentType: contentType, LineComment: lineComment})
+		configs = append(configs, t3cutil.ATSConfigFile{Name: fi.Name, Path: fi.Path, Text: txt, ContentType: contentType, LineComment: lineComment})
 	}
 
 	if hasSSLMultiCertConfig {
@@ -91,48 +88,16 @@ const HdrConfigFilePath = "Path"
 const HdrLineComment = "Line-Comment"
 
 // WriteConfigs writes the given configs as a RFC2046§5.1 MIME multipart/mixed message.
-func WriteConfigs(configs []config.ATSConfigFile, output io.Writer) error {
+func WriteConfigs(configs []t3cutil.ATSConfigFile, output io.Writer) error {
 	sort.Sort(ATSConfigFiles(configs))
-	w := multipart.NewWriter(output)
-
-	// Create a unique boundary. Because we're using a text encoding, we need to make sure the boundary text doesn't occur in any body.
-	// Always start with the same random UUID, so generating twice diffs the same (except in the unlikely chance this string is in a config somewhere).
-	boundary := `dc5p7zOLNkyTzdcZSme6tg` // random UUID
-	randSet := `abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`
-	for _, cfg := range configs {
-		for strings.Contains(cfg.Text, boundary) {
-			boundary += string(randSet[rand.Intn(len(randSet))])
-		}
-	}
-	if err := w.SetBoundary(boundary); err != nil {
-		return errors.New("setting multipart writer boundary '" + boundary + "': " + err.Error())
-	}
-
-	io.WriteString(output, `MIME-Version: 1.0`+"\r\n"+`Content-Type: multipart/mixed; boundary="`+boundary+`"`+"\r\n\r\n")
-
-	for _, cfg := range configs {
-		hdr := map[string][]string{
-			rfc.ContentType:   {cfg.ContentType},
-			HdrLineComment:    {cfg.LineComment},
-			HdrConfigFilePath: {filepath.Join(cfg.Path, cfg.Name)},
-		}
-		partW, err := w.CreatePart(hdr)
-		if err != nil {
-			return errors.New("creating multipart part for config file '" + cfg.Name + "': " + err.Error())
-		}
-		if _, err := io.WriteString(partW, cfg.Text); err != nil {
-			return errors.New("writing to multipart part for config file '" + cfg.Name + "': " + err.Error())
-		}
-	}
-
-	if err := w.Close(); err != nil {
-		return errors.New("closing multipart writer and writing final boundary: " + err.Error())
+	if err := json.NewEncoder(output).Encode(configs); err != nil {
+		return errors.New("encoding and writing configs: " + err.Error())
 	}
 	return nil
 }
 
 // ATSConfigFiles implements sort.Interface to sort by path.
-type ATSConfigFiles []config.ATSConfigFile
+type ATSConfigFiles []t3cutil.ATSConfigFile
 
 func (p ATSConfigFiles) Len() int      { return len(p) }
 func (p ATSConfigFiles) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
@@ -197,7 +162,7 @@ func PreprocessConfigFile(server *atscfg.Server, cfgFile string) string {
 	return cfgFile
 }
 
-func makeHeaderComment(serverHostName string, appVersion string, toURL string, toIPs []net.Addr, genTime time.Time) string {
+func makeHeaderComment(serverHostName string, appVersion string, toURL string, toIPs []string, genTime time.Time) string {
 	return fmt.Sprintf(
 		`DO NOT EDIT - Generated for %v by %v from %v ips %v on %v`,
 		serverHostName,
@@ -208,17 +173,14 @@ func makeHeaderComment(serverHostName string, appVersion string, toURL string, t
 	)
 }
 
-func makeIPStr(ips []net.Addr) string {
-	ipStrM := map[string]struct{}{} // use a map to de-duplicate
-	for _, ip := range ips {
-		if ip == nil {
-			continue // shouldn't happen, but not really an error if it does
-		}
-		ipStrM[ip.String()] = struct{}{}
+func makeIPStr(ips []string) string {
+	return `(` + strings.Join(ips, `,`) + `)`
+}
+
+// logWarnings writes all strings in warnings to the warning log, with the context prefix.
+// If warnings is empty, no log is written.
+func logWarnings(context string, warnings []string) {
+	for _, warn := range warnings {
+		log.Warnln(context + warn)
 	}
-	ipStrArr := []string{}
-	for ipStr, _ := range ipStrM {
-		ipStrArr = append(ipStrArr, ipStr)
-	}
-	return `(` + strings.Join(ipStrArr, `,`) + `)`
 }

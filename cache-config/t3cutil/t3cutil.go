@@ -30,6 +30,14 @@ import (
 	"strings"
 )
 
+type ATSConfigFile struct {
+	Name        string `json:"name"`
+	Path        string `json:"path"`
+	ContentType string `json:"content_type"`
+	LineComment string `json:"line_comment"`
+	Text        string `json:"text"`
+}
+
 // commentsFilter is used to remove comment
 // lines from config files while making
 // comparisons.
@@ -125,7 +133,7 @@ func Do(cmdStr string, args ...string) ([]byte, []byte, int) {
 }
 
 // DoInput is like Do but takes the stdin to pass to the command.
-func DoInput(input string, cmdStr string, args ...string) ([]byte, []byte, int) {
+func DoInput(input []byte, cmdStr string, args ...string) ([]byte, []byte, int) {
 	cmd := exec.Command(cmdStr, args...)
 
 	var outbuf bytes.Buffer
@@ -133,7 +141,7 @@ func DoInput(input string, cmdStr string, args ...string) ([]byte, []byte, int) 
 
 	cmd.Stdout = &outbuf
 	cmd.Stderr = &errbuf
-	cmd.Stdin = bytes.NewBufferString(input)
+	cmd.Stdin = bytes.NewBuffer(input)
 
 	code := 0
 	err := cmd.Run()

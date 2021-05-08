@@ -47,6 +47,13 @@ type TCCfg struct {
 	TOUser        string
 	TOURL         *url.URL
 	UserAgent     string
+
+	// TODisableProxy is whether to not use a configured Traffic Ops Proxy.
+	// This is only used by WriteConfig, which is the only command that makes enough requests to matter.
+	TODisableProxy bool
+
+	// RevalOnly is whether to only fetch config data necessary to revalidate, versus all data necessary to generate config. This is only used by WriteConfig
+	RevalOnly bool
 }
 
 func GetDataFuncs() map[string]func(TCCfg, io.Writer) error {
@@ -56,6 +63,7 @@ func GetDataFuncs() map[string]func(TCCfg, io.Writer) error {
 		`chkconfig`:     WriteChkconfig,
 		`system-info`:   WriteSystemInfo,
 		`statuses`:      WriteStatuses,
+		`config`:        WriteConfig,
 	}
 }
 
@@ -238,4 +246,16 @@ func jsonBoolStr(b bool) string {
 		return `true`
 	}
 	return `false`
+}
+
+// WriteConfig writes the Traffic Ops data necessary to generate config to output.
+func WriteConfig(cfg TCCfg, output io.Writer) error {
+	cfgData, err := GetConfigData(cfg.TOClient, cfg.TODisableProxy, cfg.CacheHostName, cfg.RevalOnly)
+	if err != nil {
+		return errors.New("getting statuses: " + err.Error())
+	}
+	if err := json.NewEncoder(output).Encode(cfgData); err != nil {
+		return errors.New("encoding config data: " + err.Error())
+	}
+	return nil
 }

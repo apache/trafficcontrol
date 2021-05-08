@@ -23,17 +23,18 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestPlugin(t *testing.T) {
 	AddPlugin(10000, Funcs{
-		modifyFiles: func(d ModifyFilesData) []config.ATSConfigFile {
+		modifyFiles: func(d ModifyFilesData) []t3cutil.ATSConfigFile {
 			if d.TOData.Server == nil || d.TOData.Server.HostName == nil || *d.TOData.Server.HostName != "testplugin" {
 				return d.Files
 			}
-			fi := config.ATSConfigFile{}
+			fi := t3cutil.ATSConfigFile{}
 			fi.Text = "testfile\n"
 			fi.ContentType = "text/plain"
 			fi.LineComment = ""
@@ -64,7 +65,7 @@ func TestPlugin(t *testing.T) {
 
 	modifyFilesData := ModifyFilesData{
 		Cfg:    config.TCCfg{Cfg: cfg},
-		Files:  []config.ATSConfigFile{},
+		Files:  []t3cutil.ATSConfigFile{},
 		TOData: &config.TOData{},
 	}
 

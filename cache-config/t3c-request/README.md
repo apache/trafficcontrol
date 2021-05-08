@@ -66,3 +66,10 @@
 	-U, --traffic-ops-user=value
         Traffic Ops username. Required. May also be set with the
         environment variable TO_USER
+	-p, --traffic-ops-disable-proxy=value
+        [true | false] Whether to not use any configured Traffic Ops
+        proxy Parameter. Only used if get-data is config.
+	-r, --reval-only=value
+        [true | false] Whether to only fetch data needed to revalidate
+        and not all data needed to generate config. Only used if
+        get-data is config.

@@ -22,18 +22,18 @@ package cfgfile
 import (
 	"encoding/base64"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func GetSSLCertsAndKeyFiles(toData *config.TOData) ([]config.ATSConfigFile, error) {
+func GetSSLCertsAndKeyFiles(toData *t3cutil.ConfigData) ([]t3cutil.ATSConfigFile, error) {
 	dses, dsWarns := atscfg.DeliveryServicesToSSLMultiCertDSes(toData.DeliveryServices)
 	logWarnings("Getting SSL files: Making SSL MultiCert DSes: ", dsWarns)
 	dses = atscfg.GetSSLMultiCertDotConfigDeliveryServices(dses)
 
-	configs := []config.ATSConfigFile{}
+	configs := []t3cutil.ATSConfigFile{}
 	for _, keys := range toData.SSLKeys {
 		dsName := tc.DeliveryServiceName(keys.DeliveryService)
 		ds, ok := dses[dsName]
@@ -61,13 +61,13 @@ func GetSSLCertsAndKeyFiles(toData *config.TOData) ([]config.ATSConfigFile, erro
 
 		certName, keyName := atscfg.GetSSLMultiCertDotConfigCertAndKeyName(dsName, ds)
 
-		keyFile := config.ATSConfigFile{}
+		keyFile := t3cutil.ATSConfigFile{}
 		keyFile.Name = keyName
 		keyFile.Path = "/opt/trafficserver/etc/trafficserver/ssl/" // TODO read config, don't hard code
 		keyFile.Text = string(key)
 		configs = append(configs, keyFile)
 
-		certFile := config.ATSConfigFile{}
+		certFile := t3cutil.ATSConfigFile{}
 		certFile.Name = certName
 		certFile.Path = "/opt/trafficserver/etc/trafficserver/ssl/" // TODO read config, don't hard code
 		certFile.Text = string(cert)

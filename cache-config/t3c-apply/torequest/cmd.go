@@ -36,21 +36,16 @@ import (
 )
 
 // generate runs t3c-generate and returns the result.
-func generate(cfg config.Cfg) ([]byte, error) {
+func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
+	configData, err := request(cfg, "config")
+	if err != nil {
+		return nil, errors.New("requesting: " + err.Error())
+	}
 	args := []string{
-		"--dir=" + config.TSConfigDir,
-		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
-		"--traffic-ops-disable-proxy=" + strconv.FormatBool(cfg.ReverseProxyDisable),
-		"--traffic-ops-user=" + cfg.TOUser,
-		"--traffic-ops-password=" + cfg.TOPass,
-		"--traffic-ops-url=" + cfg.TOURL,
-		"--cache-host-name=" + cfg.CacheHostName,
 		"--log-location-error=" + outToErr(cfg.LogLocationErr),
 		"--log-location-info=" + outToErr(cfg.LogLocationInfo),
 		"--log-location-warning=" + outToErr(cfg.LogLocationWarn),
-	}
-	if cfg.TOInsecure == true {
-		args = append(args, "--traffic-ops-insecure")
+		"--dir=" + config.TSConfigDir,
 	}
 	if cfg.DNSLocalBind {
 		args = append(args, "--dns-local-bind")
@@ -67,7 +62,7 @@ func generate(cfg config.Cfg) ([]byte, error) {
 	args = append(args, "--via-string-release="+strconv.FormatBool(!cfg.OmitViaStringRelease))
 	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))
 
-	stdOut, stdErr, code := t3cutil.Do(config.GenerateCmd, args...)
+	stdOut, stdErr, code := t3cutil.DoInput(configData, config.GenerateCmd, args...)
 	if code != 0 {
 		return nil, fmt.Errorf("t3c-generate returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}
@@ -75,7 +70,13 @@ func generate(cfg config.Cfg) ([]byte, error) {
 		log.Warnln(`t3c-generate stderr start` + "\n" + string(stdErr))
 		log.Warnln(`t3c-generate stderr end`)
 	}
-	return stdOut, nil
+
+	allFiles := []t3cutil.ATSConfigFile{}
+	if err := json.Unmarshal(stdOut, &allFiles); err != nil {
+		return nil, errors.New("unmarshalling generated files: " + err.Error())
+	}
+
+	return allFiles, nil
 }
 
 func getStatuses(cfg config.Cfg) ([]string, error) {
@@ -142,7 +143,7 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 		return fmt.Errorf("t3c-update returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}
 	if len(bytes.TrimSpace(stdErr)) > 0 {
-		log.Warnf("t3c-request returned code 0 but stderr '%v'", string(stdErr)) // usually warnings
+		log.Warnf("t3c-update returned code 0 but stderr '%v'", string(stdErr)) // usually warnings
 	}
 	log.Infoln("t3c-update succeeded")
 	return nil
@@ -151,14 +152,14 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 // diff calls t3c-diff to diff the given new file and the file on disk. Returns whether they're different.
 // Logs the difference.
 // If the file on disk doesn't exist, returns true and logs the entire file as a diff.
-func diff(cfg config.Cfg, newFile string, fileLocation string) (bool, error) {
+func diff(cfg config.Cfg, newFile []byte, fileLocation string) (bool, error) {
 	log.Warnf("DEBUG diff calling location '" + fileLocation + "'")
 	stdOut, stdErr, code := t3cutil.DoInput(newFile, `t3c-diff`, `stdin`, fileLocation)
 	if code > 1 {
-		return false, fmt.Errorf("t3c-update returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+		return false, fmt.Errorf("t3c-diff returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}
 	if len(bytes.TrimSpace(stdErr)) > 0 {
-		log.Warnf("t3c-request returned non-error code %v but stderr '%v'", code, string(stdErr))
+		log.Warnf("t3c-diff returned non-error code %v but stderr '%v'", code, string(stdErr))
 	}
 
 	if code == 0 {
@@ -180,7 +181,7 @@ func diff(cfg config.Cfg, newFile string, fileLocation string) (bool, error) {
 // verify calls t3c-verify to verify the given cfgFile.
 // The cfgFile should be the full text of either a plugin.config or remap.config.
 // Returns nil if t3c-verify returned no errors found, or the error found if any.
-func verify(cfg config.Cfg, cfgFile string) error {
+func verify(cfg config.Cfg, cfgFile []byte) error {
 	stdOut, stdErr, code := t3cutil.DoInput(cfgFile, `t3c-verify`,
 		"--log-location-error="+outToErr(cfg.LogLocationErr),
 		"--log-location-info="+outToErr(cfg.LogLocationInfo),
@@ -208,6 +209,18 @@ func verify(cfg config.Cfg, cfgFile string) error {
 
 // requestJSON calls t3c-request with the given command, and deserializes the result as JSON into obj.
 func requestJSON(cfg config.Cfg, command string, obj interface{}) error {
+	stdOut, err := request(cfg, command)
+	if err != nil {
+		return errors.New("requesting: " + err.Error())
+	}
+	if err := json.Unmarshal(stdOut, obj); err != nil {
+		return errors.New("unmarshalling '" + string(stdOut) + "': " + err.Error())
+	}
+	return nil
+}
+
+// request calls t3c-request with the given command, and returns the stdout bytes.
+func request(cfg config.Cfg, command string) ([]byte, error) {
 	stdOut, stdErr, code := t3cutil.Do(`t3c-request`,
 		"--traffic-ops-timeout-milliseconds="+strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
 		"--traffic-ops-user="+cfg.TOUser,
@@ -219,15 +232,12 @@ func requestJSON(cfg config.Cfg, command string, obj interface{}) error {
 		`--get-data=`+command,
 	)
 	if code != 0 {
-		return fmt.Errorf("t3c-request returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+		return nil, fmt.Errorf("t3c-request returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}
 	if len(bytes.TrimSpace(stdErr)) > 0 {
 		log.Warnf("t3c-request returned code 0 but stderr '%v'", string(stdErr)) // usually warnings
 	}
-	if err := json.Unmarshal(stdOut, obj); err != nil {
-		return errors.New("unmarshalling '" + string(stdOut) + "': " + err.Error())
-	}
-	return nil
+	return stdOut, nil
 }
 
 // outToErr returns stderr if logLocation is stdout, otherwise returns logLocation unchanged.

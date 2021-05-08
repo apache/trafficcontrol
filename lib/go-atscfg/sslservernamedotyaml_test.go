@@ -101,12 +101,12 @@ func TestMakeSSLServerNameYAML(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds0.ID),
 		},
-		tc.DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},
@@ -233,12 +233,12 @@ func TestMakeSSLServerNameYAMLParams(t *testing.T) {
 
 	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds0.ID),
 		},
-		tc.DeliveryServiceServer{
+		DeliveryServiceServer{
 			Server:          util.IntPtr(*server.ID),
 			DeliveryService: util.IntPtr(*ds1.ID),
 		},

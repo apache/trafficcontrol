@@ -1,4 +1,4 @@
-package cfgfile
+package t3cutil
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
+	"github.com/apache/trafficcontrol/cache-config/t3c-generate/toreq"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -35,23 +35,96 @@ import (
 
 const TrafficOpsProxyParameterName = `tm.rev_proxy.url`
 
+type ConfigData struct {
+	// Servers must be all the servers from Traffic Ops. May include servers not on the current cdn.
+	Servers []atscfg.Server `json:"servers,omitempty"`
+
+	// CacheGroups must be all cachegroups in Traffic Ops with Servers on the current server's cdn. May also include CacheGroups without servers on the current cdn.
+	CacheGroups []tc.CacheGroupNullable `json:"cache_groups,omitempty"`
+
+	// GlobalParams must be all Parameters in Traffic Ops on the tc.GlobalProfileName Profile. Must not include other parameters.
+	GlobalParams []tc.Parameter `json:"global_parameters,omitempty"`
+
+	// ServerParams must be all Parameters on the Profile of the current server. Must not include other Parameters.
+	ServerParams []tc.Parameter `json:"server_parameters,omitempty"`
+
+	// CacheKeyParams must be all Parameters with the ConfigFile atscfg.CacheKeyParameterConfigFile.
+	CacheKeyParams []tc.Parameter `json:"cache_key_parameters,omitempty"`
+
+	// ParentConfigParams must be all Parameters with the ConfigFile "parent.config.
+	ParentConfigParams []tc.Parameter `json:"parent_config_parameters,omitempty"`
+
+	// DeliveryServices must include all Delivery Services on the current server's cdn, including those not assigned to the server. Must not include delivery services on other cdns.
+	DeliveryServices []atscfg.DeliveryService `json:"delivery_services,omitempty"`
+
+	// DeliveryServiceServers must include all delivery service servers in Traffic Ops for all delivery services on the current cdn, including those not assigned to the current server.
+	DeliveryServiceServers []atscfg.DeliveryServiceServer `json:"delivery_service_servers,omitempty"`
+
+	// Server must be the server we're fetching configs from
+	Server *atscfg.Server `json:"server,omitempty"`
+
+	// Jobs must be all Jobs on the server's CDN. May include jobs on other CDNs.
+	Jobs []tc.Job `json:"jobs,omitempty"`
+
+	// CDN must be the CDN of the server.
+	CDN *tc.CDN `json:"cdn,omitempty"`
+
+	// DeliveryServiceRegexes must be all regexes on all delivery services on this server's cdn.
+	DeliveryServiceRegexes []tc.DeliveryServiceRegexes `json:"delivery_service_regexes,omitempty"`
+
+	// Profile must be the Profile of the server being requested.
+	Profile tc.Profile `json:"profile,omitempty"`
+
+	// URISigningKeys must be a map of every delivery service which is URI Signed, to its keys.
+	URISigningKeys map[tc.DeliveryServiceName][]byte `json:"uri_signing_keys,omitempty"`
+
+	// URLSigKeys must be a map of every delivery service which uses URL Sig, to its keys.
+	URLSigKeys map[tc.DeliveryServiceName]tc.URLSigKeys `json:"url_sig_keys,omitempty"`
+
+	// ServerCapabilities must be a map of all server IDs on this server's CDN, to a set of their capabilities. May also include servers from other cdns.
+	ServerCapabilities map[int]map[atscfg.ServerCapability]struct{} `json:"server_capabilities,omitempty"`
+
+	// DSRequiredCapabilities must be a map of all delivery service IDs on this server's CDN, to a set of their required capabilities. Delivery Services with no required capabilities may not have an entry in the map.
+	DSRequiredCapabilities map[int]map[atscfg.ServerCapability]struct{} `json:"delivery_service_required_capabilities,omitempty"`
+
+	// SSLKeys must be all the ssl keys for the server's cdn.
+	SSLKeys []tc.CDNSSLKeys `json:"ssl_keys,omitempty"`
+
+	// Topologies must be all the topologies for the server's cdn.
+	// May incude topologies of other cdns.
+	Topologies []tc.Topology `json:"topologies,omitempty"`
+
+	// TrafficOpsAddresses is the list of IP addresses used to request data. Because of proxies and load balancers,
+	// multiple addresses may be used for the multiple requests necessary to fetch all data.
+	TrafficOpsAddresses []string `json:"traffic_ops_addresses,omitempty"`
+	TrafficOpsURL       string   `json:"traffic_ops_url,omitempty"`
+}
+
 // GetTOData gets all the data from Traffic Ops needed to generate config.
 // Returns the data, the addresses of all Traffic Ops' requested, and any error.
-func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
+//
+// The toClient is the Traffic Ops client, which should already be initialized and connected.
+//
+// The disableProxy arg is whether to disable using any Traffic Ops proxy configured via the global TrafficOpsProxyParameterName. If the Parameter exists, this will connect to Traffic Ops to get the global parameters, get the Parameter, and then change the toClient to use it.
+//
+// The cacheHostName is the hostname of the cache to get config generation data for.
+//
+// The revalOnly arg is whether to only get data necessary to revalidate, versus all data necessary to generate cache config.
+func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName string, revalOnly bool) (*ConfigData, error) {
 	start := time.Now()
 	defer func() { log.Infof("GetTOData took %v\n", time.Since(start)) }()
 
 	toIPs := &sync.Map{} // each Traffic Ops request could get a different IP, so track them all
-	toData := &config.TOData{}
+	toData := &ConfigData{}
 
-	globalParams, toAddr, err := cfg.TOClient.GetGlobalParameters()
+	globalParams, toAddr, err := toClient.GetGlobalParameters()
 	if err != nil {
-		return nil, nil, errors.New("getting global parameters: " + err.Error())
+		return nil, errors.New("getting global parameters: " + err.Error())
 	}
 	toIPs.Store(toAddr, nil)
 	toData.GlobalParams = globalParams
 
-	if !cfg.DisableProxy {
+	if !disableProxy {
 		toProxyURLStr := ""
 		for _, param := range globalParams {
 			if param.Name == TrafficOpsProxyParameterName {
@@ -60,12 +133,12 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 			}
 		}
 		if toProxyURLStr != "" {
-			realTOURL := cfg.TOClient.C.URL
-			cfg.TOClient.C.URL = toProxyURLStr
+			realTOURL := toClient.C.URL
+			toClient.C.URL = toProxyURLStr
 			log.Infoln("using Traffic Ops proxy '" + toProxyURLStr + "'")
-			if _, _, err := cfg.TOClient.C.GetCDNs(); err != nil {
+			if _, _, err := toClient.C.GetCDNs(); err != nil {
 				log.Warnln("Traffic Ops proxy '" + toProxyURLStr + "' failed to get CDNs, falling back to real Traffic Ops")
-				cfg.TOClient.C.URL = realTOURL
+				toClient.C.URL = realTOURL
 			}
 		} else {
 			log.Infoln("Traffic Ops proxy enabled, but GLOBAL Parameter '" + TrafficOpsProxyParameterName + "' missing or empty, not using proxy")
@@ -77,7 +150,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 	serversF := func() error {
 		defer func(start time.Time) { log.Infof("serversF took %v\n", time.Since(start)) }(time.Now())
 		// TODO TOAPI add /servers?cdn=1 query param
-		servers, toAddr, err := cfg.TOClient.GetServers()
+		servers, toAddr, err := toClient.GetServers()
 		if err != nil {
 			return errors.New("getting servers: " + err.Error())
 		}
@@ -86,26 +159,26 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 
 		server := &atscfg.Server{}
 		for _, toServer := range servers {
-			if toServer.HostName != nil && *toServer.HostName == cfg.CacheHostName {
+			if toServer.HostName != nil && *toServer.HostName == cacheHostName {
 				server = &toServer
 				break
 			}
 		}
 		if server.ID == nil {
-			return errors.New("server '" + cfg.CacheHostName + " not found in servers")
+			return errors.New("server '" + cacheHostName + " not found in servers")
 		} else if server.CDNName == nil {
-			return errors.New("server '" + cfg.CacheHostName + " missing CDNName")
+			return errors.New("server '" + cacheHostName + " missing CDNName")
 		} else if server.CDNID == nil {
-			return errors.New("server '" + cfg.CacheHostName + " missing CDNID")
+			return errors.New("server '" + cacheHostName + " missing CDNID")
 		} else if server.Profile == nil {
-			return errors.New("server '" + cfg.CacheHostName + " missing Profile")
+			return errors.New("server '" + cacheHostName + " missing Profile")
 		}
 
 		toData.Server = server
 
 		sslF := func() error {
 			defer func(start time.Time) { log.Infof("sslF took %v\n", time.Since(start)) }(time.Now())
-			keys, toAddr, err := cfg.TOClient.GetCDNSSLKeys(tc.CDNName(*server.CDNName))
+			keys, toAddr, err := toClient.GetCDNSSLKeys(tc.CDNName(*server.CDNName))
 			if err != nil {
 				return errors.New("getting cdn '" + *server.CDNName + "': " + err.Error())
 			}
@@ -116,7 +189,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 		dsF := func() error {
 			defer func(start time.Time) { log.Infof("dsF took %v\n", time.Since(start)) }(time.Now())
 
-			dses, toAddr, err := cfg.TOClient.GetCDNDeliveryServices(*server.CDNID)
+			dses, toAddr, err := toClient.GetCDNDeliveryServices(*server.CDNID)
 			if err != nil {
 				return errors.New("getting delivery services: " + err.Error())
 			}
@@ -137,11 +210,12 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 
 			dssF := func() error {
 				defer func(start time.Time) { log.Infof("dssF took %v\n", time.Since(start)) }(time.Now())
-				dss, toAddr, err := cfg.TOClient.GetDeliveryServiceServers(nil, nil)
+				dss, toAddr, err := toClient.GetDeliveryServiceServers(nil, nil)
 				if err != nil {
 					return errors.New("getting delivery service servers: " + err.Error())
 				}
-				toData.DeliveryServiceServers = dss
+
+				toData.DeliveryServiceServers = filterUnusedDSS(dss, *toData.Server.CDNID, toData.Servers, toData.DeliveryServices)
 				toIPs.Store(toAddr, nil)
 				return nil
 			}
@@ -157,7 +231,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 					if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURISigning {
 						continue
 					}
-					keys, toAddr, err := cfg.TOClient.GetURISigningKeys(*ds.XMLID)
+					keys, toAddr, err := toClient.GetURISigningKeys(*ds.XMLID)
 					if err != nil {
 						if strings.Contains(strings.ToLower(err.Error()), "not found") {
 							log.Errorln("Delivery service '" + *ds.XMLID + "' is uri_signing, but keys were not found! Skipping!")
@@ -184,7 +258,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 					if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURLSig {
 						continue
 					}
-					keys, toAddr, err := cfg.TOClient.GetURLSigKeys(*ds.XMLID)
+					keys, toAddr, err := toClient.GetURLSigKeys(*ds.XMLID)
 					if err != nil {
 						if strings.Contains(strings.ToLower(err.Error()), "not found") {
 							log.Errorln("Delivery service '" + *ds.XMLID + "' is url_sig, but keys were not found! Skipping!: " + err.Error())
@@ -201,10 +275,10 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 			}
 
 			fs := []func() error{}
-			if !cfg.RevalOnly {
+			if !revalOnly {
 				fs = append([]func() error{uriSignKeysF, urlSigKeysF}, fs...) // skip keys for reval-only, which doesn't need them
 			}
-			if !cfg.RevalOnly { // TODO when MSO Origins are changed to not use DSS, we can add `&& !allDSesHaveTopologies` here, to avoid the DSS call if it isn't necessary
+			if !revalOnly { // TODO when MSO Origins are changed to not use DSS, we can add `&& !allDSesHaveTopologies` here, to avoid the DSS call if it isn't necessary
 				// skip DSS if reval-only (which doesn't need DSS)
 				fs = append([]func() error{dssF}, fs...)
 			}
@@ -213,7 +287,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 		}
 		serverParamsF := func() error {
 			defer func(start time.Time) { log.Infof("serverParamsF took %v\n", time.Since(start)) }(time.Now())
-			params, toAddr, err := cfg.TOClient.GetServerProfileParameters(*server.Profile)
+			params, toAddr, err := toClient.GetServerProfileParameters(*server.Profile)
 			if err != nil {
 				return errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
 			} else if len(params) == 0 {
@@ -225,7 +299,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 		}
 		cdnF := func() error {
 			defer func(start time.Time) { log.Infof("cdnF took %v\n", time.Since(start)) }(time.Now())
-			cdn, toAddr, err := cfg.TOClient.GetCDN(tc.CDNName(*server.CDNName))
+			cdn, toAddr, err := toClient.GetCDN(tc.CDNName(*server.CDNName))
 			if err != nil {
 				return errors.New("getting cdn '" + *server.CDNName + "': " + err.Error())
 			}
@@ -235,7 +309,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 		}
 		profileF := func() error {
 			defer func(start time.Time) { log.Infof("profileF took %v\n", time.Since(start)) }(time.Now())
-			profile, toAddr, err := cfg.TOClient.GetProfileByName(*server.Profile)
+			profile, toAddr, err := toClient.GetProfileByName(*server.Profile)
 			if err != nil {
 				return errors.New("getting profile '" + *server.Profile + "': " + err.Error())
 			}
@@ -244,7 +318,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 			return nil
 		}
 		fs := []func() error{dsF, serverParamsF, cdnF, profileF}
-		if !cfg.RevalOnly {
+		if !revalOnly {
 			fs = append([]func() error{sslF}, fs...) // skip ssl keys for reval only, which doesn't need them
 		}
 		return util.JoinErrs(runParallel(fs))
@@ -252,7 +326,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 
 	cgF := func() error {
 		defer func(start time.Time) { log.Infof("cfF took %v\n", time.Since(start)) }(time.Now())
-		cacheGroups, toAddr, err := cfg.TOClient.GetCacheGroups()
+		cacheGroups, toAddr, err := toClient.GetCacheGroups()
 		if err != nil {
 			return errors.New("getting cachegroups: " + err.Error())
 		}
@@ -262,7 +336,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 	}
 	jobsF := func() error {
 		defer func(start time.Time) { log.Infof("jobsF took %v\n", time.Since(start)) }(time.Now())
-		jobs, toAddr, err := cfg.TOClient.GetJobs() // TODO add cdn query param to jobs endpoint
+		jobs, toAddr, err := toClient.GetJobs() // TODO add cdn query param to jobs endpoint
 		if err != nil {
 			return errors.New("getting jobs: " + err.Error())
 		}
@@ -272,7 +346,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 	}
 	capsF := func() error {
 		defer func(start time.Time) { log.Infof("capsF took %v\n", time.Since(start)) }(time.Now())
-		caps, toAddr, err := cfg.TOClient.GetServerCapabilitiesByID(nil) // TODO change to not take a param; it doesn't use it to request TO anyway.
+		caps, toAddr, err := toClient.GetServerCapabilitiesByID(nil) // TODO change to not take a param; it doesn't use it to request TO anyway.
 		if err != nil {
 			log.Errorln("Server Capabilities error, skipping!")
 			// return errors.New("getting server caps from Traffic Ops: " + err.Error())
@@ -284,7 +358,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 	}
 	dsCapsF := func() error {
 		defer func(start time.Time) { log.Infof("dscapsF took %v\n", time.Since(start)) }(time.Now())
-		caps, toAddr, err := cfg.TOClient.GetDeliveryServiceRequiredCapabilitiesByID(nil)
+		caps, toAddr, err := toClient.GetDeliveryServiceRequiredCapabilitiesByID(nil)
 		if err != nil {
 			log.Errorln("DS Required Capabilities error, skipping!")
 			// return errors.New("getting DS required capabilities: " + err.Error())
@@ -296,7 +370,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 	}
 	dsrF := func() error {
 		defer func(start time.Time) { log.Infof("dsrF took %v\n", time.Since(start)) }(time.Now())
-		dsr, toAddr, err := cfg.TOClient.GetDeliveryServiceRegexes()
+		dsr, toAddr, err := toClient.GetDeliveryServiceRegexes()
 		if err != nil {
 			return errors.New("getting delivery service regexes: " + err.Error())
 		}
@@ -306,7 +380,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 	}
 	cacheKeyParamsF := func() error {
 		defer func(start time.Time) { log.Infof("cacheKeyParamsF took %v\n", time.Since(start)) }(time.Now())
-		params, toAddr, err := cfg.TOClient.GetConfigFileParameters(atscfg.CacheKeyParameterConfigFile)
+		params, toAddr, err := toClient.GetConfigFileParameters(atscfg.CacheKeyParameterConfigFile)
 		if err != nil {
 			return errors.New("getting cache key parameters: " + err.Error())
 		}
@@ -316,7 +390,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 	}
 	parentConfigParamsF := func() error {
 		defer func(start time.Time) { log.Infof("parentConfigParamsF took %v\n", time.Since(start)) }(time.Now())
-		parentConfigParams, toAddr, err := cfg.TOClient.GetConfigFileParameters("parent.config") // TODO make const in lib/go-atscfg
+		parentConfigParams, toAddr, err := toClient.GetConfigFileParameters("parent.config") // TODO make const in lib/go-atscfg
 		if err != nil {
 			return errors.New("getting parent.config parameters: " + err.Error())
 		}
@@ -327,7 +401,7 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 
 	topologiesF := func() error {
 		defer func(start time.Time) { log.Infof("topologiesF took %v\n", time.Since(start)) }(time.Now())
-		topologies, toAddr, err := cfg.TOClient.GetTopologies()
+		topologies, toAddr, err := toClient.GetTopologies()
 		if err != nil {
 			return errors.New("getting topologies: " + err.Error())
 		}
@@ -337,19 +411,23 @@ func GetTOData(cfg config.TCCfg) (*config.TOData, []net.Addr, error) {
 	}
 
 	fs := []func() error{serversF, cgF, jobsF}
-	if !cfg.RevalOnly {
+	if !revalOnly {
 		// skip data not needed for reval, if we're reval-only
 		fs = append([]func() error{dsrF, cacheKeyParamsF, parentConfigParamsF, capsF, dsCapsF, topologiesF}, fs...)
 	}
 	errs := runParallel(fs)
 
-	toIPArr := []net.Addr{}
+	toAddrSet := map[string]struct{}{} // use a set to remove duplicates
 	toIPs.Range(func(key, val interface{}) bool {
-		toIPArr = append(toIPArr, key.(net.Addr))
+		toAddrSet[key.(net.Addr).String()] = struct{}{}
 		return true
 	})
+	for addr, _ := range toAddrSet {
+		toData.TrafficOpsAddresses = append(toData.TrafficOpsAddresses, addr)
+	}
+	toData.TrafficOpsURL = toClient.C.URL
 
-	return toData, toIPArr, util.JoinErrs(errs)
+	return toData, util.JoinErrs(errs)
 }
 
 // runParallel runs all funcs in fs in parallel goroutines, and returns after all funcs have returned.
@@ -442,10 +520,51 @@ func ParamsToMultiMap(params []tc.Parameter) map[string][]string {
 	return mp
 }
 
-// logWarnings writes all strings in warnings to the warning log, with the context prefix.
-// If warnings is empty, no log is written.
-func logWarnings(context string, warnings []string) {
-	for _, warn := range warnings {
-		log.Warnln(context + warn)
+// filterUnusedDSS removes entries not on the given server's cdn from dsses, and returns a atscfg.DeliveryServiceServer.
+func filterUnusedDSS(dsses []tc.DeliveryServiceServer, cdnID int, servers []atscfg.Server, dses []atscfg.DeliveryService) []atscfg.DeliveryServiceServer {
+	serverIDs := map[int]struct{}{}
+	for _, sv := range servers {
+		if sv.ID == nil {
+			log.Errorln("filterUnusedDSS got server with nil id, skipping!")
+			continue
+		} else if sv.CDNID == nil {
+			log.Errorln("filterUnusedDSS got server with nil cdnId, skipping!")
+			continue
+		} else if *sv.CDNID != cdnID {
+			continue
+		}
+		serverIDs[*sv.ID] = struct{}{}
 	}
+	dsIDs := map[int]struct{}{}
+	for _, ds := range dses {
+		if ds.ID == nil {
+			log.Errorln("filterUnusedDSS got delivery service with nil id, skipping!")
+			continue
+		} else if ds.CDNID == nil {
+			log.Errorln("filterUnusedDSS got delivery service with nil cdnId, skipping!")
+			continue
+		} else if *ds.CDNID != cdnID {
+			continue
+		}
+		dsIDs[*ds.ID] = struct{}{}
+	}
+
+	cfgDSS := []atscfg.DeliveryServiceServer{}
+	for _, dss := range dsses {
+		if dss.Server == nil {
+			log.Errorln("filterUnusedDSS got deliveryserviceserver with nil server, skipping!")
+			continue
+		} else if dss.DeliveryService == nil {
+			log.Errorln("filterUnusedDSS got deliveryserviceserver with nil deliveryservice, skipping!")
+			continue
+		}
+		if _, ok := serverIDs[*dss.Server]; !ok {
+			continue // no log, this is normal if servers are fetched per-cdn
+		}
+		if _, ok := dsIDs[*dss.DeliveryService]; !ok {
+			continue // no log, this is normal if dses are fetched per-cdn
+		}
+		cfgDSS = append(cfgDSS, atscfg.DeliveryServiceServer{Server: *dss.Server, DeliveryService: *dss.DeliveryService})
+	}
+	return cfgDSS
 }

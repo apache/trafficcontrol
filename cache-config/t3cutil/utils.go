@@ -27,10 +27,11 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/toreq"
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func TOConnect(tccfg *TCCfg) (*TCCfg, error) {
-	_toClient, err := toreq.New(
+	toClient, err := toreq.New(
 		tccfg.TOURL,
 		tccfg.TOUser,
 		tccfg.TOPass,
@@ -42,7 +43,11 @@ func TOConnect(tccfg *TCCfg) (*TCCfg, error) {
 		return nil, errors.New("failed to connect to traffic ops: " + err.Error())
 	}
 
-	tccfg.TOClient = _toClient
+	if toClient.FellBack() {
+		log.Warnln("Traffic Ops does not support the latest version supported by this app! Falling back to previous major Traffic Ops API version!")
+	}
+
+	tccfg.TOClient = toClient
 
 	return tccfg, nil
 }

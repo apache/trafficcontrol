@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
@@ -52,7 +53,7 @@ func getAll() pluginsSlice {
 
 type Plugins interface {
 	OnStartup(d StartupData)
-	ModifyFiles(d ModifyFilesData) []config.ATSConfigFile
+	ModifyFiles(d ModifyFilesData) []t3cutil.ATSConfigFile
 }
 
 func AddPlugin(priority uint64, funcs Funcs) {
@@ -77,9 +78,9 @@ type StartupData struct {
 }
 
 type ModifyFilesData struct {
-	Cfg    config.TCCfg
-	TOData *config.TOData
-	Files  []config.ATSConfigFile
+	Cfg    config.Cfg
+	TOData *t3cutil.ConfigData
+	Files  []t3cutil.ATSConfigFile
 }
 
 type IsRequestHandled bool
@@ -90,7 +91,7 @@ const (
 )
 
 type StartupFunc func(d StartupData)
-type ModifyFilesFunc func(d ModifyFilesData) []config.ATSConfigFile
+type ModifyFilesFunc func(d ModifyFilesData) []t3cutil.ATSConfigFile
 
 type pluginObj struct {
 	funcs    Funcs
@@ -123,7 +124,7 @@ func (ps plugins) OnStartup(d StartupData) {
 }
 
 // ModifyFiles returns a slice of config files to use. May return d.Files unmodified, or may add, remove, or modify files in d.Files.
-func (ps plugins) ModifyFiles(d ModifyFilesData) []config.ATSConfigFile {
+func (ps plugins) ModifyFiles(d ModifyFilesData) []t3cutil.ATSConfigFile {
 	log.Infof("plugins.ModifyFiles calling %+v plugins\n", len(ps.slice))
 	for _, p := range ps.slice {
 		if p.funcs.modifyFiles == nil {

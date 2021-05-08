@@ -28,6 +28,7 @@ import (
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/toreq"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -36,7 +37,7 @@ import (
 
 func TestWriteConfigs(t *testing.T) {
 	buf := &bytes.Buffer{}
-	configs := []config.ATSConfigFile{
+	configs := []t3cutil.ATSConfigFile{
 		{
 			Name:        "config0.txt",
 			Path:        "/my/config0/location",
