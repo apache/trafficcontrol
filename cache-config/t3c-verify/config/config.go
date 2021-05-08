@@ -22,6 +22,7 @@ package config
 import (
 	"errors"
 	"os"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/pborman/getopt/v2"
@@ -34,6 +35,7 @@ type Cfg struct {
 	LogLocationInfo        string
 	TrafficServerConfigDir string
 	TrafficServerPluginDir string
+	FilesAdding            map[string]struct{}
 }
 
 var (
@@ -61,11 +63,21 @@ func InitConfig() (Cfg, error) {
 	logLocationInfoPtr := getopt.StringLong("log-location-info", 'i', "stderr", "Where to log infos. May be a file path, stdout, stderr")
 	atsConfigDirPtr := getopt.StringLong("trafficserver-config-dir", 'c', defaultATSConfigDir, "directory where ATS config files are stored.")
 	atsPluginDirPtr := getopt.StringLong("trafficserver-plugin-dir", 'p', defaultATSPluginDir, "directory where ATS plugins are stored.")
+	filesAdding := getopt.StringLong("files-adding", 'f', "", "comma-delimited list of file names being added, to not fail to verify if they don't already exist.")
 	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	getopt.Parse()
 
 	if *helpPtr == true {
 		Usage()
+	}
+
+	filesAddingSet := map[string]struct{}{}
+	for _, fileAdding := range strings.Split(*filesAdding, ",") {
+		fileAdding := strings.TrimSpace(fileAdding)
+		if fileAdding == "" {
+			continue
+		}
+		filesAddingSet[fileAdding] = struct{}{}
 	}
 
 	cfg := Cfg{
@@ -75,6 +87,7 @@ func InitConfig() (Cfg, error) {
 		LogLocationInfo:        *logLocationInfoPtr,
 		TrafficServerConfigDir: *atsConfigDirPtr,
 		TrafficServerPluginDir: *atsPluginDirPtr,
+		FilesAdding:            filesAddingSet,
 	}
 
 	if err := log.InitCfg(cfg); err != nil {

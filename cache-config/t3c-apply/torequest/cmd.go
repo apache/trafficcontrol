@@ -153,7 +153,6 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 // Logs the difference.
 // If the file on disk doesn't exist, returns true and logs the entire file as a diff.
 func diff(cfg config.Cfg, newFile []byte, fileLocation string) (bool, error) {
-	log.Warnf("DEBUG diff calling location '" + fileLocation + "'")
 	stdOut, stdErr, code := t3cutil.DoInput(newFile, `t3c-diff`, `stdin`, fileLocation)
 	if code > 1 {
 		return false, fmt.Errorf("t3c-diff returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
@@ -181,11 +180,12 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string) (bool, error) {
 // verify calls t3c-verify to verify the given cfgFile.
 // The cfgFile should be the full text of either a plugin.config or remap.config.
 // Returns nil if t3c-verify returned no errors found, or the error found if any.
-func verify(cfg config.Cfg, cfgFile []byte) error {
+func verify(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 	stdOut, stdErr, code := t3cutil.DoInput(cfgFile, `t3c-verify`,
 		"--log-location-error="+outToErr(cfg.LogLocationErr),
 		"--log-location-info="+outToErr(cfg.LogLocationInfo),
 		"--log-location-debug="+outToErr(cfg.LogLocationDebug),
+		"--files-adding="+strings.Join(filesAdding, ","),
 	)
 	if code != 0 {
 		log.Errorf(`verify errors start

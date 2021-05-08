@@ -176,7 +176,8 @@ func NewTrafficOpsReq(cfg config.Cfg) *TrafficOpsReq {
 }
 
 // checkConfigFile checks and audits config files.
-func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile) error {
+// The filesAdding parameter is the list of files about to be added, which is needed for verification in case a file is required and about to be created but doesn't exist yet.
+func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) error {
 	if cfg.Name == "" {
 		cfg.AuditFailed = true
 		return errors.New("Config file name is empty is empty, skipping further checks.")
@@ -205,7 +206,7 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile) error {
 
 	// perform plugin verification
 	if cfg.Name == "remap.config" || cfg.Name == "plugin.config" {
-		if err := verify(r.Cfg, cfg.Body); err != nil {
+		if err := verify(r.Cfg, cfg.Body, filesAdding); err != nil {
 			return errors.New("failed to verify '" + cfg.Name + "': " + err.Error())
 		}
 		log.Infoln("Successfully verified plugins used by '" + cfg.Name + "'")
@@ -794,6 +795,11 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 
 	log.Infoln(" ======== Start processing config files ========")
 
+	filesAdding := []string{} // list of file names being added, needed for verification.
+	for fileName, _ := range r.configFiles {
+		filesAdding = append(filesAdding, fileName)
+	}
+
 	for _, cfg := range r.configFiles {
 		// add service metadata
 		if strings.Contains(cfg.Path, "/opt/trafficserver/") || strings.Contains(cfg.Dir, "udev") {
@@ -813,7 +819,7 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 
 		log.Debugf("In %s mode, I'm about to process config file: %s, service: %s\n", r.Cfg.RunMode, cfg.Path, cfg.Service)
 
-		err := r.checkConfigFile(cfg)
+		err := r.checkConfigFile(cfg, filesAdding)
 		if err != nil {
 			log.Errorln(err)
 		}

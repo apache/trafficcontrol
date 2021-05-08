@@ -90,7 +90,7 @@ var (
 // Returns '0' if all plugins on the config line successfully verify
 // otherwise, returns the the count of plugins that failed to verify.
 //
-func checkConfigLine(line string, lineNumber int) int {
+func checkConfigLine(line string, lineNumber int, filesAdding map[string]struct{}) int {
 
 	pluginErrorCount := 0
 	exists := false
@@ -149,7 +149,7 @@ func checkConfigLine(line string, lineNumber int) int {
 					if m.MatchString(param) {
 						verified, exists = pluginParams[param]
 						if !exists {
-							verified = verifyPluginConfigfile(param)
+							verified = verifyPluginConfigfile(param, filesAdding)
 							pluginParams[param] = verified
 						}
 						if !verified {
@@ -194,7 +194,7 @@ func checkConfigLine(line string, lineNumber int) int {
 			if len(cfg) == 2 {
 				verified, exists = pluginParams[cfg[0]]
 				if !exists {
-					verified = verifyPluginConfigfile(cfg[0])
+					verified = verifyPluginConfigfile(cfg[0], filesAdding)
 					pluginParams[cfg[0]] = verified
 				}
 				if !verified {
@@ -237,7 +237,14 @@ func loadAvailablePlugins() {
 	}
 }
 
-func verifyPluginConfigfile(filename string) bool {
+func verifyPluginConfigfile(filename string, filesAdding map[string]struct{}) bool {
+	// filename isn't necessarily just a filename, it's whatever was in the plugin param, and can include a relative or absolute path.
+	// So, get just the file name for the filesAdding check, because filesAdding is just the name.
+	// TODO smarter path checking. This would wrongly succeed if a file was being created but in a different path.
+	filenameForAdding := filepath.Base(filename)
+	if _, ok := filesAdding[filenameForAdding]; ok {
+		return true
+	}
 	if filepath.IsAbs(filename) {
 		return fileExists(filename)
 	} else {
@@ -325,7 +332,7 @@ func main() {
 		line = strings.Join(textArray, " ")
 		line = strings.ReplaceAll(line, "\\", " ")
 
-		pluginErrorCount += checkConfigLine(line, lineNumber)
+		pluginErrorCount += checkConfigLine(line, lineNumber, cfg.FilesAdding)
 		lineNumber++
 		textArray = make([]string, 0)
 	}
