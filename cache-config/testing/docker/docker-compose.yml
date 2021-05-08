@@ -17,7 +17,7 @@
 #
 # Build trafficcontrol:  
 #   Copy the traffic_ops rpm to traffic_ops/traffic_ops.rpm
-#   Copy the traffic_ops_ort rpm to ort_test/traffic_ops_ort.rpm
+#   Copy the trafficcontrol-cache-config rpm to ort_test/trafficcontrol-cache-config.rpm
 #   Copy an ATS rpm to yumserver/test-rpms and update the 
 #     ../ort-tests/tc-fixtures.json to match the rpm version
 #     string you've chosen
@@ -58,7 +58,7 @@ services:
       - "443:443"
     build:
       context: ../../..
-      dockerfile: traffic_ops_ort/testing/docker/traffic_ops/Dockerfile
+      dockerfile: cache-config/testing/docker/traffic_ops/Dockerfile
     volumes:
       - ../../../GO_VERSION:/GO_VERSION
     depends_on:

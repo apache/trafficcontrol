@@ -126,6 +126,7 @@ func gitLogOneline(dir string) (string, error) {
 
 func t3cUpdateGit(host string, run_mode string) error {
 	args := []string{
+		"apply",
 		"--traffic-ops-insecure=true",
 		"--dispersion=0",
 		"--login-dispersion=0",
@@ -142,7 +143,7 @@ func t3cUpdateGit(host string, run_mode string) error {
 		"--run-mode=" + run_mode,
 		"--git=" + "yes",
 	}
-	cmd := exec.Command("/opt/ort/t3c", args...)
+	cmd := exec.Command("t3c", args...)
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 	cmd.Stdout = &out

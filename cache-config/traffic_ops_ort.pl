@@ -50,7 +50,7 @@ GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "disable_parent_config_comments=i" => \$disable_parent_config_comments,
           );
 
-my $cmd = '/opt/ort/t3c --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout';
+my $cmd = 't3c apply --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout';
 
 if ( defined $dispersion ) {
 	$cmd .= ' --dispersion=' . $dispersion;

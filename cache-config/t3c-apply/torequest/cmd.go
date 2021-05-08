@@ -222,6 +222,7 @@ func requestJSON(cfg config.Cfg, command string, obj interface{}) error {
 // request calls t3c-request with the given command, and returns the stdout bytes.
 func request(cfg config.Cfg, command string) ([]byte, error) {
 	stdOut, stdErr, code := t3cutil.Do(`t3c-request`,
+		"--traffic-ops-insecure="+strconv.FormatBool(cfg.TOInsecure),
 		"--traffic-ops-timeout-milliseconds="+strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
 		"--traffic-ops-user="+cfg.TOUser,
 		"--traffic-ops-password="+cfg.TOPass,

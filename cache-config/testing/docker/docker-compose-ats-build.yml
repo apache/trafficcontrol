@@ -30,6 +30,6 @@ services:
       - ATS_VERSION=8.1.x
     build:
       context: ../../..
-      dockerfile: traffic_ops_ort/testing/docker/trafficserver/Dockerfile
+      dockerfile: cache-config/testing/docker/trafficserver/Dockerfile
     volumes:
       - ../../..:/trafficcontrol:z

@@ -36,14 +36,14 @@ RUN yum install -y \
   epel-release initscripts postgresql13.x86_64 git gcc lua-5.1.4-15.el7 lua-devel-5.1.4-15.el7 \
   ImageMagick-c++-devel
 
-ADD ort_test/traffic_ops_ort*.rpm /traffic_ops_ort.rpm
-RUN yum install -y /traffic_ops_ort.rpm
+ADD ort_test/trafficcontrol-cache-config*.rpm /trafficcontrol-cache-config.rpm
+RUN yum install -y /trafficcontrol-cache-config.rpm
 
 RUN sed -i 's/HOME\/bin/HOME\/bin:\/usr\/local\/go\/bin:/g' /root/.bash_profile
 RUN echo "GOPATH=/root/go; export GOPATH" >> /root/.bash_profile
 RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 RUN mkdir /root/go
-RUN mkdir -p /opt/ort/status
+RUN mkdir -p /var/lib/trafficcontrol-cache-config/status
 
 EXPOSE 80 443
 ADD ort_test/run.sh /

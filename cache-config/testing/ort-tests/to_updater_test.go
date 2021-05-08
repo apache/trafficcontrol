@@ -57,7 +57,7 @@ func TestTOUpdater(t *testing.T) {
 		// change the server update status
 		err = ExecTOUpdater("atlanta-edge-03", false, true)
 		if err != nil {
-			t.Fatalf("ERROR: to-update Exec failed: %v\n", err)
+			t.Fatalf("ERROR: t3c-update Exec failed: %v\n", err)
 		}
 		// verify the update status is now 'true'
 		output, err = runTORequester("atlanta-edge-03", "update-status")
@@ -78,7 +78,7 @@ func TestTOUpdater(t *testing.T) {
 		// now change the reval stat and put server update status back
 		err = ExecTOUpdater("atlanta-edge-03", true, false)
 		if err != nil {
-			t.Fatalf("ERROR: to-update Exec failed: %v\n", err)
+			t.Fatalf("ERROR: t3c-update Exec failed: %v\n", err)
 		}
 		// verify the change
 		output, err = runTORequester("atlanta-edge-03", "update-status")
@@ -115,7 +115,7 @@ func ExecTOUpdater(host string, reval_status bool, update_status bool) error {
 		"--set-reval-status=" + strconv.FormatBool(reval_status),
 		"--set-update-status=" + strconv.FormatBool(update_status),
 	}
-	cmd := exec.Command("/usr/bin/to-update", args...)
+	cmd := exec.Command("t3c-update", args...)
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 	cmd.Stdout = &out

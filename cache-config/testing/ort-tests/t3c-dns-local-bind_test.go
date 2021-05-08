@@ -53,6 +53,7 @@ func TestT3CDNSLocalBind(t *testing.T) {
 
 func t3cUpdateDNSLocalBind(host string, run_mode string) error {
 	args := []string{
+		"apply",
 		"--traffic-ops-insecure=true",
 		"--dispersion=0",
 		"--login-dispersion=0",
@@ -67,7 +68,7 @@ func t3cUpdateDNSLocalBind(host string, run_mode string) error {
 		"--run-mode=" + run_mode,
 		"--dns-local-bind",
 	}
-	cmd := exec.Command("/opt/ort/t3c", args...)
+	cmd := exec.Command("t3c", args...)
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 	cmd.Stdout = &out

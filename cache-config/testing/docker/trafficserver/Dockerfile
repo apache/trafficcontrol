@@ -53,8 +53,8 @@ RUN yum install -y \
   tcl \
   tcl-devel
 
-ADD traffic_ops_ort/testing/docker/trafficserver/trafficserver-8.spec /trafficserver-8.spec 
-ADD traffic_ops_ort/testing/docker/trafficserver/trafficserver-9.spec /trafficserver-9.spec 
-ADD traffic_ops_ort/testing/docker/trafficserver/run.sh /
+ADD cache-config/testing/docker/trafficserver/trafficserver-8.spec /trafficserver-8.spec
+ADD cache-config/testing/docker/trafficserver/trafficserver-9.spec /trafficserver-9.spec
+ADD cache-config/testing/docker/trafficserver/run.sh /
 
 ENTRYPOINT /run.sh

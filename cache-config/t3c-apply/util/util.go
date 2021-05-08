@@ -286,7 +286,7 @@ func PackageInfo(cmdstr string, name string) ([]string, error) {
 				result = append(result, strings.TrimSpace(pkgs[ii]))
 			}
 		} else if err != nil {
-			return nil, err
+			return nil, errors.New("rpm -q --whatprovides '" + name + "' returned: " + err.Error())
 		}
 	case "pkg-query": // returns the package name for 'name'.
 		output, rc, err := ExecCommand("/bin/rpm", "-q", name)
@@ -295,7 +295,7 @@ func PackageInfo(cmdstr string, name string) ([]string, error) {
 		} else if rc == 0 { // add the rpm name
 			result = append(result, string(strings.TrimSpace(string(output))))
 		} else if err != nil {
-			return nil, err
+			return nil, errors.New("rpm -q '" + name + "' returned: " + err.Error())
 		}
 	case "pkg-requires": // returns a list of packages that requires package 'name'
 		output, rc, err := ExecCommand("/bin/rpm", "-q", "--whatrequires", name)
@@ -307,7 +307,7 @@ func PackageInfo(cmdstr string, name string) ([]string, error) {
 				result = append(result, strings.TrimSpace(pkgs[ii]))
 			}
 		} else if err != nil {
-			return nil, err
+			return nil, errors.New("rpm -q --whatrequires '" + name + "' returned: " + err.Error())
 		}
 	}
 	return result, nil

@@ -876,7 +876,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 		// check to see if any package by name is installed.
 		arr, err := util.PackageInfo("pkg-query", pkgs[ii].Name)
 		if err != nil {
-			return err
+			return errors.New("PackgeInfo pkg-query: " + err.Error())
 		}
 		// go needs the ternary operator :)
 		if len(arr) == 1 {
@@ -902,7 +902,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 				// for deletion.
 				arr, err = util.PackageInfo("pkg-requires", instpkg)
 				if err != nil {
-					return err
+					return errors.New("PackgeInfo pkg-requires: " + err.Error())
 				}
 				if len(arr) > 0 {
 					for jj := range arr {

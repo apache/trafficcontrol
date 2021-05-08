@@ -25,7 +25,8 @@ WAIT="60"
 # this seems to wake up the to container.
 #
 function ping_to {
-  /opt/ort/t3c \
+	t3c \
+		"apply" \
 		"--traffic-ops-insecure=true" \
 		"--traffic-ops-timeout-milliseconds=3000" \
 		"--traffic-ops-user=$TO_ADMIN_USER" \
@@ -35,7 +36,7 @@ function ping_to {
 		"--log-location-error=stderr" \
 		"--log-location-info=stderr" \
 		"--log-location-debug=stderr" \
-		"--run-mode=badass" 
+		"--run-mode=badass"
 }
 
 GOPATH=/root/go; export GOPATH
@@ -44,7 +45,7 @@ TERM=xterm; export TERM
 
 # setup some convienient links
 /bin/ln -s /root/go/src/github.com/apache/trafficcontrol /trafficcontrol
-/bin/ln -s /trafficcontrol/traffic_ops_ort/testing/ort-tests /ort-tests
+/bin/ln -s /trafficcontrol/cache-config/testing/ort-tests /ort-tests
 
 if [ -f /trafficcontrol/GO_VERSION ]; then
   go_version=$(cat /trafficcontrol/GO_VERSION) && \

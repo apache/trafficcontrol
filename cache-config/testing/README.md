@@ -52,29 +52,29 @@ Docker containers you will need to provide the following resources:
 
 # Directory layout
 
-  - trafficcontrol/traffic_ops_ort/testing/docker:  has all the 
+  - trafficcontrol/cache-config/testing/docker:  has all the
     necessary files for running the test Docker containers.
-  - trafficcontrol/traffic_ops_ort/testing/ort-tests:  this directory.
+  - trafficcontrol/cache-config/testing/ort-tests:  this directory.
     contains all the go files used to run the ORT tests.
 
 # Setup.
 
-  1.  Build the Traffic Ops and Traffic Ops ORT RPM's on the branch 
-      that you wish to test.  See the top level 'build' directory for 
-      building instructions. 
-  2.  Copy the Traffic Ops RPM from the 'dist' directory to 
+  1.  Build the Traffic Ops and Cache Config RPM's on the branch
+      that you wish to test.  See the top level 'build' directory for
+      building instructions.
+  2.  Copy the Traffic Ops RPM from the 'dist' directory to
       docker/traffic_ops/, no renaming is required.
-  3.  Copy the Traffic Ops ORT rpm from the 'dist' directory to 
+  3.  Copy the Traffic Ops ORT rpm from the 'dist' directory to
       docker/ort_test/, no renaming is required.
-  4.  You may copy an Apache Trafficserver RPM to the 
+  4.  You may copy an Apache Trafficserver RPM to the
       docker/yumserver/test-rpms directory or you can run:
 
-      **docker-compose -f docker-compose-ats.yml run trafficserver_build**
+      **docker-compose -f docker-compose-ats-build.yml run trafficserver_build**
 
       to build an rpm which is copied to docker/yumserver/test-rpms.
 
   5.  The container Docker files have the usernames and passwords used in the various
-      containers ie, postgresql db, traffic_ops, and traffic_ops_ort.  The usernames
+      containers ie, postgresql db, traffic_ops, and cache-config.  The usernames
       and passwords passed to the 't3c' executable in in the 
       ort-tests/conf/docker-edge-cache.conf file.  Make sure that the usernames/passwords
       in the Docker files match those in the t3c configuration file.
@@ -82,7 +82,7 @@ Docker containers you will need to provide the following resources:
       use your own Traffic Ops and Postgresql environment.
   6.  Build the Docker images and run the ort test:
       ``` 
-      cd trafficcontrol/traffic_ops_ort/testing/docker
+      cd trafficcontrol/cache-config/testing/docker
       docker-compose build
       docker-compose run ort_test
       ```
