@@ -185,8 +185,8 @@ func makeDSS(servers []Server, dses []DeliveryService) []DeliveryServiceServer {
 	for _, sv := range servers {
 		for _, ds := range dses {
 			dss = append(dss, DeliveryServiceServer{
-				Server:          util.IntPtr(*sv.ID),
-				DeliveryService: util.IntPtr(*ds.ID),
+				Server:          *sv.ID,
+				DeliveryService: *ds.ID,
 			})
 		}
 	}

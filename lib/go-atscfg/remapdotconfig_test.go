@@ -77,8 +77,8 @@ func TestMakeRemapDotConfig(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -198,8 +198,8 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -310,8 +310,8 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -436,8 +436,8 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -548,8 +548,8 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -684,12 +684,12 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds2.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds2.ID,
 		},
 	}
 
@@ -809,8 +809,8 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -922,8 +922,8 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -1036,8 +1036,8 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -1184,8 +1184,8 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -1348,8 +1348,8 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -1499,12 +1499,12 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds2.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds2.ID,
 		},
 	}
 
@@ -1836,36 +1836,36 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(1),
+			Server:          *server.ID,
+			DeliveryService: 1,
 		},
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(2),
+			Server:          *server.ID,
+			DeliveryService: 2,
 		},
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(3),
+			Server:          *server.ID,
+			DeliveryService: 3,
 		},
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(4),
+			Server:          *server.ID,
+			DeliveryService: 4,
 		},
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(5),
+			Server:          *server.ID,
+			DeliveryService: 5,
 		},
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(6),
+			Server:          *server.ID,
+			DeliveryService: 6,
 		},
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(7),
+			Server:          *server.ID,
+			DeliveryService: 7,
 		},
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(8),
+			Server:          *server.ID,
+			DeliveryService: 8,
 		},
 	}
 
@@ -2062,8 +2062,8 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -2207,8 +2207,8 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -2352,8 +2352,8 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -2497,8 +2497,8 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -2642,8 +2642,8 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -2783,8 +2783,8 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -2930,8 +2930,8 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -3077,8 +3077,8 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -3228,8 +3228,8 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -3379,8 +3379,8 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -3530,8 +3530,8 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -3676,8 +3676,8 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -3822,8 +3822,8 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -3968,8 +3968,8 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -4114,8 +4114,8 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -4260,8 +4260,8 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -4404,8 +4404,8 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -4551,8 +4551,8 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -4698,8 +4698,8 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParam(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -4817,8 +4817,8 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -4935,8 +4935,8 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURLAndDSCach
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -5050,8 +5050,8 @@ func TestMakeRemapDotConfigMidQStringIgnorePassUpCacheURLParamCacheURLAndDSCache
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -5162,8 +5162,8 @@ func TestMakeRemapDotConfigEdgeCacheURL(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -5270,8 +5270,8 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -5425,8 +5425,8 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -5572,8 +5572,8 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -5715,8 +5715,8 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -5862,8 +5862,8 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -6009,8 +6009,8 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -6157,8 +6157,8 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -6309,8 +6309,8 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -6474,8 +6474,8 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -6632,8 +6632,8 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -6779,8 +6779,8 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -6922,8 +6922,8 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -7065,8 +7065,8 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -7208,8 +7208,8 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -7355,8 +7355,8 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -7498,8 +7498,8 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -7631,8 +7631,8 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -7769,8 +7769,8 @@ func TestMakeRemapDotConfigNoHeaderRewrite(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -7912,8 +7912,8 @@ func TestMakeRemapDotConfigMidNoHeaderRewrite(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 
@@ -8055,8 +8055,8 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
 		},
 	}
 

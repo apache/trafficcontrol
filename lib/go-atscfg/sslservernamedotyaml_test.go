@@ -103,12 +103,12 @@ func TestMakeSSLServerNameYAML(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds0.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds0.ID,
 		},
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds1.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds1.ID,
 		},
 	}
 	cdn := &tc.CDN{
@@ -235,12 +235,12 @@ func TestMakeSSLServerNameYAMLParams(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds0.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds0.ID,
 		},
 		DeliveryServiceServer{
-			Server:          util.IntPtr(*server.ID),
-			DeliveryService: util.IntPtr(*ds1.ID),
+			Server:          *server.ID,
+			DeliveryService: *ds1.ID,
 		},
 	}
 	cdn := &tc.CDN{
