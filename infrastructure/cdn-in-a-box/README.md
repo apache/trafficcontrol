@@ -40,8 +40,8 @@ type `make` while in the `cdn-in-a-box` directory) or create them yourself by us
 the `*.rpm`s without any version/architecture information to their respective component
 directories, such that their filenames are as follows:
 
-* `edge/traffic_ops_ort.rpm`
-* `mid/traffic_ops_ort.rpm`
+* `edge/trafficcontrol-cache-config.rpm`
+* `mid/trafficcontrol-cache-config.rpm`
 * `traffic_monitor/traffic_monitor.rpm`
 * `traffic_ops/traffic_ops.rpm`
 * `traffic_portal/traffic_portal.rpm`
