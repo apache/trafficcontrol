@@ -1,6 +1,6 @@
 # Changelog
 All notable changes to this project will be documented in this file.
-
+t3c
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
@@ -39,7 +39,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added headers to Traffic Portal, Traffic Ops, and Traffic Monitor to opt out of tracking users via Google FLoC.
 - Add logging scope for logging.yaml generation for ATS 9 support
 - `DELETE` request method for `deliveryservices/xmlId/{name}/urlkeys` and `deliveryservices/{id}/urlkeys`.
-- t3c: bug fix to consider plugin config files for reloading remap.config
+- t3c: bug fix to consider plugin config files for reloading  remap.config
 - t3c: Change syncds so that it only warns on package version mismatch.
 
 ### Fixed

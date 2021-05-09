@@ -101,7 +101,7 @@ func main() {
 
 	if tccfg.GetData != "" {
 		if err := getdata.WriteData(tccfg); err != nil {
-			log.Errorln("writing data: " + err.Error())
+			log.Errorln("writing data : " + err.Error())
 			os.Exit(config.ExitCodeErrGeneric)
 		}
 		os.Exit(config.ExitCodeSuccess)
