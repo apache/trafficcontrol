@@ -154,7 +154,7 @@ func (cfg Cfg) PrintConfig() {
 	fmt.Printf("LogLocationInfo: %s\n", cfg.LogLocationInfo)
 	fmt.Printf("LoginDispersion : %s\n", cfg.LoginDispersion)
 	fmt.Printf("CacheHostName: %s\n", cfg.CacheHostName)
-	fmt.Printf("TOInsecure: %s\n", cfg.TOInsecure)
+	fmt.Printf("TOInsecure: %v\n", cfg.TOInsecure)
 	fmt.Printf("TOTimeoutMS: %s\n", cfg.TOTimeoutMS)
 	fmt.Printf("TOUser: %s\n", cfg.TOUser)
 	fmt.Printf("TOPass: xxxxxx\n")

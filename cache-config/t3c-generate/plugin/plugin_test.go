@@ -64,9 +64,9 @@ func TestPlugin(t *testing.T) {
 	plugins := Get(cfg)
 
 	modifyFilesData := ModifyFilesData{
-		Cfg:    config.TCCfg{Cfg: cfg},
+		Cfg:    cfg,
 		Files:  []t3cutil.ATSConfigFile{},
-		TOData: &config.TOData{},
+		TOData: &t3cutil.ConfigData{},
 	}
 
 	newFiles := plugins.ModifyFiles(modifyFilesData)

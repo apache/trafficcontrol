@@ -27,12 +27,10 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/toreq"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 )
 
 func TestWriteConfigs(t *testing.T) {
@@ -58,18 +56,18 @@ func TestWriteConfigs(t *testing.T) {
 
 	actual := buf.String()
 
-	expected0 := "Content-Type: text/plain\r\nLine-Comment: \r\nPath: /my/config0/location/config0.txt\r\n\r\nconfig0\r\n"
+	expected0 := `[{"name":"config0.txt","path":"/my/config0/location","content_type":"text/plain","line_comment":"","text":"config0"},{"name":"config1.txt","path":"/my/config1/location","content_type":"text/csv","line_comment":"","text":"config2,foo"}]`
 
 	if !strings.Contains(actual, expected0) {
 		t.Errorf("WriteConfigs expected '%v' actual '%v'", expected0, actual)
 	}
 
-	expected1 := "Content-Type: text/csv\r\nLine-Comment: \r\nPath: /my/config1/location/config1.txt\r\n\r\nconfig2,foo\r\n"
+	expected1 := `[{"name":"config0.txt","path":"/my/config0/location","content_type":"text/plain","line_comment":"","text":"config0"},{"name":"config1.txt","path":"/my/config1/location","content_type":"text/csv","line_comment":"","text":"config2,foo"}]`
 	if !strings.Contains(actual, expected1) {
 		t.Errorf("WriteConfigs expected config1 '%v' actual '%v'", expected1, actual)
 	}
 
-	expectedPrefix := "MIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary="
+	expectedPrefix := `[{"name":"config0.txt","path":"/my/config0/location","content_type":"text/plain","line_comment":"","text":"config0"},{"name":"config1.txt","path":"/my/config1/location","content_type":"text/csv","line_comment":"","text":"config2,foo"}]`
 	if !strings.HasPrefix(actual, expectedPrefix) {
 		t.Errorf("WriteConfigs expected prefix '%v' actual '%v'", expectedPrefix, actual)
 	}
@@ -143,14 +141,11 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 	revalOnly := false
 	cfgPath := "/etc/trafficserver/"
 
-	cfg := config.TCCfg{}
+	cfg := config.Cfg{}
 	cfg.Dir = cfgPath
 	cfg.RevalOnly = revalOnly
-	cfg.TOClient = &toreq.TOClient{}
-	cfg.TOClient.C = &client.Session{}
-	cfg.TOClient.C.URL = ""
 
-	configs, err := GetAllConfigs(toData, "", nil, cfg)
+	configs, err := GetAllConfigs(toData, "", cfg)
 	if err != nil {
 		t.Fatalf("error getting configs: " + err.Error())
 	}
@@ -162,7 +157,7 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 	configStr = removeComments(configStr)
 
 	for i := 0; i < 10; i++ {
-		configs2, err := GetAllConfigs(toData, "", nil, cfg)
+		configs2, err := GetAllConfigs(toData, "", cfg)
 		if err != nil {
 			t.Fatalf("error getting configs2: " + err.Error())
 		}
@@ -455,7 +450,7 @@ func randCDNSSLKeys() *tc.CDNSSLKeys {
 	}
 }
 
-func MakeFakeTOData() *config.TOData {
+func MakeFakeTOData() *t3cutil.ConfigData {
 	cg0 := *randCacheGroup()
 	cg0.ParentName = nil
 	cg0.ParentCachegroupID = nil
@@ -475,18 +470,18 @@ func MakeFakeTOData() *config.TOData {
 	ds0 := *randDS()
 	ds1 := *randDS()
 
-	dss := []tc.DeliveryServiceServer{
-		tc.DeliveryServiceServer{
-			Server:          sv0.ID,
-			DeliveryService: ds0.ID,
+	dss := []atscfg.DeliveryServiceServer{
+		atscfg.DeliveryServiceServer{
+			Server:          *sv0.ID,
+			DeliveryService: *ds0.ID,
 		},
-		tc.DeliveryServiceServer{
-			Server:          sv0.ID,
-			DeliveryService: ds1.ID,
+		atscfg.DeliveryServiceServer{
+			Server:          *sv0.ID,
+			DeliveryService: *ds1.ID,
 		},
-		tc.DeliveryServiceServer{
-			Server:          sv1.ID,
-			DeliveryService: ds0.ID,
+		atscfg.DeliveryServiceServer{
+			Server:          *sv1.ID,
+			DeliveryService: *ds0.ID,
 		},
 	}
 
@@ -498,7 +493,7 @@ func MakeFakeTOData() *config.TOData {
 	dsr1 := randDSRs()
 	dsr1.DSName = *ds1.XMLID
 
-	return &config.TOData{
+	return &t3cutil.ConfigData{
 		CacheGroups: []tc.CacheGroupNullable{
 			cg0,
 			cg1,

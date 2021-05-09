@@ -191,7 +191,7 @@ func main() {
 			} else if running {
 				log.Infoln("service 'teakd' started.")
 			} else if svcStatus == util.SvcRunning {
-				log.Infof("service 'teakd' was already running, pid: %s\n", pid)
+				log.Infof("service 'teakd' was already running, pid: %v\n", pid)
 			}
 		}
 	}
