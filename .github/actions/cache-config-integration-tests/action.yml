@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: 'to-ort-integration-tests'
-description: 'Runs Traffic Ops ORT integration tests'
+name: 'cache-config-integration-tests'
+description: 'Runs cache config integration tests'
 runs:
   using: 'node12'
   main: 'main.js'
