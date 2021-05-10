@@ -15,13 +15,10 @@ package orttest
 */
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/traffic_ops_ort/testing/ort-tests/util"
 	"os"
-	"os/exec"
 	"testing"
 	"time"
 )
@@ -52,7 +49,7 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		tcdata.DeliveryServices}, func() {
 
 		// run badass and check config files.
-		err := t3c_update("atlanta-edge-03", "badass")
+		err := runT3cUpdate("atlanta-edge-03", "badass")
 		if err != nil {
 			t.Fatalf("ERROR: t3c badass failed: %v\n", err)
 		}
@@ -79,11 +76,11 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		time.Sleep(time.Second * 5)
 
 		fmt.Println("------------------------ Verify Plugin Configs ----------------")
-		err = verify_plugin_config("/opt/trafficserver/etc/trafficserver/remap.config")
+		err = runPluginVerifier("/opt/trafficserver/etc/trafficserver/remap.config")
 		if err != nil {
 			t.Errorf("Plugin verification failed for remap.config")
 		}
-		err = verify_plugin_config("/opt/trafficserver/etc/trafficserver/plugin.config")
+		err = runPluginVerifier("/opt/trafficserver/etc/trafficserver/plugin.config")
 		if err != nil {
 			t.Errorf("Plugin verification failed for plugin.config")
 		}
@@ -106,7 +103,7 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		// remap.config is removed and atlanta-edge-03 should have
 		// queue updates enabled.  run t3c to verify a new remap.config
 		// is pulled down.
-		err = t3c_update("atlanta-edge-03", "syncds")
+		err = runT3cUpdate("atlanta-edge-03", "syncds")
 		if err != nil {
 			t.Fatalf("ERROR: t3c syncds failed: %v\n", err)
 		}
@@ -117,76 +114,4 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 
 	})
 	fmt.Println("------------- End of TestT3cBadassAndSyncDs ---------------")
-}
-
-func setQueueUpdateStatus(host_name string, update string) error {
-	args := []string{
-		"--dir=/opt/trafficserver/etc/traffficserver",
-		"--traffic-ops-insecure",
-		"--traffic-ops-timeout-milliseconds=30000",
-		"--traffic-ops-disable-proxy=true",
-		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
-		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
-		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
-		"--cache-host-name=" + host_name,
-		"--log-location-error=stdout",
-		"--log-location-info=stdout",
-		"--log-location-warning=stdout",
-		"--set-queue-status=" + update,
-		"--set-reval-status=false",
-	}
-	cmd := exec.Command("/opt/ort/atstccfg", args...)
-	var out bytes.Buffer
-	var errOut bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &errOut
-	err := cmd.Run()
-	if err != nil {
-		return errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
-	}
-	return nil
-}
-
-func verify_plugin_config(config_file string) error {
-	args := []string{
-		"--log-location-debug=test.log",
-		config_file,
-	}
-	cmd := exec.Command("/opt/ort/plugin_verifier", args...)
-	var out bytes.Buffer
-	var errOut bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &errOut
-	err := cmd.Run()
-	if err != nil {
-		return errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
-	}
-	return nil
-}
-
-func t3c_update(host string, run_mode string) error {
-	args := []string{
-		"--traffic-ops-insecure=true",
-		"--dispersion=0",
-		"--login-dispersion=0",
-		"--traffic-ops-timeout-milliseconds=3000",
-		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
-		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
-		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
-		"--cache-host-name=" + host,
-		"--log-location-error=test.log",
-		"--log-location-info=test.log",
-		"--log-location-debug=test.log",
-		"--run-mode=" + run_mode,
-	}
-	cmd := exec.Command("/opt/ort/t3c", args...)
-	var out bytes.Buffer
-	var errOut bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &errOut
-	err := cmd.Run()
-	if err != nil {
-		return errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
-	}
-	return nil
 }
