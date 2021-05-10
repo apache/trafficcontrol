@@ -18,9 +18,7 @@ package v4
 import (
 	"net/http"
 	"net/url"
-	"reflect"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 
@@ -48,7 +46,6 @@ func TestPhysLocations(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestPhysLocationsWithHeaders(t, header)
-		GetTestPaginationSupportPhysLocation(t)
 	})
 }
 
@@ -130,8 +127,9 @@ func CreateTestPhysLocations(t *testing.T) {
 }
 
 func SortTestPhysLocations(t *testing.T) {
+	var header http.Header
 	var sortedList []string
-	resp, _, err := TOSession.GetPhysLocations(nil, nil)
+	resp, _, err := TOSession.GetPhysLocations(nil, header)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
@@ -238,88 +236,5 @@ func DeleteTestPhysLocations(t *testing.T) {
 				t.Errorf("expected PhysLocation name: %s to be deleted", cdn.Name)
 			}
 		}
-	}
-}
-
-func GetTestPaginationSupportPhysLocation(t *testing.T) {
-	qparams := url.Values{}
-	qparams.Set("orderby", "id")
-	physlocations, _, err := TOSession.GetPhysLocations(qparams, nil)
-	if err != nil {
-		t.Errorf("cannot GET Physical Locations: %v", err)
-	}
-
-	if len(physlocations) > 0 {
-		qparams = url.Values{}
-		qparams.Set("orderby", "id")
-		qparams.Set("limit", "1")
-		physlocationsWithLimit, _, err := TOSession.GetPhysLocations(qparams, nil)
-		if err == nil {
-			if !reflect.DeepEqual(physlocations[:1], physlocationsWithLimit) {
-				t.Error("expected GET PhysLocation with limit = 1 to return first result")
-			}
-		} else {
-			t.Error("Error in getting PhysLocation by limit")
-		}
-		if len(physlocations) > 1 {
-			qparams = url.Values{}
-			qparams.Set("orderby", "id")
-			qparams.Set("limit", "1")
-			qparams.Set("offset", "1")
-			physlocationsWithOffset, _, err := TOSession.GetPhysLocations(qparams, nil)
-			if err == nil {
-				if !reflect.DeepEqual(physlocations[1:2], physlocationsWithOffset) {
-					t.Error("expected GET PhysLocation with limit = 1, offset = 1 to return second result")
-				}
-			} else {
-				t.Error("Error in getting PhysLocation by limit and offset")
-			}
-
-			qparams = url.Values{}
-			qparams.Set("orderby", "id")
-			qparams.Set("limit", "1")
-			qparams.Set("page", "2")
-			physlocationsWithPage, _, err := TOSession.GetPhysLocations(qparams, nil)
-			if err == nil {
-				if !reflect.DeepEqual(physlocations[1:2], physlocationsWithPage) {
-					t.Error("expected GET PhysLocation with limit = 1, page = 2 to return second result")
-				}
-			} else {
-				t.Error("Error in getting PhysLocation by limit and page")
-			}
-		} else {
-			t.Errorf("only one PhysLocation found, so offset functionality can't test")
-		}
-	} else {
-		t.Errorf("No PhysLocation found to check pagination")
-	}
-
-	qparams = url.Values{}
-	qparams.Set("limit", "-2")
-	_, _, err = TOSession.GetPhysLocations(qparams, nil)
-	if err == nil {
-		t.Error("expected GET PhysLocation to return an error when limit is not bigger than -1")
-	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
-		t.Errorf("expected GET PhysLocation to return an error for limit is not bigger than -1, actual error: " + err.Error())
-	}
-
-	qparams = url.Values{}
-	qparams.Set("limit", "1")
-	qparams.Set("offset", "0")
-	_, _, err = TOSession.GetPhysLocations(qparams, nil)
-	if err == nil {
-		t.Error("expected GET PhysLocation to return an error when offset is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET PhysLocation to return an error for offset is not a positive integer, actual error: " + err.Error())
-	}
-
-	qparams = url.Values{}
-	qparams.Set("limit", "1")
-	qparams.Set("page", "0")
-	_, _, err = TOSession.GetPhysLocations(qparams, nil)
-	if err == nil {
-		t.Error("expected GET PhysLocation to return an error when page is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET PhysLocation to return an error for page is not a positive integer, actual error: " + err.Error())
 	}
 }
