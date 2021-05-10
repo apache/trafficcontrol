@@ -116,7 +116,6 @@ else {
 sub usage {
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	print "Usage: ./traffic_ops_ort.pl <Mode> <Log_Level> <Traffic_Ops_URL> <Traffic_Ops_Login> [optional flags]\n";
-	print "Usage: ./traffic_ops_ort.pl <Mode> <Log_Level> <Traffic_Ops_URL> <Traffic_Ops_Login> [optional flags]\n";
 	print "\t<Mode> = interactive - asks questions during config process.\n";
 	print "\t<Mode> = report - prints config differences and exits.\n";
 	print "\t<Mode> = badass - attempts to fix all config differences that it can.\n";
