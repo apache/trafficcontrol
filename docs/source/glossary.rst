@@ -277,8 +277,6 @@ Glossary
 	ORT
 		The previous Traffic Control cache config app, replaced by :term:`t3c`.
 
-		.. seealso:: See :ref:`traffic-ops-ort` for a Python implementation of ORT that is (theoretically) compatible with the one actually provided in Apache Traffic Control releases.
-
 	Parameter
 	Parameters
 		Typically refers to a line in a configuration file, but in practice can represent any arbitrary configuration option.
