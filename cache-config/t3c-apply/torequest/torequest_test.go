@@ -86,15 +86,6 @@ func TestUnencodeFilter(t *testing.T) {
 	}
 }
 
-func TestNewTrafficOpsReq(t *testing.T) {
-	trops := NewTrafficOpsReq(testCfg)
-	bkupDir := config.TmpBase + "/" + trops.unixTimeStr
-
-	if trops.baseBackupDir != bkupDir {
-		t.Errorf("NewTrafficOpsReq() failed, expected '" + bkupDir + " ' actual '" + trops.baseBackupDir + "'")
-	}
-}
-
 func TestIsPackageInstalled(t *testing.T) {
 	trops := NewTrafficOpsReq(testCfg)
 	trops.pkgs["trafficserver"] = true

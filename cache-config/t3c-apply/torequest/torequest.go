@@ -57,7 +57,6 @@ type TrafficOpsReq struct {
 	pkgs                 map[string]bool // map of installed packages
 	plugins              map[string]bool // map of verified plugins
 	configFiles          map[string]*ConfigFile
-	baseBackupDir        string
 	TrafficCtlReload     bool   // a traffic_ctl_reload is required
 	SysCtlReload         bool   // a reload of the sysctl.conf is required
 	NtpdRestart          bool   // ntpd needs restarting
@@ -166,12 +165,11 @@ func NewTrafficOpsReq(cfg config.Cfg) *TrafficOpsReq {
 	unixTimeString := strconv.FormatInt(time.Now().Unix(), 10)
 
 	return &TrafficOpsReq{
-		Cfg:           cfg,
-		pkgs:          make(map[string]bool),
-		plugins:       make(map[string]bool),
-		configFiles:   make(map[string]*ConfigFile),
-		baseBackupDir: config.TmpBase + "/" + unixTimeString,
-		unixTimeStr:   unixTimeString,
+		Cfg:         cfg,
+		pkgs:        make(map[string]bool),
+		plugins:     make(map[string]bool),
+		configFiles: make(map[string]*ConfigFile),
+		unixTimeStr: unixTimeString,
 	}
 }
 
