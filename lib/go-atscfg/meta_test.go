@@ -167,6 +167,11 @@ func TestMakeMetaConfig(t *testing.T) {
 				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
 			}
 		},
+		"ssl_server_name.yaml": func(cf CfgMeta) {
+			if expected := cfgPath; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
+			}
+		},
 	}
 
 	for _, cfgFile := range cfg {

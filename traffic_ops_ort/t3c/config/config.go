@@ -114,7 +114,9 @@ type Cfg struct {
 	// UseGit is whether to create and maintain a git repo of config changes.
 	// Note this only applies to the ATS config directory inferred or set via the flag.
 	//      It does not do anything for config files generated outside that location.
-	UseGit UseGitFlag
+	UseGit                   UseGitFlag
+	DefaultClientEnableH2    *bool
+	DefaultClientTLSVersions *string
 }
 
 type UseGitFlag string
@@ -216,6 +218,9 @@ func GetCfg() (Cfg, error) {
 	dnsLocalBindPtr := getopt.BoolLong("dns-local-bind", 'b', "[true | false] whether to use the server's Service Addresses to set the ATS DNS local bind address")
 	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	useGitStr := getopt.StringLong("git", 'g', "auto", "Create and use a git repo in the config directory. Options are yes, no, and auto. If yes, create and use. If auto, use if it exist. Default is auto.")
+	defaultEnableH2 := getopt.BoolLong("default-client-enable-h2", '2', "Whether to enable HTTP/2 on Delivery Services by default, if they have no explicit Parameter. This is irrelevant if ATS records.config is not serving H2. If omitted, H2 is disabled.")
+	defaultClientTLSVersions := getopt.StringLong("default-client-tls-versions", 'v', "", "Comma-delimited list of default TLS versions for Delivery Services with no Parameter, e.g. --default-tls-versions='1.1,1.2,1.3'. If omitted, all versions are enabled.")
+
 	getopt.Parse()
 
 	dispersion := time.Second * time.Duration(*dispersionPtr)
@@ -337,28 +342,30 @@ func GetCfg() (Cfg, error) {
 	yumOptions := os.Getenv("YUM_OPTIONS")
 
 	cfg := Cfg{
-		Dispersion:          dispersion,
-		LogLocationDebug:    logLocationDebug,
-		LogLocationErr:      logLocationError,
-		LogLocationInfo:     logLocationInfo,
-		LogLocationWarn:     logLocationWarn,
-		LoginDispersion:     loginDispersion,
-		CacheHostName:       cacheHostName,
-		SvcManagement:       svcManagement,
-		Retries:             retries,
-		RevalWaitTime:       revalWaitTime,
-		ReverseProxyDisable: reverseProxyDisable,
-		RunMode:             runMode,
-		SkipOSCheck:         skipOsCheck,
-		TOInsecure:          toInsecure,
-		TOTimeoutMS:         toTimeoutMS,
-		TOUser:              toUser,
-		TOPass:              toPass,
-		TOURL:               toURL,
-		DNSLocalBind:        dnsLocalBind,
-		WaitForParents:      waitForParents,
-		YumOptions:          yumOptions,
-		UseGit:              useGit,
+		Dispersion:               dispersion,
+		LogLocationDebug:         logLocationDebug,
+		LogLocationErr:           logLocationError,
+		LogLocationInfo:          logLocationInfo,
+		LogLocationWarn:          logLocationWarn,
+		LoginDispersion:          loginDispersion,
+		CacheHostName:            cacheHostName,
+		SvcManagement:            svcManagement,
+		Retries:                  retries,
+		RevalWaitTime:            revalWaitTime,
+		ReverseProxyDisable:      reverseProxyDisable,
+		RunMode:                  runMode,
+		SkipOSCheck:              skipOsCheck,
+		TOInsecure:               toInsecure,
+		TOTimeoutMS:              toTimeoutMS,
+		TOUser:                   toUser,
+		TOPass:                   toPass,
+		TOURL:                    toURL,
+		DNSLocalBind:             dnsLocalBind,
+		WaitForParents:           waitForParents,
+		YumOptions:               yumOptions,
+		UseGit:                   useGit,
+		DefaultClientEnableH2:    defaultEnableH2,
+		DefaultClientTLSVersions: defaultClientTLSVersions,
 	}
 
 	if err = log.InitCfg(cfg); err != nil {

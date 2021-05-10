@@ -227,9 +227,14 @@ func (r *TrafficOpsReq) atsTcExecCommand(cmdstr string, queueState int, revalSta
 	if r.Cfg.TOInsecure == true {
 		args = append(args, "--traffic-ops-insecure")
 	}
-
 	if r.Cfg.DNSLocalBind {
 		args = append(args, "--dns-local-bind")
+	}
+	if r.Cfg.DefaultClientEnableH2 != nil {
+		args = append(args, "--default-client-enable-h2="+strconv.FormatBool(*r.Cfg.DefaultClientEnableH2))
+	}
+	if r.Cfg.DefaultClientTLSVersions != nil {
+		args = append(args, "--default-client-tls-versions="+*r.Cfg.DefaultClientTLSVersions+"")
 	}
 
 	switch cmdstr {

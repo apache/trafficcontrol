@@ -1896,7 +1896,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHeaderRegex),
 					SetNumber: 0,
-					Pattern:   "myregexpattern2",
+					Pattern:   "myregexpattern3",
 				},
 			},
 		},
@@ -1906,7 +1906,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 				tc.DeliveryServiceRegex{
 					Type:      "",
 					SetNumber: 0,
-					Pattern:   "myregexpattern2",
+					Pattern:   "myregexpattern4",
 				},
 			},
 		},
@@ -1916,7 +1916,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 				tc.DeliveryServiceRegex{
 					Type:      "nonexistenttype",
 					SetNumber: 0,
-					Pattern:   "myregexpattern2",
+					Pattern:   "myregexpattern5",
 				},
 			},
 		},
@@ -1926,7 +1926,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
 					SetNumber: 0,
-					Pattern:   "myregexpattern2",
+					Pattern:   "myregexpattern6",
 				},
 			},
 		},
@@ -1936,7 +1936,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
 					SetNumber: 0,
-					Pattern:   "myregexpattern2",
+					Pattern:   "myregexpattern7",
 				},
 			},
 		},

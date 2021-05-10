@@ -48,26 +48,28 @@ var ErrNotFound = errors.New("not found")
 var ErrBadRequest = errors.New("bad request")
 
 type Cfg struct {
-	CacheHostName   string
-	DisableProxy    bool
-	GetData         string
-	ListPlugins     bool
-	LogLocationErr  string
-	LogLocationInfo string
-	LogLocationWarn string
-	NumRetries      int
-	RevalOnly       bool
-	SetQueueStatus  string
-	SetRevalStatus  string
-	TOInsecure      bool
-	TOPass          string
-	TOTimeout       time.Duration
-	TOURL           *url.URL
-	TOUser          string
-	Dir             string
-	ViaRelease      bool
-	SetDNSLocalBind bool
-	ParentComments  bool
+	CacheHostName      string
+	DisableProxy       bool
+	GetData            string
+	ListPlugins        bool
+	LogLocationErr     string
+	LogLocationInfo    string
+	LogLocationWarn    string
+	NumRetries         int
+	RevalOnly          bool
+	SetQueueStatus     string
+	SetRevalStatus     string
+	TOInsecure         bool
+	TOPass             string
+	TOTimeout          time.Duration
+	TOURL              *url.URL
+	TOUser             string
+	Dir                string
+	ViaRelease         bool
+	SetDNSLocalBind    bool
+	ParentComments     bool
+	DefaultEnableH2    bool
+	DefaultTLSVersions []atscfg.TLSVersion
 }
 
 type TCCfg struct {
@@ -105,6 +107,8 @@ func GetCfg() (Cfg, error) {
 	viaRelease := flag.BoolP("via-string-release", "", false, "Whether to use the Release value from the RPM package as a replacement for the ATS version specified in the build that is returned in the Via and Server headers from ATS.")
 	dnsLocalBind := flag.BoolP("dns-local-bind", "", false, "Whether to use the server's Service Addresses to set the ATS DNS local bind address.")
 	disableParentConfigComments := flag.BoolP("disable-parent-config-comments", "", false, "Disable adding a comments to parent.config individual lines")
+	defaultEnableH2 := flag.BoolP("default-client-enable-h2", "", false, "Whether to enable HTTP/2 on Delivery Services by default, if they have no explicit Parameter. This is irrelevant if ATS records.config is not serving H2. If omitted, H2 is disabled.")
+	defaultTLSVersionsStr := flag.StringP("default-client-tls-versions", "", "", "Comma-delimited list of default TLS versions for Delivery Services with no Parameter, e.g. '--default-tls-versions=1.1,1.2,1.3'. If omitted, all versions are enabled.")
 
 	flag.Parse()
 
@@ -151,6 +155,22 @@ func GetCfg() (Cfg, error) {
 		return Cfg{}, errors.New("Missing required argument --cache-host-name. " + usageStr)
 	}
 
+	defaultTLSVersions := atscfg.DefaultDefaultTLSVersions
+
+	*defaultTLSVersionsStr = strings.TrimSpace(*defaultTLSVersionsStr)
+	if len(*defaultTLSVersionsStr) > 0 {
+		defaultTLSVersionsStrs := strings.Split(*defaultTLSVersionsStr, ",")
+
+		defaultTLSVersions = []atscfg.TLSVersion{}
+		for _, tlsVersionStr := range defaultTLSVersionsStrs {
+			tlsVersion := atscfg.StringToTLSVersion(tlsVersionStr)
+			if tlsVersion == atscfg.TLSVersionInvalid {
+				return Cfg{}, errors.New("unknown TLS Version '" + tlsVersionStr + "' in '" + *defaultTLSVersionsStr + "'")
+			}
+			defaultTLSVersions = append(defaultTLSVersions, tlsVersion)
+		}
+	}
+
 	toURLParsed, err := url.Parse(*toURL)
 	if err != nil {
 		return Cfg{}, errors.New("parsing Traffic Ops URL from " + urlSourceStr + " '" + *toURL + "': " + err.Error())
@@ -159,26 +179,28 @@ func GetCfg() (Cfg, error) {
 	}
 
 	cfg := Cfg{
-		LogLocationErr:  *logLocationErr,
-		LogLocationWarn: *logLocationWarn,
-		LogLocationInfo: *logLocationInfo,
-		NumRetries:      *numRetries,
-		TOInsecure:      *toInsecure,
-		TOPass:          *toPass,
-		TOTimeout:       time.Millisecond * time.Duration(*toTimeoutMS),
-		TOURL:           toURLParsed,
-		TOUser:          *toUser,
-		ListPlugins:     *listPlugins,
-		CacheHostName:   *cacheHostName,
-		GetData:         *getData,
-		SetRevalStatus:  *setRevalStatus,
-		SetQueueStatus:  *setQueueStatus,
-		RevalOnly:       *revalOnly,
-		DisableProxy:    *disableProxy,
-		Dir:             *dir,
-		ViaRelease:      *viaRelease,
-		SetDNSLocalBind: *dnsLocalBind,
-		ParentComments:  !(*disableParentConfigComments),
+		LogLocationErr:     *logLocationErr,
+		LogLocationWarn:    *logLocationWarn,
+		LogLocationInfo:    *logLocationInfo,
+		NumRetries:         *numRetries,
+		TOInsecure:         *toInsecure,
+		TOPass:             *toPass,
+		TOTimeout:          time.Millisecond * time.Duration(*toTimeoutMS),
+		TOURL:              toURLParsed,
+		TOUser:             *toUser,
+		ListPlugins:        *listPlugins,
+		CacheHostName:      *cacheHostName,
+		GetData:            *getData,
+		SetRevalStatus:     *setRevalStatus,
+		SetQueueStatus:     *setQueueStatus,
+		RevalOnly:          *revalOnly,
+		DisableProxy:       *disableProxy,
+		Dir:                *dir,
+		ViaRelease:         *viaRelease,
+		SetDNSLocalBind:    *dnsLocalBind,
+		ParentComments:     !(*disableParentConfigComments),
+		DefaultEnableH2:    *defaultEnableH2,
+		DefaultTLSVersions: defaultTLSVersions,
 	}
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")

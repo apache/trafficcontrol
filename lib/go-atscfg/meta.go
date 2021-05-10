@@ -437,6 +437,7 @@ func requiredFiles8() []string {
 		"plugin.config",
 		"records.config",
 		"remap.config",
+		"ssl_server_name.yaml",
 		"storage.config",
 		"volume.config",
 	}
@@ -454,6 +455,7 @@ func requiredFiles9() []string {
 		"plugin.config",
 		"records.config",
 		"remap.config",
+		"sni.yaml",
 		"storage.config",
 		"volume.config",
 	}
