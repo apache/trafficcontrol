@@ -47,6 +47,9 @@ cachegroups.tests.forEach(cacheGroupData => {
                     await cacheGroupPage.OpenCacheGroupsPage();
                 });
            });
+           cacheGroupData.toggle.forEach(toggle => {
+               
+           })
             cacheGroupData.create.forEach(create => {
                 it(create.Description, async function () {
                     expect(await cacheGroupPage.CreateCacheGroups(create, create.validationMessage)).toBeTruthy();
