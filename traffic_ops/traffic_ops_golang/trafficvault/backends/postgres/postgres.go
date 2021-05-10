@@ -295,7 +295,7 @@ func (p *Postgres) GetURISigningKeys(xmlID string, tx *sql.Tx, ctx context.Conte
 		return []byte{}, false, err
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
-	return getURISigKeys(xmlID, tvTx, ctx)
+	return getURISigningKeys(xmlID, tvTx, ctx)
 }
 
 func (p *Postgres) PutURISigningKeys(xmlID string, keysJson []byte, tx *sql.Tx, ctx context.Context) error {
@@ -305,7 +305,7 @@ func (p *Postgres) PutURISigningKeys(xmlID string, keysJson []byte, tx *sql.Tx, 
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
 
-	return putURISigKeys(xmlID, tvTx, keysJson, ctx)
+	return putURISigningKeys(xmlID, tvTx, keysJson, ctx)
 }
 
 func (p *Postgres) DeleteURISigningKeys(xmlID string, tx *sql.Tx, ctx context.Context) error {
@@ -315,7 +315,7 @@ func (p *Postgres) DeleteURISigningKeys(xmlID string, tx *sql.Tx, ctx context.Co
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
 
-	return deleteURISigKeys(xmlID, tvTx, ctx)
+	return deleteURISigningKeys(xmlID, tvTx, ctx)
 }
 
 func (p *Postgres) Ping(tx *sql.Tx, ctx context.Context) (tc.TrafficVaultPing, error) {

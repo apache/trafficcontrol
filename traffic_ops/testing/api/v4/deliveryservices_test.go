@@ -47,9 +47,9 @@ func TestDeliveryServices(t *testing.T) {
 			CreateTestDeliveryServicesURLSigKeys(t)
 			GetTestDeliveryServicesURLSigKeys(t)
 			DeleteTestDeliveryServicesURLSigKeys(t)
-			CreateTestDeliveryServicesURISigKeys(t)
-			GetTestDeliveryServicesURISigKeys(t)
-			DeleteTestDeliveryServicesURISigKeys(t)
+			CreateTestDeliveryServicesURISigningKeys(t)
+			GetTestDeliveryServicesURISigningKeys(t)
+			DeleteTestDeliveryServicesURISigningKeys(t)
 			DeleteCDNOldSSLKeys(t)
 			DeliveryServiceSSLKeys(t)
 		}
@@ -1641,7 +1641,7 @@ func DeleteTestDeliveryServicesURLSigKeys(t *testing.T) {
 
 }
 
-func GetTestDeliveryServicesURISigKeys(t *testing.T) {
+func GetTestDeliveryServicesURISigningKeys(t *testing.T) {
 	if len(testData.DeliveryServices) == 0 {
 		t.Fatal("couldn't get the xml ID of test DS")
 	}
@@ -1687,7 +1687,7 @@ const (
 }`
 )
 
-func CreateTestDeliveryServicesURISigKeys(t *testing.T) {
+func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 	if len(testData.DeliveryServices) == 0 {
 		t.Fatal("couldn't get the xml ID of test DS")
 	}
@@ -1752,7 +1752,7 @@ func CreateTestDeliveryServicesURISigKeys(t *testing.T) {
 	}
 }
 
-func DeleteTestDeliveryServicesURISigKeys(t *testing.T) {
+func DeleteTestDeliveryServicesURISigningKeys(t *testing.T) {
 	if len(testData.DeliveryServices) == 0 {
 		t.Fatal("couldn't get the xml ID of test DS")
 	}

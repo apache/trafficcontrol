@@ -28,7 +28,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func getURISigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context) ([]byte, bool, error) {
+func getURISigningKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context) ([]byte, bool, error) {
 	var jsonUriKeys json.RawMessage
 	if err := tvTx.QueryRow("SELECT data FROM uri_signing_key WHERE deliveryservice = $1", xmlID).Scan(&jsonUriKeys); err != nil {
 		if err == sql.ErrNoRows {
@@ -41,10 +41,10 @@ func getURISigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context) ([]byte, bo
 	return []byte(jsonUriKeys), true, nil
 }
 
-func putURISigKeys(xmlID string, tvTx *sqlx.Tx, keys []byte, ctx context.Context) error {
+func putURISigningKeys(xmlID string, tvTx *sqlx.Tx, keys []byte, ctx context.Context) error {
 
 	// Delete old keys first if they exist
-	if err := deleteURISigKeys(xmlID, tvTx, ctx); err != nil {
+	if err := deleteURISigningKeys(xmlID, tvTx, ctx); err != nil {
 		return err
 	}
 
@@ -61,7 +61,7 @@ func putURISigKeys(xmlID string, tvTx *sqlx.Tx, keys []byte, ctx context.Context
 	return nil
 }
 
-func deleteURISigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context) error {
+func deleteURISigningKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context) error {
 	if _, err := tvTx.Exec("DELETE FROM uri_signing_key WHERE deliveryservice = $1", xmlID); err != nil {
 		e := checkErrWithContext("Traffic Vault PostgreSQL: executing DELETE URI Sig Keys query", err, ctx.Err())
 		return e
