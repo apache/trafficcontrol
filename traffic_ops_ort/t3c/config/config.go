@@ -450,26 +450,5 @@ func printConfig(cfg Cfg) {
 }
 
 func Usage() {
-	fmt.Println("Usage: t3c [options]")
-	fmt.Println("\t[options]:")
-	fmt.Println("\t  --dispersion=[time in seconds] | -D, [time in seconds] wait a random number between 0 and <time in seconds> before starting, default = 300s")
-	fmt.Println("\t  --login-dispersion=[time in seconds] | -l, [time in seconds] wait a random number between 0 and <time in seconds> befor login, default = 0")
-	fmt.Println("\t  --log-location-debug=[value] | -d [value], Where to log debugs. May be a file path, stdout, stderr, or null, default stderr")
-	fmt.Println("\t  --log-location-error=[value] | -e [value], Where to log errors. May be a file path, stdout, stderr, or null, default stderr")
-	fmt.Println("\t  --log-location-info=[value] | -i [value], Where to log info. May be a file path, stdout, stderr, or null, default stderr")
-	fmt.Println("\t  --log-location-warning=[value] | -w [value], Where to log warnings. May be a file path, stdout, stderr, or null, default stderr")
-	fmt.Println("\t  --run-mode=[mode] | -m [mode] where mode is one of [ report | badass | syncds | revalidate ], default = report")
-	fmt.Println("\t  --cache-hostname=[hostname] | -H [hostname], Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
-	fmt.Println("\t  --num-retries=[number] | -r [number], retry connection to Traffic Ops URL [number] times, default is 3")
-	fmt.Println("\t  --reval-wait-time=[seconds] | -T [seconds] wait a random number of seconds between 0 and [seconds] before revlidation, default is 60")
-	fmt.Println("\t  --rev-proxy-disable=[true|false] | -p [true|false] bypass the reverse proxy even if one has been configured, default = false")
-	fmt.Println("\t  --skip-os-check=[true|false] | -s [true | false] bypass the check for a supported CentOS version. default = false")
-	fmt.Println("\t  --traffic-ops-insecure=[true|false] -I [true | false] Whether to ignore HTTPS certificate errors from Traffic Ops. It is HIGHLY RECOMMENDED to never use this in a production environment, but only for debugging, default = false")
-	fmt.Println("\t  --traffic-ops-timeout-milliseconds=[milliseconds] | -t [milliseconds] the Traffic Ops request timeout in milliseconds. Default = 30000 (30 seconds)")
-	fmt.Println("\t  --traffic-ops-url=[url] | -u [url], Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with the environment variable TO_URL")
-	fmt.Println("\t  --traffic-ops-user=[username] | -U [username], Traffic Ops username. Required. May also be set with the environment variable TO_USER")
-	fmt.Println("\t  --traffic-ops-password=[password] | -P [password], Traffic Ops password. Required. May also be set with the environment variable TO_PASS")
-	fmt.Println("\t  --trafficserver-home=[value] | -R [value], Trafficserver Package directory. May also be set with the environment variable TS_HOME")
-	fmt.Println("\t  --wait-for-parents | -W [true | false] do not update if parent_pending = 1 in the update json. default = true, wait for parents\n")
-	fmt.Println("\t  --help | -h, Print usage information and exit")
+	getopt.PrintUsage(os.Stdout)
 }
