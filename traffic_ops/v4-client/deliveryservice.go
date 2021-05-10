@@ -304,11 +304,15 @@ func (to *Session) AddSSLKeysForDS(request tc.DeliveryServiceAddSSLKeysReq, head
 
 // DeleteDeliveryServiceSSLKeys deletes the SSL Keys used by the Delivery
 // Service identified by the passed XMLID.
-func (to *Session) DeleteDeliveryServiceSSLKeys(XMLID string) (string, toclientlib.ReqInf, error) {
+func (to *Session) DeleteDeliveryServiceSSLKeys(XMLID string, params url.Values) (string, toclientlib.ReqInf, error) {
 	resp := struct {
 		Response string `json:"response"`
 	}{}
-	reqInf, err := to.del(fmt.Sprintf(APIDeliveryServiceXMLIDSSLKeys, url.QueryEscape(XMLID)), nil, &resp)
+	uri := fmt.Sprintf(APIDeliveryServiceXMLIDSSLKeys, url.QueryEscape(XMLID))
+	if params != nil {
+		uri += "?" + params.Encode()
+	}
+	reqInf, err := to.del(uri, nil, &resp)
 	return resp.Response, reqInf, err
 }
 

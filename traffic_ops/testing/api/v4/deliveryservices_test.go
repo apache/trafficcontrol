@@ -164,10 +164,18 @@ func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
 	return cdns[0]
 }
 
-func cleanUp(t *testing.T, ds tc.DeliveryServiceV4, oldCDNID int, newCDNID int) {
-	_, _, err := TOSession.DeleteDeliveryServiceSSLKeys(*ds.XMLID)
+func cleanUp(t *testing.T, ds tc.DeliveryServiceV4, oldCDNID int, newCDNID int, sslKeyVersions []string) {
+	_, _, err := TOSession.DeleteDeliveryServiceSSLKeys(*ds.XMLID, nil)
 	if err != nil {
 		t.Error(err)
+	}
+	params := url.Values{}
+	for _, version := range sslKeyVersions {
+		params.Set("version", version)
+		_, _, err := TOSession.DeleteDeliveryServiceSSLKeys(*ds.XMLID, params)
+		if err != nil {
+			t.Error(err)
+		}
 	}
 	_, err = TOSession.DeleteDeliveryService(*ds.ID)
 	if err != nil {
@@ -245,7 +253,7 @@ func DeleteCDNOldSSLKeys(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to generate sslkeys for DS %v: %v", *customDS.XMLID, err)
 	}
-	defer cleanUp(t, ds, cdn.ID, -1)
+	defer cleanUp(t, ds, cdn.ID, -1, []string{"1"})
 
 	// Second DS creation
 	customDS2 := getCustomDS(cdn.ID, types[0].ID, "displayName2", "routingName2", "https://test2.com", "dsID2")
@@ -331,7 +339,7 @@ func DeliveryServiceSSLKeys(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to generate sslkeys for DS %v: %v", *customDS.XMLID, err)
 	}
-	defer cleanUp(t, ds, cdn.ID, -1)
+	defer cleanUp(t, ds, cdn.ID, -1, []string{"1"})
 
 	if ds.XMLID == nil {
 		t.Fatalf("got a DS with an invalid xml ID")
@@ -424,7 +432,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	}
 	ds.CDNName = &oldCdn.Name
 
-	defer cleanUp(t, ds, oldCdn.ID, newCdn.ID)
+	defer cleanUp(t, ds, oldCdn.ID, newCdn.ID, []string{"1"})
 
 	_, _, err = TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
 		BusinessUnit: util.StrPtr("BU"),
