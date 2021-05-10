@@ -73,6 +73,9 @@ const (
 	// APIDeliveryServiceGenerateSSLKeys is the API path on which Traffic Ops will generate new SSL keys
 	APIDeliveryServiceGenerateSSLKeys = APIDeliveryServices + "/sslkeys/generate"
 
+	// APIDeliveryServiceAddSSLKeys is the API path on which Traffic Ops will add SSL keys
+	APIDeliveryServiceAddSSLKeys = APIDeliveryServices + "/sslkeys/add"
+
 	// APIDeliveryServiceURISigningKeys is the API path on which Traffic Ops serves information
 	// about and functionality relating to the URI-signing keys used by a Delivery Service identified
 	// by its XMLID. It is intended to be used with fmt.Sprintf to insert its required path parameter
@@ -289,13 +292,27 @@ func (to *Session) GenerateSSLKeysForDS(XMLID string, CDNName string, sslFields 
 	return response.Response, reqInf, nil
 }
 
+// AddSSLKeysForDS adds SSL Keys for the given DS
+func (to *Session) AddSSLKeysForDS(request tc.DeliveryServiceAddSSLKeysReq, header http.Header) (tc.SSLKeysAddResponse, toclientlib.ReqInf, error) {
+	var response tc.SSLKeysAddResponse
+	reqInf, err := to.post(APIDeliveryServiceAddSSLKeys, request, header, &response)
+	if err != nil {
+		return response, reqInf, err
+	}
+	return response, reqInf, nil
+}
+
 // DeleteDeliveryServiceSSLKeys deletes the SSL Keys used by the Delivery
 // Service identified by the passed XMLID.
-func (to *Session) DeleteDeliveryServiceSSLKeys(XMLID string) (string, toclientlib.ReqInf, error) {
+func (to *Session) DeleteDeliveryServiceSSLKeys(XMLID string, params url.Values) (string, toclientlib.ReqInf, error) {
 	resp := struct {
 		Response string `json:"response"`
 	}{}
-	reqInf, err := to.del(fmt.Sprintf(APIDeliveryServiceXMLIDSSLKeys, url.QueryEscape(XMLID)), nil, &resp)
+	uri := fmt.Sprintf(APIDeliveryServiceXMLIDSSLKeys, url.QueryEscape(XMLID))
+	if params != nil {
+		uri += "?" + params.Encode()
+	}
+	reqInf, err := to.del(uri, nil, &resp)
 	return resp.Response, reqInf, err
 }
 

@@ -75,6 +75,7 @@ ALTER TABLE dnssec OWNER TO traffic_vault;
 
 CREATE TABLE IF NOT EXISTS sslkey (
     id bigint NOT NULL,
+    data jsonb NOT NULL,
     deliveryservice text NOT NULL,
     cdn text NOT NULL,
     version text NOT NULL,

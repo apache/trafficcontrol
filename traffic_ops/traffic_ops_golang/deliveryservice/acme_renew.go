@@ -117,7 +117,7 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, http
 		return nil, errors.New("no object found for the specified key with xmlId: " + dsName + " and version: " + strconv.Itoa(int(*certVersion))), http.StatusInternalServerError
 	}
 
-	err = base64DecodeCertificate(&keyObj.Certificate)
+	err = Base64DecodeCertificate(&keyObj.Certificate)
 	if err != nil {
 		return nil, errors.New("decoding cert for XMLID " + dsName + " : " + err.Error()), http.StatusInternalServerError
 	}

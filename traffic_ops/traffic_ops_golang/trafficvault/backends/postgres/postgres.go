@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lib/pq"
 	"strconv"
 	"time"
 
@@ -53,6 +54,8 @@ const (
 	defaultMaxIdleConnections     = 10 // if this is higher than MaxDBConnections it will be automatically adjusted below it by the db/sql library
 	defaultConnMaxLifetimeSeconds = 60
 	defaultDBQueryTimeoutSecs     = 30
+
+	latestVersion = "latest"
 )
 
 type Config struct {
@@ -100,24 +103,149 @@ func (p *Postgres) commitTransaction(tx *sqlx.Tx, ctx context.Context, cancelFun
 	cancelFunc()
 }
 
+// GetDeliveryServiceSSLKeys retrieves the SSL keys of the given version for
+// the delivery service identified by the given xmlID. If version is empty,
+// the implementation should return the latest version.
 func (p *Postgres) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *sql.Tx, ctx context.Context) (tc.DeliveryServiceSSLKeysV15, bool, error) {
-	return tc.DeliveryServiceSSLKeysV15{}, false, notImplementedErr
+	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
+	if err != nil {
+		return tc.DeliveryServiceSSLKeysV15{}, false, err
+	}
+	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
+	var jsonKeys string
+	query := "SELECT data FROM sslkey WHERE deliveryservice=$1 AND version=$2"
+	if version == "" {
+		version = "latest"
+	}
+	err = tvTx.QueryRow(query, xmlID, version).Scan(&jsonKeys)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DeliveryServiceSSLKeysV15{}, false, nil
+		}
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing SELECT SSL Keys query", err, ctx.Err())
+		return tc.DeliveryServiceSSLKeysV15{}, false, e
+	}
+	sslKey := tc.DeliveryServiceSSLKeysV15{}
+	err = json.Unmarshal([]byte(jsonKeys), &sslKey)
+	if err != nil {
+		return tc.DeliveryServiceSSLKeysV15{}, false, errors.New("unmarshalling ssl keys: " + err.Error())
+	}
+	return sslKey, true, nil
 }
 
+// PutDeliveryServiceSSLKeys stores the given SSL keys for a delivery service.
 func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, ctx context.Context) error {
-	return notImplementedErr
+	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
+	if err != nil {
+		return err
+	}
+	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
+	keyJSON, err := json.Marshal(&key)
+	if err != nil {
+		return errors.New("marshalling keys: " + err.Error())
+	}
+
+	// delete the old ssl keys first
+	oldVersions := []string{strconv.FormatInt(int64(key.Version), 10), latestVersion}
+	_, err = tvTx.Exec("DELETE FROM sslkey WHERE deliveryservice=$1 and version=ANY($2)", key.DeliveryService, pq.Array(oldVersions))
+	if err != nil && err != sql.ErrNoRows {
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing DELETE SSL Key query for INSERT", err, ctx.Err())
+		return e
+	}
+
+	// insert the new ssl keys now
+	res, err := tvTx.Exec("INSERT INTO sslkey (deliveryservice, data, cdn, version) VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)", key.DeliveryService, keyJSON, key.CDN, strconv.FormatInt(int64(key.Version), 10), key.DeliveryService, keyJSON, key.CDN, latestVersion)
+	if err != nil {
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing INSERT SSL Key query", err, ctx.Err())
+		return e
+	}
+	if rowsAffected, err := res.RowsAffected(); err != nil {
+		return err
+	} else if rowsAffected == 0 {
+		return errors.New("SSL Key: no keys were inserted")
+	}
+	return nil
 }
 
+// DeleteDeliveryServiceSSLKeys removes the SSL keys of the given version (or latest
+// if version is empty) for the delivery service identified by the given xmlID.
 func (p *Postgres) DeleteDeliveryServiceSSLKeys(xmlID string, version string, tx *sql.Tx, ctx context.Context) error {
-	return notImplementedErr
+	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
+	if err != nil {
+		return err
+	}
+	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
+	if version == "" {
+		version = latestVersion
+	}
+	query := "DELETE FROM sslkey WHERE deliveryservice=$1 AND version=$2"
+	_, err = tvTx.Exec(query, xmlID, version)
+	if err != nil {
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing DELETE SSL Key query", err, ctx.Err())
+		return e
+	}
+	return nil
 }
 
+// DeleteOldDeliveryServiceSSLKeys takes a set of existingXMLIDs as input and will remove
+// all SSL keys for delivery services in the CDN identified by the given cdnName that
+// do not contain an xmlID in the given set of existingXMLIDs. This method is called
+// during a snapshot operation in order to delete SSL keys for delivery services that
+// no longer exist.
 func (p *Postgres) DeleteOldDeliveryServiceSSLKeys(existingXMLIDs map[string]struct{}, cdnName string, tx *sql.Tx, ctx context.Context) error {
-	return notImplementedErr
+	var keys []string
+	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
+	if err != nil {
+		return err
+	}
+	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
+
+	if len(existingXMLIDs) == 0 {
+		keys = append(keys, "")
+	}
+	for k, _ := range existingXMLIDs {
+		keys = append(keys, k)
+	}
+	_, err = tvTx.Exec("DELETE FROM sslkey WHERE cdn=$1 AND deliveryservice <> ALL ($2)", cdnName, pq.Array(keys))
+	if err != nil {
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing DELETE OLD SSL Key query", err, ctx.Err())
+		return e
+	}
+	return nil
 }
 
+// GetCDNSSLKeys retrieves all the SSL keys for delivery services in the CDN identified
+// by the given cdnName.
 func (p *Postgres) GetCDNSSLKeys(cdnName string, tx *sql.Tx, ctx context.Context) ([]tc.CDNSSLKey, error) {
-	return nil, notImplementedErr
+	var keys []tc.CDNSSLKey
+	var key tc.CDNSSLKey
+
+	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
+	if err != nil {
+		return keys, err
+	}
+	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
+
+	rows, err := tvTx.Query("SELECT data from sslkey WHERE cdn=$1 AND version=$2", cdnName, latestVersion)
+	if err != nil {
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing GET SSL Keys for CDN query", err, ctx.Err())
+		return keys, e
+	}
+	defer rows.Close()
+	for rows.Next() {
+		jsonKey := ""
+		if err := rows.Scan(&jsonKey); err != nil {
+			e := checkErrWithContext("Traffic Vault PostgreSQL: scanning CDN SSL keys", err, ctx.Err())
+			return keys, e
+		}
+		err = json.Unmarshal([]byte(jsonKey), &key)
+		if err != nil {
+			log.Errorf("couldn't unmarshal json key: %v", err)
+			continue
+		}
+		keys = append(keys, key)
+	}
+	return keys, nil
 }
 
 func (p *Postgres) GetDNSSECKeys(cdnName string, tx *sql.Tx, ctx context.Context) (tc.DNSSECKeysTrafficVault, bool, error) {

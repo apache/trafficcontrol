@@ -182,7 +182,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 			continue
 		}
 
-		err = base64DecodeCertificate(&keyObj.Certificate)
+		err = Base64DecodeCertificate(&keyObj.Certificate)
 		if err != nil {
 			log.Errorf("cert autorenewal: error getting SSL keys for XMLID '%s': %s", ds.XmlId, err.Error())
 			dsExpInfo.XmlId = ds.XmlId
