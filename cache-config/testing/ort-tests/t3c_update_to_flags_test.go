@@ -17,9 +17,10 @@ package orttest
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops_ort/testing/ort-tests/tcdata"
 	"testing"
+
+	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestT3cTOUpdates(t *testing.T) {
@@ -32,7 +33,7 @@ func TestT3cTOUpdates(t *testing.T) {
 		tcdata.DeliveryServices}, func() {
 
 		// retrieve the current server status
-		output, err := runTORequester("atlanta-edge-03", "update-status")
+		output, err := runRequest("atlanta-edge-03", "update-status")
 		if err != nil {
 			t.Fatalf("ERROR: to_requester run failed: %v\n", err)
 		}
@@ -52,12 +53,12 @@ func TestT3cTOUpdates(t *testing.T) {
 		}
 
 		// change the server update status
-		err = runTOUpdater("atlanta-edge-03", true, true)
+		err = ExecTOUpdater("atlanta-edge-03", true, true)
 		if err != nil {
 			t.Fatalf("ERROR: to_updater run failed: %v\n", err)
 		}
 		// verify the update status is now 'true'
-		output, err = runTORequester("atlanta-edge-03", "update-status")
+		output, err = runRequest("atlanta-edge-03", "update-status")
 		if err != nil {
 			t.Fatalf("ERROR: to_requester run failed: %v\n", err)
 		}
@@ -73,11 +74,11 @@ func TestT3cTOUpdates(t *testing.T) {
 		}
 
 		// run t3c syncds and verify only the queue update flag is reset to 'false'
-		err = runT3cUpdate("atlanta-edge-03", "syncds")
+		err = runApply("atlanta-edge-03", "syncds")
 		if err != nil {
 			t.Fatalf("ERROR: t3c syncds failed: %v\n", err)
 		}
-		output, err = runTORequester("atlanta-edge-03", "update-status")
+		output, err = runRequest("atlanta-edge-03", "update-status")
 		if err != nil {
 			t.Fatalf("ERROR: to_requester run failed: %v\n", err)
 		}
@@ -94,11 +95,11 @@ func TestT3cTOUpdates(t *testing.T) {
 
 		// run t3c revalidate and verify only the queue update flag is still 'false'
 		// and that the revalidate flag is now 'false'
-		err = runT3cUpdate("atlanta-edge-03", "revalidate")
+		err = runApply("atlanta-edge-03", "revalidate")
 		if err != nil {
 			t.Fatalf("ERROR: t3c syncds failed: %v\n", err)
 		}
-		output, err = runTORequester("atlanta-edge-03", "update-status")
+		output, err = runRequest("atlanta-edge-03", "update-status")
 		if err != nil {
 			t.Fatalf("ERROR: to_requester run failed: %v\n", err)
 		}

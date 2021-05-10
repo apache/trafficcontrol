@@ -49,7 +49,7 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		tcdata.DeliveryServices}, func() {
 
 		// run badass and check config files.
-		err := runT3cUpdate("atlanta-edge-03", "badass")
+		err := runApply("atlanta-edge-03", "badass")
 		if err != nil {
 			t.Fatalf("ERROR: t3c badass failed: %v\n", err)
 		}
@@ -76,13 +76,13 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		time.Sleep(time.Second * 5)
 
 		fmt.Println("------------------------ Verify Plugin Configs ----------------")
-		err = runPluginVerifier("/opt/trafficserver/etc/trafficserver/remap.config")
+		err = runVerify("/opt/trafficserver/etc/trafficserver/remap.config")
 		if err != nil {
-			t.Errorf("Plugin verification failed for remap.config")
+			t.Errorf("Plugin verification failed for remap.config: " + err.Error())
 		}
-		err = runPluginVerifier("/opt/trafficserver/etc/trafficserver/plugin.config")
+		err = runVerify("/opt/trafficserver/etc/trafficserver/plugin.config")
 		if err != nil {
-			t.Errorf("Plugin verification failed for plugin.config")
+			t.Errorf("Plugin verification failed for plugin.config: " + err.Error())
 		}
 
 		fmt.Println("----------------- End of Verify Plugin Configs ----------------")
@@ -95,7 +95,7 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 			t.Fatalf("ERROR: unable to remove %s\n", remap)
 		}
 		// prepare for running syncds.
-		err = setQueueUpdateStatus("atlanta-edge-03", "true")
+		err = ExecTOUpdater("atlanta-edge-03", false, true)
 		if err != nil {
 			t.Fatalf("ERROR: queue updates failed: %v\n", err)
 		}
@@ -103,7 +103,7 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		// remap.config is removed and atlanta-edge-03 should have
 		// queue updates enabled.  run t3c to verify a new remap.config
 		// is pulled down.
-		err = runT3cUpdate("atlanta-edge-03", "syncds")
+		err = runApply("atlanta-edge-03", "syncds")
 		if err != nil {
 			t.Fatalf("ERROR: t3c syncds failed: %v\n", err)
 		}

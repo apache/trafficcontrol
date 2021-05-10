@@ -133,6 +133,7 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 		"--traffic-ops-user="+cfg.TOUser,
 		"--traffic-ops-password="+cfg.TOPass,
 		"--traffic-ops-url="+cfg.TOURL,
+		"--traffic-ops-insecure="+strconv.FormatBool(cfg.TOInsecure),
 		"--log-location-error="+outToErr(cfg.LogLocationErr),
 		"--log-location-info="+outToErr(cfg.LogLocationInfo),
 		"--cache-host-name="+cfg.CacheHostName,

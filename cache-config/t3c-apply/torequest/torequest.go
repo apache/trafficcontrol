@@ -1145,9 +1145,9 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) (bool, erro
 		}
 	case config.Revalidate:
 		if serverStatus.UpdatePending {
-			_, err = sendUpdate(r.Cfg, true, false)
+			err = sendUpdate(r.Cfg, true, false)
 		} else {
-			_, err = sendUpdate(r.Cfg, false, false)
+			err = sendUpdate(r.Cfg, false, false)
 		}
 	}
 	if err != nil {

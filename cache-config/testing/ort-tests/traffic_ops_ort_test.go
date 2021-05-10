@@ -16,10 +16,13 @@ package orttest
 */
 
 import (
+	"bytes"
 	"database/sql"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -32,8 +35,10 @@ var (
 	Config             config.Config
 	testData           tcdata.TrafficControl
 	includeSystemTests bool
-	tcd                *tcdata.TCData
 )
+var tcd *tcdata.TCData
+
+var TCD *tcdata.TCData
 
 const TestAPIBase = "/api/3.0"
 
@@ -114,4 +119,78 @@ func TestMain(m *testing.M) {
 	// Now run the test case
 	rc := m.Run()
 	os.Exit(rc)
+}
+
+func runVerify(config_file string) error {
+	args := []string{
+		"verify",
+		"--log-location-debug=test.log",
+		config_file,
+	}
+	cmd := exec.Command("t3c", args...)
+	var out bytes.Buffer
+	var errOut bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errOut
+	err := cmd.Run()
+	if err != nil {
+		return errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+	}
+	return nil
+}
+
+func runRequest(host string, getData string) ([]byte, error) {
+	args := []string{
+		"request",
+		"--traffic-ops-insecure=true",
+		"--login-dispersion=0",
+		"--traffic-ops-timeout-milliseconds=3000",
+		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
+		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
+		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
+		"--cache-host-name=" + host,
+		"--log-location-error=test.log",
+		"--log-location-info=test.log",
+		"--log-location-debug=test.log",
+		"--get-data=" + getData,
+	}
+	cmd := exec.Command("t3c", args...)
+	var out bytes.Buffer
+	var errOut bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errOut
+	err := cmd.Run()
+	if err != nil {
+		return nil, errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+	}
+	return out.Bytes(), nil
+}
+
+func runApply(host string, run_mode string) error {
+	args := []string{
+		"apply",
+		"--traffic-ops-insecure=true",
+		"--dispersion=0",
+		"--login-dispersion=0",
+		"--traffic-ops-timeout-milliseconds=3000",
+		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
+		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
+		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
+		"--cache-host-name=" + host,
+		"--log-location-error=test.log",
+		"--log-location-info=test.log",
+		"--log-location-debug=test.log",
+		"--omit-via-string-release=true",
+		"--run-mode=" + run_mode,
+	}
+	cmd := exec.Command("t3c", args...)
+	var out bytes.Buffer
+	var errOut bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errOut
+	err := cmd.Run()
+	if err != nil {
+		return errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+	}
+	return nil
 }

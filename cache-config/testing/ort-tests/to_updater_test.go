@@ -15,14 +15,16 @@ package orttest
 */
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"os/exec"
 	"strconv"
 	"testing"
 
-	"github.com/apache/trafficcontrol/traffic_ops_ort/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestTOUpdater(t *testing.T) {
@@ -35,7 +37,7 @@ func TestTOUpdater(t *testing.T) {
 		tcdata.DeliveryServices}, func() {
 
 		// retrieve the current server status
-		output, err := runTORequester("atlanta-edge-03", "update-status")
+		output, err := runRequest("atlanta-edge-03", "update-status")
 		if err != nil {
 			t.Fatalf("ERROR: t3c-request Exec failed: %v\n", err)
 		}
@@ -60,7 +62,7 @@ func TestTOUpdater(t *testing.T) {
 			t.Fatalf("ERROR: t3c-update Exec failed: %v\n", err)
 		}
 		// verify the update status is now 'true'
-		output, err = runTORequester("atlanta-edge-03", "update-status")
+		output, err = runRequest("atlanta-edge-03", "update-status")
 		if err != nil {
 			t.Fatalf("ERROR: t3c-request Exec failed: %v\n", err)
 		}
@@ -81,7 +83,7 @@ func TestTOUpdater(t *testing.T) {
 			t.Fatalf("ERROR: t3c-update Exec failed: %v\n", err)
 		}
 		// verify the change
-		output, err = runTORequester("atlanta-edge-03", "update-status")
+		output, err = runRequest("atlanta-edge-03", "update-status")
 		if err != nil {
 			t.Fatalf("ERROR: t3c-request Exec failed: %v\n", err)
 		}
@@ -102,6 +104,7 @@ func TestTOUpdater(t *testing.T) {
 
 func ExecTOUpdater(host string, reval_status bool, update_status bool) error {
 	args := []string{
+		"update",
 		"--traffic-ops-insecure=true",
 		"--login-dispersion=0",
 		"--traffic-ops-timeout-milliseconds=3000",
@@ -115,7 +118,7 @@ func ExecTOUpdater(host string, reval_status bool, update_status bool) error {
 		"--set-reval-status=" + strconv.FormatBool(reval_status),
 		"--set-update-status=" + strconv.FormatBool(update_status),
 	}
-	cmd := exec.Command("t3c-update", args...)
+	cmd := exec.Command("t3c", args...)
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 	cmd.Stdout = &out
