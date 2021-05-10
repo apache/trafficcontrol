@@ -24,6 +24,8 @@ import (
 	"os"
 	"path/filepath"
 	"syscall" // TODO change to x/unix ?
+
+	"github.com/pborman/getopt/v2"
 )
 
 var commands = map[string]struct{}{
@@ -31,14 +33,22 @@ var commands = map[string]struct{}{
 	"update": struct{}{},
 }
 
+const ExitCodeSuccess = 0
 const ExitCodeNoCommand = 1
 const ExitCodeUnknownCommand = 2
 const ExitCodeCommandErr = 3
 const ExitCodeExeErr = 4
 
 func main() {
+	flagHelp := getopt.BoolLong("help", 'h', "Print usage information and exit")
+	getopt.Parse()
+	if *flagHelp {
+		fmt.Println(usageStr())
+		os.Exit(ExitCodeSuccess)
+	}
+
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "no command\n") // TODO print usage
+		fmt.Fprintf(os.Stderr, "no command\n\n"+usageStr())
 		os.Exit(ExitCodeNoCommand)
 	}
 
@@ -65,4 +75,22 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error executing sub-command: "+err.Error()+"\n")
 		os.Exit(ExitCodeCommandErr)
 	}
+}
+
+func usageStr() string {
+	return `usage: t3c [--help]
+       <command> [<args>]
+
+For the arguments of a command, see 't3c <command> --help'.
+
+These are the available commands:
+
+  apply     generate and apply configuration
+
+  diff      diff config files, with logic like ignoring comments
+  generate  generate configuration from Traffic Ops data
+  request   request Traffic Ops data
+  update    update a cache's queue and reval status in Traffic Ops
+  verify    verify a config file can be applied
+`
 }
