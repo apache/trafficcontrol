@@ -342,7 +342,12 @@ func CheckUser(cfg config.Cfg) bool {
 	return result
 }
 
-func CleanTmpDir() bool {
+func CleanTmpDir(cfg config.Cfg) bool {
+	if cfg.RunMode == config.Report {
+		log.Infof("Mode is '%v', not cleaning tmp directory", cfg.RunMode)
+		return true
+	}
+
 	now := time.Now().Unix()
 
 	if len(config.TmpBase) == 0 || !strings.HasPrefix(config.TmpBase, "/") {

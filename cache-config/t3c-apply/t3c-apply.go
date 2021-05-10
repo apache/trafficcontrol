@@ -94,7 +94,7 @@ func main() {
 	// create and clean the config.TmpBase (/tmp/ort)
 	if !util.MkDir(config.TmpBase, cfg) {
 		os.Exit(GeneralFailure)
-	} else if !util.CleanTmpDir() {
+	} else if !util.CleanTmpDir(cfg) {
 		os.Exit(GeneralFailure)
 	}
 	if cfg.RunMode != config.Report {
