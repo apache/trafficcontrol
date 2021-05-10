@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - `DELETE` request method for `deliveryservices/xmlId/{name}/urlkeys` and `deliveryservices/{id}/urlkeys`.
 - t3c: bug fix to consider plugin config files for reloading remap.config
 - t3c: Change syncds so that it only warns on package version mismatch.
+- atstccfg: add __REFETCH__ support to regex_revalidate.config processing.
 
 ### Fixed
 - [#5690](https://github.com/apache/trafficcontrol/issues/5690) - Fixed github action for added/modified db migration file.
