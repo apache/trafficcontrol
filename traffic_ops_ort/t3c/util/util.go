@@ -225,7 +225,7 @@ func PackageAction(cmdstr string, name string) (bool, error) {
 
 	switch cmdstr {
 	case "info":
-		_, rc, err = ExecCommand("/usr/bin/yum", "info", name)
+		_, rc, err = ExecCommand("/usr/bin/yum", "info", "-y", name)
 	case "install":
 		_, rc, err = ExecCommand("/usr/bin/yum", "install", "-y", name)
 	case "remove":
