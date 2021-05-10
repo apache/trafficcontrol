@@ -18,6 +18,7 @@ package v4
 import (
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -46,6 +47,7 @@ func TestProfiles(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestProfilesWithHeaders(t, header)
+		GetTestPaginationSupportProfiles(t)
 	})
 }
 
@@ -79,7 +81,7 @@ func GetTestProfilesIMS(t *testing.T) {
 	for _, pr := range testData.Profiles {
 		_, reqInf, err := TOSession.GetProfileByName(pr.Name, header)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got %v", err)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -182,9 +184,8 @@ func CopyProfile(t *testing.T) {
 func CreateTestProfiles(t *testing.T) {
 
 	for _, pr := range testData.Profiles {
-		resp, _, err := TOSession.CreateProfile(pr)
+		_, _, err := TOSession.CreateProfile(pr)
 
-		t.Log("Response: ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE profiles with name: %s %v", pr.Name, err)
 		}
@@ -207,7 +208,7 @@ func CreateTestProfiles(t *testing.T) {
 			if err != nil {
 				// ok if already exists
 				if !strings.Contains(err.Error(), "already exists") {
-					t.Errorf("could not CREATE parameter %+v: %s", param, err.Error())
+					t.Errorf("could not CREATE parameter %+v: %s", param, err)
 					continue
 				}
 			}
@@ -216,14 +217,14 @@ func CreateTestProfiles(t *testing.T) {
 			params.Set("value", *param.Value)
 			p, _, err := TOSession.GetParameters(nil, params)
 			if err != nil {
-				t.Errorf("could not GET parameter %+v: %s", param, err.Error())
+				t.Errorf("could not GET parameter %+v: %s", param, err)
 			}
 			if len(p) == 0 {
 				t.Errorf("could not GET parameter %+v: not found", param)
 			}
 			_, _, err = TOSession.CreateProfileParameter(tc.ProfileParameter{ProfileID: profileID, ParameterID: p[0].ID})
 			if err != nil {
-				t.Errorf("could not CREATE profile_parameter %+v: %s", param, err.Error())
+				t.Errorf("could not CREATE profile_parameter %+v: %s", param, err)
 			}
 		}
 
@@ -238,9 +239,22 @@ func UpdateTestProfiles(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
 	}
+	cdns, _, err := TOSession.GetCDNByName("cdn2", nil)
 	remoteProfile := resp[0]
+	oldName := remoteProfile.Name
+
 	expectedProfileDesc := "UPDATED"
+	expectedCDNId := &cdns[0].ID
+	expectedName := "testing"
+	expectedRoutingDisabled := true
+	expectedType := "TR_PROFILE"
+
 	remoteProfile.Description = expectedProfileDesc
+	remoteProfile.Type = expectedType
+	remoteProfile.CDNID = *expectedCDNId
+	remoteProfile.Name = expectedName
+	remoteProfile.RoutingDisabled = expectedRoutingDisabled
+
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateProfile(remoteProfile.ID, remoteProfile, nil)
 	if err != nil {
@@ -256,7 +270,23 @@ func UpdateTestProfiles(t *testing.T) {
 	if respProfile.Description != expectedProfileDesc {
 		t.Errorf("results do not match actual: %s, expected: %s", respProfile.Description, expectedProfileDesc)
 	}
-
+	if respProfile.Type != expectedType {
+		t.Errorf("results do not match actual: %s, expected: %s", respProfile.Type, expectedType)
+	}
+	if respProfile.CDNID != *expectedCDNId {
+		t.Errorf("results do not match actual: %d, expected: %d", respProfile.CDNID, expectedCDNId)
+	}
+	if respProfile.RoutingDisabled != expectedRoutingDisabled {
+		t.Errorf("results do not match actual: %t, expected: %t", respProfile.RoutingDisabled, expectedRoutingDisabled)
+	}
+	if respProfile.Name != expectedName {
+		t.Errorf("results do not match actual: %v, expected: %v", respProfile.Name, expectedName)
+	}
+	respProfile.Name = oldName
+	alert, _, err = TOSession.UpdateProfile(respProfile.ID, respProfile, nil)
+	if err != nil {
+		t.Errorf("cannot UPDATE Profile by id: %v - %v", err, alert)
+	}
 }
 
 func GetTestProfiles(t *testing.T) {
@@ -410,7 +440,7 @@ func DeleteTestProfiles(t *testing.T) {
 		for _, param := range resp[0].Parameters {
 			_, _, err := TOSession.DeleteParameter(*param.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE parameter with parameterID %d: %s", *param.ID, err.Error())
+				t.Errorf("cannot DELETE parameter with parameterID %d: %s", *param.ID, err)
 			}
 		}
 		delResp, _, err := TOSession.DeleteProfile(profileID)
@@ -422,7 +452,7 @@ func DeleteTestProfiles(t *testing.T) {
 		// Retrieve the Profile to see if it got deleted
 		prs, _, err := TOSession.GetProfileByName(pr.Name, nil)
 		if err != nil {
-			t.Errorf("error deleting Profile name: %s", err.Error())
+			t.Errorf("error deleting Profile name: %s", err)
 		}
 		if len(prs) > 0 {
 			t.Errorf("expected Profile Name: %s to be deleted", pr.Name)
@@ -433,5 +463,88 @@ func DeleteTestProfiles(t *testing.T) {
 		if err == nil {
 			t.Errorf("export deleted profile %s - expected: error, actual: nil", pr.Name)
 		}
+	}
+}
+
+func GetTestPaginationSupportProfiles(t *testing.T) {
+	qparams := url.Values{}
+	qparams.Set("orderby", "id")
+	profiles, _, err := TOSession.GetProfiles(qparams, nil)
+	if err != nil {
+		t.Errorf("cannot GET Profiles: %v", err)
+	}
+
+	if len(profiles) > 0 {
+		qparams = url.Values{}
+		qparams.Set("orderby", "id")
+		qparams.Set("limit", "1")
+		profilesWithLimit, _, err := TOSession.GetProfiles(qparams, nil)
+		if err == nil {
+			if !reflect.DeepEqual(profiles[:1], profilesWithLimit) {
+				t.Error("expected GET Profiles with limit = 1 to return first result")
+			}
+		} else {
+			t.Error("Error in getting Profiles by limit")
+		}
+		if len(profiles) > 1 {
+			qparams = url.Values{}
+			qparams.Set("orderby", "id")
+			qparams.Set("limit", "1")
+			qparams.Set("offset", "1")
+			profilesWithOffset, _, err := TOSession.GetProfiles(qparams, nil)
+			if err == nil {
+				if !reflect.DeepEqual(profiles[1:2], profilesWithOffset) {
+					t.Error("expected GET Profiles with limit = 1, offset = 1 to return second result")
+				}
+			} else {
+				t.Error("Error in getting Profiles by limit and offset")
+			}
+
+			qparams = url.Values{}
+			qparams.Set("orderby", "id")
+			qparams.Set("limit", "1")
+			qparams.Set("page", "2")
+			profilesWithPage, _, err := TOSession.GetProfiles(qparams, nil)
+			if err == nil {
+				if !reflect.DeepEqual(profiles[1:2], profilesWithPage) {
+					t.Error("expected GET Profiles with limit = 1, page = 2 to return second result")
+				}
+			} else {
+				t.Error("Error in getting Profiles by limit and page")
+			}
+		} else {
+			t.Errorf("only one Profiles found, so offset functionality can't test")
+		}
+	} else {
+		t.Errorf("No Profiles found to check pagination")
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "-2")
+	_, _, err = TOSession.GetProfiles(qparams, nil)
+	if err == nil {
+		t.Error("expected GET Profiles to return an error when limit is not bigger than -1")
+	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
+		t.Errorf("expected GET Profiles to return an error for limit is not bigger than -1, actual error: " + err.Error())
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "1")
+	qparams.Set("offset", "0")
+	_, _, err = TOSession.GetProfiles(qparams, nil)
+	if err == nil {
+		t.Error("expected GET Profiles to return an error when offset is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET Profiles to return an error for offset is not a positive integer, actual error: " + err.Error())
+	}
+
+	qparams = url.Values{}
+	qparams.Set("limit", "1")
+	qparams.Set("page", "0")
+	_, _, err = TOSession.GetProfiles(qparams, nil)
+	if err == nil {
+		t.Error("expected GET Profiles to return an error when page is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET Profiles to return an error for page is not a positive integer, actual error: " + err.Error())
 	}
 }
