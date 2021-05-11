@@ -1922,7 +1922,7 @@ func GetTestDeliveryServicesURISigningKeys(t *testing.T) {
 
 	_, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
 	if err != nil {
-		t.Error("Unexpected error getting URI signing keys for Delivery Service '%s': %v", *firstDS.XMLID, err)
+		t.Errorf("Unexpected error getting URI signing keys for Delivery Service '%s': %v", *firstDS.XMLID, err)
 	}
 }
 
@@ -2000,7 +2000,7 @@ func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 
 	alerts, _, err := TOSession.CreateDeliveryServiceURISigningKeys(*firstDS.XMLID, keyset2, client.RequestOptions{})
 	if err != nil {
-		t.Error("Unexpected error creating URI Signature Keys for Delivery Service '%s': %v - alerts: %+v", *firstDS.XMLID, err, alerts.Alerts)
+		t.Errorf("Unexpected error creating URI Signature Keys for Delivery Service '%s': %v - alerts: %+v", *firstDS.XMLID, err, alerts.Alerts)
 	}
 
 	secondKeysBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
@@ -2033,7 +2033,7 @@ func DeleteTestDeliveryServicesURISigningKeys(t *testing.T) {
 
 	resp, _, err := TOSession.DeleteDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
 	if err != nil {
-		t.Error("Unexpected error deleting URI Signing keys for Delivery Service '%s': %v - alerts: %+v", *firstDS.XMLID, err, resp.Alerts)
+		t.Errorf("Unexpected error deleting URI Signing keys for Delivery Service '%s': %v - alerts: %+v", *firstDS.XMLID, err, resp.Alerts)
 	}
 
 }
