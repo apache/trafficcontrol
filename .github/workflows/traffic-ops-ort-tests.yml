@@ -41,6 +41,8 @@ on:
       - go.sum
       - GO_VERSION
       - traffic_ops/*client/**.go
+      - traffic_ops/toclientlib/**.go
+      - lib/atscfg-go/**.go
       - traffic_ops/traffic_ops_golang/**.go
       - traffic_ops_ort/**.go
       - vendor/**.go
