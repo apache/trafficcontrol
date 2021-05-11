@@ -533,6 +533,18 @@ func (to *Session) DeleteDeliveryServiceSSLKeysByID(XMLID string) (string, tocli
 	return resp.Response, reqInf, err
 }
 
+func (to *Session) DeleteDeliveryServiceSSLKeysByVersion(XMLID string, params url.Values) (string, toclientlib.ReqInf, error) {
+	resp := struct {
+		Response string `json:"response"`
+	}{}
+	uri := fmt.Sprintf(APIDeliveryServiceXmlidSslKeys, url.QueryEscape(XMLID))
+	if params != nil {
+		uri += "?" + params.Encode()
+	}
+	reqInf, err := to.del(uri, nil, &resp)
+	return resp.Response, reqInf, err
+}
+
 // GetDeliveryServiceSSLKeysByID returns information about the SSL Keys used by the Delivery
 // Service identified by the passed XMLID.
 // Deprecated: GetDeliveryServiceSSLKeysByID will be removed in 6.0. Use GetDeliveryServiceSSLKeysByIDWithHdr.
