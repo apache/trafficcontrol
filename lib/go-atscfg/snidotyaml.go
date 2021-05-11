@@ -53,7 +53,7 @@ type SNIDotYAMLOpts struct {
 func MakeSNIDotYAML(
 	server *Server,
 	dses []DeliveryService,
-	dss []tc.DeliveryServiceServer,
+	dss []DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
 	tcParentConfigParams []tc.Parameter,
 	cdn *tc.CDN,

@@ -57,7 +57,7 @@ func TestMakeMetaConfig(t *testing.T) {
 	cfgPath := "/etc/foo/trafficserver"
 
 	deliveryServices := []DeliveryService{}
-	dss := []tc.DeliveryServiceServer{}
+	dss := []DeliveryServiceServer{}
 	globalParams := []tc.Parameter{}
 
 	makeLocationParam := func(name string) tc.Parameter {

@@ -431,21 +431,18 @@ func parameterWithProfilesToMap(tcParams []parameterWithProfiles) []parameterWit
 	return params
 }
 
-func filterDSS(dsses []tc.DeliveryServiceServer, dsIDs map[int]struct{}, serverIDs map[int]struct{}) []tc.DeliveryServiceServer {
+func filterDSS(dsses []DeliveryServiceServer, dsIDs map[int]struct{}, serverIDs map[int]struct{}) []DeliveryServiceServer {
 	// TODO filter only DSes on this server's CDN? Does anything ever needs DSS cross-CDN? Surely not.
 	//      Then, we can remove a bunch of config files that filter only DSes on the current cdn.
-	filtered := []tc.DeliveryServiceServer{}
+	filtered := []DeliveryServiceServer{}
 	for _, dss := range dsses {
-		if dss.Server == nil || dss.DeliveryService == nil {
-			continue // TODO warn?
-		}
 		if len(dsIDs) > 0 {
-			if _, ok := dsIDs[*dss.DeliveryService]; !ok {
+			if _, ok := dsIDs[dss.DeliveryService]; !ok {
 				continue
 			}
 		}
 		if len(serverIDs) > 0 {
-			if _, ok := serverIDs[*dss.Server]; !ok {
+			if _, ok := serverIDs[dss.Server]; !ok {
 				continue
 			}
 		}
@@ -661,4 +658,12 @@ func makeErr(warnings []string, err string) error {
 // todo also unused, maybe remove?
 func makeErrf(warnings []string, format string, v ...interface{}) error {
 	return makeErr(warnings, fmt.Sprintf(format, v...))
+}
+
+// DeliveryServiceServer is a compact version of DeliveryServiceServer.
+// The Delivery Service Servers is massive on large CDNs not using Topologies, compacting it in JSON and dropping the timestamp drastically reduces the size.
+// The t3c apps will also drop any DSS from Traffic Ops with null values, which are invalid and useless, to avoid pointers and further reduce size.
+type DeliveryServiceServer struct {
+	Server          int `json:"s"`
+	DeliveryService int `json:"d"`
 }
