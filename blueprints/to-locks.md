@@ -68,7 +68,7 @@ the CDN on behalf of user `A`.
     - A way for the `admin` user to be able to unlock CDNs on other users' behalf
     
 - Snapshot/ Queue Updates Page
-    - A way to display an error on a snap/ queue operation by one user, if another user has the lock on that CDN
+    - Disable the snap/ queue button if another user has the lock on that CDN.
 
 ### Traffic Ops Impact
 
@@ -78,18 +78,24 @@ the CDN on behalf of user `A`.
 
 Traffic Ops will need to add the logic to check for locks before snapping/ queueing a CDN. It'll also need to account for
 `shared` vs `exclusive` locks, and forbid a user from snapping/ queueing a CDN if another user possesses a lock on that CDN.
+The following endpoints will need to handle the locks logic:
+- `/cachegroups/{{ID}}/queue_update`
+- `/cdns/{{ID}}/queue_update`
+- `/servers/{{hostname}}/queue_update`
+- `/snapshot`
+- `/topologies/{{name}}/queue_update`
 
 #### REST API Impact
 
 The following is the JSON representation of a `CDN_Lock` object:
 ```JSON
 {
-  "userName": "foo",
-  "cdnName": "cdn1",
+  "username": "foo",
+  "cdn": "cdn1",
   "message": "snapping cdn",
   "shared": false,
   "creator": true,
-  "lastUpdated": "2021-05-10 16:03:34-06"
+  "lastUpdated": "2021-05-10T16:03:34-06:00"
 }
 ```
 
@@ -97,22 +103,23 @@ The following table describes the top level `CDN_Lock` object:
 
 | field       | type                        | optionality | description                                                                             |
 | ----------- | --------------------------- | ----------- | ----------------------------------------------------------------------------------------|
-| userName    | string                      | required    | the user name of the user that wants to acquire a lock on the CDN                       |
-| cdnName     | string                      | required    | the name of the CDN on which the lcok needs to be acquired                              |
+| username    | string                      | required    | the user name of the user that wants to acquire a lock on the CDN                       |
+| cdn         | string                      | required    | the name of the CDN on which the lcok needs to be acquired                              |
 | message     | string                      | optional    | the message stating a reason behind locking the CDN                                     |
 | shared      | boolean                     | required    | whether or not this is a shared lock                                                    |
-| creator     | boolean                     | optional    | whether or not the requesting `userName` is the first one to acquire a lock on `cdnName`| 
-| lastUpdated | time                        | optional    | the last time this lock was updated                                                     |
+| creator     | boolean                     | required    | whether or not the requesting `username` is the first one to acquire a lock on `cdn`| 
+| lastUpdated | time                        | required    | the last time this lock was updated                                                     |
 
 **API constraints:**
-- a `userName` and `cdnName` combination must be unique id `shared` is set to `false`. In other words, there can be only one `exclusive`
+- a `username` and `cdn` combination must be unique if `shared` is set to `false`. In other words, there can be only one `exclusive`
 lock for a CDN
 - a CDN can have multiple `shared` locks
-- the `creator` will be set to `true` if the user is the first one acquiring a lock for the specified `cdnName`
-- a user can snap/ queue a CDN only if the `creator` field corresponding to the `userName` and `cdnName` combination is `true`
+- the `creator` will be set to `true` if the user is the first one acquiring a lock for the specified `cdn`
+- a user can snap/ queue a CDN only if the `creator` field corresponding to the `username` and `cdn` combination is `true`
 - a user can delete their `exclusive` lock whenever, since the user is the creator in this case
 - a user who is the creator cannot delete their `shared` lock until all other non-creator users have releases their shared locks for that CDN
-- an `admin` user can delete the locks of other users on any CDN
+- a user with at least `all-read` and `all-write` capabilities can delete the locks of other users on any CDN. The `all-write` capability will be modified
+to include a new capability `delete-all-locks`.
 
 Three new endpoints will be added for `GET`, `POST` and `DELETE` functionality with respect to CDN locks.
 ##### GET `cdn_locks`
@@ -122,20 +129,20 @@ response JSON:
 {
   "response": [
     {
-      "userName": "foo",
-      "cdnName": "cdn1",
+      "username": "foo",
+      "cdn": "cdn1",
       "message": "snapping cdn",
       "shared": true,
       "creator": true,
-      "lastUpdated": "2021-05-10 16:03:34-06"
+      "lastUpdated": "2021-05-10T16:03:34-06:00"
     },
     {
-      "userName": "bar",
-      "cdnName": "cdn2",
+      "username": "bar",
+      "cdn": "cdn2",
       "message": "queue cdn",
       "shared": false,
       "creator": true,
-      "lastUpdated": "2021-05-10 17:04:34-06"
+      "lastUpdated": "2021-05-10T17:04:34-06:00"
     }
   ]
 }
@@ -146,7 +153,7 @@ response JSON:
 request JSON:
 ```JSON
 {
-  "cdnName": "bar",
+  "cdn": "bar",
   "message": "snapping cdn",
   "shared": false
 }
@@ -162,12 +169,12 @@ response JSON:
     }
   ],
   "response": {
-    "userName": "foo",
-    "cdnName": "bar",
+    "username": "foo",
+    "cdn": "bar",
     "message": "snapping cdn",
     "shared": false,
     "creator": true,
-    "lastUpdated": "2021-05-10 17:05:30-06"
+    "lastUpdated": "2021-05-10T17:05:30-06:00"
   }
 }
 ```
@@ -182,7 +189,15 @@ response JSON:
       "text": "Cdn lock deleted",
       "level": "success"
     }
-  ]
+  ],
+  "response": {
+    "username": "foo",
+    "cdn": "bar",
+    "message": "snapping cdn",
+    "shared": false,
+    "creator": true,
+    "lastUpdated": "2021-05-10T17:05:30-06:00"
+  }
 }
 ```
 
@@ -191,16 +206,6 @@ response JSON:
 New Go client methods will be added for the `/cdn_locks` endpoints in order to write TO API tests for the new endpoints.
 
 #### Data Model / Database Impact
-<!--
-*How* will this impact the Traffic Ops data model?
-*How* will this impact the Traffic Ops database schema?
-
-What changes to the lib/go-tc structs will be required?
-What new tables and columns will be required?
-How will existing tables and columns be changed?
-What are the column data types and modifiers?
-What are the FK references and constraints?
--->
 A new database table for `cdn_lock`, as described below, will be created.
 ```text
             Table "traffic_ops.cdn_lock"
@@ -214,12 +219,14 @@ A new database table for `cdn_lock`, as described below, will be created.
  creator       | boolean                  |           | not null | false
  last_updated  | timestamp with time zone |           | not null | now() 
 Indexes:
-    "pk_cdn_lock" PRIMARY KEY(id)
+    "pk_cdn_lock" PRIMARY KEY(username, cdn)
 Foreign-key constraints:
-    "fk_lock_cdn" FOREIGN KEY (cdn_name) REFERENCES cdn(name)
-    "fk_lock_username" FOREIGN KEY ("username") REFERENCES tm_user(username)
+    "fk_lock_cdn" FOREIGN KEY (cdn) REFERENCES cdn(name)
+    "fk_lock_username" FOREIGN KEY (username) REFERENCES tm_user(username)
 ```
 
+The `capability` table will need to add another capability by the name of `delete-all-locks` and the `all-write` capability 
+will include this new capability. 
 ### ORT Impact
 No impact
 
@@ -250,8 +257,8 @@ in the database before performing a snap or queue operation.
 We do not anticipate any impact on security due to the introduction of `cdn_locks`.
 
 ### Upgrade Impact
-There will be one database migration, to create the `cdn_locks` table. This does not depend on any
-existing data, so nothing should ideally cause this migration to fail.
+There will be two database migrations, one to create the `cdn_locks` table, and the other to add
+the new capability. This does not depend on any existing data, so nothing should ideally cause this migration to fail.
 
 ### Operations Impact
 Operations will have to learn how to create, delete and work with CDN locks, if they wish to make use of this feature.
