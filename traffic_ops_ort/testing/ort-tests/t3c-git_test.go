@@ -137,6 +137,8 @@ func t3cUpdateGit(host string, run_mode string) error {
 		"--log-location-error=test.log",
 		"--log-location-info=test.log",
 		"--log-location-debug=test.log",
+		"--log-location-debug=test.log",
+		"--omit-via-string-release=true",
 		"--run-mode=" + run_mode,
 		"--git=" + "yes",
 	}

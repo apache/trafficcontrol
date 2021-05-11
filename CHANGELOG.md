@@ -86,6 +86,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - The `riak.conf` config file and its corresponding `--riakcfg` option in `traffic_ops_golang` have been deprecated. Please use `"traffic_vault_backend": "riak"` and `"traffic_vault_config"` (with the existing contents of riak.conf) instead.
 - The Traffic Ops API route `GET /api/{version}/vault/bucket/{bucket}/key/{key}/values` has been deprecated and will no longer be available as of Traffic Ops API v4
 - The `riak_port` option in cdn.conf is now deprecated. Please use the `"port"` field in `traffic_vault_config` instead.
+- The `traffic_ops_ort.pl` tool has been deprecated in favor of `t3c`, and will be removed in the next major version.
 
 ### Removed
 - The Perl implementation of Traffic Ops has been stripped out, along with the Go implementation's "fall-back to Perl" behavior.

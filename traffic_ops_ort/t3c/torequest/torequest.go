@@ -263,6 +263,9 @@ func (r *TrafficOpsReq) atsTcExecCommand(cmdstr string, queueState int, revalSta
 		if r.Cfg.RunMode == config.Revalidate {
 			args = append(args, "--revalidate-only")
 		}
+		args = append(args, "--via-string-release="+strconv.FormatBool(!r.Cfg.OmitViaStringRelease))
+		args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(r.Cfg.DisableParentConfigComments))
+
 	default:
 		return nil, errors.New("invalid command '" + cmdstr + "'")
 	}
@@ -277,6 +280,14 @@ func (r *TrafficOpsReq) atsTcExecCommand(cmdstr string, queueState int, revalSta
 	err := cmd.Run()
 	if err != nil {
 		return nil, errors.New("Error from atstccfg: " + err.Error() + ": " + errbuf.String())
+	}
+
+	if errStr := errbuf.String(); len(errStr) != 0 {
+		log.Warnln(`atstccfg stderr start
+` + errStr + `
+atstccfg stderr end`)
+	} else {
+		log.Warnln(`atstccfg stderr was empty`)
 	}
 
 	return outbuf.Bytes(), nil
@@ -1236,6 +1247,9 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 			} else if cfg.Name == "remap.config" && r.configFiles["plugin.config"].PreReqFailed == true {
 				updateStatus = UpdateTropsFailed
 				log.Errorln("remap.config changed however, prereqs failed for plugin.config so I am skipping updates for remap.config")
+				continue
+			} else if cfg.Name == "ip_allow.config" && !r.Cfg.SyncDSUpdatesIPAllow && r.Cfg.RunMode == config.SyncDS {
+				log.Warnln("ip_allow.config changed, not updating! Run with --mode=badass or --syncds-updates-ipallow=true to update!")
 				continue
 			} else {
 				log.Debugf("All Prereqs passed for replacing %s on disk with that in Traffic Ops.\n", cfg.Name)

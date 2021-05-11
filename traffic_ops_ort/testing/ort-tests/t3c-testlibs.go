@@ -113,6 +113,7 @@ func runT3cUpdate(host string, run_mode string) error {
 		"--log-location-error=test.log",
 		"--log-location-info=test.log",
 		"--log-location-debug=test.log",
+		"--omit-via-string-release=true",
 		"--run-mode=" + run_mode,
 	}
 	cmd := exec.Command("/opt/ort/t3c", args...)

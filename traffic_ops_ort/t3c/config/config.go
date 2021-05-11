@@ -114,9 +114,12 @@ type Cfg struct {
 	// UseGit is whether to create and maintain a git repo of config changes.
 	// Note this only applies to the ATS config directory inferred or set via the flag.
 	//      It does not do anything for config files generated outside that location.
-	UseGit                   UseGitFlag
-	DefaultClientEnableH2    *bool
-	DefaultClientTLSVersions *string
+	UseGit                      UseGitFlag
+	SyncDSUpdatesIPAllow        bool
+	OmitViaStringRelease        bool
+	DisableParentConfigComments bool
+	DefaultClientEnableH2       *bool
+	DefaultClientTLSVersions    *string
 }
 
 type UseGitFlag string
@@ -218,6 +221,9 @@ func GetCfg() (Cfg, error) {
 	dnsLocalBindPtr := getopt.BoolLong("dns-local-bind", 'b', "[true | false] whether to use the server's Service Addresses to set the ATS DNS local bind address")
 	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	useGitStr := getopt.StringLong("git", 'g', "auto", "Create and use a git repo in the config directory. Options are yes, no, and auto. If yes, create and use. If auto, use if it exist. Default is auto.")
+	syncdsUpdatesIPAllowPtr := getopt.BoolLong("syncds-updates-ipallow", 'S', "Whether syncds mode will update ipallow. This exists because ATS had a bug where reloading after changing ipallow would block everything. Default is false.")
+	omitViaStringReleasePtr := getopt.BoolLong("omit-via-string-release", 'V', "Whether to set the records.config via header to the ATS release from the RPM. Default true.")
+	disableParentConfigCommentsPtr := getopt.BoolLong("disable-parent-config-comments", 'c', "Whether to disable verbose parent.config comments. Default false.")
 	defaultEnableH2 := getopt.BoolLong("default-client-enable-h2", '2', "Whether to enable HTTP/2 on Delivery Services by default, if they have no explicit Parameter. This is irrelevant if ATS records.config is not serving H2. If omitted, H2 is disabled.")
 	defaultClientTLSVersions := getopt.StringLong("default-client-tls-versions", 'v', "", "Comma-delimited list of default TLS versions for Delivery Services with no Parameter, e.g. --default-tls-versions='1.1,1.2,1.3'. If omitted, all versions are enabled.")
 
@@ -342,30 +348,33 @@ func GetCfg() (Cfg, error) {
 	yumOptions := os.Getenv("YUM_OPTIONS")
 
 	cfg := Cfg{
-		Dispersion:               dispersion,
-		LogLocationDebug:         logLocationDebug,
-		LogLocationErr:           logLocationError,
-		LogLocationInfo:          logLocationInfo,
-		LogLocationWarn:          logLocationWarn,
-		LoginDispersion:          loginDispersion,
-		CacheHostName:            cacheHostName,
-		SvcManagement:            svcManagement,
-		Retries:                  retries,
-		RevalWaitTime:            revalWaitTime,
-		ReverseProxyDisable:      reverseProxyDisable,
-		RunMode:                  runMode,
-		SkipOSCheck:              skipOsCheck,
-		TOInsecure:               toInsecure,
-		TOTimeoutMS:              toTimeoutMS,
-		TOUser:                   toUser,
-		TOPass:                   toPass,
-		TOURL:                    toURL,
-		DNSLocalBind:             dnsLocalBind,
-		WaitForParents:           waitForParents,
-		YumOptions:               yumOptions,
-		UseGit:                   useGit,
-		DefaultClientEnableH2:    defaultEnableH2,
-		DefaultClientTLSVersions: defaultClientTLSVersions,
+		Dispersion:                  dispersion,
+		LogLocationDebug:            logLocationDebug,
+		LogLocationErr:              logLocationError,
+		LogLocationInfo:             logLocationInfo,
+		LogLocationWarn:             logLocationWarn,
+		LoginDispersion:             loginDispersion,
+		CacheHostName:               cacheHostName,
+		SvcManagement:               svcManagement,
+		Retries:                     retries,
+		RevalWaitTime:               revalWaitTime,
+		ReverseProxyDisable:         reverseProxyDisable,
+		RunMode:                     runMode,
+		SkipOSCheck:                 skipOsCheck,
+		TOInsecure:                  toInsecure,
+		TOTimeoutMS:                 toTimeoutMS,
+		TOUser:                      toUser,
+		TOPass:                      toPass,
+		TOURL:                       toURL,
+		DNSLocalBind:                dnsLocalBind,
+		WaitForParents:              waitForParents,
+		YumOptions:                  yumOptions,
+		UseGit:                      useGit,
+		SyncDSUpdatesIPAllow:        *syncdsUpdatesIPAllowPtr,
+		OmitViaStringRelease:        *omitViaStringReleasePtr,
+		DisableParentConfigComments: *disableParentConfigCommentsPtr,
+		DefaultClientEnableH2:       defaultEnableH2,
+		DefaultClientTLSVersions:    defaultClientTLSVersions,
 	}
 
 	if err = log.InitCfg(cfg); err != nil {
@@ -441,26 +450,5 @@ func printConfig(cfg Cfg) {
 }
 
 func Usage() {
-	fmt.Println("Usage: t3c [options]")
-	fmt.Println("\t[options]:")
-	fmt.Println("\t  --dispersion=[time in seconds] | -D, [time in seconds] wait a random number between 0 and <time in seconds> before starting, default = 300s")
-	fmt.Println("\t  --login-dispersion=[time in seconds] | -l, [time in seconds] wait a random number between 0 and <time in seconds> befor login, default = 0")
-	fmt.Println("\t  --log-location-debug=[value] | -d [value], Where to log debugs. May be a file path, stdout, stderr, or null, default stderr")
-	fmt.Println("\t  --log-location-error=[value] | -e [value], Where to log errors. May be a file path, stdout, stderr, or null, default stderr")
-	fmt.Println("\t  --log-location-info=[value] | -i [value], Where to log info. May be a file path, stdout, stderr, or null, default stderr")
-	fmt.Println("\t  --log-location-warning=[value] | -w [value], Where to log warnings. May be a file path, stdout, stderr, or null, default stderr")
-	fmt.Println("\t  --run-mode=[mode] | -m [mode] where mode is one of [ report | badass | syncds | revalidate ], default = report")
-	fmt.Println("\t  --cache-hostname=[hostname] | -H [hostname], Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
-	fmt.Println("\t  --num-retries=[number] | -r [number], retry connection to Traffic Ops URL [number] times, default is 3")
-	fmt.Println("\t  --reval-wait-time=[seconds] | -T [seconds] wait a random number of seconds between 0 and [seconds] before revlidation, default is 60")
-	fmt.Println("\t  --rev-proxy-disable=[true|false] | -p [true|false] bypass the reverse proxy even if one has been configured, default = false")
-	fmt.Println("\t  --skip-os-check=[true|false] | -s [true | false] bypass the check for a supported CentOS version. default = false")
-	fmt.Println("\t  --traffic-ops-insecure=[true|false] -I [true | false] Whether to ignore HTTPS certificate errors from Traffic Ops. It is HIGHLY RECOMMENDED to never use this in a production environment, but only for debugging, default = false")
-	fmt.Println("\t  --traffic-ops-timeout-milliseconds=[milliseconds] | -t [milliseconds] the Traffic Ops request timeout in milliseconds. Default = 30000 (30 seconds)")
-	fmt.Println("\t  --traffic-ops-url=[url] | -u [url], Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with the environment variable TO_URL")
-	fmt.Println("\t  --traffic-ops-user=[username] | -U [username], Traffic Ops username. Required. May also be set with the environment variable TO_USER")
-	fmt.Println("\t  --traffic-ops-password=[password] | -P [password], Traffic Ops password. Required. May also be set with the environment variable TO_PASS")
-	fmt.Println("\t  --trafficserver-home=[value] | -R [value], Trafficserver Package directory. May also be set with the environment variable TS_HOME")
-	fmt.Println("\t  --wait-for-parents | -W [true | false] do not update if parent_pending = 1 in the update json. default = true, wait for parents\n")
-	fmt.Println("\t  --help | -h, Print usage information and exit")
+	getopt.PrintUsage(os.Stdout)
 }
