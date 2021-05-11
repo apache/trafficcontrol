@@ -69,6 +69,8 @@ func UpdateTestProfilesWithHeaders(t *testing.T, header http.Header) {
 				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
 			}
 		}
+	} else {
+		t.Errorf("No data available to update")
 	}
 }
 
@@ -239,53 +241,60 @@ func UpdateTestProfiles(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
 	}
-	cdns, _, err := TOSession.GetCDNByName("cdn2", nil)
-	remoteProfile := resp[0]
-	oldName := remoteProfile.Name
+	if len(resp) > 0 {
+		cdns, _, err := TOSession.GetCDNByName("cdn2", nil)
+		remoteProfile := resp[0]
+		oldName := remoteProfile.Name
 
-	expectedProfileDesc := "UPDATED"
-	expectedCDNId := &cdns[0].ID
-	expectedName := "testing"
-	expectedRoutingDisabled := true
-	expectedType := "TR_PROFILE"
+		if len(cdns) > 0 {
+			expectedProfileDesc := "UPDATED"
+			expectedCDNId := cdns[0].ID
+			expectedName := "testing"
+			expectedRoutingDisabled := true
+			expectedType := "TR_PROFILE"
 
-	remoteProfile.Description = expectedProfileDesc
-	remoteProfile.Type = expectedType
-	remoteProfile.CDNID = *expectedCDNId
-	remoteProfile.Name = expectedName
-	remoteProfile.RoutingDisabled = expectedRoutingDisabled
+			remoteProfile.Description = expectedProfileDesc
+			remoteProfile.Type = expectedType
+			remoteProfile.CDNID = expectedCDNId
+			remoteProfile.Name = expectedName
+			remoteProfile.RoutingDisabled = expectedRoutingDisabled
 
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateProfile(remoteProfile.ID, remoteProfile, nil)
-	if err != nil {
-		t.Errorf("cannot UPDATE Profile by id: %v - %v", err, alert)
-	}
+			var alert tc.Alerts
+			alert, _, err = TOSession.UpdateProfile(remoteProfile.ID, remoteProfile, nil)
+			if err != nil {
+				t.Errorf("cannot UPDATE Profile by id: %v - %v", err, alert)
+			}
 
-	// Retrieve the Profile to check Profile name got updated
-	resp, _, err = TOSession.GetProfileByID(remoteProfile.ID, nil)
-	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
-	}
-	respProfile := resp[0]
-	if respProfile.Description != expectedProfileDesc {
-		t.Errorf("results do not match actual: %s, expected: %s", respProfile.Description, expectedProfileDesc)
-	}
-	if respProfile.Type != expectedType {
-		t.Errorf("results do not match actual: %s, expected: %s", respProfile.Type, expectedType)
-	}
-	if respProfile.CDNID != *expectedCDNId {
-		t.Errorf("results do not match actual: %d, expected: %d", respProfile.CDNID, expectedCDNId)
-	}
-	if respProfile.RoutingDisabled != expectedRoutingDisabled {
-		t.Errorf("results do not match actual: %t, expected: %t", respProfile.RoutingDisabled, expectedRoutingDisabled)
-	}
-	if respProfile.Name != expectedName {
-		t.Errorf("results do not match actual: %v, expected: %v", respProfile.Name, expectedName)
-	}
-	respProfile.Name = oldName
-	alert, _, err = TOSession.UpdateProfile(respProfile.ID, respProfile, nil)
-	if err != nil {
-		t.Errorf("cannot UPDATE Profile by id: %v - %v", err, alert)
+			// Retrieve the Profile to check Profile name got updated
+			resp, _, err = TOSession.GetProfileByID(remoteProfile.ID, nil)
+			if err != nil {
+				t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
+			}
+
+			if len(resp) > 0 {
+				respProfile := resp[0]
+				if respProfile.Description != expectedProfileDesc {
+					t.Errorf("results do not match actual: %s, expected: %s", respProfile.Description, expectedProfileDesc)
+				}
+				if respProfile.Type != expectedType {
+					t.Errorf("results do not match actual: %s, expected: %s", respProfile.Type, expectedType)
+				}
+				if respProfile.CDNID != expectedCDNId {
+					t.Errorf("results do not match actual: %d, expected: %d", respProfile.CDNID, expectedCDNId)
+				}
+				if respProfile.RoutingDisabled != expectedRoutingDisabled {
+					t.Errorf("results do not match actual: %t, expected: %t", respProfile.RoutingDisabled, expectedRoutingDisabled)
+				}
+				if respProfile.Name != expectedName {
+					t.Errorf("results do not match actual: %v, expected: %v", respProfile.Name, expectedName)
+				}
+				respProfile.Name = oldName
+				alert, _, err = TOSession.UpdateProfile(respProfile.ID, respProfile, nil)
+				if err != nil {
+					t.Errorf("cannot UPDATE Profile by id: %v - %v", err, alert)
+				}
+			}
+		}
 	}
 }
 

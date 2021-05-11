@@ -79,7 +79,7 @@ func (to *Session) GetParametersByProfileName(profileName string, header http.He
 // GetProfiles returns all Profiles stored in Traffic Ops.
 func (to *Session) GetProfiles(params url.Values, header http.Header) ([]tc.Profile, toclientlib.ReqInf, error) {
 	uri := APIProfiles
-	if params != nil {
+	if len(params) > 0 {
 		uri += "?" + params.Encode()
 	}
 	var data tc.ProfilesResponse
