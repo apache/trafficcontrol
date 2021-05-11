@@ -31,7 +31,8 @@ import (
 
 const RegexRemapPrefix = "regex_remap_"
 const CacheUrlPrefix = "cacheurl_"
-const RefetchSuffix = "__REFETCH__"
+const RefetchSuffix = "##REFETCH##"
+const RefreshSuffix = "##REFRESH##"
 
 const RemapFile = "remap.config"
 
@@ -110,13 +111,13 @@ func MakeRegexRevalidateDotConfig(
 	}, nil
 }
 
-type reval_job struct {
+type revalJob struct {
 	AssetURL string
 	PurgeEnd time.Time
 	Type     string // MISS or STALE (default)
 }
 
-type jobsSort []reval_job
+type jobsSort []revalJob
 
 func (jb jobsSort) Len() int      { return len(jb) }
 func (jb jobsSort) Swap(i, j int) { jb[i], jb[j] = jb[j], jb[i] }
@@ -134,10 +135,10 @@ func (jb jobsSort) Less(i, j int) bool {
 //   - are "purge" jobs
 //   - have a start_time+ttl > now. That is, jobs that haven't expired yet.
 // Returns the filtered jobs, and any warnings.
-func filterJobs(tc_jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) ([]reval_job, []string) {
+func filterJobs(tc_jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) ([]revalJob, []string) {
 	warnings := []string{}
 
-	jobMap := map[string]reval_job{}
+	jobMap := map[string]revalJob{}
 
 	for _, tc_job := range tc_jobs {
 		if tc_job.DeliveryService == "" {
@@ -190,16 +191,19 @@ func filterJobs(tc_jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) 
 		if strings.HasSuffix(assetURL, RefetchSuffix) {
 			assetURL = strings.TrimSuffix(assetURL, RefetchSuffix)
 			jobType = "MISS"
+		} else if strings.HasSuffix(assetURL, RefreshSuffix) { // also default
+			assetURL = strings.TrimSuffix(assetURL, RefreshSuffix)
+			jobType = "STALE"
 		}
 
 		purgeEnd := jobStartTime.Add(ttl)
 
 		if rjob, ok := jobMap[assetURL]; !ok || purgeEnd.After(rjob.PurgeEnd) {
-			jobMap[assetURL] = reval_job{AssetURL: assetURL, PurgeEnd: purgeEnd, Type: jobType}
+			jobMap[assetURL] = revalJob{AssetURL: assetURL, PurgeEnd: purgeEnd, Type: jobType}
 		}
 	}
 
-	newJobs := []reval_job{}
+	newJobs := []revalJob{}
 	for _, rjob := range jobMap {
 		newJobs = append(newJobs, rjob)
 	}
