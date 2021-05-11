@@ -333,7 +333,7 @@ func DeleteCDNOldSSLKeys(t *testing.T) {
 	var cdnKeys []tc.CDNSSLKeys
 	for tries := 0; tries < 5; tries++ {
 		time.Sleep(time.Second)
-		var sslKeysResp tc.CDNSSLKeysResponseV4
+		var sslKeysResp tc.CDNSSLKeysResponse
 		sslKeysResp, _, err = TOSession.GetCDNSSLKeys(cdn.Name, client.RequestOptions{})
 		if err != nil {
 			continue
@@ -365,7 +365,7 @@ func DeleteCDNOldSSLKeys(t *testing.T) {
 	var newCdnKeys []tc.CDNSSLKeys
 	for tries := 0; tries < 5; tries++ {
 		time.Sleep(time.Second)
-		var sslKeysResp tc.CDNSSLKeysResponseV4
+		var sslKeysResp tc.CDNSSLKeysResponse
 		sslKeysResp, _, err = TOSession.GetCDNSSLKeys(cdn.Name, client.RequestOptions{})
 		newCdnKeys = sslKeysResp.Response
 		if err == nil && len(newCdnKeys) == 1 {
