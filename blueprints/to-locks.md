@@ -201,6 +201,24 @@ How will existing tables and columns be changed?
 What are the column data types and modifiers?
 What are the FK references and constraints?
 -->
+A new database table for `cdn_lock`, as described below, will be created.
+```text
+            Table "traffic_ops.cdn_lock"
+     Column    |  Type                    | Collation | Nullable | Default
+---------------+--------------------------+-----------+----------+--------
+ id            | bigint                   |           | not null |
+ username      | text                     |           | not null |
+ cdn_name      | text                     |           | not null |
+ message       | test                     |           |          |
+ shared        | boolean                  |           | not null | true
+ creator       | boolean                  |           | not null | false
+ last_updated  | timestamp with time zone |           | not null | now() 
+Indexes:
+    "pk_cdn_lock" PRIMARY KEY(id)
+Foreign-key constraints:
+    "fk_lock_cdn" FOREIGN KEY (cdn_name) REFERENCES cdn(name)
+    "fk_lock_username" FOREIGN KEY ("username") REFERENCES tm_user(username)
+```
 
 ### ORT Impact
 No impact
@@ -218,97 +236,37 @@ No impact
 No impact
 
 ### Documentation Impact
-<!--
-*How* will this impact the documentation?
-
-What new documentation will be required?
-What existing documentation will need to be updated?
--->
+All new endpoints will need to be documented, along with the documentation explaining `cdn_locks`. 
 
 ### Testing Impact
-<!--
-*How* will this impact testing?
-
-What is the high-level test plan?
-How should this be tested?
-Can this be tested within the existing test frameworks?
-How should the existing frameworks be enhanced in order to test this properly?
--->
+Client/API integration tests should be written to verify the
+functionality as described in [API](#sec:api).
 
 ### Performance Impact
-<!--
-*How* will this impact performance?
-
-Are the changes expected to improve performance in any way?
-Is there anything particularly CPU, network, or storage-intensive to be aware of?
-What are the known bottlenecks to be aware of that may need to be addressed?
--->
+We do not anticipate significant performance impact, as this process will just entail one additional check
+in the database before performing a snap or queue operation.
 
 ### Security Impact
-<!--
-*How* will this impact overall security?
-
-Are there any security risks to be aware of?
-What privilege level is required for these changes?
-Do these changes increase the attack surface (e.g. new untrusted input)?
-How will untrusted input be validated?
-If these changes are used maliciously or improperly, what could go wrong?
-Will these changes adhere to multi-tenancy?
-Will data be protected in transit (e.g. via HTTPS or TLS)?
-Will these changes require sensitive data that should be encrypted at rest?
-Will these changes require handling of any secrets?
-Will new SQL queries properly use parameter binding?
--->
+We do not anticipate any impact on security due to the introduction of `cdn_locks`.
 
 ### Upgrade Impact
-<!--
-*How* will this impact the upgrade of an existing system?
-
-Will a database migration be required?
-Do the various components need to be upgraded in a specific order?
-Will this affect the ability to rollback an upgrade?
-Are there any special steps to be followed before an upgrade can be done?
-Are there any special steps to be followed during the upgrade?
-Are there any special steps to be followed after the upgrade is complete?
--->
+There will be one database migration, to create the `cdn_locks` table. This does not depend on any
+existing data, so nothing should ideally cause this migration to fail.
 
 ### Operations Impact
-<!--
-*How* will this impact overall operation of the system?
-
-Will the changes make it harder to operate the system?
-Will the changes introduce new configuration that will need to be managed?
-Can the changes be easily automated?
-Do the changes have known limitations or risks that operators should be made aware of?
-Will the changes introduce new steps to be followed for existing operations?
--->
+Operations will have to learn how to create, delete and work with CDN locks, if they wish to make use of this feature.
+If not, there should be no impact to their use of the software.
 
 ### Developer Impact
-<!--
-*How* will this impact other developers?
-
-Will it make it easier to set up a development environment?
-Will it make the code easier to maintain?
-What do other developers need to know about these changes?
-Are the changes straightforward, or will new developer instructions be necessary?
--->
+Developers will most likely need to use CDN locks, so they'll need to be familiar with the process
+of creating, deleting, debugging and working with locks.
 
 ## Alternatives
-<!--
-What are some of the alternative solutions for this problem?
-What are the pros and cons of each approach?
-What design trade-offs were made and why?
--->
+No other alternatives for this safety measure currently exist, other than posting a message on a
+group chat or sending an email to ask everyone to refrain from making changes/ snapping/ queueing.
 
 ## Dependencies
-<!--
-Are there any significant new dependencies that will be required?
-How were the dependencies assessed and chosen?
-How will the new dependencies be managed?
-Are the dependencies required at build-time, run-time, or both?
--->
+None
 
 ## References
-<!--
-Include any references to external links here.
--->
+None
