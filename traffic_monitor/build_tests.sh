@@ -15,6 +15,12 @@
 export CGO_ENABLED=0
 export GOOS=linux
 
+if [ ! -f "traffic_monitor.rpm" ]; then
+  echo "Unable to find traffic_monitor.rpm."
+  echo "Run './pkg traffic_monitor_build' and copy TM rpm to this directory."
+  exit 1
+fi
+
 cd tools/testto
 rm testto
 go build

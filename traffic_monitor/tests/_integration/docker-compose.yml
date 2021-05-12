@@ -24,13 +24,10 @@
 # Commands are, from the root trafficcontrol directory:
 # ./pkg -v traffic_monitor_build
 # cp ./dist/traffic_monitor*.rpm ./traffic_monitor/
-# (cd ./traffic_monitor/tools/testto && go build)
-# (cd ./traffic_monitor/tools/testcaches && go build)
-# cd ./traffic_monitor
-# docker-compose up
+# ./build_tests.sh
 #
 # To run the integration tests, your current working directory must be trafficcontrol/traffic_monitor.
-# This is because Docker doesn't allow accessing files outside the current "context," and the integration tests need
+# This is because Docker doesn't allow accessing files outside the current "context".
 #
 #      docker-compose up -d
 #
