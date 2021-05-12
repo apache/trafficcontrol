@@ -69,7 +69,7 @@ func TestGetSnapshot(t *testing.T) {
 	MockGetSnapshot(mock, expected, cdn)
 	mock.ExpectCommit()
 
-	dbCtx, cancelTx := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
 	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
@@ -122,7 +122,7 @@ func TestSnapshot(t *testing.T) {
 	crc.Stats.CDNName = &cdn
 	mock.ExpectBegin()
 
-	dbCtx, cancelTx := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
 	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {

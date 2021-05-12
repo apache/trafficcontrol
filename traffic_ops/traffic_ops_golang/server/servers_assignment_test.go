@@ -87,7 +87,7 @@ func TestAssignDsesToServer(t *testing.T) {
 	mock.ExpectExec("DELETE").WithArgs(pq.Array(delete)).WillReturnResult(sqlmock.NewResult(1, 3))
 	mock.ExpectCommit()
 
-	dbCtx, cancelTx := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
 	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {

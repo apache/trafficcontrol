@@ -61,7 +61,7 @@ func TestGetConfigParams(t *testing.T) {
 	MockGetConfigParams(mock, expected, cdn)
 	mock.ExpectCommit()
 
-	dbCtx, cancelTx := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
 	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
@@ -125,7 +125,7 @@ func TestMakeCRConfigConfig(t *testing.T) {
 	expected := ExpectedMakeCRConfigConfig(expectedGetConfigParams, dnssecEnabled)
 	mock.ExpectCommit()
 
-	dbCtx, cancelTx := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
 	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
