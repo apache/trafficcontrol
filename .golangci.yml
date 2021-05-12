@@ -36,10 +36,4 @@ linters-settings:
   govet:
     disable:
       - copylocks
-      - httpresponse
-      - loopclosure
-      - lostcancel
       - printf
-      - structtag
-      - unmarshal
-      - unreachable
