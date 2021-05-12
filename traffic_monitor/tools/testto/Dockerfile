@@ -15,12 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM centos/systemd
+FROM centos:8
 MAINTAINER dev@trafficcontrol.apache.org
-
-# RUN rpm --import https://mirror.go-repo.io/centos/RPM-GPG-KEY-GO-REPO
-# RUN curl -s https://mirror.go-repo.io/centos/go-repo.repo | tee /etc/yum.repos.d/go-repo.repo
-# RUN yum install -y golang
 
 ARG APP_BIN=testto
 ADD $APP_BIN /usr/sbin/

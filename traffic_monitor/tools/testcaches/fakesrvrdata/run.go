@@ -32,7 +32,7 @@ type BytesPerSec struct { // TODO change to PerMin? PerHour? (to allow, e.g. one
 
 // runValidate verifies the FakeServerData Remaps match the RemapIncrements
 func runValidate(s *FakeServerData, remapIncrements map[string]BytesPerSec) error {
-	for r, _ := range s.ATS.Remaps {
+	for r := range s.ATS.Remaps {
 		if _, ok := remapIncrements[r]; !ok {
 			return errors.New("remap increments missing server remap '" + r + "'")
 		}

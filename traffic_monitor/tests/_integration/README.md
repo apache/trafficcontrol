@@ -1,10 +1,11 @@
 # Traffic Monitor Integration Test Framework
 
-## Building 
+## Building
 
 From the `trafficcontrol/traffic_monitor` directory run `build_tests.sh`
 
 ## Running
+
 From the `trafficcontrol/traffic_monitor` directory run:
 
 `sudo docker-compose -p tmi --project-directory . -f tests/_integration/docker-compose.yml run tmintegrationtest`

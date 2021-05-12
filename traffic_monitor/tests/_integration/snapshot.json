@@ -15,15 +15,14 @@
     "neustar.polling.interval": "30",
     "neustar.polling.url": "foo",
     "soa": {
-
     },
     "dnssec.inception": "0",
     "ttls": {
-      "admin":   "30",
-      "expire":  "30",
+      "admin": "30",
+      "expire": "30",
       "minimum": "30",
       "refresh": "30",
-      "retry":   "30"
+      "retry": "30"
     },
     "weight": "1",
     "zonemanager.cache.maintenance.interval": "30",
@@ -39,11 +38,15 @@
       "ip": "testcaches",
       "ip6": null,
       "locationId": "",
-      "port" : 30000,
+      "port": 30000,
       "status": "REPORTED",
       "type": "EDGE",
       "interfaceName": "bond0",
-      "deliveryServices": {"ds0":["ds0.monitor-integration.test"]},
+      "deliveryServices": {
+        "ds0": [
+          "ds0.monitor-integration.test"
+        ]
+      },
       "routingDisabled": 0
     },
     "server1": {
@@ -55,11 +58,15 @@
       "ip": "testcaches",
       "ip6": null,
       "locationId": "",
-      "port" : 30001,
+      "port": 30001,
       "status": "REPORTED",
       "type": "EDGE",
       "interfaceName": "bond0",
-      "deliveryServices": {"ds0":["ds0.monitor-integration.test"]},
+      "deliveryServices": {
+        "ds0": [
+          "ds0.monitor-integration.test"
+        ]
+      },
       "routingDisabled": 0
     }
   },
@@ -73,7 +80,9 @@
         "limit": 1,
         "shuffled": "false"
       },
-      "domains": ["ds0.monitor-integration.test"],
+      "domains": [
+        "ds0.monitor-integration.test"
+      ],
       "matchsets": [
         {
           "protocol": "HTTP",
@@ -85,7 +94,10 @@
           ]
         }
       ],
-      "missLocation": {"lat": 0, "lon": 0},
+      "missLocation": {
+        "lat": 0,
+        "lon": 0
+      },
       "protocol": {
         "acceptHttp": "true",
         "acceptHttps": "false",
@@ -119,10 +131,16 @@
     }
   },
   "edgeLocations": {
-    "cg0": {"latitude":0, "longitude":0}
+    "cg0": {
+      "latitude": 0,
+      "longitude": 0
+    }
   },
   "trafficRouterLocations": {
-    "tr0": {"latitude":0, "longitude":0}
+    "tr0": {
+      "latitude": 0,
+      "longitude": 0
+    }
   },
   "monitors": {
     "trafficmonitor": {

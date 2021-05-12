@@ -24,10 +24,14 @@
       ],
       "type": "EDGE",
       "hashId": "server0",
-      "deliveryServices": [{
-        "xmlId": "ds0",
-        "remaps": ["ds0.monitor-integration.test"]
-      }]
+      "deliveryServices": [
+        {
+          "xmlId": "ds0",
+          "remaps": [
+            "ds0.monitor-integration.test"
+          ]
+        }
+      ]
     },
     {
       "profile": "Edge0",
@@ -53,17 +57,24 @@
       ],
       "type": "EDGE",
       "hashId": "server1",
-      "deliveryServices": [{
-        "xmlId": "ds0",
-        "remaps": ["ds0.monitor-integration.test"]
-      }]
+      "deliveryServices": [
+        {
+          "xmlId": "ds0",
+          "remaps": [
+            "ds0.monitor-integration.test"
+          ]
+        }
+      ]
     }
   ],
   "cacheGroups": [
     {
       "cg0": {
         "name": "cg0",
-        "coordinates": {"latitude": 0, "longitude": 0}
+        "coordinates": {
+          "latitude": 0,
+          "longitude": 0
+        }
       }
     }
   ],

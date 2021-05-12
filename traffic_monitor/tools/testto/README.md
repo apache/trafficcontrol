@@ -22,7 +22,9 @@
 Build environment variables: none
 
 Run environment variables:
-- `PORT` - the port to serve on. If none is specified, no port argument will be passed to the app, and it will use its default.
+
+- `PORT` - the port to serve on. If none is specified, no port argument will be passed to the app, and it will use its
+  default.
 
 ### Building
 

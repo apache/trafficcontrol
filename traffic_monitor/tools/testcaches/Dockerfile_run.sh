@@ -16,30 +16,22 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
-# envvars=( PORT )
-# for v in $envvars
-# do
-# 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
-# done
-
 start() {
-	ARGS=
-	if [[ -n "${NUM_PORTS}" ]]; then
-			ARGS="$ARGS -numPorts ${NUM_PORTS}"
-	fi
-	if [[ -n "${NUM_REMAPS}" ]]; then
-			ARGS="$ARGS -numRemaps ${NUM_REMAPS}"
-	fi
-	if [[ -n "${PORT_START}" ]]; then
-			ARGS="$ARGS -portStart ${PORT_START}"
-	fi
-	testcaches ${ARGS}
+  ARGS=
+  if [[ -n "${NUM_PORTS}" ]]; then
+    ARGS="$ARGS -numPorts ${NUM_PORTS}"
+  fi
+  if [[ -n "${NUM_REMAPS}" ]]; then
+    ARGS="$ARGS -numRemaps ${NUM_REMAPS}"
+  fi
+  if [[ -n "${PORT_START}" ]]; then
+    ARGS="$ARGS -portStart ${PORT_START}"
+  fi
+  testcaches ${ARGS}
 }
 
 init() {
-
-	echo "INITIALIZED=1" >> /etc/environment
+  echo "INITIALIZED=1" >>/etc/environment
 }
 
 source /etc/environment

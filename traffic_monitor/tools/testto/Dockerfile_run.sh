@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
 # envvars=( PORT )
 # for v in $envvars
 # do
@@ -24,16 +23,16 @@
 # done
 
 start() {
-	ARGS=
-	if [[ -n "${PORT}" ]]; then
-			ARGS="$ARGS -port ${PORT}"
-	fi
-	testto ${ARGS}
+  ARGS=
+  if [[ -n "${PORT}" ]]; then
+    ARGS="$ARGS -port ${PORT}"
+  fi
+  testto ${ARGS}
 }
 
 init() {
 
-	echo "INITIALIZED=1" >> /etc/environment
+  echo "INITIALIZED=1" >>/etc/environment
 }
 
 source /etc/environment

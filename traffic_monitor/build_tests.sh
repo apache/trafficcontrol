@@ -12,8 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-CGO_ENABLED=0
-GOOS=linux
+export CGO_ENABLED=0
+export GOOS=linux
 
 cd tools/testto
 rm testto

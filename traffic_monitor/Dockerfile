@@ -25,17 +25,13 @@
 #
 # docker run --detach --name tm --hostname tm --net=tmi --env TO_URI=http://to.invalid:3000 --env TO_USER=user --env TO_PASS=pass traffic_monitor:latest
 
-FROM centos/systemd
+FROM centos:8
 MAINTAINER dev@trafficcontrol.apache.org
 
 ARG RPM=traffic_monitor.rpm
 ADD $RPM /
 
-RUN yum install -y initscripts
-RUN yum install -y /$(basename $RPM)
-RUN rm /$(basename $RPM)
-
-RUN curl -L jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 > /usr/sbin/jq && chmod +x /usr/sbin/jq
+RUN yum install -y initscripts jq /$(basename $RPM) && rm /$(basename $RPM)
 
 ADD Dockerfile_run.sh /
 ENTRYPOINT /Dockerfile_run.sh

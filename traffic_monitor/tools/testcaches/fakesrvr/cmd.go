@@ -86,7 +86,7 @@ func cmdSetStat(w http.ResponseWriter, r *http.Request, fakeSrvrDataThs fakesrvr
 	if _, ok := validStats[stat]; !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		statNames := []string{}
-		for statName, _ := range validStats {
+		for statName := range validStats {
 			statNames = append(statNames, statName)
 		}
 		w.Write([]byte("error with query parameter 'stat' '" + stat + "': not found. Valid stats are: [" + strings.Join(statNames, ",") + "\n"))
@@ -97,7 +97,7 @@ func cmdSetStat(w http.ResponseWriter, r *http.Request, fakeSrvrDataThs fakesrvr
 	if _, ok := srvr.ATS.Remaps[remap]; !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		remapNames := []string{}
-		for remapName, _ := range srvr.ATS.Remaps {
+		for remapName := range srvr.ATS.Remaps {
 			remapNames = append(remapNames, remapName)
 		}
 		w.Write([]byte("error with query parameter 'remap' '" + remap + "': not found. Valid remaps are: [" + strings.Join(remapNames, ",") + "\n"))

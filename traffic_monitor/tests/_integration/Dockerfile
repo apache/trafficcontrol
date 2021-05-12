@@ -25,17 +25,12 @@
 #
 # docker run --detach --name tm --hostname tm --net=tmi --env TO_URI=http://to.invalid:3000 --env TO_USER=user --env TO_PASS=pass traffic_monitor:latest
 
-FROM centos/systemd
+FROM centos:8
 MAINTAINER dev@trafficcontrol.apache.org
 
 RUN yum install -y initscripts epel-release golang glibc jq
 
 COPY traffic_monitor_integration_test /
-
-# TODO build go test here, instead of requiring it manually be built beforehand
-#      See /infrastructure/cdn-in-a-box/traffic_ops_integration_test/Dockerfile
-
-RUN curl -L jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 > /usr/sbin/jq && chmod +x /usr/sbin/jq
 
 COPY Dockerfile_run.sh /
 COPY monitoring.json /

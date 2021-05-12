@@ -26,7 +26,7 @@
 envvars=( TO_URI TO_USER TO_PASS CDN PORT )
 for v in $envvars
 do
-	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
+	if [[ -z ${!v} ]]; then echo "$v is unset"; exit 1; fi
 done
 
 start() {
