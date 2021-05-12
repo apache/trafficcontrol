@@ -98,6 +98,7 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 		err := rows.Scan(&ds.XmlId, &ds.Version)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
 		}
 		existingCerts = append(existingCerts, ExistingCerts{Version: ds.Version, XmlId: ds.XmlId})
 	}
@@ -106,7 +107,9 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 
 	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(inf.Tx.Tx, "ACME async job has started.")
 	if userErr != nil || sysErr != nil {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
 
 	go RunAutorenewal(existingCerts, inf.Config, ctx, cancelTx, inf.User, asyncStatusId, inf.Vault)
