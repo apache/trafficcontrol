@@ -125,7 +125,7 @@ ALTER TABLE uri_signing_key OWNER TO traffic_vault;
 
 CREATE TABLE IF NOT EXISTS url_sig_key (
     deliveryservice text NOT NULL,
-    data jsonb NOT NULL,
+    data bytea NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 

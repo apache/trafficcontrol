@@ -69,6 +69,7 @@ type Config struct {
 	MaxIdleConnections     int    `json:"max_idle_connections"`
 	ConnMaxLifetimeSeconds int    `json:"conn_max_lifetime_seconds"`
 	QueryTimeoutSeconds    int    `json:"query_timeout_seconds"`
+	EncryptionKeyLocation  string `json:"encryption_key_location"`
 }
 
 type Postgres struct {
@@ -317,7 +318,7 @@ func (p *Postgres) GetURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Context) 
 		return tc.URLSigKeys{}, false, err
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
-	return getURLSigKeys(xmlID, tvTx, ctx)
+	return getURLSigKeys(xmlID, tvTx, ctx, p.cfg.EncryptionKeyLocation)
 }
 
 func (p *Postgres) PutURLSigKeys(xmlID string, keys tc.URLSigKeys, tx *sql.Tx, ctx context.Context) error {
@@ -327,7 +328,7 @@ func (p *Postgres) PutURLSigKeys(xmlID string, keys tc.URLSigKeys, tx *sql.Tx, c
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
 
-	return putURLSigKeys(xmlID, tvTx, keys, ctx)
+	return putURLSigKeys(xmlID, tvTx, keys, ctx, p.cfg.EncryptionKeyLocation)
 }
 
 func (p *Postgres) DeleteURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Context) error {
@@ -438,13 +439,14 @@ func postgresLoad(b json.RawMessage) (trafficvault.TrafficVault, error) {
 
 func validateConfig(cfg Config) error {
 	errs := tovalidate.ToErrors(validation.Errors{
-		"user":                  validation.Validate(cfg.User, validation.Required),
-		"password":              validation.Validate(cfg.Password, validation.Required),
-		"hostname":              validation.Validate(cfg.Hostname, validation.Required),
-		"dbname":                validation.Validate(cfg.DBName, validation.Required),
-		"port":                  validation.Validate(cfg.Port, validation.By(tovalidate.IsValidPortNumber)),
-		"max_connections":       validation.Validate(cfg.MaxConnections, validation.Min(0)),
-		"query_timeout_seconds": validation.Validate(cfg.QueryTimeoutSeconds, validation.Min(0)),
+		"user":                    validation.Validate(cfg.User, validation.Required),
+		"password":                validation.Validate(cfg.Password, validation.Required),
+		"hostname":                validation.Validate(cfg.Hostname, validation.Required),
+		"dbname":                  validation.Validate(cfg.DBName, validation.Required),
+		"port":                    validation.Validate(cfg.Port, validation.By(tovalidate.IsValidPortNumber)),
+		"max_connections":         validation.Validate(cfg.MaxConnections, validation.Min(0)),
+		"query_timeout_seconds":   validation.Validate(cfg.QueryTimeoutSeconds, validation.Min(0)),
+		"encryption_key_location": validation.Validate(cfg.EncryptionKeyLocation, validation.Required),
 	})
 	if len(errs) == 0 {
 		return nil
