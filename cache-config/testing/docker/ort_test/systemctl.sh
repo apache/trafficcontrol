@@ -19,35 +19,33 @@
 
 # This is a work around for testing t3c which uses systemctl.
 # systemctl does not work in a container very well so this script
-# replaces systemctl in the container and always returns a 
+# replaces systemctl in the container and always returns a
 # sucessful result to t3c.
 
 USAGE="\nsystemctl COMMAND NAME\n"
 
-if [ -z $1 ] || [ -z $2 ]; then
-  echo -e $USAGE
+if [[ -z "$1" ]] || [[ -z "$2" ]]; then
+  echo -e "$USAGE"
   exit 0
 else
-  COMMAND=$1
-  NAME=$2
+  COMMAND="$1"
+  NAME="${2%.service}"
 fi
 
-if [ "$2" != "trafficserver" ]; then
-  echo -e "\nFailed to start ${NAME}.service: Unit not found.n"
+if [[ "$NAME" != "trafficserver" ]]; then
+  echo -e "\nFailed to start ${NAME}.service: Unit not found.\n"
   exit 0
 fi
 
-case $COMMAND in 
-  enable)
-    ;;
-  restart)
-    ;;
-  status)
-    ;;
-  start)
-    ;;
-  stop)
-    ;;
+case "$COMMAND" in
+  restart) command_found=true;;
+  start) command_found=true;;
+  status) command_found=true;;
+  stop) command_found=true;;
 esac
+
+if [[ "$command_found" == true ]]; then
+	"$NAME" "$COMMAND"
+fi;
 
 exit 0
