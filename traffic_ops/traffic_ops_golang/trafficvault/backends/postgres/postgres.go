@@ -26,7 +26,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/lib/pq"
 	"strconv"
 	"time"
 
@@ -38,6 +37,7 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 type Error string
@@ -148,7 +148,7 @@ func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *
 	// delete the old ssl keys first
 	oldVersions := []string{strconv.FormatInt(int64(key.Version), 10), latestVersion}
 	_, err = tvTx.Exec("DELETE FROM sslkey WHERE deliveryservice=$1 and version=ANY($2)", key.DeliveryService, pq.Array(oldVersions))
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil {
 		e := checkErrWithContext("Traffic Vault PostgreSQL: executing DELETE SSL Key query for INSERT", err, ctx.Err())
 		return e
 	}
@@ -249,15 +249,66 @@ func (p *Postgres) GetCDNSSLKeys(cdnName string, tx *sql.Tx, ctx context.Context
 }
 
 func (p *Postgres) GetDNSSECKeys(cdnName string, tx *sql.Tx, ctx context.Context) (tc.DNSSECKeysTrafficVault, bool, error) {
-	return tc.DNSSECKeysTrafficVault{}, false, notImplementedErr
+	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
+	if err != nil {
+		return tc.DNSSECKeysTrafficVault{}, false, err
+	}
+	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
+	var dnssecJSON string
+	if err := tvTx.QueryRow("SELECT data FROM dnssec WHERE cdn = $1", cdnName).Scan(&dnssecJSON); err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DNSSECKeysTrafficVault{}, false, nil
+		}
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing SELECT DNSSEC keys query", err, ctx.Err())
+		return tc.DNSSECKeysTrafficVault{}, false, e
+	}
+	dnssecKeys := tc.DNSSECKeysTrafficVault{}
+	if err := json.Unmarshal([]byte(dnssecJSON), &dnssecKeys); err != nil {
+		return tc.DNSSECKeysTrafficVault{}, false, errors.New("unmarshalling DNSSEC keys: " + err.Error())
+	}
+	return dnssecKeys, true, nil
 }
 
 func (p *Postgres) PutDNSSECKeys(cdnName string, keys tc.DNSSECKeysTrafficVault, tx *sql.Tx, ctx context.Context) error {
-	return notImplementedErr
+	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
+	if err != nil {
+		return err
+	}
+	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
+	dnssecJSON, err := json.Marshal(&keys)
+	if err != nil {
+		return errors.New("marshalling DNSSEC keys: " + err.Error())
+	}
+	_, err = tvTx.Exec("DELETE FROM dnssec WHERE cdn = $1", cdnName)
+	if err != nil {
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing DELETE DNSSEC keys query prior to INSERT", err, ctx.Err())
+		return e
+	}
+	res, err := tvTx.Exec("INSERT INTO dnssec (cdn, data) VALUES ($1, $2)", cdnName, dnssecJSON)
+	if err != nil {
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing INSERT DNSSEC keys query", err, ctx.Err())
+		return e
+	}
+	if rowsAffected, err := res.RowsAffected(); err != nil {
+		return err
+	} else if rowsAffected == 0 {
+		return errors.New("Traffic Vault PostgreSQL: executing INSERT DNSSEC keys query: no rows were inserted")
+	}
+	return nil
 }
 
 func (p *Postgres) DeleteDNSSECKeys(cdnName string, tx *sql.Tx, ctx context.Context) error {
-	return notImplementedErr
+	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
+	if err != nil {
+		return err
+	}
+	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
+	_, err = tvTx.Exec("DELETE FROM dnssec WHERE cdn = $1", cdnName)
+	if err != nil {
+		e := checkErrWithContext("Traffic Vault PostgreSQL: executing DELETE DNSSEC keys query", err, ctx.Err())
+		return e
+	}
+	return nil
 }
 
 func (p *Postgres) GetURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Context) (tc.URLSigKeys, bool, error) {
