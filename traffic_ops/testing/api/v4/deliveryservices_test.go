@@ -296,12 +296,11 @@ func DeleteCDNOldSSLKeys(t *testing.T) {
 	if err != nil {
 		t.Fatalf("couldn't snap CDN: %v", err)
 	}
-	time.Sleep(5 * time.Second)
 	var newCdnKeys []tc.CDNSSLKeys
 	for tries := 0; tries < 5; tries++ {
 		time.Sleep(time.Second)
 		newCdnKeys, _, err = TOSession.GetCDNSSLKeys(cdn.Name, nil)
-		if err == nil && len(newCdnKeys) != 0 {
+		if err == nil && len(newCdnKeys) == 1 {
 			break
 		}
 	}
