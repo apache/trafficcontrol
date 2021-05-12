@@ -68,7 +68,8 @@ func TestMakeTops(t *testing.T) {
 	MockMakeTops(mock, expected)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatal("creating transaction: ", err)

@@ -79,8 +79,8 @@ type InvalidationJobInput struct {
 	// number
 	TTL *interface{} `json:"ttl"`
 
-	dsid *uint          `json:"-"`
-	ttl  *time.Duration `json:"-"`
+	dsid *uint
+	ttl  *time.Duration
 }
 
 // UserInvalidationJobInput Represents legacy-style user input to the /user/current/jobs API endpoint.

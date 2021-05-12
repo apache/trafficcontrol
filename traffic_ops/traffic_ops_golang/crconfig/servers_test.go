@@ -180,7 +180,8 @@ func TestGetServerParams(t *testing.T) {
 	MockGetServerParams(mock, expected, cdn)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -431,7 +432,8 @@ func TestGetAllServers(t *testing.T) {
 	MockGetAllServers(mock, expected, cdn, true, true)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -467,7 +469,8 @@ func TestGetAllServersNonService(t *testing.T) {
 	MockGetAllServers(mock, expected, cdn, true, false)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -518,7 +521,8 @@ func TestGetServerDSNames(t *testing.T) {
 	MockGetServerDSNames(mock, expected, cdn)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -586,7 +590,8 @@ func TestGetServerDSes(t *testing.T) {
 	MockGetServerDSes(mock, expected, cdn)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -628,7 +633,8 @@ func TestGetCDNInfo(t *testing.T) {
 	MockGetCDNInfo(mock, expectedDomain, expectedDNSSECEnabled, cdn)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -672,7 +678,8 @@ func TestGetCDNNameFromID(t *testing.T) {
 	MockGetCDNNameFromID(mock, expected, cdnID)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
