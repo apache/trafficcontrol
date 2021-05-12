@@ -103,14 +103,13 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 	}
 
 	ctx, cancelTx := context.WithTimeout(r.Context(), AcmeTimeout*time.Duration(len(existingCerts)))
-	defer cancelTx()
 
 	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(inf.Tx.Tx, "ACME async job has started.")
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 	}
 
-	go RunAutorenewal(existingCerts, inf.Config, ctx, inf.User, asyncStatusId, inf.Vault)
+	go RunAutorenewal(existingCerts, inf.Config, ctx, cancelTx, inf.User, asyncStatusId, inf.Vault)
 
 	var alerts tc.Alerts
 	if deprecated {
@@ -126,7 +125,8 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
 
 }
-func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx context.Context, currentUser *auth.CurrentUser, asyncStatusId int, tv trafficvault.TrafficVault) {
+func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx context.Context, cancelTx context.CancelFunc, currentUser *auth.CurrentUser, asyncStatusId int, tv trafficvault.TrafficVault) {
+	defer cancelTx()
 	db, err := api.GetDB(ctx)
 	if err != nil {
 		log.Errorf("Error getting db: %s", err.Error())
@@ -231,7 +231,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 				},
 			}
 
-			if err := GetAcmeCertificates(cfg, req, ctx, currentUser, 0, tv); err != nil {
+			if err := GetAcmeCertificates(cfg, req, ctx, nil, false, currentUser, 0, tv); err != nil {
 				dsExpInfo.Error = err
 				errorCount++
 			} else {
