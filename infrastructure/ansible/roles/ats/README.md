@@ -19,7 +19,7 @@
 ATS
 =========
 
-Apache Traffic Control traditionally leverages the Apache Traffic Server caching proxy.  ATC uses its own configuration management tool to assist with the management of ATS named ORT.  This role deploys ORT to facilitate deployment and configuration of ATS according to the dataset modeled inside ATC.
+Apache Traffic Control traditionally leverages the Apache Traffic Server caching proxy.  ATC uses its own configuration management tool to assist with the management of ATS named t3c.  This role deploys t3c to facilitate deployment and configuration of ATS according to the dataset modeled inside ATC.
 
 Requirements
 ------------
@@ -31,7 +31,7 @@ Role Variables
 
 Refer to the defaults/main.yml for most information.
 
-ort_version: This is an optional string that can be provided to specify a particular version of ORT to install.  It should be something like `3.0.0-10063.5db80eca.el7`.  The absense of this variable entails automatically using the latest version available to yum at the time of initial installation.
+ort_version: This is an optional string that can be provided to specify a particular version of t3c to install.  It should be something like `3.0.0-10063.5db80eca.el7`.  The absense of this variable entails automatically using the latest version available to yum at the time of initial installation.
 
 additional_yum_repos: An optional list of additional yum repositories to enable specifically when installing this component.  This could be used to enable non-production ready rpms in a separate repository and not supplying the specific RPM version to automatically use the latest available.
 
