@@ -656,6 +656,7 @@ func (inf APIInfo) CheckPrecondition(query string, args ...interface{}) (int, er
 //
 // Close will commit the transaction, if it hasn't been rolled back.
 func (inf *APIInfo) Close() {
+	defer inf.CancelTx()
 	if err := inf.Tx.Tx.Commit(); err != nil && err != sql.ErrTxDone {
 		log.Errorln("committing transaction: " + err.Error())
 	}
