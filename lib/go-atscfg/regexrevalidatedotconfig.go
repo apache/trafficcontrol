@@ -31,6 +31,8 @@ import (
 
 const RegexRemapPrefix = "regex_remap_"
 const CacheUrlPrefix = "cacheurl_"
+const RefetchSuffix = "##REFETCH##"
+const RefreshSuffix = "##REFRESH##"
 
 const RemapFile = "remap.config"
 
@@ -94,7 +96,11 @@ func MakeRegexRevalidateDotConfig(
 
 	txt := makeHdrComment(hdrComment)
 	for _, job := range cfgJobs {
-		txt += job.AssetURL + " " + strconv.FormatInt(job.PurgeEnd.Unix(), 10) + "\n"
+		txt += job.AssetURL + " " + strconv.FormatInt(job.PurgeEnd.Unix(), 10)
+		if job.Type != "" {
+			txt += " " + job.Type
+		}
+		txt += "\n"
 	}
 
 	return Cfg{
@@ -105,12 +111,13 @@ func MakeRegexRevalidateDotConfig(
 	}, nil
 }
 
-type job struct {
+type revalJob struct {
 	AssetURL string
 	PurgeEnd time.Time
+	Type     string // MISS or STALE (default)
 }
 
-type jobsSort []job
+type jobsSort []revalJob
 
 func (jb jobsSort) Len() int      { return len(jb) }
 func (jb jobsSort) Swap(i, j int) { jb[i], jb[j] = jb[j], jb[i] }
@@ -128,27 +135,28 @@ func (jb jobsSort) Less(i, j int) bool {
 //   - are "purge" jobs
 //   - have a start_time+ttl > now. That is, jobs that haven't expired yet.
 // Returns the filtered jobs, and any warnings.
-func filterJobs(jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) ([]job, []string) {
+func filterJobs(tc_jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) ([]revalJob, []string) {
 	warnings := []string{}
 
-	jobMap := map[string]time.Time{}
-	for _, job := range jobs {
-		if job.DeliveryService == "" {
+	jobMap := map[string]revalJob{}
+
+	for _, tc_job := range tc_jobs {
+		if tc_job.DeliveryService == "" {
 			continue
 		}
-		if !strings.HasPrefix(job.Parameters, `TTL:`) {
+		if !strings.HasPrefix(tc_job.Parameters, `TTL:`) {
 			continue
 		}
-		if !strings.HasSuffix(job.Parameters, `h`) {
+		if !strings.HasSuffix(tc_job.Parameters, `h`) {
 			continue
 		}
 
-		ttlHoursStr := job.Parameters
+		ttlHoursStr := tc_job.Parameters
 		ttlHoursStr = strings.TrimPrefix(ttlHoursStr, `TTL:`)
 		ttlHoursStr = strings.TrimSuffix(ttlHoursStr, `h`)
 		ttlHours, err := strconv.Atoi(ttlHoursStr)
 		if err != nil {
-			warnings = append(warnings, fmt.Sprintf("job %+v has unexpected parameters ttl format, config generation skipping!\n", job))
+			warnings = append(warnings, fmt.Sprintf("job %+v has unexpected parameters ttl format, config generation skipping!\n", tc_job))
 			continue
 		}
 
@@ -159,9 +167,9 @@ func filterJobs(jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) ([]
 			ttl = minTTL
 		}
 
-		jobStartTime, err := time.Parse(tc.JobTimeFormat, job.StartTime)
+		jobStartTime, err := time.Parse(tc.JobTimeFormat, tc_job.StartTime)
 		if err != nil {
-			warnings = append(warnings, fmt.Sprintf("job %+v has unexpected time format, config generation skipping!\n", job))
+			warnings = append(warnings, fmt.Sprintf("job %+v has unexpected time format, config generation skipping!\n", tc_job))
 			continue
 		}
 
@@ -172,20 +180,32 @@ func filterJobs(jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) ([]
 		if jobStartTime.Add(ttl).Before(time.Now()) {
 			continue
 		}
-		if job.Keyword != JobKeywordPurge {
+		if tc_job.Keyword != JobKeywordPurge {
 			continue
+		}
+
+		// process the __REFETCH__ keyword
+		assetURL := tc_job.AssetURL
+		var jobType string
+
+		if strings.HasSuffix(assetURL, RefetchSuffix) {
+			assetURL = strings.TrimSuffix(assetURL, RefetchSuffix)
+			jobType = "MISS"
+		} else if strings.HasSuffix(assetURL, RefreshSuffix) { // also default
+			assetURL = strings.TrimSuffix(assetURL, RefreshSuffix)
+			jobType = "STALE"
 		}
 
 		purgeEnd := jobStartTime.Add(ttl)
 
-		if existingPurgeEnd, ok := jobMap[job.AssetURL]; !ok || purgeEnd.After(existingPurgeEnd) {
-			jobMap[job.AssetURL] = purgeEnd
+		if rjob, ok := jobMap[assetURL]; !ok || purgeEnd.After(rjob.PurgeEnd) {
+			jobMap[assetURL] = revalJob{AssetURL: assetURL, PurgeEnd: purgeEnd, Type: jobType}
 		}
 	}
 
-	newJobs := []job{}
-	for assetURL, purgeEnd := range jobMap {
-		newJobs = append(newJobs, job{AssetURL: assetURL, PurgeEnd: purgeEnd})
+	newJobs := []revalJob{}
+	for _, rjob := range jobMap {
+		newJobs = append(newJobs, rjob)
 	}
 	sort.Sort(jobsSort(newJobs))
 
