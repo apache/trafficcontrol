@@ -37,23 +37,23 @@ own guarantee of a "clean slate".
 
 We propose a locking mechanism by which you can guarantee the exclusivity of your changes.
 With CDN locks, you can ensure one or both of the following conditions:
-- Only you can make changes and snap/ queue your CDN (exclusive locks)
-- Anybody can make changes but only you can snap/ queue your CDN (shared locks)
+- Only you can make changes and snap/ queue your CDN (hard locks)
+- Anybody can make changes but only you can snap/ queue your CDN (soft locks)
 
-`Exclusive` locks will help in cases where you are not collaborating with other users on the changes that you are
-making to a CDN. We anticipate all automated scripts and cron jobs to make use of these exclusive locks.
+`Hard` locks will help in cases where you are not collaborating with other users on the changes that you are
+making to a CDN. We anticipate all automated scripts and cron jobs to make use of these hard locks.
 
-The second category of locks is `shared` locks. This will be useful in a scenario when a group of users is working
-on different parts of a CDN, but their changes are not related to each other. In such a case, any number of users can 
-grab the shared lock and make changes on the CDN. However, only the first user who grabbed the shared lock can actually
-snap/ queue updates on the CDN. This way, the first user to grab the lock still has the chance to review the changes, and
-also ensure that nobody else snaps/ queues the CDN before they are done with their intended modifications.
+The second category of locks is `soft` locks. This will be useful in a scenario when a group of users is working
+on different parts of a CDN, but their changes are not related to each other. In such a case, say user `A` has acquired the `soft` lock
+on cdn `foo`. Now, any number of users (including `A`) can make changes on the CDN. However, only the first user who grabbed the soft lock,
+in this case, user `A`, can actually snap/ queue updates on the CDN. This way, the first user to grab the lock still has the chance to review 
+the changes, and also ensure that nobody else snaps/ queues the CDN before they are done with their intended modifications.
 
 There is also the third option of not using locks at all, in which case, the software will behave exactly the way it does
 today, that is, no safety that your changes will not be corrupted by somebody else before you snap/ queue.
 
-For unlocking a CDN under normal circumstances, only the user who has acquired the lock can unlock it (both shared 
-and exclusive). However, in the rare case that a user `A` forgets to unlock a CDN, an `admin` role user can unlock 
+For unlocking a CDN under normal circumstances, only the user who has acquired the lock can unlock it (both soft 
+and hard). However, in the rare case that a user `A` forgets to unlock a CDN, an `admin` role user can unlock 
 the CDN on behalf of user `A`.
 
 ### Traffic Portal Impact
@@ -62,7 +62,7 @@ the CDN on behalf of user `A`.
     - New "lock" icon to give the user the ability to lock a particular CDN
     - A dropdown list that appears when you click the above mentioned lock icon, which lists the list of CDNs that you can lock
     - A `Message` field that appears under the dropdown list that the user can populate with a custom message stating the reason behind locking the CDN
-    - A `Shared` field that can be set to `true` or `false` based on user requirement
+    - A `Soft Lock` field that can be set to `true` or `false` based on user requirement
     - A CDN notification displaying which CDN is locked by which user
     - An "unlock" option that appears next to the notification, only for the user who has locked the CDN
     - A way for the `admin` user to be able to unlock CDNs on other users' behalf
@@ -77,7 +77,7 @@ the CDN on behalf of user `A`.
 - GET+POST+DELETE
 
 Traffic Ops will need to add the logic to check for locks before snapping/ queueing a CDN. It'll also need to account for
-`shared` vs `exclusive` locks, and forbid a user from snapping/ queueing a CDN if another user possesses a lock on that CDN.
+`soft` vs `hard` locks, and forbid a user from snapping/ queueing a CDN if another user possesses a lock on that CDN.
 The following endpoints will need to handle the locks logic:
 - `/cachegroups/{{ID}}/queue_update`
 - `/cdns/{{ID}}/queue_update`
@@ -93,31 +93,25 @@ The following is the JSON representation of a `CDN_Lock` object:
   "username": "foo",
   "cdn": "cdn1",
   "message": "snapping cdn",
-  "shared": false,
-  "creator": true,
+  "soft": false,
   "lastUpdated": "2021-05-10T16:03:34-06:00"
 }
 ```
 
 The following table describes the top level `CDN_Lock` object:
 
-| field       | type                        | optionality | description                                                                             |
-| ----------- | --------------------------- | ----------- | ----------------------------------------------------------------------------------------|
-| username    | string                      | required    | the user name of the user that wants to acquire a lock on the CDN                       |
-| cdn         | string                      | required    | the name of the CDN on which the lcok needs to be acquired                              |
-| message     | string                      | optional    | the message stating a reason behind locking the CDN                                     |
-| shared      | boolean                     | required    | whether or not this is a shared lock                                                    |
-| creator     | boolean                     | required    | whether or not the requesting `username` is the first one to acquire a lock on `cdn`| 
-| lastUpdated | time                        | required    | the last time this lock was updated                                                     |
+| field       | type                        | optionality | description                                                                                                                  |
+| ----------- | --------------------------- | ----------- | -----------------------------------------------------------------------------------------------------------------------------|
+| username    | string                      | required    | the user name of the user that wants to acquire a lock on the CDN                                                            |
+| cdn         | string                      | required    | the name of the CDN on which the lcok needs to be acquired                                                                   |
+| message     | string                      | optional    | the message stating a reason behind locking the CDN                                                                          |
+| soft        | boolean                     | required    | whether or not this is a shared lock, meaning if a user has the lock, whether or not other users can make changes to the CDN |
+| lastUpdated | time                        | required    | the last time this lock was updated                                                                                          |
 
 **API constraints:**
-- a `username` and `cdn` combination must be unique if `shared` is set to `false`. In other words, there can be only one `exclusive`
-lock for a CDN
-- a CDN can have multiple `shared` locks
-- the `creator` will be set to `true` if the user is the first one acquiring a lock for the specified `cdn`
-- a user can snap/ queue a CDN only if the `creator` field corresponding to the `username` and `cdn` combination is `true`
-- a user can delete their `exclusive` lock whenever, since the user is the creator in this case
-- a user who is the creator cannot delete their `shared` lock until all other non-creator users have releases their shared locks for that CDN
+- a CDN can have only one `hard` or `soft` lock at a time
+- a user can snap/ queue a CDN only if they are the one holding the lock (of either kind) on the `cdn`. Alternatively, if no one has the lock on the `cdn`, anyone can snap/ queue/ make changes to the CDN
+- a user can delete their `hard` or `soft` lock whenever they want
 - a user with at least `all-read` and `all-write` capabilities can delete the locks of other users on any CDN. The `all-write` capability will be modified
 to include a new capability `delete-all-locks`.
 
@@ -132,16 +126,14 @@ response JSON:
       "username": "foo",
       "cdn": "cdn1",
       "message": "snapping cdn",
-      "shared": true,
-      "creator": true,
+      "soft": true,
       "lastUpdated": "2021-05-10T16:03:34-06:00"
     },
     {
       "username": "bar",
       "cdn": "cdn2",
       "message": "queue cdn",
-      "shared": false,
-      "creator": true,
+      "soft": false,
       "lastUpdated": "2021-05-10T17:04:34-06:00"
     }
   ]
@@ -155,7 +147,7 @@ request JSON:
 {
   "cdn": "bar",
   "message": "snapping cdn",
-  "shared": false
+  "soft": false
 }
 ```
 
@@ -172,8 +164,7 @@ response JSON:
     "username": "foo",
     "cdn": "bar",
     "message": "snapping cdn",
-    "shared": false,
-    "creator": true,
+    "soft": false,
     "lastUpdated": "2021-05-10T17:05:30-06:00"
   }
 }
@@ -194,8 +185,7 @@ response JSON:
     "username": "foo",
     "cdn": "bar",
     "message": "snapping cdn",
-    "shared": false,
-    "creator": true,
+    "soft": false,
     "lastUpdated": "2021-05-10T17:05:30-06:00"
   }
 }
@@ -215,11 +205,10 @@ A new database table for `cdn_lock`, as described below, will be created.
  username      | text                     |           | not null |
  cdn_name      | text                     |           | not null |
  message       | test                     |           |          |
- shared        | boolean                  |           | not null | true
- creator       | boolean                  |           | not null | false
+ soft          | boolean                  |           | not null | true
  last_updated  | timestamp with time zone |           | not null | now() 
 Indexes:
-    "pk_cdn_lock" PRIMARY KEY(username, cdn)
+    "pk_cdn_lock" PRIMARY KEY(cdn)
 Foreign-key constraints:
     "fk_lock_cdn" FOREIGN KEY (cdn) REFERENCES cdn(name)
     "fk_lock_username" FOREIGN KEY (username) REFERENCES tm_user(username)
