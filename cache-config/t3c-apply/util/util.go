@@ -26,6 +26,7 @@ import (
 	"github.com/gofrs/flock"
 	"io/ioutil"
 	"math/rand"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/user"
@@ -431,4 +432,82 @@ func Touch(fn string) error {
 	}
 	myfile.Close()
 	return nil
+}
+
+func UpdateMaxmind(cfg config.Cfg) bool {
+
+	if cfg.MaxMindLocation == "" {
+		return false
+	}
+
+	// Dont update for report mode
+	if cfg.RunMode == t3cutil.ModeReport {
+		return false
+	}
+
+	// Split url, get filename
+	url, err := url.Parse(cfg.MaxMindLocation)
+	if err != nil {
+		log.Errorf("error parsing maxmind url: %v", err)
+		return false
+	}
+	path := url.Path
+	pathParts := strings.Split(path, "/")
+	fileName := pathParts[len(pathParts)-1]
+
+	// Check if filename exists in ats etc
+	filePath := cfg.TsConfigDir + "/" + fileName
+	stdOut, _, code := t3cutil.Do(`date`,
+		"+%a, %d %b %Y %r %Z",
+		"-u",
+		"-r",
+		filePath)
+
+	if code == 0 {
+		// The file exists so run an IMS check
+		ims := fmt.Sprintf("If-Modified-Since: %s", string(stdOut[:len(stdOut)-1]))
+		stdOut, _, code := t3cutil.Do(`curl`,
+			"-I",
+			"-H",
+			ims,
+			"-sw",
+			"%{http_code}",
+			cfg.MaxMindLocation,
+			"-o",
+			"/dev/null")
+
+		if string(stdOut) == "304" {
+			log.Errorf("Received a 304 for maxmind database, not updating")
+			return false
+		}
+
+		if code != 0 {
+			log.Errorf("error issuing IMS for maxmind database")
+			return false
+		}
+	}
+
+	_, _, code = t3cutil.Do(`curl`,
+		"-so",
+		filePath,
+		cfg.MaxMindLocation)
+
+	if code != 0 {
+		log.Errorf("Error downloading maxmind database")
+		return false
+	}
+
+	gunzip := exec.Command("bash", "-c", "gunzip < "+filePath+" > "+strings.TrimSuffix(filePath, ".gz"))
+	err = gunzip.Run()
+	if err != nil {
+		log.Errorf("error running gunzip: %v\n", err)
+		return false
+	}
+	if code == 0 {
+		log.Errorf("Maxmind DB at %s successfully updated from %s", filePath, cfg.MaxMindLocation)
+		return true
+	}
+
+	log.Errorf("failure gunzip maxmind db")
+	return false
 }
