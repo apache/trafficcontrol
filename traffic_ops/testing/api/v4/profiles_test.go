@@ -340,7 +340,7 @@ func UpdateTestProfiles(t *testing.T) {
 	}
 
 	respProfile.Name = oldName
-	alert, _, err = TOSession.UpdateProfile(respProfile.ID, respProfile, nil)
+	alert, _, err = TOSession.UpdateProfile(respProfile.ID, respProfile, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("Unexpected error restoring Profile name: %v - alerts: %+v", err, alert.Alerts)
 	}
@@ -542,46 +542,47 @@ func DeleteTestProfiles(t *testing.T) {
 }
 
 func GetTestPaginationSupportProfiles(t *testing.T) {
-	qparams := url.Values{}
-	qparams.Set("orderby", "id")
-	profiles, _, err := TOSession.GetProfiles(qparams, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetProfiles(opts)
 	if err != nil {
-		t.Errorf("cannot GET Profiles: %v", err)
+		t.Errorf("Unexpected error getting Profiles: %v - alerts: %+v", err, resp.Alerts)
 	}
+	profiles := resp.Response
 
 	if len(profiles) > 0 {
-		qparams = url.Values{}
-		qparams.Set("orderby", "id")
-		qparams.Set("limit", "1")
-		profilesWithLimit, _, err := TOSession.GetProfiles(qparams, nil)
+		opts.QueryParameters = url.Values{}
+		opts.QueryParameters.Set("orderby", "id")
+		opts.QueryParameters.Set("limit", "1")
+		profilesWithLimit, _, err := TOSession.GetProfiles(opts)
 		if err == nil {
-			if !reflect.DeepEqual(profiles[:1], profilesWithLimit) {
+			if !reflect.DeepEqual(profiles[:1], profilesWithLimit.Response) {
 				t.Error("expected GET Profiles with limit = 1 to return first result")
 			}
 		} else {
 			t.Error("Error in getting Profiles by limit")
 		}
 		if len(profiles) > 1 {
-			qparams = url.Values{}
-			qparams.Set("orderby", "id")
-			qparams.Set("limit", "1")
-			qparams.Set("offset", "1")
-			profilesWithOffset, _, err := TOSession.GetProfiles(qparams, nil)
+			opts.QueryParameters = url.Values{}
+			opts.QueryParameters.Set("orderby", "id")
+			opts.QueryParameters.Set("limit", "1")
+			opts.QueryParameters.Set("offset", "1")
+			profilesWithOffset, _, err := TOSession.GetProfiles(opts)
 			if err == nil {
-				if !reflect.DeepEqual(profiles[1:2], profilesWithOffset) {
+				if !reflect.DeepEqual(profiles[1:2], profilesWithOffset.Response) {
 					t.Error("expected GET Profiles with limit = 1, offset = 1 to return second result")
 				}
 			} else {
 				t.Error("Error in getting Profiles by limit and offset")
 			}
 
-			qparams = url.Values{}
-			qparams.Set("orderby", "id")
-			qparams.Set("limit", "1")
-			qparams.Set("page", "2")
-			profilesWithPage, _, err := TOSession.GetProfiles(qparams, nil)
+			opts.QueryParameters = url.Values{}
+			opts.QueryParameters.Set("orderby", "id")
+			opts.QueryParameters.Set("limit", "1")
+			opts.QueryParameters.Set("page", "2")
+			profilesWithPage, _, err := TOSession.GetProfiles(opts)
 			if err == nil {
-				if !reflect.DeepEqual(profiles[1:2], profilesWithPage) {
+				if !reflect.DeepEqual(profiles[1:2], profilesWithPage.Response) {
 					t.Error("expected GET Profiles with limit = 1, page = 2 to return second result")
 				}
 			} else {
@@ -594,32 +595,32 @@ func GetTestPaginationSupportProfiles(t *testing.T) {
 		t.Errorf("No Profiles found to check pagination")
 	}
 
-	qparams = url.Values{}
-	qparams.Set("limit", "-2")
-	_, _, err = TOSession.GetProfiles(qparams, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, _, err = TOSession.GetProfiles(opts)
 	if err == nil {
 		t.Error("expected GET Profiles to return an error when limit is not bigger than -1")
-	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
-		t.Errorf("expected GET Profiles to return an error for limit is not bigger than -1, actual error: " + err.Error())
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
+		t.Errorf("expected getting Profiles where limit is not bigger than -1 to return an error stating so, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	qparams = url.Values{}
-	qparams.Set("limit", "1")
-	qparams.Set("offset", "0")
-	_, _, err = TOSession.GetProfiles(qparams, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, _, err = TOSession.GetProfiles(opts)
 	if err == nil {
 		t.Error("expected GET Profiles to return an error when offset is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET Profiles to return an error for offset is not a positive integer, actual error: " + err.Error())
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected getting Profiles where offset is not a positive integer to return an error stating so, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	qparams = url.Values{}
-	qparams.Set("limit", "1")
-	qparams.Set("page", "0")
-	_, _, err = TOSession.GetProfiles(qparams, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, _, err = TOSession.GetProfiles(opts)
 	if err == nil {
 		t.Error("expected GET Profiles to return an error when page is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET Profiles to return an error for page is not a positive integer, actual error: " + err.Error())
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected getting Profiles where page is not a positive integer to return an error stating so, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
