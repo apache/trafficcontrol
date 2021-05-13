@@ -37,9 +37,6 @@ interface UpdateCacheGroup {
     Type: string;
     FailoverCG?: string;
 }
-interface CheckCSV {
-    Name: string;
-}
 export class CacheGroupPage extends BasePage {
     private btnCreateCacheGroups = element(by.name('createCacheGroupButton'));
     private txtName = element(by.name("name"))
@@ -54,7 +51,7 @@ export class CacheGroupPage extends BasePage {
     private txtConfirmCacheGroupName = element(by.name("confirmWithNameInput"));
     private btnDelete = element(by.buttonText('Delete'));
     private randomize = randomize;
-
+    private btnTableColumn = element(by.className("caret"))
     async OpenTopologyMenu() {
         let snp = new SideNavigationPage();
         await snp.ClickTopologyMenu();
@@ -167,10 +164,19 @@ export class CacheGroupPage extends BasePage {
         }
         return result;
     }
-    public async ToggleVisibility(): Promise<boolean> {
+    public async ToggleTableColumn(name: string): Promise<boolean> {
         let result = false;
-
-
+        await this.btnTableColumn.click();
+        //if it's already on, turn it off and return false
+        if (await browser.isElementPresent(element(by.xpath("//th[text()='" + name + "']"))) === true){
+            await element(by.xpath("//label[text()=' " + name + "']")).click();
+            result = false;
+        }else{
+            //of it already off, turn it on return true
+            await element(by.xpath("//label[text()=' " + name + "']")).click();
+            result = true;
+        }
+        await this.btnTableColumn.click();
         return result;
     }
 
