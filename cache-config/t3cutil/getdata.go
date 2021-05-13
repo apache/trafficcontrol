@@ -70,7 +70,7 @@ func GetDataFuncs() map[string]func(TCCfg, io.Writer) error {
 func GetServerUpdateStatus(cfg TCCfg) (*tc.ServerUpdateStatus, error) {
 	status, _, err := cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
 	if err != nil {
-		return nil, errors.New("getting server update status: " + err.Error())
+		return nil, errors.New("getting server '" + cfg.CacheHostName + "' update status: " + err.Error())
 	}
 	return &status, nil
 }
