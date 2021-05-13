@@ -52,7 +52,6 @@ export class LoginPage extends BasePage{
     async Login(login: LoginData){
         let result = false;
         const basePage = new BasePage();
-        await browser.wait(until.urlIs(browser.params.baseUrl))
         if(login.username === 'admin'){
             await this.txtUserName.sendKeys(login.username)
             await this.txtPassword.sendKeys(login.password)
