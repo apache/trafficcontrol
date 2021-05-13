@@ -35,4 +35,3 @@ linters-settings:
     disable:
       - copylocks
       - printf
-      - tests
