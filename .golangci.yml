@@ -15,11 +15,9 @@
 run:
   concurrency: 8
   timeout: 2m
-  tests: false
+  tests: true
   skip-dirs:
-    - ^experimental.*($|/)
-    - ^vendor.*($|/)
-    - ^rpmbuild.*($|/)
+    - ^rpmbuild.*
   skip-dirs-use-default: true
 
   output:
@@ -37,3 +35,4 @@ linters-settings:
     disable:
       - copylocks
       - printf
+      - tests
