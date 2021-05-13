@@ -28,13 +28,8 @@ import (
 	"io/ioutil"
 )
 
-func encryptString(stringToEncrypt string, encryptionKeyLocation string) (string, error) {
-	key, err := readKeyFromFile(encryptionKeyLocation)
-	if err != nil {
-		return "", err
-	}
-
-	cipherBlock, err := aes.NewCipher(key)
+func aesEncrypt(bytesToEncrypt []byte, aesKey []byte) (string, error) {
+	cipherBlock, err := aes.NewCipher(aesKey)
 	if err != nil {
 		return "", err
 	}
@@ -49,17 +44,11 @@ func encryptString(stringToEncrypt string, encryptionKeyLocation string) (string
 		return "", err
 	}
 
-	return string(gcm.Seal(nonce, nonce, []byte(stringToEncrypt), nil)), nil
+	return string(gcm.Seal(nonce, nonce, bytesToEncrypt, nil)), nil
 }
 
-func decryptString(stringToDecrypt string, encryptionKeyLocation string) (string, error) {
-	bytesToDecrypt := []byte(stringToDecrypt)
-	key, err := readKeyFromFile(encryptionKeyLocation)
-	if err != nil {
-		return "", err
-	}
-
-	cipherBlock, err := aes.NewCipher(key)
+func aesDecrypt(bytesToDecrypt []byte, aesKey []byte) (string, error) {
+	cipherBlock, err := aes.NewCipher(aesKey)
 	if err != nil {
 		return "", err
 	}

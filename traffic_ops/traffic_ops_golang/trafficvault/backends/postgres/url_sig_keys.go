@@ -30,8 +30,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func getURLSigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context, encryptionKeyLocation string) (tc.URLSigKeys, bool, error) {
-	var encryptedUrlSigKey string
+func getURLSigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context, aesKey []byte) (tc.URLSigKeys, bool, error) {
+	var encryptedUrlSigKey []byte
 	if err := tvTx.QueryRow("SELECT data FROM url_sig_key WHERE deliveryservice = $1", xmlID).Scan(&encryptedUrlSigKey); err != nil {
 		if err == sql.ErrNoRows {
 			return tc.URLSigKeys{}, false, nil
@@ -40,7 +40,7 @@ func getURLSigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context, encryptionK
 		return tc.URLSigKeys{}, false, e
 	}
 
-	jsonUrlKeys, err := decryptString(encryptedUrlSigKey, encryptionKeyLocation)
+	jsonUrlKeys, err := aesDecrypt(encryptedUrlSigKey, aesKey)
 	if err != nil {
 		return tc.URLSigKeys{}, false, err
 	}
@@ -54,7 +54,7 @@ func getURLSigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context, encryptionK
 	return urlSignKey, true, nil
 }
 
-func putURLSigKeys(xmlID string, tvTx *sqlx.Tx, keys tc.URLSigKeys, ctx context.Context, encryptionKeyLocation string) error {
+func putURLSigKeys(xmlID string, tvTx *sqlx.Tx, keys tc.URLSigKeys, ctx context.Context, aesKey []byte) error {
 	keyJSON, err := json.Marshal(&keys)
 	if err != nil {
 		return errors.New("marshalling keys: " + err.Error())
@@ -65,7 +65,7 @@ func putURLSigKeys(xmlID string, tvTx *sqlx.Tx, keys tc.URLSigKeys, ctx context.
 		return err
 	}
 
-	encryptedKey, err := encryptString(string(keyJSON), encryptionKeyLocation)
+	encryptedKey, err := aesEncrypt(keyJSON, aesKey)
 	if err != nil {
 		return errors.New("encrypting keys: " + err.Error())
 	}

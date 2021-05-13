@@ -69,12 +69,13 @@ type Config struct {
 	MaxIdleConnections     int    `json:"max_idle_connections"`
 	ConnMaxLifetimeSeconds int    `json:"conn_max_lifetime_seconds"`
 	QueryTimeoutSeconds    int    `json:"query_timeout_seconds"`
-	EncryptionKeyLocation  string `json:"encryption_key_location"`
+	AesKeyLocation         string `json:"aes_key_location"`
 }
 
 type Postgres struct {
-	cfg Config
-	db  *sqlx.DB
+	cfg    Config
+	db     *sqlx.DB
+	aesKey []byte
 }
 
 func checkErrWithContext(prefix string, err error, ctxErr error) error {
@@ -318,7 +319,7 @@ func (p *Postgres) GetURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Context) 
 		return tc.URLSigKeys{}, false, err
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
-	return getURLSigKeys(xmlID, tvTx, ctx, p.cfg.EncryptionKeyLocation)
+	return getURLSigKeys(xmlID, tvTx, ctx, p.aesKey)
 }
 
 func (p *Postgres) PutURLSigKeys(xmlID string, keys tc.URLSigKeys, tx *sql.Tx, ctx context.Context) error {
@@ -328,7 +329,7 @@ func (p *Postgres) PutURLSigKeys(xmlID string, keys tc.URLSigKeys, tx *sql.Tx, c
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
 
-	return putURLSigKeys(xmlID, tvTx, keys, ctx, p.cfg.EncryptionKeyLocation)
+	return putURLSigKeys(xmlID, tvTx, keys, ctx, p.aesKey)
 }
 
 func (p *Postgres) DeleteURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Context) error {
@@ -434,19 +435,24 @@ func postgresLoad(b json.RawMessage) (trafficvault.TrafficVault, error) {
 		log.Infoln("successfully pinged the Traffic Vault database")
 	}
 
-	return &Postgres{cfg: pgCfg, db: db}, nil
+	aesKey, err := readKeyFromFile(pgCfg.AesKeyLocation)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Postgres{cfg: pgCfg, db: db, aesKey: aesKey}, nil
 }
 
 func validateConfig(cfg Config) error {
 	errs := tovalidate.ToErrors(validation.Errors{
-		"user":                    validation.Validate(cfg.User, validation.Required),
-		"password":                validation.Validate(cfg.Password, validation.Required),
-		"hostname":                validation.Validate(cfg.Hostname, validation.Required),
-		"dbname":                  validation.Validate(cfg.DBName, validation.Required),
-		"port":                    validation.Validate(cfg.Port, validation.By(tovalidate.IsValidPortNumber)),
-		"max_connections":         validation.Validate(cfg.MaxConnections, validation.Min(0)),
-		"query_timeout_seconds":   validation.Validate(cfg.QueryTimeoutSeconds, validation.Min(0)),
-		"encryption_key_location": validation.Validate(cfg.EncryptionKeyLocation, validation.Required),
+		"user":                  validation.Validate(cfg.User, validation.Required),
+		"password":              validation.Validate(cfg.Password, validation.Required),
+		"hostname":              validation.Validate(cfg.Hostname, validation.Required),
+		"dbname":                validation.Validate(cfg.DBName, validation.Required),
+		"port":                  validation.Validate(cfg.Port, validation.By(tovalidate.IsValidPortNumber)),
+		"max_connections":       validation.Validate(cfg.MaxConnections, validation.Min(0)),
+		"query_timeout_seconds": validation.Validate(cfg.QueryTimeoutSeconds, validation.Min(0)),
+		"aes_key_location":      validation.Validate(cfg.AesKeyLocation, validation.Required),
 	})
 	if len(errs) == 0 {
 		return nil
