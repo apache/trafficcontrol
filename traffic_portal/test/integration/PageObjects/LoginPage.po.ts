@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element, until} from 'protractor';
+import { browser, by, element} from 'protractor';
 
 import { randomize } from "../config";
 import { BasePage } from './BasePage.po'
