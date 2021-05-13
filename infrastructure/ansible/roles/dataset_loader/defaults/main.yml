@@ -18,20 +18,22 @@ load_dataset: false
 dl_to_url: https://to.kabletown.invalid
 # Url to use when contacting the timeseries visualizations from the TP UI
 dl_ts_url: https://stats.kabletown.invalid
+# URL to use for static CDN config files
+dl_sf_url: https://czf.kabletown.invalid
 # Credentials to use when logging into TrafficOps
 dl_to_user:
 dl_to_user_password:
 # TrafficOps API version to use
-dl_to_api_version: 1.3
+dl_to_api_version: 3.0
 dl_target_api_url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}"
 # URL for the CZF file
-dl_shallow_czf_url: "{{ to_url }}/czf.json"
+dl_shallow_czf_url: "{{ dl_sf_url }}/czf.json"
 # URL for the the Anonymous IP configuration file
-dl_anonymous_ip_url: "{{ to_url }}/anonymousip.json"
+dl_anonymous_ip_url: "{{ dl_sf_url }}/anonymousip.json"
 # URL for the MaxMind Geolocation database
-dl_geolocation_url: "{{ to_url }}/MaxMind/auto/GeoIP2-CityLite.mmdb.gz"
+dl_geolocation_url: "{{ dl_sf_url }}/MaxMind/auto/GeoIP2-CityLite.mmdb.gz"
 # URL for the MaxMind Anonymous IP database
-dl_anonymous_db_url: "{{ to_url }}/MaxMind/auto/GeoIP2-Anonymous-IP.mmdb.gz"
+dl_anonymous_db_url: "{{ dl_sf_url }}/MaxMind/auto/GeoIP2-Anonymous-IP.mmdb.gz"
 # Which IP Addresses are allowed to communicate with the astats endpoints on each cache
 dl_allow_ip4: "127.0.0.1"
 dl_allow_ip6: "::1"
@@ -347,7 +349,7 @@ dl_ds_default_profiles:
     parameters:
       - name: geolocation.polling.url
         configFile: CRConfig.json
-        value: "{{ dl_to_url }}/MaxMind/auto/GeoLiteCity.dat.gz"
+        value: "{{ dl_sf_url }}/MaxMind/auto/GeoLiteCity.dat.gz"
         secure: 0
       - name: all_graph_url
         configFile: global
@@ -384,10 +386,6 @@ dl_ds_default_profiles:
       - name: tm.instance_name
         configFile: global
         value: Apache Traffic Control CDN
-        secure: 0
-      - name: tm.logourl
-        configFile: global
-        value: "/images/tc_logo.png"
         secure: 0
       - name: tm.rev_proxy.url
         configFile: global
@@ -692,7 +690,7 @@ dl_ds_default_profile_cdntemplates:
         secure: 0
       - name: anonymousip.polling.interval
         configFile: CRConfig.json
-        value: '86400000' 
+        value: '86400000'
         secure: 0
       - name: api.cache-control.max-age
         configFile: CRConfig.json
@@ -4046,9 +4044,9 @@ dl_ds_default_ds_template:
     eligible_mso_server_profile_names:
       - "MSO_{{ Target_cdn_delegation }}_Weighted_Primary"
       - "MSO_{{ Target_cdn_delegation }}_Weighted_Secondary"
-  - displayName: HTTP Routed with Anonymous IP Block  
+  - displayName: HTTP Routed with Anonymous IP Block
     longDesc: A basic HTTP routed Delivery Service with Anonymous IP Block Enabled
-    anonymousBlockingEnabled: true 
+    anonymousBlockingEnabled: true
     uniqueKey: simple-http-anon-block
 
 # Federations
