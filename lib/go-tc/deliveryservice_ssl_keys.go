@@ -91,6 +91,13 @@ type DeliveryServiceSSLKeysReq struct {
 	Certificate *DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
 }
 
+// DeliveryServiceSSLKeysGenerationResponse is the type of a response from
+// Traffic Ops to a request for generation of SSL Keys for a Delivery Service.
+type DeliveryServiceSSLKeysGenerationResponse struct {
+	Response string `json:"response"`
+	Alerts
+}
+
 // DeliveryServiceSSLKeysCertificate ...
 type DeliveryServiceSSLKeysCertificate struct {
 	Crt string `json:"crt"`
@@ -238,6 +245,13 @@ type TrafficVaultPingResponse struct {
 }
 
 type URLSigKeys map[string]string
+
+// URLSignatureKeysResponse is the type of a response from Traffic Ops to a request
+// for the URL Signing keys of a Delivery Service - in API version 4.0.
+type URLSignatureKeysResponse struct {
+	Response URLSigKeys `json:"response"`
+	Alerts
+}
 
 type CDNSSLKeysResp []CDNSSLKey
 

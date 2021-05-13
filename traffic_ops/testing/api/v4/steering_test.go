@@ -17,6 +17,8 @@ package v4
 
 import (
 	"testing"
+
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestSteering(t *testing.T) {
@@ -27,41 +29,42 @@ func TestSteering(t *testing.T) {
 
 func GetTestSteering(t *testing.T) {
 	if len(testData.SteeringTargets) < 1 {
-		t.Error("get steering: no steering target test data")
+		t.Fatal("get steering: no steering target test data")
 	}
 	st := testData.SteeringTargets[0]
 	if st.DeliveryService == nil {
-		t.Error("get steering: test data missing ds")
+		t.Fatal("get steering: test data missing ds")
 	}
 
-	steerings, _, err := TOSession.Steering(nil)
+	resp, _, err := TOSession.Steering(client.RequestOptions{})
 	if err != nil {
-		t.Errorf("steering get: getting steering: %v", err)
+		t.Errorf("steering get: getting steering: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	if len(steerings) != len(testData.SteeringTargets) {
-		t.Errorf("steering get: expected %v actual %v", len(testData.SteeringTargets), len(steerings))
+	if len(resp.Response) != len(testData.SteeringTargets) {
+		t.Fatalf("steering get: expected %d actual %d", len(testData.SteeringTargets), len(resp.Response))
 	}
+	steerings := resp.Response
 
 	if steerings[0].ClientSteering {
-		t.Errorf("steering get: ClientSteering expected %v actual %v", false, true)
+		t.Error("steering get: ClientSteering expected: true actual: false")
 	}
 	if len(steerings[0].Targets) != 1 {
-		t.Errorf("steering get: Targets expected %v actual %v", 1, len(steerings[0].Targets))
+		t.Fatalf("steering get: Targets expected %d actual %d", 1, len(steerings[0].Targets))
 	}
 	if steerings[0].Targets[0].Order != 0 {
-		t.Errorf("steering get: Targets Order expected %v actual %v", 0, steerings[0].Targets[0].Order)
+		t.Errorf("steering get: Targets Order expected %d actual %d", 0, steerings[0].Targets[0].Order)
+	}
+	if steerings[0].Targets[0].GeoOrder != nil {
+		t.Errorf("steering get: Targets Order expected %v actual %d", nil, *steerings[0].Targets[0].GeoOrder)
+	}
+	if steerings[0].Targets[0].Longitude != nil {
+		t.Errorf("steering get: Targets Order expected %v actual %f", nil, *steerings[0].Targets[0].Longitude)
+	}
+	if steerings[0].Targets[0].Latitude != nil {
+		t.Errorf("steering get: Targets Order expected %v actual %f", nil, *steerings[0].Targets[0].Latitude)
 	}
 	if testData.SteeringTargets[0].Value != nil && steerings[0].Targets[0].Weight != int32(*testData.SteeringTargets[0].Value) {
 		t.Errorf("steering get: Targets Order expected %v actual %v", testData.SteeringTargets[0].Value, steerings[0].Targets[0].Weight)
-	}
-	if steerings[0].Targets[0].GeoOrder != nil {
-		t.Errorf("steering get: Targets Order expected %v actual %+v", nil, *steerings[0].Targets[0].GeoOrder)
-	}
-	if steerings[0].Targets[0].Longitude != nil {
-		t.Errorf("steering get: Targets Order expected %v actual %+v", nil, *steerings[0].Targets[0].Longitude)
-	}
-	if steerings[0].Targets[0].Latitude != nil {
-		t.Errorf("steering get: Targets Order expected %v actual %+v", nil, *steerings[0].Targets[0].Latitude)
 	}
 }

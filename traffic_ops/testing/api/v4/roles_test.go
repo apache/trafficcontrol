@@ -20,12 +20,13 @@ import (
 	"net/url"
 	"reflect"
 	"sort"
-	"strings"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 const (
@@ -58,44 +59,67 @@ func TestRoles(t *testing.T) {
 }
 
 func UpdateTestRolesWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.Roles) > 0 {
-		t.Logf("testData.Roles contains: %+v\n", testData.Roles)
-		firstRole := testData.Roles[0]
-		// Retrieve the Role by role so we can get the id for the Update
-		resp, _, status, err := TOSession.GetRoleByName(*firstRole.Name, header)
-		t.Log("Status Code: ", status)
-		if err != nil {
-			t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
-		}
-		t.Logf("got response: %+v\n", resp)
-		if len(resp) > 0 {
-			remoteRole := resp[0]
-			expectedRole := "new admin2"
-			remoteRole.Name = &expectedRole
-			_, reqInf, status, _ := TOSession.UpdateRole(*remoteRole.ID, remoteRole, header)
-			if status != http.StatusPreconditionFailed {
-				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-			}
-		}
+	if len(testData.Roles) < 1 {
+		t.Fatal("Need at least one Role to test updating a Role with HTTP headers")
+	}
+	firstRole := testData.Roles[0]
+	if firstRole.Name == nil {
+		t.Fatal("Found a Role in the testing data with null or undefined name")
+	}
+
+	// Retrieve the Role by role so we can get the id for the Update
+	opts := client.NewRequestOptions()
+	opts.Header = header
+	opts.QueryParameters.Set("name", *firstRole.Name)
+	resp, _, err := TOSession.GetRoles(opts)
+	if err != nil {
+		t.Errorf("cannot get Role '%s' by name: %v - alerts: %+v", *firstRole.Name, err, resp.Alerts)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Role to exist with name '%s', found: %d", *firstRole.Name, len(resp.Response))
+	}
+	remoteRole := resp.Response[0]
+	if remoteRole.ID == nil {
+		t.Fatal("Traffic Ops returned a representation for a Role with null or undefined ID")
+	}
+
+	expectedRole := "new admin2"
+	remoteRole.Name = &expectedRole
+	opts.QueryParameters.Del("name")
+	_, reqInf, _ := TOSession.UpdateRole(*remoteRole.ID, remoteRole, opts)
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
 	}
 }
 
 func GetTestRolesIMSAfterChange(t *testing.T, header http.Header) {
+	if len(testData.Roles) < roleGood+1 {
+		t.Fatalf("Need at least %d Roles to test getting Roles with IMS change", roleGood+1)
+	}
 	role := testData.Roles[roleGood]
-	_, reqInf, _, err := TOSession.GetRoleByName(*role.Name, header)
+	if role.Name == nil {
+		t.Fatal("Found a Role in the testing data with null or undefined name")
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", *role.Name)
+	opts.Header = header
+	resp, reqInf, err := TOSession.GetRoles(opts)
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusOK {
 		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
 	}
+
 	currentTime := time.Now().UTC()
 	currentTime = currentTime.Add(1 * time.Second)
 	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
-	_, reqInf, _, err = TOSession.GetRoleByName(*role.Name, header)
+	opts.Header.Set(rfc.IfModifiedSince, timeStr)
+
+	resp, reqInf, err = TOSession.GetRoles(opts)
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusNotModified {
 		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -103,15 +127,22 @@ func GetTestRolesIMSAfterChange(t *testing.T, header http.Header) {
 }
 
 func GetTestRolesIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
+	if len(testData.Roles) < roleGood+1 {
+		t.Fatalf("Need at least %d Roles to test getting Roles with IMS change", roleGood+1)
+	}
+	role := testData.Roles[roleGood]
+	if role.Name == nil {
+		t.Fatal("Found a Role in the testing data with null or undefined name")
+	}
+
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	role := testData.Roles[roleGood]
-	_, reqInf, _, err := TOSession.GetRoleByName(*role.Name, header)
+	opts := client.NewRequestOptions()
+	opts.Header.Set(rfc.IfModifiedSince, time)
+
+	resp, reqInf, err := TOSession.GetRoles(opts)
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusNotModified {
 		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -119,45 +150,47 @@ func GetTestRolesIMS(t *testing.T) {
 
 }
 
+// This will break if anyone adds a Role or rearranges Roles in the testing data.
 func CreateTestRoles(t *testing.T) {
+	if len(testData.Roles) > 3 {
+		t.Fatal("Too many Roles in the test data. Tests can only handle 3")
+	}
+
 	expectedAlerts := []string{
 		"",
 		"can not add non-existent capabilities: [invalid-capability]",
 		"",
 	}
 	for i, role := range testData.Roles {
-		var alerts tc.Alerts
-		alerts, _, status, err := TOSession.CreateRole(role)
-		t.Log("Status Code: ", status)
-		t.Log("Response: ", alerts)
+		alerts, _, err := TOSession.CreateRole(role, client.RequestOptions{})
 		if err != nil {
-			t.Logf("error: %v", err)
-		}
-		if expectedAlerts[i] == "" && err != nil {
-			t.Errorf("expected: no error, actual: %v", err)
-		} else if len(expectedAlerts[i]) > 0 && err == nil {
+			if expectedAlerts[i] == "" {
+				t.Errorf("Unexpected error creating a Role: %v - alerts: %+v", err, alerts.Alerts)
+			} else if !alertsHaveError(alerts.Alerts, expectedAlerts[i]) {
+				t.Errorf("expected: error containing '%s', actual: %v - alerts: %+v", expectedAlerts[i], err, alerts.Alerts)
+			}
+		} else if expectedAlerts[i] != "" {
 			t.Errorf("expected: error containing '%s', actual: nil", expectedAlerts[i])
-		} else if err != nil && !strings.Contains(err.Error(), expectedAlerts[i]) {
-			t.Errorf("expected: error containing '%s', actual: %v", expectedAlerts[i], err)
 		}
 	}
 }
 
 func SortTestRoles(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, _, err := TOSession.GetRoles(nil, header)
+	resp, _, err := TOSession.GetRoles(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	for i := range resp {
-		sortedList = append(sortedList, *resp[i].Name)
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
+	sortedList := make([]string, 0, len(resp.Response))
+	for _, role := range resp.Response {
+		if role.Name == nil {
+			t.Error("Traffic Ops returned a representation for a Role with null or undefined name")
+			continue
+		}
+		sortedList = append(sortedList, *role.Name)
+	}
+
+	if !sort.StringsAreSorted(sortedList) {
 		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
@@ -170,112 +203,144 @@ func UpdateTestRoles(t *testing.T) {
 	if firstRole.Name == nil {
 		t.Fatal("Found Role with null or undefined name in test data")
 	}
+
 	// Retrieve the Role by role so we can get the id for the Update
-	resp, _, _, err := TOSession.GetRoleByName(*firstRole.Name, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", *firstRole.Name)
+	resp, _, err := TOSession.GetRoles(opts)
 	if err != nil {
-		t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
+		t.Errorf("cannot get Role '%s' by name: %v - alerts: %+v", *firstRole.Name, err, resp.Alerts)
 	}
-	if len(resp) < 1 {
-		t.Fatal("got empty response if GET role by name")
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Role to exist with name '%s', found: %d", *firstRole.Name, len(resp.Response))
 	}
-	remoteRole := resp[0]
+	remoteRole := resp.Response[0]
 	if remoteRole.ID == nil {
 		t.Fatal("Role returned from Traffic Ops had null or undefined ID")
 	}
+
 	expectedRole := "new admin2"
 	remoteRole.Name = &expectedRole
 	var alert tc.Alerts
-	alert, _, _, err = TOSession.UpdateRole(*remoteRole.ID, remoteRole, nil)
+	alert, _, err = TOSession.UpdateRole(*remoteRole.ID, remoteRole, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot UPDATE Role by id: %v - %v", err, alert)
+		t.Fatalf("cannot update Role: %v - alerts: %+v", err, alert.Alerts)
 	}
 
 	// Retrieve the Role to check role got updated
-	resp, _, _, err = TOSession.GetRoleByID(*remoteRole.ID, nil)
+	opts.QueryParameters.Del("name")
+	opts.QueryParameters.Set("id", strconv.Itoa(*remoteRole.ID))
+	resp, _, err = TOSession.GetRoles(opts)
 	if err != nil {
-		t.Errorf("cannot GET Role by role: %v - %v", firstRole.Name, err)
+		t.Errorf("cannot get Role by ID after update: %v - alerts: %+v", err, resp.Alerts)
 	}
-	respRole := resp[0]
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Role to exist with ID %d, found: %d", *remoteRole.ID, len(resp.Response))
+	}
+	respRole := resp.Response[0]
+	if respRole.Name == nil {
+		t.Fatal("Traffic Ops returned a representation for a Role that had null or undefined name")
+	}
+
 	if *respRole.Name != expectedRole {
 		t.Errorf("results do not match actual: %s, expected: %s", *respRole.Name, expectedRole)
 	}
 
 	// Set the name back to the fixture value so we can delete it after
 	remoteRole.Name = firstRole.Name
-	alert, _, _, err = TOSession.UpdateRole(*remoteRole.ID, remoteRole, nil)
+	alert, _, err = TOSession.UpdateRole(*remoteRole.ID, remoteRole, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot UPDATE Role by id: %v - %v", err, alert)
+		t.Errorf("cannot update Role: %v - alerts: %+v", err, alert.Alerts)
 	}
 
 }
 
 func GetTestRoles(t *testing.T) {
+	if len(testData.Roles) < roleGood+1 {
+		t.Fatalf("Need at least %d Roles to test getting Roles with IMS change", roleGood+1)
+	}
 	role := testData.Roles[roleGood]
-	resp, _, status, err := TOSession.GetRoleByName(*role.Name, nil)
-	t.Log("Status Code: ", status)
+	if role.Name == nil {
+		t.Fatal("Found a Role in the testing data with null or undefined name")
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", *role.Name)
+	resp, _, err := TOSession.GetRoles(opts)
 	if err != nil {
-		t.Errorf("cannot GET Role by role: %v - %v", err, resp)
+		t.Errorf("cannot get Role '%s' by name: %v - alerts: %+v", *role.Name, err, resp)
 	}
 
 }
 
 func VerifyGetRolesOrder(t *testing.T) {
-	params := url.Values{
-		"orderby":   {"name"},
-		"sortOrder": {"desc"},
+	opts := client.RequestOptions{
+		QueryParameters: url.Values{
+			"orderby":   {"name"},
+			"sortOrder": {"desc"},
+		},
 	}
-	descResp, _, status, err := TOSession.GetRoles(params, nil)
-	t.Log("Status Code: ", status)
+	descResp, _, err := TOSession.GetRoles(opts)
 	if err != nil {
-		t.Errorf("cannot GET Role by role: %v - %v", err, descResp)
-	}
-	params.Set("sortOrder", "asc")
-	ascResp, _, status, err := TOSession.GetRoles(params, nil)
-	t.Log("Status Code: ", status)
-	if err != nil {
-		t.Errorf("cannot GET Role by role: %v - %v", err, ascResp)
+		t.Errorf("cannot get Roles: %v - alerts: %+v", err, descResp.Alerts)
 	}
 
-	if reflect.DeepEqual(descResp, ascResp) {
-		t.Errorf("Role responses for descending and ascending are the same: %v - %v", descResp, ascResp)
+	opts.QueryParameters.Set("sortOrder", "asc")
+	ascResp, _, err := TOSession.GetRoles(opts)
+	if err != nil {
+		t.Errorf("cannot get Roles: %v - alerts: %+v", err, ascResp.Alerts)
+	}
+
+	if reflect.DeepEqual(descResp.Response, ascResp.Response) {
+		t.Errorf("Role responses for descending and ascending are the same: %v - %v", descResp.Response, ascResp.Response)
 	}
 
 	// reverse the descending-sorted response and compare it to the ascending-sorted one
-	for start, end := 0, len(descResp)-1; start < end; start, end = start+1, end-1 {
-		descResp[start], descResp[end] = descResp[end], descResp[start]
+	for start, end := 0, len(descResp.Response)-1; start < end; start, end = start+1, end-1 {
+		descResp.Response[start], descResp.Response[end] = descResp.Response[end], descResp.Response[start]
 	}
-	if !reflect.DeepEqual(descResp, ascResp) {
+	if !reflect.DeepEqual(descResp.Response, ascResp.Response) {
 		t.Errorf("Role responses are not equal after reversal: %v - %v", descResp, ascResp)
 	}
 }
 
 func DeleteTestRoles(t *testing.T) {
-
-	role := testData.Roles[roleGood]
-	// Retrieve the Role by name so we can get the id
-	resp, _, status, err := TOSession.GetRoleByName(*role.Name, nil)
-	t.Log("Status Code: ", status)
-	if err != nil {
-		t.Errorf("cannot GET Role by name: %v - %v", role.Name, err)
+	if len(testData.Roles) < roleGood+1 {
+		t.Fatalf("Need at least %d Roles to test getting Roles with IMS change", roleGood+1)
 	}
-	respRole := resp[0]
+	role := testData.Roles[roleGood]
+	if role.Name == nil {
+		t.Fatal("Found a Role in the testing data with null or undefined name")
+	}
 
-	delResp, _, status, err := TOSession.DeleteRole(*respRole.ID)
-	t.Log("Status Code: ", status)
+	// Retrieve the Role by name so we can get the id
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", *role.Name)
+	resp, _, err := TOSession.GetRoles(opts)
+	if err != nil {
+		t.Errorf("cannot get Role '%s' by name: %v - alerts: %+v", *role.Name, err, resp.Alerts)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Role to exist with name '%s', found: %d", *role.Name, len(resp.Response))
+	}
+	respRole := resp.Response[0]
+	if respRole.ID == nil {
+		t.Fatal("Traffic Ops returned a representation for a Role that had null or undefined ID")
+	}
+
+	delResp, _, err := TOSession.DeleteRole(*respRole.ID, client.RequestOptions{})
 
 	if err != nil {
-		t.Errorf("cannot DELETE Role by role: %v - %v", err, delResp)
+		t.Errorf("cannot delete Role: %v - alerts: %+v", err, delResp.Alerts)
 	}
 
 	// Retrieve the Role to see if it got deleted
-	roleResp, _, status, err := TOSession.GetRoleByName(*role.Name, nil)
-	t.Log("Status Code: ", status)
-
+	roleResp, _, err := TOSession.GetRoles(opts)
 	if err != nil {
-		t.Errorf("error deleting Role role: %s", err.Error())
+		t.Errorf("error fetching Role after deletion: %v - alerts: %+v", err, roleResp.Alerts)
 	}
-	if len(roleResp) > 0 {
-		t.Errorf("expected Role : %s to be deleted", *role.Name)
+	if len(roleResp.Response) > 0 {
+		t.Errorf("expected Role '%s' to be deleted, but it was found in Traffic Ops", *role.Name)
 	}
 
 }

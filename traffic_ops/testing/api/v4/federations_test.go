@@ -24,6 +24,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestFederations(t *testing.T) {
@@ -37,18 +38,18 @@ func TestFederations(t *testing.T) {
 }
 
 func GetTestFederationsIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
+
+	opts := client.NewRequestOptions()
+	opts.Header.Set(rfc.IfModifiedSince, time)
 	if len(testData.Federations) == 0 {
 		t.Error("no federations test data")
 	}
 
-	_, reqInf, err := TOSession.AllFederations(header)
+	resp, reqInf, err := TOSession.AllFederations(opts)
 	if err != nil {
-		t.Fatalf("No error expected, but got: %v", err)
+		t.Fatalf("No error expected, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusNotModified {
 		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -60,35 +61,37 @@ func GetTestFederations(t *testing.T) {
 		t.Error("no federations test data")
 	}
 
-	feds, _, err := TOSession.AllFederations(nil)
+	feds, _, err := TOSession.AllFederations(client.RequestOptions{})
 	if err != nil {
-		t.Errorf("getting federations: " + err.Error())
+		t.Errorf("getting federations: %v - alerts: %+v", err, feds.Alerts)
 	}
 
-	if len(feds) != 1 {
-		t.Errorf("federations expected 1, actual: %+v", len(feds))
+	if len(feds.Response) != 1 {
+		t.Fatalf("federations expected 1, actual: %d", len(feds.Response))
 	}
-	fed := feds[0]
+	fed := feds.Response[0]
 
 	if len(fed.Mappings) < 1 {
-		t.Error("federation mappings expected <0, actual: 0")
+		t.Fatal("federation mappings expected > 1, actual: 0")
 	}
 
 	mapping := fed.Mappings[0]
 	if mapping.CName == nil {
-		t.Error("federation mapping expected cname, actual: nil")
+		t.Fatal("federation mapping expected cname, actual: nil")
 	}
 	if mapping.TTL == nil {
-		t.Error("federation mapping expected ttl, actual: nil")
+		t.Fatal("federation mapping expected ttl, actual: nil")
 	}
 
 	matched := false
 	for _, testFed := range testData.Federations {
 		if testFed.CName == nil {
 			t.Error("test federation missing cname!")
+			continue
 		}
 		if testFed.TTL == nil {
 			t.Error("test federation missing ttl!")
+			continue
 		}
 
 		if *mapping.CName != *testFed.CName {
@@ -106,24 +109,29 @@ func GetTestFederations(t *testing.T) {
 }
 
 func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryServiceV4, tc.DeliveryServiceV4, error) {
-	dses, _, err := TOSession.GetDeliveryServices(nil, nil)
+	var ds tc.DeliveryServiceV4
+	var ds1 tc.DeliveryServiceV4
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
-		return -1, tc.DeliveryServiceV4{}, tc.DeliveryServiceV4{}, fmt.Errorf("cannot GET DeliveryServices: %v - %v", err, dses)
+		return -1, ds, ds1, fmt.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 	}
-	if len(dses) == 0 {
-		return -1, tc.DeliveryServiceV4{}, tc.DeliveryServiceV4{}, errors.New("no delivery services, must have at least 1 ds to test federations deliveryservices")
+	if len(dses.Response) < 2 {
+		return -1, ds, ds1, errors.New("no delivery services, must have at least 2 Delivery Services to test federations deliveryservices")
 	}
-	ds := dses[0]
-	ds1 := dses[1]
+	ds = dses.Response[0]
+	ds1 = dses.Response[1]
+	if ds.ID == nil || ds1.ID == nil {
+		return -1, ds, ds1, errors.New("Traffic Ops returned at least one representation of a Delivery Service that had a null or undefined ID")
+	}
 
 	if len(fedIDs) == 0 {
 		return -1, ds, ds1, errors.New("no federations, must have at least 1 federation to test federations deliveryservices")
 	}
 	fedID := fedIDs[0]
 
-	_, err = TOSession.CreateFederationDeliveryServices(fedID, []int{*ds.ID, *ds1.ID}, true)
+	alerts, _, err := TOSession.CreateFederationDeliveryServices(fedID, []int{*ds.ID, *ds1.ID}, true, client.RequestOptions{})
 	if err != nil {
-		err = fmt.Errorf("creating federations delivery services: %v", err)
+		err = fmt.Errorf("creating federations delivery services: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
 	return fedID, ds, ds1, err
@@ -133,37 +141,37 @@ func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryServiceV4, 
 func PostDeleteTestFederationsDeliveryServices(t *testing.T) {
 	fedID, ds, ds1, err := createFederationToDeliveryServiceAssociation()
 	if err != nil {
-		t.Fatalf("%v", err)
+		t.Fatal(err.Error())
 	}
 
 	// Test get created Federation Delivery Services
-	fedDSes, _, err := TOSession.GetFederationDeliveryServices(fedID, nil)
+	fedDSes, _, err := TOSession.GetFederationDeliveryServices(fedID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET Federation DeliveryServices: %v", err)
+		t.Fatalf("cannot get Federation #%d Delivery Services: %v - alerts: %+v", fedID, err, fedDSes.Alerts)
 	}
-	if len(fedDSes) != 2 {
-		t.Fatalf("two Federation DeliveryService expected for Federation %v, %v was returned", fedID, len(fedDSes))
+	if len(fedDSes.Response) != 2 {
+		t.Fatalf("two Federation DeliveryService expected for Federation %d, %d was returned", fedID, len(fedDSes.Response))
 	}
 
 	// Delete one of the Delivery Services from the Federation
-	_, _, err = TOSession.DeleteFederationDeliveryService(fedID, *ds.ID)
+	alerts, _, err := TOSession.DeleteFederationDeliveryService(fedID, *ds.ID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot Delete Federation %v DeliveryService %v: %v", fedID, ds.ID, err)
+		t.Fatalf("cannot Delete Federation #%d Delivery Service #%d: %v - alerts: %+v", fedID, ds.ID, err, alerts.Alerts)
 	}
 
 	// Make sure it is deleted
 
 	// Test get created Federation Delivery Services
-	fedDSes, _, err = TOSession.GetFederationDeliveryServices(fedID, nil)
+	fedDSes, _, err = TOSession.GetFederationDeliveryServices(fedID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET Federation DeliveryServices: %v", err)
+		t.Fatalf("cannot get Federation Delivery Services: %v - alerts: %+v", err, fedDSes.Alerts)
 	}
-	if len(fedDSes) != 1 {
-		t.Fatalf("one Federation DeliveryService expected for Federation %v, %v was returned", fedID, len(fedDSes))
+	if len(fedDSes.Response) != 1 {
+		t.Fatalf("one Federation Delivery Service expected for Federation #%d, %d was returned", fedID, len(fedDSes.Response))
 	}
 
 	// Attempt to delete the last one which should fail as you cannot remove the last
-	_, _, err = TOSession.DeleteFederationDeliveryService(fedID, *ds1.ID)
+	_, _, err = TOSession.DeleteFederationDeliveryService(fedID, *ds1.ID, client.RequestOptions{})
 	if err == nil {
 		t.Fatal("expected to receive error from attempting to delete last Delivery Service from a Federation")
 	}
@@ -174,20 +182,18 @@ func RemoveFederationResolversForCurrentUserTest(t *testing.T) {
 		t.Fatal("No test Federations, deleting resolvers cannot be tested!")
 	}
 
-	alerts, _, err := TOSession.DeleteFederationResolverMappingsForCurrentUser()
+	alerts, _, err := TOSession.DeleteFederationResolverMappingsForCurrentUser(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Unexpected error deleting Federation Resolvers for current user: %v", err)
+		t.Fatalf("Unexpected error deleting Federation Resolvers for current user: %v - alerts: %+v", err, alerts)
 	}
 	for _, a := range alerts.Alerts {
-		if a.Level == tc.SuccessLevel.String() {
-			t.Logf("Success message from current user Federation Resolver deletion: %s", a.Text)
-		} else {
-			t.Errorf("Unexpected %s from deleting Federation Resolvers for current user: %s", a.Level, a.Text)
+		if a.Level == tc.ErrorLevel.String() {
+			t.Errorf("Unexpected error-level alert from deleting Federation Resolvers for current user: %s", a.Text)
 		}
 	}
 
 	// Now try deleting Federation Resolvers when there are none.
-	_, _, err = TOSession.DeleteFederationResolverMappingsForCurrentUser()
+	_, _, err = TOSession.DeleteFederationResolverMappingsForCurrentUser(client.RequestOptions{})
 	if err != nil {
 		t.Logf("Received expected error deleting Federation Resolvers for current user: %v", err)
 	} else {
@@ -198,21 +204,21 @@ func RemoveFederationResolversForCurrentUserTest(t *testing.T) {
 func AddFederationResolversForCurrentUserTest(t *testing.T) {
 	fedID, ds, ds1, err := createFederationToDeliveryServiceAssociation()
 	if err != nil {
-		t.Fatalf("%v", err)
+		t.Fatal(err.Error())
 	}
 
 	// need to assign myself the federation to set its mappings
-	me, _, err := TOSession.GetUserCurrent(nil)
+	me, _, err := TOSession.GetUserCurrent(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Couldn't figure out who I am: %v", err)
+		t.Fatalf("Couldn't figure out who I am: %v - alerts: %+v", err, me.Alerts)
 	}
-	if me.ID == nil {
+	if me.Response.ID == nil {
 		t.Fatal("Current user has no ID, cannot continue.")
 	}
 
-	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*me.ID}, false)
+	alerts, _, err := TOSession.CreateFederationUsers(fedID, []int{*me.Response.ID}, false, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Failed to assign federation to current user: %v", err)
+		t.Fatalf("Failed to assign Federation to current user: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
 	mappings := tc.DeliveryServiceFederationResolverMappingRequest{
@@ -232,15 +238,13 @@ func AddFederationResolversForCurrentUserTest(t *testing.T) {
 		},
 	}
 
-	alerts, _, err := TOSession.AddFederationResolverMappingsForCurrentUser(mappings)
+	alerts, _, err = TOSession.AddFederationResolverMappingsForCurrentUser(mappings, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Unexpected error adding Federation Resolver mappings for the current user: %v", err)
+		t.Fatalf("Unexpected error adding Federation Resolver mappings for the current user: %v - alerts: %+v", err, alerts.Alerts)
 	}
 	for _, a := range alerts.Alerts {
-		if a.Level == tc.SuccessLevel.String() {
-			t.Logf("Received expected success alert from adding Federation Resolver mappings for the current user: %s", a.Text)
-		} else {
-			t.Errorf("Unexpected %s from adding Federation Resolver mappings for the current user: %s", a.Level, a.Text)
+		if a.Level == tc.ErrorLevel.String() {
+			t.Errorf("Unexpected error-level alert from adding Federation Resolver mappings for the current user: %s", a.Text)
 		}
 	}
 
@@ -254,14 +258,12 @@ func AddFederationResolversForCurrentUserTest(t *testing.T) {
 		},
 	}
 
-	alerts, _, err = TOSession.AddFederationResolverMappingsForCurrentUser(mappings)
+	alerts, _, err = TOSession.AddFederationResolverMappingsForCurrentUser(mappings, client.RequestOptions{})
 	if err == nil {
 		t.Fatal("Expected error adding Federation Resolver mappings for the current user, but didn't get one")
 	}
 	for _, a := range alerts.Alerts {
-		if a.Level != tc.SuccessLevel.String() {
-			t.Logf("Received expected %s from adding Federation Resolver mappings for the current user: %s", a.Level, a.Text)
-		} else {
+		if a.Level == tc.SuccessLevel.String() {
 			t.Errorf("Unexpected success from adding Federation Resolver mappings for the current user: %s", a.Text)
 		}
 	}

@@ -1,12 +1,5 @@
 package client
 
-import (
-	"fmt"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -26,30 +19,24 @@ import (
  * under the License.
  */
 
-// APICDNMonitoringConfig is the API path on which Traffic Ops serves the CDN monitoring
+import (
+	"fmt"
+	"net/url"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+)
+
+// apiCDNMonitoringConfig is the API path on which Traffic Ops serves the CDN monitoring
 // configuration information. It is meant to be used with fmt.Sprintf to insert the necessary
 // path parameters (namely the Name of the CDN of interest).
 // See Also: https://traffic-control-cdn.readthedocs.io/en/latest/api/v3/cdns_name_configs_monitoring.html
-const APICDNMonitoringConfig = "/cdns/%s/configs/monitoring"
-
-// GetTrafficMonitorConfigMap is functionally identical to GetTrafficMonitorConfig, except that it
-// coerces the value returned by the API to the tc.TrafficMonitorConfigMap structure.
-func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, toclientlib.ReqInf, error) {
-	tmConfig, reqInf, err := to.GetTrafficMonitorConfig(cdn)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	tmConfigMap, err := tc.TrafficMonitorTransformToMap(tmConfig)
-	if err != nil {
-		return tmConfigMap, reqInf, err
-	}
-	return tmConfigMap, reqInf, nil
-}
+const apiCDNMonitoringConfig = "/cdns/%s/configs/monitoring"
 
 // GetTrafficMonitorConfig returns the monitoring configuration for the CDN named by 'cdn'.
-func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf(APICDNMonitoringConfig, cdn)
+func (to *Session) GetTrafficMonitorConfig(cdn string, opts RequestOptions) (tc.TMConfigResponse, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf(apiCDNMonitoringConfig, url.PathEscape(cdn))
 	var data tc.TMConfigResponse
-	reqInf, err := to.get(route, nil, &data)
-	return &data.Response, reqInf, err
+	reqInf, err := to.get(route, opts, &data)
+	return data, reqInf, err
 }
