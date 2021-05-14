@@ -20,11 +20,18 @@ under the License.
 
 ## Problem Description
 
-Currently, there is no way to guarantee that only your changes will make their way into a snapshot or queue updates 
-for the servers of a CDN. If somebody else makes changes while you're in the middle of modifying your CDN components
-or properties, their changes will "dirty" your snapshot and change the integrity of the data that you'd expect in your 
-snapshot. This could result in data mismatches and inconsistencies.
+1. Currently, there is no way to guarantee that only your changes will make their way into a snapshot of a CDN. 
+If somebody else makes changes while you're in the middle of modifying your CDN components or properties, 
+their changes will "dirty" your snapshot and change the integrity of the data that you'd expect in your 
+snapshot.
 
+2. There is no way to prevent another user from performing a snapshot and prematurely propagating the (incomplete) changes 
+   to Traffic Router and Traffic Monitor. 
+
+3. There is no way to prevent other users from queueing updates on servers, and prematurely propagating the (incomplete) changes 
+   to the Traffic Servers.
+
+All the above three cases could result in data mismatches and inconsistencies.
 CDN locks will serve as a way to avoid data corruption in snapshots and queue update activities by ensuring
 that only the intended user(s) is able to pass their changes to the snapshot/ queue updates. By placing locks 
 on a CDN, a user can essentially block out other users from modifying data that would dirty their view of the 
@@ -84,6 +91,11 @@ The following endpoints will need to handle the locks logic:
 - `/servers/{{hostname}}/queue_update`
 - `/snapshot`
 - `/topologies/{{name}}/queue_update`
+
+In addition to these, all `PUT`, `POST`, `DELETE` endpoints that scope to a CDN will have to add in the logic to check if there 
+is a "hard" lock by some other user, before a user can modify data.
+Basically, every endpoint that affects data related to a CDN directly (for example, `profiles`), and every endpoint that affects data 
+related to a CDN indirectly (for example, `parameters`, `cachegroups`) will need to be updated to perform the above mentioned check.
 
 #### REST API Impact
 
@@ -246,8 +258,9 @@ in the database before performing a snap or queue operation.
 We do not anticipate any impact on security due to the introduction of `cdn_locks`.
 
 ### Upgrade Impact
-There will be two database migrations, one to create the `cdn_locks` table, and the other to add
-the new capability. This does not depend on any existing data, so nothing should ideally cause this migration to fail.
+There will be one database migrations, to create the `cdn_locks` table. 
+The new capability can just be added to the `seeds.sql` file. 
+This does not depend on any existing data, so nothing should ideally cause this migration to fail.
 
 ### Operations Impact
 Operations will have to learn how to create, delete and work with CDN locks, if they wish to make use of this feature.
