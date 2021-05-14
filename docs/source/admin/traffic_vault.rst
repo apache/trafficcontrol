@@ -33,7 +33,17 @@ In order to use the PostgreSQL backend for Traffic Vault, you will need to set t
 :password:                  The password to use when connecting to the database
 :port:                      The port number that the database listens for new connections on (NOTE: the PostgreSQL default is 5432)
 :user:                      The username to use when connecting to the database
-:aes_key_location:          The location on-disk for an AES, base64 encoded key used to encrypt secrets before they are stored.
+:aes_key_location:          The location on-disk for a base64-encoded AES key used to encrypt secrets before they are stored. It is highly recommended to backup this key to a safe, secure storage location, because if it is lost, you will lose access to all your Traffic Vault data. Either this option or ``hashicorp_vault`` must be used.
+:hashicorp_vault:           This group of configuration options is for fetching the base64-encoded AES key from `HashiCorp Vault <https://www.vaultproject.io/>`_. This uses the `AppRole authentication method <https://learn.hashicorp.com/tutorials/vault/approle>`_.
+
+	:address:     The address of the HashiCorp Vault server, e.g. http://localhost:8200
+	:role_id:     The RoleID of the AppRole.
+	:secret_id:   The SecretID issued against the AppRole.
+	:secret_path: The URI path where the secret AES key is located, e.g. /v1/secret/data/trafficvault. The secret should be stored using the `KV Secrets Engine <https://www.vaultproject.io/docs/secrets/kv>`_ with a key of ``traffic_vault_key`` and value of a base64-encoded AES key, e.g. ``traffic_vault_key='WoFc86CisM1aXo8D5GvDnq2h9kjULuIP4upaqX15SRc='``.
+	:login_path:  Optional. The URI path used to login with the AppRole method. Default: /v1/auth/approle/login
+	:timeout_sec: Optional. The timeout (in seconds) for requests. Default: 30
+	:insecure:    Optional. Disable server certificate verification. This should only be used for testing purposes. Default: false
+
 :conn_max_lifetime_seconds: Optional. The maximum amount of time (in seconds) a connection may be reused. If negative, connections are not closed due to a connection's age. If 0 or unset, the default of 60 is used.
 :max_connections:           Optional. The maximum number of open connections to the database. Default: 0 (unlimited)
 :max_idle_connections:      Optional. The maximum number of connections in the idle connection pool. If negative, no idle connections are retained. If 0 or unset, the default of 30 is used.

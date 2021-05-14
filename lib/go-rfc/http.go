@@ -38,6 +38,7 @@ const (
 	ContentType        = "Content-Type"        // RFC7231§3.1.1.5
 	PermissionsPolicy  = "Permissions-Policy"  // W3C "Permissions Policy"
 	Server             = "Server"              // RFC7231§7.4.2
+	UserAgent          = "User-Agent"          // RFC7231§5.5.3
 	Vary               = "Vary"                // RFC7231§7.1.4
 )
 
