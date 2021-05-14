@@ -15,7 +15,7 @@
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.config_dir",
 			"secure": false,
-			"value": "STRING /etc/trafficserver"
+			"value": "STRING /opt/trafficserver/etc/trafficserver"
 		},
 		{
 			"configFile": "records.config",
@@ -27,7 +27,7 @@
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.http.server_ports",
 			"secure": false,
-			"value": "STRING 80 80:ipv6"
+			"value": "STRING 80 80:ipv6 443:proto=http:ssl 443:ipv6:proto=http:ssl"
 		},
 		{
 			"configFile": "records.config",
@@ -243,7 +243,7 @@
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.body_factory.template_sets_dir",
 			"secure": false,
-			"value": "STRING /etc/trafficserver/body_factory"
+			"value": "STRING /opt/trafficserver/etc/trafficserver/body_factory"
 		},
 		{
 			"configFile": "storage.config",
@@ -262,6 +262,54 @@
 			"name": "Drive_Prefix",
 			"secure": false,
 			"value": "/var/trafficserver/"
+		},
+		{
+			"configFile": "records.config",
+			"name": "CONFIG proxy.config.ssl.CA.cert.path",
+			"secure": false,
+			"value": "STRING /opt/trafficserver/etc/trafficserver/ssl"
+		},
+		{
+			"configFile": "records.config",
+			"name": "CONFIG proxy.config.ssl.client.CA.cert.path",
+			"secure": false,
+			"value": "STRING /opt/trafficserver/etc/trafficserver/ssl"
+		},
+		{
+			"configFile": "records.config",
+			"name": "CONFIG proxy.config.ssl.client.cert.path",
+			"secure": false,
+			"value": "STRING /opt/trafficserver/etc/trafficserver/ssl"
+		},
+		{
+			"configFile": "records.config",
+			"name": "CONFIG proxy.config.ssl.client.private_key.path",
+			"secure": false,
+			"value": "STRING /opt/trafficserver/etc/trafficserver/ssl"
+		},
+		{
+			"configFile": "records.config",
+			"name": "CONFIG proxy.config.ssl.ocsp.enabled",
+			"secure": false,
+			"value": "INT 1"
+		},
+		{
+			"configFile": "records.config",
+			"name": "CONFIG proxy.config.ssl.server.cert.path",
+			"secure": false,
+			"value": "STRING /opt/trafficserver/etc/trafficserver/ssl"
+		},
+		{
+			"configFile": "records.config",
+			"name": "CONFIG proxy.config.ssl.server.private_key.path",
+			"secure": false,
+			"value": "STRING /opt/trafficserver/etc/trafficserver/ssl"
+		},
+		{
+			"configFile": "records.config",
+			"name": "CONFIG proxy.config.ssl.server.ticket_key.filename",
+			"secure": false,
+			"value": "STRING NULL"
 		},
 		{
 			"configFile": "set_dscp_0.config",
@@ -367,6 +415,11 @@
 			"configFile": "set_dscp_37.config",
 			"name": "location",
 			"value": "/etc/trafficserver/dscp"
+		},
+		{
+			"configFile": "ssl_multicert.config",
+			"name": "location",
+			"value": "/opt/trafficserver/etc/trafficserver"
 		}
 	]
 }
