@@ -32,12 +32,11 @@
 # TO_HOST
 # TO_PORT
 # TP_HOST
-# SRIJEET_DB_USER
-# SRIJEET_DB_NAME
+# TV_PG_DB_USER
+# TV_PG_DB_NAME
 #
 # Check that env vars are set
-# srijeet check this
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_HOST TO_PORT TP_HOST SRIJEET_DB_USER SRIJEET_DB_NAME)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_HOST TO_PORT TP_HOST TV_PG_DB_USER TV_PG_DB_NAME)
 for v in $envvars; do
   if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
@@ -79,6 +78,19 @@ cdn_conf=/opt/traffic_ops/app/conf/cdn.conf
     },
     "use_ims": true,
     "traffic_ops_golang" : {
+        "traffic_vault_backend" : "postgres",
+        "traffic_vault_config" : {
+            "dbname" : ${TV_PG_DB_NAME},
+            "hostname" : ${DB},
+            "user" : ${TV_PG_DB_USER},
+            "password" : ${DB_USER_PASS},
+            "port" : ${DB_PORT},
+            "ssl" : false,
+            "conn_max_lifetime_seconds" : 60,
+            "max_connections" : 500,
+            "max_idle_connections" : 30,
+            "query_timeout_seconds" : 10
+        },
         "proxy_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_tls_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_read_header_timeout" : ${DEBUGGING_TIMEOUT:-60},
@@ -155,13 +167,13 @@ echo "$(jq "$(<<'JQ_FILTER' envsubst
   ) |
   ."/opt/traffic_ops/app/conf/production/tv.conf"[] |= (
     (select(.config_var == "dbname") |= with_entries(if .key | test("^[A-Z]") then .value =
-      "${SRIJEET_DB_NAME}"
+      "${TV_PG_DB_NAME}"
     else . end)) |
     (select(.config_var == "hostname") |= with_entries(if .key | test("^[A-Z]") then .value =
       "${DB_FQDN}"
     else . end)) |
     (select(.config_var == "user") |= with_entries(if .key | test("^[A-Z]") then .value =
-      "${SRIJEET_DB_USER}"
+      "${TV_PG_DB_USER}"
     else . end)) |
     (select(.config_var == "password") |= with_entries(if .key | test("^[A-Z]") then .value =
       "${DB_USER_PASS}"
@@ -177,7 +189,7 @@ echo "$(jq "$(<<'JQ_FILTER' envsubst
   ) |
   ."/opt/traffic_ops/app/db/trafficvault/dbconf.yml"[] |= (
     (select(.config_var == "pgUser") |= with_entries(if .key | test("^[A-Z]") then .value =
-      "${SRIJEET_DB_USER}"
+      "${TV_PG_DB_USER}"
     else . end)) |
     (select(.config_var == "pgPassword") |= with_entries(if .key | test("^[A-Z]") then .value =
       "${DB_USER_PASS}"

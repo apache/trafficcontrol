@@ -30,8 +30,8 @@
 # ADMIN_USER
 # ADMIN_PASS
 # DOMAIN
-# SRIJEET_DB_USER
-# SRIJEET_DB_NAME
+# TV_PG_DB_USER
+# TV_PG_DB_NAME
 
 # TODO:  Unused -- should be removed?  TRAFFIC_VAULT_PASS
 
@@ -41,7 +41,7 @@ trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
 set -o errexit -o monitor -o pipefail -o xtrace;
 
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS SRIJEET_DB_USER SRIJEET_DB_NAME)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS TV_PG_DB_USER TV_PG_DB_NAME)
 for v in $envvars; do
 	if [[ -z $$v ]]; then
 		echo "$v is unset" >&2;
@@ -139,13 +139,14 @@ cd /opt/traffic_ops/app;
 
 CDNCONF=/opt/traffic_ops/app/conf/cdn.conf
 DBCONF=/opt/traffic_ops/app/conf/production/database.conf
-SRIJEET_DBCONF=/opt/traffic_ops/app/conf/production/tv.conf
+TV_PG_DBCONF=/opt/traffic_ops/app/conf/production/tv.conf
 RIAKCONF=/opt/traffic_ops/app/conf/production/riak.conf
 mkdir -p /var/log/traffic_ops
 touch "$TO_LOG_ERROR" "$TO_LOG_WARNING" "$TO_LOG_INFO" "$TO_LOG_DEBUG" "$TO_LOG_EVENT"
 tail -qf "$TO_LOG_ERROR" "$TO_LOG_WARNING" "$TO_LOG_INFO" "$TO_LOG_DEBUG" "$TO_LOG_EVENT" &
 
-traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF" -riakcfg "$RIAKCONF");
+traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF");
+#-riakcfg "$RIAKCONF");
 if [[ "$TO_DEBUG_ENABLE" == true ]]; then
 	traffic_ops_golang_command=(dlv '--accept-multiclient' '--continue' '--listen=:2345' '--headless=true' '--api-version=2' exec
 		"${traffic_ops_golang_command[0]}" -- "${traffic_ops_golang_command[@]:1}");

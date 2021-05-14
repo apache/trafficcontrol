@@ -70,8 +70,8 @@ from struct import unpack, pack
 # Paths for output configuration files
 DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/database.conf"
 DB_CONF_FILE = "/opt/traffic_ops/app/db/dbconf.yml"
-SRIJEET_DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/tv.conf"
-SRIJEET_DB_CONF_FILE = "/opt/traffic_ops/app/db/trafficvault/dbconf.yml"
+TV_PG_DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/tv.conf"
+TV_PG_DB_CONF_FILE = "/opt/traffic_ops/app/db/trafficvault/dbconf.yml"
 CDN_CONF_FILE = "/opt/traffic_ops/app/conf/cdn.conf"
 LDAP_CONF_FILE = "/opt/traffic_ops/app/conf/ldap.conf"
 USERS_CONF_FILE = "/opt/traffic_ops/install/data/json/users.json"
@@ -231,7 +231,7 @@ DEFAULTS = {
 		Question("Traffic Ops database user", "traffic_ops", "user"),
 		Question("Password for Traffic Ops database user", "", "password", hidden=True)
 	],
-	SRIJEET_DATABASE_CONF_FILE: [
+	TV_PG_DATABASE_CONF_FILE: [
 		Question("Database type", "Pg", "type"),
 		Question("Database name", "traffic_vault", "dbname"),
 		Question("Database server hostname IP or FQDN", "localhost", "hostname"),
@@ -243,7 +243,7 @@ DEFAULTS = {
 		Question("Database server root (admin) user", "postgres", "pgUser"),
 		Question("Password for database server admin", "", "pgPassword", hidden=True)
 	],
-	SRIJEET_DB_CONF_FILE: [
+	TV_PG_DB_CONF_FILE: [
 		Question("Database server root (admin) user", "postgres", "pgUser"),
 		Question("Password for database server admin", "", "pgPassword", hidden=True)
 	],
@@ -1083,7 +1083,7 @@ def invoke_db_admin_pl(action, root): # type: (str, str) -> None
 		raise OSError("Database {action} failed".format(action=action))
 	logging.info("Database %s succeeded", action)
 
-def invoke_db_admin_pl_srijeet(action, root): # type: (str, str) -> None
+def invoke_db_admin_pl_tv_pg(action, root): # type: (str, str) -> None
 	"""
 	Exectues admin with the given action, and looks for it from the given root directory.
 	"""
@@ -1101,7 +1101,7 @@ def invoke_db_admin_pl_srijeet(action, root): # type: (str, str) -> None
 	output = proc.communicate()  # type: str
 	if proc.returncode != 0:
 		logging.info("srijeet admin exec failed; stderr: %s\n\tstdout: %s", output[1], output[0])
-		#raise OSError("Srijeet Database {action} failed".format(action=action))
+		raise OSError("Srijeet Database {action} failed".format(action=action))
 	logging.info("Srijeet Database %s succeeded", action)
 
 def setup_database_data(conn_str, user, param_conf, root): # type: (str, User, dict, str) -> None
@@ -1122,12 +1122,12 @@ def setup_database_data(conn_str, user, param_conf, root): # type: (str, User, d
 		logging.info("Found existing tables skipping table creation")
 	else:
 		invoke_db_admin_pl("load_schema", root)
-		invoke_db_admin_pl_srijeet("load_schema", root)
+		invoke_db_admin_pl_tv_pg("load_schema", root)
 
 	invoke_db_admin_pl("migrate", root)
 	invoke_db_admin_pl("seed", root)
 	invoke_db_admin_pl("patch", root)
-	invoke_db_admin_pl_srijeet("migrate", root)
+	invoke_db_admin_pl_tv_pg("migrate", root)
 
 	hashed_pass = hash_pass(user.password)
 	insert_admin_query = '''
@@ -1287,9 +1287,9 @@ no_database, # type: bool
 
 	try:
 		dbconf = generate_db_conf(user_input[DATABASE_CONF_FILE], DATABASE_CONF_FILE, automatic, root_dir)
-		srijeet_dbconf = generate_db_conf(user_input[SRIJEET_DATABASE_CONF_FILE], SRIJEET_DATABASE_CONF_FILE, automatic, root_dir)
+		tv_pg_dbconf = generate_db_conf(user_input[TV_PG_DATABASE_CONF_FILE], TV_PG_DATABASE_CONF_FILE, automatic, root_dir)
 		todbconf = generate_todb_conf(user_input[DB_CONF_FILE], DB_CONF_FILE, automatic, root_dir, dbconf)
-		srijeet_todbconf = generate_todb_conf(user_input[SRIJEET_DB_CONF_FILE], SRIJEET_DB_CONF_FILE, automatic, root_dir, srijeet_dbconf)
+		tv_pg_todbconf = generate_todb_conf(user_input[TV_PG_DB_CONF_FILE], TV_PG_DB_CONF_FILE, automatic, root_dir, tv_pg_dbconf)
 		generate_ldap_conf(user_input[LDAP_CONF_FILE], LDAP_CONF_FILE, automatic, root_dir)
 		admin_conf = generate_users_conf(
 		user_input[USERS_CONF_FILE],

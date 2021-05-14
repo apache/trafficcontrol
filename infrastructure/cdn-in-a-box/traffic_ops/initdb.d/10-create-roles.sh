@@ -31,5 +31,5 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" \
     psql -U postgres -c "CREATE DATABASE $DB_NAME OWNER $DB_USER"
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" \
-    -tc "SELECT 1 FROM pg_database WHERE datname = '$SRIJEET_DB_NAME'" | grep -q 1 ||  \
-    psql -U postgres -c "CREATE DATABASE $SRIJEET_DB_NAME OWNER $SRIJEET_DB_USER"
+    -tc "SELECT 1 FROM pg_database WHERE datname = '$TV_PG_DB_NAME'" | grep -q 1 ||  \
+    psql -U postgres -c "CREATE DATABASE $TV_PG_DB_NAME OWNER $TV_PG_DB_USER"
