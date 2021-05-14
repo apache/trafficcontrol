@@ -53,7 +53,7 @@ init() {
 	local postinstall_input_file="postinstall-input.json"
 	cat > "$postinstall_input_file" <<- ENDOFMESSAGE
 {
-  "/opt/traffic_ops/app/conf/production/database.conf":[
+  "/opt/traffic_ops/app/conf/production/tv.conf":[
     {
       "Database type":"Pg",
       "config_var":"type"
@@ -80,7 +80,7 @@ init() {
       "hidden":"1"
     }
   ],
-  "/opt/traffic_ops/app/db/dbconf.yml":[
+  "/opt/traffic_ops/app/db/trafficvault/dbconf.yml":[
     {
       "Database server root (admin) user":"postgres",
       "config_var":"pgUser"

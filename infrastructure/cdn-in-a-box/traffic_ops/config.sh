@@ -34,6 +34,7 @@
 # TP_HOST
 #
 # Check that env vars are set
+# srijeet check this
 envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_HOST TO_PORT TP_HOST)
 for v in $envvars; do
   if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
@@ -136,7 +137,7 @@ echo "$(jq "$(<<'JQ_FILTER' envsubst
       "${TO_URL}"
     else . end))
   ) |
-  ."/opt/traffic_ops/app/conf/production/database.conf"[] |= (
+  ."/opt/traffic_ops/app/conf/production/tv.conf"[] |= (
     (select(.config_var == "dbname") |= with_entries(if .key | test("^[A-Z]") then .value =
       "${DB_NAME}"
     else . end)) |
@@ -150,7 +151,7 @@ echo "$(jq "$(<<'JQ_FILTER' envsubst
       "${DB_USER_PASS}"
     else . end))
   ) |
-  ."/opt/traffic_ops/app/db/dbconf.yml"[] |= (
+  ."/opt/traffic_ops/app/db/trafficvault/dbconf.yml"[] |= (
     (select(.config_var == "pgUser") |= with_entries(if .key | test("^[A-Z]") then .value =
       "${DB_USER}"
     else . end)) |
@@ -188,4 +189,4 @@ echo "$(jq "$(<<'JQ_FILTER' envsubst
 JQ_FILTER
 )" "$input_json")" >"$input_json"
 
-"${install_bin}/postinstall" -a --cfile "$input_json" -n --no-restart-to
+"${install_bin}/postinstall" --debug -a --cfile "$input_json" -n --no-restart-to

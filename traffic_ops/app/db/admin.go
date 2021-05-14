@@ -124,6 +124,7 @@ func parseDBConfig() error {
 	if TrafficVault {
 		dbConfigPath = TrafficVaultDBConfigPath
 	}
+	fmt.Println("Srijeet!!! db config path ", dbConfigPath)
 	confBytes, err := ioutil.ReadFile(dbConfigPath)
 	if err != nil {
 		return errors.New("reading DB conf '" + dbConfigPath + "': " + err.Error())
@@ -143,7 +144,10 @@ func parseDBConfig() error {
 	// parse the 'open' string into a map
 	open := make(map[string]string)
 	pairs := strings.Split(gooseCfg.Open, " ")
+	fmt.Println("Srijeet!!! length of pairs is ", len(pairs))
+	fmt.Println(pairs)
 	for _, pair := range pairs {
+		fmt.Println(pair)
 		if pair == "" {
 			continue
 		}
@@ -311,13 +315,22 @@ func loadSchema() {
 	if TrafficVault {
 		schemaPath = TrafficVaultSchemaPath
 	}
+	fmt.Println("Schema path is ", schemaPath)
 	schemaBytes, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		die("unable to read '" + DBSchemaPath + "': " + err.Error())
 	}
+	fmt.Println("host IP ", HostIP)
+
 	cmd := exec.Command("psql", "-h", HostIP, "-p", HostPort, "-d", DBName, "-U", DBUser, "-e", "-v", "ON_ERROR_STOP=1")
 	cmd.Stdin = bytes.NewBuffer(schemaBytes)
 	cmd.Env = append(os.Environ(), "PGPASSWORD="+DBPassword)
+
+	fmt.Println("host port ", HostPort)
+	fmt.Println("DB name ", DBName)
+	fmt.Println("DB user ", DBUser)
+	fmt.Println("DB PASSWORD ", DBPassword)
+
 	out, err := cmd.CombinedOutput()
 	fmt.Printf("%s", out)
 	if err != nil {

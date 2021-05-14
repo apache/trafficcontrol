@@ -120,7 +120,7 @@ to_smtp_password: ""
 to_smtp_address: ""
 
 # --- database.conf & dbconf.yml
-todb_db_name: traffic_ops
+todb_db_name: traffic_vault
 todb_type: Pg
 todb_port: 5432
 todb_host: localhost

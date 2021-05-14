@@ -40,7 +40,7 @@
       "config_var": "search_base"
     }
   ],
-  "/opt/traffic_ops/app/conf/production/database.conf": [
+  "/opt/traffic_ops/app/conf/production/tv.conf": [
     {
       "Database type": "Pg",
       "config_var": "type"
@@ -67,7 +67,7 @@
       "hidden": "1"
     }
   ],
-  "/opt/traffic_ops/app/db/dbconf.yml": [
+  "/opt/traffic_ops/app/db/trafficvault/dbconf.yml": [
     {
       "Database server root (admin) username": "dbuser",
       "config_var": "pgUser"

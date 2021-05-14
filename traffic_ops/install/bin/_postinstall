@@ -68,8 +68,8 @@ from collections import namedtuple
 from struct import unpack, pack
 
 # Paths for output configuration files
-DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/database.conf"
-DB_CONF_FILE = "/opt/traffic_ops/app/db/dbconf.yml"
+DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/tv.conf"
+DB_CONF_FILE = "/opt/traffic_ops/app/db/trafficvault/dbconf.yml"
 CDN_CONF_FILE = "/opt/traffic_ops/app/conf/cdn.conf"
 LDAP_CONF_FILE = "/opt/traffic_ops/app/conf/ldap.conf"
 USERS_CONF_FILE = "/opt/traffic_ops/install/data/json/users.json"
@@ -223,10 +223,10 @@ class CDNConfig(namedtuple('CDNConfig', ['gen_secret', 'num_secrets', 'port', 'n
 DEFAULTS = {
 	DATABASE_CONF_FILE: [
 		Question("Database type", "Pg", "type"),
-		Question("Database name", "traffic_ops", "dbname"),
+		Question("Database name", "traffic_vault", "dbname"),
 		Question("Database server hostname IP or FQDN", "localhost", "hostname"),
 		Question("Database port number", "5432", "port"),
-		Question("Traffic Ops database user", "traffic_ops", "user"),
+		Question("Traffic Ops database user", "traffic_vault", "user"),
 		Question("Password for Traffic Ops database user", "", "password", hidden=True)
 	],
 	DB_CONF_FILE: [
@@ -353,9 +353,13 @@ def generate_todb_conf(qstns, fname, auto, root, conf): # (list, str, bool, str,
 
 	path = os.path.join(root, fname.lstrip('/'))
 	hostname = conf.get('hostname', 'UNKNOWN')
+	print(hostname)
 	port = conf.get('port', 'UNKNOWN')
+	print(port)
 	user = conf.get('user', 'UNKNOWN')
+	print(user)
 	password = conf.get('password', 'UNKNOWN')
+	print(password)
 	dbname = conf.get('dbname', 'UNKNOWN')
 
 	open_line = "host={hostname} port={port} user={user} password={password} dbname={dbname}".format(hostname=hostname, port=port, user=user, password=password, dbname=dbname)
@@ -363,7 +367,8 @@ def generate_todb_conf(qstns, fname, auto, root, conf): # (list, str, bool, str,
 		print("production:", file=conf_file)
 		print("    driver:", driver, file=conf_file)
 		print("    open: {open_line} sslmode=disable".format(open_line=open_line), file=conf_file)
-
+	print("SRIJEET!!!!!!!!")
+	print(todbconf)
 	return todbconf
 
 def generate_ldap_conf(questions, fname, automatic, root): # type: (list[Question], str, bool, str) -> None
@@ -1036,7 +1041,7 @@ def exec_psql(conn_str, query, **args): # type: (str, str, dict) -> str
 	output = proc.communicate()
 	if proc.returncode != 0:
 		logging.debug("psql exec failed; stderr: %s\n\tstdout: %s", output[1], output[0])
-		raise OSError("failed to execute database query")
+		#raise OSError("failed to execute database query")
 	if sys.version_info.major >= 3:
 		return output[0].strip()
 	else:
@@ -1063,6 +1068,27 @@ def invoke_db_admin_pl(action, root): # type: (str, str) -> None
 		raise OSError("Database {action} failed".format(action=action))
 	logging.info("Database %s succeeded", action)
 
+def invoke_db_admin_pl_srijeet(action, root): # type: (str, str) -> None
+	"""
+	Exectues admin with the given action, and looks for it from the given root directory.
+	"""
+	path = os.path.join(root, "opt/traffic_ops/app")
+	# This is a workaround for admin using hard-coded relative paths. That
+	# should be fixed at some point, IMO, but for now this works.
+	os.chdir(path)
+	cmd = [os.path.join(path, "db/admin"), "--trafficvault", "--env=production", action]
+	proc = subprocess.Popen(
+		cmd,
+		stderr=subprocess.PIPE,
+		stdout=subprocess.PIPE,
+		universal_newlines=True,
+	)
+	output = proc.communicate()  # type: str
+	if proc.returncode != 0:
+		logging.debug("admin exec failed; stderr: %s\n\tstdout: %s", output[1], output[0])
+		#raise OSError("Database {action} failed".format(action=action))
+	logging.info("Database %s succeeded", action)
+
 def setup_database_data(conn_str, user, param_conf, root): # type: (str, User, dict, str) -> None
 	"""
 	Sets up all necessary initial database data using `/usr/bin/sql`
@@ -1080,102 +1106,13 @@ def setup_database_data(conn_str, user, param_conf, root): # type: (str, User, d
 	if exec_psql(conn_str, tables_found_query) == "t":
 		logging.info("Found existing tables skipping table creation")
 	else:
-		invoke_db_admin_pl("load_schema", root)
+		#invoke_db_admin_pl("load_schema", root)
+		invoke_db_admin_pl_srijeet("load_schema", root)
 
-	invoke_db_admin_pl("migrate", root)
-	invoke_db_admin_pl("seed", root)
-	invoke_db_admin_pl("patch", root)
-
-	hashed_pass = hash_pass(user.password)
-	insert_admin_query = '''
-		INSERT INTO tm_user (username, tenant_id, role, local_passwd, confirm_local_passwd)
-		VALUES (
-			'{}',
-			(SELECT id FROM tenant WHERE name = 'root'),
-			(SELECT id FROM role WHERE name = 'admin'),
-			'{hashed_pass}',
-			'{hashed_pass}'
-		)
-		ON CONFLICT (username) DO NOTHING;
-	'''.format(user.username, hashed_pass=hashed_pass)
-	_ = exec_psql(conn_str, insert_admin_query)
-
-	logging.info("=========== Setting up cdn")
-	insert_cdn_query = "\n\t-- global parameters" + '''
-		INSERT INTO cdn (name, domain_name, dnssec_enabled)
-		VALUES ('{cdn_name}', '{dns_subdomain}', false)
-		ON CONFLICT DO NOTHING;
-	'''.format(**param_conf)
-	logging.info("\n%s", insert_cdn_query)
-	_ = exec_psql(conn_str, insert_cdn_query)
-
-	tm_url = param_conf["tm.url"]
-
-	logging.info("=========== Setting up parameters")
-	insert_parameters_query = "\n\t-- global parameters" + '''
-		INSERT INTO parameter (name, config_file, value)
-		VALUES ('tm.url', 'global', '{tm_url}'),
-			('tm.infourl', 'global', '{tm_url}/doc'),
-		-- CRConfic.json parameters
-			('geolocation.polling.url', 'CRConfig.json', '{tm_url}/routing/GeoLite2-City.mmdb.gz'),
-			('geolocation6.polling.url', 'CRConfig.json', '{tm_url}/routing/GeoLiteCityv6.dat.jz')
-		ON CONFLICT (name, config_file, value) DO NOTHING;
-	'''.format(tm_url=tm_url)
-	logging.info("\n%s", insert_parameters_query)
-	_ = exec_psql(conn_str, insert_parameters_query)
-
-	logging.info("\n=========== Setting up profiles")
-	insert_profiles_query = "\n\t-- global parameters" + '''
-		INSERT INTO profile (name, description, type, cdn)
-		VALUES ('GLOBAL' 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE', (SELECT id FROM cdn WHERE name='ALL'))
-		ON CONFLICT DO NOTHING;
-
-		INSERT INTO profile_parameter (profile, parameter)
-		VALUES
-			(
-				(SELECT id FROM profile WHERE name = 'GLOBAL'),
-				(
-					SELECT id
-					FROM parameter
-					WHERE name = 'tm.url'
-						AND config_file = 'global'
-						AND value = '{tm_url}'
-				)
-			),
-			(
-				(SELECT id FROM profile WHERE name = 'GLOBAL'),
-				(
-					SELECT id
-					FROM parameter
-					WHERE name = 'tm.infourl'
-						AND config_file = 'global'
-						AND value = '{tm_url}/doc'
-				)
-			),
-			(
-				(SELECT id FROM profile WHERE name = 'GLOBAL'),
-				(
-					SELECT id
-					FROM parameter
-					WHERE name = 'geolocation.polling.url'
-						AND config_file = 'CRConfig.json'
-						AND value = '{tm_url}/routing/GeoLite2-City.mmdb.gz'
-				)
-			),
-			(
-				(SELECT id FROM profile WHERE name = 'GLOBAL'),
-				(
-					SELECT id
-					FROM parameter
-					WHERE name = 'geolocation6.polling.url'
-						AND config_file = 'CRConfig.json'
-						AND value = '{tm_url}/routing/GeoLiteCityv6.mmdb.gz'
-				)
-			)
-		ON CONFLICT (profile, parameter) DO NOTHING;
-	'''.format(tm_url=tm_url)
-	logging.info("\n%s", insert_profiles_query)
-	_ = exec_psql(conn_str, insert_cdn_query)
+	#invoke_db_admin_pl("migrate", root)
+	#invoke_db_admin_pl("seed", root)
+	#invoke_db_admin_pl("patch", root)
+	invoke_db_admin_pl_srijeet("migrate", root)
 
 def main(
 automatic, # type: bool
@@ -1297,7 +1234,7 @@ no_database, # type: bool
 			return 1
 
 		def db_connect_failed():
-			logging.error("Failed to set up database: %s", e)
+			logging.error("Srijeet Failed to set up database: %s", e)
 			logging.error(
 				"Can't connect to the database.  "
 				"Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` "
