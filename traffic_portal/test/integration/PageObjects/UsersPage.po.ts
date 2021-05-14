@@ -38,6 +38,7 @@ interface User {
 export class UsersPage extends BasePage {
 
     private btnCreateNewUser = element(by.css('[title="Create New User"]'));
+    private btnRegisterNewUser = element(by.css('[title="Register New User"]'));
     private txtFullName = element(by.name('fullName'));
     private txtUserName = element(by.name('uName'));
     private txtEmail = element(by.name('email'));
@@ -78,5 +79,13 @@ export class UsersPage extends BasePage {
       }
       return result;
     }
+
+    public async UpdateUser(user: User): Promise<boolean> {}
+
+    public async RegisterUser(user: User): Promise<boolean> {}
+
+    public async UpdateRegisterUser(user: User): Promise<boolean> {}
+
+    public async UpdateUser(user: User): Promise<boolean> {}
 
   }
