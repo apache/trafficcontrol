@@ -78,19 +78,6 @@ cdn_conf=/opt/traffic_ops/app/conf/cdn.conf
     },
     "use_ims": true,
     "traffic_ops_golang" : {
-        "traffic_vault_backend" : "postgres",
-        "traffic_vault_config" : {
-            "dbname" : ${TV_PG_DB_NAME},
-            "hostname" : ${DB},
-            "user" : ${TV_PG_DB_USER},
-            "password" : ${DB_USER_PASS},
-            "port" : ${DB_PORT},
-            "ssl" : false,
-            "conn_max_lifetime_seconds" : 60,
-            "max_connections" : 500,
-            "max_idle_connections" : 30,
-            "query_timeout_seconds" : 10
-        },
         "proxy_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_tls_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_read_header_timeout" : ${DEBUGGING_TIMEOUT:-60},
