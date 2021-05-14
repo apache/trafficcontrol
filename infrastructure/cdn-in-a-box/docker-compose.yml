@@ -183,7 +183,6 @@ services:
 
   # edge cache
   edge:
-    privileged: True
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
@@ -200,7 +199,6 @@ services:
 
   # mid cache 1
   mid-01:
-    privileged: True
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
@@ -217,7 +215,6 @@ services:
 
   # mid cache 2
   mid-02:
-    privileged: True
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
