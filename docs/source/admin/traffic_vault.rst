@@ -33,7 +33,7 @@ In order to use the PostgreSQL backend for Traffic Vault, you will need to set t
 :password:                  The password to use when connecting to the database
 :port:                      The port number that the database listens for new connections on (NOTE: the PostgreSQL default is 5432)
 :user:                      The username to use when connecting to the database
-:aes_key_location:          The location on-disk for an AES key used to encrypt secrets before they are stored.
+:aes_key_location:          The location on-disk for an AES, base64 encoded key used to encrypt secrets before they are stored.
 :conn_max_lifetime_seconds: Optional. The maximum amount of time (in seconds) a connection may be reused. If negative, connections are not closed due to a connection's age. If 0 or unset, the default of 60 is used.
 :max_connections:           Optional. The maximum number of open connections to the database. Default: 0 (unlimited)
 :max_idle_connections:      Optional. The maximum number of connections in the idle connection pool. If negative, no idle connections are retained. If 0 or unset, the default of 30 is used.
