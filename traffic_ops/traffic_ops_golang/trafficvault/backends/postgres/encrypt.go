@@ -23,6 +23,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -47,35 +48,49 @@ func aesEncrypt(bytesToEncrypt []byte, aesKey []byte) (string, error) {
 	return string(gcm.Seal(nonce, nonce, bytesToEncrypt, nil)), nil
 }
 
-func aesDecrypt(bytesToDecrypt []byte, aesKey []byte) (string, error) {
+func aesDecrypt(bytesToDecrypt []byte, aesKey []byte) ([]byte, error) {
 	cipherBlock, err := aes.NewCipher(aesKey)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 
 	gcm, err := cipher.NewGCM(cipherBlock)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 
 	nonceSize := gcm.NonceSize()
 	if len(bytesToDecrypt) < nonceSize {
-		return "", err
+		return []byte{}, err
 	}
 
 	nonce := bytesToDecrypt[:nonceSize]
 	ciphertext := bytesToDecrypt[nonceSize:]
 	decryptedString, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
-	return string(decryptedString), nil
+	return decryptedString, nil
 }
 
 func readKeyFromFile(fileLocation string) ([]byte, error) {
-	key, err := ioutil.ReadFile(fileLocation)
+	keyBase64, err := ioutil.ReadFile(fileLocation)
 	if err != nil {
 		return []byte{}, errors.New("reading file '" + fileLocation + "':" + err.Error())
 	}
+
+	keyBase64String := string(keyBase64)
+
+	key, err := base64.StdEncoding.DecodeString(keyBase64String)
+	if err != nil {
+		return []byte{}, errors.New("AES key cannot be decoded")
+	}
+
+	// verify the key works
+	_, err = aes.NewCipher(key)
+	if err != nil {
+		return []byte{}, err
+	}
+
 	return key, nil
 }

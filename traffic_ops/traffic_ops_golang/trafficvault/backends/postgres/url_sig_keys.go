@@ -46,7 +46,7 @@ func getURLSigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context, aesKey []by
 	}
 
 	urlSignKey := tc.URLSigKeys{}
-	err = json.Unmarshal([]byte(jsonUrlKeys), &urlSignKey)
+	err = json.Unmarshal(jsonUrlKeys, &urlSignKey)
 	if err != nil {
 		return tc.URLSigKeys{}, false, errors.New("unmarshalling keys: " + err.Error())
 	}
