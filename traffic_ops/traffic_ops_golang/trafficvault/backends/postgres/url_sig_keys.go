@@ -30,9 +30,9 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func getURLSigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context) (tc.URLSigKeys, bool, error) {
-	var jsonUrlKeys string
-	if err := tvTx.QueryRow("SELECT data FROM url_sig_key WHERE deliveryservice = $1", xmlID).Scan(&jsonUrlKeys); err != nil {
+func getURLSigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context, aesKey []byte) (tc.URLSigKeys, bool, error) {
+	var encryptedUrlSigKey []byte
+	if err := tvTx.QueryRow("SELECT data FROM url_sig_key WHERE deliveryservice = $1", xmlID).Scan(&encryptedUrlSigKey); err != nil {
 		if err == sql.ErrNoRows {
 			return tc.URLSigKeys{}, false, nil
 		}
@@ -40,8 +40,13 @@ func getURLSigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context) (tc.URLSigK
 		return tc.URLSigKeys{}, false, e
 	}
 
+	jsonUrlKeys, err := aesDecrypt(encryptedUrlSigKey, aesKey)
+	if err != nil {
+		return tc.URLSigKeys{}, false, err
+	}
+
 	urlSignKey := tc.URLSigKeys{}
-	err := json.Unmarshal([]byte(jsonUrlKeys), &urlSignKey)
+	err = json.Unmarshal(jsonUrlKeys, &urlSignKey)
 	if err != nil {
 		return tc.URLSigKeys{}, false, errors.New("unmarshalling keys: " + err.Error())
 	}
@@ -49,7 +54,7 @@ func getURLSigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context) (tc.URLSigK
 	return urlSignKey, true, nil
 }
 
-func putURLSigKeys(xmlID string, tvTx *sqlx.Tx, keys tc.URLSigKeys, ctx context.Context) error {
+func putURLSigKeys(xmlID string, tvTx *sqlx.Tx, keys tc.URLSigKeys, ctx context.Context, aesKey []byte) error {
 	keyJSON, err := json.Marshal(&keys)
 	if err != nil {
 		return errors.New("marshalling keys: " + err.Error())
@@ -60,7 +65,12 @@ func putURLSigKeys(xmlID string, tvTx *sqlx.Tx, keys tc.URLSigKeys, ctx context.
 		return err
 	}
 
-	res, err := tvTx.Exec("INSERT INTO url_sig_key (deliveryservice, data) VALUES ($1, $2)", xmlID, keyJSON)
+	encryptedKey, err := aesEncrypt(keyJSON, aesKey)
+	if err != nil {
+		return errors.New("encrypting keys: " + err.Error())
+	}
+
+	res, err := tvTx.Exec("INSERT INTO url_sig_key (deliveryservice, data) VALUES ($1, $2)", xmlID, encryptedKey)
 	if err != nil {
 		e := checkErrWithContext("Traffic Vault PostgreSQL: executing INSERT URL Sig Keys query", err, ctx.Err())
 		return e
