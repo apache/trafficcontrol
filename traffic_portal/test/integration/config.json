@@ -30,7 +30,7 @@
   },
   "params": {
     "apiUrl": " https://localhost:443/api/4.0",
-    "baseUrl": "https://localhost:443/",
+    "baseUrl": "https://localhost",
     "login": {
       "username": "admin",
       "password": "twelve12"
