@@ -24,6 +24,8 @@
 ARG RHEL_VERSION=8
 FROM centos:${RHEL_VERSION} AS common-cache-server-layers
 ARG RHEL_VERSION=8
+# Makes RHEL_VERSION available at runtime
+ENV RHEL_VERSION="$RHEL_VERSION"
 
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
@@ -144,6 +146,7 @@ ADD infrastructure/cdn-in-a-box/cache/run.sh infrastructure/cdn-in-a-box/traffic
 
 COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
      infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
+     infrastructure/cdn-in-a-box/cache/uname \
      /usr/local/sbin/
 
 ARG ORT_RPM=infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
