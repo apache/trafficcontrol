@@ -91,7 +91,9 @@ func main() {
 
 	sort.Sort(config.ATSConfigFiles(configs))
 
-	if err := cfgfile.WriteConfigs(configs, os.Stdout); err != nil {
+	serverAndConfig := config.ServerAndConfigs{Server: toData.Server, ConfigFile: configs}
+
+	if err := cfgfile.WriteConfigs(serverAndConfig, os.Stdout); err != nil {
 		log.Errorln("Writing configs for '" + *toData.Server.HostName + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)
 	}

@@ -69,7 +69,7 @@ func GetAllConfigs(
 		if fi.Name == atscfg.SSLMultiCertConfigFileName {
 			hasSSLMultiCertConfig = true
 		}
-		txt = PreprocessConfigFile(toData.Server, txt)
+		//txt = PreprocessConfigFile(toData.Server, txt)
 		configs = append(configs, t3cutil.ATSConfigFile{Name: fi.Name, Path: fi.Path, Text: txt, ContentType: contentType, LineComment: lineComment})
 	}
 
@@ -88,8 +88,8 @@ const HdrConfigFilePath = "Path"
 const HdrLineComment = "Line-Comment"
 
 // WriteConfigs writes the given configs as a RFC2046§5.1 MIME multipart/mixed message.
-func WriteConfigs(configs []t3cutil.ATSConfigFile, output io.Writer) error {
-	sort.Sort(ATSConfigFiles(configs))
+func WriteConfigs(configs config.ServerAndConfigs, output io.Writer) error {
+	sort.Sort(ATSConfigFiles(configs.ConfigFile))
 	if err := json.NewEncoder(output).Encode(configs); err != nil {
 		return errors.New("encoding and writing configs: " + err.Error())
 	}

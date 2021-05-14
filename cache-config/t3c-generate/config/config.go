@@ -60,6 +60,11 @@ type Cfg struct {
 	DefaultTLSVersions []atscfg.TLSVersion
 }
 
+type ServerAndConfigs struct {
+	Server     *atscfg.Server
+	ConfigFile []t3cutil.ATSConfigFile
+}
+
 func (cfg Cfg) ErrorLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationErr) }
 func (cfg Cfg) WarningLog() log.LogLocation { return log.LogLocation(cfg.LogLocationWarn) }
 func (cfg Cfg) InfoLog() log.LogLocation    { return log.LogLocation(cfg.LogLocationInfo) }
