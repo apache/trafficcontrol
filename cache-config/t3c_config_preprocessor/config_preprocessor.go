@@ -21,24 +21,18 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
+	preproc_util "github.com/apache/trafficcontrol/cache-config/t3c_config_preprocessor/preproc-util"
 	"net"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
-
-type ConfigInfo struct {
-	File      string
-	TrOpsData ToData
-}
-type ToData struct {
-	Server *atscfg.Server
-}
 
 var returnRegex = regexp.MustCompile(`\s*__RETURN__\s*`)
 
@@ -92,12 +86,18 @@ func PreprocessConfigFile(server *atscfg.Server, cfgFile string) string {
 }
 
 func main() {
-	toConfig := ConfigInfo{}
-	err := json.NewDecoder(os.Stdin).Decode(&toConfig)
+
+	configBundle := config.ServerAndConfigs{}
+	err := json.NewDecoder(os.Stdin).Decode(&configBundle)
 	if err != nil {
 		log.Errorln("Error reading json input")
 	}
-	fmt.Println()
-	outPut := PreprocessConfigFile(toConfig.TrOpsData.Server, toConfig.File)
-	fmt.Println(outPut)
+	for _, configs := range configBundle.ConfigFile {
+		configs.Text = PreprocessConfigFile(configBundle.Server, configs.Text)
+	}
+	sort.Sort(config.ATSConfigFiles(configBundle.ConfigFile))
+	if err := preproc_util.WriteConfigs(configBundle.ConfigFile, os.Stdout); err != nil {
+		log.Errorln("Writing configs for '" + *configBundle.Server.HostName + "': " + err.Error())
+		os.Exit(config.ExitCodeErrGeneric)
+	}
 }
