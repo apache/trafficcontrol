@@ -32,10 +32,12 @@
 # TO_HOST
 # TO_PORT
 # TP_HOST
+# SRIJEET_DB_USER
+# SRIJEET_DB_NAME
 #
 # Check that env vars are set
 # srijeet check this
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_HOST TO_PORT TP_HOST)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_HOST TO_PORT TP_HOST SRIJEET_DB_USER SRIJEET_DB_NAME)
 for v in $envvars; do
   if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
@@ -137,7 +139,7 @@ echo "$(jq "$(<<'JQ_FILTER' envsubst
       "${TO_URL}"
     else . end))
   ) |
-  ."/opt/traffic_ops/app/conf/production/tv.conf"[] |= (
+  ."/opt/traffic_ops/app/conf/production/database.conf"[] |= (
     (select(.config_var == "dbname") |= with_entries(if .key | test("^[A-Z]") then .value =
       "${DB_NAME}"
     else . end)) |
@@ -151,9 +153,31 @@ echo "$(jq "$(<<'JQ_FILTER' envsubst
       "${DB_USER_PASS}"
     else . end))
   ) |
-  ."/opt/traffic_ops/app/db/trafficvault/dbconf.yml"[] |= (
+  ."/opt/traffic_ops/app/conf/production/tv.conf"[] |= (
+    (select(.config_var == "dbname") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${SRIJEET_DB_NAME}"
+    else . end)) |
+    (select(.config_var == "hostname") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${DB_FQDN}"
+    else . end)) |
+    (select(.config_var == "user") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${SRIJEET_DB_USER}"
+    else . end)) |
+    (select(.config_var == "password") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${DB_USER_PASS}"
+    else . end))
+  ) |
+  ."/opt/traffic_ops/app/db/dbconf.yml"[] |= (
     (select(.config_var == "pgUser") |= with_entries(if .key | test("^[A-Z]") then .value =
       "${DB_USER}"
+    else . end)) |
+    (select(.config_var == "pgPassword") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${DB_USER_PASS}"
+    else . end))
+  ) |
+  ."/opt/traffic_ops/app/db/trafficvault/dbconf.yml"[] |= (
+    (select(.config_var == "pgUser") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${SRIJEET_DB_USER}"
     else . end)) |
     (select(.config_var == "pgPassword") |= with_entries(if .key | test("^[A-Z]") then .value =
       "${DB_USER_PASS}"

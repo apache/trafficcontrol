@@ -50,8 +50,10 @@ services:
       POSTGRES_HOME: /usr/pgsql-13
       PGPASSWORD: secretrootpass
       POSTGRES_PASSWORD: secretrootpass
-      DB_USERNAME: traffic_vault
-      DB_NAME: tv_development
+      DB_USERNAME: traffic_ops
+      DB_NAME: traffic_ops
+      SRIJEET_DB_USERNAME: traffic_vault
+      SRIJEET_DB_NAME: traffic_vault
       DB_USER_PASS: twelve
       DB_SERVER: db
       DB_PORT: 5432
