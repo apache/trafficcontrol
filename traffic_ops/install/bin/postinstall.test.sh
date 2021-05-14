@@ -104,6 +104,7 @@ mkdir -p "$ROOT_DIR/etc/pki/tls/certs";
 mkdir "$ROOT_DIR/etc/pki/tls/private";
 mkdir -p "$ROOT_DIR/opt/traffic_ops/app/public/routing";
 mkdir "$ROOT_DIR/opt/traffic_ops/app/db";
+mkdir "$ROOT_DIR/opt/traffic_ops/app/db/trafficvault";
 mkdir -p "$ROOT_DIR/opt/traffic_ops/app/conf/production";
 cat > "$ROOT_DIR/opt/traffic_ops/app/conf/cdn.conf" <<EOF
 {
