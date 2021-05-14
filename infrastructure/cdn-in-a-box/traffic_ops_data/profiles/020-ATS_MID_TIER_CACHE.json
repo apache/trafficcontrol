@@ -420,6 +420,11 @@
 			"configFile": "ssl_multicert.config",
 			"name": "location",
 			"value": "/opt/trafficserver/etc/trafficserver"
+		},
+		{
+			"configFile": "package",
+			"name": "trafficserver",
+			"value": "7.1.4-2.el7.x86_64"
 		}
 	]
 }
