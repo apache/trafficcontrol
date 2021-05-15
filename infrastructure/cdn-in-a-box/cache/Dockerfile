@@ -118,8 +118,22 @@ RUN rpm -Uvh /$(basename $ORT_RPM) &&\
     rm /$(basename $ORT_RPM)
 CMD /run.sh
 
+FROM common-traffic-server-dependencies AS get-delve
+RUN dnf -y install golang && \
+    go get -u github.com/go-delve/delve/cmd/dlv
+
 FROM common-cache-config-layers AS mid
 COPY infrastructure/cdn-in-a-box/mid/init.d/ /opt/init.d/
 
+FROM mid AS mid-debug
+COPY --from=get-delve /root/go/bin /usr/bin
+COPY infrastructure/cdn-in-a-box/cache/init-debug-scripts.sh /opt/init.d/
+
 FROM common-cache-config-layers AS edge
 COPY infrastructure/cdn-in-a-box/edge/init.d/ /opt/init.d/
+
+FROM edge AS edge-debug
+COPY --from=get-delve /root/go/bin /usr/bin
+COPY infrastructure/cdn-in-a-box/cache/init-debug-scripts.sh /opt/init.d/
+
+FROM edge
