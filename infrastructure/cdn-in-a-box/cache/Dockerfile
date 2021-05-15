@@ -67,12 +67,14 @@ RUN dnf -y install epel-release && \
             exit 1; \
     fi
 
-ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.4-2.el7.x86_64.rpm /trafficserver.rpm
-ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-devel-7.1.4-2.el7.x86_64.rpm /trafficserver-devel.rpm
-
 RUN dnf install -y bind-utils kyotocabinet-libs initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel && \
     dnf install -y jq logrotate && \
     dnf clean all
+
+FROM common-traffic-server-dependencies AS common-cache-config-layers
+
+ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.4-2.el7.x86_64.rpm /trafficserver.rpm
+ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-devel-7.1.4-2.el7.x86_64.rpm /trafficserver-devel.rpm
 
 COPY traffic_server/plugins/astats_over_http/astats_over_http.c traffic_server/plugins/astats_over_http/Makefile.am /
 
@@ -93,7 +95,6 @@ RUN dnf remove -y gcc-c++ glibc-devel autoconf automake libtool && \
 # traffic_server needs different ownership than trafficserver-7.1.4-2.el7.x86_64.rpm sets
 RUN chown -R ats:ats /etc/trafficserver/ /usr/lib64/trafficserver/
 
-FROM common-traffic-server-dependencies AS common-cache-config-layers
 
 WORKDIR /opt
 
