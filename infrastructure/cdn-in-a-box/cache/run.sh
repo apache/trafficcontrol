@@ -72,8 +72,9 @@ until [[ $(to-get "api/2.0/cdns/name/$CDN_NAME/sslkeys" | jq '.response | length
 	sleep 3
 done
 
-# Leaves the container hanging open in the event of a failure for debugging purposes
-PATH="$PATH:/opt/ort" traffic_ops_ort -kl ALL BADASS || { echo "Failed"; }
+# If /tmp/trafficcontrol-cache-config does not already exist when running t3c-apply, t3c-apply will create it and fail silently
+mkdir /tmp/trafficcontrol-cache-config
+t3c apply --run-mode=badass --traffic-ops-url="$TO_URL" --traffic-ops-user="$TO_USER" --traffic-ops-password="$TO_PASSWORD" --git=yes --dispersion=0 --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout all || { echo "Failed"; }
 
 envsubst < "/etc/cron.d/traffic_ops_ort-cron-template" > "/etc/cron.d/traffic_ops_ort-cron" && rm -f "/etc/cron.d/traffic_ops_ort-cron-template"
 chmod "0644" "/etc/cron.d/traffic_ops_ort-cron" && crontab "/etc/cron.d/traffic_ops_ort-cron"
@@ -81,4 +82,5 @@ chmod "0644" "/etc/cron.d/traffic_ops_ort-cron" && crontab "/etc/cron.d/traffic_
 crond -im off
 
 touch /var/log/trafficserver/diags.log
+# Leaves the container hanging open in the event of a failure for debugging purposes
 tail -Fn +1 /var/log/trafficserver/diags.log /var/log/ort.log

@@ -14,4 +14,5 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-*/1 * * * * PATH=$PATH:/opt/ort /usr/local/bin/traffic_ops_ort -k --dispersion 0 SYNCDS ALL $TO_URL $TO_USER:$TO_PASSWORD >> /var/log/ort.log 2>&1
+
+*/1 * * * * t3c apply --run-mode=syncds --traffic-ops-url=$TO_URL --traffic-ops-user=$TO_USER --traffic-ops-password=$TO_PASSWORD --git=yes --login-dispersion=0 --dispersion=0 --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout all >> /var/log/ort.log
