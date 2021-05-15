@@ -69,7 +69,7 @@ the CDN on behalf of user `A`.
     - New "lock" icon to give the user the ability to lock a particular CDN
     - A dropdown list that appears when you click the above mentioned lock icon, which lists the list of CDNs that you can lock
     - A `Message` field that appears under the dropdown list that the user can populate with a custom message stating the reason behind locking the CDN
-    - A `Soft Lock` field that can be set to `true` or `false` based on user requirement
+    - A set of radio buttons to show the type of lock that the user wants, that is, `Soft Lock` and `Hard Lock`. A tooltip explaining what each lock denotes will also be provided.
     - A CDN notification displaying which CDN is locked by which user
     - An "unlock" option that appears next to the notification, only for the user who has locked the CDN
     - A way for the `admin` user to be able to unlock CDNs on other users' behalf
@@ -125,7 +125,7 @@ The following table describes the top level `CDN_Lock` object:
 - a user can snap/ queue a CDN only if they are the one holding the lock (of either kind) on the `cdn`. Alternatively, if no one has the lock on the `cdn`, anyone can snap/ queue/ make changes to the CDN
 - a user can delete their `hard` or `soft` lock whenever they want
 - a user with at least `all-read` and `all-write` capabilities can delete the locks of other users on any CDN. The `all-write` capability will be modified
-to include a new capability `delete-all-locks`.
+to include a new capability `delete-all-locks`. The way it works today, this translates to a user with an `admin` role. Such a user can delete other users' locks. 
 
 Three new endpoints will be added for `GET`, `POST` and `DELETE` functionality with respect to CDN locks.
 ##### GET `cdn_locks`
