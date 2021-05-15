@@ -86,7 +86,7 @@ init() {
       "config_var":"type"
     },
     {
-      "Database name":"$TV_PG_DB_NAME",
+      "Database name":"$TV_DB_NAME",
       "config_var":"dbname"
     },
     {
@@ -98,7 +98,7 @@ init() {
       "config_var":"port"
     },
     {
-      "Traffic Ops database user":"$TV_PG_DB_USER",
+      "Traffic Ops database user":"$TV_DB_USER",
       "config_var":"user"
     },
     {

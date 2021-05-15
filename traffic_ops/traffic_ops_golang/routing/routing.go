@@ -175,13 +175,13 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, disabledRouteIDs []int, pe
 			} else {
 				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.Use(r.Handler, middlewares), ID: r.ID})
 			}
-			//log.Infof("adding route %v %v\n", r.Method, path)
+			log.Infof("adding route %v %v\n", r.Method, path)
 		}
 	}
 	for _, r := range rawRoutes {
 		middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
 		m[r.Method] = append(m[r.Method], PathHandler{Path: r.Path, Handler: middleware.Use(r.Handler, middlewares)})
-		//log.Infof("adding raw route %v %v\n", r.Method, r.Path)
+		log.Infof("adding raw route %v %v\n", r.Method, r.Path)
 	}
 
 	versionSet := map[api.Version]struct{}{}
@@ -244,10 +244,10 @@ func Handler(
 	reqID := getReqID()
 
 	reqIDStr := strconv.FormatUint(reqID, 10)
-	//log.Infoln(r.Method + " " + r.URL.Path + "?" + r.URL.RawQuery + " handling (reqid " + reqIDStr + ")")
+	log.Infoln(r.Method + " " + r.URL.Path + "?" + r.URL.RawQuery + " handling (reqid " + reqIDStr + ")")
 	start := time.Now()
 	defer func() {
-		log.Debugln(r.Method + " " + r.URL.Path + "?" + r.URL.RawQuery + " handled (reqid " + reqIDStr + ") in " + time.Since(start).String())
+		log.Infoln(r.Method + " " + r.URL.Path + "?" + r.URL.RawQuery + " handled (reqid " + reqIDStr + ") in " + time.Since(start).String())
 	}()
 
 	ctx := r.Context()

@@ -70,8 +70,8 @@ from struct import unpack, pack
 # Paths for output configuration files
 DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/database.conf"
 DB_CONF_FILE = "/opt/traffic_ops/app/db/dbconf.yml"
-TV_PG_DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/tv.conf"
-TV_PG_DB_CONF_FILE = "/opt/traffic_ops/app/db/trafficvault/dbconf.yml"
+TV_DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/tv.conf"
+TV_DB_CONF_FILE = "/opt/traffic_ops/app/db/trafficvault/dbconf.yml"
 CDN_CONF_FILE = "/opt/traffic_ops/app/conf/cdn.conf"
 LDAP_CONF_FILE = "/opt/traffic_ops/app/conf/ldap.conf"
 USERS_CONF_FILE = "/opt/traffic_ops/install/data/json/users.json"
@@ -231,7 +231,7 @@ DEFAULTS = {
 		Question("Traffic Ops database user", "traffic_ops", "user"),
 		Question("Password for Traffic Ops database user", "", "password", hidden=True)
 	],
-	TV_PG_DATABASE_CONF_FILE: [
+	TV_DATABASE_CONF_FILE: [
 		Question("Database type", "Pg", "type"),
 		Question("Database name", "traffic_vault", "dbname"),
 		Question("Database server hostname IP or FQDN", "localhost", "hostname"),
@@ -243,7 +243,7 @@ DEFAULTS = {
 		Question("Database server root (admin) user", "postgres", "pgUser"),
 		Question("Password for database server admin", "", "pgPassword", hidden=True)
 	],
-	TV_PG_DB_CONF_FILE: [
+	TV_DB_CONF_FILE: [
 		Question("Database server root (admin) user", "postgres", "pgUser"),
 		Question("Password for database server admin", "", "pgPassword", hidden=True)
 	],
@@ -358,6 +358,7 @@ def generate_todb_conf(qstns, fname, auto, root, conf): # (list, str, bool, str,
 	Also writes the configuration file to the file 'fname' under the directory 'root'.
 	"""
 	todbconf = get_config(qstns, fname, auto)
+	#ToDo: srijeet check here for type
 
 	driver = "postgres"
 	if "type" not in conf:
@@ -367,13 +368,9 @@ def generate_todb_conf(qstns, fname, auto, root, conf): # (list, str, bool, str,
 
 	path = os.path.join(root, fname.lstrip('/'))
 	hostname = conf.get('hostname', 'UNKNOWN')
-	print(hostname)
 	port = conf.get('port', 'UNKNOWN')
-	print(port)
 	user = conf.get('user', 'UNKNOWN')
-	print(user)
 	password = conf.get('password', 'UNKNOWN')
-	print(password)
 	dbname = conf.get('dbname', 'UNKNOWN')
 
 	open_line = "host={hostname} port={port} user={user} password={password} dbname={dbname}".format(hostname=hostname, port=port, user=user, password=password, dbname=dbname)
@@ -381,8 +378,6 @@ def generate_todb_conf(qstns, fname, auto, root, conf): # (list, str, bool, str,
 		print("production:", file=conf_file)
 		print("    driver:", driver, file=conf_file)
 		print("    open: {open_line} sslmode=disable".format(open_line=open_line), file=conf_file)
-	print("SRIJEET!!!!!!!!")
-	print(todbconf)
 	return todbconf
 
 def generate_ldap_conf(questions, fname, automatic, root): # type: (list[Question], str, bool, str) -> None
@@ -1028,7 +1023,6 @@ def db_connection_string(dbconf): # type: (dict) -> str
 	"""
 	Constructs a database connection string from the passed configuration object.
 	"""
-	print("SRIJEET CHATTERJEE!!!!!!! connection string")
 	user = dbconf["user"]
 	password = dbconf["password"]
 	db_name = "traffic_ops" if dbconf["type"] == "Pg" else dbconf["type"]
@@ -1056,13 +1050,13 @@ def exec_psql(conn_str, query, **args): # type: (str, str, dict) -> str
 	output = proc.communicate()
 	if proc.returncode != 0:
 		logging.debug("psql exec failed; stderr: %s\n\tstdout: %s", output[1], output[0])
-		#raise OSError("failed to execute database query")
+		raise OSError("failed to execute database query")
 	if sys.version_info.major >= 3:
 		return output[0].strip()
 	else:
 		return string.strip(output[0])
 
-def invoke_db_admin_pl(action, root): # type: (str, str) -> None
+def invoke_db_admin_pl(action, root, tv): # type: (str, str, bool) -> None
 	"""
 	Exectues admin with the given action, and looks for it from the given root directory.
 	"""
@@ -1071,6 +1065,8 @@ def invoke_db_admin_pl(action, root): # type: (str, str) -> None
 	# should be fixed at some point, IMO, but for now this works.
 	os.chdir(path)
 	cmd = [os.path.join(path, "db/admin"), "--env=production", action]
+	if tv:
+		cmd = [os.path.join(path, "db/admin"), "--trafficvault","--env=production", action]
 	proc = subprocess.Popen(
 		cmd,
 		stderr=subprocess.PIPE,
@@ -1082,27 +1078,6 @@ def invoke_db_admin_pl(action, root): # type: (str, str) -> None
 		logging.debug("admin exec failed; stderr: %s\n\tstdout: %s", output[1], output[0])
 		raise OSError("Database {action} failed".format(action=action))
 	logging.info("Database %s succeeded", action)
-
-def invoke_db_admin_pl_tv_pg(action, root): # type: (str, str) -> None
-	"""
-	Exectues admin with the given action, and looks for it from the given root directory.
-	"""
-	path = os.path.join(root, "opt/traffic_ops/app")
-	# This is a workaround for admin using hard-coded relative paths. That
-	# should be fixed at some point, IMO, but for now this works.
-	os.chdir(path)
-	cmd = [os.path.join(path, "db/admin"), "--trafficvault", "--env=production", action]
-	proc = subprocess.Popen(
-		cmd,
-		stderr=subprocess.PIPE,
-		stdout=subprocess.PIPE,
-		universal_newlines=True,
-	)
-	output = proc.communicate()  # type: str
-	if proc.returncode != 0:
-		logging.info("srijeet admin exec failed; stderr: %s\n\tstdout: %s", output[1], output[0])
-		raise OSError("Srijeet Database {action} failed".format(action=action))
-	logging.info("Srijeet Database %s succeeded", action)
 
 def setup_database_data(conn_str, user, param_conf, root): # type: (str, User, dict, str) -> None
 	"""
@@ -1121,13 +1096,13 @@ def setup_database_data(conn_str, user, param_conf, root): # type: (str, User, d
 	if exec_psql(conn_str, tables_found_query) == "t":
 		logging.info("Found existing tables skipping table creation")
 	else:
-		invoke_db_admin_pl("load_schema", root)
-		invoke_db_admin_pl_tv_pg("load_schema", root)
+		invoke_db_admin_pl("load_schema", root, False)
+		invoke_db_admin_pl("load_schema", root, True)
 
-	invoke_db_admin_pl("migrate", root)
-	invoke_db_admin_pl("seed", root)
-	invoke_db_admin_pl("patch", root)
-	invoke_db_admin_pl_tv_pg("migrate", root)
+	invoke_db_admin_pl("migrate", root, False)
+	invoke_db_admin_pl("seed", root, False)
+	invoke_db_admin_pl("patch", root, False)
+	invoke_db_admin_pl("migrate", root, True)
 
 	hashed_pass = hash_pass(user.password)
 	insert_admin_query = '''
@@ -1287,9 +1262,9 @@ no_database, # type: bool
 
 	try:
 		dbconf = generate_db_conf(user_input[DATABASE_CONF_FILE], DATABASE_CONF_FILE, automatic, root_dir)
-		tv_pg_dbconf = generate_db_conf(user_input[TV_PG_DATABASE_CONF_FILE], TV_PG_DATABASE_CONF_FILE, automatic, root_dir)
+		tv_dbconf = generate_db_conf(user_input[TV_DATABASE_CONF_FILE], TV_DATABASE_CONF_FILE, automatic, root_dir)
 		todbconf = generate_todb_conf(user_input[DB_CONF_FILE], DB_CONF_FILE, automatic, root_dir, dbconf)
-		tv_pg_todbconf = generate_todb_conf(user_input[TV_PG_DB_CONF_FILE], TV_PG_DB_CONF_FILE, automatic, root_dir, tv_pg_dbconf)
+		tv_todbconf = generate_todb_conf(user_input[TV_DB_CONF_FILE], TV_DB_CONF_FILE, automatic, root_dir, tv_dbconf)
 		generate_ldap_conf(user_input[LDAP_CONF_FILE], LDAP_CONF_FILE, automatic, root_dir)
 		admin_conf = generate_users_conf(
 		user_input[USERS_CONF_FILE],
