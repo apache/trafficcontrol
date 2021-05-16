@@ -358,7 +358,6 @@ def generate_todb_conf(qstns, fname, auto, root, conf): # (list, str, bool, str,
 	Also writes the configuration file to the file 'fname' under the directory 'root'.
 	"""
 	todbconf = get_config(qstns, fname, auto)
-	#ToDo: srijeet check here for type
 
 	driver = "postgres"
 	if "type" not in conf:
@@ -919,7 +918,7 @@ def random_word(length = 12): # type: (int) -> str
 	word_chars = string.ascii_letters + string.digits + '_'
 	return ''.join(random.choice(word_chars) for _ in range(length))
 
-def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question], str, bool, str) -> None
+def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question], str, bool, str) -> bool
 	"""
 	Generates some properties of a cdn.conf file based on the passed questions.
 
@@ -1018,6 +1017,17 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 		json.dump(existing_conf, conf_file, indent=indent)
 		print(file=conf_file)
 	logging.info("CDN configuration has been saved")
+	try:
+		traffic_vault_backend = existing_conf["traffic_ops_golang"]["traffic_vault_backend"]
+	except KeyError as e:
+		exception = ValueError("missing 'traffic_vault_backend' config_var")
+		exception.__cause__ = e
+		raise exception
+
+	if traffic_vault_backend == "postgres":
+		return True
+	else:
+		return False
 
 def db_connection_string(dbconf): # type: (dict) -> str
 	"""
@@ -1079,7 +1089,7 @@ def invoke_db_admin_pl(action, root, tv): # type: (str, str, bool) -> None
 		raise OSError("Database {action} failed".format(action=action))
 	logging.info("Database %s succeeded", action)
 
-def setup_database_data(conn_str, user, param_conf, root): # type: (str, User, dict, str) -> None
+def setup_database_data(conn_str, user, param_conf, root, postgresTV): # type: (str, User, dict, str, bool) -> None
 	"""
 	Sets up all necessary initial database data using `/usr/bin/sql`
 	"""
@@ -1097,12 +1107,16 @@ def setup_database_data(conn_str, user, param_conf, root): # type: (str, User, d
 		logging.info("Found existing tables skipping table creation")
 	else:
 		invoke_db_admin_pl("load_schema", root, False)
-		invoke_db_admin_pl("load_schema", root, True)
 
 	invoke_db_admin_pl("migrate", root, False)
 	invoke_db_admin_pl("seed", root, False)
 	invoke_db_admin_pl("patch", root, False)
-	invoke_db_admin_pl("migrate", root, True)
+
+	if postgresTV:
+		invoke_db_admin_pl("create_user", root, True)
+		invoke_db_admin_pl("createdb", root, True)
+		invoke_db_admin_pl("load_schema", root, True)
+		invoke_db_admin_pl("migrate", root, True)
 
 	hashed_pass = hash_pass(user.password)
 	insert_admin_query = '''
@@ -1210,6 +1224,7 @@ no_database, # type: bool
 	Runs the main routine given the parsed arguments as input.
 	:rtype: int
 	"""
+	postgresTV = False
 	if debug:
 		logging.getLogger().setLevel(logging.DEBUG)
 	else:
@@ -1295,7 +1310,7 @@ no_database, # type: bool
 		return 1
 
 	try:
-		generate_cdn_conf(user_input[CDN_CONF_FILE], CDN_CONF_FILE, automatic, root_dir)
+		postgresTV = generate_cdn_conf(user_input[CDN_CONF_FILE], CDN_CONF_FILE, automatic, root_dir)
 	except OSError as e:
 		logging.critical("Generating cdn.conf: %s", e)
 		return 1
@@ -1325,7 +1340,7 @@ no_database, # type: bool
 			)
 
 		try:
-			setup_database_data(conn_str, admin_conf, paramconf, root_dir)
+			setup_database_data(conn_str, admin_conf, paramconf, root_dir, postgresTV)
 		except (subprocess.CalledProcessError, OSError) as e:
 			db_connect_failed()
 			return 1

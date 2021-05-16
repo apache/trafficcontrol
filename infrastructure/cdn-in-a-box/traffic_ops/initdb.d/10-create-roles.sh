@@ -29,7 +29,3 @@ EOSQL
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" \
     -tc "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1 ||  \
     psql -U postgres -c "CREATE DATABASE $DB_NAME OWNER $DB_USER"
-
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" \
-    -tc "SELECT 1 FROM pg_database WHERE datname = '$TV_DB_NAME'" | grep -q 1 ||  \
-    psql -U postgres -c "CREATE DATABASE $TV_DB_NAME OWNER $TV_DB_USER"
