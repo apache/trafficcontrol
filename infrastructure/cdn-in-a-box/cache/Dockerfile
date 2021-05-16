@@ -98,11 +98,8 @@ RUN chown -R ats:ats /etc/trafficserver/ /usr/lib64/trafficserver/
 
 WORKDIR /opt
 
-ADD infrastructure/cdn-in-a-box/ort /opt/ort/
-
-RUN touch /var/log/ort.log && \
-    cp ort/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template && \
-    cp ort/traffic_ops_ort.logrotate /etc/logrotate.d/ort
+ADD infrastructure/cdn-in-a-box/cache/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template
+ADD infrastructure/cdn-in-a-box/cache/traffic_ops_ort.logrotate /etc/logrotate.d/ort
 
 ADD infrastructure/cdn-in-a-box/cache/run.sh infrastructure/cdn-in-a-box/traffic_ops/to-access.sh infrastructure/cdn-in-a-box/enroller/server_template.json /
 
