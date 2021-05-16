@@ -540,7 +540,7 @@ func enrollStatus(toSession *session, r io.Reader) error {
 	if err != nil {
 		for _, alert := range alerts.Alerts {
 			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
-				log.Infof("status %s already exists", s.Name)
+				log.Infof("status %s already exists", *s.Name)
 				return nil
 			}
 		}
