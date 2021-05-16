@@ -34,4 +34,3 @@ linters-settings:
   govet:
     disable:
       - copylocks
-      - printf
