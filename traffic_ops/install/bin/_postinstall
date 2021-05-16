@@ -1009,6 +1009,7 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 	existing_conf["traffic_ops_golang"]["log_location_error"] = err_log
 	access_log = os.path.join(root, "var/log/traffic_ops/access.log")
 	existing_conf["traffic_ops_golang"]["log_location_event"] = access_log
+  traffic_vault_backend = "postgres"
 
 	if "hypnotoad" not in existing_conf or not isinstance(existing_conf["hypnotoad"], dict):
 		existing_conf["hypnotoad"]["workers"] = conf.num_workers
@@ -1022,7 +1023,7 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 	except KeyError as e:
 		exception = ValueError("missing 'traffic_vault_backend' config_var")
 		exception.__cause__ = e
-		logging.warn("no traffic vault backend configured")
+		logging.warn("no traffic vault backend configured, using default postgres")
 
 	if traffic_vault_backend == "postgres":
 		return True
