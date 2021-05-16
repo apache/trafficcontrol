@@ -707,7 +707,7 @@ func enrollProfile(toSession *session, r io.Reader) error {
 			log.Infof("creating param %+v", param)
 			newAlerts, _, err := toSession.CreateParameter(param, client.RequestOptions{})
 			if err != nil {
-				log.Infof("can't create parameter %+v: %v", param, err, newAlerts.Alerts)
+				log.Infof("can't create parameter %+v: %s, %v", param, err, newAlerts.Alerts)
 				continue
 			}
 			eparam, err = toSession.getParameter(param, nil)
