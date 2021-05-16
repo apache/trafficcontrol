@@ -348,7 +348,7 @@ func main() {
 			break
 		}
 		if firstAllowedCreateRole == "" {
-			log.Printf("ERROR creating initial admin user: no roles are allowed to create users\n", err)
+			log.Printf("ERROR creating initial admin user: no roles are allowed to create users\n")
 			return
 		}
 		err := createUser(db, config.AdminUser, config.AdminPass, firstAllowedCreateRole)
