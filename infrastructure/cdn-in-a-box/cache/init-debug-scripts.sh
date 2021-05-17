@@ -21,11 +21,16 @@ set -o errexit -o nounset
 
 maybe_debug() {
 	set -o errexit -o nounset
+	hostname="$1"
+	shift
 	debug_port="$1"
 	shift
 	actual_binary="$1"
 	shift
-	if [[ "$T3C_DEBUG_COMPONENT" == "${actual_binary%.actual}" ]]; then
+	hostname="${hostname//-/_}" # replace - with _
+	hostname="${hostname^^}" # uppercase
+	debug_variable_name="T3C_DEBUG_COMPONENT_${hostname}"
+	if [[ "${!debug_variable_name}" == "${actual_binary%.actual}" ]]; then
 		command=(dlv --listen=":${debug_port}" --headless=true --api-version=2 exec "/usr/bin/${actual_binary}" --)
 	else
 		command=("$actual_binary")
@@ -33,6 +38,7 @@ maybe_debug() {
 	exec "${command[@]}" "$@"
 }
 
+hostname="$(hostname --short)"
 for t3c_tool in $(compgen -c t3c | sort | uniq); do
 	(path="$(type -p "$t3c_tool")"
 	cd "$(dirname "$path")"
@@ -43,7 +49,7 @@ for t3c_tool in $(compgen -c t3c | sort | uniq); do
 	<<-DLV_SCRIPT cat > "$dlv_script"
 	#!/usr/bin/env bash
 	$(type maybe_debug | tail -n+2)
-	maybe_debug "${DEBUG_PORT}" "${actual_binary}" "\$@"
+	maybe_debug "${hostname}" "${DEBUG_PORT}" "${actual_binary}" "\$@"
 	DLV_SCRIPT
 	mv "$t3c_tool" "$actual_binary"
 	ln -s "$dlv_script" "$t3c_tool"
