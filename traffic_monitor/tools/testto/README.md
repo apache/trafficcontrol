@@ -25,14 +25,3 @@ Run environment variables:
 
 - `PORT` - the port to serve on. If none is specified, no port argument will be passed to the app, and it will use its
   default.
-
-### Building
-
-`docker build --tag testto .`
-
-### Running
-
-```
-docker network create tmi
-docker run --detach --network tmi --name testto --hostname testto --publish 27080:80 --env PORT=80 testto
-```
