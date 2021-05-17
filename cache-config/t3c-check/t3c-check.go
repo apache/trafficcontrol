@@ -29,8 +29,8 @@ import (
 )
 
 var commands = map[string]struct{}{
-	"refs":   struct{}{},
-	"reload": struct{}{},
+	"refs":   {},
+	"reload": {},
 }
 
 const ExitCodeSuccess = 0
