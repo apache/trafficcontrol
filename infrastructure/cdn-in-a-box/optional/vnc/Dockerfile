@@ -26,7 +26,7 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 ARG VNC_BUILD_USER
 ENV VNC_USER=$VNC_BUILD_USER
 
-RUN dnf -y install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm epel-release && \
+RUN dnf -y install "https://download1.rpmfusion.org/free/el/rpmfusion-free-release-${RHEL_VERSION%%.*}.noarch.rpm" epel-release && \
     dnf -y install xterm firefox git tigervnc-server sudo bind-utils net-tools which passwd which \
                    fluxbox webcore-fonts terminus-fonts vnc mplayer wget openssl curl nc && \
     dnf -y clean all && rm -rf /var/cache/dnf
