@@ -182,9 +182,8 @@ func CopyProfile(t *testing.T) {
 func CreateTestProfiles(t *testing.T) {
 
 	for _, pr := range testData.Profiles {
-		resp, _, err := TOSession.CreateProfile(pr)
+		_, _, err := TOSession.CreateProfile(pr)
 
-		t.Log("Response: ", resp)
 		if err != nil {
 			t.Errorf("could not CREATE profiles with name: %s %v", pr.Name, err)
 		}

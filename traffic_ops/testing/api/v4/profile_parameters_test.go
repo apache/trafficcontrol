@@ -18,7 +18,6 @@ package v4
 import (
 	"net/http"
 	"net/url"
-	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -35,7 +34,6 @@ func TestProfileParameters(t *testing.T) {
 		GetTestProfileParametersIMS(t)
 		GetTestProfileParameters(t)
 		InvalidCreateTestProfileParameters(t)
-		GetTestPaginationSupportProfileParameters(t)
 	})
 }
 
@@ -82,8 +80,7 @@ func CreateTestProfileParameters(t *testing.T) {
 		ProfileID:   profileID,
 		ParameterID: parameterID,
 	}
-	resp, _, err := TOSession.CreateProfileParameter(pp)
-	t.Log("Response: ", resp)
+	_, _, err = TOSession.CreateProfileParameter(pp)
 	if err != nil {
 		t.Errorf("could not CREATE profile parameters: %v", err)
 	}
@@ -105,7 +102,6 @@ func InvalidCreateTestProfileParameters(t *testing.T) {
 	if !strings.Contains(err.Error(), "parameterId") {
 		t.Errorf("expected: error message to contain 'parameterId', actual: %v", err)
 	}
-
 }
 
 func SortTestProfileParameters(t *testing.T) {
@@ -118,7 +114,6 @@ func SortTestProfileParameters(t *testing.T) {
 	for i := range resp {
 		sortedList = append(sortedList, resp[i].Parameter)
 	}
-
 	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
 		return sortedList[p] < sortedList[q]
 	})
@@ -141,19 +136,38 @@ func GetTestProfileParameters(t *testing.T) {
 
 func DeleteTestProfileParameters(t *testing.T) {
 
-	for _, pp := range testData.ProfileParameters {
-		DeleteTestProfileParameter(t, pp)
+	if len(testData.Profiles) > 0 && len(testData.Parameters) > 0 {
+		firstProfile := testData.Profiles[0]
+		profileResp, _, err := TOSession.GetProfileByName(firstProfile.Name, nil)
+		if err != nil {
+			t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
+		}
+		profileID := profileResp[0].ID
+
+		firstParameter := testData.Parameters[0]
+		params := url.Values{}
+		params.Set("name", firstParameter.Name)
+		paramResp, _, err := TOSession.GetParameters(nil, params)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		}
+		parameterID := paramResp[0].ID
+
+		DeleteTestProfileParameter(t, profileID, parameterID)
+	} else {
+		t.Errorf("Profiles and parameters are not available")
 	}
 }
 
-func DeleteTestProfileParameter(t *testing.T, pp tc.ProfileParameter) {
+func DeleteTestProfileParameter(t *testing.T, profileId int, parameterId int) {
+
 	queryParams := url.Values{}
-	queryParams.Set("profileId", strconv.Itoa(pp.ProfileID))
-	queryParams.Set("parameterId", strconv.Itoa(pp.ParameterID))
-	// Retrieve the PtofileParameter by profile so we can get the id for the Update
+	queryParams.Set("profileId", strconv.Itoa(profileId))
+	queryParams.Set("parameterId", strconv.Itoa(parameterId))
+	// Retrieve the ProfileParameter by profile so we can get the id for the Update
 	resp, _, err := TOSession.GetProfileParameters(queryParams, nil)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by profile: %v - %v", pp.Profile, err)
+		t.Errorf("cannot GET Parameter by profile: %v - %v", profileId, err)
 	}
 	if len(resp) > 0 {
 		respPP := resp[0]
@@ -169,91 +183,7 @@ func DeleteTestProfileParameter(t *testing.T, pp tc.ProfileParameter) {
 			t.Errorf("error deleting Parameter name: %s", err.Error())
 		}
 		if len(pps) > 0 {
-			t.Errorf("expected Parameter Name: %s and ConfigFile: %s to be deleted", pp.Profile, pp.Parameter)
+			t.Errorf("expected Parameter Name: %d and ConfigFile: %d to be deleted", profileId, parameterId)
 		}
-	}
-}
-
-func GetTestPaginationSupportProfileParameters(t *testing.T) {
-	qparams := url.Values{}
-	qparams.Set("orderby", "id")
-	profileParameters, _, err := TOSession.GetProfileParameters(qparams, nil)
-	if err != nil {
-		t.Fatalf("cannot GET Profile Parameters: %v", err)
-	}
-
-	if len(profileParameters) > 0 {
-		qparams = url.Values{}
-		qparams.Set("orderby", "id")
-		qparams.Set("limit", "1")
-		profileParametersWithLimit, _, err := TOSession.GetProfileParameters(qparams, nil)
-		if err == nil {
-			if !reflect.DeepEqual(profileParameters[:1], profileParametersWithLimit) {
-				t.Error("expected GET Profile Parameters with limit = 1 to return first result")
-			}
-		} else {
-			t.Error("Error in getting profile parameters by limit")
-		}
-		if len(profileParameters) > 1 {
-			qparams = url.Values{}
-			qparams.Set("orderby", "id")
-			qparams.Set("limit", "1")
-			qparams.Set("offset", "1")
-			profileParametersWithOffset, _, err := TOSession.GetProfileParameters(qparams, nil)
-			if err == nil {
-				if !reflect.DeepEqual(profileParameters[1:2], profileParametersWithOffset) {
-					t.Error("expected GET Profile Parameters with limit = 1, offset = 1 to return second result")
-				}
-			} else {
-				t.Error("Error in getting profile parameters by limit and offset")
-			}
-
-			qparams = url.Values{}
-			qparams.Set("orderby", "id")
-			qparams.Set("limit", "1")
-			qparams.Set("page", "2")
-			profileParametersWithPage, _, err := TOSession.GetProfileParameters(qparams, nil)
-
-			if err == nil {
-				if !reflect.DeepEqual(profileParameters[1:2], profileParametersWithPage) {
-					t.Error("expected GET profile parameters with limit = 1, page = 2 to return second result")
-				}
-			} else {
-				t.Error("Error in getting profile parameters by limit and page")
-			}
-		} else {
-			t.Errorf("only one profile parameters found, so offset functionality can't test")
-		}
-	} else {
-		t.Errorf("No profile parameters found to check pagination")
-	}
-
-	qparams = url.Values{}
-	qparams.Set("limit", "-2")
-	_, _, err = TOSession.GetProfileParameters(qparams, nil)
-	if err == nil {
-		t.Error("expected GET Profile Parameters to return an error when limit is not bigger than -1")
-	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
-		t.Errorf("expected GET Profile Parameters to return an error for limit is not bigger than -1, actual error: " + err.Error())
-	}
-
-	qparams = url.Values{}
-	qparams.Set("limit", "1")
-	qparams.Set("offset", "0")
-	_, _, err = TOSession.GetProfileParameters(qparams, nil)
-	if err == nil {
-		t.Error("expected GET Profile Parameters to return an error when offset is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET Profile Parameters to return an error for offset is not a positive integer, actual error: " + err.Error())
-	}
-
-	qparams = url.Values{}
-	qparams.Set("limit", "1")
-	qparams.Set("page", "0")
-	_, _, err = TOSession.GetProfileParameters(qparams, nil)
-	if err == nil {
-		t.Error("expected GET Profile Parameters to return an error when page is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET Profile Parameters to return an error for page is not a positive integer, actual error: " + err.Error())
 	}
 }
