@@ -23,8 +23,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/gofrs/flock"
 	"io/ioutil"
 	"math/rand"
@@ -34,6 +32,10 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 const OneWeek = 604800
@@ -328,22 +330,22 @@ func CheckUser(cfg config.Cfg) bool {
 	}
 
 	switch cfg.RunMode {
-	case config.BadAss:
+	case t3cutil.ModeBadAss:
 		fallthrough
-	case config.SyncDS:
+	case t3cutil.ModeSyncDS:
 		if userInfo.Username != "root" {
 			log.Errorf("Only the root user may run in BadAss, or SyncDS mode, current user: %s\n",
 				userInfo.Username)
 			result = false
 		}
 	default:
-		log.Infof("current mode: %s, run user: %s\n", cfg.RunMode, userInfo.Username)
+		log.Infof("current mode: %s, run user: %s\n", cfg.RunMode.String(), userInfo.Username)
 	}
 	return result
 }
 
 func CleanTmpDir(cfg config.Cfg) bool {
-	if cfg.RunMode == config.Report {
+	if cfg.RunMode == t3cutil.ModeReport {
 		log.Infof("Mode is '%v', not cleaning tmp directory", cfg.RunMode)
 		return true
 	}
@@ -397,7 +399,7 @@ func doMkDir(name string, cfg config.Cfg, all bool) bool {
 		return true
 	}
 	if err != nil {
-		if cfg.RunMode != config.Report {
+		if cfg.RunMode != t3cutil.ModeReport {
 			if err != nil { // the path does not exist.
 				if all {
 					err = os.MkdirAll(name, 0755)

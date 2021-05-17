@@ -56,7 +56,7 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	if cfg.DefaultClientTLSVersions != nil {
 		args = append(args, "--default-client-tls-versions="+*cfg.DefaultClientTLSVersions+"")
 	}
-	if cfg.RunMode == config.Revalidate {
+	if cfg.RunMode == t3cutil.ModeRevalidate {
 		args = append(args, "--revalidate-only")
 	}
 	args = append(args, "--via-string-release="+strconv.FormatBool(!cfg.OmitViaStringRelease))
@@ -178,34 +178,65 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string) (bool, error) {
 	return true, nil
 }
 
-// verify calls t3c-verify to verify the given cfgFile.
+// checkRefs calls t3c-check-refs to verify the given cfgFile.
 // The cfgFile should be the full text of either a plugin.config or remap.config.
-// Returns nil if t3c-verify returned no errors found, or the error found if any.
-func verify(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
-	stdOut, stdErr, code := t3cutil.DoInput(cfgFile, `t3c-verify`,
+// Returns nil if t3c-check-refs returned no errors found, or the error found if any.
+func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
+	stdOut, stdErr, code := t3cutil.DoInput(cfgFile, `t3c`, `check`, `refs`,
 		"--log-location-error="+outToErr(cfg.LogLocationErr),
 		"--log-location-info="+outToErr(cfg.LogLocationInfo),
 		"--log-location-debug="+outToErr(cfg.LogLocationDebug),
 		"--files-adding="+strings.Join(filesAdding, ","),
 	)
 	if code != 0 {
-		log.Errorf(`verify errors start
+		log.Errorf(`check-refs errors start
 ` + string(stdOut))
-		log.Errorf(`verify errors end`)
+		log.Errorf(`check-refs errors end`)
 		if strings.TrimSpace(string(stdErr)) != "" {
-			log.Errorf(`verify output start
+			log.Errorf(`check-refs output start
 ` + string(stdErr))
-			log.Errorf(`verify output end`)
+			log.Errorf(`check-refs output end`)
 		}
 		return fmt.Errorf("%d plugins failed to verify. See log for details.", code)
 	}
 	if len(bytes.TrimSpace(stdErr)) > 0 {
-		log.Warnf("t3c-verify returned non-error code %v but stderr '%v'", code, string(stdErr))
+		log.Warnf("t3c-check-refs returned non-error code %v but stderr '%v'", code, string(stdErr))
 	}
 	if len(bytes.TrimSpace(stdOut)) > 0 {
-		log.Warnf("t3c-verify returned non-error code %v but output '%v'", code, string(stdOut))
+		log.Warnf("t3c-check-refs returned non-error code %v but output '%v'", code, string(stdOut))
 	}
 	return nil
+}
+
+// checkReload is a helper for the sub-command t3c-check-reload.
+func checkReload(mode t3cutil.Mode, pluginPackagesInstalled []string, changedConfigFiles []string) (t3cutil.ServiceNeeds, error) {
+	stdOut, stdErr, code := t3cutil.Do(`t3c`, `check`, `reload`,
+		"--run-mode="+mode.String(),
+		"--plugin-packages-installed="+strings.Join(pluginPackagesInstalled, ","),
+		"--changed-config-paths="+strings.Join(changedConfigFiles, ","),
+	)
+
+	if code != 0 {
+		log.Errorf(`t3c-check-reload errors start
+` + string(stdErr))
+		log.Errorf(`t3c-check-reload errors end`)
+		if strings.TrimSpace(string(stdErr)) != "" {
+			log.Errorf(`t3c-check-reload output start
+` + string(stdOut))
+			log.Errorf(`t3c-check-reload output end`)
+		}
+		return t3cutil.ServiceNeedsInvalid, fmt.Errorf("t3c-check-reload returned error code %d - see log for details.", code)
+	} else if strings.TrimSpace(string(stdErr)) != "" {
+		log.Errorf(`t3c-check-reload returned success code but nonempty stderr. determine-restart errors start
+` + string(stdErr))
+		log.Errorf(`t3c-check-reload errors end`)
+
+	}
+	needs := t3cutil.StrToServiceNeeds(strings.TrimSpace(string(stdOut)))
+	if needs == t3cutil.ServiceNeedsInvalid {
+		return t3cutil.ServiceNeedsInvalid, errors.New("t3c-check-reload returned unknown string '" + string(stdOut) + "'")
+	}
+	return needs, nil
 }
 
 // requestJSON calls t3c-request with the given command, and deserializes the result as JSON into obj.

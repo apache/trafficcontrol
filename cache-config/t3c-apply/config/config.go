@@ -23,13 +23,16 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/pborman/getopt/v2"
 	"net/url"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-log"
+
+	"github.com/pborman/getopt/v2"
 )
 
 var TSHome string = "/opt/trafficserver"
@@ -45,29 +48,6 @@ const (
 	TrafficCtl         = "/bin/traffic_ctl"
 	TrafficServerOwner = "ats"
 )
-
-type Mode int
-
-const (
-	BadAss     Mode = 0
-	Report     Mode = 1
-	Revalidate Mode = 2
-	SyncDS     Mode = 3
-)
-
-func (m Mode) String() string {
-	switch m {
-	case 0:
-		return "BadAss"
-	case 1:
-		return "Report"
-	case 2:
-		return "Revalidate"
-	case 3:
-		return "SyncDS"
-	}
-	return ""
-}
 
 type SvcManagement int
 
@@ -101,7 +81,7 @@ type Cfg struct {
 	Retries             int
 	RevalWaitTime       time.Duration
 	ReverseProxyDisable bool
-	RunMode             Mode
+	RunMode             t3cutil.Mode
 	SkipOSCheck         bool
 	TOInsecure          bool
 	TOTimeoutMS         time.Duration
@@ -270,20 +250,9 @@ func GetCfg() (Cfg, error) {
 		return Cfg{}, nil
 	}
 
-	runModeStr := strings.ToUpper(*runModePtr)
-	runMode := Mode(Report)
-	switch runModeStr {
-	case "REPORT":
-		runMode = Report
-	case "BADASS":
-		runMode = BadAss
-	case "SYNCDS":
-		runMode = SyncDS
-	case "REVALIDATE":
-		runMode = Revalidate
-	default:
-		Usage()
-		return Cfg{}, errors.New(runModeStr + " is an invalid mode.")
+	runMode := t3cutil.StrToMode(*runModePtr)
+	if runMode == t3cutil.ModeInvalid {
+		return Cfg{}, errors.New(*runModePtr + " is an invalid mode.")
 	}
 
 	urlSourceStr := "argument" // for error messages

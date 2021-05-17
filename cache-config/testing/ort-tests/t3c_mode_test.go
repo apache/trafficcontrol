@@ -76,11 +76,11 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		time.Sleep(time.Second * 5)
 
 		fmt.Println("------------------------ Verify Plugin Configs ----------------")
-		err = runVerify("/opt/trafficserver/etc/trafficserver/remap.config")
+		err = runCheckRefs("/opt/trafficserver/etc/trafficserver/remap.config")
 		if err != nil {
 			t.Errorf("Plugin verification failed for remap.config: " + err.Error())
 		}
-		err = runVerify("/opt/trafficserver/etc/trafficserver/plugin.config")
+		err = runCheckRefs("/opt/trafficserver/etc/trafficserver/plugin.config")
 		if err != nil {
 			t.Errorf("Plugin verification failed for plugin.config: " + err.Error())
 		}
