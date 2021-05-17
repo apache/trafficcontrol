@@ -20,6 +20,8 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 	"os"
 	"os/user"
+	"strconv"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -59,19 +61,14 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 
 		// Use this for uid/gid file check
 		atsUser, err := user.Lookup(TrafficServerOwner)
+		var atsUid string
+		var atsGid string
+
 		if err != nil {
 			t.Logf("Unable to look up user: %s: %v", TrafficServerOwner, err)
 		} else {
-			atsUid, err := strconv.Atoi(atsUser.Uid)
-			if err != nil {
-				log.Errorf("could not parse the ats UID.")
-				atsUid = 0
-			}
-			atsGid, err = strconv.Atoi(atsUser.Gid)
-			if err != nil {
-				log.Errorf("could not parse the ats GID.")
-				atsUid = 0
-			}
+			atsUid = atsUser.Uid
+			atsGid = atsUser.Gid
 		}
 
 		for _, v := range testFiles {
@@ -93,15 +90,19 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 				t.Logf("%s and %s diff clean", tfn, bfn)
 			}
 
-			_, fileInfo := util.FileExists(tfn)
-			if statStruct, ok := fileInfo.Sys().(*syscall.Stat_t); ok {
-				uid := strconv.Itoa(int(statStruct.Uid))
-				if uid != atsUid {
-					t.Errorf("Unexpected uid for file: %s: %d, expected %d", v, uid, atsUid)
-				}
-				gid := strconv.Itoa(int(statStruct.Gid))
-				if gid != atsGid {
-					t.Errorf("Unexpected gid for file: %s: %d, expected %d", v, gid, atsGid)
+			fileInfo, err := os.Stat(tfn)
+			if err != nil {
+				t.Errorf("Error getting stats on %s: %v", tfn, err)
+			} else {
+				if statStruct, ok := fileInfo.Sys().(*syscall.Stat_t); ok {
+					uid := strconv.Itoa(int(statStruct.Uid))
+					if uid != atsUid {
+						t.Errorf("Unexpected uid for file: %s: %s, expected %s", v, uid, atsUid)
+					}
+					gid := strconv.Itoa(int(statStruct.Gid))
+					if gid != atsGid {
+						t.Errorf("Unexpected gid for file: %s: %s, expected %s", v, gid, atsGid)
+					}
 				}
 			}
 		}
