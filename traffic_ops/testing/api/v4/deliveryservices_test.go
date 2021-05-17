@@ -1492,7 +1492,6 @@ func DeleteTestDeliveryServices(t *testing.T) {
 		}
 	}
 
-https://github.com/apache/trafficcontrol/pull/5797/conflict?name=traffic_ops%252Ftesting%252Fapi%252Fv4%252Fparameters_test.go&ancestor_oid=0ab40c38a7bd1ec6ae868eb307b96862dacc1111&base_oid=f2888ca4c50778d493585f5354503dd7d6e2d982&head_oid=ddbb04240926353e07d5104cb18fe053d72bab90	// clean up parameter created in CreateTestDeliveryServices()
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", "location")
 	opts.QueryParameters.Set("configFile", "remap.config")

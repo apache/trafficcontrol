@@ -17,7 +17,10 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
+	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -158,7 +161,7 @@ func UpdateTestParameters(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot update Parameter: %v - alerts: %+v", err, alert.Alerts)
 	}
-}
+
 	// Retrieve the Parameter to check Parameter name got updated
 	opts.QueryParameters.Del("name")
 	opts.QueryParameters.Set("id", strconv.Itoa(remoteParameter.ID))
@@ -179,17 +182,17 @@ func UpdateParametersEmptyConfigFile(t *testing.T) {
 	if len(testData.Parameters) > 0 {
 		firstParameter := testData.Parameters[0]
 		// Retrieve the Parameter by name so we can get the id for the Update
-		params := url.Values{}
-		params.Set("name", firstParameter.Name)
-		resp, _, err := TOSession.GetParameters(params, nil)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", url.QueryEscape(firstParameter.Name))
+		resp, _, err := TOSession.GetParameters(opts)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 		}
-		if len(resp) > 0 {
-			remoteParameter := resp[0]
+		if len(resp.Response) > 0 {
+			remoteParameter := resp.Response[0]
 			remoteParameter.ConfigFile = ""
-
-			alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, nil)
+			opts = client.NewRequestOptions()
+			alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
 			if err == nil {
 				t.Errorf("Invalid Config File has been updated by ID: %v - %v", err, alert)
 			}
@@ -286,7 +289,8 @@ func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
 }
 
 func DeleteTestParametersByInvalidId(t *testing.T) {
-	delResp, reqInf, err := TOSession.DeleteParameter(10000)
+	opts := client.NewRequestOptions()
+	delResp, reqInf, err := TOSession.DeleteParameter(10000, opts)
 	if err == nil {
 		t.Errorf("cannot DELETE Parameters by Invalid ID: %v - %v", err, delResp)
 	}
@@ -296,50 +300,50 @@ func DeleteTestParametersByInvalidId(t *testing.T) {
 }
 
 func GetTestPaginationSupportParameters(t *testing.T) {
-	qparams := url.Values{}
-	qparams.Set("orderby", "id")
-	parameters, _, err := TOSession.GetParameters(qparams, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetParameters(opts)
 	if err != nil {
-		t.Errorf("cannot GET Parameters: %v", err)
+		t.Errorf("Unexpected error getting Parameters: %v - alerts: %+v", err, resp.Alerts)
 	}
-
+	parameters := resp.Response
 	if len(parameters) > 0 {
-		qparams = url.Values{}
-		qparams.Set("orderby", "id")
-		qparams.Set("limit", "1")
-		parametersWithLimit, _, err := TOSession.GetParameters(qparams, nil)
+		opts.QueryParameters = url.Values{}
+		opts.QueryParameters.Set("orderby", "id")
+		opts.QueryParameters.Set("limit", "1")
+		parametersWithLimit, _, err := TOSession.GetParameters(opts)
 		if err == nil {
-			if !reflect.DeepEqual(parameters[:1], parametersWithLimit) {
+			if !reflect.DeepEqual(parameters[:1], parametersWithLimit.Response) {
 				t.Error("expected GET Parameters with limit = 1 to return first result")
 			}
 		} else {
-			t.Error("Error in getting parameter by limit")
+			t.Errorf("Unexpected error getting Parameters with a limit: %v - alerts: %+v", err, parametersWithLimit.Alerts)
 		}
 		if len(parameters) > 1 {
-			qparams = url.Values{}
-			qparams.Set("orderby", "id")
-			qparams.Set("limit", "1")
-			qparams.Set("offset", "1")
-			parametersWithOffset, _, err := TOSession.GetParameters(qparams, nil)
+			opts.QueryParameters = url.Values{}
+			opts.QueryParameters.Set("orderby", "id")
+			opts.QueryParameters.Set("limit", "1")
+			opts.QueryParameters.Set("offset", "1")
+			parametersWithOffset, _, err := TOSession.GetParameters(opts)
 			if err == nil {
-				if !reflect.DeepEqual(parameters[1:2], parametersWithOffset) {
+				if !reflect.DeepEqual(parameters[1:2], parametersWithOffset.Response) {
 					t.Error("expected GET Parameters with limit = 1, offset = 1 to return second result")
 				}
 			} else {
-				t.Error("Error in getting parameter by limit and offset")
+				t.Errorf("Unexpected error getting Parameters with a limit and an offset: %v - alerts: %+v", err, parametersWithOffset.Alerts)
 			}
 
-			qparams = url.Values{}
-			qparams.Set("orderby", "id")
-			qparams.Set("limit", "1")
-			qparams.Set("page", "2")
-			parametersWithPage, _, err := TOSession.GetParameters(qparams, nil)
+			opts.QueryParameters = url.Values{}
+			opts.QueryParameters.Set("orderby", "id")
+			opts.QueryParameters.Set("limit", "1")
+			opts.QueryParameters.Set("page", "2")
+			parametersWithPage, _, err := TOSession.GetParameters(opts)
 			if err == nil {
-				if !reflect.DeepEqual(parameters[1:2], parametersWithPage) {
+				if !reflect.DeepEqual(parameters[1:2], parametersWithPage.Response) {
 					t.Error("expected GET Parameters with limit = 1, page = 2 to return second result")
 				}
 			} else {
-				t.Error("Error in getting parameters by limit and page")
+				t.Errorf("Unexpected error getting Parameters with a limit and a page: %v - alerts: %+v", err, parametersWithPage.Alerts)
 			}
 		} else {
 			t.Errorf("only one parameters found, so offset functionality can't test")
@@ -348,46 +352,48 @@ func GetTestPaginationSupportParameters(t *testing.T) {
 		t.Errorf("No parameters found to check pagination")
 	}
 
-	qparams = url.Values{}
-	qparams.Set("limit", "-2")
-	_, _, err = TOSession.GetParameters(qparams, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	_, _, err = TOSession.GetParameters(opts)
 	if err == nil {
 		t.Error("expected GET Parameters to return an error when limit is not bigger than -1")
 	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
-		t.Errorf("expected GET Parameters to return an error for limit is not bigger than -1, actual error: " + err.Error())
+		t.Errorf("expected GET Parameters to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	qparams = url.Values{}
-	qparams.Set("limit", "1")
-	qparams.Set("offset", "0")
-	_, _, err = TOSession.GetParameters(qparams, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, _, err = TOSession.GetParameters(opts)
 	if err == nil {
 		t.Error("expected GET Parameters to return an error when offset is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET Parameters to return an error for offset is not a positive integer, actual error: " + err.Error())
+		t.Errorf("expected GET Parameters to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	qparams = url.Values{}
-	qparams.Set("limit", "1")
-	qparams.Set("page", "0")
-	_, _, err = TOSession.GetParameters(qparams, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	_, _, err = TOSession.GetParameters(opts)
 	if err == nil {
 		t.Error("expected GET Parameters to return an error when page is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {
-		t.Errorf("expected GET Parameters to return an error for page is not a positive integer, actual error: " + err.Error())
+		t.Errorf("expected GET Parameters to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
 func GetTestParametersByConfigfile(t *testing.T) {
 	for _, parameters := range testData.Parameters {
-		resp, reqInf, err := TOSession.GetParametersByConfigFile(parameters.ConfigFile, nil)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("configFile", url.QueryEscape(parameters.ConfigFile))
+		resp, reqInf, err := TOSession.GetParameters(opts)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by Config File: %v - %v", parameters.ConfigFile, err)
 		}
 		if reqInf.StatusCode != http.StatusOK {
 			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
 		}
-		if len(resp) <= 0 {
+		if len(resp.Response) <= 0 {
 			t.Errorf("No data available for Get Parameters by Config file")
 		}
 	}
@@ -395,14 +401,16 @@ func GetTestParametersByConfigfile(t *testing.T) {
 
 func GetTestParametersByValue(t *testing.T) {
 	for _, parameters := range testData.Parameters {
-		resp, reqInf, err := TOSession.GetParametersByValue(parameters.Value, nil)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("value", url.QueryEscape(parameters.Value))
+		resp, reqInf, err := TOSession.GetParameters(opts)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by Value: %v - %v", parameters.Value, err)
 		}
 		if reqInf.StatusCode != http.StatusOK {
 			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
 		}
-		if len(resp) <= 0 {
+		if len(resp.Response) <= 0 {
 			t.Errorf("No data available for Get Parameters by Config file")
 		}
 	}
@@ -410,63 +418,74 @@ func GetTestParametersByValue(t *testing.T) {
 
 func GetTestParametersByName(t *testing.T) {
 	for _, parameters := range testData.Parameters {
-		resp, reqInf, err := TOSession.GetParametersByName(parameters.Name, nil)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", url.QueryEscape(parameters.Name))
+		resp, reqInf, err := TOSession.GetParameters(opts)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by Name: %v - %v", parameters.Name, err)
 		}
 		if reqInf.StatusCode != http.StatusOK {
 			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
 		}
-		if len(resp) <= 0 {
+		if len(resp.Response) <= 0 {
 			t.Errorf("No data available for Get Parameters by Name")
 		}
 	}
 }
 
 func GetParametersByInvalidId(t *testing.T) {
-	resp, _, err := TOSession.GetParameterByID(10000, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("id", strconv.Itoa(10000))
+	resp, _, err := TOSession.GetParameters(opts)
 	if err != nil {
 		t.Errorf("Getting Parameters by Invalid ID %v", err)
 	}
-	if len(resp) >= 1 {
+	if len(resp.Response) >= 1 {
 		t.Errorf("Invalid ID shouldn't have any response %v Error %v", resp, err)
 	}
 }
 
 func GetParametersByInvalidName(t *testing.T) {
-	resp, _, err := TOSession.GetParametersByName("abcd", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "invalidname")
+	resp, _, err := TOSession.GetParameters(opts)
 	if err != nil {
 		t.Errorf("Getting Parameters by Invalid Name %v", err)
 	}
-	if len(resp) >= 1 {
+	if len(resp.Response) >= 1 {
 		t.Errorf("Invalid name shouldn't have any response %v Error %v", resp, err)
 	}
 }
 
 func GetParametersByInvalidConfigfile(t *testing.T) {
-	resp, _, err := TOSession.GetParametersByConfigFile("abcd", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("configFile", "invalidfile")
+	resp, _, err := TOSession.GetParameters(opts)
 	if err != nil {
 		t.Errorf("Getting Parameters by Invalid ConfigFile %v", err)
 	}
-	if len(resp) >= 1 {
+	if len(resp.Response) >= 1 {
 		t.Errorf("Invalid config file shouldn't have any response %v Error %v", resp, err)
 	}
 }
 
 func GetParametersByInvalidValue(t *testing.T) {
-	resp, _, err := TOSession.GetParametersByValue("abcd", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("value", "invalidvalue")
+	resp, _, err := TOSession.GetParameters(opts)
 	if err != nil {
 		t.Errorf("Getting Parameters by Invalid value %v", err)
 	}
-	if len(resp) >= 1 {
+	if len(resp.Response) >= 1 {
 		t.Errorf("Invalid value shouldn't have any response %v Error %v", resp, err)
 	}
 }
 
 func CreateTestParametersAlreadyExist(t *testing.T) {
-	resp, _, _ := TOSession.GetParameters(nil, nil)
-	if len(resp) > 0 {
-		_, reqInf, _ := TOSession.CreateParameter(resp[0])
+	opts := client.NewRequestOptions()
+	resp, _, _ := TOSession.GetParameters(opts)
+	if len(resp.Response) > 0 {
+		_, reqInf, _ := TOSession.CreateParameter(resp.Response[0], opts)
 		if reqInf.StatusCode != http.StatusBadRequest {
 			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 		}
@@ -474,10 +493,11 @@ func CreateTestParametersAlreadyExist(t *testing.T) {
 }
 
 func CreateTestParametersMissingName(t *testing.T) {
+	opts := client.NewRequestOptions()
 	if len(testData.Parameters) > 0 {
 		firstParameter := testData.Parameters[0]
 		firstParameter.Name = ""
-		_, reqInf, _ := TOSession.CreateParameter(firstParameter)
+		_, reqInf, _ := TOSession.CreateParameter(firstParameter, opts)
 		if reqInf.StatusCode != http.StatusBadRequest {
 			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 		}
@@ -485,12 +505,72 @@ func CreateTestParametersMissingName(t *testing.T) {
 }
 
 func CreateTestParametersMissingconfigFile(t *testing.T) {
+	opts := client.NewRequestOptions()
 	if len(testData.Parameters) > 0 {
 		firstParameter := testData.Parameters[0]
 		firstParameter.ConfigFile = ""
-		_, reqInf, _ := TOSession.CreateParameter(firstParameter)
+		_, reqInf, _ := TOSession.CreateParameter(firstParameter, opts)
 		if reqInf.StatusCode != http.StatusBadRequest {
 			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 		}
+	}
+}
+
+func UpdateParametersEmptyValue(t *testing.T) {
+	if len(testData.Parameters) > 0 {
+		firstParameter := testData.Parameters[0]
+		// Retrieve the Parameter by name so we can get the id for the Update
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", firstParameter.Name)
+		resp, _, err := TOSession.GetParameters(opts)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		}
+		remoteParameter := resp.Response[0]
+		//Parameters can be updated with empty value, so no error while updating
+		remoteParameter.Value = ""
+		opts = client.NewRequestOptions()
+		var alert tc.Alerts
+		alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
+		if err != nil {
+			t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func UpdateParametersEmptyName(t *testing.T) {
+	if len(testData.Parameters) > 0 {
+		firstParameter := testData.Parameters[0]
+		// Retrieve the Parameter by name so we can get the id for the Update
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", firstParameter.Name)
+		resp, _, err := TOSession.GetParameters(opts)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		}
+		remoteParameter := resp.Response[0]
+		remoteParameter.Name = ""
+		opts = client.NewRequestOptions()
+		var alert tc.Alerts
+		alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
+		if err == nil {
+			t.Errorf("Invalid name has been updated by ID: %v - %v", err, alert)
+		}
+		if reqInf.StatusCode != http.StatusBadRequest {
+			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+		}
+	}
+}
+
+func CreateMultipleTestParameters(t *testing.T) {
+	opts := client.NewRequestOptions()
+	//To avoid duplicate issue, deleting and creating new parameters
+	DeleteTestParameters(t)
+	_, _, err := TOSession.CreateMultipleParameters(testData.Parameters, opts)
+	if err != nil {
+		t.Errorf("could not CREATE parameters: %v", err)
 	}
 }
