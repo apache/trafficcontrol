@@ -144,7 +144,6 @@ func parseDBConfig() error {
 	open := make(map[string]string)
 	pairs := strings.Split(gooseCfg.Open, " ")
 	for _, pair := range pairs {
-		fmt.Println(pair)
 		if pair == "" {
 			continue
 		}
@@ -316,7 +315,6 @@ func loadSchema() {
 	if err != nil {
 		die("unable to read '" + DBSchemaPath + "': " + err.Error())
 	}
-
 	cmd := exec.Command("psql", "-h", HostIP, "-p", HostPort, "-d", DBName, "-U", DBUser, "-e", "-v", "ON_ERROR_STOP=1")
 	cmd.Stdin = bytes.NewBuffer(schemaBytes)
 	cmd.Env = append(os.Environ(), "PGPASSWORD="+DBPassword)

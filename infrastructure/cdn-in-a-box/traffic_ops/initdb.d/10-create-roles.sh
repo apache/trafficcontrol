@@ -23,9 +23,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE USER traffic_ops WITH ENCRYPTED PASSWORD '$POSTGRES_PASSWORD';
     CREATE USER telegraf;
     CREATE USER grafana;
-    CREATE USER traffic_vault WITH ENCRYPTED PASSWORD '$POSTGRES_PASSWORD';
 EOSQL
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" \
     -tc "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1 ||  \
     psql -U postgres -c "CREATE DATABASE $DB_NAME OWNER $DB_USER"
+

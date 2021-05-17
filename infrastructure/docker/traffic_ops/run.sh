@@ -80,49 +80,7 @@ init() {
       "hidden":"1"
     }
   ],
-  "/opt/traffic_ops/app/conf/production/tv.conf":[
-    {
-      "Database type":"Pg",
-      "config_var":"type"
-    },
-    {
-      "Database name":"$TV_DB_NAME",
-      "config_var":"dbname"
-    },
-    {
-      "Database server hostname IP or FQDN":"$DB_SERVER",
-      "config_var":"hostname"
-    },
-    {
-      "Database port number":"$DB_PORT",
-      "config_var":"port"
-    },
-    {
-      "Traffic Ops database user":"$TV_DB_USER",
-      "config_var":"user"
-    },
-    {
-      "Traffic Ops database password":"$DB_USER_PASS",
-      "config_var":"password",
-      "hidden":"1"
-    }
-  ],
   "/opt/traffic_ops/app/db/dbconf.yml":[
-    {
-      "Database server root (admin) user":"postgres",
-      "config_var":"pgUser"
-    },
-    {
-      "Database server admin password":"$DB_ROOT_PASS",
-      "config_var":"pgPassword",
-      "hidden":"1"
-    },
-    {
-      "Download Maxmind Database?":"yes",
-      "config_var":"maxmind"
-    }
-  ],
-  "/opt/traffic_ops/app/db/trafficvault/dbconf.yml":[
     {
       "Database server root (admin) user":"postgres",
       "config_var":"pgUser"

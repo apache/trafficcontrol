@@ -52,11 +52,6 @@ services:
       POSTGRES_PASSWORD: secretrootpass
       DB_USERNAME: traffic_ops
       DB_NAME: traffic_ops
-      TV_DB_USERNAME: traffic_vault
-      TV_DB_NAME: traffic_vault
-      TV_DB_SERVER: db
-      TV_DB_USER_PASS: twelve
-      TV_DB_PORT: 5432
       DB_USER_PASS: twelve
       DB_SERVER: db
       DB_PORT: 5432
