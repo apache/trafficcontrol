@@ -1023,12 +1023,9 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 	except KeyError as e:
 		exception = ValueError("missing 'traffic_vault_backend' config_var")
 		exception.__cause__ = e
-		logging.warn("no traffic vault backend configured, using default postgres")
+		raise exception
 
-	if traffic_vault_backend == "postgres":
-		return True
-	else:
-		return False
+	return traffic_vault_backend == "postgres"
 
 def db_connection_string(dbconf): # type: (dict) -> str
 	"""

@@ -32,14 +32,14 @@
 # TO_HOST
 # TO_PORT
 # TP_HOST
-# TV_DB_USER
 # TV_DB_NAME
-# TV_DB_SERVER
-# TV_DB_USER_PASS
 # TV_DB_PORT
+# TV_DB_SERVER
+# TV_DB_USER
+# TV_DB_USER_PASS
 #
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_HOST TO_PORT TP_HOST TV_DB_USER TV_DB_NAME TV_DB_SERVER TV_DB_USER_PASS TV_DB_PORT)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_HOST TO_PORT TP_HOST TV_DB_NAME TV_DB_PORT TV_DB_SERVER TV_DB_USER TV_DB_USER_PASS)
 for v in $envvars; do
   if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
@@ -88,11 +88,10 @@ cdn_conf=/opt/traffic_ops/app/conf/cdn.conf
             "user": "$TV_DB_USER",
             "password": "$TV_DB_USER_PASS",
             "port": ${TV_DB_PORT:-5432},
-            "ssl": false,
-            "conn_max_lifetime_seconds": 60,
+            "conn_max_lifetime_seconds": ${DEBUGGING_TIMEOUT:-60},
             "max_connections": 500,
             "max_idle_connections": 30,
-            "query_timeout_seconds": 10
+            "query_timeout_seconds": ${DEBUGGING_TIMEOUT:-60}
         },
         "proxy_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_tls_timeout" : ${DEBUGGING_TIMEOUT:-60},
