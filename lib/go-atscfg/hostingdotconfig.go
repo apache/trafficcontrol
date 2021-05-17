@@ -43,7 +43,7 @@ func MakeHostingDotConfig(
 	servers []Server,
 	serverParams []tc.Parameter,
 	deliveryServices []DeliveryService,
-	deliveryServiceServers []tc.DeliveryServiceServer,
+	deliveryServiceServers []DeliveryServiceServer,
 	topologies []tc.Topology,
 	hdrComment string,
 ) (Cfg, error) {
@@ -97,13 +97,10 @@ func MakeHostingDotConfig(
 
 	dsServerMap := map[int]map[int]struct{}{} // set[dsID][serverID]
 	for _, dss := range dsServers {
-		if dss.Server == nil || dss.DeliveryService == nil {
-			return Cfg{}, makeErr(warnings, "deliveryserviceservers returned dss with nil values")
+		if _, ok := dsServerMap[dss.DeliveryService]; !ok {
+			dsServerMap[dss.DeliveryService] = map[int]struct{}{}
 		}
-		if _, ok := dsServerMap[*dss.DeliveryService]; !ok {
-			dsServerMap[*dss.DeliveryService] = map[int]struct{}{}
-		}
-		dsServerMap[*dss.DeliveryService][*dss.Server] = struct{}{}
+		dsServerMap[dss.DeliveryService][dss.Server] = struct{}{}
 	}
 
 	isMid := strings.HasPrefix(server.Type, tc.MidTypePrefix)

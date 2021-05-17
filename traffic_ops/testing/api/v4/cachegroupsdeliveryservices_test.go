@@ -17,10 +17,10 @@ package v4
 
 import (
 	"net/http"
-	"net/url"
 	"strconv"
-	"strings"
 	"testing"
+
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestCacheGroupsDeliveryServices(t *testing.T) {
@@ -34,28 +34,30 @@ func TestCacheGroupsDeliveryServices(t *testing.T) {
 const TestEdgeServerCacheGroupName = "cachegroup3"
 
 func CreateTestCachegroupsDeliveryServices(t *testing.T) {
-	dss, _, err := TOSession.GetDeliveryServiceServers(nil, nil)
+	dss, _, err := TOSession.GetDeliveryServiceServers(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET DeliveryServiceServers: %v", err)
+		t.Fatalf("Unexpected error retrieving server-to-Delivery-Service assignments: %v - alerts: %+v", err, dss.Alerts)
 	}
 	if len(dss.Response) > 0 {
 		t.Fatalf("cannot test cachegroups delivery services: expected no initial delivery service servers, actual %v", len(dss.Response))
 	}
 
-	dses, _, err := TOSession.GetDeliveryServices(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v", err, dses)
 	}
 
-	clientCGs, _, err := TOSession.GetCacheGroupByName(TestEdgeServerCacheGroupName, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", TestEdgeServerCacheGroupName)
+	clientCGs, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
 		t.Fatalf("getting cachegroup: %v", err)
 	}
-	if len(clientCGs) != 1 {
-		t.Fatalf("getting cachegroup expected 1, got %v", len(clientCGs))
+	if len(clientCGs.Response) != 1 {
+		t.Fatalf("getting cachegroup expected 1, got %v", len(clientCGs.Response))
 	}
 
-	clientCG := clientCGs[0]
+	clientCG := clientCGs.Response[0]
 
 	if clientCG.ID == nil {
 		t.Fatalf("Cachegroup has a nil ID")
@@ -64,7 +66,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 
 	dsIDs := []int{}
 	topologyDsIDs := []int{}
-	for _, ds := range dses {
+	for _, ds := range dses.Response {
 		if *ds.CDNName == "cdn1" && ds.Topology == nil {
 			dsIDs = append(dsIDs, *ds.ID)
 		} else if *ds.CDNName == "cdn1" && ds.Topology != nil {
@@ -79,7 +81,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatal("No Topology-based Delivery Services found in CDN 'cdn1', cannot continue.")
 	}
 
-	_, reqInf, err := TOSession.SetCacheGroupDeliveryServices(cgID, topologyDsIDs)
+	_, reqInf, err := TOSession.SetCacheGroupDeliveryServices(cgID, topologyDsIDs, client.RequestOptions{})
 	if err == nil {
 		t.Fatal("assigning Topology-based delivery service to cachegroup - expected: error, actual: nil")
 	}
@@ -87,7 +89,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("assigning Topology-based delivery service to cachegroup - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 
-	resp, _, err := TOSession.SetCacheGroupDeliveryServices(cgID, dsIDs)
+	resp, _, err := TOSession.SetCacheGroupDeliveryServices(cgID, dsIDs, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("setting cachegroup delivery services returned error: %v", err)
 	}
@@ -98,7 +100,7 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 	// Note this second post of the same cg-dses specifically tests a previous bug, where the query
 	// failed if any servers with location parameters were already assigned, due to a foreign key
 	// violation. See https://github.com/apache/trafficcontrol/pull/3199
-	resp, _, err = TOSession.SetCacheGroupDeliveryServices(cgID, dsIDs)
+	resp, _, err = TOSession.SetCacheGroupDeliveryServices(cgID, dsIDs, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("setting cachegroup delivery services returned error: %v", err)
 	}
@@ -106,12 +108,12 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatal("setting cachegroup delivery services returned success, but no servers set")
 	}
 
-	params := url.Values{}
+	opts.QueryParameters.Del("name")
 	for _, serverName := range resp.Response.ServerNames {
-		params.Set("hostName", string(serverName))
-		resp, _, err := TOSession.GetServers(params, nil)
+		opts.QueryParameters.Set("hostName", string(serverName))
+		resp, _, err := TOSession.GetServers(opts)
 		if err != nil {
-			t.Fatalf("getting server: %v", err)
+			t.Fatalf("getting server: %v - alerts: %+v", err, resp.Alerts)
 		}
 		servers := resp.Response
 		if len(servers) != 1 {
@@ -123,11 +125,14 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		if serverID == nil {
 			t.Fatalf("got a nil server ID in response, quitting")
 		}
-		serverDSes, _, err := TOSession.GetDeliveryServicesByServer(*serverID, nil)
+		serverDSes, _, err := TOSession.GetDeliveryServicesByServer(*serverID, client.RequestOptions{})
+		if err != nil {
+			t.Errorf("Unexpected error getting servers for Delivery Service #%d: %v - alerts: %+v", *serverID, err, serverDSes.Alerts)
+		}
 
 		for _, dsID := range dsIDs {
 			found := false
-			for _, serverDS := range serverDSes {
+			for _, serverDS := range serverDSes.Response {
 				if *serverDS.ID == int(dsID) {
 					found = true
 					break
@@ -141,22 +146,26 @@ func CreateTestCachegroupsDeliveryServices(t *testing.T) {
 }
 
 func setInactive(t *testing.T, dsID int) {
-	ds, _, err := TOSession.GetDeliveryServiceByID(strconv.Itoa(dsID), nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("id", strconv.Itoa(dsID))
+	resp, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Errorf("Failed to fetch details for Delivery Service #%d", dsID)
+		t.Errorf("Failed to fetch details for Delivery Service #%d: %v - alerts: %+v", dsID, err, resp.Alerts)
 		return
 	}
-	if ds == nil {
-		t.Errorf("Got null or undefined Delivery Service for #%d", dsID)
+	if len(resp.Response) != 1 {
+		t.Errorf("Expected exactly one Delivery Service to exist with ID %d, found: %d", dsID, len(resp.Response))
 		return
 	}
+
+	ds := resp.Response[0]
 	if ds.Active == nil {
 		t.Errorf("Deliver Service #%d had null or undefined 'active'", dsID)
 		ds.Active = new(bool)
 	}
 	if *ds.Active {
 		*ds.Active = false
-		_, _, err = TOSession.UpdateDeliveryService(dsID, *ds, nil)
+		_, _, err = TOSession.UpdateDeliveryService(dsID, ds, client.RequestOptions{})
 		if err != nil {
 			t.Errorf("Failed to set Delivery Service #%d to inactive: %v", dsID, err)
 		}
@@ -164,11 +173,11 @@ func setInactive(t *testing.T, dsID int) {
 }
 
 func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
-	params := url.Values{}
-	params.Set("limit", "1000000")
-	dss, _, err := TOSession.GetDeliveryServiceServers(params, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("limit", "1000000")
+	dss, _, err := TOSession.GetDeliveryServiceServers(opts)
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceServers: %v", err)
+		t.Fatalf("Unexpected error retrieving server-to-Delivery-Service assignments: %v - alerts: %+v", err, dss.Alerts)
 	}
 	for _, ds := range dss.Response {
 		if ds.DeliveryService == nil {
@@ -182,16 +191,15 @@ func DeleteTestCachegroupsDeliveryServices(t *testing.T) {
 
 		setInactive(t, *ds.DeliveryService)
 
-		alerts, _, err := TOSession.DeleteDeliveryServiceServer(*ds.DeliveryService, *ds.Server)
-		t.Logf("Alerts from deleting deliveryserviceserver: %s", strings.Join(alerts.ToStrings(), ", "))
+		alerts, _, err := TOSession.DeleteDeliveryServiceServer(*ds.DeliveryService, *ds.Server, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("deleting delivery service servers: %v", err)
+			t.Errorf("deleting delivery service servers: %v - alerts: %+v", err, alerts.Alerts)
 		}
 	}
 
-	dss, _, err = TOSession.GetDeliveryServiceServers(nil, nil)
+	dss, _, err = TOSession.GetDeliveryServiceServers(client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceServers: %v", err)
+		t.Fatalf("Unexpected error retrieving server-to-Delivery-Service assignments: %v - alerts: %+v", err, dss.Alerts)
 	}
 	if len(dss.Response) > 0 {
 		t.Errorf("deleting delivery service servers: delete succeeded, expected empty subsequent get, actual %v", len(dss.Response))

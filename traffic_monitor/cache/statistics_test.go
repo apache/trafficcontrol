@@ -29,7 +29,7 @@ func ExampleLoadavgFromRawLine() {
 	// 0.30 0.12 0.21 1/863 1421
 }
 
-func ExampleAddInterfaceFromRawLine() {
+func ExampleStatistics_AddInterfaceFromRawLine() {
 	var s Statistics
 	raw := "eth0:47907832129 14601260    0    0    0     0          0   790726 728207677726 10210700052    0    0    0     0       0          0"
 

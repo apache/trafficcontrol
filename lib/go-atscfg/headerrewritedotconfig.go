@@ -63,7 +63,7 @@ func LastHeaderRewriteConfigFileName(dsName string) string {
 func MakeHeaderRewriteDotConfig(
 	fileName string,
 	deliveryServices []DeliveryService,
-	deliveryServiceServers []tc.DeliveryServiceServer,
+	deliveryServiceServers []DeliveryServiceServer,
 	server *Server,
 	servers []Server,
 	cacheGroupsArr []tc.CacheGroupNullable,
@@ -137,6 +137,9 @@ func MakeHeaderRewriteDotConfig(
 		}
 	}
 
+	atsRqstMaxHdrSize, paramWarns := getMaxRequestHeaderParam(tcServerParams)
+	warnings = append(warnings, paramWarns...)
+
 	atsMajorVersion, verWarns := getATSMajorVersion(tcServerParams)
 	warnings = append(warnings, verWarns...)
 
@@ -171,7 +174,7 @@ func MakeHeaderRewriteDotConfig(
 	// NOTE!! Custom TC injections MUST NOT EVER have a `[L]`. Doing so will break custom header rewrites!
 	// NOTE!! The TC injections MUST be come before custom rewrites (EdgeHeaderRewrite, InnerHeaderRewrite, etc).
 	//        If they're placed after, custom rewrites with [L] directives will result in them being applied inconsistently and incorrectly.
-	text += makeATCHeaderRewriteDirectives(ds, headerRewriteTxt, serverIsLastTier, numLastTierServers, atsMajorVersion)
+	text += makeATCHeaderRewriteDirectives(ds, headerRewriteTxt, serverIsLastTier, numLastTierServers, atsMajorVersion, atsRqstMaxHdrSize)
 
 	if headerRewriteTxt != nil && *headerRewriteTxt != "" {
 		hdrRw := returnRe.ReplaceAllString(*headerRewriteTxt, "\n")
@@ -269,7 +272,7 @@ func getAssignedTierPeers(
 	server *Server,
 	ds *DeliveryService,
 	servers []Server,
-	deliveryServiceServers []tc.DeliveryServiceServer,
+	deliveryServiceServers []DeliveryServiceServer,
 	cacheGroups []tc.CacheGroupNullable,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[ServerCapability]struct{},
@@ -289,7 +292,7 @@ func getAssignedTierPeers(
 func getAssignedEdges(
 	ds *DeliveryService,
 	servers []Server,
-	deliveryServiceServers []tc.DeliveryServiceServer,
+	deliveryServiceServers []DeliveryServiceServer,
 ) ([]Server, []string) {
 	warnings := []string{}
 
@@ -297,14 +300,10 @@ func getAssignedEdges(
 
 	dsServerIDs := map[int]struct{}{}
 	for _, dss := range dsServers {
-		if dss.Server == nil || dss.DeliveryService == nil {
-			warnings = append(warnings, "deliveryservice-servers had entry with nil values, skipping!")
+		if dss.DeliveryService != *ds.ID {
 			continue
 		}
-		if *dss.DeliveryService != *ds.ID {
-			continue
-		}
-		dsServerIDs[*dss.Server] = struct{}{}
+		dsServerIDs[dss.Server] = struct{}{}
 	}
 
 	assignedEdges := []Server{}
@@ -335,19 +334,16 @@ func getAssignedMids(
 	server *Server,
 	ds *DeliveryService,
 	servers []Server,
-	deliveryServiceServers []tc.DeliveryServiceServer,
+	deliveryServiceServers []DeliveryServiceServer,
 	cacheGroups []tc.CacheGroupNullable,
 ) ([]Server, []string) {
 	warnings := []string{}
 	assignedServers := map[int]struct{}{}
 	for _, dss := range deliveryServiceServers {
-		if dss.Server == nil || dss.DeliveryService == nil {
+		if dss.DeliveryService != *ds.ID {
 			continue
 		}
-		if *dss.DeliveryService != *ds.ID {
-			continue
-		}
-		assignedServers[*dss.Server] = struct{}{}
+		assignedServers[dss.Server] = struct{}{}
 	}
 
 	serverCGs := map[tc.CacheGroupName]struct{}{}
@@ -454,9 +450,9 @@ var returnRe = regexp.MustCompile(`\s*__RETURN__\s*`)
 //        If they're placed after, custom rewrites with [L] directives will result in them being applied inconsistently and incorrectly.
 //
 // The headerRewriteTxt is the custom header rewrite from the Delivery Service. This should be used for any logic that depends on it. The various header rewrite fields (EdgeHeaderRewrite, InnerHeaderRewrite, etc should never be used inside this function, since this function doesn't know what tier the server is at. This function should not insert the headerRewriteText, but may use it to make decisions about what to insert.
-func makeATCHeaderRewriteDirectives(ds *DeliveryService, headerRewriteTxt *string, serverIsLastTier bool, numLastTierServers int, atsMajorVersion int) string {
+func makeATCHeaderRewriteDirectives(ds *DeliveryService, headerRewriteTxt *string, serverIsLastTier bool, numLastTierServers int, atsMajorVersion int, atsRqstMaxHdrSize int) string {
 	return makeATCHeaderRewriteDirectiveMaxOriginConns(ds, headerRewriteTxt, serverIsLastTier, numLastTierServers, atsMajorVersion) +
-		makeATCHeaderRewriteDirectiveServiceCategoryHdr(ds, headerRewriteTxt)
+		makeATCHeaderRewriteDirectiveServiceCategoryHdr(ds, headerRewriteTxt) + makeATCHeaderRewriteDirectiveMaxRequestHeaderSize(ds, serverIsLastTier, atsRqstMaxHdrSize)
 }
 
 // makeATCHeaderRewriteDirectiveMaxOriginConns generates the Max Origin Connections header rewrite text, which may be empty.
@@ -505,4 +501,18 @@ func makeATCHeaderRewriteDirectiveServiceCategoryHdr(ds *DeliveryService, header
 cond %{REMAP_PSEUDO_HOOK}
 set-header ` + ServiceCategoryHeader + ` "` + *ds.XMLID + `|` + escapedServiceCategory + `"
 `
+}
+
+func makeATCHeaderRewriteDirectiveMaxRequestHeaderSize(ds *DeliveryService, serverIsLastTier bool, atsRqstMaxHdrSize int) string {
+	if serverIsLastTier || ds.MaxRequestHeaderBytes == nil || *ds.MaxRequestHeaderBytes < 1 {
+		return ""
+	}
+	hdrTxt := "cond %{REMAP_PSEUDO_HOOK}\ncond % cqhl > " + strconv.Itoa(*ds.MaxRequestHeaderBytes) + "\nset-status 400"
+	warnTxt := "#TO Max Request Header Size: " + strconv.Itoa(*ds.MaxRequestHeaderBytes) +
+		",is larger than or equal to the global setting of " + strconv.Itoa(atsRqstMaxHdrSize) + ", header rw will be ignored.\n"
+	if *ds.MaxRequestHeaderBytes >= atsRqstMaxHdrSize {
+		return warnTxt + hdrTxt
+	} else {
+		return hdrTxt
+	}
 }

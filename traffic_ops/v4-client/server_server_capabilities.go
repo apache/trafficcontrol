@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +15,7 @@
    limitations under the License.
 */
 
-package client
-
 import (
-	"fmt"
-	"net/http"
 	"net/url"
 	"strconv"
 
@@ -25,54 +23,33 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIServerServerCapabilities is the API version-relative path to the
-	// /server_server_capabilities API endpoint.
-	APIServerServerCapabilities = "/server_server_capabilities"
-)
+// apiServerServerCapabilities is the API version-relative path to the
+// /server_server_capabilities API endpoint.
+const apiServerServerCapabilities = "/server_server_capabilities"
 
 // CreateServerServerCapability assigns a Server Capability to a Server.
-func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapability) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapability, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIServerServerCapabilities, ssc, nil, &alerts)
+	reqInf, err := to.post(apiServerServerCapabilities, opts, ssc, &alerts)
 	return alerts, reqInf, err
 }
 
 // DeleteServerServerCapability unassigns a Server Capability from a Server.
-func (to *Session) DeleteServerServerCapability(serverID int, serverCapability string) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) DeleteServerServerCapability(serverID int, serverCapability string, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+	opts.QueryParameters.Set("serverId", strconv.Itoa(serverID))
+	opts.QueryParameters.Set("serverCapability", serverCapability)
 	var alerts tc.Alerts
-	v := url.Values{}
-	v.Add("serverId", strconv.Itoa(serverID))
-	v.Add("serverCapability", serverCapability)
-	qStr := v.Encode()
-	queryURL := fmt.Sprintf("%s?%s", APIServerServerCapabilities, qStr)
-	reqInf, err := to.del(queryURL, nil, &alerts)
+	reqInf, err := to.del(apiServerServerCapabilities, opts, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetServerServerCapabilities retrieves a list of Server Capabilities that are
-// assigned to a Server.
-// Callers can filter the results by server id, server host name and/or server
-// capability via the optional parameters.
-func (to *Session) GetServerServerCapabilities(serverID *int, serverHostName, serverCapability *string, header http.Header) ([]tc.ServerServerCapability, toclientlib.ReqInf, error) {
-	v := url.Values{}
-	if serverID != nil {
-		v.Add("serverId", strconv.Itoa(*serverID))
-	}
-	if serverHostName != nil {
-		v.Add("serverHostName", *serverHostName)
-	}
-	if serverCapability != nil {
-		v.Add("serverCapability", *serverCapability)
-	}
-	queryURL := APIServerServerCapabilities
-	if qStr := v.Encode(); len(qStr) > 0 {
-		queryURL = fmt.Sprintf("%s?%s", queryURL, qStr)
-	}
-
-	resp := struct {
-		Response []tc.ServerServerCapability `json:"response"`
-	}{}
-	reqInf, err := to.get(queryURL, header, &resp)
-	return resp.Response, reqInf, err
+// assigned to Servers.
+func (to *Session) GetServerServerCapabilities(opts RequestOptions) (tc.ServerServerCapabilitiesResponse, toclientlib.ReqInf, error) {
+	var resp tc.ServerServerCapabilitiesResponse
+	reqInf, err := to.get(apiServerServerCapabilities, opts, &resp)
+	return resp, reqInf, err
 }

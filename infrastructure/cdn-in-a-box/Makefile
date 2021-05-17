@@ -44,7 +44,7 @@ SPECIAL_SEASONING := $(TOMCAT_VERSION).$(TOMCAT_RELEASE)-1.el$(RHEL_VERSION).noa
 
 TO_SOURCE := $(wildcard $(TC_DIR)/traffic_ops/**)
 TO_SOURCE += $(wildcard $(TC_DIR)/traffic_ops_db/**)
-ORT_SOURCE:= $(wildcard $(TC_DIR)/traffic_ops_ort/atstccfg/**.go)
+ORT_SOURCE:= $(wildcard $(TC_DIR)/cache-config/**)
 ORT_SOURCE+= $(wildcard $(TC_DIR)/lib/**.go)
 TM_SOURCE := $(wildcard $(TC_DIR)/traffic_monitor/**)
 TP_SOURCE := $(wildcard $(TC_DIR)/traffic_portal/**)
@@ -57,7 +57,7 @@ TP_RPM := traffic_portal/traffic_portal.rpm
 TR_RPM := traffic_router/traffic_router.rpm
 TOMCAT_RPM := traffic_router/tomcat.rpm
 TS_RPM := traffic_stats/traffic_stats.rpm
-ORT_RPM := cache/traffic_ops_ort.rpm
+ORT_RPM := cache/trafficcontrol-cache-config.rpm
 
 TM_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TM_RPM)
 TO_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TO_RPM)
@@ -81,7 +81,7 @@ TP_DIST_RPM := $(TC_DIR)/dist/traffic_portal-$(SPECIAL_SAUCE)
 TR_DIST_RPM := $(TC_DIR)/dist/traffic_router-$(SPECIAL_SAUCE)
 TOMCAT_DIST_RPM := $(TC_DIR)/dist/tomcat-$(SPECIAL_SEASONING)
 TS_DIST_RPM := $(TC_DIR)/dist/traffic_stats-$(SPECIAL_SAUCE)
-ORT_DIST_RPM := $(TC_DIR)/dist/traffic_ops_ort-$(SPECIAL_SAUCE)
+ORT_DIST_RPM := $(TC_DIR)/dist/trafficcontrol-cache-config-$(SPECIAL_SAUCE)
 
 .PHONY: all build-builders clean debug native nearly-all pull-builders very-clean
 
@@ -180,7 +180,7 @@ $(TS_DIST_RPM): $(TS_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_stats$(BUILD_SUFFIX)
 
 $(ORT_DIST_RPM): $(ORT_SOURCE)
-	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_ops_ort$(BUILD_SUFFIX)
+	"$(PKG_COMMAND)" $(PKG_FLAGS) cache-config$(BUILD_SUFFIX)
 
 clean:
 	cd "$(CIAB_DIR_RELATIVE)"

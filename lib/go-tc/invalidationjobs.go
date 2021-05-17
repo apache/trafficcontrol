@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 )
@@ -38,7 +39,7 @@ import (
 // internally by InvalidationJobInput objects to store the TTL.
 const MaxTTL = math.MaxInt64 / 3600000000000
 
-var twoDays = time.Hour * 48
+const twoDays = time.Hour * 48
 
 // ValidJobRegexPrefix matches the only valid prefixes for a relative-path Content Invalidation Job regex
 var ValidJobRegexPrefix = regexp.MustCompile(`^\?/.*$`)
@@ -55,6 +56,13 @@ type InvalidationJob struct {
 	// StartTime is the time at which the job will come into effect. Must be in the future, but will
 	// fail to Validate if it is further in the future than two days.
 	StartTime *Time `json:"startTime"`
+}
+
+// InvalidationJobsResponseV40 is the type of a response from Traffic Ops to a
+// request made to its /jobs API endpoint.
+type InvalidationJobsResponse struct {
+	Response []InvalidationJob `json:"response"`
+	Alerts
 }
 
 // InvalidationJobInput represents user input intending to create or modify a content invalidation job.
@@ -79,8 +87,8 @@ type InvalidationJobInput struct {
 	// number
 	TTL *interface{} `json:"ttl"`
 
-	dsid *uint          `json:"-"`
-	ttl  *time.Duration `json:"-"`
+	dsid *uint
+	ttl  *time.Duration
 }
 
 // UserInvalidationJobInput Represents legacy-style user input to the /user/current/jobs API endpoint.

@@ -43,6 +43,7 @@ const (
 // cdns/{{Name}}/configs/monitoring endpoint of the Traffic Ops API.
 type TMConfigResponse struct {
 	Response TrafficMonitorConfig `json:"response"`
+	Alerts
 }
 
 // LegacyTMConfigResponse was the response to requests made to the

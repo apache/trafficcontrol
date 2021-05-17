@@ -23,6 +23,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestServerCapabilities(t *testing.T) {
@@ -48,67 +49,66 @@ func TestServerCapabilities(t *testing.T) {
 func CreateTestServerCapabilities(t *testing.T) {
 
 	for _, sc := range testData.ServerCapabilities {
-		resp, _, err := TOSession.CreateServerCapability(sc)
+		resp, _, err := TOSession.CreateServerCapability(sc, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not CREATE server capability: %v", err)
+			t.Errorf("Unexpected error creating Server Capability '%s': %v - alerts: %+v", sc.Name, err, resp.Alerts)
 		}
-		t.Log("Response: ", resp)
 	}
-
 }
 
 func SortTestServerCapabilities(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetServerCapabilities(header)
+	resp, _, err := TOSession.GetServerCapabilities(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	for i := range resp {
-		sortedList = append(sortedList, resp[i].Name)
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
+	sortedList := make([]string, 0, len(resp.Response))
+	for _, sc := range resp.Response {
+		sortedList = append(sortedList, sc.Name)
+	}
+
+	if !sort.StringsAreSorted(sortedList) {
 		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 
 func GetTestServerCapabilities(t *testing.T) {
-
+	opts := client.NewRequestOptions()
 	for _, sc := range testData.ServerCapabilities {
-		resp, _, err := TOSession.GetServerCapability(sc.Name, nil)
+		opts.QueryParameters.Set("name", sc.Name)
+		resp, _, err := TOSession.GetServerCapabilities(opts)
 		if err != nil {
-			t.Errorf("cannot GET server capability: %v - %v", err, resp)
-		} else if resp == nil {
-			t.Error("GET server capability expected non-nil response")
+			t.Errorf("cannot get Server Capability: %v - alerts: %+v", err, resp.Alerts)
+		}
+		if len(resp.Response) != 1 {
+			t.Errorf("Expected exactly one Server Capability to exist with name '%s', found: %d", sc.Name, len(resp.Response))
 		}
 	}
 
-	resp, _, err := TOSession.GetServerCapabilities(nil)
+	resp, _, err := TOSession.GetServerCapabilities(client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot GET server capabilities: %v", err)
+		t.Errorf("cannot get Server Capabilities: %v - alerts: %+v", err, resp.Alerts)
 	}
-	if len(resp) != len(testData.ServerCapabilities) {
-		t.Errorf("expected to GET %d server capabilities, actual: %d", len(testData.ServerCapabilities), len(resp))
+	if len(resp.Response) != len(testData.ServerCapabilities) {
+		t.Errorf("expected to get %d Server Capabilities, actual: %d", len(testData.ServerCapabilities), len(resp.Response))
 	}
 }
 
 func UpdateTestServerCapabilitiesWithHeaders(t *testing.T, header http.Header) {
-	resp, _, err := TOSession.GetServerCapabilities(header)
+	opts := client.NewRequestOptions()
+	opts.Header = header
+	resp, _, err := TOSession.GetServerCapabilities(opts)
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
-	if len(resp) == 0 {
+	if len(resp.Response) == 0 {
 		t.Fatal("no server capability in response, quitting")
 	}
-	originalName := resp[0].Name
+	originalName := resp.Response[0].Name
 	newSCName := "sc-test"
-	resp[0].Name = newSCName
+	resp.Response[0].Name = newSCName
 
-	_, reqInf, err := TOSession.UpdateServerCapability(originalName, &resp[0], header)
+	_, reqInf, err := TOSession.UpdateServerCapability(originalName, resp.Response[0], opts)
 	if err == nil {
 		t.Errorf("Expected error about Precondition Failed, got none")
 	}
@@ -118,67 +118,68 @@ func UpdateTestServerCapabilitiesWithHeaders(t *testing.T, header http.Header) {
 }
 
 func ValidationTestServerCapabilities(t *testing.T) {
-	_, _, err := TOSession.CreateServerCapability(tc.ServerCapability{Name: "b@dname"})
+	_, _, err := TOSession.CreateServerCapability(tc.ServerCapability{Name: "b@dname"}, client.RequestOptions{})
 	if err == nil {
 		t.Error("expected POST with invalid name to return an error, actual: nil")
 	}
 }
 
 func UpdateTestServerCapabilities(t *testing.T) {
-	var header http.Header
-
 	// Get server capability name and edit it to a new name
-	resp, _, err := TOSession.GetServerCapabilities(header)
+	resp, _, err := TOSession.GetServerCapabilities(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
-	if len(resp) == 0 {
+	if len(resp.Response) == 0 {
 		t.Fatalf("no server capability in response, quitting")
 	}
-	origName := resp[0].Name
+	origName := resp.Response[0].Name
 	newSCName := "sc-test"
-	resp[0].Name = newSCName
+	resp.Response[0].Name = newSCName
 
 	// Update server capability with new name
-	updateResponse, _, err := TOSession.UpdateServerCapability(origName, &resp[0], nil)
+	updateResponse, _, err := TOSession.UpdateServerCapability(origName, resp.Response[0], client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot PUT server capability: %v - %v", err, updateResponse)
+		t.Errorf("cannot update Server Capability: %v - alerts: %+v", err, updateResponse.Alerts)
 	}
 
 	// Get updated name
-	getResp, _, err := TOSession.GetServerCapability(newSCName, header)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", newSCName)
+	getResp, _, err := TOSession.GetServerCapabilities(opts)
 	if err != nil {
-		t.Fatalf("Expected no error, but %v", err.Error())
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, getResp.Alerts)
 	}
-	if getResp == nil {
+	if len(getResp.Response) == 0 {
 		t.Fatalf("no server capability in response, quitting")
 	}
-	if getResp.Name != newSCName {
-		t.Errorf("failed to update server capability name, expected: %v but got: %v", newSCName, updateResponse.Name)
+	if getResp.Response[0].Name != newSCName {
+		t.Errorf("failed to update server capability name, expected: %v but got: %v", newSCName, updateResponse.Response.Name)
 	}
 
 	// Set everything back as it was for further testing.
-	resp[0].Name = origName
-	r, _, err := TOSession.UpdateServerCapability(newSCName, &resp[0], nil)
+	resp.Response[0].Name = origName
+	r, _, err := TOSession.UpdateServerCapability(newSCName, resp.Response[0], client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot PUT seerver capability: %v - %v", err, r)
+		t.Errorf("cannot update server Capability: %v - alerts: %+v", err, r.Alerts)
 	}
 }
 
 func DeleteTestServerCapabilities(t *testing.T) {
-
+	opts := client.NewRequestOptions()
 	for _, sc := range testData.ServerCapabilities {
-		delResp, _, err := TOSession.DeleteServerCapability(sc.Name)
+		delResp, _, err := TOSession.DeleteServerCapability(sc.Name, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("cannot DELETE server capability: %v - %v", err, delResp)
+			t.Errorf("cannot delete Server Capability: %v - alerts: %+v", err, delResp.Alerts)
 		}
 
-		serverCapability, _, err := TOSession.GetServerCapability(sc.Name, nil)
-		if err == nil {
-			t.Errorf("expected error trying to GET deleted server capability: %s, actual: nil", sc.Name)
+		opts.QueryParameters.Set("name", sc.Name)
+		serverCapability, _, err := TOSession.GetServerCapabilities(opts)
+		if err != nil {
+			t.Errorf("Unexpected error getting Server Capabilities filtered by name '%s' after deletion: %v - alerts: %+v", sc.Name, err, serverCapability.Alerts)
 		}
-		if serverCapability != nil {
-			t.Errorf("expected nil trying to GET deleted server capability: %s, actual: non-nil", sc.Name)
+		if len(serverCapability.Response) != 0 {
+			t.Errorf("Expected an empty response when filtering for the name of a Server Capability that's been deleted, but found %d matching Server Capabilities", len(serverCapability.Response))
 		}
 	}
 }

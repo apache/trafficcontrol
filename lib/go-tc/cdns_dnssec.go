@@ -46,6 +46,8 @@ type GenerateCDNDNSSECKeysResponse struct {
 
 type DeleteCDNDNSSECKeysResponse GenerateCDNDNSSECKeysResponse
 
+type RefreshDNSSECKeysResponse GenerateCDNDNSSECKeysResponse
+
 // DNSSECKeys is the DNSSEC keys as stored in Riak, plus the DS record text.
 type DNSSECKeys map[string]DNSSECKeySet
 

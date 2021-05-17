@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestDeliveryServicesEligible(t *testing.T) {
@@ -31,14 +32,14 @@ func TestDeliveryServicesEligible(t *testing.T) {
 }
 
 func GetTestDeliveryServicesEligibleIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := TOSession.GetDeliveryServices(header, nil)
+
+	opts := client.NewRequestOptions()
+	opts.Header.Set(rfc.IfModifiedSince, time)
+	resp, reqInf, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("could not GET eligible delivery services: %v", err)
+		t.Fatalf("could not get eligible delivery services: %v - alerts: %+v", err, resp.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusNotModified {
 		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -46,19 +47,22 @@ func GetTestDeliveryServicesEligibleIMS(t *testing.T) {
 }
 
 func GetTestDeliveryServicesEligible(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServices(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServices: %v", err)
+		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 	}
-	if len(dses) == 0 {
-		t.Error("GET DeliveryServices returned no delivery services, need at least 1 to test")
+	if len(dses.Response) == 0 {
+		t.Fatal("GET DeliveryServices returned no delivery services, need at least 1 to test")
 	}
-	dsID := dses[0].ID
-	servers, _, err := TOSession.GetDeliveryServicesEligible(*dsID, nil)
+	dsID := dses.Response[0].ID
+	if dsID == nil {
+		t.Fatal("Traffic Ops returned a representation of a Delivery Service that had null or undefined ID")
+	}
+	servers, _, err := TOSession.GetDeliveryServicesEligible(*dsID, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("getting delivery services eligible: %v", err)
+		t.Errorf("getting Delivery Services eligible: %v - alerts: %+v", err, servers.Alerts)
 	}
-	if len(servers) == 0 {
+	if len(servers.Response) == 0 {
 		t.Error("getting delivery services eligible returned no servers")
 	}
 }

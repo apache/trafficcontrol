@@ -56,7 +56,8 @@ func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, _ := context.WithTimeout(r.Context(), AcmeTimeout)
+	ctx, cancelTx := context.WithTimeout(r.Context(), AcmeTimeout)
+	defer cancelTx()
 
 	userErr, sysErr, statusCode := renewAcmeCerts(inf.Config, xmlID, ctx, r.Context(), inf.User, inf.Vault)
 	if userErr != nil || sysErr != nil {
@@ -117,7 +118,7 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, http
 		return nil, errors.New("no object found for the specified key with xmlId: " + dsName + " and version: " + strconv.Itoa(int(*certVersion))), http.StatusInternalServerError
 	}
 
-	err = base64DecodeCertificate(&keyObj.Certificate)
+	err = Base64DecodeCertificate(&keyObj.Certificate)
 	if err != nil {
 		return nil, errors.New("decoding cert for XMLID " + dsName + " : " + err.Error()), http.StatusInternalServerError
 	}

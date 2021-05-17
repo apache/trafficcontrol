@@ -16,7 +16,7 @@ set -e
 go mod vendor -v
 touch coverprofile
 covertmp="$(mktemp)"
-for pkg in $(go list ./lib/... ./traffic_monitor/... ./traffic_stats/... ./traffic_ops/traffic_ops_golang/... ./traffic_ops_ort/atstccfg/... | grep -v "/vendor/"); do
+for pkg in $(go list ./lib/... ./traffic_monitor/... ./traffic_stats/... ./traffic_ops/traffic_ops_golang/... ./cache-config/... | grep -v "/vendor/\|testing/ort-tests"); do
 	tmp="$(mktemp)"
 	go test -v --coverprofile="$tmp" "$pkg" | tee -a result.txt
 	if [ -f "$tmp" ]; then

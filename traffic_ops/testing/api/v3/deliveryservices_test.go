@@ -40,7 +40,6 @@ func TestDeliveryServices(t *testing.T) {
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, ti)
 		header.Set(rfc.IfUnmodifiedSince, ti)
-
 		if includeSystemTests {
 			SSLDeliveryServiceCDNUpdateTest(t)
 			GetTestDeliveryServicesURLSigKeys(t)
@@ -105,7 +104,7 @@ func UpdateTestDeliveryServicesWithHeaders(t *testing.T, header http.Header) {
 		if err == nil {
 			t.Errorf("expected precondition failed error, got none")
 		}
-		if !strings.Contains(err.Error(), "412 Precondition Failed[412]") {
+		if !strings.Contains(err.Error(), "412 Precondition Failed") {
 			t.Errorf("expected error to be related to 'precondition failed', but instead is realted to %v", err.Error())
 		}
 	}
@@ -143,10 +142,18 @@ func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
 	return cdns[0]
 }
 
-func cleanUp(t *testing.T, ds tc.DeliveryServiceNullableV30, oldCDNID int, newCDNID int) {
+func cleanUp(t *testing.T, ds tc.DeliveryServiceNullableV30, oldCDNID int, newCDNID int, sslKeyVersions []string) {
 	_, _, err := TOSession.DeleteDeliveryServiceSSLKeysByID(*ds.XMLID)
 	if err != nil {
 		t.Error(err)
+	}
+	params := url.Values{}
+	for _, version := range sslKeyVersions {
+		params.Set("version", version)
+		_, _, err := TOSession.DeleteDeliveryServiceSSLKeysByVersion(*ds.XMLID, params)
+		if err != nil {
+			t.Error(err)
+		}
 	}
 	_, err = TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))
 	if err != nil {
@@ -206,7 +213,7 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	}
 	ds.CDNName = &oldCdn.Name
 
-	defer cleanUp(t, ds, oldCdn.ID, newCdn.ID)
+	defer cleanUp(t, ds, oldCdn.ID, newCdn.ID, []string{"1"})
 
 	_, _, err = TOSession.GenerateSSLKeysForDS(*ds.XMLID, *ds.CDNName, tc.SSLKeyRequestFields{
 		BusinessUnit: util.StrPtr("BU"),

@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +15,8 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -29,47 +28,38 @@ import (
  * `/cdns/:name/federations`. Although the behavior is odd, it is kept to
  * keep the same behavior from perl. */
 
-// CreateCDNFederationByName creates the given Federation in the CDN with the
-// given name.
-func (to *Session) CreateCDNFederation(f tc.CDNFederation, CDNName string) (tc.CreateCDNFederationResponse, toclientlib.ReqInf, error) {
-	data := tc.CreateCDNFederationResponse{}
-	route := "/cdns/" + url.QueryEscape(CDNName) + "/federations"
-	inf, err := to.post(route, f, nil, &data)
+// CreateCDNFederation creates the given Federation in the CDN with the given
+// name.
+func (to *Session) CreateCDNFederation(f tc.CDNFederation, cdnName string, opts RequestOptions) (tc.CreateCDNFederationResponse, toclientlib.ReqInf, error) {
+	var data tc.CreateCDNFederationResponse
+	route := "/cdns/" + url.PathEscape(cdnName) + "/federations"
+	inf, err := to.post(route, opts, f, &data)
 	return data, inf, err
 }
 
 // GetCDNFederationsByName retrieves all Federations in the CDN with the given
 // name.
-func (to *Session) GetCDNFederationsByName(CDNName string, header http.Header) (tc.CDNFederationResponse, toclientlib.ReqInf, error) {
-	data := tc.CDNFederationResponse{}
-	route := "/cdns/" + url.QueryEscape(CDNName) + "/federations"
-	inf, err := to.get(route, header, &data)
-	return data, inf, err
-}
-
-// GetCDNFederationsByID retrieves the Federation in the CDN with the given
-// name that has the given ID.
-func (to *Session) GetCDNFederationsByID(CDNName string, ID int, header http.Header) (tc.CDNFederationResponse, toclientlib.ReqInf, error) {
-	data := tc.CDNFederationResponse{}
-	route := fmt.Sprintf("/cdns/%s/federations?id=%v", url.QueryEscape(CDNName), ID)
-	inf, err := to.get(route, header, &data)
+func (to *Session) GetCDNFederationsByName(cdnName string, opts RequestOptions) (tc.CDNFederationResponse, toclientlib.ReqInf, error) {
+	var data tc.CDNFederationResponse
+	route := "/cdns/" + url.PathEscape(cdnName) + "/federations"
+	inf, err := to.get(route, opts, &data)
 	return data, inf, err
 }
 
 // UpdateCDNFederation replaces the Federation with the given ID in the CDN
 // with the given name with the provided Federation.
-func (to *Session) UpdateCDNFederation(f tc.CDNFederation, CDNName string, ID int, h http.Header) (tc.UpdateCDNFederationResponse, toclientlib.ReqInf, error) {
-	data := tc.UpdateCDNFederationResponse{}
-	route := fmt.Sprintf("/cdns/%s/federations/%d", url.QueryEscape(CDNName), ID)
-	inf, err := to.put(route, f, h, &data)
+func (to *Session) UpdateCDNFederation(f tc.CDNFederation, cdnName string, id int, opts RequestOptions) (tc.UpdateCDNFederationResponse, toclientlib.ReqInf, error) {
+	var data tc.UpdateCDNFederationResponse
+	route := fmt.Sprintf("/cdns/%s/federations/%d", url.PathEscape(cdnName), id)
+	inf, err := to.put(route, opts, f, &data)
 	return data, inf, err
 }
 
-// DeleteCDNFederationByID deletes the Federation with the given ID in the CDN
+// DeleteCDNFederation deletes the Federation with the given ID in the CDN
 // with the given name.
-func (to *Session) DeleteCDNFederation(CDNName string, ID int) (tc.DeleteCDNFederationResponse, toclientlib.ReqInf, error) {
-	data := tc.DeleteCDNFederationResponse{}
-	route := fmt.Sprintf("/cdns/%s/federations/%d", url.QueryEscape(CDNName), ID)
-	inf, err := to.del(route, nil, &data)
+func (to *Session) DeleteCDNFederation(cdnName string, id int, opts RequestOptions) (tc.DeleteCDNFederationResponse, toclientlib.ReqInf, error) {
+	var data tc.DeleteCDNFederationResponse
+	route := fmt.Sprintf("/cdns/%s/federations/%d", url.PathEscape(cdnName), id)
+	inf, err := to.del(route, opts, &data)
 	return data, inf, err
 }

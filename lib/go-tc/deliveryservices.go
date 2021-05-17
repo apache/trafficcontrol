@@ -448,9 +448,11 @@ type DeliveryServiceDestination struct {
 	Type     string `json:"type"`
 }
 
-// DeliveryServiceHealthResponse ...
+// DeliveryServiceHealthResponse is the type of a response from Traffic Ops to
+// a request for a Delivery Service's "health".
 type DeliveryServiceHealthResponse struct {
 	Response DeliveryServiceHealth `json:"response"`
+	Alerts
 }
 
 // DeliveryServiceHealth ...
@@ -467,9 +469,11 @@ type DeliveryServiceCacheGroup struct {
 	Name    string `json:"name"`
 }
 
-// DeliveryServiceCapacityResponse ...
+// DeliveryServiceCapacityResponse is the type of a response from Traffic Ops to
+// a request for a Delivery Service's "capacity".
 type DeliveryServiceCapacityResponse struct {
 	Response DeliveryServiceCapacity `json:"response"`
+	Alerts
 }
 
 // DeliveryServiceCapacity ...
@@ -523,6 +527,13 @@ type FederationDeliveryServiceNullable struct {
 	XMLID *string `json:"xmlId" db:"xml_id"`
 }
 
+// FederationDeliveryServicesResponse is the type of a response from Traffic
+// Ops to a request made to its /federations/{{ID}}/deliveryservices endpoint.
+type FederationDeliveryServicesResponse struct {
+	Response []FederationDeliveryServiceNullable `json:"response"`
+	Alerts
+}
+
 type DeliveryServiceUserPost struct {
 	UserID           *int   `json:"userId"`
 	DeliveryServices *[]int `json:"deliveryServices"`
@@ -542,6 +553,15 @@ type DSServerIDs struct {
 	DeliveryServiceID *int  `json:"dsId" db:"deliveryservice"`
 	ServerIDs         []int `json:"servers"`
 	Replace           *bool `json:"replace"`
+}
+
+// DeliveryserviceserverResponse - not to be confused with DSServerResponseV40
+// or DSServerResponse- is the type of a response from Traffic Ops to a request
+// to the /deliveryserviceserver endpoint to associate servers with a Delivery
+// Service.
+type DeliveryserviceserverResponse struct {
+	Response DSServerIDs `json:"response"`
+	Alerts
 }
 
 type CachegroupPostDSReq struct {
