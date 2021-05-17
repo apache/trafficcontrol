@@ -71,6 +71,7 @@
         pkill -9 _ort || true; traffic_ops_ort.pl -dispersion=0 --wait_for_parents=0 --login_dispersion=0 --retries=1 badass warn {{ ort_traffic_ops_url }} '{{ ort_traffic_ops_username }}:{{ ort_traffic_ops_password }}' 2>&1 | tee /tmp/badass_out; exit ${PIPESTATUS[0]}
       {%- endif -%}
   no_log: True
+  executable: "{{ lookup('pipe','which bash') }}"
 
 - name: Reboot
   shell: "sleep 5 && reboot"
