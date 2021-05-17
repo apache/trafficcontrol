@@ -231,14 +231,6 @@ DEFAULTS = {
 		Question("Traffic Ops database user", "traffic_ops", "user"),
 		Question("Password for Traffic Ops database user", "", "password", hidden=True)
 	],
-	TV_DATABASE_CONF_FILE: [
-		Question("Database type", "Pg", "type"),
-		Question("Database name", "traffic_vault", "dbname"),
-		Question("Database server hostname IP or FQDN", "localhost", "hostname"),
-		Question("Database port number", "5432", "port"),
-		Question("Traffic Ops database user", "traffic_vault", "user"),
-		Question("Password for Traffic Ops database user", "", "password", hidden=True)
-	],
 	DB_CONF_FILE: [
 		Question("Database server root (admin) user", "postgres", "pgUser"),
 		Question("Password for database server admin", "", "pgPassword", hidden=True)
@@ -253,7 +245,13 @@ DEFAULTS = {
 		Question("Port to serve on?", "443", "port"),
 		Question("Number of workers?", "12", "workers"),
 		Question("Traffic Ops url?", "http://localhost:3000", "base_url"),
-		Question("ldap.conf location?", "/opt/traffic_ops/app/conf/ldap.conf", "ldap_conf_location")
+		Question("ldap.conf location?", "/opt/traffic_ops/app/conf/ldap.conf", "ldap_conf_location"),
+		Question("Traffic Vault Database type", "Pg", "type"),
+		Question("Traffic Vault Database name", "traffic_vault", "dbname"),
+		Question("Traffic Vault Database server hostname IP or FQDN", "localhost", "hostname"),
+		Question("Traffic Vault Database port number", "5432", "port"),
+		Question("Traffic Vault database user", "traffic_vault", "user"),
+		Question("Password for Traffic Vault database user", "", "password", hidden=True)
 	],
 	LDAP_CONF_FILE:[
 		Question("Do you want to set up LDAP?", "no", "setupLdap"),
@@ -1023,7 +1021,7 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 	except KeyError as e:
 		exception = ValueError("missing 'traffic_vault_backend' config_var")
 		exception.__cause__ = e
-		raise exception
+		logging.warn("no traffic vault backend configured, using default postgres")
 
 	return traffic_vault_backend == "postgres"
 
