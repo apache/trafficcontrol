@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestASN(t *testing.T) {
@@ -32,93 +32,105 @@ func TestASN(t *testing.T) {
 		GetTestASNsIMS(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
-		header.Set(rfc.IfModifiedSince, time)
+		opts := client.NewRequestOptions()
+		opts.Header.Set(rfc.IfModifiedSince, time)
 		SortTestASNs(t)
 		UpdateTestASNs(t)
 		GetTestASNs(t)
-		GetTestASNsIMSAfterChange(t, header)
+		GetTestASNsIMSAfterChange(t, opts)
 	})
 }
 
-func GetTestASNsIMSAfterChange(t *testing.T, header http.Header) {
-	params := url.Values{}
+func GetTestASNsIMSAfterChange(t *testing.T, opts client.RequestOptions) {
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
 	for _, asn := range testData.ASNs {
-		params.Add("asn", strconv.Itoa(asn.ASN))
-		_, reqInf, err := TOSession.GetASNs(&params, header)
+		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
+		_, reqInf, err := TOSession.GetASNs(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Errorf("Expected no error, but got %v", err)
 		}
 		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
 		}
-		params.Del("asn")
 	}
 	currentTime := time.Now().UTC()
 	currentTime = currentTime.Add(1 * time.Second)
 	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
+	opts.Header.Set(rfc.IfModifiedSince, timeStr)
 	for _, asn := range testData.ASNs {
-		params.Add("asn", strconv.Itoa(asn.ASN))
-		_, reqInf, err := TOSession.GetASNs(&params, header)
+		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
+		_, reqInf, err := TOSession.GetASNs(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Errorf("Expected no error, but got %v", err)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+			t.Errorf("Expected 304 status code, got %v", reqInf.StatusCode)
 		}
-		params.Del("asn")
 	}
 }
 
 func GetTestASNsIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, asn := range testData.ASNs {
-		params.Add("asn", strconv.Itoa(asn.ASN))
+		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
 		futureTime := time.Now().AddDate(0, 0, 1)
 		time := futureTime.Format(time.RFC1123)
-		header.Set(rfc.IfModifiedSince, time)
-		_, reqInf, err := TOSession.GetASNs(&params, header)
+		opts.Header.Set(rfc.IfModifiedSince, time)
+		_, reqInf, err := TOSession.GetASNs(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Errorf("Expected no error, but got %v", err)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+			t.Errorf("Expected 304 status code, got %v", reqInf.StatusCode)
 		}
-		params.Del("asn")
 	}
 }
 
 func CreateTestASNs(t *testing.T) {
-	var header http.Header
-	resp, _, err := TOSession.GetCacheGroupByName(*testData.CacheGroups[0].Name, header)
-	if err != nil {
-		t.Fatalf("unable to get cachgroup ID: %v", err)
+	if len(testData.CacheGroups) < 1 {
+		t.Fatal("Need at least one Cache Group to test creating ASNs")
 	}
+	cg := testData.CacheGroups[0]
+	if cg.Name == nil {
+		t.Fatal("Cache Group found in the test data with null or undefined name")
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", *cg.Name)
+	resp, _, err := TOSession.GetCacheGroups(opts)
+	if err != nil {
+		t.Fatalf("unable to get cachgroup ID: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Cache Group with Name '%s', got: %d", *cg.Name, len(resp.Response))
+	}
+	if resp.Response[0].ID == nil {
+		t.Fatalf("Cache Group '%s' had no ID in Traffic Ops response", *cg.Name)
+	}
+	id := *resp.Response[0].ID
 	for _, asn := range testData.ASNs {
-		asn.CachegroupID = *resp[0].ID
-		resp, _, err := TOSession.CreateASN(asn)
-		t.Log("Response: ", resp)
+		asn.CachegroupID = id
+		resp, _, err := TOSession.CreateASN(asn, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not CREATE ASNs: %v", err)
+			t.Errorf("could not create ASN: %v - alerts: %+v", err, resp)
 		}
 	}
 
 }
 
 func SortTestASNs(t *testing.T) {
-	var header http.Header
 	var sortedList []string
-	params := url.Values{}
-	resp, _, err := TOSession.GetASNs(&params, header)
+	resp, _, err := TOSession.GetASNs(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
-	for i := range resp {
-		sortedList = append(sortedList, strconv.Itoa(resp[i].ASN))
+	if len(resp.Response) < 2 {
+		t.Fatal("Cannot test sort order with less than 2 ASNs")
+	}
+	for _, asn := range resp.Response {
+		sortedList = append(sortedList, strconv.Itoa(asn.ASN))
 	}
 
 	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
@@ -130,85 +142,90 @@ func SortTestASNs(t *testing.T) {
 }
 
 func UpdateTestASNs(t *testing.T) {
-	var header http.Header
-	firstASN := testData.ASNs[0]
-	params := url.Values{}
-	params.Add("asn", strconv.Itoa(firstASN.ASN))
-	// Retrieve the ASN by name so we can get the id for the Update
-	resp, _, err := TOSession.GetASNs(&params, header)
-	if err != nil {
-		t.Errorf("cannot GET ASN by name: '%v', %v", firstASN.ASN, err)
+	if len(testData.ASNs) < 1 {
+		t.Fatal("Need at least one ASN to test updating ASNs")
 	}
-	remoteASN := resp[0]
-	remoteASN.ASN = 7777
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateASNByID(remoteASN.ID, remoteASN)
+	firstASN := testData.ASNs[0]
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("asn", strconv.Itoa(firstASN.ASN))
+
+	resp, _, err := TOSession.GetASNs(opts)
 	if err != nil {
-		t.Errorf("cannot UPDATE ASN by id: %v - %v", err, alert)
+		t.Fatalf("cannot get ASN by ASN %d: %v - alerts: %+v", firstASN.ASN, err, resp.Alerts)
+	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("Expected ASN %d to exist, but Traffic Ops returned no such ASN", firstASN.ASN)
 	}
 
-	// Retrieve the ASN to check ASN name got updated
-	params.Del("asn")
-	params.Add("id", strconv.Itoa(remoteASN.ID))
-	resp, _, err = TOSession.GetASNs(&params, header)
+	remoteASN := resp.Response[0]
+	remoteASN.ASN = 7777
+	alert, _, err := TOSession.UpdateASN(remoteASN.ID, remoteASN, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot GET ANS by number: '$%v', %v", firstASN.ASN, err)
+		t.Fatalf("cannot update ASN by id: %v - alerts: %+v", err, alert)
 	}
-	respASN := resp[0]
+
+	opts.QueryParameters.Del("asn")
+	opts.QueryParameters.Set("id", strconv.Itoa(remoteASN.ID))
+	resp, _, err = TOSession.GetASNs(opts)
+	if err != nil {
+		t.Errorf("cannot get ANS by ID %d: %v - alerts: %+v", firstASN.ASN, err, resp.Alerts)
+	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("Expected ASN with ID %d to exist after update, but Traffic Ops returned no such ASN", remoteASN.ID)
+	}
+	respASN := resp.Response[0]
 	if respASN.ASN != remoteASN.ASN {
 		t.Errorf("results do not match actual: %v, expected: %v", respASN.ASN, remoteASN.ASN)
 	}
 
 	//Revert back to original ASN number for further functions to work correctly
 	respASN.ASN = firstASN.ASN
-	alert, _, err = TOSession.UpdateASNByID(respASN.ID, respASN)
+	alert, _, err = TOSession.UpdateASN(respASN.ID, respASN, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot UPDATE ASN by id: %v - %v", err, alert)
+		t.Errorf("cannot update ASN by id: %v - alerts: %+v", err, alert)
 	}
 }
 
 func GetTestASNs(t *testing.T) {
-
-	var header http.Header
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, asn := range testData.ASNs {
-		params.Add("asn", strconv.Itoa(asn.ASN))
-		resp, _, err := TOSession.GetASNs(&params, header)
+		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
+		resp, _, err := TOSession.GetASNs(opts)
 		if err != nil {
-			t.Errorf("cannot GET ASN by name: %v - %v", err, resp)
+			t.Errorf("cannot get ASN by asn: %v - alerts: %+v", err, resp.Alerts)
 		}
-		params.Del("asn")
 	}
 }
 
 func DeleteTestASNs(t *testing.T) {
-
-	var header http.Header
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, asn := range testData.ASNs {
-		params.Add("asn", strconv.Itoa(asn.ASN))
-		// Retrieve the ASN by name so we can get the id for the Update
-		resp, _, err := TOSession.GetASNs(&params, header)
+		opts.QueryParameters.Set("asn", strconv.Itoa(asn.ASN))
+		resp, _, err := TOSession.GetASNs(opts)
 		if err != nil {
-			t.Errorf("cannot GET ASN by number: %v - %v", asn.ASN, err)
+			t.Errorf("cannot get ASN %d: %v - alerts: %+v", asn.ASN, err, resp.Alerts)
+			continue
 		}
-		if len(resp) > 0 {
-			respASN := resp[0]
-
-			_, _, err := TOSession.DeleteASNByASN(respASN.ID)
-			if err != nil {
-				t.Errorf("cannot DELETE ASN by ASN number: '%v' %v", respASN.ASN, err)
-			}
-
-			// Retrieve the ASN to see if it got deleted
-			asns, _, err := TOSession.GetASNs(&params, header)
-			if err != nil {
-				t.Errorf("error deleting ASN number: %s", err.Error())
-			}
-			if len(asns) > 0 {
-				t.Errorf("expected ASN number: %v to be deleted", asn.ASN)
-			}
+		if len(resp.Response) < 1 {
+			t.Errorf("ASN %d existed in the test data, but not in Traffic Ops", asn.ASN)
+			continue
 		}
-		params.Del("asn")
+
+		respASN := resp.Response[0]
+
+		alerts, _, err := TOSession.DeleteASN(respASN.ID, client.RequestOptions{})
+		if err != nil {
+			t.Errorf("cannot delete ASN %d: %v - alerts: %+v", respASN.ASN, err, alerts)
+		}
+
+		// Retrieve the ASN to see if it got deleted
+		asns, _, err := TOSession.GetASNs(opts)
+		if err != nil {
+			t.Errorf("error trying to fetch ASN after deletion: %v - alerts: %+v", err, asns.Alerts)
+		}
+		if len(asns.Response) > 0 {
+			t.Errorf("expected ASN %d to be deleted, but it was found in Traffic Ops's response", asn.ASN)
+		}
 	}
 }

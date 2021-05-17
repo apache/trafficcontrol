@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,72 +15,51 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APICDNs is the API version-relative path for the /cdns API endpoint.
-	APICDNs = "/cdns"
-)
+// apiCDNs is the API version-relative path for the /cdns API endpoint.
+const apiCDNs = "/cdns"
 
 // CreateCDN creates a CDN.
-func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateCDN(cdn tc.CDN, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APICDNs, cdn, nil, &alerts)
+	reqInf, err := to.post(apiCDNs, opts, cdn, &alerts)
 	return alerts, reqInf, err
 }
 
-// UpdateCDNByID replaces the identified CDN with the provided CDN.
-func (to *Session) UpdateCDN(id int, cdn tc.CDN, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", APICDNs, id)
+// UpdateCDN replaces the identified CDN with the provided CDN.
+func (to *Session) UpdateCDN(id int, cdn tc.CDN, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", apiCDNs, id)
 	var alerts tc.Alerts
-	reqInf, err := to.put(route, cdn, header, &alerts)
+	reqInf, err := to.put(route, opts, cdn, &alerts)
 	return alerts, reqInf, err
 }
 
-// GetCDNs retrieves all CDNs in Traffic Ops.
-func (to *Session) GetCDNs(header http.Header) ([]tc.CDN, toclientlib.ReqInf, error) {
+// GetCDNs retrieves CDNs from Traffic Ops.
+func (to *Session) GetCDNs(opts RequestOptions) (tc.CDNsResponse, toclientlib.ReqInf, error) {
 	var data tc.CDNsResponse
-	reqInf, err := to.get(APICDNs, header, &data)
-	return data.Response, reqInf, err
+	reqInf, err := to.get(apiCDNs, opts, &data)
+	return data, reqInf, err
 }
 
-// GetCDNByID retrieves the CDN with the given ID.
-func (to *Session) GetCDNByID(id int, header http.Header) ([]tc.CDN, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%v", APICDNs, id)
-	var data tc.CDNsResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetCDNByName retrieves the CDN with the given Name.
-func (to *Session) GetCDNByName(name string, header http.Header) ([]tc.CDN, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?name=%s", APICDNs, url.QueryEscape(name))
-	var data tc.CDNsResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
-}
-
-// DeleteCDNByID deletes the CDN with the given ID.
-func (to *Session) DeleteCDN(id int) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", APICDNs, id)
+// DeleteCDN deletes the CDN with the given ID.
+func (to *Session) DeleteCDN(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", apiCDNs, id)
 	var alerts tc.Alerts
-	reqInf, err := to.del(route, nil, &alerts)
+	reqInf, err := to.del(route, opts, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetCDNSSLKeys retrieves the SSL keys for the CDN with the given name.
-func (to *Session) GetCDNSSLKeys(name string, header http.Header) ([]tc.CDNSSLKeys, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/name/%s/sslkeys", APICDNs, name)
+func (to *Session) GetCDNSSLKeys(name string, opts RequestOptions) (tc.CDNSSLKeysResponse, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/name/%s/sslkeys", apiCDNs, url.PathEscape(name))
 	var data tc.CDNSSLKeysResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
+	reqInf, err := to.get(route, opts, &data)
+	return data, reqInf, err
 }

@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,46 +15,47 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-// APIDSRequests is the API version-relative path to the
+// apiDSRequests is the API version-relative path to the
 // /deliveryservice_requests API endpoint.
-const APIDSRequests = "/deliveryservice_requests"
+const apiDSRequests = "/deliveryservice_requests"
 
 // CreateDeliveryServiceRequest creates the given Delivery Service Request.
-func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40, hdr http.Header) (tc.DeliveryServiceRequestV40, tc.Alerts, toclientlib.ReqInf, error) {
-	var alerts tc.Alerts
-	var created tc.DeliveryServiceRequestV40
+func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV4, opts RequestOptions) (tc.DeliveryServiceRequestResponseV4, toclientlib.ReqInf, error) {
+	var resp tc.DeliveryServiceRequestResponseV4
 	if dsr.AssigneeID == nil && dsr.Assignee != nil {
-		res, reqInf, err := to.GetUserByUsername(*dsr.Assignee, nil)
+		assigneeOpts := NewRequestOptions()
+		assigneeOpts.QueryParameters.Set("username", *dsr.Assignee)
+		res, reqInf, err := to.GetUsers(assigneeOpts)
 		if err != nil {
-			return created, alerts, reqInf, err
+			return resp, reqInf, err
 		}
-		if len(res) == 0 {
-			return created, alerts, reqInf, fmt.Errorf("no user with username '%s'", *dsr.Assignee)
+		if len(res.Response) == 0 {
+			return resp, reqInf, fmt.Errorf("no user with username '%s'", *dsr.Assignee)
 		}
-		dsr.AssigneeID = res[0].ID
+		dsr.AssigneeID = res.Response[0].ID
 	}
 
 	if dsr.AuthorID == nil && dsr.Author != "" {
-		res, reqInf, err := to.GetUserByUsername(dsr.Author, nil)
+		authorOpts := NewRequestOptions()
+		authorOpts.QueryParameters.Set("username", dsr.Author)
+		res, reqInf, err := to.GetUsers(authorOpts)
 		if err != nil {
-			return created, alerts, reqInf, err
+			return resp, reqInf, err
 		}
-		if len(res) == 0 {
-			return created, alerts, reqInf, fmt.Errorf("no user with name '%s'", dsr.Author)
+		if len(res.Response) == 0 {
+			return resp, reqInf, fmt.Errorf("no user with name '%s'", dsr.Author)
 		}
-		dsr.AuthorID = res[0].ID
+		dsr.AuthorID = res.Response[0].ID
 	}
 
 	var ds *tc.DeliveryServiceV4
@@ -63,109 +66,77 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV40
 	}
 
 	if ds.TypeID == nil && ds.Type.String() != "" {
-		ty, reqInf, err := to.GetTypeByName(ds.Type.String(), nil)
-		if err != nil || len(ty) == 0 {
-			return created, alerts, reqInf, errors.New("no type named " + ds.Type.String())
+		typeOpts := NewRequestOptions()
+		typeOpts.QueryParameters.Set("name", ds.Type.String())
+		ty, reqInf, err := to.GetTypes(typeOpts)
+		if err != nil || len(ty.Response) == 0 {
+			return resp, reqInf, errors.New("no type named " + ds.Type.String())
 		}
-		ds.TypeID = &ty[0].ID
+		ds.TypeID = &ty.Response[0].ID
 	}
 
 	if ds.CDNID == nil && ds.CDNName != nil {
-		cdns, reqInf, err := to.GetCDNByName(*ds.CDNName, nil)
-		if err != nil || len(cdns) == 0 {
-			return created, alerts, reqInf, fmt.Errorf("no CDN named '%s'", *ds.CDNName)
+		cdnOpts := NewRequestOptions()
+		cdnOpts.QueryParameters.Set("name", *ds.CDNName)
+		cdns, reqInf, err := to.GetCDNs(cdnOpts)
+		if err != nil || len(cdns.Response) == 0 {
+			return resp, reqInf, fmt.Errorf("no CDN named '%s'", *ds.CDNName)
 		}
-		ds.CDNID = &cdns[0].ID
+		ds.CDNID = &cdns.Response[0].ID
 	}
 
 	if ds.ProfileID == nil && ds.ProfileName != nil {
-		profiles, reqInf, err := to.GetProfileByName(*ds.ProfileName, nil)
-		if err != nil || len(profiles) == 0 {
-			return created, alerts, reqInf, fmt.Errorf("no Profile named '%s'", *ds.ProfileName)
+		profileOpts := NewRequestOptions()
+		profileOpts.QueryParameters.Set("name", *ds.ProfileName)
+		profiles, reqInf, err := to.GetProfiles(profileOpts)
+		if err != nil || len(profiles.Response) == 0 {
+			return resp, reqInf, fmt.Errorf("no Profile named '%s'", *ds.ProfileName)
 		}
-		ds.ProfileID = &profiles[0].ID
+		ds.ProfileID = &profiles.Response[0].ID
 	}
 
 	if ds.TenantID == nil && ds.Tenant != nil {
-		ten, reqInf, err := to.GetTenantByName(*ds.Tenant, nil)
-		if err != nil {
-			return created, alerts, reqInf, fmt.Errorf("no Tenant named '%s'", *ds.Tenant)
+		tenantOpts := NewRequestOptions()
+		tenantOpts.QueryParameters.Set("name", *ds.Tenant)
+		ten, reqInf, err := to.GetTenants(tenantOpts)
+		if err != nil || len(ten.Response) == 0 {
+			return resp, reqInf, fmt.Errorf("no Tenant named '%s'", *ds.Tenant)
 		}
-		ds.TenantID = &ten.ID
+		ds.TenantID = &ten.Response[0].ID
 	}
 
-	var resp struct {
-		tc.Alerts
-		Response tc.DeliveryServiceRequestV40 `json:"response"`
-	}
-	reqInf, err := to.post(APIDSRequests, dsr, nil, &resp)
-	alerts = resp.Alerts
-	created = resp.Response
-	return created, alerts, reqInf, err
+	reqInf, err := to.post(apiDSRequests, opts, dsr, &resp)
+	return resp, reqInf, err
 }
 
-// GetDeliveryServiceRequests retrieves all Delivery Service Requests available to session user.
-func (to *Session) GetDeliveryServiceRequests(header http.Header) ([]tc.DeliveryServiceRequestV40, tc.Alerts, toclientlib.ReqInf, error) {
-	var data struct {
-		tc.Alerts
-		Response []tc.DeliveryServiceRequestV40 `json:"response"`
-	}
-	reqInf, err := to.get(APIDSRequests, header, &data)
-	return data.Response, data.Alerts, reqInf, err
-}
-
-// GetDeliveryServiceRequestsByXMLID retrives all Delivery Service Requests that
-// are requests to create, modify, or delete a Delivery Service with the given
-// XMLID.
-func (to *Session) GetDeliveryServiceRequestsByXMLID(XMLID string, header http.Header) ([]tc.DeliveryServiceRequestV40, tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?xmlId=%s", APIDSRequests, url.QueryEscape(XMLID))
-	var data struct {
-		tc.Alerts
-		Response []tc.DeliveryServiceRequestV40 `json:"response"`
-	}
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, data.Alerts, reqInf, err
-}
-
-// GetDeliveryServiceRequest retrieves the Delivery Service Request with the given ID.
-func (to *Session) GetDeliveryServiceRequest(id int, header http.Header) (tc.DeliveryServiceRequestV40, tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", APIDSRequests, id)
-
-	var data struct {
-		tc.Alerts
-		Response []tc.DeliveryServiceRequestV40 `json:"response"`
-	}
-	reqInf, err := to.get(route, header, &data)
-
-	// We presume the cases where an incorrect number of DSRs is returned will
-	// be captured in the error returned by to.get
-	var ret tc.DeliveryServiceRequestV40
-	if len(data.Response) == 1 {
-		ret = data.Response[0]
-	}
-
-	return ret, data.Alerts, reqInf, err
+// GetDeliveryServiceRequests retrieves Delivery Service Requests available to session user.
+func (to *Session) GetDeliveryServiceRequests(opts RequestOptions) (tc.DeliveryServiceRequestsResponseV4, toclientlib.ReqInf, error) {
+	var data tc.DeliveryServiceRequestsResponseV4
+	reqInf, err := to.get(apiDSRequests, opts, &data)
+	return data, reqInf, err
 }
 
 // DeleteDeliveryServiceRequest deletes the Delivery Service Request with the given ID.
-func (to *Session) DeleteDeliveryServiceRequest(id int) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", APIDSRequests, id)
-	var alerts tc.Alerts
-	reqInf, err := to.del(route, nil, &alerts)
-	return alerts, reqInf, err
+func (to *Session) DeleteDeliveryServiceRequest(id int, opts RequestOptions) (tc.DeliveryServiceRequestResponseV4, toclientlib.ReqInf, error) {
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+	opts.QueryParameters.Set("id", strconv.Itoa(id))
+	var resp tc.DeliveryServiceRequestResponseV4
+	reqInf, err := to.del(apiDSRequests, opts, &resp)
+	return resp, reqInf, err
 }
 
 // UpdateDeliveryServiceRequest replaces the existing DSR that has the given
 // ID with the DSR passed.
-func (to *Session) UpdateDeliveryServiceRequest(id int, dsr tc.DeliveryServiceRequestV4, header http.Header) (tc.DeliveryServiceRequestV4, tc.Alerts, toclientlib.ReqInf, error) {
-
-	route := fmt.Sprintf("%s?id=%d", APIDSRequests, id)
-
-	var payload struct {
-		tc.Alerts
-		Response tc.DeliveryServiceRequestV4 `json:"response"`
+func (to *Session) UpdateDeliveryServiceRequest(id int, dsr tc.DeliveryServiceRequestV4, opts RequestOptions) (tc.DeliveryServiceRequestResponseV4, toclientlib.ReqInf, error) {
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
 	}
-	reqInf, err := to.put(route, dsr, header, &payload)
+	opts.QueryParameters.Set("id", strconv.Itoa(id))
 
-	return payload.Response, payload.Alerts, reqInf, err
+	var payload tc.DeliveryServiceRequestResponseV4
+	reqInf, err := to.put(apiDSRequests, opts, dsr, &payload)
+
+	return payload, reqInf, err
 }

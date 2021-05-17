@@ -34,7 +34,7 @@ func MakeCacheDotConfig(
 	server *Server,
 	servers []Server,
 	deliveryServices []DeliveryService,
-	deliveryServiceServers []tc.DeliveryServiceServer,
+	deliveryServiceServers []DeliveryServiceServer,
 	hdrComment string,
 ) (Cfg, error) {
 	if tc.CacheTypeFromString(server.Type) == tc.CacheTypeMid {
@@ -48,7 +48,7 @@ func makeCacheDotConfigEdge(
 	server *Server,
 	servers []Server,
 	deliveryServices []DeliveryService,
-	deliveryServiceServers []tc.DeliveryServiceServer,
+	deliveryServiceServers []DeliveryServiceServer,
 	hdrComment string,
 ) (Cfg, error) {
 	warnings := []string{}
@@ -77,14 +77,10 @@ func makeCacheDotConfigEdge(
 
 	dsIDs := map[int]struct{}{}
 	for _, dss := range dsServers {
-		if dss.Server == nil || dss.DeliveryService == nil {
-			warnings = append(warnings, "deliveryservice-servers had entry with nil values, skipping!")
+		if _, ok := profileServerIDsMap[dss.Server]; !ok {
 			continue
 		}
-		if _, ok := profileServerIDsMap[*dss.Server]; !ok {
-			continue
-		}
-		dsIDs[*dss.DeliveryService] = struct{}{}
+		dsIDs[dss.DeliveryService] = struct{}{}
 	}
 
 	profileDSes := []profileDS{}

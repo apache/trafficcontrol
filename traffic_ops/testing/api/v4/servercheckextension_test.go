@@ -21,6 +21,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 var (
@@ -37,10 +38,9 @@ func CreateTestServerCheckExtensions(t *testing.T) {
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
 
 	for _, ext := range testData.ServerCheckExtensions {
-		resp, _, err := TOSession.CreateServerCheckExtension(ext)
-		t.Logf("Response: %v %v", *ext.Name, resp)
+		resp, _, err := TOSession.CreateServerCheckExtension(ext, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not create to_extension %v: %v", ext.Name, err)
+			t.Errorf("could not create Servercheck Extension: %v - alerts: %+v", err, resp.Alerts)
 		}
 	}
 
@@ -48,8 +48,11 @@ func CreateTestServerCheckExtensions(t *testing.T) {
 }
 
 func CreateTestInvalidServerCheckExtensions(t *testing.T) {
+	if len(testData.ServerCheckExtensions) < 1 {
+		t.Fatal("Need at least one Servercheck Extension to test invalid Servercheck Extension creation")
+	}
 	// Fail Attempt to Create ServerCheckExtension as non extension user
-	_, _, err := TOSession.CreateServerCheckExtension(testData.ServerCheckExtensions[0])
+	_, _, err := TOSession.CreateServerCheckExtension(testData.ServerCheckExtensions[0], client.RequestOptions{})
 	if err == nil {
 		t.Error("expected to receive error with non extension user")
 	}
@@ -65,14 +68,14 @@ func CreateTestInvalidServerCheckExtensions(t *testing.T) {
 		ServercheckShortName: util.StrPtr("MC"),
 		Type:                 util.StrPtr("CHECK_EXTENSION_MEM"),
 	}
-	_, _, err = TOSession.CreateServerCheckExtension(toExt)
+	_, _, err = TOSession.CreateServerCheckExtension(toExt, client.RequestOptions{})
 	if err == nil {
 		t.Error("expected to receive error with no open slots left")
 	}
 
 	// Attempt to create a TO Extension with an invalid type
 	toExt.Type = util.StrPtr("INVALID_TYPE")
-	_, _, err = TOSession.CreateServerCheckExtension(toExt)
+	_, _, err = TOSession.CreateServerCheckExtension(toExt, client.RequestOptions{})
 	if err == nil {
 		t.Error("expected to receive error with invalid TO extension type")
 	}
@@ -83,15 +86,22 @@ func CreateTestInvalidServerCheckExtensions(t *testing.T) {
 func DeleteTestServerCheckExtensions(t *testing.T) {
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
 
-	extensions, _, err := TOSession.GetServerCheckExtensions()
+	extensions, _, err := TOSession.GetServerCheckExtensions(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("could not get to_extensions: %v", err)
+		t.Fatalf("could not get Servercheck Extensions: %v - alerts: %+v", err, extensions.Alerts)
 	}
 
 	ids := []int{}
 	for _, ext := range testData.ServerCheckExtensions {
+		if ext.Name == nil {
+			t.Errorf("Found Servercheck Extension in the testing data with null or undefined Name")
+		}
 		found := false
 		for _, respTOExt := range extensions.Response {
+			if respTOExt.Name == nil || respTOExt.ID == nil {
+				t.Error("Traffic Ops returned a representation for a Servercheck Extension with null or undefined ID and/or name")
+				continue
+			}
 			if *ext.Name == *respTOExt.Name {
 				ids = append(ids, *respTOExt.ID)
 				found = true
@@ -104,20 +114,26 @@ func DeleteTestServerCheckExtensions(t *testing.T) {
 	}
 
 	for _, id := range ids {
-		resp, _, err := TOSession.DeleteServerCheckExtension(id)
-		t.Logf("Response: %v %v", id, resp)
+		resp, _, err := TOSession.DeleteServerCheckExtension(id, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("cannot delete to_extension: %v - %v", id, err)
+			t.Errorf("cannot delete Servercheck Extension #%d: %v - alerts: %+v", id, err, resp.Alerts)
 		}
 	}
-	extensions, _, err = TOSession.GetServerCheckExtensions()
+	extensions, _, err = TOSession.GetServerCheckExtensions(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("could not get to_extensions: %v", err)
 	}
 
 	for _, ext := range testData.ServerCheckExtensions {
+		if ext.Name == nil {
+			t.Errorf("Found Servercheck Extension in the testing data with null or undefined Name")
+		}
 		found := false
 		for _, respTOExt := range extensions.Response {
+			if respTOExt.Name == nil {
+				t.Error("Traffic Ops returned a representation for a Servercheck Extension with null or undefined name")
+				continue
+			}
 			if *ext.Name == *respTOExt.Name {
 				found = true
 				continue

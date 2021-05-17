@@ -16,13 +16,13 @@ package v4
 */
 
 import (
-	"net/url"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestServerChecks(t *testing.T) {
@@ -39,19 +39,21 @@ func CreateTestServerChecks(t *testing.T) {
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
 
 	for _, servercheck := range testData.Serverchecks {
-		resp, _, err := TOSession.InsertServerCheckStatus(servercheck)
-		t.Logf("Response: %v host_name %v check %v", *servercheck.HostName, *servercheck.Name, resp)
+		resp, _, err := TOSession.InsertServerCheckStatus(servercheck, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not CREATE servercheck: %v", err)
+			t.Errorf("could not insert Servercheck: %v - alerts: %+v", err, resp.Alerts)
 		}
 	}
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 }
 
 func CreateTestInvalidServerChecks(t *testing.T) {
+	if len(testData.Serverchecks) < 1 {
+		t.Fatal("Need at least one Servercheck to test creating an invalid Servercheck")
+	}
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
 
-	_, _, err := TOSession.InsertServerCheckStatus(testData.Serverchecks[0])
+	_, _, err := TOSession.InsertServerCheckStatus(testData.Serverchecks[0], client.RequestOptions{})
 	if err == nil {
 		t.Error("expected to receive error with non extension user")
 	}
@@ -66,14 +68,14 @@ func CreateTestInvalidServerChecks(t *testing.T) {
 	}
 
 	// Attempt to create a ServerCheck with invalid server ID
-	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck)
+	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck, client.RequestOptions{})
 	if err == nil {
 		t.Error("expected to receive error with invalid id")
 	}
 
 	invalidServerCheck.ID = nil
 	// Attempt to create a ServerCheck with invalid host name
-	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck)
+	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck, client.RequestOptions{})
 	if err == nil {
 		t.Error("expected to receive error with invalid host name")
 	}
@@ -82,7 +84,7 @@ func CreateTestInvalidServerChecks(t *testing.T) {
 	invalidServerCheck.Name = testData.Serverchecks[0].Name
 
 	// Attempt to create a ServerCheck with invalid servercheck name
-	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck)
+	_, _, err = TOSession.InsertServerCheckStatus(invalidServerCheck, client.RequestOptions{})
 	if err == nil {
 		t.Error("expected to receive error with invalid servercheck name")
 	}
@@ -92,30 +94,46 @@ func CreateTestInvalidServerChecks(t *testing.T) {
 func UpdateTestServerChecks(t *testing.T) {
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
 	for _, servercheck := range testData.Serverchecks {
+		if servercheck.Value == nil {
+			t.Error("Found servercheck in the testing data with null or undefined Value")
+			continue
+		}
 		*servercheck.Value--
-		resp, _, err := TOSession.InsertServerCheckStatus(servercheck)
-		t.Logf("Response: %v host_name %v check %v", *servercheck.HostName, *servercheck.Name, resp)
+		resp, _, err := TOSession.InsertServerCheckStatus(servercheck, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not update servercheck: %v", err)
+			if servercheck.Name != nil {
+				t.Logf("Servercheck Name: %s", *servercheck.Name)
+			}
+			if servercheck.HostName != nil {
+				t.Logf("Servercheck Host Name: %s", *servercheck.HostName)
+			}
+			t.Errorf("could not update servercheck: %v - alerts: %+v", err, resp.Alerts)
 		}
 	}
 	SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 }
 
 func GetTestServerChecks(t *testing.T) {
-	hostname := testData.Serverchecks[0].HostName
+	if len(testData.Serverchecks) < 1 {
+		t.Fatal("Need at least one Servercheck to test creating an getting Serverchecks")
+	}
+	if testData.Serverchecks[0].HostName == nil {
+		t.Fatal("Found a Servercheck in the testing data wih null or undefined Host Name")
+	}
+	hostname := *testData.Serverchecks[0].HostName
+
 	// Get server checks
-	serverChecksResp, alerts, _, err := TOSession.GetServersChecks(nil, nil)
+	serverChecksResp, _, err := TOSession.GetServersChecks(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("could not GET serverchecks: %v (alerts: %+v)", err, alerts)
+		t.Fatalf("could not get Serverchecks: %v - alerts: %+v", err, serverChecksResp.Alerts)
 	}
 	found := false
-	for _, sc := range serverChecksResp {
-		if sc.HostName == *hostname {
+	for _, sc := range serverChecksResp.Response {
+		if sc.HostName == hostname {
 			found = true
 
 			if sc.Checks == nil {
-				t.Errorf("server %s had no checks - expected it to have at least two", *hostname)
+				t.Errorf("server %s had no checks - expected it to have at least two", hostname)
 				break
 			}
 
@@ -124,7 +142,7 @@ func GetTestServerChecks(t *testing.T) {
 			} else if ort == nil {
 				t.Error("'null' returned for ORT value servercheck - expected pointer to 12")
 			} else if *ort != 12 {
-				t.Errorf("%v returned for ORT value servercheck - expected 12", *ort)
+				t.Errorf("%d returned for ORT value servercheck - expected 12", *ort)
 			}
 
 			if ilo, ok := sc.Checks["ILO"]; !ok {
@@ -132,84 +150,88 @@ func GetTestServerChecks(t *testing.T) {
 			} else if ilo == nil {
 				t.Error("'null' returned for ILO value servercheck - expected pointer to 0")
 			} else if *ilo != 0 {
-				t.Errorf("%v returned for ILO value servercheck - expected 0", *ilo)
+				t.Errorf("%d returned for ILO value servercheck - expected 0", *ilo)
 			}
 			break
 		}
 	}
 	if !found {
-		t.Errorf("expected to find servercheck for host %v", hostname)
+		t.Errorf("expected to find servercheck for host %s", hostname)
 	}
 }
 
 func GetTestServerChecksWithName(t *testing.T) {
-	params := url.Values{}
-	params.Set("hostName", "atlanta-edge-01")
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("hostName", "atlanta-edge-01")
 
 	// Get server checks
-	scResp, alerts, _, err := TOSession.GetServersChecks(params, nil)
-	if len(scResp) == 0 {
+	scResp, _, err := TOSession.GetServersChecks(opts)
+	if len(scResp.Response) == 0 {
 		t.Fatal("no server checks in response, quitting")
 	}
 	if err != nil {
-		t.Fatalf("could not GET serverchecks by name (%v): %v (alerts: %+v)", scResp[0].HostName, err, alerts)
+		t.Fatalf("could not get Serverchecks filtered by name 'atlanta-edge-01': %v - alerts: %+v", err, scResp.Alerts)
 	}
 
 	//Add unknown param key
-	params.Add("foo", "car")
+	opts.QueryParameters.Add("foo", "car")
 	// Get server checks
-	resp, alerts, _, err := TOSession.GetServersChecks(params, nil)
-	if len(resp) == 0 {
+	resp, _, err := TOSession.GetServersChecks(opts)
+	if len(resp.Response) == 0 {
 		t.Fatal("no server checks in response, quitting")
 	}
 	if err != nil {
-		t.Fatalf("could not GET serverchecks by name (%v): %v (alerts: %+v)", resp[0].HostName, err, alerts)
+		t.Fatalf("could not get Serverchecks filtered by server Host Name '%s': %v - alerts: %+v", resp.Response[0].HostName, err, resp.Alerts)
 	}
 
-	if len(scResp) != len(resp) {
-		t.Fatalf("expected: Both response lengths should be equal, got: first resp:%v-second resp:%v", len(scResp), len(resp))
+	if len(scResp.Response) != len(resp.Response) {
+		t.Fatalf("expected: Both response lengths should be equal, got: first resp: %d - second resp: %d", len(scResp.Response), len(resp.Response))
 	}
 }
 
 func GetTestServerChecksWithID(t *testing.T) {
-	params := url.Values{}
-	serverChecksResp, _, _, err := TOSession.GetServersChecks(nil, nil)
-	if len(serverChecksResp) == 0 {
+	serverChecksResp, _, err := TOSession.GetServersChecks(client.RequestOptions{})
+	if err != nil {
+		t.Errorf("Unexpected error getting Serverchecks: %v - alerts: %+v", err, serverChecksResp.Alerts)
+	}
+	if len(serverChecksResp.Response) == 0 {
 		t.Fatal("no server checks in response, quitting")
 	}
-	if serverChecksResp[0].ID == 0 {
+	if serverChecksResp.Response[0].ID == 0 {
 		t.Fatal("ID of the response server is nil, quitting")
 	}
-	id := serverChecksResp[0].ID
-	params.Set("id", strconv.Itoa(id))
+	id := serverChecksResp.Response[0].ID
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("id", strconv.Itoa(id))
 
 	// Get server checks
-	scResp, alerts, _, err := TOSession.GetServersChecks(params, nil)
-	if len(scResp) == 0 {
+	scResp, _, err := TOSession.GetServersChecks(opts)
+	if len(scResp.Response) == 0 {
 		t.Fatal("no server checks in response, quitting")
 	}
 	if err != nil {
-		t.Fatalf("could not GET serverchecks by id (%v): %v (alerts: %+v)", scResp[0].ID, err, alerts)
+		t.Fatalf("could not get Serverchecks by ID %d: %v - alerts: %+v", scResp.Response[0].ID, err, scResp.Alerts)
 	}
 
 	//Add unknown param key
-	params.Add("foo", "car")
+	opts.QueryParameters.Add("foo", "car")
 	// Get server checks
-	resp, alerts, _, err := TOSession.GetServersChecks(params, nil)
-	if len(resp) == 0 {
+	resp, _, err := TOSession.GetServersChecks(opts)
+	if len(resp.Response) == 0 {
 		t.Fatal("no server checks in response, quitting")
 	}
 	if err != nil {
-		t.Fatalf("could not GET serverchecks by name (%v): %v (alerts: %+v)", resp[0].HostName, err, alerts)
+		t.Fatalf("could not get Serverchecks filtered by ID %d with extraneous 'foo' parameter: %v - alerts: %+v", resp.Response[0].ID, err, resp.Alerts)
 	}
 
-	if len(scResp) != len(resp) {
-		t.Fatalf("expected: Both response lengths should be equal, got: first resp:%v-second resp:%v", len(scResp), len(resp))
+	if len(scResp.Response) != len(resp.Response) {
+		t.Fatalf("expected: Both response lengths should be equal, got: first resp:%v-second resp:%v", len(scResp.Response), len(resp.Response))
 	}
 }
 
 // Need to define no-op function as TCObj interface expects a delete function
 // There is no delete path for serverchecks
-func DeleteTestServerChecks(t *testing.T) {
+func DeleteTestServerChecks(*testing.T) {
 	return
 }

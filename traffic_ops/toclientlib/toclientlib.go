@@ -28,7 +28,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptrace"
-	"strconv"
 	"strings"
 	"time"
 
@@ -129,7 +128,7 @@ type ClientOpts struct {
 	APIVersionCheckInterval time.Duration
 }
 
-// Client is a Traffic Ops client, with generic functions to be used by any specific client.
+// TOClient is a Traffic Ops client, with generic functions to be used by any specific client.
 type TOClient struct {
 	UserName     string
 	Password     string
@@ -153,6 +152,9 @@ type TOClient struct {
 	apiVersions []string
 }
 
+// NewClient returns a reference to a TOClient instance with the given settings.
+// This instance is not authenticated with Traffic Ops; external callers should
+// generally use Login, LoginWithToken, or LoginWithAgent instead.
 func NewClient(user, password, url, userAgent string, client *http.Client, apiVersions []string) *TOClient {
 	return &TOClient{
 		UserName:     user,
@@ -164,7 +166,12 @@ func NewClient(user, password, url, userAgent string, client *http.Client, apiVe
 	}
 }
 
+// DefaultTimeout is the default amount of time a TOClient instance will wait
+// for a response to its requests before giving up.
 const DefaultTimeout = time.Second * 30
+
+// DefaultAPIVersionCheckInterval is the default minimum amount of time a
+// TOClient will wait between checking for a newer API version from Traffic Ops.
 const DefaultAPIVersionCheckInterval = time.Second * 60
 
 // HTTPError is returned on Update Client failure.
@@ -189,7 +196,7 @@ func loginCreds(toUser string, toPasswd string) ([]byte, error) {
 
 	js, err := json.Marshal(credentials)
 	if err != nil {
-		err := fmt.Errorf("Error creating login json: %v", err)
+		err := fmt.Errorf("Error creating login json: %w", err)
 		return nil, err
 	}
 	return js, nil
@@ -203,7 +210,7 @@ func loginToken(token string) ([]byte, error) {
 
 	j, e := json.Marshal(form)
 	if e != nil {
-		e := fmt.Errorf("Error creating token login json: %v", e)
+		e := fmt.Errorf("Error creating token login json: %w", e)
 		return nil, e
 	}
 	return j, nil
@@ -220,7 +227,7 @@ func (to *TOClient) login() (net.Addr, error) {
 
 	reqInf, err := reqF(to, http.MethodPost, path, body, nil, &alerts, true)
 	if err != nil {
-		return reqInf.RemoteAddr, fmt.Errorf("Login error %v, alerts string: %+v", err, alerts)
+		return reqInf.RemoteAddr, fmt.Errorf("Login error %w, alerts string: %+v", err, alerts)
 	}
 
 	success := false
@@ -240,16 +247,24 @@ func (to *TOClient) login() (net.Addr, error) {
 
 func (to *TOClient) loginWithToken(token []byte) (net.Addr, error) {
 	path := to.APIBase() + "/user/login/token"
-	resp, remoteAddr, err := to.RawRequestWithHdr(http.MethodPost, path, token, nil)
-	resp, remoteAddr, err = to.errUnlessOKOrNotModified(resp, remoteAddr, err, path)
-	if err != nil {
-		return remoteAddr, fmt.Errorf("requesting: %v", err)
-	}
-	defer resp.Body.Close()
-
 	var alerts tc.Alerts
-	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		return remoteAddr, fmt.Errorf("decoding response JSON: %v", err)
+	resp, remoteAddr, err := to.RawRequestWithHdr(http.MethodPost, path, token, nil)
+	if resp != nil {
+		defer log.Close(resp.Body, "closing /user/login/token response body")
+		jErr := json.NewDecoder(resp.Body).Decode(&alerts)
+		if jErr != nil {
+			if err == nil {
+				return remoteAddr, errors.New("decoding response JSON: " + jErr.Error())
+			}
+			return remoteAddr, fmt.Errorf("error decoding response ('%v') after request error: %w", jErr, err)
+		}
+	}
+	err = to.errorFromStatusCode(resp, err, path)
+	if err != nil {
+		if alerts.HasAlerts() {
+			err = fmt.Errorf("%w - error-level alerts: %s", err, alerts.ErrorString())
+		}
+		return remoteAddr, err
 	}
 
 	for _, alert := range alerts.Alerts {
@@ -258,10 +273,10 @@ func (to *TOClient) loginWithToken(token []byte) (net.Addr, error) {
 		}
 	}
 
-	return remoteAddr, fmt.Errorf("Login failed, alerts string: %+v", alerts)
+	return remoteAddr, fmt.Errorf("login failed, alerts string: %+v", alerts)
 }
 
-// logout of Traffic Ops
+// logout of Traffic Ops.
 func (to *TOClient) logout() (net.Addr, error) {
 	credentials, err := loginCreds(to.UserName, to.Password)
 	if err != nil {
@@ -269,40 +284,56 @@ func (to *TOClient) logout() (net.Addr, error) {
 	}
 
 	path := to.APIBase() + "/user/logout"
-	resp, remoteAddr, err := to.RawRequestWithHdr("POST", path, credentials, nil)
-	resp, remoteAddr, err = to.errUnlessOKOrNotModified(resp, remoteAddr, err, path)
-	if err != nil {
-		return remoteAddr, errors.New("requesting: " + err.Error())
-	}
-	defer resp.Body.Close()
-
 	var alerts tc.Alerts
-	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		return remoteAddr, errors.New("decoding response JSON: " + err.Error())
+	resp, remoteAddr, err := to.RawRequestWithHdr("POST", path, credentials, nil)
+	if resp != nil {
+		defer log.Close(resp.Body, "closing /user/logout response body")
+		jErr := json.NewDecoder(resp.Body).Decode(&alerts)
+		if jErr != nil {
+			if err == nil {
+				return remoteAddr, errors.New("decoding response JSON: " + jErr.Error())
+			}
+			return remoteAddr, fmt.Errorf("error decoding response ('%v') after request error: %w", jErr, err)
+		}
+	}
+	err = to.errorFromStatusCode(resp, err, path)
+	if err != nil {
+		if alerts.HasAlerts() {
+			err = fmt.Errorf("%w - error-level alerts: %s", err, alerts.ErrorString())
+		}
+		return remoteAddr, err
 	}
 
 	success := false
 	for _, alert := range alerts.Alerts {
-		if alert.Level == "success" && alert.Text == "Successfully logged in." {
+		if alert.Level == "success" && alert.Text == "You are logged out." {
 			success = true
 			break
 		}
 	}
 
 	if !success {
-		return remoteAddr, fmt.Errorf("Logout failed, alerts string: %+v", alerts)
+		return remoteAddr, fmt.Errorf("logout failed, alerts string: %+v", alerts)
 	}
 
 	return remoteAddr, nil
 }
 
-// Login to traffic_ops, the response should set the cookie for this client
-// automatically. Start with
-//     to := traffic_ops.Login("user", "passwd", true)
-// subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
-// Returns the logged in client, the remote address of Traffic Ops which was translated and used to log in, and any error. If the error is not nil, the remote address may or may not be nil, depending whether the error occurred before the login request.
+// LoginWithAgent returns an authenticated TOClient.
 //
-// The apiVersions is the list of API versions supported in this client. This should generally be provided by the client package wrapping this package.
+// Start with
+//     toURL := "https://trafficops.example"
+//     apiVers := []string{"3.0", "3.1"}
+//     to := LoginWithAgent(toURL, "user", "passwd", true, "myapp/1.0", DefaultTimeout, apiVers)
+// subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
+//
+// Returns the logged in client, the remote IP address of Traffic Ops to which
+// the given URL was resolved and used to authenticate, and any error that
+// occurred. If the error is not nil, the remote address may or may not be nil,
+// depending whether the error occurred before the login request.
+//
+// apiVersions is the list of API versions supported in this client. This
+// should generally be provided by the client package wrapping this package.
 func LoginWithAgent(
 	toURL string,
 	toUser string,
@@ -336,7 +367,22 @@ func LoginWithAgent(
 	return to, remoteAddr, nil
 }
 
-// The apiVersions is the list of API versions supported in this client. This should generally be provided by the client package wrapping this package.
+// LoginWithToken returns an authenticated TOClient, using a token for said
+// authentication.
+//
+// Start with
+//     toURL := "https://trafficops.example"
+//     apiVers := []string{"3.0", "3.1"}
+//     to := LoginWithToken(toURL, "token", true, "myapp/1.0", DefaultTimeout, apiVers)
+// subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
+//
+// Returns the logged in client, the remote IP address of Traffic Ops to which
+// the given URL was resolved and used to authenticate, and any error that
+// occurred. If the error is not nil, the remote address may or may not be nil,
+// depending whether the error occurred before the login request.
+//
+// apiVersions is the list of API versions supported in this client. This
+// should generally be provided by the client package wrapping this package.
 func LoginWithToken(
 	toURL string,
 	token string,
@@ -365,19 +411,23 @@ func LoginWithToken(
 	to := NewClient("", "", toURL, userAgent, &client, apiVersions)
 	tBts, err := loginToken(token)
 	if err != nil {
-		return nil, nil, fmt.Errorf("logging in: %v", err)
+		return nil, nil, fmt.Errorf("encoding login token: %w", err)
 	}
 
 	remoteAddr, err := to.loginWithToken(tBts)
 	if err != nil {
-		return nil, remoteAddr, fmt.Errorf("logging in: %v", err)
+		return nil, remoteAddr, fmt.Errorf("logging in: %w", err)
 	}
 	return to, remoteAddr, nil
 }
 
-// Logout of Traffic Ops.
+// LogoutWithAgent creates a new TOClient, authenticates that client with
+// Traffic Ops, then immediately logs out before returning the TOClient. As a
+// result, the returned TOClient is *not* authenticated, but it is verified
+// that authentication can be performed with the given information.
 //
-// The apiVersions is the list of API versions supported in this client. This should generally be provided by the client package wrapping this package.
+// apiVersions is the list of API versions supported in this client. This
+// should generally be provided by the client package wrapping this package.
 //
 func LogoutWithAgent(
 	toURL string,
@@ -430,6 +480,11 @@ func NewNoAuthClient(
 	}, apiVersions)
 }
 
+// ErrIsNotImplemented checks that the given error stems from
+// ErrNotImplemented.
+// Caution: This method does not unwrap errors, and relies on the common
+// behavior of concatenating error messages in cascading errors to detect the
+// inheritance.
 func ErrIsNotImplemented(err error) bool {
 	return err != nil && strings.Contains(err.Error(), ErrNotImplemented.Error()) // use string.Contains in case context was added to the error
 }
@@ -438,28 +493,28 @@ func ErrIsNotImplemented(err error) bool {
 // Users should check ErrIsNotImplemented rather than comparing directly, in case context was added.
 var ErrNotImplemented = errors.New("Traffic Ops Server returned 'Not Implemented', this client is probably newer than Traffic Ops, and you probably need to either upgrade Traffic Ops, or use a client whose version matches your Traffic Ops version.")
 
-// errUnlessOKOrNotModified returns the response, the remote address, and an error if the given Response's status code is anything
-// but 200 OK/ 304 Not Modified. This includes reading the Response.Body and Closing it. Otherwise, the given response, the remote
-// address, and a nil error are returned.
-func (to *TOClient) errUnlessOKOrNotModified(resp *http.Response, remoteAddr net.Addr, err error, path string) (*http.Response, net.Addr, error) {
+// errorFromStatusCode returns an error if and when the response status code of
+// `resp` warrants it. Specifically, it checks that the response code is either
+// in the < 300 range, but with a special exception for Not Modified.
+// The error given is any network-level error that might have occurred, which is
+// used in lieu of an HTTP-based error being unavailable. Path is the request
+// path, used for informational purposes in the error message text.
+func (to *TOClient) errorFromStatusCode(resp *http.Response, err error, path string) error {
 	if err != nil {
-		return resp, remoteAddr, err
+		return err
 	}
-	if resp.StatusCode < 300 || resp.StatusCode == 304 {
-		return resp, remoteAddr, err
+	if resp == nil {
+		return errors.New("error requesting Traffic Ops: empty/invalid response")
 	}
-
-	defer resp.Body.Close()
+	if resp.StatusCode < 300 || resp.StatusCode == http.StatusNotModified {
+		return nil
+	}
 
 	if resp.StatusCode == http.StatusNotImplemented {
-		return resp, remoteAddr, ErrNotImplemented
+		return ErrNotImplemented
 	}
 
-	body, readErr := ioutil.ReadAll(resp.Body)
-	if readErr != nil {
-		return resp, remoteAddr, readErr
-	}
-	return resp, remoteAddr, errors.New(resp.Status + "[" + strconv.Itoa(resp.StatusCode) + "] - Error requesting Traffic Ops " + to.getURL(path) + " " + string(body))
+	return fmt.Errorf("error requesting Traffic Ops: path '%s' gave HTTP error %s", to.getURL(path), resp.Status)
 }
 
 // getURL constructs a full URL from the given path, relative to the
@@ -468,12 +523,17 @@ func (to *TOClient) getURL(path string) string {
 	return strings.TrimSuffix(to.URL, "/") + "/" + strings.TrimPrefix(path, "/")
 }
 
+// A ReqF is a function that can produce a ReqInf and any occurring error from
+// a TOClient, a request method and path, an optional request bod, an HTTP
+// header, and optionally decode the response into a provided reference.
 type ReqF func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error)
 
+// A MidReqF is a middleware that operates on a ReqF to return a ReqF with some
+// additional behavior added.
 type MidReqF func(ReqF) ReqF
 
 // composeReqFuncs takes an initial request func and middleware, and
-// returns a single ReqFunc to be called,
+// returns a single ReqFunc to be called.
 func composeReqFuncs(reqF ReqF, middleware []MidReqF) ReqF {
 	// compose in reverse-order, which causes them to be applied in forward-order.
 	for i := len(middleware) - 1; i >= 0; i-- {
@@ -503,7 +563,7 @@ func reqTryLatest(reqF ReqF) ReqF {
 			to.lastAPIVerCheck = time.Now().Add(time.Hour * 24 * 365)
 			defer func() { to.lastAPIVerCheck = time.Now() }()
 		}
-		return reqF(to, method, path, body, header, response, false)
+		return reqF(to, method, path, body, header, response, raw)
 	}
 }
 
@@ -531,9 +591,9 @@ func reqLogin(reqF ReqF) ReqF {
 func reqFallback(reqF ReqF) ReqF {
 	var fallbackFunc func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error)
 	fallbackFunc = func(to *TOClient, method string, path string, body interface{}, header http.Header, response interface{}, raw bool) (ReqInf, error) {
-		inf, err := reqF(to, method, path, body, header, response, false)
+		inf, err := reqF(to, method, path, body, header, response, raw)
 		if err == nil {
-			return inf, err
+			return inf, nil
 		}
 		if !ErrIsNotImplemented(err) ||
 			to.forceLatestAPI {
@@ -554,8 +614,7 @@ func reqFallback(reqF ReqF) ReqF {
 			return inf, err // we're already on the oldest minor supported, and the server doesn't support it.
 		}
 		to.latestSupportedAPI = apiVersions[nextAPIVerI]
-
-		return fallbackFunc(to, method, path, body, header, response, false)
+		return fallbackFunc(to, method, path, body, header, response, raw)
 	}
 	return fallbackFunc
 }
@@ -610,51 +669,93 @@ func makeRequestWithHeader(to *TOClient, method, path string, body interface{}, 
 			return reqInf, nil
 		}
 		defer log.Close(resp.Body, "unable to close response body")
-	}
-	if err != nil {
-		return reqInf, errors.New("requesting from Traffic Ops: " + err.Error())
-	}
-
-	if btsPtr, isBytes := response.(*[]byte); isBytes {
-		bts, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return reqInf, errors.New("reading response body: " + err.Error())
+		bts, readErr := ioutil.ReadAll(resp.Body)
+		if readErr != nil {
+			if err != nil {
+				err = fmt.Errorf("failed to read response (%v) after request error: %w", readErr, err)
+			} else {
+				err = errors.New("failed to read response: " + readErr.Error())
+			}
+			return reqInf, err
 		}
-		*btsPtr = bts
-		return reqInf, nil
+
+		// Don't bother checking for alerts if there's no error; we wouldn't do
+		// anything with them in that case anyway
+		if err != nil {
+			var alerts tc.Alerts
+			// ignore errors; some responses may not be regularly-formed, and if
+			// it's a problem later steps will uncover it.
+			if e := json.Unmarshal(bts, &alerts); e == nil {
+				errStr := alerts.ErrorString()
+				if errStr != "" {
+					err = fmt.Errorf("%w - error-level alerts: %s", err, errStr)
+				}
+			}
+		}
+
+		if btsPtr, isBytes := response.(*[]byte); isBytes {
+			*btsPtr = bts
+		} else if decodeErr := json.Unmarshal(bts, response); decodeErr != nil {
+			if err != nil {
+				err = fmt.Errorf("failed to decode response body (%v) after request error: %w", decodeErr, err)
+			} else {
+				err = errors.New("decoding response body: " + decodeErr.Error())
+			}
+		}
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(response); err != nil {
-		return reqInf, errors.New("decoding response body: " + err.Error())
-	}
-	return reqInf, nil
+	return reqInf, err
 }
 
+// Req makes a request using the given HTTP request method, request path (which
+// should include any needed query string), optionally a request body, any
+// additional HTTP headers to send, and optionally a reference into which to
+// place a decoded response.
 func (to *TOClient) Req(method string, path string, body interface{}, header http.Header, response interface{}) (ReqInf, error) {
 	reqF := composeReqFuncs(makeRequestWithHeader, []MidReqF{reqTryLatest, reqFallback, reqAPI, reqLogin})
 	return reqF(to, method, path, body, header, response, false)
 }
 
-// request performs the HTTP request to Traffic Ops, trying to refresh the cookie if an Unauthorized or Forbidden code is received. It only tries once. If the login fails, the original Unauthorized/Forbidden response is returned. If the login succeeds and the subsequent re-request fails, the re-request's response is returned even if it's another Unauthorized/Forbidden.
-// Returns the response, the remote address of the Traffic Ops instance used, and any error.
-// The returned net.Addr is guaranteed to be either nil or valid, even if the returned error is not nil. Callers are encouraged to check and use the net.Addr if an error is returned, and use the remote address in their own error messages. This violates the Go idiom that a non-nil error implies all other values are undefined, but it's more straightforward than alternatives like typecasting.
+// request performs the HTTP request to Traffic Ops, trying to refresh the
+// cookie if an Unauthorized or Forbidden code is received. It only tries once.
+// If the login fails, the original Unauthorized/Forbidden response is
+// returned. If the login succeeds and the subsequent re-request fails, the
+// re-request's response is returned even if it's another Unauthorized/Forbidden.
+// Returns the response, the remote address of the Traffic Ops instance used,
+// and any error.
+//
+// The returned net.Addr is guaranteed to be either nil or valid, even if the
+// returned error is not nil. Callers are encouraged to check and use the
+// net.Addr if an error is returned, and use the remote address in their own
+// error messages. This violates the Go idiom that a non-nil error implies all
+// other values are undefined, but it's more straightforward than alternatives
+// like typecasting.
 func (to *TOClient) request(method, path string, body []byte, header http.Header) (*http.Response, net.Addr, error) {
 	r, remoteAddr, err := to.RawRequestWithHdr(method, path, body, header)
 	if err != nil {
 		return r, remoteAddr, err
 	}
 	if r.StatusCode != http.StatusUnauthorized && r.StatusCode != http.StatusForbidden {
-		return to.errUnlessOKOrNotModified(r, remoteAddr, err, path)
+		err = to.errorFromStatusCode(r, err, path)
+		return r, remoteAddr, err
 	}
 	if _, lerr := to.login(); lerr != nil {
-		return to.errUnlessOKOrNotModified(r, remoteAddr, err, path) // if re-logging-in fails, return the original request's response
+		err = to.errorFromStatusCode(r, err, path) // if re-logging-in fails, return the original request's response
+		return r, remoteAddr, err
 	}
 
 	// return second request, even if it's another Unauthorized or Forbidden.
 	r, remoteAddr, err = to.RawRequestWithHdr(method, path, body, header)
-	return to.errUnlessOKOrNotModified(r, remoteAddr, err, path)
+	err = to.errorFromStatusCode(r, err, path)
+	return r, remoteAddr, err
 }
 
+// RawRequestWithHdr makes an HTTP request to Traffic Ops. This differs from
+// the Req method in a few ways: it returns a reference to an http.Response
+// instead of doing any decoding for the caller, it does not do any automatic
+// encoding of request bodies for the caller, and it includes no middleware,
+// meaning that authentication is not retried and API version fallback is not
+// done.
 func (to *TOClient) RawRequestWithHdr(method, path string, body []byte, header http.Header) (*http.Response, net.Addr, error) {
 	url := to.getURL(path)
 
@@ -700,6 +801,8 @@ func (to *TOClient) RawRequest(method, path string, body []byte) (*http.Response
 	return to.RawRequestWithHdr(method, path, body, nil)
 }
 
+// ReqInf contains information about a request - specifically it is primarily
+// regarding the outcome of making the request.
 type ReqInf struct {
 	// CacheHitStatus is deprecated and will be removed in the next major version.
 	CacheHitStatus CacheHitStatus

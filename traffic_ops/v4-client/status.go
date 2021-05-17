@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,64 +15,42 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"fmt"
-	"net/http"
-	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIStatuses is the API version-relative path to the /statuses API endpoint.
-	APIStatuses = "/statuses"
-)
+// apiStatuses is the API version-relative path to the /statuses API endpoint.
+const apiStatuses = "/statuses"
 
 // CreateStatus creates the given Status.
-func (to *Session) CreateStatus(status tc.StatusNullable) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateStatus(status tc.StatusNullable, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIStatuses, status, nil, &alerts)
+	reqInf, err := to.post(apiStatuses, opts, status, &alerts)
 	return alerts, reqInf, err
 }
 
 // UpdateStatus replaces the Status identified by 'id' with the one provided.
-func (to *Session) UpdateStatus(id int, status tc.Status, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", APIStatuses, id)
+func (to *Session) UpdateStatus(id int, status tc.Status, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", apiStatuses, id)
 	var alerts tc.Alerts
-	reqInf, err := to.put(route, status, header, &alerts)
+	reqInf, err := to.put(route, opts, status, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetStatuses retrieves all Statuses stored in Traffic Ops.
-func (to *Session) GetStatuses(header http.Header) ([]tc.Status, toclientlib.ReqInf, error) {
+func (to *Session) GetStatuses(opts RequestOptions) (tc.StatusesResponse, toclientlib.ReqInf, error) {
 	var data tc.StatusesResponse
-	reqInf, err := to.get(APIStatuses, header, &data)
-	return data.Response, reqInf, err
+	reqInf, err := to.get(apiStatuses, opts, &data)
+	return data, reqInf, err
 }
 
-// GetStatusByID returns the Status with the given ID.
-func (to *Session) GetStatusByID(id int, header http.Header) ([]tc.Status, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", APIStatuses, id)
-	var data tc.StatusesResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetStatusByName returns the Status with the given Name.
-func (to *Session) GetStatusByName(name string, header http.Header) ([]tc.Status, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?name=%s", APIStatuses, url.QueryEscape(name))
-	var data tc.StatusesResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
-}
-
-// DeleteStatus deletes the Status wtih the given ID.
-func (to *Session) DeleteStatus(id int) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", APIStatuses, id)
+// DeleteStatus deletes the Status with the given ID.
+func (to *Session) DeleteStatus(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", apiStatuses, id)
 	var alerts tc.Alerts
-	reqInf, err := to.del(route, nil, &alerts)
+	reqInf, err := to.del(route, opts, &alerts)
 	return alerts, reqInf, err
 }

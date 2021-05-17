@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +15,7 @@
    limitations under the License.
 */
 
-package client
-
 import (
-	"fmt"
-	"net/http"
 	"net/url"
 	"strconv"
 
@@ -25,35 +23,31 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APICDNNotifications is the API version-relative path to the
-	// /cdn_notifications API endpoint.
-	APICDNNotifications = "/cdn_notifications"
-)
+// apiCDNNotifications is the API version-relative path to the
+// /cdn_notifications API endpoint.
+const apiCDNNotifications = "/cdn_notifications"
 
 // GetCDNNotifications returns a list of CDN Notifications.
-func (to *Session) GetCDNNotifications(cdnName string, header http.Header) ([]tc.CDNNotification, toclientlib.ReqInf, error) {
+func (to *Session) GetCDNNotifications(opts RequestOptions) (tc.CDNNotificationsResponse, toclientlib.ReqInf, error) {
 	var data tc.CDNNotificationsResponse
-	params := url.Values{}
-	params.Add("cdn", cdnName)
-	route := fmt.Sprintf("%s?%s", APICDNNotifications, params.Encode())
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
+	reqInf, err := to.get(apiCDNNotifications, opts, &data)
+	return data, reqInf, err
 }
 
 // CreateCDNNotification creates a CDN notification.
-func (to *Session) CreateCDNNotification(notification tc.CDNNotificationRequest) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateCDNNotification(notification tc.CDNNotificationRequest, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APICDNNotifications, notification, nil, &alerts)
+	reqInf, err := to.post(apiCDNNotifications, opts, notification, &alerts)
 	return alerts, reqInf, err
 }
 
 // DeleteCDNNotification deletes a CDN Notification by notification ID.
-func (to *Session) DeleteCDNNotification(id int) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) DeleteCDNNotification(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	params := url.Values{}
-	params.Add("id", strconv.Itoa(id))
-	route := fmt.Sprintf("%s?%s", APICDNNotifications, params.Encode())
-	reqInf, err := to.del(route, nil, &alerts)
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+	opts.QueryParameters.Set("id", strconv.Itoa(id))
+	reqInf, err := to.del(apiCDNNotifications, opts, &alerts)
 	return alerts, reqInf, err
 }

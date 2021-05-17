@@ -1,3 +1,5 @@
+package client
+
 /*
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -10,42 +12,21 @@
    limitations under the License.
 */
 
-package client
-
 import (
-	"fmt"
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIStatsSummary is the full path to the /stats_summary API endpoint.
-	APIStatsSummary = "/stats_summary"
-)
+// apiStatsSummary is the full path to the /stats_summary API endpoint.
+const apiStatsSummary = "/stats_summary"
 
 // GetSummaryStats gets a list of Summary Stats with the ability to filter on
 // CDN, Delivery Service, and/or stat name.
-func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.StatsSummaryResponse, toclientlib.ReqInf, error) {
-	resp := tc.StatsSummaryResponse{}
-
-	param := url.Values{}
-	if cdn != nil {
-		param.Add("cdnName", *cdn)
-	}
-	if deliveryService != nil {
-		param.Add("deliveryServiceName", *deliveryService)
-	}
-	if statName != nil {
-		param.Add("statName", *statName)
-	}
-
-	route := APIStatsSummary
-	if len(param) > 0 {
-		route = fmt.Sprintf("%s?%s", APIStatsSummary, param.Encode())
-	}
-	reqInf, err := to.get(route, nil, &resp)
+func (to *Session) GetSummaryStats(opts RequestOptions) (tc.StatsSummaryResponse, toclientlib.ReqInf, error) {
+	var resp tc.StatsSummaryResponse
+	reqInf, err := to.get(apiStatsSummary, opts, &resp)
 	return resp, reqInf, err
 }
 
@@ -53,23 +34,20 @@ func (to *Session) GetSummaryStats(cdn, deliveryService, statName *string) (tc.S
 // updated.
 // If 'statName' isn't nil, the response will be limited to the stat thereby
 // named.
-func (to *Session) GetSummaryStatsLastUpdated(statName *string) (tc.StatsSummaryLastUpdatedResponse, toclientlib.ReqInf, error) {
-	resp := tc.StatsSummaryLastUpdatedResponse{}
-
-	param := url.Values{}
-	param.Add("lastSummaryDate", "true")
-	if statName != nil {
-		param.Add("statName", *statName)
+func (to *Session) GetSummaryStatsLastUpdated(opts RequestOptions) (tc.StatsSummaryLastUpdatedAPIResponse, toclientlib.ReqInf, error) {
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
 	}
-	route := fmt.Sprintf("%s?%s", APIStatsSummary, param.Encode())
+	opts.QueryParameters.Set("lastSummaryDate", "true")
 
-	reqInf, err := to.get(route, nil, &resp)
+	var resp tc.StatsSummaryLastUpdatedAPIResponse
+	reqInf, err := to.get(apiStatsSummary, opts, &resp)
 	return resp, reqInf, err
 }
 
 // CreateSummaryStats creates the given Stats Summary.
-func (to *Session) CreateSummaryStats(statsSummary tc.StatsSummary) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateSummaryStats(statsSummary tc.StatsSummary, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIStatsSummary, statsSummary, nil, &alerts)
+	reqInf, err := to.post(apiStatsSummary, opts, statsSummary, &alerts)
 	return alerts, reqInf, err
 }

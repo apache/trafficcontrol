@@ -209,3 +209,17 @@ type CRConfigStats struct {
 	TMUser    *string `json:"tm_user,omitempty"`
 	TMVersion *string `json:"tm_version,omitempty"`
 }
+
+// SnapshotResponse is the type of the response of Traffic Ops to requests
+// for CDN Snapshots..
+type SnapshotResponse struct {
+	Response CRConfig `json:"response"`
+	Alerts
+}
+
+// SnapshotResponse is the type of the response of Traffic Ops to requests
+// for *making* CDN Snapshots.
+type PutSnapshotResponse struct {
+	Response *string `json:"response,omitempty"`
+	Alerts
+}

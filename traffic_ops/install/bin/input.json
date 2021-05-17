@@ -76,10 +76,6 @@
       "Database server admin password": "dbpass",
       "config_var": "pgPassword",
       "hidden": "1"
-    },
-    {
-      "Download Maxmind Database?": "no",
-      "config_var": "maxmind"
     }
   ],
   "/opt/traffic_ops/install/data/json/openssl_configuration.json": [

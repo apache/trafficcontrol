@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,61 +15,54 @@
    limitations under the License.
 */
 
-package client
-
 import (
-	"fmt"
-	"net/http"
+	"net/url"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIDeliveryServiceRequestComments is the API version-relative route to
-	// the /deliveryservice_request_comments endpoint.
-	APIDeliveryServiceRequestComments = "/deliveryservice_request_comments"
-)
+// apiDeliveryServiceRequestComments is the API version-relative route to
+// the /deliveryservice_request_comments endpoint.
+const apiDeliveryServiceRequestComments = "/deliveryservice_request_comments"
 
 // CreateDeliveryServiceRequestComment creates the given Delivery Service
 // Request comment.
-func (to *Session) CreateDeliveryServiceRequestComment(comment tc.DeliveryServiceRequestComment) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateDeliveryServiceRequestComment(comment tc.DeliveryServiceRequestComment, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIDeliveryServiceRequestComments, comment, nil, &alerts)
+	reqInf, err := to.post(apiDeliveryServiceRequestComments, opts, comment, &alerts)
 	return alerts, reqInf, err
 }
 
 // UpdateDeliveryServiceRequestComment replaces the Delivery Service Request
 // comment identified by 'id' with the one provided.
-func (to *Session) UpdateDeliveryServiceRequestComment(id int, comment tc.DeliveryServiceRequestComment, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", APIDeliveryServiceRequestComments, id)
+func (to *Session) UpdateDeliveryServiceRequestComment(id int, comment tc.DeliveryServiceRequestComment, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+	opts.QueryParameters.Set("id", strconv.Itoa(id))
 	var alerts tc.Alerts
-	reqInf, err := to.put(route, comment, header, &alerts)
+	reqInf, err := to.put(apiDeliveryServiceRequestComments, opts, comment, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetDeliveryServiceRequestComments retrieves all comments on all Delivery
 // Service Requests.
-func (to *Session) GetDeliveryServiceRequestComments(header http.Header) ([]tc.DeliveryServiceRequestComment, toclientlib.ReqInf, error) {
+func (to *Session) GetDeliveryServiceRequestComments(opts RequestOptions) (tc.DeliveryServiceRequestCommentsResponse, toclientlib.ReqInf, error) {
 	var data tc.DeliveryServiceRequestCommentsResponse
-	reqInf, err := to.get(APIDeliveryServiceRequestComments, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetDeliveryServiceRequestComment retrieves the Delivery Service Request
-// comment with the given ID.
-func (to *Session) GetDeliveryServiceRequestComment(id int, header http.Header) ([]tc.DeliveryServiceRequestComment, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", APIDeliveryServiceRequestComments, id)
-	var data tc.DeliveryServiceRequestCommentsResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
+	reqInf, err := to.get(apiDeliveryServiceRequestComments, opts, &data)
+	return data, reqInf, err
 }
 
 // DeleteDeliveryServiceRequestComment deletes the Delivery Service Request
 // comment with the given ID.
-func (to *Session) DeleteDeliveryServiceRequestComment(id int) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", APIDeliveryServiceRequestComments, id)
+func (to *Session) DeleteDeliveryServiceRequestComment(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+	opts.QueryParameters.Set("id", strconv.Itoa(id))
 	var alerts tc.Alerts
-	reqInf, err := to.del(route, nil, &alerts)
+	reqInf, err := to.del(apiDeliveryServiceRequestComments, opts, &alerts)
 	return alerts, reqInf, err
 }

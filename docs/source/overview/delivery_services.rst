@@ -1023,3 +1023,23 @@ A text-based unique identifier for a Delivery Service. Many :ref:`to-api` endpoi
 .. [#cardinality] In source code and :ref:`to-api` responses, the "Long Description" fields of a Delivery Service are "0-indexed" - hence the names differing slightly from the ones displayed in user-friendly UIs.
 .. [#dupOrigin] These Delivery Services Types are vulnerable to what this writer likes to call the "Duplicate Origin Problem". This problem is tracked by :issue:`3537`.
 .. [#httpOnlyRegex] These regular expression types can only appear in the Match List of HTTP-:ref:`Routed <ds-types>` Delivery Services.
+
+
+.. _ds-parameters:
+
+Delivery Service Parameters
+---------------------------
+
+Features which are new, experimental, or not significant enough to be first-class Delivery Service fields are often added as Parameters. To use these, add a Profile to the Delivery Service, with the given Parameter assigned.
+
+parent.config
+'''''''''''''
+The following Parameters must have the Config File ``parent.config`` to take effect.
+
+- ``try_all_primaries_before_secondary`` - on a Delivery Service Profile, if this exists, try all primary parents before failing over to secondary parents, which may be ideal if objects are unlikely to be in cache. The default behavior is to immediately fail to a secondary, which is ideal if objects are likely to be in cache, as the first consistent-hashed secondary parent will be the primary parent in its own cachegroup and therefore receive requests for that object from clients near its own cachegroup.
+- ``enable_h2`` - on a Delivery Service Profile, if this is ``true``, enable HTTP/2 for client requests. Note ATS must also be listening for HTTP/2 in records.config, or this will have no effect. Note this setting is not in the parent.config config file, but either ssl_server_name.yaml in ATS 8 or sni.yaml in ATS 9. The Parameter has the "parent.config" config file for consistency.
+- ``tls_versions`` - on a Delivery Service Profile, if this exists, enable the given comma-delimited TLS versions for client requests. For example, ``1.1,1.2,1.3``. Note ATS must also be accepting those TLS versions in records.config, or this will have no effect. Note this setting is not in the parent.config config file, but either ssl_server_name.yaml in ATS 8 or sni.yaml in ATS 9. The Parameter has the "parent.config" config file for consistency.
+
+Additionally, :term:`Delivery Service` :ref:`Profiles <ds-profile>` can have special Parameters with the :ref:`parameter-name` "mso.parent_retry" to :ref:`multi-site-origin-qht`.
+
+.. seealso:: To see how the :ref:`Values <parameter-value>` of these Parameters are interpreted, refer to the `Apache Traffic Server documentation on the parent.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_

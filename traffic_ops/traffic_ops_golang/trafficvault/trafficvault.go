@@ -69,6 +69,9 @@ type TrafficVault interface {
 	// PutURLSigKeys stores the given URL sig keys for the delivery service identified by
 	// the given xmlID.
 	PutURLSigKeys(xmlID string, keys tc.URLSigKeys, tx *sql.Tx, ctx context.Context) error
+	// DeleteURLSigKeys deletes the URL sig keys for the delivery service identified
+	// by the given xmlID.
+	DeleteURLSigKeys(xmlID string, tx *sql.Tx, ctx context.Context) error
 	// GetURISigningKeys retrieves the URI signing keys (as raw JSON bytes) for the delivery
 	// service identified by the given xmlID.
 	GetURISigningKeys(xmlID string, tx *sql.Tx, ctx context.Context) ([]byte, bool, error)
