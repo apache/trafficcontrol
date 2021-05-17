@@ -114,12 +114,12 @@ func (p *Postgres) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *s
 		return tc.DeliveryServiceSSLKeysV15{}, false, err
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
-	var jsonKeys string
+	var encryptedSslKeys []byte
 	query := "SELECT data FROM sslkey WHERE deliveryservice=$1 AND version=$2"
 	if version == "" {
 		version = "latest"
 	}
-	err = tvTx.QueryRow(query, xmlID, version).Scan(&jsonKeys)
+	err = tvTx.QueryRow(query, xmlID, version).Scan(&encryptedSslKeys)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return tc.DeliveryServiceSSLKeysV15{}, false, nil
@@ -127,6 +127,12 @@ func (p *Postgres) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *s
 		e := checkErrWithContext("Traffic Vault PostgreSQL: executing SELECT SSL Keys query", err, ctx.Err())
 		return tc.DeliveryServiceSSLKeysV15{}, false, e
 	}
+
+	jsonKeys, err := aesDecrypt(encryptedSslKeys, p.aesKey)
+	if err != nil {
+		return tc.DeliveryServiceSSLKeysV15{}, false, err
+	}
+
 	sslKey := tc.DeliveryServiceSSLKeysV15{}
 	err = json.Unmarshal([]byte(jsonKeys), &sslKey)
 	if err != nil {
@@ -155,8 +161,13 @@ func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *
 		return e
 	}
 
+	encryptedKey, err := aesEncrypt(keyJSON, p.aesKey)
+	if err != nil {
+		return errors.New("encrypting keys: " + err.Error())
+	}
+
 	// insert the new ssl keys now
-	res, err := tvTx.Exec("INSERT INTO sslkey (deliveryservice, data, cdn, version) VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)", key.DeliveryService, keyJSON, key.CDN, strconv.FormatInt(int64(key.Version), 10), key.DeliveryService, keyJSON, key.CDN, latestVersion)
+	res, err := tvTx.Exec("INSERT INTO sslkey (deliveryservice, data, cdn, version) VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)", key.DeliveryService, encryptedKey, key.CDN, strconv.FormatInt(int64(key.Version), 10), key.DeliveryService, encryptedKey, key.CDN, latestVersion)
 	if err != nil {
 		e := checkErrWithContext("Traffic Vault PostgreSQL: executing INSERT SSL Key query", err, ctx.Err())
 		return e
@@ -235,11 +246,18 @@ func (p *Postgres) GetCDNSSLKeys(cdnName string, tx *sql.Tx, ctx context.Context
 	}
 	defer rows.Close()
 	for rows.Next() {
-		jsonKey := ""
-		if err := rows.Scan(&jsonKey); err != nil {
+		encryptedSslKeys := []byte{}
+		if err := rows.Scan(&encryptedSslKeys); err != nil {
 			e := checkErrWithContext("Traffic Vault PostgreSQL: scanning CDN SSL keys", err, ctx.Err())
 			return keys, e
 		}
+
+		jsonKey, err := aesDecrypt(encryptedSslKeys, p.aesKey)
+		if err != nil {
+			log.Errorf("couldn't decrypt key: %v", err)
+			continue
+		}
+
 		err = json.Unmarshal([]byte(jsonKey), &key)
 		if err != nil {
 			log.Errorf("couldn't unmarshal json key: %v", err)
@@ -256,14 +274,20 @@ func (p *Postgres) GetDNSSECKeys(cdnName string, tx *sql.Tx, ctx context.Context
 		return tc.DNSSECKeysTrafficVault{}, false, err
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
-	var dnssecJSON string
-	if err := tvTx.QueryRow("SELECT data FROM dnssec WHERE cdn = $1", cdnName).Scan(&dnssecJSON); err != nil {
+	var encryptedDnssecKey []byte
+	if err := tvTx.QueryRow("SELECT data FROM dnssec WHERE cdn = $1", cdnName).Scan(&encryptedDnssecKey); err != nil {
 		if err == sql.ErrNoRows {
 			return tc.DNSSECKeysTrafficVault{}, false, nil
 		}
 		e := checkErrWithContext("Traffic Vault PostgreSQL: executing SELECT DNSSEC keys query", err, ctx.Err())
 		return tc.DNSSECKeysTrafficVault{}, false, e
 	}
+
+	dnssecJSON, err := aesDecrypt(encryptedDnssecKey, p.aesKey)
+	if err != nil {
+		return tc.DNSSECKeysTrafficVault{}, false, err
+	}
+
 	dnssecKeys := tc.DNSSECKeysTrafficVault{}
 	if err := json.Unmarshal([]byte(dnssecJSON), &dnssecKeys); err != nil {
 		return tc.DNSSECKeysTrafficVault{}, false, errors.New("unmarshalling DNSSEC keys: " + err.Error())
@@ -286,7 +310,13 @@ func (p *Postgres) PutDNSSECKeys(cdnName string, keys tc.DNSSECKeysTrafficVault,
 		e := checkErrWithContext("Traffic Vault PostgreSQL: executing DELETE DNSSEC keys query prior to INSERT", err, ctx.Err())
 		return e
 	}
-	res, err := tvTx.Exec("INSERT INTO dnssec (cdn, data) VALUES ($1, $2)", cdnName, dnssecJSON)
+
+	encryptedKey, err := aesEncrypt(dnssecJSON, p.aesKey)
+	if err != nil {
+		return errors.New("encrypting keys: " + err.Error())
+	}
+
+	res, err := tvTx.Exec("INSERT INTO dnssec (cdn, data) VALUES ($1, $2)", cdnName, encryptedKey)
 	if err != nil {
 		e := checkErrWithContext("Traffic Vault PostgreSQL: executing INSERT DNSSEC keys query", err, ctx.Err())
 		return e
@@ -348,7 +378,7 @@ func (p *Postgres) GetURISigningKeys(xmlID string, tx *sql.Tx, ctx context.Conte
 		return []byte{}, false, err
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
-	return getURISigningKeys(xmlID, tvTx, ctx)
+	return getURISigningKeys(xmlID, tvTx, ctx, p.aesKey)
 }
 
 func (p *Postgres) PutURISigningKeys(xmlID string, keysJson []byte, tx *sql.Tx, ctx context.Context) error {
@@ -358,7 +388,7 @@ func (p *Postgres) PutURISigningKeys(xmlID string, keysJson []byte, tx *sql.Tx, 
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
 
-	return putURISigningKeys(xmlID, tvTx, keysJson, ctx)
+	return putURISigningKeys(xmlID, tvTx, keysJson, ctx, p.aesKey)
 }
 
 func (p *Postgres) DeleteURISigningKeys(xmlID string, tx *sql.Tx, ctx context.Context) error {
