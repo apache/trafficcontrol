@@ -18,35 +18,6 @@
  */
 
 export const users = {
-    setup: [
-        {
-            action: "CreateUser",
-            route : "/users/new",
-            method: "post",
-            data: [
-                {
-                    username: "User1",
-                    fullName: "New User",
-                    email: "test@cdn.trafficcontrol.com",
-                    localPasswd: "qwe@123#rty",
-                    roleName: 1,
-                    tenantId: 1
-                }
-            ]
-        },
-        {
-            action: "CreateRegisteredUser",
-            route : "/users/new",
-            method: "post",
-            data: [
-                {
-                    email: "test1@cdn.trafficcontrol.com",
-                    roleName: 1,
-                    tenantId: 1
-                }
-            ]
-        }
-    ],
     tests: [
         {
             logins: [
@@ -68,33 +39,34 @@ export const users = {
                     FullName: "TPCreateUser1",
                     Username: "User1",
                     Email: "test@cdn.tc.com",
-                    Role: 1,
-                    Tenant: 1,
+                    Role: "admin",
+                    Tenant: "- root",
                     Password: "qwe@123#rty",
                     ConfirmPassword: "qwe@123#rty",
-                    validationMessage: "User created."
+                    PublicSSHKey: "",
+                    validationMessage: "User created"
                 },
-                {
-                    description: "create a registered User",
-                    Email: "test1@cdn.tc.com",
-                    Role: 1,
-                    Tenant: 1,
-                    validationMessage: "Registered User created."
-                }
+                // {
+                //     description: "create a registered User",
+                //     Email: "test1@cdn.tc.com",
+                //     Role: 1,
+                //     Tenant: 1,
+                //     validationMessage: "Registered User created."
+                // }
             ],
             update: [
                 {
                     description: "update the new User",
-                    FullName: "TPCreateUser1",
+                    Username: "User1",
                     NewFullName: "TPUpdatedUser1`",
-                    validationMessage: "User updated."
+                    validationMessage: "user was updated."
                 },
-                {
-                    description: "update the registered User",
-                    Email: "test1@cdn.tc.com",
-                    FullName: "TPCreateUser2",
-                    validationMessage: "Registered User updated."
-                }
+                // {
+                //     description: "update the registered User",
+                //     Email: "test1@cdn.tc.com",
+                //     FullName: "TPCreateUser2",
+                //     validationMessage: "Registered User updated."
+                // }
             ],
         },
     ]

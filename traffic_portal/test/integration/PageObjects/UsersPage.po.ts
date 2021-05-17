@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { by, element } from 'protractor';
+import { browser, by, element } from 'protractor';
 
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
@@ -35,10 +35,16 @@ interface User {
   validationMessage?: string;
 }
 
-export class UsersPage extends BasePage {
+interface UpdateUser {
+    Username: string;
+    description: string;
+    NewFullName: string;
+    validationMessage?: string;
+}
 
-    private btnCreateNewUser = element(by.css('[title="Create New User"]'));
-    private btnRegisterNewUser = element(by.css('[title="Register New User"]'));
+export class UsersPage extends BasePage {
+    private btnCreateNewUser = element(by.name('createUserButton'));
+    // private btnRegisterNewUser = element(by.css('[title="Register New User"]'));
     private txtFullName = element(by.name('fullName'));
     private txtUserName = element(by.name('uName'));
     private txtEmail = element(by.name('email'));
@@ -47,6 +53,8 @@ export class UsersPage extends BasePage {
     private txtPassword = element(by.name('uPass'));
     private txtConfirmPassword = element(by.name('confirmPassword'));
     private txtPublicSSHKey = element(by.name('publicSshKey'));
+    private txtSearch = element(by.id('usersTable_filter')).element(by.css('label input'));
+    private txtDescription = element(by.xpath("//textarea[@name='description']"))
     private randomize = randomize;
 
     async OpenUserPage(){
@@ -54,6 +62,15 @@ export class UsersPage extends BasePage {
       await snp.ClickUserAdminMenu();
       await snp.NavigateToUsersPage();
      }
+
+    public async CheckCSV(name:string): Promise<boolean> {
+        let result = false;
+        let linkName = name;
+        if (await browser.isElementPresent(element(by.xpath("//span[text()='" + linkName + "']"))) == true) {
+            result = true;
+        }
+        return result;
+    }
 
     public async CreateUser(user: User): Promise<boolean> {
       let result = false;
@@ -80,12 +97,34 @@ export class UsersPage extends BasePage {
       return result;
     }
 
-    public async UpdateUser(user: User): Promise<boolean> {}
+    public async SearchUser(nameUser: string) {
+        let snp = new SideNavigationPage();
+        let name = nameUser + this.randomize;
+        await snp.NavigateToUsersPage();
+        await this.txtSearch.clear();
+        await this.txtSearch.sendKeys(name);
+        await element.all(by.repeater('u in ::users')).filter(function (row) {
+            return row.element(by.name('name')).getText().then(function (val) {
+                return val === name;
+            });
+        }).first().click();
+    }
 
-    public async RegisterUser(user: User): Promise<boolean> {}
+    public async UpdateUser(user: UpdateUser): Promise<boolean  | undefined> {
+        let basePage = new BasePage();
+        switch(user.Username){
+            case "update user's fullname":
+                await this.txtDescription.clear();
+                await this.txtDescription.sendKeys(user.NewFullName);
+                await basePage.ClickUpdate();
+                break;
+            default:
+                return undefined;
+        }
+        return await basePage.GetOutputMessage().then(value => user.validationMessage === value);
+    }
 
-    public async UpdateRegisterUser(user: User): Promise<boolean> {}
+    // public async RegisterUser(user: User): Promise<boolean> {}
 
-    public async UpdateUser(user: User): Promise<boolean> {}
-
+    // public async UpdateRegisterUser(user: User): Promise<boolean> {}
   }

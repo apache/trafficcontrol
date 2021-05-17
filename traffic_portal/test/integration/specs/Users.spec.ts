@@ -18,19 +18,51 @@
  */
 
 import { browser } from 'protractor';
+
 import { LoginPage } from '../PageObjects/LoginPage.po';
-import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-import { API } from '../CommonUtils/API';
 import {UsersPage} from '../PageObjects/UsersPage.po';
-import {regions, users} from "../Data";
+import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
+// import { API } from '../CommonUtils/API';
+import { users } from "../Data/users";
 
 
-const api = new API();
+// const api = new API();
 const loginPage = new LoginPage();
-const newUserPage = new UsersPage();
+const topNavigation = new TopNavigationPage();
+const usersPage = new UsersPage();
 
-describe('Setup API for Users Test', () => {
-    it('Setup', async () => {
-        await api.UseAPI(regions.setup);
+users.tests.forEach(async usersData =>{
+    usersData.logins.forEach(login => {
+        describe('Traffic Portal - Users - ' + login.description, function(){
+            it('can login', async () => {
+                browser.get(browser.params.baseUrl);
+                await loginPage.Login(login);
+                expect(await loginPage.CheckUserName(login)).toBeTruthy();
+            });
+            it('can open users page', async () => {
+                await usersPage.OpenUserPage();
+            });
+            usersData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await usersPage.CheckCSV(check.Name)).toBe(true);
+                    await usersPage.OpenUserPage();
+                });
+            });
+            usersData.add.forEach(add => {
+                it(add.description, async () => {
+                    expect(await usersPage.CreateUser(add)).toBeTruthy();
+                    await usersPage.OpenUserPage();
+                });
+            });
+            usersData.update.forEach(update => {
+                it(update.description, async () => {
+                    await usersPage.SearchUser(update.Username);
+                    expect(await usersPage.UpdateUser(update)).toBeTruthy();
+                });
+            });
+            it('can logout', async () => {
+                expect(await topNavigation.Logout()).toBeTruthy();
+            });
+        });
     });
 });
