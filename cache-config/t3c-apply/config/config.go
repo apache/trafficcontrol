@@ -23,14 +23,16 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/pborman/getopt/v2"
 	"net/url"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-log"
+
+	"github.com/pborman/getopt/v2"
 )
 
 var TSHome string = "/opt/trafficserver"
