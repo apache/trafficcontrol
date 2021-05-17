@@ -19,10 +19,29 @@ package client
 import (
 	"net"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
+
+// RequestOptions is the set of options commonly available to pass to methods
+// of a Session.
+type RequestOptions struct {
+	// Any and all extra HTTP headers to pass in the request.
+	Header http.Header
+	// Any and all query parameters to pass in the request.
+	QueryParameters url.Values
+}
+
+// NewRequestOptions returns a RequestOptions object with initialized, empty Header
+// and QueryParameters.
+func NewRequestOptions() RequestOptions {
+	return RequestOptions{
+		Header:          http.Header{},
+		QueryParameters: url.Values{},
+	}
+}
 
 // Login authenticates with Traffic Ops and returns the client object.
 //
@@ -105,18 +124,25 @@ func NewNoAuthSession(toURL string, insecure bool, userAgent string, useCache bo
 	return &Session{TOClient: *toclientlib.NewNoAuthClient(toURL, insecure, userAgent, requestTimeout, apiVersions())}
 }
 
-func (to *Session) get(path string, header http.Header, response interface{}) (toclientlib.ReqInf, error) {
-	return to.TOClient.Req(http.MethodGet, path, nil, header, response)
+func (to *Session) get(path string, opts RequestOptions, response interface{}) (toclientlib.ReqInf, error) {
+	return to.req(http.MethodGet, path, opts, nil, response)
 }
 
-func (to *Session) post(path string, body interface{}, header http.Header, response interface{}) (toclientlib.ReqInf, error) {
-	return to.TOClient.Req(http.MethodPost, path, body, header, response)
+func (to *Session) post(path string, opts RequestOptions, body, response interface{}) (toclientlib.ReqInf, error) {
+	return to.req(http.MethodPost, path, opts, body, response)
 }
 
-func (to *Session) put(path string, body interface{}, header http.Header, response interface{}) (toclientlib.ReqInf, error) {
-	return to.TOClient.Req(http.MethodPut, path, body, header, response)
+func (to *Session) put(path string, opts RequestOptions, body, response interface{}) (toclientlib.ReqInf, error) {
+	return to.req(http.MethodPut, path, opts, body, response)
 }
 
-func (to *Session) del(path string, header http.Header, response interface{}) (toclientlib.ReqInf, error) {
-	return to.TOClient.Req(http.MethodDelete, path, nil, header, response)
+func (to *Session) del(path string, opts RequestOptions, response interface{}) (toclientlib.ReqInf, error) {
+	return to.req(http.MethodDelete, path, opts, nil, response)
+}
+
+func (to *Session) req(method, path string, opts RequestOptions, body, response interface{}) (toclientlib.ReqInf, error) {
+	if len(opts.QueryParameters) > 0 {
+		path += "?" + opts.QueryParameters.Encode()
+	}
+	return to.TOClient.Req(method, path, body, opts.Header, response)
 }

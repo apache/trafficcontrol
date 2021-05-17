@@ -20,22 +20,29 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-// GetFederationFederationResolversByID retrieves all Federation Resolvers belonging to Federation of ID.
-func (to *Session) GetFederationFederationResolversByID(id int) (tc.FederationFederationResolversResponse, toclientlib.ReqInf, error) {
+// GetFederationFederationResolvers retrieves all Federation Resolvers belonging to Federation of ID.
+func (to *Session) GetFederationFederationResolvers(id int, opts RequestOptions) (tc.FederationFederationResolversResponse, toclientlib.ReqInf, error) {
 	path := fmt.Sprintf("/federations/%d/federation_resolvers", id)
-	resp := tc.FederationFederationResolversResponse{}
-	reqInf, err := to.get(path, nil, &resp)
+	var resp tc.FederationFederationResolversResponse
+	reqInf, err := to.get(path, opts, &resp)
 	return resp, reqInf, err
 }
 
-// AssignFederationFederationResolver creates the Federation Resolver 'fr'.
-func (to *Session) AssignFederationFederationResolver(fedID int, resolverIDs []int, replace bool) (tc.AssignFederationFederationResolversResponse, toclientlib.ReqInf, error) {
+// AssignFederationFederationResolver assigns the resolvers identified in
+// resolverIDs to the Federation identified by fedID. If replace is true, this
+// will overwrite any and all existing resolvers assigned to the Federation.
+func (to *Session) AssignFederationFederationResolver(
+	fedID int,
+	resolverIDs []int,
+	replace bool,
+	opts RequestOptions,
+) (tc.AssignFederationFederationResolversResponse, toclientlib.ReqInf, error) {
 	path := fmt.Sprintf("/federations/%d/federation_resolvers", fedID)
 	req := tc.AssignFederationResolversRequest{
 		Replace:        replace,
 		FedResolverIDs: resolverIDs,
 	}
 	resp := tc.AssignFederationFederationResolversResponse{}
-	reqInf, err := to.post(path, req, nil, &resp)
+	reqInf, err := to.post(path, opts, req, &resp)
 	return resp, reqInf, err
 }

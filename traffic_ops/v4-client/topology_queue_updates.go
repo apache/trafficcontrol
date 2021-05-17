@@ -1,3 +1,5 @@
+package client
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,19 +19,18 @@
  * under the License.
  */
 
-package client
-
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 // TopologiesQueueUpdate queues updates for the Topology with the given Name.
-func (to *Session) TopologiesQueueUpdate(topologyName tc.TopologyName, req tc.TopologiesQueueUpdateRequest) (tc.TopologiesQueueUpdateResponse, toclientlib.ReqInf, error) {
-	path := fmt.Sprintf(APITopologies+"/%s/queue_update", topologyName)
+func (to *Session) TopologiesQueueUpdate(topologyName string, req tc.TopologiesQueueUpdateRequest, opts RequestOptions) (tc.TopologiesQueueUpdateResponse, toclientlib.ReqInf, error) {
+	path := fmt.Sprintf(apiTopologies+"/%s/queue_update", url.PathEscape(topologyName))
 	var resp tc.TopologiesQueueUpdateResponse
-	reqInf, err := to.post(path, req, nil, &resp)
+	reqInf, err := to.post(path, opts, req, &resp)
 	return resp, reqInf, err
 }

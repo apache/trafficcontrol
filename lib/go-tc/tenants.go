@@ -19,16 +19,17 @@ package tc
  * under the License.
  */
 
-// GetTenantsResponse is the response for a request for a group of tenants
+// GetTenantsResponse is the response for a request for a group of tenants.
 type GetTenantsResponse struct {
 	Response []Tenant `json:"response"`
 	Alerts
 }
 
-// TenantResponse is the response to a create/update
+// TenantResponse is the type of a response from Traffic Ops to a PUT, POST,
+// or DELETE request made to its /tenants.
 type TenantResponse struct {
-	Response Tenant        `json:"response"`
-	Alerts   []TenantAlert `json:"alerts"`
+	Response Tenant `json:"response"`
+	Alerts
 }
 
 // Tenant ...

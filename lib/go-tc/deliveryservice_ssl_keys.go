@@ -32,6 +32,13 @@ const (
 	LetsEncryptAuthType              = "Lets Encrypt"
 )
 
+// SSLKeysAddResponse is a struct to store the response of addition of ssl keys for a DS,
+// along with any alert messages
+type SSLKeysAddResponse struct {
+	Response string `json:"response"`
+	Alerts
+}
+
 // DeliveryServiceSSLKeysResponse ...
 type DeliveryServiceSSLKeysResponse struct {
 	Response DeliveryServiceSSLKeys `json:"response"`
@@ -82,6 +89,13 @@ type DeliveryServiceSSLKeysReq struct {
 	Key         *string                            `json:"key"`
 	Version     *util.JSONIntStr                   `json:"version"`
 	Certificate *DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
+}
+
+// DeliveryServiceSSLKeysGenerationResponse is the type of a response from
+// Traffic Ops to a request for generation of SSL Keys for a Delivery Service.
+type DeliveryServiceSSLKeysGenerationResponse struct {
+	Response string `json:"response"`
+	Alerts
 }
 
 // DeliveryServiceSSLKeysCertificate ...
@@ -231,6 +245,13 @@ type TrafficVaultPingResponse struct {
 }
 
 type URLSigKeys map[string]string
+
+// URLSignatureKeysResponse is the type of a response from Traffic Ops to a request
+// for the URL Signing keys of a Delivery Service - in API version 4.0.
+type URLSignatureKeysResponse struct {
+	Response URLSigKeys `json:"response"`
+	Alerts
+}
 
 type CDNSSLKeysResp []CDNSSLKey
 

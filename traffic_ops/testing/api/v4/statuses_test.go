@@ -18,11 +18,12 @@ package v4
 import (
 	"net/http"
 	"sort"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestStatuses(t *testing.T) {
@@ -47,56 +48,70 @@ func TestStatuses(t *testing.T) {
 }
 
 func UpdateTestStatusesWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.Statuses) > 0 {
-		firstStatus := testData.Statuses[0]
-		if firstStatus.Name == nil {
-			t.Fatal("cannot update test statuses: first test data status must have a name")
-		}
+	if len(testData.Statuses) < 1 {
+		t.Fatal("Need at least one Status to test updating a status with an HTTP header")
+	}
 
-		// Retrieve the Status by name so we can get the id for the Update
-		resp, _, err := TOSession.GetStatusByName(*firstStatus.Name, header)
-		if err != nil {
-			t.Errorf("cannot GET Status by name: %v - %v", firstStatus.Name, err)
+	firstStatus := testData.Statuses[0]
+	if firstStatus.Name == nil {
+		t.Fatal("cannot update test statuses: first test data status must have a name")
+	}
+
+	// Retrieve the Status by name so we can get the id for the Update
+	opts := client.NewRequestOptions()
+	opts.Header = header
+	opts.QueryParameters.Set("name", *firstStatus.Name)
+	resp, _, err := TOSession.GetStatuses(opts)
+	if err != nil {
+		t.Errorf("cannot get Status by name '%s': %v - alerts %+v", *firstStatus.Name, err, resp.Alerts)
+	}
+	if len(resp.Response) > 0 {
+		remoteStatus := resp.Response[0]
+		expectedStatusDesc := "new description"
+		remoteStatus.Description = expectedStatusDesc
+
+		opts.QueryParameters.Del("name")
+		_, reqInf, err := TOSession.UpdateStatus(remoteStatus.ID, remoteStatus, opts)
+		if err == nil {
+			t.Errorf("Expected error about precondition failed, but got none")
 		}
-		if len(resp) > 0 {
-			remoteStatus := resp[0]
-			expectedStatusDesc := "new description"
-			remoteStatus.Description = expectedStatusDesc
-			_, reqInf, err := TOSession.UpdateStatus(remoteStatus.ID, remoteStatus, header)
-			if err == nil {
-				t.Errorf("Expected error about precondition failed, but got none")
-			}
-			if reqInf.StatusCode != http.StatusPreconditionFailed {
-				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-			}
+		if reqInf.StatusCode != http.StatusPreconditionFailed {
+			t.Errorf("Expected status code 412, got %d", reqInf.StatusCode)
 		}
 	}
 }
 
 func GetTestStatusesIMSAfterChange(t *testing.T, header http.Header) {
+	opts := client.NewRequestOptions()
+	opts.Header = header
 	for _, status := range testData.Statuses {
 		if status.Name == nil {
 			t.Fatal("cannot get ftest statuses: test data statuses must have names")
 		}
-		_, reqInf, err := TOSession.GetStatusByName(*status.Name, header)
+
+		opts.QueryParameters.Set("name", *status.Name)
+		resp, reqInf, err := TOSession.GetStatuses(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusOK {
 			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
 		}
 	}
+
 	currentTime := time.Now().UTC()
 	currentTime = currentTime.Add(1 * time.Second)
 	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
+	opts.Header.Set(rfc.IfModifiedSince, timeStr)
+
 	for _, status := range testData.Statuses {
 		if status.Name == nil {
 			t.Fatal("cannot get ftest statuses: test data statuses must have names")
 		}
-		_, reqInf, err := TOSession.GetStatusByName(*status.Name, header)
+		opts.QueryParameters.Set("name", *status.Name)
+		resp, reqInf, err := TOSession.GetStatuses(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -105,18 +120,20 @@ func GetTestStatusesIMSAfterChange(t *testing.T, header http.Header) {
 }
 
 func GetTestStatusesIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
+
+	opts := client.NewRequestOptions()
+	opts.Header.Set(rfc.IfModifiedSince, time)
+
 	for _, status := range testData.Statuses {
 		if status.Name == nil {
-			t.Fatal("cannot get ftest statuses: test data statuses must have names")
+			t.Fatal("cannot get test Statuses: test data Statuses must have names")
 		}
-		_, reqInf, err := TOSession.GetStatusByName(*status.Name, header)
+		opts.QueryParameters.Set("name", *status.Name)
+		resp, reqInf, err := TOSession.GetStatuses(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -125,63 +142,70 @@ func GetTestStatusesIMS(t *testing.T) {
 }
 
 func CreateTestStatuses(t *testing.T) {
-
 	for _, status := range testData.Statuses {
-		resp, _, err := TOSession.CreateStatus(status)
-		t.Log("Response: ", resp)
+		resp, _, err := TOSession.CreateStatus(status, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not CREATE types: %v", err)
+			t.Errorf("could not create Status: %v - alerts: %+v", err, resp.Alerts)
 		}
 	}
 
 }
 
 func SortTestStatuses(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetStatuses(header)
+	resp, _, err := TOSession.GetStatuses(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	for i := range resp {
-		sortedList = append(sortedList, resp[i].Name)
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
+	sortedList := make([]string, 0, len(resp.Response))
+	for _, status := range resp.Response {
+		sortedList = append(sortedList, status.Name)
+	}
+
+	if !sort.StringsAreSorted(sortedList) {
 		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 
 func UpdateTestStatuses(t *testing.T) {
-
+	if len(testData.Statuses) < 1 {
+		t.Fatal("Need at least one Status to test updating a Status")
+	}
 	firstStatus := testData.Statuses[0]
 	if firstStatus.Name == nil {
 		t.Fatal("cannot update test statuses: first test data status must have a name")
 	}
 
 	// Retrieve the Status by name so we can get the id for the Update
-	resp, _, err := TOSession.GetStatusByName(*firstStatus.Name, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", *firstStatus.Name)
+	resp, _, err := TOSession.GetStatuses(opts)
 	if err != nil {
-		t.Errorf("cannot GET Status by name: %v - %v", firstStatus.Name, err)
+		t.Errorf("cannot get Status by name '%s': %v - alerts: %+v", *firstStatus.Name, err, resp.Alerts)
 	}
-	remoteStatus := resp[0]
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Status to exist with name '%s', found: %d", *firstStatus.Name, len(resp.Response))
+	}
+	remoteStatus := resp.Response[0]
 	expectedStatusDesc := "new description"
 	remoteStatus.Description = expectedStatusDesc
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateStatus(remoteStatus.ID, remoteStatus, nil)
+
+	alert, _, err := TOSession.UpdateStatus(remoteStatus.ID, remoteStatus, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot UPDATE Status by id: %v - %v", err, alert)
+		t.Errorf("cannot update Status: %v - alerts: %+v", err, alert.Alerts)
 	}
 
 	// Retrieve the Status to check Status name got updated
-	resp, _, err = TOSession.GetStatusByID(remoteStatus.ID, nil)
+	opts.QueryParameters.Del("name")
+	opts.QueryParameters.Set("id", strconv.Itoa(remoteStatus.ID))
+	resp, _, err = TOSession.GetStatuses(opts)
 	if err != nil {
-		t.Errorf("cannot GET Status by ID: %v - %v", firstStatus.Description, err)
+		t.Errorf("cannot get Status '%s' by ID %d: %v - alerts: %+v", *firstStatus.Name, remoteStatus.ID, err, resp.Alerts)
 	}
-	respStatus := resp[0]
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Status to exist with ID %d, found: %d", remoteStatus.ID, len(resp.Response))
+	}
+	respStatus := resp.Response[0]
 	if respStatus.Description != expectedStatusDesc {
 		t.Errorf("results do not match actual: %s, expected: %s", respStatus.Name, expectedStatusDesc)
 	}
@@ -189,44 +213,46 @@ func UpdateTestStatuses(t *testing.T) {
 }
 
 func GetTestStatuses(t *testing.T) {
-
+	opts := client.NewRequestOptions()
 	for _, status := range testData.Statuses {
 		if status.Name == nil {
 			t.Fatal("cannot get ftest statuses: test data statuses must have names")
 		}
-		resp, _, err := TOSession.GetStatusByName(*status.Name, nil)
+		opts.QueryParameters.Set("name", *status.Name)
+		resp, _, err := TOSession.GetStatuses(opts)
 		if err != nil {
-			t.Errorf("cannot GET Status by name: %v - %v", err, resp)
+			t.Errorf("cannot get Status by name: %v - alerts: %+v", err, resp.Alerts)
 		}
 	}
 }
 
 func DeleteTestStatuses(t *testing.T) {
-
+	opts := client.NewRequestOptions()
 	for _, status := range testData.Statuses {
 		if status.Name == nil {
-			t.Fatal("cannot get ftest statuses: test data statuses must have names")
+			t.Fatal("cannot get test statuses: test data statuses must have names")
 		}
 
 		// Retrieve the Status by name so we can get the id for the Update
-		resp, _, err := TOSession.GetStatusByName(*status.Name, nil)
+		opts.QueryParameters.Set("name", *status.Name)
+		resp, _, err := TOSession.GetStatuses(opts)
 		if err != nil {
-			t.Errorf("cannot GET Status by name: %v - %v", status.Name, err)
+			t.Errorf("cannot get Statuses filtered by name '%s': %v - alerts: %+v", *status.Name, err, resp.Alerts)
 		}
-		respStatus := resp[0]
+		respStatus := resp.Response[0]
 
-		delResp, _, err := TOSession.DeleteStatus(respStatus.ID)
+		delResp, _, err := TOSession.DeleteStatus(respStatus.ID, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("cannot DELETE Status by name: %v - %v", err, delResp)
+			t.Errorf("cannot delete Status: %v - alerts: %+v", err, delResp.Alerts)
 		}
 
 		// Retrieve the Status to see if it got deleted
-		types, _, err := TOSession.GetStatusByName(*status.Name, nil)
+		resp, _, err = TOSession.GetStatuses(opts)
 		if err != nil {
-			t.Errorf("error deleting Status name: %s", err.Error())
+			t.Errorf("Unexpected error getting Statuses filtered by name after deletion: %v - alerts: %+v", err, resp.Alerts)
 		}
-		if len(types) > 0 {
-			t.Errorf("expected Status name: %s to be deleted", *status.Name)
+		if len(resp.Response) > 0 {
+			t.Errorf("expected Status '%s' to be deleted, but it was found in Traffic Ops", *status.Name)
 		}
 	}
 }

@@ -64,6 +64,24 @@ func TestMakeRegexRevalidateDotConfig(t *testing.T) {
 			Parameters:      "TTL:14h",
 			Keyword:         JobKeywordPurge,
 		},
+		tc.Job{
+			AssetURL:        "refetchasset##REFETCH##",
+			StartTime:       time.Now().Add(24 * time.Hour).Format(tc.JobTimeFormat),
+			DeliveryService: "myds",
+			CreatedBy:       "want_refetch",
+			ID:              42,
+			Parameters:      "TTL:24h",
+			Keyword:         JobKeywordPurge,
+		},
+		tc.Job{
+			AssetURL:        "refreshasset##REFRESH##",
+			StartTime:       time.Now().Add(24 * time.Hour).Format(tc.JobTimeFormat),
+			DeliveryService: "myds",
+			CreatedBy:       "want_refresh",
+			ID:              42,
+			Parameters:      "TTL:24h",
+			Keyword:         JobKeywordPurge,
+		},
 	}
 
 	cfg, err := MakeRegexRevalidateDotConfig(server, dses, params, jobs, hdr)
@@ -80,5 +98,11 @@ func TestMakeRegexRevalidateDotConfig(t *testing.T) {
 	}
 	if strings.Contains(txt, "expired") {
 		t.Errorf("expected no expired job, actual '%v'", txt)
+	}
+	if strings.Contains(txt, "##REFETCH##") || !strings.Contains(txt, "MISS") {
+		t.Errorf("##REFETCH## directive not properly handled '%v'", txt)
+	}
+	if strings.Contains(txt, "##REFRESH##") || !strings.Contains(txt, "STALE") {
+		t.Errorf("##REFRESH## directive not properly handled '%v'", txt)
 	}
 }

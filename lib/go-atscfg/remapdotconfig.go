@@ -40,7 +40,7 @@ const RemapConfigRangeDirective = `__RANGE_DIRECTIVE__`
 func MakeRemapDotConfig(
 	server *Server,
 	unfilteredDSes []DeliveryService,
-	dss []tc.DeliveryServiceServer,
+	dss []DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
 	serverParams []tc.Parameter,
 	cdn *tc.CDN,
@@ -233,33 +233,39 @@ func getServerConfigRemapDotConfigForEdge(
 	textLines := []string{}
 
 	for _, ds := range dses {
-		for _, dsRegex := range dsRegexes[tc.DeliveryServiceName(*ds.XMLID)] {
-			if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
+		if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
+			continue
+		}
+
+		topology, hasTopology := nameTopologies[TopologyName(*ds.Topology)]
+		if *ds.Topology != "" && hasTopology {
+			topoIncludesServer, err := topologyIncludesServerNullable(topology, server)
+			if err != nil {
+				return "", warnings, errors.New("getting topology server inclusion: " + err.Error())
+			}
+			if !topoIncludesServer {
 				continue
 			}
-
-			topology, hasTopology := nameTopologies[TopologyName(*ds.Topology)]
-			if *ds.Topology != "" && hasTopology {
-				topoIncludesServer, err := topologyIncludesServerNullable(topology, server)
-				if err != nil {
-					return "", warnings, errors.New("getting topology server inclusion: " + err.Error())
-				}
-				if !topoIncludesServer {
-					continue
-				}
-			}
-			remapText := ""
-			if *ds.Type == tc.DSTypeAnyMap {
-				if ds.RemapText == nil {
-					warnings = append(warnings, "ds '"+*ds.XMLID+"' is ANY_MAP, but has no remap text - skipping")
-					continue
-				}
-				remapText = *ds.RemapText + "\n"
-				textLines = append(textLines, remapText)
+		}
+		remapText := ""
+		if *ds.Type == tc.DSTypeAnyMap {
+			if ds.RemapText == nil {
+				warnings = append(warnings, "ds '"+*ds.XMLID+"' is ANY_MAP, but has no remap text - skipping")
 				continue
 			}
+			remapText = *ds.RemapText + "\n"
+			textLines = append(textLines, remapText)
+			continue
+		}
 
-			remapLines, err := makeEdgeDSDataRemapLines(ds, dsRegex, server, cdnDomain)
+		requestFQDNs, err := getDSRequestFQDNs(&ds, dsRegexes[tc.DeliveryServiceName(*ds.XMLID)], server, cdnDomain)
+		if err != nil {
+			warnings = append(warnings, "error getting ds '"+*ds.XMLID+"' request fqdns, skipping! Error: "+err.Error())
+			continue
+		}
+
+		for _, requestFQDN := range requestFQDNs {
+			remapLines, err := makeEdgeDSDataRemapLines(ds, requestFQDN, server, cdnDomain)
 			if err != nil {
 				warnings = append(warnings, "DS '"+*ds.XMLID+"' - skipping! : "+err.Error())
 				continue
@@ -271,7 +277,7 @@ func getServerConfigRemapDotConfigForEdge(
 					profilecacheKeyConfigParams = profilesCacheKeyConfigParams[*ds.ProfileID]
 				}
 				remapWarns := []string{}
-				remapText, remapWarns, err = buildEdgeRemapLine(cacheURLConfigParams, atsMajorVersion, server, serverPackageParamData, remapText, ds, dsRegex, line.From, line.To, profilecacheKeyConfigParams, cacheGroups, nameTopologies)
+				remapText, remapWarns, err = buildEdgeRemapLine(cacheURLConfigParams, atsMajorVersion, server, serverPackageParamData, remapText, ds, line.From, line.To, profilecacheKeyConfigParams, cacheGroups, nameTopologies)
 				warnings = append(warnings, remapWarns...)
 				if err != nil {
 					return "", warnings, err
@@ -281,8 +287,8 @@ func getServerConfigRemapDotConfigForEdge(
 				}
 				remapText += "\n"
 			}
-			textLines = append(textLines, remapText)
 		}
+		textLines = append(textLines, remapText)
 	}
 
 	text := header
@@ -301,7 +307,6 @@ func buildEdgeRemapLine(
 	pData map[string]string,
 	text string,
 	ds DeliveryService,
-	dsRegex tc.DeliveryServiceRegex,
 	mapFrom string,
 	mapTo string,
 	cacheKeyConfigParams map[string]string,
@@ -441,55 +446,30 @@ type remapLine struct {
 // Returns nil, if the given server and ds have no remap lines, i.e. the DS match is not a host regex, or has no origin FQDN.
 func makeEdgeDSDataRemapLines(
 	ds DeliveryService,
-	dsRegex tc.DeliveryServiceRegex,
+	requestFQDN string,
+	//	dsRegex tc.DeliveryServiceRegex,
 	server *Server,
 	cdnDomain string,
 ) ([]remapLine, error) {
-	if tc.DSMatchType(dsRegex.Type) != tc.DSMatchTypeHostRegex || ds.OrgServerFQDN == nil || *ds.OrgServerFQDN == "" {
-		return nil, nil
-	}
-	if dsRegex.Pattern == "" {
-		return nil, errors.New("ds missing regex pattern")
-	}
 	if ds.Protocol == nil {
-		return nil, errors.New("ds missing protocol")
-	}
-	if cdnDomain == "" {
-		return nil, errors.New("ds missing domain")
+		return nil, errors.New("ds had nil protocol")
 	}
 
 	remapLines := []remapLine{}
-	hostRegex := dsRegex.Pattern
 	mapTo := *ds.OrgServerFQDN + "/"
 
-	mapFromHTTP := "http://" + hostRegex + "/"
-	mapFromHTTPS := "https://" + hostRegex + "/"
-	if strings.HasSuffix(hostRegex, `.*`) {
-		re := hostRegex
-		re = strings.Replace(re, `\`, ``, -1)
-		re = strings.Replace(re, `.*`, ``, -1)
-
-		hName := "__http__"
-		if ds.Type.IsDNS() {
-			if ds.RoutingName == nil {
-				return nil, errors.New("ds is dns, but missing routing name")
-			}
-			hName = *ds.RoutingName
-		}
-
-		portStr := ""
-		if hName == "__http__" && server.TCPPort != nil && *server.TCPPort > 0 && *server.TCPPort != 80 {
-			portStr = ":" + strconv.Itoa(*server.TCPPort)
-		}
-
-		httpsPortStr := ""
-		if hName == "__http__" && server.HTTPSPort != nil && *server.HTTPSPort > 0 && *server.HTTPSPort != 443 {
-			httpsPortStr = ":" + strconv.Itoa(*server.HTTPSPort)
-		}
-
-		mapFromHTTP = "http://" + hName + re + cdnDomain + portStr + "/"
-		mapFromHTTPS = "https://" + hName + re + cdnDomain + httpsPortStr + "/"
+	portStr := ""
+	if !ds.Type.IsDNS() && server.TCPPort != nil && *server.TCPPort > 0 && *server.TCPPort != 80 {
+		portStr = ":" + strconv.Itoa(*server.TCPPort)
 	}
+
+	httpsPortStr := ""
+	if !ds.Type.IsDNS() && server.HTTPSPort != nil && *server.HTTPSPort > 0 && *server.HTTPSPort != 443 {
+		httpsPortStr = ":" + strconv.Itoa(*server.HTTPSPort)
+	}
+
+	mapFromHTTP := "http://" + requestFQDN + portStr + "/"
+	mapFromHTTPS := "https://" + requestFQDN + httpsPortStr + "/"
 
 	if *ds.Protocol == tc.DSProtocolHTTP || *ds.Protocol == tc.DSProtocolHTTPAndHTTPS {
 		remapLines = append(remapLines, remapLine{From: mapFromHTTP, To: mapTo})
@@ -559,7 +539,7 @@ func makeServerPackageParamData(server *Server, serverParams []tc.Parameter) (ma
 // Returned DSes are guaranteed to have a non-nil XMLID, Type, DSCP, ID, Active, and Topology.
 // If a DS has a nil Topology, OrgServerFQDN, FirstHeaderRewrite, InnerHeaderRewrite, or LastHeaderRewrite, "" is assigned.
 // Returns the filtered delivery services, and any warnings
-func remapFilterDSes(server *Server, dss []tc.DeliveryServiceServer, dses []DeliveryService, cacheKeyParams []tc.Parameter) ([]DeliveryService, []string) {
+func remapFilterDSes(server *Server, dss []DeliveryServiceServer, dses []DeliveryService, cacheKeyParams []tc.Parameter) ([]DeliveryService, []string) {
 	warnings := []string{}
 	isMid := strings.HasPrefix(server.Type, string(tc.CacheTypeMid))
 
@@ -582,13 +562,10 @@ func remapFilterDSes(server *Server, dss []tc.DeliveryServiceServer, dses []Deli
 
 	dssMap := map[int]map[int]struct{}{} // set of map[dsID][serverID]
 	for _, dss := range dsServers {
-		if dss.Server == nil || dss.DeliveryService == nil {
-			continue // TODO log?
+		if dssMap[dss.DeliveryService] == nil {
+			dssMap[dss.DeliveryService] = map[int]struct{}{}
 		}
-		if dssMap[*dss.DeliveryService] == nil {
-			dssMap[*dss.DeliveryService] = map[int]struct{}{}
-		}
-		dssMap[*dss.DeliveryService][*dss.Server] = struct{}{}
+		dssMap[dss.DeliveryService][dss.Server] = struct{}{}
 	}
 
 	useInactive := false
@@ -714,4 +691,48 @@ func (ks keyVals) Less(i, j int) bool {
 		return ks[i].Key < ks[j].Key
 	}
 	return ks[i].Val < ks[j].Val
+}
+
+// getDSRequestFQDNs returns the FQDNs that clients will request from the edge.
+func getDSRequestFQDNs(ds *DeliveryService, regexes []tc.DeliveryServiceRegex, server *Server, cdnDomain string) ([]string, error) {
+	if server.HostName == nil {
+		return nil, errors.New("server missing hostname")
+	}
+
+	fqdns := []string{}
+	for _, dsRegex := range regexes {
+		if tc.DSMatchType(dsRegex.Type) != tc.DSMatchTypeHostRegex || ds.OrgServerFQDN == nil || *ds.OrgServerFQDN == "" {
+			continue
+		}
+		if dsRegex.Pattern == "" {
+			return nil, errors.New("ds missing regex pattern")
+		}
+		if ds.Protocol == nil {
+			return nil, errors.New("ds missing protocol")
+		}
+		if cdnDomain == "" {
+			return nil, errors.New("ds missing domain")
+		}
+
+		hostRegex := dsRegex.Pattern
+		fqdn := hostRegex
+
+		if strings.HasSuffix(hostRegex, `.*`) {
+			re := hostRegex
+			re = strings.Replace(re, `\`, ``, -1)
+			re = strings.Replace(re, `.*`, ``, -1)
+
+			hName := *server.HostName
+			if ds.Type.IsDNS() {
+				if ds.RoutingName == nil {
+					return nil, errors.New("ds is dns, but missing routing name")
+				}
+				hName = *ds.RoutingName
+			}
+
+			fqdn = hName + re + cdnDomain
+		}
+		fqdns = append(fqdns, fqdn)
+	}
+	return fqdns, nil
 }
