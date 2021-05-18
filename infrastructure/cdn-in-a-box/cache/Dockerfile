@@ -105,7 +105,6 @@ ADD infrastructure/cdn-in-a-box/cache/run.sh infrastructure/cdn-in-a-box/traffic
 
 COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
      infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
-     infrastructure/cdn-in-a-box/cache/uname \
      /usr/local/sbin/
 # Copy systemctl.sh to /usr/bin specifically because t3c runs /bin/systemctl by absolute path
 COPY cache-config/testing/docker/ort_test/systemctl.sh /usr/bin/systemctl
