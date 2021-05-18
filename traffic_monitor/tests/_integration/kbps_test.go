@@ -16,6 +16,7 @@ package _integration
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 	"testing"
 	"time"
@@ -59,7 +60,7 @@ func TestKBPS(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error posting fake cache command '" + uri + "': " + err.Error())
 	}
-	resp.Body.Close()
+	log.Close(resp.Body, "Unable to close http client "+uri)
 
 	time.Sleep(time.Second * 5) // TODO determine if there's a faster or more precise way to wait for polled data?
 

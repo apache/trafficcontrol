@@ -36,11 +36,11 @@ func (t Time) MarshalJSON() ([]byte, error) {
 }
 
 func (t *Time) UnmarshalJSON(data []byte) error {
-	i, err := strconv.ParseInt(string(data), 10, 64)
+	unixTime, err := strconv.ParseInt(string(data), 10, 64)
 	if err != nil {
 		return errors.New("health.Time (" + string(data) + ") must be a unix epoch integer: " + err.Error())
 	}
-	*t = Time(time.Unix(i, 0))
+	*t = Time(time.Unix(unixTime, 0))
 	return nil
 }
 

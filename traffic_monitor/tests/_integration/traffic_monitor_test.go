@@ -16,7 +16,6 @@ package _integration
 */
 
 import (
-	// "database/sql"
 	"flag"
 	"fmt"
 	"net/http"

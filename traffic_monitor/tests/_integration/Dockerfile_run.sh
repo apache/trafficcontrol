@@ -148,7 +148,7 @@ EOF
 
 function wait_for_endpoint() {
   try=0
-  while curl -Lvsk "$1" 2>&1 1> /dev/null | grep -E '< HTTP/[0-9]\.?[0-9]* 200' >/dev/null && [[ $try -lt 5 ]]; do
+  while curl -Lvsk "$1" 2>&1 1>/dev/null | grep -Eq '< HTTP/[0-9]\.?[0-9]* 200' && [[ $try -lt 5 ]]; do
     if [[ $try -gt 0 ]]; then
       echo "Waiting for $1 to return a 200 OK"
       sleep 5

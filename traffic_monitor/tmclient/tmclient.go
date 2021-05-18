@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -201,7 +202,7 @@ func (c *TMClient) getBytes(path string) ([]byte, error) {
 	if err != nil {
 		return nil, errors.New("getting from '" + url + "': " + err.Error())
 	}
-	defer resp.Body.Close()
+	log.Close(resp.Body, "Unable to close http client "+url)
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return nil, fmt.Errorf("Monitor '"+url+"' returned bad status %v", resp.StatusCode)

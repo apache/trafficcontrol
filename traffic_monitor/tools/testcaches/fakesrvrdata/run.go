@@ -140,14 +140,3 @@ func run(srvrThs Ths, remapIncrements map[string]BytesPerSec) {
 		}
 	}
 }
-
-// tryReceiveIncrement asynchronously tries to recieve from incrementChan if it has a value.
-// Returns the value if it was read, or returns false if no value was waiting.
-func tryReceiveIncrement(incrementChan <-chan IncrementChanT) (IncrementChanT, bool) {
-	select {
-	case inc := <-incrementChan:
-		return inc, true
-	default:
-		return IncrementChanT{}, false
-	}
-}

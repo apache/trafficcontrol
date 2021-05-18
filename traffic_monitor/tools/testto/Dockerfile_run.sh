@@ -16,12 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# envvars=( PORT )
-# for v in $envvars
-# do
-# 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
-# done
-
 start() {
   ARGS=
   if [[ -n "${PORT}" ]]; then
@@ -31,7 +25,6 @@ start() {
 }
 
 init() {
-
   echo "INITIALIZED=1" >>/etc/environment
 }
 
