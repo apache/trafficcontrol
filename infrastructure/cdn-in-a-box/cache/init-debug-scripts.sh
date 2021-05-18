@@ -44,13 +44,12 @@ for t3c_tool in $(compgen -c t3c | sort | uniq); do
 	cd "$(dirname "$path")"
 	dlv_script="${t3c_tool}.debug"
 	actual_binary="${t3c_tool}.actual"
-	touch "$dlv_script"
-	chmod +x "$dlv_script"
 	<<-DLV_SCRIPT cat > "$dlv_script"
 	#!/usr/bin/env bash
 	$(type maybe_debug | tail -n+2)
 	maybe_debug "${hostname}" "${DEBUG_PORT}" "${actual_binary}" "\$@"
 	DLV_SCRIPT
+	chmod +x "$dlv_script"
 	mv "$t3c_tool" "$actual_binary"
 	ln -s "$dlv_script" "$t3c_tool"
 	)
