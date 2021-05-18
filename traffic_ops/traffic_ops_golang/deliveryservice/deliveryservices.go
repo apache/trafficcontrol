@@ -1165,6 +1165,18 @@ func (v *TODeliveryService) DeleteQuery() string {
 	return `DELETE FROM deliveryservice WHERE id = :id`
 }
 
+func isActiveState(s string) error {
+	switch tc.DeliveryServiceActiveState(s) {
+	case tc.DS_ACTIVE:
+		fallthrough
+	case tc.DS_INACTIVE:
+		fallthrough
+	case tc.DS_PRIMED:
+		return nil
+	}
+	return fmt.Errorf("'%s' is not a known Delivery Service Active State", s)
+}
+
 func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.DeliveryServiceV4, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
@@ -1189,7 +1201,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		"signingAlgorithm": {Column: "ds.signing_algorithm"},
 		"topology":         {Column: "ds.topology"},
 		"serviceCategory":  {Column: "ds.service_category"},
-		"active":           {Column: "ds.active", Checker: api.IsBool},
+		"active":           {Column: "ds.active", Checker: isActiveState},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
