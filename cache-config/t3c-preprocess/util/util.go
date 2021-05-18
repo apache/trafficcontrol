@@ -1,4 +1,4 @@
-package preproc_util
+package util
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -22,14 +22,12 @@ package preproc_util
 import (
 	"encoding/json"
 	"errors"
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"io"
-	"sort"
+
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 )
 
 func WriteConfigs(configs []t3cutil.ATSConfigFile, output io.Writer) error {
-	sort.Sort(config.ATSConfigFiles(configs))
 	if err := json.NewEncoder(output).Encode(configs); err != nil {
 		return errors.New("encoding and writing configs: " + err.Error())
 	}

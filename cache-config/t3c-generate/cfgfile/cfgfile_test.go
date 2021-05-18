@@ -26,7 +26,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-configPreprocessor/preproc-util"
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -36,22 +35,18 @@ import (
 
 func TestWriteConfigs(t *testing.T) {
 	buf := &bytes.Buffer{}
-	configs := config.ServerAndConfigs{
-		Server: &atscfg.Server{},
-
-		ConfigFile: []t3cutil.ATSConfigFile{
-			{
-				Name:        "config0.txt",
-				Path:        "/my/config0/location",
-				Text:        "config0",
-				ContentType: "text/plain",
-			},
-			{
-				Name:        "config1.txt",
-				Path:        "/my/config1/location",
-				Text:        "config2,foo",
-				ContentType: "text/csv",
-			},
+	configs := []t3cutil.ATSConfigFile{
+		{
+			Name:        "config0.txt",
+			Path:        "/my/config0/location",
+			Text:        "config0",
+			ContentType: "text/plain",
+		},
+		{
+			Name:        "config1.txt",
+			Path:        "/my/config1/location",
+			Text:        "config2,foo",
+			ContentType: "text/csv",
 		},
 	}
 
@@ -78,62 +73,6 @@ func TestWriteConfigs(t *testing.T) {
 	}
 }
 
-func TestPreprocessConfigFile(t *testing.T) {
-	// the TCP port replacement is fundamentally different for 80 vs non-80, so test both
-	{
-		server := &atscfg.Server{}
-		server.TCPPort = util.IntPtr(8080)
-		server.Interfaces = []tc.ServerInterfaceInfo{
-			tc.ServerInterfaceInfo{
-				IPAddresses: []tc.ServerIPAddress{
-					tc.ServerIPAddress{
-						Address:        "127.0.2.1",
-						ServiceAddress: true,
-					},
-				},
-			},
-		}
-		server.HostName = util.StrPtr("my-edge")
-		server.DomainName = util.StrPtr("example.net")
-		cfgFile := "abc__SERVER_TCP_PORT__def__CACHE_IPV4__ghi __RETURN__  \t __HOSTNAME__ jkl __FULL_HOSTNAME__ \n__SOMETHING__ __ELSE__\nmno\r\n"
-
-		actual := PreprocessConfigFile(server, cfgFile)
-
-		expected := "abc8080def127.0.2.1ghi\nmy-edge jkl my-edge.example.net \n__SOMETHING__ __ELSE__\nmno\r\n"
-
-		if expected != actual {
-			t.Errorf("PreprocessConfigFile expected '%v' actual '%v'", expected, actual)
-		}
-	}
-
-	{
-		server := &atscfg.Server{}
-		server.TCPPort = util.IntPtr(80)
-		server.Interfaces = []tc.ServerInterfaceInfo{
-			tc.ServerInterfaceInfo{
-				IPAddresses: []tc.ServerIPAddress{
-					tc.ServerIPAddress{
-						Address:        "127.0.2.1",
-						ServiceAddress: true,
-					},
-				},
-			},
-		}
-		server.HostName = util.StrPtr("my-edge")
-		server.DomainName = util.StrPtr("example.net")
-
-		cfgFile := "abc__SERVER_TCP_PORT__def__CACHE_IPV4__ghi __RETURN__  \t __HOSTNAME__ jkl __FULL_HOSTNAME__ \n__SOMETHING__ __ELSE__\nmno:__SERVER_TCP_PORT__\r\n"
-
-		actual := PreprocessConfigFile(server, cfgFile)
-
-		expected := "abc__SERVER_TCP_PORT__def127.0.2.1ghi\nmy-edge jkl my-edge.example.net \n__SOMETHING__ __ELSE__\nmno\r\n"
-
-		if expected != actual {
-			t.Errorf("PreprocessConfigFile expected '%v' actual '%v'", expected, actual)
-		}
-	}
-}
-
 // TestGetAllConfigsWriteConfigsDeterministic tests that WriteConfigs(GetAllConfigs()) is Deterministic.
 // That is, that for the same input, it always produces the same output.
 //
@@ -155,7 +94,7 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 		t.Fatalf("error getting configs: " + err.Error())
 	}
 	buf := &bytes.Buffer{}
-	if err := preproc_util.WriteConfigs(configs, buf); err != nil {
+	if err := WriteConfigs(configs, buf); err != nil {
 		t.Fatalf("error writing configs: " + err.Error())
 	}
 	configStr := buf.String()
@@ -167,7 +106,7 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 			t.Fatalf("error getting configs2: " + err.Error())
 		}
 		buf := &bytes.Buffer{}
-		if err := preproc_util.WriteConfigs(configs2, buf); err != nil {
+		if err := WriteConfigs(configs2, buf); err != nil {
 			t.Fatalf("error writing configs2: " + err.Error())
 		}
 		configStr2 := buf.String()

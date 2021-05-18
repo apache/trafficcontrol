@@ -89,11 +89,9 @@ func main() {
 	modifyFilesData := plugin.ModifyFilesData{Cfg: cfg, TOData: toData, Files: configs}
 	configs = plugins.ModifyFiles(modifyFilesData)
 
-	sort.Sort(config.ATSConfigFiles(configs))
+	sort.Sort(t3cutil.ATSConfigFiles(configs))
 
-	serverAndConfig := config.ServerAndConfigs{Server: toData.Server, ConfigFile: configs}
-
-	if err := cfgfile.WriteConfigs(serverAndConfig, os.Stdout); err != nil {
+	if err := cfgfile.WriteConfigs(configs, os.Stdout); err != nil {
 		log.Errorln("Writing configs for '" + *toData.Server.HostName + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)
 	}
