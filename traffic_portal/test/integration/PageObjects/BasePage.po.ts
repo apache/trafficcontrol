@@ -39,6 +39,7 @@ export class BasePage {
   private btnCancel =  element(by.className('close')).element(by.xpath("//span[text()='×']"));
   private btnUpdate = element(by.xpath("//button[text()='Update']"))
   private btnSubmit = element(by.xpath("//button[text()='Submit']"));
+  private btnRegister = element(by.xpath("//button[text()='Send Registration']"));
   private btnNo = element(by.xpath("//button[text()='No']"));
   
   async ClickNo(){
@@ -72,6 +73,14 @@ export class BasePage {
   async ClickCreate(){
     if(await this.btnCreate.isEnabled() == true){
       await this.btnCreate.click();
+      return true;
+    }else{
+      return false;
+    }
+  }
+  async ClickRegister(){
+    if(await this.btnRegister.isEnabled() == true){
+      await this.btnRegister.click();
       return true;
     }else{
       return false;

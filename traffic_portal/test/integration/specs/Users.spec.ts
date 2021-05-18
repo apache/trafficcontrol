@@ -22,11 +22,9 @@ import { browser } from 'protractor';
 import { LoginPage } from '../PageObjects/LoginPage.po';
 import {UsersPage} from '../PageObjects/UsersPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-// import { API } from '../CommonUtils/API';
 import { users } from "../Data/users";
 
 
-// const api = new API();
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const usersPage = new UsersPage();
@@ -48,6 +46,17 @@ users.tests.forEach(async usersData =>{
                     await usersPage.OpenUserPage();
                 });
             });
+            usersData.toggle.forEach(toggle => {
+                it(toggle.description, async () => {
+                    if(toggle.description.includes('hide')){
+                        expect(await usersPage.CheckToggle(toggle.Name)).toBe(false);
+                        await usersPage.OpenUserPage();
+                    }else{
+                        expect(await usersPage.CheckToggle(toggle.Name)).toBe(true);
+                        await usersPage.OpenUserPage();
+                    }
+                });
+            })
             usersData.add.forEach(add => {
                 it(add.description, async () => {
                     expect(await usersPage.CreateUser(add)).toBeTruthy();
@@ -57,7 +66,14 @@ users.tests.forEach(async usersData =>{
             usersData.update.forEach(update => {
                 it(update.description, async () => {
                     await usersPage.SearchUser(update.Username);
-                    expect(await usersPage.UpdateUser(update)).toBeTruthy();
+                    expect(await usersPage.UpdateUser(update)).toBe(true);
+                    await usersPage.OpenUserPage();
+                });
+            });
+            usersData.register.forEach(register => {
+                it(register.description, async () => {
+                    expect(await usersPage.RegisterUser(register)).toBeTruthy();
+                    await usersPage.OpenUserPage();
                 });
             });
             it('can logout', async () => {

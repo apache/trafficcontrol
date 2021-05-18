@@ -33,6 +33,16 @@ export const users = {
                     Name: "Export as CSV"
                 }
             ],
+            toggle: [
+                {
+                    description: "hide first table column",
+                    Name: "Email"
+                },
+                {
+                    description: "redisplay first table column",
+                    Name: "Email"
+                }
+            ],
             add: [
                 {
                     description: "create a new User",
@@ -40,25 +50,28 @@ export const users = {
                     Username: "User1",
                     Email: "test@cdn.tc.com",
                     Role: "admin",
-                    Tenant: "- root",
+                    Tenant: "-root",
                     Password: "qwe@123#rty",
                     ConfirmPassword: "qwe@123#rty",
                     PublicSSHKey: "",
                     validationMessage: "User created"
                 },
-                // {
-                //     description: "create a registered User",
-                //     Email: "test1@cdn.tc.com",
-                //     Role: 1,
-                //     Tenant: 1,
-                //     validationMessage: "Registered User created."
-                // }
+            ],
+            register: [
+                {
+                    description: "create a registered User",
+                    Email: "test2@cdn.tc.com",
+                    Role: "admin",
+                    Tenant: "-root",
+                    validationMessage: "Sent user registration to {{ test2@cdn.tc.com}} with the following permissions [ role: admin | tenant: root ]"
+                }
             ],
             update: [
                 {
-                    description: "update the new User",
+                    description: "update user's fullname",
                     Username: "User1",
-                    NewFullName: "TPUpdatedUser1`",
+                    FullName: "TPCreateUser1",
+                    NewFullName: "TPUpdatedUser1",
                     validationMessage: "user was updated."
                 },
                 // {

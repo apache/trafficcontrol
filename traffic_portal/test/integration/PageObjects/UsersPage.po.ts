@@ -38,13 +38,22 @@ interface User {
 interface UpdateUser {
     Username: string;
     description: string;
+    FullName: string,
     NewFullName: string;
+    validationMessage?: string;
+}
+
+interface RegisterUser {
+    Email: string;
+    Role: string;
+    Tenant: string;
+    existsMessage?: string;
     validationMessage?: string;
 }
 
 export class UsersPage extends BasePage {
     private btnCreateNewUser = element(by.name('createUserButton'));
-    // private btnRegisterNewUser = element(by.css('[title="Register New User"]'));
+    private btnRegisterNewUser = element(by.name('createRegisterUserButton'));
     private txtFullName = element(by.name('fullName'));
     private txtUserName = element(by.name('uName'));
     private txtEmail = element(by.name('email'));
@@ -54,7 +63,7 @@ export class UsersPage extends BasePage {
     private txtConfirmPassword = element(by.name('confirmPassword'));
     private txtPublicSSHKey = element(by.name('publicSshKey'));
     private txtSearch = element(by.id('usersTable_filter')).element(by.css('label input'));
-    private txtDescription = element(by.xpath("//textarea[@name='description']"))
+    private btnTableColumn = element(by.css('[title="Select Table Columns"]'));
     private randomize = randomize;
 
     async OpenUserPage(){
@@ -64,11 +73,22 @@ export class UsersPage extends BasePage {
      }
 
     public async CheckCSV(name:string): Promise<boolean> {
+        return element(by.cssContainingText("span", name)).isPresent();
+    }
+
+    public async CheckToggle(name:string): Promise<boolean> {
         let result = false;
-        let linkName = name;
-        if (await browser.isElementPresent(element(by.xpath("//span[text()='" + linkName + "']"))) == true) {
+        await this.btnTableColumn.click();
+        //if the box is already checked, uncheck it and return false
+        if (await browser.isElementPresent(element(by.xpath("//th[text()='" + name + "']"))) === true){
+            await element(by.xpath("//label[text()=' " + name + "']")).click();
+            result = false;
+        }else{
+            //if the box is unchecked, then check it and return true
+            await element(by.xpath("//label[text()=' " + name + "']")).click();
             result = true;
         }
+        await this.btnTableColumn.click();
         return result;
     }
 
@@ -104,7 +124,7 @@ export class UsersPage extends BasePage {
         await this.txtSearch.clear();
         await this.txtSearch.sendKeys(name);
         await element.all(by.repeater('u in ::users')).filter(function (row) {
-            return row.element(by.name('name')).getText().then(function (val) {
+            return row.element(by.name('username')).getText().then(function (val) {
                 return val === name;
             });
         }).first().click();
@@ -112,10 +132,10 @@ export class UsersPage extends BasePage {
 
     public async UpdateUser(user: UpdateUser): Promise<boolean  | undefined> {
         let basePage = new BasePage();
-        switch(user.Username){
+        switch(user.FullName){
             case "update user's fullname":
-                await this.txtDescription.clear();
-                await this.txtDescription.sendKeys(user.NewFullName);
+                await this.txtFullName.clear();
+                await this.txtFullName.sendKeys(user.NewFullName);
                 await basePage.ClickUpdate();
                 break;
             default:
@@ -124,7 +144,25 @@ export class UsersPage extends BasePage {
         return await basePage.GetOutputMessage().then(value => user.validationMessage === value);
     }
 
-    // public async RegisterUser(user: User): Promise<boolean> {}
+    public async RegisterUser(user: RegisterUser): Promise<boolean> {
+        let result = false;
+        let basePage = new BasePage();
+        let snp = new SideNavigationPage();
+        await this.btnRegisterNewUser.click();
+        await this.txtEmail.sendKeys(user.Email);
+        await this.txtRole.sendKeys(user.Role);
+        await this.txtTenant.sendKeys(user.Tenant+this.randomize);
+        await basePage.ClickRegister();
+        if(await basePage.GetOutputMessage() == user.existsMessage){
+            await snp.NavigateToUsersPage();
+            result = true;
+        }else if(await basePage.GetOutputMessage() == user.validationMessage){
+            result = true;
+        }else{
+            result = false;
+        }
+        return result;
+    }
 
     // public async UpdateRegisterUser(user: User): Promise<boolean> {}
   }
