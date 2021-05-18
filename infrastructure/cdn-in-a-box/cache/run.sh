@@ -29,16 +29,16 @@ source /to-access.sh
 # Wait on SSL certificate generation
 until [[ -f "$X509_CA_ENV_FILE" ]]
 do
-  echo "Waiting on Shared SSL certificate generation"
-  sleep 3
+	echo "Waiting on Shared SSL certificate generation"
+	sleep 3
 done
 
 # Source the CIAB-CA shared SSL environment
 until [[ -n "$X509_GENERATION_COMPLETE" ]]
 do
-  echo "Waiting on X509 vars to be defined"
-  sleep 1
-  source "$X509_CA_ENV_FILE"
+	echo "Waiting on X509 vars to be defined"
+	sleep 1
+	source "$X509_CA_ENV_FILE"
 done
 
 # Trust the CIAB-CA at the System level
@@ -56,14 +56,14 @@ export TO_PASSWORD=$TO_ADMIN_PASSWORD
 # wait until the CDN has been registered
 found=
 while [[ -z $found ]]; do
-    echo 'waiting for enroller setup'
-    sleep 3
-    found=$(to-get api/2.0/cdns?name="$CDN_NAME" | jq -r '.response[].name')
+	echo 'waiting for enroller setup'
+	sleep 3
+	found=$(to-get api/2.0/cdns?name="$CDN_NAME" | jq -r '.response[].name')
 done
 
 for f in /opt/init.d/*; do
-    echo "$f"
-    source "$f"
+	echo "$f"
+	source "$f"
 done
 
 # Wait for SSL keys to exist
