@@ -16,11 +16,11 @@ package _integration
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
