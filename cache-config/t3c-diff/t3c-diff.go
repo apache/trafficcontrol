@@ -53,12 +53,12 @@ func main() {
 		os.Exit(4)
 	}
 
-	fileA, err := readFileOrStdin(fileNameA)
+	fileA, fileAExisted, err := readFileOrStdin(fileNameA)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error reading first: "+err.Error())
 		os.Exit(5)
 	}
-	fileB, err := readFileOrStdin(fileNameB)
+	fileB, fileBExisted, err := readFileOrStdin(fileNameB)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error reading second: "+err.Error())
 		os.Exit(6)
@@ -84,29 +84,41 @@ func main() {
 		}
 		os.Exit(1)
 	}
+	if fileAExisted != fileBExisted {
+		os.Exit(1)
+	}
 	os.Exit(0)
 
 }
 
-const usageStr = `usage: t3c-diff file-a file-b
-Either file may be stdin, in which case that file is read from stdin.
-Either file may be empty, in which case it's treated as if it were empty.
-`
+const usageStr = `usage: t3c-diff [--help]
+       <file-a> <file-b>
 
-func readFileOrStdin(fileOrStdin string) (string, error) {
+Either file may be 'stdin', in which case that file is read from stdin.
+Either file may not exist.
+
+Prints the diff to stdout, and returns the exit code 0 if there was no diff, 1 if there was a diff.
+If one file exists but the other doesn't, it will always be a diff.
+
+Note this means there may be no diff text printed to stdout but still exit 1 indicating a diff
+if the file being created or deleted is semantically empty.`
+
+// readFileOrStdin reads the file, or if fileOrStdin is 'stdin', reads from stdin.
+// Returns the file, whether it existed, and any error.
+func readFileOrStdin(fileOrStdin string) (string, bool, error) {
 	if strings.ToLower(fileOrStdin) == "stdin" {
 		bts, err := ioutil.ReadAll(os.Stdin)
 		if err != nil {
-			return "", errors.New("reading stdin: " + err.Error())
+			return "", false, errors.New("reading stdin: " + err.Error())
 		}
-		return string(bts), nil
+		return string(bts), true, nil
 	}
 	bts, err := ioutil.ReadFile(fileOrStdin)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return "", nil // treat nonexistent file as the empty string for diff
+			return "", false, nil
 		}
-		return "", errors.New("reading file: " + err.Error())
+		return "", false, errors.New("reading file: " + err.Error())
 	}
-	return string(bts), nil
+	return string(bts), true, nil
 }
