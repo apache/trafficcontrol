@@ -44,8 +44,10 @@ case "$COMMAND" in
   stop) command_found=true;;
 esac
 
-if [[ "$command_found" == true ]]; then
-	"$NAME" "$COMMAND"
+
+if [[ "$command_found" != true ]]; then
+	echo "Unknown command verb ${COMMAND}."
+	exit 1
 fi;
 
-exit 0
+"$NAME" "$COMMAND"
