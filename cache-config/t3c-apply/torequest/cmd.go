@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -128,18 +129,28 @@ func getPackages(cfg config.Cfg) ([]Package, error) {
 // sendUpdate updates the given cache's queue update and reval status in Traffic Ops.
 // Note the statuses are the value to be set, not whether to set the value.
 func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
-	stdOut, stdErr, code := t3cutil.Do(`t3c-update`,
-		"--traffic-ops-timeout-milliseconds="+strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
-		"--traffic-ops-user="+cfg.TOUser,
-		"--traffic-ops-password="+cfg.TOPass,
-		"--traffic-ops-url="+cfg.TOURL,
-		"--traffic-ops-insecure="+strconv.FormatBool(cfg.TOInsecure),
-		"--log-location-error="+outToErr(cfg.LogLocationErr),
-		"--log-location-info="+outToErr(cfg.LogLocationInfo),
-		"--cache-host-name="+cfg.CacheHostName,
-		"--set-update-status="+strconv.FormatBool(updateStatus),
-		"--set-reval-status="+strconv.FormatBool(revalStatus),
-	)
+	args := []string{
+		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
+		"--traffic-ops-user=" + cfg.TOUser,
+		"--traffic-ops-password=" + cfg.TOPass,
+		"--traffic-ops-url=" + cfg.TOURL,
+		"--traffic-ops-insecure=" + strconv.FormatBool(cfg.TOInsecure),
+		"--log-location-error=" + outToErr(cfg.LogLocationErr),
+		"--log-location-info=" + outToErr(cfg.LogLocationInfo),
+		"--cache-host-name=" + cfg.CacheHostName,
+		"--set-update-status=" + strconv.FormatBool(updateStatus),
+		"--set-reval-status=" + strconv.FormatBool(revalStatus),
+	}
+	if _, used := os.LookupEnv("TO_USER"); !used {
+		args = append(args, "--traffic-ops-user="+cfg.TOUser)
+	}
+	if _, used := os.LookupEnv("TO_PASS"); !used {
+		args = append(args, "--traffic-ops-password="+cfg.TOPass)
+	}
+	if _, used := os.LookupEnv("TO_URL"); !used {
+		args = append(args, "--traffic-ops-url="+cfg.TOURL)
+	}
+	stdOut, stdErr, code := t3cutil.Do(`t3c-update`, args...)
 	if code != 0 {
 		return fmt.Errorf("t3c-update returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}
@@ -253,17 +264,24 @@ func requestJSON(cfg config.Cfg, command string, obj interface{}) error {
 
 // request calls t3c-request with the given command, and returns the stdout bytes.
 func request(cfg config.Cfg, command string) ([]byte, error) {
-	stdOut, stdErr, code := t3cutil.Do(`t3c-request`,
-		"--traffic-ops-insecure="+strconv.FormatBool(cfg.TOInsecure),
-		"--traffic-ops-timeout-milliseconds="+strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
-		"--traffic-ops-user="+cfg.TOUser,
-		"--traffic-ops-password="+cfg.TOPass,
-		"--traffic-ops-url="+cfg.TOURL,
-		"--cache-host-name="+cfg.CacheHostName,
-		"--log-location-error="+outToErr(cfg.LogLocationErr),
-		"--log-location-info="+outToErr(cfg.LogLocationInfo),
-		`--get-data=`+command,
-	)
+	args := []string{
+		"--traffic-ops-insecure=" + strconv.FormatBool(cfg.TOInsecure),
+		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
+		"--cache-host-name=" + cfg.CacheHostName,
+		"--log-location-error=" + outToErr(cfg.LogLocationErr),
+		"--log-location-info=" + outToErr(cfg.LogLocationInfo),
+		`--get-data=` + command,
+	}
+	if _, used := os.LookupEnv("TO_USER"); !used {
+		args = append(args, "--traffic-ops-user="+cfg.TOUser)
+	}
+	if _, used := os.LookupEnv("TO_PASS"); !used {
+		args = append(args, "--traffic-ops-password="+cfg.TOPass)
+	}
+	if _, used := os.LookupEnv("TO_URL"); !used {
+		args = append(args, "--traffic-ops-url="+cfg.TOURL)
+	}
+	stdOut, stdErr, code := t3cutil.Do(`t3c-request`, args...)
 	if code != 0 {
 		return nil, fmt.Errorf("t3c-request returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}

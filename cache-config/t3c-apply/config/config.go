@@ -259,12 +259,18 @@ func GetCfg() (Cfg, error) {
 	if toURL == "" {
 		urlSourceStr = "environment variable"
 		toURL = os.Getenv("TO_URL")
+	} else {
+		os.Setenv("TO_URL", toURL)
 	}
 	if toUser == "" {
 		toUser = os.Getenv("TO_USER")
+	} else {
+		os.Setenv("TO_USER", toUser)
 	}
 	if *toPassPtr == "" {
 		toPass = os.Getenv("TO_PASS")
+	} else {
+		os.Setenv("TO_PASS", toPass)
 	}
 
 	// set TSHome
