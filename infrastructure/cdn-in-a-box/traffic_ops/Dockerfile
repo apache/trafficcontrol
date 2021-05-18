@@ -105,7 +105,6 @@ COPY $TRAFFIC_OPS_RPM /traffic_ops.rpm
 RUN rpm -Uvh /traffic_ops.rpm && \
 	rm /traffic_ops.rpm
 
-ADD infrastructure/cdn-in-a-box/traffic_ops/aes.conf aes.conf
 COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
 	infrastructure/cdn-in-a-box/traffic_ops/config.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/run-go.sh \
@@ -119,9 +118,6 @@ COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
 	infrastructure/cdn-in-a-box/variables.env \
 	infrastructure/cdn-in-a-box/traffic_ops/tv.conf \
 	/
-
-# Generate the AES encryption key for traffic vault backend
-RUN echo $(openssl rand -base64 32) > aes.conf
 
 EXPOSE 443
 CMD /run-go.sh

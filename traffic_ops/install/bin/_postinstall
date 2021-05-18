@@ -721,6 +721,30 @@ def unmarshal_config(dct): # type: (dict) -> dict[str, list[Question]]
 
 	return ret
 
+def write_encryption_key(aes_key_location): # type: (str) -> None
+	"""
+	Creates an AES encryption key for the postgres traffic vault backend
+
+	:param aes_key_location: Denotes the location of the aes encryption key file
+	:returns: None
+	"""
+	logging.info(aes_key_location)
+
+	cmd = ["/usr/bin/openssl", "rand", "-base64", "32"]
+	key = open(aes_key_location, 'w')
+	proc = subprocess.Popen(
+		cmd,
+		stderr=subprocess.PIPE,
+		stdout=key,
+		universal_newlines=True,
+	)
+	proc.wait()
+	key.flush()
+	output = proc.communicate()
+	if proc.returncode != 0:
+		logging.debug("AES key generation failed; stderr: %s\n\tstdout: %s", output[1], output[0])
+		raise OSError("failed to generate AES key")
+
 def exec_openssl(description, *cmd_args): # type: (str, ...) -> bool
 	"""
 	Executes openssl with the supplied command-line arguments.
@@ -1008,6 +1032,7 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 	access_log = os.path.join(root, "var/log/traffic_ops/access.log")
 	existing_conf["traffic_ops_golang"]["log_location_event"] = access_log
 	traffic_vault_backend = "postgres"
+	traffic_vault_aes_encryption_location = "/opt/traffic_ops/app/aes.conf"
 
 	if "hypnotoad" not in existing_conf or not isinstance(existing_conf["hypnotoad"], dict):
 		existing_conf["hypnotoad"]["workers"] = conf.num_workers
@@ -1022,6 +1047,15 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 		exception = ValueError("missing 'traffic_vault_backend' config_var")
 		exception.__cause__ = e
 		logging.warn("no traffic vault backend configured, using default postgres")
+
+	if traffic_vault_backend == "postgres":
+		try:
+			traffic_vault_aes_encryption_location = existing_conf["traffic_ops_golang"]["traffic_vault_config"]["aes_key_location"]
+			write_encryption_key(traffic_vault_aes_encryption_location)
+		except KeyError as e:
+			exception = ValueError("missing 'aes_key_location' config_var")
+			exception.__cause__ = e
+			raise exception
 
 	return traffic_vault_backend == "postgres"
 
