@@ -37,6 +37,9 @@ func TestParameters(t *testing.T) {
 
 	WithObjs(t, []TCObj{Parameters}, func() {
 		GetTestParametersIMS(t)
+		GetTestParametersByConfigfile(t)
+		GetTestParametersByValue(t)
+		GetTestParametersByName(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
 		var header http.Header = make(map[string][]string)
@@ -51,9 +54,6 @@ func TestParameters(t *testing.T) {
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestParametersWithHeaders(t, header)
 		GetTestPaginationSupportParameters(t)
-		GetTestParametersByConfigfile(t)
-		GetTestParametersByValue(t)
-		GetTestParametersByName(t)
 		GetParametersByInvalidId(t)
 		GetParametersByInvalidName(t)
 		GetParametersByInvalidConfigfile(t)
@@ -156,8 +156,7 @@ func UpdateTestParameters(t *testing.T) {
 
 	expectedParameterValue := "UPDATED"
 	remoteParameter.Value = expectedParameterValue
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, client.RequestOptions{})
+	alert, _, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("cannot update Parameter: %v - alerts: %+v", err, alert.Alerts)
 	}
@@ -175,31 +174,6 @@ func UpdateTestParameters(t *testing.T) {
 	respParameter := resp.Response[0]
 	if respParameter.Value != expectedParameterValue {
 		t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
-	}
-}
-
-func UpdateParametersEmptyConfigFile(t *testing.T) {
-	if len(testData.Parameters) > 0 {
-		firstParameter := testData.Parameters[0]
-		// Retrieve the Parameter by name so we can get the id for the Update
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", url.QueryEscape(firstParameter.Name))
-		resp, _, err := TOSession.GetParameters(opts)
-		if err != nil {
-			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
-		}
-		if len(resp.Response) > 0 {
-			remoteParameter := resp.Response[0]
-			remoteParameter.ConfigFile = ""
-			opts = client.NewRequestOptions()
-			alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
-			if err == nil {
-				t.Errorf("Invalid Config File has been updated by ID: %v - %v", err, alert)
-			}
-			if reqInf.StatusCode != http.StatusBadRequest {
-				t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
-			}
-		}
 	}
 }
 
@@ -385,7 +359,7 @@ func GetTestPaginationSupportParameters(t *testing.T) {
 func GetTestParametersByConfigfile(t *testing.T) {
 	for _, parameters := range testData.Parameters {
 		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("configFile", url.QueryEscape(parameters.ConfigFile))
+		opts.QueryParameters.Set("configFile", parameters.ConfigFile)
 		resp, reqInf, err := TOSession.GetParameters(opts)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by Config File: %v - %v", parameters.ConfigFile, err)
@@ -402,7 +376,7 @@ func GetTestParametersByConfigfile(t *testing.T) {
 func GetTestParametersByValue(t *testing.T) {
 	for _, parameters := range testData.Parameters {
 		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("value", url.QueryEscape(parameters.Value))
+		opts.QueryParameters.Set("value", parameters.Value)
 		resp, reqInf, err := TOSession.GetParameters(opts)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by Value: %v - %v", parameters.Value, err)
@@ -411,7 +385,7 @@ func GetTestParametersByValue(t *testing.T) {
 			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
 		}
 		if len(resp.Response) <= 0 {
-			t.Errorf("No data available for Get Parameters by Config file")
+			t.Errorf("No data available for Get Parameters by Value")
 		}
 	}
 }
@@ -419,7 +393,7 @@ func GetTestParametersByValue(t *testing.T) {
 func GetTestParametersByName(t *testing.T) {
 	for _, parameters := range testData.Parameters {
 		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", url.QueryEscape(parameters.Name))
+		opts.QueryParameters.Set("name", parameters.Name)
 		resp, reqInf, err := TOSession.GetParameters(opts)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by Name: %v - %v", parameters.Name, err)
@@ -489,6 +463,8 @@ func CreateTestParametersAlreadyExist(t *testing.T) {
 		if reqInf.StatusCode != http.StatusBadRequest {
 			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 		}
+	} else {
+		t.Errorf("No existing parameters available to validate duplicate functionality")
 	}
 }
 
@@ -526,18 +502,23 @@ func UpdateParametersEmptyValue(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 		}
-		remoteParameter := resp.Response[0]
-		//Parameters can be updated with empty value, so no error while updating
-		remoteParameter.Value = ""
-		opts = client.NewRequestOptions()
-		var alert tc.Alerts
-		alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
-		if err != nil {
-			t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
+		if len(resp.Response) > 0 {
+			remoteParameter := resp.Response[0]
+			//Parameters can be updated with empty value, so no error while updating
+			remoteParameter.Value = ""
+			opts = client.NewRequestOptions()
+			alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
+			if err != nil {
+				t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
+			}
+			if reqInf.StatusCode != http.StatusOK {
+				t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
+			}
+		} else {
+			t.Errorf("No parameters available to update negative scenarios")
 		}
-		if reqInf.StatusCode != http.StatusOK {
-			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
-		}
+	} else {
+		t.Errorf("No parameters available to update negative scenarios")
 	}
 }
 
@@ -551,17 +532,51 @@ func UpdateParametersEmptyName(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 		}
-		remoteParameter := resp.Response[0]
-		remoteParameter.Name = ""
-		opts = client.NewRequestOptions()
-		var alert tc.Alerts
-		alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
-		if err == nil {
-			t.Errorf("Invalid name has been updated by ID: %v - %v", err, alert)
+		if len(resp.Response) > 0 {
+			remoteParameter := resp.Response[0]
+			remoteParameter.Name = ""
+			opts = client.NewRequestOptions()
+			alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
+			if err == nil {
+				t.Errorf("Invalid name has been updated by ID: %v - %v", err, alert)
+			}
+			if reqInf.StatusCode != http.StatusBadRequest {
+				t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+			}
+		} else {
+			t.Errorf("No parameters available to update negative scenarios")
 		}
-		if reqInf.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	} else {
+		t.Errorf("No parameters available to update negative scenarios")
+	}
+}
+
+func UpdateParametersEmptyConfigFile(t *testing.T) {
+	if len(testData.Parameters) > 0 {
+		firstParameter := testData.Parameters[0]
+		// Retrieve the Parameter by name so we can get the id for the Update
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", firstParameter.Name)
+		resp, _, err := TOSession.GetParameters(opts)
+		if err != nil {
+			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
 		}
+		if len(resp.Response) > 0 {
+			remoteParameter := resp.Response[0]
+			remoteParameter.ConfigFile = ""
+			opts = client.NewRequestOptions()
+			alert, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
+			if err == nil {
+				t.Errorf("Invalid Config File has been updated by ID: %v - %v", err, alert)
+			}
+			if reqInf.StatusCode != http.StatusBadRequest {
+				t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+			}
+		} else {
+			t.Errorf("No parameters available to update negative scenarios")
+		}
+	} else {
+		t.Errorf("No parameters available to update negative scenarios")
 	}
 }
 
