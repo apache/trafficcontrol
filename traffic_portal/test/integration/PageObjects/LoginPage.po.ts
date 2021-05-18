@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element} from 'protractor';
+import { browser, by, element, until} from 'protractor';
 
 import { randomize } from "../config";
 import { BasePage } from './BasePage.po'
@@ -52,6 +52,7 @@ export class LoginPage extends BasePage{
     async Login(login: LoginData){
         let result = false;
         const basePage = new BasePage();
+        await browser.wait(until.urlIs(browser.params.baseUrl + "/#!/login?redirect=%252F"), 10000)
         if(login.username === 'admin'){
             await this.txtUserName.sendKeys(login.username)
             await this.txtPassword.sendKeys(login.password)
@@ -63,7 +64,7 @@ export class LoginPage extends BasePage{
             await browser.actions().mouseMove(this.btnLogin).perform();
             await browser.actions().click(this.btnLogin).perform();
         }
-        if(await browser.getCurrentUrl() === browser.params.baseUrl + "#!/login"){
+        if(await browser.getCurrentUrl() === browser.params.baseUrl + "/#!/login"){
             result = await basePage.GetOutputMessage().then(value => value === login.validationMessage);
         }else{
             result = true;
