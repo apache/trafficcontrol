@@ -1372,7 +1372,7 @@ func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
 		"initialDispersion": validation.Validate(ds.InitialDispersion,
 			validation.By(requiredIfMatchesTypeName([]string{HTTPRegexType}, typeName)),
 			validation.By(tovalidate.IsGreaterThanZero)),
-		"ipv6RoutingEnabled": validation.Validate(ds.IPV6RoutingEnabled,
+		"ipv6RoutingEnabled": validation.Validate(&ds.IPV6RoutingEnabled,
 			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
 		"missLat": validation.Validate(ds.MissLat,
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
@@ -1943,9 +1943,6 @@ func deleteLocationParam(tx *sql.Tx, configFile string) error {
 
 // getTenantID returns the tenant Id of the given delivery service. Note it may return a nil id and nil error, if the tenant ID in the database is nil.
 func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceV4) (*int, error) {
-	if ds.ID == nil {
-		return nil, errors.New("delivery service has no ID or XMLID")
-	}
 	if ds.ID != nil {
 		existingID, _, err := getDSTenantIDByID(tx, *ds.ID) // ignore exists return - if the DS is new, we only need to check the user input tenant
 		return existingID, err

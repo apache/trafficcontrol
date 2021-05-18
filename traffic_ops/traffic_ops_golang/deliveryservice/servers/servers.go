@@ -571,7 +571,7 @@ func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, 
 		return userErr, sysErr, status
 	}
 
-	if ds.Active && replace {
+	if ds.Active != tc.DS_INACTIVE && replace {
 		ids := make([]int, 0, len(serverInfos))
 		for _, inf := range serverInfos {
 			ids = append(ids, inf.ID)
@@ -996,7 +996,7 @@ func selectMaxLastUpdatedQuery(where string) string {
 }
 
 type DSInfo struct {
-	Active               bool
+	Active               tc.DeliveryServiceActiveState
 	ID                   int
 	Name                 string
 	Type                 tc.DSType
