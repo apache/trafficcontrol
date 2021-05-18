@@ -91,7 +91,8 @@ cdn_conf=/opt/traffic_ops/app/conf/cdn.conf
             "conn_max_lifetime_seconds": ${DEBUGGING_TIMEOUT:-60},
             "max_connections": 500,
             "max_idle_connections": 30,
-            "query_timeout_seconds": ${DEBUGGING_TIMEOUT:-60}
+            "query_timeout_seconds": ${DEBUGGING_TIMEOUT:-60},
+            "aes_key_location": "$TV_AES_KEY_LOCATION"
         },
         "proxy_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_tls_timeout" : ${DEBUGGING_TIMEOUT:-60},

@@ -30,6 +30,7 @@
 # ADMIN_USER
 # ADMIN_PASS
 # DOMAIN
+# TV_AES_KEY_LOCATION
 # TV_BACKEND
 # TV_DB_NAME
 # TV_DB_PORT
@@ -44,7 +45,7 @@ trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
 set -o errexit -o monitor -o pipefail -o xtrace;
 
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS TV_BACKEND TV_DB_NAME TV_DB_PORT TV_DB_SERVER TV_DB_USER TV_DB_USER_PASS)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS $TV_AES_KEY_LOCATION TV_BACKEND TV_DB_NAME TV_DB_PORT TV_DB_SERVER TV_DB_USER TV_DB_USER_PASS)
 for v in $envvars; do
 	if [[ -z $$v ]]; then
 		echo "$v is unset" >&2;
@@ -143,7 +144,6 @@ cd /opt/traffic_ops/app;
 CDNCONF=/opt/traffic_ops/app/conf/cdn.conf
 DBCONF=/opt/traffic_ops/app/conf/production/database.conf
 RIAKCONF=/opt/traffic_ops/app/conf/production/riak.conf
-TV_DBCONF=/opt/traffic_ops/app/conf/production/tv.conf
 mkdir -p /var/log/traffic_ops
 touch "$TO_LOG_ERROR" "$TO_LOG_WARNING" "$TO_LOG_INFO" "$TO_LOG_DEBUG" "$TO_LOG_EVENT"
 tail -qf "$TO_LOG_ERROR" "$TO_LOG_WARNING" "$TO_LOG_INFO" "$TO_LOG_DEBUG" "$TO_LOG_EVENT" &
