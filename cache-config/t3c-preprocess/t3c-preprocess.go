@@ -29,7 +29,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-configPreprocessor/preproc-util"
+	"github.com/apache/trafficcontrol/cache-config/t3c-preprocess/util"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -97,8 +97,12 @@ func main() {
 		dataFiles.Files[fileI].Text = txt
 	}
 	sort.Sort(t3cutil.ATSConfigFiles(dataFiles.Files))
-	if err := preproc_util.WriteConfigs(dataFiles.Files, os.Stdout); err != nil {
-		log.Errorln("Writing configs for '" + *dataFiles.Data.Server.HostName + "': " + err.Error())
+	if err := util.WriteConfigs(dataFiles.Files, os.Stdout); err != nil {
+		hostName := ""
+		if dataFiles.Data.Server.HostName != nil {
+			hostName = *dataFiles.Data.Server.HostName
+		}
+		log.Errorln("Writing configs for server '" + hostName + "': " + err.Error())
 		os.Exit(ExitCodeErrGeneric)
 	}
 }
