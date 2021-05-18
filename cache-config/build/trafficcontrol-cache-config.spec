@@ -95,6 +95,13 @@ go_t3c_diff_dir="$ccpath"/t3c-diff
 	cp "$TC_DIR"/"$ccdir"/t3c-diff/t3c-diff .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
+# copy t3c-preprocess binary
+go_t3c_preprocess_dir="$ccpath"/t3c-preprocess
+( mkdir -p "$go_t3c_preprocess_dir" && \
+	cd "$go_t3c_preprocess_dir" && \
+	cp "$TC_DIR"/"$ccdir"/t3c-preprocess/t3c-preprocess .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
+
 
 %install
 ccdir="cache-config/"
@@ -131,6 +138,9 @@ cp -p "$t3c_verify_src"/t3c-verify ${RPM_BUILD_ROOT}/"$installdir"
 t3c_diff_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-diff
 cp -p "$t3c_diff_src"/t3c-diff ${RPM_BUILD_ROOT}/"$installdir"
 
+t3c_preprocess_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-preprocess
+cp -p "$t3c_preprocess_src"/t3c-preprocess ${RPM_BUILD_ROOT}/"$installdir"
+
 %clean
 rm -rf ${RPM_BUILD_ROOT}
 
@@ -145,6 +155,7 @@ rm -rf ${RPM_BUILD_ROOT}
 /usr/bin/t3c-apply
 /usr/bin/t3c-diff
 /usr/bin/t3c-generate
+/usr/bin/t3c-preprocess
 /usr/bin/t3c-request
 /usr/bin/t3c-update
 /usr/bin/t3c-verify
