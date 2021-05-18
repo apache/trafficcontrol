@@ -195,11 +195,7 @@ func ServiceStart(service string, cmd string) (bool, error) {
 	return false, nil
 }
 
-func WriteFile(fn string, data []byte, perm os.FileMode) (int, error) {
-	return WriteFileWithOwner(fn, data, -1, -1, perm)
-}
-
-func WriteFileWithOwner(fn string, data []byte, uid int, gid int, perm os.FileMode) (int, error) {
+func WriteFileWithOwner(fn string, data []byte, uid *int, gid *int, perm os.FileMode) (int, error) {
 	fd, err := os.OpenFile(fn, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return 0, errors.New("unable to open '" + fn + "' for writing: " + err.Error())
@@ -211,8 +207,8 @@ func WriteFileWithOwner(fn string, data []byte, uid int, gid int, perm os.FileMo
 	}
 	fd.Close()
 
-	if uid > -1 && gid > -1 {
-		err = os.Chown(fn, uid, gid)
+	if uid != nil && gid != nil {
+		err = os.Chown(fn, *uid, *gid)
 		if err != nil {
 			return 0, errors.New("error changing ownership on '" + fn + "': " + err.Error())
 		}
@@ -385,14 +381,18 @@ func CleanTmpDir(cfg config.Cfg) bool {
 }
 
 func MkDir(name string, cfg config.Cfg) bool {
-	return doMkDir(name, cfg, false)
+	return doMkDirWithOwner(name, cfg, nil, nil, false)
 }
 
 func MkDirAll(name string, cfg config.Cfg) bool {
-	return doMkDir(name, cfg, true)
+	return doMkDirWithOwner(name, cfg, nil, nil, true)
 }
 
-func doMkDir(name string, cfg config.Cfg, all bool) bool {
+func MkDirWithOwner(name string, cfg config.Cfg, uid *int, gid *int) bool {
+	return doMkDirWithOwner(name, cfg, uid, gid, false)
+}
+
+func doMkDirWithOwner(name string, cfg config.Cfg, uid *int, gid *int, all bool) bool {
 	fileInfo, err := os.Stat(name)
 	if err == nil && fileInfo.Mode().IsDir() {
 		log.Debugf("the directory '%s' already exists", name)
@@ -409,6 +409,14 @@ func doMkDir(name string, cfg config.Cfg, all bool) bool {
 				if err != nil {
 					log.Errorf("unable to create the directory '%s': %v", name, err)
 					return false
+				}
+
+				if uid != nil && gid != nil {
+					err = os.Chown(name, *uid, *gid)
+					if err != nil {
+						log.Errorf("unable to chown directory uid/gid, '%s': %v", name, err)
+						return false
+					}
 				}
 			} else if fileInfo.Mode().IsDir() {
 				log.Debugf("the directory: %s, already exists\n", name)
