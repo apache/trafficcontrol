@@ -24,7 +24,7 @@ dl_sf_url: https://czf.kabletown.invalid
 dl_to_user:
 dl_to_user_password:
 # TrafficOps API version to use
-dl_to_api_version: 3.0
+dl_to_api_version: 1.3
 dl_target_api_url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}"
 # URL for the CZF file
 dl_shallow_czf_url: "{{ dl_sf_url }}/czf.json"
