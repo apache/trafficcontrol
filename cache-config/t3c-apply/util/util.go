@@ -23,16 +23,19 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/gofrs/flock"
 	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
 	"os/user"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/gofrs/flock"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
@@ -451,40 +454,63 @@ func UpdateMaxmind(cfg config.Cfg) bool {
 		log.Errorf("error parsing maxmind url: %v", err)
 		return false
 	}
-	path := url.Path
-	pathParts := strings.Split(path, "/")
-	fileName := pathParts[len(pathParts)-1]
+	urlpath := url.Path
+	fileName := path.Base(urlpath)
+
+	if fileName == "." || fileName == "/" {
+		log.Errorf("filename for maxmind from url invalid: %s", fileName)
+		return false
+	}
 
 	// Check if filename exists in ats etc
-	filePath := cfg.TsConfigDir + "/" + fileName
+	filePath := filepath.Join(cfg.TsConfigDir, "/", fileName)
 	stdOut, _, code := t3cutil.Do(`date`,
 		"+%a, %d %b %Y %r %Z",
 		"-u",
 		"-r",
 		filePath)
 
-	if code == 0 {
-		// The file exists so run an IMS check
-		ims := fmt.Sprintf("If-Modified-Since: %s", string(stdOut[:len(stdOut)-1]))
-		stdOut, _, code := t3cutil.Do(`curl`,
-			"-I",
-			"-H",
-			ims,
-			"-sw",
-			"%{http_code}",
-			cfg.MaxMindLocation,
-			"-o",
-			"/dev/null")
+	// Do a HEAD request to check for 200 or 304 depending on if we
+	// have an existing file or not.
+	client := &http.Client{}
+	req, err := http.NewRequest("HEAD", cfg.MaxMindLocation, nil)
+	if err != nil {
+		log.Errorf("error creating head request %v", err)
+		return false
+	}
 
-		if string(stdOut) == "304" {
-			log.Errorf("Received a 304 for maxmind database, not updating")
-			return false
+	if code == 0 {
+		req.Header.Add("If-Modified-Since", strings.TrimSpace(string(stdOut)))
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Errorf("error issuing client IMS request %v", err)
+		return false
+	}
+
+	if resp.StatusCode != 304 && resp.StatusCode != 200 {
+		log.Errorf("error requesting %s, code: %d", cfg.MaxMindLocation, resp.StatusCode)
+		return false
+	}
+
+	// If we have a 304 then update the timestamp on the file on disk.
+	if resp.StatusCode == 304 {
+		dateStr := resp.Header.Get("Last-Modified")
+		if dateStr == "" {
+			dateStr = resp.Header.Get("Date")
 		}
+		_, _, code := t3cutil.Do(`touch`,
+			"-d",
+			dateStr,
+			filePath)
 
 		if code != 0 {
-			log.Errorf("error issuing IMS for maxmind database")
+			log.Errorf("error setting new date: %s, on %s", dateStr, filePath)
 			return false
 		}
+
+		log.Infof("received a 304 for maxmind database, updated disk file with new date: %s", dateStr)
+		return false
 	}
 
 	_, _, code = t3cutil.Do(`curl`,
@@ -503,11 +529,7 @@ func UpdateMaxmind(cfg config.Cfg) bool {
 		log.Errorf("error running gunzip: %v\n", err)
 		return false
 	}
-	if code == 0 {
-		log.Errorf("Maxmind DB at %s successfully updated from %s", filePath, cfg.MaxMindLocation)
-		return true
-	}
 
-	log.Errorf("failure gunzip maxmind db")
-	return false
+	log.Infof("Maxmind DB at %s successfully updated from %s", filePath, cfg.MaxMindLocation)
+	return true
 }

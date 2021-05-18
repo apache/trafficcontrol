@@ -232,9 +232,9 @@ func GitCommitAndExit(exitCode int, cfg config.Cfg) {
 	os.Exit(exitCode)
 }
 
-// CheckMaxmindUpdate will (if a url is set) check for a db on disk
-// if it exists issue an IMS to determine if it needs to update the db.
-// If no file or if update is needed to be done it is downloaded and unpacked
+// CheckMaxmindUpdate will (if a url is set) check for a db on disk.
+// If it exists, issue an IMS to determine if it needs to update the db.
+// If no file or if an update is needed to be done it is downloaded and unpacked.
 func CheckMaxmindUpdate(cfg config.Cfg) bool {
 	// Check if we have a URL for a maxmind db
 	// If we do, test if the file exists, do IMS based on disk time
