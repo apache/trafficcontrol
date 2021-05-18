@@ -38,6 +38,11 @@ if [[ "$NAME" != "trafficserver" ]]; then
 fi
 
 case "$COMMAND" in
+	enable)
+		service_file="$(rpm -ql trafficserver | grep '\.service$')"
+		echo "Created symlink /etc/systemd/system/sockets.target.wants/$(basename "$service_file") → ${service_file}."
+		exit
+		;;
   restart) command_found=true;;
   start) command_found=true;;
   status) command_found=true;;
