@@ -1055,7 +1055,7 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 		except KeyError as e:
 			exception = ValueError("missing 'aes_key_location' config_var")
 			exception.__cause__ = e
-			raise exception
+			logging.warning("no traffic vault aes encryption key location specified, using default /opt/traffic_ops/app/aes.conf")
 
 	return traffic_vault_backend == "postgres"
 
