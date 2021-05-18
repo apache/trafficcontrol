@@ -134,4 +134,5 @@ FROM edge AS edge-debug
 COPY --from=get-delve /root/go/bin /usr/bin
 COPY infrastructure/cdn-in-a-box/cache/init-debug-scripts.sh /opt/init.d/
 
+# Makes the default target skip the edge-debug stage
 FROM edge
