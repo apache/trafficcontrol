@@ -120,6 +120,9 @@ COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
 	infrastructure/cdn-in-a-box/traffic_ops/tv.conf \
 	/
 
+# Generate the AES encryption key for traffic vault backend
+RUN echo $(openssl rand -base64 32) > aes.conf
+
 EXPOSE 443
 CMD /run-go.sh
 HEALTHCHECK --interval=10s --timeout=1s \
