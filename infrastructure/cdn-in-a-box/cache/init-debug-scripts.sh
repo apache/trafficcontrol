@@ -40,17 +40,18 @@ maybe_debug() {
 
 hostname="$(hostname --short)"
 for t3c_tool in $(compgen -c t3c | sort | uniq); do
-	(path="$(type -p "$t3c_tool")"
-	cd "$(dirname "$path")"
-	dlv_script="${t3c_tool}.debug"
-	actual_binary="${t3c_tool}.actual"
-	<<-DLV_SCRIPT cat > "$dlv_script"
-	#!/usr/bin/env bash
-	$(type maybe_debug | tail -n+2)
-	maybe_debug "${hostname}" "${DEBUG_PORT}" "${actual_binary}" "\$@"
-	DLV_SCRIPT
-	chmod +x "$dlv_script"
-	mv "$t3c_tool" "$actual_binary"
-	ln -s "$dlv_script" "$t3c_tool"
+	(
+		path="$(type -p "$t3c_tool")"
+		cd "$(dirname "$path")"
+		dlv_script="${t3c_tool}.debug"
+		actual_binary="${t3c_tool}.actual"
+		<<-DLV_SCRIPT cat > "$dlv_script"
+		#!/usr/bin/env bash
+		$(type maybe_debug | tail -n+2)
+		maybe_debug "${hostname}" "${DEBUG_PORT}" "${actual_binary}" "\$@"
+		DLV_SCRIPT
+		chmod +x "$dlv_script"
+		mv "$t3c_tool" "$actual_binary"
+		ln -s "$dlv_script" "$t3c_tool"
 	)
 done
