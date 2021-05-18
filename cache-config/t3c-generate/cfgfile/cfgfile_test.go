@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/cache-config/t3c-configPreprocessor/preproc-util"
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -35,18 +36,22 @@ import (
 
 func TestWriteConfigs(t *testing.T) {
 	buf := &bytes.Buffer{}
-	configs := []t3cutil.ATSConfigFile{
-		{
-			Name:        "config0.txt",
-			Path:        "/my/config0/location",
-			Text:        "config0",
-			ContentType: "text/plain",
-		},
-		{
-			Name:        "config1.txt",
-			Path:        "/my/config1/location",
-			Text:        "config2,foo",
-			ContentType: "text/csv",
+	configs := config.ServerAndConfigs{
+		Server: &atscfg.Server{},
+
+		ConfigFile: []t3cutil.ATSConfigFile{
+			{
+				Name:        "config0.txt",
+				Path:        "/my/config0/location",
+				Text:        "config0",
+				ContentType: "text/plain",
+			},
+			{
+				Name:        "config1.txt",
+				Path:        "/my/config1/location",
+				Text:        "config2,foo",
+				ContentType: "text/csv",
+			},
 		},
 	}
 
@@ -150,7 +155,7 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 		t.Fatalf("error getting configs: " + err.Error())
 	}
 	buf := &bytes.Buffer{}
-	if err := WriteConfigs(configs, buf); err != nil {
+	if err := preproc_util.WriteConfigs(configs, buf); err != nil {
 		t.Fatalf("error writing configs: " + err.Error())
 	}
 	configStr := buf.String()
@@ -162,7 +167,7 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 			t.Fatalf("error getting configs2: " + err.Error())
 		}
 		buf := &bytes.Buffer{}
-		if err := WriteConfigs(configs2, buf); err != nil {
+		if err := preproc_util.WriteConfigs(configs2, buf); err != nil {
 			t.Fatalf("error writing configs2: " + err.Error())
 		}
 		configStr2 := buf.String()
