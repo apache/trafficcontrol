@@ -105,6 +105,7 @@ COPY $TRAFFIC_OPS_RPM /traffic_ops.rpm
 RUN rpm -Uvh /traffic_ops.rpm && \
 	rm /traffic_ops.rpm
 
+ADD infrastructure/cdn-in-a-box/traffic_ops/aes.conf aes.conf
 COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
 	infrastructure/cdn-in-a-box/traffic_ops/config.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/run-go.sh \
@@ -117,7 +118,6 @@ COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
 	infrastructure/cdn-in-a-box/traffic_ops/trafficops-init.sh \
 	infrastructure/cdn-in-a-box/variables.env \
 	infrastructure/cdn-in-a-box/traffic_ops/tv.conf \
-	infrastructure/cdn-in-a-box/traffic_ops/aes \
 	/
 
 EXPOSE 443
@@ -132,7 +132,6 @@ RUN go get -u github.com/go-delve/delve/cmd/dlv
 FROM trafficops AS trafficops-debug
 COPY --from=get-delve /root/go/bin /usr/bin
 COPY tv.conf conf/production/
-COPY aes conf/production/
 
 # Makes the default target skip the trafficops-debug stage
 FROM trafficops
