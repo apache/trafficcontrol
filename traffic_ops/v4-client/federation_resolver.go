@@ -15,8 +15,6 @@ package client
 */
 
 import (
-	"fmt"
-	"net/http"
 	"net/url"
 	"strconv"
 
@@ -24,45 +22,31 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
+// apiFederationResolvers is the API-version-relative path to the
+// /federation_resolvers endpoint.
+const apiFederationResolvers = "/federation_resolvers"
+
 // GetFederationResolvers retrieves Federation Resolvers from Traffic Ops.
-func (to *Session) GetFederationResolvers(params url.Values, header http.Header) ([]tc.FederationResolver, toclientlib.ReqInf, error) {
-	var path = "federation_resolvers/"
-	if len(params) > 0 {
-		path = fmt.Sprintf("%s?%s", path, params.Encode())
-	}
-
-	var data struct {
-		Response []tc.FederationResolver `json:"response"`
-	}
-	inf, err := to.get(path, header, &data)
-	return data.Response, inf, err
-}
-
-// GetFederationResolverByID retrieves a single Federation Resolver identified by ID.
-func (to *Session) GetFederationResolverByID(ID uint, header http.Header) (tc.FederationResolver, toclientlib.ReqInf, error) {
-	vals := url.Values{}
-	vals.Set("id", strconv.FormatUint(uint64(ID), 10))
-	feds, reqInf, err := to.GetFederationResolvers(vals, nil)
-	if err != nil {
-		return tc.FederationResolver{}, reqInf, err
-	}
-	if len(feds) != 1 {
-		return tc.FederationResolver{}, reqInf, fmt.Errorf("Traffic Ops returned %d Federation Resolvers with ID '%d'", len(feds), ID)
-	}
-	return feds[0], reqInf, nil
+func (to *Session) GetFederationResolvers(opts RequestOptions) (tc.FederationResolversResponse, toclientlib.ReqInf, error) {
+	var data tc.FederationResolversResponse
+	inf, err := to.get(apiFederationResolvers, opts, &data)
+	return data, inf, err
 }
 
 // CreateFederationResolver creates the Federation Resolver 'fr'.
-func (to *Session) CreateFederationResolver(fr tc.FederationResolver, header http.Header) (tc.FederationResolverResponseV4, toclientlib.ReqInf, error) {
-	var response tc.FederationResolverResponseV4
-	reqInf, err := to.post("federation_resolvers/", fr, header, &response)
+func (to *Session) CreateFederationResolver(fr tc.FederationResolver, opts RequestOptions) (tc.FederationResolverResponse, toclientlib.ReqInf, error) {
+	var response tc.FederationResolverResponse
+	reqInf, err := to.post(apiFederationResolvers, opts, fr, &response)
 	return response, reqInf, err
 }
 
 // DeleteFederationResolver deletes the Federation Resolver identified by 'id'.
-func (to *Session) DeleteFederationResolver(id uint) (tc.Alerts, toclientlib.ReqInf, error) {
-	var alerts tc.Alerts
-	path := fmt.Sprintf("/federation_resolvers?id=%d", id)
-	reqInf, err := to.del(path, nil, &alerts)
+func (to *Session) DeleteFederationResolver(id uint, opts RequestOptions) (tc.FederationResolverResponse, toclientlib.ReqInf, error) {
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+	opts.QueryParameters.Set("id", strconv.FormatUint(uint64(id), 10))
+	var alerts tc.FederationResolverResponse
+	reqInf, err := to.del(apiFederationResolvers, opts, &alerts)
 	return alerts, reqInf, err
 }

@@ -22,15 +22,13 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
-
 	"github.com/jmoiron/sqlx"
 )
 
-func getURISigningKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context) ([]byte, bool, error) {
-	var jsonUriKeys json.RawMessage
-	if err := tvTx.QueryRow("SELECT data FROM uri_signing_key WHERE deliveryservice = $1", xmlID).Scan(&jsonUriKeys); err != nil {
+func getURISigningKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context, aesKey []byte) ([]byte, bool, error) {
+	var encryptedUriSigningKey []byte
+	if err := tvTx.QueryRow("SELECT data FROM uri_signing_key WHERE deliveryservice = $1", xmlID).Scan(&encryptedUriSigningKey); err != nil {
 		if err == sql.ErrNoRows {
 			return []byte{}, false, nil
 		}
@@ -38,17 +36,26 @@ func getURISigningKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context) ([]byte
 		return []byte{}, false, e
 	}
 
+	jsonUriKeys, err := aesDecrypt(encryptedUriSigningKey, aesKey)
+	if err != nil {
+		return []byte{}, false, err
+	}
+
 	return []byte(jsonUriKeys), true, nil
 }
 
-func putURISigningKeys(xmlID string, tvTx *sqlx.Tx, keys []byte, ctx context.Context) error {
-
+func putURISigningKeys(xmlID string, tvTx *sqlx.Tx, keys []byte, ctx context.Context, aesKey []byte) error {
 	// Delete old keys first if they exist
 	if err := deleteURISigningKeys(xmlID, tvTx, ctx); err != nil {
 		return err
 	}
 
-	res, err := tvTx.Exec("INSERT INTO uri_signing_key (deliveryservice, data) VALUES ($1, $2)", xmlID, keys)
+	encryptedKey, err := aesEncrypt(keys, aesKey)
+	if err != nil {
+		return errors.New("encrypting keys: " + err.Error())
+	}
+
+	res, err := tvTx.Exec("INSERT INTO uri_signing_key (deliveryservice, data) VALUES ($1, $2)", xmlID, encryptedKey)
 	if err != nil {
 		e := checkErrWithContext("Traffic Vault PostgreSQL: executing INSERT URI Sig Keys query", err, ctx.Err())
 		return e

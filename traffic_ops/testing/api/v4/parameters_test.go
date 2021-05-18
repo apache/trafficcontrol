@@ -17,13 +17,14 @@ package v4
 
 import (
 	"net/http"
-	"net/url"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestParameters(t *testing.T) {
@@ -35,8 +36,7 @@ func TestParameters(t *testing.T) {
 		GetTestParametersIMS(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
-		var header http.Header
-		header = make(map[string][]string)
+		var header http.Header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
 		header.Set(rfc.IfUnmodifiedSince, time)
 		UpdateTestParameters(t)
@@ -51,93 +51,109 @@ func TestParameters(t *testing.T) {
 }
 
 func UpdateTestParametersWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.Parameters) > 0 {
-		firstParameter := testData.Parameters[0]
-		// Retrieve the Parameter by name so we can get the id for the Update
-		resp, _, err := TOSession.GetParametersByProfileName(firstParameter.Name, header)
-		if err != nil {
-			t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
-		}
-		if len(resp) > 0 {
-			remoteParameter := resp[0]
-			expectedParameterValue := "UPDATED"
-			remoteParameter.Value = expectedParameterValue
-			_, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, header)
-			if err == nil {
-				t.Errorf("Expected error about precondition failed, but got none")
-			}
-			if reqInf.StatusCode != http.StatusPreconditionFailed {
-				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-			}
-		}
+	if len(testData.Parameters) < 1 {
+		t.Fatal("Need at least one Parameter to test updating Parameters with HTTP headers")
+	}
+	firstParameter := testData.Parameters[0]
+
+	// Retrieve the Parameter by name so we can get the id for the Update
+	opts := client.NewRequestOptions()
+	opts.Header = header
+	opts.QueryParameters.Set("name", firstParameter.Name)
+	resp, _, err := TOSession.GetParameters(opts)
+	if err != nil {
+		t.Errorf("cannot get Parameter by name '%s': %v - alerts: %+v", firstParameter.Name, err, resp.Alerts)
+	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("Expected at least one Parameter to exist with name '%s'", firstParameter.Name)
+	}
+	remoteParameter := resp.Response[0]
+	expectedParameterValue := "UPDATED"
+	remoteParameter.Value = expectedParameterValue
+	_, reqInf, err := TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, opts)
+	if err == nil {
+		t.Error("Expected error about precondition failed, but got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %d", reqInf.StatusCode)
 	}
 }
 
 func GetTestParametersIMSAfterChange(t *testing.T, header http.Header) {
-	params := url.Values{}
+	opts := client.NewRequestOptions()
+	opts.Header = header
 	for _, pl := range testData.Parameters {
-		params.Set("name", pl.Name)
-		_, reqInf, err := TOSession.GetParameters(header, params)
+		opts.QueryParameters.Set("name", pl.Name)
+		resp, reqInf, err := TOSession.GetParameters(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusOK {
-			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
+			t.Fatalf("Expected 200 status code, got %d", reqInf.StatusCode)
 		}
 	}
+
 	currentTime := time.Now().UTC()
 	currentTime = currentTime.Add(1 * time.Second)
 	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
+
+	opts.Header.Set(rfc.IfModifiedSince, timeStr)
 	for _, pl := range testData.Parameters {
-		params.Set("name", pl.Name)
-		_, reqInf, err := TOSession.GetParameters(header, params)
+		opts.QueryParameters.Set("name", pl.Name)
+		resp, reqInf, err := TOSession.GetParameters(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+			t.Fatalf("Expected 304 status code, got %d", reqInf.StatusCode)
 		}
 	}
 }
 
 func CreateTestParameters(t *testing.T) {
-
-	for _, pl := range testData.Parameters {
-		resp, _, err := TOSession.CreateParameter(pl)
-		t.Log("Response: ", resp)
-		if err != nil {
-			t.Errorf("could not CREATE parameters: %v", err)
-		}
+	resp, _, err := TOSession.CreateMultipleParameters(testData.Parameters, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("could not create Parameters: %v - alerts: %+v", err, resp)
 	}
-
 }
 
 func UpdateTestParameters(t *testing.T) {
-
-	firstParameter := testData.Parameters[0]
-	// Retrieve the Parameter by name so we can get the id for the Update
-	params := url.Values{}
-	params.Set("name", firstParameter.Name)
-	resp, _, err := TOSession.GetParameters(nil, params)
-	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+	if len(testData.Parameters) < 1 {
+		t.Fatal("Need at least one Parameter to test updating Parameters")
 	}
-	remoteParameter := resp[0]
+	firstParameter := testData.Parameters[0]
+
+	// Retrieve the Parameter by name so we can get the id for the Update
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstParameter.Name)
+	resp, _, err := TOSession.GetParameters(opts)
+	if err != nil {
+		t.Errorf("cannot get Parameter by name '%s': %v - alerts: %+v", firstParameter.Name, err, resp.Alerts)
+	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("Expected at least one Parameter to exist with name '%s'", firstParameter.Name)
+	}
+	remoteParameter := resp.Response[0]
+
 	expectedParameterValue := "UPDATED"
 	remoteParameter.Value = expectedParameterValue
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, nil)
+	alert, _, err = TOSession.UpdateParameter(remoteParameter.ID, remoteParameter, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot UPDATE Parameter by id: %v - %v", err, alert)
+		t.Errorf("cannot update Parameter: %v - alerts: %+v", err, alert.Alerts)
 	}
 
 	// Retrieve the Parameter to check Parameter name got updated
-	resp, _, err = TOSession.GetParameterByID(remoteParameter.ID, nil)
+	opts.QueryParameters.Del("name")
+	opts.QueryParameters.Set("id", strconv.Itoa(remoteParameter.ID))
+	resp, _, err = TOSession.GetParameters(opts)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		t.Errorf("cannot get Parameter by ID %d: %v - alerts: %+v", remoteParameter.ID, err, resp.Alerts)
 	}
-	respParameter := resp[0]
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Parameter to exist with ID %d, found: %d", remoteParameter.ID, len(resp.Response))
+	}
+	respParameter := resp.Response[0]
 	if respParameter.Value != expectedParameterValue {
 		t.Errorf("results do not match actual: %s, expected: %s", respParameter.Value, expectedParameterValue)
 	}
@@ -145,37 +161,35 @@ func UpdateTestParameters(t *testing.T) {
 }
 
 func GetTestParametersIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	params := url.Values{}
+
+	opts := client.NewRequestOptions()
+	opts.Header.Set(rfc.IfModifiedSince, time)
 	for _, pl := range testData.Parameters {
-		params.Set("name", pl.Name)
-		_, reqInf, err := TOSession.GetParameters(header, params)
+		opts.QueryParameters.Set("name", pl.Name)
+		resp, reqInf, err := TOSession.GetParameters(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+			t.Fatalf("Expected 304 status code, got %d", reqInf.StatusCode)
 		}
 	}
 }
 
 func GetTestParameters(t *testing.T) {
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, pl := range testData.Parameters {
-		params.Set("name", pl.Name)
-		resp, _, err := TOSession.GetParameters(nil, params)
+		opts.QueryParameters.Set("name", pl.Name)
+		resp, _, err := TOSession.GetParameters(opts)
 		if err != nil {
-			t.Errorf("cannot GET Parameter by name: %v - %v", err, resp)
+			t.Errorf("cannot GET Parameter by name '%s': %v - alerts: %+v", pl.Name, err, resp.Alerts)
 		}
 	}
 }
 
 func DeleteTestParametersParallel(t *testing.T) {
-
 	var wg sync.WaitGroup
 	for _, pl := range testData.Parameters {
 
@@ -190,44 +204,45 @@ func DeleteTestParametersParallel(t *testing.T) {
 }
 
 func DeleteTestParameters(t *testing.T) {
-
 	for _, pl := range testData.Parameters {
 		DeleteTestParameter(t, pl)
 	}
 }
 
 func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
-
 	// Retrieve the Parameter by name so we can get the id for the Update
-	params := url.Values{}
-	params.Set("name", pl.Name)
-	params.Set("configFile", pl.ConfigFile)
-	resp, _, err := TOSession.GetParameters(nil, params)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", pl.Name)
+	opts.QueryParameters.Set("configFile", pl.ConfigFile)
+	resp, _, err := TOSession.GetParameters(opts)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", pl.Name, err)
+		t.Errorf("cannot get Parameter by name '%s' and configFile '%s': %v - alerts: %+v", pl.Name, pl.ConfigFile, err, resp.Alerts)
 	}
 
-	if len(resp) == 0 {
-		// TODO This fails for the ProfileParameters test; determine a way to check this, even for ProfileParameters
-		// t.Errorf("DeleteTestParameter got no params for %+v %+v", pl.Name, pl.ConfigFile)
-	} else if len(resp) > 1 {
-		// TODO figure out why this happens, and be more precise about deleting things where created.
-		// t.Errorf("DeleteTestParameter params for %+v %+v expected 1, actual %+v", pl.Name, pl.ConfigFile, len(resp))
-	}
+	// TODO This fails for the ProfileParameters test; determine a way to check this, even for ProfileParameters
+	// if len(resp.Response) == 0 {
+	// t.Errorf("DeleteTestParameter got no params for %+v %+v", pl.Name, pl.ConfigFile)
+	// TODO figure out why this happens, and be more precise about deleting things where created.
+	// } else if len(resp.Response) > 1 {
+	// t.Errorf("DeleteTestParameter params for %+v %+v expected 1, actual %+v", pl.Name, pl.ConfigFile, len(resp))
+	// }
 
-	for _, respParameter := range resp {
-		delResp, _, err := TOSession.DeleteParameter(respParameter.ID)
+	opts.QueryParameters.Del("name")
+	opts.QueryParameters.Del("configFile")
+	for _, respParameter := range resp.Response {
+		delResp, _, err := TOSession.DeleteParameter(respParameter.ID, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("cannot DELETE Parameter by name: %v - %v", err, delResp)
+			t.Errorf("cannot delete Parameter #%d: %v - alerts: %+v", respParameter.ID, err, delResp.Alerts)
 		}
 
 		// Retrieve the Parameter to see if it got deleted
-		pls, _, err := TOSession.GetParameterByID(pl.ID, nil)
+		opts.QueryParameters.Set("id", strconv.Itoa(pl.ID))
+		pls, _, err := TOSession.GetParameters(opts)
 		if err != nil {
-			t.Errorf("error deleting Parameter name: %s", err.Error())
+			t.Errorf("Unexpected error fetching Parameter #%d after deletion: %v - alerts: %+v", pl.ID, err, pls.Alerts)
 		}
-		if len(pls) > 0 {
-			t.Errorf("expected Parameter Name: %s and ConfigFile: %s to be deleted", pl.Name, pl.ConfigFile)
+		if len(pls.Response) > 0 {
+			t.Errorf("expected Parameter with name '%s' and configFile '%s' to be deleted, but it was found in a Traffic Ops response", pl.Name, pl.ConfigFile)
 		}
 	}
 }

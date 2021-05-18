@@ -17,8 +17,6 @@ package v4
 
 import (
 	"net/http"
-	"net/url"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -26,11 +24,11 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestProfileParameters(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, ProfileParameters}, func() {
-		SortTestProfileParameters(t)
 		GetTestProfileParametersIMS(t)
 		GetTestProfileParameters(t)
 		InvalidCreateTestProfileParameters(t)
@@ -38,101 +36,108 @@ func TestProfileParameters(t *testing.T) {
 }
 
 func GetTestProfileParametersIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
+	opts := client.NewRequestOptions()
+
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	queryParams := url.Values{}
+	opts.Header.Set(rfc.IfModifiedSince, time)
+
 	for _, pp := range testData.ProfileParameters {
-		queryParams.Set("profileId", strconv.Itoa(pp.ProfileID))
-		queryParams.Set("parameterId", strconv.Itoa(pp.ParameterID))
-		_, reqInf, err := TOSession.GetProfileParameters(queryParams, header)
+		opts.QueryParameters.Set("profileId", strconv.Itoa(pp.ProfileID))
+		opts.QueryParameters.Set("parameterId", strconv.Itoa(pp.ParameterID))
+		resp, reqInf, err := TOSession.GetProfileParameters(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Errorf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+			t.Errorf("Expected 304 status code, got %v", reqInf.StatusCode)
 		}
 	}
 }
 
 func CreateTestProfileParameters(t *testing.T) {
+	if len(testData.Parameters) < 1 || len(testData.Profiles) < 1 {
+		t.Fatal("Need at least one Profile and one Parameter to test associating a Parameter with a Profile")
+	}
 
 	firstProfile := testData.Profiles[0]
-	profileResp, _, err := TOSession.GetProfileByName(firstProfile.Name, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstProfile.Name)
+	profileResp, _, err := TOSession.GetProfiles(opts)
 	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
+		t.Errorf("cannot get Profile '%s' by name: %v - alerts: %+v", firstProfile.Name, err, profileResp.Alerts)
+	}
+	if len(profileResp.Response) != 1 {
+		t.Fatalf("Expected exactly one Profile to exist with name '%s', found: %d", firstProfile.Name, len(profileResp.Response))
 	}
 
 	firstParameter := testData.Parameters[0]
-	params := url.Values{}
-	params.Set("name", firstParameter.Name)
-	paramResp, _, err := TOSession.GetParameters(nil, params)
+	opts.QueryParameters.Set("name", firstParameter.Name)
+	paramResp, _, err := TOSession.GetParameters(opts)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		t.Errorf("cannot get Parameter by name '%s': %v - alerts: %+v", firstParameter.Name, err, paramResp.Alerts)
+	}
+	if len(paramResp.Response) < 1 {
+		t.Fatalf("Expected at least one Parameter to exist with name '%s'", firstParameter.Name)
 	}
 
-	profileID := profileResp[0].ID
-	parameterID := paramResp[0].ID
+	profileID := profileResp.Response[0].ID
+	parameterID := paramResp.Response[0].ID
 
-	pp := tc.ProfileParameter{
+	pp := tc.ProfileParameterCreationRequest{
 		ProfileID:   profileID,
 		ParameterID: parameterID,
 	}
-	resp, _, err := TOSession.CreateProfileParameter(pp)
-	t.Log("Response: ", resp)
+	resp, _, err := TOSession.CreateProfileParameter(pp, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("could not CREATE profile parameters: %v", err)
+		t.Errorf("could not associate parameters to profile: %v - alerts: %+v", err, resp.Alerts)
 	}
 
 }
 
 func InvalidCreateTestProfileParameters(t *testing.T) {
-	pp := tc.ProfileParameter{
+	pp := tc.ProfileParameterCreationRequest{
 		ProfileID:   0,
 		ParameterID: 0,
 	}
-	_, _, err := TOSession.CreateProfileParameter(pp)
+	resp, _, err := TOSession.CreateProfileParameter(pp, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("creating invalid profile parameter - expected: error, actual: nil")
 	}
-	if !strings.Contains(err.Error(), "profileId") {
-		t.Errorf("expected: error message to contain 'profileId', actual: %v", err)
-	}
-	if !strings.Contains(err.Error(), "parameterId") {
-		t.Errorf("expected: error message to contain 'parameterId', actual: %v", err)
+
+	foundProfile := false
+	foundParam := false
+	for _, alert := range resp.Alerts {
+		if alert.Level == tc.ErrorLevel.String() {
+			if strings.Contains(alert.Text, "profileId") {
+				foundProfile = true
+			}
+			if strings.Contains(alert.Text, "parameterId") {
+				foundParam = true
+			}
+			if foundProfile && foundParam {
+				break
+			}
+		}
 	}
 
-}
-
-func SortTestProfileParameters(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetProfileParameters(nil, header)
-	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+	if !foundProfile {
+		t.Errorf("expected: error message to contain 'profileId', actual: %v - alerts: %+v", err, resp.Alerts)
 	}
-	for i := range resp {
-		sortedList = append(sortedList, resp[i].Parameter)
+	if !foundParam {
+		t.Errorf("expected: error message to contain 'parameterId', actual: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
-	}
 }
 
 func GetTestProfileParameters(t *testing.T) {
-	queryParams := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, pp := range testData.ProfileParameters {
-		queryParams.Set("profileId", strconv.Itoa(pp.ProfileID))
-		queryParams.Set("parameterId", strconv.Itoa(pp.ParameterID))
-		resp, _, err := TOSession.GetProfileParameters(queryParams, nil)
+		opts.QueryParameters.Set("profileId", strconv.Itoa(pp.ProfileID))
+		opts.QueryParameters.Set("parameterId", strconv.Itoa(pp.ParameterID))
+		resp, _, err := TOSession.GetProfileParameters(opts)
 		if err != nil {
-			t.Errorf("cannot GET Parameter by name: %v - %v", err, resp)
+			t.Errorf("cannot get Profile #%d/Parameter #%d association: %v - alerts: %+v", pp.ProfileID, pp.ParameterID, err, resp.Alerts)
 		}
 	}
 }
@@ -145,29 +150,29 @@ func DeleteTestProfileParameters(t *testing.T) {
 }
 
 func DeleteTestProfileParameter(t *testing.T, pp tc.ProfileParameter) {
-	queryParams := url.Values{}
-	queryParams.Set("profileId", strconv.Itoa(pp.ProfileID))
-	queryParams.Set("parameterId", strconv.Itoa(pp.ParameterID))
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("profileId", strconv.Itoa(pp.ProfileID))
+	opts.QueryParameters.Set("parameterId", strconv.Itoa(pp.ParameterID))
 	// Retrieve the PtofileParameter by profile so we can get the id for the Update
-	resp, _, err := TOSession.GetProfileParameters(queryParams, nil)
+	resp, _, err := TOSession.GetProfileParameters(opts)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by profile: %v - %v", pp.Profile, err)
+		t.Errorf("cannot get Profile #%d/Parameter #%d association: %v - alerts: %+v", pp.ProfileID, pp.ParameterID, err, resp.Alerts)
 	}
-	if len(resp) > 0 {
-		respPP := resp[0]
+	if len(resp.Response) > 0 {
+		respPP := resp.Response[0]
 
-		delResp, _, err := TOSession.DeleteProfileParameter(respPP.ProfileID, respPP.ParameterID)
+		delResp, _, err := TOSession.DeleteProfileParameter(pp.ProfileID, respPP.Parameter, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("cannot DELETE Parameter by profile: %v - %v", err, delResp)
+			t.Errorf("cannot delete Profile #%d/Parameter #%d association: %v - alerts: %+v", pp.ProfileID, pp.ParameterID, err, delResp.Alerts)
 		}
 
 		// Retrieve the Parameter to see if it got deleted
-		pps, _, err := TOSession.GetProfileParameters(queryParams, nil)
+		pps, _, err := TOSession.GetProfileParameters(opts)
 		if err != nil {
-			t.Errorf("error deleting Parameter name: %s", err.Error())
+			t.Errorf("error getting #%d/Parameter #%d association after deletion: %v - alerts: %+v", pp.ProfileID, pp.ParameterID, err, pps.Alerts)
 		}
-		if len(pps) > 0 {
-			t.Errorf("expected Parameter Name: %s and ConfigFile: %s to be deleted", pp.Profile, pp.Parameter)
+		if len(pps.Response) > 0 {
+			t.Errorf("expected #%d/Parameter #%d association to be deleted, but it was found in Traffic Ops", pp.ProfileID, pp.ParameterID)
 		}
 	}
 }

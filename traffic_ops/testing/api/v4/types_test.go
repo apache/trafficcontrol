@@ -19,11 +19,13 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestTypes(t *testing.T) {
@@ -42,23 +44,29 @@ func TestTypes(t *testing.T) {
 }
 
 func GetTestTypesIMSAfterChange(t *testing.T, header http.Header) {
+	opts := client.NewRequestOptions()
+	opts.Header = header
 	for _, typ := range testData.Types {
-		_, reqInf, err := TOSession.GetTypeByName(typ.Name, header)
+		opts.QueryParameters.Set("name", typ.Name)
+		resp, reqInf, err := TOSession.GetTypes(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusOK {
 			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
 		}
 	}
+
 	currentTime := time.Now().UTC()
 	currentTime = currentTime.Add(1 * time.Second)
 	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
+	opts.Header.Set(rfc.IfModifiedSince, timeStr)
+
 	for _, typ := range testData.Types {
-		_, reqInf, err := TOSession.GetTypeByName(typ.Name, header)
+		opts.QueryParameters.Set("name", typ.Name)
+		resp, reqInf, err := TOSession.GetTypes(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -67,17 +75,17 @@ func GetTestTypesIMSAfterChange(t *testing.T, header http.Header) {
 }
 
 func GetTestTypesIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	t.Log("---- GetTestTypes ----")
+
+	opts := client.NewRequestOptions()
+	opts.Header.Set(rfc.IfModifiedSince, time)
 
 	for _, typ := range testData.Types {
-		_, reqInf, err := TOSession.GetTypeByName(typ.Name, header)
+		opts.QueryParameters.Set("name", typ.Name)
+		resp, reqInf, err := TOSession.GetTypes(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -86,8 +94,6 @@ func GetTestTypesIMS(t *testing.T) {
 }
 
 func CreateTestTypes(t *testing.T) {
-	t.Log("---- CreateTestTypes ----")
-
 	db, err := OpenConnection()
 	if err != nil {
 		t.Fatal("cannot open db")
@@ -98,82 +104,86 @@ func CreateTestTypes(t *testing.T) {
 			t.Errorf("unable to close connection to db, error: %v", err)
 		}
 	}()
-	dbQueryTemplate := "INSERT INTO type (name, description, use_in_table) VALUES ('%v', '%v', '%v');"
+	dbQueryTemplate := "INSERT INTO type (name, description, use_in_table) VALUES ('%s', '%s', '%s');"
 
+	opts := client.NewRequestOptions()
 	for _, typ := range testData.Types {
-		foundTypes, _, err := TOSession.GetTypeByName(typ.Name, nil)
-		if err == nil && len(foundTypes) > 0 {
-			t.Logf("Type %v already exists (%v match(es))", typ.Name, len(foundTypes))
+		opts.QueryParameters.Set("name", typ.Name)
+		foundTypes, _, err := TOSession.GetTypes(opts)
+		if err == nil && len(foundTypes.Response) > 0 {
+			t.Logf("Type %v already exists (%v match(es))", typ.Name, len(foundTypes.Response))
 			continue
 		}
 
+		var alerts tc.Alerts
 		if typ.UseInTable != "server" {
 			err = execSQL(db, fmt.Sprintf(dbQueryTemplate, typ.Name, typ.Description, typ.UseInTable))
 		} else {
-			_, _, err = TOSession.CreateType(typ)
+			alerts, _, err = TOSession.CreateType(typ, client.RequestOptions{})
 		}
 
 		if err != nil {
-			t.Fatalf("could not CREATE types: %v", err)
+			t.Fatalf("could not create Type: %v - alerts: %+v", err, alerts.Alerts)
 		}
 	}
 }
 
 func SortTestTypes(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetTypes(header)
+	resp, _, err := TOSession.GetTypes(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
-	}
-	for i := range resp {
-		sortedList = append(sortedList, resp[i].Name)
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
+	sortedList := make([]string, 0, len(resp.Response))
+	for _, typ := range resp.Response {
+		sortedList = append(sortedList, typ.Name)
+	}
+
+	if !sort.StringsAreSorted(sortedList) {
 		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 
 func UpdateTestTypes(t *testing.T) {
-	t.Log("---- UpdateTestTypes ----")
 
 	for i, typ := range testData.Types {
 		expectedTypeName := fmt.Sprintf("testType%v", i)
 		originalType := typ
-		resp, _, err := TOSession.GetTypeByName(originalType.Name, nil)
+
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("name", originalType.Name)
+		resp, _, err := TOSession.GetTypes(opts)
 		if err != nil {
-			t.Fatalf("cannot GET Type by name: %v - %v", originalType.Name, err)
+			t.Fatalf("cannot get Types filtered by name '%s': %v - alerts: %+v", originalType.Name, err, resp.Alerts)
 		}
-		if len(resp) < 1 {
-			t.Fatalf("no types by name: %v", originalType.Name)
+		if len(resp.Response) < 1 {
+			t.Fatalf("no Types exist by name '%s'", originalType.Name)
 		}
 
-		remoteType := resp[0]
+		remoteType := resp.Response[0]
 		remoteType.Name = expectedTypeName
 		// Ensure TO checks DB for UseInTable value
 		remoteType.UseInTable = "server"
 
-		var alert tc.Alerts
-		alert, _, err = TOSession.UpdateType(remoteType.ID, remoteType, nil)
+		alert, _, err := TOSession.UpdateType(remoteType.ID, remoteType, client.RequestOptions{})
 		if originalType.UseInTable != "server" {
 			if err == nil {
-				t.Fatalf("expected UPDATE on type %v to fail", remoteType.ID)
+				t.Fatalf("expected update on Type #%d to fail", remoteType.ID)
 			}
 			continue
 		} else if err != nil {
-			t.Fatalf("cannot UPDATE Type by id: %v - %v", err, alert)
+			t.Fatalf("cannot update Type: %v - alerts: %+v", err, alert.Alerts)
 		}
 
 		// Retrieve the Type to check Type name got updated
-		resp, _, err = TOSession.GetTypeByID(remoteType.ID, nil)
+		opts.QueryParameters.Del("name")
+		opts.QueryParameters.Set("id", strconv.Itoa(remoteType.ID))
+		resp, _, err = TOSession.GetTypes(opts)
+		opts.QueryParameters.Del("id")
 		if err != nil {
-			t.Fatalf("cannot GET Type by ID: %v - %v", originalType.ID, err)
+			t.Fatalf("cannot get Type by ID %d: %v - alerts: %+v", originalType.ID, err, resp.Alerts)
 		}
-		respType := resp[0]
+		respType := resp.Response[0]
 		if respType.Name != expectedTypeName {
 			t.Fatalf("results do not match actual: %s, expected: %s", respType.Name, expectedTypeName)
 		}
@@ -183,30 +193,25 @@ func UpdateTestTypes(t *testing.T) {
 
 		// Revert name change
 		respType.Name = originalType.Name
-		alert, _, err = TOSession.UpdateType(respType.ID, respType, nil)
+		alert, _, err = TOSession.UpdateType(respType.ID, respType, client.RequestOptions{})
 		if err != nil {
-			t.Fatalf("cannot restore UPDATE Type by id: %v - %v", err, alert)
+			t.Fatalf("cannot restore/update Type: %v - %+v", err, alert.Alerts)
 		}
 	}
 }
 
 func GetTestTypes(t *testing.T) {
-	t.Log("---- GetTestTypes ----")
-
+	opts := client.NewRequestOptions()
 	for _, typ := range testData.Types {
-		resp, _, err := TOSession.GetTypeByName(typ.Name, nil)
+		opts.QueryParameters.Set("name", typ.Name)
+		resp, _, err := TOSession.GetTypes(opts)
 		if err != nil {
-			t.Errorf("cannot GET Type by name: %v - %v", err, resp)
-
+			t.Errorf("cannot get Type: %v - alerts: %+v", err, resp.Alerts)
 		}
-
-		t.Log("Response: ", resp)
 	}
 }
 
 func DeleteTestTypes(t *testing.T) {
-	t.Log("---- DeleteTestTypes ----")
-
 	db, err := OpenConnection()
 	if err != nil {
 		t.Fatal("cannot open db")
@@ -217,35 +222,37 @@ func DeleteTestTypes(t *testing.T) {
 			t.Errorf("unable to close connection to db, error: %v", err)
 		}
 	}()
-	dbDeleteTemplate := "DELETE FROM type WHERE name='%v';"
+	dbDeleteTemplate := "DELETE FROM type WHERE name='%s';"
 
+	opts := client.NewRequestOptions()
 	for _, typ := range testData.Types {
 		// Retrieve the Type by name so we can get the id for the Update
-		resp, _, err := TOSession.GetTypeByName(typ.Name, nil)
-		if err != nil || len(resp) == 0 {
-			t.Fatalf("cannot GET Type by name: %v - %v", typ.Name, err)
+		opts.QueryParameters.Set("name", typ.Name)
+		resp, _, err := TOSession.GetTypes(opts)
+		if err != nil || len(resp.Response) == 0 {
+			t.Fatalf("cannot get Types filtered by name '%s': %v - alerts: %+v", typ.Name, err, resp.Alerts)
 		}
-		respType := resp[0]
+		respType := resp.Response[0]
 
 		if respType.UseInTable != "server" {
 			err := execSQL(db, fmt.Sprintf(dbDeleteTemplate, respType.Name))
 			if err != nil {
-				t.Fatalf("cannot DELETE Type by name: %v", err)
+				t.Fatalf("cannot delete Type using database operations: %v", err)
 			}
 		} else {
-			delResp, _, err := TOSession.DeleteType(respType.ID)
+			delResp, _, err := TOSession.DeleteType(respType.ID, client.RequestOptions{})
 			if err != nil {
-				t.Fatalf("cannot DELETE Type by name: %v - %v", err, delResp)
+				t.Fatalf("cannot delete Type using the API: %v - alerts: %+v", err, delResp.Alerts)
 			}
 		}
 
 		// Retrieve the Type to see if it got deleted
-		types, _, err := TOSession.GetTypeByName(typ.Name, nil)
+		types, _, err := TOSession.GetTypes(opts)
 		if err != nil {
-			t.Errorf("error deleting Type name: %v", err)
+			t.Errorf("error fetching Types filtered by presumably deleted name: %v - alerts: %+v", err, types.Alerts)
 		}
-		if len(types) > 0 {
-			t.Errorf("expected Type name: %s to be deleted", typ.Name)
+		if len(types.Response) > 0 {
+			t.Errorf("expected Type '%s' to be deleted", typ.Name)
 		}
 	}
 }

@@ -104,7 +104,7 @@ func UpdateTestDeliveryServicesWithHeaders(t *testing.T, header http.Header) {
 		if err == nil {
 			t.Errorf("expected precondition failed error, got none")
 		}
-		if !strings.Contains(err.Error(), "412 Precondition Failed[412]") {
+		if !strings.Contains(err.Error(), "412 Precondition Failed") {
 			t.Errorf("expected error to be related to 'precondition failed', but instead is realted to %v", err.Error())
 		}
 	}

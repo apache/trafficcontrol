@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,39 +15,17 @@
    limitations under the License.
 */
 
-package client
-
 import (
-	"fmt"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APILogs is the API version-relative path to the /logs API endpoint.
-	APILogs = "/logs"
-)
-
-// GetLogsByQueryParams gets a list of logs filtered by query params.
-func (to *Session) GetLogsByQueryParams(queryParams string) ([]tc.Log, toclientlib.ReqInf, error) {
-	uri := APILogs + queryParams
-	var data tc.LogsResponse
-	reqInf, err := to.get(uri, nil, &data)
-	return data.Response, reqInf, err
-}
+// apiLogs is the API version-relative path to the /logs API endpoint.
+const apiLogs = "/logs"
 
 // GetLogs gets a list of logs.
-func (to *Session) GetLogs() ([]tc.Log, toclientlib.ReqInf, error) {
-	return to.GetLogsByQueryParams("")
-}
-
-// GetLogsByLimit gets a list of logs limited to a certain number of logs.
-func (to *Session) GetLogsByLimit(limit int) ([]tc.Log, toclientlib.ReqInf, error) {
-	return to.GetLogsByQueryParams(fmt.Sprintf("?limit=%d", limit))
-}
-
-// GetLogsByDays gets a list of logs limited to a certain number of days.
-func (to *Session) GetLogsByDays(days int) ([]tc.Log, toclientlib.ReqInf, error) {
-	return to.GetLogsByQueryParams(fmt.Sprintf("?days=%d", days))
+func (to *Session) GetLogs(opts RequestOptions) (tc.LogsResponse, toclientlib.ReqInf, error) {
+	var data tc.LogsResponse
+	reqInf, err := to.get(apiLogs, opts, &data)
+	return data, reqInf, err
 }

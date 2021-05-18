@@ -30,11 +30,11 @@ import (
 
 var commands = map[string]struct{}{
 	"apply":    struct{}{},
+	"check":    struct{}{},
 	"diff":     struct{}{},
 	"generate": struct{}{},
 	"request":  struct{}{},
 	"update":   struct{}{},
-	"verify":   struct{}{},
 }
 
 const ExitCodeSuccess = 0

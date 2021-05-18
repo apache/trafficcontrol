@@ -192,7 +192,7 @@ func HandleLogin(db *sql.DB, jwtSigningKey string, w http.ResponseWriter, r *htt
 	clms, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("%s ERROR creating token for '%s': expected MapClaims in token, got %T", token.Claims)
+		log.Printf("ERROR creating token for 'token.Claims': expected MapClaims in token, got %T", token.Claims)
 		return
 	}
 	clms["user"] = user
@@ -348,7 +348,7 @@ func main() {
 			break
 		}
 		if firstAllowedCreateRole == "" {
-			log.Printf("ERROR creating initial admin user: no roles are allowed to create users\n", err)
+			log.Printf("ERROR creating initial admin user: no roles are allowed to create users\n")
 			return
 		}
 		err := createUser(db, config.AdminUser, config.AdminPass, firstAllowedCreateRole)

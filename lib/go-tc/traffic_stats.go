@@ -19,17 +19,19 @@ package tc
  * under the License.
  */
 
-import "encoding/json"
-import "errors"
-import "fmt"
-import "regexp"
-import "strconv"
-import "strings"
-import "time"
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 
-import "github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-log"
 
-import influx "github.com/influxdata/influxdb/client/v2"
+	influx "github.com/influxdata/influxdb/client/v2"
+)
 
 // TRAFFIC_STATS_VERSION was supposed to be the "API version", but actually the plugin (this route
 // used to be a plugin in Perl) always returned this static value
@@ -312,10 +314,15 @@ type TrafficStatsTotalStats struct {
 	Connnections *float64 `json:"connections"`
 }
 
-// TrafficStatsCDNStatsResponse contains response for getting current stats
+// TrafficStatsCDNStatsResponse contains response for getting current stats.
 type TrafficStatsCDNStatsResponse struct {
 	Response []TrafficStatsCDNsStats `json:"response"`
+	Alerts
 }
+
+// CurrentStatsResponse is the type of a response from Traffic Ops
+// to a request to its /current_stats endpoint.
+type CurrentStatsResponse = TrafficStatsCDNStatsResponse
 
 // TrafficStatsCDNsStats contains a list of CDN summary statistics
 type TrafficStatsCDNsStats struct {

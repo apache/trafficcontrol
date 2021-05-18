@@ -24,20 +24,13 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIOSVersions is the full path to the /osversions API endpoint.
-	APIOSVersions = "/osversions"
-)
+// apiOSVersions is the full path to the /osversions API endpoint.
+const apiOSVersions = "/osversions"
 
 // GetOSVersions GETs all available Operating System (OS) versions for ISO generation,
 // as well as the name of the directory where the "kickstarter" files are found.
-// Structure of returned map:
-//  key:   Name of OS
-//  value: Directory where the ISO source can be found
-func (to *Session) GetOSVersions() (map[string]string, toclientlib.ReqInf, error) {
-	var data struct {
-		Versions tc.OSVersionsResponse `json:"response"`
-	}
-	reqInf, err := to.get(APIOSVersions, nil, &data)
-	return data.Versions, reqInf, err
+func (to *Session) GetOSVersions(opts RequestOptions) (tc.OSVersionsAPIResponse, toclientlib.ReqInf, error) {
+	var data tc.OSVersionsAPIResponse
+	reqInf, err := to.get(apiOSVersions, opts, &data)
+	return data, reqInf, err
 }

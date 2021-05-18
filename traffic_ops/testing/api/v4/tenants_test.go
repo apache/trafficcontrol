@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
-	"strings"
+	"strconv"
 	"testing"
 	"time"
 
@@ -47,22 +47,37 @@ func TestTenants(t *testing.T) {
 	})
 }
 
+// This test will break if the testing Tenancy tree is modified in specific ways
 func UpdateTestTenantsWithHeaders(t *testing.T, header http.Header) {
+	opts := client.NewRequestOptions()
+	opts.Header = header
+
 	// Retrieve the Tenant by name so we can get the id for the Update
 	name := "tenant2"
+	opts.QueryParameters.Set("name", name)
+	resp, _, err := TOSession.GetTenants(opts)
+	if err != nil {
+		t.Errorf("cannot get Tenants filtered by name '%s': %v - alerts: %+v", name, err, resp.Alerts)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Tenant to exist with the name 'tenant2', found: %d", len(resp.Response))
+	}
+	modTenant := resp.Response[0]
+
 	parentName := "tenant1"
-	modTenant, _, err := TOSession.GetTenantByName(name, header)
+	opts.QueryParameters.Set("name", parentName)
+	resp, _, err = TOSession.GetTenants(opts)
 	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
+		t.Errorf("cannot get Tenants filtered by name '%s': %v - alerts: %+v", parentName, err, resp.Alerts)
 	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Tenant to exist with the name 'tenant1', found: %d", len(resp.Response))
+	}
+	newParent := resp.Response[0]
 
-	newParent, _, err := TOSession.GetTenantByName(parentName, header)
-	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %s - %v", parentName, err)
-	}
 	modTenant.ParentID = newParent.ID
-
-	_, reqInf, err := TOSession.UpdateTenant(modTenant.ID, modTenant, header)
+	opts.QueryParameters.Del("name")
+	_, reqInf, err := TOSession.UpdateTenant(modTenant.ID, modTenant, opts)
 	if err == nil {
 		t.Fatalf("expected a precondition failed error, got none")
 	}
@@ -79,10 +94,9 @@ func TestTenantsActive(t *testing.T) {
 
 func CreateTestTenants(t *testing.T) {
 	for _, ten := range testData.Tenants {
-		resp, err := TOSession.CreateTenant(ten)
-
+		resp, _, err := TOSession.CreateTenant(ten, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not CREATE tenant %s: %v", ten.Name, err)
+			t.Errorf("could not create Tenant '%s': %v - alerts: %+v", ten.Name, err, resp.Alerts)
 		} else if resp.Response.Name != ten.Name {
 			t.Errorf("expected tenant '%s'; got '%s'", ten.Name, resp.Response.Name)
 		}
@@ -90,47 +104,43 @@ func CreateTestTenants(t *testing.T) {
 }
 
 func GetTestTenants(t *testing.T) {
-	resp, _, err := TOSession.GetTenants(nil)
+	resp, _, err := TOSession.GetTenants(client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot GET all tenants: %v - %v", err, resp)
+		t.Errorf("cannot get all Tenants: %v - alerts: %+v", err, resp.Alerts)
 		return
 	}
-	foundTenants := make(map[string]tc.Tenant, len(resp))
-	for _, ten := range resp {
+	foundTenants := make(map[string]tc.Tenant, len(resp.Response))
+	for _, ten := range resp.Response {
 		foundTenants[ten.Name] = ten
 	}
 
 	// expect root and badTenant (defined in todb.go) + all defined in testData.Tenants
-	if len(resp) != 2+len(testData.Tenants) {
-		t.Errorf("expected %d tenants,  got %d", 2+len(testData.Tenants), len(resp))
+	if len(resp.Response) != 2+len(testData.Tenants) {
+		t.Errorf("expected %d tenants,  got %d", 2+len(testData.Tenants), len(resp.Response))
 	}
 
 	for _, ten := range testData.Tenants {
 		if ft, ok := foundTenants[ten.Name]; ok {
 			if ft.ParentName != ten.ParentName {
-				t.Errorf("tenant %s: expected parent %s,  got %s", ten.Name, ten.ParentName, ft.ParentName)
+				t.Errorf("Tenant '%s': expected parent '%s', got '%s'", ten.Name, ten.ParentName, ft.ParentName)
 			}
 		} else {
-			t.Errorf("expected tenant %s: not found", ten.Name)
+			t.Errorf("expected Tenant '%s': not found", ten.Name)
 		}
 	}
 }
 
 func SortTestTenants(t *testing.T) {
-	var header http.Header
-	var sortedList []string
-	resp, _, err := TOSession.GetTenants(header)
+	resp, _, err := TOSession.GetTenants(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
-	for i := range resp {
-		sortedList = append(sortedList, resp[i].Name)
+	sortedList := make([]string, 0, len(resp.Response))
+	for _, tenant := range resp.Response {
+		sortedList = append(sortedList, tenant.Name)
 	}
 
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
-	if res != true {
+	if !sort.StringsAreSorted(sortedList) {
 		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
@@ -139,28 +149,45 @@ func UpdateTestTenants(t *testing.T) {
 
 	// Retrieve the Tenant by name so we can get the id for the Update
 	name := "tenant2"
-	parentName := "tenant1"
-	modTenant, _, err := TOSession.GetTenantByName(name, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", name)
+	resp, _, err := TOSession.GetTenants(opts)
 	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
+		t.Errorf("cannot get Tenants filtered by name '%s': %v - alerts: %+v", name, err, resp.Alerts)
 	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Tenant to exist with the name 'tenant2', found: %d", len(resp.Response))
+	}
+	modTenant := resp.Response[0]
 
-	newParent, _, err := TOSession.GetTenantByName(parentName, nil)
+	parentName := "tenant1"
+	opts.QueryParameters.Set("name", parentName)
+	resp, _, err = TOSession.GetTenants(opts)
 	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %s - %v", parentName, err)
+		t.Errorf("cannot get Tenants filtered by name '%s': %v - alerts: %+v", parentName, err, resp.Alerts)
 	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Tenant to exist with the name 'tenant1', found: %d", len(resp.Response))
+	}
+	newParent := resp.Response[0]
 	modTenant.ParentID = newParent.ID
 
-	_, _, err = TOSession.UpdateTenant(modTenant.ID, modTenant, nil)
+	response, _, err := TOSession.UpdateTenant(modTenant.ID, modTenant, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot UPDATE Tenant by id: %v", err)
+		t.Errorf("cannot update Tenant: %v - alerts: %+v", err, response.Alerts)
 	}
 
 	// Retrieve the Tenant to check Tenant parent name got updated
-	respTenant, _, err := TOSession.GetTenantByID(modTenant.ID, nil)
+	opts.QueryParameters.Del("name")
+	opts.QueryParameters.Set("id", strconv.Itoa(modTenant.ID))
+	resp, _, err = TOSession.GetTenants(opts)
 	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %v - %v", name, err)
+		t.Errorf("cannot get Tenants filtered by name '%s': %v - alerts: %+v", name, err, resp.Alerts)
 	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Tenant to exist with ID %d, found: %d", modTenant.ID, len(resp.Response))
+	}
+	respTenant := resp.Response[0]
 	if respTenant.ParentName != parentName {
 		t.Errorf("results do not match actual: %s, expected: %s", respTenant.ParentName, parentName)
 	}
@@ -170,14 +197,20 @@ func UpdateTestTenants(t *testing.T) {
 func UpdateTestRootTenant(t *testing.T) {
 	// Retrieve the Tenant by name so we can get the id for the Update
 	name := "root"
-	modTenant, _, err := TOSession.GetTenantByName(name, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", name)
+	resp, _, err := TOSession.GetTenants(opts)
 	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %s - %v", name, err)
+		t.Errorf("cannot get Tenants filtered by name '%s': %v - alerts: %+v", name, err, resp.Alerts)
 	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Tenant to exist with the name 'root', found: %d", len(resp.Response))
+	}
+	modTenant := resp.Response[0]
 
 	modTenant.Active = false
 	modTenant.ParentID = modTenant.ID
-	_, reqInf, err := TOSession.UpdateTenant(modTenant.ID, modTenant, nil)
+	_, reqInf, err := TOSession.UpdateTenant(modTenant.ID, modTenant, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("expected an error when trying to update the 'root' tenant, but got nothing")
 	}
@@ -187,18 +220,23 @@ func UpdateTestRootTenant(t *testing.T) {
 }
 
 func DeleteTestTenants(t *testing.T) {
-
 	t1 := "tenant1"
-	tenant1, _, err := TOSession.GetTenantByName(t1, nil)
-
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", t1)
+	resp, _, err := TOSession.GetTenants(opts)
 	if err != nil {
-		t.Errorf("cannot GET Tenant by name: %v - %v", t1, err)
+		t.Errorf("cannot get Tenants filtered by name '%s': %v - alerts: %+v", t1, err, resp.Alerts)
 	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expeected exactly one Tenant to exist with the name '%s', found: %d", t1, len(resp.Response))
+	}
+	tenant1 := resp.Response[0]
+
 	expectedChildDeleteErrMsg := fmt.Sprintf("Tenant '%d' has child tenants. Please update these child tenants and retry.", tenant1.ID)
-	if _, err := TOSession.DeleteTenant(tenant1.ID); err == nil {
+	if response, _, err := TOSession.DeleteTenant(tenant1.ID, client.RequestOptions{}); err == nil {
 		t.Fatalf("%s has child tenants -- should not be able to delete", t1)
-	} else if !strings.Contains(err.Error(), expectedChildDeleteErrMsg) {
-		t.Errorf("expected error: %s;  got %s", expectedChildDeleteErrMsg, err.Error())
+	} else if !alertsHaveError(response.Alerts, expectedChildDeleteErrMsg) {
+		t.Errorf("expected error: %s; got: %v - alerts: %+v", expectedChildDeleteErrMsg, err, response.Alerts)
 	}
 
 	deletedTenants := map[string]struct{}{}
@@ -223,12 +261,18 @@ func DeleteTestTenants(t *testing.T) {
 				continue
 			}
 
-			toTenant, _, err := TOSession.GetTenantByName(tn.Name, nil)
+			opts.QueryParameters.Set("name", tn.Name)
+			resp, _, err := TOSession.GetTenants(opts)
 			if err != nil {
-				t.Fatalf("getting tenant %s: %v", tn.Name, err)
+				t.Fatalf("getting Tenants filtered by name '%s': %v - alerts: %+v", tn.Name, err, resp.Alerts)
 			}
-			if _, err = TOSession.DeleteTenant(toTenant.ID); err != nil {
-				t.Fatalf("deleting tenant %s: %v", toTenant.Name, err)
+			if len(resp.Response) != 1 {
+				t.Fatalf("Expected exactly one Tenant to exist with the name '%s', found: %d", tn.Name, len(resp.Response))
+			}
+			toTenant := resp.Response[0]
+
+			if alerts, _, err := TOSession.DeleteTenant(toTenant.ID, client.RequestOptions{}); err != nil {
+				t.Fatalf("deleting Tenant '%s': %v - alerts: %+v", toTenant.Name, err, alerts.Alerts)
 			}
 			deletedTenants[tn.Name] = struct{}{}
 
@@ -250,9 +294,9 @@ func ExtractXMLID(ds *tc.DeliveryServiceV4) string {
 }
 
 func UpdateTestTenantsActive(t *testing.T) {
-	originalTenants, _, err := TOSession.GetTenants(nil)
+	originalTenants, _, err := TOSession.GetTenants(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("getting tenants error expected: nil, actual: %+v", err)
+		t.Fatalf("getting Tenants error expected: nil, actual: %v - alerts: %+v", err, originalTenants.Alerts)
 	}
 
 	setTenantActive(t, "tenant1", true)
@@ -260,10 +304,12 @@ func UpdateTestTenantsActive(t *testing.T) {
 	setTenantActive(t, "tenant3", false)
 
 	// ds3 has tenant3. Even though tenant3 is inactive, we should still be able to get it, because our user is tenant1, which is active.
-	dses, _, err := TOSession.GetDeliveryServiceByXMLID("ds3", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", "ds3")
+	resp, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatal("failed to get delivery service, when the DS's tenant was inactive (even though our user's tenant was active)")
-	} else if len(dses) != 1 {
+		t.Fatalf("failed to get delivery service, when the DS's tenant was inactive (even though our user's tenant was active): %v - alerts: %+v", err, resp.Alerts)
+	} else if len(resp.Response) != 1 {
 		t.Error("admin user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
 	}
 
@@ -272,9 +318,9 @@ func UpdateTestTenantsActive(t *testing.T) {
 	setTenantActive(t, "tenant3", true)
 
 	// ds3 has tenant3. Even though tenant3's parent, tenant2, is inactive, we should still be able to get it, because our user is tenant1, which is active.
-	_, _, err = TOSession.GetDeliveryServiceByXMLID("ds3", nil)
+	resp, _, err = TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatal("failed to get delivery service, when a parent tenant was inactive (even though our user's tenant was active)")
+		t.Fatalf("failed to get delivery service, when a parent tenant was inactive (even though our user's tenant was active): %v - alerts: %+v", err, resp.Alerts)
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
@@ -289,9 +335,12 @@ func UpdateTestTenantsActive(t *testing.T) {
 	}
 
 	// tenant3user with tenant3 has no access to ds3 with tenant3 when parent tenant2 is inactive
-	dses, _, err = tenant3Session.GetDeliveryServiceByXMLID("ds3", nil)
-	for _, ds := range dses {
-		t.Errorf("tenant3user got delivery service %+v with tenant3 but tenant3 parent tenant2 is inactive, expected: no ds", ExtractXMLID(&ds))
+	resp, _, err = tenant3Session.GetDeliveryServices(opts)
+	if err != nil {
+		t.Errorf("Unexpected error fetching Delivery Services filtered by XMLID 'ds3': %v - alerts: %+v", err, resp.Alerts)
+	}
+	for _, ds := range resp.Response {
+		t.Errorf("tenant3user got delivery service %s with tenant3 but tenant3 parent tenant2 is inactive, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	setTenantActive(t, "tenant1", true)
@@ -299,9 +348,12 @@ func UpdateTestTenantsActive(t *testing.T) {
 	setTenantActive(t, "tenant3", false)
 
 	// tenant3user with tenant3 has no access to ds3 with tenant3 when tenant3 is inactive
-	dses, _, err = tenant3Session.GetDeliveryServiceByXMLID("ds3", nil)
-	for _, ds := range dses {
-		t.Errorf("tenant3user got delivery service %+v with tenant3 but tenant3 is inactive, expected: no ds", ExtractXMLID(&ds))
+	resp, _, err = tenant3Session.GetDeliveryServices(opts)
+	if err != nil {
+		t.Errorf("Unexpected error fetching Delivery Services filtered by XMLID 'ds3': %v - alerts: %+v", err, resp.Alerts)
+	}
+	for _, ds := range resp.Response {
+		t.Errorf("tenant3user got delivery service %s with tenant3 but tenant3 is inactive, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	setTenantActive(t, "tenant1", true)
@@ -309,10 +361,10 @@ func UpdateTestTenantsActive(t *testing.T) {
 	setTenantActive(t, "tenant3", true)
 
 	// tenant3user with tenant3 has access to ds3 with tenant3
-	dses, _, err = tenant3Session.GetDeliveryServiceByXMLID("ds3", nil)
+	resp, _, err = tenant3Session.GetDeliveryServices(opts)
 	if err != nil {
 		t.Errorf("tenant3user getting delivery service ds3 error expected: nil, actual: %+v", err)
-	} else if len(dses) == 0 {
+	} else if len(resp.Response) == 0 {
 		t.Error("tenant3user getting delivery service ds3 with tenant3, expected: ds, actual: empty")
 	}
 
@@ -320,44 +372,63 @@ func UpdateTestTenantsActive(t *testing.T) {
 	// 2. tenant3user has tenant3.
 	// 3. tenant2 is not a child of tenant3 (tenant3 is a child of tenant2)
 	// 4. Therefore, tenant3user should not have access to ds2
-	dses, _, _ = tenant3Session.GetDeliveryServiceByXMLID("ds2", nil)
-	for _, ds := range dses {
-		t.Errorf("tenant3user got delivery service %+v with tenant2, expected: no ds", ExtractXMLID(&ds))
+	opts.QueryParameters.Set("xmlId", "ds2")
+	resp, _, err = tenant3Session.GetDeliveryServices(opts)
+	if err != nil {
+		t.Errorf("Unexpected error fetching Delivery Services filtered by XMLID 'ds2': %v - alerts: %+v", err, resp.Alerts)
+	}
+	for _, ds := range resp.Response {
+		t.Errorf("tenant3user got delivery service %s with tenant2, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	// 1. ds1 has tenant1.
 	// 2. tenant4user has tenant4.
 	// 3. tenant1 is not a child of tenant4 (tenant4 is unrelated to tenant1)
 	// 4. Therefore, tenant4user should not have access to ds1
-	dses, _, _ = tenant4Session.GetDeliveryServiceByXMLID("ds1", nil)
-	for _, ds := range dses {
-		t.Errorf("tenant4user got delivery service %+v with tenant1, expected: no ds", ExtractXMLID(&ds))
+	opts.QueryParameters.Set("xmlId", "ds1")
+	resp, _, err = tenant4Session.GetDeliveryServices(opts)
+	if err != nil {
+		t.Errorf("Unexpected error fetching Delivery Services filtered by XMLID 'ds1': %v - alerts: %+v", err, resp.Alerts)
+	}
+	for _, ds := range resp.Response {
+		t.Errorf("tenant4user got delivery service %s with tenant1, expected: no ds", ExtractXMLID(&ds))
 	}
 
 	setTenantActive(t, "tenant3", false)
-	dses, _, _ = tenant3Session.GetDeliveryServiceByXMLID("ds3", nil)
-	for _, ds := range dses {
-		t.Errorf("tenant3user was inactive, but got delivery service %+v with tenant3, expected: no ds", ExtractXMLID(&ds))
+	opts.QueryParameters.Set("xmlId", "ds3")
+	resp, _, err = tenant3Session.GetDeliveryServices(opts)
+	if err != nil {
+		t.Errorf("Unexpected error fetching Delivery Services filtered by XMLID 'ds3': %v - alerts: %+v", err, resp.Alerts)
+	}
+	for _, ds := range resp.Response {
+		t.Errorf("tenant3user was inactive, but got delivery service %s with tenant3, expected: no ds", ExtractXMLID(&ds))
 	}
 
-	for _, tn := range originalTenants {
+	for _, tn := range originalTenants.Response {
 		if tn.Name == "root" {
 			continue
 		}
-		if _, _, err := TOSession.UpdateTenant(tn.ID, tn, nil); err != nil {
-			t.Fatalf("restoring original tenants: " + err.Error())
+		if resp, _, err := TOSession.UpdateTenant(tn.ID, tn, client.RequestOptions{}); err != nil {
+			t.Fatalf("restoring original tenants: %v - alerts: %+v", err, resp.Alerts)
 		}
 	}
 }
 
 func setTenantActive(t *testing.T, name string, active bool) {
-	tn, _, err := TOSession.GetTenantByName(name, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", name)
+	resp, _, err := TOSession.GetTenants(opts)
 	if err != nil {
-		t.Fatalf("cannot GET Tenant by name: %s - %v", name, err)
+		t.Fatalf("cannot get Tenants filtered by name '%s': %v - alerts: %+v", name, err, resp.Alerts)
 	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Tenant to exist with the name '%s', found: %d", name, len(resp.Response))
+	}
+	tn := resp.Response[0]
+
 	tn.Active = active
-	_, _, err = TOSession.UpdateTenant(tn.ID, tn, nil)
+	response, _, err := TOSession.UpdateTenant(tn.ID, tn, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot UPDATE Tenant by id: %v", err)
+		t.Fatalf("cannot update Tenant: %v - alerts: %+v", err, response.Alerts)
 	}
 }
