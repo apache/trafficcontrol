@@ -635,7 +635,7 @@ type DeliveryServiceRemovedFieldsV11 struct {
 	CacheURL *string `json:"cacheurl" db:"cacheurl"`
 }
 
-// DowngradeToV3 converts the 4.x DS to a 3.x DS
+// DowngradeToV3 converts the 4.x DS to a 3.x DS.
 func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
 	var ret DeliveryServiceNullableV30
 	ret.Active = new(bool)
@@ -692,9 +692,13 @@ func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
 	ret.LongDesc = ds.LongDesc
 	ret.LongDesc1 = ds.LongDesc1
 	ret.LongDesc2 = ds.LongDesc2
-	ret.MatchList = new([]DeliveryServiceMatch)
-	*ret.MatchList = make([]DeliveryServiceMatch, len(ds.MatchList))
-	copy(*ret.MatchList, ds.MatchList)
+	if ds.MatchList != nil {
+		ret.MatchList = new([]DeliveryServiceMatch)
+		*ret.MatchList = make([]DeliveryServiceMatch, len(ds.MatchList))
+		copy(*ret.MatchList, ds.MatchList)
+	} else {
+		ret.MatchList = nil
+	}
 	ret.MaxDNSAnswers = ds.MaxDNSAnswers
 	ret.MaxOriginConnections = ds.MaxOriginConnections
 	ret.MaxRequestHeaderBytes = ds.MaxRequestHeaderBytes
@@ -736,7 +740,7 @@ func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
 	return ret
 }
 
-// UpgradeToV4 converts the 3.x DS to a 4.x DS
+// UpgradeToV4 converts the 3.x DS to a 4.x DS.
 func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceV4 {
 	var ret DeliveryServiceV4
 	if ds.Active != nil && *ds.Active {
@@ -818,6 +822,8 @@ func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceV4 {
 	if ds.MatchList != nil {
 		ret.MatchList = make([]DeliveryServiceMatch, len(*ds.MatchList))
 		copy(ret.MatchList, *ds.MatchList)
+	} else {
+		ret.MatchList = nil
 	}
 	ret.MaxDNSAnswers = ds.MaxDNSAnswers
 	ret.MaxOriginConnections = ds.MaxOriginConnections
