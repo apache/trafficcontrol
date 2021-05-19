@@ -507,7 +507,7 @@ func validateConfig(cfg Config) error {
 		"query_timeout_seconds": validation.Validate(cfg.QueryTimeoutSeconds, validation.Min(0)),
 	})
 	aesKeyLocSet := cfg.AesKeyLocation != ""
-	hashiCorpVaultSet := cfg.HashiCorpVault != nil
+	hashiCorpVaultSet := cfg.HashiCorpVault != nil && *cfg.HashiCorpVault != HashiCorpVault{}
 	if aesKeyLocSet && hashiCorpVaultSet {
 		errs = append(errs, errors.New("aes_key_location and hashicorp_vault cannot both be set"))
 	} else if hashiCorpVaultSet {
