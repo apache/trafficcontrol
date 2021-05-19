@@ -78,7 +78,7 @@ users.tests.forEach(async usersData =>{
             });
             usersData.updateRegisterUser.forEach(updateRegisterUser => {
                 it(updateRegisterUser.description, async () => {
-                    await usersPage.SearchUser(updateRegisterUser.Username);
+                    await usersPage.SearchEmailUser(updateRegisterUser.Email);
                     expect(await usersPage.UpdateRegisterUser(updateRegisterUser)).toBe(true);
                     await usersPage.OpenUserPage();
                 });

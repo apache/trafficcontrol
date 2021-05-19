@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element } from 'protractor';
 
+import { browser, by, element } from 'protractor';
 import { BasePage } from './BasePage.po';
-import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
+import { SideNavigationPage } from '../PageObjects/SideNavigationPage.po';
 import { randomize } from '../config';
 
 interface User {
@@ -54,7 +54,6 @@ interface UpdateRegisterUser {
     description: string;
     Email: string;
     NewFullName: string;
-    Username: string;
     validationMessage?: string;
 }
 
@@ -110,7 +109,7 @@ export class UsersPage extends BasePage {
       await this.btnCreateNewUser.click();
       await this.txtFullName.sendKeys(user.FullName + this.randomize);
       await this.txtUserName.sendKeys(user.Username + this.randomize);
-      await this.txtEmail.sendKeys(user.FullName + this.randomize + user.Email);
+      await this.txtEmail.sendKeys(user.Email + this.randomize);
       await this.txtRole.sendKeys(user.Role);
       await this.txtTenant.sendKeys(user.Tenant+this.randomize);
       await this.txtPassword.sendKeys(user.Password);
@@ -141,18 +140,18 @@ export class UsersPage extends BasePage {
         }).first().click();
     }
 
-    // public async SearchEmailUser(nameEmail: string) {
-    //     let snp = new SideNavigationPage();
-    //     let name = nameEmail + this.randomize;
-    //     await snp.NavigateToUsersPage();
-    //     await this.txtSearch.clear();
-    //     await this.txtSearch.sendKeys(name);
-    //     await element.all(by.repeater('u in ::users')).filter(function (row) {
-    //         return row.element(by.name('email')).getText().then(function (val) {
-    //             return val === name;
-    //         });
-    //     }).first().click();
-    // }
+    public async SearchEmailUser(nameEmail: string) {
+        let snp = new SideNavigationPage();
+        let name = nameEmail + this.randomize;
+        await snp.NavigateToUsersPage();
+        await this.txtSearch.clear();
+        await this.txtSearch.sendKeys(name);
+        await element.all(by.repeater('u in ::users')).filter(function (row) {
+            return row.element(by.name('email')).getText().then(function (val) {
+                return val === name;
+            });
+        }).first().click();
+    }
 
     public async UpdateUser(user: UpdateUser): Promise<boolean  | undefined> {
         let basePage = new BasePage();
@@ -173,7 +172,7 @@ export class UsersPage extends BasePage {
         let basePage = new BasePage();
         let snp = new SideNavigationPage();
         await this.btnRegisterNewUser.click();
-        await this.txtEmail.sendKeys(user.Email);
+        await this.txtEmail.sendKeys(user.Email + this.randomize);
         await this.txtRole.sendKeys(user.Role);
         await this.txtTenant.sendKeys(user.Tenant + this.randomize);
         await basePage.ClickRegister();
@@ -191,8 +190,7 @@ export class UsersPage extends BasePage {
     public async UpdateRegisterUser(user: UpdateRegisterUser): Promise<boolean | undefined> {
         let basePage = new BasePage();
         switch (user.description) {
-            case "update user's fullname":
-                await this.txtFullName.clear();
+            case "update registered user's fullname":
                 await this.txtFullName.sendKeys(user.NewFullName);
                 await basePage.ClickUpdate();
                 break;

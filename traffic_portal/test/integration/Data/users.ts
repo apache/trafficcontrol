@@ -17,6 +17,8 @@
  * under the License.
  */
 
+import {randomize} from "../config";
+
 export const users = {
     tests: [
         {
@@ -50,7 +52,7 @@ export const users = {
                     Username: "User1",
                     Email: "test@cdn.tc.com",
                     Role: "admin",
-                    Tenant: "-root",
+                    Tenant: "- tenantSame",
                     Password: "qwe@123#rty",
                     ConfirmPassword: "qwe@123#rty",
                     PublicSSHKey: "",
@@ -62,8 +64,8 @@ export const users = {
                     description: "create a registered User",
                     Email: "test2@cdn.tc.com",
                     Role: "admin",
-                    Tenant: "-root",
-                    validationMessage: "Sent user registration to {{ test2@cdn.tc.com}} with the following permissions [ role: admin | tenant: root ]"
+                    Tenant: "- tenantSame",
+                    validationMessage: "Sent user registration to {{ test2@cdn.tc.com"+randomize+"}} with the following permissions [ role: admin | tenant: tenantSame"+randomize+" ]"
                 }
             ],
             update: [
@@ -77,10 +79,9 @@ export const users = {
             updateRegisterUser: [
                 {
                     description: "update registered user's fullname",
-                    Username: "registration_",
-                    Email: "test1@cdn.tc.com",
-                    NewFullName: "TPCreateUser2",
-                    validationMessage: "Registered User updated."
+                    Email: "test2@cdn.tc.com",
+                    NewFullName: "TPRegisterUser1",
+                    validationMessage: "user was updated."
                 }
             ],
         },
