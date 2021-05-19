@@ -222,7 +222,7 @@ The new field will need to be added to both the Delivery Services overview
 section as well as all of the API documentation for endpoints in which it will
 appear. Note also that the current documentation for the `PUT` method of
 `/deliveryservices/{{ID}}` incorrectly states that the response is empty,
-whereas it actually returns an array of Delivery Service representationns. The
+whereas it actually returns an array of Delivery Service representations. The
 documentation should warn the reader that setting explicitly supported TLS
 versions could break clients that expect the support of excluded versions.
 
