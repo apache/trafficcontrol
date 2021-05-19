@@ -60,4 +60,4 @@ fi
 
 su -c "vncserver :$VNC_INSTANCE_NUM -depth $VNC_DEPTH -geometry $VNC_RESOLUTION" - "$VNC_USER" 
 
-tail -F '/home/ciabuser/.vnc/vnc.infra.ciab.test:9.log'
+tail -F -- /home/ciabuser/.vnc/vnc*:9.log
