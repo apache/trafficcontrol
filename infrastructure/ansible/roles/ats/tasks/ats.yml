@@ -63,10 +63,8 @@
     mode: 0755
 
 - name: Run ORT Badass
-  environment:
-    PATH: "{{ ansible_env.PATH }}:/bin:/usr/bin"
   shell:
-    executable: "{{ lookup('pipe','/usr/bin/which bash') }}"
+    executable: "{{ lookup('pipe','command -v bash') }}"
     cmd: >-
       {%- if ort_version is not defined or ort_version == omit or ort_version >= '6.0.0.11351' -%}
         pkill -9 t3c || true; t3c apply --run-mode=badass --cache-host-name='{{ (ansible_nodename.split('.')) | first }}' --log-location-warning=stderr --log-location-error=stderr --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' --login-dispersion=0 --dispersion=0 --wait-for-parents=false 2>&1 | tee /tmp/trafficcontrol-cache-config/badass_out; exit ${PIPESTATUS[0]}
