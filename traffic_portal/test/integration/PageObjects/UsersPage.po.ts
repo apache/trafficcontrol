@@ -19,7 +19,7 @@
 
 import { by, element } from 'protractor';
 import { BasePage } from './BasePage.po';
-import { SideNavigationPage } from '../PageObjects/SideNavigationPage.po';
+import { SideNavigationPage } from './SideNavigationPage.po';
 import { randomize } from '../config';
 
 interface User {
@@ -153,16 +153,16 @@ export class UsersPage extends BasePage {
         }).first().click();
     }
 
-    public async UpdateUser(user: UpdateUser): Promise<boolean  | undefined> {
+    public async UpdateUser(user: UpdateUser): Promise<boolean> {
         const basePage = new BasePage();
         switch (user.description) {
             case "update user's fullname":
                 await this.txtFullName.clear();
                 await this.txtFullName.sendKeys(user.NewFullName);
                 await basePage.ClickUpdate();
-                break;
+                return true;
             default:
-                return undefined;
+                return false;
         }
         return basePage.GetOutputMessage().then(value => user.validationMessage === value);
     }
@@ -187,15 +187,15 @@ export class UsersPage extends BasePage {
         return result;
     }
 
-    public async UpdateRegisterUser(user: UpdateRegisterUser): Promise<boolean | undefined> {
+    public async UpdateRegisterUser(user: UpdateRegisterUser): Promise<boolean> {
         const basePage = new BasePage();
         switch (user.description) {
             case "update registered user's fullname":
                 await this.txtFullName.sendKeys(user.NewFullName);
                 await basePage.ClickUpdate();
-                break;
+                return true;
             default:
-                return undefined;
+                return false;
         }
         return basePage.GetOutputMessage().then(value => user.validationMessage === value);
     }
