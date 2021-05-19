@@ -20,10 +20,9 @@
 import { browser } from 'protractor';
 
 import { LoginPage } from '../PageObjects/LoginPage.po';
-import {UsersPage} from '../PageObjects/UsersPage.po';
+import { UsersPage } from '../PageObjects/UsersPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { users } from "../Data/users";
-
 
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
@@ -38,6 +37,7 @@ users.tests.forEach(async usersData =>{
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
             });
             it('can open users page', async () => {
+                await usersPage.OpenUserMenu()
                 await usersPage.OpenUserPage();
             });
             usersData.check.forEach(check => {
@@ -73,6 +73,13 @@ users.tests.forEach(async usersData =>{
             usersData.register.forEach(register => {
                 it(register.description, async () => {
                     expect(await usersPage.RegisterUser(register)).toBeTruthy();
+                    await usersPage.OpenUserPage();
+                });
+            });
+            usersData.updateRegisterUser.forEach(updateRegisterUser => {
+                it(updateRegisterUser.description, async () => {
+                    await usersPage.SearchUser(updateRegisterUser.Username);
+                    expect(await usersPage.UpdateRegisterUser(updateRegisterUser)).toBe(true);
                     await usersPage.OpenUserPage();
                 });
             });

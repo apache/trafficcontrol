@@ -70,16 +70,18 @@ export const users = {
                 {
                     description: "update user's fullname",
                     Username: "User1",
-                    FullName: "TPCreateUser1",
                     NewFullName: "TPUpdatedUser1",
                     validationMessage: "user was updated."
                 },
-                // {
-                //     description: "update the registered User",
-                //     Email: "test1@cdn.tc.com",
-                //     FullName: "TPCreateUser2",
-                //     validationMessage: "Registered User updated."
-                // }
+            ],
+            updateRegisterUser: [
+                {
+                    description: "update registered user's fullname",
+                    Username: "registration_",
+                    Email: "test1@cdn.tc.com",
+                    NewFullName: "TPCreateUser2",
+                    validationMessage: "Registered User updated."
+                }
             ],
         },
     ]

@@ -36,9 +36,8 @@ interface User {
 }
 
 interface UpdateUser {
-    Username: string;
     description: string;
-    FullName: string,
+    Username: string;
     NewFullName: string;
     validationMessage?: string;
 }
@@ -48,6 +47,14 @@ interface RegisterUser {
     Role: string;
     Tenant: string;
     existsMessage?: string;
+    validationMessage?: string;
+}
+
+interface UpdateRegisterUser {
+    description: string;
+    Email: string;
+    NewFullName: string;
+    Username: string;
     validationMessage?: string;
 }
 
@@ -66,24 +73,28 @@ export class UsersPage extends BasePage {
     private btnTableColumn = element(by.css('[title="Select Table Columns"]'));
     private randomize = randomize;
 
-    async OpenUserPage(){
-      let snp = new SideNavigationPage();
-      await snp.ClickUserAdminMenu();
-      await snp.NavigateToUsersPage();
-     }
+    async OpenUserPage() {
+        let snp = new SideNavigationPage();
+        await snp.NavigateToUsersPage();
+    }
 
-    public async CheckCSV(name:string): Promise<boolean> {
+    async OpenUserMenu() {
+        let snp = new SideNavigationPage();
+        await snp.ClickUserAdminMenu();
+    }
+
+    public async CheckCSV(name: string): Promise<boolean> {
         return element(by.cssContainingText("span", name)).isPresent();
     }
 
-    public async CheckToggle(name:string): Promise<boolean> {
+    public async CheckToggle(name: string): Promise<boolean> {
         let result = false;
         await this.btnTableColumn.click();
         //if the box is already checked, uncheck it and return false
-        if (await browser.isElementPresent(element(by.xpath("//th[text()='" + name + "']"))) === true){
+        if (await browser.isElementPresent(element(by.xpath("//th[text()='" + name + "']"))) === true) {
             await element(by.xpath("//label[text()=' " + name + "']")).click();
             result = false;
-        }else{
+        } else {
             //if the box is unchecked, then check it and return true
             await element(by.xpath("//label[text()=' " + name + "']")).click();
             result = true;
@@ -130,9 +141,22 @@ export class UsersPage extends BasePage {
         }).first().click();
     }
 
+    // public async SearchEmailUser(nameEmail: string) {
+    //     let snp = new SideNavigationPage();
+    //     let name = nameEmail + this.randomize;
+    //     await snp.NavigateToUsersPage();
+    //     await this.txtSearch.clear();
+    //     await this.txtSearch.sendKeys(name);
+    //     await element.all(by.repeater('u in ::users')).filter(function (row) {
+    //         return row.element(by.name('email')).getText().then(function (val) {
+    //             return val === name;
+    //         });
+    //     }).first().click();
+    // }
+
     public async UpdateUser(user: UpdateUser): Promise<boolean  | undefined> {
         let basePage = new BasePage();
-        switch(user.FullName){
+        switch (user.description) {
             case "update user's fullname":
                 await this.txtFullName.clear();
                 await this.txtFullName.sendKeys(user.NewFullName);
@@ -151,18 +175,30 @@ export class UsersPage extends BasePage {
         await this.btnRegisterNewUser.click();
         await this.txtEmail.sendKeys(user.Email);
         await this.txtRole.sendKeys(user.Role);
-        await this.txtTenant.sendKeys(user.Tenant+this.randomize);
+        await this.txtTenant.sendKeys(user.Tenant + this.randomize);
         await basePage.ClickRegister();
-        if(await basePage.GetOutputMessage() == user.existsMessage){
+        if (await basePage.GetOutputMessage() == user.existsMessage) {
             await snp.NavigateToUsersPage();
             result = true;
-        }else if(await basePage.GetOutputMessage() == user.validationMessage){
+        } else if (await basePage.GetOutputMessage() == user.validationMessage) {
             result = true;
-        }else{
+        } else {
             result = false;
         }
         return result;
     }
 
-    // public async UpdateRegisterUser(user: User): Promise<boolean> {}
+    public async UpdateRegisterUser(user: UpdateRegisterUser): Promise<boolean | undefined> {
+        let basePage = new BasePage();
+        switch (user.description) {
+            case "update user's fullname":
+                await this.txtFullName.clear();
+                await this.txtFullName.sendKeys(user.NewFullName);
+                await basePage.ClickUpdate();
+                break;
+            default:
+                return undefined;
+        }
+        return await basePage.GetOutputMessage().then(value => user.validationMessage === value);
+    }
   }
