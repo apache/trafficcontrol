@@ -132,7 +132,7 @@ func delete(w http.ResponseWriter, r *http.Request, deprecated bool) {
 
 	ds := dses[0]
 
-	if ds.Active != tc.DS_INACTIVE {
+	if ds.Active == tc.DS_ACTIVE {
 		errCode, userErr, sysErr = checkLastServer(dsID, serverID, tx)
 		if userErr != nil || sysErr != nil {
 			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated, &alt)
