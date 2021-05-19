@@ -72,12 +72,12 @@ export class UsersPage extends BasePage {
     private btnTableColumn = element(by.css('[title="Select Table Columns"]'));
     private randomize = randomize;
 
-    async OpenUserPage() {
+    public async OpenUserPage(): Promise<void> {
         const snp = new SideNavigationPage();
         await snp.NavigateToUsersPage();
     }
 
-    async OpenUserMenu() {
+    public async OpenUserMenu(): Promise<void> {
         const snp = new SideNavigationPage();
         await snp.ClickUserAdminMenu();
     }
@@ -127,7 +127,7 @@ export class UsersPage extends BasePage {
       return result;
     }
 
-    public async SearchUser(nameUser: string) {
+    public async SearchUser(nameUser: string): Promise<void> {
         const snp = new SideNavigationPage();
         const name = nameUser + this.randomize;
         await snp.NavigateToUsersPage();
@@ -140,7 +140,7 @@ export class UsersPage extends BasePage {
         }).first().click();
     }
 
-    public async SearchEmailUser(nameEmail: string) {
+    public async SearchEmailUser(nameEmail: string): Promise<void> {
         const snp = new SideNavigationPage();
         const name = nameEmail + this.randomize;
         await snp.NavigateToUsersPage();
@@ -160,7 +160,7 @@ export class UsersPage extends BasePage {
                 await this.txtFullName.clear();
                 await this.txtFullName.sendKeys(user.NewFullName);
                 await basePage.ClickUpdate();
-                return true;
+                break;
             default:
                 return false;
         }
@@ -193,7 +193,7 @@ export class UsersPage extends BasePage {
             case "update registered user's fullname":
                 await this.txtFullName.sendKeys(user.NewFullName);
                 await basePage.ClickUpdate();
-                return true;
+                break;
             default:
                 return false;
         }
