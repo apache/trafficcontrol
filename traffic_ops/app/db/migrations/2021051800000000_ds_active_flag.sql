@@ -26,6 +26,43 @@ UPDATE public.deliveryservice SET active_state = 'PRIMED' WHERE active IS FALSE;
 ALTER TABLE public.deliveryservice DROP COLUMN active;
 ALTER TABLE public.deliveryservice RENAME COLUMN active_state TO active;
 
+UPDATE public.deliveryservice_request
+SET
+	deliveryservice = jsonb_set(deliveryservice, '{active}', '"ACTIVE"')
+WHERE
+	deliveryservice IS NOT NULL
+	AND
+	deliveryservice ? 'active'
+	AND
+	(deliveryservice -> 'active')::boolean IS TRUE;
+UPDATE public.deliveryservice_request
+SET
+	deliveryservice = jsonb_set(deliveryservice, '{active}', '"PRIMED"')
+WHERE
+	deliveryservice IS NOT NULL
+	AND
+	deliveryservice ? 'active'
+	AND
+	(deliveryservice -> 'active')::boolean IS FALSE;
+UPDATE public.deliveryservice_request
+SET
+	original = jsonb_set(original, '{active}', '"ACTIVE"')
+WHERE
+	original IS NOT NULL
+	AND
+	original ? 'active'
+	AND
+	(original -> 'active')::boolean IS TRUE;
+UPDATE public.deliveryservice_request
+SET
+	original = jsonb_set(original, '{active}', '"PRIMED"')
+WHERE
+	original IS NOT NULL
+	AND
+	original ? 'active'
+	AND
+	(original -> 'active')::boolean IS FALSE;
+
 -- +goose Down
 ALTER TABLE public.deliveryservice
 ADD COLUMN active_flag boolean DEFAULT FALSE NOT NULL;
@@ -41,3 +78,46 @@ WHERE active IS 'ACTIVE';
 ALTER TABLE public.deliveryservice DROP COLUMN active;
 ALTER TABLE public.deliveryservice RENAME COLUMN active_flag TO active;
 DROP TYPE public.ds_active_state;
+
+UPDATE public.deliveryservice_request
+SET
+	deliveryservice = jsonb_set(deliveryservice, '{active}', 'true')
+WHERE
+	deliveryservice IS NOT NULL
+	AND
+	deliveryservice ? 'active'
+	AND
+	deliveryservice ->> 'active' = 'ACTIVE';
+UPDATE public.deliveryservice_request
+SET
+	deliveryservice = jsonb_set(deliveryservice, '{active}', 'false')
+WHERE
+	deliveryservice IS NOT NULL
+	AND
+	deliveryservice ? 'active'
+	AND (
+		deliveryservice ->> 'active' = 'PRIMED'
+		OR
+		deliveryservice ->> 'active' = 'INACTIVE'
+	);
+UPDATE public.deliveryservice_request
+SET
+	original = jsonb_set(original, '{active}', 'true')
+WHERE
+	original IS NOT NULL
+	AND
+	original ? 'active'
+	AND
+	original ->> 'active' = 'ACTIVE';
+UPDATE public.deliveryservice_request
+SET
+	original = jsonb_set(original, '{active}', 'false')
+WHERE
+	original IS NOT NULL
+	AND
+	original ? 'active'
+	AND (
+		original ->> 'active' = 'PRIMED'
+		OR
+		original ->> 'active' = 'INACTIVE'
+	);
