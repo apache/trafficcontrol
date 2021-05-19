@@ -731,15 +731,15 @@ def write_encryption_key(aes_key_location): # type: (str) -> None
 	logging.info(aes_key_location)
 
 	cmd = ["/usr/bin/openssl", "rand", "-base64", "32"]
-	key = open(aes_key_location, 'w')
-	proc = subprocess.Popen(
-		cmd,
-		stderr=subprocess.PIPE,
-		stdout=key,
-		universal_newlines=True,
-	)
-	proc.wait()
-	key.flush()
+	with open(aes_key_location, "w") as key:
+		proc = subprocess.Popen(
+			cmd,
+			stderr=subprocess.PIPE,
+			stdout=key,
+			universal_newlines=True,
+		)
+		proc.wait()
+		key.flush()
 	output = proc.communicate()
 	if proc.returncode != 0:
 		logging.debug("AES key generation failed; stderr: %s\n\tstdout: %s", output[1], output[0])
@@ -945,6 +945,7 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 	Generates some properties of a cdn.conf file based on the passed questions.
 
 	This modifies or writes the file 'fname' under the directory 'root'.
+	:returns: A boolean value denoting whether or not a postgres traffic vault backend is configured.
 	"""
 	cdn_conf = get_config(questions, fname, automatic)
 
