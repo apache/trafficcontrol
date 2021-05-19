@@ -86,7 +86,10 @@ initBuildArea() {
 	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" -tags "$tags")
 
 	(cd t3c-diff;
-	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" -tags "$tags")	
+	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" -tags "$tags")
+
+	(cd t3c-preprocess;
+	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}" -tags "$tags")
 
 	cp -p traffic_ops_ort.pl "$dest";
 	cp -p supermicro_udev_mapper.pl "$dest";

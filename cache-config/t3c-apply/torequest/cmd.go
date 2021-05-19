@@ -27,6 +27,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 
@@ -35,6 +36,11 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
+
+type ServerAndConfigs struct {
+	ConfigData  json.RawMessage
+	ConfigFiles json.RawMessage
+}
 
 // generate runs t3c-generate and returns the result.
 func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
@@ -63,21 +69,83 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	args = append(args, "--via-string-release="+strconv.FormatBool(!cfg.OmitViaStringRelease))
 	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))
 
-	stdOut, stdErr, code := t3cutil.DoInput(configData, config.GenerateCmd, args...)
+	generatedFiles, stdErr, code := t3cutil.DoInput(configData, config.GenerateCmd, args...)
 	if code != 0 {
-		return nil, fmt.Errorf("t3c-generate returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+		return nil, fmt.Errorf("t3c-generate returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(generatedFiles), string(stdErr))
 	}
 	if len(bytes.TrimSpace(stdErr)) > 0 {
 		log.Warnln(`t3c-generate stderr start` + "\n" + string(stdErr))
 		log.Warnln(`t3c-generate stderr end`)
 	}
 
+	preprocessedBytes, err := preprocess(cfg, configData, generatedFiles)
+	if err != nil {
+		return nil, errors.New("preprocessing config files: " + err.Error())
+	}
+
 	allFiles := []t3cutil.ATSConfigFile{}
-	if err := json.Unmarshal(stdOut, &allFiles); err != nil {
+	if err := json.Unmarshal(preprocessedBytes, &allFiles); err != nil {
 		return nil, errors.New("unmarshalling generated files: " + err.Error())
 	}
 
 	return allFiles, nil
+}
+
+// preprocess takes the to Data from 't3c-request --get-data=config' and the generated files from 't3c-generate', passes them to `t3c-preprocess`, and returns the result.
+func preprocess(cfg config.Cfg, configData []byte, generatedFiles []byte) ([]byte, error) {
+	args := []string{
+		"--log-location-error=" + outToErr(cfg.LogLocationErr),
+		"--log-location-info=" + outToErr(cfg.LogLocationInfo),
+		"--log-location-warning=" + outToErr(cfg.LogLocationWarn),
+	}
+
+	cmd := exec.Command(`t3c-preprocess`, args...)
+	outbuf := bytes.Buffer{}
+	errbuf := bytes.Buffer{}
+	cmd.Stdout = &outbuf
+	cmd.Stderr = &errbuf
+
+	stdinPipe, err := cmd.StdinPipe()
+	if err != nil {
+		return nil, errors.New("getting command pipe: " + err.Error())
+	}
+
+	if err := cmd.Start(); err != nil {
+		return nil, errors.New("starting command: " + err.Error())
+	}
+
+	if _, err := stdinPipe.Write([]byte(`{"data":`)); err != nil {
+		return nil, errors.New("writing opening json to input: " + err.Error())
+	} else if _, err := stdinPipe.Write(configData); err != nil {
+		return nil, errors.New("writing config data to input: " + err.Error())
+	} else if _, err := stdinPipe.Write([]byte(`,"files":`)); err != nil {
+		return nil, errors.New("writing files key to input: " + err.Error())
+	} else if _, err := stdinPipe.Write(generatedFiles); err != nil {
+		return nil, errors.New("writing generated files to input: " + err.Error())
+	} else if _, err := stdinPipe.Write([]byte(`}`)); err != nil {
+		return nil, errors.New("writing closing json input: " + err.Error())
+	} else if err := stdinPipe.Close(); err != nil {
+		return nil, errors.New("closing stdin writer: " + err.Error())
+	}
+
+	code := 0 // if cmd.Wait returns no error, that means the command returned 0
+	if err := cmd.Wait(); err != nil {
+		if exitErr, ok := err.(*exec.ExitError); !ok {
+			return nil, errors.New("error running command: " + err.Error())
+		} else {
+			code = exitErr.ExitCode()
+		}
+	}
+
+	stdOut := outbuf.Bytes()
+	stdErr := errbuf.Bytes()
+	if code != 0 {
+		return nil, fmt.Errorf("t3c-preprocess returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+	}
+	if len(bytes.TrimSpace(stdErr)) > 0 {
+		log.Warnf("t3c-preprocess returned code 0 but stderr '%v'", string(stdErr)) // usually warnings
+	}
+	return stdOut, nil
 }
 
 func getStatuses(cfg config.Cfg) ([]string, error) {

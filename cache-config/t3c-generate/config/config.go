@@ -26,7 +26,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -141,18 +140,6 @@ func ValidateURL(u *url.URL) error {
 	}
 	return nil
 }
-
-// ATSConfigFiles implements sort.Interface and sorts by the Location and then FileNameOnDisk, i.e. the full file path.
-type ATSConfigFiles []t3cutil.ATSConfigFile
-
-func (fs ATSConfigFiles) Len() int { return len(fs) }
-func (fs ATSConfigFiles) Less(i, j int) bool {
-	if fs[i].Path != fs[j].Path {
-		return fs[i].Path < fs[j].Path
-	}
-	return fs[i].Name < fs[j].Name
-}
-func (fs ATSConfigFiles) Swap(i, j int) { fs[i], fs[j] = fs[j], fs[i] }
 
 // TOData is the Traffic Ops data needed to generate configs.
 // See each field for details on the data required.
