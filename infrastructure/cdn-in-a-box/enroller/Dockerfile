@@ -43,7 +43,7 @@ COPY ./traffic_ops/v4-client/ /go/src/github.com/apache/trafficcontrol/traffic_o
 COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
 
 WORKDIR /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller
-RUN set -o errexit -o nounset; \
+RUN set -o errexit; \
     go clean; \
     go mod vendor -v; \
     gcflags= ldflags=; \
