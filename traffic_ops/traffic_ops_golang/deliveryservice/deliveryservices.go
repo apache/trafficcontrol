@@ -524,7 +524,7 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 	}
 
 	returnable := []interface{}{}
-	dses, userErr, sysErr, errCode, maxTime := readGetDeliveryServices(h, ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User, useIMS)
+	dses, userErr, sysErr, errCode, maxTime := readGetDeliveryServices(h, ds.APIInfo(), useIMS)
 
 	if sysErr != nil {
 		sysErr = errors.New("reading dses: " + sysErr.Error())
@@ -1177,14 +1177,17 @@ func isActiveState(s string) error {
 	return fmt.Errorf("'%s' is not a known Delivery Service Active State", s)
 }
 
-func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.DeliveryServiceV4, error, error, int, *time.Time) {
+func readGetDeliveryServices(h http.Header, inf *api.APIInfo, useIMS bool) ([]tc.DeliveryServiceV4, error, error, int, *time.Time) {
+	if inf == nil || inf.Tx == nil || inf.Tx.Tx == nil {
+		return nil, nil, errors.New("cannot get Delivery Services with nil APIInfo/database transaction"), http.StatusInternalServerError, nil
+	}
 	var maxTime time.Time
 	var runSecond bool
-	if strings.HasSuffix(params["id"], ".json") {
-		params["id"] = params["id"][:len(params["id"])-len(".json")]
+	if strings.HasSuffix(inf.Params["id"], ".json") {
+		inf.Params["id"] = inf.Params["id"][:len(inf.Params["id"])-len(".json")]
 	}
-	if _, ok := params["orderby"]; !ok {
-		params["orderby"] = "xml_id"
+	if _, ok := inf.Params["orderby"]; !ok {
+		inf.Params["orderby"] = "xml_id"
 	}
 
 	// Query Parameters to Database Query column mappings
@@ -1201,15 +1204,21 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		"signingAlgorithm": {Column: "ds.signing_algorithm"},
 		"topology":         {Column: "ds.topology"},
 		"serviceCategory":  {Column: "ds.service_category"},
-		"active":           {Column: "ds.active", Checker: isActiveState},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
+	if inf.Version.Major >= 4 {
+		queryParamsToSQLCols["active"] = dbhelpers.WhereColumnInfo{
+			Checker: isActiveState,
+			Column:  "ds.active",
+		}
+	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToSQLCols)
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 	if useIMS {
-		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(inf.Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return []tc.DeliveryServiceV4{}, nil, nil, http.StatusNotModified, &maxTime
@@ -1218,7 +1227,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 	} else {
 		log.Debugln("Non IMS request")
 	}
-	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
+	tenantIDs, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
 
 	if err != nil {
 		log.Errorln("received error querying for user's tenants: " + err.Error())
@@ -1227,13 +1236,13 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
 
-	if accessibleTo, ok := params["accessibleTo"]; ok {
+	if accessibleTo, ok := inf.Params["accessibleTo"]; ok {
 		if err := api.IsInt(accessibleTo); err != nil {
 			log.Errorln("unknown parameter value: " + err.Error())
 			return nil, errors.New("accessibleTo must be an integer"), nil, http.StatusBadRequest, &maxTime
 		}
 		accessibleTo, _ := strconv.Atoi(accessibleTo)
-		accessibleTenants, err := tenant.GetUserTenantIDListTx(tx.Tx, accessibleTo)
+		accessibleTenants, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, accessibleTo)
 		if err != nil {
 			log.Errorln("unable to get tenants: " + err.Error())
 			return nil, nil, tc.DBError, http.StatusInternalServerError, &maxTime
@@ -1241,11 +1250,28 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		where += " AND ds.tenant_id = ANY(CAST(:accessibleTo AS bigint[])) "
 		queryValues["accessibleTo"] = pq.Array(accessibleTenants)
 	}
+
+	if inf.Version.Major < 4 {
+		if isActive, ok := inf.Params["active"]; ok {
+			if err := api.IsBool(isActive); err != nil {
+				return nil, errors.New("active must be a boolean"), nil, http.StatusBadRequest, &maxTime
+			}
+			isActive, _ := strconv.ParseBool(isActive)
+			where += " AND ds.active"
+			if isActive {
+				where += " = "
+			} else {
+				where += " <> "
+			}
+			where += "'ACTIVE'"
+		}
+	}
+
 	query := SelectDeliveryServicesQuery + where + orderBy + pagination
 	log.Debugln("generated deliveryServices query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
 
-	r, e1, e2, code := GetDeliveryServices(query, queryValues, tx)
+	r, e1, e2, code := GetDeliveryServices(query, queryValues, inf.Tx)
 	return r, e1, e2, code, &maxTime
 }
 
