@@ -1044,8 +1044,6 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 	try:
 		traffic_vault_backend = existing_conf["traffic_ops_golang"]["traffic_vault_backend"]
 	except KeyError as e:
-		exception = ValueError("missing 'traffic_vault_backend' config_var")
-		exception.__cause__ = e
 		logging.warn("no traffic vault backend configured, using default postgres")
 
 	if traffic_vault_backend == "postgres":
@@ -1053,8 +1051,6 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 			traffic_vault_aes_encryption_location = existing_conf["traffic_ops_golang"]["traffic_vault_config"]["aes_key_location"]
 			write_encryption_key(traffic_vault_aes_encryption_location)
 		except KeyError as e:
-			exception = ValueError("missing 'aes_key_location' config_var")
-			exception.__cause__ = e
 			logging.warning("no traffic vault aes encryption key location specified, using default /opt/traffic_ops/app/aes.key")
 
 	return traffic_vault_backend == "postgres"
