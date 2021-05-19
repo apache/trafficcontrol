@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { browser, by, element } from 'protractor';
+import { by, element } from 'protractor';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from '../PageObjects/SideNavigationPage.po';
 import { randomize } from '../config';
@@ -73,12 +73,12 @@ export class UsersPage extends BasePage {
     private randomize = randomize;
 
     async OpenUserPage() {
-        let snp = new SideNavigationPage();
+        const snp = new SideNavigationPage();
         await snp.NavigateToUsersPage();
     }
 
     async OpenUserMenu() {
-        let snp = new SideNavigationPage();
+        const snp = new SideNavigationPage();
         await snp.ClickUserAdminMenu();
     }
 
@@ -90,12 +90,12 @@ export class UsersPage extends BasePage {
         let result = false;
         await this.btnTableColumn.click();
         //if the box is already checked, uncheck it and return false
-        if (await browser.isElementPresent(element(by.xpath("//th[text()='" + name + "']"))) === true) {
-            await element(by.xpath("//label[text()=' " + name + "']")).click();
+        if (await element(by.cssContainingText("th", name)).isPresent()) {
+            await element(by.cssContainingText("label", name)).click();
             result = false;
         } else {
             //if the box is unchecked, then check it and return true
-            await element(by.xpath("//label[text()=' " + name + "']")).click();
+            await element(by.cssContainingText("label", name)).click();
             result = true;
         }
         await this.btnTableColumn.click();
@@ -104,8 +104,8 @@ export class UsersPage extends BasePage {
 
     public async CreateUser(user: User): Promise<boolean> {
       let result = false;
-      let basePage = new BasePage();
-      let snp = new SideNavigationPage();
+      const basePage = new BasePage();
+      const snp = new SideNavigationPage();
       await this.btnCreateNewUser.click();
       await this.txtFullName.sendKeys(user.FullName + this.randomize);
       await this.txtUserName.sendKeys(user.Username + this.randomize);
@@ -128,8 +128,8 @@ export class UsersPage extends BasePage {
     }
 
     public async SearchUser(nameUser: string) {
-        let snp = new SideNavigationPage();
-        let name = nameUser + this.randomize;
+        const snp = new SideNavigationPage();
+        const name = nameUser + this.randomize;
         await snp.NavigateToUsersPage();
         await this.txtSearch.clear();
         await this.txtSearch.sendKeys(name);
@@ -141,8 +141,8 @@ export class UsersPage extends BasePage {
     }
 
     public async SearchEmailUser(nameEmail: string) {
-        let snp = new SideNavigationPage();
-        let name = nameEmail + this.randomize;
+        const snp = new SideNavigationPage();
+        const name = nameEmail + this.randomize;
         await snp.NavigateToUsersPage();
         await this.txtSearch.clear();
         await this.txtSearch.sendKeys(name);
@@ -154,7 +154,7 @@ export class UsersPage extends BasePage {
     }
 
     public async UpdateUser(user: UpdateUser): Promise<boolean  | undefined> {
-        let basePage = new BasePage();
+        const basePage = new BasePage();
         switch (user.description) {
             case "update user's fullname":
                 await this.txtFullName.clear();
@@ -164,13 +164,13 @@ export class UsersPage extends BasePage {
             default:
                 return undefined;
         }
-        return await basePage.GetOutputMessage().then(value => user.validationMessage === value);
+        return basePage.GetOutputMessage().then(value => user.validationMessage === value);
     }
 
     public async RegisterUser(user: RegisterUser): Promise<boolean> {
         let result = false;
-        let basePage = new BasePage();
-        let snp = new SideNavigationPage();
+        const basePage = new BasePage();
+        const snp = new SideNavigationPage();
         await this.btnRegisterNewUser.click();
         await this.txtEmail.sendKeys(user.Email + this.randomize);
         await this.txtRole.sendKeys(user.Role);
@@ -188,7 +188,7 @@ export class UsersPage extends BasePage {
     }
 
     public async UpdateRegisterUser(user: UpdateRegisterUser): Promise<boolean | undefined> {
-        let basePage = new BasePage();
+        const basePage = new BasePage();
         switch (user.description) {
             case "update registered user's fullname":
                 await this.txtFullName.sendKeys(user.NewFullName);
@@ -197,6 +197,6 @@ export class UsersPage extends BasePage {
             default:
                 return undefined;
         }
-        return await basePage.GetOutputMessage().then(value => user.validationMessage === value);
+        return basePage.GetOutputMessage().then(value => user.validationMessage === value);
     }
   }
