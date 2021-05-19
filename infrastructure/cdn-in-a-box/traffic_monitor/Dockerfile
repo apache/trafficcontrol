@@ -20,7 +20,7 @@
 ############################################################
 
 ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION} as trafficmonitor
+FROM centos:${RHEL_VERSION} as trafficmonitor-dependencies
 ARG RHEL_VERSION=8
 
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
@@ -42,6 +42,7 @@ RUN dnf install -y epel-release && \
         initscripts && \
     dnf clean all
 
+FROM trafficmonitor-dependencies AS trafficmonitor
 ADD $RPM /
 RUN rpm -Uvh  /$(basename $RPM) && \
     rm /$(basename $RPM)
@@ -63,7 +64,7 @@ CMD /run.sh
 HEALTHCHECK --interval=10s --timeout=1s \
     CMD bash -c 'source /to-access.sh && [[ "$(curl -s http://trafficmonitor.infra.ciab.test/api/traffic-ops-uri)" == "$TO_URL" ]]'
 
-FROM trafficmonitor as get-delve
+FROM trafficmonitor-dependencies as get-delve
 
 RUN dnf -y install golang git && \
     go get -u github.com/go-delve/delve/cmd/dlv
