@@ -27,6 +27,9 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"time"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres/hashicorpvault"
 )
 
 func aesEncrypt(bytesToEncrypt []byte, aesKey []byte) (string, error) {
@@ -73,17 +76,39 @@ func aesDecrypt(bytesToDecrypt []byte, aesKey []byte) ([]byte, error) {
 	return decryptedString, nil
 }
 
-func readKeyFromFile(fileLocation string) ([]byte, error) {
-	keyBase64, err := ioutil.ReadFile(fileLocation)
-	if err != nil {
-		return []byte{}, errors.New("reading file '" + fileLocation + "':" + err.Error())
+// readKey reads the AES key (encoded in base64) used for encryption/decryption from either an on-disk file
+// or from HashiCorp Vault (based on the given configuration).
+func readKey(cfg Config) ([]byte, error) {
+	var keyBase64 string
+	if cfg.AesKeyLocation != "" {
+		keyBase64Bytes, err := ioutil.ReadFile(cfg.AesKeyLocation)
+		if err != nil {
+			return []byte{}, errors.New("reading file '" + cfg.AesKeyLocation + "':" + err.Error())
+		}
+		keyBase64 = string(keyBase64Bytes)
+	} else {
+		hashiVault := hashicorpvault.NewClient(
+			cfg.HashiCorpVault.Address,
+			cfg.HashiCorpVault.RoleID,
+			cfg.HashiCorpVault.SecretID,
+			cfg.HashiCorpVault.LoginPath,
+			cfg.HashiCorpVault.SecretPath,
+			time.Duration(cfg.HashiCorpVault.TimeoutSec)*time.Second,
+			cfg.HashiCorpVault.Insecure,
+		)
+		if err := hashiVault.Login(); err != nil {
+			return nil, errors.New("failed to login to HashiCorp Vault: " + err.Error())
+		}
+		key, err := hashiVault.GetSecret()
+		if err != nil {
+			return nil, errors.New("failed to get AES key from HashiCorp Vault: " + err.Error())
+		}
+		keyBase64 = key
 	}
 
-	keyBase64String := string(keyBase64)
-
-	key, err := base64.StdEncoding.DecodeString(keyBase64String)
+	key, err := base64.StdEncoding.DecodeString(keyBase64)
 	if err != nil {
-		return []byte{}, errors.New("AES key cannot be decoded")
+		return []byte{}, errors.New("AES key cannot be decoded from base64")
 	}
 
 	// verify the key works

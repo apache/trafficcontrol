@@ -36,6 +36,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -55,21 +56,35 @@ const (
 	defaultConnMaxLifetimeSeconds = 60
 	defaultDBQueryTimeoutSecs     = 30
 
+	defaultHashiCorpVaultLoginPath  = "/v1/auth/approle/login"
+	defaultHashiCorpVaultTimeoutSec = 30
+
 	latestVersion = "latest"
 )
 
 type Config struct {
-	DBName                 string `json:"dbname"`
-	Hostname               string `json:"hostname"`
-	User                   string `json:"user"`
-	Password               string `json:"password"`
-	Port                   int    `json:"port"`
-	SSL                    bool   `json:"ssl"`
-	MaxConnections         int    `json:"max_connections"`
-	MaxIdleConnections     int    `json:"max_idle_connections"`
-	ConnMaxLifetimeSeconds int    `json:"conn_max_lifetime_seconds"`
-	QueryTimeoutSeconds    int    `json:"query_timeout_seconds"`
-	AesKeyLocation         string `json:"aes_key_location"`
+	DBName                 string          `json:"dbname"`
+	Hostname               string          `json:"hostname"`
+	User                   string          `json:"user"`
+	Password               string          `json:"password"`
+	Port                   int             `json:"port"`
+	SSL                    bool            `json:"ssl"`
+	MaxConnections         int             `json:"max_connections"`
+	MaxIdleConnections     int             `json:"max_idle_connections"`
+	ConnMaxLifetimeSeconds int             `json:"conn_max_lifetime_seconds"`
+	QueryTimeoutSeconds    int             `json:"query_timeout_seconds"`
+	AesKeyLocation         string          `json:"aes_key_location"`
+	HashiCorpVault         *HashiCorpVault `json:"hashicorp_vault"`
+}
+
+type HashiCorpVault struct {
+	Address    string `json:"address"`
+	RoleID     string `json:"role_id"`
+	SecretID   string `json:"secret_id"`
+	LoginPath  string `json:"login_path"`
+	SecretPath string `json:"secret_path"`
+	TimeoutSec int    `json:"timeout_sec"`
+	Insecure   bool   `json:"insecure"`
 }
 
 type Postgres struct {
@@ -443,6 +458,14 @@ func postgresLoad(b json.RawMessage) (trafficvault.TrafficVault, error) {
 	if pgCfg.QueryTimeoutSeconds == 0 {
 		pgCfg.QueryTimeoutSeconds = defaultDBQueryTimeoutSecs
 	}
+	if pgCfg.HashiCorpVault != nil {
+		if pgCfg.HashiCorpVault.LoginPath == "" {
+			pgCfg.HashiCorpVault.LoginPath = defaultHashiCorpVaultLoginPath
+		}
+		if pgCfg.HashiCorpVault.TimeoutSec == 0 {
+			pgCfg.HashiCorpVault.TimeoutSec = defaultHashiCorpVaultTimeoutSec
+		}
+	}
 
 	sslStr := "require"
 	if !pgCfg.SSL {
@@ -465,7 +488,7 @@ func postgresLoad(b json.RawMessage) (trafficvault.TrafficVault, error) {
 		log.Infoln("successfully pinged the Traffic Vault database")
 	}
 
-	aesKey, err := readKeyFromFile(pgCfg.AesKeyLocation)
+	aesKey, err := readKey(pgCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -482,8 +505,22 @@ func validateConfig(cfg Config) error {
 		"port":                  validation.Validate(cfg.Port, validation.By(tovalidate.IsValidPortNumber)),
 		"max_connections":       validation.Validate(cfg.MaxConnections, validation.Min(0)),
 		"query_timeout_seconds": validation.Validate(cfg.QueryTimeoutSeconds, validation.Min(0)),
-		"aes_key_location":      validation.Validate(cfg.AesKeyLocation, validation.Required),
 	})
+	aesKeyLocSet := cfg.AesKeyLocation != ""
+	hashiCorpVaultSet := cfg.HashiCorpVault != nil && *cfg.HashiCorpVault != HashiCorpVault{}
+	if aesKeyLocSet && hashiCorpVaultSet {
+		errs = append(errs, errors.New("aes_key_location and hashicorp_vault cannot both be set"))
+	} else if hashiCorpVaultSet {
+		hashiErrs := tovalidate.ToErrors(validation.Errors{
+			"address":     validation.Validate(cfg.HashiCorpVault.Address, validation.Required, is.URL),
+			"role_id":     validation.Validate(cfg.HashiCorpVault.RoleID, validation.Required),
+			"secret_id":   validation.Validate(cfg.HashiCorpVault.SecretID, validation.Required),
+			"secret_path": validation.Validate(cfg.HashiCorpVault.SecretPath, validation.Required),
+		})
+		errs = append(errs, hashiErrs...)
+	} else if !aesKeyLocSet {
+		errs = append(errs, errors.New("one of either aes_key_location or hashicorp_vault is required"))
+	}
 	if len(errs) == 0 {
 		return nil
 	}
