@@ -731,18 +731,15 @@ def write_encryption_key(aes_key_location): # type: (str) -> None
 	logging.info(aes_key_location)
 
 	cmd = ["/usr/bin/openssl", "rand", "-base64", "32"]
-	with open(aes_key_location, "w") as key:
-		proc = subprocess.Popen(
-			cmd,
-			stderr=subprocess.PIPE,
-			stdout=key,
-			universal_newlines=True,
-		)
-		proc.wait()
-		key.flush()
-	output = proc.communicate()
-	if proc.returncode != 0:
-		logging.debug("AES key generation failed; stderr: %s\n\tstdout: %s", output[1], output[0])
+	args = (
+		"rand",
+		"-out",
+		aes_key_location,
+		"-base64",
+		"32"
+	)
+	if not exec_openssl("Generating an AES encryption key", *args):
+		logging.debug("AES key generation failed")
 		raise OSError("failed to generate AES key")
 
 def exec_openssl(description, *cmd_args): # type: (str, ...) -> bool
