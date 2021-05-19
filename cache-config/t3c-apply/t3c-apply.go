@@ -21,12 +21,14 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/torequest"
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/util"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"os"
-	"time"
 )
 
 // exit codes
@@ -44,7 +46,7 @@ const (
 )
 
 func runSysctl(cfg config.Cfg) {
-	if cfg.RunMode == config.BadAss {
+	if cfg.RunMode == t3cutil.ModeBadAss {
 		_, rc, err := util.ExecCommand("/usr/sbin/sysctl", "-p")
 		if err != nil {
 			log.Errorln("sysctl -p failed")
@@ -97,7 +99,7 @@ func main() {
 	} else if !util.CleanTmpDir(cfg) {
 		os.Exit(GeneralFailure)
 	}
-	if cfg.RunMode != config.Report {
+	if cfg.RunMode != t3cutil.ModeReport {
 		if !lock.GetLock(config.TmpBase + "/to_ort.lock") {
 			os.Exit(AlreadyRunning)
 		}
@@ -114,7 +116,7 @@ func main() {
 
 	// if running in Revalidate mode, check to see if it's
 	// necessary to continue
-	if cfg.RunMode == config.Revalidate {
+	if cfg.RunMode == t3cutil.ModeRevalidate {
 		syncdsUpdate, err = trops.CheckRevalidateState(false)
 		if err != nil || syncdsUpdate == torequest.UpdateTropsNotNeeded {
 			if err != nil {
@@ -128,12 +130,12 @@ func main() {
 			log.Errorln(err)
 			GitCommitAndExit(SyncDSError, cfg)
 		}
-		if cfg.RunMode == config.SyncDS && syncdsUpdate == torequest.UpdateTropsNotNeeded {
+		if cfg.RunMode == t3cutil.ModeSyncDS && syncdsUpdate == torequest.UpdateTropsNotNeeded {
 			GitCommitAndExit(Success, cfg)
 		}
 	}
 
-	if cfg.RunMode == config.Revalidate {
+	if cfg.RunMode == t3cutil.ModeRevalidate {
 		log.Infoln("======== Revalidating, no package processing needed ========")
 	} else {
 		log.Infoln("======== Start processing packages  ========")
@@ -172,10 +174,8 @@ func main() {
 		}
 	}
 
-	// start trafficserver
-	result := trops.StartServices(&syncdsUpdate)
-	if !result {
-		log.Errorf("failed to start services.\n")
+	if err := trops.StartServices(&syncdsUpdate); err != nil {
+		log.Errorln("failed to start services: " + err.Error())
 		GitCommitAndExit(ServicesError, cfg)
 	}
 
@@ -202,7 +202,7 @@ func main() {
 	}
 
 	// update Traffic Ops
-	result, err = trops.UpdateTrafficOps(&syncdsUpdate)
+	result, err := trops.UpdateTrafficOps(&syncdsUpdate)
 	if err != nil {
 		log.Errorf("failed to update Traffic Ops: %s\n", err.Error())
 	} else if result {

@@ -41,7 +41,7 @@ tm_log_location_debug: "null"
 tm_log_location_event: "{{ tm_log_dir }}/event.log"
 tm_stat_flush_interval_ms: 20
 tm_serve_read_timeout_ms: 10000
-tm_serve_write_timeout_ms: 10000
+tm_serve_write_timeout_ms: 20000
 tm_http_poll_no_sleep: false
 tm_http_polling_format: "text/json"
 tm_to_min_retry_interval: 100
