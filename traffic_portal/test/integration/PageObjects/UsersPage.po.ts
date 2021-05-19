@@ -116,10 +116,10 @@ export class UsersPage extends BasePage {
       await this.txtConfirmPassword.sendKeys(user.ConfirmPassword);
       await this.txtPublicSSHKey.sendKeys(user.PublicSSHKey);
       await basePage.ClickCreate();
-      if(await basePage.GetOutputMessage() == user.existsMessage){
+      if(await basePage.GetOutputMessage() === user.existsMessage){
         await snp.NavigateToUsersPage();
         result = true;
-      }else if(await basePage.GetOutputMessage() == user.validationMessage){
+      }else if(await basePage.GetOutputMessage() === user.validationMessage){
         result = true;
       }else{
         result = false;
@@ -176,10 +176,10 @@ export class UsersPage extends BasePage {
         await this.txtRole.sendKeys(user.Role);
         await this.txtTenant.sendKeys(user.Tenant + this.randomize);
         await basePage.ClickRegister();
-        if (await basePage.GetOutputMessage() == user.existsMessage) {
+        if (await basePage.GetOutputMessage() === user.existsMessage) {
             await snp.NavigateToUsersPage();
             result = true;
-        } else if (await basePage.GetOutputMessage() == user.validationMessage) {
+        } else if (await basePage.GetOutputMessage() === user.validationMessage) {
             result = true;
         } else {
             result = false;
