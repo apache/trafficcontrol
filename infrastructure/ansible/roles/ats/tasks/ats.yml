@@ -63,6 +63,8 @@
     mode: 0755
 
 - name: Run ORT Badass
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/bin:/usr/bin"
   shell:
     executable: "{{ lookup('pipe','which bash') }}"
     cmd: >-
