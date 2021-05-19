@@ -449,13 +449,13 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 	:traffic_vault_backend:
 
-	    .. versionadded:: 6.0
-		    Optional. The name of which backend to use for Traffic Vault. Currently, the only supported backend is "riak".
+		.. versionadded:: 6.0
+			Optional. The name of which backend to use for Traffic Vault. Currently, the only supported backend is "riak".
 
 	:traffic_vault_config:
 
-	    .. versionadded:: 6.0
-		    Optional. The JSON configuration which is unique to the chosen Traffic Vault backend. See :ref:`traffic_vault_admin` for the configuration options for each supported backend.
+		.. versionadded:: 6.0
+			Optional. The JSON configuration which is unique to the chosen Traffic Vault backend. See :ref:`traffic_vault_admin` for the configuration options for each supported backend.
 
 	.. _admin-routing-blacklist:
 
@@ -475,8 +475,8 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 :use_ims:
 
-    .. versionadded:: 5.0
-	    This is an optional boolean value to enable the handling of the "If-Modified-Since" HTTP request header. Default: false
+	.. versionadded:: 5.0
+		This is an optional boolean value to enable the handling of the "If-Modified-Since" HTTP request header. Default: false
 
 Example cdn.conf
 ''''''''''''''''
@@ -661,7 +661,7 @@ You will need to update `cdn.conf`_ with any necessary changes.
 
 	'hypnotoad' => ...
 		'listen' => 'https://[::]:443?cert=/etc/pki/tls/certs/trafficops.crt&key=/etc/pki/tls/private/trafficops.key&ca=/etc/pki/tls/certs/localhost.ca&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED'
-		 ...
+		...
 
 .. _admin-to-ext-script:
 

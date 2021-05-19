@@ -32,33 +32,33 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-    +-----------+---------------------------------------------------------------------------------------------------------------+
-    | Name      | Description                                                                                                   |
-    +===========+===============================================================================================================+
-    | name      | Filter for :term:`Service Categories` with this name                                                          |
-    +-----------+---------------------------------------------------------------------------------------------------------------+
-    | orderby   | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
-    |           | array                                                                                                         |
-    +-----------+---------------------------------------------------------------------------------------------------------------+
-    | sortOrder | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
-    +-----------+---------------------------------------------------------------------------------------------------------------+
-    | limit     | Choose the maximum number of results to return                                                                |
-    +-----------+---------------------------------------------------------------------------------------------------------------+
-    | offset    | The number of results to skip before beginning to return results. Must use in conjunction with limit          |
-    +-----------+---------------------------------------------------------------------------------------------------------------+
-    | page      | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
-    |           | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
-    |           | defined to make use of ``page``.                                                                              |
-    +-----------+---------------------------------------------------------------------------------------------------------------+
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| Name      | Description                                                                                                   |
+	+===========+===============================================================================================================+
+	| name      | Filter for :term:`Service Categories` with this name                                                          |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| orderby   | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
+	|           | array                                                                                                         |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| sortOrder | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| limit     | Choose the maximum number of results to return                                                                |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| offset    | The number of results to skip before beginning to return results. Must use in conjunction with limit          |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| page      | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long   |
+	|           | and the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be     |
+	|           | defined to make use of ``page``.                                                                              |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
-    :caption: Request Example
+	:caption: Request Example
 
-    GET /api/3.0/service_categories?name=SERVICE_CATEGORY_NAME HTTP/1.1
-    Host: trafficops.infra.ciab.test
-    User-Agent: curl/7.47.0
-    Accept: */*
-    Cookie: mojolicious=...
+	GET /api/3.0/service_categories?name=SERVICE_CATEGORY_NAME HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
 
 Response Structure
 ------------------
@@ -66,28 +66,28 @@ Response Structure
 :lastUpdated: The date and time at which this :term:`Service Category` was last modified, in ISO format
 
 .. code-block:: http
-    :caption: Response Example
+	:caption: Response Example
 
-    HTTP/1.1 200 OK
-    Access-Control-Allow-Credentials: true
-    Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
-    Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-    Access-Control-Allow-Origin: *
-    Content-Type: application/json
-    Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-    Whole-Content-Sha512: Yzr6TfhxgpZ3pbbrr4TRG4wC3PlnHDDzgs2igtz/1ppLSy2MzugqaGW4y5yzwzl5T3+7q6HWej7GQZt1XIVeZQ==
-    X-Server-Name: traffic_ops_golang/
-    Date: Wed, 11 Mar 2020 20:02:47 GMT
-    Content-Length: 102
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: Yzr6TfhxgpZ3pbbrr4TRG4wC3PlnHDDzgs2igtz/1ppLSy2MzugqaGW4y5yzwzl5T3+7q6HWej7GQZt1XIVeZQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 11 Mar 2020 20:02:47 GMT
+	Content-Length: 102
 
-    {
-        "response": [
-            {
-                "lastUpdated": "2020-03-04 15:46:20-07",
-                "name": "SERVICE_CATEGORY_NAME"
-            }
-        ]
-    }
+	{
+		"response": [
+			{
+				"lastUpdated": "2020-03-04 15:46:20-07",
+				"name": "SERVICE_CATEGORY_NAME"
+			}
+		]
+	}
 
 ``POST``
 ========
@@ -102,19 +102,19 @@ Request Structure
 :name:        This :term:`Service Category`'s name
 
 .. code-block:: http
-    :caption: Request Example
+	:caption: Request Example
 
-    POST /api/3.0/service_categories HTTP/1.1
-    Host: trafficops.infra.ciab.test
-    User-Agent: curl/7.47.0
-    Accept: */*
-    Cookie: mojolicious=...
-    Content-Length: 48
-    Content-Type: application/json
+	POST /api/3.0/service_categories HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 48
+	Content-Type: application/json
 
-    {
-        "name": "SERVICE_CATEGORY_NAME",
-    }
+	{
+		"name": "SERVICE_CATEGORY_NAME",
+	}
 
 Response Structure
 ------------------
@@ -122,32 +122,32 @@ Response Structure
 :lastUpdated: The date and time at which this :term:`Service Category` was last modified, in ISO format
 
 .. code-block:: http
-    :caption: Response Example
+	:caption: Response Example
 
-    HTTP/1.1 200 OK
-    Access-Control-Allow-Credentials: true
-    Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
-    Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-    Access-Control-Allow-Origin: *
-    Content-Type: application/json
-    Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-    Whole-Content-Sha512: +pJm4c3O+JTaSXNt+LP+u240Ba/SsvSSDOQ4rDc6hcyZ0FIL+iY/WWrMHhpLulRGKGY88bM4YPCMaxGn3FZ9yQ==
-    X-Server-Name: traffic_ops_golang/
-    Date: Wed, 11 Mar 2020 20:12:20 GMT
-    Content-Length: 154
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: +pJm4c3O+JTaSXNt+LP+u240Ba/SsvSSDOQ4rDc6hcyZ0FIL+iY/WWrMHhpLulRGKGY88bM4YPCMaxGn3FZ9yQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Wed, 11 Mar 2020 20:12:20 GMT
+	Content-Length: 154
 
-    {
-        "alerts": [
-            {
-                "text": "serviceCategory was created.",
-                "level": "success"
-            }
-        ],
-        "response": {
-            "lastUpdated": "2020-03-11 14:12:20-06",
-            "name": "SERVICE_CATEGORY_NAME"
-        }
-    }
+	{
+		"alerts": [
+			{
+				"text": "serviceCategory was created.",
+				"level": "success"
+			}
+		],
+		"response": {
+			"lastUpdated": "2020-03-11 14:12:20-06",
+			"name": "SERVICE_CATEGORY_NAME"
+		}
+	}
 
 ``DELETE``
 ==========
