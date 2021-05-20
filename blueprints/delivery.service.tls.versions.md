@@ -95,6 +95,11 @@ unchecked:
 If desired, the markup used for that sample may be found in
 [Appendix A](#appendix-a).
 
+These form fields should not appear on forms for STEERING-Type and
+CLIENT_STEERING-Type Delivery Services. Traffic Portal should always submit
+update and create requests for these types of Delivery Services with
+`tlsVersions` set to `null`.
+
 Traffic Portal should disallow the addition of a TLS version that is not a
 "whole match" of the regular expression `\d+\.\d+`, and should issue a warning
 if and when a TLS version is entered that is not known to exist (at the time of
@@ -103,13 +108,9 @@ keeping with the API restrictions, it MUST NOT disallow the addition of unknown
 protocol versions, to facilitate the ability of system administrators to
 quickly upgrade to a new protocol as it's released.
 
-A warning should also be issued if any Delivery Service is found to be a target
-of the Delivery Service being edited that does not support all of the TLS
-versions that the Delivery Service being edited itself does support, or if the
-Delivery Service being edited does not support all of the TLS versions supported
-by a Delivery Service of which it is a target, or if the Delivery Service being
-edited is the target of a Delivery Service which has other targets that support
-TLS versions not supported by the Delivery Service being edited.
+A warning should also be issued if any if the Delivery Service being edited is
+the target of a Delivery Service which has other targets that support TLS
+versions not supported by the Delivery Service being edited.
 
 Traffic Poral should also display some kind of warning - possibly in a dialog
 box - whenever the "Restrict TLS Versions" box is checked, advising that
@@ -169,6 +170,12 @@ request bodies, but MUST ALWAYS be emitted as `null` in responses). In the
 event that one or more entries in the array does not match the required
 pattern, the response should be in the form of a 400 Bad Request with an
 error-level Alert indicating the problematic entry(ies).
+
+A 400 Bad Request response must also be returned if the user tries to create a
+STEERING-Type or CLIENT_STEERING-Type Delivery Service with non-`null`
+`tlsVersions`, or attempts to edit an existing so-Typed Delivery Service such
+that its `tlsVersions` property is not `null`. The response must include an
+error-level Alert indicating that this configuration is invalid.
 
 Also, similar to Traffic Portal, Traffic Ops should emit warning-level alerts
 whenever a Delivery Service is created with or modified to have a `tlsVersions`
