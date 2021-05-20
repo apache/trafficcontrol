@@ -16,7 +16,9 @@ package orttest
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
+	"os/exec"
 	"strings"
 	"testing"
 
@@ -34,7 +36,7 @@ func TestT3cCreateEmptyFile(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		err := t3cUpdateGit("atlanta-edge-03", "badass")
+		err := t3cUpdateCreateEmptyFile("atlanta-edge-03", "badass")
 		if err != nil {
 			t.Fatalf("ERROR: t3c badass failed: %v\n", err)
 		}
@@ -62,4 +64,35 @@ func TestT3cCreateEmptyFile(t *testing.T) {
 		}
 	})
 	t.Logf("------------- End of TestT3cCreateEmptyFile ---------------")
+}
+
+func t3cUpdateCreateEmptyFile(host string, run_mode string) error {
+	args := []string{
+		"apply",
+		"--traffic-ops-insecure=true",
+		"--dispersion=0",
+		"--login-dispersion=0",
+		"--traffic-ops-timeout-milliseconds=3000",
+		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
+		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
+		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
+		"--cache-host-name=" + host,
+		"--log-location-error=test.log",
+		"--log-location-info=test.log",
+		"--log-location-debug=test.log",
+		"--log-location-debug=test.log",
+		"--omit-via-string-release=true",
+		"--run-mode=" + run_mode,
+		"--git=no",
+	}
+	cmd := exec.Command("t3c", args...)
+	var out bytes.Buffer
+	var errOut bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errOut
+	err := cmd.Run()
+	if err != nil {
+		return errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+	}
+	return nil
 }
