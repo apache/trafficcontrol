@@ -49,27 +49,99 @@ Level-based authorization.
 ## Data Model Impact
 "Capabilities" as they are known today will be removed from the data model.
 Also, the current model of a Role will need to be modified. The current model
-is as follows<sup>1</sup>:
+is as follows:
 
 ```typescript
 interface Role {
-	capabilities: Array<string>;
+	capabilities: Array<string> | null;
 	description: string | null;
-	id?: number;
-	name: string;
-	privLevel: number;
+	id?: number | null;
+	name: string | null;
+	privLevel: number | null;
 }
 ```
 
-The proposed new model is shown below<sup>1</sup>.
+The proposed new model is shown below.
 
 ```typescript
 interface Role {
 	description: string;
+	lastUpdated?: Date;
 	name: string;
 	permissions: Array<string>;
 }
 ```
+
+Also, because the ID is no longer exposed via the API, the model for users will
+need to change to only reference Role name, not ID. So it'll change from...
+
+```typescript
+interface User {
+	addressLine1: string | null;
+	addressLine2: string | null;
+	city: string | null;
+	company: string | null;
+	confirmLocalPassword?: string | null;
+	country: string | null;
+	email: string | null;
+	fullName: string | null;
+	gid: number | null;
+	id?: number | null;
+	lastUpdated?: string | null;
+	localPassword?: string | null;
+	newUser: boolean | null;
+	phoneNumber: string | null;
+	postalCode: string | null;
+	publicSSHKey: string | null;
+	registrationSent: string | null;
+	role: number | null;
+	roleName?: string | null;
+	stateOrProvince: string | null;
+	tenant?: string | null;
+	tenantID: string | null;
+	uid: number | null;
+	username: string | null;
+}
+```
+
+... to ...
+
+```typescript
+interface User {
+	addressLine1: string | null;
+	addressLine2: string | null;
+	city: string | null;
+	company: string | null;
+	confirmLocalPassword?: string | null;
+	country: string | null;
+	email: string | null;
+	fullName: string;
+	gid: number | null;
+	id?: number;
+	lastUpdated?: Date;
+	localPassword?: string | null;
+	newUser: boolean;
+	phoneNumber: string | null;
+	postalCode: string | null;
+	publicSSHKey: string | null;
+	registrationSent: string | null;
+	role: string;
+	stateOrProvince: string | null;
+	tenant?: string;
+	tenantID: number;
+	uid: number | null;
+	username: string;
+}
+```
+
+... replacing the required `role` field that was a Role ID with one that is
+the Role's name (and therefore removing `roleName` as it's now redundant).
+
+(Note that `lastUpdated` changed from `string | null` to `Date`, which
+represents the transition to using proper RFC3339 formatting, and also some
+fields which cannot be `null` for a valid user are no longer `| null`. Those
+aren't changes necessary to implement Permissions, but can be done easily at
+the same time as necessary changes to User.)
 
 ## Component Impact
 This change primarily concerns Traffic Ops and Traffic Portal, though any
@@ -95,6 +167,9 @@ presence or absence of a Permission, although the full itemization of the
 Permissions afforded to a Role would, in most cases, be far too large to
 comfortably display in the table itself.
 
+Under-the-hood, API services will need to change from using Role IDs to Role
+names.
+
 ### Traffic Ops Impact
 Traffic Ops will reqire changes to its Roles and Permissions API, chiefly, and
 the database tables that back them. Enforcement of API Permissions, though,
@@ -107,9 +182,9 @@ to use Permissions rather than Role Privilege Level to determine a user's
 authorization for a given operation.
 
 #### API Impact
-Structurally, the only necessary changes are to the `/roles` endpoint, which
-will need to be updated to output structures consistent with the changes
-outlined in the Data Model Impact section. The `/capabilities` and
+Structurally, the only necessary changes are to the `/roles` and `/users`
+endpoints, which will need to be updated to output structures consistent with
+the changes outlined in the Data Model Impact section. The `/capabilities` and
 `/api_capabilities` endpoints will be removed (and we might consider renaming
 the `/server_capabilities` and `/server_server_capabilities` to drop the
 now-unnecessary "server_" qualifier).
@@ -127,9 +202,12 @@ error-level Alert that describes what operation is not permitted and what
 Permission the user is missing that would allow them to proceed.
 
 #### Client Impact
-As Permissions are defined by the Role of the authenticated user, no client
-changes are necessary beyond those necessitated by the removal of two API
-endpoints and the renaming and restructuring of a third.
+As Permissions are defined by the Role of the authenticated user, the only
+client changes are necessary beyond those necessitated by the removal of two
+API endpoints and the renaming and restructuring of a third are to stop
+filling in a Role ID on user creation/update from a Role name if an ID was
+unset (this will now be handled by the API itself, which will save a full
+HTTP request on each user creation/modification).
 
 #### Database Impact
 The new model for a Role does not allow a `null` description; a simple
@@ -141,12 +219,17 @@ deprecated colunms. However, the foreign key constraint on the
 `capability` table should be dropped, as that is no longer the source of truth
 for valid Permissions.
 
+Optionally, a migration should really be added to make a user's username
+`NOT NULL`, since that field is actually required by the API and many things
+will break if it's `NULL`.
+
 ## Documentation Impact
 The new configuration option will need to be documented, documentation for
 removed API endpoints will itself need to be removed, documentation for the
-`/roles` endpoint will need to be updated to reflect the new request and
-response structures, and as Permissions are implemented on each endpoint the
-Permissions it requires for various actions will need to be defined.
+`/roles` and `/users` endpoints will need to be updated to reflect the new
+request and response structures, and as Permissions are implemented on each
+endpoint the Permissions it requires for various actions will need to be
+defined.
 
 ## Testing Impact
 The most significant testing changes will need to be made to the Go Traffic Ops
@@ -201,5 +284,3 @@ to everyone else. The system described here is far more flexible. It could even
 eliminate the need for the `/deliveryservices/safe` API endpoint, which can be
 expressed instead as two separate Permissions: one that allows making changes
 to the "safe" Delivery Service fields and one that allows all others.
-
-[1] `lastUpdated` is omitted as it's a read-only, response-only field.
