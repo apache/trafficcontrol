@@ -16,7 +16,6 @@
 # under the License.
 
 FROM debian:buster AS enroller-dependencies
-ARG ENROLLER_DEBUG_BUILD=false
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
