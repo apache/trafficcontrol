@@ -34,11 +34,12 @@ export class BasePage {
   private lbOutputWarning = element(by.xpath("(//div[contains(@class,'alert alert-dismissable alert-warning')]//div)[1]"));
   private lbBlankError = element(by.xpath("//small[text()='Required']"));
   private lbSyntaxError = element(by.xpath("//small[text()='Must be alphamumeric with no spaces. Dashes and underscores also allowed.']"));
-  private btnCreate= element(by.xpath("//button[text()='Create']"));
+  private btnCreate= element(by.buttonText('Create'));
   private btnDeletePermanently = element(by.buttonText('Delete Permanently'));
   private btnCancel =  element(by.className('close')).element(by.xpath("//span[text()='×']"));
-  private btnUpdate = element(by.xpath("//button[text()='Update']"))
+  private btnUpdate = element(by.buttonText('Update'));
   private btnSubmit = element(by.xpath("//button[text()='Submit']"));
+  private btnRegister = element(by.buttonText('Send Registration'));
   private btnNo = element(by.xpath("//button[text()='No']"));
   
   async ClickNo(){
@@ -53,8 +54,8 @@ export class BasePage {
     }
     
   }
-  async ClickUpdate(){
-    if(await this.btnUpdate.isEnabled() == true){
+  public async ClickUpdate(): Promise<boolean>{
+    if(await this.btnUpdate.isEnabled()){
       await this.btnUpdate.click();
       return true;
     }else{
@@ -69,9 +70,17 @@ export class BasePage {
       return false;
     }
   }
-  async ClickCreate(){
-    if(await this.btnCreate.isEnabled() == true){
+  public async ClickCreate(): Promise<boolean> {
+    if(await this.btnCreate.isEnabled()){
       await this.btnCreate.click();
+      return true;
+    }else{
+      return false;
+    }
+  }
+  public async ClickRegister(): Promise<boolean> {
+    if(await this.btnRegister.isEnabled()){
+      await this.btnRegister.click();
       return true;
     }else{
       return false;
