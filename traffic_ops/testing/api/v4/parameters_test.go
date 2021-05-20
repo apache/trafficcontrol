@@ -477,6 +477,8 @@ func CreateTestParametersMissingName(t *testing.T) {
 		if reqInf.StatusCode != http.StatusBadRequest {
 			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 		}
+	} else {
+		t.Errorf("No Parameters available, So Create Parameters with missing name can't validate")
 	}
 }
 
@@ -489,6 +491,8 @@ func CreateTestParametersMissingconfigFile(t *testing.T) {
 		if reqInf.StatusCode != http.StatusBadRequest {
 			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 		}
+	} else {
+		t.Errorf("No Parameters available, So Create Parameters with missing Config file can't validate")
 	}
 }
 
