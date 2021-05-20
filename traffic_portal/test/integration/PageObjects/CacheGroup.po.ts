@@ -116,15 +116,15 @@ export class CacheGroupPage extends BasePage {
         if (cachegroup.Type == "EDGE_LOC") {
             const name = cachegroup.FailoverCG + this.randomize;
             await this.txtFailoverCG.click();
-            if (await browser.isElementPresent(element(by.xpath(`//select[@name="fallbackOptions"]//option[@label="` + name + `"]`)))) {
-                await element(by.xpath(`//select[@name="fallbackOptions"]//option[@label="` + name + `"]`)).click();
+            if (await browser.isElementPresent(element(by.css(`select[name="fallbackOptions"] > option[label="${name}"]`)))) {
+                await element(by.css(`select[name="fallbackOptions"] > option[label="${name}"]`)).click();
             } else {
                 result = undefined;
             }
         }
         await this.txtType.sendKeys(cachegroup.Type);
         await snp.ClickUpdate();
-        if (result != undefined) {
+        if (result !== undefined) {
             await basePage.GetOutputMessage().then(function (value) {
                 if (outputMessage === value) {
                     result = true;
@@ -157,12 +157,7 @@ export class CacheGroupPage extends BasePage {
         return result;
     }
     public async CheckCSV(name: string): Promise<boolean> {
-        let linkName = name;
-        let result = false;
-        if (await browser.isElementPresent(element(by.xpath("//span[text()='" + linkName + "']"))) == true) {
-            result = true;
-        }
-        return result;
+        return element(by.cssContainingText("span", name)).isPresent();
     }
     public async ToggleTableColumn(name: string): Promise<boolean> {
         let result = false;
