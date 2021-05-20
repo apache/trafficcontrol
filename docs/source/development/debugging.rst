@@ -144,7 +144,7 @@ For this example, set a breakpoint at `the assignment of "##OVERRIDDEN## " + str
 Use the debugging configuration you created to connect to ``dlv`` and start debugging ``t3c``.
 
 t3c on Mid 01 Cache
------------------
+-------------------
 * Navigate to the ``infrastructure/cdn-in-a-box`` directory. Remove ``infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm`` because it contains release Go binaries that do not include useful debugging information. Rebuild the RPM with no optimization, for debugging:
 
 .. code-block:: shell
@@ -211,7 +211,7 @@ For this example, set a breakpoint at `the assignment of "##OVERRIDDEN## " + str
 Use the debugging configuration you created to connect to ``dlv`` and start debugging ``t3c``.
 
 t3c on Mid 02 Cache
------------------
+-------------------
 * Navigate to the ``infrastructure/cdn-in-a-box`` directory. Remove ``infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm`` because it contains release Go binaries that do not include useful debugging information. Rebuild the RPM with no optimization, for debugging:
 
 .. code-block:: shell
