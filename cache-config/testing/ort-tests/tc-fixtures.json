@@ -1761,7 +1761,7 @@
             	      "lastUpdated": "2018-01-19T19:01:21.499423+00:00",
             	      "name": "trafficserver",
             	      "secure": true,
-            	      "value": "*"
+                     "value": "CHANGEME"
         	      },
                 {
                     "configFile": "empty-file.config",
