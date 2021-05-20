@@ -752,7 +752,7 @@ func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 	if r.Cfg.RunMode == t3cutil.ModeSyncDS || r.Cfg.RunMode == t3cutil.ModeBadAss || r.Cfg.RunMode == t3cutil.ModeReport {
 		serverStatus, err := getUpdateStatus(r.Cfg)
 		if err != nil {
-			log.Errorln(err)
+			log.Errorln("getting '" + r.Cfg.CacheHostName + "' update status: " + err.Error())
 			return updateStatus, err
 		}
 
