@@ -107,7 +107,7 @@ COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
      infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
      /usr/local/sbin/
 # Copy systemctl.sh to /usr/bin specifically because t3c runs /bin/systemctl by absolute path
-COPY infrastructure/cdn-in-a-box/cache/init-debug-scripts.sh /usr/bin/systemctl
+COPY infrastructure/cdn-in-a-box/cache/systemctl.sh /usr/bin/systemctl
 
 ARG ORT_RPM=infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
 COPY $ORT_RPM /
