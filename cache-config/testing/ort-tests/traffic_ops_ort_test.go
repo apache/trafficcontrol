@@ -180,6 +180,7 @@ func runApply(host string, run_mode string) error {
 		"--log-location-info=test.log",
 		"--log-location-debug=test.log",
 		"--omit-via-string-release=true",
+		"--git=no",
 		"--run-mode=" + run_mode,
 	}
 	cmd := exec.Command("t3c", args...)

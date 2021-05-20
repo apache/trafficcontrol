@@ -1077,6 +1077,9 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 			return errors.New("failed to restart trafficserver")
 		}
 		log.Infoln("trafficserver has been " + startStr + "ed")
+		if *syncdsUpdate == UpdateTropsNeeded {
+			*syncdsUpdate = UpdateTropsSuccessful
+		}
 		return nil // we restarted, so no need to reload
 	case t3cutil.ModeReport:
 		if serviceNeeds == t3cutil.ServiceNeedsRestart {
@@ -1089,13 +1092,25 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 		fallthrough
 	case t3cutil.ModeRevalidate:
 		if serviceNeeds == t3cutil.ServiceNeedsRestart {
+			if *syncdsUpdate == UpdateTropsNeeded {
+				*syncdsUpdate = UpdateTropsSuccessful
+			}
 			log.Errorln("ATS configuration has changed.  The new config will be picked up the next time ATS is started.")
 		} else if serviceNeeds == t3cutil.ServiceNeedsReload {
 			log.Infoln("ATS configuration has changed, Running 'traffic_ctl config reload' now.")
 			if _, _, err := util.ExecCommand(config.TSHome+config.TrafficCtl, "config", "reload"); err != nil {
+				if *syncdsUpdate == UpdateTropsNeeded {
+					*syncdsUpdate = UpdateTropsFailed
+				}
 				return errors.New("ATS configuration has changed and 'traffic_ctl config reload' failed, check ATS logs: " + err.Error())
 			}
+			if *syncdsUpdate == UpdateTropsNeeded {
+				*syncdsUpdate = UpdateTropsSuccessful
+			}
 			log.Infoln("ATS 'traffic_ctl config reload' was successful")
+		}
+		if *syncdsUpdate == UpdateTropsNeeded {
+			*syncdsUpdate = UpdateTropsSuccessful
 		}
 		return nil
 	}
