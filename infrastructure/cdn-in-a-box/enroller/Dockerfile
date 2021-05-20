@@ -34,6 +34,8 @@ RUN go_version=$(cat /GO_VERSION) && \
 ENV GOPATH=/go
 
 FROM enroller-dependencies AS enroller-builder
+ARG ENROLLER_DEBUG_BUILD=false
+
 # enroller source and dependencies
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
 COPY ./go.mod ./go.sum /go/src/github.com/apache/trafficcontrol/
@@ -43,7 +45,7 @@ COPY ./traffic_ops/v4-client/ /go/src/github.com/apache/trafficcontrol/traffic_o
 COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
 
 WORKDIR /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller
-RUN set -o errexit; \
+RUN set -o errexit -o nounset; \
     go clean; \
     go mod vendor -v; \
     gcflags= ldflags=; \
