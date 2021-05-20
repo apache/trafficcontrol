@@ -730,7 +730,6 @@ def write_encryption_key(aes_key_location): # type: (str) -> None
 	"""
 	logging.info(aes_key_location)
 
-	cmd = ["/usr/bin/openssl", "rand", "-base64", "32"]
 	args = (
 		"rand",
 		"-out",
@@ -1042,7 +1041,7 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 	try:
 		traffic_vault_backend = existing_conf["traffic_ops_golang"]["traffic_vault_backend"]
 	except KeyError as e:
-		logging.warn("no traffic vault backend configured, using default postgres")
+		logging.warning("no traffic vault backend configured, using default postgres")
 
 	if traffic_vault_backend == "postgres":
 		try:
