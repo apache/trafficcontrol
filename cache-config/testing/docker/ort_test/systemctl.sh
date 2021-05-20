@@ -19,41 +19,35 @@
 
 # This is a work around for testing t3c which uses systemctl.
 # systemctl does not work in a container very well so this script
-# replaces systemctl in the container and always returns a
+# replaces systemctl in the container and always returns a 
 # sucessful result to t3c.
 
 USAGE="\nsystemctl COMMAND NAME\n"
-PATH+=:/opt/trafficserver/bin
 
-if [[ -z "$1" ]] || [[ -z "$2" ]]; then
-  echo -e "$USAGE"
+if [ -z $1 ] || [ -z $2 ]; then
+  echo -e $USAGE
   exit 0
 else
-  COMMAND="$1"
-  NAME="${2%.service}"
+  COMMAND=$1
+  NAME=$2
 fi
 
-if [[ "$NAME" != "trafficserver" ]]; then
-  echo -e "\nFailed to start ${NAME}.service: Unit not found.\n"
+if [ "$2" != "trafficserver" ]; then
+  echo -e "\nFailed to start ${NAME}.service: Unit not found.n"
   exit 0
 fi
 
-case "$COMMAND" in
-	enable)
-		service_file="$(rpm -ql trafficserver | grep '\.service$')"
-		echo "Created symlink /etc/systemd/system/sockets.target.wants/$(basename "$service_file") → ${service_file}."
-		exit
-		;;
-  restart) command_found=true;;
-  start) command_found=true;;
-  status) command_found=true;;
-  stop) command_found=true;;
+case $COMMAND in 
+  enable)
+    ;;
+  restart)
+    ;;
+  status)
+    ;;
+  start)
+    ;;
+  stop)
+    ;;
 esac
 
-
-if [[ "$command_found" != true ]]; then
-	echo "Unknown command verb ${COMMAND}."
-	exit 1
-fi;
-
-"$NAME" "$COMMAND"
+exit 0
