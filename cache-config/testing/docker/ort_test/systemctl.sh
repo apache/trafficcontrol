@@ -23,6 +23,7 @@
 # sucessful result to t3c.
 
 USAGE="\nsystemctl COMMAND NAME\n"
+PATH+=:/opt/trafficserver/bin
 
 if [[ -z "$1" ]] || [[ -z "$2" ]]; then
   echo -e "$USAGE"
