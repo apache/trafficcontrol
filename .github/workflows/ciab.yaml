@@ -119,7 +119,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ github.job }}
-          path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
+          path: ${{ github.workspace }}/dist/trafficcontrol-${{ github.job }}-*.rpm
 
   traffic_portal:
     if: github.event.pull_request.draft == false
