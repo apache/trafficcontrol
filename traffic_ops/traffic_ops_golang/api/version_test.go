@@ -40,17 +40,17 @@ func ExampleVersion_Equal() {
 		Major: 1,
 		Minor: 2,
 	}
-	fmt.Println(v.Equals(o))
-	fmt.Println(o.Equals(v))
+	fmt.Println(v.Equal(o))
+	fmt.Println(o.Equal(v))
 
 	o.Major++
-	fmt.Println(v.Equals(o))
-	fmt.Println(o.Equals(v))
+	fmt.Println(v.Equal(o))
+	fmt.Println(o.Equal(v))
 
 	o.Major--
 	o.Minor--
-	fmt.Println(v.Equals(o))
-	fmt.Println(o.Equals(v))
+	fmt.Println(v.Equal(o))
+	fmt.Println(o.Equal(v))
 
 	// Output: true
 	// true

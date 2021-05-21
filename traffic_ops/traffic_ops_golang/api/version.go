@@ -31,8 +31,8 @@ type Version struct {
 	Minor uint64
 }
 
-// Equals determines if an API Version is exactly equal to some other Version.
-func (v Version) Equals(other Version) bool {
+// Equal determines if an API Version is exactly equal to some other Version.
+func (v Version) Equal(other Version) bool {
 	return v.Major == other.Major && v.Minor == other.Minor
 }
 
