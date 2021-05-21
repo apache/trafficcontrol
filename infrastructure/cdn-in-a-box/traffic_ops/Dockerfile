@@ -131,6 +131,7 @@ RUN go get -u github.com/go-delve/delve/cmd/dlv
 
 FROM trafficops AS trafficops-debug
 COPY --from=get-delve /root/go/bin /usr/bin
+COPY infrastructure/cdn-in-a-box/traffic_ops/tv.conf conf/production/
 
 # Makes the default target skip the trafficops-debug stage
 FROM trafficops
