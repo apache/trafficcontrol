@@ -37,6 +37,9 @@ func TestProfileParameters(t *testing.T) {
 		CreateTestProfileParametersAlreadyExists(t)
 		CreateTestProfileParametersInvalidProfileId(t)
 		CreateTestProfileParametersInvalidParameterId(t)
+		CreateTestProfileParametersMissingProfileId(t)
+		CreateTestProfileParametersMissingParameterId(t)
+		CreateTestProfileParametersEmptyBody(t)
 	})
 }
 
@@ -412,9 +415,12 @@ func CreateTestProfileParametersInvalidProfileId(t *testing.T) {
 		ProfileID:   profileID,
 		ParameterID: parameterID,
 	}
-	resp, _, err := TOSession.CreateProfileParameter(pp, client.RequestOptions{})
+	resp, reqInf, err := TOSession.CreateProfileParameter(pp, client.RequestOptions{})
 	if err == nil {
 		t.Errorf("Expected profile not found, but got - alerts: %+v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected 404 status code, got %v", reqInf.StatusCode)
 	}
 }
 
@@ -441,8 +447,83 @@ func CreateTestProfileParametersInvalidParameterId(t *testing.T) {
 		ProfileID:   profileID,
 		ParameterID: parameterID,
 	}
-	resp, _, err := TOSession.CreateProfileParameter(pp, client.RequestOptions{})
+	resp, reqInf, err := TOSession.CreateProfileParameter(pp, client.RequestOptions{})
 	if err == nil {
 		t.Errorf("Expected Parameter not found, but got - alerts: %+v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected 404 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func CreateTestProfileParametersMissingProfileId(t *testing.T) {
+	if len(testData.Parameters) < 1 {
+		t.Fatal("Need at least one Parameter to test associating a Parameter with a Profile")
+	}
+
+	firstParameter := testData.Parameters[0]
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstParameter.Name)
+	paramResp, _, err := TOSession.GetParameters(opts)
+	if err != nil {
+		t.Errorf("cannot get Parameter by name '%s': %v - alerts: %+v", firstParameter.Name, err, paramResp.Alerts)
+	}
+	if len(paramResp.Response) < 1 {
+		t.Fatalf("Expected at least one Parameter to exist with name '%s'", firstParameter.Name)
+	}
+
+	parameterID := paramResp.Response[0].ID
+
+	pp := tc.ProfileParameterCreationRequest{
+		ParameterID: parameterID,
+	}
+	resp, reqInf, err := TOSession.CreateProfileParameter(pp, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected 'profileId' cannot be blank, but got - alerts: %+v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func CreateTestProfileParametersMissingParameterId(t *testing.T) {
+	if len(testData.Profiles) < 1 {
+		t.Fatal("Need at least one Profile to test associating a Parameter with a Profile")
+	}
+
+	firstProfile := testData.Profiles[0]
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstProfile.Name)
+	profileResp, _, err := TOSession.GetProfiles(opts)
+	if err != nil {
+		t.Errorf("cannot get Profile '%s' by name: %v - alerts: %+v", firstProfile.Name, err, profileResp.Alerts)
+	}
+	if len(profileResp.Response) != 1 {
+		t.Fatalf("Expected exactly one Profile to exist with name '%s', found: %d", firstProfile.Name, len(profileResp.Response))
+	}
+
+	profileID := profileResp.Response[0].ID
+
+	pp := tc.ProfileParameterCreationRequest{
+		ProfileID: profileID,
+	}
+	resp, reqInf, err := TOSession.CreateProfileParameter(pp, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected 'parameterId' cannot be blank, but got - alerts: %+v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func CreateTestProfileParametersEmptyBody(t *testing.T) {
+
+	pp := tc.ProfileParameterCreationRequest{}
+	resp, reqInf, err := TOSession.CreateProfileParameter(pp, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected 'parameterId' cannot be blank, 'profileId' cannot be blank, but got - alerts: %+v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 	}
 }
