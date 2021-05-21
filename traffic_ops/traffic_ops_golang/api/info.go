@@ -187,6 +187,12 @@ func (inf Info) UseIMS() bool {
 	return inf.Config.UseIMS && inf.request.Header.Get(rfc.IfModifiedSince) != ""
 }
 
+// SetHeader is a convenience method that allows setting an HTTP header to
+// 'value'.
+func (inf Info) SetHeader(header, value string) {
+	inf.writer.Header().Set(header, value)
+}
+
 // CheckPrecondition checks a request's "preconditions" - its If-Match and
 // If-Unmodified-Since headers versus the last updated time of the requested
 // object(s), and returns (in order), an HTTP response code appropriate for the
@@ -212,7 +218,7 @@ func (inf Info) CheckPrecondition(query string, args ...interface{}) (int, error
 
 	var lastUpdated time.Time
 	if err := inf.Tx.Tx.QueryRow(query, args...).Scan(&lastUpdated); err != nil {
-		return http.StatusInternalServerError, nil, fmt.Errorf("scanning for lastUpdated: %v", err)
+		return http.StatusInternalServerError, nil, fmt.Errorf("scanning for lastUpdated: %w", err)
 	}
 
 	if etag != "" {
@@ -242,7 +248,7 @@ func (inf Info) CheckPrecondition(query string, args ...interface{}) (int, error
 // Close will commit the transaction, if it hasn't been rolled back.
 func (inf *Info) Close() {
 	defer inf.ctxCancel()
-	if err := inf.Tx.Tx.Commit(); err != nil && err != sql.ErrTxDone {
+	if err := inf.Tx.Tx.Commit(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 		log.Errorln("committing transaction: " + err.Error())
 	}
 }
@@ -276,7 +282,7 @@ func (inf *Info) CreateInfluxClient() (*influx.Client, error) {
 
 	row := inf.Tx.Tx.QueryRow(influxServersQuery)
 	if e := row.Scan(&fqdn, &tcpPort, &httpsPort); e != nil {
-		return nil, fmt.Errorf("Failed to create influx client: %v", e)
+		return nil, fmt.Errorf("Failed to create influx client: %w", e)
 	}
 
 	host := "http%s://%s:%d"
@@ -287,7 +293,7 @@ func (inf *Info) CreateInfluxClient() (*influx.Client, error) {
 		}
 		port, err := httpsPort.Value()
 		if err != nil {
-			return nil, fmt.Errorf("Failed to create influx client: %v", err)
+			return nil, fmt.Errorf("Failed to create influx client: %w", err)
 		}
 
 		p := port.(int64)
@@ -315,7 +321,7 @@ func (inf *Info) CreateInfluxClient() (*influx.Client, error) {
 	var client influx.Client
 	client, e := influx.NewHTTPClient(config)
 	if client == nil {
-		return nil, fmt.Errorf("Failed to create influx client (client was nil): %v", e)
+		return nil, fmt.Errorf("Failed to create influx client (client was nil): %w", e)
 	}
 	return &client, e
 }
@@ -384,21 +390,16 @@ func (inf Info) HandleErrOptionalDeprecation(statusCode int, userErr, sysErr err
 // it. Use this function instead of the json package when writing API
 // endpoints to safely decode and validate PUT and POST requests.
 //
-// If an error occurs, it is handled internally. The value returned indicates
-// whether or not both the parse and validation completed successfully. If
-// 'false', handles MUST NOT continue, as a response has already been written.
-//
-// TODO: change to take data loaded from db, to remove sql from tc package.
-func (inf Info) ParseBody(v ParseValidator) bool {
+// Errors  returned by this method are safe for the user to see, and should be
+// included in Alerts in responses.
+func (inf Info) ParseBody(v ParseValidator) error {
 	if err := json.NewDecoder(inf.request.Body).Decode(&v); err != nil {
-		inf.HandleErr(http.StatusBadRequest, fmt.Errorf("decoding: %v", err), nil)
-		return false
+		return fmt.Errorf("decoding: %w", err)
 	}
 	if err := v.Validate(inf.Tx.Tx); err != nil {
-		inf.HandleErr(http.StatusBadRequest, fmt.Errorf("validating: %v", err), nil)
-		return false
+		return fmt.Errorf("validating: %w", err)
 	}
-	return true
+	return nil
 }
 
 // HandleDBErr handles a database error by parsing it and returning any and all
@@ -410,44 +411,41 @@ func (inf Info) HandleDBErr(err error) {
 }
 
 // GetFilteredRows returns the rows that result from running 'query' with the
-// given query string parameter-to-WhereColumnInfo mapping, and a boolean
-// indicating success or failure of the query. If that boolean is 'false', the
-// calling handler MUST NOT continue, as a response has already been written.
-func (inf Info) GetFilteredRows(query string, params map[string]dbhelpers.WhereColumnInfo) (*sqlx.Rows, bool) {
+// given query string parameter-to-WhereColumnInfo mapping, an HTTP status code
+// (to be used in case of errors), a user-friendly error, and a server-only
+// error that should be logged.
+func (inf Info) GetFilteredRows(query string, params map[string]dbhelpers.WhereColumnInfo) (*sqlx.Rows, int, error, error) {
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, params)
 	if len(errs) > 0 {
 		inf.HandleErr(http.StatusBadRequest, util.JoinErrs(errs), nil)
-		return &sqlx.Rows{}, false
+		return nil, http.StatusBadRequest, util.JoinErrs(errs), nil
 	}
 
 	rows, err := inf.Tx.NamedQuery(query+where+orderBy+pagination, queryValues)
 	if err != nil {
-		inf.HandleErr(http.StatusInternalServerError, nil, err)
-		return &sqlx.Rows{}, false
+		return nil, http.StatusInternalServerError, nil, err
 	}
-	return rows, true
+	return rows, http.StatusOK, nil, nil
 }
 
 // CreateOrUpdate uses the passed query to insert the given value into the
-// database, returning a boolean indicating success or failure of the query. If
-// that boolean is 'false', the calling handler MUST NOT continue, as a
-// response has already been written.
-func (inf Info) CreateOrUpdate(query string, value interface{}) bool {
+// database, returning an HTTP status code (in case of error), a user-facing
+// error, and a server-only error.
+func (inf Info) CreateOrUpdate(query string, value interface{}) (int, error, error) {
 	resultRows, err := inf.Tx.NamedQuery(query, value)
 	if err != nil {
-		inf.HandleDBErr(err)
-		return false
+		u, s, c := ParseDBError(err)
+		return c, u, s
 	}
-	defer resultRows.Close()
+	defer log.Close(resultRows, "creating or updating")
 
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 	}
 	if rowsAffected == 0 {
-		inf.HandleErr(http.StatusInternalServerError, nil, errors.New("no rows affected"))
-		return false
+		return http.StatusInternalServerError, nil, errors.New("no rows affected")
 	}
 
-	return true
+	return http.StatusOK, nil, nil
 }

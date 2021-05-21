@@ -53,6 +53,7 @@ import (
 
 type errorConstant string
 
+// Error implements the error interface for errorConstants.
 func (e errorConstant) Error() string {
 	return string(e)
 }

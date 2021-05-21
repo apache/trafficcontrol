@@ -135,14 +135,14 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `cdn_locks/?$`, cdn_lock.Create, auth.PrivLevelOperations, nil, Authenticated, nil, 4134390562},
 		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `cdn_locks/?$`, cdn_lock.Delete, auth.PrivLevelOperations, nil, Authenticated, nil, 4134390564},
 
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `acme_accounts/providers?$`, acme.ReadProviders, auth.PrivLevelOperations, nil, Authenticated, nil, 4034390565},
+		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `acme_accounts/providers/?$`, acme.ReadProviders, auth.PrivLevelOperations, nil, Authenticated, nil, 4034390565},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `deliveryservices/sslkeys/generate/acme/?$`, deliveryservice.GenerateAcmeCertificates, auth.PrivLevelOperations, nil, Authenticated, nil, 2534390576},
 
 		// ACME account information
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `acme_accounts/?$`, acme.Read, auth.PrivLevelAdmin, nil, Authenticated, nil, 4034390561},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `acme_accounts/?$`, acme.Create, auth.PrivLevelAdmin, nil, Authenticated, nil, 4034390562},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `acme_accounts/?$`, acme.Update, auth.PrivLevelAdmin, nil, Authenticated, nil, 4034390563},
-		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `acme_accounts/{provider}/{email}?$`, acme.Delete, auth.PrivLevelAdmin, nil, Authenticated, nil, 4034390564},
+		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `acme_accounts/{provider}/{email}/?$`, acme.Delete, auth.PrivLevelAdmin, nil, Authenticated, nil, 4034390564},
 
 		//Delivery service ACME
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `deliveryservices/xmlId/{xmlid}/sslkeys/renew$`, deliveryservice.RenewAcmeCertificate, auth.PrivLevelOperations, nil, Authenticated, nil, 2534390573},

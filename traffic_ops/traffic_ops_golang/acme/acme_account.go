@@ -1,3 +1,6 @@
+// Package acme contains logic and handlers pertaining to the /acme_accounts,
+// /acme_accounts/providers, and /acme_accounts/{{provider}}/{{email}} API
+// endpoints.
 package acme
 
 /*
@@ -26,6 +29,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -54,17 +58,22 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		"provider": {Column: "provider"},
 	}
 
-	rows, ok := inf.GetFilteredRows(readQuery, params)
-	if !ok {
+	rows, errCode, userErr, sysErr := inf.GetFilteredRows(readQuery, params)
+	if userErr != nil || sysErr != nil {
+		inf.HandleErr(errCode, userErr, sysErr)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Errorf("querying ACME acounts: %v", err)
+		}
+	}()
 
 	acmeAccounts := []tc.AcmeAccount{}
 	for rows.Next() {
 		var acct tc.AcmeAccount
 		if err := rows.StructScan(&acct); err != nil {
-			inf.HandleErr(http.StatusInternalServerError, nil, fmt.Errorf("scanning acme accounts: %v", err))
+			inf.HandleErr(http.StatusInternalServerError, nil, fmt.Errorf("scanning acme accounts: %w", err))
 			return
 		}
 		acmeAccounts = append(acmeAccounts, acct)
@@ -73,7 +82,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	inf.WriteOKResponse(acmeAccounts, nil)
 }
 
-// ReadProviders returns a list of unique ACME provider both from the database and cdn.conf
+// ReadProviders returns a list of unique ACME provider both from the database and cdn.conf.
 func ReadProviders(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(w, r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -83,11 +92,16 @@ func ReadProviders(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	acmeProviders := []string{}
-	rows, ok := inf.GetFilteredRows(readProvidersQuery, nil)
-	if !ok {
+	rows, errCode, userErr, sysErr := inf.GetFilteredRows(readProvidersQuery, nil)
+	if userErr != nil || sysErr != nil {
+		inf.HandleErr(errCode, userErr, sysErr)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Errorf("querying ACME providers: %v", err)
+		}
+	}()
 
 	for rows.Next() {
 		var provider string
@@ -125,7 +139,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	tx := inf.Tx.Tx
 
 	var acmeAccount tc.AcmeAccount
-	if !inf.ParseBody(&acmeAccount) {
+	if userErr = inf.ParseBody(&acmeAccount); userErr != nil {
+		inf.HandleErr(http.StatusBadRequest, userErr, nil)
 		return
 	}
 
@@ -133,7 +148,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	var prevProvider string
 	err := tx.QueryRow(selectLimitedQuery, acmeAccount.Email, acmeAccount.Provider).Scan(&prevEmail, &prevProvider)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		inf.HandleErr(http.StatusInternalServerError, nil, fmt.Errorf("checking if acme account with email %s and provider %s exists: %v", *acmeAccount.Email, *acmeAccount.Provider, err))
+		inf.HandleErr(http.StatusInternalServerError, nil, fmt.Errorf("checking if acme account with email %s and provider %s exists: %w", *acmeAccount.Email, *acmeAccount.Provider, err))
 		return
 	}
 
@@ -142,11 +157,12 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !inf.CreateOrUpdate(createQuery, acmeAccount) {
+	if errCode, userErr, sysErr = inf.CreateOrUpdate(createQuery, acmeAccount); userErr != nil || sysErr != nil {
+		inf.HandleErr(errCode, userErr, sysErr)
 		return
 	}
 
-	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/acme_accounts?email=%s&provider=%s", inf.Version, url.QueryEscape(prevEmail), url.QueryEscape(prevProvider)))
+	inf.SetHeader(rfc.Location, fmt.Sprintf("/api/%s/acme_accounts?email=%s&provider=%s", inf.Version, url.QueryEscape(prevEmail), url.QueryEscape(prevProvider)))
 	inf.WriteResponseWithAlert(acmeAccount, http.StatusCreated, tc.SuccessLevel, "Acme account created")
 	inf.CreateChangeLog(fmt.Sprintf("ACME ACCOUNT: %s %s, ACTION: created", *acmeAccount.Email, *acmeAccount.Provider))
 }
@@ -163,22 +179,24 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	tx := inf.Tx.Tx
 
 	var acmeAccount tc.AcmeAccount
-	if !inf.ParseBody(&acmeAccount) {
+	if userErr = inf.ParseBody(&acmeAccount); userErr != nil {
+		inf.HandleErr(http.StatusBadRequest, userErr, nil)
 		return
 	}
 
 	var prevAccount tc.AcmeAccount
 	err := tx.QueryRow(selectByProviderAndEmailQuery, acmeAccount.Email, acmeAccount.Provider).Scan(&prevAccount.Email, &prevAccount.PrivateKey, &prevAccount.Uri, &prevAccount.Provider)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		inf.HandleErr(http.StatusBadRequest, errors.New("acme account not found"), nil)
 		return
 	}
 	if err != nil {
-		inf.HandleErr(http.StatusInternalServerError, nil, fmt.Errorf("checking if acme account with email %s and provider %s exists: %v", *acmeAccount.Email, *acmeAccount.Provider, err))
+		inf.HandleErr(http.StatusInternalServerError, nil, fmt.Errorf("checking if acme account with email %s and provider %s exists: %w", *acmeAccount.Email, *acmeAccount.Provider, err))
 		return
 	}
 
-	if !inf.CreateOrUpdate(updateQuery, acmeAccount) {
+	if errCode, userErr, sysErr = inf.CreateOrUpdate(updateQuery, acmeAccount); userErr != nil || sysErr != nil {
+		inf.HandleErr(errCode, userErr, sysErr)
 		return
 	}
 
@@ -207,12 +225,12 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		inf.HandleErr(http.StatusInternalServerError, nil, fmt.Errorf("checking if acme account with email %s and provider %s exists: %v", email, provider, err))
+		inf.HandleErr(http.StatusInternalServerError, nil, fmt.Errorf("checking if acme account with email %s and provider %s exists: %w", email, provider, err))
 		return
 	}
 
 	if _, err := tx.Exec(deleteQuery, email, provider); err != nil {
-		inf.HandleErr(http.StatusInternalServerError, nil, fmt.Errorf("deleting acme account with email %s and provider %s: %v", email, provider, err))
+		inf.HandleErr(http.StatusInternalServerError, nil, fmt.Errorf("deleting acme account with email %s and provider %s: %w", email, provider, err))
 		return
 	}
 
