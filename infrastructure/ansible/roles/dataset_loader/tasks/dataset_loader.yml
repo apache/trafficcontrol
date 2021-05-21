@@ -693,6 +693,47 @@
   set_fact:
     status_assignment: "{{ status_assignment | default({}) | combine({ item: 'REPORTED' }) }}"
   with_items: "{{ dl_hosts_atsec + dl_hosts_atsmid + dl_hosts_grove }}"
+  
+- name: Set interface facts
+  set_fact:
+    all_available_interfaces: "{{ all_available_interfaces | default({}) | combine({ item : host_iface }) }}"
+  with_items: "{{ dl_hosts_all | difference(dl_hosts_mso_alias) }}"
+  vars:
+    host_iface:
+      avail_ifaces: "{{ hostvars[item]['ansible_interfaces'] }}"
+
+- name: debugging
+  debug:
+    msg: "{{ item.value.avail_ifaces }}"
+  with_items: "{{ all_available_interfaces | dict2items }}"
+
+- name: set fact for active interfaces
+  set_fact: 
+
+- name: failig
+  debug:
+    msg: "failing for now"
+  failed_when: testing is not defined
+
+- name: Get default ip information each host
+  set_fact:
+    all_interfaces: "{{ all_interfaces | default([]) | combine({ item : [interfaces] }) }}"
+  with_items: "{{ dl_hosts_all | difference(dl_hosts_mso_alias) }}"
+  vars: 
+    ip_v4: "{{ hostvars[item].ansible_default_ipv4.address }}/{{ hostvars[item].ansible_default_ipv4.netmask }}"
+    ipv4_cidr: "{{ ip_v4 | ipaddr('prefix') }}"
+    interfaces:
+      name: "{{ hostvars[item].ansible_default_ipv4.interface }}"
+      maxBandwidth: null
+      monitor: true
+      mtu: "{{ hostvars[item].ansible_default_ipv4.mtu }}"
+      ipAddresses:
+        - address: "{{ hostvars[item].ansible_default_ipv4.address }}/{{ ipv4_cidr }}"
+          gateway: "{{ hostvars[item].ansible_default_ipv4.gateway }}"
+          serviceAddress: true
+        - address: "{{ hostvars[item].ansible_default_ipv6.address }}/{{ hostvars[item].ansible_default_ipv6.prefix }}"
+          gateway: "{{ hostvars[item].ansible_default_ipv6.gateway }}"
+          serviceAddress: true
 
 - name: Create Servers (Non-mso)
   uri:
