@@ -34,6 +34,9 @@ func TestProfileParameters(t *testing.T) {
 		InvalidCreateTestProfileParameters(t)
 		CreateMultipleProfileParameters(t)
 		CreateProfileWithMultipleParameters(t)
+		CreateTestProfileParametersAlreadyExists(t)
+		CreateTestProfileParametersInvalidProfileId(t)
+		CreateTestProfileParametersInvalidParameterId(t)
 	})
 }
 
@@ -93,6 +96,48 @@ func CreateTestProfileParameters(t *testing.T) {
 	resp, _, err := TOSession.CreateProfileParameter(pp, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("could not associate parameters to profile: %v - alerts: %+v", err, resp.Alerts)
+	}
+}
+
+func CreateTestProfileParametersAlreadyExists(t *testing.T) {
+	if len(testData.Parameters) < 1 || len(testData.Profiles) < 1 {
+		t.Fatal("Need at least one Profile and one Parameter to test associating a Parameter with a Profile")
+	}
+
+	firstProfile := testData.Profiles[0]
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstProfile.Name)
+	profileResp, _, err := TOSession.GetProfiles(opts)
+	if err != nil {
+		t.Errorf("cannot get Profile '%s' by name: %v - alerts: %+v", firstProfile.Name, err, profileResp.Alerts)
+	}
+	if len(profileResp.Response) != 1 {
+		t.Fatalf("Expected exactly one Profile to exist with name '%s', found: %d", firstProfile.Name, len(profileResp.Response))
+	}
+
+	firstParameter := testData.Parameters[0]
+	opts.QueryParameters.Set("name", firstParameter.Name)
+	paramResp, _, err := TOSession.GetParameters(opts)
+	if err != nil {
+		t.Errorf("cannot get Parameter by name '%s': %v - alerts: %+v", firstParameter.Name, err, paramResp.Alerts)
+	}
+	if len(paramResp.Response) < 1 {
+		t.Fatalf("Expected at least one Parameter to exist with name '%s'", firstParameter.Name)
+	}
+
+	profileID := profileResp.Response[0].ID
+	parameterID := paramResp.Response[0].ID
+
+	pp := tc.ProfileParameterCreationRequest{
+		ProfileID:   profileID,
+		ParameterID: parameterID,
+	}
+	resp, reqInf, err := TOSession.CreateProfileParameter(pp, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected error while creating Duplicate profile parameters: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
 	}
 
 }
@@ -341,5 +386,63 @@ func CreateProfileWithMultipleParameters(t *testing.T) {
 	_, _, err = TOSession.CreateProfileWithMultipleParameters(ppSlice, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("could not CREATE profile parameters: %v", err)
+	}
+}
+
+func CreateTestProfileParametersInvalidProfileId(t *testing.T) {
+	if len(testData.Parameters) < 1 {
+		t.Fatal("Need at least one Parameter to test associating a Parameter with a Profile")
+	}
+
+	firstParameter := testData.Parameters[0]
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstParameter.Name)
+	paramResp, _, err := TOSession.GetParameters(opts)
+	if err != nil {
+		t.Errorf("cannot get Parameter by name '%s': %v - alerts: %+v", firstParameter.Name, err, paramResp.Alerts)
+	}
+	if len(paramResp.Response) < 1 {
+		t.Fatalf("Expected at least one Parameter to exist with name '%s'", firstParameter.Name)
+	}
+
+	profileID := 111111
+	parameterID := paramResp.Response[0].ID
+
+	pp := tc.ProfileParameterCreationRequest{
+		ProfileID:   profileID,
+		ParameterID: parameterID,
+	}
+	resp, _, err := TOSession.CreateProfileParameter(pp, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected profile not found, but got - alerts: %+v", resp.Alerts)
+	}
+}
+
+func CreateTestProfileParametersInvalidParameterId(t *testing.T) {
+	if len(testData.Profiles) < 1 {
+		t.Fatal("Need at least one Profile to test associating a Parameter with a Profile")
+	}
+
+	firstProfile := testData.Profiles[0]
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstProfile.Name)
+	profileResp, _, err := TOSession.GetProfiles(opts)
+	if err != nil {
+		t.Errorf("cannot get Profile '%s' by name: %v - alerts: %+v", firstProfile.Name, err, profileResp.Alerts)
+	}
+	if len(profileResp.Response) != 1 {
+		t.Fatalf("Expected exactly one Profile to exist with name '%s', found: %d", firstProfile.Name, len(profileResp.Response))
+	}
+
+	profileID := profileResp.Response[0].ID
+	parameterID := 111111
+
+	pp := tc.ProfileParameterCreationRequest{
+		ProfileID:   profileID,
+		ParameterID: parameterID,
+	}
+	resp, _, err := TOSession.CreateProfileParameter(pp, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected Parameter not found, but got - alerts: %+v", resp.Alerts)
 	}
 }
