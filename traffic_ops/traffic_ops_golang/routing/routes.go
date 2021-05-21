@@ -1310,14 +1310,13 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 func MemoryStatsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
 		stats := runtime.MemStats{}
 		runtime.ReadMemStats(&stats)
 
 		bytes, err := json.Marshal(stats)
 		if err != nil {
-			log.Errorln("unable to marshal stats: " + err.Error())
-			handleErrs(http.StatusInternalServerError, errors.New("marshalling error"))
+			err = fmt.Errorf("unable to marshal stats: %w", err)
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, errors.New("marshalling error"), err)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -1327,13 +1326,12 @@ func MemoryStatsHandler() http.HandlerFunc {
 
 func DBStatsHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
 		stats := db.DB.Stats()
 
 		bytes, err := json.Marshal(stats)
 		if err != nil {
-			log.Errorln("unable to marshal stats: " + err.Error())
-			handleErrs(http.StatusInternalServerError, errors.New("marshalling error"))
+			err = fmt.Errorf("unable to marshal stats: %v", err)
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, errors.New("marshalling error"), err)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
