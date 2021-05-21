@@ -69,6 +69,10 @@ const NilTransactionError = errorConstant("method called on Info with nil transa
 // failure.
 const ResourceModifiedError = errorConstant("resource was modified since the time specified by the request headers")
 
+// GoneErr is the error returned in Alerts when an endpoint has been removed,
+// but the API version to which it belonged is still (partially) supported.
+const GoneErr = errorConstant("this endpoint is no longer available; please consult documentation")
+
 // Common context.Context value keys.
 const (
 	DBContextKey           = "db"
@@ -113,8 +117,7 @@ type ResponseWithSummary struct {
 // back to the client, along with an error-level alert stating that the endpoint
 // is no longer available.
 func GoneHandler(w http.ResponseWriter, r *http.Request) {
-	err := errors.New("This endpoint is no longer available; please consult documentation")
-	HandleErr(w, r, nil, http.StatusGone, err, nil)
+	HandleErr(w, r, nil, http.StatusGone, GoneErr, nil)
 }
 
 // WriteAndLogErr writes the response and logs a warning if an error occurs. This should be used in favor of simply
@@ -126,8 +129,9 @@ func WriteAndLogErr(w http.ResponseWriter, r *http.Request, bts []byte) {
 	}
 }
 
-// WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
-// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+// WriteResp takes any object, serializes it as JSON, and writes that to w.
+// This is a helper for the common case; not using this in unusual cases is
+// perfectly acceptable.
 func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {
 	resp := Response{Response: v}
 	WriteRespRaw(w, r, resp)
