@@ -488,6 +488,7 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 		return errors.New("Failed to move temp '" + tmpFileName + "' to real '" + cfg.Path + "': " + err.Error())
 	}
 	cfg.ChangeApplied = true
+	r.changedFiles = append(r.changedFiles, cfg.Name)
 
 	r.RemapConfigReload = cfg.RemapPluginConfig ||
 		cfg.Name == "remap.config" ||
@@ -998,6 +999,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 						return errors.New("Unable to install " + pkg + " : " + err.Error())
 					} else if result == true {
 						r.pkgs[pkg] = true
+						r.installedPkgs[pkg] = struct{}{}
 						log.Infof("Package %s was installed\n", pkg)
 					}
 				}
