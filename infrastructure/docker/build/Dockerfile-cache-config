@@ -37,8 +37,13 @@ RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
 		git \
 		rpm-build \
 		rsync \
+		gzip \
 		epel-release && \
 	yum -y clean all
+
+RUN yum -y install dnf-plugins-core
+RUN yum -y config-manager --set-enabled PowerTools || yum -y config-manager --set-enabled powertools
+RUN yum -y install pandoc
 
 ### cache-config specific requirements
 FROM common-dependencies AS cache-config

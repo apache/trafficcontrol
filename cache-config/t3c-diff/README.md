@@ -34,53 +34,33 @@
 -->
 # NAME
 
-t3c - Traffic Control Cache Configuration tools
+t3c-diff - Traffic Control Cache Configuration contextual diff tool
 
 # SYNOPSIS
 
-t3c [&#45;&#45;help]
-    &lt;command&gt; [&lt;args&gt;]
+t3c-diff &lt;file-a&gt; &lt;file-a&gt;
+
+[&#45;&#45;help]
 
 # DESCRIPTION
 
-The `t3c` app generates and applies cache configuration for Apache Traffic Control.
+The t3c-diff application compares configuration files with semantic context, omitting comments and other semantically irrelevant text.
 
-This includes requesting Traffic Ops, generating configuration files for caching proxies such as Apache Traffic Server, verifying Traffic Ops data is valid and produces valid config files, creating a git repo for backups and history, determining whether config changes require a reload or restart of the caching proxy service, performing that restart, and more.
+This is useful over standard diff tools without context, for example, when the grammar of a generated comment changes, or a comment contains a date. This allows operators to avoid updating sematically identical files, undesirably updating file timestamps, effecting unnecessary reloads, and other unnecessary and undesirable results.
 
-The latest version and documentation can be found at https://github.com/apache/trafficcontrol/cache-config.
+The input files may be file paths, or 'stdin' in which case that file is read from stdin.
+
+Prints the diff to stdout, and returns the exit code 0 if there was no diff, 1 if there was a diff.
+If one file exists but the other doesn't, it will always be a diff.
+
+Note this means there may be no diff text printed to stdout but still exit 1 indicating a diff
+if the file being created or deleted is semantically empty.
 
 # OPTIONS
 
---help
-    Prints the synopsis and usage information.
+-h, --help
 
-# COMMANDS
-
-We divide t3c into commands for each independent operation. Each command is its own application and can be called directly or via the t3c app. For example, 't3c apply' or 't3c-apply'.
-
-t3c-apply
-
-    Generate and apply cache configuration.
-
-t3c-check
-
-    Check that new config can be applied.
-
-t3c-diff
-
-    Diff config files, like diff or git-diff but with config-specific logic.
-
-t3c-request
-
-    Request data from Traffic Ops.
-
-t3c-update
-
-    Update a server's queue and reval status in Traffic Ops.
-
-# NOMENCLATURE
-
-The "t3c" stands for "Traffic Control Cache Config."
+    Print usage info and exit.
 
 # AUTHORS
 

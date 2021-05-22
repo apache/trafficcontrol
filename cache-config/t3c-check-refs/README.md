@@ -17,38 +17,91 @@
     under the License.
 -->
 
-# t3c-check-refs
+<!--
 
-This implements the ATS plugin readiness verifier as defined in the
-blueprint #4628, see https://github.com/apache/trafficcontrol/pull/4628
+  !!!
+      This file is both a Github Readme and manpage!
+      Please make sure changes appear properly with man,
+      and follow man conventions, such as:
+      https://www.bell-labs.com/usr/dmr/www/manintro.html
 
-## Synopsis
-  t3c-check-refs [options] [optional_config_file]
+      A primary goal of t3c is to follow POSIX and LSB standards
+      and conventions, so it's easy to learn and use by people
+      who know Linux and other *nix systems. Providing a proper
+      manpage is a big part of that.
+  !!!
 
-## Description
-  The t3c-check-refs app will read an ATS formatted plugin.config or remap.config
-  file line by line and verify that the plugin '.so' files are available in the
-  filesystem or relative to the ATS plugin installation directory by the
-  absolute or relative plugin filename.
+-->
 
-  In addition, any plugin parameters that end in '.config', '.cfg', or '.txt'
-  are considered to be plugin configuration files and there existence in the
-  filesystem or relative to the ATS configuration files directory is verified.
+# NAME
 
-  The configuration file argument is optional.  If no config file argument is
-  supplied, t3c-check-refs reads its config file input from 'stdin'
+t3c-check-refs - Traffic Control Cache Configuration generated file reference check tool
 
-## Options
-  --log-location-debug=[value] | -d [value], where to log debugs, default is empty
-  --log-location-error=[value], | -e [value], where to log errors, default is 'stderr'
-  --log-location-info=[value] | -i [value], where to log infos, default is 'stderr'
-  --trafficserver-config-dir=[value] | -c [value], where to find ATS config files, default is '/opt/trafficserver/etc/trafficserver'
-  --trafficserver-plugin-dir=[value] | -p [value], where to find ATS plugins, default is '/opt/trafficserver/libexec/trafficserver'
-  --help | -h, this help message
+## SYNOPSIS
 
-## Exit Status
-  Returns 0 if no missing plugin DSO or config files are found.
-  Otherwise the total number of missing plugin DSO and config files
-  are returned.
-  
-  
+t3c-check-refs [-c directory] [-d location] [-e location] [-f files] [-i location] [-p directory] [file]
+
+[&#45;&#45;help]
+
+## DESCRIPTION
+
+The t3c-check-refs app will read an ATS formatted plugin.config or remap.config
+file line by line and verify that the plugin '.so' files are available in the
+filesystem or relative to the ATS plugin installation directory by the
+absolute or relative plugin filename.
+
+In addition, any plugin parameters that end in '.config', '.cfg', or '.txt'
+are considered to be plugin configuration files and there existence in the
+filesystem or relative to the ATS configuration files directory is verified.
+
+The configuration file argument is optional.  If no config file argument is
+supplied, t3c-check-refs reads its config file input from stdin.
+
+## OPTIONS
+
+-c, --trafficserver-config-dir=value
+
+    directory where ATS config files are stored.
+    [/opt/trafficserver/etc/trafficserver]
+
+-d, --log-location-debug=value
+
+     Where to log debugs. May be a file path, stdout, stderr
+
+-e, --log-location-error=value
+
+     Where to log errors. May be a file path, stdout, stderr
+     [stderr]
+
+-f, --files-adding=value
+
+    comma-delimited list of file names being added, to not fail
+    to verify if they don't already exist.
+
+-h, --help
+
+    Print usage information and exit
+
+-i, --log-location-info=value
+
+     Where to log infos. May be a file path, stdout, stderr
+     [stderr]
+
+-p, --trafficserver-plugin-dir=value
+
+    directory where ATS plugins are stored.
+    [/opt/trafficserver/libexec/trafficserver]
+
+## EXIT CODES
+
+Returns 0 if no missing plugin DSO or config files are found.
+Otherwise the total number of missing plugin DSO and config files
+are returned.
+
+# AUTHORS
+
+The t3c application is maintained by Apache Traffic Control project. For help, bug reports, contributing, or anything else, see:
+
+https://trafficcontrol.apache.org/
+
+https://github.com/apache/trafficcontrol

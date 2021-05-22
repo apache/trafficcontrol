@@ -17,59 +17,117 @@
     under the License.
 -->
 
-# t3c-request
+<!--
 
-## Synopsis
-	t3c-request [-hI] [-D value] [-d value] [-e value] [-H value] [-i value] \
-		[-l value] [-P value] [-t value] [-u value] [-U value]
+  !!!
+      This file is both a Github Readme and manpage!
+      Please make sure changes appear properly with man,
+      and follow man conventions, such as:
+      https://www.bell-labs.com/usr/dmr/www/manintro.html
 
-## Description
+      A primary goal of t3c is to follow POSIX and LSB standards
+      and conventions, so it's easy to learn and use by people
+      who know Linux and other *nix systems. Providing a proper
+      manpage is a big part of that.
+  !!!
+
+-->
+# NAME
+
+t3c-request - Traffic Control Cache Configuration data requestor
+
+# SYNOPSIS
+
+t3c-request [-hIprv] [-D &lt;config|update-status|packages|chkconfig|system-info|statuses&gt;] [-d location] [-e location] [-H hostname] [-i location] [-l seconds] [-P password] [-t milliseconds] [-u url] [-U username]
+
+[&#45;&#45;help]
+
+# DESCRIPTION
+
   The t3c-request app is used get update status, package information, linux
   chkconfig status, system info and status from Traffic Ops, see the
-  --get-data option.  If no --get-data option is specified, the servers
+  --get-data option.  If no --get-data option is specified, the server's
   system-info is fetched and returned.
 
-## Options
-	-D, --get-data=value
-      	non-config-file Traffic Ops Data to get. Valid values are
-        update-status, packages, chkconfig, system-info, and
-        statuses [system-info]
-	-d, --log-location-debug=value
-        Where to log debugs. May be a file path, stdout or stderr.
-        Default is no debug logging.
-	-e, --log-location-error=value
-        Where to log errors. May be a file path, stdout, or stderr.
-        Default is stderr.
-	-i, --log-location-info=value
-        Where to log infos. May be a file path, stdout or stderr.
-        Default is stderr.
-	-H, --cache-host-name=value
-     		Host name of the cache to generate config for. Must be the
-        server host name in Traffic Ops, not a URL, and not the FQDN.
-        Defaults to the OS configured hostname.
-	-h, --help  Print usage information and exit
- 	-I, --traffic-ops-insecure
-				[true | false] ignore certificate errors from Traffic Ops
-	-l, --login-dispersion=value
-        [seconds] wait a random number of seconds between 0 and
-        [seconds] before login to traffic ops, default 0
-	-P, --traffic-ops-password=value
-        Traffic Ops password. Required. May also be set with the
-        environment variable TO_PASS
-	-t, --traffic-ops-timeout-milliseconds=value
-        Timeout in milli-seconds for Traffic Ops requests, default
-        is 30000 [30000]
-	-u, --traffic-ops-url=value
-        Traffic Ops URL. Must be the full URL, including the scheme.
-        Required. May also be set with     the environment variable
-        TO_URL
-	-U, --traffic-ops-user=value
-        Traffic Ops username. Required. May also be set with the
-        environment variable TO_USER
-	-p, --traffic-ops-disable-proxy=value
-        [true | false] Whether to not use any configured Traffic Ops
-        proxy Parameter. Only used if get-data is config.
-	-r, --reval-only=value
-        [true | false] Whether to only fetch data needed to revalidate
-        and not all data needed to generate config. Only used if
-        get-data is config.
+# OPTIONS
+
+-D,--get-data=value
+
+    non-config-file Traffic Ops Data to get. Valid values are
+    update-status, packages, chkconfig, system-info, and
+    statuses [system-info]
+
+-d,--log-location-debug=value
+
+    Where to log debugs. May be a file path, stdout, stderr
+
+-e,--log-location-error=value
+
+    Where to log errors. May be a file path, stdout, stderr
+    [stderr]
+
+-H,--cache-host-name=value
+
+    Host name of the cache to generate config for. Must be the
+    server host name in Traffic Ops, not a URL, and not the FQDN
+
+-h,--help
+
+    Print usage information and exit
+
+-i,--log-location-info=value
+
+    Where to log infos. May be a file path, stdout, stderr
+    [stderr]
+
+-I,--traffic-ops-insecure
+
+    [true | false] ignore certificate errors from Traffic Ops
+
+-l,--login-dispersion=value
+
+    [seconds] wait a random number of seconds between 0
+    and [seconds] before login to traffic ops, default 0
+
+-p,--traffic-ops-disable-proxy
+
+    [true | false] whether to not use any configure Traffic Ops
+    proxy parameter. Only used if get-data is config
+	
+-P,--traffic-ops-password=value
+
+    Traffic Ops password. Required. May also be set with the
+    environment variable TO_PASS
+
+-r,--reval-only
+
+    [true | false] whether to only fetch data needed to
+    revalidate, versus all config data. Only used if get-data is
+    config
+-t,--traffic-ops-timeout-milliseconds=value
+
+    Timeout in milli-seconds for Traffic Ops requests, default
+    is 30000 [30000]
+
+-u,--traffic-ops-url=value
+
+    Traffic Ops URL. Must be the full URL, including the scheme.
+    Required. May also be set with     the environment variable
+    TO_URL
+
+-U,--traffic-ops-user=value
+
+    Traffic Ops username. Required. May also be set with the
+    environment variable TO_USER
+
+-v,--version
+
+    Print the app version and exit
+
+# AUTHORS
+
+The t3c application is maintained by Apache Traffic Control project. For help, bug reports, contributing, or anything else, see:
+
+https://trafficcontrol.apache.org/
+
+https://github.com/apache/trafficcontrol
