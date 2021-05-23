@@ -369,11 +369,9 @@ func CreateProfileWithMultipleParameters(t *testing.T) {
 
 	profileID1 := profileResp1.Response[0].ID
 	parameterID1 := paramResp1.Response[0].ID
-	profileID2 := profileResp2.Response[0].ID
 	parameterID2 := paramResp2.Response[0].ID
 
 	DeleteTestProfileParameter(t, profileID1, parameterID1)
-	DeleteTestProfileParameter(t, profileID2, parameterID2)
 
 	profileID164 := int64(profileID1)
 	paramID164 := int64(parameterID1)
