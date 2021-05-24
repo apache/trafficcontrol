@@ -22,7 +22,6 @@ package fakesrvr
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"html"
 	"math/rand"
 	"net/http"
@@ -31,6 +30,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/fakesrvrdata"
 )
 

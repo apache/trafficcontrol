@@ -23,7 +23,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"log"
 	"net/http"
 	"regexp"
@@ -31,6 +30,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -116,6 +116,7 @@ func RouteHandler(fakeTOData Ths) http.HandlerFunc {
 			}
 		}
 		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(r.URL.Path))
 	}
 }
 

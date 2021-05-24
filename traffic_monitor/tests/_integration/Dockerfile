@@ -23,11 +23,15 @@
 FROM centos:8
 MAINTAINER dev@trafficcontrol.apache.org
 
-RUN yum install -y initscripts epel-release golang glibc jq
+RUN dnf install -y initscripts epel-release golang glibc jq git
+ENV GOPATH=/go
 
-COPY traffic_monitor_integration_test /
+COPY ./tests/_integration/ /tm
+WORKDIR /tm
 
-COPY Dockerfile_run.sh /
-COPY monitoring.json /
-COPY snapshot.json /
-ENTRYPOINT /Dockerfile_run.sh
+RUN go get -u  github.com/apache/trafficcontrol/lib/go-log github.com/apache/trafficcontrol/lib/go-tc github.com/apache/trafficcontrol/traffic_monitor
+COPY . ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/
+
+RUN go test -c -o /traffic_monitor_integration_test
+
+CMD ./Dockerfile_run.sh

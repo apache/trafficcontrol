@@ -31,7 +31,7 @@ for v in $envvars; do
 done
 
 TO_API_VERSION=4.0
-CFG_FILE=/traffic-monitor-integration-test.cfg
+CFG_FILE=/tm/traffic-monitor-integration-test.cfg
 
 start() {
   printf "DEBUG traffic_monitor_integration starting\n"
@@ -47,11 +47,11 @@ init() {
   TESTCACHES_GATEWAY=$(echo $TESTCACHES_ADDRESS | sed "s/\([0-9]\+.[0-9]\+.[0-9]\+.\)[0-9]/\11/")
 
   jq "(.. | .address?) |= \"$TESTCACHES_ADDRESS\" | (.. | .gateway?) |= \"$TESTCACHES_GATEWAY\"" \
-    /monitoring.json >/monitoring.json.tmp && mv /monitoring.json.tmp /monitoring.json
+    /tm/monitoring.json > /tm/monitoring.json.tmp && mv /tm/monitoring.json.tmp /tm/monitoring.json
 
-  curl -Lvsk ${TESTTO_URI}/api/${TO_API_VERSION}/cdns/fake/snapshot -X POST -d "@/snapshot.json"
+  curl -Lvsk ${TESTTO_URI}/api/${TO_API_VERSION}/cdns/fake/snapshot -X POST -d "@/tm/snapshot.json"
 
-  curl -Lvsk ${TESTTO_URI}/api/${TO_API_VERSION}/cdns/fake/configs/monitoring -X POST -d '@/monitoring.json'
+  curl -Lvsk ${TESTTO_URI}/api/${TO_API_VERSION}/cdns/fake/configs/monitoring -X POST -d '@/tm/monitoring.json'
 
   curl -Lvsk ${TESTTO_URI}/api/${TO_API_VERSION}/servers -X POST -d '
 [
@@ -148,15 +148,14 @@ EOF
 
 function wait_for_endpoint() {
   try=0
-  while curl -Lvsk "$1" 2>&1 1>/dev/null | grep -Eq '< HTTP/[0-9]\.?[0-9]* 200' && [[ $try -lt 5 ]]; do
-    if [[ $try -gt 0 ]]; then
-      echo "Waiting for $1 to return a 200 OK"
-      sleep 5
-    else
+  while [ $(curl -Lsk --write-out "%{http_code}" "$1" -o /dev/null) -ne 200 ] ; do
+    echo "Waiting for $1 to return a 200 OK"
+    try=$(expr $try + 1)
+    if [[ $try -gt 5 ]]; then
       echo "Unable to get $1"
       exit 1
     fi
-    try=$(expr $try + 1)
+    sleep 5
   done
 }
 export -f wait_for_endpoint

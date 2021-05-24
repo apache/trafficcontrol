@@ -60,7 +60,7 @@ func TestKBPS(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error posting fake cache command '" + uri + "': " + err.Error())
 	}
-	log.Close(resp.Body, "Unable to close http client "+uri)
+	defer log.Close(resp.Body, "Unable to close http client "+uri)
 
 	time.Sleep(time.Second * 5) // TODO determine if there's a faster or more precise way to wait for polled data?
 

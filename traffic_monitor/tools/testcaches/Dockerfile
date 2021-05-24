@@ -18,8 +18,12 @@
 FROM centos:8
 MAINTAINER dev@trafficcontrol.apache.org
 
-ARG APP_BIN=testcaches
-ADD $APP_BIN /usr/sbin/
+RUN dnf -y install golang git
+ENV GOPATH=/go
 
-ADD Dockerfile_run.sh /
-CMD /Dockerfile_run.sh
+RUN go get -u github.com/apache/trafficcontrol/lib/go-rfc
+ADD .   ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/
+WORKDIR ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches
+RUN go build && cp testcaches /usr/sbin/
+
+CMD ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/Dockerfile_run.sh

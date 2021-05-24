@@ -38,7 +38,7 @@ version: '2.1'
 services:
   testto:
     build:
-      context: ./tools/testto
+      context: ../../tools/testto
       dockerfile: ./Dockerfile
     domainname: traffic-monitor-integration.test
     env_file:
@@ -50,7 +50,7 @@ services:
 
   testcaches:
     build:
-      context: ./tools/testcaches
+      context: ../../tools/testcaches
       dockerfile: ./Dockerfile
     domainname: traffic-monitor-integration.test
     env_file:
@@ -62,7 +62,7 @@ services:
 
   trafficmonitor:
     build:
-      context: .
+      context: ./tm
       dockerfile: ./Dockerfile
       args:
         RPM: ./traffic_monitor.rpm
@@ -80,8 +80,8 @@ services:
 
   tmintegrationtest:
     build:
-      context: ./tests/_integration
-      dockerfile: ./Dockerfile
+      context: ../../
+      dockerfile: ./tests/_integration/Dockerfile
     depends_on:
       - testto
       - testcaches

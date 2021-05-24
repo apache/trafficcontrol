@@ -202,7 +202,7 @@ func (c *TMClient) getBytes(path string) ([]byte, error) {
 	if err != nil {
 		return nil, errors.New("getting from '" + url + "': " + err.Error())
 	}
-	log.Close(resp.Body, "Unable to close http client "+url)
+	defer log.Close(resp.Body, "Unable to close http client "+url)
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return nil, fmt.Errorf("Monitor '"+url+"' returned bad status %v", resp.StatusCode)
