@@ -116,7 +116,6 @@ func RouteHandler(fakeTOData Ths) http.HandlerFunc {
 			}
 		}
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(r.URL.Path))
 	}
 }
 
