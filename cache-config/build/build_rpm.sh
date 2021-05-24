@@ -148,7 +148,7 @@ buildManpage() {
 	app="$1";
 	desc="ATC t3c Manual";
 	# prepend the pandoc header to the readme
-  printf "%s\n%s\n%s\n%s" "% ${app}(1) ${app} ${TC_VERSION} | ${desc}" "%" "% $(date '+%Y-%m-%d')" "$(cat ./README.md)" > README.md
+	printf "%s\n%s\n%s\n%s" "% ${app}(1) ${app} ${TC_VERSION} | ${desc}" "%" "% $(date '+%Y-%m-%d')" "$(cat ./README.md)" > README.md
 	pandoc --standalone --to man README.md -o "${app}.1";
 }
 
