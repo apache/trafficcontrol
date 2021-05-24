@@ -44,7 +44,7 @@ t3c-preprocess
 
 The 't3c-preprocess' app preprocesses generated config files, replacing directives with relevant data.
 
-The stdin must be the JSON '{"data": &lt;data&gt;, "files": &lt;files&gt;}' where &lt;data&gt; is the output of 't3c-request --get-data=config' and &lt;files&gt; is the output of 't3c-generate'.
+The stdin must be the JSON '{"data": \<data\>, "files": \<files\>}' where \<data\> is the output of 't3c-request --get-data=config' and \<files\> is the output of 't3c-generate'.
 
 # DIRECTIVES
 

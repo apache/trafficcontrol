@@ -38,9 +38,9 @@ t3c-apply - Traffic Control Cache Configuration applicator
 
 # SYNOPSIS
 
-t3c-apply [-2bchIpsSvW] [-D seconds] [-d location] [-e location] [-g &lt;yes|no|auto&gt;] [-H hostname] [-i location] [-l seconds] [-M location] [-m &lt;badass|report|revalidate|syncds&gt;] [-P password] [-r retries] [-R path] [-T seconds] [-t milliseconds] [-u url] [-U username] [-V versions] [-w &lt;true|false&gt;]
+t3c-apply [-2bchIpsSvW] [-D seconds] [-d location] [-e location] [-g \<yes|no|auto\>] [-H hostname] [-i location] [-l seconds] [-M location] [-m \<badass|report|revalidate|syncds\>] [-P password] [-r retries] [-R path] [-T seconds] [-t milliseconds] [-u url] [-U username] [-V versions] [-w \<true|false\>]
 
-[&#45;&#45;help]
+[\-\-help]
 
 # DESCRIPTION
 

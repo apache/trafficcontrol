@@ -41,9 +41,9 @@ t3c-update - Traffic Control Cache Configuration cache status updater
 t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P value] [-t value] [-u value] [-U
  value]
  
-[&#45;h|&#45;&#45;help]
+[\-\-help]
 
-[&#45;v|&#45;&#45;version]
+[\-\-version]
 
 # DESCRIPTION
 

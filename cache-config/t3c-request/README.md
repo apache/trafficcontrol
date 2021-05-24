@@ -38,9 +38,9 @@ t3c-request - Traffic Control Cache Configuration data requestor
 
 # SYNOPSIS
 
-t3c-request [-hIprv] [-D &lt;config|update-status|packages|chkconfig|system-info|statuses&gt;] [-d location] [-e location] [-H hostname] [-i location] [-l seconds] [-P password] [-t milliseconds] [-u url] [-U username]
+t3c-request [-hIprv] [-D \<config|update-status|packages|chkconfig|system-info|statuses\>] [-d location] [-e location] [-H hostname] [-i location] [-l seconds] [-P password] [-t milliseconds] [-u url] [-U username]
 
-[&#45;&#45;help]
+[\-\-help]
 
 # DESCRIPTION
 

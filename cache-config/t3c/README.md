@@ -38,8 +38,8 @@ t3c - Traffic Control Cache Configuration tools
 
 # SYNOPSIS
 
-t3c [&#45;&#45;help]
-    &lt;command&gt; [&lt;args&gt;]
+t3c [\-\-help]
+    \<command\> [\<args\>]
 
 # DESCRIPTION
 

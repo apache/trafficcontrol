@@ -41,7 +41,7 @@ t3c-check-refs - Traffic Control Cache Configuration generated file reference ch
 
 t3c-check-refs [-c directory] [-d location] [-e location] [-f files] [-i location] [-p directory] [file]
 
-[&#45;&#45;help]
+[\-\-help]
 
 ## DESCRIPTION
 

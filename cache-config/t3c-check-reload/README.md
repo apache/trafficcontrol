@@ -41,7 +41,7 @@ t3c-check-reload - Traffic Control Cache Configuration reload check tool
 
 t3c-check-reload [-c paths] [-m mode] [-p packages]
 
-[&#45;&#45;help]
+[\-\-help]
 
 # DESCRIPTION
 

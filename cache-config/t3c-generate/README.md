@@ -40,9 +40,9 @@ t3c-generate - Traffic Control Cache Configuration generation tool
 
 t3c-generate [-2bchlvVy] [-D directory] [-e location] [-i location] [-T versions] [-w location]
 
-[&#45;h|&#45;&#45;help]
+[\-\-help]
 
-[&#45;v|&#45;&#45;version]
+[\-\-version]
 
 # DESCRIPTION
 

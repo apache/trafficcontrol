@@ -38,16 +38,16 @@ t3c-check - Traffic Control Cache Configuration generated file check tool
 
 # SYNOPSIS
 
-t3c-check &lt;command&gt; [&lt;args&gt;]
+t3c-check \<command\> [\<args\>]
 
-[&#45;&#45;help]
+[\-\-help]
 
 # DESCRIPTION
 
 The t3c-check application has commands for checking things about new config files, such as
 whether they can be safely applied or if a service reload or restart will be required.
 
-For the arguments of a command, see 't3c-check &lt;command&gt; &#45;&#45;help'.
+For the arguments of a command, see 't3c-check \<command\> \-\-help'.
 
 # COMMANDS
 

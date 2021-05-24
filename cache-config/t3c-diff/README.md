@@ -38,9 +38,9 @@ t3c-diff - Traffic Control Cache Configuration contextual diff tool
 
 # SYNOPSIS
 
-t3c-diff &lt;file-a&gt; &lt;file-a&gt;
+t3c-diff \<file-a\> \<file-a\>
 
-[&#45;&#45;help]
+[\-\-help]
 
 # DESCRIPTION
 
