@@ -17,6 +17,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.http;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.RoundingMode;
@@ -146,8 +147,11 @@ public class HTTPAccessEventBuilder {
         final String respurls = " rurls=\"" + formatObject(httpAccessRecord.getResponseURLs()) + "\"";
         stringBuilder.append(respurls);
 
-        final String userAgent = httpServletRequest.getHeader("User-Agent") + "\" ";
+        final String userAgent = httpServletRequest.getHeader("User-Agent") + "\"";
         stringBuilder.append(" uas=\"").append(userAgent);
+
+        final String deliveryServiceId = formatObject(httpAccessRecord.getDeliveryServiceXmlIds()) + "\" ";
+        stringBuilder.append(" svc=\"").append(deliveryServiceId);
 
         stringBuilder.append(formatRequestHeaders(httpAccessRecord.getRequestHeaders()));
         return stringBuilder.toString();
