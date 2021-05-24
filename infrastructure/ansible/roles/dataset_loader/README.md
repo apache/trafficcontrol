@@ -30,6 +30,8 @@ A freshly installed and functional Traffic Ops.  Users of this playbook should a
 
 Today this dataset loader assumes mostly pools of resources such as caches, cachegroups, regions, etc.  It will perform a round-robin assignment within the resource pools automatically.  If you need a different arrangement, you'll want to craft your own supplamentory modification playbook or bypass the dataset loader with a static dataset.
 
+A web server to host the static files for CZF and GeoIP needs to be responding with the required content.
+
 An ATS RPM that matches the version described by `ats_version` to be available in an accessible yum repo to ORT.
 
 It is also pesumed that you're using a working directory that contains `./out/ssl/lab.intermediateca.crt` and `./out/ssl/lab.intermediateca.pem` in order to sign Delivery Service SSL CSRs
