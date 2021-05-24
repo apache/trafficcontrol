@@ -124,6 +124,10 @@ func NewInfo(w http.ResponseWriter, r *http.Request, requiredParams, intParamNam
 	if err != nil {
 		return &Info{Tx: &sqlx.Tx{}}, errors.New("getting config: " + err.Error()), nil, http.StatusInternalServerError
 	}
+	tv, err := GetTrafficVault(r.Context())
+	if err != nil {
+		return &Info{Tx: &sqlx.Tx{}}, errors.New("getting TrafficVault: " + err.Error()), nil, http.StatusInternalServerError
+	}
 	reqID, err := getReqID(r.Context())
 	if err != nil {
 		return &Info{Tx: &sqlx.Tx{}}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
@@ -152,6 +156,7 @@ func NewInfo(w http.ResponseWriter, r *http.Request, requiredParams, intParamNam
 		IntParams: intParams,
 		User:      user,
 		Tx:        tx,
+		Vault:     tv,
 		request:   r,
 		writer:    w,
 		ctxCancel: ctxCancel,
