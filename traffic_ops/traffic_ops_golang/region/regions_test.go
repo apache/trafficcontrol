@@ -76,7 +76,7 @@ func TestReadRegions(t *testing.T) {
 
 	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"id": "1"}}
 	obj := TORegion{
-		api.InfoerImpl{&reqInfo},
+		api.InfoerImpl{ReqInfo: &reqInfo},
 		tc.Region{},
 	}
 	regions, userErr, sysErr, _, _ := obj.Read(nil, false)

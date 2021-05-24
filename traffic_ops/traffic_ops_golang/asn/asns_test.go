@@ -84,7 +84,7 @@ func TestGetASNs(t *testing.T) {
 	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 
 	obj := TOASNV11{
-		api.InfoerImpl{&reqInfo},
+		api.InfoerImpl{ReqInfo: &reqInfo},
 		tc.ASNNullable{},
 	}
 	asns, userErr, sysErr, _, _ := obj.Read(nil, false)
@@ -160,7 +160,7 @@ func TestCheckNumberForUpdate(t *testing.T) {
 	cachegroupID := 10
 	id := 1
 	asn := TOASNV11{
-		api.InfoerImpl{&reqInfo},
+		api.InfoerImpl{ReqInfo: &reqInfo},
 		tc.ASNNullable{ASN: &asnNum, CachegroupID: &cachegroupID, ID: &id},
 	}
 	err = asn.ASNExists(false)
@@ -198,7 +198,7 @@ func TestASNExistsForUpdateFailure(t *testing.T) {
 	cachegroupID := 10
 	id := 1
 	asn := TOASNV11{
-		api.InfoerImpl{&reqInfo},
+		api.InfoerImpl{ReqInfo: &reqInfo},
 		tc.ASNNullable{ASN: &asnNum, CachegroupID: &cachegroupID, ID: &id},
 	}
 	err = asn.ASNExists(false)
@@ -234,7 +234,7 @@ func TestASNExistsForUpdateSuccess(t *testing.T) {
 	cachegroupID := 10
 	id := 1
 	asn := TOASNV11{
-		api.InfoerImpl{&reqInfo},
+		api.InfoerImpl{ReqInfo: &reqInfo},
 		tc.ASNNullable{ASN: &asnNum, CachegroupID: &cachegroupID, ID: &id},
 	}
 	err = asn.ASNExists(false)
@@ -267,7 +267,7 @@ func TestASNExists(t *testing.T) {
 	asnNum := 2
 	cachegroupID := 10
 	asn := TOASNV11{
-		api.InfoerImpl{&reqInfo},
+		api.InfoerImpl{ReqInfo: &reqInfo},
 		tc.ASNNullable{ASN: &asnNum, CachegroupID: &cachegroupID},
 	}
 	err = asn.ASNExists(true)

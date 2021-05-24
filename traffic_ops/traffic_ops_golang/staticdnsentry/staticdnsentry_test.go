@@ -88,7 +88,7 @@ func TestValidate(t *testing.T) {
 
 	reqInfo := api.Info{Tx: tx}
 	// invalid name, empty domainname
-	ts := TOStaticDNSEntry{InfoerImpl: api.InfoerImpl{&reqInfo}}
+	ts := TOStaticDNSEntry{InfoerImpl: api.InfoerImpl{ReqInfo: &reqInfo}}
 	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(ts.Validate())))
 
 	expectedErrs := util.JoinErrsStr([]error{
