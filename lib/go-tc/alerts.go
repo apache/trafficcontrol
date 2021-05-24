@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
@@ -125,6 +126,18 @@ func (self *Alerts) AddAlerts(alerts Alerts) {
 // HasAlerts returns if the Alerts contains any "alert"s.
 func (self *Alerts) HasAlerts() bool {
 	return len(self.Alerts) > 0
+}
+
+// ErrorString concatenates any and all Error-Level alerts in the Alerts to
+// make one string representative of any reported errors.
+func (self Alerts) ErrorString() string {
+	var errs []string
+	for _, a := range self.Alerts {
+		if a.Level == ErrorLevel.String() {
+			errs = append(errs, a.Text)
+		}
+	}
+	return strings.Join(errs, "; ")
 }
 
 // StatusKey holds the text of the status key of a Request Context.

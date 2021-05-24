@@ -16,36 +16,53 @@ package client
 
 import (
 	"fmt"
-	"net/http"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
 const (
-	apiCDNsDNSSECKeysGenerate = "/cdns/dnsseckeys/generate"
-	apiCDNsNameDNSSECKeys     = "cdns/name/%s/dnsseckeys"
+	apiCDNsDNSSECKeysGenerate    = "/cdns/dnsseckeys/generate"
+	apiCDNsNameDNSSECKeys        = "/cdns/name/%s/dnsseckeys"
+	apiCDNsDNSSECRefresh         = "/cdns/dnsseckeys/refresh"
+	apiCDNsDNSSECKeysKSKGenerate = "/cdns/%s/dnsseckeys/ksk/generate"
 )
 
 // GenerateCDNDNSSECKeys generates DNSSEC keys for the given CDN.
-func (to *Session) GenerateCDNDNSSECKeys(req tc.CDNDNSSECGenerateReq, header http.Header) (tc.GenerateCDNDNSSECKeysResponse, toclientlib.ReqInf, error) {
+func (to *Session) GenerateCDNDNSSECKeys(req tc.CDNDNSSECGenerateReq, opts RequestOptions) (tc.GenerateCDNDNSSECKeysResponse, toclientlib.ReqInf, error) {
 	var resp tc.GenerateCDNDNSSECKeysResponse
-	reqInf, err := to.post(apiCDNsDNSSECKeysGenerate, req, header, &resp)
+	reqInf, err := to.post(apiCDNsDNSSECKeysGenerate, opts, req, &resp)
 	return resp, reqInf, err
 }
 
 // GetCDNDNSSECKeys gets the DNSSEC keys for the given CDN.
-func (to *Session) GetCDNDNSSECKeys(name string, header http.Header) (tc.CDNDNSSECKeysResponse, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf(apiCDNsNameDNSSECKeys, name)
+func (to *Session) GetCDNDNSSECKeys(name string, opts RequestOptions) (tc.CDNDNSSECKeysResponse, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf(apiCDNsNameDNSSECKeys, url.PathEscape(name))
 	var resp tc.CDNDNSSECKeysResponse
-	reqInf, err := to.get(route, header, &resp)
+	reqInf, err := to.get(route, opts, &resp)
 	return resp, reqInf, err
 }
 
 // DeleteCDNDNSSECKeys deletes all the DNSSEC keys for the given CDN.
-func (to *Session) DeleteCDNDNSSECKeys(name string, header http.Header) (tc.DeleteCDNDNSSECKeysResponse, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf(apiCDNsNameDNSSECKeys, name)
+func (to *Session) DeleteCDNDNSSECKeys(name string, opts RequestOptions) (tc.DeleteCDNDNSSECKeysResponse, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf(apiCDNsNameDNSSECKeys, url.PathEscape(name))
 	var resp tc.DeleteCDNDNSSECKeysResponse
-	reqInf, err := to.del(route, header, &resp)
+	reqInf, err := to.del(route, opts, &resp)
+	return resp, reqInf, err
+}
+
+// RefreshDNSSECKeys asynchronously regenerates any expired DNSSEC keys in all CDNs.
+func (to *Session) RefreshDNSSECKeys(opts RequestOptions) (tc.RefreshDNSSECKeysResponse, toclientlib.ReqInf, error) {
+	var resp tc.RefreshDNSSECKeysResponse
+	reqInf, err := to.get(apiCDNsDNSSECRefresh, opts, &resp)
+	return resp, reqInf, err
+}
+
+// GenerateCDNDNSSECKSK generates the DNSSEC KSKs (key-signing key) for the given CDN.
+func (to *Session) GenerateCDNDNSSECKSK(name string, req tc.CDNGenerateKSKReq, opts RequestOptions) (tc.GenerateCDNDNSSECKeysResponse, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf(apiCDNsDNSSECKeysKSKGenerate, url.PathEscape(name))
+	var resp tc.GenerateCDNDNSSECKeysResponse
+	reqInf, err := to.post(route, opts, req, &resp)
 	return resp, reqInf, err
 }

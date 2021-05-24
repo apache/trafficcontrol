@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,94 +15,50 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"fmt"
-	"net/http"
-	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIParameters is the full path to the /parameters API endpoint.
-	APIParameters = "/parameters"
-)
+// apiParameters is the full path to the /parameters API endpoint.
+const apiParameters = "/parameters"
 
 // CreateParameter performs a POST to create a Parameter.
-func (to *Session) CreateParameter(pl tc.Parameter) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateParameter(pl tc.Parameter, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIParameters, pl, nil, &alerts)
+	reqInf, err := to.post(apiParameters, opts, pl, &alerts)
 	return alerts, reqInf, err
 }
 
 // CreateMultipleParameters performs a POST to create multiple Parameters at once.
-func (to *Session) CreateMultipleParameters(pls []tc.Parameter) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateMultipleParameters(pls []tc.Parameter, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIParameters, pls, nil, &alerts)
+	reqInf, err := to.post(apiParameters, opts, pls, &alerts)
 	return alerts, reqInf, err
 }
 
 // UpdateParameter replaces the Parameter identified by 'id' with the one
 // provided.
-func (to *Session) UpdateParameter(id int, pl tc.Parameter, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", APIParameters, id)
+func (to *Session) UpdateParameter(id int, pl tc.Parameter, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", apiParameters, id)
 	var alerts tc.Alerts
-	reqInf, err := to.put(route, pl, header, &alerts)
+	reqInf, err := to.put(route, opts, pl, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetParameters returns all Parameters in Traffic Ops.
-func (to *Session) GetParameters(header http.Header, params url.Values) ([]tc.Parameter, toclientlib.ReqInf, error) {
-	route := APIParameters
-	if len(params) > 0 {
-		route += "?" + params.Encode()
-	}
-
+func (to *Session) GetParameters(opts RequestOptions) (tc.ParametersResponse, toclientlib.ReqInf, error) {
 	var data tc.ParametersResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetParameterByID returns the Parameter with the given ID.
-func (to *Session) GetParameterByID(id int, header http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", APIParameters, id)
-	var data tc.ParametersResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetParametersByName retrieves all Parameters with the given Name.
-func (to *Session) GetParametersByName(name string, header http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
-	URI := APIParameters + "?name=" + url.QueryEscape(name)
-	var data tc.ParametersResponse
-	reqInf, err := to.get(URI, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetParametersByConfigFile retrieves all Parameters that have the given
-// Config File.
-func (to *Session) GetParametersByConfigFile(configFile string, header http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
-	URI := APIParameters + "?configFile=" + url.QueryEscape(configFile)
-	var data tc.ParametersResponse
-	reqInf, err := to.get(URI, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetParametersByValue retrieves all Parameters that have the given Value.
-func (to *Session) GetParametersByValue(value string, header http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
-	URI := fmt.Sprintf("%s?value=%s", APIParameters, url.QueryEscape(value))
-	var data tc.ParametersResponse
-	reqInf, err := to.get(URI, header, &data)
-	return data.Response, reqInf, err
+	reqInf, err := to.get(apiParameters, opts, &data)
+	return data, reqInf, err
 }
 
 // DeleteParameter deletes the Parameter with the given ID.
-func (to *Session) DeleteParameter(id int) (tc.Alerts, toclientlib.ReqInf, error) {
-	URI := fmt.Sprintf("%s/%d", APIParameters, id)
+func (to *Session) DeleteParameter(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	URI := fmt.Sprintf("%s/%d", apiParameters, id)
 	var alerts tc.Alerts
-	reqInf, err := to.del(URI, nil, &alerts)
+	reqInf, err := to.del(URI, opts, &alerts)
 	return alerts, reqInf, err
 }

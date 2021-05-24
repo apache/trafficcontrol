@@ -21,6 +21,8 @@ Profiles and Parameters
 ***********************
 :dfn:`Profiles` are a collection of configuration options, defined partially by the Profile's Type_ (not to be confused with the more general ":term:`Type`" used by many other things in Traffic Control) and partially by the :dfn:`Parameters` set on them. Mainly, Profiles and Parameters are used to configure :term:`cache servers`, but they can also be used to configure parts of (nearly) any Traffic Control component, and can even be linked with more abstract concepts like :ref:`Delivery Services <ds-profile>` and :term:`Cache Groups`. The vast majority of configuration done within a Traffic Control CDN must be done through Profiles_ and Parameters_, which can be achieved either through the :ref:`to-api` or in the :ref:`tp-configure-profiles` view of Traffic Portal. For ease of use, Traffic Portal allows for duplication, comparison, import and export of Profiles_ including all of their associated Parameters_.
 
+.. seealso:: For Delivery Service Profile Parameters, see :ref:`ds-parameters`.
+
 .. _profiles:
 
 Profiles
@@ -490,7 +492,6 @@ This configuration file is generated entirely from :term:`Cache Group` relations
 - ``qstring``
 - ``psel.qstring_handling``
 - ``not_a_parent`` - unlike the other Parameters listed (which have a 1:1 correspondence with Apache Traffic Server configuration options), this Parameter affects the generation of :term:`parent` relationships between :term:`cache servers`. When a Parameter with this :ref:`parameter-name` and Config File exists on a :ref:`Profile <profiles>` used by a :term:`cache server`, it will not be added as a :term:`parent` of any other :term:`cache server`, regardless of :term:`Cache Group` hierarchy. Under ordinary circumstances, there's no real reason for this Parameter to exist.
-- ``try_all_primaries_before_secondary`` - on a Delivery Service Profile, if this exists, try all primary parents before failing over to secondary parents, which may be ideal if objects are unlikely to be in cache. The default behavior is to immediately fail to a secondary, which is ideal if objects are likely to be in cache, as the first consistent-hashed secondary parent will be the primary parent in its own cachegroup and therefore receive requests for that object from clients near its own cachegroup.
 
 Additionally, :term:`Delivery Service` :ref:`Profiles <ds-profile>` can have special Parameters with the :ref:`parameter-name` "mso.parent_retry" to :ref:`multi-site-origin-qht`.
 

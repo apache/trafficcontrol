@@ -36,6 +36,7 @@ on:
       - '!.github/actions/build-ciab/*'
       - '!.github/actions/build-rpms/*'
       - '!.github/actions/run-ciab/*'
+      - '!infrastructure/cdn-in-a-box/optional/**'
       - '!.github/workflows/ciab.yaml'
       - 'infrastructure/ansible/**'
       - 'LICENSE'
@@ -43,7 +44,7 @@ on:
       - 'misc/**'
       - 'NOTICE'
       - 'traffic_control/java/**'
-      - 'traffic_ops_ort/testing/**'
+      - 'cache-config/testing/**'
       - 'traffic_ops/testing/**'
   create:
   pull_request:
@@ -59,6 +60,7 @@ on:
       - '!.github/actions/build-ciab/*'
       - '!.github/actions/build-rpms/*'
       - '!.github/actions/run-ciab/*'
+      - '!infrastructure/cdn-in-a-box/optional/**'
       - '!.github/workflows/ciab.yaml'
       - 'infrastructure/ansible/**'
       - 'LICENSE'
@@ -66,7 +68,7 @@ on:
       - 'misc/**'
       - 'NOTICE'
       - 'traffic_control/java/**'
-      - 'traffic_ops_ort/testing/**'
+      - 'cache-config/testing/**'
       - 'traffic_ops/testing/**'
     types: [ opened, reopened, ready_for_review, synchronize ]
 
@@ -103,7 +105,7 @@ jobs:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
 
-  traffic_ops_ort:
+  cache-config:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
@@ -219,7 +221,7 @@ jobs:
     needs:
       - traffic_monitor
       - traffic_ops
-      - traffic_ops_ort
+      - cache-config
       - traffic_portal
       - traffic_router
       - traffic_stats

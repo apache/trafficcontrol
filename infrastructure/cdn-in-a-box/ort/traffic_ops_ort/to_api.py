@@ -73,28 +73,57 @@ class API(TOSession):
 
 		self.hostname = conf.shortHostname
 
-		self.atstccfg_cmd = [
-			"atstccfg",
-			"--traffic-ops-url=http{}://{}:{}".format("s" if conf.useSSL else "", conf.toHost, conf.toPort),
-			"--cache-host-name={}".format(self.hostname),
-			"--traffic-ops-user={}".format(conf.username),
-			"--traffic-ops-password={}".format(conf.password),
+		self.t3c_generate_cmd = [
+			"t3c-generate",
 			"--log-location-error=stderr",
 			"--log-location-warning=stderr",
 			"--log-location-info=stderr",
 			"--dir={}".format(path.join(conf.tsroot, "etc/trafficserver"))
 		]
 
+		self.t3c_request_cmd = [
+			"t3c-request",
+			"--traffic-ops-url=http{}://{}:{}".format("s" if conf.useSSL else "", conf.toHost, conf.toPort),
+			"--cache-host-name={}".format(self.hostname),
+			"--traffic-ops-user={}".format(conf.username),
+			"--traffic-ops-password={}".format(conf.password),
+			"--log-location-error=stderr",
+			"--log-location-debug=stderr",
+			"--log-location-info=stderr"
+		]
+
+		self.t3c_update_cmd = [
+			"t3c-update",
+			"--traffic-ops-url=http{}://{}:{}".format("s" if conf.useSSL else "", conf.toHost, conf.toPort),
+			"--cache-host-name={}".format(self.hostname),
+			"--traffic-ops-user={}".format(conf.username),
+			"--traffic-ops-password={}".format(conf.password),
+			"--log-location-error=stderr",
+			"--log-location-debug=stderr",
+			"--log-location-info=stderr",
+		]
+
 		if conf.timeout is not None and conf.timeout >= 0:
-			self.atstccfg_cmd.append("--traffic-ops-timeout-milliseconds={}".format(conf.timeout))
+			self.t3c_update_cmd.append("--traffic-ops-timeout-milliseconds={}".format(conf.timeout))
+			self.t3c_request_cmd.append("--traffic-ops-timeout-milliseconds={}".format(conf.timeout))
 		if conf.rev_proxy_disable:
-			self.atstccfg_cmd.append("--traffic-ops-disable-proxy")
+			self.t3c_update_cmd.append("--traffic-ops-disable-proxy")
+			self.t3c_request_cmd.append("--traffic-ops-disable-proxy")
 		if not conf.verify:
-			self.atstccfg_cmd.append("--traffic-ops-insecure")
+			self.t3c_update_cmd.append("--traffic-ops-insecure")
+			self.t3c_request_cmd.append("--traffic-ops-insecure")
+
 		if conf.via_string_release > 0:
-			self.atstccfg_cmd.append("--via-string-release")
+			self.t3c_generate_cmd.append("--via-string-release")
 		if conf.disable_parent_config_comments > 0:
-			self.atstccfg_cmd.append("--disable-parent-config-comments")
+			self.t3c_generate_cmd.append("--disable-parent-config-comments")
+
+		if conf.timeout is not None and conf.timeout >= 0:
+			self.t3c_request_cmd.append("--traffic-ops-timeout-milliseconds={}".format(conf.timeout))
+		if conf.rev_proxy_disable:
+			self.t3c_request_cmd.append("--traffic-ops-disable-proxy")
+		if not conf.verify:
+			self.t3c_request_cmd.append("--traffic-ops-insecure")
 
 	def __enter__(self):
 		"""
@@ -131,14 +160,17 @@ class API(TOSession):
 
 	def get_statuses(self) -> typing.List[dict]:
 		"""
-		Retrieves all statuses from the Traffic Ops instance - using atstccfg.
+		Retrieves all statuses from the Traffic Ops instance - using t3c-request.
 
 		:returns: Representations of status objects
 		:raises: ConnectionError if fetching the statuses fails for any reason
 		"""
+
+		t3c_request_cmd = self.t3c_request_cmd + ["--get-data=statuses"]
+
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=statuses"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				proc = subprocess.run(t3c_request_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 				logging.debug("Raw response: %s", proc.stdout.decode())
 				if proc.stderr.decode():
 					logging.error(proc.stderr.decode())
@@ -146,7 +178,7 @@ class API(TOSession):
 					return json.loads(proc.stdout.decode())
 			except (subprocess.SubprocessError, OSError, json.JSONDecodeError) as e:
 				logging.error("status fetch failure: %s", e)
-		raise ConnectionError("Failed to fetch statuses from atstccfg")
+		raise ConnectionError("Failed to fetch statuses from t3c-request")
 
 	def getMyPackages(self) -> typing.List[packaging.Package]:
 		"""
@@ -157,10 +189,11 @@ class API(TOSession):
 		"""
 		logging.info("Fetching this server's package list from Traffic Ops")
 
-		atstccfg_cmd = self.atstccfg_cmd + ["--get-data=packages"]
+		t3c_request_cmd = self.t3c_request_cmd + ["--get-data=packages"]
+
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(atstccfg_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				proc = subprocess.run(t3c_request_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 				logging.debug("Raw output: %s", proc.stdout.decode())
 				if proc.stderr.decode():
 					logging.error("proc.stderr.decode()")
@@ -184,19 +217,57 @@ class API(TOSession):
 		:raises ConnectionError: when something goes wrong communicating with Traffic Ops
 		"""
 		logging.info("Fetching list of configuration files from Traffic Ops")
-		atstccfg_cmd = self.atstccfg_cmd
+
+		t3c_request_cmd = self.t3c_request_cmd + ["--get-data=config"]
+
 		if conf.mode is Configuration.Modes.REVALIDATE:
-			atstccfg_cmd = self.atstccfg_cmd + ["--revalidate-only"]
+			t3c_request_cmd = self.t3c_request_cmd + ["--reval-only"]
+
+#		for _ in range(self.retries):
+#			try:
+#				proc = subprocess.run(t3c_request_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+#				logging.debug("Raw output: %s", proc.stdout.decode())
+#				if proc.stderr.decode():
+#					logging.error("proc.stderr.decode()")
+#				if proc.returncode == 0:
+#					return [packaging.Package(p) for p in json.loads(proc.stdout.decode())]
+#			except (ValueError, IndexError, json.JSONDecodeError, OSError, subprocess.SubprocessError) as e:
+#				logging.debug("package fetch failure: %r", e, stack_info=True, exc_info=True)
+#		raise ConnectionError("Failed to get a response for packages")
+
+		t3c_generate_cmd = self.t3c_generate_cmd
+
+		if conf.mode is Configuration.Modes.REVALIDATE:
+			t3c_generate_cmd = self.t3c_generate_cmd + ["--revalidate-only"]
+
+		req_out = ''
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(atstccfg_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-				logging.debug("Raw response: %s", proc.stdout.decode())
+				proc = subprocess.run(t3c_request_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				logging.debug("request config Raw response: %s", len(proc.stdout.decode()))
 				if proc.stderr.decode():
 					logging.error(proc.stderr.decode())
+				logging.debug("request config code " + str(proc.returncode))
 				if proc.returncode == 0:
-					return [ConfigFile(tsroot=conf.tsroot, contents=x[0], path=x[1]) for x in utils.parse_multipart(proc.stdout.decode())]
+					req_out = proc.stdout
+					logging.debug("request config set req_out")
+					break
 			except (subprocess.SubprocessError, ValueError, OSError) as e:
 				logging.debug("config file fetch failure: %r", e, exc_info=True, stack_info=True)
+
+		logging.debug("request config output len " + str(len(req_out)))
+		if len(req_out) > 0:
+			try:
+				logging.debug("calling t3c_generate_cmd")
+				proc = subprocess.run(t3c_generate_cmd, input=req_out, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				logging.debug("generate raw response len: %s", len(proc.stdout))
+				if proc.stderr.decode():
+					logging.error(proc.stderr.decode())
+				logging.debug("generate config code " + str(proc.returncode))
+				if proc.returncode == 0:
+					return [ConfigFile(tsroot=conf.tsroot, contents=p.get("text"), path=(p.get("path") + '/' + p.get("name"))) for p in json.loads(proc.stdout.decode())]
+			except (subprocess.SubprocessError, ValueError, OSError) as e:
+				logging.debug("config file generate failure: %r", e, exc_info=True, stack_info=True)
 
 		raise ConnectionError("Failed to fetch configuration files from Traffic Ops")
 
@@ -217,10 +288,11 @@ class API(TOSession):
 		if mode is Configuration.Modes.REPORT:
 			return
 
-		atstccfgCmd = self.atstccfg_cmd + ["--set-queue-status=false", "--set-reval-status=false"]
+		t3c_update_cmd = self.t3c_update_cmd + ["--set-update-status=false", "--set-reval-status=false"]
+
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(atstccfgCmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				proc = subprocess.run(t3c_update_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 				logging.info(proc.stdout.decode())
 				logging.error(proc.stderr.decode())
 				if proc.returncode == 0:
@@ -240,9 +312,11 @@ class API(TOSession):
 
 		logging.info("Fetching chkconfig")
 
+		t3c_request_cmd = self.t3c_request_cmd + ["--get-data=chkconfig"]
+
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=chkconfig"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				proc = subprocess.run(t3c_request_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 				logging.debug("Raw response: %s", proc.stdout.decode())
 				logging.error(proc.stderr.decode())
 				if proc.returncode == 0:
@@ -260,9 +334,12 @@ class API(TOSession):
 		:returns: An object representing the API's response
 		"""
 		logging.info("Fetching update status from Traffic Ops")
+
+		t3c_request_cmd = self.t3c_request_cmd + ["--get-data=update-status"]
+
 		for _ in range(self.retries):
 			try:
-				proc = subprocess.run(self.atstccfg_cmd + ["--get-data=update-status"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+				proc = subprocess.run(t3c_request_cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 				logging.debug("Raw response: %s", proc.stdout.decode())
 				logging.error(proc.stderr.decode())
 				if proc.returncode == 0:

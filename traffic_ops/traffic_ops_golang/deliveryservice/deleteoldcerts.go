@@ -75,12 +75,12 @@ func deleteOldDSCerts(tx *sql.Tx, cdn tc.CDNName, tv trafficvault.TrafficVault) 
 // deleteOldDSCertsDB takes a db, and creates a transaction to pass to deleteOldDSCerts.
 func deleteOldDSCertsDB(db *sql.DB, dbTimeout time.Duration, cdn tc.CDNName, tv trafficvault.TrafficVault) {
 	dbCtx, cancelTx := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		log.Errorln("Old Cert Deleter Job: beginning tx: " + err.Error())
 		return
 	}
-	defer cancelTx()
 	txCommit := false
 	defer dbhelpers.CommitIf(tx, &txCommit)
 	if err := deleteOldDSCerts(tx, cdn, tv); err != nil {

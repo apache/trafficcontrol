@@ -20,13 +20,13 @@ import (
 )
 
 const (
-	// APIVaultPing is the partial path (excluding the /api/<version> prefix) to the /vault/ping API endpoint.
-	APIVaultPing = "/vault/ping"
+	// apiVaultPing is the partial path (excluding the /api/<version> prefix) to the /vault/ping API endpoint.
+	apiVaultPing = "/vault/ping"
 )
 
 // TrafficVaultPing returns a response indicating whether or not Traffic Vault is responsive.
-func (to *Session) TrafficVaultPing() (tc.TrafficVaultPingResponse, toclientlib.ReqInf, error) {
+func (to *Session) TrafficVaultPing(opts RequestOptions) (tc.TrafficVaultPingResponse, toclientlib.ReqInf, error) {
 	var data tc.TrafficVaultPingResponse
-	reqInf, err := to.get(APIVaultPing, nil, &data)
+	reqInf, err := to.get(apiVaultPing, opts, &data)
 	return data, reqInf, err
 }

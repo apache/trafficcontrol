@@ -18,6 +18,8 @@ package v4
 import (
 	"net/http"
 	"testing"
+
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestAcmeAutoRenew(t *testing.T) {
@@ -25,9 +27,9 @@ func TestAcmeAutoRenew(t *testing.T) {
 }
 
 func PostTestAutoRenew(t *testing.T) {
-	_, reqInf, err := TOSession.AutoRenew()
+	alerts, reqInf, err := TOSession.AutoRenew(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err)
+		t.Fatalf("Unexpected error scheduling automatic renewal of ACME certificates: %v - alerts: %+v", err, alerts.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusAccepted {
 		t.Fatalf("Expected 202 status code, got %v", reqInf.StatusCode)

@@ -51,13 +51,5 @@ jobs:
       run: |
         skip_analyzers=(
           -copylocks=false
-          -httpresponse=false
-          -loopclosure=false
-          -lostcancel=false
-          -printf=false
-          -structtag=false
-          -tests=false
-          -unmarshal=false
-          -unreachable=false
         )
         go vet "${skip_analyzers[@]}" ./...

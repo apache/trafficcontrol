@@ -1,0 +1,162 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: Traffic Control Cache Config integration tests
+
+on: 
+  push:
+  workflow_dispatch:
+    paths:
+      - .github/workflows/cache-config-tests.yml
+      - go.mod
+      - go.sum
+      - GO_VERSION
+      - traffic_ops/*client/**.go
+      - traffic_ops/traffic_ops_golang/**.go
+      - cache-config/**.go
+      - vendor/**.go
+      - vendor/modules.txt
+      - .github/actions/build-ats-test-rpm
+      - .github/actions/fetch-github-branch-sha
+      - .github/actions/cache-config-integration-tests
+  create:
+  pull_request:
+    paths:
+      - .github/workflows/cache-config-tests.yml
+      - go.mod
+      - go.sum
+      - GO_VERSION
+      - traffic_ops/*client/**.go
+      - traffic_ops/toclientlib/**.go
+      - lib/atscfg-go/**.go
+      - traffic_ops/traffic_ops_golang/**.go
+      - cache-config/**.go
+      - vendor/**.go
+      - vendor/modules.txt
+      - .github/actions/build-ats-test-rpm
+      - .github/actions/fetch-github-branch-sha
+      - .github/actions/cache-config-integration-tests
+    types: [opened, reopened, ready_for_review, synchronize]
+
+jobs:
+
+  traffic_ops:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build RPM
+        uses: ./.github/actions/build-rpms
+        env:
+          ATC_COMPONENT: ${{ github.job }}
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/dist/${{ github.job }}-*.x86_64.rpm
+
+  cache-config:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build RPM
+        uses: ./.github/actions/build-rpms
+        env:
+          ATC_COMPONENT: ${{ github.job }}
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/dist/trafficcontrol-${{ github.job }}-*.x86_64.rpm
+    
+  trafficserver:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Get commit sha
+        uses: ./.github/actions/fetch-github-branch-sha
+        with:
+          owner: apache
+          repo: trafficserver
+          branch: 8.1.x
+        id: git-repo-sha
+      - name: Display SHA
+        run: echo "${{ steps.git-repo-sha.outputs.sha }}"
+      - name: Check Cache
+        id: ats-rpm-cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/dist
+          key: ${{ steps.git-repo-sha.outputs.sha }}
+      - name: Build ATS RPM
+        if: steps.ats-rpm-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/build-ats-test-rpm
+        env:
+          ATC_COMPONENT: ${{ github.job }}
+      - name: Display structure of dist directory
+        run: ls -lR
+        working-directory: ${{ github.workspace }}/dist
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/dist/${{ github.job }}-*.x86_64.rpm
+
+  cache-config_tests:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    needs: 
+      - traffic_ops
+      - cache-config
+      - trafficserver
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Download TO RPM
+      uses: actions/download-artifact@v2
+      with:
+        name: traffic_ops
+        path: ${{ github.workspace }}/cache-config/testing/docker/traffic_ops
+    - name: Display structure of TO downloaded files
+      run: ls -lR
+      working-directory: ${{ github.workspace }}/cache-config/testing/docker/traffic_ops
+    - name: Download Cache Config RPM
+      uses: actions/download-artifact@v2
+      with:
+        name: cache-config
+        path: ${{ github.workspace }}/cache-config/testing/docker/ort_test
+    - name: Display structure of cache config downloaded files
+      run: ls -lR
+      working-directory: ${{ github.workspace }}/cache-config/testing/docker/ort_test
+    - name: Download ATS RPM
+      uses: actions/download-artifact@v2
+      with:
+        name: trafficserver
+        path: ${{ github.workspace }}/cache-config/testing/docker/yumserver/test-rpms
+    - name: Display structure of ATS downloaded files
+      run: ls -lR
+      working-directory: ${{ github.workspace }}/cache-config/testing/docker/yumserver
+    - name: Build cache config test containers
+      run: docker-compose -f ${{ github.workspace }}/cache-config/testing/docker/docker-compose.yml build --parallel
+    - name: Run cache config integration tests
+      uses: ./.github/actions/cache-config-integration-tests

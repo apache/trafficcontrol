@@ -254,7 +254,7 @@ func getSSLKeysByXMLIDHelper(xmlID string, tv trafficvault.TrafficVault, alerts 
 		keyObj = tc.DeliveryServiceSSLKeys{}
 	}
 	if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
-		err = base64DecodeCertificate(&keyObj.Certificate)
+		err = Base64DecodeCertificate(&keyObj.Certificate)
 		if err != nil {
 			userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+xmlID+"': "+err.Error()))
 			alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
@@ -306,7 +306,7 @@ func getSSLKeysByXMLIDHelperV15(xmlID string, alerts tc.Alerts, inf *api.APIInfo
 		keyObj = tc.DeliveryServiceSSLKeysV15{}
 	} else {
 		parsedCert := keyObj.Certificate
-		err = base64DecodeCertificate(&parsedCert)
+		err = Base64DecodeCertificate(&parsedCert)
 		if err != nil {
 			userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+xmlID+"': "+err.Error()))
 			alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
@@ -350,7 +350,7 @@ func parseExpirationFromCert(cert []byte) (time.Time, error) {
 	return x509cert.NotAfter, nil
 }
 
-func base64DecodeCertificate(cert *tc.DeliveryServiceSSLKeysCertificate) error {
+func Base64DecodeCertificate(cert *tc.DeliveryServiceSSLKeysCertificate) error {
 	csrDec, err := base64.StdEncoding.DecodeString(cert.CSR)
 	if err != nil {
 		return errors.New("base64 decoding csr: " + err.Error())

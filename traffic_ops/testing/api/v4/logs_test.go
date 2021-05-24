@@ -17,6 +17,8 @@ package v4
 
 import (
 	"testing"
+
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestLogs(t *testing.T) {
@@ -27,18 +29,20 @@ func TestLogs(t *testing.T) {
 }
 
 func GetTestLogs(t *testing.T) {
-	_, _, err := TOSession.GetLogs()
+	resp, _, err := TOSession.GetLogs(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("error getting logs: " + err.Error())
+		t.Fatalf("error getting logs: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
 func GetTestLogsByLimit(t *testing.T) {
-	toLogs, _, err := TOSession.GetLogsByLimit(10)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("limit", "10")
+	toLogs, _, err := TOSession.GetLogs(opts)
 	if err != nil {
-		t.Fatalf("error getting logs: " + err.Error())
+		t.Errorf("error getting logs: %v - alerts: %+v", err, toLogs.Alerts)
 	}
-	if len(toLogs) != 10 {
-		t.Fatalf("GET logs by limit: incorrect number of logs returned (%v)", len(toLogs))
+	if len(toLogs.Response) != 10 {
+		t.Fatalf("Get logs by limit: incorrect number of logs returned (%d)", len(toLogs.Response))
 	}
 }

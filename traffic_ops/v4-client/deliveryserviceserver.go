@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +15,8 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -28,50 +27,40 @@ import (
 // CreateDeliveryServiceServers associates the given servers with the given
 // Delivery Services. If replace is true, it deletes any existing associations
 // for the given Delivery Service.
-func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, replace bool) (*tc.DSServerIDs, toclientlib.ReqInf, error) {
-	path := APIDeliveryServiceServer
+func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, replace bool, opts RequestOptions) (tc.DeliveryserviceserverResponse, toclientlib.ReqInf, error) {
 	req := tc.DSServerIDs{
 		DeliveryServiceID: util.IntPtr(dsID),
 		ServerIDs:         serverIDs,
 		Replace:           util.BoolPtr(replace),
 	}
-	resp := struct {
-		Response tc.DSServerIDs `json:"response"`
-	}{}
-	reqInf, err := to.post(path, req, nil, &resp)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	return &resp.Response, reqInf, nil
+	var resp tc.DeliveryserviceserverResponse
+	reqInf, err := to.post(apiDeliveryServiceServer, opts, req, &resp)
+	return resp, reqInf, err
 }
 
 // DeleteDeliveryServiceServer removes the association between the Delivery
 // Service identified by dsID and the server identified by serverID.
-func (to *Session) DeleteDeliveryServiceServer(dsID int, serverID int) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/%d", APIDeliveryServiceServer, dsID, serverID)
-	resp := tc.Alerts{}
-	reqInf, err := to.del(route, nil, &resp)
+func (to *Session) DeleteDeliveryServiceServer(dsID int, serverID int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/%d/%d", apiDeliveryServiceServer, dsID, serverID)
+	var resp tc.Alerts
+	reqInf, err := to.del(route, opts, &resp)
 	return resp, reqInf, err
 }
 
 // AssignServersToDeliveryService assigns the given list of servers to the
 // Delivery Service with the given xmlID.
-func (to *Session) AssignServersToDeliveryService(servers []string, xmlID string) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf(APIDeliveryServicesServers, url.QueryEscape(xmlID))
+func (to *Session) AssignServersToDeliveryService(servers []string, xmlID string, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf(apiDeliveryServicesServers, url.PathEscape(xmlID))
 	dss := tc.DeliveryServiceServers{ServerNames: servers, XmlId: xmlID}
-	resp := tc.Alerts{}
-	reqInf, err := to.post(route, dss, nil, &resp)
+	var resp tc.Alerts
+	reqInf, err := to.post(route, opts, dss, &resp)
 	return resp, reqInf, err
 }
 
 // GetDeliveryServiceServers returns associations between Delivery Services and
 // servers.
-func (to *Session) GetDeliveryServiceServers(urlQuery url.Values, h http.Header) (tc.DeliveryServiceServerResponse, toclientlib.ReqInf, error) {
-	route := APIDeliveryServiceServer
-	if qry := urlQuery.Encode(); qry != "" {
-		route += `?` + qry
-	}
-	resp := tc.DeliveryServiceServerResponse{}
-	reqInf, err := to.get(route, h, &resp)
+func (to *Session) GetDeliveryServiceServers(opts RequestOptions) (tc.DeliveryServiceServerResponse, toclientlib.ReqInf, error) {
+	var resp tc.DeliveryServiceServerResponse
+	reqInf, err := to.get(apiDeliveryServiceServer, opts, &resp)
 	return resp, reqInf, err
 }

@@ -159,10 +159,11 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateAcmeCertificates: Traffic Vault is not configured"))
 		return
 	}
-	ctx, _ := context.WithTimeout(r.Context(), AcmeTimeout)
+	ctx, cancelTx := context.WithTimeout(r.Context(), AcmeTimeout)
 
 	req := tc.DeliveryServiceAcmeSSLKeysReq{}
 	if err := api.Parse(r.Body, nil, &req); err != nil {
+		defer cancelTx()
 		api.HandleErr(w, r, nil, http.StatusBadRequest, fmt.Errorf("parsing request: %v", err), nil)
 		return
 	}
@@ -172,29 +173,35 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 
 	dsID, cdnName, ok, err := dbhelpers.GetDSIDAndCDNFromName(inf.Tx.Tx, *req.DeliveryService)
 	if err != nil {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("deliveryservice.GenerateLetsEncryptCertificates: getting DS ID from name: %v", err))
 		return
 	} else if !ok {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+*req.DeliveryService), nil)
 		return
 	}
 
 	userErr, sysErr, errCode = tenant.CheckID(inf.Tx.Tx, inf.User, dsID)
 	if userErr != nil || sysErr != nil {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
 	_, ok, err = dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(*req.CDN))
 	if err != nil {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("checking CDN existence: %v", err))
 		return
 	} else if !ok {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("cdn not found with name "+*req.CDN), nil)
 		return
 	}
 
 	if cdnName != tc.CDNName(*req.CDN) {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("delivery service not in cdn"), nil)
 		return
 	}
@@ -204,7 +211,7 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 	}
 
-	go GetAcmeCertificates(inf.Config, req, ctx, inf.User, asyncStatusId, inf.Vault)
+	go GetAcmeCertificates(inf.Config, req, ctx, cancelTx, true, inf.User, asyncStatusId, inf.Vault)
 
 	var alerts tc.Alerts
 	alerts.AddAlert(tc.Alert{
@@ -230,7 +237,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, _ := context.WithTimeout(r.Context(), AcmeTimeout)
+	ctx, cancelTx := context.WithTimeout(r.Context(), AcmeTimeout)
 
 	req := tc.DeliveryServiceAcmeSSLKeysReq{}
 	if req.AuthType == nil {
@@ -239,6 +246,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := api.Parse(r.Body, nil, &req); err != nil {
+		defer cancelTx()
 		api.HandleErr(w, r, nil, http.StatusBadRequest, fmt.Errorf("parsing request: %v", err), nil)
 		return
 	}
@@ -248,29 +256,35 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 
 	dsID, cdnName, ok, err := dbhelpers.GetDSIDAndCDNFromName(inf.Tx.Tx, *req.DeliveryService)
 	if err != nil {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("deliveryservice.GenerateLetsEncryptCertificates: getting DS ID from name: %v", err))
 		return
 	} else if !ok {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+*req.DeliveryService), nil)
 		return
 	}
 
 	userErr, sysErr, errCode = tenant.CheckID(inf.Tx.Tx, inf.User, dsID)
 	if userErr != nil || sysErr != nil {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
 	_, ok, err = dbhelpers.GetCDNIDFromName(inf.Tx.Tx, tc.CDNName(*req.CDN))
 	if err != nil {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("checking CDN existence: %v", err))
 		return
 	} else if !ok {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("cdn not found with name "+*req.CDN), nil)
 		return
 	}
 
 	if cdnName != tc.CDNName(*req.CDN) {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("delivery service not in cdn"), nil)
 		return
 	}
@@ -280,7 +294,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 	}
 
-	go GetAcmeCertificates(inf.Config, req, ctx, inf.User, asyncStatusId, inf.Vault)
+	go GetAcmeCertificates(inf.Config, req, ctx, cancelTx, true, inf.User, asyncStatusId, inf.Vault)
 
 	var alerts tc.Alerts
 	alerts.AddAlerts(api.CreateDeprecationAlerts(util.StrPtr(API_ACME_GENERATE_LE)))
@@ -294,8 +308,11 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAcmeCertificates gets or creates an ACME account based on the provider, then gets new certificates for the delivery service requested and saves them to Vault.
-func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysReq, ctx context.Context, currentUser *auth.CurrentUser, asyncStatusId int, tv trafficvault.TrafficVault) error {
+func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysReq, ctx context.Context, cancelTx context.CancelFunc, shouldCancelTx bool, currentUser *auth.CurrentUser, asyncStatusId int, tv trafficvault.TrafficVault) error {
 	defer func() {
+		if shouldCancelTx {
+			defer cancelTx()
+		}
 		if err := recover(); err != nil {
 			db, dbErr := api.GetDB(ctx)
 			if dbErr != nil {

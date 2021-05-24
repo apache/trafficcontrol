@@ -98,18 +98,21 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 		err := rows.Scan(&ds.XmlId, &ds.Version)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
 		}
 		existingCerts = append(existingCerts, ExistingCerts{Version: ds.Version, XmlId: ds.XmlId})
 	}
 
-	ctx, _ := context.WithTimeout(r.Context(), AcmeTimeout*time.Duration(len(existingCerts)))
+	ctx, cancelTx := context.WithTimeout(r.Context(), AcmeTimeout*time.Duration(len(existingCerts)))
 
 	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(inf.Tx.Tx, "ACME async job has started.")
 	if userErr != nil || sysErr != nil {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
 
-	go RunAutorenewal(existingCerts, inf.Config, ctx, inf.User, asyncStatusId, inf.Vault)
+	go RunAutorenewal(existingCerts, inf.Config, ctx, cancelTx, inf.User, asyncStatusId, inf.Vault)
 
 	var alerts tc.Alerts
 	if deprecated {
@@ -125,7 +128,8 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
 
 }
-func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx context.Context, currentUser *auth.CurrentUser, asyncStatusId int, tv trafficvault.TrafficVault) {
+func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx context.Context, cancelTx context.CancelFunc, currentUser *auth.CurrentUser, asyncStatusId int, tv trafficvault.TrafficVault) {
+	defer cancelTx()
 	db, err := api.GetDB(ctx)
 	if err != nil {
 		log.Errorf("Error getting db: %s", err.Error())
@@ -182,7 +186,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 			continue
 		}
 
-		err = base64DecodeCertificate(&keyObj.Certificate)
+		err = Base64DecodeCertificate(&keyObj.Certificate)
 		if err != nil {
 			log.Errorf("cert autorenewal: error getting SSL keys for XMLID '%s': %s", ds.XmlId, err.Error())
 			dsExpInfo.XmlId = ds.XmlId
@@ -230,7 +234,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 				},
 			}
 
-			if err := GetAcmeCertificates(cfg, req, ctx, currentUser, 0, tv); err != nil {
+			if err := GetAcmeCertificates(cfg, req, ctx, nil, false, currentUser, 0, tv); err != nil {
 				dsExpInfo.Error = err
 				errorCount++
 			} else {

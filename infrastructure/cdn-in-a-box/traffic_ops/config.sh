@@ -32,9 +32,14 @@
 # TO_HOST
 # TO_PORT
 # TP_HOST
+# TV_DB_NAME
+# TV_DB_PORT
+# TV_DB_SERVER
+# TV_DB_USER
+# TV_DB_USER_PASS
 #
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_HOST TO_PORT TP_HOST)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_HOST TO_PORT TP_HOST TV_DB_NAME TV_DB_PORT TV_DB_SERVER TV_DB_USER TV_DB_USER_PASS)
 for v in $envvars; do
   if [[ -z "${!v}" ]]; then echo "$v is unset"; exit 1; fi
 done
@@ -76,6 +81,19 @@ cdn_conf=/opt/traffic_ops/app/conf/cdn.conf
     },
     "use_ims": true,
     "traffic_ops_golang" : {
+          "traffic_vault_backend": "$TV_BACKEND",
+          "traffic_vault_config": {
+            "dbname": "$TV_DB_NAME",
+            "hostname": "$TV_DB_SERVER.$INFRA_SUBDOMAIN.$TLD_DOMAIN",
+            "user": "$TV_DB_USER",
+            "password": "$TV_DB_USER_PASS",
+            "port": ${TV_DB_PORT:-5432},
+            "conn_max_lifetime_seconds": ${DEBUGGING_TIMEOUT:-60},
+            "max_connections": 500,
+            "max_idle_connections": 30,
+            "query_timeout_seconds": ${DEBUGGING_TIMEOUT:-60},
+            "aes_key_location": "$TV_AES_KEY_LOCATION"
+        },
         "proxy_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_tls_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_read_header_timeout" : ${DEBUGGING_TIMEOUT:-60},
@@ -150,12 +168,34 @@ echo "$(jq "$(<<'JQ_FILTER' envsubst
       "${DB_USER_PASS}"
     else . end))
   ) |
+  ."/opt/traffic_ops/app/conf/production/tv.conf"[] |= (
+    (select(.config_var == "dbname") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${TV_DB_NAME}"
+    else . end)) |
+    (select(.config_var == "hostname") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${DB_FQDN}"
+    else . end)) |
+    (select(.config_var == "user") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${TV_DB_USER}"
+    else . end)) |
+    (select(.config_var == "password") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${TV_DB_USER_PASS}"
+    else . end))
+  ) |
   ."/opt/traffic_ops/app/db/dbconf.yml"[] |= (
     (select(.config_var == "pgUser") |= with_entries(if .key | test("^[A-Z]") then .value =
       "${DB_USER}"
     else . end)) |
     (select(.config_var == "pgPassword") |= with_entries(if .key | test("^[A-Z]") then .value =
       "${DB_USER_PASS}"
+    else . end))
+  ) |
+  ."/opt/traffic_ops/app/db/trafficvault/dbconf.yml"[] |= (
+    (select(.config_var == "pgUser") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${TV_DB_USER}"
+    else . end)) |
+    (select(.config_var == "pgPassword") |= with_entries(if .key | test("^[A-Z]") then .value =
+      "${TV_DB_USER_PASS}"
     else . end))
   ) |
   ."/opt/traffic_ops/install/data/json/openssl_configuration.json"[] |= (
@@ -188,4 +228,4 @@ echo "$(jq "$(<<'JQ_FILTER' envsubst
 JQ_FILTER
 )" "$input_json")" >"$input_json"
 
-"${install_bin}/postinstall" -a --cfile "$input_json" -n --no-restart-to
+"${install_bin}/postinstall" --debug -a --cfile "$input_json" -n --no-restart-to

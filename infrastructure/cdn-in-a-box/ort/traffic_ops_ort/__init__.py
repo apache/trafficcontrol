@@ -313,7 +313,7 @@ Module Contents
 ===============
 """
 
-__version__ = "0.2.0"
+__version__ = "0.11.0"
 __author__  = "Brennan Fieck"
 
 import argparse
@@ -526,8 +526,8 @@ def main() -> int:
 			print("(Hint: use -h/--help for usage)", file=sys.stderr)
 			return 1
 
-	if not find_executable("atstccfg"):
-		print("Could not find atstccfg executable - this is required to run ORT!", file=sys.stderr)
+	if not find_executable("t3c"):
+		print("Could not find t3c executable - this is required to run ORT!", file=sys.stderr)
 		return 1
 
 	return doMain(args)

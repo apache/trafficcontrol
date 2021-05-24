@@ -190,7 +190,7 @@ services:
       target: edge
       args:
         RHEL_VERSION: ${RHEL_VERSION:-8}
-        ORT_RPM: infrastructure/cdn-in-a-box/cache/traffic_ops_ort.rpm
+        ORT_RPM: infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
     domainname: infra.ciab.test
     env_file:
       - variables.env
@@ -207,7 +207,7 @@ services:
       target: mid
       args:
         RHEL_VERSION: ${RHEL_VERSION:-8}
-        ORT_RPM: infrastructure/cdn-in-a-box/cache/traffic_ops_ort.rpm
+        ORT_RPM: infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
     domainname: infra.ciab.test
     env_file:
       - variables.env
@@ -224,7 +224,7 @@ services:
       target: mid
       args:
         RHEL_VERSION: ${RHEL_VERSION:-8}
-        ORT_RPM: infrastructure/cdn-in-a-box/cache/traffic_ops_ort.rpm
+        ORT_RPM: infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
     domainname: infra.ciab.test
     env_file:
       - variables.env

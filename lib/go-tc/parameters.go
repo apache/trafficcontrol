@@ -255,6 +255,31 @@ type ProfileParametersNullableResponse struct {
 	Response []ProfileParametersNullable `json:"response"`
 }
 
+// ProfileParam is a relationship between a Profile and some Parameter
+// assigned to it as it appears in the Traffic Ops API's responses to the
+// /profileparameters endpoint.
+type ProfileParam struct {
+	// Parameter is the ID of the Parameter.
+	Parameter int `json:"parameter"`
+	// Profile is the name of the Profile to which the Parameter is assigned.
+	Profile     string     `json:"profile"`
+	LastUpdated *TimeNoMod `json:"lastUpdated"`
+}
+
+// ProfileParameterCreationRequest is the type of data accepted by Traffic
+// Ops as payloads in POST requests to its /profileparameters endpoint.
+type ProfileParameterCreationRequest struct {
+	ParameterID int `json:"parameterId"`
+	ProfileID   int `json:"profileId"`
+}
+
+// ProfileParametersAPIResponse is the type of a response from Traffic Ops to
+// requests made to its /profileparameters endpoint.
+type ProfileParametersAPIResponse struct {
+	Response []ProfileParam `json:"response"`
+	Alerts
+}
+
 // ProfileExportImportParameterNullable is an object of the form used by Traffic Ops
 // to represent parameters for exported and imported profiles.
 type ProfileExportImportParameterNullable struct {

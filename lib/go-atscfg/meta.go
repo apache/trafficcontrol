@@ -38,7 +38,7 @@ func MakeConfigFilesList(
 	server *Server,
 	serverParams []tc.Parameter,
 	deliveryServices []DeliveryService,
-	deliveryServiceServers []tc.DeliveryServiceServer,
+	deliveryServiceServers []DeliveryServiceServer,
 	globalParams []tc.Parameter,
 	cacheGroupArr []tc.CacheGroupNullable,
 	topologies []tc.Topology,
@@ -317,7 +317,7 @@ func getURISignedDSes(dses map[tc.DeliveryServiceName]DeliveryService) ([]tc.Del
 
 // filterConfigFileDSes returns the DSes that should have config files for the given server.
 // Returns the delivery services and any warnings.
-func filterConfigFileDSes(server *Server, deliveryServices []DeliveryService, deliveryServiceServers []tc.DeliveryServiceServer) (map[tc.DeliveryServiceName]DeliveryService, []string) {
+func filterConfigFileDSes(server *Server, deliveryServices []DeliveryService, deliveryServiceServers []DeliveryServiceServer) (map[tc.DeliveryServiceName]DeliveryService, []string) {
 	warnings := []string{}
 
 	dses := map[tc.DeliveryServiceName]DeliveryService{}
@@ -337,17 +337,13 @@ func filterConfigFileDSes(server *Server, deliveryServices []DeliveryService, de
 
 		dssMap := map[int]struct{}{}
 		for _, dss := range deliveryServiceServers {
-			if dss.Server == nil || dss.DeliveryService == nil {
-				warnings = append(warnings, "got deliveryservice-server with nil values, skipping!")
+			if dss.Server != *server.ID {
 				continue
 			}
-			if *dss.Server != *server.ID {
+			if _, ok := dsIDs[dss.DeliveryService]; !ok {
 				continue
 			}
-			if _, ok := dsIDs[*dss.DeliveryService]; !ok {
-				continue
-			}
-			dssMap[*dss.DeliveryService] = struct{}{}
+			dssMap[dss.DeliveryService] = struct{}{}
 		}
 
 		for _, ds := range deliveryServices {
@@ -437,6 +433,7 @@ func requiredFiles8() []string {
 		"plugin.config",
 		"records.config",
 		"remap.config",
+		"ssl_server_name.yaml",
 		"storage.config",
 		"volume.config",
 	}
@@ -454,6 +451,7 @@ func requiredFiles9() []string {
 		"plugin.config",
 		"records.config",
 		"remap.config",
+		"sni.yaml",
 		"storage.config",
 		"volume.config",
 	}

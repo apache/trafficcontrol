@@ -15,8 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM debian:buster AS enroller-builder
-ARG ENROLLER_DEBUG_BUILD=false
+FROM debian:buster AS enroller-dependencies
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -32,6 +31,9 @@ RUN go_version=$(cat /GO_VERSION) && \
     ln -s /usr/local/go/bin/go /usr/bin/go && \
     rm go.tar.gz
 ENV GOPATH=/go
+
+FROM enroller-dependencies AS enroller-builder
+ARG ENROLLER_DEBUG_BUILD=false
 
 # enroller source and dependencies
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
@@ -57,7 +59,7 @@ RUN set -o errexit -o nounset; \
     fi; \
     go build -ldflags "$ldflags" -gcflags "$gcflags" -tags "$tags"
 
-FROM enroller-builder as get-delve
+FROM enroller-dependencies as get-delve
 RUN go get -u github.com/go-delve/delve/cmd/dlv
 
 FROM debian:buster AS enroller

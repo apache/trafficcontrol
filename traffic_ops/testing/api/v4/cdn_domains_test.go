@@ -21,25 +21,24 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func GetTestDomains(t *testing.T) {
-	resp, _, err := TOSession.GetDomains(nil)
-	t.Log("Response: ", resp)
+	resp, _, err := TOSession.GetDomains(client.RequestOptions{})
 	if err != nil {
-		t.Errorf("could not GET domains: %v", err)
+		t.Errorf("could not GET domains: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
 func GetTestDomainsIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
+	opts := client.NewRequestOptions()
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, err := TOSession.GetDomains(header)
+	opts.Header.Set(rfc.IfModifiedSince, time)
+	resp, reqInf, err := TOSession.GetDomains(opts)
 	if err != nil {
-		t.Fatalf("could not GET domains: %v", err)
+		t.Fatalf("could not GET domains: %v - alerts: %+v", err, resp.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusNotModified {
 		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)

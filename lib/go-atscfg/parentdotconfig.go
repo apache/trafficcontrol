@@ -91,7 +91,7 @@ func MakeParentDotConfig(
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	cacheGroupArr []tc.CacheGroupNullable,
-	dss []tc.DeliveryServiceServer,
+	dss []DeliveryServiceServer,
 	cdn *tc.CDN,
 	opt ParentConfigOpts,
 ) (Cfg, error) {
@@ -245,13 +245,10 @@ func MakeParentDotConfig(
 	cgDSServers := filterDSS(dss, nil, cgServerIDs)
 	parentServerDSes := map[int]map[int]struct{}{} // map[serverID][dsID]
 	for _, dss := range cgDSServers {
-		if dss.Server == nil || dss.DeliveryService == nil {
-			return Cfg{}, makeErr(warnings, "getting cachegroup parent server delivery service servers: got dss with nil members!")
+		if parentServerDSes[dss.Server] == nil {
+			parentServerDSes[dss.Server] = map[int]struct{}{}
 		}
-		if parentServerDSes[*dss.Server] == nil {
-			parentServerDSes[*dss.Server] = map[int]struct{}{}
-		}
-		parentServerDSes[*dss.Server][*dss.DeliveryService] = struct{}{}
+		parentServerDSes[dss.Server][dss.DeliveryService] = struct{}{}
 	}
 
 	originServers, profileCaches, orgProfWarns, err := getOriginServersAndProfileCaches(cgServers, parentServerDSes, profileParentConfigParams, dses, serverCapabilities)
@@ -1520,16 +1517,12 @@ func getDSOrigins(dses map[int]DeliveryService) (map[int]*originURI, []string, e
 }
 
 // makeDSOrigins returns the DS Origins and any warnings.
-func makeDSOrigins(dsses []tc.DeliveryServiceServer, dses []DeliveryService, servers []Server) (map[DeliveryServiceID]map[ServerID]struct{}, []string) {
+func makeDSOrigins(dsses []DeliveryServiceServer, dses []DeliveryService, servers []Server) (map[DeliveryServiceID]map[ServerID]struct{}, []string) {
 	warnings := []string{}
 	dssMap := map[DeliveryServiceID]map[ServerID]struct{}{}
 	for _, dss := range dsses {
-		if dss.Server == nil || dss.DeliveryService == nil {
-			warnings = append(warnings, "making parent.config, got deliveryserviceserver with nil values, skipping!")
-			continue
-		}
-		dsID := DeliveryServiceID(*dss.DeliveryService)
-		serverID := ServerID(*dss.Server)
+		dsID := DeliveryServiceID(dss.DeliveryService)
+		serverID := ServerID(dss.Server)
 		if dssMap[dsID] == nil {
 			dssMap[dsID] = map[ServerID]struct{}{}
 		}

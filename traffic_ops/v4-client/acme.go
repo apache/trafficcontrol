@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,21 +15,17 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIAcmeAutorenew is the API version-relative path for the /acme_autorenew API endpoint.
-	APIAcmeAutorenew = "/acme_autorenew"
-)
+// apiAcmeAutorenew is the API version-relative path for the /acme_autorenew API endpoint.
+const apiAcmeAutorenew = "/acme_autorenew"
 
-// AcmeAutorenew renews the certificates.
-func (to *Session) AutoRenew() (*tc.Alerts, toclientlib.ReqInf, error) {
+// AcmeAutorenew renews all ACME certificates asynchronously.
+func (to *Session) AutoRenew(opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIAcmeAutorenew, nil, nil, &alerts)
-	return &alerts, reqInf, err
+	reqInf, err := to.post(apiAcmeAutorenew, opts, nil, &alerts)
+	return alerts, reqInf, err
 }

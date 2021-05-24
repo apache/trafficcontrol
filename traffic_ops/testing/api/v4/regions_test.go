@@ -20,12 +20,13 @@ import (
 	"net/url"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestRegions(t *testing.T) {
@@ -60,37 +61,47 @@ func TestRegions(t *testing.T) {
 }
 
 func UpdateTestRegionsWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.Regions) > 0 {
-		firstRegion := testData.Regions[0]
-		// Retrieve the Region by region so we can get the id for the Update
-		resp, _, err := TOSession.GetRegionByName(firstRegion.Name, header)
-		if err != nil {
-			t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
-		}
-		if len(resp) > 0 {
-			remoteRegion := resp[0]
-			remoteRegion.Name = "OFFLINE-TEST"
-			_, reqInf, err := TOSession.UpdateRegion(remoteRegion.ID, remoteRegion, header)
-			if err == nil {
-				t.Errorf("Expected error about precondition failed, but got none")
-			}
-			if reqInf.StatusCode != http.StatusPreconditionFailed {
-				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-			}
-		}
+	if len(testData.Regions) < 1 {
+		t.Fatal("Need at least one Region to test updating Regions with HTTP headers")
+	}
+	firstRegion := testData.Regions[0]
+
+	// Retrieve the Region by region so we can get the id for the Update
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstRegion.Name)
+	opts.Header = header
+	resp, _, err := TOSession.GetRegions(opts)
+	if err != nil {
+		t.Errorf("cannot get Region '%s' by name: %v - alerts: %+v", firstRegion.Name, err, resp.Alerts)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Region to exist with name '%s', found: %d", firstRegion.Name, len(resp.Response))
+	}
+
+	remoteRegion := resp.Response[0]
+	remoteRegion.Name = "OFFLINE-TEST"
+
+	opts.QueryParameters.Del("name")
+	_, reqInf, err := TOSession.UpdateRegion(remoteRegion.ID, remoteRegion, opts)
+	if err == nil {
+		t.Errorf("Expected error about precondition failed, but got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
 	}
 }
 
 func GetTestRegionsIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
+
+	opts := client.NewRequestOptions()
+	opts.Header.Set(rfc.IfModifiedSince, time)
 	for _, region := range testData.Regions {
-		_, reqInf, err := TOSession.GetRegionByName(region.Name, header)
+		opts.QueryParameters.Set("name", region.Name)
+		resp, reqInf, err := TOSession.GetRegions(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -99,23 +110,29 @@ func GetTestRegionsIMS(t *testing.T) {
 }
 
 func GetTestRegionsIMSAfterChange(t *testing.T, header http.Header) {
+	opts := client.NewRequestOptions()
+	opts.Header = header
 	for _, region := range testData.Regions {
-		_, reqInf, err := TOSession.GetRegionByName(region.Name, header)
+		opts.QueryParameters.Set("name", region.Name)
+		resp, reqInf, err := TOSession.GetRegions(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusOK {
 			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
 		}
 	}
+
 	currentTime := time.Now().UTC()
 	currentTime = currentTime.Add(1 * time.Second)
 	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
+	opts.Header.Set(rfc.IfModifiedSince, timeStr)
+
 	for _, region := range testData.Regions {
-		_, reqInf, err := TOSession.GetRegionByName(region.Name, header)
+		opts.QueryParameters.Set("name", region.Name)
+		resp, reqInf, err := TOSession.GetRegions(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -124,299 +141,341 @@ func GetTestRegionsIMSAfterChange(t *testing.T, header http.Header) {
 }
 
 func GetTestRegions(t *testing.T) {
+	opts := client.NewRequestOptions()
 	for _, region := range testData.Regions {
-		resp, _, err := TOSession.GetRegionByName(region.Name, nil)
+		opts.QueryParameters.Set("name", region.Name)
+		resp, _, err := TOSession.GetRegions(opts)
 		if err != nil {
-			t.Errorf("cannot GET Region by region: %v - %v", err, resp)
+			t.Errorf("cannot get Region '%s' by name: %v - alerts: %+v", region.Name, err, resp.Alerts)
 		}
 	}
 }
 
 func CreateTestRegions(t *testing.T) {
-
 	for _, region := range testData.Regions {
-		resp, _, err := TOSession.CreateRegion(region)
-		t.Log("Response: ", resp)
+		resp, _, err := TOSession.CreateRegion(region, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not CREATE region: %v", err)
+			t.Errorf("could not create Region '%s': %v - alerts: %+v", region.Name, err, resp.Alerts)
 		}
 	}
 }
 
 func SortTestRegions(t *testing.T) {
-	var sortedList []string
-	resp, _, err := TOSession.GetRegions(nil, nil)
+	resp, _, err := TOSession.GetRegions(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
-	for i := range resp {
-		sortedList = append(sortedList, resp[i].Name)
+
+	sortedList := make([]string, 0, len(resp.Response))
+	for _, region := range resp.Response {
+		sortedList = append(sortedList, region.Name)
 	}
 
 	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
 		return sortedList[p] < sortedList[q]
 	})
-	if res != true {
+	if !res {
 		t.Errorf("list is not sorted by their names: %v", sortedList)
 	}
 }
 
 func SortTestRegionsDesc(t *testing.T) {
-
-	respAsc, _, err1 := TOSession.GetRegions(nil, nil)
-	params := url.Values{}
-	params.Set("sortOrder", "desc")
-	respDesc, _, err2 := TOSession.GetRegions(params, nil)
-
-	if err1 != nil {
-		t.Errorf("Expected no error, but got error in Regions Ascending %v", err1)
+	resp, _, err := TOSession.GetRegions(client.RequestOptions{})
+	if err != nil {
+		t.Errorf("Expected no error, but got error in Regions with default ordering: %v - alerts: %+v", err, resp.Alerts)
 	}
-	if err2 != nil {
-		t.Errorf("Expected no error, but got error in Regions Descending %v", err2)
+	respAsc := resp.Response
+	if len(respAsc) < 1 {
+		t.Fatal("Need at least one Region in Traffic Ops to test Regions sort ordering")
 	}
-	if len(respAsc) == len(respDesc) {
-		if len(respAsc) > 0 && len(respDesc) > 0 {
-			// reverse the descending-sorted response and compare it to the ascending-sorted one
-			for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
-				respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
-			}
-			if respDesc[0].Name != "" && respAsc[0].Name != "" {
-				if !reflect.DeepEqual(respDesc[0].Name, respAsc[0].Name) {
-					t.Errorf("Regions responses are not equal after reversal: Asc: %s - Desc: %s", respDesc[0].Name, respAsc[0].Name)
-				}
-			}
-		} else {
-			t.Errorf("No Response returned from GET Regions using SortOrder")
-		}
-	} else {
-		t.Fatalf("Region response length are not equal Asc: %d Desc: %d", len(respAsc), len(respDesc))
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("sortOrder", "desc")
+	resp, _, err = TOSession.GetRegions(opts)
+	if err != nil {
+		t.Errorf("Expected no error, but got error in Regions with Descending ordering: %v - alerts: %+v", err, resp.Alerts)
+	}
+	respDesc := resp.Response
+	if len(respDesc) < 1 {
+		t.Fatal("Need at least one Region in Traffic Ops to test Regions sort ordering")
+	}
+
+	if len(respAsc) != len(respDesc) {
+		t.Fatalf("Traffic Ops returned %d Regions using default sort order, but %d Regions when sort order was explicitly set to descending", len(respAsc), len(respDesc))
+	}
+
+	// reverse the descending-sorted response and compare it to the ascending-sorted one
+	// TODO ensure at least two in each slice? A list of length one is
+	// trivially sorted both ascending and descending.
+	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
+	}
+	if respDesc[0].Name != respAsc[0].Name {
+		t.Errorf("Regions responses are not equal after reversal: Asc: %s - Desc: %s", respDesc[0].Name, respAsc[0].Name)
 	}
 }
 
 func UpdateTestRegions(t *testing.T) {
-
-	firstRegion := testData.Regions[0]
-	// Retrieve the Region by region so we can get the id for the Update
-	resp, _, err := TOSession.GetRegionByName(firstRegion.Name, nil)
-	if err != nil {
-		t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
+	if len(testData.Regions) < 1 {
+		t.Fatal("Need at least one Region to test updating a Region")
 	}
-	remoteRegion := resp[0]
+	firstRegion := testData.Regions[0]
+
+	// Retrieve the Region by region so we can get the id for the Update
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstRegion.Name)
+	resp, _, err := TOSession.GetRegions(opts)
+	if err != nil {
+		t.Errorf("cannot get Region '%s' by name: %v - alerts: %+v", firstRegion.Name, err, resp.Alerts)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Region to exist with name '%s', found: %d", firstRegion.Name, len(resp.Response))
+	}
+
+	remoteRegion := resp.Response[0]
 	expectedRegion := "OFFLINE-TEST"
 	remoteRegion.Name = expectedRegion
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateRegion(remoteRegion.ID, remoteRegion, nil)
+
+	alert, _, err := TOSession.UpdateRegion(remoteRegion.ID, remoteRegion, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
+		t.Errorf("cannot update Region: %v - alerts: %+v", err, alert.Alerts)
 	}
 
 	// Retrieve the Region to check region got updated
-	resp, _, err = TOSession.GetRegionByID(remoteRegion.ID, nil)
+	opts.QueryParameters.Del("name")
+	opts.QueryParameters.Set("id", strconv.Itoa(remoteRegion.ID))
+	resp, _, err = TOSession.GetRegions(opts)
 	if err != nil {
-		t.Errorf("cannot GET Region by region: %v - %v", firstRegion.Name, err)
+		t.Errorf("cannot get Region '%s' (#%d) by ID: %v - alerts: %+v", firstRegion.Name, remoteRegion.ID, err, resp.Alerts)
 	}
-	respRegion := resp[0]
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Region to exist with ID %d, found: %d", remoteRegion.ID, len(resp.Response))
+	}
+	respRegion := resp.Response[0]
 	if respRegion.Name != expectedRegion {
 		t.Errorf("results do not match actual: %s, expected: %s", respRegion.Name, expectedRegion)
 	}
 
 	// Set the name back to the fixture value so we can delete it after
 	remoteRegion.Name = firstRegion.Name
-	alert, _, err = TOSession.UpdateRegion(remoteRegion.ID, remoteRegion, nil)
+	alert, _, err = TOSession.UpdateRegion(remoteRegion.ID, remoteRegion, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot UPDATE Region by id: %v - %v", err, alert)
+		t.Errorf("cannot update Region: %v - alerts: %+v", err, alert.Alerts)
 	}
 }
 
 func VerifyPaginationSupportRegion(t *testing.T) {
-
-	qparams := url.Values{}
-	qparams.Set("orderby", "id")
-	regions, _, err := TOSession.GetRegions(qparams, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetRegions(opts)
 	if err != nil {
-		t.Fatalf("cannot GET Regions: %v", err)
+		t.Fatalf("cannot get Regions: %v - alerts: %+v", err, resp.Alerts)
+	}
+	regions := resp.Response
+	if len(regions) < 2 {
+		t.Fatalf("Need at least 2 Regions in Traffic Ops to test pagination support, found: %d", len(regions))
 	}
 
-	if len(regions) > 0 {
-		qparams = url.Values{}
-		qparams.Set("orderby", "id")
-		qparams.Set("limit", "1")
-		regionsWithLimit, _, err := TOSession.GetRegions(qparams, nil)
-		if err == nil {
-			if !reflect.DeepEqual(regions[:1], regionsWithLimit) {
-				t.Error("expected GET Regions with limit = 1 to return first result")
-			}
-		} else {
-			t.Error("Error in getting regions by limit")
-		}
-
-		if len(regions) > 1 {
-			qparams = url.Values{}
-			qparams.Set("orderby", "id")
-			qparams.Set("limit", "1")
-			qparams.Set("offset", "1")
-			regionsWithOffset, _, err := TOSession.GetRegions(qparams, nil)
-			if err == nil {
-				if !reflect.DeepEqual(regions[1:2], regionsWithOffset) {
-					t.Error("expected GET Regions with limit = 1, offset = 1 to return second result")
-				}
-			} else {
-				t.Error("Error in getting regions by limit and offset")
-			}
-
-			qparams = url.Values{}
-			qparams.Set("orderby", "id")
-			qparams.Set("limit", "1")
-			qparams.Set("page", "2")
-			regionsWithPage, _, err := TOSession.GetRegions(qparams, nil)
-			if err == nil {
-				if !reflect.DeepEqual(regions[1:2], regionsWithPage) {
-					t.Error("expected GET Regions with limit = 1, page = 2 to return second result")
-				}
-			} else {
-				t.Error("Error in getting regions by limit and page")
-			}
-		} else {
-			t.Errorf("only one region found, so offset functionality can't test")
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	regionsWithLimit, _, err := TOSession.GetRegions(opts)
+	if err == nil {
+		if !reflect.DeepEqual(regions[:1], regionsWithLimit.Response) {
+			t.Error("expected GET Regions with limit = 1 to return first result")
 		}
 	} else {
-		t.Errorf("No region found to check pagination")
+		t.Error("Error in getting regions by limit")
 	}
 
-	qparams = url.Values{}
-	qparams.Set("limit", "-2")
-	_, _, err = TOSession.GetRegions(qparams, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "1")
+	regionsWithOffset, _, err := TOSession.GetRegions(opts)
+	if err == nil {
+		if !reflect.DeepEqual(regions[1:2], regionsWithOffset.Response) {
+			t.Error("expected GET Regions with limit = 1, offset = 1 to return second result")
+		}
+	} else {
+		t.Error("Error in getting regions by limit and offset")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "2")
+	regionsWithPage, _, err := TOSession.GetRegions(opts)
+	if err == nil {
+		if !reflect.DeepEqual(regions[1:2], regionsWithPage.Response) {
+			t.Error("expected GET Regions with limit = 1, page = 2 to return second result")
+		}
+	} else {
+		t.Error("Error in getting regions by limit and page")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, _, err = TOSession.GetRegions(opts)
 	if err == nil {
 		t.Error("expected GET Regions to return an error when limit is not bigger than -1")
-	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
 		t.Errorf("expected GET Regions to return an error for limit is not bigger than -1, actual error: " + err.Error())
 	}
 
-	qparams = url.Values{}
-	qparams.Set("limit", "1")
-	qparams.Set("offset", "0")
-	_, _, err = TOSession.GetRegions(qparams, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, _, err = TOSession.GetRegions(opts)
 	if err == nil {
 		t.Error("expected GET Regions to return an error when offset is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
 		t.Errorf("expected GET Regions to return an error for offset is not a positive integer, actual error: " + err.Error())
 	}
 
-	qparams = url.Values{}
-	qparams.Set("limit", "1")
-	qparams.Set("page", "0")
-	_, _, err = TOSession.GetRegions(qparams, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, _, err = TOSession.GetRegions(opts)
 	if err == nil {
 		t.Error("expected GET Regions to return an error when page is not a positive integer")
-	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
 		t.Errorf("expected GET Regions to return an error for page is not a positive integer, actual error: " + err.Error())
 	}
 }
 
 func DeleteTestRegionsByName(t *testing.T) {
+	opts := client.NewRequestOptions()
 	for _, region := range testData.Regions {
-		delResp, _, err := TOSession.DeleteRegion(nil, &region.Name)
+		delResp, _, err := TOSession.DeleteRegion(region.Name, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("cannot DELETE Region by name: %v - %v", err, delResp)
+			t.Errorf("cannot delete Region '%s': %v - alerts: %+v", region.Name, err, delResp.Alerts)
 		}
 
-		deleteLog, _, err := TOSession.GetLogsByLimit(1)
+		opts.QueryParameters.Set("limit", "1")
+		deleteLog, _, err := TOSession.GetLogs(opts)
+		opts.QueryParameters.Del("limit")
 		if err != nil {
 			t.Fatalf("unable to get latest audit log entry")
 		}
-		if len(deleteLog) != 1 {
-			t.Fatalf("log entry length - expected: 1, actual: %d", len(deleteLog))
+		if len(deleteLog.Response) != 1 {
+			t.Fatalf("log entry length - expected: 1, actual: %d", len(deleteLog.Response))
 		}
-		if !strings.Contains(*deleteLog[0].Message, region.Name) {
-			t.Errorf("region deletion audit log entry - expected: message containing region name '%s', actual: %s", region.Name, *deleteLog[0].Message)
+		if deleteLog.Response[0].Message == nil {
+			t.Fatal("Traffic Ops returned a representation for a log entry with null or undefined message")
+		}
+		if !strings.Contains(*deleteLog.Response[0].Message, region.Name) {
+			t.Errorf("region deletion audit log entry - expected: message containing region name '%s', actual: %s", region.Name, *deleteLog.Response[0].Message)
 		}
 
 		// Retrieve the Region to see if it got deleted
-		regionResp, _, err := TOSession.GetRegionByName(region.Name, nil)
+		opts.QueryParameters.Set("name", region.Name)
+		regionResp, _, err := TOSession.GetRegions(opts)
+		opts.QueryParameters.Del("name")
 		if err != nil {
-			t.Errorf("error deleting Region region: %s", err.Error())
+			t.Errorf("error deleting Region '%s': %v - alerts: %+v", region.Name, err, regionResp.Alerts)
 		}
-		if len(regionResp) > 0 {
-			t.Errorf("expected Region : %s to be deleted", region.Name)
+		if len(regionResp.Response) > 0 {
+			t.Errorf("expected Region '%s' to be deleted, but it was found in Traffic Ops", region.Name)
 		}
 	}
 	CreateTestRegions(t)
 }
 
 func DeleteTestRegions(t *testing.T) {
-
+	opts := client.NewRequestOptions()
 	for _, region := range testData.Regions {
 		// Retrieve the Region by name so we can get the id
-		resp, _, err := TOSession.GetRegionByName(region.Name, nil)
+		opts.QueryParameters.Set("name", region.Name)
+		resp, _, err := TOSession.GetRegions(opts)
+		opts.QueryParameters.Del("name")
 		if err != nil {
-			t.Errorf("cannot GET Region by name: %v - %v", region.Name, err)
+			t.Errorf("cannot get Region '%s' by name: %v - alerts: %+v", region.Name, err, resp.Alerts)
 		}
-		respRegion := resp[0]
+		if len(resp.Response) != 1 {
+			t.Errorf("Expected exactly one Region to exist with name '%s', found: %d", region.Name, len(resp.Response))
+		}
+		respRegion := resp.Response[0]
 
-		delResp, _, err := TOSession.DeleteRegion(&respRegion.ID, nil)
+		opts.QueryParameters.Set("id", strconv.Itoa(respRegion.ID))
+		delResp, _, err := TOSession.DeleteRegion("", opts)
+		opts.QueryParameters.Del("id")
 		if err != nil {
-			t.Errorf("cannot DELETE Region by region: %v - %v", err, delResp)
+			t.Errorf("cannot delete Region: %v - alerts: %+v", err, delResp.Alerts)
 		}
 
 		// Retrieve the Region to see if it got deleted
-		regionResp, _, err := TOSession.GetRegionByName(region.Name, nil)
+		opts.QueryParameters.Set("name", region.Name)
+		regionResp, _, err := TOSession.GetRegions(opts)
 		if err != nil {
-			t.Errorf("error deleting Region region: %s", err.Error())
+			t.Errorf("error fetching Region '%s' after deletion: %v - alerts: %+v", region.Name, err, regionResp.Alerts)
 		}
-		if len(regionResp) > 0 {
-			t.Errorf("expected Region : %s to be deleted", region.Name)
+		if len(regionResp.Response) > 0 {
+			t.Errorf("expected Region '%s' to be deleted, but it was found in Traffic Ops", region.Name)
 		}
 	}
 }
 
 func DeleteTestRegionsByInvalidId(t *testing.T) {
-	i := 10000
-	delResp, _, err := TOSession.DeleteRegion(&i, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("id", "10000")
+	delResp, _, err := TOSession.DeleteRegion("", opts)
 	if err == nil {
-		t.Errorf("cannot DELETE Regions by Invalid ID: %v - %v", err, delResp)
+		t.Errorf("cannot delete Regions by invalid ID: %v - alerts: %+v", err, delResp.Alerts)
 	}
 }
 
 func DeleteTestRegionsByInvalidName(t *testing.T) {
-	i := "invalid"
-	delResp, _, err := TOSession.DeleteRegion(nil, &i)
+	delResp, _, err := TOSession.DeleteRegion("invalid", client.RequestOptions{})
 	if err == nil {
-		t.Errorf("cannot DELETE Regions by Invalid ID: %v - %v", err, delResp)
+		t.Errorf("cannot delete Regions by invalid name: %v - alerts: %+v", err, delResp.Alerts)
 	}
 }
 
 func GetTestRegionByInvalidId(t *testing.T) {
-	regionResp, _, err := TOSession.GetRegionByID(10000, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("id", "10000")
+	regionResp, _, err := TOSession.GetRegions(opts)
 	if err != nil {
-		t.Errorf("Error!! Getting Region by Invalid ID %v", err)
+		t.Errorf("Unexpected error getting Regions filtered by presumably non-existent ID: %v - alerts: %+v", err, regionResp.Alerts)
 	}
-	if len(regionResp) >= 1 {
-		t.Errorf("Error!! Invalid ID shouldn't have any response %v Error %v", regionResp, err)
+	if len(regionResp.Response) >= 1 {
+		t.Errorf("Didn't expect to find any Regions with presumably non-existent ID, found: %d", len(regionResp.Response))
 	}
 }
 
 func GetTestRegionByInvalidName(t *testing.T) {
-	regionResp, _, err := TOSession.GetRegionByName("abcd", nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "abcd")
+	regionResp, _, err := TOSession.GetRegions(opts)
 	if err != nil {
-		t.Errorf("Error!! Getting Region by Invalid Name %v", err)
+		t.Errorf("Unexpected error getting Regions filtered by presumably non-existent name: %v - alerts: %+v", err, regionResp.Alerts)
 	}
-	if len(regionResp) >= 1 {
-		t.Errorf("Error!! Invalid Name shouldn't have any response %v Error %v", regionResp, err)
+	if len(regionResp.Response) >= 1 {
+		t.Errorf("Didn't expect to find any Regions with presumably non-existent name, found: %d", len(regionResp.Response))
 	}
 }
 
 func GetTestRegionByDivision(t *testing.T) {
+	opts := client.NewRequestOptions()
 	for _, region := range testData.Regions {
-
-		resp, _, err := TOSession.GetDivisionByName(region.DivisionName, nil)
+		opts.QueryParameters.Set("name", region.DivisionName)
+		resp, _, err := TOSession.GetDivisions(opts)
+		opts.QueryParameters.Del("name")
 		if err != nil {
-			t.Errorf("cannot GET Division by name: %v - %v", region.DivisionName, err)
+			t.Errorf("cannot get Division '%s' by name: %v - alerts: %+v", region.DivisionName, err, resp.Alerts)
 		}
-		respDivision := resp[0]
+		if len(resp.Response) != 1 {
+			t.Errorf("Expected exactly one Division to exist with name '%s', found: %d", region.DivisionName, len(resp.Response))
+			continue
+		}
+		respDivision := resp.Response[0]
 
-		_, reqInf, err := TOSession.GetRegionByDivision(respDivision.ID, nil)
+		opts.QueryParameters.Set("division", strconv.Itoa(respDivision.ID))
+		regionsResp, reqInf, err := TOSession.GetRegions(opts)
+		opts.QueryParameters.Del("division")
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, regionsResp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusOK {
 			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
@@ -425,22 +484,26 @@ func GetTestRegionByDivision(t *testing.T) {
 }
 
 func GetTestRegionByInvalidDivision(t *testing.T) {
-	regionResp, _, err := TOSession.GetRegionByDivision(100000, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("division", "100000")
+	regionResp, _, err := TOSession.GetRegions(opts)
 	if err != nil {
-		t.Errorf("Getting Region by Invalid Divisions %v", err)
+		t.Errorf("Unexpected error getting Regions filtered by presumably non-existent Division ID: %v - alerts: %+v", err, regionResp.Alerts)
 	}
-	if len(regionResp) >= 1 {
-		t.Errorf("Invalid Division shouldn't have any response %v Error %v", regionResp, err)
+	if len(regionResp.Response) >= 1 {
+		t.Errorf("Didn't expect to find any Regions in presumably non-existent Division, found: %d", len(regionResp.Response))
 	}
 }
 
 func CreateTestRegionsInvalidDivision(t *testing.T) {
-
+	if len(testData.Regions) < 1 {
+		t.Fatal("Need at least one Region to test creating an invalid Region")
+	}
 	firstRegion := testData.Regions[0]
 	firstRegion.Division = 100
 	firstRegion.Name = "abcd"
-	_, _, err := TOSession.CreateRegion(firstRegion)
+	_, _, err := TOSession.CreateRegion(firstRegion, client.RequestOptions{})
 	if err == nil {
-		t.Errorf("Expected division not found Error %v", err)
+		t.Error("Expected an error creating a presumably invalid Region (name: 'abcd', Division ID: 100), but didn't get one")
 	}
 }

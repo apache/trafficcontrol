@@ -96,7 +96,8 @@ func TestLogout(t *testing.T) {
 	ctx = context.WithValue(ctx, api.PathParamsKey, map[string]string{})
 	var tv trafficvault.TrafficVault = &disabled.Disabled{}
 	ctx = context.WithValue(ctx, api.TrafficVaultContextKey, tv)
-	ctx, _ = context.WithDeadline(ctx, time.Now().Add(24*time.Hour))
+	ctx, cancelTx := context.WithDeadline(ctx, time.Now().Add(24*time.Hour))
+	defer cancelTx()
 	req = req.WithContext(ctx)
 
 	req.AddCookie(cookie)
@@ -129,10 +130,10 @@ func TestLogout(t *testing.T) {
 
 		if time.Second < time.Since(c.Expires) || -time.Second > time.Since(c.Expires) {
 			t.Errorf("Expected cookie expiration to be within one second of now, but was %s", time.Since(c.Expires))
+			break
 		}
-		break
 
-		parsedCookie, err := tocookie.Parse("secret", c.Value)
+		parsedCookie, err := tocookie.Parse("test", c.Value)
 		if err != nil {
 			t.Errorf("Failed to parse cookie value: %v", err)
 			break

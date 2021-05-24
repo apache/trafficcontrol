@@ -180,13 +180,13 @@ func makeGenericDS() *DeliveryService {
 
 // makeDSS creates DSS as an outer product of every server and ds given.
 // The given servers and dses must all have non-nil, unique IDs.
-func makeDSS(servers []Server, dses []DeliveryService) []tc.DeliveryServiceServer {
-	dss := []tc.DeliveryServiceServer{}
+func makeDSS(servers []Server, dses []DeliveryService) []DeliveryServiceServer {
+	dss := []DeliveryServiceServer{}
 	for _, sv := range servers {
 		for _, ds := range dses {
-			dss = append(dss, tc.DeliveryServiceServer{
-				Server:          util.IntPtr(*sv.ID),
-				DeliveryService: util.IntPtr(*ds.ID),
+			dss = append(dss, DeliveryServiceServer{
+				Server:          *sv.ID,
+				DeliveryService: *ds.ID,
 			})
 		}
 	}
