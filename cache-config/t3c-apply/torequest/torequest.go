@@ -488,7 +488,7 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 		return errors.New("Failed to move temp '" + tmpFileName + "' to real '" + cfg.Path + "': " + err.Error())
 	}
 	cfg.ChangeApplied = true
-	r.changedFiles = append(r.changedFiles, cfg.Name)
+	r.changedFiles = append(r.changedFiles, filepath.Join(cfg.Path, cfg.Name))
 
 	r.RemapConfigReload = cfg.RemapPluginConfig ||
 		cfg.Name == "remap.config" ||
