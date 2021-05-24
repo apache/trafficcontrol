@@ -24,7 +24,7 @@
 
 # Check that env vars are set
 envvars=( TO_URI TO_USER TO_PASS CDN PORT )
-for v in $envvars
+for v in ${envvars[@]}
 do
 	if [[ -z ${!v} ]]; then echo "$v is unset"; exit 1; fi
 done
