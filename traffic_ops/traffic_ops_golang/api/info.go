@@ -38,6 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/jmoiron/sqlx"
@@ -137,7 +138,7 @@ func NewInfo(w http.ResponseWriter, r *http.Request, requiredParams, intParamNam
 	if userErr != nil || sysErr != nil {
 		return &Info{Tx: &sqlx.Tx{}}, userErr, sysErr, errCode
 	}
-	dbCtx, ctxCancel := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second) //only place we could call cancel here is in Info.Close(), which already will rollback the transaction (which is all cancel will do.)
+	dbCtx, ctxCancel := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second) // only place we could call cancel here is in Info.Close(), which already will rollback the transaction (which is all cancel will do.)
 	tx, err := db.BeginTxx(dbCtx, nil)                                                                         // must be last, MUST not return an error if this succeeds, without closing the tx
 	if err != nil {
 		ctxCancel()
@@ -185,6 +186,25 @@ func (inf Info) UseIMS() bool {
 		return false
 	}
 	return inf.Config.UseIMS && inf.request.Header.Get(rfc.IfModifiedSince) != ""
+}
+
+// TryIfModifiedSinceQuery, given a query that returns exactly one row that
+// contains the maximum last updated time of some request along with any
+// needed parameters for interpolation, returns - in order - whether or not the
+// client's request uses IMS, whether or not the request was an IMS "Hit", and
+// the time at which the requested object(s) was/were last updated.
+func (inf Info) TryIfModifiedSinceQuery(query string, queryValues map[string]interface{}) (bool, bool, time.Time) {
+	if !inf.UseIMS() {
+		log.Debugln("Non IMS request")
+		return false, false, time.Time{}
+	}
+	runSecond, maxTime := ims.TryIfModifiedSinceQuery(inf.Tx, inf.request.Header, queryValues, query)
+	if runSecond {
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("IMS HIT")
+	}
+	return true, !runSecond, maxTime
 }
 
 // SetHeader is a convenience method that allows setting an HTTP header to
@@ -282,7 +302,7 @@ func (inf *Info) CreateInfluxClient() (*influx.Client, error) {
 
 	row := inf.Tx.Tx.QueryRow(influxServersQuery)
 	if e := row.Scan(&fqdn, &tcpPort, &httpsPort); e != nil {
-		return nil, fmt.Errorf("Failed to create influx client: %w", e)
+		return nil, fmt.Errorf("failed to create influx client: %w", e)
 	}
 
 	host := "http%s://%s:%d"
@@ -293,7 +313,7 @@ func (inf *Info) CreateInfluxClient() (*influx.Client, error) {
 		}
 		port, err := httpsPort.Value()
 		if err != nil {
-			return nil, fmt.Errorf("Failed to create influx client: %w", err)
+			return nil, fmt.Errorf("failed to create influx client: %w", err)
 		}
 
 		p := port.(int64)
@@ -321,7 +341,7 @@ func (inf *Info) CreateInfluxClient() (*influx.Client, error) {
 	var client influx.Client
 	client, e := influx.NewHTTPClient(config)
 	if client == nil {
-		return nil, fmt.Errorf("Failed to create influx client (client was nil): %w", e)
+		return nil, fmt.Errorf("failed to create influx client (client was nil): %w", e)
 	}
 	return &client, e
 }
@@ -348,6 +368,12 @@ func (inf Info) WriteResponse(r interface{}, status int, alerts []tc.Alert) {
 // always uses the status code '200 OK'.
 func (inf Info) WriteOKResponse(r interface{}, alerts []tc.Alert) {
 	inf.WriteResponse(r, http.StatusOK, alerts)
+}
+
+// WriteIMSHitResp writes a response for an IMS request "hit", using the passed
+// time as the Last-Modified date.
+func (inf Info) WriteIMSHitResp(t time.Time) {
+	WriteIMSHitResp(inf.writer, inf.request, t)
 }
 
 // WriteResponseWithAlert is a helper method that writes a response - just like

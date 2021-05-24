@@ -37,7 +37,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -203,18 +202,14 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var maxTime *time.Time
-	if inf.UseIMS() {
-		maxTime = new(time.Time)
-		var runSecond bool
-		runSecond, *maxTime = ims.TryIfModifiedSinceQuery(inf.Tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where))
-		if !runSecond {
-			log.Debugln("IMS HIT")
-			api.WriteIMSHitResp(w, r, *maxTime)
+	usedIMS, hit, t := inf.TryIfModifiedSinceQuery(selectMaxLastUpdatedQuery(where), queryValues)
+	if usedIMS {
+		if hit {
+			inf.WriteIMSHitResp(t)
 			return
 		}
-		log.Debugln("IMS MISS")
-	} else {
-		log.Debugln("Non IMS request")
+		maxTime = new(time.Time)
+		*maxTime = t
 	}
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx, inf.User.TenantID)
