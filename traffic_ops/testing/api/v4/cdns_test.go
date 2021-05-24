@@ -356,7 +356,7 @@ func GetTestCDNs(t *testing.T) {
 
 func GetTestCDNsbyDomainName(t *testing.T) {
 	if len(testData.CDNs) < 1 {
-		t.Fatalf("need at least one CDN to test creating CDNs")
+		t.Fatalf("need at least one CDN to test get CDNs")
 	}
 
 	opts := client.NewRequestOptions()
@@ -364,7 +364,7 @@ func GetTestCDNsbyDomainName(t *testing.T) {
 	opts.QueryParameters.Set("domainName", cdn.DomainName)
 	cdns, reqInf, err := TOSession.GetCDNs(opts)
 	if len(cdns.Response) != 1 {
-		t.Fatalf("Expected one response by got many %v", cdns)
+		t.Fatalf("Expected only one cdn response %v", cdns)
 	}
 	if err != nil {
 		t.Errorf("cannot get CDN by '%s': %v - alerts: %+v", cdn.DomainName, err, cdns.Alerts)
