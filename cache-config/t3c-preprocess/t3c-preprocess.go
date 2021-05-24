@@ -87,6 +87,7 @@ func PreprocessConfigFile(server *atscfg.Server, cfgFile string) string {
 }
 
 func main() {
+	// TODO read log location arguments
 	dataFiles := &DataAndFiles{}
 	if err := json.NewDecoder(os.Stdin).Decode(dataFiles); err != nil {
 		log.Errorln("Error reading json input")
