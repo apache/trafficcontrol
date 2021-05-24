@@ -386,18 +386,31 @@ func (inf Info) HandleErrOptionalDeprecation(statusCode int, userErr, sysErr err
 	}
 }
 
-// ParseBody decodes a JSON object from the client request into v, and validates
-// it. Use this function instead of the json package when writing API
-// endpoints to safely decode and validate PUT and POST requests.
+// ParseAndValidateBody decodes a JSON object from the client request into v,
+// and validates it. Use this function instead of the json package when writing
+// API endpoints to safely decode and validate PUT and POST requests.
 //
 // Errors  returned by this method are safe for the user to see, and should be
 // included in Alerts in responses.
-func (inf Info) ParseBody(v ParseValidator) error {
-	if err := json.NewDecoder(inf.request.Body).Decode(&v); err != nil {
-		return fmt.Errorf("decoding: %w", err)
+func (inf Info) ParseAndValidateBody(v ParseValidator) error {
+	if err := inf.ParseBody(&v); err != nil {
+		return err
 	}
 	if err := v.Validate(inf.Tx.Tx); err != nil {
 		return fmt.Errorf("validating: %w", err)
+	}
+	return nil
+}
+
+// ParseBody decodes a JSON object from the client request into v. Use this
+// function instead of the json package when writing API endpoints to safely
+// decode PUT and POST requests.
+//
+// Errors  returned by this method are safe for the user to see, and should be
+// included in Alerts in responses.
+func (inf Info) ParseBody(v interface{}) error {
+	if err := json.NewDecoder(inf.request.Body).Decode(v); err != nil {
+		return fmt.Errorf("decoding: %w", err)
 	}
 	return nil
 }

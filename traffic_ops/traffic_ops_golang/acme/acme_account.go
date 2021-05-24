@@ -139,7 +139,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	tx := inf.Tx.Tx
 
 	var acmeAccount tc.AcmeAccount
-	if userErr = inf.ParseBody(&acmeAccount); userErr != nil {
+	if userErr = inf.ParseAndValidateBody(&acmeAccount); userErr != nil {
 		inf.HandleErr(http.StatusBadRequest, userErr, nil)
 		return
 	}
@@ -179,7 +179,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	tx := inf.Tx.Tx
 
 	var acmeAccount tc.AcmeAccount
-	if userErr = inf.ParseBody(&acmeAccount); userErr != nil {
+	if userErr = inf.ParseAndValidateBody(&acmeAccount); userErr != nil {
 		inf.HandleErr(http.StatusBadRequest, userErr, nil)
 		return
 	}
