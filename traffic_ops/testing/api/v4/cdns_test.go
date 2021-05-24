@@ -49,10 +49,12 @@ func TestCDNs(t *testing.T) {
 		UpdateTestCDNsWithHeaders(t, header)
 		GetTestCDNs(t)
 		GetTestCDNsbyDomainName(t)
+		GetTestCDNsbyDnssec(t)
 		GetTestCDNsIMSAfterChange(t, header)
 		CreateTestCDNEmptyName(t)
 		CreateTestCDNEmptyDomainName(t)
 		GetTestPaginationSupportCdns(t)
+		SortTestCdnDesc(t)
 	})
 }
 
@@ -360,11 +362,31 @@ func GetTestCDNsbyDomainName(t *testing.T) {
 	}
 
 	opts := client.NewRequestOptions()
-	cdn := testData.CDNs[0]
+	cdn := testData.CDNs[1]
 	opts.QueryParameters.Set("domainName", cdn.DomainName)
 	cdns, reqInf, err := TOSession.GetCDNs(opts)
 	if len(cdns.Response) != 1 {
 		t.Fatalf("Expected only one cdn response %v", cdns)
+	}
+	if err != nil {
+		t.Errorf("cannot get CDN by '%s': %v - alerts: %+v", cdn.DomainName, err, cdns.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func GetTestCDNsbyDnssec(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatalf("need at least one CDN to test get CDNs")
+	}
+
+	opts := client.NewRequestOptions()
+	cdn := testData.CDNs[0]
+	opts.QueryParameters.Set("dnssecEnabled", strconv.FormatBool(cdn.DNSSECEnabled))
+	cdns, reqInf, err := TOSession.GetCDNs(opts)
+	if len(cdns.Response) < 1 {
+		t.Fatalf("Expected atleast one cdn response %v", cdns)
 	}
 	if err != nil {
 		t.Errorf("cannot get CDN by '%s': %v - alerts: %+v", cdn.DomainName, err, cdns.Alerts)
@@ -516,5 +538,41 @@ func GetTestPaginationSupportCdns(t *testing.T) {
 		t.Error("expected GET CDN to return an error when page is not a positive integer")
 	} else if !strings.Contains(err.Error(), "must be a positive integer") {
 		t.Errorf("expected GET CDN to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+}
+
+func SortTestCdnDesc(t *testing.T) {
+	resp, _, err := TOSession.GetCDNs(client.RequestOptions{})
+	if err != nil {
+		t.Errorf("Expected no error, but got error in CDN with default ordering: %v - alerts: %+v", err, resp.Alerts)
+	}
+	respAsc := resp.Response
+	if len(respAsc) < 1 {
+		t.Fatal("Need at least one CDN in Traffic Ops to test CDN sort ordering")
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("sortOrder", "desc")
+	resp, _, err = TOSession.GetCDNs(opts)
+	if err != nil {
+		t.Errorf("Expected no error, but got error in CDN with Descending ordering: %v - alerts: %+v", err, resp.Alerts)
+	}
+	respDesc := resp.Response
+	if len(respDesc) < 1 {
+		t.Fatal("Need at least one CDN in Traffic Ops to test CDN sort ordering")
+	}
+
+	if len(respAsc) != len(respDesc) {
+		t.Fatalf("Traffic Ops returned %d CDN using default sort order, but %d CDN when sort order was explicitly set to descending", len(respAsc), len(respDesc))
+	}
+
+	// reverse the descending-sorted response and compare it to the ascending-sorted one
+	// TODO ensure at least two in each slice? A list of length one is
+	// trivially sorted both ascending and descending.
+	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
+	}
+	if respDesc[0].Name != respAsc[0].Name {
+		t.Errorf("CDN responses are not equal after reversal: Asc: %s - Desc: %s", respDesc[0].Name, respAsc[0].Name)
 	}
 }
