@@ -30,16 +30,22 @@
 # ADMIN_USER
 # ADMIN_PASS
 # DOMAIN
+# TV_AES_KEY_LOCATION
+# TV_BACKEND
+# TV_DB_NAME
+# TV_DB_PORT
+# TV_DB_SERVER
+# TV_DB_USER
+# TV_DB_USER_PASS
 
 # TODO:  Unused -- should be removed?  TRAFFIC_VAULT_PASS
-
 # Setting the monitor shell option enables job control, which we need in order
 # to bring traffic_ops_golang back to the foreground.
 trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
 set -o errexit -o monitor -o pipefail -o xtrace;
 
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS TV_AES_KEY_LOCATION TV_DB_NAME TV_DB_PORT TV_DB_SERVER TV_DB_USER TV_DB_USER_PASS)
 for v in $envvars; do
 	if [[ -z $$v ]]; then
 		echo "$v is unset" >&2;
@@ -142,7 +148,12 @@ mkdir -p /var/log/traffic_ops
 touch "$TO_LOG_ERROR" "$TO_LOG_WARNING" "$TO_LOG_INFO" "$TO_LOG_DEBUG" "$TO_LOG_EVENT"
 tail -qf "$TO_LOG_ERROR" "$TO_LOG_WARNING" "$TO_LOG_INFO" "$TO_LOG_DEBUG" "$TO_LOG_EVENT" &
 
-traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF" -riakcfg "$RIAKCONF");
+if [[ -z $TV_BACKEND ]]; then
+  traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF" -riakcfg "$RIAKCONF");
+else
+  traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF");
+fi;
+
 if [[ "$TO_DEBUG_ENABLE" == true ]]; then
 	traffic_ops_golang_command=(dlv '--accept-multiclient' '--continue' '--listen=:2345' '--headless=true' '--api-version=2' exec
 		"${traffic_ops_golang_command[0]}" -- "${traffic_ops_golang_command[@]:1}");

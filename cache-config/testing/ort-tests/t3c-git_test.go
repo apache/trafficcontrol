@@ -36,7 +36,7 @@ func TestT3cGit(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		if err := util.RMGit(base_line_dir); err != nil {
+		if err := util.RMGit(test_config_dir); err != nil {
 			t.Fatalf("removing existing git directory: %v", err)
 		}
 

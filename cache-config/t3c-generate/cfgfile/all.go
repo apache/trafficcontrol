@@ -24,10 +24,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
-	"regexp"
-	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -69,7 +65,6 @@ func GetAllConfigs(
 		if fi.Name == atscfg.SSLMultiCertConfigFileName {
 			hasSSLMultiCertConfig = true
 		}
-		txt = PreprocessConfigFile(toData.Server, txt)
 		configs = append(configs, t3cutil.ATSConfigFile{Name: fi.Name, Path: fi.Path, Text: txt, ContentType: contentType, LineComment: lineComment})
 	}
 
@@ -89,77 +84,10 @@ const HdrLineComment = "Line-Comment"
 
 // WriteConfigs writes the given configs as a RFC2046§5.1 MIME multipart/mixed message.
 func WriteConfigs(configs []t3cutil.ATSConfigFile, output io.Writer) error {
-	sort.Sort(ATSConfigFiles(configs))
 	if err := json.NewEncoder(output).Encode(configs); err != nil {
 		return errors.New("encoding and writing configs: " + err.Error())
 	}
 	return nil
-}
-
-// ATSConfigFiles implements sort.Interface to sort by path.
-type ATSConfigFiles []t3cutil.ATSConfigFile
-
-func (p ATSConfigFiles) Len() int      { return len(p) }
-func (p ATSConfigFiles) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-func (p ATSConfigFiles) Less(i, j int) bool {
-	if p[i].Path != p[j].Path {
-		return p[i].Path < p[j].Path
-	}
-	return p[i].Name < p[j].Name
-}
-
-var returnRegex = regexp.MustCompile(`\s*__RETURN__\s*`)
-
-// PreprocessConfigFile does global preprocessing on the given config file cfgFile.
-// This is mostly string replacements of __X__ directives. See the code for the full list of replacements.
-// These things were formerly done by ORT, but need to be processed by t3c-generate now, because ORT no longer has the metadata necessary.
-func PreprocessConfigFile(server *atscfg.Server, cfgFile string) string {
-	if server.TCPPort != nil && *server.TCPPort != 80 && *server.TCPPort != 0 {
-		cfgFile = strings.Replace(cfgFile, `__SERVER_TCP_PORT__`, strconv.Itoa(*server.TCPPort), -1)
-	} else {
-		cfgFile = strings.Replace(cfgFile, `:__SERVER_TCP_PORT__`, ``, -1)
-	}
-
-	ipAddr := ""
-	for _, iFace := range server.Interfaces {
-		for _, addr := range iFace.IPAddresses {
-			if !addr.ServiceAddress {
-				continue
-			}
-			addrStr := addr.Address
-			ip := net.ParseIP(addrStr)
-			if ip == nil {
-				err := error(nil)
-				ip, _, err = net.ParseCIDR(addrStr)
-				if err != nil {
-					ip = nil // don't bother with the error, just skip
-				}
-			}
-			if ip == nil || ip.To4() == nil {
-				continue
-			}
-			ipAddr = addrStr
-			break
-		}
-	}
-	if ipAddr != "" {
-		cfgFile = strings.Replace(cfgFile, `__CACHE_IPV4__`, ipAddr, -1)
-	} else {
-		log.Errorln("Preprocessing: this server had a missing or malformed IPv4 Service Interface, cannot replace __CACHE_IPV4__ directives!")
-	}
-
-	if server.HostName == nil || *server.HostName == "" {
-		log.Errorln("Preprocessing: this server missing HostName, cannot replace __HOSTNAME__ directives!")
-	} else {
-		cfgFile = strings.Replace(cfgFile, `__HOSTNAME__`, *server.HostName, -1)
-	}
-	if server.HostName == nil || *server.HostName == "" || server.DomainName == nil || *server.DomainName == "" {
-		log.Errorln("Preprocessing: this server missing HostName or DomainName, cannot replace __FULL_HOSTNAME__ directives!")
-	} else {
-		cfgFile = strings.Replace(cfgFile, `__FULL_HOSTNAME__`, *server.HostName+`.`+*server.DomainName, -1)
-	}
-	cfgFile = returnRegex.ReplaceAllString(cfgFile, "\n")
-	return cfgFile
 }
 
 func makeHeaderComment(serverHostName string, appVersion string, toURL string, toIPs []string, genTime time.Time) string {

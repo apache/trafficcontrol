@@ -38,6 +38,18 @@ type ATSConfigFile struct {
 	Text        string `json:"text"`
 }
 
+// ATSConfigFiles implements sort.Interface and sorts by the Location and then FileNameOnDisk, i.e. the full file path.
+type ATSConfigFiles []ATSConfigFile
+
+func (fs ATSConfigFiles) Len() int { return len(fs) }
+func (fs ATSConfigFiles) Less(i, j int) bool {
+	if fs[i].Path != fs[j].Path {
+		return fs[i].Path < fs[j].Path
+	}
+	return fs[i].Name < fs[j].Name
+}
+func (fs ATSConfigFiles) Swap(i, j int) { fs[i], fs[j] = fs[j], fs[i] }
+
 // commentsFilter is used to remove comment
 // lines from config files while making
 // comparisons.
