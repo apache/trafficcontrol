@@ -48,6 +48,7 @@ func TestCDNs(t *testing.T) {
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestCDNsWithHeaders(t, header)
 		GetTestCDNs(t)
+		GetTestCDNsbyDomainName(t)
 		GetTestCDNsIMSAfterChange(t, header)
 		CreateTestCDNEmptyName(t)
 		CreateTestCDNEmptyDomainName(t)
@@ -350,6 +351,26 @@ func GetTestCDNs(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot get CDN '%s': %v - alerts: %+v", cdn.Name, err, resp.Alerts)
 		}
+	}
+}
+
+func GetTestCDNsbyDomainName(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatalf("need at least one CDN to test creating CDNs")
+	}
+
+	opts := client.NewRequestOptions()
+	cdn := testData.CDNs[0]
+	opts.QueryParameters.Set("domainName", cdn.DomainName)
+	cdns, reqInf, err := TOSession.GetCDNs(opts)
+	if len(cdns.Response) != 1 {
+		t.Fatalf("Expected one response by got many %v", cdns)
+	}
+	if err != nil {
+		t.Errorf("cannot get CDN by '%s': %v - alerts: %+v", cdn.DomainName, err, cdns.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
 	}
 }
 
