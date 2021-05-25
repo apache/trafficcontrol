@@ -55,6 +55,7 @@ func TestCDNs(t *testing.T) {
 		CreateTestCDNEmptyDomainName(t)
 		GetTestPaginationSupportCdns(t)
 		SortTestCdnDesc(t)
+		CreateTestCDNsAlreadyExist(t)
 	})
 }
 
@@ -284,6 +285,17 @@ func CreateTestCDNs(t *testing.T) {
 		}
 	}
 
+}
+
+func CreateTestCDNsAlreadyExist(t *testing.T) {
+	cdn := testData.CDNs[0]
+	resp, reqInf, err := TOSession.CreateCDN(cdn, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("cdn domain_name 'mycdn.ciab.test' already exists.  but got - alerts: %+v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
 }
 
 func SortTestCDNs(t *testing.T) {
