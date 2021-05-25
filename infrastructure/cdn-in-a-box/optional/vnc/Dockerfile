@@ -26,10 +26,14 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 ARG VNC_BUILD_USER
 ENV VNC_USER=$VNC_BUILD_USER
 
-RUN dnf -y install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm epel-release && \
+RUN dnf -y install "https://download1.rpmfusion.org/free/el/rpmfusion-free-release-${RHEL_VERSION%%.*}.noarch.rpm" epel-release && \
     dnf -y install xterm firefox git tigervnc-server sudo bind-utils net-tools which passwd which \
-                   fluxbox webcore-fonts terminus-fonts vnc mplayer wget openssl curl nc && \
+                   fluxbox 'google-noto*' terminus-fonts tigervnc vlc wget openssl curl nc && \
     dnf -y clean all && rm -rf /var/cache/dnf
+
+RUN if [[ "${RHEL_VERSION%%.*}" -ge 8 ]]; then \
+        curl -Lo /usr/bin/vncserver https://git.centos.org/rpms/tigervnc/raw/9e6ab1bc80/f/SOURCES/vncserver; \
+    fi
 
 RUN useradd -m $VNC_USER && \
     echo "$VNC_USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers

@@ -66,6 +66,7 @@ func t3cUpdateDNSLocalBind(host string, run_mode string) error {
 		"--log-location-info=test.log",
 		"--log-location-debug=test.log",
 		"--run-mode=" + run_mode,
+		"--git=no",
 		"--dns-local-bind",
 	}
 	cmd := exec.Command("t3c", args...)

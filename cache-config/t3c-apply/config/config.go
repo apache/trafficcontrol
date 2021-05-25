@@ -23,13 +23,16 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/pborman/getopt/v2"
 	"net/url"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-log"
+
+	"github.com/pborman/getopt/v2"
 )
 
 var TSHome string = "/opt/trafficserver"
@@ -45,29 +48,6 @@ const (
 	TrafficCtl         = "/bin/traffic_ctl"
 	TrafficServerOwner = "ats"
 )
-
-type Mode int
-
-const (
-	BadAss     Mode = 0
-	Report     Mode = 1
-	Revalidate Mode = 2
-	SyncDS     Mode = 3
-)
-
-func (m Mode) String() string {
-	switch m {
-	case 0:
-		return "BadAss"
-	case 1:
-		return "Report"
-	case 2:
-		return "Revalidate"
-	case 3:
-		return "SyncDS"
-	}
-	return ""
-}
 
 type SvcManagement int
 
@@ -101,7 +81,7 @@ type Cfg struct {
 	Retries             int
 	RevalWaitTime       time.Duration
 	ReverseProxyDisable bool
-	RunMode             Mode
+	RunMode             t3cutil.Mode
 	SkipOSCheck         bool
 	TOInsecure          bool
 	TOTimeoutMS         time.Duration
@@ -120,6 +100,11 @@ type Cfg struct {
 	DisableParentConfigComments bool
 	DefaultClientEnableH2       *bool
 	DefaultClientTLSVersions    *string
+	// MaxMindLocation is a URL string for a download location for a maxmind database
+	// for use with either HeaderRewrite or Maxmind_ACL plugins
+	MaxMindLocation string
+	TsHome          string
+	TsConfigDir     string
 }
 
 type UseGitFlag string
@@ -226,6 +211,7 @@ func GetCfg() (Cfg, error) {
 	disableParentConfigCommentsPtr := getopt.BoolLong("disable-parent-config-comments", 'c', "Whether to disable verbose parent.config comments. Default false.")
 	defaultEnableH2 := getopt.BoolLong("default-client-enable-h2", '2', "Whether to enable HTTP/2 on Delivery Services by default, if they have no explicit Parameter. This is irrelevant if ATS records.config is not serving H2. If omitted, H2 is disabled.")
 	defaultClientTLSVersions := getopt.StringLong("default-client-tls-versions", 'V', "", "Comma-delimited list of default TLS versions for Delivery Services with no Parameter, e.g. --default-tls-versions='1.1,1.2,1.3'. If omitted, all versions are enabled.")
+	maxmindLocationPtr := getopt.StringLong("maxmind-location", 'M', "", "URL of a maxmind gzipped database file, to be installed into the trafficserver etc directory.")
 
 	getopt.Parse()
 
@@ -264,38 +250,34 @@ func GetCfg() (Cfg, error) {
 	waitForParents := *waitForParentsPtr
 	dnsLocalBind := *dnsLocalBindPtr
 	help := *helpPtr
+	maxmindLocation := *maxmindLocationPtr
 
 	if help {
 		Usage()
 		return Cfg{}, nil
 	}
 
-	runModeStr := strings.ToUpper(*runModePtr)
-	runMode := Mode(Report)
-	switch runModeStr {
-	case "REPORT":
-		runMode = Report
-	case "BADASS":
-		runMode = BadAss
-	case "SYNCDS":
-		runMode = SyncDS
-	case "REVALIDATE":
-		runMode = Revalidate
-	default:
-		Usage()
-		return Cfg{}, errors.New(runModeStr + " is an invalid mode.")
+	runMode := t3cutil.StrToMode(*runModePtr)
+	if runMode == t3cutil.ModeInvalid {
+		return Cfg{}, errors.New(*runModePtr + " is an invalid mode.")
 	}
 
 	urlSourceStr := "argument" // for error messages
 	if toURL == "" {
 		urlSourceStr = "environment variable"
 		toURL = os.Getenv("TO_URL")
+	} else {
+		os.Setenv("TO_URL", toURL)
 	}
 	if toUser == "" {
 		toUser = os.Getenv("TO_USER")
+	} else {
+		os.Setenv("TO_USER", toUser)
 	}
 	if *toPassPtr == "" {
 		toPass = os.Getenv("TO_PASS")
+	} else {
+		os.Setenv("TO_PASS", toPass)
 	}
 
 	// set TSHome
@@ -375,6 +357,9 @@ func GetCfg() (Cfg, error) {
 		DisableParentConfigComments: *disableParentConfigCommentsPtr,
 		DefaultClientEnableH2:       defaultEnableH2,
 		DefaultClientTLSVersions:    defaultClientTLSVersions,
+		MaxMindLocation:             maxmindLocation,
+		TsHome:                      TSHome,
+		TsConfigDir:                 TSConfigDir,
 	}
 
 	if err = log.InitCfg(cfg); err != nil {
@@ -447,6 +432,7 @@ func printConfig(cfg Cfg) {
 	log.Debugf("TSHome: %s\n", TSHome)
 	log.Debugf("WaitForParents: %t\n", cfg.WaitForParents)
 	log.Debugf("YumOptions: %s\n", cfg.YumOptions)
+	log.Debugf("MaxmindLocation: %s\n", cfg.MaxMindLocation)
 }
 
 func Usage() {

@@ -25,10 +25,10 @@ The `t3c` app generates and applies cache configuration for Traffic Control.
 
 The `t3c` app is divided into commands, each of which can be run as an argument to `t3c` or by themselves, e.g. `t3c apply ...` or `t3c-apply ...`.
 
--------------------------------------- | --------------------------------------------------------------------
-[t3c-apply](./t3c-apply/README.md)     | Generate and apply cache configuration
-[t3c-update](./t3c-update/README.md)   | Update Traffic Ops, set or un-set update and reval flags for a cache
-[t3c-diff](./t3c-diff/README.md)       | Diff config files, like diff or git-diff but with config-specific logic
-[t3c-request](./t3c-request/README.md) | Request data from Traffic Ops
-[t3c-update](./t3c-update/README.md)   | Update a server's queue and reval status in Traffic Ops
-[t3c-verify](./t3c-verify/README.md)   | Verify config can be applied without error
+|               command                  | description |
+| -------------------------------------: | :---------- |
+| [t3c-apply](./t3c-apply/README.md)     | Generate and apply cache configuration |
+| [t3c-check](./t3c-check/README.md)    | Check that new config can be applied |
+| [t3c-diff](./t3c-diff/README.md)       | Diff config files, like diff or git-diff but with config-specific logic |
+| [t3c-request](./t3c-request/README.md) | Request data from Traffic Ops |
+| [t3c-update](./t3c-update/README.md)   | Update a server's queue and reval status in Traffic Ops |

@@ -62,7 +62,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE IF NOT EXISTS dnssec (
     cdn text NOT NULL,
-    data jsonb NOT NULL,
+    data bytea NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
@@ -75,7 +75,7 @@ ALTER TABLE dnssec OWNER TO traffic_vault;
 
 CREATE TABLE IF NOT EXISTS sslkey (
     id bigint NOT NULL,
-    data jsonb NOT NULL,
+    data bytea NOT NULL,
     deliveryservice text NOT NULL,
     cdn text NOT NULL,
     version text NOT NULL,
@@ -112,7 +112,7 @@ ALTER SEQUENCE sslkey_id_seq OWNED BY sslkey.id;
 
 CREATE TABLE IF NOT EXISTS uri_signing_key (
     deliveryservice text NOT NULL,
-    data jsonb NOT NULL,
+    data bytea NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 

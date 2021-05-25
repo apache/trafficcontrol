@@ -5,10 +5,10 @@
 	blueprint #4628, see https://github.com/apache/trafficcontrol/pull/4628
 
 Synopsis
-  t3c-verify [options] [optional_config_file]
+  t3c-check-refs [options] [optional_config_file]
 
 Description
-  The t3c-verify app will read an ATS formatted plugin.config or remap.config
+  The t3c-check-refs app will read an ATS formatted plugin.config or remap.config
   file line by line and verify that the plugin '.so' files are available in the
   filesystem or relative to the ATS plugin installation directory by the
   absolute or relative plugin filename.
@@ -19,7 +19,7 @@ Description
   directory is verified.
 
   The configuration file argument is optional.  If no config file argument is
-  supplied, t3c-verify reads its config file input from 'stdin'
+  supplied, t3c-check-refs reads its config file input from 'stdin'
 
 Options
   --log-location-debug=[value] | -d [value], where to log debugs, default is empty
@@ -64,7 +64,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-verify/config"
+	"github.com/apache/trafficcontrol/cache-config/t3c-check-refs/config"
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 

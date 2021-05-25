@@ -23,17 +23,23 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/gofrs/flock"
 	"io/ioutil"
 	"math/rand"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/user"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/gofrs/flock"
+
+	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 const OneWeek = 604800
@@ -193,11 +199,7 @@ func ServiceStart(service string, cmd string) (bool, error) {
 	return false, nil
 }
 
-func WriteFile(fn string, data []byte, perm os.FileMode) (int, error) {
-	return WriteFileWithOwner(fn, data, -1, -1, perm)
-}
-
-func WriteFileWithOwner(fn string, data []byte, uid int, gid int, perm os.FileMode) (int, error) {
+func WriteFileWithOwner(fn string, data []byte, uid *int, gid *int, perm os.FileMode) (int, error) {
 	fd, err := os.OpenFile(fn, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return 0, errors.New("unable to open '" + fn + "' for writing: " + err.Error())
@@ -209,8 +211,8 @@ func WriteFileWithOwner(fn string, data []byte, uid int, gid int, perm os.FileMo
 	}
 	fd.Close()
 
-	if uid > -1 && gid > -1 {
-		err = os.Chown(fn, uid, gid)
+	if uid != nil && gid != nil {
+		err = os.Chown(fn, *uid, *gid)
 		if err != nil {
 			return 0, errors.New("error changing ownership on '" + fn + "': " + err.Error())
 		}
@@ -328,22 +330,22 @@ func CheckUser(cfg config.Cfg) bool {
 	}
 
 	switch cfg.RunMode {
-	case config.BadAss:
+	case t3cutil.ModeBadAss:
 		fallthrough
-	case config.SyncDS:
+	case t3cutil.ModeSyncDS:
 		if userInfo.Username != "root" {
 			log.Errorf("Only the root user may run in BadAss, or SyncDS mode, current user: %s\n",
 				userInfo.Username)
 			result = false
 		}
 	default:
-		log.Infof("current mode: %s, run user: %s\n", cfg.RunMode, userInfo.Username)
+		log.Infof("current mode: %s, run user: %s\n", cfg.RunMode.String(), userInfo.Username)
 	}
 	return result
 }
 
 func CleanTmpDir(cfg config.Cfg) bool {
-	if cfg.RunMode == config.Report {
+	if cfg.RunMode == t3cutil.ModeReport {
 		log.Infof("Mode is '%v', not cleaning tmp directory", cfg.RunMode)
 		return true
 	}
@@ -383,21 +385,25 @@ func CleanTmpDir(cfg config.Cfg) bool {
 }
 
 func MkDir(name string, cfg config.Cfg) bool {
-	return doMkDir(name, cfg, false)
+	return doMkDirWithOwner(name, cfg, nil, nil, false)
 }
 
 func MkDirAll(name string, cfg config.Cfg) bool {
-	return doMkDir(name, cfg, true)
+	return doMkDirWithOwner(name, cfg, nil, nil, true)
 }
 
-func doMkDir(name string, cfg config.Cfg, all bool) bool {
+func MkDirWithOwner(name string, cfg config.Cfg, uid *int, gid *int) bool {
+	return doMkDirWithOwner(name, cfg, uid, gid, false)
+}
+
+func doMkDirWithOwner(name string, cfg config.Cfg, uid *int, gid *int, all bool) bool {
 	fileInfo, err := os.Stat(name)
 	if err == nil && fileInfo.Mode().IsDir() {
 		log.Debugf("the directory '%s' already exists", name)
 		return true
 	}
 	if err != nil {
-		if cfg.RunMode != config.Report {
+		if cfg.RunMode != t3cutil.ModeReport {
 			if err != nil { // the path does not exist.
 				if all {
 					err = os.MkdirAll(name, 0755)
@@ -407,6 +413,14 @@ func doMkDir(name string, cfg config.Cfg, all bool) bool {
 				if err != nil {
 					log.Errorf("unable to create the directory '%s': %v", name, err)
 					return false
+				}
+
+				if uid != nil && gid != nil {
+					err = os.Chown(name, *uid, *gid)
+					if err != nil {
+						log.Errorf("unable to chown directory uid/gid, '%s': %v", name, err)
+						return false
+					}
 				}
 			} else if fileInfo.Mode().IsDir() {
 				log.Debugf("the directory: %s, already exists\n", name)
@@ -429,4 +443,101 @@ func Touch(fn string) error {
 	}
 	myfile.Close()
 	return nil
+}
+
+func UpdateMaxmind(cfg config.Cfg) bool {
+
+	if cfg.MaxMindLocation == "" {
+		return false
+	}
+
+	// Dont update for report mode
+	if cfg.RunMode == t3cutil.ModeReport {
+		return false
+	}
+
+	// Split url, get filename
+	url, err := url.Parse(cfg.MaxMindLocation)
+	if err != nil {
+		log.Errorf("error parsing maxmind url: %v", err)
+		return false
+	}
+	urlpath := url.Path
+	fileName := path.Base(urlpath)
+
+	if fileName == "." || fileName == "/" {
+		log.Errorf("filename for maxmind from url invalid: %s", fileName)
+		return false
+	}
+
+	// Check if filename exists in ats etc
+	filePath := filepath.Join(cfg.TsConfigDir, "/", fileName)
+	stdOut, _, code := t3cutil.Do(`date`,
+		"+%a, %d %b %Y %r %Z",
+		"-u",
+		"-r",
+		filePath)
+
+	// Do a HEAD request to check for 200 or 304 depending on if we
+	// have an existing file or not.
+	client := &http.Client{}
+	req, err := http.NewRequest("HEAD", cfg.MaxMindLocation, nil)
+	if err != nil {
+		log.Errorf("error creating head request %v", err)
+		return false
+	}
+
+	if code == 0 {
+		req.Header.Add("If-Modified-Since", strings.TrimSpace(string(stdOut)))
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Errorf("error issuing client IMS request %v", err)
+		return false
+	}
+
+	if resp.StatusCode != 304 && resp.StatusCode != 200 {
+		log.Errorf("error requesting %s, code: %d", cfg.MaxMindLocation, resp.StatusCode)
+		return false
+	}
+
+	// If we have a 304 then update the timestamp on the file on disk.
+	if resp.StatusCode == 304 {
+		dateStr := resp.Header.Get("Last-Modified")
+		if dateStr == "" {
+			dateStr = resp.Header.Get("Date")
+		}
+		_, _, code := t3cutil.Do(`touch`,
+			"-d",
+			dateStr,
+			filePath)
+
+		if code != 0 {
+			log.Errorf("error setting new date: %s, on %s", dateStr, filePath)
+			return false
+		}
+
+		log.Infof("received a 304 for maxmind database, updated disk file with new date: %s", dateStr)
+		return false
+	}
+
+	_, _, code = t3cutil.Do(`curl`,
+		"-so",
+		filePath,
+		cfg.MaxMindLocation)
+
+	if code != 0 {
+		log.Errorf("Error downloading maxmind database")
+		return false
+	}
+
+	gunzip := exec.Command("bash", "-c", "gunzip < "+filePath+" > "+strings.TrimSuffix(filePath, ".gz"))
+	err = gunzip.Run()
+	if err != nil {
+		log.Errorf("error running gunzip: %v\n", err)
+		return false
+	}
+
+	log.Infof("Maxmind DB at %s successfully updated from %s", filePath, cfg.MaxMindLocation)
+	return true
 }

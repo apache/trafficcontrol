@@ -67,7 +67,45 @@
       "hidden": "1"
     }
   ],
+  "/opt/traffic_ops/app/conf/production/tv.conf": [
+    {
+      "Database type": "Pg",
+      "config_var": "type"
+    },
+    {
+      "Database name": "traffic_ops_db",
+      "config_var": "dbname"
+    },
+    {
+      "Database server hostname IP or FQDN": "localhost",
+      "config_var": "hostname"
+    },
+    {
+      "Database port number": "5432",
+      "config_var": "port"
+    },
+    {
+      "Traffic Ops database user": "dbuser",
+      "config_var": "user"
+    },
+    {
+      "Traffic Ops database password": "dbpass",
+      "config_var": "password",
+      "hidden": "1"
+    }
+  ],
   "/opt/traffic_ops/app/db/dbconf.yml": [
+    {
+      "Database server root (admin) username": "dbuser",
+      "config_var": "pgUser"
+    },
+    {
+      "Database server admin password": "dbpass",
+      "config_var": "pgPassword",
+      "hidden": "1"
+    }
+  ],
+  "/opt/traffic_ops/app/db/trafficvault/dbconf.yml": [
     {
       "Database server root (admin) username": "dbuser",
       "config_var": "pgUser"

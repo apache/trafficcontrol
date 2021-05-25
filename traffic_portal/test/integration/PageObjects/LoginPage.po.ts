@@ -63,7 +63,7 @@ export class LoginPage extends BasePage{
             await browser.actions().mouseMove(this.btnLogin).perform();
             await browser.actions().click(this.btnLogin).perform();
         }
-        if(await browser.getCurrentUrl() === browser.params.baseUrl + "#!/login"){
+        if(await browser.getCurrentUrl() === browser.params.baseUrl + "/#!/login"){
             result = await basePage.GetOutputMessage().then(value => value === login.validationMessage);
         }else{
             result = true;

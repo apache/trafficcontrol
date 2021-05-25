@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 )
 
 var testCfg config.Cfg = config.Cfg{
@@ -37,7 +38,7 @@ var testCfg config.Cfg = config.Cfg{
 	Retries:             3,
 	RevalWaitTime:       2,
 	ReverseProxyDisable: false,
-	RunMode:             config.Revalidate,
+	RunMode:             t3cutil.ModeRevalidate,
 	SkipOSCheck:         false,
 	TOTimeoutMS:         1000,
 	TOUser:              "mickey",

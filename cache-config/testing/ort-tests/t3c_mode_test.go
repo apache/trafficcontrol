@@ -19,9 +19,14 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 	"os"
+	"os/user"
+	"strconv"
+	"syscall"
 	"testing"
 	"time"
 )
+
+const TrafficServerOwner = "ats"
 
 var (
 	base_line_dir   = "baseline-configs"
@@ -53,6 +58,19 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		if err != nil {
 			t.Fatalf("ERROR: t3c badass failed: %v\n", err)
 		}
+
+		// Use this for uid/gid file check
+		atsUser, err := user.Lookup(TrafficServerOwner)
+		var atsUid string
+		var atsGid string
+
+		if err != nil {
+			t.Logf("Unable to look up user: %s: %v", TrafficServerOwner, err)
+		} else {
+			atsUid = atsUser.Uid
+			atsGid = atsUser.Gid
+		}
+
 		for _, v := range testFiles {
 			bfn := base_line_dir + "/" + v
 			if !util.FileExists(bfn) {
@@ -71,16 +89,32 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 			} else {
 				t.Logf("%s and %s diff clean", tfn, bfn)
 			}
+
+			fileInfo, err := os.Stat(tfn)
+			if err != nil {
+				t.Errorf("Error getting stats on %s: %v", tfn, err)
+			} else {
+				if statStruct, ok := fileInfo.Sys().(*syscall.Stat_t); ok {
+					uid := strconv.Itoa(int(statStruct.Uid))
+					if uid != atsUid {
+						t.Errorf("Unexpected uid for file: %s: %s, expected %s", v, uid, atsUid)
+					}
+					gid := strconv.Itoa(int(statStruct.Gid))
+					if gid != atsGid {
+						t.Errorf("Unexpected gid for file: %s: %s, expected %s", v, gid, atsGid)
+					}
+				}
+			}
 		}
 
 		time.Sleep(time.Second * 5)
 
 		fmt.Println("------------------------ Verify Plugin Configs ----------------")
-		err = runVerify("/opt/trafficserver/etc/trafficserver/remap.config")
+		err = runCheckRefs("/opt/trafficserver/etc/trafficserver/remap.config")
 		if err != nil {
 			t.Errorf("Plugin verification failed for remap.config: " + err.Error())
 		}
-		err = runVerify("/opt/trafficserver/etc/trafficserver/plugin.config")
+		err = runCheckRefs("/opt/trafficserver/etc/trafficserver/plugin.config")
 		if err != nil {
 			t.Errorf("Plugin verification failed for plugin.config: " + err.Error())
 		}

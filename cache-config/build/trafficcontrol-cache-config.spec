@@ -81,11 +81,18 @@ go_toupd_dir="$ccpath"/t3c-update
 	cp "$TC_DIR"/"$ccdir"/t3c-update/t3c-update .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
-# copy t3c-verify binary
-go_t3c_verify_dir="$ccpath"/t3c-verify
-( mkdir -p "$go_t3c_verify_dir" && \
-	cd "$go_t3c_verify_dir" && \
-	cp "$TC_DIR"/"$ccdir"/t3c-verify/t3c-verify .
+# copy t3c-check binary
+go_t3c_check_dir="$ccpath"/t3c-check
+( mkdir -p "$go_t3c_check_dir" && \
+	cd "$go_t3c_check_dir" && \
+	cp "$TC_DIR"/"$ccdir"/t3c-check/t3c-check .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
+
+# copy t3c-check-refs binary
+go_t3c_check_refs_dir="$ccpath"/t3c-check-refs
+( mkdir -p "$go_t3c_check_refs_dir" && \
+	cd "$go_t3c_check_refs_dir" && \
+	cp "$TC_DIR"/"$ccdir"/t3c-check-refs/t3c-check-refs .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 # copy t3c-diff binary
@@ -94,6 +101,21 @@ go_t3c_diff_dir="$ccpath"/t3c-diff
 	cd "$go_t3c_diff_dir" && \
 	cp "$TC_DIR"/"$ccdir"/t3c-diff/t3c-diff .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
+
+# copy t3c-diff binary
+go_t3c_check_reload_dir="$ccpath"/t3c-check-reload
+( mkdir -p "$go_t3c_check_reload_dir" && \
+	cd "$go_t3c_check_reload_dir" && \
+	cp "$TC_DIR"/"$ccdir"/t3c-check-reload/t3c-check-reload .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
+
+# copy t3c-preprocess binary
+go_t3c_preprocess_dir="$ccpath"/t3c-preprocess
+( mkdir -p "$go_t3c_preprocess_dir" && \
+	cd "$go_t3c_preprocess_dir" && \
+	cp "$TC_DIR"/"$ccdir"/t3c-preprocess/t3c-preprocess .
+) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
+
 
 
 %install
@@ -125,11 +147,20 @@ cp -p "$to_req_src"/t3c-request ${RPM_BUILD_ROOT}/"$installdir"
 to_upd_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-update
 cp -p "$to_upd_src"/t3c-update ${RPM_BUILD_ROOT}/"$installdir"
 
-t3c_verify_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-verify
-cp -p "$t3c_verify_src"/t3c-verify ${RPM_BUILD_ROOT}/"$installdir"
-
 t3c_diff_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-diff
 cp -p "$t3c_diff_src"/t3c-diff ${RPM_BUILD_ROOT}/"$installdir"
+
+t3c_check_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-check
+cp -p "$t3c_check_src"/t3c-check ${RPM_BUILD_ROOT}/"$installdir"
+
+t3c_check_refs_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-check-refs
+cp -p "$t3c_check_refs_src"/t3c-check-refs ${RPM_BUILD_ROOT}/"$installdir"
+
+t3c_check_reload_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-check-reload
+cp -p "$t3c_check_reload_src"/t3c-check-reload ${RPM_BUILD_ROOT}/"$installdir"
+
+t3c_preprocess_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-preprocess
+cp -p "$t3c_preprocess_src"/t3c-preprocess ${RPM_BUILD_ROOT}/"$installdir"
 
 %clean
 rm -rf ${RPM_BUILD_ROOT}
@@ -143,11 +174,14 @@ rm -rf ${RPM_BUILD_ROOT}
 /usr/bin/supermicro_udev_mapper.pl
 /usr/bin/t3c
 /usr/bin/t3c-apply
+/usr/bin/t3c-check
+/usr/bin/t3c-check-refs
+/usr/bin/t3c-check-reload
 /usr/bin/t3c-diff
 /usr/bin/t3c-generate
+/usr/bin/t3c-preprocess
 /usr/bin/t3c-request
 /usr/bin/t3c-update
-/usr/bin/t3c-verify
 
 %config(noreplace) /etc/logrotate.d/atstccfg
 %config(noreplace) /var/log/trafficcontrol-cache-config/atstccfg.log

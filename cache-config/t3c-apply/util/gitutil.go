@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 )
 
 func EnsureConfigDirIsGitRepo(atsConfigDir string) error {
@@ -88,7 +88,7 @@ func makeConfigDirGitRepo(atsConfigDir string) error {
 		return errors.New("creating initial git commit: " + err.Error())
 	}
 
-	if err := MakeGitCommitAll(atsConfigDir, GitChangeIsSelf, config.BadAss, true); err != nil {
+	if err := MakeGitCommitAll(atsConfigDir, GitChangeIsSelf, t3cutil.ModeBadAss, true); err != nil {
 		return errors.New("creating first files git commit: " + err.Error())
 	}
 
@@ -133,7 +133,7 @@ const GitChangeIsSelf = true
 const GitChangeNotSelf = false
 
 // makeGitCommitAll makes a git commit of all changes in atsConfigDir, including untracked files.
-func MakeGitCommitAll(atsConfigDir string, self bool, mode config.Mode, success bool) error {
+func MakeGitCommitAll(atsConfigDir string, self bool, mode t3cutil.Mode, success bool) error {
 	{
 		// if there are no changes, don't do anything
 		cmd := exec.Command("git", "status", "--porcelain")
@@ -170,7 +170,7 @@ func MakeGitCommitAll(atsConfigDir string, self bool, mode config.Mode, success 
 	return nil
 }
 
-func makeGitCommitMsg(now time.Time, self bool, mode config.Mode, success bool) string {
+func makeGitCommitMsg(now time.Time, self bool, mode t3cutil.Mode, success bool) string {
 	const appStr = "t3c"
 	selfStr := "other"
 	if self {

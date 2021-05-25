@@ -1492,7 +1492,6 @@ func DeleteTestDeliveryServices(t *testing.T) {
 		}
 	}
 
-	// clean up parameter created in CreateTestDeliveryServices()
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", "location")
 	opts.QueryParameters.Set("configFile", "remap.config")
