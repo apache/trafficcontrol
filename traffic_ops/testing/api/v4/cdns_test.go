@@ -288,6 +288,10 @@ func CreateTestCDNs(t *testing.T) {
 }
 
 func CreateTestCDNsAlreadyExist(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatal("Need at least one CDN to test duplicate CDNs")
+	}
+
 	cdn := testData.CDNs[0]
 	resp, reqInf, err := TOSession.CreateCDN(cdn, client.RequestOptions{})
 	if err == nil {
