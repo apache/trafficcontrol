@@ -1770,6 +1770,18 @@
                     "value": "/opt/trafficserver/etc/trafficserver/"
                 },
                 {
+                    "configFile": "non-empty-file.config",
+                    "name": "location",
+                    "secure": false,
+                    "value": "/opt/trafficserver/etc/trafficserver/"
+                },
+                {
+                    "configFile": "non-empty-file.config",
+                    "name": "foo",
+                    "secure": false,
+                    "value": "bar"
+                },
+                {
                     "configFile": "remap.config",
                     "name": "location",
             	      "secure": false,

@@ -32,55 +32,51 @@
   !!!
 
 -->
+
 # NAME
 
-t3c - Traffic Control Cache Configuration tools
+t3c-check-reload - Traffic Control Cache Configuration reload check tool
 
 # SYNOPSIS
 
-t3c [\-\-help]
-    \<command\> [\<args\>]
+t3c-check-reload [-c paths] [-m mode] [-p packages]
+
+[\-\-help]
 
 # DESCRIPTION
 
-The `t3c` app generates and applies cache configuration for Apache Traffic Control.
+The t3c-check-reload app takes a comma-delimited list of config file paths
+being changed, and a comma-delimited a list of plugin packages being installed,
+and returns whether a reload or restart of the caching proxy service is
+necessary.
 
-This includes requesting Traffic Ops, generating configuration files for caching proxies such as Apache Traffic Server, verifying Traffic Ops data is valid and produces valid config files, creating a git repo for backups and history, determining whether config changes require a reload or restart of the caching proxy service, performing that restart, and more.
+Possible return values are:
 
-The latest version and documentation can be found at https://github.com/apache/trafficcontrol/cache-config.
+  'restart' - a service restart is necessary
+
+  'reload' - a service reload is necessary
+
+  '' - no reload or restart is necessary.
 
 # OPTIONS
 
---help
-    Prints the synopsis and usage information.
+-c, --changed-config-paths=value
 
-# COMMANDS
+    comma-delimited list of the full paths of all files changed
+    by t3c
+-h, --help
 
-We divide t3c into commands for each independent operation. Each command is its own application and can be called directly or via the t3c app. For example, 't3c apply' or 't3c-apply'.
+    Print usage information and exit
 
-t3c-apply
+-m, --run-mode=value
 
-    Generate and apply cache configuration.
+     [badass | report | revalidate | syncds] run mode, default is
+     'report' [report]
 
-t3c-check
+-p, --plugin-packages-installed=value
 
-    Check that new config can be applied.
-
-t3c-diff
-
-    Diff config files, like diff or git-diff but with config-specific logic.
-
-t3c-request
-
-    Request data from Traffic Ops.
-
-t3c-update
-
-    Update a server's queue and reval status in Traffic Ops.
-
-# NOMENCLATURE
-
-The "t3c" stands for "Traffic Control Cache Config."
+    comma-delimited list of ATS plugin packages which were
+    installed by t3c
 
 # AUTHORS
 
