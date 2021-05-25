@@ -56,6 +56,7 @@ func TestCDNs(t *testing.T) {
 		GetTestPaginationSupportCdns(t)
 		SortTestCdnDesc(t)
 		CreateTestCDNsAlreadyExist(t)
+		DeleteTestCDNsInvalidId(t)
 	})
 }
 
@@ -438,6 +439,17 @@ func DeleteTestCDNs(t *testing.T) {
 				t.Errorf("expected CDN '%s' to be deleted", cdn.Name)
 			}
 		}
+	}
+}
+
+func DeleteTestCDNsInvalidId(t *testing.T) {
+
+	delResp, reqInf, err := TOSession.DeleteCDN(100000, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected, no cdn with that key found  but got - alerts: %+v", delResp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
 	}
 }
 
