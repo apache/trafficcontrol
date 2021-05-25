@@ -34,53 +34,35 @@
 -->
 # NAME
 
-t3c - Traffic Control Cache Configuration tools
+t3c-preprocess - Traffic Control Cache Configuration preprocessor
 
 # SYNOPSIS
 
-t3c [\-\-help]
-    \<command\> [\<args\>]
+t3c-preprocess
 
 # DESCRIPTION
 
-The `t3c` app generates and applies cache configuration for Apache Traffic Control.
+The 't3c-preprocess' app preprocesses generated config files, replacing directives with relevant data.
 
-This includes requesting Traffic Ops, generating configuration files for caching proxies such as Apache Traffic Server, verifying Traffic Ops data is valid and produces valid config files, creating a git repo for backups and history, determining whether config changes require a reload or restart of the caching proxy service, performing that restart, and more.
+The stdin must be the JSON '{"data": \<data\>, "files": \<files\>}' where \<data\> is the output of 't3c-request --get-data=config' and \<files\> is the output of 't3c-generate'.
 
-The latest version and documentation can be found at https://github.com/apache/trafficcontrol/cache-config.
+# DIRECTIVES
 
-# OPTIONS
+The following directives will be replaced. These directives may be placed anywhere in any file, by either t3c-generate(1) or Traffic Ops Parameters.
 
---help
-    Prints the synopsis and usage information.
+    __SERVER_TCP_PORT__ is replaced with the Server's Port from Traffic Ops; unless the server's
+                        port is 80, 0, or null, in which case any occurrences preceded by a colon
+                        are removed.
 
-# COMMANDS
+    __CACHE_IPV4__      is replaced with the Server's IP address from Traffic Ops.
 
-We divide t3c into commands for each independent operation. Each command is its own application and can be called directly or via the t3c app. For example, 't3c apply' or 't3c-apply'.
+    __HOSTNAME__        is replaced with the Server's (short) HostName from Traffic Ops.
 
-t3c-apply
+    __FULL_HOSTNAME__   is replaced with the Server's HostName, a dot, and the Server's DomainName
+                        from Traffic Ops (i.e. the Server's Fully Qualified Domain Name).
 
-    Generate and apply cache configuration.
-
-t3c-check
-
-    Check that new config can be applied.
-
-t3c-diff
-
-    Diff config files, like diff or git-diff but with config-specific logic.
-
-t3c-request
-
-    Request data from Traffic Ops.
-
-t3c-update
-
-    Update a server's queue and reval status in Traffic Ops.
-
-# NOMENCLATURE
-
-The "t3c" stands for "Traffic Control Cache Config."
+    __RETURN__          is replaced with a newline character, and any whitespace before or after
+                        it is removed.
 
 # AUTHORS
 
