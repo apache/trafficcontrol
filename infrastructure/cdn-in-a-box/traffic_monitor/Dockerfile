@@ -27,8 +27,6 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
 
-# Default values for RPM -- override with `docker build --build-arg RPM=...'
-ARG RPM=traffic_monitor/traffic_monitor.rpm
 
 RUN dnf install -y epel-release && \
     dnf install -y \
@@ -43,6 +41,9 @@ RUN dnf install -y epel-release && \
     dnf clean all
 
 FROM trafficmonitor-dependencies AS trafficmonitor
+
+# Default values for RPM -- override with `docker build --build-arg RPM=...'
+ARG RPM=traffic_monitor/traffic_monitor.rpm
 ADD $RPM /
 RUN rpm -Uvh  /$(basename $RPM) && \
     rm /$(basename $RPM)
