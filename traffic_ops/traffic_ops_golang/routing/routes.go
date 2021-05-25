@@ -43,6 +43,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachesstats"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/capabilities"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdn"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdn_lock"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdnfederation"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdnnotification"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/coordinate"
@@ -132,6 +133,12 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		/**
 		 * 4.x API
 		 */
+
+		// CDN lock
+		{api.Version{4, 0}, http.MethodGet, `cdn_locks/?$`, cdn_lock.Read, auth.PrivLevelReadOnly, Authenticated, nil, 4134390561},
+		{api.Version{4, 0}, http.MethodPost, `cdn_locks/?$`, cdn_lock.Create, auth.PrivLevelOperations, Authenticated, nil, 4134390562},
+		{api.Version{4, 0}, http.MethodDelete, `cdn_locks/?$`, cdn_lock.Delete, auth.PrivLevelOperations, Authenticated, nil, 4134390564},
+		{api.Version{4, 0}, http.MethodDelete, `cdn_locks/admin/?$`, cdn_lock.AdminDelete, auth.PrivLevelAdmin, Authenticated, nil, 4134390565},
 
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `acme_accounts/providers?$`, acme.ReadProviders, auth.PrivLevelOperations, Authenticated, nil, 4034390565},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `deliveryservices/sslkeys/generate/acme/?$`, deliveryservice.GenerateAcmeCertificates, auth.PrivLevelOperations, Authenticated, nil, 2534390576},
