@@ -229,13 +229,13 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatalf("expected one delivery service: 'ds-top', actual: %v", len(ds.Response))
 	}
 	d := ds.Response[0]
-	if d.Topology == nil || d.ID == nil || d.CDNID == nil || d.CDNName == nil {
-		t.Fatal("Traffic Ops returned a representation of a Delivery Service that had null or undefined Topology and/or CDN ID and/or CDN Name and/or ID")
+	if d.Topology == nil || d.ID == nil || d.CDNName == nil {
+		t.Fatal("Traffic Ops returned a representation of a Delivery Service that had null or undefined Topology and/or CDN Name and/or ID")
 	}
 	serversResp, _, err := TOSession.GetServers(client.RequestOptions{})
 	servers := []tc.ServerV4{}
 	for _, s := range serversResp.Response {
-		if s.CDNID != nil && *s.CDNID == *d.CDNID && s.Type == tc.CacheTypeEdge.String() {
+		if s.CDNID != nil && *s.CDNID == d.CDNID && s.Type == tc.CacheTypeEdge.String() {
 			servers = append(servers, s)
 		}
 	}
@@ -247,7 +247,7 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 	}
 	serverNames := []string{}
 	for _, s := range servers {
-		if s.CDNID != nil && s.HostName != nil && *s.CDNID == *d.CDNID && s.Type == tc.CacheTypeEdge.String() {
+		if s.CDNID != nil && s.HostName != nil && *s.CDNID == d.CDNID && s.Type == tc.CacheTypeEdge.String() {
 			serverNames = append(serverNames, *s.HostName)
 		} else {
 			t.Fatalf("expected only EDGE servers in cdn '%s', actual: %v", *d.CDNName, servers)
@@ -353,8 +353,8 @@ func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T)
 	if dsWithMid.Topology != nil {
 		t.Fatal("expected delivery service: 'ds1' to have a nil Topology, actual: non-nil")
 	}
-	if dsWithMid.CDNID == nil || dsWithMid.CDNName == nil || dsWithMid.ID == nil {
-		t.Fatal("Traffic Ops returned a representation of a Delivery Service that had null or undefined CDN ID and/or CDN Name and/or ID")
+	if dsWithMid.CDNName == nil || dsWithMid.ID == nil {
+		t.Fatal("Traffic Ops returned a representation of a Delivery Service that had null or undefined CDN Name and/or ID")
 	}
 	serversResp, _, err := TOSession.GetServers(client.RequestOptions{})
 	if err != nil {
@@ -362,7 +362,7 @@ func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T)
 	}
 	serversIds := []int{}
 	for _, s := range serversResp.Response {
-		if s.CDNID != nil && *s.CDNID == *dsWithMid.CDNID && s.Type == tc.CacheTypeEdge.String() {
+		if s.CDNID != nil && *s.CDNID == dsWithMid.CDNID && s.Type == tc.CacheTypeEdge.String() {
 			serversIds = append(serversIds, *s.ID)
 		}
 	}
@@ -389,7 +389,7 @@ func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T)
 	}
 
 	for _, dss := range dsServersResp.Response {
-		if dss.CDNID != nil && *dss.CDNID != *dsWithMid.CDNID {
+		if dss.CDNID != nil && *dss.CDNID != dsWithMid.CDNID {
 			t.Fatalf("a server for another cdn was returned for this delivery service")
 		}
 	}
@@ -580,9 +580,6 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	if ds.ID == nil {
 		t.Fatalf("Got a delivery service with a nil ID %+v", ds)
 	}
-	if ds.Active == nil {
-		t.Fatalf("Got a Delivery Service with nil 'Active': %+v", ds)
-	}
 
 	resp, _, err := TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*server.ID}, true, client.RequestOptions{})
 	if err != nil {
@@ -605,8 +602,8 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		t.Error("POST delivery service servers returned success, but ds-server not in GET")
 	}
 
-	if *ds.Active {
-		*ds.Active = false
+	if ds.Active {
+		ds.Active = false
 		_, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
 		if err != nil {
 			t.Errorf("Setting Delivery Service #%d to inactive", *ds.ID)

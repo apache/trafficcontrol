@@ -138,7 +138,7 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV30{ds.DowngradeToV3()})
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %d, ACTION: Updated safe fields", *ds.XMLID, *ds.ID), inf.User, tx)
+	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %d, ACTION: Updated safe fields", ds.XMLID, *ds.ID), inf.User, tx)
 }
 
 // updateDSSafe updates the given delivery service in the database. Returns whether the DS existed, and any error.
