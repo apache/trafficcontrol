@@ -27,7 +27,6 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
 
-
 RUN dnf install -y epel-release && \
     dnf install -y \
         jq \
