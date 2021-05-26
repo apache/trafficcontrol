@@ -120,7 +120,9 @@ func main() {
 		syncdsUpdate, err = trops.CheckRevalidateState(false)
 		if err != nil || syncdsUpdate == torequest.UpdateTropsNotNeeded {
 			if err != nil {
-				log.Errorln(err)
+				log.Errorln("Checking revalidate state: " + err.Error())
+			} else {
+				log.Infoln("Checking revalidate state: returned UpdateTropsNotNeeded")
 			}
 			GitCommitAndExit(RevalidationError, cfg)
 		}
