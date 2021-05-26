@@ -59,7 +59,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cdnLock := []tc.CdnLock{}
+	var cdnLock []tc.CdnLock
 	query := readQuery + where + orderBy + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
