@@ -160,23 +160,10 @@ export class CacheGroupPage extends BasePage {
         return element(by.cssContainingText("span", name)).isPresent();
     }
     public async ToggleTableColumn(name: string): Promise<boolean> {
-        let result = false;
         await this.btnTableColumn.click();
-        //if it's already on, turn it off and return false
-        if (await browser.isElementPresent(element(by.xpath("//th[text()='" + name + "']"))) === true){
-            await element(by.xpath("//label[text()=' " + name + "']")).click();
-            result = false;
-        }else{
-            //of it already off, turn it on return true
-            await element(by.xpath("//label[text()=' " + name + "']")).click();
-            result = true;
-        }
+        const result = await element(by.cssContainingText("th", name)).isPresent();
+        await element(by.cssContainingText("label", name)).click();
         await this.btnTableColumn.click();
-        return result;
+        return !result;
     }
-
-
-
-
-
 }
