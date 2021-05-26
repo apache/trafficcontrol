@@ -20,7 +20,7 @@ under the License.
 # Delivery Service TLS Versions
 
 ## Problem Description
-Currently, supprted TLS versions cannot be configured. This means that a
+Currently, supported TLS versions cannot be configured. This means that a
 Delivery Service can have clients requesting its content over old, insecure
 versions of TLS, and Tenants controlling that Delivery Service have no way to
 force clients to use more recent versions.
@@ -54,8 +54,8 @@ empty array.
 
 The reason for this is best understood by first understanding what `null` means
 for this field. If `tlsVersions` is `null`, it means that no TLS version
-restrictions in place; the behavior is the same as today without the field, all
-TLS versions are implicitly supported.
+restrictions are in place; the behavior is the same as today without the field,
+all TLS versions are implicitly supported.
 
 An empty array would seem to signify that no TLS versions are supported, which
 is an invalid configuration because then HTTPS content cannot be served - and
@@ -74,7 +74,7 @@ Traffic Router should not concern itself with validating the TLS versions used
 by routing requests for HTTP-routed and STEERING/CLIENT STEERING Delivery
 Services. Doing so wouldn't significantly increase content security since that
 would all be enforced by the caching layers anyway (even in the case of an
-`HTTP_NO_CACHE`-Type Delivery Service) and would reqire invasive, complex
+`HTTP_NO_CACHE`-Type Delivery Service) and would require invasive, complex
 changes as well as a headache-inducing web of edge cases to handle for STEERING
 and CLIENT STEERING routing.
 
@@ -112,7 +112,7 @@ A warning should also be issued if any if the Delivery Service being edited is
 the target of a Delivery Service which has other targets that support TLS
 versions not supported by the Delivery Service being edited.
 
-Traffic Poral should also display some kind of warning - possibly in a dialog
+Traffic Portal should also display some kind of warning - possibly in a dialog
 box - whenever the "Restrict TLS Versions" box is checked, advising that
 clients using TLS versions not listed will become unable to retrieve the
 Delivery Service's content.
@@ -234,7 +234,7 @@ documentation should warn the reader that setting explicitly supported TLS
 versions could break clients that expect the support of excluded versions.
 
 ## Testing Impact
-The integation tests between Traffic Ops and its Go client will need to be
+The integration tests between Traffic Ops and its Go client will need to be
 updated to verify the new validation and behavior, and unit tests should also
 exist for the behavior added to the Traffic Ops server.
 
@@ -252,7 +252,7 @@ the one specified above (though it need only be compiled once).
 
 Historically, though, the reaction to such things is "yes, operators have great
 power and it is up to system administrators to ensure that power is given only
-to those that can be trusted to weild it". So likely nobody thinks this is a
+to those that can be trusted to wield it". So likely nobody thinks this is a
 true concern, but if it were Traffic Ops could be configured to refuse to
 handle request payloads greater than a certain size, which would mitigate the
 problem.
