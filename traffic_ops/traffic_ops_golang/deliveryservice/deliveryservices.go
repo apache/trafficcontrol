@@ -325,6 +325,50 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 t
 	return &oldRes, status, userErr, sysErr
 }
 
+// 'ON CONFLICT DO NOTHING' should be unnecessary because all data should be
+// dumped from the table before re-insertion, but it's also harmless because
+// the only conflict that could occur is a fully duplicate row, which is fine
+// since we're intending to create that data anyway. Although it is weird.
+const insertTLSVersionsQuery = `
+INSERT INTO public.deliveryservice_tls_version (deliveryservice, tls_version)
+	SELECT
+		$1 AS deliveryservice
+		UNNEST($2) AS tls_version
+ON CONFLICT DO NOTHING
+`
+
+func recreateTLSVersions(versions []string, dsid int, tx *sql.Tx) error {
+	err := tx.QueryRow(`DELETE FROM public.deliveryservice_tls_version WHERE deliveryservice = $1`, dsid).Scan()
+	if err != nil {
+		return fmt.Errorf("cleaning up existing TLS version for DS #%d: %w", dsid, err)
+	}
+
+	if len(versions) < 1 {
+		return nil
+	}
+
+	rows, err := tx.Query(insertTLSVersionsQuery, dsid, pq.Array(versions))
+	if err != nil {
+		return fmt.Errorf("inserting new TLS versions: %w", err)
+	}
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Errorln("closing TLS versions insert rows: %v", err)
+		}
+	}()
+
+	rowsAffected := 0
+	for rows.Next() {
+		rowsAffected++
+	}
+	if rowsAffected != len(versions) {
+		return fmt.Errorf("inserting %d TLS versions for DS #%d affected %d rows", len(versions), dsid, rowsAffected)
+	}
+
+	return nil
+}
+
 // create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
 func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
 	var resultRows *sql.Rows
@@ -502,6 +546,15 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 		return nil, http.StatusInternalServerError, nil, errors.New("getting delivery service type: " + err.Error())
 	}
 	ds.Type = &dsType
+
+	// Don't touch TLSVersions if using old API versions
+	if inf.Version != nil && inf.Version.Major >= 4 {
+		if len(ds.TLSVersions) < 1 {
+			ds.TLSVersions = nil
+		} else if err = recreateTLSVersions(ds.TLSVersions, *ds.ID, tx); err != nil {
+			return nil, http.StatusInternalServerError, nil, fmt.Errorf("creating TLS versions for new Delivery Service: %w", err)
+		}
+	}
 
 	if err := createDefaultRegex(tx, *ds.ID, ds.XMLID); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("creating default regex: " + err.Error())
@@ -1200,6 +1253,17 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 	if ds.ID == nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("missing id after update")
 	}
+
+	if inf.Version != nil && inf.Version.Major >= 4 {
+		if len(ds.TLSVersions) < 1 {
+			ds.TLSVersions = nil
+		}
+		err = recreateTLSVersions(ds.TLSVersions, *ds.ID, tx)
+		if err != nil {
+			return nil, http.StatusInternalServerError, nil, fmt.Errorf("updating TLS versions for DS #%d: %w", *ds.ID, err)
+		}
+	}
+
 	newDSType, err := getTypeFromID(ds.TypeID, tx)
 	if err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("getting delivery service type after update: " + err.Error())
@@ -1416,6 +1480,8 @@ func requiredIfMatchesTypeName(patterns []string, typeName string) func(interfac
 	}
 }
 
+var validTLSVersionPattern = regexp.MustCompile(`^\d+\.\d+$`)
+
 func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
 	sanitize(ds)
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
@@ -1436,8 +1502,27 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
 		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil),
 		"remapText":           validation.Validate(ds.RemapText, noLineBreaks),
 		"routingName":         validation.Validate(ds.RoutingName, isDNSName, noPeriods, validation.Length(1, 48)),
-		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
-		"xmlId":               validation.Validate(ds.XMLID, validation.Required, noSpaces, noPeriods, validation.Length(1, 48)),
+		"tlsVersions": validation.Validate(ds.TLSVersions, validation.By(
+			func(value interface{}) error {
+				vers, ok := value.([]string)
+				if !ok {
+					return fmt.Errorf("must be an array of string, got: %T", value)
+				}
+				seen := make(map[string]struct{}, len(vers))
+				for _, tlsVersion := range vers {
+					if _, ok := seen[tlsVersion]; ok {
+						return fmt.Errorf("duplicate version '%s'", tlsVersion)
+					}
+					seen[tlsVersion] = struct{}{}
+					if !validTLSVersionPattern.Match([]byte(tlsVersion)) {
+						return fmt.Errorf("invalid TLS version '%s'", tlsVersion)
+					}
+				}
+				return nil
+			},
+		)),
+		"typeId": validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
+		"xmlId":  validation.Validate(ds.XMLID, validation.Required, noSpaces, noPeriods, validation.Length(1, 48)),
 	})
 	if err := validateTopologyFields(ds); err != nil {
 		errs = append(errs, err)
@@ -1516,7 +1601,7 @@ func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
 		"initialDispersion": validation.Validate(ds.InitialDispersion,
 			validation.By(requiredIfMatchesTypeName([]string{HTTPRegexType}, typeName)),
 			validation.By(tovalidate.IsGreaterThanZero)),
-		"ipv6RoutingEnabled": validation.Validate(ds.IPV6RoutingEnabled,
+		"ipv6RoutingEnabled": validation.Validate(&ds.IPV6RoutingEnabled,
 			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
 		"missLat": validation.Validate(ds.MissLat,
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
@@ -1772,6 +1857,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.SSLKeyVersion,
 			&ds.TenantID,
 			&ds.Tenant,
+			pq.Array(&ds.TLSVersions),
 			&ds.Topology,
 			&ds.TRRequestHeaders,
 			&ds.TRResponseHeaders,
@@ -1801,6 +1887,10 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 		ds.DeepCachingType = tc.DeepCachingTypeFromString(string(ds.DeepCachingType))
 
 		ds.Signed = ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tc.SigningAlgorithmURLSig
+
+		if len(ds.TLSVersions) < 1 {
+			ds.TLSVersions = nil
+		}
 
 		dses = append(dses, ds)
 	}
@@ -2086,8 +2176,8 @@ func deleteLocationParam(tx *sql.Tx, configFile string) error {
 
 // getTenantID returns the tenant Id of the given delivery service. Note it may return a nil id and nil error, if the tenant ID in the database is nil.
 func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceV4) (*int, error) {
-	if ds == nil || ds.ID == nil {
-		return nil, errors.New("delivery service was nil or has no ID")
+	if ds == nil {
+		return nil, errors.New("delivery service was nil")
 	}
 	if ds.ID != nil {
 		existingID, _, err := getDSTenantIDByID(tx, *ds.ID) // ignore exists return - if the DS is new, we only need to check the user input tenant
@@ -2282,6 +2372,11 @@ ds.active,
 	ds.ssl_key_version,
 	ds.tenant_id,
 	tenant.name,
+	(
+		SELECT ARRAY_AGG(tls_version ORDER BY tls_version)
+		FROM deliveryservice_tls_version
+		WHERE deliveryservice = ds.id
+	) AS tls_versions,
 	ds.topology,
 	ds.tr_request_headers,
 	ds.tr_response_headers,
