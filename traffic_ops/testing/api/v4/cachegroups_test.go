@@ -898,7 +898,7 @@ func DeleteTestCacheGroupsByInvalidId(t *testing.T) {
 
 	alerts, reqInf, err := TOSession.DeleteCacheGroup(111111, client.RequestOptions{})
 	if err == nil {
-		t.Errorf("Expected no cachegroup with that id found - alerts: %+v", alerts)
+		t.Errorf("Expected no cachegroup with that id found - but got alerts: %+v", alerts)
 	}
 	if reqInf.StatusCode != http.StatusNotFound {
 		t.Errorf("Expected status code 404, got %v", reqInf.StatusCode)
