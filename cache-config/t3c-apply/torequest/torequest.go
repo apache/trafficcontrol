@@ -629,9 +629,26 @@ func (r *TrafficOpsReq) CheckSystemServices() error {
 func (r *TrafficOpsReq) IsPackageInstalled(name string) bool {
 	for k, v := range r.pkgs {
 		if strings.HasPrefix(k, name) {
+			log.Infof("IsPackageInstalled '%v' found '%v' in cache, returning %v\n", name, k, v)
 			return v
 		}
 	}
+
+	log.Infof("IsPackageInstalled '%v' not found in cache, querying rpm", name)
+	pkgArr, err := util.PackageInfo("pkg-query", name)
+	if err != nil {
+		log.Errorf(`IsPackageInstalled PackageInfo(pkg-query, %v) failed, caching as not installed and returning false! Error: %v\n`, name, err.Error())
+		r.pkgs[name] = false
+		return false
+	}
+	if len(pkgArr) > 0 {
+		pkgAndVersion := pkgArr[0]
+		log.Infof("IsPackageInstalled '%v' found in rpm, adding '%v' to cache", name, pkgAndVersion)
+		r.pkgs[pkgAndVersion] = true
+		return true
+	}
+	log.Infof("IsPackageInstalled '%v' not found in rpm, adding '%v'=false to cache", name, name)
+	r.pkgs[name] = false
 	return false
 }
 
@@ -709,36 +726,41 @@ func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, 
 		serverStatus, err := getUpdateStatus(r.Cfg)
 		log.Infof("my status: %s\n", serverStatus.Status)
 		if err != nil {
-			log.Errorln(err)
-			return updateStatus, err
-		} else {
-			if serverStatus.UseRevalPending == false {
-				log.Errorln("Update URL: Instant invalidate is not enabled.  Separated revalidation requires upgrading to Traffic Ops version 2.2 and enabling this feature.")
-				return UpdateTropsNotNeeded, nil
-			}
-			if serverStatus.RevalPending == true {
-				log.Errorln("Traffic Ops is signaling that a revalidation is waiting to be applied.")
-				updateStatus = UpdateTropsNeeded
-				if serverStatus.ParentRevalPending == true {
-					log.Errorln("Traffic Ops is signaling that my parents need to revalidate.")
-					// no update needed until my parents are updated.
+			log.Errorln("getting update status: " + err.Error())
+			return updateStatus, errors.New("getting update status: " + err.Error())
+		}
+		if serverStatus.UseRevalPending == false {
+			log.Errorln("Update URL: Instant invalidate is not enabled.  Separated revalidation requires upgrading to Traffic Ops version 2.2 and enabling this feature.")
+			return UpdateTropsNotNeeded, nil
+		}
+		if serverStatus.RevalPending == true {
+			log.Errorln("Traffic Ops is signaling that a revalidation is waiting to be applied.")
+			updateStatus = UpdateTropsNeeded
+			if serverStatus.ParentRevalPending == true {
+				if r.Cfg.WaitForParents {
+					log.Infoln("Traffic Ops is signaling that my parents need to revalidate, not revalidating.")
 					updateStatus = UpdateTropsNotNeeded
+				} else {
+					log.Infoln("Traffic Ops is signaling that my parents need to revalidate, but wait-for-parents is false, revalidating anyway.")
 				}
-			} else if serverStatus.RevalPending == false && r.Cfg.RunMode == t3cutil.ModeRevalidate {
-				log.Errorln("In revalidate mode, but no update needs to be applied. I'm outta here.")
-				return UpdateTropsNotNeeded, nil
-			} else {
-				log.Errorln("Traffic Ops is signaling that no revalidations are waiting to be applied.")
-				return UpdateTropsNotNeeded, nil
 			}
+		} else if serverStatus.RevalPending == false && r.Cfg.RunMode == t3cutil.ModeRevalidate {
+			log.Errorln("In revalidate mode, but no update needs to be applied. I'm outta here.")
+			return UpdateTropsNotNeeded, nil
+		} else {
+			log.Errorln("Traffic Ops is signaling that no revalidations are waiting to be applied.")
+			return UpdateTropsNotNeeded, nil
 		}
 
 		err = r.checkStatusFiles(serverStatus.Status)
 		if err != nil {
-			log.Errorln(err)
+			log.Errorln(errors.New("checking status files: " + err.Error()))
+		} else {
+			log.Infoln("CheckRevalidateState checkStatusFiles returned nil error")
 		}
 	}
 
+	log.Infof("CheckRevalidateState returning %v\n", updateStatus)
 	return updateStatus, nil
 }
 
@@ -878,11 +900,13 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 // ProcessPackages retrieves a list of required RPM's from Traffic Ops
 // and determines which need to be installed or removed on the cache.
 func (r *TrafficOpsReq) ProcessPackages() error {
+	log.Infoln("Calling ProcessPackages")
 	// get the package list for this cache from Traffic Ops.
 	pkgs, err := getPackages(r.Cfg)
 	if err != nil {
 		return errors.New("getting packages: " + err.Error())
 	}
+	log.Infof("ProcessPackages got %+v\n", pkgs)
 
 	var install []string   // install package list.
 	var uninstall []string // uninstall package list
