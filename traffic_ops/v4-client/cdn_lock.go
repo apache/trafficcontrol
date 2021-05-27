@@ -46,10 +46,3 @@ func (to *Session) DeleteCdnLocks(opts RequestOptions) (tc.CdnLockDeleteResponse
 	reqInf, err := to.del(apiCDNLocks, opts, &data)
 	return data, reqInf, err
 }
-
-// AdminDeleteCdnLocks hits the endpoint an admin user would use to delete somebody else's lock.
-func (to *Session) AdminDeleteCdnLocks(opts RequestOptions) (tc.CdnLockDeleteResponse, toclientlib.ReqInf, error) {
-	var data tc.CdnLockDeleteResponse
-	reqInf, err := to.del(apiAdminCDNLocks, opts, &data)
-	return data, reqInf, err
-}

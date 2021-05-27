@@ -16,6 +16,7 @@ package v4
 */
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -130,7 +131,7 @@ func AdminCdnLocks(t *testing.T) {
 		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
 		RoleName:             util.StrPtr("operations"),
 	}
-	user1.Email = util.StrPtr("email@domain.com")
+	user1.Email = util.StrPtr("lockuseremail@domain.com")
 	user1.TenantID = util.IntPtr(resp.Response[0].ID)
 	user1.FullName = util.StrPtr("firstName LastName")
 	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
@@ -139,11 +140,36 @@ func AdminCdnLocks(t *testing.T) {
 	}
 	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
 
+	// Create another new user with operations level privileges
+	user2 := tc.User{
+		Username:             util.StrPtr("lock_user2"),
+		RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
+		LocalPassword:        util.StrPtr("test_pa$$word2"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word2"),
+		RoleName:             util.StrPtr("operations"),
+	}
+	user2.Email = util.StrPtr("newlockuseremail@domain.com")
+	user2.TenantID = util.IntPtr(resp.Response[0].ID)
+	user2.FullName = util.StrPtr("firstName2 LastName2")
+	_, _, err = TOSession.CreateUser(user2, client.RequestOptions{})
+	if err != nil {
+		fmt.Println(err)
+		t.Fatalf("could not create test user with username: %s", *user2.Username)
+	}
+	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user2"})
+
 	// Establish a session with the newly created non admin level user
 	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, *user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
 	if err != nil {
 		t.Fatalf("could not login with user lock_user1: %v", err)
 	}
+
+	// Establish another session with the newly created non admin level user
+	userSession2, _, err := client.LoginWithAgent(Config.TrafficOps.URL, *user2.Username, *user2.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	if err != nil {
+		t.Fatalf("could not login with user lock_user1: %v", err)
+	}
+
 	cdn := getCDNName(t)
 	// Create a lock for this user
 	_, _, err = userSession.CreateCdnLock(tc.CDNLock{
@@ -155,26 +181,17 @@ func AdminCdnLocks(t *testing.T) {
 		t.Fatalf("couldn't create cdn lock: %v", err)
 	}
 
-	// Non admin user trying to hit an admin privileged endpoint -> this should fail
-	_, reqInf, err := userSession.AdminDeleteCdnLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn}}})
+	// Non admin user trying to delete another user's lock -> this should fail
+	_, reqInf, err := userSession2.DeleteCdnLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn}}})
 	if err == nil {
-		t.Fatalf("expected error when a non admin user tries to hit an admin privileged endpoint, but got nothing")
-	}
-	if reqInf.StatusCode != http.StatusForbidden {
-		t.Fatalf("expected a 403 status code, but got %d instead", reqInf.StatusCode)
-	}
-
-	// Try to delete another user's lock by hitting the normal DELETE endpoint for cdn_locks -> this should fail
-	_, reqInf, err = TOSession.DeleteCdnLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn}}})
-	if err == nil {
-		t.Fatalf("expected an error while deleting other user's lock, but got nothing")
+		t.Fatalf("expected error when a non admin user tries to delete another user's lock, but got nothing")
 	}
 	if reqInf.StatusCode != http.StatusNotFound {
 		t.Fatalf("expected a 404 status code, but got %d instead", reqInf.StatusCode)
 	}
 
 	// Now try to delete another user's lock by hitting the admin DELETE endpoint for cdn_locks -> this should pass
-	_, reqInf, err = TOSession.AdminDeleteCdnLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn}}})
+	_, reqInf, err = TOSession.DeleteCdnLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn}}})
 	if err != nil {
 		t.Fatalf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
 	}

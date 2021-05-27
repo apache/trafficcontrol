@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
@@ -146,7 +147,12 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("couldn't get user for the current request"))
 	}
 	var result tc.CDNLock
-	err := inf.Tx.Tx.QueryRow(deleteQuery, cdn, inf.User.UserName).Scan(&result.UserName, &result.CDN, &result.Message, &result.Soft, &result.LastUpdated)
+	var err error
+	if inf.User.PrivLevel == auth.PrivLevelAdmin {
+		err = inf.Tx.Tx.QueryRow(deleteAdminQuery, cdn).Scan(&result.UserName, &result.CDN, &result.Message, &result.Soft, &result.LastUpdated)
+	} else {
+		err = inf.Tx.Tx.QueryRow(deleteQuery, cdn, inf.User.UserName).Scan(&result.UserName, &result.CDN, &result.Message, &result.Soft, &result.LastUpdated)
+	}
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("deleting cdn lock with cdn name %s: lock not found", cdn), nil)
@@ -157,34 +163,6 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "cdn lock deleted")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, result)
-	changeLogMsg := fmt.Sprintf("USER: %s, CDN: %s, ACTION: Lock Released", inf.User.UserName, cdn)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
-}
-
-func AdminDelete(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	cdn := inf.Params["cdn"]
-	tx := inf.Tx.Tx
-	var result tc.CDNLock
-	err := inf.Tx.Tx.QueryRow(deleteAdminQuery, cdn).Scan(&result.UserName, &result.CDN, &result.Message, &result.Soft, &result.LastUpdated)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("deleting cdn lock with cdn name %s: lock not found", cdn), nil)
-			return
-		}
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("deleting cdn lock with cdn name %s : %v", cdn, err.Error()))
-		return
-	}
-
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "cdn lock deleted by admin")
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, result)
-
-	changeLogMsg := fmt.Sprintf("USER: %s, CDN: %s, ACTION: Lock Released By admin", result.UserName, cdn)
+	changeLogMsg := fmt.Sprintf("USER: %s, CDN: %s, ACTION: Lock Released", result.UserName, cdn)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
