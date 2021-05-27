@@ -61,13 +61,13 @@ Response Structure
 			"cdn": "bar",
 			"message": "acquiring lock to snap CDN",
 			"soft": true,
-			"lastUpdated": "2021-05-26 09:31:57-06"
+			"lastUpdated": "2021-05-26T09:31:57-06"
 		}
 	]}
 
 ``POST``
 ========
-Allows user to acquire a lock on a CDN
+Allows user to acquire a lock on a CDN.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -131,7 +131,7 @@ Response Structure
 		"cdn": "bar",
 		"message": "acquiring lock to snap CDN",
 		"soft": true,
-		"lastUpdated": "2021-05-26 10:59:10-06"
+		"lastUpdated": "2021-05-26T10:59:10-06"
 	}}
 
 ``DELETE``
@@ -193,7 +193,7 @@ Response Structure
 		"cdn": "bar",
 		"message": "acquiring lock to snap CDN",
 		"soft": true,
-		"lastUpdated": "2021-05-26 10:59:10-06"
+		"lastUpdated": "2021-05-26T10:59:10-06"
 	}}
 
 ``DELETE (admin)``
@@ -256,5 +256,5 @@ Response Structure
 		"cdn": "bar",
 		"message": "acquiring lock to snap CDN",
 		"soft": true,
-		"lastUpdated": "2021-05-26 10:59:10-06"
+		"lastUpdated": "2021-05-26T10:59:10-06"
 	}}

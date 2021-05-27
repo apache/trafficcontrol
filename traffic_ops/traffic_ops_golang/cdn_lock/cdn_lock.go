@@ -59,7 +59,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var cdnLock []tc.CdnLock
+	cdnLock := []tc.CDNLock{}
 	query := readQuery + where + orderBy + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
@@ -69,8 +69,8 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var cLock tc.CdnLock
-		if err = rows.Scan(&cLock.UserName, &cLock.Cdn, &cLock.Message, &cLock.Soft, &cLock.LastUpdated); err != nil {
+		var cLock tc.CDNLock
+		if err = rows.Scan(&cLock.UserName, &cLock.CDN, &cLock.Message, &cLock.Soft, &cLock.LastUpdated); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning cdn locks: "+err.Error()))
 			return
 		}
@@ -87,31 +87,24 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-
 	tx := inf.Tx.Tx
-
-	var cdnLock tc.CdnLock
+	if inf.User == nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("couldn't get user for the current request"))
+	}
+	var cdnLock tc.CDNLock
 	if err := json.NewDecoder(r.Body).Decode(&cdnLock); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+	if cdnLock.CDN == "" {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("field 'cdn' must be present"), nil)
 		return
 	}
 	// by default, always create soft (or shared) locks
 	if cdnLock.Soft == nil {
 		cdnLock.Soft = util.BoolPtr(true)
 	}
-
-	c, err := api.GetConfig(r.Context())
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		return
-	}
-	u, userErr, sysErr, errCode := api.GetUserFromReq(w, r, c.Secrets[0])
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
-	}
-
-	cdnLock.UserName = u.UserName
+	cdnLock.UserName = inf.User.UserName
 	resultRows, err := inf.Tx.NamedQuery(insertQuery, cdnLock)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
@@ -123,7 +116,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.Scan(&cdnLock.UserName, &cdnLock.Cdn, &cdnLock.Message, &cdnLock.Soft, &cdnLock.LastUpdated); err != nil {
+		if err := resultRows.Scan(&cdnLock.UserName, &cdnLock.CDN, &cdnLock.Message, &cdnLock.Soft, &cdnLock.LastUpdated); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("cdn lock create: scanning locks: "+err.Error()))
 			return
 		}
@@ -132,11 +125,10 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("cdn lock create: lock couldn't be acquired"))
 		return
 	}
-
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "CDN lock acquired!")
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, cdnLock)
 
-	changeLogMsg := fmt.Sprintf("USER: %s, CDN: %s, ACTION: Lock Acquired", u.UserName, cdnLock.Cdn)
+	changeLogMsg := fmt.Sprintf("USER: %s, CDN: %s, ACTION: Lock Acquired", inf.User.UserName, cdnLock.CDN)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
@@ -149,35 +141,23 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cdn := inf.Params["cdn"]
-
-	c, err := api.GetConfig(r.Context())
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-		return
-	}
-	u, userErr, sysErr, errCode := api.GetUserFromReq(w, r, c.Secrets[0])
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-
 	tx := inf.Tx.Tx
-	var result tc.CdnLock
-
-	err = inf.Tx.Tx.QueryRow(deleteQuery, cdn, u.UserName).Scan(&result.UserName, &result.Cdn, &result.Message, &result.Soft, &result.LastUpdated)
+	if inf.User == nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("couldn't get user for the current request"))
+	}
+	var result tc.CDNLock
+	err := inf.Tx.Tx.QueryRow(deleteQuery, cdn, inf.User.UserName).Scan(&result.UserName, &result.CDN, &result.Message, &result.Soft, &result.LastUpdated)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New(fmt.Sprintf("deleting cdn lock with cdn name %s: lock not found", cdn)), nil)
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("deleting cdn lock with cdn name %s: lock not found", cdn), nil)
 			return
 		}
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("deleting cdn lock with cdn name %s : %v", cdn, err.Error())))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("deleting cdn lock with cdn name %s : %v", cdn, err.Error()))
 		return
 	}
-
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "cdn lock deleted")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, result)
-
-	changeLogMsg := fmt.Sprintf("USER: %s, CDN: %s, ACTION: Lock Released", u.UserName, cdn)
+	changeLogMsg := fmt.Sprintf("USER: %s, CDN: %s, ACTION: Lock Released", inf.User.UserName, cdn)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
@@ -191,14 +171,14 @@ func AdminDelete(w http.ResponseWriter, r *http.Request) {
 
 	cdn := inf.Params["cdn"]
 	tx := inf.Tx.Tx
-	var result tc.CdnLock
-	err := inf.Tx.Tx.QueryRow(deleteAdminQuery, cdn).Scan(&result.UserName, &result.Cdn, &result.Message, &result.Soft, &result.LastUpdated)
+	var result tc.CDNLock
+	err := inf.Tx.Tx.QueryRow(deleteAdminQuery, cdn).Scan(&result.UserName, &result.CDN, &result.Message, &result.Soft, &result.LastUpdated)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New(fmt.Sprintf("deleting cdn lock with cdn name %s: lock not found", cdn)), nil)
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("deleting cdn lock with cdn name %s: lock not found", cdn), nil)
 			return
 		}
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New(fmt.Sprintf("deleting cdn lock with cdn name %s : %v", cdn, err.Error())))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("deleting cdn lock with cdn name %s : %v", cdn, err.Error()))
 		return
 	}
 

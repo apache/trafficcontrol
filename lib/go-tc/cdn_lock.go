@@ -20,38 +20,29 @@ package tc
  */
 
 import (
-	"database/sql"
-
-	validation "github.com/go-ozzo/ozzo-validation"
-
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"time"
 )
 
-// CdnLock is a struct to store the details of a lock that a user wishes to acquire on a CDN.
-type CdnLock struct {
+// CDNLock is a struct to store the details of a lock that a user wishes to acquire on a CDN.
+type CDNLock struct {
 	UserName    string    `json:"userName" db:"username"`
-	Cdn         string    `json:"cdn" db:"cdn"`
+	CDN         string    `json:"cdn" db:"cdn"`
 	Message     *string   `json:"message" db:"message"`
 	Soft        *bool     `json:"soft" db:"soft"`
-	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
 }
 
+// CdnLockCreateResponse is a struct to store the response of a CREATE operation on a lock.
 type CdnLockCreateResponse struct {
-	Response CdnLock `json:"response"`
+	Response CDNLock `json:"response"`
 	Alerts
 }
 
+// CdnLocksGetResponse is a struct to store the response of a GET operation on locks.
 type CdnLocksGetResponse struct {
-	Response []CdnLock `json:"response"`
+	Response []CDNLock `json:"response"`
 	Alerts
 }
 
+// CdnLockDeleteResponse is a struct to store the response of a DELETE operation on a lock.
 type CdnLockDeleteResponse CdnLockCreateResponse
-
-func (c CdnLock) Validate(tx *sql.Tx) error {
-	errs := validation.Errors{
-		"cdn": validation.Validate(c.Cdn, validation.Required),
-	}
-	return util.JoinErrs(tovalidate.ToErrors(errs))
-}

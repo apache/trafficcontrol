@@ -16,8 +16,6 @@ package client
 */
 
 import (
-	"fmt"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
@@ -29,32 +27,29 @@ const apiCDNLocks = "/cdn_locks"
 const apiAdminCDNLocks = "/cdn_locks/admin"
 
 // CreateCdnLock creates a CDN Lock.
-func (to *Session) CreateCdnLock(cdnLock tc.CdnLock, opts RequestOptions) (tc.CdnLockCreateResponse, toclientlib.ReqInf, error) {
+func (to *Session) CreateCdnLock(cdnLock tc.CDNLock, opts RequestOptions) (tc.CdnLockCreateResponse, toclientlib.ReqInf, error) {
 	var response tc.CdnLockCreateResponse
-	var alerts tc.Alerts
-	reqInf, err := to.post(apiCDNLocks, opts, cdnLock, &alerts)
-	response.Response = cdnLock
-	response.Alerts = alerts
+	reqInf, err := to.post(apiCDNLocks, opts, cdnLock, &response)
 	return response, reqInf, err
 }
 
 // GetCdnLocks retrieves the CDN locks based on the passed in parameters.
 func (to *Session) GetCdnLocks(opts RequestOptions) (tc.CdnLocksGetResponse, toclientlib.ReqInf, error) {
 	var data tc.CdnLocksGetResponse
-	reqInf, err := to.get(fmt.Sprintf(apiCDNLocks), opts, &data)
+	reqInf, err := to.get(apiCDNLocks, opts, &data)
 	return data, reqInf, err
 }
 
 // DeleteCdnLocks deletes the CDN lock of a particular(requesting) user.
 func (to *Session) DeleteCdnLocks(opts RequestOptions) (tc.CdnLockDeleteResponse, toclientlib.ReqInf, error) {
 	var data tc.CdnLockDeleteResponse
-	reqInf, err := to.del(fmt.Sprintf(apiCDNLocks), opts, &data)
+	reqInf, err := to.del(apiCDNLocks, opts, &data)
 	return data, reqInf, err
 }
 
 // AdminDeleteCdnLocks hits the endpoint an admin user would use to delete somebody else's lock.
 func (to *Session) AdminDeleteCdnLocks(opts RequestOptions) (tc.CdnLockDeleteResponse, toclientlib.ReqInf, error) {
 	var data tc.CdnLockDeleteResponse
-	reqInf, err := to.del(fmt.Sprintf(apiAdminCDNLocks), opts, &data)
+	reqInf, err := to.del(apiAdminCDNLocks, opts, &data)
 	return data, reqInf, err
 }

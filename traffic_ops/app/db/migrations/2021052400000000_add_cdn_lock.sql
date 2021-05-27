@@ -11,7 +11,7 @@
 */
 
 -- +goose Up
-CREATE TABLE IF NOT EXISTS cdn_lock (
+CREATE TABLE IF NOT EXISTS public.cdn_lock (
                                         username text NOT NULL,
                                         cdn text NOT NULL,
                                         message text,
@@ -22,9 +22,9 @@ CREATE TABLE IF NOT EXISTS cdn_lock (
     CONSTRAINT fk_lock_username FOREIGN KEY ("username") REFERENCES tm_user(username) ON DELETE CASCADE ON UPDATE CASCADE
     );
 
-DROP TRIGGER IF EXISTS on_update_current_timestamp ON cdn_lock;
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cdn_lock FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
+DROP TRIGGER IF EXISTS on_update_current_timestamp ON public.cdn_lock;
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON public.cdn_lock FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 -- +goose Down
-DROP TRIGGER IF EXISTS on_update_current_timestamp ON cdn_lock;
-DROP TABLE IF EXISTS cdn_lock;
+DROP TRIGGER IF EXISTS on_update_current_timestamp ON public.cdn_lock;
+DROP TABLE IF EXISTS public.cdn_lock;
