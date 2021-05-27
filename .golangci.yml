@@ -29,8 +29,3 @@ linters:
   disable-all: true
   enable:
     - govet
-
-linters-settings:
-  govet:
-    disable:
-      - copylocks
