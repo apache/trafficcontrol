@@ -19,7 +19,14 @@ package tc
  * under the License.
  */
 
-import "database/sql"
+import (
+	"database/sql"
+
+	validation "github.com/go-ozzo/ozzo-validation"
+
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
+)
 
 // CdnLock is a struct to store the details of a lock that a user wishes to acquire on a CDN.
 type CdnLock struct {
@@ -43,5 +50,8 @@ type CdnLocksGetResponse struct {
 type CdnLockDeleteResponse CdnLockCreateResponse
 
 func (c CdnLock) Validate(tx *sql.Tx) error {
-	return nil
+	errs := validation.Errors{
+		"cdn": validation.Validate(c.Cdn, validation.Required),
+	}
+	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
