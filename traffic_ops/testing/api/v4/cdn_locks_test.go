@@ -141,9 +141,9 @@ func AdminCdnLocks(t *testing.T) {
 	cdn := getCDNName(t)
 	// Create a lock for this user
 	_, _, err = userSession.CreateCdnLock(tc.CdnLock{
-		Cdn:         cdn,
-		Message:     util.StrPtr("test lock"),
-		Soft:        util.BoolPtr(true),
+		Cdn:     cdn,
+		Message: util.StrPtr("test lock"),
+		Soft:    util.BoolPtr(true),
 	}, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("couldn't create cdn lock: %v", err.Error())

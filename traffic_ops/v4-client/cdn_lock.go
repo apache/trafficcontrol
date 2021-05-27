@@ -15,7 +15,6 @@ package client
    limitations under the License.
 */
 
-
 import (
 	"fmt"
 
@@ -25,6 +24,7 @@ import (
 
 // apiCDNLocks is the API version-relative path for the /cdn_locks API endpoint.
 const apiCDNLocks = "/cdn_locks"
+
 // apiAdminCDNLocks is the API version-relative path for the /cdn_locks/admin API endpoint.
 const apiAdminCDNLocks = "/cdn_locks/admin"
 
