@@ -47,8 +47,8 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cols := map[string]dbhelpers.WhereColumnInfo{
-		"cdn":      {"cdn_lock.cdn", nil},
-		"username": {"cdn_lock.username", nil},
+		"cdn":      {Column: "cdn_lock.cdn", Checker: nil},
+		"username": {Column: "cdn_lock.username", Checker: nil},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
