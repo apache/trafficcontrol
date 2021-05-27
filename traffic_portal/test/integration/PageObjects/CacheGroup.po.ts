@@ -37,7 +37,6 @@ interface UpdateCacheGroup {
     Type: string;
     FailoverCG?: string;
 }
-
 export class CacheGroupPage extends BasePage {
     private btnCreateCacheGroups = element(by.name('createCacheGroupButton'));
     private txtName = element(by.name("name"))
@@ -52,7 +51,7 @@ export class CacheGroupPage extends BasePage {
     private txtConfirmCacheGroupName = element(by.name("confirmWithNameInput"));
     private btnDelete = element(by.buttonText('Delete'));
     private randomize = randomize;
-
+    private btnTableColumn = element(by.className("caret"))
     async OpenTopologyMenu() {
         let snp = new SideNavigationPage();
         await snp.ClickTopologyMenu();
@@ -117,16 +116,15 @@ export class CacheGroupPage extends BasePage {
         if (cachegroup.Type == "EDGE_LOC") {
             const name = cachegroup.FailoverCG + this.randomize;
             await this.txtFailoverCG.click();
-            if(await browser.isElementPresent(element(by.xpath(`//select[@name="fallbackOptions"]//option[@label="`+ name + `"]`)))){
-                await element(by.xpath(`//select[@name="fallbackOptions"]//option[@label="`+ name + `"]`)).click();
-            }else{
+            if (await browser.isElementPresent(element(by.css(`select[name="fallbackOptions"] > option[label="${name}"]`)))) {
+                await element(by.css(`select[name="fallbackOptions"] > option[label="${name}"]`)).click();
+            } else {
                 result = undefined;
             }
         }
         await this.txtType.sendKeys(cachegroup.Type);
         await snp.ClickUpdate();
-        if(result != undefined)
-        {
+        if (result !== undefined) {
             await basePage.GetOutputMessage().then(function (value) {
                 if (outputMessage === value) {
                     result = true;
@@ -137,7 +135,7 @@ export class CacheGroupPage extends BasePage {
         }
         return result;
     }
-    async DeleteCacheGroups(nameCG: string, outputMessage: string) {
+    public async DeleteCacheGroups(nameCG: string, outputMessage: string) {
         let result = false;
         let basePage = new BasePage();
         let snp = new SideNavigationPage();
@@ -158,7 +156,14 @@ export class CacheGroupPage extends BasePage {
         await snp.NavigateToCacheGroupsPage();
         return result;
     }
-
-
-
+    public async CheckCSV(name: string): Promise<boolean> {
+        return element(by.cssContainingText("span", name)).isPresent();
+    }
+    public async ToggleTableColumn(name: string): Promise<boolean> {
+        await this.btnTableColumn.click();
+        const result = await element(by.cssContainingText("th", name)).isPresent();
+        await element(by.cssContainingText("label", name)).click();
+        await this.btnTableColumn.click();
+        return !result;
+    }
 }
