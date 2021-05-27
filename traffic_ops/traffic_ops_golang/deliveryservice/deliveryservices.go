@@ -339,7 +339,7 @@ ON CONFLICT DO NOTHING
 
 func recreateTLSVersions(versions []string, dsid int, tx *sql.Tx) error {
 	err := tx.QueryRow(`DELETE FROM public.deliveryservice_tls_version WHERE deliveryservice = $1`, dsid).Scan()
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("cleaning up existing TLS version for DS #%d: %w", dsid, err)
 	}
 
