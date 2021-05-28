@@ -207,7 +207,7 @@ func getATSMajorVersionFromATSVersion(atsVersion string) (int, error) {
 
 	majorVer, err := strconv.ParseUint(majorVerStr, 10, 64)
 	if err != nil {
-		return 0, errors.New("unexpected version format, expected e.g. '7.1.2.whatever'")
+		return 0, errors.New("unexpected version format '" + majorVerStr + "', expected e.g. '7.1.2.whatever'")
 	}
 	return int(majorVer), nil
 }
