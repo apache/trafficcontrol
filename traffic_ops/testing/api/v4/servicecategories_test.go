@@ -133,7 +133,7 @@ func CreateTestServiceCategoriesInvalidName(t *testing.T) {
 	firstServiceCategory.Name = ""
 	resp, reqInf, err := TOSession.CreateServiceCategory(firstServiceCategory, client.RequestOptions{})
 	if err == nil {
-		t.Errorf("Expected service_category name already exists. but got: %v - alerts: %+v", err, resp.Alerts)
+		t.Errorf("Expected 'name' cannot be blanks. but got: %v - alerts: %+v", err, resp.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
@@ -311,7 +311,7 @@ func VerifyPaginationSupportServiceCategories(t *testing.T) {
 			t.Error("expected GET Service Categories with limit = 1 to return first result")
 		}
 	} else {
-		t.Error("Error in getting Service Categories by limit")
+		t.Errorf("Error in getting Service Categories by limit %v", err)
 	}
 
 	opts.QueryParameters = url.Values{}
@@ -324,7 +324,7 @@ func VerifyPaginationSupportServiceCategories(t *testing.T) {
 			t.Error("expected GET Service Categories with limit = 1, offset = 1 to return second result")
 		}
 	} else {
-		t.Error("Error in getting Service Categories by limit and offset")
+		t.Errorf("Error in getting Service Categories by limit and offset %v", err)
 	}
 
 	opts.QueryParameters = url.Values{}
@@ -337,7 +337,7 @@ func VerifyPaginationSupportServiceCategories(t *testing.T) {
 			t.Error("expected GET Service Categories with limit = 1, page = 2 to return second result")
 		}
 	} else {
-		t.Error("Error in getting Service Categories by limit and page")
+		t.Errorf("Error in getting Service Categories by limit and page %v", err)
 	}
 
 	opts.QueryParameters = url.Values{}
