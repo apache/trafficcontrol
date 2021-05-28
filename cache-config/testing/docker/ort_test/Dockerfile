@@ -43,7 +43,6 @@ RUN sed -i 's/HOME\/bin/HOME\/bin:\/usr\/local\/go\/bin:/g' /root/.bash_profile
 RUN echo "GOPATH=/root/go; export GOPATH" >> /root/.bash_profile
 RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 RUN mkdir /root/go
-RUN mkdir -p /var/lib/trafficcontrol-cache-config/status
 
 EXPOSE 80 443
 ADD ort_test/run.sh /
