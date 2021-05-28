@@ -17,6 +17,8 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
+	"reflect"
 	"strconv"
 	"testing"
 	"time"
@@ -30,6 +32,7 @@ func TestCacheGroupParameters(t *testing.T) {
 	WithObjs(t, []TCObj{Types, Parameters, CacheGroups, CacheGroupParameters}, func() {
 		GetTestCacheGroupParameters(t)
 		GetTestCacheGroupParametersIMS(t)
+		GetTestPaginationSupportCgParameters(t)
 	})
 }
 
@@ -153,5 +156,79 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterReque
 	_, _, err = TOSession.DeleteCacheGroupParameter(cgp.CacheGroupID, -1, client.RequestOptions{})
 	if err == nil {
 		t.Error("expected error when deleting cache group parameter with non existing parameter")
+	}
+}
+
+func GetTestPaginationSupportCgParameters(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetAllCacheGroupParameters(opts)
+	t.Errorf("cachegroup parameters resp %v", resp)
+	if err != nil {
+		t.Fatalf("cannot get cachegroup parameters: %v - alerts: %+v", err, resp.Alerts)
+	}
+	cachegroup := resp.Response
+	t.Errorf("Cachegroup parameters resp.Response %v", cachegroup)
+	if len(cachegroup.CacheGroupParameters) < 3 {
+		t.Fatalf("Need at least 3 cachegroup parameters in Traffic Ops to test pagination support, found: %d", len(cachegroup.CacheGroupParameters))
+	}
+
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	cachegroupParametersWithLimit, _, err := TOSession.GetAllCacheGroupParameters(opts)
+	t.Errorf("cachegroupParametersWithLimit %v", cachegroupParametersWithLimit)
+	if !reflect.DeepEqual(cachegroup.CacheGroupParameters[:1], cachegroupParametersWithLimit.Response) {
+		t.Error("expected GET cachegroup parameters with limit = 1 to return first result")
+	}
+
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "1")
+	cachegroupsParametersWithOffset, _, err := TOSession.GetAllCacheGroupParameters(opts)
+	t.Errorf("cachegroupsParametersWithOffset %v", cachegroupsParametersWithOffset)
+	if !reflect.DeepEqual(cachegroup.CacheGroupParameters[1:2], cachegroupsParametersWithOffset.Response) {
+		t.Error("expected GET cachegroup parameters with limit = 1, offset = 1 to return second result")
+	}
+
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "2")
+	cachegroupParametersWithPage, _, err := TOSession.GetAllCacheGroupParameters(opts)
+	t.Errorf("cachegroupParametersWithPage %v", cachegroupParametersWithPage)
+	if !reflect.DeepEqual(cachegroup.CacheGroupParameters[1:2], cachegroupParametersWithPage.Response) {
+		t.Error("expected GET cachegroup parameters with limit = 1, page = 2 to return second result")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, _, err = TOSession.GetAllCacheGroupParameters(opts)
+	t.Errorf("Limit -2 %v", resp)
+	if err == nil {
+		t.Error("expected GET cachegroup parameters to return an error when limit is not bigger than -1")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
+		t.Errorf("expected GET cachegroup parameters to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, _, err = TOSession.GetAllCacheGroupParameters(opts)
+	t.Errorf("Limit 1 offset 0 %v", resp)
+
+	if err == nil {
+		t.Error("expected GET cachegroup parameters to return an error when offset is not a positive integer")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET cachegroup parameters to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, _, err = TOSession.GetAllCacheGroupParameters(opts)
+	t.Errorf("Limit 1 page 0 %v", resp)
+
+	if err == nil {
+		t.Error("expected GET cachegroup parameters to return an error when page is not a positive integer")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET cachegroup parameters to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
