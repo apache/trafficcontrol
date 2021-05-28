@@ -125,6 +125,7 @@ type FakeSystem struct {
 	LastReload           uint64          `json:"lastReload"`
 	AstatsLoad           uint64          `json:"astatsLoad"`
 	Something            string          `json:"something"`
+	Version              string          `json:"application_version"`
 }
 
 type FakeProcLoadAvg struct {

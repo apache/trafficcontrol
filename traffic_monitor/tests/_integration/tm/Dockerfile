@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,4 +14,19 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-go build -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%S'`"
+
+# This is a very simple Dockerfile.
+# All it does is install and start the Traffic Monitor, given a Traffic Ops to point it to.
+# It doesn't do any of the complex things the Dockerfiles in infrastructure/docker or infrastructure/cdn-in-a-box do, like inserting itself into Traffic Ops.
+# It is designed for a very simple use case, where the complex orchestration of other Traffic Control components is done elsewhere (or manually).
+
+FROM centos:8
+MAINTAINER dev@trafficcontrol.apache.org
+
+ARG RPM=traffic_monitor.rpm
+ADD $RPM /
+
+RUN yum install -y initscripts jq /$(basename $RPM) && rm /$(basename $RPM)
+
+ADD Dockerfile_run.sh /
+ENTRYPOINT /Dockerfile_run.sh

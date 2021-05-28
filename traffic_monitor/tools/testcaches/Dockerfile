@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,4 +14,16 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-go build -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%S'`"
+
+FROM centos:8
+MAINTAINER dev@trafficcontrol.apache.org
+
+RUN dnf -y install golang git
+ENV GOPATH=/go
+
+RUN go get -u github.com/apache/trafficcontrol/lib/go-rfc
+ADD .   ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/
+WORKDIR ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches
+RUN go build && cp testcaches /usr/sbin/
+
+CMD ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/Dockerfile_run.sh

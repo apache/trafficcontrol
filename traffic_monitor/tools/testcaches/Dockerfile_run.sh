@@ -15,4 +15,25 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-go build -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%S'`"
+
+start() {
+  ARGS=
+  if [[ -n "${NUM_PORTS}" ]]; then
+    ARGS="$ARGS -numPorts ${NUM_PORTS}"
+  fi
+  if [[ -n "${NUM_REMAPS}" ]]; then
+    ARGS="$ARGS -numRemaps ${NUM_REMAPS}"
+  fi
+  if [[ -n "${PORT_START}" ]]; then
+    ARGS="$ARGS -portStart ${PORT_START}"
+  fi
+  testcaches ${ARGS}
+}
+
+init() {
+  echo "INITIALIZED=1" >>/etc/environment
+}
+
+source /etc/environment
+if [ -z "$INITIALIZED" ]; then init; fi
+start
