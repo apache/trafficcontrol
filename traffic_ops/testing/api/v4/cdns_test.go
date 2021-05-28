@@ -379,7 +379,7 @@ func GetTestCDNsbyDomainName(t *testing.T) {
 	}
 
 	opts := client.NewRequestOptions()
-	cdn := testData.CDNs[1]
+	cdn := testData.CDNs[0]
 	opts.QueryParameters.Set("domainName", cdn.DomainName)
 	cdns, reqInf, err := TOSession.GetCDNs(opts)
 	if len(cdns.Response) != 1 {
