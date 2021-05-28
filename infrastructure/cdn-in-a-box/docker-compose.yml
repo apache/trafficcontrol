@@ -183,7 +183,6 @@ services:
 
   # edge cache
   edge:
-    privileged: True
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
@@ -192,6 +191,8 @@ services:
         RHEL_VERSION: ${RHEL_VERSION:-8}
         ORT_RPM: infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
     domainname: infra.ciab.test
+    environment:
+      DEBUG_PORT: '2347'
     env_file:
       - variables.env
     hostname: edge
@@ -200,7 +201,6 @@ services:
 
   # mid cache 1
   mid-01:
-    privileged: True
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
@@ -209,6 +209,8 @@ services:
         RHEL_VERSION: ${RHEL_VERSION:-8}
         ORT_RPM: infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
     domainname: infra.ciab.test
+    environment:
+      DEBUG_PORT: '2348'
     env_file:
       - variables.env
     hostname: mid-01
@@ -217,7 +219,6 @@ services:
 
   # mid cache 2
   mid-02:
-    privileged: True
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
@@ -226,6 +227,8 @@ services:
         RHEL_VERSION: ${RHEL_VERSION:-8}
         ORT_RPM: infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
     domainname: infra.ciab.test
+    environment:
+      DEBUG_PORT: '2349'
     env_file:
       - variables.env
     hostname: mid-02
