@@ -877,7 +877,7 @@ func GetTestCacheGroupsByType(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cannot get Cache Group '%s': %v - alerts: %+v", *firstCG.Name, err, resp.Alerts)
 	}
-	if len(resp.Response) < 1 {
+	if len(resp.Response) != 1 {
 		t.Fatalf("Expected exactly one Cache Group to exist with name '%s', but got: %d", *firstCG.Name, len(resp.Response))
 	}
 
