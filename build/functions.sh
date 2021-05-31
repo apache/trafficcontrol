@@ -239,6 +239,7 @@ buildRpm() {
 				--define "commit $(getCommit)" \
 				--define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
 				--define "_target_os $RPM_TARGET_OS" \
+				--define "${RHEL_VERSION} 1" \
 				 -ba SPECS/$package.spec \
 				"$@" # variable number of arguments
 				) || \
