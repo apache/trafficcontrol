@@ -57,10 +57,3 @@ type CacheGroupParameterNullable struct {
 	Secure      *bool      `json:"secure" db:"secure"`
 	Value       *string    `json:"value" db:"value"`
 }
-
-// CacheGroupParameterCreationRequest is the type of data accepted by Traffic
-// Ops as payloads in POST requests to its /cachegroupparameters endpoint.
-type CacheGroupParameterCreationRequest struct {
-	ParameterID  int `json:"parameterId"`
-	CacheGroupID int `json:"cachegroupId"`
-}

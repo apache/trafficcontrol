@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"sort"
 	"strconv"
 	"testing"
 	"time"
@@ -34,6 +35,8 @@ func TestCacheGroupParameters(t *testing.T) {
 		GetTestCacheGroupParametersIMS(t)
 		CreateTestCacheGroupParametersMulAssignments(t)
 		GetTestPaginationSupportCgParameters(t)
+		SortTestCacheGroupParameters(t)
+		SortTestCacheGroupParametersDesc(t)
 	})
 }
 
@@ -146,16 +149,16 @@ func CreateTestCacheGroupParametersMulAssignments(t *testing.T) {
 
 	parameterID1 := paramResp1.Response[0].ID
 	parameterID2 := paramResp2.Response[0].ID
-	pp := tc.CacheGroupParameterCreationRequest{
+	pp := tc.CacheGroupParameterRequest{
 		CacheGroupID: *cacheGroupID1,
 		ParameterID:  parameterID1,
 	}
-	pp2 := tc.CacheGroupParameterCreationRequest{
+	pp2 := tc.CacheGroupParameterRequest{
 		CacheGroupID: *cacheGroupID2,
 		ParameterID:  parameterID2,
 	}
 
-	ppSlice := []tc.CacheGroupParameterCreationRequest{
+	ppSlice := []tc.CacheGroupParameterRequest{
 		pp,
 		pp2,
 	}
@@ -313,5 +316,62 @@ func GetTestPaginationSupportCgParameters(t *testing.T) {
 	resp, _, err = TOSession.GetAllCacheGroupParameters(opts)
 	if !alertsHaveError(resp.Alerts.Alerts, "page parameter must be a positive integer") {
 		t.Errorf("expected GET cachegroup parameters to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+}
+
+func SortTestCacheGroupParameters(t *testing.T) {
+	resp, _, err := TOSession.GetAllCacheGroupParameters(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
+	}
+	cachegroupParameters := resp.Response
+	sortedList := make([]string, 0, len(cachegroupParameters.CacheGroupParameters))
+	for _, cgparameters := range cachegroupParameters.CacheGroupParameters {
+		sortedList = append(sortedList, strconv.Itoa(*cgparameters.Parameter))
+	}
+
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if !res {
+		t.Errorf("list is not sorted by their ID: %v", sortedList)
+	}
+}
+
+func SortTestCacheGroupParametersDesc(t *testing.T) {
+	resp, _, err := TOSession.GetAllCacheGroupParameters(client.RequestOptions{})
+	if err != nil {
+		t.Errorf("Expected no error, but got error in CacheGroup Parameters with default ordering: %v - alerts: %+v", err, resp.Alerts)
+	}
+	cachegroupParameters := resp.Response
+	respAsc := cachegroupParameters.CacheGroupParameters
+	if len(respAsc) < 1 {
+		t.Fatal("Need at least one CacheGroup Parameters in Traffic Ops to test CacheGroup Parameters sort ordering")
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("sortOrder", "desc")
+	resp, _, err = TOSession.GetAllCacheGroupParameters(opts)
+	if err != nil {
+		t.Errorf("Expected no error, but got error in CacheGroup Parameters with Descending ordering: %v - alerts: %+v", err, resp.Alerts)
+	}
+	cachegroupParameters = resp.Response
+	respDesc := cachegroupParameters.CacheGroupParameters
+	if len(respDesc) < 1 {
+		t.Fatal("Need at least one CacheGroup Parameters in Traffic Ops to test CacheGroup Parameters sort ordering")
+	}
+
+	if len(respAsc) != len(respDesc) {
+		t.Fatalf("Traffic Ops returned %d CacheGroup Parameters using default sort order, but %d CacheGroup Parameters when sort order was explicitly set to descending", len(respAsc), len(respDesc))
+	}
+
+	// reverse the descending-sorted response and compare it to the ascending-sorted one
+	// TODO ensure at least two in each slice? A list of length one is
+	// trivially sorted both ascending and descending.
+	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
+	}
+	if *respDesc[0].Parameter != *respAsc[0].Parameter {
+		t.Errorf("CacheGroup Parameters responses are not equal after reversal: Asc: %v - Desc: %v", *respDesc[0].Parameter, *respAsc[0].Parameter)
 	}
 }

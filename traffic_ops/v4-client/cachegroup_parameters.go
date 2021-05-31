@@ -60,7 +60,7 @@ func (to *Session) CreateCacheGroupParameter(cacheGroupID, parameterID int, opts
 }
 
 // CreateCacheGroupParameter associates a Parameter with a Cache Group.
-func (to *Session) CreateMultipleCacheGroupParameter(pps []tc.CacheGroupParameterCreationRequest, opts RequestOptions) (tc.CacheGroupParametersPostResponse, toclientlib.ReqInf, error) {
+func (to *Session) CreateMultipleCacheGroupParameter(pps []tc.CacheGroupParameterRequest, opts RequestOptions) (tc.CacheGroupParametersPostResponse, toclientlib.ReqInf, error) {
 	var data tc.CacheGroupParametersPostResponse
 	reqInf, err := to.post(apiCachegroupParameters, opts, pps, &data)
 	return data, reqInf, err
