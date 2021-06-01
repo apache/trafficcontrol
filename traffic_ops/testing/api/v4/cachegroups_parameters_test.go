@@ -37,6 +37,8 @@ func TestCacheGroupParameters(t *testing.T) {
 		GetTestPaginationSupportCgParameters(t)
 		SortTestCacheGroupParameters(t)
 		SortTestCacheGroupParametersDesc(t)
+		CreateTestCacheGroupParametersAlreadyExist(t)
+		CreateTestCacheGroupParametersWithInvalidData(t)
 	})
 }
 
@@ -84,6 +86,28 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 		t.Fatal("Cache Group Parameter response should not be nil")
 	}
 	testData.CacheGroupParameterRequests = append(testData.CacheGroupParameterRequests, resp.Response...)
+}
+
+func CreateTestCacheGroupParametersAlreadyExist(t *testing.T) {
+
+	resp, _, err := TOSession.GetAllCacheGroupParameters(client.RequestOptions{})
+	cachegroupParameters := resp.Response
+	getAllcgparameters := cachegroupParameters.CacheGroupParameters
+	parameterID := *getAllcgparameters[0].Parameter
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", *getAllcgparameters[0].CacheGroup)
+
+	cgResponse, reqInf, err := TOSession.GetCacheGroups(opts)
+	cg := cgResponse.Response[0]
+	cacheGroupID := cg.ID
+	cgparameters, reqInf, err := TOSession.CreateCacheGroupParameter(*cacheGroupID, parameterID, client.RequestOptions{})
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("Expected Parameter already associated with cachegroup %v - Alerts %v", cgparameters, cgparameters.Alerts)
+	}
 }
 
 func CreateTestCacheGroupParametersMulAssignments(t *testing.T) {
@@ -373,5 +397,15 @@ func SortTestCacheGroupParametersDesc(t *testing.T) {
 	}
 	if *respDesc[0].Parameter != *respAsc[0].Parameter {
 		t.Errorf("CacheGroup Parameters responses are not equal after reversal: Asc: %v - Desc: %v", *respDesc[0].Parameter, *respAsc[0].Parameter)
+	}
+}
+
+func CreateTestCacheGroupParametersWithInvalidData(t *testing.T) {
+	cgparameters, reqInf, err := TOSession.CreateCacheGroupParameter(1000, 1000, client.RequestOptions{})
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected 404 status code, got %v", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("Expected cachegroup not found, but found Alerts %v", cgparameters.Alerts)
 	}
 }
