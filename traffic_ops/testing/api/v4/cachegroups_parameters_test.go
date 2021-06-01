@@ -39,6 +39,7 @@ func TestCacheGroupParameters(t *testing.T) {
 		SortTestCacheGroupParametersDesc(t)
 		CreateTestCacheGroupParametersAlreadyExist(t)
 		CreateTestCacheGroupParametersWithInvalidData(t)
+		GetTestCacheGroupParametersByInvalidData(t)
 	})
 }
 
@@ -401,11 +402,48 @@ func SortTestCacheGroupParametersDesc(t *testing.T) {
 }
 
 func CreateTestCacheGroupParametersWithInvalidData(t *testing.T) {
-	cgparameters, reqInf, err := TOSession.CreateCacheGroupParameter(1000, 1000, client.RequestOptions{})
+	resp, _, err := TOSession.GetParameters(client.RequestOptions{})
+	parametersResp := resp.Response[0]
+	parameterID := parametersResp.ID
+	//Create CacheGroupParameters with Invalid Cachegroup ID
+	cgparameters, reqInf, err := TOSession.CreateCacheGroupParameter(0, parameterID, client.RequestOptions{})
 	if reqInf.StatusCode != http.StatusNotFound {
 		t.Errorf("Expected 404 status code, got %v", reqInf.StatusCode)
 	}
 	if err == nil {
 		t.Errorf("Expected cachegroup not found, but found Alerts %v", cgparameters.Alerts)
+	}
+
+	cgresp, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
+	cachegroupResp := cgresp.Response[0]
+	cachegroupID := cachegroupResp.ID
+
+	//Create CacheGroupParameters with Invalid Parameter ID
+	cgparametersresp, reqInf, err := TOSession.CreateCacheGroupParameter(*cachegroupID, 0, client.RequestOptions{})
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected 404 status code, got %v", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("Expected parameter not found, but found Alerts %v", cgparametersresp.Alerts)
+	}
+}
+
+func GetTestCacheGroupParametersByInvalidData(t *testing.T) {
+
+	//Get Cachegroup parameter by Cachegroup id
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("cachegroup", "0")
+	resp, _, _ := TOSession.GetAllCacheGroupParameters(opts)
+	cachegroupparameters := resp.Response
+	if len(cachegroupparameters.CacheGroupParameters) > 0 {
+		t.Errorf("Expected No response for the invalid cachegroup id, but found %d responses", len(cachegroupparameters.CacheGroupParameters))
+	}
+	//Get Cachegroup parameter by Parameter id
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("parameter", "0")
+	resp, _, _ = TOSession.GetAllCacheGroupParameters(opts)
+	cachegroupparameters = resp.Response
+	if len(cachegroupparameters.CacheGroupParameters) > 0 {
+		t.Errorf("Expected No response for the invalid parameter id, but found %d responses", len(cachegroupparameters.CacheGroupParameters))
 	}
 }
