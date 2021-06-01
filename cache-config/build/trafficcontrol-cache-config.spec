@@ -185,6 +185,8 @@ t3c_preprocess_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-preprocess
 cp -p "$t3c_preprocess_src"/t3c-preprocess ${RPM_BUILD_ROOT}/"$installdir"
 gzip -c -9 "$src"/t3c-preprocess/t3c-preprocess.1 > ${RPM_BUILD_ROOT}/"$mandir"/"$man1dir"/t3c-preprocess.1.gz
 
+mkdir -p ${RPM_BUILD_ROOT}/var/lib/trafficcontrol-cache-config
+
 ls ${RPM_BUILD_ROOT}/"$mandir"/"$man1dir"/
 
 %clean
@@ -237,6 +239,8 @@ fi
 /usr/share/man/man1/t3c-preprocess.1.gz
 /usr/share/man/man1/t3c-request.1.gz
 /usr/share/man/man1/t3c-update.1.gz
+
+%dir /var/lib/trafficcontrol-cache-config
 
 %config(noreplace) /etc/logrotate.d/atstccfg
 %config(noreplace) /var/log/trafficcontrol-cache-config/atstccfg.log
