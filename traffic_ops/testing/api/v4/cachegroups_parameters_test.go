@@ -92,23 +92,33 @@ func CreateTestCacheGroupParameters(t *testing.T) {
 
 func CreateTestCacheGroupParametersAlreadyExist(t *testing.T) {
 
-	resp, _, err := TOSession.GetAllCacheGroupParameters(client.RequestOptions{})
+	resp, _, _ := TOSession.GetAllCacheGroupParameters(client.RequestOptions{})
 	cachegroupParameters := resp.Response
 	getAllcgparameters := cachegroupParameters.CacheGroupParameters
+	if len(getAllcgparameters) < 1 {
+		t.Fatalf("No existing cachegroup parameters available to test duplicate functionality")
+	}
 	parameterID := *getAllcgparameters[0].Parameter
 
+	//Get cachegroup id from cachegroup name
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", *getAllcgparameters[0].CacheGroup)
 
-	cgResponse, reqInf, err := TOSession.GetCacheGroups(opts)
-	cg := cgResponse.Response[0]
-	cacheGroupID := cg.ID
-	cgparameters, reqInf, err := TOSession.CreateCacheGroupParameter(*cacheGroupID, parameterID, client.RequestOptions{})
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	cgResponse, _, _ := TOSession.GetCacheGroups(opts)
+	if len(cgResponse.Response) < 1 {
+		t.Fatalf("No data available for GetCacheGroups by Name - Length %d", len(cgResponse.Response))
 	}
-	if err == nil {
-		t.Errorf("Expected Parameter already associated with cachegroup %v - Alerts %v", cgparameters, cgparameters.Alerts)
+	cacheGroupID := cgResponse.Response[0].ID
+	if parameterID != 0 && *cacheGroupID != 0 {
+		cgparameters, reqInf, err := TOSession.CreateCacheGroupParameter(*cacheGroupID, parameterID, client.RequestOptions{})
+		if reqInf.StatusCode != http.StatusBadRequest {
+			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+		}
+		if err == nil {
+			t.Errorf("Expected Parameter - %d already associated with cachegroup %d - Alerts %v", parameterID, cacheGroupID, cgparameters.Alerts)
+		}
+	} else {
+		t.Errorf("Nil value found in one of the values. Cachegroup ID %d, Parameter ID %d", cacheGroupID, parameterID)
 	}
 }
 
@@ -353,7 +363,9 @@ func SortTestCacheGroupParameters(t *testing.T) {
 	cachegroupParameters := resp.Response
 	sortedList := make([]string, 0, len(cachegroupParameters.CacheGroupParameters))
 	for _, cgparameters := range cachegroupParameters.CacheGroupParameters {
-		sortedList = append(sortedList, strconv.Itoa(*cgparameters.Parameter))
+		if cgparameters.Parameter != nil {
+			sortedList = append(sortedList, strconv.Itoa(*cgparameters.Parameter))
+		}
 	}
 
 	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
@@ -397,35 +409,53 @@ func SortTestCacheGroupParametersDesc(t *testing.T) {
 	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
 		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
 	}
-	if *respDesc[0].Parameter != *respAsc[0].Parameter {
-		t.Errorf("CacheGroup Parameters responses are not equal after reversal: Asc: %v - Desc: %v", *respDesc[0].Parameter, *respAsc[0].Parameter)
+	if *respDesc[0].Parameter != 0 && *respAsc[0].Parameter != 0 {
+		if *respDesc[0].Parameter != *respAsc[0].Parameter {
+			t.Errorf("CacheGroup Parameters responses are not equal after reversal: Asc: %v - Desc: %v", *respDesc[0].Parameter, *respAsc[0].Parameter)
+		}
+	} else {
+		t.Errorf("Parameter ID shouldn't be empty while sorting the response")
 	}
 }
 
 func CreateTestCacheGroupParametersWithInvalidData(t *testing.T) {
-	resp, _, err := TOSession.GetParameters(client.RequestOptions{})
-	parametersResp := resp.Response[0]
-	parameterID := parametersResp.ID
-	//Create CacheGroupParameters with Invalid Cachegroup ID
-	cgparameters, reqInf, err := TOSession.CreateCacheGroupParameter(0, parameterID, client.RequestOptions{})
-	if reqInf.StatusCode != http.StatusNotFound {
-		t.Errorf("Expected 404 status code, got %v", reqInf.StatusCode)
+	parameterresp, _, err := TOSession.GetParameters(client.RequestOptions{})
+	if len(parameterresp.Response) < 1 {
+		t.Fatal("Need at least one parameters to test invalid parameters functionality")
 	}
-	if err == nil {
-		t.Errorf("Expected cachegroup not found, but found Alerts %v", cgparameters.Alerts)
+	if err != nil {
+		t.Fatalf("Error in fetching get parameters %v", err)
 	}
-
 	cgresp, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
-	cachegroupResp := cgresp.Response[0]
-	cachegroupID := cachegroupResp.ID
-
-	//Create CacheGroupParameters with Invalid Parameter ID
-	cgparametersresp, reqInf, err := TOSession.CreateCacheGroupParameter(*cachegroupID, 0, client.RequestOptions{})
-	if reqInf.StatusCode != http.StatusNotFound {
-		t.Errorf("Expected 404 status code, got %v", reqInf.StatusCode)
+	if len(cgresp.Response) < 1 {
+		t.Fatal("Need at least one cachegroups to test invalid Cache Groups functionality")
 	}
-	if err == nil {
-		t.Errorf("Expected parameter not found, but found Alerts %v", cgparametersresp.Alerts)
+	if err != nil {
+		t.Fatalf("Error in fetching get Cachegroups %v", err)
+	}
+
+	if parameterresp.Response[0].ID != 0 && *cgresp.Response[0].ID != 0 {
+		parameterID := parameterresp.Response[0].ID
+		//Create CacheGroupParameters with Invalid Cachegroup ID
+		cgparametersresp, reqInf, err := TOSession.CreateCacheGroupParameter(0, parameterID, client.RequestOptions{})
+		if reqInf.StatusCode != http.StatusNotFound {
+			t.Errorf("Expected 404 status code, got %v", reqInf.StatusCode)
+		}
+		if err == nil {
+			t.Errorf("Expected cachegroup not found, but found Alerts %v", cgparametersresp.Alerts)
+		}
+
+		cachegroupID := cgresp.Response[0].ID
+		//Create CacheGroupParameters with Invalid Parameter ID
+		cgparametersresp, reqInf, err = TOSession.CreateCacheGroupParameter(*cachegroupID, 0, client.RequestOptions{})
+		if reqInf.StatusCode != http.StatusNotFound {
+			t.Errorf("Expected 404 status code, got %v", reqInf.StatusCode)
+		}
+		if err == nil {
+			t.Errorf("Expected parameter not found, but found Alerts %v", cgparametersresp.Alerts)
+		}
+	} else {
+		t.Errorf("Parameter/Cachegroup ID is null - Parameter ID - %d, Cachegroup ID - %d", parameterresp.Response[0].ID, *cgresp.Response[0].ID)
 	}
 }
 
@@ -450,25 +480,30 @@ func GetTestCacheGroupParametersByInvalidData(t *testing.T) {
 }
 
 func GetTestCacheGroupParameter(t *testing.T) {
-	firstData := testData.CacheGroupParameterRequests[0]
-	cacheGroupID := firstData.CacheGroupID
-	parameterID := firstData.ParameterID
-
-	//Get Cachegroup parameter by Cachegroup id
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("cachegroup", strconv.Itoa(cacheGroupID))
-	resp, _, _ := TOSession.GetAllCacheGroupParameters(opts)
-	cachegroupparameters := resp.Response
-	if len(cachegroupparameters.CacheGroupParameters) < 1 {
-		t.Errorf("Expected atleast cachegroup id, but found no responses %d", len(cachegroupparameters.CacheGroupParameters))
+	if len(testData.CacheGroupParameterRequests) < 1 {
+		t.Fatal("Need at least one Cachegroup Parameter request to test get cache group parameter")
 	}
+	firstData := testData.CacheGroupParameterRequests[0]
+	if firstData.CacheGroupID != 0 && firstData.ParameterID != 0 {
+		cacheGroupID := firstData.CacheGroupID
+		parameterID := firstData.ParameterID
 
-	//Get Cachegroup parameter by Parameter id
-	opts = client.NewRequestOptions()
-	opts.QueryParameters.Set("parameter", strconv.Itoa(parameterID))
-	resp, _, _ = TOSession.GetAllCacheGroupParameters(opts)
-	cachegroupparameters = resp.Response
-	if len(cachegroupparameters.CacheGroupParameters) < 1 {
-		t.Errorf("Expected atleast parameter id, but found no responses %d", len(cachegroupparameters.CacheGroupParameters))
+		//Get Cachegroup parameter by Cachegroup id
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("cachegroup", strconv.Itoa(cacheGroupID))
+		resp, _, _ := TOSession.GetAllCacheGroupParameters(opts)
+		cachegroupparameters := resp.Response
+		if len(cachegroupparameters.CacheGroupParameters) < 1 {
+			t.Errorf("Expected atleast cachegroup id, but found no responses %d", len(cachegroupparameters.CacheGroupParameters))
+		}
+
+		//Get Cachegroup parameter by Parameter id
+		opts = client.NewRequestOptions()
+		opts.QueryParameters.Set("parameter", strconv.Itoa(parameterID))
+		resp, _, _ = TOSession.GetAllCacheGroupParameters(opts)
+		cachegroupparameters = resp.Response
+		if len(cachegroupparameters.CacheGroupParameters) < 1 {
+			t.Errorf("Expected atleast parameter id, but found no responses %d", len(cachegroupparameters.CacheGroupParameters))
+		}
 	}
 }
