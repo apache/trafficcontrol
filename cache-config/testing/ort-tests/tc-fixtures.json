@@ -879,9 +879,9 @@
       "xmlId": "ds-top",
       "anonymousBlockingEnabled": false,
       "topology": "mso-topology",
-      "firstHeaderRewrite": "first header rewrite",
-      "innerHeaderRewrite": "inner header rewrite",
-      "lastHeaderRewrite": "last header rewrite"
+      "firstHeaderRewrite": "cond %{REMAP_PSEUDO_HOOK}__RETURN__set-header CDN-SVCF \"firstHeaderRewrite\" [L]",
+      "innerHeaderRewrite": "cond %{REMAP_PSEUDO_HOOK}__RETURN__set-header CDN-SVCI \"innerHeaderRewrite\" [L]",
+      "lastHeaderRewrite": "cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-header CDN-SVCL \"lastHeaderRewrite\" [L]"
     },
     {
       "active": true,
@@ -1428,7 +1428,7 @@
           "configFile": "records.config",
           "name": "CONFIG proxy.config.http.server_ports",
           "secure": false,
-          "value": "STRING 80 80:ipv6"
+          "value": "STRING 8080 8080:ipv6"
         },
         {
           "configFile": "records.config",
@@ -1488,7 +1488,7 @@
           "configFile": "records.config",
           "name": "CONFIG proxy.config.log.logfile_dir",
           "secure": false,
-          "value": "STRING /var/log/trafficserver"
+          "value": "STRING /opt/trafficserver/var/log/trafficserver"
         },
         {
           "configFile": "records.config",
