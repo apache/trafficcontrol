@@ -36,6 +36,8 @@ func TestJobs(t *testing.T) {
 		GetTestJobs(t)
 		GetTestInvalidationJobs(t)
 		JobCollisionWarningTest(t)
+		GetTestJobsByValidData(t)
+		GetTestJobsByInvalidData(t)
 	})
 }
 
@@ -358,5 +360,139 @@ func GetTestInvalidationJobs(t *testing.T) {
 		if !found {
 			t.Errorf("expected a test job %+v to exist, but it didn't", testJob)
 		}
+	}
+}
+
+func GetTestJobsByValidData(t *testing.T) {
+
+	toJobs, _, err := TOSession.GetInvalidationJobs(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("error getting jobs %v - alerts: %+v", err, toJobs.Alerts)
+	}
+	if len(toJobs.Response) < 1 {
+		t.Fatal("Need at least one Jobs to test GET Jobs scenario")
+	}
+	jobs := toJobs.Response[0]
+	assetUrl := jobs.AssetURL
+	createdBy := jobs.CreatedBy
+	id := jobs.ID
+	dsName := jobs.DeliveryService
+	keyword := jobs.Keyword
+
+	//Get Jobs by Asset URL
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("assetUrl", *assetUrl)
+	toJobs, _, err = TOSession.GetInvalidationJobs(opts)
+	if len(toJobs.Response) < 1 {
+		t.Errorf("Expected atleast one Jobs response for GET Jobs by Asset URL, but found %d ", len(toJobs.Response))
+	}
+
+	//Get Jobs by CreatedBy
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("createdBy", *createdBy)
+	toJobs, _, err = TOSession.GetInvalidationJobs(opts)
+	if len(toJobs.Response) < 1 {
+		t.Errorf("Expected atleast one Jobs response for GET Jobs by CreatedBy, but found %d ", len(toJobs.Response))
+	}
+
+	//Get Jobs by ID
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("id", strconv.FormatUint(uint64(*id), 10))
+	toJobs, _, err = TOSession.GetInvalidationJobs(opts)
+	if len(toJobs.Response) != 1 {
+		t.Errorf("Expected only one Jobs response for GET Jobs by ID, but found %d ", len(toJobs.Response))
+	}
+
+	//Get Jobs by Keyword
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("Keyword", *keyword)
+	toJobs, _, err = TOSession.GetInvalidationJobs(opts)
+	if len(toJobs.Response) < 1 {
+		t.Errorf("Expected atleast one Jobs response for GET Jobs by keyword, but found %d ", len(toJobs.Response))
+	}
+
+	//Get Delivery Service ID by Name
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", *dsName)
+	toDSes, _, err := TOSession.GetDeliveryServices(opts)
+	ds := toDSes.Response[0]
+	//Get Jobs by DSID
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("dsId", strconv.Itoa(*ds.ID))
+	toJobs, _, err = TOSession.GetInvalidationJobs(opts)
+	if len(toJobs.Response) < 1 {
+		t.Errorf("Expected atleast one Jobs response for GET Jobs by delivery service, but found %d ", len(toJobs.Response))
+	}
+
+	//Get UserID ID by Username
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("username", "admin")
+	userResp, _, err := TOSession.GetUsers(opts)
+	user := userResp.Response[0]
+	//Get Jobs by userID
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("userId", strconv.Itoa(*user.ID))
+	toJobs, _, err = TOSession.GetInvalidationJobs(opts)
+	if len(toJobs.Response) < 1 {
+		t.Errorf("Expected atleast one Jobs response for GET Jobs by users, but found %d ", len(toJobs.Response))
+	}
+}
+
+func GetTestJobsByInvalidData(t *testing.T) {
+
+	//Get Jobs by Invalid Asset URL
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("assetUrl", "abcd")
+	toJobs, _, _ := TOSession.GetInvalidationJobs(opts)
+	if len(toJobs.Response) != 0 {
+		t.Errorf("Expected no response from Get Jobs by Invalid Asset URL, but found %d ", len(toJobs.Response))
+	}
+
+	//Get Jobs by Invalid CreatedBy
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("createdBy", "abcd")
+	toJobs, _, _ = TOSession.GetInvalidationJobs(opts)
+	if len(toJobs.Response) != 0 {
+		t.Errorf("Expected no response from Get Jobs by Invalid CreatedBy, but found %d ", len(toJobs.Response))
+	}
+
+	//Get Jobs by Invalid ID
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("id", "11111")
+	toJobs, _, _ = TOSession.GetInvalidationJobs(opts)
+	if len(toJobs.Response) != 0 {
+		t.Errorf("Expected no response from Get Jobs by Invalid ID, but found %d ", len(toJobs.Response))
+	}
+
+	//Get Jobs by Invalid Keyword
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("keyword", "invalid")
+	toJobs, _, _ = TOSession.GetInvalidationJobs(opts)
+	if len(toJobs.Response) != 0 {
+		t.Errorf("Expected no response from Get Jobs by Invalid Keyword, but found %d ", len(toJobs.Response))
+	}
+
+	//Get Jobs by Invalid DSID
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("dsId", "11111")
+	toJobs, _, _ = TOSession.GetInvalidationJobs(opts)
+	if len(toJobs.Response) != 0 {
+		t.Errorf("Expected no response from Get Jobs by Invalid DSID, but found %d ", len(toJobs.Response))
+	}
+
+	//Get Jobs by Invalid DSName
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("deliveryService", "abcd")
+	toJobs, _, _ = TOSession.GetInvalidationJobs(opts)
+	if len(toJobs.Response) != 0 {
+		t.Errorf("Expected no response from Get Jobs by Invalid DSName, but found %d ", len(toJobs.Response))
+	}
+
+	//Get Jobs by Invalid userID
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("userId", "11111")
+	toJobs, _, _ = TOSession.GetInvalidationJobs(opts)
+	if len(toJobs.Response) != 0 {
+		t.Errorf("Expected no response from Get Jobs by Invalid userID, but found %d ", len(toJobs.Response))
 	}
 }
