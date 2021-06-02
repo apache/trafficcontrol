@@ -25,6 +25,11 @@ type LogsResponse struct {
 	Alerts
 }
 
+type UserLogResponse struct {
+	Response     []Log `json:"response"`
+	SummaryCount int   `json:"summaryCount"`
+}
+
 // Log contains a change that has been made to the Traffic Control system.
 type Log struct {
 	ID          *int    `json:"id"`

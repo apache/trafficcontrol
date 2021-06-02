@@ -67,7 +67,7 @@ func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	fmt.Println(days, limit, username)
 
 	setLastSeenCookie(w)
-	logs, err := getLog(inf.Tx.Tx, days, limit, username)
+	logs, count, err := getLog(inf.Tx.Tx, days, limit, username)
 	if err != nil {
 		a.AddNewAlert(tc.ErrorLevel, err.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, a)
@@ -76,7 +76,11 @@ func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	if a.HasAlerts() {
 		api.WriteAlertsObj(w, r, 200, a, logs)
 	} else {
-		api.WriteResp(w, r, logs)
+		logResp := tc.UserLogResponse{
+			Response:     logs,
+			SummaryCount: count,
+		}
+		api.WriteResp(w, r, logResp)
 	}
 
 }
@@ -127,26 +131,28 @@ func getLastSeenCookie(r *http.Request) (time.Time, bool) {
 	return lastSeen, true
 }
 
-func getLog(tx *sql.Tx, days int, limit int, username string) ([]tc.Log, error) {
+func getLog(tx *sql.Tx, days int, limit int, username string) ([]tc.Log, int, error) {
+	var count = 0
 	rows, err := tx.Query(`
 SELECT l.id, l.level, l.message, u.username as user, l.ticketnum, l.last_updated
 FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id
-WHERE l.last_updated > now() - ($1 || ' DAY')::INTERVAL AND tm_user.username = $3
+WHERE l.last_updated > now() - ($1 || ' DAY')::INTERVAL AND u.username=$3
 ORDER BY l.last_updated DESC
 LIMIT $2
-`, days, limit)
+`, days, limit, username)
 	if err != nil {
-		return nil, errors.New("querying logs: " + err.Error())
+		return nil, count, errors.New("querying logs: " + err.Error())
 	}
 	ls := []tc.Log{}
 	for rows.Next() {
 		l := tc.Log{}
 		if err = rows.Scan(&l.ID, &l.Level, &l.Message, &l.User, &l.TicketNum, &l.LastUpdated); err != nil {
-			return nil, errors.New("scanning logs: " + err.Error())
+			return nil, count, errors.New("scanning logs: " + err.Error())
 		}
+		count += 1
 		ls = append(ls, l)
 	}
-	return ls, nil
+	return ls, count, nil
 }
 
 func getLogCountSince(tx *sql.Tx, since time.Time) (uint64, error) {
