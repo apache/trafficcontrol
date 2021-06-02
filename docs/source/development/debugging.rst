@@ -25,6 +25,10 @@ Debugging inside CDN-in-a-Box
 Some CDN-in-a-Box components can be used with a debugger to step through lines of code, set breakpoints, see the state of all variables in each scope, etc. at runtime. Components that support debugging:
 
 * `Enroller`_
+* `t3c on Caches`_
+	- `t3c on Edge Cache`_
+	- `t3c on Mid 01 Cache`_
+	- `t3c on Mid 02 Cache`_
 * `Traffic Monitor`_
 * `Traffic Ops`_
 * `Traffic Router`_
@@ -69,6 +73,210 @@ Enroller
 
 For an example of usage, set a breakpoint at `the toSession.CreateDeliveryServiceV30() call in enrollDeliveryService() <https://github.com/apache/trafficcontrol/blob/RELEASE-5.1.1/infrastructure/cdn-in-a-box/enroller/enroller.go#L209>`_, then wait for the Enroller to process a file from ``/shared/enroller/deliveryservices/`` (only exists within the Docker container).
 
+t3c on Caches
+=============
+
+t3c on Edge Cache
+-----------------
+* Navigate to the ``infrastructure/cdn-in-a-box`` directory. Remove ``infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm`` because it contains release Go binaries that do not include useful debugging information. Rebuild the RPM with no optimization, for debugging:
+
+.. code-block:: shell
+	:caption: Remove release RPMs, then build debug RPMs
+
+	make very-clean
+	make debug cache/trafficcontrol-cache-config.rpm
+
+.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native cache/trafficcontrol-cache-config.rpm`` instead of ``make debug cache/trafficcontrol-cache-config.rpm`` to build the RPM quickly.
+
+* Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``T3C_DEBUG_COMPONENT_EDGE`` to ``t3c-apply`` (used for this example). A list of valid values for ``T3C_DEBUG_COMPONENT_EDGE``:
+	- t3c-apply
+	- t3c-check
+	- t3c-check-refs
+	- t3c-check-reload
+	- t3c-diff
+	- t3c-generate
+	- t3c-request
+	- t3c-update
+
+* Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``edge-debug`` image to make sure it uses our fresh ``trafficcontrol-cache-config.rpm``. Then, start CDN-in-a-Box:
+
+.. code-block:: shell
+	:caption: docker-compose command for debugging ``t3c`` running on the Edge Cache
+
+	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+	mydc down -v
+	mydc build edge
+	mydc up -d
+	mydc logs -f trafficmonitor
+
+* Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2347. If you are using VS Code, the configuration should look like this:
+
+.. code-block:: json
+	:caption: VS Code launch.json for debugging ``t3c`` on the Edge Cache
+
+	{
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "t3c on Edge",
+				"type": "go",
+				"request": "attach",
+				"mode": "remote",
+				"port": 2347,
+				"cwd": "${workspaceRoot}",
+				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
+			}
+		]
+	}
+
+Wait for Traffic Monitor to start, which will indicate that the SSL keys have been generated. Because ``T3C_DEBUG_COMPONENT_EDGE`` is set to the name of one of the ``t3c`` binaries, ``t3c`` will *not* run automatically every minute. Start it it manually:
+
+.. code-block:: shell
+	:caption: Run ``t3c-apply`` with debugging enabled
+
+	[user@computer cdn-in-a-box]$ mydc exec edge t3c apply --run-mode=badass --traffic-ops-url=https://trafficops.infra.ciab.test --traffic-ops-user=admin --traffic-ops-password=twelve12 --git=yes --dispersion=0 --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout all
+	API server listening at: [::]:2347
+
+The *API server listening* message is from ``dlv``, indicating it is ready to accept a connection from your IDE. Note that, unlike the other components, execution of ``t3c`` does not begin until your IDE connects to ``dlv``.
+
+For this example, set a breakpoint at `the assignment of "##OVERRIDDEN## " + str to newstr in torequest.processRemapOverrides() <https://github.com/apache/trafficcontrol/blob/dde7f69d49/cache-config/t3c-apply/torequest/torequest.go#L336>`_.
+
+Use the debugging configuration you created to connect to ``dlv`` and start debugging ``t3c``.
+
+t3c on Mid 01 Cache
+-------------------
+* Navigate to the ``infrastructure/cdn-in-a-box`` directory. Remove ``infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm`` because it contains release Go binaries that do not include useful debugging information. Rebuild the RPM with no optimization, for debugging:
+
+.. code-block:: shell
+	:caption: Remove release RPMs, then build debug RPMs
+
+	make very-clean
+	make debug cache/trafficcontrol-cache-config.rpm
+
+.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native cache/trafficcontrol-cache-config.rpm`` instead of ``make debug cache/trafficcontrol-cache-config.rpm`` to build the RPM quickly.
+
+* Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``T3C_DEBUG_COMPONENT_MID_01`` to ``t3c-apply`` (used for this example). A list of valid values for ``T3C_DEBUG_COMPONENT_MID_01``:
+	- t3c-apply
+	- t3c-check
+	- t3c-check-refs
+	- t3c-check-reload
+	- t3c-diff
+	- t3c-generate
+	- t3c-request
+	- t3c-update
+
+* Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``mid-debug`` image to make sure it uses our fresh ``trafficcontrol-cache-config.rpm``. Then, start CDN-in-a-Box:
+
+.. code-block:: shell
+	:caption: docker-compose command for debugging ``t3c`` running on the Mid 01 Cache
+
+	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+	mydc down -v
+	mydc build mid-01
+	mydc up -d
+	mydc logs -f trafficmonitor
+
+* Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2348. If you are using VS Code, the configuration should look like this:
+
+.. code-block:: json
+	:caption: VS Code launch.json for debugging ``t3c`` on the Mid 01 Cache
+
+	{
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "t3c on Mid 01",
+				"type": "go",
+				"request": "attach",
+				"mode": "remote",
+				"port": 2348,
+				"cwd": "${workspaceRoot}",
+				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
+			}
+		]
+	}
+
+Wait for Traffic Monitor to start, which will indicate that the SSL keys have been generated. Because ``T3C_DEBUG_COMPONENT_MID_01`` is set to the name of one of the ``t3c`` binaries, ``t3c`` will *not* run automatically every minute. Start it it manually:
+
+.. code-block:: shell
+	:caption: Run ``t3c-apply`` with debugging enabled
+
+	[user@computer cdn-in-a-box]$ mydc exec mid-01 t3c apply --run-mode=badass --traffic-ops-url=https://trafficops.infra.ciab.test --traffic-ops-user=admin --traffic-ops-password=twelve12 --git=yes --dispersion=0 --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout all
+	API server listening at: [::]:2348
+
+The *API server listening* message is from ``dlv``, indicating it is ready to accept a connection from your IDE. Note that, unlike the other components, execution of ``t3c`` does not begin until your IDE connects to ``dlv``.
+
+For this example, set a breakpoint at `the assignment of "##OVERRIDDEN## " + str to newstr in torequest.processRemapOverrides() <https://github.com/apache/trafficcontrol/blob/dde7f69d49/cache-config/t3c-apply/torequest/torequest.go#L336>`_.
+
+Use the debugging configuration you created to connect to ``dlv`` and start debugging ``t3c``.
+
+t3c on Mid 02 Cache
+-------------------
+* Navigate to the ``infrastructure/cdn-in-a-box`` directory. Remove ``infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm`` because it contains release Go binaries that do not include useful debugging information. Rebuild the RPM with no optimization, for debugging:
+
+.. code-block:: shell
+	:caption: Remove release RPMs, then build debug RPMs
+
+	make very-clean
+	make debug cache/trafficcontrol-cache-config.rpm
+
+.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native cache/trafficcontrol-cache-config.rpm`` instead of ``make debug cache/trafficcontrol-cache-config.rpm`` to build the RPM quickly.
+
+* Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``T3C_DEBUG_COMPONENT_MID_02`` to ``t3c-apply`` (used for this example). A list of valid values for ``T3C_DEBUG_COMPONENT_MID_02``:
+	- t3c-apply
+	- t3c-check
+	- t3c-check-refs
+	- t3c-check-reload
+	- t3c-diff
+	- t3c-generate
+	- t3c-request
+	- t3c-update
+
+* Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``mid-debug`` image to make sure it uses our fresh ``trafficcontrol-cache-config.rpm``. Then, start CDN-in-a-Box:
+
+.. code-block:: shell
+	:caption: docker-compose command for debugging ``t3c`` running on the Mid 02 Cache
+
+	alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+	mydc down -v
+	mydc build mid-02
+	mydc up -d
+	mydc logs -f trafficmonitor
+
+* Install `an IDE that supports delve <https://github.com/go-delve/delve/blob/master/Documentation/EditorIntegration.md>`_ and create a debugging configuration over port 2349. If you are using VS Code, the configuration should look like this:
+
+.. code-block:: json
+	:caption: VS Code launch.json for debugging ``t3c`` on the Mid 02 Cache
+
+	{
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "t3c on Mid 02",
+				"type": "go",
+				"request": "attach",
+				"mode": "remote",
+				"port": 2349,
+				"cwd": "${workspaceRoot}",
+				"remotePath": "/tmp/go/src/github.com/apache/trafficcontrol",
+			}
+		]
+	}
+
+Wait for Traffic Monitor to start, which will indicate that the SSL keys have been generated. Because ``T3C_DEBUG_COMPONENT_MID_02`` is set to the name of one of the ``t3c`` binaries, ``t3c`` will *not* run automatically every minute. Start it it manually:
+
+.. code-block:: shell
+	:caption: Run ``t3c-apply`` with debugging enabled
+
+	[user@computer cdn-in-a-box]$ mydc exec mid-02 t3c apply --run-mode=badass --traffic-ops-url=https://trafficops.infra.ciab.test --traffic-ops-user=admin --traffic-ops-password=twelve12 --git=yes --dispersion=0 --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout all
+	API server listening at: [::]:2349
+
+The *API server listening* message is from ``dlv``, indicating it is ready to accept a connection from your IDE. Note that, unlike the other components, execution of ``t3c`` does not begin until your IDE connects to ``dlv``.
+
+For this example, set a breakpoint at `the assignment of "##OVERRIDDEN## " + str to newstr in torequest.processRemapOverrides() <https://github.com/apache/trafficcontrol/blob/dde7f69d49/cache-config/t3c-apply/torequest/torequest.go#L336>`_.
+
+Use the debugging configuration you created to connect to ``dlv`` and start debugging ``t3c``.
+
 Traffic Monitor
 ===============
 
@@ -78,9 +286,9 @@ Traffic Monitor
 	:caption: Remove release RPMs, then build debug RPMs
 
 	make very-clean
-	make debug
+	make debug traffic_monitor/traffic_monitor.rpm
 
-.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native`` instead of ``make debug`` to build the RPMs quickly.
+.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native traffic_monitor/traffic_monitor.rpm`` instead of ``make debug traffic_monitor/traffic_monitor.rpm`` to build the RPM quickly.
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TM_DEBUG_ENABLE`` to ``true``.
 
@@ -127,9 +335,9 @@ Traffic Ops
 	:caption: Remove release RPMs, then build debug RPMs
 
 	make very-clean
-	make debug
+	make debug traffic_stats/traffic_stats.rpm
 
-.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native`` instead of ``make debug`` to build the RPMs quickly.
+.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native traffic_stats/traffic_stats.rpm`` instead of ``make debug traffic_stats/traffic_stats.rpm`` to build the RPM quickly.
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TO_DEBUG_ENABLE`` to ``true``.
 
@@ -275,9 +483,9 @@ Traffic Stats
 	:caption: Remove release RPMs, then build debug RPMs
 
 	make very-clean
-	make debug
+	make debug traffic_ops/traffic_ops.rpm
 
-.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native`` instead of ``make debug`` to build the RPMs quickly.
+.. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make debug native traffic_ops/traffic_ops.rpm`` instead of ``make debug traffic_ops/traffic_ops.rpm`` to build the RPMs quickly.
 
 * Still in ``infrastructure/cdn-in-a-box``, open ``variables.env`` and set ``TS_DEBUG_ENABLE`` to ``true``.
 
