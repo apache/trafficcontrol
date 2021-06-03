@@ -38,6 +38,7 @@ func TestJobs(t *testing.T) {
 		JobCollisionWarningTest(t)
 		GetTestJobsByValidData(t)
 		GetTestJobsByInvalidData(t)
+		CreateTestJobsInvalidds(t)
 	})
 }
 
@@ -494,5 +495,62 @@ func GetTestJobsByInvalidData(t *testing.T) {
 	toJobs, _, _ = TOSession.GetInvalidationJobs(opts)
 	if len(toJobs.Response) != 0 {
 		t.Errorf("Expected no response from Get Jobs by Invalid userID, but found %d ", len(toJobs.Response))
+	}
+}
+
+func CreateTestJobsInvalidds(t *testing.T) {
+	if len(testData.InvalidationJobs) < 1 {
+		t.Error("Need at least one Invalidation Jobs to create with invalid date")
+	}
+
+	job := testData.InvalidationJobs[0]
+	job.StartTime = &tc.Time{
+		Time:  time.Now().Add(time.Minute).UTC(),
+		Valid: true,
+	}
+	testData.InvalidationJobs[0] = job
+
+	//Invalid DS
+	request := tc.InvalidationJobInput{
+		DeliveryService: util.InterfacePtr("invalid"),
+		Regex:           job.Regex,
+		StartTime:       job.StartTime,
+		TTL:             job.TTL,
+	}
+	resp, reqInf, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected No DeliveryService exists matching identifier: %v - alerts: %v", request.DeliveryService, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+
+	//Missing DS
+	request = tc.InvalidationJobInput{
+		Regex:     job.Regex,
+		StartTime: job.StartTime,
+		TTL:       job.TTL,
+	}
+	resp, _, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected deliveryService: cannot be blank - alerts: %v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+
+	//Empty DS
+	request = tc.InvalidationJobInput{
+		DeliveryService: util.InterfacePtr(""),
+		Regex:           job.Regex,
+		StartTime:       job.StartTime,
+		TTL:             job.TTL,
+	}
+	resp, reqInf, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected deliveryService: cannot be blank., No DeliveryService exists matching identifier: - alerts: %v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
 	}
 }
