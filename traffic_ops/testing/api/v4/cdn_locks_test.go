@@ -186,8 +186,8 @@ func AdminCdnLocks(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error when a non admin user tries to delete another user's lock, but got nothing")
 	}
-	if reqInf.StatusCode != http.StatusNotFound {
-		t.Fatalf("expected a 404 status code, but got %d instead", reqInf.StatusCode)
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected a 403 status code, but got %d instead", reqInf.StatusCode)
 	}
 
 	// Now try to delete another user's lock by hitting the admin DELETE endpoint for cdn_locks -> this should pass

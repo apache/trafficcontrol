@@ -155,6 +155,10 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			if inf.User.PrivLevel != auth.PrivLevelAdmin {
+				api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("deleting cdn lock with cdn name %s: operation forbidden", cdn), nil)
+				return
+			}
 			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("deleting cdn lock with cdn name %s: lock not found", cdn), nil)
 			return
 		}
