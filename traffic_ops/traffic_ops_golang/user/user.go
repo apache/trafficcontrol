@@ -375,10 +375,12 @@ func (user *TOUser) SelectQuery() string {
 	u.registration_sent,
 	u.tenant_id,
 	t.name as tenant,
-	u.last_updated
+	u.last_updated,
+	(SELECT count(l.tm_user) FROM log as l WHERE l.tm_user = u.id) as changeLogCount
 	FROM tm_user u
 	LEFT JOIN tenant t ON u.tenant_id = t.id
-	LEFT JOIN role r ON u.role = r.id`
+	LEFT JOIN role r ON u.role = r.id
+	GROUP BY u.id, r.name, t.name`
 }
 
 func (user *TOUser) UpdateQuery() string {

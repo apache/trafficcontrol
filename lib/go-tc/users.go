@@ -90,7 +90,8 @@ type commonUserFields struct {
 	Token           *string `json:"-" db:"token"`
 	UID             *int    `json:"uid"`
 	//Username        *string    `json:"username" db:"username"`  //not including major change due to naming incompatibility
-	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	LastUpdated    *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	ChangeLogCount *int       `json: "changeLogCount"`
 }
 
 // User fields in v14 have been updated to be nullable

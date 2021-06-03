@@ -76,10 +76,9 @@ func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	if a.HasAlerts() {
 		api.WriteAlertsObj(w, r, 200, a, logs)
 	} else {
-		logResp := tc.UserLogResponse{
-			Response:     logs,
-			SummaryCount: count,
-		}
+		var logResp tc.UserLogResponse
+		logResp.Response = logs
+		logResp.Summary.Count = count
 		api.WriteResp(w, r, logResp)
 	}
 
@@ -131,8 +130,8 @@ func getLastSeenCookie(r *http.Request) (time.Time, bool) {
 	return lastSeen, true
 }
 
-func getLog(tx *sql.Tx, days int, limit int, username string) ([]tc.Log, int, error) {
-	var count = 0
+func getLog(tx *sql.Tx, days int, limit int, username string) ([]tc.Log, uint64, error) {
+	var count = uint64(0)
 	rows, err := tx.Query(`
 SELECT l.id, l.level, l.message, u.username as user, l.ticketnum, l.last_updated
 FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id
