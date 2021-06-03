@@ -22,8 +22,10 @@
 ############################################################
 
 ARG RHEL_VERSION=8
-FROM centos:${RHEL_VERSION} AS common-cache-server-layers
+FROM centos:${RHEL_VERSION} AS common-traffic-server-dependencies
 ARG RHEL_VERSION=8
+# Makes RHEL_VERSION available at runtime
+ENV RHEL_VERSION="$RHEL_VERSION"
 
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
@@ -41,6 +43,7 @@ RUN dnf -y install epel-release && \
     fi && \
     dnf -y install              \
         GeoIP                   \
+        git                     \
         groff-base              \
         hwloc                   \
         hwloc-libs              \
@@ -51,109 +54,84 @@ RUN dnf -y install epel-release && \
         make                    \
         numactl-libs            \
         perl                    \
-        perl-Carp               \
-        perl-constant           \
-        perl-Data-Dumper        \
-        perl-Encode             \
-        perl-Exporter           \
-        perl-File-Path          \
-        perl-File-Temp          \
-        perl-Filter             \
-        perl-Getopt-Long        \
-        perl-HTTP-Tiny          \
-        perl-libs               \
-        perl-macros             \
-        perl-parent             \
-        perl-PathTools          \
-        perl-Pod-Escapes        \
-        perl-podlators          \
-        perl-Pod-Perldoc        \
-        perl-Pod-Simple         \
-        perl-Pod-Usage          \
-        perl-Scalar-List-Utils  \
-        perl-Socket             \
-        perl-Storable           \
-        perl-Text-ParseWords    \
-        perl-threads            \
-        perl-threads-shared     \
-        perl-Time-HiRes         \
-        perl-Time-Local         \
-        perl-URI                \
         tcl                     \
         $additional_packages && \
     if [[ "${RHEL_VERSION%%.*}" -eq 8 ]]; then \
-        set -- \
-            # Pretend that we have the right library versions.
-            # TODO: Use a proper CentOS 7 or 8 RPM once trafficserver
-            # is in EPEL again (see apache/trafficserver#6855)
-            libtcl8.6.so        libtcl8.5.so     \
-            libncursesw.so.6    libncursesw.so.5 \
-            libtinfo.so.6       libtinfo.so.5    \
-            || exit 1; \
-    fi && \
-    cd /usr/lib64 && \
-    while [[ $# -gt 0 ]]; do \
-        source="$1" && \
-        shift && \
-        target="$1" && \
-        shift && \
-        ln -s "$source" "$target" || exit 1; \
-    done
+        # Pretend that we have the right library versions.
+        # TODO: Use a proper CentOS 7 or 8 RPM once trafficserver
+        # is in EPEL again (see apache/trafficserver#6855)
+        cd /usr/lib64 && \
+        ln -s libtcl8.6.so        libtcl8.5.so && \
+        ln -s libncursesw.so.6    libncursesw.so.5 && \
+        ln -s libtinfo.so.6       libtinfo.so.5  || \
+            exit 1; \
+    fi
+
+RUN dnf install -y bind-utils kyotocabinet-libs initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel && \
+    dnf install -y jq logrotate && \
+    dnf clean all
+
+FROM common-traffic-server-dependencies AS common-cache-config-layers
 
 ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.4-2.el7.x86_64.rpm /trafficserver.rpm
 ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-devel-7.1.4-2.el7.x86_64.rpm /trafficserver-devel.rpm
 
+COPY traffic_server/plugins/astats_over_http/astats_over_http.c traffic_server/plugins/astats_over_http/Makefile.am /
+
 RUN rpm -Uvh --nodeps /trafficserver.rpm /trafficserver-devel.rpm && \
-    dnf install -y jq python3-psutil python3-setuptools python3-pip logrotate && \
-    dnf clean all
+    tsxs -v -c astats_over_http.c -o astats_over_http.so
 
-RUN dnf install -y bind-utils kyotocabinet-libs initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel
+# The symbolic links here are used because trafficserver-7.1.4-2.el7.x86_64.rpm has / as TS_ROOT,
+# but the Cache Configs assume that /opt/trafficserver is TS_ROOT. The symlinks can be removed
+# once a Traffic Server RPM using /opt/trafficserver as TS_ROOT is used.
+RUN ln -s / /opt/trafficserver && \
+    mkdir /libexec /etc/trafficserver/ssl && \
+    ln -s /usr/lib64/trafficserver/plugins /libexec/trafficserver && \
+    tsxs -v -o astats_over_http.so -i
 
-RUN python3 -m pip install --upgrade pip && python3 -m pip install requests urllib3 distro
+RUN dnf remove -y gcc-c++ glibc-devel autoconf automake libtool && \
+    rm -f /astats_over_http.c /Makefile.am
 
-ADD traffic_server/plugins/astats_over_http/astats_over_http.c traffic_server/plugins/astats_over_http/Makefile.am /
+# traffic_server needs different ownership than trafficserver-7.1.4-2.el7.x86_64.rpm sets
+RUN chown -R ats:ats /etc/trafficserver/ /usr/lib64/trafficserver/
 
-RUN tsxs -v -c astats_over_http.c -o astats_over_http.so
-
-# The symbolic link here is a shim for broken atstccfg behavior - remove when it's fixed.
-RUN mkdir -p /usr/libexec/trafficserver /opt/ort /opt/trafficserver/etc/trafficserver/ /opt/init.d && ln -s /opt/trafficserver/etc/trafficserver/ssl /etc/trafficserver/ssl && tsxs -v -o astats_over_http.so -i
-
-RUN dnf remove -y gcc-c++ glibc-devel autoconf automake libtool && rm -f /astats_over_http.c /Makefile.am
-
-# You need to do this because the RPM in the ATS archives is just all kinds of messed-up
-RUN chmod 755 /usr/lib64/trafficserver /etc/trafficserver/body_factory /etc/trafficserver/body_factory/default
-RUN mkdir -p /var/trafficserver /opt/ort && \
-    dd if=/dev/zero bs=1M count=1000 of=/var/trafficserver/cache && \
-    chown -R ats:ats /etc/trafficserver/ /var/trafficserver/ /opt/ort /usr/lib64/trafficserver/ && \
-    sed -i 's/STRING 8080 8080:ipv6/STRING 80 80:ipv6/' /etc/trafficserver/records.config
-
-RUN setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_server && setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_manager && setcap CAP_NET_BIND_SERVICE=+eip /bin/trafficserver && setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_cop
 
 WORKDIR /opt
 
-ADD infrastructure/cdn-in-a-box/ort /opt/ort/
-ADD traffic_control/clients/python /opt/Apache-TrafficControl/
+COPY infrastructure/cdn-in-a-box/cache/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template
+COPY infrastructure/cdn-in-a-box/cache/traffic_ops_ort.logrotate /etc/logrotate.d/ort
 
-RUN touch /var/log/ort.log && \
-	pip3 install ./Apache-TrafficControl && \
-	pip3 install ./ort && \
-	cp ort/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template && \
-	cp ort/traffic_ops_ort.logrotate /etc/logrotate.d/ort
-
-ADD infrastructure/cdn-in-a-box/cache/run.sh infrastructure/cdn-in-a-box/traffic_ops/to-access.sh infrastructure/cdn-in-a-box/enroller/server_template.json /
+COPY infrastructure/cdn-in-a-box/cache/run.sh infrastructure/cdn-in-a-box/traffic_ops/to-access.sh infrastructure/cdn-in-a-box/enroller/server_template.json /
 
 COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
      infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
      /usr/local/sbin/
+# Copy systemctl.sh to /usr/bin specifically because t3c runs /bin/systemctl by absolute path
+COPY infrastructure/cdn-in-a-box/cache/systemctl.sh /usr/bin/systemctl
 
 ARG ORT_RPM=infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
-ADD $ORT_RPM /
-RUN rpm -Uvh --nodeps /$(basename $ORT_RPM) &&\
+COPY $ORT_RPM /
+RUN rpm -Uvh /$(basename $ORT_RPM) &&\
     rm /$(basename $ORT_RPM)
 CMD /run.sh
 
-FROM common-cache-server-layers AS mid
+FROM common-traffic-server-dependencies AS get-delve
+RUN dnf -y install golang && \
+    go get -u github.com/go-delve/delve/cmd/dlv
+
+FROM common-cache-config-layers AS mid
 COPY infrastructure/cdn-in-a-box/mid/init.d/ /opt/init.d/
 
-FROM common-cache-server-layers AS edge
+FROM mid AS mid-debug
+COPY --from=get-delve /root/go/bin /usr/bin
+COPY infrastructure/cdn-in-a-box/cache/init-debug-scripts.sh /opt/init.d/
+
+FROM common-cache-config-layers AS edge
 COPY infrastructure/cdn-in-a-box/edge/init.d/ /opt/init.d/
+
+FROM edge AS edge-debug
+COPY --from=get-delve /root/go/bin /usr/bin
+COPY infrastructure/cdn-in-a-box/cache/init-debug-scripts.sh /opt/init.d/
+
+# Makes the default target skip the edge-debug stage
+FROM edge

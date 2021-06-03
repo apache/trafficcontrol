@@ -61,7 +61,7 @@ func newData(remaps []string) (fakesrvrdata.FakeServerData, map[string]fakesrvrd
 	}
 	serverData := fakesrvrdata.FakeServerData{
 		ATS: fakesrvrdata.FakeATS{
-			Server: "6.2.2",
+			Server: "7.1.4",
 			Remaps: serverDataRemap,
 		},
 		System: fakesrvrdata.FakeSystem{

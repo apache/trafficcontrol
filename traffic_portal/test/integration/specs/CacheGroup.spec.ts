@@ -32,7 +32,7 @@ let cacheGroupPage = new CacheGroupPage();
 cachegroups.tests.forEach(cacheGroupData => {
     describe(`Traffic Portal - CacheGroup - ${cacheGroupData.testName}`, () => {
         cacheGroupData.logins.forEach(login => {
-            it('can login', async function(){
+            it('can login', async function () {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
@@ -41,6 +41,24 @@ cachegroups.tests.forEach(cacheGroupData => {
                 await cacheGroupPage.OpenTopologyMenu();
                 await cacheGroupPage.OpenCacheGroupsPage();
             })
+            cacheGroupData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await cacheGroupPage.CheckCSV(check.Name)).toBe(true);
+                    await cacheGroupPage.OpenCacheGroupsPage();
+                });
+            });
+            cacheGroupData.toggle.forEach(toggle => {
+                it(toggle.description, async () => {
+                    if(toggle.description.includes('hide')){
+                        expect(await cacheGroupPage.ToggleTableColumn(toggle.Name)).toBe(false);
+                        await cacheGroupPage.OpenCacheGroupsPage();
+                    }else{
+                        expect(await cacheGroupPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                        await cacheGroupPage.OpenCacheGroupsPage();
+                    }
+                    
+                });
+            })
             cacheGroupData.create.forEach(create => {
                 it(create.Description, async function () {
                     expect(await cacheGroupPage.CreateCacheGroups(create, create.validationMessage)).toBeTruthy();
@@ -48,13 +66,13 @@ cachegroups.tests.forEach(cacheGroupData => {
                 })
             })
             cacheGroupData.update.forEach(update => {
-                if(update.Description.includes("cannot")){
+                if (update.Description.includes("cannot")) {
                     it(update.Description, async function () {
                         await cacheGroupPage.SearchCacheGroups(update.Name)
                         expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeUndefined();
                         await cacheGroupPage.OpenCacheGroupsPage();
                     })
-                }else{
+                } else {
                     it(update.Description, async function () {
                         await cacheGroupPage.SearchCacheGroups(update.Name)
                         expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeTruthy();
