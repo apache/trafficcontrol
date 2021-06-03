@@ -79,6 +79,36 @@ Administration of the PostgreSQL database for Traffic Vault
 
 Similar to administering the Traffic Ops database, the :ref:`admin <database-management>` tool should be used for administering the PostgreSQL Traffic Vault backend.
 
+AES Re-Encryption Tool:
+-----------------------
+
+.. program:: reencrypt
+
+app/db/reencrypt/reencrypt
+=====================================================================
+The :program:`app/db/reencrypt/reencrypt` binary is for use to re-encrypt all keys in the Postgres Traffic Vault.
+
+.. note:: For proper resolution of configuration files, it's recommended that this binary be run from the ``app/db/reencrypt`` directory
+
+Usage
+-----
+``./reencrypt [options]``
+
+Options and Arguments
+---------------------
+.. option:: -newKey
+
+	The file path for the new base64-encoded AES key.
+
+.. option:: -previousKey
+
+	The file path for the previous base64-encoded AES key.
+
+.. code-block:: bash
+	:caption: Example Usage
+
+	 ./reencrypt -newKey ~/exampleNewKey.txt -previousKey ~/exampleOldKey.txt
+
 .. _traffic_vault_riak_backend:
 
 Riak (deprecated)

@@ -36,7 +36,7 @@ func getURISigningKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context, aesKey 
 		return []byte{}, false, e
 	}
 
-	jsonUriKeys, err := aesDecrypt(encryptedUriSigningKey, aesKey)
+	jsonUriKeys, err := AesDecrypt(encryptedUriSigningKey, aesKey)
 	if err != nil {
 		return []byte{}, false, err
 	}
@@ -50,7 +50,7 @@ func putURISigningKeys(xmlID string, tvTx *sqlx.Tx, keys []byte, ctx context.Con
 		return err
 	}
 
-	encryptedKey, err := aesEncrypt(keys, aesKey)
+	encryptedKey, err := AesEncrypt(keys, aesKey)
 	if err != nil {
 		return errors.New("encrypting keys: " + err.Error())
 	}

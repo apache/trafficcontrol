@@ -32,7 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres/hashicorpvault"
 )
 
-func aesEncrypt(bytesToEncrypt []byte, aesKey []byte) (string, error) {
+func AesEncrypt(bytesToEncrypt []byte, aesKey []byte) (string, error) {
 	cipherBlock, err := aes.NewCipher(aesKey)
 	if err != nil {
 		return "", err
@@ -51,7 +51,7 @@ func aesEncrypt(bytesToEncrypt []byte, aesKey []byte) (string, error) {
 	return string(gcm.Seal(nonce, nonce, bytesToEncrypt, nil)), nil
 }
 
-func aesDecrypt(bytesToDecrypt []byte, aesKey []byte) ([]byte, error) {
+func AesDecrypt(bytesToDecrypt []byte, aesKey []byte) ([]byte, error) {
 	cipherBlock, err := aes.NewCipher(aesKey)
 	if err != nil {
 		return []byte{}, err
