@@ -53,7 +53,7 @@ func CRDCdnLocks(t *testing.T) {
 	cdnLock.UserName = TOSession.UserName
 	cdnLock.Message = util.StrPtr("snapping cdn")
 	cdnLock.Soft = util.BoolPtr(true)
-	cdnLockResp, _, err := TOSession.CreateCdnLock(cdnLock, client.RequestOptions{})
+	cdnLockResp, _, err := TOSession.CreateCDNLock(cdnLock, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("couldn't create cdn lock: %v", err)
 	}
@@ -77,7 +77,7 @@ func CRDCdnLocks(t *testing.T) {
 	}
 
 	// READ
-	cdnLocksReadResp, _, err := TOSession.GetCdnLocks(client.RequestOptions{})
+	cdnLocksReadResp, _, err := TOSession.GetCDNLocks(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("could not get CDN Locks: %v", err)
 	}
@@ -104,7 +104,7 @@ func CRDCdnLocks(t *testing.T) {
 	}
 
 	// DELETE
-	_, reqInf, err := TOSession.DeleteCdnLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdnLock.CDN}}})
+	_, reqInf, err := TOSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdnLock.CDN}}})
 	if err != nil {
 		t.Fatalf("couldn't delete cdn lock, err: %v", err)
 	}
@@ -172,7 +172,7 @@ func AdminCdnLocks(t *testing.T) {
 
 	cdn := getCDNName(t)
 	// Create a lock for this user
-	_, _, err = userSession.CreateCdnLock(tc.CDNLock{
+	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
 		CDN:     cdn,
 		Message: util.StrPtr("test lock"),
 		Soft:    util.BoolPtr(true),
@@ -182,7 +182,7 @@ func AdminCdnLocks(t *testing.T) {
 	}
 
 	// Non admin user trying to delete another user's lock -> this should fail
-	_, reqInf, err := userSession2.DeleteCdnLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn}}})
+	_, reqInf, err := userSession2.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn}}})
 	if err == nil {
 		t.Fatalf("expected error when a non admin user tries to delete another user's lock, but got nothing")
 	}
@@ -191,7 +191,7 @@ func AdminCdnLocks(t *testing.T) {
 	}
 
 	// Now try to delete another user's lock by hitting the admin DELETE endpoint for cdn_locks -> this should pass
-	_, reqInf, err = TOSession.DeleteCdnLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn}}})
+	_, reqInf, err = TOSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn}}})
 	if err != nil {
 		t.Fatalf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
 	}

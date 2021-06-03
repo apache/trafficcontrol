@@ -32,17 +32,17 @@ type CDNLock struct {
 	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
 }
 
-// CdnLockCreateResponse is a struct to store the response of a CREATE operation on a lock.
-type CdnLockCreateResponse struct {
+// CDNLockCreateResponse is a struct to store the response of a CREATE operation on a lock.
+type CDNLockCreateResponse struct {
 	Response CDNLock `json:"response"`
 	Alerts
 }
 
-// CdnLocksGetResponse is a struct to store the response of a GET operation on locks.
-type CdnLocksGetResponse struct {
+// CDNLocksGetResponse is a struct to store the response of a GET operation on locks.
+type CDNLocksGetResponse struct {
 	Response []CDNLock `json:"response"`
 	Alerts
 }
 
-// CdnLockDeleteResponse is a struct to store the response of a DELETE operation on a lock.
-type CdnLockDeleteResponse CdnLockCreateResponse
+// CDNLockDeleteResponse is a struct to store the response of a DELETE operation on a lock.
+type CDNLockDeleteResponse CDNLockCreateResponse

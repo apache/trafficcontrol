@@ -158,7 +158,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("deleting cdn lock with cdn name %s: lock not found", cdn), nil)
 			return
 		}
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("deleting cdn lock with cdn name %s : %v", cdn, err.Error()))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("deleting cdn lock with cdn name %s : %w", cdn, err))
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "cdn lock deleted")

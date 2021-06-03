@@ -23,26 +23,23 @@ import (
 // apiCDNLocks is the API version-relative path for the /cdn_locks API endpoint.
 const apiCDNLocks = "/cdn_locks"
 
-// apiAdminCDNLocks is the API version-relative path for the /cdn_locks/admin API endpoint.
-const apiAdminCDNLocks = "/cdn_locks/admin"
-
-// CreateCdnLock creates a CDN Lock.
-func (to *Session) CreateCdnLock(cdnLock tc.CDNLock, opts RequestOptions) (tc.CdnLockCreateResponse, toclientlib.ReqInf, error) {
-	var response tc.CdnLockCreateResponse
+// CreateCDNLock creates a CDN Lock.
+func (to *Session) CreateCDNLock(cdnLock tc.CDNLock, opts RequestOptions) (tc.CDNLockCreateResponse, toclientlib.ReqInf, error) {
+	var response tc.CDNLockCreateResponse
 	reqInf, err := to.post(apiCDNLocks, opts, cdnLock, &response)
 	return response, reqInf, err
 }
 
-// GetCdnLocks retrieves the CDN locks based on the passed in parameters.
-func (to *Session) GetCdnLocks(opts RequestOptions) (tc.CdnLocksGetResponse, toclientlib.ReqInf, error) {
-	var data tc.CdnLocksGetResponse
+// GetCDNLocks retrieves the CDN locks based on the passed in parameters.
+func (to *Session) GetCDNLocks(opts RequestOptions) (tc.CDNLocksGetResponse, toclientlib.ReqInf, error) {
+	var data tc.CDNLocksGetResponse
 	reqInf, err := to.get(apiCDNLocks, opts, &data)
 	return data, reqInf, err
 }
 
-// DeleteCdnLocks deletes the CDN lock of a particular(requesting) user.
-func (to *Session) DeleteCdnLocks(opts RequestOptions) (tc.CdnLockDeleteResponse, toclientlib.ReqInf, error) {
-	var data tc.CdnLockDeleteResponse
+// DeleteCDNLocks deletes the CDN lock of a particular(requesting) user.
+func (to *Session) DeleteCDNLocks(opts RequestOptions) (tc.CDNLockDeleteResponse, toclientlib.ReqInf, error) {
+	var data tc.CDNLockDeleteResponse
 	reqInf, err := to.del(apiCDNLocks, opts, &data)
 	return data, reqInf, err
 }
