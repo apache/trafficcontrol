@@ -36,7 +36,7 @@ Tooltips should be added to ensure an understanding of this feature at a high le
 ##### Read
 When displaying the information, the **Invalidation Requests** table current shows the `Parameters` field, so the display will be straight forward with no manipulation.
 
-However, we derived and calculate the expiration field based on the TTL. This code will need to be modified to account for the additional information contained in the `Parameters` field.
+However, we derive and calculate the expiration field based on the TTL. This code will need to be modified to account for the additional information contained in the `Parameters` field.
 
 ### Traffic Ops Impact
 
@@ -51,8 +51,13 @@ No new endpoints will be required. However the current invalidation job will now
 ##### Current Request
 
 Body:
-```
-{"startTime":"2021-06-02T15:23:21.348Z","deliveryService":11,"regex":"/path/.*\\.jpeg","ttl":24}
+```json
+{
+	"startTime":"2021-06-02T15:23:21.348Z",
+	"deliveryService":11,
+	"regex":"/path/.*\\.jpeg",
+	"ttl":24
+}
 ```
 
 Which is mapped to a go `struct` in the `go-tc` lib.
@@ -72,8 +77,14 @@ type InvalidationJobInput struct {
 Add an "InvalidationType" to signify a specific type of invalidation request. The InvalidationType is an optional field and will not break backwards compatibility with previous API versions. If the field is included, it _must_ be either "refetch" or "refresh".
 
 Body:
-```
-{"startTime":"2021-06-02T15:23:21.348Z","deliveryService":11,"regex":"/path/.*\\.jpeg","ttl":24,"invalidationType":"refresh"}
+```json
+{
+	"startTime":"2021-06-02T15:23:21.348Z",
+	"deliveryService":11,
+	"regex":"/path/.*\\.jpeg",
+	"ttl":24,
+	"invalidationType":"refresh"
+}
 ```
 
 This struct now contains the `InvalidationType *string` field.
@@ -98,13 +109,44 @@ Since the field is optional and existing functionality only signifies a **REFRES
 The response will be modified, then, to return this new value as well.
 
 Sample current response:
-```
-{"alerts":[{"text":"Invalidation request created for http://amc-linear-origin.local.tld/path/.*\\.jpeg, start:2021-06-02 15:23:21.348 +0000 UTC end 2021-06-03 15:23:21.348 +0000 UTC","level":"success"}],"response":{"assetUrl":"http://amc-linear-origin.local.tld/path/.*\\.jpeg","createdBy":"admin","deliveryService":"amc-live","id":1,"keyword":"PURGE","parameters":"TTL:24h""startTime":"2021-06-02 09:23:21-06"}}
+```json
+{
+	"alerts":[
+		{
+			"text":"Invalidation request created for http://amc-linear-origin.local.tld/path/.*\\.jpeg, start:2021-06-02 15:23:21.348 +0000 UTC end 2021-06-03 15:23:21.348 +0000 UTC",
+			"level":"success"
+		}
+	],
+	"response":{
+		"assetUrl":"http://amc-linear-origin.local.tld/path/.*\\.jpeg",
+		"createdBy":"admin",
+		"deliveryService":"amc-live",
+		"id":1,
+		"keyword":"PURGE",
+		"parameters":"TTL:24h""startTime":"2021-06-02 09:23:21-06"
+	}
+}
 ```
 
 Sample new response (includes the `invalidationType` on parameters field):
-```
-{"alerts":[{"text":"Invalidation request created for http://amc-linear-origin.local.tld/path/.*\\.jpeg, start:2021-06-02 15:23:21.348 +0000 UTC end 2021-06-03 15:23:21.348 +0000 UTC","level":"success"}],"response":{"assetUrl":"http://amc-linear-origin.local.tld/path/.*\\.jpeg","createdBy":"admin","deliveryService":"amc-live","id":1,"keyword":"PURGE","parameters":"TTL:24h,invalidationType:refresh","startTime":"2021-06-02 09:23:21-06"}}
+```json
+{
+	"alerts":[
+		{
+			"text":"Invalidation request created for http://amc-linear-origin.local.tld/path/.*\\.jpeg, start:2021-06-02 15:23:21.348 +0000 UTC end 2021-06-03 15:23:21.348 +0000 UTC",
+			"level":"success"
+		}
+	],
+	"response":{
+		"assetUrl":"http://amc-linear-origin.local.tld/path/.*\\.jpeg",
+		"createdBy":"admin",
+		"deliveryService":"amc-live",
+		"id":1,
+		"keyword":"PURGE",
+		"parameters":"TTL:24h,invalidationType:refresh",
+		"startTime":"2021-06-02 09:23:21-06"
+	}
+}
 ```
 
 ___
