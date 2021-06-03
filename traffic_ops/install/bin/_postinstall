@@ -729,7 +729,7 @@ def write_encryption_key(aes_key_location): # type: (str) -> None
 		"-base64",
 		"32"
 	)
-	if not exec_openssl("Generating an AES encryption key to %s" %aes_key_location, *args):
+	if not exec_openssl("Generating an AES encryption key to {loc}".format(loc=aes_key_location), *args):
 		logging.debug("AES key generation failed")
 		raise OSError("failed to generate AES key")
 
