@@ -22,10 +22,10 @@ package profileparameter
 import (
 	"database/sql"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
