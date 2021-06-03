@@ -94,28 +94,6 @@
       "hidden": "1"
     }
   ],
-  "/opt/traffic_ops/app/db/dbconf.yml": [
-    {
-      "Database server root (admin) username": "dbuser",
-      "config_var": "pgUser"
-    },
-    {
-      "Database server admin password": "dbpass",
-      "config_var": "pgPassword",
-      "hidden": "1"
-    }
-  ],
-  "/opt/traffic_ops/app/db/trafficvault/dbconf.yml": [
-    {
-      "Database server root (admin) username": "dbuser",
-      "config_var": "pgUser"
-    },
-    {
-      "Database server admin password": "dbpass",
-      "config_var": "pgPassword",
-      "hidden": "1"
-    }
-  ],
   "/opt/traffic_ops/install/data/json/openssl_configuration.json": [
     {
       "Do you want to generate a certificate?": "yes",

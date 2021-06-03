@@ -182,22 +182,6 @@ echo "$(jq "$(<<'JQ_FILTER' envsubst
       "${TV_DB_USER_PASS}"
     else . end))
   ) |
-  ."/opt/traffic_ops/app/db/dbconf.yml"[] |= (
-    (select(.config_var == "pgUser") |= with_entries(if .key | test("^[A-Z]") then .value =
-      "${DB_USER}"
-    else . end)) |
-    (select(.config_var == "pgPassword") |= with_entries(if .key | test("^[A-Z]") then .value =
-      "${DB_USER_PASS}"
-    else . end))
-  ) |
-  ."/opt/traffic_ops/app/db/trafficvault/dbconf.yml"[] |= (
-    (select(.config_var == "pgUser") |= with_entries(if .key | test("^[A-Z]") then .value =
-      "${TV_DB_USER}"
-    else . end)) |
-    (select(.config_var == "pgPassword") |= with_entries(if .key | test("^[A-Z]") then .value =
-      "${TV_DB_USER_PASS}"
-    else . end))
-  ) |
   ."/opt/traffic_ops/install/data/json/openssl_configuration.json"[] |= (
     (select(.config_var == "genCert") |= with_entries(if .key | test("^[A-Z]") then .value =
       "no"
