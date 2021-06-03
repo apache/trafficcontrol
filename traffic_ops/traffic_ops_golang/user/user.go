@@ -201,6 +201,9 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	} else {
 		log.Debugln("Non IMS request")
 	}
+
+	groupBy := "\n" + `GROUP BY u.id, r.name, t.name`
+	orderBy = groupBy + orderBy
 	query := this.SelectQuery() + where + orderBy + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
@@ -376,11 +379,10 @@ func (user *TOUser) SelectQuery() string {
 	u.tenant_id,
 	t.name as tenant,
 	u.last_updated,
-	(SELECT count(l.tm_user) FROM log as l WHERE l.tm_user = u.id) as changeLogCount
+	(SELECT count(l.tm_user) FROM log as l WHERE l.tm_user = u.id) as change_log_count
 	FROM tm_user u
 	LEFT JOIN tenant t ON u.tenant_id = t.id
-	LEFT JOIN role r ON u.role = r.id
-	GROUP BY u.id, r.name, t.name`
+	LEFT JOIN role r ON u.role = r.id`
 }
 
 func (user *TOUser) UpdateQuery() string {

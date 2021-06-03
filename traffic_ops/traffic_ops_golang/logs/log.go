@@ -22,7 +22,6 @@ package logs
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -64,7 +63,6 @@ func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	if _, ok := inf.Params["username"]; ok {
 		username = inf.Params["username"]
 	}
-	fmt.Println(days, limit, username)
 
 	setLastSeenCookie(w)
 	logs, count, err := getLog(inf.Tx.Tx, days, limit, username)
