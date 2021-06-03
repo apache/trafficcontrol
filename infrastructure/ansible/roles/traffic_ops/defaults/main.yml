@@ -139,22 +139,22 @@ todb_dbconf:
     open_manual: ""
 
 # --- Traffic Vault Postgres backend traffic_vault_config (in cdn.conf) & dbconf.yml
-tvdb_db_name: traffic_vault
-tvdb_type: Pg
-tvdb_port: 5432
-tvdb_host: localhost
-tvdb_username:
-tvdb_password:
-tvdb_ssl_enable: false
-tvdb_aes_key_loc: /opt/traffic_ops/app/conf/aes.key
-tvdb_dbconf:
+to_tvdb_db_name: traffic_vault
+to_tvdb_type: Pg
+to_tvdb_port: 5432
+to_tvdb_host: localhost
+to_tvdb_username:
+to_tvdb_password:
+to_tvdb_ssl_enable: false
+to_tvdb_aes_key_loc: "{{ to_conf_installdir }}/aes.key"
+to_tvdb_dbconf:
   production:
     driver: postgres
     host: localhost
     port: 5432
-    user: "{{ tvdb_username }}"
-    password: "{{ tvdb_password }}"
-    dbname: "{{ tvdb_db_name }}"
+    user: "{{ to_tvdb_username }}"
+    password: "{{ to_tvdb_password }}"
+    dbname: "{{ to_tvdb_db_name }}"
     sslmode: disable
     open_manual: ""
 
