@@ -34,9 +34,27 @@
     ssl_rootcert: "{{ postgresql_certs_ca }}"
   no_log: true
 
+- name: Create Traffic Vault Database User
+  postgresql_user:
+    encrypted: yes
+    name: "{{ tvdb_username }}"
+    password: "{{ tvdb_password }}"
+    port: "{{ postgresql_port }}"
+    login_host: 127.0.0.1
+    role_attr_flags: SUPERUSER,LOGIN,CREATEDB
+    ssl_rootcert: "{{ postgresql_certs_ca }}"
+  no_log: true
+
 - name: Create Traffic Ops Database
   postgresql_db:
     login_host: 127.0.0.1
     name: "{{ todb_db_name }}"
     owner: "{{ todb_username }}"
+    port: "{{ postgresql_port }}"
+
+- name: Create Traffic Vault Database
+  postgresql_db:
+    login_host: 127.0.0.1
+    name: "{{ tvdb_db_name }}"
+    owner: "{{ tvdb_username }}"
     port: "{{ postgresql_port }}"

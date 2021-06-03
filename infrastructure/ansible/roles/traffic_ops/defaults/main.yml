@@ -112,7 +112,7 @@ to_go_supported_ds_metrics:
 
 to_plugin_config: {}
 
-to_traffic_vault_backend: "riak"
+to_traffic_vault_backend: "postgres"
 
 to_smtp_enabled: false
 to_smtp_username: ""
@@ -135,6 +135,26 @@ todb_dbconf:
     user: "{{ todb_username }}"
     password: "{{ todb_password }}"
     dbname: "{{ todb_db_name }}"
+    sslmode: disable
+    open_manual: ""
+
+# --- Traffic Vault Postgres backend traffic_vault_config (in cdn.conf) & dbconf.yml
+tvdb_db_name: traffic_vault
+tvdb_type: Pg
+tvdb_port: 5432
+tvdb_host: localhost
+tvdb_username:
+tvdb_password:
+tvdb_ssl_enable: false
+tvdb_aes_key_loc: /opt/traffic_ops/app/conf/aes.key
+tvdb_dbconf:
+  production:
+    driver: postgres
+    host: localhost
+    port: 5432
+    user: "{{ tvdb_username }}"
+    password: "{{ tvdb_password }}"
+    dbname: "{{ tvdb_db_name }}"
     sslmode: disable
     open_manual: ""
 

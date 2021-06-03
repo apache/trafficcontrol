@@ -14,13 +14,13 @@
 version: "1.0"
 name: dbconf.yml
 
-{% for db_env in todb_dbconf %}
+{% for db_env in tvdb_dbconf %}
 {{ db_env }}:
-    driver: {{ todb_dbconf[db_env]['driver'] }}
-{% if todb_dbconf[db_env]['open_manual'] | length %}
-    open: {{ todb_dbconf[db_env]['open_manual'] }}
+    driver: {{ tvdb_dbconf[db_env]['driver'] }}
+{% if tvdb_dbconf[db_env]['open_manual'] | length %}
+    open: {{ tvdb_dbconf[db_env]['open_manual'] }}
 {% else %}
-    open: host={{ todb_dbconf[db_env]['host'] }} port={{ todb_dbconf[db_env]['port'] }} user={{ todb_dbconf[db_env]['user'] }} password={{ todb_dbconf[db_env]['password'] }} dbname={{ todb_dbconf[db_env]['dbname'] }} sslmode={{ todb_dbconf[db_env]['sslmode'] }}
+    open: host={{ tvdb_dbconf[db_env]['host'] }} port={{ tvdb_dbconf[db_env]['port'] }} user={{ tvdb_dbconf[db_env]['user'] }} password={{ tvdb_dbconf[db_env]['password'] }} dbname={{ tvdb_dbconf[db_env]['dbname'] }} sslmode={{ tvdb_dbconf[db_env]['sslmode'] }}
 {% endif %}
 
 {% endfor %}
