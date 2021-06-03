@@ -100,7 +100,7 @@ Response Structure
 :infoUrl:                   An :ref:`ds-info-url`
 :initialDispersion:         The :ref:`ds-initial-dispersion`
 :ipv6RoutingEnabled:        A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
-:lastUpdated:               The date and time at which this :term:`Delivery Service` was last updated, in an ISO-like format
+:lastUpdated:               The date and time at which this :term:`Delivery Service` was last updated, in :ref:`non-rfc-datetime`
 :logsEnabled:               A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 :longDesc:                  The :ref:`ds-longdesc` of this :term:`Delivery Service`
 :longDesc1:                 The :ref:`ds-longdesc2` of this :term:`Delivery Service`
@@ -390,7 +390,7 @@ Response Structure
 :infoUrl:                   An :ref:`ds-info-url`
 :initialDispersion:         The :ref:`ds-initial-dispersion`
 :ipv6RoutingEnabled:        A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
-:lastUpdated:               The date and time at which this :term:`Delivery Service` was last updated, in an ISO-like format
+:lastUpdated:               The date and time at which this :term:`Delivery Service` was last updated, in :ref:`non-rfc-datetime`
 :logsEnabled:               A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 :longDesc:                  The :ref:`ds-longdesc` of this :term:`Delivery Service`
 :longDesc1:                 The :ref:`ds-longdesc2` of this :term:`Delivery Service`

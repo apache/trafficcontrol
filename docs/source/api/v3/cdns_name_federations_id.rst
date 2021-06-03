@@ -70,7 +70,7 @@ Response Structure
 
 	.. note:: This key will only be present if the description was provided when the federation was created
 
-:lastUpdated: The date and time at which this federation was last modified, in an ISO-like format
+:lastUpdated: The date and time at which this federation was last modified, in :ref:`non-rfc-datetime`
 :ttl:         Time to Live (TTL) for the ``cname``, in hours
 
 

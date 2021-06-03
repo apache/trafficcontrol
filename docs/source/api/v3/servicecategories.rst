@@ -63,7 +63,7 @@ Request Structure
 Response Structure
 ------------------
 :name:        This :term:`Service Category`'s name
-:lastUpdated: The date and time at which this :term:`Service Category` was last modified, in an ISO-like format
+:lastUpdated: The date and time at which this :term:`Service Category` was last modified, in :ref:`non-rfc-datetime`
 
 .. code-block:: http
 	:caption: Response Example
@@ -119,7 +119,7 @@ Request Structure
 Response Structure
 ------------------
 :name:        This :term:`Service Category`'s name
-:lastUpdated: The date and time at which this :term:`Service Category` was last modified, in an ISO-like format
+:lastUpdated: The date and time at which this :term:`Service Category` was last modified, in :ref:`non-rfc-datetime`
 
 .. code-block:: http
 	:caption: Response Example

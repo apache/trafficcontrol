@@ -55,7 +55,7 @@ Response Structure
 :cachegroupParameters: An array of identifying information for the :ref:`cache-group-parameters` of :term:`Cache Groups`
 
 	:cachegroup:   A string containing the :ref:`cache-group-name` of the :term:`Cache Group`
-	:last_updated: Date and time of last modification in an ISO-like format
+	:last_updated: Date and time of last modification in :ref:`non-rfc-datetime`
 	:parameter:    An integer that is the :term:`Parameter`'s :ref:`parameter-id`
 
 .. code-block:: http

@@ -70,7 +70,7 @@ Response Structure
 :cdnName:         The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
 :description:     The :term:`Profile`'s :ref:`profile-description`
 :id:              The :term:`Profile`'s :ref:`profile-id`
-:lastUpdated:     The date and time at which this :term:`Profile` was last updated, in an ISO-like format
+:lastUpdated:     The date and time at which this :term:`Profile` was last updated, in :ref:`non-rfc-datetime`
 :name:            The :term:`Profile`'s :ref:`profile-name`
 :routingDisabled: The :term:`Profile`'s :ref:`profile-routing-disabled` setting
 :type:            The :term:`Profile`'s :ref:`profile-type`
