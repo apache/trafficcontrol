@@ -39,6 +39,8 @@ func TestJobs(t *testing.T) {
 		GetTestJobsByValidData(t)
 		GetTestJobsByInvalidData(t)
 		CreateTestJobsInvalidds(t)
+		CreateTestJobsAlreadyExistTTL(t)
+		CreateTestJobswithPastDate(t)
 	})
 }
 
@@ -549,6 +551,132 @@ func CreateTestJobsInvalidds(t *testing.T) {
 	resp, reqInf, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
 	if err == nil {
 		t.Errorf("Expected deliveryService: cannot be blank., No DeliveryService exists matching identifier: - alerts: %v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+}
+
+func CreateTestJobsAlreadyExistTTL(t *testing.T) {
+
+	job := testData.InvalidationJobs[0]
+	job.StartTime = &tc.Time{
+		Time:  time.Now().Add(time.Minute).UTC(),
+		Valid: true,
+	}
+	testData.InvalidationJobs[0] = job
+
+	job = testData.InvalidationJobs[0]
+	request := tc.InvalidationJobInput{
+		DeliveryService: job.DeliveryService,
+		Regex:           job.Regex,
+		StartTime:       job.StartTime,
+		TTL:             job.TTL,
+	}
+	resp, _, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("Expected Invalidation request created, but found error %v - Alert %v", err, resp.Alerts)
+	}
+}
+
+func CreateTestJobswithPastDate(t *testing.T) {
+
+	//past start date
+	dt := time.Now()
+	dt.Format("2019-06-18 21:28:31")
+
+	job := testData.InvalidationJobs[0]
+	job.StartTime = &tc.Time{
+		Time:  dt.AddDate(0, 0, -1),
+		Valid: true,
+	}
+	testData.InvalidationJobs[0] = job
+
+	job = testData.InvalidationJobs[0]
+	request := tc.InvalidationJobInput{
+		DeliveryService: job.DeliveryService,
+		Regex:           job.Regex,
+		StartTime:       job.StartTime,
+		TTL:             job.TTL,
+	}
+	resp, reqInf, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected startTime: must be in the future - Alert %v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+
+	//RFC Format past start date
+	dt = time.Now()
+	dt.Format("2019-10-12T07:20:50.52Z")
+
+	job = testData.InvalidationJobs[0]
+	job.StartTime = &tc.Time{
+		Time:  dt.AddDate(0, 0, -1),
+		Valid: true,
+	}
+	testData.InvalidationJobs[0] = job
+
+	job = testData.InvalidationJobs[0]
+	request = tc.InvalidationJobInput{
+		DeliveryService: job.DeliveryService,
+		Regex:           job.Regex,
+		StartTime:       job.StartTime,
+		TTL:             job.TTL,
+	}
+	resp, reqInf, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected startTime: must be in the future - Alert %v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+
+	//Non standard Format past start date
+	dt = time.Now()
+	dt.Format("2020-03-11 14:12:20-06")
+
+	job = testData.InvalidationJobs[0]
+	job.StartTime = &tc.Time{
+		Time:  dt.AddDate(0, 0, -5),
+		Valid: true,
+	}
+	testData.InvalidationJobs[0] = job
+
+	job = testData.InvalidationJobs[0]
+	request = tc.InvalidationJobInput{
+		DeliveryService: job.DeliveryService,
+		Regex:           job.Regex,
+		StartTime:       job.StartTime,
+		TTL:             job.TTL,
+	}
+	resp, reqInf, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected startTime: must be in the future - Alert %v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+
+	//unix standard format past start date
+	job = testData.InvalidationJobs[0]
+	job.StartTime = &tc.Time{
+		Time:  time.Unix(1, 0),
+		Valid: true,
+	}
+	testData.InvalidationJobs[0] = job
+
+	job = testData.InvalidationJobs[0]
+	request = tc.InvalidationJobInput{
+		DeliveryService: job.DeliveryService,
+		Regex:           job.Regex,
+		StartTime:       job.StartTime,
+		TTL:             job.TTL,
+	}
+	resp, reqInf, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected startTime: must be in the future - Alert %v", resp.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
