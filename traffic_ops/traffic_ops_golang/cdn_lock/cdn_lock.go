@@ -97,13 +97,13 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
+	if cdnLock.Soft == nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("field 'soft' must be present"), nil)
+		return
+	}
 	if cdnLock.CDN == "" {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("field 'cdn' must be present"), nil)
 		return
-	}
-	// by default, always create soft (or shared) locks
-	if cdnLock.Soft == nil {
-		cdnLock.Soft = util.BoolPtr(true)
 	}
 	cdnLock.UserName = inf.User.UserName
 	resultRows, err := inf.Tx.NamedQuery(insertQuery, cdnLock)
