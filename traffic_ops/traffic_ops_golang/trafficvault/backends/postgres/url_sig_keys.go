@@ -40,7 +40,7 @@ func getURLSigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context, aesKey []by
 		return tc.URLSigKeys{}, false, e
 	}
 
-	jsonUrlKeys, err := AesDecrypt(encryptedUrlSigKey, aesKey)
+	jsonUrlKeys, err := AESDecrypt(encryptedUrlSigKey, aesKey)
 	if err != nil {
 		return tc.URLSigKeys{}, false, err
 	}
@@ -65,7 +65,7 @@ func putURLSigKeys(xmlID string, tvTx *sqlx.Tx, keys tc.URLSigKeys, ctx context.
 		return err
 	}
 
-	encryptedKey, err := AesEncrypt(keyJSON, aesKey)
+	encryptedKey, err := AESEncrypt(keyJSON, aesKey)
 	if err != nil {
 		return errors.New("encrypting keys: " + err.Error())
 	}

@@ -96,18 +96,22 @@ Usage
 
 Options and Arguments
 ---------------------
-.. option:: -newKey
+.. option:: --new-key
 
 	The file path for the new base64-encoded AES key.
 
-.. option:: -previousKey
+.. option:: --previous-key
 
 	The file path for the previous base64-encoded AES key.
+
+.. option:: --cfg
+
+	The path for the configuration file. Default is ``./reencrypt.conf``.
 
 .. code-block:: bash
 	:caption: Example Usage
 
-	 ./reencrypt -newKey ~/exampleNewKey.txt -previousKey ~/exampleOldKey.txt
+	 ./reencrypt --new-key ~/exampleNewKey.txt --previous-key ~/exampleOldKey.txt
 
 .. _traffic_vault_riak_backend:
 

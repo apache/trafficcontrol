@@ -32,7 +32,9 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres/hashicorpvault"
 )
 
-func AesEncrypt(bytesToEncrypt []byte, aesKey []byte) (string, error) {
+// AESEncrypt encrypts a byte array using an AES key.
+// This returns a encrypted byte array and an error if the encryption was not successful.
+func AESEncrypt(bytesToEncrypt []byte, aesKey []byte) (string, error) {
 	cipherBlock, err := aes.NewCipher(aesKey)
 	if err != nil {
 		return "", err
@@ -51,7 +53,9 @@ func AesEncrypt(bytesToEncrypt []byte, aesKey []byte) (string, error) {
 	return string(gcm.Seal(nonce, nonce, bytesToEncrypt, nil)), nil
 }
 
-func AesDecrypt(bytesToDecrypt []byte, aesKey []byte) ([]byte, error) {
+// AESDecrypt decrypts a byte array using an AES key.
+// This returns a decrypted byte array and an error if the decryption was not successful.
+func AESDecrypt(bytesToDecrypt []byte, aesKey []byte) ([]byte, error) {
 	cipherBlock, err := aes.NewCipher(aesKey)
 	if err != nil {
 		return []byte{}, err

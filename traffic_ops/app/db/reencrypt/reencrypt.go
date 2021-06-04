@@ -1,3 +1,27 @@
+/*
+
+Name
+	reencrypt
+
+Synopsis
+	reencrypt [--previous-key value] [--new-key value] [--cfg value]
+
+Description
+  The reencrypt app is used to re-encrypt all data in the Postgres Traffic Vault
+  using a new base64-encoded AES key.
+
+Options
+	--previous-key
+        The file path for the previous base64-encoded AES key.
+
+	--new-key
+        The file path for the new base64-encoded AES key.
+
+	--cfg
+        The path for the configuration file. Default is `./reencrypt.conf`.
+
+*/
+
 package main
 
 /*
@@ -20,11 +44,6 @@ package main
  */
 
 import (
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres"
-
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
-
 	"crypto/aes"
 	"encoding/base64"
 	"encoding/json"
@@ -35,47 +54,52 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres"
+
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 const PROPERTIES_FILE = "./reencrypt.conf"
 
 func main() {
-	previousKeyLocation := flag.String("previousKey", "", "The file path for the previous base64 encoded AES key.")
-	newKeyLocation := flag.String("newKey", "", "The file path for the new base64 encoded AES key.")
+	previousKeyLocation := flag.String("previous-key", "", "The file path for the previous base64 encoded AES key.")
+	newKeyLocation := flag.String("new-key", "", "The file path for the new base64 encoded AES key.")
+	cfg := flag.String("cfg", PROPERTIES_FILE, "The path for the configuration file. Default is "+PROPERTIES_FILE+".")
 	flag.Parse()
 
+	if len(os.Args) < 4 {
+		flag.Usage()
+		os.Exit(1)
+	}
+
 	if previousKeyLocation == nil || *previousKeyLocation == "" {
-		fmt.Println("previousKey flag is required.")
-		os.Exit(0)
+		die("previous-key flag is required.")
 	}
 	if newKeyLocation == nil || *newKeyLocation == "" {
-		fmt.Println("newKey flag is required.")
-		os.Exit(0)
+		die("new-key flag is required.")
 	}
 
 	newKey, err := readKey(*newKeyLocation)
 	if err != nil {
-		fmt.Println("reading newKey: ", err.Error())
-		os.Exit(0)
+		die("reading new-key: " + err.Error())
 	}
 
 	previousKey, err := readKey(*previousKeyLocation)
 	if err != nil {
-		fmt.Println("reading previousKey: ", err.Error())
-		os.Exit(0)
+		die("reading previous-key: " + err.Error())
 	}
 
-	dbConfBytes, err := ioutil.ReadFile(PROPERTIES_FILE)
+	dbConfBytes, err := ioutil.ReadFile(*cfg)
 	if err != nil {
-		fmt.Println("reading db conf '", PROPERTIES_FILE, "': ", err.Error())
-		os.Exit(0)
+		die("reading db conf '" + *cfg + "': " + err.Error())
 	}
 
 	pgCfg := Config{}
 	err = json.Unmarshal(dbConfBytes, &pgCfg)
 	if err != nil {
-		fmt.Println("unmarshalling '", PROPERTIES_FILE, "': ", err.Error())
-		os.Exit(0)
+		die("unmarshalling '" + *cfg + "': " + err.Error())
 	}
 
 	sslStr := "require"
@@ -84,30 +108,24 @@ func main() {
 	}
 	db, err := sqlx.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s&fallback_application_name=trafficvault", pgCfg.User, pgCfg.Password, pgCfg.Hostname, pgCfg.Port, pgCfg.DBName, sslStr))
 	if err != nil {
-		fmt.Println("opening database: " + err.Error())
-		os.Exit(0)
+		die("opening database: " + err.Error())
 	}
 
 	if err = reEncryptSslKeys(db, previousKey, newKey); err != nil {
-		fmt.Println("re-encrypting SSL Keys: ", err.Error())
-		os.Exit(0)
+		die("re-encrypting SSL Keys: " + err.Error())
 	}
 	if err = reEncryptUrlSigKeys(db, previousKey, newKey); err != nil {
-		fmt.Println("re-encrypting URL Sig Keys: ", err.Error())
-		os.Exit(0)
+		die("re-encrypting URL Sig Keys: " + err.Error())
 	}
 	if err = reEncryptUriSigningKeys(db, previousKey, newKey); err != nil {
-		fmt.Println("re-encrypting URI Signing Keys: ", err.Error())
-		os.Exit(0)
+		die("re-encrypting URI Signing Keys: " + err.Error())
 	}
 	if err = reEncryptDNSSECKeys(db, previousKey, newKey); err != nil {
-		fmt.Println("re-encrypting DNSSEC Keys: ", err.Error())
-		os.Exit(0)
+		die("re-encrypting DNSSEC Keys: " + err.Error())
 	}
 
 	if err = updateKeyFile(previousKey, *previousKeyLocation, newKey); err != nil {
-		fmt.Println("updating the key file: ", err.Error())
-		os.Exit(0)
+		die("updating the key file: " + err.Error())
 	}
 
 	fmt.Println("Successfully re-encrypted keys for SSL Keys, URL Sig Keys, URI Signing Keys, and DNSSEC Keys.")
@@ -132,7 +150,7 @@ func readKey(keyLocation string) ([]byte, error) {
 
 	key, err := base64.StdEncoding.DecodeString(keyBase64)
 	if err != nil {
-		return []byte{}, errors.New("AES key cannot be decoded from base64")
+		return []byte{}, errors.New(fmt.Sprintf("AES key cannot be decoded from base64: %v", err))
 	}
 
 	// verify the key works
@@ -147,56 +165,47 @@ func readKey(keyLocation string) ([]byte, error) {
 func reEncryptSslKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 	tx, err := db.Begin()
 	if err != nil {
-		fmt.Println("transaction begin failed ", err, " ", tx)
-		os.Exit(0)
+		return errors.New(fmt.Sprintf("transaction begin failed %v %v ", err, tx))
 	}
 	defer tx.Commit()
 
 	rows, err := tx.Query("SELECT id, data FROM sslkey")
 	if err != nil {
-		fmt.Println("querying: ", err)
-		os.Exit(0)
+		return errors.New(fmt.Sprintf("querying: %v", err))
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		updateTx, err := db.Begin()
 		if err != nil {
-			fmt.Println("transaction begin failed ", err, " ", updateTx)
-			os.Exit(0)
+			return errors.New(fmt.Sprintf("transaction begin failed %v %v", err, updateTx))
 		}
 		defer updateTx.Commit()
 
 		id := 0
 		var encryptedSslKeys []byte
 		if err = rows.Scan(&id, &encryptedSslKeys); err != nil {
-			fmt.Println("getting SSL Keys: ", err)
-			return err
+			return errors.New(fmt.Sprintf("getting SSL Keys: %v", err))
 		}
-		jsonKeys, err := postgres.AesDecrypt(encryptedSslKeys, previousKey)
+		jsonKeys, err := postgres.AESDecrypt(encryptedSslKeys, previousKey)
 		if err != nil {
-			fmt.Println("reading SSL Keys: ", err)
-			return err
+			return errors.New(fmt.Sprintf("reading SSL Keys: %v", err))
 		}
 
-		reencryptedKeys, err := postgres.AesEncrypt(jsonKeys, newKey)
+		reencryptedKeys, err := postgres.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
-			fmt.Println("encrypting SSL Keys with new key: ", err)
-			return err
+			return errors.New(fmt.Sprintf("encrypting SSL Keys with new key: %v", err))
 		}
 
 		res, err := updateTx.Exec(`UPDATE sslkey SET data = $1 WHERE id = $2`, []byte(reencryptedKeys), id)
 		if err != nil {
-			fmt.Println("updating SSL Keys for id ", id, ": ", err)
-			return err
+			return errors.New(fmt.Sprintf("updating SSL Keys for id %d: %v", id, err))
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			fmt.Println("error determining rows affected for reencrypting SSL Keys with id ", id)
 			return errors.New(fmt.Sprintf("determining rows affected for reencrypting SSL Keys with id %d", id))
 		}
 		if rowsAffected == 0 {
-			fmt.Println("no rows updated for reencrypting SSL Keys for id ", id)
 			return errors.New(fmt.Sprintf("no rows updated for reencrypting SSL Keys for id %d", id))
 		}
 
@@ -208,57 +217,48 @@ func reEncryptSslKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 func reEncryptUrlSigKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 	tx, err := db.Begin()
 	if err != nil {
-		fmt.Println("transaction begin failed ", err, " ", tx)
-		os.Exit(0)
+		return errors.New(fmt.Sprintf("transaction begin failed %v %v", err, tx))
 	}
 	defer tx.Commit()
 
 	rows, err := tx.Query("SELECT deliveryservice, data FROM url_sig_key")
 	if err != nil {
-		fmt.Println("querying: ", err)
-		os.Exit(0)
+		return errors.New(fmt.Sprintf("querying: %v", err))
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		updateTx, err := db.Begin()
 		if err != nil {
-			fmt.Println("transaction begin failed ", err, " ", updateTx)
-			os.Exit(0)
+			return errors.New(fmt.Sprintf("transaction begin failed %v %v", err, updateTx))
 		}
 		defer updateTx.Commit()
 
 		ds := ""
 		var encryptedSslKeys []byte
 		if err = rows.Scan(&ds, &encryptedSslKeys); err != nil {
-			fmt.Println("getting URL Sig Keys: ", err)
-			return err
+			return errors.New(fmt.Sprintf("getting URL Sig Keys: %v", err))
 		}
-		jsonKeys, err := postgres.AesDecrypt(encryptedSslKeys, previousKey)
+		jsonKeys, err := postgres.AESDecrypt(encryptedSslKeys, previousKey)
 		if err != nil {
-			fmt.Println("reading URL Sig Keys: ", err)
-			return err
+			return errors.New(fmt.Sprintf("reading URL Sig Keys: %v", err))
 		}
 
-		reencryptedKeys, err := postgres.AesEncrypt(jsonKeys, newKey)
+		reencryptedKeys, err := postgres.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
-			fmt.Println("encrypting URL Sig Keys with new key: ", err)
-			return err
+			return errors.New(fmt.Sprintf("encrypting URL Sig Keys with new key: %v", err))
 		}
 
 		res, err := updateTx.Exec(`UPDATE url_sig_key SET data = $1 WHERE deliveryservice = $2`, []byte(reencryptedKeys), ds)
 		if err != nil {
-			fmt.Println("updating URL Sig Keys for deliveryservice ", ds, ": ", err)
-			return err
+			return errors.New(fmt.Sprintf("updating URL Sig Keys for deliveryservice %s: %v", ds, err))
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			fmt.Println("error determining rows affected for reencrypting URL Sig Keys with deliveryservice ", ds)
-			return errors.New(fmt.Sprintf("determining rows affected for reencrypting URL Sig Keys with deliveryservice %d", ds))
+			return errors.New(fmt.Sprintf("determining rows affected for reencrypting URL Sig Keys with deliveryservice %s", ds))
 		}
 		if rowsAffected == 0 {
-			fmt.Println("no rows updated for reencrypting URL Sig Keys for id ", ds)
-			return errors.New(fmt.Sprintf("no rows updated for reencrypting URL Sig Keys for deliveryservice %d", ds))
+			return errors.New(fmt.Sprintf("no rows updated for reencrypting URL Sig Keys for deliveryservice %s", ds))
 		}
 
 	}
@@ -269,57 +269,48 @@ func reEncryptUrlSigKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 func reEncryptUriSigningKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 	tx, err := db.Begin()
 	if err != nil {
-		fmt.Println("transaction begin failed ", err, " ", tx)
-		os.Exit(0)
+		return errors.New(fmt.Sprintf("transaction begin failed %v %v", err, tx))
 	}
 	defer tx.Commit()
 
 	rows, err := tx.Query("SELECT deliveryservice, data FROM uri_signing_key")
 	if err != nil {
-		fmt.Println("querying: ", err)
-		os.Exit(0)
+		return errors.New(fmt.Sprintf("querying: %v", err))
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		updateTx, err := db.Begin()
 		if err != nil {
-			fmt.Println("transaction begin failed ", err, " ", updateTx)
-			os.Exit(0)
+			return errors.New(fmt.Sprintf("transaction begin failed %v %v", err, updateTx))
 		}
 		defer updateTx.Commit()
 
 		ds := ""
 		var encryptedSslKeys []byte
 		if err = rows.Scan(&ds, &encryptedSslKeys); err != nil {
-			fmt.Println("getting URI Signing Keys: ", err)
-			return err
+			return errors.New(fmt.Sprintf("getting URI Signing Keys: %v", err))
 		}
-		jsonKeys, err := postgres.AesDecrypt(encryptedSslKeys, previousKey)
+		jsonKeys, err := postgres.AESDecrypt(encryptedSslKeys, previousKey)
 		if err != nil {
-			fmt.Println("reading URI Signing Keys: ", err)
-			return err
+			return errors.New(fmt.Sprintf("reading URI Signing Keys: %v", err))
 		}
 
-		reencryptedKeys, err := postgres.AesEncrypt(jsonKeys, newKey)
+		reencryptedKeys, err := postgres.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
-			fmt.Println("encrypting URI Signing Keys with new key: ", err)
-			return err
+			return errors.New(fmt.Sprintf("encrypting URI Signing Keys with new key: %v", err))
 		}
 
 		res, err := updateTx.Exec(`UPDATE uri_signing_key SET data = $1 WHERE deliveryservice = $2`, []byte(reencryptedKeys), ds)
 		if err != nil {
-			fmt.Println("updating URI Signing Keys for deliveryservice ", ds, ": ", err)
-			return err
+			return errors.New(fmt.Sprintf("updating URI Signing Keys for deliveryservice %s: %v", ds, err))
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			fmt.Println("error determining rows affected for reencrypting URI Signing Keys with deliveryservice ", ds)
-			return errors.New(fmt.Sprintf("determining rows affected for reencrypting URI Signing Keys with deliveryservice %d", ds))
+			return errors.New(fmt.Sprintf("determining rows affected for reencrypting URI Signing Keys with deliveryservice %s", ds))
 		}
 		if rowsAffected == 0 {
-			fmt.Println("no rows updated for reencrypting URI Signing Keys for id ", ds)
-			return errors.New(fmt.Sprintf("no rows updated for reencrypting URI Signing Keys for deliveryservice %d", ds))
+			return errors.New(fmt.Sprintf("no rows updated for reencrypting URI Signing Keys for deliveryservice %s", ds))
 		}
 
 	}
@@ -330,57 +321,48 @@ func reEncryptUriSigningKeys(db *sqlx.DB, previousKey []byte, newKey []byte) err
 func reEncryptDNSSECKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 	tx, err := db.Begin()
 	if err != nil {
-		fmt.Println("transaction begin failed ", err, " ", tx)
-		os.Exit(0)
+		return errors.New(fmt.Sprintf("transaction begin failed %v %v", err, tx))
 	}
 	defer tx.Commit()
 
 	rows, err := tx.Query("SELECT cdn, data FROM dnssec")
 	if err != nil {
-		fmt.Println("querying: ", err)
-		os.Exit(0)
+		return errors.New(fmt.Sprintf("querying: %v", err))
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		updateTx, err := db.Begin()
 		if err != nil {
-			fmt.Println("transaction begin failed ", err, " ", updateTx)
-			os.Exit(0)
+			return errors.New(fmt.Sprintf("transaction begin failed %v %v", err, updateTx))
 		}
 		defer updateTx.Commit()
 
 		ds := ""
 		var encryptedSslKeys []byte
 		if err = rows.Scan(&ds, &encryptedSslKeys); err != nil {
-			fmt.Println("getting DNSSEC Keys: ", err)
-			return err
+			return errors.New(fmt.Sprintf("getting DNSSEC Keys: %v", err))
 		}
-		jsonKeys, err := postgres.AesDecrypt(encryptedSslKeys, previousKey)
+		jsonKeys, err := postgres.AESDecrypt(encryptedSslKeys, previousKey)
 		if err != nil {
-			fmt.Println("reading DNSSEC Keys: ", err)
-			return err
+			return errors.New(fmt.Sprintf("reading DNSSEC Keys: %v", err))
 		}
 
-		reencryptedKeys, err := postgres.AesEncrypt(jsonKeys, newKey)
+		reencryptedKeys, err := postgres.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
-			fmt.Println("encrypting DNSSEC Keys with new key: ", err)
-			return err
+			return errors.New(fmt.Sprintf("encrypting DNSSEC Keys with new key: %v", err))
 		}
 
 		res, err := updateTx.Exec(`UPDATE dnssec SET data = $1 WHERE cdn = $2`, []byte(reencryptedKeys), ds)
 		if err != nil {
-			fmt.Println("updating DNSSEC Keys for deliveryservice ", ds, ": ", err)
-			return err
+			return errors.New(fmt.Sprintf("updating DNSSEC Keys for deliveryservice %s: %v", ds, err))
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			fmt.Println("error determining rows affected for reencrypting DNSSEC Keys with deliveryservice ", ds)
-			return errors.New(fmt.Sprintf("determining rows affected for reencrypting DNSSEC Keys with deliveryservice %d", ds))
+			return errors.New(fmt.Sprintf("determining rows affected for reencrypting DNSSEC Keys with deliveryservice %s", ds))
 		}
 		if rowsAffected == 0 {
-			fmt.Println("no rows updated for reencrypting DNSSEC Keys for id ", ds)
-			return errors.New(fmt.Sprintf("no rows updated for reencrypting DNSSEC Keys for deliveryservice %d", ds))
+			return errors.New(fmt.Sprintf("no rows updated for reencrypting DNSSEC Keys for deliveryservice %s", ds))
 		}
 
 	}
@@ -403,4 +385,9 @@ func updateKeyFile(previousKey []byte, previousKeyLocation string, newKey []byte
 	}
 
 	return nil
+}
+
+func die(message string) {
+	fmt.Println(message)
+	os.Exit(1)
 }
