@@ -701,6 +701,10 @@
   vars:
     host_iface:
       avail_ifaces: "{{ hostvars[item]['ansible_interfaces'] }}"
+    
+- name: testing this out
+  template: src=./interfaces.j2 dest=./output.txt
+  with_items: "{{ all_available_interfaces }}"
 
 - name: debugging
   debug:
