@@ -64,11 +64,11 @@ Which is mapped to a go `struct` in the `go-tc` lib.
 ```go
 type InvalidationJobInput struct {
 	DeliveryService *interface{} `json:"deliveryService"`
-	Regex *string `json:"regex"`
-	StartTime *Time `json:"startTime"`
-	TTL *interface{} `json:"ttl"`
-	dsid *uint
-	ttl  *time.Duration
+	Regex           *string      `json:"regex"`
+	StartTime       *Time        `json:"startTime"`
+	TTL             *interface{} `json:"ttl"`
+	dsid            *uint
+	ttl             *time.Duration
 }
 ```
 
@@ -90,13 +90,13 @@ Body:
 This struct now contains the `InvalidationType *string` field.
 ```go
 type InvalidationJobInput struct {
-	DeliveryService *interface{} `json:"deliveryService"`
-	Regex *string `json:"regex"`
-	InvalidationType *string `json:"invalidationType,omitempty"`
-	StartTime *Time `json:"startTime"`
-	TTL *interface{} `json:"ttl"`
-	dsid *uint
-	ttl  *time.Duration
+	DeliveryService  *interface{} `json:"deliveryService"`
+	Regex            *string      `json:"regex"`
+	InvalidationType *string      `json:"invalidationType,omitempty"`
+	StartTime        *Time        `json:"startTime"`
+	TTL              *interface{} `json:"ttl"`
+	dsid             *uint
+	ttl              *time.Duration
 }
 ```
 
