@@ -25,6 +25,7 @@ func TestLogs(t *testing.T) {
 	WithObjs(t, []TCObj{Roles, Tenants, Users}, func() { // Objs added to create logs when this test is run alone
 		GetTestLogs(t)
 		GetTestLogsByLimit(t)
+		GetTestLogsByUsername(t)
 	})
 }
 
@@ -44,5 +45,17 @@ func GetTestLogsByLimit(t *testing.T) {
 	}
 	if len(toLogs.Response) != 10 {
 		t.Fatalf("Get logs by limit: incorrect number of logs returned (%d)", len(toLogs.Response))
+	}
+}
+
+func GetTestLogsByUsername(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("username", "admin")
+	toLogs, _, err := TOSession.GetLogs(opts)
+	if err != nil {
+		t.Errorf("error getting logs: %v - alerts: %+v", err, toLogs.Alerts)
+	}
+	if len(toLogs.Response) <= 0 {
+		t.Fatalf("Get logs by username: incorrect number of logs returned (%d)", len(toLogs.Response))
 	}
 }

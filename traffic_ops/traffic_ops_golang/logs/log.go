@@ -60,8 +60,8 @@ func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	if pLimit, ok := inf.IntParams["limit"]; ok {
 		limit = pLimit
 	}
-	if _, ok := inf.Params["username"]; ok {
-		username = inf.Params["username"]
+	if pUsername, ok := inf.Params["username"]; ok {
+		username = pUsername
 	}
 
 	setLastSeenCookie(w)
@@ -74,12 +74,8 @@ func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	if a.HasAlerts() {
 		api.WriteAlertsObj(w, r, 200, a, logs)
 	} else {
-		var logResp tc.UserLogResponse
-		logResp.Response = logs
-		logResp.Summary.Count = count
-		api.WriteResp(w, r, logResp)
+		api.WriteRespWithSummary(w, r, logs, count)
 	}
-
 }
 
 func GetNewCount(w http.ResponseWriter, r *http.Request) {
@@ -128,15 +124,30 @@ func getLastSeenCookie(r *http.Request) (time.Time, bool) {
 	return lastSeen, true
 }
 
-func getLog(tx *sql.Tx, days int, limit int, username string) ([]tc.Log, uint64, error) {
-	var count = uint64(0)
-	rows, err := tx.Query(`
+const selectUsernameQuery = `
 SELECT l.id, l.level, l.message, u.username as user, l.ticketnum, l.last_updated
 FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id
-WHERE l.last_updated > now() - ($1 || ' DAY')::INTERVAL OR u.username=$3
+WHERE l.last_updated > now() - ($1 || ' DAY')::INTERVAL AND u.username=$3
 ORDER BY l.last_updated DESC
-LIMIT $2
-`, days, limit, username)
+LIMIT $2`
+
+const selectQuery = `
+SELECT l.id, l.level, l.message, u.username as user, l.ticketnum, l.last_updated
+FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id
+WHERE l.last_updated > now() - ($1 || ' DAY')::INTERVAL
+ORDER BY l.last_updated DESC
+LIMIT $2`
+
+func getLog(tx *sql.Tx, days int, limit int, username string) ([]tc.Log, uint64, error) {
+	var count = uint64(0)
+	var rows *sql.Rows
+	var err error
+
+	if username != "" {
+		rows, err = tx.Query(selectUsernameQuery, days, limit, username)
+	} else {
+		rows, err = tx.Query(selectQuery, days, limit)
+	}
 	if err != nil {
 		return nil, count, errors.New("querying logs: " + err.Error())
 	}
