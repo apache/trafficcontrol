@@ -133,7 +133,7 @@ func getLog(tx *sql.Tx, days int, limit int, username string) ([]tc.Log, uint64,
 	rows, err := tx.Query(`
 SELECT l.id, l.level, l.message, u.username as user, l.ticketnum, l.last_updated
 FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id
-WHERE l.last_updated > now() - ($1 || ' DAY')::INTERVAL AND u.username=$3
+WHERE l.last_updated > now() - ($1 || ' DAY')::INTERVAL OR u.username=$3
 ORDER BY l.last_updated DESC
 LIMIT $2
 `, days, limit, username)

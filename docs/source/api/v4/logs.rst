@@ -32,18 +32,20 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-------+----------+------------------------------------------------------+
-	| Name  | Required | Description                                          |
-	+=======+==========+======================================================+
-	| days  | no       | An integer number of days of change logs to return   |
-	+-------+----------+------------------------------------------------------+
-	| limit | no       | The number of records to which to limit the response |
-	+-------+----------+------------------------------------------------------+
+	+----------+----------+------------------------------------------------------+
+	| Name     | Required | Description                                          |
+	+==========+==========+======================================================+
+	| days     | no       | An integer number of days of change logs to return   |
+	+----------+----------+------------------------------------------------------+
+	| limit    | no       | The number of records to which to limit the response |
+	+----------+----------+------------------------------------------------------+
+	| username | no       | A name to which to limit the response too 					 |
+	+----------+----------+------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/4.0/logs?days=1&limit=2 HTTP/1.1
+	GET /api/4.0/logs?days=1&limit=2&username=admin HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -57,6 +59,7 @@ Response Structure
 :message:     Log detail about what occurred
 :ticketNum:   Optional field to cross reference with any bug tracking systems
 :user:        Name of the user who made the change
+:summary.count: Associated changelog entries for a given query param
 
 .. code-block:: http
 	:caption: Response Example
@@ -92,5 +95,8 @@ Response Structure
 			"user": "admin",
 			"id": 443,
 			"message": "1 delivery services were assigned to test"
-		}
-	]}
+		}],
+		"summary": {
+      "count": 20
+    }
+	}
