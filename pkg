@@ -192,10 +192,10 @@ while (( "$#" )); do
 		# compose file, in which case the symlink will be followed before it is processed.
 		# A "dist" symlink will be temporarily created in that directory to facilitate the collation of artefacts.
 		if [ -e "$COMPOSE_FILE.$1" ] ; then
-			ln -sf "$(dirname -- "$(realpath -e -- "$SELF")")/dist" "$(dirname -- "$(realpath -e -- "$COMPOSE_FILE.$1")")/dist" || exit 1
+			ln -sfT "$(dirname -- "$(realpath -e -- "$SELF")")/dist" "$(dirname -- "$(realpath -e -- "$COMPOSE_FILE.$1")")/dist" || exit 1
 			$SELF -f $(realpath -e "$COMPOSE_FILE.$1") $([ "$verbose" == 0 ] || echo "-v") $([ "$quiet" == 0 ] || echo "-q") $([ "$debug" == 0 ] || echo "-d") $([ "$build" == 0 ] || echo "-b") $("${COMPOSECMD[@]}" -f $(realpath -e "$COMPOSE_FILE.$1") config --services)
 			chained_exit=$?
-			rm "$(dirname -- "$(realpath -e -- "$COMPOSE_FILE.$1")")/dist"
+			rm -r "$(dirname -- "$(realpath -e -- "$COMPOSE_FILE.$1")")/dist"
 			[ $chained_exit == 0 ] || exit $chained_exit
 		fi
 	) || {
