@@ -83,10 +83,6 @@ if [ ${#COMPOSECMD[@]} -eq 0 ]; then
 	COMPOSECMD=(docker run --rm "${DOCKER_ADDR[@]}" $COMPOSE_OPTIONS "${VOLUMES[@]}" -w "$(pwd)" $IMAGE)
 fi
 
-# Mark RHEL_VERSION for export, although it is not set yet
-export RHEL_VERSION
-RUN_OPTIONS=(-e RHEL_VERSION)
-
 # Parse command line arguments
 verbose=0
 debug=0
@@ -160,6 +156,12 @@ while getopts :?78abdf:lopqv opt; do
 done
 
 shift $((OPTIND-1))
+
+# Mark RHEL_VERSION for export
+export RHEL_VERSION
+if [[ -v RHEL_VERSION ]]; then
+	RUN_OPTIONS+=(-e RHEL_VERSION)
+fi
 
 # If no specific packages are listed, or -a is used, run them all.
 if (( ! "$#" || "$all" == 1 )); then

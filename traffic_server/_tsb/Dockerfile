@@ -46,6 +46,8 @@ RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
 ### ats specific requirements
 FROM ats-common-dependencies AS build-ats-specific
 ARG RHEL_VERSION=8
+# Makes RHEL_VERSION accessible to CMD
+ENV RHEL_VERSION="$RHEL_VERSION"
 
 RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
 		os_pkgs=( \
