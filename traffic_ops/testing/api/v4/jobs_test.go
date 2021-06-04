@@ -41,9 +41,10 @@ func TestJobs(t *testing.T) {
 		CreateTestJobsInvalidds(t)
 		CreateTestJobsAlreadyExistTTL(t)
 		CreateTestJobswithPastDate(t)
-		//CreateJobsWithInvalidDateFormat(t)
 		CreateTestJobsWithFutureDate(t)
 		CreateJobsMissingDate(t)
+		CreateJobsMissingRegex(t)
+		CreateJobsMissingTtl(t)
 	})
 }
 
@@ -378,9 +379,6 @@ func GetTestJobsByValidData(t *testing.T) {
 	if len(toJobs.Response) < 1 {
 		t.Fatal("Need at least one Jobs to test GET Jobs scenario")
 	}
-	if len(toJobs.Response) < 1 {
-		t.Fatalf("Need at least one Jobs to test GET Jobs by valid data")
-	}
 	jobs := toJobs.Response[0]
 	assetUrl := jobs.AssetURL
 	createdBy := jobs.CreatedBy
@@ -413,7 +411,7 @@ func GetTestJobsByValidData(t *testing.T) {
 	}
 
 	//Get Jobs by ID
-	if len(strconv.FormatUint(uint64(*id), 10)) > 1 {
+	if *id > 1 {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("id", strconv.FormatUint(uint64(*id), 10))
 		toJobs, _, _ = TOSession.GetInvalidationJobs(opts)
@@ -443,7 +441,7 @@ func GetTestJobsByValidData(t *testing.T) {
 		toDSes, _, _ := TOSession.GetDeliveryServices(opts)
 		if len(toDSes.Response) > 0 {
 			dsId := toDSes.Response[0].ID
-			if *dsId == 0 {
+			if *dsId > 0 {
 				//Get Jobs by DSID
 				opts := client.NewRequestOptions()
 				opts.QueryParameters.Set("dsId", strconv.Itoa(*dsId))
@@ -467,7 +465,7 @@ func GetTestJobsByValidData(t *testing.T) {
 	userResp, _, _ := TOSession.GetUsers(opts)
 	if len(userResp.Response) > 0 {
 		userId := userResp.Response[0].ID
-		if *userId == 0 {
+		if *userId > 0 {
 			//Get Jobs by userID
 			opts := client.NewRequestOptions()
 			opts.QueryParameters.Set("userId", strconv.Itoa(*userId))
@@ -610,7 +608,6 @@ func CreateTestJobsAlreadyExistTTL(t *testing.T) {
 	}
 	testData.InvalidationJobs[0] = job
 
-	job = testData.InvalidationJobs[0]
 	request := tc.InvalidationJobInput{
 		DeliveryService: job.DeliveryService,
 		Regex:           job.Regex,
@@ -624,7 +621,9 @@ func CreateTestJobsAlreadyExistTTL(t *testing.T) {
 }
 
 func CreateTestJobswithPastDate(t *testing.T) {
-
+	if len(testData.InvalidationJobs) < 1 {
+		t.Fatal("Need at least one Invalidation Job to test creating an invalid Job")
+	}
 	//past start date
 	dt := time.Now()
 	dt.Format("2019-06-18 21:28:31")
@@ -716,37 +715,10 @@ func CreateTestJobswithPastDate(t *testing.T) {
 	}
 }
 
-/*
-func CreateJobsWithInvalidDateFormat(t *testing.T) {
-	//Invalid start date
-	dt := time.Now()
-	dt.Format("20192-09-27 10:50:11")
-
-	job := testData.InvalidationJobs[0]
-	job.StartTime = &tc.Time{
-		Time:  dt.AddDate(0, 0, -1),
-		Valid: true,
-	}
-	t.Errorf("job.StartTime Invalid date format %v", job.StartTime)
-	testData.InvalidationJobs[0] = job
-
-	request := tc.InvalidationJobInput{
-		DeliveryService: job.DeliveryService,
-		Regex:           job.Regex,
-		StartTime:       "20192-09-27 10:50:11",
-		TTL:             job.TTL,
-	}
-	resp, reqInf, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
-	t.Errorf("Response %v", resp)
-	if err == nil {
-		t.Errorf("Expected Unable to parse Invalidation Job - Alert %v", resp.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
-	}
-}*/
-
 func CreateTestJobsWithFutureDate(t *testing.T) {
+	if len(testData.InvalidationJobs) < 1 {
+		t.Fatal("Need at least one Invalidation Job to test creating an invalid Job")
+	}
 	//RFC Future start date
 	dt := time.Now()
 	dt.Format("2019-10-12T07:20:50.52Z")
@@ -809,7 +781,9 @@ func CreateTestJobsWithFutureDate(t *testing.T) {
 }
 
 func CreateJobsMissingDate(t *testing.T) {
-
+	if len(testData.InvalidationJobs) < 1 {
+		t.Fatal("Need at least one Invalidation Job to test creating an invalid Job")
+	}
 	//Missing date
 	job := testData.InvalidationJobs[0]
 	request := tc.InvalidationJobInput{
@@ -819,15 +793,36 @@ func CreateJobsMissingDate(t *testing.T) {
 	}
 	resp, _, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
 	if err == nil {
-		t.Errorf("Expected Invalidation request created, but found error %v - Alert %v", err, resp.Alerts)
+		t.Errorf("Expected Invalidation request created, but no error found %v - Alert %v", resp, resp.Alerts)
 	}
+}
 
-	//Empty dates
+func CreateJobsMissingRegex(t *testing.T) {
+	if len(testData.InvalidationJobs) < 1 {
+		t.Fatal("Need at least one Invalidation Job to test creating an invalid Job")
+	}
+	//Missing Regex
+	//Future start date
+	dt := time.Now()
+	dt.Format("2019-10-12T07:20:50.52Z")
+	job := testData.InvalidationJobs[0]
 	job.StartTime = &tc.Time{
-		Time:  time.Time{},
+		Time:  dt.AddDate(0, 0, 1),
 		Valid: true,
 	}
-	t.Errorf("job.StartTime %v", job.StartTime)
+	testData.InvalidationJobs[0] = job
+	request := tc.InvalidationJobInput{
+		DeliveryService: job.DeliveryService,
+		TTL:             job.TTL,
+		StartTime:       job.StartTime,
+	}
+	resp, _, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected regex: cannot be blank, but no error found %v - Alert %v", resp, resp.Alerts)
+	}
+
+	//Empty Regex
+	job.Regex = nil
 	request = tc.InvalidationJobInput{
 		DeliveryService: job.DeliveryService,
 		Regex:           job.Regex,
@@ -836,6 +831,44 @@ func CreateJobsMissingDate(t *testing.T) {
 	}
 	resp, _, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
 	if err == nil {
-		t.Errorf("Expected Invalidation request created, but found error %v - Alert %v", err, resp.Alerts)
+		t.Errorf("Expected regex: cannot be blank, but no error found %v - Alert %v", resp, resp.Alerts)
+	}
+}
+
+func CreateJobsMissingTtl(t *testing.T) {
+	if len(testData.InvalidationJobs) < 1 {
+		t.Fatal("Need at least one Invalidation Job to test creating an invalid Job")
+	}
+	//Missing TTL
+	//Future start date
+	dt := time.Now()
+	dt.Format("2019-10-12T07:20:50.52Z")
+	job := testData.InvalidationJobs[0]
+	job.StartTime = &tc.Time{
+		Time:  dt.AddDate(0, 0, 1),
+		Valid: true,
+	}
+	testData.InvalidationJobs[0] = job
+	request := tc.InvalidationJobInput{
+		DeliveryService: job.DeliveryService,
+		Regex:           job.Regex,
+		StartTime:       job.StartTime,
+	}
+	resp, _, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected ttl: cannot be blank., but no error found %v - Alert %v", resp, resp.Alerts)
+	}
+
+	//Empty TTL
+	job.TTL = nil
+	request = tc.InvalidationJobInput{
+		DeliveryService: job.DeliveryService,
+		Regex:           job.Regex,
+		TTL:             job.TTL,
+		StartTime:       job.StartTime,
+	}
+	resp, _, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected ttl: cannot be blank., ttl: must be a number of hours, or a duration string e.g. '48h', but no error found %v - Alert %v", resp, resp.Alerts)
 	}
 }
