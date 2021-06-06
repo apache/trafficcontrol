@@ -43,7 +43,9 @@ License:	Apache License, Version 2.0
 URL:		  https://github.com/apache/trafficcontrol
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 Requires:	tcl, hwloc, pcre, libcap, brotli, libmaxminddb, openssl
-BuildRequires:	autoconf, automake, devtoolset-9 libtool, pcre, libcap-devel, pcre-devel
+BuildRequires:	autoconf, automake,  libtool, pcre, libcap-devel, pcre-devel
+%{?el7:BuildRequires: devtoolset-9}
+%{?el8:BuildRequires: gcc-toolset-9-gcc, gcc-toolset-9-gcc-c++}
 Source: trafficserver
 
 %description
