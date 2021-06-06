@@ -119,6 +119,6 @@ chmod "0644" "/etc/cron.d/traffic_ops_ort-cron" && crontab "/etc/cron.d/traffic_
 
 crond -im off
 
-touch /var/log/trafficserver/diags.log
+touch /opt/trafficserver/var/log/trafficserver/diags.log
 # Leaves the container hanging open in the event of a failure for debugging purposes
-tail -Fn +1 /var/log/trafficserver/diags.log /var/log/ort.log
+tail -Fn+1 /opt/trafficserver/var/log/trafficserver/diags.log /var/log/ort.log

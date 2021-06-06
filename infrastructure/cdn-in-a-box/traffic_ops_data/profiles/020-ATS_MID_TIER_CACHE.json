@@ -87,7 +87,7 @@
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.log.logfile_dir",
 			"secure": false,
-			"value": "STRING /var/log/trafficserver"
+			"value": "STRING /opt/trafficserver/var/log/trafficserver"
 		},
 		{
 			"configFile": "records.config",
