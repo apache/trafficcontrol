@@ -97,7 +97,7 @@ for f in /opt/init.d/*; do
 done
 
 # Wait for SSL keys to exist
-until [[ $(to-get "api/2.0/cdns/name/$CDN_NAME/sslkeys" | jq '.response | length') -gt 0 ]]; do
+until [[ $(to-get "api/2.0/cdns/name/$CDN_NAME/sslkeys" | jq '.response | length') -ge 2 ]]; do
 	echo 'waiting for SSL keys to exist'
 	sleep 3
 done
