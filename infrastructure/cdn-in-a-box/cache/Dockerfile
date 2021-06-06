@@ -27,6 +27,9 @@ ARG RHEL_VERSION=8
 # Makes RHEL_VERSION available at runtime
 ENV RHEL_VERSION="$RHEL_VERSION"
 
+# The /traffic_ops_data volume is included to set the ATS RPM version in the MID profile.
+VOLUME /traffic_ops_data
+
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
@@ -120,6 +123,7 @@ RUN dnf -y install golang && \
     go get -u github.com/go-delve/delve/cmd/dlv
 
 FROM common-cache-config-layers AS mid
+ENV CACHE_TYPE=mid
 COPY infrastructure/cdn-in-a-box/mid/init.d/ /opt/init.d/
 
 FROM mid AS mid-debug
@@ -127,6 +131,7 @@ COPY --from=get-delve /root/go/bin /usr/bin
 COPY infrastructure/cdn-in-a-box/cache/init-debug-scripts.sh /opt/init.d/
 
 FROM common-cache-config-layers AS edge
+ENV CACHE_TYPE=edge
 COPY infrastructure/cdn-in-a-box/edge/init.d/ /opt/init.d/
 
 FROM edge AS edge-debug

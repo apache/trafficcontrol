@@ -17,7 +17,37 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -o errexit -o xtrace -o monitor
+trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
+set -o errexit -o nounset -o pipefail -o xtrace -o monitor
+
+set_trafficserver_version() {
+	local ats_profile
+	case "$CACHE_TYPE" in
+		edge) ats_profile=/traffic_ops_data/profiles/010-ATS_EDGE_TIER_CACHE.json;;
+		mid) ats_profile=/traffic_ops_data/profiles/020-ATS_MID_TIER_CACHE.json;;
+	esac
+	local trafficserver_version
+	trafficserver_version="$(rpm -qp --qf '%{version}-%{release}.%{arch}\n' /trafficserver.rpm)"
+
+	until [[ -s "$ats_profile" ]]; do
+		echo "Waiting for ${ats_profile} to exist..."
+		sleep 3
+	done
+
+	echo "$(<"$ats_profile" jq --arg TRAFFICSERVER_VERSION "$trafficserver_version" '.params[] |= (
+			select(.configFile == "package" and .name == "trafficserver").value = $TRAFFICSERVER_VERSION
+		)')" >"$ats_profile"
+	if ! <"$ats_profile" jq -r --arg TRAFFICSERVER_VERSION "$trafficserver_version" '.params[] |
+		select(.configFile == "package" and .name == "trafficserver").value' |
+			grep -q "^${trafficserver_version}$"
+	then
+		echo "trafficserver RPM version ${trafficserver_version} was not set!"
+		exit 1
+	fi
+	sync
+}
+
+set_trafficserver_version
 
 mkdir /tmp/ort
 
@@ -34,7 +64,7 @@ do
 done
 
 # Source the CIAB-CA shared SSL environment
-until [[ -n "$X509_GENERATION_COMPLETE" ]]
+until [[ -v X509_GENERATION_COMPLETE && -n "$X509_GENERATION_COMPLETE" ]]
 do
 	echo "Waiting on X509 vars to be defined"
 	sleep 1

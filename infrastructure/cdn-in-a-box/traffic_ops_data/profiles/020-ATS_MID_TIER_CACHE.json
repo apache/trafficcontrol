@@ -424,7 +424,7 @@
 		{
 			"configFile": "package",
 			"name": "trafficserver",
-			"value": "7.1.4-2.el7.x86_64"
+			"value": "(unchanged)"
 		}
 	]
 }
