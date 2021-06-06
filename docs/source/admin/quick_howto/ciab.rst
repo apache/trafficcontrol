@@ -65,11 +65,11 @@ In a typical scenario, if the steps in `Building`_ have been followed, all that'
 	+=================================+================================================================+=======================================+===========================================+
 	| DNS                             | DNS name resolution on 9353                                    | N/A                                   | N/A                                       |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Edge Tier Cache                 | Apache Trafficserver HTTP caching reverse proxy on port 9000   | N/A                                   | N/A                                       |
+	| Edge Tier Cache                 | Apache Trafficserver 8.1 HTTP caching reverse proxy on port 9000   | N/A                                   | N/A                                       |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Mid Tier Cache                  | Apache Trafficserver HTTP caching forward proxy on port 9100   | N/A                                   | N/A                                       |
+	| Mid Tier Cache                  | Apache Trafficserver 8.1 HTTP caching forward proxy on port 9100   | N/A                                   | N/A                                       |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
-	| Second Mid-Tier Cache (parent   | Apache Trafficserver HTTP caching forward proxy on port 9100   | N/A                                   | N/A                                       |
+	| Second Mid-Tier Cache (parent   | Apache Trafficserver 8.1 HTTP caching forward proxy on port 9100   | N/A                                   | N/A                                       |
 	| of the first Mid-Tier Cache)    |                                                                |                                       |                                           |
 	+---------------------------------+----------------------------------------------------------------+---------------------------------------+-------------------------------------------+
 	| Mock Origin Server              | Example web page served on port 9200                           | N/A                                   | N/A                                       |

@@ -37,38 +37,34 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 EXPOSE 80
 
 RUN dnf -y install epel-release && \
-    if [[ "${RHEL_VERSION%%.*}" -ge 8 ]]; then \
-        additional_packages='compat-openssl10 pkgconf-pkg-config' || \
+    if [[ "${RHEL_VERSION%%.*}" -lt 8 ]]; then \
+        additional_packages='perl(URI)' || \
         exit 1; \
     else \
-        additional_packages=openssl || \
+        additional_packages='' || \
         exit 1; \
     fi && \
     dnf -y install              \
+        brotli                  \
         GeoIP                   \
         git                     \
         groff-base              \
         hwloc                   \
-        hwloc-libs              \
+        # jansson is required by the ATS TSB RPM
+        jansson                 \
         kyotocabinet-libs       \
+        libmaxminddb            \
         libtool-ltdl            \
         libunwind               \
+        # luajit is required by the ATS TSB RPM
+        luajit                  \
         lzo                     \
         make                    \
         numactl-libs            \
+        openssl                 \
         perl                    \
         tcl                     \
-        $additional_packages && \
-    if [[ "${RHEL_VERSION%%.*}" -eq 8 ]]; then \
-        # Pretend that we have the right library versions.
-        # TODO: Use a proper CentOS 7 or 8 RPM once trafficserver
-        # is in EPEL again (see apache/trafficserver#6855)
-        cd /usr/lib64 && \
-        ln -s libtcl8.6.so        libtcl8.5.so && \
-        ln -s libncursesw.so.6    libncursesw.so.5 && \
-        ln -s libtinfo.so.6       libtinfo.so.5  || \
-            exit 1; \
-    fi
+        $additional_packages
 
 RUN dnf install -y bind-utils kyotocabinet-libs initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel && \
     dnf install -y jq logrotate && \
@@ -76,28 +72,30 @@ RUN dnf install -y bind-utils kyotocabinet-libs initscripts iproute net-tools nm
 
 FROM common-traffic-server-dependencies AS common-cache-config-layers
 
-ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.4-2.el7.x86_64.rpm /trafficserver.rpm
-ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-devel-7.1.4-2.el7.x86_64.rpm /trafficserver-devel.rpm
-
+COPY infrastructure/cdn-in-a-box/cache/trafficserver.rpm /trafficserver.rpm
 COPY traffic_server/plugins/astats_over_http/astats_over_http.c traffic_server/plugins/astats_over_http/Makefile.am /
 
-RUN rpm -Uvh --nodeps /trafficserver.rpm /trafficserver-devel.rpm && \
-    tsxs -v -c astats_over_http.c -o astats_over_http.so
-
-# The symbolic links here are used because trafficserver-7.1.4-2.el7.x86_64.rpm has / as TS_ROOT,
-# but the Cache Configs assume that /opt/trafficserver is TS_ROOT. The symlinks can be removed
-# once a Traffic Server RPM using /opt/trafficserver as TS_ROOT is used.
-RUN ln -s / /opt/trafficserver && \
-    mkdir /libexec /etc/trafficserver/ssl && \
-    ln -s /usr/lib64/trafficserver/plugins /libexec/trafficserver && \
-    tsxs -v -o astats_over_http.so -i
-
-RUN dnf remove -y gcc-c++ glibc-devel autoconf automake libtool && \
+RUN set -o errexit -o nounset -o xtrace; \
+    rpm -Uvh /trafficserver.rpm; \
+    if [[ -e /trafficserver-devel.rpm ]]; then \
+        rpm -Uvh /trafficserver-devel.rpm; \
+    fi; \
+    PATH+=:/opt/trafficserver/bin; \
+    tsxs -v -c astats_over_http.c -o astats_over_http.so && \
+    tsxs -v -o astats_over_http.so -i && \
+    dnf remove -y gcc-c++ glibc-devel autoconf automake libtool && \
     rm -f /astats_over_http.c /Makefile.am
 
-# traffic_server needs different ownership than trafficserver-7.1.4-2.el7.x86_64.rpm sets
-RUN chown -R ats:ats /etc/trafficserver/ /usr/lib64/trafficserver/
-
+RUN set -o pipefail && \
+    # The ssl directory needs to exist or the first sslkey file will be skipped on badass
+    if [[ ! -e /opt/trafficserver/etc/trafficserver/ssl ]]; then \
+        echo 'Creating ssl directory...'; \
+        mkdir /opt/trafficserver/etc/trafficserver/ssl; \
+    fi; \
+    # trafficserver needs different ownership than the trafficserver RPM sets
+    rpm -ql trafficserver | \
+        grep /etc/trafficserver | \
+        xargs chown -R ats:ats
 
 WORKDIR /opt
 
