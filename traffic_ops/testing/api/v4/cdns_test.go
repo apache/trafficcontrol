@@ -460,6 +460,7 @@ func CreateTestCDNEmptyName(t *testing.T) {
 
 	firstData := testData.CDNs[0]
 	firstData.Name = ""
+	firstData.DomainName = "EmptyCDNName"
 	resp, reqInf, err := TOSession.CreateCDN(firstData, client.RequestOptions{})
 	if err == nil {
 		t.Errorf("Expected 'name' cannot be blank  but got - alerts: %+v", resp.Alerts)
@@ -475,6 +476,7 @@ func CreateTestCDNEmptyDomainName(t *testing.T) {
 	}
 
 	firstData := testData.CDNs[0]
+	firstData.Name = "EmptyDomainName"
 	firstData.DomainName = ""
 	resp, reqInf, err := TOSession.CreateCDN(firstData, client.RequestOptions{})
 	if err == nil {
