@@ -34,7 +34,9 @@ MAINTAINER dev@trafficcontrol.apache.org
 RUN yum install -y \
   https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm \
   epel-release initscripts postgresql13.x86_64 git gcc lua-5.1.4-15.el7 lua-devel-5.1.4-15.el7 \
-  ImageMagick-c++-devel
+  ImageMagick-c++-devel && \
+  # jq is used in run.sh to update tc-fixtures.json with the ATS RPM version
+  yum install -y jq
 
 ADD ort_test/trafficcontrol-cache-config*.rpm /trafficcontrol-cache-config.rpm
 RUN yum install -y /trafficcontrol-cache-config.rpm
@@ -43,7 +45,6 @@ RUN sed -i 's/HOME\/bin/HOME\/bin:\/usr\/local\/go\/bin:/g' /root/.bash_profile
 RUN echo "GOPATH=/root/go; export GOPATH" >> /root/.bash_profile
 RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 RUN mkdir /root/go
-RUN mkdir -p /var/lib/trafficcontrol-cache-config/status
 
 EXPOSE 80 443
 ADD ort_test/run.sh /

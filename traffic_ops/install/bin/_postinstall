@@ -78,6 +78,7 @@ USERS_CONF_FILE = "/opt/traffic_ops/install/data/json/users.json"
 PROFILES_CONF_FILE = "/opt/traffic_ops/install/data/profiles/"
 OPENSSL_CONF_FILE = "/opt/traffic_ops/install/data/json/openssl_configuration.json"
 PARAM_CONF_FILE = "/opt/traffic_ops/install/data/json/profiles.json"
+TRAFFIC_VAULT_AES_KEY_FILE = "/opt/traffic_ops/app/conf/aes.key"
 
 
 POST_INSTALL_CFG = "/opt/traffic_ops/install/data/json/post_install.json"
@@ -231,13 +232,13 @@ DEFAULTS = {
 		Question("Traffic Ops database user", "traffic_ops", "user"),
 		Question("Password for Traffic Ops database user", "", "password", hidden=True)
 	],
-	DB_CONF_FILE: [
-		Question("Database server root (admin) user", "postgres", "pgUser"),
-		Question("Password for database server admin", "", "pgPassword", hidden=True)
-	],
-	TV_DB_CONF_FILE: [
-		Question("Database server root (admin) user", "postgres", "pgUser"),
-		Question("Password for database server admin", "", "pgPassword", hidden=True)
+	TV_DATABASE_CONF_FILE: [
+		Question("Traffic Vault Database type", "Pg", "type"),
+		Question("Traffic Vault Database name", "traffic_vault", "dbname"),
+		Question("Traffic Vault Database server hostname IP or FQDN", "localhost", "hostname"),
+		Question("Traffic Vault Database port number", "5432", "port"),
+		Question("Traffic Vault database user", "traffic_vault", "user"),
+		Question("Password for Traffic Vault database user", "", "password", hidden=True)
 	],
 	CDN_CONF_FILE: [
 		Question("Generate a new secret?", "yes", "genSecret"),
@@ -246,12 +247,6 @@ DEFAULTS = {
 		Question("Number of workers?", "12", "workers"),
 		Question("Traffic Ops url?", "http://localhost:3000", "base_url"),
 		Question("ldap.conf location?", "/opt/traffic_ops/app/conf/ldap.conf", "ldap_conf_location"),
-		Question("Traffic Vault Database type", "Pg", "type"),
-		Question("Traffic Vault Database name", "traffic_vault", "dbname"),
-		Question("Traffic Vault Database server hostname IP or FQDN", "localhost", "hostname"),
-		Question("Traffic Vault Database port number", "5432", "port"),
-		Question("Traffic Vault database user", "traffic_vault", "user"),
-		Question("Password for Traffic Vault database user", "", "password", hidden=True)
 	],
 	LDAP_CONF_FILE:[
 		Question("Do you want to set up LDAP?", "no", "setupLdap"),
@@ -349,13 +344,12 @@ def generate_db_conf(qstns, fname, automatic, root): # (list[Question], str, boo
 
 	return db_conf
 
-def generate_todb_conf(qstns, fname, auto, root, conf): # (list, str, bool, str, dict) -> dict
+def generate_todb_conf(fname, root, conf): # (str, str, dict)
 	"""
-	Generates the dbconf.yml file and returns a map of its configuration.
+	Generates the dbconf.yml file.
 
 	Also writes the configuration file to the file 'fname' under the directory 'root'.
 	"""
-	todbconf = get_config(qstns, fname, auto)
 
 	driver = "postgres"
 	if "type" not in conf:
@@ -375,7 +369,6 @@ def generate_todb_conf(qstns, fname, auto, root, conf): # (list, str, bool, str,
 		print("production:", file=conf_file)
 		print("    driver:", driver, file=conf_file)
 		print("    open: {open_line} sslmode=disable".format(open_line=open_line), file=conf_file)
-	return todbconf
 
 def generate_ldap_conf(questions, fname, automatic, root): # type: (list[Question], str, bool, str) -> None
 	"""
@@ -728,7 +721,6 @@ def write_encryption_key(aes_key_location): # type: (str) -> None
 	:param aes_key_location: Denotes the location of the aes encryption key file
 	:returns: None
 	"""
-	logging.info(aes_key_location)
 
 	args = (
 		"rand",
@@ -737,7 +729,7 @@ def write_encryption_key(aes_key_location): # type: (str) -> None
 		"-base64",
 		"32"
 	)
-	if not exec_openssl("Generating an AES encryption key", *args):
+	if not exec_openssl("Generating an AES encryption key to {loc}".format(loc=aes_key_location), *args):
 		logging.debug("AES key generation failed")
 		raise OSError("failed to generate AES key")
 
@@ -1029,7 +1021,7 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 	access_log = os.path.join(root, "var/log/traffic_ops/access.log")
 	existing_conf["traffic_ops_golang"]["log_location_event"] = access_log
 	traffic_vault_backend = "postgres"
-	traffic_vault_aes_encryption_location = "/opt/traffic_ops/app/aes.key"
+	tv_aes_key_location = os.path.join(root, TRAFFIC_VAULT_AES_KEY_FILE.lstrip('/'))
 
 	if "hypnotoad" not in existing_conf or not isinstance(existing_conf["hypnotoad"], dict):
 		existing_conf["hypnotoad"]["workers"] = conf.num_workers
@@ -1045,10 +1037,10 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 
 	if traffic_vault_backend == "postgres":
 		try:
-			traffic_vault_aes_encryption_location = existing_conf["traffic_ops_golang"]["traffic_vault_config"]["aes_key_location"]
-			write_encryption_key(traffic_vault_aes_encryption_location)
+			tv_aes_key_location = existing_conf["traffic_ops_golang"]["traffic_vault_config"]["aes_key_location"]
 		except KeyError as e:
-			logging.warning("no traffic vault aes encryption key location specified, using default /opt/traffic_ops/app/aes.key")
+			logging.warning("no traffic vault aes encryption key location specified, using default %s", TRAFFIC_VAULT_AES_KEY_FILE)
+		write_encryption_key(tv_aes_key_location)
 
 	return traffic_vault_backend == "postgres"
 
@@ -1300,9 +1292,11 @@ no_database, # type: bool
 
 	try:
 		dbconf = generate_db_conf(user_input[DATABASE_CONF_FILE], DATABASE_CONF_FILE, automatic, root_dir)
-		tv_dbconf = generate_db_conf(user_input[TV_DATABASE_CONF_FILE], TV_DATABASE_CONF_FILE, automatic, root_dir)
-		todbconf = generate_todb_conf(user_input[DB_CONF_FILE], DB_CONF_FILE, automatic, root_dir, dbconf)
-		tv_todbconf = generate_todb_conf(user_input[TV_DB_CONF_FILE], TV_DB_CONF_FILE, automatic, root_dir, tv_dbconf)
+		generate_todb_conf(DB_CONF_FILE, root_dir, dbconf)
+		# the new "/opt/traffic_ops/app/conf/production/tv.conf" section for Traffic Vault PostgreSQL backend is optional
+		if TV_DATABASE_CONF_FILE in user_input:
+			tv_dbconf = generate_db_conf(user_input[TV_DATABASE_CONF_FILE], TV_DATABASE_CONF_FILE, automatic, root_dir)
+			generate_todb_conf(TV_DB_CONF_FILE, root_dir, tv_dbconf)
 		generate_ldap_conf(user_input[LDAP_CONF_FILE], LDAP_CONF_FILE, automatic, root_dir)
 		admin_conf = generate_users_conf(
 		user_input[USERS_CONF_FILE],

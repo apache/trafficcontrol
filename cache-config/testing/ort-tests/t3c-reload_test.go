@@ -32,45 +32,170 @@ func TestT3cReload(t *testing.T) {
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
-		t.Logf("------------- Start TestT3cReload Core ---------------")
 
-		cacheHostName := "atlanta-edge-03"
+		doTestT3cReloadHeaderRewrite(t)
+		doTestT3cReloadAnythingInTrafficserverDir(t)
+		doTestT3cReloadNoChange(t)
+		doTestT3cRevalCallsReload(t)
 
-		t.Logf("DEBUG TestT3cReload calling badass")
-		if stdOut, exitCode := t3cUpdateReload(cacheHostName, "badass"); exitCode != 0 {
-			t.Fatalf("ERROR: t3c badass failed: code '%v' output '%v'\n", exitCode, stdOut)
-		}
-
-		t.Logf("DEBUG TestT3cReload deleting file")
-
-		// delete a file that we know should trigger a reload.
-		fileNameToRemove := filepath.Join(test_config_dir, "hdr_rw_first_ds-top.config")
-		if err := os.Remove(fileNameToRemove); err != nil {
-			t.Fatalf("failed to remove file '" + fileNameToRemove + "': " + err.Error())
-		}
-
-		t.Logf("DEBUG TestT3cReload setting upate flag")
-		// set the update flag, so syncds will run
-		if err := ExecTOUpdater("atlanta-edge-03", false, true); err != nil {
-			t.Fatalf("t3c-update failed: %v\n", err)
-		}
-
-		t.Logf("DEBUG TestT3cReload calling syncds")
-		stdOut, _ := t3cUpdateReload(cacheHostName, "syncds")
-		// Ignore the exit code error for now, because the ORT Integration Test Framework doesn't currently start ATS.
-		// TODO check err, after running ATS is added to the tests.
-		// if err != nil {
-		// 	t.Fatalf("t3c syncds failed: %v\n", err)
-		// }
-
-		t.Logf("DEBUG TestT3cReload looking for reload string")
-		if !strings.Contains(stdOut, `Running 'traffic_ctl config reload' now`) {
-			t.Errorf("expected t3c to do a reload after adding a header rewrite file, actual: '''%v'''\n", stdOut)
-		}
-
-		t.Logf("------------- End TestT3cReload Core ---------------")
 	})
 	t.Logf("------------- End of TestT3cReload ---------------")
+}
+
+func doTestT3cReloadHeaderRewrite(t *testing.T) {
+	t.Logf("------------- Start doTestT3cReloadHeaderRewrite ---------------")
+
+	cacheHostName := "atlanta-edge-03"
+
+	t.Logf("DEBUG TestT3cReload calling badass")
+	if stdOut, exitCode := t3cUpdateReload(cacheHostName, "badass"); exitCode != 0 {
+		t.Fatalf("ERROR: t3c badass failed: code '%v' output '%v'\n", exitCode, stdOut)
+	}
+
+	t.Logf("DEBUG TestT3cReload deleting file")
+
+	// delete a file that we know should trigger a reload.
+	fileNameToRemove := filepath.Join(test_config_dir, "hdr_rw_first_ds-top.config")
+	if err := os.Remove(fileNameToRemove); err != nil {
+		t.Fatalf("failed to remove file '" + fileNameToRemove + "': " + err.Error())
+	}
+
+	t.Logf("DEBUG TestT3cReload setting upate flag")
+	// set the update flag, so syncds will run
+	if err := ExecTOUpdater("atlanta-edge-03", false, true); err != nil {
+		t.Fatalf("t3c-update failed: %v\n", err)
+	}
+
+	t.Logf("DEBUG TestT3cReload calling syncds")
+	stdOut, _ := t3cUpdateReload(cacheHostName, "syncds")
+	// Ignore the exit code error for now, because the ORT Integration Test Framework doesn't currently start ATS.
+	// TODO check err, after running ATS is added to the tests.
+	// if err != nil {
+	// 	t.Fatalf("t3c syncds failed: %v\n", err)
+	// }
+
+	t.Logf("DEBUG TestT3cReload looking for reload string")
+	if !strings.Contains(stdOut, `Running 'traffic_ctl config reload' now`) {
+		t.Errorf("expected t3c to do a reload after adding a header rewrite file, actual: '''%v'''\n", stdOut)
+	}
+
+	t.Logf("------------- End TestT3cReload doTestT3cReloadHeaderRewrite ---------------")
+}
+
+func doTestT3cReloadAnythingInTrafficserverDir(t *testing.T) {
+	t.Logf("------------- Start doTestT3cReloadAnythingInTrafficserverDir ---------------")
+
+	cacheHostName := "atlanta-edge-03"
+
+	t.Logf("DEBUG doTestT3cReloadHeaderRewrite calling badass")
+	if stdOut, exitCode := t3cUpdateReload(cacheHostName, "badass"); exitCode != 0 {
+		t.Fatalf("ERROR: t3c badass failed: code '%v' output '%v'\n", exitCode, stdOut)
+	}
+
+	t.Logf("DEBUG doTestT3cReloadHeaderRewrite deleting file")
+
+	// delete a random file in etc/trafficserver which should trigger a reload
+	fileNameToRemove := filepath.Join(test_config_dir, "non-empty-file.config")
+	if err := os.Remove(fileNameToRemove); err != nil {
+		t.Fatalf("failed to remove file '" + fileNameToRemove + "': " + err.Error())
+	}
+
+	t.Logf("DEBUG doTestT3cReloadHeaderRewrite setting update flag")
+	// set the update flag, so syncds will run
+	if err := ExecTOUpdater("atlanta-edge-03", false, true); err != nil {
+		t.Fatalf("t3c-update failed: %v\n", err)
+	}
+
+	t.Logf("DEBUG doTestT3cReloadHeaderRewrite calling syncds")
+	stdOut, _ := t3cUpdateReload(cacheHostName, "syncds")
+	// Ignore the exit code error for now, because the ORT Integration Test Framework doesn't currently start ATS.
+	// TODO check err, after running ATS is added to the tests.
+	// if err != nil {
+	// 	t.Fatalf("t3c syncds failed: %v\n", err)
+	// }
+
+	t.Logf("DEBUG TestT3cReload looking for reload string")
+	if !strings.Contains(stdOut, `Running 'traffic_ctl config reload' now`) {
+		t.Errorf("expected t3c to do a reload after adding a etc/trafficserver file, actual: '''%v'''\n", stdOut)
+	}
+
+	t.Logf("------------- End TestT3cReload doTestT3cReloadAnythingInTrafficserverDir ---------------")
+}
+
+func doTestT3cReloadNoChange(t *testing.T) {
+	t.Logf("------------- Start doTestT3cReloadNoChange ---------------")
+
+	cacheHostName := "atlanta-edge-03"
+
+	t.Logf("DEBUG doTestT3cReloadHeaderRewrite calling badass")
+	if stdOut, exitCode := t3cUpdateReload(cacheHostName, "badass"); exitCode != 0 {
+		t.Fatalf("ERROR: t3c badass failed: code '%v' output '%v'\n", exitCode, stdOut)
+	}
+
+	t.Logf("DEBUG doTestT3cReloadHeaderRewrite deleting file")
+
+	// no change, should not trigger a reload
+
+	t.Logf("DEBUG doTestT3cReloadHeaderRewrite setting update flag")
+	// set the update flag, so syncds will run
+	if err := ExecTOUpdater("atlanta-edge-03", false, true); err != nil {
+		t.Fatalf("t3c-update failed: %v\n", err)
+	}
+
+	t.Logf("DEBUG doTestT3cReloadHeaderRewrite calling syncds")
+	stdOut, _ := t3cUpdateReload(cacheHostName, "syncds")
+	// Ignore the exit code error for now, because the ORT Integration Test Framework doesn't currently start ATS.
+	// TODO check err, after running ATS is added to the tests.
+	// if err != nil {
+	// 	t.Fatalf("t3c syncds failed: %v\n", err)
+	// }
+
+	t.Logf("DEBUG TestT3cReload looking for reload string")
+	if strings.Contains(stdOut, `Running 'traffic_ctl config reload' now`) {
+		t.Errorf("expected t3c to not reload after no change, actual: '''%v'''\n", stdOut)
+	}
+
+	t.Logf("------------- End TestT3cReload doTestT3cReloadNoChange ---------------")
+}
+
+func doTestT3cRevalCallsReload(t *testing.T) {
+	t.Logf("------------- Start TestT3cReload doTestT3cRevalCallsReload ---------------")
+
+	cacheHostName := "atlanta-edge-03"
+
+	t.Logf("DEBUG doTestT3cRevalCallsReload calling badass")
+	if stdOut, exitCode := t3cUpdateReload(cacheHostName, "badass"); exitCode != 0 {
+		t.Fatalf("ERROR: t3c badass failed: code '%v' output '%v'\n", exitCode, stdOut)
+	}
+
+	t.Logf("DEBUG doTestT3cRevalCallsReload deleting file")
+
+	// delete a regex_revalidate.config to trigger a reval change and reload
+	fileNameToRemove := filepath.Join(test_config_dir, "regex_revalidate.config")
+	if err := os.Remove(fileNameToRemove); err != nil {
+		t.Fatalf("failed to remove file '" + fileNameToRemove + "': " + err.Error())
+	}
+
+	t.Logf("DEBUG doTestT3cRevalCallsReload setting reval flag")
+	// set the update flag, so reval will run
+	if err := ExecTOUpdater("atlanta-edge-03", true, false); err != nil {
+		t.Fatalf("t3c-update failed: %v\n", err)
+	}
+
+	t.Logf("DEBUG doTestT3cReloadHeaderRewrite calling revalidate")
+	stdOut, _ := t3cUpdateReload(cacheHostName, "revalidate")
+	// Ignore the exit code error for now, because the ORT Integration Test Framework doesn't currently start ATS.
+	// TODO check err, after running ATS is added to the tests.
+	// if err != nil {
+	// 	t.Fatalf("t3c syncds failed: %v\n", err)
+	// }
+
+	t.Logf("DEBUG TestT3cReload looking for reload string")
+	if !strings.Contains(stdOut, `Running 'traffic_ctl config reload' now`) {
+		t.Errorf("expected t3c to reload after reval change, actual: '''%v'''\n", stdOut)
+	}
+
+	t.Logf("------------- End TestT3cReload doTestT3cRevalCallsReload ---------------")
 }
 
 func t3cUpdateReload(host string, runMode string) (string, int) {

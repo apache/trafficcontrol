@@ -60,6 +60,13 @@ func GetURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting URI signing keys: "+err.Error()))
 		return
 	}
+	if len(ro) == 0 {
+		ro, err = json.Marshal(tc.URISignerKeyset{})
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("marshalling empty URISignerKeyset: "+err.Error()))
+			return
+		}
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(ro)
 }

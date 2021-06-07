@@ -204,30 +204,6 @@ cat <<- EOF > "$ROOT_DIR/defaults.json"
 			"hidden": true
 		}
 	],
-	"/opt/traffic_ops/app/db/dbconf.yml": [
-		{
-			"Database server root (admin) user": "postgres",
-			"config_var": "pgUser",
-			"hidden": false
-		},
-		{
-			"Password for database server admin": "${TO_PASSWORD}",
-			"config_var": "pgPassword",
-			"hidden": true
-		}
-	],
-	"/opt/traffic_ops/app/db/trafficvault/dbconf.yml": [
-		{
-			"Database server root (admin) user": "postgres",
-			"config_var": "pgUser",
-			"hidden": false
-		},
-		{
-			"Password for database server admin": "${TO_PASSWORD}",
-			"config_var": "pgPassword",
-			"hidden": true
-		}
-	],
 	"/opt/traffic_ops/app/conf/cdn.conf": [
 		{
 			"Generate a new secret?": "yes",

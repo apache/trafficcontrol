@@ -25,9 +25,11 @@ on:
       - go.mod
       - go.sum
       - GO_VERSION
+      - lib/go-atscfg/**.go
       - traffic_ops/*client/**.go
       - traffic_ops/traffic_ops_golang/**.go
       - cache-config/**.go
+      - cache-config/testing/**
       - vendor/**.go
       - vendor/modules.txt
       - .github/actions/build-ats-test-rpm
@@ -40,11 +42,13 @@ on:
       - go.mod
       - go.sum
       - GO_VERSION
+      - lib/go-atscfg/**.go
       - traffic_ops/*client/**.go
       - traffic_ops/toclientlib/**.go
       - lib/atscfg-go/**.go
       - traffic_ops/traffic_ops_golang/**.go
       - cache-config/**.go
+      - cache-config/testing/**
       - vendor/**.go
       - vendor/modules.txt
       - .github/actions/build-ats-test-rpm

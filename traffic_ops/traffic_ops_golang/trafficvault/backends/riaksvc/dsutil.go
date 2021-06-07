@@ -238,11 +238,7 @@ func getURISigningKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, x
 		return nil, false, errors.New("fetching riak objects: " + err.Error())
 	}
 	if len(ro) == 0 {
-		bts, err := json.Marshal(tc.URISignerKeyset{})
-		if err != nil {
-			return nil, false, errors.New("marshalling empty URISignerKeyset: " + err.Error())
-		}
-		return bts, false, nil
+		return []byte{}, false, nil
 	}
 	if ro[0].Value == nil {
 		return ro[0].Value, false, nil
