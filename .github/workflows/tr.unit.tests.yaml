@@ -56,7 +56,7 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: Run unit tests
+      - name: Run Traffic Router unit tests
         uses: ./.github/actions/tr-unit-tests
       - name: Upload Surefire Reports
         uses: actions/upload-artifact@v2
