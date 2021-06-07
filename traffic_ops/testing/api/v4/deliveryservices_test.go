@@ -2053,9 +2053,9 @@ func DeleteTestDeliveryServicesURISigningKeys(t *testing.T) {
 		t.Errorf("Unexpected error deleting URI Signing keys for Delivery Service '%s': %v - alerts: %+v", firstDS.XMLID, err, resp.Alerts)
 	}
 
-	emptyBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
+	emptyBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(firstDS.XMLID, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("Unexpected error getting URI signing keys for Delivery Service '%s': %v", *firstDS.XMLID, err)
+		t.Errorf("Unexpected error getting URI signing keys for Delivery Service '%s': %v", firstDS.XMLID, err)
 	}
 	emptyMap := make(map[string]interface{})
 	err = json.Unmarshal(emptyBytes, &emptyMap)
