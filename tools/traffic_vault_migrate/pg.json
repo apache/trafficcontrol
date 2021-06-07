@@ -1,0 +1,9 @@
+{
+  "user": "traffic_vault",
+  "password": "twelve",
+  "database": "traffic_vault",
+  "port": "5432",
+  "host": "localhost",
+  "sslmode": "disable",
+  "aesKey": "lGKE2pksirj55ZF27xRVdgm5oOCGKnD259QhVh7dBFY="
+}

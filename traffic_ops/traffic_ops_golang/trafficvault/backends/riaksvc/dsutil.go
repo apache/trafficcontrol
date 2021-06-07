@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -79,7 +80,7 @@ func putDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, aut
 	}
 	err = withCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
 		obj := &riak.Object{
-			ContentType:     "application/json",
+			ContentType:     rfc.ApplicationJSON,
 			Charset:         "utf-8",
 			ContentEncoding: "utf-8",
 			Key:             makeDSSSLKeyKey(key.DeliveryService, key.Version.String()),

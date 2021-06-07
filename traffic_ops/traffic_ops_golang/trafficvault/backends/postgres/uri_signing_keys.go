@@ -44,7 +44,7 @@ func getURISigningKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context, aesKey 
 		return []byte{}, false, err
 	}
 
-	return []byte(jsonUriKeys), true, nil
+	return jsonUriKeys, true, nil
 }
 
 func putURISigningKeys(xmlID string, tvTx *sqlx.Tx, keys []byte, ctx context.Context, aesKey []byte) error {
@@ -58,7 +58,7 @@ func putURISigningKeys(xmlID string, tvTx *sqlx.Tx, keys []byte, ctx context.Con
 		return errors.New("encrypting keys: " + err.Error())
 	}
 
-	res, err := tvTx.Exec("INSERT INTO uri_signing_key (deliveryservice, data) VALUES ($1, $2)", xmlID, encryptedKey)
+	res, err := tvTx.Exec("INSERT INTO uri_signing_key (deliveryservice, data) VALUES ($1, $2)", xmlID, string(encryptedKey))
 	if err != nil {
 		e := checkErrWithContext("Traffic Vault PostgreSQL: executing INSERT URI Sig Keys query", err, ctx.Err())
 		return e

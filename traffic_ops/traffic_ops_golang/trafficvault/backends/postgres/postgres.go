@@ -176,10 +176,11 @@ func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *
 		return e
 	}
 
-	encryptedKey, err := util.AESEncrypt(keyJSON, p.aesKey)
+	encryptedKeyRaw, err := util.AESEncrypt(keyJSON, p.aesKey)
 	if err != nil {
 		return errors.New("encrypting keys: " + err.Error())
 	}
+	encryptedKey := string(encryptedKeyRaw)
 
 	// insert the new ssl keys now
 	res, err := tvTx.Exec("INSERT INTO sslkey (deliveryservice, data, cdn, version) VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)", key.DeliveryService, encryptedKey, key.CDN, strconv.FormatInt(int64(key.Version), 10), key.DeliveryService, encryptedKey, key.CDN, latestVersion)
@@ -326,10 +327,11 @@ func (p *Postgres) PutDNSSECKeys(cdnName string, keys tc.DNSSECKeysTrafficVault,
 		return e
 	}
 
-	encryptedKey, err := util.AESEncrypt(dnssecJSON, p.aesKey)
+	encryptedKeyRaw, err := util.AESEncrypt(dnssecJSON, p.aesKey)
 	if err != nil {
 		return errors.New("encrypting keys: " + err.Error())
 	}
+	encryptedKey := string(encryptedKeyRaw)
 
 	res, err := tvTx.Exec("INSERT INTO dnssec (cdn, data) VALUES ($1, $2)", cdnName, encryptedKey)
 	if err != nil {

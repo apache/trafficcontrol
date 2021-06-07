@@ -66,10 +66,11 @@ func putURLSigKeys(xmlID string, tvTx *sqlx.Tx, keys tc.URLSigKeys, ctx context.
 		return err
 	}
 
-	encryptedKey, err := util.AESEncrypt(keyJSON, aesKey)
+	encryptedKeyRaw, err := util.AESEncrypt(keyJSON, aesKey)
 	if err != nil {
 		return errors.New("encrypting keys: " + err.Error())
 	}
+	encryptedKey := string(encryptedKeyRaw)
 
 	res, err := tvTx.Exec("INSERT INTO url_sig_key (deliveryservice, data) VALUES ($1, $2)", xmlID, encryptedKey)
 	if err != nil {
