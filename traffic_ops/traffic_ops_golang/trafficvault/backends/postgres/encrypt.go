@@ -21,64 +21,13 @@ package postgres
 
 import (
 	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
 	"encoding/base64"
 	"errors"
-	"io"
 	"io/ioutil"
 	"time"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres/hashicorpvault"
 )
-
-// AESEncrypt encrypts a byte array using an AES key.
-// This returns a encrypted byte array and an error if the encryption was not successful.
-func AESEncrypt(bytesToEncrypt []byte, aesKey []byte) (string, error) {
-	cipherBlock, err := aes.NewCipher(aesKey)
-	if err != nil {
-		return "", err
-	}
-
-	gcm, err := cipher.NewGCM(cipherBlock)
-	if err != nil {
-		return "", err
-	}
-
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		return "", err
-	}
-
-	return string(gcm.Seal(nonce, nonce, bytesToEncrypt, nil)), nil
-}
-
-// AESDecrypt decrypts a byte array using an AES key.
-// This returns a decrypted byte array and an error if the decryption was not successful.
-func AESDecrypt(bytesToDecrypt []byte, aesKey []byte) ([]byte, error) {
-	cipherBlock, err := aes.NewCipher(aesKey)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	gcm, err := cipher.NewGCM(cipherBlock)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	nonceSize := gcm.NonceSize()
-	if len(bytesToDecrypt) < nonceSize {
-		return []byte{}, err
-	}
-
-	nonce := bytesToDecrypt[:nonceSize]
-	ciphertext := bytesToDecrypt[nonceSize:]
-	decryptedString, err := gcm.Open(nil, nonce, ciphertext, nil)
-	if err != nil {
-		return []byte{}, err
-	}
-	return decryptedString, nil
-}
 
 // readKey reads the AES key (encoded in base64) used for encryption/decryption from either an on-disk file
 // or from HashiCorp Vault (based on the given configuration).

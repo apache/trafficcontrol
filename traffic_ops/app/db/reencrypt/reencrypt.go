@@ -55,7 +55,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres"
+	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -187,12 +187,12 @@ func reEncryptSslKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 		if err = rows.Scan(&id, &encryptedSslKeys); err != nil {
 			return errors.New(fmt.Sprintf("getting SSL Keys: %v", err))
 		}
-		jsonKeys, err := postgres.AESDecrypt(encryptedSslKeys, previousKey)
+		jsonKeys, err := util.AESDecrypt(encryptedSslKeys, previousKey)
 		if err != nil {
 			return errors.New(fmt.Sprintf("reading SSL Keys: %v", err))
 		}
 
-		reencryptedKeys, err := postgres.AESEncrypt(jsonKeys, newKey)
+		reencryptedKeys, err := util.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
 			return errors.New(fmt.Sprintf("encrypting SSL Keys with new key: %v", err))
 		}
@@ -239,12 +239,12 @@ func reEncryptUrlSigKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 		if err = rows.Scan(&ds, &encryptedSslKeys); err != nil {
 			return errors.New(fmt.Sprintf("getting URL Sig Keys: %v", err))
 		}
-		jsonKeys, err := postgres.AESDecrypt(encryptedSslKeys, previousKey)
+		jsonKeys, err := util.AESDecrypt(encryptedSslKeys, previousKey)
 		if err != nil {
 			return errors.New(fmt.Sprintf("reading URL Sig Keys: %v", err))
 		}
 
-		reencryptedKeys, err := postgres.AESEncrypt(jsonKeys, newKey)
+		reencryptedKeys, err := util.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
 			return errors.New(fmt.Sprintf("encrypting URL Sig Keys with new key: %v", err))
 		}
@@ -291,12 +291,12 @@ func reEncryptUriSigningKeys(db *sqlx.DB, previousKey []byte, newKey []byte) err
 		if err = rows.Scan(&ds, &encryptedSslKeys); err != nil {
 			return errors.New(fmt.Sprintf("getting URI Signing Keys: %v", err))
 		}
-		jsonKeys, err := postgres.AESDecrypt(encryptedSslKeys, previousKey)
+		jsonKeys, err := util.AESDecrypt(encryptedSslKeys, previousKey)
 		if err != nil {
 			return errors.New(fmt.Sprintf("reading URI Signing Keys: %v", err))
 		}
 
-		reencryptedKeys, err := postgres.AESEncrypt(jsonKeys, newKey)
+		reencryptedKeys, err := util.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
 			return errors.New(fmt.Sprintf("encrypting URI Signing Keys with new key: %v", err))
 		}
@@ -343,12 +343,12 @@ func reEncryptDNSSECKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 		if err = rows.Scan(&ds, &encryptedSslKeys); err != nil {
 			return errors.New(fmt.Sprintf("getting DNSSEC Keys: %v", err))
 		}
-		jsonKeys, err := postgres.AESDecrypt(encryptedSslKeys, previousKey)
+		jsonKeys, err := util.AESDecrypt(encryptedSslKeys, previousKey)
 		if err != nil {
 			return errors.New(fmt.Sprintf("reading DNSSEC Keys: %v", err))
 		}
 
-		reencryptedKeys, err := postgres.AESEncrypt(jsonKeys, newKey)
+		reencryptedKeys, err := util.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
 			return errors.New(fmt.Sprintf("encrypting DNSSEC Keys with new key: %v", err))
 		}

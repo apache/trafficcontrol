@@ -23,6 +23,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -36,7 +39,7 @@ func getURISigningKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context, aesKey 
 		return []byte{}, false, e
 	}
 
-	jsonUriKeys, err := AESDecrypt(encryptedUriSigningKey, aesKey)
+	jsonUriKeys, err := util.AESDecrypt(encryptedUriSigningKey, aesKey)
 	if err != nil {
 		return []byte{}, false, err
 	}
@@ -50,7 +53,7 @@ func putURISigningKeys(xmlID string, tvTx *sqlx.Tx, keys []byte, ctx context.Con
 		return err
 	}
 
-	encryptedKey, err := AESEncrypt(keys, aesKey)
+	encryptedKey, err := util.AESEncrypt(keys, aesKey)
 	if err != nil {
 		return errors.New("encrypting keys: " + err.Error())
 	}
