@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -482,6 +483,126 @@ type DeliveryServiceV40 struct {
 // DeliveryServiceV4 is a Delivery Service as it appears in version 4 of the
 // Traffic Ops API - it always points to the highest minor version in APIv4.
 type DeliveryServiceV4 = DeliveryServiceV40
+
+// These are the TLS Versions known by Apache Traffic Control to exist.
+const (
+	// Deprecated: TLS version 1.0 is known to be insecure.
+	TLSVersion10 = "1.0"
+	// Deprecated: TLS version 1.1 is known to be insecure.
+	TLSVersion11 = "1.1"
+	TLSVersion12 = "1.2"
+	TLSVersion13 = "1.3"
+)
+
+func newerDisallowedMessage(old string, newer []string) string {
+	l := len(newer)
+	if l < 1 {
+		return ""
+	}
+
+	var msg strings.Builder
+	msg.WriteString("old TLS version ")
+	msg.WriteString(old)
+	msg.WriteString(" is allowed, but newer version")
+	if l > 1 {
+		msg.WriteRune('s')
+	}
+	msg.WriteRune(' ')
+	msg.WriteString(newer[0])
+	if l > 1 {
+		msg.WriteString(", ")
+		if l > 2 {
+			msg.WriteString(newer[1])
+			msg.WriteString(", and ")
+			msg.WriteString(newer[2])
+		} else {
+			msg.WriteString("and ")
+			msg.WriteString(newer[1])
+		}
+		msg.WriteString(" are ")
+	} else {
+		msg.WriteString(" is ")
+	}
+	msg.WriteString("disallowed; this configuration may be insecure")
+
+	return msg.String()
+}
+
+// TLSVersionsAlerts generates warning-level alerts for the given TLS versions
+// array. It will warn if newer versions are disallowed while older, less
+// secure versions are allowed, or if there are unrecognized versions present.
+//
+// This does NOT verify that the passed TLS versions are _valid_, it ONLY
+// creates warnings based on conditions that are possibly detrimental to CDN
+// operation, but can, in fact, work.
+func TLSVersionsAlerts(vers []string) Alerts {
+	if len(vers) < 1 {
+		return Alerts{Alerts: []Alert{}}
+	}
+	messages := []string{}
+
+	found := map[string]bool{
+		TLSVersion10: false,
+		TLSVersion11: false,
+		TLSVersion12: false,
+		TLSVersion13: false,
+	}
+
+	for _, v := range vers {
+		switch v {
+		case TLSVersion10:
+			found[TLSVersion10] = true
+		case TLSVersion11:
+			found[TLSVersion11] = true
+		case TLSVersion12:
+			found[TLSVersion12] = true
+		case TLSVersion13:
+			found[TLSVersion13] = true
+		default:
+			messages = append(messages, "unknown TLS version '"+v+"' - possible typo")
+		}
+	}
+
+	if found[TLSVersion10] {
+		var newerDisallowed []string
+		if !found[TLSVersion11] {
+			newerDisallowed = append(newerDisallowed, TLSVersion11)
+		}
+		if !found[TLSVersion12] {
+			newerDisallowed = append(newerDisallowed, TLSVersion12)
+		}
+		if !found[TLSVersion13] {
+			newerDisallowed = append(newerDisallowed, TLSVersion13)
+		}
+		msg := newerDisallowedMessage(TLSVersion10, newerDisallowed)
+		if msg != "" {
+			messages = append(messages, msg)
+		}
+	} else if found[TLSVersion11] {
+		var newerDisallowed []string
+		if !found[TLSVersion12] {
+			newerDisallowed = append(newerDisallowed, TLSVersion12)
+		}
+		if !found[TLSVersion13] {
+			newerDisallowed = append(newerDisallowed, TLSVersion13)
+		}
+		msg := newerDisallowedMessage(TLSVersion11, newerDisallowed)
+		if msg != "" {
+			messages = append(messages, msg)
+		}
+	} else if found[TLSVersion12] {
+		var newerDisallowed []string
+		if !found[TLSVersion13] {
+			newerDisallowed = append(newerDisallowed, TLSVersion13)
+		}
+		msg := newerDisallowedMessage(TLSVersion12, newerDisallowed)
+		if msg != "" {
+			messages = append(messages, msg)
+		}
+	}
+
+	return CreateAlerts(WarnLevel, messages...)
+}
 
 type DeliveryServiceV30 struct {
 	DeliveryServiceNullableV15
