@@ -132,6 +132,11 @@ Traffic Ops will often return responses from its API that include dates. As of t
 
 .. note:: In practice, all Traffic Ops API responses use the UTC timezone (offset ``+00``), but do note that this custom format is not capable of representing all timezones.
 
+.. code-block:: text
+	:caption: Example Date/Timestamp
+
+	2021-06-07 08:01:02+00
+
 Using API Endpoints
 ===================
 #. Authenticate with valid Traffic Control user account credentials (the same used by Traffic Portal).
