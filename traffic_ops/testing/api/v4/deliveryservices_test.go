@@ -90,6 +90,7 @@ func TestDeliveryServices(t *testing.T) {
 		t.Run("GET request using the 'type' query string parameter", GetDeliveryServiceByValidType)
 		t.Run("GET request using the 'xmlId' query string parameter", GetDeliveryServiceByValidXmlId)
 		t.Run("Descending order sorted response to GET request", SortTestDeliveryServicesDesc)
+		t.Run("TLS Versions property", addTLSVersionsToDeliveryService)
 	})
 }
 
@@ -2264,5 +2265,92 @@ func SortTestDeliveryServicesDesc(t *testing.T) {
 	}
 	if !reflect.DeepEqual(respDesc[0].XMLID, respAsc[0].XMLID) {
 		t.Errorf("Delivery Service responses are not equal after reversal: %v - %v", respDesc[0].XMLID, respAsc[0].XMLID)
+	}
+}
+
+func addTLSVersionsToDeliveryService(t *testing.T) {
+	me, _, err := TOSession.GetUserCurrent(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("Failed to get current User: %v - alerts: %+v", err, me.Alerts)
+	}
+	if me.Response.Tenant == nil || me.Response.TenantID == nil {
+		t.Fatal("Traffic Ops returned a representation for the current user with null or undefined tenant and/or tenantID")
+	}
+
+	ds := tc.DeliveryServiceV4{
+		CDNName:              new(string),
+		DisplayName:          "ds-test-tls-versions",
+		InitialDispersion:    new(int),
+		MissLat:              new(float64),
+		MissLong:             new(float64),
+		MultiSiteOrigin:      new(bool),
+		OrgServerFQDN:        new(string),
+		Protocol:             new(int),
+		QStringIgnore:        new(int),
+		RangeRequestHandling: new(int),
+		Tenant:               new(string),
+		TenantID:             *me.Response.TenantID,
+		TLSVersions: []string{
+			"1.1",
+		},
+		Type:  new(tc.DSType),
+		XMLID: "ds-test-tls-versions",
+	}
+	*ds.InitialDispersion = 1
+	*ds.Tenant = *me.Response.Tenant
+
+	cdns, _, err := TOSession.GetCDNs(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("Failed to get CDNs: %v - alerts: %+v", err, cdns.Alerts)
+	}
+	if len(cdns.Response) < 1 {
+		t.Fatalf("Need at least one CDN to exist in order to test Delivery Service TLS Versions")
+	}
+	ds.CDNID = cdns.Response[0].ID
+	*ds.CDNName = cdns.Response[0].Name
+
+	*ds.Type = "STEERING"
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", string(*ds.Type))
+	types, _, err := TOSession.GetTypes(opts)
+	if err != nil {
+		t.Fatalf("Failed to get Types: %v - alerts: %+v", err, types.Alerts)
+	}
+	if len(types.Response) != 1 {
+		t.Fatalf("Expected exactly one Type to exist named 'STEERING', found: %d", len(types.Response))
+	}
+	ds.TypeID = types.Response[0].ID
+
+	_, _, err = TOSession.CreateDeliveryService(ds, client.RequestOptions{})
+	if err == nil {
+		t.Error("Expected an error creating a STEERING Delivery Service with explicit TLS Versions, but didn't")
+	} else if !strings.Contains(err.Error(), "'tlsVersions' must be 'null' for STEERING-Type") {
+		t.Errorf("Expected an error about non-null TLS Versions for STEERING-Type Delivery Services, got: %v", err)
+	}
+
+	*ds.Type = "HTTP"
+	opts.QueryParameters.Set("name", string(*ds.Type))
+	types, _, err = TOSession.GetTypes(opts)
+	if err != nil {
+		t.Fatalf("Failed to get Types: %v - alerts: %+v", err, types.Alerts)
+	}
+	if len(types.Response) != 1 {
+		t.Fatalf("Expected exactly one Type to exist named 'HTTP', found: %d", len(types.Response))
+	}
+	ds.TypeID = types.Response[0].ID
+
+	*ds.OrgServerFQDN = "https://origin.test"
+	resp, _, err := TOSession.CreateDeliveryService(ds, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("Unexpected error creating a Delivery Service: %v - alerts: %+v", err, resp.Alerts)
+	} else if len(resp.Response) != 1 {
+		t.Errorf("Expected creating a new Delivery Service to create exactly one Delivery Service, but Traffic Ops indicated that %d were created", len(resp.Response))
+	} else if resp.Response[0].ID == nil {
+		t.Error("Traffic Ops returned a representation for a created Delivery Service that had null or undefined ID")
+	} else {
+		alerts, _, err := TOSession.DeleteDeliveryService(*resp.Response[0].ID, client.RequestOptions{})
+		if err != nil {
+			t.Errorf("Failed to clean up newly created Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
+		}
 	}
 }
