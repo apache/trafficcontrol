@@ -25,8 +25,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"io/fs"
 	"io/ioutil"
 	"log"
+	"os"
 	"reflect"
 	"sort"
 	"strings"
@@ -160,6 +162,47 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Printf("Done [%v seconds]\n", time.Now().Sub(fromTimer).Seconds())
+
+	if dump {
+		log.Printf("Dumping data from %v...\n", fromSrv.Name())
+		fromTimer = time.Now()
+		sslKeysBytes, err := json.Marshal(&fromSSLKeys)
+		if err != nil {
+			log.Fatal(err)
+		}
+		dnssecKeyBytes, err := json.Marshal(&fromDNSSecKeys)
+		if err != nil {
+			log.Fatal(err)
+		}
+		uriKeyBytes, err := json.Marshal(&fromURIKeys)
+		if err != nil {
+			log.Fatal(err)
+		}
+		urlKeyBytes, err := json.Marshal(&fromURLKeys)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if err := os.Mkdir("dump", os.ModePerm); err != nil {
+			if !os.IsExist(err) {
+				log.Fatal(err)
+			}
+		}
+		if err = ioutil.WriteFile("dump/sslkeys.json", sslKeysBytes, fs.ModeExclusive); err != nil {
+			log.Println(err)
+		}
+		if err = ioutil.WriteFile("dump/dnsseckeys.json", dnssecKeyBytes, fs.ModeExclusive); err != nil {
+			log.Println(err)
+		}
+		if err = ioutil.WriteFile("dump/urlkeys.json", urlKeyBytes, fs.ModeExclusive); err != nil {
+			log.Println(err)
+		}
+		if err = ioutil.WriteFile("dump/urikeys.json", uriKeyBytes, fs.ModeExclusive); err != nil {
+			log.Println(err)
+		}
+		log.Printf("Done [%v seconds]\n", time.Now().Sub(fromTimer).Seconds())
+		return
+	}
 
 	if compare {
 		log.Printf("Fetching data from %v...\n", toSrv.Name())
