@@ -26,7 +26,9 @@ setowner() {
 }
 
 cleanup() {
-	setowner "$tc_volume" "${tc_volume}/dist"
+	if [ "$(id -u)" -eq 0 ]; then
+		setowner "$tc_volume" "${tc_volume}/dist"
+	fi
 }
 
 set -o xtrace;
