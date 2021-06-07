@@ -368,8 +368,8 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 t
 const insertTLSVersionsQuery = `
 INSERT INTO public.deliveryservice_tls_version (deliveryservice, tls_version)
 	SELECT
-		$1 AS deliveryservice
-		UNNEST($2) AS tls_version
+		$1 AS deliveryservice,
+		UNNEST($2::text[]) AS tls_version
 ON CONFLICT DO NOTHING
 `
 
@@ -387,19 +387,12 @@ func recreateTLSVersions(versions []string, dsid int, tx *sql.Tx) error {
 	if err != nil {
 		return fmt.Errorf("inserting new TLS versions: %w", err)
 	}
-	defer func() {
-		err = rows.Close()
-		if err != nil {
-			log.Errorln("closing TLS versions insert rows: %v", err)
-		}
-	}()
-
-	rowsAffected := 0
-	for rows.Next() {
-		rowsAffected++
+	err = rows.Close()
+	if err != nil {
+		log.Errorln("closing TLS versions insert rows: ", err.Error())
 	}
-	if rowsAffected != len(versions) {
-		return fmt.Errorf("inserting %d TLS versions for DS #%d affected %d rows", len(versions), dsid, rowsAffected)
+	if err = rows.Err(); err != nil {
+		log.Errorln("an error occurred at some point in the TLS insertion query: ", err.Error())
 	}
 
 	return nil
