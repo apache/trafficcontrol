@@ -1735,6 +1735,18 @@ func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"rangeRequestHandling": validation.Validate(ds.RangeRequestHandling,
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+		"tlsVersions": validation.Validate(
+			&ds.TLSVersions,
+			validation.By(
+				func(value interface{}) error {
+					vers := value.(*[]string)
+					if vers != nil && len(*vers) > 0 && tc.DSType(typeName).IsSteering() {
+						return errors.New("must be 'null' for STEERING-Type and CLIENT_STEERING-Type Delivery Services")
+					}
+					return nil
+				},
+			),
+		),
 		"topology": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
 				ds := dsi.(*tc.DeliveryServiceV4)
