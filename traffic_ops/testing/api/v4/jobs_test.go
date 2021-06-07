@@ -45,6 +45,7 @@ func TestJobs(t *testing.T) {
 		CreateJobsMissingDate(t)
 		CreateJobsMissingRegex(t)
 		CreateJobsMissingTtl(t)
+		UpdateTestJobsInvalidds(t)
 	})
 }
 
@@ -870,5 +871,69 @@ func CreateJobsMissingTtl(t *testing.T) {
 	resp, _, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
 	if err == nil {
 		t.Errorf("Expected ttl: cannot be blank., ttl: must be a number of hours, or a duration string e.g. '48h', but no error found %v - Alert %v", resp, resp.Alerts)
+	}
+}
+
+func UpdateTestJobsInvalidds(t *testing.T) {
+	if len(testData.DeliveryServices) < 2 {
+		t.Fatal("Need at least two Delivery Service to update Invalidation Job")
+	}
+	if testData.DeliveryServices[0].XMLID == nil || testData.DeliveryServices[1].XMLID == nil {
+		t.Fatal("Found a Delivery Service in the testing data with null or undefined XMLID")
+	}
+	xmlID := *testData.DeliveryServices[0].XMLID
+	startTime := tc.Time{
+		Time:  time.Now().Add(time.Hour),
+		Valid: true,
+	}
+	firstJob := tc.InvalidationJobInput{
+		DeliveryService: util.InterfacePtr(&xmlID),
+		Regex:           util.StrPtr(`/\.*([A-Z]0?)`),
+		TTL:             util.InterfacePtr(16),
+		StartTime:       &startTime,
+	}
+
+	resp, _, err := TOSession.CreateInvalidationJob(firstJob, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("Unexpected error creating a content invalidation Job: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("deliveryService", xmlID)
+	jobs, _, err := TOSession.GetInvalidationJobs(opts)
+	if err != nil {
+		t.Fatalf("unable to get invalidation jobs: %v - alerts: %+v", err, jobs.Alerts)
+	}
+
+	var realJob *tc.InvalidationJob
+	for i, job := range jobs.Response {
+		if job.StartTime == nil || job.DeliveryService == nil || job.CreatedBy == nil {
+			t.Error("Traffic Ops returned a representation of a content invalidation Job that had null or undefined Start Time and/or Delivery Service and/or Created By")
+			continue
+		}
+		diff := firstJob.StartTime.Time.Sub(job.StartTime.Time)
+		if *job.DeliveryService == xmlID && *job.CreatedBy == "admin" && diff < time.Second {
+			realJob = &jobs.Response[i]
+			break
+		}
+	}
+	if realJob == nil || realJob.ID == nil || *realJob.ID == 0 {
+		t.Fatal("could not find new job")
+	}
+
+	newTime := tc.Time{
+		Time:  startTime.Time.Add(time.Hour * 2),
+		Valid: true,
+	}
+	realJob.StartTime = &newTime
+
+	//update jobs with new ds id
+	realJob.DeliveryService = testData.DeliveryServices[1].XMLID
+	alerts, reqInf, err := TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("expected Cannot change 'deliveryService' of existing invalidation job! - alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusConflict {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
 	}
 }
