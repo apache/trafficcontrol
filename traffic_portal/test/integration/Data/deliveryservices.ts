@@ -65,11 +65,27 @@ export const deliveryservices = {
                     validationMessage: "Delivery Service [ cdntesting ] updated"
                 }
             ],
+            assignserver: [
+                {
+                    description: "assign server to delivery service",
+                    ServerName: "TPServerTest1",
+                    DSName: "TPService1",
+                    validationMessage: "....."
+                }
+            ],
+            assignrequiredcapabilities: [
+                {
+                    description: "assign required capabilities to delivery service",
+                    ServerCapName: "TPServerCap1",
+                    DSName: "TPService1",
+                    validationMessage: "....."
+                }
+            ],
             remove: [
                 {
                     description: "delete a delivery service",
                     Name: "tpdservice1",
-                    validationMessage: "Delivery Service [ tpdservice1 ] deleted"
+                    validationMessage: "Delivery service [ tpdservice1 ] deleted"
                 },
                 {
                     description: "delete a delivery service",

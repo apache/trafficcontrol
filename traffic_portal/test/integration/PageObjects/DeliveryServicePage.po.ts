@@ -20,7 +20,7 @@
 import { BasePage } from './BasePage.po';
 import { randomize } from "../config";
 import { SideNavigationPage } from './SideNavigationPage.po';
-import { browser, by, element} from 'protractor';
+import { by, element} from 'protractor';
 interface DeliveryServices {
   Type: string;
   Name: string;
@@ -142,7 +142,7 @@ export class DeliveryServicePage extends BasePage {
     switch (type) {
       case "ANY_MAP": {
         await this.txtXmlId.sendKeys(deliveryservice.Name + this.randomize);
-        await this.txtDisplayName.sendKeys('cdntest' + this.randomize);
+        await this.txtDisplayName.sendKeys(deliveryservice.Name + this.randomize);
         await this.selectActive.sendKeys('Active')
         await this.selectType.sendKeys('ANY_MAP')
         await this.selectTenant.sendKeys('- root')
@@ -196,11 +196,9 @@ export class DeliveryServicePage extends BasePage {
     let name = nameDS + this.randomize;
     await this.txtSearch.clear();
     await this.txtSearch.sendKeys(name);
-    if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) === true) {
-      await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-      return true;
-    }
-    return false;
+    const result = await element(by.cssContainingText("span", name)).isPresent();
+    await element(by.cssContainingText("span", name)).click();
+    return !result;
   }
   public async DeleteDeliveryService(deliveryservice:DeleteDeliveryService): Promise<boolean> {
     let result = false;
