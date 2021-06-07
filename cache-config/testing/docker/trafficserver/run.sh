@@ -28,6 +28,13 @@ function initBuildArea() {
   exit 1; }
 }
 
+setowner() {
+	own="$(stat -c%u:%g "$1")"
+	shift
+	chown -R "${own}" "$@"
+}
+trap 'exit_code=$?; setowner /trafficcontrol /trafficcontrol/dist; exit $exit_code' EXIT;
+
 case ${ATS_VERSION:0:1} in
   8) cp /trafficserver-8.spec /trafficserver.spec
      ;;
@@ -78,5 +85,3 @@ case ${ATS_VERSION:0:1} in
      exit 1
      ;;
 esac 
-
-
