@@ -168,6 +168,9 @@ if (( ! "$#" || "$all" == 1 )); then
 	set -- `$SELF -f "$COMPOSE_FILE" -l`
 fi
 
+# Create the dist directory if it does not exist.
+mkdir -p dist
+
 # Build each project in turn.
 failure=0
 badproj=""
