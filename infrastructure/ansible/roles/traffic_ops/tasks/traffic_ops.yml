@@ -111,6 +111,15 @@
     dest: "{{ to_db_installdir }}/trafficvault/dbconf.yml"
   notify: Restart Traffic Ops
 
+- name: Render Traffic Vault database AES key file
+  template:
+    src: "aes.key.j2"
+    owner: "{{ to_user }}"
+    group: "{{ to_group }}"
+    mode: 0600
+    dest: "{{ to_tvdb_aes_key_loc }}"
+  notify: Restart Traffic Ops
+
 - name: Render Traffic Ops configuration files
   template:
     src: "{{item}}.j2"

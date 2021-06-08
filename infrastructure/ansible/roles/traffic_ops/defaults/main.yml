@@ -147,6 +147,7 @@ to_tvdb_username:
 to_tvdb_password:
 to_tvdb_ssl_enable: false
 to_tvdb_aes_key_loc: "{{ to_conf_installdir }}/aes.key"
+to_tvdb_aes_key:
 to_tvdb_dbconf:
   production:
     driver: postgres
