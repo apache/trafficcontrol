@@ -20,7 +20,22 @@
 trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
 set -o errexit -o nounset -o pipefail -o xtrace -o monitor
 
-set_trafficserver_version() {
+set_profile_parameter() {
+	local profile_file="$1" config_file="$2" name="$3" new_value="$4" human_readable="$5"
+	jq=(jq --arg CONFIG_FILE "$config_file" --arg NAME "$name" --arg NEW_VALUE "$new_value")
+	echo "$(<"$profile_file" "${jq[@]}" '.params[] |= (
+		select(.configFile == $CONFIG_FILE and .name == $NAME).value = $NEW_VALUE
+	)')" >"$profile_file"
+	if ! <"$profile_file" "${jq[@]}" '.params[] |
+		select(.configFile == $CONFIG_FILE and .name == $NAME).value' |
+		grep -qF "\"${new_value}\""
+	then
+		echo "${human_readable} \"${new_value}\" was not set!"
+		exit 1
+	fi
+}
+
+set_trafficserver_parameters() {
 	local ats_profile
 	case "$CACHE_TYPE" in
 		edge) ats_profile=/traffic_ops_data/profiles/010-ATS_EDGE_TIER_CACHE.json;;
@@ -33,21 +48,11 @@ set_trafficserver_version() {
 		echo "Waiting for ${ats_profile} to exist..."
 		sleep 3
 	done
+	set_profile_parameter "$ats_profile" package trafficserver "$trafficserver_version" 'trafficserver RPM version'
 
-	echo "$(<"$ats_profile" jq --arg TRAFFICSERVER_VERSION "$trafficserver_version" '.params[] |= (
-			select(.configFile == "package" and .name == "trafficserver").value = $TRAFFICSERVER_VERSION
-		)')" >"$ats_profile"
-	if ! <"$ats_profile" jq -r --arg TRAFFICSERVER_VERSION "$trafficserver_version" '.params[] |
-		select(.configFile == "package" and .name == "trafficserver").value' |
-			grep -q "^${trafficserver_version}$"
-	then
-		echo "trafficserver RPM version ${trafficserver_version} was not set!"
-		exit 1
-	fi
-	sync
 }
 
-set_trafficserver_version
+set_trafficserver_parameters
 
 mkdir /tmp/ort
 
