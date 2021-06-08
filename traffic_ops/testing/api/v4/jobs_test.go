@@ -931,7 +931,29 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	realJob.DeliveryService = testData.DeliveryServices[1].XMLID
 	alerts, reqInf, err := TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
 	if err == nil {
-		t.Fatalf("expected Cannot change 'deliveryService' of existing invalidation job! - alerts: %+v", alerts.Alerts)
+		t.Fatalf("Expected Cannot change 'deliveryService' of existing invalidation job! - alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusConflict {
+		t.Errorf("Expected status code 409, got %v", reqInf.StatusCode)
+	}
+
+	//update jobs with invalid ds id
+	invaliddsid := "abcd"
+	realJob.DeliveryService = &invaliddsid
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected Cannot change 'deliveryService' of existing invalidation job! - alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusConflict {
+		t.Errorf("Expected status code 409, got %v", reqInf.StatusCode)
+	}
+
+	//update jobs with blank ds id
+	invaliddsid = ""
+	realJob.DeliveryService = &invaliddsid
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected deliveryService: cannot be blank. - alerts: %+v", alerts.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusConflict {
 		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
