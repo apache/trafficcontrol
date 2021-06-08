@@ -21,7 +21,7 @@ module.exports = angular.module('trafficPortal.private.changeLogs.list', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.changeLogs.list', {
-				url: '',
+				url: '?username',
 				views: {
 					changeLogsContent: {
 						templateUrl: 'common/modules/table/changeLogs/table.changeLogs.tpl.html',
@@ -30,9 +30,9 @@ module.exports = angular.module('trafficPortal.private.changeLogs.list', [])
 							tableName: function() {
 								return 'changeLogs';
 							},
-							changeLogs: function(changeLogService, propertiesModel) {
+							changeLogs: function($stateParams, changeLogService, propertiesModel) {
 								const days = (propertiesModel.properties.changeLogs) ? propertiesModel.properties.changeLogs.days : 7;
-								return changeLogService.getChangeLogs({ days: days });
+								return changeLogService.getChangeLogs({ days: days, username: $stateParams.username });
 							}
 						}
 					}

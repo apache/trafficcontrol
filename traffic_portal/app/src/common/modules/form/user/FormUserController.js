@@ -37,10 +37,13 @@ var FormUserController = function(user, $scope, $location, formUtils, stringUtil
             });
     };
 
-    var getChangeLogsPerUser = function() {
-        changeLogService.getChangeLogs({ username: userModel.user.username })
+    $scope.changeLogs = [];
+
+    $scope.getChangeLogs = function(userName) {
+        changeLogService.getChangeLogs({ username: userName })
             .then(function(response) {
                 $scope.changeLogs = response;
+                locationUtils.navigateToPath('/change-logs?username='+userName);
             });
     };
 
@@ -65,7 +68,6 @@ var FormUserController = function(user, $scope, $location, formUtils, stringUtil
     var init = function () {
         getRoles();
         getTenants();
-        getChangeLogsPerUser();
     };
     init();
 
