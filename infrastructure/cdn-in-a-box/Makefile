@@ -85,7 +85,6 @@ TOMCAT_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TOMCAT_RPM)
 TS_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TS_RPM)
 ORT_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(ORT_RPM)
 
-#ATS_DIST_RPM := $(shell set -o xtrace && ls -t $(TC_DIR)/dist/trafficserver-$(SPECIAL_SYRUP) | head -n1 || echo $(TC_DIR)/dist/trafficserver-$(SPECIAL_SYRUP))
 ATS_DIST_RPM := $(TC_DIR)/dist/trafficserver-$(SPECIAL_SYRUP)
 TM_DIST_RPM := $(TC_DIR)/dist/traffic_monitor-$(SPECIAL_SAUCE)
 TO_DIST_RPM := $(TC_DIR)/dist/traffic_ops-$(SPECIAL_SAUCE)
