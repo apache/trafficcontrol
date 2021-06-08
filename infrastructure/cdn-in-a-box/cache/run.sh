@@ -41,16 +41,16 @@ set_trafficserver_parameters() {
 		edge) ats_profile=/traffic_ops_data/profiles/010-ATS_EDGE_TIER_CACHE.json;;
 		mid) ats_profile=/traffic_ops_data/profiles/020-ATS_MID_TIER_CACHE.json;;
 	esac
-	local trafficserver_version log_directory
+	local trafficserver_version
 	trafficserver_version="$(rpm -qp --qf '%{version}-%{release}.%{arch}\n' /trafficserver.rpm)"
-	log_directory="$(rpm -ql /trafficserver.rpm | grep '/var/log/trafficserver$')"
+	logfile_dir="$(rpm -ql /trafficserver.rpm | grep '/var/log/trafficserver$')"
 
 	until [[ -s "$ats_profile" ]]; do
 		echo "Waiting for ${ats_profile} to exist..."
 		sleep 3
 	done
 	set_profile_parameter "$ats_profile" package trafficserver "$trafficserver_version" 'trafficserver RPM version'
-	set_profile_parameter "$ats_profile" records.config 'CONFIG proxy.config.log.logfile_dir' "STRING ${log_directory}" 'trafficserver logging directory'
+	set_profile_parameter "$ats_profile" records.config 'CONFIG proxy.config.log.logfile_dir' "STRING ${logfile_dir}" 'trafficserver logging directory'
 
 }
 
@@ -126,6 +126,6 @@ chmod "0644" "/etc/cron.d/traffic_ops_ort-cron" && crontab "/etc/cron.d/traffic_
 
 crond -im off
 
-touch /opt/trafficserver/var/log/trafficserver/diags.log
+touch "${logfile_dir}/diags.log"
 # Leaves the container hanging open in the event of a failure for debugging purposes
-tail -Fn+1 /opt/trafficserver/var/log/trafficserver/diags.log /var/log/ort.log
+tail -Fn+1 "${logfile_dir}/diags.log" /var/log/ort.log
