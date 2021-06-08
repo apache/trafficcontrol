@@ -86,16 +86,15 @@ RUN set -o errexit -o nounset -o xtrace; \
     dnf remove -y gcc-c++ glibc-devel autoconf automake libtool && \
     rm -f /astats_over_http.c /Makefile.am
 
-RUN set -o pipefail && \
+RUN set -o errexit -o nounset -o pipefail && \
     # The ssl directory needs to exist or the first sslkey file will be skipped on badass
-    if [[ ! -e /opt/trafficserver/etc/trafficserver/ssl ]]; then \
+    etc_trafficserver="$(rpm -ql trafficserver.rpm | grep '/etc/trafficserver$')"; \
+    if [[ ! -e "${etc_trafficserver}/ssl" ]]; then \
         echo 'Creating ssl directory...'; \
-        mkdir /opt/trafficserver/etc/trafficserver/ssl; \
+        mkdir "${etc_trafficserver}/ssl"; \
     fi; \
     # trafficserver needs different ownership than the trafficserver RPM sets
-    rpm -ql trafficserver | \
-        grep /etc/trafficserver | \
-        xargs chown -R ats:ats
+    chown -R ats:ats "$etc_trafficserver"
 
 WORKDIR /opt
 
