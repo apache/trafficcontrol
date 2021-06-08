@@ -106,8 +106,6 @@ jobs:
           repo: trafficserver
           branch: 8.1.x
         id: git-repo-sha
-      - name: Display SHA
-        run: echo "${{ steps.git-repo-sha.outputs.sha }}"
       - name: Check Cache
         id: ats-rpm-cache
         uses: actions/cache@v2
