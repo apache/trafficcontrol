@@ -4,5 +4,5 @@
   "host": "localhost",
   "port": "8087",
   "tls": false,
-  "tlsVersion": "1.1"
+  "tlsVersion": "11"
 }

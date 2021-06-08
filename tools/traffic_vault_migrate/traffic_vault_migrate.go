@@ -25,7 +25,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"io/fs"
 	"io/ioutil"
 	"log"
 	"os"
@@ -60,15 +59,16 @@ func init() {
 	flag.BoolVar(&dump, "dump", false, "Write keys (from 'from' server) to disk")
 }
 
+func supportedBackends() []TVBackend {
+	return []TVBackend{
+		&riakBE, &pgBE,
+	}
+}
+
 func main() {
 	flag.Parse()
 	var fromSrv TVBackend
 	var toSrv TVBackend
-
-	//fromType = "PG"
-	//toType = "Riak"
-	//fromCfg = "pg.json"
-	//toCfg = "riak.json"
 
 	toSrvUsed := !dump && !dry
 
@@ -183,21 +183,21 @@ func main() {
 			log.Fatal(err)
 		}
 
-		if err := os.Mkdir("dump", os.ModePerm); err != nil {
+		if err := os.Mkdir("dump", 0750); err != nil {
 			if !os.IsExist(err) {
 				log.Fatal(err)
 			}
 		}
-		if err = ioutil.WriteFile("dump/sslkeys.json", sslKeysBytes, fs.ModeExclusive); err != nil {
+		if err = ioutil.WriteFile("dump/sslkeys.json", sslKeysBytes, 0640); err != nil {
 			log.Println(err)
 		}
-		if err = ioutil.WriteFile("dump/dnsseckeys.json", dnssecKeyBytes, fs.ModeExclusive); err != nil {
+		if err = ioutil.WriteFile("dump/dnsseckeys.json", dnssecKeyBytes, 0640); err != nil {
 			log.Println(err)
 		}
-		if err = ioutil.WriteFile("dump/urlkeys.json", urlKeyBytes, fs.ModeExclusive); err != nil {
+		if err = ioutil.WriteFile("dump/urlkeys.json", urlKeyBytes, 0640); err != nil {
 			log.Println(err)
 		}
-		if err = ioutil.WriteFile("dump/urikeys.json", uriKeyBytes, fs.ModeExclusive); err != nil {
+		if err = ioutil.WriteFile("dump/urikeys.json", uriKeyBytes, 0640); err != nil {
 			log.Println(err)
 		}
 		log.Printf("Done [%v seconds]\n", time.Now().Sub(fromTimer).Seconds())
@@ -259,7 +259,7 @@ func main() {
 	if confirm {
 		ans := "q"
 		for {
-			fmt.Print("Confirm data insertion (y/n):")
+			fmt.Print("Confirm data insertion (y/n): ")
 			if _, err := fmt.Scanln(&ans); err != nil {
 				log.Fatal("unable to get user input")
 			}
@@ -428,11 +428,6 @@ type URLSigKey struct {
 	CommonRecord
 }
 
-func supportedBackends() []TVBackend {
-	return []TVBackend{
-		&riakBE, &pgBE,
-	}
-}
 func supportedTypes() []string {
 	var typs []string
 	for _, be := range supportedBackends() {

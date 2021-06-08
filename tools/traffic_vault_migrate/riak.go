@@ -27,7 +27,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/basho/riak-go-client"
-	"log"
 	"reflect"
 	"time"
 )
@@ -49,12 +48,13 @@ var (
 )
 
 type RiakConfig struct {
-	Host       string `json:"host"`
-	Port       string `json:"port"`
-	User       string `json:"user"`
-	Password   string `json:"password"`
-	VerifyTLS  bool   `json:"tls"`
-	TLSVersion string `json:"tlsVersion"`
+	Host          string `json:"host"`
+	Port          string `json:"port"`
+	User          string `json:"user"`
+	Password      string `json:"password"`
+	VerifyTLS     bool   `json:"tls"`
+	TLSVersionRaw string `json:"tlsVersion"`
+	TLSVersion    uint16
 }
 type RiakBackend struct {
 	sslKeys     RiakSSLKeyTable
@@ -83,6 +83,16 @@ func (rb *RiakBackend) ReadConfig(s string) error {
 	}
 
 	rb.cfg = *cfgGeneric.Interface().(*RiakConfig)
+
+	if rb.cfg.TLSVersionRaw == "10" {
+		rb.cfg.TLSVersion = tls.VersionTLS10
+	} else if rb.cfg.TLSVersionRaw == "11" {
+		rb.cfg.TLSVersion = tls.VersionTLS11
+	} else if rb.cfg.TLSVersionRaw == "12" {
+		rb.cfg.TLSVersion = tls.VersionTLS12
+	} else if rb.cfg.TLSVersionRaw == "13" {
+		rb.cfg.TLSVersion = tls.VersionTLS13
+	}
 	return nil
 }
 func (rb *RiakBackend) Insert() error {
@@ -136,7 +146,7 @@ func (rb *RiakBackend) SetURLSigKeys(keys []URLSigKey) error {
 func (rb *RiakBackend) Start() error {
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: !rb.cfg.VerifyTLS,
-		MaxVersion:         tls.VersionTLS11,
+		MaxVersion:         rb.cfg.TLSVersion,
 	}
 	auth := &riak.AuthOptions{
 		User:      rb.cfg.User,
@@ -149,7 +159,7 @@ func (rb *RiakBackend) Start() error {
 		return err
 	}
 	if err := cluster.Start(); err != nil {
-		return err
+		return fmt.Errorf("unable to start riak cluster: %v", err)
 	}
 
 	rb.cluster = cluster
@@ -208,10 +218,7 @@ type RiakSSLKeyTable struct {
 func (tbl *RiakSSLKeyTable) gatherKeys(cluster *riak.Cluster) error {
 	searchDocs, err := search(cluster, INDEX_SSL, "cdn:*", "", 1000, SCHEMA_SSL_FIELDS[:])
 	if err != nil {
-		return err
-	}
-	if len(searchDocs) == 0 {
-		return errors.New("No ssl keys")
+		return fmt.Errorf("RiakSSLKey gatherKeys: %v", err)
 	}
 
 	tbl.Records = make([]RiakSSLKeyRecord, len(searchDocs))
@@ -221,14 +228,14 @@ func (tbl *RiakSSLKeyTable) gatherKeys(cluster *riak.Cluster) error {
 			return err
 		}
 		if len(objs) < 1 {
-			return errors.New(fmt.Sprintf("Unable to find any objects with key %v and bucket %v, but search results were returned!", doc.Key, doc.Bucket))
+			return fmt.Errorf("RiakSSLKey gatherKeys unable to find any objects with key %v and bucket %v, but search results were returned", doc.Key, doc.Bucket)
 		}
 		if len(objs) > 1 {
-			return errors.New(fmt.Sprintf("More than 1 ssl key record found %v\n", len(objs)))
+			return fmt.Errorf("RiakSSLKey gatherKeys more than 1 ssl key record found %v\n", len(objs))
 		}
 		var obj tc.DeliveryServiceSSLKeys
 		if err = json.Unmarshal(objs[0].Value, &obj); err != nil {
-			return err
+			return fmt.Errorf("RiakSSLKey gatherKeys unable to unmarshal object into tc.DeliveryServiceSSLKeys: %v", err)
 		}
 		tbl.Records[i] = RiakSSLKeyRecord{
 			DeliveryServiceSSLKeys: obj,
@@ -263,11 +270,11 @@ func (tbl *RiakSSLKeyTable) insertKeys(cluster *riak.Cluster) error {
 	for _, record := range tbl.Records {
 		objBytes, err := json.Marshal(record.DeliveryServiceSSLKeys)
 		if err != nil {
-			return err
+			return fmt.Errorf("RiakSSLKey insertKeys failed to unmarshal keys: %v", err)
 		}
 		err = setObject(cluster, makeRiakObject(objBytes, record.DeliveryService+"-"+record.Version.String()), BUCKET_SSL)
 		if err != nil {
-			return err
+			return fmt.Errorf("RiakSSLKey insertKeys: %v", err)
 		}
 	}
 	return nil
@@ -298,12 +305,12 @@ func (tbl *RiakDNSSecKeyTable) gatherKeys(cluster *riak.Cluster) error {
 	tbl.Records = []RiakDNSSecKeyRecord{}
 	objs, err := getObjects(cluster, BUCKET_DNSSEC)
 	if err != nil {
-		return err
+		return fmt.Errorf("RiakDNSSecKey gatherKeys: %v", err)
 	}
 	for _, obj := range objs {
 		key := tc.DNSSECKeysRiak{}
 		if err := json.Unmarshal(obj.Value, &key); err != nil {
-			return err
+			return fmt.Errorf("RiakDNSSecKey gatherKeys unable to unmarshal object to tc.DNSSECKeysRiak: %v", err)
 		}
 		tbl.Records = append(tbl.Records, RiakDNSSecKeyRecord{
 			CDN:          obj.Key,
@@ -341,12 +348,12 @@ func (tbl *RiakDNSSecKeyTable) insertKeys(cluster *riak.Cluster) error {
 	for _, record := range tbl.Records {
 		objBytes, err := json.Marshal(record.Key)
 		if err != nil {
-			return err
+			return fmt.Errorf("RiakDNSSecKey insertKeys error marshalling keys: %v", err)
 		}
 
 		err = setObject(cluster, makeRiakObject(objBytes, record.CDN), BUCKET_DNSSEC)
 		if err != nil {
-			return err
+			return fmt.Errorf("RiakDNSSecKey insertKeys: %v", err)
 		}
 	}
 	return nil
@@ -374,12 +381,12 @@ func (tbl *RiakURLSigKeyTable) gatherKeys(cluster *riak.Cluster) error {
 	tbl.Records = []RiakURLSigKeyRecord{}
 	objs, err := getObjects(cluster, BUCKET_URL_SIG)
 	if err != nil {
-		return err
+		return fmt.Errorf("RiakURLSigKey gatherKeys: %v", err)
 	}
 	for _, obj := range objs {
 		key := tc.URLSigKeys{}
 		if err := json.Unmarshal(obj.Value, &key); err != nil {
-			return err
+			return fmt.Errorf("RiakURLSigKey gatherKeys unable to unamrshal object into tc.URLSigKeys: %v", err)
 		}
 		tbl.Records = append(tbl.Records, RiakURLSigKeyRecord{
 			DeliveryService: obj.Key,
@@ -416,12 +423,12 @@ func (tbl *RiakURLSigKeyTable) insertKeys(cluster *riak.Cluster) error {
 	for _, record := range tbl.Records {
 		objBytes, err := json.Marshal(record.Key)
 		if err != nil {
-			return err
+			return fmt.Errorf("RiakURLSigKey insertKeys unable to marshal keys: %v", err)
 		}
 
 		err = setObject(cluster, makeRiakObject(objBytes, "url_sig_"+record.DeliveryService+".config"), BUCKET_URL_SIG)
 		if err != nil {
-			return err
+			return fmt.Errorf("RiakURLSigKey insertKeys: %v", err)
 		}
 	}
 	return nil
@@ -449,12 +456,12 @@ func (tbl *RiakURISignKeyTable) gatherKeys(cluster *riak.Cluster) error {
 	tbl.Records = []RiakURISignKeyRecord{}
 	objs, err := getObjects(cluster, BUCKET_URI_SIG)
 	if err != nil {
-		return err
+		return fmt.Errorf("RiakURISignKey gatherKeys: %v", err)
 	}
 	for _, obj := range objs {
 		key := map[string]tc.URISignerKeyset{}
 		if err := json.Unmarshal(obj.Value, &key); err != nil {
-			return err
+			return fmt.Errorf("RiakURISignKey gatherKeys unable to unmarshal object into map[string]tc.URISignerKeySet: %v", err)
 		}
 
 		tbl.Records = append(tbl.Records, RiakURISignKeyRecord{
@@ -493,12 +500,12 @@ func (tbl *RiakURISignKeyTable) insertKeys(cluster *riak.Cluster) error {
 	for _, record := range tbl.Records {
 		objBytes, err := json.Marshal(record.Key)
 		if err != nil {
-			return err
+			return fmt.Errorf("RiakURISignKey insertKeys: unable to marshal key: %v", err)
 		}
 
 		err = setObject(cluster, makeRiakObject(objBytes, record.DeliveryService), BUCKET_URI_SIG)
 		if err != nil {
-			return err
+			return fmt.Errorf("RiakURISignKey insertKeys: %v", err)
 		}
 	}
 	return nil
@@ -535,7 +542,7 @@ func getObjects(cluster *riak.Cluster, bucket string) ([]*riak.Object, error) {
 			return nil, err
 		}
 		if len(objects) > 1 {
-			return nil, errors.New(fmt.Sprintf("Unexpected number of objects %v, ignoring\n", len(objects)))
+			return nil, fmt.Errorf("Unexpected number of objects %v, ignoring\n", len(objects))
 		}
 
 		objs = append(objs, objects[0])
@@ -550,18 +557,18 @@ func getObject(cluster *riak.Cluster, bucket string, key string) ([]*riak.Object
 		WithTimeout(time.Second * 60).
 		Build()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error building riak fetch value command: %v", err)
 	}
 
 	if err := cluster.Execute(cmd); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error executing riak fetch value command: %v", err)
 	}
 
 	fvc := cmd.(*riak.FetchValueCommand)
 	rsp := fvc.Response
 
 	if rsp.IsNotFound {
-		return nil, errors.New(fmt.Sprintf("ERROR Key not found: %v:%v", bucket, key))
+		return nil, fmt.Errorf("errors executing riak fetch value command; key not found: %v:%v", bucket, key)
 	}
 
 	return rsp.Values, nil
@@ -573,7 +580,7 @@ func setObject(cluster *riak.Cluster, obj *riak.Object, bucket string) error {
 		WithTimeout(time.Second * 5).
 		Build()
 	if err != nil {
-		return err
+		return fmt.Errorf("error building riak store value command: %v", err)
 	}
 
 	return cluster.Execute(cmd)
@@ -598,14 +605,14 @@ func search(cluster *riak.Cluster, index string, query string, filterQuery strin
 		iCmd, err := riakCmd.Build()
 
 		if err != nil {
-			return nil, errors.New("building Riak command: " + err.Error())
+			return nil, fmt.Errorf("building Riak search command: %v", err.Error())
 		}
 		if err = cluster.Execute(iCmd); err != nil {
-			return nil, errors.New("executing Riak command index '" + index + "' query '" + query + "': " + err.Error())
+			return nil, fmt.Errorf("executing Riak search command index '%v' query '%v': %v", index, query, err.Error())
 		}
 		cmd, ok := iCmd.(*riak.SearchCommand)
 		if !ok {
-			return nil, fmt.Errorf("riak command unexpected type %T", iCmd)
+			return nil, fmt.Errorf("riak search command unexpected type %T", iCmd)
 		}
 		if start == 0 {
 			if cmd.Response == nil || cmd.Response.NumFound == 0 {
@@ -644,11 +651,11 @@ func listKeys(cluster *riak.Cluster, bucket string) ([]string, error) {
 		WithAllowListing().
 		Build()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("building riak list keys command failed: " + err.Error())
 	}
 
 	if err := cluster.Execute(cmd); err != nil {
-		return nil, err
+		return nil, errors.New("error executing riak list keys command: " + err.Error())
 	}
 
 	lkc := cmd.(*riak.ListKeysCommand)
@@ -659,30 +666,30 @@ func ping(cluster *riak.Cluster) error {
 	ping := riak.PingCommandBuilder{}
 	cmd, err := ping.Build()
 	if err != nil {
-		log.Fatal(err)
+		return errors.New("failed to build riak ping command: " + err.Error())
 	}
 
 	if err = cluster.Execute(cmd); err != nil {
-		log.Fatal(err)
+		return err
 	}
 	response, ok := cmd.(*riak.PingCommand)
 	if !ok {
-		log.Fatalf("Unexpected riak command type: %v", cmd)
+		return errors.New(fmt.Sprintf("unexpected riak command type for ping: %v", cmd))
 	}
 
 	if response.Error() != nil {
-		return response.Error()
+		return errors.New("riak ping command response error: " + response.Error().Error())
 	}
 
 	if !response.Success() {
-		return errors.New("unable to ping riak")
+		return errors.New("riak ping command returned unsuccessfully")
 	}
 
 	return nil
 }
 func getRiakCluster(srv RiakConfig, authOptions *riak.AuthOptions) (*riak.Cluster, error) {
 	if authOptions == nil {
-		return nil, errors.New("ERROR: no riak auth information from riak.conf, cannot authenticate to any riak servers")
+		return nil, errors.New("no riak auth information from riak.conf, cannot authenticate to any riak servers")
 	}
 	nodes := []*riak.Node{}
 	nodeOpts := &riak.NodeOptions{
@@ -699,7 +706,7 @@ func getRiakCluster(srv RiakConfig, authOptions *riak.AuthOptions) (*riak.Cluste
 	}
 	nodes = append(nodes, node)
 	if len(nodes) == 0 {
-		return nil, errors.New("ERROR: no available riak servers")
+		return nil, errors.New("no available riak servers")
 	}
 	opts := &riak.ClusterOptions{
 		Nodes:             nodes,
