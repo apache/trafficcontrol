@@ -144,7 +144,7 @@ endif
 
 # Relative path output RPM recipies
 $(ATS_RPM_RELATIVE): $(ATS_DIST_RPM)
-	cp -f "$?" "$@"
+	cp -f "$?" "$@" || (rm "$(CIAB_DIR_RELATIVE)/cache/ATS_VERSION"; false)
 $(TM_RPM_RELATIVE): $(TM_DIST_RPM)
 	cp -f "$?" "$@"
 $(TO_RPM_RELATIVE): $(TO_DIST_RPM)
@@ -162,7 +162,7 @@ $(ORT_RPM_RELATIVE): $(ORT_DIST_RPM)
 
 # Absolute path output RPM recipies
 $(ATS_RPM_ABSOLUTE): $(ATS_DIST_RPM)
-	cp -f "$?" "$@"
+	cp -f "$?" "$@" || (rm "$(CIAB_DIR_ABSOLUTE)/cache/ATS_VERSION"; false)
 $(TM_RPM_ABSOLUTE): $(TM_DIST_RPM)
 	cp -f "$?" "$@"
 $(TO_RPM_ABSOLUTE): $(TO_DIST_RPM)
