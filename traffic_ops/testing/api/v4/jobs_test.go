@@ -920,14 +920,14 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	if realJob == nil || realJob.ID == nil || *realJob.ID == 0 {
 		t.Fatal("could not find new job")
 	}
-
+	var originalJob = realJob
 	newTime := tc.Time{
 		Time:  startTime.Time.Add(time.Hour * 2),
 		Valid: true,
 	}
 	realJob.StartTime = &newTime
 
-	//update jobs with new ds id
+	//update existing jobs with new ds id
 	realJob.DeliveryService = testData.DeliveryServices[1].XMLID
 	alerts, reqInf, err := TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
 	if err == nil {
@@ -937,7 +937,8 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 		t.Errorf("Expected status code 409, got %v", reqInf.StatusCode)
 	}
 
-	//update jobs with invalid ds id
+	//update existing jobs with invalid ds id
+	realJob = originalJob
 	invaliddsid := "abcd"
 	realJob.DeliveryService = &invaliddsid
 	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
@@ -948,14 +949,218 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 		t.Errorf("Expected status code 409, got %v", reqInf.StatusCode)
 	}
 
-	//update jobs with blank ds id
+	//update existing jobs with blank ds id
+	realJob = originalJob
 	invaliddsid = ""
 	realJob.DeliveryService = &invaliddsid
 	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected deliveryService: cannot be blank. - alerts: %+v", alerts.Alerts)
 	}
-	if reqInf.StatusCode != http.StatusConflict {
+	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
 	}
+
+	//update existing jobs with new id
+	realJob = originalJob
+	var b uint64 = 1111
+	var a *uint64 = &b
+	realJob.ID = a
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected Cannot change an invalidation job 'id'! - alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusConflict {
+		t.Errorf("Expected status code 409, got %v", reqInf.StatusCode)
+	}
+
+	//update existing jobs with asset url not starts with origin.infra
+	realJob = originalJob
+	assetURL := "http://google.com"
+	realJob.AssetURL = &assetURL
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected Cannot set asset URL that does not start with Delivery Service origin URL: http://origin.infra.ciab.test. - alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+
+	//update existing jobs with blank asset url
+	realJob = originalJob
+	assetURL = ""
+	realJob.AssetURL = &assetURL
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected assetUrl: cannot be blank. alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+
+	//update existing jobs with blank created by
+	realJob = originalJob
+	createdBy := ""
+	realJob.CreatedBy = &createdBy
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected createdBy: cannot be blank. alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+
+	//update existing jobs created by
+	realJob = originalJob
+	createdBy = "operator"
+	realJob.CreatedBy = &createdBy
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected Cannot change 'createdBy' of existing invalidation jobs!. alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusConflict {
+		t.Errorf("Expected status code 409, got %v", reqInf.StatusCode)
+	}
+
+	//update existing jobs with blank parameters
+	realJob = originalJob
+	parameters := ""
+	realJob.Parameters = &parameters
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected parameters: cannot be blank. alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+
+	//update existing jobs start date after 2 days
+	realJob = originalJob
+	dt := time.Now()
+	dt.Format("2019-10-12T07:20:50.52Z")
+	realJob.StartTime = &tc.Time{
+		Time:  dt.AddDate(0, 0, 3),
+		Valid: true,
+	}
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected startTime: must be within two days from now. alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+
+	//update jobs with past start date
+	realJob = originalJob
+	dt = time.Now()
+	dt.Format("2019-06-18 21:28:31")
+	realJob.StartTime = &tc.Time{
+		Time:  dt.AddDate(0, 0, -3),
+		Valid: true,
+	}
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected startTime: cannot be in the past. alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+
+	//update jobs with RFC Format past start date
+	realJob = originalJob
+	dt = time.Now()
+	dt.Format("2019-10-12T07:20:50.52Z")
+	realJob.StartTime = &tc.Time{
+		Time:  dt.AddDate(0, 0, -1),
+		Valid: true,
+	}
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected startTime: cannot be in the past. alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+
+	//update jobs with UNIX Format past start date
+	realJob = originalJob
+	realJob.StartTime = &tc.Time{
+		Time:  time.Unix(1, 0),
+		Valid: true,
+	}
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected startTime: cannot be in the past. alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+
+	//update jobs with non standartd Format past start date
+	realJob = originalJob
+	dt = time.Now()
+	dt.Format("2020-03-11 14:12:20-06")
+	realJob.StartTime = &tc.Time{
+		Time:  dt.AddDate(0, 0, -1),
+		Valid: true,
+	}
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected startTime: cannot be in the past. alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
+	}
+
+	//update jobs with RFC Format Future start date
+	realJob = originalJob
+	dt = time.Now()
+	dt.Format("2019-10-12T07:20:50.52Z")
+	realJob.StartTime = &tc.Time{
+		Time:  dt.AddDate(0, 0, 1),
+		Valid: true,
+	}
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("Expected Content invalidation job updated. alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code 200, got %v", reqInf.StatusCode)
+	}
+
+	//update jobs with UNIX Format Future start date
+	realJob = originalJob
+	dt = time.Now()
+	dt.Format(".000")
+	realJob.StartTime = &tc.Time{
+		Time:  dt.AddDate(0, 0, 1),
+		Valid: true,
+	}
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("Expected Content invalidation job updated. alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code 200, got %v", reqInf.StatusCode)
+	}
+
+	//update jobs with non standartd Format Future start date
+	realJob = originalJob
+	dt = time.Now()
+	dt.Format("2020-03-11 14:12:20-06")
+	realJob.StartTime = &tc.Time{
+		Time:  dt.AddDate(0, 0, 1),
+		Valid: true,
+	}
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("Expected Content invalidation job updated. alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code 200, got %v", reqInf.StatusCode)
+	}
+}
+
+func DeleteTestJobs(t *testing.T) {
+
 }
