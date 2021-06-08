@@ -215,16 +215,50 @@ jobs:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
 
+  trafficserver:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Get commit sha
+        uses: ./.github/actions/fetch-github-branch-sha
+        with:
+          owner: apache
+          repo: trafficserver
+          branch: 8.1.x
+        id: git-repo-sha
+      - name: Check Cache
+        id: ats-rpm-cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/dist
+          key: ${{ steps.git-repo-sha.outputs.sha }}-el${{ env.RHEL_VERSION }}-${{ hashFiles('cache-config/testing/docker/trafficserver/**') }}
+      - name: Build ATS RPM
+        if: steps.ats-rpm-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/build-ats-test-rpm
+        env:
+          ATC_COMPONENT: ${{ github.job }}
+      - name: Display structure of dist directory
+        run: ls -lR
+        working-directory: ${{ github.workspace }}/dist
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/dist/${{ github.job }}-*.x86_64.rpm
+
   ciab-build:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     needs:
+      - cache-config
       - traffic_monitor
       - traffic_ops
-      - cache-config
       - traffic_portal
       - traffic_router
       - traffic_stats
+      - trafficserver
     steps:
       - name: Checkout
         uses: actions/checkout@master

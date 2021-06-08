@@ -27,6 +27,9 @@ ARG RHEL_VERSION=8
 # Makes RHEL_VERSION available at runtime
 ENV RHEL_VERSION="$RHEL_VERSION"
 
+# The /traffic_ops_data volume is included to set the ATS RPM version in the MID profile.
+VOLUME /traffic_ops_data
+
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
@@ -34,38 +37,34 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 EXPOSE 80
 
 RUN dnf -y install epel-release && \
-    if [[ "${RHEL_VERSION%%.*}" -ge 8 ]]; then \
-        additional_packages='compat-openssl10 pkgconf-pkg-config' || \
+    if [[ "${RHEL_VERSION%%.*}" -lt 8 ]]; then \
+        additional_packages='perl(URI)' || \
         exit 1; \
     else \
-        additional_packages=openssl || \
+        additional_packages='' || \
         exit 1; \
     fi && \
     dnf -y install              \
+        brotli                  \
         GeoIP                   \
         git                     \
         groff-base              \
         hwloc                   \
-        hwloc-libs              \
+        # jansson is required by the ATS TSB RPM
+        jansson                 \
         kyotocabinet-libs       \
+        libmaxminddb            \
         libtool-ltdl            \
         libunwind               \
+        # luajit is required by the ATS TSB RPM
+        luajit                  \
         lzo                     \
         make                    \
         numactl-libs            \
+        openssl                 \
         perl                    \
         tcl                     \
-        $additional_packages && \
-    if [[ "${RHEL_VERSION%%.*}" -eq 8 ]]; then \
-        # Pretend that we have the right library versions.
-        # TODO: Use a proper CentOS 7 or 8 RPM once trafficserver
-        # is in EPEL again (see apache/trafficserver#6855)
-        cd /usr/lib64 && \
-        ln -s libtcl8.6.so        libtcl8.5.so && \
-        ln -s libncursesw.so.6    libncursesw.so.5 && \
-        ln -s libtinfo.so.6       libtinfo.so.5  || \
-            exit 1; \
-    fi
+        $additional_packages
 
 RUN dnf install -y bind-utils kyotocabinet-libs initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel && \
     dnf install -y jq logrotate && \
@@ -73,28 +72,29 @@ RUN dnf install -y bind-utils kyotocabinet-libs initscripts iproute net-tools nm
 
 FROM common-traffic-server-dependencies AS common-cache-config-layers
 
-ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.4-2.el7.x86_64.rpm /trafficserver.rpm
-ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-devel-7.1.4-2.el7.x86_64.rpm /trafficserver-devel.rpm
-
+COPY infrastructure/cdn-in-a-box/cache/trafficserver.rpm /trafficserver.rpm
 COPY traffic_server/plugins/astats_over_http/astats_over_http.c traffic_server/plugins/astats_over_http/Makefile.am /
 
-RUN rpm -Uvh --nodeps /trafficserver.rpm /trafficserver-devel.rpm && \
-    tsxs -v -c astats_over_http.c -o astats_over_http.so
-
-# The symbolic links here are used because trafficserver-7.1.4-2.el7.x86_64.rpm has / as TS_ROOT,
-# but the Cache Configs assume that /opt/trafficserver is TS_ROOT. The symlinks can be removed
-# once a Traffic Server RPM using /opt/trafficserver as TS_ROOT is used.
-RUN ln -s / /opt/trafficserver && \
-    mkdir /libexec /etc/trafficserver/ssl && \
-    ln -s /usr/lib64/trafficserver/plugins /libexec/trafficserver && \
-    tsxs -v -o astats_over_http.so -i
-
-RUN dnf remove -y gcc-c++ glibc-devel autoconf automake libtool && \
+RUN set -o errexit -o nounset -o xtrace; \
+    rpm -Uvh /trafficserver.rpm; \
+    if [[ -e /trafficserver-devel.rpm ]]; then \
+        rpm -Uvh /trafficserver-devel.rpm; \
+    fi; \
+    PATH+=:/opt/trafficserver/bin; \
+    tsxs -v -c astats_over_http.c -o astats_over_http.so && \
+    tsxs -v -o astats_over_http.so -i && \
+    dnf remove -y gcc-c++ glibc-devel autoconf automake libtool && \
     rm -f /astats_over_http.c /Makefile.am
 
-# traffic_server needs different ownership than trafficserver-7.1.4-2.el7.x86_64.rpm sets
-RUN chown -R ats:ats /etc/trafficserver/ /usr/lib64/trafficserver/
-
+RUN set -o errexit -o nounset -o pipefail && \
+    # The ssl directory needs to exist or the first sslkey file will be skipped on badass
+    etc_trafficserver="$(rpm -ql trafficserver.rpm | grep '/etc/trafficserver$')"; \
+    if [[ ! -e "${etc_trafficserver}/ssl" ]]; then \
+        echo 'Creating ssl directory...'; \
+        mkdir "${etc_trafficserver}/ssl"; \
+    fi; \
+    # trafficserver needs different ownership than the trafficserver RPM sets
+    chown -R ats:ats "$etc_trafficserver"
 
 WORKDIR /opt
 
@@ -120,6 +120,7 @@ RUN dnf -y install golang && \
     go get -u github.com/go-delve/delve/cmd/dlv
 
 FROM common-cache-config-layers AS mid
+ENV CACHE_TYPE=mid
 COPY infrastructure/cdn-in-a-box/mid/init.d/ /opt/init.d/
 
 FROM mid AS mid-debug
@@ -127,6 +128,7 @@ COPY --from=get-delve /root/go/bin /usr/bin
 COPY infrastructure/cdn-in-a-box/cache/init-debug-scripts.sh /opt/init.d/
 
 FROM common-cache-config-layers AS edge
+ENV CACHE_TYPE=edge
 COPY infrastructure/cdn-in-a-box/edge/init.d/ /opt/init.d/
 
 FROM edge AS edge-debug

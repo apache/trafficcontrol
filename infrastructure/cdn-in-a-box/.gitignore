@@ -16,6 +16,7 @@
 # under the License.
 #
 *.rpm
-traffic_ops/ca
-optional/vpn/vpnca
-traffic_vault/prestart.d/00-0-standalone-config.sh
+/cache/ATS_VERSION
+/optional/vpn/vpnca
+/traffic_ops/ca
+/traffic_vault/prestart.d/00-0-standalone-config.sh

@@ -31,5 +31,7 @@ services:
     build:
       context: ../../..
       dockerfile: cache-config/testing/docker/trafficserver/Dockerfile
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-7}
     volumes:
       - ../../..:/trafficcontrol:z
