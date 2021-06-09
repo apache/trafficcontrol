@@ -22,12 +22,14 @@ package logs
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 const DefaultLogLimit = 1000
@@ -52,7 +54,6 @@ func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 
 	limit := DefaultLogLimit
 	days := DefaultLogDays
-	var username string
 	if pDays, ok := inf.IntParams["days"]; ok {
 		days = pDays
 		limit = DefaultLogLimitForDays
@@ -60,12 +61,9 @@ func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	if pLimit, ok := inf.IntParams["limit"]; ok {
 		limit = pLimit
 	}
-	if pUsername, ok := inf.Params["username"]; ok {
-		username = pUsername
-	}
 
 	setLastSeenCookie(w)
-	logs, count, err := getLog(inf.Tx.Tx, days, limit, username)
+	logs, count, err := getLog(inf, days, limit)
 	if err != nil {
 		a.AddNewAlert(tc.ErrorLevel, err.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, a)
@@ -124,30 +122,37 @@ func getLastSeenCookie(r *http.Request) (time.Time, bool) {
 	return lastSeen, true
 }
 
-const selectUsernameQuery = `
+const selectFromQuery = `
 SELECT l.id, l.level, l.message, u.username as user, l.ticketnum, l.last_updated
-FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id
-WHERE l.last_updated > now() - ($1 || ' DAY')::INTERVAL AND u.username=$3
-ORDER BY l.last_updated DESC
-LIMIT $2`
+FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id`
 
-const selectQuery = `
-SELECT l.id, l.level, l.message, u.username as user, l.ticketnum, l.last_updated
-FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id
-WHERE l.last_updated > now() - ($1 || ' DAY')::INTERVAL
-ORDER BY l.last_updated DESC
-LIMIT $2`
-
-func getLog(tx *sql.Tx, days int, limit int, username string) ([]tc.Log, uint64, error) {
+func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 	var count = uint64(0)
-	var rows *sql.Rows
-	var err error
 
-	if username != "" {
-		rows, err = tx.Query(selectUsernameQuery, days, limit, username)
-	} else {
-		rows, err = tx.Query(selectQuery, days, limit)
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"username": dbhelpers.WhereColumnInfo{Column: "u.username", Checker: nil},
 	}
+	where, orderBy, pagination, queryValues, errs :=
+		dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return nil, 0, util.JoinErrs(errs)
+	}
+
+	timeInterval := fmt.Sprintf("l.last_updated > now() - INTERVAL '%v' DAY", days)
+	if _, ok := inf.Params["username"]; ok {
+		where = where + " AND " + timeInterval
+	} else {
+		where = "\nWHERE " + timeInterval
+	}
+	if orderBy == "" {
+		orderBy = orderBy + "\nORDER BY l.last_updated DESC"
+	}
+	if pagination == "" {
+		pagination = pagination + fmt.Sprintf("\nLIMIT %v", limit)
+	}
+	query := selectFromQuery + where + orderBy + pagination
+
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, count, errors.New("querying logs: " + err.Error())
 	}
