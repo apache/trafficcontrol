@@ -70,11 +70,11 @@ func main() {
 	flag.Parse()
 	var fromSrv TVBackend
 	var toSrv TVBackend
-	//
-	//fromType = "PG"
-	//fromCfg = "pg.conf"
-	//toType = "Riak"
-	//toCfg = "riak.conf"
+
+	fromType = "PG"
+	fromCfg = "pg.json"
+	toType = "Riak"
+	toCfg = "riak.json"
 	compare = true
 
 	toSrvUsed := !dump && !dry
@@ -334,7 +334,8 @@ func GetKeys(be TVBackend) ([]SSLKey, []DNSSecKey, []URISignKey, []URLSigKey, er
 		return nil, nil, nil, nil, errors.New(fmt.Sprintf("Unable to %v url keys: %v", be.Name(), err))
 	}
 	sort.Slice(sslkeys[:], func(a, b int) bool {
-		return sslkeys[a].CDN < sslkeys[b].CDN && sslkeys[a].DeliveryService < sslkeys[b].DeliveryService && sslkeys[a].Version < sslkeys[b].Version
+		return sslkeys[a].CDN < sslkeys[b].CDN ||
+			sslkeys[a].CDN == sslkeys[b].CDN && sslkeys[a].DeliveryService < sslkeys[b].DeliveryService
 	})
 	sort.Slice(dnssec[:], func(a, b int) bool {
 		return dnssec[a].CDN < dnssec[b].CDN
