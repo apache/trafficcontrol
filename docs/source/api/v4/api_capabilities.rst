@@ -60,7 +60,7 @@ Response Structure
 
 :httpRoute:   The request route for which this capability applies - relative to the Traffic Ops server's URL
 :id:          An integer which uniquely identifies this capability
-:lastUpdated: The time at which this capability was last updated, in ISO format
+:lastUpdated: The time at which this capability was last updated, in :ref:`non-rfc-datetime`
 
 .. code-block:: http
 	:caption: Response Example

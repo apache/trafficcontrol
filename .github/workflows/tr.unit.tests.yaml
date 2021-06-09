@@ -24,13 +24,13 @@ env:
 on:
   push:
     paths:
-      - .github/actions/tr-tests/**
+      - .github/actions/tr-unit-tests/**
       - .github/workflows/tr.unit.tests.yaml
       - traffic_router/**
   create:
   pull_request:
     paths:
-      - .github/actions/tr-tests/**
+      - .github/actions/tr-unit-tests/**
       - .github/workflows/tr.unit.tests.yaml
       - traffic_router/**
     types: [ opened, reopened, ready_for_review, synchronize ]
@@ -56,8 +56,8 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: Run unit tests
-        uses: ./.github/actions/tr-tests
+      - name: Run Traffic Router unit tests
+        uses: ./.github/actions/tr-unit-tests
       - name: Upload Surefire Reports
         uses: actions/upload-artifact@v2
         if: ${{ failure() }}
