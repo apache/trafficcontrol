@@ -1,4 +1,4 @@
-// cdn_lock package contains the CRD methods related to CDNLocks
+// Package cdn_lock contains the CRD methods which aid in locking and unlocking CDNs.
 package cdn_lock
 
 /*
