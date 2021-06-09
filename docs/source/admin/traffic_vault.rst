@@ -79,16 +79,13 @@ Administration of the PostgreSQL database for Traffic Vault
 
 Similar to administering the Traffic Ops database, the :ref:`admin <database-management>` tool should be used for administering the PostgreSQL Traffic Vault backend.
 
-AES Re-Encryption Tool:
------------------------
-
 .. program:: reencrypt
 
 app/db/reencrypt/reencrypt
-=====================================================================
-The :program:`app/db/reencrypt/reencrypt` binary is for use to re-encrypt all keys in the Postgres Traffic Vault.
+--------------------------
+The :program:`app/db/reencrypt/reencrypt` binary is used to re-encrypt all data in the Postgres Traffic Vault with a new base64-encoded AES key.
 
-.. note:: For proper resolution of configuration files, it's recommended that this binary be run from the ``app/db/reencrypt`` directory
+.. note:: For proper resolution of configuration files, it's recommended that this binary be run from the ``app/db/reencrypt`` directory.
 
 Usage
 -----
@@ -96,17 +93,21 @@ Usage
 
 Options and Arguments
 ---------------------
-.. option:: --new-key
+.. option:: --new-key NEW_KEY
 
-	The file path for the new base64-encoded AES key.
+	(Optional) The file path for the new base64-encoded AES key. Default is ``/opt/traffic_ops/app/conf/new.key``.
 
-.. option:: --previous-key
+.. option:: --previous-key PREVIOUS_KEY
 
-	The file path for the previous base64-encoded AES key.
+	(Optional) The file path for the previous base64-encoded AES key. Default is ``/opt/traffic_ops/app/conf/aes.key``.
 
-.. option:: --cfg
+.. option:: --cfg CONFIG_FILE
 
-	The path for the configuration file. Default is ``./reencrypt.conf``.
+	(Optional) The path for the configuration file. Default is ``./reencrypt.conf``.
+
+.. option:: --help
+
+	(Optional) Print usage information and exit.
 
 .. code-block:: bash
 	:caption: Example Usage

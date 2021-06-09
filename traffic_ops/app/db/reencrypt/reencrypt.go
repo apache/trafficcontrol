@@ -64,21 +64,15 @@ import (
 const PROPERTIES_FILE = "./reencrypt.conf"
 
 func main() {
-	previousKeyLocation := flag.String("previous-key", "", "The file path for the previous base64 encoded AES key.")
-	newKeyLocation := flag.String("new-key", "", "The file path for the new base64 encoded AES key.")
-	cfg := flag.String("cfg", PROPERTIES_FILE, "The path for the configuration file. Default is "+PROPERTIES_FILE+".")
+	previousKeyLocation := flag.String("previous-key", "/opt/traffic_ops/app/conf/aes.key", "(Optional) The file path for the previous base64 encoded AES key. Default is /opt/traffic_ops/app/conf/aes.key.")
+	newKeyLocation := flag.String("new-key", "/opt/traffic_ops/app/conf/new.key", "(Optional) The file path for the new base64 encoded AES key. Default is /opt/traffic_ops/app/conf/new.key.")
+	cfg := flag.String("cfg", PROPERTIES_FILE, "(Optional) The path for the configuration file. Default is "+PROPERTIES_FILE+".")
+	help := flag.Bool("help", false, "(Optional) Print usage information and exit.")
 	flag.Parse()
 
-	if len(os.Args) < 4 {
+	if *help {
 		flag.Usage()
 		os.Exit(1)
-	}
-
-	if previousKeyLocation == nil || *previousKeyLocation == "" {
-		die("previous-key flag is required.")
-	}
-	if newKeyLocation == nil || *newKeyLocation == "" {
-		die("new-key flag is required.")
 	}
 
 	newKey, err := readKey(*newKeyLocation)
@@ -150,7 +144,7 @@ func readKey(keyLocation string) ([]byte, error) {
 
 	key, err := base64.StdEncoding.DecodeString(keyBase64)
 	if err != nil {
-		return []byte{}, errors.New(fmt.Sprintf("AES key cannot be decoded from base64: %v", err))
+		return []byte{}, fmt.Errorf("AES key cannot be decoded from base64: %w", err)
 	}
 
 	// verify the key works
@@ -165,48 +159,48 @@ func readKey(keyLocation string) ([]byte, error) {
 func reEncryptSslKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 	tx, err := db.Begin()
 	if err != nil {
-		return errors.New(fmt.Sprintf("transaction begin failed %v %v ", err, tx))
+		return fmt.Errorf("transaction begin failed %w %v ", err, tx)
 	}
 	defer tx.Commit()
 
 	rows, err := tx.Query("SELECT id, data FROM sslkey")
 	if err != nil {
-		return errors.New(fmt.Sprintf("querying: %v", err))
+		return fmt.Errorf("querying: %w", err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		updateTx, err := db.Begin()
 		if err != nil {
-			return errors.New(fmt.Sprintf("transaction begin failed %v %v", err, updateTx))
+			return fmt.Errorf("transaction begin failed %w %v", err, updateTx)
 		}
 		defer updateTx.Commit()
 
 		id := 0
 		var encryptedSslKeys []byte
 		if err = rows.Scan(&id, &encryptedSslKeys); err != nil {
-			return errors.New(fmt.Sprintf("getting SSL Keys: %v", err))
+			return fmt.Errorf("getting SSL Keys: %w", err)
 		}
 		jsonKeys, err := util.AESDecrypt(encryptedSslKeys, previousKey)
 		if err != nil {
-			return errors.New(fmt.Sprintf("reading SSL Keys: %v", err))
+			return fmt.Errorf("reading SSL Keys: %w", err)
 		}
 
 		reencryptedKeys, err := util.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
-			return errors.New(fmt.Sprintf("encrypting SSL Keys with new key: %v", err))
+			return fmt.Errorf("encrypting SSL Keys with new key: %w", err)
 		}
 
 		res, err := updateTx.Exec(`UPDATE sslkey SET data = $1 WHERE id = $2`, []byte(reencryptedKeys), id)
 		if err != nil {
-			return errors.New(fmt.Sprintf("updating SSL Keys for id %d: %v", id, err))
+			return fmt.Errorf("updating SSL Keys for id %d: %w", id, err)
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return errors.New(fmt.Sprintf("determining rows affected for reencrypting SSL Keys with id %d", id))
+			return fmt.Errorf("determining rows affected for reencrypting SSL Keys with id %d", id)
 		}
 		if rowsAffected == 0 {
-			return errors.New(fmt.Sprintf("no rows updated for reencrypting SSL Keys for id %d", id))
+			return fmt.Errorf("no rows updated for reencrypting SSL Keys for id %d", id)
 		}
 
 	}
@@ -217,48 +211,48 @@ func reEncryptSslKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 func reEncryptUrlSigKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 	tx, err := db.Begin()
 	if err != nil {
-		return errors.New(fmt.Sprintf("transaction begin failed %v %v", err, tx))
+		return fmt.Errorf("transaction begin failed %w %v", err, tx)
 	}
 	defer tx.Commit()
 
 	rows, err := tx.Query("SELECT deliveryservice, data FROM url_sig_key")
 	if err != nil {
-		return errors.New(fmt.Sprintf("querying: %v", err))
+		return fmt.Errorf("querying: %w", err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		updateTx, err := db.Begin()
 		if err != nil {
-			return errors.New(fmt.Sprintf("transaction begin failed %v %v", err, updateTx))
+			return fmt.Errorf("transaction begin failed %w %v", err, updateTx)
 		}
 		defer updateTx.Commit()
 
 		ds := ""
 		var encryptedSslKeys []byte
 		if err = rows.Scan(&ds, &encryptedSslKeys); err != nil {
-			return errors.New(fmt.Sprintf("getting URL Sig Keys: %v", err))
+			return fmt.Errorf("getting URL Sig Keys: %w", err)
 		}
 		jsonKeys, err := util.AESDecrypt(encryptedSslKeys, previousKey)
 		if err != nil {
-			return errors.New(fmt.Sprintf("reading URL Sig Keys: %v", err))
+			return fmt.Errorf("reading URL Sig Keys: %w", err)
 		}
 
 		reencryptedKeys, err := util.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
-			return errors.New(fmt.Sprintf("encrypting URL Sig Keys with new key: %v", err))
+			return fmt.Errorf("encrypting URL Sig Keys with new key: %w", err)
 		}
 
 		res, err := updateTx.Exec(`UPDATE url_sig_key SET data = $1 WHERE deliveryservice = $2`, []byte(reencryptedKeys), ds)
 		if err != nil {
-			return errors.New(fmt.Sprintf("updating URL Sig Keys for deliveryservice %s: %v", ds, err))
+			return fmt.Errorf("updating URL Sig Keys for deliveryservice %s: %w", ds, err)
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return errors.New(fmt.Sprintf("determining rows affected for reencrypting URL Sig Keys with deliveryservice %s", ds))
+			return fmt.Errorf("determining rows affected for reencrypting URL Sig Keys with deliveryservice %s", ds)
 		}
 		if rowsAffected == 0 {
-			return errors.New(fmt.Sprintf("no rows updated for reencrypting URL Sig Keys for deliveryservice %s", ds))
+			return fmt.Errorf("no rows updated for reencrypting URL Sig Keys for deliveryservice %s", ds)
 		}
 
 	}
@@ -269,48 +263,48 @@ func reEncryptUrlSigKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 func reEncryptUriSigningKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 	tx, err := db.Begin()
 	if err != nil {
-		return errors.New(fmt.Sprintf("transaction begin failed %v %v", err, tx))
+		return fmt.Errorf("transaction begin failed %w %v", err, tx)
 	}
 	defer tx.Commit()
 
 	rows, err := tx.Query("SELECT deliveryservice, data FROM uri_signing_key")
 	if err != nil {
-		return errors.New(fmt.Sprintf("querying: %v", err))
+		return fmt.Errorf("querying: %w", err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		updateTx, err := db.Begin()
 		if err != nil {
-			return errors.New(fmt.Sprintf("transaction begin failed %v %v", err, updateTx))
+			return fmt.Errorf("transaction begin failed %w %v", err, updateTx)
 		}
 		defer updateTx.Commit()
 
 		ds := ""
 		var encryptedSslKeys []byte
 		if err = rows.Scan(&ds, &encryptedSslKeys); err != nil {
-			return errors.New(fmt.Sprintf("getting URI Signing Keys: %v", err))
+			return fmt.Errorf("getting URI Signing Keys: %w", err)
 		}
 		jsonKeys, err := util.AESDecrypt(encryptedSslKeys, previousKey)
 		if err != nil {
-			return errors.New(fmt.Sprintf("reading URI Signing Keys: %v", err))
+			return fmt.Errorf("reading URI Signing Keys: %w", err)
 		}
 
 		reencryptedKeys, err := util.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
-			return errors.New(fmt.Sprintf("encrypting URI Signing Keys with new key: %v", err))
+			return fmt.Errorf("encrypting URI Signing Keys with new key: %w", err)
 		}
 
 		res, err := updateTx.Exec(`UPDATE uri_signing_key SET data = $1 WHERE deliveryservice = $2`, []byte(reencryptedKeys), ds)
 		if err != nil {
-			return errors.New(fmt.Sprintf("updating URI Signing Keys for deliveryservice %s: %v", ds, err))
+			return fmt.Errorf("updating URI Signing Keys for deliveryservice %s: %w", ds, err)
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return errors.New(fmt.Sprintf("determining rows affected for reencrypting URI Signing Keys with deliveryservice %s", ds))
+			return fmt.Errorf("determining rows affected for reencrypting URI Signing Keys with deliveryservice %s", ds)
 		}
 		if rowsAffected == 0 {
-			return errors.New(fmt.Sprintf("no rows updated for reencrypting URI Signing Keys for deliveryservice %s", ds))
+			return fmt.Errorf("no rows updated for reencrypting URI Signing Keys for deliveryservice %s", ds)
 		}
 
 	}
@@ -321,48 +315,48 @@ func reEncryptUriSigningKeys(db *sqlx.DB, previousKey []byte, newKey []byte) err
 func reEncryptDNSSECKeys(db *sqlx.DB, previousKey []byte, newKey []byte) error {
 	tx, err := db.Begin()
 	if err != nil {
-		return errors.New(fmt.Sprintf("transaction begin failed %v %v", err, tx))
+		return fmt.Errorf("transaction begin failed %w %v", err, tx)
 	}
 	defer tx.Commit()
 
 	rows, err := tx.Query("SELECT cdn, data FROM dnssec")
 	if err != nil {
-		return errors.New(fmt.Sprintf("querying: %v", err))
+		return fmt.Errorf("querying: %w", err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		updateTx, err := db.Begin()
 		if err != nil {
-			return errors.New(fmt.Sprintf("transaction begin failed %v %v", err, updateTx))
+			return fmt.Errorf("transaction begin failed %w %v", err, updateTx)
 		}
 		defer updateTx.Commit()
 
 		ds := ""
 		var encryptedSslKeys []byte
 		if err = rows.Scan(&ds, &encryptedSslKeys); err != nil {
-			return errors.New(fmt.Sprintf("getting DNSSEC Keys: %v", err))
+			return fmt.Errorf("getting DNSSEC Keys: %w", err)
 		}
 		jsonKeys, err := util.AESDecrypt(encryptedSslKeys, previousKey)
 		if err != nil {
-			return errors.New(fmt.Sprintf("reading DNSSEC Keys: %v", err))
+			return fmt.Errorf("reading DNSSEC Keys: %w", err)
 		}
 
 		reencryptedKeys, err := util.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
-			return errors.New(fmt.Sprintf("encrypting DNSSEC Keys with new key: %v", err))
+			return fmt.Errorf("encrypting DNSSEC Keys with new key: %w", err)
 		}
 
 		res, err := updateTx.Exec(`UPDATE dnssec SET data = $1 WHERE cdn = $2`, []byte(reencryptedKeys), ds)
 		if err != nil {
-			return errors.New(fmt.Sprintf("updating DNSSEC Keys for deliveryservice %s: %v", ds, err))
+			return fmt.Errorf("updating DNSSEC Keys for deliveryservice %s: %w", ds, err)
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return errors.New(fmt.Sprintf("determining rows affected for reencrypting DNSSEC Keys with deliveryservice %s", ds))
+			return fmt.Errorf("determining rows affected for reencrypting DNSSEC Keys with deliveryservice %s", ds)
 		}
 		if rowsAffected == 0 {
-			return errors.New(fmt.Sprintf("no rows updated for reencrypting DNSSEC Keys for deliveryservice %s", ds))
+			return fmt.Errorf("no rows updated for reencrypting DNSSEC Keys for deliveryservice %s", ds)
 		}
 
 	}
@@ -388,6 +382,6 @@ func updateKeyFile(previousKey []byte, previousKeyLocation string, newKey []byte
 }
 
 func die(message string) {
-	fmt.Println(message)
+	fmt.Fprintln(os.Stderr, message)
 	os.Exit(1)
 }
