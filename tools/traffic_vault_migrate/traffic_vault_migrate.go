@@ -24,7 +24,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"io/ioutil"
 	"log"
 	"os"
@@ -32,6 +31,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 var (
@@ -69,6 +70,12 @@ func main() {
 	flag.Parse()
 	var fromSrv TVBackend
 	var toSrv TVBackend
+	//
+	//fromType = "PG"
+	//fromCfg = "pg.conf"
+	//toType = "Riak"
+	//toCfg = "riak.conf"
+	compare = true
 
 	toSrvUsed := !dump && !dry
 
@@ -342,18 +349,17 @@ func GetKeys(be TVBackend) ([]SSLKey, []DNSSecKey, []URISignKey, []URLSigKey, er
 }
 
 // UnmarshalConfig takes in a config file and a type and will read the config file into the reflected type
-func UnmarshalConfig(configFile string, t reflect.Type) (reflect.Value, error) {
+func UnmarshalConfig(configFile string, config interface{}) error {
 	data, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		return reflect.Value{}, err
+		return err
 	}
-	val := reflect.New(t)
-	err = json.Unmarshal(data, val.Interface())
+	err = json.Unmarshal(data, config)
 	if err != nil {
-		return reflect.Value{}, err
+		return err
 	}
 
-	return val, nil
+	return nil
 }
 
 // TVBackend represents a TV backend that can be have data migrated to/from
@@ -399,33 +405,27 @@ type TVBackend interface {
 	SetURLSigKeys([]URLSigKey) error
 }
 
-type CommonRecord struct{}
-
 // SSLKey is the common representation of a SSL Key
 type SSLKey struct {
 	tc.DeliveryServiceSSLKeys
-	CommonRecord
 }
 
 // DNSSecKey is the common representation of a DNSSec Key
 type DNSSecKey struct {
 	CDN string
 	tc.DNSSECKeysTrafficVault
-	CommonRecord
 }
 
 // URISignKey is the common representation of an URI Sign Key
 type URISignKey struct {
 	DeliveryService string
 	Keys            map[string]tc.URISignerKeyset
-	CommonRecord
 }
 
 // URLSigKey is the common representation of an URL Sig Key
 type URLSigKey struct {
 	DeliveryService string
 	tc.URLSigKeys
-	CommonRecord
 }
 
 func supportedTypes() []string {

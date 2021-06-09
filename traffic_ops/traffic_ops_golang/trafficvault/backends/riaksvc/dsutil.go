@@ -23,10 +23,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
 	"github.com/basho/riak-go-client"
