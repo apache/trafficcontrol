@@ -88,7 +88,7 @@ RUN set -o errexit -o nounset -o xtrace; \
 
 RUN set -o errexit -o nounset -o pipefail -o xtrace && \
     # The ssl directory needs to exist or the first sslkey file will be skipped on badass
-    etc_trafficserver="$(rpm -ql trafficserver.rpm | grep '/etc/trafficserver$')"; \
+    etc_trafficserver="$(rpm -qpl trafficserver.rpm | grep '/etc/trafficserver$')"; \
     if [[ ! -e "${etc_trafficserver}/ssl" ]]; then \
         echo 'Creating ssl directory...'; \
         mkdir "${etc_trafficserver}/ssl"; \

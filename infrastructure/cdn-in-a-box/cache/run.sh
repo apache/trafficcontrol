@@ -42,8 +42,8 @@ set_trafficserver_parameters() {
 		mid) ats_profile=/traffic_ops_data/profiles/020-ATS_MID_TIER_CACHE.json;;
 	esac
 	local trafficserver_version
-	trafficserver_version="$(rpm -qp --qf '%{version}-%{release}.%{arch}\n' /trafficserver.rpm)"
-	logfile_dir="$(rpm -ql /trafficserver.rpm | grep '/var/log/trafficserver$')"
+	trafficserver_version="$(rpm -q --qf '%{version}-%{release}.%{arch}\n' trafficserver)"
+	logfile_dir="$(rpm -ql trafficserver | grep '/var/log/trafficserver$')"
 
 	until [[ -s "$ats_profile" ]]; do
 		echo "Waiting for ${ats_profile} to exist..."
