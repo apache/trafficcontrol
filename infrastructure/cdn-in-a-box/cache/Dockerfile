@@ -86,7 +86,7 @@ RUN set -o errexit -o nounset -o xtrace; \
     dnf remove -y gcc-c++ glibc-devel autoconf automake libtool && \
     rm -f /astats_over_http.c /Makefile.am
 
-RUN set -o errexit -o nounset -o pipefail && \
+RUN set -o errexit -o nounset -o pipefail -o xtrace && \
     # The ssl directory needs to exist or the first sslkey file will be skipped on badass
     etc_trafficserver="$(rpm -ql trafficserver.rpm | grep '/etc/trafficserver$')"; \
     if [[ ! -e "${etc_trafficserver}/ssl" ]]; then \
