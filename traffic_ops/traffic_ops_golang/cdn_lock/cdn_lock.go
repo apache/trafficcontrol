@@ -1,3 +1,4 @@
+// cdn_lock package contains the CRD methods related to CDNLocks
 package cdn_lock
 
 /*
@@ -38,6 +39,7 @@ const insertQuery = `INSERT INTO cdn_lock (username, cdn, message, soft) VALUES 
 const deleteQuery = `DELETE FROM cdn_lock WHERE cdn=$1 AND username=$2 RETURNING username, cdn, message, soft, last_updated`
 const deleteAdminQuery = `DELETE FROM cdn_lock WHERE cdn=$1 RETURNING username, cdn, message, soft, last_updated`
 
+// Read is the handler for GET requests to /cdn_locks.
 func Read(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
@@ -81,6 +83,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, cdnLock)
 }
 
+// Create is the handler for POST requests to /cdn_locks.
 func Create(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -133,6 +136,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
+// Delete is the handler for DELETE requests to /cdn_locks.
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
 	if userErr != nil || sysErr != nil {
