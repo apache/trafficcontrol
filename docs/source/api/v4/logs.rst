@@ -39,7 +39,7 @@ Request Structure
 	+----------+----------+------------------------------------------------------+
 	| limit    | no       | The number of records to which to limit the response |
 	+----------+----------+------------------------------------------------------+
-	| username | no       | A name to which to limit the response too 					 |
+	| username | no       | A name to which to limit the response too            |
 	+----------+----------+------------------------------------------------------+
 
 .. code-block:: http
@@ -59,7 +59,6 @@ Response Structure
 :message:     Log detail about what occurred
 :ticketNum:   Optional field to cross reference with any bug tracking systems
 :user:        Name of the user who made the change
-:summary.count: Associated changelog entries for a given query param
 
 .. code-block:: http
 	:caption: Response Example
@@ -97,6 +96,10 @@ Response Structure
 			"message": "1 delivery services were assigned to test"
 		}],
 		"summary": {
-      "count": 20
-    }
+			"count": 2
+		}
 	}
+
+Summary Fields
+""""""""""""""
+The ``summary`` object returned by this method of this endpoint uses only the ``count`` :ref:`standard property <reserved-summary-fields>`.

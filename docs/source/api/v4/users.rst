@@ -90,7 +90,7 @@ Response Structure
 :tenantId:         The integral, unique identifier of the tenant to which this user belongs
 :uid:              A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user - now it is always ``null``
 :username:         The user's username
-:changeLogCount:   The number of change log entries created by a particular user
+:changeLogCount:   The number of change log entries created by the user
 
 .. code-block:: http
 	:caption: Response Example
