@@ -131,14 +131,27 @@ func delete(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	}
 
 	ds := dses[0]
-	if ds.Active {
+	if ds.Active == nil {
+		errCode = http.StatusInternalServerError
+		sysErr = fmt.Errorf("Delivery Service #%d had nil Active", dsID)
+		api.HandleErrOptionalDeprecation(w, r, tx, errCode, nil, sysErr, deprecated, &alt)
+		return
+	}
+
+	if *ds.Active {
 		errCode, userErr, sysErr = checkLastServer(dsID, serverID, tx)
 		if userErr != nil || sysErr != nil {
 			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated, &alt)
 			return
 		}
 	}
-	dsName := ds.XMLID
+	if ds.XMLID == nil {
+		errCode = http.StatusInternalServerError
+		sysErr = fmt.Errorf("Delivery Service #%d had nil XMLID", dsID)
+		api.HandleErrOptionalDeprecation(w, r, tx, errCode, nil, sysErr, deprecated, &alt)
+		return
+	}
+	dsName := *ds.XMLID
 
 	serverName, exists, err := dbhelpers.GetServerNameFromID(tx, serverID)
 	if err != nil {

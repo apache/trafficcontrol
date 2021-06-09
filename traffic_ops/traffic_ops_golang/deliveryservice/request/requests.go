@@ -309,7 +309,11 @@ func Get(w http.ResponseWriter, r *http.Request) {
 // DeliveryService's Tenant, as appropriate to the change type.
 func isTenantAuthorized(dsr tc.DeliveryServiceRequestV40, inf *api.APIInfo) (bool, error) {
 	if dsr.Requested != nil && (dsr.ChangeType == tc.DSRChangeTypeUpdate || dsr.ChangeType == tc.DSRChangeTypeCreate) {
-		ok, err := tenant.IsResourceAuthorizedToUserTx(dsr.Requested.TenantID, inf.User, inf.Tx.Tx)
+		if dsr.Requested.TenantID == nil {
+			log.Debugf("requested.tenantID is nil")
+			return false, errors.New("requested.tenantID is nil")
+		}
+		ok, err := tenant.IsResourceAuthorizedToUserTx(*dsr.Requested.TenantID, inf.User, inf.Tx.Tx)
 		if err != nil {
 			err = fmt.Errorf("requested: %v", err)
 		}
@@ -324,7 +328,11 @@ func isTenantAuthorized(dsr tc.DeliveryServiceRequestV40, inf *api.APIInfo) (boo
 		return true, nil
 	}
 
-	ok, err := tenant.IsResourceAuthorizedToUserTx(ds.TenantID, inf.User, inf.Tx.Tx)
+	if ds.TenantID == nil {
+		log.Debugf("original.tenantID is nil")
+		return false, errors.New("original.tenantID is nil")
+	}
+	ok, err := tenant.IsResourceAuthorizedToUserTx(*ds.TenantID, inf.User, inf.Tx.Tx)
 	if err != nil {
 		err = fmt.Errorf("original: %v", err)
 	}

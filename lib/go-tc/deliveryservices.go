@@ -195,17 +195,17 @@ type DeliveryServiceFieldsV31 struct {
 // Traffic Ops API.
 type DeliveryServiceV40 struct {
 	// Active dictates whether the Delivery Service is routed by Traffic Router.
-	Active bool `json:"active" db:"active"`
+	Active *bool `json:"active" db:"active"`
 	// AnonymousBlockingEnabled sets whether or not anonymized IP addresses
 	// (e.g. Tor exit nodes) should be restricted from accessing the Delivery
 	// Service's content.
-	AnonymousBlockingEnabled bool `json:"anonymousBlockingEnabled" db:"anonymous_blocking_enabled"`
+	AnonymousBlockingEnabled *bool `json:"anonymousBlockingEnabled" db:"anonymous_blocking_enabled"`
 	// CCRDNSTTL sets the Time-to-Live - in seconds - for DNS responses for this
 	// Delivery Service from Traffic Router.
 	CCRDNSTTL *int `json:"ccrDnsTtl" db:"ccr_dns_ttl"`
 	// CDNID is the integral, unique identifier for the CDN to which the
 	// Delivery Service belongs.
-	CDNID int `json:"cdnId" db:"cdn_id"`
+	CDNID *int `json:"cdnId" db:"cdn_id"`
 	// CDNName is the name of the CDN to which the Delivery Service belongs.
 	CDNName *string `json:"cdnName"`
 	// CheckPath is a path which may be requested of the Delivery Service's
@@ -222,10 +222,10 @@ type DeliveryServiceV40 struct {
 	// DeepCachingType may only legally point to 'ALWAYS' or 'NEVER', which
 	// define whether "deep caching" may or may not be used for this Delivery
 	// Service, respectively.
-	DeepCachingType DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
+	DeepCachingType *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
 	// DisplayName is a human-friendly name that might be used in some UIs
 	// somewhere.
-	DisplayName string `json:"displayName" db:"display_name"`
+	DisplayName *string `json:"displayName" db:"display_name"`
 	// DNSBypassCNAME is a fully qualified domain name to be used in a CNAME
 	// record presented to clients in bypass scenarios.
 	DNSBypassCNAME *string `json:"dnsBypassCname" db:"dns_bypass_cname"`
@@ -242,7 +242,7 @@ type DeliveryServiceV40 struct {
 	// transferred between clients, origins, and cache servers when obtaining
 	// and serving content for this Delivery Service.
 	// See Also: https://en.wikipedia.org/wiki/Differentiated_services
-	DSCP int `json:"dscp" db:"dscp"`
+	DSCP *int `json:"dscp" db:"dscp"`
 	// EcsEnabled describes whether or not the Traffic Router's EDNS0 Client
 	// Subnet extensions should be enabled when serving DNS responses for this
 	// Delivery Service. Even if this is true, the Traffic Router may still
@@ -273,7 +273,7 @@ type DeliveryServiceV40 struct {
 	// 2 (which indicates that content should be served to clients whose IP
 	// addresses can be found within a Coverage Zone File OR are allowed access
 	// according to the "array" in GeoLimitCountries).
-	GeoLimit int `json:"geoLimit" db:"geo_limit"`
+	GeoLimit *int `json:"geoLimit" db:"geo_limit"`
 	// GeoLimitCountries is an "array" of "country codes" that itemizes the
 	// countries within which the Delivery Service's content ought to be made
 	// available. This has no effect if GeoLimit is not a pointer to exactly the
@@ -287,7 +287,7 @@ type DeliveryServiceV40 struct {
 	// only valid values to which it may point are 0 (which indicates the use of
 	// a MaxMind GeoIP2 database) and 1 (which indicates the use of a Neustar
 	// GeoPoint IP address database).
-	GeoProvider int `json:"geoProvider" db:"geo_provider"`
+	GeoProvider *int `json:"geoProvider" db:"geo_provider"`
 	// GlobalMaxMBPS defines a maximum number of MegaBytes Per Second which may
 	// be served for the Delivery Service before redirecting clients to bypass
 	// locations.
@@ -316,7 +316,7 @@ type DeliveryServiceV40 struct {
 	InnerHeaderRewrite *string `json:"innerHeaderRewrite" db:"inner_header_rewrite"`
 	// IPV6RoutingEnabled controls whether or not routing over IPv6 should be
 	// done for this Delivery Service.
-	IPV6RoutingEnabled bool `json:"ipv6RoutingEnabled" db:"ipv6_routing_enabled"`
+	IPV6RoutingEnabled *bool `json:"ipv6RoutingEnabled" db:"ipv6_routing_enabled"`
 	// LastHeaderRewrite is a "header rewrite rule" used by ATS at the first
 	// caching layer encountered in the Delivery Service's Topology, or nil if
 	// there is no such rule. This has no effect on Delivery Services that don't
@@ -326,7 +326,7 @@ type DeliveryServiceV40 struct {
 	// updated.
 	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
 	// LogsEnabled controls nothing. It is kept only for legacy compatibility.
-	LogsEnabled bool `json:"logsEnabled" db:"logs_enabled"`
+	LogsEnabled *bool `json:"logsEnabled" db:"logs_enabled"`
 	// LongDesc is a description of the Delivery Service, having arbitrary
 	// length.
 	LongDesc *string `json:"longDesc" db:"long_desc"`
@@ -419,7 +419,7 @@ type DeliveryServiceV40 struct {
 	// rules are configured on the Traffic Router serving content for this
 	// Delivery Service will have an effect on the traffic of this Delivery
 	// Service.
-	RegionalGeoBlocking bool `json:"regionalGeoBlocking" db:"regional_geo_blocking"`
+	RegionalGeoBlocking *bool `json:"regionalGeoBlocking" db:"regional_geo_blocking"`
 	// RemapText is raw text to insert in "remap.config" on the cache servers
 	// serving content for this Delivery Service. Care is necessitated in its
 	// use, because the input is in no way restricted, validated, or limited in
@@ -428,7 +428,7 @@ type DeliveryServiceV40 struct {
 	// RoutingName defines the lowest-level DNS label used by the Delivery
 	// Service, e.g. if trafficcontrol.apache.org were a Delivery Service, it
 	// would have a RoutingName of "trafficcontrol".
-	RoutingName string `json:"routingName" db:"routing_name"`
+	RoutingName *string `json:"routingName" db:"routing_name"`
 	// ServiceCategory defines a category to which a Delivery Service may
 	// belong, which will cause HTTP Responses containing content for the
 	// Delivery Service to have the "X-CDN-SVC" header with a value that is the
@@ -449,7 +449,7 @@ type DeliveryServiceV40 struct {
 	Tenant *string `json:"tenant"`
 	// TenantID is the integral, unique identifier for the Tenant to which the
 	// Delivery Service belongs.
-	TenantID int `json:"tenantId" db:"tenant_id"`
+	TenantID *int `json:"tenantId" db:"tenant_id"`
 	// TLSVersions is the list of explicitly supported TLS versions for cache
 	// servers serving the Delivery Service's content.
 	TLSVersions []string `json:"tlsVersions" db:"tls_versions"`
@@ -472,12 +472,12 @@ type DeliveryServiceV40 struct {
 	Type *DSType `json:"type"`
 	// TypeID is an integral, unique identifier for the Tenant to which the
 	// Delivery Service belongs.
-	TypeID int `json:"typeId" db:"type"`
+	TypeID *int `json:"typeId" db:"type"`
 	// XMLID is a unique identifier that is also the second lowest-level DNS
 	// label used by the Delivery Service. For example, if a Delivery Service's
 	// content may be requested from video.demo1.mycdn.ciab.test, it may be
 	// inferred that the Delivery Service's XMLID is demo1.
-	XMLID string `json:"xmlId" db:"xml_id"`
+	XMLID *string `json:"xmlId" db:"xml_id"`
 }
 
 // DeliveryServiceV4 is a Delivery Service as it appears in version 4 of the
@@ -750,40 +750,32 @@ func (ds *DeliveryServiceV4) RemoveLD1AndLD2() DeliveryServiceV4 {
 // DowngradeToV3 converts the 4.x DS to a 3.x DS.
 func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
 	var ret DeliveryServiceNullableV30
-	ret.Active = new(bool)
-	*ret.Active = ds.Active
-	ret.AnonymousBlockingEnabled = new(bool)
-	*ret.AnonymousBlockingEnabled = ds.AnonymousBlockingEnabled
+	ret.Active = ds.Active
+	ret.AnonymousBlockingEnabled = ds.AnonymousBlockingEnabled
 	ret.CCRDNSTTL = ds.CCRDNSTTL
-	ret.CDNID = new(int)
-	*ret.CDNID = ds.CDNID
+	ret.CDNID = ds.CDNID
 	ret.CDNName = ds.CDNName
 	ret.CheckPath = ds.CheckPath
 	ret.ConsistentHashRegex = ds.ConsistentHashRegex
 	ret.ConsistentHashQueryParams = make([]string, len(ds.ConsistentHashQueryParams))
 	copy(ret.ConsistentHashQueryParams, ds.ConsistentHashQueryParams)
-	ret.DeepCachingType = new(DeepCachingType)
-	*ret.DeepCachingType = ds.DeepCachingType
-	ret.DisplayName = new(string)
-	*ret.DisplayName = ds.DisplayName
+	ret.DeepCachingType = ds.DeepCachingType
+	ret.DisplayName = ds.DisplayName
 	ret.DNSBypassCNAME = ds.DNSBypassCNAME
 	ret.DNSBypassIP = ds.DNSBypassIP
 	ret.DNSBypassIP6 = ds.DNSBypassIP6
 	ret.DNSBypassTTL = ds.DNSBypassTTL
-	ret.DSCP = new(int)
-	*ret.DSCP = ds.DSCP
+	ret.DSCP = ds.DSCP
 	ret.EcsEnabled = ds.EcsEnabled
 	ret.EdgeHeaderRewrite = ds.EdgeHeaderRewrite
 	ret.ExampleURLs = make([]string, len(ds.ExampleURLs))
 	copy(ret.ExampleURLs, ds.ExampleURLs)
 	ret.FirstHeaderRewrite = ds.FirstHeaderRewrite
 	ret.FQPacingRate = ds.FQPacingRate
-	ret.GeoLimit = new(int)
-	*ret.GeoLimit = ds.GeoLimit
+	ret.GeoLimit = ds.GeoLimit
 	ret.GeoLimitCountries = ds.GeoLimitCountries
 	ret.GeoLimitRedirectURL = ds.GeoLimitRedirectURL
-	ret.GeoProvider = new(int)
-	*ret.GeoProvider = ds.GeoProvider
+	ret.GeoProvider = ds.GeoProvider
 	ret.GlobalMaxMBPS = ds.GlobalMaxMBPS
 	ret.GlobalMaxTPS = ds.GlobalMaxTPS
 	ret.HTTPBypassFQDN = ds.HTTPBypassFQDN
@@ -791,12 +783,10 @@ func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
 	ret.InfoURL = ds.InfoURL
 	ret.InitialDispersion = ds.InitialDispersion
 	ret.InnerHeaderRewrite = ds.InnerHeaderRewrite
-	ret.IPV6RoutingEnabled = new(bool)
-	*ret.IPV6RoutingEnabled = ds.IPV6RoutingEnabled
+	ret.IPV6RoutingEnabled = ds.IPV6RoutingEnabled
 	ret.LastHeaderRewrite = ds.LastHeaderRewrite
 	ret.LastUpdated = TimeNoModFromTime(ds.LastUpdated)
-	ret.LogsEnabled = new(bool)
-	*ret.LogsEnabled = ds.LogsEnabled
+	ret.LogsEnabled = ds.LogsEnabled
 	ret.LongDesc = ds.LongDesc
 	ret.LongDesc1 = ds.LongDesc1
 	ret.LongDesc2 = ds.LongDesc2
@@ -824,26 +814,21 @@ func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
 	ret.RangeRequestHandling = ds.RangeRequestHandling
 	ret.RangeSliceBlockSize = ds.RangeSliceBlockSize
 	ret.RegexRemap = ds.RegexRemap
-	ret.RegionalGeoBlocking = new(bool)
-	*ret.RegionalGeoBlocking = ds.RegionalGeoBlocking
+	ret.RegionalGeoBlocking = ds.RegionalGeoBlocking
 	ret.RemapText = ds.RemapText
-	ret.RoutingName = new(string)
-	*ret.RoutingName = ds.RoutingName
+	ret.RoutingName = ds.RoutingName
 	ret.ServiceCategory = ds.ServiceCategory
 	ret.Signed = ds.Signed
 	ret.SigningAlgorithm = ds.SigningAlgorithm
 	ret.SSLKeyVersion = ds.SSLKeyVersion
 	ret.Tenant = ds.Tenant
-	ret.TenantID = new(int)
-	*ret.TenantID = ds.TenantID
+	ret.TenantID = ds.TenantID
 	ret.Topology = ds.Topology
 	ret.TRResponseHeaders = ds.TRResponseHeaders
 	ret.TRRequestHeaders = ds.TRRequestHeaders
 	ret.Type = ds.Type
-	ret.TypeID = new(int)
-	*ret.TypeID = ds.TypeID
-	ret.XMLID = new(string)
-	*ret.XMLID = ds.XMLID
+	ret.TypeID = ds.TypeID
+	ret.XMLID = ds.XMLID
 
 	return ret
 }
@@ -851,58 +836,32 @@ func (ds *DeliveryServiceV4) DowngradeToV3() DeliveryServiceNullableV30 {
 // UpgradeToV4 converts the 3.x DS to a 4.x DS.
 func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceV4 {
 	var ret DeliveryServiceV4
-	if ds.Active != nil && *ds.Active {
-		ret.Active = true
-	} else {
-		ret.Active = false
-	}
-	if ds.AnonymousBlockingEnabled != nil && *ds.AnonymousBlockingEnabled {
-		ret.AnonymousBlockingEnabled = true
-	} else {
-		ret.AnonymousBlockingEnabled = false
-	}
+	ret.Active = ds.Active
+	ret.AnonymousBlockingEnabled = ds.AnonymousBlockingEnabled
 	ret.CCRDNSTTL = ds.CCRDNSTTL
-	if ds.CDNID != nil {
-		ret.CDNID = *ds.CDNID
-	}
+	ret.CDNID = ds.CDNID
 	ret.CDNName = ds.CDNName
 	ret.CheckPath = ds.CheckPath
 	ret.ConsistentHashRegex = ds.ConsistentHashRegex
 	ret.ConsistentHashQueryParams = make([]string, len(ds.ConsistentHashQueryParams))
 	copy(ret.ConsistentHashQueryParams, ds.ConsistentHashQueryParams)
-	if ds.DeepCachingType != nil && *ds.DeepCachingType == DeepCachingTypeAlways {
-		ret.DeepCachingType = DeepCachingTypeAlways
-	} else {
-		ret.DeepCachingType = DeepCachingTypeNever
-	}
-	if ds.DisplayName != nil {
-		ret.DisplayName = *ds.DisplayName
-	}
+	ret.DeepCachingType = ds.DeepCachingType
+	ret.DisplayName = ds.DisplayName
 	ret.DNSBypassCNAME = ds.DNSBypassCNAME
 	ret.DNSBypassIP = ds.DNSBypassIP
 	ret.DNSBypassIP6 = ds.DNSBypassIP6
 	ret.DNSBypassTTL = ds.DNSBypassTTL
-	if ds.DSCP != nil {
-		ret.DSCP = *ds.DSCP
-	}
+	ret.DSCP = ds.DSCP
 	ret.EcsEnabled = ds.EcsEnabled
 	ret.EdgeHeaderRewrite = ds.EdgeHeaderRewrite
 	ret.ExampleURLs = make([]string, len(ds.ExampleURLs))
 	copy(ret.ExampleURLs, ds.ExampleURLs)
 	ret.FirstHeaderRewrite = ds.FirstHeaderRewrite
 	ret.FQPacingRate = ds.FQPacingRate
-	if ds.GeoLimit != nil && (*ds.GeoLimit == 1 || *ds.GeoLimit == 2) {
-		ret.GeoLimit = *ds.GeoLimit
-	} else {
-		ret.GeoLimit = 0
-	}
+	ret.GeoLimit = ds.GeoLimit
 	ret.GeoLimitCountries = ds.GeoLimitCountries
 	ret.GeoLimitRedirectURL = ds.GeoLimitRedirectURL
-	if ds.GeoProvider != nil && *ds.GeoProvider == 1 {
-		ret.GeoProvider = 1
-	} else {
-		ret.GeoProvider = 0
-	}
+	ret.GeoProvider = ds.GeoProvider
 	ret.GlobalMaxMBPS = ds.GlobalMaxMBPS
 	ret.GlobalMaxTPS = ds.GlobalMaxTPS
 	ret.HTTPBypassFQDN = ds.HTTPBypassFQDN
@@ -910,20 +869,12 @@ func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceV4 {
 	ret.InfoURL = ds.InfoURL
 	ret.InitialDispersion = ds.InitialDispersion
 	ret.InnerHeaderRewrite = ds.InnerHeaderRewrite
-	if ds.IPV6RoutingEnabled != nil && *ds.IPV6RoutingEnabled {
-		ret.IPV6RoutingEnabled = true
-	} else {
-		ret.IPV6RoutingEnabled = false
-	}
+	ret.IPV6RoutingEnabled = ds.IPV6RoutingEnabled
 	ret.LastHeaderRewrite = ds.LastHeaderRewrite
 	if ds.LastUpdated != nil {
 		ret.LastUpdated = ds.LastUpdated.Time
 	}
-	if ds.LogsEnabled != nil && *ds.LogsEnabled {
-		ret.LogsEnabled = true
-	} else {
-		ret.LogsEnabled = false
-	}
+	ret.LogsEnabled = ds.LogsEnabled
 	ret.LongDesc = ds.LongDesc
 	ret.LongDesc1 = ds.LongDesc1
 	ret.LongDesc2 = ds.LongDesc2
@@ -950,34 +901,22 @@ func (ds *DeliveryServiceNullableV30) UpgradeToV4() DeliveryServiceV4 {
 	ret.RangeRequestHandling = ds.RangeRequestHandling
 	ret.RangeSliceBlockSize = ds.RangeSliceBlockSize
 	ret.RegexRemap = ds.RegexRemap
-	if ds.RegionalGeoBlocking != nil && *ds.RegionalGeoBlocking {
-		ret.RegionalGeoBlocking = true
-	} else {
-		ret.RegionalGeoBlocking = false
-	}
+	ret.RegionalGeoBlocking = ds.RegionalGeoBlocking
 	ret.RemapText = ds.RemapText
-	if ds.RoutingName != nil {
-		ret.RoutingName = *ds.RoutingName
-	}
+	ret.RoutingName = ds.RoutingName
 	ret.ServiceCategory = ds.ServiceCategory
 	ret.Signed = ds.Signed
 	ret.SigningAlgorithm = ds.SigningAlgorithm
 	ret.SSLKeyVersion = ds.SSLKeyVersion
 	ret.Tenant = ds.Tenant
-	if ds.TenantID != nil {
-		ret.TenantID = *ds.TenantID
-	}
+	ret.TenantID = ds.TenantID
 	ret.TLSVersions = nil
 	ret.Topology = ds.Topology
 	ret.TRResponseHeaders = ds.TRResponseHeaders
 	ret.TRRequestHeaders = ds.TRRequestHeaders
 	ret.Type = ds.Type
-	if ds.TypeID != nil {
-		ret.TypeID = *ds.TypeID
-	}
-	if ds.XMLID != nil {
-		ret.XMLID = *ds.XMLID
-	}
+	ret.TypeID = ds.TypeID
+	ret.XMLID = ds.XMLID
 	return ret
 }
 

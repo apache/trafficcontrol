@@ -159,8 +159,12 @@ func setInactive(t *testing.T, dsID int) {
 	}
 
 	ds := resp.Response[0]
-	if ds.Active {
-		ds.Active = false
+	if ds.Active == nil {
+		t.Errorf("Deliver Service #%d had null or undefined 'active'", dsID)
+		ds.Active = new(bool)
+	}
+	if *ds.Active {
+		*ds.Active = false
 		_, _, err = TOSession.UpdateDeliveryService(dsID, ds, client.RequestOptions{})
 		if err != nil {
 			t.Errorf("Failed to set Delivery Service #%d to inactive: %v", dsID, err)

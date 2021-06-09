@@ -71,7 +71,10 @@ func JobCollisionWarningTest(t *testing.T) {
 	if len(testData.DeliveryServices) < 1 {
 		t.Fatal("Need at least one Delivery Service to test Invalidation Job collisions")
 	}
-	xmlID := testData.DeliveryServices[0].XMLID
+	if testData.DeliveryServices[0].XMLID == nil {
+		t.Fatal("Found a Delivery Service in the testing data with null or undefined XMLID")
+	}
+	xmlID := *testData.DeliveryServices[0].XMLID
 
 	startTime := tc.Time{
 		Time:  time.Now().Add(time.Hour),
@@ -172,11 +175,11 @@ func CreateTestInvalidationJobs(t *testing.T) {
 	}
 	dsNameIDs := make(map[string]int64, len(toDSes.Response))
 	for _, ds := range toDSes.Response {
-		if ds.ID == nil {
-			t.Error("Traffic Ops returned a representation of a Delivery Service that had null or undefined ID")
+		if ds.XMLID == nil || ds.ID == nil {
+			t.Error("Traffic Ops returned a representation of a Delivery Service that had null or undefined XMLID and/or ID")
 			continue
 		}
-		dsNameIDs[ds.XMLID] = int64(*ds.ID)
+		dsNameIDs[*ds.XMLID] = int64(*ds.ID)
 	}
 
 	for _, job := range testData.InvalidationJobs {
@@ -200,11 +203,11 @@ func CreateTestInvalidJob(t *testing.T) {
 	}
 	dsNameIDs := make(map[string]int64, len(toDSes.Response))
 	for _, ds := range toDSes.Response {
-		if ds.ID == nil {
+		if ds.XMLID == nil || ds.ID == nil {
 			t.Error("Traffic Ops returned a representation of a Delivery Service that had null or undefined XMLID and/or ID")
 			continue
 		}
-		dsNameIDs[ds.XMLID] = int64(*ds.ID)
+		dsNameIDs[*ds.XMLID] = int64(*ds.ID)
 	}
 
 	if len(testData.InvalidationJobs) < 1 {
