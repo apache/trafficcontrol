@@ -145,6 +145,15 @@
     GOPATH: /opt/traffic_ops/go
   run_once: true
 
+- name: Load Traffic Vault DB schema
+  command: ./db/admin --trafficvault -env=production load_schema
+  args:
+    chdir: "{{ to_app_installdir }}"
+  environment:
+    PATH: "{{ lookup('env', 'PATH') }}:{{ to_base_installdir }}/go/bin"
+    GOPATH: /opt/traffic_ops/go
+  run_once: true
+
 - name: Upgrade Traffic Vault DB
   command: ./db/admin --trafficvault -env=production upgrade
   args:
