@@ -46,6 +46,8 @@ func TestJobs(t *testing.T) {
 		CreateJobsMissingRegex(t)
 		CreateJobsMissingTtl(t)
 		UpdateTestJobsInvalidds(t)
+		DeleteTestJobs(t)
+		DeleteTestJobsByInvalidId(t)
 	})
 }
 
@@ -1163,4 +1165,37 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 
 func DeleteTestJobs(t *testing.T) {
 
+	//Get all Jobs
+	toJobs, _, err := TOSession.GetInvalidationJobs(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("error getting jobs %v - alerts: %+v", err, toJobs.Alerts)
+	}
+	if len(toJobs.Response) < 1 {
+		t.Fatal("Need at least one Jobs to test GET Jobs scenario")
+	}
+	jobs := toJobs.Response[0]
+	id := jobs.ID
+
+	//Delete Jobs by valid id
+	alerts, reqInf, err := TOSession.DeleteInvalidationJob(uint64(*id), client.RequestOptions{})
+	if err != nil {
+		t.Errorf("Expected Content invalidation job was deleted Error - %v, Alerts %v", err, alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code 200, got %v", reqInf.StatusCode)
+	}
+}
+
+func DeleteTestJobsByInvalidId(t *testing.T) {
+
+	//Delete Jobs by valid id
+	var b uint64 = 1111
+	var a *uint64 = &b
+	alerts, reqInf, err := TOSession.DeleteInvalidationJob(uint64(*a), client.RequestOptions{})
+	if err != nil {
+		t.Errorf("Expected Content invalidation job was deleted Error - %v, Alerts %v", err, alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code 200, got %v", reqInf.StatusCode)
+	}
 }
