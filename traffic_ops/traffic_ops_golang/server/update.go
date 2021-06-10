@@ -42,6 +42,16 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	idOrName := inf.Params["id-or-name"]
 	id, err := strconv.Atoi(idOrName)
+	cdnName, err := dbhelpers.GetCDNNameFromServerID(inf.Tx.Tx, int64(id))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
 	hostName := ""
 	if err == nil {
 		name, ok, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, id)

@@ -223,7 +223,11 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 			return
 		}
 	}
-
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, cdn, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, statusCode, userErr, sysErr, deprecated, &alt)
+		return
+	}
 	// We never store tm_path, even though low API versions show it in responses.
 	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, inf.Config.Version, inf.Config.CRConfigUseRequestHost, false)
 	if err != nil {
