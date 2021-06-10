@@ -27,7 +27,7 @@ import (
 )
 
 // AESEncrypt encrypts a byte array using an AES key.
-// This returns a encrypted byte array and an error if the encryption was not successful.
+// This returns an encrypted byte array and an error if the encryption was not successful.
 func AESEncrypt(bytesToEncrypt []byte, aesKey []byte) (string, error) {
 	cipherBlock, err := aes.NewCipher(aesKey)
 	if err != nil {
