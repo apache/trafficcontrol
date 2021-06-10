@@ -128,9 +128,13 @@ FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id`
 
 func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 	var count = uint64(0)
+	if _, ok := inf.Params["orderby"]; !ok {
+		inf.Params["orderby"] = "last_updated"
+	}
 
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"username": dbhelpers.WhereColumnInfo{Column: "u.username", Checker: nil},
+		"username":     dbhelpers.WhereColumnInfo{Column: "u.username", Checker: nil},
+		"last_updated": dbhelpers.WhereColumnInfo{Column: "l.last_updated", Checker: nil},
 	}
 	where, orderBy, pagination, queryValues, errs :=
 		dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
@@ -143,9 +147,6 @@ func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 		where = where + " AND " + timeInterval
 	} else {
 		where = "\nWHERE " + timeInterval
-	}
-	if orderBy == "" {
-		orderBy = orderBy + "\nORDER BY l.last_updated DESC"
 	}
 	if pagination == "" {
 		pagination = pagination + fmt.Sprintf("\nLIMIT %v", limit)

@@ -55,6 +55,11 @@ func GetTestLogsByUsername(t *testing.T) {
 	if err != nil {
 		t.Errorf("error getting logs: %v - alerts: %+v", err, toLogs.Alerts)
 	}
+	for _, user := range toLogs.Response {
+		if *user.User != "admin" {
+			t.Fatalf("incorrect username seen in logs, expected: `admin`, got: %v", *user.User)
+		}
+	}
 	if len(toLogs.Response) <= 0 {
 		t.Fatalf("Get logs by username: incorrect number of logs returned (%d)", len(toLogs.Response))
 	}
