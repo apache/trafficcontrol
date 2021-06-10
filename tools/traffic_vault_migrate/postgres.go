@@ -138,8 +138,8 @@ func (pg *PGBackend) ValidateKey() []string {
 	return errors
 }
 
-// Stop terminates the connection to the backend DB
-func (pg *PGBackend) Stop() error {
+// Close terminates the connection to the backend DB
+func (pg *PGBackend) Close() error {
 	return pg.db.Close()
 }
 
@@ -320,7 +320,7 @@ func (tbl *pgDNSSecTable) validate() []string {
 	return nil
 }
 func (tbl *pgDNSSecTable) insertKeys(db *sql.DB) error {
-	queryFmt := "INSERT INTO dnssec (cdn, data) VALUES "
+	queryBase := "INSERT INTO dnssec (cdn, data) VALUES "
 	stride := 2
 	queryArgs := make([]interface{}, len(tbl.Records)*stride)
 	for i, record := range tbl.Records {
@@ -328,7 +328,7 @@ func (tbl *pgDNSSecTable) insertKeys(db *sql.DB) error {
 		queryArgs[j] = record.CDN
 		queryArgs[j+1] = record.DataEncrypted
 	}
-	return insertIntoTable(db, queryFmt, stride, queryArgs)
+	return insertIntoTable(db, queryBase, stride, queryArgs)
 }
 
 type pgSSLKeyRecord struct {
@@ -344,7 +344,7 @@ type pgSSLKeyTable struct {
 }
 
 func (tbl *pgSSLKeyTable) insertKeys(db *sql.DB) error {
-	queryFmt := "INSERT INTO sslkey (deliveryservice, data, cdn, version) VALUES "
+	queryBase := "INSERT INTO sslkey (deliveryservice, data, cdn, version) VALUES "
 	duplicateKeys := 2
 	stride := 4
 	queryArgs := make([]interface{}, len(tbl.Records)*stride*duplicateKeys)
@@ -361,7 +361,7 @@ func (tbl *pgSSLKeyTable) insertKeys(db *sql.DB) error {
 		queryArgs[j+6] = record.CDN
 		queryArgs[j+7] = "latest"
 	}
-	return insertIntoTable(db, queryFmt, 4, queryArgs)
+	return insertIntoTable(db, queryBase, 4, queryArgs)
 }
 func (tbl *pgSSLKeyTable) gatherKeys(db *sql.DB) error {
 	sz, err := getSize(db, "sslkey WHERE version='latest'")
@@ -569,7 +569,7 @@ type pgURISignKeyTable struct {
 }
 
 func (tbl *pgURISignKeyTable) insertKeys(db *sql.DB) error {
-	queryFmt := "INSERT INTO uri_signing_key (deliveryservice, data) VALUES "
+	queryBase := "INSERT INTO uri_signing_key (deliveryservice, data) VALUES "
 	stride := 2
 	queryArgs := make([]interface{}, len(tbl.Records)*stride)
 	for i, record := range tbl.Records {
@@ -577,7 +577,7 @@ func (tbl *pgURISignKeyTable) insertKeys(db *sql.DB) error {
 		queryArgs[j] = record.DeliveryService
 		queryArgs[j+1] = record.DataEncrypted
 	}
-	return insertIntoTable(db, queryFmt, stride, queryArgs)
+	return insertIntoTable(db, queryBase, stride, queryArgs)
 }
 func (tbl *pgURISignKeyTable) gatherKeys(db *sql.DB) error {
 	sz, err := getSize(db, "uri_signing_key")
@@ -702,7 +702,7 @@ func decryptInto(aesKey []byte, encData []byte, value interface{}) error {
 	}
 	return nil
 }
-func insertIntoTable(db *sql.DB, queryFmt string, stride int, queryArgs []interface{}) error {
+func insertIntoTable(db *sql.DB, queryBase string, stride int, queryArgs []interface{}) error {
 	rows := len(queryArgs) / stride
 	workStr := ""
 	queryValueStr := make([]string, rows)
@@ -721,7 +721,7 @@ func insertIntoTable(db *sql.DB, queryFmt string, stride int, queryArgs []interf
 		workStr += strconv.Itoa(i + 1)
 	}
 	queryValueStr[len(queryValueStr)-1] = "(" + workStr + ")"
-	query := queryFmt + strings.Join(queryValueStr, ",")
+	query := queryBase + strings.Join(queryValueStr, ",")
 
 	tx, err := db.Begin()
 	if err != nil {

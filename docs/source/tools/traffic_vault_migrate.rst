@@ -26,41 +26,46 @@ The tool assumes that the schema for each backend is already setup as according 
 
 Usage
 ===========
-``traffic_vault_migrate -from_cfg CFG -to_cfg CFG -from_type TYP -to_type TYP [-confirm] [-compare] [-dry] [-dump]``
+``traffic_vault_migrate [-cdhmr] [-f value] [-g value] [-o value] [-t value]``
 
-.. option:: -compare
+.. option:: -c, --compare
 
 		Compare 'to' and 'from' backend keys. Will fetch keys from the dbs of both 'to' and 'from', sorts them by cdn/ds/version and does a deep comparison.
 
-.. option:: -confirm
-
-		Requires confirmation before inserting records (default true)
-
-.. option:: -dry
-
-		Do not perform writes. Will do a basic output of the keys on the 'from' backend.
-
-.. option:: -dump
+.. option:: -d, --dump
 
 		Write keys (from 'from' server) to disk in the folder 'dump' with the unix permissions 0640.
 
 		.. warning:: This can write potentially sensitive information to disk, use with care.
 
-.. option:: -from_cfg
+.. option:: -f, --fromCfg=CFG
 
 		From server config file (default "riak.json")
 
-.. option:: -from_type
-
-		From server types (Riak|PG) (default "Riak")
-
-.. option:: -to_cfg
+.. option:: -g, --toCfg=CFG
 
 		To server config file (default "pg.json")
 
-.. option:: -to_type
+.. option:: -h, --help
+
+		Displays usage information
+
+.. option:: -o, --toType=TYPE
 
 		From server types (Riak|PG) (default "PG")
+
+.. option:: -m, --noConfirm
+
+		Do not require confirmation before inserting records
+
+.. option:: -r, --dry
+
+		Do not perform writes. Will do a basic output of the keys on the 'from' backend.
+
+.. option:: -t, --fromType=TYPE
+
+		From server types (Riak|PG) (default "Riak")
+
 
 Riak
 ----------
@@ -76,7 +81,7 @@ riak.json
 
  :port: The port for which the Riak server is listening for protobuf connections.
 
- :tls: (Optional) Determines whether to verify insecure certificates.
+ :insecure: (Optional) Determines whether to verify insecure certificates.
 
  :tlsVersion: (Optional) Max TLS version supported. Valid values are  "10", "11", "12", "13".
 
@@ -98,10 +103,10 @@ pg.json
 
  :host: The hostname of the PG server.
 
- :sslmode: The ssl settings for the client connection, `explanation here <https://www.postgresql.org/docs/9.1/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS>`_. Options are 'disable', 'allow', 'prefer', 'require', 'verify-ca' and 'verify-full'
+ :sslmode: The ssl settings for the client connection, `explanation here <https://www.postgresql.org/docs/13/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS>`_. Options are 'disable', 'allow', 'prefer', 'require', 'verify-ca' and 'verify-full'
 
  :aesKey: The base64 encoding of a 16, 24, or 32 bit AES key.
 
 Development
 =============
-To add a plugin, implement the traffic_vault_migrate.go:TVBackend interface and add the backend to the returned values in supportedBackends
+To add a plugin, implement the traffic_vault_migrate.go:TVBackend interface and add the backend to the returned values in :atc-godoc:`tools/traffic_vault_migrate.supportBackends`.

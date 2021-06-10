@@ -22,7 +22,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -30,36 +29,77 @@ import (
 	"reflect"
 	"sort"
 	"strings"
-	"time"
+
+	"github.com/pborman/getopt/v2"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 var (
-	fromType string
-	toType   string
-	fromCfg  string
-	toCfg    string
-	dry      bool
-	compare  bool
-	confirm  bool
-	dump     bool
+	fromType  string
+	toType    string
+	fromCfg   string
+	toCfg     string
+	dry       bool
+	compare   bool
+	noConfirm bool
+	dump      bool
 
 	riakBE RiakBackend = RiakBackend{}
 	pgBE   PGBackend   = PGBackend{}
 )
 
 func init() {
-	flag.StringVar(&fromType, "from_type", riakBE.Name(), fmt.Sprintf("From server types (%v)", strings.Join(supportedTypes(), "|")))
-	flag.StringVar(&toType, "to_type", pgBE.Name(), fmt.Sprintf("From server types (%v)", strings.Join(supportedTypes(), "|")))
-	flag.StringVar(&toCfg, "to_cfg", "pg.json", "To server config file")
-	flag.StringVar(&fromCfg, "from_cfg", "riak.json", "From server config file")
-	flag.BoolVar(&dry, "dry", false, "Do not perform writes")
-	flag.BoolVar(&compare, "compare", false, "Compare to and from server records")
-	flag.BoolVar(&confirm, "confirm", true, "Requires confirmation before inserting records")
-	flag.BoolVar(&dump, "dump", false, "Write keys (from 'from' server) to disk")
+	fromTypePtr := getopt.StringLong("fromType", 't', riakBE.Name(), fmt.Sprintf("From server types (%v)", strings.Join(supportedTypes(), "|")))
+	if fromTypePtr == nil {
+		log.Fatal("unable to load fromType")
+	}
+	fromType = *fromTypePtr
+
+	toTypePtr := getopt.StringLong("toType", 'o', pgBE.Name(), fmt.Sprintf("From server types (%v)", strings.Join(supportedTypes(), "|")))
+	if toTypePtr == nil {
+		log.Fatal("unable to load toType")
+	}
+	toType = *toTypePtr
+
+	toCfgPtr := getopt.StringLong("toCfg", 'g', "pg.json", "To server config file")
+	if toCfgPtr == nil {
+		log.Fatal("unable to load toCfg")
+	}
+	toCfg = *toCfgPtr
+
+	fromCfgPtr := getopt.StringLong("fromCfg", 'f', "riak.json", "From server config file")
+	if fromCfgPtr == nil {
+		log.Fatal("unable to load fromCfg")
+	}
+	fromCfg = *fromCfgPtr
+
+	dryPtr := getopt.BoolLong("dry", 'r', "Do not perform writes")
+	if dryPtr == nil {
+		log.Fatal("unable to load dry")
+	}
+	dry = *dryPtr
+
+	comparePtr := getopt.BoolLong("compare", 'c', "Compare to and from server records")
+	if comparePtr == nil {
+		log.Fatal("unable to load compare")
+	}
+	compare = *comparePtr
+
+	noConfirmPtr := getopt.BoolLong("noConfirm", 'm', "Requires confirmation before inserting records")
+	if noConfirmPtr == nil {
+		log.Fatal("unable to load noConfirm")
+	}
+	noConfirm = *noConfirmPtr
+
+	dumpPtr := getopt.BoolLong("dump", 'd', "Write keys (from 'from' server) to disk")
+	if dumpPtr == nil {
+		log.Fatal("unable to load dump")
+	}
+	dump = *dumpPtr
 }
 
+// supportBackends returns the backends available in this tool
 func supportedBackends() []TVBackend {
 	return []TVBackend{
 		&riakBE, &pgBE,
@@ -67,7 +107,7 @@ func supportedBackends() []TVBackend {
 }
 
 func main() {
-	flag.Parse()
+	getopt.ParseV2()
 	var fromSrv TVBackend
 	var toSrv TVBackend
 
@@ -85,76 +125,49 @@ func main() {
 		toSrv = getBackendFromType(toType)
 	}
 
-	var toTimer time.Time
-	var toTime float64
-	var fromTimer time.Time
-	var fromTime float64
-
 	log.Println("Reading configs...")
-	fromTimer = time.Now()
 	if err := fromSrv.ReadConfig(fromCfg); err != nil {
 		log.Fatalf("Unable to read fromSrv cfg: %v", err)
 	}
-	fromTime = time.Now().Sub(fromTimer).Seconds()
 
 	if toSrvUsed {
-		toTimer = time.Now()
 		if err := toSrv.ReadConfig(toCfg); err != nil {
 			log.Fatalf("Unable to read toSrv cfg: %v", err)
 		}
-		toTime := time.Now().Sub(toTimer).Seconds()
-		log.Printf("Done [%v seconds]\n\tto: [%v seconds]\n\tfrom: [%v seconds]\n", toTime+fromTime, toTime, fromTime)
-	} else {
-		log.Printf("Done [%v seconds]\n", fromTime)
 	}
 
-	log.Println("Starting servers...")
-	fromTimer = time.Now()
+	log.Println("Starting server connections...")
 	if err := fromSrv.Start(); err != nil {
 		log.Fatalf("issue starting fromSrv: %v", err)
 	}
-	fromTime = time.Now().Sub(fromTimer).Seconds()
 	defer func() {
-		fromSrv.Stop()
+		fromSrv.Close()
 	}()
 	if toSrvUsed {
-		toTimer = time.Now()
 		if err := toSrv.Start(); err != nil {
 			log.Fatalf("issue starting toSrv: %v", err)
 		}
-		toTime = time.Now().Sub(toTimer).Seconds()
 		defer func() {
-			toSrv.Stop()
+			toSrv.Close()
 		}()
-		log.Printf("Done [%v seconds]\n\tto: [%v seconds]\n\tfrom: [%v seconds]\n", toTime+fromTime, toTime, fromTime)
-	} else {
-		log.Printf("Done [%v seconds]\n", fromTime)
 	}
 
 	log.Println("Pinging servers...")
-	fromTimer = time.Now()
 	if err := fromSrv.Ping(); err != nil {
 		log.Fatalf("Unable to ping fromSrv: %v", err)
 	}
-	fromTime = time.Now().Sub(fromTimer).Seconds()
 	if toSrvUsed {
-		toTimer = time.Now()
 		if err := toSrv.Ping(); err != nil {
 			log.Fatalf("Unable to ping toSrv: %v", err)
 		}
-		toTime = time.Now().Sub(toTimer).Seconds()
-		log.Printf("Done [%v seconds]\n\tto: [%v seconds]\n\tfrom: [%v seconds]\n", toTime+fromTime, toTime, fromTime)
-	} else {
-		log.Printf("Done [%v seconds]\n", fromTime)
 	}
 
 	log.Printf("Fetching data from %v...\n", fromSrv.Name())
-	fromTimer = time.Now()
 	if err := fromSrv.Fetch(); err != nil {
 		log.Fatalf("Unable to fetch fromSrv data: %v", err)
 	}
 
-	fromSSLKeys, fromDNSSecKeys, fromURIKeys, fromURLKeys, err := GetKeys(fromSrv)
+	fromSecret, err := GetKeys(fromSrv)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -162,57 +175,20 @@ func main() {
 	if err := Validate(fromSrv); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Done [%v seconds]\n", time.Now().Sub(fromTimer).Seconds())
 
 	if dump {
 		log.Printf("Dumping data from %v...\n", fromSrv.Name())
-		fromTimer = time.Now()
-		sslKeysBytes, err := json.Marshal(&fromSSLKeys)
-		if err != nil {
-			log.Fatal(err)
-		}
-		dnssecKeyBytes, err := json.Marshal(&fromDNSSecKeys)
-		if err != nil {
-			log.Fatal(err)
-		}
-		uriKeyBytes, err := json.Marshal(&fromURIKeys)
-		if err != nil {
-			log.Fatal(err)
-		}
-		urlKeyBytes, err := json.Marshal(&fromURLKeys)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if err := os.Mkdir("dump", 0750); err != nil {
-			if !os.IsExist(err) {
-				log.Fatal(err)
-			}
-		}
-		if err = ioutil.WriteFile("dump/sslkeys.json", sslKeysBytes, 0640); err != nil {
-			log.Println(err)
-		}
-		if err = ioutil.WriteFile("dump/dnsseckeys.json", dnssecKeyBytes, 0640); err != nil {
-			log.Println(err)
-		}
-		if err = ioutil.WriteFile("dump/urlkeys.json", urlKeyBytes, 0640); err != nil {
-			log.Println(err)
-		}
-		if err = ioutil.WriteFile("dump/urikeys.json", uriKeyBytes, 0640); err != nil {
-			log.Println(err)
-		}
-		log.Printf("Done [%v seconds]\n", time.Now().Sub(fromTimer).Seconds())
+		fromSecret.dump("dump")
 		return
 	}
 
 	if compare {
 		log.Printf("Fetching data from %v...\n", toSrv.Name())
-		toTimer = time.Now()
 		if err := toSrv.Fetch(); err != nil {
 			log.Fatalf("Unable to fetch toSrv data: %v\n", err)
 		}
 
-		toSSLKeys, toDNSSecKeys, toURIKeys, toURLKeys, err := GetKeys(toSrv)
+		toSecret, err := GetKeys(toSrv)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -220,36 +196,37 @@ func main() {
 		if err := toSrv.ValidateKey(); err != nil && len(err) > 0 {
 			log.Fatal(strings.Join(err, "\n"))
 		}
-		log.Printf("Done [%v seconds]\n", time.Now().Sub(toTimer).Seconds())
+
+		fromSecret.sort()
+		toSecret.sort()
+
 		log.Println(fromSrv.String())
 		log.Println(toSrv.String())
 
-		if !reflect.DeepEqual(fromSSLKeys, toSSLKeys) {
+		if !reflect.DeepEqual(fromSecret.sslkeys, toSecret.sslkeys) {
 			log.Fatal("from sslkeys and to sslkeys don't match")
 		}
-		if !reflect.DeepEqual(fromDNSSecKeys, toDNSSecKeys) {
+		if !reflect.DeepEqual(fromSecret.dnssecKeys, toSecret.dnssecKeys) {
 			log.Fatal("from dnssec and to dnssec don't match")
 		}
-		if !reflect.DeepEqual(fromURIKeys, toURIKeys) {
+		if !reflect.DeepEqual(fromSecret.uriKeys, toSecret.uriKeys) {
 			log.Fatal("from uri and to uri don't match")
 		}
-		if !reflect.DeepEqual(fromURLKeys, toURLKeys) {
+		if !reflect.DeepEqual(fromSecret.urlKeys, toSecret.urlKeys) {
 			log.Fatal("from url and to url don't match")
 		}
-		log.Println("Both datasources have the same keys!")
+		log.Println("Both data sources have the same keys")
 		return
 	}
 
 	log.Printf("Setting %v keys...\n", toSrv.Name())
-	toTimer = time.Now()
-	if err := SetKeys(toSrv, fromSSLKeys, fromDNSSecKeys, fromURIKeys, fromURLKeys); err != nil {
+	if err := SetKeys(toSrv, fromSecret); err != nil {
 		log.Fatal(err)
 	}
 
 	if err := Validate(toSrv); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Done [%v seconds]\n", time.Now().Sub(toTimer).Seconds())
 
 	log.Println(fromSrv.String())
 
@@ -257,7 +234,7 @@ func main() {
 		return
 	}
 
-	if confirm {
+	if !noConfirm {
 		ans := "q"
 		for {
 			fmt.Print("Confirm data insertion (y/n): ")
@@ -273,74 +250,53 @@ func main() {
 		}
 	}
 	log.Printf("Inserting data into %v...\n", toSrv.Name())
-	toTimer = time.Now()
 	if err := toSrv.Insert(); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Done [%v seconds]\n", time.Now().Sub(toTimer).Seconds())
-
 }
 
 // Validate runs the ValidateKey method on the backend
 func Validate(be TVBackend) error {
 	if errs := be.ValidateKey(); errs != nil && len(errs) > 0 {
 		return errors.New(fmt.Sprintf("Validation Errors (%v): \n%v", be.Name(), strings.Join(errs, "\n")))
-	} else {
-		log.Println("Validated " + be.Name())
 	}
 	return nil
 }
 
 // SetKeys will set all of the keys for a backend
-func SetKeys(be TVBackend, sslkeys []SSLKey, dnssecKeys []DNSSecKey, uriKeys []URISignKey, urlKeys []URLSigKey) error {
-	if err := be.SetSSLKeys(sslkeys); err != nil {
+func SetKeys(be TVBackend, s Secrets) error {
+	if err := be.SetSSLKeys(s.sslkeys); err != nil {
 		return errors.New(fmt.Sprintf("Unable to set %v ssl keys: %v", be.Name(), err))
 	}
-	if err := be.SetDNSSecKeys(dnssecKeys); err != nil {
+	if err := be.SetDNSSecKeys(s.dnssecKeys); err != nil {
 		return errors.New(fmt.Sprintf("Unable to set %v dnssec keys: %v", be.Name(), err))
 	}
-	if err := be.SetURLSigKeys(urlKeys); err != nil {
+	if err := be.SetURLSigKeys(s.urlKeys); err != nil {
 		return errors.New(fmt.Sprintf("Unable to set %v url keys: %v", be.Name(), err))
 	}
-	if err := be.SetURISignKeys(uriKeys); err != nil {
+	if err := be.SetURISignKeys(s.uriKeys); err != nil {
 		return errors.New(fmt.Sprintf("Unable to set %v uri keys: %v", be.Name(), err))
 	}
 	return nil
 }
 
 // GetKeys will get all of the keys for a backend
-func GetKeys(be TVBackend) ([]SSLKey, []DNSSecKey, []URISignKey, []URLSigKey, error) {
-	var sslkeys []SSLKey
-	var dnssec []DNSSecKey
-	var uri []URISignKey
-	var url []URLSigKey
+func GetKeys(be TVBackend) (Secrets, error) {
+	var secret Secrets
 	var err error
-	if sslkeys, err = be.GetSSLKeys(); err != nil {
-		return nil, nil, nil, nil, errors.New(fmt.Sprintf("Unable to get %v sslkeys: %v", be.Name(), err))
+	if secret.sslkeys, err = be.GetSSLKeys(); err != nil {
+		return Secrets{}, errors.New(fmt.Sprintf("Unable to get %v sslkeys: %v", be.Name(), err))
 	}
-	if dnssec, err = be.GetDNSSecKeys(); err != nil {
-		return nil, nil, nil, nil, errors.New(fmt.Sprintf("Unable to get %v dnssec keys: %v", be.Name(), err))
+	if secret.dnssecKeys, err = be.GetDNSSecKeys(); err != nil {
+		return Secrets{}, errors.New(fmt.Sprintf("Unable to get %v dnssec keys: %v", be.Name(), err))
 	}
-	if uri, err = be.GetURISignKeys(); err != nil {
-		return nil, nil, nil, nil, errors.New(fmt.Sprintf("Unable to get %v uri keys: %v", be.Name(), err))
+	if secret.uriKeys, err = be.GetURISignKeys(); err != nil {
+		return Secrets{}, errors.New(fmt.Sprintf("Unable to get %v uri keys: %v", be.Name(), err))
 	}
-	if url, err = be.GetURLSigKeys(); err != nil {
-		return nil, nil, nil, nil, errors.New(fmt.Sprintf("Unable to %v url keys: %v", be.Name(), err))
+	if secret.urlKeys, err = be.GetURLSigKeys(); err != nil {
+		return Secrets{}, errors.New(fmt.Sprintf("Unable to %v url keys: %v", be.Name(), err))
 	}
-	sort.Slice(sslkeys[:], func(a, b int) bool {
-		return sslkeys[a].CDN < sslkeys[b].CDN ||
-			sslkeys[a].CDN == sslkeys[b].CDN && sslkeys[a].DeliveryService < sslkeys[b].DeliveryService
-	})
-	sort.Slice(dnssec[:], func(a, b int) bool {
-		return dnssec[a].CDN < dnssec[b].CDN
-	})
-	sort.Slice(uri[:], func(a, b int) bool {
-		return uri[a].DeliveryService < uri[b].DeliveryService
-	})
-	sort.Slice(url[:], func(a, b int) bool {
-		return url[a].DeliveryService < url[b].DeliveryService
-	})
-	return sslkeys, dnssec, uri, url, nil
+	return secret, nil
 }
 
 // UnmarshalConfig takes in a config file and a type and will read the config file into the reflected type
@@ -361,8 +317,8 @@ func UnmarshalConfig(configFile string, config interface{}) error {
 type TVBackend interface {
 	// Start initiates the connection to the backend DB
 	Start() error
-	// Stop terminates the connection to the backend DB
-	Stop() error
+	// Close terminates the connection to the backend DB
+	Close() error
 	// Ping checks the connection to the backend DB
 	Ping() error
 	// ValidateKey validates that the keys are valid (in most cases, certain fields are not null)
@@ -400,6 +356,49 @@ type TVBackend interface {
 	SetURLSigKeys([]URLSigKey) error
 }
 
+// Secrets contains every key to be migrated
+type Secrets struct {
+	sslkeys    []SSLKey
+	dnssecKeys []DNSSecKey
+	uriKeys    []URISignKey
+	urlKeys    []URLSigKey
+}
+
+func (s *Secrets) sort() {
+	sort.Slice(s.sslkeys[:], func(a, b int) bool {
+		return s.sslkeys[a].CDN < s.sslkeys[b].CDN ||
+			s.sslkeys[a].CDN == s.sslkeys[b].CDN && s.sslkeys[a].DeliveryService < s.sslkeys[b].DeliveryService
+	})
+	sort.Slice(s.dnssecKeys[:], func(a, b int) bool {
+		return s.dnssecKeys[a].CDN < s.dnssecKeys[b].CDN
+	})
+	sort.Slice(s.uriKeys[:], func(a, b int) bool {
+		return s.uriKeys[a].DeliveryService < s.uriKeys[b].DeliveryService
+	})
+	sort.Slice(s.urlKeys[:], func(a, b int) bool {
+		return s.urlKeys[a].DeliveryService < s.urlKeys[b].DeliveryService
+	})
+}
+func (s *Secrets) dump(directory string) {
+	if err := os.Mkdir(directory, 0750); err != nil {
+		if !os.IsExist(err) {
+			log.Fatal(err)
+		}
+	}
+	if err := writeKeys(directory+"/sslkeys.json", &s.sslkeys); err != nil {
+		log.Fatal(err)
+	}
+	if err := writeKeys(directory+"/dnsseckeys.json", &s.dnssecKeys); err != nil {
+		log.Fatal(err)
+	}
+	if err := writeKeys(directory+"/urlkeys.json", &s.urlKeys); err != nil {
+		log.Fatal(err)
+	}
+	if err := writeKeys(directory+"/urikeys.json", &s.uriKeys); err != nil {
+		log.Fatal(err)
+	}
+}
+
 // SSLKey is the common representation of a SSL Key
 type SSLKey struct {
 	tc.DeliveryServiceSSLKeys
@@ -423,6 +422,17 @@ type URLSigKey struct {
 	tc.URLSigKeys
 }
 
+func writeKeys(filename string, data interface{}) error {
+	bytes, err := json.Marshal(&data)
+	if err != nil {
+		return err
+	}
+	if err = ioutil.WriteFile(filename, bytes, 0640); err != nil {
+		return err
+	}
+
+	return nil
+}
 func supportedTypes() []string {
 	var typs []string
 	for _, be := range supportedBackends() {

@@ -54,7 +54,7 @@ type RiakConfig struct {
 	Port          string `json:"port"`
 	User          string `json:"user"`
 	Password      string `json:"password"`
-	VerifyTLS     bool   `json:"tls"`
+	Insecure      bool   `json:"insecure"`
 	TLSVersionRaw string `json:"tlsVersion"`
 	TLSVersion    uint16
 }
@@ -166,7 +166,7 @@ func (rb *RiakBackend) SetURLSigKeys(keys []URLSigKey) error {
 // Start initiates the connection to the backend DB
 func (rb *RiakBackend) Start() error {
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: !rb.cfg.VerifyTLS,
+		InsecureSkipVerify: !rb.cfg.Insecure,
 		MaxVersion:         rb.cfg.TLSVersion,
 	}
 	auth := &riak.AuthOptions{
@@ -191,8 +191,8 @@ func (rb *RiakBackend) Start() error {
 	return nil
 }
 
-// Stop terminates the connection to the backend DB
-func (rb *RiakBackend) Stop() error {
+// Close terminates the connection to the backend DB
+func (rb *RiakBackend) Close() error {
 	if err := rb.cluster.Stop(); err != nil {
 		return err
 	}
