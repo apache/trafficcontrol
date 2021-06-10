@@ -259,6 +259,29 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
         );
     };
 
+    this.getLocks = function(queryParams) {
+        return $http.get(ENV.api['root'] + 'cdn_locks', { params: queryParams }).then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
+    };
+
+    this.deleteLock = function(queryParams) {
+        return $http.delete(ENV.api['root'] + 'cdn_locks', { params: queryParams }).then(
+            function(result) {
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
+    };
+
 };
 
 CDNService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
