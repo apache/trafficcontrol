@@ -928,20 +928,18 @@ func serverParentageParams(sv *Server, params []parameterWithProfilesMap) (profi
 		case ParentConfigCacheParamWeight:
 			profileCache.Weight = param.Value
 		case ParentConfigCacheParamPort:
-			i, err := strconv.ParseInt(param.Value, 10, 64)
-			if err != nil {
+			if i, err := strconv.Atoi(param.Value); err != nil {
 				warnings = append(warnings, "port param is not an integer, skipping! : "+err.Error())
 			} else {
-				profileCache.Port = int(i)
+				profileCache.Port = i
 			}
 		case ParentConfigCacheParamUseIP:
 			profileCache.UseIP = param.Value == "1"
 		case ParentConfigCacheParamRank:
-			i, err := strconv.ParseInt(param.Value, 10, 64)
-			if err != nil {
+			if i, err := strconv.Atoi(param.Value); err != nil {
 				warnings = append(warnings, "rank param is not an integer, skipping! : "+err.Error())
 			} else {
-				profileCache.Rank = int(i)
+				profileCache.Rank = i
 			}
 		case ParentConfigCacheParamNotAParent:
 			profileCache.NotAParent = param.Value != "false"
@@ -1449,20 +1447,18 @@ func getParentConfigProfileParams(
 				// TODO validate float?
 				profileCache.Weight = val
 			case ParentConfigCacheParamPort:
-				i, err := strconv.ParseInt(val, 10, 64)
-				if err != nil {
+				if i, err := strconv.Atoi(val); err != nil {
 					warnings = append(warnings, "port param is not an integer, skipping! : "+err.Error())
 				} else {
-					profileCache.Port = int(i)
+					profileCache.Port = i
 				}
 			case ParentConfigCacheParamUseIP:
 				profileCache.UseIP = val == "1"
 			case ParentConfigCacheParamRank:
-				i, err := strconv.ParseInt(val, 10, 64)
-				if err != nil {
+				if i, err := strconv.Atoi(val); err != nil {
 					warnings = append(warnings, "rank param is not an integer, skipping! : "+err.Error())
 				} else {
-					profileCache.Rank = int(i)
+					profileCache.Rank = i
 				}
 			case ParentConfigCacheParamNotAParent:
 				profileCache.NotAParent = val != "false"

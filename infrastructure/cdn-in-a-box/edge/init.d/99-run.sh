@@ -18,4 +18,4 @@
 # under the License.
 
 hostname="$(hostname --short)"
-to-enroll "$hostname" "$CDN_NAME" || (while true; do echo "enroll failed."; sleep 3 ; done)
+to-enroll "$CACHE_TYPE" "$CDN_NAME" || (while true; do echo "enroll failed."; sleep 3 ; done)
