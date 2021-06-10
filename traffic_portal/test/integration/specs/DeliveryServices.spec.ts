@@ -20,10 +20,12 @@
 import { browser } from 'protractor';
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { DeliveryServicePage } from '../PageObjects/DeliveryServicePage.po';
+import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { API } from '../CommonUtils/API';
 import { deliveryservices } from "../Data/deliveryservices";
 
 const api = new API();
+const topNavigation = new TopNavigationPage();
 const loginPage = new LoginPage();
 const deliveryservicesPage = new DeliveryServicePage();
 
@@ -79,6 +81,9 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
                     expect(await deliveryservicesPage.DeleteDeliveryService(remove)).toBeTruthy();
                     await deliveryservicesPage.OpenDeliveryServicePage();
                 });
+            });
+            it('can logout', async () => {
+                expect(await topNavigation.Logout()).toBeTruthy();
             });
         })
     })
