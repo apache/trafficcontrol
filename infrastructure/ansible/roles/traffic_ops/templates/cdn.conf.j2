@@ -80,9 +80,18 @@
       "plugin_config" : {{ to_plugin_config | to_nice_json(indent=2) }},
       "traffic_vault_backend": "{{ to_traffic_vault_backend }}",
       "traffic_vault_config": {
+{% if to_traffic_vault_backend == "postgres" %}
+         "dbname": "{{ to_tvdb_db_name }}",
+         "hostname": "{{ to_tvdb_host }}",
+         "port": {{ to_tvdb_port }},
+         "user": "{{ to_tvdb_username }}",
+         "password": "{{ to_tvdb_password }}",
+         "aes_key_location": "{{ to_tvdb_aes_key_loc }}"
+{% else %}
          "user": "{{ to_riak_username }}",
          "password": "{{ to_riak_username_password }}",
          "MaxTLSVersion": "{{ to_riak_tls_max_version }}"
+{% endif %}
       }
    }
 }

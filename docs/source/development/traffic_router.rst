@@ -53,15 +53,15 @@ Using Homebrew, |AdoptOpenJDK instructions|_
 .. code-block:: shell
 	:caption: Install OpenJDK 8 on macOS
 
-        brew tap AdoptOpenJDK/openjdk
-        brew cask install adoptopenjdk8
+	brew tap AdoptOpenJDK/openjdk
+	brew cask install adoptopenjdk8
 
 Next, set the JAVA_HOME environment variable. Add this line to your ``~/.bash_profile``:
 
 .. code-block:: shell
-        :caption: Set JAVA_HOME environment variable
+	:caption: Set JAVA_HOME environment variable
 
-        export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
+	export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
 
 .. |AdoptOpenJDK instructions| replace:: add the AdoptOpenJDK tap and install the ``adoptopenjdk8`` cask
 .. _AdoptOpenJDK instructions: https://github.com/AdoptOpenJDK/homebrew-openjdk#other-versions
@@ -108,16 +108,16 @@ To install the Traffic Router Developer environment:
 #. Set the environment variable TRAFFIC_MONITOR_HOSTS to be a semicolon delimited list of Traffic Monitors that can be accessed during integration tests OR install the :file:`traffic_monitor.properties` file.
 #. Additional configuration is set using the below files:
 
-  * copy :file:`core/src/main/conf/dns.properties` to :file:`core/src/test/conf/`
-  * copy :file:`core/src/main/conf/http.properties` to :file:`core/src/test/conf/`
-  * copy :file:`core/src/main/conf/log4j.properties` to :file:`core/src/test/conf/`
-  * copy :file:`core/src/main/conf/traffic_monitor.properties` to :file:`core/src/test/conf/` and then edit the ``traffic_monitor.bootstrap.hosts`` property
-  * copy :file:`core/src/main/conf/traffic_ops.properties` to :file:`core/src/test/conf/` and then edit the credentials as appropriate for the Traffic Ops instance you will be using.
-  * Default configuration values now reside in :file:`core/src/main/webapp/WEB-INF/applicationContext.xml`
+	* copy :file:`core/src/main/conf/dns.properties` to :file:`core/src/test/conf/`
+	* copy :file:`core/src/main/conf/http.properties` to :file:`core/src/test/conf/`
+	* copy :file:`core/src/main/conf/log4j.properties` to :file:`core/src/test/conf/`
+	* copy :file:`core/src/main/conf/traffic_monitor.properties` to :file:`core/src/test/conf/` and then edit the ``traffic_monitor.bootstrap.hosts`` property
+	* copy :file:`core/src/main/conf/traffic_ops.properties` to :file:`core/src/test/conf/` and then edit the credentials as appropriate for the Traffic Ops instance you will be using.
+	* Default configuration values now reside in :file:`core/src/main/webapp/WEB-INF/applicationContext.xml`
 
-  	.. note:: These values may be overridden by creating and/or modifying the property files listed in :file:`core/src/main/resources/applicationProperties.xml`
+	.. note:: These values may be overridden by creating and/or modifying the property files listed in :file:`core/src/main/resources/applicationProperties.xml`
 
-  	.. note:: Pre-existing properties files are still honored by Traffic Router. For example :file:`traffic_monitor.properties` may contain the :abbr:`FQDN (Fully Qualified Domain Name)` and port of the Traffic Monitor instance(s), separated by semicolons as necessary (do not include scheme e.g. ``http://``)
+	.. note:: Pre-existing properties files are still honored by Traffic Router. For example :file:`traffic_monitor.properties` may contain the :abbr:`FQDN (Fully Qualified Domain Name)` and port of the Traffic Monitor instance(s), separated by semicolons as necessary (do not include scheme e.g. ``http://``)
 
 
 #. Import the existing git repository as projects into your IDE (Eclipse):
@@ -309,7 +309,7 @@ API
 :ref:`tr-api`
 
 .. toctree::
-  :hidden:
-  :maxdepth: 1
+	:hidden:
+	:maxdepth: 1
 
-  traffic_router/traffic_router_api
+	traffic_router/traffic_router_api

@@ -21,40 +21,50 @@
 # container running CentOS 7.
 ###############################################################
 
-FROM centos:7
+ARG RHEL_VERSION=7
+FROM centos:${RHEL_VERSION}
+ARG RHEL_VERSION=7
+ENV RHEL_VERSION="$RHEL_VERSION"
 VOLUME /atsbuild
 
-# install the required yum repo
-RUN yum install -y centos-release-scl 
 # install the required toolsets
-RUN yum install -y \
-  autoconf \
-  automake \
-  curses \
-  curl \
-  devtoolset-9 \
-  flex \
-  git \
-  hwloc \
-  hwloc-devel \
-  libtool \
-  libcap \
-  libcap-devel \
-  lua \
-  make \
-  openssl \
-  openssl-devel \
-  pcre \
-  pcre-devel \
-  pkgconfig \
-  python3 \
-  redhat-rpm-config \
-  rpm-build \
-  tcl \
-  tcl-devel
+RUN set -o errexit; \
+  if [[ "${RHEL_VERSION%%.*}" -le 7 ]]; then \
+    yum -y install centos-release-scl; \
+    enable_repo=''; \
+    toolset_rpms='devtoolset-9'; \
+  else \
+    enable_repo='--enablerepo=powertools'; \
+    toolset_rpms='gcc-toolset-9-gcc gcc-toolset-9-gcc-c++'; \
+  fi; \
+  yum -y $enable_repo install \
+    autoconf \
+    automake \
+    curl \
+    flex \
+    git \
+    hwloc \
+    hwloc-devel \
+    libtool \
+    libcap \
+    libcap-devel \
+    lua \
+    make \
+    openssl \
+    openssl-devel \
+    pcre \
+    pcre-devel \
+    pkgconfig \
+    python3 \
+    redhat-rpm-config \
+    rpm-build \
+    tcl \
+    tcl-devel \
+    $toolset_rpms
 
-ADD cache-config/testing/docker/trafficserver/trafficserver-8.spec /trafficserver-8.spec
-ADD cache-config/testing/docker/trafficserver/trafficserver-9.spec /trafficserver-9.spec
-ADD cache-config/testing/docker/trafficserver/run.sh /
+COPY cache-config/testing/docker/trafficserver/trafficserver-8.spec \
+     cache-config/testing/docker/trafficserver/trafficserver-9.spec \
+     cache-config/testing/docker/trafficserver/run.sh \
+     /
 
-ENTRYPOINT /run.sh
+CMD /run.sh

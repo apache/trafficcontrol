@@ -26,6 +26,8 @@ ARG RHEL_VERSION=8
 # Makes RHEL_VERSION available in later layers without needing to specify it again
 ENV RHEL_VERSION="$RHEL_VERSION"
 
+VOLUME /traffic_ops_data
+
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 		yum -y install dnf || exit 1; \
 	fi

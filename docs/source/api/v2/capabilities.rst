@@ -63,7 +63,7 @@ Response Structure
 ------------------
 :name:        Name of the capability
 :description: Describes the permissions covered by the capability.
-:lastUpdated: Date and time of the last update made to this capability, in an ISO-like format
+:lastUpdated: Date and time of the last update made to this capability, in :ref:`non-rfc-datetime`
 
 .. code-block:: http
 	:caption: Response Example

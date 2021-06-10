@@ -86,7 +86,7 @@ Response Structure
 .. code-block:: json
 	:caption: Response Example
 
-	 {
+	{
 			"alerts": [{
 				"level": "warning",
 				"text": "This endpoint is deprecated, and will be removed in the future"
@@ -138,4 +138,3 @@ Response Structure
 		}
 
 .. [1] Users with the roles "admin" and/or "operations" will be able to see servers not assigned to *any* given :term:`Delivery Service`, whereas any other user will only be able to see the servers not assigned to :term:`Delivery Services` their Tenant is allowed to see.
-
