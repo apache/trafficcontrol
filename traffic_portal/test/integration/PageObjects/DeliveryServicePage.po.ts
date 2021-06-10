@@ -20,111 +20,63 @@
 import { BasePage } from './BasePage.po';
 import { randomize } from "../config";
 import { SideNavigationPage } from './SideNavigationPage.po';
-import { by, element} from 'protractor';
+import { by, element } from 'protractor';
+
 interface DeliveryServices {
   Type: string;
   Name: string;
+  validationMessage: string;
+}
+interface UpdateDeliveryService {
+  description: string;
+  Name: string;
+  NewName: string;
   validationMessage: string;
 }
 interface DeleteDeliveryService {
   Name: string;
   validationMessage: string;
 }
+interface AssignServer {
+  DSName: string;
+  ServerName: string;
+  validationMessage: string;
+}
+interface AssignRC {
+  RCName: string;
+  DSName: string;
+  validationMessage: string;
+}
 export class DeliveryServicePage extends BasePage {
-  private btnMore = element(by.name("moreBtn"));
   private btnCreateNewDeliveryServices = element(by.linkText("Create Delivery Service"));
   private mnuFormDropDown = element(by.name('selectFormDropdown'));
   private btnSubmitFormDropDown = element(by.buttonText('Submit'));
   private txtSearch = element(by.id("quickSearch"))
-  // private txtSearchRC = element(by.id('serverCapabilitiesTable_filter')).element(by.css('label input'));
-  // private mnuDeliveryServicesTable = element(by.id('deliveryServicesTable'));
   private txtConfirmName = element(by.name('confirmWithNameInput'));
   private btnDelete = element(by.buttonText('Delete'));
-  // private btnMore = element(by.name('moreBtn'));
-  // private btnManageRequiredServerCapabilities = element(by.linkText('Manage Required Server Capabilities'));
-  // private btnAddRequiredServerCapabilities = element(by.name('addCapabilityBtn'));
-  // private txtSearchRequiredServerCapabilities = element(by.id('deliveryServiceCapabilitiesTable_filter')).element(by.css('label input'));
-  // private btnRemoveRequiredServerCapabilities = element(by.css('a[title="Remove Required Server Capability"]'));
-  // private btnYesRemoveRC = element(by.buttonText('Yes'));
-  // private txtRequestStatus = element(by.name('requestStatus'));
-  // private txtComment = element(by.name('comment'));
-  // private mnuManageServers = element(by.linkText('Manage Servers'));
-  // private btnLinkServersToDS = element(by.xpath("//button[@title='Link Servers to Delivery Service']"));
-  // private txtSearchServersForDS = element(by.xpath("//div[@id='dsServersUnassignedTable_filter']//input[@type='search']"));
-  // private txtSearchServerToUnlinkFromDS = element(by.xpath("//div[@id='dsServersTable_filter']//input[@type='search']"));
-  // private mnuUnlinkServerFromDS = element(by.linkText("Unlink Server from Delivery Service"));
-  // private txtServerAssign = element(by.id('dsServersUnassignedTable'));
-
+  private btnMore = element(by.name('moreBtn'));
+  private mnuManageRequiredServerCapabilities = element(by.linkText('Manage Required Server Capabilities'));
+  private btnAddRequiredServerCapabilities = element(by.name('addCapabilityBtn'));
+  private txtInputRC = element(by.name("selectFormDropdown")); 
+  private mnuManageServers = element(by.buttonText('Manage Servers'));
+  private btnAssignServer = element(by.name("selectServersMenuItem"));
   private txtXmlId = element(by.name('xmlId'));
   private txtDisplayName = element(by.name('displayName'));
   private selectActive = element(by.name('active'));
   private selectType = element(by.id('type'));
   private selectTenant = element(by.name('tenantId'));
   private selectCDN = element(by.name('cdn'));
-  // private txtLongDesc = element(by.name('longDesc'));
-  // private txtlongDesc2 = element(by.name('longDesc1'));
-  // private txtlongDesc3 = element(by.name('longDesc2'));
   private txtOrgServerURL = element(by.name('orgServerFqdn'));
   private txtProtocol = element(by.name('protocol'));
-  // private txtDscp = element(by.name('dscp'));
-  // private txtProfile = element(by.name('profile'));
-  // private txtInfoUrl = element(by.name('infoUrl'));
-  // private txtCheckPath = element(by.name('checkPath'));
-  // private txtOriginShield = element(by.name('originShield'));
-
-  // Cache Configuration Settings 
-  // private txtMaxOriginConnections = element(by.name('maxOriginConnections'));
-  // private txtSigningAlgorithm = element(by.name('signingAlgorithm'));
-  // private txtRangeRequestHandling = element(by.name('rangeRequestHandling'));
-  // private txtQueryStringHandling = element(by.name('qstringIgnore'));
-  // private txtEdgeHeaderRewrite = element(by.name('edgeHeaderRewrite'));
-  // private txtMidHeaderRewrite = element(by.name('midHeaderRewrite'));
-  // private txtRegexRemap = element(by.name('regexRemap'));
   private txtRemapText = element(by.name('remapText'));
-  // private txtMultiSiteOrigin = element(by.name('multiSiteOrigin'));
-  // private txtCacheURL = element(by.name('cacheurl'));
-
-  //Routing Configuration Settings 
-  // private txtRoutingName = element(by.name('routingName'));
-  // private txtIpv6RoutingEnabled = element(by.name('ipv6RoutingEnabled'));
-  // private txtSubnetEnabled = element(by.name('ecsEnabled'));
-  // private txtGeoProvider = element(by.name('geoProvider'));
-  // private txtMissLat = element(by.name('missLat'));
-  // private txtMissLong = element(by.name('missLong'));
-  // private txtGeoLimit = element(by.name('geoLimit'));
-  // private txtGeoLimitRedirectURL = element(by.name('geoLimitRedirectURL'));
-  // private txtDnsBypassIp = element(by.name('dnsBypassIp'));
-  // private txtDnsBypassIpv6 = element(by.name('dnsBypassIp6'));
-  // private txtDnsBypassCname = element(by.name('dnsBypassCname'));
-  // private txtDnsBypassTtl = element(by.name('dnsBypassTtl'));
-  // private txtMaxDnsAnswers = element(by.name('maxDnsAnswers'));
-  // private txtCcrDnsTtl = element(by.name('ccrDnsTtl'));
-  // private txtGlobalMaxMbps = element(by.name('globalMaxMbps'));
-  // private txtGlobalMaxTps = element(by.name('globalMaxTps'));
-  // private txtFqPacingRate = element(by.name('fqPacingRate'));
-  // private txtTrResponseHeaders = element(by.name('trResponseHeaders'));
-  // private txtTrRequestHeaders = element(by.name('trRequestHeaders'));
-  // private txtDeepCachingType = element(by.name('deepCachingType'));
-  // private txtInitialDispersion = element(by.name('initialDispersion'));
-  // private txtAnonymousBlockingEnabled = element(by.name('anonymousBlockingEnabled'));
-  // private txtRegionalGeoBlocking = element(by.name('regionalGeoBlocking'));
-  // private txtHttpBypassFqdn = element(by.name('httpBypassFqdn'));
-  // private txtConsistentHashRegex = element(by.name('consistentHashRegex'));
-  // private txtConsistentHashQueryParam = element(by.name('consistentHashQueryParam'));
   private btnCreateDeliveryServices = element(by.xpath("//div[@class='pull-right']//button[text()='Create']"));
-  // private btnFullfillRequest = element(by.xpath("//button[text()='Fulfill Request']"));
-  // private txtSearchDSRequest = element(by.xpath("//div[@id='dsRequestsTable_filter']//input[@type='search']"));
-  // private lnkCompleteRequest = element(by.css('a[title="Complete Request"]'));
-  // private txtCommentCompleteDS = element(by.name("text"));
-  // private btnDeleteRequest = element(by.xpath("//button[text()='Delete Request']"));
-  // private txtNoMatchingError = element(by.xpath("//td[text()='No data available in table']"));
   private randomize = randomize;
 
-  async OpenDeliveryServicePage(){
+  async OpenDeliveryServicePage() {
     let snp = new SideNavigationPage();
     await snp.NavigateToDeliveryServicesPage();
   }
-  async OpenServicesMenu(){
+  async OpenServicesMenu() {
     let snp = new SideNavigationPage();
     await snp.ClickServicesMenu();
   }
@@ -200,7 +152,27 @@ export class DeliveryServicePage extends BasePage {
     await element(by.cssContainingText("span", name)).click();
     return !result;
   }
-  public async DeleteDeliveryService(deliveryservice:DeleteDeliveryService): Promise<boolean> {
+  public async UpdateDeliveryService(deliveryservice: UpdateDeliveryService): Promise<boolean | undefined> {
+    let result: boolean | undefined = false;
+    let basePage = new BasePage();
+    if (deliveryservice.validationMessage.includes("updated")) {
+      deliveryservice.validationMessage = deliveryservice.validationMessage.replace(deliveryservice.Name, deliveryservice.Name + this.randomize)
+    }
+    switch (deliveryservice.description) {
+      case "update delivery service display name":
+        await this.txtDisplayName.clear();
+        await this.txtDisplayName.sendKeys(deliveryservice.NewName + this.randomize);
+        await basePage.ClickUpdate();
+        break;
+      default:
+        result = undefined;
+    }
+    if (result = !undefined) {
+      result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
+    }
+    return result;
+  }
+  public async DeleteDeliveryService(deliveryservice: DeleteDeliveryService): Promise<boolean> {
     let result = false;
     let basePage = new BasePage();
     if (deliveryservice.validationMessage.includes("deleted")) {
@@ -212,4 +184,29 @@ export class DeliveryServicePage extends BasePage {
     result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
     return result;
   }
+  public async AssignServerToDeliveryService(deliveryservice: AssignServer): Promise<boolean>{
+    let result = false;
+    let basePage = new BasePage();
+    await this.btnMore.click();
+    await this.mnuManageServers.click();
+    await this.btnMore.click();
+    await this.btnAssignServer.click();
+    await element(by.cssContainingText("td", deliveryservice.ServerName)).click();
+    await this.ClickSubmit();
+    result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
+    return result;
+  }
+  public async AssignRequiredCapabilitiesToDS(deliveryservice: AssignRC): Promise<boolean>{
+    let result = false;
+    let basePage = new BasePage();
+    await this.btnMore.click();
+    await this.mnuManageRequiredServerCapabilities.click();
+    await this.btnAddRequiredServerCapabilities.click();
+    await this.txtInputRC.sendKeys(deliveryservice.RCName);
+    await this.ClickSubmit();
+    result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
+    return result;
+  }
+  
+
 }

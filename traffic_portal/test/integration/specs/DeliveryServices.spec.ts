@@ -20,27 +20,25 @@
 import { browser } from 'protractor';
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { DeliveryServicePage } from '../PageObjects/DeliveryServicePage.po';
-// import { API } from '../CommonUtils/API';
-// import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
+import { API } from '../CommonUtils/API';
 import { deliveryservices } from "../Data/deliveryservices";
 
-// const api = new API();
+const api = new API();
 const loginPage = new LoginPage();
-// const topNavigation = new TopNavigationPage();
 const deliveryservicesPage = new DeliveryServicePage();
 
-// describe('Setup API for delivery service test', function () {
-//     it('Setup', async () => {
-//         await api.UseAPI(deliveryservices.setup);
-//     });
-// });
+describe('Setup API for delivery service test', function () {
+    it('Setup', async () => {
+        await api.UseAPI(deliveryservices.setup);
+    });
+});
 deliveryservices.tests.forEach(async deliveryservicesData => {
     deliveryservicesData.logins.forEach(login =>{
         describe(`Traffic Portal - Delivery Service - ${login.description}`, () =>{
             it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
-                expect(await loginPage.CheckUserName(login)).toBeTruthy();
+                expect(await loginPage.CheckUserName(login)).toBe(true);
             });
             it('can open delivery service page', async () => {
                 await deliveryservicesPage.OpenServicesMenu();
@@ -48,10 +46,33 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
             });
             deliveryservicesData.add.forEach(add => {
                 it(add.description, async function () {
-                    expect(await deliveryservicesPage.CreateDeliveryService(add)).toBeTruthy();
+                    expect(await deliveryservicesPage.CreateDeliveryService(add)).toBe(true);
                     await deliveryservicesPage.OpenDeliveryServicePage();
                 });
             });
+            deliveryservicesData.update.forEach(update => {
+                it(update.description, async function () {
+                    await deliveryservicesPage.SearchDeliveryService(update.Name);
+                    expect(await deliveryservicesPage.UpdateDeliveryService(update)).toBe(true);
+                    await deliveryservicesPage.OpenDeliveryServicePage();
+                });
+            })
+            deliveryservicesData.assignserver.forEach(assignserver => {
+                it(assignserver.description, async function(){
+                    await deliveryservicesPage.SearchDeliveryService(assignserver.DSName);
+                    expect(await deliveryservicesPage.AssignServerToDeliveryService(assignserver)).toBe(true);
+                    await deliveryservicesPage.OpenDeliveryServicePage();
+                }
+                
+                )
+            })
+            deliveryservicesData.assignrequiredcapabilities.forEach(assignrc => {
+                it(assignrc.description, async function(){
+                    await deliveryservicesPage.SearchDeliveryService(assignrc.DSName);
+                    expect(await deliveryservicesPage.AssignRequiredCapabilitiesToDS(assignrc)).toBe(true);
+                    await deliveryservicesPage.OpenDeliveryServicePage();
+                })
+            })
             deliveryservicesData.remove.forEach(remove => {
                 it(remove.description, async () => {
                     await deliveryservicesPage.SearchDeliveryService(remove.Name);
@@ -59,13 +80,12 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
                     await deliveryservicesPage.OpenDeliveryServicePage();
                 });
             });
-
         })
     })
 
 })
-// describe('Clean up API for delivery service test', () => {
-//     it('Cleanup', async () => {
-//         await api.UseAPI(deliveryservices.cleanup);
-//     });
-// });
+describe('Clean up API for delivery service test', () => {
+    it('Cleanup', async () => {
+        await api.UseAPI(deliveryservices.cleanup);
+    });
+});
