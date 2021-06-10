@@ -28,7 +28,7 @@ func TestAbout(t *testing.T) {
 	}
 	t.Logf("about: %v", m)
 
-	m, _, err = NoAuthTOSession.GetAbout(client.RequestOptions{})
+	_, _, err = NoAuthTOSession.GetAbout(client.RequestOptions{})
 	if err == nil {
 		t.Error("expected error from GetAbout() when unauthenticated")
 	}

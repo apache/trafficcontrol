@@ -207,7 +207,7 @@ func AssignServersToTopologyBasedDeliveryService(t *testing.T) {
 	if d.Topology == nil || d.ID == nil || d.CDNID == nil || d.CDNName == nil {
 		t.Fatal("Traffic Ops returned a representation of a Delivery Service that had null or undefined Topology and/or CDN ID and/or CDN Name and/or ID")
 	}
-	serversResp, _, err := TOSession.GetServers(client.RequestOptions{})
+	serversResp, _, _ := TOSession.GetServers(client.RequestOptions{})
 	servers := []tc.ServerV4{}
 	for _, s := range serversResp.Response {
 		if s.CDNID != nil && *s.CDNID == *d.CDNID && s.Type == tc.CacheTypeEdge.String() {

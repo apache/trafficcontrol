@@ -1667,7 +1667,7 @@ func VerifyPaginationSupportDS(t *testing.T) {
 	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
-	deliveryserviceWithLimit, _, err := TOSession.GetDeliveryServices(opts)
+	deliveryserviceWithLimit, _, _ := TOSession.GetDeliveryServices(opts)
 	if !reflect.DeepEqual(deliveryservice.Response[:1], deliveryserviceWithLimit.Response) {
 		t.Error("expected GET deliveryservice with limit = 1 to return first result")
 	}
@@ -1676,7 +1676,7 @@ func VerifyPaginationSupportDS(t *testing.T) {
 	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("offset", "1")
-	deliveryserviceWithOffset, _, err := TOSession.GetDeliveryServices(opts)
+	deliveryserviceWithOffset, _, _ := TOSession.GetDeliveryServices(opts)
 	if !reflect.DeepEqual(deliveryservice.Response[1:2], deliveryserviceWithOffset.Response) {
 		t.Error("expected GET deliveryservice with limit = 1, offset = 1 to return second result")
 	}
@@ -1685,7 +1685,7 @@ func VerifyPaginationSupportDS(t *testing.T) {
 	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("page", "2")
-	deliveryserviceWithPage, _, err := TOSession.GetDeliveryServices(opts)
+	deliveryserviceWithPage, _, _ := TOSession.GetDeliveryServices(opts)
 	if !reflect.DeepEqual(deliveryservice.Response[1:2], deliveryserviceWithPage.Response) {
 		t.Error("expected GET deliveryservice with limit = 1, page = 2 to return second result")
 	}

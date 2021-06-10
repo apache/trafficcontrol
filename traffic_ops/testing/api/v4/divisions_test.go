@@ -342,7 +342,7 @@ func GetTestPaginationSupportDivision(t *testing.T) {
 	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
-	divisionsWithLimit, _, err := TOSession.GetDivisions(opts)
+	divisionsWithLimit, _, _ := TOSession.GetDivisions(opts)
 	if !reflect.DeepEqual(divisions[:1], divisionsWithLimit.Response) {
 		t.Error("expected GET Divisions with limit = 1 to return first result")
 	}
@@ -351,7 +351,7 @@ func GetTestPaginationSupportDivision(t *testing.T) {
 	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("offset", "1")
-	divisionsWithOffset, _, err := TOSession.GetDivisions(opts)
+	divisionsWithOffset, _, _ := TOSession.GetDivisions(opts)
 	if !reflect.DeepEqual(divisions[1:2], divisionsWithOffset.Response) {
 		t.Error("expected GET Divisions with limit = 1, offset = 1 to return second result")
 	}
@@ -360,7 +360,7 @@ func GetTestPaginationSupportDivision(t *testing.T) {
 	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("page", "2")
-	divisionsWithPage, _, err := TOSession.GetDivisions(opts)
+	divisionsWithPage, _, _ := TOSession.GetDivisions(opts)
 	if !reflect.DeepEqual(divisions[1:2], divisionsWithPage.Response) {
 		t.Error("expected GET Divisions with limit = 1, page = 2 to return second result")
 	}

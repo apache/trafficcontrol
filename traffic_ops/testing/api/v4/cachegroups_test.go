@@ -789,7 +789,7 @@ func GetTestPaginationSupportCg(t *testing.T) {
 
 	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
-	cachegroupWithLimit, _, err := TOSession.GetCacheGroups(opts)
+	cachegroupWithLimit, _, _ := TOSession.GetCacheGroups(opts)
 
 	if !reflect.DeepEqual(cachegroup[:1], cachegroupWithLimit.Response) {
 		t.Error("expected GET Cachegroups with limit = 1 to return first result")
@@ -798,7 +798,7 @@ func GetTestPaginationSupportCg(t *testing.T) {
 	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("offset", "1")
-	cachegroupsWithOffset, _, err := TOSession.GetCacheGroups(opts)
+	cachegroupsWithOffset, _, _ := TOSession.GetCacheGroups(opts)
 	if !reflect.DeepEqual(cachegroup[1:2], cachegroupsWithOffset.Response) {
 		t.Error("expected GET cachegroup with limit = 1, offset = 1 to return second result")
 	}
@@ -806,7 +806,7 @@ func GetTestPaginationSupportCg(t *testing.T) {
 	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("page", "2")
-	cachegroupWithPage, _, err := TOSession.GetCacheGroups(opts)
+	cachegroupWithPage, _, _ := TOSession.GetCacheGroups(opts)
 	if !reflect.DeepEqual(cachegroup[1:2], cachegroupWithPage.Response) {
 		t.Error("expected GET cachegroup with limit = 1, page = 2 to return second result")
 	}
