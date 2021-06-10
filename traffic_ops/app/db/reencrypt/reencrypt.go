@@ -333,14 +333,14 @@ func reEncryptDNSSECKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 	for cdn, reencryptedKeys := range dnssecKeyMap {
 		res, err := tx.Exec(`UPDATE dnssec SET data = $1 WHERE cdn = $2`, []byte(reencryptedKeys), cdn)
 		if err != nil {
-			return fmt.Errorf("updating DNSSEC Keys for deliveryservice %s: %w", cdn, err)
+			return fmt.Errorf("updating DNSSEC Keys for cdn %s: %w", cdn, err)
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return fmt.Errorf("determining rows affected for reencrypting DNSSEC Keys with deliveryservice %s", cdn)
+			return fmt.Errorf("determining rows affected for reencrypting DNSSEC Keys with cdn %s", cdn)
 		}
 		if rowsAffected == 0 {
-			return fmt.Errorf("no rows updated for reencrypting DNSSEC Keys for deliveryservice %s", cdn)
+			return fmt.Errorf("no rows updated for reencrypting DNSSEC Keys for cdn %s", cdn)
 		}
 	}
 
