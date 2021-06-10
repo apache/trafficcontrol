@@ -17,7 +17,44 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -o errexit -o xtrace -o monitor
+trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
+set -o errexit -o nounset -o pipefail -o xtrace -o monitor
+
+set_profile_parameter() {
+	local profile_file="$1" config_file="$2" name="$3" new_value="$4" human_readable="$5"
+	jq=(jq --arg CONFIG_FILE "$config_file" --arg NAME "$name" --arg NEW_VALUE "$new_value")
+	echo "$(<"$profile_file" "${jq[@]}" '.params[] |= (
+		select(.configFile == $CONFIG_FILE and .name == $NAME).value = $NEW_VALUE
+	)')" >"$profile_file"
+	if ! <"$profile_file" "${jq[@]}" '.params[] |
+		select(.configFile == $CONFIG_FILE and .name == $NAME).value' |
+		grep -qF "\"${new_value}\""
+	then
+		echo "${human_readable} \"${new_value}\" was not set!"
+		exit 1
+	fi
+}
+
+set_trafficserver_parameters() {
+	local ats_profile
+	case "$CACHE_TYPE" in
+		edge) ats_profile=/traffic_ops_data/profiles/010-ATS_EDGE_TIER_CACHE.json;;
+		mid) ats_profile=/traffic_ops_data/profiles/020-ATS_MID_TIER_CACHE.json;;
+	esac
+	local trafficserver_version
+	trafficserver_version="$(rpm -q --qf '%{version}-%{release}.%{arch}\n' trafficserver)"
+	logfile_dir="$(rpm -ql trafficserver | grep '/var/log/trafficserver$')"
+
+	until [[ -s "$ats_profile" ]]; do
+		echo "Waiting for ${ats_profile} to exist..."
+		sleep 3
+	done
+	set_profile_parameter "$ats_profile" package trafficserver "$trafficserver_version" 'trafficserver RPM version'
+	set_profile_parameter "$ats_profile" records.config 'CONFIG proxy.config.log.logfile_dir' "STRING ${logfile_dir}" 'trafficserver logging directory'
+
+}
+
+set_trafficserver_parameters
 
 mkdir /tmp/ort
 
@@ -34,7 +71,7 @@ do
 done
 
 # Source the CIAB-CA shared SSL environment
-until [[ -n "$X509_GENERATION_COMPLETE" ]]
+until [[ -v X509_GENERATION_COMPLETE && -n "$X509_GENERATION_COMPLETE" ]]
 do
 	echo "Waiting on X509 vars to be defined"
 	sleep 1
@@ -67,7 +104,7 @@ for f in /opt/init.d/*; do
 done
 
 # Wait for SSL keys to exist
-until [[ $(to-get "api/2.0/cdns/name/$CDN_NAME/sslkeys" | jq '.response | length') -gt 0 ]]; do
+until [[ $(to-get "api/2.0/cdns/name/$CDN_NAME/sslkeys" | jq '.response | length') -ge 2 ]]; do
 	echo 'waiting for SSL keys to exist'
 	sleep 3
 done
@@ -89,6 +126,6 @@ chmod "0644" "/etc/cron.d/traffic_ops_ort-cron" && crontab "/etc/cron.d/traffic_
 
 crond -im off
 
-touch /var/log/trafficserver/diags.log
+touch "${logfile_dir}/diags.log"
 # Leaves the container hanging open in the event of a failure for debugging purposes
-tail -Fn +1 /var/log/trafficserver/diags.log /var/log/ort.log
+tail -Fn+1 "${logfile_dir}/diags.log" /var/log/ort.log

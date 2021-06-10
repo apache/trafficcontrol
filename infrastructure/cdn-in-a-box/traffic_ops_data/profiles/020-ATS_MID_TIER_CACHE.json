@@ -87,7 +87,7 @@
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.log.logfile_dir",
 			"secure": false,
-			"value": "STRING /var/log/trafficserver"
+			"value": "(unchanged)"
 		},
 		{
 			"configFile": "records.config",
@@ -424,7 +424,7 @@
 		{
 			"configFile": "package",
 			"name": "trafficserver",
-			"value": "7.1.4-2.el7.x86_64"
+			"value": "(unchanged)"
 		}
 	]
 }

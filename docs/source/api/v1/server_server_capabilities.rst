@@ -67,7 +67,7 @@ Response Structure
 ------------------
 :serverHostName:   The server's host name
 :serverId:         The server's integral, unique identifier
-:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in an ISO-like format
+:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in :ref:`non-rfc-datetime`
 :serverCapability: The :term:`Server Capability`'s name
 
 .. code-block:: http
@@ -136,7 +136,7 @@ Request Structure
 Response Structure
 ------------------
 :serverId:         The integral, unique identifier of the newly associated server
-:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in an ISO-like format
+:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in :ref:`non-rfc-datetime`
 :serverCapability: The :term:`Server Capability`'s name
 
 .. code-block:: http

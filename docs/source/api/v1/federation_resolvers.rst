@@ -69,7 +69,7 @@ Response Structure
 ------------------
 :id:          The integral, unique identifier of the resolver
 :ipAddress:   The IP address or :abbr:`CIDR (Classless Inter-Domain Routing)`-notation subnet of the resolver - may be IPv4 or IPv6
-:lastUpdated: The date and time at which this resolver was last updated, in an ISO-like format
+:lastUpdated: The date and time at which this resolver was last updated, in :ref:`non-rfc-datetime`
 
 	.. versionadded:: 1.4
 
@@ -236,4 +236,3 @@ Response Structure
 		"ipAddress": "1.2.6.4/22",
 		"type": "RESOLVE6"
 	}}
-
