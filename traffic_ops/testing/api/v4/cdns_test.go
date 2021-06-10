@@ -448,8 +448,8 @@ func DeleteTestCDNsInvalidId(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected, no cdn with that key found  but got - alerts: %+v", delResp.Alerts)
 	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected 404 status code, got %v", reqInf.StatusCode)
 	}
 }
 
