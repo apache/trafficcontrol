@@ -44,7 +44,7 @@ var testCfg config.Cfg = config.Cfg{
 	TOUser:              "mickey",
 	TOPass:              "mouse",
 	TOURL:               "http://mouse.com",
-	WaitForParents:      false,
+	WaitForParents:      "false",
 	YumOptions:          "none",
 }
 

@@ -43,6 +43,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - `DELETE` request method for `deliveryservices/xmlId/{name}/urlkeys` and `deliveryservices/{id}/urlkeys`.
 - t3c now uses separate apps, full run syntax changed to `t3c apply ...`, moved to cache-config and RPM changed to trafficcontrol-cache-config. See cache-config README.md.
 - t3c: bug fix to consider plugin config files for reloading remap.config
+- t3c: add flag to wait for parents in syncds mode
 - t3c: Change syncds so that it only warns on package version mismatch.
 - atstccfg: add ##REFETCH## support to regex_revalidate.config processing.
 - Added a Traffic Monitor integration test framework.
