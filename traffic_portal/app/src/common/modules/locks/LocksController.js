@@ -68,13 +68,20 @@ var LocksController = function($scope, $rootScope, $interval, $state, $uibModal,
 		});
 	};
 
-	$scope.$on("$destroy", function() {
+	$rootScope.$on('authService::login', function() {
+		getLocks();
+		createInterval();
+	});
+
+	$rootScope.$on('trafficPortal::exit', function() {
 		killInterval();
 	});
 
 	let init = function () {
-		getLocks();
-		createInterval();
+		if (userModel.loaded) {
+			getLocks();
+			createInterval();
+		}
 	};
 	init();
 
