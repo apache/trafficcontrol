@@ -110,6 +110,42 @@ func (ds *TODeliveryService) IsTenantAuthorized(user *auth.CurrentUser) (bool, e
 	return isTenantAuthorized(ds.ReqInfo, &ds.DeliveryServiceV4)
 }
 
+const getTLSVersionsQuery = `
+SELECT tls_version
+FROM public.deliveryservice_tls_version
+WHERE deliveryservice = $1
+ORDER BY tls_version
+`
+
+// GetDSTLSVersions retrieves the TLS versions explicitly supported by a
+// Delivery Service identified by dsID. This will panic if handed a nil
+// transaction.
+func GetDSTLSVersions(dsID int, tx *sql.Tx) ([]string, error) {
+	rows, err := tx.Query(getTLSVersionsQuery, dsID)
+	if err != nil {
+		return nil, fmt.Errorf("querying: %w", err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Errorf("closing TLS versions rows: %v", err)
+		}
+	}()
+
+	var vers []string
+	for rows.Next() {
+		var ver string
+		if err = rows.Scan(&ver); err != nil {
+			return nil, fmt.Errorf("scanning: %w", err)
+		}
+		vers = append(vers, ver)
+	}
+	err = rows.Err()
+	if err != nil {
+		err = fmt.Errorf("iteration error: %w", err)
+	}
+	return vers, err
+}
+
 func CreateV12(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -585,13 +621,10 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 	}
 	ds.Type = &dsType
 
-	// Don't touch TLSVersions if using old API versions
-	if inf.Version != nil && inf.Version.Major >= 4 {
-		if len(ds.TLSVersions) < 1 {
-			ds.TLSVersions = nil
-		} else if err = recreateTLSVersions(ds.TLSVersions, *ds.ID, tx); err != nil {
-			return nil, alerts, http.StatusInternalServerError, nil, fmt.Errorf("creating TLS versions for new Delivery Service: %w", err)
-		}
+	if len(ds.TLSVersions) < 1 {
+		ds.TLSVersions = nil
+	} else if err = recreateTLSVersions(ds.TLSVersions, *ds.ID, tx); err != nil {
+		return nil, alerts, http.StatusInternalServerError, nil, fmt.Errorf("creating TLS versions for new Delivery Service: %w", err)
 	}
 
 	if err := createDefaultRegex(tx, *ds.ID, *ds.XMLID); err != nil {
@@ -1041,12 +1074,23 @@ WHERE
 	return nil, alerts, status, userErr, sysErr
 }
 func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, tc.Alerts, int, error, error) {
+	var alerts tc.Alerts
+
 	dsNull := tc.DeliveryServiceNullableV30(*dsV31)
 	ds := dsNull.UpgradeToV4()
 	dsV40 := ds
+	if dsV40.ID == nil {
+		return nil, alerts, http.StatusInternalServerError, nil, errors.New("cannot update a Delivery Service with nil ID")
+	}
+
 	tx := inf.Tx.Tx
+	var sysErr error
+	if dsV40.TLSVersions, sysErr = GetDSTLSVersions(*dsV40.ID, tx); sysErr != nil {
+		return nil, alerts, http.StatusInternalServerError, nil, fmt.Errorf("getting TLS versions for DS #%d in API version < 4.0: %w", *dsV40.ID, sysErr)
+	}
+
 	res, alerts, status, usrErr, sysErr := updateV40(w, r, inf, &dsV40, false)
-	if res == nil {
+	if res == nil || usrErr != nil || sysErr != nil {
 		return nil, alerts, status, usrErr, sysErr
 	}
 	ds = *res
