@@ -17,7 +17,6 @@ package com.comcast.cdn.traffic_control.traffic_router.core.http;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.RoundingMode;
