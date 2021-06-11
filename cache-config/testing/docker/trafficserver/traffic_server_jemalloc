@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,30 +17,21 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-#
+# SPDX-License-Identifier: Apache-2.0
 
----
-version: '2.1'
+# This file is a simple shim that configures some basic profiling for
+# traffic_server in jemalloc. If you use it, you'll want to adjust the values
+# in MALLOC_CONF to meet your specific needs. (man jemalloc for details.)
 
-volumes:
-  trafficcontrol:
+# To use this, set your traffic server binary parameter to be this file instead
+# of traffic_server.
 
-services:
+prefix=/usr
+exec_prefix=/usr
+libdir=/usr/lib64
 
-  trafficserver_build:
-    environment:
-      - ATS_VERSION=8.1.x
-      - CJOSE_URL=https://github.com/cisco/cjose
-      - CJOSE_TAG=latest
-      - JANSSON_URL=https://github.com/akheron/jansson
-      - JANSSON_TAG=v2.11
-      - OPENSSL_URL=https://github.com/openssl/openssl
-      - OPENSSL_TAG=OpenSSL_1_1_1
-      - RUN_ATS_UNIT_TESTS=false
-    build:
-      context: ../../..
-      dockerfile: cache-config/testing/docker/trafficserver/Dockerfile
-      args:
-        RHEL_VERSION: ${RHEL_VERSION:-8}
-    volumes:
-      - ../../..:/trafficcontrol:z
+MALLOC_CONF="prof:true,prof_prefix:/tmp/jeprof.out,lg_prof_interval:33,lg_prof_sample:20"
+LD_PRELOAD=${libdir}/libjemalloc.so.2
+export LD_PRELOAD
+export MALLOC_CONF
+/opt/trafficserver/bin/traffic_server $@

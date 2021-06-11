@@ -18,7 +18,8 @@
 name: Traffic Control Cache Config integration tests
 
 env:
-  RHEL_VERSION: 7
+  RHEL_VERSION: 8
+  ATS_VERSION: 8.1.x
 
 on:
   push:
@@ -104,7 +105,7 @@ jobs:
         with:
           owner: apache
           repo: trafficserver
-          branch: 8.1.x
+          branch: ${{ env.ATS_VERSION }}
         id: git-repo-sha
       - name: Check Cache
         id: ats-rpm-cache
