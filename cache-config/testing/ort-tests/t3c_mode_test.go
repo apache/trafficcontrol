@@ -78,7 +78,7 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		}()
 
 		// run badass and check config files.
-		if err := runApply("atlanta-edge-03", "badass"); err != nil {
+		if err := runApply("atlanta-edge-03", "badass", 0); err != nil {
 			t.Fatalf("ERROR: t3c badass failed: %v\n", err)
 		}
 
@@ -160,7 +160,7 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		// remap.config is removed and atlanta-edge-03 should have
 		// queue updates enabled.  run t3c to verify a new remap.config
 		// is pulled down.
-		err = runApply("atlanta-edge-03", "syncds")
+		err = runApply("atlanta-edge-03", "syncds", 0)
 		if err != nil {
 			t.Fatalf("ERROR: t3c syncds failed: %v\n", err)
 		}
