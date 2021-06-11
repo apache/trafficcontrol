@@ -83,7 +83,7 @@ Similar to administering the Traffic Ops database, the :ref:`admin <database-man
 
 app/db/reencrypt/reencrypt
 --------------------------
-The :program:`app/db/reencrypt/reencrypt` binary is used to re-encrypt all data in the Postgres Traffic Vault with a new base64-encoded AES key.
+The :program:`reencrypt` binary is used to re-encrypt all data in the Postgres Traffic Vault with a new base64-encoded AES key.
 
 .. note:: For proper resolution of configuration files, it's recommended that this binary be run from the ``app/db/reencrypt`` directory.
 
