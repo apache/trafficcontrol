@@ -43,8 +43,8 @@ var LocksController = function($scope, $rootScope, $interval, $state, $uibModal,
 
 	$scope.confirmUnlock = function(lock) {
 		const params = {
-			title: 'Remove lock from: ' + lock.cdnName,
-			message: 'Are you sure you want to remove the lock from the ' + lock.cdnName + ' CDN?'
+			title: 'Remove lock from: ' + lock.cdn,
+			message: 'Are you sure you want to remove the lock from the ' + lock.cdn + ' CDN?'
 		};
 		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
@@ -57,12 +57,12 @@ var LocksController = function($scope, $rootScope, $interval, $state, $uibModal,
 			}
 		});
 		modalInstance.result.then(function() {
-			cdnService.deleteLock({ cdn: lock.cdnName }).
-			then(
-				function() {
-					$state.reload();
-				}
-			);
+			cdnService.deleteLock({ cdn: lock.cdn }).
+				then(
+					function() {
+						$state.reload();
+					}
+				);
 		}, function () {
 			// do nothing
 		});

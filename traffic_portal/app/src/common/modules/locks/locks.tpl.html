@@ -16,8 +16,8 @@ under the License.
 -->
 
 <div id="locksContainer">
-    <div class="alert alert-danger" ng-repeat="l in locks">
+    <div class="alert alert-dark" ng-repeat="l in locks">
         <button type="button" class="close" title="Unlock {{l.cdn}}" aria-hidden="true" ng-click="confirmUnlock(l)"><i class="fa fa-unlock"></i></button>
-        <div ng-bind-html="l.cdn + ' is locked by ' + l.userName + ' [ type: ' + ((l.soft) ? 'soft' : 'hard') + ', message: ' + l.message +' ]'"></div>
+        <div ng-bind-html="l.cdn + ' is ' + ((l.soft) ? 'soft' : 'hard') + ' locked by ' + l.userName + ' (' + l.message + ')' | linky:'_blank'"></div>
     </div>
 </div>
