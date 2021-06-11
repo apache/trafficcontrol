@@ -108,7 +108,7 @@ func main() {
 
 	tx, err := db.Begin()
 	if err != nil {
-		die(fmt.Sprintf("transaction begin failed %w %v ", err, tx))
+		die(fmt.Sprintf("transaction begin failed %v %v ", err, tx))
 	}
 	defer tx.Commit()
 
