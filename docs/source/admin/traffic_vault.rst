@@ -88,11 +88,11 @@ The :program:`app/db/reencrypt/reencrypt` binary is used to re-encrypt all data 
 .. note:: For proper resolution of configuration files, it's recommended that this binary be run from the ``app/db/reencrypt`` directory.
 
 Usage
------
+"""""
 ``./reencrypt [options]``
 
 Options and Arguments
----------------------
+"""""""""""""""""""""
 .. option:: --new-key NEW_KEY
 
 	(Optional) The file path for the new base64-encoded AES key. Default is ``/opt/traffic_ops/app/conf/new.key``.
