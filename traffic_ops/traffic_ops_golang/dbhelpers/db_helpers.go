@@ -108,7 +108,7 @@ func CheckIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (error, error, i
 	var userName string
 	rows, err := tx.Query(query, cdn)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil, http.StatusOK
 		}
 		return nil, errors.New("querying cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
@@ -563,7 +563,7 @@ func GetCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
 func GetCDNNameFromServerID(tx *sql.Tx, serverId int64) (tc.CDNName, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn_id FROM server WHERE id=$1)`, serverId).Scan(&name); err != nil {
-		return "", errors.New("querying CDN name from server ID : " + err.Error())
+		return "", fmt.Errorf("querying CDN name from server ID: %w", err)
 	}
 	return tc.CDNName(name), nil
 }

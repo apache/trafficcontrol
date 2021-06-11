@@ -65,7 +65,7 @@ func getCDNNameAndServerID(t *testing.T) (string, int) {
 		if err != nil {
 			t.Errorf("could not get servers for cdn %s: %v", cdn.Name, err)
 		}
-		if len(serversResp.Response) != 0 {
+		if len(serversResp.Response) != 0 && serversResp.Response[0].ID != nil {
 			serverID = *serversResp.Response[0].ID
 			return cdn.Name, serverID
 		}
@@ -103,6 +103,7 @@ func getCDNDetailsAndTopologyName(t *testing.T) (int, string, string) {
 			}
 		}
 	}
+	t.Error("couldn't find a valid CDN and associated Topology name")
 	return -1, "", ""
 }
 
@@ -325,13 +326,13 @@ func SnapshotWithLock(t *testing.T) {
 		t.Errorf("expected error while snapping cdn %s by user admin, but got nothing", cdn)
 	}
 	if reqInf.StatusCode != http.StatusForbidden {
-		t.Fatalf("expected a 403 status code, but got %d instead", reqInf.StatusCode)
+		t.Errorf("expected a 403 status code, but got %d instead", reqInf.StatusCode)
 	}
 
 	// Delete the lock
 	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn}}})
 	if err != nil {
-		t.Fatalf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
+		t.Errorf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
 	}
 }
 
