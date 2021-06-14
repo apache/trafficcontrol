@@ -73,7 +73,7 @@ func main() {
 
 	if *help {
 		flag.Usage()
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 	newKey, err := readKey(*newKeyLocation)
