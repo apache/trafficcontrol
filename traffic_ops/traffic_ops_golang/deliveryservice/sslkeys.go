@@ -69,7 +69,7 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+*req.DeliveryService), nil)
 		return
 	}
-	cdn, err := getCDNNameFromDSID(inf.Tx.Tx, dsID)
+	cdn, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, dsID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateSSLKeys: getting CDN from DS ID "+err.Error()))
 		return

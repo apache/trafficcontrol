@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -45,6 +46,13 @@ func ImportProfileHandler(w http.ResponseWriter, r *http.Request) {
 	if err := api.Parse(r.Body, inf.Tx.Tx, &importedProfile); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
+	}
+	if importedProfile.Profile.CDNName == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no CDN Name in the profile to be imported"), nil)
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *importedProfile.Profile.CDNName, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 	}
 
 	id, err := importProfile(&importedProfile.Profile, inf.Tx.Tx)

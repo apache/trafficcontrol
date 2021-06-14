@@ -21,6 +21,7 @@ package profile
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -49,6 +50,15 @@ func CopyProfileHandler(w http.ResponseWriter, r *http.Request) {
 			ExistingName: inf.Params["existing_profile"],
 			Name:         inf.Params["new_profile"],
 		},
+	}
+
+	cdnName, err := dbhelpers.GetCDNNameFromProfileID(inf.Tx.Tx, p.Response.ID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 	}
 
 	errs := copyProfile(inf, &p.Response)

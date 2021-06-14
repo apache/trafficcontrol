@@ -732,7 +732,7 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ds.ID = &id
-	cdn, err := getCDNNameFromDSID(inf.Tx.Tx, id)
+	cdn, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, id)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice update: getting CDN from DS ID "+err.Error()))
 		return

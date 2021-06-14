@@ -81,7 +81,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+*req.DeliveryService), nil)
 		return
 	}
-	cdn, err := getCDNNameFromDSID(inf.Tx.Tx, dsID)
+	cdn, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, dsID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.AddSSLKeys: getting CDN from DS ID "+err.Error()))
 		return
@@ -468,25 +468,6 @@ func getDSIDFromName(tx *sql.Tx, xmlID string) (int, bool, error) {
 	}
 	return id, true, nil
 }
-
-// getCDNNameFromDSID returns the associated CDN name with the delivery service ID that is provided.
-func getCDNNameFromDSID(tx *sql.Tx, dsID int) (string, error) {
-	cdn := ""
-	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn_id FROM deliveryservice WHERE id = $1)`, dsID).Scan(&cdn); err != nil {
-		return cdn, fmt.Errorf("querying CDN for deliveryservice with ID '%v': %v", dsID, err)
-	}
-	return cdn, nil
-}
-
-// getCDNNameFromDSXMLID returns the associated CDN name with the delivery service XML ID that is provided.
-func getCDNNameFromDSXMLID(tx *sql.Tx, xmlID string) (string, error) {
-	cdn := ""
-	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn_id FROM deliveryservice WHERE xml_id = $1)`, xmlID).Scan(&cdn); err != nil {
-		return cdn, fmt.Errorf("querying CDN for deliveryservice with XML ID '%v': %v", xmlID, err)
-	}
-	return cdn, nil
-}
-
 // returns a delivery service xmlId for a cdn by host regex.
 func getXMLID(cdnID int64, hostRegex string, tx *sql.Tx) (string, bool, error) {
 	q := `

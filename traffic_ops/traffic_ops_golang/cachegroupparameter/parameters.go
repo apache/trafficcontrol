@@ -207,6 +207,16 @@ func (cgparam *TOCacheGroupParameter) Delete() (error, error, int) {
 		return fmt.Errorf("parameter %v does not exist", *cgparam.ID), nil, http.StatusNotFound
 	}
 
+	cdns, err := dbhelpers.GetCDNsForCachegroup(cgparam.ReqInfo.Tx.Tx, &cgparam.CacheGroupID)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	for cdn, _ := range cdns {
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(cgparam.ReqInfo.Tx.Tx, cdn, cgparam.ReqInfo.User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, statusCode
+		}
+	}
 	return api.GenericDelete(cgparam)
 }
 
@@ -273,7 +283,10 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-
+	if inf.User == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
+		return
+	}
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("reading request body: "+err.Error()), nil)
@@ -311,6 +324,18 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, p := range params {
+		cdns, err := dbhelpers.GetCDNsForCachegroup(inf.Tx.Tx, p.CacheGroup)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		for cdn, _ := range cdns {
+			userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
+			if userErr != nil || sysErr != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+				return
+			}
+		}
 		ppExists, err := dbhelpers.CachegroupParameterAssociationExists(*p.Parameter, *p.CacheGroup, inf.Tx.Tx)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)

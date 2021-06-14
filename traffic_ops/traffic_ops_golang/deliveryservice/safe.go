@@ -70,7 +70,7 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("decoding: %s", err), nil)
 		return
 	}
-	cdn, err := getCDNNameFromDSID(inf.Tx.Tx, dsID)
+	cdn, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, dsID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice update safe: getting CDN from DS ID "+err.Error()))
 		return

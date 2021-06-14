@@ -61,7 +61,7 @@ func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cdn, err := getCDNNameFromDSXMLID(inf.Tx.Tx, xmlID)
+	cdn, err := dbhelpers.GetCDNNameFromDSXMLID(inf.Tx.Tx, xmlID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("renew acme certificate: getting CDN from DS XML ID "+err.Error()))
 		return

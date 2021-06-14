@@ -89,7 +89,11 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("cdn '"+cdnName+"' not found"), nil)
 		return
 	}
-
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdnName, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
 	if err := generateStoreDNSSECKeys(inf.Tx.Tx, cdnName, cdnDomain, uint64(*req.TTL), uint64(*req.KSKExpirationDays), uint64(*req.ZSKExpirationDays), int64(*req.EffectiveDateUnix), inf.Vault, r.Context()); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and storing DNSSEC CDN keys: "+err.Error()))
 		return
@@ -446,6 +450,11 @@ func deleteDNSSECKeys(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		return
 	} else if !ok {
 		writeError(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil, deprecated)
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, key, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
 	if err := inf.Vault.DeleteDNSSECKeys(key, inf.Tx.Tx, r.Context()); err != nil {

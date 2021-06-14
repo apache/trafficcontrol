@@ -247,9 +247,53 @@ JOIN profile_parameter pp ON pp.parameter = p.id
 WHERE pp.profile = :profile_id`
 }
 
-func (pr *TOProfile) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, pr) }
-func (pr *TOProfile) Create() (error, error, int)              { return api.GenericCreate(pr) }
-func (pr *TOProfile) Delete() (error, error, int)              { return api.GenericDelete(pr) }
+func (pr *TOProfile) checkIfProfileCanBeAlteredByCurrentUser() (error, error, int) {
+	var cdnName string
+	if pr.CDNName != nil {
+		cdnName = *pr.CDNName
+	} else {
+		if pr.CDNID != nil {
+			cdn, ok, err := dbhelpers.GetCDNNameFromID(pr.ReqInfo.Tx.Tx, int64(*pr.CDNID))
+			if err != nil {
+				return nil, err, http.StatusInternalServerError
+			} else if !ok {
+				return nil, nil, http.StatusNotFound
+			}
+			cdnName = string(cdn)
+		} else {
+			return errors.New("no cdn found for this profile"), nil, http.StatusBadRequest
+		}
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(pr.ReqInfo.Tx.Tx, cdnName, pr.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
+	}
+	return nil, nil, http.StatusOK
+}
+
+func (pr *TOProfile) Update(h http.Header) (error, error, int) {
+	userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
+	}
+	return api.GenericUpdate(h, pr)
+}
+
+func (pr *TOProfile) Create() (error, error, int) {
+	userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
+	}
+	return api.GenericCreate(pr)
+}
+
+func (pr *TOProfile) Delete() (error, error, int) {
+	userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
+	}
+	return api.GenericDelete(pr)
+}
 
 func updateQuery() string {
 	query := `UPDATE

@@ -257,7 +257,7 @@ func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cdn, err := getCDNNameFromDSID(inf.Tx.Tx, dsID)
+	cdn, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, dsID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateURLKeys: getting CDN from DS ID "+err.Error()))
 		return

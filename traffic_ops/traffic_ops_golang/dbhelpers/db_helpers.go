@@ -1283,3 +1283,53 @@ func CheckTopologyOrgServerCGInDSCG(tx *sql.Tx, cdnIds []int, dsTopology string,
 	}
 	return nil, nil, http.StatusOK
 }
+
+// GetCDNNameFromDSID returns the associated CDN name with the delivery service ID that is provided.
+func GetCDNNameFromDSID(tx *sql.Tx, dsID int) (string, error) {
+	cdn := ""
+	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn_id FROM deliveryservice WHERE id = $1)`, dsID).Scan(&cdn); err != nil {
+		return cdn, fmt.Errorf("querying CDN for deliveryservice with ID '%v': %v", dsID, err)
+	}
+	return cdn, nil
+}
+
+// GetCDNNameFromDSXMLID returns the associated CDN name with the delivery service XML ID that is provided.
+func GetCDNNameFromDSXMLID(tx *sql.Tx, xmlID string) (string, error) {
+	cdn := ""
+	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn_id FROM deliveryservice WHERE xml_id = $1)`, xmlID).Scan(&cdn); err != nil {
+		return cdn, fmt.Errorf("querying CDN for deliveryservice with XML ID '%v': %v", xmlID, err)
+	}
+	return cdn, nil
+}
+
+// GetCDNsForCachegroup returns a map of CDNs for all the servers in the provided cachegroup.
+func GetCDNsForCachegroup(tx *sql.Tx, cgID *int) (map[string]bool, error) {
+	cdns := make(map[string]bool, 0)
+	var cdn string
+	if cgID == nil {
+		return cdns, errors.New("no cachegroup ID found")
+	}
+	query := `SELECT name FROM cdn WHERE id IN (SELECT cdn_id FROM server WHERE cachegroup = $1)`
+	rows, err := tx.Query(query, *cgID)
+	if err != nil {
+		return cdns, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err = rows.Scan(&cdn)
+		if err != nil {
+			return cdns, err
+		}
+		cdns[cdn] = true
+	}
+	return cdns, nil
+}
+
+func GetCDNNameFromProfileID(tx *sql.Tx, id int) (tc.CDNName, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn FROM profile WHERE id = $1)`, id).Scan(&name); err != nil {
+		return "", errors.New("querying CDN ID: " + err.Error())
+	}
+	return tc.CDNName(name), nil
+}

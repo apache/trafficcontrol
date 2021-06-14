@@ -273,7 +273,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Profile: CRUD
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `profiles/?$`, api.ReadHandler(&profile.TOProfile{}), auth.PrivLevelReadOnly, Authenticated, nil, 4687585893},
-
 		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `profiles/{id}$`, api.UpdateHandler(&profile.TOProfile{}), auth.PrivLevelOperations, Authenticated, nil, 484391723},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `profiles/?$`, api.CreateHandler(&profile.TOProfile{}), auth.PrivLevelOperations, Authenticated, nil, 45402115563},
 		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `profiles/{id}$`, api.DeleteHandler(&profile.TOProfile{}), auth.PrivLevelOperations, Authenticated, nil, 42055944653},
