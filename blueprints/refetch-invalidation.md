@@ -20,11 +20,11 @@ under the License.
 
 ## Problem Description
 
-Currently, within ATC, there is a concept of Invalidation Jobs. These Invalidation Jobs give a user the ability to queue an invalidation for a resource, primarily based on regular expressions. The invalidation is gathered and treated as though there was a cache **STALE**, allowing the cache to query the origin server to **REFRESH** the resource. However, should the cache policy still be incorrect or misconfigured, the resource could be updated on the origin server, but the cache will still receive a 304 - Not Modified HTTP status response.
+Currently, within ATC, there is a concept of Invalidation Jobs. These Invalidation Jobs give a user the ability to queue an invalidation for a resource, primarily based on regular expressions. The invalidation is gathered and treated as though there was a cache **STALE**, allowing the CDN to query the origin server to **REFRESH** the resource. However, should the cache policy still be incorrect or misconfigured, the resource could be updated on the origin server, but the cache will still receive a 304 - Not Modified HTTP status response.
 
 ## Proposed Change
 
- To address this potential conflict, a proposal to add **REFETCH** as an option for Invalidation Jobs. This will then be treated by caches as a **MISS** (rather than a **STALE**), thusly allowing the cache to retrieve the resource regardless of cache policies. The original **REFRESH**/**STALE** will be the default option, where **REFETCH**/**MISS** will be the addition.
+To address this potential conflict, a proposal to add **REFETCH** as an option for Invalidation Jobs. This will then be treated by caches as a **MISS** (rather than a **STALE**), thusly allowing the cache to retrieve the resource regardless of cache policies. The original **REFRESH**/**STALE** will be the default option, where **REFETCH**/**MISS** will be the addition.
 
 ### Traffic Portal Impact
 
@@ -34,9 +34,11 @@ Traffic Portal will need to update the Invalidation Job to account for the diffe
 Tooltips should be added to ensure an understanding of this feature at a high level.
 
 ##### Read
-When displaying the information, the **Invalidation Requests** table current shows the `Parameters` field, so the display will be straight forward with no manipulation.
+When displaying the information, the **Invalidation Requests** table current shows the `Parameters` field, which is only the TTL in hours in the format `TTL:%dh`. The `Parameters` field will be changed to a `TTL` field. This can be displayed directly on the table, however it should be made clear that this is in hours and no other time value.
 
-However, we derive and calculate the expiration field based on the TTL. This code will need to be modified to account for the additional information contained in the `Parameters` field.
+Additionally, since we derive and calculate the expiration field based on the TTL some code will need to be modified to account for the change in field name and value.
+
+Speaking of Time, time values returned by the server will be formatted to follow RFC3339 per API guidelines.
 
 ### Traffic Ops Impact
 
@@ -74,7 +76,7 @@ type InvalidationJobInput struct {
 
 ##### Proposed
 
-Add an "InvalidationType" to signify a specific type of invalidation request. The InvalidationType is an optional field and will not break backwards compatibility with previous API versions. If the field is included, it _must_ be either "refetch" or "refresh".
+Add an "InvalidationType" to signify a specific type of invalidation request. If the field is included, it _must_ be either "refetch" or "refresh".
 
 Body:
 ```json
@@ -102,11 +104,40 @@ type InvalidationJobInput struct {
 
 ##### Parsing the value
 
-Since the field is optional and existing functionality only signifies a **REFRESH**/**STALE** capability, if the field is omitted, empty, malformed, or in any way _not_ `refetch` then it will be treated as `refresh`.
+The value can only pass validation if it is either explicitly `refresh` or `refetch`. Any other value (including missing/omitted) will be treated as 400 - Bad Content.
 
 ##### Response
 
-The response will be modified, then, to return this new value as well.
+The response will be modified, then, to return this new value as well. Additionally, _Time_ values will be formatted to RFC3339 to follow API guidelines. This, plus some database changes, will require changes to the struct used for reading the values from the DB.
+
+The current struct:
+
+```go
+type InvalidationJob struct {
+	AssetURL        *string `json:"assetUrl"`
+	CreatedBy       *string `json:"createdBy"`
+	DeliveryService *string `json:"deliveryService"`
+	ID              *uint64 `json:"id"`
+	Keyword         *string `json:"keyword"`
+	Parameters      *string `json:"parameters"`
+	StartTime       *Time   `json:"startTime"`
+}
+```
+
+Will be changed to:
+
+```go
+type InvalidationJob struct {
+	AssetURL         *string `json:"assetUrl"`
+	CreatedBy        *string `json:"createdBy"`
+	DeliveryService  *string `json:"deliveryService"`
+	ID               *uint64 `json:"id"`
+	Keyword          *string `json:"keyword"`
+	TTL              *int    `json:"ttl"`
+	InvalidationType *string `json:"invalidationType"`
+	StartTime        *Time   `json:"startTime"`
+}
+```
 
 Sample current response:
 ```json
@@ -123,17 +154,18 @@ Sample current response:
 		"deliveryService":"amc-live",
 		"id":1,
 		"keyword":"PURGE",
-		"parameters":"TTL:24h""startTime":"2021-06-02 09:23:21-06"
+		"parameters":"TTL:24h",
+		"startTime":"2021-06-02 09:23:21-06"
 	}
 }
 ```
 
-Sample new response (includes the `invalidationType` on parameters field):
+Sample new response (includes the `invalidationType` on parameters field, an updated `alert text` field, and a RFC3339 formated startTime):
 ```json
 {
 	"alerts":[
 		{
-			"text":"Invalidation request created for http://amc-linear-origin.local.tld/path/.*\\.jpeg, start:2021-06-02 15:23:21.348 +0000 UTC end 2021-06-03 15:23:21.348 +0000 UTC",
+			"text":"Invalidation (refresh) request created for http://amc-linear-origin.local.tld/path/.*\\.jpeg, start:2021-06-02 15:23:21.348 +0000 UTC end 2021-06-03 15:23:21.348 +0000 UTC",
 			"level":"success"
 		}
 	],
@@ -143,8 +175,9 @@ Sample new response (includes the `invalidationType` on parameters field):
 		"deliveryService":"amc-live",
 		"id":1,
 		"keyword":"PURGE",
-		"parameters":"TTL:24h,invalidationType:refresh",
-		"startTime":"2021-06-02 09:23:21-06"
+		"ttl":24,
+		"invalidationType":"refresh",
+		"startTime":"2021-06-02T09:23:21-06Z07:00"
 	}
 }
 ```
@@ -158,30 +191,56 @@ ___
 
 #### Client Impact
 
-Likewise with Traffic Portal, the `go` clients will need to be updated to provide this additional functionality. Since an additional field has been added to `InvalidationJobInput` in `go-tc` lib, this can be set by the client as well. If left unset, it will default to "refresh".
+Likewise with Traffic Portal, the `go` clients will need to be updated to provide this additional functionality. Since an additional field has been added to `InvalidationJobInput` in `go-tc` lib, this can be set by the client as well.
+
+There is also
 
 #### Data Model / Database Impact
 
+When referring to _Jobs_, these are relegated to three database tables in the TO DB; _jobs_, _job\_agent_, and _job\_status_.
 
-The current column `parameters` will now contain a cskv (comma separated key value) string. Currently it only stores the `TTL` for the invalidation request:
-```
-TTL:48h
-```
+> The _jobs_ concept appears to have been intended to be generic and flexible, however it's only ever been implemented to record invalidation jobs.
 
-Moving forward, this column will also contain the type of cache invalidation. For instance, the string may read:
+The current column `parameters` will be converted to `ttl` and contain an INT datatype representing the TTL in hours. 
 ```
-TTL:48h,invalidationType:refetch
+ttl:48h
 ```
 
-If there is no `invalidationType` in the cskv, it is assumed to be **REFRESH**/**STALE** as it's default value keeping with the current implementation. Otherwise the `invalidationType` will be either `refetch` or `refresh`, defaulting to `refresh` during validation.
+I propose adding an additional column, _invalidation\_type_. This column will be non-nullable. Default value will be `refresh` (rather than a nullable `NULL` value).
 
-*OPTIONAL, BUT RECOMMENDED*: As part of this effort, the _Boy Scout Rule_ will be applied ("Always leave the campground cleaner than you found it."). The `agent`, `status`, `asset_type`, `object_type`, and `object_name` columns will be removed. `agent` and `status` are currently hardcoded to the value of 1. Similarly, `asset_type` is never a anything besides "file". `object_type` and `object_name` are not used at all. This would require a DB migration with Goose as well. If this were not implemented, no migration is necessary.
+```
+invalidation_type: refresh
+```
+
+The jobs table will then look more like:
+
+| id | agent | object\_type | object\_name | invalidation\_type | keyword | ttl | asset\_url | asset\_type | status | start\_time | entered\_time | job\_user | last\_updated | job\_deliveryservice |
+|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
+
+
+*OPTIONAL, BUT RECOMMENDED*: As part of this effort, the _Boy Scout Rule_ will be applied ("Always leave the campground cleaner than you found it."). The `agent`, `status`, `asset_type`, `keyword`, `object_type`, and `object_name` columns will be removed. `agent` and `status` are currently hardcoded to the value of 1 and don't appear to be accessed beyond the INSERT. Similarly, `asset_type` is always "file" and `keyword` is always "PURGE". `object_type` and `object_name` are not used at all. Also, if `status` is removed, the _job\_status_ table can also be removed. Likewise with the _job\_agent_ table if the `job_agent` column is removed. If this were the case, it will also impact the REST API as well since the `keyword` field will not longer be returned. Finally, for clarity, the _jobs_ table could be renamed to _invalidationjob_ since that is the only functionality provided. In the future, should we need to expand the concept of _jobs_ we would still be able to do so.
 
 > The removal of these columns will impact the `UserInvalidationJob` struct. Even though the only endpoint utilizing this struct (v1.1) is deprecated, it is still in use.
 
 ### ORT/T3C Impact
 
-The `regexrevalidatedotconfig.go` in _lib/tc-atscfg_ currently has a function called `filterJobs` that is responsible for parsing the _parameters_ information from the job. Right now, that is only parsing the **TTL**, however it would then also need to parse the optional, extra field of **invalidationType**. 
+The changes required to implement the final functionality have already been implemented within ORT/T3C. The generation of the invalidation regex jobs previously resembled:
+
+```
+# regex purgeExpiryTime
+refreshasset 1623861151
+```
+
+They now include an optional third field that is either **STALE** or **MISS**.
+
+```
+# regex purgeExpiryTime (optional)type
+refreshasset 1623861151
+refreshasset 1623861151 STALE
+refreshasset 1623861151 MISS
+```
+
+The `regexrevalidatedotconfig.go` in _lib/tc-atscfg_ currently has a function called `filterJobs` that is responsible for parsing the _parameters_ information from the job. Right now, that is parsing the **TTL**. However, this will need to account for the new specific TTL field as well as the new InvalidationType field.
 
 ```go
 type revalJob struct {
@@ -253,7 +312,7 @@ There will be no performance impact for Traffic Control.
 
 ### Security Impact
 
-The validation in Traffic Ops of the `invalidationType` field will be such that it can only be explicitly set to **refetch**. Any other value (missing, malformed, wrong data type, etc.) will result in either a 400 level error or a default to **refresh**. No other permissions are modified.
+The validation in Traffic Ops of the `invalidationType` field will be such that it can only be explicitly set to **refresh** or **refetch**. Any other value (missing, malformed, wrong data type, etc.) will result in either a 400 level error. No other permissions are modified.
 
 > Current permissions require `PrivLevelPortal` to create, update, delete. For read, only `PrivLevelReadOnly` is needed.
 
