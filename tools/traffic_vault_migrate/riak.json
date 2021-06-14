@@ -3,6 +3,6 @@
   "password": "riakAdmin",
   "host": "localhost",
   "port": "8087",
-  "insecure": false,
+  "insecure": true,
   "tlsVersion": "11"
 }

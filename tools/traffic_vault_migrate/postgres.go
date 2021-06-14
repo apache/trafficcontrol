@@ -25,10 +25,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	util "github.com/apache/trafficcontrol/lib/go-util"
 
@@ -59,11 +59,11 @@ type PGBackend struct {
 
 // String returns a high level overview of the backend and its keys
 func (pg *PGBackend) String() string {
-	data := fmt.Sprintf("PG server %v@%v:%v\n", pg.cfg.User, pg.cfg.Host, pg.cfg.Port)
-	data += fmt.Sprintf("\tSSL Keys: %v\n", len(pg.sslKey.Records))
-	data += fmt.Sprintf("\tDNSSec Keys: %v\n", len(pg.dnssec.Records))
-	data += fmt.Sprintf("\tURI Keys: %v\n", len(pg.uri.Records))
-	data += fmt.Sprintf("\tURL Keys: %v\n", len(pg.url.Records))
+	data := fmt.Sprintf("PG server %s@%s:%s\n", pg.cfg.User, pg.cfg.Host, pg.cfg.Port)
+	data += fmt.Sprintf("\tSSL Keys: %d\n", len(pg.sslKey.Records))
+	data += fmt.Sprintf("\tDNSSec Keys: %d\n", len(pg.dnssec.Records))
+	data += fmt.Sprintf("\tURI Keys: %d\n", len(pg.uri.Records))
+	data += fmt.Sprintf("\tURL Keys: %d\n", len(pg.url.Records))
 	return data
 }
 
@@ -72,15 +72,14 @@ func (pg *PGBackend) Name() string {
 	return "PG"
 }
 
-// ReadConfig takes in a filename and will read it into the backends config
-func (pg *PGBackend) ReadConfig(s string) error {
-	err := UnmarshalConfig(s, &pg.cfg)
-	if err != nil {
+// ReadConfigFile takes in a filename and will read it into the backends config
+func (pg *PGBackend) ReadConfigFile(configFile string) error {
+	var err error
+	if err = UnmarshalConfig(configFile, &pg.cfg); err != nil {
 		return err
 	}
 
-	pg.cfg.AESKey, err = base64.StdEncoding.DecodeString(pg.cfg.Key)
-	if err != nil {
+	if pg.cfg.AESKey, err = base64.StdEncoding.DecodeString(pg.cfg.Key); err != nil {
 		return fmt.Errorf("unable to decode PG AESKey: %w", err)
 	}
 	return nil
@@ -122,20 +121,20 @@ func (pg *PGBackend) Start() error {
 
 // ValidateKey validates that the keys are valid (in most cases, certain fields are not null)
 func (pg *PGBackend) ValidateKey() []string {
-	var errors []string
+	var errs []string
 	if errs := pg.sslKey.validate(); errs != nil {
-		errors = append(errors, errs...)
+		errs = append(errs, errs...)
 	}
 	if errs := pg.dnssec.validate(); errs != nil {
-		errors = append(errors, errs...)
+		errs = append(errs, errs...)
 	}
 	if errs := pg.uri.validate(); errs != nil {
-		errors = append(errors, errs...)
+		errs = append(errs, errs...)
 	}
 	if errs := pg.url.validate(); errs != nil {
-		errors = append(errors, errs...)
+		errs = append(errs, errs...)
 	}
-	return errors
+	return errs
 }
 
 // Close terminates the connection to the backend DB
@@ -241,7 +240,7 @@ type pgDNSSecTable struct {
 func (tbl *pgDNSSecTable) gatherKeys(db *sql.DB) error {
 	sz, err := getSize(db, "dnssec")
 	if err != nil {
-		log.Println("PGDNSSec gatherKeys: unable to determine size of dnssec table")
+		log.Errorln("PGDNSSec gatherKeys: unable to determine size of dnssec table")
 	}
 	tbl.Records = make([]pgDNSSecRecord, sz)
 
@@ -249,14 +248,13 @@ func (tbl *pgDNSSecTable) gatherKeys(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("PGDNSSec gatherKeys: unable to query: %w", err)
 	}
-	defer rows.Close()
+	defer log.Close(rows, "closing dnssec query")
 	i := 0
 	for rows.Next() {
 		if i > len(tbl.Records)-1 {
-			return fmt.Errorf("PGDNSSec gatherKeys got more results than expected %v", len(tbl.Records))
+			return fmt.Errorf("PGDNSSec gatherKeys got more results than expected dv", len(tbl.Records))
 		}
-		err := rows.Scan(&tbl.Records[i].CDN, &tbl.Records[i].DataEncrypted)
-		if err != nil {
+		if err := rows.Scan(&tbl.Records[i].CDN, &tbl.Records[i].DataEncrypted); err != nil {
 			return fmt.Errorf("PGDNSSec gatherKeys unable to scan row: %w", err)
 		}
 		i += 1
@@ -265,8 +263,7 @@ func (tbl *pgDNSSecTable) gatherKeys(db *sql.DB) error {
 }
 func (tbl *pgDNSSecTable) decrypt(aesKey []byte) error {
 	for i, _ := range tbl.Records {
-		err := decryptInto(aesKey, tbl.Records[i].DataEncrypted, &tbl.Records[i].Key)
-		if err != nil {
+		if err := decryptInto(aesKey, tbl.Records[i].DataEncrypted, &tbl.Records[i].Key); err != nil {
 			return fmt.Errorf("unable to decrypt into keys: %w", err)
 		}
 	}
@@ -314,7 +311,7 @@ func (tbl *pgDNSSecTable) fromGeneric(keys []DNSSecKey) {
 func (tbl *pgDNSSecTable) validate() []string {
 	for i, record := range tbl.Records {
 		if record.DataEncrypted == nil && len(record.Key) > 0 {
-			return []string{fmt.Sprintf("DNSSEC Key %v: DataEncrypted is blank!", i)}
+			return []string{fmt.Sprintf("DNSSEC Key %d: DataEncrypted is blank!", i)}
 		}
 	}
 	return nil
@@ -338,6 +335,7 @@ type pgSSLKeyRecord struct {
 	// These records are stored on the table but are duplicated
 	DeliveryService string
 	CDN             string
+	Version         util.JSONIntStr
 }
 type pgSSLKeyTable struct {
 	Records []pgSSLKeyRecord
@@ -345,44 +343,47 @@ type pgSSLKeyTable struct {
 
 func (tbl *pgSSLKeyTable) insertKeys(db *sql.DB) error {
 	queryBase := "INSERT INTO sslkey (deliveryservice, data, cdn, version) VALUES "
-	duplicateKeys := 2
 	stride := 4
-	queryArgs := make([]interface{}, len(tbl.Records)*stride*duplicateKeys)
+	queryArgs := make([]interface{}, len(tbl.Records)*stride)
 	for i, record := range tbl.Records {
-		j := i * duplicateKeys * stride
+		j := i * stride
 
 		queryArgs[j] = record.DeliveryService
 		queryArgs[j+1] = record.DataEncrypted
 		queryArgs[j+2] = record.CDN
-		queryArgs[j+3] = record.Keys.Version.String()
-
-		queryArgs[j+4] = record.DeliveryService
-		queryArgs[j+5] = record.DataEncrypted
-		queryArgs[j+6] = record.CDN
-		queryArgs[j+7] = "latest"
+		queryArgs[j+3] = record.Version.String()
 	}
 	return insertIntoTable(db, queryBase, 4, queryArgs)
 }
 func (tbl *pgSSLKeyTable) gatherKeys(db *sql.DB) error {
-	sz, err := getSize(db, "sslkey WHERE version='latest'")
+	sz, err := getSize(db, "sslkey")
 	if err != nil {
 		return fmt.Errorf("PGSSLKey gatherKeys unable to determine size of sslkey table: %w", err)
 	}
 	tbl.Records = make([]pgSSLKeyRecord, sz)
 
-	rows, err := db.Query("SELECT data, deliveryservice, cdn from sslkey WHERE version = 'latest'")
+	rows, err := db.Query("SELECT data, deliveryservice, cdn, version from sslkey")
 	if err != nil {
 		return fmt.Errorf("PGSSLKey gatherKeys unable to query: %w", err)
 	}
-	defer rows.Close()
+	defer log.Close(rows, "closing sslkey query")
 	i := 0
+	var version string
 	for rows.Next() {
 		if i > len(tbl.Records)-1 {
 			return errors.New("PGSSLKey gatherKeys: got more results than expected")
 		}
-		err := rows.Scan(&tbl.Records[i].DataEncrypted, &tbl.Records[i].DeliveryService, &tbl.Records[i].CDN)
-		if err != nil {
+		if err := rows.Scan(&tbl.Records[i].DataEncrypted, &tbl.Records[i].DeliveryService, &tbl.Records[i].CDN, &version); err != nil {
 			return fmt.Errorf("PGSSLKey gatherKeys unable to scan row: %w", err)
+		}
+		if version == "latest" {
+			tbl.Records[i].Version = tbl.Records[i].Keys.Version
+		} else {
+			ver, err := strconv.ParseInt(version, 10, 64)
+			if err != nil {
+				return fmt.Errorf("PGSSLKey gatherKeys unable to parse version %s\n", version)
+			}
+			tbl.Records[i].Version = util.JSONIntStr(ver)
 		}
 		i += 1
 	}
@@ -390,8 +391,7 @@ func (tbl *pgSSLKeyTable) gatherKeys(db *sql.DB) error {
 }
 func (tbl *pgSSLKeyTable) decrypt(aesKey []byte) error {
 	for i, dns := range tbl.Records {
-		err := decryptInto(aesKey, dns.DataEncrypted, &tbl.Records[i].Keys)
-		if err != nil {
+		if err := decryptInto(aesKey, dns.DataEncrypted, &tbl.Records[i].Keys); err != nil {
 			return fmt.Errorf("unable to decrypt into keys: %w", err)
 		}
 	}
@@ -417,6 +417,7 @@ func (tbl *pgSSLKeyTable) toGeneric() []SSLKey {
 	for i, record := range tbl.Records {
 		keys[i] = SSLKey{
 			DeliveryServiceSSLKeys: record.Keys,
+			Version:                record.Version,
 		}
 	}
 	return keys
@@ -432,29 +433,30 @@ func (tbl *pgSSLKeyTable) fromGeneric(keys []SSLKey) {
 			},
 			DeliveryService: key.DeliveryService,
 			CDN:             key.CDN,
+			Version:         key.Version,
 		}
 	}
 }
 func (tbl *pgSSLKeyTable) validate() []string {
 	defaultKey := tc.DeliveryServiceSSLKeys{}
-	var errors []string
-	fmtStr := "SSL Key %v: %v"
+	var errs []string
+	fmtStr := "SSL Key %d: %s"
 	for i, record := range tbl.Records {
 		if record.Keys == defaultKey {
-			errors = append(errors, fmt.Sprintf(fmtStr, i, "DS SSL Keys are default!"))
+			errs = append(errs, fmt.Sprintf(fmtStr, i, "DS SSL Keys are default!"))
 		} else if record.Keys.Key == "" {
-			errors = append(errors, fmt.Sprintf(fmtStr, i, "Key is blank!"))
+			errs = append(errs, fmt.Sprintf(fmtStr, i, "Key is blank!"))
 		} else if record.Keys.CDN == "" {
-			errors = append(errors, fmt.Sprintf(fmtStr, i, "CDN is blank!"))
+			errs = append(errs, fmt.Sprintf(fmtStr, i, "CDN is blank!"))
 		} else if record.Keys.DeliveryService == "" {
-			errors = append(errors, fmt.Sprintf(fmtStr, i, "DS is blank!"))
+			errs = append(errs, fmt.Sprintf(fmtStr, i, "DS is blank!"))
 		} else if record.DataEncrypted == nil {
-			errors = append(errors, fmt.Sprintf(fmtStr, i, "DataEncrypted is blank!"))
-		} else if record.Keys.Version.String() == "" {
-			errors = append(errors, fmt.Sprintf(fmtStr, i, "Version is blank!"))
+			errs = append(errs, fmt.Sprintf(fmtStr, i, "DataEncrypted is blank!"))
+		} else if record.Version.String() == "" {
+			errs = append(errs, fmt.Sprintf(fmtStr, i, "Version is blank!"))
 		}
 	}
-	return errors
+	return errs
 }
 
 type pgURLSigKeyRecord struct {
@@ -480,7 +482,7 @@ func (tbl *pgURLSigKeyTable) insertKeys(db *sql.DB) error {
 func (tbl *pgURLSigKeyTable) gatherKeys(db *sql.DB) error {
 	sz, err := getSize(db, "url_sig_key")
 	if err != nil {
-		log.Println("PGURLSigKey gatherKeys: unable to determine url_sig_key table size")
+		log.Errorln("PGURLSigKey gatherKeys: unable to determine url_sig_key table size")
 	}
 	tbl.Records = make([]pgURLSigKeyRecord, sz)
 
@@ -488,14 +490,13 @@ func (tbl *pgURLSigKeyTable) gatherKeys(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("PGURLSigKey gatherKeys error creating query: %w", err)
 	}
-	defer rows.Close()
+	defer log.Close(rows, "closing url_sig_key query")
 	i := 0
 	for rows.Next() {
 		if i > len(tbl.Records)-1 {
-			return fmt.Errorf("PGURLSigKey gatherKeys: got more results than expected %v", len(tbl.Records))
+			return fmt.Errorf("PGURLSigKey gatherKeys: got more results than expected %d", len(tbl.Records))
 		}
-		err := rows.Scan(&tbl.Records[i].DeliveryService, &tbl.Records[i].DataEncrypted)
-		if err != nil {
+		if err := rows.Scan(&tbl.Records[i].DeliveryService, &tbl.Records[i].DataEncrypted); err != nil {
 			return fmt.Errorf("PGURLSigKey gatherKeys: unable to scan row: %w", err)
 		}
 		i += 1
@@ -504,8 +505,7 @@ func (tbl *pgURLSigKeyTable) gatherKeys(db *sql.DB) error {
 }
 func (tbl *pgURLSigKeyTable) decrypt(aesKey []byte) error {
 	for i, sig := range tbl.Records {
-		err := decryptInto(aesKey, sig.DataEncrypted, &tbl.Records[i].Keys)
-		if err != nil {
+		if err := decryptInto(aesKey, sig.DataEncrypted, &tbl.Records[i].Keys); err != nil {
 			return fmt.Errorf("unable to decrypt into keys: %w", err)
 		}
 	}
@@ -553,7 +553,7 @@ func (tbl *pgURLSigKeyTable) fromGeneric(keys []URLSigKey) {
 func (tbl *pgURLSigKeyTable) validate() []string {
 	for i, record := range tbl.Records {
 		if record.DataEncrypted == nil && len(record.Keys) > 0 {
-			return []string{fmt.Sprintf("URl Sig Key %v: DataEncrypted is blank!", i)}
+			return []string{fmt.Sprintf("URL Sig Key %d: DataEncrypted is blank!", i)}
 		}
 	}
 	return nil
@@ -582,7 +582,7 @@ func (tbl *pgURISignKeyTable) insertKeys(db *sql.DB) error {
 func (tbl *pgURISignKeyTable) gatherKeys(db *sql.DB) error {
 	sz, err := getSize(db, "uri_signing_key")
 	if err != nil {
-		log.Println("PGURISignKey gatherKeys: unable to determine size of uri_signing_key table")
+		log.Errorln("PGURISignKey gatherKeys: unable to determine size of uri_signing_key table")
 	}
 	tbl.Records = make([]pgURISignKeyRecord, sz)
 
@@ -590,14 +590,13 @@ func (tbl *pgURISignKeyTable) gatherKeys(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("PGURISignKey gatherKeys error while query: %w", err)
 	}
-	defer rows.Close()
+	defer log.Close(rows, "closing uri_signing_key table")
 	i := 0
 	for rows.Next() {
 		if i > len(tbl.Records)-1 {
-			return fmt.Errorf("PGURISignKey gatherKeys: got more results than expected %v", len(tbl.Records))
+			return fmt.Errorf("PGURISignKey gatherKeys: got more results than expected %d", len(tbl.Records))
 		}
-		err := rows.Scan(&tbl.Records[i].DeliveryService, &tbl.Records[i].DataEncrypted)
-		if err != nil {
+		if err := rows.Scan(&tbl.Records[i].DeliveryService, &tbl.Records[i].DataEncrypted); err != nil {
 			return fmt.Errorf("PGURISignKey gatherKeys: unable to scan row: %w", err)
 		}
 		i += 1
@@ -606,8 +605,7 @@ func (tbl *pgURISignKeyTable) gatherKeys(db *sql.DB) error {
 }
 func (tbl *pgURISignKeyTable) decrypt(aesKey []byte) error {
 	for i, sign := range tbl.Records {
-		err := decryptInto(aesKey, sign.DataEncrypted, &tbl.Records[i].Keys)
-		if err != nil {
+		if err := decryptInto(aesKey, sign.DataEncrypted, &tbl.Records[i].Keys); err != nil {
 			return fmt.Errorf("unable to decrypt into keys: %w", err)
 		}
 	}
@@ -656,7 +654,7 @@ func (tbl *pgURISignKeyTable) fromGeneric(keys []URISignKey) {
 func (tbl *pgURISignKeyTable) validate() []string {
 	for i, record := range tbl.Records {
 		if record.DataEncrypted == nil && len(record.Keys) > 0 {
-			return []string{fmt.Sprintf("URI Sign Key %v: DataEncrypted is blank!", i)}
+			return []string{fmt.Sprintf("URI Sign Key %d: DataEncrypted is blank!", i)}
 		}
 	}
 	return nil
@@ -671,9 +669,8 @@ func getSize(db *sql.DB, table string) (int64, error) {
 	if !rows.Next() {
 		return 0, errors.New("no results returned for: " + table)
 	}
-	err = rows.Scan(&numRows)
-	if err != nil {
-		return 0, fmt.Errorf("error reading number of results for %v: %w", table, err)
+	if err = rows.Scan(&numRows); err != nil {
+		return 0, fmt.Errorf("error reading number of results for %s: %w", table, err)
 	}
 	return numRows, nil
 }
@@ -696,8 +693,10 @@ func decryptInto(aesKey []byte, encData []byte, value interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(data, &value)
-	if err != nil {
+	if len(data) == 0 {
+		return errors.New("decrypted data is empty")
+	}
+	if err = json.Unmarshal(data, &value); err != nil {
 		return err
 	}
 	return nil
@@ -730,14 +729,14 @@ func insertIntoTable(db *sql.DB, queryBase string, stride int, queryArgs []inter
 	res, err := tx.Exec(query, queryArgs...)
 	if err != nil {
 		if err2 := tx.Rollback(); err2 != nil {
-			return fmt.Errorf("encountered error rolling back %v while handling error %v", err2, err)
+			return fmt.Errorf("encountered error rolling back %w while handling error %v", err2, err)
 		}
-		return fmt.Errorf("error executing query '%v': %w", query, err)
+		return fmt.Errorf("error executing query '%s': %w", query, err)
 	}
 	if rows, err := res.RowsAffected(); err != nil {
 		return fmt.Errorf("error getting rows affected: %w", err)
 	} else if rows != int64(len(queryValueStr)) {
-		return fmt.Errorf("wanted to insert %v rows, but inserted %v\n", len(queryValueStr), rows)
+		return fmt.Errorf("wanted to insert %d rows, but inserted %d\n", len(queryValueStr), rows)
 	}
 	return tx.Commit()
 }

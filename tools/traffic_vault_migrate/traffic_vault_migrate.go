@@ -24,7 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
+	stdlog "log"
 	"os"
 	"reflect"
 	"sort"
@@ -32,19 +32,29 @@ import (
 
 	"github.com/pborman/getopt/v2"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 var (
-	fromType  string
-	toType    string
-	fromCfg   string
-	toCfg     string
-	dry       bool
-	compare   bool
-	noConfirm bool
-	dump      bool
+	fromType    string
+	toType      string
+	fromCfg     string
+	toCfg       string
+	cfgLocation string
+	dry         bool
+	compare     bool
+	noConfirm   bool
+	dump        bool
 
+	cfg config = config{
+		LogLocationError:   log.LogLocationStderr,
+		LogLocationWarning: log.LogLocationStdout,
+		LogLocationInfo:    log.LogLocationStdout,
+		LogLocationDebug:   log.LogLocationNull,
+		LogLocationEvent:   log.LogLocationNull,
+	}
 	riakBE RiakBackend = RiakBackend{}
 	pgBE   PGBackend   = PGBackend{}
 )
@@ -52,51 +62,57 @@ var (
 func init() {
 	fromTypePtr := getopt.StringLong("fromType", 't', riakBE.Name(), fmt.Sprintf("From server types (%v)", strings.Join(supportedTypes(), "|")))
 	if fromTypePtr == nil {
-		log.Fatal("unable to load fromType")
+		stdlog.Fatal("unable to load fromType")
 	}
 	fromType = *fromTypePtr
 
 	toTypePtr := getopt.StringLong("toType", 'o', pgBE.Name(), fmt.Sprintf("From server types (%v)", strings.Join(supportedTypes(), "|")))
 	if toTypePtr == nil {
-		log.Fatal("unable to load toType")
+		stdlog.Fatal("unable to load toType")
 	}
 	toType = *toTypePtr
 
 	toCfgPtr := getopt.StringLong("toCfg", 'g', "pg.json", "To server config file")
 	if toCfgPtr == nil {
-		log.Fatal("unable to load toCfg")
+		stdlog.Fatal("unable to load toCfg")
 	}
 	toCfg = *toCfgPtr
 
 	fromCfgPtr := getopt.StringLong("fromCfg", 'f', "riak.json", "From server config file")
 	if fromCfgPtr == nil {
-		log.Fatal("unable to load fromCfg")
+		stdlog.Fatal("unable to load fromCfg")
 	}
 	fromCfg = *fromCfgPtr
 
 	dryPtr := getopt.BoolLong("dry", 'r', "Do not perform writes")
 	if dryPtr == nil {
-		log.Fatal("unable to load dry")
+		stdlog.Fatal("unable to load dry")
 	}
 	dry = *dryPtr
 
 	comparePtr := getopt.BoolLong("compare", 'c', "Compare to and from server records")
 	if comparePtr == nil {
-		log.Fatal("unable to load compare")
+		stdlog.Fatal("unable to load compare")
 	}
 	compare = *comparePtr
 
 	noConfirmPtr := getopt.BoolLong("noConfirm", 'm', "Requires confirmation before inserting records")
 	if noConfirmPtr == nil {
-		log.Fatal("unable to load noConfirm")
+		stdlog.Fatal("unable to load noConfirm")
 	}
 	noConfirm = *noConfirmPtr
 
 	dumpPtr := getopt.BoolLong("dump", 'd', "Write keys (from 'from' server) to disk")
 	if dumpPtr == nil {
-		log.Fatal("unable to load dump")
+		stdlog.Fatal("unable to load dump")
 	}
 	dump = *dumpPtr
+
+	cfgLocationPtr := getopt.StringLong("cfg", 'l', "Log configuration")
+	if cfgLocationPtr == nil {
+		stdlog.Fatal("unable to load cfg")
+	}
+	cfgLocation = *cfgLocationPtr
 }
 
 // supportBackends returns the backends available in this tool
@@ -108,16 +124,27 @@ func supportedBackends() []TVBackend {
 
 func main() {
 	getopt.ParseV2()
+
+	initConfig()
+
 	var fromSrv TVBackend
 	var toSrv TVBackend
+
+	toType = "Riak"
+	fromType = "PG"
+	fromCfg = "pg.json"
+	toCfg = "riak.json"
+	compare = true
 
 	toSrvUsed := !dump && !dry
 
 	if !validateType(fromType) {
-		log.Fatal("Unknown fromType " + fromType)
+		log.Errorln("Unknown fromType " + fromType)
+		os.Exit(1)
 	}
 	if toSrvUsed && !validateType(toType) {
-		log.Fatal("Unknown toType " + toType)
+		log.Errorln("Unknown toType " + toType)
+		os.Exit(1)
 	}
 
 	fromSrv = getBackendFromType(fromType)
@@ -125,110 +152,124 @@ func main() {
 		toSrv = getBackendFromType(toType)
 	}
 
-	log.Println("Reading configs...")
-	if err := fromSrv.ReadConfig(fromCfg); err != nil {
-		log.Fatalf("Unable to read fromSrv cfg: %v", err)
+	log.Infoln("Reading configs...")
+	if err := fromSrv.ReadConfigFile(fromCfg); err != nil {
+		log.Errorf("Unable to read fromSrv cfg: %v", err)
+		os.Exit(1)
 	}
 
 	if toSrvUsed {
-		if err := toSrv.ReadConfig(toCfg); err != nil {
-			log.Fatalf("Unable to read toSrv cfg: %v", err)
+		if err := toSrv.ReadConfigFile(toCfg); err != nil {
+			log.Errorf("Unable to read toSrv cfg: %v", err)
+			os.Exit(1)
 		}
 	}
 
-	log.Println("Starting server connections...")
+	log.Infoln("Starting server connections...")
 	if err := fromSrv.Start(); err != nil {
-		log.Fatalf("issue starting fromSrv: %v", err)
+		log.Errorf("issue starting fromSrv: %v", err)
+		os.Exit(1)
 	}
-	defer func() {
-		fromSrv.Close()
-	}()
+	defer log.Close(fromSrv, "closing fromSrv")
 	if toSrvUsed {
 		if err := toSrv.Start(); err != nil {
-			log.Fatalf("issue starting toSrv: %v", err)
+			log.Errorf("issue starting toSrv: %v", err)
+			os.Exit(1)
 		}
-		defer func() {
-			toSrv.Close()
-		}()
+		defer log.Close(toSrv, "closing toSrv")
 	}
 
-	log.Println("Pinging servers...")
+	log.Infoln("Pinging servers...")
 	if err := fromSrv.Ping(); err != nil {
-		log.Fatalf("Unable to ping fromSrv: %v", err)
+		log.Errorf("Unable to ping fromSrv: %v", err)
+		os.Exit(1)
 	}
 	if toSrvUsed {
 		if err := toSrv.Ping(); err != nil {
-			log.Fatalf("Unable to ping toSrv: %v", err)
+			log.Errorf("Unable to ping toSrv: %v", err)
+			os.Exit(1)
 		}
 	}
 
-	log.Printf("Fetching data from %v...\n", fromSrv.Name())
+	log.Infof("Fetching data from %v...\n", fromSrv.Name())
 	if err := fromSrv.Fetch(); err != nil {
-		log.Fatalf("Unable to fetch fromSrv data: %v", err)
+		log.Errorf("Unable to fetch fromSrv data: %v", err)
+		os.Exit(1)
 	}
 
 	fromSecret, err := GetKeys(fromSrv)
 	if err != nil {
-		log.Fatal(err)
+		log.Errorln(err)
+		os.Exit(1)
 	}
 
 	if err := Validate(fromSrv); err != nil {
-		log.Fatal(err)
+		log.Errorln(err)
+		os.Exit(1)
 	}
 
 	if dump {
-		log.Printf("Dumping data from %v...\n", fromSrv.Name())
+		log.Infof("Dumping data from %v...\n", fromSrv.Name())
 		fromSecret.dump("dump")
 		return
 	}
 
 	if compare {
-		log.Printf("Fetching data from %v...\n", toSrv.Name())
+		log.Infof("Fetching data from %v...\n", toSrv.Name())
 		if err := toSrv.Fetch(); err != nil {
-			log.Fatalf("Unable to fetch toSrv data: %v\n", err)
+			log.Errorf("Unable to fetch toSrv data: %v\n", err)
+			os.Exit(1)
 		}
 
 		toSecret, err := GetKeys(toSrv)
 		if err != nil {
-			log.Fatal(err)
+			log.Errorln(err)
+			os.Exit(1)
 		}
-		log.Println("Validating " + toSrv.Name())
+		log.Infoln("Validating " + toSrv.Name())
 		if err := toSrv.ValidateKey(); err != nil && len(err) > 0 {
-			log.Fatal(strings.Join(err, "\n"))
+			log.Errorln(strings.Join(err, "\n"))
+			os.Exit(1)
 		}
 
 		fromSecret.sort()
 		toSecret.sort()
 
-		log.Println(fromSrv.String())
-		log.Println(toSrv.String())
+		log.Infoln(fromSrv.String())
+		log.Infoln(toSrv.String())
 
 		if !reflect.DeepEqual(fromSecret.sslkeys, toSecret.sslkeys) {
-			log.Fatal("from sslkeys and to sslkeys don't match")
+			log.Errorln("from sslkeys and to sslkeys don't match")
+			os.Exit(1)
 		}
 		if !reflect.DeepEqual(fromSecret.dnssecKeys, toSecret.dnssecKeys) {
-			log.Fatal("from dnssec and to dnssec don't match")
+			log.Errorln("from dnssec and to dnssec don't match")
+			os.Exit(1)
 		}
 		if !reflect.DeepEqual(fromSecret.uriKeys, toSecret.uriKeys) {
-			log.Fatal("from uri and to uri don't match")
+			log.Errorln("from uri and to uri don't match")
+			os.Exit(1)
 		}
 		if !reflect.DeepEqual(fromSecret.urlKeys, toSecret.urlKeys) {
-			log.Fatal("from url and to url don't match")
+			log.Errorln("from url and to url don't match")
+			os.Exit(1)
 		}
-		log.Println("Both data sources have the same keys")
+		log.Infoln("Both data sources have the same keys")
 		return
 	}
 
-	log.Printf("Setting %v keys...\n", toSrv.Name())
+	log.Infof("Setting %v keys...\n", toSrv.Name())
 	if err := SetKeys(toSrv, fromSecret); err != nil {
-		log.Fatal(err)
+		log.Errorln(err)
+		os.Exit(1)
 	}
 
 	if err := Validate(toSrv); err != nil {
-		log.Fatal(err)
+		log.Errorln(err)
+		os.Exit(1)
 	}
 
-	log.Println(fromSrv.String())
+	log.Infoln(fromSrv.String())
 
 	if dry {
 		return
@@ -239,7 +280,8 @@ func main() {
 		for {
 			fmt.Print("Confirm data insertion (y/n): ")
 			if _, err := fmt.Scanln(&ans); err != nil {
-				log.Fatal("unable to get user input")
+				log.Errorln("unable to get user input")
+				os.Exit(1)
 			}
 
 			if ans == "y" {
@@ -249,9 +291,10 @@ func main() {
 			}
 		}
 	}
-	log.Printf("Inserting data into %v...\n", toSrv.Name())
+	log.Infof("Inserting data into %v...\n", toSrv.Name())
 	if err := toSrv.Insert(); err != nil {
-		log.Fatal(err)
+		log.Errorln(err)
+		os.Exit(1)
 	}
 }
 
@@ -325,8 +368,8 @@ type TVBackend interface {
 	ValidateKey() []string
 	// Name returns the name for this backend
 	Name() string
-	// ReadConfig takes in a filename and will read it into the backends config
-	ReadConfig(string) error
+	// ReadConfigFile takes in a filename and will read it into the backends config
+	ReadConfigFile(string) error
 	// String returns a high level overview of the backend and its keys
 	String() string
 
@@ -367,7 +410,8 @@ type Secrets struct {
 func (s *Secrets) sort() {
 	sort.Slice(s.sslkeys[:], func(a, b int) bool {
 		return s.sslkeys[a].CDN < s.sslkeys[b].CDN ||
-			s.sslkeys[a].CDN == s.sslkeys[b].CDN && s.sslkeys[a].DeliveryService < s.sslkeys[b].DeliveryService
+			s.sslkeys[a].CDN == s.sslkeys[b].CDN && s.sslkeys[a].DeliveryService < s.sslkeys[b].DeliveryService ||
+			s.sslkeys[a].CDN == s.sslkeys[b].CDN && s.sslkeys[a].DeliveryService == s.sslkeys[b].DeliveryService && s.sslkeys[a].Version < s.sslkeys[b].Version
 	})
 	sort.Slice(s.dnssecKeys[:], func(a, b int) bool {
 		return s.dnssecKeys[a].CDN < s.dnssecKeys[b].CDN
@@ -382,26 +426,32 @@ func (s *Secrets) sort() {
 func (s *Secrets) dump(directory string) {
 	if err := os.Mkdir(directory, 0750); err != nil {
 		if !os.IsExist(err) {
-			log.Fatal(err)
+			log.Errorln(err)
+			os.Exit(1)
 		}
 	}
 	if err := writeKeys(directory+"/sslkeys.json", &s.sslkeys); err != nil {
-		log.Fatal(err)
+		log.Errorln(err)
+		os.Exit(1)
 	}
 	if err := writeKeys(directory+"/dnsseckeys.json", &s.dnssecKeys); err != nil {
-		log.Fatal(err)
+		log.Errorln(err)
+		os.Exit(1)
 	}
 	if err := writeKeys(directory+"/urlkeys.json", &s.urlKeys); err != nil {
-		log.Fatal(err)
+		log.Errorln(err)
+		os.Exit(1)
 	}
 	if err := writeKeys(directory+"/urikeys.json", &s.uriKeys); err != nil {
-		log.Fatal(err)
+		log.Errorln(err)
+		os.Exit(1)
 	}
 }
 
 // SSLKey is the common representation of a SSL Key
 type SSLKey struct {
 	tc.DeliveryServiceSSLKeys
+	Version util.JSONIntStr
 }
 
 // DNSSecKey is the common representation of a DNSSec Key
@@ -422,12 +472,26 @@ type URLSigKey struct {
 	tc.URLSigKeys
 }
 
+type config struct {
+	LogLocationError   string `json:"error_log"`
+	LogLocationWarning string `json:"warning_log"`
+	LogLocationInfo    string `json:"info_log"`
+	LogLocationDebug   string `json:"debug_log"`
+	LogLocationEvent   string `json:"event_log"`
+}
+
+func (c config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
+func (c config) WarningLog() log.LogLocation { return log.LogLocation(c.LogLocationInfo) }
+func (c config) InfoLog() log.LogLocation    { return log.LogLocation(c.LogLocationInfo) }
+func (c config) DebugLog() log.LogLocation   { return log.LogLocation(c.LogLocationDebug) }
+func (c config) EventLog() log.LogLocation   { return log.LogLocation(c.LogLocationEvent) }
+
 func writeKeys(filename string, data interface{}) error {
 	bytes, err := json.Marshal(&data)
 	if err != nil {
 		return err
 	}
-	if err = ioutil.WriteFile(filename, bytes, 0640); err != nil {
+	if err = ioutil.WriteFile(filename, bytes, 0600); err != nil {
 		return err
 	}
 
@@ -455,4 +519,29 @@ func getBackendFromType(typ string) TVBackend {
 		}
 	}
 	return nil
+}
+func initConfig() {
+	if cfgLocation != "" {
+		if _, err := os.Stat(cfgLocation); err != nil {
+			if os.IsNotExist(err) {
+				stdlog.Fatal("file" + cfgLocation + " does not exist")
+			}
+		}
+		data, err := ioutil.ReadFile(cfgLocation)
+		if err != nil {
+			stdlog.Fatal(err)
+		}
+
+		var newCfg config
+		err = json.Unmarshal(data, &newCfg)
+		if err != nil {
+			stdlog.Fatal(err)
+		}
+		cfg = newCfg
+	}
+
+	err := log.InitCfg(cfg)
+	if err != nil {
+		stdlog.Fatal(err)
+	}
 }
