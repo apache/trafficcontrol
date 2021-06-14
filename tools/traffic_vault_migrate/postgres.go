@@ -252,7 +252,7 @@ func (tbl *pgDNSSecTable) gatherKeys(db *sql.DB) error {
 	i := 0
 	for rows.Next() {
 		if i > len(tbl.Records)-1 {
-			return fmt.Errorf("PGDNSSec gatherKeys got more results than expected dv", len(tbl.Records))
+			return fmt.Errorf("PGDNSSec gatherKeys got more results than expected %d", len(tbl.Records))
 		}
 		if err := rows.Scan(&tbl.Records[i].CDN, &tbl.Records[i].DataEncrypted); err != nil {
 			return fmt.Errorf("PGDNSSec gatherKeys unable to scan row: %w", err)
