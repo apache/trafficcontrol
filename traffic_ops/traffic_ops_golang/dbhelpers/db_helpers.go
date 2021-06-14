@@ -559,7 +559,7 @@ func GetCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
 	return tc.CDNName(name), true, nil
 }
 
-// GetCDNNameFromServerID gets the CDN name for the server with the given ID
+// GetCDNNameFromServerID gets the CDN name for the server with the given ID.
 func GetCDNNameFromServerID(tx *sql.Tx, serverId int64) (tc.CDNName, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn_id FROM server WHERE id=$1)`, serverId).Scan(&name); err != nil {
