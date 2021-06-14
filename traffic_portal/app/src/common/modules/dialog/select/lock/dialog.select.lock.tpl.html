@@ -28,7 +28,7 @@ under the License.
                         <small class="input-error" ng-show="hasPropertyError(lockForm.cdn, 'required')">Required</small>
                     </label>
                     <select id="cdn" name="cdn" class="form-control" ng-model="lock.cdn" ng-options="cdn.name as cdn.name for cdn in cdns" required>
-                        <option value="">Select...</option>
+                        <option disabled hidden selected value="">Select...</option>
                     </select>
                 </div>
             </div>
@@ -48,13 +48,13 @@ under the License.
                 <div class="col-sm-12 col-md-12">
                     <div class="form-group">
                         <p>Type *</p>
-                        <input id="soft" type="radio" data-ng-model="lock.soft" data-ng-value="true">
-                        <label class="has-tooltip" for="soft">&nbsp;Soft<div class="helptooltip">
+                        <input id="soft" name="lockType" type="radio" data-ng-model="lock.soft" data-ng-value="true">
+                        <label class="has-tooltip" for="soft">Soft<div class="helptooltip">
                             <div class="helptext">A soft lock will prevent others from queueing server updates or snapshotting the locked CDN.</div>
                         </div>
                         </label><br>
-                        <input id="hard" type="radio" data-ng-model="lock.soft" data-ng-value="false">
-                        <label class="has-tooltip" for="soft">&nbsp;Hard<div class="helptooltip">
+                        <input id="hard" name="lockType" type="radio" data-ng-model="lock.soft" data-ng-value="false">
+                        <label class="has-tooltip" for="soft">Hard<div class="helptooltip">
                             <div class="helptext">A hard lock will prevent others from queueing server updates or snapshotting the locked CDN. It will also block others from making changes that would change the state of the locked CDN.</div>
                         </div>
                         </label>
@@ -64,6 +64,6 @@ under the License.
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn action-btn" ng-click="cancel()">Cancel</button>
-    <button class="btn btn-link" ng-disabled="lockForm.$invalid" ng-click="select()">Submit</button>
+    <button type="button" class="btn action-btn" ng-click="cancel()">Cancel</button>
+    <button type="button" class="btn btn-link" ng-disabled="lockForm.$invalid" ng-click="select()">Submit</button>
 </div>

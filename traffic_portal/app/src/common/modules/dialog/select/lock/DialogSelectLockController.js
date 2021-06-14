@@ -22,7 +22,7 @@ var DialogSelectLockController = function(cdns, $scope, $uibModalInstance) {
 	$scope.cdns = cdns.filter(
 		function (cdn) {
 			// you cannot apply a lock to the 'ALL' cdn
-			return cdn.name != 'ALL';
+			return cdn.name !== 'ALL';
 		}
 	);
 
