@@ -122,6 +122,9 @@ public class DNSAccessEventBuilder {
                 .append("\"")
                 .append(" ttl=\"-\"")
                 .append(" ans=\"-\"")
+                .append(" svc=\"")
+                .append(dnsAccessRecord.getDeliveryServiceXmlIds())
+                .append("\"")
                 .toString();
     }
 
@@ -140,7 +143,10 @@ public class DNSAccessEventBuilder {
                 .append(rerr)
                 .append("\"")
                 .append(" ttl=\"-\"")
-                .append(" ans=\"-\"").toString();
+                .append(" ans=\"-\"")
+                .append(" svc=\"")
+                .append(dnsAccessRecord.getDeliveryServiceXmlIds())
+                .append("\"").toString();
     }
 
     private static String createQuery(final Record query) {
