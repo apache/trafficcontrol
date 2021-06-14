@@ -48,12 +48,12 @@ under the License.
                 <div class="col-sm-12 col-md-12">
                     <div class="form-group">
                         <p>Type *</p>
-                        <input id="soft" name="lockType" type="radio" data-ng-model="lock.soft" data-ng-value="true">
+                        <input id="soft" name="lockType" type="radio" ng-model="lock.soft" ng-value="true">
                         <label class="has-tooltip" for="soft">Soft<div class="helptooltip">
                             <div class="helptext">A soft lock will prevent others from queueing server updates or snapshotting the locked CDN.</div>
                         </div>
                         </label><br>
-                        <input id="hard" name="lockType" type="radio" data-ng-model="lock.soft" data-ng-value="false">
+                        <input id="hard" name="lockType" type="radio" ng-model="lock.soft" ng-value="false">
                         <label class="has-tooltip" for="soft">Hard<div class="helptooltip">
                             <div class="helptext">A hard lock will prevent others from queueing server updates or snapshotting the locked CDN. It will also block others from making changes that would change the state of the locked CDN.</div>
                         </div>
