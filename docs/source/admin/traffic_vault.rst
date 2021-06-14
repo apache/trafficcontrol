@@ -114,6 +114,18 @@ Options and Arguments
 
 	 ./reencrypt --new-key ~/exampleNewKey.txt --previous-key ~/exampleOldKey.txt
 
+reencrypt.conf
+""""""""""""""
+This file deals with configuration of the Traffic Vault Database to be used with the :program:`reencrypt` tool.
+
+:dbname: The name of the PostgreSQL database used.
+:hostname: The hostname (:abbr:`FQDN (Fully Qualified Domain Name)`) of the server that runs the Traffic Vault Database.
+:password: The password to use when authenticating with the Traffic Vault database.
+:port: The port number (as a string) on which the Traffic Vault Database is listening for incoming connections (NOTE: the PostgreSQL default is 5432).
+:ssl: A boolean that sets whether or not the Traffic Vault Database encrypts its connections with SSL.
+:user: The name of the user as whom to connect to the database.
+
+
 .. _traffic_vault_riak_backend:
 
 Riak (deprecated)

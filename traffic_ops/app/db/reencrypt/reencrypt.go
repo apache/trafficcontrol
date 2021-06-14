@@ -174,7 +174,7 @@ func reEncryptSslKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 	}
 	defer rows.Close()
 
-	sslKeyMap := map[int]string{}
+	sslKeyMap := map[int][]byte{}
 
 	for rows.Next() {
 		id := 0
@@ -196,7 +196,7 @@ func reEncryptSslKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 	}
 
 	for id, reencryptedKeys := range sslKeyMap {
-		res, err := tx.Exec(`UPDATE sslkey SET data = $1 WHERE id = $2`, []byte(reencryptedKeys), id)
+		res, err := tx.Exec(`UPDATE sslkey SET data = $1 WHERE id = $2`, reencryptedKeys, id)
 		if err != nil {
 			return fmt.Errorf("updating SSL Keys for id %d: %w", id, err)
 		}
@@ -219,7 +219,7 @@ func reEncryptUrlSigKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 	}
 	defer rows.Close()
 
-	urlSigKeysMap := map[string]string{}
+	urlSigKeysMap := map[string][]byte{}
 
 	for rows.Next() {
 		ds := ""
@@ -241,7 +241,7 @@ func reEncryptUrlSigKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 	}
 
 	for ds, reencryptedKeys := range urlSigKeysMap {
-		res, err := tx.Exec(`UPDATE url_sig_key SET data = $1 WHERE deliveryservice = $2`, []byte(reencryptedKeys), ds)
+		res, err := tx.Exec(`UPDATE url_sig_key SET data = $1 WHERE deliveryservice = $2`, reencryptedKeys, ds)
 		if err != nil {
 			return fmt.Errorf("updating URL Sig Keys for deliveryservice %s: %w", ds, err)
 		}
@@ -264,7 +264,7 @@ func reEncryptUriSigningKeys(tx *sql.Tx, previousKey []byte, newKey []byte) erro
 	}
 	defer rows.Close()
 
-	uriSigningKeyMap := map[string]string{}
+	uriSigningKeyMap := map[string][]byte{}
 
 	for rows.Next() {
 		ds := ""
@@ -286,7 +286,7 @@ func reEncryptUriSigningKeys(tx *sql.Tx, previousKey []byte, newKey []byte) erro
 	}
 
 	for ds, reencryptedKeys := range uriSigningKeyMap {
-		res, err := tx.Exec(`UPDATE uri_signing_key SET data = $1 WHERE deliveryservice = $2`, []byte(reencryptedKeys), ds)
+		res, err := tx.Exec(`UPDATE uri_signing_key SET data = $1 WHERE deliveryservice = $2`, reencryptedKeys, ds)
 		if err != nil {
 			return fmt.Errorf("updating URI Signing Keys for deliveryservice %s: %w", ds, err)
 		}
@@ -309,7 +309,7 @@ func reEncryptDNSSECKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 	}
 	defer rows.Close()
 
-	dnssecKeyMap := map[string]string{}
+	dnssecKeyMap := map[string][]byte{}
 
 	for rows.Next() {
 		cdn := ""
@@ -331,7 +331,7 @@ func reEncryptDNSSECKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 	}
 
 	for cdn, reencryptedKeys := range dnssecKeyMap {
-		res, err := tx.Exec(`UPDATE dnssec SET data = $1 WHERE cdn = $2`, []byte(reencryptedKeys), cdn)
+		res, err := tx.Exec(`UPDATE dnssec SET data = $1 WHERE cdn = $2`, reencryptedKeys, cdn)
 		if err != nil {
 			return fmt.Errorf("updating DNSSEC Keys for cdn %s: %w", cdn, err)
 		}

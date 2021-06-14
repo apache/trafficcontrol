@@ -26,29 +26,31 @@ import (
 	"io"
 )
 
-// AESEncrypt encrypts a byte array using an AES key.
-// This returns an encrypted byte array and an error if the encryption was not successful.
-func AESEncrypt(bytesToEncrypt []byte, aesKey []byte) (string, error) {
+// AESEncrypt takes in a 16, 24, or 32 byte AES key (128, 192, 256 bit encryption respectively) and plain text. It
+// returns the encrypted text. In case of error, the text returned is an empty string. AES requires input text to
+// be greater than 12 bytes in length.
+func AESEncrypt(bytesToEncrypt []byte, aesKey []byte) ([]byte, error) {
 	cipherBlock, err := aes.NewCipher(aesKey)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 
 	gcm, err := cipher.NewGCM(cipherBlock)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		return "", err
+		return []byte{}, err
 	}
 
-	return string(gcm.Seal(nonce, nonce, bytesToEncrypt, nil)), nil
+	return gcm.Seal(nonce, nonce, bytesToEncrypt, nil), nil
 }
 
-// AESDecrypt decrypts a byte array using an AES key.
-// This returns a decrypted byte array and an error if the decryption was not successful.
+// AESDecrypt takes in a 16, 24, or 32 byte AES key (128, 192, 256 bit encryption respectively) and encrypted text. It
+// returns the resulting decrypted text. In case of error, the text returned is an empty string. AES requires input
+// text to be greater than 12 bytes in length.
 func AESDecrypt(bytesToDecrypt []byte, aesKey []byte) ([]byte, error) {
 	cipherBlock, err := aes.NewCipher(aesKey)
 	if err != nil {
