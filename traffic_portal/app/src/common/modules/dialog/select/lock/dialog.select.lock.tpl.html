@@ -23,10 +23,8 @@ under the License.
     <form name="lockForm" novalidate>
         <div class="row">
             <div class="col-sm-12 col-md-12">
-                <div class="form-group" ng-class="{'has-error': hasError(lockForm.cdn), 'has-feedback': hasError(lockForm.cdn)}">
-                    <label class="control-label" for="cdn">CDN *
-                        <small class="input-error" ng-show="hasPropertyError(lockForm.cdn, 'required')">Required</small>
-                    </label>
+                <div class="form-group">
+                    <label class="control-label" for="cdn">CDN *</label>
                     <select id="cdn" name="cdn" class="form-control" ng-model="lock.cdn" ng-options="cdn.name as cdn.name for cdn in cdns" required>
                         <option disabled hidden selected value="">Select...</option>
                     </select>
@@ -35,12 +33,9 @@ under the License.
         </div>
         <div class="row">
             <div class="col-sm-12 col-md-12">
-                <div class="form-group" ng-class="{'has-error': hasError(lockForm.message), 'has-feedback': hasError(lockForm.message)}">
-                    <label class="control-label" for="message">Message *
-                        <small class="input-error" ng-show="hasPropertyError(lockForm.message, 'maxlength')">Too Long</small>
-                    </label>
+                <div class="form-group">
+                    <label class="control-label" for="message">Message *</label>
                     <input id="message" name="message" type="text" class="form-control" ng-model="lock.message" maxlength="256" required autofocus>
-                    <span ng-show="hasError(lockForm.message)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
         </div>
