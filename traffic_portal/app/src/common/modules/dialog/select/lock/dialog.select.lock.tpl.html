@@ -45,20 +45,23 @@ under the License.
             </div>
         </div>
         <div class="row">
-                <div class="col-sm-12 col-md-12">
-                    <div class="form-group">
-                        <p>Type *</p>
-                        <input id="soft" name="lockType" type="radio" ng-model="lock.soft" ng-value="true">
-                        <label class="has-tooltip" for="soft">Soft<div class="helptooltip">
-                            <div class="helptext">A soft lock will prevent others from queueing server updates or snapshotting the locked CDN.</div>
-                        </div>
-                        </label><br>
-                        <input id="hard" name="lockType" type="radio" ng-model="lock.soft" ng-value="false">
-                        <label class="has-tooltip" for="soft">Hard<div class="helptooltip">
-                            <div class="helptext">A hard lock will prevent others from queueing server updates or snapshotting the locked CDN. It will also block others from making changes that would change the state of the locked CDN.</div>
+            <div class="col-sm-12 col-md-12">
+                <fieldset class="form-group" ng-class="{'has-error': hasError(lockform.lockType)}">
+                    <legend>
+                        <label class="has-tooltip" for="soft">Type <i class="fa fa-info-circle has-tooltip"></i><div class="helptooltip">
+                            <div class="helptext">
+                                <ul>
+                                    <li>SOFT: A soft lock will prevent others from queueing server updates or snapshotting the locked CDN.</li>
+                                    <li>HARD: A hard lock will prevent others from queueing server updates or snapshotting the locked CDN. It will also block others from making changes that would change the state of the locked CDN.</li>
+                                </ul>
+                            </div>
                         </div>
                         </label>
-                    </div>
+                    </legend>
+                    <input id="soft" name="lockType" type="radio" ng-model="lock.soft" ng-value="true" required> Soft
+                    <br>
+                    <input id="hard" name="lockType" type="radio" ng-model="lock.soft" ng-value="false" required> Hard
+                </fieldset>
             </div>
         </div>
     </form>
