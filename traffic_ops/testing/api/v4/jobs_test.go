@@ -374,7 +374,6 @@ func GetTestInvalidationJobs(t *testing.T) {
 }
 
 func GetTestJobsByValidData(t *testing.T) {
-
 	toJobs, _, err := TOSession.GetInvalidationJobs(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("error getting jobs %v - alerts: %+v", err, toJobs.Alerts)
@@ -383,6 +382,7 @@ func GetTestJobsByValidData(t *testing.T) {
 		t.Fatal("Need at least one Jobs to test GET Jobs scenario")
 	}
 	jobs := toJobs.Response[0]
+
 	assetUrl := jobs.AssetURL
 	createdBy := jobs.CreatedBy
 	id := jobs.ID
@@ -422,7 +422,7 @@ func GetTestJobsByValidData(t *testing.T) {
 			t.Errorf("Expected only one Jobs response for GET Jobs by ID, but found %d ", len(toJobs.Response))
 		}
 	} else {
-		t.Errorf("ID Field is empty, so can't test get jobs")
+		t.Errorf("ID Field is empty, so can't test get jobs %d", *id)
 	}
 
 	//Get Jobs by Keyword
@@ -482,7 +482,6 @@ func GetTestJobsByValidData(t *testing.T) {
 	} else {
 		t.Error("No user response available for get user by name")
 	}
-
 }
 
 func GetTestJobsByInvalidData(t *testing.T) {
@@ -899,7 +898,6 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error creating a content invalidation Job: %v - alerts: %+v", err, resp.Alerts)
 	}
-
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("deliveryService", xmlID)
 	jobs, _, err := TOSession.GetInvalidationJobs(opts)
@@ -907,7 +905,7 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 		t.Fatalf("unable to get invalidation jobs: %v - alerts: %+v", err, jobs.Alerts)
 	}
 
-	var realJob *tc.InvalidationJob
+	var realJob tc.InvalidationJob
 	for i, job := range jobs.Response {
 		if job.StartTime == nil || job.DeliveryService == nil || job.CreatedBy == nil {
 			t.Error("Traffic Ops returned a representation of a content invalidation Job that had null or undefined Start Time and/or Delivery Service and/or Created By")
@@ -915,23 +913,23 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 		}
 		diff := firstJob.StartTime.Time.Sub(job.StartTime.Time)
 		if *job.DeliveryService == xmlID && *job.CreatedBy == "admin" && diff < time.Second {
-			realJob = &jobs.Response[i]
+			realJob = jobs.Response[i]
 			break
 		}
 	}
-	if realJob == nil || realJob.ID == nil || *realJob.ID == 0 {
+	if realJob.ID == nil || *realJob.ID == 0 {
 		t.Fatal("could not find new job")
 	}
-	var originalJob = realJob
+
+	//update existing jobs with new ds id
+	originalJob := realJob
 	newTime := tc.Time{
 		Time:  startTime.Time.Add(time.Hour * 2),
 		Valid: true,
 	}
-	realJob.StartTime = &newTime
-
-	//update existing jobs with new ds id
-	realJob.DeliveryService = testData.DeliveryServices[1].XMLID
-	alerts, reqInf, err := TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	originalJob.StartTime = &newTime
+	originalJob.DeliveryService = testData.DeliveryServices[1].XMLID
+	alerts, reqInf, err := TOSession.UpdateInvalidationJob(originalJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected Cannot change 'deliveryService' of existing invalidation job! - alerts: %+v", alerts.Alerts)
 	}
@@ -940,10 +938,12 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	}
 
 	//update existing jobs with invalid ds id
-	realJob = originalJob
+	invaliddsidJob := realJob
 	invaliddsid := "abcd"
-	realJob.DeliveryService = &invaliddsid
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	invaliddsidJob.DeliveryService = &invaliddsid
+	originalJob.DeliveryService = testData.DeliveryServices[1].XMLID
+
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(invaliddsidJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected Cannot change 'deliveryService' of existing invalidation job! - alerts: %+v", alerts.Alerts)
 	}
@@ -952,10 +952,10 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	}
 
 	//update existing jobs with blank ds id
-	realJob = originalJob
-	invaliddsid = ""
-	realJob.DeliveryService = &invaliddsid
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	blankdsidJob := realJob
+	blankdsid := ""
+	blankdsidJob.DeliveryService = &blankdsid
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(blankdsidJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected deliveryService: cannot be blank. - alerts: %+v", alerts.Alerts)
 	}
@@ -963,24 +963,11 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
 	}
 
-	//update existing jobs with new id
-	realJob = originalJob
-	var b uint64 = 1111
-	var a *uint64 = &b
-	realJob.ID = a
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
-	if err == nil {
-		t.Fatalf("Expected Cannot change an invalidation job 'id'! - alerts: %+v", alerts.Alerts)
-	}
-	if reqInf.StatusCode != http.StatusConflict {
-		t.Errorf("Expected status code 409, got %v", reqInf.StatusCode)
-	}
-
 	//update existing jobs with asset url not starts with origin.infra
-	realJob = originalJob
+	invalidasseturlJob := realJob
 	assetURL := "http://google.com"
-	realJob.AssetURL = &assetURL
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	invalidasseturlJob.AssetURL = &assetURL
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(invalidasseturlJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected Cannot set asset URL that does not start with Delivery Service origin URL: http://origin.infra.ciab.test. - alerts: %+v", alerts.Alerts)
 	}
@@ -989,10 +976,10 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	}
 
 	//update existing jobs with blank asset url
-	realJob = originalJob
+	blankasseturlJob := realJob
 	assetURL = ""
-	realJob.AssetURL = &assetURL
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	blankasseturlJob.AssetURL = &assetURL
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(blankasseturlJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected assetUrl: cannot be blank. alerts: %+v", alerts.Alerts)
 	}
@@ -1001,10 +988,10 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	}
 
 	//update existing jobs with blank created by
-	realJob = originalJob
+	blankCreatedByJob := realJob
 	createdBy := ""
-	realJob.CreatedBy = &createdBy
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	blankCreatedByJob.CreatedBy = &createdBy
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(blankCreatedByJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected createdBy: cannot be blank. alerts: %+v", alerts.Alerts)
 	}
@@ -1013,10 +1000,10 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	}
 
 	//update existing jobs created by
-	realJob = originalJob
+	createdByJob := realJob
 	createdBy = "operator"
-	realJob.CreatedBy = &createdBy
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	createdByJob.CreatedBy = &createdBy
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(createdByJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected Cannot change 'createdBy' of existing invalidation jobs!. alerts: %+v", alerts.Alerts)
 	}
@@ -1025,10 +1012,10 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	}
 
 	//update existing jobs with blank parameters
-	realJob = originalJob
+	blankParametersJob := realJob
 	parameters := ""
-	realJob.Parameters = &parameters
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	blankParametersJob.Parameters = &parameters
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(blankParametersJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected parameters: cannot be blank. alerts: %+v", alerts.Alerts)
 	}
@@ -1037,14 +1024,14 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	}
 
 	//update existing jobs start date after 2 days
-	realJob = originalJob
+	startDateFutureJob := realJob
 	dt := time.Now()
 	dt.Format("2019-10-12T07:20:50.52Z")
-	realJob.StartTime = &tc.Time{
+	startDateFutureJob.StartTime = &tc.Time{
 		Time:  dt.AddDate(0, 0, 3),
 		Valid: true,
 	}
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(startDateFutureJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected startTime: must be within two days from now. alerts: %+v", alerts.Alerts)
 	}
@@ -1053,14 +1040,14 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	}
 
 	//update jobs with past start date
-	realJob = originalJob
+	pastStartDateJob := realJob
 	dt = time.Now()
 	dt.Format("2019-06-18 21:28:31")
-	realJob.StartTime = &tc.Time{
+	pastStartDateJob.StartTime = &tc.Time{
 		Time:  dt.AddDate(0, 0, -3),
 		Valid: true,
 	}
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(pastStartDateJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected startTime: cannot be in the past. alerts: %+v", alerts.Alerts)
 	}
@@ -1069,14 +1056,14 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	}
 
 	//update jobs with RFC Format past start date
-	realJob = originalJob
+	pastStartDateJob = realJob
 	dt = time.Now()
 	dt.Format("2019-10-12T07:20:50.52Z")
-	realJob.StartTime = &tc.Time{
+	pastStartDateJob.StartTime = &tc.Time{
 		Time:  dt.AddDate(0, 0, -1),
 		Valid: true,
 	}
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(pastStartDateJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected startTime: cannot be in the past. alerts: %+v", alerts.Alerts)
 	}
@@ -1085,12 +1072,12 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	}
 
 	//update jobs with UNIX Format past start date
-	realJob = originalJob
-	realJob.StartTime = &tc.Time{
+	pastStartDateJob = realJob
+	pastStartDateJob.StartTime = &tc.Time{
 		Time:  time.Unix(1, 0),
 		Valid: true,
 	}
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(pastStartDateJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected startTime: cannot be in the past. alerts: %+v", alerts.Alerts)
 	}
@@ -1099,14 +1086,14 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	}
 
 	//update jobs with non standartd Format past start date
-	realJob = originalJob
+	pastStartDateJob = realJob
 	dt = time.Now()
 	dt.Format("2020-03-11 14:12:20-06")
-	realJob.StartTime = &tc.Time{
+	pastStartDateJob.StartTime = &tc.Time{
 		Time:  dt.AddDate(0, 0, -1),
 		Valid: true,
 	}
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(pastStartDateJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected startTime: cannot be in the past. alerts: %+v", alerts.Alerts)
 	}
@@ -1115,14 +1102,14 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	}
 
 	//update jobs with RFC Format Future start date
-	realJob = originalJob
+	startDateFutureJob = realJob
 	dt = time.Now()
 	dt.Format("2019-10-12T07:20:50.52Z")
-	realJob.StartTime = &tc.Time{
+	startDateFutureJob.StartTime = &tc.Time{
 		Time:  dt.AddDate(0, 0, 1),
 		Valid: true,
 	}
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(startDateFutureJob, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("Expected Content invalidation job updated. alerts: %+v", alerts.Alerts)
 	}
@@ -1131,14 +1118,14 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	}
 
 	//update jobs with UNIX Format Future start date
-	realJob = originalJob
+	startDateFutureJob = realJob
 	dt = time.Now()
 	dt.Format(".000")
-	realJob.StartTime = &tc.Time{
+	startDateFutureJob.StartTime = &tc.Time{
 		Time:  dt.AddDate(0, 0, 1),
 		Valid: true,
 	}
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(startDateFutureJob, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("Expected Content invalidation job updated. alerts: %+v", alerts.Alerts)
 	}
@@ -1147,19 +1134,32 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	}
 
 	//update jobs with non standartd Format Future start date
-	realJob = originalJob
+	startDateFutureJob = realJob
 	dt = time.Now()
 	dt.Format("2020-03-11 14:12:20-06")
-	realJob.StartTime = &tc.Time{
+	startDateFutureJob.StartTime = &tc.Time{
 		Time:  dt.AddDate(0, 0, 1),
 		Valid: true,
 	}
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(*realJob, client.RequestOptions{})
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(startDateFutureJob, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("Expected Content invalidation job updated. alerts: %+v", alerts.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusOK {
 		t.Errorf("Expected status code 200, got %v", reqInf.StatusCode)
+	}
+
+	//update existing jobs with new id
+	newIdJob := realJob
+	var b uint64 = 1111
+	var a *uint64 = &b
+	newIdJob.ID = a
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(newIdJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected Cannot change an invalidation job 'id'! - alerts: %+v", alerts.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected status code 404, got %v", reqInf.StatusCode)
 	}
 }
 
@@ -1188,14 +1188,14 @@ func DeleteTestJobs(t *testing.T) {
 
 func DeleteTestJobsByInvalidId(t *testing.T) {
 
-	//Delete Jobs by valid id
+	//Delete Jobs by invalid id
 	var b uint64 = 1111
 	var a *uint64 = &b
 	alerts, reqInf, err := TOSession.DeleteInvalidationJob(uint64(*a), client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Expected Content invalidation job was deleted Error - %v, Alerts %v", err, alerts.Alerts)
+	if err == nil {
+		t.Errorf("Expected No job by id. Error - %v, Alerts %v", err, alerts.Alerts)
 	}
-	if reqInf.StatusCode != http.StatusOK {
-		t.Errorf("Expected status code 200, got %v", reqInf.StatusCode)
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected status code 404, got %v", reqInf.StatusCode)
 	}
 }
