@@ -130,12 +130,6 @@ func main() {
 	var fromSrv TVBackend
 	var toSrv TVBackend
 
-	toType = "Riak"
-	fromType = "PG"
-	fromCfg = "pg.json"
-	toCfg = "riak.json"
-	compare = true
-
 	toSrvUsed := !dump && !dry
 
 	if !validateType(fromType) {
