@@ -720,7 +720,10 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-
+	if inf.User == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
+		return
+	}
 	id := inf.IntParams["id"]
 
 	ds := tc.DeliveryServiceV40{}
@@ -729,6 +732,17 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ds.ID = &id
+	cdn, err := getCDNNameFromDSID(inf.Tx.Tx, id)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice update: getting CDN from DS ID "+err.Error()))
+		return
+	}
+	// CheckIfCurrentUserCanModifyCDN
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
 	res, status, userErr, sysErr := updateV40(w, r, inf, &ds)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)

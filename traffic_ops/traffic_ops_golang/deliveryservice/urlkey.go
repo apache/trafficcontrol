@@ -220,7 +220,10 @@ func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-
+	if inf.User == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
+		return
+	}
 	if !inf.Config.TrafficVaultEnabled {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.GenerateURLKeys: Traffic Vault is not configured"))
 		return
@@ -251,6 +254,18 @@ func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+string(ds)), nil)
+		return
+	}
+
+	cdn, err := getCDNNameFromDSID(inf.Tx.Tx, dsID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateURLKeys: getting CDN from DS ID "+err.Error()))
+		return
+	}
+	// CheckIfCurrentUserCanModifyCDN
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
 

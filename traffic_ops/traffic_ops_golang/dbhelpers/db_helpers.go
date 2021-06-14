@@ -207,6 +207,32 @@ func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParams
 	return whereClause, orderBy, paginationClause, queryValues, errs
 }
 
+// CheckIfCurrentUserCanModifyCDN checks if the current user has the lock on the cdn that the requested operation is to be performed on.
+// This will succeed if the either there is no lock by any user on the CDN, or if the current user has the lock on the CDN.
+func CheckIfCurrentUserCanModifyCDN(tx *sql.Tx, cdn, user string) (error, error, int) {
+	query := `SELECT username, soft FROM cdn_lock WHERE cdn=$1`
+	var userName string
+	var soft bool
+	rows, err := tx.Query(query, cdn)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil, http.StatusOK
+		}
+		return nil, errors.New("querying cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&userName, &soft)
+		if err != nil {
+			return nil, errors.New("scanning cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
+		}
+	}
+	if userName != "" && user != userName && !soft {
+		return errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), nil, http.StatusForbidden
+	}
+	return nil, nil, http.StatusOK
+}
+
 func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string) (string, map[string]interface{}, []error) {
 	var criteria string
 

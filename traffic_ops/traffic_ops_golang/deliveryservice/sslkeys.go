@@ -23,6 +23,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"net/http"
 	"strconv"
 
@@ -42,7 +43,10 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-
+	if inf.User == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
+		return
+	}
 	if !inf.Config.TrafficVaultEnabled {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateSSLKeys: Traffic Vault is not configured"))
 		return
@@ -63,6 +67,17 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+*req.DeliveryService), nil)
+		return
+	}
+	cdn, err := getCDNNameFromDSID(inf.Tx.Tx, dsID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateSSLKeys: getting CDN from DS ID "+err.Error()))
+		return
+	}
+	// CheckIfCurrentUserCanModifyCDN
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
 	if err := generatePutRiakKeys(req, inf.Tx.Tx, inf.Vault, r.Context()); err != nil {

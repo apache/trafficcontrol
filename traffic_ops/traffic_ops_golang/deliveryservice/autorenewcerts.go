@@ -23,6 +23,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"net/http"
 	"strconv"
 	"time"
@@ -80,6 +81,10 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 	}
 	defer inf.Close()
 
+	if inf.User == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
+		return
+	}
 	if !inf.Config.TrafficVaultEnabled {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Traffic Vault service is unavailable"), errors.New("getting SSL keys from Traffic Vault by xml id: Traffic Vault is not configured"), deprecated, deprecation)
 		return
@@ -98,6 +103,17 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 		err := rows.Scan(&ds.XmlId, &ds.Version)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		cdn, err := getCDNNameFromDSXMLID(inf.Tx.Tx, ds.XmlId)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("renew acme certificate: getting CDN from DS XML ID "+err.Error()))
+			return
+		}
+		// CheckIfCurrentUserCanModifyCDN
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 			return
 		}
 		existingCerts = append(existingCerts, ExistingCerts{Version: ds.Version, XmlId: ds.XmlId})

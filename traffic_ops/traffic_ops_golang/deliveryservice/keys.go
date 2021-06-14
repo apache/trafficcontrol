@@ -29,6 +29,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"net/http"
 	"strconv"
 	"strings"
@@ -54,6 +55,10 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
+	if inf.User == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
+		return
+	}
 	if !inf.Config.TrafficVaultEnabled {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("adding SSL keys to Traffic Vault for delivery service: Traffic Vault is not configured"))
 		return
@@ -76,7 +81,17 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+*req.DeliveryService), nil)
 		return
 	}
-
+	cdn, err := getCDNNameFromDSID(inf.Tx.Tx, dsID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.AddSSLKeys: getting CDN from DS ID "+err.Error()))
+		return
+	}
+	// CheckIfCurrentUserCanModifyCDN
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
 	// ECDSA keys support is only permitted for DNS delivery services
 	// Traffic Router (HTTP* delivery service types) do not support ECDSA keys
 	dsType, dsFound, err := getDSType(inf.Tx.Tx, *req.Key)
@@ -452,6 +467,24 @@ func getDSIDFromName(tx *sql.Tx, xmlID string) (int, bool, error) {
 		return id, false, fmt.Errorf("querying ID for delivery service ID '%v': %v", xmlID, err)
 	}
 	return id, true, nil
+}
+
+// getCDNNameFromDSID returns the associated CDN name with the delivery service ID that is provided.
+func getCDNNameFromDSID(tx *sql.Tx, dsID int) (string, error) {
+	cdn := ""
+	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn_id FROM deliveryservice WHERE id = $1)`, dsID).Scan(&cdn); err != nil {
+		return cdn, fmt.Errorf("querying CDN for deliveryservice with ID '%v': %v", dsID, err)
+	}
+	return cdn, nil
+}
+
+// getCDNNameFromDSXMLID returns the associated CDN name with the delivery service XML ID that is provided.
+func getCDNNameFromDSXMLID(tx *sql.Tx, xmlID string) (string, error) {
+	cdn := ""
+	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn_id FROM deliveryservice WHERE xml_id = $1)`, xmlID).Scan(&cdn); err != nil {
+		return cdn, fmt.Errorf("querying CDN for deliveryservice with XML ID '%v': %v", xmlID, err)
+	}
+	return cdn, nil
 }
 
 // returns a delivery service xmlId for a cdn by host regex.

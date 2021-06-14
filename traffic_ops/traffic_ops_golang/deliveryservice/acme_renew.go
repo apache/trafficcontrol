@@ -22,6 +22,7 @@ package deliveryservice
 import (
 	"context"
 	"errors"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"net/http"
 	"strconv"
 
@@ -45,6 +46,10 @@ func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
+	if inf.User == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
+		return
+	}
 	if !inf.Config.TrafficVaultEnabled {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Traffic Vault is not configured"))
 		return
@@ -56,10 +61,22 @@ func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cdn, err := getCDNNameFromDSXMLID(inf.Tx.Tx, xmlID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("renew acme certificate: getting CDN from DS XML ID "+err.Error()))
+		return
+	}
+	// CheckIfCurrentUserCanModifyCDN
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+
 	ctx, cancelTx := context.WithTimeout(r.Context(), AcmeTimeout)
 	defer cancelTx()
 
-	userErr, sysErr, statusCode := renewAcmeCerts(inf.Config, xmlID, ctx, r.Context(), inf.User, inf.Vault)
+	userErr, sysErr, statusCode = renewAcmeCerts(inf.Config, xmlID, ctx, r.Context(), inf.User, inf.Vault)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return

@@ -155,6 +155,10 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
+	if inf.User == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
+		return
+	}
 	if !inf.Config.TrafficVaultEnabled {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateAcmeCertificates: Traffic Vault is not configured"))
 		return
@@ -203,6 +207,12 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 	if cdnName != tc.CDNName(*req.CDN) {
 		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("delivery service not in cdn"), nil)
+		return
+	}
+	// CheckIfCurrentUserCanModifyCDN
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
 
