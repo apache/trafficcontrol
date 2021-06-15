@@ -793,9 +793,12 @@ func CreateJobsMissingDate(t *testing.T) {
 		Regex:           job.Regex,
 		TTL:             job.TTL,
 	}
-	resp, _, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	resp, reqInf, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
 	if err == nil {
-		t.Errorf("Expected Invalidation request created, but no error found %v - Alert %v", resp, resp.Alerts)
+		t.Errorf("Expected startTime: cannot be blank, but no error found %v - Alert %v", resp, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
 	}
 }
 
@@ -818,9 +821,12 @@ func CreateJobsMissingRegex(t *testing.T) {
 		TTL:             job.TTL,
 		StartTime:       job.StartTime,
 	}
-	resp, _, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	resp, reqInf, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
 	if err == nil {
 		t.Errorf("Expected regex: cannot be blank, but no error found %v - Alert %v", resp, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
 	}
 
 	//Empty Regex
@@ -834,6 +840,9 @@ func CreateJobsMissingRegex(t *testing.T) {
 	resp, _, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
 	if err == nil {
 		t.Errorf("Expected regex: cannot be blank, but no error found %v - Alert %v", resp, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
 	}
 }
 
@@ -856,9 +865,12 @@ func CreateJobsMissingTtl(t *testing.T) {
 		Regex:           job.Regex,
 		StartTime:       job.StartTime,
 	}
-	resp, _, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	resp, reqInf, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
 	if err == nil {
 		t.Errorf("Expected ttl: cannot be blank., but no error found %v - Alert %v", resp, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
 	}
 
 	//Empty TTL
@@ -872,6 +884,9 @@ func CreateJobsMissingTtl(t *testing.T) {
 	resp, _, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
 	if err == nil {
 		t.Errorf("Expected ttl: cannot be blank., ttl: must be a number of hours, or a duration string e.g. '48h', but no error found %v - Alert %v", resp, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
 	}
 }
 
@@ -941,8 +956,6 @@ func UpdateTestJobsInvalidds(t *testing.T) {
 	invaliddsidJob := realJob
 	invaliddsid := "abcd"
 	invaliddsidJob.DeliveryService = &invaliddsid
-	originalJob.DeliveryService = testData.DeliveryServices[1].XMLID
-
 	alerts, reqInf, err = TOSession.UpdateInvalidationJob(invaliddsidJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected Cannot change 'deliveryService' of existing invalidation job! - alerts: %+v", alerts.Alerts)
