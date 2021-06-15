@@ -100,7 +100,7 @@ public class AbstractProtocolTest {
 
         abstractProtocol.run();
 
-        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 rhi=- ttms=345.123 xn=65535 fqdn=www.example.com. type=A class=IN rcode=NOERROR rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ttl=\"3600\" ans=\"192.168.8.9\" svc=\"null\"");
+        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 rhi=- ttms=345.123 xn=65535 fqdn=www.example.com. type=A class=IN rcode=NOERROR rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ttl=\"3600\" ans=\"192.168.8.9\" svc=\"-\"");
     }
 
     @Test
@@ -123,7 +123,7 @@ public class AbstractProtocolTest {
         abstractProtocol.setNameServer(nameServer);
         abstractProtocol.run();
 
-        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 rhi=- ttms=345.123 xn=65535 fqdn=John\\032Wayne. type=TYPE65530 class=CLASS43210 rcode=REFUSED rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ttl=\"-\" ans=\"-\" svc=\"null\"");
+        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 rhi=- ttms=345.123 xn=65535 fqdn=John\\032Wayne. type=TYPE65530 class=CLASS43210 rcode=REFUSED rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ttl=\"-\" ans=\"-\" svc=\"-\"");
     }
 
     @Test
@@ -131,7 +131,7 @@ public class AbstractProtocolTest {
         FakeAbstractProtocol abstractProtocol = new FakeAbstractProtocol(client, new byte[] {1,2,3,4,5,6,7});
         abstractProtocol.setNameServer(nameServer);
         abstractProtocol.run();
-        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 rhi=- ttms=345.123 xn=- fqdn=- type=- class=- rcode=- rtype=- rloc=\"-\" rdtl=- rerr=\"Bad Request:WireParseException:end of input\" ttl=\"-\" ans=\"-\" svc=\"null\"");
+        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 rhi=- ttms=345.123 xn=- fqdn=- type=- class=- rcode=- rtype=- rloc=\"-\" rdtl=- rerr=\"Bad Request:WireParseException:end of input\" ttl=\"-\" ans=\"-\" svc=\"-\"");
     }
 
     @Test
@@ -154,7 +154,7 @@ public class AbstractProtocolTest {
         abstractProtocol.setNameServer(nameServer);
         abstractProtocol.run();
 
-        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 rhi=- ttms=345.123 xn=65535 fqdn=John\\032Wayne. type=TYPE65530 class=CLASS43210 rcode=SERVFAIL rtype=- rloc=\"-\" rdtl=- rerr=\"Server Error:RuntimeException:Aw snap!\" ttl=\"-\" ans=\"-\" svc=\"null\"");
+        verify(accessLogger).info("144140678.000 qtype=DNS chi=192.168.23.45 rhi=- ttms=345.123 xn=65535 fqdn=John\\032Wayne. type=TYPE65530 class=CLASS43210 rcode=SERVFAIL rtype=- rloc=\"-\" rdtl=- rerr=\"Server Error:RuntimeException:Aw snap!\" ttl=\"-\" ans=\"-\" svc=\"-\"");
 
     }
 

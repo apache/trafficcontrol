@@ -53,7 +53,8 @@ public class DNSAccessEventBuilder {
 
         final String routingInfo = "rtype=" + rType + " rloc=\"" + rloc +  "\" rdtl=" + rdtl + " rerr=\"-\"";
         String answer = "ans=\"-\"";
-        final String dsInfo = "svc=\"" + dnsAccessRecord.getDeliveryServiceXmlIds() + "\"";
+        final String dsString = dnsAccessRecord.getDeliveryServiceXmlIds() == null ? "-" : dnsAccessRecord.getDeliveryServiceXmlIds();
+        final String dsInfo = "svc=\"" + dsString + "\"";
 
         if (dnsAccessRecord.getDnsMessage() != null) {
             answer = createTTLandAnswer(dnsAccessRecord.getDnsMessage());
@@ -114,6 +115,7 @@ public class DNSAccessEventBuilder {
     public static String create(final DNSAccessRecord dnsAccessRecord, final WireParseException wireParseException) {
         final String event = createEvent(dnsAccessRecord);
         final String rerr = "Bad Request:" + wireParseException.getClass().getSimpleName() + ":" + wireParseException.getMessage();
+        final String dsID = dnsAccessRecord.getDeliveryServiceXmlIds() == null ? "-" : dnsAccessRecord.getDeliveryServiceXmlIds();
         return new StringBuilder(event)
                 .append(" rtype=-")
                 .append(" rloc=\"-\"")
@@ -124,7 +126,7 @@ public class DNSAccessEventBuilder {
                 .append(" ttl=\"-\"")
                 .append(" ans=\"-\"")
                 .append(" svc=\"")
-                .append(dnsAccessRecord.getDeliveryServiceXmlIds())
+                .append(dsID)
                 .append("\"")
                 .toString();
     }
@@ -135,6 +137,7 @@ public class DNSAccessEventBuilder {
         final String event = createEvent(dnsAccessRecord);
 
         final String rerr = "Server Error:" + exception.getClass().getSimpleName() + ":" + exception.getMessage();
+        final String dsID = dnsAccessRecord.getDeliveryServiceXmlIds() == null ? "-" : dnsAccessRecord.getDeliveryServiceXmlIds();
 
         return new StringBuilder(event)
                 .append(" rtype=-")
@@ -146,7 +149,7 @@ public class DNSAccessEventBuilder {
                 .append(" ttl=\"-\"")
                 .append(" ans=\"-\"")
                 .append(" svc=\"")
-                .append(dnsAccessRecord.getDeliveryServiceXmlIds())
+                .append(dsID)
                 .append("\"").toString();
     }
 

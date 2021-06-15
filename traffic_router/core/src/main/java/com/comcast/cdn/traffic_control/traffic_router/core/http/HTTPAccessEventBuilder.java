@@ -73,7 +73,7 @@ public class HTTPAccessEventBuilder {
         return stringBuilder.toString();
     }
 
-    @SuppressWarnings("PMD.UseStringBufferForStringAppends")
+    @SuppressWarnings({"PMD.UseStringBufferForStringAppends", "PMD.NPathComplexity"})
     public static String create(final HTTPAccessRecord httpAccessRecord) {
         final long start = httpAccessRecord.getRequestDate().getTime();
         final String timeString = String.format("%d.%03d", start / 1000, start % 1000);
@@ -149,8 +149,9 @@ public class HTTPAccessEventBuilder {
         final String userAgent = httpServletRequest.getHeader("User-Agent") + "\"";
         stringBuilder.append(" uas=\"").append(userAgent);
 
-        final String deliveryServiceId = formatObject(httpAccessRecord.getDeliveryServiceXmlIds()) + "\" ";
-        stringBuilder.append(" svc=\"").append(deliveryServiceId);
+        final String fmtDSID = formatObject(httpAccessRecord.getDeliveryServiceXmlIds());
+        final String deliveryServiceId = fmtDSID == null ? "-" : fmtDSID;
+        stringBuilder.append(" svc=\"").append(deliveryServiceId).append("\" ");
 
         stringBuilder.append(formatRequestHeaders(httpAccessRecord.getRequestHeaders()));
         return stringBuilder.toString();
