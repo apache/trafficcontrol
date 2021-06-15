@@ -106,7 +106,7 @@ func (pg *PGBackend) Insert() error {
 	return nil
 }
 
-// Start initiates the connection to the backend DB
+// Start initiates the connection to the backend DB.
 func (pg *PGBackend) Start() error {
 	sqlStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", pg.cfg.User, pg.cfg.Password, pg.cfg.Host, pg.cfg.Port, pg.cfg.Database, pg.cfg.SSLMode)
 	db, err := sql.Open("postgres", sqlStr)
