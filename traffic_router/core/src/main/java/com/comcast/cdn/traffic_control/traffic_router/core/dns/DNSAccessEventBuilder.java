@@ -53,11 +53,12 @@ public class DNSAccessEventBuilder {
 
         final String routingInfo = "rtype=" + rType + " rloc=\"" + rloc +  "\" rdtl=" + rdtl + " rerr=\"-\"";
         String answer = "ans=\"-\"";
+        final String dsInfo = "svc=\"" + dnsAccessRecord.getDeliveryServiceXmlIds() + "\"";
 
         if (dnsAccessRecord.getDnsMessage() != null) {
             answer = createTTLandAnswer(dnsAccessRecord.getDnsMessage());
         }
-        return event + " " + routingInfo + " " + answer;
+        return event + " " + routingInfo + " " + answer + " " + dsInfo;
     }
 
     private static String createEvent(final DNSAccessRecord dnsAccessRecord) {
