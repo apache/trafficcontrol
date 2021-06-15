@@ -45,3 +45,16 @@
 .dialog-20 .modal-dialog {
   width: 20%;
 }
+
+.fieldset-body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-column-gap: 1.5em;
+  grid-row-gap: 5px;
+  justify-items: start;
+  align-items: center;
+  ​
+  & > :nth-child(n) {
+    margin: 0;
+  }
+}

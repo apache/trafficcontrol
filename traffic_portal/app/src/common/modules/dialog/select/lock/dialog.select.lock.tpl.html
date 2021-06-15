@@ -14,13 +14,13 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-
+​
 <div class="modal-header">
     <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
     <h4 class="modal-title">Create CDN Lock</h4>
 </div>
-<div class="modal-body">
-    <form name="lockForm" novalidate>
+<form ng-submit="select()">
+    <div class="modal-body">
         <div class="row">
             <div class="col-sm-12 col-md-12">
                 <div class="form-group">
@@ -41,27 +41,28 @@ under the License.
         </div>
         <div class="row">
             <div class="col-sm-12 col-md-12">
-                <fieldset class="form-group" ng-class="{'has-error': hasError(lockform.lockType)}">
-                    <legend>Type *</legend>
-                    <input id="soft" name="lockType" type="radio" ng-model="lock.soft" ng-value="true" required>
-                    <label class="has-tooltip" for="soft">Soft <i class="fa fa-info-circle has-tooltip"></i><div class="helptooltip">
-                        <div class="helptext">A <em>SOFT</em> lock will prevent others from queueing server updates or snapshotting the locked CDN
+                <fieldset class="form-group">
+                    <legend>Type</legend>
+                    <div class="fieldset-body">
+                        <label class="has-tooltip" for="soft">Soft<div class="helptooltip">
+                            <div class="helptext">A <dfn>soft</dfn> lock will prevent others from queueing server updates or snapshotting the locked CDN
+                            </div>
                         </div>
-                    </div>
-                    </label>
-                    <br>
-                    <input id="hard" name="lockType" type="radio" ng-model="lock.soft" ng-value="false" required>
-                    <label class="has-tooltip" for="hard">Hard <i class="fa fa-info-circle has-tooltip"></i><div class="helptooltip">
-                        <div class="helptext">A <em>HARD</em> lock will prevent others from queueing server updates or snapshotting the locked CDN. It will also block others from making changes that would change the state of the locked CDN.
+                        </label>
+                        <input id="soft" name="lockType" type="radio" ng-model="lock.soft" ng-value="true" required>
+                        <label class="has-tooltip" for="hard">Hard<div class="helptooltip">
+                            <div class="helptext">A <dfn>hard</dfn> lock will prevent others from queueing server updates or snapshotting the locked CDN. It will also block others from making changes that would change the state of the locked CDN.
+                            </div>
                         </div>
+                        </label>
+                        <input id="hard" name="lockType" type="radio" ng-model="lock.soft" ng-value="false" required>
                     </div>
-                    </label>
                 </fieldset>
             </div>
         </div>
-    </form>
-</div>
-<div class="modal-footer">
-    <button type="button" class="btn action-btn" ng-click="cancel()">Cancel</button>
-    <button type="button" class="btn btn-link" ng-disabled="lockForm.$invalid" ng-click="select()">Submit</button>
-</div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn action-btn" ng-click="cancel()">Cancel</button>
+        <button class="btn btn-link">Submit</button>
+    </div>
+</form>
