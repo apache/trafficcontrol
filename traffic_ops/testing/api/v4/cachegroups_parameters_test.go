@@ -98,6 +98,12 @@ func CreateTestCacheGroupParametersAlreadyExist(t *testing.T) {
 	if len(getAllcgparameters) < 1 {
 		t.Fatalf("No existing cachegroup parameters available to test duplicate functionality")
 	}
+	if getAllcgparameters[0].Parameter == nil && *getAllcgparameters[0].Parameter != 0 {
+		t.Fatalf("found nil/0 Value in Paramters")
+	}
+	if len(*getAllcgparameters[0].CacheGroup) < 1 {
+		t.Fatalf("found null Value in Cachegroup %d", len(*getAllcgparameters[0].CacheGroup))
+	}
 	parameterID := *getAllcgparameters[0].Parameter
 
 	//Get cachegroup id from cachegroup name
@@ -108,17 +114,16 @@ func CreateTestCacheGroupParametersAlreadyExist(t *testing.T) {
 	if len(cgResponse.Response) < 1 {
 		t.Fatalf("No data available for GetCacheGroups by Name - Length %d", len(cgResponse.Response))
 	}
-	cacheGroupID := cgResponse.Response[0].ID
-	if parameterID != 0 && *cacheGroupID != 0 {
-		cgparameters, reqInf, err := TOSession.CreateCacheGroupParameter(*cacheGroupID, parameterID, client.RequestOptions{})
-		if reqInf.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
-		}
-		if err == nil {
-			t.Errorf("Expected Parameter - %d already associated with cachegroup %d - Alerts %v", parameterID, cacheGroupID, cgparameters.Alerts)
-		}
-	} else {
-		t.Errorf("Nil value found in one of the values. Cachegroup ID %d, Parameter ID %d", cacheGroupID, parameterID)
+	if cgResponse.Response[0].ID == nil && *cgResponse.Response[0].ID != 0 {
+		t.Fatalf("found nil/0 Value in Cachegroup ID")
+	}
+	cachegroupID := *cgResponse.Response[0].ID
+	cgparameters, reqInf, err := TOSession.CreateCacheGroupParameter(cachegroupID, parameterID, client.RequestOptions{})
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("Expected Parameter - %d already associated with cachegroup %d - Alerts %v", parameterID, cachegroupID, cgparameters.Alerts)
 	}
 }
 
@@ -367,10 +372,7 @@ func SortTestCacheGroupParameters(t *testing.T) {
 			sortedList = append(sortedList, strconv.Itoa(*cgparameters.Parameter))
 		}
 	}
-
-	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
-		return sortedList[p] < sortedList[q]
-	})
+	res := sort.StringsAreSorted(sortedList)
 	if !res {
 		t.Errorf("list is not sorted by their ID: %v", sortedList)
 	}
@@ -409,12 +411,11 @@ func SortTestCacheGroupParametersDesc(t *testing.T) {
 	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
 		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
 	}
-	if *respDesc[0].Parameter != 0 && *respAsc[0].Parameter != 0 {
-		if *respDesc[0].Parameter != *respAsc[0].Parameter {
-			t.Errorf("CacheGroup Parameters responses are not equal after reversal: Asc: %v - Desc: %v", *respDesc[0].Parameter, *respAsc[0].Parameter)
-		}
-	} else {
-		t.Errorf("Parameter ID shouldn't be empty while sorting the response")
+	if respDesc[0].Parameter == nil || respAsc[0].Parameter == nil {
+		t.Fatalf("Parameter value is nil in response, So Sort functionality can't perform")
+	}
+	if *respDesc[0].Parameter != *respAsc[0].Parameter {
+		t.Errorf("CacheGroup Parameters responses are not equal after reversal: Asc: %v - Desc: %v", *respDesc[0].Parameter, *respAsc[0].Parameter)
 	}
 }
 
@@ -433,7 +434,9 @@ func CreateTestCacheGroupParametersWithInvalidData(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error in fetching get Cachegroups %v", err)
 	}
-
+	if cgresp.Response[0].ID == nil {
+		t.Fatalf("Cache group response ID is nil in Get Cache groups")
+	}
 	if parameterresp.Response[0].ID != 0 && *cgresp.Response[0].ID != 0 {
 		parameterID := parameterresp.Response[0].ID
 		//Create CacheGroupParameters with Invalid Cachegroup ID
