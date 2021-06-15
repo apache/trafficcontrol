@@ -91,7 +91,7 @@ reencrypt_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/db/reencrypt
 # copy TV migrate
 tvm_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/db/traffic_vault_migrate
 ( mkdir -p "$tvm_dir" && \
-	cd "$tvm_dirr" && \
+	cd "$tvm_dir" && \
 	cp "$TC_DIR"/traffic_ops/app/db/traffic_vault_migrate/traffic_vault_migrate .
 ) || { echo "Could not copy go db traffic_vault_migrate at $(pwd): $!"; exit 1; };
 
