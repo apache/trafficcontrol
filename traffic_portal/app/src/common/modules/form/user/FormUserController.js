@@ -40,7 +40,7 @@ var FormUserController = function(user, $scope, $location, formUtils, stringUtil
     $scope.changeLogs = [];
 
     $scope.getChangeLogs = function(userName) {
-        changeLogService.getChangeLogs({ username: userName })
+        changeLogService.getChangeLogs({ username: encodeURIComponent(userName) })
             .then(function(response) {
                 $scope.changeLogs = response;
                 locationUtils.navigateToPath('/change-logs?username='+userName);
