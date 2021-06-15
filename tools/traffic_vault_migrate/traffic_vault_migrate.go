@@ -221,7 +221,7 @@ func main() {
 	if compare {
 		log.Infof("Fetching data from %s...\n", toSrv.Name())
 		if err := toSrv.Fetch(); err != nil {
-			log.Errorf("Unable to fetch toSrv data: %w\n", err)
+			log.Errorf("Unable to fetch toSrv data: %v\n", err)
 			os.Exit(1)
 		}
 
