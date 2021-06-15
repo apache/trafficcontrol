@@ -34,19 +34,20 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 var (
 	fromType    string
 	toType      string
-	fromCfg     string
-	toCfg       string
-	cfgLocation string
+	fromCfgPath string
+	toCfgPath   string
+	logCfgPath  string
+	keyFile     string
 	dry         bool
 	compare     bool
 	noConfirm   bool
 	dump        bool
+	logLevel    string
 
 	cfg config = config{
 		LogLocationError:   log.LogLocationStderr,
@@ -72,50 +73,50 @@ func init() {
 	}
 	toType = *toTypePtr
 
-	toCfgPtr := getopt.StringLong("toCfg", 'g', "pg.json", "To server config file")
+	toCfgPtr := getopt.StringLong("toCfgPath", 'g', "pg.json", "To server config file")
 	if toCfgPtr == nil {
 		stdlog.Fatal("unable to load toCfg")
 	}
-	toCfg = *toCfgPtr
+	toCfgPath = *toCfgPtr
 
-	fromCfgPtr := getopt.StringLong("fromCfg", 'f', "riak.json", "From server config file")
+	fromCfgPtr := getopt.StringLong("fromCfgPath", 'f', "riak.json", "From server config file")
 	if fromCfgPtr == nil {
 		stdlog.Fatal("unable to load fromCfg")
 	}
-	fromCfg = *fromCfgPtr
+	fromCfgPath = *fromCfgPtr
 
-	dryPtr := getopt.BoolLong("dry", 'r', "Do not perform writes")
-	if dryPtr == nil {
-		stdlog.Fatal("unable to load dry")
-	}
-	dry = *dryPtr
+	getopt.FlagLong(&dry, "dry", 'r', "Do not perform writes").
+		SetOptional().
+		SetFlag().
+		SetGroup("no_insert")
 
-	comparePtr := getopt.BoolLong("compare", 'c', "Compare to and from server records")
-	if comparePtr == nil {
-		stdlog.Fatal("unable to load compare")
-	}
-	compare = *comparePtr
+	getopt.FlagLong(&compare, "compare", 'c', "Compare to and from server records").
+		SetOptional().
+		SetFlag().
+		SetGroup("no_insert")
 
-	noConfirmPtr := getopt.BoolLong("noConfirm", 'm', "Requires confirmation before inserting records")
-	if noConfirmPtr == nil {
-		stdlog.Fatal("unable to load noConfirm")
-	}
-	noConfirm = *noConfirmPtr
+	getopt.FlagLong(&noConfirm, "noConfirm", 'm', "Requires confirmation before inserting records").
+		SetFlag()
 
-	dumpPtr := getopt.BoolLong("dump", 'd', "Write keys (from 'from' server) to disk")
-	if dumpPtr == nil {
-		stdlog.Fatal("unable to load dump")
-	}
-	dump = *dumpPtr
+	getopt.FlagLong(&dump, "dump", 'd', "Write keys (from 'from' server) to disk").
+		SetOptional().
+		SetGroup("disk_bck").
+		SetFlag()
 
-	cfgLocationPtr := getopt.StringLong("cfg", 'l', "Log configuration")
-	if cfgLocationPtr == nil {
-		stdlog.Fatal("unable to load cfg")
-	}
-	cfgLocation = *cfgLocationPtr
+	getopt.FlagLong(&keyFile, "fill", 'i', "Insert data into `to` server with data this directory").
+		SetOptional().
+		SetGroup("disk_bck")
+
+	getopt.FlagLong(&logCfgPath, "logCfg", 'l', "Log configuration file").
+		SetOptional().
+		SetGroup("log")
+
+	getopt.FlagLong(&logLevel, "logLevel", 'e', "Print everything at above specified log level (error|warning|info|debug|event)").
+		SetOptional().
+		SetGroup("log")
 }
 
-// supportBackends returns the backends available in this tool
+// supportBackends returns the backends available in this tool.
 func supportedBackends() []TVBackend {
 	return []TVBackend{
 		&riakBE, &pgBE,
@@ -132,86 +133,95 @@ func main() {
 
 	toSrvUsed := !dump && !dry
 
-	if !validateType(fromType) {
-		log.Errorln("Unknown fromType " + fromType)
-		os.Exit(1)
-	}
-	if toSrvUsed && !validateType(toType) {
-		log.Errorln("Unknown toType " + toType)
-		os.Exit(1)
-	}
+	importData := keyFile != ""
+	toSrvUsed := !dump && !dry || keyFile != ""
 
-	fromSrv = getBackendFromType(fromType)
-	if toSrvUsed {
-		toSrv = getBackendFromType(toType)
-	}
+	if !importData {
+		log.Infof("Initiating fromSrv %s...\n", fromType)
+		if !validateType(fromType) {
+			log.Errorln("Unknown fromType " + fromType)
+			os.Exit(1)
+		}
+		fromSrv = getBackendFromType(fromType)
+		if err := fromSrv.ReadConfigFile(fromCfgPath); err != nil {
+			log.Errorf("Unable to read fromSrv cfg: %v", err)
+			os.Exit(1)
+		}
 
-	log.Infoln("Reading configs...")
-	if err := fromSrv.ReadConfigFile(fromCfg); err != nil {
-		log.Errorf("Unable to read fromSrv cfg: %v", err)
-		os.Exit(1)
-	}
+		if err := fromSrv.Start(); err != nil {
+			log.Errorf("issue starting fromSrv: %v", err)
+			os.Exit(1)
+		}
+		defer log.Close(fromSrv, "closing fromSrv")
 
-	if toSrvUsed {
-		if err := toSrv.ReadConfigFile(toCfg); err != nil {
-			log.Errorf("Unable to read toSrv cfg: %v", err)
+		if err := fromSrv.Ping(); err != nil {
+			log.Errorf("Unable to ping fromSrv: %v", err)
 			os.Exit(1)
 		}
 	}
 
-	log.Infoln("Starting server connections...")
-	if err := fromSrv.Start(); err != nil {
-		log.Errorf("issue starting fromSrv: %v", err)
-		os.Exit(1)
-	}
-	defer log.Close(fromSrv, "closing fromSrv")
 	if toSrvUsed {
+		log.Infof("Initiating toSrv %s...\n", toType)
+		if !validateType(toType) {
+			log.Errorln("Unknown toType " + toType)
+			os.Exit(1)
+		}
+		toSrv = getBackendFromType(toType)
+
+		if err := toSrv.ReadConfigFile(toCfgPath); err != nil {
+			log.Errorf("Unable to read toSrv cfg: %v", err)
+			os.Exit(1)
+		}
+
 		if err := toSrv.Start(); err != nil {
 			log.Errorf("issue starting toSrv: %v", err)
 			os.Exit(1)
 		}
 		defer log.Close(toSrv, "closing toSrv")
-	}
 
-	log.Infoln("Pinging servers...")
-	if err := fromSrv.Ping(); err != nil {
-		log.Errorf("Unable to ping fromSrv: %v", err)
-		os.Exit(1)
-	}
-	if toSrvUsed {
 		if err := toSrv.Ping(); err != nil {
 			log.Errorf("Unable to ping toSrv: %v", err)
 			os.Exit(1)
 		}
 	}
 
-	log.Infof("Fetching data from %v...\n", fromSrv.Name())
-	if err := fromSrv.Fetch(); err != nil {
-		log.Errorf("Unable to fetch fromSrv data: %v", err)
-		os.Exit(1)
-	}
+	var fromSecret Secrets
+	if !importData {
+		var err error
+		log.Infof("Fetching data from %s...\n", fromSrv.Name())
+		if err = fromSrv.Fetch(); err != nil {
+			log.Errorf("Unable to fetch fromSrv data: %v", err)
+			os.Exit(1)
+		}
 
-	fromSecret, err := GetKeys(fromSrv)
-	if err != nil {
-		log.Errorln(err)
-		os.Exit(1)
-	}
+		if fromSecret, err = GetKeys(fromSrv); err != nil {
+			log.Errorln(err)
+			os.Exit(1)
+		}
 
-	if err := Validate(fromSrv); err != nil {
-		log.Errorln(err)
-		os.Exit(1)
+		if err := Validate(fromSrv); err != nil {
+			log.Errorln(err)
+			os.Exit(1)
+		}
+
+	} else {
+		err := fromSecret.fill(keyFile)
+		if err != nil {
+			log.Errorln(err)
+			os.Exit(1)
+		}
 	}
 
 	if dump {
-		log.Infof("Dumping data from %v...\n", fromSrv.Name())
+		log.Infof("Dumping data from %s...\n", fromSrv.Name())
 		fromSecret.dump("dump")
 		return
 	}
 
 	if compare {
-		log.Infof("Fetching data from %v...\n", toSrv.Name())
+		log.Infof("Fetching data from %s...\n", toSrv.Name())
 		if err := toSrv.Fetch(); err != nil {
-			log.Errorf("Unable to fetch toSrv data: %v\n", err)
+			log.Errorf("Unable to fetch toSrv data: %w\n", err)
 			os.Exit(1)
 		}
 
@@ -229,7 +239,11 @@ func main() {
 		fromSecret.sort()
 		toSecret.sort()
 
-		log.Infoln(fromSrv.String())
+		if !importData {
+			log.Infoln(fromSrv.String())
+		} else {
+			log.Infof("Disk backup:\n\tSSL Keys: %d\n\tDNSSec Keys: %d\n\tURI Keys: %d\n\tURL Keys: %d\n", len(fromSecret.sslkeys), len(fromSecret.dnssecKeys), len(fromSecret.uriKeys), len(fromSecret.urlKeys))
+		}
 		log.Infoln(toSrv.String())
 
 		if !reflect.DeepEqual(fromSecret.sslkeys, toSecret.sslkeys) {
@@ -252,18 +266,24 @@ func main() {
 		return
 	}
 
-	log.Infof("Setting %v keys...\n", toSrv.Name())
-	if err := SetKeys(toSrv, fromSecret); err != nil {
-		log.Errorln(err)
-		os.Exit(1)
+	if toSrvUsed {
+		log.Infof("Setting %s keys...\n", toSrv.Name())
+		if err := SetKeys(toSrv, fromSecret); err != nil {
+			log.Errorln(err)
+			os.Exit(1)
+		}
+
+		if err := Validate(toSrv); err != nil {
+			log.Errorln(err)
+			os.Exit(1)
+		}
 	}
 
-	if err := Validate(toSrv); err != nil {
-		log.Errorln(err)
-		os.Exit(1)
+	if !importData {
+		log.Infoln(fromSrv.String())
+	} else {
+		log.Infof("Disk backup:\n\tSSL Keys: %d\n\tDNSSec Keys: %d\n\tURI Keys: %d\n\tURL Keys: %d\n", len(fromSecret.sslkeys), len(fromSecret.dnssecKeys), len(fromSecret.uriKeys), len(fromSecret.urlKeys))
 	}
-
-	log.Infoln(fromSrv.String())
 
 	if dry {
 		return
@@ -285,58 +305,58 @@ func main() {
 			}
 		}
 	}
-	log.Infof("Inserting data into %v...\n", toSrv.Name())
+	log.Infof("Inserting data into %s...\n", toSrv.Name())
 	if err := toSrv.Insert(); err != nil {
 		log.Errorln(err)
 		os.Exit(1)
 	}
 }
 
-// Validate runs the ValidateKey method on the backend
+// Validate runs the ValidateKey method on the backend.
 func Validate(be TVBackend) error {
 	if errs := be.ValidateKey(); errs != nil && len(errs) > 0 {
-		return errors.New(fmt.Sprintf("Validation Errors (%v): \n%v", be.Name(), strings.Join(errs, "\n")))
+		return errors.New(fmt.Sprintf("Validation Errors (%s): \n%s", be.Name(), strings.Join(errs, "\n")))
 	}
 	return nil
 }
 
-// SetKeys will set all of the keys for a backend
+// SetKeys will set all of the keys for a backend.
 func SetKeys(be TVBackend, s Secrets) error {
 	if err := be.SetSSLKeys(s.sslkeys); err != nil {
-		return errors.New(fmt.Sprintf("Unable to set %v ssl keys: %v", be.Name(), err))
+		return fmt.Errorf("Unable to set %s ssl keys: %w", be.Name(), err)
 	}
 	if err := be.SetDNSSecKeys(s.dnssecKeys); err != nil {
-		return errors.New(fmt.Sprintf("Unable to set %v dnssec keys: %v", be.Name(), err))
+		return fmt.Errorf("Unable to set %s dnssec keys: %w", be.Name(), err)
 	}
 	if err := be.SetURLSigKeys(s.urlKeys); err != nil {
-		return errors.New(fmt.Sprintf("Unable to set %v url keys: %v", be.Name(), err))
+		return fmt.Errorf("Unable to set %v url keys: %v", be.Name(), err)
 	}
 	if err := be.SetURISignKeys(s.uriKeys); err != nil {
-		return errors.New(fmt.Sprintf("Unable to set %v uri keys: %v", be.Name(), err))
+		return fmt.Errorf("Unable to set %v uri keys: %v", be.Name(), err)
 	}
 	return nil
 }
 
-// GetKeys will get all of the keys for a backend
+// GetKeys will get all of the keys for a backend.
 func GetKeys(be TVBackend) (Secrets, error) {
 	var secret Secrets
 	var err error
 	if secret.sslkeys, err = be.GetSSLKeys(); err != nil {
-		return Secrets{}, errors.New(fmt.Sprintf("Unable to get %v sslkeys: %v", be.Name(), err))
+		return Secrets{}, fmt.Errorf("Unable to get %v sslkeys: %v", be.Name(), err)
 	}
 	if secret.dnssecKeys, err = be.GetDNSSecKeys(); err != nil {
-		return Secrets{}, errors.New(fmt.Sprintf("Unable to get %v dnssec keys: %v", be.Name(), err))
+		return Secrets{}, fmt.Errorf("Unable to get %v dnssec keys: %v", be.Name(), err)
 	}
 	if secret.uriKeys, err = be.GetURISignKeys(); err != nil {
-		return Secrets{}, errors.New(fmt.Sprintf("Unable to get %v uri keys: %v", be.Name(), err))
+		return Secrets{}, fmt.Errorf("Unable to get %v uri keys: %v", be.Name(), err)
 	}
 	if secret.urlKeys, err = be.GetURLSigKeys(); err != nil {
-		return Secrets{}, errors.New(fmt.Sprintf("Unable to %v url keys: %v", be.Name(), err))
+		return Secrets{}, fmt.Errorf("Unable to %v url keys: %v", be.Name(), err)
 	}
 	return secret, nil
 }
 
-// UnmarshalConfig takes in a config file and a type and will read the config file into the reflected type
+// UnmarshalConfig takes in a config file and a type and will read the config file into the reflected type.
 func UnmarshalConfig(configFile string, config interface{}) error {
 	data, err := ioutil.ReadFile(configFile)
 	if err != nil {
@@ -352,48 +372,48 @@ func UnmarshalConfig(configFile string, config interface{}) error {
 
 // TVBackend represents a TV backend that can be have data migrated to/from
 type TVBackend interface {
-	// Start initiates the connection to the backend DB
+	// Start initiates the connection to the backend DB.
 	Start() error
-	// Close terminates the connection to the backend DB
+	// Close terminates the connection to the backend DB.
 	Close() error
-	// Ping checks the connection to the backend DB
+	// Ping checks the connection to the backend DB.
 	Ping() error
-	// ValidateKey validates that the keys are valid (in most cases, certain fields are not null)
+	// ValidateKey validates that the keys are valid (in most cases, certain fields are not null).
 	ValidateKey() []string
-	// Name returns the name for this backend
+	// Name returns the name for this backend.
 	Name() string
-	// ReadConfigFile takes in a filename and will read it into the backends config
+	// ReadConfigFile takes in a filename and will read it into the backends config.
 	ReadConfigFile(string) error
-	// String returns a high level overview of the backend and its keys
+	// String returns a high level overview of the backend and its keys.
 	String() string
 
-	// Fetch gets all of the keys from the backend DB
+	// Fetch gets all of the keys from the backend DB.
 	Fetch() error
-	// Insert takes the current keys and inserts them into the backend DB
+	// Insert takes the current keys and inserts them into the backend DB.
 	Insert() error
 
-	// GetSSLKeys converts the backends internal key representation into the common representation (SSLKey)
+	// GetSSLKeys converts the backends internal key representation into the common representation (SSLKey).
 	GetSSLKeys() ([]SSLKey, error)
-	// SetSSLKeys takes in keys and converts & encrypts the data into the backends internal format
+	// SetSSLKeys takes in keys and converts & encrypts the data into the backends internal format.
 	SetSSLKeys([]SSLKey) error
 
-	// GetDNSSecKeys converts the backends internal key representation into the common representation (DNSSecKey)
+	// GetDNSSecKeys converts the backends internal key representation into the common representation (DNSSecKey).
 	GetDNSSecKeys() ([]DNSSecKey, error)
-	// SetDNSSecKeys takes in keys and converts & encrypts the data into the backends internal format
+	// SetDNSSecKeys takes in keys and converts & encrypts the data into the backends internal format.
 	SetDNSSecKeys([]DNSSecKey) error
 
-	// GetURISignKeys converts the pg internal key representation into the common representation (URISignKey)
+	// GetURISignKeys converts the pg internal key representation into the common representation (URISignKey).
 	GetURISignKeys() ([]URISignKey, error)
-	// SetURISignKeys takes in keys and converts & encrypts the data into the backends internal format
+	// SetURISignKeys takes in keys and converts & encrypts the data into the backends internal format.
 	SetURISignKeys([]URISignKey) error
 
-	// GetURLSigKeys converts the backends internal key representation into the common representation (URLSigKey)
+	// GetURLSigKeys converts the backends internal key representation into the common representation (URLSigKey).
 	GetURLSigKeys() ([]URLSigKey, error)
-	// SetURLSigKeys takes in keys and converts & encrypts the data into the backends internal format
+	// SetURLSigKeys takes in keys and converts & encrypts the data into the backends internal format.
 	SetURLSigKeys([]URLSigKey) error
 }
 
-// Secrets contains every key to be migrated
+// Secrets contains every key to be migrated.
 type Secrets struct {
 	sslkeys    []SSLKey
 	dnssecKeys []DNSSecKey
@@ -441,26 +461,41 @@ func (s *Secrets) dump(directory string) {
 		os.Exit(1)
 	}
 }
-
-// SSLKey is the common representation of a SSL Key
-type SSLKey struct {
-	tc.DeliveryServiceSSLKeys
-	Version util.JSONIntStr
+func (s *Secrets) fill(directory string) error {
+	if err := readKeys(directory+"/sslkeys.json", &s.sslkeys); err != nil {
+		return err
+	}
+	if err := readKeys(directory+"/dnsseckeys.json", &s.dnssecKeys); err != nil {
+		return err
+	}
+	if err := readKeys(directory+"/urlkeys.json", &s.urlKeys); err != nil {
+		return err
+	}
+	if err := readKeys(directory+"/urikeys.json", &s.uriKeys); err != nil {
+		return err
+	}
+	return nil
 }
 
-// DNSSecKey is the common representation of a DNSSec Key
+// SSLKey is the common representation of a SSL Key.
+type SSLKey struct {
+	tc.DeliveryServiceSSLKeys
+	Version string
+}
+
+// DNSSecKey is the common representation of a DNSSec Key.
 type DNSSecKey struct {
 	CDN string
 	tc.DNSSECKeysTrafficVault
 }
 
-// URISignKey is the common representation of an URI Sign Key
+// URISignKey is the common representation of an URI Signing Key.
 type URISignKey struct {
 	DeliveryService string
 	Keys            map[string]tc.URISignerKeyset
 }
 
-// URLSigKey is the common representation of an URL Sig Key
+// URLSigKey is the common representation of an URL Sig Key.
 type URLSigKey struct {
 	DeliveryService string
 	tc.URLSigKeys
@@ -491,6 +526,24 @@ func writeKeys(filename string, data interface{}) error {
 
 	return nil
 }
+func readKeys(filename string, data interface{}) error {
+	if _, err := os.Stat(filename); err != nil {
+		if os.IsNotExist(err) {
+			return errors.New("file " + filename + " does not exist")
+		}
+	}
+
+	fileBytes, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(fileBytes, &data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func supportedTypes() []string {
 	var typs []string
 	for _, be := range supportedBackends() {
@@ -515,13 +568,13 @@ func getBackendFromType(typ string) TVBackend {
 	return nil
 }
 func initConfig() {
-	if cfgLocation != "" {
-		if _, err := os.Stat(cfgLocation); err != nil {
+	if logCfgPath != "" {
+		if _, err := os.Stat(logCfgPath); err != nil {
 			if os.IsNotExist(err) {
-				stdlog.Fatal("file" + cfgLocation + " does not exist")
+				stdlog.Fatal("file '" + logCfgPath + "' does not exist")
 			}
 		}
-		data, err := ioutil.ReadFile(cfgLocation)
+		data, err := ioutil.ReadFile(logCfgPath)
 		if err != nil {
 			stdlog.Fatal(err)
 		}
@@ -532,6 +585,25 @@ func initConfig() {
 			stdlog.Fatal(err)
 		}
 		cfg = newCfg
+	} else if logLevel != "" {
+		switch logLevel {
+		case "event":
+			cfg.LogLocationEvent = log.LogLocationStdout
+			fallthrough
+		case "debug":
+			cfg.LogLocationDebug = log.LogLocationStdout
+			fallthrough
+		case "info":
+			cfg.LogLocationInfo = log.LogLocationStdout
+			fallthrough
+		case "warning":
+			cfg.LogLocationWarning = log.LogLocationStdout
+			fallthrough
+		case "error":
+			cfg.LogLocationError = log.LogLocationStderr
+		default:
+			stdlog.Fatal("unknown logLevel " + logLevel)
+		}
 	}
 
 	err := log.InitCfg(cfg)

@@ -75,3 +75,9 @@ func AESDecrypt(bytesToDecrypt []byte, aesKey []byte) ([]byte, error) {
 	}
 	return decryptedString, nil
 }
+
+// ValidateAESKey takes in a byte slice and tests if it's a valid AES key (16, 24, or 32 bytes)
+func ValidateAESKey(keyBytes []byte) error {
+	_, err := aes.NewCipher(keyBytes)
+	return err
+}

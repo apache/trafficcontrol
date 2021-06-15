@@ -44,7 +44,12 @@ func TestInvalidKey(t *testing.T) {
 	text := []byte("this is my favorite test on the citadel")
 	emptyKey := []byte{}
 
-	_, err := AESEncrypt(emptyKey, text)
+	err := ValidateAESKey(emptyKey)
+	if err == nil {
+		t.Fatal("expected ValidateAESKey to return error with empty key")
+	}
+
+	_, err = AESEncrypt(emptyKey, text)
 	if err == nil {
 		t.Fatal("expected AESEncrypt to return error with empty key")
 	}
@@ -63,13 +68,23 @@ func TestInvalidKey(t *testing.T) {
 			t.Fatal("expected longKey to be more than 32 characters")
 		}
 
+		err = ValidateAESKey(shortKey)
+		if err == nil {
+			t.Fatal("expected ValidateAESKey to return error with short key")
+		}
+
+		err = ValidateAESKey(longKey)
+		if err == nil {
+			t.Fatal("expected ValidateAESKey to return error with long key")
+		}
+
 		_, err = AESEncrypt(shortKey, text)
 		if err == nil {
-			t.Fatal("expected AESEncrypt return error with short key")
+			t.Fatal("expected AESEncrypt to return error with short key")
 		}
 		_, err = AESDecrypt(shortKey, text)
 		if err == nil {
-			t.Fatal("expected AESDecrypt return error with short key")
+			t.Fatal("expected AESDecrypt to return error with short key")
 		}
 
 		_, err = AESEncrypt(longKey, text)
@@ -102,6 +117,11 @@ func TestValidKey(t *testing.T) {
 	text := []byte("this is my favorite test on the citadel")
 	for _, keySize := range validKeySizes {
 		validKey := randomByteArray(keySize)
+
+		err := ValidateAESKey(validKey)
+		if err != nil {
+			t.Fatal("expected ValidatedAESKey to succeed, got : " + err.Error())
+		}
 
 		encText, err := AESEncrypt(text, validKey)
 		if err != nil {

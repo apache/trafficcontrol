@@ -32,27 +32,49 @@ Usage
 
 		Compare 'to' and 'from' backend keys. Will fetch keys from the dbs of both 'to' and 'from', sorts them by cdn/ds/version and does a deep comparison.
 
+		.. note:: Mutually exclusive with :option:`-r`/:option:`--dry`
+
 .. option:: -d, --dump
 
 		Write keys (from 'from' server) to disk in the folder 'dump' with the unix permissions 0640.
 
 		.. warning:: This can write potentially sensitive information to disk, use with care.
 
-.. option:: -f, --fromCfg=CFG
+		.. note:: Mutually exclusive with :option:`-l`/:option:`--fill`
 
-		From server config file (default "riak.json")
+.. option:: -e LEVEL, --logLevel=LEVEL
 
-.. option:: -g, --toCfg=CFG
+		Print everything at above specified log level (error|warning|info|debug|event) [info]
 
-		To server config file (default "pg.json")
+		.. note:: Mutually exclusive with :option:`-l`/:option:`--logCfg`
+
+.. option:: -f CFG, --fromCfgPath=CFG
+
+		From server config file ["riak.json"]
+
+.. option:: -g CFG, --toCfgPath=CFG
+
+		To server config file ["pg.json"]
 
 .. option:: -h, --help
 
 		Displays usage information
 
-.. option:: -o, --toType=TYPE
+.. option:: -i DIR, --fill DIR
 
-		From server types (Riak|PG) (default "PG")
+		Insert data into `to` server with data this directory
+
+		.. note:: Mutually exclusive with :option:`-d`/:option:`--dump`
+
+.. option:: -l CFG, --logCfg CFG
+
+		Log configuration file
+
+		.. note:: Mutually exclusive with :option:`-e`/:option:`--logLevel`
+
+.. option:: -o TYPE, --toType=TYPE
+
+		From server types (Riak|PG) [PG]
 
 .. option:: -m, --noConfirm
 
@@ -62,9 +84,11 @@ Usage
 
 		Do not perform writes. Will do a basic output of the keys on the 'from' backend.
 
-.. option:: -t, --fromType=TYPE
+		.. note:: Mutually exclusive with :option:`-c`/:option:`--compare`
 
-		From server types (Riak|PG) (default "Riak")
+.. option:: -t TYPE, --fromType=TYPE
+
+		From server types (Riak|PG) [Riak]
 
 
 Riak
@@ -80,6 +104,8 @@ riak.json
  :host: The hostname for the Riak server.
 
  :port: The port for which the Riak server is listening for protobuf connections.
+
+ :timeout: The number of seconds to wait for each operation.
 
  :insecure: (Optional) Determines whether to verify insecure certificates.
 
@@ -106,6 +132,22 @@ pg.json
  :sslmode: The ssl settings for the client connection, `explanation here <https://www.postgresql.org/docs/13/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS>`_. Options are 'disable', 'allow', 'prefer', 'require', 'verify-ca' and 'verify-full'
 
  :aesKey: The base64 encoding of a 16, 24, or 32 bit AES key.
+
+
+Logging
+----------
+
+The log configuration file has the structure:
+
+ :error_log: Where to output error messages (stderr|stdout|null)
+
+ :warning_log: Where to output warning messages (stderr|stdout|null)
+
+ :info_log: Where to output info messages (stderr|stdout|null)
+
+ :debug_log: Where to output error messages (stderr|stdout|null)
+
+ :event_log: Where to output error messages (stderr|stdout|null)
 
 Development
 =============
