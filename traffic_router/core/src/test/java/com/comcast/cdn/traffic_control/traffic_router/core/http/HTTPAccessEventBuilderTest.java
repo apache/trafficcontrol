@@ -245,12 +245,4 @@ public class HTTPAccessEventBuilderTest {
 
         assertThat(httpAccessEvent, containsString("uas=\"Mozilla/5.0 Gecko/20100101 Firefox/68.0\""));
     }
-
-    @Test
-    public void itUsesDeliveryServiceXmlId() throws Exception {
-        /*HTTPAccessRecord httpAccessRecord = new HTTPAccessRecord.Builder(new Date(144140678000L), request).build();
-        String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
-
-        assertThat(httpAccessEvent, containsString("uas=\"Mozilla/5.0 Gecko/20100101 Firefox/68.0\""));*/
-    }
 }
