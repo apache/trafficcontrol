@@ -44,20 +44,14 @@ under the License.
                 <fieldset class="form-group" ng-class="{'has-error': hasError(lockform.lockType)}">
                     <input id="soft" name="lockType" type="radio" ng-model="lock.soft" ng-value="true" required>
                     <label class="has-tooltip" for="soft">Soft <i class="fa fa-info-circle has-tooltip"></i><div class="helptooltip">
-                        <div class="helptext">
-                            <ul>
-                                <li>SOFT: A soft lock will prevent others from queueing server updates or snapshotting the locked CDN.</li>
-                            </ul>
+                        <div class="helptext">A <em>SOFT</em> lock will prevent others from queueing server updates or snapshotting the locked CDN
                         </div>
                     </div>
                     </label>
                     <br>
                     <input id="hard" name="lockType" type="radio" ng-model="lock.soft" ng-value="false" required>
                     <label class="has-tooltip" for="hard">Hard <i class="fa fa-info-circle has-tooltip"></i><div class="helptooltip">
-                        <div class="helptext">
-                            <ul>
-                                <li>HARD: A soft lock will prevent others from queueing server updates or snapshotting the locked CDN. It will also block others from making changes that would change the state of the locked CDN.</li>
-                            </ul>
+                        <div class="helptext">A <em>HARD</em> lock will prevent others from queueing server updates or snapshotting the locked CDN. It will also block others from making changes that would change the state of the locked CDN.
                         </div>
                     </div>
                     </label>
