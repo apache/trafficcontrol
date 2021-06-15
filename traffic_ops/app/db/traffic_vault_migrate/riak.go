@@ -129,21 +129,21 @@ func (rb *RiakBackend) Insert() error {
 
 // ValidateKey validates that the keys are valid (in most cases, certain fields are not null).
 func (rb *RiakBackend) ValidateKey() []string {
-	errs := []string{}
+	allErrs := []string{}
 	if errs := rb.sslKeys.validate(); errs != nil {
-		errs = append(errs, errs...)
+		allErrs = append(allErrs, errs...)
 	}
 	if errs := rb.dnssecKeys.validate(); errs != nil {
-		errs = append(errs, errs...)
+		allErrs = append(allErrs, errs...)
 	}
 	if errs := rb.uriSigningKeys.validate(); errs != nil {
-		errs = append(errs, errs...)
+		allErrs = append(allErrs, errs...)
 	}
 	if errs := rb.urlSigKeys.validate(); errs != nil {
-		errs = append(errs, errs...)
+		allErrs = append(allErrs, errs...)
 	}
 
-	return errs
+	return allErrs
 }
 
 // SetSSLKeys takes in keys and converts & encrypts the data into the backends internal format.

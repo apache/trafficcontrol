@@ -126,20 +126,20 @@ func (pg *PGBackend) Start() error {
 
 // ValidateKey validates that the keys are valid (in most cases, certain fields are not null).
 func (pg *PGBackend) ValidateKey() []string {
-	var errs []string
+	var allErrs []string
 	if errs := pg.sslKey.validate(); errs != nil {
-		errs = append(errs, errs...)
+		allErrs = append(allErrs, errs...)
 	}
 	if errs := pg.dnssec.validate(); errs != nil {
-		errs = append(errs, errs...)
+		allErrs = append(allErrs, errs...)
 	}
 	if errs := pg.uriSigningKeys.validate(); errs != nil {
-		errs = append(errs, errs...)
+		allErrs = append(allErrs, errs...)
 	}
 	if errs := pg.urlSigKeys.validate(); errs != nil {
-		errs = append(errs, errs...)
+		allErrs = append(allErrs, errs...)
 	}
-	return errs
+	return allErrs
 }
 
 // Close terminates the connection to the backend DB.
