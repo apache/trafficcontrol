@@ -652,7 +652,7 @@ func search(cluster *riak.Cluster, index string, query string, filterQuery strin
 			} else if numRows < cmd.Response.NumFound {
 				searchDocs = make([]*riak.SearchDoc, cmd.Response.NumFound)
 			}
-			if cmd.Response.NumFound > 10000 {
+			if cmd.Response.NumFound > numRows*10 {
 				fmt.Printf("WARNING: found %d rows, press enter to continue", cmd.Response.NumFound)
 				_, _ = fmt.Scanln()
 			}
