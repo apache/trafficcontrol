@@ -385,8 +385,8 @@ ON CONFLICT DO NOTHING
 `
 
 func recreateTLSVersions(versions []string, dsid int, tx *sql.Tx) error {
-	err := tx.QueryRow(`DELETE FROM public.deliveryservice_tls_version WHERE deliveryservice = $1`, dsid).Scan()
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+	_, err := tx.Exec(`DELETE FROM public.deliveryservice_tls_version WHERE deliveryservice = $1`, dsid)
+	if err != nil {
 		return fmt.Errorf("cleaning up existing TLS version for DS #%d: %w", dsid, err)
 	}
 
@@ -394,18 +394,10 @@ func recreateTLSVersions(versions []string, dsid int, tx *sql.Tx) error {
 		return nil
 	}
 
-	rows, err := tx.Query(insertTLSVersionsQuery, dsid, pq.Array(versions))
+	_, err = tx.Exec(insertTLSVersionsQuery, dsid, pq.Array(versions))
 	if err != nil {
 		return fmt.Errorf("inserting new TLS versions: %w", err)
 	}
-	err = rows.Close()
-	if err != nil {
-		log.Errorln("closing TLS versions insert rows: ", err.Error())
-	}
-	if err = rows.Err(); err != nil {
-		log.Errorln("an error occurred at some point in the TLS insertion query: ", err.Error())
-	}
-
 	return nil
 }
 
