@@ -40,13 +40,18 @@ export class DivisionsPage extends BasePage {
     private txtConfirmName = element(by.name('confirmWithNameInput'));
     private randomize = randomize;
 
-    async OpenDivisionsPage(){
+    public async OpenDivisionsPage(){
         let snp = new SideNavigationPage();
         await snp.NavigateToDivisionsPage();
     }
-    async OpenTopologyMenu(){
+
+    public async OpenTopologyMenu(){
         let snp = new SideNavigationPage();
         await snp.ClickTopologyMenu();
+    }
+
+    public async CheckCSV(name: string): Promise<boolean> {
+        return element(by.cssContainingText("span", name)).isPresent();
     }
 
     public async CreateDivisions(divisions: Division): Promise<boolean> {
