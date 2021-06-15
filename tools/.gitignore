@@ -16,6 +16,4 @@
 # under the License.
 #
 traffic_vault_util
-traffic_vault_migrate/traffic_vault_migrate
-traffic_vault_migrate/dump
 golang/junit

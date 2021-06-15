@@ -18,7 +18,7 @@
 #########################
 Traffic Vault Migrate
 #########################
-The ``traffic_vault_migrate`` tool - located at :file:`tools/traffic_vault_migrate/traffic_vault_migrate.go` in the `Apache Traffic Control repository <https://github.com/apache/trafficcontrol>`_ -
+The ``traffic_vault_migrate`` tool - located at :file:`traffic_ops/app/db/traffic_vault_migrate/traffic_vault_migrate.go` in the `Apache Traffic Control repository <https://github.com/apache/trafficcontrol>`_ -
 is used to transfer TV keys between database servers. It interfaces directly with each backend so Traffic Ops/Vault being available is not a requirement.
 The tool assumes that the schema for each backend is already setup as according to the :ref:`admin setup <traffic_vault_admin>`.
 

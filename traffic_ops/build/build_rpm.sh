@@ -80,6 +80,11 @@ initBuildArea() {
 	go build -v -o reencrypt || \
 								{ echo "Could not build reencrypt binary"; return 1;})
 
+	# compile db/traffic_vault_migrate
+		(cd app/db/traffic_vault_migrate
+	go build -v -o traffic_vault_migrate || \
+								{ echo "Could not build traffic_vault_migrate binary"; return 1;})
+
 	# compile TO profile converter
 	(cd install/bin/convert_profile
 	go build -v -gcflags "$gcflags" -ldflags "$ldflags" -tags="$tags" || \
