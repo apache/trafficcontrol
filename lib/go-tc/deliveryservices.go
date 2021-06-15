@@ -494,7 +494,7 @@ const (
 	TLSVersion13 = "1.3"
 )
 
-func newerDisallowedMessage(old string, newer []string) string {
+func newerTLSVersionsDisallowedMessage(old string, newer []string) string {
 	l := len(newer)
 	if l < 1 {
 		return ""
@@ -574,7 +574,7 @@ func TLSVersionsAlerts(vers []string) Alerts {
 		if !found[TLSVersion13] {
 			newerDisallowed = append(newerDisallowed, TLSVersion13)
 		}
-		msg := newerDisallowedMessage(TLSVersion10, newerDisallowed)
+		msg := newerTLSVersionsDisallowedMessage(TLSVersion10, newerDisallowed)
 		if msg != "" {
 			messages = append(messages, msg)
 		}
@@ -586,7 +586,7 @@ func TLSVersionsAlerts(vers []string) Alerts {
 		if !found[TLSVersion13] {
 			newerDisallowed = append(newerDisallowed, TLSVersion13)
 		}
-		msg := newerDisallowedMessage(TLSVersion11, newerDisallowed)
+		msg := newerTLSVersionsDisallowedMessage(TLSVersion11, newerDisallowed)
 		if msg != "" {
 			messages = append(messages, msg)
 		}
@@ -595,7 +595,7 @@ func TLSVersionsAlerts(vers []string) Alerts {
 		if !found[TLSVersion13] {
 			newerDisallowed = append(newerDisallowed, TLSVersion13)
 		}
-		msg := newerDisallowedMessage(TLSVersion12, newerDisallowed)
+		msg := newerTLSVersionsDisallowedMessage(TLSVersion12, newerDisallowed)
 		if msg != "" {
 			messages = append(messages, msg)
 		}
