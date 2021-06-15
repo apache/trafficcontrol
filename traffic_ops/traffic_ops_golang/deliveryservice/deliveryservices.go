@@ -110,38 +110,20 @@ func (ds *TODeliveryService) IsTenantAuthorized(user *auth.CurrentUser) (bool, e
 	return isTenantAuthorized(ds.ReqInfo, &ds.DeliveryServiceV4)
 }
 
-const getTLSVersionsQuery = `
-SELECT tls_version
-FROM public.deliveryservice_tls_version
+const baseTLSVersionsQuery = `SELECT ARRAY_AGG(tls_version ORDER BY tls_version) FROM deliveryservice_tls_version`
+
+const getTLSVersionsQuery = baseTLSVersionsQuery + `
 WHERE deliveryservice = $1
-ORDER BY tls_version
 `
 
 // GetDSTLSVersions retrieves the TLS versions explicitly supported by a
 // Delivery Service identified by dsID. This will panic if handed a nil
 // transaction.
 func GetDSTLSVersions(dsID int, tx *sql.Tx) ([]string, error) {
-	rows, err := tx.Query(getTLSVersionsQuery, dsID)
-	if err != nil {
-		return nil, fmt.Errorf("querying: %w", err)
-	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			log.Errorf("closing TLS versions rows: %v", err)
-		}
-	}()
-
 	var vers []string
-	for rows.Next() {
-		var ver string
-		if err = rows.Scan(&ver); err != nil {
-			return nil, fmt.Errorf("scanning: %w", err)
-		}
-		vers = append(vers, ver)
-	}
-	err = rows.Err()
+	err := tx.QueryRow(getTLSVersionsQuery, dsID).Scan(pq.Array(&vers))
 	if err != nil {
-		err = fmt.Errorf("iteration error: %w", err)
+		err = fmt.Errorf("querying: %w", err)
 	}
 	return vers, err
 }
@@ -2466,11 +2448,7 @@ ds.active,
 	ds.ssl_key_version,
 	ds.tenant_id,
 	tenant.name,
-	(
-		SELECT ARRAY_AGG(tls_version ORDER BY tls_version)
-		FROM deliveryservice_tls_version
-		WHERE deliveryservice = ds.id
-	) AS tls_versions,
+	(` + baseTLSVersionsQuery + ` WHERE deliveryservice = ds.id) AS tls_versions,
 	ds.topology,
 	ds.tr_request_headers,
 	ds.tr_response_headers,
