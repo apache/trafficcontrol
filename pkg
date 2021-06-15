@@ -159,7 +159,7 @@ shift $((OPTIND-1))
 
 # Mark RHEL_VERSION for export
 export RHEL_VERSION
-if [[ -v RHEL_VERSION ]]; then
+if [[ -n "$RHEL_VERSION" ]]; then
 	RUN_OPTIONS+=(-e RHEL_VERSION)
 fi
 
