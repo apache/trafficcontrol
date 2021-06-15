@@ -410,6 +410,10 @@ func (topology *TOTopology) GetAuditName() string {
 // Create is a requirement of the api.Creator interface.
 func (topology *TOTopology) Create() (error, error, int) {
 	tx := topology.APIInfo().Tx.Tx
+	userErr, sysErr, statusCode := topology.checkIfTopologyCanBeAlteredByCurrentUser()
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
+	}
 	err := tx.QueryRow(insertQuery(), topology.Name, topology.Description).Scan(&topology.Name, &topology.Description, &topology.LastUpdated)
 	if err != nil {
 		return api.ParseDBError(err)
@@ -606,7 +610,10 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
-
+	userErr, sysErr, statusCode := topology.checkIfTopologyCanBeAlteredByCurrentUser()
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
+	}
 	oldTopology := TOTopology{APIInfoImpl: topology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}
 
 	if err := oldTopology.removeParents(); err != nil {
@@ -648,6 +655,10 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 // Delete is unused and simply satisfies the Deleter interface
 // (although TOTOpology is used as an OptionsDeleter)
 func (topology *TOTopology) Delete() (error, error, int) {
+	userErr, sysErr, statusCode := topology.checkIfTopologyCanBeAlteredByCurrentUser()
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
+	}
 	return nil, nil, 0
 }
 
@@ -661,6 +672,10 @@ func (topology *TOTopology) OptionsDelete() (error, error, int) {
 		return fmt.Errorf("cannot find exactly 1 topology with the query string provided"), nil, http.StatusBadRequest
 	}
 	topology.Topology = topologies[0].(tc.Topology)
+	userErr, sysErr, statusCode := topology.checkIfTopologyCanBeAlteredByCurrentUser()
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
+	}
 	return api.GenericOptionsDelete(topology)
 }
 
@@ -805,4 +820,23 @@ func selectMaxLastUpdatedQuery(where string) string {
 		SELECT max(t.last_updated) as ti from topology t JOIN topology_cachegroup tc on t.name = tc.topology` + where +
 		` UNION ALL
 	select max(last_updated) as ti from last_deleted l where l.table_name='topology') as res`
+}
+
+func (topology *TOTopology) checkIfTopologyCanBeAlteredByCurrentUser() (error, error, int) {
+	cachegroups := topology.getCachegroupNames()
+	serverIDs, err := dbhelpers.GetServerIDsFromCachegroupNames(topology.ReqInfo.Tx.Tx, cachegroups)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	cdns, err := dbhelpers.GetCDNNamesFromServerIds(topology.ReqInfo.Tx.Tx, serverIDs)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	for _, cdn := range cdns {
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(topology.ReqInfo.Tx.Tx, cdn, topology.ReqInfo.User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, statusCode
+		}
+	}
+	return nil, nil, http.StatusOK
 }

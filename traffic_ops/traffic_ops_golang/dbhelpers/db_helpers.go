@@ -1333,3 +1333,41 @@ func GetCDNNameFromProfileID(tx *sql.Tx, id int) (tc.CDNName, error) {
 	}
 	return tc.CDNName(name), nil
 }
+
+func GetServerIDsFromCachegroupNames(tx *sql.Tx, cgID []string) ([]int64, error) {
+	var serverIDs []int64
+	var serverID int64
+	query := `SELECT server.id FROM server JOIN cachegroup cg ON cg.id = server.cachegroup where cg.name IN $1`
+	rows, err := tx.Query(query, pq.Array(cgID))
+	if err != nil {
+		return serverIDs, errors.New("getting server IDs from cachegroup names : " + err.Error())
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&serverID)
+		if err != nil {
+			return serverIDs, errors.New("scanning server ID : " + err.Error())
+		}
+		serverIDs = append(serverIDs, serverID)
+	}
+	return serverIDs, nil
+}
+
+func GetCDNNamesFromServerIds(tx *sql.Tx, serverIds []int64) ([]string, error) {
+	var cdns []string
+	cdn := ""
+	query := `SELECT DISTINCT(name) FROM cdn JOIN server ON cdn.id = server.cdn_id WHERE server.id IN $1`
+	rows, err := tx.Query(query, pq.Array(serverIds))
+	if err != nil {
+		return cdns, errors.New("getting cdn name for server : " + err.Error())
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&cdn)
+		if err != nil {
+			return cdns, errors.New("scanning cdn name " + cdn + ": " + err.Error())
+		}
+		cdns = append(cdns, cdn)
+	}
+	return cdns, nil
+}
