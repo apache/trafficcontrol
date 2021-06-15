@@ -33,9 +33,9 @@ Configure Anonymous Blocking
 			"name": "Anonymous IP Blocking Policy",
 
 			"anonymousIp": { "blockAnonymousVPN": true,
-			                 "blockHostingProvider": true,
-			                 "blockPublicProxy": true,
-			                 "blockTorExitNode": true},
+				"blockHostingProvider": true,
+				"blockPublicProxy": true,
+				"blockTorExitNode": true},
 
 			"ip4Whitelist": ["192.168.30.0/24", "10.0.2.0/24", "10.1.1.1/32"],
 			"ip6Whitelist": ["2001:550:90a::/48", "::1/128"],

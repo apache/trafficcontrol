@@ -91,10 +91,10 @@ These are the available commands:
 
   apply     generate and apply configuration
 
+  check     check that new config can be applied
   diff      diff config files, with logic like ignoring comments
   generate  generate configuration from Traffic Ops data
   request   request Traffic Ops data
   update    update a cache's queue and reval status in Traffic Ops
-  verify    verify a config file can be applied
 `
 }

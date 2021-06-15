@@ -104,6 +104,7 @@ mkdir -p "$ROOT_DIR/etc/pki/tls/certs";
 mkdir "$ROOT_DIR/etc/pki/tls/private";
 mkdir -p "$ROOT_DIR/opt/traffic_ops/app/public/routing";
 mkdir "$ROOT_DIR/opt/traffic_ops/app/db";
+mkdir "$ROOT_DIR/opt/traffic_ops/app/db/trafficvault";
 mkdir -p "$ROOT_DIR/opt/traffic_ops/app/conf/production";
 cat > "$ROOT_DIR/opt/traffic_ops/app/conf/cdn.conf" <<EOF
 {
@@ -171,15 +172,35 @@ cat <<- EOF > "$ROOT_DIR/defaults.json"
 			"hidden": true
 		}
 	],
-	"/opt/traffic_ops/app/db/dbconf.yml": [
+	"/opt/traffic_ops/app/conf/production/tv.conf": [
 		{
-			"Database server root (admin) user": "postgres",
-			"config_var": "pgUser",
+			"Database type": "Pg",
+			"config_var": "type",
 			"hidden": false
 		},
 		{
-			"Password for database server admin": "${TO_PASSWORD}",
-			"config_var": "pgPassword",
+			"Database name": "traffic_vault",
+			"config_var": "dbname",
+			"hidden": false
+		},
+		{
+			"Database server hostname IP or FQDN": "localhost",
+			"config_var": "hostname",
+			"hidden": false
+		},
+		{
+			"Database port number": "5432",
+			"config_var": "port",
+			"hidden": false
+		},
+		{
+			"Traffic Ops database user": "traffic_vault",
+			"config_var": "user",
+			"hidden": false
+		},
+		{
+			"Password for Traffic Ops database user": "${TO_PASSWORD}",
+			"config_var": "password",
 			"hidden": true
 		}
 	],

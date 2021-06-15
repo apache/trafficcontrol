@@ -24,6 +24,7 @@ import (
 
 // apiProfileParameters is the full path to the /profileparameters API endpoint.
 const apiProfileParameters = "/profileparameters"
+const apiProfileParameter = "/profileparameter"
 
 // Supported query string parameter names.
 const (
@@ -43,6 +44,14 @@ func (to *Session) CreateProfileParameter(pp tc.ProfileParameterCreationRequest,
 func (to *Session) CreateMultipleProfileParameters(pps []tc.ProfileParameterCreationRequest, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiProfileParameters, opts, pps, &alerts)
+	return alerts, reqInf, err
+}
+
+// CreateProfileWithMultipleParameters assigns multipe Parameters to one or more
+// Profiles at once.
+func (to *Session) CreateProfileWithMultipleParameters(pps tc.PostProfileParam, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	var alerts tc.Alerts
+	reqInf, err := to.post(apiProfileParameter, opts, pps, &alerts)
 	return alerts, reqInf, err
 }
 

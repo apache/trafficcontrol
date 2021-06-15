@@ -497,7 +497,8 @@ func makeTo(tosJSON []RemapRuleToJSON, rule remapdata.RemapRule, baseTransport *
 				return nil, fmt.Errorf("error parsing to %v proxy_url: %v", to.URL, toJSON.ProxyURL)
 			}
 			to.ProxyURL = proxyURL
-			newTransport := *baseTransport
+			// See b7953cc239 for the reasoning behind copying the Transport.
+			newTransport := *baseTransport.Clone()
 			if proxyURL != nil && proxyURL.Host != "" {
 				newTransport.Proxy = http.ProxyURL(proxyURL)
 			}

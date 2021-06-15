@@ -14,4 +14,16 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-*/1 * * * * PATH=$PATH:/opt/ort /usr/local/bin/traffic_ops_ort -k --dispersion 0 SYNCDS ALL $TO_URL $TO_USER:$TO_PASSWORD >> /var/log/ort.log 2>&1
+
+FROM centos:8
+MAINTAINER dev@trafficcontrol.apache.org
+
+RUN dnf -y install golang git
+ENV GOPATH=/go
+
+RUN go get -u github.com/apache/trafficcontrol/lib/go-rfc
+ADD .   ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/
+WORKDIR ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches
+RUN go build && cp testcaches /usr/sbin/
+
+CMD ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/Dockerfile_run.sh

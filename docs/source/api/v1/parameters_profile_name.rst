@@ -53,7 +53,7 @@ Response Structure
 ------------------
 :configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
 :id:          The :term:`Parameter`'s :ref:`parameter-id`
-:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in an ISO-like format
+:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in :ref:`non-rfc-datetime`
 :name:        :ref:`parameter-name` of the :term:`Parameter`
 :profiles:    An array of :term:`Profile` :ref:`Names <profile-name>` that use this :term:`Parameter`
 :secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`

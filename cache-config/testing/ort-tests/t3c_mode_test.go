@@ -53,9 +53,32 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		// run badass and check config files.
-		err := runApply("atlanta-edge-03", "badass")
+		// traffic_ctl doesn't work because the test framework doesn't currently run ATS.
+		// So, temporarily replace it with a no-op
+		// TODO: remove this when running ATS is added to the test framework
+
+		if err := os.Rename(`/opt/trafficserver/bin/traffic_ctl`, `/opt/trafficserver/bin/traffic_ctl.real`); err != nil {
+			t.Fatal("temporarily moving traffic_ctl: " + err.Error())
+		}
+
+		fi, err := os.OpenFile(`/opt/trafficserver/bin/traffic_ctl`, os.O_RDWR|os.O_CREATE, 755)
 		if err != nil {
+			t.Fatal("creating temp no-op traffic_ctl file: " + err.Error())
+		}
+		if _, err := fi.WriteString(`#!/usr/bin/env bash` + "\n"); err != nil {
+			fi.Close()
+			t.Fatal("writing temp no-op traffic_ctl file: " + err.Error())
+		}
+		fi.Close()
+
+		defer func() {
+			if err := os.Rename(`/opt/trafficserver/bin/traffic_ctl.real`, `/opt/trafficserver/bin/traffic_ctl`); err != nil {
+				t.Fatal("moving real traffic_ctl back: " + err.Error())
+			}
+		}()
+
+		// run badass and check config files.
+		if err := runApply("atlanta-edge-03", "badass", 0); err != nil {
 			t.Fatalf("ERROR: t3c badass failed: %v\n", err)
 		}
 
@@ -137,7 +160,7 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		// remap.config is removed and atlanta-edge-03 should have
 		// queue updates enabled.  run t3c to verify a new remap.config
 		// is pulled down.
-		err = runApply("atlanta-edge-03", "syncds")
+		err = runApply("atlanta-edge-03", "syncds", 0)
 		if err != nil {
 			t.Fatalf("ERROR: t3c syncds failed: %v\n", err)
 		}

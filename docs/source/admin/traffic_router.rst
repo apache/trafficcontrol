@@ -369,9 +369,9 @@ Normally, when performing consistent hashing for an HTTP-:ref:`routed <ds-types>
 
 .. caution:: Certain query parameters are reserved by Traffic Router for its own use, and thus cannot be present in any Consistent Hash Query Parameters. These reserved parameters are:
 
-	 - trred
-	 - format
-	 - fakeClientIPAddress
+	- trred
+	- format
+	- fakeClientIPAddress
 
 .. _tr-dnssec:
 
@@ -442,11 +442,11 @@ Example Request Flow
 The following is an example of the request flow when a client requests the routing name for an example delivery service, ``tr.service.cdn.example.com``. The request flow assumes that the resolver is cold and has yet to build a local cache of lookups, meaning it has to walk the domain hierarchy asking for ``NS`` records until it reaches ``service.cdn.example.com``. This example starts after the resolver has determined which name servers are authoritative for ``cdn.example.com``. Note that the same logic is applied for each of the three queries made by the resolver.
 
 .. figure:: traffic_router/images/edge_tr_example.png
-   :scale: 30%
-   :align: center
-   :alt: Example Request Flow for Edge Traffic Routing
+	:scale: 30%
+	:align: center
+	:alt: Example Request Flow for Edge Traffic Routing
 
-   Example Request Flow for Edge Traffic Routing. Note this picks up when the resolver hits the CDN managed domain.
+	Example Request Flow for Edge Traffic Routing. Note this picks up when the resolver hits the CDN managed domain.
 
 .. _tr-logs:
 

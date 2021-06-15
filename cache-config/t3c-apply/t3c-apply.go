@@ -120,7 +120,9 @@ func main() {
 		syncdsUpdate, err = trops.CheckRevalidateState(false)
 		if err != nil || syncdsUpdate == torequest.UpdateTropsNotNeeded {
 			if err != nil {
-				log.Errorln(err)
+				log.Errorln("Checking revalidate state: " + err.Error())
+			} else {
+				log.Infoln("Checking revalidate state: returned UpdateTropsNotNeeded")
 			}
 			GitCommitAndExit(RevalidationError, cfg)
 		}
@@ -131,6 +133,8 @@ func main() {
 			GitCommitAndExit(SyncDSError, cfg)
 		}
 		if cfg.RunMode == t3cutil.ModeSyncDS && syncdsUpdate == torequest.UpdateTropsNotNeeded {
+			// check for maxmind db updates even if we have no other updates
+			CheckMaxmindUpdate(cfg)
 			GitCommitAndExit(Success, cfg)
 		}
 	}
@@ -173,6 +177,9 @@ func main() {
 			log.Infoln("updated the remap.config for reloading.")
 		}
 	}
+
+	// check for maxmind db updates
+	CheckMaxmindUpdate(cfg)
 
 	if err := trops.StartServices(&syncdsUpdate); err != nil {
 		log.Errorln("failed to start services: " + err.Error())
@@ -225,4 +232,27 @@ func GitCommitAndExit(exitCode int, cfg config.Cfg) {
 		}
 	}
 	os.Exit(exitCode)
+}
+
+// CheckMaxmindUpdate will (if a url is set) check for a db on disk.
+// If it exists, issue an IMS to determine if it needs to update the db.
+// If no file or if an update is needed to be done it is downloaded and unpacked.
+func CheckMaxmindUpdate(cfg config.Cfg) bool {
+	// Check if we have a URL for a maxmind db
+	// If we do, test if the file exists, do IMS based on disk time
+	// and download and unpack as needed
+	result := false
+	if cfg.MaxMindLocation != "" {
+		// Check if the maxmind db needs to be updated before reload
+		result = util.UpdateMaxmind(cfg)
+		if result {
+			log.Infoln("maxmind database was updated from " + cfg.MaxMindLocation)
+		} else {
+			log.Infoln("maxmind database not updated. Either not needed or curl/gunzip failure")
+		}
+	} else {
+		log.Infoln(("maxmindlocation is empty, not checking for DB update"))
+	}
+
+	return result
 }

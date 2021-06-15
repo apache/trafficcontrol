@@ -205,11 +205,11 @@ func getATSMajorVersionFromATSVersion(atsVersion string) (int, error) {
 	}
 	majorVerStr := atsVersion[:dotPos]
 
-	majorVer, err := strconv.ParseUint(majorVerStr, 10, 64)
-	if err != nil {
-		return 0, errors.New("unexpected version format, expected e.g. '7.1.2.whatever'")
+	majorVer, err := strconv.Atoi(majorVerStr)
+	if err != nil || majorVer < 0 {
+		return 0, errors.New("unexpected version format '" + majorVerStr + "', expected e.g. '7.1.2.whatever'")
 	}
-	return int(majorVer), nil
+	return majorVer, nil
 }
 
 // genericProfileConfig generates a generic profile config text, from the profile's parameters with the given config file name.

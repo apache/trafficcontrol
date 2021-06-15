@@ -48,8 +48,4 @@ jobs:
     - name: Install modules
       run: go mod vendor -v
     - name: go vet
-      run: |
-        skip_analyzers=(
-          -copylocks=false
-        )
-        go vet "${skip_analyzers[@]}" ./...
+      run: go vet ./...
