@@ -45,7 +45,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/aes"
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
@@ -154,8 +153,7 @@ func readKey(keyLocation string) ([]byte, error) {
 	}
 
 	// verify the key works
-	_, err = aes.NewCipher(key)
-	if err != nil {
+	if err = util.ValidateAESKey(key); err != nil {
 		return []byte{}, err
 	}
 

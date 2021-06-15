@@ -26,7 +26,7 @@ The tool assumes that the schema for each backend is already setup as according 
 
 Usage
 ===========
-``traffic_vault_migrate [-cdhmr] [-f value] [-g value] [-o value] [-t value]``
+``traffic_vault_migrate [-cdhmr] [-e value] [-f value] [-g value] [-i value] [-l value] [-o value] [-t value]``
 
 .. option:: -c, --compare
 
