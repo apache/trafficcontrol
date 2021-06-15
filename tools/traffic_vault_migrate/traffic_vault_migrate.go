@@ -131,8 +131,6 @@ func main() {
 	var fromSrv TVBackend
 	var toSrv TVBackend
 
-	toSrvUsed := !dump && !dry
-
 	importData := keyFile != ""
 	toSrvUsed := !dump && !dry || keyFile != ""
 
