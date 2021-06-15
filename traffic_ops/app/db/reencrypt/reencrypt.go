@@ -44,6 +44,7 @@ package main
  */
 
 import (
+	"bytes"
 	"crypto/aes"
 	"database/sql"
 	"encoding/base64"
@@ -53,8 +54,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
 
@@ -129,10 +128,6 @@ func main() {
 		die("re-encrypting DNSSEC Keys: " + err.Error())
 	}
 
-	if err = updateKeyFile(previousKey, *previousKeyLocation, newKey); err != nil {
-		die("updating the key file: " + err.Error())
-	}
-
 	fmt.Println("Successfully re-encrypted keys for SSL Keys, URL Sig Keys, URI Signing Keys, and DNSSEC Keys.")
 }
 
@@ -187,6 +182,10 @@ func reEncryptSslKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 			return fmt.Errorf("reading SSL Keys: %w", err)
 		}
 
+		if !bytes.HasPrefix(jsonKeys, []byte("{")) {
+			return fmt.Errorf("decrypted SSL Key did not have prefix '{' for id %d", id)
+		}
+
 		reencryptedKeys, err := util.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
 			return fmt.Errorf("encrypting SSL Keys with new key: %w", err)
@@ -230,6 +229,10 @@ func reEncryptUrlSigKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 		jsonKeys, err := util.AESDecrypt(encryptedSslKeys, previousKey)
 		if err != nil {
 			return fmt.Errorf("reading URL Sig Keys: %w", err)
+		}
+
+		if !bytes.HasPrefix(jsonKeys, []byte("{")) {
+			return fmt.Errorf("decrypted URL Sig Key did not have prefix '{' for ds: %s", ds)
 		}
 
 		reencryptedKeys, err := util.AESEncrypt(jsonKeys, newKey)
@@ -277,6 +280,10 @@ func reEncryptUriSigningKeys(tx *sql.Tx, previousKey []byte, newKey []byte) erro
 			return fmt.Errorf("reading URI Signing Keys: %w", err)
 		}
 
+		if !bytes.HasPrefix(jsonKeys, []byte("{")) {
+			return fmt.Errorf("decrypted URI Signing Key did not have prefix '{' for ds: %s", ds)
+		}
+
 		reencryptedKeys, err := util.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
 			return fmt.Errorf("encrypting URI Signing Keys with new key: %w", err)
@@ -322,6 +329,10 @@ func reEncryptDNSSECKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 			return fmt.Errorf("reading DNSSEC Keys: %w", err)
 		}
 
+		if !bytes.HasPrefix(jsonKeys, []byte("{")) {
+			return fmt.Errorf("decrypted DNSSEC Key did not have prefix '{' for cdn: %s", cdn)
+		}
+
 		reencryptedKeys, err := util.AESEncrypt(jsonKeys, newKey)
 		if err != nil {
 			return fmt.Errorf("encrypting DNSSEC Keys with new key: %w", err)
@@ -342,23 +353,6 @@ func reEncryptDNSSECKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 		if rowsAffected == 0 {
 			return fmt.Errorf("no rows updated for reencrypting DNSSEC Keys for cdn %s", cdn)
 		}
-	}
-
-	return nil
-}
-
-// updateKeyFile saves the new key in the same location as the old one so TO can use the new one.
-// It also saves the old one as a new file with a date to indicate when the re-encrypt was performed.
-func updateKeyFile(previousKey []byte, previousKeyLocation string, newKey []byte) error {
-	newKeyStr := base64.StdEncoding.EncodeToString(newKey)
-	if err := ioutil.WriteFile(previousKeyLocation, []byte(newKeyStr), 0600); err != nil {
-		return errors.New("writing key file " + previousKeyLocation + ": " + err.Error())
-	}
-
-	previousKeyStr := base64.StdEncoding.EncodeToString(previousKey)
-	savedKeyLocation := fmt.Sprintf("%s/savedEncryptionKey-%s.txt", filepath.Dir(previousKeyLocation), time.Now().Format(time.RFC3339))
-	if err := ioutil.WriteFile(savedKeyLocation, []byte(previousKeyStr), 0600); err != nil {
-		return errors.New("writing key file " + savedKeyLocation + ": " + err.Error())
 	}
 
 	return nil
