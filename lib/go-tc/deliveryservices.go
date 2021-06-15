@@ -528,18 +528,24 @@ func newerTLSVersionsDisallowedMessage(old string, newer []string) string {
 	return msg.String()
 }
 
-// TLSVersionsAlerts generates warning-level alerts for the given TLS versions
-// array. It will warn if newer versions are disallowed while older, less
-// secure versions are allowed, or if there are unrecognized versions present.
+// TLSVersionsAlerts generates warning-level alerts for the Delivery Service's
+// TLS versions array. It will warn if newer versions are disallowed while
+// older, less secure versions are allowed, if there are unrecognized versions
+// present, if the Delivery Service's Protocol does not make use of TLS
+// Versions, and whenever TLSVersions are explicitly set at all.
 //
-// This does NOT verify that the passed TLS versions are _valid_, it ONLY
-// creates warnings based on conditions that are possibly detrimental to CDN
-// operation, but can, in fact, work.
-func TLSVersionsAlerts(vers []string) Alerts {
-	if len(vers) < 1 {
+// This does NOT verify that the Delivery Service's TLS versions are _valid_,
+// it ONLY creates warnings based on conditions that are possibly detrimental
+// to CDN operation, but can, in fact, work.
+func (ds DeliveryServiceV4) TLSVersionsAlerts() Alerts {
+	vers := ds.TLSVersions
+	messages := []string{}
+
+	if len(vers) > 0 {
+		messages = append(messages, "setting TLS Versions that are explicitly supported may break older clients that can't use the specified versions")
+	} else {
 		return Alerts{Alerts: []Alert{}}
 	}
-	messages := []string{}
 
 	found := map[string]bool{
 		TLSVersion10: false,
@@ -599,6 +605,10 @@ func TLSVersionsAlerts(vers []string) Alerts {
 		if msg != "" {
 			messages = append(messages, msg)
 		}
+	}
+
+	if ds.Protocol != nil && *ds.Protocol == DSProtocolHTTP {
+		messages = append(messages, "tlsVersions has no effect on Delivery Services with Protocol '0' (HTTP_ONLY)")
 	}
 
 	return CreateAlerts(WarnLevel, messages...)

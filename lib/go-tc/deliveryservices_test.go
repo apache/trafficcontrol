@@ -705,105 +705,122 @@ func containsWarning(a Alerts, expected string) func(*testing.T) {
 	}
 }
 
+const nonNilTLSVersionsWarningMessage = "setting TLS Versions that are explicitly supported may break older clients that can't use the specified versions"
+
 func TestTLSVersionsAlerts(t *testing.T) {
-	var vers []string
-	alerts := TLSVersionsAlerts(vers)
+	var ds DeliveryServiceV40
+	alerts := ds.TLSVersionsAlerts()
 	if alerts.HasAlerts() {
 		t.Errorf("nil versions should not produce any warnings, but these were generated: %v", alerts.Alerts)
 	}
-	vers = make([]string, 0, 3)
-	alerts = TLSVersionsAlerts(vers)
+	ds.TLSVersions = make([]string, 0, 3)
+	alerts = ds.TLSVersionsAlerts()
 	if alerts.HasAlerts() {
 		t.Errorf("empty versions should not produce any warnings, but these were generated: %v", alerts.Alerts)
 	}
 
+	ds.Protocol = new(int)
+	*ds.Protocol = 0
 	expected := "old TLS version 1.0 is allowed, but newer versions 1.1, 1.2, and 1.3 are disallowed; this configuration may be insecure"
-	vers = append(vers, TLSVersion10)
-	alerts = TLSVersionsAlerts(vers)
-	if len(alerts.Alerts) != 1 {
-		t.Errorf("expected allowing only TLS v1.0 to generate exactly one warning, got %d: %v", len(alerts.Alerts), alerts)
+	ds.TLSVersions = append(ds.TLSVersions, TLSVersion10)
+	alerts = ds.TLSVersionsAlerts()
+	if len(alerts.Alerts) != 3 {
+		t.Errorf("expected allowing only TLS v1.0 to generate exactly three warnings, got %d: %v", len(alerts.Alerts), alerts)
 	} else {
 		t.Run("only TLS version 1.0 allowed - returns warnings", expectOnlyWarnings(alerts))
 		t.Run("only TLS version 1.0 allowed - has expected warning", containsWarning(alerts, expected))
+		expected = "tlsVersions has no effect on Delivery Services with Protocol '0' (HTTP_ONLY)"
+		t.Run("only TLS version 1.0 allowed - has warning about Protocol '0'", containsWarning(alerts, expected))
+		t.Run("only TLS version 1.0 allowed - has warning about non-nil tlsVersions", containsWarning(alerts, nonNilTLSVersionsWarningMessage))
 	}
 
+	ds.Protocol = nil
 	expected = "old TLS version 1.0 is allowed, but newer versions 1.1, and 1.3 are disallowed; this configuration may be insecure"
-	vers = append(vers, TLSVersion12)
-	alerts = TLSVersionsAlerts(vers)
-	if len(alerts.Alerts) != 1 {
-		t.Errorf("expected allowing only TLS v1.0 and 1.2 to generate exactly one warning, got %d: %v", len(alerts.Alerts), alerts)
+	ds.TLSVersions = append(ds.TLSVersions, TLSVersion12)
+	alerts = ds.TLSVersionsAlerts()
+	if len(alerts.Alerts) != 2 {
+		t.Errorf("expected allowing only TLS v1.0 and 1.2 to generate exactly two warnings, got %d: %v", len(alerts.Alerts), alerts)
 	} else {
 		t.Run("only TLS versions 1.0 and 1.2 allowed - returns warnings", expectOnlyWarnings(alerts))
 		t.Run("only TLS versions 1.0 and 1.2 allowed - has expected warning", containsWarning(alerts, expected))
+		t.Run("only TLS versions 1.0 and 1.2 allowed - has warning about non-nil tlsVersions", containsWarning(alerts, nonNilTLSVersionsWarningMessage))
 	}
 
 	expected = "old TLS version 1.0 is allowed, but newer version 1.3 is disallowed; this configuration may be insecure"
-	vers = append(vers, TLSVersion11)
-	alerts = TLSVersionsAlerts(vers)
-	if len(alerts.Alerts) != 1 {
-		t.Errorf("expected disallowing only TLS v1.3 to generate exactly one warning, got %d: %v", len(alerts.Alerts), alerts)
+	ds.TLSVersions = append(ds.TLSVersions, TLSVersion11)
+	alerts = ds.TLSVersionsAlerts()
+	if len(alerts.Alerts) != 2 {
+		t.Errorf("expected disallowing only TLS v1.3 to generate exactly two warnings, got %d: %v", len(alerts.Alerts), alerts)
 	} else {
 		t.Run("only TLS version 1.3 disallowed - returns warnings", expectOnlyWarnings(alerts))
 		t.Run("only TLS version 1.3 disallowed - has expected warning", containsWarning(alerts, expected))
+		t.Run("only TLS version 1.3 disallowed - has warning about non-nil tlsVersions", containsWarning(alerts, nonNilTLSVersionsWarningMessage))
 	}
 
 	expected = "old TLS version 1.1 is allowed, but newer versions 1.2, and 1.3 are disallowed; this configuration may be insecure"
-	vers = make([]string, 0, 2)
-	vers = append(vers, TLSVersion11)
-	alerts = TLSVersionsAlerts(vers)
-	if len(alerts.Alerts) != 1 {
-		t.Errorf("expected allowing only TLS v1.1 to generate exactly one warning, got %d: %v", len(alerts.Alerts), alerts)
+	ds.TLSVersions = make([]string, 0, 2)
+	ds.TLSVersions = append(ds.TLSVersions, TLSVersion11)
+	alerts = ds.TLSVersionsAlerts()
+	if len(alerts.Alerts) != 2 {
+		t.Errorf("expected allowing only TLS v1.1 to generate exactly two warnings, got %d: %v", len(alerts.Alerts), alerts)
 	} else {
 		t.Run("only TLS version 1.1 allowed - returns warnings", expectOnlyWarnings(alerts))
 		t.Run("only TLS version 1.1 allowed - has expected warning", containsWarning(alerts, expected))
+		t.Run("only TLS version 1.1 allowed - has warning about non-nil tlsVersions", containsWarning(alerts, nonNilTLSVersionsWarningMessage))
 	}
 
 	expected = "old TLS version 1.1 is allowed, but newer version 1.3 is disallowed; this configuration may be insecure"
-	vers = append(vers, TLSVersion12)
-	alerts = TLSVersionsAlerts(vers)
-	if len(alerts.Alerts) != 1 {
-		t.Errorf("expected allowing only TLS v1.1 and 1.2 to generate exactly one warning, got %d: %v", len(alerts.Alerts), alerts)
+	ds.TLSVersions = append(ds.TLSVersions, TLSVersion12)
+	alerts = ds.TLSVersionsAlerts()
+	if len(alerts.Alerts) != 2 {
+		t.Errorf("expected allowing only TLS v1.1 and 1.2 to generate exactly two warning, got %d: %v", len(alerts.Alerts), alerts)
 	} else {
 		t.Run("only TLS versions 1.1 and 1.2 allowed - returns warnings", expectOnlyWarnings(alerts))
 		t.Run("only TLS versions 1.1 and 1.2 allowed - has expected warning", containsWarning(alerts, expected))
+		t.Run("only TLS versions 1.1 and 1.2 allowed - has warning about non-nil tlsVersions", containsWarning(alerts, nonNilTLSVersionsWarningMessage))
 	}
 
 	expected = "old TLS version 1.2 is allowed, but newer version 1.3 is disallowed; this configuration may be insecure"
-	vers = make([]string, 0, 4)
-	vers = append(vers, TLSVersion12)
-	alerts = TLSVersionsAlerts(vers)
-	if len(alerts.Alerts) != 1 {
-		t.Errorf("expected allowing only TLS v1.2 to generate exactly one warning, got %d: %v", len(alerts.Alerts), alerts)
+	ds.TLSVersions = make([]string, 0, 4)
+	ds.TLSVersions = append(ds.TLSVersions, TLSVersion12)
+	alerts = ds.TLSVersionsAlerts()
+	if len(alerts.Alerts) != 2 {
+		t.Errorf("expected allowing only TLS v1.2 to generate exactly two warnings, got %d: %v", len(alerts.Alerts), alerts)
 	} else {
 		t.Run("only TLS version 1.2 allowed - returns warnings", expectOnlyWarnings(alerts))
 		t.Run("only TLS version 1.2 allowed - has expected warning", containsWarning(alerts, expected))
+		t.Run("only TLS version 1.2 allowed - has warning about non-nil tlsVersions", containsWarning(alerts, nonNilTLSVersionsWarningMessage))
 	}
 
-	vers = append(vers, TLSVersion13)
-	alerts = TLSVersionsAlerts(vers)
-	if len(alerts.Alerts) > 0 {
-		t.Errorf("Expected allowing TLS versions 1.2 and 1.3 to not generate any warnings, got %d: %v", len(alerts.Alerts), alerts.Alerts)
+	ds.TLSVersions = append(ds.TLSVersions, TLSVersion13)
+	alerts = ds.TLSVersionsAlerts()
+	if len(alerts.Alerts) != 1 {
+		t.Errorf("Expected allowing TLS versions 1.2 and 1.3 to generate exactly one warning, got %d: %v", len(alerts.Alerts), alerts.Alerts)
+	} else {
+		t.Run("only TLS versions 1.2 and 1.3 allowed - has warning about non-nil tlsVersions", containsWarning(alerts, nonNilTLSVersionsWarningMessage))
 	}
 
 	expected = "unknown TLS version '13.37' - possible typo"
-	vers = append(vers, "13.37")
-	alerts = TLSVersionsAlerts(vers)
-	if len(alerts.Alerts) != 1 {
-		t.Errorf("expected allowing an unknown TLS version to generate exactly one warning, got %d: %v", len(alerts.Alerts), alerts.Alerts)
+	ds.TLSVersions = append(ds.TLSVersions, "13.37")
+	alerts = ds.TLSVersionsAlerts()
+	if len(alerts.Alerts) != 2 {
+		t.Errorf("expected allowing an unknown TLS version to generate exactly two warnings, got %d: %v", len(alerts.Alerts), alerts.Alerts)
 	} else {
 		t.Run("unknown TLS version allowed - returns warnings", expectOnlyWarnings(alerts))
 		t.Run("unknown TLS version allowed - has expected warning", containsWarning(alerts, expected))
+		t.Run("unknown TLS version allowed - has warning about non-nil tlsVersions", containsWarning(alerts, nonNilTLSVersionsWarningMessage))
 	}
 
-	vers = append(vers, TLSVersion10)
-	alerts = TLSVersionsAlerts(vers)
-	if len(alerts.Alerts) != 2 {
-		t.Errorf("expected allowing an unknown TLS version and disallowing only version 1.1 to generate exactly two warnings, got %d: %v", len(alerts.Alerts), alerts.Alerts)
+	ds.TLSVersions = append(ds.TLSVersions, TLSVersion10)
+	alerts = ds.TLSVersionsAlerts()
+	if len(alerts.Alerts) != 3 {
+		t.Errorf("expected allowing an unknown TLS version and disallowing only version 1.1 to generate exactly three warnings, got %d: %v", len(alerts.Alerts), alerts.Alerts)
 	} else {
 		t.Run("unknown TLS version and disallowed v1.1 - returns warnings", expectOnlyWarnings(alerts))
 		t.Run("unknown TLS version and disallowed v1.1 - has expected warning", containsWarning(alerts, expected))
 		expected = "old TLS version 1.0 is allowed, but newer version 1.1 is disallowed; this configuration may be insecure"
 		t.Run("unknown TLS version and disallowed v1.1 - has second expected warning", containsWarning(alerts, expected))
+		t.Run("unknown TLS version and disallowed v1.1 - has warning about non-nil tlsVersions", containsWarning(alerts, nonNilTLSVersionsWarningMessage))
 	}
 }
 
@@ -818,10 +835,11 @@ func BenchmarkTLSVersionsAlerts(b *testing.B) {
 			versions = append(versions, fmt.Sprintf("%d.%d", major, minor))
 		}
 	}
+	ds := DeliveryServiceV4{TLSVersions: versions}
 
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		TLSVersionsAlerts(versions)
+		ds.TLSVersionsAlerts()
 	}
 }
