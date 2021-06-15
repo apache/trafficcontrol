@@ -19,4 +19,4 @@
 
 # Traffic Vault Migrate 
 Traffic Vault Migrate is a tool built using golang that migrates data from Traffic Vault backends. Run 
-`traffic_vault_migrate -h` or consult [the docs](https://traffic-control-cdn.readthedocs.io/en/latest/tools/traffic_vault_migrate.html) for details.
+`traffic_vault_migrate -h` or consult [the docs](https://traffic-control-cdn.readthedocs.io/en/latest/development/traffic_ops.html#traffic-vault-migrate) for details.

@@ -47,7 +47,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - t3c: Change syncds so that it only warns on package version mismatch.
 - atstccfg: add ##REFETCH## support to regex_revalidate.config processing.
 - Added a Traffic Monitor integration test framework.
-- Added `tools/traffic_vault_migrate` to help with migrating Traffic Ops Traffic Vault backends
+- Added `traffic_ops/app/db/traffic_vault_migrate` to help with migrating Traffic Ops Traffic Vault backends
 - Added a tool at `/traffic_ops/app/db/reencrypt` to re-encrypt the data in the Postgres Traffic Vault with a new key.
 
 ### Fixed
