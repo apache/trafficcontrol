@@ -20,8 +20,10 @@ package deliveryservice
  */
 
 import (
+	"fmt"
 	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -146,13 +148,10 @@ func TestGetDSTLSVersions(t *testing.T) {
 
 	rows := sqlmock.NewRows([]string{"tls_version"})
 	expected := []string{"1.0", "1.1", "1.2", "1.3"}
-	rows.AddRow(expected[0])
-	rows.AddRow(expected[1])
-	rows.AddRow(expected[2])
-	rows.AddRow(expected[3])
+	rows.AddRow(fmt.Sprintf("{%s}", strings.Join(expected, ",")))
 
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT tls_version").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 
 	vers, err := GetDSTLSVersions(0, db.MustBegin().Tx)
 	if err != nil {
@@ -160,7 +159,7 @@ func TestGetDSTLSVersions(t *testing.T) {
 	} else if len(vers) != 4 {
 		t.Errorf("Expected to get 4 TLS versions, got: %d", len(vers))
 	} else if !reflect.DeepEqual(expected, vers) {
-		t.Errorf("Incorrect TLS versions returned, expected: %v - actual: %v", expected, vers)
+		t.Errorf("Incorrect TLS versions returned, expected: %+v - actual: %+v", expected, vers)
 	}
 }
 
