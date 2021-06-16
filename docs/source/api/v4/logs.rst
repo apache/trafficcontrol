@@ -32,18 +32,27 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+----------+----------+------------------------------------------------------+
-	| Name     | Required | Description                                          |
-	+==========+==========+======================================================+
-	| days     | no       | An integer number of days of change logs to return   |
-	+----------+----------+------------------------------------------------------+
-	| limit    | no       | The number of records to which to limit the response |
-	+----------+----------+------------------------------------------------------+
-	| username | no       | A name to which to limit the response too            |
-	+----------+----------+------------------------------------------------------+
+	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
+	| Name      | Required | Description                                                                                                                         |
+	+===========+==========+=====================================================================================================================================+
+	| days      | no       | An integer number of days of change logs to return                                                                                  |
+	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
+	| limit     | no       | The number of records to which to limit the response                                                                                |
+	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
+	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                       |
+	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
+	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                |
+	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1.|
+	|           |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                   |
+	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
+	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                            |
+	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
+	| username  | no       | A name to which to limit the response too                                                                                           |
+	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
 
 .. versionadded:: ATCv6
-	The ``username`` query parameter was added to this in endpoint across across all API versions in :abbr:`ATC (Apache Traffic Control)` version 6.0.0.
+	The ``username``, ``sortOrder``, ``page``, ``offset``, ``orderby`` query parameters were added to this in endpoint across across all API versions in :abbr:`ATC (Apache Traffic Control)` version 6.0.0.
 
 .. code-block:: http
 	:caption: Request Example
