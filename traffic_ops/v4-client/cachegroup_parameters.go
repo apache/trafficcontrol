@@ -59,7 +59,7 @@ func (to *Session) CreateCacheGroupParameter(cacheGroupID, parameterID int, opts
 	return data, reqInf, err
 }
 
-// CreateMultipleCacheGroupParameter associates multiple parameter with multiple Cache Group.
+// CreateMultipleCacheGroupParameter associates multiple Parameters with multiple Cache Groups.
 func (to *Session) CreateMultipleCacheGroupParameter(pps []tc.CacheGroupParameterRequest, opts RequestOptions) (tc.CacheGroupParametersPostResponse, toclientlib.ReqInf, error) {
 	var data tc.CacheGroupParametersPostResponse
 	reqInf, err := to.post(apiCachegroupParameters, opts, pps, &data)

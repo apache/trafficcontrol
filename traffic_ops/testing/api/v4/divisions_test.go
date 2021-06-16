@@ -233,12 +233,8 @@ func SortTestDivisionDesc(t *testing.T) {
 	for start, end := 0, len(respDesc.Response)-1; start < end; start, end = start+1, end-1 {
 		respDesc.Response[start], respDesc.Response[end] = respDesc.Response[end], respDesc.Response[start]
 	}
-	if len(respDesc.Response[0].Name) > 0 && len(respAsc.Response[0].Name) > 0 {
-		if respDesc.Response[0].Name != respAsc.Response[0].Name {
-			t.Errorf("Division responses are not equal after reversal: %s - %s", respDesc.Response[0].Name, respAsc.Response[0].Name)
-		}
-	} else {
-		t.Errorf("Division name shouldn't be empty while sorting the response")
+	if respDesc.Response[0].Name != respAsc.Response[0].Name {
+		t.Errorf("Division responses are not equal after reversal: %s - %s", respDesc.Response[0].Name, respAsc.Response[0].Name)
 	}
 }
 

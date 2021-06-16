@@ -212,12 +212,8 @@ func SortTestCoordinatesDesc(t *testing.T) {
 	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
 		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
 	}
-	if len(respDesc[0].Name) > 0 && len(respAsc[0].Name) > 0 {
-		if respDesc[0].Name != respAsc[0].Name {
-			t.Errorf("Coordinates responses are not equal after reversal: %s - %s", respDesc[0].Name, respAsc[0].Name)
-		}
-	} else {
-		t.Errorf("Coordinates name shouldn't be empty while sorting the response")
+	if respDesc[0].Name != respAsc[0].Name {
+		t.Errorf("Coordinates responses are not equal after reversal: %s - %s", respDesc[0].Name, respAsc[0].Name)
 	}
 }
 

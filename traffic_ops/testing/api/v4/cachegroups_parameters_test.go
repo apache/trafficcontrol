@@ -98,11 +98,11 @@ func CreateTestCacheGroupParametersAlreadyExist(t *testing.T) {
 	if len(getAllcgparameters) < 1 {
 		t.Fatalf("No existing cachegroup parameters available to test duplicate functionality")
 	}
-	if getAllcgparameters[0].Parameter == nil && *getAllcgparameters[0].Parameter != 0 {
-		t.Fatalf("found nil/0 Value in Paramters")
+	if getAllcgparameters[0].Parameter == nil {
+		t.Fatalf("found nil Value in Paramters")
 	}
-	if len(*getAllcgparameters[0].CacheGroup) < 1 {
-		t.Fatalf("found null Value in Cachegroup %d", len(*getAllcgparameters[0].CacheGroup))
+	if getAllcgparameters[0].CacheGroup == nil {
+		t.Fatalf("found nil Value in Cachegroup ")
 	}
 	parameterID := *getAllcgparameters[0].Parameter
 
@@ -114,8 +114,8 @@ func CreateTestCacheGroupParametersAlreadyExist(t *testing.T) {
 	if len(cgResponse.Response) < 1 {
 		t.Fatalf("No data available for GetCacheGroups by Name - Length %d", len(cgResponse.Response))
 	}
-	if cgResponse.Response[0].ID == nil && *cgResponse.Response[0].ID != 0 {
-		t.Fatalf("found nil/0 Value in Cachegroup ID")
+	if cgResponse.Response[0].ID == nil {
+		t.Fatalf("found nil Value in Cachegroup ID")
 	}
 	cachegroupID := *cgResponse.Response[0].ID
 	cgparameters, reqInf, err := TOSession.CreateCacheGroupParameter(cachegroupID, parameterID, client.RequestOptions{})
@@ -166,8 +166,8 @@ func CreateTestCacheGroupParametersMulAssignments(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot get Parameter '%s': %v - alerts: %+v", firstParameter.Name, err, paramResp1.Alerts)
 	}
-	if len(paramResp1.Response) != 1 {
-		t.Fatalf("Expected exactly one Parameter named '%s' to exist, but found %d", firstParameter.Name, len(paramResp1.Response))
+	if len(paramResp1.Response) < 1 {
+		t.Fatalf("Expected atleast one Parameter named '%s' to exist, but found %d", firstParameter.Name, len(paramResp1.Response))
 	}
 	opts.QueryParameters.Set("name", secondParameter.Name)
 	paramResp2, _, err := TOSession.GetParameters(opts)
@@ -175,7 +175,7 @@ func CreateTestCacheGroupParametersMulAssignments(t *testing.T) {
 		t.Errorf("cannot get Parameter '%s': %v - alerts: %+v", secondParameter.Name, err, paramResp2.Alerts)
 	}
 	if len(paramResp2.Response) < 1 {
-		t.Fatalf("Expected exactly one Parameter named '%s' to exist, but found %d", secondParameter.Name, len(paramResp2.Response))
+		t.Fatalf("Expected atleast one Parameter named '%s' to exist, but found %d", secondParameter.Name, len(paramResp2.Response))
 	}
 
 	// Assign Parameter to Cache Group
