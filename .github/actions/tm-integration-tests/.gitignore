@@ -16,10 +16,3 @@
 # under the License.
 #
 node_modules/
-cdn.conf
-database.conf
-error.log
-localhost.crt
-localhost.key
-riak.conf
-warning.log

@@ -7,7 +7,7 @@
 	"version": "0.0.0",
 	"scripts": {
 		"build": "tsc",
-		"lint": "eslint to-integration-tests.ts",
+		"lint": "eslint tm-integration-tests.ts",
 		"all": "npm run lint && npm run build"
 	},
 	"devDependencies": {

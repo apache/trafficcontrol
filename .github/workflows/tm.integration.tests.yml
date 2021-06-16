@@ -24,19 +24,19 @@ env:
 on:
   push:
     paths:
-      - .github/actions/todb-init/**
       - .github/actions/tm-integration-tests/**
       - .github/workflows/tm.integration.tests.yml
       - GO_VERSION
       - traffic_monitor/**
+      - lib/**
   create:
   pull_request:
     paths:
-      - .github/actions/todb-init/**
-      - .github/actions/tp-integration-tests/**
-      - .github/workflows/tp.integration.tests.yml
+      - .github/actions/tm-integration-tests/**
+      - .github/workflows/tm.integration.tests.yml
       - GO_VERSION
       - traffic_monitor/**
+      - lib/**
     types: [ opened, reopened, ready_for_review, synchronize ]
 
 jobs:
@@ -48,17 +48,7 @@ jobs:
         uses: actions/checkout@master
         with:
             fetch-depth: 1
-#      - name: Cache Alpine Docker image
-#        uses: actions/cache@v2
-#        with:
-#          path: ${{ github.workspace }}/docker-images
-#          key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
-#      - name: Import cached Alpine Docker image
-#        run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
       - name: Run integration tests
         uses: ./.github/actions/tm-integration-tests
         env:
           GOPATH: /github/workspace
-#      - name: Save Alpine Docker image
-#        run: src/github.com/apache/trafficcontrol/.github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
-
