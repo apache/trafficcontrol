@@ -48,7 +48,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/2.0/logs?days=1&limit=2 HTTP/1.1
+	GET /api/2.0/logs?days=1&limit=2&username=admin HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -98,4 +98,12 @@ Response Structure
 			"id": 443,
 			"message": "1 delivery services were assigned to test"
 		}
-	]}
+		}],
+		"summary": {
+			"count": 2
+		}
+	}
+
+Summary Fields
+""""""""""""""
+The ``summary`` object returned by this method of this endpoint uses only the ``count`` :ref:`standard property <reserved-summary-fields>`.

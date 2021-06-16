@@ -25,7 +25,7 @@ under the License.
             <li class="active">{{userName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
-            <button name="viewChangelog" class="btn btn-primary" title="Change Log" ng-click="getChangeLogs(user.username)">View Change Log</button>
+            <a class="btn btn-primary" ng-href="/#!/change-logs?username={{userName}}">View Change Log</a>
             <a class="btn btn-primary" ng-href="/#!/tenants/{{user.tenantId}}/delivery-services?all=true">View Delivery Services</a>
         </div>
         <div class="clearfix"></div>
