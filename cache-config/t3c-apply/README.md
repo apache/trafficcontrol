@@ -191,8 +191,9 @@ Typical usage is to install t3c on the cache machine, and then run it periodical
 
 -W, --wait-for-parents
 
-    [true | false] do not update if parent_pending = 1 in the
-    update json. default is false, wait for parents
+    [true | false | reval] do not update if parent_pending = 1 in the
+    update json. Default is 'reval', wait for parents in revalidate
+    mode, but not syncds (unless Traffic Ops has !use_reval_pending)
 
 # MODES
 
