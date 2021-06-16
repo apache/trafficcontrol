@@ -233,12 +233,8 @@ func SortTestDivisionDesc(t *testing.T) {
 	for start, end := 0, len(respDesc.Response)-1; start < end; start, end = start+1, end-1 {
 		respDesc.Response[start], respDesc.Response[end] = respDesc.Response[end], respDesc.Response[start]
 	}
-	if len(respDesc.Response[0].Name) > 0 && len(respAsc.Response[0].Name) > 0 {
-		if respDesc.Response[0].Name != respAsc.Response[0].Name {
-			t.Errorf("Division responses are not equal after reversal: %s - %s", respDesc.Response[0].Name, respAsc.Response[0].Name)
-		}
-	} else {
-		t.Errorf("Division name shouldn't be empty while sorting the response")
+	if respDesc.Response[0].Name != respAsc.Response[0].Name {
+		t.Errorf("Division responses are not equal after reversal: %s - %s", respDesc.Response[0].Name, respAsc.Response[0].Name)
 	}
 }
 
@@ -346,7 +342,7 @@ func GetTestPaginationSupportDivision(t *testing.T) {
 	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
-	divisionsWithLimit, _, _ := TOSession.GetDivisions(opts)
+	divisionsWithLimit, _, err := TOSession.GetDivisions(opts)
 	if !reflect.DeepEqual(divisions[:1], divisionsWithLimit.Response) {
 		t.Error("expected GET Divisions with limit = 1 to return first result")
 	}
@@ -355,7 +351,7 @@ func GetTestPaginationSupportDivision(t *testing.T) {
 	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("offset", "1")
-	divisionsWithOffset, _, _ := TOSession.GetDivisions(opts)
+	divisionsWithOffset, _, err := TOSession.GetDivisions(opts)
 	if !reflect.DeepEqual(divisions[1:2], divisionsWithOffset.Response) {
 		t.Error("expected GET Divisions with limit = 1, offset = 1 to return second result")
 	}
@@ -364,7 +360,7 @@ func GetTestPaginationSupportDivision(t *testing.T) {
 	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("page", "2")
-	divisionsWithPage, _, _ := TOSession.GetDivisions(opts)
+	divisionsWithPage, _, err := TOSession.GetDivisions(opts)
 	if !reflect.DeepEqual(divisions[1:2], divisionsWithPage.Response) {
 		t.Error("expected GET Divisions with limit = 1, page = 2 to return second result")
 	}
