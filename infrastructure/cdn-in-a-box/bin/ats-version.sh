@@ -27,10 +27,14 @@ remote_ats_version() {
 	local gitbox_url=https://gitbox.apache.org/repos/asf
 	local repo="${project}.git"
 	local branch refs commit last_tag release
-	branch="$(grep -F ATS_VERSION "${script_dir}/../../../cache-config/testing/docker/trafficserver/run.sh" "${script_dir}/../../../cache-config/testing/docker/docker-compose-ats-build.yml" |
-		grep -Eo '[0-9]+\.[0-9]+\.x' |
-		tail -n1
-	)"
+	if [[ -n "${ATS_VERSION:-}" ]]; then
+		branch="$ATS_VERSION"
+	else
+		branch="$(grep -F ATS_VERSION "${script_dir}/../../../cache-config/testing/docker/trafficserver/run.sh" "${script_dir}/../../../cache-config/testing/docker/docker-compose-ats-build.yml" |
+			grep -Eo '[0-9]+\.[0-9]+\.x' |
+			tail -n1
+		)"
+	fi
 	refs="$(curl -fs "${gitbox_url}/${repo}/info/refs?service=git-upload-pack" |
 		sed -E 's/^00[0-9a-f]{2}//g' |
 		tr -d '\0')"
