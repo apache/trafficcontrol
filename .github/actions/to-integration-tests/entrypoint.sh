@@ -16,8 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-+set -e
-+
+set -e
+
 download_go() {
 	. build/functions.sh
 	if verify_and_set_go_version; then
