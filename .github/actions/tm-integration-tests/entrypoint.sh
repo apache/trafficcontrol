@@ -30,6 +30,7 @@ function wait_for_endpoint() {
     fi
     sleep 5
   done
+  echo "Able to reach $1"
 }
 export -f wait_for_endpoint
 
@@ -119,12 +120,13 @@ cd "${repo_dir}/traffic_monitor/tools/testto"
 go mod vendor
 go build
 
-./testto $TESTTO_PORT &
+touch to.log
+
+./testto $TESTTO_PORT >to.log 2>&1 &
+tail -f to.log | color_and_prefix "${gray_bg}" 'Test TO' &
 
 wait_for_endpoint "${TESTTO_URI}:${TESTTO_PORT}/api/4.0/ping"
-echo "Fake TO Started"
 
-echo "Seeding Data"
 curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/4.0/cdns/$CDN/snapshot -X POST -d "@${test_dir}/snapshot.json"
 curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/4.0/cdns/$CDN/configs/monitoring -X POST -d "@${test_dir}/monitoring.json"
 curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/4.0/servers -X POST -d "@${test_dir}/servers.json"
@@ -133,7 +135,10 @@ cd "${repo_dir}/traffic_monitor/tools/testcaches"
 go mod vendor
 go build
 
-./testcaches -numPorts "$NUM_PORTS" -numRemaps "$NUM_REMAPS" -portStart $TESTCACHES_PORT_START &
+touch cache.log
+
+./testcaches -numPorts "$NUM_PORTS" -numRemaps "$NUM_REMAPS" -portStart $TESTCACHES_PORT_START > cache.log 2>&1 &
+tail -f cache.log | color_and_prefix "${gray_bg}" 'Test Cache' &
 
 wait_for_endpoint "$TESTCACHES_URI:$TESTCACHES_PORT_START/_astats"
 
@@ -155,8 +160,8 @@ cat > ./traffic_monitor.cfg <<- EOF
       "health_flush_interval_ms": 20,
       "stat_flush_interval_ms": 20,
       "log_location_event": null,
-      "log_location_error": "stdout",
-      "log_location_warning": "stdout",
+      "log_location_error": "err.log",
+      "log_location_warning": "warn.log",
       "log_location_info": null,
       "log_location_debug": null,
       "serve_read_timeout_ms": 10000,
@@ -165,6 +170,9 @@ cat > ./traffic_monitor.cfg <<- EOF
       "static_file_dir": "${repo_dir}/traffic_monitor/static/"
   }
 EOF
+touch err.log warn.log
+tail -f warn.log 2>&1 | color_and_prefix "${yellow_bg}" "Traffic Monitor" &
+tail -f err.log 2>&1 | color_and_prefix "${red_bg}" "Traffic Monitor" &
 
 cat > ./traffic_ops.cfg <<- EOF
   {
@@ -178,11 +186,10 @@ cat > ./traffic_ops.cfg <<- EOF
 EOF
 
 ./traffic_monitor -opsCfg traffic_ops.cfg -config traffic_monitor.cfg  &
-sleep 30s
+sleep 10s
 
 
 wait_for_endpoint "http://$TM_URI:$TM_PORT/api/version"
-echo "TM Running"
 
 cd ${test_dir}
 
@@ -190,5 +197,3 @@ jq ".trafficMonitor.URL = \"http://$TM_URI:$TM_PORT\"" \
   traffic-monitor-test.conf > tmt.conf.tmp && mv tmt.conf.tmp traffic-monitor-test.conf
 
 go test -test.v -cfg traffic-monitor-test.conf
-
-exit $?
