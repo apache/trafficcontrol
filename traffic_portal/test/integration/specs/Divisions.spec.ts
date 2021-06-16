@@ -47,7 +47,12 @@ divisions.tests.forEach(divisionsData => {
                 await divisionsPage.OpenTopologyMenu();
                 await divisionsPage.OpenDivisionsPage();
             });
-
+            divisionsData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await divisionsPage.CheckCSV(check.Name)).toBe(true);
+                    await divisionsPage.OpenDivisionsPage();
+                });
+            });
             divisionsData.add.forEach(add => {
                 it(add.description, async () => {
                     expect(await divisionsPage.CreateDivisions(add)).toBeTruthy();
