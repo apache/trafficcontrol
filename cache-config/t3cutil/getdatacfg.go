@@ -48,8 +48,8 @@ type ConfigData struct {
 	// ServerParams must be all Parameters on the Profile of the current server. Must not include other Parameters.
 	ServerParams []tc.Parameter `json:"server_parameters,omitempty"`
 
-	// CacheKeyParams must be all Parameters with the ConfigFile atscfg.CacheKeyParameterConfigFile.
-	CacheKeyParams []tc.Parameter `json:"cache_key_parameters,omitempty"`
+	// RemapConfigParams must be all Parameters with the ConfigFile "remap.config" or "cachekey.config" (compat)
+	RemapConfigParams []tc.Parameter `json:"remap_config_parameters,omitempty"`
 
 	// ParentConfigParams must be all Parameters with the ConfigFile "parent.config.
 	ParentConfigParams []tc.Parameter `json:"parent_config_parameters,omitempty"`
@@ -378,16 +378,25 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 		toData.DeliveryServiceRegexes = dsr
 		return nil
 	}
-	cacheKeyParamsF := func() error {
-		defer func(start time.Time) { log.Infof("cacheKeyParamsF took %v\n", time.Since(start)) }(time.Now())
-		params, toAddr, err := toClient.GetConfigFileParameters(atscfg.CacheKeyParameterConfigFile)
+
+	remapConfigParamsF := func() error {
+		defer func(start time.Time) { log.Infof("remapConfigParamsF took %v\n", time.Since(start)) }(time.Now())
+		remapConfigParams, toAddr, err := toClient.GetConfigFileParameters("remap.config") // TODO make const in lib/go-atscfg
 		if err != nil {
-			return errors.New("getting cache key parameters: " + err.Error())
+			return errors.New("getting remap.config parameters: " + err.Error())
 		}
+
+		// Also append the cachekey.config parameters for compatibility
+		cacheKeyParams, toAddr, err := toClient.GetConfigFileParameters("cachekey.config")
+		if err != nil {
+			return errors.New("getting delivery service parameters: " + err.Error())
+		}
+
 		toIPs.Store(toAddr, nil)
-		toData.CacheKeyParams = params
+		toData.RemapConfigParams = append(remapConfigParams, cacheKeyParams...)
 		return nil
 	}
+
 	parentConfigParamsF := func() error {
 		defer func(start time.Time) { log.Infof("parentConfigParamsF took %v\n", time.Since(start)) }(time.Now())
 		parentConfigParams, toAddr, err := toClient.GetConfigFileParameters("parent.config") // TODO make const in lib/go-atscfg
@@ -413,7 +422,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 	fs := []func() error{serversF, cgF, jobsF}
 	if !revalOnly {
 		// skip data not needed for reval, if we're reval-only
-		fs = append([]func() error{dsrF, cacheKeyParamsF, parentConfigParamsF, capsF, dsCapsF, topologiesF}, fs...)
+		fs = append([]func() error{dsrF, remapConfigParamsF, parentConfigParamsF, capsF, dsCapsF, topologiesF}, fs...)
 	}
 	errs := runParallel(fs)
 
