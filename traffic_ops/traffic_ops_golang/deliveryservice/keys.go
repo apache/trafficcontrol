@@ -468,6 +468,7 @@ func getDSIDFromName(tx *sql.Tx, xmlID string) (int, bool, error) {
 	}
 	return id, true, nil
 }
+
 // returns a delivery service xmlId for a cdn by host regex.
 func getXMLID(cdnID int64, hostRegex string, tx *sql.Tx) (string, bool, error) {
 	q := `

@@ -233,6 +233,38 @@ func CheckIfCurrentUserCanModifyCDN(tx *sql.Tx, cdn, user string) (error, error,
 	return nil, nil, http.StatusOK
 }
 
+// CheckIfCurrentUserCanModifyCDNWithID checks if the current user has the lock on the cdn (identified by ID) that the requested operation is to be performed on.
+// This will succeed if the either there is no lock by any user on the CDN, or if the current user has the lock on the CDN.
+func CheckIfCurrentUserCanModifyCDNWithID(tx *sql.Tx, cdnID int64, user string) (error, error, int) {
+	cdnName, ok, err := GetCDNNameFromID(tx, cdnID)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	} else if !ok {
+		return errors.New("CDN not found"), nil, http.StatusBadRequest
+	}
+	query := `SELECT username, soft FROM cdn_lock WHERE cdn=$1`
+	var userName string
+	var soft bool
+	rows, err := tx.Query(query, string(cdnName))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil, http.StatusOK
+		}
+		return nil, errors.New("querying cdn_lock for user " + user + " and cdn " + string(cdnName) + ": " + err.Error()), http.StatusInternalServerError
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&userName, &soft)
+		if err != nil {
+			return nil, errors.New("scanning cdn_lock for user " + user + " and cdn " + string(cdnName) + ": " + err.Error()), http.StatusInternalServerError
+		}
+	}
+	if userName != "" && user != userName && !soft {
+		return errors.New("user " + userName + " currently has a hard lock on cdn " + string(cdnName)), nil, http.StatusForbidden
+	}
+	return nil, nil, http.StatusOK
+}
+
 func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string) (string, map[string]interface{}, []error) {
 	var criteria string
 
@@ -1370,4 +1402,13 @@ func GetCDNNamesFromServerIds(tx *sql.Tx, serverIds []int64) ([]string, error) {
 		cdns = append(cdns, cdn)
 	}
 	return cdns, nil
+}
+
+// GetCDNNameFromServerID gets the CDN name for the server with the given ID.
+func GetCDNNameFromServerID(tx *sql.Tx, serverId int64) (tc.CDNName, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn_id FROM server WHERE id=$1)`, serverId).Scan(&name); err != nil {
+		return "", fmt.Errorf("querying CDN name from server ID: %w", err)
+	}
+	return tc.CDNName(name), nil
 }

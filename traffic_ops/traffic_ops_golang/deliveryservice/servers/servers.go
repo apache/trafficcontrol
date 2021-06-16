@@ -442,6 +442,21 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+	if ds.CDNID != nil {
+		cdn, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(*ds.CDNID))
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		} else if !ok {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+			return
+		}
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
 	serverInfos, err := dbhelpers.GetServerInfosFromIDs(inf.Tx.Tx, servers)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
@@ -511,6 +526,22 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, errors.New("delivery service not found"))
 		return
+	}
+
+	if ds.CDNID != nil {
+		cdn, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(*ds.CDNID))
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		} else if !ok {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+			return
+		}
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
 	}
 
 	// get list of server Ids to insert

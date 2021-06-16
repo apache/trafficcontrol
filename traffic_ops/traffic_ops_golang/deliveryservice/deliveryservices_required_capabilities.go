@@ -252,7 +252,14 @@ func (rc *RequiredCapability) Delete() (error, error, int) {
 	} else if err != nil {
 		return nil, fmt.Errorf("checking authorization for existing DS ID: %s" + err.Error()), http.StatusInternalServerError
 	}
-
+	cdnName, err := dbhelpers.GetCDNNameFromDSID(rc.ReqInfo.Tx.Tx, *rc.DeliveryServiceID)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(rc.ReqInfo.Tx.Tx, cdnName, rc.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
 	return api.GenericDelete(rc)
 }
 
@@ -263,6 +270,15 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 		return errors.New("not authorized on this tenant"), nil, http.StatusForbidden
 	} else if err != nil {
 		return nil, fmt.Errorf("checking authorization for existing DS ID: %s" + err.Error()), http.StatusInternalServerError
+	}
+
+	cdnName, err := dbhelpers.GetCDNNameFromDSID(rc.ReqInfo.Tx.Tx, *rc.DeliveryServiceID)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(rc.ReqInfo.Tx.Tx, cdnName, rc.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 
 	// Ensure DS type is only of HTTP*, DNS* types

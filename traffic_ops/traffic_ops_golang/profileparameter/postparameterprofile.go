@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"net/http"
 	"strconv"
 
@@ -44,6 +45,20 @@ func PostParamProfile(w http.ResponseWriter, r *http.Request) {
 	if err := api.Parse(r.Body, inf.Tx.Tx, &paramProfile); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parse error: "+err.Error()), nil)
 		return
+	}
+	if paramProfile.ProfileIDs != nil {
+		for _, profileID := range *paramProfile.ProfileIDs {
+			cdnName, err := dbhelpers.GetCDNNameFromProfileID(inf.Tx.Tx, int(profileID))
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+				return
+			}
+			userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+			if userErr != nil || sysErr != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+				return
+			}
+		}
 	}
 	if err := insertParameterProfile(paramProfile, inf.Tx.Tx); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("posting parameter profile: "+err.Error()))
