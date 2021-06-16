@@ -2388,25 +2388,24 @@ func addTLSVersionsToDeliveryService(t *testing.T) {
 		t.Fatal("Traffic Ops returned a representation for the current user with null or undefined tenant and/or tenantID")
 	}
 
-	ds := tc.DeliveryServiceV4{
-		CDNName:              new(string),
-		DisplayName:          new(string),
-		InitialDispersion:    new(int),
-		MissLat:              new(float64),
-		MissLong:             new(float64),
-		MultiSiteOrigin:      new(bool),
-		OrgServerFQDN:        new(string),
-		Protocol:             new(int),
-		QStringIgnore:        new(int),
-		RangeRequestHandling: new(int),
-		Tenant:               new(string),
-		TenantID:             me.Response.TenantID,
-		TLSVersions: []string{
-			"1.1",
-		},
-		Type:  new(tc.DSType),
-		XMLID: new(string),
+	var ds tc.DeliveryServiceV4
+	ds.CDNName = new(string)
+	ds.DisplayName = new(string)
+	ds.InitialDispersion = new(int)
+	ds.MissLat = new(float64)
+	ds.MissLong = new(float64)
+	ds.MultiSiteOrigin = new(bool)
+	ds.OrgServerFQDN = new(string)
+	ds.Protocol = new(int)
+	ds.QStringIgnore = new(int)
+	ds.RangeRequestHandling = new(int)
+	ds.Tenant = new(string)
+	ds.TenantID = me.Response.TenantID
+	ds.TLSVersions = []string{
+		"1.1",
 	}
+	ds.Type = new(tc.DSType)
+	ds.XMLID = new(string)
 	*ds.InitialDispersion = 1
 	*ds.Tenant = *me.Response.Tenant
 	*ds.DisplayName = "ds-test-tls-versions"

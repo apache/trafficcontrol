@@ -538,7 +538,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 	defer resultRows.Close()
 
 	id := 0
-	var lastUpdated time.Time
+	var lastUpdated tc.TimeNoMod
 	if !resultRows.Next() {
 		return nil, http.StatusInternalServerError, nil, errors.New("no deliveryservice request inserted, no id was returned")
 	}
@@ -591,7 +591,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 	if matchlist, ok := matchlists[*ds.XMLID]; !ok {
 		return nil, http.StatusInternalServerError, nil, errors.New("creating DS: reading matchlists: not found")
 	} else {
-		ds.MatchList = matchlist
+		ds.MatchList = &matchlist
 	}
 
 	cdnName, cdnDomain, dnssecEnabled, err := getCDNNameDomainDNSSecEnabled(*ds.ID, tx)
@@ -599,7 +599,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 		return nil, http.StatusInternalServerError, nil, errors.New("creating DS: getting CDN info: " + err.Error())
 	}
 
-	ds.ExampleURLs = MakeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, ds.MatchList, cdnDomain)
+	ds.ExampleURLs = MakeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 
 	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.SigningAlgorithm, dsType, ds.MaxOriginConnections); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("ensuring ds parameters:: " + err.Error())
@@ -618,7 +618,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 		return nil, http.StatusInternalServerError, nil, errors.New("creating delivery service: " + err.Error())
 	}
 
-	ds.LastUpdated = lastUpdated
+	ds.LastUpdated = &lastUpdated
 	if err := api.CreateChangeLogRawErr(api.ApiChange, "DS: "+*ds.XMLID+", ID: "+strconv.Itoa(*ds.ID)+", ACTION: Created delivery service", user, tx); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
 	}
@@ -1279,7 +1279,7 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 	if !resultRows.Next() {
 		return nil, http.StatusNotFound, errors.New("no delivery service found with this id"), nil
 	}
-	var lastUpdated time.Time
+	var lastUpdated tc.TimeNoMod
 	if err := resultRows.Scan(&lastUpdated); err != nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("scan updating delivery service: " + err.Error())
 	}
@@ -1330,7 +1330,7 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 	if ml, ok := matchLists[*ds.XMLID]; !ok {
 		return nil, http.StatusInternalServerError, nil, errors.New("no matchlists after update")
 	} else {
-		ds.MatchList = ml
+		ds.MatchList = &ml
 	}
 
 	if err := EnsureParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, ds.MidHeaderRewrite, ds.RegexRemap, ds.SigningAlgorithm, newDSType, ds.MaxOriginConnections); err != nil {
@@ -1343,7 +1343,7 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 		}
 	}
 
-	ds.LastUpdated = lastUpdated
+	ds.LastUpdated = &lastUpdated
 
 	// the update may change or delete the query params -- delete existing and re-add if any provided
 	q := `DELETE FROM deliveryservice_consistent_hash_query_param WHERE deliveryservice_id = $1`
@@ -1972,8 +1972,8 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 		if !ok {
 			continue
 		}
-		ds.MatchList = matchList
-		ds.ExampleURLs = MakeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, ds.MatchList, dsCDNDomains[*ds.XMLID])
+		ds.MatchList = &matchList
+		ds.ExampleURLs = MakeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, dsCDNDomains[*ds.XMLID])
 		dses[i] = ds
 	}
 

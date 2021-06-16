@@ -462,80 +462,79 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 	typeID := 22
 	xmlid := "xmlid"
 
-	newDS := DeliveryServiceV4{
-		Active:                    new(bool),
-		AnonymousBlockingEnabled:  &anonymousBlockingEnabled,
-		CCRDNSTTL:                 &cCRDNSTTL,
-		CDNID:                     &cdnID,
-		CDNName:                   &cdnName,
-		CheckPath:                 &checkPath,
-		ConsistentHashQueryParams: consistentHashQueryParams,
-		ConsistentHashRegex:       &consistentHashRegex,
-		DeepCachingType:           &deepCachingType,
-		DisplayName:               &displayName,
-		DNSBypassCNAME:            &dnsBypassCNAME,
-		DNSBypassIP:               &dnsBypassIP,
-		DNSBypassIP6:              &dnsBypassIP6,
-		DNSBypassTTL:              &dnsBypassTTL,
-		DSCP:                      &dscp,
-		EcsEnabled:                ecsEnabled,
-		EdgeHeaderRewrite:         &edgeHeaderRewrite,
-		ExampleURLs:               exampleURLs,
-		FirstHeaderRewrite:        &firstHeaderRewrite,
-		FQPacingRate:              &fqPacingRate,
-		GeoLimit:                  &geoLimit,
-		GeoLimitCountries:         &geoLimitCountries,
-		GeoLimitRedirectURL:       &geoLimitRedirectURL,
-		GeoProvider:               &geoProvider,
-		GlobalMaxMBPS:             &globalMaxMBPS,
-		GlobalMaxTPS:              &globalMaxTPS,
-		HTTPBypassFQDN:            &hTTPBypassFQDN,
-		ID:                        &id,
-		InfoURL:                   &infoURL,
-		InitialDispersion:         &initialDispersion,
-		InnerHeaderRewrite:        &innerHeaderRewrite,
-		IPV6RoutingEnabled:        &ipv6RoutingEnabled,
-		LastHeaderRewrite:         &lastHeaderRewrite,
-		LastUpdated:               lastUpdated.Time,
-		LogsEnabled:               &logsEnabled,
-		LongDesc:                  &longDesc,
-		LongDesc1:                 &longDesc1,
-		LongDesc2:                 &longDesc2,
-		MatchList:                 nil,
-		MaxDNSAnswers:             &maxDNSAnswers,
-		MaxOriginConnections:      &maxOriginConnections,
-		MaxRequestHeaderBytes:     &maxRequestHeaderBytes,
-		MidHeaderRewrite:          &midHeaderRewrite,
-		MissLat:                   &missLat,
-		MissLong:                  &missLong,
-		MultiSiteOrigin:           &multiSiteOrigin,
-		OriginShield:              &originShield,
-		OrgServerFQDN:             &orgServerFQDN,
-		ProfileDesc:               &profileDesc,
-		ProfileID:                 &profileID,
-		ProfileName:               &profileName,
-		Protocol:                  &protocol,
-		QStringIgnore:             &qstringIgnore,
-		RangeRequestHandling:      &rangeRequestHandling,
-		RangeSliceBlockSize:       &rangeSliceBlockSize,
-		RegexRemap:                &regexRemap,
-		RegionalGeoBlocking:       &regionalGeoBlocking,
-		RemapText:                 &remapText,
-		RoutingName:               &routingName,
-		ServiceCategory:           &serviceCategory,
-		Signed:                    signed,
-		SigningAlgorithm:          &signingAlgorithm,
-		SSLKeyVersion:             &sSLKeyVersion,
-		Tenant:                    &tenant,
-		TenantID:                  &tenantID,
-		TLSVersions:               []string{"1.0", "1.1", "1.2", "1.3"},
-		Topology:                  &topology,
-		TRResponseHeaders:         &trResponseHeaders,
-		TRRequestHeaders:          &trRequestHeaders,
-		Type:                      &typ,
-		TypeID:                    &typeID,
-		XMLID:                     &xmlid,
-	}
+	newDS := DeliveryServiceV4{}
+	newDS.Active = new(bool)
+	newDS.AnonymousBlockingEnabled = &anonymousBlockingEnabled
+	newDS.CCRDNSTTL = &cCRDNSTTL
+	newDS.CDNID = &cdnID
+	newDS.CDNName = &cdnName
+	newDS.CheckPath = &checkPath
+	newDS.ConsistentHashQueryParams = consistentHashQueryParams
+	newDS.ConsistentHashRegex = &consistentHashRegex
+	newDS.DeepCachingType = &deepCachingType
+	newDS.DisplayName = &displayName
+	newDS.DNSBypassCNAME = &dnsBypassCNAME
+	newDS.DNSBypassIP = &dnsBypassIP
+	newDS.DNSBypassIP6 = &dnsBypassIP6
+	newDS.DNSBypassTTL = &dnsBypassTTL
+	newDS.DSCP = &dscp
+	newDS.EcsEnabled = ecsEnabled
+	newDS.EdgeHeaderRewrite = &edgeHeaderRewrite
+	newDS.ExampleURLs = exampleURLs
+	newDS.FirstHeaderRewrite = &firstHeaderRewrite
+	newDS.FQPacingRate = &fqPacingRate
+	newDS.GeoLimit = &geoLimit
+	newDS.GeoLimitCountries = &geoLimitCountries
+	newDS.GeoLimitRedirectURL = &geoLimitRedirectURL
+	newDS.GeoProvider = &geoProvider
+	newDS.GlobalMaxMBPS = &globalMaxMBPS
+	newDS.GlobalMaxTPS = &globalMaxTPS
+	newDS.HTTPBypassFQDN = &hTTPBypassFQDN
+	newDS.ID = &id
+	newDS.InfoURL = &infoURL
+	newDS.InitialDispersion = &initialDispersion
+	newDS.InnerHeaderRewrite = &innerHeaderRewrite
+	newDS.IPV6RoutingEnabled = &ipv6RoutingEnabled
+	newDS.LastHeaderRewrite = &lastHeaderRewrite
+	newDS.LastUpdated = lastUpdated
+	newDS.LogsEnabled = &logsEnabled
+	newDS.LongDesc = &longDesc
+	newDS.LongDesc1 = &longDesc1
+	newDS.LongDesc2 = &longDesc2
+	newDS.MatchList = nil
+	newDS.MaxDNSAnswers = &maxDNSAnswers
+	newDS.MaxOriginConnections = &maxOriginConnections
+	newDS.MaxRequestHeaderBytes = &maxRequestHeaderBytes
+	newDS.MidHeaderRewrite = &midHeaderRewrite
+	newDS.MissLat = &missLat
+	newDS.MissLong = &missLong
+	newDS.MultiSiteOrigin = &multiSiteOrigin
+	newDS.OriginShield = &originShield
+	newDS.OrgServerFQDN = &orgServerFQDN
+	newDS.ProfileDesc = &profileDesc
+	newDS.ProfileID = &profileID
+	newDS.ProfileName = &profileName
+	newDS.Protocol = &protocol
+	newDS.QStringIgnore = &qstringIgnore
+	newDS.RangeRequestHandling = &rangeRequestHandling
+	newDS.RangeSliceBlockSize = &rangeSliceBlockSize
+	newDS.RegexRemap = &regexRemap
+	newDS.RegionalGeoBlocking = &regionalGeoBlocking
+	newDS.RemapText = &remapText
+	newDS.RoutingName = &routingName
+	newDS.ServiceCategory = &serviceCategory
+	newDS.Signed = signed
+	newDS.SigningAlgorithm = &signingAlgorithm
+	newDS.SSLKeyVersion = &sSLKeyVersion
+	newDS.Tenant = &tenant
+	newDS.TenantID = &tenantID
+	newDS.TLSVersions = []string{"1.0", "1.1", "1.2", "1.3"}
+	newDS.Topology = &topology
+	newDS.TRResponseHeaders = &trResponseHeaders
+	newDS.TRRequestHeaders = &trRequestHeaders
+	newDS.Type = &typ
+	newDS.TypeID = &typeID
+	newDS.XMLID = &xmlid
 
 	active := false
 	oldDS := DeliveryServiceNullableV30{
