@@ -508,7 +508,7 @@ type config struct {
 }
 
 func (c config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
-func (c config) WarningLog() log.LogLocation { return log.LogLocation(c.LogLocationInfo) }
+func (c config) WarningLog() log.LogLocation { return log.LogLocation(c.LogLocationWarning) }
 func (c config) InfoLog() log.LogLocation    { return log.LogLocation(c.LogLocationInfo) }
 func (c config) DebugLog() log.LogLocation   { return log.LogLocation(c.LogLocationDebug) }
 func (c config) EventLog() log.LogLocation   { return log.LogLocation(c.LogLocationEvent) }
