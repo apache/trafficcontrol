@@ -32,13 +32,18 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-------+----------+------------------------------------------------------+
-	| Name  | Required | Description                                          |
-	+=======+==========+======================================================+
-	| days  | no       | An integer number of days of change logs to return   |
-	+-------+----------+------------------------------------------------------+
-	| limit | no       | The number of records to which to limit the response |
-	+-------+----------+------------------------------------------------------+
+	+----------+----------+------------------------------------------------------+
+	| Name     | Required | Description                                          |
+	+==========+==========+======================================================+
+	| days     | no       | An integer number of days of change logs to return   |
+	+----------+----------+------------------------------------------------------+
+	| limit    | no       | The number of records to which to limit the response |
+	+----------+----------+------------------------------------------------------+
+	| username | no       | A name to which to limit the response too            |
+	+----------+----------+------------------------------------------------------+
+
+.. versionadded:: ATCv6
+	The ``username`` query parameter was added to this in endpoint across across all API versions in :abbr:`ATC (Apache Traffic Control)` version 6.0.0.
 
 .. code-block:: http
 	:caption: Request Example
