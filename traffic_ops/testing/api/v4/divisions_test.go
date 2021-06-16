@@ -338,50 +338,43 @@ func GetTestPaginationSupportDivision(t *testing.T) {
 		t.Fatalf("Need at least 2 Divisions to test Division pagination, only found: %d", len(resp.Response))
 	}
 	divisions := resp.Response
-	if len(divisions) > 0 {
-		opts.QueryParameters = url.Values{}
-		opts.QueryParameters.Set("orderby", "id")
-		opts.QueryParameters.Set("limit", "1")
-		divisionsWithLimit, _, err := TOSession.GetDivisions(opts)
-		if err == nil {
-			if !reflect.DeepEqual(divisions[:1], divisionsWithLimit.Response) {
-				t.Error("expected GET Divisions with limit = 1 to return first result")
-			}
-		} else {
-			t.Errorf("Unexpected error getting Divisions with a limit: %v - alerts: %+v", err, divisionsWithLimit.Alerts)
-		}
-		if len(divisions) > 1 {
-			opts.QueryParameters = url.Values{}
-			opts.QueryParameters.Set("orderby", "id")
-			opts.QueryParameters.Set("limit", "1")
-			opts.QueryParameters.Set("offset", "1")
-			divisionsWithOffset, _, err := TOSession.GetDivisions(opts)
-			if err == nil {
-				if !reflect.DeepEqual(divisions[1:2], divisionsWithOffset.Response) {
-					t.Error("expected GET Divisions with limit = 1, offset = 1 to return second result")
-				}
-			} else {
-				t.Errorf("Unexpected error getting Divisions with a limit and an offset: %v - alerts: %+v", err, divisionsWithOffset.Alerts)
-			}
-
-			opts.QueryParameters = url.Values{}
-			opts.QueryParameters.Set("orderby", "id")
-			opts.QueryParameters.Set("limit", "1")
-			opts.QueryParameters.Set("page", "2")
-			divisionsWithPage, _, err := TOSession.GetDivisions(opts)
-			if err == nil {
-				if !reflect.DeepEqual(divisions[1:2], divisionsWithPage.Response) {
-					t.Error("expected GET Divisions with limit = 1, page = 2 to return second result")
-				}
-			} else {
-				t.Errorf("Unexpected error getting Divisions with a limit and a page: %v - alerts: %+v", err, divisionsWithPage.Alerts)
-			}
-		} else {
-			t.Errorf("only one Divisions found, so offset functionality can't test")
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	divisionsWithLimit, _, err := TOSession.GetDivisions(opts)
+	if err == nil {
+		if !reflect.DeepEqual(divisions[:1], divisionsWithLimit.Response) {
+			t.Error("expected GET Divisions with limit = 1 to return first result")
 		}
 	} else {
-		t.Errorf("No Divisions found to check pagination")
+		t.Errorf("Unexpected error getting Divisions with a limit: %v - alerts: %+v", err, divisionsWithLimit.Alerts)
 	}
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "1")
+	divisionsWithOffset, _, err := TOSession.GetDivisions(opts)
+	if err == nil {
+		if !reflect.DeepEqual(divisions[1:2], divisionsWithOffset.Response) {
+			t.Error("expected GET Divisions with limit = 1, offset = 1 to return second result")
+		}
+	} else {
+		t.Errorf("Unexpected error getting Divisions with a limit and an offset: %v - alerts: %+v", err, divisionsWithOffset.Alerts)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "2")
+	divisionsWithPage, _, err := TOSession.GetDivisions(opts)
+	if err == nil {
+		if !reflect.DeepEqual(divisions[1:2], divisionsWithPage.Response) {
+			t.Error("expected GET Divisions with limit = 1, page = 2 to return second result")
+		}
+	} else {
+		t.Errorf("Unexpected error getting Divisions with a limit and a page: %v - alerts: %+v", err, divisionsWithPage.Alerts)
+	}
+
 	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("limit", "-2")
 	resp, _, err = TOSession.GetDivisions(opts)
