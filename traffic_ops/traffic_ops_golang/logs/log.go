@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -126,15 +127,23 @@ const selectFromQuery = `
 SELECT l.id, l.level, l.message, u.username as user, l.ticketnum, l.last_updated
 FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id`
 
+const countQuery = `SELECT count(l.tm_user) FROM log as l`
+
 func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 	var count = uint64(0)
+	var whereCount string
 	if _, ok := inf.Params["orderby"]; !ok {
-		inf.Params["orderby"] = "last_updated"
+		inf.Params["orderby"] = "lastUpdated"
+	}
+	if _, ok := inf.Params["limit"]; !ok {
+		inf.Params["limit"] = strconv.Itoa(DefaultLogLimit)
+	} else {
+		inf.Params["limit"] = strconv.Itoa(limit)
 	}
 
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"username":     dbhelpers.WhereColumnInfo{Column: "u.username", Checker: nil},
-		"last_updated": dbhelpers.WhereColumnInfo{Column: "l.last_updated", Checker: nil},
+		"username":    dbhelpers.WhereColumnInfo{Column: "u.username", Checker: nil},
+		"lastUpdated": dbhelpers.WhereColumnInfo{Column: "l.last_updated", Checker: nil},
 	}
 	where, orderBy, pagination, queryValues, errs :=
 		dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
@@ -143,16 +152,26 @@ func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 	}
 
 	timeInterval := fmt.Sprintf("l.last_updated > now() - INTERVAL '%v' DAY", days)
-	if _, ok := inf.Params["username"]; ok {
+	if where != "" {
+		whereCount = ", tm_user as u\n" + where + " AND l.tm_user = u.id"
 		where = where + " AND " + timeInterval
 	} else {
+		whereCount = where
 		where = "\nWHERE " + timeInterval
 	}
-	if pagination == "" {
-		pagination = pagination + fmt.Sprintf("\nLIMIT %v", limit)
-	}
-	query := selectFromQuery + where + orderBy + pagination
 
+	queryCount := countQuery + whereCount
+	rowCount, err := inf.Tx.NamedQuery(queryCount, queryValues)
+	if err != nil {
+		return nil, count, errors.New("querying log count for a given user: " + err.Error())
+	}
+	for rowCount.Next() {
+		if err = rowCount.Scan(&count); err != nil {
+			return nil, count, errors.New("scanning logs: " + err.Error())
+		}
+	}
+
+	query := selectFromQuery + where + orderBy + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, count, errors.New("querying logs: " + err.Error())
@@ -163,7 +182,6 @@ func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 		if err = rows.Scan(&l.ID, &l.Level, &l.Message, &l.User, &l.TicketNum, &l.LastUpdated); err != nil {
 			return nil, count, errors.New("scanning logs: " + err.Error())
 		}
-		count += 1
 		ls = append(ls, l)
 	}
 	return ls, count, nil
