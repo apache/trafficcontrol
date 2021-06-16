@@ -36,7 +36,13 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 	columns = [
 		{
 			headerName: "Delivery Service",
-			field: "deliveryService.xmlId",
+			valueGetter: function(params) {
+				if (params.data.requested) {
+					return params.data.requested.xmlId;
+				} else {
+					return params.data.original.xmlId;
+				}
+			},
 			hide: false
 		},
 		{
@@ -136,12 +142,15 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		onRowClicked: function(params) {
 			const selection = window.getSelection().toString();
 			if(selection === "" || selection === $scope.mouseDownSelectionText) {
+				const typeId = (params.data.requested) ? params.data.requested.typeId : params.data.original.typeId;
+
 				let path = '/delivery-service-requests/' + params.data.id + '?type=';
-				typeService.getType(params.data.deliveryService.typeId)
+				typeService.getType(typeId)
 					.then(function (result) {
 						path += result.name;
 						locationUtils.navigateToPath(path);
 					});
+
 				$scope.$apply();
 			}
 			$scope.mouseDownSelectionText = "";
@@ -428,7 +437,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 
 		// only the user assigned to the request can mark it as rejected (unless the user has override capabilities)
-		if ((request.assigneeId != userModel.user.id) && (userModel.user.roleName != propertiesModel.properties.dsRequests.overrideRole)) {
+		if ((request.assignee != userModel.user.username) && (userModel.user.roleName != propertiesModel.properties.dsRequests.overrideRole)) {
 			messageModel.setMessages([{
 				level: 'error',
 				text: 'Only the assignee can mark a delivery service request as rejected'
@@ -467,7 +476,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 
 		// only the user assigned to the request can mark it as complete (unless the user has override capabilities)
-		if ((request.assigneeId != userModel.user.id) && (userModel.user.roleName != propertiesModel.properties.dsRequests.overrideRole)) {
+		if ((request.assignee != userModel.user.username) && (userModel.user.roleName != propertiesModel.properties.dsRequests.overrideRole)) {
 			messageModel.setMessages([{
 				level: 'error',
 				text: 'Only the assignee can mark a delivery service request as complete'
@@ -503,11 +512,12 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 
 	$scope.deleteRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		var params = {
-			title: 'Delete the ' + request.deliveryService.xmlId + ' ' + request.changeType + ' request?',
-			key: request.deliveryService.xmlId + ' ' + request.changeType + ' request'
+		const xmlId = (request.requested) ? request.requested.xmlId : request.original.xmlId;
+		const params = {
+			title: 'Delete the ' + xmlId + ' ' + request.changeType + ' request?',
+			key: xmlId + ' ' + request.changeType + ' request'
 		};
-		var modalInstance = $uibModal.open({
+		const modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
 			controller: 'DialogDeleteController',
 			size: 'md',
@@ -525,12 +535,15 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		}, function () {
 			// do nothing
 		});
-	};
+	}
 
 	$scope.fulfillRequest = function (request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		var path = '/delivery-service-requests/' + request.id + '?type=';
-		typeService.getType(request.deliveryService.typeId)
+
+		const typeId = (request.requested) ? request.requested.typeId : request.original.typeId;
+
+		let path = '/delivery-service-requests/' + request.id + '?type=';
+		typeService.getType(typeId)
 			.then(function (result) {
 				path += result.name;
 				locationUtils.navigateToPath(path);

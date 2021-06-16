@@ -15,10 +15,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
-
-import { DeliveryService, InvalidationJob, User } from "../../models";
+import { DeliveryService, InvalidationJob, NewInvalidationJob, User } from "../../models";
 
 import { APIService } from "./apiservice";
 
@@ -57,9 +54,9 @@ export class InvalidationJobService extends APIService {
 	 * Fetches all invalidation jobs that match the passed criteria.
 	 *
 	 * @param opts Optional identifiers for the requested Jobs.
-	 * @returns An Observable that will emit the request Jobs.
+	 * @returns The request Jobs.
 	 */
-	public getInvalidationJobs(opts?: JobOpts): Observable<Array<InvalidationJob>> {
+	public async getInvalidationJobs(opts?: JobOpts): Promise<Array<InvalidationJob>> {
 		const path = "jobs";
 		const params: Record<string, string> = {};
 		if (opts) {
@@ -79,20 +76,25 @@ export class InvalidationJobService extends APIService {
 				params.userId = String(opts.user.id);
 			}
 		}
-		return this.get<Array<InvalidationJob>>(path, undefined, params).pipe();
+		return this.get<Array<InvalidationJob>>(path, undefined, params).toPromise().catch(
+			e => {
+				console.error("Failed to get Invalidation Jobs:", e);
+				return [];
+			}
+		);
 	}
 
 	/**
 	 * Creates an Invalidation Job.
 	 *
 	 * @param job The Job to create.
-	 * @returns An Observable that emits whether or not creation succeeded.
+	 * @returns whether or not creation succeeded.
 	 */
-	public createInvalidationJob(job: InvalidationJob): Observable<boolean> {
-		const path = "user/current/jobs";
-		return this.post(path, job).pipe(map(
+	public async createInvalidationJob(job: NewInvalidationJob): Promise<boolean> {
+		const path = "jobs";
+		return this.post(path, job).toPromise().then(
 			() => true,
 			() => false
-		));
+		);
 	}
 }

@@ -5,10 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- Added support for CDN locks
+- Added support for PostgreSQL as a Traffic Vault backend
 - [#5449](https://github.com/apache/trafficcontrol/issues/5449) The `todb-tests` GitHub action now runs the Traffic Ops DB tests
 - Python client: [#5611](https://github.com/apache/trafficcontrol/pull/5611) Added server_detail endpoint
 - Ported the Postinstall script to Python. The Perl version has been moved to `install/bin/_postinstall.pl` and has been deprecated, pending removal in a future release.
 - CDN-in-a-Box: Generate config files using the Postinstall script
+- CDN-in-a-Box: Add Federation with CNAME foo.kabletown.net.
 - Apache Traffic Server: [#5627](https://github.com/apache/trafficcontrol/pull/5627) - Added the creation of Centos8 RPMs for Apache Traffic Server
 - Traffic Ops/Traffic Portal: [#5479](https://github.com/apache/trafficcontrol/issues/5479) - Added the ability to change a server capability name
 - Traffic Ops: [#3577](https://github.com/apache/trafficcontrol/issues/3577) - Added a query param (server host_name or ID) for servercheck API
@@ -32,24 +35,39 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - t3c: Added option to track config changes in git.
 - ORT config generation: Added a rule to ip_allow such that PURGE requests are allowed over localhost
 - Added integration to use ACME to generate new SSL certificates.
+- Add a Federation to the Ansible Dataset Loader
+- Added asynchronous status to ACME certificate generation.
+- Added per Delivery Service HTTP/2 and TLS Versions support, via ssl_server_name.yaml and sni.yaml. See overview/delivery_services and t3c docs.
+- Added headers to Traffic Portal, Traffic Ops, and Traffic Monitor to opt out of tracking users via Google FLoC.
+- Add logging scope for logging.yaml generation for ATS 9 support
+- `DELETE` request method for `deliveryservices/xmlId/{name}/urlkeys` and `deliveryservices/{id}/urlkeys`.
+- t3c now uses separate apps, full run syntax changed to `t3c apply ...`, moved to cache-config and RPM changed to trafficcontrol-cache-config. See cache-config README.md.
+- t3c: bug fix to consider plugin config files for reloading remap.config
+- t3c: add flag to wait for parents in syncds mode
+- t3c: Change syncds so that it only warns on package version mismatch.
+- atstccfg: add ##REFETCH## support to regex_revalidate.config processing.
+- Added a Traffic Monitor integration test framework.
+- Added a tool at `/traffic_ops/app/db/reencrypt` to re-encrypt the data in the Postgres Traffic Vault with a new key.
 
 ### Fixed
 - [#5690](https://github.com/apache/trafficcontrol/issues/5690) - Fixed github action for added/modified db migration file.
-- Fixed the return error for GET api `cdns/routing` to avoid incorrect success response.
 - [#2471](https://github.com/apache/trafficcontrol/issues/2471) - A PR check to ensure added db migration file is the latest.
 - [#5609](https://github.com/apache/trafficcontrol/issues/5609) - Fixed GET /servercheck filter for an extra query param.
 - [#5288](https://github.com/apache/trafficcontrol/issues/5288) - Fixed the ability to create and update a server with MTU value >= 1280.
 - [#5284](https://github.com/apache/trafficcontrol/issues/5284) - Fixed error message when creating a server with non-existent profile
 - Fixed a NullPointerException in TR when a client passes a null SNI hostname in a TLS request
 - Fixed a logging bug in Traffic Monitor where it wouldn't log errors in certain cases where a backup file could be used instead. Also, Traffic Monitor now rejects monitoring snapshots that have no delivery services.
+- [#5739](https://github.com/apache/trafficcontrol/issues/5739) - Prevent looping in case of a failed login attempt
 - [#5407](https://github.com/apache/trafficcontrol/issues/5407) - Make sure that you cannot add two servers with identical content
-- [#5712](https://github.com/apache/trafficcontrol/issues/5712) - Ensure that 5.x Traffic Stats is compatible with 5.x Traffic Monitor and 5.x Traffic Ops, and that it doesn't log all 0's for `cache_stats`  
 - [#2881](https://github.com/apache/trafficcontrol/issues/2881) - Some API endpoints have incorrect Content-Types
 - [#5363](https://github.com/apache/trafficcontrol/issues/5363) - Postgresql version changeable by env variable
 - [#5405](https://github.com/apache/trafficcontrol/issues/5405) - Prevent Tenant update from choosing child as new parent
 - [#5384](https://github.com/apache/trafficcontrol/issues/5384) - New grids will now properly remember the current page number.
 - [#5548](https://github.com/apache/trafficcontrol/issues/5548) - Don't return a `403 Forbidden` when the user tries to get servers of a non-existent DS using `GET /servers?dsId={{nonexistent DS ID}}`
-- [#5724](https://github.com/apache/trafficcontrol/issues/5724) - Set XMPPID to hostname if the server had none, don't error on server update when XMPPID is empty
+- [#5732](https://github.com/apache/trafficcontrol/issues/5732) - TO API POST /cdns/dnsseckeys/generate times out with large numbers of delivery services
+- Fixed server creation through legacy API versions to default `monitor` to `true`.
+- Fixed t3c to generate topology parents correctly for parents with the Type MID+ or EDGE+ versus just the literal. Naming cache types to not be exactly 'EDGE' or 'MID' is still discouraged and not guaranteed to work, but it's unfortunately somewhat common, so this fixes it in one particular case.
+- Fixed t3c to create config files and directories as ats.ats
 
 ### Changed
 - Updated the Traffic Ops Python client to 3.0
@@ -58,17 +76,42 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated Traffic Ops supported database version from PostgreSQL 9.6 to 13.2
 - Set Traffic Router to also accept TLSv1.3 protocols by default in server.xml
 - Disabled TLSv1.1 for Traffic Router in Ansible role by default
+- Updated the Traffic Monitor Ansible role to set `serve_write_timeout_ms` to `20000` by default because 10 seconds can be too short for relatively large CDNs.
 - Refactored the Traffic Ops - Traffic Vault integration to more easily support the development of new Traffic Vault backends
 - Updated Apache Tomcat from 8.5.63 to 9.0.43
 - Delivery Service Requests now keep a record of the changes they make.
+- Changed the `goose` provider to the maintained fork [`github.com/kevinburke/goose`](https://github.com/kevinburke/goose)
+- The format of the `/servers/{{host name}}/update_status` Traffic Ops API endpoint has been changed to use a top-level `response` property, in keeping with (most of) the rest of the API.
+- The API v4 Traffic Ops Go client has been overhauled compared to its predecessors to have a consistent call signature that allows passing query string parameters and HTTP headers to any client method.
+- Updated BouncyCastle libraries in Traffic Router to v1.68.
+- CDN in a Box now uses `t3c` for cache configuration.
+- CDN in a Box now uses Apache Traffic Server 8.1.
 
 ### Deprecated
+- The Riak Traffic Vault backend is now deprecated and its support may be removed in a future release. It is highly recommended to use the new PostgreSQL backend instead.
 - The `riak.conf` config file and its corresponding `--riakcfg` option in `traffic_ops_golang` have been deprecated. Please use `"traffic_vault_backend": "riak"` and `"traffic_vault_config"` (with the existing contents of riak.conf) instead.
+- The Traffic Ops API route `GET /api/{version}/vault/bucket/{bucket}/key/{key}/values` has been deprecated and will no longer be available as of Traffic Ops API v4
 - The `riak_port` option in cdn.conf is now deprecated. Please use the `"port"` field in `traffic_vault_config` instead.
+- The `traffic_ops_ort.pl` tool has been deprecated in favor of `t3c`, and will be removed in the next major version.
 
 ### Removed
 - The Perl implementation of Traffic Ops has been stripped out, along with the Go implementation's "fall-back to Perl" behavior.
+- Traffic Ops no longer includes an `app/public` directory, as the static webserver has been removed along with the Perl Traffic Ops implementation. Traffic Ops also no longer attempts to download MaxMind GeoIP City databases when running the Traffic Ops Postinstall script.
 - The `compare` tool stack has been removed, as it no longer serves a purpose.
+- Removed the Perl-only `cdn.conf` option `geniso.iso_root_path`
+
+## [5.1.2] - 2021-05-17
+### Fixed
+- Fixed the return error for GET api `cdns/routing` to avoid incorrect success response.
+- [#5712](https://github.com/apache/trafficcontrol/issues/5712) - Ensure that 5.x Traffic Stats is compatible with 5.x Traffic Monitor and 5.x Traffic Ops, and that it doesn't log all 0's for `cache_stats`
+- Fixed ORT being unable to update URLSIG keys for Delivery Services
+- Fixed ORT service category header rewrite for mids and topologies.
+- Fixed an issue where Traffic Ops becoming unavailable caused Traffic Monitor to segfault and crash
+- [#5754](https://github.com/apache/trafficcontrol/issues/5754) - Ensure Health Threshold Parameters use legacy format for legacy Monitoring Config handler
+- [#5695](https://github.com/apache/trafficcontrol/issues/5695) - Ensure vitals are calculated only against monitored interfaces
+- Fixed Traffic Monitor to report `ONLINE` caches as available.
+- [#5744](https://github.com/apache/trafficcontrol/issues/5744) - Sort TM Delivery Service States page by DS name
+- [#5724](https://github.com/apache/trafficcontrol/issues/5724) - Set XMPPID to hostname if the server had none, don't error on server update when XMPPID is empty
 
 ## [5.1.1] - 2021-03-19
 ### Added
@@ -130,6 +173,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - #5554 - TM UI overflows screen width and hides table data
 
 ### Changed
+- [#5553](https://github.com/apache/trafficcontrol/pull/5553) - Removing Tomcat specific build requirement
 - Refactored the Traffic Ops Go client internals so that all public methods have a consistent behavior/implementation
 - Pinned external actions used by Documentation Build and TR Unit Tests workflows to commit SHA-1 and the Docker image used by the Weasel workflow to a SHA-256 digest
 - Set Traffic Router to only accept TLSv1.1 and TLSv1.2 protocols in server.xml

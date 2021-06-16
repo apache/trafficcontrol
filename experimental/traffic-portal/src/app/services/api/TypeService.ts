@@ -14,9 +14,6 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
-
 import { Type } from "../../models";
 import { APIService } from "./apiservice";
 
@@ -35,15 +32,15 @@ type UseInTable = "cachegroup" |
  */
 @Injectable({providedIn: "root"})
 export class TypeService extends APIService {
-	public getTypes(idOrName: number | string): Observable<Type>;
-	public getTypes(): Observable<Array<Type>>;
+	public async getTypes(idOrName: number | string): Promise<Type>;
+	public async getTypes(): Promise<Array<Type>>;
 	/**
 	 * Gets one or all Types from Traffic Ops
 	 *
 	 * @param idOrName Either the integral, unique identifier (number) or name (string) of a single Type to be returned.
-	 * @returns An Observable that will emit the requested Type(s).
+	 * @returns The requested Type(s).
 	 */
-	public getTypes(idOrName?: number | string): Observable<Type | Array<Type>> {
+	public async getTypes(idOrName?: number | string): Promise<Type | Array<Type>> {
 		const path = "types";
 		if (idOrName !== undefined) {
 			let params;
@@ -54,21 +51,39 @@ export class TypeService extends APIService {
 				case "number":
 					params = {id: String(idOrName)};
 			}
-			return this.get<[Type]>(path, undefined, params).pipe(map(
+			return this.get<[Type]>(path, undefined, params).toPromise().then(
 				r => r[0]
-			));
+			).catch(
+				e => {
+					console.error("Failed to get Type:", e);
+					return {
+						id: -1,
+						name: ""
+					};
+				}
+			);
 		}
-		return this.get<Array<Type>>(path);
+		return this.get<Array<Type>>(path).toPromise().catch(
+			e => {
+				console.error("Failed to get Types:", e);
+				return [];
+			}
+		);
 	}
 
 	/**
 	 * Gets all Types used by specific database table.
 	 *
 	 * @param useInTable The database table for which to retrieve Types.
-	 * @returns An Observable that emits the requested Types.
+	 * @returns The requested Types.
 	 */
-	public getTypesInTable(useInTable: UseInTable): Observable<Array<Type>> {
-		return this.get<Array<Type>>("types", undefined, {useInTable});
+	public async getTypesInTable(useInTable: UseInTable): Promise<Array<Type>> {
+		return this.get<Array<Type>>("types", undefined, {useInTable}).toPromise().catch(
+			(e) => {
+				console.error("Failed to get Types:", e);
+				return [];
+			}
+		);
 	}
 
 	/**
@@ -76,7 +91,7 @@ export class TypeService extends APIService {
 	 *
 	 * @returns All Types that have 'server' as their 'useInTable'.
 	 */
-	public getServerTypes(): Observable<Array<Type>> {
+	public async getServerTypes(): Promise<Array<Type>> {
 		return this.getTypesInTable("server");
 	}
 

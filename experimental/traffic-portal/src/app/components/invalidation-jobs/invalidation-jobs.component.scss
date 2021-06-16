@@ -11,22 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-@import '../../../theme.scss';
+
 #new {
 	position: fixed;
 	bottom: 5px;
 	right: 5px;
-	width: 4em;
-	height: 4em;
-	background-color: $theme_tertiary;
-	color: white;
-	border-radius: 2em;
-	border-width: 0;
-	border-style: none;
-	font: inherit;
-	text-align: center;
-	vertical-align: middle;
-	line-height: 2em;
 }
 
 h2 {

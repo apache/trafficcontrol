@@ -16,15 +16,16 @@ package v4
 */
 
 import (
-	"encoding/json"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 var fedIDs []int
@@ -48,15 +49,18 @@ func TestCDNFederations(t *testing.T) {
 }
 
 func UpdateTestCDNFederationsWithHeaders(t *testing.T, h http.Header) {
+	opts := client.NewRequestOptions()
+	opts.Header = h
 	for _, id := range fedIDs {
-		fed, _, err := TOSession.GetCDNFederationsByID("foo", id, h)
+		opts.QueryParameters.Set("id", strconv.Itoa(id))
+		fed, _, err := TOSession.GetCDNFederationsByName("foo", opts)
 		if err != nil {
-			t.Errorf("cannot GET federation by id: %v", err)
+			t.Errorf("cannot GET federation by id: %v - alerts: %+v", err, fed.Alerts)
 		}
 		if len(fed.Response) > 0 {
 			expectedCName := "new.cname."
 			fed.Response[0].CName = &expectedCName
-			_, reqInf, err := TOSession.UpdateCDNFederation(fed.Response[0], "foo", id, h)
+			_, reqInf, err := TOSession.UpdateCDNFederation(fed.Response[0], "foo", id, opts)
 			if err == nil {
 				t.Errorf("Expected an error saying precondition failed, but got none")
 			}
@@ -84,12 +88,10 @@ func CreateTestCDNFederations(t *testing.T) {
 			break
 		}
 
-		data, _, err := TOSession.CreateCDNFederation(f, testData.CDNs[i].Name)
+		data, _, err := TOSession.CreateCDNFederation(f, testData.CDNs[i].Name, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not POST federations: " + err.Error())
+			t.Errorf("could not create CDN Federations: %v - alerts: %+v", err, data.Alerts)
 		}
-		bytes, _ := json.Marshal(data)
-		t.Logf("POST Response: %s\n", bytes)
 
 		// need to save the ids, otherwise the other tests won't be able to reference the federations
 		if data.Response.ID == nil {
@@ -102,7 +104,6 @@ func CreateTestCDNFederations(t *testing.T) {
 
 // This test will not work unless a given CDN has more than one federation associated with it.
 func SortTestCDNFederations(t *testing.T) {
-	var header http.Header
 	var sortedList []string
 
 	//Create a new federation under the same CDN
@@ -110,18 +111,16 @@ func SortTestCDNFederations(t *testing.T) {
 	ttl := 50
 	description := "test"
 	f := tc.CDNFederation{ID: nil, CName: &cname, TTL: &ttl, Description: &description, LastUpdated: nil}
-	data, _, err := TOSession.CreateCDNFederation(f, "cdn1")
+	data, _, err := TOSession.CreateCDNFederation(f, "cdn1", client.RequestOptions{})
 	if err != nil {
-		t.Errorf("could not POST federations: " + err.Error())
+		t.Errorf("could not create CDN Federations: %v - alerts: %+v", err, data.Alerts)
 	}
-	bytes, _ := json.Marshal(data)
-	t.Logf("POST Response: %s\n", bytes)
 	id := *data.Response.ID
 
 	//Get list of federations for one type of cdn
-	resp, _, err := TOSession.GetCDNFederationsByName("cdn1", header)
+	resp, _, err := TOSession.GetCDNFederationsByName("cdn1", client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but got %v - alerts: %+v", err, resp.Alerts)
 	}
 	for i := range resp.Response {
 		sortedList = append(sortedList, *resp.Response[i].CName)
@@ -136,20 +135,19 @@ func SortTestCDNFederations(t *testing.T) {
 	}
 
 	// Delete the newly created federation
-	resp1, _, err1 := TOSession.DeleteCDNFederation("cdn1", id)
+	resp1, _, err := TOSession.DeleteCDNFederation("cdn1", id, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot DELETE federation by id: '%d' %v", id, err1)
+		t.Errorf("cannot delete federation #%d: %v - alerts: %+v", id, err, resp1.Alerts)
 	}
-	bytes, _ = json.Marshal(resp1)
-	t.Logf("DELETE Response: %s\n", bytes)
 }
 
 func UpdateTestCDNFederations(t *testing.T) {
-
+	opts := client.NewRequestOptions()
 	for _, id := range fedIDs {
-		fed, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
+		opts.QueryParameters.Set("id", strconv.Itoa(id))
+		fed, _, err := TOSession.GetCDNFederationsByName("foo", opts)
 		if err != nil {
-			t.Errorf("cannot GET federation by id: %v", err)
+			t.Errorf("cannot get federation by id: %v - alerts: %+v", err, fed.Alerts)
 			continue
 		}
 		if len(fed.Response) < 1 {
@@ -159,19 +157,18 @@ func UpdateTestCDNFederations(t *testing.T) {
 
 		expectedCName := "new.cname."
 		fed.Response[0].CName = &expectedCName
-		resp, _, err := TOSession.UpdateCDNFederation(fed.Response[0], "foo", id, nil)
+		resp, _, err := TOSession.UpdateCDNFederation(fed.Response[0], "foo", id, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("cannot PUT federation by id: %v", err)
+			t.Errorf("cannot update federation by id: %v - alerts: %+v", err, resp.Alerts)
 		}
-		bytes, _ := json.Marshal(resp)
-		t.Logf("PUT Response: %s\n", bytes)
 
-		resp2, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
+		resp2, _, err := TOSession.GetCDNFederationsByName("foo", opts)
 		if err != nil {
-			t.Errorf("cannot GET federation by id after PUT: %v", err)
+			t.Errorf("cannot get federation by id after update: %v - alerts: %+v", err, resp2.Alerts)
 		}
-		bytes, _ = json.Marshal(resp2)
-		t.Logf("GET Response: %s\n", bytes)
+		if len(resp2.Response) < 1 {
+			t.Error("cannot get federation by id after update: Federation not found in Traffic Ops response")
+		}
 
 		if resp2.Response[0].CName == nil {
 			t.Error("CName is nil after updating")
@@ -189,13 +186,13 @@ func GetTestCDNFederations(t *testing.T) {
 	// created. (DELETE cdns/:name/federations/:id may need to
 	// clean up fedIDs connection?)
 
+	opts := client.NewRequestOptions()
 	for _, id := range fedIDs {
-		data, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
+		opts.QueryParameters.Set("id", strconv.Itoa(id))
+		data, _, err := TOSession.GetCDNFederationsByName("foo", opts)
 		if err != nil {
-			t.Errorf("could not GET federations: " + err.Error())
+			t.Errorf("could not get federations: %v - alerts: %+v", err, data.Alerts)
 		}
-		bytes, _ := json.Marshal(data)
-		t.Logf("GET Response: %s\n", bytes)
 	}
 }
 
@@ -210,16 +207,20 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 		t.Fatal("not enough federation resolvers to test")
 	}
 
-	frs, _, err := TOSession.GetFederationResolvers(nil, nil)
+	frs, _, err := TOSession.GetFederationResolvers(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Unexpected error getting Federation Resolvers: %v", err)
+		t.Fatalf("Unexpected error getting Federation Resolvers: %v - alerts: %+v", err, frs.Alerts)
 	}
-	if len(frs) != frCnt {
-		t.Fatalf("Wrong number of Federation Resolvers from GET, want %d got %d", frCnt, len(frs))
+	if len(frs.Response) != frCnt {
+		t.Fatalf("Wrong number of Federation Resolvers from GET, want %d got %d", frCnt, len(frs.Response))
 	}
 
-	frIDs := make([]int, 0, len(frs))
-	for _, fr := range frs {
+	frIDs := make([]int, 0, len(frs.Response))
+	for _, fr := range frs.Response {
+		if fr.ID == nil {
+			// Because we need 'frCnt' resolver ids, this is not recoverable
+			t.Fatal("Traffic Ops returned a representation for a Federation Resolver with null or undefined ID")
+		}
 		frIDs = append(frIDs, int(*fr.ID))
 	}
 
@@ -263,10 +264,23 @@ func AssignTestFederationFederationResolvers(t *testing.T) {
 
 	for _, c := range testCases {
 		t.Run(c.description, func(t *testing.T) {
-			_, _, err := TOSession.AssignFederationFederationResolver(c.fedID, c.resolverIDs, c.replace)
-
-			if err != nil && !strings.Contains(err.Error(), c.err) {
-				t.Fatalf("error: expected error result %v, want: %v", err, c.err)
+			resp, _, err := TOSession.AssignFederationFederationResolver(c.fedID, c.resolverIDs, c.replace, client.RequestOptions{})
+			if err != nil {
+				if c.err == "" {
+					t.Errorf("Unexpected error assigning Federation Resolvers to Federation: %v - alerts: %+v", err, resp.Alerts)
+					return
+				}
+				found := false
+				for _, alert := range resp.Alerts.Alerts {
+					if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, c.err) {
+						found = true
+					}
+				}
+				if !found {
+					t.Errorf("Expected to find an error-level alert relating to '%s', but didn't - err: %v - alerts: %+v", c.err, err, resp.Alerts)
+				}
+			} else if c.err != "" {
+				t.Errorf("Expected to get an error assigning Federation Resolvers to Federation, but didn't - alerts: %+v", resp.Alerts)
 			}
 		})
 	}
@@ -297,9 +311,9 @@ func GetTestFederationFederationResolvers(t *testing.T) {
 
 	for _, c := range testCases {
 		t.Run(c.description, func(t *testing.T) {
-			resp, _, err := TOSession.GetFederationFederationResolversByID(c.fedID)
+			resp, _, err := TOSession.GetFederationFederationResolvers(c.fedID, client.RequestOptions{})
 			if err != nil {
-				t.Fatalf("Error getting federation federation resolvers by federation id: %d, err: %s", c.fedID, err.Error())
+				t.Fatalf("Error getting federation federation resolvers by federation id %d: %v - alerts: %+v", c.fedID, err, resp.Alerts)
 			}
 			if len(resp.Response) == 0 && c.hasRecords {
 				t.Fatalf("expected federation of ID %d to have associated federation resolvers, but had 0", c.fedID)
@@ -309,19 +323,19 @@ func GetTestFederationFederationResolvers(t *testing.T) {
 }
 
 func DeleteTestCDNFederations(t *testing.T) {
-
+	opts := client.NewRequestOptions()
 	for _, id := range fedIDs {
-		resp, _, err := TOSession.DeleteCDNFederation("foo", id)
+		resp, _, err := TOSession.DeleteCDNFederation("foo", id, opts)
 		if err != nil {
-			t.Errorf("cannot DELETE federation by id: '%d' %v", id, err)
+			t.Errorf("cannot delete federation #%d: %v - alerts: %+v", id, err, resp.Alerts)
 		}
-		bytes, err := json.Marshal(resp)
-		t.Logf("DELETE Response: %s\n", bytes)
 
-		data, _, err := TOSession.GetCDNFederationsByID("foo", id, nil)
+		opts.QueryParameters.Set("id", strconv.Itoa(id))
+		data, _, err := TOSession.GetCDNFederationsByName("foo", opts)
 		if len(data.Response) != 0 {
 			t.Error("expected federation to be deleted")
 		}
+		opts.QueryParameters.Del("id")
 	}
 	fedIDs = nil // reset the global variable for the next test
 }

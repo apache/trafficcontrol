@@ -15,16 +15,4 @@ limitations under the License.
 <ul>
 	<li *ngFor="let j of jobs" [hidden]="endDate(j) < now"><code>{{j.assetUrl}}</code> (active from <time [dateTime]="j.startTime">{{j.startTime | date:'medium'}}</time> to <time [dateTime]="endDate(j)">{{endDate(j) | date:'medium'}})</time></li>
 </ul>
-<button type="button" id="new" title="Create a new content invalidation job for this Delivery Service" (click)="newJob($event)">+</button>
-
-<dialog openable [toggle]="showDialog">
-	<h2>New Content Invalidation Job</h2>
-	<form method="dialog" (ngSubmit)="submitDialog($event)" ngNativeValidate>
-		<label for="regexp">Content Pattern to Invalidate</label><input type="text" name="regexp" id="regexp" [formControl]="regexp" required title="A regular expression. Matching request paths will be invalidated" customvalidity [validity]='regexpIsValid'/>
-		<label for="ttl">Time To Live (hours)</label><input type="number" name="ttl" id="ttl" [formControl]="ttl" min="1" step="1" required/>
-		<label for="startdate">Scheduled Start Date</label><input type="date" name="startdate" id="startdate" [formControl]="startDate" required/>
-		<label for="starttime">Scheduled Start Time</label><input type="time" name="starttime" id="starttime" [formControl]="startTime"/>
-		<button type="button" (click)="closeDialog($event)" id="cancel">Cancel</button>
-		<button id="submit">Submit</button>
-	</form>
-</dialog>
+<button mat-fab type="button" id="new" title="Create a new content invalidation job for this Delivery Service" (click)="newJob()"><fa-icon [icon]="addIcon"></fa-icon></button>

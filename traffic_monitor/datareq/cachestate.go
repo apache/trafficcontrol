@@ -38,6 +38,9 @@ import (
 // the polled interface data.
 const NotFoundStatus = "unavailable - interface not found"
 
+// OnlineStatus is the status value of all interfaces that are associated with an ONLINE server.
+const OnlineStatus = "available - server ONLINE"
+
 // CacheStatus contains summary stat data about the given cache.
 type CacheStatus struct {
 	Type        *string  `json:"type,omitempty"`
@@ -183,6 +186,11 @@ func createCacheStatuses(
 				}
 			}
 
+			if serverInfo.ServerStatus == tc.CacheStatusOnline.String() {
+				infStatus.Status = OnlineStatus
+				infStatus.Available = true
+			}
+
 			interfaceStatuses[interfaceName] = infStatus
 		}
 
@@ -233,6 +241,13 @@ func createCacheStatuses(
 		healthSpan, err := resultSpanMS(tc.CacheName(cacheName), healthHistory)
 		if err != nil {
 			log.Infof("Error getting cache %v health span: %v\n", cacheName, err)
+		}
+
+		if serverInfo.ServerStatus == tc.CacheStatusOnline.String() {
+			cacheStatus.Why = "ONLINE - available"
+			cacheStatus.Available.IPv4 = serverInfo.IPv4() != ""
+			cacheStatus.Available.IPv6 = serverInfo.IPv6() != ""
+			cacheStatus.ProcessedAvailable = cacheStatus.Available.IPv4 || cacheStatus.Available.IPv6
 		}
 
 		statii[cacheName] = CacheStatus{

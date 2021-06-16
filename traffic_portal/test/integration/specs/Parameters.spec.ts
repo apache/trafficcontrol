@@ -16,79 +16,69 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { readFileSync } from "fs";
-
 import { browser } from 'protractor';
-import using from "jasmine-data-provider";
 
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { ParametersPage } from '../PageObjects/ParametersPage.po';
 import { API } from '../CommonUtils/API';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
+import { parameters } from "../Data";
 
-let api = new API();
-let loginPage = new LoginPage();
-let topNavigation = new TopNavigationPage();
-let parametersPage = new ParametersPage();
+const api = new API();
+const loginPage = new LoginPage();
+const topNavigation = new TopNavigationPage();
+const parametersPage = new ParametersPage();
 
+describe('Setup API for parameter test', () => {
+    it('Setup', async () => {
+        await api.UseAPI(parameters.setup);
+    });
+});
 
-let setupFile = 'Data/Parameters/Setup.json';
-let cleanupFile = 'Data/Parameters/Cleanup.json';
-let filename = 'Data/Parameters/TestCases.json';
-let testData = JSON.parse(readFileSync(filename, "utf8"));
+parameters.tests.forEach(async parametersData => {
+    parametersData.logins.forEach(login => {
+        describe(`Traffic Portal - Parameters - ${login.description}`, () => {
 
-describe('Setup API for parameter test', function () {
-    it('Setup', async function () {
-        let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        await api.UseAPI(setupData);
-    })
-})
-
-using(testData.Parameters, async function(parametersData){
-    using(parametersData.Login, function(login){
-        describe('Traffic Portal - Parameters - ' + login.description, function(){
-
-            it('can login', async function(){
+            it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            })
+            });
             it('can open parameters page', async function(){
                 await parametersPage.OpenConfigureMenu();
                 await parametersPage.OpenParametersPage();
-            })
-            using(parametersData.Add, function (add) {
-                it(add.description, async function () {
+            });
+            parametersData.add.forEach(add => {
+                it(add.description, async () => {
                     expect(await parametersPage.CreateParameter(add)).toBeTruthy();
                     await parametersPage.OpenParametersPage();
-                })
-            })
-            using(parametersData.Update, function (update) {
-                it(update.description, async function () {
+                });
+            });
+            parametersData.update.forEach(update => {
+                it(update.description, async () => {
                     await parametersPage.SearchParameter(update.Name);
                     expect(await parametersPage.UpdateParameter(update)).toBeTruthy();
                     await parametersPage.OpenParametersPage();
-                })
-            })
+                });
+            });
 
-            using(parametersData.Remove, function (remove) {
-                it(remove.description, async function () {
+            parametersData.remove.forEach(remove => {
+                it(remove.description, async () => {
                     await parametersPage.SearchParameter(remove.Name);
                     expect(await parametersPage.DeleteParameter(remove)).toBeTruthy();
                     await parametersPage.OpenParametersPage();
-                })
-            })
+                });
+            });
 
-            it('can logout', async function(){
+            it('can logout', async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
-            })
-        })
-    })
-})
+            });
+        });
+    });
+});
 
-describe('Clean up API for parameter test', function () {
-    it('Cleanup', async function () {
-        let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        await api.UseAPI(cleanupData);
-    })
-})
+describe('Clean up API for parameter test', () => {
+    it('Cleanup', async () => {
+        await api.UseAPI(parameters.cleanup);
+    });
+});

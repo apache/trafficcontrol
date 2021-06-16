@@ -20,6 +20,7 @@ package deliveryservice
  */
 
 import (
+	"context"
 	"database/sql"
 	"encoding/base64"
 	"errors"
@@ -35,8 +36,8 @@ import (
 	"github.com/miekg/dns"
 )
 
-func PutDNSSecKeys(tx *sql.Tx, xmlID string, cdnName string, exampleURLs []string, tv trafficvault.TrafficVault) (error, error, int) {
-	keys, ok, err := tv.GetDNSSECKeys(cdnName, tx)
+func PutDNSSecKeys(tx *sql.Tx, xmlID string, cdnName string, exampleURLs []string, tv trafficvault.TrafficVault, ctx context.Context) (error, error, int) {
+	keys, ok, err := tv.GetDNSSECKeys(cdnName, tx, ctx)
 	if err != nil {
 		return nil, errors.New("getting DNSSec keys from Traffic Vault: " + err.Error()), http.StatusInternalServerError
 	} else if !ok {
@@ -55,7 +56,7 @@ func PutDNSSecKeys(tx *sql.Tx, xmlID string, cdnName string, exampleURLs []strin
 		return nil, errors.New("creating DNSSEC keys for delivery service '" + xmlID + "': " + err.Error()), http.StatusInternalServerError
 	}
 	keys[xmlID] = dsKeys
-	if err := tv.PutDNSSECKeys(cdnName, keys, tx); err != nil {
+	if err := tv.PutDNSSECKeys(cdnName, keys, tx, ctx); err != nil {
 		return nil, errors.New("putting DNSSEC keys in Traffic Vault: " + err.Error()), http.StatusInternalServerError
 	}
 	return nil, nil, http.StatusOK

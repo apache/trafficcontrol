@@ -36,7 +36,7 @@ while ! to-ping 2>/dev/null; do
 done
 
 # NOTE: order dependent on foreign key references, e.g. profiles must be loaded before parameters
-endpoints="cdns types divisions regions phys_locations tenants users cachegroups profiles parameters server_capabilities servers topologies deliveryservices server_server_capabilities deliveryservice_servers deliveryservices_required_capabilities"
+endpoints="cdns types divisions regions phys_locations tenants users cachegroups profiles parameters server_capabilities servers topologies deliveryservices federations server_server_capabilities deliveryservice_servers deliveryservices_required_capabilities"
 vars=$(awk -F = '/^\w/ {printf "$%s ",$1}' /variables.env)
 
 waitfor() {
@@ -145,7 +145,7 @@ traffic_router_zonemanager_timeout() {
   mv "$modified_crconfig" $crconfig_path;
 }
 
-if [[ "$LOAD_TRAFFIC_OPS_DATA" == true ]]; then
+if [[ ! -e /shared/SKIP_TRAFFIC_OPS_DATA ]]; then
 	traffic_router_zonemanager_timeout
 
 	# Load required data at the top level

@@ -6,15 +6,19 @@
     "moduleResolution": "node",
     "inlineSourceMap": true,
     "declaration": false,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "outDir": "GeneratedCode",
     "resolveJsonModule": true,
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noImplicitThis": true
+    "noImplicitThis": true,
+    "typeRoots": [
+      "node_modules/@types",
+      "types"
+    ]
   },
   "exclude": [
     "node_modules"
-  ]
+  ],
 }

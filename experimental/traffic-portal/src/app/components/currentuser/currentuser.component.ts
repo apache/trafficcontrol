@@ -11,13 +11,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, OnInit, OnDestroy } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
+import { ActivatedRoute, Router } from "@angular/router";
+import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { UserService } from "src/app/services/api";
 
-import { Subscription } from "rxjs";
-import { first } from "rxjs/operators";
-
-import { User } from "../../models";
-import { AuthenticationService } from "../../services";
+import { User } from "src/app/models";
+import { AuthenticationService } from "src/app/services";
+import { UpdatePasswordDialogComponent } from "./update-password-dialog/update-password-dialog.component";
 
 /**
  * CurrentuserComponent is the controller for the current user's profile page.
@@ -27,17 +29,32 @@ import { AuthenticationService } from "../../services";
 	styleUrls: ["./currentuser.component.scss"],
 	templateUrl: "./currentuser.component.html"
 })
-export class CurrentuserComponent implements OnInit, OnDestroy {
+export class CurrentuserComponent implements OnInit {
 
 	/** The currently logged-in user - or 'null' if not logged-in. */
 	public currentUser: User | null = null;
-	/** A subscription for the authentication service's currentUser value. */
-	private subscription: Subscription | null = null;
-
+	/** Whether or not the page is in 'edit' mode. */
+	private editing = false;
+	/** Whether or not the page is in 'edit' mode. */
+	public get editMode(): boolean {
+		return this.editing;
+	}
+	/** The icon for the 'edit' button. */
+	public editIcon = faEdit;
 	/**
-	 * Constructor.
+	 * The editing copy of the current user - used so that you don't need to
+	 * reload the page to see accurate information when the edits are cancelled.
 	 */
-	constructor(private readonly auth: AuthenticationService) {
+	public editUser: User | null = null;
+
+	constructor(
+		private readonly auth: AuthenticationService,
+		private readonly api: UserService,
+		private readonly dialog: MatDialog,
+		private readonly route: ActivatedRoute,
+		private readonly router: Router
+	) {
+		this.currentUser = this.auth.currentUser;
 	}
 
 	/**
@@ -45,29 +62,91 @@ export class CurrentuserComponent implements OnInit, OnDestroy {
 	 * authentication service.
 	 */
 	public ngOnInit(): void {
-		this.currentUser = this.auth.currentUserValue;
 		if (this.currentUser === null) {
-			this.auth.updateCurrentUser().pipe(first()).subscribe(
-				(r: boolean) => {
+			this.auth.updateCurrentUser().then(
+				r => {
 					if (r) {
-						this.currentUser = this.auth.currentUserValue;
+						this.currentUser = this.auth.currentUser;
 					}
 				}
 			);
 		}
-		this.subscription = this.auth.currentUser.subscribe(
-			u => {
-				this.currentUser = u;
+		const edit = this.route.snapshot.queryParamMap.get("edit");
+		if (edit === "true") {
+			this.edit();
+			const updPasswd = this.route.snapshot.queryParamMap.get("updatePassword");
+			if (updPasswd === "true") {
+				this.updatePassword();
+			}
+		}
+	}
+
+	/**
+	 * Handles when the user clicks on the 'edit' button, making the user's
+	 * information editable.
+	 */
+	public edit(): void {
+		if (!this.currentUser) {
+			console.error("cannot edit null user");
+			return;
+		}
+		this.editUser = {...this.currentUser};
+		this.editing = true;
+	}
+
+	/**
+	 * Handles when the user click's on the 'cancel' button to cancel edits to
+	 * the user's information.
+	 */
+	public cancelEdit(): void {
+		// It's impossible to be in edit mode with a null user
+		this.editUser = {...(this.currentUser as User)};
+		this.router.navigate(["."], {queryParams: {}, relativeTo: this.route});
+		this.editing = false;
+	}
+
+	/**
+	 * Opens the password change dialog box/form.
+	 */
+	public updatePassword(): void {
+		this.router.navigate(["."], {queryParams: {edit: true, updatePassword: true}, relativeTo: this.route});
+		this.dialog.open(UpdatePasswordDialogComponent).afterClosed().subscribe(
+			() => {
+				this.router.navigate(["."], {queryParams: {edit: true}, relativeTo: this.route});
 			}
 		);
 	}
 
 	/**
-	 * Runs when the component is destroyed - cleans up active subscriptions.
+	 * Handles submission of the user edit form.
+	 *
+	 * @param e The form submittal event.
 	 */
-	public ngOnDestroy(): void {
-		if (this.subscription) {
-			this.subscription.unsubscribe();
-		}
+	public submitEdit(e: Event): void {
+		e.preventDefault();
+		e.stopPropagation();
+
+		// There's a separate form for editing passwords, we don't intend to do that here.
+		(this.editUser as User).localPasswd = undefined;
+		(this.editUser as User).confirmLocalPasswd = undefined;
+
+		this.api.updateCurrentUser(this.editUser as User).then(
+			success => {
+				if (success) {
+					this.auth.updateCurrentUser().then(
+						updated => {
+							if (!updated) {
+								console.warn("Failed to fetch current user after successful update");
+							}
+							this.currentUser = this.auth.currentUser;
+							this.cancelEdit();
+						}
+					);
+				} else {
+					console.warn("Editing the current user failed");
+					this.cancelEdit();
+				}
+			}
+		);
 	}
 }

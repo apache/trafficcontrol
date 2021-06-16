@@ -19,11 +19,27 @@ package tc
  * under the License.
  */
 
-import "database/sql"
-import "errors"
-import "net"
+import (
+	"database/sql"
+	"errors"
+	"net"
 
-import "github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
+)
+
+// FederationResolversResponse represents a Traffic Ops API response to a
+// GET request to its /federation_resolvers endpoint.
+type FederationResolversResponse struct {
+	Alerts
+	Response []FederationResolver `json:"response"`
+}
+
+// FederationResolverResponse represents a Traffic Ops API response to a
+// POST or DELETE request to its /federation_resolvers endpoint.
+type FederationResolverResponse struct {
+	Alerts
+	Response FederationResolver `json:"response"`
+}
 
 // FederationResolver represents a resolver record for a CDN Federation.
 type FederationResolver struct {

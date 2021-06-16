@@ -81,6 +81,13 @@ db_admin_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/db
 	cp "$TC_DIR"/traffic_ops/app/db/admin .
 ) || { echo "Could not copy go db admin at $(pwd): $!"; exit 1; };
 
+# copy TV DB reencrypt
+reencrypt_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/db/reencrypt
+( mkdir -p "$reencrypt_dir" && \
+	cd "$reencrypt_dir" && \
+	cp "$TC_DIR"/traffic_ops/app/db/reencrypt/reencrypt .
+) || { echo "Could not copy go db reencrypt at $(pwd): $!"; exit 1; };
+
 # copy TO profile converter
 convert_dir=src/github.com/apache/trafficcontrol/traffic_ops/install/bin/convert_profile
 ( mkdir -p "$convert_dir" && \
@@ -106,10 +113,6 @@ echo "go rming $RPM_BUILD_ROOT/%{PACKAGEDIR}/{pkg,src,bin}"
 %__mkdir -p $RPM_BUILD_ROOT/var/www/files
 %__cp install/data/json/osversions.json $RPM_BUILD_ROOT/var/www/files/.
 
-if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing ]; then
-	%__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing
-fi
-
 # install traffic_ops_golang binary
 if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/bin ]; then
 	%__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/bin
@@ -134,7 +137,7 @@ echo -e "\nBacking up config files.\n"
 if [ -f /var/tmp/traffic_ops-backup.tar ]; then
 	%__rm /var/tmp/traffic_ops-backup.tar
 fi
-cd %{PACKAGEDIR} && tar cf /var/tmp/traffic_ops-backup.tar app/public/routing  app/conf app/db/dbconf.yml app/local app/cpanfile.snapshot
+cd %{PACKAGEDIR} && tar cf /var/tmp/traffic_ops-backup.tar app/conf app/db/dbconf.yml app/local app/cpanfile.snapshot
 fi
 
 # upgrade
@@ -222,6 +225,5 @@ fi
 %{PACKAGEDIR}/app/bin/checks
 %{PACKAGEDIR}/app/bin/tests
 %{PACKAGEDIR}/app/db
-%{PACKAGEDIR}/app/public
 %{PACKAGEDIR}/app/templates
 %{PACKAGEDIR}/install

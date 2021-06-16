@@ -1,8 +1,4 @@
 // Package client implements methods for interacting with the Traffic Ops API.
-//
-// Warning: Using the un-versioned import path ("client") is deprecated, and the
-// ability to do so will be removed in ATC 6.0 - please use versioned client
-// imports (e.g. "v3-client") instead
 package client
 
 /*
@@ -24,15 +20,13 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIAbout is the API version-relative path for the /about API endpoint.
-	APIAbout = "/about"
-)
+// apiAbout is the API version-relative path for the /about API endpoint.
+const apiAbout = "/about"
 
 // GetAbout gets data about the TO instance.
-func (to *Session) GetAbout() (map[string]string, toclientlib.ReqInf, error) {
-	route := APIAbout
+func (to *Session) GetAbout(opts RequestOptions) (map[string]string, toclientlib.ReqInf, error) {
+	route := apiAbout
 	var data map[string]string
-	reqInf, err := to.get(route, nil, &data)
+	reqInf, err := to.get(route, opts, &data)
 	return data, reqInf, err
 }

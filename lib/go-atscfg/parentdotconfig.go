@@ -91,7 +91,7 @@ func MakeParentDotConfig(
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	cacheGroupArr []tc.CacheGroupNullable,
-	dss []tc.DeliveryServiceServer,
+	dss []DeliveryServiceServer,
 	cdn *tc.CDN,
 	opt ParentConfigOpts,
 ) (Cfg, error) {
@@ -245,13 +245,10 @@ func MakeParentDotConfig(
 	cgDSServers := filterDSS(dss, nil, cgServerIDs)
 	parentServerDSes := map[int]map[int]struct{}{} // map[serverID][dsID]
 	for _, dss := range cgDSServers {
-		if dss.Server == nil || dss.DeliveryService == nil {
-			return Cfg{}, makeErr(warnings, "getting cachegroup parent server delivery service servers: got dss with nil members!")
+		if parentServerDSes[dss.Server] == nil {
+			parentServerDSes[dss.Server] = map[int]struct{}{}
 		}
-		if parentServerDSes[*dss.Server] == nil {
-			parentServerDSes[*dss.Server] = map[int]struct{}{}
-		}
-		parentServerDSes[*dss.Server][*dss.DeliveryService] = struct{}{}
+		parentServerDSes[dss.Server][dss.DeliveryService] = struct{}{}
 	}
 
 	originServers, profileCaches, orgProfWarns, err := getOriginServersAndProfileCaches(cgServers, parentServerDSes, profileParentConfigParams, dses, serverCapabilities)
@@ -288,7 +285,7 @@ func MakeParentDotConfig(
 		}
 		if ds.OrgServerFQDN == nil || *ds.OrgServerFQDN == "" {
 			// this check needs to be after the HTTP|DNS check, because Steering DSes without origins are ok'
-			warnings = append(warnings, "ds  '"+*ds.XMLID+"' has no origin server! Skipping!")
+			warnings = append(warnings, "DS '"+*ds.XMLID+"' has no origin server! Skipping!")
 			continue
 		}
 
@@ -298,7 +295,7 @@ func MakeParentDotConfig(
 		warnings = append(warnings, dsParamsWarnings...)
 
 		if existingDS, ok := processedOriginsToDSNames[*ds.OrgServerFQDN]; ok {
-			warnings = append(warnings, "duplicate origin! services '"+*ds.XMLID+"' and '"+string(existingDS)+"' share origin '"+*ds.OrgServerFQDN+"': skipping '"+*ds.XMLID+"'!")
+			warnings = append(warnings, "duplicate origin! DS '"+*ds.XMLID+"' and '"+string(existingDS)+"' share origin '"+*ds.OrgServerFQDN+"': skipping '"+*ds.XMLID+"'!")
 			continue
 		}
 
@@ -338,7 +335,7 @@ func MakeParentDotConfig(
 			orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN)
 			warnings = append(warnings, orgWarns...)
 			if err != nil {
-				warnings = append(warnings, "malformed ds '"+*ds.XMLID+"' origin  URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
+				warnings = append(warnings, "DS '"+*ds.XMLID+"' has malformed origin URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
 				continue
 			}
 
@@ -359,7 +356,7 @@ func MakeParentDotConfig(
 
 				if len(parentInfos[OriginHost(orgURI.Hostname())]) == 0 {
 					// TODO error? emulates Perl
-					warnings = append(warnings, "delivery service "+*ds.XMLID+" has no parent servers")
+					warnings = append(warnings, "DS "+*ds.XMLID+" has no parent servers")
 				}
 
 				parents, secondaryParents, parentWarns := getMSOParentStrs(&ds, parentInfos[OriginHost(orgURI.Hostname())], atsMajorVer, dsParams.Algorithm, dsParams.TryAllPrimariesBeforeSecondary)
@@ -384,7 +381,7 @@ func MakeParentDotConfig(
 			orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN)
 			warnings = append(warnings, orgWarns...)
 			if err != nil {
-				warnings = append(warnings, "malformed ds '"+*ds.XMLID+"' origin  URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
+				warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
 				continue
 			}
 
@@ -691,7 +688,7 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 		}
 		if v, ok := dsParams[ParentConfigParamMSOUnavailableServerRetryResponses]; ok {
 			if v != "" && !unavailableServerRetryResponsesValid(v) {
-				warnings = append(warnings, "malformed "+ParentConfigParamMSOUnavailableServerRetryResponses+" parameter '"+v+"', not using!")
+				warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed "+ParentConfigParamMSOUnavailableServerRetryResponses+" parameter '"+v+"', not using!")
 			} else if v != "" {
 				params.UnavailableServerRetryResponses = v
 			}
@@ -713,7 +710,7 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 	}
 	if v, ok := dsParams[ParentConfigParamUnavailableServerRetryResponses]; ok {
 		if v != "" && !unavailableServerRetryResponsesValid(v) {
-			warnings = append(warnings, "malformed "+ParentConfigParamUnavailableServerRetryResponses+" parameter '"+v+"', not using!")
+			warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed "+ParentConfigParamUnavailableServerRetryResponses+" parameter '"+v+"', not using!")
 		} else if v != "" {
 			params.UnavailableServerRetryResponses = v
 		}
@@ -760,7 +757,7 @@ func getTopologyParentConfigLine(
 	orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN)
 	warnings = append(warnings, orgWarns...)
 	if err != nil {
-		return "", warnings, errors.New("Malformed ds '" + *ds.XMLID + "' origin  URI: '" + *ds.OrgServerFQDN + "': skipping!" + err.Error())
+		return "", warnings, errors.New("DS '" + *ds.XMLID + "' has malformed origin URI: '" + *ds.OrgServerFQDN + "': skipping!" + err.Error())
 	}
 
 	topology := nameTopologies[TopologyName(*ds.Topology)]
@@ -843,7 +840,7 @@ func getSecondaryModeStr(tryAllPrimariesBeforeSecondary bool, atsMajorVer int, d
 		return "", warnings
 	}
 	if atsMajorVer < 8 {
-		warnings = append(warnings, "Delivery Service '"+string(ds)+"' had Parameter "+ParentConfigParamSecondaryMode+" but this cache is "+strconv.Itoa(atsMajorVer)+" and secondary_mode isn't supported in ATS until 8. Not using!")
+		warnings = append(warnings, "DS '"+string(ds)+"' had Parameter "+ParentConfigParamSecondaryMode+" but this cache is "+strconv.Itoa(atsMajorVer)+" and secondary_mode isn't supported in ATS until 8. Not using!")
 		return "", warnings
 	}
 	return ` secondary_mode=2`, warnings // See https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/files/parent.config.en.html
@@ -931,20 +928,18 @@ func serverParentageParams(sv *Server, params []parameterWithProfilesMap) (profi
 		case ParentConfigCacheParamWeight:
 			profileCache.Weight = param.Value
 		case ParentConfigCacheParamPort:
-			i, err := strconv.ParseInt(param.Value, 10, 64)
-			if err != nil {
+			if i, err := strconv.Atoi(param.Value); err != nil {
 				warnings = append(warnings, "port param is not an integer, skipping! : "+err.Error())
 			} else {
-				profileCache.Port = int(i)
+				profileCache.Port = i
 			}
 		case ParentConfigCacheParamUseIP:
 			profileCache.UseIP = param.Value == "1"
 		case ParentConfigCacheParamRank:
-			i, err := strconv.ParseInt(param.Value, 10, 64)
-			if err != nil {
+			if i, err := strconv.Atoi(param.Value); err != nil {
 				warnings = append(warnings, "rank param is not an integer, skipping! : "+err.Error())
 			} else {
-				profileCache.Rank = int(i)
+				profileCache.Rank = i
 			}
 		case ParentConfigCacheParamNotAParent:
 			profileCache.NotAParent = param.Value != "false"
@@ -1058,7 +1053,7 @@ func getTopologyParents(
 			continue
 		}
 
-		if tc.CacheType(sv.Type) != tc.CacheTypeEdge && tc.CacheType(sv.Type) != tc.CacheTypeMid && sv.Type != tc.OriginTypeName {
+		if !strings.HasPrefix(sv.Type, tc.EdgeTypePrefix) && !strings.HasPrefix(sv.Type, tc.MidTypePrefix) && sv.Type != tc.OriginTypeName {
 			continue // only consider edges, mids, and origins in the CacheGroup.
 		}
 		if _, dsHasOrigin := dsOrigins[ServerID(*sv.ID)]; sv.Type == tc.OriginTypeName && !dsHasOrigin {
@@ -1452,20 +1447,18 @@ func getParentConfigProfileParams(
 				// TODO validate float?
 				profileCache.Weight = val
 			case ParentConfigCacheParamPort:
-				i, err := strconv.ParseInt(val, 10, 64)
-				if err != nil {
+				if i, err := strconv.Atoi(val); err != nil {
 					warnings = append(warnings, "port param is not an integer, skipping! : "+err.Error())
 				} else {
-					profileCache.Port = int(i)
+					profileCache.Port = i
 				}
 			case ParentConfigCacheParamUseIP:
 				profileCache.UseIP = val == "1"
 			case ParentConfigCacheParamRank:
-				i, err := strconv.ParseInt(val, 10, 64)
-				if err != nil {
+				if i, err := strconv.Atoi(val); err != nil {
 					warnings = append(warnings, "rank param is not an integer, skipping! : "+err.Error())
 				} else {
-					profileCache.Rank = int(i)
+					profileCache.Rank = i
 				}
 			case ParentConfigCacheParamNotAParent:
 				profileCache.NotAParent = val != "false"
@@ -1520,16 +1513,12 @@ func getDSOrigins(dses map[int]DeliveryService) (map[int]*originURI, []string, e
 }
 
 // makeDSOrigins returns the DS Origins and any warnings.
-func makeDSOrigins(dsses []tc.DeliveryServiceServer, dses []DeliveryService, servers []Server) (map[DeliveryServiceID]map[ServerID]struct{}, []string) {
+func makeDSOrigins(dsses []DeliveryServiceServer, dses []DeliveryService, servers []Server) (map[DeliveryServiceID]map[ServerID]struct{}, []string) {
 	warnings := []string{}
 	dssMap := map[DeliveryServiceID]map[ServerID]struct{}{}
 	for _, dss := range dsses {
-		if dss.Server == nil || dss.DeliveryService == nil {
-			warnings = append(warnings, "making parent.config, got deliveryserviceserver with nil values, skipping!")
-			continue
-		}
-		dsID := DeliveryServiceID(*dss.DeliveryService)
-		serverID := ServerID(*dss.Server)
+		dsID := DeliveryServiceID(dss.DeliveryService)
+		serverID := ServerID(dss.Server)
 		if dssMap[dsID] == nil {
 			dssMap[dsID] = map[ServerID]struct{}{}
 		}

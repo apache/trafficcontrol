@@ -68,7 +68,7 @@ Response Structure
 
 :fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
 :id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
-:lastUpdated:                   The time and date at which this entry was last updated in an ISO-like format
+:lastUpdated:                   The time and date at which this entry was last updated in :ref:`non-rfc-datetime`
 :latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
 :localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
 
@@ -211,7 +211,7 @@ Response Structure
 
 :fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
 :id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
-:lastUpdated:                   The time and date at which this entry was last updated in an ISO-like format
+:lastUpdated:                   The time and date at which this entry was last updated in :ref:`non-rfc-datetime`
 :latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
 :localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
 

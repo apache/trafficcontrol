@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# The following environment variables must be set (ordinarily by `docker run -e` arguments):
+# TO_URI
+# TO_USER
+# TO_PASS
+# CDN
+
+# Check that env vars are set
+envvars=( TO_URI TO_USER TO_PASS CDN PORT )
+for v in ${envvars[@]}
+do
+	if [[ -z ${!v} ]]; then echo "$v is unset"; exit 1; fi
+done
+
+start() {
+	service traffic_monitor start
+	touch /opt/traffic_monitor/var/log/traffic_monitor.log
+	exec tail -f /opt/traffic_monitor/var/log/traffic_monitor.log
+}
+
+init() {
+	mkdir -p /opt/traffic_monitor/conf
+	cat > /opt/traffic_monitor/conf/traffic_monitor.cfg <<- EOF
+		{
+				"cache_health_polling_interval_ms": 6000,
+				"cache_stat_polling_interval_ms": 6000,
+				"monitor_config_polling_interval_ms": 15000,
+				"http_timeout_ms": 2000,
+				"peer_polling_interval_ms": 5000,
+				"peer_optimistic": true,
+				"max_events": 200,
+				"max_stat_history": 5,
+				"max_health_history": 5,
+				"health_flush_interval_ms": 20,
+				"stat_flush_interval_ms": 20,
+				"log_location_event": "/opt/traffic_monitor/var/log/event.log",
+				"log_location_error": "/opt/traffic_monitor/var/log/traffic_monitor.log",
+				"log_location_warning": "/opt/traffic_monitor/var/log/traffic_monitor.log",
+				"log_location_info": "null",
+				"log_location_debug": "null",
+				"serve_read_timeout_ms": 10000,
+				"serve_write_timeout_ms": 10000,
+				"http_poll_no_sleep": false,
+				"static_file_dir": "/opt/traffic_monitor/static/"
+		}
+EOF
+
+  cat > /opt/traffic_monitor/conf/traffic_ops.cfg <<- EOF
+		{
+				"username": "$TO_USER",
+				"password": "$TO_PASS",
+				"url": "$TO_URI",
+				"insecure": true,
+				"cdnName": "$CDN",
+				"httpListener": ":$PORT"
+				}
+	EOF
+
+	echo "INITIALIZED=1" >> /etc/environment
+}
+
+source /etc/environment
+if [ -z "$INITIALIZED" ]; then init; fi
+start

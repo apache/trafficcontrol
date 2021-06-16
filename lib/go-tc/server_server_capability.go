@@ -19,10 +19,17 @@ package tc
  * under the License.
  */
 
-// ServerServerCapability represents an association between a server capability and a server
+// ServerServerCapability represents an association between a server capability and a server.
 type ServerServerCapability struct {
 	LastUpdated      *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Server           *string    `json:"serverHostName,omitempty" db:"host_name"`
 	ServerID         *int       `json:"serverId" db:"server"`
 	ServerCapability *string    `json:"serverCapability" db:"server_capability"`
+}
+
+// ServerServerCapabilitiesResponse is the type of a response from Traffic
+// Ops to a request made to its /server_server_capabilities.
+type ServerServerCapabilitiesResponse struct {
+	Response []ServerServerCapability `json:"response"`
+	Alerts
 }

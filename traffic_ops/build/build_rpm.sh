@@ -75,6 +75,11 @@ initBuildArea() {
 	go build -v -o admin -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
 								{ echo "Could not build db/admin binary"; return 1;})
 
+	# compile db/reencrypt
+		(cd app/db/reencrypt
+	go build -v -o reencrypt || \
+								{ echo "Could not build reencrypt binary"; return 1;})
+
 	# compile TO profile converter
 	(cd install/bin/convert_profile
 	go build -v -gcflags "$gcflags" -ldflags "$ldflags" -tags="$tags" || \
@@ -82,7 +87,7 @@ initBuildArea() {
 
 	rsync -av etc install "$dest"/ || \
 		 { echo "Could not copy to $dest: $?"; return 1; }
-	if ! (cd app; rsync -av bin conf db public script templates "${dest}/app"); then
+	if ! (cd app; rsync -av bin conf db script templates "${dest}/app"); then
 		echo "Could not copy to $dest/app"
 		return 1
 	fi

@@ -18,7 +18,6 @@ package tc
 import (
 	"database/sql"
 	"errors"
-	"strconv"
 	"strings"
 	"time"
 
@@ -27,16 +26,18 @@ import (
 	"github.com/lestrrat/go-jwx/jwk"
 )
 
-const DNSSECKSKType = "ksk"
-const DNSSECZSKType = "zsk"
-const DNSSECKeyStatusNew = "new"
-const DNSSECKeyStatusExpired = "expired"
-const DNSSECStatusExisting = "existing"
 const (
 	SelfSignedCertAuthType           = "Self Signed"
 	CertificateAuthorityCertAuthType = "Certificate Authority"
 	LetsEncryptAuthType              = "Lets Encrypt"
 )
+
+// SSLKeysAddResponse is a struct to store the response of addition of ssl keys for a DS,
+// along with any alert messages
+type SSLKeysAddResponse struct {
+	Response string `json:"response"`
+	Alerts
+}
 
 // DeliveryServiceSSLKeysResponse ...
 type DeliveryServiceSSLKeysResponse struct {
@@ -88,6 +89,13 @@ type DeliveryServiceSSLKeysReq struct {
 	Key         *string                            `json:"key"`
 	Version     *util.JSONIntStr                   `json:"version"`
 	Certificate *DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
+}
+
+// DeliveryServiceSSLKeysGenerationResponse is the type of a response from
+// Traffic Ops to a request for generation of SSL Keys for a Delivery Service.
+type DeliveryServiceSSLKeysGenerationResponse struct {
+	Response string `json:"response"`
+	Alerts
 }
 
 // DeliveryServiceSSLKeysCertificate ...
@@ -186,17 +194,29 @@ func (r *DeliveryServiceGenSSLKeysReq) Validate(tx *sql.Tx) error {
 	return nil
 }
 
-type DeliveryServiceLetsEncryptSSLKeysReq struct {
+type DeliveryServiceAcmeSSLKeysReq struct {
 	DeliveryServiceSSLKeysReq
 }
 
-func (r *DeliveryServiceLetsEncryptSSLKeysReq) Validate(tx *sql.Tx) error {
+func (r *DeliveryServiceAcmeSSLKeysReq) Validate(tx *sql.Tx) error {
 	r.Sanitize()
 	errs := r.validateSharedRequiredRequestFields()
 	if len(errs) > 0 {
 		return errors.New("missing fields: " + strings.Join(errs, "; "))
 	}
+	errs = r.validateAcmeSpecificFields()
+	if len(errs) > 0 {
+		return errors.New("missing fields: " + strings.Join(errs, "; "))
+	}
 	return nil
+}
+
+func (r *DeliveryServiceAcmeSSLKeysReq) validateAcmeSpecificFields() []string {
+	errs := []string{}
+	if checkNilOrEmpty(r.AuthType) {
+		errs = append(errs, "authType required")
+	}
+	return errs
 }
 
 func checkNilOrEmpty(s *string) bool {
@@ -209,138 +229,29 @@ type URISignerKeyset struct {
 	Keys       []jwk.EssentialHeader `json:"keys"`
 }
 
-// Deprecated: use TrafficVaultPingResponse instead.
-type RiakPingResp TrafficVaultPingResponse
+// Deprecated: use TrafficVaultPing instead.
+type RiakPingResp TrafficVaultPing
 
-type TrafficVaultPingResponse struct {
+// TrafficVaultPing represents the status of a given Traffic Vault server.
+type TrafficVaultPing struct {
 	Status string `json:"status"`
 	Server string `json:"server"`
 }
 
-// DNSSECKeys is the DNSSEC keys as stored in Riak, plus the DS record text.
-type DNSSECKeys map[string]DNSSECKeySet
-
-// Deprecated: use DNSSECKeysTrafficVault instead
-type DNSSECKeysRiak DNSSECKeysV11
-
-type DNSSECKeysTrafficVault DNSSECKeysV11
-
-// DNSSECKeysV11 is the DNSSEC keys object stored in Riak. The map key strings are both DeliveryServiceNames and CDNNames.
-type DNSSECKeysV11 map[string]DNSSECKeySetV11
-
-type DNSSECKeySet struct {
-	ZSK []DNSSECKey `json:"zsk"`
-	KSK []DNSSECKey `json:"ksk"`
-}
-
-// DNSSECKeySetV11 is a DNSSEC key set (ZSK and KSK), as stored in Riak.
-// This is specifically the key data, without the DS record text (which can be computed), and is also the format used in API 1.1 through 1.3.
-type DNSSECKeySetV11 struct {
-	ZSK []DNSSECKeyV11 `json:"zsk"`
-	KSK []DNSSECKeyV11 `json:"ksk"`
-}
-
-type DNSSECKey struct {
-	DNSSECKeyV11
-	DSRecord *DNSSECKeyDSRecord `json:"dsRecord,omitempty"`
-}
-
-type DNSSECKeyV11 struct {
-	InceptionDateUnix  int64                 `json:"inceptionDate"`
-	ExpirationDateUnix int64                 `json:"expirationDate"`
-	Name               string                `json:"name"`
-	TTLSeconds         uint64                `json:"ttl,string"`
-	Status             string                `json:"status"`
-	EffectiveDateUnix  int64                 `json:"effectiveDate"`
-	Public             string                `json:"public"`
-	Private            string                `json:"private"`
-	DSRecord           *DNSSECKeyDSRecordV11 `json:"dsRecord,omitempty"`
-}
-
-// DNSSECKeyDSRecordRiak is a DNSSEC key DS record, as stored in Riak.
-// This is specifically the key data, without the DS record text (which can be computed), and is also the format used in API 1.1 through 1.3.
-type DNSSECKeyDSRecordRiak DNSSECKeyDSRecordV11
-
-type DNSSECKeyDSRecord struct {
-	DNSSECKeyDSRecordV11
-	Text string `json:"text"`
-}
-
-type DNSSECKeyDSRecordV11 struct {
-	Algorithm  int64  `json:"algorithm,string"`
-	DigestType int64  `json:"digestType,string"`
-	Digest     string `json:"digest"`
-}
-
-// CDNDNSSECGenerateReqDate is the date accepted by CDNDNSSECGenerateReq.
-// This will unmarshal a UNIX epoch integer, a RFC3339 string, the old format string used by Perl '2018-08-21+14:26:06', and the old format string sent by the Portal '2018-08-21 14:14:42'.
-// This exists to fix a critical bug, see https://github.com/apache/trafficcontrol/issues/2723 - it SHOULD NOT be used by any other endpoint.
-type CDNDNSSECGenerateReqDate int64
-
-func (i *CDNDNSSECGenerateReqDate) UnmarshalJSON(d []byte) error {
-	const oldPortalDateFormat = `2006-01-02 15:04:05`
-	const oldPerlUIDateFormat = `2006-01-02+15:04:05`
-	if len(d) == 0 {
-		return errors.New("empty object")
-	}
-	if d[0] == '"' {
-		d = d[1 : len(d)-1] // strip JSON quotes, to accept the UNIX epoch as a string or number
-	}
-	if di, err := strconv.ParseInt(string(d), 10, 64); err == nil {
-		*i = CDNDNSSECGenerateReqDate(di)
-		return nil
-	}
-	if t, err := time.Parse(time.RFC3339, string(d)); err == nil {
-		*i = CDNDNSSECGenerateReqDate(t.Unix())
-		return nil
-	}
-	if t, err := time.Parse(oldPortalDateFormat, string(d)); err == nil {
-		*i = CDNDNSSECGenerateReqDate(t.Unix())
-		return nil
-	}
-	if t, err := time.Parse(oldPerlUIDateFormat, string(d)); err == nil {
-		*i = CDNDNSSECGenerateReqDate(t.Unix())
-		return nil
-	}
-	return errors.New("invalid date")
-}
-
-type CDNDNSSECGenerateReq struct {
-	// Key is the CDN name, as documented in the API documentation.
-	Key *string `json:"key"`
-	// Name is the CDN domain, as documented in the API documentation.
-	Name              *string                   `json:"name"`
-	TTL               *util.JSONIntStr          `json:"ttl"`
-	KSKExpirationDays *util.JSONIntStr          `json:"kskExpirationDays"`
-	ZSKExpirationDays *util.JSONIntStr          `json:"zskExpirationDays"`
-	EffectiveDateUnix *CDNDNSSECGenerateReqDate `json:"effectiveDate"`
-}
-
-func (r CDNDNSSECGenerateReq) Validate(tx *sql.Tx) error {
-	errs := []string{}
-	if r.Key == nil {
-		errs = append(errs, "key (cdn name) must be set")
-	}
-	if r.Name == nil {
-		errs = append(errs, "name (cdn domain name) must be set")
-	}
-	if r.TTL == nil {
-		errs = append(errs, "ttl must be set")
-	}
-	if r.KSKExpirationDays == nil {
-		errs = append(errs, "kskExpirationDays must be set")
-	}
-	if r.ZSKExpirationDays == nil {
-		errs = append(errs, "zskExpirationDays must be set")
-	}
-	// effective date is optional
-	if len(errs) > 0 {
-		return errors.New("missing fields: " + strings.Join(errs, "; "))
-	}
-	return nil
+// TrafficVaultPingResponse represents the JSON HTTP response returned by the /vault/ping route.
+type TrafficVaultPingResponse struct {
+	Response TrafficVaultPing `json:"response"`
+	Alerts
 }
 
 type URLSigKeys map[string]string
+
+// URLSignatureKeysResponse is the type of a response from Traffic Ops to a request
+// for the URL Signing keys of a Delivery Service - in API version 4.0.
+type URLSignatureKeysResponse struct {
+	Response URLSigKeys `json:"response"`
+	Alerts
+}
 
 type CDNSSLKeysResp []CDNSSLKey
 

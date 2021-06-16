@@ -66,3 +66,36 @@ Response Structure
 		"key14":"DtXsu8nsw04YhT0kNoKBhu2G3P9WRpQJ",
 		"key7":"cmKoIIxXGAxUMdCsWvnGLoIMGmNiuT5I"
 	}}
+
+
+``DELETE``
+==========
+.. seealso:: :ref:`to-api-deliveryservices-id-urlkeys`
+
+Deletes URL signing keys for a :term:`Delivery Service`.
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type:  Object
+
+Request Structure
+-----------------
+.. table:: Request Path Parameters
+
+	+-------+------------------------------------------------------+
+	|  Name |              Description                             |
+	+=======+======================================================+
+	| xmlid | The 'xml_id' of the desired :term:`Delivery Service` |
+	+-------+------------------------------------------------------+
+
+Response Structure
+------------------
+.. code-block:: json
+	:caption: Response Example
+
+	{
+		"alerts": [{
+			"level": "success",
+			"text": "Successfully deleted URL Sig keys from Traffic Vault"
+		}]
+	}

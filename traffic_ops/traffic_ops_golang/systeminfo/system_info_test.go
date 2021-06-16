@@ -95,7 +95,8 @@ func TestGetSystemInfo(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT.*WHERE p.config_file = \$1`).WillReturnRows(rows)
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTxx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)

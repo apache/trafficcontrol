@@ -54,7 +54,6 @@ npm-debug.log
 yarn-error.log
 testem.log
 /typings
-proxy.json
 
 # System Files
 .DS_Store

@@ -55,10 +55,17 @@ func GetURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	ro, _, err := inf.Vault.GetURISigningKeys(xmlID, inf.Tx.Tx)
+	ro, _, err := inf.Vault.GetURISigningKeys(xmlID, inf.Tx.Tx, r.Context())
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting URI signing keys: "+err.Error()))
 		return
+	}
+	if len(ro) == 0 {
+		ro, err = json.Marshal(tc.URISignerKeyset{})
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("marshalling empty URISignerKeyset: "+err.Error()))
+			return
+		}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(ro)
@@ -92,7 +99,7 @@ func RemoveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	_, found, err := inf.Vault.GetURISigningKeys(xmlID, inf.Tx.Tx)
+	_, found, err := inf.Vault.GetURISigningKeys(xmlID, inf.Tx.Tx, r.Context())
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("removing URI signing keys: "+err.Error()))
 		return
@@ -102,7 +109,7 @@ func RemoveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request)
 		api.WriteRespAlert(w, r, tc.InfoLevel, "not deleted, no object found to delete")
 		return
 	}
-	if err := inf.Vault.DeleteURISigningKeys(xmlID, inf.Tx.Tx); err != nil {
+	if err := inf.Vault.DeleteURISigningKeys(xmlID, inf.Tx.Tx, r.Context()); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("removing URI signing keys: "+err.Error()))
 		return
 	}
@@ -154,7 +161,7 @@ func SaveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := inf.Vault.PutURISigningKeys(xmlID, data, inf.Tx.Tx); err != nil {
+	if err := inf.Vault.PutURISigningKeys(xmlID, data, inf.Tx.Tx, r.Context()); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("saving URI signing keys: "+err.Error()))
 		return
 	}

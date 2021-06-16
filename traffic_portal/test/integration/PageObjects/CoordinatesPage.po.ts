@@ -22,6 +22,25 @@ import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
+interface Coordinates {
+    description?: string;
+    Latitude: number;
+    Longitude: number;
+    Name: string;
+    validationMessage?: string;
+}
+
+interface UpdateCoordinate {
+    description: string;
+    Latitude: number;
+    validationMessage?: string;
+}
+
+interface DeleteCoordinate {
+    Name: string;
+    validationMessage?: string;
+}
+
 export class CoordinatesPage extends BasePage {
 
     private btnCreateNewCoordinates = element(by.xpath("//button[@title='Create Coordinate']"));
@@ -42,7 +61,7 @@ export class CoordinatesPage extends BasePage {
         await snp.ClickTopologyMenu();
     }
 
-    async CreateCoordinates(coordinates) {
+    public async CreateCoordinates(coordinates: Coordinates): Promise<boolean> {
         let result = false;
         let basePage = new BasePage();
         await this.btnCreateNewCoordinates.click();
@@ -73,7 +92,8 @@ export class CoordinatesPage extends BasePage {
         }
         return false;
     }
-    async UpdateCoordinates(coordinates): Promise<boolean | undefined> {
+
+    async UpdateCoordinates(coordinates: UpdateCoordinate): Promise<boolean | undefined> {
         let result: boolean | undefined = false;
         let basePage = new BasePage();
         switch (coordinates.description) {
@@ -97,7 +117,8 @@ export class CoordinatesPage extends BasePage {
         }
         return result;
     }
-    async DeleteCoordinates(coordinates) {
+
+    public async DeleteCoordinates(coordinates: DeleteCoordinate): Promise<boolean> {
         let result = false;
         let basePage = new BasePage();
         await this.btnDelete.click();

@@ -16,7 +16,7 @@
 # under the License.
 
 name: 'build-ats-test-rpm'
-description: 'Builds an ATS RPM used for ORT Integration tests.'
+description: 'Builds an ATS RPM used for cache config Integration tests.'
 runs:
   using: 'node12'
   main: 'main.js'

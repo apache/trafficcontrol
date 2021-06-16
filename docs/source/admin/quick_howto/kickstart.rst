@@ -43,6 +43,13 @@ Generating a System Image
 
 :file:`ks.src` is a standard, Kickstart-formatted file that the will be used to create the Kickstart (ks.cfg) file for the install whenever a system image is generated from the source tree. :file:`ks.src` is a template - it will be overwritten by any information set in the form submitted from :menuselection:`Tools --> Generate ISO` in Traffic Portal. Ultimately, the two are combined to create the final Kickstart file (:file:`ks.cfg`).
 
-.. Note:: It is highly recommended for ease of use that the system image source trees be kept under 1GB in size.
+.. note:: It is highly recommended for ease of use that the system image source trees be kept under 1GB in size.
 
 .. seealso:: For in-depth instructions, please see `Kickstart Installation <https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Installation_Guide/s1-kickstart2-howuse.html>`_ in the Red Hat documentation.
+
+.. _kickstart.files.location:
+
+``kickstart.files.location``
+=============================
+
+The Kickstart root directory used by :ref:`to-overview` (``/var/www/files`` by default) can be changed by setting the ``kickstart.files.location`` :term:`Parameter`.

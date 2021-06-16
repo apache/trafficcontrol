@@ -26,6 +26,47 @@ import randomIpv6 from "random-ipv6";
 
 import { config, randomize } from '../config';
 
+interface GetRequest {
+    queryKey: string;
+    queryValue: string | number | boolean;
+    replace: string | number;
+    route: string;
+}
+
+export interface IDData extends Record<string | number, unknown> {
+    getRequest?: Array<GetRequest>;
+    route?: string;
+}
+
+interface APIDataData extends Record<PropertyKey, unknown>, IDData {
+    id?: unknown;
+}
+
+export interface APIData {
+    action: string;
+    data: Array<APIDataData>;
+    method: string;
+    route: string;
+}
+
+/**
+ * hasProperty checks, generically, whether some variable passed as `o` has the
+ * property `k`.
+ *
+ * @example
+ * hasProperty({}, "id"); // returns false
+ * hasProperty({id: 8}); // returns true
+ * hasProperty({id: undefined}); // returns true
+ *
+ * @param o The object to check.
+ * @param k The key for which to check in the object.
+ * @returns Whether or not `o` has the property `k`.
+ * @throws {Error} when the type check fails.
+ */
+ export function hasProperty<T extends object, K extends PropertyKey, S>(o: T, k: K): o is T & Record<K, S | unknown> {
+	return Object.prototype.hasOwnProperty.call(o, k);
+}
+
 export class API {
 
     private cookie = "";
@@ -57,14 +98,20 @@ export class API {
         return response
     }
 
-    public async SendRequest(route: string, method: "post" | "get" | "delete", data): Promise<void> {
+    public async SendRequest<T extends IDData>(route: string, method: string, data: T): Promise<void> {
         let response
         this.Randomize(data)
 
         if(data.hasOwnProperty('getRequest')){
-            let response = await this.GetId(data);
-            if (response != null) {
-                throw new Error('Failed to get id:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data)
+            let response;
+            try {
+                response = await this.GetId(data);
+            } catch (e) {
+                let msg = e instanceof Error ? e.message : String(e);
+                if (response) {
+                    msg = `response status: ${response.statusText}, response data: ${response.data} - ${msg}`;
+                }
+                throw new Error(`Failed to get id: ${msg}`);
             }
         }
 
@@ -85,10 +132,16 @@ export class API {
                 });
                 break;
             case "delete":
+                if (!data.route) {
+                    throw new Error("DELETE requests must include a 'route' data property")
+                }
                 if ((data.route).includes('?name')){
                     data.route = data.route + randomize
                 }
                 if ((data.route).includes('?id')){
+                    if (!hasProperty(data, "id")) {
+                        throw new Error("route specified an 'id' query parameter, but data had no 'id' property");
+                    }
                     data.route = data.route + data.id;
                 }
                 if((data.route).includes('/service_categories/')){
@@ -100,113 +153,129 @@ export class API {
                     headers: { Cookie: this.cookie},
                 });
                 break;
+            default:
+                throw new Error(`unrecognized request method: '${method}'`);
         }
         if (response.status == 200 || response.status == 201) {
             return;
         } else {
             console.log("Reponse Data: " , response.data);
             console.log("Response: " , response);
-            throw new Error('Request Failed:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data);
+            throw new Error(`request failed: response status: '${response.statusText}' response data: '${response.data}'`);
         }
     }
 
-    public async GetId(data): Promise<null | AxiosResponse<unknown>> {
-        for(var i = 0; i < data.getRequest.length; i++) {
-            var query = '?' + data.getRequest[i].queryKey  + '=' + data.getRequest[i].queryValue + randomize;
-            try {
-                const response = await axios({
-                    method: 'get',
-                    url: this.config.params.apiUrl + data.getRequest[i].route + query,
-                    headers: { Cookie: this.cookie},
-               });
+    public async GetId(data: IDData): Promise<null | AxiosResponse<unknown>> {
+        if (!data.getRequest) {
+            return null;
+        }
+        for (const request of data.getRequest) {
+            const query = `?${encodeURIComponent(request.queryKey)}=${encodeURIComponent(request.queryValue)}${randomize}`;
+            const response = await axios({
+                method: 'get',
+                url: this.config.params.apiUrl + request.route + query,
+                headers: { Cookie: this.cookie},
+            });
 
-               if (response.status == 200) {
-                    if(data.getRequest[i].hasOwnProperty('isArray')){
-                        data[data.getRequest[i].replace] = [await response.data.response[0].id];
-                    } else if (data.getRequest[i].replace == "route") {
-                        data[data.getRequest[i].replace] = data.route + response.data.response[0].id;
-                    } else {
-                        data[data.getRequest[i].replace] = await response.data.response[0].id;
-                    }
+            if (response.status == 200) {
+                if(request.hasOwnProperty('isArray')){
+                    data[request.replace] = [await response.data.response[0].id];
+                } else if (request.replace === "route") {
+                    data.route = data.route + response.data.response[0].id;
                 } else {
-                    return response
+                    data[request.replace] = await response.data.response[0].id;
                 }
-            } catch (error) {
-                return error;
+            } else {
+                // todo: should this be getting cut short like this?
+                return response
             }
         }
         return null
     }
 
-   public Randomize(data): void {
-        if(data.hasOwnProperty('email')) {
-            data['email'] = data.fullName + randomize + data.email;
-        }
-        if(data.hasOwnProperty('fullName')) {
-            data['fullName'] = data.fullName + randomize;
-        }
-        if(data.hasOwnProperty('hostName')) {
-            data['hostName'] = data.hostName + randomize;
-        }
-        if(data.hasOwnProperty('ipAddress')) {
-            data['ipAddress'] = (Math.floor(Math.random() * 255) + 1)+"."+(Math.floor(Math.random() * 255))+"."+(Math.floor(Math.random() * 255))+"."+(Math.floor(Math.random() * 255));
-        }
-        if(data.hasOwnProperty('name')) {
-            data['name'] = data.name + randomize;
-        }
-        if(data.hasOwnProperty('requiredCapability')) {
-            data['requiredCapability'] = data.requiredCapability + randomize;
-        }
-        if(data.hasOwnProperty('serverCapability')) {
-            data['serverCapability'] = data.serverCapability + randomize;
-        }
-        if(data.hasOwnProperty('username')) {
-            data['username'] = data.username + randomize;
-        }
-        if(data.hasOwnProperty('xmlId')) {
-            data['xmlId'] = data.xmlId + randomize;
-        }
-        if(data.hasOwnProperty('shortName')) {
-            data['shortName'] = data.shortName + randomize;
-        }
-        if(data.hasOwnProperty('divisionName')) {
-            data['divisionName'] = data.divisionName + randomize;
-        }
-        if(data.hasOwnProperty('domainName')) {
-            data['domainName'] = data.domainName + randomize;
-        }
-        if(data.hasOwnProperty('nodes')){
-           for(var i in  data['nodes']){
-               data['nodes'][i].cachegroup = data['nodes'][i].cachegroup + randomize;
+   public Randomize(data: object): void {
+       if (hasProperty(data, "fullName")) {
+           if (hasProperty(data, "email")) {
+               data.email = data.fullName + randomize + data.email;
            }
+           data.fullName = data.fullName + randomize;
+       }
+        if (hasProperty(data, "hostName")) {
+            data.hostName = data.hostName + randomize;
         }
-        if(data.hasOwnProperty('interfaces')){
-            let ipv6 = randomIpv6();
-            for(var i in data['interfaces']){
-                for(var j in data['interfaces'][i].ipAddresses){
-                   data['interfaces'][i].ipAddresses[j].address = ipv6.toString();
+        if (hasProperty(data, "ipAddress")) {
+            const rand = () => Math.floor(Math.random()*255)+1;
+            data.ipAddress = `${rand()}.${rand()}.${rand()}.${rand()}`;
+        }
+        if(hasProperty(data, 'name')) {
+            data.name = data.name + randomize;
+        }
+        if(hasProperty(data, 'requiredCapability')) {
+            data.requiredCapability = data.requiredCapability + randomize;
+        }
+        if(hasProperty(data, 'serverCapability')) {
+            data.serverCapability = data.serverCapability + randomize;
+        }
+        if(hasProperty(data, 'username')) {
+            data.username = data.username + randomize;
+        }
+        if(hasProperty(data, 'xmlId')) {
+            data.xmlId = data.xmlId + randomize;
+        }
+        if(hasProperty(data, 'shortName')) {
+            data.shortName = data.shortName + randomize;
+        }
+        if(hasProperty(data, 'divisionName')) {
+            data.divisionName = data.divisionName + randomize;
+        }
+        if(hasProperty(data, 'domainName')) {
+            data.domainName = data.domainName + randomize;
+        }
+        if(hasProperty(data, 'nodes')){
+            if (data.nodes instanceof Array) {
+                data.nodes.map(i => {
+                    if (typeof(i) === "object" && i !== null && hasProperty(i, "cachegroup")) {
+                        i.cachegroup = i.cachegroup + randomize;
+                    }
+                });
+            }
+        }
+        if(hasProperty(data, 'interfaces')){
+            if (data.interfaces instanceof Array) {
+                const ipv6 = randomIpv6();
+                for (const inf of data.interfaces) {
+                    if (typeof(inf) === "object" && inf !== null && hasProperty(inf, "ipAddresses") && inf.ipAddresses instanceof Array) {
+                        for (const ip of inf.ipAddresses) {
+                           ip.address = ipv6.toString();
+                        }
+                    }
                 }
             }
         }
     }
 
-    public async UseAPI(data): Promise<void> {
-        let response = await this.Login();
-        if (response.status == 200) {
-            for(var i = 0; i < data.Prerequisites.length; i++){
-                for(var j = 0; j < data.Prerequisites[i].Data.length; j++){
+    public async UseAPI(data: Array<APIData>): Promise<void> {
+        const response = await this.Login();
+        if (response.status === 200) {
+            for(let i = 0; i < data.length; i++){
+                for(let j = 0; j < data[i].data.length; j++){
+                    const route = data[i].data[j].route ?? data[i].route;
                     try {
-                        await this.SendRequest(data.Prerequisites[i].Route, data.Prerequisites[i].Method, data.Prerequisites[i].Data[j]);
+                        await this.SendRequest(route, data[i].method, data[i].data[j]);
                     } catch (output) {
-                        console.error(`UseAPI failed on Action ${data.Prerequisites[i].Action} with index ${i}, and Data index ${j}`);
-                        throw new Error(output);
+                        if (output instanceof Error) {
+                            output = output.message;
+                        }
+                        console.debug(`${data[i].method} ${route}`);
+                        console.debug("DATA:", data[i].data[j]);
+                        throw new Error(`UseAPI failed on Action ${data[i].action} with index ${i}, and Data index ${j}: ${output}`);
                     }
                 }
             }
         } else if (response.status == undefined) {
             throw new Error(`Error requesting ${this.config.params.apiUrl}: ${response}`);
         } else {
-            throw new Error('Login failed:\nResponse Status: ' + response.statusText + '\nResponse Data: ' + response.data)
+            throw new Error(`Login failed: Response Status: '${response.statusText}'' Response Data: '${response.data}'`);
         }
     }
 }

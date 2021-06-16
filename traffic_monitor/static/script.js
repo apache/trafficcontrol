@@ -313,7 +313,10 @@ function getDSProperty(ds, prop) {
 function getDsStats() {
 	/// \todo add /api/delivery-service-stats which only returns the data needed by the UI, for efficiency
 	ajax("/publish/DsStats", function(r) {
-		const deliveryServices = new Map(Object.entries(JSON.parse(r).deliveryService));
+		const deliveryServices = new Map(Object.entries(JSON.parse(r).deliveryService).sort((dsTupleA, dsTupleB) => {
+			return -1 * dsTupleA[0].localeCompare(dsTupleB[0]);
+		}));
+
 		const table = document.createElement('TBODY');
 		table.id = "deliveryservice-stats";
 

@@ -39,7 +39,7 @@ from the `npm` flags with `--`.
 | ------------------------------- | :--------------------------------------------------------------------------------------------------: |
 | params.baseUrl                  | Environment test run on. Tests are written for cdn-in-a-box only. Do not run on other environment                                   |
 | capabilities.shardTestFiles     | Input `true` or `false` to turn on or off parallelization. If the value is false, maxInstances will always count as 1. The default value in the config file = false                            |
-| capabilities.maxInstances       | Input number of chrome instances that your machine can handle. Test will fail if local machine cannot handle a lot of chrome instances. The default value = 1    |
+| capabilities.maxInstances       | Input number of Chromium instances that your machine can handle. Test will fail if local machine cannot handle a lot of Chromium instances. The default value = 1    |
 
 ### Example
 ```bash

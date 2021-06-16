@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -46,7 +47,7 @@ func CreateTestCDNWithReadOnlyUser(t *testing.T) {
 		DomainName: "createfailure.invalid",
 	}
 
-	alerts, _, err := readonlyTOClient.CreateCDN(cdn)
+	alerts, _, err := readonlyTOClient.CreateCDN(cdn, client.RequestOptions{})
 
 	if err == nil {
 		t.Error("readonlyuser creating cdn error expected: not nil, actual: nil error")
@@ -62,8 +63,10 @@ func CreateTestCDNWithReadOnlyUser(t *testing.T) {
 		}
 	}
 
-	cdns, _, _ := TOSession.GetCDNByName(cdn.Name, nil)
-	if len(cdns) > 0 {
-		t.Errorf("readonlyuser getting created cdn, len(cdns) expected: 0, actual: %+v %+v", len(cdns), cdns)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", cdn.Name)
+	cdns, _, _ := TOSession.GetCDNs(opts)
+	if len(cdns.Response) > 0 {
+		t.Errorf("readonlyuser getting created cdn, len(cdns) expected: 0, actual: %d", len(cdns.Response))
 	}
 }

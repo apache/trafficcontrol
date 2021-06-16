@@ -246,7 +246,8 @@ func TestGetServerInterfaces(t *testing.T) {
 	mock.ExpectBegin()
 	mockServerInterfaces(mock, cacheID, serverInterfaces)
 
-	dbCtx, _ := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)

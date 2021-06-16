@@ -133,8 +133,6 @@ Guide
 		Database server root (admin) user: postgres
 		Password for database server admin:
 		Re-Enter Password for database server admin:
-		Download Maxmind Database? [yes]:
-		Download Maxmind Database?: yes
 		===========/opt/traffic_ops/app/conf/cdn.conf===========
 		Generate a new secret? [yes]:
 		Generate a new secret?: yes
@@ -165,10 +163,6 @@ Guide
 		DNS sub-domain for which your CDN is authoritative [cdn1.kabletown.net]: blue-cdn.supercdn.net
 		DNS sub-domain for which your CDN is authoritative: blue-cdn.supercdn.net
 		Writing json to /opt/traffic_ops/install/data/json/profiles.json
-		Downloading Maxmind data
-		--2017-06-11 15:32:41--  http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz
-		Resolving geolite.maxmind.com (geolite.maxmind.com)... 2400:cb00:2048:1::6810:262f, 2400:cb00:2048:1::6810:252f, 104.16.38.47, ...
-		Connecting to geolite.maxmind.com (geolite.maxmind.com)|2400:cb00:2048:1::6810:262f|:80... connected.
 
 		... much SQL output skipped
 
@@ -325,6 +319,9 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 	:iso_root_path: Sets the filesystem path to the root of the ISO generation directory. For default installations, this should usually be set to :file:`/opt/traffic_ops/app/public`.
 
+	.. deprecated:: ATCv6
+		The ``geniso.iso_root_path`` configuration option is unused now that Traffic Ops is rewritten from Perl to Golang and will be removed in a future ATC release.
+
 	.. seealso:: :ref:`tp-tools-generate-iso`
 
 :hypnotoad: This is a group of options that mainly no longer have any meaning..
@@ -452,13 +449,13 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 	:traffic_vault_backend:
 
-	    .. versionadded:: 6.0
-		    Optional. The name of which backend to use for Traffic Vault. Currently, the only supported backend is "riak".
+		.. versionadded:: 6.0
+			Optional. The name of which backend to use for Traffic Vault. Currently, the only supported backend is "riak".
 
 	:traffic_vault_config:
 
-	    .. versionadded:: 6.0
-		    Optional. The JSON configuration which is unique to the chosen Traffic Vault backend. See :ref:`traffic_vault_admin` for the configuration options for each supported backend.
+		.. versionadded:: 6.0
+			Optional. The JSON configuration which is unique to the chosen Traffic Vault backend. See :ref:`traffic_vault_admin` for the configuration options for each supported backend.
 
 	.. _admin-routing-blacklist:
 
@@ -478,8 +475,8 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 :use_ims:
 
-    .. versionadded:: 5.0
-	    This is an optional boolean value to enable the handling of the "If-Modified-Since" HTTP request header. Default: false
+	.. versionadded:: 5.0
+		This is an optional boolean value to enable the handling of the "If-Modified-Since" HTTP request header. Default: false
 
 Example cdn.conf
 ''''''''''''''''
@@ -664,7 +661,7 @@ You will need to update `cdn.conf`_ with any necessary changes.
 
 	'hypnotoad' => ...
 		'listen' => 'https://[::]:443?cert=/etc/pki/tls/certs/trafficops.crt&key=/etc/pki/tls/private/trafficops.key&ca=/etc/pki/tls/certs/localhost.ca&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED'
-		 ...
+		...
 
 .. _admin-to-ext-script:
 

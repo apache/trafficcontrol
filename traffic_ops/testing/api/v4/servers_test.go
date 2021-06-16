@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestServers(t *testing.T) {
@@ -63,24 +64,34 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	const topologyName = "forked-topology"
 	const cdnName = "cdn2"
 	const expectedLength = 1
-	cdns, _, err := TOSession.GetCDNByName(cdnName, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", cdnName)
+	cdns, _, err := TOSession.GetCDNs(opts)
 	if err != nil {
-		t.Fatalf("unable to GET CDN: %v", err)
+		t.Fatalf("unable to get CDN '%s': %v - alerts: %+v", cdnName, err, cdns.Alerts)
 	}
-	cdnID := cdns[0].ID
-	params := url.Values{}
-	params.Add("cachegroupName", cacheGroupName)
-	params.Add("topology", topologyName)
-	params.Add("cdn", strconv.Itoa(cdnID))
-	servers, _, err := TOSession.GetServers(params, nil)
+	if len(cdns.Response) < 1 {
+		t.Fatalf("Expected exactly one CDN to exist with name '%s', found: %d", cdnName, len(cdns.Response))
+	}
+	cdnID := cdns.Response[0].ID
+
+	serverOpts := client.NewRequestOptions()
+	serverOpts.QueryParameters.Add("cachegroupName", cacheGroupName)
+	serverOpts.QueryParameters.Add("topology", topologyName)
+	serverOpts.QueryParameters.Add("cdn", strconv.Itoa(cdnID))
+	servers, _, err := TOSession.GetServers(serverOpts)
 	if err != nil {
-		t.Fatalf("getting server from cdn %s from cachegroup %s in topology %s: %s", cdnName, cacheGroupName, topologyName, err.Error())
+		t.Fatalf("getting server from CDN '%s', from Cache Group '%s', and in Topology '%s': %v - alerts: %+v", cdnName, cacheGroupName, topologyName, err, servers.Alerts)
 	}
 	if len(servers.Response) != expectedLength {
 		t.Fatalf("expected to get %d server from cdn %s from cachegroup %s in topology %s, got %d servers", expectedLength, cdnName, cacheGroupName, topologyName, len(servers.Response))
 	}
 	server := servers.Response[0]
-	_, reqInf, err := TOSession.DeleteServer(*server.ID, nil)
+	if server.ID == nil || server.CDNID == nil || server.ProfileID == nil || server.CachegroupID == nil || server.HostName == nil {
+		t.Fatal("Traffic Ops returned a representation for a server with null or undefined ID and/or CDN ID and/or Profile ID and/or Cache Group ID and/or Host Name")
+	}
+
+	_, reqInf, err := TOSession.DeleteServer(*server.ID, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("expected an error deleting server with id %d, received no error", *server.ID)
 	}
@@ -89,49 +100,59 @@ func LastServerInTopologyCacheGroup(t *testing.T) {
 	}
 
 	// attempt to move it to another CDN while it's the last server in the cachegroup in its CDN
-	cdns, _, err = TOSession.GetCDNByName("cdn1", nil)
+	opts.QueryParameters.Set("name", "cdn1")
+	cdns, _, err = TOSession.GetCDNs(opts)
 	if err != nil {
-		t.Fatalf("unable to GET CDN: %v", err)
+		t.Fatalf("unable to get CDN 'cdn1': %v - alerts: %+v", err, cdns.Alerts)
 	}
-	newCDNID := cdns[0].ID
+	if len(cdns.Response) < 1 {
+		t.Fatalf("Expected exactly one CDN to exist with name 'cdn1', found: %d", len(cdns.Response))
+	}
+	newCDNID := cdns.Response[0].ID
 	oldCDNID := *server.CDNID
 	server.CDNID = &newCDNID
-	profiles, _, err := TOSession.GetProfileByName("MID1", nil)
+	opts.QueryParameters.Set("name", "MID1")
+	profiles, _, err := TOSession.GetProfiles(opts)
 	if err != nil {
-		t.Fatalf("unable to GET profile: %v", err)
+		t.Errorf("unable to get Profile 'MID1': %v - alerts: %+v", err, profiles.Alerts)
 	}
-	newProfile := profiles[0].ID
+	if len(profiles.Response) != 1 {
+		t.Fatalf("Expected exactly one Profile to exist with name 'MID1', found: %d", len(profiles.Response))
+	}
+	newProfile := profiles.Response[0].ID
 	oldProfile := *server.ProfileID
 	server.ProfileID = &newProfile
-	_, _, err = TOSession.UpdateServer(*server.ID, server, nil)
+	_, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("changing the CDN of the last server (%s) in a CDN in a cachegroup used by a topology assigned to a delivery service(s) in that CDN - expected: error, actual: nil", *server.HostName)
 	}
 	server.CDNID = &oldCDNID
 	server.ProfileID = &oldProfile
 
-	params = url.Values{}
-	params.Add("name", moveToCacheGroup)
-	cgs, _, err := TOSession.GetCacheGroups(params, nil)
+	opts.QueryParameters.Set("name", moveToCacheGroup)
+	cgs, _, err := TOSession.GetCacheGroups(opts)
 	if err != nil {
-		t.Fatalf("getting cachegroup with hostname %s: %s", moveToCacheGroup, err.Error())
+		t.Fatalf("getting cachegroup with hostname %s: %v - alerts: %+v", moveToCacheGroup, err, cgs.Alerts)
 	}
-	if len(cgs) != expectedLength {
-		t.Fatalf("expected %d cachegroup with hostname %s, received %d cachegroups", expectedLength, moveToCacheGroup, len(cgs))
+	if len(cgs.Response) != expectedLength {
+		t.Fatalf("expected %d cachegroup with hostname %s, received %d cachegroups", expectedLength, moveToCacheGroup, len(cgs.Response))
+	}
+	if cgs.Response[0].ID == nil {
+		t.Fatalf("Traffic Ops responded with Cache Group '%s' that had null or undefined ID", moveToCacheGroup)
 	}
 
-	_, _, err = TOSession.UpdateServer(*server.ID, server, nil)
+	alerts, _, err := TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("error updating server with hostname %s without moving it to a different cachegroup: %s", *server.HostName, err.Error())
+		t.Fatalf("error updating server with hostname %s without moving it to a different Cache Group: %v - alerts: %+v", *server.HostName, err, alerts.Alerts)
 	}
 
-	*server.CachegroupID = *cgs[0].ID
-	_, _, err = TOSession.UpdateServer(*server.ID, server, nil)
+	*server.CachegroupID = *cgs.Response[0].ID
+	alerts, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("expected an error moving server with id %s to a different cachegroup, received no error", *server.HostName)
 	}
 	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
-		t.Fatalf("expected a 400-level error moving server with id %d to a different cachegroup, got status code %d: %s", *server.ID, reqInf.StatusCode, err.Error())
+		t.Fatalf("expected a 400-level error moving server with id %d to a different cachegroup, got status code %d: %v - alerts: %+v", *server.ID, reqInf.StatusCode, err, alerts.Alerts)
 	}
 }
 
@@ -146,13 +167,13 @@ func UpdateTestServerStatus(t *testing.T) {
 	}
 
 	hostName := *firstServer.HostName
-	params := url.Values{}
-	params.Add("hostName", hostName)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("hostName", hostName)
 
 	// Retrieve the server by hostname so we can get the id for the Update
-	resp, _, err := TOSession.GetServers(params, nil)
+	resp, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("cannot GET Server by hostname '%s': %v - %v", hostName, err, resp.Alerts)
+		t.Fatalf("cannot get Server by hostname '%s': %v - alerts %+v", hostName, err, resp.Alerts)
 	}
 	if len(resp.Response) < 1 {
 		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
@@ -162,20 +183,18 @@ func UpdateTestServerStatus(t *testing.T) {
 		t.Logf("Testing will proceed with server: %+v", resp.Response[0])
 	}
 	remoteServer := resp.Response[0]
-	if remoteServer.ID == nil {
-		t.Fatalf("Got null ID for server '%s'", hostName)
+	if remoteServer.ID == nil || remoteServer.HostName == nil || remoteServer.StatusLastUpdated == nil {
+		t.Fatalf("Traffic Ops returned a representation for server '%s' with null or undefined ID and/or Host Name and/or Status Last Updated time", hostName)
 	}
-	id := fmt.Sprintf("%v", *resp.Response[0].ID)
-	idParam := url.Values{}
-	idParam.Add("id", id)
+	id := fmt.Sprintf("%v", *remoteServer.ID)
 	originalStatusID := 0
 	updatedStatusID := 0
 
-	statuses, _, err := TOSession.GetStatuses(nil)
+	statuses, _, err := TOSession.GetStatuses(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot get statuses: %v", err.Error())
+		t.Fatalf("cannot get Statuses: %v - alerts: %+v", err, statuses.Alerts)
 	}
-	for _, status := range statuses {
+	for _, status := range statuses.Response {
 		if status.Name == "REPORTED" {
 			originalStatusID = status.ID
 		}
@@ -186,14 +205,16 @@ func UpdateTestServerStatus(t *testing.T) {
 	// Keeping the status same, perform an update and make sure that statusLastUpdated didnt change
 	remoteServer.StatusID = &originalStatusID
 
-	alerts, _, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, nil)
+	alerts, _, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
+		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - alerts: %+v", *remoteServer.ID, hostName, err, alerts)
 	}
 
-	resp, _, err = TOSession.GetServers(idParam, nil)
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("id", id)
+	resp, _, err = TOSession.GetServers(opts)
 	if err != nil {
-		t.Errorf("cannot GET Server by ID: %v - %v", *remoteServer.HostName, err)
+		t.Errorf("cannot get Server #%s by ID: %v - alerts %+v", id, err, resp.Alerts)
 	}
 	if len(resp.Response) < 1 {
 		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
@@ -204,6 +225,9 @@ func UpdateTestServerStatus(t *testing.T) {
 	}
 
 	respServer := resp.Response[0]
+	if respServer.StatusLastUpdated == nil {
+		t.Fatal("Traffic Ops returned a representation for a server with null or undefined Status Last Updated time")
+	}
 
 	if !remoteServer.StatusLastUpdated.Equal(*respServer.StatusLastUpdated) {
 		t.Errorf("since status didnt change, no change in 'StatusLastUpdated' time was expected. Difference observer: old value: %v, new value: %v",
@@ -213,14 +237,14 @@ func UpdateTestServerStatus(t *testing.T) {
 	// Changing the status, perform an update and make sure that statusLastUpdated changed
 	remoteServer.StatusID = &updatedStatusID
 
-	alerts, _, err = TOSession.UpdateServer(*remoteServer.ID, remoteServer, nil)
+	alerts, _, err = TOSession.UpdateServer(*remoteServer.ID, remoteServer, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
+		t.Fatalf("cannot update Server #%d (hostname '%s'): %v - alerts %+v", *remoteServer.ID, hostName, err, alerts.Alerts)
 	}
 
-	resp, _, err = TOSession.GetServers(idParam, nil)
+	resp, _, err = TOSession.GetServers(opts)
 	if err != nil {
-		t.Errorf("cannot GET Server by ID: %v - %v", *remoteServer.HostName, err)
+		t.Errorf("cannot get Server by ID: %v - %v", *remoteServer.HostName, err)
 	}
 	if len(resp.Response) < 1 {
 		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
@@ -231,6 +255,9 @@ func UpdateTestServerStatus(t *testing.T) {
 	}
 
 	respServer = resp.Response[0]
+	if respServer.StatusLastUpdated == nil {
+		t.Fatal("Traffic Ops returned a representation for a server with null or undefined Status Last Updated time")
+	}
 
 	if *remoteServer.StatusLastUpdated == *respServer.StatusLastUpdated {
 		t.Errorf("since status was changed, expected to see a time difference between the old and new 'StatusLastUpdated' values, got the same value")
@@ -239,14 +266,14 @@ func UpdateTestServerStatus(t *testing.T) {
 	// Changing the status, perform an update and make sure that statusLastUpdated changed
 	remoteServer.StatusID = &originalStatusID
 
-	alerts, _, err = TOSession.UpdateServer(*remoteServer.ID, remoteServer, nil)
+	alerts, _, err = TOSession.UpdateServer(*remoteServer.ID, remoteServer, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
+		t.Fatalf("cannot update Server by ID %d (hostname '%s'): %v - alerts: %+v", *remoteServer.ID, hostName, err, alerts)
 	}
 
-	resp, _, err = TOSession.GetServers(idParam, nil)
+	resp, _, err = TOSession.GetServers(opts)
 	if err != nil {
-		t.Errorf("cannot GET Server by ID: %v - %v", *remoteServer.HostName, err)
+		t.Errorf("cannot get Server by ID %d: %v - alerts: %+v", *remoteServer.ID, err, resp.Alerts)
 	}
 	if len(resp.Response) < 1 {
 		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
@@ -257,6 +284,9 @@ func UpdateTestServerStatus(t *testing.T) {
 	}
 
 	respServer = resp.Response[0]
+	if respServer.StatusLastUpdated == nil {
+		t.Fatal("Traffic Ops returned a representation for a server with null or undefined Status Last Updated time")
+	}
 
 	if *remoteServer.StatusLastUpdated == *respServer.StatusLastUpdated {
 		t.Errorf("since status was changed, expected to see a time difference between the old and new 'StatusLastUpdated' values, got the same value")
@@ -274,14 +304,14 @@ func UpdateTestServersWithHeaders(t *testing.T, header http.Header) {
 	}
 
 	hostName := *firstServer.HostName
-	params := url.Values{}
-	params.Add("hostName", hostName)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Add("hostName", hostName)
+	opts.Header = header
 
 	// Retrieve the server by hostname so we can get the id for the Update
-	resp, _, err := TOSession.GetServers(params, header)
-
+	resp, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("cannot GET Server by hostname '%s': %v - %v", hostName, err, resp.Alerts)
+		t.Fatalf("cannot get Server by hostname '%s': %v - alerts: %+v", hostName, err, resp.Alerts)
 	}
 	if len(resp.Response) < 1 {
 		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
@@ -293,13 +323,8 @@ func UpdateTestServersWithHeaders(t *testing.T, header http.Header) {
 
 	remoteServer := resp.Response[0]
 	if remoteServer.ID == nil {
-		t.Fatalf("Got null ID for server '%s'", hostName)
+		t.Fatalf("Got null or undefined ID for server '%s'", hostName)
 	}
-
-	// Creating idParam to get server when hostname changes.
-	id := fmt.Sprintf("%v", *resp.Response[0].ID)
-	idParam := url.Values{}
-	idParam.Add("id", id)
 
 	infs := remoteServer.Interfaces
 	if len(infs) < 1 {
@@ -318,7 +343,8 @@ func UpdateTestServersWithHeaders(t *testing.T, header http.Header) {
 	remoteServer.Rack = &updatedServerRack
 	remoteServer.HostName = &updatedHostName
 
-	_, reqInf, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, header)
+	opts.QueryParameters = nil
+	_, reqInf, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, opts)
 	if err == nil {
 		t.Errorf("Expected error about precondition failed, but got none")
 	}
@@ -328,16 +354,17 @@ func UpdateTestServersWithHeaders(t *testing.T, header http.Header) {
 }
 
 func GetTestServersIMSAfterChange(t *testing.T, header http.Header) {
-	params := url.Values{}
+	opts := client.NewRequestOptions()
+	opts.Header = header
 	for _, server := range testData.Servers {
 		if server.HostName == nil {
 			t.Errorf("found server with nil hostname: %+v", server)
 			continue
 		}
-		params.Set("hostName", *server.HostName)
-		_, reqInf, err := TOSession.GetServers(params, header)
+		opts.QueryParameters.Set("hostName", *server.HostName)
+		resp, reqInf, err := TOSession.GetServers(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusOK {
 			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
@@ -346,16 +373,17 @@ func GetTestServersIMSAfterChange(t *testing.T, header http.Header) {
 	currentTime := time.Now().UTC()
 	currentTime = currentTime.Add(1 * time.Second)
 	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
+
+	opts.Header.Set(rfc.IfModifiedSince, timeStr)
 	for _, server := range testData.Servers {
 		if server.HostName == nil {
 			t.Errorf("found server with nil hostname: %+v", server)
 			continue
 		}
-		params.Set("hostName", *server.HostName)
-		_, reqInf, err := TOSession.GetServers(params, header)
+		opts.QueryParameters.Set("hostName", *server.HostName)
+		resp, reqInf, err := TOSession.GetServers(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -364,21 +392,20 @@ func GetTestServersIMSAfterChange(t *testing.T, header http.Header) {
 }
 
 func GetTestServersIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
 	futureTime := time.Now().AddDate(0, 0, 1)
 	timestamp := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timestamp)
-	params := url.Values{}
+
+	opts := client.NewRequestOptions()
+	opts.Header.Set(rfc.IfModifiedSince, timestamp)
 	for _, server := range testData.Servers {
 		if server.HostName == nil {
 			t.Errorf("found server with nil hostname: %+v", server)
 			continue
 		}
-		params.Set("hostName", *server.HostName)
-		_, reqInf, err := TOSession.GetServers(params, header)
+		opts.QueryParameters.Set("hostName", *server.HostName)
+		resp, reqInf, err := TOSession.GetServers(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -393,84 +420,96 @@ func CreateTestServers(t *testing.T) {
 			t.Errorf("found server with nil hostname: %+v", server)
 			continue
 		}
-		resp, _, err := TOSession.CreateServer(server, nil)
-		t.Log("Response: ", *server.HostName, " ", resp)
+		resp, _, err := TOSession.CreateServer(server, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not CREATE servers: %v", err)
+			t.Errorf("could not create server '%s': %v - alerts: %+v", *server.HostName, err, resp.Alerts)
 		}
 	}
 }
 
 func CreateTestBlankFields(t *testing.T) {
-	serverResp, _, err := TOSession.GetServers(nil, nil)
+	serverResp, _, err := TOSession.GetServers(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("couldnt get servers: %v", err)
+		t.Fatalf("couldnt get servers: %v - alerts: %+v", err, serverResp.Alerts)
 	}
 	if len(serverResp.Response) < 1 {
 		t.Fatal("expected at least one server")
 	}
 	server := serverResp.Response[0]
+	if server.ID == nil {
+		t.Fatal("Traffic Ops returned a representation for a servver with null or undefined ID")
+	}
 	originalHost := server.HostName
 
 	server.HostName = util.StrPtr("")
-	_, _, err = TOSession.UpdateServer(*server.ID, server, nil)
+	_, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
 	if err == nil {
-		t.Fatal("should not be able to update server with blank HostName")
+		t.Error("should not be able to update server with blank HostName")
 	}
 
 	server.HostName = originalHost
 	server.DomainName = util.StrPtr("")
-	_, _, err = TOSession.UpdateServer(*server.ID, server, nil)
+	_, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
 	if err == nil {
-		t.Fatal("should not be able to update server with blank DomainName")
+		t.Error("should not be able to update server with blank DomainName")
 	}
 }
 
+// This test will break if the structure of the test data servers collection
+// is changed at all.
 func CreateTestServerWithoutProfileID(t *testing.T) {
-	params := url.Values{}
-	servers := testData.Servers[19]
-	params.Set("hostName", *servers.HostName)
+	if len(testData.Servers) < 20 {
+		t.Fatal("Need at least 20 servers to test creating a server without a Profile")
+	}
+	testServer := testData.Servers[19]
+	if testServer.HostName == nil {
+		t.Fatal("Found a server in the test data with null or undefined Host Name")
+	}
 
-	resp, _, err := TOSession.GetServers(params, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("hostName", *testServer.HostName)
+
+	resp, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("cannot GET Server by name '%s': %v - %v", *servers.HostName, err, resp.Alerts)
+		t.Fatalf("cannot get Server by Host Name '%s': %v - alerts: %+v", *testServer.HostName, err, resp.Alerts)
 	}
 
 	server := resp.Response[0]
+	if server.Profile == nil || server.ID == nil || server.HostName == nil {
+		t.Fatal("Traffic Ops returned a representation of a server with null or undefined ID and/or Profile and/or Host Name")
+	}
 	originalProfile := *server.Profile
-	delResp, _, err := TOSession.DeleteServer(*server.ID, nil)
+	delResp, _, err := TOSession.DeleteServer(*server.ID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot DELETE Server by ID %d: %v - %v", *server.ID, err, delResp)
+		t.Fatalf("cannot delete Server by ID %d: %v - %v", *server.ID, err, delResp)
 	}
 
 	*server.Profile = ""
 	server.ProfileID = nil
-	response, reqInfo, errs := TOSession.CreateServer(server, nil)
-	t.Log("Response: ", *server.HostName, " ", response)
+	_, reqInfo, err := TOSession.CreateServer(server, client.RequestOptions{})
 	if reqInfo.StatusCode != 400 {
 		t.Fatalf("Expected status code: %v but got: %v", "400", reqInfo.StatusCode)
 	}
 
 	//Reverting it back for further tests
 	*server.Profile = originalProfile
-	response, _, errs = TOSession.CreateServer(server, nil)
-	t.Log("Response: ", *server.HostName, " ", response)
-	if errs != nil {
-		t.Fatalf("could not CREATE servers: %v", errs)
+	response, _, err := TOSession.CreateServer(server, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("could not create server: %v - alerts: %+v", err, response.Alerts)
 	}
 }
 
 func GetTestServers(t *testing.T) {
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 	for _, server := range testData.Servers {
 		if server.HostName == nil {
 			t.Errorf("found server with nil hostname: %+v", server)
 			continue
 		}
-		params.Set("hostName", *server.HostName)
-		resp, _, err := TOSession.GetServers(params, nil)
+		opts.QueryParameters.Set("hostName", *server.HostName)
+		resp, _, err := TOSession.GetServers(opts)
 		if err != nil {
-			t.Errorf("cannot GET Server by name '%s': %v - %v", *server.HostName, err, resp.Alerts)
+			t.Errorf("cannot get Server by Host Name '%s': %v - alerts: %+v", *server.HostName, err, resp.Alerts)
 		} else if resp.Summary.Count != 1 {
 			t.Errorf("incorrect server count, expected: 1, actual: %d", resp.Summary.Count)
 		}
@@ -478,20 +517,21 @@ func GetTestServers(t *testing.T) {
 }
 
 func GetTestServersDetails(t *testing.T) {
-
+	opts := client.NewRequestOptions()
 	for _, server := range testData.Servers {
 		if server.HostName == nil {
 			t.Errorf("found server with nil hostname: %+v", server)
 			continue
 		}
-		resp, _, err := TOSession.GetServerDetailsByHostName(*server.HostName, nil)
+		opts.QueryParameters.Set("hostName", *server.HostName)
+		resp, _, err := TOSession.GetServersDetails(opts)
 		if err != nil {
-			t.Errorf("cannot GET Server Details by name: %v - %v", err, resp)
+			t.Errorf("cannot get Server Details: %v - alerts: %+v", err, resp.Alerts)
 		}
-		if len(resp) == 0 {
+		if len(resp.Response) == 0 {
 			t.Fatal("no servers in response, quitting")
 		}
-		if len(resp[0].ServerInterfaces) == 0 {
+		if len(resp.Response[0].ServerInterfaces) == 0 {
 			t.Fatalf("no interfaces to check, quitting")
 		}
 		if len(server.Interfaces) == 0 {
@@ -499,35 +539,35 @@ func GetTestServersDetails(t *testing.T) {
 		}
 
 		// just check the first interface for noe
-		if resp[0].ServerInterfaces[0].RouterHostName != server.Interfaces[0].RouterHostName {
-			t.Errorf("expected router host name to be %s, but got %s", server.Interfaces[0].RouterHostName, resp[0].ServerInterfaces[0].RouterHostName)
+		if resp.Response[0].ServerInterfaces[0].RouterHostName != server.Interfaces[0].RouterHostName {
+			t.Errorf("expected router host name to be %s, but got %s", server.Interfaces[0].RouterHostName, resp.Response[0].ServerInterfaces[0].RouterHostName)
 		}
-		if resp[0].ServerInterfaces[0].RouterPortName != server.Interfaces[0].RouterPortName {
-			t.Errorf("expected router port to be %s, but got %s", server.Interfaces[0].RouterPortName, resp[0].ServerInterfaces[0].RouterPortName)
+		if resp.Response[0].ServerInterfaces[0].RouterPortName != server.Interfaces[0].RouterPortName {
+			t.Errorf("expected router port to be %s, but got %s", server.Interfaces[0].RouterPortName, resp.Response[0].ServerInterfaces[0].RouterPortName)
 		}
 	}
 }
 
 func GetTestServersQueryParameters(t *testing.T) {
-	dses, _, err := TOSession.GetDeliveryServices(nil, url.Values{"xmlId": []string{"ds1"}})
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{QueryParameters: url.Values{"xmlId": []string{"ds1"}}})
 	if err != nil {
-		t.Fatalf("Failed to get Delivery Services: %v", err)
+		t.Fatalf("Failed to get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 	}
-	if len(dses) < 1 {
+	if len(dses.Response) < 1 {
 		t.Fatal("Failed to get at least one Delivery Service")
 	}
 
-	ds := dses[0]
+	ds := dses.Response[0]
 	if ds.ID == nil {
-		t.Fatal("Got Delivery Service with nil ID")
+		t.Fatal("Traffic Ops returned a representation of a Delivery Service with null or undefined ID")
 	}
 
 	AssignTestDeliveryService(t)
-	params := url.Values{}
-	params.Add("dsId", strconv.Itoa(*ds.ID))
-	servers, _, err := TOSession.GetServers(params, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("dsId", strconv.Itoa(*ds.ID))
+	servers, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("Failed to get server by Delivery Service ID: %v", err)
+		t.Fatalf("Failed to get server by Delivery Service ID: %v - alerts: %+v", err, servers.Alerts)
 	}
 	if len(servers.Response) != 3 {
 		t.Fatalf("expected to get 3 servers for Delivery Service: %d, actual: %d", *ds.ID, len(servers.Response))
@@ -535,17 +575,16 @@ func GetTestServersQueryParameters(t *testing.T) {
 
 	currentTime := time.Now().UTC().Add(5 * time.Second)
 	timestamp := currentTime.Format(time.RFC1123)
-	var header http.Header
-	header = make(map[string][]string)
-	header.Set(rfc.IfModifiedSince, timestamp)
-	_, reqInf, _ := TOSession.GetServers(params, header)
+
+	opts.Header.Set(rfc.IfModifiedSince, timestamp)
+	_, reqInf, _ := TOSession.GetServers(opts)
 	if reqInf.StatusCode != http.StatusNotModified {
 		t.Errorf("Expected a status code of 304, got %v", reqInf.StatusCode)
 	}
 
-	dses, _, err = TOSession.GetDeliveryServices(nil, nil)
+	dses, _, err = TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Failed to get Delivery Services: %v", err)
+		t.Fatalf("Failed to get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 	}
 
 	foundTopDs := false
@@ -553,8 +592,16 @@ func GetTestServersQueryParameters(t *testing.T) {
 		topDSXmlID = "ds-top"
 		topology   = "mso-topology"
 	)
-	for _, ds = range dses {
-		if ds.XMLID == nil || *ds.XMLID != topDSXmlID {
+	for _, ds = range dses.Response {
+		if ds.XMLID == nil || ds.ID == nil {
+			t.Error("Traffic Ops returned a representation of a Delivery Service that had a null or undefined XMLID and/or ID")
+			continue
+		}
+		if *ds.XMLID != topDSXmlID {
+			continue
+		}
+		if ds.Topology == nil || ds.FirstHeaderRewrite == nil || ds.InnerHeaderRewrite == nil || ds.LastHeaderRewrite == nil {
+			t.Errorf("Traffic Ops returned a representation of Delivery Service '%s' that had a null or undefined Topology and/or First Header Rewrite text and/or Inner Header Rewrite text and/or Last Header Rewrite text", topDSXmlID)
 			continue
 		}
 		foundTopDs = true
@@ -568,32 +615,43 @@ func GetTestServersQueryParameters(t *testing.T) {
 	 * client.GetServers( response because ds-top is topology-based
 	 */
 	const otherServerHostname = "topology-edge-02"
-	serverResponse, _, err := TOSession.GetServers(url.Values{"hostName": []string{otherServerHostname}}, nil)
+	serverResponse, _, err := TOSession.GetServers(client.RequestOptions{QueryParameters: url.Values{"hostName": []string{otherServerHostname}}})
 	if err != nil {
-		t.Fatalf("getting server by hostname %s: %s", otherServerHostname, err)
+		t.Fatalf("getting server by Host Name %s: %v - alerts: %+v", otherServerHostname, err, serverResponse.Alerts)
 	}
 	if len(serverResponse.Response) != 1 {
 		t.Fatalf("unable to find server with hostname %s", otherServerHostname)
 	}
 	otherServer := serverResponse.Response[0]
+	if otherServer.ID == nil || otherServer.HostName == nil {
+		t.Fatal("Traffic Ops returned a representation of a Server that had a null or undefined ID and/or Host Name")
+	}
 
 	dsTopologyField, dsFirstHeaderRewriteField, innerHeaderRewriteField, lastHeaderRewriteField := *ds.Topology, *ds.FirstHeaderRewrite, *ds.InnerHeaderRewrite, *ds.LastHeaderRewrite
 	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = nil, nil, nil, nil
-	ds, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, nil)
+	updResp, _, err := TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("unable to temporary remove topology-related fields from deliveryservice %s: %s", topDSXmlID, err)
+		t.Fatalf("unable to temporary remove topology-related fields from deliveryservice '%s': %v - alerts: %+v", topDSXmlID, err, updResp.Alerts)
 	}
-	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*otherServer.ID}, false)
+	if len(updResp.Response) != 1 {
+		t.Fatalf("Expected updating a Delivery Service to update exactly one Delivery Service, but Traffic Ops indicates that %d were updated", len(updResp.Response))
+	}
+	ds = updResp.Response[0]
+	if ds.ID == nil {
+		t.Fatal("Traffic Ops returned a representation of a Delivery Service that had null or undefined ID")
+	}
+	assignResp, _, err := TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*otherServer.ID}, false, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("unable to assign server %s to deliveryservice %s: %s", *otherServer.HostName, topDSXmlID, err)
+		t.Fatalf("unable to assign server '%s' to Delivery Service '%s': %v - alerts: %+v", *otherServer.HostName, topDSXmlID, err, assignResp.Alerts)
 	}
 	ds.Topology, ds.FirstHeaderRewrite, ds.InnerHeaderRewrite, ds.LastHeaderRewrite = &dsTopologyField, &dsFirstHeaderRewriteField, &innerHeaderRewriteField, &lastHeaderRewriteField
-	ds, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, nil)
+	updResp, _, err = TOSession.UpdateDeliveryService(*ds.ID, ds, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("unable to re-add topology-related fields to deliveryservice %s: %s", topDSXmlID, err)
+		t.Fatalf("unable to re-add topology-related fields to deliveryservice %s: %v - alerts: %+v", topDSXmlID, err, updResp.Alerts)
 	}
 
-	params.Set("dsId", strconv.Itoa(*ds.ID))
+	opts.Header = nil
+	opts.QueryParameters.Set("dsId", strconv.Itoa(*ds.ID))
 	expectedHostnames := map[string]bool{
 		"edge1-cdn1-cg3":                 false,
 		"edge2-cdn1-cg3":                 false,
@@ -602,14 +660,17 @@ func GetTestServersQueryParameters(t *testing.T) {
 		"edgeInCachegroup3":              false,
 		"midInSecondaryCachegroupInCDN1": false,
 	}
-	response, _, err := TOSession.GetServers(params, nil)
+	response, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s: %s", topDSXmlID, err)
+		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s: %v - alerts: %+v", topDSXmlID, err, response.Alerts)
 	}
 	if len(response.Response) == 0 {
-		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s: %s", topDSXmlID, err)
+		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s", topDSXmlID)
 	}
 	for _, server := range response.Response {
+		if server.HostName == nil {
+			t.Fatal("Traffic Ops responded with a representation for a server with null or undefined Host Name")
+		}
 		if _, exists := expectedHostnames[*server.HostName]; !exists {
 			t.Fatalf("expected hostnames %v, actual %s", expectedHostnames, *server.HostName)
 		}
@@ -625,19 +686,19 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Fatalf("%d servers missing from the response: %s", len(notInResponse), strings.Join(notInResponse, ", "))
 	}
 	const originHostname = "denver-mso-org-01"
-	if _, _, err = TOSession.AssignServersToDeliveryService([]string{originHostname}, topDSXmlID); err != nil {
-		t.Fatalf("assigning origin server %s to delivery service %s: %s", originHostname, topDSXmlID, err.Error())
+	if resp, _, err := TOSession.AssignServersToDeliveryService([]string{originHostname}, topDSXmlID, client.RequestOptions{}); err != nil {
+		t.Fatalf("assigning origin server '%s' to Delivery Service '%s': %v - alerts: %+v", originHostname, topDSXmlID, err, resp.Alerts)
 	}
-	response, _, err = TOSession.GetServers(params, nil)
+	response, _, err = TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s: %s", topDSXmlID, err)
+		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s: %v - alerts: %+v", topDSXmlID, err, response.Alerts)
 	}
 	if len(response.Response) == 0 {
-		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s: %s", topDSXmlID, err)
+		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s", topDSXmlID)
 	}
 	containsOrigin := false
 	for _, server := range response.Response {
-		if *server.HostName != originHostname {
+		if server.HostName == nil || *server.HostName != originHostname {
 			continue
 		}
 		containsOrigin = true
@@ -648,21 +709,21 @@ func GetTestServersQueryParameters(t *testing.T) {
 	}
 
 	const topDsWithNoMids = "ds-based-top-with-no-mids"
-	dses, _, err = TOSession.GetDeliveryServices(nil, url.Values{"xmlId": []string{topDsWithNoMids}})
+	dses, _, err = TOSession.GetDeliveryServices(client.RequestOptions{QueryParameters: url.Values{"xmlId": []string{topDsWithNoMids}}})
 	if err != nil {
-		t.Fatalf("Failed to get Delivery Services: %v", err)
+		t.Fatalf("Failed to get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 	}
-	if len(dses) < 1 {
+	if len(dses.Response) < 1 {
 		t.Fatal("Failed to get at least one Delivery Service")
 	}
 
-	ds = dses[0]
+	ds = dses.Response[0]
 	if ds.ID == nil {
 		t.Fatal("Got Delivery Service with nil ID")
 	}
-	params.Set("dsId", strconv.Itoa(*ds.ID))
+	opts.QueryParameters.Set("dsId", strconv.Itoa(*ds.ID))
 
-	response, _, err = TOSession.GetServers(params, nil)
+	response, _, err = TOSession.GetServers(opts)
 	if err != nil {
 		t.Fatalf("Failed to get servers by Topology-based Delivery Service ID with xmlId %s: %s", topDsWithNoMids, err)
 	}
@@ -670,13 +731,16 @@ func GetTestServersQueryParameters(t *testing.T) {
 		t.Fatalf("Did not find any servers for Topology-based Delivery Service with xmlId %s: %s", topDsWithNoMids, err)
 	}
 	for _, server := range response.Response {
-		if tc.CacheTypeFromString(server.Type) == tc.CacheTypeMid {
+		if server.HostName == nil {
+			t.Fatal("Traffic Ops returned a server with null or undefined Host Name")
+		}
+		if server.Type == tc.CacheTypeMid.String() {
 			t.Fatalf("Expected to find no %s-typed servers when querying servers by the ID for Delivery Service with XMLID %s but found %s-typed server %s", tc.CacheTypeMid, topDsWithNoMids, tc.CacheTypeMid, *server.HostName)
 		}
 	}
 
-	params.Del("dsId")
-	params.Add("topology", topology)
+	opts.QueryParameters.Del("dsId")
+	opts.QueryParameters.Set("topology", topology)
 	expectedHostnames = map[string]bool{
 		originHostname:                   false,
 		"denver-mso-org-02":              false,
@@ -690,14 +754,17 @@ func GetTestServersQueryParameters(t *testing.T) {
 		"midInSecondaryCachegroup":       false,
 		"midInSecondaryCachegroupInCDN1": false,
 	}
-	response, _, err = TOSession.GetServers(params, nil)
+	response, _, err = TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("Failed to get servers belonging to cachegroups in topology %s: %s", topology, err)
+		t.Fatalf("Failed to get servers belonging to Cache Groups in Topology %s: %v - alerts: %+v", topology, err, response.Alerts)
 	}
 	if len(response.Response) == 0 {
-		t.Fatalf("Did not find any servers belonging to cachegroups in topology %s: %s", topology, err)
+		t.Fatalf("Did not find any servers belonging to Cache Groups in Topology %s:", topology)
 	}
 	for _, server := range response.Response {
+		if server.HostName == nil {
+			t.Fatal("Traffic Ops returned a server with null or undefined Host Name")
+		}
 		if _, exists := expectedHostnames[*server.HostName]; !exists {
 			t.Fatalf("expected hostnames %v, actual %s", expectedHostnames, *server.HostName)
 		}
@@ -712,75 +779,75 @@ func GetTestServersQueryParameters(t *testing.T) {
 	if len(notInResponse) != 0 {
 		t.Fatalf("%d servers missing from the response: %s", len(notInResponse), strings.Join(notInResponse, ", "))
 	}
-	params.Del("topology")
+	opts.QueryParameters.Del("topology")
 
-	resp, _, err := TOSession.GetServers(nil, nil)
+	resp, _, err := TOSession.GetServers(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Failed to get servers: %v", err)
+		t.Fatalf("Failed to get servers: %v - alerts: %+v", err, resp.Alerts)
 	}
 
 	if len(resp.Response) < 1 {
-		t.Fatalf("Failed to get at least one server")
+		t.Fatal("Failed to get at least one server")
 	}
 
 	s := resp.Response[0]
 
-	params.Add("type", s.Type)
-	if _, _, err := TOSession.GetServers(params, nil); err != nil {
-		t.Errorf("Error getting servers by type: %v", err)
+	opts.QueryParameters.Set("type", s.Type)
+	if resp, _, err := TOSession.GetServers(opts); err != nil {
+		t.Errorf("Error getting servers by Type: %v - alerts: %+v", err, resp.Alerts)
 	}
-	params.Del("type")
+	opts.QueryParameters.Del("type")
 
 	if s.CachegroupID == nil {
 		t.Error("Found server with no Cache Group ID")
 	} else {
-		params.Add("cachegroup", strconv.Itoa(*s.CachegroupID))
-		if _, _, err := TOSession.GetServers(params, nil); err != nil {
-			t.Errorf("Error getting servers by Cache Group ID: %v", err)
+		opts.QueryParameters.Add("cachegroup", strconv.Itoa(*s.CachegroupID))
+		if resp, _, err := TOSession.GetServers(opts); err != nil {
+			t.Errorf("Error getting servers by Cache Group ID: %v - alerts: %+v", err, resp.Alerts)
 		}
-		params.Del("cachegroup")
+		opts.QueryParameters.Del("cachegroup")
 	}
 
 	if s.Status == nil {
 		t.Error("Found server with no status")
 	} else {
-		params.Add("status", *s.Status)
-		if _, _, err := TOSession.GetServers(params, nil); err != nil {
-			t.Errorf("Error getting servers by status: %v", err)
+		opts.QueryParameters.Add("status", *s.Status)
+		if resp, _, err := TOSession.GetServers(opts); err != nil {
+			t.Errorf("Error getting servers by status: %v - alerts: %+v", err, resp.Alerts)
 		}
-		params.Del("status")
+		opts.QueryParameters.Del("status")
 	}
 
 	if s.ProfileID == nil {
 		t.Error("Found server with no Profile ID")
 	} else {
-		params.Add("profileId", strconv.Itoa(*s.ProfileID))
-		if _, _, err := TOSession.GetServers(params, nil); err != nil {
-			t.Errorf("Error getting servers by Profile ID: %v", err)
+		opts.QueryParameters.Add("profileId", strconv.Itoa(*s.ProfileID))
+		if resp, _, err := TOSession.GetServers(opts); err != nil {
+			t.Errorf("Error getting servers by Profile ID: %v - alerts: %+v", err, resp.Alerts)
 		}
-		params.Del("profileId")
+		opts.QueryParameters.Del("profileId")
 	}
 
-	cgs, _, err := TOSession.GetCacheGroups(nil, nil)
+	cgs, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("Failed to get Cache Groups: %v", err)
 	}
-	if len(cgs) < 1 {
+	if len(cgs.Response) < 1 {
 		t.Fatal("Failed to get at least one Cache Group")
 	}
-	if cgs[0].ID == nil {
+	if cgs.Response[0].ID == nil {
 		t.Fatal("Cache Group found with no ID")
 	}
 
-	params.Add("parentCacheGroup", strconv.Itoa(*cgs[0].ID))
-	if _, _, err = TOSession.GetServers(params, nil); err != nil {
-		t.Errorf("Error getting servers by parentCacheGroup: %v", err)
+	opts.QueryParameters.Add("parentCacheGroup", strconv.Itoa(*cgs.Response[0].ID))
+	if resp, _, err = TOSession.GetServers(opts); err != nil {
+		t.Errorf("Error getting servers by parent Cache Group: %v - alerts: %+v", err, resp.Alerts)
 	}
-	params.Del("parentCacheGroup")
+	opts.QueryParameters.Del("parentCacheGroup")
 }
 
 func UniqueIPProfileTestServers(t *testing.T) {
-	serversResp, _, err := TOSession.GetServers(nil, nil)
+	serversResp, _, err := TOSession.GetServers(client.RequestOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -816,24 +883,27 @@ func UniqueIPProfileTestServers(t *testing.T) {
 			XMPPID:       &xmppID,
 		},
 		Interfaces: server.Interfaces,
-	}, nil)
+	}, client.RequestOptions{})
 
 	if err == nil {
 		t.Error("expected an error when updating a server with an ipaddress that already exists on another server with the same profile")
 		// Cleanup, don't want to break other tests
-		pathParams := url.Values{}
-		pathParams.Add("xmppid", xmppID)
-		server, _, err := TOSession.GetServers(pathParams, nil)
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Add("xmppid", xmppID)
+		server, _, err := TOSession.GetServers(opts)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("Unexpected error getting servers filtered by XMPPID '%s': %v - alerts: %+v", xmppID, err, server.Alerts)
 		}
-		_, _, err = TOSession.DeleteServer(*server.Response[0].ID, nil)
+		if len(server.Response) < 1 {
+			t.Fatalf("Expected at least one server to exist with XMPPID '%s'", xmppID)
+		}
+		alerts, _, err := TOSession.DeleteServer(*server.Response[0].ID, client.RequestOptions{})
 		if err != nil {
-			t.Fatalf("unable to delete server: %v", err)
+			t.Fatalf("unable to delete server: %v - alerts: %+v", err, alerts.Alerts)
 		}
 	}
 
-	var changed bool
+	changed := false
 	for i, interf := range server.Interfaces {
 		if interf.Monitor {
 			for j, ip := range interf.IPAddresses {
@@ -847,9 +917,9 @@ func UniqueIPProfileTestServers(t *testing.T) {
 	if !changed {
 		t.Fatal("did not find ip address to update")
 	}
-	_, _, err = TOSession.UpdateServer(*server.ID, server, nil)
+	alerts, _, err := TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("expected update to pass: %s", err)
+		t.Fatalf("expected update to pass: %v - alerts: %+v", err, alerts.Alerts)
 	}
 }
 
@@ -864,13 +934,13 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	hostName := *firstServer.HostName
-	params := url.Values{}
-	params.Add("hostName", hostName)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Add("hostName", hostName)
 
 	// Retrieve the server by hostname so we can get the id for the Update
-	resp, _, err := TOSession.GetServers(params, nil)
+	resp, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("cannot GET Server by hostname '%s': %v - %v", hostName, err, resp.Alerts)
+		t.Fatalf("cannot get Server by hostname '%s': %v - alerts: %+v", hostName, err, resp.Alerts)
 	}
 	if len(resp.Response) < 1 {
 		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
@@ -881,27 +951,27 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	remoteServer := resp.Response[0]
-	if remoteServer.ID == nil {
-		t.Fatalf("Got null ID for server '%s'", hostName)
+	if remoteServer.ID == nil || remoteServer.HostName == nil || remoteServer.XMPPID == nil {
+		t.Fatalf("Traffic Ops returned a representation for server '%s' with null or undefined ID and/or Host Name and/or XMPPID", hostName)
 	}
 
-	originalHostname := *resp.Response[0].HostName
-	originalXMPIDD := *resp.Response[0].XMPPID
+	originalHostname := *remoteServer.HostName
+	originalXMPIDD := *remoteServer.XMPPID
 
 	// Creating idParam to get server when hostname changes.
-	id := fmt.Sprintf("%v", *resp.Response[0].ID)
-	idParam := url.Values{}
-	idParam.Add("id", id)
+	id := fmt.Sprintf("%v", *remoteServer.ID)
+	idOpts := client.NewRequestOptions()
+	idOpts.QueryParameters.Add("id", id)
 
 	infs := remoteServer.Interfaces
 	if len(infs) < 1 {
 		t.Fatalf("Expected server '%s' to have at least one network interface", hostName)
 	}
 	inf := infs[0]
-	if resp.Response[0].Interfaces[0].MTU == nil {
+	if remoteServer.Interfaces[0].MTU == nil {
 		t.Fatalf("got null value for interface MTU related to server %s", hostName)
 	}
-	originalMTU := *resp.Response[0].Interfaces[0].MTU
+	originalMTU := *remoteServer.Interfaces[0].MTU
 
 	updatedServerInterface := "bond1"
 	updatedServerRack := "RR 119.03"
@@ -917,15 +987,15 @@ func UpdateTestServers(t *testing.T) {
 	remoteServer.HostName = &updatedHostName
 	remoteServer.Interfaces[0].MTU = &updatedMTU
 
-	alerts, _, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, nil)
+	alerts, _, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alerts)
+		t.Fatalf("cannot update Server by ID %d (hostname '%s'): %v - alerts: %+v", *remoteServer.ID, hostName, err, alerts.Alerts)
 	}
 
 	// Retrieve the server to check rack, interfaceName, hostName and MTU values were updated
-	resp, _, err = TOSession.GetServers(idParam, nil)
+	resp, _, err = TOSession.GetServers(idOpts)
 	if err != nil {
-		t.Errorf("cannot GET Server by ID: %v - %v", *remoteServer.HostName, err)
+		t.Errorf("cannot get Server: %v - alerts: %+v", err, resp.Alerts)
 	}
 	if len(resp.Response) < 1 {
 		t.Fatalf("Expected at least one server to exist by hostname '%s'", hostName)
@@ -936,6 +1006,9 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	respServer := resp.Response[0]
+	if respServer.HostName == nil || respServer.XMPPID == nil {
+		t.Fatal("Traffic Ops returned a representation for a server with null or undefined Host Name and/or XMPPID")
+	}
 	infs = respServer.Interfaces
 	found := false
 	for _, inf = range infs {
@@ -975,41 +1048,47 @@ func UpdateTestServers(t *testing.T) {
 
 	//Check to verify XMPPID never gets updated
 	remoteServer.XMPPID = &updatedXMPPID
-	al, reqInf, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, nil)
+	al, reqInf, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, client.RequestOptions{})
 	if err != nil && reqInf.StatusCode != http.StatusBadRequest {
-		t.Logf("error making sure that XMPPID does not get updated, %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, al)
+		t.Errorf("error making sure that XMPPID does not get updated, %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, al.Alerts)
 	}
 
 	//Change back hostname, xmppid, mtu to its original name for other tests to pass
 	remoteServer.HostName = &originalHostname
 	remoteServer.XMPPID = &originalXMPIDD
 	remoteServer.Interfaces[0].MTU = &originalMTU
-	alert, _, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, nil)
+	alert, _, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alert)
 	}
-	resp, _, err = TOSession.GetServers(params, nil)
+	resp, _, err = TOSession.GetServers(opts)
 	if err != nil {
-		t.Errorf("cannot GET Server by hostName: %v - %v", originalHostname, err)
+		t.Errorf("cannot get Server by Host Name '%s': %v - alerts: %+v", originalHostname, err, resp.Alerts)
 	}
 
 	// Assign server to DS and then attempt to update to a different type
-	dses, _, err := TOSession.GetDeliveryServices(nil, nil)
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("cannot GET DeliveryServices: %v", err)
+		t.Fatalf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
 	}
-	if len(dses) < 1 {
+	if len(dses.Response) < 1 {
 		t.Fatal("GET DeliveryServices returned no dses, must have at least 1 to test invalid type server update")
 	}
-
-	serverTypes, _, err := TOSession.GetTypes(nil, "server")
-	if err != nil {
-		t.Fatalf("cannot GET Server Types: %v", err)
+	ds := dses.Response[0]
+	if ds.ID == nil {
+		t.Fatal("Traffic Ops returned a representation of a Delivery Servvice with a null or undefined ID")
 	}
-	if len(serverTypes) < 2 {
+
+	typeOpts := client.NewRequestOptions()
+	typeOpts.QueryParameters.Set("useInTable", "server")
+	serverTypes, _, err := TOSession.GetTypes(opts)
+	if err != nil {
+		t.Fatalf("cannot get Server Types: %v - alerts: %+v", err, serverTypes.Alerts)
+	}
+	if len(serverTypes.Response) < 2 {
 		t.Fatal("GET Server Types returned less then 2 types, must have at least 2 to test invalid type server update")
 	}
-	for _, t := range serverTypes {
+	for _, t := range serverTypes.Response {
 		if t.ID != *remoteServer.TypeID {
 			remoteServer.TypeID = &t.ID
 			break
@@ -1017,13 +1096,13 @@ func UpdateTestServers(t *testing.T) {
 	}
 
 	// Assign server to DS
-	_, _, err = TOSession.CreateDeliveryServiceServers(*dses[0].ID, []int{*remoteServer.ID}, true)
+	assignResp, _, err := TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*remoteServer.ID}, true, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("POST delivery service servers: %v", err)
+		t.Fatalf("Unexpected error creating server-to-Delivery-Service assignments: %v - alerts: %+v", err, assignResp.Alerts)
 	}
 
 	// Attempt Update - should fail
-	alerts, _, err = TOSession.UpdateServer(*remoteServer.ID, remoteServer, nil)
+	alerts, _, err = TOSession.UpdateServer(*remoteServer.ID, remoteServer, client.RequestOptions{})
 	if err == nil {
 		t.Errorf("expected error when updating Server Type of a server assigned to DSes")
 	} else {
@@ -1032,7 +1111,7 @@ func UpdateTestServers(t *testing.T) {
 }
 
 func DeleteTestServers(t *testing.T) {
-	params := url.Values{}
+	opts := client.NewRequestOptions()
 
 	for _, server := range testData.Servers {
 		if server.HostName == nil {
@@ -1040,11 +1119,11 @@ func DeleteTestServers(t *testing.T) {
 			continue
 		}
 
-		params.Set("hostName", *server.HostName)
+		opts.QueryParameters.Set("hostName", *server.HostName)
 
-		resp, _, err := TOSession.GetServers(params, nil)
+		resp, _, err := TOSession.GetServers(opts)
 		if err != nil {
-			t.Errorf("cannot GET Server by hostname '%s': %v - %v", *server.HostName, err, resp.Alerts)
+			t.Errorf("cannot get Server by Host Name '%s': %v - alerts: %+v", *server.HostName, err, resp.Alerts)
 			continue
 		}
 		if len(resp.Response) > 0 {
@@ -1059,16 +1138,16 @@ func DeleteTestServers(t *testing.T) {
 				continue
 			}
 
-			delResp, _, err := TOSession.DeleteServer(*respServer.ID, nil)
+			delResp, _, err := TOSession.DeleteServer(*respServer.ID, client.RequestOptions{})
 			if err != nil {
-				t.Errorf("cannot DELETE Server by ID %d: %v - %v", *respServer.ID, err, delResp)
+				t.Errorf("cannot delete Server by ID %d: %v - alerts: %+v", *respServer.ID, err, delResp.Alerts)
 				continue
 			}
 
 			// Retrieve the Server to see if it got deleted
-			resp, _, err := TOSession.GetServers(params, nil)
+			resp, _, err := TOSession.GetServers(opts)
 			if err != nil {
-				t.Errorf("error deleting Server hostname '%s': %v - %v", *server.HostName, err, resp.Alerts)
+				t.Errorf("error filtering Servers by hostname '%s' after supposed deletion: %v - alerts: %+v", *server.HostName, err, resp.Alerts)
 			}
 			if len(resp.Response) > 0 {
 				t.Errorf("expected Server hostname: %s to be deleted", *server.HostName)
@@ -1078,11 +1157,11 @@ func DeleteTestServers(t *testing.T) {
 }
 
 func GetServersForNonExistentDeliveryService(t *testing.T) {
-	params := url.Values{}
-	params.Set("dsId", "999999")
-	resp, reqInf, err := TOSession.GetServers(params, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("dsId", "999999")
+	resp, reqInf, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Errorf("error getting the servers for DS with ID %d: %v", 999999, err.Error())
+		t.Errorf("error getting the servers for DS with ID %d: %v - alerts: %+v", 999999, err, resp.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusOK {
 		t.Errorf("expected status code of 200, but got %d", reqInf.StatusCode)

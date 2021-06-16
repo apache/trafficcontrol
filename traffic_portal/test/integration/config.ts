@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { readFileSync } from "fs";
 import { resolve } from "path";
 
 import { emptyDir } from "fs-extra";
@@ -26,8 +25,9 @@ import HtmlReporter from "protractor-beautiful-reporter";
 
 import { API } from './CommonUtils/API';
 import * as conf from "./config.json"
+import { prerequisites } from "./Data";
 
-let downloadsPath = resolve('Downloads');
+const downloadsPath = resolve('Downloads');
 export const randomize = Math.random().toString(36).substring(3, 7);
 export const twoNumberRandomize = Math.floor(Math.random() * 101);
 
@@ -66,8 +66,6 @@ config.onPrepare = async function () {
         }).getJasmine2Reporter());
     }
 
-    let api = new API();
-    let setupFile = 'Data/Prerequisites/user.setup.json';
-    let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-    await api.UseAPI(setupData);
+    const api = new API();
+    await api.UseAPI(prerequisites);
 }

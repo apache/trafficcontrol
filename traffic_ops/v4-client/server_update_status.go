@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,13 +15,10 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"strings"
+	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -27,14 +26,11 @@ import (
 
 // UpdateServerStatus updates the Status of the server identified by
 // 'serverID'.
-func (to *Session) UpdateServerStatus(serverID int, req tc.ServerPutStatus) (*tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateServerStatus(serverID int, req tc.ServerPutStatus, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	path := fmt.Sprintf("servers/%d/status", serverID)
-	alerts := tc.Alerts{}
-	reqInf, err := to.put(path, req, nil, &alerts)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	return &alerts, reqInf, nil
+	var alerts tc.Alerts
+	reqInf, err := to.put(path, opts, req, &alerts)
+	return alerts, reqInf, err
 }
 
 var queueUpdateActions = map[bool]string{
@@ -45,33 +41,43 @@ var queueUpdateActions = map[bool]string{
 // SetServerQueueUpdate set the "updPending" field of th eserver identified by
 // 'serverID' to the value of 'queueUpdate - and properly queues updates on
 // parents/children as necessary.
-func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool) (tc.ServerQueueUpdateResponse, toclientlib.ReqInf, error) {
+func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool, opts RequestOptions) (tc.ServerQueueUpdateResponse, toclientlib.ReqInf, error) {
 	req := tc.ServerQueueUpdateRequest{Action: queueUpdateActions[queueUpdate]}
-	resp := tc.ServerQueueUpdateResponse{}
+	var resp tc.ServerQueueUpdateResponse
 	path := fmt.Sprintf("/servers/%d/queue_update", serverID)
-	reqInf, err := to.post(path, req, nil, &resp)
+	reqInf, err := to.post(path, opts, req, &resp)
 	return resp, reqInf, err
 }
 
 // SetUpdateServerStatuses updates a server's queue status and/or reval status.
 // Either updateStatus or revalStatus may be nil, in which case that status
 // isn't updated (but not both, because that wouldn't do anything).
-func (to *Session) SetUpdateServerStatuses(serverName string, updateStatus *bool, revalStatus *bool) (toclientlib.ReqInf, error) {
+func (to *Session) SetUpdateServerStatuses(serverName string, updateStatus *bool, revalStatus *bool, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
 	if updateStatus == nil && revalStatus == nil {
-		return reqInf, errors.New("either updateStatus or revalStatus must be non-nil; nothing to do")
+		return tc.Alerts{}, reqInf, errors.New("either updateStatus or revalStatus must be non-nil; nothing to do")
 	}
 
-	path := `/servers/` + serverName + `/update?`
-	queryParams := []string{}
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+
 	if updateStatus != nil {
-		queryParams = append(queryParams, `updated=`+strconv.FormatBool(*updateStatus))
+		if *updateStatus {
+			opts.QueryParameters.Set("updated", "true")
+		} else {
+			opts.QueryParameters.Set("updated", "false")
+		}
 	}
 	if revalStatus != nil {
-		queryParams = append(queryParams, `reval_updated=`+strconv.FormatBool(*revalStatus))
+		if *revalStatus {
+			opts.QueryParameters.Set("reval_updated", "true")
+		} else {
+			opts.QueryParameters.Set("reval_updated", "false")
+		}
 	}
-	path += strings.Join(queryParams, `&`)
-	alerts := tc.Alerts{}
-	reqInf, err := to.post(path, nil, nil, &alerts)
-	return reqInf, err
+	var alerts tc.Alerts
+	path := `/servers/` + url.PathEscape(serverName) + `/update`
+	reqInf, err := to.post(path, opts, nil, &alerts)
+	return alerts, reqInf, err
 }

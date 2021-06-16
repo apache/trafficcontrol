@@ -70,12 +70,15 @@ from struct import unpack, pack
 # Paths for output configuration files
 DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/database.conf"
 DB_CONF_FILE = "/opt/traffic_ops/app/db/dbconf.yml"
+TV_DATABASE_CONF_FILE = "/opt/traffic_ops/app/conf/production/tv.conf"
+TV_DB_CONF_FILE = "/opt/traffic_ops/app/db/trafficvault/dbconf.yml"
 CDN_CONF_FILE = "/opt/traffic_ops/app/conf/cdn.conf"
 LDAP_CONF_FILE = "/opt/traffic_ops/app/conf/ldap.conf"
 USERS_CONF_FILE = "/opt/traffic_ops/install/data/json/users.json"
 PROFILES_CONF_FILE = "/opt/traffic_ops/install/data/profiles/"
 OPENSSL_CONF_FILE = "/opt/traffic_ops/install/data/json/openssl_configuration.json"
 PARAM_CONF_FILE = "/opt/traffic_ops/install/data/json/profiles.json"
+TRAFFIC_VAULT_AES_KEY_FILE = "/opt/traffic_ops/app/conf/aes.key"
 
 
 POST_INSTALL_CFG = "/opt/traffic_ops/install/data/json/post_install.json"
@@ -229,10 +232,13 @@ DEFAULTS = {
 		Question("Traffic Ops database user", "traffic_ops", "user"),
 		Question("Password for Traffic Ops database user", "", "password", hidden=True)
 	],
-	DB_CONF_FILE: [
-		Question("Database server root (admin) user", "postgres", "pgUser"),
-		Question("Password for database server admin", "", "pgPassword", hidden=True),
-		Question("Download Maxmind Database?", "yes", "maxmind")
+	TV_DATABASE_CONF_FILE: [
+		Question("Traffic Vault Database type", "Pg", "type"),
+		Question("Traffic Vault Database name", "traffic_vault", "dbname"),
+		Question("Traffic Vault Database server hostname IP or FQDN", "localhost", "hostname"),
+		Question("Traffic Vault Database port number", "5432", "port"),
+		Question("Traffic Vault database user", "traffic_vault", "user"),
+		Question("Password for Traffic Vault database user", "", "password", hidden=True)
 	],
 	CDN_CONF_FILE: [
 		Question("Generate a new secret?", "yes", "genSecret"),
@@ -240,7 +246,7 @@ DEFAULTS = {
 		Question("Port to serve on?", "443", "port"),
 		Question("Number of workers?", "12", "workers"),
 		Question("Traffic Ops url?", "http://localhost:3000", "base_url"),
-		Question("ldap.conf location?", "/opt/traffic_ops/app/conf/ldap.conf", "ldap_conf_location")
+		Question("ldap.conf location?", "/opt/traffic_ops/app/conf/ldap.conf", "ldap_conf_location"),
 	],
 	LDAP_CONF_FILE:[
 		Question("Do you want to set up LDAP?", "no", "setupLdap"),
@@ -338,13 +344,12 @@ def generate_db_conf(qstns, fname, automatic, root): # (list[Question], str, boo
 
 	return db_conf
 
-def generate_todb_conf(qstns, fname, auto, root, conf): # (list, str, bool, str, dict) -> dict
+def generate_todb_conf(fname, root, conf): # (str, str, dict)
 	"""
-	Generates the dbconf.yml file and returns a map of its configuration.
+	Generates the dbconf.yml file.
 
 	Also writes the configuration file to the file 'fname' under the directory 'root'.
 	"""
-	todbconf = get_config(qstns, fname, auto)
 
 	driver = "postgres"
 	if "type" not in conf:
@@ -364,8 +369,6 @@ def generate_todb_conf(qstns, fname, auto, root, conf): # (list, str, bool, str,
 		print("production:", file=conf_file)
 		print("    driver:", driver, file=conf_file)
 		print("    open: {open_line} sslmode=disable".format(open_line=open_line), file=conf_file)
-
-	return todbconf
 
 def generate_ldap_conf(questions, fname, automatic, root): # type: (list[Question], str, bool, str) -> None
 	"""
@@ -711,49 +714,24 @@ def unmarshal_config(dct): # type: (dict) -> dict[str, list[Question]]
 
 	return ret
 
-def setup_maxmind(maxmind_answer, root, download_tool = '/usr/bin/wget'): # type: (str, str, str) -> None
+def write_encryption_key(aes_key_location): # type: (str) -> None
 	"""
-	If 'maxmind_answer' is a truthy response ('y' or 'yes' (case-insensitive), sets up a Maxmind
-	database using `wget`.
+	Creates an AES encryption key for the postgres traffic vault backend
+
+	:param aes_key_location: Denotes the location of the aes encryption key file
+	:returns: None
 	"""
-	if maxmind_answer.lower() not in {'y', 'yes'}:
-		logging.info("Not downloading Maxmind data")
-		return
 
-	os.chdir(os.path.join(root, 'opt/traffic_ops/app/public/routing'))
-
-	def failed_download(e, ip_version):  # type: (Exception, int) -> None
-		logging.error("Failed to download MaxMind data")
-		logging.debug("(ipv%d) Exception: %s", ip_version, e)
-
-	cmd = [download_tool, "https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz"]
-	# Perl ignored errors downloading the databases, so we do too
-	try:
-		subprocess.check_call(
-			cmd,
-			stderr=subprocess.PIPE,
-			stdout=subprocess.PIPE,
-			universal_newlines=True
-		)
-	except (subprocess.CalledProcessError, OSError) as e:
-		failed_download(e, 4)
-	except subprocess.SubprocessError as e:
-		failed_download(e, 4)
-
-	cmd[1] = (
-		"https://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz"
+	args = (
+		"rand",
+		"-out",
+		aes_key_location,
+		"-base64",
+		"32"
 	)
-	try:
-		subprocess.check_call(
-			cmd,
-			stderr=subprocess.PIPE,
-			stdout=subprocess.PIPE,
-			universal_newlines=True
-		)
-	except (subprocess.CalledProcessError, OSError) as e:
-		failed_download(e, 6)
-	except subprocess.SubprocessError as e:
-		failed_download(e, 6)
+	if not exec_openssl("Generating an AES encryption key to {loc}".format(loc=aes_key_location), *args):
+		logging.debug("AES key generation failed")
+		raise OSError("failed to generate AES key")
 
 def exec_openssl(description, *cmd_args): # type: (str, ...) -> bool
 	"""
@@ -950,11 +928,12 @@ def random_word(length = 12): # type: (int) -> str
 	word_chars = string.ascii_letters + string.digits + '_'
 	return ''.join(random.choice(word_chars) for _ in range(length))
 
-def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question], str, bool, str) -> None
+def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question], str, bool, str) -> bool
 	"""
 	Generates some properties of a cdn.conf file based on the passed questions.
 
 	This modifies or writes the file 'fname' under the directory 'root'.
+	:returns: A boolean value denoting whether or not a postgres traffic vault backend is configured.
 	"""
 	cdn_conf = get_config(questions, fname, automatic)
 
@@ -1041,6 +1020,8 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 	existing_conf["traffic_ops_golang"]["log_location_error"] = err_log
 	access_log = os.path.join(root, "var/log/traffic_ops/access.log")
 	existing_conf["traffic_ops_golang"]["log_location_event"] = access_log
+	traffic_vault_backend = "postgres"
+	tv_aes_key_location = os.path.join(root, TRAFFIC_VAULT_AES_KEY_FILE.lstrip('/'))
 
 	if "hypnotoad" not in existing_conf or not isinstance(existing_conf["hypnotoad"], dict):
 		existing_conf["hypnotoad"]["workers"] = conf.num_workers
@@ -1049,6 +1030,19 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 		json.dump(existing_conf, conf_file, indent=indent)
 		print(file=conf_file)
 	logging.info("CDN configuration has been saved")
+	try:
+		traffic_vault_backend = existing_conf["traffic_ops_golang"]["traffic_vault_backend"]
+	except KeyError as e:
+		logging.warning("no traffic vault backend configured, using default postgres")
+
+	if traffic_vault_backend == "postgres":
+		try:
+			tv_aes_key_location = existing_conf["traffic_ops_golang"]["traffic_vault_config"]["aes_key_location"]
+		except KeyError as e:
+			logging.warning("no traffic vault aes encryption key location specified, using default %s", TRAFFIC_VAULT_AES_KEY_FILE)
+		write_encryption_key(tv_aes_key_location)
+
+	return traffic_vault_backend == "postgres"
 
 def db_connection_string(dbconf): # type: (dict) -> str
 	"""
@@ -1087,7 +1081,7 @@ def exec_psql(conn_str, query, **args): # type: (str, str, dict) -> str
 	else:
 		return string.strip(output[0])
 
-def invoke_db_admin_pl(action, root): # type: (str, str) -> None
+def invoke_db_admin_pl(action, root, tv): # type: (str, str, bool) -> None
 	"""
 	Exectues admin with the given action, and looks for it from the given root directory.
 	"""
@@ -1096,6 +1090,8 @@ def invoke_db_admin_pl(action, root): # type: (str, str) -> None
 	# should be fixed at some point, IMO, but for now this works.
 	os.chdir(path)
 	cmd = [os.path.join(path, "db/admin"), "--env=production", action]
+	if tv:
+		cmd = [os.path.join(path, "db/admin"), "--trafficvault","--env=production", action]
 	proc = subprocess.Popen(
 		cmd,
 		stderr=subprocess.PIPE,
@@ -1108,7 +1104,7 @@ def invoke_db_admin_pl(action, root): # type: (str, str) -> None
 		raise OSError("Database {action} failed".format(action=action))
 	logging.info("Database %s succeeded", action)
 
-def setup_database_data(conn_str, user, param_conf, root): # type: (str, User, dict, str) -> None
+def setup_database_data(conn_str, user, param_conf, root, postgresTV): # type: (str, User, dict, str, bool) -> None
 	"""
 	Sets up all necessary initial database data using `/usr/bin/sql`
 	"""
@@ -1125,11 +1121,17 @@ def setup_database_data(conn_str, user, param_conf, root): # type: (str, User, d
 	if exec_psql(conn_str, tables_found_query) == "t":
 		logging.info("Found existing tables skipping table creation")
 	else:
-		invoke_db_admin_pl("load_schema", root)
+		invoke_db_admin_pl("load_schema", root, False)
 
-	invoke_db_admin_pl("migrate", root)
-	invoke_db_admin_pl("seed", root)
-	invoke_db_admin_pl("patch", root)
+	invoke_db_admin_pl("migrate", root, False)
+	invoke_db_admin_pl("seed", root, False)
+	invoke_db_admin_pl("patch", root, False)
+
+	if postgresTV:
+		invoke_db_admin_pl("create_user", root, True)
+		invoke_db_admin_pl("createdb", root, True)
+		invoke_db_admin_pl("load_schema", root, True)
+		invoke_db_admin_pl("migrate", root, True)
 
 	hashed_pass = hash_pass(user.password)
 	insert_admin_query = '''
@@ -1237,6 +1239,7 @@ no_database, # type: bool
 	Runs the main routine given the parsed arguments as input.
 	:rtype: int
 	"""
+	postgresTV = False
 	if debug:
 		logging.getLogger().setLevel(logging.DEBUG)
 	else:
@@ -1289,7 +1292,11 @@ no_database, # type: bool
 
 	try:
 		dbconf = generate_db_conf(user_input[DATABASE_CONF_FILE], DATABASE_CONF_FILE, automatic, root_dir)
-		todbconf = generate_todb_conf(user_input[DB_CONF_FILE], DB_CONF_FILE, automatic, root_dir, dbconf)
+		generate_todb_conf(DB_CONF_FILE, root_dir, dbconf)
+		# the new "/opt/traffic_ops/app/conf/production/tv.conf" section for Traffic Vault PostgreSQL backend is optional
+		if TV_DATABASE_CONF_FILE in user_input:
+			tv_dbconf = generate_db_conf(user_input[TV_DATABASE_CONF_FILE], TV_DATABASE_CONF_FILE, automatic, root_dir)
+			generate_todb_conf(TV_DB_CONF_FILE, root_dir, tv_dbconf)
 		generate_ldap_conf(user_input[LDAP_CONF_FILE], LDAP_CONF_FILE, automatic, root_dir)
 		admin_conf = generate_users_conf(
 		user_input[USERS_CONF_FILE],
@@ -1312,12 +1319,6 @@ no_database, # type: bool
 		return 1
 
 	try:
-		setup_maxmind(todbconf.get("maxmind", "no"), root_dir)
-	except OSError as e:
-		logging.critical("Setting up MaxMind: %s", e)
-		return 1
-
-	try:
 		cert_code = setup_certificates(opensslconf, root_dir, ops_user, ops_group)
 		if cert_code:
 			return cert_code
@@ -1326,7 +1327,7 @@ no_database, # type: bool
 		return 1
 
 	try:
-		generate_cdn_conf(user_input[CDN_CONF_FILE], CDN_CONF_FILE, automatic, root_dir)
+		postgresTV = generate_cdn_conf(user_input[CDN_CONF_FILE], CDN_CONF_FILE, automatic, root_dir)
 	except OSError as e:
 		logging.critical("Generating cdn.conf: %s", e)
 		return 1
@@ -1356,7 +1357,7 @@ no_database, # type: bool
 			)
 
 		try:
-			setup_database_data(conn_str, admin_conf, paramconf, root_dir)
+			setup_database_data(conn_str, admin_conf, paramconf, root_dir, postgresTV)
 		except (subprocess.CalledProcessError, OSError) as e:
 			db_connect_failed()
 			return 1

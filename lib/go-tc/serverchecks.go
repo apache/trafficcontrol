@@ -1,13 +1,5 @@
 package tc
 
-import (
-	"database/sql"
-	"errors"
-	"strings"
-
-	"github.com/apache/trafficcontrol/lib/go-util"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -26,6 +18,14 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"database/sql"
+	"errors"
+	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
+)
 
 // ServerchecksResponse is a list of Serverchecks as a response.
 // swagger:response ServerchecksResponse
@@ -177,6 +177,14 @@ type GenericServerCheck struct {
 	// Checks maps arbitrary checks - up to one per "column" (whatever those mean)
 	// done on the server to their values.
 	Checks map[string]*int `json:"checks,omitempty"`
+}
+
+// ServercheckAPIResponse (not to be confused with ServerchecksResponse) is the
+// type of a response from Traffic Ops to a request to its /servercheck
+// endpoint (not to be confused with its /servers/checks endpoint).
+type ServercheckAPIResponse struct {
+	Response []GenericServerCheck `json:"response"`
+	Alerts
 }
 
 // ServerCheckColumns is a collection of columns associated with a particular

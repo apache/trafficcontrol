@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,86 +15,56 @@
    limitations under the License.
 */
 
-package client
-
 import (
-	"errors"
 	"fmt"
-	"net/http"
-	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-// APITenants is the API version-relative path to the /tenants API endpoint.
-const APITenants = "/tenants"
+// apiTenants is the API version-relative path to the /tenants API endpoint.
+const apiTenants = "/tenants"
 
-// APITenantID is the API version-relative path to the /tenants/{{ID}} API endpoint.
-const APITenantID = APITenants + "/%d"
+// apiTenantID is the API version-relative path to the /tenants/{{ID}} API endpoint.
+const apiTenantID = apiTenants + "/%d"
 
 // GetTenants retrieves all Tenants stored in Traffic Ops.
-func (to *Session) GetTenants(header http.Header) ([]tc.Tenant, toclientlib.ReqInf, error) {
+func (to *Session) GetTenants(opts RequestOptions) (tc.GetTenantsResponse, toclientlib.ReqInf, error) {
 	var data tc.GetTenantsResponse
-	reqInf, err := to.get(APITenants, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetTenantByID retrieves the Tenant with the given ID.
-func (to *Session) GetTenantByID(id int, header http.Header) (tc.Tenant, toclientlib.ReqInf, error) {
-	var data tc.GetTenantsResponse
-	reqInf, err := to.get(fmt.Sprintf("%s?id=%v", APITenants, id), header, &data)
-	if err != nil {
-		return tc.Tenant{}, reqInf, err
-	}
-	if reqInf.StatusCode == http.StatusNotModified {
-		return tc.Tenant{}, reqInf, nil
-	}
-	return data.Response[0], reqInf, nil
-}
-
-// GetTenantByName retrieves the Tenant with the given Name
-func (to *Session) GetTenantByName(name string, header http.Header) (tc.Tenant, toclientlib.ReqInf, error) {
-	var data tc.GetTenantsResponse
-	query := APITenants + "?name=" + url.QueryEscape(name)
-	reqInf, err := to.get(query, header, &data)
-	if err != nil {
-		return tc.Tenant{}, reqInf, err
-	}
-	if reqInf.StatusCode == http.StatusNotModified {
-		return tc.Tenant{}, reqInf, nil
-	}
-	if len(data.Response) > 0 {
-		return data.Response[0], reqInf, nil
-	}
-	return tc.Tenant{}, reqInf, errors.New("no tenant found with name " + name)
+	reqInf, err := to.get(apiTenants, opts, &data)
+	return data, reqInf, err
 }
 
 // CreateTenant creates the Tenant it's passed.
-func (to *Session) CreateTenant(t tc.Tenant) (tc.TenantResponse, error) {
+func (to *Session) CreateTenant(t tc.Tenant, opts RequestOptions) (tc.TenantResponse, toclientlib.ReqInf, error) {
 	if t.ParentID == 0 && t.ParentName != "" {
-		tenant, _, err := to.GetTenantByName(t.ParentName, nil)
+		parentOpts := NewRequestOptions()
+		parentOpts.QueryParameters.Set("name", t.ParentName)
+		tenant, reqInf, err := to.GetTenants(parentOpts)
 		if err != nil {
-			return tc.TenantResponse{}, err
+			return tc.TenantResponse{Alerts: tenant.Alerts}, reqInf, err
 		}
-		t.ParentID = tenant.ID
+		if len(tenant.Response) < 1 {
+			return tc.TenantResponse{Alerts: tenant.Alerts}, reqInf, fmt.Errorf("no Tenant could be found for Parent Tenant '%s'", t.ParentName)
+		}
+		t.ParentID = tenant.Response[0].ID
 	}
 
 	var data tc.TenantResponse
-	_, err := to.post(APITenants, t, nil, &data)
-	return data, err
+	reqInf, err := to.post(apiTenants, opts, t, &data)
+	return data, reqInf, err
 }
 
 // UpdateTenant replaces the Tenant identified by 'id' with the one provided.
-func (to *Session) UpdateTenant(id int, t tc.Tenant, header http.Header) (tc.TenantResponse, toclientlib.ReqInf, error) {
+func (to *Session) UpdateTenant(id int, t tc.Tenant, opts RequestOptions) (tc.TenantResponse, toclientlib.ReqInf, error) {
 	var data tc.TenantResponse
-	reqInf, err := to.put(fmt.Sprintf(APITenantID, id), t, header, &data)
+	reqInf, err := to.put(fmt.Sprintf(apiTenantID, id), opts, t, &data)
 	return data, reqInf, err
 }
 
 // DeleteTenant deletes the Tenant matching the ID it's passed.
-func (to *Session) DeleteTenant(id int) (tc.DeleteTenantResponse, error) {
-	var data tc.DeleteTenantResponse
-	_, err := to.del(fmt.Sprintf(APITenantID, id), nil, &data)
-	return data, err
+func (to *Session) DeleteTenant(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	var data tc.Alerts
+	reqInf, err := to.del(fmt.Sprintf(apiTenantID, id), opts, &data)
+	return data, reqInf, err
 }

@@ -16,76 +16,72 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { readFileSync } from "fs";
-
 import { browser } from 'protractor';
-import using from "jasmine-data-provider";
 
 import { LoginPage } from '../PageObjects/LoginPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { API } from '../CommonUtils/API';
 import { DivisionsPage } from '../PageObjects/Divisions.po';
+import { divisions } from "../Data";
 
-let setupFile = 'Data/Divisions/Setup.json';
-let cleanupFile = 'Data/Divisions/Cleanup.json';
-let filename = 'Data/Divisions/TestCases.json';
-let testData = JSON.parse(readFileSync(filename, "utf8"));
+const api = new API();
+const loginPage = new LoginPage();
+const topNavigation = new TopNavigationPage();
+const divisionsPage = new DivisionsPage();
 
-let api = new API();
-let loginPage = new LoginPage();
-let topNavigation = new TopNavigationPage();
-let divisionsPage = new DivisionsPage();
+describe('Setup API for Divisions Test', () => {
+    it('Setup', async () => {
+        await api.UseAPI(divisions.setup);
+    });
+});
 
-describe('Setup API for Divisions Test', function(){
-    it('Setup', async function(){
-        let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        await api.UseAPI(setupData);
-    })
-})
-
-using(testData.Divisions, async function(divisionsData){
-    using(divisionsData.Login, function(login){
-        describe('Traffic Portal - Divisions - ' + login.description, function(){
+divisions.tests.forEach(divisionsData => {
+    divisionsData.logins.forEach(login => {
+        describe(`Traffic Portal - Divisions - ${login.description}`, () => {
             it('can login', async function(){
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            })
-            it('can open divisions page', async function(){
+            });
+            it('can open divisions page', async () => {
                 await divisionsPage.OpenTopologyMenu();
                 await divisionsPage.OpenDivisionsPage();
-            })
-
-            using(divisionsData.Add, function (add) {
-                it(add.description, async function () {
+            });
+            divisionsData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await divisionsPage.CheckCSV(check.Name)).toBe(true);
+                    await divisionsPage.OpenDivisionsPage();
+                });
+            });
+            divisionsData.add.forEach(add => {
+                it(add.description, async () => {
                     expect(await divisionsPage.CreateDivisions(add)).toBeTruthy();
                     await divisionsPage.OpenDivisionsPage();
-                })
-            })
-            using(divisionsData.Update, function (update) {
-                it(update.description, async function () {
+                });
+            });
+            divisionsData.update.forEach(update => {
+                it(update.description, async () => {
                     await divisionsPage.SearchDivisions(update.Name);
                     expect(await divisionsPage.UpdateDivisions(update)).toBeTruthy();
                     await divisionsPage.OpenDivisionsPage();
-                })
-            })
-            using(divisionsData.Remove, function (remove) {
-                it(remove.description, async function () {
+                });
+            });
+            divisionsData.remove.forEach(remove => {
+                it(remove.description, async () => {
                     await divisionsPage.SearchDivisions(remove.Name);
                     expect(await divisionsPage.DeleteDivisions(remove)).toBeTruthy();
                     await divisionsPage.OpenDivisionsPage();
-                })
-            })
-            it('can logout', async function () {
+                });
+            });
+            it('can logout', async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
-            })
-        })
-    })
-})
+            });
+        });
+    });
+});
 
-describe('Clean Up API for Divisions Test', function () {
-    it('Cleanup', async function () {
-        let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        await api.UseAPI(cleanupData);
-    })
-})
+describe('Clean Up API for Divisions Test', () => {
+    it('Cleanup', async () => {
+        await api.UseAPI(divisions.cleanup);
+    });
+});

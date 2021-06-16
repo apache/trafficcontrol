@@ -31,7 +31,7 @@ GOPATH="$(mktemp -d)"
 export PATH="${GOPATH}/bin:${PATH}" GOPATH
 
 apk add --no-cache git gcc gettext postgresql-client musl-dev
-go get -v bitbucket.org/liamstask/goose/cmd/goose
+GO111MODULE=off go get -v github.com/kevinburke/goose/cmd/goose
 mv $GOPATH/bin/goose /bin/ &&\
 	apk del git gcc musl-dev
 

@@ -24,6 +24,36 @@ import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
 import { randomize } from '../config';
 
+interface CreateServer {
+  Status: string;
+  Hostname: string;
+  Domainname: string;
+  CDN: string;
+  CacheGroup: string;
+  Type: string;
+  Profile: string;
+  PhysLocation: string;
+  InterfaceName: string;
+  validationMessage?: string;
+}
+
+interface ServerCapability {
+  ServerCapability: string;
+  validationMessage?: string;
+}
+
+interface UpdateServer {
+  description: string;
+  CDN: string;
+  Profile: string;
+  validationMessage?: string;
+}
+
+interface DeleteServer {
+  Name: string;
+  validationMessage?: string;
+}
+
 export class ServersPage extends BasePage {
 
   private btnMore = element(by.xpath("//button[contains(text(),'More')]"));
@@ -77,7 +107,7 @@ export class ServersPage extends BasePage {
     await this.btnCreateServer.click()
   }
 
-  async CreateServer(server){
+  public async CreateServer(server: CreateServer): Promise<boolean> {
     let result = false;
     let basePage = new BasePage();
     let ipv6 = randomIpv6();
@@ -129,10 +159,7 @@ export class ServersPage extends BasePage {
     let result: boolean | undefined = false;
     let basePage = new BasePage();
     let deliveryService = deliveryServiceName+this.randomize;
-    let serverNameRandomized;
-    await this.txtHostName.getText().then(function(value){
-      serverNameRandomized = value;
-    })
+    const serverNameRandomized = await this.txtHostName.getText();
     let serverName = serverNameRandomized.replace(this.randomize,"")
     if(outputMessage.includes("delivery services assigned")){
       outputMessage = outputMessage.replace(serverName,serverNameRandomized)
@@ -163,7 +190,7 @@ export class ServersPage extends BasePage {
 
   }
 
-  public async AddServerCapabilitiesToServer(serverCapabilities): Promise<boolean | undefined> {
+  public async AddServerCapabilitiesToServer(serverCapabilities: ServerCapability): Promise<boolean | undefined> {
     let result: boolean | undefined = false;
     let basePage = new BasePage();
     let serverCapabilitiesName = serverCapabilities.ServerCapability + this.randomize;
@@ -174,7 +201,7 @@ export class ServersPage extends BasePage {
       await this.selectCapabilities.sendKeys(serverCapabilitiesName);
       await basePage.ClickSubmit();
       result = await basePage.GetOutputMessage().then(function(value){
-        if(serverCapabilities.validationMessage == value || value.includes(serverCapabilities.validationMessage)){
+        if(serverCapabilities.validationMessage === value || serverCapabilities.validationMessage && value.includes(serverCapabilities.validationMessage)){
           result = true;
         }else{
           result = false;
@@ -211,10 +238,7 @@ export class ServersPage extends BasePage {
     let result: boolean | undefined = false;
     let basePage = new BasePage();
     let serverCapabilitiesname = serverCapabilities+this.randomize;
-    let url;
-    await browser.getCurrentUrl().then((link) => {
-      url = link.toString();
-    })
+    const url = (await browser.getCurrentUrl()).toString();
     let serverNumber = url.substring(url.lastIndexOf('/') + 1);
     if(outputMessage.includes("cannot remove")){
       outputMessage = outputMessage.replace(serverCapabilities,serverCapabilitiesname)
@@ -242,7 +266,8 @@ export class ServersPage extends BasePage {
     await this.OpenServerPage();
     return result;
    }
-  async UpdateServer(server){
+
+  public async UpdateServer(server: UpdateServer): Promise<boolean | undefined> {
     let result = false;
     let basePage = new BasePage();
     if(server.description.includes('change the cdn of a Server')){
@@ -259,7 +284,8 @@ export class ServersPage extends BasePage {
         return result;
     }
   }
-  async DeleteServer(server){
+
+  async DeleteServer(server: DeleteServer){
     let result = false;
     let basePage = new BasePage();
     let name = server.Name + this.randomize

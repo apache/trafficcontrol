@@ -14,75 +14,73 @@
 
 @import '../../../theme.scss';
 
-details {
-	border: 2px solid gray;
+mat-card {
+	// border: 2px solid gray;
+	padding: 0;
+	overflow: hidden;
+	border-radius: 0;
+	transition: all 0.2s ease-in;
 
-	& > summary {
-		background-color: $theme_main;
-		color: white;
-		padding: 10px;
+	// :last-child and :first-child won't work, since it's wrapped in an
+	// ng-template implicitly, so it's always both :first-child and :last-child
+	// regardless of the actual position in the list.
+	&.last {
+		border-bottom-right-radius: 12px;
+		border-bottom-left-radius: 12px;
+	}
+	&.first {
+		border-top-left-radius: 12px;
+		border-top-right-radius: 12px;
+	}
+
+	& > mat-card-title-group {
+		// background-color: $theme_secondary;
+		padding: 16px;
 		cursor: pointer;
-
-		span:first-child {
-			display: inline-block;
-			max-width: 45%;
-			overflow: hidden;
-			white-space: nowrap;
-			text-overflow: ellipsis;
-		}
-		span:last-child {
-			float: right;
-			display: inline-block;
-			max-width: 30%;
-			overflow: hidden;
-			white-space: nowrap;
-			text-overflow: ellipsis;
-		}
 
 		svg {
 			height: 1.5em;
 			fill: white;
+			color: white;
 		}
 	}
 
-	&.inactive > summary {
+	&.inactive > mat-card-title-group {
 		background-color: gray;
 		color: #d3d3d3;
 	}
 
-	&[open] {
+	&.open {
 		border-radius: 12px;
-		& > summary {
+		margin: 24px auto;
+		& > mat-card-title-group {
 			border-radius: 10px 10px 0 0;
+		}
+		mat-card-actions {
+			padding-bottom: 16px;
 		}
 	}
 }
 
 a.info {
 	text-decoration: none;
-	color: inherit;
 	margin-left: 8px;
 }
 
-div.card-content {
-	display: grid;
-	grid-column-gap: 10px;
-	grid-row-gap: 10px;
-	padding: 10px;
-	position: relative;
+mat-card-content {
+	margin: 16px;
+	transition: all 0.2s ease-in;
 
 	div.canvas-container {
 		width: 100%;
-		position: relative;
-		z-index: -1;
+		max-width: 100%;
+		min-width: 100%;
+		min-height: 100%;
+		max-height: 100%;
+		z-index: 0;
 	}
 
 	div.loading {
-		position: absolute;
-		top: 0;
-		bottom: 0;
-		right: 0;
-		left: 0;
 		width: 100%;
 		height: 100%;
 		display: flex;
@@ -111,34 +109,10 @@ div.card-content {
 	meter {
 		width: 100%;
 	}
+
 }
 
-@media (min-width: 768px) {
-	div.card-content {
-		grid-template-columns: 1fr 1fr;
-	}
-}
-
-@media (max-width: 767px) {
-	div.card-content {
-		grid-template-columns: 1fr;
-	}
-}
-
-a.view-details {
-	background-color: $theme_tertiary;
-	color: white;
-	height: 2em;
-	width: 2em;
-	display: block;
-	padding: 5px;
-	text-align: center;
-	border-radius: calc(1em + 5px);
-	position: absolute;
-	bottom: 5px;
-
-	img {
-		margin-top: 3px;
-		height: 1.5em;
-	}
+mat-card-actions {
+	margin: 0;
+	padding: 16px;
 }

@@ -34,9 +34,9 @@ func Vault(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	pingResp, err := inf.Vault.Ping(inf.Tx.Tx)
+	pingResp, err := inf.Vault.Ping(inf.Tx.Tx, r.Context())
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("error pinging Riak: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("error pinging Traffic Vault: "+err.Error()))
 		return
 	}
 	api.WriteResp(w, r, pingResp)

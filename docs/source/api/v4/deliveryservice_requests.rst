@@ -833,5 +833,3 @@ The response is a full representation of the deleted :term:`Delivery Service Req
 			}
 		]
 	}
-
-.. [#geoLimit] These fields must be defined if and only if ``geoLimit`` is non-zero

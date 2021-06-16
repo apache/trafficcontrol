@@ -71,3 +71,6 @@ services:
   smtp:
     ports:
       - "4443:443"
+  static:
+    ports:
+      - "9443:443"

@@ -12,27 +12,37 @@
 * limitations under the License.
 */
 
-import { browser, logging } from "protractor";
+import { browser, until } from "protractor";
 
-import { AppPage } from "./app.po";
+import { LoginPage } from "./app.po";
 
 describe("workspace-project App", () => {
-	let page: AppPage;
+	let page: LoginPage;
 
 	beforeEach(() => {
-		page = new AppPage();
-	});
-
-	it("should display welcome message", () => {
+		page = new LoginPage();
 		page.navigateTo();
-		expect(page.getTitleText()).toEqual("traffic-portal app is running!");
 	});
 
-	afterEach(async () => {
-		// Assert that there are no errors emitted from the browser
-		const logs = await browser.manage().logs().get(logging.Type.BROWSER);
-		expect(logs).not.toContain(jasmine.objectContaining({
-			level: logging.Level.SEVERE,
-		} as logging.Entry));
+	it("should allow login", async done => {
+		await page.usernameInput.sendKeys("admin");
+		await page.passwordInput.sendKeys("twelve12");
+		await page.loginButton.click();
+		try {
+			await browser.wait(until.urlIs(browser.baseUrl), 1000);
+		} catch(e) {
+			done.fail(`page did not navigate after login: ${e}`);
+			return;
+		}
+		expect(browser.getCurrentUrl()).toBe(browser.baseUrl);
+		done();
+	});
+
+	it("should clear the form", async () => {
+		await page.usernameInput.sendKeys("foo");
+		await page.passwordInput.sendKeys("bar");
+		await page.clearButton.click();
+		expect(page.usernameInput.getText()).toBe("");
+		expect(page.passwordInput.getText()).toBe("");
 	});
 });

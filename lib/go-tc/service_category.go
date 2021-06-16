@@ -22,12 +22,14 @@ package tc
 // ServiceCategoriesResponse is a list of Service Categories as a response.
 type ServiceCategoriesResponse struct {
 	Response []ServiceCategory `json:"response"`
+	Alerts
 }
 
 // ServiceCategoryResponse is a single Service Category response for Update and Create to
 // depict what changed.
 type ServiceCategoryResponse struct {
 	Response ServiceCategory `json:"response"`
+	Alerts
 }
 
 // ServiceCategory holds the name, id and associated tenant that comprise a service category.

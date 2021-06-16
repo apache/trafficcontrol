@@ -16,73 +16,64 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { readFileSync } from "fs";
-
 import { browser } from 'protractor'
-import using from "jasmine-data-provider";
 
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { ProfilesPage } from '../PageObjects/ProfilesPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { API } from '../CommonUtils/API';
+import { profiles } from "../Data";
 
-let setupFile = 'Data/Profiles/Setup.json';
-let cleanupFile = 'Data/Profiles/Cleanup.json';
-let filename = 'Data/Profiles/TestCases.json';
-let testData = JSON.parse(readFileSync(filename, "utf8"));
+const api = new API();
+const loginPage = new LoginPage();
+const topNavigation = new TopNavigationPage();
+const profilesPage = new ProfilesPage();
 
-let api = new API();
-let loginPage = new LoginPage();
-let topNavigation = new TopNavigationPage();
-let profilesPage = new ProfilesPage();
-
-describe('Setup API for Profiles', function () {
-    it('Setup', async function () {
-        let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        await api.UseAPI(setupData);
-    })
-})
-using(testData.Profiles, async function(profilesData){
-    using(profilesData.Login, function(login){
-        describe('Traffic Portal - Profiles - ' + login.description, function(){
-            it('can login', async function(){
+describe('Setup API for Profiles', () => {
+    it('Setup', async () => {
+        await api.UseAPI(profiles.setup);
+    });
+});
+profiles.tests.forEach(async profilesData => {
+    profilesData.logins.forEach(login => {
+        describe(`Traffic Portal - Profiles - ${login.description}`, () => {
+            it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            })
-            it('can open profiles page', async function () {
+            });
+            it('can open profiles page', async () => {
                 await profilesPage.OpenConfigureMenu();
                 await profilesPage.OpenProfilesPage();
-            })
-            using(profilesData.Add, function (add) {
-                it(add.description, async function () {
+            });
+            profilesData.add.forEach(add => {
+                it(add.description, async () => {
                     expect(await profilesPage.CreateProfile(add)).toBeTruthy();
                     await profilesPage.OpenProfilesPage();
-                })
-            })
-            using(profilesData.Update, function (update) {
-                it(update.description, async function () {
+                });
+            });
+            profilesData.update.forEach(update => {
+                it(update.description, async () => {
                     await profilesPage.SearchProfile(update.Name);
                     expect(await profilesPage.UpdateProfile(update)).toBeTruthy();
                     await profilesPage.OpenProfilesPage();
-                })
-            })
-            using(profilesData.Remove, function (remove) {
-                it(remove.description, async function () {
+                });
+            });
+            profilesData.remove.forEach(remove => {
+                it(remove.description, async () => {
                     await profilesPage.SearchProfile(remove.Name);
                     expect(await profilesPage.DeleteProfile(remove)).toBeTruthy();
                     await profilesPage.OpenProfilesPage();
-                })
-            })
-            it('can logout', async function(){
+                });
+            });
+            it('can logout', async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
-            })
-        })
-    })
-})
-describe('Clean up API for Profiles', function () {
-    it('Cleanup', async function () {
-        let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        await api.UseAPI(cleanupData);
-    })
-})
+            });
+        });
+    });
+});
+describe('Clean up API for Profiles', () => {
+    it('Cleanup', async () => {
+        await api.UseAPI(profiles.cleanup);
+    });
+});

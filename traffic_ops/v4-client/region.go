@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,87 +15,65 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIRegions is the API version-relative path to the /regions API endpoint.
-	APIRegions = "/regions"
-)
+// apiRegions is the API version-relative path to the /regions API endpoint.
+const apiRegions = "/regions"
 
 // CreateRegion creates the given Region.
-func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateRegion(region tc.Region, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	if region.Division == 0 && region.DivisionName != "" {
-		divisions, _, err := to.GetDivisionByName(region.DivisionName, nil)
+		divisionOpts := NewRequestOptions()
+		divisionOpts.QueryParameters.Set("name", region.DivisionName)
+		divisions, reqInf, err := to.GetDivisions(divisionOpts)
 		if err != nil {
-			return tc.Alerts{}, toclientlib.ReqInf{}, err
+			return divisions.Alerts, reqInf, err
 		}
-		if len(divisions) == 0 {
-			return tc.Alerts{}, toclientlib.ReqInf{}, errors.New("no division with name " + region.DivisionName)
+		if len(divisions.Response) == 0 {
+			return divisions.Alerts, reqInf, errors.New("no division with name " + region.DivisionName)
 		}
-		region.Division = divisions[0].ID
+		region.Division = divisions.Response[0].ID
 	}
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIRegions, region, nil, &alerts)
+	reqInf, err := to.post(apiRegions, opts, region, &alerts)
 	return alerts, reqInf, err
 }
 
 // UpdateRegion replaces the Region identified by ID with the one provided.
-func (to *Session) UpdateRegion(id int, region tc.Region, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", APIRegions, id)
+func (to *Session) UpdateRegion(id int, region tc.Region, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", apiRegions, id)
 	var alerts tc.Alerts
-	reqInf, err := to.put(route, region, header, &alerts)
+	reqInf, err := to.put(route, opts, region, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetRegions returns all Regions in Traffic Ops.
-func (to *Session) GetRegions(header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
+func (to *Session) GetRegions(opts RequestOptions) (tc.RegionsResponse, toclientlib.ReqInf, error) {
 	var data tc.RegionsResponse
-	reqInf, err := to.get(APIRegions, header, &data)
-	return data.Response, reqInf, err
+	reqInf, err := to.get(apiRegions, opts, &data)
+	return data, reqInf, err
 }
 
-// GetRegionByID returns the Region with the given ID.
-func (to *Session) GetRegionByID(id int, header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", APIRegions, id)
-	var data tc.RegionsResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetRegionByName retrieves the Region with the given Name.
-func (to *Session) GetRegionByName(name string, header http.Header) ([]tc.Region, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?name=%s", APIRegions, url.QueryEscape(name))
-	var data tc.RegionsResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
-}
-
-// DeleteRegion lets you DELETE a Region. Only 1 parameter is required, not both.
-func (to *Session) DeleteRegion(id *int, name *string) (tc.Alerts, toclientlib.ReqInf, error) {
-	v := url.Values{}
-	if id != nil {
-		v.Add("id", strconv.Itoa(*id))
+// DeleteRegion lets you delete a Region. Regions can be deleted by ID instead
+// of by name if the ID is provided in the request options and the name is an
+// empty string.
+func (to *Session) DeleteRegion(name string, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
 	}
-	if name != nil {
-		v.Add("name", *name)
-	}
-	URI := "/regions"
-	if qStr := v.Encode(); len(qStr) > 0 {
-		URI = fmt.Sprintf("%s?%s", URI, qStr)
+
+	if name != "" || opts.QueryParameters.Get("id") == "" {
+		opts.QueryParameters.Set("name", name)
 	}
 
 	var alerts tc.Alerts
-	reqInf, err := to.del(URI, nil, &alerts)
+	reqInf, err := to.del(apiRegions, opts, &alerts)
 	return alerts, reqInf, err
 }

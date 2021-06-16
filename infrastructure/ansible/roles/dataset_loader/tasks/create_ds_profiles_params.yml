@@ -16,8 +16,8 @@
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles"
     method: POST
     body: "{{ lookup('template', 'profile.j2') }}"
-  with_items: "{{ dl_ds_merged_profile_cdntemplates }}"
-  when: ( item.type == 'DS_PROFILE' )
+  with_items: "{{ dl_ds_merged_profile_cdntemplates | selectattr('type','equalto','DS_PROFILE') }}"
+  when: ( (fixed_profile_name != '' and fixed_profile_name == item.name) or (ds_suffix != '' and item.name.endswith(ds_suffix)) )
   vars:
     name: "{{ item.name }}"
     description: "{{ item.description }}"
@@ -35,8 +35,8 @@
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/profiles/name/{{ item.name }}/parameters"
     method: POST
     body: "{{ lookup('template', 'parameter.j2') }}"
-  when: ( item.type == 'DS_PROFILE' and target_xmlId is defined )
-  with_items: "{{ dl_ds_merged_profile_cdntemplates }}"
+  with_items: "{{ dl_ds_merged_profile_cdntemplates | selectattr('type','equalto','DS_PROFILE') }}"
+  when: ( (fixed_profile_name != '' and fixed_profile_name == item.name) or (ds_suffix != '' and item.name.endswith(ds_suffix)) )
   vars:
     cdn_query: "response[?name == '{{ item.cdn | default('ALL') }}'].id | [0]"
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"

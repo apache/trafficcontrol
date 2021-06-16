@@ -16,58 +16,53 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { readFileSync } from "fs";
-
 import { browser } from 'protractor';
-import using from "jasmine-data-provider";
 
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { ServerCapabilitiesPage } from '../PageObjects/ServerCapabilitiesPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
+import { serverCapabilities } from "../Data";
 
-let filename = 'Data/ServerCapabilities/TestCases.json';
-let testData = JSON.parse(readFileSync(filename, "utf8"));
+const loginPage = new LoginPage();
+const topNavigation = new TopNavigationPage();
+const serverCapabilitiesPage = new ServerCapabilitiesPage();
 
-let loginPage = new LoginPage();
-let topNavigation = new TopNavigationPage();
-let serverCapabilitiesPage = new ServerCapabilitiesPage();
-
-using(testData.ServerCapabilities, function(serverCapabilitiesData) {
-    describe('Traffic Portal - Server Capabilities - '+ serverCapabilitiesData.TestName,  function(){
-        using(serverCapabilitiesData.Login, function(login) {
-            it('can login', async function(){
+serverCapabilities.tests.forEach(serverCapabilitiesData => {
+    describe(`Traffic Portal - Server Capabilities - ${serverCapabilitiesData.testName}`,  () => {
+        serverCapabilitiesData.logins.forEach(login => {
+            it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            })
-            it('can open server capability page', async function() {
+            });
+            it('can open server capability page', async () => {
                 await serverCapabilitiesPage.OpenConfigureMenu();
                 await serverCapabilitiesPage.OpenServerCapabilityPage();
-            })
-            using(serverCapabilitiesData.Add, function(add) {
-                it(add.description, async function(){
-                    expect(await serverCapabilitiesPage.CreateServerCapabilities(add.Name, add.validationMessage)).toBeTruthy();
+            });
+            serverCapabilitiesData.add.forEach(add => {
+                it(add.description, async () => {
+                    expect(await serverCapabilitiesPage.CreateServerCapabilities(add.name, add.validationMessage)).toBeTruthy();
                     await serverCapabilitiesPage.OpenServerCapabilityPage();
-                })
-            })
-            using(serverCapabilitiesData.Delete, function(remove) {
-                if(remove.description.includes("invalid")){
-                    it(remove.description, async function(){
-                        await serverCapabilitiesPage.SearchServerCapabilities(remove.Name)
-                        expect(await serverCapabilitiesPage.DeleteServerCapabilities(remove.InvalidName, remove.validationMessage)).toBeFalsy();
+                });
+            });
+            serverCapabilitiesData.remove.forEach(remove => {
+                if (remove.invalid) {
+                    it(remove.description, async () => {
+                        await serverCapabilitiesPage.SearchServerCapabilities(remove.name)
+                        expect(await serverCapabilitiesPage.DeleteServerCapabilities(remove.invalidName, remove.validationMessage)).toBeFalsy();
                         await serverCapabilitiesPage.OpenServerCapabilityPage();
-                    })
+                    });
                 } else {
-                    it(remove.description, async function(){
-                        await serverCapabilitiesPage.SearchServerCapabilities(remove.Name)
-                        expect(await serverCapabilitiesPage.DeleteServerCapabilities(remove.Name, remove.validationMessage)).toBeTruthy();
+                    it(remove.description, async () => {
+                        await serverCapabilitiesPage.SearchServerCapabilities(remove.name)
+                        expect(await serverCapabilitiesPage.DeleteServerCapabilities(remove.name, remove.validationMessage)).toBeTruthy();
                         await serverCapabilitiesPage.OpenServerCapabilityPage();
-                    })
+                    });
                 }
-            })
-            it('can logout', async function(){
+            });
+            it('can logout', async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
-            })
-        })
-    })
-})
+            });
+        });
+    });
+});

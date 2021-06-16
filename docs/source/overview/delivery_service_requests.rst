@@ -21,7 +21,7 @@ A :abbr:`DSR (Delivery Service Request)` is a request to create a new :term:`Del
 
 .. seealso:: :ref:`ds_requests` for information about how to use :abbr:`DSR (Delivery Service Request)`\ s in
 
-.. seealso:: The API reference for Delivery Service-related endpoints such as :ref:`to-api-deliveryservice_requests` contains definitions of the Delivery Service object(s) returned and/or accepted by those endpoints.
+.. seealso:: The API reference for Delivery Service-related endpoints such as :ref:`to-api-deliveryservice-requests` contains definitions of the Delivery Service object(s) returned and/or accepted by those endpoints.
 
 .. seealso:: The :atc-godoc:`lib/go-tc.DeliveryServiceRequestV30` Go structure documentation.
 
@@ -31,6 +31,7 @@ The model for a :abbr:`DSR (Delivery Service Request)` in the most recent versio
 
 .. code-block:: typescript
 	:caption: Delivery Service Request as a Typescript Interface
+
 	interface DeliveryServiceRequest {
 		assignee: string | null;
 		author: string;
@@ -98,7 +99,7 @@ update
 
 Created At
 ----------
-This is the date and time at which the :abbr:`DSR (Delivery Service Request)` was created. In the context of the :ref:`to-api`, it is formatted as an :rfc:`3339` date string.
+This is the date and time at which the :abbr:`DSR (Delivery Service Request)` was created. In the context of the :ref:`to-api`, it is formatted as an :rfc:`3339` date string except where otherwise noted.
 
 ID
 --

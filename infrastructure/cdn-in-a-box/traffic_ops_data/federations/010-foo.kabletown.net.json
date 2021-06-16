@@ -1,0 +1,15 @@
+{
+  "mappings": [
+    {
+      "ttl": 60,
+      "cname": "${FEDERATION_CNAME}",
+      "resolve4": [
+        "0.0.0.0/0"
+      ],
+      "resolve6": [
+        "::/0"
+      ]
+    }
+  ],
+  "deliveryService": "demo2"
+}

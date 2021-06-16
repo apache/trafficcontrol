@@ -22,6 +22,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 var (
@@ -37,13 +38,15 @@ func TestStatsSummary(t *testing.T) {
 	GetTestStatsSummariesLastUpdated(t)
 }
 
+// Note that these stats summaries are never cleaned up, and will be left in
+// the TODB after the tests complete
 func CreateTestStatsSummaries(t *testing.T) {
 	tmpTime := latestTime
 	for _, ss := range testData.StatsSummaries {
 		ss.SummaryTime = tmpTime
-		_, _, err := TOSession.CreateSummaryStats(ss)
+		alerts, _, err := TOSession.CreateSummaryStats(ss, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("creating stats_summary %v: %v", ss.StatName, err)
+			t.Errorf("creating Stats Summary for stat '%s': %v - alerts: %+v", *ss.StatName, err, alerts.Alerts)
 		}
 
 		tmpTime = tmpTime.AddDate(0, 0, -1)
@@ -55,9 +58,9 @@ func CreateTestStatsSummaries(t *testing.T) {
 func GetTestStatsSummaries(t *testing.T) {
 	var testCases = []struct {
 		description            string
-		stat                   *string
-		cdn                    *string
-		ds                     *string
+		stat                   string
+		cdn                    string
+		ds                     string
 		expectedStatsSummaries []tc.StatsSummary
 	}{
 		{
@@ -66,22 +69,26 @@ func GetTestStatsSummaries(t *testing.T) {
 		},
 		{
 			description: "non-existant stat name",
-			stat:        util.StrPtr("bogus"),
+			stat:        "bogus",
 		},
 		{
 			description: "non-existant ds name",
-			ds:          util.StrPtr("bogus"),
+			ds:          "bogus",
 		},
 		{
 			description: "non-existant cdn name",
-			cdn:         util.StrPtr("bogus"),
+			cdn:         "bogus",
 		},
 		{
 			description: "get stats summary by stat name",
-			stat:        util.StrPtr("daily_bytesserved"),
+			stat:        "daily_bytesserved",
 			expectedStatsSummaries: func() []tc.StatsSummary {
 				statsSummaries := []tc.StatsSummary{}
 				for _, ss := range testStatsSummaries {
+					if ss.StatName == nil {
+						t.Error("testing stats summaries collection contains a Stats Summary with nil StatName")
+						continue
+					}
 					if *ss.StatName == "daily_bytesserved" {
 						statsSummaries = append(statsSummaries, ss)
 					}
@@ -91,35 +98,53 @@ func GetTestStatsSummaries(t *testing.T) {
 		},
 		{
 			description:            "get stats summary by cdn name",
-			cdn:                    util.StrPtr("cdn1"),
+			cdn:                    "cdn1",
 			expectedStatsSummaries: testStatsSummaries,
 		},
 		{
 			description:            "get stats summary by ds name",
-			ds:                     util.StrPtr("all"),
+			ds:                     "all",
 			expectedStatsSummaries: testStatsSummaries,
 		},
 	}
 
 	for _, tc := range testCases {
+		opts := client.NewRequestOptions()
 		t.Run(tc.description, func(t *testing.T) {
-			tsr, _, err := TOSession.GetSummaryStats(tc.cdn, tc.ds, tc.stat)
+			if tc.cdn != "" {
+				opts.QueryParameters.Set("cdnName", tc.cdn)
+			}
+			if tc.ds != "" {
+				opts.QueryParameters.Set("deliveryServiceName", tc.ds)
+			}
+			if tc.stat != "" {
+				opts.QueryParameters.Set("statName", tc.stat)
+			}
+			tsr, _, err := TOSession.GetSummaryStats(opts)
 			if err != nil {
-				t.Fatalf("received unexpected error %v on GET to stats_summary", err)
+				t.Fatalf("Unexpected error getting Stats Summary: %v - alerts: %+v", err, tsr.Alerts)
 			}
 			if len(tc.expectedStatsSummaries) == 0 && len(tsr.Response) != 0 {
-				t.Fatalf("expected to recieve no stats summaries but received %v", len(tsr.Response))
+				t.Fatalf("expected to recieve no stats summaries but received %d", len(tsr.Response))
 			}
 			for _, ess := range tc.expectedStatsSummaries {
+				if ess.StatName == nil {
+					t.Error("testing stats summaries collection contains a Stats Summary with nil StatName")
+					continue
+				}
 				found := false
 				for _, ss := range tsr.Response {
+					if ss.StatName == nil {
+						t.Error("Traffic Ops returned a representation for a Stats Summary with null or undefined name")
+						continue
+					}
 					if *ess.StatName == *ss.StatName && ess.SummaryTime.Equal(ss.SummaryTime) {
 						found = true
 						break
 					}
 				}
 				if !found {
-					t.Errorf("expected to find stat %v in stats summary response", *ess.StatName)
+					t.Errorf("expected to find stat '%s' in stats summary response", *ess.StatName)
 				}
 			}
 		})
@@ -149,6 +174,10 @@ func GetTestStatsSummariesLastUpdated(t *testing.T) {
 		},
 	}
 	for _, ss := range testStatsSummaries {
+		if ss.StatName == nil {
+			t.Error("testing stats summaries collection contains a Stats Summary with nil StatName")
+			continue
+		}
 		testCases = append(testCases, testCase{
 			description:       fmt.Sprintf("latest updated timestamp for - %v", *ss.StatName),
 			stat:              ss.StatName,
@@ -158,19 +187,23 @@ func GetTestStatsSummariesLastUpdated(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		opts := client.NewRequestOptions()
 		t.Run(tc.description, func(t *testing.T) {
-			tsr, _, err := TOSession.GetSummaryStatsLastUpdated(tc.stat)
-			if tc.errExpected && err == nil {
-				t.Fatalf("expected to get error on getting stats_summary latest updated timestamp but received nil")
+			if tc.stat != nil {
+				opts.QueryParameters.Set("statName", *tc.stat)
 			}
-
-			if !tc.errExpected && err != nil {
-				t.Fatalf("received unexpected error getting stats_summary latest updated timestamp: %v", err)
-			}
-			if !tc.errExpected && tc.nullTimeStamp && tsr.Response.SummaryTime != nil {
-				t.Fatalf("expected to get null on latest timestamp but instead got %v", tsr.Response.SummaryTime)
-			}
-			if !tc.errExpected && !tc.nullTimeStamp && !tsr.Response.SummaryTime.Equal(tc.expectedTimestamp) {
+			tsr, _, err := TOSession.GetSummaryStatsLastUpdated(opts)
+			if tc.errExpected {
+				if err == nil {
+					t.Fatalf("expected to get error on getting stats_summary latest updated timestamp but received nil")
+				}
+			} else if err != nil {
+				t.Fatalf("received unexpected error getting Stats Summary latest updated timestamp: %v - alerts: %+v", err, tsr.Alerts)
+			} else if tc.nullTimeStamp {
+				if tsr.Response.SummaryTime != nil {
+					t.Fatalf("expected to get null on latest timestamp but instead got %v", *tsr.Response.SummaryTime)
+				}
+			} else if !tsr.Response.SummaryTime.Equal(tc.expectedTimestamp) {
 				t.Fatalf("received latest timestamp %v does not match up to expected timestamp %v", tsr.Response.SummaryTime, tc.expectedTimestamp)
 			}
 		})

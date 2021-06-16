@@ -145,6 +145,12 @@
   #no_log: true
   failed_when: (create_user_out.status == 400 and create_user_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_user_out.status > 400 and create_user_out.status < 600)
 
+- name: Get All Users
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/users"
+    method: GET
+  register: get_all_users
+
 - name: Create Cachegroups - Traffic Router
   uri:
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cachegroups"
@@ -796,11 +802,6 @@
     method: GET
   register: get_all_servers
 
-- name: Collect All CDN delegations assigned to Fake Origins
-  set_fact:
-    cdnDelegationList: "{{ (cdnDelegationList | default([]) ) + [hostvars[item]['cdn']] }}"
-  with_items: "{{ groups['fakeorigin'] }}"
-
 - name: Convert the CDN Delegation list into an index
   set_fact:
     cdnDelegationIndex: "{{ (cdnDelegationIndex | default({}) ) | combine( { item.1: item.0 } ) }}"
@@ -837,6 +838,22 @@
     url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/deliveryservices"
     method: GET
   register: get_all_ds
+
+- name: Render Federations Lists
+  with_items: "{{ cdnDelegationList }}"
+  loop_control:
+    loop_var: Target_cdn_delegation
+  set_fact:
+    federations_for_cdn_delegation: "{{ dl_ds_default_federations }}"
+  register: federations_out
+
+- name: Create Federations
+  vars:
+    federations_query: 'results[].ansible_facts[].federations_for_cdn_delegation[]'
+  with_items: "{{ federations_out | json_query(federations_query) }}"
+  loop_control:
+    loop_var: federation
+  include_tasks: federation_loader.yml
 
 - name: Ensure SSL info directory exists
   file:

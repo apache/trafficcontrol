@@ -25,6 +25,7 @@ do
 done
 
 source to-access.sh
+check-skips
 
 set-dns.sh
 insert-self-into-dns.sh

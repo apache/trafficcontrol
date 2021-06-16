@@ -64,3 +64,10 @@ func (st SteeringTargetNullable) Validate(tx *sql.Tx) error {
 	}
 	return nil
 }
+
+// SteeringTargetsResponse is the type of a response from Traffic Ops to its
+// /steering/{{ID}}/targets endpoint.
+type SteeringTargetsResponse struct {
+	Response []SteeringTargetNullable `json:"response"`
+	Alerts
+}

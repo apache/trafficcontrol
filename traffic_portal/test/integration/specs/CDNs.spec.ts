@@ -16,58 +16,57 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { readFileSync } from "fs";
-
 import { browser } from 'protractor';
-import using from "jasmine-data-provider";
 
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { CDNPage } from '../PageObjects/CDNPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
+import { cdns } from "../Data";
 
-let filename = 'Data/CDN/TestCases.json';
-let testData = JSON.parse(readFileSync(filename, "utf8"));
 
-let loginPage = new LoginPage();
-let topNavigation = new TopNavigationPage();
-let cdnsPage = new CDNPage();
+const loginPage = new LoginPage();
+const topNavigation = new TopNavigationPage();
+const cdnsPage = new CDNPage();
 
-using(testData.CDN, async function(cdnsData){
-    using(cdnsData.Login, function(login){
+cdns.tests.forEach(async cdnsData =>{
+    cdnsData.logins.forEach(login => {
         describe('Traffic Portal - CDN - ' + login.description, function(){
-            it('can login', async function(){
+            it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            })
-            it('can open CDN page', async function(){
+            });
+            it('can open CDN page', async () => {
                 await cdnsPage.OpenCDNsPage();
-            })
-
-            using(cdnsData.Add, function (add){
-                it(add.description, async function(){
+            });
+             cdnsData.check.forEach(check => {
+                 it(check.description, async () => {
+                     expect(await cdnsPage.CheckCSV(check.Name)).toBe(true);
+                     await cdnsPage.OpenCDNsPage();
+                 });
+            });
+            cdnsData.add.forEach(add => {
+                it(add.description, async () => {
                     expect(await cdnsPage.CreateCDN(add)).toBeTruthy();
                     await cdnsPage.OpenCDNsPage();
-                })
-            })
-            using(cdnsData.Update, function(update){
-                it(update.description, async function(){
+                });
+            });
+            cdnsData.update.forEach(update => {
+                it(update.description, async () => {
                     await cdnsPage.SearchCDN(update.Name);
                     expect(await cdnsPage.UpdateCDN(update)).toBeTruthy();
-                })
-
-            })
-            using(cdnsData.Remove, function(remove){
-                it(remove.description, async function(){
+                });
+            });
+            cdnsData.remove.forEach(remove => {
+                it(remove.description, async () => {
                     await cdnsPage.SearchCDN(remove.Name);
                     expect(await cdnsPage.DeleteCDN(remove)).toBeTruthy();
 
-                })
-            })
-            it('can logout', async function () {
+                });
+            });
+            it('can logout', async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
-            })
-
-        })
-    })
-})
+            });
+        });
+    });
+});

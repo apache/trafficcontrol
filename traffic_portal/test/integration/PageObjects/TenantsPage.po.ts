@@ -21,6 +21,15 @@ import { by, element } from 'protractor';
 import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from './SideNavigationPage.po';
+
+interface Tenant {
+  ParentTenant: string;
+  Name: string;
+  Active: string;
+  existsMessage?: string;
+  validationMessage?: string;
+}
+
 export class TenantsPage extends BasePage {
 
     private btnCreateNewTenant = element(by.xpath("//button[@title='Create New Tenant']"));
@@ -37,7 +46,8 @@ export class TenantsPage extends BasePage {
       await snp.ClickUserAdminMenu();
       await snp.NavigateToTenantsPage();
     }
-    async CreateTenant(tenant){
+
+    public async CreateTenant(tenant: Tenant): Promise<boolean> {
         let result = false;
         let basePage = new BasePage();
         let snp = new SideNavigationPage();

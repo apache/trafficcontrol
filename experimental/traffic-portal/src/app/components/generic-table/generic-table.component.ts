@@ -233,6 +233,7 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 			isExternalFilterPresent: this.shouldFilter.bind(this),
 			preventDefaultOnContextMenu: true,
 			rowSelection: "multiple",
+			suppressContextMenu: true,
 			tooltipShowDelay: 500
 		};
 	}
@@ -414,7 +415,12 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 	 */
 	public toggleVisibility(col: string): void {
 		if (this.columnAPI) {
-			const visible = this.columnAPI.getColumn(col).isVisible();
+			const column = this.columnAPI.getColumn(col);
+			if (!column) {
+				console.error(`Failed to set visibility for column '${col}': no such column`);
+				return;
+			}
+			const visible = column.isVisible();
 			this.columnAPI.setColumnVisible(col, !visible);
 		}
 	}
@@ -442,6 +448,17 @@ export class GenericTableComponent implements OnInit, OnDestroy {
 		right: "unset",
 		top: "0",
 	};
+
+	/**
+	 * This dumb hack is necessary because for at least the past three years
+	 * AG-Grid has not respected its `suppressContextMenu` and
+	 * `preventDefaultOnContextMenu` settings.
+	 *
+	 * @param e The raw contextmenu event, so we can manually prevent its default behavior.
+	 */
+	public preventDefault(e: Event): void {
+		e.preventDefault();
+	}
 
 	/**
 	 * Handles opening the context menu when a table cell is right-clicked.

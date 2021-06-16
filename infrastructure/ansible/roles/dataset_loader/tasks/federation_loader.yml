@@ -1,0 +1,81 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+- name: "Create Federation {{ federation.mappings.cname }}"
+  vars:
+    cdn_name_query: 'response[?xmlId == `{{ federation.deliveryService | to_json }}`].cdnName | [0]'
+    cdn_name: '{{ get_all_ds.json | json_query(cdn_name_query) }}'
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/{{ cdn_name }}/federations"
+    method: POST
+    body: '{"cname":{{ federation.mappings.cname | to_json }},"ttl":{{ federation.mappings.ttl }}}'
+  register: create_federation_out
+
+- name: "Get ID of Federation {{ federation.mappings.cname }}"
+  set_fact:
+    federation_id: "{{ create_federation_out.json.response.id }}"
+    federation_cname: "{{ create_federation_out.json.response.cname }}"
+
+- name: "Assign User to Federation {{ federation_cname }}"
+  vars:
+    federation_user: "{{ federation.user }}"
+    federation_user_query: "response[?username == `{{ federation_user }}`].id | [0]"
+    federation_user_id: "{{ get_all_users.json | json_query(federation_user_query) }}"
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federations/{{ federation_id }}/users"
+    method: POST
+    body: '{"userIds":[{{ federation_user_id }}],"replace":false}'
+
+- name: "Assign Delivery Service to Federation {{ federation_cname }}"
+  vars:
+    federation_ds_id_query: 'response[?xmlId == `{{ federation.deliveryService | to_json }}`].id | [0]'
+    federation_ds_id: "{{ get_all_ds.json | json_query(federation_ds_id_query) }}"
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federations/{{ federation_id }}/deliveryservices"
+    method: POST
+    body: '{"dsIds":[{{ federation_ds_id }}],"replace":false}'
+
+- name: "Create Federation Resolvers of type {{ resolver_type_name }}"
+  with_dict: "{{ resolvers }}"
+  loop_control:
+    loop_var: resolver
+  vars:
+    resolvers: |
+      {
+        {%- for resolver_type, resolvers in federation.mappings.resolvers.items() -%}
+          {%- set resolver_type_loop = loop -%}
+          {%- for resolver in resolvers -%}
+            {{ resolver | to_json }}: {{ resolver_type | upper | to_json }}
+            {%- if not (loop.last and resolver_type_loop.last) -%},{%- endif -%}
+          {%- endfor -%}
+        {%- endfor -%}
+      }
+    resolver_type_name: "{{ resolver.value }}"
+    type_query: "[?name == `{{ resolver_type_name }}`].id | [0]"
+    resolver_type_id: "{{ get_all_types.json.response | json_query(type_query) }}"
+    ip_address: "{{ resolver.key }}"
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federation_resolvers"
+    method: POST
+    body: '{"ipAddress":{{ ip_address | to_json }},"typeId":{{ resolver_type_id }}}'
+  register: federation_resolver_out
+
+- name: "Assign Federation Resolvers of type {{ resolver_type_name }} to Federation {{ federation_cname }}"
+  with_items: "{{ federation_resolver_out.results }}"
+  loop_control:
+    loop_var: resolver_post_response
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/federations/{{ federation_id }}/federation_resolvers"
+    method: POST
+    body: '{"fedResolverIds":[{{ resolver_post_response.json | json_query("response.id") }}],"replace":false}'
