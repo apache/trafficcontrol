@@ -16,7 +16,6 @@
 # under the License.
 
 FROM debian:buster AS enroller-dependencies
-ARG ENROLLER_DEBUG_BUILD=false
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -34,6 +33,8 @@ RUN go_version=$(cat /GO_VERSION) && \
 ENV GOPATH=/go
 
 FROM enroller-dependencies AS enroller-builder
+ARG ENROLLER_DEBUG_BUILD=false
+
 # enroller source and dependencies
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
 COPY ./go.mod ./go.sum /go/src/github.com/apache/trafficcontrol/

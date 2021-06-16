@@ -24,7 +24,9 @@ ARG RHEL_VERSION=8
 FROM centos:${RHEL_VERSION} as trafficops-dependencies
 ARG RHEL_VERSION=8
 # Makes RHEL_VERSION available in later layers without needing to specify it again
-ENV RHEL_VERSION=$RHEL_VERSION
+ENV RHEL_VERSION="$RHEL_VERSION"
+
+VOLUME /traffic_ops_data
 
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 		yum -y install dnf || exit 1; \
@@ -131,6 +133,7 @@ RUN go get -u github.com/go-delve/delve/cmd/dlv
 
 FROM trafficops AS trafficops-debug
 COPY --from=get-delve /root/go/bin /usr/bin
+COPY infrastructure/cdn-in-a-box/traffic_ops/tv.conf conf/production/
 
 # Makes the default target skip the trafficops-debug stage
 FROM trafficops

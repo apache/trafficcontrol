@@ -1492,7 +1492,6 @@ func DeleteTestDeliveryServices(t *testing.T) {
 		}
 	}
 
-	// clean up parameter created in CreateTestDeliveryServices()
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", "location")
 	opts.QueryParameters.Set("configFile", "remap.config")
@@ -2036,6 +2035,29 @@ func DeleteTestDeliveryServicesURISigningKeys(t *testing.T) {
 		t.Errorf("Unexpected error deleting URI Signing keys for Delivery Service '%s': %v - alerts: %+v", *firstDS.XMLID, err, resp.Alerts)
 	}
 
+	emptyBytes, _, err := TOSession.GetDeliveryServiceURISigningKeys(*firstDS.XMLID, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("Unexpected error getting URI signing keys for Delivery Service '%s': %v", *firstDS.XMLID, err)
+	}
+	emptyMap := make(map[string]interface{})
+	err = json.Unmarshal(emptyBytes, &emptyMap)
+	if err != nil {
+		t.Errorf("unexpected error unmarshalling empty URI signing keys response: %v", err)
+	}
+	renewalKid, hasRenewalKid := emptyMap["renewal_kid"]
+	keys, hasKeys := emptyMap["keys"]
+	if !hasRenewalKid {
+		t.Error("getting empty URI signing keys - expected: 'renewal_kid' key, actual: not present")
+	}
+	if !hasKeys {
+		t.Error("getting empty URI signing keys - expected: 'keys' key, actual: not present")
+	}
+	if renewalKid != nil {
+		t.Errorf("getting empty URI signing keys - expected: 'renewal_kid' value to be nil, actual: %+v", renewalKid)
+	}
+	if keys != nil {
+		t.Errorf("getting empty URI signing keys - expected: 'keys' value to be nil, actual: %+v", keys)
+	}
 }
 
 func GetDeliveryServiceByLogsEnabled(t *testing.T) {

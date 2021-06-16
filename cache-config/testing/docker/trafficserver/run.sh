@@ -28,6 +28,13 @@ function initBuildArea() {
   exit 1; }
 }
 
+setowner() {
+	own="$(stat -c%u:%g "$1")"
+	shift
+	chown -R "${own}" "$@"
+}
+trap 'exit_code=$?; setowner /trafficcontrol /trafficcontrol/dist; exit $exit_code' EXIT;
+
 case ${ATS_VERSION:0:1} in
   8) cp /trafficserver-8.spec /trafficserver.spec
      ;;
@@ -44,7 +51,11 @@ echo "Building a RPM for ATS version: $ATS_VERSION"
 id ats &>/dev/null || /usr/sbin/useradd -u 176 -r ats -s /sbin/nologin -d /
 
 # setup the environment to use the devtoolset-9 tools.
-source scl_source enable devtoolset-9 
+if [[ "${RHEL_VERSION%%.*}" -le 7 ]]; then \
+  source scl_source enable devtoolset-9
+else
+  source scl_source enable gcc-toolset-9
+fi
 
 initBuildArea
 
@@ -74,5 +85,3 @@ case ${ATS_VERSION:0:1} in
      exit 1
      ;;
 esac 
-
-

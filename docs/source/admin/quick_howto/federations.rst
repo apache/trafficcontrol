@@ -77,9 +77,9 @@ Configure Federations
 		curl -ki -H "Cookie: mojolicious=eyJleHBpcmVzIjoxNDQ5MTA1MTI2LCJhdXRoX2RhdGEiOiJmZWRlcmF0aW9uX3VzZXIxIn0---06b4f870d809d82a91433e92eae8320875c3e8b0;" -XPUT 'http://localhost:3000/api/2.0/federations' -d '
 		{"federations": [
 			{ "deliveryService": "images-c1",
-			  "mappings":
+				"mappings":
 				{ "resolve4": [ "8.8.8.8/32", "8.8.4.4/32" ],
-				  "resolve6": ["2001:4860:4860::8888/128", "2001:4860:4860::8844"]
+					"resolve6": ["2001:4860:4860::8888/128", "2001:4860:4860::8844"]
 				}
 			}
 		]}'

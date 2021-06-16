@@ -20,7 +20,9 @@ package health
  */
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -31,6 +33,15 @@ type Time time.Time
 
 func (t Time) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("%d", time.Time(t).Unix())), nil
+}
+
+func (t *Time) UnmarshalJSON(data []byte) error {
+	unixTime, err := strconv.ParseInt(string(data), 10, 64)
+	if err != nil {
+		return errors.New("health.Time (" + string(data) + ") must be a unix epoch integer: " + err.Error())
+	}
+	*t = Time(time.Unix(unixTime, 0))
+	return nil
 }
 
 // Event represents an event change in aggregated data. For example, a cache being marked as unavailable.

@@ -32,7 +32,7 @@ else
   NAME=$2
 fi
 
-if [ "$2" != "trafficserver" ]; then
+if [ "$2" != "trafficserver.service" ]; then
   echo -e "\nFailed to start ${NAME}.service: Unit not found.n"
   exit 0
 fi
@@ -41,13 +41,17 @@ case $COMMAND in
   enable)
     ;;
   restart)
+    /opt/trafficserver/bin/trafficserver restart
     ;;
   status)
+    /opt/trafficserver/bin/trafficserver status
     ;;
   start)
+    /opt/trafficserver/bin/trafficserver start
     ;;
   stop)
+    /opt/trafficserver/bin/trafficserver stop
     ;;
 esac
 
-exit 0
+exit $?

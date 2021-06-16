@@ -37,8 +37,16 @@ RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
 		git \
 		rpm-build \
 		rsync \
+		gzip \
 		epel-release && \
 	yum -y clean all
+
+# CentOS 7 has pandoc in epel (which we installed above), 8 has it in [pP]ower[tT]ools
+RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
+		yum -y install dnf-plugins-core && \
+		(yum -y config-manager --set-enabled PowerTools || yum -y config-manager --set-enabled powertools) \
+	fi && \
+	yum -y install pandoc
 
 ### cache-config specific requirements
 FROM common-dependencies AS cache-config

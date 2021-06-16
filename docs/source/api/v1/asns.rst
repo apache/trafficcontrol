@@ -73,7 +73,7 @@ Response Structure
 :cachegroup:   A string that is the :ref:`cache-group-name` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :cachegroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :id:           An integral, unique identifier for this association between an :abbr:`ASN (Autonomous System Number)` and a :term:`Cache Group`
-:lastUpdated:  The time and date this server entry was last updated in an ISO-like format
+:lastUpdated:  The time and date this server entry was last updated in :ref:`non-rfc-datetime`
 
 .. code-block:: http
 	:caption: Response Example
@@ -140,7 +140,7 @@ Response Structure
 :cachegroup:   A string that is the :ref:`cache-group-name` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :cachegroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :id:           An integral, unique identifier for this association between an :abbr:`ASN (Autonomous System Number)` and a :term:`Cache Group`
-:lastUpdated:  The time and date this server entry was last updated in an ISO-like format
+:lastUpdated:  The time and date this server entry was last updated in :ref:`non-rfc-datetime`
 
 .. code-block:: http
 	:caption: Response Example
@@ -171,4 +171,3 @@ Response Structure
 		"id": 1,
 		"lastUpdated": "2019-12-02 21:49:08+00"
 	}}
-

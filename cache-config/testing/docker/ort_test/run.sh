@@ -79,7 +79,19 @@ if [[ -z $ATS_RPM ]]; then
   echo "ERROR: No ATS RPM was found"
   exit 2
 else
-  sed -i -e "s/CHANGEME/$ATS_RPM/" /ort-tests/tc-fixtures.json
+  echo "$(</ort-tests/tc-fixtures.json jq --arg ATS_RPM "$ATS_RPM" '.profiles[] |= (
+    select(.params != null).params[] |= (
+      select(.configFile == "package" and .name == "trafficserver").value = $ATS_RPM
+    ))')" >/ort-tests/tc-fixtures.json
+  if ! </ort-tests/tc-fixtures.json jq -r --arg ATS_RPM "$ATS_RPM" '.profiles[] |
+    select(.params != null).params[] |
+    select(.configFile == "package" and .name == "trafficserver")
+    .value' |
+      grep -qF "$ATS_RPM";
+  then
+    echo "ATS RPM version ${ATS_RPM} was not set"
+    exit 2
+  fi
 fi
 
 # wake up the to_server

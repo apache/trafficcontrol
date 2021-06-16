@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"testing"
 	"time"
 
@@ -165,11 +166,11 @@ func runRequest(host string, getData string) ([]byte, error) {
 	return out.Bytes(), nil
 }
 
-func runApply(host string, run_mode string) error {
+func runApply(host string, run_mode string, dispersion time.Duration) error {
 	args := []string{
 		"apply",
 		"--traffic-ops-insecure=true",
-		"--dispersion=0",
+		"--dispersion=" + strconv.FormatInt(int64(dispersion/time.Second), 10),
 		"--login-dispersion=0",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
@@ -180,6 +181,7 @@ func runApply(host string, run_mode string) error {
 		"--log-location-info=test.log",
 		"--log-location-debug=test.log",
 		"--omit-via-string-release=true",
+		"--git=no",
 		"--run-mode=" + run_mode,
 	}
 	cmd := exec.Command("t3c", args...)
