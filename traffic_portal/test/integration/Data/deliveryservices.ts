@@ -311,11 +311,6 @@ export const deliveryservices = {
 					description: "Admin Role",
 					username: "TPAdmin",
 					password: "pa$$word"
-				},
-                {
-					description: "Operator Role",
-					username: "TPOperator",
-					password: "pa$$word"
 				}
             ],
             add: [
