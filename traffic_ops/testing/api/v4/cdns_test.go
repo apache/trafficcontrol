@@ -48,7 +48,7 @@ func TestCDNs(t *testing.T) {
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestCDNsWithHeaders(t, header)
 		GetTestCDNs(t)
-		GetTestCDNsbyDomainName(t)
+		t.Run("get CDNs filtered by Domain Name", GetTestCDNsbyDomainName)
 		GetTestCDNsbyDnssec(t)
 		GetTestCDNsIMSAfterChange(t, header)
 		CreateTestCDNEmptyName(t)
@@ -325,6 +325,7 @@ func UpdateTestCDNs(t *testing.T) {
 	if len(testData.CDNs) < 1 {
 		t.Fatal("Need at least one CDN to test updating CDNs")
 	}
+
 	firstCDN := testData.CDNs[0]
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", firstCDN.Name)
@@ -337,12 +338,21 @@ func UpdateTestCDNs(t *testing.T) {
 		t.Fatalf("Expected exactly one CDN to be named '%s', found: %d", firstCDN.Name, len(resp.Response))
 	}
 	remoteCDN := resp.Response[0]
+	originalDomain := remoteCDN.DomainName
 	expectedCDNDomain := "domain2"
 	remoteCDN.DomainName = expectedCDNDomain
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateCDN(remoteCDN.ID, remoteCDN, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("cannot update CDN: %v - alerts: %+v", err, alert)
+	} else {
+		defer func(id int, cdn tc.CDN, domain string) {
+			cdn.DomainName = domain
+			alerts, _, err := TOSession.UpdateCDN(id, cdn, client.RequestOptions{})
+			if err != nil {
+				t.Errorf("Unexpected error restoring CDN domain name: %v - alerts: %+v", err, alerts.Alerts)
+			}
+		}(remoteCDN.ID, remoteCDN, originalDomain)
 	}
 
 	// Retrieve the CDN to check CDN name got updated
@@ -359,7 +369,6 @@ func UpdateTestCDNs(t *testing.T) {
 	if respCDN.DomainName != expectedCDNDomain {
 		t.Errorf("results do not match actual: %s, expected: %s", respCDN.DomainName, expectedCDNDomain)
 	}
-
 }
 
 func GetTestCDNs(t *testing.T) {
@@ -383,7 +392,7 @@ func GetTestCDNsbyDomainName(t *testing.T) {
 	opts.QueryParameters.Set("domainName", cdn.DomainName)
 	cdns, reqInf, err := TOSession.GetCDNs(opts)
 	if len(cdns.Response) != 1 {
-		t.Fatalf("Expected only one cdn response %v", cdns)
+		t.Errorf("Expected exactly one CDN to exist with domain name '%s', found: %d", cdn.DomainName, len(cdns.Response))
 	}
 	if err != nil {
 		t.Errorf("cannot get CDN by '%s': %v - alerts: %+v", cdn.DomainName, err, cdns.Alerts)
@@ -448,8 +457,8 @@ func DeleteTestCDNsInvalidId(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected, no cdn with that key found  but got - alerts: %+v", delResp.Alerts)
 	}
-	if reqInf.StatusCode != http.StatusBadRequest {
-		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected response status code %d, got %d", http.StatusNotFound, reqInf.StatusCode)
 	}
 }
 
