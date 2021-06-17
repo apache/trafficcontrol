@@ -18,7 +18,6 @@
 
 set -e
 
-
 function wait_for_endpoint() {
   try=0
   while [ $(curl -Lsk --write-out "%{http_code}" "$1" -o /dev/null) -ne 200 ] ; do
@@ -102,18 +101,17 @@ sudo hostname $TM_URI
 
 sudo tee -a /etc/hosts  <<- EOF
 127.0.0.1 $TO_URI
-127.0.0.1 $TESTTO_URI
 127.0.0.1 $TESTCACHES_URI
 127.0.0.1 $TM_URI
 EOF
 
-jq ".[].tcpPort |= $PORT | .[].cdnName |= $CDN | .[].hostName |= $TM_URI" \
+jq ".[].tcpPort |= $PORT | .[].cdnName |= \"$CDN\" | .[].hostName |= \"$TM_URI\"" \
   ${test_dir}/servers.json > servers.json.tmp && mv servers.json.tmp ${test_dir}/servers.json
 
-jq ".trafficMonitors[].port |= $PORT | .trafficMonitors[].hostName |= \"$TM_URI\" | .trafficServers[].interfaces[0].ipAddresses[0].address = \"127.0.0.1\"" \
+jq ".trafficMonitors[].port |= $PORT | .trafficMonitors[].ip6 |= \"$TM_URI\" | .trafficMonitors[].ip |= \"$TM_URI\" | .trafficMonitors[].hostName |= \"$TM_URI\" | .trafficServers[].interfaces[0].ipAddresses[0].address = \"127.0.0.1\"" \
   ${test_dir}/monitoring.json > monitoring.json.tmp && mv monitoring.json.tmp ${test_dir}/monitoring.json
 
-jq ".monitors[].port |= $PORT | .monitors[].ip = $TM_URI | .stats[].CDN_name = $CDN | .stats[].tm_host = $TESTTO_URI" \
+jq ".monitors.trafficmonitor.port |= $PORT | .monitors.trafficmonitor.ip |= \"$TM_URI\" | .monitors.trafficmonitor.ip6 |= \"$TM_URI\" | .stats[\"CDN_name\"] = \"$CDN\" | .stats[\"tm_host\"] = \"$TESTTO_URI\"" \
   ${test_dir}/snapshot.json > snapshot.json.tmp && mv snapshot.json.tmp ${test_dir}/snapshot.json
 
 cd "${repo_dir}/traffic_monitor/tools/testto"
@@ -186,7 +184,7 @@ cat > ./traffic_ops.cfg <<- EOF
 EOF
 
 ./traffic_monitor -opsCfg traffic_ops.cfg -config traffic_monitor.cfg  &
-sleep 10s
+sleep 25s
 
 
 wait_for_endpoint "http://$TM_URI:$TM_PORT/api/version"
