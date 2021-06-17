@@ -16,8 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-+set -e
-+
 download_go() {
 	. build/functions.sh
 	if verify_and_set_go_version; then
@@ -181,16 +179,13 @@ envsubst <"${resources}/riak.json" >riak.conf
 truncate --size=0 warning.log error.log # Removes output from previous API versions and makes sure files exist
 ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf &
 
+# TODO - Make these logs build artifacts
+# 2>&1 makes terminal output go faster, even though stderr will not contain anything
+tail -f warning.log 2>&1 | color_and_prefix "${yellow_bg}" 'Traffic Ops' &
+tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops' &
+
+
 cd "../testing/api/v$INPUT_VERSION"
 
 cp "${resources}/traffic-ops-test.json" traffic-ops-test.conf
-go test -test.v --cfg traffic-ops-test.conf || code="$?" && code="$?"
-
-# TODO - Make these logs build artifacts
-# 2>&1 makes terminal output go faster, even though stderr will not contain anything
-echo "------------ TRAFFIC OPS LOGS ------------"
-cd -
-color_and_prefix "${yellow_bg}" 'Traffic Ops' <warning.log 2>&1
-color_and_prefix "${red_bg}" 'Traffic Ops' <error.log 2>&1
-
-exit "$code"
+go test -test.v --cfg traffic-ops-test.conf
