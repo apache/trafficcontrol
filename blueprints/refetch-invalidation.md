@@ -321,7 +321,7 @@ The validation in Traffic Ops of the `invalidationType` field will be such that 
 
 ### Upgrade Impact
 
-Unless the database schema is changed, there will be no required migration. Since the field is optional and defaults to a value, any previous data will remain unaltered.
+The API for v4 and database schemas will change, however with the addition of the Parameter to ensure the feature is checked for safe guards, there is minimal impact on the upgrades. Clients will continue to create invalidation jobs (`refresh`) as they did before without impacting the caches downstream. However the caches downstream must implement the proper regexrevalidation plugin before enabling the feature via Parameters.
 
 Those utilizing the clients will need to update to be able to utilize the new type of invalidation job.
 
