@@ -236,7 +236,10 @@ func (to *Session) GenerateSSLKeysForDS(
 	sslFields tc.SSLKeyRequestFields,
 	opts RequestOptions,
 ) (tc.DeliveryServiceSSLKeysGenerationResponse, toclientlib.ReqInf, error) {
-	version := util.JSONIntStr(1)
+	if sslFields.Version == nil {
+		sslFields.Version = util.IntPtr(1)
+	}
+	version := util.JSONIntStr(*sslFields.Version)
 	request := tc.DeliveryServiceSSLKeysReq{
 		BusinessUnit:    sslFields.BusinessUnit,
 		CDN:             util.StrPtr(cdnName),

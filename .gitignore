@@ -34,6 +34,8 @@ docs/source/_build/
 traffic_ops/app/conf/ldap.conf
 traffic_ops/app/db/admin
 traffic_ops/app/db/reencrypt/reencrypt
+traffic_ops/app/db/traffic_vault_migrate/traffic_vault_migrate
+traffic_ops/app/db/traffic_vault_migrate/dump
 traffic_ops/**/*.log
 traffic_stats/traffic_stats
 misc/traffic-control-cdn/downloads/*.rpm

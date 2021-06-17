@@ -1,0 +1,9 @@
+{
+  "user": "admin",
+  "password": "riakAdmin",
+  "host": "localhost",
+  "port": "8087",
+  "insecure": true,
+  "tlsVersion": "11",
+  "timeout": 5
+}

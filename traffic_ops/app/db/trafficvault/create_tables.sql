@@ -74,7 +74,6 @@ ALTER TABLE dnssec OWNER TO traffic_vault;
 --
 
 CREATE TABLE IF NOT EXISTS sslkey (
-    id bigint NOT NULL,
     data bytea NOT NULL,
     deliveryservice text NOT NULL,
     cdn text NOT NULL,
@@ -85,25 +84,6 @@ CREATE TABLE IF NOT EXISTS sslkey (
 
 ALTER TABLE sslkey OWNER TO traffic_vault;
 
---
--- Name: sslkey_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_vault
---
-
-CREATE SEQUENCE IF NOT EXISTS sslkey_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE sslkey_id_seq OWNER TO traffic_vault;
-
---
--- Name: sslkey_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_vault
---
-
-ALTER SEQUENCE sslkey_id_seq OWNED BY sslkey.id;
 
 
 --
@@ -133,19 +113,6 @@ CREATE TABLE IF NOT EXISTS url_sig_key (
 ALTER TABLE url_sig_key OWNER TO traffic_vault;
 
 --
--- Name: sslkey id; Type: DEFAULT; Schema: public; Owner: traffic_vault
---
-
-ALTER TABLE ONLY sslkey ALTER COLUMN id SET DEFAULT nextval('sslkey_id_seq'::regclass);
-
---
--- Name: sslkey_id_seq; Type: SEQUENCE SET; Schema: public; Owner: traffic_vault
---
-
-SELECT pg_catalog.setval('sslkey_id_seq', 1, false);
-
-
---
 -- Name: dnssec dnssec_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_vault
 --
 
@@ -158,7 +125,7 @@ ALTER TABLE ONLY dnssec
 --
 
 ALTER TABLE ONLY sslkey
-    ADD CONSTRAINT sslkey_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT sslkey_pkey PRIMARY KEY (deliveryservice, cdn, version);
 
 
 --

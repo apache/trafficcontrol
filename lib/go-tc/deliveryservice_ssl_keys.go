@@ -73,6 +73,7 @@ type SSLKeyRequestFields struct {
 	HostName     *string `json:"hostname,omitempty"`
 	Country      *string `json:"country,omitempty"`
 	State        *string `json:"state,omitempty"`
+	Version      *int    `json:"version,omitempty"`
 }
 
 type DeliveryServiceSSLKeysReq struct {
