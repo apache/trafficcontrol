@@ -18,5 +18,7 @@
 name: 'tm-integration-tests'
 description: 'Runs Traffic Monitor integration tests'
 runs:
-  using: 'node12'
-  main: 'dist/tm-integration-tests.js'
+  using: composite
+  steps:
+    - run: ${{ github.action_path }}/entrypoint.sh
+      shell: bash
