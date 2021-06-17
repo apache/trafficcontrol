@@ -16,8 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -e
-
++set -e
++
 download_go() {
 	. build/functions.sh
 	if verify_and_set_go_version; then
@@ -183,11 +183,14 @@ truncate --size=0 warning.log error.log # Removes output from previous API versi
 
 cd "../testing/api/v$INPUT_VERSION"
 
+cp "${resources}/traffic-ops-test.json" traffic-ops-test.conf
+go test -test.v --cfg traffic-ops-test.conf || code="$?" && code="$?"
+
 # TODO - Make these logs build artifacts
 # 2>&1 makes terminal output go faster, even though stderr will not contain anything
 echo "------------ TRAFFIC OPS LOGS ------------"
+cd -
 color_and_prefix "${yellow_bg}" 'Traffic Ops' <warning.log 2>&1
 color_and_prefix "${red_bg}" 'Traffic Ops' <error.log 2>&1
 
-cp "${resources}/traffic-ops-test.json" traffic-ops-test.conf
-go test -test.v --cfg traffic-ops-test.conf
+exit "$code"
