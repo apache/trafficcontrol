@@ -109,6 +109,29 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         });
     };
 
+    $scope.lockCDN = function() {
+        const modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/select/lock/dialog.select.lock.tpl.html',
+            controller: 'DialogSelectLockController',
+            size: 'md',
+            resolve: {
+                cdns: function() {
+                    return $scope.cdns;
+                }
+            }
+        });
+        modalInstance.result.then(function(lock) {
+            cdnService.createLock(lock).
+            then(
+                function() {
+                    $state.reload();
+                }
+            );
+        }, function () {
+            // do nothing
+        });
+    };
+
     $scope.snapshot = function() {
         var params = {
             title: 'Diff CDN Config Snapshot',

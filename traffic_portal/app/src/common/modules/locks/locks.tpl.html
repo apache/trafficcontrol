@@ -6,9 +6,7 @@ regarding copyright ownership.  The ASF licenses this file
 to you under the Apache License, Version 2.0 (the
 "License"); you may not use this file except in compliance
 with the License.  You may obtain a copy of the License at
-
   http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing,
 software distributed under the License is distributed on an
 "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,30 +15,9 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<div class="main_container">
-
-    <!-- navigation -->
-    <div class="main-nav col-md-3" ui-view="navigation"></div>
-
-    <!-- header -->
-    <div class="top_nav" ui-view="header"></div>
-
-    <!-- page content -->
-    <div class="main-content" role="main">
-
-        <!-- locks -->
-        <div ui-view="locks"></div>
-
-        <!-- notifications -->
-        <div ui-view="notifications"></div>
-
-        <!-- messages -->
-        <div ui-view="message"></div>
-
-        <!-- the content -->
-        <div ui-view="content"></div>
-
+<div id="locksContainer">
+    <div class="alert alert-dark" ng-repeat="l in locks">
+        <button type="button" class="close" title="Unlock {{l.cdn}}" ng-click="confirmUnlock(l)"><i class="fa fa-unlock"></i></button>
+        <div ng-bind-html="l.cdn + ' is ' + ((l.soft) ? 'soft' : 'hard') + ' locked by ' + l.userName + ' (' + l.message + ')' | linky:'_blank'"></div>
     </div>
-
 </div>
-
