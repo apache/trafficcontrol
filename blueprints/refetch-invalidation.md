@@ -99,7 +99,7 @@ This struct now contains the `InvalidationType *string` field. Additionally, the
 type InvalidationJobInput struct {
 	DeliveryService  string  `json:"deliveryService"`
 	Regex            string  `json:"regex"`
-	InvalidationType *string `json:"invalidationType,omitempty"`
+	InvalidationType *string `json:"invalidationType"`
 	StartTime        *Time   `json:"startTime"`
 	TTL              *uint   `json:"ttl"`
 }
