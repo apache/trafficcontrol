@@ -421,6 +421,76 @@ export const deliveryservices = {
                     validationMessage: "Forbidden."
                 }
             ]
+        },
+		{
+            logins: [
+				{
+					description: "Operator Role",
+					username: "TPOperator",
+					password: "pa$$word"
+				}
+            ],
+            add: [
+                {
+                    description: "create ANY_MAP delivery service",
+                    Name: "tpdservice1",
+                    Type: "ANY_MAP",
+                    validationMessage: "Delivery Service [ tpdservice1 ] created"
+                },
+                {
+                    description: "create DNS delivery service",
+                    Name: "tpdservice2",
+                    Type: "DNS",
+                    validationMessage: "Delivery Service [ tpdservice2 ] created"
+                },
+                {
+                    description: "create STEERING delivery service",
+                    Name: "tpdservice3",
+                    Type: "STEERING",
+                    validationMessage: "Delivery Service [ tpdservice3 ] created"
+                }
+            ],
+            update: [
+                {
+                    description: "update delivery service display name",
+                    Name: "tpdservice1",
+                    NewName: "TPServiceNew1",
+                    validationMessage: "Delivery Service [ tpdservice1 ] updated"
+                }
+            ],
+            assignserver: [
+                {
+                    description: "assign server to delivery service",
+                    ServerName: "DSTest",
+                    DSName: "TPServiceNew1",
+                    validationMessage: "server assignments complete"
+                }
+            ],
+            assignrequiredcapabilities: [
+                {
+                    description: "assign required capabilities to delivery service",
+                    RCName: "DSTestCap",
+                    DSName: "tpdservice2",
+                    validationMessage: "deliveryservice.RequiredCapability was created."
+                }
+            ],
+            remove: [
+                {
+                    description: "delete a delivery service",
+                    Name: "tpdservice1",
+                    validationMessage: "Delivery service [ tpdservice1 ] deleted"
+                },
+                {
+                    description: "delete a delivery service",
+                    Name: "tpdservice2",
+                    validationMessage: "Delivery service [ tpdservice2 ] deleted"
+                },
+                {
+                    description: "delete a delivery service",
+                    Name: "tpdservice3",
+                    validationMessage: "Delivery service [ tpdservice3 ] deleted"
+                }
+            ]
         }
     ]
 }
