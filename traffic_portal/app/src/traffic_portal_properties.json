@@ -188,7 +188,7 @@
         "customLink": {
           "_comment": "Do you want to show a custom link to your own ds dashboards?",
           "show": false,
-          "baseUrl": "https://trafficstats.domain.com/dashboard/db/cdn-overview?var-svc="
+          "baseUrl": "https://trafficstats.domain.com/dashboard/script/traffic_ops_deliveryservice.js?which="
         }
       }
     },
@@ -202,7 +202,7 @@
       "charts": {
         "_comment": "Do you want to show a charts button for each server? If so, where can the charts be found? xml id will be appended to the provided url.",
         "show": false,
-        "baseUrl": "https://trafficstats.domain.com/dashboard/db/server-stats?var-SERVER="
+        "baseUrl": "https://trafficstats.domain.com/dashboard/script/traffic_ops_server.js?which="
       }
     },
     "changeLogs": {
