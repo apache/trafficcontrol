@@ -20,7 +20,9 @@ under the License.
 
 ## Problem Description
 
-Currently, within ATC, there is a concept of Invalidation Jobs. These Invalidation Jobs give a user the ability to queue an invalidation for a resource, primarily based on regular expressions. The invalidation is gathered and treated as though there was a cache **STALE**, allowing the CDN to query the origin server to **REFRESH** the resource. However, should the cache policy still be incorrect or misconfigured, the resource could be updated on the origin server, but the cache will still receive a 304 - Not Modified HTTP status response.
+Currently, within ATC, there is a concept of Invalidation Jobs. These Invalidation Jobs give a user the ability to queue an invalidation for a resource, primarily based on regular expressions. The invalidation is gathered and treated as though there was a cache **STALE**, allowing the CDN to query the origin server to **REFRESH** the resource. However, should the cache policy still be incorrect or misconfigured, the resource could be updated on the origin server, but the CDN will still receive a 304 - Not Modified HTTP status response.
+
+It should be noted that this problem originally arose from a misconfigured origin, however this applies to any parent cache within the topology.
 
 ## Proposed Change
 
@@ -46,7 +48,9 @@ Both the API and the database schema will likely be updated, which in turn will 
 
 #### REST API Impact
 
-No new endpoints will be required. However the current invalidation job will now include an optional field during `Create`. Invalidation jobs are added by submitting a POST to the jobs endpoint. 
+No new endpoints will be required. However the current invalidation job will now include an optional field during `Create`. Invalidation jobs are added by submitting a POST to the jobs endpoint.
+
+Globally, a new parameter will be added (recommend something akin to `refetch_enabled`, which defaults to **false**), that will be used to validate any **POSTS** calls to the _/jobs_ endpoint. This will be an initial check done to perform that the CDN is configured to process and return `refetch` jobs. If a `refetch` is submitted and the value of the parameter is **true**, the **POST** will succeed. If the value is `refetch` and the parameter is set to **false**, the **POST** will fail with a 400 - Bad Request. If the value is `refresh`, the parameter need not be checked at all and the **POST** will succeed. 
 
 **POST** /api/4.0/jobs
 
@@ -89,16 +93,15 @@ Body:
 }
 ```
 
-This struct now contains the `InvalidationType *string` field.
+This struct now contains the `InvalidationType *string` field. Additionally, the `DeliveryService` and `TTL` are no longer empty interfaces. Also `DeliveryService` and `Regex` are no longer optional fields. 
+
 ```go
 type InvalidationJobInput struct {
-	DeliveryService  *interface{} `json:"deliveryService"`
-	Regex            *string      `json:"regex"`
-	InvalidationType *string      `json:"invalidationType,omitempty"`
-	StartTime        *Time        `json:"startTime"`
-	TTL              *interface{} `json:"ttl"`
-	dsid             *uint
-	ttl              *time.Duration
+	DeliveryService  string  `json:"deliveryService"`
+	Regex            string  `json:"regex"`
+	InvalidationType *string `json:"invalidationType,omitempty"`
+	StartTime        *Time   `json:"startTime"`
+	TTL              *uint   `json:"ttl"`
 }
 ```
 
