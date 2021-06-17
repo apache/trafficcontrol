@@ -2,12 +2,12 @@
 	"author": "Apache Traffic Control",
 	"description": "Runs Traffic Portal Integration tests",
 	"license": "Apache-2.0",
-	"main": "dist/to-integration-tests.js",
-	"name": "to-integration-tests",
+	"main": "dist/tp-integration-tests.js",
+	"name": "tp-integration-tests",
 	"version": "0.0.0",
 	"scripts": {
 		"build": "tsc",
-		"lint": "eslint to-integration-tests.ts",
+		"lint": "eslint tp-integration-tests.ts",
 		"all": "npm run lint && npm run build"
 	},
 	"devDependencies": {

@@ -53,75 +53,7 @@ init() {
 
   curl -Lvsk ${TESTTO_URI}/api/${TO_API_VERSION}/cdns/fake/configs/monitoring -X POST -d '@/tm/monitoring.json'
 
-  curl -Lvsk ${TESTTO_URI}/api/${TO_API_VERSION}/servers -X POST -d '
-[
-  {
-    "cachegroup": "foo",
-    "cachegroupId": 0,
-    "cdnId": 1,
-    "cdnName": "fake",
-    "deliveryServices": null,
-		"fqdn": "trafficmonitor.traffic-monitor-integration.test",
-    "guid": "foo",
-    "hostName": "trafficmonitor",
-    "httpsPort": null,
-    "id": 1,
-    "iloIpAddress": null,
-    "iloIpGateway": null,
-    "iloIpNetmask": null,
-    "iloPassword": null,
-    "iloUsername": null,
-    "interfaceMtu": null,
-    "interfaceName": "bond0",
-    "ip6Address": null,
-    "ip6Gateway": null,
-    "interfaces": [
-      {
-        "ipAddresses": [
-          {
-            "address": "4.0.16.239.6",
-            "gateway": "4.0.16.239.1",
-            "serviceAddress": true
-          },
-          {
-            "address": "fc01:9400:1000:8::6",
-            "gateway": "fc01:9400:1000:8::1",
-            "serviceAddress": true
-          }
-        ],
-        "maxBandwidth": null,
-        "monitor": true,
-        "mtu": 1500,
-        "name": "eth0"
-      }
-    ],
-    "ipGateway": "4.0.0.0.1",
-    "ipNetmask": "255.255.255.0",
-    "lastUpdated": "2019",
-    "mgmtIpAddress": null,
-    "mgmtIpGateway": null,
-    "mgmtIpNetmask": null,
-    "offlineReason": "none",
-    "physLocation": "",
-    "physLocationId": 0,
-    "profile": "Monitor0",
-    "profileDesc": "nodesc",
-    "profileId": 0,
-    "rack": "",
-    "revalPending": false,
-    "routerHostName": "",
-    "routerPortName": "",
-    "status": "REPORTED",
-    "statusId": 0,
-    "tcpPort": 80,
-    "type": "RASCAL",
-    "typeId": 0,
-    "updPending": false,
-    "xmppId": "",
-    "xmppPasswd": ""
-  }
-]
-'
+  curl -Lvsk ${TESTTO_URI}/api/${TO_API_VERSION}/servers -X POST -d '@/tm/servers.json'
 
   cat >$CFG_FILE <<-EOF
 {
