@@ -82,6 +82,9 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
                     await deliveryservicesPage.OpenDeliveryServicePage();
                 });
             });
+            it('can close service menu tab', async () => {
+                await deliveryservicesPage.OpenServicesMenu();
+            });
             it('can logout', async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
             });
