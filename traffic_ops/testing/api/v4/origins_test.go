@@ -36,12 +36,14 @@ func TestOrigins(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfUnmodifiedSince, time)
+		GetTestOriginsByParams(t)
+		GetTestOriginsByInvalidParams(t)
 		UpdateTestOrigins(t)
 		UpdateTestOriginsWithHeaders(t, header)
 		GetTestOrigins(t)
 		NotFoundDeleteTest(t)
 		OriginTenancyTest(t)
-		VerifyPaginationSupport(t)
+		GetTestPaginationSupportOrigins(t)
 		header = make(map[string][]string)
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
@@ -270,17 +272,17 @@ func alertsHaveError(alerts []tc.Alert, err string) bool {
 	return false
 }
 
-func VerifyPaginationSupport(t *testing.T) {
+func GetTestPaginationSupportOrigins(t *testing.T) {
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("orderby", "id")
 	resp, _, err := TOSession.GetOrigins(opts)
 	if err != nil {
 		t.Fatalf("cannot get Origins: %v - alerts: %+v", err, resp.Alerts)
 	}
-	if len(resp.Response) < 3 {
-		t.Fatalf("Need at least 3 Origins in Traffic Ops to test pagination")
-	}
 	origins := resp.Response
+	if len(origins) < 3 {
+		t.Fatalf("Need at least 3 Origins in Traffic Ops to test pagination, found: %d", len(resp.Response))
+	}
 
 	opts.QueryParameters.Set("limit", "1")
 	originsWithLimit, _, err := TOSession.GetOrigins(opts)
@@ -372,5 +374,150 @@ func DeleteTestOrigins(t *testing.T) {
 				t.Errorf("expected Origin '%s' to be deleted, but it was found in Traffic Ops", *origin.Name)
 			}
 		}
+	}
+}
+
+func GetTestOriginsByParams(t *testing.T) {
+	if len(testData.Origins) < 1 {
+		t.Fatal("Need at least one Origin to test Get Origins by params")
+	}
+	origins := testData.Origins[0]
+	if origins.Name == nil || len(*origins.Name) == 0 {
+		t.Fatal("Found nil value in Origin name")
+	}
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", *origins.Name)
+	originByName, _, _ := TOSession.GetOrigins(opts)
+	if len(originByName.Response) < 1 {
+		t.Fatalf("Expected atleast one Origin for GET Origin by Delivery Service, but found %d", len(originByName.Response))
+	}
+	if originByName.Response[0].DeliveryServiceID == nil {
+		t.Fatal("Found nil value in delivery service")
+	}
+	if originByName.Response[0].CachegroupID == nil {
+		t.Fatal("Found nil value in Cachegroup")
+	}
+	if originByName.Response[0].CoordinateID == nil {
+		t.Fatal("Found nil value in Coordinate")
+	}
+	if originByName.Response[0].ProfileID == nil {
+		t.Fatal("Found nil value in Profile")
+	}
+	if originByName.Response[0].IsPrimary == nil {
+		t.Fatal("Found nil value in IsPrimary field")
+	}
+
+	//Get Origins by DSID
+	dsId := *originByName.Response[0].DeliveryServiceID
+	opts.QueryParameters.Del("name")
+	opts.QueryParameters.Set("deliveryservice", strconv.Itoa(dsId))
+	originByDs, _, err := TOSession.GetOrigins(opts)
+	if err != nil {
+		t.Errorf("cannot get Origin by DeliveryService ID: %v - alerts: %+v", err, originByDs.Alerts)
+	}
+	if len(originByDs.Response) < 1 {
+		t.Fatalf("Expected atleast one Origin for GET Origin by Delivery Service, but found %d", len(originByDs.Response))
+	}
+
+	//Get Origins by Cachegroup
+	cachegroupID := *originByName.Response[0].CachegroupID
+	opts.QueryParameters.Del("deliveryservice")
+	opts.QueryParameters.Set("cachegroup", strconv.Itoa(cachegroupID))
+	originByCg, _, err := TOSession.GetOrigins(opts)
+	if err != nil {
+		t.Errorf("cannot get Origin by Cachegroup ID: %v - alerts: %+v", err, originByCg.Alerts)
+	}
+	if len(originByCg.Response) < 1 {
+		t.Fatalf("Expected atleast one Origin for GET Origin by Cachegroups, but found %d", len(originByCg.Response))
+	}
+
+	//Get Origins by Coordinate
+	CoordinateID := *originByName.Response[0].CoordinateID
+	opts.QueryParameters.Del("cachegroup")
+	opts.QueryParameters.Set("coordinate", strconv.Itoa(CoordinateID))
+	originByCoordinate, _, err := TOSession.GetOrigins(opts)
+	if err != nil {
+		t.Errorf("cannot get Origin by Coordinate ID: %v - alerts: %+v", err, originByCoordinate.Alerts)
+	}
+	if len(originByCoordinate.Response) < 1 {
+		t.Fatalf("Expected atleast one Origin for GET Origin by Coordinate, but found %d", len(originByCoordinate.Response))
+	}
+
+	//Get Origins by Profile
+	profileId := *originByName.Response[0].ProfileID
+	opts.QueryParameters.Del("coordinate")
+	opts.QueryParameters.Set("profileId", strconv.Itoa(profileId))
+	originByProfile, _, err := TOSession.GetOrigins(opts)
+	if err != nil {
+		t.Errorf("cannot get Origin by Profile ID: %v - alerts: %+v", err, originByProfile.Alerts)
+	}
+	if len(originByProfile.Response) < 1 {
+		t.Fatalf("Expected atleast one Origin for GET Origin by Profile, but found %d", len(originByProfile.Response))
+	}
+
+	//Get Origins by Primary
+	isPrimary := *originByName.Response[0].IsPrimary
+	opts.QueryParameters.Del("profileId")
+	opts.QueryParameters.Set("isPrimary", strconv.FormatBool(isPrimary))
+	originByPrimary, _, err := TOSession.GetOrigins(opts)
+	if err != nil {
+		t.Errorf("cannot get Origin by Primary ID: %v - alerts: %+v", err, originByPrimary.Alerts)
+	}
+	if len(originByPrimary.Response) < 1 {
+		t.Fatalf("Expected atleast one Origin for GET Origin by Primary, but found %d", len(originByPrimary.Response))
+	}
+
+	//Get Origins by Tenant
+	tenant := *originByName.Response[0].TenantID
+	opts.QueryParameters.Del("isPrimary")
+	opts.QueryParameters.Set("tenant", strconv.Itoa(tenant))
+	originByTenant, _, err := TOSession.GetOrigins(opts)
+	if err != nil {
+		t.Errorf("cannot get Origin by Tenant ID: %v - alerts: %+v", err, originByTenant.Alerts)
+	}
+	if len(originByTenant.Response) < 1 {
+		t.Fatalf("Expected atleast one Origin for GET Origin by Tenant, but found %d", len(originByTenant.Response))
+	}
+}
+
+func GetTestOriginsByInvalidParams(t *testing.T) {
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("deliveryservice", "12345")
+	originByDs, _, _ := TOSession.GetOrigins(opts)
+	if len(originByDs.Response) > 0 {
+		t.Fatalf("Expected empty response for GET Origin by invalid Delivery Service, but found %d", len(originByDs.Response))
+	}
+
+	//Get Origins by Cachegroup
+	opts.QueryParameters.Del("deliveryservice")
+	opts.QueryParameters.Set("cachegroup", "12345")
+	originByCg, _, _ := TOSession.GetOrigins(opts)
+	if len(originByCg.Response) > 0 {
+		t.Fatalf("Expected empty response for GET Origin by invalid Cachegroups, but found %d", len(originByCg.Response))
+	}
+
+	//Get Origins by Coordinate
+	opts.QueryParameters.Del("cachegroup")
+	opts.QueryParameters.Set("coordinate", "12345")
+	originByCoordinate, _, _ := TOSession.GetOrigins(opts)
+	if len(originByCoordinate.Response) > 0 {
+		t.Fatalf("Expected empty response for GET Origin by invalid Coordinate, but found %d", len(originByCoordinate.Response))
+	}
+
+	//Get Origins by Profile
+	opts.QueryParameters.Del("coordinate")
+	opts.QueryParameters.Set("profileId", "12345")
+	originByProfile, _, _ := TOSession.GetOrigins(opts)
+	if len(originByProfile.Response) > 0 {
+		t.Fatalf("Expected empty response for GET Origin by invalid Profile, but found %d", len(originByProfile.Response))
+	}
+
+	//Get Origins by Tenant
+	opts.QueryParameters.Del("profileId")
+	opts.QueryParameters.Set("tenant", "12345")
+	originByTenant, _, _ := TOSession.GetOrigins(opts)
+	if len(originByTenant.Response) > 0 {
+		t.Fatalf("Expected empty response for GET Origin by invalid Tenant, but found %d", len(originByTenant.Response))
 	}
 }
