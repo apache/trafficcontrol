@@ -81,6 +81,20 @@ db_admin_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/db
 	cp "$TC_DIR"/traffic_ops/app/db/admin .
 ) || { echo "Could not copy go db admin at $(pwd): $!"; exit 1; };
 
+# copy TV DB reencrypt
+reencrypt_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/db/reencrypt
+( mkdir -p "$reencrypt_dir" && \
+	cd "$reencrypt_dir" && \
+	cp "$TC_DIR"/traffic_ops/app/db/reencrypt/reencrypt .
+) || { echo "Could not copy go db reencrypt at $(pwd): $!"; exit 1; };
+
+# copy TV migrate
+tvm_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/db/traffic_vault_migrate
+( mkdir -p "$tvm_dir" && \
+	cd "$tvm_dir" && \
+	cp "$TC_DIR"/traffic_ops/app/db/traffic_vault_migrate/traffic_vault_migrate .
+) || { echo "Could not copy go db traffic_vault_migrate at $(pwd): $!"; exit 1; };
+
 # copy TO profile converter
 convert_dir=src/github.com/apache/trafficcontrol/traffic_ops/install/bin/convert_profile
 ( mkdir -p "$convert_dir" && \

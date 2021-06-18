@@ -737,7 +737,7 @@ func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, 
 			log.Errorln("Traffic Ops is signaling that a revalidation is waiting to be applied.")
 			updateStatus = UpdateTropsNeeded
 			if serverStatus.ParentRevalPending == true {
-				if r.Cfg.WaitForParents {
+				if r.Cfg.WaitForParents == config.WaitForParentsReval || r.Cfg.WaitForParents == config.WaitForParentsTrue {
 					log.Infoln("Traffic Ops is signaling that my parents need to revalidate, not revalidating.")
 					updateStatus = UpdateTropsNotNeeded
 				} else {
@@ -787,7 +787,9 @@ func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 			updateStatus = UpdateTropsNeeded
 			log.Errorln("Traffic Ops is signaling that an update is waiting to be applied")
 
-			if serverStatus.ParentPending && r.Cfg.WaitForParents && !serverStatus.UseRevalPending {
+			if serverStatus.ParentPending &&
+				(r.Cfg.WaitForParents == config.WaitForParentsTrue ||
+					(r.Cfg.WaitForParents == config.WaitForParentsReval && !serverStatus.UseRevalPending)) {
 				log.Errorln("Traffic Ops is signaling that my parents need an update.")
 				if r.Cfg.RunMode == t3cutil.ModeSyncDS {
 					log.Infof("In syncds mode, sleeping for %ds to see if the update my parents need is cleared.", randDispSec/time.Second)
@@ -804,7 +806,7 @@ func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 					}
 				}
 			} else {
-				log.Debugf("Traffic Ops is signaling that my parents do not need an update, or wait_for_parents is false.")
+				log.Debugf("Processing with update: Traffic Ops server status %+v config wait-for-parents %+v", serverStatus, r.Cfg.WaitForParents)
 			}
 		} else if r.Cfg.RunMode == t3cutil.ModeSyncDS {
 			log.Errorln("In syncds mode, but no syncds update needs to be applied.  Running revalidation before exiting.")

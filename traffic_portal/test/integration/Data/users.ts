@@ -31,7 +31,7 @@ export const users = {
             ],
             check: [
                 {
-                    description: "check CSV link from CDN page",
+                    description: "check CSV link from Users page",
                     Name: "Export as CSV"
                 }
             ],
