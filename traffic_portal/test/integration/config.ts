@@ -39,7 +39,7 @@ if (config.capabilities) {
 }
 config.onPrepare = async function () {
     await browser.waitForAngularEnabled(true);
-
+    browser.driver.manage().window().maximize();
     emptyDir('./Reports/', function (err) {
       console.log(err);
     });

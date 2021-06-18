@@ -421,6 +421,76 @@ export const deliveryservices = {
                     validationMessage: "Forbidden."
                 }
             ]
+        },
+		{
+            logins: [
+                {
+					description: "Operation Role",
+					username: "TPOperator",
+					password: "pa$$word"
+				}
+            ],
+            add: [
+                {
+                    description: "create ANY_MAP delivery service",
+                    Name: "optpdservice1",
+                    Type: "ANY_MAP",
+                    validationMessage: "Delivery Service [ optpdservice1 ] created"
+                },
+                {
+                    description: "create DNS delivery service",
+                    Name: "optpdservice2",
+                    Type: "DNS",
+                    validationMessage: "Delivery Service [ optpdservice2 ] created"
+                },
+                {
+                    description: "create STEERING delivery service",
+                    Name: "optpdservice3",
+                    Type: "STEERING",
+                    validationMessage: "Delivery Service [ optpdservice3 ] created"
+                }
+            ],
+            update: [
+                {
+                    description: "update delivery service display name",
+                    Name: "optpdservice1",
+                    NewName: "opTPServiceNew1",
+                    validationMessage: "Delivery Service [ optpdservice1 ] updated"
+                }
+            ],
+            assignserver: [
+                {
+                    description: "assign server to delivery service",
+                    ServerName: "DSTest",
+                    DSName: "opTPServiceNew1",
+                    validationMessage: "server assignments complete"
+                }
+            ],
+            assignrequiredcapabilities: [
+                {
+                    description: "assign required capabilities to delivery service",
+                    RCName: "DSTestCap",
+                    DSName: "optpdservice2",
+                    validationMessage: "deliveryservice.RequiredCapability was created."
+                }
+            ],
+            remove: [
+                {
+                    description: "delete a delivery service",
+                    Name: "optpdservice1",
+                    validationMessage: "Delivery service [ optpdservice1 ] deleted"
+                },
+                {
+                    description: "delete a delivery service",
+                    Name: "optpdservice2",
+                    validationMessage: "Delivery service [ optpdservice2 ] deleted"
+                },
+                {
+                    description: "delete a delivery service",
+                    Name: "optpdservice3",
+                    validationMessage: "Delivery service [ optpdservice3 ] deleted"
+                }
+            ]
         }
     ]
 }
