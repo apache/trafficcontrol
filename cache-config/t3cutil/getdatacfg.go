@@ -22,6 +22,7 @@ package t3cutil
 import (
 	"errors"
 	"net"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -29,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/toreq"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -64,7 +66,7 @@ type ConfigData struct {
 	Server *atscfg.Server `json:"server,omitempty"`
 
 	// Jobs must be all Jobs on the server's CDN. May include jobs on other CDNs.
-	Jobs []tc.Job `json:"jobs,omitempty"`
+	Jobs []tc.InvalidationJob `json:"jobs,omitempty"`
 
 	// CDN must be the CDN of the server.
 	CDN *tc.CDN `json:"cdn,omitempty"`
@@ -98,6 +100,60 @@ type ConfigData struct {
 	// multiple addresses may be used for the multiple requests necessary to fetch all data.
 	TrafficOpsAddresses []string `json:"traffic_ops_addresses,omitempty"`
 	TrafficOpsURL       string   `json:"traffic_ops_url,omitempty"`
+
+	MetaData ConfigDataMetaData `json:"metadata"`
+}
+
+type ConfigDataMetaData struct {
+	Servers                ReqMetaData                            `json:"servers"`
+	CacheGroups            ReqMetaData                            `json:"cache_groups"`
+	GlobalParams           ReqMetaData                            `json:"global_parameters"`
+	ServerParams           ReqMetaData                            `json:"server_parameters"`
+	CacheKeyParams         ReqMetaData                            `json:"cache_key_parameters"`
+	ParentConfigParams     ReqMetaData                            `json:"parent_config_parameters"`
+	DeliveryServices       ReqMetaData                            `json:"delivery_services"`
+	DeliveryServiceServers ReqMetaData                            `json:"delivery_service_servers"`
+	Jobs                   ReqMetaData                            `json:"jobs"`
+	CDN                    ReqMetaData                            `json:"cdn"`
+	DeliveryServiceRegexes ReqMetaData                            `json:"delivery_service_regexes"`
+	Profile                ReqMetaData                            `json:"profile"`
+	URISigningKeys         map[tc.DeliveryServiceName]ReqMetaData `json:"uri_signing_keys"`
+	URLSigKeys             map[tc.DeliveryServiceName]ReqMetaData `json:"url_sig_keys"`
+	ServerCapabilities     ReqMetaData                            `json:"server_capabilities"`
+	DSRequiredCapabilities ReqMetaData                            `json:"delivery_service_required_capabilities"`
+	SSLKeys                ReqMetaData                            `json:"ssl_keys"`
+	Topologies             ReqMetaData                            `json:"topologies"`
+}
+
+// ReqMetaData has response headers for Conditional Requests.
+type ReqMetaData struct {
+	LastModified string `json:"last_modified"`
+	Date         string `json:"date"`
+	ETag         string `json:"etag"`
+}
+
+func MakeReqHdr(md ReqMetaData) http.Header {
+	if md.LastModified == "" && md.Date == "" && md.ETag == "" {
+		return nil
+	}
+	hdr := http.Header{}
+	if lm, ok := rfc.ParseHTTPDate(md.LastModified); ok {
+		hdr.Set("If-Modified-Since", rfc.FormatHTTPDate(lm.Add(time.Second))) // add 1s, because TO rounds down, which will always be modified
+	} else if date, ok := rfc.ParseHTTPDate(md.Date); ok {
+		hdr.Set("If-Modified-Since", rfc.FormatHTTPDate(date.Add(time.Second))) // add 1s, because TO rounds down, which will always be modified
+	}
+	if md.ETag != "" {
+		hdr.Set("If-None-Match", md.ETag)
+	}
+	return hdr
+}
+
+func MakeReqMetaData(respHdr http.Header) ReqMetaData {
+	return ReqMetaData{
+		LastModified: respHdr.Get(rfc.LastModified),
+		Date:         respHdr.Get(rfc.Date),
+		ETag:         respHdr.Get(rfc.ETagHeader),
+	}
 }
 
 // GetTOData gets all the data from Traffic Ops needed to generate config.
@@ -110,23 +166,36 @@ type ConfigData struct {
 // The cacheHostName is the hostname of the cache to get config generation data for.
 //
 // The revalOnly arg is whether to only get data necessary to revalidate, versus all data necessary to generate cache config.
-func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName string, revalOnly bool) (*ConfigData, error) {
+func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName string, revalOnly bool, oldCfg *ConfigData) (*ConfigData, error) {
 	start := time.Now()
 	defer func() { log.Infof("GetTOData took %v\n", time.Since(start)) }()
 
 	toIPs := &sync.Map{} // each Traffic Ops request could get a different IP, so track them all
 	toData := &ConfigData{}
 
-	globalParams, toAddr, err := toClient.GetGlobalParameters()
-	if err != nil {
-		return nil, errors.New("getting global parameters: " + err.Error())
+	{
+		reqHdr := (http.Header)(nil)
+		if oldCfg != nil {
+			reqHdr = MakeReqHdr(oldCfg.MetaData.GlobalParams)
+		}
+		globalParams, reqInf, err := toClient.GetGlobalParameters(reqHdr)
+		if err != nil {
+			return nil, errors.New("getting global parameters: " + err.Error())
+		}
+		if reqInf.StatusCode == http.StatusNotModified {
+			log.Infof("Getting config: %v not modified, using old config", "Global Params")
+			toData.GlobalParams = oldCfg.GlobalParams
+		} else {
+			log.Infof("Getting config: %v is modified, using new response", "Global Params")
+			toData.GlobalParams = globalParams
+		}
+		toData.MetaData.GlobalParams = MakeReqMetaData(reqInf.Headers)
+		toIPs.Store(reqInf.RemoteAddr, nil)
 	}
-	toIPs.Store(toAddr, nil)
-	toData.GlobalParams = globalParams
 
 	if !disableProxy {
 		toProxyURLStr := ""
-		for _, param := range globalParams {
+		for _, param := range toData.GlobalParams {
 			if param.Name == TrafficOpsProxyParameterName {
 				toProxyURLStr = param.Value
 				break
@@ -150,15 +219,29 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 	serversF := func() error {
 		defer func(start time.Time) { log.Infof("serversF took %v\n", time.Since(start)) }(time.Now())
 		// TODO TOAPI add /servers?cdn=1 query param
-		servers, toAddr, err := toClient.GetServers()
-		if err != nil {
-			return errors.New("getting servers: " + err.Error())
+
+		{
+			reqHdr := (http.Header)(nil)
+			if oldCfg != nil {
+				reqHdr = MakeReqHdr(oldCfg.MetaData.Servers)
+			}
+			servers, reqInf, err := toClient.GetServers(reqHdr)
+			if err != nil {
+				return errors.New("getting servers: " + err.Error())
+			}
+			if reqInf.StatusCode == http.StatusNotModified {
+				log.Infof("Getting config: %v not modified, using old config", "Servers")
+				toData.Servers = oldCfg.Servers
+			} else {
+				log.Infof("Getting config: %v is modified, using new response", "Servers")
+				toData.Servers = servers
+			}
+			toData.MetaData.Servers = MakeReqMetaData(reqInf.Headers)
+			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
-		toData.Servers = servers
-		toIPs.Store(toAddr, nil)
 
 		server := &atscfg.Server{}
-		for _, toServer := range servers {
+		for _, toServer := range toData.Servers {
 			if toServer.HostName != nil && *toServer.HostName == cacheHostName {
 				server = &toServer
 				break
@@ -178,23 +261,52 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 
 		sslF := func() error {
 			defer func(start time.Time) { log.Infof("sslF took %v\n", time.Since(start)) }(time.Now())
-			keys, toAddr, err := toClient.GetCDNSSLKeys(tc.CDNName(*server.CDNName))
-			if err != nil {
-				return errors.New("getting cdn '" + *server.CDNName + "': " + err.Error())
+
+			{
+				reqHdr := (http.Header)(nil)
+				if oldCfg != nil {
+					reqHdr = MakeReqHdr(oldCfg.MetaData.SSLKeys)
+				}
+				keys, reqInf, err := toClient.GetCDNSSLKeys(tc.CDNName(*server.CDNName), reqHdr)
+				if err != nil {
+					return errors.New("getting cdn '" + *server.CDNName + "': " + err.Error())
+				}
+
+				if reqInf.StatusCode == http.StatusNotModified {
+					log.Infof("Getting config: %v not modified, using old config", "SSLKeys")
+					toData.SSLKeys = oldCfg.SSLKeys
+				} else {
+					log.Infof("Getting config: %v is modified, using new response", "SSLKeys")
+					toData.SSLKeys = keys
+				}
+				toData.MetaData.SSLKeys = MakeReqMetaData(reqInf.Headers)
+				toIPs.Store(reqInf.RemoteAddr, nil)
 			}
-			toData.SSLKeys = keys
-			toIPs.Store(toAddr, nil)
 			return nil
 		}
 		dsF := func() error {
 			defer func(start time.Time) { log.Infof("dsF took %v\n", time.Since(start)) }(time.Now())
 
-			dses, toAddr, err := toClient.GetCDNDeliveryServices(*server.CDNID)
-			if err != nil {
-				return errors.New("getting delivery services: " + err.Error())
+			{
+				reqHdr := (http.Header)(nil)
+				if oldCfg != nil {
+					reqHdr = MakeReqHdr(oldCfg.MetaData.DeliveryServices)
+				}
+				dses, reqInf, err := toClient.GetCDNDeliveryServices(*server.CDNID, reqHdr)
+				if err != nil {
+					return errors.New("getting delivery services: " + err.Error())
+				}
+
+				if reqInf.StatusCode == http.StatusNotModified {
+					log.Infof("Getting config: %v not modified, using old config", "DeliveryServices")
+					toData.DeliveryServices = oldCfg.DeliveryServices
+				} else {
+					log.Infof("Getting config: %v is modified, using new response", "DeliveryServices")
+					toData.DeliveryServices = dses
+				}
+				toData.MetaData.DeliveryServices = MakeReqMetaData(reqInf.Headers)
+				toIPs.Store(reqInf.RemoteAddr, nil)
 			}
-			toData.DeliveryServices = dses
-			toIPs.Store(toAddr, nil)
 
 			// TODO uncomment when MSO Origins are changed to not use DSS, to avoid the DSS call if it isn't necessary
 			// allDSesHaveTopologies := true
@@ -210,20 +322,35 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 
 			dssF := func() error {
 				defer func(start time.Time) { log.Infof("dssF took %v\n", time.Since(start)) }(time.Now())
-				dss, toAddr, err := toClient.GetDeliveryServiceServers(nil, nil)
-				if err != nil {
-					return errors.New("getting delivery service servers: " + err.Error())
-				}
 
-				toData.DeliveryServiceServers = filterUnusedDSS(dss, *toData.Server.CDNID, toData.Servers, toData.DeliveryServices)
-				toIPs.Store(toAddr, nil)
+				{
+					reqHdr := (http.Header)(nil)
+					if oldCfg != nil {
+						reqHdr = MakeReqHdr(oldCfg.MetaData.DeliveryServiceServers)
+					}
+					dss, reqInf, err := toClient.GetDeliveryServiceServers(nil, nil, reqHdr)
+					if err != nil {
+						return errors.New("getting delivery service servers: " + err.Error())
+					}
+
+					if reqInf.StatusCode == http.StatusNotModified {
+						log.Infof("Getting config: %v not modified, using old config", "DeliveryServiceServers")
+						toData.DeliveryServiceServers = oldCfg.DeliveryServiceServers
+					} else {
+						log.Infof("Getting config: %v is modified, using new response", "DeliveryServiceServers")
+						toData.DeliveryServiceServers = filterUnusedDSS(dss, *toData.Server.CDNID, toData.Servers, toData.DeliveryServices)
+					}
+					toData.MetaData.DeliveryServiceServers = MakeReqMetaData(reqInf.Headers)
+					toIPs.Store(reqInf.RemoteAddr, nil)
+				}
 				return nil
 			}
 
 			uriSignKeysF := func() error {
 				defer func(start time.Time) { log.Infof("uriF took %v\n", time.Since(start)) }(time.Now())
 				uriSigningKeys := map[tc.DeliveryServiceName][]byte{}
-				for _, ds := range dses {
+				toData.MetaData.URISigningKeys = map[tc.DeliveryServiceName]ReqMetaData{}
+				for _, ds := range toData.DeliveryServices {
 					if ds.XMLID == nil {
 						continue // TODO warn?
 					}
@@ -231,17 +358,30 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURISigning {
 						continue
 					}
-					keys, toAddr, err := toClient.GetURISigningKeys(*ds.XMLID)
+
+					reqHdr := (http.Header)(nil)
+					if oldCfg != nil && oldCfg.MetaData.URISigningKeys != nil {
+						reqHdr = MakeReqHdr(oldCfg.MetaData.URISigningKeys[tc.DeliveryServiceName(*ds.XMLID)])
+					}
+					keys, reqInf, err := toClient.GetURISigningKeys(*ds.XMLID, reqHdr)
 					if err != nil {
 						if strings.Contains(strings.ToLower(err.Error()), "not found") {
-							log.Errorln("Delivery service '" + *ds.XMLID + "' is uri_signing, but keys were not found! Skipping!")
+							log.Errorln("Delivery service '" + *ds.XMLID + "' is uri_signing, but keys not found! Skipping!")
 							continue
 						} else {
 							return errors.New("getting uri signing keys for ds '" + *ds.XMLID + "': " + err.Error())
 						}
 					}
-					toIPs.Store(toAddr, nil)
-					uriSigningKeys[tc.DeliveryServiceName(*ds.XMLID)] = keys
+
+					if reqInf.StatusCode == http.StatusNotModified {
+						log.Infof("Getting config: %v not modified, using old config", "URISigningKeys["+*ds.XMLID+"]")
+						uriSigningKeys[tc.DeliveryServiceName(*ds.XMLID)] = oldCfg.URISigningKeys[tc.DeliveryServiceName(*ds.XMLID)]
+					} else {
+						log.Infof("Getting config: %v is modified, using new response", "URISigningKeys["+*ds.XMLID+"]")
+						uriSigningKeys[tc.DeliveryServiceName(*ds.XMLID)] = keys
+					}
+					toData.MetaData.URISigningKeys[tc.DeliveryServiceName(*ds.XMLID)] = MakeReqMetaData(reqInf.Headers)
+					toIPs.Store(reqInf.RemoteAddr, nil)
 				}
 				toData.URISigningKeys = uriSigningKeys
 				return nil
@@ -250,7 +390,8 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			urlSigKeysF := func() error {
 				defer func(start time.Time) { log.Infof("urlF took %v\n", time.Since(start)) }(time.Now())
 				urlSigKeys := map[tc.DeliveryServiceName]tc.URLSigKeys{}
-				for _, ds := range dses {
+				toData.MetaData.URLSigKeys = map[tc.DeliveryServiceName]ReqMetaData{}
+				for _, ds := range toData.DeliveryServices {
 					if ds.XMLID == nil {
 						continue // TODO warn?
 					}
@@ -258,17 +399,30 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURLSig {
 						continue
 					}
-					keys, toAddr, err := toClient.GetURLSigKeys(*ds.XMLID)
+
+					reqHdr := (http.Header)(nil)
+					if oldCfg != nil {
+						reqHdr = MakeReqHdr(oldCfg.MetaData.URLSigKeys[tc.DeliveryServiceName(*ds.XMLID)])
+					}
+					keys, reqInf, err := toClient.GetURLSigKeys(*ds.XMLID, reqHdr)
 					if err != nil {
 						if strings.Contains(strings.ToLower(err.Error()), "not found") {
-							log.Errorln("Delivery service '" + *ds.XMLID + "' is url_sig, but keys were not found! Skipping!: " + err.Error())
+							log.Errorln("Delivery service '" + *ds.XMLID + "' is url_sig, but keys not found! Skipping!: " + err.Error())
 							continue
 						} else {
 							return errors.New("getting url sig keys for ds '" + *ds.XMLID + "': " + err.Error())
 						}
 					}
-					toIPs.Store(toAddr, nil)
-					urlSigKeys[tc.DeliveryServiceName(*ds.XMLID)] = keys
+
+					if reqInf.StatusCode == http.StatusNotModified {
+						log.Infof("Getting config: %v not modified, using old config", "URLSigKeys["+*ds.XMLID+"]")
+						urlSigKeys[tc.DeliveryServiceName(*ds.XMLID)] = oldCfg.URLSigKeys[tc.DeliveryServiceName(*ds.XMLID)]
+					} else {
+						log.Infof("Getting config: %v is modified, using new response", "URLSigKeys["+*ds.XMLID+"]")
+						urlSigKeys[tc.DeliveryServiceName(*ds.XMLID)] = keys
+					}
+					toData.MetaData.URLSigKeys[tc.DeliveryServiceName(*ds.XMLID)] = MakeReqMetaData(reqInf.Headers)
+					toIPs.Store(reqInf.RemoteAddr, nil)
 				}
 				toData.URLSigKeys = urlSigKeys
 				return nil
@@ -287,34 +441,74 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 		}
 		serverParamsF := func() error {
 			defer func(start time.Time) { log.Infof("serverParamsF took %v\n", time.Since(start)) }(time.Now())
-			params, toAddr, err := toClient.GetServerProfileParameters(*server.Profile)
-			if err != nil {
-				return errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
-			} else if len(params) == 0 {
-				return errors.New("getting server profile '" + *server.Profile + "' parameters: no parameters (profile not found?)")
+			{
+				reqHdr := (http.Header)(nil)
+				if oldCfg != nil {
+					reqHdr = MakeReqHdr(oldCfg.MetaData.ServerParams)
+				}
+				params, reqInf, err := toClient.GetServerProfileParameters(*server.Profile, reqHdr)
+				if err != nil {
+					return errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
+				} else if len(params) == 0 {
+					return errors.New("getting server profile '" + *server.Profile + "' parameters: no parameters (profile not found?)")
+				}
+
+				if reqInf.StatusCode == http.StatusNotModified {
+					log.Infof("Getting config: %v not modified, using old config", "ServerParams")
+					toData.ServerParams = oldCfg.ServerParams
+				} else {
+					log.Infof("Getting config: %v is modified, using new response", "ServerParams")
+					toData.ServerParams = params
+				}
+				toData.MetaData.ServerParams = MakeReqMetaData(reqInf.Headers)
+				toIPs.Store(reqInf.RemoteAddr, nil)
 			}
-			toData.ServerParams = params
-			toIPs.Store(toAddr, nil)
 			return nil
 		}
 		cdnF := func() error {
 			defer func(start time.Time) { log.Infof("cdnF took %v\n", time.Since(start)) }(time.Now())
-			cdn, toAddr, err := toClient.GetCDN(tc.CDNName(*server.CDNName))
-			if err != nil {
-				return errors.New("getting cdn '" + *server.CDNName + "': " + err.Error())
+			{
+				reqHdr := (http.Header)(nil)
+				if oldCfg != nil {
+					reqHdr = MakeReqHdr(oldCfg.MetaData.CDN)
+				}
+				cdn, reqInf, err := toClient.GetCDN(tc.CDNName(*server.CDNName), reqHdr)
+				if err != nil {
+					return errors.New("getting cdn '" + *server.CDNName + "': " + err.Error())
+				}
+				if reqInf.StatusCode == http.StatusNotModified {
+					log.Infof("Getting config: %v not modified, using old config", "CDN")
+					toData.CDN = oldCfg.CDN
+				} else {
+					log.Infof("Getting config: %v is modified, using new response", "CDN")
+					toData.CDN = &cdn
+				}
+				toData.MetaData.CDN = MakeReqMetaData(reqInf.Headers)
+				toIPs.Store(reqInf.RemoteAddr, nil)
 			}
-			toData.CDN = &cdn
-			toIPs.Store(toAddr, nil)
 			return nil
 		}
 		profileF := func() error {
 			defer func(start time.Time) { log.Infof("profileF took %v\n", time.Since(start)) }(time.Now())
-			profile, toAddr, err := toClient.GetProfileByName(*server.Profile)
-			if err != nil {
-				return errors.New("getting profile '" + *server.Profile + "': " + err.Error())
+			{
+				reqHdr := (http.Header)(nil)
+				if oldCfg != nil {
+					reqHdr = MakeReqHdr(oldCfg.MetaData.GlobalParams)
+				}
+				profile, reqInf, err := toClient.GetProfileByName(*server.Profile, reqHdr)
+				if err != nil {
+					return errors.New("getting profile '" + *server.Profile + "': " + err.Error())
+				}
+				if reqInf.StatusCode == http.StatusNotModified {
+					log.Infof("Getting config: %v not modified, using old config", "Profile")
+					toData.Profile = oldCfg.Profile
+				} else {
+					log.Infof("Getting config: %v is modified, using new response", "Profile")
+					toData.Profile = profile
+				}
+				toData.MetaData.Profile = MakeReqMetaData(reqInf.Headers)
+				toIPs.Store(reqInf.RemoteAddr, nil)
 			}
-			toData.Profile = profile
-			toIPs.Store(toAddr, nil)
 			return nil
 		}
 		fs := []func() error{dsF, serverParamsF, cdnF, profileF}
@@ -326,87 +520,192 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 
 	cgF := func() error {
 		defer func(start time.Time) { log.Infof("cfF took %v\n", time.Since(start)) }(time.Now())
-		cacheGroups, toAddr, err := toClient.GetCacheGroups()
-		if err != nil {
-			return errors.New("getting cachegroups: " + err.Error())
+		{
+			reqHdr := (http.Header)(nil)
+			if oldCfg != nil {
+				reqHdr = MakeReqHdr(oldCfg.MetaData.CacheGroups)
+			}
+			cacheGroups, reqInf, err := toClient.GetCacheGroups(reqHdr)
+			if err != nil {
+				return errors.New("getting cachegroups: " + err.Error())
+			}
+			if reqInf.StatusCode == http.StatusNotModified {
+				log.Infof("Getting config: %v not modified, using old config", "CacheGroups")
+				toData.CacheGroups = oldCfg.CacheGroups
+			} else {
+				log.Infof("Getting config: %v is modified, using new response", "CacheGroups")
+				toData.CacheGroups = cacheGroups
+			}
+			toData.MetaData.CacheGroups = MakeReqMetaData(reqInf.Headers)
+			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
-		toData.CacheGroups = cacheGroups
-		toIPs.Store(toAddr, nil)
 		return nil
 	}
 	jobsF := func() error {
 		defer func(start time.Time) { log.Infof("jobsF took %v\n", time.Since(start)) }(time.Now())
-		jobs, toAddr, err := toClient.GetJobs() // TODO add cdn query param to jobs endpoint
-		if err != nil {
-			return errors.New("getting jobs: " + err.Error())
+		{
+			reqHdr := (http.Header)(nil)
+			if oldCfg != nil {
+				reqHdr = MakeReqHdr(oldCfg.MetaData.Jobs)
+			}
+			jobs, reqInf, err := toClient.GetJobs(reqHdr) // TODO add cdn query param to jobs endpoint
+			if err != nil {
+				return errors.New("getting jobs: " + err.Error())
+			}
+			if reqInf.StatusCode == http.StatusNotModified {
+				log.Infof("Getting config: %v not modified, using old config", "Jobs")
+				toData.Jobs = oldCfg.Jobs
+			} else {
+				log.Infof("Getting config: %v is modified, using new response", "Jobs")
+				toData.Jobs = jobs
+			}
+			toData.MetaData.Jobs = MakeReqMetaData(reqInf.Headers)
+			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
-		toData.Jobs = jobs
-		toIPs.Store(toAddr, nil)
 		return nil
 	}
 	capsF := func() error {
 		defer func(start time.Time) { log.Infof("capsF took %v\n", time.Since(start)) }(time.Now())
-		caps, toAddr, err := toClient.GetServerCapabilitiesByID(nil) // TODO change to not take a param; it doesn't use it to request TO anyway.
-		if err != nil {
-			log.Errorln("Server Capabilities error, skipping!")
-			// return errors.New("getting server caps from Traffic Ops: " + err.Error())
-		} else {
-			toData.ServerCapabilities = caps
-			toIPs.Store(toAddr, nil)
+		{
+			reqHdr := (http.Header)(nil)
+			if oldCfg != nil {
+				reqHdr = MakeReqHdr(oldCfg.MetaData.ServerCapabilities)
+			}
+			log.Infof("Getting config: ServerCapabilities reqHdr %+v", reqHdr)
+			caps, reqInf, err := toClient.GetServerCapabilitiesByID(nil, reqHdr) // TODO change to not take a param; it doesn't use it to request TO anyway.
+			if err != nil {
+				log.Errorln("Server Capabilities error, skipping!")
+				// return errors.New("getting server caps from Traffic Ops: " + err.Error())
+			} else {
+				if reqInf.StatusCode == http.StatusNotModified {
+					log.Infof("Getting config: %v not modified, using old config", "ServerCapabilities")
+					toData.ServerCapabilities = oldCfg.ServerCapabilities
+				} else {
+					log.Infof("Getting config: %v is modified, using new response", "ServerCapabilities")
+					toData.ServerCapabilities = caps
+				}
+				toData.MetaData.ServerCapabilities = MakeReqMetaData(reqInf.Headers)
+				toIPs.Store(reqInf.RemoteAddr, nil)
+			}
 		}
 		return nil
 	}
 	dsCapsF := func() error {
 		defer func(start time.Time) { log.Infof("dscapsF took %v\n", time.Since(start)) }(time.Now())
-		caps, toAddr, err := toClient.GetDeliveryServiceRequiredCapabilitiesByID(nil)
-		if err != nil {
-			log.Errorln("DS Required Capabilities error, skipping!")
-			// return errors.New("getting DS required capabilities: " + err.Error())
-		} else {
-			toData.DSRequiredCapabilities = caps
-			toIPs.Store(toAddr, nil)
+		{
+			reqHdr := (http.Header)(nil)
+			if oldCfg != nil {
+				reqHdr = MakeReqHdr(oldCfg.MetaData.DSRequiredCapabilities)
+			}
+			caps, reqInf, err := toClient.GetDeliveryServiceRequiredCapabilitiesByID(nil, reqHdr)
+			if err != nil {
+				log.Errorln("DS Required Capabilities error, skipping!")
+				// return errors.New("getting DS required capabilities: " + err.Error())
+			} else {
+				if reqInf.StatusCode == http.StatusNotModified {
+					log.Infof("Getting config: %v not modified, using old config", "DSRequiredCapabilities")
+					toData.DSRequiredCapabilities = oldCfg.DSRequiredCapabilities
+				} else {
+					log.Infof("Getting config: %v is modified, using new response", "DSRequiredCapabilities")
+					toData.DSRequiredCapabilities = caps
+				}
+				toData.MetaData.DSRequiredCapabilities = MakeReqMetaData(reqInf.Headers)
+				toIPs.Store(reqInf.RemoteAddr, nil)
+			}
 		}
 		return nil
 	}
 	dsrF := func() error {
 		defer func(start time.Time) { log.Infof("dsrF took %v\n", time.Since(start)) }(time.Now())
-		dsr, toAddr, err := toClient.GetDeliveryServiceRegexes()
-		if err != nil {
-			return errors.New("getting delivery service regexes: " + err.Error())
+		{
+			reqHdr := (http.Header)(nil)
+			if oldCfg != nil {
+				reqHdr = MakeReqHdr(oldCfg.MetaData.DeliveryServiceRegexes)
+			}
+			dsr, reqInf, err := toClient.GetDeliveryServiceRegexes(reqHdr)
+			if err != nil {
+				return errors.New("getting delivery service regexes: " + err.Error())
+			}
+			if reqInf.StatusCode == http.StatusNotModified {
+				log.Infof("Getting config: %v not modified, using old config", "DeliveryServiceRegexes")
+				toData.DeliveryServiceRegexes = oldCfg.DeliveryServiceRegexes
+			} else {
+				log.Infof("Getting config: %v is modified, using new response", "DeliveryServiceRegexes")
+				toData.DeliveryServiceRegexes = dsr
+			}
+			toData.MetaData.DeliveryServiceRegexes = MakeReqMetaData(reqInf.Headers)
+			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
-		toIPs.Store(toAddr, nil)
-		toData.DeliveryServiceRegexes = dsr
 		return nil
 	}
 	cacheKeyParamsF := func() error {
 		defer func(start time.Time) { log.Infof("cacheKeyParamsF took %v\n", time.Since(start)) }(time.Now())
-		params, toAddr, err := toClient.GetConfigFileParameters(atscfg.CacheKeyParameterConfigFile)
-		if err != nil {
-			return errors.New("getting cache key parameters: " + err.Error())
+		{
+			reqHdr := (http.Header)(nil)
+			if oldCfg != nil {
+				reqHdr = MakeReqHdr(oldCfg.MetaData.CacheKeyParams)
+			}
+			params, reqInf, err := toClient.GetConfigFileParameters(atscfg.CacheKeyParameterConfigFile, reqHdr)
+			if err != nil {
+				return errors.New("getting cache key parameters: " + err.Error())
+			}
+			if reqInf.StatusCode == http.StatusNotModified {
+				log.Infof("Getting config: %v not modified, using old config", "CacheKeyParams")
+				toData.CacheKeyParams = oldCfg.CacheKeyParams
+			} else {
+				log.Infof("Getting config: %v is modified, using new response", "CacheKeyParams")
+				toData.CacheKeyParams = params
+			}
+			toData.MetaData.CacheKeyParams = MakeReqMetaData(reqInf.Headers)
+			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
-		toIPs.Store(toAddr, nil)
-		toData.CacheKeyParams = params
 		return nil
 	}
 	parentConfigParamsF := func() error {
 		defer func(start time.Time) { log.Infof("parentConfigParamsF took %v\n", time.Since(start)) }(time.Now())
-		parentConfigParams, toAddr, err := toClient.GetConfigFileParameters("parent.config") // TODO make const in lib/go-atscfg
-		if err != nil {
-			return errors.New("getting parent.config parameters: " + err.Error())
+		{
+			reqHdr := (http.Header)(nil)
+			if oldCfg != nil {
+				reqHdr = MakeReqHdr(oldCfg.MetaData.ParentConfigParams)
+			}
+			parentConfigParams, reqInf, err := toClient.GetConfigFileParameters("parent.config", reqHdr) // TODO make const in lib/go-atscfg
+			if err != nil {
+				return errors.New("getting parent.config parameters: " + err.Error())
+			}
+			if reqInf.StatusCode == http.StatusNotModified {
+				log.Infof("Getting config: %v not modified, using old config", "ParentConfigParams")
+				toData.ParentConfigParams = oldCfg.ParentConfigParams
+			} else {
+				log.Infof("Getting config: %v is modified, using new response", "ParentConfigParams")
+				toData.ParentConfigParams = parentConfigParams
+			}
+			toData.MetaData.ParentConfigParams = MakeReqMetaData(reqInf.Headers)
+			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
-		toIPs.Store(toAddr, nil)
-		toData.ParentConfigParams = parentConfigParams
 		return nil
 	}
 
 	topologiesF := func() error {
 		defer func(start time.Time) { log.Infof("topologiesF took %v\n", time.Since(start)) }(time.Now())
-		topologies, toAddr, err := toClient.GetTopologies()
-		if err != nil {
-			return errors.New("getting topologies: " + err.Error())
+		{
+			reqHdr := (http.Header)(nil)
+			if oldCfg != nil {
+				reqHdr = MakeReqHdr(oldCfg.MetaData.Topologies)
+			}
+			topologies, reqInf, err := toClient.GetTopologies(reqHdr)
+			if err != nil {
+				return errors.New("getting topologies: " + err.Error())
+			}
+			if reqInf.StatusCode == http.StatusNotModified {
+				log.Infof("Getting config: %v not modified, using old config", "Topologies")
+				toData.Topologies = oldCfg.Topologies
+			} else {
+				log.Infof("Getting config: %v is modified, using new response", "Topologies")
+				toData.Topologies = topologies
+			}
+			toData.MetaData.Topologies = MakeReqMetaData(reqInf.Headers)
+			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
-		toIPs.Store(toAddr, nil)
-		toData.Topologies = topologies
 		return nil
 	}
 
