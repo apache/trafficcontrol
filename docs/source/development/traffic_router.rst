@@ -99,6 +99,10 @@ Java Formatting Conventions
 ===========================
 None at this time. The codebase will eventually be formatted per Java standards.
 
+Kotlin
+======
+Traffic Router includes support for Kotlin, though only a single test has been converted so far: :atc-file:`traffic_router/core/src/test/java/com/comcast/cdn/traffic_control/traffic_router/core/ds/DeliveryServiceTest.kt`
+
 Installing The Developer Environment
 ====================================
 To install the Traffic Router Developer environment:
