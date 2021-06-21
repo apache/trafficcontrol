@@ -29,12 +29,13 @@ import (
 )
 
 var commands = map[string]struct{}{
-	"apply":    struct{}{},
-	"check":    struct{}{},
-	"diff":     struct{}{},
-	"generate": struct{}{},
-	"request":  struct{}{},
-	"update":   struct{}{},
+	"apply":      struct{}{},
+	"check":      struct{}{},
+	"diff":       struct{}{},
+	"generate":   struct{}{},
+	"preprocess": struct{}{},
+	"request":    struct{}{},
+	"update":     struct{}{},
 }
 
 const ExitCodeSuccess = 0
@@ -89,12 +90,13 @@ For the arguments of a command, see 't3c <command> --help'.
 
 These are the available commands:
 
-  apply     generate and apply configuration
+  apply      generate and apply configuration
 
-  check     check that new config can be applied
-  diff      diff config files, with logic like ignoring comments
-  generate  generate configuration from Traffic Ops data
-  request   request Traffic Ops data
-  update    update a cache's queue and reval status in Traffic Ops
+  check      check that new config can be applied
+  diff       diff config files, with logic like ignoring comments
+  generate   generate configuration from Traffic Ops data
+  preprocess preprocess generated config files
+  request    request Traffic Ops data
+  update     update a cache's queue and reval status in Traffic Ops
 `
 }
