@@ -48,4 +48,19 @@ describe("orderBy", () => {
 		expect(output[2].foo).toEqual(1);
 		expect(output[3].foo).toEqual(3);
 	});
+
+	it("won't order by a property that objects don't have", () => {
+		const input = [{foo: 2}, {foo: 1}];
+		const output = orderBy(input, "bar");
+		expect(output[0].foo).toEqual(2);
+		expect(output[1].foo).toEqual(1);
+	});
+
+	it("doesn't do any ordering when there are no ordering properties provided", () => {
+		const input = [{foo: 3}, {foo: 2}, {foo: 1}];
+		const output = orderBy(input, []);
+		expect(output[0].foo).toEqual(3);
+		expect(output[1].foo).toEqual(2);
+		expect(output[2].foo).toEqual(1);
+	});
 });

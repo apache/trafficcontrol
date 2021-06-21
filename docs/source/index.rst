@@ -28,9 +28,9 @@ CDN Basics
 A review of the basic functionality of a Content Delivery Network.
 
 .. toctree::
-   :maxdepth: 2
+	:maxdepth: 2
 
-   basics/index
+	basics/index
 
 
 Traffic Control Overview
@@ -38,60 +38,58 @@ Traffic Control Overview
 An introduction to the Traffic Control architecture, components, and their integration.
 
 .. toctree::
-   :maxdepth: 0
+	:maxdepth: 0
 
-   overview/index
+	overview/index
 
 Administrator's Guide
 =====================
 How to deploy and manage a Traffic Control CDN.
 
 .. toctree::
-   :maxdepth: 3
+	:maxdepth: 3
 
-   admin/index
+	admin/index
 
 Developer's Guide
 ==================
 A guide to the various internal and external APIs, and an introduction for the Traffic Control developer.
 
 .. toctree::
-   :maxdepth: 3
+	:maxdepth: 3
 
-   development/index
+	development/index
 
 APIs
 ====
 A guide to external RESTful APIs for Traffic Ops
 
 .. toctree::
-   :maxdepth: 3
+	:maxdepth: 3
 
-   api/index
+	api/index
 
 Tools
 =====
 A living list of tools for testing, interacting with, and developing for the Traffic Control CDN
 
 .. toctree::
-   :maxdepth: 3
+	:maxdepth: 3
 
-   tools/index
+	tools/index
 
 FAQ
 ===
 
 .. toctree::
-   :maxdepth: 3
+	:maxdepth: 3
 
-   faq
+	faq
 
 Indices and Tables
 ==================
 
 .. toctree::
-   :maxdepth: 3
+	:maxdepth: 3
 
-   glossary.rst
-
-
+	glossary.rst

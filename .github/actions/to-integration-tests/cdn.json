@@ -40,9 +40,6 @@
 	"secrets": [
 		"blahblah"
 	],
-	"geniso": {
-		"iso_root_path": "/opt/traffic_ops/app/public"
-	},
 	"inactivity_timeout": 60,
 	"smtp": {
 		"enabled": true,

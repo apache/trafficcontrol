@@ -23,6 +23,7 @@
 ![Go Unit Tests](https://github.com/apache/trafficcontrol/workflows/Go%20Unit%20Tests/badge.svg)
 ![Go Formatting](https://github.com/apache/trafficcontrol/workflows/Go%20Format/badge.svg)
 ![TP Integration Tests](https://github.com/apache/trafficcontrol/workflows/TP%20Integration%20Tests/badge.svg)
+![TM Integration Tests](https://github.com/apache/trafficcontrol/workflows/TM%20Integration%20Tests/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/traffic-control-cdn/badge/?version=latest)](http://traffic-control-cdn.readthedocs.io/en/latest/?badge=latest)
 
 # Apache Traffic Control

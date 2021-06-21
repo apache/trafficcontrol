@@ -57,7 +57,7 @@ func TestMakeMetaConfig(t *testing.T) {
 	cfgPath := "/etc/foo/trafficserver"
 
 	deliveryServices := []DeliveryService{}
-	dss := []tc.DeliveryServiceServer{}
+	dss := []DeliveryServiceServer{}
 	globalParams := []tc.Parameter{}
 
 	makeLocationParam := func(name string) tc.Parameter {
@@ -163,6 +163,11 @@ func TestMakeMetaConfig(t *testing.T) {
 			}
 		},
 		"storage.config": func(cf CfgMeta) {
+			if expected := cfgPath; cf.Path != expected {
+				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
+			}
+		},
+		"ssl_server_name.yaml": func(cf CfgMeta) {
 			if expected := cfgPath; cf.Path != expected {
 				t.Errorf("expected location '%v', actual '%v'", expected, cf.Path)
 			}

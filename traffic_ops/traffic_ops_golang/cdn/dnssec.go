@@ -20,11 +20,16 @@ package cdn
  */
 
 import (
+	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"math"
 	"net/http"
+	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -36,8 +41,12 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 )
 
-const CDNDNSSECKeyType = "dnssec"
-const DNSSECStatusExisting = "existing"
+const (
+	CDNDNSSECKeyType     = "dnssec"
+	DNSSECStatusExisting = "existing"
+
+	DNSSECGenerationCPURatio = 0.66
+)
 
 func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -81,11 +90,30 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := generateStoreDNSSECKeys(inf.Tx.Tx, cdnName, cdnDomain, uint64(*req.TTL), uint64(*req.KSKExpirationDays), uint64(*req.ZSKExpirationDays), int64(*req.EffectiveDateUnix), inf.Vault); err != nil {
+	if err := generateStoreDNSSECKeys(inf.Tx.Tx, cdnName, cdnDomain, uint64(*req.TTL), uint64(*req.KSKExpirationDays), uint64(*req.ZSKExpirationDays), int64(*req.EffectiveDateUnix), inf.Vault, r.Context()); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and storing DNSSEC CDN keys: "+err.Error()))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(cdnID)+", ACTION: Generated DNSSEC keys", inf.User, inf.Tx.Tx)
+	// NOTE: using a separate transaction (with its own timeout) for the changelog because the main
+	// transaction can time out if DNSSEC generation takes too long
+	db, err := api.GetDB(r.Context())
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating CDN DNSSEC keys: getting DB from request context for changelog: "+err.Error()))
+		return
+	}
+	logCtx, logCancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer logCancel()
+	logTx, err := db.BeginTxx(logCtx, nil)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating CDN DNSSEC keys: could not begin transaction for changelog: "+err.Error()))
+		return
+	}
+	defer func() {
+		if err := logTx.Commit(); err != nil && err != sql.ErrTxDone {
+			log.Errorln("generating CDN DNSSEC keys: committing transaction for changelog: " + err.Error())
+		}
+	}()
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+cdnName+", ID: "+strconv.Itoa(cdnID)+", ACTION: Generated DNSSEC keys", inf.User, logTx.Tx)
 	api.WriteResp(w, r, "Successfully created dnssec keys for "+cdnName)
 }
 
@@ -113,7 +141,7 @@ func GetDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 
 	cdnName := inf.Params["name"]
 
-	tvKeys, keysExist, err := inf.Vault.GetDNSSECKeys(cdnName, inf.Tx.Tx)
+	tvKeys, keysExist, err := inf.Vault.GetDNSSECKeys(cdnName, inf.Tx.Tx, r.Context())
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DNSSEC CDN keys: "+err.Error()))
 		return
@@ -148,7 +176,7 @@ func GetDNSSECKeysV11(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cdnName := inf.Params["name"]
-	riakKeys, keysExist, err := inf.Vault.GetDNSSECKeys(cdnName, inf.Tx.Tx)
+	riakKeys, keysExist, err := inf.Vault.GetDNSSECKeys(cdnName, inf.Tx.Tx, r.Context())
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DNSSEC CDN keys: "+err.Error()))
 		return
@@ -178,13 +206,14 @@ func generateStoreDNSSECKeys(
 	zExpDays uint64,
 	effectiveDateUnix int64,
 	tv trafficvault.TrafficVault,
+	ctx context.Context,
 ) error {
 
 	zExp := time.Duration(zExpDays) * time.Hour * 24
 	kExp := time.Duration(kExpDays) * time.Hour * 24
 	ttl := time.Duration(ttlSeconds) * time.Second
 
-	oldKeys, oldKeysExist, err := tv.GetDNSSECKeys(cdnName, tx)
+	oldKeys, oldKeysExist, err := tv.GetDNSSECKeys(cdnName, tx, ctx)
 	if err != nil {
 		return errors.New("getting old dnssec keys: " + err.Error())
 	}
@@ -245,6 +274,8 @@ func generateStoreDNSSECKeys(
 	if err != nil {
 		return errors.New("getting delivery service matchlists: " + err.Error())
 	}
+
+	jobList := make([]dnssecGenJob, 0, len(dses))
 	for _, ds := range dses {
 		if !ds.Type.IsHTTP() && !ds.Type.IsDNS() {
 			continue // skip delivery services that aren't DNS or HTTP (e.g. ANY_MAP)
@@ -256,18 +287,87 @@ func generateStoreDNSSECKeys(
 		}
 
 		exampleURLs := deliveryservice.MakeExampleURLs(ds.Protocol, ds.Type, ds.RoutingName, matchlist, cdnDomain)
-		log.Infoln("Creating keys for " + ds.Name)
-		overrideTTL := true
-		dsKeys, err := deliveryservice.CreateDNSSECKeys(exampleURLs, cdnKeys, kExp, zExp, ttl, overrideTTL)
-		if err != nil {
-			return errors.New("creating delivery service DNSSEC keys: " + err.Error())
-		}
-		newKeys[ds.Name] = dsKeys
+		jobList = append(jobList, dnssecGenJob{
+			XMLID:       ds.Name,
+			ExampleURLs: exampleURLs,
+			CDNKeys:     cdnKeys,
+			KExp:        kExp,
+			ZExp:        zExp,
+			TTL:         ttl,
+			OverrideTTL: true,
+		})
 	}
-	if err := tv.PutDNSSECKeys(cdnName, newKeys, tx); err != nil {
+	numWorkers := int(math.Max(1, math.Floor(float64(runtime.NumCPU())*DNSSECGenerationCPURatio)))
+	jobChan := make(chan dnssecGenJob, len(jobList))
+	resultChan := make(chan dnssecGenResult, len(jobList))
+	panickedChan := make(chan struct{}, numWorkers)
+	wg := sync.WaitGroup{}
+	wg.Add(numWorkers)
+	for w := 0; w < numWorkers; w++ {
+		go dnssecGenWorker(w, &wg, jobChan, resultChan, panickedChan)
+	}
+	for _, j := range jobList {
+		jobChan <- j
+	}
+	close(jobChan)
+	wg.Wait()
+	select {
+	case <-panickedChan:
+		return errors.New("creating DNSSEC keys, at least one worker goroutine panicked")
+	default:
+		log.Infoln("no DNSSEC generation worker goroutines panicked")
+	}
+	for i := 0; i < len(jobList); i++ {
+		res := <-resultChan
+		if res.Error != nil {
+			return fmt.Errorf("creating DNSSEC keys for delivery service %s: %s", res.XMLID, res.Error.Error())
+		}
+		newKeys[res.XMLID] = *res.Keys
+	}
+
+	if err := tv.PutDNSSECKeys(cdnName, newKeys, tx, ctx); err != nil {
 		return errors.New("putting CDN DNSSEC keys in Traffic Vault: " + err.Error())
 	}
 	return nil
+}
+
+func dnssecGenWorker(id int, waitGroup *sync.WaitGroup, jobs <-chan dnssecGenJob, results chan<- dnssecGenResult, panicked chan<- struct{}) {
+	log.Infof("DNSSEC gen worker %d starting", id)
+	defer func() {
+		if r := recover(); r != nil {
+			panicked <- struct{}{}
+			log.Errorf("DNSSEC gen worker %d recovered from panic: %v", id, r)
+		}
+		waitGroup.Done()
+		log.Infof("DNSSEC gen worker %d exiting", id)
+	}()
+	for j := range jobs {
+		log.Infof("DNSSEC gen worker %d creating keys for %s", id, j.XMLID)
+		res := dnssecGenResult{XMLID: j.XMLID}
+		dsKeys, err := deliveryservice.CreateDNSSECKeys(j.ExampleURLs, j.CDNKeys, j.KExp, j.ZExp, j.TTL, j.OverrideTTL)
+		if err != nil {
+			res.Error = err
+		} else {
+			res.Keys = &dsKeys
+		}
+		results <- res
+	}
+}
+
+type dnssecGenJob struct {
+	XMLID       string
+	ExampleURLs []string
+	CDNKeys     tc.DNSSECKeySetV11
+	KExp        time.Duration
+	ZExp        time.Duration
+	TTL         time.Duration
+	OverrideTTL bool
+}
+
+type dnssecGenResult struct {
+	XMLID string
+	Keys  *tc.DNSSECKeySetV11
+	Error error
 }
 
 const API_DNSSECKEYS = "DELETE /cdns/name/:name/dnsseckeys"
@@ -348,7 +448,7 @@ func deleteDNSSECKeys(w http.ResponseWriter, r *http.Request, deprecated bool) {
 		writeError(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil, deprecated)
 		return
 	}
-	if err := inf.Vault.DeleteDNSSECKeys(key, inf.Tx.Tx); err != nil {
+	if err := inf.Vault.DeleteDNSSECKeys(key, inf.Tx.Tx, r.Context()); err != nil {
 		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting CDN DNSSEC keys: "+err.Error()), deprecated)
 		return
 	}

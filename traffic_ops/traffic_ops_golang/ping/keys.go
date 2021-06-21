@@ -36,7 +36,7 @@ func Keys(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	pingResp, err := inf.Vault.Ping(inf.Tx.Tx)
+	pingResp, err := inf.Vault.Ping(inf.Tx.Tx, r.Context())
 	if err != nil {
 		api.HandleDeprecatedErr(w, r, nil, http.StatusInternalServerError, err, nil, util.StrPtr(API_VAULT_PING))
 		return

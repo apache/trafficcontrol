@@ -18,6 +18,8 @@ load_dataset: false
 dl_to_url: https://to.kabletown.invalid
 # Url to use when contacting the timeseries visualizations from the TP UI
 dl_ts_url: https://stats.kabletown.invalid
+# URL to use for static CDN config files
+dl_sf_url: https://czf.kabletown.invalid
 # Credentials to use when logging into TrafficOps
 dl_to_user:
 dl_to_user_password:
@@ -25,13 +27,13 @@ dl_to_user_password:
 dl_to_api_version: 1.3
 dl_target_api_url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}"
 # URL for the CZF file
-dl_shallow_czf_url: "{{ dl_to_url }}/czf.json"
+dl_shallow_czf_url: "{{ dl_sf_url }}/czf.json"
 # URL for the the Anonymous IP configuration file
-dl_anonymous_ip_url: "{{ dl_to_url }}/anonymousip.json"
+dl_anonymous_ip_url: "{{ dl_sf_url }}/anonymousip.json"
 # URL for the MaxMind Geolocation database
-dl_geolocation_url: "{{ dl_to_url }}/MaxMind/auto/GeoIP2-CityLite.mmdb.gz"
+dl_geolocation_url: "{{ dl_sf_url }}/MaxMind/auto/GeoIP2-CityLite.mmdb.gz"
 # URL for the MaxMind Anonymous IP database
-dl_anonymous_db_url: "{{ dl_to_url }}/MaxMind/auto/GeoIP2-Anonymous-IP.mmdb.gz"
+dl_anonymous_db_url: "{{ dl_sf_url }}/MaxMind/auto/GeoIP2-Anonymous-IP.mmdb.gz"
 # Which IP Addresses are allowed to communicate with the astats endpoints on each cache
 dl_allow_ip4: "127.0.0.1"
 dl_allow_ip6: "::1"
@@ -303,9 +305,9 @@ dl_ds_default_divisions:
 # Mapping of eligible TO Profile regex to inventory hostvar component name
 dl_ds_merged_profile_prefix_ansible_component_map: "{{ dl_ds_default_profile_prefix_ansible_component_map }}"
 dl_ds_default_profile_prefix_ansible_component_map:
-  grove: '(?i)^Grove_Edge_.*'
-  atsec: "(?i)^ATS_EDGE{{ dl_ds_ats_major_version }}_.*"
-  atsmid: "(?i)^ATS_MID{{ dl_ds_ats_major_version }}_.*"
+  grove: '(?i)^EDGE_GROVE_.*'
+  atsec: "(?i)^EDGE_ATS_{{ dl_ds_ats_major_version }}_.*"
+  atsmid: "(?i)^MID_ATS_{{ dl_ds_ats_major_version }}_.*"
   fakeorigin: '(?i)^MSO_.*'
   mso_parent_alias: '(?i)^MSO_.*'
   influxdb: '(?i)^INFLUXDB$'
@@ -412,7 +414,7 @@ dl_ds_default_profiles:
     parameters:
       - name: geolocation.polling.url
         configFile: CRConfig.json
-        value: "{{ dl_to_url }}/MaxMind/auto/GeoLiteCity.dat.gz"
+        value: "{{ dl_sf_url }}/MaxMind/auto/GeoLiteCity.dat.gz"
         secure: 0
       - name: all_graph_url
         configFile: global
@@ -449,10 +451,6 @@ dl_ds_default_profiles:
       - name: tm.instance_name
         configFile: global
         value: Apache Traffic Control CDN
-        secure: 0
-      - name: tm.logourl
-        configFile: global
-        value: "/images/tc_logo.png"
         secure: 0
       - name: tm.rev_proxy.url
         configFile: global
@@ -1586,7 +1584,7 @@ dl_ds_default_profile_cdntemplates:
         configFile: parent.config
         value: '1'
         secure: 0
-  - name: "Grove_Edge_{{ Target_cdn_delegation }}"
+  - name: "EDGE_GROVE_{{ Target_cdn_delegation }}"
     description: "Edge cache({{ Target_cdn_delegation }}) - Grove"
     cdn: "{{ Target_cdn_delegation }}"
     type: GROVE_PROFILE
@@ -1706,25 +1704,25 @@ dl_ds_default_profile_cdntemplates:
       - name: health.polling.url
         configFile: rascal.properties
         value: http://${hostname}/_astats?application=&inf.name=${interface_name}
-  - name: "ATS_Edge7_{{ Target_cdn_delegation }}"
+  - name: "EDGE_ATS_7_{{ Target_cdn_delegation }}"
     description: "Edge cache({{ Target_cdn_delegation }}) - ATS 7"
     cdn: "{{ Target_cdn_delegation }}"
     type: ATS_PROFILE
     routingDisabled: false
     parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.edge.common + dl_ds_default_profile_layers.ats.edge['v'+dl_ds_ats_major_version] }}"
-  - name: "ATS_Edge8_{{ Target_cdn_delegation }}"
+  - name: "EDGE_ATS_8_{{ Target_cdn_delegation }}"
     description: "Edge cache({{ Target_cdn_delegation }}) - ATS 8"
     cdn: "{{ Target_cdn_delegation }}"
     type: ATS_PROFILE
     routingDisabled: false
     parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.edge.common + dl_ds_default_profile_layers.ats.edge['v'+dl_ds_ats_major_version] }}"
-  - name: "ATS_Mid7_{{ Target_cdn_delegation }}"
+  - name: "MID_ATS_7_{{ Target_cdn_delegation }}"
     description: "Mid cache({{ Target_cdn_delegation }}) - ATS 7"
     cdn: "{{ Target_cdn_delegation }}"
     type: ATS_PROFILE
     routingDisabled: false
     parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.mid.common + dl_ds_default_profile_layers.ats.mid['v'+dl_ds_ats_major_version] }}"
-  - name: "ATS_Mid8_{{ Target_cdn_delegation }}"
+  - name: "MID_ATS_8_{{ Target_cdn_delegation }}"
     description: "Mid cache({{ Target_cdn_delegation }}) - ATS 8"
     cdn: "{{ Target_cdn_delegation }}"
     type: ATS_PROFILE

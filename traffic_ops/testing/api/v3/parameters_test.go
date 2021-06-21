@@ -200,10 +200,10 @@ func DeleteTestParametersParallel(t *testing.T) {
 	for _, pl := range testData.Parameters {
 
 		wg.Add(1)
-		go func() {
+		go func(p tc.Parameter) {
 			defer wg.Done()
-			DeleteTestParameter(t, pl)
-		}()
+			DeleteTestParameter(t, p)
+		}(pl)
 
 	}
 	wg.Wait()

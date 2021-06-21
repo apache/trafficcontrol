@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,68 +15,49 @@
    limitations under the License.
 */
 
-package client
-
 import (
-	"fmt"
-	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIRoles is the full path to the /roles API endpoint.
-	APIRoles = "/roles"
-)
+// apiRoles is the full path to the /roles API endpoint.
+const apiRoles = "/roles"
 
 // CreateRole creates the given Role.
-func (to *Session) CreateRole(role tc.Role) (tc.Alerts, toclientlib.ReqInf, int, error) {
+func (to *Session) CreateRole(role tc.Role, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIRoles, role, nil, &alerts)
-	return alerts, reqInf, reqInf.StatusCode, err
+	reqInf, err := to.post(apiRoles, opts, role, &alerts)
+	return alerts, reqInf, err
 }
 
 // UpdateRole replaces the Role identified by 'id' with the one provided.
-func (to *Session) UpdateRole(id int, role tc.Role, header http.Header) (tc.Alerts, toclientlib.ReqInf, int, error) {
-	route := fmt.Sprintf("%s/?id=%d", APIRoles, id)
+func (to *Session) UpdateRole(id int, role tc.Role, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+	opts.QueryParameters.Set("id", strconv.Itoa(id))
 	var alerts tc.Alerts
-	reqInf, err := to.put(route, role, header, &alerts)
-	return alerts, reqInf, reqInf.StatusCode, err
-}
-
-// GetRoleByID returns the Role with the given ID.
-func (to *Session) GetRoleByID(id int, header http.Header) ([]tc.Role, toclientlib.ReqInf, int, error) {
-	route := fmt.Sprintf("%s/?id=%d", APIRoles, id)
-	var data tc.RolesResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, reqInf.StatusCode, err
-}
-
-// GetRoleByName returns the Role with the given Name.
-func (to *Session) GetRoleByName(name string, header http.Header) ([]tc.Role, toclientlib.ReqInf, int, error) {
-	route := fmt.Sprintf("%s?name=%s", APIRoles, url.QueryEscape(name))
-	var data tc.RolesResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, reqInf.StatusCode, err
+	reqInf, err := to.put(apiRoles, opts, role, &alerts)
+	return alerts, reqInf, err
 }
 
 // GetRoles retrieves Roles from Traffic Ops.
-func (to *Session) GetRoles(queryParams url.Values, header http.Header) ([]tc.Role, toclientlib.ReqInf, int, error) {
-	route := APIRoles
-	if len(queryParams) > 0 {
-		route += "?" + queryParams.Encode()
-	}
+func (to *Session) GetRoles(opts RequestOptions) (tc.RolesResponse, toclientlib.ReqInf, error) {
 	var data tc.RolesResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, reqInf.StatusCode, err
+	reqInf, err := to.get(apiRoles, opts, &data)
+	return data, reqInf, err
 }
 
 // DeleteRole deletes the Role with the given ID.
-func (to *Session) DeleteRole(id int) (tc.Alerts, toclientlib.ReqInf, int, error) {
-	route := fmt.Sprintf("%s/?id=%d", APIRoles, id)
+func (to *Session) DeleteRole(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+	opts.QueryParameters.Set("id", strconv.Itoa(id))
 	var alerts tc.Alerts
-	reqInf, err := to.del(route, nil, &alerts)
-	return alerts, reqInf, reqInf.StatusCode, err
+	reqInf, err := to.del(apiRoles, opts, &alerts)
+	return alerts, reqInf, err
 }

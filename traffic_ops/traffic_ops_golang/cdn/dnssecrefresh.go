@@ -20,6 +20,7 @@ package cdn
  */
 
 import (
+	"context"
 	// "context"
 	"database/sql"
 	"errors"
@@ -137,7 +138,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, tv trafficvault.TrafficVault) {
 	}
 
 	for _, cdnInf := range cdnDNSSECKeyParams {
-		keys, ok, err := tv.GetDNSSECKeys(string(cdnInf.CDNName), tx) // TODO get all in a map beforehand
+		keys, ok, err := tv.GetDNSSECKeys(string(cdnInf.CDNName), tx, context.Background()) // TODO get all in a map beforehand
 		if err != nil {
 			log.Warnln("refreshing DNSSEC Keys: getting cdn '" + string(cdnInf.CDNName) + "' keys from Traffic Vault, skipping: " + err.Error())
 			continue
@@ -271,7 +272,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, tv trafficvault.TrafficVault) {
 			}
 		}
 		if updatedAny {
-			if err := tv.PutDNSSECKeys(string(cdnInf.CDNName), keys, tx); err != nil {
+			if err := tv.PutDNSSECKeys(string(cdnInf.CDNName), keys, tx, context.Background()); err != nil {
 				log.Errorln("refreshing DNSSEC Keys: putting keys into Traffic Vault for cdn '" + string(cdnInf.CDNName) + "': " + err.Error())
 			}
 		}

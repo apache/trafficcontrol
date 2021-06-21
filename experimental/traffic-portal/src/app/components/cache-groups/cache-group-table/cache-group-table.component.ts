@@ -15,7 +15,8 @@
 import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
-import { BehaviorSubject, Observable } from "rxjs";
+import { BehaviorSubject } from "rxjs";
+
 import { CacheGroup } from "src/app/models/cache-groups";
 import { CacheGroupService } from "src/app/services/api";
 import { ContextMenuActionEvent, ContextMenuItem } from "../../generic-table/generic-table.component";
@@ -31,7 +32,7 @@ import { ContextMenuActionEvent, ContextMenuItem } from "../../generic-table/gen
 export class CacheGroupTableComponent implements OnInit {
 
 	/** All of the servers which should appear in the table. */
-	public cacheGroups: Observable<Array<CacheGroup>> | null = null;
+	public readonly cacheGroups: Promise<Array<CacheGroup>>;
 
 	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [
@@ -137,13 +138,12 @@ export class CacheGroupTableComponent implements OnInit {
 	 */
 	constructor(private readonly api: CacheGroupService, private readonly route: ActivatedRoute) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
+		this.cacheGroups = this.api.getCacheGroups();
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
 	public ngOnInit(): void {
-		this.cacheGroups = this.api.getCacheGroups();
-
-		this.route.queryParamMap.subscribe(
+		this.route.queryParamMap.toPromise().then(
 			m => {
 				const search = m.get("search");
 				if (search) {
@@ -151,6 +151,10 @@ export class CacheGroupTableComponent implements OnInit {
 					this.fuzzySubject.next(search);
 					this.fuzzySubject.next(this.fuzzControl.value);
 				}
+			}
+		).catch(
+			e => {
+				console.error("Failed to get query parameters:", e);
 			}
 		);
 	}

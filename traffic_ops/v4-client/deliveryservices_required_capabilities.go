@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +15,7 @@
    limitations under the License.
 */
 
-package client
-
 import (
-	"fmt"
-	"net/http"
 	"net/url"
 	"strconv"
 
@@ -25,52 +23,33 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIDeliveryServicesRequiredCapabilities is the API version-relative
-	// route to the /deliveryservices_required_capabilities endpoint.
-	APIDeliveryServicesRequiredCapabilities = "/deliveryservices_required_capabilities"
-)
+// apiDeliveryServicesRequiredCapabilities is the API version-relative
+// route to the /deliveryservices_required_capabilities endpoint.
+const apiDeliveryServicesRequiredCapabilities = "/deliveryservices_required_capabilities"
 
-// CreateDeliveryServicesRequiredCapability assigns a Required Capability to a Delivery Service
-func (to *Session) CreateDeliveryServicesRequiredCapability(capability tc.DeliveryServicesRequiredCapability) (tc.Alerts, toclientlib.ReqInf, error) {
+// CreateDeliveryServicesRequiredCapability assigns a Required Capability to a Delivery Service.
+func (to *Session) CreateDeliveryServicesRequiredCapability(capability tc.DeliveryServicesRequiredCapability, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIDeliveryServicesRequiredCapabilities, capability, nil, &alerts)
+	reqInf, err := to.post(apiDeliveryServicesRequiredCapabilities, opts, capability, &alerts)
 	return alerts, reqInf, err
 }
 
-// DeleteDeliveryServicesRequiredCapability unassigns a Required Capability from a Delivery Service
-func (to *Session) DeleteDeliveryServicesRequiredCapability(deliveryserviceID int, capability string) (tc.Alerts, toclientlib.ReqInf, error) {
+// DeleteDeliveryServicesRequiredCapability unassigns a Required Capability from a Delivery Service.
+func (to *Session) DeleteDeliveryServicesRequiredCapability(deliveryserviceID int, capability string, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	param := url.Values{}
-	param.Add("deliveryServiceID", strconv.Itoa(deliveryserviceID))
-	param.Add("requiredCapability", capability)
-	route := fmt.Sprintf("%s?%s", APIDeliveryServicesRequiredCapabilities, param.Encode())
-	reqInf, err := to.del(route, nil, &alerts)
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+	opts.QueryParameters.Set("deliveryServiceID", strconv.Itoa(deliveryserviceID))
+	opts.QueryParameters.Set("requiredCapability", capability)
+	reqInf, err := to.del(apiDeliveryServicesRequiredCapabilities, opts, &alerts)
 	return alerts, reqInf, err
 }
 
-// GetDeliveryServicesRequiredCapabilities retrieves a list of Required Capabilities that are assigned to a Delivery Service
-// Callers can filter the results by delivery service id, xml id and/or required capability via the optional parameters
-func (to *Session) GetDeliveryServicesRequiredCapabilities(deliveryServiceID *int, xmlID, capability *string, header http.Header) ([]tc.DeliveryServicesRequiredCapability, toclientlib.ReqInf, error) {
-	param := url.Values{}
-	if deliveryServiceID != nil {
-		param.Add("deliveryServiceID", strconv.Itoa(*deliveryServiceID))
-	}
-	if xmlID != nil {
-		param.Add("xmlID", *xmlID)
-	}
-	if capability != nil {
-		param.Add("requiredCapability", *capability)
-	}
-
-	route := APIDeliveryServicesRequiredCapabilities
-	if len(param) > 0 {
-		route = fmt.Sprintf("%s?%s", route, param.Encode())
-	}
-
-	resp := struct {
-		Response []tc.DeliveryServicesRequiredCapability `json:"response"`
-	}{}
-	reqInf, err := to.get(route, header, &resp)
-	return resp.Response, reqInf, err
+// GetDeliveryServicesRequiredCapabilities retrieves a list of relationships
+// between Delivery Services and the Capabilities they require.
+func (to *Session) GetDeliveryServicesRequiredCapabilities(opts RequestOptions) (tc.DeliveryServicesRequiredCapabilitiesResponse, toclientlib.ReqInf, error) {
+	var resp tc.DeliveryServicesRequiredCapabilitiesResponse
+	reqInf, err := to.get(apiDeliveryServicesRequiredCapabilities, opts, &resp)
+	return resp, reqInf, err
 }

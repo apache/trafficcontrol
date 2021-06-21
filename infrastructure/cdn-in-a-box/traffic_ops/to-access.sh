@@ -203,12 +203,12 @@ to-enroll() {
 			;;
 		"edge" )
 			export MY_TYPE="EDGE"
-			export MY_PROFILE="ATS_EDGE_TIER_CACHE"
+			export MY_PROFILE="EDGE_TIER_ATS_CACHE"
 			export MY_STATUS="REPORTED"
 			;;
 		"mid" )
 			export MY_TYPE="MID"
-			export MY_PROFILE="ATS_MID_TIER_CACHE"
+			export MY_PROFILE="MID_TIER_ATS_CACHE"
 			export MY_STATUS="REPORTED"
 			;;
 		"origin" )
@@ -297,16 +297,16 @@ function testenrolled() {
 #     csr_path
 #     key_path
 to-add-sslkeys() {
-	demo1_crt="$(sed -n -e '/-----BEGIN CERTIFICATE-----/,$p' $4 | jq -s -R '.')"
-	demo1_csr="$(sed -n -e '/-----BEGIN CERTIFICATE REQUEST-----/,$p' $5 | jq -s -R '.')"
-	demo1_key="$(sed -n -e '/-----BEGIN PRIVATE KEY-----/,$p' $6 | jq -s -R '.')"
+	ds_crt="$(sed -n -e '/-----BEGIN CERTIFICATE-----/,$p' $4 | jq -s -R '.')"
+	ds_csr="$(sed -n -e '/-----BEGIN CERTIFICATE REQUEST-----/,$p' $5 | jq -s -R '.')"
+	ds_key="$(sed -n -e '/-----BEGIN PRIVATE KEY-----/,$p' $6 | jq -s -R '.')"
 	json_request=$(jq -n \
 	                  --arg     cdn        "$1" \
 	                  --arg     dsname     "$2" \
 	                  --arg     hostname   "$3" \
-	                  --argjson crt        "$demo1_crt" \
-	                  --argjson csr        "$demo1_csr" \
-	                  --argjson key        "$demo1_key" \
+	                  --argjson crt        "$ds_crt" \
+	                  --argjson csr        "$ds_csr" \
+	                  --argjson key        "$ds_key" \
 	                 "{ cdn: \$cdn,
 	                    certificate: {
 	                      crt: \$crt,
@@ -374,4 +374,14 @@ to-auto-snapqueue() {
 
 		sleep $AUTO_SNAPQUEUE_POLL_INTERVAL
 	done
+}
+
+check-skips() {
+	if [[ "$SKIP_TRAFFIC_OPS_DATA" == true ]]; then
+		touch /shared/SKIP_TRAFFIC_OPS_DATA
+	fi
+	if [[ "$SKIP_DIG_IP" == true ]]; then
+		touch /shared/SKIP_DIG_IP
+	fi
+	sync
 }

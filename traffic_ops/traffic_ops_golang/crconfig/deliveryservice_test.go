@@ -221,7 +221,8 @@ func TestMakeDSes(t *testing.T) {
 	MockMakeDSes(mock, expected, cdn)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -288,7 +289,8 @@ func TestGetServerProfileParams(t *testing.T) {
 	MockGetServerProfileParams(mock, expected, cdn)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -376,7 +378,8 @@ func TestGetDSRegexesDomains(t *testing.T) {
 	MockGetDSRegexesDomains(mock, expectedMatchsets, expectedDomains, cdn)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -439,7 +442,8 @@ func TestGetStaticDNSEntries(t *testing.T) {
 	MockGetStaticDNSEntries(mock, expected, cdn)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)

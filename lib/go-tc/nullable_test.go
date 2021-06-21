@@ -2,6 +2,7 @@
 // skip this unless specifically testing for nullable vs non-nullable struct comparison
 
 // Run as `go test -tags nullable`
+//go:build nullable
 // +build nullable
 
 package tc

@@ -26,6 +26,12 @@ export const cdns = {
 					password: "pa$$word"
 				}
 			],
+			check: [
+				{
+					description: "check CSV link from CDN page",
+					Name: "Export as CSV"
+				}
+			],
 			add: [
 				{
 					description: "create a CDN",
@@ -53,23 +59,32 @@ export const cdns = {
 				{
 					description: "perform snapshot",
 					Name: "TPCDN1",
+					NewName: "",
 					validationMessage: "Snapshot performed"
 				},
 				{
 					description: "queue CDN updates",
 					Name: "TPCDN2",
+					NewName: "",
 					validationMessage: "Queued CDN server updates"
 				},
 				{
 					description: "clear CDN updates",
 					Name: "TPCDN2",
+					NewName: "",
 					validationMessage: "Cleared CDN server updates"
+				},
+				{
+					description: "update cdn name",
+					Name: "TPCDN1",
+					NewName: "TPNewCDN1",
+					validationMessage: "cdn was updated."
 				}
 			],
 			remove: [
 				{
 					description: "delete CDN",
-					Name: "TPCDN1",
+					Name: "TPNewCDN1",
 					validationMessage: "cdn was deleted."
 				}
 			]
@@ -81,6 +96,12 @@ export const cdns = {
 					description: "Read Only Role",
 					username: "TPReadOnly",
 					password: "pa$$word"
+				}
+			],
+			check: [
+				{
+					description: "check CSV link from CDN page",
+					Name: "Export as CSV"
 				}
 			],
 			add: [
@@ -96,16 +117,25 @@ export const cdns = {
 				{
 					description: "perform snapshot",
 					Name: "TPCDN2",
+					NewName: "",
 					validationMessage: "Forbidden."
 				},
 				{
 					description: "queue CDN updates",
 					Name: "TPCDN2",
+					NewName: "",
 					validationMessage: "Forbidden."
 				},
 				{
 					description: "clear CDN updates",
 					Name: "TPCDN2",
+					NewName: "",
+					validationMessage: "Forbidden."
+				},
+				{
+					description: "update cdn name",
+					Name: "TPCDN2",
+					NewName: "TPNewCDN2",
 					validationMessage: "Forbidden."
 				}
 			],
@@ -123,6 +153,12 @@ export const cdns = {
 					description: "Operation Role",
 					username: "TPOperator",
 					password: "pa$$word"
+				}
+			],
+			check: [
+				{
+					description: "check CSV link from CDN page",
+					Name: "Export as CSV"
 				}
 			],
 			add: [
@@ -152,17 +188,26 @@ export const cdns = {
 				{
 					description: "perform snapshot",
 					Name: "TPCDN3",
+					NewName: "",
 					validationMessage: "Snapshot performed"
 				},
 				{
 					description: "queue CDN updates",
 					Name: "TPCDN4",
+					NewName: "",
 					validationMessage: "Queued CDN server updates"
 				},
 				{
 					description: "clear CDN updates",
 					Name: "TPCDN4",
+					NewName: "",
 					validationMessage: "Cleared CDN server updates"
+				},
+				{
+					description: "update cdn name",
+					Name: "TPCDN3",
+					NewName: "TPNewCDN3",
+					validationMessage: "cdn was updated."
 				}
 			],
 			remove: [
@@ -173,7 +218,7 @@ export const cdns = {
 				},
 				{
 					description: "delete CDN",
-					Name: "TPCDN3",
+					Name: "TPNewCDN3",
 					validationMessage: "cdn was deleted."
 				},
 				{

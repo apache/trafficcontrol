@@ -13,8 +13,6 @@
 */
 import { Component, EventEmitter, HostListener, Input, OnInit, Output } from "@angular/core";
 import { FormControl } from "@angular/forms";
-import { merge, of } from "rxjs";
-import { mergeAll } from "rxjs/operators";
 import { Server, Status } from "src/app/models";
 import { ServerService } from "src/app/services/api";
 
@@ -45,7 +43,7 @@ export class UpdateStatusComponent implements OnInit {
 	}
 
 	/** The possible statuses of a server. */
-	public statuses = of(new Array<Status>());
+	public statuses = new Promise(resolve => resolve(new Array<Status>()));
 	/** The ID of the current status of the server, or null if the servers have disparate statuses. */
 	public currentStatus: null | number = null;
 
@@ -76,7 +74,12 @@ export class UpdateStatusComponent implements OnInit {
 	 * Sets up the necessary data to complete the form.
 	 */
 	public ngOnInit(): void {
-		this.statuses = this.api.getStatuses();
+		this.statuses = this.api.getStatuses().catch(
+			e => {
+				console.error("Failed to get Statuses:", e);
+				return [];
+			}
+		);
 		if (this.servers.length < 1) {
 			return;
 		}
@@ -104,11 +107,11 @@ export class UpdateStatusComponent implements OnInit {
 		e.stopPropagation();
 		let observables;
 		if (this.isOffline) {
-			observables = this.servers.map(x=>this.api.updateStatus(x, this.statusControl.value.id, this.offlineReasonControl.value));
+			observables = this.servers.map(async x=>this.api.updateStatus(x, this.statusControl.value.id, this.offlineReasonControl.value));
 		} else {
-			observables = this.servers.map(x=>this.api.updateStatus(x, this.statusControl.value.id));
+			observables = this.servers.map(async x=>this.api.updateStatus(x, this.statusControl.value.id));
 		}
-		merge(observables).pipe(mergeAll()).subscribe(
+		Promise.all(observables).then(
 			() => {
 				this.done.emit(true);
 			},

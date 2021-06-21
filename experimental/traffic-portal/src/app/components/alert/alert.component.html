@@ -11,7 +11,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<dialog id="alert" [ngClass]="{'success': alert && alert.level === 'success', 'info': alert && alert.level === 'info', 'warning': alert && alert.level === 'warning', 'error': alert && alert.level === 'error' }">
-	<span>{{alert ? alert.text : ''}}</span>
-	<button title="close" (click)="close()">&times;</button>
-</dialog>

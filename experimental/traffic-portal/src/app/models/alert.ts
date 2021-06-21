@@ -13,9 +13,9 @@
 */
 
 /**
- *
+ * These are the allowed Levels for Alerts.
  */
-type AlertLevel = "info" | "success" | "error" | "warning";
+export type AlertLevel = "info" | "success" | "error" | "warning";
 
 /**
  * Represents a single `alert` object returned by the Traffic Ops API

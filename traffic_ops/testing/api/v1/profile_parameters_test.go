@@ -132,10 +132,10 @@ func DeleteTestProfileParametersParallel(t *testing.T) {
 	for _, pp := range testData.ProfileParameters {
 
 		wg.Add(1)
-		go func() {
+		go func(p tc.ProfileParameter) {
 			defer wg.Done()
-			DeleteTestProfileParameter(t, pp)
-		}()
+			DeleteTestProfileParameter(t, p)
+		}(pp)
 
 	}
 	wg.Wait()

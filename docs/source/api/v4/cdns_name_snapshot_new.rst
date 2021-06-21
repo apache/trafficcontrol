@@ -320,7 +320,7 @@ Response Structure
 	:tm_user:    The username of the currently logged-in user
 	:tm_version: The full version number of the Traffic Ops server, including release number, git commit hash, and supported Enterprise Linux version
 
-:topologies:	An array of :term:`Topologies` where each key is the name of that Topology.
+:topologies: An array of :term:`Topologies` where each key is the name of that Topology.
 
 	:nodes: An array of the names of the :term:`Edge-Tier` :term:`Cache Groups` in this :term:`Topology`. :term:`Mid-Tier` Cache Groups in the topology are not included.
 
@@ -364,17 +364,17 @@ Response Structure
 				"certificates.polling.interval": "300000",
 				"consistent.dns.routing": "true",
 				"coveragezone.polling.interval": "3600000",
-				"coveragezone.polling.url": "https://trafficops.infra.ciab.test:443/coverage-zone.json",
+				"coveragezone.polling.url": "https://static.infra.ciab.test:443/coverage-zone.json",
 				"dnssec.dynamic.response.expiration": "300s",
 				"dnssec.enabled": "false",
 				"domain_name": "mycdn.ciab.test",
 				"federationmapping.polling.interval": "60000",
 				"federationmapping.polling.url": "https://${toHostname}/api/2.0/federations/all",
 				"geolocation.polling.interval": "86400000",
-				"geolocation.polling.url": "https://trafficops.infra.ciab.test:443/GeoLite2-City.mmdb.gz",
+				"geolocation.polling.url": "https://static.infra.ciab.test:443/GeoLite2-City.mmdb.gz",
 				"keystore.maintenance.interval": "300",
 				"neustar.polling.interval": "86400000",
-				"neustar.polling.url": "https://trafficops.infra.ciab.test:443/neustar.tar.gz",
+				"neustar.polling.url": "https://static.infra.ciab.test:443/neustar.tar.gz",
 				"soa": {
 					"admin": "twelve_monkeys",
 					"expire": "604800",

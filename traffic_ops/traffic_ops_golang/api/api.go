@@ -492,6 +492,7 @@ type APIInfo struct {
 	ReqID     uint64
 	Version   *Version
 	Tx        *sqlx.Tx
+	CancelTx  context.CancelFunc
 	Vault     trafficvault.TrafficVault
 	Config    *config.Config
 	request   *http.Request
@@ -553,10 +554,10 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	if userErr != nil || sysErr != nil {
 		return &APIInfo{Tx: &sqlx.Tx{}}, userErr, sysErr, errCode
 	}
-	dbCtx, _ := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second) //only place we could call cancel here is in APIInfo.Close(), which already will rollback the transaction (which is all cancel will do.)
-	tx, err := db.BeginTxx(dbCtx, nil)                                                                 // must be last, MUST not return an error if this succeeds, without closing the tx
+	dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second) //only place we could call cancel here is in APIInfo.Close(), which already will rollback the transaction (which is all cancel will do.)
+	tx, err := db.BeginTxx(dbCtx, nil)                                                                        // must be last, MUST not return an error if this succeeds, without closing the tx
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, userErr, errors.New("could not begin transaction: " + err.Error()), http.StatusInternalServerError
+		return &APIInfo{Tx: &sqlx.Tx{}, CancelTx: cancelTx}, userErr, errors.New("could not begin transaction: " + err.Error()), http.StatusInternalServerError
 	}
 	return &APIInfo{
 		Config:    cfg,
@@ -566,6 +567,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 		IntParams: intParams,
 		User:      user,
 		Tx:        tx,
+		CancelTx:  cancelTx,
 		Vault:     tv,
 		request:   r,
 	}, nil, nil, http.StatusOK
@@ -654,6 +656,7 @@ func (inf APIInfo) CheckPrecondition(query string, args ...interface{}) (int, er
 //
 // Close will commit the transaction, if it hasn't been rolled back.
 func (inf *APIInfo) Close() {
+	defer inf.CancelTx()
 	if err := inf.Tx.Tx.Commit(); err != nil && err != sql.ErrTxDone {
 		log.Errorln("committing transaction: " + err.Error())
 	}

@@ -15,7 +15,9 @@ package tc
    limitations under the License.
 */
 
-// DeliveryServiceRegexResponse ...
+// DeliveryServiceRegexResponse is the type of a Traffic Ops API response to
+// the /deliveryservices_regexes endpoint - in all API verions (at the time of
+// this writing).
 type DeliveryServiceRegexResponse struct {
 	Response []DeliveryServiceRegexes `json:"response"`
 	Alerts
@@ -34,10 +36,10 @@ type DeliveryServiceRegex struct {
 	Pattern   string `json:"pattern"`
 }
 
-// DeliveryServiceIDRegexResponse is a list of DeliveryServiceIDRegexes. It is
-// unused.
+// DeliveryServiceIDRegexResponse is a list of DeliveryServiceIDRegexes.
 type DeliveryServiceIDRegexResponse struct {
 	Response []DeliveryServiceIDRegex `json:"response"`
+	Alerts
 }
 
 // DeliveryServiceIDRegex holds information relating to a single routing regular

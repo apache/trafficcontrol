@@ -14,7 +14,16 @@
 #
 
 install_ats: False
-ort_pkg_name: "{% if ort_version is defined and ort_version != omit %}{{ 'traffic_ops_ort-'+ort_version }}{% else %}traffic_ops_ort{% endif %}"
+ort_pkg_name: >-
+  {%- if ort_version is defined and ort_version != omit -%}
+    {%- if ort_version >= '6.0.0.11351' -%}
+      {{ 'trafficcontrol-cache-config-'+ort_version }}
+    {%- else -%}
+      {{ 'traffic_ops_ort-'+ort_version }}
+    {%- endif -%}
+  {%- else -%}
+    trafficcontrol-cache-config
+  {%- endif -%}
 
 # URL to communicate with TrafficOps at
 ort_traffic_ops_url:
@@ -23,17 +32,26 @@ ort_traffic_ops_url:
 ort_traffic_ops_username:
 ort_traffic_ops_password:
 
-# ORT cronjobs to deploy
+# t3c cronjobs to deploy
 ort_crontab:
   # Perform configuration polling that doesn't require a restart on a 20 minute +- dispersion interval
   syncds:
     schedule: '0,20,40 * * * *'
     user: root
-    job: "t3c --run-mode=syncds --traffic-ops-timeout-milliseconds=30000 --cache-host-name=\\\"$(hostname -s)\\\"  --log-location-error=stderr --log-location-warning=stderr --log-location-info=stderr --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' --login-dispersion=35 --dispersion=420 >> /var/log/ort/syncds.log 2>&1"
+    job: >-
+      {%- if ort_version is not defined or ort_version == omit or ort_version >= '6.0.0.11351' -%}
+        t3c apply --run-mode=syncds --cache-host-name='{{ (ansible_nodename.split('.')) | first }}' --log-location-warning=stderr --log-location-error=stderr --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' --login-dispersion=35 --dispersion=420 &> /tmp/trafficcontrol-cache-config/syncds.log
+      {%- else -%}
+        traffic_ops_ort.pl syncds warn {{ ort_traffic_ops_url }} '{{ ort_traffic_ops_username }}:{{ ort_traffic_ops_password }}' --login_dispersion=35 --dispersion=420 &>/tmp/ort/syncds.log
+      {%- endif -%}
   # Perform a check for user requested content invalidations every minute
   reval:
     schedule: '1-19,21-39,41-59 * * * *'
     user: root
-    job: "t3c --run-mode=revalidate --traffic-ops-timeout-milliseconds=30000 --cache-host-name=\\\"$(hostname -s)\\\"  --log-location-error=stderr --log-location-warning=stderr --log-location-info=stderr --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' --login-dispersion=35 --dispersion=420 >> /var/log/ort/reval.log 2>&1"
-
+    job: >-
+      {%- if ort_version is not defined or ort_version == omit or ort_version >= '6.0.0.11351' -%}
+        t3c apply --run-mode=revalidate --cache-host-name='{{ (ansible_nodename.split('.')) | first }}' --log-location-warning=stderr --log-location-error=stderr --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' --login-dispersion=35 &> /tmp/trafficcontrol-cache-config/reval.log
+      {%- else -%}
+        traffic_ops_ort.pl revalidate warn {{ ort_traffic_ops_url }} '{{ ort_traffic_ops_username }}:{{ ort_traffic_ops_password }}' --login_dispersion=35 &>/tmp/ort/reval.log
+      {%- endif -%}
 ats_clear_data: false

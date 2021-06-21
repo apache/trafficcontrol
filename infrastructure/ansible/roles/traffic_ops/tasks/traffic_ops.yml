@@ -67,8 +67,6 @@
       notify: Restart Traffic Ops
       environment:
         GOPATH: /opt/traffic_ops/go
-        GOBIN: /opt/traffic_ops/go/bin
-        PATH: "{{ lookup('env','PATH') }}:/opt/traffic_ops/go/bin:/usr/local/go/bin"
       register: Postinstall_output
       failed_when:
         (Postinstall_output.stdout.find("Success! Postinstall complete.") == -1) or
@@ -106,6 +104,24 @@
     dest: "{{ to_db_installdir }}/dbconf.yml"
   notify: Restart Traffic Ops
 
+- name: Render Traffic Vault database configuration file
+  template:
+    src: "trafficvault_dbconf.yml.j2"
+    owner: "{{ to_user }}"
+    group: "{{ to_group }}"
+    mode: 0600
+    dest: "{{ to_db_installdir }}/trafficvault/dbconf.yml"
+  notify: Restart Traffic Ops
+
+- name: Render Traffic Vault database AES key file
+  template:
+    src: "aes.key.j2"
+    owner: "{{ to_user }}"
+    group: "{{ to_group }}"
+    mode: 0600
+    dest: "{{ to_tvdb_aes_key_loc }}"
+  notify: Restart Traffic Ops
+
 - name: Render Traffic Ops configuration files
   template:
     src: "{{item}}.j2"
@@ -123,19 +139,35 @@
   notify: Restart Traffic Ops
 
 - name: Upgrade TODB
-  shell: ./db/admin -env=production upgrade
+  command: ./db/admin -env=production upgrade
   args:
     chdir: "{{ to_app_installdir }}"
   environment:
-    PATH: "{{ lookup('env', 'PATH') }}:{{ to_base_installdir }}/go/bin:/usr/local/go/bin"
-    PERL5LIB: ./lib:./local/lib/perl5
+    PATH: "{{ lookup('env', 'PATH') }}:{{ to_base_installdir }}/go/bin"
     GOPATH: /opt/traffic_ops/go
-    GOBIN: /opt/traffic_ops/go/bin
   failed_when:
     (db_migrations_output.stdout.find("Can't run goose") != -1) or
     (db_migrations_output.rc != 0)
   run_once: true
   register: db_migrations_output
+
+- name: Load Traffic Vault DB schema
+  command: ./db/admin --trafficvault -env=production load_schema
+  args:
+    chdir: "{{ to_app_installdir }}"
+  environment:
+    PATH: "{{ lookup('env', 'PATH') }}:{{ to_base_installdir }}/go/bin"
+    GOPATH: /opt/traffic_ops/go
+  run_once: true
+
+- name: Upgrade Traffic Vault DB
+  command: ./db/admin --trafficvault -env=production upgrade
+  args:
+    chdir: "{{ to_app_installdir }}"
+  environment:
+    PATH: "{{ lookup('env', 'PATH') }}:{{ to_base_installdir }}/go/bin"
+    GOPATH: /opt/traffic_ops/go
+  run_once: true
 
 - name: Initialize Riak SOLR
   block:

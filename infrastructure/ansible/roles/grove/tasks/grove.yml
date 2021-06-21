@@ -49,6 +49,13 @@
       #!/usr/bin/perl
       # empty for Grove, prevents systems previously running ORT from overriding TO Update Flag
 
+- name: Create an empty t3c file
+  copy:
+    dest: "/usr/bin/t3c"
+    content: |
+      #!/usr/bin/perl
+      # empty for Grove, prevents systems previously running t3c from overriding TO Update Flag
+
 - name: Create log folder
   file:
     path: "{{ grove_custom_ats2_path | dirname }}"

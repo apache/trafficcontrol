@@ -21,9 +21,9 @@ Traffic Control is distributed in source form for the developer, but also as a b
 
 When installing a complete CDN from scratch, a sample recommended order is:
 
-#. Traffic Ops DB (Postgresql)
+#. Traffic Ops DB (PostgreSQL)
 #. `InfluxDB [Optional] <https://github.com/influxdata/influxdb>`_
-#. Traffic Vault (Riak) [Optional]
+#. Traffic Vault (PostgreSQL or Riak) [Optional]
 #. Fake Origin [Optional]
 #. Traffic Ops
 #. Traffic Portal

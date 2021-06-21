@@ -49,6 +49,7 @@ type ServerCheckExtensionNullable struct {
 // ServerCheckExtensionResponse represents the response from Traffic Ops when getting ServerCheckExtension.
 type ServerCheckExtensionResponse struct {
 	Response []ServerCheckExtensionNullable `json:"response"`
+	Alerts
 }
 
 // ServerCheckExtensionPostResponse represents the response from Traffic Ops when creating ServerCheckExtension.

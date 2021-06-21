@@ -22,6 +22,7 @@ package tc
 // FederationFederationResolversResponse represents an API response containing Federation Resolvers for a given Federation.
 type FederationFederationResolversResponse struct {
 	Response []FederationResolver `json:"response"`
+	Alerts
 }
 
 // AssignFederationFederationResolversResponse represents an API response for assigning a Federation Resolver to a Federation.

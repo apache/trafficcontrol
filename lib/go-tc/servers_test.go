@@ -54,7 +54,7 @@ func ExampleLegacyInterfaceDetails_ToInterfaces() {
 			fmt.Printf("\taddr=%s, gateway=%s, service address=%t\n", ip.Address, *ip.Gateway, ip.ServiceAddress)
 		}
 	}
-	// Output: name=test, monitor=false
+	// Output: name=test, monitor=true
 	// 	addr=1.2.3.4/30, gateway=4.3.2.1, service address=true
 	// 	addr=::14/64, gateway=::15, service address=false
 	//
@@ -1124,8 +1124,8 @@ func TestServerNullableV2_Upgrade(t *testing.T) {
 			t.Errorf("Incorrect Interface MTU after upgrade; want: %d, got: %d", *nullable.InterfaceMtu, *inf.MTU)
 		}
 
-		if inf.Monitor {
-			t.Error("Incorrect Interface Monitor after upgrade; want: false, got: true")
+		if !inf.Monitor {
+			t.Error("Incorrect Interface Monitor after upgrade; want: true, got: false")
 		}
 
 		if inf.MaxBandwidth != nil {

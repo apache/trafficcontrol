@@ -23,6 +23,13 @@ die() {
 	{ test -n "$@" && echo "$@"; exit 1; } >&2
 }
 
+setowner() {
+	own="$(stat -c%u:%g "$1")"
+	shift
+	chown -R "${own}" "$@"
+}
+trap 'exit_code=$?; setowner /rpmbuilddir/RPMS/x86_64 /rpmbuilddir/RPMS/x86_64; exit $exit_code' EXIT;
+
 mkdir /opt/build
 cp -fa /opt/{src,build}/jansson
 cp -fa /opt/{src,build}/cjose

@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,20 +15,24 @@
    limitations under the License.
 */
 
-package client
-
 import (
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIPing is the full path to the /ping API endpoint.
-	APIPing = "/ping"
-)
+// apiPing is the full path to the /ping API endpoint.
+const apiPing = "/ping"
 
-// Ping returns a static json object to show that traffic_ops is responsive.
-func (to *Session) Ping() (map[string]string, toclientlib.ReqInf, error) {
-	var data map[string]string
-	reqInf, err := to.get(APIPing, nil, &data)
+// PingResponse is the type of a response from Traffic Ops to a requestt made
+// to its /ping API endpoint.
+type PingResponse struct {
+	Ping string `json:"ping"`
+	tc.Alerts
+}
+
+// Ping returns a simple response to show that Traffic Ops is responsive.
+func (to *Session) Ping(opts RequestOptions) (PingResponse, toclientlib.ReqInf, error) {
+	var data PingResponse
+	reqInf, err := to.get(apiPing, opts, &data)
 	return data, reqInf, err
 }

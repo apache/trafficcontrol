@@ -54,10 +54,10 @@ services:
     volumes:
       - ../../..:/trafficcontrol:z
 
-  traffic_ops_ort_build:
-    image: apache/traffic_ops_ort_builder:master
+  cache-config_build:
+    image: apache/trafficcontrol-cache-config_builder:master
     build:
-      dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops_ort
+      dockerfile: infrastructure/docker/build/Dockerfile-cache-config
       context: ../../..
       args:
         RHEL_VERSION: ${RHEL_VERSION:-8}

@@ -17,16 +17,18 @@ package v4
 
 import (
 	"testing"
+
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestPing(t *testing.T) {
-	_, _, err := TOSession.Ping()
+	resp, _, err := TOSession.Ping(client.RequestOptions{})
 	if err != nil {
-		t.Errorf("could not Ping authenticated: %v", err)
+		t.Errorf("could not ping while authenticated: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	_, _, err = NoAuthTOSession.Ping()
+	resp, _, err = NoAuthTOSession.Ping(client.RequestOptions{})
 	if err != nil {
-		t.Errorf("could not Ping unauthenticated: %v", err)
+		t.Errorf("could not ping while unauthenticated: %v - alerts: %+v", err, resp.Alerts)
 	}
 }

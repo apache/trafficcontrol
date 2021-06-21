@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,49 +15,50 @@
    limitations under the License.
 */
 
-package client
-
 import (
-	"fmt"
-	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIASNs is the API version-relative path for the /asns API endpoint.
-	APIASNs = "/asns"
-)
+// apiASNs is the API version-relative path for the /asns API endpoint.
+const apiASNs = "/asns"
 
-// CreateASN creates a ASN
-func (to *Session) CreateASN(entity tc.ASN) (tc.Alerts, toclientlib.ReqInf, error) {
+// CreateASN creates the passed ASN.
+func (to *Session) CreateASN(asn tc.ASN, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIASNs, entity, nil, &alerts)
+	reqInf, err := to.post(apiASNs, opts, asn, &alerts)
 	return alerts, reqInf, err
 }
 
-// UpdateASNByID updates a ASN by ID
-func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", APIASNs, id)
+// UpdateASN updates the ASN identified by id by replacing it with the passed
+// ASN.
+func (to *Session) UpdateASN(id int, entity tc.ASN, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+	opts.QueryParameters.Set("id", strconv.Itoa(id))
 	var alerts tc.Alerts
-	reqInf, err := to.put(route, entity, nil, &alerts)
+	reqInf, err := to.put(apiASNs, opts, entity, &alerts)
 	return alerts, reqInf, err
 }
 
-// GetASNs returns a list of ASNs matching query params
-func (to *Session) GetASNs(params *url.Values, header http.Header) ([]tc.ASN, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?%s", APIASNs, params.Encode())
+// GetASNs retrieves ASNs from Traffic Ops.
+func (to *Session) GetASNs(opts RequestOptions) (tc.ASNsResponse, toclientlib.ReqInf, error) {
 	var data tc.ASNsResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
+	reqInf, err := to.get(apiASNs, opts, &data)
+	return data, reqInf, err
 }
 
-// DeleteASNByASN deletes an ASN by asn number
-func (to *Session) DeleteASNByASN(asn int) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", APIASNs, asn)
+// DeleteASN deletes the ASN with the given ID.
+func (to *Session) DeleteASN(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+	opts.QueryParameters.Set("id", strconv.Itoa(id))
 	var alerts tc.Alerts
-	reqInf, err := to.del(route, nil, &alerts)
+	reqInf, err := to.del(apiASNs, opts, &alerts)
 	return alerts, reqInf, err
 }

@@ -21,6 +21,8 @@ Profiles and Parameters
 ***********************
 :dfn:`Profiles` are a collection of configuration options, defined partially by the Profile's Type_ (not to be confused with the more general ":term:`Type`" used by many other things in Traffic Control) and partially by the :dfn:`Parameters` set on them. Mainly, Profiles and Parameters are used to configure :term:`cache servers`, but they can also be used to configure parts of (nearly) any Traffic Control component, and can even be linked with more abstract concepts like :ref:`Delivery Services <ds-profile>` and :term:`Cache Groups`. The vast majority of configuration done within a Traffic Control CDN must be done through Profiles_ and Parameters_, which can be achieved either through the :ref:`to-api` or in the :ref:`tp-configure-profiles` view of Traffic Portal. For ease of use, Traffic Portal allows for duplication, comparison, import and export of Profiles_ including all of their associated Parameters_.
 
+.. seealso:: For Delivery Service Profile Parameters, see :ref:`ds-parameters`.
+
 .. _profiles:
 
 Profiles
@@ -71,7 +73,7 @@ A Profile's :dfn:`Type` determines how its configured Parameters_ are treated by
 ATS_PROFILE
 	A Profile that can be used with either an Edge-tier or Mid-tier :term:`cache server` (but not both, in general). This is the only Profile type that will ultimately pass its Parameters_ on to :term:`ORT` in the form of generated configuration files. For this reason, it can make use of the :ref:`ort-special-strings` in the values of some of its Parameters_.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``EDGE`` or ``MID``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
+	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``EDGE`` or ``MID``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise! This includes :ref:`to-api-caches-stats`.
 
 DS_PROFILE
 	A Profile that, rather than applying to a server, is instead :ref:`used by a Delivery Service <ds-profile>`.
@@ -188,8 +190,6 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| tm.infourl               | global                  | This is the "for more information go here" URL, which used to be visible in the "About" page of the now-deprecated Traffic Ops UI.    |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| tm.logourl               | global                  | This is the URL of the logo for Traffic Ops and can be relative if the logo is under :file:`traffic_ops/app/public`.                  |
-	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| tm.instance_name         | global                  | The name of the Traffic Ops instance - typically to distinguish instances when multiple are active.                                   |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| tm.traffic_mon_fwd_proxy | global                  | When collecting stats from Traffic Monitor, Traffic Ops will use this forward proxy instead of the actual Traffic Monitor host.       |
@@ -223,8 +223,6 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	|                          |                         | configuration file.**                                                                                                                 |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 
-
-.. note:: Since the Traffic Ops UI has been removed, the tm.logourl has no real meaning, and in fact most Traffic Ops distributions neither set this :ref:`Parameter <parameters>`, nor provide a logo.
 
 Some of these Parameters_ have the `Config File`_ value global_, while others have `CRConfig.json`_. This is not a typo, and the distinction is that those that use global_ are typically configuration options relating to Traffic Control as a whole or to Traffic Ops itself, whereas `CRConfig.json`_ is used by configuration options that are set globally, but pertain mainly to routing and are thus communicated to Traffic Routers through :term:`CDN Snapshots` (which historically were called "CRConfig Snapshots" or simply "the CRConfig").
 When a :ref:`Parameter <parameters>` has a `Config File`_ value that *isn't* one of global_ or `CRConfig.json`_, it refers to the global configuration of said `Config File`_ across all servers that use it across all CDNs configured in Traffic Control. This can be used to easily apply extremely common configuration to a great many servers in one place.
@@ -494,7 +492,6 @@ This configuration file is generated entirely from :term:`Cache Group` relations
 - ``qstring``
 - ``psel.qstring_handling``
 - ``not_a_parent`` - unlike the other Parameters listed (which have a 1:1 correspondence with Apache Traffic Server configuration options), this Parameter affects the generation of :term:`parent` relationships between :term:`cache servers`. When a Parameter with this :ref:`parameter-name` and Config File exists on a :ref:`Profile <profiles>` used by a :term:`cache server`, it will not be added as a :term:`parent` of any other :term:`cache server`, regardless of :term:`Cache Group` hierarchy. Under ordinary circumstances, there's no real reason for this Parameter to exist.
-- ``try_all_primaries_before_secondary`` - on a Delivery Service Profile, if this exists, try all primary parents before failing over to secondary parents, which may be ideal if objects are unlikely to be in cache. The default behavior is to immediately fail to a secondary, which is ideal if objects are likely to be in cache, as the first consistent-hashed secondary parent will be the primary parent in its own cachegroup and therefore receive requests for that object from clients near its own cachegroup.
 
 Additionally, :term:`Delivery Service` :ref:`Profiles <ds-profile>` can have special Parameters with the :ref:`parameter-name` "mso.parent_retry" to :ref:`multi-site-origin-qht`.
 

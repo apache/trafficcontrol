@@ -149,36 +149,43 @@ export class ServerDetailsComponent implements OnInit {
 	 * Initializes the controller based on route query parameters.
 	 */
 	public ngOnInit(): void {
-		this.cacheGroupService.getCacheGroups().subscribe(
+
+		const handleErr = (obj: string): (e: unknown) => void =>
+			(e: unknown): void => {
+				console.error(`Failed to get ${obj}:`, e);
+			};
+		;
+
+		this.cacheGroupService.getCacheGroups().then(
 			cgs => {
 				this.cacheGroups = cgs;
 			}
 		);
-		this.cdnService.getCDNs().subscribe(
+		this.cdnService.getCDNs().then(
 			cdns => {
 				this.cdns = Array.from(cdns.values());
 			}
 		);
-		this.serverService.getStatuses().subscribe(
+		this.serverService.getStatuses().then(
 			statuses => {
 				this.statuses = statuses;
 			}
-		);
-		this.profileService.getProfiles().subscribe(
+		).catch(handleErr("Statuses"));
+		this.profileService.getProfiles().then(
 			profiles => {
 				this.profiles = profiles;
 			}
-		);
-		this.typeService.getServerTypes().subscribe(
+		).catch(handleErr("Profiles"));
+		this.typeService.getServerTypes().then(
 			types => {
 				this.types = types;
 			}
 		);
-		this.physlocService.getPhysicalLocations().subscribe(
+		this.physlocService.getPhysicalLocations().then(
 			physlocs => {
 				this.physicalLocations = physlocs;
 			}
-		);
+		).catch(handleErr("Physical Locations"));
 
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
@@ -189,9 +196,13 @@ export class ServerDetailsComponent implements OnInit {
 		this.isNew = ID === "new";
 
 		if (!this.isNew) {
-			this.serverService.getServers(Number(ID)).subscribe(
+			this.serverService.getServers(Number(ID)).then(
 				s => {
 					this.server = s;
+				}
+			).catch(
+				e => {
+					console.error(`Failed to get server #${ID}:`, e);
 				}
 			);
 		} else {
@@ -218,7 +229,7 @@ export class ServerDetailsComponent implements OnInit {
 		e.preventDefault();
 		e.stopPropagation();
 		if (this.isNew) {
-			this.serverService.createServer(this.server).subscribe(
+			this.serverService.createServer(this.server).then(
 				s => {
 					if (!s.id) {
 						throw new Error("Traffic Ops returned server with no ID");
@@ -322,8 +333,12 @@ export class ServerDetailsComponent implements OnInit {
 			return;
 		}
 		if (reload) {
-			this.serverService.getServers(this.server.id).subscribe(
+			this.serverService.getServers(this.server.id).then(
 				s => this.server = s
+			).catch(
+				e => {
+					console.error("Failed to reload servers:", e);
+				}
 			);
 		}
 	}

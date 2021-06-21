@@ -17,6 +17,7 @@ package v1
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -25,6 +26,7 @@ import (
 func TestCRConfig(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, DeliveryServices}, func() {
 		UpdateTestCRConfigSnapshot(t)
+		MonitoringConfig(t)
 		SnapshotTestCDNbyName(t)
 		SnapshotTestCDNbyInvalidName(t)
 		SnapshotTestCDNbyID(t)
@@ -34,7 +36,7 @@ func TestCRConfig(t *testing.T) {
 
 func UpdateTestCRConfigSnapshot(t *testing.T) {
 	if len(testData.CDNs) < 1 {
-		t.Error("no cdn test data")
+		t.Fatalf("no cdn test data")
 	}
 	cdn := testData.CDNs[0].Name
 
@@ -150,6 +152,86 @@ func UpdateTestCRConfigSnapshot(t *testing.T) {
 
 	if *crcNew.Stats.TMHost != "" {
 		t.Errorf("update to snapshot not captured in /new endpoint")
+	}
+}
+
+func MonitoringConfig(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatalf("no cdn test data")
+	}
+	const cdnName = "cdn1"
+	const profileName = "EDGE1"
+	cdns, _, err := TOSession.GetCDNByName(cdnName)
+	if err != nil {
+		t.Fatalf("getting CDNs with name '%s': %s", cdnName, err.Error())
+	}
+	if len(cdns) < 1 {
+		t.Fatalf("expected to find a CDN named %s", cdnName)
+	}
+	if len(cdns) > 1 {
+		t.Fatalf("expected exactly 1 CDN named %s but found %d CDNs", cdnName, len(cdns))
+	}
+	profiles, _, err := TOSession.GetProfileByName(profileName)
+	if err != nil {
+		t.Fatalf("getting Profiles with name '%s': %s", profileName, err.Error())
+	}
+	if len(profiles) != 1 {
+		t.Fatalf("expected exactly 1 Profiles named %s but found %d Profiles", profileName, len(profiles))
+	}
+	parameters, _, err := TOSession.GetParametersByProfileName(profileName)
+	if err != nil {
+		t.Fatalf("getting Parameters by Profile name '%s': %s", profileName, err.Error())
+	}
+	parameterMap := map[string]tc.HealthThreshold{}
+	parameterFound := map[string]bool{}
+	const thresholdPrefixLength = len(tc.ThresholdPrefix)
+	for _, parameter := range parameters {
+		if !strings.HasPrefix(parameter.Name, tc.ThresholdPrefix) {
+			continue
+		}
+		parameterName := parameter.Name[thresholdPrefixLength:]
+		parameterMap[parameterName], err = tc.StrToThreshold(parameter.Value)
+		if err != nil {
+			t.Fatalf("converting string '%s' to HealthThreshold: %s", parameter.Value, err.Error())
+		}
+		parameterFound[parameterName] = false
+	}
+	const expectedThresholdParameters = 3
+	if len(parameterMap) != expectedThresholdParameters {
+		t.Fatalf("expected Profile '%s' to contain %d Parameters with names starting with '%s' but %d such Parameters were found", profileName, expectedThresholdParameters, tc.ThresholdPrefix, len(parameterMap))
+	}
+	tmConfig, _, err := TOSession.GetTrafficMonitorConfig(cdnName)
+	if err != nil {
+		t.Fatalf("getting Traffic Monitor Config: %s", err.Error())
+	}
+	profileFound := false
+	var profile tc.TMProfile
+	for _, profile = range tmConfig.Profiles {
+		if profile.Name == profileName {
+			profileFound = true
+			break
+		}
+	}
+	if !profileFound {
+		t.Fatalf("Traffic Monitor Config contained no Profile named '%s", profileName)
+	}
+	for parameterName, value := range profile.Parameters.Thresholds {
+		if _, ok := parameterFound[parameterName]; !ok {
+			t.Fatalf("unexpected Threshold Parameter name '%s' found in Profile '%s' in Traffic Monitor Config", parameterName, profileName)
+		}
+		parameterFound[parameterName] = true
+		if parameterMap[parameterName].String() != value.String() {
+			t.Fatalf("expected '%s' but received '%s' for Threshold Parameter '%s' in Profile '%s' in Traffic Monitor Config", parameterMap[parameterName].String(), value.String(), parameterName, profileName)
+		}
+	}
+	missingParameters := []string{}
+	for parameterName, found := range parameterFound {
+		if !found {
+			missingParameters = append(missingParameters, parameterName)
+		}
+	}
+	if len(missingParameters) != 0 {
+		t.Fatalf("Threshold parameters defined for Profile '%s' but missing for Profile '%s' in Traffic Monitor Config: %s", profileName, profileName, strings.Join(missingParameters, ", "))
 	}
 }
 

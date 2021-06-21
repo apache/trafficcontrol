@@ -131,7 +131,7 @@ type Config struct {
 }
 
 func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
-func (c Config) WarningLog() log.LogLocation { return log.LogLocation(c.LogLocationInfo) }
+func (c Config) WarningLog() log.LogLocation { return log.LogLocation(c.LogLocationWarning) }
 func (c Config) InfoLog() log.LogLocation    { return log.LogLocation(c.LogLocationInfo) }
 func (c Config) DebugLog() log.LogLocation   { return log.LogLocation(c.LogLocationDebug) }
 func (c Config) EventLog() log.LogLocation   { return log.LogLocation(c.LogLocationEvent) }

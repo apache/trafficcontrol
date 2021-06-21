@@ -25,10 +25,7 @@ form {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	justify-items: center;
-
-	label {
-		margin: 0 0.5em;
-	}
+	margin-bottom: 16px;
 
 	button {
 		margin-top: 15px;
@@ -37,19 +34,9 @@ form {
 }
 
 #invalidate {
-	background-color: $theme_tertiary;
-	height: 2em;
-	width: 2em;
-	display: block;
-	padding: 1em;
 	right: 5px;
-	text-align: center;
-	vertical-align: middle;
-	border-radius: 2em;
 	position: fixed;
 	bottom: 5px;
-	cursor: pointer;
-
 	img {
 		height: 2em;
 	}

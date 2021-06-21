@@ -20,7 +20,9 @@ package health
  */
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -33,6 +35,15 @@ func (t Time) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("%d", time.Time(t).Unix())), nil
 }
 
+func (t *Time) UnmarshalJSON(data []byte) error {
+	unixTime, err := strconv.ParseInt(string(data), 10, 64)
+	if err != nil {
+		return errors.New("health.Time (" + string(data) + ") must be a unix epoch integer: " + err.Error())
+	}
+	*t = Time(time.Unix(unixTime, 0))
+	return nil
+}
+
 // Event represents an event change in aggregated data. For example, a cache being marked as unavailable.
 type Event struct {
 	Time          Time   `json:"time"`
@@ -42,8 +53,8 @@ type Event struct {
 	Hostname      string `json:"hostname"`
 	Type          string `json:"type"`
 	Available     bool   `json:"isAvailable"`
-	IPv4Available bool   `json:"isAvailable"`
-	IPv6Available bool   `json:"isAvailable"`
+	IPv4Available bool   `json:"ipv4Available"`
+	IPv6Available bool   `json:"ipv6Available"`
 }
 
 // Events provides safe access for multiple goroutines readers and a single writer to a stored Events slice.

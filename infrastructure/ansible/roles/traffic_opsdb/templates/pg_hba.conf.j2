@@ -111,16 +111,19 @@
 # ------------------------------------------------------
    # --  Primary
    hostssl  {{ todb_db_name }} {{ postgresql_user }} {{ (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) }}{{ '/32' if (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) | ansible.netcommon.ipaddr('address') }}  md5
+   hostssl  {{ tvdb_db_name }} {{ postgresql_user }} {{ (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) }}{{ '/32' if (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) | ansible.netcommon.ipaddr('address') }}  md5
 
 {% if groups['traffic_opsdb-standby'] is defined %}
    # --  Secondary
    hostssl  {{ todb_db_name }} {{ postgresql_user }} {{ (groups['traffic_opsdb-standby'] | map('extract', hostvars, ['ansible_host']) | first) }}{{ '/32' if (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) | ansible.netcommon.ipaddr('address') }}  md5
+   hostssl  {{ tvdb_db_name }} {{ postgresql_user }} {{ (groups['traffic_opsdb-standby'] | map('extract', hostvars, ['ansible_host']) | first) }}{{ '/32' if (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) | ansible.netcommon.ipaddr('address') }}  md5
 
 {% endif %}
 {% if groups['traffic_opsdb-replicas'] is defined %}
    # --  Replicas
    {% for host_obj in (groups['traffic_opsdb-replicas']) %}
    hostssl  {{ todb_db_name }} {{ postgresql_user }} {{ (groups['traffic_opsdb-replicas'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_opsdb-replicas'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
+   hostssl  {{ tvdb_db_name }} {{ postgresql_user }} {{ (groups['traffic_opsdb-replicas'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_opsdb-replicas'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
    {% endfor %}
 
 {% endif %}
@@ -136,6 +139,17 @@
    host  {{ postgresql_user }} {{ todb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
 {% endfor %}
 {% endif %}
+
+#-------------------------------------
+#  TRAFFIC VAULT
+# ------------------------------------------------------
+{% for host_obj in (groups['traffic_ops']) %}
+   hostssl  {{ tvdb_db_name }} {{ tvdb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}/32  md5
+   host  {{ tvdb_db_name }} {{ tvdb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}/32  md5
+
+   hostssl  {{ postgresql_user }} {{ tvdb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}/32  md5
+   host  {{ postgresql_user }} {{ tvdb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}/32  md5
+{% endfor %}
 
 {% if postgresql_replica_user is defined and postgresql_replica_user is not none %}
 # ------------------------------------------------------

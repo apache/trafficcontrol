@@ -39,7 +39,8 @@ limitations under the License.
 	(sortChanged)="storeSort()"
 	(columnMoved)="storeColumns()"
 	(columnVisible)="storeColumns(true)"
-	(cellContextMenu)="onCellContextMenu($event)">
+	(cellContextMenu)="onCellContextMenu($event)"
+	(contextmenu)="preventDefault($event)">
 </ag-grid-angular>
 
 <menu #contextmenu type="contextmenu" [hidden]="!showContextMenu" [ngStyle]="menuStyle" *ngIf="contextMenuItems && contextMenuItems.length > 0">

@@ -31,3 +31,18 @@ export interface PhysicalLocation {
 	state: string;
 	zip: string;
 }
+
+export const defaultPhysLoc: PhysicalLocation = {
+	address: "",
+	city: "",
+	comments: null,
+	email: null,
+	name: "",
+	phone: null,
+	poc: null,
+	region: null,
+	regionId: -1,
+	shortName: "",
+	state: "",
+	zip: ""
+};

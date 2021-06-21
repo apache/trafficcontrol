@@ -27,7 +27,10 @@ Retrieves information regarding pending updates and revalidation jobs for a give
 
 :Auth. Required: Yes
 :Roles Required: None
-:Response Type: ``undefined`` - this endpoint will return a top-level array containing the response, as opposed to within a ``response`` object
+:Response Type: Array
+
+.. versionchanged:: 4.0
+	Prior to API version 4.0, the response was a top-level array rather than the normal ``response`` object.
 
 Request Structure
 -----------------
@@ -50,7 +53,7 @@ Request Structure
 
 Response Structure
 ------------------
-Each object in the returned array\ [1]_ will contain the following fields:
+Each object in the returned array\ [#uniqueness]_ will contain the following fields:
 
 :host_id:              The integral, unique identifier for the server for which the other fields in this object represent the pending updates and revalidation status
 :host_name:            The (short) hostname of the server for which the other fields in this object represent the pending updates and revalidation status
@@ -81,7 +84,7 @@ Each object in the returned array\ [1]_ will contain the following fields:
 	Date: Mon, 04 Feb 2019 16:24:01 GMT
 	Content-Length: 174
 
-	[{
+	{ "response": [{
 		"host_name": "edge",
 		"upd_pending": false,
 		"reval_pending": false,
@@ -90,6 +93,6 @@ Each object in the returned array\ [1]_ will contain the following fields:
 		"status": "REPORTED",
 		"parent_pending": false,
 		"parent_reval_pending": false
-	}]
+	}]}
 
-.. [1] The returned object is an array, and there is no guarantee that one server exists for a given hostname. However, for each server in the array, that server's update status will be accurate for the server with that particular server ID.
+.. [#uniqueness] The returned object is an array, and there is no guarantee that one server exists for a given hostname. However, for each server in the array, that server's update status will be accurate for the server with that particular server ID.

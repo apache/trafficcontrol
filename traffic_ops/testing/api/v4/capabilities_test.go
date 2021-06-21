@@ -27,6 +27,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 // These capabilities are defined during the setup process in todb.go.
@@ -81,17 +82,17 @@ func CreateTestCapabilities(t *testing.T) {
 }
 
 func GetTestCapabilitiesIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
+	opts := client.NewRequestOptions()
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
+	opts.Header.Set(rfc.IfModifiedSince, time)
 	testDataLen := len(testData.Capabilities) + len(staticCapabilities)
 	capMap := make(map[string]string, testDataLen)
 
 	for _, c := range testData.Capabilities {
+		opts.QueryParameters.Set("name", c.Name)
 		capMap[c.Name] = c.Description
-		_, reqInf, err := TOSession.GetCapability(c.Name, header)
+		_, reqInf, err := TOSession.GetCapabilities(opts)
 		if err != nil {
 			t.Fatalf("Expected no error, but got %v", err.Error())
 		}
@@ -104,14 +105,22 @@ func GetTestCapabilitiesIMS(t *testing.T) {
 func GetTestCapabilities(t *testing.T) {
 	testDataLen := len(testData.Capabilities) + len(staticCapabilities)
 	capMap := make(map[string]string, testDataLen)
+	opts := client.NewRequestOptions()
 
 	for _, c := range testData.Capabilities {
 		capMap[c.Name] = c.Description
-		cap, _, err := TOSession.GetCapability(c.Name, nil)
+		opts.QueryParameters.Set("name", c.Name)
+		caps, _, err := TOSession.GetCapabilities(opts)
 		if err != nil {
-			t.Errorf("could not get capability '%s': %v", c.Name, err)
+			t.Errorf("could not get capability '%s': %v - alerts: %+v", c.Name, err, caps.Alerts)
 			continue
 		}
+		if len(caps.Response) != 1 {
+			t.Errorf("Expected exactly one capability named '%s' to exist, found: %d", c.Name, len(caps.Response))
+			continue
+		}
+
+		cap := caps.Response[0]
 
 		if cap.Name != c.Name {
 			t.Errorf("requested capacity '%s' but got a capacity with the name '%s'", c.Name, cap.Name)
@@ -126,15 +135,15 @@ func GetTestCapabilities(t *testing.T) {
 		capMap[c.Name] = c.Description
 	}
 
-	caps, _, err := TOSession.GetCapabilities(nil)
+	caps, _, err := TOSession.GetCapabilities(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("could not get all capabilities: %v", err)
+		t.Fatalf("could not get all capabilities: %v - alerts: %+v", err, caps.Alerts)
 	}
-	if len(caps) != testDataLen {
-		t.Fatalf("response returned different number of capabilities than those that exist; got %d, want %d", len(caps), testDataLen)
+	if len(caps.Response) != testDataLen {
+		t.Fatalf("response returned different number of capabilities than those that exist; got %d, want %d", len(caps.Response), testDataLen)
 	}
 
-	for _, c := range caps {
+	for _, c := range caps.Response {
 		if desc, ok := capMap[c.Name]; !ok {
 			t.Errorf("capability '%s' found in response, but not in test data!", c.Name)
 		} else {

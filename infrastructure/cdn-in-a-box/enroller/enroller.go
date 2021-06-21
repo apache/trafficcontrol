@@ -28,12 +28,14 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	log "github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -52,11 +54,12 @@ func newSession(reqTimeout time.Duration, toURL string, toUser string, toPass st
 func (s session) getParameter(m tc.Parameter, header http.Header) (tc.Parameter, error) {
 	// TODO: s.GetParameterByxxx() does not seem to work with values with spaces --
 	// doing this the hard way for now
-	parameters, _, err := s.GetParameters(header, nil)
+	opts := client.RequestOptions{Header: header}
+	parameters, _, err := s.GetParameters(opts)
 	if err != nil {
-		return m, err
+		return m, fmt.Errorf("getting Parameters: %v - alerts: %+v", err, parameters.Alerts)
 	}
-	for _, p := range parameters {
+	for _, p := range parameters.Response {
 		if p.Name == m.Name && p.Value == m.Value && p.ConfigFile == m.ConfigFile {
 			return p, nil
 		}
@@ -70,17 +73,20 @@ func enrollType(toSession *session, r io.Reader) error {
 	var s tc.Type
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Type: %s\n", err)
+		log.Infof("error decoding Type: %s", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateType(s)
+	alerts, _, err := toSession.CreateType(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("type %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("Type '%s' already exists", s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Type: %s\n", err)
+		err = fmt.Errorf("error creating Type: %v - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -97,17 +103,19 @@ func enrollCDN(toSession *session, r io.Reader) error {
 	var s tc.CDN
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding CDN: %s\n", err)
+		log.Infof("error decoding CDN: %v", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateCDN(s)
+	alerts, _, err := toSession.CreateCDN(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("cdn %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts {
+			if strings.Contains(alert.Text, "already exists") {
+				log.Infof("CDN '%s' already exists", s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating CDN: %s\n", err)
+		log.Infof("error creating CDN: %v - alerts: %+v", err, alerts.Alerts)
 		return err
 	}
 
@@ -127,13 +135,16 @@ func enrollASN(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, _, err := toSession.CreateASN(s)
+	alerts, _, err := toSession.CreateASN(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("asn %d already exists\n", s.ASN)
-			return nil
+		for _, alert := range alerts.Alerts {
+			if strings.Contains(alert.Text, "already exists") {
+				log.Infof("asn %d already exists", s.ASN)
+				return nil
+			}
 		}
-		log.Infof("error creating ASN: %s\n", err)
+		err = fmt.Errorf("error creating ASN: %s - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -150,17 +161,20 @@ func enrollCachegroup(toSession *session, r io.Reader) error {
 	var s tc.CacheGroupNullable
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Cachegroup: %s\n", err)
+		log.Infof("error decoding Cache Group: '%s'", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateCacheGroup(s)
+	alerts, _, err := toSession.CreateCacheGroup(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("cachegroup %s already exists\n", *s.Name)
-			return nil
+		for _, alert := range alerts.Alerts.Alerts {
+			if strings.Contains(alert.Text, "already exists") {
+				log.Infof("Cache Group '%s' already exists", *s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Cachegroup: %s\n", err)
+		err = fmt.Errorf("error creating Cache Group: %v - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -176,17 +190,20 @@ func enrollTopology(toSession *session, r io.Reader) error {
 	var s tc.Topology
 	err := dec.Decode(&s)
 	if err != nil && err != io.EOF {
-		log.Infof("error decoding Topology: %s\n", err)
+		log.Infof("error decoding Topology: %s", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateTopology(s)
+	alerts, _, err := toSession.CreateTopology(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("topology %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("topology %s already exists", s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Topology: %s\n", err)
+		err = fmt.Errorf("error creating Topology: %v - alerts: %+v", err, alerts.Alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -202,17 +219,19 @@ func enrollDeliveryService(toSession *session, r io.Reader) error {
 	var s tc.DeliveryServiceV4
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding DeliveryService: %s\n", err)
+		log.Infof("error decoding DeliveryService: %v", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateDeliveryService(s)
+	alerts, _, err := toSession.CreateDeliveryService(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("deliveryservice %s already exists\n", *s.XMLID)
-			return nil
+		for _, alert := range alerts.Alerts.Alerts {
+			if strings.Contains(alert.Text, "already exists") {
+				log.Infof("Delivery Service '%s' already exists", *s.XMLID)
+				return nil
+			}
 		}
-		log.Infof("error creating DeliveryService: %s\n", err)
+		log.Infof("error creating Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
 		return err
 	}
 
@@ -233,21 +252,27 @@ func enrollDeliveryServicesRequiredCapability(toSession *session, r io.Reader) e
 		return err
 	}
 
-	dses, _, err := toSession.GetDeliveryServiceByXMLID(*dsrc.XMLID, nil)
+	if dsrc.XMLID == nil {
+		return errors.New("required capability had no XMLID")
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", *dsrc.XMLID)
+	dses, _, err := toSession.GetDeliveryServices(opts)
 	if err != nil {
 		log.Infof("getting Delivery Service by XMLID %s: %s", *dsrc.XMLID, err.Error())
 		return err
 	}
-	if len(dses) < 1 {
-		err = errors.New("could not find a Delivey Service with XMLID %s")
+	if len(dses.Response) < 1 {
+		err = fmt.Errorf("could not find a Delivey Service with XMLID %s", *dsrc.XMLID)
 		log.Infoln(err)
 		return err
 	}
-	dsrc.DeliveryServiceID = dses[0].ID
+	dsrc.DeliveryServiceID = dses.Response[0].ID
 
-	alerts, _, err := toSession.CreateDeliveryServicesRequiredCapability(dsrc)
+	alerts, _, err := toSession.CreateDeliveryServicesRequiredCapability(dsrc, client.RequestOptions{})
 	if err != nil {
-		log.Infof("error creating Delivery Services Required Capability: %s\n", err)
+		log.Infof("error creating Delivery Services Required Capability: %v", err)
 		return err
 	}
 
@@ -269,35 +294,38 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	params := url.Values{"xmlId": []string{dss.XmlId}}
-	dses, _, err := toSession.GetDeliveryServices(nil, params)
+	opts := client.RequestOptions{QueryParameters: url.Values{"xmlId": []string{dss.XmlId}}}
+	dses, _, err := toSession.GetDeliveryServices(opts)
 	if err != nil {
 		return err
 	}
-	if len(dses) == 0 {
+	if len(dses.Response) == 0 {
 		return errors.New("no deliveryservice with name " + dss.XmlId)
 	}
-	if dses[0].ID == nil {
+	if dses.Response[0].ID == nil {
 		return errors.New("Deliveryservice with name " + dss.XmlId + " has a nil ID")
 	}
-	dsID := *dses[0].ID
+	dsID := *dses.Response[0].ID
 
-	params = url.Values{}
+	opts.QueryParameters = url.Values{}
 	var serverIDs []int
 	for _, sn := range dss.ServerNames {
-		params.Set("hostName", sn)
-		servers, _, err := toSession.GetServers(params, nil)
+		opts.QueryParameters.Set("hostName", sn)
+		servers, _, err := toSession.GetServers(opts)
 		if err != nil {
 			return err
 		}
 		if len(servers.Response) == 0 {
 			return errors.New("no server with hostName " + sn)
 		}
+		if servers.Response[0].ID == nil {
+			return fmt.Errorf("Traffic Ops gave back a representation for server '%s' with null or undefined ID", sn)
+		}
 		serverIDs = append(serverIDs, *servers.Response[0].ID)
 	}
-	_, _, err = toSession.CreateDeliveryServiceServers(dsID, serverIDs, true)
+	resp, _, err := toSession.CreateDeliveryServiceServers(dsID, serverIDs, true, client.RequestOptions{})
 	if err != nil {
-		log.Infof("error creating DeliveryServiceServer: %s\n", err)
+		log.Infof("error assigning servers %v to Delivery Service #%d: %v - alerts: %+v", serverIDs, dsID, err, resp.Alerts)
 	}
 
 	return err
@@ -308,17 +336,19 @@ func enrollDivision(toSession *session, r io.Reader) error {
 	var s tc.Division
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Division: %s\n", err)
+		log.Infof("error decoding Division: %s", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateDivision(s)
+	alerts, _, err := toSession.CreateDivision(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("division %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts {
+			if strings.Contains(alert.Text, "already exists") {
+				log.Infof("division %s already exists", s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Division: %s\n", err)
+		log.Infof("error creating Division: %v - alerts: %+v", err, alerts.Alerts)
 		return err
 	}
 
@@ -334,17 +364,22 @@ func enrollOrigin(toSession *session, r io.Reader) error {
 	var s tc.Origin
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Origin: %s\n", err)
+		log.Infof("error decoding Origin: %v", err)
 		return err
 	}
+	if s.Name == nil {
+		return errors.New("cannot create an Origin with no name")
+	}
 
-	alerts, _, err := toSession.CreateOrigin(s)
+	alerts, _, err := toSession.CreateOrigin(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("origin %s already exists\n", *s.Name)
-			return nil
+		for _, alert := range alerts.Alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("Origin '%s' already exists", *s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Origin: %s\n", err)
+		log.Infof("error creating Origin: %v - alerts: %+v", err, alerts.Alerts)
 		return err
 	}
 
@@ -369,15 +404,15 @@ func enrollParameter(toSession *session, r io.Reader) error {
 		var alerts tc.Alerts
 		if err == nil {
 			// existing param -- update
-			alerts, _, err = toSession.UpdateParameter(eparam.ID, p, nil)
+			alerts, _, err = toSession.UpdateParameter(eparam.ID, p, client.RequestOptions{})
 			if err != nil {
-				log.Infof("error updating parameter %d: %s with %+v ", eparam.ID, err.Error(), p)
+				log.Infof("error updating parameter %d: %v with %+v - alerts: %+v ", eparam.ID, err, p, alerts.Alerts)
 				break
 			}
 		} else {
-			alerts, _, err = toSession.CreateParameter(p)
+			alerts, _, err = toSession.CreateParameter(p, client.RequestOptions{})
 			if err != nil {
-				log.Infof("error creating parameter: %s from %+v\n", err.Error(), p)
+				log.Infof("error creating parameter: %v from %+v - alerts: %+v", err, p, alerts.Alerts)
 				return err
 			}
 			eparam, err = toSession.getParameter(p, nil)
@@ -395,21 +430,33 @@ func enrollParameter(toSession *session, r io.Reader) error {
 				return err
 			}
 
+			opts := client.NewRequestOptions()
 			for _, n := range profiles {
-				profiles, _, err := toSession.GetProfileByName(n, nil)
+				opts.QueryParameters.Set("name", n)
+				profiles, _, err := toSession.GetProfiles(opts)
 				if err != nil {
 					return err
 				}
-				if len(profiles) == 0 {
+				if len(profiles.Response) == 0 {
 					return errors.New("no profile with name " + n)
 				}
 
-				pp := tc.ProfileParameter{ParameterID: eparam.ID, ProfileID: profiles[0].ID}
-				_, _, err = toSession.CreateProfileParameter(pp)
+				pp := tc.ProfileParameterCreationRequest{ParameterID: eparam.ID, ProfileID: profiles.Response[0].ID}
+				resp, _, err := toSession.CreateProfileParameter(pp, client.RequestOptions{})
 				if err != nil {
-					if strings.Contains(err.Error(), "already exists") {
+					found := false
+					for _, alert := range resp.Alerts {
+						if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+							found = true
+							break
+						}
+					}
+					if found {
 						continue
 					}
+					// the original code didn't actually do anything if the error wasn't that the
+					// Profile/Parameter association already exists.
+					// TODO: handle other errors?
 				}
 			}
 		}
@@ -425,17 +472,22 @@ func enrollPhysLocation(toSession *session, r io.Reader) error {
 	var s tc.PhysLocation
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding PhysLocation: %s\n", err)
+		err = fmt.Errorf("error decoding Physical Location: %v", err)
+		log.Infoln(err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreatePhysLocation(s)
+	alerts, _, err := toSession.CreatePhysLocation(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("physLocation %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("Physical Location %s already exists", s.Name)
+				return nil
+			}
+
 		}
-		log.Infof("error creating PhysLocation: %s\n", err)
+		err = fmt.Errorf("error creating Physical Location '%s': %v - alerts: %+v", s.Name, err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -455,13 +507,16 @@ func enrollRegion(toSession *session, r io.Reader) error {
 		return err
 	}
 
-	alerts, _, err := toSession.CreateRegion(s)
+	alerts, _, err := toSession.CreateRegion(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("region %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("a Region named '%s' already exists", s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Region: %s\n", err)
+		err = fmt.Errorf("error creating Region '%s': %v - alerts: %+v", s.Name, err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -477,17 +532,19 @@ func enrollStatus(toSession *session, r io.Reader) error {
 	var s tc.StatusNullable
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Status: %s\n", err)
+		log.Infof("error decoding Status: %s", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateStatus(s)
+	alerts, _, err := toSession.CreateStatus(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("status %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("status %s already exists", *s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Status: %s\n", err)
+		err = fmt.Errorf("error creating Status: %v - alerts: %+v", err, alerts.Alerts)
 		return err
 	}
 
@@ -503,17 +560,20 @@ func enrollTenant(toSession *session, r io.Reader) error {
 	var s tc.Tenant
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Tenant: %s\n", err)
+		log.Infof("error decoding Tenant: %s", err)
 		return err
 	}
 
-	alerts, err := toSession.CreateTenant(s)
+	alerts, _, err := toSession.CreateTenant(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("tenant %s already exists\n", s.Name)
-			return nil
+		for _, alert := range alerts.Alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("tenant %s already exists", s.Name)
+				return nil
+			}
 		}
-		log.Infof("error creating Tenant: %s\n", err)
+		err = fmt.Errorf("error creating Tenant: %v - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -530,17 +590,20 @@ func enrollUser(toSession *session, r io.Reader) error {
 	err := dec.Decode(&s)
 	log.Infof("User is %++v\n", s)
 	if err != nil {
-		log.Infof("error decoding User: %s\n", err)
+		log.Infof("error decoding User: %v", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateUser(s)
+	alerts, _, err := toSession.CreateUser(s, client.RequestOptions{})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
-			log.Infof("user %s already exists\n", *s.Username)
-			return nil
+		for _, alert := range alerts.Alerts.Alerts {
+			if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+				log.Infof("user %s already exists\n", *s.Username)
+				return nil
+			}
 		}
-		log.Infof("error creating User: %s\n", err)
+		err = fmt.Errorf("error creating User: %v - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -573,44 +636,55 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		return errors.New("missing name on profile")
 	}
 
-	profiles, _, err := toSession.GetProfileByName(profile.Name, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", profile.Name)
+	profiles, _, err := toSession.GetProfiles(opts)
 
 	createProfile := false
-	if err != nil || len(profiles) == 0 {
+	if err != nil || len(profiles.Response) == 0 {
 		// no profile by that name -- need to create it
 		createProfile = true
 	} else {
 		// updating - ID needs to match
-		profile = profiles[0]
+		profile = profiles.Response[0]
 	}
 
 	var alerts tc.Alerts
 	var action string
 	if createProfile {
-		alerts, _, err = toSession.CreateProfile(profile)
+		alerts, _, err = toSession.CreateProfile(profile, client.RequestOptions{})
 		if err != nil {
-			if strings.Contains(err.Error(), "already exists") {
-				log.Infof("profile %s already exists\n", profile.Name)
+			found := false
+			for _, alert := range alerts.Alerts {
+				if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+					found = true
+					break
+				}
+			}
+			if found {
+				log.Infof("profile %s already exists", profile.Name)
 			} else {
-				log.Infof("error creating profile from %+v: %s\n", profile, err.Error())
+				log.Infof("error creating profile from %+v: %v - alerts: %+v", profile, err, alerts.Alerts)
 			}
 		}
-		profiles, _, err = toSession.GetProfileByName(profile.Name, nil)
+		profiles, _, err = toSession.GetProfiles(opts)
 		if err != nil {
-			log.Infof("error getting profile ID from %+v: %s\n", profile, err.Error())
+			log.Infof("error getting profile ID from %+v: %v - alerts: %+v", profile, err, profiles.Alerts)
 		}
-		if len(profiles) == 0 {
-			log.Infof("no results returned for getting profile ID from %+v", profile)
+		if len(profiles.Response) == 0 {
+			err = fmt.Errorf("no results returned for getting profile ID from %+v", profile)
+			log.Infoln(err)
+			return err
 		}
-		profile = profiles[0]
+		profile = profiles.Response[0]
 		action = "creating"
 	} else {
-		alerts, _, err = toSession.UpdateProfile(profile.ID, profile, nil)
+		alerts, _, err = toSession.UpdateProfile(profile.ID, profile, client.RequestOptions{})
 		action = "updating"
 	}
 
 	if err != nil {
-		log.Infof("error "+action+" from %s: %s\n", err)
+		log.Infof("error "+action+" from %s: %s", err)
 		return err
 	}
 
@@ -630,10 +704,10 @@ func enrollProfile(toSession *session, r io.Reader) error {
 		eparam, err := toSession.getParameter(param, nil)
 		if err != nil {
 			// create it
-			log.Infof("creating param %+v\n", param)
-			_, _, err = toSession.CreateParameter(param)
+			log.Infof("creating param %+v", param)
+			newAlerts, _, err := toSession.CreateParameter(param, client.RequestOptions{})
 			if err != nil {
-				log.Infof("can't create parameter %+v: %s\n", param, err.Error())
+				log.Infof("can't create parameter %+v: %s, %v", param, err, newAlerts.Alerts)
 				continue
 			}
 			eparam, err = toSession.getParameter(param, nil)
@@ -650,13 +724,19 @@ func enrollProfile(toSession *session, r io.Reader) error {
 			log.Infof("param ID not found for %v", eparam)
 			continue
 		}
-		pp := tc.ProfileParameter{ProfileID: profile.ID, ParameterID: eparam.ID}
-		_, _, err = toSession.CreateProfileParameter(pp)
+		pp := tc.ProfileParameterCreationRequest{ProfileID: profile.ID, ParameterID: eparam.ID}
+		resp, _, err := toSession.CreateProfileParameter(pp, client.RequestOptions{})
 		if err != nil {
-			if !strings.Contains(err.Error(), "already exists") {
-				log.Infof("error creating profileparameter %+v: %s\n", pp, err.Error())
+			found := false
+			for _, alert := range resp.Alerts {
+				if alert.Level == tc.ErrorLevel.String() && strings.Contains(alert.Text, "already exists") {
+					found = true
+					break
+				}
 			}
-			continue
+			if !found {
+				log.Infof("error creating profileparameter %+v: %v - alerts: %+v", pp, err, resp.Alerts)
+			}
 		}
 	}
 
@@ -673,13 +753,14 @@ func enrollServer(toSession *session, r io.Reader) error {
 	var s tc.ServerV40
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Server: %s\n", err)
+		log.Infof("error decoding Server: %v", err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateServer(s, nil)
+	alerts, _, err := toSession.CreateServer(s, client.RequestOptions{})
 	if err != nil {
-		log.Infof("error creating Server: %s\n", err)
+		err = fmt.Errorf("error creating Server: %v - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -696,13 +777,15 @@ func enrollServerCapability(toSession *session, r io.Reader) error {
 	var s tc.ServerCapability
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Server Capability: %s\n", err)
+		err = fmt.Errorf("error decoding Server Capability: %v", err)
+		log.Infoln(err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateServerCapability(s)
+	alerts, _, err := toSession.CreateServerCapability(s, client.RequestOptions{})
 	if err != nil {
-		log.Infof("error creating Server Capability: %s\n", err)
+		err = fmt.Errorf("error creating Server Capability: %v - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err)
 		return err
 	}
 
@@ -724,50 +807,74 @@ func enrollFederation(toSession *session, r io.Reader) error {
 		log.Infof("error decoding Server Capability: %s\n", err)
 		return err
 	}
+	opts := client.NewRequestOptions()
 	for _, mapping := range federation.Mappings {
 		var cdnFederation tc.CDNFederation
 		var cdnName string
 		{
 			xmlID := string(federation.DeliveryService)
-			deliveryServices, _, err := toSession.GetDeliveryServiceByXMLID(xmlID, nil)
+			opts.QueryParameters.Set("xmlId", xmlID)
+			deliveryServices, _, err := toSession.GetDeliveryServices(opts)
+			opts.QueryParameters.Del("xmlId")
 			if err != nil {
-				log.Infof("getting Delivery Service %s: %s", xmlID, err.Error())
+				err = fmt.Errorf("getting Delivery Service '%s': %v - alerts: %+v", xmlID, err, deliveryServices.Alerts)
+				log.Infoln(err)
 				return err
 			}
-			if len(deliveryServices) != 1 {
-				log.Infof("wanted 1 Delivery Service with XMLID %s but received %d Delivery Services", xmlID, len(deliveryServices))
+			if len(deliveryServices.Response) != 1 {
+				err = fmt.Errorf("wanted 1 Delivery Service with XMLID %s but received %d Delivery Services", xmlID, len(deliveryServices.Response))
+				log.Infoln(err)
 				return err
 			}
-			deliveryService := deliveryServices[0]
+			deliveryService := deliveryServices.Response[0]
+			if deliveryService.CDNName == nil || deliveryService.ID == nil || deliveryService.XMLID == nil {
+				err = fmt.Errorf("Delivery Service '%s' as returned from Traffic Ops had null or undefined CDN name and/or ID", xmlID)
+				log.Infoln(err)
+				return err
+			}
 			cdnName = *deliveryService.CDNName
 			cdnFederation = tc.CDNFederation{
 				CName: mapping.CName,
 				TTL:   mapping.TTL,
 			}
-			resp, _, err := toSession.CreateCDNFederation(cdnFederation, cdnName)
+			resp, _, err := toSession.CreateCDNFederation(cdnFederation, cdnName, client.RequestOptions{})
 			if err != nil {
-				log.Infof("creating CDN Federation: %s", err.Error())
+				err = fmt.Errorf("creating CDN Federation: %v - alerts: %+v", err, resp.Alerts)
+				log.Infoln(err)
 				return err
 			}
 			cdnFederation = resp.Response
-			if _, err = toSession.CreateFederationDeliveryServices(*resp.Response.ID, []int{*deliveryService.ID}, true); err != nil {
-				log.Infof("assigning Delivery Service %s to Federation with ID %d: %s", *deliveryService.XMLID, *cdnFederation.ID, err.Error())
+			if cdnFederation.ID == nil {
+				err = fmt.Errorf("Federation returned from creation through Traffic Ops with null or undefined ID")
+				log.Infoln(err)
+				return err
+			}
+			if alerts, _, err := toSession.CreateFederationDeliveryServices(*cdnFederation.ID, []int{*deliveryService.ID}, true, client.RequestOptions{}); err != nil {
+				err = fmt.Errorf("assigning Delivery Service %s to Federation with ID %d: %v - alerts: %+v", xmlID, *cdnFederation.ID, err, alerts.Alerts)
+				log.Infoln(err)
 				return err
 			}
 		}
 		{
-			user, _, err := toSession.GetUserCurrent(nil)
+			user, _, err := toSession.GetUserCurrent(client.RequestOptions{})
 			if err != nil {
-				log.Infof("getting the Current User: %s", err.Error())
+				err = fmt.Errorf("getting the Current User: %v - alerts: %+v", err, user.Alerts)
+				log.Infoln(err)
 				return err
 			}
-			_, _, err = toSession.CreateFederationUsers(*cdnFederation.ID, []int{*user.ID}, true)
+			if user.Response.ID == nil {
+				err = errors.New("current user returned from Traffic Ops had null or undefined ID")
+				log.Infoln(err)
+				return err
+			}
+			resp, _, err := toSession.CreateFederationUsers(*cdnFederation.ID, []int{*user.Response.ID}, true, client.RequestOptions{})
 			if err != nil {
 				var username string
-				if user.UserName != nil {
-					username = *user.UserName
+				if user.Response.UserName != nil {
+					username = *user.Response.UserName
 				}
-				log.Infof("assigning User %s to Federation with ID %d: %s", username, *cdnFederation.ID, err.Error())
+				err = fmt.Errorf("assigning User '%s' to Federation with ID %d: %v - alerts: %+v", username, *cdnFederation.ID, err, resp.Alerts)
+				log.Infoln(err)
 				return err
 			}
 		}
@@ -783,18 +890,21 @@ func enrollFederation(toSession *session, r io.Reader) error {
 				allResolverIDs = append(allResolverIDs, resolverIDs...)
 			}
 		}
-		if _, _, err = toSession.AssignFederationFederationResolver(*cdnFederation.ID, allResolverIDs, true); err != nil {
-			log.Infof("assigning Federation Resolvers to Federation with ID %d: %s", *cdnFederation.ID, err.Error())
+		if resp, _, err := toSession.AssignFederationFederationResolver(*cdnFederation.ID, allResolverIDs, true, client.RequestOptions{}); err != nil {
+			err = fmt.Errorf("assigning Federation Resolvers to Federation with ID %d: %v - alerts: %+v", *cdnFederation.ID, err, resp.Alerts)
+			log.Infoln(err)
 			return err
 		}
-		response, _, err := toSession.GetCDNFederationsByID(cdnName, *cdnFederation.ID, nil)
+		opts.QueryParameters.Set("id", strconv.Itoa(*cdnFederation.ID))
+		response, _, err := toSession.GetCDNFederationsByName(cdnName, opts)
+		opts.QueryParameters.Del("id")
 		if err != nil {
-			log.Infof("getting CDN Federation with ID %d: %s", *cdnFederation.ID, err.Error())
+			err = fmt.Errorf("getting CDN Federation with ID %d: %v - alerts: %+v", *cdnFederation.ID, err, response.Alerts)
 			return err
 		}
 		if len(response.Response) < 1 {
 			err = fmt.Errorf("unable to GET a CDN Federation ID %d in CDN %s", *cdnFederation.ID, cdnName)
-			log.Infof(err.Error())
+			log.Infoln(err)
 			return err
 		}
 		cdnFederation = response.Response[0]
@@ -803,8 +913,8 @@ func enrollFederation(toSession *session, r io.Reader) error {
 		enc.SetIndent("", "  ")
 		err = enc.Encode(&cdnFederation)
 		if err != nil {
-			err = fmt.Errorf("encoding CDNFederation %s with ID %d: %s", *cdnFederation.CName, *cdnFederation.ID, err.Error())
-			log.Infof(err.Error())
+			err = fmt.Errorf("encoding CDNFederation %s with ID %d: %v", *cdnFederation.CName, *cdnFederation.ID, err)
+			log.Infoln(err)
 			return err
 		}
 	}
@@ -814,17 +924,20 @@ func enrollFederation(toSession *session, r io.Reader) error {
 // createFederationResolversOfType creates Federation Resolvers of either RESOLVE4 type or RESOLVE6 type.
 func createFederationResolversOfType(toSession *session, resolverTypeName tc.FederationResolverType, ipAddresses []string) ([]int, error) {
 	typeNameString := string(resolverTypeName)
-	types, _, err := toSession.GetTypeByName(typeNameString, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", typeNameString)
+	types, _, err := toSession.GetTypes(opts)
 	if err != nil {
-		log.Infof("getting resolver type %s: %s", typeNameString, err.Error())
+		err = fmt.Errorf("getting resolver type '%s': %v - alerts: %+v", typeNameString, err, types.Alerts)
+		log.Infoln(err)
 		return nil, err
 	}
-	if len(types) < 1 {
+	if len(types.Response) < 1 {
 		err := fmt.Errorf("unable to get a type with name %s", typeNameString)
 		log.Infof(err.Error())
 		return nil, err
 	}
-	typeID := uint(types[0].ID)
+	typeID := uint(types.Response[0].ID)
 
 	var resolverIDs []int
 	for _, ipAddress := range ipAddresses {
@@ -832,10 +945,13 @@ func createFederationResolversOfType(toSession *session, resolverTypeName tc.Fed
 			IPAddress: &ipAddress,
 			TypeID:    &typeID,
 		}
-		response, _, err := toSession.CreateFederationResolver(resolver, nil)
+		response, _, err := toSession.CreateFederationResolver(resolver, client.RequestOptions{})
 		if err != nil {
-			log.Infof("creating Federation Resolver with IP address %s: %s", ipAddress, err.Error())
+			err = fmt.Errorf("creating Federation Resolver with IP address %s: %v - alerts: %+v", ipAddress, err, response.Alerts)
 			return nil, err
+		}
+		if response.Response.ID == nil {
+
 		}
 		resolverIDs = append(resolverIDs, int(*response.Response.ID))
 	}
@@ -848,13 +964,19 @@ func enrollServerServerCapability(toSession *session, r io.Reader) error {
 	var s tc.ServerServerCapability
 	err := dec.Decode(&s)
 	if err != nil {
-		log.Infof("error decoding Server: %s\n", err)
+		err = fmt.Errorf("error decoding Server/Capability relationship: %s", err)
+		log.Infoln(err)
+		return err
+	}
+	if s.Server == nil {
+		err = errors.New("server/Capability relationship did not specify a server")
 		return err
 	}
 
-	resp, _, err := toSession.GetServers(url.Values{"hostName": []string{*s.Server}}, nil)
+	resp, _, err := toSession.GetServers(client.RequestOptions{QueryParameters: url.Values{"hostName": []string{*s.Server}}})
 	if err != nil {
-		log.Infof("getting server %s: %s\n", *s.Server, err.Error())
+		err = fmt.Errorf("getting server '%s': %v - alerts: %+v", *s.Server, err, resp.Alerts)
+		log.Infoln(err)
 		return err
 	}
 	if len(resp.Response) < 1 {
@@ -869,9 +991,10 @@ func enrollServerServerCapability(toSession *session, r io.Reader) error {
 	}
 	s.ServerID = resp.Response[0].ID
 
-	alerts, _, err := toSession.CreateServerServerCapability(s)
+	alerts, _, err := toSession.CreateServerServerCapability(s, client.RequestOptions{})
 	if err != nil {
-		log.Infof("error creating Server Server Capability: %s\n", err)
+		err = fmt.Errorf("error creating Server Server Capability: %v - alerts: %+v", err, alerts.Alerts)
+		log.Infoln(err.Error())
 		return err
 	}
 

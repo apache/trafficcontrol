@@ -48,7 +48,7 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"authType": "Let's Encrypt",
+		"authType": "Lets Encrypt",
 		"key": "ds-01",
 		"deliveryservice": "ds-01",
 		"version": "3",
@@ -64,7 +64,7 @@ Response Structure
 
 	{ "alerts": [{
 		"level": "success",
-		"text": "Beginning async ACME call for ds-01 using Let's Encrypt. This may take a few minutes."
+		"text": "Beginning async ACME call for demo1 using Lets Encrypt. This may take a few minutes. Status updates can be found here: /api/4.0/async_status/1"
 	}]}
 
 .. [#needOne] Either the ``key`` or the ``deliveryservice`` field must be provided. If both are provided, then they must match.

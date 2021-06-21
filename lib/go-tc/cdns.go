@@ -102,9 +102,11 @@ type CDNNullable struct {
 	Name *string `json:"name" db:"name"`
 }
 
-// CDNSSLKeysResponse ...
+// CDNSSLKeysResponse is the structure of the Traffic Ops API's response to
+// requests made to its /cdns/name/{{name}}/sslkeys endpoint.
 type CDNSSLKeysResponse struct {
 	Response []CDNSSLKeys `json:"response"`
+	Alerts
 }
 
 // CDNSSLKeys ...

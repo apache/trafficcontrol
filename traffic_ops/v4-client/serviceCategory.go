@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,51 +15,45 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIServiceCategories is the API version-relative path to the /service_categories API
-	// endpoints.
-	APIServiceCategories = "/service_categories"
-)
+// apiServiceCategories is the API version-relative path to the /service_categories API
+// endpoints.
+const apiServiceCategories = "/service_categories"
 
 // CreateServiceCategory creates the given Service Category.
-func (to *Session) CreateServiceCategory(serviceCategory tc.ServiceCategory) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateServiceCategory(serviceCategory tc.ServiceCategory, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIServiceCategories, serviceCategory, nil, &alerts)
+	reqInf, err := to.post(apiServiceCategories, opts, serviceCategory, &alerts)
 	return alerts, reqInf, err
 }
 
 // UpdateServiceCategory replaces the Service Category with the given Name with
 // the one provided.
-func (to *Session) UpdateServiceCategory(name string, serviceCategory tc.ServiceCategory, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%s", APIServiceCategories, name)
+func (to *Session) UpdateServiceCategory(name string, serviceCategory tc.ServiceCategory, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/%s", apiServiceCategories, url.PathEscape(name))
 	var alerts tc.Alerts
-	reqInf, err := to.put(route, serviceCategory, header, &alerts)
+	reqInf, err := to.put(route, opts, serviceCategory, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetServiceCategories retrieves Service Categories from Traffic Ops.
-func (to *Session) GetServiceCategories(values url.Values, header http.Header) ([]tc.ServiceCategory, toclientlib.ReqInf, error) {
-	path := fmt.Sprintf("%s?%s", APIServiceCategories, values.Encode())
+func (to *Session) GetServiceCategories(opts RequestOptions) (tc.ServiceCategoriesResponse, toclientlib.ReqInf, error) {
 	var data tc.ServiceCategoriesResponse
-	reqInf, err := to.get(path, header, &data)
-	return data.Response, reqInf, err
+	reqInf, err := to.get(apiServiceCategories, opts, &data)
+	return data, reqInf, err
 }
 
 // DeleteServiceCategory deletes the Service Category with the given Name.
-func (to *Session) DeleteServiceCategory(name string) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%s", APIServiceCategories, name)
+func (to *Session) DeleteServiceCategory(name string, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/%s", apiServiceCategories, url.PathEscape(name))
 	var alerts tc.Alerts
-	reqInf, err := to.del(route, nil, &alerts)
+	reqInf, err := to.del(route, opts, &alerts)
 	return alerts, reqInf, err
 }

@@ -24,6 +24,8 @@ export interface User {
 	city?:            string;
 	/** The company for which the user works. */
 	company?:         string;
+	/** A confirmation field for the user's password - this has no known effect, but we set it anyway on password update. */
+	confirmLocalPasswd?: string;
 	/** The country in which the user lives/is based. */
 	country?:         string;
 	/** The user's email address. */
@@ -36,6 +38,8 @@ export interface User {
 	id:               number;
 	/** The date/time at which the user was last updated. */
 	lastUpdated?:     Date;
+	/** The user's password - this should only be populated on update, and only if updating the password. */
+	localPasswd?:     string;
 	/** legacy field with no purpose. */
 	localUser?:       boolean;
 	/**

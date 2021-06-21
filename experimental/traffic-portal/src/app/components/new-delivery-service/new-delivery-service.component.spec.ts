@@ -11,33 +11,42 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { HttpClientModule } from "@angular/common/http";
-import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
-import { FormsModule, ReactiveFormsModule } from "@angular/forms";
-import { RouterTestingModule } from "@angular/router/testing";
-import { of } from "rxjs";
-import { UserService } from "src/app/services/api";
 
+import {HarnessLoader, parallel} from "@angular/cdk/testing";
+import {TestbedHarnessEnvironment} from "@angular/cdk/testing/testbed";
+import { HttpClientModule } from "@angular/common/http";
+import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { MatButtonModule } from "@angular/material/button";
+import { MatRadioModule } from "@angular/material/radio";
+import { MatStepperModule } from "@angular/material/stepper";
+import {MatStepperHarness} from "@angular/material/stepper/testing";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import { RouterTestingModule } from "@angular/router/testing";
+
+import { UserService } from "src/app/services/api";
 
 import { Protocol } from "../../models";
 import { TpHeaderComponent } from "../tp-header/tp-header.component";
 import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
 
+
 describe("NewDeliveryServiceComponent", () => {
 	let component: NewDeliveryServiceComponent;
 	let fixture: ComponentFixture<NewDeliveryServiceComponent>;
+	let loader: HarnessLoader;
 
-	beforeEach(waitForAsync(() => {
+	beforeEach(async () => {
 		// mock the API
 		const mockAPIService = jasmine.createSpyObj(["getRoles", "getCurrentUser"]);
-		mockAPIService.getRoles.and.returnValue(of([]));
-		mockAPIService.getCurrentUser.and.returnValue(of({
+		mockAPIService.getRoles.and.returnValue(new Promise(resolve => resolve([])));
+		mockAPIService.getCurrentUser.and.returnValue(new Promise(resolve => resolve({
 			id: 0,
 			newUser: false,
 			username: "test"
-		}));
+		})));
 
-		TestBed.configureTestingModule({
+		await TestBed.configureTestingModule({
 			declarations: [
 				NewDeliveryServiceComponent,
 				TpHeaderComponent
@@ -46,24 +55,27 @@ describe("NewDeliveryServiceComponent", () => {
 				FormsModule,
 				HttpClientModule,
 				ReactiveFormsModule,
-				RouterTestingModule
-			]
-		});
-		TestBed.overrideProvider(UserService, { useValue: mockAPIService });
-		TestBed.compileComponents();
-	}));
-
-	beforeEach(() => {
+				RouterTestingModule,
+				NoopAnimationsModule,
+				MatStepperModule,
+				MatButtonModule,
+				MatRadioModule
+			],
+			providers: [{provide: UserService, useValue: mockAPIService}]
+		}).compileComponents();
+		// TestBed.overrideProvider(UserService, { useValue: mockAPIService });
+		// TestBed.compileComponents();
 		fixture = TestBed.createComponent(NewDeliveryServiceComponent);
 		component = fixture.componentInstance;
+		loader = TestbedHarnessEnvironment.loader(fixture);
 		fixture.detectChanges();
 	});
 
-	it("should exist", () => {
+	it("should exist", async () => {
 		expect(component).toBeTruthy();
 	});
 
-	it("should parse Origin URLs properly", () => {
+	it("should parse Origin URLs properly", async () => {
 		component.originURL.setValue("http://some.domain.test:9001/a/check/path/here");
 		component.setOriginURL();
 		expect(component.deliveryService.orgServerFqdn).toEqual("http://some.domain.test:9001", "http://some.domain.test:9001");
@@ -73,7 +85,13 @@ describe("NewDeliveryServiceComponent", () => {
 			"Delivery Service for some.domain.test"
 		);
 		expect(component.displayName.value).toEqual("Delivery Service for some.domain.test", "Delivery Service for some.domain.test");
-		expect(component.step).toEqual(1, "one");
+		const stepper = await loader.getHarness(MatStepperHarness);
+		const steps = await stepper.getSteps();
+		expect(await parallel(() => steps.map(async step => step.isSelected()))).toEqual([
+			false,
+			true,
+			false
+		]);
 		expect(component.deliveryService.protocol).toEqual(Protocol.HTTP_AND_HTTPS, "HTTP_AND_HTTPS");
 
 		// check other protocol setting
@@ -82,9 +100,11 @@ describe("NewDeliveryServiceComponent", () => {
 		expect(component.deliveryService.protocol).toEqual(Protocol.HTTP_TO_HTTPS, "HTTP_TO_HTTPS");
 	});
 
-	it("should set meta info properly", () => {
+	it("should set meta info properly", async () => {
 		try {
-			component.step = 1;
+			const stepper = await loader.getHarness(MatStepperHarness);
+			const steps = await stepper.getSteps();
+			await steps[1].select();
 			component.displayName.setValue("test._QUEST");
 			component.infoURL.setValue("ftp://this-is-a-weird.url/");
 			component.description.setValue("test description");
@@ -94,7 +114,11 @@ describe("NewDeliveryServiceComponent", () => {
 			expect(component.deliveryService.xmlId).toEqual("test-quest", "test-quest");
 			expect(component.deliveryService.longDesc).toEqual("test description", "test description");
 			expect(component.deliveryService.infoUrl).toEqual("ftp://this-is-a-weird.url/", "ftp://this-is-a-weird.url/");
-			expect(component.step).toEqual(2, "two");
+			expect(await parallel(() => steps.map(async step => step.isSelected()))).toEqual([
+				false,
+				false,
+				true
+			]);
 		} catch (e) {
 			console.error("Error occurred:", e);
 		}

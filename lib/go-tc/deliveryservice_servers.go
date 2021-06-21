@@ -1,9 +1,5 @@
 package tc
 
-import (
-	"time"
-)
-
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,12 +15,18 @@ import (
    limitations under the License.
 */
 
-// DeliveryServiceServerResponse ...
+import (
+	"time"
+)
+
+// DeliveryServiceServerResponse is the type of a response from Traffic Ops
+// to a GET request to the /deliveryserviceserver endpoint.
 type DeliveryServiceServerResponse struct {
 	Orderby  string                  `json:"orderby"`
 	Response []DeliveryServiceServer `json:"response"`
 	Size     int                     `json:"size"`
 	Limit    int                     `json:"limit"`
+	Alerts
 }
 
 type DSSMapResponse struct {
@@ -162,6 +164,18 @@ type DSServerV4 struct {
 	DSServerBaseV4
 	ServerInterfaces *[]ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
 }
+
+// DSServerResponseV40 is the type of a response from Traffic Ops to a request
+// for servers assigned to a Delivery Service - in API version 4.0.
+type DSServerResponseV40 struct {
+	Response []DSServerV4 `json:"response"`
+	Alerts
+}
+
+// DSServerResponseV4 is the type of a response from Traffic Ops to a request
+// for servers assigned to a Delivery Service - in the latest minor version of
+// API version 4.
+type DSServerResponseV4 = DSServerResponseV40
 
 func (oldBase DSServerBase) ToDSServerBaseV4() DSServerBaseV4 {
 	var dsServerBaseV4 DSServerBaseV4

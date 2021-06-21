@@ -34,13 +34,13 @@ type Config struct {
 ```
 4. Implement all the methods required by the `TrafficVault` interface on your new `Foo` struct. Initially, you may want to simply stub out the methods and implement them later:
 ```go
-func (f *Foo) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *sql.Tx) (tc.DeliveryServiceSSLKeysV15, bool, error) {
+func (f *Foo) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *sql.Tx, ctx context.Context) (tc.DeliveryServiceSSLKeysV15, bool, error) {
 	return tc.DeliveryServiceSSLKeysV15{}, false, nil
 }
 
 ... (snip)
 
-func (f *Foo) Ping(tx *sql.Tx) (tc.TrafficVaultPingResponse, error) {
+func (f *Foo) Ping(tx *sql.Tx, ctx context.Context) (tc.TrafficVaultPingResponse, error) {
 	return tc.TrafficVaultPingResponse{}, nil
 }
 ```
@@ -58,4 +58,11 @@ func init() {
 	trafficvault.AddBackend("foo", loadFoo)
 }
 ```
-7. You are now able to test your new Traffic Vault `Foo` backend. First, in `cdn.conf`, you need to set `traffic_vault_backend` to `"foo"` and include your desired `Foo` configuration in `traffic_vault_config`. Once that is done, Traffic Vault is enabled, and you can use Traffic Ops API routes that require Traffic Vault. At this point, you should go back and fully implement the stubbed out `TrafficVault` interface methods on your `Foo` type.
+7. In `./backends/backends.go`, import your new package:
+```go
+import (
+    _ "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/foo"
+)
+```
+This is required for the package `init()` function to run and register the new backend.
+8. You are now able to test your new Traffic Vault `Foo` backend. First, in `cdn.conf`, you need to set `traffic_vault_backend` to `"foo"` and include your desired `Foo` configuration in `traffic_vault_config`. Once that is done, Traffic Vault is enabled, and you can use Traffic Ops API routes that require Traffic Vault. At this point, you should go back and fully implement the stubbed out `TrafficVault` interface methods on your `Foo` type.

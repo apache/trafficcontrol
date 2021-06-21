@@ -14,6 +14,7 @@
 
 Name:       tomcat
 Version:    %{tomcat_version}
+BuildArch:  noarch
 Release:    %{build_number}
 Summary:    Apache Tomcat Servlet/JSP Engine 9.0+, RI for Servlet 3.1/JSP 2.3 API
 License:    Apache Software License
