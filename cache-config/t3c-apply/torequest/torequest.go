@@ -490,7 +490,8 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 	cfg.ChangeApplied = true
 	r.changedFiles = append(r.changedFiles, filepath.Join(cfg.Path, cfg.Name))
 
-	r.RemapConfigReload = cfg.RemapPluginConfig ||
+	r.RemapConfigReload = r.RemapConfigReload ||
+		cfg.RemapPluginConfig ||
 		cfg.Name == "remap.config" ||
 		strings.HasPrefix(cfg.Name, "url_sig_") ||
 		strings.HasPrefix(cfg.Name, "uri_signing") ||
@@ -506,9 +507,9 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 		(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".cer")) ||
 		(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".key"))
 
-	r.TrafficServerRestart = cfg.Name == "plugin.config"
-	r.NtpdRestart = cfg.Name == "ntpd.conf"
-	r.SysCtlReload = cfg.Name == "sysctl.conf"
+	r.TrafficServerRestart = r.TrafficServerRestart || (cfg.Name == "plugin.config")
+	r.NtpdRestart = r.NtpdRestart || (cfg.Name == "ntpd.conf")
+	r.SysCtlReload = r.SysCtlReload || (cfg.Name == "sysctl.conf")
 
 	log.Debugf("Setting change applied for '%s'\n", cfg.Name)
 	return nil
