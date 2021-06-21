@@ -235,6 +235,7 @@ func (s *Server) handleScriptFunc(staticFileDir string) (http.HandlerFunc, error
 	}
 	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set(rfc.ContentType, rfc.MIME_JS.String())
+		w.Header().Set(rfc.PermissionsPolicy, "interest-cohort=()")
 		w.Write(bytes)
 	}, nil
 }
@@ -246,6 +247,7 @@ func (s *Server) handleStyleFunc(staticFileDir string) (http.HandlerFunc, error)
 	}
 	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set(rfc.ContentType, rfc.MIME_CSS.String())
+		w.Header().Set(rfc.PermissionsPolicy, "interest-cohort=()")
 		w.Write(bytes)
 	}, nil
 }
@@ -257,7 +259,8 @@ func (s *Server) handleFile(name string) (http.HandlerFunc, error) {
 	}
 	contentType := http.DetectContentType(bytes)
 	return func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("Content-Type", contentType)
+		w.Header().Set(rfc.ContentType, contentType)
+		w.Header().Set(rfc.PermissionsPolicy, "interest-cohort=()")
 		fmt.Fprintf(w, "%s", bytes)
 	}, nil
 }

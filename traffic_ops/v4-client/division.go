@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,65 +15,43 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"fmt"
-	"net/http"
-	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APIDivisions is the API version-relative path to the /divisions API route.
-	APIDivisions = "/divisions"
-)
+// apiDivisions is the API version-relative path to the /divisions API route.
+const apiDivisions = "/divisions"
 
 // CreateDivision creates the given Division.
-func (to *Session) CreateDivision(division tc.Division) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateDivision(division tc.Division, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIDivisions, division, nil, &alerts)
+	reqInf, err := to.post(apiDivisions, opts, division, &alerts)
 	return alerts, reqInf, err
 }
 
 // UpdateDivision replaces the Division identified by 'id' with the one
 // provided.
-func (to *Session) UpdateDivision(id int, division tc.Division, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", APIDivisions, id)
+func (to *Session) UpdateDivision(id int, division tc.Division, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", apiDivisions, id)
 	var alerts tc.Alerts
-	reqInf, err := to.put(route, division, header, &alerts)
+	reqInf, err := to.put(route, opts, division, &alerts)
 	return alerts, reqInf, err
 }
 
-// GetDivisions returns all Divisions in Traffic Ops.
-func (to *Session) GetDivisions(header http.Header) ([]tc.Division, toclientlib.ReqInf, error) {
+// GetDivisions returns Divisions from Traffic Ops.
+func (to *Session) GetDivisions(opts RequestOptions) (tc.DivisionsResponse, toclientlib.ReqInf, error) {
 	var data tc.DivisionsResponse
-	reqInf, err := to.get(APIDivisions, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetDivisionByID retrieves the Division with the given ID.
-func (to *Session) GetDivisionByID(id int, header http.Header) ([]tc.Division, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", APIDivisions, id)
-	var data tc.DivisionsResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetDivisionByName retrieves the Division with the given Name.
-func (to *Session) GetDivisionByName(name string, header http.Header) ([]tc.Division, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?name=%s", APIDivisions, url.QueryEscape(name))
-	var data tc.DivisionsResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
+	reqInf, err := to.get(apiDivisions, opts, &data)
+	return data, reqInf, err
 }
 
 // DeleteDivision deletes the Division identified by 'id'.
-func (to *Session) DeleteDivision(id int) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", APIDivisions, id)
+func (to *Session) DeleteDivision(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", apiDivisions, id)
 	var alerts tc.Alerts
-	reqInf, err := to.del(route, nil, &alerts)
+	reqInf, err := to.del(route, opts, &alerts)
 	return alerts, reqInf, err
 }

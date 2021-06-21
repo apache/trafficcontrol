@@ -15,6 +15,7 @@ import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
+import { MatDialogModule } from "@angular/material/dialog";
 
 import { of } from "rxjs";
 import { InvalidationJobService } from "src/app/services/api";
@@ -68,7 +69,8 @@ describe("InvalidationJobsComponent", () => {
 				FormsModule,
 				HttpClientModule,
 				ReactiveFormsModule,
-				RouterTestingModule
+				RouterTestingModule,
+				MatDialogModule
 			]
 		});
 

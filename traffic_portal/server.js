@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,7 +21,6 @@ var constants = require('constants'),
     express = require('express'),
     http = require('http'),
     https = require('https'),
-    path = require('path'),
     fs = require('fs'),
     morgan = require('morgan'),
     modRewrite = require('connect-modrewrite'),
@@ -46,6 +45,10 @@ var logStream = fs.createWriteStream(config.log.stream, { flags: 'a' }),
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = config.reject_unauthorized;
 
 var app = express();
+app.use(function(_, resp, next) {
+    resp.setHeader("Permissions-Policy", "interest-cohort=()")
+    next();
+});
 
 app.use(function(req, res, next) {
     var err = null;

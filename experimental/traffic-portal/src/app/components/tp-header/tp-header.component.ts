@@ -11,9 +11,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Component, Input, OnDestroy, OnInit } from "@angular/core";
-import { Subscription } from "rxjs";
+import { Component, Input, OnInit } from "@angular/core";
 import { AuthenticationService } from "src/app/services";
+import { UserService } from "src/app/services/api";
 
 /**
  * TpHeaderComponent is the controller for the standard Traffic Portal header.
@@ -23,7 +23,7 @@ import { AuthenticationService } from "src/app/services";
 	styleUrls: ["./tp-header.component.scss"],
 	templateUrl: "./tp-header.component.html"
 })
-export class TpHeaderComponent implements OnInit, OnDestroy {
+export class TpHeaderComponent implements OnInit {
 
 	/**
 	 * The set of permissions available to the authenticated user.
@@ -33,7 +33,7 @@ export class TpHeaderComponent implements OnInit, OnDestroy {
 	/**
 	 * Holds a continuous subscription for the current user's permissions, in case they change.
 	 */
-	private permissionSubscription: Subscription | undefined;
+	// private permissionSubscription: Subscription | undefined;
 
 	/**
 	 * The title to be used in the header.
@@ -43,22 +43,26 @@ export class TpHeaderComponent implements OnInit, OnDestroy {
 	@Input() public title?: string;
 
 	/** Constructor */
-	constructor(private readonly auth: AuthenticationService) {
+	constructor(private readonly auth: AuthenticationService, private readonly api: UserService) {
 	}
 
 	/** Sets up data dependencies. */
 	public ngOnInit(): void {
-		this.permissionSubscription = this.auth.currentUserCapabilities.subscribe(
-			x => {
-				this.permissions = x;
-			}
-		);
+		this.permissions = this.auth.capabilities;
 	}
 
-	/** Cleans up data dependencies. */
-	public ngOnDestroy(): void {
-		if (this.permissionSubscription) {
-			this.permissionSubscription.unsubscribe();
-		}
+	/**
+	 * Handles when the user clicks the "Logout" button by using the API to
+	 * invalidate their session before redirecting them to the login page.
+	 */
+	public logout(): void {
+		this.api.logout().then(
+			r => {
+				if (!r) {
+					console.warn("Failed to log out - clearing user data anyway!");
+				}
+				this.auth.logout();
+			}
+		);
 	}
 }

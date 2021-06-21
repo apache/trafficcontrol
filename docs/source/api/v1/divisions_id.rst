@@ -71,7 +71,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          An integral, unique identifier for this Division
-:lastUpdated: The date and time at which this Division was last modified, in ISO format
+:lastUpdated: The date and time at which this Division was last modified, in :ref:`non-rfc-datetime`
 :name:        The Division name
 
 .. code-block:: http
@@ -137,7 +137,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          An integral, unique identifier for this Division
-:lastUpdated: The date and time at which this Division was last modified, in ISO format
+:lastUpdated: The date and time at which this Division was last modified, in :ref:`non-rfc-datetime`
 :name:        The Division name
 
 .. code-block:: http

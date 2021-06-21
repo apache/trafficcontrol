@@ -132,3 +132,12 @@ input.sub-form {
 		display: grid;
 	}
 }
+
+mat-radio-group {
+	display: flex;
+	flex-direction: column;
+}
+
+mat-radio-button {
+	margin: 15px auto 0 7px;
+}

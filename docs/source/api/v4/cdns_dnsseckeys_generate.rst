@@ -32,7 +32,6 @@ Request Structure
 :effectiveDate:         An optional string containing the date and time at which the newly-generated :abbr:`ZSK (Zone-Signing Key)` and :abbr:`KSK (Key-Signing Key)` become effective, in :RFC:`3339` format. Defaults to the current time if not specified.
 :key:                   Name of the CDN
 :kskExpirationDays:     Expiration (in days) for the :abbr:`KSKs (Key-Signing Keys)`
-:name:                  Domain name used by the CDN
 :ttl:                   Time, in seconds, for which the keypairs shall remain valid
 :zskExpirationDays:     Expiration (in days) for the :abbr:`ZSKs (Zone-Signing Keys)`
 
@@ -50,7 +49,6 @@ Request Structure
 	{
 		"key": "CDN-in-a-Box",
 		"kskExpirationDays": 1095,
-		"name": "mycdn.ciab.test",
 		"ttl": 3600,
 		"zskExpirationDays": 1095
 	}

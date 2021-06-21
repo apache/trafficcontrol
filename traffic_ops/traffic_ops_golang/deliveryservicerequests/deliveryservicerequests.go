@@ -1,3 +1,10 @@
+// Package deliveryservicerequests contains the handler for the endpoint
+// responsible for issuing a request for Delivery Service creation via email -
+// not to be confused with package
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request.
+//
+// Deprecated: This package contains logic relating to a deprecated API
+// endpoint and is subject to removal in the future.
 package deliveryservicerequests
 
 /*
@@ -19,18 +26,22 @@ package deliveryservicerequests
  * under the License.
  */
 
-import "encoding/json"
-import "fmt"
-import "net/http"
-import "net/mail"
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/mail"
 
-import "github.com/apache/trafficcontrol/lib/go-rfc"
-import "github.com/apache/trafficcontrol/lib/go-tc"
-
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+)
 
 const msg = "From: %s\r\nTo:%s\r\nContent-Type: text/html\r\nSubject: Delivery Service Request for %s\r\n\r\n%s"
 
+// Request is the handler for creating a Delivery Service request via
+// /deliveryservices/request - not to be confused with a Delivery Service
+// Request as created using the /deliveryservice_requests.
 func Request(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
@@ -42,7 +53,7 @@ func Request(w http.ResponseWriter, r *http.Request) {
 
 	var dsr tc.DeliveryServiceRequestRequest
 	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
-		userErr = fmt.Errorf("Error parsing request: %v", err)
+		userErr = fmt.Errorf("parsing request: %w", err)
 		errCode = http.StatusBadRequest
 		api.HandleErr(w, r, tx, errCode, userErr, nil)
 		return
@@ -56,8 +67,8 @@ func Request(w http.ResponseWriter, r *http.Request) {
 
 	addr, err := mail.ParseAddress(dsr.EmailTo)
 	if err != nil {
-		userErr = fmt.Errorf("'%s' is not a valid RFC5322 email address!", dsr.EmailTo)
-		sysErr = fmt.Errorf("Parsing submitted email address: %s", err)
+		userErr = fmt.Errorf("'%s' is not a valid RFC5322 email address", dsr.EmailTo)
+		sysErr = fmt.Errorf("parsing submitted email address: %w", err)
 		errCode = http.StatusBadRequest
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -65,7 +76,7 @@ func Request(w http.ResponseWriter, r *http.Request) {
 
 	body, err := dsr.Details.Format()
 	if err != nil {
-		sysErr = fmt.Errorf("Failed to format email body: %v", err)
+		sysErr = fmt.Errorf("failed to format email body: %w", err)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
@@ -78,6 +89,8 @@ func Request(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteRespAlert(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service request sent to %s", dsr.EmailTo))
-	w.Write([]byte{'\n'})
+	var alerts tc.Alerts
+	alerts.AddNewAlert(tc.SuccessLevel, "Delivery Service request sent to "+dsr.EmailTo)
+	alerts.AddNewAlert(tc.WarnLevel, "This endpoint is deprecated, it has been removed in API versions 4.0 and later")
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
 }

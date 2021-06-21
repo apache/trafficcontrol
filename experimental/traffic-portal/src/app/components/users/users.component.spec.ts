@@ -14,15 +14,12 @@
 import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
-
-import { of } from "rxjs";
-
+import { RouterTestingModule } from "@angular/router/testing";
 
 import { User } from "../../models";
 import { APIService } from "../../services/api/apiservice";
 import { LoadingComponent } from "../loading/loading.component";
 import { TpHeaderComponent } from "../tp-header/tp-header.component";
-import { UserCardComponent } from "../user-card/user-card.component";
 import { UsersComponent } from "./users.component";
 
 describe("UsersComponent", () => {
@@ -32,25 +29,25 @@ describe("UsersComponent", () => {
 	beforeEach(waitForAsync(() => {
 		// mock the API
 		const mockAPIService = jasmine.createSpyObj(["getUsers", "getRoles", "getCurrentUser"]);
-		mockAPIService.getUsers.and.returnValue(of([]));
-		mockAPIService.getRoles.and.returnValue(of([]));
-		mockAPIService.getCurrentUser.and.returnValue(of({
+		mockAPIService.getUsers.and.returnValue(new Promise(resolve => resolve([])));
+		mockAPIService.getRoles.and.returnValue(new Promise(resolve => resolve([])));
+		mockAPIService.getCurrentUser.and.returnValue(new Promise(resolve => resolve({
 			id: 0,
 			newUser: false,
 			username: "test"
-		} as User));
+		} as User)));
 
 		TestBed.configureTestingModule({
 			declarations: [
 				UsersComponent,
 				LoadingComponent,
 				TpHeaderComponent,
-				UserCardComponent
 			],
 			imports: [
 				FormsModule,
 				HttpClientModule,
-				ReactiveFormsModule
+				ReactiveFormsModule,
+				RouterTestingModule
 			],
 		});
 		TestBed.overrideProvider(APIService, { useValue: mockAPIService });

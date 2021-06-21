@@ -26,7 +26,9 @@ setowner() {
 }
 
 cleanup() {
-	setowner "$tc_volume" "${tc_volume}/dist"
+	if [ "$(id -u)" -eq 0 ]; then
+		setowner "$tc_volume" "${tc_volume}/dist"
+	fi
 }
 
 set -o xtrace;
@@ -65,7 +67,7 @@ mkdir -p "${tc_volume}/dist"
 ln -sf "${tc_volume}/dist" "dist"
 
 if [ $# -eq 0 ]; then
-	set -- tarball traffic_monitor traffic_ops traffic_ops_ort traffic_portal traffic_router traffic_stats grove grove/grovetccfg docs
+	set -- tarball traffic_monitor traffic_ops cache-config traffic_portal traffic_router traffic_stats grove grove/grovetccfg docs
 fi
 
 for project in "$@"; do

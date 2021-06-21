@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,22 +15,16 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/url"
+	"errors"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-const (
-	// APISnaphost is the API version-relative path for the /snapshot API endpoint.
-	APISnaphost = "/snapshot"
-)
+// apiSnapshot is the API version-relative path for the /snapshot API endpoint.
+const apiSnapshot = "/snapshot"
 
 // OuterResponse is the most basic type of a Traffic Ops API response,
 // containing some kind of JSON-encoded 'response' object.
@@ -36,52 +32,30 @@ type OuterResponse struct {
 	Response json.RawMessage `json:"response"`
 }
 
-// GetCRConfig returns the raw JSON bytes of the CRConfig from Traffic Ops, and whether the bytes were from the client's internal cache.
-func (to *Session) GetCRConfig(cdn string) ([]byte, toclientlib.ReqInf, error) {
+// GetCRConfig returns the Snapshot for the given CDN from Traffic Ops.
+func (to *Session) GetCRConfig(cdn string, opts RequestOptions) (tc.SnapshotResponse, toclientlib.ReqInf, error) {
 	uri := `/cdns/` + cdn + `/snapshot`
-	bts := []byte{}
-	reqInf, err := to.get(uri, nil, &bts)
-	if err != nil {
-		return nil, reqInf, err
-	}
-
-	resp := OuterResponse{}
-	if err := json.Unmarshal(bts, &resp); err != nil {
-		return nil, reqInf, err
-	}
-	return resp.Response, reqInf, nil
+	var resp tc.SnapshotResponse
+	reqInf, err := to.get(uri, opts, &resp)
+	return resp, reqInf, err
 }
 
 // SnapshotCRConfig creates a new Snapshot for the CDN with the given Name -
 // NOT just a new CRConfig!
-func (to *Session) SnapshotCRConfig(cdn string, header http.Header) (toclientlib.ReqInf, error) {
-	uri := fmt.Sprintf("%s?cdn=%s", APISnaphost, url.QueryEscape(cdn))
-	resp := OuterResponse{}
-	reqInf, err := to.put(uri, nil, header, &resp)
-	return reqInf, err
+func (to *Session) SnapshotCRConfig(opts RequestOptions) (tc.PutSnapshotResponse, toclientlib.ReqInf, error) {
+	var resp tc.PutSnapshotResponse
+	if opts.QueryParameters == nil || (opts.QueryParameters.Get("cdn") == "" && opts.QueryParameters.Get("cdnID") == "") {
+		return resp, toclientlib.ReqInf{}, errors.New("cannot take Snapshot of unidentified CDN - set 'cdn' or 'cdnID' query parameter")
+	}
+	reqInf, err := to.put(apiSnapshot, opts, nil, &resp)
+	return resp, reqInf, err
 }
 
-// GetCRConfigNew returns the raw JSON bytes of the latest CRConfig from Traffic Ops, and whether the bytes were from the client's internal cache.
-func (to *Session) GetCRConfigNew(cdn string) ([]byte, toclientlib.ReqInf, error) {
+// GetCRConfigNew returns the *new* Snapshot for the given CDN from Traffic
+// Ops.
+func (to *Session) GetCRConfigNew(cdn string, opts RequestOptions) (tc.SnapshotResponse, toclientlib.ReqInf, error) {
 	uri := `/cdns/` + cdn + `/snapshot/new`
-	bts := []byte{}
-	reqInf, err := to.get(uri, nil, &bts)
-	if err != nil {
-		return nil, reqInf, err
-	}
-
-	resp := OuterResponse{}
-	if err := json.Unmarshal(bts, &resp); err != nil {
-		return nil, reqInf, err
-	}
-	return resp.Response, reqInf, nil
-}
-
-// SnapshotCRConfigByID creates a new Snapshot for the CDN with the given ID -
-// NOT just a new CRConfig!
-func (to *Session) SnapshotCRConfigByID(id int) (tc.Alerts, toclientlib.ReqInf, error) {
-	url := fmt.Sprintf("%s?cdnID=%d", APISnaphost, id)
-	var alerts tc.Alerts
-	reqInf, err := to.put(url, nil, nil, &alerts)
-	return alerts, reqInf, err
+	var resp tc.SnapshotResponse
+	reqInf, err := to.get(uri, opts, &resp)
+	return resp, reqInf, err
 }

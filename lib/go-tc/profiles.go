@@ -1,18 +1,5 @@
 package tc
 
-import (
-	"database/sql"
-	"errors"
-	"fmt"
-	"strconv"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/lib/pq"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -31,6 +18,20 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"strconv"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
+
+	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/lib/pq"
+)
 
 // ProfilesResponse is a list of profiles returned by GET requests.
 type ProfilesResponse struct {
@@ -113,6 +114,8 @@ type ProfileExportResponse struct {
 	// Parameters associated to the profile
 	//
 	Parameters []ProfileExportImportParameterNullable `json:"parameters"`
+
+	Alerts
 }
 
 // ProfileImportRequest is an object of the form used by Traffic Ops

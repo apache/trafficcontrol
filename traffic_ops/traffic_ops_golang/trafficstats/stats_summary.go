@@ -154,8 +154,6 @@ func CreateStatsSummary(w http.ResponseWriter, r *http.Request) {
 	}
 
 	successMsg := "Stats Summary was successfully created"
-	logMsg := fmt.Sprintf("STATSSUMMARY: %v, ID: %v, ACTION: create stats_summary", *ss.StatName, id)
-	api.CreateChangeLogRawTx(api.ApiChange, logMsg, inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, successMsg)
 }
 

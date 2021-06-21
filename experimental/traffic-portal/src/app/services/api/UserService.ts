@@ -15,9 +15,6 @@
 import { HttpClient, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
-
 import { Role, User, Capability } from "../../models/user";
 
 import { APIService } from "./apiservice";
@@ -40,39 +37,93 @@ export class UserService extends APIService {
 	/**
 	 * Performs authentication with the Traffic Ops server.
 	 *
-	 * @param u The username to be used for authentication
+	 * @param uOrT The username to be used for authentication, if `p` is
+	 * provided. If `p` is **not** provided, then this is used as a token.
 	 * @param p The password of user `u`
-	 * @returns An observable that will emit the entire HTTP response
+	 * @returns The entire HTTP response on success, or `null` on failure.
 	 */
-	public login(u: string, p: string): Observable<HttpResponse<object>> {
-		const path = `/api/${this.apiVersion}/user/login`;
-		return this.http.post(path, {p, u}, this.defaultOptions);
+	public async login(uOrT: string, p?: string): Promise<HttpResponse<object> | null> {
+		let path = `/api/${this.apiVersion}/user/login`;
+		if (p !== undefined) {
+			return this.http.post(path, {p, u: uOrT}, this.defaultOptions).toPromise().catch(
+				e => {
+					console.error("Failed to login:", e);
+					return null;
+				}
+			);
+		}
+		path += "/token";
+		return this.http.post(path, {t: uOrT}, this.defaultOptions).toPromise().catch(
+			e => {
+				console.error("Failed to login with token:", e);
+				return null;
+			}
+		);
+	}
+
+	/**
+	 * Ends the current user's session - but does *not* affect the
+	 * AuthenticationService's user data, which must be separately cleared.
+	 *
+	 * @returns The entire HTTP response on succes, or `null` on failure.
+	 */
+	public async logout(): Promise<HttpResponse<object> | null> {
+		const path = `/api/${this.apiVersion}/user/logout`;
+		return this.http.post(path, undefined, this.defaultOptions).toPromise().catch(
+			e => {
+				console.error("Failed to logout:", e);
+				return null;
+			}
+		);
 	}
 
 	/**
 	 * Fetches the current user from Traffic Ops.
 	 *
-	 * @returns An observable that will emit a `User` object representing the current user.
+	 * @returns A `User` object representing the current user.
 	 */
-	public getCurrentUser(): Observable<User> {
+	public async getCurrentUser(): Promise<User> {
 		const path = "user/current";
-		return this.get<User>(path).pipe(map(
+		return this.get<User>(path).toPromise().then(
 			r => {
 				r.lastUpdated = new Date((r.lastUpdated as unknown as string).replace("+00", "Z"));
 				return r;
 			}
-		));
+		).catch(
+			e => {
+				console.error("Failed to get current user:", e);
+				return {
+					id: -1,
+					newUser: false,
+					username: ""
+				};
+			}
+		);
 	}
 
-	public getUsers(nameOrID: string | number): Observable<User>;
-	public getUsers(): Observable<Array<User>>;
+	/**
+	 * Updates the current user to match the one passed in.
+	 *
+	 * @param user The new form of the user.
+	 * @returns whether or not the request was successful.
+	 */
+	public async updateCurrentUser(user: User): Promise<boolean> {
+		const path = "user/current";
+		return this.put<User>(path, {user}).toPromise().then(
+			() => true,
+			() => false
+		);
+	}
+
+	public async getUsers(nameOrID: string | number): Promise<User>;
+	public async getUsers(): Promise<Array<User>>;
 	/**
 	 * Gets an array of all users in Traffic Ops.
 	 *
 	 * @param nameOrID If given, returns only the User with the given username (string) or ID (number).
-	 * @returns An Observable that will emit an Array of User objects - or a single User object if 'nameOrID' was given.
+	 * @returns An Array of User objects - or a single User object if 'nameOrID' was given.
 	 */
-	public getUsers(nameOrID?: string | number): Observable<Array<User> | User> {
+	public async getUsers(nameOrID?: string | number): Promise<Array<User> | User> {
 		const path = "users";
 		if (nameOrID) {
 			let params;
@@ -83,35 +134,48 @@ export class UserService extends APIService {
 				case "number":
 					params = {id: String(nameOrID)};
 			}
-			return this.get<[User]>(path, undefined, params).pipe(map(
+			return this.get<[User]>(path, undefined, params).toPromise().then(
 				r => {
 					r[0].lastUpdated = new Date((r[0].lastUpdated as unknown as string).replace("+00", "Z"));
 					return r[0];
 				}
-			));
+			).catch(
+				e => {
+					console.error("Failed to get user:", e);
+					return {
+						id: -1,
+						newUser: false,
+						username: ""
+					};
+				}
+			);
 		}
-		return this.get<Array<User>>(path).pipe(map(r => r.map(
+		return this.get<Array<User>>(path).toPromise().then(r => r.map(
 			u => {
 				u.lastUpdated = new Date((u.lastUpdated as unknown as string).replace("+00", "Z"));
 				return u;
 			}
-		)));
+		)).catch(
+			e => {
+				console.error("Failed to get users:", e);
+				return [];
+			}
+		);
 	}
 
 	/** Fetches the Role with the given ID. */
-	public getRoles (nameOrID: number | string): Observable<Role>;
+	public async getRoles (nameOrID: number | string): Promise<Role>;
 	/** Fetches all Roles. */
-	public getRoles (): Observable<Array<Role>>;
+	public async getRoles (): Promise<Array<Role>>;
 	/**
 	 * Fetches one or all Roles from Traffic Ops.
 	 *
 	 * @param nameOrID Optionally, the name or integral, unique identifier of a single Role which will be fetched
 	 * @throws {TypeError} When called with an improper argument.
-	 * @returns an Observable that will emit either an Array of Roles, or a single Role, depending on whether
+	 * @returns Either an Array of Roles, or a single Role, depending on whether
 	 * `name`/`id` was passed
-	 * (In the event that `name`/`id` is given but does not match any Role, `null` will be emitted)
 	 */
-	public getRoles(nameOrID?: string | number): Observable<Array<Role> | Role> {
+	public async getRoles(nameOrID?: string | number): Promise<Array<Role> | Role> {
 		const path = "roles";
 		if (nameOrID !== undefined) {
 			let params;
@@ -122,31 +186,59 @@ export class UserService extends APIService {
 				case "number":
 					params = {id: String(nameOrID)};
 			}
-			return this.get<[Role]>(path, undefined, params).pipe(map(r => r[0]));
+			return this.get<[Role]>(path, undefined, params).toPromise().then(r => r[0]).catch(
+				e => {
+					console.error("Failed to get Role:", e);
+					return {
+						capabilities: [],
+						id: -1,
+						name: "",
+						privLevel: -1,
+					};
+				}
+			);
 		}
-		return this.get<Array<Role>>(path);
+		return this.get<Array<Role>>(path).toPromise().catch(
+			e => {
+				console.error("Failed to get Roles:", e);
+				return [];
+			}
+		);
 	}
 
 	/** Fetches the User Capability (Permission) with the given name. */
-	public getCapabilities (name: string): Observable<Capability>;
+	public async getCapabilities (name: string): Promise<Capability>;
 	/** Fetches all User Capabilities (Permissions). */
-	public getCapabilities (): Observable<Array<Capability>>;
+	public async getCapabilities (): Promise<Array<Capability>>;
 	/**
 	 * Fetches one or all Capabilities from Traffic Ops.
 	 *
 	 * @param name Optionally, the name of a single Capability which will be fetched
 	 * @throws {TypeError} When called with an improper argument.
-	 * @returns an Observable that will emit either an Array of Capabilities, or a single Capability,
+	 * @returns Either an Array of Capabilities, or a single Capability,
 	 * depending on whether `name`/`id` was passed
 	 */
-	public getCapabilities(name?: string): Observable<Array<Capability> | Capability> {
+	public async getCapabilities(name?: string): Promise<Array<Capability> | Capability> {
 		const path = "capabilities";
 		if (name) {
-			return this.get<[Capability]>(path, undefined, {name}).pipe(map(
+			return this.get<[Capability]>(path, undefined, {name}).toPromise().then(
 				r => r[0]
-			));
+			).catch(
+				e => {
+					console.error("Failed to get user Permission:", e);
+					return {
+						description: "",
+						name: ""
+					};
+				}
+			);
 		}
-		return this.get<Array<Capability>>(path);
+		return this.get<Array<Capability>>(path).toPromise().catch(
+			e => {
+				console.error("Failed to get user Permissions:", e);
+				return [];
+			}
+		);
 	}
 
 }

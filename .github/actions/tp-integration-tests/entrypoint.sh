@@ -15,6 +15,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
 set -o errexit -o nounset -o pipefail
 
 hub_fqdn="http://localhost:4444/wd/hub/status"
@@ -143,14 +144,14 @@ start_traffic_vault &
 
 sudo apt-get install -y --no-install-recommends gettext \
 	ruby ruby-dev libc-dev curl \
-	gcc musl-dev
+	gcc
 
-sudo gem update --system && sudo gem install sass compass
+sudo gem install sass compass
 sudo npm i -g forever bower grunt
 
-CHROME_CONTAINER=$(docker ps | grep "selenium/node-chrome" | awk '{print $1}')
-HUB_CONTAINER=$(docker ps | grep "selenium/hub" | awk '{print $1}')
-CHROME_VER=$(docker exec "$CHROME_CONTAINER" google-chrome --version | sed -E 's/.* ([0-9.]+).*/\1/')
+CHROMIUM_CONTAINER=$(docker ps -qf name=chromium)
+HUB_CONTAINER=$(docker ps -qf name=hub)
+CHROMIUM_VER=$(docker exec "$CHROMIUM_CONTAINER" chromium --version | grep -Eo '[0-9.]+')
 
 GOROOT=/usr/local/go
 export PATH="${PATH}:${GOROOT}/bin"
@@ -206,7 +207,7 @@ onFail() {
   mv tp.log Reports/forever.log
   mv access.log Reports/tp-access.log
   mv out.log Reports/node.log
-  docker logs $CHROME_CONTAINER > Reports/chrome.log
+  docker logs $CHROMIUM_CONTAINER > Reports/chromium.log
   docker logs $HUB_CONTAINER > Reports/hub.log
   echo "Detailed logs produced info Reports artifact"
   exit 1
@@ -217,7 +218,7 @@ cd "${REPO_DIR}/traffic_portal/test/integration"
 npm ci
 PATH=$(pwd)/node_modules/.bin/:$PATH
 
-webdriver-manager update --gecko false --versions.chrome "LATEST_RELEASE_$CHROME_VER"
+webdriver-manager update --gecko false --versions.chrome "LATEST_RELEASE_$CHROMIUM_VER"
 
 jq " .capabilities.chromeOptions.args = [
     \"--headless\",
@@ -238,4 +239,5 @@ timeout 5m bash <<TMOUT
   done
 TMOUT
 
+trap - ERR
 protractor ./GeneratedCode/config.js --params.baseUrl="${tp_fqdn}" --params.apiUrl="${to_fqdn}/api/4.0" || onFail

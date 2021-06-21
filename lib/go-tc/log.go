@@ -22,6 +22,7 @@ package tc
 // LogsResponse is a list of Logs as a response.
 type LogsResponse struct {
 	Response []Log `json:"response"`
+	Alerts
 }
 
 // Log contains a change that has been made to the Traffic Control system.

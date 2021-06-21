@@ -16,74 +16,65 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { readFileSync } from "fs";
-
 import { browser } from 'protractor';
-import using from "jasmine-data-provider";
 
 import { LoginPage } from '../PageObjects/LoginPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { API } from '../CommonUtils/API';
 import { TypesPage } from '../PageObjects/Types.po'
+import { types } from "../Data";
 
-let setupFile = 'Data/Types/Setup.json';
-let cleanupFile = 'Data/Types/Cleanup.json';
-let filename = 'Data/Types/TestCases.json';
-let testData = JSON.parse(readFileSync(filename, "utf8"));
+const api = new API();
+const loginPage = new LoginPage();
+const topNavigation = new TopNavigationPage();
+const typesPage = new TypesPage();
 
-let api = new API();
-let loginPage = new LoginPage();
-let topNavigation = new TopNavigationPage();
-let typesPage = new TypesPage();
-
-describe('Setup API for Types Test', function(){
-    it('Setup', async function(){
-        let setupData = JSON.parse(readFileSync(setupFile, "utf8"));
-        await api.UseAPI(setupData);
-    })
-})
-using(testData.Types, async function(typesData){
-    using(typesData.Login, function(login){
-        describe('Traffic Portal - Types - ' + login.description, function(){
-            it('can login', async function(){
+describe('Setup API for Types Test', () => {
+    it('Setup', async () => {
+        await api.UseAPI(types.setup);
+    });
+});
+types.tests.forEach(async typesData => {
+    typesData.logins.forEach(login => {
+        describe(`Traffic Portal - Types - ${login.description}`, () => {
+            it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            })
-            it('can open types page', async function(){
+            });
+            it('can open types page', async () => {
                 await typesPage.OpenConfigureMenu();
                 await typesPage.OpenTypesPage();
-            })
+            });
 
-            using(typesData.Add, function (add) {
-                it(add.description, async function () {
+            typesData.add.forEach(add => {
+                it(add.description, async () => {
                     expect(await typesPage.CreateType(add)).toBeTruthy();
                     await typesPage.OpenTypesPage();
-                })
-            })
-            using(typesData.Update, function (update) {
-                it(update.description, async function () {
+                });
+            });
+            typesData.update.forEach(update => {
+                it(update.description, async () => {
                     await typesPage.SearchType(update.Name);
                     expect(await typesPage.UpdateType(update)).toBeTruthy();
                     await typesPage.OpenTypesPage();
-                })
-            })
-            using(typesData.Remove, function (remove) {
-                it(remove.description, async function () {
+                });
+            });
+            typesData.remove.forEach(remove => {
+                it(remove.description, async () => {
                     await typesPage.SearchType(remove.Name);
                     expect(await typesPage.DeleteTypes(remove)).toBeTruthy();
                     await typesPage.OpenTypesPage();
-                })
-            })
-            it('can logout', async function () {
+                });
+            });
+            it('can logout', async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
-            })
-        })
-    })
-})
-describe('Clean Up API for Types Test', function () {
-    it('Cleanup', async function () {
-        let cleanupData = JSON.parse(readFileSync(cleanupFile, "utf8"));
-        await api.UseAPI(cleanupData);
-    })
-})
+            });
+        });
+    });
+});
+describe('Clean Up API for Types Test', () => {
+    it('Cleanup', async () => {
+        await api.UseAPI(types.cleanup);
+    });
+});

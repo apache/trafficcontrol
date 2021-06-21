@@ -61,7 +61,8 @@ func TestGetConfigParams(t *testing.T) {
 	MockGetConfigParams(mock, expected, cdn)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
@@ -124,7 +125,8 @@ func TestMakeCRConfigConfig(t *testing.T) {
 	expected := ExpectedMakeCRConfigConfig(expectedGetConfigParams, dnssecEnabled)
 	mock.ExpectCommit()
 
-	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancelTx()
 	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)

@@ -1682,20 +1682,6 @@
     "parameters": [
         {
             "configFile": "rascal.properties",
-            "lastUpdated": "2018-01-19T19:01:21.455131+00:00",
-            "name": "health.threshold.loadavg",
-            "secure": false,
-            "value": "25.0"
-        },
-        {
-            "configFile": "rascal.properties",
-            "lastUpdated": "2018-01-19T19:01:21.472279+00:00",
-            "name": "health.threshold.availableBandwidthInKbps",
-            "secure": false,
-            "value": ">1750000"
-        },
-        {
-            "configFile": "rascal.properties",
             "lastUpdated": "2018-01-19T19:01:21.489534+00:00",
             "name": "history.count",
             "secure": false,
@@ -2244,7 +2230,27 @@
             "lastUpdated": "2018-03-02T17:27:11.818418+00:00",
             "name": "EDGE1",
             "routing_disabled": false,
-            "type": "ATS_PROFILE"
+            "type": "ATS_PROFILE",
+            "params": [
+                {
+                    "configFile": "rascal.properties",
+                    "name": "health.threshold.loadavg",
+                    "secure": false,
+                    "value": "25.0"
+                },
+                {
+                    "configFile": "rascal.properties",
+                    "name": "health.threshold.availableBandwidthInKbps",
+                    "secure": false,
+                    "value": ">1750000"
+                },
+                {
+                    "configFile": "rascal.properties",
+                    "name": "health.threshold.queryTime",
+                    "secure": false,
+                    "value": "1000"
+                }
+            ]
         },
         {
             "cdnName": "cdn2",

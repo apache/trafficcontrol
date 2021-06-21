@@ -200,8 +200,6 @@ The response is an array of representations of :term:`Delivery Service Requests`
 ========
 Creates a new :term:`Delivery Service Request`. "Closed" :term:`Delivery Service Requests` cannot be created, an existing :term:`Delivery Service Request` must be placed into a closed :ref:`dsr-status`. A :term:`Delivery Service Request` to create, modify or delete a :term:`Delivery Service` cannot be created if an open :term:`Delivery Service Request` exists for a :term:`Delivery Service` with the same :ref:`ds-xmlid`. Because of this, :term:`Delivery Service Requests` cannot be used to change a :term:`Delivery Service`'s :ref:`ds-xmlid`.
 
-.. warning:: This route does NOT do the same thing as :ref:`POST deliveryservices/request <to-api-deliveryservices-request>`.
-
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
 :Response Type:  Object
@@ -833,5 +831,3 @@ The response is a full representation of the deleted :term:`Delivery Service Req
 			}
 		]
 	}
-
-.. [#geoLimit] These fields must be defined if and only if ``geoLimit`` is non-zero

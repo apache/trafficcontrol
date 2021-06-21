@@ -74,22 +74,21 @@ const (
 	DBNameKey   = "dbname"
 
 	// available commands
-	CmdCreateDB      = "createdb"
-	CmdDropDB        = "dropdb"
-	CmdCreateUser    = "create_user"
-	CmdDropUser      = "drop_user"
-	CmdShowUsers     = "show_users"
-	CmdReset         = "reset"
-	CmdUpgrade       = "upgrade"
-	CmdMigrate       = "migrate"
-	CmdDown          = "down"
-	CmdRedo          = "redo"
-	CmdStatus        = "status"
-	CmdDBVersion     = "dbversion"
-	CmdSeed          = "seed"
-	CmdLoadSchema    = "load_schema"
-	CmdReverseSchema = "reverse_schema"
-	CmdPatch         = "patch"
+	CmdCreateDB   = "createdb"
+	CmdDropDB     = "dropdb"
+	CmdCreateUser = "create_user"
+	CmdDropUser   = "drop_user"
+	CmdShowUsers  = "show_users"
+	CmdReset      = "reset"
+	CmdUpgrade    = "upgrade"
+	CmdMigrate    = "migrate"
+	CmdDown       = "down"
+	CmdRedo       = "redo"
+	CmdStatus     = "status"
+	CmdDBVersion  = "dbversion"
+	CmdSeed       = "seed"
+	CmdLoadSchema = "load_schema"
+	CmdPatch      = "patch"
 
 	// goose commands that don't match the commands for this tool
 	GooseUp = "up"
@@ -100,11 +99,16 @@ const (
 	DBPatchesPath      = "db/patches.sql"
 	DefaultEnvironment = EnvDevelopment
 	DefaultDBSuperUser = "postgres"
+
+	TrafficVaultDBConfigPath = "db/trafficvault/dbconf.yml"
+	TrafficVaultDir          = "db/trafficvault"
+	TrafficVaultSchemaPath   = "db/trafficvault/create_tables.sql"
 )
 
 var (
 	// globals that are passed in via CLI flags and used in commands
-	Environment string
+	Environment  string
+	TrafficVault bool
 
 	// globals that are parsed out of DBConfigFile and used in commands
 	DBName      string
@@ -116,9 +120,13 @@ var (
 )
 
 func parseDBConfig() error {
-	confBytes, err := ioutil.ReadFile(DBConfigPath)
+	dbConfigPath := DBConfigPath
+	if TrafficVault {
+		dbConfigPath = TrafficVaultDBConfigPath
+	}
+	confBytes, err := ioutil.ReadFile(dbConfigPath)
 	if err != nil {
-		return errors.New("reading DB conf '" + DBConfigPath + "': " + err.Error())
+		return errors.New("reading DB conf '" + dbConfigPath + "': " + err.Error())
 	}
 
 	dbConfig := DBConfig{}
@@ -252,8 +260,10 @@ func reset() {
 
 func upgrade() {
 	goose(GooseUp)
-	seed()
-	patch()
+	if !TrafficVault {
+		seed()
+		patch()
+	}
 }
 
 func migrate() {
@@ -277,6 +287,9 @@ func dbVersion() {
 }
 
 func seed() {
+	if TrafficVault {
+		die("seed not supported for trafficvault environment")
+	}
 	fmt.Println("Seeding database w/ required data.")
 	seedsBytes, err := ioutil.ReadFile(DBSeedsPath)
 	if err != nil {
@@ -294,7 +307,11 @@ func seed() {
 
 func loadSchema() {
 	fmt.Println("Creating database tables.")
-	schemaBytes, err := ioutil.ReadFile(DBSchemaPath)
+	schemaPath := DBSchemaPath
+	if TrafficVault {
+		schemaPath = TrafficVaultSchemaPath
+	}
+	schemaBytes, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		die("unable to read '" + DBSchemaPath + "': " + err.Error())
 	}
@@ -308,18 +325,10 @@ func loadSchema() {
 	}
 }
 
-func reverseSchema() {
-	fmt.Fprintf(os.Stderr, "WARNING: the '%s' command will be removed with Traffic Ops Perl because it will no longer be necessary\n", CmdReverseSchema)
-	cmd := exec.Command("db/reverse_schema.pl")
-	cmd.Env = append(os.Environ(), "MOJO_MODE="+Environment)
-	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
-	if err != nil {
-		die("Can't run `db/reverse_schema.pl`: " + err.Error())
-	}
-}
-
 func patch() {
+	if TrafficVault {
+		die("patch not supported for trafficvault environment")
+	}
 	fmt.Println("Patching database with required data fixes.")
 	patchesBytes, err := ioutil.ReadFile(DBPatchesPath)
 	if err != nil {
@@ -337,7 +346,12 @@ func patch() {
 
 func goose(arg string) {
 	fmt.Println("Running goose " + arg + "...")
-	cmd := exec.Command("goose", "--env="+Environment, arg)
+	args := []string{"--env=" + Environment}
+	if TrafficVault {
+		args = append(args, "--path="+TrafficVaultDir)
+	}
+	args = append(args, arg)
+	cmd := exec.Command("goose", args...)
 	out, err := cmd.CombinedOutput()
 	fmt.Printf("%s", out)
 	if err != nil {
@@ -355,12 +369,14 @@ func usage() string {
 	home := "$HOME"
 	home = os.Getenv("HOME")
 	return `
-Usage:  ` + programName + ` [--env (development|test|production|integration)] [arguments]
+Usage:  ` + programName + ` [--trafficvault] [--env (development|test|production|integration)] [arguments]
 
 Example:  ` + programName + ` --env=test reset
 
-Purpose:  This script is used to manage database. The environments are
-          defined in the dbconf.yml, as well as the database names.
+Purpose:  This script is used to manage the Traffic Ops database and Traffic Vault PostgreSQL backend database.
+          The Traffic Ops environments and database names are defined in the dbconf.yml, and for Traffic Vault
+          they are defined in trafficvault/dbconf.yml. In order to execute commands against the Traffic Vault
+          database, the the --trafficvault option.
 
 NOTE:
 Postgres Superuser: The 'postgres' superuser needs to be created to run ` + programName + ` and setup databases.
@@ -381,6 +397,7 @@ without prompts.
  ----------------------
  *:*:*:postgres:your-postgres-password
  *:*:*:traffic_ops:the-password-in-dbconf.yml
+ *:*:*:traffic_vault:the-password-in-trafficvault-dbconf.yml
  ----------------------
 
  Save the following example into this file ` + home + `/.pgpass with the permissions of this file
@@ -396,11 +413,10 @@ create_user  - Execute 'create_user' the user for the current environment (traff
 dropdb  - Execute db 'dropdb' on the database for the current environment.
 down  - Roll back a single migration from the current version.
 drop_user  - Execute 'drop_user' the user for the current environment (traffic_ops).
-patch  - Execute sql from db/patches.sql for loading post-migration data patches.
+patch  - Execute sql from db/patches.sql for loading post-migration data patches (NOTE: not supported with --trafficvault option).
 redo  - Roll back the most recently applied migration, then run it again.
 reset  - Execute db 'dropdb', 'createdb', load_schema, migrate on the database for the current environment.
-reverse_schema  - Reverse engineer the lib/Schema/Result files from the environment database.
-seed  - Execute sql from db/seeds.sql for loading static data.
+seed  - Execute sql from db/seeds.sql for loading static data (NOTE: not supported with --trafficvault option).
 show_users  - Execute sql to show all of the user for the current environment.
 status  - Print the status of all migrations.
 upgrade  - Execute migrate, seed, and patches on the database for the current environment.
@@ -410,6 +426,7 @@ migrate  - Execute migrate (without seeds or patches) on the database for the cu
 
 func main() {
 	flag.StringVar(&Environment, "env", DefaultEnvironment, "The environment to use (defined in "+DBConfigPath+").")
+	flag.BoolVar(&TrafficVault, "trafficvault", false, "Run this for the Traffic Vault database")
 	flag.Parse()
 	if len(flag.Args()) != 1 || flag.Arg(0) == "" {
 		die(usage())
@@ -436,7 +453,6 @@ func main() {
 	commands[CmdDBVersion] = dbVersion
 	commands[CmdSeed] = seed
 	commands[CmdLoadSchema] = loadSchema
-	commands[CmdReverseSchema] = reverseSchema
 	commands[CmdPatch] = patch
 
 	userCmd := flag.Arg(0)

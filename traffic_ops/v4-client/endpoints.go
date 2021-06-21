@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +14,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-
-package client
-
-const apiBaseStr = "/api/"
 
 // apiVersions is the list of minor API versions in this client's major version.
 // This should be all minor versions from 0 up to the latest minor in Traffic Control

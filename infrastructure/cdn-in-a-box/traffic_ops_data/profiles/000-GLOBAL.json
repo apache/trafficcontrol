@@ -10,24 +10,19 @@
       "configFile": "global"
     },
     {
-      "value": "/images/tc_logo.png",
-      "configFile": "global",
-      "name": "tm.logourl"
-    },
-    {
       "configFile": "global",
       "name": "tm.instance_name",
       "value": "CDN-In-A-Box"
     },
     {
-      "value": "https://trafficops.infra.ciab.test/GeoLite2-City.mmdb.gz",
+      "value": "https://static.infra.ciab.test/GeoLite2-City.mmdb.gz",
       "configFile": "CRConfig.json",
       "name": "geolocation.polling.url"
     },
     {
       "name": "geolocation6.polling.url",
       "configFile": "CRConfig.json",
-      "value": "https://trafficops.infra.ciab.test/GeoLite2-City.mmdb.gz"
+      "value": "https://static.infra.ciab.test/GeoLite2-City.mmdb.gz"
     },
     {
       "value": "Traffic Ops",

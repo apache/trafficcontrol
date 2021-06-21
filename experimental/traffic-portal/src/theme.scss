@@ -11,10 +11,90 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+@import '~@angular/material/theming';
 
-$theme_main: #2A3F54;
-$theme_secondary: #337AB7;
+@mixin theme-color($config-or-theme) {
+	// Extract the color configuration in case a theme has been passed.
+	// This allows consumers to either pass a theme object or a color configuration.
+	$config: mat-get-color-config($config-or-theme);
+	// Extract the palettes you need from the theme definition.
+	$primary: map-get($config, primary);
+	$accent: map-get($config, accent);
+	$warn: map-get($config, warn);
+
+	.color-primary {
+		// Use mat-color to extract individual colors from a palette.
+		background-color: mat-color($config);
+		color: white;
+		border-color: mat-color($config, A400);
+	}
+
+	.color-primary-inverted {
+		background-color: transparent;
+		color: mat-color($primary);
+	}
+
+	.color-accent {
+		background-color: mat-color($accent);
+		color: white;
+		border-color: mat-color($accent, A400);
+	}
+
+	.color-accent-inverted {
+		background-color: transparent;
+		color: mat-color($accent);
+	}
+
+	.color-warn {
+		background-color: mat-color($warn);
+		color: white;
+		border-color: mat-color($warn, A400);
+	}
+
+	.color-warn-inverted {
+		background-color: white;
+		color: mat-color($warn);
+	}
+}
+
+@mixin theme-typography($config-or-theme) {
+	// Extract the typography configuration in case a theme has been passed.
+	$config: mat-get-typography-config($config-or-theme);
+
+	.color-primary,
+	.color-primary-inverted,
+	.color-accent,
+	.color-accent-inverted,
+	.color-warn,
+	.color-warn-inverted {
+		font: {
+			family: mat-font-family($config, body-1);
+			size: mat-font-size($config, body-1);
+			weight: mat-font-weight($config, body-1);
+		}
+	}
+}
+
+@mixin theme($theme) {
+	// Extracts the color and typography configurations from the theme.
+	$color: mat-get-color-config($theme);
+	$typography: mat-get-typography-config($theme);
+
+	// Do not generate styles if configurations for individual theming
+	// systems have been explicitly set to `null`.
+	@if $color != null {
+		@include theme-color($color);
+	}
+	@if $typography != null {
+		@include theme-typography($typography);
+	}
+}
+
+$theme_main: #1565C0;
+$theme_secondary: #C2185B;
 $theme_tertiary: #2E6DA4;
 $error: #E74C3C;
-$warning: #F0B37E;
+$warning: #FF9800;
 $success: #1ABB9C;

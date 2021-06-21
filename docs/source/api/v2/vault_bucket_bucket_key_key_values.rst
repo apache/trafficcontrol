@@ -20,6 +20,8 @@
 **********************************************
 Retrieves the `object <https://docs.riak.com/riak/kv/latest/learn/concepts/keys-and-objects/index.html#objects>`_ stored under a given `key <https://docs.riak.com/riak/kv/latest/learn/concepts/keys-and-objects/index.html#keys>`_ from a given `bucket <https://docs.riak.com/riak/kv/latest/learn/concepts/buckets/index.html>`_ in :ref:`tv-overview`.
 
+.. deprecated:: ATCv6
+
 ``GET``
 =======
 :Auth. Required: Yes
@@ -69,6 +71,11 @@ The response structure varies according to what is stored. Top-level keys will a
 	Transfer-Encoding: chunked
 
 	{
+		"alerts": [
+		{
+			"text": "This endpoint is deprecated, and will be removed in the future",
+			"level": "warning"
+		}],
 		"response": {
 			"cdn": "CDN-in-a-Box",
 			"certificate": {

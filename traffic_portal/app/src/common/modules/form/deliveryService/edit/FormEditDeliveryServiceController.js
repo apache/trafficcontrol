@@ -61,7 +61,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 			var dsRequest = {
 				changeType: 'delete',
 				status: status,
-				deliveryService: deliveryService
+				original: deliveryService
 			};
 
 			// if the user chooses to complete/fulfill the delete request immediately, a delivery service request will be made and marked as complete, 
@@ -114,7 +114,8 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 							deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
 								then(
 									function() {
-										messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + dsRequest.deliveryService.xmlId + ' delivery service' } ], true);
+										const xmlId = (dsRequest.requested) ? dsRequest.requested.xmlId : dsRequest.original.xmlId;
+										messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + xmlId + ' delivery service' } ], true);
 										locationUtils.navigateToPath('/delivery-service-requests');
 									}
 								);
@@ -140,7 +141,8 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 						then(
 							function() {
 								if (!autoFulfilled) {
-									messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + dsRequest.deliveryService.xmlId + ' delivery service' } ], true);
+									const xmlId = (dsRequest.requested) ? dsRequest.requested.xmlId : dsRequest.original.xmlId;
+									messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + xmlId + ' delivery service' } ], true);
 									locationUtils.navigateToPath('/delivery-service-requests');
 								}
 							}
@@ -149,8 +151,8 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 					if (autoFulfilled) {
 						// assign the ds request
 						promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.username));
-						// set the status to 'submitted'
-						promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'submitted'));
+						// set the status to 'complete'
+						promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'complete'));
 					}
 				}
 			);
@@ -224,7 +226,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 				var dsRequest = {
 					changeType: 'update',
 					status: status,
-					deliveryService: deliveryService
+					requested: deliveryService
 				};
 				// if the user chooses to complete/fulfill the update request immediately, a delivery service request will be made and marked as complete,
 				// then if that is successful, the DS will be updated
@@ -234,12 +236,6 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 							deliveryServiceService.updateDeliveryService(deliveryService).
 								then(
 									function() {
-										// upon successful update of ds, set the dsr to 'complete'
-										deliveryServiceRequestService.getDeliveryServiceRequests({ xmlId: deliveryService.xmlId, status: 'submitted' }).then(
-											function(response) {
-												deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response[0].id, 'complete');
-											}
-										);
 										$state.reload(); // reloads all the resolves for the view
 										messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] updated' } ], false);
 									}

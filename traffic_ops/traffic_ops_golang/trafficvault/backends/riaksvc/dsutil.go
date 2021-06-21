@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
 	"github.com/basho/riak-go-client"
@@ -79,7 +80,7 @@ func putDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, aut
 	}
 	err = withCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
 		obj := &riak.Object{
-			ContentType:     "application/json",
+			ContentType:     rfc.ApplicationJSON,
 			Charset:         "utf-8",
 			ContentEncoding: "utf-8",
 			Key:             makeDSSSLKeyKey(key.DeliveryService, key.Version.String()),
@@ -238,11 +239,7 @@ func getURISigningKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, x
 		return nil, false, errors.New("fetching riak objects: " + err.Error())
 	}
 	if len(ro) == 0 {
-		bts, err := json.Marshal(tc.URISignerKeyset{})
-		if err != nil {
-			return nil, false, errors.New("marshalling empty URISignerKeyset: " + err.Error())
-		}
-		return bts, false, nil
+		return []byte{}, false, nil
 	}
 	if ro[0].Value == nil {
 		return ro[0].Value, false, nil
@@ -328,6 +325,18 @@ func putURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc
 		return nil
 	})
 	return err
+}
+
+func deleteURLSigningKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, ds tc.DeliveryServiceName) error {
+	cluster, err := getPooledCluster(tx, authOpts, riakPort)
+	if err != nil {
+		return errors.New("getting pooled Riak cluster: " + err.Error())
+	}
+	key := getURLSigConfigFileName(ds)
+	if err := deleteObject(key, urlSigKeysBucket, cluster); err != nil {
+		return errors.New("deleting object: " + err.Error())
+	}
+	return nil
 }
 
 const sslKeysIndex = "sslkeys"

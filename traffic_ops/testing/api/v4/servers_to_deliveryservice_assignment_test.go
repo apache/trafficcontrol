@@ -16,12 +16,12 @@ package v4
 
 import (
 	"net/http"
-	"net/url"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestAssignments(t *testing.T) {
@@ -34,8 +34,8 @@ func TestAssignments(t *testing.T) {
 }
 
 func AssignTestDeliveryService(t *testing.T) {
-	if len(testData.Servers) < 1 {
-		t.Fatal("Need at least one test server to test delivery service assignment")
+	if len(testData.Servers) < 1 || len(testData.DeliveryServices) < 1 {
+		t.Fatal("Need at least one test server and one Delivery Service to test Delivery Service assignment")
 	}
 
 	server := testData.Servers[0]
@@ -43,12 +43,11 @@ func AssignTestDeliveryService(t *testing.T) {
 		t.Fatalf("First server had nil hostname: %+v", server)
 	}
 
-	params := url.Values{}
-	params.Add("hostName", *server.HostName)
-
-	rs, _, err := TOSession.GetServers(params, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Add("hostName", *server.HostName)
+	rs, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch server information: %v", err)
+		t.Fatalf("Failed to fetch server information: %v - alerts: %+v", err, rs.Alerts)
 	} else if len(rs.Response) == 0 {
 		t.Fatalf("Failed to fetch server information: No results returned!")
 	}
@@ -57,31 +56,35 @@ func AssignTestDeliveryService(t *testing.T) {
 		t.Fatalf("Server '%s' had nil ID", *server.HostName)
 	}
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLID(*testData.DeliveryServices[0].XMLID, nil)
+	if testData.DeliveryServices[0].XMLID == nil {
+		t.Fatal("Found Delivery Service in testing data with null or undefined XMLID")
+	}
+
+	opts.QueryParameters.Del("hostName")
+	opts.QueryParameters.Set("xmlId", *testData.DeliveryServices[0].XMLID)
+	rd, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch DS information: %v", err)
-	} else if len(rd) == 0 {
+		t.Fatalf("Failed to fetch DS information: %v - alerts: %+v", err, rd.Alerts)
+	} else if len(rd.Response) == 0 {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
-	firstDS := rd[0]
+	firstDS := rd.Response[0]
 
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}
-	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(*firstServer.ID, []int{*firstDS.ID}, false, nil)
+	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(*firstServer.ID, []int{*firstDS.ID}, false, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("Couldn't assign DS '%+v' to server '%+v': %v (alerts: %v)", firstDS, firstServer, err, alerts)
+		t.Errorf("Couldn't assign DS '%+v' to server '%+v': %v - alerts: %+v", firstDS, firstServer, err, alerts.Alerts)
 	}
-	t.Logf("alerts: %+v", alerts)
 
-	response, _, err := TOSession.GetServerIDDeliveryServices(*firstServer.ID, nil)
-	t.Logf("response: %+v", response)
+	response, _, err := TOSession.GetServerIDDeliveryServices(*firstServer.ID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v", firstServer, err)
+		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v - alerts: %+v", firstServer, err, response.Alerts)
 	}
 
 	var found bool
-	for _, ds := range response {
+	for _, ds := range response.Response {
 		if ds.ID != nil && *ds.ID == *firstDS.ID {
 			found = true
 			break
@@ -89,22 +92,22 @@ func AssignTestDeliveryService(t *testing.T) {
 	}
 
 	if !found {
-		t.Errorf(`Server/DS assignment not found after "successful" assignment!`)
+		t.Error(`Server/DS assignment not found after "successful" assignment!`)
 	}
 
 	currentTime := time.Now().UTC().Add(5 * time.Second)
 	time := currentTime.Format(time.RFC1123)
-	var header http.Header
-	header = make(map[string][]string)
-	header.Set(rfc.IfModifiedSince, time)
-	_, reqInf, _ := TOSession.GetServerIDDeliveryServices(*firstServer.ID, header)
+
+	opts.Header.Set(rfc.IfModifiedSince, time)
+	opts.QueryParameters.Del("xmlId")
+	_, reqInf, _ := TOSession.GetServerIDDeliveryServices(*firstServer.ID, opts)
 	if reqInf.StatusCode != http.StatusNotModified {
-		t.Errorf("Expected a status code of 304, got %v", reqInf.StatusCode)
+		t.Errorf("Expected a status code of 304, got %d", reqInf.StatusCode)
 	}
 }
 
 func AssignIncorrectTestDeliveryService(t *testing.T) {
-	var server *tc.ServerV40
+	var server *tc.ServerV4
 	for _, s := range testData.Servers {
 		if s.CDNName != nil && *s.CDNName == "cdn2" {
 			server = &s
@@ -119,13 +122,13 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 	}
 	hostname := *server.HostName
 
-	params := url.Values{}
-	params.Add("hostName", hostname)
-	rs, _, err := TOSession.GetServers(params, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Add("hostName", hostname)
+	rs, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch server information: %v - %v", err, rs.Alerts)
+		t.Fatalf("Failed to fetch server information: %v - alerts: %+v", err, rs.Alerts)
 	} else if len(rs.Response) == 0 {
-		t.Fatalf("Failed to fetch server information: No results returned!")
+		t.Fatal("Failed to fetch server information: No results returned!")
 	}
 	server = &rs.Response[0]
 	if server.ID == nil {
@@ -139,30 +142,31 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 		t.Fatal("Delivery Service selected for testing had null or undefined XMLID")
 	}
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLID(*testData.DeliveryServices[0].XMLID, nil)
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", *testData.DeliveryServices[0].XMLID)
+	rd, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch DS information: %v", err)
-	} else if len(rd) == 0 {
+		t.Fatalf("Failed to fetch DS information: %v - alerts: %+v", err, rd.Alerts)
+	} else if len(rd.Response) == 0 {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
-	firstDS := rd[0]
+	firstDS := rd.Response[0]
 
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}
-	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{*firstDS.ID}, false, nil)
+	alerts, _, err := TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{*firstDS.ID}, false, client.RequestOptions{})
 	if err == nil {
-		t.Errorf("Expected bad assignment to fail, but it didn't! (alerts: %v)", alerts)
+		t.Errorf("Expected bad assignment to fail, but it didn't: alerts: %v", alerts.Alerts)
 	}
 
-	response, _, err := TOSession.GetServerIDDeliveryServices(*server.ID, nil)
-	t.Logf("response: %+v", response)
+	response, _, err := TOSession.GetServerIDDeliveryServices(*server.ID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v", *server, err)
+		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v - alerts: %+v", *server, err, response.Alerts)
 	}
 
 	var found bool
-	for _, ds := range response {
+	for _, ds := range response.Response {
 
 		if ds.ID != nil && *ds.ID == *firstDS.ID {
 			found = true
@@ -176,7 +180,7 @@ func AssignIncorrectTestDeliveryService(t *testing.T) {
 }
 
 func AssignTopologyBasedDeliveryService(t *testing.T) {
-	var server *tc.ServerV40
+	var server *tc.ServerV4
 	for _, s := range testData.Servers {
 		if s.CDNName != nil && *s.CDNName == "cdn1" && s.Type == string(tc.CacheTypeEdge) {
 			server = &s
@@ -184,14 +188,14 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 		}
 	}
 	if server == nil || server.HostName == nil {
-		t.Fatalf("Couldn't find an EDGE server in CDN 'cdn1'!")
+		t.Fatalf("Couldn't find an EDGE server in CDN 'cdn1' with a non-nil Host Name")
 	}
 
-	params := url.Values{}
-	params.Add("hostName", *server.HostName)
-	rs, _, err := TOSession.GetServers(params, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Add("hostName", *server.HostName)
+	rs, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch server information: %v", err)
+		t.Fatalf("Failed to fetch server information: %v - alerts: %+v", err, rs.Alerts)
 	} else if len(rs.Response) == 0 {
 		t.Fatalf("Failed to fetch server information: No results returned!")
 	}
@@ -200,18 +204,20 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatal("Server had nil ID")
 	}
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLID("ds-top", nil)
+	opts.QueryParameters.Del("hostName")
+	opts.QueryParameters.Set("xmlId", "ds-top")
+	rd, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch DS information: %v", err)
-	} else if len(rd) == 0 {
+		t.Fatalf("Failed to fetch DS information: %v - alerts: %+v", err, rd.Alerts)
+	} else if len(rd.Response) == 0 {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
-	firstDS := rd[0]
+	firstDS := rd.Response[0]
 
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}
-	alerts, reqInf, err := TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{*firstDS.ID}, false, nil)
+	alerts, reqInf, err := TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{*firstDS.ID}, false, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("Expected assignment to succeed, but it didn't! (alerts: %v)", alerts)
 	}
@@ -219,14 +225,13 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatalf("assigning Topology-based delivery service to server - expected: non-error status code, actual: %d", reqInf.StatusCode)
 	}
 
-	response, _, err := TOSession.GetServerIDDeliveryServices(*server.ID, nil)
-	t.Logf("response: %+v", response)
+	response, _, err := TOSession.GetServerIDDeliveryServices(*server.ID, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v", *server, err)
+		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v - alerts: %+v", *server, err, response.Alerts)
 	}
 
 	var found bool
-	for _, ds := range response {
+	for _, ds := range response.Response {
 
 		if ds.ID != nil && *ds.ID == *firstDS.ID {
 			found = true
@@ -235,16 +240,16 @@ func AssignTopologyBasedDeliveryService(t *testing.T) {
 	}
 
 	if !found {
-		t.Errorf(`Valid Server/DS assignment was not created!`)
+		t.Error(`Valid Server/DS assignment was not created!`)
 	}
 }
 
 func OriginAssignTopologyBasedDeliveryService(t *testing.T) {
-	params := url.Values{}
-	params.Add("hostName", "denver-mso-org-01")
-	rs, _, err := TOSession.GetServers(params, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Add("hostName", "denver-mso-org-01")
+	rs, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch server information: %v", err)
+		t.Fatalf("Failed to fetch server information: %v - alerts: %+v", err, rs.Alerts)
 	} else if len(rs.Response) == 0 {
 		t.Fatalf("Failed to fetch server information: No results returned!")
 	}
@@ -253,39 +258,42 @@ func OriginAssignTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatal("Server had nil ID")
 	}
 
-	rd, _, err := TOSession.GetDeliveryServiceByXMLID("ds-top-req-cap", nil)
+	opts.QueryParameters.Del("hostName")
+	opts.QueryParameters.Set("xmlId", "ds-top-req-cap")
+	rd, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch DS information: %v", err)
-	} else if len(rd) == 0 {
+		t.Fatalf("Failed to fetch DS information: %v - alerts: %+v", err, rd.Alerts)
+	} else if len(rd.Response) == 0 {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
-	firstDS := rd[0]
+	firstDS := rd.Response[0]
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}
 
 	// invalid assignment: ORG server cachegroup does not belong to the topology
-	alerts, reqInf, err := TOSession.AssignDeliveryServiceIDsToServerID(*origin.ID, []int{*firstDS.ID}, true, nil)
+	alerts, reqInf, err := TOSession.AssignDeliveryServiceIDsToServerID(*origin.ID, []int{*firstDS.ID}, true, client.RequestOptions{})
 	if err == nil {
-		t.Errorf("Expected assigning ORG server to topology-based delivery service where the ORG server does not belong to the topology to fail, but it didn't! (alerts: %v)", alerts)
+		t.Errorf("Expected assigning ORG server to topology-based delivery service where the ORG server does not belong to the topology to fail, but it didn't: alerts: %+v", alerts.Alerts)
 	}
 	if reqInf.StatusCode < http.StatusBadRequest || reqInf.StatusCode >= http.StatusInternalServerError {
 		t.Fatalf("assigning Topology-based delivery service to ORG server that does not belong to the topology - expected: 400-level status code, actual: %d", reqInf.StatusCode)
 	}
 
 	// valid assignment ORG server cachegroup belongs to the topology
-	rd, _, err = TOSession.GetDeliveryServiceByXMLID("ds-top", nil)
+	opts.QueryParameters.Set("xmlId", "ds-top")
+	rd, _, err = TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("Failed to fetch DS information: %v", err)
-	} else if len(rd) == 0 {
+		t.Fatalf("Failed to fetch DS information: %v - alerts: %+v", err, rd.Alerts)
+	} else if len(rd.Response) == 0 {
 		t.Fatalf("Failed to fetch DS information: No results returned!")
 	}
-	firstDS = rd[0]
+	firstDS = rd.Response[0]
 	if firstDS.ID == nil {
 		t.Fatal("Fetch DS information returned unknown ID")
 	}
 
-	alerts, reqInf, err = TOSession.AssignDeliveryServiceIDsToServerID(*origin.ID, []int{*firstDS.ID}, true, nil)
+	alerts, reqInf, err = TOSession.AssignDeliveryServiceIDsToServerID(*origin.ID, []int{*firstDS.ID}, true, opts)
 	if err != nil {
 		t.Errorf("Expected assigning ORG server to topology-based delivery service where the ORG server belongs to the topology to succeed, but it didn't! (alerts: %v, err: %v)", alerts, err)
 	}
@@ -293,12 +301,12 @@ func OriginAssignTopologyBasedDeliveryService(t *testing.T) {
 		t.Fatalf("assigning Topology-based delivery service to ORG server that belongs to the topology - expected: 200-level status code, actual: %d", reqInf.StatusCode)
 	}
 
-	response, _, err := TOSession.GetServerIDDeliveryServices(*origin.ID, nil)
+	response, _, err := TOSession.GetServerIDDeliveryServices(*origin.ID, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("Couldn't get Delivery Services assigned to Server '%+v': %v", *origin, err)
 	}
 	var found bool
-	for _, ds := range response {
+	for _, ds := range response.Response {
 
 		if ds.ID != nil && *ds.ID == *firstDS.ID {
 			found = true

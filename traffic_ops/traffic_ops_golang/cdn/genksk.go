@@ -91,7 +91,7 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 		multiplier = &mult
 	}
 
-	dnssecKeys, ok, err := inf.Vault.GetDNSSECKeys(string(cdnName), inf.Tx.Tx)
+	dnssecKeys, ok, err := inf.Vault.GetDNSSECKeys(string(cdnName), inf.Tx.Tx, r.Context())
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting CDN DNSSEC keys: "+err.Error()))
 		return
@@ -109,7 +109,7 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 	}
 	dnssecKeys[string(cdnName)] = newKey
 
-	if err := inf.Vault.PutDNSSECKeys(string(cdnName), dnssecKeys, inf.Tx.Tx); err != nil {
+	if err := inf.Vault.PutDNSSECKeys(string(cdnName), dnssecKeys, inf.Tx.Tx, r.Context()); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("putting CDN DNSSEC keys: "+err.Error()))
 		return
 	}

@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +15,8 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -25,21 +24,23 @@ import (
 )
 
 const (
-	// APIProfiles is the full path to the /profiles API endpoint.
-	APIProfiles = "/profiles"
-	// APIProfilesNameParameters is the full path to the
+	// apiProfiles is the full path to the /profiles API endpoint.
+	apiProfiles = "/profiles"
+	// apiProfilesNameParameters is the full path to the
 	// /profiles/name/{{name}}/parameters API endpoint.
-	APIProfilesNameParameters = APIProfiles + "/name/%s/parameters"
+	apiProfilesNameParameters = apiProfiles + "/name/%s/parameters"
 )
 
 // CreateProfile creates the passed Profile.
-func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateProfile(pl tc.Profile, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	if pl.CDNID == 0 && pl.CDNName != "" {
-		cdns, _, err := to.GetCDNByName(pl.CDNName, nil)
+		cdnOpts := NewRequestOptions()
+		cdnOpts.QueryParameters.Set("name", pl.CDNName)
+		cdns, _, err := to.GetCDNs(cdnOpts)
 		if err != nil {
-			return tc.Alerts{}, toclientlib.ReqInf{}, err
+			return tc.Alerts{}, toclientlib.ReqInf{}, fmt.Errorf("resolving Profile's CDN Name '%s' to an ID: %w", pl.CDNName, err)
 		}
-		if len(cdns) == 0 {
+		if len(cdns.Response) == 0 {
 			return tc.Alerts{
 					Alerts: []tc.Alert{
 						{
@@ -51,100 +52,66 @@ func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, toclientlib.ReqInf, 
 				toclientlib.ReqInf{},
 				fmt.Errorf("no CDN with name %s", pl.CDNName)
 		}
-		pl.CDNID = cdns[0].ID
+		pl.CDNID = cdns.Response[0].ID
 	}
 
 	var alerts tc.Alerts
-	reqInf, err := to.post(APIProfiles, pl, nil, &alerts)
+	reqInf, err := to.post(apiProfiles, opts, pl, &alerts)
 	return alerts, reqInf, err
 }
 
 // UpdateProfile replaces the Profile identified by ID with the one provided.
-func (to *Session) UpdateProfile(id int, pl tc.Profile, header http.Header) (tc.Alerts, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", APIProfiles, id)
+func (to *Session) UpdateProfile(id int, pl tc.Profile, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", apiProfiles, id)
 	var alerts tc.Alerts
-	reqInf, err := to.put(route, pl, header, &alerts)
+	reqInf, err := to.put(route, opts, pl, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetParametersByProfileName returns all of the Parameters that are assigned
 // to the Profile with the given Name.
-func (to *Session) GetParametersByProfileName(profileName string, header http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf(APIProfilesNameParameters, profileName)
+func (to *Session) GetParametersByProfileName(profileName string, opts RequestOptions) (tc.ParametersResponse, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf(apiProfilesNameParameters, profileName)
 	var data tc.ParametersResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
+	reqInf, err := to.get(route, opts, &data)
+	return data, reqInf, err
 }
 
 // GetProfiles returns all Profiles stored in Traffic Ops.
-func (to *Session) GetProfiles(header http.Header) ([]tc.Profile, toclientlib.ReqInf, error) {
+func (to *Session) GetProfiles(opts RequestOptions) (tc.ProfilesResponse, toclientlib.ReqInf, error) {
 	var data tc.ProfilesResponse
-	reqInf, err := to.get(APIProfiles, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetProfileByID retrieves the Profile with the given ID.
-func (to *Session) GetProfileByID(id int, header http.Header) ([]tc.Profile, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", APIProfiles, id)
-	var data tc.ProfilesResponse
-	reqInf, err := to.get(route, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetProfileByName retrieves the Profile with the given Name.
-func (to *Session) GetProfileByName(name string, header http.Header) ([]tc.Profile, toclientlib.ReqInf, error) {
-	URI := fmt.Sprintf("%s?name=%s", APIProfiles, url.QueryEscape(name))
-	var data tc.ProfilesResponse
-	reqInf, err := to.get(URI, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetProfilesByParameterID retrieves the Profiles to which the Parameter
-// identified by the ID 'param' is assigned.
-func (to *Session) GetProfilesByParameterID(param int, header http.Header) ([]tc.Profile, toclientlib.ReqInf, error) {
-	URI := fmt.Sprintf("%s?param=%d", APIProfiles, param)
-	var data tc.ProfilesResponse
-	reqInf, err := to.get(URI, header, &data)
-	return data.Response, reqInf, err
-}
-
-// GetProfilesByCDNID retrieves all Profiles that are within the scope of the
-// CDN identified by 'cdnID'.
-func (to *Session) GetProfilesByCDNID(cdnID int, header http.Header) ([]tc.Profile, toclientlib.ReqInf, error) {
-	URI := fmt.Sprintf("%s?cdn=%d", APIProfiles, cdnID)
-	var data tc.ProfilesResponse
-	reqInf, err := to.get(URI, header, &data)
-	return data.Response, reqInf, err
+	reqInf, err := to.get(apiProfiles, opts, &data)
+	return data, reqInf, err
 }
 
 // DeleteProfile deletes the Profile with the given ID.
-func (to *Session) DeleteProfile(id int) (tc.Alerts, toclientlib.ReqInf, error) {
-	URI := fmt.Sprintf("%s/%d", APIProfiles, id)
+func (to *Session) DeleteProfile(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	URI := fmt.Sprintf("%s/%d", apiProfiles, id)
 	var alerts tc.Alerts
-	reqInf, err := to.del(URI, nil, &alerts)
+	reqInf, err := to.del(URI, opts, &alerts)
 	return alerts, reqInf, err
 }
 
 // ExportProfile Returns an exported Profile.
-func (to *Session) ExportProfile(id int) (*tc.ProfileExportResponse, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/%d/export", APIProfiles, id)
+func (to *Session) ExportProfile(id int, opts RequestOptions) (tc.ProfileExportResponse, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/%d/export", apiProfiles, id)
 	var data tc.ProfileExportResponse
-	reqInf, err := to.get(route, nil, &data)
-	return &data, reqInf, err
+	reqInf, err := to.get(route, opts, &data)
+	return data, reqInf, err
 }
 
 // ImportProfile imports an exported Profile.
-func (to *Session) ImportProfile(importRequest *tc.ProfileImportRequest) (*tc.ProfileImportResponse, toclientlib.ReqInf, error) {
-	route := fmt.Sprintf("%s/import", APIProfiles)
+func (to *Session) ImportProfile(importRequest tc.ProfileImportRequest, opts RequestOptions) (tc.ProfileImportResponse, toclientlib.ReqInf, error) {
+	route := fmt.Sprintf("%s/import", apiProfiles)
 	var data tc.ProfileImportResponse
-	reqInf, err := to.post(route, importRequest, nil, &data)
-	return &data, reqInf, err
+	reqInf, err := to.post(route, opts, importRequest, &data)
+	return data, reqInf, err
 }
 
 // CopyProfile creates a new profile from an existing profile.
-func (to *Session) CopyProfile(p tc.ProfileCopy) (tc.ProfileCopyResponse, toclientlib.ReqInf, error) {
-	path := fmt.Sprintf("%s/name/%s/copy/%s", APIProfiles, p.Name, p.ExistingName)
-	resp := tc.ProfileCopyResponse{}
-	reqInf, err := to.post(path, p, nil, &resp)
+func (to *Session) CopyProfile(p tc.ProfileCopy, opts RequestOptions) (tc.ProfileCopyResponse, toclientlib.ReqInf, error) {
+	path := fmt.Sprintf("%s/name/%s/copy/%s", apiProfiles, url.PathEscape(p.Name), url.PathEscape(p.ExistingName))
+	var resp tc.ProfileCopyResponse
+	reqInf, err := to.post(path, opts, p, &resp)
 	return resp, reqInf, err
 }

@@ -21,11 +21,11 @@ package v4
 
 import (
 	"net/http"
-	"net/url"
 	"strconv"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 type topologiesQueueUpdateTestCase struct {
@@ -46,36 +46,39 @@ func TestTopologiesQueueUpdate(t *testing.T) {
 
 func getCDNIDAndDSID(t *testing.T) (int64, int) {
 	xmlID := "ds-top"
-	params := url.Values{}
-	params.Set("xmlId", xmlID)
-	dses, _, err := TOSession.GetDeliveryServices(nil, params)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", xmlID)
+	dses, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
-		t.Fatalf("unable to get deliveryservice %s: %s", xmlID, err)
+		t.Fatalf("unable to get Delivery Service '%s': %v - alerts: %+v", xmlID, err, dses.Alerts)
 	}
-	if len(dses) < 1 {
-		t.Fatalf("deliveryservice with xmlId %s not found!", xmlID)
+	if len(dses.Response) < 1 {
+		t.Fatalf("deliveryservice with xmlId '%s' not found!", xmlID)
 	}
-	ds := dses[0]
+	ds := dses.Response[0]
+	if ds.CDNID == nil || ds.ID == nil {
+		t.Fatalf("Traffic Ops returned a representation of a Delivery Service that had null or undefined CDN ID and/or ID")
+	}
 	return int64(*ds.CDNID), *ds.ID
 }
 
-func InvalidCDNIDIsRejected(t *testing.T, topologyName tc.TopologyName) {
+func InvalidCDNIDIsRejected(t *testing.T, topologyName string) {
 	testCase := topologiesQueueUpdateTestCase{
 		Description:                  "invalid CDN ID",
 		TopologiesQueueUpdateRequest: tc.TopologiesQueueUpdateRequest{Action: "queue", CDNID: -1},
 	}
-	_, reqInf, _ := TOSession.TopologiesQueueUpdate(topologyName, testCase.TopologiesQueueUpdateRequest)
+	_, reqInf, _ := TOSession.TopologiesQueueUpdate(topologyName, testCase.TopologiesQueueUpdateRequest, client.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Fatalf("expected status code %d for request with %s, got status code %d", http.StatusBadRequest, testCase.Description, reqInf.StatusCode)
 	}
 }
 
-func InvalidActionIsRejected(t *testing.T, topologyName tc.TopologyName, cdnID int64) {
+func InvalidActionIsRejected(t *testing.T, topologyName string, cdnID int64) {
 	testCase := topologiesQueueUpdateTestCase{
 		Description:                  "invalid update action",
 		TopologiesQueueUpdateRequest: tc.TopologiesQueueUpdateRequest{Action: "requeue", CDNID: cdnID},
 	}
-	_, reqInf, _ := TOSession.TopologiesQueueUpdate(topologyName, testCase.TopologiesQueueUpdateRequest)
+	_, reqInf, _ := TOSession.TopologiesQueueUpdate(topologyName, testCase.TopologiesQueueUpdateRequest, client.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Fatalf("expected status code %d for request with %s, got status code %d", http.StatusBadRequest, testCase.Description, reqInf.StatusCode)
 	}
@@ -87,21 +90,21 @@ func NonexistentTopologyIsRejected(t *testing.T, cdnID int64) {
 		Description:                  "nonexistent topology",
 		TopologiesQueueUpdateRequest: tc.TopologiesQueueUpdateRequest{Action: "queue", CDNID: cdnID},
 	}
-	_, reqInf, _ := TOSession.TopologiesQueueUpdate(topologyName, testCase.TopologiesQueueUpdateRequest)
+	_, reqInf, _ := TOSession.TopologiesQueueUpdate(topologyName, testCase.TopologiesQueueUpdateRequest, client.RequestOptions{})
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Fatalf("expected status code %d for request with %s, got status code %d", http.StatusBadRequest, testCase.Description, reqInf.StatusCode)
 	}
 }
 
-func UpdatesAreQueued(t *testing.T, topologyName tc.TopologyName, cdnID int64, dsID int) {
+func UpdatesAreQueued(t *testing.T, topologyName string, cdnID int64, dsID int) {
 	const action = "queue"
 	testCase := topologiesQueueUpdateTestCase{
 		Description:                  "invalid update action",
 		TopologiesQueueUpdateRequest: tc.TopologiesQueueUpdateRequest{Action: action, CDNID: cdnID},
 	}
-	resp, _, err := TOSession.TopologiesQueueUpdate(topologyName, testCase.TopologiesQueueUpdateRequest)
+	resp, _, err := TOSession.TopologiesQueueUpdate(topologyName, testCase.TopologiesQueueUpdateRequest, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("received error queueing server updates on topology %s: %s", topologyName, err)
+		t.Fatalf("received error queueing server updates on Topology '%s': %v - alerts: %+v", topologyName, err, resp.Alerts)
 	}
 	if resp.Action != action {
 		t.Fatalf("expected action %s, received action %s", action, resp.Action)
@@ -109,18 +112,23 @@ func UpdatesAreQueued(t *testing.T, topologyName tc.TopologyName, cdnID int64, d
 	if resp.CDNID != cdnID {
 		t.Fatalf("expected CDN ID %d, received CDN ID %d", cdnID, resp.CDNID)
 	}
-	if topologyName != resp.Topology {
+	if topologyName != string(resp.Topology) {
 		t.Fatalf("expected topology %s, received topology %s", topologyName, resp.Topology)
 	}
-	params := url.Values{}
+
+	opts := client.NewRequestOptions()
 	dsIDString := strconv.Itoa(dsID)
-	params.Set("dsId", dsIDString)
-	serversResponse, _, err := TOSession.GetServers(params, nil)
+	opts.QueryParameters.Set("dsId", dsIDString)
+	serversResponse, _, err := TOSession.GetServers(opts)
 	if err != nil {
-		t.Fatalf("getting servers for delivery service with id %s: %s", dsIDString, err)
+		t.Fatalf("getting servers for Delivery Service with id %d: %v - alerts: %+v", dsID, err, serversResponse.Alerts)
 	}
 	servers := serversResponse.Response
 	for _, server := range servers {
+		if server.CDNID == nil || server.HostName == nil || server.UpdPending == nil {
+			t.Error("Traffic Ops returned a representation of a server with null or undefined CDN ID and/or HostName and/or Update Pending flag")
+			continue
+		}
 		if *server.CDNID != int(cdnID) {
 			continue
 		}

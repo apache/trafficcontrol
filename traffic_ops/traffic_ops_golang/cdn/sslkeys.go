@@ -37,7 +37,7 @@ func GetSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting CDN SSL keys from Traffic Vault: Traffic Vault is not configured"))
 		return
 	}
-	keys, err := inf.Vault.GetCDNSSLKeys(inf.Params["name"], inf.Tx.Tx)
+	keys, err := inf.Vault.GetCDNSSLKeys(inf.Params["name"], inf.Tx.Tx, r.Context())
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn ssl keys from Traffic Vault: "+err.Error()))
 		return

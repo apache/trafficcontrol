@@ -48,7 +48,7 @@ type ASNQueryParams struct {
 
 	// Autonomous System Numbers per APNIC for identifying a service provider
 	//
-	asn string `json:"asn"`
+	Asn string `json:"asn"`
 
 	// Related cachegroup name
 	//

@@ -14,15 +14,11 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 
-import { Observable, of } from "rxjs";
-import { merge } from "rxjs/index";
-import { map, mergeAll, reduce } from "rxjs/operators";
-
 import {
-	CDN,
 	DataPoint,
 	DataSet,
 	DataSetWithSummary,
+	defaultDeliveryService,
 	DeliveryService,
 	DSCapacity,
 	DSHealth,
@@ -161,16 +157,16 @@ export class DeliveryServiceService extends APIService {
 		this.deliveryServiceTypes = new Array<Type>();
 	}
 
-	public getDeliveryServices(id: string | number): Observable<DeliveryService>;
-	public getDeliveryServices(): Observable<Array<DeliveryService>>;
+	public async getDeliveryServices(id: string | number): Promise<DeliveryService>;
+	public async getDeliveryServices(): Promise<Array<DeliveryService>>;
 	/**
 	 * Gets a list of all visible Delivery Services
 	 *
 	 * @param id A unique identifier for a Delivery Service - either a numeric id or an "xml_id"
 	 * @throws TypeError if ``id`` is not a proper type
-	 * @returns An observable that will emit an array of `DeliveryService` objects.
+	 * @returns An array of `DeliveryService` objects.
 	 */
-	public getDeliveryServices(id?: string | number): Observable<DeliveryService[] | DeliveryService> {
+	public async getDeliveryServices(id?: string | number): Promise<DeliveryService[] | DeliveryService> {
 		const path = "deliveryservices";
 		if (id) {
 			let params;
@@ -183,34 +179,44 @@ export class DeliveryServiceService extends APIService {
 				case "number":
 					params = {id: String(id)};
 			}
-			return this.get<[DeliveryService]>(path, undefined, params).pipe(map(
+			return this.get<[DeliveryService]>(path, undefined, params).toPromise().then(
 				r => {
 					const ds = r[0];
 					ds.lastUpdated = new Date((ds.lastUpdated as unknown as string).replace("+00", "Z"));
 					return ds;
 				}
-			));
+			).catch(
+				e => {
+					console.error("Error getting Delivery Services:", e);
+					return {...defaultDeliveryService};
+				}
+			);
 		}
-		return this.get<Array<DeliveryService>>(path).pipe(map(r => r.map(
+		return this.get<Array<DeliveryService>>(path).toPromise().then(r => r.map(
 			ds => {
 				ds.lastUpdated = new Date((ds.lastUpdated as unknown as string).replace("+00", "Z"));
 				return ds;
 			}
-		)));
+		)).catch(
+			e => {
+				console.error("Error getting Delivery Services:", e);
+				return [];
+			}
+		);
 	}
 
 	/**
 	 * Creates a new Delivery Service
 	 *
 	 * @param ds The new Delivery Service object
-	 * @returns An Observable that will emit a boolean value indicating the success of the operation
+	 * @returns A boolean value indicating the success of the operation
 	 */
-	public createDeliveryService(ds: DeliveryService): Observable<boolean> {
+	public async createDeliveryService(ds: DeliveryService): Promise<boolean> {
 		const path = "deliveryservices";
-		return this.post<DeliveryService>(path, ds).pipe(map(
+		return this.post<DeliveryService>(path, ds).toPromise().then(
 			() => true,
 			() => false
-		));
+		);
 	}
 
 	/**
@@ -218,10 +224,10 @@ export class DeliveryServiceService extends APIService {
 	 * integral value.
 	 *
 	 * @param d Either a {@link DeliveryService} or an integral, unique identifier of a Delivery Service
-	 * @returns An Observable that emits an object that hopefully has the right keys to represent capacity.
+	 * @returns An object that hopefully has the right keys to represent capacity.
 	 * @throws If `d` is a {@link DeliveryService} that has no (valid) id
 	 */
-	public getDSCapacity(d: number | DeliveryService): Observable<DSCapacity> {
+	public async getDSCapacity(d: number | DeliveryService): Promise<DSCapacity> {
 		let id: number;
 		if (typeof d === "number") {
 			id = d;
@@ -234,7 +240,13 @@ export class DeliveryServiceService extends APIService {
 		}
 
 		const path = `deliveryservices/${id}/capacity`;
-		return this.get<DSCapacity>(path).pipe();
+		return this.get<DSCapacity>(path).toPromise().catch(
+			() => ({
+				availablePercent: 0,
+				maintenancePercent: 0,
+				utilizedPercent: 0
+			})
+		);
 	}
 
 	/**
@@ -242,15 +254,20 @@ export class DeliveryServiceService extends APIService {
 	 * integral value.
 	 *
 	 * @param d The integral, unique identifier of a Delivery Service
-	 * @returns An Observable that emits a response from the health endpoint
+	 * @returns A response from the health endpoint
 	 */
-	public getDSHealth(d: number): Observable<DSHealth> {
+	public async getDSHealth(d: number): Promise<DSHealth> {
 		const path = `deliveryservices/${d}/health`;
-		return this.get<DSHealth>(path).pipe();
+		return this.get<DSHealth>(path).toPromise().catch(
+			() => ({
+				totalOffline: 0,
+				totalOnline: 0
+			})
+		);
 	}
 
-	public getDSKBPS(d: string, start: Date, end: Date, interval: string, useMids: boolean, dataOnly: true): Observable<Array<DataPoint>>;
-	public getDSKBPS(d: string, start: Date, end: Date, interval: string, useMids: boolean, dataOnly?: false): Observable<DataResponse>;
+	public async getDSKBPS(d: string, s: Date, e: Date, i: string, u: boolean, dataOnly: true): Promise<Array<DataPoint>>;
+	public async getDSKBPS(d: string, start: Date, end: Date, interval: string, useMids: boolean, dataOnly?: false): Promise<DataResponse>;
 	/**
 	 * Retrieves Delivery Service throughput statistics for a given time period, averaged over a given
 	 * interval.
@@ -261,16 +278,16 @@ export class DeliveryServiceService extends APIService {
 	 * @param interval A unit-suffixed interval over which data will be "binned"
 	 * @param useMids Collect data regarding Mid-tier cache servers rather than Edge-tier cache servers
 	 * @param dataOnly Only returns the data series, not any supplementing meta info found in the API response
-	 * @returns An Observable that will emit an Array of datapoint Arrays (length 2 containing a date string and data value)
+	 * @returns An Array of datapoint Arrays (length 2 containing a date string and data value)
 	 */
-	public getDSKBPS(
+	public async getDSKBPS(
 		d: string,
 		start: Date,
 		end: Date,
 		interval: string,
 		useMids: boolean,
 		dataOnly?: boolean
-	): Observable<Array<DataPoint> | DataResponse> {
+	): Promise<Array<DataPoint> | DataResponse> {
 		const path = "deliveryservice_stats";
 		const params = {
 			deliveryServiceName: d,
@@ -280,7 +297,7 @@ export class DeliveryServiceService extends APIService {
 			serverType: useMids ? "mid" : "edge",
 			startDate: start.toISOString()
 		};
-		return this.get<object>(path, undefined, params).pipe(map(
+		return this.get<object>(path, undefined, params).toPromise().then(
 			r => {
 				try {
 					if (!isDataResponse(r)) {
@@ -302,7 +319,17 @@ export class DeliveryServiceService extends APIService {
 				}
 				return r;
 			}
-		));
+		).catch(
+			e => {
+				console.error("Failed to get Delivery Service KBPS data:", e);
+				return dataOnly ? [] : {
+					series: {
+						name: "",
+						values: []
+					}
+				};
+			}
+		);
 	}
 
 	/**
@@ -313,15 +340,15 @@ export class DeliveryServiceService extends APIService {
 	 * @param end The desired end date/time of the data range (must not have nonzero milliseconds!)
 	 * @param interval A string that describes the interval across which to 'bucket' data e.g. '60s'
 	 * @param useMids If given (and true) will get stats for the Mid-tier instead of the Edge-tier (which is the default behavior).
-	 * @returns An Observable that will emit the requested DataResponse.
+	 * @returns The requested DataResponse.
 	 */
-	public getDSTPS(
+	public async getDSTPS(
 		d: string,
 		start: Date,
 		end: Date,
 		interval: string,
 		useMids?: boolean
-	): Observable<DataResponse> {
+	): Promise<DataResponse> {
 		const path = "deliveryservice_stats";
 		const params = {
 			deliveryServiceName: d,
@@ -331,7 +358,17 @@ export class DeliveryServiceService extends APIService {
 			serverType: useMids ? "mid" : "edge",
 			startDate: start.toISOString()
 		};
-		return this.get<DataResponse>(path, undefined, params).pipe();
+		return this.get<DataResponse>(path, undefined, params).toPromise().catch(
+			e => {
+				console.error("Failed to get Delivery Service TPS data:", e);
+				return {
+					series: {
+						name: "",
+						values: []
+					}
+				};
+			}
+		);
 	}
 
 	/**
@@ -342,15 +379,15 @@ export class DeliveryServiceService extends APIService {
 	 * @param end The desired end date/time of the data range (must not have nonzero milliseconds!)
 	 * @param interval A string that describes the interval across which to 'bucket' data e.g. '60s'
 	 * @param useMids If given (and true) will get stats for the Mid-tier instead of the Edge-tier (which is the default behavior)
-	 * @returns An Observable that will emit the requested TPSData.
+	 * @returns The requested TPSData.
 	 */
-	public getAllDSTPSData(
+	public async getAllDSTPSData(
 		d: string,
 		start: Date,
 		end: Date,
 		interval: string,
 		useMids?: boolean
-	): Observable<TPSData> {
+	): Promise<TPSData> {
 		const path = "deliveryservice_stats";
 		const params: Record<string, string> = {
 			deliveryServiceName: d,
@@ -368,12 +405,10 @@ export class DeliveryServiceService extends APIService {
 		];
 
 		const observables = metricTypes.map(
-			x => this.get<object>(path, undefined, {metricType: x, ...params}).pipe(map(constructDataSetFromResponse))
+			async x => this.get<object>(path, undefined, {metricType: x, ...params}).toPromise().then(constructDataSetFromResponse)
 		);
 
-		// TODO: Figure out why this double-merge is necessary
-		const tasks = merge(observables).pipe(mergeAll());
-		return tasks.pipe(reduce(
+		return Promise.all(observables).then(data => data.reduce(
 			(output: TPSData, result: DataSetWithSummary): TPSData => {
 				switch (result.dataSet.label) {
 					case "tps_total":
@@ -415,58 +450,38 @@ export class DeliveryServiceService extends APIService {
 	 * (should) never change, and therefore can be cached. This method makes an HTTP request iff the values are not already
 	 * cached.
 	 *
-	 * @returns An Observable that will emit an array of all of the Type objects in Traffic Ops that refer specifically to Delivery Service
+	 * @returns An array of all of the Type objects in Traffic Ops that refer specifically to Delivery Service
 	 * 	types.
 	 */
-	public getDSTypes(): Observable<Array<Type>> {
-		if (this.deliveryServiceTypes) {
-			return of(this.deliveryServiceTypes);
+	public async getDSTypes(): Promise<Array<Type>> {
+		if (this.deliveryServiceTypes.length > 0) {
+			return this.deliveryServiceTypes;
 		}
 		const path = "types";
-		return this.get<Array<Type>>(path, undefined, {useInTable: "deliveryservice"}).pipe(map(
+		return this.get<Array<Type>>(path, undefined, {useInTable: "deliveryservice"}).toPromise().catch(
+			e => {
+				console.error("Failed to get Delivery Service Types:", e);
+				return [];
+			}
+		).then(
 			r => {
 				this.deliveryServiceTypes = r;
 				return r;
 			}
-		));
-	}
-
-	/**
-	 * Gets one or all CDNs from Traffic Ops
-	 *
-	 * @param id The integral, unique identifier of a single CDN to be returned
-	 * @returns An Observable that will emit either a Map of CDN names to full CDN objects, or a single CDN, depending on whether `id` was
-	 * 	passed.
-	 */
-	public getCDNs(id?: number): Observable<Map<string, CDN> | CDN> {
-		const path = "cdns";
-		if (id) {
-			return this.get<[CDN]>(path, undefined, {id: String(id)}).pipe(map(
-				r => r[0]
-			));
-		}
-		return this.get<Array<CDN>>(path).pipe(map(
-			r => {
-				const ret = new Map<string, CDN>();
-				for (const c of r) {
-					ret.set(c.name, c);
-				}
-				return ret;
-			}
-		));
+		);
 	}
 
 	/**
 	 * Creates a new content invalidation job.
 	 *
 	 * @param job The content invalidation job to be created.
-	 * @returns An Observable that emits once: whether or not creation succeeded.
+	 * @returns whether or not creation succeeded.
 	 */
-	public createInvalidationJob(job: InvalidationJob): Observable<boolean> {
+	public async createInvalidationJob(job: InvalidationJob): Promise<boolean> {
 		const path = "user/current/jobs";
-		return this.post<InvalidationJob>(path, job).pipe(map(
+		return this.post<InvalidationJob>(path, job).toPromise().then(
 			() => true,
 			() => false
-		));
+		);
 	}
 }

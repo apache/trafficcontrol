@@ -45,7 +45,8 @@ var FormNewDeliveryServiceController = function(deliveryService, origin, topolog
 						then(
 							function() {
 								if (!autoFulfilled) {
-									messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + dsRequest.deliveryService.xmlId + ' delivery service' } ], true);
+									const xmlId = (dsRequest.requested) ? dsRequest.requested.xmlId : dsRequest.original.xmlId;
+									messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + xmlId + ' delivery service' } ], true);
 									locationUtils.navigateToPath('/delivery-service-requests');
 								}
 							}
@@ -97,7 +98,7 @@ var FormNewDeliveryServiceController = function(deliveryService, origin, topolog
 				var dsRequest = {
 					changeType: 'create',
 					status: status,
-					deliveryService: deliveryService
+					requested: deliveryService
 				};
 				// if the user chooses to complete/fulfill the create request immediately, the ds will be created and behind the
 				// scenes a delivery service request will be created and marked as complete

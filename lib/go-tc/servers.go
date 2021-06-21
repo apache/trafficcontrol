@@ -185,8 +185,8 @@ type LegacyInterfaceDetails struct {
 }
 
 // ToInterfaces converts a LegacyInterfaceDetails to a slice of
-// ServerInterfaceInfo structures. No interfaces will be marked for monitoring,
-// and it will generate service addresses according to the passed indicators
+// ServerInterfaceInfo structures. Only one interface is expected and will be marked for monitoring.
+// It will generate service addresses according to the passed indicators
 // for each address family.
 func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService bool) ([]ServerInterfaceInfo, error) {
 	var iface ServerInterfaceInfo
@@ -200,6 +200,10 @@ func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService boo
 		return nil, errors.New("interfaceName is null")
 	}
 	iface.Name = *lid.InterfaceName
+
+	// default to true since there should only be one interface from legacy API versions
+	// if Monitor is false on all interfaces, then TM will see the server as unhealthy
+	iface.Monitor = true
 
 	var ips []ServerIPAddress
 	if lid.IPAddress != nil && *lid.IPAddress != "" {
@@ -267,6 +271,10 @@ func (lid *LegacyInterfaceDetails) ToInterfacesV4(ipv4IsService, ipv6IsService b
 		return nil, errors.New("interfaceName is null")
 	}
 	iface.Name = *lid.InterfaceName
+
+	// default to true since there should only be one interface from legacy API versions
+	// if Monitor is false on all interfaces, then TM will see the server as unhealthy
+	iface.Monitor = true
 
 	var ips []ServerIPAddress
 	if lid.IPAddress != nil && *lid.IPAddress != "" {
@@ -968,12 +976,16 @@ func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
 	return upgraded, nil
 }
 
-// ServerV40 is the representation of a Server in version 3.1 of the Traffic Ops API
+// ServerV40 is the representation of a Server in version 4.0 of the Traffic Ops API.
 type ServerV40 struct {
 	CommonServerProperties
 	Interfaces        []ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
 	StatusLastUpdated *time.Time               `json:"statusLastUpdated" db:"status_last_updated"`
 }
+
+// ServerV4 is the representation of a Server in the latest minor version of
+// version 4 of the Traffic Ops API.
+type ServerV4 = ServerV40
 
 // ServerV30 is the representation of a Server in version 3 of the Traffic Ops API.
 type ServerV30 struct {
@@ -1101,6 +1113,19 @@ type ServerUpdateStatus struct {
 	ParentPending      bool   `json:"parent_pending"`
 	ParentRevalPending bool   `json:"parent_reval_pending"`
 }
+
+// ServerUpdateStatusResponseV40 is the type of a response from the Traffic
+// Ops API to a request to its /servers/{{host name}}/update_status endpoint
+// in API version 4.0.
+type ServerUpdateStatusResponseV40 struct {
+	Response []ServerUpdateStatus `json:"response"`
+	Alerts
+}
+
+// ServerUpdateStatusResponseV4 is the type of a response from the Traffic
+// Ops API to a request to its /servers/{{host name}}/update_status endpoint
+// in the latest minor version of API version 4.
+type ServerUpdateStatusResponseV4 = ServerUpdateStatusResponseV40
 
 type ServerPutStatus struct {
 	Status        util.JSONNameOrIDStr `json:"status"`

@@ -30,20 +30,20 @@ while ! to-ping; do
     sleep 3
 done
 
+xmlID="$(<<<"$DS_HOSTS" sed 's/ .*//g')" # Only get the first xmlID
 while true; do
     sleep 3
-    exampleURLs=($(to-get /api/${TO_API_VERSION}/deliveryservices | jq -r '.response[].exampleURLs[]' || true))
-    if ! exampeURLs=($(to-get "/api/${TO_API_VERSION}/deliveryservices" | jq -r '.response[].exampleURLs[]')) \
-            || [[ "${#exampleURLs[@]}" -eq 0 ]]; then
-        echo waiting for delivery service example URLs
+    if ! exampleURLs=($(to-get "/api/${TO_API_VERSION}/deliveryservices?xmlId=${xmlID}" | jq -r '.response[].exampleURLs[]')) ||
+      [[ "${#exampleURLs[@]}" -eq 0 ]]; then
+        echo waiting for delivery service ${xmlID} example URLs
         continue
     fi
     echo "example URLs: '${exampleURLs[*]}'"
 
     success="true"
     for u in "${exampleURLs[@]}"; do
-        if ! status=$(curl -Lkvs --connect-timeout 2 -m5 -o /dev/null -w "%{http_code}" "$u") \
-                || [[ "$status" -ne 200 ]]; then
+        if ! status=$(curl -Lkvs --connect-timeout 2 -m5 -o /dev/null -w "%{http_code}" "$u") ||
+          [[ "$status" -ne 200 ]]; then
             echo "failed to curl delivery service example URL '$u' got status code '$status'"
             success="false"
             break
@@ -52,6 +52,26 @@ while true; do
     done
     if [[ "$success" == "true" ]]; then
         echo "successfully curled all delivery service example URLs '${exampleURLs[*]}'"
+        break
+    fi
+done
+xmlID="$(<<<"$DS_HOSTS" sed -E 's/.* (\w+) .*/\1/g')" # Only get the second xmlID
+while true; do
+  sleep 3
+  if ! exampleURLs=($(to-get "/api/${TO_API_VERSION}/deliveryservices?xmlId=${xmlID}" | jq -r '.response[].exampleURLs[]')) ||
+    [[ "${#exampleURLs[@]}" -eq 0 ]]; then
+      echo waiting for delivery service ${xmlID} example URLs
+      continue
+  fi
+  echo "example URLs: '${exampleURLs[*]}'"
+  dsDomain="${exampleURLs[0]/*\/}"
+  if ! digResponse="$(dig +short "@${TR_FQDN}" -t CNAME "$dsDomain")" ||
+    [[ "$digResponse" != "$FEDERATION_CNAME" ]]; then
+    echo "Failed to query Delivery Service ${dsDomain} for Federation CNAME ${FEDERATION_CNAME}"
+    success=false
+  fi
+    if [[ "$success" == true ]]; then
+        echo "successfully queried Delivery Service ${dsDomain} for Federation CNAME '${FEDERATION_CNAME}'"
         break
     fi
 done

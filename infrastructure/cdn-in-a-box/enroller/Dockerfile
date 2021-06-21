@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM debian:buster AS enroller-builder
+FROM debian:buster AS enroller-dependencies
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -32,6 +32,9 @@ RUN go_version=$(cat /GO_VERSION) && \
     rm go.tar.gz
 ENV GOPATH=/go
 
+FROM enroller-dependencies AS enroller-builder
+ARG ENROLLER_DEBUG_BUILD=false
+
 # enroller source and dependencies
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
 COPY ./go.mod ./go.sum /go/src/github.com/apache/trafficcontrol/
@@ -41,9 +44,25 @@ COPY ./traffic_ops/v4-client/ /go/src/github.com/apache/trafficcontrol/traffic_o
 COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
 
 WORKDIR /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller
-RUN go clean && go mod vendor -v && go build
+RUN set -o errexit -o nounset; \
+    go clean; \
+    go mod vendor -v; \
+    gcflags= ldflags=; \
+    tags='usergo netgo'; \
+    if [ "$ENROLLER_DEBUG_BUILD" = true ]; then \
+        apt-get install -y --no-install-recommends gcc libstdc++-8-dev; \
+        echo 'Building Enroller without optimization or inlining'; \
+        gcflags='all=-N -l'; \
+    else \
+        echo 'Optimizing Enroller build'; \
+        ldflags='-s -w'; \
+    fi; \
+    go build -ldflags "$ldflags" -gcflags "$gcflags" -tags "$tags"
 
-FROM debian:buster
+FROM enroller-dependencies as get-delve
+RUN go get -u github.com/go-delve/delve/cmd/dlv
+
+FROM debian:buster AS enroller
 
 RUN apt-get update && apt-get install -y \
         netcat curl dnsutils net-tools \
@@ -63,3 +82,9 @@ COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
 
 WORKDIR /shared/enroller
 CMD /run.sh
+
+FROM enroller AS enroller-debug
+COPY --from=get-delve /go/bin /usr/bin
+
+# Makes the default target skip the enroller-debug stage
+FROM enroller

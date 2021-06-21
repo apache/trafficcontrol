@@ -65,7 +65,7 @@ If present, ``projects`` should be one or more project names. When no specific p
 - source\ [2]_
 - traffic_monitor_build\ [2]_
 - traffic_ops_build\ [2]_
-- traffic_ops_ort_build\ [2]_
+- cache-config_build\ [2]_
 - traffic_portal_build\ [2]_
 - traffic_router_build\ [2]_
 - traffic_stats_build\ [2]_

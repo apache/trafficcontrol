@@ -132,6 +132,7 @@ func WrapHeaders(h http.HandlerFunc) http.HandlerFunc {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set(rfc.Vary, rfc.AcceptEncoding)
 		w.Header().Set("X-Server-Name", ServerName)
+		w.Header().Set(rfc.PermissionsPolicy, "interest-cohort=()")
 		iw := &util.BodyInterceptor{W: w}
 		h(iw, r)
 

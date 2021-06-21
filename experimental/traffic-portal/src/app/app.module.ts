@@ -22,6 +22,20 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from "@angular/common/http";
 import { NgModule } from "@angular/core";
 import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
+import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { MatButtonModule } from "@angular/material/button";
+import { MatCardModule } from "@angular/material/card";
+import { MatNativeDateModule } from "@angular/material/core";
+import { MatDividerModule } from "@angular/material/divider";
+import { MatExpansionModule } from "@angular/material/expansion";
+import { MatInputModule } from "@angular/material/input";
+import { MatListModule } from "@angular/material/list";
+import { MatRadioModule } from "@angular/material/radio";
+import { MatSnackBarModule } from "@angular/material/snack-bar";
+import { MatStepperModule } from "@angular/material/stepper";
+import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatDialogModule } from "@angular/material/dialog";
+import { MatDatepickerModule } from "@angular/material/datepicker";
 
 import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { AgGridModule } from "ag-grid-angular";
@@ -42,7 +56,6 @@ import { NewDeliveryServiceComponent } from "./components/new-delivery-service/n
 import { ServersTableComponent } from "./components/servers/servers-table/servers-table.component";
 import { SSHCellRendererComponent } from "./components/table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 import { TpHeaderComponent } from "./components/tp-header/tp-header.component";
-import { UserCardComponent } from "./components/user-card/user-card.component";
 import { UsersComponent } from "./components/users/users.component";
 import { CustomvalidityDirective } from "./directives/customvalidity.directive";
 import { LinechartDirective } from "./directives/linechart.directive";
@@ -55,6 +68,10 @@ import { BooleanFilterComponent } from "./components/table-components/boolean-fi
 import { ServerDetailsComponent } from "./components/servers/server-details/server-details.component";
 import { UpdateCellRendererComponent } from "./components/table-components/update-cell-renderer/update-cell-renderer.component";
 import { UpdateStatusComponent } from "./components/servers/update-status/update-status.component";
+import {
+	NewInvalidationJobDialogComponent
+} from "./components/invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
+import { UpdatePasswordDialogComponent } from "./components/currentuser/update-password-dialog/update-password-dialog.component";
 
 // TODO: Figure out the actual typing here.
 Chart.plugins.register({
@@ -91,7 +108,6 @@ Chart.plugins.register({
 		NewDeliveryServiceComponent,
 		TpHeaderComponent,
 		LoadingComponent,
-		UserCardComponent,
 		DeliveryserviceComponent,
 		LinechartDirective,
 		InvalidationJobsComponent,
@@ -104,7 +120,9 @@ Chart.plugins.register({
 		BooleanFilterComponent,
 		ServerDetailsComponent,
 		UpdateCellRendererComponent,
-		UpdateStatusComponent
+		UpdateStatusComponent,
+		NewInvalidationJobDialogComponent,
+		UpdatePasswordDialogComponent
 	],
 	entryComponents: [
 		SSHCellRendererComponent
@@ -116,7 +134,21 @@ Chart.plugins.register({
 		ReactiveFormsModule,
 		FormsModule,
 		FontAwesomeModule,
-		AgGridModule.withComponents([])
+		AgGridModule.withComponents([]),
+		BrowserAnimationsModule,
+		MatButtonModule,
+		MatCardModule,
+		MatDividerModule,
+		MatExpansionModule,
+		MatInputModule,
+		MatListModule,
+		MatRadioModule,
+		MatSnackBarModule,
+		MatStepperModule,
+		MatToolbarModule,
+		MatDialogModule,
+		MatDatepickerModule,
+		MatNativeDateModule,
 	],
 	providers: [
 		{multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor},

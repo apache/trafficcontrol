@@ -32,7 +32,7 @@ on:
       - grove/**.go
       - lib/**.go
       - traffic_monitor/**.go
-      - traffic_ops_ort/atstccfg/**.go
+      - cache-config/t3c-generate/**.go
       - traffic_ops/traffic_ops_golang/**.go
       - traffic_stats/**.go
       - vendor/**.go
@@ -48,7 +48,7 @@ on:
       - grove/**.go
       - lib/**.go
       - traffic_monitor/**.go
-      - traffic_ops_ort/atstccfg/**.go
+      - cache-config/t3c-generate/**.go
       - traffic_ops/traffic_ops_golang/**.go
       - traffic_stats/**.go
       - vendor/**.go
@@ -76,7 +76,7 @@ jobs:
     - name: Run unit tests
       uses: ./src/github.com/apache/trafficcontrol/.github/actions/go-test
       with:
-        dir: ./grove/... ./lib/... ./traffic_monitor/... ./traffic_ops/traffic_ops_golang/... ./traffic_ops_ort/atstccfg/... ./traffic_stats/... ./traffic_ops/app/bin/...
+        dir: ./grove/... ./lib/... ./traffic_monitor/... ./traffic_ops/traffic_ops_golang/... ./cache-config/t3c-generate/... ./traffic_stats/... ./traffic_ops/app/bin/...
       env:
         GOPATH: /github/workspace
     - name: Save Alpine Docker image

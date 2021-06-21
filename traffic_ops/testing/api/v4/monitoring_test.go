@@ -1,3 +1,5 @@
+package v4
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +15,11 @@
    limitations under the License.
 */
 
-package v4
-
 import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestMonitoring(t *testing.T) {
@@ -44,42 +45,48 @@ func GetTestMonitoringConfigNoSnapshotOnTheFly(t *testing.T) {
 		t.Fatal("No edge server found in test data, cannot test")
 	}
 
-	tmConfig, _, err := TOSession.GetTrafficMonitorConfigMap(*server.CDNName)
+	resp, _, err := TOSession.GetTrafficMonitorConfig(*server.CDNName, client.RequestOptions{})
 	if err != nil {
-		t.Error("getting monitoring: " + err.Error())
-	} else if len(tmConfig.TrafficServer) == 0 {
-		t.Error("Expected Monitoring without a snapshot to generate on-the-fly, actual: empty monitoring object for cdn '" + *server.CDNName + "'")
+		t.Errorf("getting monitoring: %v - alerts: %+v", err, resp.Alerts)
+	} else if len(resp.Response.TrafficServers) == 0 {
+		t.Errorf("Expected Monitoring without a snapshot to generate on-the-fly, actual: empty monitoring object for CDN '%s'", *server.CDNName)
 	}
 }
 
 func AllCDNsCanSnapshot(t *testing.T) {
 
-	serversByHost := make(map[string]tc.ServerV40)
+	serversByHost := make(map[string]tc.ServerV40, len(testData.Servers))
 
 	for _, server := range testData.Servers {
+		if server.HostName == nil {
+			t.Error("Found server in test data with null or undefined hostName")
+			continue
+		}
 		serversByHost[*server.HostName] = server
 	}
 
+	opts := client.NewRequestOptions()
 	for _, cdn := range testData.CDNs {
-		_, err := TOSession.SnapshotCRConfig(cdn.Name, nil)
+		opts.QueryParameters.Set("cdn", cdn.Name)
+		resp, _, err := TOSession.SnapshotCRConfig(opts)
 		if err != nil {
-			t.Error(err)
+			t.Errorf("Unexpected error making Snapshot for CDN '%s': %v - alerts: %+v", cdn.Name, err, resp.Alerts)
 			continue
 		}
 
-		tmConfig, _, err := TOSession.GetTrafficMonitorConfigMap(cdn.Name)
-		if err != nil && tmConfig == nil {
-			t.Error(err)
+		tmConfig, _, err := TOSession.GetTrafficMonitorConfig(cdn.Name, client.RequestOptions{})
+		if err != nil {
+			t.Errorf("Unexpected error fetching Traffic Monitor Config for CDN '%s': %v - alerts: %+v", cdn.Name, err, tmConfig.Alerts)
 			continue
 		}
 
-		for hostName, server := range tmConfig.TrafficServer {
-			if _, ok := serversByHost[hostName]; !ok {
-				t.Errorf("Server %v not found in test data", hostName)
+		for _, server := range tmConfig.Response.TrafficServers {
+			if _, ok := serversByHost[server.HostName]; !ok {
+				t.Errorf("Server '%s' not found in test data", server.HostName)
 				continue
 			}
 			if len(server.Interfaces) < 1 {
-				t.Errorf("Server %v expected to get more than 1 interface(s), got %v", hostName, len(server.Interfaces))
+				t.Errorf("Server '%s' expected to get more than 1 interface(s), got %d", server.HostName, len(server.Interfaces))
 			}
 		}
 	}

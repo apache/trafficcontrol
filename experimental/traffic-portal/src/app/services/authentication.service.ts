@@ -12,13 +12,10 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-
-import { BehaviorSubject, Observable } from "rxjs";
-import { first, map } from "rxjs/operators";
-
 import { User } from "../models";
 
 import { UserService } from "./api";
+import { CurrentUserService } from "./current-user.service";
 
 /**
  * AuthenticationService handles authentication with the Traffic Ops server and
@@ -26,99 +23,81 @@ import { UserService } from "./api";
  */
 @Injectable({ providedIn: "root" })
 export class AuthenticationService {
-	/** An observable that emits the current user, or 'null' if they are not logged in. */
-	public currentUser: Observable<User | null>;
-	/** Observation subject for the current user. */
-	private readonly currentUserSubject: BehaviorSubject<User | null>;
 
-	/** An Observable that emits whether or not the current user is logged in. */
-	public loggedIn: Observable<boolean>;
-	/** Observation subject for whether or not the user is logged in. */
-	private readonly loggedInSubject: BehaviorSubject<boolean>;
+	/**
+	 * The currently authenticated user - or `null` if not authenticated.
+	 */
+	public get currentUser(): User | null {
+		return this.currentUserService.currentUser;
+	}
 
-	/** An Observable that emits the current user's capabilities. */
-	public currentUserCapabilities: Observable<Set<string>>;
-	/** Behavior subject for the current user's capabilities. */
-	private readonly currentUserCapabilitiesSubject: BehaviorSubject<Set<string>>;
+	/**
+	 * All of the Permissions afforded to the currently authenticated user.
+	 */
+	public get capabilities(): Set<string> {
+		return this.currentUserService.capabilities;
+	}
 
 	/**
 	 * Constructs the service with its required dependencies injected.
 	 *
 	 * @param api A reference to the UserService.
 	 */
-	constructor(private readonly api: UserService) {
-		this.currentUserSubject = new BehaviorSubject<User | null>(null);
-		this.loggedInSubject = new BehaviorSubject<boolean>(false);
-		this.currentUserCapabilitiesSubject = new BehaviorSubject<Set<string>>(new Set<string>());
-		this.currentUser = this.currentUserSubject.asObservable();
-		this.loggedIn = this.loggedInSubject.asObservable();
-		this.currentUserCapabilities = this.currentUserCapabilitiesSubject.asObservable();
+	constructor(private readonly api: UserService, private readonly currentUserService: CurrentUserService) {
 		this.updateCurrentUser();
-	}
-
-	/** The current user's User, or 'null' if they are not logged in. */
-	public get currentUserValue(): User | null {
-		return this.currentUserSubject.value;
-	}
-
-	/** Whether or not the current user is logged in. */
-	public get loggedInValue(): boolean {
-		return this.loggedInSubject.value;
-	}
-
-	/** The Capabilities of the current user. */
-	public get currentUserCapabilitiesValue(): Set<string> {
-		return this.currentUserCapabilitiesSubject.value;
 	}
 
 	/**
 	 * Updates the current user, and provides a way for callers to check if the update was succesful.
 	 *
-	 * @returns An `Observable` which will emit a boolean value indicating the success of the update
+	 * @param token If given, the service will first attempt to login using this token.
+	 * @returns A boolean value indicating the success of the update
 	 */
-	public updateCurrentUser(): Observable<boolean> {
-		return this.api.getCurrentUser().pipe(first()).pipe(map(
-			(u: User) => {
-				this.currentUserSubject.next(u);
-				if (u.role) {
-					this.api.getRoles(u.role).subscribe(
-						r => {
-							this.currentUserCapabilitiesSubject.next(new Set<string>(r.capabilities));
-						}
-					);
+	public async updateCurrentUser(token?: string): Promise<boolean> {
+		if (token) {
+			if (!(await this.api.login(token))) {
+				console.error("invalid token");
+				return false;
+			}
+		}
+		return this.api.getCurrentUser().then(
+			async u => {
+				if (u.role === undefined) {
+					throw new Error("current user had no Role");
 				}
+				const role = await this.api.getRoles(u.role);
+				this.currentUserService.setUser(u, new Set(role.capabilities));
 				return true;
-			},
-			(e: Error) => {
+			}
+		).catch(
+			e => {
 				console.error("Failed to update current user:", e);
 				return false;
 			}
-		));
+		);
 	}
 
 	/**
 	 * Logs in a user and, on successful login, updates the current user.
 	 *
-	 * @param u The user's username.
+	 * @param uOrT The user's username, if `p` is given. If `p` is *not* given,
+	 * this is treated as a login token.
 	 * @param p The user's password.
 	 * @returns An observable that emits whether or not login succeeded.
 	 */
-	public login(u: string, p: string): Observable<boolean> {
-		return this.api.login(u, p).pipe(map(
-			(resp) => {
+	public async login(uOrT: string, p?: string): Promise<boolean> {
+		return this.api.login(uOrT, p).then(
+			async resp => {
 				if (resp && resp.status === 200) {
-					this.loggedInSubject.next(true);
-					this.updateCurrentUser();
-					return true;
+					return this.updateCurrentUser();
 				}
 				return false;
 			}
-		));
+		);
 	}
 
 	/** Logs the currently logged-in user out. */
 	public logout(): void {
-		this.currentUserSubject.next(null);
-		this.loggedInSubject.next(false);
+		this.currentUserService.logout();
 	}
 }

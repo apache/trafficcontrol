@@ -15,7 +15,6 @@ import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
-import { of } from "rxjs";
 import { DeliveryServiceService } from "src/app/services/api";
 
 
@@ -32,7 +31,7 @@ describe("DashboardComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		const mockAPIService = jasmine.createSpyObj(["getDeliveryServices"]);
-		mockAPIService.getDeliveryServices.and.returnValue(of([]));
+		mockAPIService.getDeliveryServices.and.returnValue(new Promise(resolve=>resolve([])));
 
 		TestBed.configureTestingModule({
 			declarations: [
@@ -71,7 +70,7 @@ describe("DashboardComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
-	it("sets the \"search\" query parameter", () => {
+	it('sets the "search" query parameter', () => {
 		expect(true).toBeTruthy();
 	});
 

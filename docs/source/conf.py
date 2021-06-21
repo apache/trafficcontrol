@@ -28,7 +28,7 @@
 import os
 import sys
 here = os.path.dirname(__file__)
-ortPath = os.path.join(here, '..', '..', 'infrastructure', 'cdn-in-a-box', 'ort')
+ortPath = os.path.join(here, '..', '..', 'experimental', 'ort-python')
 clientPath = os.path.join(here, '..', '..', 'traffic_control', 'clients', 'python')
 ortPath = os.path.abspath(ortPath)
 clientPath = os.path.abspath(clientPath)

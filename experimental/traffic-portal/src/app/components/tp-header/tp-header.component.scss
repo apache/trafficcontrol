@@ -12,13 +12,11 @@
 * limitations under the License.
 */
 @import '../../../theme.scss';
-header {
+mat-toolbar {
 	display: inline-flex;
 	width: 100%;
 	height: 3em;
 	padding: 5px;
-	background-color: $theme_secondary;
-	color: white;
 	position: sticky;
 	top: 0;
 	z-index: 1;
@@ -45,6 +43,7 @@ header {
 nav > ul > li a {
 	text-decoration: none;
 	color: inherit;
+	text-transform: uppercase;
 }
 
 nav#expanded > ul {
@@ -56,9 +55,17 @@ nav#expanded > ul {
 		display: inline;
 		margin: auto 0.5em;
 
-		& svg {
+		svg {
 			width: 1.1em;
 			fill: white;
+		}
+
+		button {
+			appearance: none;
+			font: inherit;
+			background: transparent;
+			border: none;
+			color: inherit;
 		}
 	}
 }
@@ -113,6 +120,17 @@ nav#collapsed {
 					height: 100%;
 					width: 100%;
 					line-height: 2.25em;
+				}
+
+				button {
+					appearance: none;
+					border: none;
+					background-color: transparent;
+					width: 100%;
+					height: 100%;
+					padding: 0;
+					line-height: 2.25em;
+					font: inherit;
 				}
 
 				&:hover {

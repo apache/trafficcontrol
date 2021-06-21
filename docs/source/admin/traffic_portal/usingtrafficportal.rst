@@ -370,7 +370,7 @@ Use the `Quick Search` to search across all table columns or the column filter t
 :Cache Group:       [Visible by default] The :ref:`Name of the Cache Group <cache-group-name>` to which this server belongs
 :CDN:               [Visible by default] The name of the CDN to which the server belongs
 :Domain:            [Visible by default] The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
-:Hash ID:			The identifier of the server used in Traffic Router's consistent hashing algorithm.
+:Hash ID:           The identifier of the server used in Traffic Router's consistent hashing algorithm.
 :Host:              [Visible by default] The (short) hostname of the server
 :HTTPS Port:        The port on which the server listens for incoming HTTPS connections/requests
 :ID:                An integral, unique identifier for this server
@@ -670,7 +670,7 @@ Generates a boot-able system image for any of the servers in the Servers table (
 Copy Server Attributes From
 	Optional. This option lets the user choose a server from the Traffic Ops database and will auto-fill the other fields as much as possible based on that server's properties
 OS Version
-	This list is populated by modifying the :file:`osversions.json` file on the Traffic Ops server. This file maps OS names to the name of a directory under ``app/public/iso/`` directory within the Traffic Ops install directory
+	This list is populated by modifying the :file:`osversions.json` file on the Traffic Ops server. This file maps OS names to the name of a directory under :ref:`kickstart.files.location` (``/var/www/files`` by default).
 Hostname
 	The desired hostname of the resultant system
 Domain

@@ -27,13 +27,14 @@ under the License.
         </ol>
         <div class="pull-right" role="group" ng-if="settings.isRequest">
             <div class="btn-group" role="group" uib-dropdown is-open="status.isopen">
-                <button ng-disabled="dsRequest.status == 'rejected' || dsRequest.status == 'pending' || dsRequest.status == 'complete'" type="button" class="btn btn-link dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                <button ng-disabled="dsRequest.status == 'rejected' || dsRequest.status == 'complete'" type="button" class="btn btn-link dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     {{dsRequest.status | uppercase }}&nbsp;
-                    <span ng-show="dsRequest.status == 'draft' || dsRequest.status == 'submitted'" class="caret"></span>
+                    <span ng-show="dsRequest.status == 'draft' || dsRequest.status == 'submitted' || dsRequest.status == 'pending'" class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li role="menuitem"><a ng-if="dsRequest.status == 'submitted'" ng-click="editStatus('draft')">Change status to: DRAFT</a></li>
                     <li role="menuitem"><a ng-if="dsRequest.status == 'draft'" ng-click="editStatus('submitted')">Change status to: SUBMITTED</a></li>
+                    <li role="menuitem"><a ng-if="dsRequest.status == 'pending'" ng-click="editStatus('complete')">Change status to: COMPLETE</a></li>
                 </ul>
             </div>
         </div>
@@ -83,8 +84,9 @@ under the License.
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.xmlId, 'required')">Required</small>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.xmlId, 'maxlength')">Too Long</small>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.xmlId, 'pattern')">Must be a valid DNS label (no special characters, capital letters, periods, underscores, or spaces and cannot begin or end with a hyphen)</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.xmlId != dsCurrent.xmlId">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.xmlId != dsCurrent.xmlId">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.xmlId}}</pre>
                             </aside>
                         </div>
@@ -98,8 +100,9 @@ under the License.
                             <input id="displayName" name="displayName" type="text" class="form-control" ng-model="deliveryService.displayName" maxlength="48" required>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.displayName, 'required')">Required</small>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.displayName, 'maxlength')">Too Long</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.displayName != dsCurrent.displayName">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.displayName != dsCurrent.displayName">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.displayName}}</pre>
                             </aside>
                         </div>
@@ -116,8 +119,9 @@ under the License.
                                 <option ng-value="false">Not Active</option>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.active, 'required')">Required</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.active != dsCurrent.active">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.active != dsCurrent.active">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.active ? 'Active' : 'Not Active'}}</pre>
                             </aside>
                         </div>
@@ -138,8 +142,9 @@ under the License.
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.type, 'required')">Required</small>
                             <small ng-show="deliveryService.typeId"><a href="/#!/types/{{deliveryService.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.typeId != dsCurrent.typeId">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.typeId != dsCurrent.typeId">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.type}}</pre>
                             </aside>
                         </div>
@@ -155,8 +160,9 @@ under the License.
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.tenantId, 'required')">Required</small>
                             <small ng-show="deliveryService.tenantId"><a href="/#!/tenants/{{deliveryService.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.tenantId != dsCurrent.tenantId">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.tenantId != dsCurrent.tenantId">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.tenant}}</pre>
                             </aside>
                         </div>
@@ -172,8 +178,9 @@ under the License.
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.cdnId, 'required')">Required</small>
                             <small ng-show="deliveryService.cdnId"><a href="/#!/cdns/{{deliveryService.cdnId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.cdnId != dsCurrent.cdnId">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.cdnId != dsCurrent.cdnId">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.cdnName}}</pre>
                             </aside>
                         </div>
@@ -202,8 +209,9 @@ under the License.
                                 <option ng-value="3">HTTP to HTTPS</option>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.protocol, 'required')">Required</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.protocol != dsCurrent.protocol">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.protocol != dsCurrent.protocol">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{magicNumberLabel(protocols, dsCurrent.protocol)}}</pre>
                             </aside>
                         </div>
@@ -218,8 +226,9 @@ under the License.
                                 <option value="">Select...</option>
                             </select>
                             <small ng-show="deliveryService.serviceCategory"><a href="/#!/service-categories/edit?name={{deliveryService.serviceCategory}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.serviceCategory != dsCurrent.serviceCategory">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.serviceCategory != dsCurrent.serviceCategory">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.serviceCategory}}</pre>
                             </aside>
                         </div>
@@ -231,8 +240,9 @@ under the License.
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <textarea id="longDesc" name="longDesc" class="form-control" ng-model="deliveryService.longDesc" spellcheck="true" rows="3"></textarea>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc != dsCurrent.longDesc">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.longDesc != dsCurrent.longDesc">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.longDesc}}</pre>
                             </aside>
                         </div>
@@ -244,8 +254,9 @@ under the License.
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <textarea id="longDesc1" name="longDesc1" class="form-control" ng-model="deliveryService.longDesc1" spellcheck="true" rows="3"></textarea>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc1 != dsCurrent.longDesc1">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.longDesc1 != dsCurrent.longDesc1">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.longDesc1}}</pre>
                             </aside>
                         </div>
@@ -257,8 +268,9 @@ under the License.
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <textarea id="longDesc2" name="longDesc2" class="form-control" ng-model="deliveryService.longDesc2" rows="3" spellcheck="true"></textarea>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.longDesc2 != dsCurrent.longDesc2">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.longDesc2 != dsCurrent.longDesc2">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.longDesc2}}</pre>
                             </aside>
                         </div>
@@ -273,8 +285,9 @@ under the License.
                                 <option selected value="">None</option>
                             </select>
                             <small ng-show="deliveryService.profileId"><a href="/#!/profiles/{{deliveryService.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.profileId != dsCurrent.profileId">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.profileId != dsCurrent.profileId">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.profileName}}</pre>
                             </aside>
                         </div>
@@ -288,8 +301,9 @@ under the License.
                             <input id="infoUrl" name="infoUrl" type="url" title="Must be a valid URL." class="form-control" ng-model="deliveryService.infoUrl" maxlength="255">
                             <small class="input-error invalid-URL-error">Invalid URL</small>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.infoUrl, 'maxlength')">Too Long</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.infoUrl != dsCurrent.infoUrl">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.infoUrl != dsCurrent.infoUrl">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.infoUrl}}</pre>
                             </aside>
                         </div>
@@ -302,8 +316,9 @@ under the License.
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <input id="checkPath" name="checkPath" type="text" class="form-control" ng-model="deliveryService.checkPath" maxlength="255">
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.checkPath, 'maxlength')">Too Long</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.checkPath != dsCurrent.checkPath">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.checkPath != dsCurrent.checkPath">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.checkPath}}</pre>
                             </aside>
                         </div>
@@ -323,8 +338,9 @@ under the License.
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.routingName, 'required')">Required</small>
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.routingName, 'maxlength')">Too Long</small>
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.routingName, 'pattern')">Must be a valid DNS label (no special characters, capital letters, periods, underscores, or spaces and cannot begin or end with a hyphen)</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.routingName != dsCurrent.routingName">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.routingName != dsCurrent.routingName">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.routingName}}</pre>
                             </aside>
                         </div>
@@ -340,8 +356,9 @@ under the License.
                                 <option ng-value="false">Disabled</option>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.ipv6RoutingEnabled, 'required')">Required</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ipv6RoutingEnabled != dsCurrent.ipv6RoutingEnabled">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.ipv6RoutingEnabled != dsCurrent.ipv6RoutingEnabled">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.ipv6RoutingEnabled ? 'Enabled' : 'Disabled'}}</pre>
                             </aside>
                         </div>
@@ -357,8 +374,9 @@ under the License.
                                 <option ng-value="false">Disabled</option>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.ecsEnabled, 'required')">Required</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ecsEnabled != dsCurrent.ecsEnabled">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.ecsEnabled != dsCurrent.ecsEnabled">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.ecsEnabled ? 'Enabled' : 'Disabled'}}</pre>
                             </aside>
                         </div>
@@ -374,8 +392,9 @@ under the License.
                                 <option ng-value="1">Neustar</option>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.geoProvider, 'required')">Required</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoProvider != dsCurrent.geoProvider">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.geoProvider != dsCurrent.geoProvider">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{magicNumberLabel(geoProviders, dsCurrent.geoProvider)}}</pre>
                             </aside>
                         </div>
@@ -401,8 +420,9 @@ under the License.
                                 <option ng-value="2">Coverage Zone File and Country Code(s)</option>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.geoLimit, 'required')">Required</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimit != dsCurrent.geoLimit">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.geoLimit != dsCurrent.geoLimit">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{magicNumberLabel(geoLimits, dsCurrent.geoLimit)}}</pre>
                             </aside>
                         </div>
@@ -415,8 +435,9 @@ under the License.
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <input id="geoLimitCountries" name="geoLimitCountries" type="text" class="form-control" ng-model="deliveryService.geoLimitCountries" maxlength="255" pattern="[A-Z]+(,[A-Z]+)*">
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.geoLimitCountries, 'maxlength')">Too Long</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitCountries != dsCurrent.geoLimitCountries">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.geoLimitCountries != dsCurrent.geoLimitCountries">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.geoLimitCountries}}</pre>
                             </aside>
                         </div>
@@ -434,8 +455,9 @@ under the License.
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <input id="geoLimitRedirectURL" name="geoLimitRedirectURL" title="Must be a valid URL" type="url" class="form-control" ng-model="deliveryService.geoLimitRedirectURL">
                             <small class="input-error invalid-URL-error">Invalid URL</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.geoLimitRedirectURL != dsCurrent.geoLimitRedirectURL">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.geoLimitRedirectURL != dsCurrent.geoLimitRedirectURL">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.geoLimitRedirectURL}}</pre>
                             </aside>
                         </div>
@@ -450,8 +472,9 @@ under the License.
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <input id="maxDnsAnswers" name="maxDnsAnswers" type="number" class="form-control" placeholder="Max number of IP addresses in DNS answer (0 means all)" ng-model="deliveryService.maxDnsAnswers" step="1" min="0">
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.maxDnsAnswers, 'min')">Too Small (must be greater than or equal to 0)</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.maxDnsAnswers != dsCurrent.maxDnsAnswers">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.maxDnsAnswers != dsCurrent.maxDnsAnswers">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.maxDnsAnswers}}</pre>
                             </aside>
                         </div>
@@ -463,8 +486,9 @@ under the License.
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <input id="ccrDnsTtl" name="ccrDnsTtl" type="number" class="form-control" ng-model="deliveryService.ccrDnsTtl" step="1" min="0">
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.ccrDnsTtl != dsCurrent.ccrDnsTtl">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.ccrDnsTtl != dsCurrent.ccrDnsTtl">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.ccrDnsTtl}}</pre>
                             </aside>
                         </div>
@@ -484,8 +508,9 @@ under the License.
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.consistentHashRegex, 'maxlength')">Too Long</small>
                             <small><a ng-click="encodeRegex(deliveryService.consistentHashRegex)" href="/#!/delivery-services/{{deliveryService.id}}/consistent-hash?pattern={{encodedRegex}}" target="_blank">Test Regex&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                             <span ng-show="hasError(routingConfig.consistentHashRegex)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.consistentHashRegex != dsCurrent.consistentHashRegex">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.consistentHashRegex != dsCurrent.consistentHashRegex">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.consistentHashRegex}}</pre>
                             </aside>
                         </div>
@@ -503,8 +528,9 @@ under the License.
                                 <option ng-value="false" selected>Disabled</option>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(routingConfig.regionalGeoBlocking, 'required')">Required</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.regionalGeoBlocking != dsCurrent.regionalGeoBlocking">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.regionalGeoBlocking != dsCurrent.regionalGeoBlocking">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.regionalGeoBlocking ? 'Enabled' : 'Disabled'}}</pre>
                             </aside>
                         </div>
@@ -518,8 +544,9 @@ under the License.
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <textarea id="trResponseHeaders" name="trResponseHeaders" class="form-control" ng-model="deliveryService.trResponseHeaders" rows="3"></textarea>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.trResponseHeaders != dsCurrent.trResponseHeaders">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.trResponseHeaders != dsCurrent.trResponseHeaders">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.trResponseHeaders}}</pre>
                             </aside>
                         </div>
@@ -533,8 +560,9 @@ under the License.
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <textarea id="trRequestHeaders" name="trRequestHeaders" class="form-control" ng-model="deliveryService.trRequestHeaders" rows="3"></textarea>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="open() && deliveryService.trRequestHeaders != dsCurrent.trRequestHeaders">
-                                <h3>Current Value</h3>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.trRequestHeaders != dsCurrent.trRequestHeaders">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.trRequestHeaders}}</pre>
                             </aside>
                         </div>
@@ -544,7 +572,8 @@ under the License.
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-if="!settings.isNew" ng-disabled="!deletable()" ng-click="confirmDelete(deliveryService)">{{settings.deleteLabel}}</button>
                 <button class="btn btn-success" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid || !saveable()" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
-                <button class="btn btn-primary" ng-if="settings.isRequest && fulfillable()" ng-disabled="deliveryServiceForm.$invalid" ng-click="fulfillRequest(deliveryService)">Fulfill Request</button>
+                <button class="btn btn-primary" ng-if="settings.isRequest && fulfillable()" ng-disabled="deliveryServiceForm.$invalid || deliveryServiceForm.$dirty" ng-click="fulfillRequest(deliveryService)">Fulfill Request</button>
+                <button class="btn btn-primary" ng-if="settings.isRequest && dsRequest.status == 'pending'" ng-click="editStatus('complete')">Complete Request</button>
             </div>
         </form>
     </div>

@@ -16,7 +16,10 @@ package v4
 */
 
 import (
+	"net/url"
 	"testing"
+
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestAPICapabilities(t *testing.T) {
@@ -56,7 +59,12 @@ func TestAPICapabilities(t *testing.T) {
 
 	for _, c := range testCases {
 		t.Run(c.description, func(t *testing.T) {
-			caps, _, err := TOSession.GetAPICapabilities(c.capability, c.order)
+			opts := client.RequestOptions{
+				QueryParameters: url.Values{},
+			}
+			opts.QueryParameters.Set("capability", c.capability)
+			opts.QueryParameters.Set("orderby", c.order)
+			caps, _, err := TOSession.GetAPICapabilities(opts)
 
 			if err != nil {
 				t.Fatalf("error retrieving API capabilities: %s", err.Error())
@@ -66,7 +74,7 @@ func TestAPICapabilities(t *testing.T) {
 				t.Fatalf("error: expected capability %s to have records, but found 0", c.capability)
 			}
 
-			if c.order != "" {
+			if c.order != "" && c.hasRecords {
 				if c.first != caps.Response[0].HTTPMethod {
 					t.Fatalf("error: expected first element to be %s, got %s", c.first, caps.Response[0].HTTPMethod)
 				}

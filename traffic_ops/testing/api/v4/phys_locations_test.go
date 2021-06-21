@@ -18,12 +18,15 @@ package v4
 import (
 	"net/http"
 	"net/url"
+	"reflect"
 	"sort"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestPhysLocations(t *testing.T) {
@@ -46,42 +49,52 @@ func TestPhysLocations(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestPhysLocationsWithHeaders(t, header)
+		GetTestPaginationSupportPhysLocation(t)
 	})
 }
 
 func UpdateTestPhysLocationsWithHeaders(t *testing.T, header http.Header) {
-	if len(testData.PhysLocations) > 0 {
-		firstPhysLocation := testData.PhysLocations[0]
-		// Retrieve the PhysLocation by name so we can get the id for the Update
-		resp, _, err := TOSession.GetPhysLocationByName(firstPhysLocation.Name, header)
-		if err != nil {
-			t.Errorf("cannot GET PhysLocation by name: '%s', %v", firstPhysLocation.Name, err)
-		}
-		if len(resp) > 0 {
-			remotePhysLocation := resp[0]
-			expectedPhysLocationCity := "city1"
-			remotePhysLocation.City = expectedPhysLocationCity
-			_, reqInf, err := TOSession.UpdatePhysLocation(remotePhysLocation.ID, remotePhysLocation, header)
-			if err == nil {
-				t.Errorf("Expected error about precondition failed, but got none")
-			}
-			if reqInf.StatusCode != http.StatusPreconditionFailed {
-				t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
-			}
-		}
+	if len(testData.PhysLocations) < 1 {
+		t.Fatal("Need at least one Physical Location to test updating Physical Locations, with an HTTP header")
+	}
+	firstPhysLocation := testData.PhysLocations[0]
+
+	// Retrieve the PhysLocation by name so we can get the id for the Update
+	opts := client.NewRequestOptions()
+	opts.Header = header
+	opts.QueryParameters.Set("name", firstPhysLocation.Name)
+	resp, _, err := TOSession.GetPhysLocations(opts)
+	if err != nil {
+		t.Errorf("cannot get Physical Location by name '%s': %v - alerts: %+v", firstPhysLocation.Name, err, resp.Alerts)
+	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("Expected exactly one Physical Location to exist with name '%s', found: %d", firstPhysLocation.Name, len(resp.Response))
+	}
+
+	remotePhysLocation := resp.Response[0]
+	expectedPhysLocationCity := "city1"
+	remotePhysLocation.City = expectedPhysLocationCity
+	opts.QueryParameters.Del("name")
+	_, reqInf, err := TOSession.UpdatePhysLocation(remotePhysLocation.ID, remotePhysLocation, opts)
+	if err == nil {
+		t.Errorf("Expected error about precondition failed, but got none")
+	}
+	if reqInf.StatusCode != http.StatusPreconditionFailed {
+		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
 	}
 }
 
 func GetTestPhysLocationsIMS(t *testing.T) {
-	var header http.Header
-	header = make(map[string][]string)
 	futureTime := time.Now().AddDate(0, 0, 1)
 	time := futureTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, time)
-	for _, cdn := range testData.PhysLocations {
-		_, reqInf, err := TOSession.GetPhysLocationByName(cdn.Name, header)
+
+	opts := client.NewRequestOptions()
+	opts.Header.Set(rfc.IfModifiedSince, time)
+	for _, physLoc := range testData.PhysLocations {
+		opts.QueryParameters.Set("name", physLoc.Name)
+		resp, reqInf, err := TOSession.GetPhysLocations(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -91,23 +104,29 @@ func GetTestPhysLocationsIMS(t *testing.T) {
 }
 
 func GetTestPhysLocationsIMSAfterChange(t *testing.T, header http.Header) {
-	for _, cdn := range testData.PhysLocations {
-		_, reqInf, err := TOSession.GetPhysLocationByName(cdn.Name, header)
+	opts := client.NewRequestOptions()
+	opts.Header = header
+	for _, physLoc := range testData.PhysLocations {
+		opts.QueryParameters.Set("name", physLoc.Name)
+		resp, reqInf, err := TOSession.GetPhysLocations(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusOK {
 			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
 		}
 	}
+
 	currentTime := time.Now().UTC()
 	currentTime = currentTime.Add(1 * time.Second)
 	timeStr := currentTime.Format(time.RFC1123)
-	header.Set(rfc.IfModifiedSince, timeStr)
-	for _, cdn := range testData.PhysLocations {
-		_, reqInf, err := TOSession.GetPhysLocationByName(cdn.Name, header)
+	opts.Header.Set(rfc.IfModifiedSince, timeStr)
+
+	for _, physLoc := range testData.PhysLocations {
+		opts.QueryParameters.Set("name", physLoc.Name)
+		resp, reqInf, err := TOSession.GetPhysLocations(opts)
 		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
+			t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 		}
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
@@ -117,24 +136,22 @@ func GetTestPhysLocationsIMSAfterChange(t *testing.T, header http.Header) {
 
 func CreateTestPhysLocations(t *testing.T) {
 	for _, pl := range testData.PhysLocations {
-		resp, _, err := TOSession.CreatePhysLocation(pl)
-		t.Log("Response: ", resp)
+		resp, _, err := TOSession.CreatePhysLocation(pl, client.RequestOptions{})
 		if err != nil {
-			t.Errorf("could not CREATE physlocations: %v", err)
+			t.Errorf("could not create Physical Location '%s': %v - alerts: %+v", pl.Name, err, resp.Alerts)
 		}
 	}
 
 }
 
 func SortTestPhysLocations(t *testing.T) {
-	var header http.Header
 	var sortedList []string
-	resp, _, err := TOSession.GetPhysLocations(nil, header)
+	resp, _, err := TOSession.GetPhysLocations(client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err.Error())
+		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
 	}
-	for i := range resp {
-		sortedList = append(sortedList, resp[i].Name)
+	for _, pl := range resp.Response {
+		sortedList = append(sortedList, pl.Name)
 	}
 
 	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
@@ -146,28 +163,42 @@ func SortTestPhysLocations(t *testing.T) {
 }
 
 func UpdateTestPhysLocations(t *testing.T) {
-
-	firstPhysLocation := testData.PhysLocations[0]
-	// Retrieve the PhysLocation by name so we can get the id for the Update
-	resp, _, err := TOSession.GetPhysLocationByName(firstPhysLocation.Name, nil)
-	if err != nil {
-		t.Errorf("cannot GET PhysLocation by name: '%s', %v", firstPhysLocation.Name, err)
+	if len(testData.PhysLocations) < 1 {
+		t.Fatal("Need at least one Physical Location to test updating Physical Locations")
 	}
-	remotePhysLocation := resp[0]
+	firstPhysLocation := testData.PhysLocations[0]
+
+	// Retrieve the PhysLocation by name so we can get the id for the Update
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstPhysLocation.Name)
+	resp, _, err := TOSession.GetPhysLocations(opts)
+	if err != nil {
+		t.Errorf("cannot get Physical Location by name '%s': %v - alerts: %+v", firstPhysLocation.Name, err, resp.Alerts)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Physical Location to exist with name '%s', found: %d", firstPhysLocation.Name, len(resp.Response))
+	}
+
+	remotePhysLocation := resp.Response[0]
 	expectedPhysLocationCity := "city1"
 	remotePhysLocation.City = expectedPhysLocationCity
-	var alert tc.Alerts
-	alert, _, err = TOSession.UpdatePhysLocation(remotePhysLocation.ID, remotePhysLocation, nil)
+
+	alerts, _, err := TOSession.UpdatePhysLocation(remotePhysLocation.ID, remotePhysLocation, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("cannot UPDATE PhysLocation by id: %v - %v", err, alert)
+		t.Errorf("cannot update Physical Location: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
 	// Retrieve the PhysLocation to check PhysLocation name got updated
-	resp, _, err = TOSession.GetPhysLocationByID(remotePhysLocation.ID, nil)
+	opts.QueryParameters.Del("name")
+	opts.QueryParameters.Set("id", strconv.Itoa(remotePhysLocation.ID))
+	resp, _, err = TOSession.GetPhysLocations(opts)
 	if err != nil {
-		t.Errorf("cannot GET PhysLocation by name: '$%s', %v", firstPhysLocation.Name, err)
+		t.Errorf("cannot Physical Location '%s' (#%d) by ID: %v - alerts: %+v", firstPhysLocation.Name, remotePhysLocation.ID, err, resp.Alerts)
 	}
-	respPhysLocation := resp[0]
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Physical Location to exist with ID %d, found: %d", remotePhysLocation.ID, len(resp.Response))
+	}
+	respPhysLocation := resp.Response[0]
 	if respPhysLocation.City != expectedPhysLocationCity {
 		t.Errorf("results do not match actual: %s, expected: %s", respPhysLocation.City, expectedPhysLocationCity)
 	}
@@ -175,23 +206,25 @@ func UpdateTestPhysLocations(t *testing.T) {
 }
 
 func GetTestPhysLocations(t *testing.T) {
-
-	for _, cdn := range testData.PhysLocations {
-		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name, nil)
+	opts := client.NewRequestOptions()
+	for _, pl := range testData.PhysLocations {
+		opts.QueryParameters.Set("name", pl.Name)
+		resp, _, err := TOSession.GetPhysLocations(opts)
 		if err != nil {
-			t.Errorf("cannot GET PhysLocation by name: %v - %v", err, resp)
+			t.Errorf("cannot get Physical Location '%s': %v - alerts: %+v", pl.Name, err, resp.Alerts)
 		}
 	}
-
 }
 
 func GetSortPhysLocationsTest(t *testing.T) {
-	resp, _, err := TOSession.GetPhysLocations(url.Values{"orderby": {"id"}}, nil)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetPhysLocations(opts)
 	if err != nil {
-		t.Error(err.Error())
+		t.Errorf("Unexpected error getting Physical Locations ordered by ID: %v - alerts: %+v", err, resp.Alerts)
 	}
-	sorted := sort.SliceIsSorted(resp, func(i, j int) bool {
-		return resp[i].ID < resp[j].ID
+	sorted := sort.SliceIsSorted(resp.Response, func(i, j int) bool {
+		return resp.Response[i].ID < resp.Response[j].ID
 	})
 	if !sorted {
 		t.Error("expected response to be sorted by id")
@@ -199,12 +232,12 @@ func GetSortPhysLocationsTest(t *testing.T) {
 }
 
 func GetDefaultSortPhysLocationsTest(t *testing.T) {
-	resp, _, err := TOSession.GetPhysLocations(nil, nil)
+	resp, _, err := TOSession.GetPhysLocations(client.RequestOptions{})
 	if err != nil {
-		t.Error(err.Error())
+		t.Errorf("Unexpected error getting Physical Locations: %v - alerts: %+v", err, resp.Alerts)
 	}
-	sorted := sort.SliceIsSorted(resp, func(i, j int) bool {
-		return resp[i].Name < resp[j].Name
+	sorted := sort.SliceIsSorted(resp.Response, func(i, j int) bool {
+		return resp.Response[i].Name < resp.Response[j].Name
 	})
 	if !sorted {
 		t.Error("expected response to be sorted by name")
@@ -212,29 +245,117 @@ func GetDefaultSortPhysLocationsTest(t *testing.T) {
 }
 
 func DeleteTestPhysLocations(t *testing.T) {
-
-	for _, cdn := range testData.PhysLocations {
+	opts := client.NewRequestOptions()
+	for _, pl := range testData.PhysLocations {
 		// Retrieve the PhysLocation by name so we can get the id for the Update
-		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name, nil)
+		opts.QueryParameters.Set("name", pl.Name)
+		resp, _, err := TOSession.GetPhysLocations(opts)
 		if err != nil {
-			t.Errorf("cannot GET PhysLocation by name: %v - %v", cdn.Name, err)
+			t.Errorf("cannot get Physical Location by name '%s': %v - alerts: %+v", pl.Name, err, resp.Alerts)
 		}
-		if len(resp) > 0 {
-			respPhysLocation := resp[0]
-
-			_, _, err := TOSession.DeletePhysLocation(respPhysLocation.ID)
-			if err != nil {
-				t.Errorf("cannot DELETE PhysLocation by name: '%s' %v", respPhysLocation.Name, err)
-			}
-
-			// Retrieve the PhysLocation to see if it got deleted
-			cdns, _, err := TOSession.GetPhysLocationByName(cdn.Name, nil)
-			if err != nil {
-				t.Errorf("error deleting PhysLocation name: %s", err.Error())
-			}
-			if len(cdns) > 0 {
-				t.Errorf("expected PhysLocation name: %s to be deleted", cdn.Name)
-			}
+		if len(resp.Response) != 1 {
+			t.Errorf("Expected exactly one Physical Location to exist with name '%s', found: %d", pl.Name, len(resp.Response))
+			continue
 		}
+
+		respPhysLocation := resp.Response[0]
+
+		alerts, _, err := TOSession.DeletePhysLocation(respPhysLocation.ID, client.RequestOptions{})
+		if err != nil {
+			t.Errorf("Unexpected error deleting Physical Location '%s' (#%d): %v - alerts: %+v", respPhysLocation.Name, respPhysLocation.ID, err, alerts.Alerts)
+		}
+
+		// Retrieve the PhysLocation to see if it got deleted
+		resp, _, err = TOSession.GetPhysLocations(opts)
+		if err != nil {
+			t.Errorf("error getting Physical Location '%s' after deletion: %v - alerts: %+v", pl.Name, err, resp.Alerts)
+		}
+		if len(resp.Response) > 0 {
+			t.Errorf("expected Physical Location '%s' to be deleted, but it was found in Traffic Ops", pl.Name)
+		}
+	}
+}
+
+func GetTestPaginationSupportPhysLocation(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetPhysLocations(opts)
+	if err != nil {
+		t.Errorf("Unexpected error getting Physical Locations: %v - alerts: %+v", err, resp.Alerts)
+	}
+	physlocations := resp.Response
+
+	if len(physlocations) > 0 {
+		opts.QueryParameters = url.Values{}
+		opts.QueryParameters.Set("orderby", "id")
+		opts.QueryParameters.Set("limit", "1")
+		physlocationsWithLimit, _, err := TOSession.GetPhysLocations(opts)
+		if err == nil {
+			if !reflect.DeepEqual(physlocations[:1], physlocationsWithLimit.Response) {
+				t.Error("expected GET PhysLocation with limit = 1 to return first result")
+			}
+		} else {
+			t.Errorf("Unexpected error getting Physical Locations with a limit: %v - alerts: %+v", err, physlocationsWithLimit.Alerts)
+		}
+		if len(physlocations) > 1 {
+			opts.QueryParameters = url.Values{}
+			opts.QueryParameters.Set("orderby", "id")
+			opts.QueryParameters.Set("limit", "1")
+			opts.QueryParameters.Set("offset", "1")
+			physlocationsWithOffset, _, err := TOSession.GetPhysLocations(opts)
+			if err == nil {
+				if !reflect.DeepEqual(physlocations[1:2], physlocationsWithOffset.Response) {
+					t.Error("expected GET PhysLocation with limit = 1, offset = 1 to return second result")
+				}
+			} else {
+				t.Errorf("Unexpected error getting Physical Locations with a limit and an offset: %v - alerts: %+v", err, physlocationsWithOffset.Alerts)
+			}
+
+			opts.QueryParameters = url.Values{}
+			opts.QueryParameters.Set("orderby", "id")
+			opts.QueryParameters.Set("limit", "1")
+			opts.QueryParameters.Set("page", "2")
+			physlocationsWithPage, _, err := TOSession.GetPhysLocations(opts)
+			if err == nil {
+				if !reflect.DeepEqual(physlocations[1:2], physlocationsWithPage.Response) {
+					t.Error("expected GET PhysLocation with limit = 1, page = 2 to return second result")
+				}
+			} else {
+				t.Errorf("Unexpected error getting Physical Locations with a limit and a page: %v - alerts: %+v", err, physlocationsWithPage.Alerts)
+			}
+		} else {
+			t.Errorf("only one PhysLocation found, so offset functionality can't test")
+		}
+	} else {
+		t.Errorf("No PhysLocation found to check pagination")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, _, err = TOSession.GetPhysLocations(opts)
+	if err == nil {
+		t.Error("expected GET PhysLocation to return an error when limit is not bigger than -1")
+	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
+		t.Errorf("expected GET PhysLocation to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, _, err = TOSession.GetPhysLocations(opts)
+	if err == nil {
+		t.Error("expected GET PhysLocation to return an error when offset is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET PhysLocation to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, _, err = TOSession.GetPhysLocations(opts)
+	if err == nil {
+		t.Error("expected GET PhysLocation to return an error when page is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET PhysLocation to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 }

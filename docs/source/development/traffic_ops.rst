@@ -28,7 +28,7 @@ Software Requirements
 =====================
 Traffic Ops is only supported on CentOS 7+ systems (although many developers do use Mac OS with some success). Here are the requirements:
 
-- `Goose <https://bitbucket.org/liamstask/goose/>`_ (although the ``postinstall`` script will install this)
+- `Goose <https://github.com/kevinburke/goose>`_ (although the ``postinstall`` script will install this)
 - `PostgreSQL 13.2 <https://www.postgresql.org/download/>`_ - the machine where Traffic Ops is running must have the client tool set (e.g. :manpage:`psql(1)`), but the actual database can be run anywhere so long as it is accessible.
 
 	.. note:: Prior to version 13.2, Traffic Ops used version 9.6. For upgrading an existing Mac OS Homebrew-based PostgreSQL instance, you can use `Homebrew <https://brew.sh/>`_ to easily upgrade from 9.6 to 13.2:
@@ -180,7 +180,7 @@ Traffic Ops Project Tree Overview
 
 app/db/admin
 ============
-The :program:`app/db/admin` binary is for use in managing the Traffic Ops database tables. This essentially serves as a front-end for `Goose <https://bitbucket.org/liamstask/goose/>`_.
+The :program:`app/db/admin` binary is for use in managing the Traffic Ops (and Traffic Vault PostgreSQL backend) database tables. This essentially serves as a front-end for `Goose <https://github.com/kevinburke/goose>`_.
 
 .. note:: For proper resolution of configuration and SOL statement files, it's recommended that this binary be run from the ``app`` directory
 
@@ -201,6 +201,10 @@ Options and Arguments
 
 	:program:`admin` sets :envvar:`MOJO_MODE` to the value of the environment as specified by this option. (Default: ``development``)
 
+.. option:: --trafficvault
+
+	When used, commands will be run against the Traffic Vault PostgreSQL backend database as specified in the :file:`app/db/trafficvault/dbconf.yml` configuration file.
+
 .. option:: command
 
 	The :option:`command` specifies the operation to be performed on the database. It must be one of:
@@ -218,19 +222,17 @@ Options and Arguments
 	drop_user
 		Drops the user defined for the current environment
 	load_schema
-		Sets up the database for the current environment according to the SQL statements in ``app/db/create_tables.sql``
+		Sets up the database for the current environment according to the SQL statements in ``app/db/create_tables.sql`` or ``app/db/trafficvault/create_tables.sql`` if the ``--trafficvault`` option is used
 	migrate
 		Runs a migration on the database for the current environment
 	patch
-		Patches the database for the current environment using the SQL statements from the ``app/db/patches.sql``
+		Patches the database for the current environment using the SQL statements from the ``app/db/patches.sql``. This command is not supported when using the ``--trafficvault`` option
 	redo
 		Rolls back the most recently applied migration, then run it again
 	reset
 		Creates the user defined for the current environment, drops the database for the current environment, creates a new one, loads the schema into it, and runs a single migration on it
-	reverse_schema
-		Reverse engineers the ``app/lib/Schema/Result/*`` files from the environment database
 	seed
-		Executes the SQL statements from the ``app/db/seeds.sql`` file for loading static data
+		Executes the SQL statements from the ``app/db/seeds.sql`` file for loading static data. This command is not supported when using the ``--trafficvault`` option
 	show_users
 		Displays a list of all users registered with the PostgreSQL server
 	status
@@ -243,7 +245,7 @@ Options and Arguments
 
 	db/admin --env=test reset
 
-The environments are defined in the :atc-file:`traffic_ops/app/db/dbconf.yml` file, and the name of the database generated will be the name of the environment for which it was created.
+The environments are defined in the :atc-file:`traffic_ops/app/db/dbconf.yml` file, and the name of the database generated will be the name of the environment for which it was created. If the ``--trafficvault`` option is used, the :file:`app/db/trafficvault/dbconf.yml` file defines this information.
 
 Installing The Developer Environment
 ====================================
@@ -264,9 +266,148 @@ To install the Traffic Ops Developer environment:
 	.. seealso:: `PostgreSQL instructions on setting up a database <https://wiki.postgresql.org/wiki/First_steps>`_.
 
 
-#. Use the ``reset`` and ``upgrade`` :option:`command`\ s of :program:`admin` (see :ref:`database-management` for usage) to set up the ``traffic_ops`` database(s).
+#. Use the ``reset`` and ``upgrade`` :option:`command`\ s of :program:`admin` (see :ref:`database-management` for usage) to set up the ``traffic_ops`` database(s) and optionally with the ``--trafficvault`` option to set up the ``traffic_vault`` database(s).
 #. Run the :atc-file:`traffic_ops/install/bin/postinstall` script, it will prompt for information like the default user login credentials.
 #. To run Traffic Ops, follow the instructions in :ref:`to-running`.
+
+.. program:: traffic_vault_migrate
+
+app/db/traffic_vault_migrate
+==============================
+The ``traffic_vault_migrate`` tool - located at :file:`traffic_ops/app/db/traffic_vault_migrate/traffic_vault_migrate.go` in the `Apache Traffic Control repository <https://github.com/apache/trafficcontrol>`_ -
+is used to transfer TV keys between database servers. It interfaces directly with each backend so Traffic Ops/Vault being available is not a requirement.
+The tool assumes that the schema for each backend is already setup as according to the :ref:`admin setup <traffic_vault_admin>`.
+
+.. program:: traffic_vault_migrate
+
+Usage
+-----------
+``traffic_vault_migrate [-cdhmr] [-e value] [-f value] [-g value] [-i value] [-l value] [-o value] [-t value]``
+
+.. option:: -c, --compare
+
+		Compare 'to' and 'from' backend keys. Will fetch keys from the dbs of both 'to' and 'from', sorts them by cdn/ds/version and does a deep comparison.
+
+		.. note:: Mutually exclusive with :option:`-r`/:option:`--dry`
+
+.. option:: -d, --dump
+
+		Write keys (from 'from' server) to disk in the folder 'dump' with the unix permissions 0640.
+
+		.. warning:: This can write potentially sensitive information to disk, use with care.
+
+		.. note:: Mutually exclusive with :option:`-l`/:option:`--fill`
+
+.. option:: -e LEVEL, --logLevel=LEVEL
+
+		Print everything at above specified log level (error|warning|info|debug|event) [info]
+
+		.. note:: Mutually exclusive with :option:`-l`/:option:`--logCfg`
+
+.. option:: -f CFG, --fromCfgPath=CFG
+
+		From server config file ["riak.json"]
+
+.. option:: -g CFG, --toCfgPath=CFG
+
+		To server config file ["pg.json"]
+
+.. option:: -h, --help
+
+		Displays usage information
+
+.. option:: -i DIR, --fill DIR
+
+		Insert data into `to` server with data this directory
+
+		.. note:: Mutually exclusive with :option:`-d`/:option:`--dump`
+
+.. option:: -l CFG, --logCfg CFG
+
+		Log configuration file
+
+		.. note:: Mutually exclusive with :option:`-e`/:option:`--logLevel`
+
+.. option:: -o TYPE, --toType=TYPE
+
+		From server types (Riak|PG) [PG]
+
+.. option:: -m, --noConfirm
+
+		Do not require confirmation before inserting records
+
+.. option:: -r, --dry
+
+		Do not perform writes. Will do a basic output of the keys on the 'from' backend.
+
+		.. note:: Mutually exclusive with :option:`-c`/:option:`--compare`
+
+.. option:: -t TYPE, --fromType=TYPE
+
+		From server types (Riak|PG) [Riak]
+
+
+Riak
+----------
+
+riak.json
+""""""""""
+
+ :user: The username used to log into the Riak server.
+
+ :password: The password used to log into the Riak server.
+
+ :host: The hostname for the Riak server.
+
+ :port: The port for which the Riak server is listening for protobuf connections.
+
+ :timeout: The number of seconds to wait for each operation.
+
+ :insecure: (Optional) Determines whether to verify insecure certificates.
+
+ :tlsVersion: (Optional) Max TLS version supported. Valid values are  "10", "11", "12", "13".
+
+
+Postgres
+---------
+:program:`traffic_vault_migrate` will properly handle both encryption and decryption of postgres data as that is done on the client side.
+
+pg.json
+"""""""""
+
+ :user: The username used to log into the PG server.
+
+ :password: The password for the user to log into the PG server.
+
+ :database: The database to connect to.
+
+ :port: The port on which the PG server is listening.
+
+ :host: The hostname of the PG server.
+
+ :sslmode: The ssl settings for the client connection, `explanation here <https://www.postgresql.org/docs/13/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS>`_. Options are 'disable', 'allow', 'prefer', 'require', 'verify-ca' and 'verify-full'
+
+ :aesKey: The base64 encoding of a 16, 24, or 32 bit AES key.
+
+
+Logging
+----------
+
+The log configuration file has the structure:
+
+ :error_log: Where to output error messages (stderr|stdout|null)
+
+ :warning_log: Where to output warning messages (stderr|stdout|null)
+
+ :info_log: Where to output info messages (stderr|stdout|null)
+
+ :debug_log: Where to output error messages (stderr|stdout|null)
+
+ :event_log: Where to output error messages (stderr|stdout|null)
+
+Adding a Migration Backend
+-----------------------------
+To add a plugin, implement the traffic_vault_migrate.go:TVBackend interface and add the backend to the returned values in :atc-godoc:`traffic_ops/app/db/traffic_vault_migrate.supportBackends`.
 
 Test Cases
 ==========
@@ -317,7 +458,7 @@ The integration tests are run using :manpage:`go-test(1)`, with two configuratio
 
 .. option:: --includeSystemTests ``no``/``yes``
 
-	Specify whether to run tests that depend on additional components like an SMTP server or a Riak server. Default: ``no``
+	Specify whether to run tests that depend on additional components like an SMTP server or a Traffic Vault server. Default: ``no``
 
 Configuring the Integration Tests
 """""""""""""""""""""""""""""""""

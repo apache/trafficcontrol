@@ -16,27 +16,37 @@ limitations under the License.
 <main>
 	<form name="timespan" (ngSubmit)="newDateRange()" ngNativeValidate>
 		<div>
-			<label for="fromdate">From</label>
-			<input [formControl]="fromDate" type="date" id="fromdate" title="From (date)" name="fromdate"/>
-			<label for="fromtime">At</label>
-			<input [formControl]="fromTime" type="time" id="fromtime" title="From (time)" name="fromtime" value="00:00">
+			<mat-form-field>
+				<mat-label>From</mat-label>
+				<input matInput [formControl]="fromDate" type="date" title="From (date)" name="fromdate"/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>At</mat-label>
+				<input matInput [formControl]="fromTime" type="time" title="From (time)" name="fromtime" value="00:00">
+			</mat-form-field>
 		</div>
 		<div>
-			<label for="todate">To</label>
-			<input [formControl]="toDate" type="date" id="todate" title="To (date)" name="todate"/>
-			<label for="totime">At</label>
-			<input [formControl]="toTime" type="time" id="totime" title="To (time)" name="totime"></div>
-		<button>Refresh</button>
+			<mat-form-field>
+				<mat-label>To</mat-label>
+				<input matInput [formControl]="toDate" type="date" title="To (date)" name="todate"/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>At</mat-label>
+				<input matInput [formControl]="toTime" type="time" title="To (time)" name="totime">
+			</mat-form-field>
+		</div>
+		<button mat-raised-button>Refresh</button>
 	</form>
-	<hr/>
+	<mat-divider></mat-divider>
 	<canvas linechart chartTitle="Bandwidth of Cache Tiers" [chartDataSets]="bandwidthData" chartYAxisLabel="Bandwidth (Kilobytes Per Second)" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time">
 		Your browser does not support canvases or Javascript. Normally, this would be a graph of bandwidth data.
 	</canvas>
-	<hr/>
+	<mat-divider></mat-divider>
 	 <canvas linechart chartTitle="Transactions at the Edge Tier" [chartDataSets]="tpsChartData" chartYAxisLabel="Transactions Per Second" chartXAxisLabel="Date/Time" [chartDisplayLegend]="true" chartType="time">
 		Your browser does not support canvases or Javascript. Normally, this would be a graph of transaction data.
 	</canvas>
-	<a id="invalidate" routerLink="/deliveryservice/{{deliveryservice.id}}/invalidation-jobs">
-		<img src="assets/invalidate.svg" title="Invalidate Content">
+	<a mat-fab id="invalidate" routerLink="/deliveryservice/{{deliveryservice.id}}/invalidation-jobs" title="invalidate content" aria-label="invalidate content">
+		<!-- <img src="assets/invalidate.svg" title="Invalidate Content"> -->
+		<fa-icon [icon]="invalidateIcon"></fa-icon>
 	</a>
 </main>

@@ -13,16 +13,14 @@
 #
 
 run:
-  concurrency: 4
-  timeout: 5m
-  issues-exit-code: 0 # TODO: once all enabled linters are satisfied  
-  tests: false
+  concurrency: 8
+  timeout: 2m
+  tests: true
   skip-dirs:
-    - ^experimental.*($|/)
+    - ^rpmbuild.*
   skip-dirs-use-default: true
 
   output:
-  # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
     format: colored-line-number
     print-issued-lines: true
     print-linter-name: true
@@ -31,8 +29,3 @@ linters:
   disable-all: true
   enable:
     - govet
-    - errcheck
-    - structcheck
-    - golint
-    - gofmt
-    - staticcheck

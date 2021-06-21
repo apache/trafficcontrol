@@ -16,27 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { readFileSync } from "fs";
-
 import { browser } from 'protractor';
-import using from "jasmine-data-provider";
 
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { CacheGroupPage } from '../PageObjects/CacheGroup.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
+import { cachegroups } from "../Data";
 
 
-let filename = 'Data/CacheGroup/TestCases.json';
-let testData = JSON.parse(readFileSync(filename, "utf8"));
 
 let loginPage = new LoginPage();
 let topNavigation = new TopNavigationPage();
 let cacheGroupPage = new CacheGroupPage();
 
-using(testData.CacheGroup, function (cacheGroupData) {
-    describe('Traffic Portal - CacheGroup - ' + cacheGroupData.TestName, function () {
-        using(cacheGroupData.Login, function (login) {
-            it('can login', async function(){
+cachegroups.tests.forEach(cacheGroupData => {
+    describe(`Traffic Portal - CacheGroup - ${cacheGroupData.testName}`, () => {
+        cacheGroupData.logins.forEach(login => {
+            it('can login', async function () {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
@@ -45,21 +41,39 @@ using(testData.CacheGroup, function (cacheGroupData) {
                 await cacheGroupPage.OpenTopologyMenu();
                 await cacheGroupPage.OpenCacheGroupsPage();
             })
-            using(cacheGroupData.Create, function (create) {
-                it(create.description, async function () {
+            cacheGroupData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await cacheGroupPage.CheckCSV(check.Name)).toBe(true);
+                    await cacheGroupPage.OpenCacheGroupsPage();
+                });
+            });
+            cacheGroupData.toggle.forEach(toggle => {
+                it(toggle.description, async () => {
+                    if(toggle.description.includes('hide')){
+                        expect(await cacheGroupPage.ToggleTableColumn(toggle.Name)).toBe(false);
+                        await cacheGroupPage.OpenCacheGroupsPage();
+                    }else{
+                        expect(await cacheGroupPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                        await cacheGroupPage.OpenCacheGroupsPage();
+                    }
+                    
+                });
+            })
+            cacheGroupData.create.forEach(create => {
+                it(create.Description, async function () {
                     expect(await cacheGroupPage.CreateCacheGroups(create, create.validationMessage)).toBeTruthy();
                     await cacheGroupPage.OpenCacheGroupsPage();
                 })
             })
-            using(cacheGroupData.Update, function (update) {
-                if(update.description.includes("cannot")){
-                    it(update.description, async function () {
+            cacheGroupData.update.forEach(update => {
+                if (update.Description.includes("cannot")) {
+                    it(update.Description, async function () {
                         await cacheGroupPage.SearchCacheGroups(update.Name)
                         expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeUndefined();
                         await cacheGroupPage.OpenCacheGroupsPage();
                     })
-                }else{
-                    it(update.description, async function () {
+                } else {
+                    it(update.Description, async function () {
                         await cacheGroupPage.SearchCacheGroups(update.Name)
                         expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeTruthy();
                         await cacheGroupPage.OpenCacheGroupsPage();
@@ -67,8 +81,8 @@ using(testData.CacheGroup, function (cacheGroupData) {
                 }
 
             })
-            using(cacheGroupData.Remove, function (remove) {
-                it(remove.description, async function () {
+            cacheGroupData.remove.forEach(remove => {
+                it(remove.Description, async function () {
                     await cacheGroupPage.SearchCacheGroups(remove.Name)
                     expect(await cacheGroupPage.DeleteCacheGroups(remove.Name, remove.validationMessage)).toBeTruthy();
                 })

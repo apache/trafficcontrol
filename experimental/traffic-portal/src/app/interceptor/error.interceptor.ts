@@ -13,13 +13,12 @@
 */
 import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { Router } from "@angular/router";
 
 import { Observable, throwError } from "rxjs";
 import { catchError } from "rxjs/operators";
 
 import { Alert } from "../models/alert";
-import { AlertService, AuthenticationService } from "../services";
+import { AlertService, CurrentUserService } from "../services";
 
 /**
  * This class intercepts any and all HTTP error responses and checks for
@@ -28,12 +27,8 @@ import { AlertService, AuthenticationService } from "../services";
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
 
-	/**
-	 * Constructor.
-	 */
 	constructor(
-		private readonly authenticationService: AuthenticationService,
-		private readonly router: Router,
+		private readonly currentUserService: CurrentUserService,
 		private readonly alerts: AlertService
 	) {}
 
@@ -47,7 +42,7 @@ export class ErrorInterceptor implements HttpInterceptor {
 	 * @returns An Observable that will emit an event if the request fails.
 	 */
 	public intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-		return next.handle(request).pipe(catchError(err => {
+		return next.handle(request).pipe(catchError((err) => {
 			console.error("HTTP Error: ", err);
 
 			if (err.hasOwnProperty("error") && (err as {error: object}).error.hasOwnProperty("alerts")) {
@@ -56,11 +51,9 @@ export class ErrorInterceptor implements HttpInterceptor {
 				}
 			}
 			if (err.status === 401 || err.status === 403) {
-				this.authenticationService.logout();
-				this.router.navigate(["/login"]);
+				this.currentUserService.logout(true);
 			}
 
-			// const error = err.error && err.error.message ? err.error.message : err.statusText;
 			return throwError(err);
 		}));
 	}

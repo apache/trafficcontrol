@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var NotificationsController = function($rootScope, $scope, $interval, cdnService) {
+var NotificationsController = function($rootScope, $scope, $interval, userModel, cdnService) {
 
 	let interval;
 
@@ -47,17 +47,24 @@ var NotificationsController = function($rootScope, $scope, $interval, cdnService
 		localStorage.setItem("dismissed_notification_ids", JSON.stringify($scope.dismissedNotifications));
 	};
 
-	$scope.$on("$destroy", function() {
+	$rootScope.$on('authService::login', function() {
+		getNotifications();
+		createInterval();
+	});
+
+	$rootScope.$on('trafficPortal::exit', function() {
 		killInterval();
 	});
 
-	let init = function () {
-		getNotifications();
-		createInterval();
+	var init = function () {
+		if (userModel.loaded) {
+			getNotifications();
+			createInterval();
+		}
 	};
 	init();
 
 };
 
-NotificationsController.$inject = ['$rootScope', '$scope', '$interval', 'cdnService'];
+NotificationsController.$inject = ['$rootScope', '$scope', '$interval', 'userModel', 'cdnService'];
 module.exports = NotificationsController;
