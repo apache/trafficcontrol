@@ -29,7 +29,6 @@
  *
  * @returns {(input: string) => string} A filter that sanitizes input text for safe insertion into URL query strings.
  */
-
 var EncodeURIComponentFilter = function() {
     return function(input) {
         return encodeURIComponent(input);
