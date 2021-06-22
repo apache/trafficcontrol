@@ -69,7 +69,7 @@ export class DeliveryServicePage extends BasePage {
   private txtOrgServerURL = element(by.name('orgServerFqdn'));
   private txtProtocol = element(by.name('protocol'));
   private txtRemapText = element(by.name('remapText'));
-  private btnCreateDeliveryServices = element(by.xpath("//div[@class='pull-right']//button[text()='Create']"));
+  private btnCreateDeliveryServices = element(by.buttonText('Create'));
   private randomize = randomize;
 
   public async OpenDeliveryServicePage() {
