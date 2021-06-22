@@ -21,6 +21,7 @@ package tc
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -137,3 +138,20 @@ func (t *TimeNoMod) UnmarshalJSON([]byte) (err error) {
 
 // TimeStamp holds the current time with nanosecond precision. It is unused.
 type TimeStamp time.Time
+
+// ParseUnixNanoOrRFC3339 parses the given string as either a Unix nanosecond
+// timestamp or an RFC3339-formatted date/time (optional nanosecond precision).
+// The returned time.Time structure will be set to the UTC location. If the
+// passed string cannot be parsed as either date representation, an error is
+// returned describing what went wrong, in Go's own words.
+func ParseUnixNanoOrRFC3339(val string) (time.Time, error) {
+	ns, nsErr := strconv.ParseInt(val, 10, 64)
+	if nsErr == nil {
+		return time.Unix(0, ns).UTC(), nil
+	}
+	rfcTime, rfcErr := time.Parse(time.RFC3339Nano, val)
+	if rfcErr == nil {
+		return rfcTime.UTC(), nil
+	}
+	return time.Time{}, fmt.Errorf("invalid timestamp '%s': not a Unix nanosecond timestamp and %w", val, rfcErr)
+}
