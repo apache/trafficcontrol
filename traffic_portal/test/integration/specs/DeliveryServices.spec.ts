@@ -34,6 +34,7 @@ describe('Setup API for delivery service test', function () {
         await api.UseAPI(deliveryservices.setup);
     });
 });
+
 deliveryservices.tests.forEach(async deliveryservicesData => {
     deliveryservicesData.logins.forEach(login =>{
         describe(`Traffic Portal - Delivery Service - ${login.description}`, () =>{
