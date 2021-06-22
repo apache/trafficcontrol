@@ -275,6 +275,13 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// CheckIfCurrentUserCanModifyCDN
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
 	userErr, sysErr, errCode = tenant.CheckID(inf.Tx.Tx, inf.User, dsID)
 	if userErr != nil || sysErr != nil {
 		defer cancelTx()

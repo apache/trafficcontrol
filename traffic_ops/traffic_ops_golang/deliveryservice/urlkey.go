@@ -204,6 +204,26 @@ func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	destinationDSID, ok, err := getDSIDFromName(inf.Tx.Tx, string(ds))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.CopySSLKeys: getting DS ID from name "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+string(ds)), nil)
+		return
+	}
+	cdn, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, destinationDSID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateSSLKeys: getting CDN from DS ID "+err.Error()))
+		return
+	}
+	// CheckIfCurrentUserCanModifyCDN
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+
 	if err := inf.Vault.PutURLSigKeys(string(ds), keys, inf.Tx.Tx, r.Context()); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+" copied from "+string(copyDS)+": "+err.Error()))
 		return
@@ -353,6 +373,18 @@ func DeleteURLKeysByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cdn, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, dsId)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteURLKeysByID: getting CDN from DS ID "+err.Error()))
+		return
+	}
+	// CheckIfCurrentUserCanModifyCDN
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+
 	err = inf.Vault.DeleteURLSigKeys(string(ds), inf.Tx.Tx, r.Context())
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting URL Sig keys from Traffic Vault: "+err.Error()))
@@ -401,6 +433,17 @@ func DeleteURLKeysByName(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+string(ds)), nil)
+		return
+	}
+	cdn, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, dsId)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteURLKeysByName: getting CDN from DS ID "+err.Error()))
+		return
+	}
+	// CheckIfCurrentUserCanModifyCDN
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
 
