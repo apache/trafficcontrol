@@ -190,7 +190,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		inf.Params["orderby"] = "xmlId"
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols, "r.last_updated")
 	if len(errs) > 0 {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
 		return

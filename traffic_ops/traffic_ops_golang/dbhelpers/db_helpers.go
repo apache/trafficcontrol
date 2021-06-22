@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -126,14 +127,54 @@ func CheckIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (error, error, i
 	return nil, nil, http.StatusOK
 }
 
-func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, string, map[string]interface{}, []error) {
+const newerStmt = ` >= :newerThan`
+const olderStmt = ` <= :olderThan`
+
+func buildAgeFilter(params map[string]string, fieldName string) (string, time.Time, time.Time, error) {
+	if fieldName == "" {
+		return "", time.Time{}, time.Time{}, nil
+	}
+
+	var newerTime, olderTime time.Time
+	var err error
+
+	var b strings.Builder
+	// enough room for each statement, plus " AND " to separate them
+	b.Grow(len(newerStmt) + len(olderStmt) + 5 + (len(fieldName) * 2))
+
+	newerThan, ok := params["newerThan"]
+	if ok {
+		newerTime, err = tc.ParseUnixNanoOrRFC3339(newerThan)
+		if err != nil {
+			return "", time.Time{}, time.Time{}, fmt.Errorf("invalid value for 'newerThan': %w", err)
+		}
+		b.WriteString(fieldName)
+		b.WriteString(newerStmt)
+	}
+	olderThan, ok := params["olderThan"]
+	if ok {
+		olderTime, err = tc.ParseUnixNanoOrRFC3339(olderThan)
+		if err != nil {
+			return "", time.Time{}, time.Time{}, fmt.Errorf("invalid value for 'olderThan': %w", err)
+		}
+		if b.Len() > 0 {
+			b.WriteString(" AND ")
+		}
+		b.WriteString(fieldName)
+		b.WriteString(olderStmt)
+	}
+
+	return b.String(), newerTime, olderTime, nil
+}
+
+func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo, ageFilterField string) (string, string, string, map[string]interface{}, []error) {
 	whereClause := BaseWhere
 	orderBy := BaseOrderBy
 	paginationClause := BaseLimit
 	var criteria string
 	var queryValues map[string]interface{}
 	var errs []error
-	criteria, queryValues, errs = parseCriteriaAndQueryValues(queryParamsToSQLCols, parameters)
+	criteria, queryValues, errs = parseCriteriaAndQueryValues(queryParamsToSQLCols, parameters, ageFilterField)
 
 	if len(queryValues) > 0 {
 		whereClause += " " + criteria
@@ -207,7 +248,7 @@ func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParams
 	return whereClause, orderBy, paginationClause, queryValues, errs
 }
 
-func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string) (string, map[string]interface{}, []error) {
+func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string, fieldName string) (string, map[string]interface{}, []error) {
 	var criteria string
 
 	var criteriaArgs []string
@@ -228,9 +269,17 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 			}
 		}
 	}
-	criteria = strings.Join(criteriaArgs, " AND ")
 
-	return criteria, queryValues, errs
+	clause, newerTime, olderTime, err := buildAgeFilter(parameters, fieldName)
+	if err != nil {
+		errs = append(errs, err)
+	} else {
+		queryValues["newerThan"] = newerTime
+		queryValues["olderThan"] = olderTime
+		criteriaArgs = append(criteriaArgs, clause)
+	}
+
+	return strings.Join(criteriaArgs, " AND "), queryValues, errs
 }
 
 // AddTenancyCheck takes a WHERE clause (can be ""), the associated queryValues (can be empty),

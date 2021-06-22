@@ -60,7 +60,7 @@ FROM table t
 		"param1": WhereColumnInfo{"t.col1", nil},
 		"param2": WhereColumnInfo{"t.col2", nil},
 	}
-	where, orderBy, pagination, queryValues, _ := BuildWhereAndOrderByAndPagination(v, queryParamsToSQLCols)
+	where, orderBy, pagination, queryValues, _ := BuildWhereAndOrderByAndPagination(v, queryParamsToSQLCols, "")
 	query := selectStmt + where + orderBy + pagination
 	actualQuery := stripAllWhitespace(query)
 
@@ -87,6 +87,134 @@ FROM table t
 		t.Errorf("expected: %v error, actual: %v", actualQuery, expectedV2)
 	}
 
+}
+
+type ageFilteringQueryCase struct {
+	ExpectedNewerThan *time.Time
+	ExpectedOlderThan *time.Time
+	FieldName         string
+	NewerThan         string
+	OlderThan         string
+}
+
+func testAgeFilteringQueryCase(qCase ageFilteringQueryCase) func(*testing.T) {
+	v := map[string]string{"param1": "queryParamv1", "param2": "queryParamv2", "limit": "20", "offset": "10"}
+	queryParamsToSQLCols := map[string]WhereColumnInfo{
+		"param1": {"t.col1", nil},
+		"param2": {"t.col2", nil},
+	}
+	return func(t *testing.T) {
+		if qCase.NewerThan != "" {
+			v["newerThan"] = qCase.NewerThan
+		}
+		if qCase.OlderThan != "" {
+			v["olderThan"] = qCase.OlderThan
+		}
+
+		where, _, _, queryValues, errs := BuildWhereAndOrderByAndPagination(v, queryParamsToSQLCols, qCase.FieldName)
+		if len(errs) > 0 {
+			t.Errorf("Unexpected error: %v", util.JoinErrs(errs))
+		}
+		if qCase.ExpectedNewerThan != nil {
+			if newerThan, ok := queryValues["newerThan"]; !ok {
+				t.Error("Expected query values to contain a 'newerThan' value")
+			} else if newerThanTime, ok := newerThan.(time.Time); !ok {
+				t.Errorf("Expected newerThan value to be a time.Time, got: %T", newerThan)
+			} else if !qCase.ExpectedNewerThan.Equal(newerThanTime) {
+				t.Errorf("Incorrect newerThan time, expected: %v got: %v", *qCase.ExpectedNewerThan, newerThanTime)
+			}
+
+			if !strings.Contains(where, qCase.FieldName+newerStmt) {
+				t.Errorf("WHERE clause should've had a statement that restricts the '%s' field to no older than %v, actual: %s", qCase.FieldName, *qCase.ExpectedNewerThan, where)
+			}
+		} else if strings.Contains(where, qCase.FieldName+newerStmt) {
+			t.Error("WHERE clause should not have had a 'newerThan' statement")
+		}
+		if qCase.ExpectedOlderThan != nil {
+			if olderThan, ok := queryValues["olderThan"]; !ok {
+				t.Error("Expected query values to contain a 'olderThan' value")
+			} else if olderThanTime, ok := olderThan.(time.Time); !ok {
+				t.Errorf("Expected olderThan value to be a time.Time, got: %T", olderThan)
+			} else if !qCase.ExpectedOlderThan.Equal(olderThanTime) {
+				t.Errorf("Incorrect olderThan time, expected: %v got: %v", *qCase.ExpectedOlderThan, olderThanTime)
+			}
+
+			if !strings.Contains(where, qCase.FieldName+olderStmt) {
+				t.Errorf("WHERE clause should've had a statement that restricts the '%s' field to no newer than %v, actual: %s", qCase.FieldName, *qCase.ExpectedOlderThan, where)
+			}
+		} else if strings.Contains(where, qCase.FieldName+olderStmt) {
+			t.Error("WHERE clause should not have had a 'olderThan' statement")
+		}
+
+	}
+}
+
+func TestBuildQueryWithAgeFiltering(t *testing.T) {
+	t.Run("no query string parameters given", testAgeFilteringQueryCase(
+		ageFilteringQueryCase{
+			ExpectedNewerThan: nil,
+			ExpectedOlderThan: nil,
+			FieldName:         "last_updated",
+			NewerThan:         "",
+			OlderThan:         "",
+		},
+	))
+	t.Run("age filtering not supported", testAgeFilteringQueryCase(
+		ageFilteringQueryCase{
+			ExpectedNewerThan: nil,
+			ExpectedOlderThan: nil,
+			FieldName:         "",
+			NewerThan:         "1257894000000000000",
+			OlderThan:         "1257895000000000000",
+		},
+	))
+	newerThan := time.Unix(0, 1257894000000000000)
+	olderThan := time.Unix(0, 1257895000000000000)
+	t.Run("filtering with 'newerThan'", testAgeFilteringQueryCase(
+		ageFilteringQueryCase{
+			ExpectedNewerThan: &newerThan,
+			ExpectedOlderThan: nil,
+			FieldName:         "last_updated",
+			NewerThan:         "1257894000000000000",
+			OlderThan:         "",
+		},
+	))
+	t.Run("filtering with 'olderThan'", testAgeFilteringQueryCase(
+		ageFilteringQueryCase{
+			ExpectedNewerThan: nil,
+			ExpectedOlderThan: &olderThan,
+			FieldName:         "last_updated",
+			NewerThan:         "",
+			OlderThan:         "1257895000000000000",
+		},
+	))
+	t.Run("filtering with both 'newerThan' and 'olderThan'", testAgeFilteringQueryCase(
+		ageFilteringQueryCase{
+			ExpectedNewerThan: &newerThan,
+			ExpectedOlderThan: &olderThan,
+			FieldName:         "last_updated",
+			NewerThan:         "1257894000000000000",
+			OlderThan:         "1257895000000000000",
+		},
+	))
+	t.Run("filtering with mixed date/time formats", testAgeFilteringQueryCase(
+		ageFilteringQueryCase{
+			ExpectedNewerThan: &newerThan,
+			ExpectedOlderThan: &olderThan,
+			FieldName:         "last_updated",
+			NewerThan:         newerThan.Format(time.RFC3339Nano),
+			OlderThan:         "1257895000000000000",
+		},
+	))
+	t.Run("filtering with an unusual field name", testAgeFilteringQueryCase(
+		ageFilteringQueryCase{
+			ExpectedNewerThan: nil,
+			ExpectedOlderThan: &olderThan,
+			FieldName:         "some other field name",
+			NewerThan:         "",
+			OlderThan:         "1257895000000000000",
+		},
+	))
 }
 
 func TestGetCacheGroupByName(t *testing.T) {

@@ -19,17 +19,18 @@ package capabilities
  * under the License.
  */
 
-import "database/sql"
-import "encoding/json"
-import "errors"
-import "fmt"
-import "net/http"
+import (
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
-import "github.com/apache/trafficcontrol/lib/go-util"
-
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+)
 
 const readQuery = `
 SELECT description,
@@ -57,7 +58,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		"name": dbhelpers.WhereColumnInfo{Column: "capability.name"},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols, "capability.last_updated")
 	if len(errs) > 0 {
 		errCode = http.StatusBadRequest
 		userErr = util.JoinErrs(errs)

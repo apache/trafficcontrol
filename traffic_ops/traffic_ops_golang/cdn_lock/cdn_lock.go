@@ -54,7 +54,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		"username": {Column: "cdn_lock.username", Checker: nil},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols, "cdn_lock.last_updated")
 	if len(errs) > 0 {
 		errCode = http.StatusBadRequest
 		userErr = util.JoinErrs(errs)

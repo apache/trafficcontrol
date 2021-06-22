@@ -24,13 +24,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/jmoiron/sqlx"
 
@@ -71,7 +72,7 @@ func (cgparam *TOCacheGroupParameter) Read(h http.Header, useIMS bool) ([]interf
 	var runSecond bool
 	queryParamsToQueryCols := cgparam.ParamColumns()
 	parameters := cgparam.APIInfo().Params
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols, "p.last_updated")
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
@@ -239,7 +240,7 @@ func GetAllCacheGroupParameters(tx *sqlx.Tx, parameters map[string]string) (tc.C
 		"parameter":  dbhelpers.WhereColumnInfo{Column: "cgp.parameter", Checker: api.IsInt},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols, "cgp.last_updated")
 	if len(errs) > 0 {
 		return tc.CacheGroupParametersList{}, util.JoinErrs(errs)
 	}
@@ -340,14 +341,14 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 }
 
 func selectAllQuery() string {
-	return `SELECT cgp.cachegroup, cgp.parameter, cgp.last_updated, cg.name 
-				FROM cachegroup_parameter AS cgp 
+	return `SELECT cgp.cachegroup, cgp.parameter, cgp.last_updated, cg.name
+				FROM cachegroup_parameter AS cgp
 				JOIN cachegroup AS cg ON cg.id = cachegroup`
 }
 
 func insertQuery() string {
-	return `INSERT INTO cachegroup_parameter 
-		(cachegroup, 
-		parameter) 
+	return `INSERT INTO cachegroup_parameter
+		(cachegroup,
+		parameter)
 		VALUES `
 }

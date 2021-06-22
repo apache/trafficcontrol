@@ -148,7 +148,7 @@ func (param *TOParameter) Read(h http.Header, useIMS bool) ([]interface{}, error
 	var runSecond bool
 	code := http.StatusOK
 	queryParamsToQueryCols := param.ParamColumns()
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(param.APIInfo().Params, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(param.APIInfo().Params, queryParamsToQueryCols, "p.last_updated")
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}

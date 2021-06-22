@@ -371,10 +371,10 @@ func (cg *TOCacheGroup) createCacheGroupFallbacks() error {
 func (cg *TOCacheGroup) isValidCacheGroupFallback(fallbackName string) (bool, error) {
 	var isValid bool
 	query := `SELECT(
-SELECT cachegroup.id 
-FROM cachegroup 
-JOIN type on type.id = cachegroup.type 
-WHERE cachegroup.name = $1 
+SELECT cachegroup.id
+FROM cachegroup
+JOIN type on type.id = cachegroup.type
+WHERE cachegroup.name = $1
 AND (type.name = 'EDGE_LOC')
 ) IS NOT NULL;`
 
@@ -389,9 +389,9 @@ AND (type.name = 'EDGE_LOC')
 func (cg *TOCacheGroup) isAllowedToFallback(cacheGroupType int) (bool, error) {
 	var isValid bool
 	query := `SELECT(
-SELECT type.name 
-FROM type 
-WHERE type.id = $1 
+SELECT type.name
+FROM type
+WHERE type.id = $1
 AND (type.name = 'EDGE_LOC')
 ) IS NOT NULL;`
 
@@ -514,7 +514,7 @@ func (cg *TOCacheGroup) Read(h http.Header, useIMS bool) ([]interface{}, error, 
 		"type":      {Column: "cachegroup.type"},
 		"topology":  {Column: "topology_cachegroup.topology"},
 	}
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(cg.ReqInfo.Params, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(cg.ReqInfo.Params, queryParamsToQueryCols, "cachegroup.last_updated")
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}

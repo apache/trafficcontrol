@@ -63,7 +63,7 @@ func getAPICapabilities(tx *sqlx.Tx, params map[string]string) ([]tc.APICapabili
 	}
 
 	where, orderBy, pagination, queryValues, errs :=
-		dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
+		dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols, "last_updated")
 
 	if len(errs) > 0 {
 		err = util.JoinErrs(errs)

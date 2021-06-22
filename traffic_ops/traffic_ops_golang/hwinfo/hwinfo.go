@@ -111,7 +111,7 @@ func getHWInfo(tx *sqlx.Tx, params map[string]string) ([]tc.HWInfo, error) {
 		"val":            dbhelpers.WhereColumnInfo{Column: "h.val"},
 		"lastUpdated":    dbhelpers.WhereColumnInfo{Column: "h.last_updated"}, //TODO: this doesn't appear to work needs debugging
 	}
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols, "")
 	if len(errs) > 0 {
 		return nil, fmt.Errorf("Building hwinfo query clauses: %v", util.JoinErrs(errs))
 	}

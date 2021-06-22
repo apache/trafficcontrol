@@ -109,8 +109,8 @@ func createCheckExt(toExt tc.ServerCheckExtensionNullable, tx *sqlx.Tx) (int, er
 	scc := ""
 	if err := tx.Tx.QueryRow(`
 	SELECT id, servercheck_column_name
-	FROM to_extension 
-	WHERE type in 
+	FROM to_extension
+	WHERE type in
 		(SELECT id FROM type WHERE name = 'CHECK_EXTENSION_OPEN_SLOT')
 	ORDER BY servercheck_column_name
 	LIMIT 1`).Scan(&id, &scc); err != nil {
@@ -200,7 +200,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		"type":        dbhelpers.WhereColumnInfo{Column: "t.name"},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToSQLCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToSQLCols, "")
 	if len(errs) > 0 {
 		handleError(w, r, r.Method, inf.Tx.Tx, version, http.StatusBadRequest, util.JoinErrs(errs), nil)
 		return

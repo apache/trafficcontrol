@@ -1226,7 +1226,7 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		"active":           {Column: "ds.active", Checker: api.IsBool},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols, "ds.last_updated")
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}

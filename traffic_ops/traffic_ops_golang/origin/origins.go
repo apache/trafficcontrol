@@ -165,7 +165,7 @@ func getOrigins(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		"tenant":          dbhelpers.WhereColumnInfo{Column: "o.tenant", Checker: api.IsInt},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols, "o.last_updated")
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}

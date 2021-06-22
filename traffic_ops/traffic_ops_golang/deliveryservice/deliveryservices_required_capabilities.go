@@ -201,7 +201,7 @@ func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int, us
 	var maxTime time.Time
 	var runSecond bool
 	var results []tc.DeliveryServicesRequiredCapability
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(rc.APIInfo().Params, rc.ParamColumns())
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(rc.APIInfo().Params, rc.ParamColumns(), "")
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
@@ -327,8 +327,8 @@ func (rc *RequiredCapability) checkServerCap() (error, error, int) {
 	// Get server capability name
 	name := ""
 	if err := tx.QueryRow(`
-		SELECT name 
-		FROM server_capability 
+		SELECT name
+		FROM server_capability
 		WHERE name = $1`, rc.RequiredCapability).Scan(&name); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("querying server capability for name '%v': %v", rc.RequiredCapability, err), http.StatusInternalServerError
 	}
@@ -419,7 +419,7 @@ func (rc *RequiredCapability) ensureDSServerCap() (error, error, int) {
 	dsServerIDs := []int64{}
 	if err := tx.Tx.QueryRow(`
 	SELECT ARRAY(
-		SELECT ds.server 
+		SELECT ds.server
 		FROM deliveryservice_server ds
 		JOIN server s ON ds.server = s.id
 		JOIN type t ON s.type = t.id
@@ -438,7 +438,7 @@ func (rc *RequiredCapability) ensureDSServerCap() (error, error, int) {
 	if err := tx.QueryRow(`
 	SELECT ARRAY(
 		SELECT server
-		FROM server_server_capability 
+		FROM server_server_capability
 		WHERE server = ANY($1)
 		AND server_capability=$2
 	)`, pq.Array(dsServerIDs), rc.RequiredCapability).Scan(pq.Array(&capServerIDs)); err != nil && err != sql.ErrNoRows {
