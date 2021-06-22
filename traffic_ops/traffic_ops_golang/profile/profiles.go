@@ -272,25 +272,31 @@ func (pr *TOProfile) checkIfProfileCanBeAlteredByCurrentUser() (error, error, in
 }
 
 func (pr *TOProfile) Update(h http.Header) (error, error, int) {
-	userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, statusCode
+	if pr.CDNName != nil || pr.CDNID != nil {
+		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, statusCode
+		}
 	}
 	return api.GenericUpdate(h, pr)
 }
 
 func (pr *TOProfile) Create() (error, error, int) {
-	userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, statusCode
+	if pr.CDNName != nil || pr.CDNID != nil {
+		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, statusCode
+		}
 	}
 	return api.GenericCreate(pr)
 }
 
 func (pr *TOProfile) Delete() (error, error, int) {
-	userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, statusCode
+	if pr.CDNName != nil || pr.CDNID != nil {
+		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, statusCode
+		}
 	}
 	return api.GenericDelete(pr)
 }

@@ -479,7 +479,7 @@ func getCDNIDFromName(tx *sql.Tx, name tc.CDNName) (int, bool, error) {
 		if err == sql.ErrNoRows {
 			return id, false, nil
 		}
-		return id, false, errors.New("querying CDN ID: " + err.Error())
+		return id, false, errors.New("querying CDN ID from name: " + err.Error())
 	}
 	return id, true, nil
 }

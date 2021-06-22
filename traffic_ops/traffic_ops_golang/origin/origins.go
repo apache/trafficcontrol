@@ -459,13 +459,15 @@ func (origin *TOOrigin) Delete() (error, error, int) {
 		return errors.New("cannot delete a primary origin"), nil, http.StatusBadRequest
 	}
 
-	cdnName, err := dbhelpers.GetCDNNameFromDSID(origin.ReqInfo.Tx.Tx, *origin.DeliveryServiceID)
-	if err != nil {
-		return nil, err, http.StatusInternalServerError
-	}
-	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, cdnName, origin.ReqInfo.User.UserName)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, errCode
+	if origin.DeliveryServiceID != nil {
+		cdnName, err := dbhelpers.GetCDNNameFromDSID(origin.ReqInfo.Tx.Tx, *origin.DeliveryServiceID)
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, cdnName, origin.ReqInfo.User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
 	}
 	result, err := origin.ReqInfo.Tx.NamedExec(deleteQuery(), origin)
 	if err != nil {

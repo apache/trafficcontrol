@@ -240,7 +240,7 @@ func CheckIfCurrentUserCanModifyCDNWithID(tx *sql.Tx, cdnID int64, user string) 
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	} else if !ok {
-		return errors.New("CDN not found"), nil, http.StatusBadRequest
+		return errors.New("CDN not found"), nil, http.StatusNotFound
 	}
 	query := `SELECT username, soft FROM cdn_lock WHERE cdn=$1`
 	var userName string
@@ -612,7 +612,7 @@ func GetCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
 		if err == sql.ErrNoRows {
 			return "", false, nil
 		}
-		return "", false, errors.New("querying CDN ID: " + err.Error())
+		return "", false, errors.New("querying CDN name from ID: " + err.Error())
 	}
 	return tc.CDNName(name), true, nil
 }
@@ -633,7 +633,7 @@ func GetCDNIDFromName(tx *sql.Tx, name tc.CDNName) (int, bool, error) {
 		if err == sql.ErrNoRows {
 			return id, false, nil
 		}
-		return id, false, errors.New("querying CDN ID: " + err.Error())
+		return id, false, errors.New("querying CDN ID from name: " + err.Error())
 	}
 	return id, true, nil
 }
@@ -1318,6 +1318,9 @@ func CheckTopologyOrgServerCGInDSCG(tx *sql.Tx, cdnIds []int, dsTopology string,
 
 // GetCDNNameFromDSID returns the associated CDN name with the delivery service ID that is provided.
 func GetCDNNameFromDSID(tx *sql.Tx, dsID int) (string, error) {
+	if dsID == -1 {
+		return "", nil
+	}
 	cdn := ""
 	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn_id FROM deliveryservice WHERE id = $1)`, dsID).Scan(&cdn); err != nil {
 		return cdn, fmt.Errorf("querying CDN for deliveryservice with ID '%v': %v", dsID, err)
@@ -1361,7 +1364,15 @@ func GetCDNsForCachegroup(tx *sql.Tx, cgID *int) (map[string]bool, error) {
 func GetCDNNameFromProfileID(tx *sql.Tx, id int) (tc.CDNName, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn FROM profile WHERE id = $1)`, id).Scan(&name); err != nil {
-		return "", errors.New("querying CDN ID: " + err.Error())
+		return "", errors.New("querying CDN name from profile ID: " + err.Error())
+	}
+	return tc.CDNName(name), nil
+}
+
+func GetCDNNameFromProfileName(tx *sql.Tx, profileName string) (tc.CDNName, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn FROM profile WHERE name = $1)`, profileName).Scan(&name); err != nil {
+		return "", errors.New("querying CDN name from profile name: " + err.Error())
 	}
 	return tc.CDNName(name), nil
 }
@@ -1369,7 +1380,7 @@ func GetCDNNameFromProfileID(tx *sql.Tx, id int) (tc.CDNName, error) {
 func GetServerIDsFromCachegroupNames(tx *sql.Tx, cgID []string) ([]int64, error) {
 	var serverIDs []int64
 	var serverID int64
-	query := `SELECT server.id FROM server JOIN cachegroup cg ON cg.id = server.cachegroup where cg.name IN $1`
+	query := `SELECT server.id FROM server JOIN cachegroup cg ON cg.id = server.cachegroup where cg.name = ANY($1)`
 	rows, err := tx.Query(query, pq.Array(cgID))
 	if err != nil {
 		return serverIDs, errors.New("getting server IDs from cachegroup names : " + err.Error())
@@ -1388,7 +1399,7 @@ func GetServerIDsFromCachegroupNames(tx *sql.Tx, cgID []string) ([]int64, error)
 func GetCDNNamesFromServerIds(tx *sql.Tx, serverIds []int64) ([]string, error) {
 	var cdns []string
 	cdn := ""
-	query := `SELECT DISTINCT(name) FROM cdn JOIN server ON cdn.id = server.cdn_id WHERE server.id IN $1`
+	query := `SELECT DISTINCT(name) FROM cdn JOIN server ON cdn.id = server.cdn_id WHERE server.id = ANY($1)`
 	rows, err := tx.Query(query, pq.Array(serverIds))
 	if err != nil {
 		return cdns, errors.New("getting cdn name for server : " + err.Error())
