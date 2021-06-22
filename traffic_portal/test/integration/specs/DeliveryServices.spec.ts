@@ -78,7 +78,7 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
             deliveryservicesData.remove.forEach(remove => {
                 it(remove.description, async () => {
                     await deliveryservicesPage.SearchDeliveryService(remove.Name);
-                    expect(await deliveryservicesPage.DeleteDeliveryService(remove)).toBeTruthy();
+                    expect(await deliveryservicesPage.DeleteDeliveryService(remove)).toBe(true);
                     await deliveryservicesPage.OpenDeliveryServicePage();
                 });
             });
@@ -86,7 +86,7 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
                 await deliveryservicesPage.OpenServicesMenu();
             });
             it('can logout', async () => {
-                expect(await topNavigation.Logout()).toBeTruthy();
+                expect(await topNavigation.Logout()).toBe(true);
             });
         })
     })

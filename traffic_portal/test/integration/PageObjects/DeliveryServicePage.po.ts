@@ -72,18 +72,20 @@ export class DeliveryServicePage extends BasePage {
   private btnCreateDeliveryServices = element(by.xpath("//div[@class='pull-right']//button[text()='Create']"));
   private randomize = randomize;
 
-  async OpenDeliveryServicePage() {
-    let snp = new SideNavigationPage();
+  public async OpenDeliveryServicePage() {
+    const snp = new SideNavigationPage();
     await snp.NavigateToDeliveryServicesPage();
   }
-  async OpenServicesMenu() {
-    let snp = new SideNavigationPage();
+
+  public async OpenServicesMenu() {
+    const snp = new SideNavigationPage();
     await snp.ClickServicesMenu();
   }
+
   public async CreateDeliveryService(deliveryservice: DeliveryServices): Promise<boolean> {
     let result = false;
     let type: string = deliveryservice.Type;
-    let basePage = new BasePage();
+    const basePage = new BasePage();
     if (deliveryservice.validationMessage.includes("created")) {
       deliveryservice.validationMessage = deliveryservice.validationMessage.replace(deliveryservice.Name, deliveryservice.Name + this.randomize)
     }
@@ -144,17 +146,19 @@ export class DeliveryServicePage extends BasePage {
     result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
     return result;
   }
+
   public async SearchDeliveryService(nameDS: string): Promise<boolean> {
-    let name = nameDS + this.randomize;
+    const name = nameDS + this.randomize;
     await this.txtSearch.clear();
     await this.txtSearch.sendKeys(name);
     const result = await element(by.cssContainingText("span", name)).isPresent();
     await element(by.cssContainingText("span", name)).click();
     return !result;
   }
+
   public async UpdateDeliveryService(deliveryservice: UpdateDeliveryService): Promise<boolean | undefined> {
     let result: boolean | undefined = false;
-    let basePage = new BasePage();
+    const basePage = new BasePage();
     if (deliveryservice.validationMessage.includes("updated")) {
       deliveryservice.validationMessage = deliveryservice.validationMessage.replace(deliveryservice.Name, deliveryservice.Name + this.randomize)
     }
@@ -172,9 +176,10 @@ export class DeliveryServicePage extends BasePage {
     }
     return result;
   }
+
   public async DeleteDeliveryService(deliveryservice: DeleteDeliveryService): Promise<boolean> {
     let result = false;
-    let basePage = new BasePage();
+    const basePage = new BasePage();
     if (deliveryservice.validationMessage.includes("deleted")) {
       deliveryservice.validationMessage = deliveryservice.validationMessage.replace(deliveryservice.Name, deliveryservice.Name + this.randomize);
     }
@@ -184,9 +189,10 @@ export class DeliveryServicePage extends BasePage {
     result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
     return result;
   }
+
   public async AssignServerToDeliveryService(deliveryservice: AssignServer): Promise<boolean>{
     let result = false;
-    let basePage = new BasePage();
+    const basePage = new BasePage();
     await this.btnMore.click();
     await this.mnuManageServers.click();
     await this.btnMore.click();
@@ -196,9 +202,10 @@ export class DeliveryServicePage extends BasePage {
     result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
     return result;
   }
+
   public async AssignRequiredCapabilitiesToDS(deliveryservice: AssignRC): Promise<boolean>{
     let result = false;
-    let basePage = new BasePage();
+    const basePage = new BasePage();
     await this.btnMore.click();
     await this.mnuManageRequiredServerCapabilities.click();
     await this.btnAddRequiredServerCapabilities.click();
