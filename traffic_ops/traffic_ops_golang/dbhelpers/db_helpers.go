@@ -1,3 +1,9 @@
+// Package dbhelpers is a collection of helpful functions for interacting with
+// the Traffic Ops database in common ways.
+//
+// Because these functions rely on connections to Traffic Ops databases in
+// particular, this package should never be imported anywhere outside of
+// internal Traffic Ops packages.
 package dbhelpers
 
 /*
@@ -127,9 +133,19 @@ func CheckIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (error, error, i
 	return nil, nil, http.StatusOK
 }
 
-const newerStmt = ` >= :newerThan`
-const olderStmt = ` <= :olderThan`
+// These are used internally in `buildAgeFilter` so that some lengths aren't
+// hard-coded.
+const (
+	newerStmt = ` >= :newerThan`
+	olderStmt = ` <= :olderThan`
+)
 
+// buildAgeFilter, given some query string parameters and the name of a
+// database field that can be used for age filtering, this returns a statement
+// that can be appended to a WHERE clause that provides age filtering. It also
+// returns two time.Time values which are, respectively, the value to which
+// 'newerThan' should be set and the value to which 'olderThan' should be set
+// in the query values map returned from the query builder.
 func buildAgeFilter(params map[string]string, fieldName string) (string, time.Time, time.Time, error) {
 	if fieldName == "" {
 		return "", time.Time{}, time.Time{}, nil
@@ -167,6 +183,18 @@ func buildAgeFilter(params map[string]string, fieldName string) (string, time.Ti
 	return b.String(), newerTime, olderTime, nil
 }
 
+// BuildWhereAndOrderByAndPagination constructs a database query given a set of
+// query string parameters, mappings of valid, recognized filtering query
+// string parameters to their respective database column names, and the name of
+// a database column that can be used for age filtering with 'newerThan' and/or
+// 'olderThan'. If this field name is not given (i.e. is the blank string), age
+// filtering statements are not added to any returned WHERE clause.
+//
+// This function returns, in order, the generated WHERE clause, a generated
+// ORDER BY clause, a "pagination" clause that controls LIMIT and OFFSET, a map
+// of named parameters to their values for use in interpolating query values,
+// and any and all errors that occurred during parsing and/or checking of query
+// string parameters and/or constructing the query from them.
 func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo, ageFilterField string) (string, string, string, map[string]interface{}, []error) {
 	whereClause := BaseWhere
 	orderBy := BaseOrderBy
