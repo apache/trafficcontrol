@@ -21,7 +21,6 @@ import { by, element } from 'protractor';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 import { randomize } from '../config';
-
 interface User {
   FullName: string;
   Username: string;
