@@ -105,7 +105,9 @@ func CRDProfileWithLocks(t *testing.T) {
 	if err != nil {
 		t.Fatalf("couldn't create cdn lock: %v", err)
 	}
-
+	if len(testData.Profiles) == 0 {
+		t.Fatal("no profiles to run tests on, quitting")
+	}
 	pr := testData.Profiles[0]
 	pr.Name = "cdn_locks_test_profile"
 	pr.CDNID = cdnsResp.Response[0].ID
@@ -130,7 +132,7 @@ func CRDProfileWithLocks(t *testing.T) {
 	opts.QueryParameters.Set("name", pr.Name)
 	profile, _, err := userSession.GetProfiles(opts)
 	if err != nil {
-		t.Fatalf("couldn;t get profile: %v", err)
+		t.Fatalf("couldn't get profile: %v", err)
 	}
 	if len(profile.Response) != 1 {
 		t.Fatal("couldn't get exactly one profile in the response, quitting")

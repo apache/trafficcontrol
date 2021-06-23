@@ -55,7 +55,136 @@ func TestServers(t *testing.T) {
 		UpdateTestServerStatus(t)
 		LastServerInTopologyCacheGroup(t)
 		GetServersForNonExistentDeliveryService(t)
+		CRDServerWithLocks(t)
 	})
+}
+
+func CRDServerWithLocks(t *testing.T) {
+	resp, _, err := TOSession.GetTenants(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("could not GET tenants: %v", err)
+	}
+	if len(resp.Response) == 0 {
+		t.Fatalf("didn't get any tenant in response")
+	}
+
+	// Create a new user with operations level privileges
+	user1 := tc.User{
+		Username:             util.StrPtr("lock_user1"),
+		RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
+		LocalPassword:        util.StrPtr("test_pa$$word"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+		RoleName:             util.StrPtr("operations"),
+	}
+	user1.Email = util.StrPtr("lockuseremail@domain.com")
+	user1.TenantID = util.IntPtr(resp.Response[0].ID)
+	user1.FullName = util.StrPtr("firstName LastName")
+	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("could not create test user with username: %s", *user1.Username)
+	}
+	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
+
+	// Establish a session with the newly created non admin level user
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, *user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	if err != nil {
+		t.Fatalf("could not login with user lock_user1: %v", err)
+	}
+	if len(testData.Servers) == 0 {
+		t.Fatalf("no servers to run the test on, quitting")
+	}
+
+	server := testData.Servers[0]
+	server.HostName = util.StrPtr("cdn_locks_test_server")
+	server.Interfaces = []tc.ServerInterfaceInfoV40{
+		{
+			ServerInterfaceInfo: tc.ServerInterfaceInfo{
+				IPAddresses: []tc.ServerIPAddress{
+					{
+						Address:        "123.32.43.21",
+						Gateway:        util.StrPtr("100.100.100.100"),
+						ServiceAddress: true,
+					},
+				},
+				MaxBandwidth: util.Uint64Ptr(2500),
+				Monitor:      true,
+				MTU:          util.Uint64Ptr(1500),
+				Name:         "cdn_locks_interfaceName",
+			},
+			RouterHostName: "router1",
+			RouterPortName: "9090",
+		},
+	}
+	// Create a lock for this user
+	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
+		CDN:     *server.CDNName,
+		Message: util.StrPtr("test lock"),
+		Soft:    util.BoolPtr(false),
+	}, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("couldn't create cdn lock: %v", err)
+	}
+	// Try to create a new server on a CDN that another user has a hard lock on -> this should fail
+	_, reqInf, err := TOSession.CreateServer(server, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while creating a new server for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while creating a new server for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to create a new profile on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.CreateServer(server, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while creating a new server for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("hostName", *server.HostName)
+	servers, _, err := userSession.GetServers(opts)
+	if err != nil {
+		t.Fatalf("couldn't get server: %v", err)
+	}
+	if len(servers.Response) != 1 {
+		t.Fatal("couldn't get exactly one server in the response, quitting")
+	}
+	serverID := servers.Response[0].ID
+	// Try to update a server on a CDN that another user has a hard lock on -> this should fail
+	server.DomainName = util.StrPtr("changed_domain_name")
+	_, reqInf, err = TOSession.UpdateServer(*serverID, servers.Response[0], client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while updating a server for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while updating a server for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to update a server on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.UpdateServer(*serverID, servers.Response[0], client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while updating a server for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	// Try to delete a server on a CDN that another user has a hard lock on -> this should fail
+	_, reqInf, err = TOSession.DeleteServer(*serverID, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while deleting a server for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while deleting a server for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to delete a server on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.DeleteServer(*serverID, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while deleting a server for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	// Delete the lock
+	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{*server.CDNName}}})
+	if err != nil {
+		t.Errorf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
+	}
 }
 
 func LastServerInTopologyCacheGroup(t *testing.T) {
