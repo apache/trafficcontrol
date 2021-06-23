@@ -21,6 +21,9 @@
 
 .. seealso:: :ref:`ds_requests`
 
+.. deprecated:: ATCv6
+	This endpoint does not appear in Traffic Ops API version 4.0 - released with Apache Traffic Control version 6.0 - or later.
+
 ``POST``
 ========
 Allows a user to submit Delivery Service Requests.

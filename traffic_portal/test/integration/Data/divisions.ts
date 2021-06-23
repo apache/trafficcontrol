@@ -63,6 +63,12 @@ export const divisions = {
 					password: "pa$$word"
 				}
 			],
+			check: [
+				{
+					description: "check CSV link from Division page",
+					Name: "Export as CSV"
+				}
+			],
 			add: [
 				{
 					description: "create a Divisions",
@@ -92,6 +98,12 @@ export const divisions = {
 					description: "Read Only Role",
 					username: "TPReadOnly",
 					password: "pa$$word"
+				}
+			],
+			check: [
+				{
+					description: "check CSV link from Division page",
+					Name: "Export as CSV"
 				}
 			],
 			add: [

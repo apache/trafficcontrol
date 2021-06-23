@@ -17,7 +17,11 @@
 
 name: Traffic Control Cache Config integration tests
 
-on: 
+env:
+  RHEL_VERSION: 8
+  ATS_VERSION: 8.1.x
+
+on:
   push:
   workflow_dispatch:
     paths:
@@ -101,16 +105,14 @@ jobs:
         with:
           owner: apache
           repo: trafficserver
-          branch: 8.1.x
+          branch: ${{ env.ATS_VERSION }}
         id: git-repo-sha
-      - name: Display SHA
-        run: echo "${{ steps.git-repo-sha.outputs.sha }}"
       - name: Check Cache
         id: ats-rpm-cache
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/dist
-          key: ${{ steps.git-repo-sha.outputs.sha }}
+          key: ${{ steps.git-repo-sha.outputs.sha }}-el${{ env.RHEL_VERSION }}-${{ hashFiles('cache-config/testing/docker/trafficserver/**') }}
       - name: Build ATS RPM
         if: steps.ats-rpm-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/build-ats-test-rpm

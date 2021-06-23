@@ -297,16 +297,16 @@ function testenrolled() {
 #     csr_path
 #     key_path
 to-add-sslkeys() {
-	demo1_crt="$(sed -n -e '/-----BEGIN CERTIFICATE-----/,$p' $4 | jq -s -R '.')"
-	demo1_csr="$(sed -n -e '/-----BEGIN CERTIFICATE REQUEST-----/,$p' $5 | jq -s -R '.')"
-	demo1_key="$(sed -n -e '/-----BEGIN PRIVATE KEY-----/,$p' $6 | jq -s -R '.')"
+	ds_crt="$(sed -n -e '/-----BEGIN CERTIFICATE-----/,$p' $4 | jq -s -R '.')"
+	ds_csr="$(sed -n -e '/-----BEGIN CERTIFICATE REQUEST-----/,$p' $5 | jq -s -R '.')"
+	ds_key="$(sed -n -e '/-----BEGIN PRIVATE KEY-----/,$p' $6 | jq -s -R '.')"
 	json_request=$(jq -n \
 	                  --arg     cdn        "$1" \
 	                  --arg     dsname     "$2" \
 	                  --arg     hostname   "$3" \
-	                  --argjson crt        "$demo1_crt" \
-	                  --argjson csr        "$demo1_csr" \
-	                  --argjson key        "$demo1_key" \
+	                  --argjson crt        "$ds_crt" \
+	                  --argjson csr        "$ds_csr" \
+	                  --argjson key        "$ds_key" \
 	                 "{ cdn: \$cdn,
 	                    certificate: {
 	                      crt: \$crt,

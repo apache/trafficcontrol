@@ -18,7 +18,7 @@
 #
 
 ---
-version: '2'
+version: '2.1'
 
 volumes:
   trafficcontrol:
@@ -28,8 +28,17 @@ services:
   trafficserver_build:
     environment:
       - ATS_VERSION=8.1.x
+      - CJOSE_URL=https://github.com/cisco/cjose
+      - CJOSE_TAG=latest
+      - JANSSON_URL=https://github.com/akheron/jansson
+      - JANSSON_TAG=v2.11
+      - OPENSSL_URL=https://github.com/openssl/openssl
+      - OPENSSL_TAG=OpenSSL_1_1_1
+      - RUN_ATS_UNIT_TESTS=false
     build:
       context: ../../..
       dockerfile: cache-config/testing/docker/trafficserver/Dockerfile
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
     volumes:
       - ../../..:/trafficcontrol:z

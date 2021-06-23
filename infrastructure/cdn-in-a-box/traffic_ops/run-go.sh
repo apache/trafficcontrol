@@ -191,13 +191,20 @@ while true; do
 	sleep 2;
 done
 
-### Add SSL keys for demo1 delivery service
-until [[ -s "$X509_DEMO1_CERT_FILE" && -s "$X509_DEMO1_REQUEST_FILE" && -s "$X509_DEMO1_KEY_FILE" ]]; do
-	echo "Waiting on X509_DEMO1 files to exist";
-	sleep 3;
-	source "$X509_CA_ENV_FILE";
+# change loop condition to ds_index <= 3 when Delivery Service demo3 exists
+for ((ds_index = 1; ds_index <= 2; ds_index++)); do
+	ds_name="demo${ds_index}"
+	cert_file_var="X509_DEMO${ds_index}_CERT_FILE"
+	request_file_var="X509_DEMO${ds_index}_REQUEST_FILE"
+	key_file="X509_DEMO${ds_index}_KEY_FILE"
+	### Add SSL keys for delivery service
+	until [[ -s "${!cert_file_var}" && -s "${!request_file_var}" && -s "${!key_file}" ]]; do
+		echo "Waiting on X509_DEMO${ds_index} files to exist";
+		sleep 3;
+		source "$X509_CA_ENV_FILE";
+	done
+	to-add-sslkeys "$CDN_NAME" "$ds_name" "*.demo${ds_index}.mycdn.ciab.test" "${!cert_file_var}" "${!request_file_var}" "${!key_file}";
 done
-to-add-sslkeys "$CDN_NAME" "$ds_name" "*.demo1.mycdn.ciab.test" "$X509_DEMO1_CERT_FILE" "$X509_DEMO1_REQUEST_FILE" "$X509_DEMO1_KEY_FILE";
 
 ### Automatic Queue/Snapshot ###
 if [[ "$AUTO_SNAPQUEUE_ENABLED" = true ]]; then

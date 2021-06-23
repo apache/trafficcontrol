@@ -52,7 +52,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          Integral, unique identifier for the Log entry
-:lastUpdated: Date and time at which the change was made, in ISO format
+:lastUpdated: Date and time at which the change was made, in :ref:`non-rfc-datetime`
 :level:       Log categories for each entry, e.g. 'UICHANGE', 'OPER', 'APICHANGE'
 :message:     Log detail about what occurred
 :ticketNum:   Optional field to cross reference with any bug tracking systems

@@ -522,10 +522,10 @@ Max DNS Answers
 ---------------
 
 DNS-routed Delivery Service
-  The maximum number of :term:`Edge-tier cache server` IP addresses that the Traffic Router will include in responses to DNS requests. When provided, the :term:`cache server` IP addresses included are rotated in each response to spread traffic evenly. This number should scale according to the amount of traffic the Delivery Service is expected to serve.
+	The maximum number of :term:`Edge-tier cache server` IP addresses that the Traffic Router will include in responses to DNS requests. When provided, the :term:`cache server` IP addresses included are rotated in each response to spread traffic evenly. This number should scale according to the amount of traffic the Delivery Service is expected to serve.
 
 HTTP-routed Delivery Service
-  If the Traffic Router profile parameter "edge.http.limit" is set, setting this to a non-zero value will override that parameter for this delivery service, limiting the number of Traffic Router IP addresses (A records) that are included in responses to DNS requests for this delivery service.
+	If the Traffic Router profile parameter "edge.http.limit" is set, setting this to a non-zero value will override that parameter for this delivery service, limiting the number of Traffic Router IP addresses (A records) that are included in responses to DNS requests for this delivery service.
 
 .. _ds-max-origin-connections:
 

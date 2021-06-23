@@ -17,9 +17,11 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -46,7 +48,15 @@ func TestCDNs(t *testing.T) {
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestCDNsWithHeaders(t, header)
 		GetTestCDNs(t)
+		t.Run("get CDNs filtered by Domain Name", GetTestCDNsbyDomainName)
+		GetTestCDNsbyDnssec(t)
 		GetTestCDNsIMSAfterChange(t, header)
+		CreateTestCDNEmptyName(t)
+		CreateTestCDNEmptyDomainName(t)
+		GetTestPaginationSupportCdns(t)
+		SortTestCdnDesc(t)
+		CreateTestCDNsAlreadyExist(t)
+		DeleteTestCDNsInvalidId(t)
 	})
 }
 
@@ -278,6 +288,21 @@ func CreateTestCDNs(t *testing.T) {
 
 }
 
+func CreateTestCDNsAlreadyExist(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatal("Need at least one CDN to test duplicate CDNs")
+	}
+
+	cdn := testData.CDNs[0]
+	resp, reqInf, err := TOSession.CreateCDN(cdn, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("cdn domain_name 'mycdn.ciab.test' already exists.  but got - alerts: %+v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+}
+
 func SortTestCDNs(t *testing.T) {
 	var sortedList []string
 	resp, _, err := TOSession.GetCDNs(client.RequestOptions{})
@@ -300,6 +325,7 @@ func UpdateTestCDNs(t *testing.T) {
 	if len(testData.CDNs) < 1 {
 		t.Fatal("Need at least one CDN to test updating CDNs")
 	}
+
 	firstCDN := testData.CDNs[0]
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", firstCDN.Name)
@@ -312,12 +338,21 @@ func UpdateTestCDNs(t *testing.T) {
 		t.Fatalf("Expected exactly one CDN to be named '%s', found: %d", firstCDN.Name, len(resp.Response))
 	}
 	remoteCDN := resp.Response[0]
+	originalDomain := remoteCDN.DomainName
 	expectedCDNDomain := "domain2"
 	remoteCDN.DomainName = expectedCDNDomain
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateCDN(remoteCDN.ID, remoteCDN, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("cannot update CDN: %v - alerts: %+v", err, alert)
+	} else {
+		defer func(id int, cdn tc.CDN, domain string) {
+			cdn.DomainName = domain
+			alerts, _, err := TOSession.UpdateCDN(id, cdn, client.RequestOptions{})
+			if err != nil {
+				t.Errorf("Unexpected error restoring CDN domain name: %v - alerts: %+v", err, alerts.Alerts)
+			}
+		}(remoteCDN.ID, remoteCDN, originalDomain)
 	}
 
 	// Retrieve the CDN to check CDN name got updated
@@ -334,7 +369,6 @@ func UpdateTestCDNs(t *testing.T) {
 	if respCDN.DomainName != expectedCDNDomain {
 		t.Errorf("results do not match actual: %s, expected: %s", respCDN.DomainName, expectedCDNDomain)
 	}
-
 }
 
 func GetTestCDNs(t *testing.T) {
@@ -345,6 +379,46 @@ func GetTestCDNs(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot get CDN '%s': %v - alerts: %+v", cdn.Name, err, resp.Alerts)
 		}
+	}
+}
+
+func GetTestCDNsbyDomainName(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatalf("need at least one CDN to test get CDNs")
+	}
+
+	opts := client.NewRequestOptions()
+	cdn := testData.CDNs[0]
+	opts.QueryParameters.Set("domainName", cdn.DomainName)
+	cdns, reqInf, err := TOSession.GetCDNs(opts)
+	if len(cdns.Response) != 1 {
+		t.Errorf("Expected exactly one CDN to exist with domain name '%s', found: %d", cdn.DomainName, len(cdns.Response))
+	}
+	if err != nil {
+		t.Errorf("cannot get CDN by '%s': %v - alerts: %+v", cdn.DomainName, err, cdns.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func GetTestCDNsbyDnssec(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatalf("need at least one CDN to test get CDNs")
+	}
+
+	opts := client.NewRequestOptions()
+	cdn := testData.CDNs[0]
+	opts.QueryParameters.Set("dnssecEnabled", strconv.FormatBool(cdn.DNSSECEnabled))
+	cdns, reqInf, err := TOSession.GetCDNs(opts)
+	if len(cdns.Response) < 1 {
+		t.Fatalf("Expected atleast one cdn response %v", cdns)
+	}
+	if err != nil {
+		t.Errorf("cannot get CDN by '%s': %v - alerts: %+v", cdn.DomainName, err, cdns.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
 	}
 }
 
@@ -374,5 +448,170 @@ func DeleteTestCDNs(t *testing.T) {
 				t.Errorf("expected CDN '%s' to be deleted", cdn.Name)
 			}
 		}
+	}
+}
+
+func DeleteTestCDNsInvalidId(t *testing.T) {
+
+	delResp, reqInf, err := TOSession.DeleteCDN(100000, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected, no cdn with that key found  but got - alerts: %+v", delResp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected response status code %d, got %d", http.StatusNotFound, reqInf.StatusCode)
+	}
+}
+
+func CreateTestCDNEmptyName(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatalf("need at least one CDN to test creating CDNs")
+	}
+
+	firstData := testData.CDNs[0]
+	firstData.Name = ""
+	firstData.DomainName = "EmptyCDNName"
+	resp, reqInf, err := TOSession.CreateCDN(firstData, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected 'name' cannot be blank  but got - alerts: %+v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func CreateTestCDNEmptyDomainName(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatalf("need at least one CDN to test creating CDNs")
+	}
+
+	firstData := testData.CDNs[0]
+	firstData.Name = "EmptyDomainName"
+	firstData.DomainName = ""
+	resp, reqInf, err := TOSession.CreateCDN(firstData, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected 'domainName' cannot be blank  but got - alerts: %+v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func GetTestPaginationSupportCdns(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetCDNs(opts)
+	if err != nil {
+		t.Errorf("Unexpected error getting CDNs: %v - alerts: %+v", err, resp.Alerts)
+	}
+	cdns := resp.Response
+
+	if len(cdns) > 0 {
+		opts.QueryParameters = url.Values{}
+		opts.QueryParameters.Set("orderby", "id")
+		opts.QueryParameters.Set("limit", "1")
+		cdnsWithLimit, _, err := TOSession.GetCDNs(opts)
+		if err == nil {
+			if !reflect.DeepEqual(cdns[:1], cdnsWithLimit.Response) {
+				t.Error("expected GET CDN with limit = 1 to return first result")
+			}
+		} else {
+			t.Errorf("Unexpected error getting CDN with a limit: %v - alerts: %+v", err, cdnsWithLimit.Alerts)
+		}
+		if len(cdns) > 1 {
+			opts.QueryParameters = url.Values{}
+			opts.QueryParameters.Set("orderby", "id")
+			opts.QueryParameters.Set("limit", "1")
+			opts.QueryParameters.Set("offset", "1")
+			cdnsWithOffset, _, err := TOSession.GetCDNs(opts)
+			if err == nil {
+				if !reflect.DeepEqual(cdns[1:2], cdnsWithOffset.Response) {
+					t.Error("expected GET CDN with limit = 1, offset = 1 to return second result")
+				}
+			} else {
+				t.Errorf("Unexpected error getting CDN with a limit and an offset: %v - alerts: %+v", err, cdnsWithOffset.Alerts)
+			}
+
+			opts.QueryParameters = url.Values{}
+			opts.QueryParameters.Set("orderby", "id")
+			opts.QueryParameters.Set("limit", "1")
+			opts.QueryParameters.Set("page", "2")
+			cdnsWithPage, _, err := TOSession.GetCDNs(opts)
+			if err == nil {
+				if !reflect.DeepEqual(cdns[1:2], cdnsWithPage.Response) {
+					t.Error("expected GET CDN with limit = 1, page = 2 to return second result")
+				}
+			} else {
+				t.Errorf("Unexpected error getting CDN with a limit and a page: %v - alerts: %+v", err, cdnsWithPage.Alerts)
+			}
+		} else {
+			t.Errorf("only one CDN found, so offset functionality can't test")
+		}
+	} else {
+		t.Errorf("No CDN found to check pagination")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, _, err = TOSession.GetCDNs(opts)
+	if err == nil {
+		t.Error("expected GET CDN to return an error when limit is not bigger than -1")
+	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
+		t.Errorf("expected GET CDN to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, _, err = TOSession.GetCDNs(opts)
+	if err == nil {
+		t.Error("expected GET CDN to return an error when offset is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET CDN to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, _, err = TOSession.GetCDNs(opts)
+	if err == nil {
+		t.Error("expected GET CDN to return an error when page is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET CDN to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+}
+
+func SortTestCdnDesc(t *testing.T) {
+	resp, _, err := TOSession.GetCDNs(client.RequestOptions{})
+	if err != nil {
+		t.Errorf("Expected no error, but got error in CDN with default ordering: %v - alerts: %+v", err, resp.Alerts)
+	}
+	respAsc := resp.Response
+	if len(respAsc) < 1 {
+		t.Fatal("Need at least one CDN in Traffic Ops to test CDN sort ordering")
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("sortOrder", "desc")
+	resp, _, err = TOSession.GetCDNs(opts)
+	if err != nil {
+		t.Errorf("Expected no error, but got error in CDN with Descending ordering: %v - alerts: %+v", err, resp.Alerts)
+	}
+	respDesc := resp.Response
+	if len(respDesc) < 1 {
+		t.Fatal("Need at least one CDN in Traffic Ops to test CDN sort ordering")
+	}
+
+	if len(respAsc) != len(respDesc) {
+		t.Fatalf("Traffic Ops returned %d CDN using default sort order, but %d CDN when sort order was explicitly set to descending", len(respAsc), len(respDesc))
+	}
+
+	// reverse the descending-sorted response and compare it to the ascending-sorted one
+	// TODO ensure at least two in each slice? A list of length one is
+	// trivially sorted both ascending and descending.
+	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
+	}
+	if respDesc[0].Name != respAsc[0].Name {
+		t.Errorf("CDN responses are not equal after reversal: Asc: %s - Desc: %s", respDesc[0].Name, respAsc[0].Name)
 	}
 }

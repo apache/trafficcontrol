@@ -26,10 +26,7 @@ Source0:  trafficcontrol-cache-config-%{version}.tgz
 URL:      https://github.com/apache/trafficcontrol/
 Vendor:   Apache Software Foundation
 Packager: dev at trafficcontrol dot Apache dot org
-%{?el6:Requires: git, perl}
-%{?el7:Requires: git, perl}
-%{?el8:Requires: git, perl}
-
+Requires: git, perl
 
 %description
 Installs Traffic Control Cache Configuration utilities. See the `t3c` application.

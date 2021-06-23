@@ -14,4 +14,5 @@
 {% for hostname in groups['traffic_opsdb'] %}
 {{ hostname }}:{{ postgresql_port }}:{{ postgresql_admin_user }}:{{ postgresql_admin_user_password }}
 {{ hostname }}:{{ postgresql_port }}:{{ todb_username }}:{{ todb_password }}
+{{ hostname }}:{{ postgresql_port }}:{{ tvdb_username }}:{{ tvdb_password }}
 {% endfor %}

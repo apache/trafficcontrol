@@ -26,6 +26,7 @@ import (
 	"errors"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -40,7 +41,7 @@ func getURLSigKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context, aesKey []by
 		return tc.URLSigKeys{}, false, e
 	}
 
-	jsonUrlKeys, err := aesDecrypt(encryptedUrlSigKey, aesKey)
+	jsonUrlKeys, err := util.AESDecrypt(encryptedUrlSigKey, aesKey)
 	if err != nil {
 		return tc.URLSigKeys{}, false, err
 	}
@@ -65,7 +66,7 @@ func putURLSigKeys(xmlID string, tvTx *sqlx.Tx, keys tc.URLSigKeys, ctx context.
 		return err
 	}
 
-	encryptedKey, err := aesEncrypt(keyJSON, aesKey)
+	encryptedKey, err := util.AESEncrypt(keyJSON, aesKey)
 	if err != nil {
 		return errors.New("encrypting keys: " + err.Error())
 	}

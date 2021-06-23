@@ -53,13 +53,13 @@ Response Structure
 :cdnName:     The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
 :description: The :term:`Profile`'s :ref:`profile-description`
 :id:          The :term:`Profile`'s :ref:`profile-id`
-:lastUpdated: The date and time at which this :term:`Profile` was last updated, in an ISO-like format
+:lastUpdated: The date and time at which this :term:`Profile` was last updated, in :ref:`non-rfc-datetime`
 :name:        The :term:`Profile`'s :ref:`profile-name`
 :params:      An array of :term:`Parameters` in use by this :term:`Profile`
 
 	:configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
 	:id:          The :term:`Parameter`'s :ref:`parameter-id`
-	:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in an ISO-like format
+	:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in :ref:`non-rfc-datetime`
 	:name:        :ref:`parameter-name` of the :term:`Parameter`
 	:profiles:    An array of :term:`Profile` :ref:`Names <profile-name>` that use this :term:`Parameter`
 	:secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
@@ -174,7 +174,7 @@ Response Structure
 :cdnName:         The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
 :description:     The :term:`Profile`'s :ref:`profile-description`
 :id:              The :term:`Profile`'s :ref:`profile-id`
-:lastUpdated:     The date and time at which this :term:`Profile` was last updated, in an ISO-like format
+:lastUpdated:     The date and time at which this :term:`Profile` was last updated, in :ref:`non-rfc-datetime`
 :name:            The :term:`Profile`'s :ref:`profile-name`
 :routingDisabled: The :term:`Profile`'s :ref:`profile-routing-disabled` setting
 :type:            The :term:`Profile`'s :ref:`profile-type`

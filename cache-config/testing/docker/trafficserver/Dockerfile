@@ -17,44 +17,100 @@
 
 ###############################################################
 # Dockerfile to build Traffic Server RPM
-# Based on CentOS 7 for ATS RPM ot match the ort_test 
-# container running CentOS 7.
 ###############################################################
 
-FROM centos:7
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION}
+ARG RHEL_VERSION=8
+# Makes RHEL_VERSION available in later layers without needing to specify it again
+ENV RHEL_VERSION=$RHEL_VERSION
+
+MAINTAINER dev@trafficcontrol.apache.org
+
 VOLUME /atsbuild
 
-# install the required yum repo
-RUN yum install -y centos-release-scl 
-# install the required toolsets
-RUN yum install -y \
-  autoconf \
-  automake \
-  curses \
-  curl \
-  devtoolset-9 \
-  flex \
-  git \
-  hwloc \
-  hwloc-devel \
-  libtool \
-  libcap \
-  libcap-devel \
-  lua \
-  make \
-  openssl \
-  openssl-devel \
-  pcre \
-  pcre-devel \
-  pkgconfig \
-  python3 \
-  redhat-rpm-config \
-  rpm-build \
-  tcl \
-  tcl-devel
+RUN echo "Image Version: ${RHEL_VERSION}"
 
-ADD cache-config/testing/docker/trafficserver/trafficserver-8.spec /trafficserver-8.spec
-ADD cache-config/testing/docker/trafficserver/trafficserver-9.spec /trafficserver-9.spec
-ADD cache-config/testing/docker/trafficserver/run.sh /
+### Common for all sub-component builds
+RUN set -o errexit; \
+    if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
+		rpm_gpg_key=RPM-GPG-KEY-centosofficial; \
+		yum install -y 'dnf-command(config-manager)'; \
+		yum config-manager --set-enabled powertools; \
+	else \
+		rpm_gpg_key="RPM-GPG-KEY-CentOS-${RHEL_VERSION%%.*}"; \
+		yum install -y deltarpm centos-release-scl-rh; \
+		yum-config-manager --enable rhel-server-rhscl-7-rpms; \
+	fi && \
+	rpm --import "/etc/pki/rpm-gpg/${rpm_gpg_key}" && \
+	rpm --import "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-${RHEL_VERSION%%.*}" && \
+	yum -y clean all && \
+	yum -y update ca-certificates && \
+	yum -y install \
+		git \
+		rpm-build \
+		rsync \
+		epel-release && \
+	yum -y clean all
 
-ENTRYPOINT /run.sh
+RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
+		os_pkgs=( \
+			brotli \
+			brotli-devel \
+			curl \
+			gcc-toolset-9 \
+			gcc-toolset-9-runtime \
+			jansson \
+			jansson-devel \
+			libmaxminddb \
+			libmaxminddb-devel); \
+		os_toolset="gcc-toolset-9"; \
+	else \
+		os_pkgs=(devtoolset-9); \
+	fi \
+	&& yum install -y \
+		${os_pkgs[*]} \
+		autoconf \
+		automake \
+		expat-devel \
+		flex \
+		gcc-c++ \
+		glibc-devel \
+		hwloc \
+		hwloc-devel \
+		libcap-devel \
+		libcurl-devel \
+		libtool \
+		libuuid-devel \
+		lua-devel \
+		luajit-devel \
+		make \
+		man \
+		nano \
+		ncurses-devel \
+		nmap-ncat \
+		openssl \
+		openssl-devel \
+		pcre \
+		pcre-devel \
+		perl-Digest-SHA \
+		perl-ExtUtils-MakeMaker \
+		perl-URI \
+		pkgconfig \
+		python3 \
+		sudo \
+		tcl-devel \
+		zlib \
+		zlib-devel \
+	&& yum clean all
+
+ADD  traffic_server/plugins/astats_over_http /astats_over_http
+
+COPY cache-config/testing/docker/trafficserver/traffic_server_jemalloc \
+     cache-config/testing/docker/trafficserver/trafficserver.spec \
+     cache-config/testing/docker/trafficserver/cjose.pic.patch  \
+     cache-config/testing/docker/trafficserver/jansson.pic.patch \
+     cache-config/testing/docker/trafficserver/run.sh \ 
+    / 
+
+CMD /run.sh

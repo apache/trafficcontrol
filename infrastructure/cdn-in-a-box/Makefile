@@ -38,10 +38,17 @@ BUILD_NUMBER := $(shell git rev-list HEAD 2>/dev/null | wc -l | tr -d '[[:space:
 TC_VERSION := $(shell cat "$(TC_DIR)/VERSION")
 TOMCAT_VERSION := $(shell grep '^\s*TOMCAT_VERSION=' "$(TC_DIR)/traffic_router/build/build_rpm.sh"  | cut -d= -f2)
 TOMCAT_RELEASE := $(shell grep '^\s*TOMCAT_RELEASE=' "$(TC_DIR)/traffic_router/build/build_rpm.sh"  | cut -d= -f2)
+ATS_VERSION := $(shell $(CIAB_DIR_RELATIVE)bin/ats-version.sh)
+ifeq ($(RHEL_VERSION),7)
+# The commit hash in `git describe` is only 7 characters in CentOS 7's git 1.8
+ATS_VERSION := $(shell echo "$(ATS_VERSION)" | sed -E 's/^(.*-[0-9]+\.[0-9a-f]{7})[0-9a-f]*/\1/')
+endif
 
 SPECIAL_SAUCE := $(TC_VERSION)-$(BUILD_NUMBER).el$(RHEL_VERSION).x86_64.rpm
 SPECIAL_SEASONING := $(TOMCAT_VERSION).$(TOMCAT_RELEASE)-1.el$(RHEL_VERSION).noarch.rpm
+SPECIAL_SYRUP := $(ATS_VERSION).el$(RHEL_VERSION).x86_64.rpm
 
+ATS_SOURCE := $(wildcard $(TC_DIR)/cache-config/testing/docker/trafficserver/**)
 TO_SOURCE := $(wildcard $(TC_DIR)/traffic_ops/**)
 TO_SOURCE += $(wildcard $(TC_DIR)/traffic_ops_db/**)
 ORT_SOURCE:= $(wildcard $(TC_DIR)/cache-config/**)
@@ -51,6 +58,7 @@ TP_SOURCE := $(wildcard $(TC_DIR)/traffic_portal/**)
 TR_SOURCE := $(wildcard $(TC_DIR)/traffic_router/**)
 TS_SOURCE := $(wildcard $(TC_DIR)/traffic_stats/**)
 
+ATS_RPM := cache/trafficserver.rpm
 TM_RPM := traffic_monitor/traffic_monitor.rpm
 TO_RPM := traffic_ops/traffic_ops.rpm
 TP_RPM := traffic_portal/traffic_portal.rpm
@@ -59,6 +67,7 @@ TOMCAT_RPM := traffic_router/tomcat.rpm
 TS_RPM := traffic_stats/traffic_stats.rpm
 ORT_RPM := cache/trafficcontrol-cache-config.rpm
 
+ATS_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(ATS_RPM)
 TM_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TM_RPM)
 TO_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TO_RPM)
 TP_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TP_RPM)
@@ -67,6 +76,7 @@ TOMCAT_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TOMCAT_RPM)
 TS_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TS_RPM)
 ORT_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(ORT_RPM)
 
+ATS_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(ATS_RPM)
 TM_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TM_RPM)
 TO_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TO_RPM)
 TP_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TP_RPM)
@@ -75,6 +85,7 @@ TOMCAT_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TOMCAT_RPM)
 TS_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TS_RPM)
 ORT_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(ORT_RPM)
 
+ATS_DIST_RPM := $(TC_DIR)/dist/trafficserver-$(SPECIAL_SYRUP)
 TM_DIST_RPM := $(TC_DIR)/dist/traffic_monitor-$(SPECIAL_SAUCE)
 TO_DIST_RPM := $(TC_DIR)/dist/traffic_ops-$(SPECIAL_SAUCE)
 TP_DIST_RPM := $(TC_DIR)/dist/traffic_portal-$(SPECIAL_SAUCE)
@@ -86,7 +97,7 @@ ORT_DIST_RPM := $(TC_DIR)/dist/trafficcontrol-cache-config-$(SPECIAL_SAUCE)
 .PHONY: all build-builders clean debug native nearly-all pull-builders very-clean
 
 # Default target; builds all pre-requisite rpms from source trees
-all: $(ORT_RPM_RELATIVE) $(TM_RPM_RELATIVE) $(TP_RPM_RELATIVE) $(TO_RPM_RELATIVE) $(TR_RPM_RELATIVE) $(TOMCAT_RPM_RELATIVE) $(TS_RPM_RELATIVE)
+all: $(ATS_RPM_RELATIVE) $(ORT_RPM_RELATIVE) $(TM_RPM_RELATIVE) $(TP_RPM_RELATIVE) $(TO_RPM_RELATIVE) $(TR_RPM_RELATIVE) $(TOMCAT_RPM_RELATIVE) $(TS_RPM_RELATIVE)
 
 ifneq ($(filter build-builders,$(MAKECMDGOALS)),)
 PKG_FLAGS += -b
@@ -132,6 +143,8 @@ endif
 endif
 
 # Relative path output RPM recipies
+$(ATS_RPM_RELATIVE): $(ATS_DIST_RPM)
+	cp -f "$?" "$@" || (rm "$(CIAB_DIR_RELATIVE)/cache/ATS_VERSION"; false)
 $(TM_RPM_RELATIVE): $(TM_DIST_RPM)
 	cp -f "$?" "$@"
 $(TO_RPM_RELATIVE): $(TO_DIST_RPM)
@@ -148,6 +161,8 @@ $(ORT_RPM_RELATIVE): $(ORT_DIST_RPM)
 	cp -f "$?" "$@"
 
 # Absolute path output RPM recipies
+$(ATS_RPM_ABSOLUTE): $(ATS_DIST_RPM)
+	cp -f "$?" "$@" || (rm "$(CIAB_DIR_ABSOLUTE)/cache/ATS_VERSION"; false)
 $(TM_RPM_ABSOLUTE): $(TM_DIST_RPM)
 	cp -f "$?" "$@"
 $(TO_RPM_ABSOLUTE): $(TO_DIST_RPM)
@@ -164,6 +179,9 @@ $(ORT_RPM_ABSOLUTE): $(ORT_DIST_RPM)
 	cp -f "$?" "$@"
 
 # Dist rpms
+$(ATS_DIST_RPM): $(ATS_SOURCE)
+	docker-compose -f $(TC_DIR)/cache-config/testing/docker/docker-compose-ats-build.yml build --parallel trafficserver_build && docker-compose -f $(TC_DIR)/cache-config/testing/docker/docker-compose-ats-build.yml run --rm trafficserver_build
+
 $(TM_DIST_RPM): $(TM_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_monitor$(BUILD_SUFFIX)
 

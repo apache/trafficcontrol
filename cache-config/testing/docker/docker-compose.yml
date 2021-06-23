@@ -27,7 +27,7 @@
 #
 
 ---
-version: '2'
+version: '2.1'
 
 volumes:
   trafficcontrol:
@@ -81,6 +81,8 @@ services:
     env_file:
       - variables.env
     build:
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
       context: .
       dockerfile: ort_test/Dockerfile
     depends_on:
