@@ -54,8 +54,7 @@ Request Structure
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| xmlId             | no       | Show only the :term:`Delivery Service` that has this text-based, unique identifier                                                      |
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| orderby           | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                           |
-	|                   |          | array                                                                                                                                   |
+	| orderby           | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array                     |
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| sortOrder         | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                |
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
@@ -68,6 +67,15 @@ Request Structure
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| active            | no       | Show only the :term:`Delivery Services` that have :ref:`ds-active` set or not based on this boolean (whether or not they are active)    |
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| newerThan         | no       | Return only :term:`Delivery Services` that were most recently updated no earlier than this date/time, which may be given as an          |
+	|                   |          | :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight on January 1\ :sup:`st` 1970 UTC).              |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| olderThan         | no       | Return only :term:`Delivery Services` that were most recently updated no later than this date/time, which may be given as an            |
+	|                   |          | :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight on January 1\ :sup:`st` 1970 UTC).              |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+
+.. versionadded:: ATCv6
+	The ``newerThan`` and ``olderThan`` query string parameters were added to all API versions as of :abbr:`ATC (Apache Traffic Control)` version 6.0.
 
 Response Structure
 ------------------
