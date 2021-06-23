@@ -39,18 +39,30 @@ Request Structure
 
 .. table:: Request Query Parameters
 
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| Name        | Required | Description                                                                                                                          |
-	+=============+==========+======================================================================================================================================+
-	| id          | no       | Show only the :term:`Delivery Service` regular expression that has this integral, unique identifier                                  |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| limit       | no       | Choose the maximum number of results to return                                                                                       |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| offset      | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                 |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
-	| page        | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1. |
-	|             |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                    |
-	+-------------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| Name      | Required | Description                                                                                                                          |
+	+===========+==========+======================================================================================================================================+
+	| id        | no       | Show only the :term:`Delivery Service` regular expression that has this integral, unique identifier                                  |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| limit     | no       | Choose the maximum number of results to return                                                                                       |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                 |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1. |
+	|           |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                    |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| newerThan | no       | Return only :term:`Delivery Service` regular expressions that were most recently updated no earlier than this date/time, which may   |
+	|           |          | be given as an :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight on January 1\ :sup:`st` 1970  |
+	|           |          | UTC).                                                                                                                                |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+	| olderThan | no       | Return only :term:`Delivery Service` regular expressions that were most recently updated no later than this date/time, which may be  |
+	|           |          | given as an :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight on January 1\ :sup:`st` 1970     |
+	|           |          | UTC).                                                                                                                                |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------------------------------------+
+
+.. versionadded:: ATCv6
+	The ``newerThan`` and ``olderThan`` query parameters were added to this in endpoint across all API versions in :abbr:`ATC (Apache Traffic Control)` version 6.0.0.
+
 
 .. code-block:: http
 	:caption: Request Example
