@@ -142,7 +142,7 @@ export class UsersPage extends BasePage {
 
     public async SearchEmailUser(nameEmail: string): Promise<void> {
         const snp = new SideNavigationPage();
-        const name = nameEmail + this.randomize;
+        const name = nameEmail;
         await snp.NavigateToUsersPage();
         await this.txtSearch.clear();
         await this.txtSearch.sendKeys(name);
@@ -172,7 +172,7 @@ export class UsersPage extends BasePage {
         const basePage = new BasePage();
         const snp = new SideNavigationPage();
         await this.btnRegisterNewUser.click();
-        await this.txtEmail.sendKeys(user.Email + this.randomize);
+        await this.txtEmail.sendKeys(user.Email);
         await this.txtRole.sendKeys(user.Role);
         await this.txtTenant.sendKeys(user.Tenant + this.randomize);
         await basePage.ClickRegister();
