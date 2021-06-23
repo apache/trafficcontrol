@@ -109,7 +109,7 @@ export class UsersPage extends BasePage {
       await this.btnCreateNewUser.click();
       await this.txtFullName.sendKeys(user.FullName + this.randomize);
       await this.txtUserName.sendKeys(user.Username + this.randomize);
-      await this.txtEmail.sendKeys(user.Email + this.randomize);
+      await this.txtEmail.sendKeys(user.Email);
       await this.txtRole.sendKeys(user.Role);
       await this.txtTenant.sendKeys(user.Tenant+this.randomize);
       await this.txtPassword.sendKeys(user.Password);
