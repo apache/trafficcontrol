@@ -292,6 +292,13 @@ func (pr *TOProfile) Create() (error, error, int) {
 }
 
 func (pr *TOProfile) Delete() (error, error, int) {
+	if pr.CDNName == nil && pr.CDNID == nil {
+		cdnName, err := dbhelpers.GetCDNNameFromProfileID(pr.APIInfo().Tx.Tx, *pr.ID)
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		pr.CDNName = util.StrPtr(string(cdnName))
+	}
 	if pr.CDNName != nil || pr.CDNID != nil {
 		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
 		if userErr != nil || sysErr != nil {
