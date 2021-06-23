@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -54,6 +55,16 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	serverID := int64(inf.IntParams["id"])
 	queue := reqObj.Action == "queue"
+	cdnName, err := dbhelpers.GetCDNNameFromServerID(inf.Tx.Tx, serverID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
 	ok, err := queueUpdate(inf.Tx.Tx, serverID, queue)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("queueing updates: %v", err))

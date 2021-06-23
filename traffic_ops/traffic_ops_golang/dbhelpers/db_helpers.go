@@ -101,6 +101,31 @@ const getUserByEmailQuery = getUserBaseQuery + `
 WHERE tm_user.email = $1
 `
 
+// CheckIfCurrentUserHasCdnLock checks if the current user has the lock on the cdn that the requested operation is to be performed on.
+// This will succeed if the either there is no lock by any user on the CDN, or if the current user has the lock on the CDN.
+func CheckIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (error, error, int) {
+	query := `SELECT username FROM cdn_lock WHERE cdn=$1`
+	var userName string
+	rows, err := tx.Query(query, cdn)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil, http.StatusOK
+		}
+		return nil, errors.New("querying cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&userName)
+		if err != nil {
+			return nil, errors.New("scanning cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
+		}
+	}
+	if userName != "" && user != userName {
+		return errors.New("user " + user + " currently does not have the lock on cdn " + cdn), nil, http.StatusForbidden
+	}
+	return nil, nil, http.StatusOK
+}
+
 func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, string, map[string]interface{}, []error) {
 	whereClause := BaseWhere
 	orderBy := BaseOrderBy
@@ -532,6 +557,15 @@ func GetCDNNameFromID(tx *sql.Tx, id int64) (tc.CDNName, bool, error) {
 		return "", false, errors.New("querying CDN ID: " + err.Error())
 	}
 	return tc.CDNName(name), true, nil
+}
+
+// GetCDNNameFromServerID gets the CDN name for the server with the given ID.
+func GetCDNNameFromServerID(tx *sql.Tx, serverId int64) (tc.CDNName, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn_id FROM server WHERE id=$1)`, serverId).Scan(&name); err != nil {
+		return "", fmt.Errorf("querying CDN name from server ID: %w", err)
+	}
+	return tc.CDNName(name), nil
 }
 
 // GetCDNIDFromName returns the ID of the CDN if a CDN with the name exists

@@ -85,6 +85,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 // Create is the handler for POST requests to /cdn_locks.
 func Create(w http.ResponseWriter, r *http.Request) {
+	soft := "soft"
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -103,6 +104,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	if cdnLock.Soft == nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("field 'soft' must be present"), nil)
 		return
+	}
+	if !*cdnLock.Soft {
+		soft = "hard"
 	}
 	if cdnLock.CDN == "" {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("field 'cdn' must be present"), nil)
@@ -129,10 +133,10 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("cdn lock create: lock couldn't be acquired"))
 		return
 	}
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "CDN lock acquired!")
+	alerts := tc.CreateAlerts(tc.SuccessLevel, fmt.Sprintf("%s CDN lock acquired!", soft))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, cdnLock)
 
-	changeLogMsg := fmt.Sprintf("USER: %s, CDN: %s, ACTION: Lock Acquired", inf.User.UserName, cdnLock.CDN)
+	changeLogMsg := fmt.Sprintf("USER: %s, CDN: %s, ACTION: %s lock acquired", inf.User.UserName, cdnLock.CDN, soft)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
