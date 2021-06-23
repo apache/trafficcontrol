@@ -301,9 +301,13 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 	clause, newerTime, olderTime, err := buildAgeFilter(parameters, fieldName)
 	if err != nil {
 		errs = append(errs, err)
-	} else {
-		queryValues["newerThan"] = newerTime
-		queryValues["olderThan"] = olderTime
+	} else if clause != "" {
+		if _, ok := parameters["newerThan"]; ok {
+			queryValues["newerThan"] = newerTime
+		}
+		if _, ok := parameters["olderThan"]; ok {
+			queryValues["olderThan"] = olderTime
+		}
 		criteriaArgs = append(criteriaArgs, clause)
 	}
 

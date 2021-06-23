@@ -47,6 +47,26 @@ func stripAllWhitespace(s string) string {
 }
 
 func TestBuildQuery(t *testing.T) {
+	where, orderBy, pagination, queryValues, errs := BuildWhereAndOrderByAndPagination(map[string]string{}, map[string]WhereColumnInfo{}, "")
+	if len(errs) != 0 {
+		t.Errorf("Unexpected errors building query with no/empty inputs")
+		for _, err := range errs {
+			t.Error(err)
+		}
+	}
+	if where != "" {
+		t.Errorf("WHERE clause should be empty with no criteria, got: %s", where)
+	}
+	if orderBy != "" {
+		t.Errorf("ORDER BY clause should be empty with no criteria, got: %s", orderBy)
+	}
+	if pagination != "" {
+		t.Errorf("No pagination should be emitted with no criteria, got: %s", pagination)
+	}
+	for key, val := range queryValues {
+		t.Errorf("Unexpected query value '%s' (value: %v) emitted from query building with no criteria", key, val)
+	}
+
 	v := map[string]string{"param1": "queryParamv1", "param2": "queryParamv2", "limit": "20", "offset": "10"}
 
 	selectStmt := `SELECT
@@ -57,10 +77,16 @@ FROM table t
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]WhereColumnInfo{
-		"param1": WhereColumnInfo{"t.col1", nil},
-		"param2": WhereColumnInfo{"t.col2", nil},
+		"param1": {Column: "t.col1"},
+		"param2": {Column: "t.col2"},
 	}
-	where, orderBy, pagination, queryValues, _ := BuildWhereAndOrderByAndPagination(v, queryParamsToSQLCols, "")
+	where, orderBy, pagination, queryValues, errs = BuildWhereAndOrderByAndPagination(v, queryParamsToSQLCols, "")
+	if len(errs) != 0 {
+		t.Errorf("Unexpected errors building query")
+		for _, err := range errs {
+			t.Error(err)
+		}
+	}
 	query := selectStmt + where + orderBy + pagination
 	actualQuery := stripAllWhitespace(query)
 
