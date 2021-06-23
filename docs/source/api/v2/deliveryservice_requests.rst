@@ -53,8 +53,7 @@ Request Structure
 	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| xmlId     | no       | Filter for :ref:`ds_requests` that have the given :ref:`ds-xmlid`.                                                                      |
 	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                           |
-	|           |          | array                                                                                                                                   |
+	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array                     |
 	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                |
 	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
@@ -65,9 +64,15 @@ Request Structure
 	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1.    |
 	|           |          | If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                       |
 	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| newerThan | no       | Return only :term:`DSRs` that were most recently updated no earlier than this date/time, which may be given as an :rfc:`3339`-formatted |
+	|           |          | string or as number of nanoseconds since the Unix Epoch (midnight on January 1\ :sup:`st` 1970 UTC).                                    |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| olderThan | no       | Return only :term:`DSRs` that were most recently updated no later than this date/time, which may be given as an :rfc:`3339`-formatted   |
+	|           |          | string or as number of nanoseconds since the Unix Epoch (midnight on January 1\ :sup:`st` 1970 UTC).                                    |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 
 .. versionadded:: ATCv6
-	The ``createdAt`` query parameter was added to this in endpoint across all API versions in :abbr:`ATC (Apache Traffic Control)` version 6.0.0.
+	The ``newerThan``, ``olderThan``, and ``createdAt`` query parameters were added to this in endpoint across all API versions in :abbr:`ATC (Apache Traffic Control)` version 6.0.0.
 
 .. code-block:: http
 	:caption: Request Example
