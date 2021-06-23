@@ -42,16 +42,6 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	idOrName := inf.Params["id-or-name"]
 	id, err := strconv.Atoi(idOrName)
-	cdnName, err := dbhelpers.GetCDNNameFromServerID(inf.Tx.Tx, int64(id))
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-		return
-	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-		return
-	}
 	hostName := ""
 	if err == nil {
 		name, ok, err := dbhelpers.GetServerNameFromID(inf.Tx.Tx, id)
@@ -63,13 +53,34 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		hostName = name
+		cdnName, err := dbhelpers.GetCDNNameFromServerID(inf.Tx.Tx, int64(id))
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
 	} else {
 		hostName = idOrName
-		if _, ok, err := dbhelpers.GetServerIDFromName(hostName, inf.Tx.Tx); err != nil {
+		serverID, ok, err := dbhelpers.GetServerIDFromName(hostName, inf.Tx.Tx)
+		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server id from name '"+idOrName+"': "+err.Error()))
 			return
 		} else if !ok {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("server name '"+idOrName+"' not found"), nil)
+			return
+		}
+		cdnName, err := dbhelpers.GetCDNNameFromServerID(inf.Tx.Tx, int64(serverID))
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 			return
 		}
 	}
