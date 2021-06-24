@@ -212,13 +212,16 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 	// CheckIfCurrentUserCanModifyCDN
 	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
 
 	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(inf.Tx.Tx, "ACME async job has started.")
 	if userErr != nil || sysErr != nil {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
 
 	go GetAcmeCertificates(inf.Config, req, ctx, cancelTx, true, inf.User, asyncStatusId, inf.Vault)
@@ -278,6 +281,7 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 	// CheckIfCurrentUserCanModifyCDN
 	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
@@ -308,7 +312,9 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 
 	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(inf.Tx.Tx, "ACME async job has started.")
 	if userErr != nil || sysErr != nil {
+		defer cancelTx()
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
 
 	go GetAcmeCertificates(inf.Config, req, ctx, cancelTx, true, inf.User, asyncStatusId, inf.Vault)

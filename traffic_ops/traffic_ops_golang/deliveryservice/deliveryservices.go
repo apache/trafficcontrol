@@ -1198,7 +1198,7 @@ func (ds *TODeliveryService) Delete() (error, error, int) {
 	} else {
 		cdnName, err := dbhelpers.GetCDNNameFromDSID(ds.ReqInfo.Tx.Tx, *ds.ID)
 		if err != nil {
-			return fmt.Errorf("couldn't get cdn name for DS: %w", err.Error()), nil, http.StatusBadRequest
+			return fmt.Errorf("couldn't get cdn name for DS: %v", err), nil, http.StatusBadRequest
 		}
 		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(ds.APIInfo().Tx.Tx, cdnName, ds.APIInfo().User.UserName)
 		if userErr != nil || sysErr != nil {

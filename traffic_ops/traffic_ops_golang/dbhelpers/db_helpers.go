@@ -1414,12 +1414,3 @@ func GetCDNNamesFromServerIds(tx *sql.Tx, serverIds []int64) ([]string, error) {
 	}
 	return cdns, nil
 }
-
-// GetCDNNameFromServerID gets the CDN name for the server with the given ID.
-func GetCDNNameFromServerID(tx *sql.Tx, serverId int64) (tc.CDNName, error) {
-	name := ""
-	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn_id FROM server WHERE id=$1)`, serverId).Scan(&name); err != nil {
-		return "", fmt.Errorf("querying CDN name from server ID: %w", err)
-	}
-	return tc.CDNName(name), nil
-}

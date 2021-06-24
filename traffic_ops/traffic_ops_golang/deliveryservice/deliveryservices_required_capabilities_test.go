@@ -80,6 +80,8 @@ func TestCreateDeliveryServicesRequiredCapability(t *testing.T) {
 	typeRows := sqlmock.NewRows([]string{"name", "required_capabilities", "topology"}).AddRow(
 		"HTTP", "{}", nil,
 	)
+	mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("cdnName"))
+	mock.ExpectQuery("SELECT username").WillReturnRows(sqlmock.NewRows(nil))
 	mock.ExpectQuery("SELECT t.name.*").WillReturnRows(typeRows)
 
 	scRows := sqlmock.NewRows([]string{"name"}).AddRow(
@@ -244,6 +246,8 @@ func TestDeleteDeliveryServicesRequiredCapability(t *testing.T) {
 	mock.ExpectBegin()
 	mockTenantID(t, mock, 1)
 
+	mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("cdnName"))
+	mock.ExpectQuery("SELECT username").WillReturnRows(sqlmock.NewRows(nil))
 	mock.ExpectExec("DELETE").WillReturnResult(sqlmock.NewResult(1, 1))
 
 	rc := RequiredCapability{
@@ -366,6 +370,8 @@ func TestCreateDeliveryServicesRequiredCapabilityInvalidDSType(t *testing.T) {
 	typeRows := sqlmock.NewRows([]string{"name", "required_capabilities", "topology"}).AddRow(
 		"ANY_MAP", "{}", nil,
 	)
+	mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("cdnName"))
+	mock.ExpectQuery("SELECT username").WillReturnRows(sqlmock.NewRows(nil))
 	mock.ExpectQuery("SELECT t.name.*").WillReturnRows(typeRows)
 
 	userErr, sysErr, errCode := rc.Create()
