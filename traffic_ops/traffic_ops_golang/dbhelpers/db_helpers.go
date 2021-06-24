@@ -1361,6 +1361,7 @@ func GetCDNsForCachegroup(tx *sql.Tx, cgID *int) (map[string]bool, error) {
 	return cdns, nil
 }
 
+// GetCDNNameFromProfileID returns the cdn name for the provided profile ID.
 func GetCDNNameFromProfileID(tx *sql.Tx, id int) (tc.CDNName, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn FROM profile WHERE id = $1)`, id).Scan(&name); err != nil {
@@ -1369,6 +1370,7 @@ func GetCDNNameFromProfileID(tx *sql.Tx, id int) (tc.CDNName, error) {
 	return tc.CDNName(name), nil
 }
 
+// GetCDNNameFromProfileName returns the cdn name for the provided profile name.
 func GetCDNNameFromProfileName(tx *sql.Tx, profileName string) (tc.CDNName, error) {
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn FROM profile WHERE name = $1)`, profileName).Scan(&name); err != nil {
@@ -1377,6 +1379,7 @@ func GetCDNNameFromProfileName(tx *sql.Tx, profileName string) (tc.CDNName, erro
 	return tc.CDNName(name), nil
 }
 
+// GetServerIDsFromCachegroupNames returns a list of servers IDs for a list of cachegroup IDs.
 func GetServerIDsFromCachegroupNames(tx *sql.Tx, cgID []string) ([]int64, error) {
 	var serverIDs []int64
 	var serverID int64
@@ -1396,6 +1399,7 @@ func GetServerIDsFromCachegroupNames(tx *sql.Tx, cgID []string) ([]int64, error)
 	return serverIDs, nil
 }
 
+// GetCDNNamesFromServerIds returns a list of cdn names for a list of server IDs.
 func GetCDNNamesFromServerIds(tx *sql.Tx, serverIds []int64) ([]string, error) {
 	var cdns []string
 	cdn := ""
