@@ -43,15 +43,15 @@ func TestDeliveryServices(t *testing.T) {
 		header.Set(rfc.IfModifiedSince, ti)
 		header.Set(rfc.IfUnmodifiedSince, ti)
 		if includeSystemTests {
-			SSLDeliveryServiceCDNUpdateTest(t)
-			CreateTestDeliveryServicesURLSignatureKeys(t)
-			GetTestDeliveryServicesURLSignatureKeys(t)
-			DeleteTestDeliveryServicesURLSignatureKeys(t)
-			CreateTestDeliveryServicesURISigningKeys(t)
-			GetTestDeliveryServicesURISigningKeys(t)
-			DeleteTestDeliveryServicesURISigningKeys(t)
-			DeleteCDNOldSSLKeys(t)
-			DeliveryServiceSSLKeys(t)
+			t.Run("Update CDN for a Delivery Service with SSL keys", SSLDeliveryServiceCDNUpdateTest)
+			t.Run("Create URL Signature keys for a Delivery Service", CreateTestDeliveryServicesURLSignatureKeys)
+			t.Run("Retrieve URL Signature keys for a Delivery Service", GetTestDeliveryServicesURLSignatureKeys)
+			t.Run("Delete URL Signature keys for a Delivery Service", DeleteTestDeliveryServicesURLSignatureKeys)
+			t.Run("Create URI Signing Keys for a Delivery Service", CreateTestDeliveryServicesURISigningKeys)
+			t.Run("Retrieve URI Signing keys for a Delivery Service", GetTestDeliveryServicesURISigningKeys)
+			t.Run("Delete URI Signing keys for a Delivery Service", DeleteTestDeliveryServicesURISigningKeys)
+			t.Run("Delete old CDN SSL keys", DeleteCDNOldSSLKeys)
+			t.Run("Create and retrieve SSL keys for a Delivery Service", DeliveryServiceSSLKeys)
 		}
 
 		CreateTestDeliveryServiceWithLongDescFields(t)
@@ -2079,8 +2079,12 @@ func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 		t.Errorf("failed to unmarshal uri sig keys")
 	}
 
-	if len(firstKeys) == 0 {
-		t.Errorf("failed to create uri sig keys")
+	kabletownFirstKeys, ok := firstKeys["Kabletown URI Authority 1"]
+	if !ok {
+		t.Fatal("failed to create uri sig keys: 'Kabletown URI Authority 1' not found in response after creation")
+	}
+	if len(kabletownFirstKeys.Keys) < 1 {
+		t.Fatal("failed to create URI signing keys: 'Kabletown URI Authority 1' had zero keys after creation")
 	}
 
 	// Create new keys again and check that they are different
@@ -2105,12 +2109,16 @@ func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 		t.Errorf("failed to unmarshal uri sig keys")
 	}
 
-	if len(secondKeys) == 0 {
-		t.Errorf("failed to create uri sig keys")
+	kabletownSecondKeys, ok := secondKeys["Kabletown URI Authority 1"]
+	if !ok {
+		t.Fatal("failed to create uri sig keys: 'Kabletown URI Authority 1' not found in response after creation")
+	}
+	if len(kabletownSecondKeys.Keys) < 1 {
+		t.Fatal("failed to create URI signing keys: 'Kabletown URI Authority 1' had zero keys after creation")
 	}
 
-	if secondKeys["Kabletown URI Authority 1"].Keys[0].KeyID == firstKeys["Kabletown URI Authority 1"].Keys[0].KeyID {
-		t.Errorf("second create did not generate new uri sig keys")
+	if kabletownSecondKeys.Keys[0].KeyID == kabletownFirstKeys.Keys[0].KeyID {
+		t.Errorf("second create did not generate new uri sig keys - key mismatch")
 	}
 }
 
