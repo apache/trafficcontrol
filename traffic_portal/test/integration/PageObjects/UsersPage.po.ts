@@ -55,7 +55,6 @@ interface UpdateRegisterUser {
     NewFullName: string;
     validationMessage?: string;
 }
-
 export class UsersPage extends BasePage {
     private btnCreateNewUser = element(by.name('createUserButton'));
     private btnRegisterNewUser = element(by.name('createRegisterUserButton'));
