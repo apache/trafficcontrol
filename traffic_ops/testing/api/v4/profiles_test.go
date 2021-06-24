@@ -50,11 +50,11 @@ func TestProfiles(t *testing.T) {
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestProfilesWithHeaders(t, header)
 		GetTestPaginationSupportProfiles(t)
-		CRDProfileWithLocks(t)
+		CUDProfileWithLocks(t)
 	})
 }
 
-func CRDProfileWithLocks(t *testing.T) {
+func CUDProfileWithLocks(t *testing.T) {
 	resp, _, err := TOSession.GetTenants(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("could not GET tenants: %v", err)

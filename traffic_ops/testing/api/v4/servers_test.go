@@ -55,11 +55,11 @@ func TestServers(t *testing.T) {
 		UpdateTestServerStatus(t)
 		LastServerInTopologyCacheGroup(t)
 		GetServersForNonExistentDeliveryService(t)
-		CRDServerWithLocks(t)
+		CUDServerWithLocks(t)
 	})
 }
 
-func CRDServerWithLocks(t *testing.T) {
+func CUDServerWithLocks(t *testing.T) {
 	resp, _, err := TOSession.GetTenants(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("could not GET tenants: %v", err)
@@ -150,7 +150,7 @@ func CRDServerWithLocks(t *testing.T) {
 	}
 	serverID := servers.Response[0].ID
 	// Try to update a server on a CDN that another user has a hard lock on -> this should fail
-	server.DomainName = util.StrPtr("changed_domain_name")
+	servers.Response[0].DomainName = util.StrPtr("changed_domain_name")
 	_, reqInf, err = TOSession.UpdateServer(*serverID, servers.Response[0], client.RequestOptions{})
 	if err == nil {
 		t.Error("expected an error while updating a server for a CDN for which a hard lock is held by another user, but got nothing")

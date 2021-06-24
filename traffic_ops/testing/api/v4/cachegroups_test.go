@@ -26,6 +26,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -57,7 +58,103 @@ func TestCacheGroups(t *testing.T) {
 		GetTestCacheGroupsByInvalidType(t)
 		GetTestCacheGroupsByType(t)
 		DeleteTestCacheGroupsByInvalidId(t)
+		UpdateCachegroupWithLocks(t)
 	})
+}
+
+func UpdateCachegroupWithLocks(t *testing.T) {
+	var cdnName string
+	servers := make([]tc.ServerV40, 0)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Add("name", "cachegroup1")
+	cgResp, _, err := TOSession.GetCacheGroups(opts)
+	if err != nil {
+		t.Fatalf("couldn't get cachegroup: %v", err)
+	}
+	if len(cgResp.Response) != 1 {
+		t.Fatalf("expected only one cachegroup in response, but got %d, quitting", len(cgResp.Response))
+	}
+	opts.QueryParameters.Del("name")
+	opts.QueryParameters.Add("cachegroupName", "cachegroup1")
+	serversResp, _, err := TOSession.GetServers(opts)
+	if err != nil {
+		t.Fatalf("couldn't get servers for cachegroup: %v", err)
+	}
+	servers = serversResp.Response
+	if len(servers) == 0 {
+		t.Fatalf("couldn't get a cachegroup with 1 or more servers assigned, quitting")
+	}
+	server := servers[0]
+	if server.CDNName != nil {
+		cdnName = *server.CDNName
+	} else if server.CDNID != nil {
+		opts = client.RequestOptions{}
+		opts.QueryParameters.Add("id", strconv.Itoa(*server.CDNID))
+		cdnResp, _, err := TOSession.GetCDNs(opts)
+		if err != nil {
+			t.Fatalf("couldn't get CDN: %v", err)
+		}
+		if len(cdnResp.Response) != 1 {
+			t.Fatalf("expected only one CDN in response, but got %d", len(cdnResp.Response))
+		}
+		cdnName = cdnResp.Response[0].Name
+	}
+
+	// Create a new user with operations level privileges
+	user1 := tc.User{
+		Username:             util.StrPtr("lock_user1"),
+		RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
+		LocalPassword:        util.StrPtr("test_pa$$word"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+		RoleName:             util.StrPtr("operations"),
+	}
+	user1.Email = util.StrPtr("lockuseremail@domain.com")
+	user1.TenantID = util.IntPtr(1)
+	user1.FullName = util.StrPtr("firstName LastName")
+	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("could not create test user with username: %s", *user1.Username)
+	}
+	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
+
+	// Establish a session with the newly created non admin level user
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, *user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	if err != nil {
+		t.Fatalf("could not login with user lock_user1: %v", err)
+	}
+
+	// Create a lock for this user
+	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
+		CDN:     cdnName,
+		Message: util.StrPtr("test lock"),
+		Soft:    util.BoolPtr(false),
+	}, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("couldn't create cdn lock: %v", err)
+	}
+	cg := cgResp.Response[0]
+
+	// Try to update a cachegroup on a CDN that another user has a hard lock on -> this should fail
+	cg.ShortName = util.StrPtr("changedShortName")
+	_, reqInf, err := TOSession.UpdateCacheGroup(*cg.ID, cg, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while updating a cachegroup for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while updating a cachegroup for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to update a cachegroup on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.UpdateCacheGroup(*cg.ID, cg, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while updating a cachegroup for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	// Delete the lock
+	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdnName}}})
+	if err != nil {
+		t.Errorf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
+	}
 }
 
 func UpdateTestCacheGroupsWithHeaders(t *testing.T, h http.Header) {
