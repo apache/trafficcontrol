@@ -265,6 +265,33 @@ func CheckIfCurrentUserCanModifyCDNWithID(tx *sql.Tx, cdnID int64, user string) 
 	return nil, nil, http.StatusOK
 }
 
+// CheckIfCurrentUserCanModifyCachegroup checks if the current user has the lock on the cdns that are associated with the provided cachegroup ID.
+// This will succeed if no other user has a hard lock on any of the CDNs that relate to the cachegroup in question.
+func CheckIfCurrentUserCanModifyCachegroup(tx *sql.Tx, cachegroupID int, user string) (error, error, int) {
+	query := `SELECT username, cdn, soft FROM cdn_lock WHERE cdn IN (SELECT name FROM cdn WHERE id IN (SELECT cdn_id FROM server WHERE cachegroup = ($1)))`
+	var userName string
+	var cdn string
+	var soft bool
+	rows, err := tx.Query(query, cachegroupID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil, http.StatusOK
+		}
+		return nil, errors.New("querying cdn_lock for user " + user + " and cachegroup ID " + strconv.Itoa(cachegroupID) + ": " + err.Error()), http.StatusInternalServerError
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&userName, &cdn, &soft)
+		if err != nil {
+			return nil, errors.New("scanning cdn_lock for user " + user + " and cachegroup ID " + strconv.Itoa(cachegroupID) + ": " + err.Error()), http.StatusInternalServerError
+		}
+	}
+	if userName != "" && user != userName && !soft {
+		return errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), nil, http.StatusForbidden
+	}
+	return nil, nil, http.StatusOK
+}
+
 func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string) (string, map[string]interface{}, []error) {
 	var criteria string
 
@@ -1335,30 +1362,6 @@ func GetCDNNameFromDSXMLID(tx *sql.Tx, xmlID string) (string, error) {
 		return cdn, fmt.Errorf("querying CDN for deliveryservice with XML ID '%v': %v", xmlID, err)
 	}
 	return cdn, nil
-}
-
-// GetCDNsForCachegroup returns a map of CDNs for all the servers in the provided cachegroup.
-func GetCDNsForCachegroup(tx *sql.Tx, cgID *int) (map[string]bool, error) {
-	cdns := make(map[string]bool, 0)
-	var cdn string
-	if cgID == nil {
-		return cdns, errors.New("no cachegroup ID found")
-	}
-	query := `SELECT name FROM cdn WHERE id IN (SELECT cdn_id FROM server WHERE cachegroup = $1)`
-	rows, err := tx.Query(query, *cgID)
-	if err != nil {
-		return cdns, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		err = rows.Scan(&cdn)
-		if err != nil {
-			return cdns, err
-		}
-		cdns[cdn] = true
-	}
-	return cdns, nil
 }
 
 // GetCDNNameFromProfileID returns the cdn name for the provided profile ID.

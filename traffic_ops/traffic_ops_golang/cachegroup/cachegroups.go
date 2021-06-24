@@ -611,23 +611,17 @@ func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
-	cdns, err := dbhelpers.GetCDNsForCachegroup(cg.ReqInfo.Tx.Tx, cg.ID)
-	if err != nil {
-		return nil, err, http.StatusInternalServerError
+	// CheckIfCurrentUserCanModifyCachegroup
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCachegroup(cg.ReqInfo.Tx.Tx, *cg.ID, cg.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
-	for cdn, _ := range cdns {
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(cg.ReqInfo.Tx.Tx, cdn, cg.ReqInfo.User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, statusCode
-		}
-	}
-
 	coordinateID, userErr, sysErr, errCode := cg.handleCoordinateUpdate()
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 
-	err = cg.ReqInfo.Tx.Tx.QueryRow(
+	err := cg.ReqInfo.Tx.Tx.QueryRow(
 		UpdateQuery(),
 		cg.Name,
 		cg.ShortName,
@@ -727,15 +721,10 @@ func (cg *TOCacheGroup) Delete() (error, error, int) {
 		return nil, errors.New("cachegroup delete: getting coord: " + err.Error()), http.StatusInternalServerError
 	}
 
-	cdns, err := dbhelpers.GetCDNsForCachegroup(cg.ReqInfo.Tx.Tx, cg.ID)
-	if err != nil {
-		return nil, err, http.StatusInternalServerError
-	}
-	for cdn, _ := range cdns {
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(cg.ReqInfo.Tx.Tx, cdn, cg.ReqInfo.User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, statusCode
-		}
+	// CheckIfCurrentUserCanModifyCachegroup
+	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCachegroup(cg.ReqInfo.Tx.Tx, *cg.ID, cg.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 	if err = cg.deleteCoordinate(*coordinateID); err != nil {
 		return nil, errors.New("cachegroup delete: deleting coord: " + err.Error()), http.StatusInternalServerError
