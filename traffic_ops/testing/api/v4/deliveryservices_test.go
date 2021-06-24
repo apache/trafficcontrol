@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -91,7 +90,6 @@ func TestDeliveryServices(t *testing.T) {
 		GetDeliveryServiceByValidType(t)
 		GetDeliveryServiceByValidXmlId(t)
 		SortTestDeliveryServicesDesc(t)
-		SortTestDeliveryServices(t)
 	})
 }
 
@@ -2367,25 +2365,5 @@ func SortTestDeliveryServicesDesc(t *testing.T) {
 		if !reflect.DeepEqual(respDesc[0].XMLID, respAsc[0].XMLID) {
 			t.Errorf("Delivery Service responses are not equal after reversal: %v - %v", *respDesc[0].XMLID, *respAsc[0].XMLID)
 		}
-	}
-}
-
-func SortTestDeliveryServices(t *testing.T) {
-	resp, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	sortedList := make([]string, 0, len(resp.Response))
-	for _, ds := range resp.Response {
-		if ds.XMLID == nil {
-			t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
-			continue
-		}
-		sortedList = append(sortedList, *ds.XMLID)
-	}
-
-	if !sort.StringsAreSorted(sortedList) {
-		t.Errorf("list is not sorted by their XML Id: %v", sortedList)
 	}
 }
