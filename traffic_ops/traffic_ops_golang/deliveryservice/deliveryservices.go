@@ -1334,6 +1334,16 @@ func (v *TODeliveryService) DeleteQuery() string {
 }
 
 func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser, useIMS bool) ([]tc.DeliveryServiceV4, error, error, int, *time.Time) {
+	if tx == nil {
+		return nil, nil, errors.New("nil transaction passed to readGetDeliveryServices"), http.StatusInternalServerError, nil
+	}
+	if user == nil {
+		return nil, nil, errors.New("nil user passed to readGetDeliveryServices"), http.StatusInternalServerError, nil
+	}
+	if params == nil {
+		params = make(map[string]string)
+	}
+
 	var maxTime time.Time
 	var runSecond bool
 	if strings.HasSuffix(params["id"], ".json") {
@@ -1377,8 +1387,8 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 
 	if err != nil {
-		log.Errorln("received error querying for user's tenants: " + err.Error())
-		return nil, nil, tc.DBError, http.StatusInternalServerError, &maxTime
+		err = fmt.Errorf("received error querying for user's tenants: %w", err)
+		return nil, nil, err, http.StatusInternalServerError, &maxTime
 	}
 
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
