@@ -58,6 +58,17 @@ Request Structure
 	|            |          | the first page is 1. If ``offset`` was defined, this query parameter has no effect. ``limit`` must be defined to  |
 	|            |          | make use of ``page``.                                                                                             |
 	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| newerThan  | no       | Return only servers that were most recently updated no earlier than this date/time, which may be given as an      |
+	|            |          | :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight on January 1\ :sup:`st`   |
+	|            |          | 1970 UTC).                                                                                                        |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+	| olderThan  | no       | Return only servers that were most recently updated no later than this date/time, which may be given as an        |
+	|            |          | :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight on January 1\ :sup:`st`   |
+	|            |          | 1970 UTC).                                                                                                        |
+	+------------+----------+-------------------------------------------------------------------------------------------------------------------+
+
+.. versionadded:: ATCv6
+	The ``newerThan`` and ``olderThan`` query string parameters were added to all API versions as of :abbr:`ATC (Apache Traffic Control)` version 6.0.
 
 .. code-block:: http
 	:caption: Request Example
