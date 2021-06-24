@@ -49,6 +49,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added a Traffic Monitor integration test framework.
 - Added `traffic_ops/app/db/traffic_vault_migrate` to help with migrating Traffic Ops Traffic Vault backends
 - Added a tool at `/traffic_ops/app/db/reencrypt` to re-encrypt the data in the Postgres Traffic Vault with a new key.
+- Added support for age filtering via the `newerThan` and `olderThan` query string parameters to the Traffic Ops API endpoints `/users`, `/topologies`, `/servers`, `/profiles`, `/parameters`, `/origins`, `/jobs`, `/federation_resolvers`, `/deliveryservices/{{ID}}/regexes`, `/servers/{{ID}}/deliveryservices`, `/deliveryservice_requests`, `/deliveryservices`, `/cdn_notifications`, `/cdn_locks`, `/capabilities`, `/cachegroups/{{ID}}/unassigned_parameters`, `/cachegroupparameters`, `/cachegroups`, and `/api_capabilities`.
 
 ### Fixed
 - [#5690](https://github.com/apache/trafficcontrol/issues/5690) - Fixed github action for added/modified db migration file.
