@@ -20,13 +20,13 @@
       - " valid_build_version == 'true' "
 
 - name: Install Postgres
-  yum:
+  package:
     name:
       - "{{ postgresql_server_pkg_name }}"
       - "{{ postgresql_client_pkg_name }}"
       - "{{ postgresql_devel_pkg_name }}"
       - gcc
-      - python-devel
+      - "python{{ ansible_python.version.major }}-devel"
     state: present
     lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
@@ -71,7 +71,9 @@
 
 - name: Install psycopg2 python module
   pip:
-    name: psycopg2
+    name:
+      - psycopg2
+    extra_args: "--ignore-installed"
   environment:
     PATH: "{{ pg_bin_path }}:{{ lookup('env', 'PATH') }}"
 
