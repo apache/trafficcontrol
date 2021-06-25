@@ -30,6 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -44,8 +45,8 @@ import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -87,7 +88,7 @@ public class ConsistentHasherTest {
 		when(trafficRouter.buildPatternBasedHashString(anyString(), anyString())).thenCallRealMethod();
 		when(trafficRouter.buildPatternBasedHashString(any(DeliveryService.class), any(HTTPRequest.class))).thenCallRealMethod();
 
-		initMocks(this);
+		MockitoAnnotations.openMocks(this);
 	}
 
 	@Test

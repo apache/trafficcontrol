@@ -33,9 +33,9 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.never;
@@ -57,7 +57,7 @@ public class GeoSortSteeringResultsTest {
         steeringResults = new ArrayList<>();
         clientLocation = new Geolocation(47.0, -122.0);
         deliveryService = mock(DeliveryService.class);
-        doCallRealMethod().when(trafficRouter).geoSortSteeringResults(anyListOf(SteeringResult.class), anyString(), any(DeliveryService.class));
+        doCallRealMethod().when(trafficRouter).geoSortSteeringResults(anyList(), anyString(), any(DeliveryService.class));
         when(trafficRouter.getClientLocationByCoverageZoneOrGeo(anyString(), any(DeliveryService.class))).thenReturn(clientLocation);
     }
 
