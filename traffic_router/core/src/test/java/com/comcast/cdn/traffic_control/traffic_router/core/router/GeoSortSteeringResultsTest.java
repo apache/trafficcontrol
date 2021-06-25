@@ -37,6 +37,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -54,7 +55,7 @@ public class GeoSortSteeringResultsTest {
     @Before
     public void before() {
         trafficRouter = mock(TrafficRouter.class);
-        steeringResults = new ArrayList<>();
+        steeringResults = spy(new ArrayList<>());
         clientLocation = new Geolocation(47.0, -122.0);
         deliveryService = mock(DeliveryService.class);
         doCallRealMethod().when(trafficRouter).geoSortSteeringResults(anyList(), anyString(), any(DeliveryService.class));
@@ -85,12 +86,11 @@ public class GeoSortSteeringResultsTest {
         SteeringTarget steeringTarget = new SteeringTarget();
         steeringTarget.setGeolocation(clientLocation);
         steeringResults.add(new SteeringResult(steeringTarget, deliveryService));
-        clientLocation = null;
-        PowerMockito.mockStatic(Collections.class);
+        when(trafficRouter.getClientLocationByCoverageZoneOrGeo(anyString(), any(DeliveryService.class))).thenReturn(null);
 
         trafficRouter.geoSortSteeringResults(steeringResults, "::1", deliveryService);
 
-        PowerMockito.verifyStatic(never());
+        verify(steeringResults, never()).sort(any());
     }
 
     @Test
