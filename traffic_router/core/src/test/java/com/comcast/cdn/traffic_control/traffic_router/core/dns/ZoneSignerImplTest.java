@@ -52,15 +52,17 @@ import org.xbill.DNS.Type;
 @PrepareForTest(ZoneSignerImpl.class)
 public class ZoneSignerImplTest {
 
-    static class IsRRsetTypeA extends ArgumentMatcher<RRset> {
-        public boolean matches(Object rrset) {
-            return ((RRset) rrset).getType() == Type.A;
+    static class IsRRsetTypeA implements ArgumentMatcher<RRset> {
+        @Override
+        public boolean matches(RRset rRset) {
+            return rRset.getType() == Type.A;
         }
     }
 
-    static class IsRRsetTypeNSEC extends ArgumentMatcher<RRset> {
-        public boolean matches(Object rrset) {
-            return ((RRset) rrset).getType() == Type.NSEC;
+    static class IsRRsetTypeNSEC implements ArgumentMatcher<RRset> {
+        @Override
+        public boolean matches(RRset rRset) {
+            return rRset.getType() == Type.NSEC;
         }
     }
 
