@@ -100,9 +100,18 @@
 {% if groups['traffic_ops'] is defined %}
    # --  TO Instances for Postinstall
 {% for host_obj in (groups['traffic_ops']) %}
-   hostssl  all {{ postgresql_user }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
-   #host  all {{ postgresql_user }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
-
+{% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+   hostssl  all {{ postgresql_user }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+{%endif%}
+{% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+   hostssl  all {{ postgresql_user }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+{%endif%}
+{% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+   #host  all {{ postgresql_user }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+{%endif%}
+{% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+   #host  all {{ postgresql_user }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+{%endif%}
 {% endfor %}
 {% endif %}
 
@@ -110,20 +119,53 @@
 #  Postgres SUPERUSER
 # ------------------------------------------------------
    # --  Primary
-   hostssl  {{ todb_db_name }} {{ postgresql_user }} {{ (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) }}{{ '/32' if (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) | ansible.netcommon.ipaddr('address') }}  md5
-   hostssl  {{ tvdb_db_name }} {{ postgresql_user }} {{ (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) }}{{ '/32' if (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) | ansible.netcommon.ipaddr('address') }}  md5
+   {% if hostvars[groups['traffic_opsdb-primary'] | first].ansible_default_ipv4.address|default(hostvars[groups['traffic_opsdb-primary'] | first].ansible_all_ipv4_addresses[0]) is defined %}
+   hostssl  {{ todb_db_name }} {{ postgresql_user }} {{ hostvars[groups['traffic_opsdb-primary'] | first].ansible_default_ipv4.address|default(hostvars[groups['traffic_opsdb-primary'] | first].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[groups['traffic_opsdb-primary'] | first].ansible_default_ipv6.address|default(hostvars[groups['traffic_opsdb-primary'] | first].ansible_all_ipv6_addresses[0]) is defined %}
+   hostssl  {{ todb_db_name }} {{ postgresql_user }} {{ hostvars[groups['traffic_opsdb-primary'] | first].ansible_default_ipv6.address|default(hostvars[groups['traffic_opsdb-primary'] | first].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
+
+   {% if hostvars[groups['traffic_opsdb-primary'] | first].ansible_default_ipv4.address|default(hostvars[groups['traffic_opsdb-primary'] | first].ansible_all_ipv4_addresses[0]) is defined %}
+   hostssl  {{ tvdb_db_name }} {{ postgresql_user }} {{ hostvars[groups['traffic_opsdb-primary'] | first].ansible_default_ipv4.address|default(hostvars[groups['traffic_opsdb-primary'] | first].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[groups['traffic_opsdb-primary'] | first].ansible_default_ipv6.address|default(hostvars[groups['traffic_opsdb-primary'] | first].ansible_all_ipv6_addresses[0]) is defined %}
+   hostssl  {{ tvdb_db_name }} {{ postgresql_user }} {{ hostvars[groups['traffic_opsdb-primary'] | first].ansible_default_ipv6.address|default(hostvars[groups['traffic_opsdb-primary'] | first].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
 
 {% if groups['traffic_opsdb-standby'] is defined %}
    # --  Secondary
-   hostssl  {{ todb_db_name }} {{ postgresql_user }} {{ (groups['traffic_opsdb-standby'] | map('extract', hostvars, ['ansible_host']) | first) }}{{ '/32' if (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) | ansible.netcommon.ipaddr('address') }}  md5
-   hostssl  {{ tvdb_db_name }} {{ postgresql_user }} {{ (groups['traffic_opsdb-standby'] | map('extract', hostvars, ['ansible_host']) | first) }}{{ '/32' if (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) | ansible.netcommon.ipaddr('address') }}  md5
+   {% if hostvars[groups['traffic_opsdb-standby'] | first].ansible_default_ipv4.address|default(hostvars[groups['traffic_opsdb-standby'] | first].ansible_all_ipv4_addresses[0]) is defined %}
+   hostssl  {{ todb_db_name }} {{ postgresql_user }} {{ hostvars[groups['traffic_opsdb-standby'] | first].ansible_default_ipv4.address|default(hostvars[groups['traffic_opsdb-standby'] | first].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[groups['traffic_opsdb-standby'] | first].ansible_default_ipv6.address|default(hostvars[groups['traffic_opsdb-standby'] | first].ansible_all_ipv6_addresses[0]) is defined %}
+   hostssl  {{ todb_db_name }} {{ postgresql_user }} {{ hostvars[groups['traffic_opsdb-standby'] | first].ansible_default_ipv6.address|default(hostvars[groups['traffic_opsdb-standby'] | first].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
+
+   {% if hostvars[groups['traffic_opsdb-standby'] | first].ansible_default_ipv4.address|default(hostvars[groups['traffic_opsdb-standby'] | first].ansible_all_ipv4_addresses[0]) is defined %}
+   hostssl  {{ tvdb_db_name }} {{ postgresql_user }} {{ hostvars[groups['traffic_opsdb-standby'] | first].ansible_default_ipv4.address|default(hostvars[groups['traffic_opsdb-standby'] | first].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[groups['traffic_opsdb-standby'] | first].ansible_default_ipv6.address|default(hostvars[groups['traffic_opsdb-standby'] | first].ansible_all_ipv6_addresses[0]) is defined %}
+   hostssl  {{ tvdb_db_name }} {{ postgresql_user }} {{ hostvars[groups['traffic_opsdb-standby'] | first].ansible_default_ipv6.address|default(hostvars[groups['traffic_opsdb-standby'] | first].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
 
 {% endif %}
 {% if groups['traffic_opsdb-replicas'] is defined %}
    # --  Replicas
    {% for host_obj in (groups['traffic_opsdb-replicas']) %}
-   hostssl  {{ todb_db_name }} {{ postgresql_user }} {{ (groups['traffic_opsdb-replicas'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_opsdb-replicas'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
-   hostssl  {{ tvdb_db_name }} {{ postgresql_user }} {{ (groups['traffic_opsdb-replicas'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_opsdb-replicas'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
+   {% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+   hostssl  {{ todb_db_name }} {{ postgresql_user }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+   hostssl  {{ todb_db_name }} {{ postgresql_user }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
+
+   {% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+   hostssl  {{ tvdb_db_name }} {{ postgresql_user }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+   hostssl  {{ tvdb_db_name }} {{ postgresql_user }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
    {% endfor %}
 
 {% endif %}
@@ -132,41 +174,98 @@
 # ------------------------------------------------------
 {% if groups['traffic_ops'] is defined %}
 {% for host_obj in (groups['traffic_ops']) %}
-   hostssl  {{ todb_db_name }} {{ todb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
-   host  {{ todb_db_name }} {{ todb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
+   {% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+   hostssl  {{ todb_db_name }} {{ todb_username }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+   hostssl  {{ todb_db_name }} {{ todb_username }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+   host  {{ todb_db_name }} {{ todb_username }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+   host  {{ todb_db_name }} {{ todb_username }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
 
-   hostssl  {{ postgresql_user }} {{ todb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
-   host  {{ postgresql_user }} {{ todb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
+   {% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+   hostssl  {{ postgresql_user }} {{ todb_username }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+   hostssl  {{ postgresql_user }} {{ todb_username }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+   host  {{ postgresql_user }} {{ todb_username }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+   host  {{ postgresql_user }} {{ todb_username }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
 {% endfor %}
 {% endif %}
 
 #-------------------------------------
 #  TRAFFIC VAULT
 # ------------------------------------------------------
+{% if groups['traffic_ops'] is defined %}
 {% for host_obj in (groups['traffic_ops']) %}
-   hostssl  {{ tvdb_db_name }} {{ tvdb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}/32  md5
-   host  {{ tvdb_db_name }} {{ tvdb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}/32  md5
+   {% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+   hostssl  {{ tvdb_db_name }} {{ tvdb_username }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+   hostssl  {{ tvdb_db_name }} {{ tvdb_username }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+   host  {{ tvdb_db_name }} {{ tvdb_username }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+   host  {{ tvdb_db_name }} {{ tvdb_username }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
 
-   hostssl  {{ postgresql_user }} {{ tvdb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}/32  md5
-   host  {{ postgresql_user }} {{ tvdb_username }} {{ (groups['traffic_ops'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}/32  md5
+   {% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+   hostssl  {{ postgresql_user }} {{ tvdb_username }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+   hostssl  {{ postgresql_user }} {{ tvdb_username }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+   host  {{ postgresql_user }} {{ tvdb_username }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+   host  {{ postgresql_user }} {{ tvdb_username }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
 {% endfor %}
+{% endif %}
 
 {% if postgresql_replica_user is defined and postgresql_replica_user is not none %}
 # ------------------------------------------------------
 #  REPLICATION
 # ------------------------------------------------------
 # --  Primary
-      hostssl  replication {{ postgresql_replica_user }} {{ (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) }}{{ '/32' if (groups['traffic_opsdb-primary'] | map('extract', hostvars, ['ansible_host']) | first) | ansible.netcommon.ipaddr('address') }}  md5
+      {% if hostvars[groups['traffic_opsdb-primary'] | first].ansible_default_ipv4.address|default(hostvars[groups['traffic_opsdb-primary'] | first].ansible_all_ipv4_addresses[0]) is defined %}
+      hostssl  replication {{ postgresql_replica_user }} {{ hostvars[groups['traffic_opsdb-primary'] | first].ansible_default_ipv4.address|default(hostvars[groups['traffic_opsdb-primary'] | first].ansible_all_ipv4_addresses[0]) }}/32  md5
+      {%endif%}
+      {% if hostvars[groups['traffic_opsdb-primary'] | first].ansible_default_ipv6.address|default(hostvars[groups['traffic_opsdb-primary'] | first].ansible_all_ipv6_addresses[0]) is defined %}
+      hostssl  replication {{ postgresql_replica_user }} {{ hostvars[groups['traffic_opsdb-primary'] | first].ansible_default_ipv6.address|default(hostvars[groups['traffic_opsdb-primary'] | first].ansible_all_ipv6_addresses[0]) }}/128  md5
+      {%endif%}
 
 {% if groups['traffic_opsdb-standby'] is defined %}
 # --  Secondary
-      hostssl  replication {{ postgresql_replica_user }} {{ (groups['traffic_opsdb-standby'] | map('extract', hostvars, ['ansible_host']) | first) }}{{ '/32' if (groups['traffic_opsdb-standby'] | map('extract', hostvars, ['ansible_host']) | first) | ansible.netcommon.ipaddr('address') }}   md5
+      {% if hostvars[groups['traffic_opsdb-standby'] | first].ansible_default_ipv4.address|default(hostvars[groups['traffic_opsdb-standby'] | first].ansible_all_ipv4_addresses[0]) is defined %}
+      hostssl  replication {{ postgresql_replica_user }} {{ hostvars[groups['traffic_opsdb-standby'] | first].ansible_default_ipv4.address|default(hostvars[groups['traffic_opsdb-standby'] | first].ansible_all_ipv4_addresses[0]) }}/32  md5
+      {%endif%}
+      {% if hostvars[groups['traffic_opsdb-standby'] | first].ansible_default_ipv6.address|default(hostvars[groups['traffic_opsdb-standby'] | first].ansible_all_ipv6_addresses[0]) is defined %}
+      hostssl  replication {{ postgresql_replica_user }} {{ hostvars[groups['traffic_opsdb-standby'] | first].ansible_default_ipv6.address|default(hostvars[groups['traffic_opsdb-standby'] | first].ansible_all_ipv6_addresses[0]) }}/128  md5
+      {%endif%}
 {% endif %}
 
 {% if groups['traffic_opsdb-replicas'] is defined %}
 # --  Replicas
   {% for host_obj in (groups['traffic_opsdb-replicas']) %}
-      hostssl  replication {{ postgresql_replica_user }} {{ (groups['traffic_opsdb-replicas'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_opsdb-replicas'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
+      {% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+      hostssl  replication {{ postgresql_replica_user }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+      {%endif%}
+      {% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+      hostssl  replication {{ postgresql_replica_user }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+      {%endif%}
   {% endfor %}
 {% endif %}
 {% endif %}
@@ -176,17 +275,29 @@
 #  TELEGRAF
 # ------------------------------------------------------
   host    {{ todb_db_name }}     {{ telegraf_db_user }}        127.0.0.1/32  md5
-  host    {{ todb_db_name }}     {{ telegraf_db_user }}        ::1/128  md5
+  host    {{ todb_db_name }}     {{ telegraf_db_user }}        [::1/128]  md5
+{% if groups['traffic_stats'] is defined %}
 {% for host_obj in (groups['traffic_stats']) %}
-  host  {{ todb_db_name }} {{ telegraf_db_user }} {{ (groups['traffic_stats'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_stats'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
+  {% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+  host  {{ todb_db_name }} {{ telegraf_db_user }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+  {%endif%}
+  {% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+  host  {{ todb_db_name }} {{ telegraf_db_user }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+  {%endif%}
 {% endfor %}
 {% endif %}
+{% endif %}
 
-{% if grafana_db_user is defined and grafana_db_user is not none %}
+{% if grafana_db_user is defined and grafana_db_user is not none groups['traffic_stats'] is defined %}
 # ------------------------------------------------------
 #  GRAFANA
 # ------------------------------------------------------
  {% for host_obj in (groups['traffic_stats']) %}
-   host  {{ grafana_db_name }} {{ grafana_db_user }} {{ (groups['traffic_stats'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] }}{{ '/32' if (groups['traffic_stats'] | map('extract', hostvars, ['ansible_host']) | list)[loop.index0] | ansible.netcommon.ipaddr('address') }}  md5
+   {% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
+   host  {{ grafana_db_name }} {{ grafana_db_user }} {{ hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) }}/32  md5
+   {%endif%}
+   {% if hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) is defined %}
+   host  {{ grafana_db_name }} {{ grafana_db_user }} {{ hostvars[host_obj].ansible_default_ipv6.address|default(hostvars[host_obj].ansible_all_ipv6_addresses[0]) }}/128  md5
+   {%endif%}
  {% endfor %}
 {% endif %}
