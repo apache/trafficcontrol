@@ -1,3 +1,4 @@
+---
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,13 +20,13 @@
       - " valid_build_version == 'true' "
 
 - name: Install Postgres
-  yum:
+  package:
     name:
       - "{{ postgresql_server_pkg_name }}"
       - "{{ postgresql_client_pkg_name }}"
       - "{{ postgresql_devel_pkg_name }}"
       - gcc
-      - python-devel
+      - "python{{ ansible_python.version.major }}-devel"
     state: present
     lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
@@ -70,7 +71,9 @@
 
 - name: Install psycopg2 python module
   pip:
-    name: psycopg2
+    name:
+      - psycopg2
+    extra_args: "--ignore-installed"
   environment:
     PATH: "{{ pg_bin_path }}:{{ lookup('env', 'PATH') }}"
 
@@ -154,7 +157,7 @@
   postgresql_user:
     encrypted: true
     name: "{{ postgresql_replica_user }}"
-    password: "{{ postgresql_admin_user_password }}"
+    password: "{{ postgresql_replica_user_password }}"
     port: "{{ postgresql_port }}"
     login_host: 127.0.0.1
     role_attr_flags: REPLICATION
@@ -163,4 +166,4 @@
   notify: Restart Traffic OpsDB
   when:
     - (postgresql_replica_user is defined) and postgresql_replica_user
-    - (postgresql_admin_user_password is defined) and postgresql_admin_user_password
+    - (postgresql_replica_user_password is defined) and postgresql_replica_user_password

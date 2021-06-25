@@ -1,3 +1,4 @@
+---
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -37,7 +38,7 @@
 
 - name: Create Traffic Vault Database User
   postgresql_user:
-    encrypted: yes
+    encrypted: true
     name: "{{ tvdb_username }}"
     password: "{{ tvdb_password }}"
     port: "{{ postgresql_port }}"
