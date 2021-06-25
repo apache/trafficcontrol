@@ -85,7 +85,16 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("server ID %d not found", id), nil)
 		return
 	}
-
+	cdnName, err := dbhelpers.GetCDNNameFromServerID(inf.Tx.Tx, int64(id))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
 	status := tc.StatusNullable{}
 	statusExists := false
 	if reqObj.Status.Name != nil {

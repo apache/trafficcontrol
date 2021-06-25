@@ -27,7 +27,6 @@ to_group: trafops # currently hardcoded into TO
 # TO Installation information
 to_base_installdir: /opt/traffic_ops
 to_app_installdir: "{{ to_base_installdir }}/app"
-to_public_dir: "{{ to_app_installdir }}/public"
 to_db_installdir: "{{ to_app_installdir }}/db"
 to_conf_installdir: "{{ to_app_installdir }}/conf"
 to_install_installdir: "{{ to_base_installdir }}/install"
