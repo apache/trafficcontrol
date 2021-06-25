@@ -132,9 +132,6 @@ const countQuery = `SELECT count(l.tm_user) FROM log as l`
 func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 	var count = uint64(0)
 	var whereCount string
-	if _, ok := inf.Params["orderby"]; !ok {
-		inf.Params["orderby"] = "lastUpdated"
-	}
 	if _, ok := inf.Params["limit"]; !ok {
 		inf.Params["limit"] = strconv.Itoa(DefaultLogLimit)
 	} else {
@@ -142,10 +139,9 @@ func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 	}
 
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"username":    dbhelpers.WhereColumnInfo{Column: "u.username", Checker: nil},
-		"lastUpdated": dbhelpers.WhereColumnInfo{Column: "l.last_updated", Checker: nil},
+		"username": dbhelpers.WhereColumnInfo{Column: "u.username", Checker: nil},
 	}
-	where, orderBy, pagination, queryValues, errs :=
+	where, _, pagination, queryValues, errs :=
 		dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, 0, util.JoinErrs(errs)
@@ -171,7 +167,7 @@ func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 		}
 	}
 
-	query := selectFromQuery + where + orderBy + pagination
+	query := selectFromQuery + where + "\n ORDER BY last_updated DESC" + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, count, errors.New("querying logs: " + err.Error())
