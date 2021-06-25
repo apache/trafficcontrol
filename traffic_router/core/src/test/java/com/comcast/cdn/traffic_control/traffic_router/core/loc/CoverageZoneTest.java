@@ -108,7 +108,7 @@ public class CoverageZoneTest {
 		when(trafficRouter.getSupportingCaches(anyList(), eq(deliveryService), any(IPVersions.class))).thenCallRealMethod();
 		when(trafficRouter.filterEnabledLocations(anyList(), any(CacheLocation.LocalizationMethod.class))).thenCallRealMethod();
 		PowerMockito.when(trafficRouter, "getNetworkNode", "12.23.34.45").thenReturn(eastNetworkNode);
-		PowerMockito.when(trafficRouter, "getClosestCacheLocation", anyList(), any(CacheLocation.class), any(DeliveryService.class), any(IPVersions.class)).thenCallRealMethod();
+		PowerMockito.when(trafficRouter, "getClosestCacheLocation", anyList(), any(), any(), any()).thenCallRealMethod();
 	}
 
 	@Test

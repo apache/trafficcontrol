@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -58,7 +59,7 @@ public class AbstractServiceUpdaterTest {
 		when(databasePath.toFile()).thenReturn(databaseFile);
 
 		databasesDirectory = mock(Path.class);
-		when(databasesDirectory.resolve(anyString())).thenReturn(databasePath);
+		when(databasesDirectory.resolve((String) isNull())).thenReturn(databasePath);
 
 		mockStatic(Files.class);
 		PowerMockito.when(Files.exists(any(Path.class))).thenReturn(true);
