@@ -33,10 +33,10 @@ import (
 
 const readQuery = `
 SELECT cn.id,
-	cn.cdn, 
+	cn.cdn,
 	cn.last_updated,
-	cn.user, 
-	cn.notification 
+	cn.user,
+	cn.notification
 FROM cdn_notification as cn
 INNER JOIN cdn ON cdn.name = cn.cdn
 INNER JOIN tm_user ON tm_user.username = cn.user
@@ -80,7 +80,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		"user": dbhelpers.WhereColumnInfo{Column: "tm_user.username"},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols, "cn.last_updated")
 	if len(errs) > 0 {
 		sysErr = util.JoinErrs(errs)
 		errCode = http.StatusBadRequest

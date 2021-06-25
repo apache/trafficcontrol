@@ -51,8 +51,7 @@ Request Structure
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| tenant          | no       | Return only :term:`Origins` belonging to the tenant identified by this integral, unique identifier                                                                |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| orderby         | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                                                     |
-	|                 |          | array                                                                                                                                                             |
+	| orderby         | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array                                               |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| sortOrder       | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                                          |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -63,6 +62,16 @@ Request Structure
 	| page            | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are ``limit`` long and the first page is 1. If ``offset`` was defined,   |
 	|                 |          | this query parameter has no effect. ``limit`` must be defined to make use of ``page``.                                                                            |
 	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| newerThan       | no       | Return only :term:`Origins` that were most recently updated no earlier than this date/time, which may be given as an :rfc:`3339`-formatted string or as number of |
+	|                 |          | nanoseconds since the Unix Epoch (midnight on January 1\ :sup:`st` 1970 UTC).                                                                                     |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| olderThan       | no       | Return only :term:`Origins` that were most recently updated no later than this date/time, which may be given as an :rfc:`3339`-formatted string or as number of   |
+	|                 |          | nanoseconds since the Unix Epoch (midnight on January 1\ :sup:`st` 1970 UTC).                                                                                     |
+	+-----------------+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+.. versionadded:: ATCv6
+	The ``newerThan`` and ``olderThan`` query string parameters were added to all API versions as of :abbr:`ATC (Apache Traffic Control)` version 6.0.
+
 
 .. note:: Several fields of origin definitions which are filterable by Query Parameters are allowed to be ``null``. ``null`` values in these fields will be filtered *out* appropriately by such Query Parameters, but do note that ``null`` is not a valid value accepted by any of these Query Parameters, and attempting to pass it will result in an error.
 

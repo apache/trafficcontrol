@@ -244,7 +244,7 @@ func handleReadServerCheck(inf *api.APIInfo, tx *sql.Tx) ([]tc.GenericServerChec
 		"hostName": dbhelpers.WhereColumnInfo{Column: "server.host_name"},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols, "")
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}

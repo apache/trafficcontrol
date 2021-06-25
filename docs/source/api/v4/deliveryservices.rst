@@ -54,8 +54,7 @@ Request Structure
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| xmlId             | no       | Show only the :term:`Delivery Service` that has this text-based, unique identifier                                                      |
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
-	| orderby           | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response``                           |
-	|                   |          | array                                                                                                                                   |
+	| orderby           | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array                     |
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| sortOrder         | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                                                |
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
@@ -68,11 +67,17 @@ Request Structure
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 	| active            | no       | Show only the :term:`Delivery Services` that have :ref:`ds-active` set or not based on this boolean (whether or not they are active)    |
 	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| newerThan         | no       | Return only :term:`Delivery Services` that were most recently updated no earlier than this date/time, which may be given as an          |
+	|                   |          | :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight on January 1\ :sup:`st` 1970 UTC).              |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
+	| olderThan         | no       | Return only :term:`Delivery Services` that were most recently updated no later than this date/time, which may be given as an            |
+	|                   |          | :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight on January 1\ :sup:`st` 1970 UTC).              |
+	+-------------------+----------+-----------------------------------------------------------------------------------------------------------------------------------------+
 
 Response Structure
 ------------------
-:active:                   A boolean that defines :ref:`ds-active`.
-:anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
+:active:                    A boolean that defines :ref:`ds-active`.
+:anonymousBlockingEnabled:  A boolean that defines :ref:`ds-anonymous-blocking`
 :ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :cdnName:                   Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs

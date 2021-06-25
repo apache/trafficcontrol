@@ -29,17 +29,29 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-------+----------+--------------------------------------------------------------------------------------------------------+
-	|  Name | Required | Description                                                                                            |
-	+=======+==========+========================================================================================================+
-	|  cdn  |   no     | Used to filter :term:`Profiles` by the integral, unique identifier of the CDN to which they belong     |
-	+-------+----------+--------------------------------------------------------------------------------------------------------+
-	|  id   |   no     | Filters :term:`Profiles` by :ref:`profile-id`                                                          |
-	+-------+----------+--------------------------------------------------------------------------------------------------------+
-	| name  |   no     | Filters :term:`Profiles` by :ref:`profile-name`                                                        |
-	+-------+----------+--------------------------------------------------------------------------------------------------------+
-	| param |   no     | Used to filter :term:`Profiles` by the :ref:`parameter-id` of a :term:`Parameter` associated with them |
-	+-------+----------+--------------------------------------------------------------------------------------------------------+
+	+-----------+----------+--------------------------------------------------------------------------------------------------------+
+	|  Name     | Required | Description                                                                                            |
+	+===========+==========+========================================================================================================+
+	|  cdn      |   no     | Used to filter :term:`Profiles` by the integral, unique identifier of the CDN to which they belong     |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------+
+	|  id       |   no     | Filters :term:`Profiles` by :ref:`profile-id`                                                          |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------+
+	| name      |   no     | Filters :term:`Profiles` by :ref:`profile-name`                                                        |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------+
+	| param     |   no     | Used to filter :term:`Profiles` by the :ref:`parameter-id` of a :term:`Parameter` associated with them |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------+
+	| newerThan | no       | Return only :term:`Profiles` that were most recently updated no earlier than this date/time, which may |
+	|           |          | be given as an :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight |
+	|           |          | on January 1\ :sup:`st` 1970 UTC).                                                                     |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------+
+	| olderThan | no       | Return only :term:`Profiles` that were most recently updated no later than this date/time, which may   |
+	|           |          | be given as an :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight |
+	|           |          | 1\ :sup:`st` 1970 UTC).                                                                                |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------+
+
+.. versionadded:: ATCv6
+	The ``value``, ``newerThan``, and ``olderThan`` query string parameters were added to all API versions as of :abbr:`ATC (Apache Traffic Control)` version 6.0.
+
 
 .. code-block:: http
 	:caption: Request Example

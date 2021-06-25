@@ -940,7 +940,7 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 		"xml_id": dbhelpers.WhereColumnInfo{Column: "ds.xml_id"},
 		"xmlId":  dbhelpers.WhereColumnInfo{Column: "ds.xml_id"},
 	}
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols, "ds.last_updated")
 	if len(errs) > 0 {
 		return nil, nil, errors.New("reading server dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError, nil
 	}

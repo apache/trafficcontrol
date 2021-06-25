@@ -117,7 +117,8 @@ func read(h http.Header, tx *sqlx.Tx, parameters map[string]string, user *auth.C
 		"deliveryservice": dbhelpers.WhereColumnInfo{Column: "st.deliveryservice", Checker: api.IsInt},
 		"target":          dbhelpers.WhereColumnInfo{Column: "st.target", Checker: api.IsInt},
 	}
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols)
+	// This table stores a 'last_updated', but it isn't exposed through the API, it seems.
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(parameters, queryParamsToQueryCols, "")
 	if len(errs) > 0 {
 		return nil, nil, util.JoinErrs(errs), http.StatusBadRequest, nil
 	}

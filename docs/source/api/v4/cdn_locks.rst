@@ -33,13 +33,25 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+---------------+----------+-----------------------------------------------------------------------------------+
-	| Parameter     | Required | Description                                                                       |
-	+===============+==========+===================================================================================+
-	| username      | no       | Return only the CDN lock that the user with ``username`` possesses                |
-	+---------------+----------+-----------------------------------------------------------------------------------+
-	| cdn           | no       | Return only the CDN lock for the CDN that has the name ``cdn``                    |
-	+---------------+----------+-----------------------------------------------------------------------------------+
+	+-----------+----------+--------------------------------------------------------------------------------------------------------+
+	| Parameter | Required | Description                                                                                            |
+	+===========+==========+========================================================================================================+
+	| username  | no       | Return only the CDN lock that the user with ``username`` possesses                                     |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------+
+	| cdn       | no       | Return only the CDN lock for the CDN that has the name ``cdn``                                         |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------+
+	| newerThan | no       | Return only CDN locks that were most recently updated no earlier than this date/time, which may be     |
+	|           |          | given as an :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight    |
+	|           |          | on January 1\ :sup:`st` 1970 UTC).                                                                     |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------+
+	| olderThan | no       | Return only CDN locks that were most recently updated no later than this date/time, which may be       |
+	|           |          | given as an :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight    |
+	|           |          | on January 1\ :sup:`st` 1970 UTC).                                                                     |
+	+-----------+----------+--------------------------------------------------------------------------------------------------------+
+
+.. versionadded:: ATCv6
+	The ``newerThan`` and ``olderThan`` query string parameters were added to all API versions as of :abbr:`ATC (Apache Traffic Control)` version 6.0.
+
 
 Response Structure
 ------------------

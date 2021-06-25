@@ -49,7 +49,7 @@ func GetDnsChallengeRecords(w http.ResponseWriter, r *http.Request) {
 		"fqdn": dbhelpers.WhereColumnInfo{Column: "fqdn"},
 	}
 
-	where, _, _, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	where, _, _, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols, "")
 	if len(errs) > 0 {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, util.JoinErrs(errs))
 		return

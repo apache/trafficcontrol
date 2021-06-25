@@ -126,7 +126,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		"type":      dbhelpers.WhereColumnInfo{Column: "type.name"},
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols, "federation_resolver.last_updated")
 	if len(errs) > 0 {
 		sysErr = util.JoinErrs(errs)
 		errCode = http.StatusBadRequest

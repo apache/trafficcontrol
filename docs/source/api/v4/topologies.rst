@@ -31,11 +31,17 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+------+----------+-----------------------------------------------------+
-	| Name | Required | Description                                         |
-	+======+==========+=====================================================+
-	| name | no       | Return the :term:`Topology` with this name          |
-	+------+----------+-----------------------------------------------------+
+	+----------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| Name           | Required | Description                                                                                                                  |
+	+================+==========+==============================================================================================================================+
+	| name           | no       | Return the :term:`Topology` with this name                                                                                   |
+	+----------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| newerThan      | no       | Return only :term:`Topologies` that were most recently updated no earlier than this date/time, which may be given as an      |
+	|                |          | :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight on January 1\ :sup:`st` 1970 UTC).   |
+	+----------------+----------+------------------------------------------------------------------------------------------------------------------------------+
+	| olderThan      | no       | Return only :term:`Topologies` that were most recently updated no later than this date/time, which may be given as an        |
+	|                |          | :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight on January 1\ :sup:`st` 1970 UTC).   |
+	+----------------+----------+------------------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

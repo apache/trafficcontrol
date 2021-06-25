@@ -483,9 +483,9 @@ RETURNING
 `
 
 const originServerQuery = `
-JOIN deliveryservice_server dsorg 
-ON dsorg.server = s.id 
-WHERE t.name = '` + tc.OriginTypeName + `' 
+JOIN deliveryservice_server dsorg
+ON dsorg.server = s.id
+WHERE t.name = '` + tc.OriginTypeName + `'
 AND dsorg.deliveryservice=:dsId
 `
 const deleteServerQuery = `DELETE FROM server WHERE id=$1`
@@ -1063,7 +1063,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 `
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols, "s.last_updated")
 	if dsHasRequiredCapabilities {
 		where += requiredCapabilitiesCondition
 	}
@@ -1274,8 +1274,8 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 		capabilities.array_agg
 		@>
 		(
-		SELECT ARRAY_AGG(drc.required_capability) 
-		FROM deliveryservices_required_capability drc 
+		SELECT ARRAY_AGG(drc.required_capability)
+		FROM deliveryservices_required_capability drc
 		WHERE drc.deliveryservice_id=:ds_id)
 		)`
 	} else {

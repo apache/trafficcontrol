@@ -191,7 +191,10 @@ func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, 
 	code := http.StatusOK
 	var maxTime time.Time
 	var runSecond bool
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.ParamColumns())
+	// 'last_updated' field is probably usually ambiguous due to joins, so we
+	// can't filter with it  without knowing more about the query than we're
+	// being given here.
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.ParamColumns(), "")
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
@@ -261,7 +264,7 @@ func GenericUpdate(h http.Header, val GenericUpdater) (error, error, int) {
 // GenericDelete, there is no requirement that a specific key is used as the parameter.
 // GenericOptionsDeleter.DeleteKeyOptions() specifies which keys can be used.
 func GenericOptionsDelete(val GenericOptionsDeleter) (error, error, int) {
-	where, _, _, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.DeleteKeyOptions())
+	where, _, _, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(val.APIInfo().Params, val.DeleteKeyOptions(), "")
 	if len(errs) > 0 {
 		return util.JoinErrs(errs), nil, http.StatusBadRequest
 	}

@@ -431,7 +431,7 @@ func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface{}, err
 	var maxTime time.Time
 	var runSecond bool
 	interfaces := make([]interface{}, 0)
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(topology.ReqInfo.Params, topology.ParamColumns())
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(topology.ReqInfo.Params, topology.ParamColumns(), "t.last_updated")
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}

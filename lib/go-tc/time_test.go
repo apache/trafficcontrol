@@ -21,6 +21,7 @@ package tc
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 )
@@ -50,5 +51,32 @@ func TestTimeJSON(t *testing.T) {
 		if string(got) != tm.json {
 			t.Errorf("expected %s, got %s", tm.json, got)
 		}
+	}
+}
+
+func ExampleParseUnixNanoOrRFC3339_nanoseconds() {
+	t, err := ParseUnixNanoOrRFC3339("1257894000000000000")
+	if err != nil {
+		fmt.Printf("Error parsing nanoseconds: %v\n", err)
+	} else {
+		fmt.Println(t)
+	}
+	// Output: 2009-11-10 23:00:00 +0000 UTC
+}
+
+func ExampleParseUnixNanoOrRFC3339_rfc3339() {
+	t, err := ParseUnixNanoOrRFC3339("2009-11-10T23:00:00Z")
+	if err != nil {
+		fmt.Printf("Error parsing RFC3339 timestamp: %v\n", err)
+	} else {
+		fmt.Println(t)
+	}
+	// Output: 2009-11-10 23:00:00 +0000 UTC
+}
+
+func TestParseUnixNanoOrRFC3339(t *testing.T) {
+	_, err := ParseUnixNanoOrRFC3339("10 Nov 09 23:00 UTC")
+	if err == nil {
+		t.Error("Expected an error parsing an invalid timestamp")
 	}
 }

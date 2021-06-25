@@ -32,11 +32,41 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+----------------+----------+--------+------------------------------------+
-	|    Name        | Required | Type   |         Description                |
-	+================+==========+========+====================================+
-	|   capability   |   no     | string | Capability name                    |
-	+----------------+----------+--------+------------------------------------+
+	+----------------+----------+--------------------------------------------------------------------------------------------------------+
+	| Name           | Required | Description                                                                                            |
+	+================+==========+========================================================================================================+
+	| capability     | no       | Return only the Capability that has this name                                                          |
+	+----------------+----------+--------------------------------------------------------------------------------------------------------+
+	| id             | no       | Return only the Capability that has this integral, unique identifier                                   |
+	+----------------+----------+--------------------------------------------------------------------------------------------------------+
+	| httpMethod     | no       | Return only Capabilities which have this ``httpMethod``                                                |
+	+----------------+----------+--------------------------------------------------------------------------------------------------------+
+	| route          | no       | Return only Capabilities which have this ``route``                                                     |
+	+----------------+----------+--------------------------------------------------------------------------------------------------------+
+	| lastUpdated    | no       | Return only Capabilites which were last updated at this **exact** date and time\ [#lastUpdatedFormat]_ |
+	+----------------+----------+--------------------------------------------------------------------------------------------------------+
+	| sortOrder      | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")               |
+	+----------------+----------+--------------------------------------------------------------------------------------------------------+
+	| limit          | no       | Choose the maximum number of results to return                                                         |
+	+----------------+----------+--------------------------------------------------------------------------------------------------------+
+	| offset         | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit   |
+	+----------------+----------+--------------------------------------------------------------------------------------------------------+
+	| page           | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are           |
+	|                |          | ``limit`` long and the first page is 1. If ``offset`` was defined, this query parameter has no         |
+	|                |          | effect. ``limit`` must be defined to make use of ``page``.                                             |
+	+----------------+----------+--------------------------------------------------------------------------------------------------------+
+	| newerThan      | no       | Return only Capabilities that were most recently updated no earlier than this date/time, which may be  |
+	|                |          | given as an :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight    |
+	|                |          | on January 1\ :sup:`st` 1970 UTC).                                                                     |
+	+----------------+----------+--------------------------------------------------------------------------------------------------------+
+	| olderThan      | no       | Return only Capabilities that were most recently updated no later than this date/time, which may be    |
+	|                |          | given as an :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight    |
+	|                |          | on January 1\ :sup:`st` 1970 UTC).                                                                     |
+	+----------------+----------+--------------------------------------------------------------------------------------------------------+
+
+.. versionadded:: ATCv6
+	The ``newerThan`` and ``olderThan`` query string parameters were added to all API versions as of :abbr:`ATC (Apache Traffic Control)` version 6.0.
+
 
 .. code-block:: http
 	:caption: Request Example
@@ -182,3 +212,5 @@ Response Structure
 		"id": 273,
 		"capability": "types-write"
 	}}
+
+.. [#lastUpdatedFormat] Unlike the ``newerThan`` and ``olderThan`` query string parameters which can accept either RFC3339 strings or nanoseconds, this **must** be RFC3339 and **must not** have sub-second precision. This also means that the format of the returned ``lastUpdated`` fields on the actual response objects is unnacceptable as input for this query string parameter.

@@ -1,3 +1,9 @@
+// Package dbhelpers is a collection of helpful functions for interacting with
+// the Traffic Ops database in common ways.
+//
+// Because these functions rely on connections to Traffic Ops databases in
+// particular, this package should never be imported anywhere outside of
+// internal Traffic Ops packages.
 package dbhelpers
 
 /*
@@ -26,6 +32,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -126,14 +133,76 @@ func CheckIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (error, error, i
 	return nil, nil, http.StatusOK
 }
 
-func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, string, map[string]interface{}, []error) {
+// These are used internally in `buildAgeFilter` so that some lengths aren't
+// hard-coded.
+const (
+	newerStmt = ` >= :newerThan`
+	olderStmt = ` <= :olderThan`
+)
+
+// buildAgeFilter, given some query string parameters and the name of a
+// database field that can be used for age filtering, this returns a statement
+// that can be appended to a WHERE clause that provides age filtering. It also
+// returns two time.Time values which are, respectively, the value to which
+// 'newerThan' should be set and the value to which 'olderThan' should be set
+// in the query values map returned from the query builder.
+func buildAgeFilter(params map[string]string, fieldName string) (string, time.Time, time.Time, error) {
+	if fieldName == "" {
+		return "", time.Time{}, time.Time{}, nil
+	}
+
+	var newerTime, olderTime time.Time
+	var err error
+
+	var b strings.Builder
+	// enough room for each statement, plus " AND " to separate them
+	b.Grow(len(newerStmt) + len(olderStmt) + 5 + (len(fieldName) * 2))
+
+	newerThan, ok := params["newerThan"]
+	if ok {
+		newerTime, err = tc.ParseUnixNanoOrRFC3339(newerThan)
+		if err != nil {
+			return "", time.Time{}, time.Time{}, fmt.Errorf("invalid value for 'newerThan': %w", err)
+		}
+		b.WriteString(fieldName)
+		b.WriteString(newerStmt)
+	}
+	olderThan, ok := params["olderThan"]
+	if ok {
+		olderTime, err = tc.ParseUnixNanoOrRFC3339(olderThan)
+		if err != nil {
+			return "", time.Time{}, time.Time{}, fmt.Errorf("invalid value for 'olderThan': %w", err)
+		}
+		if b.Len() > 0 {
+			b.WriteString(" AND ")
+		}
+		b.WriteString(fieldName)
+		b.WriteString(olderStmt)
+	}
+
+	return b.String(), newerTime, olderTime, nil
+}
+
+// BuildWhereAndOrderByAndPagination constructs a database query given a set of
+// query string parameters, mappings of valid, recognized filtering query
+// string parameters to their respective database column names, and the name of
+// a database column that can be used for age filtering with 'newerThan' and/or
+// 'olderThan'. If this field name is not given (i.e. is the blank string), age
+// filtering statements are not added to any returned WHERE clause.
+//
+// This function returns, in order, the generated WHERE clause, a generated
+// ORDER BY clause, a "pagination" clause that controls LIMIT and OFFSET, a map
+// of named parameters to their values for use in interpolating query values,
+// and any and all errors that occurred during parsing and/or checking of query
+// string parameters and/or constructing the query from them.
+func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo, ageFilterField string) (string, string, string, map[string]interface{}, []error) {
 	whereClause := BaseWhere
 	orderBy := BaseOrderBy
 	paginationClause := BaseLimit
 	var criteria string
 	var queryValues map[string]interface{}
 	var errs []error
-	criteria, queryValues, errs = parseCriteriaAndQueryValues(queryParamsToSQLCols, parameters)
+	criteria, queryValues, errs = parseCriteriaAndQueryValues(queryParamsToSQLCols, parameters, ageFilterField)
 
 	if len(queryValues) > 0 {
 		whereClause += " " + criteria
@@ -207,7 +276,7 @@ func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParams
 	return whereClause, orderBy, paginationClause, queryValues, errs
 }
 
-func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string) (string, map[string]interface{}, []error) {
+func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string, fieldName string) (string, map[string]interface{}, []error) {
 	var criteria string
 
 	var criteriaArgs []string
@@ -228,9 +297,21 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 			}
 		}
 	}
-	criteria = strings.Join(criteriaArgs, " AND ")
 
-	return criteria, queryValues, errs
+	clause, newerTime, olderTime, err := buildAgeFilter(parameters, fieldName)
+	if err != nil {
+		errs = append(errs, err)
+	} else if clause != "" {
+		if _, ok := parameters["newerThan"]; ok {
+			queryValues["newerThan"] = newerTime
+		}
+		if _, ok := parameters["olderThan"]; ok {
+			queryValues["olderThan"] = olderTime
+		}
+		criteriaArgs = append(criteriaArgs, clause)
+	}
+
+	return strings.Join(criteriaArgs, " AND "), queryValues, errs
 }
 
 // AddTenancyCheck takes a WHERE clause (can be ""), the associated queryValues (can be empty),

@@ -21,10 +21,11 @@ package profile
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -117,7 +118,7 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 		NameQueryParam: dbhelpers.WhereColumnInfo{Column: "prof.name"},
 		IDQueryParam:   dbhelpers.WhereColumnInfo{Column: "prof.id", Checker: api.IsInt},
 	}
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(prof.APIInfo().Params, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(prof.APIInfo().Params, queryParamsToQueryCols, "prof.last_updated")
 
 	// Narrow down if the query parameter is 'param'
 

@@ -104,7 +104,7 @@ JOIN type as rt ON r.type = rt.id
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"dsid": dbhelpers.WhereColumnInfo{Column: "ds.ID", Checker: api.IsInt},
 		"id":   dbhelpers.WhereColumnInfo{Column: "r.id", Checker: api.IsInt}}
-	where, _, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	where, _, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols, "r.last_updated")
 	if len(errs) > 0 {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
 		return
@@ -267,10 +267,10 @@ func getCurrentDetails(tx *sql.Tx, dsID int, regexID int) error {
 	var setNumber int
 	var typeName string
 	err := tx.QueryRow(`
-select dsr.set_number, t.name 
-from deliveryservice_regex as dsr 
-join regex as r on dsr.regex = r.id 
-join type as t on t.id = r.type 
+select dsr.set_number, t.name
+from deliveryservice_regex as dsr
+join regex as r on dsr.regex = r.id
+join type as t on t.id = r.type
 where dsr.deliveryservice=$1 and r.id=$2`,
 		dsID, regexID).Scan(&setNumber, &typeName)
 	if err != nil {
@@ -357,7 +357,7 @@ func Put(w http.ResponseWriter, r *http.Request) {
 func canUpdate(tx *sql.Tx, dsr tc.DeliveryServiceRegexPost) error {
 	var name string
 	err := tx.QueryRow(`
-select name from type as t 
+select name from type as t
 where t.id=$1`,
 		dsr.Type).Scan(&name)
 	if err != nil {

@@ -46,7 +46,111 @@ func TestOrigins(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestOriginsWithHeaders(t, header)
+		t.Run("age filtering", ageFilteringTest)
 	})
+}
+
+func ageFilteringTest(t *testing.T) {
+	cgr, _, err := TOSession.GetCacheGroups(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("Failed to get Cache Groups: %v", err)
+	}
+	if len(cgr.Response) < 1 {
+		t.Fatal("Need at least one Cache Group in Traffic Ops to make a testing Origin")
+	}
+	cg := cgr.Response[0]
+
+	dsr, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("Failed to get Delivery Services: %v", err)
+	}
+	if len(dsr.Response) < 1 {
+		t.Fatal("Need at least one Delivery Service in Traffic Ops to make a testing Origin")
+	}
+	ds := dsr.Response[0]
+
+	cu, _, err := TOSession.GetUserCurrent(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("Failed to get current user: %v", err)
+	}
+	if cu.Response.TenantID == nil {
+		t.Fatal("Traffic Ops returned a representation for the current user with null or undefined Tenant ID")
+	}
+
+	origin := tc.Origin{
+		CachegroupID:      cg.ID,
+		DeliveryServiceID: ds.ID,
+		FQDN:              new(string),
+		IPAddress:         new(string),
+		Name:              new(string),
+		Protocol:          new(string),
+		TenantID:          cu.Response.TenantID,
+	}
+	*origin.FQDN = "fqdn"
+	*origin.IPAddress = "192.0.2.254"
+	*origin.Name = "age-filtering-test-origin"
+	*origin.Protocol = "http"
+
+	// Postgresql's dates don't have sub-second precision (or the pq adapter doesn't)
+	time.Sleep(time.Second)
+
+	createResp, _, err := TOSession.CreateOrigin(origin, client.RequestOptions{})
+	creationTime := time.Now()
+	if err != nil {
+		t.Fatalf("Unexpected error creating a new Origin: %v", err)
+	}
+	if createResp.Response.ID == nil {
+		t.Fatal("Traffic Ops created an Origin with no ID")
+	}
+	orgID := *createResp.Response.ID
+	defer func(id int) {
+		if _, _, err := TOSession.DeleteOrigin(id, client.RequestOptions{}); err != nil {
+			t.Errorf("Failed to clean up origin created for age filtering test: %v", err)
+		}
+	}(orgID)
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("newerThan", creationTime.Format(time.RFC3339))
+	resp, _, err := TOSession.GetOrigins(opts)
+	if err != nil {
+		t.Errorf("Failed to query Origins with newerThan=%s: %v", creationTime.Format(time.RFC3339), err)
+	}
+	if len(resp.Response) != 1 {
+		t.Errorf("Expected the origin most recently created - and only that Origin - to appear in the response, found: %d", len(resp.Response))
+	}
+
+	found := false
+	for _, org := range resp.Response {
+		if org.ID == nil {
+			t.Error("Traffic Ops returned a representation for an Origin with null or undefined ID")
+			continue
+		}
+		if *org.ID == orgID {
+			found = true
+		} else {
+			t.Errorf("Found unexpected Origin #%d in the response", *org.ID)
+		}
+	}
+	if !found {
+		t.Error("Didn't find the Origin created for age-filtering testing")
+	}
+
+	opts.QueryParameters.Del("newerThan")
+	opts.QueryParameters.Set("olderThan", creationTime.Add(-1*time.Second).Format(time.RFC3339))
+	resp, _, err = TOSession.GetOrigins(opts)
+	if err != nil {
+		t.Errorf("Failed to query Origins with newerThan=%s: %v", creationTime.Format(time.RFC3339), err)
+	}
+
+	for _, org := range resp.Response {
+		if org.ID == nil {
+			t.Error("Traffic Ops returned a representation for an Origin with null or undefined ID")
+			continue
+		}
+		if *org.ID == orgID {
+			t.Errorf("Found unexpected Origin #%d in the response", *org.ID)
+		}
+	}
 }
 
 func UpdateTestOriginsWithHeaders(t *testing.T, header http.Header) {

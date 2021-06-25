@@ -31,29 +31,37 @@ Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+------------+----------+-----------------------------------------------------------------------------------------------------+
-	| Name       | Required | Description                                                                                         |
-	+============+==========+=====================================================================================================+
-	| id         | no       | Return only the Federation Resolver identified by this integral, unique identifier                  |
-	+------------+----------+-----------------------------------------------------------------------------------------------------+
-	| ipAddress  | no       | Return only the Federation Resolver(s) that has/have this IP Address                                |
-	+------------+----------+-----------------------------------------------------------------------------------------------------+
-	| type       | no       | Return only the Federation Resolvers of this :term:`Type`                                           |
-	+------------+----------+-----------------------------------------------------------------------------------------------------+
-	| orderby    | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the    |
-	|            |          | ``response`` array                                                                                  |
-	+------------+----------+-----------------------------------------------------------------------------------------------------+
-	| sortOrder  | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")            |
-	+------------+----------+-----------------------------------------------------------------------------------------------------+
-	| limit      | no       | Choose the maximum number of results to return                                                      |
-	+------------+----------+-----------------------------------------------------------------------------------------------------+
-	| offset     | no       | The number of results to skip before beginning to return results. Must use in conjunction with      |
-	|            |          | limit                                                                                               |
-	+------------+----------+-----------------------------------------------------------------------------------------------------+
-	| page       | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are        |
-	|            |          | ``limit`` long and the first page is 1. If ``offset`` was defined, this query parameter has no      |
-	|            |          | effect. ``limit`` must be defined to make use of ``page``.                                          |
-	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	+-----------+----------+-----------------------------------------------------------------------------------------------------+
+	| Name      | Required | Description                                                                                         |
+	+===========+==========+=====================================================================================================+
+	| id        | no       | Return only the Federation Resolver identified by this integral, unique identifier                  |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------+
+	| ipAddress | no       | Return only the Federation Resolver(s) that has/have this IP Address                                |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------+
+	| type      | no       | Return only the Federation Resolvers of this :term:`Type`                                           |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------+
+	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the    |
+	|           |          | ``response`` array                                                                                  |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------+
+	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")            |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------+
+	| limit     | no       | Choose the maximum number of results to return                                                      |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------+
+	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with      |
+	|           |          | limit                                                                                               |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------+
+	| page      | no       | Return the n\ :sup:`th` page of results, where "n" is the value of this parameter, pages are        |
+	|           |          | ``limit`` long and the first page is 1. If ``offset`` was defined, this query parameter has no      |
+	|           |          | effect. ``limit`` must be defined to make use of ``page``.                                          |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------+
+	| newerThan | no       | Return only :term:`Federation` Resolvers that were most recently updated no earlier than this       |
+	|           |          | date/time, which may be given as an :rfc:`3339`-formatted string or as number of nanoseconds since  |
+	|           |          | the Unix Epoch (midnight on January 1\ :sup:`st` 1970 UTC).                                         |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------+
+	| olderThan | no       | Return only :term:`Federation` Resolvers that were most recently updated no    later than this      |
+	|           |          | date/time, which may be given as an :rfc:`3339`-formatted string or as number of nanoseconds since  |
+	|           |          | the Unix Epoch (midnight on January 1\ :sup:`st` 1970 UTC).                                         |
+	+-----------+----------+-----------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

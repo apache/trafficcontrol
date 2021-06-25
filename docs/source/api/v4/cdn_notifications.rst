@@ -41,6 +41,14 @@ Request Structure
 	+------------+----------+-----------------------------------------------------------------------------------------------------+
 	| user       | no       | The username of the user responsible for creating the CDN notifications.                            |
 	+------------+----------+-----------------------------------------------------------------------------------------------------+
+	| newerThan | no       | Return only CDN locks that were most recently updated no earlier than this date/time, which may be   |
+	|           |          | given as an :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight  |
+	|           |          | on January 1\ :sup:`st` 1970 UTC).                                                                   |
+	+-----------+----------+------------------------------------------------------------------------------------------------------+
+	| olderThan | no       | Return only CDN locks that were most recently updated no later than this date/time, which may be     |
+	|           |          | given as an :rfc:`3339`-formatted string or as number of nanoseconds since the Unix Epoch (midnight  |
+	|           |          | on January 1\ :sup:`st` 1970 UTC).                                                                   |
+	+-----------+----------+------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
