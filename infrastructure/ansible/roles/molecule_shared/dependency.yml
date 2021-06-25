@@ -198,7 +198,7 @@
             filtered_req_rpms_query: "[?{{ filtered_req_rpms_query_dynamic if filtered_req_rpms_query_dynamic != '' else false }}]"
             filtered_req_rpms: "{{ scenario_requirements.required_rpms | json_query(filtered_req_rpms_query) }}"
             matched_rpms_query: "[?starts_with(@,`{{ item.rpm_prefix }}`)]"
-            matched_rpms: "{{ pkg_rpms | json_query(matched_rpms_query) }}"
+            matched_rpms: "{{ pkg_rpms.stdout_lines | map('basename') | json_query(matched_rpms_query) }}"
 
         - name: Find missing optional rpms
           set_fact:
@@ -211,7 +211,7 @@
             filtered_req_rpms_query: "[?{{ filtered_req_rpms_query_dynamic if filtered_req_rpms_query_dynamic != '' else false }}]"
             filtered_req_rpms: "{{ scenario_requirements.required_rpms | json_query(filtered_req_rpms_query) }}"
             matched_rpms_query: "[?starts_with(@,`{{ item.rpm_prefix }}`)]"
-            matched_rpms: "{{ pkg_rpms | json_query(matched_rpms_query) }}"
+            matched_rpms: "{{ pkg_rpms.stdout_lines | map('basename') | json_query(matched_rpms_query) }}"
 
         - name: Invoke pkg to build missing rpms
           command: "{{ item.cmdstr }}"
