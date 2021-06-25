@@ -21,6 +21,9 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.xbill.DNS.*;
@@ -36,6 +39,7 @@ import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
+import static org.powermock.api.support.membermodification.MemberModifier.stub;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Random.class, Header.class, DNSAccessEventBuilder.class, System.class, DNSAccessRecord.class})
@@ -61,8 +65,15 @@ public class DNSAccessEventBuilderTest {
 
     @Test
     public void itCreatesRequestErrorData() throws Exception {
-        when(System.currentTimeMillis()).thenReturn(144140678789L);
-        when(System.nanoTime()).thenReturn(100000000L,889000000L);
+        Answer<Long> nanoTimeAnswer = new Answer<Long>() {
+            final long[] nanoTimes = {100000000L,889000000L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return nanoTimes[index++ % 2];
+            }
+        };
+        when(System.nanoTime()).thenAnswer(nanoTimeAnswer);
+        when(System.currentTimeMillis()).thenAnswer(invocation -> 144140678789L);
 
         DNSAccessRecord dnsAccessRecord = new DNSAccessRecord.Builder(144140678000L, client).build();
 
@@ -75,8 +86,23 @@ public class DNSAccessEventBuilderTest {
     public void itAddsResponseData() throws Exception {
         final Name name = Name.fromString("www.example.com.");
 
-        when(System.nanoTime()).thenReturn(100000000L, 100000000L + 789123000L );
-        when(System.currentTimeMillis()).thenReturn(144140678789L).thenReturn(144140678000L);
+		Answer<Long> nanoTimeAnswer = new Answer<Long>() {
+            final long[] nanoTimes = {100000000L, 100000000L + 789123000L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return nanoTimes[index++ % 2];
+            }
+        };
+        when(System.nanoTime()).thenAnswer(nanoTimeAnswer);
+
+		Answer<Long> currentTimeAnswer = new Answer<Long>() {
+            final long[] currentTimes = {144140678789L, 144140678000L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return currentTimes[index++ % 2];
+            }
+        };
+        when(System.currentTimeMillis()).then(currentTimeAnswer);
 
         final Record question = Record.newRecord(name, Type.A, DClass.IN, 12345L);
 
@@ -109,7 +135,7 @@ public class DNSAccessEventBuilderTest {
                 " rcode=NOERROR rtype=- rloc=\"-\" rdtl=- rerr=\"-\" ttl=\"1 2 3\" ans=\"foo bar baz\""));
 
 
-        when(System.nanoTime()).thenReturn(100000000L + 456000L);
+        when(System.nanoTime()).thenAnswer(invocation -> 100000000L + 456000L);
         dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord);
 
         assertThat(dnsAccessEvent, equalTo("144140678.000 qtype=DNS chi=192.168.10.11 rhi=- ttms=0.456" +
@@ -120,8 +146,15 @@ public class DNSAccessEventBuilderTest {
     @Test
     public void itCreatesServerErrorData() throws Exception {
         Message query = Message.newQuery(Record.newRecord(Name.fromString("www.example.com."), Type.A, DClass.IN, 12345L));
-        when(System.currentTimeMillis()).thenReturn(144140678789L);
-        when(System.nanoTime()).thenReturn(100000000L, 100000000L + 789876321L );
+        Answer<Long> nanoTimeAnswer = new Answer<Long>() {
+            final long[] nanoTimes = {100000000L, 100000000L + 789876321L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return nanoTimes[index++ % 2];
+            }
+        };
+        when(System.nanoTime()).thenAnswer(nanoTimeAnswer);
+        when(System.currentTimeMillis()).thenAnswer(invocation -> 144140678789L);
 
         DNSAccessRecord dnsAccessRecord = new DNSAccessRecord.Builder(144140678000L, client).dnsMessage(query).build();
         String dnsAccessEvent = DNSAccessEventBuilder.create(dnsAccessRecord, new RuntimeException("boom it failed"));
@@ -134,8 +167,23 @@ public class DNSAccessEventBuilderTest {
     public void itAddsResultTypeData() throws Exception {
         final Name name = Name.fromString("www.example.com.");
 
-        when(System.currentTimeMillis()).thenReturn(144140678789L).thenReturn(144140678000L);
-        when(System.nanoTime()).thenReturn(100000000L, 100000000L + 789000321L, 100000000L + 123123L, 100000000L + 246001L );
+        Answer<Long> nanoTimeAnswer = new Answer<Long>() {
+            final long[] nanoTimes = {100000000L, 100000000L + 789000321L, 100000000L + 123123L, 100000000L + 246001L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return nanoTimes[index++ % 4];
+            }
+        };
+        when(System.nanoTime()).thenAnswer(nanoTimeAnswer);
+
+        Answer<Long> currentTimeAnswer = new Answer<Long>() {
+            final long[] currentTimes = {144140678789L, 144140678000L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return currentTimes[index++ % 2];
+            }
+        };
+        when(System.currentTimeMillis()).then(currentTimeAnswer);
 
         final Record question = Record.newRecord(name, Type.A, DClass.IN, 12345L);
         final Message response = spy(Message.newQuery(question));
@@ -190,8 +238,23 @@ public class DNSAccessEventBuilderTest {
     public void itLogsResolverAndClient() throws Exception {
         final Name name = Name.fromString("www.example.com.");
 
-        when(System.currentTimeMillis()).thenReturn(144140678789L).thenReturn(144140678000L);
-        when(System.nanoTime()).thenReturn(100000000L, 100000000L + 789000321L, 100000000L + 123123L, 100000000L + 246001L );
+        Answer<Long> nanoTimeAnswer = new Answer<Long>() {
+            final long[] nanoTimes = {100000000L, 100000000L + 789000321L, 100000000L + 123123L, 100000000L + 246001L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return nanoTimes[index++ % 4];
+            }
+        };
+        when(System.nanoTime()).thenAnswer(nanoTimeAnswer);
+
+        Answer<Long> currentTimeAnswer = new Answer<Long>() {
+            final long[] currentTimes = {144140678789L, 144140678000L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return currentTimes[index++ % 2];
+            }
+        };
+        when(System.currentTimeMillis()).then(currentTimeAnswer);
 
         final Record question = Record.newRecord(name, Type.A, DClass.IN, 12345L);
         final Message response = spy(Message.newQuery(question));
