@@ -63,13 +63,14 @@ public class ZoneManagerUnitTest {
         when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
 
         PowerMockito.spy(ZoneManager.class);
-        PowerMockito.doNothing().when(ZoneManager.class, "initTopLevelDomain", cacheRegister);
-        PowerMockito.doNothing().when(ZoneManager.class, "initZoneCache", trafficRouter);
+        PowerMockito.stub(PowerMockito.method(ZoneManager.class, "initTopLevelDomain")).toReturn(null);
+        PowerMockito.stub(PowerMockito.method(ZoneManager.class, "initZoneCache")).toReturn(null);
 
         SignatureManager signatureManager = PowerMockito.mock(SignatureManager.class);
         whenNew(SignatureManager.class).withArguments(any(ZoneManager.class), any(CacheRegister.class), any(TrafficOpsUtils.class), any(TrafficRouterManager.class)).thenReturn(signatureManager);
 
         zoneManager = spy(new ZoneManager(trafficRouter, new StatTracker(), null, mock(TrafficRouterManager.class)));
+
     }
 
     @Test
