@@ -155,7 +155,7 @@
   postgresql_user:
     encrypted: true
     name: "{{ postgresql_replica_user }}"
-    password: "{{ postgresql_admin_user_password }}"
+    password: "{{ postgresql_replica_user_password }}"
     port: "{{ postgresql_port }}"
     login_host: 127.0.0.1
     role_attr_flags: REPLICATION
@@ -164,4 +164,4 @@
   notify: Restart Traffic OpsDB
   when:
     - (postgresql_replica_user is defined) and postgresql_replica_user
-    - (postgresql_admin_user_password is defined) and postgresql_admin_user_password
+    - (postgresql_replica_user_password is defined) and postgresql_replica_user_password

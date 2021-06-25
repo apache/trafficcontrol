@@ -12,7 +12,7 @@
 # limitations under the License.
 #}
 standby_mode = 'on'
-primary_conninfo = 'host={{ postgresql_target_replication_parent }} port={{ postgresql_port }} user={{ postgresql_replica_user }} password={{ postgresql_admin_user_password }}'
+primary_conninfo = 'host={{ postgresql_target_replication_parent }} port={{ postgresql_port }} user={{ postgresql_replica_user }} password={{ postgresql_replica_user_password }}'
 trigger_file = '{{ postgresql_datadir }}/replication.trigger'
 
 
