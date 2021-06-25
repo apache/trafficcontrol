@@ -66,3 +66,4 @@
   wait_for:
     port: "{{ postgresql_port }}"
     delay: 3
+  changed_when: false
