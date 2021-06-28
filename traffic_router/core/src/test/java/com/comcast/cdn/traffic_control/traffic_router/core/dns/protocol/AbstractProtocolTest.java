@@ -23,6 +23,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.xbill.DNS.*;
@@ -32,7 +34,7 @@ import java.net.InetAddress;
 import java.util.Random;
 
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.*;
@@ -54,11 +56,26 @@ public class AbstractProtocolTest {
         whenNew(Random.class).withNoArguments().thenReturn(random);
 
         mockStatic(System.class);
-        when(System.currentTimeMillis()).thenReturn(144140678000L).thenReturn(144140678345L);
-        when(System.nanoTime()).thenReturn(100000000L, 100000000L + 345123000L);
+        Answer<Long> nanoTimeAnswer = new Answer<Long>() {
+            final long[] nanoTimes = {100000000L, 100000000L + 345123000L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return nanoTimes[index++ % 2];
+            }
+        };
+        when(System.nanoTime()).thenAnswer(nanoTimeAnswer);
+
+        Answer<Long> currentTimeAnswer = new Answer<Long>() {
+            final long[] currentTimes = {144140678000L, 144140678345L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return currentTimes[index++ % 2];
+            }
+        };
+        when(System.currentTimeMillis()).then(currentTimeAnswer);
 
         mockStatic(Logger.class);
-        when(Logger.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access")).thenReturn(accessLogger);
+        when(Logger.getLogger("com.comcast.cdn.traffic_control.traffic_router.core.access")).thenAnswer(invocation -> accessLogger);
 
         header = new Header();
         header.setID(65535);

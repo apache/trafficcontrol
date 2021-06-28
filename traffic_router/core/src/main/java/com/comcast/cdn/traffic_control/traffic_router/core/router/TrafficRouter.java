@@ -1665,8 +1665,8 @@ public class TrafficRouter {
 
 		final Geolocation clientLocation = getClientLocationByCoverageZoneOrGeo(clientIP, deliveryService);
 		if (clientLocation != null) {
-			Collections.sort(steeringResults, new SteeringGeolocationComparator(clientLocation));
-			Collections.sort(steeringResults, Comparator.comparingInt(s -> s.getSteeringTarget().getOrder())); // re-sort by order to preserve the ordering done by ConsistentHasher
+			steeringResults.sort(new SteeringGeolocationComparator(clientLocation));
+			steeringResults.sort(Comparator.comparingInt(s -> s.getSteeringTarget().getOrder())); // re-sort by order to preserve the ordering done by ConsistentHasher
 		}
 	}
 
