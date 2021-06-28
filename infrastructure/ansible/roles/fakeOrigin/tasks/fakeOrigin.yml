@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 - name: Install fakeOrigin
-  yum:
+  package:
     name: "{{ fo_pkg_name }}"
     state: installed
     update_cache: true
