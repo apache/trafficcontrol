@@ -396,7 +396,7 @@ func withCluster(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, f func(
 // If fields is empty, all fields will be returned.
 func search(cluster StorageCluster, index string, query string, filterQuery string, numRows uint32, fields []string) ([]*riak.SearchDoc, error) {
 	var searchDocs []*riak.SearchDoc
-	for start := uint32(0); ; {
+	for start := uint32(0); ; start += numRows {
 		riakCmd := riak.NewSearchCommandBuilder().
 			WithIndexName(index).
 			WithQuery(query).
@@ -430,7 +430,7 @@ func search(cluster StorageCluster, index string, query string, filterQuery stri
 			}
 		}
 
-		// If the total number of docs is not evenly divisible by 1000.
+		// If the total number of docs is not evenly divisible by numRows
 		if uint32(len(cmd.Response.Docs)) < numRows {
 			numRows = uint32(len(cmd.Response.Docs))
 		}
@@ -442,6 +442,5 @@ func search(cluster StorageCluster, index string, query string, filterQuery stri
 		if cmd.Response.NumFound == numRows+start {
 			return searchDocs, nil
 		}
-		start += numRows
 	}
 }
