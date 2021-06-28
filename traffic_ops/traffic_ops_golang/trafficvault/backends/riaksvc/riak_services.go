@@ -394,31 +394,54 @@ func withCluster(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, f func(
 
 // search searches Riak for the given query. Returns nil and a nil error if no object was found.
 // If fields is empty, all fields will be returned.
-func search(cluster StorageCluster, index string, query string, filterQuery string, numRows int, fields []string) ([]*riak.SearchDoc, error) {
-	riakCmd := riak.NewSearchCommandBuilder().
-		WithIndexName(index).
-		WithQuery(query).
-		WithNumRows(uint32(numRows))
-	if len(filterQuery) > 0 {
-		riakCmd = riakCmd.WithFilterQuery(filterQuery)
-	}
-	if len(fields) > 0 {
-		riakCmd = riakCmd.WithReturnFields(fields...)
-	}
-	iCmd, err := riakCmd.Build()
+func search(cluster StorageCluster, index string, query string, filterQuery string, numRows uint32, fields []string) ([]*riak.SearchDoc, error) {
+	var searchDocs []*riak.SearchDoc
+	for start := uint32(0); ; {
+		riakCmd := riak.NewSearchCommandBuilder().
+			WithIndexName(index).
+			WithQuery(query).
+			WithNumRows(numRows)
+		if len(filterQuery) > 0 {
+			riakCmd = riakCmd.WithFilterQuery(filterQuery)
+		}
+		if len(fields) > 0 {
+			riakCmd = riakCmd.WithReturnFields(fields...)
+		}
+		iCmd, err := riakCmd.Build()
 
-	if err != nil {
-		return nil, errors.New("building Riak command: " + err.Error())
+		if err != nil {
+			return nil, errors.New("building Riak command: " + err.Error())
+		}
+		if err = cluster.Execute(iCmd); err != nil {
+			return nil, errors.New("executing Riak command index '" + index + "' query '" + query + "': " + err.Error())
+		}
+		cmd, ok := iCmd.(*riak.SearchCommand)
+		if !ok {
+			return nil, fmt.Errorf("riak command unexpected type %T", iCmd)
+		}
+		if start == 0 {
+			if cmd.Response == nil || cmd.Response.NumFound == 0 {
+				return nil, nil
+			}
+			if cmd.Response.NumFound <= numRows {
+				return cmd.Response.Docs, nil
+			} else {
+				searchDocs = make([]*riak.SearchDoc, cmd.Response.NumFound)
+			}
+		}
+
+		// If the total number of docs is not evenly divisible by 1000.
+		if uint32(len(cmd.Response.Docs)) < numRows {
+			numRows = uint32(len(cmd.Response.Docs))
+		}
+
+		for responseIndex := uint32(0); responseIndex < numRows; responseIndex += 1 {
+			returnIndex := responseIndex + start
+			searchDocs[returnIndex] = cmd.Response.Docs[responseIndex]
+		}
+		if cmd.Response.NumFound == numRows+start {
+			return searchDocs, nil
+		}
+		start += numRows
 	}
-	if err = cluster.Execute(iCmd); err != nil {
-		return nil, errors.New("executing Riak command index '" + index + "' query '" + query + "': " + err.Error())
-	}
-	cmd, ok := iCmd.(*riak.SearchCommand)
-	if !ok {
-		return nil, fmt.Errorf("Riak command unexpected type %T", iCmd)
-	}
-	if cmd.Response == nil || cmd.Response.NumFound == 0 {
-		return nil, nil
-	}
-	return cmd.Response.Docs, nil
 }
