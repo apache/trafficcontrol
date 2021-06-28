@@ -1,0 +1,330 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Base FO setup
+  hosts: all
+  gather_facts: true
+  become: true
+
+  vars_files:
+    - "{{ molecule_ephemeral_directory }}/secret_varfile.json"
+
+  tasks:
+    - name: Install Optional Dependencies
+      yum:
+        name:
+          - "{{ ffmpeg_url[ansible_distribution_major_version] }}"
+        update_cache: true
+        state: present
+        enablerepo: "{{ additional_yum_repos | default([]) }}"
+        lock_timeout: 300
+        disable_gpg_check: true
+      retries: 5
+      delay: 5
+      vars:
+        ffmpeg_url:
+          "7": https://pkg.opencast.org/rpms/release/el/7/x86_64/ffmpeg/ffmpeg-4.3.git.20200616044012-1.el7.x86_64.rpm
+          "8": https://pkg.opencast.org/rpms/release/el/8/x86_64/ffmpeg/ffmpeg-4.3.git.20200616044012-1.el8.x86_64.rpm
+
+    - name: Deploy fakeOrigin
+      import_role:
+        name: fakeOrigin
+      vars:
+        install_fakeorigin: true
+        fo_http_port: 80
+        fo_https_port: 443
+        fo_ssl_key_file: /etc/pki/tls/private/server.key.pem
+        fo_ssl_cert_file: /etc/pki/tls/certs/server.crt
+        fo_binding_address: "0.0.0.0"
+        fo_endpoint_config:
+          - id: SampleVideo
+            source: "{{ fo_sample_video }}"
+            outputdir: "{{ fo_output_dir }}"
+            type: static
+          - id: SampleDir
+            source: "{{ fo_video_dir }}"
+            outputdir: "{{ fo_output_dir }}"
+            type: dir
+          - id: HLS_ABR_VOD
+            source: "{{ fo_sample_video }}"
+            outputdir: "{{ fo_output_dir }}/HLS_ABR_VOD"
+            type: vod
+            manual_command:
+              - ffmpeg
+              - "-y"
+              - "-i"
+              - "%SOURCE%"
+              - "-vf"
+              - scale=w=1280:h=720:force_original_aspect_ratio=decrease
+              - "-c:a"
+              - aac
+              - "-ar"
+              - '48000'
+              - "-c:v"
+              - h264
+              - "-profile:v"
+              - main
+              - "-crf"
+              - '20'
+              - "-sc_threshold"
+              - '0'
+              - "-g"
+              - '48'
+              - "-keyint_min"
+              - '48'
+              - "-hls_time"
+              - '4'
+              - "-hls_playlist_type"
+              - vod
+              - "-b:v"
+              - 2800k
+              - "-b:a"
+              - 128k
+              - "-hls_list_size"
+              - '0'
+              - "-hls_segment_filename"
+              - "%OUTPUTDIRECTORY%/%DISKID%_seq_%03d_1280x720.ts"
+              - "%OUTPUTDIRECTORY%/%DISKID%_1280x720-20000.m3u8"
+              - "-vf"
+              - scale=w=1920:h=1080:force_original_aspect_ratio=decrease
+              - "-c:a"
+              - aac
+              - "-ar"
+              - '48000'
+              - "-c:v"
+              - h264
+              - "-profile:v"
+              - main
+              - "-crf"
+              - '20'
+              - "-sc_threshold"
+              - '0'
+              - "-g"
+              - '48'
+              - "-keyint_min"
+              - '48'
+              - "-hls_time"
+              - '4'
+              - "-hls_playlist_type"
+              - vod
+              - "-b:v"
+              - 5000k
+              - "-b:a"
+              - 192k
+              - "-hls_list_size"
+              - '0'
+              - "-hls_segment_filename"
+              - "%OUTPUTDIRECTORY%/%DISKID%_seq_%03d_1920x1080.ts"
+              - "%OUTPUTDIRECTORY%/%DISKID%_1920x1080-40000.m3u8"
+          - id: HLS_ABR_LIVE
+            source: "{{ fo_sample_video }}"
+            outputdir: "{{ fo_output_dir }}/HLS_ABR_LIVE"
+            type: live
+            manual_command:
+              - ffmpeg
+              - "-y"
+              - "-i"
+              - "%SOURCE%"
+              - "-vf"
+              - scale=w=1280:h=720:force_original_aspect_ratio=decrease
+              - "-c:a"
+              - aac
+              - "-ar"
+              - '48000'
+              - "-c:v"
+              - h264
+              - "-profile:v"
+              - main
+              - "-crf"
+              - '20'
+              - "-sc_threshold"
+              - '0'
+              - "-g"
+              - '48'
+              - "-keyint_min"
+              - '48'
+              - "-hls_time"
+              - '4'
+              - "-hls_playlist_type"
+              - vod
+              - "-b:v"
+              - 2800k
+              - "-b:a"
+              - 128k
+              - "-hls_list_size"
+              - '0'
+              - "-hls_segment_filename"
+              - "%OUTPUTDIRECTORY%/%DISKID%_seq_%03d_1280x720.ts"
+              - "%OUTPUTDIRECTORY%/%DISKID%_1280x720-20000.m3u8"
+              - "-vf"
+              - scale=w=1920:h=1080:force_original_aspect_ratio=decrease
+              - "-c:a"
+              - aac
+              - "-ar"
+              - '48000'
+              - "-c:v"
+              - h264
+              - "-profile:v"
+              - main
+              - "-crf"
+              - '20'
+              - "-sc_threshold"
+              - '0'
+              - "-g"
+              - '48'
+              - "-keyint_min"
+              - '48'
+              - "-hls_time"
+              - '4'
+              - "-hls_playlist_type"
+              - vod
+              - "-b:v"
+              - 5000k
+              - "-b:a"
+              - 192k
+              - "-hls_list_size"
+              - '0'
+              - "-hls_segment_filename"
+              - "%OUTPUTDIRECTORY%/%DISKID%_seq_%03d_1920x1080.ts"
+              - "%OUTPUTDIRECTORY%/%DISKID%_1920x1080-40000.m3u8"
+          - id: DUPLICATE_HLS_ABR_VOD
+            override_disk_id: HLS_ABR_VOD
+            source: "{{ fo_sample_video }}"
+            outputdir: "{{ fo_output_dir }}/HLS_ABR_VOD"
+            type: vod
+          - id: DUPLICATE_HLS_ABR_LIVE
+            override_disk_id: HLS_ABR_LIVE
+            source: "{{ fo_sample_video }}"
+            outputdir: "{{ fo_output_dir }}/HLS_ABR_LIVE"
+            type: live
+          - id: HLS_VOD
+            source: "{{ fo_sample_video }}"
+            outputdir: "{{ fo_output_dir }}/HLS_VOD"
+            type: vod
+            manual_command:
+              - ffmpeg
+              - "-y"
+              - "-i"
+              - "%SOURCE%"
+              - "-vf"
+              - scale=w=1920:h=1080:force_original_aspect_ratio=decrease
+              - "-c:a"
+              - aac
+              - "-ar"
+              - '48000'
+              - "-c:v"
+              - h264
+              - "-profile:v"
+              - main
+              - "-crf"
+              - '20'
+              - "-sc_threshold"
+              - '0'
+              - "-g"
+              - '48'
+              - "-keyint_min"
+              - '48'
+              - "-hls_time"
+              - '4'
+              - "-hls_playlist_type"
+              - vod
+              - "-b:v"
+              - 5000k
+              - "-b:a"
+              - 192k
+              - "-hls_list_size"
+              - '0'
+              - "-hls_segment_filename"
+              - "%OUTPUTDIRECTORY%/%DISKID%_seq_%03d.ts"
+              - "%OUTPUTDIRECTORY%/%DISKID%.m3u8"
+          - id: HLS_LIVE
+            source: "{{ fo_sample_video }}"
+            outputdir: "{{ fo_output_dir }}/HLS_LIVE"
+            type: live
+            manual_command:
+              - ffmpeg
+              - "-y"
+              - "-i"
+              - "%SOURCE%"
+              - "-vf"
+              - scale=w=1920:h=1080:force_original_aspect_ratio=decrease
+              - "-c:a"
+              - aac
+              - "-ar"
+              - '48000'
+              - "-c:v"
+              - h264
+              - "-profile:v"
+              - main
+              - "-crf"
+              - '20'
+              - "-sc_threshold"
+              - '0'
+              - "-g"
+              - '48'
+              - "-keyint_min"
+              - '48'
+              - "-hls_time"
+              - '4'
+              - "-hls_playlist_type"
+              - vod
+              - "-b:v"
+              - 5000k
+              - "-b:a"
+              - 192k
+              - "-hls_list_size"
+              - '0'
+              - "-hls_segment_filename"
+              - "%OUTPUTDIRECTORY%/%DISKID%_seq_%03d.ts"
+              - "%OUTPUTDIRECTORY%/%DISKID%.m3u8"
+          - id: HLS_EVENT
+            source: "{{ fo_sample_video }}"
+            outputdir: "{{ fo_output_dir }}/HLS_EVENT"
+            type: event
+            manual_command:
+              - ffmpeg
+              - "-y"
+              - "-i"
+              - "%SOURCE%"
+              - "-vf"
+              - scale=w=1920:h=1080:force_original_aspect_ratio=decrease
+              - "-c:a"
+              - aac
+              - "-ar"
+              - '48000'
+              - "-c:v"
+              - h264
+              - "-profile:v"
+              - main
+              - "-crf"
+              - '20'
+              - "-sc_threshold"
+              - '0'
+              - "-g"
+              - '48'
+              - "-keyint_min"
+              - '48'
+              - "-hls_time"
+              - '4'
+              - "-hls_playlist_type"
+              - event
+              - "-b:v"
+              - 5000k
+              - "-b:a"
+              - 192k
+              - "-hls_list_size"
+              - '0'
+              - "-hls_segment_filename"
+              - "%OUTPUTDIRECTORY%/%DISKID%_seq_%03d.ts"
+              - "%OUTPUTDIRECTORY%/%DISKID%.m3u8"
