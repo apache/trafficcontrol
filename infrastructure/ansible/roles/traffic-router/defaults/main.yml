@@ -111,7 +111,7 @@ tr_connectors:
 tr_dns_tcp_port: 53
 tr_dns_tcp_backlog: 65535
 tr_dns_udp_port: 53
-tr_dns_max_threads: 10000
+tr_dns_max_threads: 100
 tr_dns_zones_dir: "{{tr_base_dir}}/var/auto-zones"
 
 # cache.properties
