@@ -65,7 +65,7 @@ export const users = {
                     Email: "test2@cdn.tc.com",
                     Role: "admin",
                     Tenant: "- tenantSame",
-                    validationMessage: `Sent user registration to {{ test2@cdn.tc.com${randomize}}} with the following permissions [ role: admin | tenant: tenantSame${randomize} ]`
+                    validationMessage: `Sent user registration to {{ ${randomize}test2@cdn.tc.com}} with the following permissions [ role: admin | tenant: tenantSame${randomize} ]`
                 }
             ],
             update: [

@@ -21,7 +21,6 @@ import { by, element } from 'protractor';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 import { randomize } from '../config';
-
 interface User {
   FullName: string;
   Username: string;
@@ -56,7 +55,6 @@ interface UpdateRegisterUser {
     NewFullName: string;
     validationMessage?: string;
 }
-
 export class UsersPage extends BasePage {
     private btnCreateNewUser = element(by.name('createUserButton'));
     private btnRegisterNewUser = element(by.name('createRegisterUserButton'));
@@ -109,7 +107,7 @@ export class UsersPage extends BasePage {
       await this.btnCreateNewUser.click();
       await this.txtFullName.sendKeys(user.FullName + this.randomize);
       await this.txtUserName.sendKeys(user.Username + this.randomize);
-      await this.txtEmail.sendKeys(user.Email + this.randomize);
+      await this.txtEmail.sendKeys(this.randomize + user.Email);
       await this.txtRole.sendKeys(user.Role);
       await this.txtTenant.sendKeys(user.Tenant+this.randomize);
       await this.txtPassword.sendKeys(user.Password);
@@ -142,7 +140,7 @@ export class UsersPage extends BasePage {
 
     public async SearchEmailUser(nameEmail: string): Promise<void> {
         const snp = new SideNavigationPage();
-        const name = nameEmail + this.randomize;
+        const name = this.randomize + nameEmail;
         await snp.NavigateToUsersPage();
         await this.txtSearch.clear();
         await this.txtSearch.sendKeys(name);
@@ -172,7 +170,7 @@ export class UsersPage extends BasePage {
         const basePage = new BasePage();
         const snp = new SideNavigationPage();
         await this.btnRegisterNewUser.click();
-        await this.txtEmail.sendKeys(user.Email + this.randomize);
+        await this.txtEmail.sendKeys(this.randomize + user.Email);
         await this.txtRole.sendKeys(user.Role);
         await this.txtTenant.sendKeys(user.Tenant + this.randomize);
         await basePage.ClickRegister();
