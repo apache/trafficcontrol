@@ -400,7 +400,8 @@ func search(cluster StorageCluster, index string, query string, filterQuery stri
 		riakCmd := riak.NewSearchCommandBuilder().
 			WithIndexName(index).
 			WithQuery(query).
-			WithNumRows(numRows)
+			WithNumRows(numRows).
+			WithStart(numRows)
 		if len(filterQuery) > 0 {
 			riakCmd = riakCmd.WithFilterQuery(filterQuery)
 		}
@@ -419,10 +420,10 @@ func search(cluster StorageCluster, index string, query string, filterQuery stri
 		if !ok {
 			return nil, fmt.Errorf("riak command unexpected type %T", iCmd)
 		}
+		if cmd.Response == nil {
+			return nil, fmt.Errorf("riak recieved nil responce")
+		}
 		if start == 0 {
-			if cmd.Response == nil || cmd.Response.NumFound == 0 {
-				return nil, nil
-			}
 			if cmd.Response.NumFound <= numRows {
 				return cmd.Response.Docs, nil
 			} else {
