@@ -919,6 +919,13 @@ type TODSSDeliveryService struct {
 
 // Read shows all of the delivery services associated with the specified server.
 func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	version := dss.APIInfo().Version
+	if version == nil {
+		return nil, nil, errors.New("TODSSDeliveryService.Read called with nil API version"), http.StatusInternalServerError, nil
+	}
+	if version.Major == 1 && version.Minor < 1 {
+		return nil, nil, fmt.Errorf("TODSSDeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError, nil
+	}
 	var maxTime time.Time
 	var runSecond bool
 	returnable := []interface{}{}
@@ -983,6 +990,9 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	}
 
 	for _, ds := range dses {
+		if version.Major > 3 && version.Minor >= 0 {
+			ds = ds.RemoveLD1AndLD2()
+		}
 		returnable = append(returnable, ds)
 	}
 	return returnable, nil, nil, http.StatusOK, &maxTime

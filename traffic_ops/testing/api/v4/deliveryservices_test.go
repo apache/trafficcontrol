@@ -665,6 +665,7 @@ func CreateTestDeliveryServices(t *testing.T) {
 		t.Errorf("cannot create parameter: %v - alerts: %+v", err, alerts.Alerts)
 	}
 	for _, ds := range testData.DeliveryServices {
+		ds = ds.RemoveLD1AndLD2()
 		resp, _, err := TOSession.CreateDeliveryService(ds, client.RequestOptions{})
 		if err != nil {
 			t.Errorf("could not create Delivery Service '%s': %v - alerts: %+v", *ds.XMLID, err, resp.Alerts)
