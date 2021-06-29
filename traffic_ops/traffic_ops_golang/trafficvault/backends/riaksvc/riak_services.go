@@ -401,7 +401,7 @@ func search(cluster StorageCluster, index string, query string, filterQuery stri
 			WithIndexName(index).
 			WithQuery(query).
 			WithNumRows(numRows).
-			WithStart(numRows)
+			WithStart(start)
 		if len(filterQuery) > 0 {
 			riakCmd = riakCmd.WithFilterQuery(filterQuery)
 		}
