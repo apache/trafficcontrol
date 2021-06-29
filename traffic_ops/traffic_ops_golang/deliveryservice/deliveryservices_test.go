@@ -211,7 +211,7 @@ func TestMakeExampleURLs(t *testing.T) {
 func TestReadGetDeliveryServices(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
 	}
 	defer mockDB.Close()
 
