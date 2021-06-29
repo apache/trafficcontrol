@@ -208,7 +208,7 @@ func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-		w.Write(append(respBts, '\n'))
+		api.WriteAndLogErr(w, r, append(respBts, '\n'))
 
 		// TODO: afaik, Perl never clears these tokens. They should be reset to NULL on login, I think.
 	}
@@ -514,6 +514,6 @@ func ResetPassword(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-		w.Write(append(respBts, '\n'))
+		api.WriteAndLogErr(w, r, append(respBts, '\n'))
 	}
 }
