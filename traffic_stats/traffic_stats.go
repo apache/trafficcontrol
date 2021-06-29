@@ -37,23 +37,14 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-
 	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+
 	log "github.com/cihub/seelog"
 	influx "github.com/influxdata/influxdb/client/v2"
 )
 
 const UserAgent = "traffic-stats"
 const TrafficOpsRequestTimeout = time.Second * time.Duration(10)
-
-const (
-	// FATAL will exit after printing error
-	FATAL = iota
-	// ERROR will just keep going, print error
-	ERROR
-	// WARN will keep going and print a warning
-	WARN
-)
 
 const (
 	defaultPollingInterval             = 10
@@ -159,12 +150,12 @@ func main() {
 		case <-termChan:
 			log.Info("Shutdown Request Received - Sending stored metrics then quitting")
 			for _, val := range Bps {
-				sendMetrics(config, runningConfig, val, false)
+				sendMetrics(config, val, false)
 			}
 			os.Exit(0)
 		case <-tickers.Publish:
 			for key, val := range Bps {
-				go sendMetrics(config, runningConfig, val, true)
+				go sendMetrics(config, val, true)
 				delete(Bps, key)
 			}
 		case runningConfig = <-configChan:
@@ -174,7 +165,7 @@ func main() {
 			for cdnName, urls := range runningConfig.HealthUrls {
 				for _, u := range urls {
 					log.Debug(cdnName, " -> ", u)
-					go calcMetrics(cdnName, u, runningConfig.CacheMap, config, runningConfig)
+					go calcMetrics(cdnName, u, runningConfig.CacheMap, config)
 				}
 			}
 		case now := <-tickers.DailySummary:
@@ -253,9 +244,9 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 	if len(config.InfluxURLs) == 0 {
 		return config, fmt.Errorf("No InfluxDB urls provided in influxUrls, please provide at least one valid URL.  e.g. \"influxUrls\": [\"http://localhost:8086\"]")
 	}
-	for _, url := range config.InfluxURLs {
+	for _, u := range config.InfluxURLs {
 		influxDBProps := InfluxDBProps{
-			URL: url,
+			URL: u,
 		}
 		config.InfluxDBs = append(config.InfluxDBs, &influxDBProps)
 	}
@@ -431,7 +422,7 @@ func writeSummaryStats(config StartupConfig, statsSummary tc.StatsSummary) {
 	}
 	_, _, err = to.CreateSummaryStats(statsSummary)
 	if err != nil {
-		log.Error(fmt.Errorf("could not create summary stats: %v", err))
+		log.Errorf("could not create summary stats: %v", err)
 	}
 }
 
@@ -485,14 +476,29 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	cacheStatPath = strings.Replace(cacheStatPath, "=,", "=", 1)
 	dsStatPath = strings.Replace(dsStatPath, "=,", "=", 1)
 
+	setHealthURLs(config, &runningConfig, cacheStatPath, dsStatPath)
+
+	lastSummaryTimeResponse, _, err := to.GetSummaryStatsLastUpdated(util.StrPtr("daily_maxgbps"))
+	if err != nil {
+		log.Errorf("unable to get summary stats last updated: %v", err)
+	} else if lastSummaryTimeResponse.Response.SummaryTime == nil {
+		log.Warn("unable to get last updated stats summary timestamp: daily_maxgbps stats summary not reported yet")
+	} else {
+		runningConfig.LastSummaryTime = *lastSummaryTimeResponse.Response.SummaryTime
+	}
+
+	configChan <- runningConfig
+}
+
+func setHealthURLs(config StartupConfig, runningConfig *RunningConfig, cacheStatPath string, dsStatPath string) {
 	runningConfig.HealthUrls = make(map[string]map[string][]string)
-	for _, server := range servers {
-		if server.Type == "RASCAL" && server.Status != config.StatusToMon {
+	for _, server := range runningConfig.CacheMap {
+		if server.Type == tc.MonitorTypeName && server.Status != config.StatusToMon {
 			log.Debugf("Skipping %s.%s.  Looking for status %s but got status %s", server.HostName, server.DomainName, config.StatusToMon, server.Status)
 			continue
 		}
 
-		if server.Type == "RASCAL" && server.Status == config.StatusToMon {
+		if server.Type == tc.MonitorTypeName && server.Status == config.StatusToMon {
 			cdnName := server.CDNName
 			if cdnName == "" {
 				log.Error("Unable to find CDN name for " + server.HostName + ".. skipping")
@@ -508,21 +514,10 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 			runningConfig.HealthUrls[cdnName]["DsStats"] = append(runningConfig.HealthUrls[cdnName]["DsStats"], healthURL)
 		}
 	}
-
-	lastSummaryTimeResponse, _, err := to.GetSummaryStatsLastUpdated(util.StrPtr("daily_maxgbps"))
-	if err != nil {
-		log.Errorf("unable to get summary stats last updated: %v", err)
-	} else if lastSummaryTimeResponse.Response.SummaryTime == nil {
-		log.Warn("unable to get last updated stats summary timestamp: daily_maxgbps stats summary not reported yet")
-	} else {
-		runningConfig.LastSummaryTime = *lastSummaryTimeResponse.Response.SummaryTime
-	}
-
-	configChan <- runningConfig
 }
 
-func calcMetrics(cdnName string, urls []string, cacheMap map[string]tc.Server, config StartupConfig, runningConfig RunningConfig) {
-	sampleTime := int64(time.Now().Unix())
+func calcMetrics(cdnName string, urls []string, cacheMap map[string]tc.Server, config StartupConfig) {
+	sampleTime := time.Now().Unix()
 	// get the data from trafficMonitor
 	var trafMonData []byte
 	var err error
@@ -557,7 +552,7 @@ func calcMetrics(cdnName string, urls []string, cacheMap map[string]tc.Server, c
 	}
 }
 
-func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config StartupConfig) error {
+func calcDsValues(tmData []byte, cdnName string, sampleTime int64, config StartupConfig) error {
 	type DsStatsJSON struct {
 		Pp              string `json:"pp"`
 		Date            string `json:"date"`
@@ -570,7 +565,7 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 	}
 
 	var jData DsStatsJSON
-	err := json.Unmarshal(rascalData, &jData)
+	err := json.Unmarshal(tmData, &jData)
 	if err != nil {
 		return fmt.Errorf("could not unmarshall deliveryservice stats JSON - %v", err)
 	}
@@ -777,7 +772,7 @@ func influxConnect(config StartupConfig) (influx.Client, error) {
 	return nil, err
 }
 
-func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.BatchPoints, retry bool) {
+func sendMetrics(config StartupConfig, bps influx.BatchPoints, retry bool) {
 	influxClient, err := influxConnect(config)
 	if err != nil {
 		if retry {
@@ -819,13 +814,6 @@ func sendMetrics(config StartupConfig, runningConfig RunningConfig, bps influx.B
 
 func intMin(a, b int) int {
 	if a < b {
-		return a
-	}
-	return b
-}
-
-func floatMax(a, b float64) float64 {
-	if a > b {
 		return a
 	}
 	return b
