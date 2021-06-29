@@ -53,43 +53,43 @@ func TestDeliveryServices(t *testing.T) {
 			t.Run("Create and retrieve SSL keys for a Delivery Service", DeliveryServiceSSLKeys)
 		}
 
-		CreateTestDeliveryServiceWithLongDescFields(t)
-		UpdateTestDeliveryServiceWithLongDescFields(t)
-		GetTestDeliveryServicesIMS(t)
-		GetAccessibleToTest(t)
-		UpdateTestDeliveryServices(t)
-		UpdateValidateORGServerCacheGroup(t)
-		UpdateTestDeliveryServicesWithHeaders(t, header)
-		UpdateNullableTestDeliveryServices(t)
-		UpdateDeliveryServiceWithInvalidRemapText(t)
-		UpdateDeliveryServiceWithInvalidSliceRangeRequest(t)
-		UpdateDeliveryServiceWithInvalidTopology(t)
-		GetTestDeliveryServicesIMSAfterChange(t, header)
-		UpdateDeliveryServiceTopologyHeaderRewriteFields(t)
-		GetTestDeliveryServices(t)
-		GetInactiveTestDeliveryServices(t)
-		GetTestDeliveryServicesCapacity(t)
-		DeliveryServiceMinorVersionsTest(t)
-		DeliveryServiceTenancyTest(t)
-		PostDeliveryServiceTest(t)
+		t.Run("Create a Delivery Service with the removed Long Description 2 and 3 fields", CreateTestDeliveryServiceWithLongDescFields)
+		t.Run("Update a Delivery Service, setting its removed Long Description 2 and 3 fields", UpdateTestDeliveryServiceWithLongDescFields)
+		t.Run("Getting unmodified Delivery Services using the If-Modified-Since header", GetTestDeliveryServicesIMS)
+		t.Run("Getting Delivery Services accessible to a Tenant", GetAccessibleToTest)
+		t.Run("Basic update of some Delivery Service fields", UpdateTestDeliveryServices)
+		t.Run("Assign an Origin not in a Cache Group used by a Delivery Service's Topology to that Delivery Service", UpdateValidateORGServerCacheGroup)
+		t.Run("Attempt to update a Delivery Service with If-Unmodified-Since", testUpdatingDeliveryServicesWithIUSOrIfMatch(header))
+		t.Run("Basic update of some other Delivery Service fields", UpdateNullableTestDeliveryServices)
+		t.Run("Update a Delivery Service giving it invalid Raw Remap text", UpdateDeliveryServiceWithInvalidRemapText)
+		t.Run("Update a Delivery Service giving it invalid combinations of Range Slice Block Size and Range Request Handling", UpdateDeliveryServiceWithInvalidSliceRangeRequest)
+		t.Run("Invalid Topology-to-Delivery Service assignments", UpdateDeliveryServiceWithInvalidTopology)
+		t.Run("Getting modified Delivery Services using the If-Modified-Since header", testGettingDeliveryServicesWithIMSAfterModification(header))
+		t.Run("Basic update of Delivery Service header rewrite fields", UpdateDeliveryServiceTopologyHeaderRewriteFields)
+		t.Run("Basic GET request", GetTestDeliveryServices)
+		t.Run("GET requests using the 'active' query string parameter", GetInactiveTestDeliveryServices)
+		t.Run("Basic GET request for /deliveryservices/{{ID}}/capacity", GetTestDeliveryServicesCapacity)
+		t.Run("Update fields added in new minor versions of the API", DeliveryServiceMinorVersionsTest)
+		t.Run("Verify Tenancy-restricted Delivery Service access", DeliveryServiceTenancyTest)
+		t.Run("Attempt to create invalid Delivery Services", PostDeliveryServiceTest)
 		header = make(map[string][]string)
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
-		UpdateTestDeliveryServicesWithHeaders(t, header)
-		VerifyPaginationSupportDS(t)
-		GetDeliveryServiceByCdn(t)
-		GetDeliveryServiceByInvalidCdn(t)
-		GetDeliveryServiceByInvalidProfile(t)
-		GetDeliveryServiceByInvalidTenant(t)
-		GetDeliveryServiceByInvalidType(t)
-		GetDeliveryServiceByInvalidAccessibleTo(t)
-		GetDeliveryServiceByInvalidXmlId(t)
-		GetDeliveryServiceByLogsEnabled(t)
-		GetDeliveryServiceByValidProfile(t)
-		GetDeliveryServiceByValidTenant(t)
-		GetDeliveryServiceByValidType(t)
-		GetDeliveryServiceByValidXmlId(t)
-		SortTestDeliveryServicesDesc(t)
+		t.Run("Attempt to update a Delivery Service with If-Match", testUpdatingDeliveryServicesWithIUSOrIfMatch(header))
+		t.Run("GET requests using pagination-controlling query string parameters", VerifyPaginationSupportDS)
+		t.Run("GET requests using the 'cdn' query string parameter", GetDeliveryServiceByCdn)
+		t.Run("Check behavior of 'cdn' query string parameter when CDN doesn't exist", GetDeliveryServiceByInvalidCdn)
+		t.Run("Check behavior of 'profile' query string parameter when Profile doesn't exist", GetDeliveryServiceByInvalidProfile)
+		t.Run("Check behavior of 'tenant' query string parameter when Tenant doesn't exist", GetDeliveryServiceByInvalidTenant)
+		t.Run("Check behavior of 'type' query string parameter when Type doesn't exist", GetDeliveryServiceByInvalidType)
+		t.Run("Check behavior of 'accessibleTo' query string parameter when the Tenant doesn't exist", GetDeliveryServiceByInvalidAccessibleTo)
+		t.Run("Check behavior of 'xmlId' query string parameter when xmlId doesn't exist", GetDeliveryServiceByInvalidXmlId)
+		t.Run("GET request using the 'logsEnabled' query string parameter", GetDeliveryServiceByLogsEnabled)
+		t.Run("GET request using the 'profile' query string parameter", GetDeliveryServiceByValidProfile)
+		t.Run("GET request using the 'tenant' query string parameter", GetDeliveryServiceByValidTenant)
+		t.Run("GET request using the 'type' query string parameter", GetDeliveryServiceByValidType)
+		t.Run("GET request using the 'xmlId' query string parameter", GetDeliveryServiceByValidXmlId)
+		t.Run("Descending order sorted response to GET request", SortTestDeliveryServicesDesc)
 	})
 }
 
@@ -180,6 +180,12 @@ func UpdateTestDeliveryServiceWithLongDescFields(t *testing.T) {
 	}
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected a 400 status code, but got %d", reqInf.StatusCode)
+	}
+}
+
+func testUpdatingDeliveryServicesWithIUSOrIfMatch(h http.Header) func(*testing.T) {
+	return func(t *testing.T) {
+		UpdateTestDeliveryServicesWithHeaders(t, h)
 	}
 }
 
@@ -684,6 +690,12 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	}
 	if len(keys.Response) != len(oldCDNKeys) {
 		t.Fatalf("expected %v key, got %v", len(oldCDNKeys), len(keys.Response))
+	}
+}
+
+func testGettingDeliveryServicesWithIMSAfterModification(h http.Header) func(*testing.T) {
+	return func(t *testing.T) {
+		GetTestDeliveryServicesIMSAfterChange(t, h)
 	}
 }
 
