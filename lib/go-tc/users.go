@@ -90,8 +90,7 @@ type commonUserFields struct {
 	Token           *string `json:"-" db:"token"`
 	UID             *int    `json:"uid"`
 	//Username        *string    `json:"username" db:"username"`  //not including major change due to naming incompatibility
-	LastUpdated    *TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	ChangeLogCount *int       `json:"changeLogCount" db:"change_log_count"`
+	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
 // User fields in v14 have been updated to be nullable
@@ -106,6 +105,12 @@ type User struct {
 	// TODO: make the breaking API change to make all user APIs use "roleName" consistently.
 	RoleName *string `json:"roleName,omitempty" db:"-"`
 	commonUserFields
+}
+
+// UserV40 contains ChangeLogCount field
+type UserV40 struct {
+	User
+	ChangeLogCount *int `json:"changeLogCount" db:"change_log_count"`
 }
 
 // UserCurrent represents the profile for the authenticated user
@@ -292,6 +297,12 @@ type UsersResponseV13 struct {
 // UsersResponse can hold a Traffic Ops API response to a request to get a list of users.
 type UsersResponse struct {
 	Response []User `json:"response"`
+	Alerts
+}
+
+// UsersResponseV40 is the Traffic Ops API version 4.0 variant of UserResponse.
+type UsersResponseV40 struct {
+	Response []UserV40 `json:"response"`
 	Alerts
 }
 
