@@ -247,34 +247,6 @@ under the License.
                             </aside>
                         </div>
                     </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.longDesc1), 'has-feedback': hasError(generalConfig.longDesc1)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="longDesc1">Long Description 2<div class="helptooltip">
-                            <div class="helptext">Free text field not currently used in configuration.</div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="longDesc1" name="longDesc1" class="form-control" ng-model="deliveryService.longDesc1" spellcheck="true" rows="3"></textarea>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.longDesc1 != dsCurrent.longDesc1">
-                                <h3 ng-if="open()">Current Value</h3>
-                                <h3 ng-if="!open()">Previous Value</h3>
-                                <pre>{{::dsCurrent.longDesc1}}</pre>
-                            </aside>
-                        </div>
-                    </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.longDesc2), 'has-feedback': hasError(generalConfig.longDesc2)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">Long Description 3<div class="helptooltip">
-                            <div class="helptext">Free text field not currently used in configuration.</div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="longDesc2" name="longDesc2" class="form-control" ng-model="deliveryService.longDesc2" rows="3" spellcheck="true"></textarea>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.longDesc2 != dsCurrent.longDesc2">
-                                <h3 ng-if="open()">Current Value</h3>
-                                <h3 ng-if="!open()">Previous Value</h3>
-                                <pre>{{::dsCurrent.longDesc2}}</pre>
-                            </aside>
-                        </div>
-                    </div>
                     <div class="form-group" ng-class="{'has-error': hasError(generalConfig.profile), 'has-feedback': hasError(generalConfig.profile)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="profile">Profile<div class="helptooltip">
                             <div class="helptext">Only used if a Delivery Service uses configurations that specifically require a profile. Example: Multi-Site Origin configurations would require a Delivery Service Profile to be used.</div>
