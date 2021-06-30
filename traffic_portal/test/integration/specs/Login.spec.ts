@@ -17,12 +17,10 @@
  * under the License.
  */
 import { browser } from 'protractor';
-import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { LoginPage } from '../PageObjects/LoginPage.po';
 import { login } from "../Data";
 
 const loginPage = new LoginPage();
-const topNavigation = new TopNavigationPage();
 login.tests.forEach(async loginData => {
     loginData.logins.forEach(login => {
         describe(`Traffic Portal - Login - ${login.description}`, () => {
@@ -34,9 +32,6 @@ login.tests.forEach(async loginData => {
             })
             it(login.description, async () => {
                 expect(await loginPage.Login(login)).toBe(true);
-            });
-            it('can logout', async () => {
-                expect(await topNavigation.Logout()).toBeTruthy();
             });
         });
     });
