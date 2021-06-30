@@ -107,7 +107,7 @@ func CreateTestOrigins(t *testing.T) {
 
 func CreateTestOriginDuplicateData(t *testing.T) {
 	if len(testData.Origins) < 1 {
-		t.Fatal("Need at least one Origin to test duplicate Origins")
+		t.Fatal("Need at least one Origin to test duplicate scenario")
 	}
 	firstOrigin := testData.Origins[0]
 	if firstOrigin.Name == nil {
@@ -117,8 +117,8 @@ func CreateTestOriginDuplicateData(t *testing.T) {
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("Expected 400 Status code, but found %d", reqInf.StatusCode)
 	}
-	if err == nil {
-		t.Errorf("Expected, origin name '%s' already exists, but no error found - Alerts %+v", *firstOrigin.Name, resp.Alerts)
+	if err != nil {
+		t.Errorf("Expected, origin name %s already exists, but no error found - Alerts %v", *firstOrigin.Name, resp.Alerts)
 	}
 }
 
@@ -193,7 +193,7 @@ func UpdateTestOrigins(t *testing.T) {
 	updateProtocol := "https"
 	updateTenant := "tenant2"
 
-	// update port/FQDN/IPAddress/IPV6Address/Profile/IsPrimary values on origin
+	// update Cachegroup/Coordinate/Name/Delivery Service/Port/FQDN/IPAddress/IPV6Address/Profile/IsPrimary/Protocol/Tenant values on origin
 	originRequest := tc.Origin{
 		Cachegroup:      &updateCachegroup,
 		Coordinate:      &updateCoordinate,
