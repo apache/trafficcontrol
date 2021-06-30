@@ -36,6 +36,7 @@ func TestOrigins(t *testing.T) {
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfUnmodifiedSince, time)
+		CreateTestOriginDuplicateData(t)
 		GetTestOriginsByParams(t)
 		GetTestOriginsByInvalidParams(t)
 		UpdateTestOrigins(t)
@@ -48,6 +49,8 @@ func TestOrigins(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestOriginsWithHeaders(t, header)
+		CreateTestOriginInvalidData(t)
+		updateTestOriginsWithInvalidData(t)
 	})
 }
 
@@ -99,6 +102,23 @@ func CreateTestOrigins(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not create Origins: %v - alerts: %+v", err, resp.Alerts)
 		}
+	}
+}
+
+func CreateTestOriginDuplicateData(t *testing.T) {
+	if len(testData.Origins) < 1 {
+		t.Fatal("Need at least one Origin to test duplicate Origins")
+	}
+	firstOrigin := testData.Origins[0]
+	if firstOrigin.Name == nil {
+		t.Fatalf("couldn't get the name of test origin server")
+	}
+	resp, reqInf, err := TOSession.CreateOrigin(firstOrigin, client.RequestOptions{})
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 Status code, but found %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("Expected, origin name '%s' already exists, but no error found - Alerts %+v", *firstOrigin.Name, resp.Alerts)
 	}
 }
 
@@ -163,16 +183,40 @@ func UpdateTestOrigins(t *testing.T) {
 	}
 	updatedPort := 4321
 	updatedFQDN := "updated.example.com"
+	updatedIpAddress := "5.6.7.8"
+	updatedIpv6Address := "dead:beef:cafe::455"
+	updatedIsPrimary := false
+	updatedProfile := "EDGEInCDN2"
+	updateDeliveryService := "ds3"
+	updateCachegroup := "multiOriginCachegroup"
+	updateCoordinate := "coordinate2"
+	updateProtocol := "https"
+	updateTenant := "tenant2"
 
-	// update port and FQDN values on origin
-	remoteOrigin.Port = &updatedPort
-	remoteOrigin.FQDN = &updatedFQDN
-	updResp, _, err := TOSession.UpdateOrigin(*remoteOrigin.ID, remoteOrigin, client.RequestOptions{})
+	// update port/FQDN/IPAddress/IPV6Address/Profile/IsPrimary values on origin
+	originRequest := tc.Origin{
+		Cachegroup:      &updateCachegroup,
+		Coordinate:      &updateCoordinate,
+		Name:            remoteOrigin.Name,
+		DeliveryService: &updateDeliveryService,
+		FQDN:            &updatedFQDN,
+		IP6Address:      &updatedIpv6Address,
+		IPAddress:       &updatedIpAddress,
+		IsPrimary:       &updatedIsPrimary,
+		Port:            &updatedPort,
+		Profile:         &updatedProfile,
+		Protocol:        &updateProtocol,
+		Tenant:          &updateTenant,
+	}
+
+	updResp, reqInf, err := TOSession.UpdateOrigin(*remoteOrigin.ID, originRequest, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("cannot update Origin '%s' (#%d): %v - %v", foName, *remoteOrigin.ID, err, updResp.Alerts)
 	}
-
-	// Retrieve the origin to check port and FQDN values were updated
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected 200 Status Code, but found %d", reqInf.StatusCode)
+	}
+	// Retrieve the origin to check cachegroup, coordinate, deliveryservice, port, FQDN, IPAddress, IPV6Address, Profile, IsPrimary, Protocol, Tenant values were updated
 	opts.QueryParameters.Del("name")
 	opts.QueryParameters.Set("id", strconv.Itoa(*remoteOrigin.ID))
 	resp, _, err = TOSession.GetOrigins(opts)
@@ -184,6 +228,24 @@ func UpdateTestOrigins(t *testing.T) {
 	}
 	respOrigin := resp.Response[0]
 
+	if respOrigin.Cachegroup == nil {
+		t.Errorf("results do not match, actual: null or undefined - expected: %s", updateCachegroup)
+	} else if *respOrigin.Cachegroup != updateCachegroup {
+		t.Errorf("results do not match actual: %s, expected: %s", *respOrigin.Cachegroup, updateCachegroup)
+	}
+
+	if respOrigin.Coordinate == nil {
+		t.Errorf("results do not match, actual: null or undefined - expected: %s", updateCoordinate)
+	} else if *respOrigin.Coordinate != updateCoordinate {
+		t.Errorf("results do not match actual: %s, expected: %s", *respOrigin.Coordinate, updateCoordinate)
+	}
+
+	if respOrigin.DeliveryService == nil {
+		t.Errorf("results do not match, actual: null or undefined - expected: %s", updateDeliveryService)
+	} else if *respOrigin.DeliveryService != updateDeliveryService {
+		t.Errorf("results do not match actual: %s, expected: %s", *respOrigin.DeliveryService, updateDeliveryService)
+	}
+
 	if respOrigin.Port == nil {
 		t.Errorf("results do not match, actual: null or undefined - expected: %d", updatedPort)
 	} else if *respOrigin.Port != updatedPort {
@@ -193,6 +255,41 @@ func UpdateTestOrigins(t *testing.T) {
 		t.Errorf("results do not match, actual: null or undefined, expected: '%s'", updatedFQDN)
 	} else if *respOrigin.FQDN != updatedFQDN {
 		t.Errorf("results do not match actual: %s, expected: %s", *respOrigin.FQDN, updatedFQDN)
+	}
+	if respOrigin.IPAddress == nil {
+		t.Errorf("results do not match, actual: null or undefined, expected: '%s'", updatedIpAddress)
+	} else if *respOrigin.IPAddress != updatedIpAddress {
+		t.Errorf("results do not match actual: %s, expected: %s", *respOrigin.IPAddress, updatedIpAddress)
+	}
+
+	if respOrigin.IP6Address == nil {
+		t.Errorf("results do not match, actual: null or undefined, expected: '%s'", updatedIpv6Address)
+	} else if *respOrigin.IP6Address != updatedIpv6Address {
+		t.Errorf("results do not match actual: %s, expected: %s", *respOrigin.IP6Address, updatedIpv6Address)
+	}
+
+	if respOrigin.IsPrimary == nil {
+		t.Errorf("results do not match, actual: null or undefined, expected: '%t'", updatedIsPrimary)
+	} else if *respOrigin.IsPrimary != updatedIsPrimary {
+		t.Errorf("results do not match actual: %t, expected: %t", *respOrigin.IsPrimary, updatedIsPrimary)
+	}
+
+	if respOrigin.Profile == nil {
+		t.Errorf("results do not match, actual: null or undefined, expected: '%s'", updatedProfile)
+	} else if *respOrigin.Profile != updatedProfile {
+		t.Errorf("results do not match actual: %s, expected: %s", *respOrigin.Profile, updatedProfile)
+	}
+
+	if respOrigin.Protocol == nil {
+		t.Errorf("results do not match, actual: null or undefined, expected: '%s'", updateProtocol)
+	} else if *respOrigin.Protocol != updateProtocol {
+		t.Errorf("results do not match actual: %s, expected: %s", *respOrigin.Protocol, updateProtocol)
+	}
+
+	if respOrigin.Tenant == nil {
+		t.Errorf("results do not match, actual: null or undefined, expected: '%s'", updateTenant)
+	} else if *respOrigin.Tenant != updateTenant {
+		t.Errorf("results do not match actual: %s, expected: %s", *respOrigin.Tenant, updateTenant)
 	}
 }
 
@@ -519,5 +616,268 @@ func GetTestOriginsByInvalidParams(t *testing.T) {
 	originByTenant, _, _ := TOSession.GetOrigins(opts)
 	if len(originByTenant.Response) > 0 {
 		t.Fatalf("Expected empty response for GET Origin by invalid Tenant, but found %d", len(originByTenant.Response))
+	}
+}
+
+func CreateTestOriginInvalidData(t *testing.T) {
+	if len(testData.Origins) < 1 {
+		t.Fatal("Need at least one Origin to test duplicate Origins")
+	}
+	firstOrigin := testData.Origins[0]
+	if firstOrigin.Name == nil {
+		t.Fatalf("couldn't get the name of test origin server")
+	}
+	oldCachegroupId := firstOrigin.CachegroupID
+	oldProfileId := firstOrigin.ProfileID
+	oldTenantId := firstOrigin.TenantID
+	oldProtocol := firstOrigin.Protocol
+	oldCoordinateId := firstOrigin.CoordinateID
+	oldIpv4 := firstOrigin.IPAddress
+
+	//invalid cg id
+	cachegroupID := new(int)
+	*cachegroupID = 12345
+	name := new(string)
+	*name = "invalid"
+	firstOrigin.CachegroupID = cachegroupID
+	firstOrigin.Name = name
+	resp, reqInf, err := TOSession.CreateOrigin(firstOrigin, client.RequestOptions{})
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected 404 Status code, but found %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("Expected cachegroup not found - Alerts %v", resp.Alerts)
+	}
+
+	//invalid profile id
+	firstOrigin.CachegroupID = oldCachegroupId
+	profileId := new(int)
+	*profileId = 12345
+	firstOrigin.ProfileID = profileId
+	resp, reqInf, err = TOSession.CreateOrigin(firstOrigin, client.RequestOptions{})
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected 404 Status code, but found %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("Expected profile not found - Alerts %v", resp.Alerts)
+	}
+
+	//invalid tenant id
+	firstOrigin.ProfileID = oldProfileId
+	tenantId := new(int)
+	*tenantId = 12345
+	firstOrigin.TenantID = tenantId
+	resp, reqInf, err = TOSession.CreateOrigin(firstOrigin, client.RequestOptions{})
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("Expected 403 Status code, but found %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("Expected user not authorized for requested tenant - Alerts %v", resp.Alerts)
+	}
+
+	//invalid protocol id
+	firstOrigin.TenantID = oldTenantId
+	protocol := new(string)
+	*protocol = "abcd"
+	firstOrigin.Protocol = protocol
+	resp, reqInf, err = TOSession.CreateOrigin(firstOrigin, client.RequestOptions{})
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 Status code, but found %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("Expected 'protocol' must be http or https - Alerts %v", resp.Alerts)
+	}
+
+	//invalid coordinate id
+	firstOrigin.Protocol = oldProtocol
+	coordinateId := new(int)
+	*coordinateId = 12345
+	firstOrigin.CoordinateID = coordinateId
+	resp, reqInf, err = TOSession.CreateOrigin(firstOrigin, client.RequestOptions{})
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected 404 Status code, but found %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("Expected coordinate not found - Alerts %v", resp.Alerts)
+	}
+
+	//invalid IPV4
+	firstOrigin.CoordinateID = oldCoordinateId
+	ipv4 := new(string)
+	*ipv4 = "1.11"
+	firstOrigin.IPAddress = ipv4
+	resp, reqInf, err = TOSession.CreateOrigin(firstOrigin, client.RequestOptions{})
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 Status code, but found %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("Expected 'ipAddress' must be a valid IPv4 address - Alerts %v", resp.Alerts)
+	}
+
+	//invalid IPV6
+	firstOrigin.IPAddress = oldIpv4
+	ipv6 := new(string)
+	*ipv6 = "1:1:1:1:1"
+	firstOrigin.IP6Address = ipv6
+	resp, reqInf, err = TOSession.CreateOrigin(firstOrigin, client.RequestOptions{})
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 Status code, but found %d", reqInf.StatusCode)
+	}
+	if err == nil {
+		t.Errorf("Expected 'ip6Address' must be a valid IPv6 address - Alerts %v", resp.Alerts)
+	}
+}
+
+func updateTestOriginsWithInvalidData(t *testing.T) {
+	if len(testData.Origins) < 1 {
+		t.Fatal("Need at least one Origin to test updating Origins")
+	}
+	firstOrigin := testData.Origins[0]
+	if firstOrigin.Name == nil {
+		t.Fatal("Found an Origin in the testing data with null or undefined name")
+	}
+	foName := *firstOrigin.Name
+	// Retrieve the origin by name so we can get the id for the Update
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", foName)
+	resp, _, err := TOSession.GetOrigins(opts)
+	if err != nil {
+		t.Errorf("cannot get Origin '%s': %v - alerts: %+v", foName, err, resp.Alerts)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected exactly one Origin to exist with name '%s', found: %d", foName, len(resp.Response))
+	}
+	remoteOrigin := resp.Response[0]
+	if remoteOrigin.ID == nil {
+		t.Fatalf("Traffic Ops responded with a representation of Origin '%s' that had null or undefined ID", foName)
+	}
+
+	oldCachegroupId := remoteOrigin.CachegroupID
+	oldProfileId := remoteOrigin.ProfileID
+	oldTenantId := remoteOrigin.TenantID
+	oldProtocol := remoteOrigin.Protocol
+	oldCoordinateId := remoteOrigin.CoordinateID
+	oldIpv4 := remoteOrigin.IPAddress
+	oldIpv6 := remoteOrigin.IP6Address
+	oldPort := remoteOrigin.Port
+	oldDeliveryServiceId := remoteOrigin.DeliveryServiceID
+
+	//update invalid port
+	updatedPort := 123456
+	remoteOrigin.Port = &updatedPort
+	updResp, reqInf, err := TOSession.UpdateOrigin(*remoteOrigin.ID, remoteOrigin, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected - Port must be a valid integer between 1 and 65535. Port - %d, Alerts %v", updatedPort, updResp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 Status Code, but found %d", reqInf.StatusCode)
+	}
+
+	//update cachegroup id
+	remoteOrigin.Port = oldPort
+	updatedCachegroupId := 123456
+	remoteOrigin.CachegroupID = &updatedCachegroupId
+	updResp, reqInf, err = TOSession.UpdateOrigin(*remoteOrigin.ID, remoteOrigin, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected - Cachegroup not found. Cachegroup - %d, Alerts %v", updatedCachegroupId, updResp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected 404 Status Code, but found %d", reqInf.StatusCode)
+	}
+
+	//update coordinate id
+	remoteOrigin.CachegroupID = oldCachegroupId
+	updatedCoordinateId := 123456
+	remoteOrigin.CoordinateID = &updatedCoordinateId
+	updResp, reqInf, err = TOSession.UpdateOrigin(*remoteOrigin.ID, remoteOrigin, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected - Coordinate not found, Coordinate - %d, Alerts %v", updatedCoordinateId, updResp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected 404 Status Code, but found %d", reqInf.StatusCode)
+	}
+
+	//update invalid ds id
+	remoteOrigin.CoordinateID = oldCoordinateId
+	updatedDeliveryServiceId := 123456
+	remoteOrigin.DeliveryServiceID = &updatedDeliveryServiceId
+	updResp, reqInf, err = TOSession.UpdateOrigin(*remoteOrigin.ID, remoteOrigin, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected - checking tenancy: requested delivery service does not exist, Delivery Service - %d, Alerts %v", updatedDeliveryServiceId, updResp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 Status Code, but found %d", reqInf.StatusCode)
+	}
+
+	//update invalid protocol
+	remoteOrigin.DeliveryServiceID = oldDeliveryServiceId
+	updatedProtocol := "httpsss"
+	remoteOrigin.Protocol = &updatedProtocol
+	updResp, reqInf, err = TOSession.UpdateOrigin(*remoteOrigin.ID, remoteOrigin, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected - Protocol must be http or https. Protocol - %s, Alerts %v", updatedProtocol, updResp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 Status Code, but found %d", reqInf.StatusCode)
+	}
+
+	//update invalid ipv6
+	remoteOrigin.Protocol = oldProtocol
+	updatedIpv6 := "1.1"
+	remoteOrigin.IP6Address = &updatedIpv6
+	updResp, reqInf, err = TOSession.UpdateOrigin(*remoteOrigin.ID, remoteOrigin, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected - Ip6Address must be a valid IPv6 address. IPV6 Address - %s, Alerts %v", updatedIpv6, updResp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 Status Code, but found %d", reqInf.StatusCode)
+	}
+
+	//update invalid ipv4
+	remoteOrigin.IP6Address = oldIpv6
+	updatedIpv4 := "1.1"
+	remoteOrigin.IPAddress = &updatedIpv4
+	updResp, reqInf, err = TOSession.UpdateOrigin(*remoteOrigin.ID, remoteOrigin, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected - IpAddress must be a valid IPv4 address. IPV4 - %s, Alerts %v", updatedIpv4, updResp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 Status Code, but found %d", reqInf.StatusCode)
+	}
+
+	//update invalid tenant
+	remoteOrigin.IPAddress = oldIpv4
+	updatedTenantId := 11111
+	remoteOrigin.TenantID = &updatedTenantId
+	updResp, reqInf, err = TOSession.UpdateOrigin(*remoteOrigin.ID, remoteOrigin, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected - user not authorized for requested tenant. Tenant - %d, Alerts %v", updatedTenantId, updResp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("Expected 403 Status Code, but found %d", reqInf.StatusCode)
+	}
+
+	//update invalid profile
+	remoteOrigin.TenantID = oldTenantId
+	updatedProfileId := 12345
+	remoteOrigin.ProfileID = &updatedProfileId
+	updResp, reqInf, err = TOSession.UpdateOrigin(*remoteOrigin.ID, remoteOrigin, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected - profile not found %d - Alerts %v", updatedProfileId, updResp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected 404 Status Code, but found %d", reqInf.StatusCode)
+	}
+
+	//update invalid id
+	remoteOrigin.ProfileID = oldProfileId
+	invalidId := new(int)
+	*invalidId = 12345
+	updResp, reqInf, err = TOSession.UpdateOrigin(*invalidId, remoteOrigin, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected - Origin not found. Origin ID - %d, Alerts %v", *invalidId, updResp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected 404 Status Code, but found %d", reqInf.StatusCode)
 	}
 }
