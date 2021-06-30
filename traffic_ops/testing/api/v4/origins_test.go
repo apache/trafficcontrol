@@ -117,7 +117,7 @@ func CreateTestOriginDuplicateData(t *testing.T) {
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("Expected 400 Status code, but found %d", reqInf.StatusCode)
 	}
-	if err != nil {
+	if err == nil {
 		t.Errorf("Expected, origin name %s already exists, but no error found - Alerts %v", *firstOrigin.Name, resp.Alerts)
 	}
 }
