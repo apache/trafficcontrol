@@ -304,8 +304,8 @@ type DeliveryServiceNullableFieldsV11 struct {
 	LastUpdated              *TimeNoMod              `json:"lastUpdated" db:"last_updated"`
 	LogsEnabled              *bool                   `json:"logsEnabled" db:"logs_enabled"`
 	LongDesc                 *string                 `json:"longDesc" db:"long_desc"`
-	LongDesc1                *string                 `json:"longDesc1" db:"long_desc_1"`
-	LongDesc2                *string                 `json:"longDesc2" db:"long_desc_2"`
+	LongDesc1                *string                 `json:"longDesc1,omitempty" db:"long_desc_1"`
+	LongDesc2                *string                 `json:"longDesc2,omitempty" db:"long_desc_2"`
 	MatchList                *[]DeliveryServiceMatch `json:"matchList"`
 	MaxDNSAnswers            *int                    `json:"maxDnsAnswers" db:"max_dns_answers"`
 	MidHeaderRewrite         *string                 `json:"midHeaderRewrite" db:"mid_header_rewrite"`
@@ -337,6 +337,13 @@ type DeliveryServiceNullableFieldsV11 struct {
 // Deprecated: used for backwards compatibility  with ATC <v5.1
 type DeliveryServiceRemovedFieldsV11 struct {
 	CacheURL *string `json:"cacheurl" db:"cacheurl"`
+}
+
+// RemoveLD1AndLD2 removes the Long Description 1 and Long Description 2 fields from a V 4.x DS, and returns the resulting struct.
+func (ds *DeliveryServiceV4) RemoveLD1AndLD2() DeliveryServiceV4 {
+	ds.LongDesc1 = nil
+	ds.LongDesc2 = nil
+	return *ds
 }
 
 // DowngradeToV3 converts the 4.x DS to a 3.x DS
@@ -591,7 +598,7 @@ type DeliveryServiceSafeUpdateRequest struct {
 	DisplayName *string `json:"displayName"`
 	InfoURL     *string `json:"infoUrl"`
 	LongDesc    *string `json:"longDesc"`
-	LongDesc1   *string `json:"longDesc1"`
+	LongDesc1   *string `json:"longDesc1,omitempty"`
 }
 
 // Validate implements the github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
