@@ -30,10 +30,10 @@ login.tests.forEach(async loginData => {
                 browser.get(browser.params.baseUrl);
             });
             it('check environment banner does not display',async() => {
-                expect(await loginPage.CheckBanner()).toBe(true);
+                expect(await loginPage.CheckBanner()).toBe(false);
             })
             it(login.description, async () => {
-                expect(await loginPage.Login(login)).toBe(false);
+                expect(await loginPage.Login(login)).toBe(true);
             });
             it('can logout', async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
