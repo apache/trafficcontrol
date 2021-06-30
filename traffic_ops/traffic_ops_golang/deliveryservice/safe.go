@@ -87,7 +87,7 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 	}
 	if version.Major > 3 && version.Minor >= 0 {
 		if dsr.LongDesc1 != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the Long Description 1 field are no longer supported in API 4.0 onwards"), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 field is no longer supported in API 4.0 onwards"), nil)
 			return
 		}
 		ok, err = updateDSSafe(tx, dsID, dsr, true)

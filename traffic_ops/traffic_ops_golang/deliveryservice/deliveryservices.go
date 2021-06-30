@@ -356,7 +356,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 	}
 	if omitExtraLongDescFields {
 		if ds.LongDesc1 != nil || ds.LongDesc2 != nil {
-			return nil, http.StatusBadRequest, errors.New("the Long Description 1 and Long Description 2 fields are no longer supported in API 4.0 onwards"), nil
+			return nil, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil
 		}
 		resultRows, err = tx.Query(insertQueryWithoutLD1AndLD2(),
 			&ds.Active,
@@ -1077,7 +1077,7 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 
 	if omitExtraLongDescFields {
 		if ds.LongDesc1 != nil || ds.LongDesc2 != nil {
-			return nil, http.StatusBadRequest, errors.New("the Long Description 1 and Long Description 2 fields are no longer supported in API 4.0 onwards"), nil
+			return nil, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil
 		}
 		resultRows, err = tx.Query(updateDSQueryWithoutLD1AndLD2(),
 			&ds.Active,

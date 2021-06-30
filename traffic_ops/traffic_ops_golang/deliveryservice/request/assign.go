@@ -224,7 +224,7 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 	var resp interface{}
 	if inf.Version.Major >= 4 {
 		if dsr.Requested.LongDesc1 != nil || dsr.Requested.LongDesc2 != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the Long Description 1 and Long Description 2 fields are no longer supported in API 4.0 onwards"), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil)
 			return
 		}
 		if dsr.Original != nil {

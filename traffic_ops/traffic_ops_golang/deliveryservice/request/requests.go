@@ -460,13 +460,13 @@ func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 	}
 	if dsr.Original != nil {
 		if dsr.Original.LongDesc1 != nil || dsr.Original.LongDesc2 != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the Long Description 1 and Long Description 2 fields are no longer supported in API 4.0 onwards"), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil)
 			return
 		}
 	}
 	if dsr.Requested != nil {
 		if dsr.Requested.LongDesc1 != nil || dsr.Requested.LongDesc2 != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the Long Description 1 and Long Description 2 fields are no longer supported in API 4.0 onwards"), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil)
 			return
 		}
 	}
@@ -742,13 +742,13 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 	}
 	if dsr.Original != nil {
 		if dsr.Original.LongDesc1 != nil || dsr.Original.LongDesc2 != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the Long Description 1 and Long Description 2 fields are no longer supported in API 4.0 onwards"), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil)
 			return
 		}
 	}
 	if dsr.Requested != nil {
 		if dsr.Requested.LongDesc1 != nil || dsr.Requested.LongDesc2 != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the Long Description 1 and Long Description 2 fields are no longer supported in API 4.0 onwards"), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil)
 			return
 		}
 	}
