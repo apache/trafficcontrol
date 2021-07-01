@@ -481,7 +481,7 @@ WHERE ds.id = $1
 		if err == sql.ErrNoRows {
 			return tc.DeliveryServiceName(""), tc.CDNName(""), false, nil
 		}
-		return tc.DeliveryServiceName(""), tc.CDNName(""), false, errors.New("querying delivery service name: " + err.Error())
+		return tc.DeliveryServiceName(""), tc.CDNName(""), false, errors.New("querying delivery service name and CDN name: " + err.Error())
 	}
 	return name, cdn, true, nil
 }
@@ -499,7 +499,7 @@ WHERE ds.xml_id = $1
 		if err == sql.ErrNoRows {
 			return dsId, tc.CDNName(""), false, nil
 		}
-		return dsId, tc.CDNName(""), false, errors.New("querying delivery service name: " + err.Error())
+		return dsId, tc.CDNName(""), false, errors.New("querying delivery service ID and CDN name: " + err.Error())
 	}
 	return dsId, cdn, true, nil
 }
