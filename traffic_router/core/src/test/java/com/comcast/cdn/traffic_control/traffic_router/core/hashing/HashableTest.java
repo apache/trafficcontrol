@@ -21,6 +21,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.IsNot.not;
@@ -36,7 +37,7 @@ public class HashableTest {
 
 	@Before
 	public void before() {
-		initMocks(this);
+		MockitoAnnotations.openMocks(this);
 	}
 
 	@Test

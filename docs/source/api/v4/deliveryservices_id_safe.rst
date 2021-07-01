@@ -40,7 +40,6 @@ Request Structure
 :displayName: A string that is the :ref:`ds-display-name`
 :infoUrl:     An optional\ [#optional]_ string containing the :ref:`ds-info-url`
 :longDesc:    An optional\ [#optional]_ string containing the :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:   An optional\ [#optional]_ string containing the :ref:`ds-longdesc2` of this :term:`Delivery Service`
 
 .. code-block:: http
 	:caption: Request Example
@@ -56,7 +55,7 @@ Request Structure
 	{
 		"displayName": "test",
 		"infoUrl": "this is not even a real URL",
-		"longDesc": "longDesc1 is implicitly set to null in this example
+		"longDesc": "this is a description of the delivery service"
 	}
 
 Response Structure
@@ -97,8 +96,6 @@ Response Structure
 :lastUpdated:               The date and time at which this :term:`Delivery Service` was last updated, in :ref:`non-rfc-datetime`
 :logsEnabled:               A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 :longDesc:                  The :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:                 The :ref:`ds-longdesc2` of this :term:`Delivery Service`
-:longDesc2:                 The :ref:`ds-longdesc3` of this :term:`Delivery Service`
 :matchList:                 The :term:`Delivery Service`'s :ref:`ds-matchlist`
 
 	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
@@ -183,9 +180,7 @@ Response Structure
 			"lastHeaderRewrite": null,
 			"lastUpdated": "2020-02-10 15:33:03+00",
 			"logsEnabled": true,
-			"longDesc": "longDesc1 is implicitly set to null in this example",
-			"longDesc1": null,
-			"longDesc2": null,
+			"longDesc": "this is a description of the delivery service",
 			"matchList": [
 				{
 					"type": "HOST_REGEXP",

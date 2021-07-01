@@ -23,6 +23,8 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -38,7 +40,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
-import static org.mockito.Matchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
@@ -81,7 +83,14 @@ public class HTTPAccessEventBuilderTest {
 
     @Test
     public void itAddsResponseData() throws Exception {
-        when(System.nanoTime()).thenReturn(100111001L, 225111001L);
+        Answer<Long> nanoTimeAnswer = new Answer<Long>() {
+            final long[] nanoTimes = {100111001L, 225111001L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return nanoTimes[index++ % 2];
+            }
+        };
+        when(System.nanoTime()).thenAnswer(nanoTimeAnswer);
 
         StatTracker.Track track = new StatTracker.Track();
         HTTPAccessRecord.Builder builder = new HTTPAccessRecord.Builder(new Date(144140633999L), request)
@@ -98,7 +107,14 @@ public class HTTPAccessEventBuilderTest {
 
     @Test
     public void itAddsMuiltiResponseData() throws Exception {
-        when(System.nanoTime()).thenReturn(100111001L, 225111001L);
+        Answer<Long> nanoTimeAnswer = new Answer<Long>() {
+            final long[] nanoTimes = {100111001L, 225111001L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return nanoTimes[index++ % 2];
+            }
+        };
+        when(System.nanoTime()).thenAnswer(nanoTimeAnswer);
 
         List<URL> urls = new ArrayList<URL>();
         urls.add(new URL("http://example.com/hereitis/index.html?foo=bar"));
@@ -120,7 +136,14 @@ public class HTTPAccessEventBuilderTest {
 
     @Test
     public void itRoundsUpToNearestMicroSecond() throws Exception {
-        when(System.nanoTime()).thenReturn(100111001L, 100234999L);
+        Answer<Long> nanoTimeAnswer = new Answer<Long>() {
+            final long[] nanoTimes = {100111001L, 100234999L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return nanoTimes[index++ % 2];
+            }
+        };
+        when(System.nanoTime()).thenAnswer(nanoTimeAnswer);
 
         Date fastFinishDate = mock(Date.class);
         when(fastFinishDate.getTime()).thenReturn(144140678000L);
@@ -141,7 +164,14 @@ public class HTTPAccessEventBuilderTest {
 
     @Test
     public void itRecordsTrafficRouterErrors() throws Exception {
-        when(System.nanoTime()).thenReturn(111001L, 567002L);
+        Answer<Long> nanoTimeAnswer = new Answer<Long>() {
+            final long[] nanoTimes = {111001L, 567002L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return nanoTimes[index++ % 2];
+            }
+        };
+        when(System.nanoTime()).thenAnswer(nanoTimeAnswer);
 
         Date fastFinishDate = mock(Date.class);
         when(fastFinishDate.getTime()).thenReturn(144140678000L);
@@ -162,7 +192,14 @@ public class HTTPAccessEventBuilderTest {
     
     @Test
     public void itRecordsMissResultDetails() throws Exception {
-        when(System.nanoTime()).thenReturn(100000101L, 100789000L);
+        Answer<Long> nanoTimeAnswer = new Answer<Long>() {
+            final long[] nanoTimes = {100000101L, 100789000L};
+            int index = 0;
+            public Long answer(InvocationOnMock invocation) {
+                return nanoTimes[index++ % 2];
+            }
+        };
+        when(System.nanoTime()).thenAnswer(nanoTimeAnswer);
 
         Date fastFinishDate = mock(Date.class);
         when(fastFinishDate.getTime()).thenReturn(144140678000L);

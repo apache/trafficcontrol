@@ -252,7 +252,7 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, status, userErr, sysErr := createV40(w, r, inf, ds)
+	res, status, userErr, sysErr := createV40(w, r, inf, ds, true)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
 		return
@@ -304,7 +304,7 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 t
 	tx := inf.Tx.Tx
 	dsNullable := tc.DeliveryServiceNullableV30(dsV31)
 	ds := dsNullable.UpgradeToV4()
-	res, status, userErr, sysErr := createV40(w, r, inf, tc.DeliveryServiceV40(ds))
+	res, status, userErr, sysErr := createV40(w, r, inf, tc.DeliveryServiceV40(ds), false)
 	if res == nil {
 		return nil, status, userErr, sysErr
 	}
@@ -329,7 +329,9 @@ func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 t
 }
 
 // create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
-func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 tc.DeliveryServiceV40) (*tc.DeliveryServiceV40, int, error, error) {
+func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
+	var resultRows *sql.Rows
+	var err error
 	user := inf.User
 	tx := inf.Tx.Tx
 	ds := tc.DeliveryServiceV4(dsV40)
@@ -352,71 +354,137 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 	if errCode, userErr, sysErr := dbhelpers.CheckTopology(inf.Tx, ds); userErr != nil || sysErr != nil {
 		return nil, errCode, userErr, sysErr
 	}
+
 	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*ds.CDNID), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		return nil, errCode, userErr, sysErr
 	}
-	resultRows, err := tx.Query(insertQuery(),
-		&ds.Active,
-		&ds.AnonymousBlockingEnabled,
-		&ds.CCRDNSTTL,
-		&ds.CDNID,
-		&ds.CheckPath,
-		&ds.ConsistentHashRegex,
-		&deepCachingType,
-		&ds.DisplayName,
-		&ds.DNSBypassCNAME,
-		&ds.DNSBypassIP,
-		&ds.DNSBypassIP6,
-		&ds.DNSBypassTTL,
-		&ds.DSCP,
-		&ds.EdgeHeaderRewrite,
-		&ds.GeoLimitRedirectURL,
-		&ds.GeoLimit,
-		&ds.GeoLimitCountries,
-		&ds.GeoProvider,
-		&ds.GlobalMaxMBPS,
-		&ds.GlobalMaxTPS,
-		&ds.FQPacingRate,
-		&ds.HTTPBypassFQDN,
-		&ds.InfoURL,
-		&ds.InitialDispersion,
-		&ds.IPV6RoutingEnabled,
-		&ds.LogsEnabled,
-		&ds.LongDesc,
-		&ds.LongDesc1,
-		&ds.LongDesc2,
-		&ds.MaxDNSAnswers,
-		&ds.MaxOriginConnections,
-		&ds.MidHeaderRewrite,
-		&ds.MissLat,
-		&ds.MissLong,
-		&ds.MultiSiteOrigin,
-		&ds.OriginShield,
-		&ds.ProfileID,
-		&ds.Protocol,
-		&ds.QStringIgnore,
-		&ds.RangeRequestHandling,
-		&ds.RegexRemap,
-		&ds.RegionalGeoBlocking,
-		&ds.RemapText,
-		&ds.RoutingName,
-		&ds.SigningAlgorithm,
-		&ds.SSLKeyVersion,
-		&ds.TenantID,
-		&ds.Topology,
-		&ds.TRRequestHeaders,
-		&ds.TRResponseHeaders,
-		&ds.TypeID,
-		&ds.XMLID,
-		&ds.EcsEnabled,
-		&ds.RangeSliceBlockSize,
-		&ds.FirstHeaderRewrite,
-		&ds.InnerHeaderRewrite,
-		&ds.LastHeaderRewrite,
-		&ds.ServiceCategory,
-		&ds.MaxRequestHeaderBytes,
-	)
+	if omitExtraLongDescFields {
+		if ds.LongDesc1 != nil || ds.LongDesc2 != nil {
+			return nil, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil
+		}
+		resultRows, err = tx.Query(insertQueryWithoutLD1AndLD2(),
+			&ds.Active,
+			&ds.AnonymousBlockingEnabled,
+			&ds.CCRDNSTTL,
+			&ds.CDNID,
+			&ds.CheckPath,
+			&ds.ConsistentHashRegex,
+			&deepCachingType,
+			&ds.DisplayName,
+			&ds.DNSBypassCNAME,
+			&ds.DNSBypassIP,
+			&ds.DNSBypassIP6,
+			&ds.DNSBypassTTL,
+			&ds.DSCP,
+			&ds.EdgeHeaderRewrite,
+			&ds.GeoLimitRedirectURL,
+			&ds.GeoLimit,
+			&ds.GeoLimitCountries,
+			&ds.GeoProvider,
+			&ds.GlobalMaxMBPS,
+			&ds.GlobalMaxTPS,
+			&ds.FQPacingRate,
+			&ds.HTTPBypassFQDN,
+			&ds.InfoURL,
+			&ds.InitialDispersion,
+			&ds.IPV6RoutingEnabled,
+			&ds.LogsEnabled,
+			&ds.LongDesc,
+			&ds.MaxDNSAnswers,
+			&ds.MaxOriginConnections,
+			&ds.MidHeaderRewrite,
+			&ds.MissLat,
+			&ds.MissLong,
+			&ds.MultiSiteOrigin,
+			&ds.OriginShield,
+			&ds.ProfileID,
+			&ds.Protocol,
+			&ds.QStringIgnore,
+			&ds.RangeRequestHandling,
+			&ds.RegexRemap,
+			&ds.RegionalGeoBlocking,
+			&ds.RemapText,
+			&ds.RoutingName,
+			&ds.SigningAlgorithm,
+			&ds.SSLKeyVersion,
+			&ds.TenantID,
+			&ds.Topology,
+			&ds.TRRequestHeaders,
+			&ds.TRResponseHeaders,
+			&ds.TypeID,
+			&ds.XMLID,
+			&ds.EcsEnabled,
+			&ds.RangeSliceBlockSize,
+			&ds.FirstHeaderRewrite,
+			&ds.InnerHeaderRewrite,
+			&ds.LastHeaderRewrite,
+			&ds.ServiceCategory,
+			&ds.MaxRequestHeaderBytes,
+		)
+	} else {
+		resultRows, err = tx.Query(insertQuery(),
+			&ds.Active,
+			&ds.AnonymousBlockingEnabled,
+			&ds.CCRDNSTTL,
+			&ds.CDNID,
+			&ds.CheckPath,
+			&ds.ConsistentHashRegex,
+			&deepCachingType,
+			&ds.DisplayName,
+			&ds.DNSBypassCNAME,
+			&ds.DNSBypassIP,
+			&ds.DNSBypassIP6,
+			&ds.DNSBypassTTL,
+			&ds.DSCP,
+			&ds.EdgeHeaderRewrite,
+			&ds.GeoLimitRedirectURL,
+			&ds.GeoLimit,
+			&ds.GeoLimitCountries,
+			&ds.GeoProvider,
+			&ds.GlobalMaxMBPS,
+			&ds.GlobalMaxTPS,
+			&ds.FQPacingRate,
+			&ds.HTTPBypassFQDN,
+			&ds.InfoURL,
+			&ds.InitialDispersion,
+			&ds.IPV6RoutingEnabled,
+			&ds.LogsEnabled,
+			&ds.LongDesc,
+			&ds.LongDesc1,
+			&ds.LongDesc2,
+			&ds.MaxDNSAnswers,
+			&ds.MaxOriginConnections,
+			&ds.MidHeaderRewrite,
+			&ds.MissLat,
+			&ds.MissLong,
+			&ds.MultiSiteOrigin,
+			&ds.OriginShield,
+			&ds.ProfileID,
+			&ds.Protocol,
+			&ds.QStringIgnore,
+			&ds.RangeRequestHandling,
+			&ds.RegexRemap,
+			&ds.RegionalGeoBlocking,
+			&ds.RemapText,
+			&ds.RoutingName,
+			&ds.SigningAlgorithm,
+			&ds.SSLKeyVersion,
+			&ds.TenantID,
+			&ds.Topology,
+			&ds.TRRequestHeaders,
+			&ds.TRResponseHeaders,
+			&ds.TypeID,
+			&ds.XMLID,
+			&ds.EcsEnabled,
+			&ds.RangeSliceBlockSize,
+			&ds.FirstHeaderRewrite,
+			&ds.InnerHeaderRewrite,
+			&ds.LastHeaderRewrite,
+			&ds.ServiceCategory,
+			&ds.MaxRequestHeaderBytes,
+		)
+	}
 
 	if err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -554,7 +622,7 @@ func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, er
 		switch {
 		// NOTE: it's required to handle minor version cases in a descending >= manner
 		case version.Major > 3 && version.Minor >= 0:
-			returnable = append(returnable, ds)
+			returnable = append(returnable, ds.RemoveLD1AndLD2())
 		case version.Major > 2 && version.Minor >= 1:
 			returnable = append(returnable, ds.DowngradeToV3())
 		case version.Major > 2:
@@ -742,7 +810,7 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
-	res, status, userErr, sysErr := updateV40(w, r, inf, &ds)
+	res, status, userErr, sysErr := updateV40(w, r, inf, &ds, true)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, status, userErr, sysErr)
 		return
@@ -903,7 +971,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 	ds := dsNull.UpgradeToV4()
 	dsV40 := tc.DeliveryServiceV40(ds)
 	tx := inf.Tx.Tx
-	res, status, usrErr, sysErr := updateV40(w, r, inf, &dsV40)
+	res, status, usrErr, sysErr := updateV40(w, r, inf, &dsV40, false)
 	if res == nil {
 		return nil, status, usrErr, sysErr
 	}
@@ -925,7 +993,9 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 	oldRes := tc.DeliveryServiceV31(ds.DowngradeToV3())
 	return &oldRes, http.StatusOK, nil, nil
 }
-func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *tc.DeliveryServiceV40) (*tc.DeliveryServiceV40, int, error, error) {
+func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
+	var resultRows *sql.Rows
+	var err error
 	tx := inf.Tx.Tx
 	user := inf.User
 	ds := tc.DeliveryServiceV4(*dsV40)
@@ -1019,67 +1089,132 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 		}
 	}
 
-	resultRows, err := tx.Query(updateDSQuery(),
-		&ds.Active,
-		&ds.CCRDNSTTL,
-		&ds.CDNID,
-		&ds.CheckPath,
-		&deepCachingType,
-		&ds.DisplayName,
-		&ds.DNSBypassCNAME,
-		&ds.DNSBypassIP,
-		&ds.DNSBypassIP6,
-		&ds.DNSBypassTTL,
-		&ds.DSCP,
-		&ds.EdgeHeaderRewrite,
-		&ds.GeoLimitRedirectURL,
-		&ds.GeoLimit,
-		&ds.GeoLimitCountries,
-		&ds.GeoProvider,
-		&ds.GlobalMaxMBPS,
-		&ds.GlobalMaxTPS,
-		&ds.FQPacingRate,
-		&ds.HTTPBypassFQDN,
-		&ds.InfoURL,
-		&ds.InitialDispersion,
-		&ds.IPV6RoutingEnabled,
-		&ds.LogsEnabled,
-		&ds.LongDesc,
-		&ds.LongDesc1,
-		&ds.LongDesc2,
-		&ds.MaxDNSAnswers,
-		&ds.MidHeaderRewrite,
-		&ds.MissLat,
-		&ds.MissLong,
-		&ds.MultiSiteOrigin,
-		&ds.OriginShield,
-		&ds.ProfileID,
-		&ds.Protocol,
-		&ds.QStringIgnore,
-		&ds.RangeRequestHandling,
-		&ds.RegexRemap,
-		&ds.RegionalGeoBlocking,
-		&ds.RemapText,
-		&ds.RoutingName,
-		&ds.SigningAlgorithm,
-		&ds.SSLKeyVersion,
-		&ds.TenantID,
-		&ds.TRRequestHeaders,
-		&ds.TRResponseHeaders,
-		&ds.TypeID,
-		&ds.XMLID,
-		&ds.AnonymousBlockingEnabled,
-		&ds.ConsistentHashRegex,
-		&ds.MaxOriginConnections,
-		&ds.EcsEnabled,
-		&ds.RangeSliceBlockSize,
-		&ds.Topology,
-		&ds.FirstHeaderRewrite,
-		&ds.InnerHeaderRewrite,
-		&ds.LastHeaderRewrite,
-		&ds.ServiceCategory,
-		&ds.MaxRequestHeaderBytes,
-		&ds.ID)
+	if omitExtraLongDescFields {
+		if ds.LongDesc1 != nil || ds.LongDesc2 != nil {
+			return nil, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil
+		}
+		resultRows, err = tx.Query(updateDSQueryWithoutLD1AndLD2(),
+			&ds.Active,
+			&ds.CCRDNSTTL,
+			&ds.CDNID,
+			&ds.CheckPath,
+			&deepCachingType,
+			&ds.DisplayName,
+			&ds.DNSBypassCNAME,
+			&ds.DNSBypassIP,
+			&ds.DNSBypassIP6,
+			&ds.DNSBypassTTL,
+			&ds.DSCP,
+			&ds.EdgeHeaderRewrite,
+			&ds.GeoLimitRedirectURL,
+			&ds.GeoLimit,
+			&ds.GeoLimitCountries,
+			&ds.GeoProvider,
+			&ds.GlobalMaxMBPS,
+			&ds.GlobalMaxTPS,
+			&ds.FQPacingRate,
+			&ds.HTTPBypassFQDN,
+			&ds.InfoURL,
+			&ds.InitialDispersion,
+			&ds.IPV6RoutingEnabled,
+			&ds.LogsEnabled,
+			&ds.LongDesc,
+			&ds.MaxDNSAnswers,
+			&ds.MidHeaderRewrite,
+			&ds.MissLat,
+			&ds.MissLong,
+			&ds.MultiSiteOrigin,
+			&ds.OriginShield,
+			&ds.ProfileID,
+			&ds.Protocol,
+			&ds.QStringIgnore,
+			&ds.RangeRequestHandling,
+			&ds.RegexRemap,
+			&ds.RegionalGeoBlocking,
+			&ds.RemapText,
+			&ds.RoutingName,
+			&ds.SigningAlgorithm,
+			&ds.SSLKeyVersion,
+			&ds.TenantID,
+			&ds.TRRequestHeaders,
+			&ds.TRResponseHeaders,
+			&ds.TypeID,
+			&ds.XMLID,
+			&ds.AnonymousBlockingEnabled,
+			&ds.ConsistentHashRegex,
+			&ds.MaxOriginConnections,
+			&ds.EcsEnabled,
+			&ds.RangeSliceBlockSize,
+			&ds.Topology,
+			&ds.FirstHeaderRewrite,
+			&ds.InnerHeaderRewrite,
+			&ds.LastHeaderRewrite,
+			&ds.ServiceCategory,
+			&ds.MaxRequestHeaderBytes,
+			&ds.ID)
+	} else {
+		resultRows, err = tx.Query(updateDSQuery(),
+			&ds.Active,
+			&ds.CCRDNSTTL,
+			&ds.CDNID,
+			&ds.CheckPath,
+			&deepCachingType,
+			&ds.DisplayName,
+			&ds.DNSBypassCNAME,
+			&ds.DNSBypassIP,
+			&ds.DNSBypassIP6,
+			&ds.DNSBypassTTL,
+			&ds.DSCP,
+			&ds.EdgeHeaderRewrite,
+			&ds.GeoLimitRedirectURL,
+			&ds.GeoLimit,
+			&ds.GeoLimitCountries,
+			&ds.GeoProvider,
+			&ds.GlobalMaxMBPS,
+			&ds.GlobalMaxTPS,
+			&ds.FQPacingRate,
+			&ds.HTTPBypassFQDN,
+			&ds.InfoURL,
+			&ds.InitialDispersion,
+			&ds.IPV6RoutingEnabled,
+			&ds.LogsEnabled,
+			&ds.LongDesc,
+			&ds.LongDesc1,
+			&ds.LongDesc2,
+			&ds.MaxDNSAnswers,
+			&ds.MidHeaderRewrite,
+			&ds.MissLat,
+			&ds.MissLong,
+			&ds.MultiSiteOrigin,
+			&ds.OriginShield,
+			&ds.ProfileID,
+			&ds.Protocol,
+			&ds.QStringIgnore,
+			&ds.RangeRequestHandling,
+			&ds.RegexRemap,
+			&ds.RegionalGeoBlocking,
+			&ds.RemapText,
+			&ds.RoutingName,
+			&ds.SigningAlgorithm,
+			&ds.SSLKeyVersion,
+			&ds.TenantID,
+			&ds.TRRequestHeaders,
+			&ds.TRResponseHeaders,
+			&ds.TypeID,
+			&ds.XMLID,
+			&ds.AnonymousBlockingEnabled,
+			&ds.ConsistentHashRegex,
+			&ds.MaxOriginConnections,
+			&ds.EcsEnabled,
+			&ds.RangeSliceBlockSize,
+			&ds.Topology,
+			&ds.FirstHeaderRewrite,
+			&ds.InnerHeaderRewrite,
+			&ds.LastHeaderRewrite,
+			&ds.ServiceCategory,
+			&ds.MaxRequestHeaderBytes,
+			&ds.ID)
+	}
 
 	if err != nil {
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -2298,6 +2433,72 @@ RETURNING last_updated
 `
 }
 
+func updateDSQueryWithoutLD1AndLD2() string {
+	return `
+UPDATE
+deliveryservice SET
+active=$1,
+ccr_dns_ttl=$2,
+cdn_id=$3,
+check_path=$4,
+deep_caching_type=$5,
+display_name=$6,
+dns_bypass_cname=$7,
+dns_bypass_ip=$8,
+dns_bypass_ip6=$9,
+dns_bypass_ttl=$10,
+dscp=$11,
+edge_header_rewrite=$12,
+geolimit_redirect_url=$13,
+geo_limit=$14,
+geo_limit_countries=$15,
+geo_provider=$16,
+global_max_mbps=$17,
+global_max_tps=$18,
+fq_pacing_rate=$19,
+http_bypass_fqdn=$20,
+info_url=$21,
+initial_dispersion=$22,
+ipv6_routing_enabled=$23,
+logs_enabled=$24,
+long_desc=$25,
+max_dns_answers=$26,
+mid_header_rewrite=$27,
+miss_lat=$28,
+miss_long=$29,
+multi_site_origin=$30,
+origin_shield=$31,
+profile=$32,
+protocol=$33,
+qstring_ignore=$34,
+range_request_handling=$35,
+regex_remap=$36,
+regional_geo_blocking=$37,
+remap_text=$38,
+routing_name=$39,
+signing_algorithm=$40,
+ssl_key_version=$41,
+tenant_id=$42,
+tr_request_headers=$43,
+tr_response_headers=$44,
+type=$45,
+xml_id=$46,
+anonymous_blocking_enabled=$47,
+consistent_hash_regex=$48,
+max_origin_connections=$49,
+ecs_enabled=$50,
+range_slice_block_size=$51,
+topology=$52,
+first_header_rewrite=$53,
+inner_header_rewrite=$54,
+last_header_rewrite=$55,
+service_category=$56,
+max_request_header_bytes=$57
+WHERE id=$58
+RETURNING last_updated
+`
+}
+
 func insertQuery() string {
 	return `
 INSERT INTO deliveryservice (
@@ -2362,6 +2563,72 @@ service_category,
 max_request_header_bytes
 )
 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59)
+RETURNING id, last_updated
+`
+}
+
+func insertQueryWithoutLD1AndLD2() string {
+	return `
+INSERT INTO deliveryservice (
+active,
+anonymous_blocking_enabled,
+ccr_dns_ttl,
+cdn_id,
+check_path,
+consistent_hash_regex,
+deep_caching_type,
+display_name,
+dns_bypass_cname,
+dns_bypass_ip,
+dns_bypass_ip6,
+dns_bypass_ttl,
+dscp,
+edge_header_rewrite,
+geolimit_redirect_url,
+geo_limit,
+geo_limit_countries,
+geo_provider,
+global_max_mbps,
+global_max_tps,
+fq_pacing_rate,
+http_bypass_fqdn,
+info_url,
+initial_dispersion,
+ipv6_routing_enabled,
+logs_enabled,
+long_desc,
+max_dns_answers,
+max_origin_connections,
+mid_header_rewrite,
+miss_lat,
+miss_long,
+multi_site_origin,
+origin_shield,
+profile,
+protocol,
+qstring_ignore,
+range_request_handling,
+regex_remap,
+regional_geo_blocking,
+remap_text,
+routing_name,
+signing_algorithm,
+ssl_key_version,
+tenant_id,
+topology,
+tr_request_headers,
+tr_response_headers,
+type,
+xml_id,
+ecs_enabled,
+range_slice_block_size,
+first_header_rewrite,
+inner_header_rewrite,
+last_header_rewrite,
+service_category,
+max_request_header_bytes
+)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57)
 RETURNING id, last_updated
 `
 }

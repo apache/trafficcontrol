@@ -1804,7 +1804,7 @@ func MemoryStatsHandler() http.HandlerFunc {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(bytes)
+		api.WriteAndLogErr(w, r, bytes)
 	}
 }
 
@@ -1820,7 +1820,7 @@ func DBStatsHandler(db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(bytes)
+		api.WriteAndLogErr(w, r, bytes)
 	}
 }
 
@@ -1842,7 +1842,7 @@ func rootHandler(d ServerData) http.Handler {
 func notImplementedHandler(w http.ResponseWriter, r *http.Request) {
 	code := http.StatusNotImplemented
 	w.WriteHeader(code)
-	w.Write([]byte(http.StatusText(code)))
+	api.WriteAndLogErr(w, r, []byte(http.StatusText(code)))
 }
 
 //CreateThrottledHandler takes a handler, and a max and uses a channel to insure the handler is used concurrently by only max number of routines

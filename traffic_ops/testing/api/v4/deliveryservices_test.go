@@ -54,6 +54,8 @@ func TestDeliveryServices(t *testing.T) {
 			DeliveryServiceSSLKeys(t)
 		}
 
+		CreateTestDeliveryServiceWithLongDescFields(t)
+		UpdateTestDeliveryServiceWithLongDescFields(t)
 		GetTestDeliveryServicesIMS(t)
 		GetAccessibleToTest(t)
 		UpdateTestDeliveryServices(t)
@@ -203,6 +205,96 @@ func CUDDeliveryServiceWithLocks(t *testing.T) {
 	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn.Name}}})
 	if err != nil {
 		t.Errorf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
+  }
+}
+
+func CreateTestDeliveryServiceWithLongDescFields(t *testing.T) {
+	if len(testData.DeliveryServices) < 1 {
+		t.Fatal("Need at least one Delivery Service to test updating a Delivery Service")
+	}
+	firstDS := testData.DeliveryServices[0]
+	if firstDS.XMLID == nil {
+		t.Fatal("Found a Delivery Service in the test data with a null or undefined XMLID")
+	}
+
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
+	if err != nil {
+		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
+	}
+	var remoteDS tc.DeliveryServiceV4
+	found := false
+	for _, ds := range dses.Response {
+		if ds.XMLID == nil {
+			t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
+			continue
+		}
+		if *ds.XMLID == *firstDS.XMLID {
+			found = true
+			remoteDS = ds
+			break
+		}
+	}
+	if !found {
+		t.Errorf("GET Delivery Services missing: %v", firstDS.XMLID)
+	}
+	if remoteDS.ID == nil {
+		t.Fatal("Traffic Ops returned a representation for a Delivery Service with null or undefined ID") //... or it returned no DSes at all
+	}
+	remoteDS.XMLID = util.StrPtr("testDSCreation")
+	remoteDS.DisplayName = util.StrPtr("test DS with LD1 and LD2 fields")
+	remoteDS.LongDesc1 = util.StrPtr("long desc 1")
+	remoteDS.LongDesc2 = util.StrPtr("Long desc 2")
+	_, reqInf, err := TOSession.CreateDeliveryService(remoteDS, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("expected an error stating that Long Desc 1 and Long Desc 2 fields are not supported in api version 4.0 onwards, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected a 400 status code, but got %d", reqInf.StatusCode)
+	}
+}
+
+func UpdateTestDeliveryServiceWithLongDescFields(t *testing.T) {
+	if len(testData.DeliveryServices) < 1 {
+		t.Fatal("Need at least one Delivery Service to test updating a Delivery Service")
+	}
+	firstDS := testData.DeliveryServices[0]
+	if firstDS.XMLID == nil {
+		t.Fatal("Found a Delivery Service in the test data with a null or undefined XMLID")
+	}
+
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
+	if err != nil {
+		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
+	}
+
+	var remoteDS tc.DeliveryServiceV4
+	found := false
+	for _, ds := range dses.Response {
+		if ds.XMLID == nil {
+			t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
+			continue
+		}
+		if *ds.XMLID == *firstDS.XMLID {
+			found = true
+			remoteDS = ds
+			break
+		}
+	}
+	if !found {
+		t.Errorf("GET Delivery Services missing: %v", firstDS.XMLID)
+	}
+	if remoteDS.ID == nil {
+		t.Fatal("Traffic Ops returned a representation for a Delivery Service with null or undefined ID") //... or it returned no DSes at all
+	}
+
+	remoteDS.LongDesc1 = util.StrPtr("long desc 1")
+	remoteDS.LongDesc2 = util.StrPtr("Long desc 2")
+	_, reqInf, err := TOSession.UpdateDeliveryService(*remoteDS.ID, remoteDS, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("expected an error stating that Long Desc 1 and Long Desc 2 fields are not supported in api version 4.0 onwards, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected a 400 status code, but got %d", reqInf.StatusCode)
 	}
 }
 
@@ -778,6 +870,7 @@ func CreateTestDeliveryServices(t *testing.T) {
 		t.Errorf("cannot create parameter: %v - alerts: %+v", err, alerts.Alerts)
 	}
 	for _, ds := range testData.DeliveryServices {
+		ds = ds.RemoveLD1AndLD2()
 		resp, _, err := TOSession.CreateDeliveryService(ds, client.RequestOptions{})
 		if err != nil {
 			t.Errorf("could not create Delivery Service '%s': %v - alerts: %+v", *ds.XMLID, err, resp.Alerts)

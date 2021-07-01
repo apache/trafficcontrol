@@ -172,8 +172,6 @@ The response contains a full representation of the newly assigned :term:`Deliver
 			"lastUpdated": "2020-09-25 02:09:54+00",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
-			"longDesc1": null,
-			"longDesc2": null,
 			"matchList": [
 				{
 					"type": "HOST_REGEXP",
@@ -259,8 +257,6 @@ The response contains a full representation of the newly assigned :term:`Deliver
 			"lastUpdated": null,
 			"logsEnabled": false,
 			"longDesc": "long desc",
-			"longDesc1": null,
-			"longDesc2": null,
 			"matchList": null,
 			"maxDnsAnswers": null,
 			"midHeaderRewrite": null,
