@@ -142,14 +142,14 @@ func (en *TOStaticDNSEntry) Read(h http.Header, useIMS bool) ([]interface{}, err
 	return api.GenericRead(h, en, useIMS)
 }
 func (en *TOStaticDNSEntry) Create() (error, error, int) {
-	var cdnName string
+	var cdnName tc.CDNName
 	var err error
 	if en.DeliveryServiceID != nil {
-		cdnName, err = dbhelpers.GetCDNNameFromDSID(en.ReqInfo.Tx.Tx, *en.DeliveryServiceID)
+		_, cdnName, _, err = dbhelpers.GetDSNameAndCDNFromID(en.ReqInfo.Tx.Tx, *en.DeliveryServiceID)
 		if err != nil {
 			return nil, err, http.StatusInternalServerError
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, cdnName, en.ReqInfo.User.UserName)
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, string(cdnName), en.ReqInfo.User.UserName)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
 		}
@@ -157,14 +157,14 @@ func (en *TOStaticDNSEntry) Create() (error, error, int) {
 	return api.GenericCreate(en)
 }
 func (en *TOStaticDNSEntry) Update(h http.Header) (error, error, int) {
-	var cdnName string
+	var cdnName tc.CDNName
 	var err error
 	if en.DeliveryServiceID != nil {
-		cdnName, err = dbhelpers.GetCDNNameFromDSID(en.ReqInfo.Tx.Tx, *en.DeliveryServiceID)
+		_, cdnName, _, err = dbhelpers.GetDSNameAndCDNFromID(en.ReqInfo.Tx.Tx, *en.DeliveryServiceID)
 		if err != nil {
 			return nil, err, http.StatusInternalServerError
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, cdnName, en.ReqInfo.User.UserName)
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, string(cdnName), en.ReqInfo.User.UserName)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
 		}
@@ -172,14 +172,14 @@ func (en *TOStaticDNSEntry) Update(h http.Header) (error, error, int) {
 	return api.GenericUpdate(h, en)
 }
 func (en *TOStaticDNSEntry) Delete() (error, error, int) {
-	var cdnName string
+	var cdnName tc.CDNName
 	var err error
 	if en.DeliveryServiceID != nil {
-		cdnName, err = dbhelpers.GetCDNNameFromDSID(en.ReqInfo.Tx.Tx, *en.DeliveryServiceID)
+		_, cdnName, _, err = dbhelpers.GetDSNameAndCDNFromID(en.ReqInfo.Tx.Tx, *en.DeliveryServiceID)
 		if err != nil {
 			return nil, err, http.StatusInternalServerError
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, cdnName, en.ReqInfo.User.UserName)
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, string(cdnName), en.ReqInfo.User.UserName)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
 		}

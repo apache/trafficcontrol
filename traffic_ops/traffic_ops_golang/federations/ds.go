@@ -63,17 +63,15 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("A federation must have at least one delivery service assigned"), nil)
 			return
 		}
-		for _, dsID := range post.DSIDs {
-			cdnName, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, dsID)
-			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
-			userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdnName, inf.User.UserName)
-			if userErr != nil || sysErr != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-				return
-			}
+		cdnNames, err := dbhelpers.GetCDNNamesFromDSIds(inf.Tx.Tx, post.DSIDs)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNs(inf.Tx.Tx, cdnNames, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
 		}
 		if err := deleteDSFeds(inf.Tx.Tx, fedID); err != nil {
 			userErr, sysErr, errCode := api.ParseDBError(err)
@@ -196,11 +194,11 @@ func (v *TOFedDSes) Delete() (error, error, int) {
 	}
 	v.ID = &dsID
 
-	cdnName, err := dbhelpers.GetCDNNameFromDSID(v.ReqInfo.Tx.Tx, dsID)
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(v.ReqInfo.Tx.Tx, dsID)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
-	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(v.ReqInfo.Tx.Tx, cdnName, v.ReqInfo.User.UserName)
+	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(v.ReqInfo.Tx.Tx, string(cdnName), v.ReqInfo.User.UserName)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}

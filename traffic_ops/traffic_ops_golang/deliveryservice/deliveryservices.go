@@ -724,10 +724,6 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	if inf.User == nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
-		return
-	}
 	id := inf.IntParams["id"]
 
 	ds := tc.DeliveryServiceV40{}
@@ -736,13 +732,12 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ds.ID = &id
-	cdn, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, id)
+	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, id)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice update: getting CDN from DS ID "+err.Error()))
 		return
 	}
-	// CheckIfCurrentUserCanModifyCDN
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
@@ -1196,11 +1191,11 @@ func (ds *TODeliveryService) Delete() (error, error, int) {
 			return userErr, sysErr, errCode
 		}
 	} else {
-		cdnName, err := dbhelpers.GetCDNNameFromDSID(ds.ReqInfo.Tx.Tx, *ds.ID)
+		_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(ds.ReqInfo.Tx.Tx, *ds.ID)
 		if err != nil {
-			return fmt.Errorf("couldn't get cdn name for DS: %v", err), nil, http.StatusBadRequest
+			return nil, fmt.Errorf("couldn't get cdn name for DS: %v", err), http.StatusBadRequest
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(ds.APIInfo().Tx.Tx, cdnName, ds.APIInfo().User.UserName)
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(ds.APIInfo().Tx.Tx, string(cdnName), ds.APIInfo().User.UserName)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
 		}

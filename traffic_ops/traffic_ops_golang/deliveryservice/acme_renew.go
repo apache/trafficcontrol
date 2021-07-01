@@ -46,10 +46,6 @@ func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	if inf.User == nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
-		return
-	}
 	if !inf.Config.TrafficVaultEnabled {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Traffic Vault is not configured"))
 		return
@@ -61,13 +57,16 @@ func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cdn, err := dbhelpers.GetCDNNameFromDSXMLID(inf.Tx.Tx, xmlID)
+	_, cdn, ok, err := dbhelpers.GetDSIDAndCDNFromName(inf.Tx.Tx, xmlID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("renew acme certificate: getting CDN from DS XML ID "+err.Error()))
 		return
 	}
-	// CheckIfCurrentUserCanModifyCDN
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return

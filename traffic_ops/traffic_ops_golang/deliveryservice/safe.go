@@ -53,10 +53,6 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	if inf.User == nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
-		return
-	}
 	dsID := inf.IntParams["id"]
 
 	userErr, sysErr, errCode = tenant.CheckID(tx, inf.User, dsID)
@@ -70,13 +66,12 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("decoding: %s", err), nil)
 		return
 	}
-	cdn, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, dsID)
+	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, dsID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice update safe: getting CDN from DS ID "+err.Error()))
 		return
 	}
-	// CheckIfCurrentUserCanModifyCDN
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return

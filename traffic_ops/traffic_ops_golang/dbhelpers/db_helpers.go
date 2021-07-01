@@ -207,6 +207,53 @@ func BuildWhereAndOrderByAndPagination(parameters map[string]string, queryParams
 	return whereClause, orderBy, paginationClause, queryValues, errs
 }
 
+// CheckIfCurrentUserCanModifyCDNs checks if the current user has the lock on the list of cdns that the requested operation is to be performed on.
+// This will succeed if the either there is no lock by any user on any of the CDNs, or if the current user has the lock on any of the CDNs.
+func CheckIfCurrentUserCanModifyCDNs(tx *sql.Tx, cdns []string, user string) (error, error, int) {
+	query := `SELECT username, soft, cdn FROM cdn_lock WHERE cdn=ANY($1)`
+	var userName, cdn string
+	var soft bool
+	rows, err := tx.Query(query, pq.Array(cdns))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil, http.StatusOK
+		}
+		return nil, errors.New("querying cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&userName, &soft, &cdn)
+		if err != nil {
+			return nil, errors.New("scanning cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
+		}
+		if userName != "" && user != userName && !soft {
+			return errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), nil, http.StatusForbidden
+		}
+	}
+	return nil, nil, http.StatusOK
+}
+
+// CheckIfCurrentUserCanModifyCDNs checks if the current user has the lock on the list of cdns(identified by ID) that the requested operation is to be performed on.
+// This will succeed if the either there is no lock by any user on any of the CDNs, or if the current user has the lock on any of the CDNs.
+func CheckIfCurrentUserCanModifyCDNsByID(tx *sql.Tx, cdns []int, user string) (error, error, int) {
+	query := `SELECT name FROM cdn WHERE id=ANY($1)`
+	var name string
+	var cdnNames []string
+	rows, err := tx.Query(query, pq.Array(cdns))
+	if err != nil {
+		return nil, errors.New("no cdn names found for the given IDs: " + err.Error()), http.StatusInternalServerError
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&name)
+		if err != nil {
+			return nil, errors.New("scanning cdn name: " + err.Error()), http.StatusInternalServerError
+		}
+		cdnNames = append(cdnNames, name)
+	}
+	return CheckIfCurrentUserCanModifyCDNs(tx, cdnNames, user)
+}
+
 // CheckIfCurrentUserCanModifyCDN checks if the current user has the lock on the cdn that the requested operation is to be performed on.
 // This will succeed if the either there is no lock by any user on the CDN, or if the current user has the lock on the CDN.
 func CheckIfCurrentUserCanModifyCDN(tx *sql.Tx, cdn, user string) (error, error, int) {
@@ -242,27 +289,7 @@ func CheckIfCurrentUserCanModifyCDNWithID(tx *sql.Tx, cdnID int64, user string) 
 	} else if !ok {
 		return errors.New("CDN not found"), nil, http.StatusNotFound
 	}
-	query := `SELECT username, soft FROM cdn_lock WHERE cdn=$1`
-	var userName string
-	var soft bool
-	rows, err := tx.Query(query, string(cdnName))
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil, http.StatusOK
-		}
-		return nil, errors.New("querying cdn_lock for user " + user + " and cdn " + string(cdnName) + ": " + err.Error()), http.StatusInternalServerError
-	}
-	defer rows.Close()
-	for rows.Next() {
-		err = rows.Scan(&userName, &soft)
-		if err != nil {
-			return nil, errors.New("scanning cdn_lock for user " + user + " and cdn " + string(cdnName) + ": " + err.Error()), http.StatusInternalServerError
-		}
-	}
-	if userName != "" && user != userName && !soft {
-		return errors.New("user " + userName + " currently has a hard lock on cdn " + string(cdnName)), nil, http.StatusForbidden
-	}
-	return nil, nil, http.StatusOK
+	return CheckIfCurrentUserCanModifyCDN(tx, string(cdnName), user)
 }
 
 // CheckIfCurrentUserCanModifyCachegroup checks if the current user has the lock on the cdns that are associated with the provided cachegroup ID.
@@ -288,6 +315,33 @@ func CheckIfCurrentUserCanModifyCachegroup(tx *sql.Tx, cachegroupID int, user st
 	}
 	if userName != "" && user != userName && !soft {
 		return errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), nil, http.StatusForbidden
+	}
+	return nil, nil, http.StatusOK
+}
+
+// CheckIfCurrentUserCanModifyCachegroups checks if the current user has the lock on the cdns that are associated with the provided cachegroup IDs.
+// This will succeed if no other user has a hard lock on any of the CDNs that relate to the cachegroups in question.
+func CheckIfCurrentUserCanModifyCachegroups(tx *sql.Tx, cachegroupID []int, user string) (error, error, int) {
+	query := `SELECT username, cdn, soft FROM cdn_lock WHERE cdn IN (SELECT name FROM cdn WHERE id IN (SELECT cdn_id FROM server WHERE cachegroup = ANY($1)))`
+	var userName string
+	var cdn string
+	var soft bool
+	rows, err := tx.Query(query, pq.Array(cachegroupID))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil, http.StatusOK
+		}
+		return nil, errors.New("querying cachegroups cdn_lock for user " + user + ": " + err.Error()), http.StatusInternalServerError
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&userName, &cdn, &soft)
+		if err != nil {
+			return nil, errors.New("scanning cachegroups cdn_lock for user " + user + ": " + err.Error()), http.StatusInternalServerError
+		}
+		if userName != "" && user != userName && !soft {
+			return errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), nil, http.StatusForbidden
+		}
 	}
 	return nil, nil, http.StatusOK
 }
@@ -1343,27 +1397,6 @@ func CheckTopologyOrgServerCGInDSCG(tx *sql.Tx, cdnIds []int, dsTopology string,
 	return nil, nil, http.StatusOK
 }
 
-// GetCDNNameFromDSID returns the associated CDN name with the delivery service ID that is provided.
-func GetCDNNameFromDSID(tx *sql.Tx, dsID int) (string, error) {
-	if dsID == -1 {
-		return "", nil
-	}
-	cdn := ""
-	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn_id FROM deliveryservice WHERE id = $1)`, dsID).Scan(&cdn); err != nil {
-		return cdn, fmt.Errorf("querying CDN for deliveryservice with ID '%v': %v", dsID, err)
-	}
-	return cdn, nil
-}
-
-// GetCDNNameFromDSXMLID returns the associated CDN name with the delivery service XML ID that is provided.
-func GetCDNNameFromDSXMLID(tx *sql.Tx, xmlID string) (string, error) {
-	cdn := ""
-	if err := tx.QueryRow(`SELECT name FROM cdn WHERE id = (SELECT cdn_id FROM deliveryservice WHERE xml_id = $1)`, xmlID).Scan(&cdn); err != nil {
-		return cdn, fmt.Errorf("querying CDN for deliveryservice with XML ID '%v': %v", xmlID, err)
-	}
-	return cdn, nil
-}
-
 // GetCDNNameFromProfileID returns the cdn name for the provided profile ID.
 func GetCDNNameFromProfileID(tx *sql.Tx, id int) (tc.CDNName, error) {
 	name := ""
@@ -1391,7 +1424,7 @@ func GetServerIDsFromCachegroupNames(tx *sql.Tx, cgID []string) ([]int64, error)
 	if err != nil {
 		return serverIDs, errors.New("getting server IDs from cachegroup names : " + err.Error())
 	}
-	defer rows.Close()
+	defer log.Close(rows, "could not close rows in GetServerIDsFromCachegroupNames")
 	for rows.Next() {
 		err = rows.Scan(&serverID)
 		if err != nil {
@@ -1411,7 +1444,47 @@ func GetCDNNamesFromServerIds(tx *sql.Tx, serverIds []int64) ([]string, error) {
 	if err != nil {
 		return cdns, errors.New("getting cdn name for server : " + err.Error())
 	}
-	defer rows.Close()
+	defer log.Close(rows, "could not close rows in GetCDNNamesFromServerIds")
+	for rows.Next() {
+		err = rows.Scan(&cdn)
+		if err != nil {
+			return cdns, errors.New("scanning cdn name " + cdn + ": " + err.Error())
+		}
+		cdns = append(cdns, cdn)
+	}
+	return cdns, nil
+}
+
+// GetCDNNamesFromDSIds returns a list of cdn names for a list of DS IDs.
+func GetCDNNamesFromDSIds(tx *sql.Tx, dsIds []int) ([]string, error) {
+	var cdns []string
+	cdn := ""
+	query := `SELECT DISTINCT(name) FROM cdn JOIN deliveryservice ON cdn.id = deliveryservice.cdn_id WHERE deliveryservice.id = ANY($1)`
+	rows, err := tx.Query(query, pq.Array(dsIds))
+	if err != nil {
+		return cdns, errors.New("getting cdn name for DS : " + err.Error())
+	}
+	defer log.Close(rows, "could not close rows in GetCDNNamesFromDSIds")
+	for rows.Next() {
+		err = rows.Scan(&cdn)
+		if err != nil {
+			return cdns, errors.New("scanning cdn name " + cdn + ": " + err.Error())
+		}
+		cdns = append(cdns, cdn)
+	}
+	return cdns, nil
+}
+
+// GetCDNNamesFromProfileIDs returns a list of cdn names for a list of profile IDs.
+func GetCDNNamesFromProfileIDs(tx *sql.Tx, profileIDs []int64) ([]string, error) {
+	var cdns []string
+	cdn := ""
+	query := `SELECT DISTINCT(cdn.name) FROM cdn JOIN profile ON cdn.id = profile.cdn WHERE profile.id = ANY($1)`
+	rows, err := tx.Query(query, pq.Array(profileIDs))
+	if err != nil {
+		return cdns, errors.New("getting cdn name for profiles : " + err.Error())
+	}
+	defer log.Close(rows, "could not close rows in GetCDNNamesFromProfileIDs")
 	for rows.Next() {
 		err = rows.Scan(&cdn)
 		if err != nil {

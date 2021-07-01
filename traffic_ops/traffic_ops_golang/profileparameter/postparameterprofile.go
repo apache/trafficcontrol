@@ -47,17 +47,15 @@ func PostParamProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if paramProfile.ProfileIDs != nil {
-		for _, profileID := range *paramProfile.ProfileIDs {
-			cdnName, err := dbhelpers.GetCDNNameFromProfileID(inf.Tx.Tx, int(profileID))
-			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-				return
-			}
-			userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-			if userErr != nil || sysErr != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-				return
-			}
+		cdnNames, err := dbhelpers.GetCDNNamesFromProfileIDs(inf.Tx.Tx, *paramProfile.ProfileIDs)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNs(inf.Tx.Tx, cdnNames, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
 		}
 	}
 	if err := insertParameterProfile(paramProfile, inf.Tx.Tx); err != nil {

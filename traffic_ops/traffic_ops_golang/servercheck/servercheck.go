@@ -130,17 +130,6 @@ func CreateUpdateServercheck(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("Server not found"), nil)
 		return
 	}
-
-	cdnName, err := dbhelpers.GetCDNNameFromServerID(inf.Tx.Tx, int64(id))
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-		return
-	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-		return
-	}
 	col, exists, err := getColName(serverCheckReq.Name, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting servercheck column name: "+err.Error()))

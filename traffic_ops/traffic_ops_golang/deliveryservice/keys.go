@@ -29,7 +29,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"net/http"
 	"strconv"
 	"strings"
@@ -38,6 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 )
@@ -55,10 +55,6 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	if inf.User == nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
-		return
-	}
 	if !inf.Config.TrafficVaultEnabled {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("adding SSL keys to Traffic Vault for delivery service: Traffic Vault is not configured"))
 		return
@@ -81,13 +77,12 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+*req.DeliveryService), nil)
 		return
 	}
-	cdn, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, dsID)
+	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, dsID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.AddSSLKeys: getting CDN from DS ID "+err.Error()))
 		return
 	}
-	// CheckIfCurrentUserCanModifyCDN
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return

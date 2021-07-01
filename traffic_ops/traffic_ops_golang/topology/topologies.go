@@ -832,11 +832,9 @@ func (topology *TOTopology) checkIfTopologyCanBeAlteredByCurrentUser() (error, e
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
-	for _, cdn := range cdns {
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(topology.ReqInfo.Tx.Tx, cdn, topology.ReqInfo.User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, statusCode
-		}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNs(topology.ReqInfo.Tx.Tx, cdns, topology.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
 	}
 	return nil, nil, http.StatusOK
 }

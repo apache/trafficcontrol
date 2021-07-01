@@ -80,17 +80,12 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 		return
 	}
 	defer inf.Close()
-
-	if inf.User == nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
-		return
-	}
 	if !inf.Config.TrafficVaultEnabled {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Traffic Vault service is unavailable"), errors.New("getting SSL keys from Traffic Vault by xml id: Traffic Vault is not configured"), deprecated, deprecation)
 		return
 	}
 
-	rows, err := inf.Tx.Tx.Query(`SELECT xml_id, ssl_key_version FROM deliveryservice WHERE ssl_key_version != 0`)
+	rows, err := inf.Tx.Tx.Query(`SELECT xml_id, ssl_key_version, cdn_id FROM deliveryservice WHERE ssl_key_version != 0`)
 	if err != nil {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err, deprecated, deprecation)
 		return
@@ -98,27 +93,27 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 	defer rows.Close()
 
 	existingCerts := []ExistingCerts{}
+	cdnMap := make(map[int]bool)
+	cdns := []int{}
+	var cdn int
 	for rows.Next() {
 		ds := DsKey{}
-		err := rows.Scan(&ds.XmlId, &ds.Version)
+		err := rows.Scan(&ds.XmlId, &ds.Version, &cdn)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 			return
 		}
-		cdn, err := dbhelpers.GetCDNNameFromDSXMLID(inf.Tx.Tx, ds.XmlId)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("renew acme certificate: getting CDN from DS XML ID "+err.Error()))
-			return
-		}
-		// CheckIfCurrentUserCanModifyCDN
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-			return
-		}
+		cdnMap[cdn] = true
 		existingCerts = append(existingCerts, ExistingCerts{Version: ds.Version, XmlId: ds.XmlId})
 	}
-
+	for k, _ := range cdnMap {
+		cdns = append(cdns, k)
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNsByID(inf.Tx.Tx, cdns, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
 	ctx, cancelTx := context.WithTimeout(r.Context(), AcmeTimeout*time.Duration(len(existingCerts)))
 
 	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(inf.Tx.Tx, "ACME async job has started.")

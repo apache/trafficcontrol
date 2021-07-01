@@ -155,10 +155,6 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	if inf.User == nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
-		return
-	}
 	if !inf.Config.TrafficVaultEnabled {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.GenerateAcmeCertificates: Traffic Vault is not configured"))
 		return
@@ -209,7 +205,6 @@ func GenerateAcmeCertificates(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("delivery service not in cdn"), nil)
 		return
 	}
-	// CheckIfCurrentUserCanModifyCDN
 	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		defer cancelTx()
@@ -278,7 +273,6 @@ func GenerateLetsEncryptCertificates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// CheckIfCurrentUserCanModifyCDN
 	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		defer cancelTx()

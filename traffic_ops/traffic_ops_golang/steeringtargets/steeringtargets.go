@@ -204,12 +204,11 @@ func (st *TOSteeringTargetV11) Create() (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
-	cdn, err := dbhelpers.GetCDNNameFromDSID(st.ReqInfo.Tx.Tx, int(dsID))
+	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(st.ReqInfo.Tx.Tx, int(dsID))
 	if err != nil {
 		return nil, errors.New("createSteeringTarget: getting CDN from DS ID " + err.Error()), http.StatusInternalServerError
 	}
-	// CheckIfCurrentUserCanModifyCDN
-	if userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, cdn, st.ReqInfo.User.UserName); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, string(cdn), st.ReqInfo.User.UserName); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 
@@ -240,12 +239,11 @@ func (st *TOSteeringTargetV11) Update(h http.Header) (error, error, int) {
 		return errors.New("delivery service ID must be an integer"), nil, http.StatusBadRequest
 	}
 
-	cdn, err := dbhelpers.GetCDNNameFromDSID(st.ReqInfo.Tx.Tx, dsIDInt)
+	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(st.ReqInfo.Tx.Tx, dsIDInt)
 	if err != nil {
 		return nil, errors.New("updateSteeringTarget: getting CDN from DS ID " + err.Error()), http.StatusInternalServerError
 	}
-	// CheckIfCurrentUserCanModifyCDN
-	if userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, cdn, st.ReqInfo.User.UserName); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, string(cdn), st.ReqInfo.User.UserName); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 
@@ -322,12 +320,11 @@ func (st *TOSteeringTargetV11) Delete() (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
-	cdn, err := dbhelpers.GetCDNNameFromDSID(st.ReqInfo.Tx.Tx, int(*st.DeliveryServiceID))
+	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(st.ReqInfo.Tx.Tx, int(*st.DeliveryServiceID))
 	if err != nil {
 		return nil, errors.New("deleteSteeringTarget: getting CDN from DS ID " + err.Error()), http.StatusInternalServerError
 	}
-	// CheckIfCurrentUserCanModifyCDN
-	if userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, cdn, st.ReqInfo.User.UserName); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, string(cdn), st.ReqInfo.User.UserName); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 	result, err := st.ReqInfo.Tx.NamedExec(deleteQuery(), st)

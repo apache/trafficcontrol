@@ -80,10 +80,6 @@ func RemoveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	defer inf.Close()
-	if inf.User == nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
-		return
-	}
 	if !inf.Config.TrafficVaultEnabled {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("rhe Traffic Vault service is unavailable"), errors.New("getting Traffic Vault SSL keys by host name: Traffic Vault is not configured"))
 		return
@@ -103,12 +99,16 @@ func RemoveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	cdnName, err := dbhelpers.GetCDNNameFromDSXMLID(inf.Tx.Tx, xmlID)
+	_, cdnName, ok, err := dbhelpers.GetDSIDAndCDNFromName(inf.Tx.Tx, xmlID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdnName, inf.User.UserName)
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -140,10 +140,6 @@ func SaveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	if inf.User == nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
-		return
-	}
 	if !inf.Config.TrafficVaultEnabled {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("the Traffic Vault service is unavailable"), errors.New("getting Traffic Vault SSL keys by host name: Traffic Vault is not configured"))
 		return
@@ -163,12 +159,16 @@ func SaveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cdnName, err := dbhelpers.GetCDNNameFromDSXMLID(inf.Tx.Tx, xmlID)
+	_, cdnName, ok, err := dbhelpers.GetDSIDAndCDNFromName(inf.Tx.Tx, xmlID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdnName, inf.User.UserName)
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return

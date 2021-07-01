@@ -228,12 +228,12 @@ func Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cdnName, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, inf.IntParams["dsid"])
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, inf.IntParams["dsid"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdnName, inf.User.UserName)
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -329,12 +329,12 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON"), nil)
 		return
 	}
-	cdnName, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, inf.IntParams["dsid"])
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, inf.IntParams["dsid"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdnName, inf.User.UserName)
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -436,20 +436,16 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	dsID := inf.IntParams["dsid"]
-	dsName, ok, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
-		return
-	} else if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
-		return
-	}
-	cdnName, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, inf.IntParams["dsid"])
+	dsName, cdnName, ok, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, inf.IntParams["dsid"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdnName, inf.User.UserName)
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return

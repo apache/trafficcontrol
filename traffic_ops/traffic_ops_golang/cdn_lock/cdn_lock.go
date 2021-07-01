@@ -93,9 +93,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 	tx := inf.Tx.Tx
-	if inf.User == nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("couldn't get user for the current request"))
-	}
 	var cdnLock tc.CDNLock
 	if err := json.NewDecoder(r.Body).Decode(&cdnLock); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -151,9 +148,6 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	cdn := inf.Params["cdn"]
 	tx := inf.Tx.Tx
-	if inf.User == nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("couldn't get user for the current request"))
-	}
 	var result tc.CDNLock
 	var err error
 	if inf.User.PrivLevel == auth.PrivLevelAdmin {

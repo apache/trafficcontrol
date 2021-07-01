@@ -316,11 +316,11 @@ func (origin *TOOrigin) Update(h http.Header) (error, error, int) {
 		return errors.New("cannot update the delivery service of a primary origin"), nil, http.StatusBadRequest
 	}
 
-	cdnName, err := dbhelpers.GetCDNNameFromDSID(origin.ReqInfo.Tx.Tx, *origin.DeliveryServiceID)
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(origin.ReqInfo.Tx.Tx, *origin.DeliveryServiceID)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, cdnName, origin.ReqInfo.User.UserName)
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, string(cdnName), origin.ReqInfo.User.UserName)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
@@ -382,11 +382,11 @@ func (origin *TOOrigin) Create() (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
-	cdnName, err := dbhelpers.GetCDNNameFromDSID(origin.ReqInfo.Tx.Tx, *origin.DeliveryServiceID)
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(origin.ReqInfo.Tx.Tx, *origin.DeliveryServiceID)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, cdnName, origin.ReqInfo.User.UserName)
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, string(cdnName), origin.ReqInfo.User.UserName)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
@@ -460,11 +460,11 @@ func (origin *TOOrigin) Delete() (error, error, int) {
 	}
 
 	if origin.DeliveryServiceID != nil {
-		cdnName, err := dbhelpers.GetCDNNameFromDSID(origin.ReqInfo.Tx.Tx, *origin.DeliveryServiceID)
+		_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(origin.ReqInfo.Tx.Tx, *origin.DeliveryServiceID)
 		if err != nil {
 			return nil, err, http.StatusInternalServerError
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, cdnName, origin.ReqInfo.User.UserName)
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, string(cdnName), origin.ReqInfo.User.UserName)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
 		}

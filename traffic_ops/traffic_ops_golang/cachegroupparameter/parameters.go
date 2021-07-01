@@ -278,10 +278,6 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	if inf.User == nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
-		return
-	}
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("reading request body: "+err.Error()), nil)
@@ -317,14 +313,8 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing cachegroup parameter: "+parseErr.Error()), nil)
 		return
 	}
-
+	cachegroups := []int{}
 	for _, p := range params {
-		// CheckIfCurrentUserCanModifyCachegroup
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCachegroup(inf.Tx.Tx, *p.CacheGroup, inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-			return
-		}
 		ppExists, err := dbhelpers.CachegroupParameterAssociationExists(*p.Parameter, *p.CacheGroup, inf.Tx.Tx)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
@@ -334,8 +324,13 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parameter: "+strconv.Itoa(*p.Parameter)+" already associated with cachegroup: "+strconv.Itoa(*p.CacheGroup)+"."), nil)
 			return
 		}
+		cachegroups = append(cachegroups, *p.CacheGroup)
 	}
-
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCachegroups(inf.Tx.Tx, cachegroups, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
 	values := []string{}
 	for _, param := range params {
 		values = append(values, "("+strconv.Itoa(*param.CacheGroup)+", "+strconv.Itoa(*param.Parameter)+")")

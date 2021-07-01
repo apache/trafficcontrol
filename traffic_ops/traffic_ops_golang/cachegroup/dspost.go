@@ -84,18 +84,15 @@ func DSPostHandlerV40(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, dsID := range req.DeliveryServices {
-		cdn, err := dbhelpers.GetCDNNameFromDSID(inf.Tx.Tx, dsID)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cachegroup deliveryservice update: getting CDN from DS ID "+err.Error()))
-			return
-		}
-		// CheckIfCurrentUserCanModifyCDN
-		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdn, inf.User.UserName)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-			return
-		}
+	cdnNames, err := dbhelpers.GetCDNNamesFromDSIds(inf.Tx.Tx, req.DeliveryServices)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting CDN names from DS IDs "+err.Error()))
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNs(inf.Tx.Tx, cdnNames, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
 	}
 	resp, vals, userErr, sysErr, errCode := postDSes(inf.Tx.Tx, inf.User, inf.IntParams["id"], req.DeliveryServices)
 	if userErr != nil || sysErr != nil {
