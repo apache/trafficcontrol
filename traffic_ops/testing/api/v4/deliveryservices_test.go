@@ -205,7 +205,7 @@ func CUDDeliveryServiceWithLocks(t *testing.T) {
 	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn.Name}}})
 	if err != nil {
 		t.Errorf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
-  }
+	}
 }
 
 func CreateTestDeliveryServiceWithLongDescFields(t *testing.T) {
