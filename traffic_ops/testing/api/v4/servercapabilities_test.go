@@ -37,6 +37,7 @@ func TestServerCapabilities(t *testing.T) {
 		header.Set(rfc.IfUnmodifiedSince, rfcTime)
 		SortTestServerCapabilities(t)
 		CreateTestServerCapabilityAlreadyExist(t)
+		GetTestServerCapabilitiesByInvalidName(t)
 		UpdateTestServerCapabilities(t)
 		UpdateTestServerCapabilitiesWithHeaders(t, header)
 		header = make(map[string][]string)
@@ -108,6 +109,18 @@ func GetTestServerCapabilities(t *testing.T) {
 	}
 	if len(resp.Response) != len(testData.ServerCapabilities) {
 		t.Errorf("expected to get %d Server Capabilities, actual: %d", len(testData.ServerCapabilities), len(resp.Response))
+	}
+}
+
+func GetTestServerCapabilitiesByInvalidName(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "abcd")
+	resp, _, err := TOSession.GetServerCapabilities(opts)
+	if err != nil {
+		t.Errorf("Expected no error: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if len(resp.Response) > 0 {
+		t.Errorf("Expected no response for Get Server Capability by Invalid name, but found some response '%d'", len(resp.Response))
 	}
 }
 
