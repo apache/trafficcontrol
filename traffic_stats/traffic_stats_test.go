@@ -21,6 +21,8 @@ under the License.
 
 import (
 	"encoding/json"
+	"reflect"
+	"sort"
 	"testing"
 	"time"
 
@@ -153,5 +155,106 @@ func TestCalcCacheValues(t *testing.T) {
 		if val.(float64) != 25.56 {
 			t.Errorf("expected invalid stat to result in a value of 0.0, but got %v instead", val.(float64))
 		}
+	}
+}
+
+func TestSetHealthURLs(t *testing.T) {
+	cfg := StartupConfig{
+		StatusToMon: tc.CacheStatusOffline.String(),
+	}
+	runningCfg := RunningConfig{}
+	runningCfg.CacheMap = map[string]tc.Server{
+		"tm1": {
+			CDNName:    "foo",
+			DomainName: "example.org",
+			HostName:   "tm1",
+			Status:     tc.CacheStatusOffline.String(),
+			TCPPort:    8080,
+			Type:       tc.MonitorTypeName,
+		},
+		"tm2": {
+			CDNName:    "bar",
+			DomainName: "example.org",
+			HostName:   "tm2",
+			Status:     tc.CacheStatusOffline.String(),
+			TCPPort:    8080,
+			Type:       tc.MonitorTypeName,
+		},
+		"tm3": {
+			CDNName:    "foo",
+			DomainName: "example.org",
+			HostName:   "tm3",
+			Status:     tc.CacheStatusOffline.String(),
+			TCPPort:    8080,
+			Type:       tc.MonitorTypeName,
+		},
+		"tm4": {
+			CDNName:    "bar",
+			DomainName: "example.org",
+			HostName:   "tm4",
+			Status:     tc.CacheStatusOffline.String(),
+			TCPPort:    8080,
+			Type:       tc.MonitorTypeName,
+		},
+		"tm5": {
+			CDNName:    "foo",
+			DomainName: "example.org",
+			HostName:   "tm5",
+			Status:     tc.CacheStatusOnline.String(),
+			TCPPort:    8080,
+			Type:       tc.MonitorTypeName,
+		},
+		"tm6": {
+			CDNName:    "bar",
+			DomainName: "example.org",
+			HostName:   "tm6",
+			Status:     tc.CacheStatusOnline.String(),
+			TCPPort:    8080,
+			Type:       tc.MonitorTypeName,
+		},
+		"cache1": {
+			CDNName:    "foo",
+			DomainName: "example.org",
+			HostName:   "cache1",
+			Status:     tc.CacheStatusOffline.String(),
+			TCPPort:    8080,
+			Type:       tc.CacheTypeEdge.String(),
+		},
+	}
+	setHealthURLs(cfg, &runningCfg, "/cacheStats", "/dsStats")
+	expected := map[string]map[string][]string{
+		"foo": {
+			"CacheStats": []string{
+				"http://tm1.example.org:8080/cacheStats",
+				"http://tm3.example.org:8080/cacheStats",
+			},
+			"DsStats": []string{
+				"http://tm1.example.org:8080/dsStats",
+				"http://tm3.example.org:8080/dsStats",
+			},
+		},
+		"bar": {
+			"CacheStats": []string{
+				"http://tm2.example.org:8080/cacheStats",
+				"http://tm4.example.org:8080/cacheStats",
+			},
+			"DsStats": []string{
+				"http://tm2.example.org:8080/dsStats",
+				"http://tm4.example.org:8080/dsStats",
+			},
+		},
+	}
+	for _, toBeSorted := range []map[string]map[string][]string{
+		expected,
+		runningCfg.HealthUrls,
+	} {
+		for _, healthURLs := range toBeSorted {
+			for _, urls := range healthURLs {
+				sort.Strings(urls)
+			}
+		}
+	}
+	if !reflect.DeepEqual(expected, runningCfg.HealthUrls) {
+		t.Errorf("expected: %+v, actual: %+v", expected, runningCfg.HealthUrls)
 	}
 }
