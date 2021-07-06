@@ -407,10 +407,6 @@ dl_ds_default_profiles:
         configFile: global
         value: '1'
         secure: 0
-      - name: use_tenancy
-        configFile: global
-        value: '1'
-        secure: 0
       - name: visual_status_panel_1
         configFile: global
         value: "{{ dl_ts_url }}/dashboard-solo/db/cdn-stats-by-type?panelId=1"

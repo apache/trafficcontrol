@@ -35,11 +35,6 @@
       "name": "use_reval_pending"
     },
     {
-      "name": "use_tenancy",
-      "configFile": "global",
-      "value": "1"
-    },
-    {
       "name": "default_geo_miss_latitude",
       "configFile": "global",
       "value": "0"
