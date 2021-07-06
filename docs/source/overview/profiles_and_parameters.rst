@@ -200,9 +200,6 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	|                          |                         | updates and pending content invalidation jobs. This behavior should be enabled by default, and disabling it, while still possible, is |
 	|                          |                         | **EXTREMELY DISCOURAGED**.                                                                                                            |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| use_tenancy              | global                  | This :ref:`Parameter <parameters>`, when it exists and has a Value_ of exactly "1" enables the use :term:`Tenants` in Traffic         |
-	|                          |                         | Control. This should be enabled by default, and while disabling this is still possible, it is **EXTREMELY DISCOURAGED**.              |
-	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| geolocation.polling.url  | CRConfig.json           | The location of a geographic IP mapping database for Traffic Router instances to use.                                                 |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| geolocation6.polling.url | CRConfig.json           | The location of a geographic IPv6 mapping database for Traffic Router instances to use.                                               |
