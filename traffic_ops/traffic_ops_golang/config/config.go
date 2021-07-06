@@ -90,7 +90,6 @@ type ConfigTrafficOpsGolang struct {
 	MaxDBConnections         int                        `json:"max_db_connections"`
 	DBMaxIdleConnections     int                        `json:"db_max_idle_connections"`
 	DBConnMaxLifetimeSeconds int                        `json:"db_conn_max_lifetime_seconds"`
-	BackendMaxConnections    map[string]int             `json:"backend_max_connections"`
 	DBQueryTimeoutSeconds    int                        `json:"db_query_timeout_seconds"`
 	Plugins                  []string                   `json:"plugins"`
 	PluginConfig             map[string]json.RawMessage `json:"plugin_config"`
@@ -208,8 +207,6 @@ func NewFakeConfig() Config {
 	c := Config{}
 	c.URL, _ = url.Parse("http://example.com")
 	c.Secrets = append(c.Secrets, "foo")
-	c.BackendMaxConnections = make(map[string]int, 1)
-	c.BackendMaxConnections["mojolicious"] = 42
 	return c
 }
 
@@ -348,9 +345,8 @@ func (c Config) GetKeyPath() string {
 }
 
 const (
-	MojoliciousConcurrentConnectionsDefault = 12 // MojoliciousConcurrentConnectionsDefault
-	DBMaxIdleConnectionsDefault             = 10 // if this is higher than MaxDBConnections it will be automatically adjusted below it by the db/sql library
-	DBConnMaxLifetimeSecondsDefault         = 60
+	DBMaxIdleConnectionsDefault     = 10 // if this is higher than MaxDBConnections it will be automatically adjusted below it by the db/sql library
+	DBConnMaxLifetimeSecondsDefault = 60
 )
 
 // ParseConfig validates required fields, and parses non-JSON types
@@ -376,12 +372,6 @@ func ParseConfig(cfg Config) (Config, error) {
 	}
 	if cfg.LogLocationEvent == "" {
 		cfg.LogLocationEvent = log.LogLocationNull
-	}
-	if cfg.BackendMaxConnections == nil {
-		cfg.BackendMaxConnections = make(map[string]int)
-	}
-	if cfg.BackendMaxConnections["mojolicious"] == 0 {
-		cfg.BackendMaxConnections["mojolicious"] = MojoliciousConcurrentConnectionsDefault
 	}
 	if cfg.DBMaxIdleConnections == 0 {
 		cfg.DBMaxIdleConnections = DBMaxIdleConnectionsDefault

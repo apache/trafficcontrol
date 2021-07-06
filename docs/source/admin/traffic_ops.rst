@@ -390,7 +390,6 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 :traffic_ops_golang: This group configuration options is used exclusively by `traffic_ops_golang`_.
 
-	:backend_max_connections: This optional object, if declared, is a map of back-end service names to the maximum number of allowed concurrent connections to them from the Traffic Ops server. Currently, there are no supported keys.
 	:crconfig_emulate_old_path: An optional boolean that controls the value of a part of :term:`Snapshots` that report what :ref:`to-api` endpoint is used to generate :term:`Snapshots`. If this is ``true``, it forces Traffic Ops to report that a legacy, deprecated endpoint is used, whereas if it's ``false`` Traffic Ops will report the actual, current endpoint. Default if not specified is ``false``.
 
 		.. deprecated:: 3.0
