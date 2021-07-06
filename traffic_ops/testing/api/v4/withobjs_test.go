@@ -44,7 +44,6 @@ const (
 	ASN TCObj = iota
 	CacheGroups
 	CacheGroupsDeliveryServices
-	CacheGroupParameters
 	CDNs
 	CDNFederations
 	CDNNotifications
@@ -90,7 +89,6 @@ var withFuncs = map[TCObj]TCObjFuncs{
 	ASN:                                   {CreateTestASNs, DeleteTestASNs},
 	CacheGroups:                           {CreateTestCacheGroups, DeleteTestCacheGroups},
 	CacheGroupsDeliveryServices:           {CreateTestCachegroupsDeliveryServices, DeleteTestCachegroupsDeliveryServices},
-	CacheGroupParameters:                  {CreateTestCacheGroupParameters, DeleteTestCacheGroupParameters},
 	CDNs:                                  {CreateTestCDNs, DeleteTestCDNs},
 	CDNNotifications:                      {CreateTestCDNNotifications, DeleteTestCDNNotifications},
 	CDNFederations:                        {CreateTestCDNFederations, DeleteTestCDNFederations},

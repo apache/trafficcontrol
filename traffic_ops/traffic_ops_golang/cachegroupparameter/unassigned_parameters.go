@@ -1,3 +1,4 @@
+// Package cachegroupparameter is deprecated and will be removed with API v1-3.
 package cachegroupparameter
 
 /*
