@@ -189,7 +189,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			log.Infof("Getting config: %v is modified, using new response", "Global Params")
 			toData.GlobalParams = globalParams
 		}
-		toData.MetaData.GlobalParams = MakeReqMetaData(reqInf.Headers)
+		toData.MetaData.GlobalParams = MakeReqMetaData(reqInf.RespHeaders)
 		toIPs.Store(reqInf.RemoteAddr, nil)
 	}
 
@@ -236,7 +236,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				log.Infof("Getting config: %v is modified, using new response", "Servers")
 				toData.Servers = servers
 			}
-			toData.MetaData.Servers = MakeReqMetaData(reqInf.Headers)
+			toData.MetaData.Servers = MakeReqMetaData(reqInf.RespHeaders)
 			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
 
@@ -279,7 +279,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					log.Infof("Getting config: %v is modified, using new response", "SSLKeys")
 					toData.SSLKeys = keys
 				}
-				toData.MetaData.SSLKeys = MakeReqMetaData(reqInf.Headers)
+				toData.MetaData.SSLKeys = MakeReqMetaData(reqInf.RespHeaders)
 				toIPs.Store(reqInf.RemoteAddr, nil)
 			}
 			return nil
@@ -304,7 +304,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					log.Infof("Getting config: %v is modified, using new response", "DeliveryServices")
 					toData.DeliveryServices = dses
 				}
-				toData.MetaData.DeliveryServices = MakeReqMetaData(reqInf.Headers)
+				toData.MetaData.DeliveryServices = MakeReqMetaData(reqInf.RespHeaders)
 				toIPs.Store(reqInf.RemoteAddr, nil)
 			}
 
@@ -340,7 +340,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 						log.Infof("Getting config: %v is modified, using new response", "DeliveryServiceServers")
 						toData.DeliveryServiceServers = filterUnusedDSS(dss, *toData.Server.CDNID, toData.Servers, toData.DeliveryServices)
 					}
-					toData.MetaData.DeliveryServiceServers = MakeReqMetaData(reqInf.Headers)
+					toData.MetaData.DeliveryServiceServers = MakeReqMetaData(reqInf.RespHeaders)
 					toIPs.Store(reqInf.RemoteAddr, nil)
 				}
 				return nil
@@ -380,7 +380,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 						log.Infof("Getting config: %v is modified, using new response", "URISigningKeys["+*ds.XMLID+"]")
 						uriSigningKeys[tc.DeliveryServiceName(*ds.XMLID)] = keys
 					}
-					toData.MetaData.URISigningKeys[tc.DeliveryServiceName(*ds.XMLID)] = MakeReqMetaData(reqInf.Headers)
+					toData.MetaData.URISigningKeys[tc.DeliveryServiceName(*ds.XMLID)] = MakeReqMetaData(reqInf.RespHeaders)
 					toIPs.Store(reqInf.RemoteAddr, nil)
 				}
 				toData.URISigningKeys = uriSigningKeys
@@ -421,7 +421,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 						log.Infof("Getting config: %v is modified, using new response", "URLSigKeys["+*ds.XMLID+"]")
 						urlSigKeys[tc.DeliveryServiceName(*ds.XMLID)] = keys
 					}
-					toData.MetaData.URLSigKeys[tc.DeliveryServiceName(*ds.XMLID)] = MakeReqMetaData(reqInf.Headers)
+					toData.MetaData.URLSigKeys[tc.DeliveryServiceName(*ds.XMLID)] = MakeReqMetaData(reqInf.RespHeaders)
 					toIPs.Store(reqInf.RemoteAddr, nil)
 				}
 				toData.URLSigKeys = urlSigKeys
@@ -460,7 +460,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					log.Infof("Getting config: %v is modified, using new response", "ServerParams")
 					toData.ServerParams = params
 				}
-				toData.MetaData.ServerParams = MakeReqMetaData(reqInf.Headers)
+				toData.MetaData.ServerParams = MakeReqMetaData(reqInf.RespHeaders)
 				toIPs.Store(reqInf.RemoteAddr, nil)
 			}
 			return nil
@@ -483,7 +483,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					log.Infof("Getting config: %v is modified, using new response", "CDN")
 					toData.CDN = &cdn
 				}
-				toData.MetaData.CDN = MakeReqMetaData(reqInf.Headers)
+				toData.MetaData.CDN = MakeReqMetaData(reqInf.RespHeaders)
 				toIPs.Store(reqInf.RemoteAddr, nil)
 			}
 			return nil
@@ -506,7 +506,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					log.Infof("Getting config: %v is modified, using new response", "Profile")
 					toData.Profile = profile
 				}
-				toData.MetaData.Profile = MakeReqMetaData(reqInf.Headers)
+				toData.MetaData.Profile = MakeReqMetaData(reqInf.RespHeaders)
 				toIPs.Store(reqInf.RemoteAddr, nil)
 			}
 			return nil
@@ -536,7 +536,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				log.Infof("Getting config: %v is modified, using new response", "CacheGroups")
 				toData.CacheGroups = cacheGroups
 			}
-			toData.MetaData.CacheGroups = MakeReqMetaData(reqInf.Headers)
+			toData.MetaData.CacheGroups = MakeReqMetaData(reqInf.RespHeaders)
 			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
 		return nil
@@ -559,7 +559,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				log.Infof("Getting config: %v is modified, using new response", "Jobs")
 				toData.Jobs = jobs
 			}
-			toData.MetaData.Jobs = MakeReqMetaData(reqInf.Headers)
+			toData.MetaData.Jobs = MakeReqMetaData(reqInf.RespHeaders)
 			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
 		return nil
@@ -584,7 +584,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					log.Infof("Getting config: %v is modified, using new response", "ServerCapabilities")
 					toData.ServerCapabilities = caps
 				}
-				toData.MetaData.ServerCapabilities = MakeReqMetaData(reqInf.Headers)
+				toData.MetaData.ServerCapabilities = MakeReqMetaData(reqInf.RespHeaders)
 				toIPs.Store(reqInf.RemoteAddr, nil)
 			}
 		}
@@ -609,7 +609,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					log.Infof("Getting config: %v is modified, using new response", "DSRequiredCapabilities")
 					toData.DSRequiredCapabilities = caps
 				}
-				toData.MetaData.DSRequiredCapabilities = MakeReqMetaData(reqInf.Headers)
+				toData.MetaData.DSRequiredCapabilities = MakeReqMetaData(reqInf.RespHeaders)
 				toIPs.Store(reqInf.RemoteAddr, nil)
 			}
 		}
@@ -633,7 +633,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				log.Infof("Getting config: %v is modified, using new response", "DeliveryServiceRegexes")
 				toData.DeliveryServiceRegexes = dsr
 			}
-			toData.MetaData.DeliveryServiceRegexes = MakeReqMetaData(reqInf.Headers)
+			toData.MetaData.DeliveryServiceRegexes = MakeReqMetaData(reqInf.RespHeaders)
 			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
 		return nil
@@ -656,7 +656,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				log.Infof("Getting config: %v is modified, using new response", "CacheKeyParams")
 				toData.CacheKeyParams = params
 			}
-			toData.MetaData.CacheKeyParams = MakeReqMetaData(reqInf.Headers)
+			toData.MetaData.CacheKeyParams = MakeReqMetaData(reqInf.RespHeaders)
 			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
 		return nil
@@ -679,7 +679,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				log.Infof("Getting config: %v is modified, using new response", "ParentConfigParams")
 				toData.ParentConfigParams = parentConfigParams
 			}
-			toData.MetaData.ParentConfigParams = MakeReqMetaData(reqInf.Headers)
+			toData.MetaData.ParentConfigParams = MakeReqMetaData(reqInf.RespHeaders)
 			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
 		return nil
@@ -703,7 +703,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				log.Infof("Getting config: %v is modified, using new response", "Topologies")
 				toData.Topologies = topologies
 			}
-			toData.MetaData.Topologies = MakeReqMetaData(reqInf.Headers)
+			toData.MetaData.Topologies = MakeReqMetaData(reqInf.RespHeaders)
 			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
 		return nil
