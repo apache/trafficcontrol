@@ -421,7 +421,7 @@ func search(cluster StorageCluster, index string, query string, filterQuery stri
 			return nil, fmt.Errorf("riak command unexpected type %T", iCmd)
 		}
 		if cmd.Response == nil {
-			return nil, fmt.Errorf("riak recieved nil responce")
+			return nil, fmt.Errorf("riak received nil response")
 		}
 		if start == 0 {
 			if cmd.Response.NumFound <= numRows {
