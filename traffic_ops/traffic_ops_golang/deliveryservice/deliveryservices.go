@@ -623,6 +623,8 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 		return nil, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
 	}
 
+	dsV40 = ds
+
 	return &dsV40, http.StatusOK, nil, nil
 }
 
