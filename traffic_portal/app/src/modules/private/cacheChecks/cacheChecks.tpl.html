@@ -18,48 +18,7 @@ under the License.
 -->
 
 <div class="x_panel">
-    <div class="x_title">
-        <ol class="breadcrumb pull-left">
-            <li class="active">Cache Checks</li>
-        </ol>
-        <div class="pull-right" role="group">
-            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-        </div>
-        <div class="clearfix"></div>
-    </div>
-    <div class="x_content">
-        <br>
-        <table id="cacheChecksTable" class="table responsive-utilities jambo_table">
-            <thead>
-            <tr class="headings">
-                <th>Hostname</th>
-                <th>Profile</th>
-                <th>Status</th>
-                <th ng-if="::config.updatePending.show" uib-popover="{{::config.updatePending.desc}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{::config.updatePending.key}}</th>
-                <th ng-if="::config.revalPending.show" uib-popover="{{::config.revalPending.desc}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{::config.revalPending.key}}</th>
-                <th ng-repeat="e in ::config.extensions" uib-popover="{{::e['desc']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{::e['key']}}</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr ng-click="editCache(cc.id)" ng-repeat="cc in ::cacheChecks">
-                <td>{{::cc.hostName}}</td>
-                <td>{{::cc.profile}}</td>
-                <td>{{::cc.adminState}}</td>
-                <td ng-if="::config.updatePending.show" data-order="{{::cc.updPending}}" data-search="{{(cc.updPending) ? config.updatePending.key : ''}}">
-                    <i title="Updates Pending" ng-show="cc.updPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
-                    <i title="Updates Applied" ng-show="!cc.updPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
-                </td>
-                <td ng-if="::config.revalPending.show" data-order="{{::cc.revalPending}}" data-search="{{(cc.revalPending) ? config.revalPending.key : ''}}">
-                    <i ng-show="cc.revalPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
-                </td>
-                <td ng-repeat="e in ::config.extensions" data-order="{{::cc.checks[e.key]}}" data-search="{{searchTerm(e, cc.checks[e.key])}}">
-                    <i ng-if="e.type == 'bool' && cc.checks[e.key] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
-                    <i ng-if="e.type == 'bool' && cc.checks[e.key] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
-                    <span ng-if="e.type != 'bool'">{{::cc.checks[e.key]}}</span>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+    <common-grid-controller title="Cache Checks" table-name="cacheChecks" options="gridOptions"
+                            data="cacheChecks" columns="columns"></common-grid-controller>
 </div>
 
