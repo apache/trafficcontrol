@@ -20,7 +20,7 @@
 import { BasePage } from './BasePage.po';
 import { randomize } from "../config";
 import { SideNavigationPage } from './SideNavigationPage.po';
-import { by, element } from 'protractor';
+import {browser, by, element} from 'protractor';
 
 interface DeliveryServices {
   Type: string;
@@ -57,7 +57,7 @@ export class DeliveryServicePage extends BasePage {
   private btnMore = element(by.name('moreBtn'));
   private mnuManageRequiredServerCapabilities = element(by.linkText('Manage Required Server Capabilities'));
   private btnAddRequiredServerCapabilities = element(by.name('addCapabilityBtn'));
-  private txtInputRC = element(by.name("selectFormDropdown")); 
+  private txtInputRC = element(by.name("selectFormDropdown"));
   private mnuManageServers = element(by.buttonText('Manage Servers'));
   private btnAssignServer = element(by.name("selectServersMenuItem"));
   private txtXmlId = element(by.name('xmlId'));
@@ -197,6 +197,7 @@ export class DeliveryServicePage extends BasePage {
     await this.mnuManageServers.click();
     await this.btnMore.click();
     await this.btnAssignServer.click();
+    await browser.sleep(1000);
     await element(by.cssContainingText("td", deliveryservice.ServerName)).click();
     await this.ClickSubmit();
     result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
@@ -214,6 +215,6 @@ export class DeliveryServicePage extends BasePage {
     result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
     return result;
   }
-  
+
 
 }
