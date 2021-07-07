@@ -16,6 +16,7 @@ package v4
 */
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -290,6 +291,15 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterReque
 	}
 }
 
+func jsonify(i interface{}, t *testing.T) string {
+	bts, err := json.MarshalIndent(i, "", "\t")
+	if err != nil {
+		t.Errorf("failed to marshal: %v", err)
+		return ""
+	}
+	return string(bts)
+}
+
 func GetTestPaginationSupportCgParameters(t *testing.T) {
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("orderby", "id")
@@ -297,34 +307,36 @@ func GetTestPaginationSupportCgParameters(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cannot get cachegroup parameters: %v - alerts: %+v", err, resp.Alerts)
 	}
-	cachegroupParameters := resp.Response
-	if len(cachegroupParameters.CacheGroupParameters) < 3 {
-		t.Fatalf("Need at least 3 cachegroup parameters in Traffic Ops to test pagination support, found: %d", len(cachegroupParameters.CacheGroupParameters))
+	cgps := resp.Response.CacheGroupParameters
+	if len(cgps) < 3 {
+		t.Fatalf("Need at least 3 cachegroup parameters in Traffic Ops to test pagination support, found: %d", len(cgps))
 	}
 
-	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
 	respWithLimit, _, err := TOSession.GetAllCacheGroupParameters(opts)
 	if err != nil {
 		t.Fatalf("cannot get cachegroup parameters with limits: %v - alerts: %+v", err, respWithLimit.Alerts)
 	}
-	cachegroupParametersWithLimit := respWithLimit.Response
-	if !reflect.DeepEqual(cachegroupParameters.CacheGroupParameters[:1], cachegroupParametersWithLimit.CacheGroupParameters) {
+	cgpsWithLimit := respWithLimit.Response.CacheGroupParameters
+	if !reflect.DeepEqual(cgps[:1], cgpsWithLimit) {
 		t.Error("expected GET cachegroup parameters with limit = 1 to return first result")
+		t.Logf("original response: %s", jsonify(cgps, t))
+		t.Logf("response with limit = 1: %s", jsonify(cgpsWithLimit, t))
 	}
 
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("offset", "1")
 	respWithOffset, _, err := TOSession.GetAllCacheGroupParameters(opts)
 	if err != nil {
 		t.Fatalf("cannot get cachegroup parameters with offset: %v - alerts: %+v", err, respWithOffset.Alerts)
 	}
-	cachegroupParametersWithOffset := respWithOffset.Response
-	if !reflect.DeepEqual(cachegroupParameters.CacheGroupParameters[1:2], cachegroupParametersWithOffset.CacheGroupParameters) {
+	cgpsWithOffset := respWithOffset.Response.CacheGroupParameters
+	if !reflect.DeepEqual(cgps[1:2], cgpsWithOffset) {
 		t.Error("expected GET cachegroup parameters with limit = 1, offset = 1 to return second result")
+		t.Logf("original response: %s", jsonify(cgps, t))
+		t.Logf("response with limit = 1 and offset = 1: %s", jsonify(cgpsWithOffset, t))
 	}
 
+	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("page", "2")
@@ -332,9 +344,11 @@ func GetTestPaginationSupportCgParameters(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cannot get cachegroup parameters with page: %v - alerts: %+v", err, respWithPage.Alerts)
 	}
-	cachegroupParametersWithPage := respWithPage.Response
-	if !reflect.DeepEqual(cachegroupParameters.CacheGroupParameters[1:2], cachegroupParametersWithPage.CacheGroupParameters) {
+	cgpsWithPage := respWithPage.Response.CacheGroupParameters
+	if !reflect.DeepEqual(cgps[1:2], cgpsWithPage) {
 		t.Error("expected GET cachegroup parameters with limit = 1, page = 2 to return second result")
+		t.Logf("original response: %s", jsonify(cgps, t))
+		t.Logf("response with limit = 1 page = 2: %s", jsonify(cgpsWithPage, t))
 	}
 
 	opts.QueryParameters = url.Values{}

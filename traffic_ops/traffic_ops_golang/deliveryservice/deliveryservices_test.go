@@ -23,9 +23,11 @@ import (
 	"net/http"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -203,5 +205,179 @@ func TestMakeExampleURLs(t *testing.T) {
 	}
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("MakeExampleURLs expected %v actual %v", expected, actual)
+	}
+}
+
+func TestReadGetDeliveryServices(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	u := auth.CurrentUser{
+		TenantID: 1,
+	}
+
+	mock.ExpectBegin()
+	tenantRows := sqlmock.NewRows([]string{"id"})
+	tenantRows.AddRow(u.TenantID)
+	mock.ExpectQuery("WITH RECURSIVE").WillReturnRows(tenantRows)
+	dsRows := sqlmock.NewRows([]string{
+		"active",
+		"anonymous_blocking_enabled",
+		"ccr_dns_ttl",
+		"cdn_id",
+		"cdnName",
+		"check_path",
+		"consistent_hash_regex",
+		"deep_caching_type",
+		"display_name",
+		"dns_bypass_cname",
+		"dns_bypass_ip",
+		"dns_bypass_ip6",
+		"dns_bypass_ttl",
+		"dscp",
+		"ecs_enabled",
+		"edge_header_rewrite",
+		"first_header_rewrite",
+		"geolimit_redirect_url",
+		"geo_limit",
+		"geo_limit_countries",
+		"geo_provider",
+		"global_max_mbps",
+		"global_max_tps",
+		"fq_pacing_rate",
+		"http_bypass_fqdn",
+		"id",
+		"info_url",
+		"initial_dispersion",
+		"inner_header_rewrite",
+		"ipv6_routing_enabled",
+		"last_header_rewrite",
+		"last_updated",
+		"logs_enabled",
+		"long_desc",
+		"long_desc_1",
+		"long_desc_2",
+		"max_dns_answers",
+		"max_origin_connections",
+		"max_request_header_bytes",
+		"mid_header_rewrite",
+		"miss_lat",
+		"miss_long",
+		"multi_site_origin",
+		"org_server_fqdn",
+		"origin_shield",
+		"profileID",
+		"profile_name",
+		"profile_description",
+		"protocol",
+		"qstring_ignore",
+		"query_keys",
+		"range_request_handling",
+		"regex_remap",
+		"regional_geo_blocking",
+		"remap_text",
+		"routing_name",
+		"service_category",
+		"signing_algorithm",
+		"range_slice_block_size",
+		"ssl_key_version",
+		"tenant_id",
+		"tenant.name",
+		"topology",
+		"tr_request_headers",
+		"tr_response_headers",
+		"name",
+		"type_id",
+		"xml_id",
+		"cdn_domain",
+	})
+	dsRows.AddRow(
+		true,
+		false,
+		nil,
+		1,
+		"test",
+		"",
+		"",
+		"NEVER",
+		"Demo 1",
+		nil,
+		nil,
+		nil,
+		nil,
+		1,
+		false,
+		nil,
+		nil,
+		nil,
+		0,
+		nil,
+		0,
+		nil,
+		nil,
+		nil,
+		nil,
+		1,
+		nil,
+		1,
+		nil,
+		true,
+		nil,
+		time.Now(),
+		false,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		0.0,
+		0.0,
+		false,
+		"origin.infra.ciab.test",
+		nil,
+		nil,
+		nil,
+		nil,
+		0,
+		0,
+		"{}",
+		0,
+		nil,
+		false,
+		nil,
+		"video",
+		nil,
+		nil,
+		nil,
+		nil,
+		1,
+		"test",
+		nil,
+		nil,
+		nil,
+		"test",
+		1,
+		"demo1",
+		"mycdn.ciab.test",
+	)
+	mock.ExpectQuery("^SELECT.*ORDER BY ds.xml_id$").WillReturnRows(dsRows)
+	regexRows := sqlmock.NewRows([]string{"ds_name", "type", "pattern", "set_number"})
+	regexRows.AddRow("demo1", "hostregexp", "", 0)
+	mock.ExpectQuery("SELECT ds\\.xml_id as ds_name, t\\.name as type, r\\.pattern, COALESCE\\(dsr\\.set_number, 0\\) FROM regex").WillReturnRows(regexRows)
+
+	_, userErr, sysErr, _, _ := readGetDeliveryServices(nil, nil, db.MustBegin(), &u, false)
+	if userErr != nil {
+		t.Errorf("Unexpected user error reading Delivery Services: %v", userErr)
+	}
+	if sysErr != nil {
+		t.Errorf("Unexpected system error reading Delivery Services: %v", sysErr)
 	}
 }
