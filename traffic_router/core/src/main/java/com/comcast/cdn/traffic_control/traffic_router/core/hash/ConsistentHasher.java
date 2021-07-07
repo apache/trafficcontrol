@@ -89,8 +89,10 @@ public class ConsistentHasher {
 			return hashableMap;
 		}
 
-		double minHash = 0;
-		double maxHash = 0;
+		final long middleValue = Double.doubleToLongBits(Double.MAX_VALUE) / 2;
+		final double middlePosition = Double.longBitsToDouble(middleValue);
+		double minHash = middlePosition;
+		double maxHash = middlePosition;
 
 		try {
 			minHash = hashableMap.firstKey();
