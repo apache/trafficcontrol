@@ -127,9 +127,6 @@ github.com/nxadm/tail/ratelimiter
 github.com/nxadm/tail/util
 github.com/nxadm/tail/watch
 github.com/nxadm/tail/winfile
-# github.com/ogier/pflag v0.0.2-0.20201025181535-73e519546fc0
-## explicit
-github.com/ogier/pflag
 # github.com/onsi/ginkgo v1.14.2
 ## explicit
 github.com/onsi/ginkgo
@@ -204,7 +201,6 @@ golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 # golang.org/x/text v0.3.6
-## explicit
 golang.org/x/text/encoding
 golang.org/x/text/encoding/charmap
 golang.org/x/text/encoding/htmlindex
@@ -245,6 +241,6 @@ gopkg.in/square/go-jose.v2/cipher
 gopkg.in/square/go-jose.v2/json
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 gopkg.in/tomb.v1
-# gopkg.in/yaml.v2 v2.3.0 => gopkg.in/yaml.v2 v2.2.1
+# gopkg.in/yaml.v2 v2.3.0 => gopkg.in/yaml.v2 v2.2.8
 ## explicit
 gopkg.in/yaml.v2

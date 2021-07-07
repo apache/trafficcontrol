@@ -102,6 +102,7 @@ RETURNING last_updated
 // PutStatus is the handler for PUT requests to
 // /deliveryservice_requests/{{ID}}/status.
 func PutStatus(w http.ResponseWriter, r *http.Request) {
+	var omitExtraLongDescFields bool
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
@@ -123,6 +124,9 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if inf.Version.Major >= 4 && inf.Version.Minor >= 0 {
+		omitExtraLongDescFields = true
+	}
 	var req tc.StatusChangeRequest
 	if err := api.Parse(r.Body, tx, &req); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -170,7 +174,7 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 	// (and isn't a "create" request)
 	if dsr.IsOpen() && req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted && dsr.ChangeType != tc.DSRChangeTypeCreate {
 		if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
-			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}})
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}}, omitExtraLongDescFields)
 			if userErr != nil || sysErr != nil {
 				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 				return
@@ -179,7 +183,7 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 				sysErr = fmt.Errorf("failed to build original from dsr #%d that was to be closed; requested ID: %d", dsrID, *dsr.Requested.ID)
 			}
 		} else if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
-			errCode, userErr, sysErr = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Original.ID: {&dsr}})
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Original.ID: {&dsr}}, omitExtraLongDescFields)
 			if userErr != nil || sysErr != nil {
 				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 				return
@@ -226,6 +230,12 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 
 	var resp interface{}
 	if inf.Version.Major >= 4 {
+		if dsr.Original != nil {
+			*dsr.Original = dsr.Original.RemoveLD1AndLD2()
+		}
+		if dsr.Requested != nil {
+			*dsr.Requested = dsr.Requested.RemoveLD1AndLD2()
+		}
 		resp = dsr
 	} else {
 		resp = dsr.Downgrade()

@@ -38,9 +38,9 @@ import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -104,11 +104,11 @@ public class CoverageZoneTest {
 		when(trafficRouter.getCoverageZoneCacheLocation("12.23.34.45", "delivery-service-1", IPVersions.IPV4ONLY)).thenCallRealMethod();
 		when(trafficRouter.getCoverageZoneCacheLocation("12.23.34.45", "delivery-service-1", false, null, IPVersions.IPV4ONLY)).thenCallRealMethod();
 		when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
-		when(trafficRouter.orderLocations(anyListOf(CacheLocation.class),any(Geolocation.class))).thenCallRealMethod();
-		when(trafficRouter.getSupportingCaches(anyListOf(Cache.class), eq(deliveryService), any(IPVersions.class))).thenCallRealMethod();
-		when(trafficRouter.filterEnabledLocations(anyListOf(CacheLocation.class), any(CacheLocation.LocalizationMethod.class))).thenCallRealMethod();
+		when(trafficRouter.orderLocations(anyList(),any(Geolocation.class))).thenCallRealMethod();
+		when(trafficRouter.getSupportingCaches(anyList(), eq(deliveryService), any(IPVersions.class))).thenCallRealMethod();
+		when(trafficRouter.filterEnabledLocations(anyList(), any(CacheLocation.LocalizationMethod.class))).thenCallRealMethod();
 		PowerMockito.when(trafficRouter, "getNetworkNode", "12.23.34.45").thenReturn(eastNetworkNode);
-		PowerMockito.when(trafficRouter, "getClosestCacheLocation", anyListOf(CacheLocation.class), any(CacheLocation.class), any(DeliveryService.class), any(IPVersions.class)).thenCallRealMethod();
+		PowerMockito.when(trafficRouter, "getClosestCacheLocation", anyList(), any(), any(), any()).thenCallRealMethod();
 	}
 
 	@Test

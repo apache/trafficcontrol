@@ -45,8 +45,8 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 import static org.powermock.api.mockito.PowerMockito.doCallRealMethod;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
@@ -63,13 +63,14 @@ public class ZoneManagerUnitTest {
         when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
 
         PowerMockito.spy(ZoneManager.class);
-        PowerMockito.doNothing().when(ZoneManager.class, "initTopLevelDomain", cacheRegister);
-        PowerMockito.doNothing().when(ZoneManager.class, "initZoneCache", trafficRouter);
+        PowerMockito.stub(PowerMockito.method(ZoneManager.class, "initTopLevelDomain")).toReturn(null);
+        PowerMockito.stub(PowerMockito.method(ZoneManager.class, "initZoneCache")).toReturn(null);
 
         SignatureManager signatureManager = PowerMockito.mock(SignatureManager.class);
         whenNew(SignatureManager.class).withArguments(any(ZoneManager.class), any(CacheRegister.class), any(TrafficOpsUtils.class), any(TrafficRouterManager.class)).thenReturn(signatureManager);
 
         zoneManager = spy(new ZoneManager(trafficRouter, new StatTracker(), null, mock(TrafficRouterManager.class)));
+
     }
 
     @Test

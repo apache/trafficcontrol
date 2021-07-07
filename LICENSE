@@ -531,11 +531,6 @@ This product bundles dgrijalva/jwt-go, which is available under an MIT license.
 ./vendor/github.com/dgrijalva/jwt-go/LICENSE
 Refer to the above license for the full text.
 
-This product bundles ogier/pflag, which is available under a BSD-3-Clause license.
-@vendor/github.com/ogier/pflag/*
-./vendor/github.com/ogier/pflag/LICENSE
-Refer to the above license for the full text.
-
 This product bundles errors, which is available under a BSD-2-Clause license.
 @vendor/github.com/pkg/errors/*
 ./vendor/github.com/pkg/errors/LICENSE

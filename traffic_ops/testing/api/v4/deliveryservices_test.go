@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -43,54 +42,151 @@ func TestDeliveryServices(t *testing.T) {
 		header.Set(rfc.IfModifiedSince, ti)
 		header.Set(rfc.IfUnmodifiedSince, ti)
 		if includeSystemTests {
-			SSLDeliveryServiceCDNUpdateTest(t)
-			CreateTestDeliveryServicesURLSignatureKeys(t)
-			GetTestDeliveryServicesURLSignatureKeys(t)
-			DeleteTestDeliveryServicesURLSignatureKeys(t)
-			CreateTestDeliveryServicesURISigningKeys(t)
-			GetTestDeliveryServicesURISigningKeys(t)
-			DeleteTestDeliveryServicesURISigningKeys(t)
-			DeleteCDNOldSSLKeys(t)
-			DeliveryServiceSSLKeys(t)
+			t.Run("Update CDN for a Delivery Service with SSL keys", SSLDeliveryServiceCDNUpdateTest)
+			t.Run("Create URL Signature keys for a Delivery Service", CreateTestDeliveryServicesURLSignatureKeys)
+			t.Run("Retrieve URL Signature keys for a Delivery Service", GetTestDeliveryServicesURLSignatureKeys)
+			t.Run("Delete URL Signature keys for a Delivery Service", DeleteTestDeliveryServicesURLSignatureKeys)
+			t.Run("Create URI Signing Keys for a Delivery Service", CreateTestDeliveryServicesURISigningKeys)
+			t.Run("Retrieve URI Signing keys for a Delivery Service", GetTestDeliveryServicesURISigningKeys)
+			t.Run("Delete URI Signing keys for a Delivery Service", DeleteTestDeliveryServicesURISigningKeys)
+			t.Run("Delete old CDN SSL keys", DeleteCDNOldSSLKeys)
+			t.Run("Create and retrieve SSL keys for a Delivery Service", DeliveryServiceSSLKeys)
 		}
 
-		GetTestDeliveryServicesIMS(t)
-		GetAccessibleToTest(t)
-		UpdateTestDeliveryServices(t)
-		UpdateValidateORGServerCacheGroup(t)
-		UpdateTestDeliveryServicesWithHeaders(t, header)
-		UpdateNullableTestDeliveryServices(t)
-		UpdateDeliveryServiceWithInvalidRemapText(t)
-		UpdateDeliveryServiceWithInvalidSliceRangeRequest(t)
-		UpdateDeliveryServiceWithInvalidTopology(t)
-		GetTestDeliveryServicesIMSAfterChange(t, header)
-		UpdateDeliveryServiceTopologyHeaderRewriteFields(t)
-		GetTestDeliveryServices(t)
-		GetInactiveTestDeliveryServices(t)
-		GetTestDeliveryServicesCapacity(t)
-		DeliveryServiceMinorVersionsTest(t)
-		DeliveryServiceTenancyTest(t)
-		PostDeliveryServiceTest(t)
+		t.Run("Create a Delivery Service with the removed Long Description 2 and 3 fields", CreateTestDeliveryServiceWithLongDescFields)
+		t.Run("Update a Delivery Service, setting its removed Long Description 2 and 3 fields", UpdateTestDeliveryServiceWithLongDescFields)
+		t.Run("Getting unmodified Delivery Services using the If-Modified-Since header", GetTestDeliveryServicesIMS)
+		t.Run("Getting Delivery Services accessible to a Tenant", GetAccessibleToTest)
+		t.Run("Basic update of some Delivery Service fields", UpdateTestDeliveryServices)
+		t.Run("Assign an Origin not in a Cache Group used by a Delivery Service's Topology to that Delivery Service", UpdateValidateORGServerCacheGroup)
+		t.Run("Attempt to update a Delivery Service with If-Unmodified-Since", testUpdatingDeliveryServicesWithIUSOrIfMatch(header))
+		t.Run("Basic update of some other Delivery Service fields", UpdateNullableTestDeliveryServices)
+		t.Run("Update a Delivery Service giving it invalid Raw Remap text", UpdateDeliveryServiceWithInvalidRemapText)
+		t.Run("Update a Delivery Service giving it invalid combinations of Range Slice Block Size and Range Request Handling", UpdateDeliveryServiceWithInvalidSliceRangeRequest)
+		t.Run("Invalid Topology-to-Delivery Service assignments", UpdateDeliveryServiceWithInvalidTopology)
+		t.Run("Getting modified Delivery Services using the If-Modified-Since header", testGettingDeliveryServicesWithIMSAfterModification(header))
+		t.Run("Basic update of Delivery Service header rewrite fields", UpdateDeliveryServiceTopologyHeaderRewriteFields)
+		t.Run("Basic GET request", GetTestDeliveryServices)
+		t.Run("GET requests using the 'active' query string parameter", GetInactiveTestDeliveryServices)
+		t.Run("Basic GET request for /deliveryservices/{{ID}}/capacity", GetTestDeliveryServicesCapacity)
+		t.Run("Update fields added in new minor versions of the API", DeliveryServiceMinorVersionsTest)
+		t.Run("Verify Tenancy-restricted Delivery Service access", DeliveryServiceTenancyTest)
+		t.Run("Attempt to create invalid Delivery Services", PostDeliveryServiceTest)
 		header = make(map[string][]string)
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
-		UpdateTestDeliveryServicesWithHeaders(t, header)
-		VerifyPaginationSupportDS(t)
-		GetDeliveryServiceByCdn(t)
-		GetDeliveryServiceByInvalidCdn(t)
-		GetDeliveryServiceByInvalidProfile(t)
-		GetDeliveryServiceByInvalidTenant(t)
-		GetDeliveryServiceByInvalidType(t)
-		GetDeliveryServiceByInvalidAccessibleTo(t)
-		GetDeliveryServiceByInvalidXmlId(t)
-		GetDeliveryServiceByLogsEnabled(t)
-		GetDeliveryServiceByValidProfile(t)
-		GetDeliveryServiceByValidTenant(t)
-		GetDeliveryServiceByValidType(t)
-		GetDeliveryServiceByValidXmlId(t)
-		SortTestDeliveryServicesDesc(t)
-		SortTestDeliveryServices(t)
+		t.Run("Attempt to update a Delivery Service with If-Match", testUpdatingDeliveryServicesWithIUSOrIfMatch(header))
+		t.Run("GET requests using pagination-controlling query string parameters", VerifyPaginationSupportDS)
+		t.Run("GET requests using the 'cdn' query string parameter", GetDeliveryServiceByCdn)
+		t.Run("Check behavior of 'cdn' query string parameter when CDN doesn't exist", GetDeliveryServiceByInvalidCdn)
+		t.Run("Check behavior of 'profile' query string parameter when Profile doesn't exist", GetDeliveryServiceByInvalidProfile)
+		t.Run("Check behavior of 'tenant' query string parameter when Tenant doesn't exist", GetDeliveryServiceByInvalidTenant)
+		t.Run("Check behavior of 'type' query string parameter when Type doesn't exist", GetDeliveryServiceByInvalidType)
+		t.Run("Check behavior of 'accessibleTo' query string parameter when the Tenant doesn't exist", GetDeliveryServiceByInvalidAccessibleTo)
+		t.Run("Check behavior of 'xmlId' query string parameter when xmlId doesn't exist", GetDeliveryServiceByInvalidXmlId)
+		t.Run("GET request using the 'logsEnabled' query string parameter", GetDeliveryServiceByLogsEnabled)
+		t.Run("GET request using the 'profile' query string parameter", GetDeliveryServiceByValidProfile)
+		t.Run("GET request using the 'tenant' query string parameter", GetDeliveryServiceByValidTenant)
+		t.Run("GET request using the 'type' query string parameter", GetDeliveryServiceByValidType)
+		t.Run("GET request using the 'xmlId' query string parameter", GetDeliveryServiceByValidXmlId)
+		t.Run("Descending order sorted response to GET request", SortTestDeliveryServicesDesc)
 	})
+}
+
+func CreateTestDeliveryServiceWithLongDescFields(t *testing.T) {
+	if len(testData.DeliveryServices) < 1 {
+		t.Fatal("Need at least one Delivery Service to test updating a Delivery Service")
+	}
+	firstDS := testData.DeliveryServices[0]
+	if firstDS.XMLID == nil {
+		t.Fatal("Found a Delivery Service in the test data with a null or undefined XMLID")
+	}
+
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
+	if err != nil {
+		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
+	}
+	var remoteDS tc.DeliveryServiceV4
+	found := false
+	for _, ds := range dses.Response {
+		if ds.XMLID == nil {
+			t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
+			continue
+		}
+		if *ds.XMLID == *firstDS.XMLID {
+			found = true
+			remoteDS = ds
+			break
+		}
+	}
+	if !found {
+		t.Errorf("GET Delivery Services missing: %v", firstDS.XMLID)
+	}
+	if remoteDS.ID == nil {
+		t.Fatal("Traffic Ops returned a representation for a Delivery Service with null or undefined ID") //... or it returned no DSes at all
+	}
+	remoteDS.XMLID = util.StrPtr("testDSCreation")
+	remoteDS.DisplayName = util.StrPtr("test DS with LD1 and LD2 fields")
+	remoteDS.LongDesc1 = util.StrPtr("long desc 1")
+	remoteDS.LongDesc2 = util.StrPtr("Long desc 2")
+	_, reqInf, err := TOSession.CreateDeliveryService(remoteDS, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("expected an error stating that Long Desc 1 and Long Desc 2 fields are not supported in api version 4.0 onwards, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected a 400 status code, but got %d", reqInf.StatusCode)
+	}
+}
+
+func UpdateTestDeliveryServiceWithLongDescFields(t *testing.T) {
+	if len(testData.DeliveryServices) < 1 {
+		t.Fatal("Need at least one Delivery Service to test updating a Delivery Service")
+	}
+	firstDS := testData.DeliveryServices[0]
+	if firstDS.XMLID == nil {
+		t.Fatal("Found a Delivery Service in the test data with a null or undefined XMLID")
+	}
+
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
+	if err != nil {
+		t.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
+	}
+
+	var remoteDS tc.DeliveryServiceV4
+	found := false
+	for _, ds := range dses.Response {
+		if ds.XMLID == nil {
+			t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
+			continue
+		}
+		if *ds.XMLID == *firstDS.XMLID {
+			found = true
+			remoteDS = ds
+			break
+		}
+	}
+	if !found {
+		t.Errorf("GET Delivery Services missing: %v", firstDS.XMLID)
+	}
+	if remoteDS.ID == nil {
+		t.Fatal("Traffic Ops returned a representation for a Delivery Service with null or undefined ID") //... or it returned no DSes at all
+	}
+
+	remoteDS.LongDesc1 = util.StrPtr("long desc 1")
+	remoteDS.LongDesc2 = util.StrPtr("Long desc 2")
+	_, reqInf, err := TOSession.UpdateDeliveryService(*remoteDS.ID, remoteDS, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("expected an error stating that Long Desc 1 and Long Desc 2 fields are not supported in api version 4.0 onwards, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected a 400 status code, but got %d", reqInf.StatusCode)
+	}
+}
+
+func testUpdatingDeliveryServicesWithIUSOrIfMatch(h http.Header) func(*testing.T) {
+	return func(t *testing.T) {
+		UpdateTestDeliveryServicesWithHeaders(t, h)
+	}
 }
 
 func UpdateTestDeliveryServicesWithHeaders(t *testing.T, header http.Header) {
@@ -597,6 +693,12 @@ func SSLDeliveryServiceCDNUpdateTest(t *testing.T) {
 	}
 }
 
+func testGettingDeliveryServicesWithIMSAfterModification(h http.Header) func(*testing.T) {
+	return func(t *testing.T) {
+		GetTestDeliveryServicesIMSAfterChange(t, h)
+	}
+}
+
 func GetTestDeliveryServicesIMSAfterChange(t *testing.T, header http.Header) {
 	opts := client.RequestOptions{Header: header}
 	resp, reqInf, err := TOSession.GetDeliveryServices(opts)
@@ -665,6 +767,7 @@ func CreateTestDeliveryServices(t *testing.T) {
 		t.Errorf("cannot create parameter: %v - alerts: %+v", err, alerts.Alerts)
 	}
 	for _, ds := range testData.DeliveryServices {
+		ds = ds.RemoveLD1AndLD2()
 		resp, _, err := TOSession.CreateDeliveryService(ds, client.RequestOptions{})
 		if err != nil {
 			t.Errorf("could not create Delivery Service '%s': %v - alerts: %+v", *ds.XMLID, err, resp.Alerts)
@@ -1986,8 +2089,12 @@ func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 		t.Errorf("failed to unmarshal uri sig keys")
 	}
 
-	if len(firstKeys) == 0 {
-		t.Errorf("failed to create uri sig keys")
+	kabletownFirstKeys, ok := firstKeys["Kabletown URI Authority 1"]
+	if !ok {
+		t.Fatal("failed to create uri sig keys: 'Kabletown URI Authority 1' not found in response after creation")
+	}
+	if len(kabletownFirstKeys.Keys) < 1 {
+		t.Fatal("failed to create URI signing keys: 'Kabletown URI Authority 1' had zero keys after creation")
 	}
 
 	// Create new keys again and check that they are different
@@ -2012,12 +2119,16 @@ func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 		t.Errorf("failed to unmarshal uri sig keys")
 	}
 
-	if len(secondKeys) == 0 {
-		t.Errorf("failed to create uri sig keys")
+	kabletownSecondKeys, ok := secondKeys["Kabletown URI Authority 1"]
+	if !ok {
+		t.Fatal("failed to create uri sig keys: 'Kabletown URI Authority 1' not found in response after creation")
+	}
+	if len(kabletownSecondKeys.Keys) < 1 {
+		t.Fatal("failed to create URI signing keys: 'Kabletown URI Authority 1' had zero keys after creation")
 	}
 
-	if secondKeys["Kabletown URI Authority 1"].Keys[0].KeyID == firstKeys["Kabletown URI Authority 1"].Keys[0].KeyID {
-		t.Errorf("second create did not generate new uri sig keys")
+	if kabletownSecondKeys.Keys[0].KeyID == kabletownFirstKeys.Keys[0].KeyID {
+		t.Errorf("second create did not generate new uri sig keys - key mismatch")
 	}
 }
 
@@ -2266,25 +2377,5 @@ func SortTestDeliveryServicesDesc(t *testing.T) {
 		if !reflect.DeepEqual(respDesc[0].XMLID, respAsc[0].XMLID) {
 			t.Errorf("Delivery Service responses are not equal after reversal: %v - %v", *respDesc[0].XMLID, *respAsc[0].XMLID)
 		}
-	}
-}
-
-func SortTestDeliveryServices(t *testing.T) {
-	resp, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("Unexpected error getting Delivery Services: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	sortedList := make([]string, 0, len(resp.Response))
-	for _, ds := range resp.Response {
-		if ds.XMLID == nil {
-			t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
-			continue
-		}
-		sortedList = append(sortedList, *ds.XMLID)
-	}
-
-	if !sort.StringsAreSorted(sortedList) {
-		t.Errorf("list is not sorted by their XML Id: %v", sortedList)
 	}
 }

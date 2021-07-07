@@ -1794,13 +1794,6 @@
         },
         {
             "configFile": "global",
-            "lastUpdated": "2018-01-19T19:01:21.501151+00:00",
-            "name": "use_tenancy",
-            "secure": false,
-            "value": "1"
-        },
-        {
-            "configFile": "global",
             "lastUpdated": "2020-04-21T05:19:43.853831+00:00",
             "name": "tm.instance_name",
             "secure": false,

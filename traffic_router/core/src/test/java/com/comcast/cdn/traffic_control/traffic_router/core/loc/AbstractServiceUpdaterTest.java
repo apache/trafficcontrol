@@ -29,15 +29,18 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.method;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
+import static org.powermock.api.support.membermodification.MemberModifier.stub;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({AbstractServiceUpdater.class, HttpURLConnection.class, URL.class, Files.class})
@@ -58,10 +61,10 @@ public class AbstractServiceUpdaterTest {
 		when(databasePath.toFile()).thenReturn(databaseFile);
 
 		databasesDirectory = mock(Path.class);
-		when(databasesDirectory.resolve(anyString())).thenReturn(databasePath);
+		when(databasesDirectory.resolve((String) isNull())).thenReturn(databasePath);
 
 		mockStatic(Files.class);
-		PowerMockito.when(Files.exists(any(Path.class))).thenReturn(true);
+		stub(method(Files.class, "exists")).toReturn(true);
 
 
 		connection = PowerMockito.mock(HttpURLConnection.class);
@@ -69,7 +72,7 @@ public class AbstractServiceUpdaterTest {
 		when(connection.getResponseCode()).thenReturn(304);
 
 		URL url = PowerMockito.mock(URL.class);
-		when(url.openConnection()).thenReturn(connection);
+		stub(method(URL.class, "openConnection")).toReturn(connection);
 
 		whenNew(URL.class).withAnyArguments().thenReturn(url);
 	}

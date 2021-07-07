@@ -98,7 +98,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	w.Write(append(respBts, '\n'))
+	api.WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
 func getHWInfo(tx *sqlx.Tx, params map[string]string) ([]tc.HWInfo, error) {

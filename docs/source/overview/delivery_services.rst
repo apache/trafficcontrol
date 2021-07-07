@@ -460,34 +460,6 @@ Free text field that has no strictly defined purpose, but it is suggested that i
 	| longDesc | Traffic Control source code and :ref:`to-api` responses | unchanged (``string``, ``String`` etc.) |
 	+----------+---------------------------------------------------------+-----------------------------------------+
 
-.. _ds-longdesc2:
-
-Long Description 2
-------------------
-Free text field that has no strictly defined purpose.
-
-.. table::
-
-	+----------------------------+---------------------------------------------------------+-----------------------------------------+
-	| Name                       | Use(s)                                                  | Type(s)                                 |
-	+============================+=========================================================+=========================================+
-	| longDesc1\ [#cardinality]_ | Traffic Control source code and :ref:`to-api` responses | unchanged (``string``, ``String`` etc.) |
-	+----------------------------+---------------------------------------------------------+-----------------------------------------+
-
-.. _ds-longdesc3:
-
-Long Description 3
-------------------
-Free text field that has no strictly defined purpose.
-
-.. table::
-
-	+----------------------------+---------------------------------------------------------+-----------------------------------------+
-	| Name                       | Use(s)                                                  | Type(s)                                 |
-	+============================+=========================================================+=========================================+
-	| longDesc2\ [#cardinality]_ | Traffic Control source code and :ref:`to-api` responses | unchanged (``string``, ``String`` etc.) |
-	+----------------------------+---------------------------------------------------------+-----------------------------------------+
-
 .. _ds-matchlist:
 
 Match List

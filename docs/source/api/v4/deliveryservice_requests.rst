@@ -138,8 +138,6 @@ The response is an array of representations of :term:`Delivery Service Requests`
 			"lastUpdated": "0001-01-01 00:00:00+00",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
-			"longDesc1": null,
-			"longDesc2": null,
 			"matchList": [
 				{
 					"type": "HOST_REGEXP",
@@ -254,8 +252,6 @@ The request must be a well-formed representation of a :term:`Delivery Service Re
 			"lastUpdated": "2020-02-13 16:43:54+00",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
-			"longDesc1": null,
-			"longDesc2": null,
 			"matchList": [
 				{
 					"type": "HOST_REGEXP",
@@ -379,8 +375,6 @@ The response will be a representation of the created :term:`Delivery Service Req
 				"lastUpdated": "0001-01-01 00:00:00+00",
 				"logsEnabled": true,
 				"longDesc": "Apachecon North America 2018",
-				"longDesc1": null,
-				"longDesc2": null,
 				"matchList": [
 					{
 						"type": "HOST_REGEXP",
@@ -464,8 +458,6 @@ The response will be a representation of the created :term:`Delivery Service Req
 				"lastUpdated": "2020-02-13 16:43:54+00",
 				"logsEnabled": true,
 				"longDesc": "Apachecon North America 2018",
-				"longDesc1": null,
-				"longDesc2": null,
 				"matchList": [
 					{
 						"type": "HOST_REGEXP",
@@ -639,8 +631,6 @@ The response is a full representation of the edited :term:`Delivery Service Requ
 			"lastUpdated": "2020-09-25 02:09:54+00",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
-			"longDesc1": null,
-			"longDesc2": null,
 			"matchList": [
 				{
 					"type": "HOST_REGEXP",
@@ -726,8 +716,6 @@ The response is a full representation of the edited :term:`Delivery Service Requ
 			"lastUpdated": null,
 			"logsEnabled": false,
 			"longDesc": "long desc",
-			"longDesc1": null,
-			"longDesc2": null,
 			"matchList": null,
 			"maxDnsAnswers": null,
 			"midHeaderRewrite": null,

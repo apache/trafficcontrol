@@ -17,6 +17,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.util;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
@@ -28,9 +29,12 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.powermock.api.mockito.PowerMockito.method;
 import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
+import static org.powermock.api.support.membermodification.MemberModifier.stub;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Fetcher.class, URL.class, InputStreamReader.class})
@@ -53,7 +57,7 @@ public class FetcherTest {
         when(httpURLConnection.getInputStream()).thenReturn(inputStream);
 
         URL url = mock(URL.class);
-        when(url.openConnection()).thenReturn(httpURLConnection);
+        stub(method(URL.class, "openConnection")).toReturn(httpURLConnection);
         whenNew(URL.class).withArguments("http://www.example.com").thenReturn(url);
 
         Fetcher fetcher = new Fetcher();

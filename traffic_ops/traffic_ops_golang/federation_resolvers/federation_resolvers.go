@@ -340,5 +340,5 @@ func DeleteByID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set(rfc.ContentType, rfc.MIME_JSON.String())
 	w.WriteHeader(statusCode)
-	w.Write(append(respBts, '\n'))
+	api.WriteAndLogErr(w, r, append(respBts, '\n'))
 }

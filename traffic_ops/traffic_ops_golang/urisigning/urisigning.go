@@ -68,7 +68,7 @@ func GetURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(ro)
+	api.WriteAndLogErr(w, r, ro)
 }
 
 // removeDeliveryServiceURIKeysHandler is the HTTP DELETE handler used to remove urisigning keys assigned to a delivery service.
@@ -167,7 +167,7 @@ func SaveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+xmlID+", ID: "+strconv.Itoa(dsID)+", ACTION: Stored URI signing keys to a delivery service", inf.User, inf.Tx.Tx)
 	w.Header().Set("Content-Type", rfc.ApplicationJSON)
-	w.Write(data)
+	api.WriteAndLogErr(w, r, data)
 }
 
 // getDSIDFromName loads the DeliveryService's ID from the database, from the xml_id. Returns whether the delivery service was found, and any error.
