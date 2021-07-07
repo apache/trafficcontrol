@@ -209,7 +209,7 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 
 	version := inf.Version
 	if version == nil {
-		return nil, nil, fmt.Errorf("TOUsers.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError, nil
+		return nil, nil, fmt.Errorf("TOUsers.Read called with invalid API version"), http.StatusInternalServerError, nil
 	}
 	if version.Major >= 4 {
 		query = this.SelectQuery40() + where + orderBy + pagination
