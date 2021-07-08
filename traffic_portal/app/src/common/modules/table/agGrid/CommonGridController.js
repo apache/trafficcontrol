@@ -45,9 +45,9 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
     this.selectedData = [];
     /** @type any */
     this.defaultData = {};
-    /** @type CGC.CommonOption[] */
+    /** @type CGC.DropDownOption[] */
     this.dropDownOptions = [];
-    /** @type CGC.CommonOption[] */
+    /** @type CGC.ContextMenuOption[] */
     this.contextMenuOptions = [];
     /** @type CGC.TitleButton */
     this.titleButton = {};

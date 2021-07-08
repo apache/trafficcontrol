@@ -43,11 +43,11 @@ export namespace CGC {
         shown(row: any): void;
 
         // If href is undefined, getHref is called
-        href: string;
+        href?: string;
         getHref(row: any): string;
 
         // If text is undefined, getText is called
-        text: string;
+        text?: string;
         getText(row: any): string;
     }
 
