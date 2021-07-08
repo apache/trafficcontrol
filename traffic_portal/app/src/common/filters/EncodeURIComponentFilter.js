@@ -17,9 +17,22 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.filters', [])
-	.filter('encodeURIComponent', require('./EncodeURIComponentFilter'))
-	.filter('offsetFilter', require('./OffsetFilter'))
-	.filter('percentFilter', require('./PercentFilter'))
-	.filter('unitsFilter', require('./UnitsFilter'))
-;
+/**
+ * This is a factory function for an AngularJS filter meant to allow easy
+ * sanitization of interpolated input into URL query strings.
+ *
+ * @example
+ *
+ * <a ng-href="https://example.test/something?foo={{someString | encodeURIComponent}}">
+ *   A safe link
+ * </a>
+ *
+ * @returns {(input: string) => string} A filter that sanitizes input text for safe insertion into URL query strings.
+ */
+var EncodeURIComponentFilter = function() {
+    return function(input) {
+        return encodeURIComponent(input);
+    };
+};
+
+module.exports = EncodeURIComponentFilter;

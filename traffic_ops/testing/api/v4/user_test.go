@@ -477,7 +477,7 @@ func UserTenancyTest(t *testing.T) {
 	tenant4Found := false
 	tenant3Username := "tenant3user"
 	tenant4Username := "tenant4user"
-	tenant3User := tc.User{}
+	tenant3User := tc.UserV40{}
 
 	// assert admin user can view tenant3user and tenant4user
 	for _, user := range users.Response {

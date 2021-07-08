@@ -107,6 +107,12 @@ type User struct {
 	commonUserFields
 }
 
+// UserV40 contains ChangeLogCount field
+type UserV40 struct {
+	User
+	ChangeLogCount *int `json:"changeLogCount" db:"change_log_count"`
+}
+
 // UserCurrent represents the profile for the authenticated user
 type UserCurrent struct {
 	UserName  *string `json:"username"`
@@ -291,6 +297,12 @@ type UsersResponseV13 struct {
 // UsersResponse can hold a Traffic Ops API response to a request to get a list of users.
 type UsersResponse struct {
 	Response []User `json:"response"`
+	Alerts
+}
+
+// UsersResponseV40 is the Traffic Ops API version 4.0 variant of UserResponse.
+type UsersResponseV40 struct {
+	Response []UserV40 `json:"response"`
 	Alerts
 }
 

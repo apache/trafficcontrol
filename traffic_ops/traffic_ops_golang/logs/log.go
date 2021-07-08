@@ -22,12 +22,15 @@ package logs
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 const DefaultLogLimit = 1000
@@ -61,7 +64,7 @@ func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	}
 
 	setLastSeenCookie(w)
-	logs, err := getLog(inf.Tx.Tx, days, limit)
+	logs, count, err := getLog(inf, days, limit)
 	if err != nil {
 		a.AddNewAlert(tc.ErrorLevel, err.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, a)
@@ -70,9 +73,8 @@ func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	if a.HasAlerts() {
 		api.WriteAlertsObj(w, r, 200, a, logs)
 	} else {
-		api.WriteResp(w, r, logs)
+		api.WriteRespWithSummary(w, r, logs, count)
 	}
-
 }
 
 func GetNewCount(w http.ResponseWriter, r *http.Request) {
@@ -121,26 +123,64 @@ func getLastSeenCookie(r *http.Request) (time.Time, bool) {
 	return lastSeen, true
 }
 
-func getLog(tx *sql.Tx, days int, limit int) ([]tc.Log, error) {
-	rows, err := tx.Query(`
+const selectFromQuery = `
 SELECT l.id, l.level, l.message, u.username as user, l.ticketnum, l.last_updated
-FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id
-WHERE l.last_updated > now() - ($1 || ' DAY')::INTERVAL
-ORDER BY l.last_updated DESC
-LIMIT $2
-`, days, limit)
+FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id`
+
+const countQuery = `SELECT count(l.tm_user) FROM log as l`
+
+func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
+	var count = uint64(0)
+	var whereCount string
+	if _, ok := inf.Params["limit"]; !ok {
+		inf.Params["limit"] = strconv.Itoa(DefaultLogLimit)
+	} else {
+		inf.Params["limit"] = strconv.Itoa(limit)
+	}
+
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"username": dbhelpers.WhereColumnInfo{Column: "u.username", Checker: nil},
+	}
+	where, _, pagination, queryValues, errs :=
+		dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return nil, 0, util.JoinErrs(errs)
+	}
+
+	timeInterval := fmt.Sprintf("l.last_updated > now() - INTERVAL '%v' DAY", days)
+	if where != "" {
+		whereCount = ", tm_user as u\n" + where + " AND l.tm_user = u.id"
+		where = where + " AND " + timeInterval
+	} else {
+		whereCount = where
+		where = "\nWHERE " + timeInterval
+	}
+
+	queryCount := countQuery + whereCount
+	rowCount, err := inf.Tx.NamedQuery(queryCount, queryValues)
 	if err != nil {
-		return nil, errors.New("querying logs: " + err.Error())
+		return nil, count, errors.New("querying log count for a given user: " + err.Error())
+	}
+	for rowCount.Next() {
+		if err = rowCount.Scan(&count); err != nil {
+			return nil, count, errors.New("scanning logs: " + err.Error())
+		}
+	}
+
+	query := selectFromQuery + where + "\n ORDER BY last_updated DESC" + pagination
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return nil, count, errors.New("querying logs: " + err.Error())
 	}
 	ls := []tc.Log{}
 	for rows.Next() {
 		l := tc.Log{}
 		if err = rows.Scan(&l.ID, &l.Level, &l.Message, &l.User, &l.TicketNum, &l.LastUpdated); err != nil {
-			return nil, errors.New("scanning logs: " + err.Error())
+			return nil, count, errors.New("scanning logs: " + err.Error())
 		}
 		ls = append(ls, l)
 	}
-	return ls, nil
+	return ls, count, nil
 }
 
 func getLogCountSince(tx *sql.Tx, since time.Time) (uint64, error) {
