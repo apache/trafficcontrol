@@ -236,18 +236,8 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
             valueFormatter: dateCellFormatter
         },
         {
-            headerName: "Long Desc 1",
+            headerName: "Long Desc",
             field: "longDesc",
-            hide: true
-        },
-        {
-            headerName: "Long Desc 2",
-            field: "longDesc1",
-            hide: true
-        },
-        {
-            headerName: "Long Desc 3",
-            field: "longDesc2",
             hide: true
         },
         {

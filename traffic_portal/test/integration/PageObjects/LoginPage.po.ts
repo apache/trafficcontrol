@@ -46,10 +46,11 @@ export class LoginPage extends BasePage{
     private btnLogin = element(by.name("loginSubmit"))
     private lnkResetPassword= element (by.xpath("//button[text()='Reset Password']"))
     private lblUserName = element(by.xpath("//span[@id='headerUsername']"))
+    private bannerEnvironment = element(by.css('.enviro-banner.prod'));
     private randomize = randomize;
 
 
-    async Login(login: LoginData){
+    public async Login(login: LoginData){
         let result = false;
         const basePage = new BasePage();
         if(login.username === 'admin'){
@@ -77,6 +78,14 @@ export class LoginPage extends BasePage{
 
     public async CheckUserName(login: LoginData): Promise<boolean> {
         if(await this.lblUserName.getText() === 'admin' || await this.lblUserName.getText() === login.username+this.randomize){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    public async CheckBanner(): Promise<boolean> {
+        if(await this.bannerEnvironment.isPresent()){
             return true;
         }else{
             return false;

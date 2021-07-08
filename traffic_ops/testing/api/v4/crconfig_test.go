@@ -56,12 +56,14 @@ func SnapshotWithReadOnlyUser(t *testing.T) {
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	user := tc.User{
-		Username:             util.StrPtr("test_user"),
-		RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
-		LocalPassword:        util.StrPtr("test_pa$$word"),
-		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-		RoleName:             util.StrPtr("read-only user"),
+	user := tc.UserV40{
+		User: tc.User{
+			Username:             util.StrPtr("test_user"),
+			RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
+			LocalPassword:        util.StrPtr("test_pa$$word"),
+			ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+			RoleName:             util.StrPtr("read-only user"),
+		},
 	}
 	user.Email = util.StrPtr("email@domain.com")
 	user.TenantID = util.IntPtr(resp.Response[0].ID)

@@ -16,10 +16,6 @@
 
 -- THIS FILE INCLUDES POST-MIGRATION DATA FIXES REQUIRED OF TRAFFIC OPS
 
--- set use_tenancy to 1 -- this should remain until code that depends on it is removed from both TO and TP
--- NOTE that we know use_tenancy exists b/c it's inserted in seeds.sql
-UPDATE parameter SET value = '1' WHERE name = 'use_tenancy' AND config_file = 'global';
-
 -- Mapping roles and capabilities: (used to be in a migration)
 
 -- For role 'federation'

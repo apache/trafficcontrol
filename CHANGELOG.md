@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [#5451](https://github.com/apache/trafficcontrol/issues/5451) Added change log count to user API's response payload and query param (username) to logs API
 - Added support for CDN locks
 - Added support for PostgreSQL as a Traffic Vault backend
 - [#5449](https://github.com/apache/trafficcontrol/issues/5449) The `todb-tests` GitHub action now runs the Traffic Ops DB tests
@@ -64,6 +65,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5407](https://github.com/apache/trafficcontrol/issues/5407) - Make sure that you cannot add two servers with identical content
 - [#2881](https://github.com/apache/trafficcontrol/issues/2881) - Some API endpoints have incorrect Content-Types
 - [#5863](https://github.com/apache/trafficcontrol/issues/5863) - Traffic Monitor logs warnings to `log_location_info` instead of `log_location_warning`
+- [#5492](https://github.com/apache/trafficcontrol/issues/5942) - Traffic Stats does not failover to another Traffic Monitor when one stops responding
 - [#5363](https://github.com/apache/trafficcontrol/issues/5363) - Postgresql version changeable by env variable
 - [#5405](https://github.com/apache/trafficcontrol/issues/5405) - Prevent Tenant update from choosing child as new parent
 - [#5384](https://github.com/apache/trafficcontrol/issues/5384) - New grids will now properly remember the current page number.
