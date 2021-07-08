@@ -197,8 +197,8 @@ export class DeliveryServicePage extends BasePage {
     await this.mnuManageServers.click();
     await this.btnMore.click();
     await this.btnAssignServer.click();
-    await browser.sleep(1000);
-    await element(by.cssContainingText("td", deliveryservice.ServerName)).click();
+    await browser.sleep(3000);
+    await element(by.cssContainingText(".ag-cell-value", deliveryservice.ServerName)).click();
     await this.ClickSubmit();
     result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
     return result;
