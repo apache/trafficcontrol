@@ -51,7 +51,7 @@ The latest version and documentation can be found at https://github.com/apache/t
 
 # OPTIONS
 
---help
+\-\-help
     Prints the synopsis and usage information.
 
 # COMMANDS
@@ -69,6 +69,14 @@ t3c-check
 t3c-diff
 
     Diff config files, like diff or git-diff but with config-specific logic.
+
+t3c-generate
+
+    Generate configuration files from Traffic Ops data.
+
+t3c-preprocess
+
+    Preprocess generated config files.
 
 t3c-request
 
