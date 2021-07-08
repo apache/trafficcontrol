@@ -188,4 +188,4 @@ tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops' &
 cd "../testing/api/v$INPUT_VERSION"
 
 cp "${resources}/traffic-ops-test.json" traffic-ops-test.conf
-go test -test.v --cfg traffic-ops-test.conf
+go test --cfg traffic-ops-test.conf
