@@ -91,9 +91,9 @@ start_traffic_vault() {
 		--rm \
 		"$trafficvault" \
 		/usr/lib/riak/riak-cluster.sh;
-	docker logs -f "$trafficvault" 2>&1 |
-		color_and_prefix "$gray_bg" 'Traffic Vault';
+	docker logs -f "$trafficvault" 2>&1 >"${ciab_dir}/traffic.vault.logs";
 }
+truncate -s0 "${ciab_dir}/traffic.vault.logs";
 start_traffic_vault & disown
 
 sudo apt-get install -y --no-install-recommends gettext
@@ -176,14 +176,8 @@ cp "${resources}/database.json" database.conf
 export $(<"${ciab_dir}/variables.env" sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
 envsubst <"${resources}/riak.json" >riak.conf
 
-truncate --size=0 warning.log error.log # Removes output from previous API versions and makes sure files exist
+truncate --size=0 traffic.ops.log # Removes output from previous API versions and makes sure files exist
 ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf &
-
-# TODO - Make these logs build artifacts
-# 2>&1 makes terminal output go faster, even though stderr will not contain anything
-tail -f warning.log 2>&1 | color_and_prefix "${yellow_bg}" 'Traffic Ops' &
-tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops' &
-
 
 cd "../testing/api/v$INPUT_VERSION"
 
