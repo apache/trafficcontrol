@@ -22,7 +22,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -34,6 +36,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 		AssignOriginsToTopologyBasedDeliveryServices(t)
 		TryToRemoveLastServerInDeliveryService(t)
 		AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t)
+		GetTestDSSIMS(t)
 	})
 }
 
@@ -374,6 +377,26 @@ func AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t *testing.T)
 		if dss.CDNID != nil && *dss.CDNID != *dsWithMid[0].CDNID {
 			t.Fatalf("a server for another cdn was returned for this delivery service")
 		}
+	}
+}
+
+func GetTestDSSIMS(t *testing.T) {
+	const noLimit = 999999
+	_, reqInf, err := TOSession.GetDeliveryServiceServersWithLimitsWithHdr(noLimit, nil, nil, nil)
+	if err != nil {
+		t.Errorf("deliveryserviceservers expected: no error, actual: %v", err)
+	} else if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("expected deliveryserviceservers response code %v, actual %v", http.StatusOK, reqInf.StatusCode)
+	}
+
+	reqHdr := http.Header{}
+	reqHdr.Set(rfc.IfModifiedSince, time.Now().UTC().Add(2*time.Second).Format(time.RFC1123))
+
+	_, reqInf, err = TOSession.GetDeliveryServiceServersWithLimitsWithHdr(noLimit, nil, nil, reqHdr)
+	if err != nil {
+		t.Errorf("deliveryserviceservers IMS request expected: no error, actual: %v", err)
+	} else if reqInf.StatusCode != http.StatusNotModified {
+		t.Errorf("expected deliveryserviceservers IMS response code %v, actual %v", http.StatusNotModified, reqInf.StatusCode)
 	}
 }
 
