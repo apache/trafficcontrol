@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 )
 
 var SteeringUserSession *client.Session
@@ -252,6 +252,9 @@ func GetTestSteeringTargets(t *testing.T) {
 
 func DeleteTestSteeringTargets(t *testing.T) {
 	dsIDs := []uint64{}
+	if SteeringUserSession == nil {
+		t.Fatal("Steering user session is nil")
+	}
 	for _, st := range testData.SteeringTargets {
 		if st.DeliveryService == nil {
 			t.Fatal("deleting steering target: test data missing ds")

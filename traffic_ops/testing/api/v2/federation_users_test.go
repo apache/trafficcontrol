@@ -127,7 +127,10 @@ func CreateTestInvalidFederationUsers(t *testing.T) {
 
 func DeleteTestFederationUsers(t *testing.T) {
 	if len(testData.Federations) == 0 {
-		t.Error("no federations test data")
+		t.Fatal("no federations test data")
+	}
+	if len(fedIDs) < 1 {
+		t.Fatal("No cached federation IDs")
 	}
 
 	fedID := fedIDs[0]

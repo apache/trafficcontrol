@@ -92,6 +92,10 @@ func DeleteTestRegions(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET Region by name: %v - %v", region.Name, err)
 		}
+		if len(resp) != 1 {
+			t.Errorf("Expected exactly one Region to exist with name '%s', found: %d", region.Name, len(resp))
+			continue
+		}
 		respRegion := resp[0]
 
 		delResp, _, err := TOSession.DeleteRegionByID(respRegion.ID)
