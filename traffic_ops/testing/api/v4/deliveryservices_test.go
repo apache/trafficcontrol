@@ -2389,9 +2389,15 @@ func addTLSVersionsToDeliveryService(t *testing.T) {
 	}
 
 	var ds tc.DeliveryServiceV4
+	ds.Active = new(bool)
 	ds.CDNName = new(string)
 	ds.DisplayName = new(string)
+	ds.DSCP = new(int)
+	ds.GeoLimit = new(int)
+	ds.GeoProvider = new(int)
 	ds.InitialDispersion = new(int)
+	ds.IPV6RoutingEnabled = new(bool)
+	ds.LogsEnabled = new(bool)
 	ds.MissLat = new(float64)
 	ds.MissLong = new(float64)
 	ds.MultiSiteOrigin = new(bool)
@@ -2399,6 +2405,7 @@ func addTLSVersionsToDeliveryService(t *testing.T) {
 	ds.Protocol = new(int)
 	ds.QStringIgnore = new(int)
 	ds.RangeRequestHandling = new(int)
+	ds.RegionalGeoBlocking = new(bool)
 	ds.Tenant = new(string)
 	ds.TenantID = me.Response.TenantID
 	ds.TLSVersions = []string{
@@ -2406,6 +2413,7 @@ func addTLSVersionsToDeliveryService(t *testing.T) {
 	}
 	ds.Type = new(tc.DSType)
 	ds.XMLID = new(string)
+	*ds.DSCP = 1
 	*ds.InitialDispersion = 1
 	*ds.Tenant = *me.Response.Tenant
 	*ds.DisplayName = "ds-test-tls-versions"
