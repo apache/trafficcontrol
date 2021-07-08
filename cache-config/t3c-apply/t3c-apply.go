@@ -95,8 +95,10 @@ func main() {
 
 	// create and clean the config.TmpBase (/tmp/ort)
 	if !util.MkDir(config.TmpBase, cfg) {
+		log.Errorln("mkdir TmpBase '" + config.TmpBase + "' failed, cannot continue")
 		os.Exit(GeneralFailure)
 	} else if !util.CleanTmpDir(cfg) {
+		log.Errorln("CleanTmpDir failed, cannot continue")
 		os.Exit(GeneralFailure)
 	}
 	if cfg.RunMode != t3cutil.ModeReport {

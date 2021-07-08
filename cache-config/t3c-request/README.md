@@ -51,76 +51,75 @@ t3c-request [-hIprv] [-D \<config|update-status|packages|chkconfig|system-info|s
 
 # OPTIONS
 
--D,--get-data=value
+-D, -\-get-data=value
 
     non-config-file Traffic Ops Data to get. Valid values are
     update-status, packages, chkconfig, system-info, and
     statuses [system-info]
 
--d,--log-location-debug=value
-
-    Where to log debugs. May be a file path, stdout, stderr
-
--e,--log-location-error=value
-
-    Where to log errors. May be a file path, stdout, stderr
-    [stderr]
-
--H,--cache-host-name=value
+-H, -\-cache-host-name=value
 
     Host name of the cache to generate config for. Must be the
     server host name in Traffic Ops, not a URL, and not the FQDN
 
--h,--help
+-h, -\-help
 
     Print usage information and exit
 
--i,--log-location-info=value
-
-    Where to log infos. May be a file path, stdout, stderr
-    [stderr]
-
--I,--traffic-ops-insecure
+-I, -\-traffic-ops-insecure
 
     [true | false] ignore certificate errors from Traffic Ops
 
--l,--login-dispersion=value
+-l, -\-login-dispersion=value
 
     [seconds] wait a random number of seconds between 0
     and [seconds] before login to traffic ops, default 0
 
--p,--traffic-ops-disable-proxy
+-p, -\-traffic-ops-disable-proxy
 
     [true | false] whether to not use any configure Traffic Ops
     proxy parameter. Only used if get-data is config
-	
--P,--traffic-ops-password=value
+
+-P, -\-traffic-ops-password=value
 
     Traffic Ops password. Required. May also be set with the
     environment variable TO_PASS
 
--r,--reval-only
+-r, -\-reval-only
 
     [true | false] whether to only fetch data needed to
     revalidate, versus all config data. Only used if get-data is
     config
--t,--traffic-ops-timeout-milliseconds=value
+
+-s, -\-silent
+
+    Silent. Errors are not logged, and the 'verbose' flag is
+    ignored. If a fatal error occurs, the return code will be
+    non-zero but no text will be output to stderr
+
+-t, -\-traffic-ops-timeout-milliseconds=value
 
     Timeout in milli-seconds for Traffic Ops requests, default
     is 30000 [30000]
 
--u,--traffic-ops-url=value
+-u, -\-traffic-ops-url=value
 
     Traffic Ops URL. Must be the full URL, including the scheme.
     Required. May also be set with     the environment variable
     TO_URL
 
--U,--traffic-ops-user=value
+-U, -\-traffic-ops-user=value
 
     Traffic Ops username. Required. May also be set with the
     environment variable TO_USER
 
--v,--version
+-v, -\-verbose
+
+    Log verbosity. Logging is output to stderr. By default,
+    errors are logged. To log warnings, pass '-v'. To log info,
+    pass '-vv'. To omit error logging, see '-s'.
+
+-V, -\-version
 
     Print the app version and exit
 

@@ -1047,8 +1047,10 @@ func TopologyExists(tx *sql.Tx, name string) (bool, error) {
 	return count > 0, err
 }
 
-// CheckTopology returns an error if the given Topology does not exist or if one of the Topology's Cache Groups is
-// empty with respect to the Delivery Service's CDN.
+// CheckTopology returns an error if the given Topology does not exist or if
+// one of the Topology's Cache Groups is empty with respect to the Delivery
+// Service's CDN. Note that this can panic if ds does not have a properly set
+// CDNID.
 func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceV4) (int, error, error) {
 	statusCode, userErr, sysErr := http.StatusOK, error(nil), error(nil)
 
@@ -1065,7 +1067,7 @@ func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceV4) (int, error, error) {
 	}
 
 	if err = topology_validation.CheckForEmptyCacheGroups(tx, cacheGroupIDs, []int{*ds.CDNID}, true, []int{}); err != nil {
-		return http.StatusBadRequest, fmt.Errorf("empty cachegroups in Topology %s found for CDN %d: %s", *ds.Topology, *ds.CDNID, err.Error()), nil
+		return http.StatusBadRequest, fmt.Errorf("empty cachegroups in Topology %s found for CDN %d: %w", *ds.Topology, *ds.CDNID, err), nil
 	}
 
 	return statusCode, userErr, sysErr

@@ -51,6 +51,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added `traffic_ops/app/db/traffic_vault_migrate` to help with migrating Traffic Ops Traffic Vault backends
 - Added a tool at `/traffic_ops/app/db/reencrypt` to re-encrypt the data in the Postgres Traffic Vault with a new key.
 - Enhanced ort integration test for reload states
+- Added a new field to Delivery Services - `tlsVersions` - that explicitly lists the TLS versions that may be used to retrieve their content from Cache Servers.
 
 ### Fixed
 - [#5690](https://github.com/apache/trafficcontrol/issues/5690) - Fixed github action for added/modified db migration file.
@@ -71,11 +72,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5384](https://github.com/apache/trafficcontrol/issues/5384) - New grids will now properly remember the current page number.
 - [#5548](https://github.com/apache/trafficcontrol/issues/5548) - Don't return a `403 Forbidden` when the user tries to get servers of a non-existent DS using `GET /servers?dsId={{nonexistent DS ID}}`
 - [#5732](https://github.com/apache/trafficcontrol/issues/5732) - TO API POST /cdns/dnsseckeys/generate times out with large numbers of delivery services
+- [#5902](https://github.com/apache/trafficcontrol/issues/5902) - Fixed issue where the TO API wouldn't properly query all SSL certificates from Riak.
 - Fixed server creation through legacy API versions to default `monitor` to `true`.
 - Fixed t3c to generate topology parents correctly for parents with the Type MID+ or EDGE+ versus just the literal. Naming cache types to not be exactly 'EDGE' or 'MID' is still discouraged and not guaranteed to work, but it's unfortunately somewhat common, so this fixes it in one particular case.
+- [#5965](https://github.com/apache/trafficcontrol/issues/5965) - Fixed Traffic Ops /deliveryserviceservers If-Modified-Since requests.
 - Fixed t3c to create config files and directories as ats.ats
 - Fixed t3c-apply service restart and ats config reload logic.
-- Reduced TR dns.max-threads ansible default from 10000 to 100. 
+- Reduced TR dns.max-threads ansible default from 10000 to 100.
+- [#5981](https://github.com/apache/trafficcontrol/issues/5891) - `/deliveryservices/{{ID}}/safe` returns incorrect response for the requested API version
+- [#5984](https://github.com/apache/trafficcontrol/issues/5894) - `/servers/{{ID}}/deliveryservices` returns incorrect response for the requested API version
 
 ### Changed
 - Updated the Traffic Ops Python client to 3.0

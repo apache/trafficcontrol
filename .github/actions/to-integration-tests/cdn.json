@@ -13,8 +13,8 @@
 	"traffic_ops_golang": {
 		"insecure": true,
 		"port": "6443",
-		"log_location_error": "error.log",
-		"log_location_warning": "warning.log",
+		"log_location_error": "traffic.ops.log",
+		"log_location_warning": "traffic.ops.log",
 		"log_location_info": null,
 		"log_location_debug": null,
 		"log_location_event": null,

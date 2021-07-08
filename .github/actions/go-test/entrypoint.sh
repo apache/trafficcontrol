@@ -37,5 +37,5 @@ fi
 
 # Need to fetch golang.org/x/* dependencies
 go mod vendor -v
-go test -v $INPUT_DIR
+go test $INPUT_DIR
 exit $?

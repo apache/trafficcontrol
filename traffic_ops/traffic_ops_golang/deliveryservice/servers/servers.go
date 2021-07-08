@@ -245,7 +245,10 @@ func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *au
 		log.Warnf("Error getting the max last updated query %v", err)
 	}
 	if useIMS {
-		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, map[string]interface{}{}, query1)
+		queryValues := map[string]interface{}{
+			"accessibleTenants": pq.Array(tenantIDs),
+		}
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, query1)
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return nil, nil, &maxTime
@@ -284,7 +287,7 @@ func selectQuery(orderBy string, limit string, offset string, dsIDs []int64, ser
 	FROM deliveryservice_server s`
 
 	if getMaxQuery {
-		selectStmt = `SELECT max(t) from (
+		selectStmt = `SELECT max(t) from ( (
 		SELECT max(s.last_updated) as t FROM deliveryservice_server s`
 	}
 	allowedOrderByCols := map[string]string{
@@ -317,14 +320,19 @@ AND s.server = ANY(:serverids)
 `
 	}
 
+	if getMaxQuery {
+		selectStmt += ` GROUP BY s.deliveryservice`
+	}
+
 	if orderBy != "" {
 		selectStmt += ` ORDER BY ` + orderBy
 	}
 
-	selectStmt += ` LIMIT ` + limit + ` OFFSET ` + offset + ` ROWS`
+	selectStmt += ` LIMIT ` + limit + ` OFFSET ` + offset + ` ROWS `
 	if getMaxQuery {
-		return selectStmt + `UNION ALL
-		select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_server') as res`, nil
+		return selectStmt + ` )
+UNION ALL
+select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_server') as res`, nil
 	}
 	return selectStmt, nil
 }

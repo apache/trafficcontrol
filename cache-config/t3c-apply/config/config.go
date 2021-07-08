@@ -211,16 +211,12 @@ func GetCfg() (Cfg, error) {
 
 	dispersionPtr := getopt.IntLong("dispersion", 'D', 300, "[seconds] wait a random number of seconds between 0 and [seconds] before starting, default 300")
 	loginDispersionPtr := getopt.IntLong("login-dispersion", 'l', 0, "[seconds] wait a random number of seconds between 0 and [seconds] before login to traffic ops, default 0")
-	logLocationDebugPtr := getopt.StringLong("log-location-debug", 'd', "", "Where to log debugs. May be a file path, stdout, stderr, or null, default ''")
-	logLocationErrorPtr := getopt.StringLong("log-location-error", 'e', "stderr", "Where to log errors. May be a file path, stdout, stderr, or null, default stderr")
-	logLocationInfoPtr := getopt.StringLong("log-location-info", 'i', "stderr", "Where to log info. May be a file path, stdout, stderr, or null, default stderr")
-	logLocationWarnPtr := getopt.StringLong("log-location-warning", 'w', "stderr", "Where to log warnings. May be a file path, stdout, stderr, or null, default stderr")
 	cacheHostNamePtr := getopt.StringLong("cache-host-name", 'H', "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
 	retriesPtr := getopt.IntLong("num-retries", 'r', 3, "[number] retry connection to Traffic Ops URL [number] times, default is 3")
 	revalWaitTimePtr := getopt.IntLong("reval-wait-time", 'T', 60, "[seconds] wait a random number of seconds between 0 and [seconds] before revlidation, default is 60")
 	reverseProxyDisablePtr := getopt.BoolLong("reverse-proxy-disable", 'p', "[false | true] bypass the reverse proxy even if one has been configured default is false")
 	runModePtr := getopt.StringLong("run-mode", 'm', "report", "[badass | report | revalidate | syncds] run mode, default is 'report'")
-	skipOSCheckPtr := getopt.BoolLong("skip-os-check", 's', "[false | true] skip os check, default is false")
+	skipOSCheckPtr := getopt.BoolLong("skip-os-check", 'O', "[false | true] skip os check, default is false")
 	toInsecurePtr := getopt.BoolLong("traffic-ops-insecure", 'I', "[true | false] ignore certificate errors from Traffic Ops")
 	toTimeoutMSPtr := getopt.IntLong("traffic-ops-timeout-milliseconds", 't', 30000, "Timeout in milli-seconds for Traffic Ops requests, default is 30000")
 	toURLPtr := getopt.StringLong("traffic-ops-url", 'u', "", "Traffic Ops URL. Must be the full URL, including the scheme. Required. May also be set with the environment variable TO_URL")
@@ -232,20 +228,38 @@ func GetCfg() (Cfg, error) {
 	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	useGitStr := getopt.StringLong("git", 'g', "auto", "Create and use a git repo in the config directory. Options are yes, no, and auto. If yes, create and use. If auto, use if it exist. Default is auto.")
 	syncdsUpdatesIPAllowPtr := getopt.BoolLong("syncds-updates-ipallow", 'S', "Whether syncds mode will update ipallow. This exists because ATS had a bug where reloading after changing ipallow would block everything. Default is false.")
-	omitViaStringReleasePtr := getopt.BoolLong("omit-via-string-release", 'v', "Whether to set the records.config via header to the ATS release from the RPM. Default true.")
+	omitViaStringReleasePtr := getopt.BoolLong("omit-via-string-release", 'o', "Whether to set the records.config via header to the ATS release from the RPM. Default true.")
 	disableParentConfigCommentsPtr := getopt.BoolLong("disable-parent-config-comments", 'c', "Whether to disable verbose parent.config comments. Default false.")
 	defaultEnableH2 := getopt.BoolLong("default-client-enable-h2", '2', "Whether to enable HTTP/2 on Delivery Services by default, if they have no explicit Parameter. This is irrelevant if ATS records.config is not serving H2. If omitted, H2 is disabled.")
 	defaultClientTLSVersions := getopt.StringLong("default-client-tls-versions", 'V', "", "Comma-delimited list of default TLS versions for Delivery Services with no Parameter, e.g. --default-tls-versions='1.1,1.2,1.3'. If omitted, all versions are enabled.")
 	maxmindLocationPtr := getopt.StringLong("maxmind-location", 'M', "", "URL of a maxmind gzipped database file, to be installed into the trafficserver etc directory.")
+	verbosePtr := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
+	silentPtr := getopt.BoolLong("silent", 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
 
 	getopt.Parse()
 
 	dispersion := time.Second * time.Duration(*dispersionPtr)
 	loginDispersion := time.Second * time.Duration(*loginDispersionPtr)
-	logLocationDebug := *logLocationDebugPtr
-	logLocationError := *logLocationErrorPtr
-	logLocationInfo := *logLocationInfoPtr
-	logLocationWarn := *logLocationWarnPtr
+
+	logLocationError := log.LogLocationStderr
+	logLocationWarn := log.LogLocationNull
+	logLocationInfo := log.LogLocationNull
+	logLocationDebug := log.LogLocationNull
+	if *silentPtr {
+		logLocationError = log.LogLocationNull
+	} else {
+		if *verbosePtr >= 1 {
+			logLocationWarn = log.LogLocationStderr
+		}
+		if *verbosePtr >= 2 {
+			logLocationInfo = log.LogLocationStderr
+			logLocationDebug = log.LogLocationStderr // t3c only has 3 verbosity options: none (-s), error (default or --verbose=0), warning (-v), and info (-vv). Any code calling log.Debug is treated as Info.
+		}
+	}
+
+	if *verbosePtr > 2 {
+		return Cfg{}, errors.New("Too many verbose options. The maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
+	}
 
 	var cacheHostName string
 	if len(*cacheHostNamePtr) > 0 {
