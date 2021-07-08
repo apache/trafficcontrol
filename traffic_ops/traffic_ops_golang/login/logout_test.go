@@ -80,7 +80,7 @@ func TestLogout(t *testing.T) {
 
 	cookie := tocookie.GetCookie(testUser.UserName, 24*time.Hour, "secret")
 	rr := httptest.NewRecorder()
-	req, err := http.NewRequest(http.MethodPost, "/api/1.4/logout", nil)
+	req, err := http.NewRequest(http.MethodPost, "/api/4.0/logout", nil)
 	if err != nil {
 		t.Fatalf("Failed to create a request: %v", err)
 	}
