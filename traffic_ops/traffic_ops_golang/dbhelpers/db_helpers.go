@@ -273,9 +273,9 @@ func CheckIfCurrentUserCanModifyCDN(tx *sql.Tx, cdn, user string) (error, error,
 		if err != nil {
 			return nil, errors.New("scanning cdn_lock for user " + user + " and cdn " + cdn + ": " + err.Error()), http.StatusInternalServerError
 		}
-	}
-	if userName != "" && user != userName && !soft {
-		return errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), nil, http.StatusForbidden
+		if userName != "" && user != userName && !soft {
+			return errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), nil, http.StatusForbidden
+		}
 	}
 	return nil, nil, http.StatusOK
 }
@@ -312,9 +312,9 @@ func CheckIfCurrentUserCanModifyCachegroup(tx *sql.Tx, cachegroupID int, user st
 		if err != nil {
 			return nil, errors.New("scanning cdn_lock for user " + user + " and cachegroup ID " + strconv.Itoa(cachegroupID) + ": " + err.Error()), http.StatusInternalServerError
 		}
-	}
-	if userName != "" && user != userName && !soft {
-		return errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), nil, http.StatusForbidden
+		if userName != "" && user != userName && !soft {
+			return errors.New("user " + userName + " currently has a hard lock on cdn " + cdn), nil, http.StatusForbidden
+		}
 	}
 	return nil, nil, http.StatusOK
 }
