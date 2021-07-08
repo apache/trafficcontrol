@@ -17,6 +17,8 @@
  * under the License.
  */
 
+import {ColDef, GridOptions, RowClickedEvent} from "ag-grid-community/main";
+
 export namespace CGC {
     export enum OptionType {
         Seperator = 0,
@@ -24,13 +26,16 @@ export namespace CGC {
         Ancor = 2
     }
 
-    export interface GridSettings {
-        rowClassRules?: any;
+    export interface GridSettings extends GridOptions {
         selectRows?: boolean;
         selectionProperty?: string;
         refreshable?: boolean;
 
-        onRowClick(row: any): void;
+        onRowClick(row: RowClickedEvent): void;
+    }
+
+    export interface ColumnDefinition extends ColDef {
+
     }
 
     export interface CommonOption {

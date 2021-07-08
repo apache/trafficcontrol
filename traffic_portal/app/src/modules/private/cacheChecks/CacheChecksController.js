@@ -17,12 +17,14 @@
  * under the License.
  */
 
+/** @typedef { import('../../../common/modules/table/agGrid/CommonGridController').CGC } CGC */
+
 var CacheChecksController = function(cacheChecks, $scope, $state, $interval, locationUtils, serverUtils, propertiesModel) {
 	$scope.cacheChecks = cacheChecks;
 
 	$scope.config = propertiesModel.properties.cacheChecks;
 
-
+	/** @type CGC.ColumnDefinition */
 	$scope.columns = [
 		{
 			headerName: "Hostname",
@@ -52,10 +54,11 @@ var CacheChecksController = function(cacheChecks, $scope, $state, $interval, loc
 		},
 	];
 
+	/** @type CGC.GridSettings */
 	$scope.gridOptions = {
 		refreshable: true,
 		onRowClick(row) {
-			locationUtils.navigateToPath('/servers/' + row.id);
+			locationUtils.navigateToPath('/servers/' + row.data.id);
 		}
 	};
 

@@ -17,10 +17,13 @@
  * under the License.
  */
 
+/** @typedef { import('../../../../common/modules/table/agGrid/CommonGridController').CGC } CGC */
+
 var TableAssignDSServersController = function(deliveryService, servers, assignedServers, $scope, $uibModalInstance) {
 
 	$scope.selectedServers = [];
 
+	/** @type CGC.ColumnDefinition */
 	$scope.columns = [
 		{
 			headerName: "Host",
@@ -57,6 +60,7 @@ var TableAssignDSServersController = function(deliveryService, servers, assigned
 		$uibModalInstance.dismiss('cancel');
 	};
 
+	/** @type CGC.GridSettings */
 	$scope.gridOptions = {
 		selectRows: true,
 		selectionProperty: "selected"

@@ -219,7 +219,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
             onRowClicked: function(params) {
                 const selection = window.getSelection().toString();
                 if(self.options.onRowClick !== undefined && (selection === "" || selection === $scope.mouseDownSelectionText)) {
-                    self.options.onRowClick(params.data);
+                    self.options.onRowClick(params);
                     $scope.$apply();
                 }
                 $scope.mouseDownSelectionText = "";
