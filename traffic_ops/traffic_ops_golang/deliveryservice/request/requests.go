@@ -463,11 +463,17 @@ func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil)
 			return
 		}
+		if len(dsr.Original.TLSVersions) < 1 {
+			dsr.Original.TLSVersions = nil
+		}
 	}
 	if dsr.Requested != nil {
 		if dsr.Requested.LongDesc1 != nil || dsr.Requested.LongDesc2 != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil)
 			return
+		}
+		if len(dsr.Requested.TLSVersions) < 1 {
+			dsr.Requested.TLSVersions = nil
 		}
 	}
 	errCode, userErr, sysErr := insert(&dsr, inf)
@@ -730,6 +736,13 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 	dsr.LastEditedBy = inf.User.UserName
 	dsr.LastEditedByID = new(int)
 	*dsr.LastEditedByID = inf.User.ID
+
+	if dsr.Requested != nil && len(dsr.Requested.TLSVersions) < 1 {
+		dsr.Requested.TLSVersions = nil
+	}
+	if dsr.Original != nil && len(dsr.Original.TLSVersions) < 1 {
+		dsr.Original.TLSVersions = nil
+	}
 
 	args := []interface{}{
 		dsr.AssigneeID,

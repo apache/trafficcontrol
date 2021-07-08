@@ -20,8 +20,10 @@ package deliveryservice
  */
 
 import (
+	"fmt"
 	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -123,6 +125,41 @@ func TestGetDeliveryServicesMatchLists(t *testing.T) {
 	GetDeliveryServicesMatchLists([]string{"foo"}, db.MustBegin().Tx)
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("expectations were not met: %s", err)
+	}
+}
+
+func TestGetDSTLSVersions(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Unexpected error opening a stub database connection: %v", err)
+	}
+	defer func() {
+		if err := mockDB.Close(); err != nil {
+			t.Errorf("Failed to close database: %v", err)
+		}
+	}()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Errorf("Failed to close sqlx DB handle: %v", err)
+		}
+	}()
+
+	rows := sqlmock.NewRows([]string{"tls_version"})
+	expected := []string{"1.0", "1.1", "1.2", "1.3"}
+	rows.AddRow(fmt.Sprintf("{%s}", strings.Join(expected, ",")))
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+
+	vers, err := GetDSTLSVersions(0, db.MustBegin().Tx)
+	if err != nil {
+		t.Errorf("Unexpected error getting DS TLS Versions: %v", err)
+	} else if len(vers) != 4 {
+		t.Errorf("Expected to get 4 TLS versions, got: %d", len(vers))
+	} else if !reflect.DeepEqual(expected, vers) {
+		t.Errorf("Incorrect TLS versions returned, expected: %+v - actual: %+v", expected, vers)
 	}
 }
 
@@ -289,6 +326,7 @@ func TestReadGetDeliveryServices(t *testing.T) {
 		"ssl_key_version",
 		"tenant_id",
 		"tenant.name",
+		"tls_versions",
 		"topology",
 		"tr_request_headers",
 		"tr_response_headers",
@@ -360,6 +398,7 @@ func TestReadGetDeliveryServices(t *testing.T) {
 		nil,
 		1,
 		"test",
+		"{}",
 		nil,
 		nil,
 		nil,

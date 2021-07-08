@@ -51,6 +51,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added `traffic_ops/app/db/traffic_vault_migrate` to help with migrating Traffic Ops Traffic Vault backends
 - Added a tool at `/traffic_ops/app/db/reencrypt` to re-encrypt the data in the Postgres Traffic Vault with a new key.
 - Enhanced ort integration test for reload states
+- Added a new field to Delivery Services - `tlsVersions` - that explicitly lists the TLS versions that may be used to retrieve their content from Cache Servers.
 
 ### Fixed
 - [#5690](https://github.com/apache/trafficcontrol/issues/5690) - Fixed github action for added/modified db migration file.
@@ -76,7 +77,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5965](https://github.com/apache/trafficcontrol/issues/5965) - Fixed Traffic Ops /deliveryserviceservers If-Modified-Since requests.
 - Fixed t3c to create config files and directories as ats.ats
 - Fixed t3c-apply service restart and ats config reload logic.
-- Reduced TR dns.max-threads ansible default from 10000 to 100. 
+- Reduced TR dns.max-threads ansible default from 10000 to 100.
+- [#5981](https://github.com/apache/trafficcontrol/issues/5891) - `/deliveryservices/{{ID}}/safe` returns incorrect response for the requested API version
+- [#5984](https://github.com/apache/trafficcontrol/issues/5894) - `/servers/{{ID}}/deliveryservices` returns incorrect response for the requested API version
 
 ### Changed
 - Updated the Traffic Ops Python client to 3.0
