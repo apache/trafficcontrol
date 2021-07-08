@@ -259,13 +259,11 @@ func t3cUpdateReload(host string, runMode string) (string, int) {
 		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
 		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
 		"--cache-host-name=" + host,
-		"--log-location-error=stdout",
-		"--log-location-info=stdout",
-		"--log-location-debug=test.log",
+		"-vv",
 		"--omit-via-string-release=true",
 		"--git=" + "yes",
 		"--run-mode=" + runMode,
 	}
-	stdOut, _, exitCode := t3cutil.Do("t3c", args...) // should be no stderr, we told it to log to stdout
-	return string(stdOut), exitCode
+	_, stdErr, exitCode := t3cutil.Do("t3c", args...)
+	return string(stdErr), exitCode
 }

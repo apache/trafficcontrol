@@ -33,9 +33,7 @@ function ping_to {
 		"--traffic-ops-password=$TO_ADMIN_PASS" \
 		"--traffic-ops-url=$TO_URI" \
 		"--cache-host-name=atlanta-edge-03" \
-		"--log-location-error=stderr" \
-		"--log-location-info=stderr" \
-		"--log-location-debug=stderr" \
+		"-vv" \
 		"--run-mode=badass"
 }
 
