@@ -89,19 +89,21 @@ func TestDeliveryServices(t *testing.T) {
 		t.Run("GET request using the 'tenant' query string parameter", GetDeliveryServiceByValidTenant)
 		t.Run("GET request using the 'type' query string parameter", GetDeliveryServiceByValidType)
 		t.Run("GET request using the 'xmlId' query string parameter", GetDeliveryServiceByValidXmlId)
-    t.Run("Descending order sorted response to GET request", SortTestDeliveryServicesDesc)
-    t.Run("Create/ Update/ Delete delivery services with locks", CUDDeliveryServiceWithLocks)
+		t.Run("Descending order sorted response to GET request", SortTestDeliveryServicesDesc)
+		t.Run("Create/ Update/ Delete delivery services with locks", CUDDeliveryServiceWithLocks)
 	})
 }
 
 func CUDDeliveryServiceWithLocks(t *testing.T) {
 	// Create a new user with operations level privileges
-	user1 := tc.User{
-		Username:             util.StrPtr("lock_user1"),
-		RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
-		LocalPassword:        util.StrPtr("test_pa$$word"),
-		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-		RoleName:             util.StrPtr("operations"),
+	user1 := tc.UserV40{
+		User: tc.User{
+			Username:             util.StrPtr("lock_user1"),
+			RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
+			LocalPassword:        util.StrPtr("test_pa$$word"),
+			ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+			RoleName:             util.StrPtr("operations"),
+		},
 	}
 	user1.Email = util.StrPtr("lockuseremail@domain.com")
 	user1.TenantID = util.IntPtr(1)

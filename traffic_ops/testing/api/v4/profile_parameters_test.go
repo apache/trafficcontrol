@@ -45,12 +45,14 @@ func TestProfileParameters(t *testing.T) {
 
 func CreateDeleteProfileParameterWithLocks(t *testing.T) {
 	// Create a new user with operations level privileges
-	user1 := tc.User{
-		Username:             util.StrPtr("lock_user1"),
-		RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
-		LocalPassword:        util.StrPtr("test_pa$$word"),
-		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-		RoleName:             util.StrPtr("operations"),
+	user1 := tc.UserV40{
+		User: tc.User{
+			Username:             util.StrPtr("lock_user1"),
+			RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
+			LocalPassword:        util.StrPtr("test_pa$$word"),
+			ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+			RoleName:             util.StrPtr("operations"),
+		},
 	}
 	user1.Email = util.StrPtr("lockuseremail@domain.com")
 	user1.TenantID = util.IntPtr(1)
