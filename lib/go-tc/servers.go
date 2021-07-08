@@ -173,7 +173,7 @@ func (sii *ServerInterfaceInfo) Scan(src interface{}) error {
 	return json.Unmarshal([]byte(b), sii)
 }
 
-// LegacyInterfaceDetails is the details for interfaces on servers for API v1 and v2.
+// LegacyInterfaceDetails is the details for interfaces on servers for API v2.
 type LegacyInterfaceDetails struct {
 	InterfaceMtu  *int    `json:"interfaceMtu" db:"interface_mtu"`
 	InterfaceName *string `json:"interfaceName" db:"interface_name"`
