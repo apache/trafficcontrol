@@ -795,6 +795,18 @@ The :term:`Tenant` who owns this Delivery Service. They (and their parents, if a
 	| TenantID | Go code and :ref:`to-api` requests/responses | Integral, unique identifier (``bigint``, ``int`` etc.) |
 	+----------+----------------------------------------------+--------------------------------------------------------+
 
+.. _ds-tls-versions:
+
+TLS Versions
+------------
+The versions of TLS that can be used in HTTP requests to :term:`Edge-tier cache servers` for this Delivery Service's content can be limited using this property. When a Delivery Service has this property set to anything other than a ``null`` value, it lists the versions that will be allowed. Any versions can be added to the supported set, so long as they are of the form :samp:`{Major}.{Minor}`, e.g. ``1.1`` or ``42.0``. When this is a ``null`` value, no restrictions are placed on the TLS versions that may be used for retrieving Delivery Service content.
+
+.. impl-detail:: Traffic Ops will accept empty arrays as a synonym for ``null`` in requests, but will always represent them as ``null`` in responses. Note that this means it's impossible to create a Delivery Service that explicitly supports no TLS versions - the proper way to disable HTTPS for a Delivery Service is to set its Protocol_ accordingly.
+
+A Delivery Service that has a Type_ of ``STEERING`` or ``CLIENT_STEERING`` may not legally be set to have a TLS Versions property that is non-``null``.
+
+.. warning:: Using this setting may cause old clients that only support archaic TLS versions to break suddenly. Be sure that the security increase is worth this risk.
+
 .. _ds-topology:
 
 Topology

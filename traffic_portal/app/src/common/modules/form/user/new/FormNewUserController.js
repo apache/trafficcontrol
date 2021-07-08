@@ -29,7 +29,7 @@ var FormNewUserController = function(user, $scope, $controller, userService) {
         saveLabel: 'Create'
     };
 
-    $scope.confirmSave = function(user, usernameField) {
+    $scope.confirmSave = function(user) {
         userService.createUser(user);
     };
 
