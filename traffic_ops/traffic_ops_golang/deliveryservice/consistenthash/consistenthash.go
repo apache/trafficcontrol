@@ -45,8 +45,7 @@ type TRConsistentHashRequest struct {
 	CdnID               int64  `json:"cdnId"`
 }
 
-// endpoint to test Traffic Router's Pattern-Based Consistent Hashing feature
-// /api/1.5/consistenthash
+// Post is the handler for POST requests to /consistenthash.
 func Post(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {

@@ -475,7 +475,7 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 
 type TODeliveryServiceServers tc.DeliveryServiceServers
 
-// GetCreateHandler assigns an existing Server to and existing Deliveryservice in response to api/1.1/deliveryservices/{xml_id}/servers
+// GetCreateHandler is the handler for POST requests to /deliveryservices/{{XMLID}}/servers.
 func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xml_id"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -702,7 +702,7 @@ VALUES (:id, :server )`
 	return query
 }
 
-// GetReadAssigned retrieves lists of servers  based in the filter identified in the request: api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
+// GetReadAssigned is the handler for GET requests to /deliveryservices/{id}/servers.
 func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
