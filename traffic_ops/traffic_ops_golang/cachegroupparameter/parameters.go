@@ -207,6 +207,11 @@ func (cgparam *TOCacheGroupParameter) Delete() (error, error, int) {
 		return fmt.Errorf("parameter %v does not exist", *cgparam.ID), nil, http.StatusNotFound
 	}
 
+	// CheckIfCurrentUserCanModifyCachegroup
+	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCachegroup(cgparam.ReqInfo.Tx.Tx, cgparam.CacheGroupID, cgparam.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
 	return api.GenericDelete(cgparam)
 }
 
@@ -273,7 +278,6 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("reading request body: "+err.Error()), nil)
@@ -309,7 +313,7 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing cachegroup parameter: "+parseErr.Error()), nil)
 		return
 	}
-
+	cachegroups := []int{}
 	for _, p := range params {
 		ppExists, err := dbhelpers.CachegroupParameterAssociationExists(*p.Parameter, *p.CacheGroup, inf.Tx.Tx)
 		if err != nil {
@@ -320,8 +324,13 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parameter: "+strconv.Itoa(*p.Parameter)+" already associated with cachegroup: "+strconv.Itoa(*p.CacheGroup)+"."), nil)
 			return
 		}
+		cachegroups = append(cachegroups, *p.CacheGroup)
 	}
-
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCachegroups(inf.Tx.Tx, cachegroups, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
 	values := []string{}
 	for _, param := range params {
 		values = append(values, "("+strconv.Itoa(*param.CacheGroup)+", "+strconv.Itoa(*param.Parameter)+")")

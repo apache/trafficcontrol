@@ -204,6 +204,14 @@ func (st *TOSteeringTargetV11) Create() (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
+	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(st.ReqInfo.Tx.Tx, int(dsID))
+	if err != nil {
+		return nil, errors.New("createSteeringTarget: getting CDN from DS ID " + err.Error()), http.StatusInternalServerError
+	}
+	if userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, string(cdn), st.ReqInfo.User.UserName); userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+
 	rows, err := st.ReqInfo.Tx.NamedQuery(insertQuery(), st)
 	if err != nil {
 		return api.ParseDBError(err)
@@ -230,6 +238,15 @@ func (st *TOSteeringTargetV11) Update(h http.Header) (error, error, int) {
 	if err != nil {
 		return errors.New("delivery service ID must be an integer"), nil, http.StatusBadRequest
 	}
+
+	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(st.ReqInfo.Tx.Tx, dsIDInt)
+	if err != nil {
+		return nil, errors.New("updateSteeringTarget: getting CDN from DS ID " + err.Error()), http.StatusInternalServerError
+	}
+	if userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, string(cdn), st.ReqInfo.User.UserName); userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+
 	dsID := uint64(dsIDInt)
 	// TODO determine if the CRUDer automatically does this
 	st.DeliveryServiceID = &dsID
@@ -303,6 +320,13 @@ func (st *TOSteeringTargetV11) Delete() (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
+	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(st.ReqInfo.Tx.Tx, int(*st.DeliveryServiceID))
+	if err != nil {
+		return nil, errors.New("deleteSteeringTarget: getting CDN from DS ID " + err.Error()), http.StatusInternalServerError
+	}
+	if userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(st.ReqInfo.Tx.Tx, string(cdn), st.ReqInfo.User.UserName); userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
 	result, err := st.ReqInfo.Tx.NamedExec(deleteQuery(), st)
 	if err != nil {
 		return nil, errors.New("steering target delete exec: " + err.Error()), http.StatusInternalServerError

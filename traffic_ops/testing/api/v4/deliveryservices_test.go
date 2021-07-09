@@ -90,8 +90,123 @@ func TestDeliveryServices(t *testing.T) {
 		t.Run("GET request using the 'type' query string parameter", GetDeliveryServiceByValidType)
 		t.Run("GET request using the 'xmlId' query string parameter", GetDeliveryServiceByValidXmlId)
 		t.Run("Descending order sorted response to GET request", SortTestDeliveryServicesDesc)
+		t.Run("Create/ Update/ Delete delivery services with locks", CUDDeliveryServiceWithLocks)
 		t.Run("TLS Versions property", addTLSVersionsToDeliveryService)
 	})
+}
+
+func CUDDeliveryServiceWithLocks(t *testing.T) {
+	// Create a new user with operations level privileges
+	user1 := tc.UserV40{
+		User: tc.User{
+			Username:             util.StrPtr("lock_user1"),
+			RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
+			LocalPassword:        util.StrPtr("test_pa$$word"),
+			ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+			RoleName:             util.StrPtr("operations"),
+		},
+	}
+	user1.Email = util.StrPtr("lockuseremail@domain.com")
+	user1.TenantID = util.IntPtr(1)
+	//util.IntPtr(resp.Response[0].ID)
+	user1.FullName = util.StrPtr("firstName LastName")
+	_, _, err := TOSession.CreateUser(user1, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("could not create test user with username: %s", *user1.Username)
+	}
+	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
+
+	// Establish a session with the newly created non admin level user
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, *user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	if err != nil {
+		t.Fatalf("could not login with user lock_user1: %v", err)
+	}
+	if len(testData.DeliveryServices) == 0 {
+		t.Fatalf("no deliveryservices to run the test on, quitting")
+	}
+
+	cdn := createBlankCDN("sslkeytransfer", t)
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "HTTP")
+	types, _, err := TOSession.GetTypes(opts)
+	if err != nil {
+		t.Fatalf("unable to get Types: %v - alerts: %+v", err, types.Alerts)
+	}
+	if len(types.Response) < 1 {
+		t.Fatal("expected at least one type")
+	}
+	customDS := getCustomDS(cdn.ID, types.Response[0].ID, "cdn_locks_test_ds_name", "routingName", "https://test_cdn_locks.com", "cdn_locks_test_ds_xml_id")
+
+	// Create a lock for this user
+	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
+		CDN:     cdn.Name,
+		Message: util.StrPtr("test lock"),
+		Soft:    util.BoolPtr(false),
+	}, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("couldn't create cdn lock: %v", err)
+	}
+	// Try to create a new ds on a CDN that another user has a hard lock on -> this should fail
+	_, reqInf, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while creating a new ds for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while creating a new ds for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to create a new ds on a CDN that the same user has a hard lock on -> this should succeed
+	dsResp, reqInf, err := userSession.CreateDeliveryService(customDS, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while creating a new ds for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+	if len(dsResp.Response) != 1 {
+		t.Fatalf("one response expected, but got %d", len(dsResp.Response))
+	}
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", *customDS.XMLID)
+	deliveryServices, _, err := userSession.GetDeliveryServices(opts)
+	if err != nil {
+		t.Fatalf("couldn't get ds: %v", err)
+	}
+	if len(deliveryServices.Response) != 1 {
+		t.Fatal("couldn't get exactly one ds in the response, quitting")
+	}
+	dsID := dsResp.Response[0].ID
+	// Try to update a ds on a CDN that another user has a hard lock on -> this should fail
+	customDS.LongDesc = util.StrPtr("changed_long_desc")
+	_, reqInf, err = TOSession.UpdateDeliveryService(*dsID, customDS, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while updating a ds for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while updating a ds for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+	// Try to update a ds on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.UpdateDeliveryService(*dsID, customDS, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while updating a ds for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+	// Try to delete a ds on a CDN that another user has a hard lock on -> this should fail
+	_, reqInf, err = TOSession.DeleteDeliveryService(*dsID, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while deleting a ds for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while deleting a ds for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to delete a ds on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.DeleteDeliveryService(*dsID, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while deleting a ds for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	// Delete the lock
+	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdn.Name}}})
+	if err != nil {
+		t.Errorf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
+	}
 }
 
 func CreateTestDeliveryServiceWithLongDescFields(t *testing.T) {
