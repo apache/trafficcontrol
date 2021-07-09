@@ -15,9 +15,9 @@
 
 package secure;
 
-import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateDataListener;
-import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateRegistry;
-import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
+import org.apache.traffic_control.traffic_router.secure.CertificateDataListener;
+import org.apache.traffic_control.traffic_router.secure.CertificateRegistry;
+import org.apache.traffic_control.traffic_router.shared.CertificateData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

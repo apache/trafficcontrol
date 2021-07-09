@@ -15,10 +15,10 @@
 
 package data;
 
-import com.comcast.cdn.traffic_control.traffic_router.neustar.data.HttpClient;
-import com.comcast.cdn.traffic_control.traffic_router.neustar.data.NeustarDatabaseUpdater;
-import com.comcast.cdn.traffic_control.traffic_router.neustar.data.TarExtractor;
-import com.comcast.cdn.traffic_control.traffic_router.neustar.files.FilesMover;
+import org.apache.traffic_control.traffic_router.neustar.data.HttpClient;
+import org.apache.traffic_control.traffic_router.neustar.data.NeustarDatabaseUpdater;
+import org.apache.traffic_control.traffic_router.neustar.data.TarExtractor;
+import org.apache.traffic_control.traffic_router.neustar.files.FilesMover;
 import com.quova.bff.reader.io.GPDatabaseReader;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;

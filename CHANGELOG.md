@@ -91,6 +91,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Disabled TLSv1.1 for Traffic Router in Ansible role by default
 - Updated the Traffic Monitor Ansible role to set `serve_write_timeout_ms` to `20000` by default because 10 seconds can be too short for relatively large CDNs.
 - Refactored the Traffic Ops - Traffic Vault integration to more easily support the development of new Traffic Vault backends
+- Changed the Traffic Router package structure from com.comcast.cdn.\* to org.apache.\*
 - Updated Apache Tomcat from 8.5.63 to 9.0.43
 - Delivery Service Requests now keep a record of the changes they make.
 - Changed the `goose` provider to the maintained fork [`github.com/kevinburke/goose`](https://github.com/kevinburke/goose)
