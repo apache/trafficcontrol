@@ -491,57 +491,6 @@
       "deliveryServices": {
         "https-nocert": ["edge-cache-092.https-nocert.thecdn.example.com"]
       }
-    },
-    "edge-cache-900": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-900@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-900.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.90.100",
-      "ip6": "2001:dead:beef:1:C::1A/64",
-      "cacheGroup": "cache-group-1",
-      "locationId": "location-1",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "http-only-test": ["edge-cache-900.http-only-test.thecdn.example.com"]
-      }
-    },
-    "edge-cache-901": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-901@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-901.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.90.101",
-      "ip6": "2001:dead:beef:1:C::11/64",
-      "cacheGroup": "cache-group-1",
-      "locationId": "location-1",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "http-only-test": ["edge-cache-901.http-only-test.thecdn.example.com"]
-      }
-    },
-    "edge-cache-902": {
-      "type": "EDGE",
-      "profile": "EDGE_STATIC",
-      "status": "REPORTED",
-      "hashId": "edge-cache-902@xmpp.cdn.example.com",
-      "fqdn": "edge-cache-902.thecdn.example.com",
-      "port": "8090",
-      "ip": "12.34.90.102",
-      "ip6": "2001:dead:beef:1:C::12/64",
-      "cacheGroup": "cache-group-1",
-      "locationId": "location-1",
-      "hashCount": 1000,
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "http-only-test": ["edge-cache-902.http-only-test.thecdn.example.com"]
-      }
     }
   },
   "contentRouters": {
