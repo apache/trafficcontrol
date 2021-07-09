@@ -15,7 +15,7 @@
 
 package secure;
 
-import com.comcast.cdn.traffic_control.traffic_router.secure.BindPrivateKey;
+import org.apache.traffic_control.traffic_router.secure.BindPrivateKey;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

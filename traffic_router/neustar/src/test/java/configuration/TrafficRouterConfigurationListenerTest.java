@@ -15,8 +15,8 @@
 
 package configuration;
 
-import com.comcast.cdn.traffic_control.traffic_router.neustar.configuration.ServiceRefresher;
-import com.comcast.cdn.traffic_control.traffic_router.neustar.configuration.TrafficRouterConfigurationListener;
+import org.apache.traffic_control.traffic_router.neustar.configuration.ServiceRefresher;
+import org.apache.traffic_control.traffic_router.neustar.configuration.TrafficRouterConfigurationListener;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;

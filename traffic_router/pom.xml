@@ -17,7 +17,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>traffic_router</artifactId>
-	<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+	<groupId>org.apache.traffic_control.traffic_router</groupId>
 	<version>5.0.0</version>
 	<packaging>pom</packaging>
 	<name>traffic_router</name>

@@ -136,7 +136,7 @@ To install the Traffic Router Developer environment:
 
 	a. In the package explorer, expand ``traffic_router_core``
 	#. Expand ``src/test/java``
-	#. Expand the package ``com.comcast.cdn.traffic_control.traffic_router.core``
+	#. Expand the package ``org.apache.traffic_control.traffic_router.core``
 	#. Open and run ``TrafficRouterStart.java``
 
 		..  Note:: If an error is displayed in the Console, run ``mvn clean verify`` from the ``traffic_router`` directory

@@ -123,7 +123,7 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 
 // DefaultDSTTL is the default DS Record TTL to use, if no CDN Snapshot exists, or if no tld.ttls.DS parameter exists.
 // This MUST be the same value as Traffic Router's default. Currently:
-// traffic_router/core/src/main/java/com/comcast/cdn/traffic_control/traffic_router/core/dns/SignatureManager.java:476
+// traffic_router/core/src/main/java/org/apache/traffic_control/traffic_router/core/dns/SignatureManager.java:476
 // `final Long dsTtl = ZoneUtils.getLong(config.get("ttls"), "DS", 60);`.
 // If Traffic Router and Traffic Ops differ, and a user is using the default, errors may occur!
 // Users are advised to set the tld.ttls.DS CRConfig.json Parameter, so the default is not used!

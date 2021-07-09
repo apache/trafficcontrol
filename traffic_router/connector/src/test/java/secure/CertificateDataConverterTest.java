@@ -15,10 +15,10 @@
 
 package secure;
 
-import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateDataConverter;
-import com.comcast.cdn.traffic_control.traffic_router.secure.HandshakeData;
-import com.comcast.cdn.traffic_control.traffic_router.shared.Certificate;
-import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
+import org.apache.traffic_control.traffic_router.secure.CertificateDataConverter;
+import org.apache.traffic_control.traffic_router.secure.HandshakeData;
+import org.apache.traffic_control.traffic_router.shared.Certificate;
+import org.apache.traffic_control.traffic_router.shared.CertificateData;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;

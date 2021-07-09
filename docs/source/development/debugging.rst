@@ -455,10 +455,10 @@ Traffic Router
 	        tail: '/opt/tomcat/logs/catalina.2020-02-21.log' has appeared;  following end of new file
 
 	        ==> /opt/traffic_router/var/log/traffic_router.log <==
-	        INFO  2020-02-21T05:16:07.557 [Thread-3] com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
-	        INFO  2020-02-21T05:16:07.557 [Thread-4] com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
-	        INFO  2020-02-21T05:16:07.558 [Thread-5] com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
-	        INFO  2020-02-21T05:16:07.559 [Thread-6] com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
+	        INFO  2020-02-21T05:16:07.557 [Thread-3] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
+	        INFO  2020-02-21T05:16:07.557 [Thread-4] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
+	        INFO  2020-02-21T05:16:07.558 [Thread-5] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
+	        INFO  2020-02-21T05:16:07.559 [Thread-6] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
 
 	        ==> /opt/tomcat/logs/catalina.log <==
 	        Listening for transport dt_socket at address: 5005
@@ -466,11 +466,11 @@ Traffic Router
 	Watch for the line that mentions port 5005 -----------^^^^
 
 	        ==> /opt/tomcat/logs/catalina.2020-02-21.log <==
-	        21-Feb-2020 05:16:07.359 WARNING [main] com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol.<clinit> Adding BouncyCastle provider
-	        21-Feb-2020 05:16:07.452 WARNING [main] com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol.<init> Serving wildcard certs for multiple domains
-	        21-Feb-2020 05:16:07.459 WARNING [main] com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol.<init> Serving wildcard certs for multiple domains
-	        21-Feb-2020 05:16:07.459 WARNING [main] com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol.<init> Serving wildcard certs for multiple domains
-	        21-Feb-2020 05:16:07.461 INFO [main] com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol.setSslImplementationName setSslImplementation: com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslImplementation
+	        21-Feb-2020 05:16:07.359 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<clinit> Adding BouncyCastle provider
+	        21-Feb-2020 05:16:07.452 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<init> Serving wildcard certs for multiple domains
+	        21-Feb-2020 05:16:07.459 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<init> Serving wildcard certs for multiple domains
+	        21-Feb-2020 05:16:07.459 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<init> Serving wildcard certs for multiple domains
+	        21-Feb-2020 05:16:07.461 INFO [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.setSslImplementationName setSslImplementation: org.apache.traffic_control.traffic_router.protocol.RouterSslImplementation
 
 * When you see that Tomcat is listening for debugger connections on port 5005, start debugging using the debug configuration that you created.
 

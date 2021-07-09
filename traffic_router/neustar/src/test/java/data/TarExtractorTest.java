@@ -15,7 +15,7 @@
 
 package data;
 
-import com.comcast.cdn.traffic_control.traffic_router.neustar.data.TarExtractor;
+import org.apache.traffic_control.traffic_router.neustar.data.TarExtractor;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.log4j.ConsoleAppender;

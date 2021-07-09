@@ -27,26 +27,26 @@
 	<Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
 	<Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
 
-	<Listener className="com.comcast.cdn.traffic_control.traffic_router.tomcat.TomcatLifecycleListener" />
+	<Listener className="org.apache.traffic_control.traffic_router.tomcat.TomcatLifecycleListener" />
 	<!-- A "Service" is a collection of one or more "Connectors" that share 
 		a single "Container" Note: A "Service" is not itself a "Container", so you 
 		may not define subcomponents such as "Valves" at this level. Documentation 
 		at /docs/config/service.html -->
 
 	<Service name="traffic_router_core">
-		<Connector port="80" protocol="com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
+		<Connector port="80" protocol="org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
 				   connectionTimeout="10000" mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="Port"
-					sendReasonPhrase="true"/>
-		<Connector port="3333" protocol="com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
+				   sendReasonPhrase="true"/>
+		<Connector port="3333" protocol="org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
 				   connectionTimeout="10000" mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="ApiPort"/>
-		<Connector port="3443" protocol="com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
+		<Connector port="3443" protocol="org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
 				   scheme="https" secure="true" SSLEnabled="true" clientAuth="false" sslProtocol="TLS" protocols="+TLSv1.1,+TLSv1.2,+TLSv1.3" connectionTimeout="10000"
 				   mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="SecureApiPort" sendReasonPhrase="true"
-				   sslImplementationName="com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslImplementation"> </Connector>
-		<Connector port="443" protocol="com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
+				   sslImplementationName="org.apache.traffic_control.traffic_router.protocol.RouterSslImplementation"> </Connector>
+		<Connector port="443" protocol="org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
 				   scheme="https" secure="true" SSLEnabled="true" clientAuth="false" sslProtocol="TLS" protocols="+TLSv1.1,+TLSv1.2,+TLSv1.3" connectionTimeout="10000"
 				   mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="SecurePort" sendReasonPhrase="true"
-				   sslImplementationName="com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslImplementation">
+				   sslImplementationName="org.apache.traffic_control.traffic_router.protocol.RouterSslImplementation">
 		</Connector>
 		<Engine name="traffic_router_core" defaultHost="localhost">
 			<Host name="localhost" appBase="webapps">
