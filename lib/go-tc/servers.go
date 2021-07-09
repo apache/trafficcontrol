@@ -1192,3 +1192,11 @@ type ServerQueueUpdate struct {
 	ServerID util.JSONIntStr `json:"serverId"`
 	Action   string          `json:"action"`
 }
+
+// ServerGenericQueueUpdateResponse encodes the response data for the POST
+// queue_updates endpoint.
+type ServerGenericQueueUpdateResponse struct {
+	Action string `json:"action"`
+	CDNID  int    `json:"cdnId"`
+	TypeID int    `json:"typeID"`
+}
