@@ -106,8 +106,8 @@ func (dss *TODeliveryServiceServer) Validate(tx *sql.Tx) error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-// ReadDSSHandlerV14 list all of the Deliveryservice Servers in response to requests to api/1.4+/deliveryserviceserver.
-func ReadDSSHandlerV14(w http.ResponseWriter, r *http.Request) {
+// ReadDSSHandler is the handler for GET requests to /deliveryserviceserver.
+func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)

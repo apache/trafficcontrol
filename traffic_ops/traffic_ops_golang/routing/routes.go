@@ -289,7 +289,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// get all edge servers associated with a delivery service (from deliveryservice_server table)
 
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `deliveryserviceserver/?$`, dsserver.ReadDSSHandlerV14, auth.PrivLevelReadOnly, Authenticated, nil, 49461450333},
+		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `deliveryserviceserver/?$`, dsserver.ReadDSSHandler, auth.PrivLevelReadOnly, Authenticated, nil, 49461450333},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `deliveryserviceserver$`, dsserver.GetReplaceHandler, auth.PrivLevelOperations, Authenticated, nil, 4297997883},
 		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `deliveryserviceserver/{dsid}/{serverid}`, dsserver.Delete, auth.PrivLevelOperations, Authenticated, nil, 45321845233},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler, auth.PrivLevelOperations, Authenticated, nil, 44281812063},
@@ -684,7 +684,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// get all edge servers associated with a delivery service (from deliveryservice_server table)
 
-		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `deliveryserviceserver/?$`, dsserver.ReadDSSHandlerV14, auth.PrivLevelReadOnly, Authenticated, nil, 29461450333},
+		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `deliveryserviceserver/?$`, dsserver.ReadDSSHandler, auth.PrivLevelReadOnly, Authenticated, nil, 29461450333},
 		{api.Version{Major: 3, Minor: 0}, http.MethodPost, `deliveryserviceserver$`, dsserver.GetReplaceHandler, auth.PrivLevelOperations, Authenticated, nil, 2297997883},
 		{api.Version{Major: 3, Minor: 0}, http.MethodDelete, `deliveryserviceserver/{dsid}/{serverid}`, dsserver.Delete, auth.PrivLevelOperations, Authenticated, nil, 25321845233},
 		{api.Version{Major: 3, Minor: 0}, http.MethodPost, `deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler, auth.PrivLevelOperations, Authenticated, nil, 24281812063},
@@ -1054,7 +1054,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// get all edge servers associated with a delivery service (from deliveryservice_server table)
 
-		{api.Version{Major: 2, Minor: 0}, http.MethodGet, `deliveryserviceserver/?$`, dsserver.ReadDSSHandlerV14, auth.PrivLevelReadOnly, Authenticated, nil, 2946145033},
+		{api.Version{Major: 2, Minor: 0}, http.MethodGet, `deliveryserviceserver/?$`, dsserver.ReadDSSHandler, auth.PrivLevelReadOnly, Authenticated, nil, 2946145033},
 		{api.Version{Major: 2, Minor: 0}, http.MethodPost, `deliveryserviceserver$`, dsserver.GetReplaceHandler, auth.PrivLevelOperations, Authenticated, nil, 229799788},
 		{api.Version{Major: 2, Minor: 0}, http.MethodDelete, `deliveryserviceserver/{dsid}/{serverid}`, dsserver.Delete, auth.PrivLevelOperations, Authenticated, nil, 2532184523},
 		{api.Version{Major: 2, Minor: 0}, http.MethodPost, `deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler, auth.PrivLevelOperations, Authenticated, nil, 2428181206},
