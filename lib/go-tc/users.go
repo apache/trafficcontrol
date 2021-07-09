@@ -19,7 +19,9 @@ package tc
  * under the License.
  */
 
-import "database/sql"
+import (
+	"database/sql"
+)
 import "encoding/json"
 import "errors"
 import "fmt"
@@ -110,7 +112,8 @@ type User struct {
 // UserV40 contains ChangeLogCount field
 type UserV40 struct {
 	User
-	ChangeLogCount *int `json:"changeLogCount" db:"change_log_count"`
+	ChangeLogCount    *int       `json:"changeLogCount" db:"change_log_count"`
+	LastAuthenticated *TimeNoMod `json:"lastAuthenticated" db:"last_authenticated"`
 }
 
 // UserCurrent represents the profile for the authenticated user
@@ -119,6 +122,11 @@ type UserCurrent struct {
 	LocalUser *bool   `json:"localUser"`
 	RoleName  *string `json:"roleName"`
 	commonUserFields
+}
+
+type UserCurrentV40 struct {
+	UserCurrent
+	LastAuthenticated *TimeNoMod `json:"lastAuthenticated" db:"last_authenticated"`
 }
 
 // CurrentUserUpdateRequest differs from a regular User/UserCurrent in that many of its fields are
