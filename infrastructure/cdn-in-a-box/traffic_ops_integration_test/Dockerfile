@@ -44,7 +44,6 @@ COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
 # integration source and dependencies
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
 COPY ./traffic_ops/toclientlib/ /go/src/github.com/apache/trafficcontrol/traffic_ops/toclientlib/
-COPY ./traffic_ops/v1-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v1-client/
 COPY ./traffic_ops/v2-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v2-client/
 COPY ./traffic_ops/v3-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v3-client/
 COPY ./traffic_ops/v4-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v4-client/
@@ -58,7 +57,7 @@ RUN go mod vendor -v
 
 ENV CGO_ENABLED=0
 RUN set -o errexit -o xtrace;\
-    for api_version in v1 v2 v3 v4; do\
+    for api_version in v2 v3 v4; do\
         go test -c ./$api_version -ldflags="-w -s" -o traffic_ops_${api_version}_integration_test;\
     done
 
@@ -81,12 +80,10 @@ RUN apk add --no-cache --update \
 COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/run.sh    /opt/integration/app/
 COPY ./infrastructure/cdn-in-a-box/traffic_ops/to-access.sh /opt/integration/app/
 COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/config.sh /opt/integration/app/
-COPY ./traffic_ops/testing/api/v1/tc-fixtures.json /opt/integration/app/tc-fixtures-v1.json
 COPY ./traffic_ops/testing/api/v2/tc-fixtures.json /opt/integration/app/tc-fixtures-v2.json
 COPY ./traffic_ops/testing/api/v3/tc-fixtures.json /opt/integration/app/tc-fixtures-v3.json
 COPY ./traffic_ops/testing/api/v4/tc-fixtures.json /opt/integration/app/tc-fixtures-v4.json
 COPY --from=integration-builder \
-    /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v1_integration_test \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v2_integration_test \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v3_integration_test \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v4_integration_test \

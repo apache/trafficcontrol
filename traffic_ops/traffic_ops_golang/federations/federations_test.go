@@ -19,18 +19,17 @@ package federations
  * under the License.
  */
 
-import "database/sql"
-import "io/ioutil"
-import "net/http"
-import "strings"
-import "testing"
+import (
+	"database/sql"
+	"io/ioutil"
+	"net/http"
+	"strings"
+	"testing"
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
-
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-import "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-
-import "gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
+)
 
 func TestAddFederationResolverMappingsForCurrentUser(t *testing.T) {
 	t.Run("add Federation Resolver Mappings for the current user", positiveTestAddFederationResolverMappingsForCurrentUser)
@@ -224,27 +223,7 @@ func TestGetMappingsFromRequestBody(t *testing.T) {
 	data := `{"federations":[{"deliveryService":"test","mappings":{"resolve4":[], "resolve6":[]}}]}`
 	buf := strings.NewReader(data)
 
-	legacyVersion := api.Version{
-		Major: 1,
-		Minor: 3,
-	}
-
-	version := api.Version{
-		Major: 1,
-		Minor: 4,
-	}
-
-	_, userErr, sysErr := getMappingsFromRequestBody(legacyVersion, ioutil.NopCloser(buf))
-	if userErr != nil {
-		t.Errorf("Unexpected user error legacy parsing '%s': %v", data, userErr)
-	}
-	if sysErr != nil {
-		t.Errorf("Unexpected system error legacy parsing '%s': %v", data, sysErr)
-	}
-
-	buf = strings.NewReader(data)
-
-	_, userErr, sysErr = getMappingsFromRequestBody(version, ioutil.NopCloser(buf))
+	_, userErr, sysErr := getMappingsFromRequestBody(ioutil.NopCloser(buf))
 	if userErr != nil {
 		t.Errorf("Unexpected user error parsing '%s': %v", data, userErr)
 	}
@@ -253,21 +232,10 @@ func TestGetMappingsFromRequestBody(t *testing.T) {
 	}
 
 	data = `[{"deliveryService":"test","mappings":{"resolve4":[], "resolve6":[]}}]`
-	buf = strings.NewReader(data)
-
-	_, userErr, sysErr = getMappingsFromRequestBody(legacyVersion, ioutil.NopCloser(buf))
-	if userErr == nil {
-		t.Errorf("Expected user error legacy parsing '%s' but didn't get one", data)
-	} else {
-		t.Logf("Got expected user error legacy parsing '%s': %v", data, userErr)
-	}
-	if sysErr != nil {
-		t.Errorf("Unexpected system error legacy parsing '%s': %v", data, sysErr)
-	}
 
 	buf = strings.NewReader(data)
 
-	_, userErr, sysErr = getMappingsFromRequestBody(version, ioutil.NopCloser(buf))
+	_, userErr, sysErr = getMappingsFromRequestBody(ioutil.NopCloser(buf))
 	if userErr != nil {
 		t.Errorf("Unexpected user error parsing '%s': %v", data, userErr)
 	}

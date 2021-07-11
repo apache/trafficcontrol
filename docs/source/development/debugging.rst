@@ -373,7 +373,7 @@ Traffic Ops
 
 * Use the debugging configuration you created to start debugging Traffic Ops. It should connect without first breaking at any line.
 
-For an example of usage, set a breakpoint at `the log.Debugln() call in TOProfile.Read() <https://github.com/apache/trafficcontrol/blob/RELEASE-5.1.1/traffic_ops/traffic_ops_golang/profile/profiles.go#L148>`_, then visit https://trafficportal.infra.ciab.test/api/1.5/profiles (after logging into :ref:`tp-overview`).
+For an example of usage, set a breakpoint at `the log.Debugln() call in TOProfile.Read() <https://github.com/apache/trafficcontrol/blob/RELEASE-5.1.1/traffic_ops/traffic_ops_golang/profile/profiles.go#L148>`_, then visit https://trafficportal.infra.ciab.test/api/4.0/profiles (after logging into :ref:`tp-overview`).
 
 Traffic Router
 ==============

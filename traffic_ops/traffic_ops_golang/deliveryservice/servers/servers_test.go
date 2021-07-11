@@ -158,7 +158,7 @@ func TestReadServers(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	actualSrvs, err := read(db.MustBegin(), dsID, &auth.CurrentUser{PrivLevel: 30}, false)
+	actualSrvs, err := read(db.MustBegin(), dsID, &auth.CurrentUser{PrivLevel: 30})
 	if err != nil {
 		t.Fatalf("an error '%s' occurred during read", err)
 	}

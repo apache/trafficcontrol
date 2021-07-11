@@ -133,10 +133,6 @@ func (tp *TOType) Create() (error, error, int) {
 }
 
 func (tp *TOType) AllowMutation(forCreation bool) bool {
-	apiInfo := tp.APIInfo()
-	if apiInfo.Version.Major < 2 {
-		return true
-	}
 	if !forCreation {
 		userErr, sysErr, actualUseInTable := tp.loadUseInTable()
 		if userErr != nil || sysErr != nil {

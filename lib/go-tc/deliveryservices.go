@@ -868,13 +868,6 @@ type DeliveryServiceRouting struct {
 	RegionalDenied    int     `json:"regionalDenied"`
 }
 
-type UserAvailableDS struct {
-	ID          *int    `json:"id" db:"id"`
-	DisplayName *string `json:"displayName" db:"display_name"`
-	XMLID       *string `json:"xmlId" db:"xml_id"`
-	TenantID    *int    `json:"-"` // tenant is necessary to check authorization, but not serialized
-}
-
 type FederationDeliveryServiceNullable struct {
 	ID    *int    `json:"id" db:"id"`
 	CDN   *string `json:"cdn" db:"cdn"`

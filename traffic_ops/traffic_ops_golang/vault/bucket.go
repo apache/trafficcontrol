@@ -28,7 +28,12 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-// Deprecated
+// GetBucketKeyDeprecated fetches a specific key from a specific "bucket" from
+// Riak.
+//
+// Deprecated: This endpoint relies on the Riak implementation of Traffic Vault,
+// and will be incompatible with the more flexible Traffic Vault definition to
+// be used in the future.
 func GetBucketKeyDeprecated(w http.ResponseWriter, r *http.Request) {
 	getBucketKey(w, r, api.CreateDeprecationAlerts(nil))
 }
@@ -62,10 +67,5 @@ func getBucketKey(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 		return
 	}
 
-	if len(a.Alerts) > 0 {
-		api.WriteAlertsObj(w, r, http.StatusOK, a, valObj)
-	} else {
-		api.WriteResp(w, r, valObj)
-	}
-
+	api.WriteResp(w, r, valObj)
 }

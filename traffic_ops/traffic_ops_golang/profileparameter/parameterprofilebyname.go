@@ -25,40 +25,19 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-const API_PROFILES_NAME_NAME_PARAMETERS = "profiles/name/{name}/parameters"
-
-func GetProfileNameDeprecated(w http.ResponseWriter, r *http.Request) {
-	getProfileName(w, r, true)
-}
-
 func GetProfileName(w http.ResponseWriter, r *http.Request) {
-	getProfileName(w, r, false)
-}
-
-func getProfileName(w http.ResponseWriter, r *http.Request, deprecated bool) {
-	deprecation := util.StrPtr(API_PROFILES_NAME_NAME_PARAMETERS)
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated, deprecation)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	name := inf.Params["name"]
-	if deprecated {
-		profiles, err := getParametersByProfileName(inf.Tx.Tx, name)
-		if err != nil {
-			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, nil, deprecated, deprecation)
-			return
-		}
-		api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(deprecation), profiles)
-	} else {
-		api.RespWriter(w, r, inf.Tx.Tx)(getParametersByProfileName(inf.Tx.Tx, name))
-	}
+	api.RespWriter(w, r, inf.Tx.Tx)(getParametersByProfileName(inf.Tx.Tx, name))
 }
 
 func getParametersByProfileName(tx *sql.Tx, profileName string) ([]tc.ProfileParameterByName, error) {

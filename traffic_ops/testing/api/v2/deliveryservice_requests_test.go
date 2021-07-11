@@ -305,6 +305,9 @@ func DeleteTestDeliveryServiceRequests(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceRequest by id: %v - %v", dsr.DeliveryService.XMLID, err)
 	}
+	if len(resp) < 1 {
+		t.Fatalf("Expected at least one Delivery Service Request to exist for a Delivery Service with XMLID '%s', found: 0", dsr.DeliveryService.XMLID)
+	}
 	respDSR := resp[0]
 	alert, _, err := TOSession.DeleteDeliveryServiceRequestByID(respDSR.ID)
 	t.Log("Response: ", alert)

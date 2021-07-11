@@ -20,19 +20,16 @@ package routing
  */
 
 import (
+	"bytes"
+	"context"
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"reflect"
 	"testing"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-
-	"fmt"
-
-	"bytes"
-	"context"
-	"net/http/httptest"
-
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
@@ -51,85 +48,85 @@ type routeTest struct {
 
 // TODO: This should be expanded to include POST/PUT/DELETE and other params
 var testRoutes = []routeTest{
-	routeTest{
+	{
 		Method:      `GET`,
-		Path:        `api/1.1/cdns`,
+		Path:        `api/2.0/cdns`,
 		ExpectMatch: true,
 		Params:      map[string]string{},
 	},
-	routeTest{
+	{
 		Method:      `POST`,
 		Path:        `api/1.4/users/login`,
 		ExpectMatch: false,
 		Params:      map[string]string{},
 	},
-	routeTest{
+	{
 		Method:      `POST`,
-		Path:        `api/1.1/cdns`,
+		Path:        `api/3.0/cdns`,
 		ExpectMatch: true,
 		Params:      map[string]string{},
 	},
-	routeTest{
+	{
 		Method:      `POST`,
-		Path:        `api/1.1/users`,
+		Path:        `api/3.0/users`,
 		ExpectMatch: true,
 		Params:      map[string]string{},
 	},
-	routeTest{
+	{
 		Method:      `PUT`,
-		Path:        `api/1.1/deliveryservices/3`,
+		Path:        `api/3.0/deliveryservices/3`,
 		ExpectMatch: true,
 		Params:      map[string]string{"id": "3"},
 	},
-	routeTest{
+	{
 		Method:      `DELETE`,
-		Path:        `api/1.1/servers/777`,
+		Path:        `api/3.0/servers/777`,
 		ExpectMatch: true,
 		Params:      map[string]string{"id": "777"},
 	},
-	routeTest{
+	{
 		Method:      `GET`,
-		Path:        `api/1.4/cdns/1`,
-		ExpectMatch: true,
-		Params:      map[string]string{"id": "1"},
-	},
-	routeTest{
-		Method:      `GET`,
-		Path:        `api/1.4/notatypeweknowabout`,
+		Path:        `api/3.0/cdns/1`,
 		ExpectMatch: false,
 		Params:      map[string]string{},
 	},
-	routeTest{
-		Method:      `GET`,
-		Path:        `api/1.3/asns.json`,
-		ExpectMatch: true,
+	{
+		Method:      http.MethodGet,
+		Path:        "/api/1.1/about",
+		ExpectMatch: false,
 		Params:      map[string]string{},
 	},
-	routeTest{
+	{
+		Method:      `GET`,
+		Path:        `api/3.0/notatypeweknowabout`,
+		ExpectMatch: false,
+		Params:      map[string]string{},
+	},
+	{
 		Method:      `GET`,
 		Path:        `api/99999.99999/cdns`,
 		ExpectMatch: false,
 		Params:      map[string]string{},
 	},
-	routeTest{
+	{
 		Method:      `GET`,
-		Path:        `blahblah/api/1.2/cdns`,
+		Path:        `blahblah/api/3.0/cdns`,
 		ExpectMatch: false,
 		Params:      map[string]string{},
 	},
-	routeTest{
+	{
 		Method:      `GET`,
-		Path:        `internal/api/1.2/federations.json`,
+		Path:        `internal/api/2.0/federations.json`,
 		ExpectMatch: false,
 		Params:      map[string]string{},
 	},
-	routeTest{
+	{
 		Method:      `GET`,
-		Path:        `api/1.5/servers`,
+		Path:        `api/3.0/servers`,
 		ExpectMatch: true,
 		Params:      map[string]string{},
 	},
-	routeTest{
+	{
 		Method:      `GET`,
 		Path:        `api/2.0/servers`,
 		ExpectMatch: true,

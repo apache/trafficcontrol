@@ -120,6 +120,10 @@ func DeleteTestDivisions(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET Division by name: %v - %v", division.Name, err)
 		}
+		if len(resp) != 1 {
+			t.Errorf("Expected exactly one Division to exist with name '%s', found: %d", division.Name, len(resp))
+			continue
+		}
 		respDivision := resp[0]
 
 		delResp, _, err := TOSession.DeleteDivisionByID(respDivision.ID)
