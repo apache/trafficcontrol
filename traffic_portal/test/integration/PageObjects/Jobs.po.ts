@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import { by, element } from 'protractor';
 import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
@@ -44,7 +45,7 @@ export class JobsPage extends BasePage {
         let snp = new SideNavigationPage();
         await snp.ClickToolsMenu();
     }
-    
+
     public async CreateJobs(jobs: Job): Promise<boolean> {
         let result = false;
         let basePage = new BasePage();
