@@ -18,10 +18,9 @@ package client
 import (
 	"errors"
 	"fmt"
-	"net/url"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"net/url"
 )
 
 // UpdateServerStatus updates the Status of the server identified by
@@ -46,6 +45,32 @@ func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool, opts Req
 	var resp tc.ServerQueueUpdateResponse
 	path := fmt.Sprintf("/servers/%d/queue_update", serverID)
 	reqInf, err := to.post(path, opts, req, &resp)
+	return resp, reqInf, err
+}
+
+// SetServerQueueUpdatesByType set the "updPending" field of a list of servers identified by
+// 'cdnName' and 'typeName' to the value of 'queueUpdate'
+func (to *Session) SetServerQueueUpdatesByType(typeName string, cdnName string, queueUpdate bool, opts RequestOptions) (tc.ServerGenericQueueUpdateResponse, toclientlib.ReqInf, error) {
+	req := tc.ServerQueueUpdateRequest{Action: queueUpdateActions[queueUpdate]}
+	var resp tc.ServerGenericQueueUpdateResponse
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+	path := fmt.Sprintf("/queue_updates/%s?type=%s", url.PathEscape(cdnName), typeName)
+	reqInf, err := to.put(path, opts, req, &resp)
+	return resp, reqInf, err
+}
+
+// SetServerQueueUpdatesByProfile set the "updPending" field of a list of servers identified by
+// 'cdnName' and 'profileName' to the value of 'queueUpdate'
+func (to *Session) SetServerQueueUpdatesByProfile(profileName string, cdnName string, queueUpdate bool, opts RequestOptions) (tc.ServerGenericQueueUpdateResponse, toclientlib.ReqInf, error) {
+	req := tc.ServerQueueUpdateRequest{Action: queueUpdateActions[queueUpdate]}
+	var resp tc.ServerGenericQueueUpdateResponse
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+	path := fmt.Sprintf("/queue_updates/%s?profile=%s", url.PathEscape(cdnName), profileName)
+	reqInf, err := to.put(path, opts, req, &resp)
 	return resp, reqInf, err
 }
 

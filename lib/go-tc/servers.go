@@ -1196,7 +1196,9 @@ type ServerQueueUpdate struct {
 // ServerGenericQueueUpdateResponse encodes the response data for the POST
 // queue_updates endpoint.
 type ServerGenericQueueUpdateResponse struct {
-	Action string `json:"action"`
-	CDNID  int    `json:"cdnId"`
-	TypeID int    `json:"typeID"`
+	Action    string `json:"action"`
+	CDNID     int    `json:"cdnID"`
+	TypeID    int    `json:"typeID,omitempty"`
+	ProfileID int    `json:"profileID,omitempty"`
+	Alerts
 }

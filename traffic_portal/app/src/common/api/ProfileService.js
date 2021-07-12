@@ -133,7 +133,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.queueServerUpdatesByProfile = function(cdnName, profileName) {
-        return $http.post(ENV.api['root'] + 'queue_updates?cdn=' + cdnName + '&profile=' + profileName, {action: "queue"}).then(
+        return $http.put(ENV.api['root'] + 'queue_updates/' + cdnName + '?profile=' + profileName, {action: "queue"}).then(
             function(result) {
                 messageModel.setMessages([{level: 'success', text: 'Queued server updates by profile'}], false);
                 return result;
@@ -146,7 +146,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.clearServerUpdatesByProfile = function(cdnName, profileName) {
-        return $http.post(ENV.api['root'] + 'queue_updates?cdn=' + cdnName + '&profile=' + profileName, {action: "dequeue"}).then(
+        return $http.put(ENV.api['root'] + 'queue_updates/' + cdnName + '?profile=' + profileName, {action: "dequeue"}).then(
             function(result) {
                 messageModel.setMessages([{level: 'success', text: 'Cleared server updates by profile'}], false);
                 return result;

@@ -263,7 +263,7 @@ func ProfileAndTypeQueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	query := `UPDATE server SET upd_pending = :upd_pending`
 	query = query + where + orderBy + pagination
 	queryValues["upd_pending"] = queue
-	ok, err = queueGenericUpdate(inf.Tx, queryValues, query)
+	ok, err = queueUpdatesByTypeOrProfile(inf.Tx, queryValues, query)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("queueing updates: %v", err))
 		return
@@ -273,10 +273,10 @@ func ProfileAndTypeQueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+cdn+", Type: "+typeName+", ACTION: CDN server updates "+reqObj.Action+"d", inf.User, inf.Tx.Tx)
-	api.WriteResp(w, r, tc.ServerGenericQueueUpdateResponse{Action: reqObj.Action, CDNID: cdnID, TypeID: typeID})
+	api.WriteResp(w, r, tc.ServerGenericQueueUpdateResponse{Action: reqObj.Action, CDNID: cdnID, TypeID: typeID, ProfileID: profileID})
 }
 
-func queueGenericUpdate(tx *sqlx.Tx, queryValues map[string]interface{}, query string) (bool, error) {
+func queueUpdatesByTypeOrProfile(tx *sqlx.Tx, queryValues map[string]interface{}, query string) (bool, error) {
 	result, err := tx.NamedExec(query, queryValues)
 	if err != nil {
 		return false, errors.New("querying generic queue updates: " + err.Error())

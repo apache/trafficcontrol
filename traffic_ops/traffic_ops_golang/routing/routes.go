@@ -135,7 +135,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		 */
 
 		// Queue Updates
-		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `queue_updates/?$`, server.ProfileAndTypeQueueUpdateHandler, auth.PrivLevelOperations, Authenticated, nil, 4134390571},
+		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `queue_updates/{cdn}?$`, server.ProfileAndTypeQueueUpdateHandler, auth.PrivLevelOperations, Authenticated, nil, 4134390571},
 
 		// CDN lock
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdn_locks/?$`, cdn_lock.Read, auth.PrivLevelReadOnly, Authenticated, nil, 4134390561},
