@@ -126,9 +126,9 @@ func Current(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if version.Major >= 4 {
-		api.WriteResp(w, r, currentUser)
-	} else {
 		api.WriteResp(w, r, currentUserV40)
+	} else {
+		api.WriteResp(w, r, currentUser)
 	}
 }
 

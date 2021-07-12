@@ -109,14 +109,14 @@ type User struct {
 	commonUserFields
 }
 
-// UserV40 contains ChangeLogCount field
+// UserV40 contains ChangeLogCount field.
 type UserV40 struct {
 	User
 	ChangeLogCount    *int       `json:"changeLogCount" db:"change_log_count"`
 	LastAuthenticated *TimeNoMod `json:"lastAuthenticated" db:"last_authenticated"`
 }
 
-// UserCurrent represents the profile for the authenticated user
+// UserCurrent represents the profile for the authenticated user.
 type UserCurrent struct {
 	UserName  *string `json:"username"`
 	LocalUser *bool   `json:"localUser"`
@@ -124,6 +124,7 @@ type UserCurrent struct {
 	commonUserFields
 }
 
+// UserCurrentV40 contains LastAuthenticated field.
 type UserCurrentV40 struct {
 	UserCurrent
 	LastAuthenticated *TimeNoMod `json:"lastAuthenticated" db:"last_authenticated"`
@@ -336,6 +337,12 @@ type DeleteUserResponse struct {
 // or update the current user.
 type UserCurrentResponse struct {
 	Response UserCurrent `json:"response"`
+	Alerts
+}
+
+// UserCurrentResponseV40 is the Traffic Ops API version 4.0 variant of UserResponse.
+type UserCurrentResponseV40 struct {
+	Response UserCurrentV40 `json:"response"`
 	Alerts
 }
 

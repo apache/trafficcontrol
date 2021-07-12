@@ -33,9 +33,9 @@ func (to *Session) GetUsers(opts RequestOptions) (tc.UsersResponseV40, toclientl
 }
 
 // GetUserCurrent retrieves the currently authenticated User.
-func (to *Session) GetUserCurrent(opts RequestOptions) (tc.UserCurrentResponse, toclientlib.ReqInf, error) {
+func (to *Session) GetUserCurrent(opts RequestOptions) (tc.UserCurrentResponseV40, toclientlib.ReqInf, error) {
 	route := `/user/current`
-	resp := tc.UserCurrentResponse{}
+	resp := tc.UserCurrentResponseV40{}
 	reqInf, err := to.get(route, opts, &resp)
 	return resp, reqInf, err
 }

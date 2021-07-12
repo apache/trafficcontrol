@@ -132,7 +132,7 @@ Response Structure
 			"tenantId": 1,
 			"uid": null,
 			"lastUpdated": "2018-12-12 16:26:32+00",
-			"changeLogCount":	20,
+			"changeLogCount": 20,
 			"lastAuthenticated": "2021-07-09T14:44:10.371708-06:00"
 		}
 	]}
