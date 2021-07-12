@@ -19,6 +19,8 @@
 ``cachegroups/{{ID}}/parameters``
 *********************************
 
+.. deprecated:: ATCv6
+
 ``GET``
 =======
 Gets all of a :ref:`Cache Group's parameters <cache-group-parameters>`.
