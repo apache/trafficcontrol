@@ -386,8 +386,6 @@ Request Structure
 		"lastHeaderRewrite": null,
 		"logsEnabled": true,
 		"longDesc": "A Delivery Service created expressly for API documentation examples",
-		"longDesc1": null,
-		"longDesc2": null,
 		"maxDnsAnswers": null,
 		"missLat": 0,
 		"missLong": 0,
