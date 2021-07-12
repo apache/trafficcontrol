@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdn-locks:
+.. _to-api-queue-updates-by-type-or-profile:
 
 *************************
 ``queue_updates/{{cdn}}``
