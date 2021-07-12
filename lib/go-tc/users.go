@@ -21,16 +21,16 @@ package tc
 
 import (
 	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
+
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+
+	"github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 )
-import "encoding/json"
-import "errors"
-import "fmt"
-
-import "github.com/apache/trafficcontrol/lib/go-rfc"
-import "github.com/apache/trafficcontrol/lib/go-util"
-
-import "github.com/go-ozzo/ozzo-validation"
-import "github.com/go-ozzo/ozzo-validation/is"
 
 // UserCredentials contains Traffic Ops login credentials
 type UserCredentials struct {
