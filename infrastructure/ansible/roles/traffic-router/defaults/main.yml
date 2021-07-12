@@ -67,7 +67,7 @@ tr_java_opts:
 
 # server.xml
 tr_connector_default:
-  protocol: 'com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol'
+  protocol: 'org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol'
   maxThreads: 10000
   connectionTimeout: 10000
   mbeanPath: 'traffic-router:name=languidState'
@@ -105,7 +105,7 @@ tr_connectors:
     clientAuth: false
     sslProtocol: 'TLS'
     protocols: '+TLSv1.2,+TLSv1.3'
-    sslImplementationName: 'com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslImplementation'
+    sslImplementationName: 'org.apache.traffic_control.traffic_router.protocol.RouterSslImplementation'
 
 # dns.properties
 tr_dns_tcp_port: 53
@@ -153,9 +153,9 @@ tr_log4j_opts:
   - log4j.rootLogger=WARN, A1
   -
   - "# Set application logger levels"
-  - log4j.logger.com.comcast.cdn.traffic_control.traffic_router=INFO
-  - log4j.logger.com.comcast.cdn.traffic_control.traffic_router.core.access=INFO, ACCESS
-  - log4j.additivity.com.comcast.cdn.traffic_control.traffic_router.core.access=false
+  - log4j.logger.org.apache.traffic_control.traffic_router=INFO
+  - log4j.logger.org.apache.traffic_control.traffic_router.core.access=INFO, ACCESS
+  - log4j.additivity.org.apache.traffic_control.traffic_router.core.access=false
 
 # logging.properties
 tr_logging_opts:

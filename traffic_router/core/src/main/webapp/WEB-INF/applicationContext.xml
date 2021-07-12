@@ -22,8 +22,8 @@
 
 	<import resource="classpath:/applicationProperties.xml" />
 
-	<context:component-scan base-package="com.comcast.cdn.traffic_control.traffic_router" >
-		<context:exclude-filter type="regex" expression="com\.comcast\.cdn\.traffic_control\.traffic_router\.api.*"/>
+	<context:component-scan base-package="org.apache.traffic_control.traffic_router" >
+		<context:exclude-filter type="regex" expression="org\.apache\.traffic_control\.traffic_router\.api.*"/>
 	</context:component-scan>
 
 	<bean id="databasesDir" class="java.nio.file.Paths" factory-method="get">
@@ -46,16 +46,16 @@
 		</constructor-arg>
 	</bean>
 
-	<bean id="statTracker" class="com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker"/>
+	<bean id="statTracker" class="org.apache.traffic_control.traffic_router.core.router.StatTracker"/>
 
 	<bean name="staticZoneManagerZoneDirectoryInitializer" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
-		<property name="staticMethod" value="com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager.setZoneDirectory"/>
+		<property name="staticMethod" value="org.apache.traffic_control.traffic_router.core.dns.ZoneManager.setZoneDirectory"/>
 		<property name="arguments">
 			<list><ref bean="autoZonesDir"/></list>
 		</property>
 	</bean>
 
-	<bean id="trafficRouterManager" class="com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager">
+	<bean id="trafficRouterManager" class="org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager">
 		<property name="statTracker" ref="statTracker" />
 		<property name="nameServer" ref="NameServer" />
 		<property name="trafficOpsUtils" ref="trafficOpsUtils" />
@@ -66,9 +66,9 @@
 		<property name="steeringRegistry" ref="steeringRegistry" />
 	</bean>
 
-	<bean id="federationsRegistry" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry"/>
+	<bean id="federationsRegistry" class="org.apache.traffic_control.traffic_router.core.loc.FederationRegistry"/>
 
-	<bean id="federationsWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationsWatcher" init-method="init">
+	<bean id="federationsWatcher" class="org.apache.traffic_control.traffic_router.core.loc.FederationsWatcher" init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="databasesDirectory" ref="databasesDir" />
 		<property name="databaseName" value="$[cache.federations.database:federations.json]" />
@@ -78,9 +78,9 @@
 		<property name="federationRegistry" ref="federationsRegistry" />
 	</bean>
 
-	<bean id="steeringRegistry" class="com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry"/>
+	<bean id="steeringRegistry" class="org.apache.traffic_control.traffic_router.core.ds.SteeringRegistry"/>
 
-	<bean id="steeringWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringWatcher">
+	<bean id="steeringWatcher" class="org.apache.traffic_control.traffic_router.core.ds.SteeringWatcher">
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="databasesDirectory" ref="databasesDir" />
 		<property name="databaseName" value="$[cache.steering.database:steering.json]" />
@@ -89,7 +89,7 @@
 		<property name="steeringRegistry" ref="steeringRegistry" />
 	</bean>
 
-	<bean id="letsEncryptDnsChallengeWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.ds.LetsEncryptDnsChallengeWatcher">
+	<bean id="letsEncryptDnsChallengeWatcher" class="org.apache.traffic_control.traffic_router.core.ds.LetsEncryptDnsChallengeWatcher">
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="databasesDirectory" ref="databasesDir" />
 		<property name="databaseName" value="$[cache.letsencrypt.database:letsencrypt.json]" />
@@ -108,16 +108,16 @@
 		<constructor-arg value="1"/>
 	</bean>
 
-	<bean name="certificateChecker" class="com.comcast.cdn.traffic_control.traffic_router.core.config.CertificateChecker"/>
+	<bean name="certificateChecker" class="org.apache.traffic_control.traffic_router.core.config.CertificateChecker"/>
 
-	<bean name="certificatesPublisher" class="com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPublisher">
+	<bean name="certificatesPublisher" class="org.apache.traffic_control.traffic_router.core.secure.CertificatesPublisher">
 		<constructor-arg name="certificatesQueue" ref="certificatesQueue"/>
 		<constructor-arg name="publishStatusQueue" ref="publishStatusQueue"/>
 		<constructor-arg name="certificateChecker" ref="certificateChecker"/>
 		<constructor-arg name="trafficRouterManager" ref="trafficRouterManager"/>
 	</bean>
 
-	<bean id="ConfigHandler" class="com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler">
+	<bean id="ConfigHandler" class="org.apache.traffic_control.traffic_router.core.config.ConfigHandler">
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 		<property name="geolocationDatabaseUpdater" ref="geolocationDatabaseUpdater" />
 		<property name="networkUpdater" ref="networkUpdater" />
@@ -136,15 +136,15 @@
 		<property name="publishStatusQueue" ref="publishStatusQueue" />
 	</bean>
 
-	<bean id="trafficOpsUtils" class="com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils">
+	<bean id="trafficOpsUtils" class="org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils">
 		<property name="username" value="$[traffic_ops.username]" />
 		<property name="password" value="$[traffic_ops.password]" />
 	</bean>
 
-	<bean id="maxmindGeolocationService" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService"/>
-	<bean id="anonymousIpDatabaseService" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService"/>
+	<bean id="maxmindGeolocationService" class="org.apache.traffic_control.traffic_router.core.loc.MaxmindGeolocationService"/>
+	<bean id="anonymousIpDatabaseService" class="org.apache.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService"/>
 	
-	<bean id="geolocationDatabaseUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater" init-method="init">
+	<bean id="geolocationDatabaseUpdater" class="org.apache.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater" init-method="init">
 		<property name="databasesDirectory" ref="databasesDir"/>
 		<property name="databaseName" value="$[cache.geolocation.database:GeoLite2-City.mmdb]" />
 		<property name="pollingInterval" value="$[cache.geolocation.database.refresh.period:86400000]" />
@@ -153,7 +153,7 @@
 		<property name="maxmindGeolocationService" ref="maxmindGeolocationService" />
 	</bean>
 
-	<bean id="networkUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.NetworkUpdater" init-method="init">
+	<bean id="networkUpdater" class="org.apache.traffic_control.traffic_router.core.loc.NetworkUpdater" init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="databasesDirectory" ref="databasesDir" />
 		<property name="databaseName" value="$[cache.czmap.database:czmap.json]" />
@@ -161,7 +161,7 @@
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>
 
-	<bean id="deepNetworkUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.DeepNetworkUpdater" init-method="init">
+	<bean id="deepNetworkUpdater" class="org.apache.traffic_control.traffic_router.core.loc.DeepNetworkUpdater" init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="databasesDirectory" ref="databasesDir" />
 		<property name="databaseName" value="$[cache.dczmap.database:dczmap.json]" />
@@ -169,7 +169,7 @@
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>
 
-	<bean id="regionalGeoUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoUpdater"
+	<bean id="regionalGeoUpdater" class="org.apache.traffic_control.traffic_router.core.loc.RegionalGeoUpdater"
 		init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="databasesDirectory" ref="databasesDir" />
@@ -178,7 +178,7 @@
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>
 
-	<bean id="anonymousIpConfigUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpConfigUpdater"
+	<bean id="anonymousIpConfigUpdater" class="org.apache.traffic_control.traffic_router.core.loc.AnonymousIpConfigUpdater"
 		init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="databasesDirectory" ref="databasesDir" />
@@ -187,7 +187,7 @@
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>
 
-	<bean id="anonymousIpDatabaseUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseUpdater"
+	<bean id="anonymousIpDatabaseUpdater" class="org.apache.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseUpdater"
 		init-method="init">
 		<property name="executorService" ref="ScheduledExecutorService" />
 		<property name="databasesDirectory" ref="databasesDir" />
@@ -200,7 +200,7 @@
 	<bean id="ScheduledExecutorService" class="java.util.concurrent.Executors"
 		factory-method="newSingleThreadScheduledExecutor" />
 
-	<bean id="MonitorWatcher" class="com.comcast.cdn.traffic_control.traffic_router.core.monitor.TrafficMonitorWatcher">
+	<bean id="MonitorWatcher" class="org.apache.traffic_control.traffic_router.core.monitor.TrafficMonitorWatcher">
 		<property name="stateUrl" value="http://[host]/publish/CrStates" />
 		<property name="configUrl" value="http://[host]/publish/CrConfig?json" />
 		<property name="configHandler" ref="ConfigHandler" />
@@ -215,18 +215,18 @@
 		<property name="propertiesDirectory" ref="propertiesDir" />
 	</bean>
 
-	<bean id="federationExporter" class="com.comcast.cdn.traffic_control.traffic_router.core.util.FederationExporter">
+	<bean id="federationExporter" class="org.apache.traffic_control.traffic_router.core.util.FederationExporter">
 		<property name="federationRegistry" ref="federationsRegistry"/>
 	</bean>
 
-	<bean id="dataExporter" class="com.comcast.cdn.traffic_control.traffic_router.core.util.DataExporter">
+	<bean id="dataExporter" class="org.apache.traffic_control.traffic_router.core.util.DataExporter">
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 		<property name="statTracker" ref="statTracker" />
 		<property name="federationExporter" ref="federationExporter"/>
 	</bean>
 
-	<bean id="languidState" class="com.comcast.cdn.traffic_control.traffic_router.core.util.LanguidState" init-method="init"
-		depends-on="geolocationDatabaseUpdater, networkUpdater, deepNetworkUpdater, regionalGeoUpdater, MonitorWatcher, trafficRouterManager, ConfigHandler">
+	<bean id="languidState" class="org.apache.traffic_control.traffic_router.core.util.LanguidState" init-method="init"
+		  depends-on="geolocationDatabaseUpdater, networkUpdater, deepNetworkUpdater, regionalGeoUpdater, MonitorWatcher, trafficRouterManager, ConfigHandler">
 		<!-- todo: add bean refs that can be validated inside the method called -->
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>
@@ -265,7 +265,7 @@
 		</property>
 	</bean>
 
-	<bean id="NameServer" class="com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer">
+	<bean id="NameServer" class="org.apache.traffic_control.traffic_router.core.dns.NameServer">
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>
 
@@ -308,7 +308,7 @@
 		<constructor-arg index="2" ref="DnsStreamInetAddress" />
 	</bean>
 
-	<bean id="TCP" class="com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.TCP">
+	<bean id="TCP" class="org.apache.traffic_control.traffic_router.core.dns.protocol.TCP">
 		<property name="serverSocket" ref="ServerSocket" />
 		<property name="executorService" ref="TCPRequestHandlerExecutorService" />
 		<property name="cancelService" ref="TCPCancelExecutorService" />
@@ -327,7 +327,7 @@
 		<constructor-arg index="1" ref="DatagramInetAddress" />
 	</bean>
 
-	<bean id="UDP" class="com.comcast.cdn.traffic_control.traffic_router.core.dns.protocol.UDP">
+	<bean id="UDP" class="org.apache.traffic_control.traffic_router.core.dns.protocol.UDP">
 		<property name="datagramSocket" ref="DatagramSocket" />
 		<property name="executorService" ref="UDPRequestHandlerExecutorService" />
 		<property name="cancelService" ref="UDPCancelExecutorService" />
@@ -341,7 +341,7 @@
 		<constructor-arg index="0" value="2" />
 	</bean>
 
-	<bean id="NameServerMain" class="com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServerMain">
+	<bean id="NameServerMain" class="org.apache.traffic_control.traffic_router.core.dns.NameServerMain">
 		<property name="protocolService" ref="ProtocolExecutorService" />
 		<property name="protocols">
 			<list>
@@ -356,17 +356,17 @@
 		<value>/clientaccesspolicy.xml</value>
 	</util:list>
 
-	<bean name="routerFilter" class="com.comcast.cdn.traffic_control.traffic_router.core.http.RouterFilter">
+	<bean name="routerFilter" class="org.apache.traffic_control.traffic_router.core.http.RouterFilter">
 		<property name="doNotLog" value="$[http.access.static.content.donotlog]" />
 		<property name="staticContentWhiteList" ref="staticContentWhiteList" />
 	</bean>
 
-	<bean name="certificatesClient" class="com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesClient">
+	<bean name="certificatesClient" class="org.apache.traffic_control.traffic_router.core.secure.CertificatesClient">
 		<property name="trafficOpsUtils" ref="trafficOpsUtils"/>
 		<property name="trafficRouterManager" ref="trafficRouterManager"/>
 	</bean>
 
-	<bean name="certificatesPoller" class="com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPoller" init-method="start">
+	<bean name="certificatesPoller" class="org.apache.traffic_control.traffic_router.core.secure.CertificatesPoller" init-method="start">
 		<property name="certificatesClient" ref="certificatesClient"/>
 		<property name="certificatesQueue" ref="certificatesQueue"/>
 		<property name="trafficRouterManager" ref="trafficRouterManager"/>

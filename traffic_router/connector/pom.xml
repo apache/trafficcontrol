@@ -17,7 +17,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+		<groupId>org.apache.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
         <version>5.0.0</version>
 	</parent>
@@ -68,7 +68,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidProtocol</mainClass>
+							<mainClass>org.apache.traffic_control.traffic_router.protocol.LanguidProtocol</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -78,7 +78,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<groupId>org.apache.traffic_control.traffic_router</groupId>
 			<artifactId>traffic_router_shared</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>

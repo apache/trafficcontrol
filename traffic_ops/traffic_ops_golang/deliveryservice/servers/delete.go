@@ -153,6 +153,13 @@ func delete(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	}
 	dsName := *ds.XMLID
 
+	if ds.CDNName != nil {
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *ds.CDNName, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
 	serverName, exists, err := dbhelpers.GetServerNameFromID(tx, serverID)
 	if err != nil {
 		api.HandleErrOptionalDeprecation(w, r, tx, http.StatusInternalServerError, nil, errors.New("getting server name from id: "+err.Error()), deprecated, &alt)

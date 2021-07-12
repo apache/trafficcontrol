@@ -148,7 +148,7 @@ func UpdateTestDeliveryServiceRequestsWithHeaders(t *testing.T, header http.Head
 	}
 	resetDS(ds)
 	if ds == nil || ds.XMLID == nil {
-		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
+		t.Fatalf("the %dth DSR in the test data had no Delivery Service, or that Delivery Service had a null or undefined XMLID", dsrGood)
 	}
 	opts := client.NewRequestOptions()
 	opts.Header = header
@@ -202,7 +202,7 @@ func GetTestDeliveryServiceRequestsIMSAfterChange(t *testing.T, header http.Head
 
 	resetDS(ds)
 	if ds == nil || ds.XMLID == nil {
-		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
+		t.Fatalf("the %dth DSR in the test data had no Delivery Service, or that Delivery Service had a null or undefined XMLID", dsrGood)
 	}
 
 	opts := client.NewRequestOptions()
@@ -312,7 +312,7 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 		}
 		resetDS(ds)
 		if ds == nil || ds.XMLID == nil {
-			t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrBadTenant)
+			t.Fatalf("the %dth DSR in the test data had no Delivery Service, or that Delivery Service had a null or undefined XMLID", dsrBadTenant)
 		}
 
 		resp, _, err := TOSession.CreateDeliveryServiceRequest(dsr, client.RequestOptions{})
@@ -522,7 +522,7 @@ func GetTestDeliveryServiceRequestsIMS(t *testing.T) {
 	}
 	resetDS(ds)
 	if ds == nil || ds.XMLID == nil {
-		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
+		t.Fatalf("the %dth DSR in the test data had no Delivery Service, or that Delivery Service had null or undefined XMLID", dsrGood)
 	}
 
 	opts.QueryParameters.Set("xmlId", *ds.XMLID)
@@ -551,7 +551,7 @@ func GetTestDeliveryServiceRequests(t *testing.T) {
 	resetDS(ds)
 
 	if ds == nil || ds.XMLID == nil {
-		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
+		t.Fatalf("the %dth DSR in the test data had no Delivery Service, or that Delivery Service had a null or undefined XMLID", dsrGood)
 	}
 
 	opts := client.NewRequestOptions()
@@ -580,7 +580,7 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 
 	resetDS(ds)
 	if ds == nil || ds.XMLID == nil {
-		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
+		t.Fatalf("the %dth DSR in the test data had no Delivery Service, or that Delivery Service had a null or undefined XMLID", dsrGood)
 	}
 
 	opts := client.NewRequestOptions()

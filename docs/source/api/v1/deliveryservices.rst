@@ -116,8 +116,8 @@ Response Structure
 :lastUpdated:        The date and time at which this :term:`Delivery Service` was last updated, in :ref:`non-rfc-datetime`
 :logsEnabled:        A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 :longDesc:           The :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:          The :ref:`ds-longdesc2` of this :term:`Delivery Service`
-:longDesc2:          The :ref:`ds-longdesc3` of this :term:`Delivery Service`
+:longDesc1:          The 2nd long description of this :term:`Delivery Service`
+:longDesc2:          the 3rd long description of this :term:`Delivery Service`
 :matchList:          The :term:`Delivery Service`'s :ref:`ds-matchlist`
 
 	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
@@ -328,8 +328,8 @@ Request Structure
 :ipv6RoutingEnabled:   A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
 :logsEnabled:          A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 :longDesc:             The :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:            An optional field containing the :ref:`ds-longdesc2` of this :term:`Delivery Service`
-:longDesc2:            An optional field containing the :ref:`ds-longdesc3` of this :term:`Delivery Service`
+:longDesc1:            An optional field containing the 2nd long description of this :term:`Delivery Service`
+:longDesc2:            An optional field containing the 3rd long description of this :term:`Delivery Service`
 :maxDnsAnswers:        The :ref:`ds-max-dns-answers` allowed for this :term:`Delivery Service`
 :maxOriginConnections: The :ref:`ds-max-origin-connections`
 
@@ -472,8 +472,8 @@ Response Structure
 :lastUpdated:         The date and time at which this :term:`Delivery Service` was last updated, in :ref:`non-rfc-datetime`
 :logsEnabled:         A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 :longDesc:            The :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:           The :ref:`ds-longdesc2` of this :term:`Delivery Service`
-:longDesc2:           The :ref:`ds-longdesc3` of this :term:`Delivery Service`
+:longDesc1:           The 2nd long description of this :term:`Delivery Service`
+:longDesc2:           the 3rd long description of this :term:`Delivery Service`
 :matchList:           The :term:`Delivery Service`'s :ref:`ds-matchlist`
 
 	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)

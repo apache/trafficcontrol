@@ -383,8 +383,8 @@ func WriteAlerts(w http.ResponseWriter, r *http.Request, code int, alerts tc.Ale
 
 func WriteAlertsObj(w http.ResponseWriter, r *http.Request, code int, alerts tc.Alerts, obj interface{}) {
 	if !alerts.HasAlerts() {
-		WriteResp(w, r, obj)
 		w.WriteHeader(code)
+		WriteResp(w, r, obj)
 		return
 	}
 	if respWritten(r) {

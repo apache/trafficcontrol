@@ -20,7 +20,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
+import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
 
 public class GeolocationTest {
 

@@ -15,7 +15,7 @@
 
 package files;
 
-import com.comcast.cdn.traffic_control.traffic_router.neustar.files.FilesMover;
+import org.apache.traffic_control.traffic_router.neustar.files.FilesMover;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

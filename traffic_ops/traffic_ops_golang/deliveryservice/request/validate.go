@@ -56,7 +56,7 @@ func validateLegacy(dsr tc.DeliveryServiceRequestNullable, tx *sql.Tx) error {
 		}
 		toStatus, ok := s.(*tc.RequestStatus)
 		if !ok {
-			return fmt.Errorf("Expected *tc.RequestStatus type,  got %T", s)
+			return fmt.Errorf("expected *tc.RequestStatus type, got %T", s)
 		}
 		return fromStatus.ValidTransition(*toStatus)
 	}

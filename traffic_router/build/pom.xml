@@ -20,7 +20,7 @@
 	<packaging>pom</packaging>
 
 	<parent>
-		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+		<groupId>org.apache.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
 		<version>5.0.0</version>
 	</parent>
@@ -33,17 +33,17 @@
 	<dependencies>
 		<!-- RPM plugin will not package artifacts without these defined dependencies -->
 		<dependency>
-			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<groupId>org.apache.traffic_control.traffic_router</groupId>
 			<artifactId>traffic_router_connector</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<groupId>org.apache.traffic_control.traffic_router</groupId>
 			<artifactId>traffic_router_shared</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<groupId>org.apache.traffic_control.traffic_router</groupId>
 			<artifactId>ROOT</artifactId>
 			<version>${project.parent.version}</version>
 			<type>war</type>
@@ -193,7 +193,7 @@
 									<dependency>
 										<stripVersion>true</stripVersion>
 										<excludes>
-											<exclude>com.comcast.cdn.traffic_control.traffic_router:traffic_router_core</exclude>
+											<exclude>org.apache.traffic_control.traffic_router:traffic_router_core</exclude>
 										</excludes>
 									</dependency>
 								</mapping>
@@ -218,7 +218,7 @@
 									<dependency>
 										<stripVersion>true</stripVersion>
 										<includes>
-											<include>com.comcast.cdn.traffic_control.traffic_router:ROOT</include>
+											<include>org.apache.traffic_control.traffic_router:ROOT</include>
 										</includes>
 									</dependency>
 								</mapping>

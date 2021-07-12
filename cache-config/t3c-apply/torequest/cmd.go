@@ -49,11 +49,19 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 		return nil, errors.New("requesting: " + err.Error())
 	}
 	args := []string{
-		"--log-location-error=" + outToErr(cfg.LogLocationErr),
-		"--log-location-info=" + outToErr(cfg.LogLocationInfo),
-		"--log-location-warning=" + outToErr(cfg.LogLocationWarn),
 		"--dir=" + config.TSConfigDir,
 	}
+
+	if cfg.LogLocationErr == log.LogLocationNull {
+		args = append(args, "-s")
+	}
+	if cfg.LogLocationWarn != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+	if cfg.LogLocationInfo != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+
 	if cfg.DNSLocalBind {
 		args = append(args, "--dns-local-bind")
 	}
@@ -93,10 +101,16 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 
 // preprocess takes the to Data from 't3c-request --get-data=config' and the generated files from 't3c-generate', passes them to `t3c-preprocess`, and returns the result.
 func preprocess(cfg config.Cfg, configData []byte, generatedFiles []byte) ([]byte, error) {
-	args := []string{
-		"--log-location-error=" + outToErr(cfg.LogLocationErr),
-		"--log-location-info=" + outToErr(cfg.LogLocationInfo),
-		"--log-location-warning=" + outToErr(cfg.LogLocationWarn),
+	args := []string{}
+
+	if cfg.LogLocationErr == log.LogLocationNull {
+		args = append(args, "-s")
+	}
+	if cfg.LogLocationWarn != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+	if cfg.LogLocationInfo != log.LogLocationNull {
+		args = append(args, "-v")
 	}
 
 	cmd := exec.Command(`t3c-preprocess`, args...)
@@ -203,12 +217,21 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 		"--traffic-ops-password=" + cfg.TOPass,
 		"--traffic-ops-url=" + cfg.TOURL,
 		"--traffic-ops-insecure=" + strconv.FormatBool(cfg.TOInsecure),
-		"--log-location-error=" + outToErr(cfg.LogLocationErr),
-		"--log-location-info=" + outToErr(cfg.LogLocationInfo),
 		"--cache-host-name=" + cfg.CacheHostName,
 		"--set-update-status=" + strconv.FormatBool(updateStatus),
 		"--set-reval-status=" + strconv.FormatBool(revalStatus),
 	}
+
+	if cfg.LogLocationErr == log.LogLocationNull {
+		args = append(args, "-s")
+	}
+	if cfg.LogLocationWarn != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+	if cfg.LogLocationInfo != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+
 	if _, used := os.LookupEnv("TO_USER"); !used {
 		args = append(args, "--traffic-ops-user="+cfg.TOUser)
 	}
@@ -261,12 +284,21 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string) (bool, error) {
 // The cfgFile should be the full text of either a plugin.config or remap.config.
 // Returns nil if t3c-check-refs returned no errors found, or the error found if any.
 func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
-	stdOut, stdErr, code := t3cutil.DoInput(cfgFile, `t3c`, `check`, `refs`,
-		"--log-location-error="+outToErr(cfg.LogLocationErr),
-		"--log-location-info="+outToErr(cfg.LogLocationInfo),
-		"--log-location-debug="+outToErr(cfg.LogLocationDebug),
-		"--files-adding="+strings.Join(filesAdding, ","),
-	)
+	args := []string{`check`, `refs`,
+		"--files-adding=" + strings.Join(filesAdding, ","),
+	}
+	if cfg.LogLocationErr == log.LogLocationNull {
+		args = append(args, "-s")
+	}
+	if cfg.LogLocationWarn != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+	if cfg.LogLocationInfo != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+
+	stdOut, stdErr, code := t3cutil.DoInput(cfgFile, `t3c`, args...)
+
 	if code != 0 {
 		log.Errorf(`check-refs errors start
 ` + string(stdOut))
@@ -338,10 +370,19 @@ func request(cfg config.Cfg, command string) ([]byte, error) {
 		"--traffic-ops-insecure=" + strconv.FormatBool(cfg.TOInsecure),
 		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
 		"--cache-host-name=" + cfg.CacheHostName,
-		"--log-location-error=" + outToErr(cfg.LogLocationErr),
-		"--log-location-info=" + outToErr(cfg.LogLocationInfo),
 		`--get-data=` + command,
 	}
+
+	if cfg.LogLocationErr == log.LogLocationNull {
+		args = append(args, "-s")
+	}
+	if cfg.LogLocationWarn != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+	if cfg.LogLocationInfo != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+
 	if _, used := os.LookupEnv("TO_USER"); !used {
 		args = append(args, "--traffic-ops-user="+cfg.TOUser)
 	}

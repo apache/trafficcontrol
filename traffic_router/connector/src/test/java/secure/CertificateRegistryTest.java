@@ -15,11 +15,11 @@
 
 package secure;
 
-import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterNioEndpoint;
-import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateDataConverter;
-import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateRegistry;
-import com.comcast.cdn.traffic_control.traffic_router.secure.HandshakeData;
-import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
+import org.apache.traffic_control.traffic_router.protocol.RouterNioEndpoint;
+import org.apache.traffic_control.traffic_router.secure.CertificateDataConverter;
+import org.apache.traffic_control.traffic_router.secure.CertificateRegistry;
+import org.apache.traffic_control.traffic_router.secure.HandshakeData;
+import org.apache.traffic_control.traffic_router.shared.CertificateData;
 import org.junit.Before;
 import org.junit.Test;
 
