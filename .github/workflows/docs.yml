@@ -48,7 +48,6 @@ jobs:
         uses: ./.github/actions/sphinx-action
         with:
           docs-folder: "docs/"
-          pre-build-command: "apt-get update -y && apt-get install -y python3-dev build-essential"
       - uses: actions/upload-artifact@v1
         with:
           name: HTMLDocumentation
