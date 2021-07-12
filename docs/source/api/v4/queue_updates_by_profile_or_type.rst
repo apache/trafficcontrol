@@ -15,15 +15,15 @@
 
 .. _to-api-cdn-locks:
 
-*********************
-``cdn_locks/{{cdn}}``
-*********************
+*************************
+``queue_updates/{{cdn}}``
+*************************
 
 .. versionadded:: 4.0
 
 ``PUT``
 =======
-Allows user to acquire a lock on a CDN.
+Allows a user to queue updates on the servers of a CDN filtered by ``type`` and/or ``profile``.
 :term:`Queue` or dequeue updates for a list of servers.
 
 :Auth. Required: Yes
