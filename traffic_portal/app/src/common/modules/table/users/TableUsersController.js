@@ -17,11 +17,13 @@
  * under the License.
  */
 
-var TableUsersController = function(users, $scope, $state, locationUtils) {
+var TableUsersController = function(users, $scope, $state, dateUtils, locationUtils) {
 
     let usersTable;
 
     $scope.users = users;
+
+    $scope.getRelativeTime = dateUtils.getRelativeTime;
 
     $scope.columns = [
         { "name": "Full Name", "visible": true, "searchable": true },
@@ -62,7 +64,7 @@ var TableUsersController = function(users, $scope, $state, locationUtils) {
             "iDisplayLength": 25,
             "aaSorting": [],
             "columns": $scope.columns,
-            "initComplete": function(settings, json) {
+            "initComplete": function() {
                 try {
                     // need to create the show/hide column checkboxes and bind to the current visibility
                     $scope.columns = JSON.parse(localStorage.getItem('DataTables_usersTable_/')).columns;
@@ -75,5 +77,5 @@ var TableUsersController = function(users, $scope, $state, locationUtils) {
 
 };
 
-TableUsersController.$inject = ['users', '$scope', '$state', 'locationUtils'];
+TableUsersController.$inject = ['users', '$scope', '$state', 'dateUtils', 'locationUtils'];
 module.exports = TableUsersController;

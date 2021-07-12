@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -113,7 +114,7 @@ type User struct {
 type UserV40 struct {
 	User
 	ChangeLogCount    *int       `json:"changeLogCount" db:"change_log_count"`
-	LastAuthenticated *TimeNoMod `json:"lastAuthenticated" db:"last_authenticated"`
+	LastAuthenticated *time.Time `json:"lastAuthenticated" db:"last_authenticated"`
 }
 
 // UserCurrent represents the profile for the authenticated user.
@@ -127,7 +128,7 @@ type UserCurrent struct {
 // UserCurrentV40 contains LastAuthenticated field.
 type UserCurrentV40 struct {
 	UserCurrent
-	LastAuthenticated *TimeNoMod `json:"lastAuthenticated" db:"last_authenticated"`
+	LastAuthenticated *time.Time `json:"lastAuthenticated" db:"last_authenticated"`
 }
 
 // CurrentUserUpdateRequest differs from a regular User/UserCurrent in that many of its fields are
