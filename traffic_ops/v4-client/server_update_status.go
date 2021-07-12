@@ -18,9 +18,10 @@ package client
 import (
 	"errors"
 	"fmt"
+	"net/url"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-	"net/url"
 )
 
 // UpdateServerStatus updates the Status of the server identified by

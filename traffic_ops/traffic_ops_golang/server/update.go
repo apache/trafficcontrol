@@ -168,6 +168,7 @@ func setUpdateStatuses(tx *sql.Tx, hostName string, updatePending *bool, revalPe
 	return nil
 }
 
+// ProfileAndTypeQueueUpdateHandler queues/ dequeues updates on servers for a particular CDN, filtered by type and/ or profile.
 func ProfileAndTypeQueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	var cdnID int
 	var typeID int
@@ -276,6 +277,7 @@ func ProfileAndTypeQueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, tc.ServerGenericQueueUpdateResponse{Action: reqObj.Action, CDNID: cdnID, TypeID: typeID, ProfileID: profileID})
 }
 
+// queueUpdatesByTypeOrProfile is the helper function to queue/ dequeue updates on servers for a CDN, filtered by type and/ or profile
 func queueUpdatesByTypeOrProfile(tx *sqlx.Tx, queryValues map[string]interface{}, query string) (bool, error) {
 	result, err := tx.NamedExec(query, queryValues)
 	if err != nil {
