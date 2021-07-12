@@ -18,11 +18,9 @@
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
 
-ALTER TABLE tm_user
-    ADD COLUMN last_authenticated timestamp with time zone;
+ALTER TABLE tm_user ADD COLUMN last_authenticated timestamp with time zone;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
 
-ALTER TABLE tm_user
-DROP COLUMN last_authenticated;
+ALTER TABLE tm_user DROP COLUMN last_authenticated;
