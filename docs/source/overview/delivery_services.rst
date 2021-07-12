@@ -188,7 +188,7 @@ Edge Header Rewrite Rules
 -------------------------
 This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Edge-tier cache servers`.
 
-.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`t3c-special-strings`.
 
 .. note:: This field cannot be used if the Delivery Service is assigned to a :term:`Topology`.
 
@@ -243,7 +243,7 @@ First Header Rewrite Rules
 --------------------------
 This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`First-tier cache servers`.
 
-.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`t3c-special-strings`.
 
 .. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
 
@@ -424,7 +424,7 @@ Inner Header Rewrite Rules
 --------------------------
 This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Inner-tier cache servers`.
 
-.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`t3c-special-strings`.
 
 .. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
 
@@ -434,7 +434,7 @@ Last Header Rewrite Rules
 -------------------------
 This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Last-tier cache servers`.
 
-.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`t3c-special-strings`.
 
 .. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
 
@@ -517,7 +517,7 @@ Mid Header Rewrite Rules
 ------------------------
 This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Mid-tier cache servers`.
 
-.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`t3c-special-strings`.
 
 .. note:: This field cannot be used if the Delivery Service is assigned to a :term:`Topology`.
 
@@ -658,7 +658,7 @@ Raw Remap Text
 --------------
 For HTTP and DNS-:ref:`Routed <ds-types>` Delivery Services, this will be added to the end of a line in the `remap.config ATS configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_ line on the cache verbatim. For ANY_MAP-:ref:`Type <ds-types>` Delivery Services this must be defined.
 
-.. tip:: Because this ultimately is a raw line of content in a configuration file, it can make use of the :ref:`ort-special-strings`. Of particular note is the :ref:`ort-remap-override` template string.
+.. tip:: Because this ultimately is a raw line of content in a configuration file, it can make use of the :ref:`t3c-special-strings`. Of particular note is the :ref:`t3c-remap-override` template string.
 
 .. note:: This field **must** be defined on ANY_MAP-`Type`_ Delivery Services, but is otherwise optional.
 
