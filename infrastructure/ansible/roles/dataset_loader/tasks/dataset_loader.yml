@@ -694,52 +694,11 @@
     status_assignment: "{{ status_assignment | default({}) | combine({ item: 'REPORTED' }) }}"
   with_items: "{{ dl_hosts_atsec + dl_hosts_atsmid + dl_hosts_grove }}"
   
-- name: Set interface facts
-  set_fact:
-    all_available_interfaces: "{{ all_available_interfaces | default({}) | combine({ item : host_iface }) }}"
-  with_items: "{{ dl_hosts_all | difference(dl_hosts_mso_alias) }}"
-  vars:
-    host_iface:
-      avail_ifaces: "{{ hostvars[item]['ansible_interfaces'] }}"
-    
-- name: testing this out
-  template: src=./interfaces.j2 dest=./output.txt
-  with_items: "{{ all_available_interfaces }}"
-
-- name: debugging
-  debug:
-    msg: "{{ item.value.avail_ifaces }}"
-  with_items: "{{ all_available_interfaces | dict2items }}"
-
-- name: set fact for active interfaces
-  set_fact: 
-
-- name: failig
-  debug:
-    msg: "failing for now"
-  failed_when: testing is not defined
-
-- name: Get default ip information each host
-  set_fact:
-    all_interfaces: "{{ all_interfaces | default([]) | combine({ item : [interfaces] }) }}"
-  with_items: "{{ dl_hosts_all | difference(dl_hosts_mso_alias) }}"
-  vars: 
-    ip_v4: "{{ hostvars[item].ansible_default_ipv4.address }}/{{ hostvars[item].ansible_default_ipv4.netmask }}"
-    ipv4_cidr: "{{ ip_v4 | ipaddr('prefix') }}"
-    interfaces:
-      name: "{{ hostvars[item].ansible_default_ipv4.interface }}"
-      maxBandwidth: null
-      monitor: true
-      mtu: "{{ hostvars[item].ansible_default_ipv4.mtu }}"
-      ipAddresses:
-        - address: "{{ hostvars[item].ansible_default_ipv4.address }}/{{ ipv4_cidr }}"
-          gateway: "{{ hostvars[item].ansible_default_ipv4.gateway }}"
-          serviceAddress: true
-        - address: "{{ hostvars[item].ansible_default_ipv6.address }}/{{ hostvars[item].ansible_default_ipv6.prefix }}"
-          gateway: "{{ hostvars[item].ansible_default_ipv6.gateway }}"
-          serviceAddress: true
+# Due to data manipulation being a shortcome of ansible, in these next set of tasks we are extracting 
+# interface data that is needed for server creation for dual homing puposes from ansible facts and 
+# storing the final result in dl_all_interfaces var
           
-- name: set tmp var to store all pertinent interfaces data from ansible facts for each host
+- name: Set tmp var to store all pertinent interfaces data from ansible facts for each host
   set_fact:
     _dl_all_ifaces_tmp_1: "{{ (_dl_all_ifaces_tmp_1 | default([])) + [ifaces] }}"
   loop: "{{ hostvars | to_json | replace(replacestr, '') | from_json | json_query(loop_query) | subelements('all_ifaces') }}"
@@ -752,7 +711,7 @@
     iface_query: "[ansible_{{ item.1 }}] | [? (ipv4 || ipv6) && length(ipv6[?!starts_with(address,`fe80`) && scope == `global`]) > `0` && (type == `ether` || type == `bonding`)] | [0] | {iface_name: device, v6_addresses: ipv6[?!starts_with(address,`fe80`) && scope == `global`], host: `{{ item.0.host_name }}`, mtu: mtu, v4_address: ipv4}"
     ifaces: "{{ item.0.hostvrs | json_query(iface_query) }}"
 
-- name: set var to add checks for v6 slaac address and service address to tmp var for all interfaces
+- name: Set var to add checks for v6 slaac address and service address to tmp var for all interfaces
   set_fact: 
     _dl_all_ifaces_tmp_2: "{{ _dl_all_ifaces_tmp_2 | default({}) | combine({ host_key: combined_result }) }}"
   loop: "{{ _dl_all_ifaces_tmp_1 | subelements('v6_addresses') }}"
@@ -781,7 +740,7 @@
       v4_address: "{{ (_dl_all_ifaces_tmp_2 | default({})) | json_query(v4_addr_query) | default(item.0.v4_address, true) }}"
       v6_addresses: "{{ ((_dl_all_ifaces_tmp_2 | default({})) | json_query(v6_addr_query) | default([], true)) + [result] }}"
 
-- name: set var to add v4 service address check to tmp var for all interfaces
+- name: Set var to add v4 service address check to tmp var for all interfaces
   set_fact:
     _dl_all_ifaces_tmp_3: "{{ (_dl_all_ifaces_tmp_3 | default([])) + [ item | combine({'v4_address': {'is_service_address': is_v4_service_addr } }, recursive=True)] }}"
   loop: "{{ _dl_all_ifaces_tmp_2 | dict2items | map(attribute='value') | list }}"
@@ -975,15 +934,15 @@
     profileId: "{{ profile_id }}"
     cdnId: "{{ cdn_id }}"
     updPending: True
-    interfaceName: "eth0"
-    ipIsService: true
-    ipAddress: "{{ hostvars[item].ansible_host }}"
-    ipNetmask: "255.255.255.0"
-    ipGateway: "127.0.0.0"
-    ip6Address: "{{ omit }}"
-    ip6IsService: true
-    ip6Gateway: "{{ omit }}"
-    interfaceMtu: "9000"
+    interfaces:
+      - maxBandwidth: null
+        monitor: true
+        mtu: 9000
+        name: "eth0"
+        ipAddresses:
+          - address: "{{ hostvars[item].ansible_host }}"
+            gateway: "127.0.0.0"
+            serviceAddress: true
     default_inventory_hostname: "{{ hostvars[item].component | default('server') }}.kabletown.invalid"
     merged_server_attrs: "{{ dl_ds_merged_servers['server.kabletown.invalid'] | combine(dl_ds_merged_servers[default_inventory_hostname] | default({}) ) | combine(dl_ds_merged_servers[item] | default({}) ) }}"
     tcpPort: "{{ merged_server_attrs.tcpPort | default(omit) }}"
