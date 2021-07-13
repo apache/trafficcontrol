@@ -51,6 +51,8 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
     this.contextMenuOptions = [];
     /** @type CGC.TitleButton */
     this.titleButton = {};
+    /** @type CGC.TitleBreadCrumbs */
+    this.breadCrumbs = [];
 
     function HTTPSCellRenderer() {}
     HTTPSCellRenderer.prototype.init = function(params) {
@@ -301,8 +303,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
 
                 try {
                     const page = parseInt(localStorage.getItem(tableName + "_table_page"));
-                    const totalPages = $scope.gridOptions.api.paginationGetTotalPages();
-                    if (page !== undefined && page > 0 && page <= totalPages-1) {
+                    if (page !== undefined && page > 0 && page <= $scope.gridOptions.api.paginationGetTotalPages()-1) {
                         $scope.gridOptions.api.paginationGoToPage(page);
                     }
                 } catch (e) {
@@ -375,6 +376,24 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
         return menu.getHref(this.entry);
     };
 
+    this.bcGetText = function (bc) {
+        if(bc.text !== undefined){
+            return bc.text;
+        }
+        return bc.getText();
+    };
+
+    this.bcHasHref = function(bc) {
+        return bc.href !== undefined || bc.getHref !== undefined;
+    };
+
+    this.bcGetHref = function(bc) {
+        if(bc.href !== undefined) {
+            return bc.href;
+        }
+        return bc.getHref();
+    };
+
     this.getText = function (menu) {
         if (menu.text !== undefined){
             return menu.text;
@@ -407,7 +426,8 @@ angular.module("trafficPortal.table").component("commonGridController", {
         dropDownOptions: "<?",
         contextMenuOptions: "<?",
         defaultData: "<?",
-        titleButton: "<?"
+        titleButton: "<?",
+        breadCrumbs: "<?"
     }
 });
 
