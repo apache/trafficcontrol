@@ -95,6 +95,7 @@ type Cfg struct {
 	// Note this only applies to the ATS config directory inferred or set via the flag.
 	//      It does not do anything for config files generated outside that location.
 	UseGit                      UseGitFlag
+	NoCache                     bool
 	SyncDSUpdatesIPAllow        bool
 	OmitViaStringRelease        bool
 	DisableParentConfigComments bool
@@ -227,6 +228,7 @@ func GetCfg() (Cfg, error) {
 	dnsLocalBindPtr := getopt.BoolLong("dns-local-bind", 'b', "[true | false] whether to use the server's Service Addresses to set the ATS DNS local bind address")
 	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	useGitStr := getopt.StringLong("git", 'g', "auto", "Create and use a git repo in the config directory. Options are yes, no, and auto. If yes, create and use. If auto, use if it exist. Default is auto.")
+	noCachePtr := getopt.BoolLong("no-cache", 'n', "Whether to not use a cache and make conditional requests to Traffic Ops")
 	syncdsUpdatesIPAllowPtr := getopt.BoolLong("syncds-updates-ipallow", 'S', "Whether syncds mode will update ipallow. This exists because ATS had a bug where reloading after changing ipallow would block everything. Default is false.")
 	omitViaStringReleasePtr := getopt.BoolLong("omit-via-string-release", 'o', "Whether to set the records.config via header to the ATS release from the RPM. Default true.")
 	disableParentConfigCommentsPtr := getopt.BoolLong("disable-parent-config-comments", 'c', "Whether to disable verbose parent.config comments. Default false.")
@@ -395,6 +397,7 @@ func GetCfg() (Cfg, error) {
 		WaitForParents:              waitForParents,
 		YumOptions:                  yumOptions,
 		UseGit:                      useGit,
+		NoCache:                     *noCachePtr,
 		SyncDSUpdatesIPAllow:        *syncdsUpdatesIPAllowPtr,
 		OmitViaStringRelease:        *omitViaStringReleasePtr,
 		DisableParentConfigComments: *disableParentConfigCommentsPtr,

@@ -49,7 +49,7 @@ func MakeRegexRevalidateDotConfig(
 	server *Server,
 	deliveryServices []DeliveryService,
 	globalParams []tc.Parameter,
-	jobs []tc.Job,
+	jobs []tc.InvalidationJob,
 	hdrComment string,
 ) (Cfg, error) {
 	warnings := []string{}
@@ -69,9 +69,13 @@ func MakeRegexRevalidateDotConfig(
 		dsNames[*ds.XMLID] = struct{}{}
 	}
 
-	dsJobs := []tc.Job{}
+	dsJobs := []tc.InvalidationJob{}
 	for _, job := range jobs {
-		if _, ok := dsNames[job.DeliveryService]; !ok {
+		if job.DeliveryService == nil {
+			warnings = append(warnings, "got job from Traffic Ops with a nil DeliveryService! Skipping!")
+			continue
+		}
+		if _, ok := dsNames[*job.DeliveryService]; !ok {
 			continue
 		}
 		dsJobs = append(dsJobs, job)
@@ -135,28 +139,31 @@ func (jb jobsSort) Less(i, j int) bool {
 //   - are "purge" jobs
 //   - have a start_time+ttl > now. That is, jobs that haven't expired yet.
 // Returns the filtered jobs, and any warnings.
-func filterJobs(tc_jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) ([]revalJob, []string) {
+func filterJobs(tcJobs []tc.InvalidationJob, maxReval time.Duration, minTTL time.Duration) ([]revalJob, []string) {
 	warnings := []string{}
 
 	jobMap := map[string]revalJob{}
 
-	for _, tc_job := range tc_jobs {
-		if tc_job.DeliveryService == "" {
+	for _, tcJob := range tcJobs {
+		if tcJob.DeliveryService == nil || *tcJob.DeliveryService == "" {
 			continue
 		}
-		if !strings.HasPrefix(tc_job.Parameters, `TTL:`) {
+		if tcJob.Parameters == nil {
 			continue
 		}
-		if !strings.HasSuffix(tc_job.Parameters, `h`) {
+		if !strings.HasPrefix(*tcJob.Parameters, `TTL:`) {
+			continue
+		}
+		if !strings.HasSuffix(*tcJob.Parameters, `h`) {
 			continue
 		}
 
-		ttlHoursStr := tc_job.Parameters
+		ttlHoursStr := *tcJob.Parameters
 		ttlHoursStr = strings.TrimPrefix(ttlHoursStr, `TTL:`)
 		ttlHoursStr = strings.TrimSuffix(ttlHoursStr, `h`)
 		ttlHours, err := strconv.Atoi(ttlHoursStr)
 		if err != nil {
-			warnings = append(warnings, fmt.Sprintf("job %+v has unexpected parameters ttl format, config generation skipping!\n", tc_job))
+			warnings = append(warnings, fmt.Sprintf("job %+v has unexpected parameters ttl format, config generation skipping!\n", tcJob))
 			continue
 		}
 
@@ -167,25 +174,28 @@ func filterJobs(tc_jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) 
 			ttl = minTTL
 		}
 
-		jobStartTime, err := time.Parse(tc.JobTimeFormat, tc_job.StartTime)
-		if err != nil {
-			warnings = append(warnings, fmt.Sprintf("job %+v has unexpected time format, config generation skipping!\n", tc_job))
+		if tcJob.StartTime == nil {
+			warnings = append(warnings, fmt.Sprintf("job %+v had nil start time, config generation skipping!\n", tcJob))
 			continue
 		}
 
-		if jobStartTime.Add(maxReval).Before(time.Now()) {
+		if tcJob.StartTime.Add(maxReval).Before(time.Now()) {
 			continue
 		}
 
-		if jobStartTime.Add(ttl).Before(time.Now()) {
+		if tcJob.StartTime.Add(ttl).Before(time.Now()) {
 			continue
 		}
-		if tc_job.Keyword != JobKeywordPurge {
+		if tcJob.Keyword == nil || *tcJob.Keyword != JobKeywordPurge {
+			continue
+		}
+
+		if tcJob.AssetURL == nil {
 			continue
 		}
 
 		// process the __REFETCH__ keyword
-		assetURL := tc_job.AssetURL
+		assetURL := *tcJob.AssetURL
 		var jobType string
 
 		if strings.HasSuffix(assetURL, RefetchSuffix) {
@@ -196,7 +206,7 @@ func filterJobs(tc_jobs []tc.Job, maxReval time.Duration, minTTL time.Duration) 
 			jobType = "STALE"
 		}
 
-		purgeEnd := jobStartTime.Add(ttl)
+		purgeEnd := tcJob.StartTime.Add(ttl)
 
 		if rjob, ok := jobMap[assetURL]; !ok || purgeEnd.After(rjob.PurgeEnd) {
 			jobMap[assetURL] = revalJob{AssetURL: assetURL, PurgeEnd: purgeEnd, Type: jobType}
