@@ -72,7 +72,7 @@ with open(os.path.join(HERE, "README.rst")) as fd:
 	       packages=find_packages(exclude=["contrib", "docs", "tests"]),
 	       install_requires=[
 	           "future>=0.16.0",
-	           "requests>=2.13.0",
+	           "requests>=2.26.0",
 	           "munch>=2.1.1",
 	       ],
 	       entry_points={
