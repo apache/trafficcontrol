@@ -44,7 +44,7 @@ func getURISigningKeys(xmlID string, tvTx *sqlx.Tx, ctx context.Context, aesKey 
 		return []byte{}, false, err
 	}
 
-	return []byte(jsonUriKeys), true, nil
+	return jsonUriKeys, true, nil
 }
 
 func putURISigningKeys(xmlID string, tvTx *sqlx.Tx, keys []byte, ctx context.Context, aesKey []byte) error {

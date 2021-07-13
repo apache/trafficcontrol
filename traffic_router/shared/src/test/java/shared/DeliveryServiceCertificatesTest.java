@@ -15,8 +15,8 @@
 
 package shared;
 
-import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
-import com.comcast.cdn.traffic_control.traffic_router.shared.DeliveryServiceCertificates;
+import org.apache.traffic_control.traffic_router.shared.CertificateData;
+import org.apache.traffic_control.traffic_router.shared.DeliveryServiceCertificates;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

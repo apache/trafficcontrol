@@ -23,6 +23,7 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
 const pingResponse = `{"ping":"pong"}`
@@ -31,5 +32,5 @@ const pingResponse = `{"ping":"pong"}`
 // server is responding.
 func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	w.Write(append([]byte(pingResponse), '\n'))
+	api.WriteAndLogErr(w, r, append([]byte(pingResponse), '\n'))
 }

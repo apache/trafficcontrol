@@ -141,11 +141,51 @@ func (en *TOStaticDNSEntry) Read(h http.Header, useIMS bool) ([]interface{}, err
 	api.DefaultSort(en.APIInfo(), "host")
 	return api.GenericRead(h, en, useIMS)
 }
-func (en *TOStaticDNSEntry) Create() (error, error, int) { return api.GenericCreate(en) }
+func (en *TOStaticDNSEntry) Create() (error, error, int) {
+	var cdnName tc.CDNName
+	var err error
+	if en.DeliveryServiceID != nil {
+		_, cdnName, _, err = dbhelpers.GetDSNameAndCDNFromID(en.ReqInfo.Tx.Tx, *en.DeliveryServiceID)
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, string(cdnName), en.ReqInfo.User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+	}
+	return api.GenericCreate(en)
+}
 func (en *TOStaticDNSEntry) Update(h http.Header) (error, error, int) {
+	var cdnName tc.CDNName
+	var err error
+	if en.DeliveryServiceID != nil {
+		_, cdnName, _, err = dbhelpers.GetDSNameAndCDNFromID(en.ReqInfo.Tx.Tx, *en.DeliveryServiceID)
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, string(cdnName), en.ReqInfo.User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+	}
 	return api.GenericUpdate(h, en)
 }
-func (en *TOStaticDNSEntry) Delete() (error, error, int) { return api.GenericDelete(en) }
+func (en *TOStaticDNSEntry) Delete() (error, error, int) {
+	var cdnName tc.CDNName
+	var err error
+	if en.DeliveryServiceID != nil {
+		_, cdnName, _, err = dbhelpers.GetDSNameAndCDNFromID(en.ReqInfo.Tx.Tx, *en.DeliveryServiceID)
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, string(cdnName), en.ReqInfo.User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+	}
+	return api.GenericDelete(en)
+}
 func (v *TOStaticDNSEntry) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
 		SELECT max(sde.last_updated) as t FROM staticdnsentry as sde

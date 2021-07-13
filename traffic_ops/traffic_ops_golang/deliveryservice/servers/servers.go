@@ -245,7 +245,10 @@ func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *au
 		log.Warnf("Error getting the max last updated query %v", err)
 	}
 	if useIMS {
-		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, map[string]interface{}{}, query1)
+		queryValues := map[string]interface{}{
+			"accessibleTenants": pq.Array(tenantIDs),
+		}
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, query1)
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return nil, nil, &maxTime
@@ -284,7 +287,7 @@ func selectQuery(orderBy string, limit string, offset string, dsIDs []int64, ser
 	FROM deliveryservice_server s`
 
 	if getMaxQuery {
-		selectStmt = `SELECT max(t) from (
+		selectStmt = `SELECT max(t) from ( (
 		SELECT max(s.last_updated) as t FROM deliveryservice_server s`
 	}
 	allowedOrderByCols := map[string]string{
@@ -317,14 +320,19 @@ AND s.server = ANY(:serverids)
 `
 	}
 
+	if getMaxQuery {
+		selectStmt += ` GROUP BY s.deliveryservice`
+	}
+
 	if orderBy != "" {
 		selectStmt += ` ORDER BY ` + orderBy
 	}
 
-	selectStmt += ` LIMIT ` + limit + ` OFFSET ` + offset + ` ROWS`
+	selectStmt += ` LIMIT ` + limit + ` OFFSET ` + offset + ` ROWS `
 	if getMaxQuery {
-		return selectStmt + `UNION ALL
-		select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_server') as res`, nil
+		return selectStmt + ` )
+UNION ALL
+select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_server') as res`, nil
 	}
 	return selectStmt, nil
 }
@@ -442,6 +450,21 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+	if ds.CDNID != nil {
+		cdn, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(*ds.CDNID))
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		} else if !ok {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+			return
+		}
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
 	serverInfos, err := dbhelpers.GetServerInfosFromIDs(inf.Tx.Tx, servers)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
@@ -511,6 +534,22 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, errors.New("delivery service not found"))
 		return
+	}
+
+	if ds.CDNID != nil {
+		cdn, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(*ds.CDNID))
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		} else if !ok {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+			return
+		}
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
 	}
 
 	// get list of server Ids to insert
@@ -919,6 +958,13 @@ type TODSSDeliveryService struct {
 
 // Read shows all of the delivery services associated with the specified server.
 func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	version := dss.APIInfo().Version
+	if version == nil {
+		return nil, nil, errors.New("TODSSDeliveryService.Read called with nil API version"), http.StatusInternalServerError, nil
+	}
+	if version.Major == 1 && version.Minor < 1 {
+		return nil, nil, fmt.Errorf("TODSSDeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError, nil
+	}
 	var maxTime time.Time
 	var runSecond bool
 	returnable := []interface{}{}
@@ -983,6 +1029,9 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	}
 
 	for _, ds := range dses {
+		if version.Major > 3 && version.Minor >= 0 {
+			ds = ds.RemoveLD1AndLD2()
+		}
 		returnable = append(returnable, ds)
 	}
 	return returnable, nil, nil, http.StatusOK, &maxTime

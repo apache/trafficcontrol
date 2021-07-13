@@ -15,10 +15,10 @@
 
 package secure;
 
-import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateDataListener;
-import com.comcast.cdn.traffic_control.traffic_router.shared.DeliveryServiceCertificates;
-import com.comcast.cdn.traffic_control.traffic_router.shared.DeliveryServiceCertificatesMBean;
-import com.comcast.cdn.traffic_control.traffic_router.tomcat.TomcatLifecycleListener;
+import org.apache.traffic_control.traffic_router.secure.CertificateDataListener;
+import org.apache.traffic_control.traffic_router.shared.DeliveryServiceCertificates;
+import org.apache.traffic_control.traffic_router.shared.DeliveryServiceCertificatesMBean;
+import org.apache.traffic_control.traffic_router.tomcat.TomcatLifecycleListener;
 import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleEvent;
 import org.junit.Before;

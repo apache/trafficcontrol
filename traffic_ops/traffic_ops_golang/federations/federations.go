@@ -580,7 +580,7 @@ func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *h
 	}
 
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	w.Write(append(respBts, '\n'))
+	api.WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
 // retrieves mappings from the given request body using the rules of the given api Version

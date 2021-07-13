@@ -314,7 +314,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write(append(resp, '\n'))
+		api.WriteAndLogErr(w, r, append(resp, '\n'))
 		return
 	}
 
@@ -401,7 +401,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set(http.CanonicalHeaderKey("location"), inf.Config.URL.Scheme+"://"+r.Host+"/api/1.4/jobs?id="+strconv.FormatUint(uint64(*result.ID), 10))
 	w.WriteHeader(http.StatusOK)
-	w.Write(append(resp, '\n'))
+	api.WriteAndLogErr(w, r, append(resp, '\n'))
 
 	duplicate := ""
 	if len(conflicts) > 0 {
@@ -574,7 +574,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
-	w.Write(append(resp, '\n'))
+	api.WriteAndLogErr(w, r, append(resp, '\n'))
 
 	api.CreateChangeLogRawTx(api.ApiChange, api.Updated+" content invalidation job - ID: "+strconv.FormatUint(*job.ID, 10)+" DS: "+*job.DeliveryService+" URL: '"+*job.AssetURL+"' Params: '"+*job.Parameters+"'", inf.User, inf.Tx.Tx)
 }
@@ -660,7 +660,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
-	w.Write(append(resp, '\n'))
+	api.WriteAndLogErr(w, r, append(resp, '\n'))
 
 	api.CreateChangeLogRawTx(api.ApiChange, api.Deleted+" content invalidation job - ID: "+strconv.FormatUint(*result.ID, 10)+" DS: "+*result.DeliveryService+" URL: '"+*result.AssetURL+"' Params: '"+*result.Parameters+"'", inf.User, inf.Tx.Tx)
 }

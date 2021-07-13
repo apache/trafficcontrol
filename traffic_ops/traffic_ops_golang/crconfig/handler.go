@@ -134,7 +134,7 @@ func SnapshotGetMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	w.Write([]byte(`{"response":` + snapshot + `}`))
+	api.WriteAndLogErr(w, r, []byte(`{"response":`+snapshot+`}`))
 }
 
 // SnapshotOldGetHandler gets and serves the CRConfig from the snapshot table, not wrapped in response to match the old non-API CRConfig-Snapshots endpoint
@@ -156,7 +156,7 @@ func SnapshotOldGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	w.Write([]byte(snapshot))
+	api.WriteAndLogErr(w, r, []byte(snapshot))
 }
 
 // SnapshotHandler creates the CRConfig JSON and writes it to the snapshot table in the database.
@@ -223,7 +223,11 @@ func snapshotHandler(w http.ResponseWriter, r *http.Request, deprecated bool) {
 			return
 		}
 	}
-
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, cdn, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, statusCode, userErr, sysErr, deprecated, &alt)
+		return
+	}
 	// We never store tm_path, even though low API versions show it in responses.
 	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, inf.Config.Version, inf.Config.CRConfigUseRequestHost, false)
 	if err != nil {

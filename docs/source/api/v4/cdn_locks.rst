@@ -122,7 +122,7 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "CDN lock acquired!",
+			"text": "soft CDN lock acquired!",
 			"level":"success"
 		}
 	],

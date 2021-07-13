@@ -247,7 +247,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request, client *influx.Client
 		w.Header().Set(rfc.ContentType, jsonWithRFCTimestamps.String())
 	}
 	w.Header().Set(http.CanonicalHeaderKey("vary"), http.CanonicalHeaderKey("Accept"))
-	w.Write(append(respBts, '\n'))
+	api.WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
 func handleLegacyRequest(w http.ResponseWriter, r *http.Request, client *influx.Client, cfg tc.TrafficDSStatsConfig, inf *api.APIInfo) {
@@ -315,7 +315,7 @@ func handleLegacyRequest(w http.ResponseWriter, r *http.Request, client *influx.
 		w.Header().Set(rfc.ContentType, jsonWithRFCTimestamps.String())
 	}
 	w.Header().Set(http.CanonicalHeaderKey("vary"), http.CanonicalHeaderKey("Accept"))
-	w.Write(append(respBts, '\n'))
+	api.WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
 func getDSSummary(client *influx.Client, conf *tc.TrafficDSStatsConfig, db string) (*tc.TrafficStatsSummary, *float64, *float64, error) {

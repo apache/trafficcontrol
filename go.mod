@@ -22,7 +22,7 @@ go 1.15
 replace (
 	github.com/fsnotify/fsnotify v1.4.9 => github.com/fsnotify/fsnotify v1.3.0
 	github.com/golang/protobuf v1.4.2 => github.com/golang/protobuf v0.0.0-20171021043952-1643683e1b54
-	gopkg.in/yaml.v2 v2.3.0 => gopkg.in/yaml.v2 v2.2.1
+	gopkg.in/yaml.v2 v2.3.0 => gopkg.in/yaml.v2 v2.2.8
 )
 
 require (
@@ -54,7 +54,6 @@ require (
 	github.com/miekg/dns v1.0.6-0.20180406150955-01d59357d468
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
-	github.com/ogier/pflag v0.0.2-0.20201025181535-73e519546fc0
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.3
 	github.com/pborman/getopt/v2 v2.1.0
@@ -64,7 +63,6 @@ require (
 	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf
 	golang.org/x/net v0.0.0-20210505214959-0714010a04ed
 	golang.org/x/sys v0.0.0-20210503173754-0981d6026fa6
-	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 	gopkg.in/asn1-ber.v1 v1.0.0-20170511165959-379148ca0225 // indirect

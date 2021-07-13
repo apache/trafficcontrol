@@ -15,7 +15,7 @@
 
 package configuration;
 
-import com.comcast.cdn.traffic_control.traffic_router.neustar.configuration.NeustarConfiguration;
+import org.apache.traffic_control.traffic_router.neustar.configuration.NeustarConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

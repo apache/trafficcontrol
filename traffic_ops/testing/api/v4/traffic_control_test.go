@@ -24,7 +24,6 @@ type TrafficControl struct {
 	ASNs                                              []tc.ASN                                `json:"asns"`
 	CDNs                                              []tc.CDN                                `json:"cdns"`
 	CacheGroups                                       []tc.CacheGroupNullable                 `json:"cachegroups"`
-	CacheGroupParameterRequests                       []tc.CacheGroupParameterRequest         `json:"cachegroupParameters"`
 	Capabilities                                      []tc.Capability                         `json:"capability"`
 	Coordinates                                       []tc.Coordinate                         `json:"coordinates"`
 	DeliveryServicesRegexes                           []tc.DeliveryServiceRegexesTest         `json:"deliveryServicesRegexes"`
@@ -56,6 +55,6 @@ type TrafficControl struct {
 	Types                                             []tc.Type                               `json:"types"`
 	SteeringTargets                                   []tc.SteeringTargetNullable             `json:"steeringTargets"`
 	Serverchecks                                      []tc.ServercheckRequestNullable         `json:"serverchecks"`
-	Users                                             []tc.User                               `json:"users"`
+	Users                                             []tc.UserV40                            `json:"users"`
 	InvalidationJobs                                  []tc.InvalidationJobInput               `json:"invalidationJobs"`
 }

@@ -22,7 +22,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -35,6 +37,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 		AssignOriginsToTopologyBasedDeliveryServices(t)
 		TryToRemoveLastServerInDeliveryService(t)
 		AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t)
+		GetTestDSSIMS(t)
 	})
 }
 
@@ -190,6 +193,28 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 	alerts, _, err = TOSession.DeleteServer(*server.ID, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("Failed to delete server: %v - alerts: %+v", err, alerts.Alerts)
+	}
+}
+
+func GetTestDSSIMS(t *testing.T) {
+	const noLimit = 999999
+
+	limit := noLimit
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("limit", strconv.Itoa(limit))
+	_, reqInf, err := TOSession.GetDeliveryServiceServers(opts)
+	if err != nil {
+		t.Errorf("deliveryserviceservers expected: no error, actual: %v", err)
+	} else if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("expected deliveryserviceservers response code %v, actual %v", http.StatusOK, reqInf.StatusCode)
+	}
+
+	opts.Header.Set(rfc.IfModifiedSince, time.Now().UTC().Add(2*time.Second).Format(time.RFC1123))
+	_, reqInf, err = TOSession.GetDeliveryServiceServers(opts)
+	if err != nil {
+		t.Errorf("deliveryserviceservers IMS request expected: no error, actual: %v", err)
+	} else if reqInf.StatusCode != http.StatusNotModified {
+		t.Errorf("expected deliveryserviceservers IMS response code %v, actual %v", http.StatusNotModified, reqInf.StatusCode)
 	}
 }
 

@@ -21,6 +21,9 @@
 
 .. note:: This route does NOT do the same thing as :ref:`POST deliveryservice_requests<to-api-v3-deliveryservice-requests-post>`.
 
+.. deprecated:: ATCv6
+	This endpoint does not appear in Traffic Ops API version 4.0 - released with Apache Traffic Control version 6.0 - or later.
+
 ``POST``
 ========
 Submits an emailed requesting that a :term:`Delivery Service` be created.

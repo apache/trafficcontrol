@@ -59,38 +59,36 @@ supplied, t3c-check-refs reads its config file input from stdin.
 
 ## OPTIONS
 
--c, --trafficserver-config-dir=value
+-c, -\-trafficserver-config-dir=value
 
     directory where ATS config files are stored.
     [/opt/trafficserver/etc/trafficserver]
 
--d, --log-location-debug=value
-
-     Where to log debugs. May be a file path, stdout, stderr
-
--e, --log-location-error=value
-
-     Where to log errors. May be a file path, stdout, stderr
-     [stderr]
-
--f, --files-adding=value
+-f, -\-files-adding=value
 
     comma-delimited list of file names being added, to not fail
     to verify if they don't already exist.
 
--h, --help
+-h, -\-help
 
     Print usage information and exit
 
--i, --log-location-info=value
-
-     Where to log infos. May be a file path, stdout, stderr
-     [stderr]
-
--p, --trafficserver-plugin-dir=value
+-p, -\-trafficserver-plugin-dir=value
 
     directory where ATS plugins are stored.
     [/opt/trafficserver/libexec/trafficserver]
+
+-s, -\-silent
+
+    Silent. Errors are not logged, and the 'verbose' flag is
+    ignored. If a fatal error occurs, the return code will be
+    non-zero but no text will be output to stderr
+
+-v, -\-verbose
+
+    Log verbosity. Logging is output to stderr. By default,
+    errors are logged. To log warnings, pass '-v'. To log info,
+    pass '-vv'. To omit error logging, see '-s'.
 
 ## EXIT CODES
 

@@ -23,6 +23,8 @@ import (
 	"strings"
 )
 
+const ApplyCachePath = `/var/lib/trafficcontrol-cache-config/config-data.json`
+
 // ServiceNeeds represents whether we need to reload or restart Traffic Server,
 // as returned by t3c-check-reload.
 //

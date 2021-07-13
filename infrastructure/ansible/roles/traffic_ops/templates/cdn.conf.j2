@@ -15,9 +15,6 @@
    "cors" : {
       "access_control_allow_origin" : "{{ to_cors_access_control_allow_origin }}"
    },
-   "geniso" : {
-      "iso_root_path" : "{{ to_public_dir }}"
-   },
    "hypnotoad" : {
       "accept_interval" : {{ to_hypnotoad_accept_interval }},
       "group" : "{{ to_group }}",
@@ -54,9 +51,6 @@
    },
    "use_ims": {{ to_use_ims | bool | lower }},
    "traffic_ops_golang" : {
-      "backend_max_connections" : {
-         "mojolicious" : {{ to_mojo_max_db_connections }}
-      },
       "idle_timeout" : {{ to_go_inactive_timeout }},
       "log_location_debug" : "{{ to_go_logging_file_debug }}",
       "log_location_error" : "{{ to_go_logging_file_error }}",

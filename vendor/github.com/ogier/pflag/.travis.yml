@@ -1,4 +1,0 @@
-language: go
-arch:
-   - ppc64le
-   - amd64

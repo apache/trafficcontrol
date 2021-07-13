@@ -33,9 +33,7 @@ function ping_to {
 		"--traffic-ops-password=$TO_ADMIN_PASS" \
 		"--traffic-ops-url=$TO_URI" \
 		"--cache-host-name=atlanta-edge-03" \
-		"--log-location-error=stderr" \
-		"--log-location-info=stderr" \
-		"--log-location-debug=stderr" \
+		"-vv" \
 		"--run-mode=badass"
 }
 
@@ -70,7 +68,7 @@ fi
 cd /ort-tests
 go get -u ./...
 cp /ort-tests/tc-fixtures.json /tc-fixtures.json
-ATS_RPM=`basename /yumserver/test-rpms/trafficserver-*.rpm |
+ATS_RPM=`basename /yumserver/test-rpms/trafficserver-[0-9]*.rpm |
   gawk 'match($0, /trafficserver\-(.+)\.rpm$/, arr) {print arr[1]}'`
 
 echo "ATS_RPM: $ATS_RPM"

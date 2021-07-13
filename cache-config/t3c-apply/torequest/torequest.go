@@ -490,25 +490,30 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 	cfg.ChangeApplied = true
 	r.changedFiles = append(r.changedFiles, filepath.Join(cfg.Path, cfg.Name))
 
-	r.RemapConfigReload = cfg.RemapPluginConfig ||
+	r.RemapConfigReload = r.RemapConfigReload ||
+		cfg.RemapPluginConfig ||
 		cfg.Name == "remap.config" ||
-		strings.HasPrefix(cfg.Name, "url_sig_") ||
-		strings.HasPrefix(cfg.Name, "uri_signing") ||
+		strings.HasPrefix(cfg.Name, "bg_fetch") ||
 		strings.HasPrefix(cfg.Name, "hdr_rw_") ||
 		strings.HasPrefix(cfg.Name, "regex_remap_") ||
-		strings.HasPrefix(cfg.Name, "bg_fetch") ||
+		strings.HasPrefix(cfg.Name, "set_dscp_") ||
+		strings.HasPrefix(cfg.Name, "url_sig_") ||
+		strings.HasPrefix(cfg.Name, "uri_signing") ||
 		strings.HasSuffix(cfg.Name, ".lua")
 
 	r.TrafficCtlReload = r.TrafficCtlReload ||
 		strings.HasSuffix(cfg.Dir, "trafficserver") ||
 		r.RemapConfigReload ||
 		cfg.Name == "ssl_multicert.config" ||
+		cfg.Name == "records.config" ||
 		(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".cer")) ||
 		(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".key"))
 
-	r.TrafficServerRestart = cfg.Name == "plugin.config"
-	r.NtpdRestart = cfg.Name == "ntpd.conf"
-	r.SysCtlReload = cfg.Name == "sysctl.conf"
+	r.TrafficServerRestart = r.TrafficServerRestart || (cfg.Name == "plugin.config")
+	r.NtpdRestart = r.NtpdRestart || (cfg.Name == "ntpd.conf")
+	r.SysCtlReload = r.SysCtlReload || (cfg.Name == "sysctl.conf")
+
+	log.Debugf("Reload state after %s: remap.config: %t reload: %t restart: %t ntpd: %t sysctl: %t", cfg.Name, r.RemapConfigReload, r.TrafficCtlReload, r.TrafficServerRestart, r.NtpdRestart, r.SysCtlReload)
 
 	log.Debugf("Setting change applied for '%s'\n", cfg.Name)
 	return nil
@@ -890,6 +895,10 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 				}
 			}
 		}
+	}
+
+	if 0 < len(r.changedFiles) {
+		log.Infof("Final state: remap.config: %t reload: %t restart: %t ntpd: %t sysctl: %t", r.RemapConfigReload, r.TrafficCtlReload, r.TrafficServerRestart, r.NtpdRestart, r.SysCtlReload)
 	}
 
 	if updateStatus != UpdateTropsFailed && changesRequired > 0 {

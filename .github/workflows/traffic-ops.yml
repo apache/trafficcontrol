@@ -61,7 +61,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:11
+        image: postgres:13
         env:
           POSTGRES_USER: traffic_ops
           POSTGRES_PASSWORD: twelve
@@ -98,26 +98,79 @@ jobs:
       id: todb
       uses: ./.github/actions/todb-init
     - name: Run API v1 tests
+      id: v1Tests
+      if: ${{ steps.todb.outcome == 'success' && always() }}
       uses: ./.github/actions/to-integration-tests
       with:
         version: 1
+    - name: Upload v1 Vault logs
+      if: ${{ steps.v1Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v1 Traffic Vault logs
+        path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
+    - name: Upload v1 Ops logs
+      if: ${{ steps.v1Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v1 Traffic Ops logs
+        path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
     - name: Run API v2 tests
+      id: v2Tests
       if: ${{ steps.todb.outcome == 'success' && always() }}
       uses: ./.github/actions/to-integration-tests
       with:
         version: 2
         smtp_address: 172.17.0.1
+    - name: Upload v2 Vault logs
+      if: ${{ steps.v2Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v2 Traffic Vault logs
+        path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
+    - name: Upload v2 Ops logs
+      if: ${{ steps.v2Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v2 Traffic Ops logs
+        path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
     - name: Run API v3 tests
+      id: v3Tests
       if: ${{ steps.todb.outcome == 'success' && always() }}
       uses: ./.github/actions/to-integration-tests
       with:
         version: 3
         smtp_address: 172.17.0.1
+    - name: Upload v3 Vault logs
+      if: ${{ steps.v3Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v3 Traffic Vault logs
+        path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
+    - name: Upload v3 Ops logs
+      if: ${{ steps.v3Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v3 Traffic Ops logs
+        path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
     - name: Run API v4 tests
+      id: v4Tests
       if: ${{ steps.todb.outcome == 'success' && always() }}
       uses: ./.github/actions/to-integration-tests
       with:
         version: 4
         smtp_address: 172.17.0.1
+    - name: Upload v4 Vault logs
+      if: ${{ steps.v4Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v4 Traffic Vault logs
+        path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
+    - name: Upload v4 Ops logs
+      if: ${{ steps.v4Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v4 Traffic Ops logs
+        path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
     - name: Save Alpine Docker image
       run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}

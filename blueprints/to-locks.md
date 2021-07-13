@@ -168,7 +168,7 @@ response JSON:
 {
   "alerts": [
     {
-      "text": "CDN lock acquired!",
+      "text": "hard CDN lock acquired!",
       "level": "success"
     }
   ],
