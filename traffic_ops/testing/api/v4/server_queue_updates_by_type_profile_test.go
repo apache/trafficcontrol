@@ -52,7 +52,7 @@ func QueueUpdatesByType(t *testing.T) {
 	opts.QueryParameters.Del("name")
 
 	// Queue updates by type (and CDN)
-	_, _, err = TOSession.SetServerQueueUpdatesByType(server.Type, *server.CDNName, true, client.NewRequestOptions())
+	_, _, err = TOSession.SetServerQueueUpdatesByType(server.Type, cdns.Response[0].ID, true, client.NewRequestOptions())
 	if err != nil {
 		t.Errorf("couldn't queue updates by type (and CDN): %v", err)
 	}
@@ -108,7 +108,7 @@ func QueueUpdatesByProfile(t *testing.T) {
 	opts.QueryParameters.Del("name")
 
 	// Queue updates by profile (and CDN)
-	_, _, err = TOSession.SetServerQueueUpdatesByProfile(profiles.Response[0].Name, *server.CDNName, true, client.NewRequestOptions())
+	_, _, err = TOSession.SetServerQueueUpdatesByProfile(profiles.Response[0].Name, cdns.Response[0].ID, true, client.NewRequestOptions())
 	if err != nil {
 		t.Errorf("couldn't queue updates by profile (and CDN): %v", err)
 	}

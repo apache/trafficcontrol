@@ -83,8 +83,8 @@ var TypeService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
-    this.queueServerUpdates = function(cdnName, typeName) {
-        return $http.put(ENV.api['root'] + 'queue_updates/' + cdnName + '?type=' + typeName, {action: "queue"}).then(
+    this.queueServerUpdates = function(cdnID, typeName) {
+        return $http.post(ENV.api['root'] + 'cdns/' + cdnID +'/queue_update?type=' + typeName, {action: "queue"}).then(
             function(result) {
                 messageModel.setMessages([{level: 'success', text: 'Queued server updates by type'}], false);
                 return result;
@@ -96,8 +96,8 @@ var TypeService = function($http, ENV, locationUtils, messageModel) {
         );
     };
 
-    this.clearServerUpdates = function(cdnName, typeName) {
-        return $http.put(ENV.api['root'] + 'queue_updates/' + cdnName + '?type=' + typeName, {action: "dequeue"}).then(
+    this.clearServerUpdates = function(cdnID, typeName) {
+        return $http.post(ENV.api['root'] + 'cdns/' + cdnID + '/queue_update?type=' + typeName, {action: "dequeue"}).then(
             function(result) {
                 messageModel.setMessages([{level: 'success', text: 'Cleared server updates by type'}], false);
                 return result;

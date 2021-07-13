@@ -51,27 +51,27 @@ func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool, opts Req
 
 // SetServerQueueUpdatesByType set the "updPending" field of a list of servers identified by
 // 'cdnName' and 'typeName' to the value of 'queueUpdate'
-func (to *Session) SetServerQueueUpdatesByType(typeName string, cdnName string, queueUpdate bool, opts RequestOptions) (tc.ServerGenericQueueUpdateResponse, toclientlib.ReqInf, error) {
+func (to *Session) SetServerQueueUpdatesByType(typeName string, cdnID int, queueUpdate bool, opts RequestOptions) (tc.ServerGenericQueueUpdateResponse, toclientlib.ReqInf, error) {
 	req := tc.ServerQueueUpdateRequest{Action: queueUpdateActions[queueUpdate]}
 	var resp tc.ServerGenericQueueUpdateResponse
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
-	path := fmt.Sprintf("/queue_updates/%s?type=%s", url.PathEscape(cdnName), typeName)
-	reqInf, err := to.put(path, opts, req, &resp)
+	path := fmt.Sprintf("/cdns/%d/queue_update?type=%s", cdnID, typeName)
+	reqInf, err := to.post(path, opts, req, &resp)
 	return resp, reqInf, err
 }
 
 // SetServerQueueUpdatesByProfile set the "updPending" field of a list of servers identified by
 // 'cdnName' and 'profileName' to the value of 'queueUpdate'
-func (to *Session) SetServerQueueUpdatesByProfile(profileName string, cdnName string, queueUpdate bool, opts RequestOptions) (tc.ServerGenericQueueUpdateResponse, toclientlib.ReqInf, error) {
+func (to *Session) SetServerQueueUpdatesByProfile(profileName string, cdnID int, queueUpdate bool, opts RequestOptions) (tc.ServerGenericQueueUpdateResponse, toclientlib.ReqInf, error) {
 	req := tc.ServerQueueUpdateRequest{Action: queueUpdateActions[queueUpdate]}
 	var resp tc.ServerGenericQueueUpdateResponse
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
-	path := fmt.Sprintf("/queue_updates/%s?profile=%s", url.PathEscape(cdnName), profileName)
-	reqInf, err := to.put(path, opts, req, &resp)
+	path := fmt.Sprintf("/cdns/%d/queue_update?profile=%s", cdnID, profileName)
+	reqInf, err := to.post(path, opts, req, &resp)
 	return resp, reqInf, err
 }
 

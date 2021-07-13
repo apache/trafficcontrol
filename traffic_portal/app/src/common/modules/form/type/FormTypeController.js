@@ -51,7 +51,7 @@ var FormTypeController = function(type, $scope, $location, formUtils, stringUtil
             }
         });
         modalInstance.result.then(function(cdn) {
-            typeService.queueServerUpdates(cdn.name, $scope.type.name).then($scope.refresh);
+            typeService.queueServerUpdates(cdn.id, $scope.type.name).then($scope.refresh);
         }, function () {
             // do nothing
         });
@@ -76,7 +76,7 @@ var FormTypeController = function(type, $scope, $location, formUtils, stringUtil
             }
         });
         modalInstance.result.then(function(cdn) {
-            typeService.clearServerUpdates(cdn.name, $scope.type.name).then($scope.refresh);
+            typeService.clearServerUpdates(cdn.id, $scope.type.name).then($scope.refresh);
         }, function () {
             // do nothing
         });
