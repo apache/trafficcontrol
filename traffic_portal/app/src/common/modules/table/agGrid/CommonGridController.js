@@ -376,6 +376,13 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
         return menu.getHref(this.entry);
     };
 
+    this.contextIsDisabled = function(menu) {
+        if (menu.isDisabled !== undefined) {
+            return menu.isDisabled(this.entry);
+        }
+        return false;
+    };
+
     this.bcGetText = function (bc) {
         if(bc.text !== undefined){
             return bc.text;
