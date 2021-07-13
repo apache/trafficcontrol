@@ -52,12 +52,22 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
     /** @type CGC.TitleButton */
     this.titleButton = {};
 
+    function HTTPSCellRenderer() {}
+    HTTPSCellRenderer.prototype.init = function(params) {
+        this.eGui = document.createElement("A");
+        this.eGui.href = "https://" + params.value;
+        this.eGui.setAttribute("class", "link");
+        this.eGui.setAttribute("target", "_blank");
+        this.eGui.textContent = params.value;
+    };
+    HTTPSCellRenderer.prototype.getGui = function() {return this.eGui;};
+
     // browserify can't handle classes...
     function SSHCellRenderer() {}
     SSHCellRenderer.prototype.init = function(params) {
         this.eGui = document.createElement("A");
         this.eGui.href = "ssh://" + userModel.user.username + "@" + params.value;
-        this.eGui.setAttribute("target", "_blank");
+        this.eGui.setAttribute("class", "link");
         this.eGui.textContent = params.value;
     };
     SSHCellRenderer.prototype.getGui = function() {return this.eGui;};
@@ -141,6 +151,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
 
         this.gridOptions = {
             components: {
+                httpsCellRenderer: HTTPSCellRenderer,
                 sshCellRenderer: SSHCellRenderer,
                 updateCellRenderer: UpdateCellRenderer,
                 checkCellRenderer: CheckCellRenderer,
@@ -217,6 +228,10 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
                 $scope.$apply();
             },
             onRowClicked: function(params) {
+                if (params.event.target.classList.contains('link')) {
+                    // no need to navigate to server detail page
+                    return;
+                }
                 const selection = window.getSelection().toString();
                 if(self.options.onRowClick !== undefined && (selection === "" || selection === $scope.mouseDownSelectionText)) {
                     self.options.onRowClick(params);
@@ -282,6 +297,16 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
                     }
                 } catch (e) {
                     console.error("Failure to load stored page size:", e);
+                }
+
+                try {
+                    const page = parseInt(localStorage.getItem(tableName + "_table_page"));
+                    const totalPages = $scope.gridOptions.api.paginationGetTotalPages();
+                    if (page !== undefined && page > 0 && page <= totalPages-1) {
+                        $scope.gridOptions.api.paginationGoToPage(page);
+                    }
+                } catch (e) {
+                    console.error("Failed to load stored page number:", e);
                 }
 
                 self.gridOptions.api.addEventListener("sortChanged", function() {
