@@ -17,67 +17,78 @@
  * under the License.
  */
 
+/** @typedef { import('../../../common/modules/table/agGrid/CommonGridController').CGC } CGC */
+
 var CacheChecksController = function(cacheChecks, $scope, $state, $interval, locationUtils, serverUtils, propertiesModel) {
-
-	var cacheChecksInterval,
-		autoRefresh = false,
-		refreshRateInMS = 10000;
-
-	var createInterval = function() {
-		killInterval();
-		cacheChecksInterval = $interval(function() { $scope.refresh() }, refreshRateInMS );
-	};
-
-	var killInterval = function() {
-		if (angular.isDefined(cacheChecksInterval)) {
-			$interval.cancel(cacheChecksInterval);
-			cacheChecksInterval = undefined;
-		}
-	};
-
 	$scope.cacheChecks = cacheChecks;
 
 	$scope.config = propertiesModel.properties.cacheChecks;
 
-	$scope.ssh = serverUtils.ssh;
+	/** @type CGC.ColumnDefinition */
+	$scope.columns = [
+		{
+			headerName: "Hostname",
+			field: "hostName",
+		},
+		{
+			headerName: "Profile",
+			field: "profile",
+		},
+		{
+			headerName: "Status",
+			field: "adminState"
+		},
+		{
+			headerName: $scope.config.updatePending.key,
+			field: "updPending",
+			filter: true,
+			cellRenderer: "updateCellRenderer",
+			headerTooltip: $scope.config.updatePending.desc
+		},
+		{
+			headerName: $scope.config.revalPending.key,
+			field: "revalPending",
+			filter: true,
+			cellRenderer: "updateCellRenderer",
+			headerTooltip: $scope.config.revalPending.desc
+		},
+	];
 
-	$scope.editCache = function(id) {
-		locationUtils.navigateToPath('/servers/' + id);
+	/** @type CGC.GridSettings */
+	$scope.gridOptions = {
+		refreshable: true,
+		onRowClick(row) {
+			locationUtils.navigateToPath('/servers/' + row.data.id);
+		}
 	};
 
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	$scope.searchTerm = function(extension, value) {
-		if (extension.type == 'bool') {
-			if (value == 1) {
-				return extension.key;
-			} else {
-				return '';
+	this.unroll = function(row) {
+	    $scope.config.extensions.forEach(ext => {
+	        let key = "_config" + ext.key;
+	        if(row.checks !== undefined) {
+				row[key] = row.checks[ext.key];
 			}
-		}
-		return value;
-	};
-
-	$scope.$on("$destroy", function() {
-		killInterval();
-	});
-
-	angular.element(document).ready(function () {
-		$('#cacheChecksTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": -1
 		});
-	});
-
-	var init = function () {
-		if (autoRefresh) {
-			createInterval();
-		}
 	};
-	init();
 
+	this.$onInit = function() {
+		let self = this;
+		$scope.cacheChecks.forEach(cacheCheck => {
+			self.unroll(cacheCheck);
+		});
+		$scope.config.extensions.forEach(ext => {
+			let colDef = {
+				headerName: ext.key,
+                field: "_config" + ext.key,
+				headerTooltip: ext.desc
+			};
+		    if(ext.type === "bool") {
+		    	colDef.cellRenderer = "checkCellRenderer";
+		    	colDef.filter = true;
+			}
+		    $scope.columns.push(colDef);
+		});
+	};
 };
 
 CacheChecksController.$inject = ['cacheChecks', '$scope', '$state', '$interval', 'locationUtils', 'serverUtils', 'propertiesModel'];

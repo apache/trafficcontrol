@@ -24,24 +24,8 @@ under the License.
     <h3 class="modal-title">Assign {{(deliveryService.topology) ? 'ORG ' : ''}}Servers to {{::deliveryService.xmlId}}</h3>
 </div>
 <div class="modal-body">
-    <table id="dsServersUnassignedTable" class="table responsive-utilities jambo_table" style="table-layout:fixed; width:100%;">
-        <thead>
-        <tr class="headings">
-            <th style="padding-left: 10px;"><input id="selectAllCB" type="checkbox" ng-click="selectAll($event)"></th>
-            <th>Host</th>
-            <th>Cache Group</th>
-            <th>Profile</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr id="{{::s.id}}" class="server-row" ng-class="::{'active': s.selected}" ng-repeat="s in ::servers" ng-click="s.selected = !s.selected; onChange()">
-            <td><input type="checkbox" ng-model="s.selected"></td>
-            <td data-search="^{{::s.hostName}}$">{{::s.hostName}}</td>
-            <td data-search="^{{::s.cachegroup}}$">{{::s.cachegroup}}</td>
-            <td data-search="^{{::s.profile}}$">{{::s.profile}}</td>
-        </tr>
-        </tbody>
-    </table>
+    <common-grid-controller table-name="dsServersUnassigned" options="gridOptions"
+                            data="servers" columns="columns" selected-data="selectedServers"></common-grid-controller>
 </div>
 <div class="modal-footer">
     <button class="btn btn-link" ng-click="cancel()">cancel</button>

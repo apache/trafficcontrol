@@ -17,62 +17,42 @@
  * under the License.
  */
 
+/** @typedef { import('../../../../common/modules/table/agGrid/CommonGridController').CGC } CGC */
+
 var TableAssignDSServersController = function(deliveryService, servers, assignedServers, $scope, $uibModalInstance) {
 
-	var selectedServers = [];
+	$scope.selectedServers = [];
 
-	var addAll = function() {
-		markVisibleServers(true);
-	};
-
-	var removeAll = function() {
-		markVisibleServers(false);
-	};
-
-	var markVisibleServers = function(selected) {
-		var visibleServerIds = $('#dsServersUnassignedTable tr.server-row').map(
-			function() {
-				return parseInt($(this).attr('id'));
-			}).get();
-		$scope.servers = _.map(servers, function(server) {
-			if (visibleServerIds.includes(server.id)) {
-				server['selected'] = selected;
-			}
-			return server;
-		});
-		updateSelectedCount();
-	};
-
-	var updateSelectedCount = function() {
-		selectedServers = _.filter($scope.servers, function(server) { return server['selected'] == true; } );
-		$('div.selected-count').html('<b>' + selectedServers.length + ' servers selected</b>');
-	};
+	/** @type CGC.ColumnDefinition */
+	$scope.columns = [
+		{
+			headerName: "Host",
+			field: "hostName",
+			checkboxSelection: true,
+			headerCheckboxSelection: true,
+		},
+		{
+			headerName: "Cache Group",
+			field: "cachegroup",
+		},
+		{
+			headerName: "Profile",
+			field: "profile"
+		}
+	];
 
 	$scope.deliveryService = deliveryService;
 
-	$scope.servers = _.map(servers, function(server) {
-		var isAssigned = _.find(assignedServers, function(assignedServer) { return assignedServer.id == server.id });
+	$scope.servers = servers.map(server => {
+		let isAssigned = assignedServers.find(assignedServer => assignedServer.id === server.id);
 		if (isAssigned) {
 			server['selected'] = true;
 		}
 		return server;
 	});
 
-	$scope.selectAll = function($event) {
-		var checkbox = $event.target;
-		if (checkbox.checked) {
-			addAll();
-		} else {
-			removeAll();
-		}
-	};
-
-	$scope.onChange = function() {
-		updateSelectedCount();
-	};
-
 	$scope.submit = function() {
-		var selectedServerIds = _.pluck(selectedServers, 'id');
+		const selectedServerIds = this.selectedServers.map(s => s["id"]);
 		$uibModalInstance.close(selectedServerIds);
 	};
 
@@ -80,24 +60,11 @@ var TableAssignDSServersController = function(deliveryService, servers, assigned
 		$uibModalInstance.dismiss('cancel');
 	};
 
-	angular.element(document).ready(function () {
-		var dsServersUnassignedTable = $('#dsServersUnassignedTable').dataTable({
-			"scrollY": "60vh",
-			"paging": false,
-			"order": [[ 1, 'asc' ]],
-			"dom": '<"selected-count">frtip',
-			"columnDefs": [
-				{ 'orderable': false, 'targets': 0 },
-				{ "width": "5%", "targets": 0 }
-			],
-			"stateSave": false
-		});
-		dsServersUnassignedTable.on( 'search.dt', function () {
-			$("#selectAllCB").removeAttr("checked"); // uncheck the all box when filtering
-		} );
-		updateSelectedCount();
-	});
-
+	/** @type CGC.GridSettings */
+	$scope.gridOptions = {
+		selectRows: true,
+		selectionProperty: "selected"
+	};
 };
 
 TableAssignDSServersController.$inject = ['deliveryService', 'servers', 'assignedServers', '$scope', '$uibModalInstance'];
