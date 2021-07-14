@@ -91,11 +91,13 @@ const SystemInfoParamConfigFile = `global`
 
 // WriteSystemInfo writes the "system info" to output.
 //
-// This is the same info at /api/1.x/system/info, which is actually just all Parameters with the config_file 'global'.
-// Note this is different than the more common "global parameters", which usually refers to all Parameters on the Profile named 'GLOBAL'.
+// This is the same info as the Traffic Ops API's /system/info endpoint, which
+// is actually just all Parameters with the config_file 'global'.
+// Note this is different than the more common "global parameters", which
+// usually refers to all Parameters on the Profile named 'GLOBAL'.
 //
-// This is identical to the /api/1.x/system/info endpoint, except it does not include a '{response: {parameters:' wrapper.
-//
+// This is identical to the /system/info endpoint, except it does not include a
+//  '{response: {parameters:' wrapper.
 func WriteSystemInfo(cfg TCCfg, output io.Writer) error {
 	paramArr, _, err := cfg.TOClient.GetConfigFileParameters(SystemInfoParamConfigFile, nil)
 	if err != nil {
@@ -112,7 +114,8 @@ func WriteSystemInfo(cfg TCCfg, output io.Writer) error {
 }
 
 // WriteStatuses writes the Traffic Ops statuses to output.
-// Note this is identical to /api/1.x/statuses except it omits the '{response:' wrapper.
+// Note this is identical to /statuses except it omits the '{response:'
+// wrapper.
 func WriteStatuses(cfg TCCfg, output io.Writer) error {
 	statuses, _, err := cfg.TOClient.GetStatuses(nil)
 	if err != nil {
@@ -124,8 +127,11 @@ func WriteStatuses(cfg TCCfg, output io.Writer) error {
 	return nil
 }
 
-// WriteUpdateStatus writes the Traffic Ops server update status to output.
-// Note this is identical to /api/1.x/servers/name/update_status except it omits the '[]' wrapper.
+// WriteServerUpdateStatus writes the Traffic Ops server update status to
+// output.
+// Note this is identical to the Traffic Ops API's
+// /servers/{{host name}}/update_status endpoint except it omits the '[]'
+// wrapper.
 func WriteServerUpdateStatus(cfg TCCfg, output io.Writer) error {
 	status, err := GetServerUpdateStatus(cfg)
 	if err != nil {
