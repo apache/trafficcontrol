@@ -25,8 +25,10 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
@@ -70,7 +72,7 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
-	if err := generatePutRiakKeys(req, inf.Tx.Tx, inf.Vault, r.Context()); err != nil {
+	if err := GeneratePutRiakKeys(req, inf.Tx.Tx, inf.Vault, r.Context()); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and putting SSL keys: "+err.Error()))
 		return
 	}
@@ -82,9 +84,9 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, "Successfully created ssl keys for "+*req.DeliveryService)
 }
 
-// generatePutRiakKeys generates a certificate, csr, and key from the given request, and insert it into the Riak key database.
+// GeneratePutRiakKeys generates a certificate, csr, and key from the given request, and insert it into the Riak key database.
 // The req MUST be validated, ensuring required fields exist.
-func generatePutRiakKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql.Tx, tv trafficvault.TrafficVault, ctx context.Context) error {
+func GeneratePutRiakKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql.Tx, tv trafficvault.TrafficVault, ctx context.Context) error {
 	dsSSLKeys := tc.DeliveryServiceSSLKeys{
 		CDN:             *req.CDN,
 		DeliveryService: *req.DeliveryService,
@@ -109,4 +111,46 @@ func generatePutRiakKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql.Tx, tv tra
 		return errors.New("putting keys in Traffic Vault: " + err.Error())
 	}
 	return nil
+}
+
+func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV40, inf *api.APIInfo, context context.Context) (error, int) {
+	version := util.JSONIntStr(1)
+	hostname := strings.Split(ds.ExampleURLs[0], "://")[1]
+	if strings.Contains(ds.Type.String(), "HTTP") {
+		parts := strings.Split(hostname, ".")
+		parts[0] = "*"
+		hostname = strings.Join(parts, ".")
+	}
+
+	cdnName, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(*ds.CDNID))
+	if err != nil {
+		return err, http.StatusInternalServerError
+	} else if !ok {
+		return nil, http.StatusNotFound
+	}
+
+	cdnNameStr := string(cdnName)
+
+	req := tc.DeliveryServiceGenSSLKeysReq{
+		DeliveryServiceSSLKeysReq: tc.DeliveryServiceSSLKeysReq{
+			CDN:             &cdnNameStr,
+			DeliveryService: ds.XMLID,
+			HostName:        &hostname,
+			Key:             ds.XMLID,
+			Version:         &version,
+			BusinessUnit:    util.StrPtr("Placeholder"),
+			City:            util.StrPtr("Placeholder"),
+			Organization:    util.StrPtr("Placeholder"),
+			Country:         util.StrPtr("United States (US)"),
+			State:           util.StrPtr("CO"),
+		},
+	}
+	if err := GeneratePutRiakKeys(req, inf.Tx.Tx, inf.Vault, context); err != nil {
+		return errors.New("generating and putting SSL keys: " + err.Error()), http.StatusInternalServerError
+	}
+	if err := updateSSLKeyVersion(*req.DeliveryService, req.Version.ToInt64(), inf.Tx.Tx); err != nil {
+		return errors.New("generating SSL keys for delivery service '" + *req.DeliveryService + "': " + err.Error()), http.StatusInternalServerError
+	}
+
+	return nil, http.StatusOK
 }
