@@ -43,7 +43,8 @@ Response Structure
 :email:             The user's email address
 :fullName:          The user's full name, e.g. "John Quincy Adams"
 :gid:               A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user
-:id:               An integral, unique identifier for this user
+:id:                An integral, unique identifier for this user
+:lastAuthenticated: The date and time at which the user was last authenticated, in :ref:`RFC3339`
 :lastUpdated:       The date and time at which the user was last modified, in :ref:`non-rfc-datetime`
 :newUser:           A meta field with no apparent purpose that is usually ``null`` unless explicitly set during creation or modification of a user via some API endpoint
 :phoneNumber:       The user's phone number
@@ -57,7 +58,6 @@ Response Structure
 :tenantId:          The integral, unique identifier of the :term:`Tenant` to which this user belongs
 :uid:               A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user
 :username:          The user's username
-:lastAuthenticated: The date and time at which the user was last authenticated, in :ref:`non-rfc-datetime`
 
 .. code-block:: http
 	:caption: Response Example

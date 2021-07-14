@@ -70,6 +70,7 @@ Response Structure
 ------------------
 :addressLine1:      The user's address - including street name and number
 :addressLine2:      An additional address field for e.g. apartment number
+:changeLogCount:    The number of change log entries created by the user
 :city:              The name of the city wherein the user resides
 :company:           The name of the company for which the user works
 :country:           The name of the country wherein the user resides
@@ -77,6 +78,7 @@ Response Structure
 :fullName:          The user's full name, e.g. "John Quincy Adams"
 :gid:               A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user - now it is always ``null``
 :id:                An integral, unique identifier for this user
+:lastAuthenticated: The date and time at which the user was last authenticated, in :ref:`RFC3339`
 :lastUpdated:       The date and time at which the user was last modified, in :ref:`non-rfc-datetime`
 :newUser:           A meta field with no apparent purpose that is usually ``null`` unless explicitly set during creation or modification of a user via some API endpoint
 :phoneNumber:       The user's phone number
@@ -90,8 +92,6 @@ Response Structure
 :tenantId:          The integral, unique identifier of the tenant to which this user belongs
 :uid:               A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX user ID of the user - now it is always ``null``
 :username:          The user's username
-:changeLogCount:    The number of change log entries created by the user
-:lastAuthenticated: The date and time at which the user was last authenticated, in :ref:`non-rfc-datetime`
 
 .. code-block:: http
 	:caption: Response Example

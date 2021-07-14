@@ -454,6 +454,9 @@ func GetTestUsers(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot get users: %v - alerts: %+v", err, resp.Alerts)
 	}
+	if resp.Response == nil {
+		t.Fatalf("expected a users list, got nothing")
+	}
 	if resp.Response[0].LastAuthenticated == nil {
 		t.Errorf("current user's authenticated time, expected: '%s' actual: %v", resp.Response[0].LastAuthenticated, nil)
 	}

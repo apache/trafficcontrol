@@ -154,12 +154,13 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				//If all's well until here, then update last authenticated time
 				tx, txErr := db.Begin()
 				if txErr != nil {
-					api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("beginning transaction: %v", txErr))
+					api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("beginning transaction: %w", txErr))
 					return
 				}
 				defer tx.Commit()
 				_, dbErr := tx.Exec(UpdateLoginTimeQuery, form.Username)
 				if dbErr != nil {
+					log.Errorf("unable to update authentication time for a given user: %s\n", dbErr.Error())
 					resp = struct {
 						tc.Alerts
 					}{tc.CreateAlerts(tc.ErrorLevel, "Unable to update authentication time for a given user")}

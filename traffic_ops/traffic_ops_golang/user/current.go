@@ -106,70 +106,25 @@ func Current(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	var currentUser tc.UserCurrent
-	var currentUserV40 tc.UserCurrentV40
-	var err error
+	currentUser, err := getUser(inf.Tx.Tx, inf.User.ID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting current user: "+err.Error()))
+		return
+	}
+
 	version := inf.Version
 	if version == nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, fmt.Errorf("TOUsers.Read called with invalid API version"), nil)
 		return
 	}
 	if version.Major >= 4 {
-		currentUserV40, err = getUserV40(inf.Tx.Tx, inf.User.ID)
-	} else {
-		currentUser, err = getUser(inf.Tx.Tx, inf.User.ID)
-	}
-
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting current user: "+err.Error()))
-		return
-	}
-
-	if version.Major >= 4 {
-		api.WriteResp(w, r, currentUserV40)
-	} else {
 		api.WriteResp(w, r, currentUser)
+	} else {
+		api.WriteResp(w, r, currentUser.UserCurrent)
 	}
 }
 
-func getUser(tx *sql.Tx, id int) (tc.UserCurrent, error) {
-	q := `
-SELECT
-u.address_line1,
-u.address_line2,
-u.city,
-u.company,
-u.country,
-u.email,
-u.full_name,
-u.id,
-u.last_updated,
-u.local_passwd,
-u.new_user,
-u.phone_number,
-u.postal_code,
-u.public_ssh_key,
-u.role,
-r.name as role_name,
-u.state_or_province,
-t.name as tenant,
-u.tenant_id,
-u.username
-FROM tm_user as u
-LEFT JOIN role as r ON r.id = u.role
-INNER JOIN tenant as t ON t.id = u.tenant_id
-WHERE u.id=$1
-`
-	u := tc.UserCurrent{}
-	localPassword := sql.NullString{}
-	if err := tx.QueryRow(q, id).Scan(&u.AddressLine1, &u.AddressLine2, &u.City, &u.Company, &u.Country, &u.Email, &u.FullName, &u.ID, &u.LastUpdated, &localPassword, &u.NewUser, &u.PhoneNumber, &u.PostalCode, &u.PublicSSHKey, &u.Role, &u.RoleName, &u.StateOrProvince, &u.Tenant, &u.TenantID, &u.UserName); err != nil {
-		return tc.UserCurrent{}, errors.New("querying current user: " + err.Error())
-	}
-	u.LocalUser = util.BoolPtr(localPassword.Valid)
-	return u, nil
-}
-
-func getUserV40(tx *sql.Tx, id int) (tc.UserCurrentV40, error) {
+func getUser(tx *sql.Tx, id int) (tc.UserCurrentV40, error) {
 	q := `
 SELECT
 u.address_line1,
