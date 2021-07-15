@@ -53,7 +53,6 @@ jobs.tests.forEach(jobsData => {
                     await jobsPage.OpenJobsPage();
                 });
             });
-           
             it('can logout', async () => {
                 expect(await topNavigation.Logout()).toBe(true);
             });
