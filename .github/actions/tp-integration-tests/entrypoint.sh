@@ -135,8 +135,6 @@ CHROMIUM_CONTAINER=$(docker ps -qf name=chromium)
 HUB_CONTAINER=$(docker ps -qf name=hub)
 CHROMIUM_VER=$(docker exec "$CHROMIUM_CONTAINER" chromium --version | grep -Eo '[0-9.]+')
 
-GOROOT=/usr/local/go
-export PATH="${PATH}:${GOROOT}/bin"
 export GOPATH="${HOME}/go"
 readonly ORG_DIR="$GOPATH/src/github.com/apache"
 readonly REPO_DIR="${ORG_DIR}/trafficcontrol"

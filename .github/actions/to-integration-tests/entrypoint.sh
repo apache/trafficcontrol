@@ -75,8 +75,6 @@ start_traffic_vault & disown
 
 sudo apt-get install -y --no-install-recommends gettext
 
-GOROOT=/usr/local/go
-export GOROOT PATH="${PATH}:${GOROOT}/bin"
 export GOPATH="${HOME}/go"
 org_dir="$GOPATH/src/github.com/apache"
 repo_dir="${org_dir}/trafficcontrol"
