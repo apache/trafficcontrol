@@ -78,7 +78,7 @@ Response Structure
 :fullName:          The user's full name, e.g. "John Quincy Adams"
 :gid:               A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user - now it is always ``null``
 :id:                An integral, unique identifier for this user
-:lastAuthenticated: The date and time at which the user was last authenticated, in :rfc:`RFC3339`
+:lastAuthenticated: The date and time at which the user was last authenticated, in :rfc:`3339`
 :lastUpdated:       The date and time at which the user was last modified, in :ref:`non-rfc-datetime`
 :newUser:           A meta field with no apparent purpose that is usually ``null`` unless explicitly set during creation or modification of a user via some API endpoint
 :phoneNumber:       The user's phone number
