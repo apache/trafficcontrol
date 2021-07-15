@@ -20,6 +20,16 @@ set -e
 
 cd "${GOPATH}/src/github.com/apache/trafficcontrol"
 
+download_go() {
+	go_version="$(cat GO_VERSION)"
+	wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz"
+	tar -C /usr/local -xzf go.tar.gz
+	rm go.tar.gz
+	export PATH="${PATH}:${GOROOT}/bin"
+	go version
+}
+download_go
+
 if [ -z "$INPUT_DIR" ]; then
 	# There's a bug in "defaults" for inputs
 	INPUT_DIR="./lib/..."
