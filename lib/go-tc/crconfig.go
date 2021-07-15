@@ -58,17 +58,36 @@ type CRConfigConfig struct {
 	ZoneManagerThreadpoolScale                 *string      `json:"zonemanager.threadpool.scale,omitempty"`
 }
 
+// CRConfigTTL defines the Time-To-Live (TTL) of various record types served by
+// Traffic Router.
+//
+// Each TTL given is an optional field containing a number of seconds encoded
+// as a string. If a field is nil, the CRConfigTTL is instructing Traffic
+// Router to use its configured default for records of that type.
 type CRConfigTTL struct {
-	ASeconds      *string `json:"A,omitempty"`
-	AAAASeconds   *string `json:"AAAA,omitempty"`
+	// A records
+	ASeconds *string `json:"A,omitempty"`
+	// AAAA records
+	AAAASeconds *string `json:"AAAA,omitempty"`
+	// DNSKEY records
 	DNSkeySeconds *string `json:"DNSKEY,omitempty"`
-	DSSeconds     *string `json:"DS,omitempty"`
-	NSSeconds     *string `json:"NS,omitempty"`
-	SOASeconds    *string `json:"SOA,omitempty"`
+	// DS records
+	DSSeconds *string `json:"DS,omitempty"`
+	// NS records
+	NSSeconds *string `json:"NS,omitempty"`
+	// SOA records
+	SOASeconds *string `json:"SOA,omitempty"`
 }
 
+// CRConfigRouterStatus is the name of the Status of a Traffic Router server
+// object. This is only used in the context of CDN Snapshots, and has no
+// special nuance or behavior not afforded to a regular string - so in general
+// it is suggested that a string be used instead where possible, to keep
+// compatibility with Server/ServerV4/ServerNullable etc. structures.
 type CRConfigRouterStatus string
 
+// CRConfigRouter represents a Traffic Router as defined within a CDN Snapshot,
+// named with "CRConfig" for legacy reasons.
 type CRConfigRouter struct {
 	APIPort       *string               `json:"api.port,omitempty"`
 	FQDN          *string               `json:"fqdn,omitempty"`
@@ -83,8 +102,15 @@ type CRConfigRouter struct {
 	ServerStatus  *CRConfigRouterStatus `json:"status,omitempty"`
 }
 
+// CRConfigServerStatus is the name of the Status of a server object. This is
+// only used in the context of CDN Snapshots, and has no special nuance or
+// behavior not afforded to a regular string - so in general it is suggested
+// that a string be used instead where possible, to keep compatibility with
+// Server/ServerV4/ServerNullable etc. structures.
 type CRConfigServerStatus string
 
+// CRConfigTrafficOpsServer represents a Traffic Ops instance as defined within
+// a CDN Snapshot, named with "CRConfig" for legacy reasons.
 type CRConfigTrafficOpsServer struct {
 	CacheGroup       *string               `json:"cacheGroup,omitempty"`
 	Capabilities     []string              `json:"capabilities,omitempty"`
@@ -104,7 +130,8 @@ type CRConfigTrafficOpsServer struct {
 	RoutingDisabled  int64                 `json:"routingDisabled"`
 }
 
-//TODO: drichardson - reconcile this with the DeliveryService struct in deliveryservices.go
+// CRConfigDeliveryService represents a Delivery Service as they appear in CDN
+// Snapshots, named with "CRConfig" for legacy reasons.
 type CRConfigDeliveryService struct {
 	AnonymousBlockingEnabled  *string                               `json:"anonymousBlockingEnabled,omitempty"`
 	BypassDestination         map[string]*CRConfigBypassDestination `json:"bypassDestination,omitempty"`
@@ -136,14 +163,29 @@ type CRConfigDeliveryService struct {
 	TTLs                      *CRConfigTTL                          `json:"ttls,omitempty"`
 }
 
+// CRConfigTopology is the format in which Topologies are represented in a CDN
+// Snapshot, named with "CRConfig" for legacy reasons.
+//
+// CRConfigTopology structures do not include the Topologies' Names, because in
+// a CDN Snapshot they are stored in a mapping of their Names to this
+// structure.
 type CRConfigTopology struct {
 	Nodes []string `json:"nodes"`
 }
 
+// CRConfigGeoEnabled is a structure that contains information describing a
+// geographical location allowed to access a Delivery Service's content, named
+// with "CRConfig" for legacy reasons.
+//
+// Presently, each CRConfigGeoEnabled in a CDN Snapshot's Delivery Service's
+// GeoEnabled property is a single entry in the underlying, actual Delivery
+// Service's Geo Limit Countries array.
 type CRConfigGeoEnabled struct {
 	CountryCode string `json:"countryCode"`
 }
 
+// CRConfigStaticDNSEntry structures encode a Static DNS Entry for a Delivery
+// Service in a CDN Snapshot, named with "CRConfig" for legacy reasons.
 type CRConfigStaticDNSEntry struct {
 	Name  string `json:"name"`
 	TTL   int    `json:"ttl"`
@@ -151,6 +193,14 @@ type CRConfigStaticDNSEntry struct {
 	Value string `json:"value"`
 }
 
+// CRConfigBypassDestination is a network location to which excess traffic
+// requesting a Delivery Service's content will be directed when the Service's
+// ability to deliver content is deemed to be saturated, named with "CRConfig"
+// for legacy reasons.
+//
+// This is generated based on the Delivery Service's Type (specifically whether
+// it is DNS-routed or HTTP-routed) and its HTTP Bypass FQDN, DNS Bypass CNAME,
+// DNS Bypass IP, DNS Bypass IPv6, and DNS Bypass TTL properties.
 type CRConfigBypassDestination struct {
 	IP    *string `json:"ip,omitempty"`    // only used by DNS DSes
 	IP6   *string `json:"ip6,omitempty"`   // only used by DNS DSes
@@ -160,16 +210,31 @@ type CRConfigBypassDestination struct {
 	Port  *string `json:"port,omitempty"`  // only used by HTTP DSes
 }
 
+// CRConfigDispersion defines for a Delivery Service appearing in a CDN
+// Snapshot the number of cache servers to which its content is initially
+// distributed, named with "CRConfig" for legacy reasons.
+//
+// This is generated from a Delivery Service's Initial Dispersion property.
 type CRConfigDispersion struct {
 	Limit    int  `json:"limit"`
 	Shuffled bool `json:"shuffled,string"`
 }
 
+// CRConfigBackupLocations defines how a Traffic Router should handle traffic
+// normally bound for a given CRConfigLatitudeLongitude in the event that said
+// CRConfigLatitudeLongitude becomes unavailable, named with "CRConfig" for
+// legacy reasons.
 type CRConfigBackupLocations struct {
 	FallbackToClosest bool     `json:"fallbackToClosest,string"`
 	List              []string `json:"list,omitempty"`
 }
 
+// CRConfigLatitudeLongitude structures are geographical locations for routing
+// purpose that can contain either edge-tier cache servers or Traffic Routers
+// (but not a mixture of both), named with "CRConfig" for legacy reasons.
+//
+// In general, any given CRConfigLatitudeLongitude represents a Cache Group
+// object.
 type CRConfigLatitudeLongitude struct {
 	Lat                 float64                 `json:"latitude"`
 	Lon                 float64                 `json:"longitude"`
@@ -177,17 +242,30 @@ type CRConfigLatitudeLongitude struct {
 	LocalizationMethods []LocalizationMethod    `json:"localizationMethods"`
 }
 
+// CRConfigLatitudeLongitudeShort is a geographical location where clients will
+// be assumed to be located if determining their location fails (a "Geo Miss"),
+// named with "CRConfig" for legacy reasons.
+//
+// These are generated for Delivery Services in CDN Snapshots from their Geo
+// Miss Default Latitude and Geo Miss Default Longitude properties.
 type CRConfigLatitudeLongitudeShort struct {
 	Lat float64 `json:"lat"`
 	Lon float64 `json:"long"`
 }
 
+// CRConfigDeliveryServiceProtocol is used in CDN Snapshots to define the
+// protocols used to access Delivery Service content, named with "CRConfig" for
+// legacy reasons.
+//
+// This is generated for Delivery Services based on their Protocol property.
 type CRConfigDeliveryServiceProtocol struct {
 	AcceptHTTP      *bool `json:"acceptHttp,string,omitempty"`
 	AcceptHTTPS     bool  `json:"acceptHttps,string"`
 	RedirectOnHTTPS bool  `json:"redirectToHttps,string"`
 }
 
+// CRConfigMonitor structures are used in CDN Snapshots to represent Traffic
+// Monitors, named with "CRConfig" for legacy reasons.
 type CRConfigMonitor struct {
 	FQDN         *string               `json:"fqdn,omitempty"`
 	HTTPSPort    *int                  `json:"httpsPort"`
@@ -211,13 +289,13 @@ type CRConfigStats struct {
 }
 
 // SnapshotResponse is the type of the response of Traffic Ops to requests
-// for CDN Snapshots..
+// for CDN Snapshots.
 type SnapshotResponse struct {
 	Response CRConfig `json:"response"`
 	Alerts
 }
 
-// SnapshotResponse is the type of the response of Traffic Ops to requests
+// PutSnapshotResponse is the type of the response of Traffic Ops to requests
 // for *making* CDN Snapshots.
 type PutSnapshotResponse struct {
 	Response *string `json:"response,omitempty"`
