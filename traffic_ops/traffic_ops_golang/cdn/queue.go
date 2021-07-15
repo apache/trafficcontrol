@@ -39,6 +39,8 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 	var profileID int
 	var ok bool
 	var err error
+	var str string
+	queryParams := make(map[string]string, 0)
 
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
@@ -85,9 +87,9 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no type ID found with that name"), nil)
 			return
 		}
-		inf.Params["typeID"] = strconv.Itoa(typeID)
+		queryParams["typeID"] = strconv.Itoa(typeID)
+		str = fmt.Sprintf(" typeID: %d", typeID)
 	}
-	delete(inf.Params, "type")
 
 	// get profile ID
 	if profile != "" {
@@ -100,9 +102,9 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no profile ID found with that name"), nil)
 			return
 		}
-		inf.Params["profileID"] = strconv.Itoa(profileID)
+		queryParams["profileID"] = strconv.Itoa(profileID)
+		str = fmt.Sprintf(" profileID: %d", profileID)
 	}
-	delete(inf.Params, "profile")
 
 	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
@@ -110,7 +112,7 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(queryParams, cols)
 	if len(errs) > 0 {
 		errCode = http.StatusBadRequest
 		userErr = util.JoinErrs(errs)
@@ -131,8 +133,8 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+", ACTION: CDN server updates "+reqObj.Action+"d", inf.User, inf.Tx.Tx)
-	api.WriteResp(w, r, tc.ServerGenericQueueUpdateResponse{Action: reqObj.Action, CDNID: inf.IntParams["id"], TypeID: typeID, ProfileID: profileID})
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+str+", ACTION: CDN server updates "+reqObj.Action+"d", inf.User, inf.Tx.Tx)
+	api.WriteResp(w, r, tc.CDNQueueUpdateResponse{Action: reqObj.Action, CDNID: int64(inf.IntParams["id"])})
 }
 
 // queueUpdates is the helper function to queue/ dequeue updates on servers for a CDN, optionally filtered by type and/ or profile

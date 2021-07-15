@@ -49,32 +49,6 @@ func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool, opts Req
 	return resp, reqInf, err
 }
 
-// SetServerQueueUpdatesByType set the "updPending" field of a list of servers identified by
-// 'cdnName' and 'typeName' to the value of 'queueUpdate'
-func (to *Session) SetServerQueueUpdatesByType(typeName string, cdnID int, queueUpdate bool, opts RequestOptions) (tc.ServerGenericQueueUpdateResponse, toclientlib.ReqInf, error) {
-	req := tc.ServerQueueUpdateRequest{Action: queueUpdateActions[queueUpdate]}
-	var resp tc.ServerGenericQueueUpdateResponse
-	if opts.QueryParameters == nil {
-		opts.QueryParameters = url.Values{}
-	}
-	path := fmt.Sprintf("/cdns/%d/queue_update?type=%s", cdnID, typeName)
-	reqInf, err := to.post(path, opts, req, &resp)
-	return resp, reqInf, err
-}
-
-// SetServerQueueUpdatesByProfile set the "updPending" field of a list of servers identified by
-// 'cdnName' and 'profileName' to the value of 'queueUpdate'
-func (to *Session) SetServerQueueUpdatesByProfile(profileName string, cdnID int, queueUpdate bool, opts RequestOptions) (tc.ServerGenericQueueUpdateResponse, toclientlib.ReqInf, error) {
-	req := tc.ServerQueueUpdateRequest{Action: queueUpdateActions[queueUpdate]}
-	var resp tc.ServerGenericQueueUpdateResponse
-	if opts.QueryParameters == nil {
-		opts.QueryParameters = url.Values{}
-	}
-	path := fmt.Sprintf("/cdns/%d/queue_update?profile=%s", cdnID, profileName)
-	reqInf, err := to.post(path, opts, req, &resp)
-	return resp, reqInf, err
-}
-
 // SetUpdateServerStatuses updates a server's queue status and/or reval status.
 // Either updateStatus or revalStatus may be nil, in which case that status
 // isn't updated (but not both, because that wouldn't do anything).

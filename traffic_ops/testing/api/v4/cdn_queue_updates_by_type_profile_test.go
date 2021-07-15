@@ -23,7 +23,7 @@ import (
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
-func TestServerQueueUpdateByProfileAndType(t *testing.T) {
+func TestCDNQueueUpdateByProfileAndType(t *testing.T) {
 	WithObjs(t, []TCObj{Types, CDNs, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers}, func() {
 		QueueUpdatesByType(t)
 		QueueUpdatesByProfile(t)
@@ -31,6 +31,7 @@ func TestServerQueueUpdateByProfileAndType(t *testing.T) {
 }
 
 func QueueUpdatesByType(t *testing.T) {
+	queryOpts := client.NewRequestOptions()
 	if len(testData.Servers) < 1 {
 		t.Fatalf("no servers to run the tests on...quitting.")
 	}
@@ -50,9 +51,9 @@ func QueueUpdatesByType(t *testing.T) {
 		t.Fatalf("expected 1 CDN in response, got %d", len(cdns.Response))
 	}
 	opts.QueryParameters.Del("name")
-
+	queryOpts.QueryParameters.Set("type", server.Type)
 	// Queue updates by type (and CDN)
-	_, _, err = TOSession.SetServerQueueUpdatesByType(server.Type, cdns.Response[0].ID, true, client.NewRequestOptions())
+	_, _, err = TOSession.QueueUpdatesForCDN(cdns.Response[0].ID, true, queryOpts)
 	if err != nil {
 		t.Errorf("couldn't queue updates by type (and CDN): %v", err)
 	}
@@ -75,6 +76,7 @@ func QueueUpdatesByType(t *testing.T) {
 }
 
 func QueueUpdatesByProfile(t *testing.T) {
+	queryOpts := client.NewRequestOptions()
 	if len(testData.Servers) < 1 {
 		t.Fatalf("no servers to run the tests on...quitting.")
 	}
@@ -106,9 +108,9 @@ func QueueUpdatesByProfile(t *testing.T) {
 		t.Fatalf("expected 1 profile in response, got %d", len(profiles.Response))
 	}
 	opts.QueryParameters.Del("name")
-
+	queryOpts.QueryParameters.Set("profile", profiles.Response[0].Name)
 	// Queue updates by profile (and CDN)
-	_, _, err = TOSession.SetServerQueueUpdatesByProfile(profiles.Response[0].Name, cdns.Response[0].ID, true, client.NewRequestOptions())
+	_, _, err = TOSession.QueueUpdatesForCDN(cdns.Response[0].ID, true, queryOpts)
 	if err != nil {
 		t.Errorf("couldn't queue updates by profile (and CDN): %v", err)
 	}
