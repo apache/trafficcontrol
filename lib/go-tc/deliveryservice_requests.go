@@ -155,7 +155,7 @@ pre {
 </html>
 `))
 
-// IDNoMod type is used to suppress JSON unmarshalling
+// IDNoMod type is used to suppress JSON unmarshalling.
 type IDNoMod int
 
 // DeliveryServiceRequestRequest is a literal request to make a Delivery Service.
@@ -491,21 +491,22 @@ func (a *IDNoMod) UnmarshalJSON([]byte) error {
 	return nil
 }
 
-// RequestStatus captures where in the workflow this request is
+// RequestStatus captures where in the workflow this request is.
 type RequestStatus string
 
+// The various Statuses a Delivery Service Request (DSR) may have.
 const (
-	// RequestStatusInvalid -- invalid state
+	// The state as parsed from a raw string did not represent a valid RequestStatus.
 	RequestStatusInvalid = RequestStatus("invalid")
-	// RequestStatusDraft -- newly created; not ready to be reviewed
+	// The DSR is a draft that is not ready for review.
 	RequestStatusDraft = RequestStatus("draft")
-	// RequestStatusSubmitted -- newly created; ready to be reviewed
+	// The DSR has been submitted for review.
 	RequestStatusSubmitted = RequestStatus("submitted")
-	// RequestStatusRejected -- reviewed, but problems found
+	// The DSR was rejected by a reviewer.
 	RequestStatusRejected = RequestStatus("rejected")
-	// RequestStatusPending -- reviewed and locked; ready to be implemented
+	// The DSR has been approved by a reviewer and is pending fullfillment.
 	RequestStatusPending = RequestStatus("pending")
-	// RequestStatusComplete -- implemented and locked
+	// The DSR has been approved and fully implemented.
 	RequestStatusComplete = RequestStatus("complete")
 )
 
@@ -902,19 +903,19 @@ type DeliveryServiceRequestResponseV40 struct {
 	Alerts
 }
 
-// DeliveryServiceRequestCUDResponseV4 is the type of a response from
+// DeliveryServiceRequestResponseV4 is the type of a response from
 // Traffic Ops when creating, updating, or deleting a Delivery Service Request
 // using the latest minor version of API version 4.
 type DeliveryServiceRequestResponseV4 = DeliveryServiceRequestResponseV40
 
-// DeliveryServiceRequestResponseV40 is the type of a response from Traffic Ops
+// DeliveryServiceRequestsResponseV40 is the type of a response from Traffic Ops
 // for Delivery Service Requests using API version 4.0.
 type DeliveryServiceRequestsResponseV40 struct {
 	Response []DeliveryServiceRequestV40 `json:"response"`
 	Alerts
 }
 
-// DeliveryServiceRequestResponseV4 is the type of a response from Traffic Ops
+// DeliveryServiceRequestsResponseV4 is the type of a response from Traffic Ops
 // for Delivery Service Requests using the latest minor version of API version
 // 4.
 type DeliveryServiceRequestsResponseV4 = DeliveryServiceRequestsResponseV40
