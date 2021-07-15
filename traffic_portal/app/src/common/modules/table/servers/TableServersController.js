@@ -258,7 +258,8 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			},
 			getText: function (entry) {
 				return "Open " + entry.hostName + " in New Tab";
-			}
+			},
+			newTab: true
 		},
 		{
 			type: 2,
@@ -372,7 +373,11 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 
 	/** Options, configuration, data and callbacks for the ag-grid table. */
 	/** @type CGC.GridSettings */
-	$scope.gridOptions = { };
+	$scope.gridOptions = {
+		onRowClick: function(row) {
+			locationUtils.navigateToPath("/servers/" + row.data.id);
+		}
+	};
 
 	$scope.defaultData = {
 		hostName: "",

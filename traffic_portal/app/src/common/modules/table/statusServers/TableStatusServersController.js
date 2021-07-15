@@ -25,27 +25,22 @@ var TableStatusServersController = function(status, servers, filter, $controller
 
 	/** @type CGC.TitleBreadCrumbs[] */
 	$scope.breadCrumbs = [{
-			href: "#!/statuses",
-			text: "Statuses"
+		href: "#!/statuses",
+		text: "Statuses"
+	},
+	{
+		getHref: function() {
+			return "#!/statuses/" + $scope.status.id;
 		},
-		{
-			getHref: function() {
-				return "#!/statuses/" + $scope.status.id;
-			},
-			getText: function() {
-				return $scope.status.name;
-			}
-		},
-		{
-			text: "Servers"
-		}];
+		getText: function() {
+			return $scope.status.name;
+		}
+	},
+	{
+		text: "Servers"
+	}];
 
 	$scope.status = status;
-
-
-	this.$onInit = function() {
-		console.log($scope);
-	};
 };
 
 TableStatusServersController.$inject = ['status', 'servers', 'filter', '$controller', '$scope'];

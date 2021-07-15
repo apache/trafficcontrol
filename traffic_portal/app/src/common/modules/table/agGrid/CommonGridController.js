@@ -231,7 +231,6 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
             },
             onRowClicked: function(params) {
                 if (params.event.target.classList.contains('link')) {
-                    // no need to navigate to server detail page
                     return;
                 }
                 const selection = window.getSelection().toString();

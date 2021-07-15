@@ -17,8 +17,11 @@
  * under the License.
  */
 
+/** @typedef { import('../agGrid/CommonGridController').CGC } CGC */
+
 var TableJobsController = function(tableName, jobs, $document, $scope, $state, $uibModal, locationUtils, jobService, messageModel, dateUtils) {
 
+	/** @type CGC.ColumnDefinition */
 	$scope.columns = [
 		{
 			headerName: "Delivery Service",
@@ -85,6 +88,7 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 		type: 1
 	}];
 
+	/** @type CGC.GridSettings */
 	$scope.gridOptions = {
 		rowClassRules: {
 			'active-job': function(params) {
