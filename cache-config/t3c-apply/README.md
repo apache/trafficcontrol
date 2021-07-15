@@ -106,6 +106,11 @@ Typical usage is to install t3c on the cache machine, and then run it periodical
     [badass | report | revalidate | syncds] run mode, default is
     'report' [report]
 
+ -n, -\-no-cache
+
+    Whether to not use a cache and make conditional requests to
+    Traffic Ops. Default is false: use cache.
+
 -o, -\-omit-via-string-release
 
     Whether to set the records.config via header to the ATS

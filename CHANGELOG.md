@@ -48,6 +48,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - t3c: add flag to wait for parents in syncds mode
 - t3c: Change syncds so that it only warns on package version mismatch.
 - atstccfg: add ##REFETCH## support to regex_revalidate.config processing.
+- Added t3c caching Traffic Ops data and using If-Modified-Since to avoid unnecessary requests.
 - Added a Traffic Monitor integration test framework.
 - Added `traffic_ops/app/db/traffic_vault_migrate` to help with migrating Traffic Ops Traffic Vault backends
 - Added a tool at `/traffic_ops/app/db/reencrypt` to re-encrypt the data in the Postgres Traffic Vault with a new key.
@@ -79,7 +80,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5965](https://github.com/apache/trafficcontrol/issues/5965) - Fixed Traffic Ops /deliveryserviceservers If-Modified-Since requests.
 - Fixed t3c to create config files and directories as ats.ats
 - Fixed t3c-apply service restart and ats config reload logic.
-- Reduced TR dns.max-threads ansible default from 10000 to 100.
+- Reduced TR dns.max-threads ansible default from 10000 to 100. 
+- Converted TP Delivery Service Servers Assignment table to ag-grid
+- Converted TP Cache Checks table to ag-grid
 - [#5981](https://github.com/apache/trafficcontrol/issues/5891) - `/deliveryservices/{{ID}}/safe` returns incorrect response for the requested API version
 - [#5984](https://github.com/apache/trafficcontrol/issues/5894) - `/servers/{{ID}}/deliveryservices` returns incorrect response for the requested API version
 
@@ -112,11 +115,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - The `traffic_ops_ort.pl` tool has been deprecated in favor of `t3c`, and will be removed in the next major version.
 
 ### Removed
+- Removed the unused `backend_max_connections` option from `cdn.conf`.
 - Removed the `Long Description 2` and `Long Description 3` fields of `DeliveryService` from the UI, and changed the backend so that routes corresponding API 4.0 and above no longer accept or return these fields. 
 - The Perl implementation of Traffic Ops has been stripped out, along with the Go implementation's "fall-back to Perl" behavior.
 - Traffic Ops no longer includes an `app/public` directory, as the static webserver has been removed along with the Perl Traffic Ops implementation. Traffic Ops also no longer attempts to download MaxMind GeoIP City databases when running the Traffic Ops Postinstall script.
 - The `compare` tool stack has been removed, as it no longer serves a purpose.
 - Removed the Perl-only `cdn.conf` option `geniso.iso_root_path`
+- Traffic Ops API version 1
+
 
 ## [5.1.2] - 2021-05-17
 ### Fixed

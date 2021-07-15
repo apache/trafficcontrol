@@ -1,3 +1,5 @@
+// Package logs contains handlers and logic for the /logs and /logs/newcount
+// API endpoints.
 package logs
 
 /*
@@ -33,19 +35,18 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-const DefaultLogLimit = 1000
-const DefaultLogLimitForDays = 1000000
-const DefaultLogDays = 30
+// These are the default values for query string parameters if not provided.
+const (
+	// For the 'limit' parameter.
+	DefaultLogLimit = 1000
+	// For the 'limit' parameter when 'days' is given and 'limit' is not.
+	DefaultLogLimitForDays = 1000000
+	// For the 'days' parameter.
+	DefaultLogDays = 30
+)
 
-func GetDeprecated(w http.ResponseWriter, r *http.Request) {
-	get(w, r, api.CreateDeprecationAlerts(util.StrPtr("/logs")))
-}
-
+// Get is the handler for GET requests to /logs.
 func Get(w http.ResponseWriter, r *http.Request) {
-	get(w, r, tc.Alerts{})
-}
-
-func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"days", "limit"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -63,6 +64,7 @@ func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 		limit = pLimit
 	}
 
+	a := tc.Alerts{}
 	setLastSeenCookie(w)
 	logs, count, err := getLog(inf, days, limit)
 	if err != nil {
@@ -77,6 +79,7 @@ func get(w http.ResponseWriter, r *http.Request, a tc.Alerts) {
 	}
 }
 
+// GetNewCount is the handler for GET requests to /logs/newcount.
 func GetNewCount(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"days", "limit"})
 	if userErr != nil || sysErr != nil {
@@ -99,6 +102,9 @@ func GetNewCount(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, tc.NewLogCountResp{NewLogCount: newCount})
 }
 
+// LastSeenLogCookieName is the name of the HTTP cookie that stores the
+// date/time at which the client last requested logs, so that unread logs can
+// be returned to them on request.
 const LastSeenLogCookieName = "last_seen_log"
 
 func setLastSeenCookie(w http.ResponseWriter) {
@@ -139,7 +145,7 @@ func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 	}
 
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"username": dbhelpers.WhereColumnInfo{Column: "u.username", Checker: nil},
+		"username": {Column: "u.username", Checker: nil},
 	}
 	where, _, pagination, queryValues, errs :=
 		dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
@@ -161,6 +167,7 @@ func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 	if err != nil {
 		return nil, count, errors.New("querying log count for a given user: " + err.Error())
 	}
+	defer rowCount.Close()
 	for rowCount.Next() {
 		if err = rowCount.Scan(&count); err != nil {
 			return nil, count, errors.New("scanning logs: " + err.Error())
@@ -172,6 +179,7 @@ func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 	if err != nil {
 		return nil, count, errors.New("querying logs: " + err.Error())
 	}
+	defer rows.Close()
 	ls := []tc.Log{}
 	for rows.Next() {
 		l := tc.Log{}

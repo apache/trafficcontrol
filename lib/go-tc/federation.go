@@ -101,8 +101,8 @@ type FederationsResponse struct {
 	Alerts
 }
 
-// AllFederationCDN is the JSON object returned by
-// /api/1.x/federations?all&cdnName=my-cdn-name.
+// AllFederationCDN is the structure of a response from Traffic Ops to a GET
+// request made to its /federations/all endpoint.
 type AllFederationCDN struct {
 	CDNName *CDNName `json:"cdnName"`
 }
@@ -159,8 +159,10 @@ type FederationResolverMapping struct {
 	ResolverMapping
 }
 
-// IAllFederation is an interface for the disparate objects returned by /api/1.x/federations?all.
-// Adds additional safety, allowing functions to only return one of the valid object types for the endpoint.
+// IAllFederation is an interface for the disparate objects returned by
+// Federations-related Traffic Ops API endpoints.
+// Adds additional safety, allowing functions to only return one of the valid
+// object types for the endpoint.
 type IAllFederation interface {
 	IsAllFederations() bool
 }

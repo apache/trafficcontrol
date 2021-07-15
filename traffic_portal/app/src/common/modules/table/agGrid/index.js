@@ -17,10 +17,5 @@
  * under the License.
  */
 
-// this is the config the TO UI uses
-
-"use strict";
-
-angular.module('config', [])
-
-.constant('ENV', { api: { root:'/api/4.0/', stable: "/api/3.1/" } });
+module.exports = angular.module("trafficPortal.table", [])
+    .controller("CommonGridController", require("./CommonGridController"));

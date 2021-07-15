@@ -147,8 +147,6 @@ Request Structure
 		"lastHeaderRewrite": null,
 		"logsEnabled": true,
 		"longDesc": "A Delivery Service created expressly for API documentation examples",
-		"longDesc1": null,
-		"longDesc2": null,
 		"maxDnsAnswers": null,
 		"missLat": 0,
 		"missLong": 0,
@@ -224,8 +222,6 @@ Response Structure
 
 :logsEnabled: A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 :longDesc:    The :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:   The :ref:`ds-longdesc2` of this :term:`Delivery Service`
-:longDesc2:   The :ref:`ds-longdesc3` of this :term:`Delivery Service`
 :matchList:   The :term:`Delivery Service`'s :ref:`ds-matchlist`
 
 	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
@@ -328,8 +324,6 @@ Response Structure
 		"lastUpdated": "2021-06-07T23:34:04.831215Z",
 		"logsEnabled": true,
 		"longDesc": "A Delivery Service created expressly for API documentation examples",
-		"longDesc1": null,
-		"longDesc2": null,
 		"matchList": [
 			{
 				"type": "HOST_REGEXP",

@@ -73,6 +73,7 @@ init() {
   # update the base_url in cdn.conf
   sed -i -e "s#http://localhost\:3000#http://${TO_HOSTNAME}\:443#" $CDNCONF
 	sed -i -e 's#https://\[::\]#https://127\.0\.0\.1#' $CDNCONF
+  sed -i -e 's#"use_ims": false,#"use_ims": true,#' $CDNCONF
   #
   cat > $DATABASECONF << EOM
 {

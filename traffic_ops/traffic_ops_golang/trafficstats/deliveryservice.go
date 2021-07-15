@@ -175,11 +175,7 @@ func GetDSStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if inf.Version.Major > 1 {
-		handleRequest(w, r, client, c, inf)
-	} else {
-		handleLegacyRequest(w, r, client, c, inf)
-	}
+	handleRequest(w, r, client, c, inf)
 }
 
 func handleRequest(w http.ResponseWriter, r *http.Request, client *influx.Client, cfg tc.TrafficDSStatsConfig, inf *api.APIInfo) {
@@ -205,74 +201,6 @@ func handleRequest(w http.ResponseWriter, r *http.Request, client *influx.Client
 			}
 		} else {
 			resp.Summary = &tc.TrafficDSStatsSummary{}
-		}
-
-	}
-
-	if !cfg.ExcludeSeries {
-		series, err := getDSSeries(client, &cfg, inf.Config.ConfigInflux.DSDBName)
-
-		if err != nil {
-			sysErr := fmt.Errorf("Getting summary response from Influx: %v", err)
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
-			return
-		}
-
-		// match Perl implementation and omit series if no data
-		if series != nil {
-			if !cfg.Unix {
-				series.FormatTimestamps()
-			}
-
-			resp.Series = series
-		}
-	}
-
-	var respObj struct {
-		Response interface{} `json:"response"`
-	}
-	respObj.Response = resp
-
-	respBts, err := json.Marshal(respObj)
-	if err != nil {
-		sysErr := fmt.Errorf("Marshalling response: %v", err)
-		errCode := http.StatusInternalServerError
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
-		return
-	}
-
-	if cfg.Unix {
-		w.Header().Set(rfc.ContentType, jsonWithUnixTimestamps.String())
-	} else {
-		w.Header().Set(rfc.ContentType, jsonWithRFCTimestamps.String())
-	}
-	w.Header().Set(http.CanonicalHeaderKey("vary"), http.CanonicalHeaderKey("Accept"))
-	api.WriteAndLogErr(w, r, append(respBts, '\n'))
-}
-
-func handleLegacyRequest(w http.ResponseWriter, r *http.Request, client *influx.Client, cfg tc.TrafficDSStatsConfig, inf *api.APIInfo) {
-	// TODO: as above, this could be done on TO itself, thus sending only one synchronous request
-	// per hit on this endpoint, rather than the current two. Not sure if that's worth it for large
-	// data sets, though.
-	var resp tc.TrafficDSStatsResponseV1
-	if !cfg.ExcludeSummary {
-		summary, kBs, txns, err := getDSSummary(client, &cfg, inf.Config.ConfigInflux.DSDBName)
-
-		if err != nil {
-			sysErr := fmt.Errorf("Getting summary response from Influx: %v", err)
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, sysErr)
-			return
-		}
-
-		// match Perl implementation and set summary to zero values if no data
-		if summary != nil {
-			resp.Summary = &tc.LegacyTrafficDSStatsSummary{
-				TrafficStatsSummary: *summary,
-				TotalBytes:          kBs,
-				TotalTransactions:   txns,
-			}
-		} else {
-			resp.Summary = &tc.LegacyTrafficDSStatsSummary{}
 		}
 
 	}

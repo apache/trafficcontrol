@@ -90,13 +90,18 @@ func DeleteTestStatuses(t *testing.T) {
 
 	for _, status := range testData.Statuses {
 		if status.Name == nil {
-			t.Fatal("cannot get ftest statuses: test data statuses must have names")
+			t.Error("Found status in testing data with null or undefined Name")
+			continue
 		}
 
 		// Retrieve the Status by name so we can get the id for the Update
 		resp, _, err := TOSession.GetStatusByName(*status.Name)
 		if err != nil {
 			t.Errorf("cannot GET Status by name: %v - %v", status.Name, err)
+		}
+		if len(resp) != 1 {
+			t.Errorf("Expected exactly one Status to exist with name '%s', found: %d", *status.Name, len(resp))
+			continue
 		}
 		respStatus := resp[0]
 
