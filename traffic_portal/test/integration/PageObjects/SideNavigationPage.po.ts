@@ -55,8 +55,7 @@ export class SideNavigationPage extends BasePage{
     private lnkRegions = element(by.xpath("//a[@href='/#!/regions']"));
     private lnkASNs = element(by.xpath("//a[@href='/#!/asns']"));
     //Navigation for Jobs
-    private propTools = "//div[@id='sidebar-menu']//a[contains(text(),'Tools')]"
-    private mnuTools = element(by.xpath( this.propTools))
+    private mnuTools = element(by.cssContainingText("#sidebar-menu a", "Tools"))
     private lnkJobs = element(by.linkText("Invalidate Content"))
     async ClickConfigureMenu(){
         await browser.wait(ExpectedConditions.visibilityOf(this.mnuConfigure), 2000);

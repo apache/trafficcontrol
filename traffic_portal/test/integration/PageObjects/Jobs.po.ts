@@ -29,27 +29,27 @@ interface Job {
     validationMessage: string;
 }
 export class JobsPage extends BasePage {
-    private moreBtn=element(by.name('moreBtn'));
-    private createJobMenuItem=element(by.name('createJobMenuItem'));
-	private txtRegex=element(by.name('regex'));
-	private txtTtl=element(by.name('ttl'));
-	private txtDeliveryservice=element(by.name('deliveryservice'));
+    private moreBtn = element(by.name('moreBtn'));
+    private createJobMenuItem = element(by.name('createJobMenuItem'));
+    private txtRegex = element(by.name('regex'));
+    private txtTtl = element(by.name('ttl'));
+    private txtDeliveryservice = element(by.name('deliveryservice'));
     private randomize = randomize;
 
-    public async OpenJobsPage(){
+    public async OpenJobsPage() {
         let snp = new SideNavigationPage();
         await snp.NavigateToJobsPage();
     }
 
-    public async OpenToolsMenu(){
+    public async OpenToolsMenu() {
         let snp = new SideNavigationPage();
         await snp.ClickToolsMenu();
     }
 
     public async CreateJobs(jobs: Job): Promise<boolean> {
         let result = false;
-        let basePage = new BasePage();
-        let snp = new SideNavigationPage();
+        const basePage = new BasePage();
+        const snp = new SideNavigationPage();
         await snp.NavigateToJobsPage();
         await this.moreBtn.click();
         await this.createJobMenuItem.click();
