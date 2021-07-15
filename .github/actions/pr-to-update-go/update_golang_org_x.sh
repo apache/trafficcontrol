@@ -19,8 +19,6 @@
 set -o errexit -o nounset
 trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
 
-GOROOT=/usr/local/go
-export PATH="${PATH}:${GOROOT}/bin"
 export GOPATH="${HOME}/go"
 
 # update all golang.org/x dependencies in go.mod/go.sum
