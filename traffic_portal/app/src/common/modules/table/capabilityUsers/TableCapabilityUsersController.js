@@ -26,7 +26,7 @@ var TableCapabilityUsersController = function(capability, capUsers, $controller,
 
 	$scope.capability = capability[0];
 
-	$scope.getRelativeTime = dateUtils.getRelativeTime;
+	$scope.relativeLoginTime = dateUtils.relativeLoginTime;
 
 	$scope.editUser = function(id) {
 		locationUtils.navigateToPath('/users/' + id);

@@ -23,7 +23,7 @@ var TableUsersController = function(users, $scope, $state, dateUtils, locationUt
 
     $scope.users = users;
 
-    $scope.getRelativeTime = dateUtils.getRelativeTime;
+    $scope.relativeLoginTime = dateUtils.relativeLoginTime;
 
     $scope.columns = [
         { "name": "Full Name", "visible": true, "searchable": true },
