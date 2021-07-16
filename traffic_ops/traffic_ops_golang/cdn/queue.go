@@ -40,7 +40,7 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 	var ok bool
 	var err error
 	var str string
-	queryParams := make(map[string]string, 0)
+	params := make(map[string]string, 0)
 
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
@@ -50,7 +50,7 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cols := map[string]dbhelpers.WhereColumnInfo{
-		"cdnID":     {Column: "server.cdn_id", Checker: nil},
+		"cdnID":     {Column: "server.cdn_id", Checker: api.IsInt},
 		"typeID":    {Column: "server.type", Checker: nil},
 		"profileID": {Column: "server.profile", Checker: nil},
 	}
@@ -67,6 +67,7 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("action must be 'queue' or 'dequeue'"), nil)
 		return
 	}
+	params["cdnID"] = strconv.Itoa(inf.IntParams["id"])
 	cdnName, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(inf.IntParams["id"]))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn name from ID '"+inf.Params["id"]+"': "+err.Error()))
@@ -87,7 +88,7 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no type ID found with that name"), nil)
 			return
 		}
-		queryParams["typeID"] = strconv.Itoa(typeID)
+		params["typeID"] = strconv.Itoa(typeID)
 		str = fmt.Sprintf(" typeID: %d", typeID)
 	}
 
@@ -102,7 +103,7 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no profile ID found with that name"), nil)
 			return
 		}
-		queryParams["profileID"] = strconv.Itoa(profileID)
+		params["profileID"] = strconv.Itoa(profileID)
 		str = fmt.Sprintf(" profileID: %d", profileID)
 	}
 
@@ -112,7 +113,7 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(queryParams, cols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, cols)
 	if len(errs) > 0 {
 		errCode = http.StatusBadRequest
 		userErr = util.JoinErrs(errs)

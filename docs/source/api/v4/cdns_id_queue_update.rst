@@ -80,10 +80,9 @@ Response Structure
 	Whole-Content-Sha512: rBpFfrrP+9IFkwsRloEM+v+I8MuBZDXqFu+WUTGtRGypnAn2gHooPoNQRyVvJGjyIQrLXLvqjEtve+lH2Tj4uw==
 	X-Server-Name: traffic_ops_golang/
 	Date: Wed, 14 Nov 2018 21:02:07 GMT
-	Content-Length: 54
+	Content-Length: 41
 
 	{ "response": {
 		"action": "queue",
-		"cdnId": 2,
-		"typeID": 11
+		"cdnId": 2
 	}}

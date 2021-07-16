@@ -31,6 +31,25 @@ func TestCDNQueueUpdateByProfileAndType(t *testing.T) {
 }
 
 func QueueUpdatesByType(t *testing.T) {
+	allServersResp, _, err := TOSession.GetServers(client.NewRequestOptions())
+	if err != nil {
+		t.Fatalf("couldn't get all servers: %v", err)
+	}
+
+	// Clear updates on all servers to begin with
+	for _, s := range allServersResp.Response {
+		if s.ID != nil {
+			_, _, err = TOSession.SetServerQueueUpdate(*s.ID, false, client.NewRequestOptions())
+			if err != nil {
+				t.Errorf("couldn't clear updates on server with ID: %d, err: %v", *s.ID, err.Error())
+			}
+		}
+	}
+
+	allServersResp, _, err = TOSession.GetServers(client.NewRequestOptions())
+	if err != nil {
+		t.Fatalf("couldn't get all servers: %v", err)
+	}
 	queryOpts := client.NewRequestOptions()
 	if len(testData.Servers) < 1 {
 		t.Fatalf("no servers to run the tests on...quitting.")
@@ -61,6 +80,7 @@ func QueueUpdatesByType(t *testing.T) {
 	// Get all the servers for the same CDN and type as that of the first server
 	opts.QueryParameters.Set("cdn", strconv.Itoa(cdns.Response[0].ID))
 	opts.QueryParameters.Set("type", server.Type)
+	serverIDMap := make(map[int]bool, 0)
 	resp, _, err := TOSession.GetServers(opts)
 	if err != nil {
 		t.Fatalf("couldn't get servers by cdn and type: %v", err)
@@ -72,10 +92,48 @@ func QueueUpdatesByType(t *testing.T) {
 		if s.UpdPending == nil || !*s.UpdPending {
 			t.Errorf("expected updates to be queued on all the servers filtered by type and CDN, but %s didn't queue updates", *s.HostName)
 		}
+		if s.ID != nil {
+			serverIDMap[*s.ID] = true
+		}
+	}
+
+	// Make sure that the servers that are not filtered by the above criteria do not have updates queued
+	allServersResp, _, err = TOSession.GetServers(client.NewRequestOptions())
+	if err != nil {
+		t.Fatalf("couldn't get all servers: %v", err)
+	}
+	for _, s := range allServersResp.Response {
+		if s.ID != nil {
+			if _, ok := serverIDMap[*s.ID]; !ok {
+				if s.UpdPending != nil && *s.UpdPending {
+					t.Errorf("did not expect server with ID: %d to have queued updates", *s.ID)
+				}
+			}
+
+		}
+	}
+	_, _, err = TOSession.QueueUpdatesForCDN(cdns.Response[0].ID, false, queryOpts)
+	if err != nil {
+		t.Errorf("couldn't queue updates by type (and CDN): %v", err)
 	}
 }
 
 func QueueUpdatesByProfile(t *testing.T) {
+	allServersResp, _, err := TOSession.GetServers(client.NewRequestOptions())
+	if err != nil {
+		t.Fatalf("couldn't get all servers: %v", err)
+	}
+
+	// Clear updates on all servers to begin with
+	for _, s := range allServersResp.Response {
+		if s.ID != nil {
+			_, _, err = TOSession.SetServerQueueUpdate(*s.ID, false, client.NewRequestOptions())
+			if err != nil {
+				t.Errorf("couldn't clear updates on server with ID: %d, err: %v", *s.ID, err.Error())
+			}
+		}
+	}
+
 	queryOpts := client.NewRequestOptions()
 	if len(testData.Servers) < 1 {
 		t.Fatalf("no servers to run the tests on...quitting.")
@@ -118,6 +176,7 @@ func QueueUpdatesByProfile(t *testing.T) {
 	// Get all the servers for the same CDN and profile as that of the first server
 	opts.QueryParameters.Set("cdn", strconv.Itoa(cdns.Response[0].ID))
 	opts.QueryParameters.Set("profileId", strconv.Itoa(profiles.Response[0].ID))
+	serverIDMap := make(map[int]bool, 0)
 	resp, _, err := TOSession.GetServers(opts)
 	if err != nil {
 		t.Fatalf("couldn't get servers by cdn and profile: %v", err)
@@ -129,5 +188,28 @@ func QueueUpdatesByProfile(t *testing.T) {
 		if s.UpdPending == nil || !*s.UpdPending {
 			t.Errorf("expected updates to be queued on all the servers filtered by profile and CDN, but %s didn't queue updates", *s.HostName)
 		}
+		if s.ID != nil {
+			serverIDMap[*s.ID] = true
+		}
+	}
+
+	// Make sure that the servers that are not filtered by the above criteria do not have updates queued
+	allServersResp, _, err = TOSession.GetServers(client.NewRequestOptions())
+	if err != nil {
+		t.Fatalf("couldn't get all servers: %v", err)
+	}
+	for _, s := range allServersResp.Response {
+		if s.ID != nil {
+			if _, ok := serverIDMap[*s.ID]; !ok {
+				if s.UpdPending != nil && *s.UpdPending {
+					t.Errorf("did not expect server with ID: %d to have queued updates", *s.ID)
+				}
+			}
+
+		}
+	}
+	_, _, err = TOSession.QueueUpdatesForCDN(cdns.Response[0].ID, false, queryOpts)
+	if err != nil {
+		t.Errorf("couldn't queue updates by type (and CDN): %v", err)
 	}
 }
