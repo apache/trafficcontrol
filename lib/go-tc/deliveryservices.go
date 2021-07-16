@@ -573,10 +573,10 @@ type DeliveryServiceNullableFieldsV11 struct {
 	LongDesc *string `json:"longDesc" db:"long_desc"`
 	// LongDesc1 is a description of the Delivery Service, having arbitrary
 	// length.
-	LongDesc1 *string `json:"longDesc1" db:"long_desc_1"`
+	LongDesc1 *string `json:"longDesc1,omitempty" db:"long_desc_1"`
 	// LongDesc2 is a description of the Delivery Service, having arbitrary
 	// length.
-	LongDesc2 *string `json:"longDesc2" db:"long_desc_2"`
+	LongDesc2 *string `json:"longDesc2,omitempty" db:"long_desc_2"`
 	// MatchList is a list of Regular Expressions used for routing the Delivery
 	// Service. Order matters, and the array is not allowed to be sparse.
 	MatchList *[]DeliveryServiceMatch `json:"matchList"`
