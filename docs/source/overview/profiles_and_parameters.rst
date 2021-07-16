@@ -584,9 +584,9 @@ This configuration file can only be affected by the special ``maxRevalDurationDa
 
 remap.config
 ''''''''''''
-This configuration file can only be affected by Parameters on a :ref:`Profile <profiles>` assigned to a :term:`Delivery Service`. Then, for every Parameter assigned to that :ref:`Profile <profiles>` that has the Config File value "remap.config" -, a parameter will be added to the line for that :term:`Delivery Service` like so: :file:`@pparam={Value}` where ``Name`` is of the form `<plugin>.pparam` and ``Value`` are the plugin pparam arguments.
+This configuration file can only be affected by Parameters on a :ref:`Profile <profiles>` assigned to a :term:`Delivery Service`. Then, for every Parameter assigned to that :ref:`Profile <profiles>` that has the Config File value "remap.config" -, a parameter will be added to the line for that :term:`Delivery Service` like so: :file:`@pparam={Value}` where ``Name`` is of the form `<plugin>.pparam` and ``Value`` are the plugin pparam arguments. Each argument should have its ow n parameter Repeated arguments are allowed but a warning is issued.
 
-Previously this configuration file can only be affected by one Parameter on a :ref:`Profile <profiles>` assigned to a :term:`Delivery Service`. Then, for every Parameter assigned to that :ref:`Profile <profiles>` that has the Config File value "cachekey.config" - **NOT this Config File** -, a parameter will be added to the line for that :term:`Delivery Service` like so: :file:`pparam=--{Name}={Value}` where ``Name`` is the Parameter's :ref:`parameter-name`, and ``Value`` is its Value_.  Multiple arguments should use multiple parameters.  The order that multiple args show up in the remap rule should be considered random.
+For backwards compatibility a special case exists for the ``cachekey.config`` "term"`Delivery Service` parameter. This is of the form: :file:`pparam=--{Name}={Value}` where ``Name`` is the Parameter's :ref:`parameter-name`, and ``Value`` is its Value_.  A warning will be issued if these parameters are used along with ``cachekey.pparam`` parameters.
 
 The following plugins have support for adding args with following parameter `Config File`
   - ``background_fetch.pparam`` `<https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/background_fetch.en.html>` Note the --config=bg_fetch.conf arg is already added by t3c.

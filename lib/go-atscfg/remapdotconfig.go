@@ -105,7 +105,9 @@ func MakeRemapDotConfig(
 	}, nil
 }
 
-// key is '<plugin>.pparam' or 'cachekey.config'
+// This sticks the DS parameters in a map.
+// remap.config parameters use "<plugin>.pparam" key
+// cachekey.config parameters retain the 'cachekey.config' key
 func classifyConfigParams(configParams []tc.Parameter) map[string][]tc.Parameter {
 	var configParamMap = map[string][]tc.Parameter{}
 	for _, param := range configParams {
@@ -141,10 +143,10 @@ func paramsStringFor(parameters []tc.Parameter, warnings *[]string) (paramsStrin
 			*warnings = append(*warnings, "Multiple repeated arguments '"+arg+"'")
 		}
 	}
-	return paramsString
+	return
 }
 
-// for cachekey.config parameters
+// for parameters that use 'cachekey.config' as their key
 func paramsStringOldFor(parameters []tc.Parameter, warnings *[]string) (paramsString string) {
 	// check for duplicate parameters
 	uniquemap := map[string]int{}
@@ -166,8 +168,27 @@ func paramsStringOldFor(parameters []tc.Parameter, warnings *[]string) (paramsSt
 	for _, keyVal := range paramKeyVals {
 		paramsString += " @pparam=--" + keyVal.Key + "=" + keyVal.Val
 	}
+	return
+}
 
-	return paramsString
+// Handles special case for cachekey
+func cachekeyArgsFor(configParamsMap map[string][]tc.Parameter, warnings *[]string) (argsString string) {
+
+	hasCachekey := false
+
+	if params, ok := configParamsMap["cachekey.pparam"]; ok {
+		argsString += paramsStringFor(params, warnings)
+		hasCachekey = true
+	}
+
+	// Add on the cachekey.config
+	if params, ok := configParamsMap["cachekey.config"]; ok {
+		if hasCachekey {
+			*warnings = append(*warnings, "Both new cachekey.pparam and old cachekey.config parameters assigned")
+		}
+		argsString += paramsStringOldFor(params, warnings)
+	}
+	return
 }
 
 // getServerConfigRemapDotConfigForMid returns the remap lines, any warnings, and any error.
@@ -214,10 +235,6 @@ func getServerConfigRemapDotConfigForMid(
 			continue // skip remap rules from extra HOST_REGEXP entries
 		}
 
-		// multiple uses of cachekey plugins don't work right in ATS, but Perl has always done it.
-		// So for now, keep track of it, so we can log an error when it happens.
-		hasCacheKey := false
-
 		midRemap := ""
 
 		if *ds.Topology != "" {
@@ -230,37 +247,25 @@ func getServerConfigRemapDotConfigForMid(
 			midRemap += ` @plugin=header_rewrite.so @pparam=` + midHeaderRewriteConfigFileName(*ds.XMLID)
 		}
 
+		// Logic for handling cachekey params
+		var cachekeyArgs string
+
+		// qstring ignore
 		if ds.QStringIgnore != nil && *ds.QStringIgnore == tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
-			qstr, addedCacheKey := getQStringIgnoreRemap(atsMajorVersion)
-			if addedCacheKey {
-				hasCacheKey = true
-			}
-			midRemap += qstr
+			cachekeyArgs = getQStringIgnoreRemap(atsMajorVersion)
 		}
 
 		var dsConfigParamsMap map[string][]tc.Parameter
-
 		if nil != ds.ProfileID {
 			dsConfigParamsMap = classifyConfigParams(profilesConfigParams[*ds.ProfileID])
-			var cachekeyParams string
+		}
 
-			// Prefer to use cachekey.pparam
-			if params, ok := dsConfigParamsMap["cachekey.pparam"]; ok {
-				cachekeyParams = paramsStringFor(params, &warnings)
+		if 0 < len(dsConfigParamsMap) {
+			cachekeyArgs += cachekeyArgsFor(dsConfigParamsMap, &warnings)
+		}
 
-				if _, ok := dsConfigParamsMap["cachekey.config"]; ok {
-					warnings = append(warnings, "Delivery Service '"+*ds.XMLID+"': has both old cachekey.config and new cachekey.pparam parameters assigned, ignoring old cachekey.config ones")
-				}
-			} else if params, ok := dsConfigParamsMap["cachekey.config"]; ok {
-				cachekeyParams = paramsStringOldFor(params, &warnings)
-			}
-
-			if cachekeyParams != "" {
-				if hasCacheKey {
-					warnings = append(warnings, "Delivery Service '"+*ds.XMLID+"': qstring_ignore and cachekey params both add cachekey, but ATS cachekey doesn't work correctly with multiple entries! Adding anyway!")
-				}
-				midRemap += " @plugin=cachekey.so" + cachekeyParams
-			}
+		if cachekeyArgs != "" {
+			midRemap += " @plugin=cachekey.so" + cachekeyArgs
 		}
 
 		if ds.RangeRequestHandling != nil && (*ds.RangeRequestHandling == tc.RangeRequestHandlingCacheRangeRequest || *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice) {
@@ -416,41 +421,25 @@ func buildEdgeRemapLine(
 		}
 	}
 
-	// multiple uses of cachekey plugins don't work right in ATS, but Perl has always done it.
-	// So for now, keep track of it, so we can log an error when it happens.
-	hasCacheKey := false
+	// Form the cachekey args string, qstring ignore, then
+	// remap.config then cachekey.config
+	var cachekeyArgs string
 
 	if ds.QStringIgnore != nil {
 		if *ds.QStringIgnore == tc.QueryStringIgnoreDropAtEdge {
 			dqsFile := "drop_qstring.config"
 			text += ` @plugin=regex_remap.so @pparam=` + dqsFile
 		} else if *ds.QStringIgnore == tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp {
-			qstr, addedCacheKey := getQStringIgnoreRemap(atsMajorVersion)
-			if addedCacheKey {
-				hasCacheKey = true
-			}
-			text += qstr
+			cachekeyArgs = getQStringIgnoreRemap(atsMajorVersion)
 		}
 	}
 
-	var cachekeyParams string
-
-	// Prefer to use cachekey.pparam
-	if params, ok := dsConfigParamsMap["cachekey.pparam"]; ok {
-		cachekeyParams = paramsStringFor(params, &warnings)
-
-		if _, ok := dsConfigParamsMap["cachekey.config"]; ok {
-			warnings = append(warnings, "Delivery Service '"+*ds.XMLID+"': has both old cachekey.config and new cachekey.pparam parameters assigned, ignoring old cachekey.config ones")
-		}
-	} else if params, ok := dsConfigParamsMap["cachekey.config"]; ok {
-		cachekeyParams = paramsStringOldFor(params, &warnings)
+	if 0 < len(dsConfigParamsMap) {
+		cachekeyArgs += cachekeyArgsFor(dsConfigParamsMap, &warnings)
 	}
 
-	if cachekeyParams != "" {
-		if hasCacheKey {
-			warnings = append(warnings, "Delivery Service '"+*ds.XMLID+"': qstring_ignore and cachekey params both add cachekey, but ATS cachekey doesn't work correctly with multiple entries! Adding anyway!")
-		}
-		text += " @plugin=cachekey.so" + cachekeyParams
+	if cachekeyArgs != "" {
+		text += " @plugin=cachekey.so" + cachekeyArgs
 	}
 
 	// Note: should use full path here?
@@ -577,12 +566,12 @@ func midHeaderRewriteConfigFileName(dsName string) string {
 }
 
 // getQStringIgnoreRemap returns the remap, whether cachekey was added.
-func getQStringIgnoreRemap(atsMajorVersion int) (string, bool) {
+func getQStringIgnoreRemap(atsMajorVersion int) string {
 	if atsMajorVersion < 7 {
 		log.Errorf("Unsupport version of ats found %v", atsMajorVersion)
-		return "", false
+		return ""
 	}
-	return ` @plugin=cachekey.so @pparam=--separator= @pparam=--remove-all-params=true @pparam=--remove-path=true @pparam=--capture-prefix-uri=/^([^?]*)/$1/`, true
+	return ` @pparam=--separator= @pparam=--remove-all-params=true @pparam=--remove-path=true @pparam=--capture-prefix-uri=/^([^?]*)/$1/`
 }
 
 // makeServerPackageParamData returns a map[paramName]paramVal for this server, config file 'package'.

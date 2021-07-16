@@ -674,7 +674,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			if oldCfg != nil {
 				reqHdr = MakeReqHdr(oldCfg.MetaData.RemapConfigParams)
 			}
-			params, reqInf, err := toClient.GetConfigFileParameters(atscfg.CacheKeyParameterConfigFile, reqHdr)
+			params, reqInf, err := toClient.GetConfigFileParameters("remap.config", reqHdr)
 			if err != nil {
 				return errors.New("getting cache key parameters: " + err.Error())
 			}

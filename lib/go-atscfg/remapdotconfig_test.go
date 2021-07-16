@@ -983,9 +983,15 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 
 	remapConfigParams := []tc.Parameter{
 		tc.Parameter{
-			Name:       "cachekeykey",
+			Name:       "cachekey.pparam",
+			ConfigFile: "remap.config",
+			Value:      "--ckeypp=cvalpp",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "ckeycc",
 			ConfigFile: "cachekey.config",
-			Value:      "cachekeyval",
+			Value:      "cvalcc",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
 		tc.Parameter{
@@ -1032,16 +1038,18 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 		t.Errorf("expected to contain origin FQDN twice (Mids remap origins to themselves, as a forward proxy), actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "cachekeykey") {
-		t.Errorf("expected to contain cachekey parameter, actual '%v'", txt)
+	if 1 != strings.Count(remapLine, "cachekey.so") {
+		t.Errorf("expected only single cachekey.so plugin, actual '%v'", txt)
+	} else if !strings.Contains(remapLine, "--remove-path=true") {
+		t.Errorf("expected cachekey qstring ignore args, actual '%v'", txt)
+	} else if !strings.Contains(remapLine, "--ckeypp=cvalpp") {
+		t.Errorf("expected to contain cachekey.pparam param, actual '%v'", txt)
+	} else if !strings.Contains(remapLine, "--ckeycc=cvalcc") {
+		t.Errorf("expected to contain cachekey.config param, actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "cachekeyval") {
-		t.Errorf("expected to contain cachekey parameter value, actual '%v'", txt)
-	}
-
-	if strings.Contains(remapLine, "shouldnotexist") {
-		t.Errorf("expected to not contain cachekey parameter for different DS profile, actual '%v'", txt)
+	if 1 != len(cfg.Warnings) || !strings.Contains(cfg.Warnings[0], "Both new cachekey.pparam and old cachekey.config parameters assigned") {
+		t.Errorf("expected to contain warning about using both cachekey.config and cachekey.pparam, actual '%v', '%v'", cfg.Warnings, txt)
 	}
 }
 
@@ -3314,7 +3322,9 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "url_sig_") {
+	if 1 != strings.Count(remapLine, "url_sig.so") {
+		t.Errorf("expected remap on edge server with URL Sig to contain url_sig.so, actual '%v'", txt)
+	} else if !strings.Contains(remapLine, "url_sig_") {
 		t.Errorf("expected remap on edge server with URL Sig to contain url sig file, actual '%v'", txt)
 	} else if !strings.Contains(remapLine, "pristine") {
 		t.Errorf("expected remap on edge server with URL Sig to contain pristine arg, actual '%v'", txt)
@@ -4133,7 +4143,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 		tc.Parameter{
 			Name:       "cachekey.pparam",
 			ConfigFile: "remap.config",
-			Value:      "--cachekeykey=cachekeyval",
+			Value:      "--ckeypp=",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "ckeycc",
+			ConfigFile: "cachekey.config",
+			Value:      "",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
 		tc.Parameter{
@@ -4180,8 +4196,18 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 		t.Errorf("expected remap on edge server with qstring ignore pass up to contain cachekey plugin, actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "cachekeykey") {
-		t.Errorf("expected remap on edge server with qstring ignore pass up and cachekey param to include both, actual '%v'", txt)
+	if 1 != strings.Count(remapLine, "cachekey.so") {
+		t.Errorf("expected only single cachekey.so plugin, actual '%v'", txt)
+	} else if !strings.Contains(remapLine, "--remove-all-params=true") {
+		t.Errorf("expected remap on edge server with qstring ignore to have cachekey parameters, actual '%v'", txt)
+	} else if !strings.Contains(remapLine, "--ckeypp=") {
+		t.Errorf("expected cachekey plugin to have '--ckeypp=', actual '%v'", txt)
+	} else if !strings.Contains(remapLine, "--ckeycc=") {
+		t.Errorf("expected cachekey plugin to have '--ckeycc=', actual '%v'", txt)
+	}
+
+	if 1 != len(cfg.Warnings) || !strings.Contains(cfg.Warnings[0], "Both new cachekey.pparam and old cachekey.config parameters assigned") {
+		t.Errorf("expected to contain warning about using both cachekey.config and cachekey.pparam, actual '%v', '%v'", cfg.Warnings, txt)
 	}
 }
 
@@ -4379,13 +4405,13 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 		tc.Parameter{
 			Name:       "cachekey.pparam",
 			ConfigFile: "remap.config",
-			Value:      "--cachekeykey=cachekeyval",
+			Value:      "--ckeypp=cvalpp",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
 		tc.Parameter{
-			Name:       "cachekeykey",
+			Name:       "ckeycc",
 			ConfigFile: "cachekey.config",
-			Value:      "cachekeyvalfoo",
+			Value:      "cvalcc",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
 		tc.Parameter{
@@ -4432,20 +4458,12 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 		t.Errorf("expected remap on edge server with ds cache key params to contain cachekey plugin, actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "cachekeykey") {
-		t.Errorf("expected remap on edge server with ds cache key params to contain param keys, actual '%v'", txt)
+	if !strings.Contains(remapLine, "--ckeypp=cvalpp") {
+		t.Errorf("expected remap on edge server with ds cache key params to contain cachekey.pparam keys, actual '%v'", txt)
 	}
-	if !strings.Contains(remapLine, "cachekeyval") {
-		t.Errorf("expected remap on edge server with ds cache key params to contain param vals, actual '%v'", txt)
+	if !strings.Contains(remapLine, "--ckeycc=cvalcc") {
+		t.Errorf("expected remap on edge server with ds cache key params to contain cachekey.config vals, actual '%v'", txt)
 	}
-	if strings.Contains(remapLine, "cachekeyvalfoo") {
-		t.Errorf("expected remap on edge server with ds cache key params to prefer cachekey.pparam vals, actual '%v'", txt)
-	}
-
-	if strings.Contains(remapLine, "shouldnotinclude") {
-		t.Errorf("expected remap on edge server to not include different ds cache key params, actual '%v'", txt)
-	}
-
 }
 
 func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
@@ -5473,6 +5491,10 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
 	}
 
+	if 1 != strings.Count(remapLine, "cachekey.so") {
+		t.Errorf("expected remap on edge server to contain a single cachekey plugin, actual '%v'", txt)
+	}
+
 	if !strings.Contains(remapLine, "slice.so") {
 		t.Errorf("expected remap on edge server with ds slice range request handling to contain background fetch plugin, actual '%v'", txt)
 	}
@@ -5607,6 +5629,10 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
+	}
+
+	if 1 != strings.Count(remapLine, "cachekey.so") {
+		t.Errorf("expected remap on edge server to contain a single cachekey plugin, actual '%v'", txt)
 	}
 
 	if !strings.Contains(remapLine, "slice.so") {
@@ -5750,6 +5776,10 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
 	}
 
+	if 1 != strings.Count(remapLine, "cachekey.so") {
+		t.Errorf("expected remap on edge server to contain a single cachekey plugin, actual '%v'", txt)
+	}
+
 	if !strings.Contains(remapLine, "slice.so") {
 		t.Errorf("expected remap on edge server with ds slice range request handling to contain background fetch plugin, actual '%v'", txt)
 	}
@@ -5884,11 +5914,15 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
 	}
 
+	if 1 != strings.Count(remapLine, "cachekey.so") {
+		t.Errorf("expected remap on edge server to contain a single cachekey plugin, actual '%v'", txt)
+	}
+
 	if strings.Contains(remapLine, "background_fetch.so") {
 		t.Errorf("expected remap on edge server with ds cache range request handling to not contain background fetch plugin, actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "cache_range_requests.so") {
+	if 1 != strings.Count(remapLine, "cache_range_requests.so") {
 		t.Errorf("expected remap on edge server with ds cache range request handling to contain cache_range_requests plugin, actual '%v'", txt)
 	}
 }
