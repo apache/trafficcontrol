@@ -22,7 +22,11 @@ import (
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// SetUserDeliveryService associates the given delivery services with the given user.
+// SetUserDeliveryService associates the given Delivery Services with the given
+// user.
+//
+// Deprecated: This method doesn't work, as Traffic Ops API version 2 and later
+// do not actually provide this functionality.
 func (to *Session) SetDeliveryServiceUser(userID int, dses []int, replace bool) (*tc.UserDeliveryServicePostResponse, error) {
 	uri := apiBase + `/deliveryservice_user`
 	ds := tc.DeliveryServiceUserPost{UserID: &userID, DeliveryServices: &dses, Replace: &replace}
@@ -38,7 +42,11 @@ func (to *Session) SetDeliveryServiceUser(userID int, dses []int, replace bool) 
 	return &resp, nil
 }
 
-// DeleteDeliveryServiceUser deletes the association between the given delivery service and user
+// DeleteDeliveryServiceUser deletes the association between the given Delivery
+// Service and user
+//
+// Deprecated: This method doesn't work, as Traffic Ops API version 2 and later
+// do not actually provide this functionality.
 func (to *Session) DeleteDeliveryServiceUser(userID int, dsID int) (*tc.UserDeliveryServiceDeleteResponse, error) {
 	uri := apiBase + `/deliveryservice_user/` + strconv.Itoa(dsID) + `/` + strconv.Itoa(userID)
 	resp := tc.UserDeliveryServiceDeleteResponse{}
