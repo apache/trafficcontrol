@@ -33,81 +33,56 @@ import (
 // CDNName is the name of a CDN in Traffic Control.
 type CDNName string
 
-// TrafficMonitorName is the hostname of a Traffic Monitor peer.
+// TrafficMonitorName is the (short) hostname of a Traffic Monitor peer.
 type TrafficMonitorName string
 
-// CacheName is the hostname of a CDN cache.
-type CacheName string
-
-// CacheGroupName is the name of a CDN cachegroup.
-type CacheGroupName string
-
-// DeliveryServiceName is the name of a CDN delivery service.
-type DeliveryServiceName string
-
-// TopologyName is the name of a topology of cachegroups.
-type TopologyName string
-
-// CacheType is the type (or tier) of a CDN cache.
-type CacheType string
-
-// InterfaceName is the name of the server interface
-type InterfaceName string
-
-const OriginLocationType = "ORG_LOC"
-
-const (
-	// CacheTypeEdge represents an edge cache.
-	CacheTypeEdge = CacheType("EDGE")
-	// CacheTypeMid represents a mid cache.
-	CacheTypeMid = CacheType("MID")
-	// CacheTypeInvalid represents an cache type enumeration. Note this is the default construction for a CacheType.
-	CacheTypeInvalid = CacheType("")
-)
-
-const AlgorithmConsistentHash = "consistent_hash"
-
-const MonitorTypeName = "RASCAL"
-const MonitorProfilePrefix = "RASCAL"
-const RouterTypeName = "CCR"
-const EdgeTypePrefix = "EDGE"
-const MidTypePrefix = "MID"
-
-const OriginTypeName = "ORG"
-
-const (
-	CacheGroupEdgeTypeName   = EdgeTypePrefix + "_LOC"
-	CacheGroupMidTypeName    = MidTypePrefix + "_LOC"
-	CacheGroupOriginTypeName = OriginTypeName + "_LOC"
-)
-
-const GlobalProfileName = "GLOBAL"
-
-// ParameterName represents the name of a Traffic Ops parameter meant to belong in a Traffic Ops config file.
-type ParameterName string
-
-// UseRevalPendingParameterName is the name of a parameter which tells whether or not Traffic Ops should use pending revalidation jobs.
-const UseRevalPendingParameterName = ParameterName("use_reval_pending")
-
-// ConfigFileName represents the name of a Traffic Ops config file.
-type ConfigFileName string
-
-// GlobalConfigFileName is the name of the global Traffic Ops config file.
-const GlobalConfigFileName = ConfigFileName("global")
-
-func (c CacheName) String() string {
-	return string(c)
-}
-
+// String implements the fmt.Stringer interface.
 func (t TrafficMonitorName) String() string {
 	return string(t)
 }
 
+// CacheName is the (short) hostname of a cache server.
+type CacheName string
+
+// String implements the fmt.Stringer interface.
+func (c CacheName) String() string {
+	return string(c)
+}
+
+// CacheGroupName is the name of a Cache Group.
+type CacheGroupName string
+
+// DeliveryServiceName is the name of a Delivery Service.
+//
+// This has no attached semantics, and so it may be encountered in situations
+// where it is the actual Display Name, but most often (as far as this author
+// knows), it actually refers to a Delivery Service's XMLID.
+type DeliveryServiceName string
+
+// String implements the fmt.Stringer interface.
 func (d DeliveryServiceName) String() string {
 	return string(d)
 }
 
-// String returns a string representation of this cache type.
+// TopologyName is the name of a Topology.
+type TopologyName string
+
+// CacheType is the type (or tier) of a cache server.
+type CacheType string
+
+// The allowable values for a CacheType.
+const (
+	// CacheTypeEdge represents an edge-tier cache server.
+	CacheTypeEdge = CacheType("EDGE")
+	// CacheTypeMid represents a mid-tier cache server.
+	CacheTypeMid = CacheType("MID")
+	// CacheTypeInvalid represents an CacheType. Note this is the default
+	// construction for a CacheType.
+	CacheTypeInvalid = CacheType("")
+)
+
+// String returns a string representation of this CacheType, implementing the
+// fmt.Stringer interface.
 func (t CacheType) String() string {
 	switch t {
 	case CacheTypeEdge:
@@ -119,7 +94,8 @@ func (t CacheType) String() string {
 	}
 }
 
-// CacheTypeFromString returns a cache type object from its string representation, or CacheTypeInvalid if the string is not a valid type.
+// CacheTypeFromString returns a CacheType structure from its string
+// representation, or CacheTypeInvalid if the string is not a valid CacheType.
 func CacheTypeFromString(s string) CacheType {
 	s = strings.ToLower(s)
 	if strings.HasPrefix(s, "edge") {
@@ -131,30 +107,173 @@ func CacheTypeFromString(s string) CacheType {
 	return CacheTypeInvalid
 }
 
-// These are prefixed "QueryStringIgnore" even though the values don't always indicate ignoring, because the database column is named "qstring_ignore"
+// InterfaceName is the name of a server interface.
+type InterfaceName string
 
-const QueryStringIgnoreUseInCacheKeyAndPassUp = 0
-const QueryStringIgnoreIgnoreInCacheKeyAndPassUp = 1
-const QueryStringIgnoreDropAtEdge = 2
+// OriginLocationType is the Name of a Cache Group which represents an
+// "Origin Location".
+//
+// There is no enforcement in Traffic Control anywhere that ensures than an
+// ORG_LOC-Type Cache Group will only actually contain Origin servers.
+//
+// Deprecated: Prefer CacheGroupOriginTypeName for consistency.
+const OriginLocationType = "ORG_LOC"
 
-const RangeRequestHandlingDontCache = 0
-const RangeRequestHandlingBackgroundFetch = 1
-const RangeRequestHandlingCacheRangeRequest = 2
-const RangeRequestHandlingSlice = 3
+// AlgorithmConsistentHash is the name of the Multi-Site Origin hashing
+// algorithm that performs consistent hashing on a set of parents.
+const AlgorithmConsistentHash = "consistent_hash"
 
-// DSTypeCategory is the Delivery Service type category: HTTP or DNS
+// MonitorTypeName is the Name of the Type which must be assigned to a server
+// for it to be treated as a Traffic Monitor instance by ATC.
+//
+// "Rascal" is a legacy name for Traffic Monitor.
+//
+// Note that there is, in general, no guarantee that a Type with this name
+// exists in Traffic Ops at any given time.
+const MonitorTypeName = "RASCAL"
+
+// MonitorProfilePrefix is a prefix which MUST appear on the Names of Profiles
+// used by Traffic Monitor instances as servers in Traffic Ops, or they may not
+// be treated properly.
+//
+// "Rascal" is a legacy name for Traffic Monitor.
+//
+// Deprecated: This should not be a requirement for TM instances to be treated
+// properly, and new code should not check this.
+const MonitorProfilePrefix = "RASCAL"
+
+// RouterTypeName is the Name of the Type which must be assigned to a server
+// for it to be treated as a Traffic Router instance by ATC.
+//
+// "CCR" is an acronym for a legacy name for Traffic Router.
+//
+// Note that there is, in general, no guarantee that a Type with this name
+// exists in Traffic Ops at any given time.
+const RouterTypeName = "CCR"
+
+// EdgeTypePrefix is a prefix which MUST appear on the Names of Types used by
+// edge-tier cache servers in order for them to be recognized as edge-tier
+// cache servers by ATC.
+const EdgeTypePrefix = "EDGE"
+
+// MidTypePrefix is a prefix which MUST appear on the Names of Types used by
+// mid-tier cache servers in order for them to be recognized as mid-tier cache
+// servers by ATC.
+const MidTypePrefix = "MID"
+
+// OriginTypeName is the Name of the Type which must be assigned to a server
+// for it to be treated as an Origin server by ATC.
+//
+// Note that there is, in general, no guarantee that a Type with this name
+// exists in Traffic Ops at any given time.
+const OriginTypeName = "ORG"
+
+// These are the Names of the Types that must be used by various kinds of Cache
+// Groups to ensure proper behavior.
+//
+// Note that there is, in general, no guarantee that a Type with any of these
+// names exist in Traffic Ops at any given time.
+//
+// Note also that there is no enforcement in Traffic Control that a particular
+// Type of Cache Group contains only or any of a particular Type or Types of
+// server(s).
+const (
+	CacheGroupEdgeTypeName   = EdgeTypePrefix + "_LOC"
+	CacheGroupMidTypeName    = MidTypePrefix + "_LOC"
+	CacheGroupOriginTypeName = OriginTypeName + "_LOC"
+)
+
+// GlobalProfileName is the Name of a Profile that is treated specially in some
+// respects by some components of ATC.
+//
+// Note that there is, in general, no guarantee that a Profile with this Name
+// exists in Traffic Ops at any given time, nor that it will have or not have
+// any particular set of assigned Parameters, nor that any set of Parameters
+// that do happen to be assigned to it should it exist will have or not have
+// particular ConfigFile or Secure or Value values, nor that any such
+// Parameters should they exist would have Values that match any given pattern,
+// nor that it has any particular Profile Type, nor that it is or is not
+// assigned to any Delivery Service or server or server(s), nor that those
+// servers be or not be of any particular Type should they exist. Traffic Ops
+// promises much, but guarantees little.
+const GlobalProfileName = "GLOBAL"
+
+// ParameterName represents the name of a Traffic Ops Parameter.
+//
+// This has no additional attached semantics.
+type ParameterName string
+
+// UseRevalPendingParameterName is the name of a Parameter which tells whether
+// or not Traffic Ops should use pending content invalidation jobs separately
+// from traditionally "queued updates".
+//
+// Note that there is no guarantee that a Parameter with this name exists in
+// Traffic Ops at any given time, nor that it will have or not have any
+// particular ConfigFile or Secure or Value value, nor that should such a
+// Parameter exist that its value will match or not match any given pattern,
+// nor that it will or will not be assigned to any particular Profile or
+// Profiles or Cache Groups.
+//
+// Deprecated: UseRevalPending was a feature flag introduced for ATC version 2,
+// and newer code should just assume that pending revalidations are going to be
+// fetched by t3c.
+const UseRevalPendingParameterName = ParameterName("use_reval_pending")
+
+// ConfigFileName is a Parameter ConfigFile value.
+//
+// This has no additional attached semantics, and so while it is known to most
+// frequently refer to a Parameter's ConfigFile, it may also be used to refer
+// to the name of a literal configuration file within or without the context of
+// Traffic Control, with unknown specificity (relative or absolute path?
+// file:// URL?) and/or restrictions.
+type ConfigFileName string
+
+// GlobalConfigFileName is ConfigFile value which can cause a Parameter to be
+// handled specially by Traffic Control components under certain circumstances.
+//
+// Note that there is no guarantee that a Parameter with this ConfigFile value
+// exists in Traffic Ops at any given time, nor that any particular number of
+// such Parameters is allowed or forbidden, nor that any such existing
+// Parameters will have or not have any particular Name or Secure or Value
+// value, nor that should such a Parameter exist that its value will match or
+// not match any given pattern, nor that it will or will not be assigned to any
+// particular Profile or Profiles or Cache Groups.
+const GlobalConfigFileName = ConfigFileName("global")
+
+// The allowed values for a Delivery Service's Query String Handling.
+//
+// These are prefixed "QueryStringIgnore" even though the values don't always
+// indicate ignoring, because the database column is named "qstring_ignore".
+const (
+	QueryStringIgnoreUseInCacheKeyAndPassUp    = 0
+	QueryStringIgnoreIgnoreInCacheKeyAndPassUp = 1
+	QueryStringIgnoreDropAtEdge                = 2
+)
+
+// The allowed values for a Delivery Service's Range Request Handling.
+const (
+	RangeRequestHandlingDontCache         = 0
+	RangeRequestHandlingBackgroundFetch   = 1
+	RangeRequestHandlingCacheRangeRequest = 2
+	RangeRequestHandlingSlice             = 3
+)
+
+// A DSTypeCategory defines the routing method for a Delivery Service, i.e.
+// HTTP or DNS.
 type DSTypeCategory string
 
 const (
-	// DSTypeCategoryHTTP represents an HTTP delivery service
+	// DSTypeCategoryHTTP represents an HTTP-routed Delivery Service.
 	DSTypeCategoryHTTP = DSTypeCategory("http")
-	// DSTypeCategoryDNS represents a DNS delivery service
+	// DSTypeCategoryDNS represents a DNS-routed Delivery Service.
 	DSTypeCategoryDNS = DSTypeCategory("dns")
-	// DSTypeCategoryInvalid represents an invalid delivery service type enumeration. Note this is the default construction for a DSTypeCategory.
+	// DSTypeCategoryInvalid represents an invalid Delivery Service routing
+	// type. Note this is the default construction for a DSTypeCategory.
 	DSTypeCategoryInvalid = DSTypeCategory("")
 )
 
-// String returns a string representation of this delivery service type.
+// String returns a string representation of this DSTypeCategory, implementing
+// the fmt.Stringer interface.
 func (t DSTypeCategory) String() string {
 	switch t {
 	case DSTypeCategoryHTTP:
@@ -166,7 +285,11 @@ func (t DSTypeCategory) String() string {
 	}
 }
 
-// DSTypeCategoryFromString returns a delivery service type object from its string representation, or DSTypeCategoryInvalid if the string is not a valid type.
+// DSTypeCategoryFromString returns a DSTypeCategory from its string
+// representation, or DSTypeCategoryInvalid if the string is not a valid
+// DSTypeCategory.
+//
+// This is cAsE-iNsEnSiTiVe.
 func DSTypeCategoryFromString(s string) DSTypeCategory {
 	s = strings.ToLower(s)
 	switch s {
@@ -179,31 +302,65 @@ func DSTypeCategoryFromString(s string) DSTypeCategory {
 	}
 }
 
-const SigningAlgorithmURLSig = "url_sig"
-const SigningAlgorithmURISigning = "uri_signing"
+// These are the allowable values for the Signing Algorithm property of a
+// Delivery Service.
+const (
+	SigningAlgorithmURLSig     = "url_sig"
+	SigningAlgorithmURISigning = "uri_signing"
+)
 
-const DSProtocolHTTP = 0
-const DSProtocolHTTPS = 1
-const DSProtocolHTTPAndHTTPS = 2
-const DSProtocolHTTPToHTTPS = 3
+// These are the allowable values for the Protocol property of a Delivery
+// Service.
+const (
+	// Indicates content will only be served using the unsecured HTTP Protocol.
+	DSProtocolHTTP = 0
+	// Indicates content will only be served using the secured HTTPS Protocol.
+	DSProtocolHTTPS = 1
+	// Indicates content will only be served over both HTTP and HTTPS.
+	DSProtocolHTTPAndHTTPS = 2
+	// Indicates content will only be served using the secured HTTPS Protocol,
+	// and that unsecured HTTP requests will be directed to use HTTPS instead.
+	DSProtocolHTTPToHTTPS = 3
+)
 
-// CacheStatus represents the Traffic Server status set in Traffic Ops (online, offline, admin_down, reported). The string values of this type should match the Traffic Ops values.
+// CacheStatus is a Name of some Status.
+//
+// More specifically, it is used here to enumerate the Statuses that are
+// understood and acted upon in specific ways by Traffic Monitor.
+//
+// Note that the Statuses captured in this package as CacheStatus values are in
+// no way restricted to use by cache servers, despite the name.
 type CacheStatus string
 
+// These are the allowable values of a CacheStatus.
+//
+// Note that there is no guarantee that a Status by any of these Names exists
+// in Traffic Ops at any given time, nor that such a Status - should it exist
+// - have any given Description or ID.
 const (
-	// CacheStatusAdminDown represents a cache which has been administratively marked as down, but which should still appear in the CDN (Traffic Server, Traffic Monitor, Traffic Router).
+	// CacheStatusAdminDown represents a cache server which has been
+	// administratively marked as "down", but which should still appear in the
+	// CDN.
 	CacheStatusAdminDown = CacheStatus("ADMIN_DOWN")
-	// CacheStatusOnline represents a cache which has been marked as Online in Traffic Ops, irrespective of monitoring. Traffic Monitor will always flag these caches as available.
+	// CacheStatusOnline represents a cache server which should always be
+	// considered online/available/healthy, irrespective of monitoring.
+	// Non-cache servers also typically use this Status instead of REPORTED.
 	CacheStatusOnline = CacheStatus("ONLINE")
-	// CacheStatusOffline represents a cache which has been marked as Offline in Traffic Ops. These caches will not be returned in any endpoint, and Traffic Monitor acts like they don't exist.
+	// CacheStatusOffline represents a cache server which should always be
+	// considered offline/unavailable/unhealthy, irrespective of monitoring.
 	CacheStatusOffline = CacheStatus("OFFLINE")
-	// CacheStatusReported represents a cache which has been marked as Reported in Traffic Ops. These caches are polled for health and returned in endpoints as available or unavailable based on bandwidth, response time, and other factors. The vast majority of caches should be Reported.
+	// CacheStatusReported represents a cache server which is polled for health
+	// by Traffic Monitor. The vast majority of cache servers should have this
+	// Status.
 	CacheStatusReported = CacheStatus("REPORTED")
-	// CacheStatusInvalid represents an invalid status enumeration.
+	// CacheStatusInvalid represents an unrecognized Status value. Note that
+	// this is not actually "invalid", because Statuses may have any unique
+	// name, not just those captured as CacheStatus values in this package.
 	CacheStatusInvalid = CacheStatus("")
 )
 
-// String returns a string representation of this cache status
+// String returns a string representation of this CacheStatus, implementing the
+// fmt.Stringer interface.
 func (t CacheStatus) String() string {
 	switch t {
 	case CacheStatusAdminDown:
@@ -219,7 +376,8 @@ func (t CacheStatus) String() string {
 	}
 }
 
-// CacheStatusFromString returns a CacheStatus from its string representation, or CacheStatusInvalid if the string is not a valid type.
+// CacheStatusFromString returns a CacheStatus from its string representation,
+// or CacheStatusInvalid if the string is not a valid CacheStatus.
 func CacheStatusFromString(s string) CacheStatus {
 	s = strings.ToLower(s)
 	switch s {
@@ -239,22 +397,31 @@ func CacheStatusFromString(s string) CacheStatus {
 }
 
 // Protocol represents an ATC-supported content delivery protocol.
+//
+// Deprecated: This does not accurately model the Protocol of a Delivery
+// Service, use DSProtocolHTTP, DSProtocolHTTPS, DSProtocolHTTPToHTTPS, and
+// DSProtocolHTTPAndHTTPS instead.
 type Protocol string
 
+// The allowable values of a Protocol.
+//
+// Deprecated: These do not accurately model the Protocol of a Delivery
+// Service, use DSProtocolHTTP, DSProtocolHTTPS, DSProtocolHTTPToHTTPS, and
+// DSProtocolHTTPAndHTTPS instead.
 const (
 	// ProtocolHTTP represents the HTTP/1.1 protocol as specified in RFC2616.
 	ProtocolHTTP = Protocol("http")
-	// ProtocolHTTPS represents the HTTP/1.1 protocol over a TCP connection secured by TLS
+	// ProtocolHTTPS represents the HTTP/1.1 protocol over a TCP connection secured by TLS.
 	ProtocolHTTPS = Protocol("https")
-	// ProtocolHTTPtoHTTPS represents a redirection of unsecured HTTP requests to HTTPS
+	// ProtocolHTTPtoHTTPS represents a redirection of unsecured HTTP requests to HTTPS.
 	ProtocolHTTPtoHTTPS = Protocol("http to https")
-	// ProtocolHTTPandHTTPS represents the use of both HTTP and HTTPS
+	// ProtocolHTTPandHTTPS represents the use of both HTTP and HTTPS.
 	ProtocolHTTPandHTTPS = Protocol("http and https")
-	// ProtocolInvalid represents an invalid Protocol
+	// ProtocolInvalid represents an invalid Protocol.
 	ProtocolInvalid = Protocol("")
 )
 
-// String implements the "Stringer" interface.
+// String implements the fmt.Stringer interface.
 func (p Protocol) String() string {
 	switch p {
 	case ProtocolHTTP:
@@ -286,7 +453,7 @@ func ProtocolFromString(s string) Protocol {
 	}
 }
 
-// UnmarshalJSON implements the json.Unmarshaler interface.
+// UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (p *Protocol) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		return errors.New("Protocol cannot be null")
@@ -302,14 +469,16 @@ func (p *Protocol) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// MarshalJSON implements the json.Marshaler interface.
+// MarshalJSON implements the encoding/json.Marshaler interface.
 func (p Protocol) MarshalJSON() ([]byte, error) {
 	return json.Marshal(p.String())
 }
 
-// LocalizationMethod represents an enabled localization method for a cachegroup. The string values of this type should match the Traffic Ops values.
+// LocalizationMethod represents an enabled localization method for a Cache
+// Group. The string values of this type should match the Traffic Ops values.
 type LocalizationMethod string
 
+// These are the allowable values of a LocalizationMethod.
 const (
 	LocalizationMethodCZ      = LocalizationMethod("CZ")
 	LocalizationMethodDeepCZ  = LocalizationMethod("DEEP_CZ")
@@ -317,7 +486,8 @@ const (
 	LocalizationMethodInvalid = LocalizationMethod("INVALID")
 )
 
-// String returns a string representation of this localization method
+// String returns a string representation of this LocalizationMethod,
+// implementing the fmt.Stringer interface.
 func (m LocalizationMethod) String() string {
 	switch m {
 	case LocalizationMethodCZ:
@@ -331,6 +501,10 @@ func (m LocalizationMethod) String() string {
 	}
 }
 
+// LocalizationMethodFromString parses and returns a LocalizationMethod from
+// its string representation.
+//
+// This is cAsE-iNsEnSiTiVe.
 func LocalizationMethodFromString(s string) LocalizationMethod {
 	switch strings.ToLower(s) {
 	case "cz":
@@ -344,6 +518,7 @@ func LocalizationMethodFromString(s string) LocalizationMethod {
 	}
 }
 
+// UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (m *LocalizationMethod) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		return errors.New("LocalizationMethod cannot be null")
@@ -359,10 +534,12 @@ func (m *LocalizationMethod) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// MarshalJSON implements the encoding/json.Marshaler interface.
 func (m LocalizationMethod) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m.String())
 }
 
+// Scan implements the database/sql.Scanner interface.
 func (m *LocalizationMethod) Scan(value interface{}) error {
 	if value == nil {
 		return errors.New("LocalizationMethod cannot be null")
@@ -384,16 +561,21 @@ func (m *LocalizationMethod) Scan(value interface{}) error {
 	}
 }
 
-// DeepCachingType represents a Delivery Service's deep caching type. The string values of this type should match the Traffic Ops values.
+// DeepCachingType represents a Delivery Service's Deep Caching Type. The
+// string values of this type should match the Traffic Ops values.
 type DeepCachingType string
 
+// These are the allowable values of a DeepCachingType. Note that unlike most
+// "enumerated" constants exported by this package, the default construction
+// yields a valid value.
 const (
 	DeepCachingTypeNever   = DeepCachingType("") // default value
 	DeepCachingTypeAlways  = DeepCachingType("ALWAYS")
 	DeepCachingTypeInvalid = DeepCachingType("INVALID")
 )
 
-// String returns a string representation of this deep caching type
+// String returns a string representation of this DeepCachingType, implementing
+// the fmt.Stringer interface.
 func (t DeepCachingType) String() string {
 	switch t {
 	case DeepCachingTypeAlways:
@@ -405,7 +587,9 @@ func (t DeepCachingType) String() string {
 	}
 }
 
-// DeepCachingTypeFromString returns a DeepCachingType from its string representation, or DeepCachingTypeInvalid if the string is not a valid type.
+// DeepCachingTypeFromString returns a DeepCachingType from its string
+// representation, or DeepCachingTypeInvalid if the string is not a valid
+// DeepCachingTypeFromString.
 func DeepCachingTypeFromString(s string) DeepCachingType {
 	switch strings.ToLower(s) {
 	case "always":
@@ -420,7 +604,10 @@ func DeepCachingTypeFromString(s string) DeepCachingType {
 	}
 }
 
-// UnmarshalJSON unmarshals a JSON representation of a DeepCachingType (i.e. a string) or returns an error if the DeepCachingType is invalid
+// UnmarshalJSON unmarshals a JSON representation of a DeepCachingType (i.e. a
+// string) or returns an error if the DeepCachingType is invalid.
+//
+// This implements the encoding/json.Unmarshaler interface.
 func (t *DeepCachingType) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		*t = DeepCachingTypeNever
@@ -437,13 +624,22 @@ func (t *DeepCachingType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// MarshalJSON marshals into a JSON representation
+// MarshalJSON marshals into a JSON representation, implementing the
+// encoding/json.Marshaler interface.
 func (t DeepCachingType) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.String())
 }
 
+// A SteeringType is the Name of the Type of a Steering Target.
 type SteeringType string
 
+// These are the allowable values of a SteeringType.
+//
+// Note that, in general, there is no guarantee that a Type by any of these
+// Names exists in Traffic Ops at any given time, nor that any such Types
+// - should they exist - will have any particular UseInTable value, nor that
+// the Types assigned to Steering Target relationships will be representable
+// by these values.
 const (
 	SteeringTypeOrder     SteeringType = "STEERING_ORDER"
 	SteeringTypeWeight    SteeringType = "STEERING_WEIGHT"
@@ -452,6 +648,13 @@ const (
 	SteeringTypeInvalid   SteeringType = ""
 )
 
+// SteeringTypeFromString parses a string to return the corresponding
+// SteeringType.
+//
+// Warning: This is cAsE-iNsEnSiTiVe, but some components of Traffic Ops may
+// compare the Names of Steering Target Types in case-sensitive ways, so this
+// may obscure values that will be later detected as invalid, depending on how
+// it's used.
 func SteeringTypeFromString(s string) SteeringType {
 	s = strings.ToLower(strings.Replace(s, "_", "", -1))
 	switch s {
@@ -468,7 +671,8 @@ func SteeringTypeFromString(s string) SteeringType {
 	}
 }
 
-// String returns a string representation of this steering type.
+// String returns a string representation of this SteeringType, implementing
+// the fmt.Stringer interface.
 func (t SteeringType) String() string {
 	switch t {
 	case SteeringTypeOrder:
@@ -484,14 +688,24 @@ func (t SteeringType) String() string {
 	}
 }
 
+// A FederationResolverType is the Name of a Type of a Federation Resolver
+// Mapping.
 type FederationResolverType string
 
+// These are the allowable values of a FederationResolverType.
+//
+// Note that, in general, there is no guarantee that a Type by any of these
+// Names exists in Traffic Ops at any given time, nor that any such Types
+// - should they exist - will have any particular UseInTable value, nor that
+// the Types assigned to Federation Resolver Mappings will be representable
+// by these values.
 const (
 	FederationResolverType4       = FederationResolverType("RESOLVE4")
 	FederationResolverType6       = FederationResolverType("RESOLVE6")
 	FederationResolverTypeInvalid = FederationResolverType("")
 )
 
+// String imlpements the fmt.Stringer interface.
 func (t FederationResolverType) String() string {
 	switch t {
 	case FederationResolverType4:
@@ -503,6 +717,8 @@ func (t FederationResolverType) String() string {
 	}
 }
 
+// FederationResolverTypeFromString parses a string and returns the
+// corresponding FederationResolverType.
 func FederationResolverTypeFromString(s string) FederationResolverType {
 	switch strings.ToLower(s) {
 	case "resolve4":
@@ -514,9 +730,16 @@ func FederationResolverTypeFromString(s string) FederationResolverType {
 	}
 }
 
-// DSType is the Delivery Service type.
+// DSType is the Name of a Type used by a Delivery Service.
 type DSType string
 
+// These are the allowable values for a DSType.
+//
+// Note that, in general, there is no guarantee that a Type by any of these
+// Names exists in Traffic Ops at any given time, nor that any such Types
+// - should they exist - will have any particular UseInTable value, nor that
+// the Types assigned to Delivery Services will be representable by these
+// values.
 const (
 	DSTypeClientSteering   DSType = "CLIENT_STEERING"
 	DSTypeDNS              DSType = "DNS"
@@ -531,7 +754,8 @@ const (
 	DSTypeInvalid          DSType = ""
 )
 
-// String returns a string representation of this delivery service type.
+// String returns a string representation of this DSType, implementing the
+// fmt.Stringer interface.
 func (t DSType) String() string {
 	switch t {
 	case DSTypeHTTPNoCache:
@@ -559,7 +783,8 @@ func (t DSType) String() string {
 	}
 }
 
-// DSTypeFromString returns a delivery service type object from its string representation, or DSTypeInvalid if the string is not a valid type.
+// DSTypeFromString returns a DSType from its string representation, or
+// DSTypeInvalid if the string is not a valid DSType.
 func DSTypeFromString(s string) DSType {
 	s = strings.ToLower(strings.Replace(s, "_", "", -1))
 	switch s {
@@ -588,12 +813,14 @@ func DSTypeFromString(s string) DSType {
 	}
 }
 
-// UsesDNSSECKeys returns whether the DSType uses or needs DNSSEC keys.
+// UsesDNSSECKeys returns whether a Delivery Service of a Type that has a Name
+// that is this DSType uses or needs DNSSEC keys.
 func (t DSType) UsesDNSSECKeys() bool {
 	return t.IsDNS() || t.IsHTTP() || t.IsSteering()
 }
 
-// IsHTTP returns whether the DSType is an HTTP category.
+// IsHTTP returns whether a Delivery Service of a Type that has a Name
+// that is this DSType is HTTP-routed.
 func (t DSType) IsHTTP() bool {
 	switch t {
 	case DSTypeHTTP:
@@ -608,7 +835,8 @@ func (t DSType) IsHTTP() bool {
 	return false
 }
 
-// IsDNS returns whether the DSType is a DNS category.
+// IsDNS returns whether a Delivery Service of a Type that has a Name
+// that is this DSType is DNS-routed.
 func (t DSType) IsDNS() bool {
 	switch t {
 	case DSTypeDNS:
@@ -621,7 +849,8 @@ func (t DSType) IsDNS() bool {
 	return false
 }
 
-// IsSteering returns whether the DSType is a Steering category
+// IsSteering returns whether a Delivery Service of a Type that has a Name
+// that is this DSType is Steering-routed.
 func (t DSType) IsSteering() bool {
 	switch t {
 	case DSTypeSteering:
@@ -632,12 +861,12 @@ func (t DSType) IsSteering() bool {
 	return false
 }
 
-// HasSSLKeys returns whether delivery services of this type have SSL keys.
+// HasSSLKeys returns whether Dlivery Services of this Type can have SSL keys.
 func (t DSType) HasSSLKeys() bool {
 	return t.IsHTTP() || t.IsDNS() || t.IsSteering()
 }
 
-// IsLive returns whether delivery services of this type are "live".
+// IsLive returns whether Delivery Services of this Type are "live".
 func (t DSType) IsLive() bool {
 	switch t {
 	case DSTypeDNSLive:
@@ -652,7 +881,7 @@ func (t DSType) IsLive() bool {
 	return false
 }
 
-// IsNational returns whether delivery services of this type are "national".
+// IsNational returns whether Delivery Services of this Type are "national".
 func (t DSType) IsNational() bool {
 	switch t {
 	case DSTypeDNSLiveNational:
@@ -663,7 +892,8 @@ func (t DSType) IsNational() bool {
 	return false
 }
 
-// UsesMidCache returns whether delivery services of this type use mid-tier caches
+// UsesMidCache returns whether Delivery Services of this Type use mid-tier
+// cache servers.
 func (t DSType) UsesMidCache() bool {
 	switch t {
 	case DSTypeDNSLive:
@@ -676,21 +906,48 @@ func (t DSType) UsesMidCache() bool {
 	return true
 }
 
+// DSTypeLiveNationalSuffix is the suffix that Delivery Services which are both
+// "live" and "national" MUST have at the end of the Name(s) of the Type(s)
+// they use in order to be treated properly by ATC.
+//
+// Deprecated: Use DSType.IsLive and DSType.IsNational instead.
 const DSTypeLiveNationalSuffix = "_LIVE_NATNL"
+
+// DSTypeLiveSuffix is the suffix that Delivery Services which are "live" - but
+// not "national" (maybe?) - MUST have at the end of the Name(s) of the Type(s)
+// they use in order to be treated properly by ATC.
+//
+// Deprecated: Use DSType.IsLive and DSType.IsNational instead.
 const DSTypeLiveSuffix = "_LIVE"
 
-// QStringIgnore is an entry in the delivery_service table qstring_ignore column, and represents how to treat the URL query string for requests to that delivery service.
-// This enum's String function returns the numeric representation, because it is a legacy database value, and the number should be kept for both database and API JSON uses. For the same reason, this enum has no FromString function.
+// A QStringIgnore defines how to treat the URL query string for requests
+// for a given Delivery Service's content.
+//
+// This enum's String function returns the numeric representation, because it
+// is a legacy database value, and the number should be kept for both database
+// and API JSON uses. For the same reason, this enum has no FromString
+// function.
+//
+// One should normally use the QueryStringIgnoreUseInCacheKeyAndPassUp,
+// QueryStringIgnoreIgnoreInCacheKeyAndPassUp, and
+// QueryStringIgnoreDropAtEdge constants instead, as they have the same type as
+// the Delivery Service field they represent.
 type QStringIgnore int
 
+// These are the allowable values for a QStringIgnore.
 const (
 	QStringIgnoreUseInCacheKeyAndPassUp    QStringIgnore = 0
 	QStringIgnoreIgnoreInCacheKeyAndPassUp QStringIgnore = 1
 	QStringIgnoreDrop                      QStringIgnore = 2
 )
 
-// String returns the string number of the QStringIgnore value.
-// Note this returns the number, not a human-readable value, because QStringIgnore is a legacy database sigil, and both database and API JSON uses should use the number. This also returns 'INVALID' for unknown values, to fail fast in the event of bad data.
+// String returns the string number of the QStringIgnore value, implementing
+// the fmt.Stringer interface.
+//
+// Note this returns the number, not a human-readable value, because
+// QStringIgnore is a legacy database sigil, and both database and API JSON
+// uses should use the number. This also returns 'INVALID' for unknown values,
+// to fail fast in the event of bad data.
 func (e QStringIgnore) String() string {
 	switch e {
 	case QStringIgnoreUseInCacheKeyAndPassUp:
@@ -704,8 +961,17 @@ func (e QStringIgnore) String() string {
 	}
 }
 
+// A DSMatchType is the Name of a Type of a Regular Expression ("Regex") used
+// by a Delivery Service.
 type DSMatchType string
 
+// These are the allowed values for a DSMatchType.
+//
+// Note that, in general, there is no guarantee that a Type by any of these
+// Names exists in Traffic Ops at any given time, nor that any such Types
+// - should they exist - will have any particular UseInTable value, nor that
+// the Types assigned to Delivery Service Regexes will be representable
+// by these values.
 const (
 	DSMatchTypeHostRegex     DSMatchType = "HOST_REGEXP"
 	DSMatchTypePathRegex     DSMatchType = "PATH_REGEXP"
@@ -714,7 +980,8 @@ const (
 	DSMatchTypeInvalid       DSMatchType = ""
 )
 
-// String returns a string representation of this delivery service match type.
+// String returns a string representation of this DSMatchType, implementing the
+// fmt.Stringer interface.
 func (t DSMatchType) String() string {
 	switch t {
 	case DSMatchTypeHostRegex:
@@ -730,7 +997,8 @@ func (t DSMatchType) String() string {
 	}
 }
 
-// DSMatchTypeFromString returns a delivery service match type object from its string representation, or DSMatchTypeInvalid if the string is not a valid type.
+// DSMatchTypeFromString returns a DSMatchType from its string representation,
+// or DSMatchTypeInvalid if the string is not a valid type.
 func DSMatchTypeFromString(s string) DSMatchType {
 	s = strings.ToLower(strings.Replace(s, "_", "", -1))
 	switch s {
