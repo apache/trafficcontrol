@@ -451,6 +451,9 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/service/application').name,
         require('./common/service/utils').name,
 
+        // components
+        require("./common/modules/table/agGrid").name,
+
         // filters
         require('./common/filters').name
 

@@ -53,7 +53,7 @@ func TestTSConfigFromRequest(t *testing.T) {
 		},
 	}
 
-	r, e := http.NewRequest(http.MethodGet, "https://example.test/api/1.4/deliveryservice_stats", nil)
+	r, e := http.NewRequest(http.MethodGet, "https://example.test/api/whatever version we're on now/deliveryservice_stats", nil)
 	if e != nil {
 		t.Fatalf("Failed to build test request: %v", e)
 	}

@@ -51,6 +51,14 @@ t3c-request [-hIprv] [-D \<config|update-status|packages|chkconfig|system-info|s
 
 # OPTIONS
 
+
+=======
+-c, -\-old-config=value
+
+    Old config from a previous config request. Optional. May be
+    a file path, or 'stdin' to read from stdin. Used to make
+    conditional requests.
+
 -D, -\-get-data=value
 
     non-config-file Traffic Ops Data to get. Valid values are
