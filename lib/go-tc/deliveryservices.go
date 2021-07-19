@@ -975,7 +975,7 @@ type FederationDeliveryServicesResponse struct {
 //
 // DO NOT USE THIS - it ONLY still exists because it is still in use by Traffic
 // Ops's Go client for API versions 2 and 3, despite that those API versions do
-// not include the concepts and functionaly for which this structure was
+// not include the concepts and functionality for which this structure was
 // created.
 //
 // Deprecated: All Go clients for API versions that still erroneously link to
@@ -991,7 +991,7 @@ type DeliveryServiceUserPost struct {
 //
 // DO NOT USE THIS - it ONLY still exists because it is still in use by Traffic
 // Ops's Go client for API versions 2 and 3, despite that those API versions do
-// not include the concepts and functionaly for which this structure was
+// not include the concepts and functionality for which this structure was
 // created.
 //
 // Deprecated: All Go clients for API versions that still erroneously link to
