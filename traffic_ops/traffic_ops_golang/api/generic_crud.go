@@ -231,12 +231,15 @@ func GenericUpdate(h http.Header, val GenericUpdater) (error, error, int) {
 	fmt.Println("found", found)
 	fmt.Println("err", err)
 	if err == nil && found == false {
+		fmt.Println("inside if err == nil && found == false")
 		return errors.New("no " + val.GetType() + " found with this id"), nil, http.StatusNotFound
 	}
 	if err != nil {
+		fmt.Println("inside if err != nil")
 		return nil, err, http.StatusInternalServerError
 	}
 	if !IsUnmodified(h, *existingLastUpdated) {
+		fmt.Println("Inside !IsUnmodified(h, *existingLastUpdated")
 		return ResourceModifiedError, nil, http.StatusPreconditionFailed
 	}
 
