@@ -31,7 +31,7 @@ export namespace CGC {
         selectionProperty?: string;
         refreshable?: boolean;
 
-        onRowClick(row: RowClickedEvent): void;
+        onRowClick?(row: RowClickedEvent): void;
     }
 
     export interface ColumnDefinition extends ColDef {
@@ -45,25 +45,25 @@ export namespace CGC {
 
         // If text is undefined, getText is called
         text?: string;
-        getText(): string;
+        getText?(): string;
     }
 
     export interface CommonOption {
         type: OptionType;
         name: string;
-        newTab: boolean;
+        newTab?: boolean;
 
-        onClick(row: any): void;
-        isDisabled(row: any): boolean;
-        shown(row: any): void;
+        onClick?(row: any): void;
+        isDisabled?(row: any): boolean;
+        shown?(row: any): void;
 
         // If href is undefined, getHref is called
         href?: string;
-        getHref(row: any): string;
+        getHref?(row: any): string;
 
         // If text is undefined, getText is called
         text?: string;
-        getText(row: any): string;
+        getText?(row: any): string;
     }
 
     export interface TitleButton {
