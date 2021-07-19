@@ -30,10 +30,13 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
+// ThresholdPrefix is the prefix of all Names of Parameters used to define
+// monitoring thresholds.
+const ThresholdPrefix = "health.threshold."
+
+// These are the names of statistics that can be used in thresholds for server
+// health.
 const (
-	// ThresholdPrefix is the prefix of all Names of Parameters used to define
-	// monitoring thresholds.
-	ThresholdPrefix   = "health.threshold."
 	StatNameKBPS      = "kbps"
 	StatNameMaxKBPS   = "maxKbps"
 	StatNameBandwidth = "bandwidth"
@@ -47,8 +50,10 @@ type TMConfigResponse struct {
 }
 
 // LegacyTMConfigResponse was the response to requests made to the
-// cdns/{{Name}}/configs/montoring endpoint of the Traffic Ops API in older API
-// versions.
+// cdns/{{Name}}/configs/monitoring endpoint of the Traffic Ops API in older
+// API versions.
+//
+// Deprecated: New code should use TMConfigResponse instead.
 type LegacyTMConfigResponse struct {
 	Response LegacyTrafficMonitorConfig `json:"response"`
 }
@@ -86,6 +91,9 @@ const healthThresholdLoadAverage = "loadavg"
 const healthThresholdQueryTime = "queryTime"
 
 // ToLegacyConfig converts TrafficMonitorConfig to LegacyTrafficMonitorConfig.
+//
+// Deprecated: LegacyTrafficMonitoryConfig is deprecated. New code should just
+// use TrafficMonitorConfig instead.
 func (tmc *TrafficMonitorConfig) ToLegacyConfig() LegacyTrafficMonitorConfig {
 	var servers []LegacyTrafficServer
 	for _, s := range tmc.TrafficServers {
@@ -103,7 +111,6 @@ func (tmc *TrafficMonitorConfig) ToLegacyConfig() LegacyTrafficMonitorConfig {
 			delete(tmc.Profiles[profileIndex].Parameters.Thresholds, healthThresholdLoadAverage)
 		}
 		if _, exists := thresholds[healthThresholdQueryTime]; exists {
-			//tmc.Profiles[profileIndex].Parameters.QueryTime = int(thresholds[healthThresholdQueryTime].Val)
 			tmc.Profiles[profileIndex].Parameters.QueryTime = thresholds[healthThresholdQueryTime].String()
 			delete(tmc.Profiles[profileIndex].Parameters.Thresholds, healthThresholdQueryTime)
 		}
@@ -120,7 +127,8 @@ func (tmc *TrafficMonitorConfig) ToLegacyConfig() LegacyTrafficMonitorConfig {
 	return legacy
 }
 
-// LegacyTrafficMonitorConfig represents TrafficMonitorConfig for ATC versions before 5.0.
+// LegacyTrafficMonitorConfig represents TrafficMonitorConfig for ATC versions
+// before 5.0.
 type LegacyTrafficMonitorConfig struct {
 	TrafficServers   []LegacyTrafficServer  `json:"trafficServers,omitempty"`
 	CacheGroups      []TMCacheGroup         `json:"cacheGroups,omitempty"`
@@ -131,6 +139,9 @@ type LegacyTrafficMonitorConfig struct {
 }
 
 // Upgrade converts a legacy TM Config to the newer structure.
+//
+// Deprecated: LegacyTrafficMonitoryConfig is deprecated. New code should just
+// use TrafficMonitorConfig instead.
 func (s *LegacyTrafficMonitorConfig) Upgrade() *TrafficMonitorConfig {
 	upgraded := TrafficMonitorConfig{
 		CacheGroups:      s.CacheGroups,
@@ -181,6 +192,15 @@ type TrafficMonitorConfigMap struct {
 	Profile map[string]TMProfile
 }
 
+// ToLegacy converts a Stats to a LegacyStats.
+//
+// This returns a list of descriptions of which - if any - cache servers were
+// skipped in the conversion and why, as well as the converted LegacyStats.
+//
+// This creates a "shallow" copy of most properties of the Stats.
+//
+// Deprecated: LegacyStats is deprecated. New code should just use Stats
+// instead.
 func (s *Stats) ToLegacy(monitorConfig TrafficMonitorConfigMap) ([]string, LegacyStats) {
 	legacyStats := LegacyStats{
 		CommonAPIData: s.CommonAPIData,
@@ -244,12 +264,18 @@ type Stats struct {
 	Caches map[string]ServerStats `json:"caches"`
 }
 
+// LegacyStats is designed for returning via the API. It contains result
+// history for each cache server, as well as common API data.
+//
+// Deprecated: This structure is incapable of representing interface-level
+// stats, so new code should use Stats instead.
 type LegacyStats struct {
 	CommonAPIData
 	Caches map[CacheName]map[string][]ResultStatVal `json:"caches"`
 }
 
-// CommonAPIData contains generic data common to most endpoints.
+// CommonAPIData contains generic data common to most Traffic Monitor API
+// endpoints.
 type CommonAPIData struct {
 	QueryParams string `json:"pp"`
 	DateStr     string `json:"date"`
@@ -271,6 +297,7 @@ type ResultStatVal struct {
 	Val  interface{} `json:"value"`
 }
 
+// MarshalJSON implements the encoding/json.Marshaler interface.
 func (t *ResultStatVal) MarshalJSON() ([]byte, error) {
 	v := struct {
 		Val  string `json:"value"`
@@ -285,6 +312,7 @@ func (t *ResultStatVal) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&v)
 }
 
+// UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (t *ResultStatVal) UnmarshalJSON(data []byte) error {
 	v := struct {
 		Val  string `json:"value"`
@@ -305,13 +333,20 @@ func (t *ResultStatVal) UnmarshalJSON(data []byte) error {
 // Valid returns a non-nil error if the configuration map is invalid.
 //
 // A configuration map is considered invalid if:
-// - It is nil
-// - It has no CacheGroups
-// - It has no Profiles
-// - It has no Traffic Monitors
-// - It has no Traffic Servers
-// - The Config mapping has no 'peers.polling.interval' key
-// - The Config mapping has no 'health.polling.interval' key
+//
+// - it is nil,
+//
+// - it has no CacheGroups,
+//
+// - it has no Profiles,
+//
+// - it has no Traffic Monitors,
+//
+// - it has no Traffic Servers,
+//
+// - the Config mapping has no 'peers.polling.interval' key,
+//
+// - or the Config mapping has no 'health.polling.interval' key.
 func (cfg *TrafficMonitorConfigMap) Valid() error {
 	if cfg == nil {
 		return errors.New("MonitorConfig is nil")
@@ -347,7 +382,12 @@ func (cfg *TrafficMonitorConfigMap) Valid() error {
 	return nil
 }
 
-// LegacyTrafficMonitorConfigMap ...
+// LegacyTrafficMonitorConfigMap is a representation of a
+// LegacyTrafficMonitorConfig using unique values as map keys.
+//
+// Deprecated: This structure is incapable of representing per-interface
+// configuration information for servers, so new code should use
+// TrafficMonitorConfigMap instead.
 type LegacyTrafficMonitorConfigMap struct {
 	TrafficServer   map[string]LegacyTrafficServer
 	CacheGroup      map[string]TMCacheGroup
@@ -362,6 +402,8 @@ type LegacyTrafficMonitorConfigMap struct {
 //
 // Note that all fields except TrafficServer are "shallow" copies, so modifying
 // the original will impact the upgraded copy.
+//
+// Deprecated: LegacyTrafficMonitorConfigMap is deprecated.
 func (c *LegacyTrafficMonitorConfigMap) Upgrade() *TrafficMonitorConfigMap {
 	upgraded := TrafficMonitorConfigMap{
 		CacheGroup:      c.CacheGroup,
@@ -436,9 +478,12 @@ type TMProfile struct {
 }
 
 // TMParameters is a structure containing all of the Parameters with special
-// meaning to Traffic Monitor. For specifics regarding each Parameter, refer to
-// the official documentation.
-// TODO change TO to return this struct, so a custom UnmarshalJSON isn't necessary.
+// meaning to Traffic Monitor.
+//
+// For specifics regarding each Parameter, refer to the official documentation.
+//
+// TODO change TO to return this struct, so a custom UnmarshalJSON isn't
+// necessary.
 type TMParameters struct {
 	HealthConnectionTimeout int    `json:"health.connection.timeout"`
 	HealthPollingURL        string `json:"health.polling.url"`
@@ -467,6 +512,9 @@ type HealthThresholdJSONParameters struct {
 	QueryTime string `json:"health.threshold.queryTime,omitempty"`
 }
 
+// DefaultHealthThresholdComparator is the comparator used for health
+// thresholds when one is not explicitly provided in the Value of a Parameter
+// used to define a Threshold.
 const DefaultHealthThresholdComparator = "<"
 
 // HealthThreshold describes some value against which to compare health
@@ -571,6 +619,12 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 	return nil
 }
 
+// TrafficMonitorTransformToMap converts the given TrafficMonitorConfig to a
+// TrafficMonitorConfigMap.
+//
+// This also implicitly calls Valid on the TrafficMonitorConfigMap before
+// returning it, and gives back whatever value that returns as the error return
+// value.
 func TrafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonitorConfigMap, error) {
 	var tm TrafficMonitorConfigMap
 
@@ -610,6 +664,12 @@ func TrafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonit
 	return &tm, tm.Valid()
 }
 
+// LegacyTrafficMonitorTransformToMap converts the given
+// LegacyTrafficMonitorConfig to a LegacyTrafficMonitorConfigMap.
+//
+// This also implicitly calls LegacyMonitorConfigValid on the
+// LegacyTrafficMonitorConfigMap before returning it, and gives back whatever
+// value that returns as the error return value.
 func LegacyTrafficMonitorTransformToMap(tmConfig *LegacyTrafficMonitorConfig) (*LegacyTrafficMonitorConfigMap, error) {
 	var tm LegacyTrafficMonitorConfigMap
 
@@ -649,6 +709,11 @@ func LegacyTrafficMonitorTransformToMap(tmConfig *LegacyTrafficMonitorConfig) (*
 	return &tm, LegacyMonitorConfigValid(&tm)
 }
 
+// LegacyMonitorConfigValid checks the validity of the passed
+// LegacyTrafficMonitorConfigMap, returning an error if it is invalid.
+//
+// Deprecated: LegacyTrafficMonitorConfigMap is deprecated, new code should use
+// TrafficMonitorConfigMap instead.
 func LegacyMonitorConfigValid(cfg *LegacyTrafficMonitorConfigMap) error {
 	if cfg == nil {
 		return errors.New("MonitorConfig is nil")
@@ -686,12 +751,20 @@ func LegacyMonitorConfigValid(cfg *LegacyTrafficMonitorConfigMap) error {
 	return nil
 }
 
+// HealthData is a representation of all of the health information for a CDN
+// or Delivery Service.
+//
+// This is the type of the `response` property of responses from Traffic Ops to
+// GET requests made to its /deliveryservices/{{ID}}/health and /cdns/health
+// API endpoints.
 type HealthData struct {
 	TotalOffline uint64                 `json:"totalOffline"`
 	TotalOnline  uint64                 `json:"totalOnline"`
 	CacheGroups  []HealthDataCacheGroup `json:"cachegroups"`
 }
 
+// HealthDataCacheGroup holds health information specific to a particular Cache
+// Group.
 type HealthDataCacheGroup struct {
 	Offline int64          `json:"offline"`
 	Online  int64          `json:"online"`
