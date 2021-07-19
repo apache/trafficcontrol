@@ -27,7 +27,7 @@ import (
 
 // Job represents a content invalidation job as stored in the database.
 //
-// Deprecated: Use InvalidationJob instead, as it's more flexible
+// Deprecated: Use InvalidationJob instead, as it's more flexible.
 type Job struct {
 	Parameters      string `json:"parameters"`
 	Keyword         string `json:"keyword"`
@@ -41,7 +41,7 @@ type Job struct {
 // JobRequest contains the data to create a job.
 // Note this is a convenience struct for posting users; the actual JSON object is a JobRequestAPI
 //
-// Deprecated: Use InvalidationJobInput instead, as it's more flexible
+// Deprecated: Use InvalidationJobInput instead, as it's more flexible.
 type JobRequest struct {
 	TTL               time.Duration
 	StartTime         time.Time
@@ -54,7 +54,7 @@ type JobRequest struct {
 // used by the Perl version of the /jobs and /user/current/jobs endpoints.
 //
 // Deprecated: Since job inputs no longer strictly require this format, an RFC 3339 format or a
-// timestamp in milliseconds should be used instead
+// timestamp in milliseconds should be used instead.
 const JobRequestTimeFormat = `2006-01-02 15:04:05`
 
 // JobTimeFormat is a Go reference time format, for use with time.Format.
