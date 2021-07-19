@@ -227,6 +227,9 @@ func GenericRead(h http.Header, val GenericReader, useIMS bool) ([]interface{}, 
 // GenericUpdate handles the common update case, where the update returns the new last_modified time.
 func GenericUpdate(h http.Header, val GenericUpdater) (error, error, int) {
 	existingLastUpdated, found, err := val.GetLastUpdated()
+	fmt.Println("Existing last updated", existingLastUpdated)
+	fmt.Println("found", found)
+	fmt.Println("err", err)
 	if err == nil && found == false {
 		return errors.New("no " + val.GetType() + " found with this id"), nil, http.StatusNotFound
 	}
