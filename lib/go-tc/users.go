@@ -29,45 +29,20 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 )
 
-// UserCredentials contains Traffic Ops login credentials
+// UserCredentials contains Traffic Ops login credentials.
 type UserCredentials struct {
 	Username string `json:"u"`
 	Password string `json:"p"`
 }
 
-// UserToken represents a request payload containing a UUID token for authentication
+// UserToken represents a request payload containing a UUID token for
+// authentication.
 type UserToken struct {
 	Token string `json:"t"`
-}
-
-// UserV13 contains non-nullable TO user information
-type UserV13 struct {
-	Username         string    `json:"username"`
-	PublicSSHKey     string    `json:"publicSshKey"`
-	Role             int       `json:"role"`
-	RoleName         string    `json:"rolename"`
-	ID               int       `json:"id"`
-	UID              int       `json:"uid"`
-	GID              int       `json:"gid"`
-	Company          string    `json:"company"`
-	Email            string    `json:"email"`
-	FullName         string    `json:"fullName"`
-	NewUser          bool      `json:"newUser"`
-	LastUpdated      string    `json:"lastUpdated"`
-	AddressLine1     string    `json:"addressLine1"`
-	AddressLine2     string    `json:"addressLine2"`
-	City             string    `json:"city"`
-	Country          string    `json:"country"`
-	PhoneNumber      string    `json:"phoneNumber"`
-	PostalCode       string    `json:"postalCode"`
-	RegistrationSent TimeNoMod `json:"registrationSent"`
-	StateOrProvince  string    `json:"stateOrProvince"`
-	Tenant           string    `json:"tenant"`
-	TenantID         int       `json:"tenantId"`
 }
 
 // commonUserFields is unexported, but its contents are still visible when it is embedded
@@ -296,13 +271,6 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 //  Response structs should only be used in the client       //
 //  The client's use of these will eventually be deprecated  //
 // --------------------------------------------------------- //
-
-// UsersResponseV13 is the Traffic Ops API version 1.3 variant of UserResponse.
-// It is unused.
-type UsersResponseV13 struct {
-	Response []UserV13 `json:"response"`
-	Alerts
-}
 
 // UsersResponse can hold a Traffic Ops API response to a request to get a list of users.
 type UsersResponse struct {
