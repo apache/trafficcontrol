@@ -19,13 +19,14 @@ package tc
  * under the License.
  */
 
-// RegionsResponse ...
+// RegionsResponse is the type of responses from Traffic Ops to GET requests
+// made to its /regions API endpoint.
 type RegionsResponse struct {
 	Response []Region `json:"response"`
 	Alerts
 }
 
-// Region ...
+// A Region is a named collection of Physical Locations within a Division.
 type Region struct {
 	DivisionName string    `json:"divisionName"`
 	Division     int       `json:"division" db:"division"`
