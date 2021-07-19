@@ -58,7 +58,8 @@ type TOExtensionPostResponse struct {
 	Alerts
 }
 
-// TOExtensionID ...
+// A TOExtensionID contains an identifier for a particular Traffic Ops
+// extension.
 type TOExtensionID struct {
 	ID int `json:"id"`
 }
