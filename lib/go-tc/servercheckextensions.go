@@ -58,7 +58,7 @@ type ServerCheckExtensionPostResponse struct {
 	Alerts
 }
 
-// ServerCheckExtensionID ...
+// A ServerCheckExtensionID contains an identified for a Servercheck Extension.
 type ServerCheckExtensionID struct {
 	ID int `json:"id"`
 }
