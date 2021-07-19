@@ -154,8 +154,12 @@ func (tp *TOType) loadUseInTable() (error, error, string) {
 	// ID is only nil on creation, should not call this method in that case
 	if tp.ID != nil {
 		query := `SELECT use_in_table from type where id=$1`
+		fmt.Println("Query", query)
 		err := tp.ReqInfo.Tx.Tx.QueryRow(query, tp.ID).Scan(&useInTable)
+		fmt.Println("err", err)
 		if err == sql.ErrNoRows {
+			fmt.Println("err ", "sql: no rows in result set")
+			fmt.Println("tp.UseInTable", tp.UseInTable)
 			if tp.UseInTable == nil {
 				return nil, nil, ""
 			}

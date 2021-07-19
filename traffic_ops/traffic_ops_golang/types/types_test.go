@@ -26,6 +26,8 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -146,7 +148,7 @@ func createDummyType(field string) *TOType {
 
 func TestUpdateInvalidType(t *testing.T) {
 	invalidUpdateType := createDummyType("test")
-
+	fmt.Println("invalidUpdateType", invalidUpdateType)
 	err, _, statusCode := invalidUpdateType.Update(nil)
 	if err == nil {
 		t.Fatalf("expected update type tp have an error")
