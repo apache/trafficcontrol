@@ -247,7 +247,7 @@ var LabBox = React.createClass({
         this.opsHost = formData.opsHost.trim();
 
         $.ajax({
-            url: "http://localhost:8888/api/1.2/user/login?" + params,
+            url: "http://localhost:8888/api/4.0/user/login?" + params,
             dataType: 'json',
             type: 'POST',
             crossDomain: true,
@@ -256,7 +256,7 @@ var LabBox = React.createClass({
     },
     handleGetDeliveryServicesSubmit: function(data) {
         return $.ajax({
-            url: "http://localhost:8888/api/1.2/deliveryservices.json?opsHost=" + this.opsHost,
+            url: "http://localhost:8888/api/4.0/deliveryservices.json?opsHost=" + this.opsHost,
             dataType: 'json',
             type: 'GET',
             success: function(data) {
@@ -298,10 +298,10 @@ var LabBox = React.createClass({
         console.log("handle submit");
         var opsHost = this.state.opsHost.trim();
 
-        console.log("http://localhost:8888/api/1.2/deliveryservices.json?opsHost=" + opsHost);
+        console.log("http://localhost:8888/api/4.0/deliveryservices.json?opsHost=" + opsHost);
 
         $.ajax({
-            url: "http://localhost:8888/api/1.2/deliveryservices.json?opsHost=" + opsHost,
+            url: "http://localhost:8888/api/4.0/deliveryservices.json?opsHost=" + opsHost,
             dataType: 'json',
             type: 'GET',
             success: function(data) {
