@@ -124,28 +124,24 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 	query := `UPDATE server SET upd_pending = :upd_pending`
 	query = query + where + orderBy + pagination
 	queryValues["upd_pending"] = reqObj.Action == "queue"
-	ok, err = queueUpdates(inf.Tx, queryValues, query)
+	rowsAffected, err := queueUpdates(inf.Tx, queryValues, query)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("queueing updates: %v", err))
 		return
 	}
-	if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("no server with the given combination found"), nil)
-		return
-	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+str+", ACTION: CDN server updates "+reqObj.Action+"d", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+str+", ACTION: server updates "+reqObj.Action+"d on "+strconv.Itoa(int(rowsAffected))+" servers", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, tc.CDNQueueUpdateResponse{Action: reqObj.Action, CDNID: int64(inf.IntParams["id"])})
 }
 
 // queueUpdates is the helper function to queue/ dequeue updates on servers for a CDN, optionally filtered by type and/ or profile
-func queueUpdates(tx *sqlx.Tx, queryValues map[string]interface{}, query string) (bool, error) {
+func queueUpdates(tx *sqlx.Tx, queryValues map[string]interface{}, query string) (int64, error) {
 	result, err := tx.NamedExec(query, queryValues)
 	if err != nil {
-		return false, errors.New("querying queue updates: " + err.Error())
+		return 0, errors.New("querying queue updates: " + err.Error())
 	} else if rc, err := result.RowsAffected(); err != nil {
-		return false, fmt.Errorf("checking rows updated: %v", err)
+		return rc, fmt.Errorf("checking rows updated: %v", err)
 	} else {
-		return rc > 0, nil
+		return rc, nil
 	}
 }
