@@ -56,7 +56,7 @@ to-auth () {
     cookie_current $COOKIEJAR && return
     local datadir=$(mktemp -d)
     local login="$datadir/login.json"
-    local url=$TO_URL/api/1.2/user/login
+    local url=$TO_URL/api/4.0/user/login
     local datatype='Accept: application/json'
     cat > "$login"  <<-CREDS
         { "u" : "$TO_USER", "p" : "$TO_PASSWORD" }
@@ -79,7 +79,7 @@ to-get () {
 # Dump the postgres db to a file from traffic ops
 dump_source_db() {
     local dumpfile="$1"
-    to-get api/1.2/dbdump >"$dumpfile"
+    to-get api/4.0/dbdump >"$dumpfile"
 }
 
 # Prepare the destination db by terminating any existing connections and then dropping and creating the db.
@@ -205,7 +205,7 @@ TO_URL=$TO_DEST_URL
 echo "Snapshotting CRConfigs on $TO_URL"
 
 # get the list of cdns from the copied db
-cdns=$(to-get api/1.3/cdns | jq -Sr '.response|.[]|.name' | grep -v ALL)
+cdns=$(to-get api/4.0/cdns | jq -Sr '.response|.[]|.name' | grep -v ALL)
 
 for c in $cdns; do
     write_crconfig "$c"

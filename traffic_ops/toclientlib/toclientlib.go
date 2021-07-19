@@ -664,6 +664,7 @@ func makeRequestWithHeader(to *TOClient, method, path string, body interface{}, 
 	}
 	reqInf.RemoteAddr = remoteAddr
 	if resp != nil {
+		reqInf.RespHeaders = resp.Header.Clone()
 		reqInf.StatusCode = resp.StatusCode
 		if reqInf.StatusCode == http.StatusNotModified {
 			return reqInf, nil
@@ -808,6 +809,7 @@ type ReqInf struct {
 	CacheHitStatus CacheHitStatus
 	RemoteAddr     net.Addr
 	StatusCode     int
+	RespHeaders    http.Header
 }
 
 // CacheHitStatus is deprecated and will be removed in the next major version.

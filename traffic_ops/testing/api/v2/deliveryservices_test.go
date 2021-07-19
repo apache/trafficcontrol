@@ -394,8 +394,16 @@ func DeleteTestDeliveryServices(t *testing.T) {
 	}
 	for _, testDS := range testData.DeliveryServices {
 		ds := tc.DeliveryServiceNullable{}
+		if testDS.XMLID == nil {
+			t.Error("Testing Delivery Service found with null or undefined XMLID")
+			continue
+		}
 		found := false
 		for _, realDS := range dses {
+			if realDS.XMLID == nil || realDS.ID == nil {
+				t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID and/or ID")
+				continue
+			}
 			if *realDS.XMLID == *testDS.XMLID {
 				ds = realDS
 				found = true
@@ -403,7 +411,8 @@ func DeleteTestDeliveryServices(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Errorf("DeliveryService not found in Traffic Ops: %v", ds.XMLID)
+			t.Errorf("DeliveryService not found in Traffic Ops: %s", *testDS.XMLID)
+			continue
 		}
 
 		delResp, err := TOSession.DeleteDeliveryService(strconv.Itoa(*ds.ID))

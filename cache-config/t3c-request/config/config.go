@@ -20,10 +20,12 @@ package config
  */
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
@@ -69,6 +71,7 @@ func InitConfig() (Cfg, error) {
 	revalOnlyPtr := getopt.BoolLong("reval-only", 'r', "[true | false] whether to only fetch data needed to revalidate, versus all config data. Only used if get-data is config")
 	disableProxyPtr := getopt.BoolLong("traffic-ops-disable-proxy", 'p', "[true | false] whether to not use any configure Traffic Ops proxy parameter. Only used if get-data is config")
 	toPassPtr := getopt.StringLong("traffic-ops-password", 'P', "", "Traffic Ops password. Required. May also be set with the environment variable TO_PASS    ")
+	oldCfgPtr := getopt.StringLong("old-config", 'c', "", "Old config from a previous config request. Optional. May be a file path, or 'stdin' to read from stdin. Used to make conditional requests.")
 	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	versionPtr := getopt.BoolLong("version", 'V', "Print the app version")
 	verbosePtr := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
@@ -164,6 +167,13 @@ func InitConfig() (Cfg, error) {
 		return Cfg{}, errors.New("initializing loggers: " + err.Error())
 	}
 
+	// load old config after initializing the loggers, because we want to log how long it takes
+	oldCfg, err := LoadOldCfg(*oldCfgPtr)
+	if err != nil {
+		return Cfg{}, errors.New("loading old config: " + err.Error())
+	}
+	cfg.OldCfg = oldCfg
+
 	return cfg, nil
 }
 
@@ -180,4 +190,33 @@ func (cfg Cfg) PrintConfig() {
 	fmt.Printf("TOUser: %s\n", cfg.TOUser)
 	fmt.Printf("TOPass: xxxxxx\n")
 	fmt.Printf("TOURL: %s\n", cfg.TOURL)
+}
+
+func LoadOldCfg(path string) (*t3cutil.ConfigData, error) {
+	defer func(start time.Time) { log.Infof("loading old config took %v\n", time.Since(start)) }(time.Now())
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return nil, nil // old config is optional.
+	}
+
+	if strings.ToLower(path) == "stdin" {
+		cfg := &t3cutil.ConfigData{}
+		if err := json.NewDecoder(os.Stdin).Decode(cfg); err != nil {
+			return nil, errors.New("decoding old config from stdin: " + err.Error())
+		}
+		return cfg, nil
+	}
+
+	fi, err := os.Open(path)
+	if err != nil {
+		return nil, errors.New("opening old config file '" + path + "': " + err.Error())
+	}
+	defer fi.Close()
+
+	cfg := &t3cutil.ConfigData{}
+	if err := json.NewDecoder(fi).Decode(cfg); err != nil {
+		return nil, errors.New("decoding old config file '" + path + "': " + err.Error())
+	}
+
+	return cfg, nil
 }

@@ -1656,7 +1656,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-		
+
 	@api_request('post', 'servercheck', ('3.0',))
 	def create_servercheck(self, data=None):
 		"""
@@ -2234,7 +2234,7 @@ if __name__ == '__main__':
 		print('Bulk cache group [{0}] has id [{1}]'.format(cache_group.name, cache_group.id))
 
 		# Example with URL replacement parameters
-		# e.g. TOSession.get_cachegroups_by_id() == end-point 'api/1.2/cachegroups/{id}'
+		# e.g. TOSession.get_cachegroups_by_id() is the '/cachegroups/{id}' API endpoint
 		#      See TOSession object for details.
 		print('    Getting cachegroup by id [{0}]'.format(cache_group.id),
 			  ' to demonstrate getting by id...')
