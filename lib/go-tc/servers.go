@@ -1,18 +1,5 @@
 package tc
 
-import (
-	"database/sql/driver"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"net"
-	"strconv"
-	"strings"
-	"time"
-
-	"github.com/apache/trafficcontrol/lib/go-util"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -31,6 +18,19 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
+)
 
 // ServersV4Response is the format of a response to a GET request for API v4.x /servers.
 type ServersV4Response struct {
@@ -63,6 +63,13 @@ type ServersDetailResponse struct {
 	Alerts
 }
 
+// ServerDetailV11 is the type of each entry in the `response` array property
+// of responses from Traffic Ops to GET requests made to its /servers/details
+// API endpoint in API version 2.0.
+//
+// The reason it's named with "V11" is because it was originally used to model
+// the response in API version 1.1, and the structure simply hasn't changed
+// between then and 2.0.
 type ServerDetailV11 struct {
 	ServerDetail
 	LegacyInterfaceDetails
@@ -70,7 +77,7 @@ type ServerDetailV11 struct {
 	RouterPortName *string `json:"routerPortName" db:"router_port_name"`
 }
 
-// ServerDetailV30 is the details for a server for API v3
+// ServerDetailV30 is the details for a server for API v3.
 type ServerDetailV30 struct {
 	ServerDetail
 	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces"`
@@ -78,7 +85,7 @@ type ServerDetailV30 struct {
 	RouterPortName   *string                `json:"routerPortName" db:"router_port_name"`
 }
 
-// ServerDetailV40 is the details for a server for API v4
+// ServerDetailV40 is the details for a server for API v4.
 type ServerDetailV40 struct {
 	ServerDetail
 	ServerInterfaces []ServerInterfaceInfoV40 `json:"interfaces"`
@@ -150,14 +157,16 @@ func (i *ServerInterfaceInfo) GetDefaultAddress() (string, string) {
 }
 
 // Value implements the driver.Valuer interface
-// marshals struct to json to pass back as a json.RawMessage
+// marshals struct to json to pass back as a json.RawMessage.
 func (sii *ServerInterfaceInfo) Value() (driver.Value, error) {
 	b, err := json.Marshal(sii)
 	return b, err
 }
 
-// Scan implements the sql.Scanner interface
-// expects json.RawMessage and unmarshals to a ServerInterfaceInfo struct
+// Scan implements the sql.Scanner interface.
+//
+// This expects src to be a json.RawMessage and unmarshals it into the
+// ServerInterfaceInfo.
 func (sii *ServerInterfaceInfo) Scan(src interface{}) error {
 	b, ok := src.([]byte)
 	if !ok {
@@ -168,6 +177,10 @@ func (sii *ServerInterfaceInfo) Scan(src interface{}) error {
 }
 
 // LegacyInterfaceDetails is the details for interfaces on servers for API v2.
+//
+// Deprecated: Traffic Ops API version 2 is deprecated, upgrade to Server
+// representations that support interfaces (i.e. ServerInterfaceInfoV40
+// slices).
 type LegacyInterfaceDetails struct {
 	InterfaceMtu  *int    `json:"interfaceMtu" db:"interface_mtu"`
 	InterfaceName *string `json:"interfaceName" db:"interface_name"`
@@ -182,6 +195,9 @@ type LegacyInterfaceDetails struct {
 // ServerInterfaceInfo structures. Only one interface is expected and will be marked for monitoring.
 // It will generate service addresses according to the passed indicators
 // for each address family.
+//
+// Deprecated: LegacyInterfaceDetails is deprecated, and this will be removed
+// with it.
 func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService bool) ([]ServerInterfaceInfo, error) {
 	var iface ServerInterfaceInfo
 	if lid.InterfaceMtu == nil {
@@ -237,6 +253,13 @@ func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService boo
 	return []ServerInterfaceInfo{iface}, nil
 }
 
+// ToInterfacesV4 upgrades server interfaces from their APIv3 representation to
+// an APIv4 representation.
+//
+// The passed routerName and routerPort can be nil, which will leave the
+// upgradeded interfaces' RouterHostName and RouterPortName unset, or they can
+// be pointers to string values to which ALL of the interfaces will have their
+// RouterHostName and RouterPortName set.
 func ToInterfacesV4(oldInterfaces []ServerInterfaceInfo, routerName, routerPort *string) ([]ServerInterfaceInfoV40, error) {
 	v4Interfaces := make([]ServerInterfaceInfoV40, 0)
 	var v4Int ServerInterfaceInfoV40
@@ -253,6 +276,20 @@ func ToInterfacesV4(oldInterfaces []ServerInterfaceInfo, routerName, routerPort 
 	return v4Interfaces, nil
 }
 
+// ToInterfacesV4 converts a LegacyInterfaceDetails to a slice of
+// ServerInterfaceInfoV40 structures.
+//
+// Only one interface is expected and will be marked for monitoring. This will
+// generate service addresses according to the passed indicators for each
+// address family.
+//
+// The passed routerName and routerPort can be nil, which will leave the
+// upgradeded interfaces' RouterHostName and RouterPortName unset, or they can
+// be pointers to string values to which ALL of the interfaces will have their
+// RouterHostName and RouterPortName set.
+//
+// Deprecated: LegacyInterfaceDetails is deprecated, and this will be removed
+// with it.
 func (lid *LegacyInterfaceDetails) ToInterfacesV4(ipv4IsService, ipv6IsService bool, routerName, routerPort *string) ([]ServerInterfaceInfoV40, error) {
 	var iface ServerInterfaceInfoV40
 	if lid.InterfaceMtu == nil {
@@ -384,6 +421,8 @@ func (lid LegacyInterfaceDetails) String() string {
 	return b.String()
 }
 
+// V4InterfaceInfoToV3Interfaces downgrades a set of ServerInterfaceInfoV40s to
+// ServerInterfaceInfos.
 func V4InterfaceInfoToV3Interfaces(serverInterfaces []ServerInterfaceInfoV40) ([]ServerInterfaceInfo, error) {
 	var interfaces []ServerInterfaceInfo
 
@@ -400,6 +439,11 @@ func V4InterfaceInfoToV3Interfaces(serverInterfaces []ServerInterfaceInfoV40) ([
 	return interfaces, nil
 }
 
+// V4InterfaceInfoToLegacyInterfaces downgrades a set of
+// ServerInterfaceInfoV40s to a LegacyInterfaceDetails.
+//
+// Deprecated: LegacyInterfaceDetails is deprecated, and this will be removed
+// with it.
 func V4InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfoV40) (LegacyInterfaceDetails, error) {
 	var legacyDetails LegacyInterfaceDetails
 
@@ -471,6 +515,9 @@ func V4InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfoV40
 // equivalent LegacyInterfaceDetails structure. It does this by creating the
 // IP address fields using the "service" interface's IP addresses. All others
 // are discarded, as the legacy format is incapable of representing them.
+//
+// Deprecated: LegacyInterfaceDetails is deprecated, and this will be removed
+// with it.
 func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (LegacyInterfaceDetails, error) {
 	var legacyDetails LegacyInterfaceDetails
 
@@ -540,6 +587,7 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 
 // Server is a non-"nullable" representation of a Server as it appeared in API
 // version 2.0
+//
 // Deprecated: Please use versioned and nullable structures from now on.
 type Server struct {
 	Cachegroup       string              `json:"cachegroup" db:"cachegroup"`
@@ -643,6 +691,9 @@ type ServerNullableV11 struct {
 }
 
 // ServerNullableV2 is a server as it appeared in API v2.
+//
+// Deprecated: Traffic Ops API version 2 is deprecated, new code should use
+// ServerV40 or newer structures.
 type ServerNullableV2 struct {
 	ServerNullableV11
 	IPIsService  *bool `json:"ipIsService" db:"ip_address_is_service"`
@@ -659,6 +710,9 @@ type ServerNullableV2 struct {
 // Further note that this makes "shallow" copies of member properties; if
 // reference types (map, slice, pointer etc.) are altered on the original after
 // conversion, the changes WILL affect the nullable copy.
+//
+// Deprecated: Traffic Ops API version 2 is deprecated, new code should use
+// ServerV40 or newer structures.
 func (s Server) ToNullable() ServerNullableV2 {
 	return ServerNullableV2{
 		ServerNullableV11: ServerNullableV11{
@@ -724,6 +778,7 @@ func coerceBool(b *bool) bool {
 	}
 	return *b
 }
+
 func coerceInt(i *int) int {
 	if i == nil {
 		return 0
@@ -739,6 +794,9 @@ func coerceString(s *string) string {
 }
 
 // ToNonNullable converts the ServerNullableV2 safely to a Server structure.
+//
+// Deprecated: Traffic Ops API version 2 is deprecated, new code should use
+// ServerV40 or newer structures.
 func (s ServerNullableV2) ToNonNullable() Server {
 	ret := Server{
 		Cachegroup:     coerceString(s.Cachegroup),
@@ -808,6 +866,9 @@ func (s ServerNullableV2) ToNonNullable() Server {
 //
 // Note that this makes "shallow" copies of all underlying data, so changes to
 // the original will affect the upgraded copy.
+//
+// Deprecated: Traffic Ops API versions 2 and 3 are both deprecated, new code
+// should use ServerV40 or newer structures.
 func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 	ipv4IsService := false
 	if s.IPIsService != nil {
@@ -832,6 +893,12 @@ func (s ServerNullableV2) Upgrade() (ServerV30, error) {
 	return upgraded, nil
 }
 
+// UpgradeToV40 upgrades the ServerV30 to a ServerV40.
+//
+// This makes a "shallow" copy of the structure's properties.
+//
+// Deprecated: Traffic Ops API version 3 is deprecated, new code should use
+// ServerV40 or newer structures.
 func (s ServerV30) UpgradeToV40() (ServerV40, error) {
 	upgraded := ServerV40{
 		CommonServerProperties: s.CommonServerProperties,
@@ -845,6 +912,12 @@ func (s ServerV30) UpgradeToV40() (ServerV40, error) {
 	return upgraded, nil
 }
 
+// UpgradeToV40 upgrades the ServerNullableV2 to a ServerV40.
+//
+// This makes a "shallow" copy of the structure's properties.
+//
+// Deprecated: Traffic Ops API version 2 is deprecated, new code should use
+// ServerV40 or newer structures.
 func (s ServerNullableV2) UpgradeToV40() (ServerV40, error) {
 	ipv4IsService := false
 	if s.IPIsService != nil {
@@ -887,7 +960,9 @@ type ServerV30 struct {
 }
 
 // ServerNullable represents an ATC server, as returned by the TO API.
-// Deprecated: please use versioned structures instead of this alias from now on.
+//
+// Deprecated: Traffic Ops API version 3 is deprecated, new code should use
+// ServerV40 or newer structures.
 type ServerNullable ServerV30
 
 // ToServerV2 converts the server to an equivalent ServerNullableV2 structure,
@@ -899,6 +974,9 @@ func (s *ServerNullable) ToServerV2() (ServerNullableV2, error) {
 
 // ToServerV2 converts the server to an equivalent ServerNullableV2 structure,
 // if possible. If the conversion could not be performed, an error is returned.
+//
+// Deprecated: Traffic Ops API version 2 is deprecated, new code should use
+// ServerV40 or newer structures.
 func (s *ServerV30) ToServerV2() (ServerNullableV2, error) {
 	legacyServer := ServerNullableV2{
 		ServerNullableV11: ServerNullableV11{
@@ -920,6 +998,12 @@ func (s *ServerV30) ToServerV2() (ServerNullableV2, error) {
 	return legacyServer, nil
 }
 
+// ToServerV3FromV4 downgrades the ServerV40 to a ServerV30.
+//
+// This makes a "shallow" copy of most of the structure's properties.
+//
+// Deprecated: Traffic Ops API version 3 is deprecated, new code should use
+// ServerV40 or newer structures.
 func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
 	routerHostName := ""
 	routerPortName := ""
@@ -951,6 +1035,12 @@ func (s *ServerV40) ToServerV3FromV4() (ServerV30, error) {
 	return serverV30, nil
 }
 
+// ToServerV2FromV4 downgrades the ServerV40 to a ServerNullableV2.
+//
+// This makes a "shallow" copy of most of the structure's properties.
+//
+// Deprecated: Traffic Ops API version 2 is deprecated, new code should use
+// ServerV40 or newer structures.
 func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
 	routerHostName := ""
 	routerPortName := ""
@@ -993,6 +1083,14 @@ func (s *ServerV40) ToServerV2FromV4() (ServerNullableV2, error) {
 	return legacyServer, nil
 }
 
+// ServerUpdateStatus is the type of each entry in the `response` property of
+// the response from Traffic Ops to GET requests made to its
+// /servers/{{host name}}/update_status API endpoint.
+//
+// This is a subset of Server structure information mainly relating to what
+// operations t3c has done/needs to do. For most purposes, using Server
+// structures will be better - especially since the basic principle of this
+// type is predicated on a lie: that server host names are unique.
 type ServerUpdateStatus struct {
 	HostName           string `json:"host_name"`
 	UpdatePending      bool   `json:"upd_pending"`
@@ -1017,11 +1115,20 @@ type ServerUpdateStatusResponseV40 struct {
 // in the latest minor version of API version 4.
 type ServerUpdateStatusResponseV4 = ServerUpdateStatusResponseV40
 
+// ServerPutStatus is a request to change the Status of a server, optionally
+// with an explanation.
 type ServerPutStatus struct {
 	Status        util.JSONNameOrIDStr `json:"status"`
 	OfflineReason *string              `json:"offlineReason"`
 }
 
+// ServerInfo is a stripped-down type containing a subset of information for a
+// server.
+//
+// This is primarily only useful internally in Traffic Ops for
+// constructing/examining the relationships between servers and other ATC
+// objects. That is to say, for most other purposes a ServerV4 would be better
+// suited.
 type ServerInfo struct {
 	Cachegroup   string
 	CachegroupID int
@@ -1033,6 +1140,16 @@ type ServerInfo struct {
 	Type         string
 }
 
+// ServerDetail is a type that contains a superset of the information available
+// in a ServerNullable.
+//
+// This should NOT be used in general, it's almost always better to use a
+// proper server representation. However, this structure is not deprecated
+// because it is embedded in structures still in use, and its future is unclear
+// and undecided.
+//
+// Deprecated: The API versions that use this representation have been
+// deprecated, newer structures like ServerV4 should be used instead.
 type ServerDetail struct {
 	CacheGroup         *string           `json:"cachegroup" db:"cachegroup"`
 	CDNName            *string           `json:"cdnName" db:"cdn_name"`
