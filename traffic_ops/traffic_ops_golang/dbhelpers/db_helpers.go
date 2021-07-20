@@ -1496,3 +1496,13 @@ func GetCDNNamesFromProfileIDs(tx *sql.Tx, profileIDs []int64) ([]string, error)
 	}
 	return cdns, nil
 }
+
+// GetDSIDFromStaticDNSEntry returns the delivery service ID associated with the static DNS entry
+func GetDSIDFromStaticDNSEntry(tx *sql.Tx, staticDNSEntryID int) (int, error) {
+	var dsID int
+	query := `SELECT deliveryservice FROM staticdnsentry WHERE id = $1`
+	if err := tx.QueryRow(query, staticDNSEntryID).Scan(&dsID); err != nil {
+		return -1, errors.New("querying DS ID from static dns entry: " + err.Error())
+	}
+	return dsID, nil
+}

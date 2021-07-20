@@ -348,6 +348,20 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, cdnName, ok, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, int(dsid))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service and CDN name from ID: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
 	row := inf.Tx.Tx.QueryRow(insertQuery,
 		dsid,
 		*job.Regex,
@@ -527,6 +541,21 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, cdnName, ok, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, int(dsid))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service and CDN name from ID: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+
 	row = inf.Tx.Tx.QueryRow(updateQuery,
 		input.AssetURL,
 		input.Keyword,
@@ -632,9 +661,24 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, cdnName, ok, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, int(dsid))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service and CDN name from ID: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+
 	result := tc.InvalidationJob{}
 	row = inf.Tx.Tx.QueryRow(deleteQuery, inf.Params["id"])
-	err := row.Scan(&result.AssetURL,
+	err = row.Scan(&result.AssetURL,
 		&result.CreatedBy,
 		&result.DeliveryService,
 		&result.ID,
