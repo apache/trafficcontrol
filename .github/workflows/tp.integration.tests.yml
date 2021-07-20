@@ -119,4 +119,3 @@ jobs:
           path: ${{ github.workspace }}/traffic_portal/test/integration/Reports/
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
-

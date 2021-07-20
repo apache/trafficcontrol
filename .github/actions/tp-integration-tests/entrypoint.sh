@@ -192,7 +192,6 @@ onFail() {
   exit 1
 }
 
-
 cd "${REPO_DIR}/traffic_portal/test/integration"
 npm ci
 PATH=$(pwd)/node_modules/.bin/:$PATH

@@ -52,3 +52,5 @@ jobs:
         uses: ./.github/actions/tm-integration-tests
         env:
           GOPATH: /github/workspace
+      - name: go-version
+        run: echo "::set-output name=value::$(cat GO_VERSION)"
