@@ -222,10 +222,6 @@ This product bundles fontawesome CSS files, which are available under an MIT lic
 ./licenses/MIT-fontawesome
 Refer to the above license for the full text.
 
-This product bundles bootstrap, which is available under an MIT license.
-@misc/traffic-control-cdn/*/bootstrap*
-Refer to the above license for the full text.
-
 This product bundles normalize.css, which is available under an MIT license.
 ./licenses/MIT-normalize
 Refer to the above license for the full text.

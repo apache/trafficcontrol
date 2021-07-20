@@ -38,7 +38,6 @@ traffic_ops/app/db/traffic_vault_migrate/traffic_vault_migrate
 traffic_ops/app/db/traffic_vault_migrate/dump
 traffic_ops/**/*.log
 traffic_stats/traffic_stats
-misc/traffic-control-cdn/downloads/*.rpm
 traffic_router/*/*.log
 traffic_router/*.log
 vendor/**/appveyor.yml

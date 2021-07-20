@@ -55,15 +55,6 @@ traffic_router/core/src/test/resources/api/2.0/federations/all, Apache-2.0
 BUILD_NUMBER$, Apache-2.0
 
 # Images, created for this project or used under an Apache license.
-^misc/traffic-control-cdn/images/atc_logo\.png, Apache-2.0
-^misc/traffic-control-cdn/images/header_bkgd\.png, Apache-2.0
-^misc/traffic-control-cdn/images/main_bkgd\.png, Apache-2.0
-^misc/traffic-control-cdn/images/tc_logo\.png, Apache-2.0
-^misc/traffic-control-cdn/images/traffic_monitor_logo\.png, Apache-2.0
-^misc/traffic-control-cdn/images/traffic_operations_logo\.png, Apache-2.0
-^misc/traffic-control-cdn/images/traffic_portal_logo\.png, Apache-2.0
-^misc/traffic-control-cdn/images/traffic_router_logo\.png, Apache-2.0
-^misc/traffic-control-cdn/images/traffic_stats_logo\.png, Apache-2.0
 ^misc/logos/ATC-PNG\.png, Apache-2.0
 ^misc/logos/ATC-PNG-FULL-BLACK\.png, Apache-2.0
 ^misc/logos/ATC-PNG-FULL-BLACK-LARGE\.png, Apache-2.0
