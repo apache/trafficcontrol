@@ -112,7 +112,6 @@ func (tp *TOType) Read(h http.Header, useIMS bool) ([]interface{}, error, error,
 }
 
 func (tp *TOType) Update(h http.Header) (error, error, int) {
-	fmt.Println("inside update statement")
 	if !tp.AllowMutation(false) {
 		return errors.New("can not update type"), nil, http.StatusBadRequest
 	}
@@ -135,12 +134,7 @@ func (tp *TOType) Create() (error, error, int) {
 
 func (tp *TOType) AllowMutation(forCreation bool) bool {
 	if !forCreation {
-		fmt.Println("inside if !for creation")
 		userErr, sysErr, actualUseInTable := tp.loadUseInTable()
-		if actualUseInTable == "" {
-			fmt.Println("inside if actualUseInTable == ")
-			return true
-		}
 		if userErr != nil || sysErr != nil {
 			return false
 		} else if actualUseInTable != "server" {
@@ -157,12 +151,8 @@ func (tp *TOType) loadUseInTable() (error, error, string) {
 	// ID is only nil on creation, should not call this method in that case
 	if tp.ID != nil {
 		query := `SELECT use_in_table from type where id=$1`
-		fmt.Println("Query", query)
 		err := tp.ReqInfo.Tx.Tx.QueryRow(query, tp.ID).Scan(&useInTable)
-		fmt.Println("err", err)
 		if err == sql.ErrNoRows {
-			fmt.Println("err ", "sql: no rows in result set")
-			fmt.Println("tp.UseInTable", tp.UseInTable)
 			if tp.UseInTable == nil {
 				return nil, nil, ""
 			}
@@ -172,7 +162,6 @@ func (tp *TOType) loadUseInTable() (error, error, string) {
 			return nil, err, ""
 		}
 	} else {
-		fmt.Println("inside else tp.Id is nil")
 		return errors.New("no type with that key found"), nil, ""
 	}
 
