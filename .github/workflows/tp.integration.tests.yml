@@ -119,3 +119,10 @@ jobs:
           path: ${{ github.workspace }}/traffic_portal/test/integration/Reports/
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
+      - name: Check Go Version
+        run: echo "::set-output name=value::$(cat GO_VERSION)"
+        id: go-version
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ steps.go-version.outputs.value }}
