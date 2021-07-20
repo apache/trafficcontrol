@@ -48,14 +48,13 @@ jobs:
         uses: actions/checkout@master
         with:
             fetch-depth: 1
-      - name: Run integration tests
-        uses: ./.github/actions/tm-integration-tests
-        env:
-          GOPATH: /github/workspace
-      - name: go-version
-        run: echo "::set-output name=value::$(cat GO_VERSION)"
+      - name: Check Go Version
+        run: echo "::set-output id=value::$(cat GO_VERSION)"
       - name: Install Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{ steps.go-version.outputs.value }}
-        
+      - name: Run integration tests
+        uses: ./.github/actions/tm-integration-tests
+        env:
+          GOPATH: /github/workspace
