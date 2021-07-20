@@ -43,6 +43,10 @@ func RemoveStrDuplicates(inputStrings []string, seenStrings map[string]struct{})
 }
 
 // StrInArray returns whether s is one of the strings in strs.
+//
+// Deprecated: This function is totally identical to ContainsStr, but this one
+// is not used in any known ATC code, while ContainsStr is. New code should use
+// ContainsStr so that this duplicate can be removed.
 func StrInArray(strs []string, s string) bool {
 	for _, str := range strs {
 		if str == s {
@@ -63,6 +67,7 @@ func RemoveStrFromArray(strs []string, s string) []string {
 	return newStrArray
 }
 
+// ContainsStr returns whether x is one of the elements of a.
 func ContainsStr(a []string, x string) bool {
 	for _, n := range a {
 		if x == n {
