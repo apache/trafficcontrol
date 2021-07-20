@@ -24,7 +24,7 @@ mkdir -p "$SRCDIR"
 ln -s "$PWD" "$SRCDIR/trafficcontrol"
 cd "$SRCDIR/trafficcontrol"
 
-/usr/local/go/bin/go fmt ./...
+go fmt ./...
 DIFF_FILE="$(mktemp)"
 git diff >"$DIFF_FILE"
 
