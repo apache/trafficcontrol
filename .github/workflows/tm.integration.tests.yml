@@ -49,7 +49,7 @@ jobs:
         with:
             fetch-depth: 1
       - name: Check Go Version
-        run: echo "::set-output id=value::$(cat GO_VERSION)"
+        run: echo "::set-output name=value::$(cat GO_VERSION)"
       - name: Install Go
         uses: actions/setup-go@v2
         with:
