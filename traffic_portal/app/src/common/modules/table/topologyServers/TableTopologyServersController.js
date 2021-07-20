@@ -90,13 +90,12 @@ var TableTopologyServersController = function(topologies, servers, filter, $cont
 
 	this.$onInit = function() {
 		let i;
-		for(i = 0; i < $scope.dropDownOptions.length; ++i) {
-			const ddo = $scope.dropDownOptions[i];
+		for(const ddo of $scope.dropDownOptions) {
 			if (ddo.text !== undefined){
 				if (ddo.text === "Queue Server Updates") {
-					$scope.dropDownOptions[i].onClick = function(entry) { $scope.confirmTopologyQueueServerUpdates($scope.topology); };
+					ddo.onClick = function(entry) { $scope.confirmTopologyQueueServerUpdates($scope.topology); };
 				} else if (ddo.text === "Clear Server Updates") {
-					$scope.dropDownOptions[i].onClick = function(entry) { $scope.confirmTopologyClearServerUpdates($scope.topology); };
+					ddo.onClick = function(entry) { $scope.confirmTopologyClearServerUpdates($scope.topology); };
 				}
 			}
 		}

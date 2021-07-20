@@ -112,13 +112,12 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, filter, $c
 
 	this.$onInit = function() {
 		let i;
-		for(i = 0; i < $scope.dropDownOptions.length; ++i) {
-			const ddo = $scope.dropDownOptions[i];
+		for(const ddo of $scope.dropDownOptions) {
 			if (ddo.text !== undefined){
 				if (ddo.text === "Queue Server Updates") {
-					$scope.dropDownOptions[i].onClick = function(entry) { $scope.confirmCacheGroupQueueServerUpdates($scope.cacheGroup); };
+					ddo.onClick = function(entry) { $scope.confirmCacheGroupQueueServerUpdates($scope.cacheGroup); };
 				} else if (ddo.text === "Clear Server Updates") {
-					$scope.dropDownOptions[i].onClick = function(entry) { $scope.confirmCacheGroupClearServerUpdates($scope.cacheGroup); };
+					ddo.onClick = function(entry) { $scope.confirmCacheGroupClearServerUpdates($scope.cacheGroup); };
 				}
 			}
 		}

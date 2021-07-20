@@ -230,7 +230,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
                 $scope.$apply();
             },
             onRowClicked: function(params) {
-                if (params.event.target.classList.contains('link')) {
+                if (params.event.target instanceof HTMLAnchorElement) {
                     return;
                 }
                 const selection = window.getSelection().toString();

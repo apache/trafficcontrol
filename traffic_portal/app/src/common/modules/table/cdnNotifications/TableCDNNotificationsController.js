@@ -42,11 +42,10 @@ var TableCDNNotificationsController = function(cdn, notifications, filter, $cont
 
 	this.$onInit = function() {
 		let i;
-		for(i = 0; i < $scope.dropDownOptions.length; ++i) {
-			const ddo = $scope.dropDownOptions[i];
+		for(const ddo of $scope.dropDownOptions) {
 			if (ddo.text !== undefined){
 				if (ddo.text === "Create Notification") {
-					$scope.dropDownOptions[i].onClick = function(entry) { $scope.createNotification($scope.cdn); };
+					ddo.onClick = function(entry) { $scope.createNotification($scope.cdn); };
 				}
 			}
 		}
