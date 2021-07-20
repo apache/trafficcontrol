@@ -21,20 +21,26 @@ package util
 
 import (
 	"crypto/sha512"
-	"fmt"
-
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sort"
 	"strconv"
 )
 
+// MSPerNS is the number of *nanoseconds* in a *millisecond* - not the other
+// way around, as the name might imply.
 const MSPerNS = int64(1000000)
 
-// ToNumeric returns a float for any numeric type, and false if the interface does not hold a numeric type.
-// This allows converting unknown numeric types (for example, from JSON) in a single line
-// TODO try to parse string stats as numbers?
+// ToNumeric returns a float for any numeric type, and false if the interface
+// does not hold a numeric type. This allows converting unknown numeric types
+// (for example, from JSON) in a single line.
+//
+// TODO try to parse string stats as numbers? Also, JSON numbers are defined by
+// the JSON spec to be IEEE double-precision floating point numbers and as such
+// the encoding/json package always decodes them as float64s before coercing to
+// requested types, so this may not be needed.
 func ToNumeric(v interface{}) (float64, bool) {
 	switch i := v.(type) {
 	case uint8:
@@ -76,6 +82,7 @@ func ToNumeric(v interface{}) (float64, bool) {
 // This is designed to handle backwards-compatibility for old Perl endpoints which accept both. Please do not use this for new endpoints or new APIs, APIs should be well-typed.
 type JSONIntStr int64
 
+// UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (i *JSONIntStr) UnmarshalJSON(d []byte) error {
 	if len(d) == 0 {
 		return errors.New("empty object")
@@ -92,10 +99,13 @@ func (i *JSONIntStr) UnmarshalJSON(d []byte) error {
 	return nil
 }
 
+// ToInt64 returns the int64 value of the JSONIntStr.
 func (i JSONIntStr) ToInt64() int64 {
 	return int64(i)
 }
 
+// String implements the fmt.Stringer interface by returning the JSONIntStr
+// encoded in base 10 into a string.
 func (i JSONIntStr) String() string {
 	return strconv.FormatInt(int64(i), 10)
 }
@@ -110,6 +120,7 @@ type JSONNameOrIDStr struct {
 	ID   *int
 }
 
+// MarshalJSON implements the encoding/json.Marshaler interface.
 func (i JSONNameOrIDStr) MarshalJSON() ([]byte, error) {
 	if i.ID != nil {
 		return json.Marshal(*i.ID)
@@ -120,6 +131,7 @@ func (i JSONNameOrIDStr) MarshalJSON() ([]byte, error) {
 	return nil, errors.New("either Name or ID must be non-nil")
 }
 
+// UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (i *JSONNameOrIDStr) UnmarshalJSON(d []byte) error {
 	if len(d) == 0 {
 		return errors.New("empty object")
