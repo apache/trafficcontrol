@@ -213,11 +213,11 @@ HTTP request on each user creation/modification).
 The new model for a Role does not allow a `null` description; a simple
 migration that coalesces existing `NULL` values to an empty string and adds a
 check constraint should be all that's actually required. No other immediate
-changes should be made, since old API versions will still need access to the
-deprecated columns. However, the foreign key constraint on the
-`role_capability` table that links a "Capability" name to a row in the
-`capability` table should be dropped, as that is no longer the source of truth
-for valid Permissions.
+changes should be made - including dropping the now-unused `api_capability`
+table -, since old API versions will still need access to the deprecated
+columns. However, the foreign key constraint on the `role_capability` table
+that links a "Capability" name to a row in the `capability` table should be
+dropped, as that is no longer the source of truth for valid Permissions.
 
 Optionally, a migration should really be added to make a user's username
 `NOT NULL`, since that field is actually required by the API and many things
