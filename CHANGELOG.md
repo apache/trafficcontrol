@@ -99,6 +99,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Refactored the Traffic Ops - Traffic Vault integration to more easily support the development of new Traffic Vault backends
 - Changed the Traffic Router package structure from com.comcast.cdn.\* to org.apache.\*
 - Updated Apache Tomcat from 8.5.63 to 9.0.43
+- Improved the DNSSEC refresh Traffic Ops API (`/cdns/dnsseckeys/refresh`). As of TO API v4, its method is `PUT` instead of `GET`, its response format was changed to return an alert instead of a string-based response, it returns a 202 instead of a 200, and it now works with the `async_status` API in order for the client to check the status of the async job: [#3054](https://github.com/apache/trafficcontrol/issues/3054)
 - Delivery Service Requests now keep a record of the changes they make.
 - Changed the `goose` provider to the maintained fork [`github.com/kevinburke/goose`](https://github.com/kevinburke/goose)
 - The format of the `/servers/{{host name}}/update_status` Traffic Ops API endpoint has been changed to use a top-level `response` property, in keeping with (most of) the rest of the API.

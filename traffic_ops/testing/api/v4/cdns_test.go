@@ -157,9 +157,24 @@ func TestCDNsDNSSEC(t *testing.T) {
 }
 
 func RefreshDNSSECKeys(t *testing.T) {
-	resp, _, err := TOSession.RefreshDNSSECKeys(client.RequestOptions{})
+	resp, reqInf, err := TOSession.RefreshDNSSECKeys(client.RequestOptions{})
 	if err != nil {
 		t.Errorf("unable to refresh DNSSEC keys: %v - alerts: %+v", err, resp.Alerts)
+	}
+	loc := reqInf.RespHeaders.Get("Location")
+	if loc == "" {
+		t.Errorf("refreshing DNSSEC keys - expected: non-empty 'Location' response header, actual: empty")
+	}
+	asyncID, err := strconv.Atoi(strings.Split(loc, "/")[4])
+	if err != nil {
+		t.Errorf("parsing async_status ID from 'Location' response header - expected: no error, actual: %v", err)
+	}
+	status, _, err := TOSession.GetAsyncStatus(asyncID, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("getting async status id %d - expected: no error, actual: %v", asyncID, err)
+	}
+	if status.Response.Message == nil {
+		t.Errorf("getting async status for DNSSEC refresh job - expected: non-nil message, actual: nil")
 	}
 }
 

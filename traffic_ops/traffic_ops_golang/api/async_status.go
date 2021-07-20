@@ -23,7 +23,8 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -35,14 +36,6 @@ const (
 )
 
 const CurrentAsyncEndpoint = "/api/4.0/async_status/"
-
-type AsyncStatus struct {
-	Id        int        `json:"id,omitempty" db:"id"`
-	Status    string     `json:"status,omitempty" db:"status"`
-	StartTime time.Time  `json:"start_time,omitempty" db:"start_time"`
-	EndTime   *time.Time `json:"end_time,omitempty" db:"end_time"`
-	Message   *string    `json:"message,omitempty" db:"message"`
-}
 
 const selectAsyncStatusQuery = `SELECT id, status, message, start_time, end_time from async_status WHERE id = $1`
 const insertAsyncStatusQuery = `INSERT INTO async_status (status, message) VALUES ($1, $2) RETURNING id`
@@ -67,7 +60,7 @@ func GetAsyncStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	asyncStatus := AsyncStatus{}
+	asyncStatus := tc.AsyncStatus{}
 	rowCount := 0
 	for rows.Next() {
 		rowCount++

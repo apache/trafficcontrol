@@ -21,7 +21,6 @@ package cdn
 
 import (
 	"context"
-	// "context"
 	"database/sql"
 	"errors"
 	"net/http"
@@ -33,51 +32,90 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
+var noTx = (*sql.Tx)(nil) // make a variable instead of passing nil directly, to reduce copy-paste errors
+
 func RefreshDNSSECKeys(w http.ResponseWriter, r *http.Request) {
+	_, _, status, usrErr, sysErr := refreshDNSSECKeys(r.Context())
+	if usrErr != nil || sysErr != nil {
+		api.HandleErr(w, r, noTx, status, usrErr, sysErr)
+		return
+	}
+
+	api.WriteResp(w, r, "Checking DNSSEC keys for refresh in the background")
+}
+
+func RefreshDNSSECKeysV4(w http.ResponseWriter, r *http.Request) {
+	asyncStatusID, started, status, usrErr, sysErr := refreshDNSSECKeys(r.Context())
+	if usrErr != nil || sysErr != nil {
+		api.HandleErr(w, r, noTx, status, usrErr, sysErr)
+		return
+	}
+	message := "the server is already executing a DNSSEC refresh"
+	if started {
+		message = "Starting DNSSEC key refresh in the background. This may take a few minutes. Status updates can be found here: " + api.CurrentAsyncEndpoint + strconv.Itoa(asyncStatusID)
+	}
+	w.Header().Add("Location", api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusID))
+	api.WriteAlerts(w, r, http.StatusAccepted, tc.CreateAlerts(tc.SuccessLevel, message))
+}
+
+// refreshDNSSECKeys starts a goroutine to refresh the DNSSEC keys for all delivery services in all CDNs (except for the CDN KSKs which need to be refreshed separately).
+// It returns the async status ID, a bool indicating whether the refresh job was started or not, an HTTP status, a user error, and a system error.
+func refreshDNSSECKeys(ctx context.Context) (int, bool, int, error, error) {
 	if setInDNSSECKeyRefresh() {
-		db, err := api.GetDB(r.Context())
-		noTx := (*sql.Tx)(nil) // make a variable instead of passing nil directly, to reduce copy-paste errors
+		db, err := api.GetDB(ctx)
 		if err != nil {
-			api.HandleErr(w, r, noTx, http.StatusInternalServerError, nil, errors.New("RefresHDNSSECKeys getting db from context: "+err.Error()))
 			unsetInDNSSECKeyRefresh()
-			return
+			return 0, false, http.StatusInternalServerError, nil, errors.New("RefreshDNSSECKeys getting db from context: " + err.Error())
 		}
-		cfg, err := api.GetConfig(r.Context())
+		cfg, err := api.GetConfig(ctx)
 		if err != nil {
-			api.HandleErr(w, r, noTx, http.StatusInternalServerError, nil, errors.New("RefresHDNSSECKeys getting config from context: "+err.Error()))
 			unsetInDNSSECKeyRefresh()
-			return
+			return 0, false, http.StatusInternalServerError, nil, errors.New("RefreshDNSSECKeys getting config from context: " + err.Error())
+		}
+		user, err := auth.GetCurrentUser(ctx)
+		if err != nil {
+			unsetInDNSSECKeyRefresh()
+			return 0, false, http.StatusInternalServerError, nil, errors.New("RefreshDNSSECKeys getting user from context: " + err.Error())
 		}
 		if !cfg.TrafficVaultEnabled {
-			api.HandleErr(w, r, noTx, http.StatusInternalServerError, nil, errors.New("refreshing DNSSEC keys: Traffic Vault not enabled"))
 			unsetInDNSSECKeyRefresh()
-			return
+			return 0, false, http.StatusInternalServerError, nil, errors.New("refreshing DNSSEC keys: Traffic Vault not enabled")
 		}
-		tv, err := api.GetTrafficVault(r.Context())
+		tv, err := api.GetTrafficVault(ctx)
 		if err != nil {
-			api.HandleErr(w, r, noTx, http.StatusInternalServerError, nil, errors.New("RefresHDNSSECKeys getting Traffic Vault from context: "+err.Error()))
 			unsetInDNSSECKeyRefresh()
-			return
+			return 0, false, http.StatusInternalServerError, nil, errors.New("RefreshDNSSECKeys getting Traffic Vault from context: " + err.Error())
 		}
 
 		tx, err := db.Begin()
 		if err != nil {
-			api.HandleErr(w, r, noTx, http.StatusInternalServerError, nil, errors.New("RefresHDNSSECKeys beginning tx: "+err.Error()))
 			unsetInDNSSECKeyRefresh()
-			return
+			return 0, false, http.StatusInternalServerError, nil, errors.New("RefreshDNSSECKeys beginning tx: " + err.Error())
 		}
-		go doDNSSECKeyRefresh(tx, tv) // doDNSSECKeyRefresh takes ownership of tx and MUST close it.
+		asyncTx, err := db.Begin()
+		if err != nil {
+			unsetInDNSSECKeyRefresh()
+			return 0, false, http.StatusInternalServerError, nil, errors.New("RefreshDNSSECKeys beginning tx: " + err.Error())
+		}
+		jobID, status, usrErr, sysErr := api.InsertAsyncStatus(asyncTx, "DNSSEC refresh started")
+		if usrErr != nil || sysErr != nil {
+			unsetInDNSSECKeyRefresh()
+			return 0, false, status, usrErr, sysErr
+		}
+		go doDNSSECKeyRefresh(tx, db, tv, jobID, user) // doDNSSECKeyRefresh takes ownership of tx and MUST close it.
+		return jobID, true, http.StatusAccepted, nil, nil
 	} else {
 		log.Infoln("RefreshDNSSECKeys called, while server was concurrently executing a refresh, doing nothing")
+		return 0, false, http.StatusAccepted, nil, nil
 	}
-
-	api.WriteResp(w, r, "Checking DNSSEC keys for refresh in the background")
 }
 
 const DNSSECKeyRefreshDefaultTTL = time.Duration(60) * time.Second
@@ -89,7 +127,7 @@ const DNSSECKeyRefreshDefaultZSKExpiration = time.Duration(30) * time.Hour * 24
 // doDNSSECKeyRefresh refreshes the CDN's DNSSEC keys, as necessary.
 // This takes ownership of tx, and MUST call `tx.Close()`.
 // This SHOULD only be called if setInDNSSECKeyRefresh() returned true, in which case this MUST call unsetInDNSSECKeyRefresh() before returning.
-func doDNSSECKeyRefresh(tx *sql.Tx, tv trafficvault.TrafficVault) {
+func doDNSSECKeyRefresh(tx *sql.Tx, asyncDB *sqlx.DB, tv trafficvault.TrafficVault, jobID int, user *auth.CurrentUser) {
 	doCommit := true
 	defer func() {
 		if doCommit {
@@ -106,6 +144,9 @@ func doDNSSECKeyRefresh(tx *sql.Tx, tv trafficvault.TrafficVault) {
 	if err != nil {
 		log.Errorln("refreshing DNSSEC Keys: getting cdn parameters: " + err.Error())
 		doCommit = false
+		if asyncErr := api.UpdateAsyncStatus(asyncDB, api.AsyncFailed, "DNSSEC refresh failed", jobID, true); asyncErr != nil {
+			log.Errorf("updating async status for id %d: %v", jobID, asyncErr)
+		}
 		return
 	}
 	cdns := []string{}
@@ -119,6 +160,9 @@ func doDNSSECKeyRefresh(tx *sql.Tx, tv trafficvault.TrafficVault) {
 	if err != nil {
 		log.Errorln("refreshing DNSSEC Keys: getting ds info: " + err.Error())
 		doCommit = false
+		if asyncErr := api.UpdateAsyncStatus(asyncDB, api.AsyncFailed, "DNSSEC refresh failed", jobID, true); asyncErr != nil {
+			log.Errorf("updating async status for id %d: %v", jobID, asyncErr)
+		}
 		return
 	}
 	dses := []string{}
@@ -130,6 +174,9 @@ func doDNSSECKeyRefresh(tx *sql.Tx, tv trafficvault.TrafficVault) {
 	if err != nil {
 		log.Errorln("refreshing DNSSEC Keys: getting ds matchlists: " + err.Error())
 		doCommit = false
+		if asyncErr := api.UpdateAsyncStatus(asyncDB, api.AsyncFailed, "DNSSEC refresh failed", jobID, true); asyncErr != nil {
+			log.Errorf("updating async status for id %d: %v", jobID, asyncErr)
+		}
 		return
 	}
 	exampleURLs := map[tc.DeliveryServiceName][]string{}
@@ -137,6 +184,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, tv trafficvault.TrafficVault) {
 		exampleURLs[ds] = deliveryservice.MakeExampleURLs(inf.Protocol, inf.Type, inf.RoutingName, dsMatchlists[string(ds)], inf.CDNDomain)
 	}
 
+	anyErrors := false
 	for _, cdnInf := range cdnDNSSECKeyParams {
 		keys, ok, err := tv.GetDNSSECKeys(string(cdnInf.CDNName), tx, context.Background()) // TODO get all in a map beforehand
 		if err != nil {
@@ -186,13 +234,14 @@ func doDNSSECKeyRefresh(tx *sql.Tx, tv trafficvault.TrafficVault) {
 			if expiration.After(nowPlusTTL) {
 				continue
 			}
-			log.Infoln("The ZSK keys for '" + string(cdnInf.CDNName) + "' are expired!")
+			log.Infoln("The ZSK keys for '" + string(cdnInf.CDNName) + "' are expired! Regenerating them now.")
 			effectiveDate := expiration.Add(ttl * time.Duration(effectiveMultiplier) * -1) // -1 to subtract
 			isKSK := false
 			cdnDNSDomain := cdnInf.CDNDomain + "."
 			newKeys, err := regenExpiredKeys(isKSK, cdnDNSDomain, keys[string(cdnInf.CDNName)], effectiveDate, false, false)
 			if err != nil {
 				log.Errorln("refreshing DNSSEC Keys: regenerating expired ZSK keys: " + err.Error())
+				anyErrors = true
 			} else {
 				keys[string(cdnInf.CDNName)] = newKeys
 				updatedAny = true
@@ -214,6 +263,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, tv trafficvault.TrafficVault) {
 				cdnKeys, ok := keys[string(ds.CDNName)]
 				if !ok {
 					log.Errorln("refreshing DNSSEC Keys: cdn has no keys, cannot create ds keys")
+					anyErrors = true
 					continue
 				}
 
@@ -221,6 +271,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, tv trafficvault.TrafficVault) {
 				dsKeys, err := deliveryservice.CreateDNSSECKeys(exampleURLs[ds.DSName], cdnKeys, defaultKSKExpiration, defaultZSKExpiration, ttl, overrideTTL)
 				if err != nil {
 					log.Errorln("refreshing DNSSEC Keys: creating missing ds keys: " + err.Error())
+					anyErrors = true
 				}
 				keys[string(ds.DSName)] = dsKeys
 				updatedAny = true
@@ -235,12 +286,13 @@ func doDNSSECKeyRefresh(tx *sql.Tx, tv trafficvault.TrafficVault) {
 				if expiration.After(nowPlusTTL) {
 					continue
 				}
-				log.Infoln("The KSK keys for '" + ds.DSName + "' are expired!")
+				log.Infoln("The KSK keys for '" + ds.DSName + "' are expired! Regenerating them now.")
 				effectiveDate := expiration.Add(ttl * time.Duration(effectiveMultiplier) * -1) // -1 to subtract
 				isKSK := true
 				newKeys, err := regenExpiredKeys(isKSK, string(ds.DSName), dsKeys, effectiveDate, false, false)
 				if err != nil {
 					log.Errorln("refreshing DNSSEC Keys: regenerating expired KSK keys for ds '" + string(ds.DSName) + "': " + err.Error())
+					anyErrors = true
 				} else {
 					keys[string(ds.DSName)] = newKeys
 					updatedAny = true
@@ -255,12 +307,13 @@ func doDNSSECKeyRefresh(tx *sql.Tx, tv trafficvault.TrafficVault) {
 				if expiration.After(nowPlusTTL) {
 					continue
 				}
-				log.Infoln("The ZSK keys for '" + ds.DSName + "' are expired!")
+				log.Infoln("The ZSK keys for '" + ds.DSName + "' are expired! Regenerating them now.")
 				effectiveDate := expiration.Add(ttl * time.Duration(effectiveMultiplier) * -1) // -1 to subtract
 				isKSK := false
 				newKeys, err := regenExpiredKeys(isKSK, string(ds.DSName), dsKeys, effectiveDate, false, false)
 				if err != nil {
 					log.Errorln("refreshing DNSSEC Keys: regenerating expired ZSK keys for ds '" + string(ds.DSName) + "': " + err.Error())
+					anyErrors = true
 				} else {
 					if existingNewKeys, ok := keys[string(ds.DSName)]; ok {
 						existingNewKeys.ZSK = newKeys.ZSK
@@ -274,8 +327,19 @@ func doDNSSECKeyRefresh(tx *sql.Tx, tv trafficvault.TrafficVault) {
 		if updatedAny {
 			if err := tv.PutDNSSECKeys(string(cdnInf.CDNName), keys, tx, context.Background()); err != nil {
 				log.Errorln("refreshing DNSSEC Keys: putting keys into Traffic Vault for cdn '" + string(cdnInf.CDNName) + "': " + err.Error())
+				anyErrors = true
 			}
 		}
+	}
+	api.CreateChangeLogRawTx(api.ApiChange, "Refreshed DNSSEC keys", user, tx)
+	status := api.AsyncSucceeded
+	msg := "DNSSEC refresh completed successfully"
+	if anyErrors {
+		status = api.AsyncFailed
+		msg = "DNSSEC refresh failed"
+	}
+	if asyncErr := api.UpdateAsyncStatus(asyncDB, status, msg, jobID, true); asyncErr != nil {
+		log.Errorf("updating async status for id %d: %v", jobID, asyncErr)
 	}
 	log.Infoln("Done refreshing DNSSEC keys")
 }
