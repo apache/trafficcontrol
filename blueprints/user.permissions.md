@@ -214,7 +214,7 @@ The new model for a Role does not allow a `null` description; a simple
 migration that coalesces existing `NULL` values to an empty string and adds a
 check constraint should be all that's actually required. No other immediate
 changes should be made, since old API versions will still need access to the
-deprecated colunms. However, the foreign key constraint on the
+deprecated columns. However, the foreign key constraint on the
 `role_capability` table that links a "Capability" name to a row in the
 `capability` table should be dropped, as that is no longer the source of truth
 for valid Permissions.
