@@ -19,11 +19,13 @@ package rfc
  * under the License.
  */
 
-import "math"
-import "net/http"
-import "strconv"
-import "strings"
-import "time"
+import (
+	"math"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+)
 
 // CacheableResponseCodes provides fast lookup of whether a HTTP response
 // code is cache-able by default.
@@ -262,8 +264,9 @@ func canStoreResponse(respCode int, respHeaders http.Header, reqCC, respCC Cache
 	return cacheControlAllows(respCode, respHeaders, respCC)
 }
 
-// canStoreAuthenticated checks the constraints in RFC7234§3.2
-// TODO: ensure RFC7234§3.2 requirements that max-age=0, must-revlaidate, s-maxage=0 are revalidated
+// canStoreAuthenticated checks the constraints in RFC7234§3.2.
+//
+// TODO: ensure RFC7234§3.2 requirements that max-age=0, must-revlaidate, s-maxage=0 are revalidated.
 func canStoreAuthenticated(reqCacheControl, respCacheControl CacheControlMap) bool {
 	if _, ok := reqCacheControl["authorization"]; !ok {
 		return true
@@ -286,7 +289,8 @@ func canStoreAuthenticated(reqCacheControl, respCacheControl CacheControlMap) bo
 //
 // If strictRFC is false, this ignores request headers denying cacheability such
 // as `no-cache`, in order to protect origins.
-// TODO add options to ignore/violate request Cache-Control (to protect origins)
+//
+// TODO add options to ignore/violate request Cache-Control (to protect origins).
 func CanCache(reqMethod string, reqHeaders http.Header, respCode int, respHeaders http.Header, strictRFC bool) bool {
 	// log.Debugf("CanCache start\n")
 	if _, ok := CacheableRequestMethods[reqMethod]; !ok {
@@ -302,7 +306,8 @@ func CanCache(reqMethod string, reqHeaders http.Header, respCode int, respHeader
 // heuristicFreshness follows the recommendation of RFC7234§4.2.2 and returns
 // the min of 10% of the (Date - Last-Modified) headers and 24 hours, if they
 // exist, and 24 hours if they don't.
-// TODO: smarter and configurable heuristics
+//
+// TODO: smarter and configurable heuristics.
 func heuristicFreshness(respHeaders http.Header) time.Duration {
 	day := 24 * time.Hour
 	lastModified, ok := GetHTTPDate(respHeaders, "last-modified")
@@ -333,7 +338,7 @@ func getHTTPDeltaSecondsCacheControl(m map[string]string, key string) (time.Dura
 	return time.Duration(seconds) * time.Second, true
 }
 
-// getFreshnessLifetime calculates the freshness_lifetime per RFC7234§4.2.1
+// getFreshnessLifetime calculates the freshness_lifetime per RFC7234§4.2.1.
 func getFreshnessLifetime(respHeaders http.Header, respCacheControl CacheControlMap) time.Duration {
 	if s, ok := getHTTPDeltaSecondsCacheControl(respCacheControl, "s-maxage"); ok {
 		return s
@@ -379,10 +384,10 @@ func getCurrentAge(respHeaders http.Header, reqTime, respTime time.Time) time.Du
 // FreshFor gives a duration for which an HTTP response may still be cached -
 // from the time of the request.
 //
-// respHeaders is the collection of headers passed in the original response
-// respCC is the parsed Cache-Control header that was present in the original response
-// reqTime is the time at which the request was made
-// respTime is the time at which the original response was received
+// respHeaders is the collection of headers passed in the original response.
+// respCC is the parsed Cache-Control header that was present in the original response.
+// reqTime is the time at which the request was made.
+// respTime is the time at which the original response was received.
 func FreshFor(respHeaders http.Header, respCC CacheControlMap, reqTime, respTime time.Time) time.Duration {
 	freshnessLifetime := getFreshnessLifetime(respHeaders, respCC)
 
@@ -426,6 +431,7 @@ func (r Reuse) String() string {
 }
 
 // selectedHeadersMatch checks the constraints in RFC7234§4.1.
+//
 // TODO: change caching to key on URL+headers, so multiple requests for the same URL with different vary headers can be cached?
 func selectedHeadersMatch(reqHeaders http.Header, respReqHeaders http.Header, strictRFC bool) bool {
 	varyHeaders, ok := reqHeaders["vary"]
