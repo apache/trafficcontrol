@@ -44,13 +44,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
-      - name: Check Go Version
-        run: echo "::set-output name=value::$(cat GO_VERSION)"
-        id: go-version
-      - name: Install Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{ steps.go-version.outputs.value }}
       - name: Vendor dependencies
         id: vendor-dependencies
         run: .github/actions/check-go-modules/entrypoint.sh vendor_dependencies
@@ -63,3 +56,10 @@ jobs:
       - name: Changes to go.sum
         if: ${{ steps.vendor-dependencies.outcome == 'success' && always() }}
         run: .github/actions/check-go-modules/entrypoint.sh check_go_file go.sum
+      - name: Check Go Version
+        run: echo "::set-output name=value::$(cat GO_VERSION)"
+        id: go-version
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ steps.go-version.outputs.value }}
