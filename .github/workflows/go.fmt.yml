@@ -52,6 +52,13 @@ jobs:
         key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
     - name: Import cached Alpine Docker image
       run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
+    - name: Check Go Version
+      run: echo "::set-output name=value::$(cat GO_VERSION)"
+      id: go-version
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ steps.go-version.outputs.value }}
     - name: Run Go fmt
       uses: ./.github/actions/go-fmt
     - name: Save Alpine Docker image
