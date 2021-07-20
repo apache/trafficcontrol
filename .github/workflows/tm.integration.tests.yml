@@ -54,6 +54,7 @@ jobs:
           GOPATH: /github/workspace
       - name: go-version
         run: echo "::set-output name=value::$(cat GO_VERSION)"
+      - name: Install Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{ steps.go-version.outputs.value }}
