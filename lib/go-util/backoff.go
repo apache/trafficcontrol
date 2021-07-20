@@ -1,3 +1,5 @@
+package util
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,8 +22,6 @@
 // Used to return an exponentially increasing time.Duration value that may be used
 // to sleep between retries.
 
-package util
-
 import (
 	"fmt"
 	"math"
@@ -29,17 +29,24 @@ import (
 	"time"
 )
 
-// DefaultFactor may be used by applications for the factor argument.
+// DefaultFactor may be used by applications for the factor argument to
+// NewBackoff.
 const DefaultFactor = 2.0
 
 // ConstantBackoffDuration is a fallback duration that may be used by
-// an application along with NewConstantBackoff()
+// an application along with NewConstantBackoff().
 const ConstantBackoffDuration = 30 * time.Second
 
 // Implementation of a Backoff that returns a constant time duration
 // used as a fallback.
 type constantBackoff struct{ d time.Duration }
 
+// NewConstantBackoff returns a Backoff that does not change its duration.
+//
+// This is roughly equivalent to calling NewBackoff(d, d+1*time.Second, 1.0)
+// (the max duration doesn't matter when the factor is 1), but is more
+// efficient in terms of both CPU load/time and memory used, and so should be
+// done instead.
 func NewConstantBackoff(d time.Duration) Backoff {
 	return &constantBackoff{d}
 }
@@ -54,11 +61,36 @@ type backoff struct {
 	rgen    *rand.Rand
 }
 
+// A Backoff is a definition of how long to wait between attempting something,
+// which is normally a network action, to avoid overloading requested
+// resources.
 type Backoff interface {
+	// BackoffDuration returns the time that should be waited before attempting
+	// the action again. Normally, this duration will grow exponentially, but
+	// in the case of a Backoff constructed using NewConstantBackoff, it will
+	// be the same every time.
 	BackoffDuration() time.Duration
+	// Reset clears any incrementing of the duration returned by
+	// BackoffDuration, so that the next call will yield the same duration as
+	// the first call.
 	Reset()
 }
 
+// NewBackoff constructs and returns a Backoff that starts with a duration at
+// min and increments it exponentially according to the "factor" up to a
+// maximum defined by the passed max.
+//
+// The rate of increase is defined to be nmfⁿ⁻¹ where n is the number of
+// attempts that have already been made, m is the minimum duration, and f is
+// the factor. The duration for any given attempt n (starting at zero) is
+// defined to be mfⁿ+j where j is a randomly generated "jitter" that is added
+// to each duration. The "jitter" will be a number of nanoseconds between the
+// zero and the magnitude of the difference between the min and the factor. If
+// the factor, treated as a number of nanoseconds, is greater than the minimum
+// duration, this jitter will *subtract* from the resulting duration, and it
+// will be between this difference (exclusive) and zero (inclusive). If the
+// factor is less than the min it will *add* to the resulting duration, and it
+// will be between 0 (inclusive) and the difference (exclusive).
 func NewBackoff(min time.Duration, max time.Duration, factor float64) (Backoff, error) {
 
 	// verify arguments and set defaults if necessary.
@@ -83,7 +115,7 @@ func NewBackoff(min time.Duration, max time.Duration, factor float64) (Backoff, 
 	}, nil
 }
 
-// generate random jitter
+// generate random jitter.
 func (b *backoff) jitter(durFloat float64, minFloat float64) float64 {
 	return b.rgen.Float64() * (durFloat - minFloat)
 }
@@ -92,7 +124,7 @@ func (b *backoff) Reset() {
 	b.attempt = 0
 }
 
-// Calculate and return  backoff time duration
+// Calculate and return  backoff time duration.
 func (b *backoff) BackoffDuration() time.Duration {
 
 	minFloat := float64(b.Min)
