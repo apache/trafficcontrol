@@ -1,4 +1,39 @@
+// Package log contains utilities for sensible logging.
+//
+// ATC components written in Go should use this package rather than a
+// third-party library. This package also provides log *levels*, which are not
+// really supported by the standard log package, so it's generally better to
+// use this than even that standard library.
+//
 // Inspired by https://www.goinggo.net/2013/11/using-log-package-in-go.html
+//
+// Usage
+//
+// Normally, one will have some command-line program that takes in some kind of
+// configuration either via command-line arguments or a configuration file, and
+// want that configuration to define how logging happens. The easiest way to
+// logging up and running is to put that configuration into a type that
+// implements this package's Config interface, like:
+//
+//
+//      type Configuration struct {
+//      	ErrorLogs     string `json:"errorLogs"`
+//      	WarningLogs   string `json:"warningLogs"`
+//      	InfoLogs      string `json:"infoLogs"`
+//      	DebugLogs     string `json:"debugLogs"`
+//      	EventLogs     string `json:"eventLogs"`
+//      	EnableFeature bool   `json:"enableFeature"`
+//      }
+//
+//      func (c Configuration) ErrorLog() string { return c.ErrorLogs}
+//      func (c Configuration) WarningLog() string { return c.WarningLogs }
+//      func (c Configuration) InfoLog() string { return c.InfoLogs }
+//      func (c Configuration) DebugLog() string { return c.DebugLogs }
+//      func (c Configuration) EventLog() string { return c.EventLogs }
+//
+// Then the configuration can be unmarshaled from JSON and the resulting
+// Configuration can be passed directly to InitCfg, and then everything is
+// set-up and ready to go.
 package log
 
 /*
