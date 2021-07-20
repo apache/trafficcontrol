@@ -23,10 +23,20 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// AstatsSeparator is the string used by astats.config to separate
+// configuration option names from values.
 const AstatsSeparator = "="
+
+// AstatsFileName is the name of the file used to contain configuration for the
+// astats_over_http Traffic Server plugin.
 const AstatsFileName = "astats.config"
 
+// ContentTypeAstatsDotConfig is the MIME type of the content of astats.config
+// file.
 const ContentTypeAstatsDotConfig = ContentTypeTextASCII
+
+// LineCommentAstatsDotConfig is the string used to mark the beginning of a
+// line comment as understood by parsers of astats.config files.
 const LineCommentAstatsDotConfig = LineCommentHash
 
 // AStatsDotConfigOpts contains settings to configure generation options.
@@ -37,6 +47,11 @@ type AStatsDotConfigOpts struct {
 	HdrComment string
 }
 
+// MakeAStatsDotConfig constructs an astats.config file for the given server
+// with the given Parameters and header comment content.
+//
+// TODO: Rename to 'MakeAstatsDotConfig' for consistency with other exported
+// symbols?
 func MakeAStatsDotConfig(
 	server *Server,
 	serverParams []tc.ParameterV5,
