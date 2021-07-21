@@ -30,10 +30,9 @@ Feel free to add the name of a tool or script that is affected but not on the li
 - unknown
 
 ## What is the best way to verify this PR?
-<!-- Please include here ALL the steps necessary to test your Pull Request. If
-it includes tests (and most should), outline here the steps needed to run the
-tests. If not, lay out the manual testing procedure and please explain why
-tests are unnecessary for this Pull Request. -->
+<!-- Please include here ALL the steps necessary to test your Pull Request.
+If your PR includes tests (and most should), provide the steps needed to run the tests.
+If not, please provide step-by-step instructions to test the PR manually and explain why your PR does not need tests. -->
 
 ## If this is a bug fix, what versions of Traffic Control are affected?
 <!-- If this PR fixes a bug, please list here all of the affected versions - to
