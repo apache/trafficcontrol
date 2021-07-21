@@ -36,10 +36,9 @@ or Traffic Control mailing lists (https://trafficcontrol.apache.org/mailing_list
 -->
 
 ## I'm submitting a ...
-<!-- delete all those that don't apply -->
-<!--- security vulnerability (STOP!! - see above)-->
--  new feature / enhancement request
--  other <!--(Please do not submit support requests here - see above)-->
+<!-- Do not submit a security vulnerability here - see above security vulnerability info -->
+- [x] new feature / enhancement request
+<!--Please do not submit support requests here - see above-->
 
 ## Traffic Control components affected ...
 <!-- delete all those that don't apply -->
