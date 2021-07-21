@@ -53,12 +53,6 @@ provide the *STEPS TO REPRODUCE* and include the applicable TC version.
 If not, feel free to delete this section.
 -->
 
-## Anything else:
-<!--
-e.g. additional context, related issues, suggestions about how to approach (feel
-free to delete this section)
--->
-
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file

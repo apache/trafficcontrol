@@ -85,21 +85,6 @@ e.g.
 - [ ] This PR includes any and all required license headers
 - [ ] This PR **DOES NOT FIX A SERIOUS SECURITY VULNERABILITY** (see [the Apache Software Foundation's security guidelines](https://apache.org/security) for details)
 
-
-## Additional Information
-<!-- If you would like to include any additional information on the PR for
-potential reviewers please put it here.
-
-Some examples of this would be:
-
-- Before and after screenshots/gifs of the Traffic Portal if it is affected
-- Links to other dependent Pull Requests
-- References to relevant context (e.g. new/updates to dependent libraries,
-mailing list records, blueprints)
-
-Feel free to leave this section blank (or, preferably, delete it entirely).
--->
-
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file

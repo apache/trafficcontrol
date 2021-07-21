@@ -52,12 +52,6 @@ If the current behavior is a bug, please provide the *STEPS TO REPRODUCE* and
 include the applicable TC version.
 -->
 
-## Anything else:
-<!--
-e.g. stacktraces, related issues, suggestions how to fix (feel free to delete
-this section)
--->
-
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
