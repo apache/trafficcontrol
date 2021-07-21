@@ -143,7 +143,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, f
 	/** @type CGC.TitleButton */
 	$scope.titleButton = {
 		onClick: function() {
-			locationUtils.navigateToPath(encodeURIComponent("topologies/edit?name=" + $scope.deliveryService.topology));
+			locationUtils.navigateToPath("topologies/edit?name=" + encodeURIComponent($scope.deliveryService.topology));
 		},
 		getText: function() {
 			return "[ " + $scope.deliveryService.topology + " topology ]";
@@ -157,7 +157,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, f
 		},
 		{
 			getHref: function() {
-				return encodeURIComponent("#!/delivery-services/" + $scope.deliveryService.id + "?type=" + $scope.deliveryService.type);
+				return "#!/delivery-services/" + $scope.deliveryService.id + "?type=" + encodeURIComponent($scope.deliveryService.type);
 			},
 			getText: function() {
 				return $scope.deliveryService.xmlId;
