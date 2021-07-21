@@ -34,22 +34,12 @@ Feel free to add the name of a tool or script that is affected but not on the li
 If your PR includes tests (and most should), provide the steps needed to run the tests.
 If not, please provide step-by-step instructions to test the PR manually and explain why your PR does not need tests. -->
 
-## If this is a bug fix, what versions of Traffic Control are affected?
-<!-- If this PR fixes a bug, please list here all of the affected versions - to
-the best of your knowledge. It's also pretty helpful to include a commit hash
-of where 'master' is at the time this PR is opened (if it affects master),
-because what 'master' means will change over time. For example, if this PR
-fixes a bug that's present in master (at commit hash '1df853c8'), in v4.0.0,
-and in the current 4.0.1 Release candidate (e.g. RC1), then this list would
-look like:
 
-- master (1df853c8)
-- 4.0.0
-- 4.0.1 (RC1)
-
-If you don't know what other versions might have this bug, AND don't know how
-to find the commit hash of 'master', then feel free to leave this section
-blank (or, preferably, delete it entirely).
+## If this is a bugfix, which Traffic Control versions contained the bug?
+<!-- Delete this section if the PR is not a bugfix, or if the bug is only in the master branch.
+Examples:
+- 5.1.2
+- 5.1.3 (RC1)
  -->
 
 
