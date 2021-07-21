@@ -5,19 +5,11 @@ the Apache Traffic Control Security Team at security@trafficcontrol.apache.org a
 guidelines at https://apache.org/security regarding vulnerability disclosure.
 -->
 ## What does this PR (Pull Request) do?
-<!-- Explain the changes you made here. If this fixes an Issue, identify it by
-replacing the text in the checkbox item with the Issue number e.g.
+- [ ] This PR fixes #REPLACE_ME
+<!-- Or you can say
+- [x] This PR is not related to any Issue
 
-- [x] This PR fixes #9001 OR is not related to any Issue
-
-^ This will automatically close Issue number 9001 when the Pull Request is
-merged (The '#' is important).
-
-Be sure you check the box properly, see the "The following criteria are ALL
-met by this PR" section for details.
--->
-
-- [ ] This PR fixes #REPLACE_ME OR is not related to any Issue <!-- You can check for an issue here: https://github.com/apache/trafficcontrol/issues -->
+A description of your PR goes here ↓ -->
 
 
 ## Which Traffic Control components are affected by this PR?
