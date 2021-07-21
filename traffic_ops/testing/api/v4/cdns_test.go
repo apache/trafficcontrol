@@ -161,6 +161,9 @@ func RefreshDNSSECKeys(t *testing.T) {
 	if err != nil {
 		t.Errorf("unable to refresh DNSSEC keys: %v - alerts: %+v", err, resp.Alerts)
 	}
+	if reqInf.StatusCode != http.StatusAccepted {
+		t.Errorf("refreshing DNSSEC keys - expected: status code %d, actual: %d", http.StatusAccepted, reqInf.StatusCode)
+	}
 	loc := reqInf.RespHeaders.Get("Location")
 	if loc == "" {
 		t.Errorf("refreshing DNSSEC keys - expected: non-empty 'Location' response header, actual: empty")
