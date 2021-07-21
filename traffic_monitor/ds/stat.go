@@ -130,18 +130,13 @@ func addAvailableData(dsStats *dsdata.Stats, crStates tc.CRStates, serverCachegr
 	}
 
 	// TODO move to its own func?
-	for dsName, ds := range crStates.DeliveryService {
+	for dsName := range crStates.DeliveryService {
 		stat, ok := dsStats.DeliveryService[dsName]
 		if !ok {
 			log.Infof("CreateStats not adding disabledLocations for '%s': not found in Stats\n", dsName)
 			continue // TODO log warning? Error?
 		}
-
-		// TODO determine if a deep copy is necessary
-		stat.CommonStats.CachesDisabled = make([]string, len(ds.DisabledLocations), len(ds.DisabledLocations))
-		for i, v := range ds.DisabledLocations {
-			stat.CommonStats.CachesDisabled[i] = string(v)
-		}
+		stat.CommonStats.CachesDisabled = make([]string, 0)
 	}
 }
 

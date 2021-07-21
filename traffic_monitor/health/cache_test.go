@@ -417,6 +417,7 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 
 	localCacheStatusThreadsafe := threadsafe.NewCacheAvailableStatus()
 	localStates := peer.NewCRStatesThreadsafe()
+	localStates.SetDeliveryService("myDS", tc.CRStatesDeliveryService{})
 	events := NewThreadsafeEvents(200)
 
 	// test that a normal stat poll over the kbps threshold marks down
@@ -432,6 +433,16 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 	results[0].Statistics.Interfaces = original
 
 	CalcAvailability(results, pollerName, statResultHistory, mc, toData, localCacheStatusThreadsafe, localStates, events, config.Both)
+
+	// ensure that the DisabledLocations is an empty, non-nil slice
+	for _, ds := range localStates.GetDeliveryServices() {
+		if ds.DisabledLocations == nil {
+			t.Error("expected: non-nil DisabledLocations, actual: nil")
+		}
+		if len(ds.DisabledLocations) > 0 {
+			t.Errorf("expected: empty DisabledLocations, actual: %d", len(ds.DisabledLocations))
+		}
+	}
 
 	localCacheStatuses := localCacheStatusThreadsafe.Get()
 	localCacheStatus, ok := localCacheStatuses[result.ID]
