@@ -36,20 +36,26 @@ Response Structure
 .. code-block:: http
 	:caption: Response Example
 
-	HTTP/1.1 200 OK
+	HTTP/1.1 202 Accepted
 	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
-	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
-	Date: Wed, 14 Nov 2018 21:37:30 GMT
-	X-Server-Name: traffic_ops_golang/
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Location: /api/4.0/async_status/3
+	Permissions-Policy: interest-cohort=()
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 20 Jul 2021 23:55:11 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
-	Whole-Content-Sha512: Uwl+924m6Ye3NraFP+RBpldkhcNTTDyXHZbzRaYV95p9tP56Z61gckeKSr1oQIkNXjXcCsDN5Dmum7Zk1AR6Hw==
-	Content-Length: 69
+	Whole-Content-Sha512: yJUGNCYygBYvHft4z0nxJ0/p230s3PdPT5Tld+8hIWfxmpmKDciY4D7+1Bf8S69ckmZR/yxY95kIZEbg9/jFgw==
+	X-Server-Name: traffic_ops_golang/
+	Date: Tue, 20 Jul 2021 22:55:11 GMT
+	Content-Length: 176
 
 	{
-		"response": "Checking DNSSEC keys for refresh in the background"
+		"alerts": [
+			{
+				"text": "Starting DNSSEC key refresh in the background. This may take a few minutes. Status updates can be found here: /api/4.0/async_status/3",
+				"level": "success"
+			}
+		]
 	}
