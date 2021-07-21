@@ -98,6 +98,7 @@ type Cfg struct {
 	NoCache                     bool
 	SyncDSUpdatesIPAllow        bool
 	OmitViaStringRelease        bool
+	NoOutgoingIP                bool
 	DisableParentConfigComments bool
 	DefaultClientEnableH2       *bool
 	DefaultClientTLSVersions    *string
@@ -231,6 +232,7 @@ func GetCfg() (Cfg, error) {
 	noCachePtr := getopt.BoolLong("no-cache", 'n', "Whether to not use a cache and make conditional requests to Traffic Ops")
 	syncdsUpdatesIPAllowPtr := getopt.BoolLong("syncds-updates-ipallow", 'S', "Whether syncds mode will update ipallow. This exists because ATS had a bug where reloading after changing ipallow would block everything. Default is false.")
 	omitViaStringReleasePtr := getopt.BoolLong("omit-via-string-release", 'o', "Whether to set the records.config via header to the ATS release from the RPM. Default true.")
+	noOutgoingIP := getopt.BoolLong("no-outgoing-ip", 'i', "Whether to not set the records.config outgoing IP to the server's addresses in Traffic Ops. Default is false.")
 	disableParentConfigCommentsPtr := getopt.BoolLong("disable-parent-config-comments", 'c', "Whether to disable verbose parent.config comments. Default false.")
 	defaultEnableH2 := getopt.BoolLong("default-client-enable-h2", '2', "Whether to enable HTTP/2 on Delivery Services by default, if they have no explicit Parameter. This is irrelevant if ATS records.config is not serving H2. If omitted, H2 is disabled.")
 	defaultClientTLSVersions := getopt.StringLong("default-client-tls-versions", 'V', "", "Comma-delimited list of default TLS versions for Delivery Services with no Parameter, e.g. --default-tls-versions='1.1,1.2,1.3'. If omitted, all versions are enabled.")
@@ -400,6 +402,7 @@ func GetCfg() (Cfg, error) {
 		NoCache:                     *noCachePtr,
 		SyncDSUpdatesIPAllow:        *syncdsUpdatesIPAllowPtr,
 		OmitViaStringRelease:        *omitViaStringReleasePtr,
+		NoOutgoingIP:                *noOutgoingIP,
 		DisableParentConfigComments: *disableParentConfigCommentsPtr,
 		DefaultClientEnableH2:       defaultEnableH2,
 		DefaultClientTLSVersions:    defaultClientTLSVersions,

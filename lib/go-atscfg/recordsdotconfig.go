@@ -46,6 +46,15 @@ type RecordsConfigOpts struct {
 	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
 	// To omit the header comment, pass the empty string.
 	HdrComment string
+
+	// NoOutgoingIP is whether to omit adding a records.config entry for
+	// proxy.local.outgoing_ip_to_bind set to the server's IP addresses (V4 and V6).
+	// By default, this entry is added, unless it already exists in records.config
+	// (probably from a Parameter).
+	//
+	// The default, setting the IP to bind, is usually the right solution, unless
+	// the server's addresses are unusual or not public, such as NAT.
+	NoOutgoingIP bool
 }
 
 func MakeRecordsDotConfig(
@@ -87,8 +96,12 @@ func MakeRecordsDotConfig(
 // Returns the modified text and any warnings.
 func addRecordsDotConfigOverrides(txt string, server *Server, opt *RecordsConfigOpts) (string, []string) {
 	warnings := []string{}
-	txt, ipWarns := addRecordsDotConfigOutgoingIP(txt, server)
-	warnings = append(warnings, ipWarns...)
+
+	if !opt.NoOutgoingIP {
+		ipWarns := []string{}
+		txt, ipWarns = addRecordsDotConfigOutgoingIP(txt, server)
+		warnings = append(warnings, ipWarns...)
+	}
 
 	if opt.ReleaseViaStr {
 		viaWarns := []string{}
