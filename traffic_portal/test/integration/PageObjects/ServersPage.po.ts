@@ -141,7 +141,7 @@ export class ServersPage extends BasePage {
     let name = nameServer+this.randomize;
     await this.txtQuickSearch.clear();
     await this.txtQuickSearch.sendKeys(name);
-    await browser.actions().click(element(by.xpath("//span[text()='"+name+"']"))).perform();
+    await browser.actions().click(element(by.cssContainingText("span", name))).perform();
   }
 
   public async SearchDeliveryServiceFromServerPage(name:string): Promise<boolean> {
