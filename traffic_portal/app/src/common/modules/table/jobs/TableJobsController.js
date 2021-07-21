@@ -82,7 +82,7 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 	/** @type CGC.ContextMenuOption[] */
 	$scope.contextMenuOptions = [{
 		onClick: function (job, $event) {
-			$scope.confirmRemoveJob(jobs,  $event);
+			$scope.confirmRemoveJob(job,  $event);
 		},
 		text: "Delete Invalidation Request",
 		type: 1
@@ -108,8 +108,7 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.confirmRemoveJob = function(jobs) {
-	    let job = jobs[0];
+	$scope.confirmRemoveJob = function(job) {
 		const params = {
 			title: 'Remove Invalidation Request?',
 			message: 'Are you sure you want to remove the ' + job.assetUrl + ' invalidation request?<br><br>' +

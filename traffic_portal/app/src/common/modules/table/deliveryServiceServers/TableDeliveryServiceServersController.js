@@ -35,13 +35,13 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, f
 	$scope.deliveryService = deliveryService;
 
 	this.$onInit = function() {
-	    $scope.contextMenuOptions.push({
+		$scope.contextMenuOptions.push({
 			type: 0
 		});
 		$scope.contextMenuOptions.push({
 			type: 1,
 			shown: function(row) {
-			    return !row.topology;
+				return !row.topology;
 			},
 			onClick: function(row) {
 				$scope.confirmRemoveServer(row);
@@ -74,7 +74,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, f
 		});
 		$scope.dropDownOptions.push({
 			type: 1,
-            name: "selectServersMenuItem",
+			name: "selectServersMenuItem",
 			onClick: function() {
 				$scope.selectServers();
 			},
@@ -142,30 +142,30 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, f
 
 	/** @type CGC.TitleButton */
 	$scope.titleButton = {
-	    onClick: function() {
-	    	locationUtils.navigateToPath("topologies/edit?name=" + $scope.deliveryService.topology);
+		onClick: function() {
+			locationUtils.navigateToPath(encodeURI("topologies/edit?name=" + $scope.deliveryService.topology));
 		},
 		getText: function() {
-	    	return "[ " + $scope.deliveryService.topology + " topology ]";
+			return "[ " + $scope.deliveryService.topology + " topology ]";
 		}
 	};
 
 	/** @type CGC.TitleBreadCrumbs */
 	$scope.breadCrumbs = [{
-		href: "#!/delivery-services",
-		text: "Delivery Services"
-	},
+			href: "#!/delivery-services",
+			text: "Delivery Services"
+		},
 		{
 			getHref: function() {
-				return "#!/delivery-services/" + $scope.deliveryService.id + "?type=" + $scope.deliveryService.type;
+				return encodeURI("#!/delivery-services/" + $scope.deliveryService.id + "?type=" + $scope.deliveryService.type);
 			},
 			getText: function() {
 				return $scope.deliveryService.xmlId;
-			}
-		},
-		{
-			text: "Servers"
-		}];
+		}
+	},
+	{
+		text: "Servers"
+	}];
 
 };
 

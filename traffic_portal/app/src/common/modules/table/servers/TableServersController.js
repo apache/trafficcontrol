@@ -283,7 +283,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			onClick: function (entry) {
 				$scope.confirmDelete(entry, null);
 			},
-            text: "Delete"
+			text: "Delete"
 		},
 		{
 			type: 0
@@ -301,7 +301,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 				return !$scope.isCache(entry) || entry.updPending;
 			},
 			onClick: function (entry){
-			    $scope.queueServerUpdates(entry, null);
+				$scope.queueServerUpdates(entry, null);
 			},
 			text: "Queue Server Updates",
 		},
@@ -310,7 +310,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			isDisabled: function(entry){
 				return !$scope.isCache(entry) || !entry.updPending;
 			},
-            onClick: function (entry){
+			onClick: function (entry){
 				$scope.clearServerUpdates(entry,  null);
 			},
 			text: "Clear Server Updates",
@@ -352,7 +352,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 			shown: function (entry) {
 				return $scope.isEdge(entry) || $scope.isCache(entry);
 			},
-            text: "Manage Delivery Services",
+			text: "Manage Delivery Services",
 			getHref: function (entry) {
 				return "#!/servers/" + entry.id + "/delivery-services";
 			}
