@@ -43,19 +43,18 @@ or Traffic Control mailing lists (https://trafficcontrol.apache.org/mailing_list
 
 ## Traffic Control components affected ...
 <!-- delete all those that don't apply -->
--  CDN in a Box
--  Documentation
--  Grove
--  Traffic Control Client
--  Traffic Monitor
--  Traffic Ops
--  Traffic Ops ORT
--  Traffic Portal
--  Traffic Router
--  Traffic Stats
--  Traffic Vault
--  CI tests
--  unknown
+- Traffic Control Cache Config (T3C)
+- Traffic Control Client <!-- Please specify which (Python, Go, or Java) -->
+- Traffic Monitor
+- Traffic Ops
+- Traffic Portal
+- Traffic Router
+- Traffic Stats
+- Grove
+- Documentation
+- CDN in a Box
+- Automation (GitHub Actions, Ansible Roles)
+- unknown
 
 ## Current behavior:
 <!-- Describe how the current features are insufficient. -->

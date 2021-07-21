@@ -28,18 +28,18 @@ affected but not on the list.
 Additionally, if this Pull Request does NOT affect documentation, please
 explain why documentation is not required. -->
 
-- CDN in a Box
-- Documentation
-- Grove
-- Traffic Control Client <!-- Please specify which; e.g. 'Python', 'Go', 'Java' -->
+- Documentation <!-- If this Pull Request does NOT affect documentation, please explain why. -->
+- Traffic Control Cache Config (T3C)
+- Traffic Control Client <!-- Please specify which (Python, Go, or Java) -->
 - Traffic Monitor
 - Traffic Ops
-- Traffic Ops ORT
 - Traffic Portal
 - Traffic Router
 - Traffic Stats
-- Traffic Vault
-- CI tests
+- Grove
+- CDN in a Box
+- Automation <!-- Please specify which (GitHub Actions, Docker images, Ansible Roles, etc.) -->
+- unknown
 
 ## What is the best way to verify this PR?
 <!-- Please include here ALL the steps necessary to test your Pull Request. If
