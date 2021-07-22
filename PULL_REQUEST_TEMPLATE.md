@@ -44,21 +44,15 @@ Examples:
 
 
 ## The following criteria are ALL met by this PR
-<!-- Check the boxes to signify that the associated statement is true. To
-"check a box", replace the space inside of the square brackets with an 'x'.
-e.g.
+<!-- Check each box to signify that the associated statement is true. For example:
+- [x]  ← Correct!
+- [ x] ← Wrong
+- []   ← Wrong
+- [*]  ← Wrong -->
 
-- [ x] <- Wrong
-- [x ] <- Wrong
-- [] <- Wrong
-- [*] <- Wrong
-- [x] <- Correct!
-
--->
-
-- [ ] This PR includes tests OR I have explained why tests are unnecessary
-- [ ] This PR includes documentation OR I have explained why documentation is unnecessary
-- [ ] This PR includes an update to CHANGELOG.md OR such an update is not necessary
+- [ ] This PR includes tests <!-- If not, please delete this text and explain why this PR does not need tests. -->
+- [ ] This PR include documentation <!-- If not, please delete this text and explain why this PR does not need documentation. -->
+- [ ] This PR includes a CHANGELOG.md entry <!-- A fix for a bug from an ATC release, an improvement, or a new feature should include a changelog entry. -->
 - [ ] This PR **DOES NOT FIX A SERIOUS SECURITY VULNERABILITY** (see [the Apache Software Foundation's security guidelines](https://apache.org/security) for details)
 
 <!--
