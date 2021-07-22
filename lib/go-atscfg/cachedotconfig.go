@@ -27,7 +27,12 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// ContentTypeCacheDotConfig is the MIME type of the contents of a cache.config
+// file.
 const ContentTypeCacheDotConfig = ContentTypeTextASCII
+
+// LineCommentCacheDotConfig is the string that signifies the beginning of a
+// line comment in the grammar of a cache.config file.
 const LineCommentCacheDotConfig = LineCommentHash
 
 // CacheDotConfigOpts contains settings to configure generation options.
