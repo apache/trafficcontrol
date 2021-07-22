@@ -31,6 +31,8 @@ var FormNewDeliveryServiceController = function(deliveryService, origin, topolog
 		saveLabel: 'Create'
 	};
 
+	$scope.restrictTLS = false;
+
 	var createDeliveryServiceCreateRequest = function(dsRequest, dsRequestComment, autoFulfilled) {
 		deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
 			then(
@@ -64,6 +66,9 @@ var FormNewDeliveryServiceController = function(deliveryService, origin, topolog
 
 
 	$scope.save = function(deliveryService) {
+		if (!$scope.restrictTLS) {
+			deliveryService.tlsVersions = null;
+		}
 		// if ds requests are enabled in traffic_portal_properties.json, we'll create a ds request, else just create the ds
 		if ($scope.dsRequestsEnabled) {
 			var params = {
