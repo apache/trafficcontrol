@@ -97,6 +97,17 @@ jobs:
     - name: Initialize Traffic Ops Database
       id: todb
       uses: ./.github/actions/todb-init
+    - name: Check Go Version
+      run: echo "::set-output name=value::$(cat GO_VERSION)"
+      id: go-version
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ steps.go-version.outputs.value }}
+    - name: Run API v1 tests
+      uses: ./.github/actions/to-integration-tests
+      with:
+        version: 1
     - name: Run API v2 tests
       id: v2Tests
       if: ${{ steps.todb.outcome == 'success' && always() }}
@@ -156,10 +167,3 @@ jobs:
         path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
     - name: Save Alpine Docker image
       run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
-    - name: Check Go Version
-      run: echo "::set-output name=value::$(cat GO_VERSION)"
-      id: go-version
-    - name: Install Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: ${{ steps.go-version.outputs.value }}
