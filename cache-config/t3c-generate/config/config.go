@@ -21,7 +21,6 @@ package config
 
 import (
 	"errors"
-	"fmt"
 	"net/url"
 	"os"
 	"strings"
@@ -84,7 +83,7 @@ func GetCfg() (Cfg, error) {
 	getopt.Parse()
 
 	if *version {
-		fmt.Println(AppName + " v" + Version)
+		log.Errorln(AppName + " v" + Version)
 		os.Exit(0)
 	} else if *help {
 		getopt.PrintUsage(os.Stdout)

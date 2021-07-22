@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -61,7 +60,7 @@ func main() {
 	var lock util.FileLock
 	cfg, err := config.GetCfg()
 	if err != nil {
-		fmt.Println(err)
+		log.Infoln(err)
 		os.Exit(ConfigError)
 	} else if cfg == (config.Cfg{}) { // user used the --help option
 		os.Exit(Success)
@@ -107,7 +106,7 @@ func main() {
 		}
 	}
 
-	fmt.Println(time.Now().Format(time.UnixDate))
+	log.Infoln(time.Now().Format(time.UnixDate))
 
 	if !util.CheckUser(cfg) {
 		lock.UnlockAndExit(UserCheckError)

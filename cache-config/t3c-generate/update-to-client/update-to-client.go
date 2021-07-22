@@ -22,6 +22,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -32,7 +33,7 @@ import (
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Fprintf(os.Stdout, usageStr())
+		log.Errorln(usageStr())
 		os.Exit(0)
 	}
 	dir := os.Args[1]
@@ -40,18 +41,18 @@ func main() {
 
 	workingDir, err := os.Getwd()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error getting working directory: "+err.Error()+"\n")
+		log.Errorf("Error getting working directory: %s\n", err.Error())
 		os.Exit(1)
 	}
 
 	dir = filepath.Join(workingDir, dir) // make the given directory absolute
 
 	if err := updateVendoredTOClient(dir, branch); err != nil {
-		fmt.Fprintf(os.Stderr, "Error updating vendored client: "+err.Error()+"\n")
+		log.Errorf("Error updating vendored client: %s\n", err.Error())
 		os.Exit(1)
 	}
 	if err := updateNewClientUsage(dir); err != nil {
-		fmt.Fprintf(os.Stderr, "Error updating new client usage: "+err.Error()+"\n")
+		log.Errorf("Error updating new client usage: %s\n", err.Error())
 		os.Exit(1)
 	}
 	os.Exit(0)

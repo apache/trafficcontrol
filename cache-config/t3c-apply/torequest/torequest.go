@@ -161,7 +161,7 @@ func unencodeFilter(body []string) []string {
 // DumpConfigFiles is used for debugging
 func (r *TrafficOpsReq) DumpConfigFiles() {
 	for _, cfg := range r.configFiles {
-		fmt.Printf("Name: %s, Dir: %s, Service: %s\n",
+		log.Infof("Name: %s, Dir: %s, Service: %s\n",
 			cfg.Name, cfg.Dir, cfg.Service)
 	}
 }
@@ -548,11 +548,11 @@ func (r *TrafficOpsReq) sleepTimer(serverStatus *tc.ServerUpdateStatus) {
 	}
 
 	for randDispSec > 0 {
-		fmt.Printf(".")
+		log.Infof(".")
 		time.Sleep(time.Second)
 		revalClockSec--
 		if revalClockSec < 1 && r.Cfg.RunMode != t3cutil.ModeBadAss && serverStatus.UseRevalPending {
-			fmt.Printf("\n")
+			log.Infof("\n")
 			log.Infoln("Interrupting dispersion sleep period for revalidation check.")
 			_, err := r.RevalidateWhileSleeping()
 			if r.Cfg.RevalWaitTime > 0 {
@@ -574,7 +574,7 @@ func (r *TrafficOpsReq) sleepTimer(serverStatus *tc.ServerUpdateStatus) {
 		}
 		randDispSec--
 	}
-	fmt.Printf("\n")
+	log.Infof("\n")
 }
 
 // CheckSystemServices is used to verify that packages installed

@@ -20,7 +20,7 @@ package main
  */
 
 import (
-	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"os"
 	"path/filepath"
 	"syscall" // TODO change to x/unix ?
@@ -48,18 +48,18 @@ func main() {
 	flagHelp := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	getopt.Parse()
 	if *flagHelp {
-		fmt.Println(usageStr())
+		log.Errorln(usageStr())
 		os.Exit(ExitCodeSuccess)
 	}
 
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "no command\n\n"+usageStr())
+		log.Errorf("no command\n\n%s", usageStr())
 		os.Exit(ExitCodeNoCommand)
 	}
 
 	cmd := os.Args[1]
 	if _, ok := commands[cmd]; !ok {
-		fmt.Fprintf(os.Stderr, "unknown command\n") // TODO print usage
+		log.Errorf("unknown command\n%s", usageStr())
 		os.Exit(ExitCodeUnknownCommand)
 	}
 
@@ -68,7 +68,7 @@ func main() {
 
 	ex, err := os.Executable()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error getting application information: "+err.Error()+"\n")
+		log.Errorf("error getting application information: %s\n", err.Error())
 		os.Exit(ExitCodeExeErr)
 	}
 	dir := filepath.Dir(ex)
@@ -77,7 +77,7 @@ func main() {
 	env := os.Environ()
 
 	if err := syscall.Exec(appDir, args, env); err != nil {
-		fmt.Fprintf(os.Stderr, "error executing sub-command: "+err.Error()+"\n")
+		log.Errorf("error executing sub-command: %s\n", err.Error())
 		os.Exit(ExitCodeCommandErr)
 	}
 }

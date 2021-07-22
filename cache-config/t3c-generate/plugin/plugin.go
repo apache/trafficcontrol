@@ -15,7 +15,6 @@ package plugin
 */
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"runtime"
@@ -59,7 +58,7 @@ type Plugins interface {
 func AddPlugin(priority uint64, funcs Funcs) {
 	_, filename, _, ok := runtime.Caller(1)
 	if !ok {
-		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error plugin.AddPlugin: runtime.Caller failed, can't get plugin names") // print, because this is called in init, loggers don't exist yet
+		log.Errorln(time.Now().Format(time.RFC3339Nano) + " Error plugin.AddPlugin: runtime.Caller failed, can't get plugin names")
 		os.Exit(1)
 	}
 

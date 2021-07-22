@@ -23,7 +23,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"sort"
 	"strings"
@@ -38,12 +37,12 @@ import (
 func main() {
 	cfg, err := config.GetCfg()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Getting config: "+err.Error()+"\n")
+		log.Errorf("Getting config: %s\n", err.Error())
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
 	if cfg.ListPlugins {
-		fmt.Println(strings.Join(plugin.List(), "\n"))
+		log.Errorln(strings.Join(plugin.List(), "\n"))
 		os.Exit(0)
 	}
 

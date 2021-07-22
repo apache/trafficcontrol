@@ -21,7 +21,6 @@ package config
 
 import (
 	"errors"
-	"fmt"
 	"net/url"
 	"os"
 	"time"
@@ -86,7 +85,7 @@ func InitConfig() (Cfg, error) {
 		Usage()
 	}
 	if *versionPtr == true {
-		fmt.Println(AppName + " v" + Version)
+		log.Errorln(AppName + " v" + Version)
 	}
 
 	logLocationError := log.LogLocationStderr

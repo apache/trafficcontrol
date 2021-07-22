@@ -21,7 +21,7 @@ package t3cutil
 
 import (
 	"bytes"
-	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"html"
 	"io/ioutil"
 	"os"
@@ -81,7 +81,7 @@ func NewLineFilter(str string) string {
 func ReadFile(f string) []byte {
 	data, err := ioutil.ReadFile(f)
 	if err != nil {
-		fmt.Println("Error reading file ", f)
+		log.Errorln("Error reading file ", f)
 		os.Exit(1)
 	}
 	return data
