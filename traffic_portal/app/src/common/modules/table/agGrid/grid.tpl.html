@@ -21,7 +21,7 @@ under the License.
     <div class="pull-left">
         <ol class="breadcrumb pull-left" ng-if="$ctrl.breadCrumbs !== undefined">
             <li ng-repeat="bc in $ctrl.breadCrumbs track by $index" ng-class="{'active': ($index+1 === $ctrl.breadCrumbs.length)}">
-                <a ng-if="$ctrl.bcHasHref(bc)" ng-href="$ctrl.bcGetHref(bc)">{{ $ctrl.bcGetText(bc) }}</a>
+                <a ng-if="$ctrl.bcHasHref(bc)" ng-href="{{ $ctrl.bcGetHref(bc) }}">{{ $ctrl.bcGetText(bc) }}</a>
                 <span class="bc" ng-if="!$ctrl.bcHasHref(bc)">{{  $ctrl.bcGetText(bc) }}</span>
             </li>
         </ol>
