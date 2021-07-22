@@ -59,7 +59,6 @@ e.g.
 - [ ] This PR includes tests OR I have explained why tests are unnecessary
 - [ ] This PR includes documentation OR I have explained why documentation is unnecessary
 - [ ] This PR includes an update to CHANGELOG.md OR such an update is not necessary
-- [ ] This PR includes any and all required license headers
 - [ ] This PR **DOES NOT FIX A SERIOUS SECURITY VULNERABILITY** (see [the Apache Software Foundation's security guidelines](https://apache.org/security) for details)
 
 <!--
