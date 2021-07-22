@@ -68,8 +68,6 @@ check_go_file() {
 	exit_code=1
 }
 
-GOROOT=/usr/local/go
-export PATH="${PATH}:${GOROOT}/bin"
 export GOPATH="${HOME}/go"
 
 exit_code=0
