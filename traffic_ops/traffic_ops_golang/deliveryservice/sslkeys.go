@@ -23,7 +23,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -73,7 +72,7 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
-	if err := GeneratePutRiakKeys(req, inf.Tx.Tx, inf.Vault, r.Context()); err != nil {
+	if err := generatePutTrafficVaultSSLKeys(req, inf.Tx.Tx, inf.Vault, r.Context()); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and putting SSL keys: "+err.Error()))
 		return
 	}
@@ -85,9 +84,9 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, "Successfully created ssl keys for "+*req.DeliveryService)
 }
 
-// GeneratePutRiakKeys generates a certificate, csr, and key from the given request, and insert it into the Riak key database.
+// generatePutTrafficVaultSSLKeys generates a certificate, csr, and key from the given request, and insert it into the Riak key database.
 // The req MUST be validated, ensuring required fields exist.
-func GeneratePutRiakKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql.Tx, tv trafficvault.TrafficVault, ctx context.Context) error {
+func generatePutTrafficVaultSSLKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql.Tx, tv trafficvault.TrafficVault, ctx context.Context) error {
 	dsSSLKeys := tc.DeliveryServiceSSLKeys{
 		CDN:             *req.CDN,
 		DeliveryService: *req.DeliveryService,
@@ -116,20 +115,21 @@ func GeneratePutRiakKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql.Tx, tv tra
 
 // GeneratePlaceholderSelfSignedCert generates a self-signed SSL certificate as a placeholder when a new HTTPS
 // delivery service is created or an HTTP delivery service is updated to use HTTPS.
-func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV40, inf *api.APIInfo, context context.Context) (error, int) {
+func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV4, inf *api.APIInfo, context context.Context) (error, int) {
+	tv := inf.Vault
+	_, ok, err := tv.GetDeliveryServiceSSLKeys(*ds.XMLID, "", inf.Tx.Tx, context)
+	if err != nil {
+		return errors.New("getting latest ssl keys for xmlId: " + *ds.XMLID + " : " + err.Error()), http.StatusInternalServerError
+	}
+	if ok {
+		return nil, http.StatusOK
+	}
+
 	version := util.JSONIntStr(1)
 
-	db, err := api.GetDB(context)
-	if err != nil {
-		return err, http.StatusInternalServerError
-	}
-	tx, err := db.Begin()
-	if err != nil {
-		return err, http.StatusInternalServerError
-	}
-	defer tx.Commit()
+	tx := inf.Tx.Tx
 
-	cdnName, cdnDomain, err := getCDNNameDomain(*ds.CDNID, tx)
+	cdnName, cdnDomain, err := dbhelpers.GetCDNNameDomain(*ds.CDNID, tx)
 	if err != nil {
 		return err, http.StatusInternalServerError
 	}
@@ -141,7 +141,7 @@ func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV40, inf *api.APIInf
 	}
 
 	hostname := strings.Split(ds.ExampleURLs[0], "://")[1]
-	if strings.Contains(ds.Type.String(), "HTTP") {
+	if ds.Type.IsHTTP() {
 		parts := strings.Split(hostname, ".")
 		parts[0] = "*"
 		hostname = strings.Join(parts, ".")
@@ -157,11 +157,11 @@ func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV40, inf *api.APIInf
 			BusinessUnit:    util.StrPtr("Placeholder"),
 			City:            util.StrPtr("Placeholder"),
 			Organization:    util.StrPtr("Placeholder"),
-			Country:         util.StrPtr("United States (US)"),
-			State:           util.StrPtr("CO"),
+			Country:         util.StrPtr("Placeholder"),
+			State:           util.StrPtr("Placeholder"),
 		},
 	}
-	if err := GeneratePutRiakKeys(req, tx, inf.Vault, context); err != nil {
+	if err := generatePutTrafficVaultSSLKeys(req, tx, inf.Vault, context); err != nil {
 		return errors.New("generating and putting SSL keys: " + err.Error()), http.StatusInternalServerError
 	}
 	if err := updateSSLKeyVersion(*req.DeliveryService, req.Version.ToInt64(), tx); err != nil {
@@ -169,14 +169,4 @@ func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV40, inf *api.APIInf
 	}
 
 	return nil, http.StatusOK
-}
-
-func getCDNNameDomain(cdnID int, tx *sql.Tx) (string, string, error) {
-	q := `SELECT cdn.name, cdn.domain_name from cdn where cdn.id = $1`
-	cdnName := ""
-	cdnDomain := ""
-	if err := tx.QueryRow(q, cdnID).Scan(&cdnName, &cdnDomain); err != nil {
-		return "", "", fmt.Errorf("getting cdn name and domain for cdn '%v': "+err.Error(), cdnID)
-	}
-	return cdnName, cdnDomain, nil
 }
