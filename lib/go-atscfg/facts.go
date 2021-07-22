@@ -21,7 +21,11 @@ package atscfg
 
 import "strings"
 
+// ContentType12MFacts is the MIME type of the contents of a 12M_facts file.
 const ContentType12MFacts = ContentTypeTextASCII
+
+// LineComment12MFacts is the string that signifies the start of a line comment
+// in the grammar of a 12M_facts file.
 const LineComment12MFacts = LineCommentHash
 
 // Config12MFactsOpts contains settings to configure generation options.
@@ -32,6 +36,8 @@ type Config12MFactsOpts struct {
 	HdrComment string
 }
 
+// Make12MFacts constructs a 12M_facts file for the given server with the given
+// header comment contents.
 func Make12MFacts(
 	server *Server,
 	opt *Config12MFactsOpts,
