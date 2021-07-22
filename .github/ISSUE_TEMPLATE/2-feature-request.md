@@ -63,10 +63,3 @@ or the Traffic Control Users mailing list (send an email to users-subscribe@traf
 ## New behavior:
 <!-- Describe how the feature would improve Traffic Control -->
 
-## Minimal reproduction of the problem with instructions:
-<!--
-If you can illustrate your feature request better with an example, please
-provide the *STEPS TO REPRODUCE* and include the applicable TC version.
-If not, feel free to delete this section.
--->
-
