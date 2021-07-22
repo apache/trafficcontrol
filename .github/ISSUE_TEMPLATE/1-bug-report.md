@@ -38,8 +38,7 @@ or the Traffic Control Users mailing list (send an email to users-subscribe@traf
 - [x] bug report
 <!--Please do not submit support requests here - see above-->
 
-## Traffic Control components affected ...
-<!-- delete all those that don't apply -->
+## Traffic Control components affected ... <!-- delete all those that don't apply -->
 - Traffic Control Cache Config (T3C)
 - Traffic Control Client <!-- Please specify which (Python, Go, or Java) -->
 - Traffic Monitor
@@ -54,14 +53,14 @@ or the Traffic Control Users mailing list (send an email to users-subscribe@traf
 - unknown
 
 ## Current behavior:
-<!-- Describe how the bug manifests -->
+<!-- Describe how the bug happens -->
 
 ## Expected behavior:
 <!-- Describe what the behavior would be without the bug -->
 
+
 ## Minimal reproduction of the problem with instructions:
-<!--
-If the current behavior is a bug, please provide the *STEPS TO REPRODUCE* and
+<!-- If the current behavior is a bug, please provide the *STEPS TO REPRODUCE* and
 include the applicable TC version.
 -->
 

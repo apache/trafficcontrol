@@ -17,13 +17,9 @@
 # under the License.
 #
 name: Feature request
-
 about: Suggest how to improve Traffic Control with something new
-
 labels: enhancement
-
 ---
-
 <!--
 ************ STOP!! ************
 If this issue identifies a security vulnerability, DO NOT submit it! Instead, contact
@@ -58,7 +54,8 @@ or the Traffic Control Users mailing list (send an email to users-subscribe@traf
 - unknown
 
 ## Current behavior:
-<!-- Describe how the current features are insufficient. -->
+<!-- Describe how current ATC features are insufficient. -->
+
 
 ## New behavior:
 <!-- Describe how the feature would improve Traffic Control -->

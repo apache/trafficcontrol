@@ -17,13 +17,9 @@
 # under the License.
 #
 name: Improvement request
-
 about: Suggest how to improve Traffic Control. Examples include usability, performance, tech debt, etc.
-
 labels: improvement
-
 ---
-
 <!--
 ************ STOP!! ************
 If this issue identifies a security vulnerability, DO NOT submit it! Instead, contact
@@ -60,13 +56,13 @@ or the Traffic Control Users mailing list (send an email to users-subscribe@traf
 ## Current behavior:
 <!-- Describe how the current features are insufficient. -->
 
+
 ## New behavior:
 <!-- Describe how the feature would improve Traffic Control -->
 
+
 ## Minimal reproduction of the problem with instructions:
-<!--
-If you can illustrate your feature request better with an example, please
+<!-- If you can illustrate your improvement request better with an example, please
 provide the *STEPS TO REPRODUCE* and include the applicable TC version.
-If not, feel free to delete this section.
 -->
 
