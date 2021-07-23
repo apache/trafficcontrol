@@ -20,6 +20,7 @@ package main
  */
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -60,7 +61,7 @@ func main() {
 	var lock util.FileLock
 	cfg, err := config.GetCfg()
 	if err != nil {
-		log.Errorln(err)
+		fmt.Println(err)
 		os.Exit(ConfigError)
 	} else if cfg == (config.Cfg{}) { // user used the --help option
 		os.Exit(Success)
