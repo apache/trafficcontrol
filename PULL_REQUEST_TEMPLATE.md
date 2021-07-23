@@ -1,15 +1,17 @@
 <!--
-************ STOP!! ************
-If this PR is intended to fix a security vulnerability, DO NOT submit it! Instead, contact
+Thank you for contributing! Please be sure to read our contribution guidelines: https://github.com/apache/trafficcontrol/blob/master/CONTRIBUTING.md
+If this closes or relates to an existing issue, please reference it using one of the following:
+
+closes: #ISSUE
+related: #ISSUE
+
+If this PR fixes a security vulnerability, DO NOT submit! Instead, contact
 the Apache Traffic Control Security Team at security@trafficcontrol.apache.org and follow the
 guidelines at https://apache.org/security regarding vulnerability disclosure.
 -->
-## What does this PR (PR) do?
-- [ ] This PR fixes #REPLACE_ME
-<!-- Or you can say
-- [x] This PR is not related to any Issue
 
-A description of your PR goes here ↓ -->
+---
+**^ Add meaningful description above**
 
 
 ## Which Traffic Control components are affected by this PR?
