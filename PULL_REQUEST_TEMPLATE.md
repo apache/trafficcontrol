@@ -1,10 +1,10 @@
 <!--
 ************ STOP!! ************
-If this Pull Request is intended to fix a security vulnerability, DO NOT submit it! Instead, contact
+If this PR is intended to fix a security vulnerability, DO NOT submit it! Instead, contact
 the Apache Traffic Control Security Team at security@trafficcontrol.apache.org and follow the
 guidelines at https://apache.org/security regarding vulnerability disclosure.
 -->
-## What does this PR (Pull Request) do?
+## What does this PR (PR) do?
 - [ ] This PR fixes #REPLACE_ME
 <!-- Or you can say
 - [x] This PR is not related to any Issue
@@ -13,7 +13,7 @@ A description of your PR goes here ↓ -->
 
 
 ## Which Traffic Control components are affected by this PR?
-<!-- Please delete all components from this list that are NOT affected by this Pull Request.
+<!-- Please delete all components from this list that are NOT affected by this PR.
 Feel free to add the name of a tool or script that is affected but not on the list.
 -->
 - Documentation
@@ -30,7 +30,7 @@ Feel free to add the name of a tool or script that is affected but not on the li
 - unknown
 
 ## What is the best way to verify this PR?
-<!-- Please include here ALL the steps necessary to test your Pull Request.
+<!-- Please include here ALL the steps necessary to test your PR.
 If your PR includes tests (and most should), provide the steps needed to run the tests.
 If not, please provide step-by-step instructions to test the PR manually and explain why your PR does not need tests. -->
 
