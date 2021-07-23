@@ -52,23 +52,6 @@ start_traffic_vault() {
 		sed -i '/to-access\.sh\|^to-enroll/d' /etc/riak/{prestart.d,poststart.d}/*
 	BASH_LINES
 
-	DOCKER_BUILDKIT=1 docker build "$ciab_dir" -f "${ciab_dir}/traffic_vault/Dockerfile" -t "$trafficvault" 2>&1 |
-		color_and_prefix "$gray_bg" "building Traffic Vault";
-	if [[ -n "$(docker ps -qf "name=^${trafficvault}")" ]]; then
-		echo 'Traffic Vault is already running.'
-		return;
-	fi;
-	echo 'Starting Traffic Vault...';
-	docker run \
-		--detach \
-		--env-file="${ciab_dir}/variables.env" \
-		--hostname="${trafficvault}.infra.ciab.test" \
-		--name="$trafficvault" \
-		--publish=8087:8087 \
-		--rm \
-		"$trafficvault" \
-		/usr/lib/riak/riak-cluster.sh;
-	docker logs -f "$trafficvault" 2>&1 >"${ciab_dir}/traffic.vault.logs";
 }
 truncate -s0 "${ciab_dir}/traffic.vault.logs";
 start_traffic_vault & disown
