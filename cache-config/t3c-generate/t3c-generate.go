@@ -23,6 +23,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"sort"
 	"strings"
@@ -37,7 +38,7 @@ import (
 func main() {
 	cfg, err := config.GetCfg()
 	if err != nil {
-		log.Errorf("Getting config: %s\n", err.Error())
+		fmt.Fprintf(os.Stderr, "Getting config: "+err.Error()+"\n")
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
