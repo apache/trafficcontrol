@@ -15,6 +15,7 @@ package plugin
 */
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"runtime"
@@ -56,14 +57,15 @@ type Plugins interface {
 }
 
 func AddPlugin(priority uint64, funcs Funcs) {
+	// print used here, because this is called in init, loggers don't exist yet
 	_, filename, _, ok := runtime.Caller(1)
 	if !ok {
-		log.Errorln(time.Now().Format(time.RFC3339Nano) + " Error plugin.AddPlugin: runtime.Caller failed, can't get plugin names")
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error plugin.AddPlugin: runtime.Caller failed, can't get plugin names")
 		os.Exit(1)
 	}
 
 	pluginName := strings.TrimSuffix(path.Base(filename), ".go")
-	log.Infoln("AddPlugin adding " + pluginName)
+	fmt.Println("AddPlugin adding " + pluginName)
 	initPlugins = append(initPlugins, pluginObj{funcs: funcs, priority: priority, name: pluginName})
 }
 
