@@ -65,7 +65,7 @@ func init() {
 	getopt.FlagLong(&fromType, "fromType", 't', fmt.Sprintf("From server types (%v)", strings.Join(supportedTypes(), "|")))
 
 	toType = pgBE.Name()
-	getopt.FlagLong(&fromType, "toType", 'o', fmt.Sprintf("From server types (%v)", strings.Join(supportedTypes(), "|")))
+	getopt.FlagLong(&toType, "toType", 'o', fmt.Sprintf("To server types (%v)", strings.Join(supportedTypes(), "|")))
 
 	toCfgPath = "pg.json"
 	getopt.FlagLong(&toCfgPath, "toCfgPath", 'g', "To server config file")
