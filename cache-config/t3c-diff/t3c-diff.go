@@ -35,6 +35,7 @@ import (
 func main() {
 	help := getopt.BoolLong("help", 'h', "Print usage info and exit")
 	getopt.ParseV2()
+	log.Init(os.Stderr, os.Stderr, os.Stderr, os.Stderr, os.Stderr)
 	if *help {
 		log.Errorln(usageStr)
 		os.Exit(0)

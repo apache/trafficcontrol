@@ -47,6 +47,7 @@ const ExitCodeExeErr = 4
 func main() {
 	flagHelp := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	getopt.Parse()
+	log.Init(os.Stderr, os.Stderr, os.Stderr, os.Stderr, os.Stderr)
 	if *flagHelp {
 		log.Errorln(usageStr())
 		os.Exit(ExitCodeSuccess)

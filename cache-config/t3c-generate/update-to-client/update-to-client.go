@@ -32,6 +32,7 @@ import (
 )
 
 func main() {
+	log.Init(os.Stderr, os.Stderr, os.Stderr, os.Stderr, os.Stderr)
 	if len(os.Args) < 3 {
 		log.Errorln(usageStr())
 		os.Exit(0)
