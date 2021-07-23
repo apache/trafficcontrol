@@ -38,7 +38,8 @@ or the Traffic Control Users mailing list (send an email to users-subscribe@traf
 - [x] bug report
 <!-- Please do not submit support requests here - see above-->
 
-## Traffic Control components affected ... <!-- delete all those that don't apply -->
+## Traffic Control components affected ...
+<!-- delete all those that don't apply -->
 - Traffic Control Cache Config (T3C)
 - Traffic Control Client <!-- Please specify which (Python, Go, or Java) -->
 - Traffic Monitor
