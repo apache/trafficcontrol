@@ -16,7 +16,7 @@ A description of your PR goes here ↓ -->
 <!-- Please delete all components from this list that are NOT affected by this Pull Request.
 Feel free to add the name of a tool or script that is affected but not on the list.
 -->
-- Documentation <!-- If this Pull Request does NOT affect documentation, please explain why. -->
+- Documentation
 - Traffic Control Cache Config (T3C)
 - Traffic Control Client <!-- Please specify which (Python, Go, or Java) -->
 - Traffic Monitor
