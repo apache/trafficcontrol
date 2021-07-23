@@ -328,7 +328,7 @@ func GetCfg() (Cfg, error) {
 	var tsHome = ""
 	if *tsHomePtr != "" {
 		tsHome = *tsHomePtr
-		log.Infof("set TSHome from command line: '%s'\n\n", TSHome)
+		log.Infof("set TSHome from command line: '%s'\n", TSHome)
 	}
 	if *tsHomePtr == "" { // evironment or rpm check.
 		tsHome = os.Getenv("TS_HOME") // check for the environment variable.

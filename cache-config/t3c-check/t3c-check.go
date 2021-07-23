@@ -54,7 +54,7 @@ func main() {
 
 	cmd := os.Args[1]
 	if _, ok := commands[cmd]; !ok {
-		log.Errorf("unknown command\n\n%s", usageStr())
+		log.Errorf("unknown command\n%s", usageStr())
 		os.Exit(ExitCodeUnknownCommand)
 	}
 
