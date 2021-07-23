@@ -46,12 +46,6 @@ Examples:
 
 
 ## The following criteria are ALL met by this PR
-<!-- Check each box to signify that the associated statement is true. For example:
-- [x]  ← Correct!
-- [ x] ← Wrong
-- []   ← Wrong
-- [*]  ← Wrong -->
-
 - [x] This PR includes tests <!-- If not, please delete this text and explain why this PR does not need tests. -->
 - [x] This PR include documentation <!-- If not, please delete this text and explain why this PR does not need documentation. -->
 - [x] This PR includes a CHANGELOG.md entry <!-- A fix for a bug from an ATC release, an improvement, or a new feature should include a changelog entry. -->
