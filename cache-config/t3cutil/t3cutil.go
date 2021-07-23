@@ -21,10 +21,7 @@ package t3cutil
 
 import (
 	"bytes"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"html"
-	"io/ioutil"
-	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -74,17 +71,6 @@ func CommentsFilter(body []string) []string {
 func NewLineFilter(str string) string {
 	str = strings.ReplaceAll(str, "\r\n", "\n")
 	return strings.TrimSpace(str)
-}
-
-// ReadFile reads a file and returns the
-// file contents.
-func ReadFile(f string) []byte {
-	data, err := ioutil.ReadFile(f)
-	if err != nil {
-		log.Errorln("Error reading file ", f)
-		os.Exit(1)
-	}
-	return data
 }
 
 // UnencodeFilter translates HTML escape
