@@ -46,7 +46,6 @@ Various :abbr:`ATC (Apache Traffic Control)` components and tools use specific e
 	- :atc-file:`infrastructure/cdn-in-a-box/traffic_ops/to-access.sh` expects this password to authenticate the administrative-level user given by :envvar:`TO_USER`.
 	- :ref:`atstccfg` uses this variable to authenticate the user used for fetching configuration information.
 	- :ref:`toaccess-module` uses this variable to authenticate with the Traffic Ops instance before sending requests.
-	- The Python :ref:`ort.py` will use this variable to specify the password of the user as whom to authenticate when fetching configuration information - but only when using the "new calling convention".
 
 .. envvar:: TO_URL
 
@@ -58,7 +57,6 @@ Various :abbr:`ATC (Apache Traffic Control)` components and tools use specific e
 	- The Traffic Ops :ref:`to-go-tests` for integration with the Go client use this to define the URL at which the Traffic Ops instance is running. It will override configuration file settings that specify the instance location.
 	- :ref:`atstccfg` uses this variable to specify the Traffic Ops instance used to fetch configuration information.
 	- :ref:`toaccess-module` uses this variable to identify the Traffic Ops instance to which requests will be sent.
-	- The Python :ref:`ort.py` will use this variable to specify the Traffic Ops instance used to fetch configuration information - but only when using the "new calling convention".
 
 .. envvar:: TO_USER
 
@@ -69,4 +67,3 @@ Various :abbr:`ATC (Apache Traffic Control)` components and tools use specific e
 	- :atc-file:`infrastructure/cdn-in-a-box/traffic_ops/to-access.sh` expects this to be the name of an administrative-level user.
 	- :ref:`atstccfg` uses this variable to name the user as whom to authenticate for fetching configuration information.
 	- :ref:`toaccess-module` uses this variable to authenticate with the Traffic Ops instance before sending requests.
-	- The Python :ref:`ort.py` will use this variable to specify the user as whom to authenticate when fetching configuration information - but only when using the "new calling convention".

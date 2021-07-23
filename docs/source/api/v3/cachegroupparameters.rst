@@ -19,6 +19,8 @@
 ``cachegroupparameters``
 ************************
 
+.. deprecated:: ATCv6
+
 ``GET``
 =======
 Extract information about the :ref:`cache-group-parameters` associated with :term:`Cache Groups`.
@@ -84,6 +86,8 @@ Response Structure
 			}
 		]
 	}}
+
+.. deprecated:: ATCv6
 
 ``POST``
 ========

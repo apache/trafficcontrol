@@ -74,6 +74,11 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(*reqObj.CDN), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
 	queue := reqObj.Action == "queue"
 	updatedCaches, err := queueUpdates(inf.Tx.Tx, cgID, *reqObj.CDN, queue)
 	if err != nil {

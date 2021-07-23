@@ -15,8 +15,8 @@
 
 package protocol;
 
-import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslImplementation;
-import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslUtil;
+import org.apache.traffic_control.traffic_router.protocol.RouterSslImplementation;
+import org.apache.traffic_control.traffic_router.protocol.RouterSslUtil;
 import org.apache.tomcat.util.net.SSLHostConfig;
 import org.apache.tomcat.util.net.SSLHostConfigCertificate;
 import org.apache.tomcat.util.net.SSLSupport;

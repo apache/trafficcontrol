@@ -316,6 +316,15 @@ func (origin *TOOrigin) Update(h http.Header) (error, error, int) {
 		return errors.New("cannot update the delivery service of a primary origin"), nil, http.StatusBadRequest
 	}
 
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(origin.ReqInfo.Tx.Tx, *origin.DeliveryServiceID)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, string(cdnName), origin.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+
 	log.Debugf("about to run exec query: %s with origin: %++v", updateQuery(), origin)
 	resultRows, err := origin.ReqInfo.Tx.NamedQuery(updateQuery(), origin)
 	if err != nil {
@@ -369,6 +378,15 @@ WHERE id=:id RETURNING last_updated`
 func (origin *TOOrigin) Create() (error, error, int) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
 	userErr, sysErr, errCode := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(origin.ReqInfo.Tx.Tx, *origin.DeliveryServiceID)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, string(cdnName), origin.ReqInfo.User.UserName)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
@@ -441,6 +459,16 @@ func (origin *TOOrigin) Delete() (error, error, int) {
 		return errors.New("cannot delete a primary origin"), nil, http.StatusBadRequest
 	}
 
+	if origin.DeliveryServiceID != nil {
+		_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(origin.ReqInfo.Tx.Tx, *origin.DeliveryServiceID)
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(origin.ReqInfo.Tx.Tx, string(cdnName), origin.ReqInfo.User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+	}
 	result, err := origin.ReqInfo.Tx.NamedExec(deleteQuery(), origin)
 	if err != nil {
 		return nil, errors.New("origin delete: query: " + err.Error()), http.StatusInternalServerError

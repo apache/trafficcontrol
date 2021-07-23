@@ -15,6 +15,7 @@ package orttest
 */
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -37,7 +38,7 @@ func TestT3cReload(t *testing.T) {
 		doTestT3cReloadAnythingInTrafficserverDir(t)
 		doTestT3cReloadNoChange(t)
 		doTestT3cRevalCallsReload(t)
-
+		doTestT3cReloadState(t)
 	})
 	t.Logf("------------- End of TestT3cReload ---------------")
 }
@@ -199,7 +200,7 @@ func doTestT3cRevalCallsReload(t *testing.T) {
 }
 
 func doTestT3cReloadState(t *testing.T) {
-	t.Logf("------------- Start doTestT3cReloadReloadState ---------------")
+	t.Logf("------------- Start doTestT3cReloadState ---------------")
 
 	cacheHostName := "atlanta-edge-03"
 
@@ -210,18 +211,19 @@ func doTestT3cReloadState(t *testing.T) {
 
 	t.Logf("DEBUG TestT3cReload deleting header rewrite")
 
-	var fileNameToRemove string
-
 	// delete header rewrite so we know should trigger a remap.config touch and reload.
-	fileNameToRemove = filepath.Join(test_config_dir, "hdr_rw_first_ds-top.config")
+	fileNameToRemove := filepath.Join(test_config_dir, "hdr_rw_first_ds-top.config")
 	if err := os.Remove(fileNameToRemove); err != nil {
 		t.Fatalf("failed to remove file '" + fileNameToRemove + "': " + err.Error())
 	}
 
-	// delete storage.config we know should trigger just a reload.
-	fileNameToRemove = filepath.Join(test_config_dir, "storage.config")
-	if err := os.Remove(fileNameToRemove); err != nil {
-		t.Fatalf("failed to remove file '" + fileNameToRemove + "': " + err.Error())
+	// create plugin.config to trigger restart directive
+	t.Logf("DEBUG TestT3cReload creating plugin.config")
+	pluginConfigPath := filepath.Join(test_config_dir, "plugin.config")
+	contents := []byte("remap_stats.so")
+	err := ioutil.WriteFile(pluginConfigPath, contents, 0666)
+	if err != nil {
+		t.Fatalf("Unable to create file %s\n", pluginConfigPath)
 	}
 
 	t.Logf("DEBUG TestT3cReload setting upate flag")
@@ -232,20 +234,15 @@ func doTestT3cReloadState(t *testing.T) {
 
 	t.Logf("DEBUG TestT3cReload calling syncds")
 	stdOut, _ := t3cUpdateReload(cacheHostName, "syncds")
-	// Ignore the exit code error for now, because the ORT Integration Test Framework doesn't currently start ATS.
-	// TODO check err, after running ATS is added to the tests.
-	// if err != nil {
-	// 	t.Fatalf("t3c syncds failed: %v\n", err)
-	// }
 
-	t.Logf("DEBUG TestT3cReload looking for reload string")
-	if !strings.Contains(stdOut, `Running 'traffic_ctl config reload' now`) {
-		t.Errorf("expected t3c to do a reload after adding a header rewrite file, actual: '''%v'''\n", stdOut)
+	t.Logf("DEBUG TestT3cReload looking for reload summary")
+	if !strings.Contains(stdOut, "Final state: remap.config: true reload: true restart: true ntpd: false sysctl: false") {
+		t.Errorf("expected t3c Final reload state for remap.config, reload and restart, actual: '''%v'''\n", stdOut)
 	}
 
-	t.Logf("DEBUG TestT3cReload looking for remap.config reloading string")
-	if !strings.Contains(stdOut, `updated the remap.config for reloading`) {
-		t.Errorf("expected t3c to touch remap.config after adding a header rewrite file, actual: '''%v'''\n", stdOut)
+	// remove plugin.config file for next test
+	if err := os.Remove(pluginConfigPath); err != nil {
+		t.Fatalf("failed to remove file '" + pluginConfigPath + "': " + err.Error())
 	}
 
 	t.Logf("------------- End TestT3cReload doTestT3cReloadState ---------------")
@@ -262,13 +259,11 @@ func t3cUpdateReload(host string, runMode string) (string, int) {
 		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
 		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
 		"--cache-host-name=" + host,
-		"--log-location-error=stdout",
-		"--log-location-info=stdout",
-		"--log-location-debug=test.log",
+		"-vv",
 		"--omit-via-string-release=true",
 		"--git=" + "yes",
 		"--run-mode=" + runMode,
 	}
-	stdOut, _, exitCode := t3cutil.Do("t3c", args...) // should be no stderr, we told it to log to stdout
-	return string(stdOut), exitCode
+	_, stdErr, exitCode := t3cutil.Do("t3c", args...)
+	return string(stdErr), exitCode
 }

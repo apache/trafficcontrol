@@ -71,7 +71,7 @@ A Profile's :dfn:`Type` determines how its configured Parameters_ are treated by
 .. danger:: Nearly all of these Profile Types have strict naming requirements, and it may be noted that some of said requirements are prefixes ending with ``_``, while others are either not prefixes or do not end with ``_``. This is exactly true; some requirements **need** that ``_`` and some may or may not have it. It is our suggestion, therefore, that for the time being all prefixes use the ``_`` notation to separate words, so as to avoid causing headaches remembering when that matters and when it does not.
 
 ATS_PROFILE
-	A Profile that can be used with either an Edge-tier or Mid-tier :term:`cache server` (but not both, in general). This is the only Profile type that will ultimately pass its Parameters_ on to :term:`ORT` in the form of generated configuration files. For this reason, it can make use of the :ref:`ort-special-strings` in the values of some of its Parameters_.
+	A Profile that can be used with either an Edge-tier or Mid-tier :term:`cache server` (but not both, in general). This is the only Profile type that will ultimately pass its Parameters_ on to :term:`ORT` in the form of generated configuration files. For this reason, it can make use of the :ref:`t3c-special-strings` in the values of some of its Parameters_.
 
 	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``EDGE`` or ``MID``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise! This includes :ref:`to-api-caches-stats`.
 
@@ -199,9 +199,6 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	| use_reval_pending        | global                  | When this Parameter is present and its Value_ is exactly "1", Traffic Ops will separately keep track of :term:`cache servers`'        |
 	|                          |                         | updates and pending content invalidation jobs. This behavior should be enabled by default, and disabling it, while still possible, is |
 	|                          |                         | **EXTREMELY DISCOURAGED**.                                                                                                            |
-	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| use_tenancy              | global                  | This :ref:`Parameter <parameters>`, when it exists and has a Value_ of exactly "1" enables the use :term:`Tenants` in Traffic         |
-	|                          |                         | Control. This should be enabled by default, and while disabling this is still possible, it is **EXTREMELY DISCOURAGED**.              |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| geolocation.polling.url  | CRConfig.json           | The location of a geographic IP mapping database for Traffic Router instances to use.                                                 |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+

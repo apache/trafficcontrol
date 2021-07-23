@@ -20,12 +20,15 @@ package profile
  */
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/profileparameter"
 )
 
@@ -50,7 +53,6 @@ func CopyProfileHandler(w http.ResponseWriter, r *http.Request) {
 			Name:         inf.Params["new_profile"],
 		},
 	}
-
 	errs := copyProfile(inf, &p.Response)
 	if errs.userErr != nil || errs.sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errs.errCode, errs.userErr, errs.sysErr)
@@ -116,6 +118,29 @@ func copyProfile(inf *api.APIInfo, p *tc.ProfileCopy) errorDetails {
 		}
 	}
 
+	cdnName, err := dbhelpers.GetCDNNameFromProfileName(inf.Tx.Tx, p.ExistingName)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return errorDetails{
+				userErr: errors.New("no cdn for the given profile"),
+				sysErr:  nil,
+				errCode: http.StatusBadRequest,
+			}
+		}
+		return errorDetails{
+			userErr: nil,
+			sysErr:  err,
+			errCode: http.StatusInternalServerError,
+		}
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return errorDetails{
+			userErr: userErr,
+			sysErr:  sysErr,
+			errCode: errCode,
+		}
+	}
 	// use existing CRUD helpers to create the new profile
 	toProfile.ProfileNullable = profiles[0].(tc.ProfileNullable)
 	toProfile.ProfileNullable.Name = &p.Name

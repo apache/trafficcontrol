@@ -53,6 +53,16 @@ func PostProfileParamsByName(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no profile with that name exists"), nil)
 		return
 	}
+	cdnName, err := dbhelpers.GetCDNNameFromProfileID(inf.Tx.Tx, profileID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
 	insertedObjs, err := insertParametersForProfile(profileName, profParams, inf.Tx.Tx)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("posting profile parameters by name: "+err.Error()))

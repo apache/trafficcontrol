@@ -57,7 +57,94 @@ func TestCDNs(t *testing.T) {
 		SortTestCdnDesc(t)
 		CreateTestCDNsAlreadyExist(t)
 		DeleteTestCDNsInvalidId(t)
+		UpdateDeleteCDNWithLocks(t)
 	})
+}
+
+func UpdateDeleteCDNWithLocks(t *testing.T) {
+	// Create a new user with operations level privileges
+	user1 := tc.UserV40{
+		User: tc.User{
+			Username:             util.StrPtr("lock_user1"),
+			RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
+			LocalPassword:        util.StrPtr("test_pa$$word"),
+			ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+			RoleName:             util.StrPtr("operations"),
+		},
+	}
+	user1.Email = util.StrPtr("lockuseremail@domain.com")
+	user1.TenantID = util.IntPtr(1)
+	user1.FullName = util.StrPtr("firstName LastName")
+	_, _, err := TOSession.CreateUser(user1, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("could not create test user with username: %s", *user1.Username)
+	}
+	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
+
+	// Establish a session with the newly created non admin level user
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, *user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	if err != nil {
+		t.Fatalf("could not login with user lock_user1: %v", err)
+	}
+
+	cdn := createBlankCDN("locksCDN", t)
+
+	// Create a lock for this user
+	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
+		CDN:     cdn.Name,
+		Message: util.StrPtr("test lock"),
+		Soft:    util.BoolPtr(false),
+	}, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("couldn't create cdn lock: %v", err)
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", cdn.Name)
+	cdns, _, err := userSession.GetCDNs(opts)
+	if err != nil {
+		t.Fatalf("couldn't get cdn: %v", err)
+	}
+	if len(cdns.Response) != 1 {
+		t.Fatal("couldn't get exactly one cdn in the response, quitting")
+	}
+	cdnID := cdns.Response[0].ID
+	// Try to update a CDN that another user has a hard lock on -> this should fail
+	cdns.Response[0].DomainName = "changed_domain_name"
+	_, reqInf, err := TOSession.UpdateCDN(cdnID, cdns.Response[0], client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while updating a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while updating a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to update a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.UpdateCDN(cdnID, cdns.Response[0], client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while updating a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	// Try to delete a CDN that another user has a hard lock on -> this should fail
+	_, reqInf, err = TOSession.DeleteCDN(cdnID, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while deleting a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while deleting a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to delete a CDN that the same user has a hard lock on -> this should succeed
+	// This should also delete the lock associated with this CDN
+	_, reqInf, err = userSession.DeleteCDN(cdnID, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while deleting a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	locks, _, _ := userSession.GetCDNLocks(client.RequestOptions{})
+	if len(locks.Response) != 0 {
+		t.Errorf("expected deletion of CDN to delete it's associated lock, and no locks in the response, but got %d locks instead", len(locks.Response))
+	}
 }
 
 func TestCDNsDNSSEC(t *testing.T) {
@@ -70,9 +157,27 @@ func TestCDNsDNSSEC(t *testing.T) {
 }
 
 func RefreshDNSSECKeys(t *testing.T) {
-	resp, _, err := TOSession.RefreshDNSSECKeys(client.RequestOptions{})
+	resp, reqInf, err := TOSession.RefreshDNSSECKeys(client.RequestOptions{})
 	if err != nil {
 		t.Errorf("unable to refresh DNSSEC keys: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusAccepted {
+		t.Errorf("refreshing DNSSEC keys - expected: status code %d, actual: %d", http.StatusAccepted, reqInf.StatusCode)
+	}
+	loc := reqInf.RespHeaders.Get("Location")
+	if loc == "" {
+		t.Errorf("refreshing DNSSEC keys - expected: non-empty 'Location' response header, actual: empty")
+	}
+	asyncID, err := strconv.Atoi(strings.Split(loc, "/")[4])
+	if err != nil {
+		t.Errorf("parsing async_status ID from 'Location' response header - expected: no error, actual: %v", err)
+	}
+	status, _, err := TOSession.GetAsyncStatus(asyncID, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("getting async status id %d - expected: no error, actual: %v", asyncID, err)
+	}
+	if status.Response.Message == nil {
+		t.Errorf("getting async status for DNSSEC refresh job - expected: non-nil message, actual: nil")
 	}
 }
 

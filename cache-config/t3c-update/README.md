@@ -57,15 +57,6 @@ t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P v
 
     [true | false] sets the servers revalidate status (required)
 
--d, --log-location-debug=value
-
-    Where to log debugs. May be a file path, stdout, stderr
-
--e, --log-location-error=value
-
-    Where to log errors. May be a file path, stdout, stderr
-    [stderr]
-
 -H, --cache-host-name=value
 
     Host name of the cache to generate config for. Must be the
@@ -74,11 +65,6 @@ t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P v
 -h, --help
 
     Print usage information and exit
-
--i, --log-location-info=value
-
-    Where to log infos. May be a file path, stdout, stderr
-    [stderr]
 
 -I, --traffic-ops-insecure
 
@@ -98,6 +84,12 @@ t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P v
 
     [true | false] sets the servers update status (required)
 
+-s, -\-silent
+
+    Silent. Errors are not logged, and the 'verbose' flag is
+    ignored. If a fatal error occurs, the return code will be
+    non-zero but no text will be output to stderr
+
 -t, --traffic-ops-timeout-milliseconds=value
 
     Timeout in milli-seconds for Traffic Ops requests, default
@@ -114,7 +106,13 @@ t3c-update [-ahIqv] [-d value] [-e value] [-H value] [-i value] [-l value] [-P v
     Traffic Ops username. Required. May also be set with the
     environment variable TO_USER
 
--v, --version
+-v, -\-verbose
+
+    Log verbosity. Logging is output to stderr. By default,
+    errors are logged. To log warnings, pass '-v'. To log info,
+    pass '-vv'. To omit error logging, see '-s'.
+
+-V, --version
 
     Print the version and exit
 

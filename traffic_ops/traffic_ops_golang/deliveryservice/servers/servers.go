@@ -106,44 +106,8 @@ func (dss *TODeliveryServiceServer) Validate(tx *sql.Tx) error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-// ReadDSSHandler list all of the Deliveryservice Servers in response to requests to api/1.1/deliveryserviceserver$
+// ReadDSSHandler is the handler for GET requests to /deliveryserviceserver.
 func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
-	useIMS := false
-	cfg, err := api.GetConfig(r.Context())
-	if err != nil {
-		log.Warnf("Couldnt get the config %v", err)
-	}
-	if cfg != nil {
-		useIMS = cfg.UseIMS
-	}
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	dss := TODeliveryServiceServer{}
-	dss.SetInfo(inf)
-	results, err, maxTime := dss.readDSS(nil, inf.Tx, inf.User, inf.Params, inf.IntParams, nil, nil, useIMS)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-		return
-	}
-	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
-		// RFC1123
-		date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
-		w.Header().Add(rfc.LastModified, date)
-	}
-	// statusnotmodified
-	if err == nil && results == nil {
-		w.WriteHeader(http.StatusNotModified)
-	}
-	api.WriteRespRaw(w, r, results)
-}
-
-// ReadDSSHandler list all of the Deliveryservice Servers in response to requests to api/1.1/deliveryserviceserver$
-func ReadDSSHandlerV14(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -245,7 +209,10 @@ func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *au
 		log.Warnf("Error getting the max last updated query %v", err)
 	}
 	if useIMS {
-		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, map[string]interface{}{}, query1)
+		queryValues := map[string]interface{}{
+			"accessibleTenants": pq.Array(tenantIDs),
+		}
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, h, queryValues, query1)
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return nil, nil, &maxTime
@@ -284,7 +251,7 @@ func selectQuery(orderBy string, limit string, offset string, dsIDs []int64, ser
 	FROM deliveryservice_server s`
 
 	if getMaxQuery {
-		selectStmt = `SELECT max(t) from (
+		selectStmt = `SELECT max(t) from ( (
 		SELECT max(s.last_updated) as t FROM deliveryservice_server s`
 	}
 	allowedOrderByCols := map[string]string{
@@ -317,14 +284,19 @@ AND s.server = ANY(:serverids)
 `
 	}
 
+	if getMaxQuery {
+		selectStmt += ` GROUP BY s.deliveryservice`
+	}
+
 	if orderBy != "" {
 		selectStmt += ` ORDER BY ` + orderBy
 	}
 
-	selectStmt += ` LIMIT ` + limit + ` OFFSET ` + offset + ` ROWS`
+	selectStmt += ` LIMIT ` + limit + ` OFFSET ` + offset + ` ROWS `
 	if getMaxQuery {
-		return selectStmt + `UNION ALL
-		select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_server') as res`, nil
+		return selectStmt + ` )
+UNION ALL
+select max(last_updated) as t from last_deleted l where l.table_name='deliveryservice_server') as res`, nil
 	}
 	return selectStmt, nil
 }
@@ -442,6 +414,21 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+	if ds.CDNID != nil {
+		cdn, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(*ds.CDNID))
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		} else if !ok {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+			return
+		}
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
 	serverInfos, err := dbhelpers.GetServerInfosFromIDs(inf.Tx.Tx, servers)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
@@ -488,7 +475,7 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 
 type TODeliveryServiceServers tc.DeliveryServiceServers
 
-// GetCreateHandler assigns an existing Server to and existing Deliveryservice in response to api/1.1/deliveryservices/{xml_id}/servers
+// GetCreateHandler is the handler for POST requests to /deliveryservices/{{XMLID}}/servers.
 func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xml_id"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -511,6 +498,22 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, errors.New("delivery service not found"))
 		return
+	}
+
+	if ds.CDNID != nil {
+		cdn, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(*ds.CDNID))
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		} else if !ok {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+			return
+		}
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
 	}
 
 	// get list of server Ids to insert
@@ -699,18 +702,8 @@ VALUES (:id, :server )`
 	return query
 }
 
-// GetReadAssigned retrieves lists of servers  based in the filter identified in the request: api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
+// GetReadAssigned is the handler for GET requests to /deliveryservices/{id}/servers.
 func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
-	getRead(w, r, false, tc.Alerts{})
-}
-
-// GetReadUnassigned retrieves lists of servers  based in the filter identified in the request: api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
-func GetReadUnassigned(w http.ResponseWriter, r *http.Request) {
-	alerts := api.CreateDeprecationAlerts(nil)
-	getRead(w, r, true, alerts)
-}
-
-func getRead(w http.ResponseWriter, r *http.Request, unassigned bool, alerts tc.Alerts) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -718,7 +711,8 @@ func getRead(w http.ResponseWriter, r *http.Request, unassigned bool, alerts tc.
 	}
 	defer inf.Close()
 
-	servers, err := read(inf.Tx, inf.IntParams["id"], inf.User, unassigned)
+	alerts := tc.Alerts{}
+	servers, err := read(inf.Tx, inf.IntParams["id"], inf.User)
 	if err != nil {
 		alerts.AddNewAlert(tc.ErrorLevel, err.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
@@ -780,7 +774,7 @@ func getRead(w http.ResponseWriter, r *http.Request, unassigned bool, alerts tc.
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, servers)
 }
 
-func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser, unassigned bool) ([]tc.DSServerV4, error) {
+func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser) ([]tc.DSServerV4, error) {
 	queryDataString :=
 		`,
 cg.name as cachegroup,
@@ -825,12 +819,8 @@ JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id `
-	if unassigned {
-		queryFormatString += `WHERE s.id not in (select server from deliveryservice_server where deliveryservice = $1)`
-	} else {
-		queryFormatString += `WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
-	}
+JOIN type t ON s.type = t.id
+WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
 
 	idRows, err := tx.Queryx(fmt.Sprintf(queryFormatString, ""), dsID)
 	if err != nil {
@@ -919,6 +909,13 @@ type TODSSDeliveryService struct {
 
 // Read shows all of the delivery services associated with the specified server.
 func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	version := dss.APIInfo().Version
+	if version == nil {
+		return nil, nil, errors.New("TODSSDeliveryService.Read called with nil API version"), http.StatusInternalServerError, nil
+	}
+	if version.Major == 1 && version.Minor < 1 {
+		return nil, nil, fmt.Errorf("TODSSDeliveryService.Read called with invalid API version: %d.%d", version.Major, version.Minor), http.StatusInternalServerError, nil
+	}
 	var maxTime time.Time
 	var runSecond bool
 	returnable := []interface{}{}
@@ -983,6 +980,9 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	}
 
 	for _, ds := range dses {
+		if version.Major > 3 && version.Minor >= 0 {
+			ds = ds.RemoveLD1AndLD2()
+		}
 		returnable = append(returnable, ds)
 	}
 	return returnable, nil, nil, http.StatusOK, &maxTime

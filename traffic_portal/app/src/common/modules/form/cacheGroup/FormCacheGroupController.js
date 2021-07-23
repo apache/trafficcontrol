@@ -31,10 +31,6 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
         $location.path($location.path() + '/asns');
     };
 
-    $scope.viewParams = function() {
-        $location.path($location.path() + '/parameters');
-    };
-
     $scope.viewServers = function() {
         $location.path($location.path() + '/servers');
     };

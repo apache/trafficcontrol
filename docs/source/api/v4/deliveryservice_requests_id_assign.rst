@@ -169,11 +169,9 @@ The response contains a full representation of the newly assigned :term:`Deliver
 			"infoUrl": null,
 			"initialDispersion": 1,
 			"ipv6RoutingEnabled": true,
-			"lastUpdated": "2020-09-25 02:09:54+00",
+			"lastUpdated": "2020-09-25T02:09:54Z",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
-			"longDesc1": null,
-			"longDesc2": null,
 			"matchList": [
 				{
 					"type": "HOST_REGEXP",
@@ -228,7 +226,8 @@ The response contains a full representation of the newly assigned :term:`Deliver
 			"firstHeaderRewrite": null,
 			"innerHeaderRewrite": null,
 			"lastHeaderRewrite": null,
-			"serviceCategory": null
+			"serviceCategory": null,
+			"tlsVersions": null
 		},
 		"requested": {
 			"active": true,
@@ -259,8 +258,6 @@ The response contains a full representation of the newly assigned :term:`Deliver
 			"lastUpdated": null,
 			"logsEnabled": false,
 			"longDesc": "long desc",
-			"longDesc1": null,
-			"longDesc2": null,
 			"matchList": null,
 			"maxDnsAnswers": null,
 			"midHeaderRewrite": null,
@@ -301,7 +298,8 @@ The response contains a full representation of the newly assigned :term:`Deliver
 			"firstHeaderRewrite": null,
 			"innerHeaderRewrite": null,
 			"lastHeaderRewrite": null,
-			"serviceCategory": null
+			"serviceCategory": null,
+			"tlsVersions": null
 		},
 		"status": "draft"
 	}}

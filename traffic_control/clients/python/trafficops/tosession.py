@@ -346,8 +346,9 @@ class TOSession(RestApiSession):
 	@api_request('get', 'cachegroups/{cache_group_id:d}/parameters', ('3.0',))
 	def get_cachegroup_parameters(self, cache_group_id=None):
 		"""
-		Get a cache groups parameters
-		:ref:`to-api-cachegroups-id-parameters`
+		Get a cache groups parameters. This endpoint has been
+		deprecated and will no longer be available as of TO API v4.
+		:ref:`to-api-v3-cachegroups-id-parameters`
 		:param cache_group_id: The cache group Id
 		:type cache_group_id: int
 		:rtype: Tuple[Dict[str, Any], requests.Response]
@@ -357,8 +358,9 @@ class TOSession(RestApiSession):
 	@api_request('get', 'cachegroupparameters', ('3.0',))
 	def get_all_cachegroup_parameters(self):
 		"""
-		A collection of all cache group parameters.
-		:ref:`to-api-cachegroupparameters`
+		A collection of all cache group parameters. This endpoint has been
+		deprecated and will no longer be available as of TO API v4.
+		:ref:`to-api-v3-cachegroupparameters`
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -414,8 +416,9 @@ class TOSession(RestApiSession):
 	@api_request('delete', 'cachegroupparameters/{cache_group_id:d}/{parameter_id:d}', ('3.0',))
 	def delete_cache_group_parameters(self, cache_group_id=None, parameter_id=None):
 		"""
-		Delete a cache group parameter association
-		:ref:`to-api-cachegroupparameters-id-parameterID`
+		Delete a cache group parameter association. This endpoint has been
+		deprecated and will no longer be available as of TO API v4.
+		:ref:`to-api-v3-cachegroupparameters-id-parameterID`
 		:param cache_group_id: The cache group id in which the parameter will be deleted
 		:type cache_group_id: int
 		:param parameter_id: The parameter id which will be disassociated
@@ -1653,7 +1656,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-		
+
 	@api_request('post', 'servercheck', ('3.0',))
 	def create_servercheck(self, data=None):
 		"""
@@ -2231,7 +2234,7 @@ if __name__ == '__main__':
 		print('Bulk cache group [{0}] has id [{1}]'.format(cache_group.name, cache_group.id))
 
 		# Example with URL replacement parameters
-		# e.g. TOSession.get_cachegroups_by_id() == end-point 'api/1.2/cachegroups/{id}'
+		# e.g. TOSession.get_cachegroups_by_id() is the '/cachegroups/{id}' API endpoint
 		#      See TOSession object for details.
 		print('    Getting cachegroup by id [{0}]'.format(cache_group.id),
 			  ' to demonstrate getting by id...')

@@ -29,6 +29,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 const InvalidID = -1
@@ -666,4 +667,32 @@ func makeErrf(warnings []string, format string, v ...interface{}) error {
 type DeliveryServiceServer struct {
 	Server          int `json:"s"`
 	DeliveryService int `json:"d"`
+}
+
+func JobsToInvalidationJobs(oldJobs []tc.Job) ([]tc.InvalidationJob, error) {
+	jobs := make([]tc.InvalidationJob, len(oldJobs), len(oldJobs))
+	err := error(nil)
+	for i, oldJob := range oldJobs {
+		jobs[i], err = JobToInvalidationJob(oldJob)
+		if err != nil {
+			return nil, errors.New("converting old tc.Job to tc.InvalidationJob: " + err.Error())
+		}
+	}
+	return jobs, nil
+}
+
+func JobToInvalidationJob(jb tc.Job) (tc.InvalidationJob, error) {
+	startTime := tc.Time{}
+	if err := json.Unmarshal([]byte(`"`+jb.StartTime+`"`), &startTime); err != nil {
+		return tc.InvalidationJob{}, errors.New("unmarshalling time: " + err.Error())
+	}
+	return tc.InvalidationJob{
+		AssetURL:        util.StrPtr(jb.AssetURL),
+		CreatedBy:       util.StrPtr(jb.CreatedBy),
+		DeliveryService: util.StrPtr(jb.DeliveryService),
+		ID:              util.Uint64Ptr(uint64(jb.ID)),
+		Keyword:         util.StrPtr(jb.Keyword),
+		Parameters:      util.StrPtr(jb.Parameters),
+		StartTime:       &startTime,
+	}, nil
 }

@@ -1,3 +1,4 @@
+// Package cachegroupparameter is deprecated and will be removed with API v1-3.
 package cachegroupparameter
 
 /*
@@ -24,22 +25,22 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/jmoiron/sqlx"
-
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+
+	"github.com/jmoiron/sqlx"
 )
 
 const (
@@ -207,6 +208,11 @@ func (cgparam *TOCacheGroupParameter) Delete() (error, error, int) {
 		return fmt.Errorf("parameter %v does not exist", *cgparam.ID), nil, http.StatusNotFound
 	}
 
+	// CheckIfCurrentUserCanModifyCachegroup
+	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCachegroup(cgparam.ReqInfo.Tx.Tx, cgparam.CacheGroupID, cgparam.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
 	return api.GenericDelete(cgparam)
 }
 
@@ -214,16 +220,16 @@ func (cgparam *TOCacheGroupParameter) Delete() (error, error, int) {
 func ReadAllCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, nil)
 		return
 	}
 	defer inf.Close()
 	output, err := GetAllCacheGroupParameters(inf.Tx, inf.Params)
 	if err != nil {
-		api.WriteRespAlertObj(w, r, tc.ErrorLevel, "querying cachegroupparameters with error: "+err.Error(), output)
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("querying cachegroupparameters with error: "+err.Error()), nil)
 		return
 	}
-	api.WriteResp(w, r, output)
+	api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(nil), output)
 }
 
 // GetAllCacheGroupParameters gets all cachegroup associations from the database and returns as slice.
@@ -269,14 +275,13 @@ func GetAllCacheGroupParameters(tx *sqlx.Tx, parameters map[string]string) (tc.C
 func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr, nil)
 		return
 	}
 	defer inf.Close()
-
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("reading request body: "+err.Error()), nil)
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("reading request body: "+err.Error()), nil, nil)
 		return
 	}
 
@@ -287,7 +292,7 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(buf)
 	err = decoder.Decode(&paramsInt)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing json: "+err.Error()), nil)
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing json: "+err.Error()), nil, nil)
 		return
 	}
 
@@ -298,7 +303,7 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 		var singleParam tc.CacheGroupParametersNullable
 		parseErr = json.Unmarshal(data, &singleParam)
 		if singleParam.CacheGroup == nil || singleParam.Parameter == nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid cachegroup parameter."), nil)
+			api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid cachegroup parameter."), nil, nil)
 			return
 		}
 		params = append(params, singleParam)
@@ -306,22 +311,27 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 		parseErr = json.Unmarshal(data, &params)
 	}
 	if parseErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing cachegroup parameter: "+parseErr.Error()), nil)
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing cachegroup parameter: "+parseErr.Error()), nil, nil)
 		return
 	}
-
+	cachegroups := []int{}
 	for _, p := range params {
 		ppExists, err := dbhelpers.CachegroupParameterAssociationExists(*p.Parameter, *p.CacheGroup, inf.Tx.Tx)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err, nil)
 			return
 		}
 		if ppExists {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parameter: "+strconv.Itoa(*p.Parameter)+" already associated with cachegroup: "+strconv.Itoa(*p.CacheGroup)+"."), nil)
+			api.HandleDeprecatedErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parameter: "+strconv.Itoa(*p.Parameter)+" already associated with cachegroup: "+strconv.Itoa(*p.CacheGroup)+"."), nil, nil)
 			return
 		}
+		cachegroups = append(cachegroups, *p.CacheGroup)
 	}
-
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCachegroups(inf.Tx.Tx, cachegroups, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
 	values := []string{}
 	for _, param := range params {
 		values = append(values, "("+strconv.Itoa(*param.CacheGroup)+", "+strconv.Itoa(*param.Parameter)+")")
@@ -332,11 +342,13 @@ func AddCacheGroupParameters(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		userErr, sysErr, code := api.ParseDBError(err)
-		api.HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
+		api.HandleDeprecatedErr(w, r, inf.Tx.Tx, code, userErr, sysErr, nil)
 		return
 	}
 
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Cachegroup parameter associations were created.", params)
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "Cachegroup parameter associations were created.")
+	alerts.AddAlerts(api.CreateDeprecationAlerts(nil))
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, params)
 }
 
 func selectAllQuery() string {

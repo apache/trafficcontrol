@@ -222,10 +222,6 @@ This product bundles fontawesome CSS files, which are available under an MIT lic
 ./licenses/MIT-fontawesome
 Refer to the above license for the full text.
 
-This product bundles bootstrap, which is available under an MIT license.
-@misc/traffic-control-cdn/*/bootstrap*
-Refer to the above license for the full text.
-
 This product bundles normalize.css, which is available under an MIT license.
 ./licenses/MIT-normalize
 Refer to the above license for the full text.
@@ -529,11 +525,6 @@ Refer to the above license for the full text.
 This product bundles dgrijalva/jwt-go, which is available under an MIT license.
 @vendor/github.com/dgrijalva/jwt-go/*
 ./vendor/github.com/dgrijalva/jwt-go/LICENSE
-Refer to the above license for the full text.
-
-This product bundles ogier/pflag, which is available under a BSD-3-Clause license.
-@vendor/github.com/ogier/pflag/*
-./vendor/github.com/ogier/pflag/LICENSE
 Refer to the above license for the full text.
 
 This product bundles errors, which is available under a BSD-2-Clause license.

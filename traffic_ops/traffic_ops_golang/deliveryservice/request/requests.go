@@ -136,7 +136,7 @@ func selectMaxLastUpdatedQuery(where string) string {
 // them as originals on the Delivery Services to which each ID maps in
 // needOriginals. It returns a response code to use if an error occurred, in
 // which case it also returns a user error and a system error.
-func getOriginals(ids []int, tx *sqlx.Tx, needOriginals map[int][]*tc.DeliveryServiceRequestV4) (int, error, error) {
+func getOriginals(ids []int, tx *sqlx.Tx, needOriginals map[int][]*tc.DeliveryServiceRequestV4, omitExtraLongDescFields bool) (int, error, error) {
 	if len(ids) > 0 {
 		originals, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(originalsQuery, map[string]interface{}{"ids": pq.Array(ids)}, tx)
 		if userErr != nil || sysErr != nil {
@@ -150,6 +150,9 @@ func getOriginals(ids []int, tx *sqlx.Tx, needOriginals map[int][]*tc.DeliverySe
 				for _, n := range need {
 					n.Original = new(tc.DeliveryServiceV4)
 					*n.Original = original
+					if omitExtraLongDescFields {
+						*n.Original = n.Original.RemoveLD1AndLD2()
+					}
 				}
 			} else {
 				log.Warnf("Trying to fill in originals: found Delivery Service that wasn't identified by a DSR (#%d)", *original.ID)
@@ -285,7 +288,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if version.Major >= 4 {
-		errCode, userErr, sysErr = getOriginals(originalIDs, inf.Tx, needOriginals)
+		errCode, userErr, sysErr = getOriginals(originalIDs, inf.Tx, needOriginals, true)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		} else {
@@ -368,6 +371,12 @@ func insert(dsr *tc.DeliveryServiceRequestV40, inf *api.APIInfo) (int, error, er
 		}
 		dsr.Original = new(tc.DeliveryServiceV4)
 		*dsr.Original = originals[0]
+		if inf.Version.Major >= 4 && inf.Version.Minor >= 0 {
+			*dsr.Original = dsr.Original.RemoveLD1AndLD2()
+			if dsr.Requested != nil {
+				*dsr.Requested = dsr.Requested.RemoveLD1AndLD2()
+			}
+		}
 	}
 	return http.StatusOK, nil, nil
 }
@@ -449,7 +458,24 @@ func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
-
+	if dsr.Original != nil {
+		if dsr.Original.LongDesc1 != nil || dsr.Original.LongDesc2 != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil)
+			return
+		}
+		if len(dsr.Original.TLSVersions) < 1 {
+			dsr.Original.TLSVersions = nil
+		}
+	}
+	if dsr.Requested != nil {
+		if dsr.Requested.LongDesc1 != nil || dsr.Requested.LongDesc2 != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil)
+			return
+		}
+		if len(dsr.Requested.TLSVersions) < 1 {
+			dsr.Requested.TLSVersions = nil
+		}
+	}
 	errCode, userErr, sysErr := insert(&dsr, inf)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -577,6 +603,7 @@ func Post(w http.ResponseWriter, r *http.Request) {
 
 // Delete is the handler for DELETE requests to /deliveryservice_requests.
 func Delete(w http.ResponseWriter, r *http.Request) {
+	var omitExtraLongDescFields bool
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
@@ -597,6 +624,9 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if version.Major >= 4 && version.Minor >= 0 {
+		omitExtraLongDescFields = true
+	}
 	var dsr tc.DeliveryServiceRequestV40
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
 		if err == sql.ErrNoRows {
@@ -639,9 +669,9 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	if dsr.IsOpen() && dsr.ChangeType != tc.DSRChangeTypeCreate {
 		if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
-			errCode, userErr, sysErr = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Original.ID: {&dsr}})
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Original.ID: {&dsr}}, omitExtraLongDescFields)
 		} else if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
-			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}})
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}}, omitExtraLongDescFields)
 		}
 
 		if userErr != nil || sysErr != nil {
@@ -707,6 +737,13 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 	dsr.LastEditedByID = new(int)
 	*dsr.LastEditedByID = inf.User.ID
 
+	if dsr.Requested != nil && len(dsr.Requested.TLSVersions) < 1 {
+		dsr.Requested.TLSVersions = nil
+	}
+	if dsr.Original != nil && len(dsr.Original.TLSVersions) < 1 {
+		dsr.Original.TLSVersions = nil
+	}
+
 	args := []interface{}{
 		dsr.AssigneeID,
 		dsr.ChangeType,
@@ -715,6 +752,18 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		dsr.Original,
 		dsr.Status,
 		inf.IntParams["id"],
+	}
+	if dsr.Original != nil {
+		if dsr.Original.LongDesc1 != nil || dsr.Original.LongDesc2 != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil)
+			return
+		}
+	}
+	if dsr.Requested != nil {
+		if dsr.Requested.LongDesc1 != nil || dsr.Requested.LongDesc2 != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil)
+			return
+		}
 	}
 	if err := tx.QueryRow(updateQuery, args...).Scan(&dsr.CreatedAt, &dsr.LastUpdated); err != nil {
 		var userErr, sysErr error
@@ -750,6 +799,10 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		}
 		dsr.Original = new(tc.DeliveryServiceV4)
 		*dsr.Original = originals[0]
+		*dsr.Original = dsr.Original.RemoveLD1AndLD2()
+		if dsr.Requested != nil {
+			*dsr.Requested = dsr.Requested.RemoveLD1AndLD2()
+		}
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d updated", inf.IntParams["id"]), dsr)

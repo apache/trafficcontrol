@@ -95,8 +95,10 @@ func main() {
 
 	// create and clean the config.TmpBase (/tmp/ort)
 	if !util.MkDir(config.TmpBase, cfg) {
+		log.Errorln("mkdir TmpBase '" + config.TmpBase + "' failed, cannot continue")
 		os.Exit(GeneralFailure)
 	} else if !util.CleanTmpDir(cfg) {
+		log.Errorln("CleanTmpDir failed, cannot continue")
 		os.Exit(GeneralFailure)
 	}
 	if cfg.RunMode != t3cutil.ModeReport {
@@ -134,7 +136,21 @@ func main() {
 		}
 		if cfg.RunMode == t3cutil.ModeSyncDS && syncdsUpdate == torequest.UpdateTropsNotNeeded {
 			// check for maxmind db updates even if we have no other updates
-			CheckMaxmindUpdate(cfg)
+			if CheckMaxmindUpdate(cfg) {
+				// We updated the db so we should touch and reload
+				trops.RemapConfigReload = true
+				path := config.TSConfigDir + "/remap.config"
+				_, rc, err := util.ExecCommand("/usr/bin/touch", path)
+				if err != nil {
+					log.Errorf("failed to update the remap.config for reloading: %s\n", err.Error())
+				} else if rc == 0 {
+					log.Infoln("updated the remap.config for reloading.")
+				}
+				if err := trops.StartServices(&syncdsUpdate); err != nil {
+					log.Errorln("failed to start services: " + err.Error())
+					GitCommitAndExit(ServicesError, cfg)
+				}
+			}
 			GitCommitAndExit(Success, cfg)
 		}
 	}
@@ -168,6 +184,12 @@ func main() {
 		log.Errorf("Error while processing config files: %s\n", err.Error())
 	}
 
+	// check for maxmind db updates
+	// If we've updated also reload remap to reload the plugin and pick up the new database
+	if CheckMaxmindUpdate(cfg) {
+		trops.RemapConfigReload = true
+	}
+
 	if trops.RemapConfigReload == true {
 		cfg, ok := trops.GetConfigFile("remap.config")
 		_, rc, err := util.ExecCommand("/usr/bin/touch", cfg.Path)
@@ -177,9 +199,6 @@ func main() {
 			log.Infoln("updated the remap.config for reloading.")
 		}
 	}
-
-	// check for maxmind db updates
-	CheckMaxmindUpdate(cfg)
 
 	if err := trops.StartServices(&syncdsUpdate); err != nil {
 		log.Errorln("failed to start services: " + err.Error())

@@ -18,6 +18,7 @@ package client
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strconv"
 
@@ -68,8 +69,13 @@ func (to *Session) GetJobs(deliveryServiceID *int, userID *int) ([]tc.Job, tocli
 	return data.Response, reqInf, err
 }
 
-// Returns a list of Content Invalidation Jobs visible to your Tenant, filtered according to
-// ds and user
+// GetInvalidationJobs is deprecated, use GetInvalidationJobsWithHdr instead.
+func (to *Session) GetInvalidationJobs(ds *interface{}, user *interface{}) ([]tc.InvalidationJob, toclientlib.ReqInf, error) {
+	return to.GetInvalidationJobsWithHdr(ds, user, nil)
+}
+
+// GetInvalidationJobsWithHdr returns a list of Content Invalidation Jobs visible to your Tenant,
+// filtered according to ds and user.
 //
 // Either or both of ds and user may be nil, but when they are not they cause filtering of the
 // returned jobs by Delivery Service and Traffic Ops user, respectively.
@@ -83,7 +89,7 @@ func (to *Session) GetJobs(deliveryServiceID *int, userID *int) ([]tc.Job, tocli
 // desired user (in the case of a float64 the fractional part is dropped, e.g. 3.45 -> 3), or it may
 // be a string, in which case it should be the username of the desired user, or it may be an actual
 // tc.User or tc.UserCurrent structure.
-func (to *Session) GetInvalidationJobs(ds *interface{}, user *interface{}) ([]tc.InvalidationJob, toclientlib.ReqInf, error) {
+func (to *Session) GetInvalidationJobsWithHdr(ds *interface{}, user *interface{}, hdr http.Header) ([]tc.InvalidationJob, toclientlib.ReqInf, error) {
 	const DSIDKey = "dsId"
 	const DSKey = "deliveryService"
 	const UserKey = "userId"
@@ -152,6 +158,6 @@ func (to *Session) GetInvalidationJobs(ds *interface{}, user *interface{}) ([]tc
 	data := struct {
 		Response []tc.InvalidationJob `json:"response"`
 	}{}
-	reqInf, err := to.get(path, nil, &data)
+	reqInf, err := to.get(path, hdr, &data)
 	return data.Response, reqInf, err
 }

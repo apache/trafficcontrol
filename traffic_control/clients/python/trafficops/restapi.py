@@ -138,13 +138,13 @@ class RestApiSession(object):
 		:type host_port: int
 		:param api_version: The version of the API to make calls against. If supplied, endpoint version validation will be performed. If supplied as None, no version validation will be performed. :const:`None` is allowed so that non-versioned REST APIs can be implemented.
 		:type api_version: Union[str, None]
-		:param api_base_path: The part of the url that is the base path, from the web server root (which may include an API version), for all API endpoints without the server url portion e.g. 'api/', 'api/1.2/'
+		:param api_base_path: The part of the url that is the base path, from the web server root (which may include an API version), for all API endpoints without the server url portion e.g. 'api/', 'api/latest/'
 
 			.. note:: To specify the base path with the passed ``api_version`` you can specify
 				``api_base_path`` as ``api/{api_version}/`` and the API version will be substituted.
 				If ``api_version`` is :const:`None` and '{api_version}' is specified in the
 				``api_base_path`` string then an exception will be thrown.
-				e.g. api_version=u'1.2' -> 'api/{api_version}/' -> 'api/1.2/'
+				e.g. api_version=u'latest' -> 'api/{api_version}/' -> 'api/latest/'
 				api_version=None   -> 'api/{api_version}/' -> Throws Exception
 
 		:type api_base_path: str

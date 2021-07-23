@@ -586,7 +586,7 @@ func enrollTenant(toSession *session, r io.Reader) error {
 
 func enrollUser(toSession *session, r io.Reader) error {
 	dec := json.NewDecoder(r)
-	var s tc.User
+	var s tc.UserV40
 	err := dec.Decode(&s)
 	log.Infof("User is %++v\n", s)
 	if err != nil {

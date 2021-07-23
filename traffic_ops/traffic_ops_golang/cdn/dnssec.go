@@ -34,7 +34,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
@@ -89,7 +88,11 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("cdn '"+cdnName+"' not found"), nil)
 		return
 	}
-
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdnName, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
 	if err := generateStoreDNSSECKeys(inf.Tx.Tx, cdnName, cdnDomain, uint64(*req.TTL), uint64(*req.KSKExpirationDays), uint64(*req.ZSKExpirationDays), int64(*req.EffectiveDateUnix), inf.Vault, r.Context()); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and storing DNSSEC CDN keys: "+err.Error()))
 		return
@@ -119,7 +122,7 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 
 // DefaultDSTTL is the default DS Record TTL to use, if no CDN Snapshot exists, or if no tld.ttls.DS parameter exists.
 // This MUST be the same value as Traffic Router's default. Currently:
-// traffic_router/core/src/main/java/com/comcast/cdn/traffic_control/traffic_router/core/dns/SignatureManager.java:476
+// traffic_router/core/src/main/java/org/apache/traffic_control/traffic_router/core/dns/SignatureManager.java:476
 // `final Long dsTtl = ZoneUtils.getLong(config.get("ttls"), "DS", 60);`.
 // If Traffic Router and Traffic Ops differ, and a user is using the default, errors may occur!
 // Users are advised to set the tld.ttls.DS CRConfig.json Parameter, so the default is not used!
@@ -165,28 +168,6 @@ func GetDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.WriteResp(w, r, keys)
-}
-
-func GetDNSSECKeysV11(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	cdnName := inf.Params["name"]
-	riakKeys, keysExist, err := inf.Vault.GetDNSSECKeys(cdnName, inf.Tx.Tx, r.Context())
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DNSSEC CDN keys: "+err.Error()))
-		return
-	}
-	if !keysExist {
-		// TODO emulates Perl; change to error, 404?
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, " - Dnssec keys for "+cdnName+" could not be found. ", struct{}{}) // emulates Perl
-		return
-	}
-	api.WriteResp(w, r, riakKeys)
 }
 
 func GetDSRecordTTL(tx *sql.Tx, cdn string) (time.Duration, error) {
@@ -411,56 +392,40 @@ WHERE cdn.name = $1
 }
 
 func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
-	deleteDNSSECKeys(w, r, false)
-}
-
-func DeleteDNSSECKeysDeprecated(w http.ResponseWriter, r *http.Request) {
-	deleteDNSSECKeys(w, r, true)
-}
-
-func writeError(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error, deprecated bool) {
-	if deprecated {
-		api.HandleDeprecatedErr(w, r, tx, statusCode, userErr, sysErr, util.StrPtr(API_DNSSECKEYS))
-	} else {
-		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
-	}
-}
-
-func deleteDNSSECKeys(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		writeError(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	if !inf.Config.TrafficVaultEnabled {
-		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting CDN DNSSEC keys from Traffic Vault: Traffic Vault is not configured"), deprecated)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting CDN DNSSEC keys from Traffic Vault: Traffic Vault is not configured"))
 		return
 	}
 
 	key := inf.Params["name"]
 	cdnID, ok, err := getCDNIDFromName(inf.Tx.Tx, tc.CDNName(key))
 	if err != nil {
-		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn id: "+err.Error()), deprecated)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn id: "+err.Error()))
 		return
 	} else if !ok {
-		writeError(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil, deprecated)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, key, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
 	if err := inf.Vault.DeleteDNSSECKeys(key, inf.Tx.Tx, r.Context()); err != nil {
-		writeError(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting CDN DNSSEC keys: "+err.Error()), deprecated)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting CDN DNSSEC keys: "+err.Error()))
 		return
 	}
 
 	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+key+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted DNSSEC keys", inf.User, inf.Tx.Tx)
 	successMsg := "Successfully deleted " + CDNDNSSECKeyType + " for " + key
-	if deprecated {
-		api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(util.StrPtr(API_DNSSECKEYS)), successMsg)
-	} else {
-		api.WriteResp(w, r, successMsg)
-
-	}
+	api.WriteResp(w, r, successMsg)
 }
 
 // getCDNIDFromName returns the CDN's ID if a CDN with the given name exists
@@ -470,7 +435,7 @@ func getCDNIDFromName(tx *sql.Tx, name tc.CDNName) (int, bool, error) {
 		if err == sql.ErrNoRows {
 			return id, false, nil
 		}
-		return id, false, errors.New("querying CDN ID: " + err.Error())
+		return id, false, errors.New("querying CDN ID from name: " + err.Error())
 	}
 	return id, true, nil
 }

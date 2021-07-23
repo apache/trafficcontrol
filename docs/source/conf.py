@@ -28,11 +28,8 @@
 import os
 import sys
 here = os.path.dirname(__file__)
-ortPath = os.path.join(here, '..', '..', 'experimental', 'ort-python')
 clientPath = os.path.join(here, '..', '..', 'traffic_control', 'clients', 'python')
-ortPath = os.path.abspath(ortPath)
 clientPath = os.path.abspath(clientPath)
-sys.path.insert(0, ortPath)
 sys.path.insert(0, clientPath)
 sys.path.insert(0, os.path.join(here, '_ext'))
 

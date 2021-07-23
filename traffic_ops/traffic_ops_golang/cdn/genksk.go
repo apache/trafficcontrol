@@ -45,7 +45,10 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-
+	if inf.User == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("no user in API info"))
+		return
+	}
 	if !inf.Config.TrafficVaultEnabled {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating CDN KSK: Traffic Vault is not configured"))
 		return
@@ -76,7 +79,11 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
-
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
 	ttl, multiplier, err := getKSKParams(inf.Tx.Tx, cdnName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting CDN KSK parameters: "+err.Error()))

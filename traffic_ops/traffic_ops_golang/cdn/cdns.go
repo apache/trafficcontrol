@@ -142,11 +142,25 @@ func (cdn *TOCDN) Read(h http.Header, useIMS bool) ([]interface{}, error, error,
 }
 
 func (cdn *TOCDN) Update(h http.Header) (error, error, int) {
+	if cdn.ID != nil {
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(cdn.APIInfo().Tx.Tx, int64(*cdn.ID), cdn.APIInfo().User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+	}
 	*cdn.DomainName = strings.ToLower(*cdn.DomainName)
 	return api.GenericUpdate(h, cdn)
 }
 
-func (cdn *TOCDN) Delete() (error, error, int) { return api.GenericDelete(cdn) }
+func (cdn *TOCDN) Delete() (error, error, int) {
+	if cdn.ID != nil {
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(cdn.APIInfo().Tx.Tx, int64(*cdn.ID), cdn.APIInfo().User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+	}
+	return api.GenericDelete(cdn)
+}
 
 func selectQuery() string {
 	query := `SELECT

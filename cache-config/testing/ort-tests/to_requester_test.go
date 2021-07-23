@@ -123,9 +123,7 @@ func ExecTORequester(host string, data_req string) (string, error) {
 		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
 		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
 		"--cache-host-name=" + host,
-		"--log-location-error=test.log",
-		"--log-location-info=test.log",
-		"--log-location-debug=test.log",
+		"-vv",
 		"--get-data=" + data_req,
 	}
 	cmd := exec.Command("/usr/bin/t3c-request", args...)

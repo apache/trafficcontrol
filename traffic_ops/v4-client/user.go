@@ -24,26 +24,29 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
+// UserCurrentResponseV4 is an alias to avoid client breaking changes. In-case of a minor or major version change, we replace the below alias with a new structure.
+type UserCurrentResponseV4 = tc.UserCurrentResponseV40
+
 // GetUsers retrieves all (Tenant-accessible) Users stored in Traffic Ops.
-func (to *Session) GetUsers(opts RequestOptions) (tc.UsersResponse, toclientlib.ReqInf, error) {
-	data := tc.UsersResponse{}
+func (to *Session) GetUsers(opts RequestOptions) (tc.UsersResponseV40, toclientlib.ReqInf, error) {
+	data := tc.UsersResponseV40{}
 	route := "/users"
 	inf, err := to.get(route, opts, &data)
 	return data, inf, err
 }
 
 // GetUserCurrent retrieves the currently authenticated User.
-func (to *Session) GetUserCurrent(opts RequestOptions) (tc.UserCurrentResponse, toclientlib.ReqInf, error) {
+func (to *Session) GetUserCurrent(opts RequestOptions) (UserCurrentResponseV4, toclientlib.ReqInf, error) {
 	route := `/user/current`
-	resp := tc.UserCurrentResponse{}
+	resp := UserCurrentResponseV4{}
 	reqInf, err := to.get(route, opts, &resp)
 	return resp, reqInf, err
 }
 
-// UpdateCurrentUser replaces the current user data with the provided tc.User structure.
-func (to *Session) UpdateCurrentUser(u tc.User, opts RequestOptions) (tc.UpdateUserResponse, toclientlib.ReqInf, error) {
+// UpdateCurrentUser replaces the current user data with the provided tc.UserV40 structure.
+func (to *Session) UpdateCurrentUser(u tc.UserV40, opts RequestOptions) (tc.UpdateUserResponse, toclientlib.ReqInf, error) {
 	user := struct {
-		User tc.User `json:"user"`
+		User tc.UserV40 `json:"user"`
 	}{u}
 	var clientResp tc.UpdateUserResponse
 	reqInf, err := to.put("/user/current", opts, user, &clientResp)
@@ -51,7 +54,7 @@ func (to *Session) UpdateCurrentUser(u tc.User, opts RequestOptions) (tc.UpdateU
 }
 
 // CreateUser creates the given user.
-func (to *Session) CreateUser(user tc.User, opts RequestOptions) (tc.CreateUserResponse, toclientlib.ReqInf, error) {
+func (to *Session) CreateUser(user tc.UserV40, opts RequestOptions) (tc.CreateUserResponse, toclientlib.ReqInf, error) {
 	if user.TenantID == nil && user.Tenant != nil {
 		innerOpts := NewRequestOptions()
 		innerOpts.QueryParameters.Set("name", *user.Tenant)
@@ -85,7 +88,7 @@ func (to *Session) CreateUser(user tc.User, opts RequestOptions) (tc.CreateUserR
 }
 
 // UpdateUser replaces the User identified by 'id' with the one provided.
-func (to *Session) UpdateUser(id int, u tc.User, opts RequestOptions) (tc.UpdateUserResponse, toclientlib.ReqInf, error) {
+func (to *Session) UpdateUser(id int, u tc.UserV40, opts RequestOptions) (tc.UpdateUserResponse, toclientlib.ReqInf, error) {
 	route := "/users/" + strconv.Itoa(id)
 	var clientResp tc.UpdateUserResponse
 	reqInf, err := to.put(route, opts, u, &clientResp)

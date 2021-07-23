@@ -220,7 +220,7 @@ func GzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
 		w.WriteHeader(status)
 	}
 
-	w.Write(bytes)
+	api.WriteAndLogErr(w, r, bytes)
 }
 
 // GzipIfAccepts gzips the given bytes, writes a `Content-Encoding: gzip` header to the given writer, and returns the gzipped bytes, if the Request supports GZip (has an Accept-Encoding header). Else, returns the bytes unmodified. Note the given bytes are NOT written to the given writer. It is assumed the bytes may need to pass thru other middleware before being written.
@@ -252,7 +252,7 @@ func NotImplementedHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		w.WriteHeader(http.StatusNotImplemented)
-		w.Write([]byte(`{"alerts":[{"level":"error","text":"The requested api version is not implemented by this server. If you are using a newer client with an older server, you will need to use an older client version or upgrade your server."}]}`))
+		api.WriteAndLogErr(w, r, []byte(`{"alerts":[{"level":"error","text":"The requested api version is not implemented by this server. If you are using a newer client with an older server, you will need to use an older client version or upgrade your server."}]}`))
 	})
 }
 
@@ -262,6 +262,6 @@ func DisabledRouteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write([]byte(`{"alerts":[{"level":"error","text":"The requested route is currently disabled."}]}` + "\n"))
+		api.WriteAndLogErr(w, r, []byte(`{"alerts":[{"level":"error","text":"The requested route is currently disabled."}]}`+"\n"))
 	})
 }
