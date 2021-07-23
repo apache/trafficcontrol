@@ -22,14 +22,12 @@ on:
   push:
     paths:
       - docs/source/**
-      - experimental/ort-python/**.py
       - .github/workflows/docs.yml
       - traffic_control/clients/python/**.py
   pull_request:
     types: [opened, reopened, ready_for_review, synchronize]
     paths:
       - docs/source/**
-      - experimental/ort-python/**.py
       - .github/workflows/docs.yml
       - traffic_control/clients/python/**.py
 
@@ -50,7 +48,6 @@ jobs:
         uses: ./.github/actions/sphinx-action
         with:
           docs-folder: "docs/"
-          pre-build-command: "apt-get update -y && apt-get install -y python3-dev build-essential"
       - uses: actions/upload-artifact@v1
         with:
           name: HTMLDocumentation

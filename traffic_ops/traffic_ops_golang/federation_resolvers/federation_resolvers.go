@@ -23,7 +23,6 @@ package federation_resolvers
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -94,11 +93,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
-	}
-
-	if inf.Version.Major == 1 && inf.Version.Minor < 4 {
-		fr.LastUpdated = nil
-		fr.Type = nil
 	}
 
 	changeLogMsg := fmt.Sprintf("FEDERATION_RESOLVER: %s, ID: %d, ACTION: Created", *fr.IPAddress, *fr.ID)
@@ -292,53 +286,4 @@ func deleteFederationResolver(inf *api.APIInfo) (tc.Alert, tc.FederationResolver
 	}
 
 	return alert, result, userErr, sysErr, statusCode
-}
-
-// DeleteByID is the handler for DELETE requests to /federation_resolvers/{{ID}}.
-func DeleteByID(w http.ResponseWriter, r *http.Request) {
-	inf, sysErr, userErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-	if sysErr != nil || userErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	alert, respObj, userErr, sysErr, statusCode := deleteFederationResolver(inf)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
-		return
-	}
-
-	var resp = struct {
-		tc.Alerts
-		Response *tc.FederationResolver `json:"response,omitempty"`
-	}{
-		tc.Alerts{
-			Alerts: []tc.Alert{
-				alert,
-				tc.Alert{
-					Level: tc.WarnLevel.String(),
-					Text:  "This endpoint is deprecated, please use the 'id' query parameter of '/federation_resolvers' instead",
-				},
-			},
-		},
-		&respObj,
-	}
-
-	if inf.Version.Major == 1 && inf.Version.Minor < 5 {
-		resp.Response = nil
-	}
-
-	respBts, err := json.Marshal(resp)
-	if err != nil {
-		sysErr = fmt.Errorf("marhsaling response: %v", err)
-		errCode = http.StatusInternalServerError
-		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
-		return
-	}
-
-	w.Header().Set(rfc.ContentType, rfc.MIME_JSON.String())
-	w.WriteHeader(statusCode)
-	w.Write(append(respBts, '\n'))
 }

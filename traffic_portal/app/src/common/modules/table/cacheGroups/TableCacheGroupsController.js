@@ -165,12 +165,6 @@ var TableCacheGroupsController = function(cacheGroups, $location, $scope, $state
             }
         },
         {
-            text: 'Manage Parameters',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/cache-groups/' + $itemScope.cg.id + '/parameters');
-            }
-        },
-        {
             text: 'Manage Servers',
             click: function ($itemScope) {
                 locationUtils.navigateToPath('/cache-groups/' + $itemScope.cg.id + '/servers');

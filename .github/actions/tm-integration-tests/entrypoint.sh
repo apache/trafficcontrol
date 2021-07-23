@@ -168,4 +168,4 @@ cd ${test_dir}
 jq ".trafficMonitor.URL = \"http://$TM_URI:$TM_PORT\"" \
   traffic-monitor-test.conf > tmt.conf.tmp && mv tmt.conf.tmp traffic-monitor-test.conf
 
-go test -test.v -cfg traffic-monitor-test.conf
+go test -cfg traffic-monitor-test.conf

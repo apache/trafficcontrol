@@ -101,7 +101,7 @@ func UpdateTestCDNFederations(t *testing.T) {
 func GetTestCDNFederations(t *testing.T) {
 
 	// TOSession.GetCDNFederationsByName can't be tested until
-	// POST /api/1.2/federations/:id/deliveryservices has been
+	// POST /federations/{{id}}/deliveryservices has been
 	// created. (DELETE cdns/:name/federations/:id may need to
 	// clean up fedIDs connection?)
 

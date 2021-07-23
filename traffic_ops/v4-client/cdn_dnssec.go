@@ -53,9 +53,9 @@ func (to *Session) DeleteCDNDNSSECKeys(name string, opts RequestOptions) (tc.Del
 }
 
 // RefreshDNSSECKeys asynchronously regenerates any expired DNSSEC keys in all CDNs.
-func (to *Session) RefreshDNSSECKeys(opts RequestOptions) (tc.RefreshDNSSECKeysResponse, toclientlib.ReqInf, error) {
-	var resp tc.RefreshDNSSECKeysResponse
-	reqInf, err := to.get(apiCDNsDNSSECRefresh, opts, &resp)
+func (to *Session) RefreshDNSSECKeys(opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+	var resp tc.Alerts
+	reqInf, err := to.put(apiCDNsDNSSECRefresh, opts, nil, &resp)
 	return resp, reqInf, err
 }
 

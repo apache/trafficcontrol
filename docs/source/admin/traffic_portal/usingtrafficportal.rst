@@ -246,8 +246,6 @@ Use the `Select Columns` menu to select the delivery service columns to view and
 - :ref:`ds-ipv6-routing` (visible by default)
 - :ref:`ds-last-header-rw-rules`
 - :ref:`ds-longdesc`
-- :ref:`ds-longdesc2`
-- :ref:`ds-longdesc3`
 - :ref:`ds-max-dns-answers`
 - :ref:`ds-max-origin-connections`
 - :ref:`ds-mid-header-rw-rules`

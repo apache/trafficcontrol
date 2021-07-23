@@ -171,7 +171,6 @@ func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) (error, error,
 }
 
 func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	version := role.APIInfo().Version
 	api.DefaultSort(role.APIInfo(), "name")
 	vals, userErr, sysErr, errCode, maxTime := api.GenericRead(h, role, useIMS)
 	if errCode == http.StatusNotModified {
@@ -184,14 +183,9 @@ func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	returnable := []interface{}{}
 	for _, val := range vals {
 		rl := val.(*TORole)
-		switch {
-		case version.Major > 1 || version.Minor >= 3:
-			caps := ([]string)(*rl.PQCapabilities)
-			rl.Capabilities = &caps
-			returnable = append(returnable, rl)
-		case version.Minor >= 1:
-			returnable = append(returnable, rl.RoleV11)
-		}
+		caps := ([]string)(*rl.PQCapabilities)
+		rl.Capabilities = &caps
+		returnable = append(returnable, rl)
 	}
 	return returnable, nil, nil, http.StatusOK, maxTime
 }

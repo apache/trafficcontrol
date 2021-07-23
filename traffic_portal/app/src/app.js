@@ -63,7 +63,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/cacheGroups/list').name,
         require('./modules/private/cacheGroups/new').name,
         require('./modules/private/cacheGroups/asns').name,
-        require('./modules/private/cacheGroups/parameters').name,
         require('./modules/private/cacheGroups/servers').name,
         require('./modules/private/cacheGroups/staticDnsEntries').name,
         require('./modules/private/cacheChecks').name,
@@ -359,7 +358,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/asns').name,
         require('./common/modules/table/cacheGroups').name,
         require('./common/modules/table/cacheGroupAsns').name,
-        require('./common/modules/table/cacheGroupParameters').name,
         require('./common/modules/table/cacheGroupServers').name,
         require('./common/modules/table/cacheGroupStaticDnsEntries').name,
         require('./common/modules/table/capabilities').name,
@@ -452,6 +450,9 @@ var trafficPortal = angular.module('trafficPortal', [
         // services
         require('./common/service/application').name,
         require('./common/service/utils').name,
+
+        // components
+        require("./common/modules/table/agGrid").name,
 
         // filters
         require('./common/filters').name

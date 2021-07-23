@@ -1,3 +1,4 @@
+// Package cachegroupparameter is deprecated and will be removed with API v1-3.
 package cachegroupparameter
 
 /*
@@ -150,8 +151,7 @@ func TestReadCacheGroupParameters(t *testing.T) {
 		},
 	}
 	toParameterReaders := map[string]api.Reader{
-		"Unassigned Parameters": &TOCacheGroupUnassignedParameter{},
-		"Parameters":            &TOCacheGroupParameter{},
+		"Parameters": &TOCacheGroupParameter{},
 	}
 	for _, testCase := range testCases {
 		for toParameterKey, toParameterReader := range toParameterReaders {

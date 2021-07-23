@@ -184,7 +184,7 @@ func GetCacheStats(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(rfc.ContentType, jsonWithRFCTimestamps.String())
 	}
 	w.Header().Set(http.CanonicalHeaderKey("vary"), http.CanonicalHeaderKey("Accept"))
-	w.Write(append(respBts, '\n'))
+	api.WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
 func getCacheSummary(client *influx.Client, conf *tc.TrafficCacheStatsConfig, db string) (*tc.TrafficStatsSummary, error) {

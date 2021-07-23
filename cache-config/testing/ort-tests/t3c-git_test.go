@@ -135,10 +135,8 @@ func t3cUpdateGit(host string, run_mode string) error {
 		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
 		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
 		"--cache-host-name=" + host,
-		"--log-location-error=test.log",
-		"--log-location-info=test.log",
-		"--log-location-debug=test.log",
-		"--log-location-debug=test.log",
+		"--verbose", // first verbose option to enable warnings
+		"--verbose", // second verbose option to enable info
 		"--omit-via-string-release=true",
 		"--run-mode=" + run_mode,
 		"--git=" + "yes",

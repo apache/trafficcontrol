@@ -17,20 +17,21 @@
  * under the License.
  */
 import { browser } from 'protractor';
-
 import { LoginPage } from '../PageObjects/LoginPage.po';
 import { login } from "../Data";
 
 const loginPage = new LoginPage();
-
 login.tests.forEach(async loginData => {
     loginData.logins.forEach(login => {
         describe(`Traffic Portal - Login - ${login.description}`, () => {
             it('can open login page', async () => {
                 browser.get(browser.params.baseUrl);
             });
+            it('check environment banner does not display',async() => {
+                expect(await loginPage.CheckBanner()).toBe(false);
+            })
             it(login.description, async () => {
-                expect(await loginPage.Login(login)).toBeTruthy();
+                expect(await loginPage.Login(login)).toBe(true);
             });
         });
     });

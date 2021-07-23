@@ -233,8 +233,7 @@ func (fed TOCDNFederation) isTenantAuthorized() (error, error, int) {
 		return nil, errors.New("getting tenant id from federation: " + err.Error()), http.StatusInternalServerError
 	}
 
-	// TODO: After IsResourceAuthorizedToUserTx is updated to no longer have `use_tenancy`,
-	// that will probably be better to use. For now, use the list. Issue #2602
+	// TODO: use IsResourceAuthorizedToUserTx instead
 	list, err := tenant.GetUserTenantIDListTx(fed.APIInfo().Tx.Tx, fed.APIInfo().User.TenantID)
 	if err != nil {
 		return nil, errors.New("getting federation tenant list: " + err.Error()), http.StatusInternalServerError

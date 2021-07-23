@@ -44,6 +44,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+<<<<<<< HEAD
+=======
+      - name: Check Go Version
+        run: echo "::set-output name=value::$(cat GO_VERSION)"
+        id: go-version
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ steps.go-version.outputs.value }}
+>>>>>>> apache/master
       - name: Vendor dependencies
         id: vendor-dependencies
         run: .github/actions/check-go-modules/entrypoint.sh vendor_dependencies

@@ -117,6 +117,18 @@ func (pp *TOProfileParameter) Validate() error {
 //The insert sql returns the profile and lastUpdated values of the newly inserted profileparameter and have
 //to be added to the struct
 func (pp *TOProfileParameter) Create() (error, error, int) {
+	if pp.ProfileID != nil {
+		cdnName, err := dbhelpers.GetCDNNameFromProfileID(pp.ReqInfo.Tx.Tx, *pp.ProfileID)
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(pp.ReqInfo.Tx.Tx, string(cdnName), pp.ReqInfo.User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+	} else {
+		return errors.New("no profile ID in request"), nil, http.StatusBadRequest
+	}
 	resultRows, err := pp.APIInfo().Tx.NamedQuery(insertQuery(), pp)
 	if err != nil {
 		return api.ParseDBError(err)
@@ -159,7 +171,21 @@ func (pp *TOProfileParameter) Read(h http.Header, useIMS bool) ([]interface{}, e
 	api.DefaultSort(pp.APIInfo(), "parameter")
 	return api.GenericRead(h, pp, useIMS)
 }
-func (pp *TOProfileParameter) Delete() (error, error, int) { return api.GenericDelete(pp) }
+func (pp *TOProfileParameter) Delete() (error, error, int) {
+	if pp.ProfileID != nil {
+		cdnName, err := dbhelpers.GetCDNNameFromProfileID(pp.ReqInfo.Tx.Tx, *pp.ProfileID)
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(pp.ReqInfo.Tx.Tx, string(cdnName), pp.ReqInfo.User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+	} else {
+		return errors.New("no profile ID in request"), nil, http.StatusBadRequest
+	}
+	return api.GenericDelete(pp)
+}
 func (v *TOProfileParameter) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
 		SELECT max(pp.last_updated) as t FROM profile_parameter pp

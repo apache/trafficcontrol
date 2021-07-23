@@ -15,9 +15,9 @@
 
 package secure;
 
-import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateDataListener;
-import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateRegistry;
-import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
+import org.apache.traffic_control.traffic_router.secure.CertificateDataListener;
+import org.apache.traffic_control.traffic_router.secure.CertificateRegistry;
+import org.apache.traffic_control.traffic_router.shared.CertificateData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;

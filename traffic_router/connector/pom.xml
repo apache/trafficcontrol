@@ -17,7 +17,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+		<groupId>org.apache.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
         <version>5.0.0</version>
 	</parent>
@@ -68,7 +68,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidProtocol</mainClass>
+							<mainClass>org.apache.traffic_control.traffic_router.protocol.LanguidProtocol</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -78,7 +78,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<groupId>org.apache.traffic_control.traffic_router</groupId>
 			<artifactId>traffic_router_shared</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
@@ -100,17 +100,20 @@
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
-			<artifactId>powermock-api-mockito</artifactId>
+			<artifactId>powermock-api-mockito2</artifactId>
+			<version>2.0.9</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
+			<artifactId>mockito-core</artifactId>
+			<version>3.11.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-module-junit4</artifactId>
+			<version>2.0.9</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

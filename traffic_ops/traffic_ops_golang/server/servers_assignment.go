@@ -149,7 +149,11 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
-
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(serverCDN), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
 	if len(dsList) > 0 {
 		if errCode, userErr, sysErr = checkTenancyAndCDN(tx, string(serverCDN), server, serverInfo, dsList, inf.User); userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, tx, errCode, userErr, sysErr)

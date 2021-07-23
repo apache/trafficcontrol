@@ -493,23 +493,27 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 	r.RemapConfigReload = r.RemapConfigReload ||
 		cfg.RemapPluginConfig ||
 		cfg.Name == "remap.config" ||
-		strings.HasPrefix(cfg.Name, "url_sig_") ||
-		strings.HasPrefix(cfg.Name, "uri_signing") ||
+		strings.HasPrefix(cfg.Name, "bg_fetch") ||
 		strings.HasPrefix(cfg.Name, "hdr_rw_") ||
 		strings.HasPrefix(cfg.Name, "regex_remap_") ||
-		strings.HasPrefix(cfg.Name, "bg_fetch") ||
+		strings.HasPrefix(cfg.Name, "set_dscp_") ||
+		strings.HasPrefix(cfg.Name, "url_sig_") ||
+		strings.HasPrefix(cfg.Name, "uri_signing") ||
 		strings.HasSuffix(cfg.Name, ".lua")
 
 	r.TrafficCtlReload = r.TrafficCtlReload ||
 		strings.HasSuffix(cfg.Dir, "trafficserver") ||
 		r.RemapConfigReload ||
 		cfg.Name == "ssl_multicert.config" ||
+		cfg.Name == "records.config" ||
 		(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".cer")) ||
 		(strings.HasSuffix(cfg.Dir, "ssl") && strings.HasSuffix(cfg.Name, ".key"))
 
 	r.TrafficServerRestart = r.TrafficServerRestart || (cfg.Name == "plugin.config")
 	r.NtpdRestart = r.NtpdRestart || (cfg.Name == "ntpd.conf")
 	r.SysCtlReload = r.SysCtlReload || (cfg.Name == "sysctl.conf")
+
+	log.Debugf("Reload state after %s: remap.config: %t reload: %t restart: %t ntpd: %t sysctl: %t", cfg.Name, r.RemapConfigReload, r.TrafficCtlReload, r.TrafficServerRestart, r.NtpdRestart, r.SysCtlReload)
 
 	log.Debugf("Setting change applied for '%s'\n", cfg.Name)
 	return nil
@@ -893,6 +897,10 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 		}
 	}
 
+	if 0 < len(r.changedFiles) {
+		log.Infof("Final state: remap.config: %t reload: %t restart: %t ntpd: %t sysctl: %t", r.RemapConfigReload, r.TrafficCtlReload, r.TrafficServerRestart, r.NtpdRestart, r.SysCtlReload)
+	}
+
 	if updateStatus != UpdateTropsFailed && changesRequired > 0 {
 		return UpdateTropsNeeded, nil
 	}
@@ -1085,6 +1093,16 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus) error {
 	}
 
 	log.Infof("t3c-check-reload returned '%+v'\n", serviceNeeds)
+
+	// We have our own internal knowledge of files that have been modified as well
+	// If check-reload does not know about these and we do, then we should initiate
+	// a reload as well
+	if serviceNeeds != t3cutil.ServiceNeedsRestart && serviceNeeds != t3cutil.ServiceNeedsReload {
+		if r.TrafficCtlReload || r.RemapConfigReload {
+			log.Infof("ATS config files unchanged, we updated files via t3c-apply, ATS needs reload")
+			serviceNeeds = t3cutil.ServiceNeedsReload
+		}
+	}
 
 	if (serviceNeeds == t3cutil.ServiceNeedsRestart || serviceNeeds == t3cutil.ServiceNeedsReload) && !r.IsPackageInstalled("trafficserver") {
 		// TODO try to reload/restart anyway? To allow non-RPM installs?

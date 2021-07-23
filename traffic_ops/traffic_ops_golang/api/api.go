@@ -112,6 +112,15 @@ func GoneHandler(w http.ResponseWriter, r *http.Request) {
 	HandleErr(w, r, nil, http.StatusGone, err, nil)
 }
 
+// WriteAndLogErr writes the response and logs a warning if an error occurs. This should be used in favor of simply
+// calling w.Write() so that errors are properly logged for troubleshooting.
+func WriteAndLogErr(w http.ResponseWriter, r *http.Request, bts []byte) {
+	if b, err := w.Write(bts); err != nil {
+		reqID, _ := getReqID(r.Context())
+		log.Warnf("failed to write response (method = %s, URL = %s, request ID = %d, remote addr = %s, bytes written = %d): %v", r.Method, r.URL.String(), reqID, r.RemoteAddr, b, err)
+	}
+}
+
 // WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {
@@ -127,14 +136,14 @@ func WriteRespRaw(w http.ResponseWriter, r *http.Request, v interface{}) {
 	}
 	setRespWritten(r)
 
-	bts, err := json.Marshal(v)
+	respBts, err := json.Marshal(v)
 	if err != nil {
 		log.Errorf("marshalling JSON (raw) for %T: %v", v, err)
 		tc.GetHandleErrorsFunc(w, r)(http.StatusInternalServerError, errors.New(http.StatusText(http.StatusInternalServerError)))
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	w.Write(append(bts, '\n'))
+	WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
 // WriteRespWithSummary writes a JSON-encoded representation of an arbitrary
@@ -166,7 +175,7 @@ func WriteRespVals(w http.ResponseWriter, r *http.Request, v interface{}, vals m
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(append(respBts, '\n'))
+	WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
 // WriteIMSHitResp writes a response to 'w' for an IMS request "hit", using the
@@ -259,11 +268,11 @@ func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, use
 	respBts, err := json.Marshal(tc.CreateErrorAlerts(userErr))
 	if err != nil {
 		log.Errorln("marshalling error: " + err.Error())
-		w.Write(append([]byte(http.StatusText(http.StatusInternalServerError)), '\n'))
+		WriteAndLogErr(w, r, append([]byte(http.StatusText(http.StatusInternalServerError)), '\n'))
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	w.Write(append(respBts, '\n'))
+	WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
 // RespWriter is a helper to allow a one-line response, for endpoints with a function that returns the object that needs to be written and an error.
@@ -306,7 +315,7 @@ func WriteRespAlert(w http.ResponseWriter, r *http.Request, level tc.AlertLevel,
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	w.Write(append(respBts, '\n'))
+	WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
 // WriteRespAlertNotFound creates an alert indicating that the resource was not found and writes that to w.
@@ -325,7 +334,7 @@ func WriteRespAlertNotFound(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.WriteHeader(http.StatusNotFound)
-	w.Write(append(respBts, '\n'))
+	WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
 // WriteRespAlertObj Writes the given alert, and the given response object.
@@ -350,7 +359,7 @@ func WriteRespAlertObj(w http.ResponseWriter, r *http.Request, level tc.AlertLev
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	_, _ = w.Write(append(respBts, '\n'))
+	WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
 func WriteAlerts(w http.ResponseWriter, r *http.Request, code int, alerts tc.Alerts) {
@@ -363,19 +372,19 @@ func WriteAlerts(w http.ResponseWriter, r *http.Request, code int, alerts tc.Ale
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.WriteHeader(code)
 	if alerts.HasAlerts() {
-		resp, err := json.Marshal(alerts)
+		respBts, err := json.Marshal(alerts)
 		if err != nil {
 			handleSimpleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("marshalling JSON: %v", err))
 			return
 		}
-		_, _ = w.Write(append(resp, '\n'))
+		WriteAndLogErr(w, r, append(respBts, '\n'))
 	}
 }
 
 func WriteAlertsObj(w http.ResponseWriter, r *http.Request, code int, alerts tc.Alerts, obj interface{}) {
 	if !alerts.HasAlerts() {
-		WriteResp(w, r, obj)
 		w.WriteHeader(code)
+		WriteResp(w, r, obj)
 		return
 	}
 	if respWritten(r) {
@@ -398,7 +407,7 @@ func WriteAlertsObj(w http.ResponseWriter, r *http.Request, code int, alerts tc.
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 	w.WriteHeader(code)
-	w.Write(append(respBts, '\n'))
+	WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
 // IntParams parses integer parameters, and returns map of the given params, or an error if any integer param is not an integer. The intParams may be nil if no integer parameters are required. Note this does not check existence; if an integer paramter is required, it should be included in the requiredParams given to NewInfo.
