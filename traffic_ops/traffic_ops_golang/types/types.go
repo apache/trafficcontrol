@@ -112,6 +112,7 @@ func (tp *TOType) Read(h http.Header, useIMS bool) ([]interface{}, error, error,
 }
 
 func (tp *TOType) Update(h http.Header) (error, error, int) {
+	fmt.Println("inside update statement")
 	if !tp.AllowMutation(false) {
 		return errors.New("can not update type"), nil, http.StatusBadRequest
 	}
@@ -134,8 +135,10 @@ func (tp *TOType) Create() (error, error, int) {
 
 func (tp *TOType) AllowMutation(forCreation bool) bool {
 	if !forCreation {
+		fmt.Println("inside if !for creation")
 		userErr, sysErr, actualUseInTable := tp.loadUseInTable()
 		if actualUseInTable == "" {
+			fmt.Println("inside if actualUseInTable == ")
 			return true
 		}
 		if userErr != nil || sysErr != nil {
@@ -169,6 +172,7 @@ func (tp *TOType) loadUseInTable() (error, error, string) {
 			return nil, err, ""
 		}
 	} else {
+		fmt.Println("inside else tp.Id is nil")
 		return errors.New("no type with that key found"), nil, ""
 	}
 
