@@ -22,6 +22,7 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"os"
 	"strings"
@@ -82,7 +83,7 @@ func InitConfig() (Cfg, error) {
 		Usage()
 	}
 	if *versionPtr == true {
-		log.Errorln(AppName + " v" + Version)
+		fmt.Println(AppName + " v" + Version)
 		os.Exit(0)
 	}
 
