@@ -33,7 +33,7 @@ Feel free to add the name of a tool or script that is affected but not on the li
 
 ## What is the best way to verify this PR?
 <!-- Please include here ALL the steps necessary to test your PR.
-If your PR includes tests (and most should), provide the steps needed to run the tests.
+If your PR has tests (and most should), provide the steps needed to run the tests.
 If not, please provide step-by-step instructions to test the PR manually and explain why your PR does not need tests. -->
 
 
@@ -48,7 +48,7 @@ Examples:
 ## PR submission checklist
 - [x] This PR has tests <!-- If not, please delete this text and explain why this PR does not need tests. -->
 - [x] This PR has documentation <!-- If not, please delete this text and explain why this PR does not need documentation. -->
-- [x] This PR includes a CHANGELOG.md entry <!-- A fix for a bug from an ATC release, an improvement, or a new feature should include a changelog entry. -->
+- [x] This PR has a CHANGELOG.md entry <!-- A fix for a bug from an ATC release, an improvement, or a new feature should have a changelog entry. -->
 - [x] This PR **DOES NOT FIX A SERIOUS SECURITY VULNERABILITY** (see [the Apache Software Foundation's security guidelines](https://apache.org/security) for details)
 
 <!--
