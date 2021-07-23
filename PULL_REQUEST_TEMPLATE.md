@@ -50,10 +50,10 @@ Examples:
 - []   ← Wrong
 - [*]  ← Wrong -->
 
-- [ ] This PR includes tests <!-- If not, please delete this text and explain why this PR does not need tests. -->
-- [ ] This PR include documentation <!-- If not, please delete this text and explain why this PR does not need documentation. -->
-- [ ] This PR includes a CHANGELOG.md entry <!-- A fix for a bug from an ATC release, an improvement, or a new feature should include a changelog entry. -->
-- [ ] This PR **DOES NOT FIX A SERIOUS SECURITY VULNERABILITY** (see [the Apache Software Foundation's security guidelines](https://apache.org/security) for details)
+- [x] This PR includes tests <!-- If not, please delete this text and explain why this PR does not need tests. -->
+- [x] This PR include documentation <!-- If not, please delete this text and explain why this PR does not need documentation. -->
+- [x] This PR includes a CHANGELOG.md entry <!-- A fix for a bug from an ATC release, an improvement, or a new feature should include a changelog entry. -->
+- [x] This PR **DOES NOT FIX A SERIOUS SECURITY VULNERABILITY** (see [the Apache Software Foundation's security guidelines](https://apache.org/security) for details)
 
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
