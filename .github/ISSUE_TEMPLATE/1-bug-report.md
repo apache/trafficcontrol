@@ -56,6 +56,7 @@ or the Traffic Control Users mailing list (send an email to users-subscribe@traf
 ## Current behavior:
 <!-- Describe how the bug happens -->
 
+
 ## Expected behavior:
 <!-- Describe what the behavior would be without the bug -->
 
