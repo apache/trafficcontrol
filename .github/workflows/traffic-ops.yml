@@ -104,10 +104,6 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: ${{ steps.go-version.outputs.value }}
-    - name: Run API v1 tests
-      uses: ./.github/actions/to-integration-tests
-      with:
-        version: 1
     - name: Run API v2 tests
       id: v2Tests
       if: ${{ steps.todb.outcome == 'success' && always() }}
