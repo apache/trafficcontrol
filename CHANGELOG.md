@@ -99,6 +99,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated Flot libraries to supported versions
 - [apache/trafficcontrol](https://github.com/apache/trafficcontrol) is now a Go module
 - Updated Traffic Ops supported database version from PostgreSQL 9.6 to 13.2
+- [#3342](https://github.com/apache/trafficcontrol/issues/3342) - Updated the [`db/admin`](https://traffic-control-cdn.readthedocs.io/en/latest/development/traffic_ops.html#database-management) tool to use [Migrate](https://github.com/golang-migrate/migrate) instead of Goose and converted the migrations to Migrate format (split up/down for each migration into separate files)
 - Set Traffic Router to also accept TLSv1.3 protocols by default in server.xml
 - Disabled TLSv1.1 for Traffic Router in Ansible role by default
 - Updated the Traffic Monitor Ansible role to set `serve_write_timeout_ms` to `20000` by default because 10 seconds can be too short for relatively large CDNs.

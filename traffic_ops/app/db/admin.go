@@ -29,6 +29,9 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"gopkg.in/yaml.v2"
 )
 
@@ -72,6 +75,7 @@ const (
 	UserKey     = "user"
 	PasswordKey = "password"
 	DBNameKey   = "dbname"
+	SSLModeKey  = "sslmode"
 
 	// available commands
 	CmdCreateDB   = "createdb"
@@ -116,12 +120,15 @@ var (
 	TrafficVault bool
 
 	// globals that are parsed out of DBConfigFile and used in commands
+	DBDriver    string
 	DBName      string
 	DBSuperUser = DefaultDBSuperUser
 	DBUser      string
 	DBPassword  string
 	HostIP      string
 	HostPort    string
+	SSLMode     string
+	Migrate     *migrate.Migrate
 )
 
 func parseDBConfig() error {
@@ -145,6 +152,7 @@ func parseDBConfig() error {
 		return errors.New("getting goose config: " + err.Error())
 	}
 
+	DBDriver = gooseCfg.Driver
 	// parse the 'open' string into a map
 	open := make(map[string]string)
 	pairs := strings.Split(gooseCfg.Open, " ")
@@ -160,8 +168,8 @@ func parseDBConfig() error {
 	}
 
 	ok := false
-	stringPointers := []*string{&HostIP, &HostPort, &DBUser, &DBPassword, &DBName}
-	keys := []string{HostKey, PortKey, UserKey, PasswordKey, DBNameKey}
+	stringPointers := []*string{&HostIP, &HostPort, &DBUser, &DBPassword, &DBName, &SSLMode}
+	keys := []string{HostKey, PortKey, UserKey, PasswordKey, DBNameKey, SSLModeKey}
 	for index, stringPointer := range stringPointers {
 		key := keys[index]
 		*stringPointer, ok = open[key]
@@ -249,27 +257,62 @@ func reset() {
 	dropDB()
 	createDB()
 	loadSchema()
-	migrate()
+	runMigrations()
 }
 
 func upgrade() {
-	goose(GooseUp)
+	runMigrations()
 	if !TrafficVault {
 		seed()
 		patch()
 	}
 }
 
-func migrate() {
-	goose(GooseUp)
+func runMigrations() {
+	initMigrate()
+	migratedFromGoose := false
+	if !TrafficVault {
+		_, _, versionErr := Migrate.Version()
+		if versionErr != nil {
+			if versionErr != migrate.ErrNilVersion {
+				die("Error running migrate version: " + versionErr.Error())
+			}
+			migratedFromGoose = true
+			if err := Migrate.Steps(1); err != nil {
+				die("Error migrating to Migrate from Goose: " + err.Error())
+			}
+		}
+	}
+	upErr := Migrate.Up()
+	if upErr == migrate.ErrNoChange {
+		if !migratedFromGoose {
+			println(upErr.Error())
+		}
+	} else if upErr != nil {
+		die("Error running migrate up: " + upErr.Error())
+	}
+
 }
 
 func down() {
-	goose(CmdDown)
+	initMigrate()
+	if err := Migrate.Steps(-1); err != nil {
+		die("Error running migrate down: " + err.Error())
+	}
 }
 
 func redo() {
-	goose(CmdRedo)
+	initMigrate()
+	{
+		if downErr := Migrate.Steps(-1); downErr != nil {
+			die("Error running migrate down 1 in 'redo': " + downErr.Error())
+		}
+	}
+	{
+		if upErr := Migrate.Steps(1); upErr != nil {
+			die("Error running migrate up 1 in 'redo': " + upErr.Error())
+		}
+	}
 }
 
 // Deprecated: Migrate does not track migration status of past migrations. Use dbversion() to check the migration version and dirty status.
@@ -278,7 +321,16 @@ func status() {
 }
 
 func dbVersion() {
-	goose(CmdDBVersion)
+	initMigrate()
+	version, dirty, err := Migrate.Version()
+	if err != nil {
+		die("Error running migrate version: " + err.Error())
+	}
+	fmt.Printf("dbversion %d", version)
+	if dirty {
+		fmt.Printf(" (dirty)")
+	}
+	println()
 }
 
 func seed() {
@@ -336,21 +388,6 @@ func patch() {
 	fmt.Printf("%s", out)
 	if err != nil {
 		die("Can't patch database w/ required data")
-	}
-}
-
-func goose(arg string) {
-	fmt.Println("Running goose " + arg + "...")
-	args := []string{"--env=" + Environment}
-	if TrafficVault {
-		args = append(args, "--path="+TrafficVaultDir)
-	}
-	args = append(args, arg)
-	cmd := exec.Command("goose", args...)
-	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
-	if err != nil {
-		die("Can't run goose: " + err.Error())
 	}
 }
 
@@ -451,7 +488,7 @@ func main() {
 	commands[CmdShowUsers] = showUsers
 	commands[CmdReset] = reset
 	commands[CmdUpgrade] = upgrade
-	commands[CmdMigrate] = migrate
+	commands[CmdMigrate] = runMigrations
 	commands[CmdDown] = down
 	commands[CmdRedo] = redo
 	commands[CmdStatus] = status
@@ -466,5 +503,18 @@ func main() {
 	} else {
 		fmt.Println(usage())
 		die("invalid command: " + userCmd)
+	}
+}
+
+func initMigrate() {
+	var err error
+	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s", DBDriver, DBUser, DBPassword, HostIP, HostPort, DBName, SSLMode)
+	if !TrafficVault {
+		Migrate, err = migrate.New(DBMigrationsPath, connectionString)
+	} else {
+		Migrate, err = migrate.New(TrafficVaultMigrationsPath, connectionString)
+	}
+	if err != nil {
+		die("Starting Migrate: " + err.Error())
 	}
 }
