@@ -400,19 +400,27 @@ without prompts.
 ===================================================================================================================
 ` + programName + ` arguments:
 
-createdb  - Execute db 'createdb' the database for the current environment.
-create_user  - Execute 'create_user' the user for the current environment (traffic_ops).
-dropdb  - Execute db 'dropdb' on the database for the current environment.
-down  - Roll back a single migration from the current version.
-drop_user  - Execute 'drop_user' the user for the current environment (traffic_ops).
-patch  - Execute sql from db/patches.sql for loading post-migration data patches (NOTE: not supported with --trafficvault option).
-redo  - Roll back the most recently applied migration, then run it again.
-reset  - Execute db 'dropdb', 'createdb', load_schema, migrate on the database for the current environment.
-seed  - Execute sql from db/seeds.sql for loading static data (NOTE: not supported with --trafficvault option).
+createdb    - Execute db 'createdb' the database for the current environment.
+create_user - Execute 'create_user' the user for the current environment
+              (traffic_ops).
+dbversion   - Prints the current migration version
+dropdb      - Execute db 'dropdb' on the database for the current environment.
+down        - Roll back a single migration from the current version.
+drop_user   - Execute 'drop_user' the user for the current environment
+              (traffic_ops).
+patch       - Execute sql from db/patches.sql for loading post-migration data
+              patches (NOTE: not supported with --trafficvault option).
+redo        - Roll back the most recently applied migration, then run it again.
+reset       - Execute db 'dropdb', 'createdb', load_schema, migrate on the
+              database for the current environment.
+seed        - Execute sql from db/seeds.sql for loading static data (NOTE: not
+              supported with --trafficvault option).
 show_users  - Execute sql to show all of the user for the current environment.
-status  - Print the status of all migrations.
-upgrade  - Execute migrate, seed, and patches on the database for the current environment.
-migrate  - Execute migrate (without seeds or patches) on the database for the current environment.
+status      - Print the status of all migrations.
+upgrade     - Execute migrate, seed, and patches on the database for the current
+              environment.
+migrate     - Execute migrate (without seeds or patches) on the database for the
+              current environment.
 `
 }
 
