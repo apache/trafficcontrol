@@ -236,7 +236,7 @@ Options and Arguments
 	show_users
 		Displays a list of all users registered with the PostgreSQL server
 	status
-		Prints the status of all migrations
+		Deprecated, ``status`` is now an alias for ``dbversion`` and will be removed in a future Traffic Control release.
 	upgrade
 		Performs a migration on the database for the current environment, then seeds it and patches it using the SQL statements from the ``app/db/patches.sql`` file
 

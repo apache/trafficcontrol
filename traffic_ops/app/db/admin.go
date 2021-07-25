@@ -84,6 +84,8 @@ const (
 	CmdMigrate    = "migrate"
 	CmdDown       = "down"
 	CmdRedo       = "redo"
+	// Deprecated: Migrate only tracks migration version and dirty status, not a status for each migration.
+	// Use CmdDBVersion to check the migration version and dirty status.
 	CmdStatus     = "status"
 	CmdDBVersion  = "dbversion"
 	CmdSeed       = "seed"
@@ -270,8 +272,9 @@ func redo() {
 	goose(CmdRedo)
 }
 
+// Deprecated: Migrate does not track migration status of past migrations. Use dbversion() to check the migration version and dirty status.
 func status() {
-	goose(CmdStatus)
+	dbVersion()
 }
 
 func dbVersion() {
@@ -416,7 +419,9 @@ reset       - Execute db 'dropdb', 'createdb', load_schema, migrate on the
 seed        - Execute sql from db/seeds.sql for loading static data (NOTE: not
               supported with --trafficvault option).
 show_users  - Execute sql to show all of the user for the current environment.
-status      - Print the status of all migrations.
+status      - Prints the current migration version (Deprecated, status is now an
+              alias for dbversion and will be removed in a future Traffic
+              Control release).
 upgrade     - Execute migrate, seed, and patches on the database for the current
               environment.
 migrate     - Execute migrate (without seeds or patches) on the database for the
