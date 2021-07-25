@@ -93,16 +93,19 @@ const (
 	// goose commands that don't match the commands for this tool
 	GooseUp = "up"
 
-	DBConfigPath       = "db/dbconf.yml"
-	DBSeedsPath        = "db/seeds.sql"
-	DBSchemaPath       = "db/create_tables.sql"
-	DBPatchesPath      = "db/patches.sql"
+	dbDir              = "db/"
+	DBConfigPath       = dbDir + "dbconf.yml"
+	DBMigrationsPath   = "file:" + dbDir + "migrations"
+	DBSeedsPath        = dbDir + "seeds.sql"
+	DBSchemaPath       = dbDir + "create_tables.sql"
+	DBPatchesPath      = dbDir + "patches.sql"
 	DefaultEnvironment = EnvDevelopment
 	DefaultDBSuperUser = "postgres"
 
-	TrafficVaultDBConfigPath = "db/trafficvault/dbconf.yml"
-	TrafficVaultDir          = "db/trafficvault"
-	TrafficVaultSchemaPath   = "db/trafficvault/create_tables.sql"
+	TrafficVaultDBConfigPath   = TrafficVaultDir + "dbconf.yml"
+	TrafficVaultMigrationsPath = "file:" + TrafficVaultDir + "migrations"
+	TrafficVaultDir            = dbDir + "trafficvault/"
+	TrafficVaultSchemaPath     = TrafficVaultDir + "create_tables.sql"
 )
 
 var (
