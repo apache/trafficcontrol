@@ -158,25 +158,14 @@ func parseDBConfig() error {
 	}
 
 	ok := false
-	HostIP, ok = open[HostKey]
-	if !ok {
-		return errors.New("unable to get '" + HostKey + "' for environment '" + Environment + "'")
-	}
-	HostPort, ok = open[PortKey]
-	if !ok {
-		return errors.New("unable to get '" + PortKey + "' for environment '" + Environment + "'")
-	}
-	DBUser, ok = open[UserKey]
-	if !ok {
-		return errors.New("unable to get '" + UserKey + "' for environment '" + Environment + "'")
-	}
-	DBPassword, ok = open[PasswordKey]
-	if !ok {
-		return errors.New("unable to get '" + PasswordKey + "' for environment '" + Environment + "'")
-	}
-	DBName, ok = open[DBNameKey]
-	if !ok {
-		return errors.New("unable to get '" + DBNameKey + "' for environment '" + Environment + "'")
+	stringPointers := []*string{&HostIP, &HostPort, &DBUser, &DBPassword, &DBName}
+	keys := []string{HostKey, PortKey, UserKey, PasswordKey, DBNameKey}
+	for index, stringPointer := range stringPointers {
+		key := keys[index]
+		*stringPointer, ok = open[key]
+		if !ok {
+			return errors.New("unable to get '" + key + "' for environment '" + Environment + "'")
+		}
 	}
 
 	return nil
