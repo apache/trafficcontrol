@@ -517,4 +517,37 @@ func initMigrate() {
 	if err != nil {
 		die("Starting Migrate: " + err.Error())
 	}
+	Migrate.Log = &Log{}
+}
+
+// Log represents the logger
+// https://github.com/golang-migrate/migrate/blob/v4.14.1/internal/cli/log.go#L9-L12
+type Log struct {
+	verbose bool
+}
+
+// Printf prints out formatted string into a log
+// https://github.com/golang-migrate/migrate/blob/v4.14.1/internal/cli/log.go#L14-L21
+func (l *Log) Printf(format string, v ...interface{}) {
+	if l.verbose {
+		fmt.Printf(format, v...)
+	} else {
+		fmt.Fprintf(os.Stderr, format, v...)
+	}
+}
+
+// Println prints out args into a log
+// https://github.com/golang-migrate/migrate/blob/v4.14.1/internal/cli/log.go#L23-L30
+func (l *Log) Println(args ...interface{}) {
+	if l.verbose {
+		fmt.Println(args...)
+	} else {
+		fmt.Fprintln(os.Stderr, args...)
+	}
+}
+
+// Verbose shows if verbose print enabled
+// https://github.com/golang-migrate/migrate/blob/v4.14.1/internal/cli/log.go#L32-L35
+func (l *Log) Verbose() bool {
+	return l.verbose
 }
