@@ -2,8 +2,8 @@
 Thank you for contributing! Please be sure to read our contribution guidelines: https://github.com/apache/trafficcontrol/blob/master/CONTRIBUTING.md
 If this closes or relates to an existing issue, please reference it using one of the following:
 
-closes: #ISSUE
-related: #ISSUE
+Closes: #ISSUE
+Related: #ISSUE
 
 If this PR fixes a security vulnerability, DO NOT submit! Instead, contact
 the Apache Traffic Control Security Team at security@trafficcontrol.apache.org and follow the
