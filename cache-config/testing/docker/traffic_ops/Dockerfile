@@ -49,7 +49,6 @@ RUN set -o nounset -o errexit && \
 	dnf -y $enable_repo install      \
 		bind-utils           \
 		gettext              \
-		golang               \
 		# ip commands is used in set-to-ips-from-dns.sh
 		iproute              \
 		isomd5sum            \
