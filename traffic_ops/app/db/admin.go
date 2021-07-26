@@ -27,7 +27,11 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -78,16 +82,17 @@ const (
 	SSLModeKey  = "sslmode"
 
 	// available commands
-	CmdCreateDB   = "createdb"
-	CmdDropDB     = "dropdb"
-	CmdCreateUser = "create_user"
-	CmdDropUser   = "drop_user"
-	CmdShowUsers  = "show_users"
-	CmdReset      = "reset"
-	CmdUpgrade    = "upgrade"
-	CmdMigrate    = "migrate"
-	CmdDown       = "down"
-	CmdRedo       = "redo"
+	CmdCreateDB        = "createdb"
+	CmdDropDB          = "dropdb"
+	CmdCreateMigration = "create_migration"
+	CmdCreateUser      = "create_user"
+	CmdDropUser        = "drop_user"
+	CmdShowUsers       = "show_users"
+	CmdReset           = "reset"
+	CmdUpgrade         = "upgrade"
+	CmdMigrate         = "migrate"
+	CmdDown            = "down"
+	CmdRedo            = "redo"
 	// Deprecated: Migrate only tracks migration version and dirty status, not a status for each migration.
 	// Use CmdDBVersion to check the migration version and dirty status.
 	CmdStatus     = "status"
@@ -101,7 +106,8 @@ const (
 
 	dbDir              = "db/"
 	DBConfigPath       = dbDir + "dbconf.yml"
-	DBMigrationsPath   = "file:" + dbDir + "migrations"
+	DBMigrationsPath   = dbDir + "migrations"
+	DBMigrationsSource = "file:" + DBMigrationsPath
 	DBSeedsPath        = dbDir + "seeds.sql"
 	DBSchemaPath       = dbDir + "create_tables.sql"
 	DBPatchesPath      = dbDir + "patches.sql"
@@ -120,15 +126,16 @@ var (
 	TrafficVault bool
 
 	// globals that are parsed out of DBConfigFile and used in commands
-	DBDriver    string
-	DBName      string
-	DBSuperUser = DefaultDBSuperUser
-	DBUser      string
-	DBPassword  string
-	HostIP      string
-	HostPort    string
-	SSLMode     string
-	Migrate     *migrate.Migrate
+	DBDriver      string
+	DBName        string
+	DBSuperUser   = DefaultDBSuperUser
+	DBUser        string
+	DBPassword    string
+	HostIP        string
+	HostPort      string
+	SSLMode       string
+	Migrate       *migrate.Migrate
+	MigrationName string
 )
 
 func parseDBConfig() error {
@@ -209,6 +216,46 @@ func dropDB() {
 	fmt.Printf("%s", out)
 	if err != nil {
 		die("Can't drop db " + DBName)
+	}
+}
+
+func createMigration() {
+	const apacheLicense2 = `/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership.  The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+`
+	var err error
+	if err = os.MkdirAll(DBMigrationsPath, os.ModePerm); err != nil {
+		die("Creating migrations directory " + DBMigrationsPath + ": " + err.Error())
+	}
+	migrationTime := time.Now()
+	formattedMigrationTime := migrationTime.Format("20060102150405") + fmt.Sprintf("%02d", migrationTime.Nanosecond()%100)
+	for _, direction := range []string{"up", "down"} {
+		var migrationFile *os.File
+		basename := fmt.Sprintf("%s_%s.%s.sql", formattedMigrationTime, MigrationName, direction)
+		filename := filepath.Join(DBMigrationsPath, basename)
+		if migrationFile, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0644); err != nil {
+			die("Creating migration " + filename + ": " + err.Error())
+		}
+		defer log.Close(migrationFile, "Closing migration "+filename)
+		if migrationFile.Write([]byte(apacheLicense2)); err != nil {
+			die("Writing content to migration " + filename + ": " + err.Error())
+		}
+		fmt.Printf("Created migration %s\n", filename)
 	}
 }
 
@@ -441,6 +488,8 @@ without prompts.
 ` + programName + ` arguments:
 
 createdb    - Execute db 'createdb' the database for the current environment.
+create_migration NAME
+            - Creates a pair of timestamped up/down migrations titled NAME.
 create_user - Execute 'create_user' the user for the current environment
               (traffic_ops).
 dbversion   - Prints the current migration version
@@ -470,7 +519,12 @@ func main() {
 	flag.StringVar(&Environment, "env", DefaultEnvironment, "The environment to use (defined in "+DBConfigPath+").")
 	flag.BoolVar(&TrafficVault, "trafficvault", false, "Run this for the Traffic Vault database")
 	flag.Parse()
-	if len(flag.Args()) != 1 || flag.Arg(0) == "" {
+	if flag.Arg(0) == CmdCreateMigration {
+		if len(flag.Args()) != 2 {
+			die(usage())
+		}
+		MigrationName = flag.Arg(1)
+	} else if len(flag.Args()) != 1 || flag.Arg(0) == "" {
 		die(usage())
 	}
 	if Environment == "" {
@@ -483,6 +537,7 @@ func main() {
 
 	commands[CmdCreateDB] = createDB
 	commands[CmdDropDB] = dropDB
+	commands[CmdCreateMigration] = createMigration
 	commands[CmdCreateUser] = createUser
 	commands[CmdDropUser] = dropUser
 	commands[CmdShowUsers] = showUsers
@@ -510,7 +565,7 @@ func initMigrate() {
 	var err error
 	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s", DBDriver, DBUser, DBPassword, HostIP, HostPort, DBName, SSLMode)
 	if !TrafficVault {
-		Migrate, err = migrate.New(DBMigrationsPath, connectionString)
+		Migrate, err = migrate.New(DBMigrationsSource, connectionString)
 	} else {
 		Migrate, err = migrate.New(TrafficVaultMigrationsPath, connectionString)
 	}

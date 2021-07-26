@@ -211,6 +211,8 @@ Options and Arguments
 
 	createdb
 		Creates the database for the current environment
+	create_migration
+		Creates a pair of timestamped up/down migrations titled NAME.
 	create_user
 		Creates the user defined for the current environment
 	dbversion
