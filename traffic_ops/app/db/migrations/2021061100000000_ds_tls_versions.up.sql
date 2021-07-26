@@ -11,14 +11,12 @@
 	limitations under the License.
 */
 
--- +goose Up
 CREATE TABLE IF NOT EXISTS public.deliveryservice_tls_version (
 	deliveryservice bigint NOT NULL REFERENCES public.deliveryservice(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	tls_version text NOT NULL CHECK (tls_version <> ''),
 	PRIMARY KEY (deliveryservice, tls_version)
 );
 
--- +goose StatementBegin
 CREATE OR REPLACE FUNCTION update_ds_timestamp_on_insert()
 	RETURNS trigger
 	AS $$
@@ -32,9 +30,7 @@ BEGIN
 	RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
--- +goose StatementEnd
 
--- +goose StatementBegin
 CREATE OR REPLACE FUNCTION update_ds_timestamp_on_delete()
 	RETURNS trigger
 	AS $$
@@ -48,7 +44,6 @@ BEGIN
 	RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
--- +goose StatementEnd
 
 CREATE TRIGGER update_ds_timestamp_on_tls_version_insertion
 	AFTER INSERT ON public.deliveryservice_tls_version
@@ -70,22 +65,3 @@ SET
 	original = jsonb_set(original, '{tlsVersions}', 'null')
 WHERE
 	original IS NOT NULL;
-
--- +goose Down
-UPDATE public.deliveryservice_request
-SET
-	deliveryservice = deliveryservice - 'tlsVersions'
-WHERE
-	deliveryservice IS NOT NULL;
-
-UPDATE public.deliveryservice_request
-SET
-	original = original - 'tlsVersions'
-WHERE
-	original IS NOT NULL;
-
-DROP TRIGGER IF EXISTS update_ds_timestamp_on_tls_version_insertion_or_update ON public.deliveryservice_tls_version;
-DROP TRIGGER IF EXISTS update_ds_timestamp_on_tls_version_delete ON public.deliveryservice_tls_version;
-DROP TABLE IF EXISTS public.deliveryservice_tls_version;
-DROP FUNCTION IF EXISTS update_ds_timestamp_on_insert;
-DROP FUNCTION IF EXISTS update_ds_timestamp_on_delete;

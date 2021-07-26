@@ -11,7 +11,6 @@
 	limitations under the License.
 */
 
--- +goose Up
 ALTER TABLE public.deliveryservice_request
 ADD COLUMN original jsonb DEFAULT NULL;
 
@@ -57,22 +56,3 @@ CHECK (
 		)
 	)
 );
-
--- +goose Down
-ALTER TABLE public.deliveryservice_request
-DROP CONSTRAINT appropriate_requested_and_original_for_change_type;
-
-UPDATE public.deliveryservice_request
-SET deliveryservice = original
-WHERE deliveryservice IS NULL;
-
-ALTER TABLE public.deliveryservice_request
-ALTER COLUMN deliveryservice
-DROP DEFAULT;
-
-ALTER TABLE public.deliveryservice_request
-ALTER COLUMN deliveryservice
-SET NOT NULL;
-
-ALTER TABLE public.deliveryservice_request
-DROP COLUMN original;

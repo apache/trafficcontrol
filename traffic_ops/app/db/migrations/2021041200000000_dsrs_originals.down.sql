@@ -1,3 +1,4 @@
+-- syntax:postgresql
 /*
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -10,8 +11,20 @@
 	limitations under the License.
 */
 
--- +goose Up
-ALTER TABLE deliveryservice DROP COLUMN multi_site_origin_algorithm;
+ALTER TABLE public.deliveryservice_request
+DROP CONSTRAINT appropriate_requested_and_original_for_change_type;
 
--- +goose Down
-ALTER TABLE deliveryservice ADD COLUMN multi_site_origin_algorithm smallint;
+UPDATE public.deliveryservice_request
+SET deliveryservice = original
+WHERE deliveryservice IS NULL;
+
+ALTER TABLE public.deliveryservice_request
+ALTER COLUMN deliveryservice
+DROP DEFAULT;
+
+ALTER TABLE public.deliveryservice_request
+ALTER COLUMN deliveryservice
+SET NOT NULL;
+
+ALTER TABLE public.deliveryservice_request
+DROP COLUMN original;

@@ -25,11 +25,5 @@ afterward regarding which CDN is named, even if the one to which it is linked
 is wrong, somehow.
 */
 
--- +goose Up
-UPDATE snapshot
-SET crconfig = crconfig::jsonb #- '{stats,tm_path}'
-WHERE crconfig::jsonb ? 'stats' AND (crconfig::jsonb -> 'stats') ? 'tm_path';
-
--- +goose Down
 UPDATE snapshot SET crconfig = jsonb_set(crconfig::jsonb, '{stats,tm_path}', ('"/api/4.0/cdns/' || (crconfig::jsonb -> 'stats' ->> 'CDN_name') || '/snapshot"')::jsonb)
 WHERE crconfig::jsonb ? 'stats' AND (crconfig::jsonb -> 'stats') ? 'CDN_name';

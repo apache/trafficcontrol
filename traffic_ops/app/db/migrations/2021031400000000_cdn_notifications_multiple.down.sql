@@ -15,12 +15,16 @@
  * the License.
  */
 
--- +goose Up
--- SQL in section 'Up' is executed when this migration is applied
+DROP TABLE IF EXISTS cdn_notification;
 
-ALTER TABLE tm_user ADD COLUMN last_authenticated timestamp with time zone;
-
--- +goose Down
--- SQL section 'Down' is executed when this migration is rolled back
-
-ALTER TABLE tm_user DROP COLUMN last_authenticated;
+CREATE TABLE cdn_notification (
+    cdn text NOT NULL,
+    "user" text NOT NULL,
+    notification text,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT pk_cdn_notification PRIMARY KEY (cdn),
+    CONSTRAINT fk_notification_cdn FOREIGN KEY (cdn) REFERENCES cdn(name) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_notification_user FOREIGN KEY ("user") REFERENCES tm_user(username) ON DELETE CASCADE ON UPDATE CASCADE
+);
+DROP TRIGGER IF EXISTS on_update_current_timestamp ON cdn_notification;
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cdn_notification FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();

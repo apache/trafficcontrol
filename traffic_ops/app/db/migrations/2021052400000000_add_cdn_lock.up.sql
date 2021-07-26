@@ -10,7 +10,6 @@
 	limitations under the License.
 */
 
--- +goose Up
 CREATE TABLE IF NOT EXISTS public.cdn_lock (
                                         username text NOT NULL,
                                         cdn text NOT NULL,
@@ -24,7 +23,3 @@ CREATE TABLE IF NOT EXISTS public.cdn_lock (
 
 DROP TRIGGER IF EXISTS on_update_current_timestamp ON public.cdn_lock;
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON public.cdn_lock FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
--- +goose Down
-DROP TRIGGER IF EXISTS on_update_current_timestamp ON public.cdn_lock;
-DROP TABLE IF EXISTS public.cdn_lock;

@@ -10,15 +10,6 @@
     limitations under the License.
 */
 
--- +goose Up
--- SQL in section 'Up' is executed when this migration is applied
-ALTER TABLE public.server_server_capability DROP CONSTRAINT fk_server_capability;
-ALTER TABLE public.deliveryservices_required_capability DROP CONSTRAINT fk_required_capability;
-ALTER TABLE public.server_server_capability ADD CONSTRAINT fk_server_capability FOREIGN KEY (server_capability) REFERENCES server_capability(name) ON UPDATE CASCADE ON DELETE RESTRICT;
-ALTER TABLE public.deliveryservices_required_capability ADD CONSTRAINT fk_required_capability FOREIGN KEY (required_capability) REFERENCES server_capability(name) ON UPDATE CASCADE ON DELETE RESTRICT;
-
--- +goose Down
--- SQL section 'Down' is executed when this migration is rolled back
 ALTER TABLE public.server_server_capability DROP CONSTRAINT fk_server_capability;
 ALTER TABLE public.deliveryservices_required_capability DROP CONSTRAINT fk_required_capability;
 ALTER TABLE public.server_server_capability ADD CONSTRAINT fk_server_capability FOREIGN KEY (server_capability) REFERENCES server_capability(name) ON DELETE RESTRICT;

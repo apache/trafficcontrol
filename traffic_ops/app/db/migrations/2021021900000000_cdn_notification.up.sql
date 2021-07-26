@@ -15,8 +15,6 @@
  * the License.
  */
 
--- +goose Up
--- SQL in section 'Up' is executed when this migration is applied
 CREATE TABLE cdn_notification (
     cdn text NOT NULL,
     "user" text NOT NULL,
@@ -28,8 +26,3 @@ CREATE TABLE cdn_notification (
 );
 DROP TRIGGER IF EXISTS on_update_current_timestamp ON cdn_notification;
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON cdn_notification FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
--- +goose Down
--- SQL section 'Down' is executed when this migration is rolled back
-DROP TABLE IF EXISTS cdn_notification;

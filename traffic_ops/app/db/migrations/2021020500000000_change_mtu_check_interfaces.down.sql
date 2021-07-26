@@ -1,11 +1,8 @@
 /*
-
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
-
         http://www.apache.org/licenses/LICENSE-2.0
-
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,10 +10,5 @@
     limitations under the License.
 */
 
--- +goose Up
--- SQL in section 'Up' is executed when this migration is applied
-UPDATE "server" s set xmpp_id = host_name WHERE s.xmpp_id IS NULL OR s.xmpp_id = '';
-
--- +goose Down
--- SQL section 'Down' is executed when this migration is rolled back
-UPDATE "server" s set xmpp_id = NULL WHERE s.xmpp_id IS NULL OR s.xmpp_id = '';
+ALTER TABLE interface DROP CONSTRAINT interface_mtu_check;
+ALTER TABLE interface ADD CONSTRAINT interface_mtu_check CHECK (((mtu IS NULL) OR (mtu > 1280)));

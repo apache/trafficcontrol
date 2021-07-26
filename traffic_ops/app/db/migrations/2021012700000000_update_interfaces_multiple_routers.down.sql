@@ -13,22 +13,6 @@
     limitations under the License.
 */
 
--- +goose Up
--- SQL in section 'Up' is executed when this migration is applied
-ALTER TABLE interface ADD COLUMN router_host_name text NOT NULL DEFAULT '';
-ALTER TABLE interface ADD COLUMN router_port_name text NOT NULL DEFAULT '';
-
-UPDATE interface
-SET router_host_name = COALESCE(server.router_host_name, ''),
-router_port_name = COALESCE(server.router_port_name, '')
-FROM server
-WHERE server = server.id;
-
-ALTER TABLE server DROP COLUMN router_host_name;
-ALTER TABLE server DROP COLUMN router_port_name;
-
--- +goose Down
--- SQL section 'Down' is executed when this migration is rolled back
 ALTER TABLE server ADD COLUMN router_host_name text DEFAULT '';
 ALTER TABLE server ADD COLUMN router_port_name text DEFAULT '';
 

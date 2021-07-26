@@ -13,31 +13,5 @@
     limitations under the License.
 */
 
--- +goose Up
--- SQL in section 'Up' is executed when this migration is applied
-
-CREATE SEQUENCE IF NOT EXISTS async_status_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-CREATE TABLE IF NOT EXISTS async_status (
-    id bigint NOT NULL DEFAULT nextval('async_status_id_seq'::regclass),
-    status TEXT NOT NULL,
-    message TEXT,
-    start_time timestamp with time zone DEFAULT now() NOT NULL,
-    end_time timestamp with time zone,
-
-    PRIMARY KEY (id)
-);
-
-ALTER SEQUENCE async_status_id_seq OWNED BY async_status.id;
-
-
--- +goose Down
--- SQL section 'Down' is executed when this migration is rolled back
-
 DROP TABLE IF EXISTS async_status;
 DROP SEQUENCE IF EXISTS async_status_id_seq;
