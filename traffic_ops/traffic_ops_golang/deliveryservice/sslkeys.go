@@ -116,17 +116,6 @@ func generatePutTrafficVaultSSLKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql
 // GeneratePlaceholderSelfSignedCert generates a self-signed SSL certificate as a placeholder when a new HTTPS
 // delivery service is created or an HTTP delivery service is updated to use HTTPS.
 func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV4, inf *api.APIInfo, context context.Context) (error, int) {
-	tv := inf.Vault
-	_, ok, err := tv.GetDeliveryServiceSSLKeys(*ds.XMLID, "", inf.Tx.Tx, context)
-	if err != nil {
-		return errors.New("getting latest ssl keys for xmlId: " + *ds.XMLID + " : " + err.Error()), http.StatusInternalServerError
-	}
-	if ok {
-		return nil, http.StatusOK
-	}
-
-	version := util.JSONIntStr(1)
-
 	db, err := api.GetDB(context)
 	if err != nil {
 		return err, http.StatusInternalServerError
@@ -136,6 +125,17 @@ func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV4, inf *api.APIInfo
 		return err, http.StatusInternalServerError
 	}
 	defer tx.Commit()
+
+	tv := inf.Vault
+	_, ok, err := tv.GetDeliveryServiceSSLKeys(*ds.XMLID, "", tx, context)
+	if err != nil {
+		return errors.New("getting latest ssl keys for xmlId: " + *ds.XMLID + " : " + err.Error()), http.StatusInternalServerError
+	}
+	if ok {
+		return nil, http.StatusOK
+	}
+
+	version := util.JSONIntStr(1)
 
 	cdnName, cdnDomain, err := dbhelpers.GetCDNNameDomain(*ds.CDNID, tx)
 	if err != nil {
