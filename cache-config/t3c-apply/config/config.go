@@ -22,6 +22,7 @@ package config
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"net/url"
 	"os"
 	"os/exec"
@@ -208,6 +209,7 @@ func GetTSPackageHome() string {
 
 func GetCfg() (Cfg, error) {
 	var err error
+	toInfoLog := []string{}
 
 	dispersionPtr := getopt.IntLong("dispersion", 'D', 300, "[seconds] wait a random number of seconds between 0 and [seconds] before starting, default 300")
 	loginDispersionPtr := getopt.IntLong("login-dispersion", 'l', 0, "[seconds] wait a random number of seconds between 0 and [seconds] before login to traffic ops, default 0")
@@ -328,25 +330,25 @@ func GetCfg() (Cfg, error) {
 	var tsHome = ""
 	if *tsHomePtr != "" {
 		tsHome = *tsHomePtr
-		log.Infof("set TSHome from command line: '%s'\n", TSHome)
+		toInfoLog = append(toInfoLog, fmt.Sprintf("set TSHome from command line: '%s'", TSHome))
 	}
 	if *tsHomePtr == "" { // evironment or rpm check.
 		tsHome = os.Getenv("TS_HOME") // check for the environment variable.
 		if tsHome != "" {
-			log.Infof("set TSHome from TS_HOME environment variable '%s'\n", TSHome)
+			toInfoLog = append(toInfoLog, fmt.Sprintf("set TSHome from TS_HOME environment variable '%s'\n", TSHome))
 		} else { // finally check using the config file listing from the rpm package.
 			tsHome = GetTSPackageHome()
 			if tsHome != "" {
-				log.Infof("set TSHome from the RPM config file  list '%s'\n", tsHome)
+				toInfoLog = append(toInfoLog, fmt.Sprintf("set TSHome from the RPM config file  list '%s'\n", TSHome))
 			} else {
-				log.Infof("no override for TSHome was found, using the configured default: '%s'\n", TSHome)
+				toInfoLog = append(toInfoLog, fmt.Sprintf("no override for TSHome was found, using the configured default: '%s'\n", TSHome))
 			}
 		}
 	}
 	if tsHome != "" {
 		TSHome = tsHome
 		TSConfigDir = tsHome + "/etc/trafficserver"
-		log.Infof("TSHome: %s, TSConfigDir: %s\n", TSHome, TSConfigDir)
+		toInfoLog = append(toInfoLog, fmt.Sprintf("TSHome: %s, TSConfigDir: %s\n", TSHome, TSConfigDir))
 	}
 
 	usageStr := "basic usage: t3c-apply --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache"
@@ -409,6 +411,10 @@ func GetCfg() (Cfg, error) {
 
 	if err = log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
+	}
+
+	for msg := range toInfoLog {
+		log.Infoln(msg)
 	}
 
 	printConfig(cfg)
