@@ -127,7 +127,15 @@ func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV4, inf *api.APIInfo
 
 	version := util.JSONIntStr(1)
 
-	tx := inf.Tx.Tx
+	db, err := api.GetDB(context)
+	if err != nil {
+		return err, http.StatusInternalServerError
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return err, http.StatusInternalServerError
+	}
+	defer tx.Commit()
 
 	cdnName, cdnDomain, err := dbhelpers.GetCDNNameDomain(*ds.CDNID, tx)
 	if err != nil {
