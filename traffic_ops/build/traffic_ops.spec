@@ -131,6 +131,15 @@ src=src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
 db_admin_src=src/github.com/apache/trafficcontrol/traffic_ops/app/db
 %__cp -p  "$db_admin_src"/admin           "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/db/admin
 %__rm $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/db/*.go
+%__rm -r $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/db/trafficvault/test
+
+reencrypt_src=src/github.com/apache/trafficcontrol/traffic_ops/app/db/reencrypt
+%__cp -p  "$reencrypt_src"/reencrypt           "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/db/reencrypt/reencrypt
+%__rm $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/db/reencrypt/*.go
+
+tv_migrate_src=src/github.com/apache/trafficcontrol/traffic_ops/app/db/traffic_vault_migrate
+%__cp -p  "$tv_migrate_src"/traffic_vault_migrate           "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/db/traffic_vault_migrate/traffic_vault_migrate
+%__rm $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/db/traffic_vault_migrate/*.go
 
 convert_profile_src=src/github.com/apache/trafficcontrol/traffic_ops/install/bin/convert_profile
 %__cp -p  "$convert_profile_src"/convert_profile           "${RPM_BUILD_ROOT}"/opt/traffic_ops/install/bin/convert_profile
@@ -228,6 +237,8 @@ fi
 %config(noreplace)/var/www/files/osversions.json
 %attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/db/admin
 %attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/install/bin/convert_profile/convert_profile
+%attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/db/reencrypt/reencrypt
+%attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/db/traffic_vault_migrate/traffic_vault_migrate
 %{PACKAGEDIR}/etc
 %{PACKAGEDIR}/app/bin/checks
 %{PACKAGEDIR}/app/bin/tests
