@@ -10,9 +10,9 @@ the Apache Traffic Control Security Team at security@trafficcontrol.apache.org a
 guidelines at https://apache.org/security regarding vulnerability disclosure.
 -->
 
----
-**^ Add meaningful description above**
 
+-----------------------------------------------
+<!-- **^ Add meaningful description above** -->
 
 ## Which Traffic Control components are affected by this PR?
 <!-- Please delete all components from this list that are NOT affected by this PR.
