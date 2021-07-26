@@ -38,7 +38,7 @@ func TestJobs(t *testing.T) {
 		JobCollisionWarningTest(t)
 		GetTestJobsByValidData(t)
 		GetTestJobsByInvalidData(t)
-		CreateTestJobsInvalidds(t)
+		CreateTestJobsInvalidDS(t)
 		CreateTestJobsAlreadyExistTTL(t)
 		CreateTestJobswithPastDate(t)
 		CreateTestJobsWithFutureDate(t)
@@ -543,7 +543,7 @@ func GetTestJobsByInvalidData(t *testing.T) {
 	}
 }
 
-func CreateTestJobsInvalidds(t *testing.T) {
+func CreateTestJobsInvalidDS(t *testing.T) {
 	if len(testData.InvalidationJobs) < 1 {
 		t.Error("Need at least one Invalidation Jobs to test invalid ds")
 	}
