@@ -28,7 +28,6 @@ Software Requirements
 =====================
 Traffic Ops is only supported on CentOS 7+ systems (although many developers do use Mac OS with some success). Here are the requirements:
 
-- `Goose <https://github.com/kevinburke/goose>`_ (although the ``postinstall`` script will install this)
 - `PostgreSQL 13.2 <https://www.postgresql.org/download/>`_ - the machine where Traffic Ops is running must have the client tool set (e.g. :manpage:`psql(1)`), but the actual database can be run anywhere so long as it is accessible.
 
 	.. note:: Prior to version 13.2, Traffic Ops used version 9.6. For upgrading an existing Mac OS Homebrew-based PostgreSQL instance, you can use `Homebrew <https://brew.sh/>`_ to easily upgrade from 9.6 to 13.2:
@@ -180,7 +179,7 @@ Traffic Ops Project Tree Overview
 
 app/db/admin
 ============
-The :program:`app/db/admin` binary is for use in managing the Traffic Ops (and Traffic Vault PostgreSQL backend) database tables. This essentially serves as a front-end for `Goose <https://github.com/kevinburke/goose>`_.
+The :program:`app/db/admin` binary is for use in managing the Traffic Ops (and Traffic Vault PostgreSQL backend) database tables. This essentially serves as a front-end for `Migrate <https://github.com/golang-migrate/migrate>`_, though  ``dbconf.yml`` comes from `Goose <https://github.com/kevinburke/goose/blob/1.15/db-sample/dbconf.yml>`_, which Traffic Ops used to use before switching to Migrate.
 
 .. note:: For proper resolution of configuration and SOL statement files, it's recommended that this binary be run from the ``app`` directory
 
@@ -192,7 +191,7 @@ Options and Arguments
 ---------------------
 .. option:: --env ENVIRONMENT
 
-	An optional environment specification that causes the database configuration to be read out of the corresponding section of the :file:`app/db/dbconf.yml` configuration file. One of:
+	An optional environment specification that causes the database configuration to be read out of the corresponding section of the :atc-file:`app/db/dbconf.yml` configuration file. One of:
 
 	- development
 	- integration
@@ -203,7 +202,7 @@ Options and Arguments
 
 .. option:: --trafficvault
 
-	When used, commands will be run against the Traffic Vault PostgreSQL backend database as specified in the :file:`app/db/trafficvault/dbconf.yml` configuration file.
+	When used, commands will be run against the Traffic Vault PostgreSQL backend database as specified in the :atc-file:`app/db/trafficvault/dbconf.yml` configuration file.
 
 .. option:: command
 

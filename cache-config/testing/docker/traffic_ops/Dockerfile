@@ -49,7 +49,6 @@ RUN set -o nounset -o errexit && \
 	dnf -y $enable_repo install      \
 		bind-utils           \
 		gettext              \
-		git                  \
 		golang               \
 		# ip commands is used in set-to-ips-from-dns.sh
 		iproute              \
@@ -72,8 +71,6 @@ RUN set -o nounset -o errexit && \
 EXPOSE 443
 
 WORKDIR /opt/traffic_ops/app
-ADD traffic_ops/install/bin/install_goose.sh ./
-RUN ./install_goose.sh && rm ./install_goose.sh && dnf -y remove git && dnf clean all
 
 ADD cache-config/testing/docker/traffic_ops/traffic_ops*.rpm /traffic_ops.rpm
 RUN yum -y install /traffic_ops.rpm && \

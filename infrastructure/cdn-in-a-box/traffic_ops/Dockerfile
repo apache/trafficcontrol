@@ -96,8 +96,6 @@ FROM trafficops-dependencies AS trafficops
 EXPOSE 443
 
 WORKDIR /opt/traffic_ops/app
-ADD traffic_ops/install/bin/install_goose.sh ./
-RUN ./install_goose.sh && rm ./install_goose.sh
 
 ADD infrastructure/cdn-in-a-box/traffic_ops_data /traffic_ops_data
 
