@@ -122,7 +122,7 @@
 
 - name: you have to call get once for Riak/TO to work right before you can add certs
   uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/name/{{ Target_cdn_name }}/sslkeys.json"
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/cdns/name/{{ Target_cdn_name }}/sslkeys"
     method: GET
 
 - name: Assign Servers to Delivery Services - Grove

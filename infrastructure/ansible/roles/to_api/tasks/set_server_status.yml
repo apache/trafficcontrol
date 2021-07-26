@@ -17,7 +17,7 @@
 
 - name: Get server details for {{to_api_target_host}}
   uri:
-    url: "{{ to_api_base_url }}/api/{{ to_api_version }}/servers/hostname/{{ to_api_target_host.split('.')[0] }}/details"
+    url: "{{ to_api_base_url }}/api/{{ to_api_version }}/servers/details?hostName={{ to_api_target_host.split('.')[0] }}"
     method: GET
     headers:
       Cookie: "{{ hostvars.localhost.login.set_cookie }}"
