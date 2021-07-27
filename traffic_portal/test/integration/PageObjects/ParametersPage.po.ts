@@ -27,7 +27,7 @@ interface DeleteParameter {
   validationMessage?: string;
 }
 
-interface Parameter extends DeleteParameter{
+interface Parameter extends DeleteParameter {
   ConfigFile: string;
   Secure: string;
   Value: string;
@@ -51,6 +51,7 @@ export class ParametersPage extends BasePage {
   private btnDelete = element(by.buttonText('Delete'));
   private btnYes = element(by.buttonText('Yes'));
   private txtConfirmName = element(by.name('confirmWithNameInput'));
+  private btnTableColumn = element(by.className("caret"))
   private randomize = randomize;
 
   async OpenParametersPage() {
@@ -123,5 +124,17 @@ export class ParametersPage extends BasePage {
       }
     })
     return result;
+  }
+
+  public async CheckCSV(name: string): Promise<boolean> {
+    return element(by.cssContainingText("span", name)).isPresent();
+  }
+  
+  public async ToggleTableColumn(name: string): Promise<boolean> {
+    await this.btnTableColumn.click();
+    const result = await element(by.cssContainingText("th", name)).isPresent();
+    await element(by.cssContainingText("label", name)).click();
+    await this.btnTableColumn.click();
+    return !result;
   }
 }
