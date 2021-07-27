@@ -40,12 +40,12 @@ func TestJobs(t *testing.T) {
 		GetTestJobsByInvalidData(t)
 		CreateTestJobsInvalidDS(t)
 		CreateTestJobsAlreadyExistTTL(t)
-		CreateTestJobswithPastDate(t)
+		CreateTestJobsWithPastDate(t)
 		CreateTestJobsWithFutureDate(t)
 		CreateJobsMissingDate(t)
 		CreateJobsMissingRegex(t)
 		CreateJobsMissingTtl(t)
-		UpdateTestJobsInvalidds(t)
+		UpdateTestJobsInvalidDS(t)
 		DeleteTestJobs(t)
 		DeleteTestJobsByInvalidId(t)
 	})
@@ -622,7 +622,7 @@ func CreateTestJobsAlreadyExistTTL(t *testing.T) {
 	}
 }
 
-func CreateTestJobswithPastDate(t *testing.T) {
+func CreateTestJobsWithPastDate(t *testing.T) {
 	if len(testData.InvalidationJobs) < 1 {
 		t.Fatal("Need at least one Invalidation Job to test creating an invalid Job")
 	}
@@ -890,7 +890,7 @@ func CreateJobsMissingTtl(t *testing.T) {
 	}
 }
 
-func UpdateTestJobsInvalidds(t *testing.T) {
+func UpdateTestJobsInvalidDS(t *testing.T) {
 	if len(testData.DeliveryServices) < 2 {
 		t.Fatal("Need at least two Delivery Service to update Invalidation Job")
 	}
