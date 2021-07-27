@@ -45,7 +45,7 @@ func TestServerCapabilities(t *testing.T) {
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestServerCapabilitiesWithHeaders(t, header)
 		ValidationTestServerCapabilities(t)
-		UpdateTestServerCapabilititesInvalidData(t)
+		UpdateTestServerCapabilitiesInvalidData(t)
 		DeleteTestServerCapabilitiesInvalidName(t)
 	})
 }
@@ -195,7 +195,7 @@ func UpdateTestServerCapabilities(t *testing.T) {
 	}
 }
 
-func UpdateTestServerCapabilititesInvalidData(t *testing.T) {
+func UpdateTestServerCapabilitiesInvalidData(t *testing.T) {
 	resp, _, err := TOSession.GetServerCapabilities(client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("Expected no error, but got: %v - alerts: %+v", err, resp.Alerts)
