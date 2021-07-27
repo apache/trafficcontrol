@@ -63,12 +63,6 @@ type ServersDetailResponse struct {
 	Alerts
 }
 
-// ServersV1Response is a list of Servers for v1 as a response.
-type ServersV1Response struct {
-	Response []ServerV1 `json:"response"`
-	Alerts
-}
-
 type ServerDetailV11 struct {
 	ServerDetail
 	LegacyInterfaceDetails
@@ -598,55 +592,6 @@ type Server struct {
 	XMPPPasswd       string              `json:"xmppPasswd" db:"xmpp_passwd"`
 }
 
-type ServerV1 struct {
-	Cachegroup       string              `json:"cachegroup" db:"cachegroup"`
-	CachegroupID     int                 `json:"cachegroupId" db:"cachegroup_id"`
-	CDNID            int                 `json:"cdnId" db:"cdn_id"`
-	CDNName          string              `json:"cdnName" db:"cdn_name"`
-	DeliveryServices map[string][]string `json:"deliveryServices,omitempty"`
-	DomainName       string              `json:"domainName" db:"domain_name"`
-	FQDN             *string             `json:"fqdn,omitempty"`
-	FqdnTime         time.Time           `json:"-"`
-	GUID             string              `json:"guid" db:"guid"`
-	HostName         string              `json:"hostName" db:"host_name"`
-	HTTPSPort        int                 `json:"httpsPort" db:"https_port"`
-	ID               int                 `json:"id" db:"id"`
-	ILOIPAddress     string              `json:"iloIpAddress" db:"ilo_ip_address"`
-	ILOIPGateway     string              `json:"iloIpGateway" db:"ilo_ip_gateway"`
-	ILOIPNetmask     string              `json:"iloIpNetmask" db:"ilo_ip_netmask"`
-	ILOPassword      string              `json:"iloPassword" db:"ilo_password"`
-	ILOUsername      string              `json:"iloUsername" db:"ilo_username"`
-	InterfaceMtu     int                 `json:"interfaceMtu" db:"interface_mtu"`
-	InterfaceName    string              `json:"interfaceName" db:"interface_name"`
-	IP6Address       string              `json:"ip6Address" db:"ip6_address"`
-	IP6Gateway       string              `json:"ip6Gateway" db:"ip6_gateway"`
-	IPAddress        string              `json:"ipAddress" db:"ip_address"`
-	IPGateway        string              `json:"ipGateway" db:"ip_gateway"`
-	IPNetmask        string              `json:"ipNetmask" db:"ip_netmask"`
-	LastUpdated      TimeNoMod           `json:"lastUpdated" db:"last_updated"`
-	MgmtIPAddress    string              `json:"mgmtIpAddress" db:"mgmt_ip_address"`
-	MgmtIPGateway    string              `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
-	MgmtIPNetmask    string              `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
-	OfflineReason    string              `json:"offlineReason" db:"offline_reason"`
-	PhysLocation     string              `json:"physLocation" db:"phys_location"`
-	PhysLocationID   int                 `json:"physLocationId" db:"phys_location_id"`
-	Profile          string              `json:"profile" db:"profile"`
-	ProfileDesc      string              `json:"profileDesc" db:"profile_desc"`
-	ProfileID        int                 `json:"profileId" db:"profile_id"`
-	Rack             string              `json:"rack" db:"rack"`
-	RevalPending     bool                `json:"revalPending" db:"reval_pending"`
-	RouterHostName   string              `json:"routerHostName" db:"router_host_name"`
-	RouterPortName   string              `json:"routerPortName" db:"router_port_name"`
-	Status           string              `json:"status" db:"status"`
-	StatusID         int                 `json:"statusId" db:"status_id"`
-	TCPPort          int                 `json:"tcpPort" db:"tcp_port"`
-	Type             string              `json:"type" db:"server_type"`
-	TypeID           int                 `json:"typeId" db:"server_type_id"`
-	UpdPending       bool                `json:"updPending" db:"upd_pending"`
-	XMPPID           string              `json:"xmppId" db:"xmpp_id"`
-	XMPPPasswd       string              `json:"xmppPasswd" db:"xmpp_passwd"`
-}
-
 // CommonServerProperties is just the collection of properties which are
 // shared by all servers across API versions.
 type CommonServerProperties struct {
@@ -770,61 +715,6 @@ func (s Server) ToNullable() ServerNullableV2 {
 		},
 		IPIsService:  &s.IPIsService,
 		IP6IsService: &s.IP6IsService,
-	}
-}
-
-func (s ServerV1) ToNullable() ServerNullableV11 {
-	return ServerNullableV11{
-		CommonServerProperties: CommonServerProperties{
-			Cachegroup:       &s.Cachegroup,
-			CachegroupID:     &s.CachegroupID,
-			CDNID:            &s.CDNID,
-			CDNName:          &s.CDNName,
-			DeliveryServices: &s.DeliveryServices,
-			DomainName:       &s.DomainName,
-			FQDN:             s.FQDN,
-			FqdnTime:         s.FqdnTime,
-			GUID:             &s.GUID,
-			HostName:         &s.HostName,
-			HTTPSPort:        &s.HTTPSPort,
-			ID:               &s.ID,
-			ILOIPAddress:     &s.ILOIPAddress,
-			ILOIPGateway:     &s.ILOIPGateway,
-			ILOIPNetmask:     &s.ILOIPNetmask,
-			ILOPassword:      &s.ILOPassword,
-			ILOUsername:      &s.ILOUsername,
-			LastUpdated:      &s.LastUpdated,
-			MgmtIPAddress:    &s.MgmtIPAddress,
-			MgmtIPGateway:    &s.MgmtIPGateway,
-			MgmtIPNetmask:    &s.MgmtIPNetmask,
-			OfflineReason:    &s.OfflineReason,
-			PhysLocation:     &s.PhysLocation,
-			PhysLocationID:   &s.PhysLocationID,
-			Profile:          &s.Profile,
-			ProfileDesc:      &s.ProfileDesc,
-			ProfileID:        &s.ProfileID,
-			Rack:             &s.Rack,
-			RevalPending:     &s.RevalPending,
-			Status:           &s.Status,
-			StatusID:         &s.StatusID,
-			TCPPort:          &s.TCPPort,
-			Type:             s.Type,
-			TypeID:           &s.TypeID,
-			UpdPending:       &s.UpdPending,
-			XMPPID:           &s.XMPPID,
-			XMPPPasswd:       &s.XMPPPasswd,
-		},
-		LegacyInterfaceDetails: LegacyInterfaceDetails{
-			InterfaceMtu:  &s.InterfaceMtu,
-			InterfaceName: &s.InterfaceName,
-			IPAddress:     &s.IPAddress,
-			IPGateway:     &s.IPGateway,
-			IPNetmask:     &s.IPNetmask,
-			IP6Address:    &s.IP6Address,
-			IP6Gateway:    &s.IP6Gateway,
-		},
-		RouterHostName: &s.RouterHostName,
-		RouterPortName: &s.RouterPortName,
 	}
 }
 

@@ -283,18 +283,6 @@ func updateSSLKeyVersion(xmlID string, version int64, tx *sql.Tx) error {
 	return nil
 }
 
-// returns the cdn_id found by domainname.
-func getCDNIDByDomainname(domainName string, tx *sql.Tx) (int64, bool, error) {
-	cdnID := int64(0)
-	if err := tx.QueryRow(`SELECT id from cdn WHERE domain_name = $1`, domainName).Scan(&cdnID); err != nil {
-		if err == sql.ErrNoRows {
-			return 0, false, nil
-		}
-		return 0, false, err
-	}
-	return cdnID, true, nil
-}
-
 // getDSIDFromName loads the DeliveryService's ID from the database, from the xml_id. Returns whether the delivery service was found, and any error.
 func getDSIDFromName(tx *sql.Tx, xmlID string) (int, bool, error) {
 	id := 0

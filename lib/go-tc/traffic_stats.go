@@ -33,14 +33,6 @@ import (
 	influx "github.com/influxdata/influxdb/client/v2"
 )
 
-// TRAFFIC_STATS_VERSION was supposed to be the "API version", but actually the plugin (this route
-// used to be a plugin in Perl) always returned this static value
-const TRAFFIC_STATS_VERSION = "1.2"
-
-// TRAFFIC_STATS_SOURCE is the value of the "source" field in an API response. Perl always returned
-// source="TrafficStats", so we do too
-const TRAFFIC_STATS_SOURCE = "TrafficStats"
-
 // TrafficStatsDurationPattern reflects all the possible durations that can be requested via the
 // deliveryservice_stats endpoint
 var TrafficStatsDurationPattern = regexp.MustCompile(`^\d+[mhdw]$`)

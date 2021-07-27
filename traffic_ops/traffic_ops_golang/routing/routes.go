@@ -1359,13 +1359,6 @@ func rootHandler(d ServerData) http.Handler {
 	return root{}
 }
 
-// notImplementedHandler returns a 501 Not Implemented to the client. This should be used very rarely, and primarily for old API Perl routes which were broken long ago, which we don't have the resources to rewrite in Go for the time being.
-func notImplementedHandler(w http.ResponseWriter, r *http.Request) {
-	code := http.StatusNotImplemented
-	w.WriteHeader(code)
-	api.WriteAndLogErr(w, r, []byte(http.StatusText(code)))
-}
-
 //CreateThrottledHandler takes a handler, and a max and uses a channel to insure the handler is used concurrently by only max number of routines
 func CreateThrottledHandler(handler http.Handler, maxConcurrentCalls int) ThrottledHandler {
 	return ThrottledHandler{handler, make(chan struct{}, maxConcurrentCalls)}

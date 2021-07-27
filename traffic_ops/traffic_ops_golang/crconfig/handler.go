@@ -136,28 +136,6 @@ func SnapshotGetMonitoringHandler(w http.ResponseWriter, r *http.Request) {
 	api.WriteAndLogErr(w, r, []byte(`{"response":`+snapshot+`}`))
 }
 
-// SnapshotOldGetHandler gets and serves the CRConfig from the snapshot table, not wrapped in response to match the old non-API CRConfig-Snapshots endpoint
-func SnapshotOldGetHandler(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	snapshot, cdnExists, err := GetSnapshot(inf.Tx.Tx, inf.Params["cdn"])
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
-		return
-	}
-	if !cdnExists {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
-		return
-	}
-	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	api.WriteAndLogErr(w, r, []byte(snapshot))
-}
-
 // SnapshotHandler creates the CRConfig JSON and writes it to the snapshot table in the database.
 func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id", "cdnID"})
