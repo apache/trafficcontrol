@@ -42,6 +42,7 @@ func TestDeliveryServices(t *testing.T) {
 		header.Set(rfc.IfModifiedSince, ti)
 		header.Set(rfc.IfUnmodifiedSince, ti)
 		if includeSystemTests {
+			t.Run("Verify SSL key generation on DS creation", VerifySSLKeysOnDsCreationTest)
 			t.Run("Update CDN for a Delivery Service with SSL keys", SSLDeliveryServiceCDNUpdateTest)
 			t.Run("Create URL Signature keys for a Delivery Service", CreateTestDeliveryServicesURLSignatureKeys)
 			t.Run("Retrieve URL Signature keys for a Delivery Service", GetTestDeliveryServicesURLSignatureKeys)
@@ -703,6 +704,43 @@ func DeliveryServiceSSLKeys(t *testing.T) {
 	}
 	if dsSSLKey.Certificate.CSR == "" {
 		t.Errorf("expected a valid CSR, but got nothing")
+	}
+}
+
+func VerifySSLKeysOnDsCreationTest(t *testing.T) {
+	for _, ds := range testData.DeliveryServices {
+		if !(*ds.Protocol == tc.DSProtocolHTTPS || *ds.Protocol == tc.DSProtocolHTTPAndHTTPS || *ds.Protocol == tc.DSProtocolHTTPToHTTPS) {
+			continue
+		}
+		var err error
+		dsSSLKey := new(tc.DeliveryServiceSSLKeys)
+		for tries := 0; tries < 5; tries++ {
+			time.Sleep(time.Second)
+			var sslKeysResp tc.DeliveryServiceSSLKeysResponse
+			sslKeysResp, _, err = TOSession.GetDeliveryServiceSSLKeys(*ds.XMLID, client.RequestOptions{})
+			*dsSSLKey = sslKeysResp.Response
+			if err == nil && dsSSLKey != nil {
+				break
+			}
+		}
+
+		if err != nil || dsSSLKey == nil {
+			t.Fatalf("unable to get DS %s SSL key: %v", *ds.XMLID, err)
+		}
+		if dsSSLKey.Certificate.Key == "" {
+			t.Errorf("expected a valid key but got nothing")
+		}
+		if dsSSLKey.Certificate.Crt == "" {
+			t.Errorf("expected a valid certificate, but got nothing")
+		}
+		if dsSSLKey.Certificate.CSR == "" {
+			t.Errorf("expected a valid CSR, but got nothing")
+		}
+
+		err = deliveryservice.Base64DecodeCertificate(&dsSSLKey.Certificate)
+		if err != nil {
+			t.Fatalf("couldn't decode certificate: %v", err)
+		}
 	}
 }
 
