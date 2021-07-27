@@ -105,8 +105,6 @@ type Config struct {
 	PeerOptimistic               bool            `json:"peer_optimistic"`
 	PeerOptimisticQuorumMin      int             `json:"peer_optimistic_quorum_min"`
 	MaxEvents                    uint64          `json:"max_events"`
-	MaxStatHistory               uint64          `json:"max_stat_history"`
-	MaxHealthHistory             uint64          `json:"max_health_history"`
 	HealthFlushInterval          time.Duration   `json:"-"`
 	StatFlushInterval            time.Duration   `json:"-"`
 	StatBufferInterval           time.Duration   `json:"-"`
@@ -146,8 +144,6 @@ var DefaultConfig = Config{
 	PeerOptimistic:               true,
 	PeerOptimisticQuorumMin:      0,
 	MaxEvents:                    200,
-	MaxStatHistory:               5,
-	MaxHealthHistory:             5,
 	HealthFlushInterval:          200 * time.Millisecond,
 	StatFlushInterval:            200 * time.Millisecond,
 	StatBufferInterval:           0,
