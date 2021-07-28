@@ -48,6 +48,12 @@ physLocations.tests.forEach(async physlocationsData => {
                 await physlocationsPage.OpenConfigureMenu();
                 await physlocationsPage.OpenPhysLocationPage();
             });
+            physlocationsData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await physlocationsPage.CheckCSV(check.Name)).toBe(true);
+                    await physlocationsPage.OpenPhysLocationPage();
+                });
+            });
             physlocationsData.add.forEach(add => {
                 it(add.description, async () => {
                     expect(await physlocationsPage.CreatePhysLocation(add)).toBeTruthy();

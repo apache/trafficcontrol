@@ -146,4 +146,8 @@ export class PhysLocationsPage extends BasePage {
     })
     return result;
   }
+
+  public async CheckCSV(name: string): Promise<boolean> {
+    return element(by.cssContainingText("span", name)).isPresent();
+  }
 }
