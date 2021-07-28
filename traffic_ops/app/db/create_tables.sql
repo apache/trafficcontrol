@@ -1398,7 +1398,7 @@ CREATE TABLE IF NOT EXISTS server (
 );
 
 --
--- Name: before_update_server_trigger; Type: TRIGGEr; Schema: public; Owner: traffic_ops
+-- Name: before_update_server_trigger; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 DROP TRIGGER IF EXISTS before_update_server_trigger ON server;
 CREATE TRIGGER before_update_server_trigger
@@ -1407,7 +1407,7 @@ CREATE TRIGGER before_update_server_trigger
     EXECUTE PROCEDURE before_server_table();
 
 --
--- Name: before_create_server_trigger; Type: TRIGGEr; Schema: public; Owner: traffic_ops
+-- Name: before_create_server_trigger; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 DROP TRIGGER IF EXISTS before_create_server_trigger ON server;
 CREATE TRIGGER before_create_server_trigger
@@ -1794,7 +1794,7 @@ ALTER SEQUENCE to_extension_id_seq OWNED BY to_extension.id;
 -- Name: toplogy; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE topology (
+CREATE TABLE IF NOT EXISTS topology (
     name text PRIMARY KEY,
     description text NOT NULL,
     last_updated timestamp with time zone DEFAULT now() NOT NULL
@@ -1804,7 +1804,7 @@ CREATE TABLE topology (
 -- Name: topology_cachegroup; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE topology_cachegroup (
+CREATE TABLE IF NOT EXISTS topology_cachegroup (
     id BIGSERIAL PRIMARY KEY,
     topology text NOT NULL,
     cachegroup text NOT NULL,
@@ -1812,12 +1812,11 @@ CREATE TABLE topology_cachegroup (
     CONSTRAINT unique_topology_cachegroup UNIQUE (topology, cachegroup)
 );
 
-
 --
 -- Name: topology_cachegroup_parents; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
-CREATE TABLE topology_cachegroup_parents (
+CREATE TABLE IF NOT EXISTS topology_cachegroup_parents (
     child bigint NOT NULL,
     parent bigint NOT NULL,
     rank integer NOT NULL,
