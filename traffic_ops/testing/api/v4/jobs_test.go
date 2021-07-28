@@ -736,9 +736,12 @@ func CreateTestJobsWithFutureDate(t *testing.T) {
 		StartTime:       job.StartTime,
 		TTL:             job.TTL,
 	}
-	resp, _, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	resp, reqInf, err := TOSession.CreateInvalidationJob(request, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("Expected Invalidation request created, but found error %v - Alert %v", err, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code 200, got %v", reqInf.StatusCode)
 	}
 
 	//Non standard format Future start date
@@ -756,9 +759,12 @@ func CreateTestJobsWithFutureDate(t *testing.T) {
 		StartTime:       job.StartTime,
 		TTL:             job.TTL,
 	}
-	resp, _, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	resp, reqInf, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("Expected Invalidation request created, but found error %v - Alert %v", err, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code 200, got %v", reqInf.StatusCode)
 	}
 
 	//UNIX format Future start date
@@ -776,9 +782,12 @@ func CreateTestJobsWithFutureDate(t *testing.T) {
 		StartTime:       job.StartTime,
 		TTL:             job.TTL,
 	}
-	resp, _, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
+	resp, reqInf, err = TOSession.CreateInvalidationJob(request, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("Expected Invalidation request created, but found error %v - Alert %v", err, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code 200, got %v", reqInf.StatusCode)
 	}
 }
 
@@ -953,10 +962,10 @@ func UpdateTestJobsInvalidDS(t *testing.T) {
 	}
 
 	//update existing jobs with invalid ds id
-	invaliddsidJob := realJob
-	invaliddsid := "abcd"
-	invaliddsidJob.DeliveryService = &invaliddsid
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(invaliddsidJob, client.RequestOptions{})
+	invalidDsIdJob := realJob
+	invalidDsId := "abcd"
+	invalidDsIdJob.DeliveryService = &invalidDsId
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(invalidDsIdJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected Cannot change 'deliveryService' of existing invalidation job! - alerts: %+v", alerts.Alerts)
 	}
@@ -965,10 +974,10 @@ func UpdateTestJobsInvalidDS(t *testing.T) {
 	}
 
 	//update existing jobs with blank ds id
-	blankdsidJob := realJob
-	blankdsid := ""
-	blankdsidJob.DeliveryService = &blankdsid
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(blankdsidJob, client.RequestOptions{})
+	blankDsIdJob := realJob
+	blankDsId := ""
+	blankDsIdJob.DeliveryService = &blankDsId
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(blankDsIdJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected deliveryService: cannot be blank. - alerts: %+v", alerts.Alerts)
 	}
@@ -977,10 +986,10 @@ func UpdateTestJobsInvalidDS(t *testing.T) {
 	}
 
 	//update existing jobs with asset url not starts with origin.infra
-	invalidasseturlJob := realJob
+	invalidAssetURLJob := realJob
 	assetURL := "http://google.com"
-	invalidasseturlJob.AssetURL = &assetURL
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(invalidasseturlJob, client.RequestOptions{})
+	invalidAssetURLJob.AssetURL = &assetURL
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(invalidAssetURLJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected Cannot set asset URL that does not start with Delivery Service origin URL: http://origin.infra.ciab.test. - alerts: %+v", alerts.Alerts)
 	}
@@ -989,10 +998,10 @@ func UpdateTestJobsInvalidDS(t *testing.T) {
 	}
 
 	//update existing jobs with blank asset url
-	blankasseturlJob := realJob
+	blankAssetURLJob := realJob
 	assetURL = ""
-	blankasseturlJob.AssetURL = &assetURL
-	alerts, reqInf, err = TOSession.UpdateInvalidationJob(blankasseturlJob, client.RequestOptions{})
+	blankAssetURLJob.AssetURL = &assetURL
+	alerts, reqInf, err = TOSession.UpdateInvalidationJob(blankAssetURLJob, client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected assetUrl: cannot be blank. alerts: %+v", alerts.Alerts)
 	}
@@ -1098,7 +1107,7 @@ func UpdateTestJobsInvalidDS(t *testing.T) {
 		t.Errorf("Expected status code 400, got %v", reqInf.StatusCode)
 	}
 
-	//update jobs with non standartd Format past start date
+	//update jobs with non standard Format past start date
 	pastStartDateJob = realJob
 	dt = time.Now()
 	dt.Format("2020-03-11 14:12:20-06")
@@ -1146,7 +1155,7 @@ func UpdateTestJobsInvalidDS(t *testing.T) {
 		t.Errorf("Expected status code 200, got %v", reqInf.StatusCode)
 	}
 
-	//update jobs with non standartd Format Future start date
+	//update jobs with non standard Format Future start date
 	startDateFutureJob = realJob
 	dt = time.Now()
 	dt.Format("2020-03-11 14:12:20-06")
