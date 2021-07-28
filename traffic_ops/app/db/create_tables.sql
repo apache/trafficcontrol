@@ -2595,7 +2595,7 @@ IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'topology_c
     -- Name: topology_cachegroup_parents_child_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
     --
 
-    CREATE INDEX topology_cachegroup_parents_child_fkey ON topology_cachegroup_parents USING btree (child);
+    CREATE INDEX IF NOT EXISTS topology_cachegroup_parents_child_fkey ON topology_cachegroup_parents USING btree (child);
 END IF;
 
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'topology_cachegroup_parents' AND column_name = 'parent') THEN
@@ -2603,7 +2603,7 @@ IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'topology_c
     -- Name: topology_cachegroup_parents_parents_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
     --
 
-    CREATE INDEX topology_cachegroup_parents_parents_fkey ON topology_cachegroup_parents USING btree (parent);
+    CREATE INDEX IF NOT EXISTS topology_cachegroup_parents_parents_fkey ON topology_cachegroup_parents USING btree (parent);
 END IF;
 
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'deliveryservice' AND column_name = 'topology') THEN
@@ -2611,7 +2611,7 @@ IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'deliveryse
     -- Name: deliveryservice_topology_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
     --
 
-    CREATE INDEX deliveryservice_topology_fkey ON deliveryservice USING btree (topology);
+    CREATE INDEX IF NOT EXISTS deliveryservice_topology_fkey ON deliveryservice USING btree (topology);
 END IF;
 
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'tenant' AND column_name = 'parent_id') THEN
