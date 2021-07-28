@@ -27,10 +27,36 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// MaxLogObjects is the maximum number of "Log Objects" that can be defined in a
+// logging configuration file for ATS (logging.config, logging.yaml,
+// logs_xml.config).
+//
+// See the ATS documentatio for logging configuration for details:
+// https://docs.trafficserver.apache.org/en/8.1.x/admin-guide/files/logging.yaml.en.html
+// ... although documentation for unsupported ATS versions may be more helpful:
+// https://docs.trafficserver.apache.org/en/6.1.x/admin-guide/files/logs_xml.config.en.html
+// Note that it's not possible to select this version of the documentation from
+// the version footer in the sidebar at https://docs.trafficserver.apache.org/
+// anymore at the time of this writing, and may be removed entirely by the time
+// of reading.
 const MaxLogObjects = 10
 
+// LoggingFileName is the name of the logging configuration file used by ATS
+// 7.1.x. This is also the ConfigFile value of Parameters that can affect ATS
+// logging configuration - regardless of the actual name of the configuration
+// file used by the ATS version installed on the cache server.
 const LoggingFileName = "logging.config"
+
+// ContentTypeLoggingDotConfig is the MIME type of the contents of a logging
+// configuration file used by ATS 7.1.x.
 const ContentTypeLoggingDotConfig = ContentTypeTextASCII
+
+// LineCommentLoggingDotConfig is the string used to indicate the start of a
+// line comment in the grammar of the logging configuration files used by ATS
+// 7.1.x.
+//
+// TODO: Is this true? According to the ATS docs, the contents of logging.config
+// are a Lua script, which uses "--" for comments, not "#".
 const LineCommentLoggingDotConfig = LineCommentHash
 
 // LoggingDotConfigOpts contains settings to configure generation options.
@@ -41,8 +67,12 @@ type LoggingDotConfigOpts struct {
 	HdrComment string
 }
 
-// MakeStorageDotConfig creates storage.config for a given ATS Profile.
-// The paramData is the map of parameter names to values, for all parameters assigned to the given profile, with the config_file "storage.config".
+// MakeLoggingDotConfig creates a logging.config for a given ATS Profile.
+//
+// serverParams is expected to be the map of Parameter Names to Values of all
+// Parameters assigned to the given Profile, that have the ConfigFile
+// "logging.config". That is, they must already be filtered BEFORE being passed
+// in here.
 func MakeLoggingDotConfig(
 	server *Server,
 	serverParams []tc.ParameterV5,
