@@ -900,17 +900,17 @@ CREATE TABLE IF NOT EXISTS ip_address (
 );
 
 --
--- Name: before_create_ip_address_trigger; Type: TRIGGEr; Schema: public; Owner: traffic_ops
+-- Name: before_create_ip_address_trigger; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
-
+DROP TRIGGER IF EXISTS before_create_ip_address_trigger on ip_address;
 CREATE TRIGGER before_create_ip_address_trigger
     BEFORE INSERT ON ip_address
     FOR EACH ROW EXECUTE PROCEDURE before_ip_address_table();
 
 --
--- Name: before_update_ip_address_trigger; Type: TRIGGEr; Schema: public; Owner: traffic_ops
+-- Name: before_update_ip_address_trigger; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
-
+DROP TRIGGER IF EXISTS before_update_ip_address_trigger on ip_address;
 CREATE TRIGGER before_update_ip_address_trigger
     BEFORE UPDATE ON ip_address
     FOR EACH ROW WHEN (NEW.address <> OLD.address)
@@ -1400,7 +1400,7 @@ CREATE TABLE IF NOT EXISTS server (
 --
 -- Name: before_update_server_trigger; Type: TRIGGEr; Schema: public; Owner: traffic_ops
 --
-
+DROP TRIGGER IF EXISTS before_update_server_trigger ON server;
 CREATE TRIGGER before_update_server_trigger
     BEFORE UPDATE ON server
     FOR EACH ROW WHEN (NEW.profile <> OLD.profile)
@@ -1409,7 +1409,7 @@ CREATE TRIGGER before_update_server_trigger
 --
 -- Name: before_create_server_trigger; Type: TRIGGEr; Schema: public; Owner: traffic_ops
 --
-
+DROP TRIGGER IF EXISTS before_create_server_trigger ON server;
 CREATE TRIGGER before_create_server_trigger
     BEFORE INSERT ON server
     FOR EACH ROW EXECUTE PROCEDURE before_server_table();
