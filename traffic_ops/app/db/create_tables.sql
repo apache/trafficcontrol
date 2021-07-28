@@ -50,8 +50,98 @@ BEGIN
 END;
 $$;
 
-
 ALTER FUNCTION public.on_update_current_timestamp_last_updated() OWNER TO traffic_ops;
+
+--
+-- Name: before_server_table(); Type: FUNCTION; Schema: public; Owner: traffic_ops
+--
+
+CREATE OR REPLACE FUNCTION before_server_table()
+    RETURNS TRIGGER AS
+$$
+DECLARE
+    server_count BIGINT;
+BEGIN
+    WITH server_ips AS (
+        SELECT s.id, i.name, ip.address, s.profile
+        FROM server s
+                 JOIN interface i on i.server = s.ID
+                 JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
+        WHERE i.monitor = true
+    )
+    SELECT count(*)
+    INTO server_count
+    FROM server_ips sip
+             JOIN server_ips sip2 on sip.id <> sip2.id
+    WHERE sip.id = NEW.id
+      AND sip2.address = sip.address
+      AND sip2.profile = sip.profile;
+
+    IF server_count > 0 THEN
+        RAISE EXCEPTION 'Server [id:%] does not have a unique ip_address over the profile [id:%], [%] conflicts',
+            NEW.id,
+            NEW.profile,
+            server_count;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+ALTER FUNCTION public.before_server_table() OWNER TO traffic_ops;
+
+--
+-- Name: before_ip_address_table(); Type: FUNCTION; Schema: public; Owner: traffic_ops
+--
+
+CREATE OR REPLACE FUNCTION before_ip_address_table()
+    RETURNS TRIGGER
+AS
+$$
+DECLARE
+    server_count   BIGINT;
+    server_id      BIGINT;
+    server_profile BIGINT;
+BEGIN
+    WITH server_ips AS (
+        SELECT s.id as sid, ip.interface, i.name, ip.address, s.profile, ip.server
+        FROM server s
+                 JOIN interface i
+                      on i.server = s.ID
+                 JOIN ip_address ip
+                      on ip.Server = s.ID and ip.interface = i.name
+        WHERE ip.service_address = true
+    )
+    SELECT count(distinct(sip.sid)), sip.sid, sip.profile
+    INTO server_count, server_id, server_profile
+    FROM server_ips sip
+    WHERE (sip.server <> NEW.server AND (SELECT host(sip.address)) = (SELECT host(NEW.address)) AND sip.profile = (SELECT profile from server s WHERE s.id = NEW.server))
+    GROUP BY sip.sid, sip.profile;
+
+    IF server_count > 0 THEN
+        RAISE EXCEPTION 'ip_address is not unique across the server [id:%] profile [id:%], [%] conflicts',
+            server_id,
+            server_profile,
+            server_count;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+ALTER FUNCTION public.before_ip_address_table() OWNER TO traffic_ops;
+
+--
+-- Name: on_delete_current_timestamp_last_updated(); Type: FUNCTION; Schema: public; Owner: traffic_ops
+--
+
+CREATE OR REPLACE FUNCTION public.on_delete_current_timestamp_last_updated()
+    RETURNS trigger
+AS $$
+BEGIN
+    update last_deleted set last_updated = now() where table_name = TG_ARGV[0];
+    RETURN NEW;
+END;
+$$
+LANGUAGE plpgsql;
+
+ALTER FUNCTION public.on_delete_current_timestamp_last_updated() OWNER TO traffic_ops;
 
 SET default_tablespace = '';
 
@@ -157,6 +247,22 @@ IF NOT EXISTS (SELECT FROM pg_type WHERE typname = 'workflow_states') THEN
     );
 END IF;
 
+IF NOT EXISTS(SELECT FROM pg_type WHERE typname = 'server_ip_address') THEN
+    --
+    -- Name: server_ip_address; Type: TYPE; Schema: public; Owner: traffic_ops
+    --
+
+    CREATE TYPE server_ip_address AS (address inet, gateway inet, service_address boolean);
+END IF;
+
+IF NOT EXISTS(SELECT FROM pg_type WHERE typname = 'server_interface') THEN
+    --
+    -- Name: server_interface; Type: TYPE; Schema: public; Owner: traffic_ops
+    --
+
+    CREATE TYPE server_interface AS (ip_addresses server_ip_address ARRAY, max_bandwidth bigint, monitor boolean, mtu bigint, name text);
+END IF;
+
 IF NOT EXISTS (SELECT FROM pg_type WHERE typname = 'deliveryservice_signature_type') THEN
     --
     -- Name: deliveryservice_signature_type; Type: DOMAIN; Schema: public; Owner: traffic_ops
@@ -165,6 +271,18 @@ IF NOT EXISTS (SELECT FROM pg_type WHERE typname = 'deliveryservice_signature_ty
     CREATE DOMAIN deliveryservice_signature_type AS text CHECK (VALUE IN ('url_sig', 'uri_signing'));
 END IF;
 END$$;
+
+--
+-- Name: acme_account; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS acme_account (
+    email text NOT NULL,
+    private_key text NOT NULL,
+    provider text NOT NULL,
+    uri text NOT NULL,
+    PRIMARY KEY (email, provider)
+);
 
 --
 -- Name: api_capability; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -415,12 +533,46 @@ CREATE TABLE IF NOT EXISTS deliveryservice (
     deep_caching_type deep_caching_type NOT NULL DEFAULT 'NEVER',
     fq_pacing_rate bigint DEFAULT 0,
     anonymous_blocking_enabled boolean NOT NULL DEFAULT FALSE,
+    consistent_hash_regex text,
+    max_origin_connections bigint NOT NULL DEFAULT 0 CHECK (max_origin_connections >= 0),
+    ecs_enabled boolean NOT NULL DEFAULT false,
+    range_slice_block_size integer CHECK (range_slice_block_size >= 262144 AND range_slice_block_size <= 33554432) DEFAULT NULL,
+    topology text,
+    first_header_rewrite text,
+    inner_header_rewrite text,
+    last_header_rewrite text,
+    service_category text,
+    max_request_header_bytes int NOT NULL DEFAULT 0,
     CONSTRAINT routing_name_not_empty CHECK ((length(routing_name) > 0)),
     CONSTRAINT idx_89502_primary PRIMARY KEY (id, type)
 );
 
 
 ALTER TABLE deliveryservice OWNER TO traffic_ops;
+
+--
+-- Name: deliveryservices_required_capability; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS deliveryservices_required_capability (
+    required_capability TEXT NOT NULL,
+    deliveryservice_id bigint NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+
+    PRIMARY KEY (deliveryservice_id, required_capability)
+);
+
+--
+-- Name: deliveryservice_consistent_hash_query_param; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS deliveryservice_consistent_hash_query_param (
+   name TEXT NOT NULL,
+   deliveryservice_id bigint NOT NULL,
+   CONSTRAINT name_empty CHECK (length(name) > 0),
+   CONSTRAINT name_reserved CHECK (name NOT IN ('format','trred')),
+   PRIMARY KEY (name, deliveryservice_id)
+);
 
 --
 -- Name: deliveryservice_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
@@ -552,6 +704,14 @@ ALTER TABLE division_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE division_id_seq OWNED BY division.id;
 
+--
+-- Name: dnschallenges; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS dnschallenges (
+    fqdn text NOT NULL,
+    record text NOT NULL
+);
 
 --
 -- Name: federation; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -705,6 +865,56 @@ ALTER TABLE hwinfo_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE hwinfo_id_seq OWNED BY hwinfo.id;
 
+--
+-- Name: interface; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS interface (
+    max_bandwidth bigint DEFAULT NULL CHECK (max_bandwidth IS NULL OR max_bandwidth >= 0),
+    monitor boolean NOT NULL,
+    mtu bigint DEFAULT 1500 CHECK (mtu IS NULL OR mtu > 1280),
+    name text NOT NULL CHECK (name != ''),
+    server bigint NOT NULL,
+    PRIMARY KEY (name, server)
+);
+
+--
+-- Name: ip_address; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS ip_address (
+    address inet NOT NULL,
+    gateway inet CHECK (
+        gateway IS NULL OR (
+            family(gateway) = 4 AND
+            masklen(gateway) = 32
+        ) OR (
+            family(gateway) = 6 AND
+            masklen(gateway) = 128
+        )
+    ),
+    interface text NOT NULL,
+    server bigint NOT NULL,
+    service_address boolean NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (address, interface, server)
+);
+
+--
+-- Name: before_create_ip_address_trigger; Type: TRIGGEr; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER before_create_ip_address_trigger
+    BEFORE INSERT ON ip_address
+    FOR EACH ROW EXECUTE PROCEDURE before_ip_address_table();
+
+--
+-- Name: before_update_ip_address_trigger; Type: TRIGGEr; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER before_update_ip_address_trigger
+    BEFORE UPDATE ON ip_address
+    FOR EACH ROW WHEN (NEW.address <> OLD.address)
+    EXECUTE PROCEDURE before_ip_address_table();
 
 --
 -- Name: job; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -825,6 +1035,10 @@ ALTER TABLE job_status_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE job_status_id_seq OWNED BY job_status.id;
 
+CREATE TABLE IF NOT EXISTS last_deleted (
+    table_name text NOT NULL PRIMARY KEY,
+    last_updated timestamp with time zone NOT NULL DEFAULT now()
+);
 
 --
 -- Name: log; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -1156,13 +1370,6 @@ CREATE TABLE IF NOT EXISTS server (
     tcp_port bigint,
     xmpp_id text,
     xmpp_passwd text,
-    interface_name text NOT NULL,
-    ip_address text NOT NULL,
-    ip_netmask text NOT NULL,
-    ip_gateway text NOT NULL,
-    ip6_address text,
-    ip6_gateway text,
-    interface_mtu bigint DEFAULT '9000'::bigint NOT NULL,
     phys_location bigint NOT NULL,
     rack text,
     cachegroup bigint DEFAULT '0'::bigint NOT NULL,
@@ -1186,12 +1393,60 @@ CREATE TABLE IF NOT EXISTS server (
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     https_port bigint,
     reval_pending boolean NOT NULL DEFAULT FALSE,
-    CONSTRAINT idx_89709_primary PRIMARY KEY (id, cachegroup, type, status, profile)
+    status_last_updated timestamp with time zone,
+    CONSTRAINT idx_89709_primary PRIMARY KEY (id)
 );
+
+--
+-- Name: before_update_server_trigger; Type: TRIGGEr; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER before_update_server_trigger
+    BEFORE UPDATE ON server
+    FOR EACH ROW WHEN (NEW.profile <> OLD.profile)
+    EXECUTE PROCEDURE before_server_table();
+
+--
+-- Name: before_create_server_trigger; Type: TRIGGEr; Schema: public; Owner: traffic_ops
+--
+
+CREATE TRIGGER before_create_server_trigger
+    BEFORE INSERT ON server
+    FOR EACH ROW EXECUTE PROCEDURE before_server_table();
 
 
 ALTER TABLE server OWNER TO traffic_ops;
 
+--
+-- Name: server_capability; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS server_capability (
+    name TEXT PRIMARY KEY,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT name_empty CHECK (length(name) > 0)
+);
+
+--
+-- Name: server_server_capability; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS server_server_capability (
+    server_capability TEXT NOT NULL,
+    server bigint NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+
+    PRIMARY KEY (server, server_capability)
+);
+
+--
+-- Name: service_category; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS service_category (
+    name TEXT PRIMARY KEY CHECK (name <> ''),
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+);
 --
 -- Name: server_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --
@@ -1284,8 +1539,9 @@ ALTER SEQUENCE servercheck_id_seq OWNED BY servercheck.id;
 
 CREATE TABLE IF NOT EXISTS snapshot (
     cdn text NOT NULL,
-    content json NOT NULL,
+    crconfig json NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
+    monitoring json NOT NULL,
     CONSTRAINT snapshot_pkey PRIMARY KEY (cdn)
 );
 
@@ -1534,6 +1790,42 @@ ALTER TABLE to_extension_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE to_extension_id_seq OWNED BY to_extension.id;
 
+--
+-- Name: toplogy; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE topology (
+    name text PRIMARY KEY,
+    description text NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
+);
+
+--
+-- Name: topology_cachegroup; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE topology_cachegroup (
+    id BIGSERIAL PRIMARY KEY,
+    topology text NOT NULL,
+    cachegroup text NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT unique_topology_cachegroup UNIQUE (topology, cachegroup)
+);
+
+
+--
+-- Name: topology_cachegroup_parents; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE topology_cachegroup_parents (
+    child bigint NOT NULL,
+    parent bigint NOT NULL,
+    rank integer NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT topology_cachegroup_parents_rank_check CHECK (rank = 1 OR rank = 2),
+    CONSTRAINT unique_child_rank UNIQUE (child, rank),
+    CONSTRAINT unique_child_parent UNIQUE (child, parent)
+);
 
 --
 -- Name: type; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -2216,24 +2508,6 @@ IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'server' AN
     CREATE INDEX IF NOT EXISTS idx_89709_fk_server_cachegroup1 ON server USING btree (cachegroup);
 END IF;
 
-IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'server' AND column_name = 'ip6_address')
-    AND EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'server' AND column_name = 'profile') THEN
-    --
-    -- Name: idx_89709_ip6_profile; Type: INDEX; Schema: public; Owner: traffic_ops
-    --
-
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_89709_ip6_profile ON server USING btree (ip6_address, profile);
-END IF;
-
-IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'server' AND column_name = 'ip_address')
-    AND EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'server' AND column_name = 'profile') THEN
-    --
-    -- Name: idx_89709_ip_profile; Type: INDEX; Schema: public; Owner: traffic_ops
-    --
-
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_89709_ip_profile ON server USING btree (ip_address, profile);
-END IF;
-
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'server' AND column_name = 'id') THEN
     --
     -- Name: idx_89709_se_id_unique; Type: INDEX; Schema: public; Owner: traffic_ops
@@ -2299,6 +2573,46 @@ IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'staticdnse
     --
 
     CREATE INDEX IF NOT EXISTS idx_89729_fk_staticdnsentry_type ON staticdnsentry USING btree (type);
+END IF;
+
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'topology_cachegroup' AND column_name = 'cachegroup') THEN
+    --
+    -- Name: topology_cachegroup_cachegroup_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+    --
+
+    CREATE INDEX IF NOT EXISTS topology_cachegroup_cachegroup_fkey ON topology_cachegroup USING btree (cachegroup);
+END IF;
+
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'topology_cachegroup' AND column_name = 'topology') THEN
+    --
+    -- Name: topology_cachegroup_topology_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+    --
+
+    CREATE INDEX IF NOT EXISTS topology_cachegroup_topology_fkey ON topology_cachegroup USING btree (topology);
+END IF;
+
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'topology_cachegroup_parents' AND column_name = 'child') THEN
+    --
+    -- Name: topology_cachegroup_parents_child_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+    --
+
+    CREATE INDEX topology_cachegroup_parents_child_fkey ON topology_cachegroup_parents USING btree (child);
+END IF;
+
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'topology_cachegroup_parents' AND column_name = 'parent') THEN
+    --
+    -- Name: topology_cachegroup_parents_parents_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+    --
+
+    CREATE INDEX topology_cachegroup_parents_parents_fkey ON topology_cachegroup_parents USING btree (parent);
+END IF;
+
+IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'deliveryservice' AND column_name = 'topology') THEN
+    --
+    -- Name: deliveryservice_topology_fkey; Type: INDEX; Schema: public; Owner: traffic_ops
+    --
+
+    CREATE INDEX deliveryservice_topology_fkey ON deliveryservice USING btree (topology);
 END IF;
 
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'tenant' AND column_name = 'parent_id') THEN
@@ -2424,6 +2738,121 @@ END IF;
 END$$;
 
 
+DO $$
+    DECLARE table_names VARCHAR[] := CAST(ARRAY[
+        'api_capability',
+        'asn',
+        'cachegroup',
+        'cachegroup_fallbacks',
+        'cachegroup_localization_method',
+        'cachegroup_parameter',
+        'capability',
+        'cdn',
+        'coordinate',
+        'deliveryservice',
+        'deliveryservice_regex',
+        'deliveryservice_request',
+        'deliveryservice_request_comment',
+        'deliveryservice_server',
+        'deliveryservice_tmuser',
+        'deliveryservices_required_capability',
+        'division',
+        'federation',
+        'federation_deliveryservice',
+        'federation_federation_resolver',
+        'federation_resolver',
+        'federation_tmuser',
+        'hwinfo',
+        'job',
+        'job_agent',
+        'job_status',
+        'log',
+        'origin',
+        'parameter',
+        'phys_location',
+        'profile',
+        'profile_parameter',
+        'regex',
+        'region',
+        'role',
+        'role_capability',
+        'server',
+        'server_capability',
+        'server_server_capability',
+        'servercheck',
+        'service_category',
+        'snapshot',
+        'staticdnsentry',
+        'stats_summary',
+        'status',
+        'steering_target',
+        'tenant',
+        'tm_user',
+        'to_extension',
+        'topology',
+        'topology_cachegroup',
+        'topology_cachegroup_parents',
+        'type',
+        'user_role'
+    ] AS VARCHAR[]);
+    table_name TEXT;
+    trigger_name TEXT := 'on_delete_current_timestamp';
+    trigger_exists BOOLEAN;
+
+BEGIN
+    FOREACH table_name IN ARRAY table_names
+        LOOP
+            EXECUTE FORMAT('SELECT EXISTS (
+                SELECT
+                FROM pg_catalog.pg_trigger
+                WHERE tgname = ''%s''
+                AND tgrelid = CAST(''%s'' AS REGCLASS))
+                ',
+                QUOTE_IDENT(trigger_name),
+                QUOTE_IDENT(table_name)) INTO trigger_exists;
+            IF NOT trigger_exists
+            THEN
+                EXECUTE FORMAT('
+                    CREATE TRIGGER %s
+                    AFTER DELETE ON %s
+                    FOR EACH ROW
+                        EXECUTE PROCEDURE %s_last_updated(''%s'');
+                    ',
+                    QUOTE_IDENT(trigger_name),
+                    QUOTE_IDENT(table_name),
+                    QUOTE_IDENT(trigger_name),
+                    QUOTE_IDENT(table_name)
+                    );
+            END IF;
+            IF table_name = 'topology' THEN
+                EXECUTE FORMAT('
+                        CREATE INDEX IF NOT EXISTS %s_last_updated_idx
+                               ON %s_cachegroup (last_updated DESC NULLS LAST);
+                        ',
+                        QUOTE_IDENT(table_name),
+                        QUOTE_IDENT(table_name)
+                    );
+            ELSIF table_name = 'phys_location' THEN
+            EXECUTE FORMAT('
+                        CREATE INDEX IF NOT EXISTS pys_location_last_updated_idx
+                               ON %s (last_updated DESC NULLS LAST);
+                        ',
+                        QUOTE_IDENT(table_name)
+                );
+
+            ELSIF NOT (table_name = 'stats_summary' OR table_name = 'cachegroup_fallbacks' OR table_name = 'cachegroup_localization_method')THEN
+                EXECUTE FORMAT('
+                        CREATE INDEX IF NOT EXISTS %s_last_updated_idx
+                               ON %s (last_updated DESC NULLS LAST);
+                        ',
+                        QUOTE_IDENT(table_name),
+                        QUOTE_IDENT(table_name)
+                        );
+            END IF;
+        END LOOP;
+END
+$$;
+
 --
 -- Add on_update_current_timestamp TRIGGER to all tables
 --
@@ -2471,6 +2900,9 @@ DECLARE
         'steering_target',
         'tenant',
         'tm_user',
+        'topology',
+        'topology_cachegroup',
+        'topology_cachegroup_parents',
         'type',
         'user_role'
     ] AS VARCHAR[]);
@@ -2513,6 +2945,123 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
 
     ALTER TABLE ONLY profile_parameter
         ADD CONSTRAINT fk_atsprofile_atsparameters_atsparameters1 FOREIGN KEY (parameter) REFERENCES parameter(id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'deliveryservice_service_category_fkey' AND table_name = 'deliveryservice') THEN
+    --
+    -- Name: deliveryservice_service_category_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice
+        ADD CONSTRAINT deliveryservice_service_category_fkey FOREIGN KEY (service_category) REFERENCES service_category(name) ON UPDATE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'ip_address_server_fkey' AND table_name = 'ip_address') THEN
+    --
+    -- Name: ip_address_server_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY ip_address
+        ADD CONSTRAINT ip_address_server_fkey FOREIGN KEY (interface, server) REFERENCES interface(name, server) ON DELETE CASCADE ON UPDATE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'ip_address_interface_fkey' AND table_name = 'ip_address') THEN
+    --
+    -- Name: ip_address_interface_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY ip_address
+        ADD CONSTRAINT ip_address_interface_fkey FOREIGN KEY (server) REFERENCES server(id) ON DELETE CASCADE ON UPDATE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'topology_cachegroup_cachegroup_fkey' AND table_name = 'topology_cachegroup') THEN
+    --
+    -- Name: topology_cachegroup_cachegroup_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY topology_cachegroup
+        ADD CONSTRAINT topology_cachegroup_cachegroup_fkey FOREIGN KEY (cachegroup) REFERENCES cachegroup(name) ON UPDATE CASCADE ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'topology_cachegroup_topology_fkey' AND table_name = 'topology_cachegroup') THEN
+    --
+    -- Name: topology_cachegroup_topology_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY topology_cachegroup
+        ADD CONSTRAINT topology_cachegroup_topology_fkey FOREIGN KEY (topology) REFERENCES topology(name) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'topology_cachegroup_parents_child_fkey' AND table_name = 'topology_cachegroup') THEN
+    --
+    -- Name: topology_cachegroup_parents_child_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY topology_cachegroup_parents
+        ADD CONSTRAINT topology_cachegroup_parents_child_fkey FOREIGN KEY (child) REFERENCES topology_cachegroup(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'topology_cachegroup_parents_parent_fkey' AND table_name = 'topology_cachegroup') THEN
+    --
+    -- Name: topology_cachegroup_parents_parent_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY topology_cachegroup_parents
+        ADD CONSTRAINT topology_cachegroup_parents_parent_fkey FOREIGN KEY (parent) REFERENCES topology_cachegroup(id) ON UPDATE CASCADE ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'fk_deliveryservice_id' AND table_name = 'deliveryservices_required_capability') THEN
+    --
+    -- Name: fk_deliveryservice_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservices_required_capability
+        ADD CONSTRAINT fk_deliveryservice_id FOREIGN KEY (deliveryservice_id) REFERENCES deliveryservice(id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'fk_required_capability' AND table_name = 'deliveryservices_required_capability') THEN
+    --
+    -- Name: fk_required_capability; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservices_required_capability
+        ADD CONSTRAINT fk_required_capability FOREIGN KEY (required_capability) REFERENCES server_capability(name) ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'deliveryservice_topology_fkey' AND table_name = 'deliveryservice') THEN
+    --
+    -- Name: deliveryservice_topology_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY deliveryservice
+        ADD CONSTRAINT deliveryservice_topology_fkey FOREIGN KEY (topology) REFERENCES topology (name) ON UPDATE CASCADE ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'fk_server' AND table_name = 'server_server_capability') THEN
+    --
+    -- Name: fk_server; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY server_server_capability
+        ADD CONSTRAINT fk_server FOREIGN KEY (server) REFERENCES server(id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'fk_server_capability' AND table_name = 'server_server_capability') THEN
+    --
+    -- Name: fk_server_capability; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE ONLY server_server_capability
+        ADD CONSTRAINT fk_server_capability FOREIGN KEY (server_capability) REFERENCES server_capability(name) ON DELETE RESTRICT;
+END IF;
+
+IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'fk_deliveryservice' AND table_name = 'deliveryservice_consistent_hash_query_param') THEN
+    --
+    -- Name: fk_deliveryservice; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE deliveryservice_consistent_hash_query_param
+        ADD CONSTRAINT fk_deliveryservice FOREIGN KEY (deliveryservice_id) REFERENCES deliveryservice(id) ON DELETE CASCADE;
 END IF;
 
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_atsprofile_atsparameters_atsprofile1' AND table_name = 'profile_parameter') THEN
@@ -2765,6 +3314,15 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
 
     ALTER TABLE ONLY hwinfo
         ADD CONSTRAINT fk_hwinfo1 FOREIGN KEY (serverid) REFERENCES server(id) ON DELETE CASCADE;
+END IF;
+
+IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'interface_server_fkey' AND table_name = 'interface') THEN
+    --
+    -- Name: interface_server_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+    --
+
+    ALTER TABLE interface
+        ADD CONSTRAINT interface_server_fkey FOREIGN KEY (server) REFERENCES server(id) ON DELETE CASCADE ON UPDATE CASCADE;
 END IF;
 
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_job_agent_id1' AND table_name = 'job') THEN
