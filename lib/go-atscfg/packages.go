@@ -26,10 +26,33 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// PackagesFileName is an unused constant of unknown purpose.
+//
+// Deprecated: Since the 'package' ConfigFile value is a "dummy" value used to
+// indicate packages that should be installed through yum, there isn't a need
+// for any definition of a file name, and the Parameter ConfigFile value is
+// already exported as PackagesParamConfigFile.
 const PackagesFileName = `packages`
+
+// PackagesParamConfigFile is the ConfigFile value of Parameters that define
+// system packages to be installed on a cache server.
 const PackagesParamConfigFile = `package`
 
+// ContentTypePackages is a MIME type of unknown meaning and purpose.
+//
+// Deprecated: Since the 'package' ConfigFile value is a "dummy" value used to
+// indicate packages that should be installed through yum, there isn't a need
+// for any definition of a content type for a file that doesn't exist, and this
+// value is never used for anything anyway. The contents of the file as output
+// by tc3-generate are actually encoded as JSON, so at best this is inaccurate.
 const ContentTypePackages = ContentTypeTextASCII
+
+// LineCommentPackages is used only to convey the idea that since "package
+// Parameters" don't define file contents they don't have comments and therefore
+// no string signifies the beginning of a comment for this non-existent grammar.
+//
+// Deprecated: This constant expresses a concept that by its own definition has
+// no meaning.
 const LineCommentPackages = ""
 
 // PackagesOpts contains settings to configure generation options.
