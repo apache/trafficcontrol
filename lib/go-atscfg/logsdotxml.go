@@ -26,9 +26,29 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// LogsXMLFileName is the name of a logging configuration file used by ATS
+// version 6 and earlier.
+//
+// Deprecated: The versions of ATS that use this file are not supported, either
+// by ATC or the ATS project itself.
 const LogsXMLFileName = "logs_xml.config"
+
+// ContentTypeLogsDotXML is the MIME content type of the logging configuration
+// file used by ATS version 6 and earlier.
+//
+// Deprecated: The versions of ATS that use this file are not supported, either
+// by ATC or the ATS project itself.
 const ContentTypeLogsDotXML = `text/xml`
 
+// LineCommentLogsDotXML is the string used in the grammar of a logging
+// configuration file used by ATS version 6 and earlier to indicate the
+// beginning of a comment node.
+//
+// Note that XML does not have "line" comments, only comment nodes - which MUST
+// have the associated closing tag (-->).
+//
+// Deprecated: The versions of ATS that use this file are not supported, either
+// by ATC or the ATS project itself.
 const LineCommentLogsDotXML = `<!--`
 
 // LogsXMLDotConfigOpts contains settings to configure generation options.
@@ -39,6 +59,16 @@ type LogsXMLDotConfigOpts struct {
 	HdrComment string
 }
 
+// MakeLogsXMLDotConfig constructs a logging configuration file used by ATS
+// version 6 and earlier for the given server.
+//
+// serverParams is expected to be the map of Parameter Names to Values of all
+// Parameters assigned to the given Profile, that have the ConfigFile
+// "logging.config". That is, they must already be filtered BEFORE being passed
+// in here.
+//
+// Deprecated: The versions of ATS that use this file are not supported, either
+// by ATC or the ATS project itself.
 func MakeLogsXMLDotConfig(
 	server *Server,
 	serverParams []tc.ParameterV5,
