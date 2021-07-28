@@ -172,7 +172,7 @@
   with_items: "{{ dl_ds_merged_cachegroups | json_query(type_filter) }}"
   vars:
     type_query: "response[?name == '{{ item.type | default('EDGE_LOC') }}'].id | [0]"
-    type_filter: "[?type == 'INFRA_LOC']"
+    type_filter: "[?type == 'TC_LOC']"
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_cachegroup_out
   failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
