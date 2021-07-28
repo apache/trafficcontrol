@@ -52,7 +52,7 @@
     name: "{{ dl_ds_merged_cdns[cdnDelegationPrimary].name | default(cdnDelegationPrimary) }}"
     domainName: "{{ cdnDelegationPrimary }}.{{ (groups['traffic_ops'] | first).split('.')[1:] | join('.') | lower }}"
     dnssecEnabled: "{{ dl_ds_merged_cdns[cdnDelegationPrimary].dnssecEnabled | default(false) | lower }}"
-    cdn_query: "response[?starts_with(domainName,`{{ cdnDelegationPrimary }}`) == `true`].id | [0]"
+    cdn_query: "response[?starts_with(domainName,`{{ cdnDelegationPrimary | lower }}`) == `true`].id | [0]"
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: update_cdn_out
   failed_when: (update_cdn_out.status == 400 and update_cdn_out.json | to_json | from_json | json_query(error_query) | length != 0) or (update_cdn_out.status > 400 and update_cdn_out.status < 600)
