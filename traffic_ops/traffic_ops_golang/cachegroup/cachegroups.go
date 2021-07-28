@@ -37,7 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -688,7 +688,7 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 	}
 
 	if err = cg.updateCoordinate(); err != nil {
-		return nil, nil, tc.DBError, http.StatusInternalServerError
+		return nil, err, tc.DBError, http.StatusBadRequest
 	}
 	return coordinateID, nil, nil, http.StatusOK
 }
