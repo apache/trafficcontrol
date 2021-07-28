@@ -102,7 +102,7 @@
       name: "{{ item.name }}"
       description: "{{ item.description }}"
       useInTable: "{{ item.useInTable }}"
-  with_items: "{{ dl_ds_merged_types }}"
+  with_items: "{{ dl_ds_private_types }}"
   vars:
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_types_out
