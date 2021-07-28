@@ -3000,7 +3000,7 @@ IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constrain
         ADD CONSTRAINT topology_cachegroup_parents_child_fkey FOREIGN KEY (child) REFERENCES topology_cachegroup(id) ON UPDATE CASCADE ON DELETE CASCADE;
 END IF;
 
-IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'topology_cachegroup_parents_parent_fkey' AND table_name = 'topology_cachegroup') THEN
+IF NOT EXISTS (SELECT  FROM information_schema.table_constraints WHERE constraint_name = 'topology_cachegroup_parents_parent_fkey' AND table_name = 'topology_cachegroup_parents') THEN
     --
     -- Name: topology_cachegroup_parents_parent_fkey; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
     --
