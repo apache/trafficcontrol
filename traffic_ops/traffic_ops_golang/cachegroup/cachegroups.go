@@ -688,7 +688,7 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 	}
 
 	if err = cg.updateCoordinate(); err != nil {
-		return nil, err, tc.DBError, http.StatusBadRequest
+		return nil, err, tc.DBError, http.StatusInternalServerError
 	}
 	return coordinateID, nil, nil, http.StatusOK
 }
