@@ -27,8 +27,11 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// CfgMeta is a definition of the location of an arbitrary configuration file.
 type CfgMeta struct {
+	// Name is the basename of the file itself.
 	Name string
+	// Path is the absolute path to the directory containing the file.
 	Path string
 }
 
@@ -43,7 +46,8 @@ type ConfigFilesListOpts struct {
 	ATSMajorVersion uint
 }
 
-// MakeMetaObj returns the list of config files, any warnings, and any errors.
+// MakeConfigFilesList returns the list of configuration files that need to be
+// generated for the given server, any warnings, and any error.
 func MakeConfigFilesList(
 	configDir string,
 	server *Server,
