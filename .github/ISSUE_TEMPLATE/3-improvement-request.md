@@ -58,7 +58,7 @@ Please do not submit support requests here - see above -->
 
 
 ## New behavior:
-<!-- Describe how the feature would improve Traffic Control -->
+<!-- Describe how this change would improve Traffic Control -->
 
 
 ## Minimal reproduction of the problem with instructions:
