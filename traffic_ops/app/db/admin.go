@@ -91,6 +91,7 @@ const (
 	CmdReset           = "reset"
 	CmdUpgrade         = "upgrade"
 	CmdMigrate         = "migrate"
+	CmdUp              = "up"
 	CmdDown            = "down"
 	CmdRedo            = "redo"
 	// Deprecated: Migrate only tracks migration version and dirty status, not a status for each migration.
@@ -338,6 +339,10 @@ func runMigrations() {
 
 }
 
+func runUp() {
+	runMigrations()
+}
+
 func down() {
 	initMigrate()
 	if err := Migrate.Steps(-1); err != nil {
@@ -486,6 +491,7 @@ without prompts.
 
 migrate     - Execute migrate (without seeds or patches) on the database for the
               current environment.
+up          - Alias for 'migrate'
 down        - Roll back a single migration from the current version.
 createdb    - Execute db 'createdb' the database for the current environment.
 dropdb      - Execute db 'dropdb' on the database for the current environment.
@@ -541,6 +547,7 @@ func main() {
 	commands[CmdReset] = reset
 	commands[CmdUpgrade] = upgrade
 	commands[CmdMigrate] = runMigrations
+	commands[CmdUp] = runUp
 	commands[CmdDown] = down
 	commands[CmdRedo] = redo
 	commands[CmdStatus] = status
