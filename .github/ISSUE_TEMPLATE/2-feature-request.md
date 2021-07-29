@@ -53,10 +53,6 @@ Please do not submit support requests here - see above -->
 - Automation (GitHub Actions, Ansible Roles)
 - unknown
 
-## Current behavior:
-<!-- Describe how current ATC features are insufficient. -->
-
-
-## New behavior:
-<!-- Describe how the feature would improve Traffic Control -->
+## Description
+<!-- Describe how the current ATC features are insufficient and how this new feature would improve Traffic Control -->
 
