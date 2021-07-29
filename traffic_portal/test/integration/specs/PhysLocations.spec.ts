@@ -44,7 +44,7 @@ physLocations.tests.forEach(async physlocationsData => {
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
             });
-            it('can open parameters page', async () => {
+            it('can open physical locations page', async () => {
                 await physlocationsPage.OpenConfigureMenu();
                 await physlocationsPage.OpenPhysLocationPage();
             });

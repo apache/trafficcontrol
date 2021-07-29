@@ -67,19 +67,19 @@ export class PhysLocationsPage extends BasePage {
   private txtConfirmName = element(by.name('confirmWithNameInput'));
   private randomize = randomize;
 
-  async OpenPhysLocationPage() {
-    let snp = new SideNavigationPage();
+  public async OpenPhysLocationPage() {
+    const snp = new SideNavigationPage();
     await snp.NavigateToPhysLocation();
   }
-  async OpenConfigureMenu() {
-    let snp = new SideNavigationPage();
+  public async OpenConfigureMenu() {
+    const snp = new SideNavigationPage();
     await snp.ClickTopologyMenu();
   }
 
   public async CreatePhysLocation(physlocation: CreatePhysicalLocation): Promise<boolean> {
     let result = false;
-    let basePage = new BasePage();
-    let snp = new SideNavigationPage();
+    const basePage = new BasePage();
+    const snp = new SideNavigationPage();
     await snp.NavigateToPhysLocation();
     await this.btnCreateNewPhysLocation.click();
     await this.txtName.sendKeys(physlocation.Name + this.randomize);
@@ -105,7 +105,7 @@ export class PhysLocationsPage extends BasePage {
   }
 
   public async SearchPhysLocation(physlocationName: string): Promise<void> {
-    let snp = new SideNavigationPage();
+    const snp = new SideNavigationPage();
     let name = physlocationName + this.randomize;
     await snp.NavigateToPhysLocation();
     await this.txtSearch.clear();
@@ -117,8 +117,8 @@ export class PhysLocationsPage extends BasePage {
     }).first().click();
   }
 
-  public async UpdatePhysLocation(physlocation: UpdatePhysicalLocation): Promise<boolean | undefined> {
-    let basePage = new BasePage();
+  public async UpdatePhysLocation(physlocation: UpdatePhysicalLocation): Promise<boolean> {
+    const basePage = new BasePage();
 
     switch (physlocation.description) {
       case "update physlocation region":
@@ -126,14 +126,14 @@ export class PhysLocationsPage extends BasePage {
         await basePage.ClickUpdate();
         break;
       default:
-        return undefined;
+        return false;
     }
     return await basePage.GetOutputMessage().then(value => physlocation.validationMessage === value);
   }
 
   public async DeletePhysLocation(physlocation: DeletePhysicalLocation): Promise<boolean> {
     let result = false;
-    let basePage = new BasePage();
+    const basePage = new BasePage();
     await this.btnDelete.click();
     await this.txtConfirmName.sendKeys(physlocation.Name + this.randomize);
     await basePage.ClickDeletePermanently();
