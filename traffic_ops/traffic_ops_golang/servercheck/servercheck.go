@@ -27,7 +27,6 @@ import (
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 
@@ -163,7 +162,6 @@ func getServerID(id *int, hostname *string, tx *sql.Tx) (int, bool, error) {
 
 func getColName(shortName *string, tx *sql.Tx) (string, bool, error) {
 	col := ""
-	log.Infoln(*shortName)
 	if err := tx.QueryRow(`SELECT servercheck_column_name FROM to_extension WHERE servercheck_short_name = $1`, *shortName).Scan(&col); err != nil {
 		if err == sql.ErrNoRows {
 			return "", false, nil
