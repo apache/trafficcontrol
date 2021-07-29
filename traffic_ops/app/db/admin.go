@@ -40,18 +40,18 @@ import (
 )
 
 type DBConfig struct {
-	Development GooseConfig `yaml:"development"`
-	Test        GooseConfig `yaml:"test"`
-	Integration GooseConfig `yaml:"integration"`
-	Production  GooseConfig `yaml:"production"`
+	Development EnvConfig `yaml:"development"`
+	Test        EnvConfig `yaml:"test"`
+	Integration EnvConfig `yaml:"integration"`
+	Production  EnvConfig `yaml:"production"`
 }
 
-type GooseConfig struct {
+type EnvConfig struct {
 	Driver string `yaml:"driver"`
 	Open   string `yaml:"open"`
 }
 
-func (conf DBConfig) getGooseConfig(env string) (GooseConfig, error) {
+func (conf DBConfig) getEnvironmentConfig(env string) (EnvConfig, error) {
 	switch env {
 	case EnvDevelopment:
 		return conf.Development, nil
@@ -62,7 +62,7 @@ func (conf DBConfig) getGooseConfig(env string) (GooseConfig, error) {
 	case EnvProduction:
 		return conf.Production, nil
 	default:
-		return GooseConfig{}, errors.New("invalid environment: " + env)
+		return EnvConfig{}, errors.New("invalid environment: " + env)
 	}
 }
 
@@ -73,7 +73,7 @@ const (
 	EnvIntegration = "integration"
 	EnvProduction  = "production"
 
-	// keys in the goose config's "open" string value
+	// keys in the database config's "open" string value
 	HostKey     = "host"
 	PortKey     = "port"
 	UserKey     = "user"
@@ -154,15 +154,15 @@ func parseDBConfig() error {
 		return errors.New("unmarshalling DB conf yaml: " + err.Error())
 	}
 
-	gooseCfg, err := dbConfig.getGooseConfig(Environment)
+	envConfig, err := dbConfig.getEnvironmentConfig(Environment)
 	if err != nil {
-		return errors.New("getting goose config: " + err.Error())
+		return errors.New("getting environment config: " + err.Error())
 	}
 
-	DBDriver = gooseCfg.Driver
+	DBDriver = envConfig.Driver
 	// parse the 'open' string into a map
 	open := make(map[string]string)
-	pairs := strings.Split(gooseCfg.Open, " ")
+	pairs := strings.Split(envConfig.Open, " ")
 	for _, pair := range pairs {
 		if pair == "" {
 			continue
