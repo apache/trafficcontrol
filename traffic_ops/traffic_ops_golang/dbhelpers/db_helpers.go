@@ -1496,3 +1496,26 @@ func GetCDNNamesFromProfileIDs(tx *sql.Tx, profileIDs []int64) ([]string, error)
 	}
 	return cdns, nil
 }
+
+// AppendWhere appends 'extra' safely to the WHERE clause 'where'. What is
+// returned is guaranteed to be a valid WHERE clause (including a blank string).
+func AppendWhere(where, extra string) string {
+	if where == "" && extra == "" {
+		return ""
+	}
+	if where == "" {
+		where = BaseWhere + " "
+	} else {
+		where += " AND "
+	}
+	return where + extra
+}
+
+// GetRoleIDFromName returns the ID of the role associated with the supplied name
+func GetRoleIDFromName(tx *sql.Tx, roleName string) (int, error) {
+	var id int
+	if err := tx.QueryRow(`SELECT id FROM role WHERE name = $1`, roleName).Scan(&id); err != nil {
+		return -1, errors.New("querying role ID from name: " + err.Error())
+	}
+	return id, nil
+}
