@@ -35,8 +35,8 @@ or the Traffic Control Users mailing list (send an email to users-subscribe@traf
 
 ## I'm submitting a ...
 <!-- Do not submit a security vulnerability here - see above security vulnerability info -->
+Please do not submit support requests here - see above -->
 - [x] new feature / enhancement request
-<!-- Please do not submit support requests here - see above-->
 
 ## Traffic Control components affected ...
 <!-- delete all those that don't apply -->
