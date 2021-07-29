@@ -19,7 +19,7 @@ guidelines at https://apache.org/security regarding vulnerability disclosure.
 Feel free to add the name of a tool or script that is affected but not on the list.
 -->
 - Documentation
-- Traffic Control Cache Config (T3C)
+- Traffic Control Cache Config (T3C, formerly ORT)
 - Traffic Control Client <!-- Please specify which (Python, Go, or Java) -->
 - Traffic Monitor
 - Traffic Ops
