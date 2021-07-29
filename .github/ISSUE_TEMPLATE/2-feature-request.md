@@ -18,7 +18,7 @@
 #
 name: Feature request
 about: Suggest how to improve Traffic Control with something new
-labels: enhancement
+labels: new feature
 ---
 <!--
 ************ STOP!! ************
@@ -36,7 +36,7 @@ or the Traffic Control Users mailing list (send an email to users-subscribe@traf
 ## I'm submitting a ...
 <!-- Do not submit a security vulnerability here - see above security vulnerability info -->
 Please do not submit support requests here - see above -->
-- [x] new feature / enhancement request
+- [x] new feature request
 
 ## Traffic Control components affected ...
 <!-- delete all those that don't apply -->
