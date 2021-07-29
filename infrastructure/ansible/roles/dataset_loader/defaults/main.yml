@@ -125,7 +125,7 @@ dl_ds_default_cachegroups:
     parentCachegroup:
     secondaryParentCachegroup:
     localizationMethods:
-    type: INFRA_LOC
+    type: TC_LOC
     fallbackToClosest:
   - name: multi-site-org-east
     shortName: msoe
