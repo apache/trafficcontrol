@@ -348,13 +348,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, cdnName, ok, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, int(dsid))
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, int(dsid))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service and CDN name from ID: "+err.Error()))
-		return
-	}
-	if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
 	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
@@ -541,13 +537,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, cdnName, ok, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, int(dsid))
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, int(dsid))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service and CDN name from ID: "+err.Error()))
-		return
-	}
-	if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
 	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
@@ -661,13 +653,9 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, cdnName, ok, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, int(dsid))
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, int(dsid))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service and CDN name from ID: "+err.Error()))
-		return
-	}
-	if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
 	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
