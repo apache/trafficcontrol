@@ -484,14 +484,16 @@ without prompts.
 ===================================================================================================================
 ` + programName + ` arguments:
 
+migrate     - Execute migrate (without seeds or patches) on the database for the
+              current environment.
+down        - Roll back a single migration from the current version.
 createdb    - Execute db 'createdb' the database for the current environment.
+dropdb      - Execute db 'dropdb' on the database for the current environment.
 create_migration NAME
             - Creates a pair of timestamped up/down migrations titled NAME.
 create_user - Execute 'create_user' the user for the current environment
               (traffic_ops).
 dbversion   - Prints the current migration version
-dropdb      - Execute db 'dropdb' on the database for the current environment.
-down        - Roll back a single migration from the current version.
 drop_user   - Execute 'drop_user' the user for the current environment
               (traffic_ops).
 patch       - Execute sql from db/patches.sql for loading post-migration data
@@ -507,8 +509,6 @@ status      - Prints the current migration version (Deprecated, status is now an
               Control release).
 upgrade     - Execute migrate, seed, and patches on the database for the current
               environment.
-migrate     - Execute migrate (without seeds or patches) on the database for the
-              current environment.
 `
 }
 
