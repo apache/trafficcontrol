@@ -61,8 +61,3 @@ Please do not submit support requests here - see above -->
 <!-- Describe how this change would improve Traffic Control -->
 
 
-## Minimal reproduction of the problem with instructions:
-<!-- If you can illustrate your improvement request better with an example, please
-provide the *STEPS TO REPRODUCE* and include the applicable TC version.
--->
-
