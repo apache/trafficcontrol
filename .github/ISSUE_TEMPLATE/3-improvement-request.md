@@ -17,7 +17,7 @@
 # under the License.
 #
 name: Improvement request
-about: Suggest how to improve Traffic Control. Examples include usability, performance, tech debt, etc.
+about: Suggest how to improve an existing feature of Traffic Control (usability, performance, tech debt, etc.)
 labels: improvement
 ---
 <!--
