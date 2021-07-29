@@ -101,9 +101,6 @@ const (
 	CmdLoadSchema = "load_schema"
 	CmdPatch      = "patch"
 
-	// goose commands that don't match the commands for this tool
-	GooseUp = "up"
-
 	dbDir              = "db/"
 	DBConfigPath       = dbDir + "dbconf.yml"
 	DBMigrationsPath   = dbDir + "migrations"
