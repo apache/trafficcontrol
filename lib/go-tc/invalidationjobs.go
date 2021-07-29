@@ -255,13 +255,13 @@ func ValidateJobUniqueness(tx *sql.Tx, dsID uint, startTime time.Time, assetURL 
 	var errs []string
 
 	const readQuery = `
-SELECT invalidation.id,
+SELECT job.id,
        'PURGE' as keyword,
        CONCAT('TTL:', ttl_hr, 'h') AS parameters,
        asset_url,
        start_time
-FROM invalidation
-WHERE invalidation.job_deliveryservice = $1
+FROM job
+WHERE job.job_deliveryservice = $1
 `
 	rows, err := tx.Query(readQuery, dsID)
 	if err != nil {
