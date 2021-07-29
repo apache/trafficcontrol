@@ -318,7 +318,7 @@ Usage
 
 .. option:: -i DIR, --fill DIR
 
-		Insert data into `to` server with data this directory
+		Insert data into `to` server with data in this directory
 
 		.. note:: Mutually exclusive with :option:`-d`/:option:`--dump`
 
@@ -334,7 +334,7 @@ Usage
 
 .. option:: -m, --noConfirm
 
-		Do not require confirmation before inserting records
+		Don't require confirmation before inserting records
 
 .. option:: -r, --dry
 
