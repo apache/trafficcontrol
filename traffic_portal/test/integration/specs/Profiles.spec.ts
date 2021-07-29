@@ -46,6 +46,24 @@ profiles.tests.forEach(async profilesData => {
                 await profilesPage.OpenConfigureMenu();
                 await profilesPage.OpenProfilesPage();
             });
+            profilesData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await profilesPage.CheckCSV(check.Name)).toBe(true);
+                    await profilesPage.OpenProfilesPage();
+                });
+            });
+            profilesData.toggle.forEach(toggle => {
+                it(toggle.description, async () => {
+                    if(toggle.description.includes('hide')){
+                        expect(await profilesPage.ToggleTableColumn(toggle.Name)).toBe(false);
+                        await profilesPage.OpenProfilesPage();
+                    }else{
+                        expect(await profilesPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                        await profilesPage.OpenProfilesPage();
+                    }
+
+                });
+            })
             profilesData.add.forEach(add => {
                 it(add.description, async () => {
                     expect(await profilesPage.CreateProfile(add)).toBeTruthy();
