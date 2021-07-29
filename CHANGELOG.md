@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops: Adds API endpoints to fetch (GET), create (POST) or delete (DELETE) a cdn notification. Create and delete are limited to users with operations or admin role.
 - Added ACME certificate renewals and ACME account registration using external account binding
 - Added functionality to automatically renew ACME certificates.
+- Traffic Ops: [#6069](https://github.com/apache/trafficcontrol/issues/6069) - prevent unassigning all ONLINE ORG servers from an MSO-enabled delivery service
 - Added ORT flag to set local.dns bind address from server service addresses
 - Added an endpoint for statuses on asynchronous jobs and applied it to the ACME renewal endpoint.
 - Added two new cdn.conf options to make Traffic Vault configuration more backend-agnostic: `traffic_vault_backend` and `traffic_vault_config`

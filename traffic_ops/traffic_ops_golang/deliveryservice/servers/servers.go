@@ -309,15 +309,6 @@ type DSServerIds struct {
 
 type TODSServerIds DSServerIds
 
-const verifyStatusesQuery = `
-SELECT status.name = '` + string(tc.CacheStatusOnline) + `' OR status.name = '` + string(tc.CacheStatusReported) + `'
-FROM server
-INNER JOIN status ON server.status = status.id
-JOIN type t on server.type = t.id
-WHERE server.id = ANY($1::BIGINT[])
-AND t.name like '` + string(tc.EdgeTypePrefix) + `%'
-`
-
 const checkPreExistingEdgeServersQuery = `
 SELECT t.name AS name
 FROM type t
@@ -328,47 +319,18 @@ WHERE s.id = ANY(ARRAY(SELECT server FROM deliveryservice_server WHERE deliverys
 AND (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
 AND t.name like '` + string(tc.EdgeTypePrefix) + `%'
 AND dss.deliveryservice=$1
+LIMIT 1
 `
 
-func checkIfEdgesExistedBefore(tx *sql.Tx, dsID int) (error, bool) {
-	rows, err := tx.Query(checkPreExistingEdgeServersQuery, dsID)
-	if err != nil {
-		return fmt.Errorf("couldn't query for pre existing edge servers for this DS: %v", err.Error()), false
-	}
-	defer rows.Close()
-	for rows.Next() {
-		return nil, true
-	}
-	return nil, false
-}
-
-func verifyAtLeastOneAvailableServer(ids []int, tx *sql.Tx) (bool, error) {
-	if len(ids) < 1 {
-		return false, nil
-	}
-
-	if tx == nil {
-		return false, errors.New("nil transaction")
-	}
-
-	rows, err := tx.Query(verifyStatusesQuery, pq.Array(ids))
-	if err != nil {
-		return false, fmt.Errorf("querying: %v", err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var isAvailable bool
-		err = rows.Scan(&isAvailable)
-		if err != nil {
-			return false, fmt.Errorf("scanning: %v", err)
+func hasAvailableEdgesCurrentlyAssigned(tx *sql.Tx, dsID int) (bool, error) {
+	t := ""
+	if err := tx.QueryRow(checkPreExistingEdgeServersQuery, dsID).Scan(&t); err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
 		}
-		if isAvailable {
-			return true, nil
-		}
+		return false, fmt.Errorf("couldn't query for pre existing edge servers for this DS: %s", err.Error())
 	}
-
-	return false, nil
+	return true, nil
 }
 
 // GetReplaceHandler is the handler for POST requests to the /deliveryserviceserver API endpoint.
@@ -568,7 +530,7 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 // validateDSSAssignments returns an error if the given servers cannot be assigned to the given delivery service.
 func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, replace bool) (error, error, int) {
-	valid := false
+	anyAvailableServers := false
 	userErr, sysErr, status := validateDSS(tx, ds, serverInfos)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, status
@@ -576,17 +538,29 @@ func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, 
 
 	if ds.Active && replace {
 		ids := make([]int, 0, len(serverInfos))
+		newOrgCount := 0
+		newAvailableEdgeCount := 0
 		for _, inf := range serverInfos {
 			ids = append(ids, inf.ID)
 			// We dont check for the cache type to be = EDGE here because if this is a new DS, and we want to assign an online/ reported ORG to it,
 			// we should be able to do that.
 			if inf.Status == string(tc.CacheStatusOnline) || inf.Status == string(tc.CacheStatusReported) {
-				valid = true
+				anyAvailableServers = true
+				if inf.Type == tc.OriginTypeName {
+					newOrgCount++
+				}
+				if strings.HasPrefix(inf.Type, tc.CacheTypeEdge.String()) {
+					newAvailableEdgeCount++
+				}
 			}
 		}
 		// Prevent the user from deleting all the servers in an active DS
 		if len(ids) == 0 {
 			return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+		}
+		// prevent the user from deleting all ORG servers from an active, MSO-enabled DS
+		if ds.UseMultiSiteOrigin && newOrgCount < 1 {
+			return fmt.Errorf("this server assignment leaves Active, MSO-enabled Delivery Service #%d without any '%s' or '%s' %s servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported, tc.OriginTypeName), nil, http.StatusConflict
 		}
 		// The following check is necessary because of the following:
 		// Consider a brand new active DS that has no server assignments.
@@ -594,22 +568,12 @@ func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, 
 		// Since this is a new DS and it didnt have any "pre existing" online/ reported EDGEs, this should be possible.
 		// However, if that DS had a couple of online/ reported EDGEs assigned to it, and now if you wanted to "replace"
 		// that assignment with the new assignment of an online/ reported ORG, this should be prohibited by TO.
-		err, preExistingEdges := checkIfEdgesExistedBefore(tx, ds.ID)
+		currentlyHasAvailableEdgesAssigned, err := hasAvailableEdgesCurrentlyAssigned(tx, ds.ID)
 		if err != nil {
 			return nil, fmt.Errorf("checking for pre existing ONLINE/ REPORTED EDGES: %v", err), http.StatusInternalServerError
 		}
-		if preExistingEdges {
-			ok, err := verifyAtLeastOneAvailableServer(ids, tx)
-			if err != nil {
-				return nil, fmt.Errorf("verifying statuses: %v", err), http.StatusInternalServerError
-			}
-			if !ok {
-				return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
-			}
-		} else {
-			if !valid {
-				return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
-			}
+		if (currentlyHasAvailableEdgesAssigned && newAvailableEdgeCount < 1) || !anyAvailableServers {
+			return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
 		}
 	}
 
@@ -674,25 +638,23 @@ func ValidateServerCapabilities(tx *sql.Tx, dsID int, serverNamesAndTypes []tc.S
 		}
 	}
 
-	var sCaps []string
 	dsCaps, err := dbhelpers.GetDSRequiredCapabilitiesFromID(dsID, tx)
 
 	if err != nil {
 		return nil, fmt.Errorf("validating server capabilities: %v", err), http.StatusInternalServerError
 	}
 
-	for _, name := range nonOriginServerNames {
-		sCaps, err = dbhelpers.GetServerCapabilitiesFromName(name, tx)
-		if err != nil {
-			return nil, err, http.StatusInternalServerError
-		}
+	serverCaps, err := dbhelpers.GetServerCapabilitiesOfServers(nonOriginServerNames, tx)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	for hostname, caps := range serverCaps {
 		for _, dsc := range dsCaps {
-			if !util.ContainsStr(sCaps, dsc) {
-				return fmt.Errorf("Caching server cannot be assigned to this delivery service without having the required delivery service capabilities: [%v] for server %s", dsCaps, name), nil, http.StatusBadRequest
+			if !util.ContainsStr(caps, dsc) {
+				return fmt.Errorf("the cache %s cannot be assigned to this delivery service without having the required delivery service capabilities: %v", hostname, dsCaps), nil, http.StatusBadRequest
 			}
 		}
 	}
-
 	return nil, nil, 0
 }
 
@@ -1008,6 +970,7 @@ type DSInfo struct {
 	MaxOriginConnections *int
 	Topology             *string
 	CDNID                *int
+	UseMultiSiteOrigin   bool
 }
 
 // language=sql
@@ -1024,7 +987,8 @@ SELECT
   ds.cacheurl,
   ds.max_origin_connections,
   ds.topology,
-  ds.cdn_id
+  ds.cdn_id,
+  ds.multi_site_origin
 FROM
   deliveryservice ds
   JOIN type tp ON ds.type = tp.id
@@ -1032,6 +996,7 @@ FROM
 
 func scanDSInfoRow(row *sql.Row) (DSInfo, bool, error) {
 	di := DSInfo{}
+	var useMSO *bool
 	if err := row.Scan(
 		&di.Active,
 		&di.ID,
@@ -1045,6 +1010,7 @@ func scanDSInfoRow(row *sql.Row) (DSInfo, bool, error) {
 		&di.MaxOriginConnections,
 		&di.Topology,
 		&di.CDNID,
+		&useMSO,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return DSInfo{}, false, nil
@@ -1052,6 +1018,9 @@ func scanDSInfoRow(row *sql.Row) (DSInfo, bool, error) {
 		return DSInfo{}, false, fmt.Errorf("querying delivery service server ds info: %v", err)
 	}
 	di.Type = tc.DSTypeFromString(string(di.Type))
+	if useMSO != nil {
+		di.UseMultiSiteOrigin = *useMSO
+	}
 	return di, true, nil
 }
 

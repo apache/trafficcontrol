@@ -602,6 +602,70 @@ func GetServerCapabilitiesFromName(name string, tx *sql.Tx) ([]string, error) {
 	return caps, nil
 }
 
+// GetServerCapabilitiesOfServers gets all of the server capabilities of the given server hostnames.
+func GetServerCapabilitiesOfServers(names []string, tx *sql.Tx) (map[string][]string, error) {
+	serverCaps := make(map[string][]string, len(names))
+	q := `
+SELECT
+  s.host_name,
+  ARRAY_REMOVE(ARRAY_AGG(ssc.server_capability ORDER BY ssc.server_capability), NULL) AS capabilities
+FROM server s
+LEFT JOIN server_server_capability ssc ON s.id = ssc.server
+WHERE
+  s.host_name = ANY($1)
+GROUP BY s.host_name
+`
+	rows, err := tx.Query(q, pq.Array(&names))
+	if err != nil {
+		return nil, errors.New("querying server capabilities by host names: " + err.Error())
+	}
+	defer log.Close(rows, "closing rows in GetServerCapabilitiesOfServers")
+
+	for rows.Next() {
+		hostname := ""
+		caps := []string{}
+		if err := rows.Scan(&hostname, pq.Array(&caps)); err != nil {
+			return nil, errors.New("scanning server capabilities: " + err.Error())
+		}
+		serverCaps[hostname] = caps
+	}
+	return serverCaps, nil
+}
+
+// GetRequiredCapabilitiesOfDeliveryServices gets all of the required capabilities of the given delivery service IDs.
+func GetRequiredCapabilitiesOfDeliveryServices(ids []int, tx *sql.Tx) (map[int][]string, error) {
+	queryIDs := make([]int64, 0, len(ids))
+	for _, id := range ids {
+		queryIDs = append(queryIDs, int64(id))
+	}
+	dsCaps := make(map[int][]string, len(ids))
+	q := `
+SELECT
+  d.id,
+  ARRAY_REMOVE(ARRAY_AGG(dsrc.required_capability ORDER BY dsrc.required_capability), NULL) AS required_capabilities
+FROM deliveryservice d
+LEFT JOIN deliveryservices_required_capability dsrc on d.id = dsrc.deliveryservice_id
+WHERE
+  d.id = ANY($1)
+GROUP BY d.id
+`
+	rows, err := tx.Query(q, pq.Array(&queryIDs))
+	if err != nil {
+		return nil, errors.New("querying delivery service required capabilities by IDs: " + err.Error())
+	}
+	defer log.Close(rows, "closing rows in GetRequiredCapabilitiesOfDeliveryServices")
+
+	for rows.Next() {
+		id := 0
+		caps := []string{}
+		if err := rows.Scan(&id, pq.Array(&caps)); err != nil {
+			return nil, errors.New("scanning required capabilities: " + err.Error())
+		}
+		dsCaps[id] = caps
+	}
+	return dsCaps, nil
+}
+
 const dsrExistsQuery = `
 SELECT EXISTS(
 	SELECT id
