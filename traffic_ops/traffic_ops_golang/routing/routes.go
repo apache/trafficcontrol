@@ -128,6 +128,13 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		// it's unique.
 
 		/**
+		 * 5.x API
+		 */
+		{api.Version{Major: 5, Minor: 0}, http.MethodGet, `roles/?$`, role.Get, auth.PrivLevelReadOnly, Authenticated, nil, 5870885833},
+		{api.Version{Major: 5, Minor: 0}, http.MethodPut, `roles/?$`, role.Update, auth.PrivLevelAdmin, Authenticated, nil, 56128974893},
+		{api.Version{Major: 5, Minor: 0}, http.MethodPost, `roles/?$`, role.Create, auth.PrivLevelAdmin, Authenticated, nil, 5306524063},
+		{api.Version{Major: 5, Minor: 0}, http.MethodDelete, `roles/?$`, role.Delete, auth.PrivLevelAdmin, Authenticated, nil, 53567059823},
+		/**
 		 * 4.x API
 		 */
 
@@ -412,9 +419,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `origins/?$`, api.DeleteHandler(&origin.TOOrigin{}), auth.PrivLevelOperations, Authenticated, nil, 4602732633},
 
 		//Roles
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `roles/?$`, api.ReadHandler(&role.TORole{}), auth.PrivLevelReadOnly, Authenticated, nil, 4870885833},
+		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `roles/?$`, role.Get, auth.PrivLevelReadOnly, Authenticated, nil, 4870885833},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `roles/?$`, api.UpdateHandler(&role.TORole{}), auth.PrivLevelAdmin, Authenticated, nil, 46128974893},
-		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `roles/?$`, api.CreateHandler(&role.TORole{}), auth.PrivLevelAdmin, Authenticated, nil, 4306524063},
+		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `roles/?$`, role.Create, auth.PrivLevelAdmin, Authenticated, nil, 4306524063},
 		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `roles/?$`, api.DeleteHandler(&role.TORole{}), auth.PrivLevelAdmin, Authenticated, nil, 43567059823},
 
 		//Delivery Services Regexes

@@ -28,6 +28,11 @@ type RolesResponse struct {
 	Alerts
 }
 
+type RolesResponseV5 struct {
+	Response []RoleV50 `json:"response"`
+	Alerts
+}
+
 // RoleResponse is a single Role response for Update and Create to depict what
 // changed.
 // swagger:response RoleResponse
@@ -36,6 +41,18 @@ type RoleResponse struct {
 	// in: body
 	Response Role `json:"response"`
 	Alerts
+}
+
+type RoleResponseV5 struct {
+	Response RoleV50 `json:"response"`
+	Alerts
+}
+
+type RoleV50 struct {
+	Name        *string    `json:"name" db:"name"`
+	Permissions []string   `json:"permissions" db:"permissions"`
+	Description *string    `json:"description" db:"description"`
+	LastUpdated *TimeNoMod `json:"lastUpdated,omitempty" db:"last_updated"`
 }
 
 // A Role is a definition of the permissions afforded to a user with that Role.
