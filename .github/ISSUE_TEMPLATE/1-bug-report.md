@@ -61,7 +61,7 @@ Please do not submit support requests here - see above -->
 <!-- Describe what the behavior would be without the bug -->
 
 
-## Minimal reproduction of the problem with instructions:
+## Steps to reproduce:
 <!-- If the current behavior is a bug, please provide the *STEPS TO REPRODUCE* and
 include the applicable TC version.
 -->
