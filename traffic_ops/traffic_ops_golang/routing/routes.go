@@ -202,7 +202,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `cdns/name/{name}/dnsseckeys?$`, cdn.DeleteDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil, 4711042073},
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdns/name/{name}/dnsseckeys/?$`, cdn.GetDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil, 4790106093},
 
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdns/dnsseckeys/refresh/?$`, cdn.RefreshDNSSECKeys, auth.PrivLevelOperations, Authenticated, nil, 47719971163},
+		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `cdns/dnsseckeys/refresh/?$`, cdn.RefreshDNSSECKeysV4, auth.PrivLevelOperations, Authenticated, nil, 47719971163},
 
 		//CDN: Monitoring: Traffic Monitor
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdns/{cdn}/configs/monitoring?$`, crconfig.SnapshotGetMonitoringHandler, auth.PrivLevelReadOnly, Authenticated, nil, 42408478923},
@@ -1357,13 +1357,6 @@ func (root) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // rootHandler returns the / handler for the service, which simply returns a "not found" response.
 func rootHandler(d ServerData) http.Handler {
 	return root{}
-}
-
-// notImplementedHandler returns a 501 Not Implemented to the client. This should be used very rarely, and primarily for old API Perl routes which were broken long ago, which we don't have the resources to rewrite in Go for the time being.
-func notImplementedHandler(w http.ResponseWriter, r *http.Request) {
-	code := http.StatusNotImplemented
-	w.WriteHeader(code)
-	api.WriteAndLogErr(w, r, []byte(http.StatusText(code)))
 }
 
 //CreateThrottledHandler takes a handler, and a max and uses a channel to insure the handler is used concurrently by only max number of routines

@@ -31,8 +31,6 @@ tm_http_timeout_ms: 2000
 tm_peer_polling_interval_ms: 5000
 tm_peer_optimistic: true
 tm_max_events: 200
-tm_max_stat_history: 5
-tm_max_health_history: 5
 tm_health_flush_interval_ms: 20
 tm_log_location_error: "{{ tm_log_dir }}/traffic_monitor.log"
 tm_log_location_warning: "{{ tm_log_dir }}/traffic_monitor.log"
@@ -42,7 +40,6 @@ tm_log_location_event: "{{ tm_log_dir }}/event.log"
 tm_stat_flush_interval_ms: 20
 tm_serve_read_timeout_ms: 10000
 tm_serve_write_timeout_ms: 20000
-tm_http_poll_no_sleep: false
 tm_http_polling_format: "text/json"
 tm_to_min_retry_interval: 100
 tm_to_max_retry_interval: 60000
