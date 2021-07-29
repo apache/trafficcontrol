@@ -248,6 +248,27 @@ Options and Arguments
 
 The environments are defined in the :atc-file:`traffic_ops/app/db/dbconf.yml` file, and the name of the database generated will be the name of the environment for which it was created. If the ``--trafficvault`` option is used, the :file:`app/db/trafficvault/dbconf.yml` file defines this information.
 
+Resolving Migration Failures
+----------------------------
+
+If you encounter an error running a migration, you will see a message like
+
+.. code-block:: bash
+	:caption: db/admin error example
+
+	[root@trafficops app]# db/admin -env production migrate
+	Error running migrate up: migration failed: syntax error at or near "This_is_a_syntax_error" (column 1) in line 18: /*
+
+That means that the migration version in the ``version`` column of the ``schema_migrations`` table has been updated to the version of the migration that failed, but the ``dirty`` column is also set, and if you try to run another migration (either up or down), you will see
+
+.. code-block:: bash
+	:caption: db/admin error migrating when the database version is dirty
+
+	[root@trafficops app]# db/admin -env production migrate
+	Error running migrate up: Dirty database version 2021070800000000. Fix and force version.
+
+You will need to manually fix the database. When you are sure that it is fixed, you can unset the ``dirty`` column manually using an SQL client.
+
 Installing The Developer Environment
 ====================================
 To install the Traffic Ops Developer environment:
