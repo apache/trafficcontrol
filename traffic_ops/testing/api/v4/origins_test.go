@@ -617,6 +617,22 @@ func GetTestOriginsByInvalidParams(t *testing.T) {
 	if len(originByTenant.Response) > 0 {
 		t.Fatalf("Expected empty response for GET Origin by invalid Tenant, but found %d", len(originByTenant.Response))
 	}
+
+	//Get Origins by Name
+	opts.QueryParameters.Del("tenant")
+	opts.QueryParameters.Set("name", "abcdef")
+	originByName, _, _ := TOSession.GetOrigins(opts)
+	if len(originByName.Response) > 0 {
+		t.Fatalf("Expected empty response for GET Origin by invalid name, but found %d", len(originByName.Response))
+	}
+
+	//Get Origins by Primary
+	opts.QueryParameters.Del("name")
+	opts.QueryParameters.Set("primary", "12345")
+	originByPrimary, _, _ := TOSession.GetOrigins(opts)
+	if len(originByPrimary.Response) > 0 {
+		t.Fatalf("Expected empty response for GET Origin by invalid Primary, but found %d", len(originByPrimary.Response))
+	}
 }
 
 func CreateTestOriginInvalidData(t *testing.T) {
