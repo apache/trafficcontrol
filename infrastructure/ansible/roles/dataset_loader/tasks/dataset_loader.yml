@@ -703,9 +703,11 @@
     updPending: True
     interfaceName: "{{ hostvars[item].ansible_default_ipv4.interface | default('eth0') }}"
     ipAddress: "{{ hostvars[item].ansible_default_ipv4.address | default(hostvars[item].ansible_host) }}"
+    ipIsService: true
     ipNetmask: "{{ hostvars[item].ansible_default_ipv4.netmask | default('255.255.255.0') }}"
     ipGateway: "{{ hostvars[item].ansible_default_ipv4.gateway | default('127.0.0.0') }}"
     ip6Address: "{{ hostvars[item].ansible_default_ipv6.address | default(omit) }}"
+    ip6IsService: true
     ip6Gateway: "{{ hostvars[item].ansible_default_ipv6.gateway | default(omit) }}"
     interfaceMtu: "{{ hostvars[item].ansible_default_ipv4.mtu | default('9000') }}"
     tcpPort: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).tcpPort | default(omit) }}"
@@ -772,10 +774,12 @@
     cdnId: "{{ cdn_id }}"
     updPending: True
     interfaceName: "eth0"
+    ipIsService: true
     ipAddress: "{{ hostvars[item].ansible_host }}"
     ipNetmask: "255.255.255.0"
     ipGateway: "127.0.0.0"
     ip6Address: "{{ omit }}"
+    ip6IsService: true
     ip6Gateway: "{{ omit }}"
     interfaceMtu: "9000"
     tcpPort: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).tcpPort | default(omit) }}"
