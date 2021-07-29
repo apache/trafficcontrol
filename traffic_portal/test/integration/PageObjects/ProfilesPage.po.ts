@@ -61,7 +61,7 @@ export class ProfilesPage extends BasePage {
     private mnuCompareTable = element(by.id('profilesParamsCompareTable_wrapper'));
     private btnTableColumn = element(by.className("caret"))
     private randomize = randomize;
-    
+
     public async OpenProfilesPage() {
         const snp = new SideNavigationPage();
         await snp.NavigateToProfilesPage();
@@ -107,7 +107,7 @@ export class ProfilesPage extends BasePage {
         return false;
     }
 
-    async CompareProfile(profile1: string, profile2: string) {
+    public async CompareProfile(profile1: string, profile2: string) {
         let result = false;
         const snp = new SideNavigationPage();
         await snp.NavigateToProfilesPage();
