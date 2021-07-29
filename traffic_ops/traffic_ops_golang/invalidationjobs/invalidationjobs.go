@@ -47,47 +47,28 @@ type InvalidationJob struct {
 	tc.InvalidationJob
 }
 
-const readQuery = `
-SELECT job.id,
-       keyword,
-       parameters,
-       asset_url,
-       start_time,
-       u.username AS createdBy,
-       ds.xml_id AS dsId
-FROM job
-JOIN tm_user u ON job.job_user = u.id
-JOIN deliveryservice ds  ON job.job_deliveryservice = ds.id
-`
-
 const insertQuery = `
-INSERT INTO job (
-	agent,
-	asset_type,
+INSERT INTO invalidation (
+	ttl_hr,
 	asset_url,
-	entered_time,
-	job_deliveryservice,
-	job_user,
-	keyword,
-	parameters,
 	start_time,
-	status)
+	entered_time,
+	job_user,
+	job_deliveryservice,
+	invalidation_type)
 VALUES (
-	1::bigint,
-	'file',
+	$1,
 	(
 		SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
 		FROM origin o
-		WHERE o.deliveryservice = $1
+		WHERE o.deliveryservice = $2
 		AND o.is_primary
-	) || $2,
-	$3,
+	) || $3,
 	$4,
 	$5,
-	'PURGE',
 	$6,
 	$7,
-	1::bigint
+	$8
 )
 RETURNING
 	asset_url,
@@ -98,8 +79,8 @@ RETURNING
 	(SELECT tm_user.username
 	 FROM tm_user
 	 WHERE tm_user.id=job_user) AS createdBy,
-	keyword,
-	parameters,
+	'PURGE' AS keyword,
+	CONCAT('TTL:', ttl_hr, 'h') AS parameters,
 	start_time
 `
 
@@ -128,65 +109,64 @@ WHERE server.status NOT IN (
 `
 
 const updateQuery = `
-UPDATE job
+UPDATE invalidation
 SET asset_url=$1,
-    keyword=$2,
-    parameters=$3,
-    start_time=$4
-WHERE job.id=$5
-RETURNING job.asset_url,
+    ttl_hr=$2,
+    start_time=$3
+WHERE invalidation.id=$4
+RETURNING asset_url,
           (
            SELECT tm_user.username
            FROM tm_user
-           WHERE tm_user.id=job.job_user
+           WHERE tm_user.id=invalidation.job_user
           ) AS created_by,
           (
            SELECT deliveryservice.xml_id
            FROM deliveryservice
-           WHERE deliveryservice.id=job.job_deliveryservice
+           WHERE deliveryservice.id=invalidation.job_deliveryservice
           ) AS delivery_service,
-          job.id,
-          job.keyword,
-          job.parameters,
-          job.start_time
+          invalidation.id,
+          'PURGE' as keyword,
+          CONCAT('TTL:', ttl_hr, 'h') AS parameters,
+          start_time
 `
 
 const putInfoQuery = `
-SELECT job.id AS id,
+SELECT invalidation.id AS id,
        tm_user.username AS createdBy,
-       job.job_user AS createdByID,
-       job.job_deliveryservice AS dsid,
+       invalidation.job_user AS createdByID,
+       invalidation.job_deliveryservice AS dsid,
        deliveryservice.xml_id AS dsxmlid,
-       job.asset_url AS assetURL,
-       job.parameters,
-       job.start_time AS start_time,
+       invalidation.asset_url AS assetURL,
+       CONCAT('TTL:', ttl_hr, 'h') AS parameters,
+       invalidation.start_time AS start_time,
        origin.protocol || '://' || origin.fqdn || rtrim(concat(':', origin.port), ':') AS OFQDN
-FROM job
-INNER JOIN origin ON origin.deliveryservice=job.job_deliveryservice AND origin.is_primary
-INNER JOIN tm_user ON tm_user.id=job.job_user
-INNER JOIN deliveryservice ON deliveryservice.id=job.job_deliveryservice
-WHERE job.id=$1
+FROM invalidation
+INNER JOIN origin ON origin.deliveryservice=invalidation.job_deliveryservice AND origin.is_primary
+INNER JOIN tm_user ON tm_user.id=invalidation.job_user
+INNER JOIN deliveryservice ON deliveryservice.id=invalidation.job_deliveryservice
+WHERE invalidation.id=$1
 `
 
 const deleteQuery = `
 DELETE
-FROM job
-WHERE job.id=$1
-RETURNING job.asset_url,
+FROM invalidation
+WHERE invalidation.id=$1
+RETURNING invalidation.asset_url,
           (
            SELECT tm_user.username
            FROM tm_user
-           WHERE tm_user.id=job.job_user
+           WHERE tm_user.id=invalidation.job_user
           ) AS created_by,
           (
            SELECT deliveryservice.xml_id
            FROM deliveryservice
-           WHERE deliveryservice.id=job.job_deliveryservice
+           WHERE deliveryservice.id=invalidation.job_deliveryservice
           ) AS deliveryservice,
-          job.id,
-          job.keyword,
-          job.parameters,
-          job.start_time
+          invalidation.id,          
+		  'PURGE' as keyword,
+          CONCAT('TTL:', ttl_hr, 'h') AS parameters,
+          invalidation.start_time
 `
 
 type apiResponse struct {
@@ -203,20 +183,33 @@ func selectMaxLastUpdatedQuery(where string) string {
 	select max(last_updated) as t from last_deleted l where l.table_name='job') as res`
 }
 
+const readQuery = `
+SELECT invalidation.id,
+        'PURGE' AS keyword,
+		ttl_hr,
+		asset_url,
+		start_time,
+		u.username as createdBy,
+		ds.xml_id as dsId
+FROM invalidation
+JOIN tm_user u ON invalidation.job_user = u.id
+JOIN deliveryservice ds ON invalidation.job_deliveryservice = ds.id
+`
+
 // Used by GET requests to `/jobs`, simply returns a filtered list of
 // content invalidation jobs according to the provided query parameters.
 func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":              dbhelpers.WhereColumnInfo{Column: "job.id", Checker: api.IsInt},
-		"keyword":         dbhelpers.WhereColumnInfo{Column: "job.keyword"},
-		"assetUrl":        dbhelpers.WhereColumnInfo{Column: "job.asset_url"},
-		"startTime":       dbhelpers.WhereColumnInfo{Column: "job.start_time"},
-		"userId":          dbhelpers.WhereColumnInfo{Column: "job.job_user", Checker: api.IsInt},
-		"createdBy":       dbhelpers.WhereColumnInfo{Column: `(SELECT tm_user.username FROM tm_user WHERE tm_user.id=job.job_user)`},
-		"deliveryService": dbhelpers.WhereColumnInfo{Column: `(SELECT deliveryservice.xml_id FROM deliveryservice WHERE deliveryservice.id=job.job_deliveryservice)`},
-		"dsId":            dbhelpers.WhereColumnInfo{Column: "job.job_deliveryservice", Checker: api.IsInt},
+		"id":              dbhelpers.WhereColumnInfo{Column: "invalidation.id", Checker: api.IsInt},
+		"keyword":         dbhelpers.WhereColumnInfo{Column: "keyword"},
+		"assetUrl":        dbhelpers.WhereColumnInfo{Column: "asset_url"},
+		"startTime":       dbhelpers.WhereColumnInfo{Column: "start_time"},
+		"userId":          dbhelpers.WhereColumnInfo{Column: "job_user", Checker: api.IsInt},
+		"createdBy":       dbhelpers.WhereColumnInfo{Column: `(SELECT tm_user.username FROM tm_user WHERE tm_user.id=invalidation.job_user)`},
+		"deliveryService": dbhelpers.WhereColumnInfo{Column: `(SELECT deliveryservice.xml_id FROM deliveryservice WHERE deliveryservice.id=invalidation.job_deliveryservice)`},
+		"dsId":            dbhelpers.WhereColumnInfo{Column: "invalidation.job_deliveryservice", Checker: api.IsInt},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(job.APIInfo().Params, queryParamsToSQLCols)
@@ -287,6 +280,12 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
 		if err != nil {
 			return nil, nil, fmt.Errorf("parsing db response: %v", err), http.StatusInternalServerError, nil
 		}
+
+		// NamedQuery (nor prepare statements) cannot handle string functions in SELECT such as:
+		// 	CONCAT('TTL:', ttl_hr, 'h') AS parameters
+		// So it is necessary to modify the value after it's been queried.
+		fmtTTL := fmt.Sprintf("TTL:%sh", *j.Parameters)
+		j.Parameters = &fmtTTL
 
 		returnable = append(returnable, j)
 	}
@@ -377,13 +376,14 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	row := inf.Tx.Tx.QueryRow(insertQuery,
-		dsid,
+		ttl,
+		dsid, // Used in inner select for deliveryservice
 		*job.Regex,
+		(*job.StartTime).Time,
 		time.Now(),
-		dsid,
 		inf.User.ID,
-		fmt.Sprintf("TTL:%dh", ttl),
-		(*job.StartTime).Time)
+		dsid,
+		"REFRESH")
 
 	result := tc.InvalidationJob{}
 	err = row.Scan(&result.AssetURL,
@@ -568,8 +568,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	row = inf.Tx.Tx.QueryRow(updateQuery,
 		input.AssetURL,
-		input.Keyword,
-		input.Parameters,
+		strings.TrimSuffix(strings.TrimPrefix(*input.Parameters, "TTL:"), "h"), // Strip TTL: and h from 'TTL:##h'
 		input.StartTime.Time,
 		*job.ID)
 	err = row.Scan(&job.AssetURL,
@@ -634,7 +633,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	var dsid uint
 	var createdBy uint
-	row := inf.Tx.Tx.QueryRow(`SELECT job_deliveryservice, job_user FROM job WHERE id=$1`, inf.Params["id"])
+	row := inf.Tx.Tx.QueryRow(`SELECT job_deliveryservice, job_user FROM invalidation WHERE id=$1`, inf.Params["id"])
 	if err := row.Scan(&dsid, &createdBy); err != nil {
 		if err == sql.ErrNoRows {
 			userErr = fmt.Errorf("No job by id '%s'!", inf.Params["id"])

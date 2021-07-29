@@ -255,17 +255,17 @@ func ValidateJobUniqueness(tx *sql.Tx, dsID uint, startTime time.Time, assetURL 
 	var errs []string
 
 	const readQuery = `
-SELECT job.id,
-       keyword,
-       parameters,
+SELECT invalidation.id,
+       'PURGE' as keyword,
+       CONCAT('TTL:', ttl_hr, 'h') AS parameters,
        asset_url,
        start_time
-FROM job
-WHERE job.job_deliveryservice = $1
+FROM invalidation
+WHERE invalidation.job_deliveryservice = $1
 `
 	rows, err := tx.Query(readQuery, dsID)
 	if err != nil {
-		errs = append(errs, fmt.Sprintf("unable to query for other invalidation jobs"))
+		errs = append(errs, "unable to query for other invalidation jobs")
 	} else {
 		defer rows.Close()
 		jobStart := startTime
