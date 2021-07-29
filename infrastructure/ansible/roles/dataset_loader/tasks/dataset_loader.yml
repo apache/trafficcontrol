@@ -970,7 +970,7 @@
 
 - name: Snapshot all CDNs
   uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/snapshot/{{ item.name }}"
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/snapshot?cdn={{ item.name }}"
     method: PUT
   with_items: "{{ get_all_cdns.json.response[1:] }}"
   register: snapshot_out
