@@ -25,6 +25,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -247,6 +248,24 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
+
+	fedID, err := strconv.Atoi(inf.Params["id"])
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+	cdnIDs, ok, err := dbhelpers.GetCDNIDsFromFedResolverID(fedID, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("database exception: %v", err))
+		return
+	}
+	if ok {
+		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNsByID(inf.Tx.Tx, cdnIDs, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
+	}
 
 	alert, respObj, userErr, sysErr, statusCode := deleteFederationResolver(inf)
 	if userErr != nil || sysErr != nil {
