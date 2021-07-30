@@ -230,7 +230,6 @@ func (fed *TOCDNFederation) Delete() (error, error, int) {
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
-	// For some reason, the delete endpoint takes in an int for the param "name", whereas in all other federation endpoints, it is the integer CDN ID
 	if cdn, ok := fed.APIInfo().Params["name"]; ok {
 		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
 		if userErr != nil || sysErr != nil {

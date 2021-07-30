@@ -560,6 +560,18 @@ func GetFederationNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	return name, true, nil
 }
 
+// GetCDNIDFromFedID returns the ID of the CDN for the current federation.
+func GetCDNIDFromFedID(id int, tx *sql.Tx) (int, bool, error) {
+	var cdnID int
+	if err := tx.QueryRow(`SELECT cdn_id FROM deliveryservice WHERE id = (SELECT deliveryservice FROM federation_deliveryservice WHERE federation = $1)`, id).Scan(&cdnID); err != nil {
+		if err == sql.ErrNoRows {
+			return cdnID, false, nil
+		}
+		return cdnID, false, err
+	}
+	return cdnID, true, nil
+}
+
 // GetProfileNameFromID returns the profile's name, whether a profile with ID exists, or any error.
 func GetProfileNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	name := ""
