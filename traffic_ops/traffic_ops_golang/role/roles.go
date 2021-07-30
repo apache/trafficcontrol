@@ -28,13 +28,13 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
@@ -246,6 +246,14 @@ description=:description
 WHERE id=:id RETURNING last_updated`
 }
 
+func updateLegacyRoleQuery() string {
+	return `UPDATE
+role SET
+name=$1,
+description=$2
+WHERE id=$3 RETURNING last_updated`
+}
+
 func updateRoleQuery() string {
 	return `UPDATE
 role SET
@@ -372,9 +380,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		roleDesc = *role.Description
 		privLevel = *role.PrivLevel
 		roleCapabilities = role.Capabilities
-		if roleID, ok = inf.IntParams["id"]; !ok {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must supply a role ID to delete"), nil)
+		if roleIDParam, ok := inf.Params["id"]; !ok {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must supply a role ID to update"), nil)
 			return
+		} else {
+			roleID, err = strconv.Atoi(roleIDParam)
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must supply an integral role ID to update"), nil)
+				return
+			}
 		}
 		if privLevel > inf.User.PrivLevel {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("can not create a role with a higher priv level than your own"), nil)
@@ -395,9 +409,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		rows, err := inf.Tx.Tx.Query(updateQuery(), role)
+		rows, err := inf.Tx.Tx.Query(updateLegacyRoleQuery(), roleName, roleDesc, roleID)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("updating role: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("updating role here: "+err.Error()))
 			return
 		}
 		rows.Close()
@@ -547,9 +561,15 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		if roleID, ok = inf.IntParams["id"]; !ok {
+		if roleIDParam, ok := inf.Params["id"]; !ok {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must supply a role ID to delete"), nil)
 			return
+		} else {
+			roleID, err = strconv.Atoi(roleIDParam)
+			if err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must supply an integral role ID to delete"), nil)
+				return
+			}
 		}
 	}
 
@@ -688,6 +708,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func Get(w http.ResponseWriter, r *http.Request) {
+	var maxTime time.Time
+	var runSecond bool
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
@@ -725,7 +747,19 @@ func Get(w http.ResponseWriter, r *http.Request) {
 			where = dbhelpers.AppendWhere(where, "permissions @> :can")
 		}
 	}
-
+	if inf.Config.UseIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(inf.Tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			api.AddLastModifiedHdr(w, maxTime)
+			w.WriteHeader(http.StatusNotModified)
+			api.WriteResp(w, r, []interface{}{})
+			return
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
 	query := readQuery() + where + orderBy + pagination
 
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
@@ -735,16 +769,11 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 	defer log.Close(rows, "reading in Roles from the database")
 
-	var response struct {
-		Response interface{}
-	}
-
 	var roleV50 tc.RoleV50
 	rolesV50 := []tc.RoleV50{}
 
 	var role tc.Role
 	roles := []tc.Role{}
-
 	if version.Major >= 5 {
 		for rows.Next() {
 			throwAway := new(interface{})
@@ -754,7 +783,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 			}
 			rolesV50 = append(rolesV50, roleV50)
 		}
-		response.Response = rolesV50
+		api.WriteResp(w, r, rolesV50)
 	} else {
 		for rows.Next() {
 			throwAway := new(interface{})
@@ -766,50 +795,14 @@ func Get(w http.ResponseWriter, r *http.Request) {
 			role.Capabilities = &capabilities
 			roles = append(roles, role)
 		}
-		response.Response = roles
+		api.WriteResp(w, r, roles)
 	}
-
-	if inf.UseIMS() {
-		maxTime, err := getMaxLastUpdated(where, queryValues, inf.Tx)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-		w.Header().Add(rfc.LastModified, maxTime.Format(rfc.LastModifiedFormat))
-	}
-	api.WriteResp(w, r, response)
-}
-
-func getMaxLastUpdated(where string, queryValues map[string]interface{}, tx *sqlx.Tx) (time.Time, error) {
-	query := selectMaxLastUpdatedQuery(where)
-	var t time.Time
-	rows, err := tx.NamedQuery(query, queryValues)
-	if err != nil {
-		return t, fmt.Errorf("query for max user last updated time: %w", err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		if err = rows.Scan(&t); err != nil {
-			return t, fmt.Errorf("scanning user max last updated time: %w", err)
-		}
-	}
-	return t, nil
 }
 
 func selectMaxLastUpdatedQuery(where string) string {
-	return `
-		SELECT max(t)
-		FROM (
-			SELECT max(r.last_updated) AS t
-			FROM role r ` + where + `
-			UNION ALL
-			SELECT max(l.last_updated)
-			FROM last_deleted l
-			WHERE l.tablename=role OR l.tablename=role_capability
-			UNION ALL
-			SELECT max(rc.last_updated)
-			FROM role_capability rc
-			WHERE rc.role_id = r.id
-		) AS res`
+	return `SELECT max(t) FROM (
+		SELECT max(r.last_updated) AS t from role r ` + where + ` UNION ALL
+		SELECT max(l.last_updated) AS t from last_deleted l WHERE l.table_name='role' OR l.table_name='role_capability' UNION ALL
+		SELECT max(rc.last_updated) AS t from role_capability rc INNER JOIN role ON rc.role_id = role.id)
+		as res`
 }

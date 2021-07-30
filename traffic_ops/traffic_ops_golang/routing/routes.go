@@ -420,9 +420,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Roles
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `roles/?$`, role.Get, auth.PrivLevelReadOnly, Authenticated, nil, 4870885833},
-		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `roles/?$`, api.UpdateHandler(&role.TORole{}), auth.PrivLevelAdmin, Authenticated, nil, 46128974893},
+		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `roles/?$`, role.Update, auth.PrivLevelAdmin, Authenticated, nil, 46128974893},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `roles/?$`, role.Create, auth.PrivLevelAdmin, Authenticated, nil, 4306524063},
-		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `roles/?$`, api.DeleteHandler(&role.TORole{}), auth.PrivLevelAdmin, Authenticated, nil, 43567059823},
+		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `roles/?$`, role.Delete, auth.PrivLevelAdmin, Authenticated, nil, 43567059823},
 
 		//Delivery Services Regexes
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `deliveryservices_regexes/?$`, deliveryservicesregexes.Get, auth.PrivLevelReadOnly, Authenticated, nil, 4055014533},

@@ -55,6 +55,32 @@ type RoleV50 struct {
 	LastUpdated *TimeNoMod `json:"lastUpdated,omitempty" db:"last_updated"`
 }
 
+func (role Role) Upgrade() RoleV50 {
+	var roleV50 RoleV50
+	roleV50.Name = role.Name
+	roleV50.Description = role.Description
+	if role.Capabilities == nil {
+		roleV50.Permissions = nil
+	} else {
+		roleV50.Permissions = make([]string, len(*role.Capabilities))
+		copy(roleV50.Permissions, *role.Capabilities)
+	}
+	return roleV50
+}
+
+func (roleV50 RoleV50) Downgrade() Role {
+	var role Role
+	role.Name = roleV50.Name
+	role.Description = roleV50.Description
+	if len(roleV50.Permissions) == 0 {
+		role.Capabilities = nil
+	} else {
+		*role.Capabilities = make([]string, len(roleV50.Permissions))
+		copy(*role.Capabilities, roleV50.Permissions)
+	}
+	return role
+}
+
 // Role ...
 type Role struct {
 	RoleV11
