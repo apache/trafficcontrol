@@ -55,7 +55,33 @@ type RoleV50 struct {
 	LastUpdated *TimeNoMod `json:"lastUpdated,omitempty" db:"last_updated"`
 }
 
-// A Role is a definition of the permissions afforded to a user with that Role.
+func (role Role) Upgrade() RoleV50 {
+	var roleV50 RoleV50
+	roleV50.Name = role.Name
+	roleV50.Description = role.Description
+	if role.Capabilities == nil {
+		roleV50.Permissions = nil
+	} else {
+		roleV50.Permissions = make([]string, len(*role.Capabilities))
+		copy(roleV50.Permissions, *role.Capabilities)
+	}
+	return roleV50
+}
+
+func (roleV50 RoleV50) Downgrade() Role {
+	var role Role
+	role.Name = roleV50.Name
+	role.Description = roleV50.Description
+	if len(roleV50.Permissions) == 0 {
+		role.Capabilities = nil
+	} else {
+		*role.Capabilities = make([]string, len(roleV50.Permissions))
+		copy(*role.Capabilities, roleV50.Permissions)
+	}
+	return role
+}
+
+// Role ...
 type Role struct {
 	RoleV11
 
@@ -65,12 +91,7 @@ type Role struct {
 	Capabilities *[]string `json:"capabilities" db:"-"`
 }
 
-// RoleV11 is a representation of a Role as it appeared in version 1.1 of the
-// Traffic Ops API.
-//
-// Deprecated: Traffic Ops API version 1.1 no longer exists - the ONLY reason
-// this structure still exists is because it is nested in newer structures - DO
-// NOT USE THIS!
+// RoleV11 ...
 type RoleV11 struct {
 	// ID of the Role
 	//

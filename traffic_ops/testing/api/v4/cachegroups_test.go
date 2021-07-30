@@ -115,6 +115,7 @@ func UpdateCachegroupWithLocks(t *testing.T) {
 	user1.FullName = util.StrPtr("firstName LastName")
 	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
 	if err != nil {
+		fmt.Println(err)
 		t.Fatalf("could not create test user with username: %s", *user1.Username)
 	}
 	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
