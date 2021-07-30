@@ -40,7 +40,7 @@ interface UpdateParameter {
 
 export class ParametersPage extends BasePage {
 
-  private btnCreateNewParameter = element(by.xpath("//button[@title='Create Parameter']"));
+  private btnCreateNewParameter = element(by.name('createParameterButton'));
   private txtName = element(by.name('name'));
   private txtConfigFile = element(by.name('configFile'));
   private txtValue = element((by.name("value")));
