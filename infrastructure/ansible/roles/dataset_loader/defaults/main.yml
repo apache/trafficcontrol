@@ -71,14 +71,8 @@ dl_ds_default_cdns:
     dnssecEnabled: false
 
 # TO Types
-#dl_ds_merged_types: "{{ dl_ds_default_types }}"
-#dl_ds_default_types:
-#  - name: TR_LOC
-#    description: Traffic Router Logical Location
-#    useInTable: cachegroup
-#  - name: INFRA_LOC
-#    description: Generic Infrastructure Logical Location
-#    useInTable: cachegroup
+dl_ds_merged_types: "{{ dl_ds_default_types }}"
+dl_ds_default_types: []
 
 # The mapping of components from inventory hostvars to TO types
 dl_ds_merged_type_ansible_component_map: "{{ dl_ds_default_type_ansible_component_map }}"
