@@ -161,18 +161,18 @@ func readKey(keyLocation string) ([]byte, error) {
 }
 
 func reEncryptSslKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
-	rows, err := tx.Query("SELECT id, data FROM sslkey")
+	rows, err := tx.Query("SELECT deliveryservice, data FROM sslkey")
 	if err != nil {
 		return fmt.Errorf("querying: %w", err)
 	}
 	defer rows.Close()
 
-	sslKeyMap := map[int][]byte{}
+	sslKeyMap := map[string][]byte{}
 
 	for rows.Next() {
-		id := 0
+		xmlid := ""
 		var encryptedSslKeys []byte
-		if err = rows.Scan(&id, &encryptedSslKeys); err != nil {
+		if err = rows.Scan(&xmlid, &encryptedSslKeys); err != nil {
 			return fmt.Errorf("getting SSL Keys: %w", err)
 		}
 		jsonKeys, err := util.AESDecrypt(encryptedSslKeys, previousKey)
@@ -181,7 +181,7 @@ func reEncryptSslKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 		}
 
 		if !bytes.HasPrefix(jsonKeys, []byte("{")) {
-			return fmt.Errorf("decrypted SSL Key did not have prefix '{' for id %d", id)
+			return fmt.Errorf("decrypted SSL Key did not have prefix '{' for xmlid %s", xmlid)
 		}
 
 		reencryptedKeys, err := util.AESEncrypt(jsonKeys, newKey)
@@ -189,20 +189,20 @@ func reEncryptSslKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 			return fmt.Errorf("encrypting SSL Keys with new key: %w", err)
 		}
 
-		sslKeyMap[id] = reencryptedKeys
+		sslKeyMap[xmlid] = reencryptedKeys
 	}
 
-	for id, reencryptedKeys := range sslKeyMap {
-		res, err := tx.Exec(`UPDATE sslkey SET data = $1 WHERE id = $2`, reencryptedKeys, id)
+	for xmlid, reencryptedKeys := range sslKeyMap {
+		res, err := tx.Exec(`UPDATE sslkey SET data = $1 WHERE deliveryservice = $2`, reencryptedKeys, xmlid)
 		if err != nil {
-			return fmt.Errorf("updating SSL Keys for id %d: %w", id, err)
+			return fmt.Errorf("updating SSL Keys for xmlid %s: %w", xmlid, err)
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return fmt.Errorf("determining rows affected for reencrypting SSL Keys with id %d", id)
+			return fmt.Errorf("determining rows affected for reencrypting SSL Keys with xmlid %s: %w", xmlid, err)
 		}
 		if rowsAffected == 0 {
-			return fmt.Errorf("no rows updated for reencrypting SSL Keys for id %d", id)
+			return fmt.Errorf("no rows updated for reencrypting SSL Keys for xmlid %s", xmlid)
 		}
 	}
 
@@ -248,7 +248,7 @@ func reEncryptUrlSigKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return fmt.Errorf("determining rows affected for reencrypting URL Sig Keys with deliveryservice %s", ds)
+			return fmt.Errorf("determining rows affected for reencrypting URL Sig Keys with deliveryservice %s: %w", ds, err)
 		}
 		if rowsAffected == 0 {
 			return fmt.Errorf("no rows updated for reencrypting URL Sig Keys for deliveryservice %s", ds)
@@ -297,7 +297,7 @@ func reEncryptUriSigningKeys(tx *sql.Tx, previousKey []byte, newKey []byte) erro
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return fmt.Errorf("determining rows affected for reencrypting URI Signing Keys with deliveryservice %s", ds)
+			return fmt.Errorf("determining rows affected for reencrypting URI Signing Keys with deliveryservice %s: %w", ds, err)
 		}
 		if rowsAffected == 0 {
 			return fmt.Errorf("no rows updated for reencrypting URI Signing Keys for deliveryservice %s", ds)
@@ -346,7 +346,7 @@ func reEncryptDNSSECKeys(tx *sql.Tx, previousKey []byte, newKey []byte) error {
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
-			return fmt.Errorf("determining rows affected for reencrypting DNSSEC Keys with cdn %s", cdn)
+			return fmt.Errorf("determining rows affected for reencrypting DNSSEC Keys with cdn %s: %w", cdn, err)
 		}
 		if rowsAffected == 0 {
 			return fmt.Errorf("no rows updated for reencrypting DNSSEC Keys for cdn %s", cdn)

@@ -47,6 +47,8 @@ CrStates$, Apache-2.0 # JSON with a specific format.
 ^docs/.*\.(png|jpe?g|ico|gif)$, Apache-2.0
 ^blueprints/.*\.(png|jpe?g|ico|gif)$, Apache-2.0
 favicon.(ico|png)$, Apache-2.0
+traffic_ops/app/db/trafficvault/test/.*\.key$, Apache-2.0 # test AES key files
+traffic_ops/app/db/trafficvault/test/data/.*\.dat$, Apache-2.0 # test data files
 ^traffic_ops/experimental/goto/testFiles/, Apache-2.0
 \.pem$, Apache-2.0 # Single certificate file.
 traffic_router/core/src/test/resources/api/2.0/cdns/name/thecdn/sslkeys(-missing-1)?, Apache-2.0 #JSON files with no extension
