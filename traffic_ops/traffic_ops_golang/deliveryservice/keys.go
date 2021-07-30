@@ -67,20 +67,15 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dsID, ok, err := getDSIDFromName(inf.Tx.Tx, *req.DeliveryService)
+	dsID, cdnID, ok, err := getDSIDAndCDNIDFromName(inf.Tx.Tx, *req.DeliveryService)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.AddSSLKeys: getting DS ID from name "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.AddSSLKeys: getting DS ID and CDN ID from name "+err.Error()))
 		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+*req.DeliveryService), nil)
 		return
 	}
-	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, dsID)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.AddSSLKeys: getting CDN from DS ID "+err.Error()))
-		return
-	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(cdnID), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
@@ -255,14 +250,21 @@ func DeleteSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	xmlID := inf.Params["xmlid"]
-	dsID, ok, err := getDSIDFromName(inf.Tx.Tx, xmlID)
+	dsID, cdnID, ok, err := getDSIDAndCDNIDFromName(inf.Tx.Tx, xmlID)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteSSLKeys: getting DS ID from name "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteSSLKeys: getting DS ID and CDN ID from name "+err.Error()))
 		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+xmlID), nil)
 		return
 	}
+
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(cdnID), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+
 	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -283,16 +285,29 @@ func updateSSLKeyVersion(xmlID string, version int64, tx *sql.Tx) error {
 	return nil
 }
 
-// getDSIDFromName loads the DeliveryService's ID from the database, from the xml_id. Returns whether the delivery service was found, and any error.
-func getDSIDFromName(tx *sql.Tx, xmlID string) (int, bool, error) {
-	id := 0
-	if err := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id = $1`, xmlID).Scan(&id); err != nil {
+// returns the cdn_id found by domainname.
+func getCDNIDByDomainname(domainName string, tx *sql.Tx) (int64, bool, error) {
+	cdnID := int64(0)
+	if err := tx.QueryRow(`SELECT id from cdn WHERE domain_name = $1`, domainName).Scan(&cdnID); err != nil {
 		if err == sql.ErrNoRows {
-			return id, false, nil
+			return 0, false, nil
 		}
-		return id, false, fmt.Errorf("querying ID for delivery service ID '%v': %v", xmlID, err)
+		return 0, false, err
 	}
-	return id, true, nil
+	return cdnID, true, nil
+}
+
+// getDSIDAndCDNIDFromName loads the DeliveryService's ID and CDN ID from the database, from the xml_id. Returns whether the delivery service was found, and any error.
+func getDSIDAndCDNIDFromName(tx *sql.Tx, xmlID string) (int, int, bool, error) {
+	id := 0
+	cdnID := 0
+	if err := tx.QueryRow(`SELECT id, cdn_id FROM deliveryservice WHERE xml_id = $1`, xmlID).Scan(&id, &cdnID); err != nil {
+		if err == sql.ErrNoRows {
+			return id, cdnID, false, nil
+		}
+		return id, cdnID, false, fmt.Errorf("querying ID for delivery service ID '%v': %v", xmlID, err)
+	}
+	return id, cdnID, true, nil
 }
 
 // verify the server certificate chain and return the
