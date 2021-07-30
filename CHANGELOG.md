@@ -59,6 +59,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Enhanced ort integration test for reload states
 - Added a new field to Delivery Services - `tlsVersions` - that explicitly lists the TLS versions that may be used to retrieve their content from Cache Servers.
 - Updated T3C changes in Ansible playbooks 
+- Updated all endpoints in infrastructure code to use API version 2.0
 
 ### Fixed
 - [#5690](https://github.com/apache/trafficcontrol/issues/5690) - Fixed github action for added/modified db migration file.
