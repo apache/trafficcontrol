@@ -371,7 +371,7 @@ func RegisterRoutes(d ServerData) error {
 	}
 
 	authBase := middleware.AuthBase{Secret: d.Config.Secrets[0], Override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
-	routes, versions := CreateRouteMap(routeSlice, rawRoutes, d.DisabledRoutes, handlerToFunc(catchall), authBase, d.RequestTimeout, time.Duration(*d.CacheMS)*time.Millisecond, d.DisableReadWhileWriter)
+	routes, versions := CreateRouteMap(routeSlice, rawRoutes, d.DisabledRoutes, handlerToFunc(catchall), authBase, d.RequestTimeout, time.Duration(*d.CacheMS)*time.Millisecond, !d.ReadWhileWriter)
 
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
