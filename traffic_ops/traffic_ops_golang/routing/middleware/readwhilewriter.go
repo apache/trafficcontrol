@@ -26,48 +26,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
-
-// ReadWhileWriterWrapper blocks multiple requests for the same object,
-// and makes a single request to the real handler (which is probably expensive, e.g. database calls),
-// and returns the result to all callers.
-func ReadWhileWriterWrapper() Middleware {
-	rwr := NewRWR()
-	return func(h http.HandlerFunc) http.HandlerFunc {
-		return WrapReadWhileWriter(h, rwr)
-	}
-}
-
-func WrapReadWhileWriter(h http.HandlerFunc, rwr *RWR) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Infoln("ReadWhileWriter starting")
-		if r.Method != http.MethodGet {
-			// only GETs use RWR. TODO: determine if we should rwr HEAD
-			h(w, r)
-			return
-		}
-		user, err := auth.GetCurrentUser(r.Context())
-		if err != nil {
-			h(w, r) // not our job to error, pass the request along
-			return
-		}
-		// Note no error doesn't mean a valid user, there may be no user (which is allowed for some endpoints).
-		// In that case, user.TenantID will be TenantIDInvalid.
-		// Which is fine, we'll use that as a cache key like any valid tenant,
-		// and all unauthenticated requests will share requests.
-
-		// TODO: add "allowed to request no-cache" as a Tenant Role Permission
-		if user.TenantID != auth.TenantIDInvalid && requestNoCache(r) {
-			h(w, r)
-			return
-		}
-
-		cacheKey := makeSmallCacheKey(r, user)
-
-		multiRequestWrite(h, w, r, rwr, cacheKey)
-	}
-}
 
 type ReqObj struct {
 	Body    []byte
