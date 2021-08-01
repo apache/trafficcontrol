@@ -20,6 +20,7 @@ package middleware
  */
 
 import (
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -58,6 +59,7 @@ func SmallCacheWrapper(span time.Duration, disableRWR bool) Middleware {
 //
 func WrapSmallCache(h http.HandlerFunc, cache *SmallCache, rwr *RWR) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		thisReqStart := time.Now()
 		log.Infoln("SmallCache starting")
 		if cache.CacheTime == 0 && rwr == nil {
 			log.Infoln("SmallCache cache and rwr disabled, skipping entirely")
@@ -92,8 +94,29 @@ func WrapSmallCache(h http.HandlerFunc, cache *SmallCache, rwr *RWR) http.Handle
 		// Which is fine, we'll use that as a cache key like any valid tenant,
 		// and all unauthenticated requests will share a cache.
 
-		// TODO: add "allowed to request no-cache" as a Tenant Role Permission
-		if user.TenantID != auth.TenantIDInvalid && requestNoCache(r) {
+		maxAge := time.Duration(math.MaxInt64)
+		noCache := false
+		if useCC := UserAllowedToCacheControl(user); useCC {
+			reqCC := rfc.ParseCacheControl(r.Header)
+			if ccMaxAge, hasMaxAge := reqCC.GetTime("max-age"); hasMaxAge {
+				maxAge = ccMaxAge
+			}
+			noCache = reqCC.Has("no-cache") || reqCC.Has("no-store") || maxAge == 0 || rfc.HasPragmaNoCache(r.Header)
+		}
+
+		maxCacheTime := cache.CacheTime
+		if maxAge < maxCacheTime {
+			maxCacheTime = maxAge
+		}
+
+		// Note we are compliant ignoring max-stale and min-fresh, because we never serve stale.
+		// We are compliant ignoring no-transform, because we are not a proxy and do not transform an upstream request
+
+		// TODO implement 'Cache-Control: only-if-cached'.
+		// We are technically in violation by not respecting that, or returning an error.
+		// It could also be useful for debugging.
+
+		if noCache {
 			log.Infoln("SmallCache had valid tenant who sent no-cache, skipping entirely")
 			h(w, r)
 			return
@@ -101,16 +124,16 @@ func WrapSmallCache(h http.HandlerFunc, cache *SmallCache, rwr *RWR) http.Handle
 
 		cacheKey := makeSmallCacheKey(r, user)
 
-		if cache.CacheTime == 0 {
-			log.Infoln("SmallCache: '" + cacheKey + "' cache disabled, fetching")
-			smallCacheInterceptAndCache(h, w, r, cache, rwr, cacheKey)
+		if maxCacheTime == 0 {
+			log.Infof("SmallCache: '%v' cache disabled (CacheTime %v, maxAge %v), fetching", cacheKey, cache.CacheTime, maxAge)
+			smallCacheInterceptAndCache(h, w, r, cache, rwr, cacheKey, thisReqStart, maxCacheTime)
 			return
 		}
 
 		iCacheObj, ok := cache.Cache.Load(cacheKey)
 		if !ok {
 			log.Infoln("SmallCache: '" + cacheKey + "' not in cache, fetching")
-			smallCacheInterceptAndCache(h, w, r, cache, rwr, cacheKey)
+			smallCacheInterceptAndCache(h, w, r, cache, rwr, cacheKey, thisReqStart, maxCacheTime)
 			return
 		}
 
@@ -122,10 +145,10 @@ func WrapSmallCache(h http.HandlerFunc, cache *SmallCache, rwr *RWR) http.Handle
 		}
 
 		age := time.Since(cacheObj.Time)
-		if age > cache.CacheTime {
+		if age > maxCacheTime {
 			log.Infoln("SmallCache: in cache expired, fetching")
 			cache.Cache.Delete(cacheKey)
-			smallCacheInterceptAndCache(h, w, r, cache, rwr, cacheKey)
+			smallCacheInterceptAndCache(h, w, r, cache, rwr, cacheKey, thisReqStart, maxCacheTime)
 			return
 		}
 
@@ -134,43 +157,30 @@ func WrapSmallCache(h http.HandlerFunc, cache *SmallCache, rwr *RWR) http.Handle
 	}
 }
 
-// requestNoCache returns whether the client requested not to be served from cache.
-func requestNoCache(req *http.Request) bool {
-	if req.Header.Get("Cache-Control") == "" {
-		pragmaHdr := req.Header.Get("Pragma")
-		if pragmaHdr != "" && strings.Contains(strings.ToLower(pragmaHdr), "no-cache") {
-			return true
-		}
-	}
-	cc := rfc.ParseCacheControl(req.Header)
-	if _, ok := cc["no-cache"]; ok {
-		return true
-	}
-	if _, ok := cc["no-store"]; ok {
-		return true
-	}
-	if val, ok := cc["max-age"]; ok {
-		if val == `0` || val == `"0"` {
-			return true
-		}
-	}
-	return false
-}
-
-func smallCacheInterceptAndCache(h http.HandlerFunc, w http.ResponseWriter, r *http.Request, cache *SmallCache, rwr *RWR, cacheKey CacheKey) {
+func smallCacheInterceptAndCache(h http.HandlerFunc, w http.ResponseWriter, r *http.Request, cache *SmallCache, rwr *RWR, cacheKey CacheKey, thisReqStart time.Time, maxAge time.Duration) {
 	if cache.CacheTime != 0 {
 		lastGC := (*time.Time)(atomic.LoadPointer(cache.LastGC))
-		if cache.CacheTime != 0 && time.Since(*lastGC) > SmallCacheGCInterval {
+		if time.Since(*lastGC) > SmallCacheGCInterval {
 			go func() { cache.GC() }()
 		}
 	}
 
+	queueWriter := RWRQueueWriter(nil)
 	if rwr != nil {
 		log.Infoln("RWR starting")
-		if reqChan := rwr.GetOrMakeQueue(cacheKey); reqChan != nil {
+		queueReader := RWRQueueReader(nil)
+		queueReader, queueWriter = rwr.GetOrMakeQueue(cacheKey, thisReqStart, maxAge)
+		log.Infof("RWR GetOrMakeQueue returned reader %v writer %v\n", queueReader != nil, queueWriter != nil)
+		if queueReader != nil {
 			log.Infoln("RWR: GetOrMakeQueue loaded '" + cacheKey + "', there's another concurrent reader, queueing up")
 			// we loaded, so a request is ongoing, we need to queue up
-			obj := <-reqChan
+			obj := queueReader.Read()
+
+			reqTimeDiff := thisReqStart.Sub(queueReader.Start())
+			ageSeconds := int(math.Ceil(reqTimeDiff.Seconds()))
+			w.Header().Add("Age", strconv.Itoa(ageSeconds))
+			log.Infof("smallCacheInterceptAndCache: '"+string(cacheKey)+"' setting Header Age %v\n", ageSeconds)
+
 			if obj.Code != 200 {
 				log.Infof("smallCacheInterceptAndCache: '"+string(cacheKey)+"' writing code %v\n", obj.Code)
 				w.WriteHeader(obj.Code)
@@ -203,7 +213,7 @@ func smallCacheInterceptAndCache(h http.HandlerFunc, w http.ResponseWriter, r *h
 
 	if cache.CacheTime != 0 {
 		cache.Cache.Store(cacheKey, CacheObj{
-			Time:    time.Now(),
+			Time:    thisReqStart,
 			Body:    iw.Body,
 			Code:    iw.Code,
 			Headers: iw.Headers,
@@ -224,12 +234,12 @@ func smallCacheInterceptAndCache(h http.HandlerFunc, w http.ResponseWriter, r *h
 	w.Write(iw.Body)
 	log.Infoln("SmallCache wrote to real writer")
 
-	if rwr != nil {
+	if queueWriter != nil {
 		log.Infoln("RWR: '" + cacheKey + "' starting thread to write to queued readers")
 		// run in a goroutine, so we don't block this routine, and the http request can finish
-		// TODO test performance, vs closing the writer (?) and calling WriteQueue in this goroutine
-		// TODO test performance, of dedicated QueueWriter goroutine(s)
-		go rwr.WriteQueue(cacheKey, ReqObj{Body: iw.Body, Headers: iw.Headers, Code: iw.Code})
+		// TODO test performance, vs closing the writer (?) and calling QueueWriter.Write in this goroutine
+		// TODO test performance, of dedicated QueueWriter.Write goroutine(s)
+		go queueWriter.Write(ReqObj{Body: iw.Body, Headers: iw.Headers, Code: iw.Code})
 	}
 }
 
@@ -341,4 +351,15 @@ func (sc *SmallCache) InvalidatePath(path string) {
 		log.Infoln("SmallCache.InvalidateCache deleting '" + key + "'")
 		sc.Cache.Delete(key)
 	}
+}
+
+func UserAllowedToCacheControl(user *auth.CurrentUser) bool {
+	// TODO: add "allowed to request no-cache" as a Tenant Role Permission
+	if user == nil {
+		return false
+	}
+	if user.TenantID == auth.TenantIDInvalid {
+		return false
+	}
+	return true
 }

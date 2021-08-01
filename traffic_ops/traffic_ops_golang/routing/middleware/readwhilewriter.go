@@ -22,10 +22,10 @@ package middleware
 import (
 	"net/http"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 type ReqObj struct {
@@ -34,63 +34,29 @@ type ReqObj struct {
 	Headers http.Header
 }
 
-func multiRequestWrite(h http.HandlerFunc, w http.ResponseWriter, r *http.Request, rwr *RWR, cacheKey CacheKey) {
-	log.Infoln("RWR starting")
-	if reqChan := rwr.GetOrMakeQueue(cacheKey); reqChan != nil {
-		log.Infoln("RWR: GetOrMakeQueue loaded, there's another concurrent reader, queueing up")
-		// we loaded, so a request is ongoing, we need to queue up
-		obj := <-reqChan
-		util.WriteHeaders(w, obj.Headers)
-		if obj.Code != 200 && obj.Code != 0 {
-			log.Infof("RWR: '"+string(cacheKey)+"' concurrent writing code %v\n", obj.Code)
-			w.WriteHeader(obj.Code)
-		} else {
-			log.Infof("RWR: '" + string(cacheKey) + "' concurrent had no code, not writing code\n")
-		}
-		w.Write(obj.Body)
-		return
-	}
-
-	log.Infoln("RWR GetOrMakeQueue made queue, no concurrent reader")
-
-	// we didn't load, so we're the first - make the req, respond to queued requestors, and close the queue.
-
-	// To test the read-while-writer (which is normally very fast and difficult to test),
-	// you can uncomment the following lines:
-	// log.Infoln("DEBUG multiRequestWrite debug sleep")
-	// time.Sleep(time.Second * 10) // debug
-
-	iw := &util.FullInterceptor{W: w}
-	h(iw, r)
-
-	// If the StatusKey Context was set, prioritize it
-	ctx := r.Context()
-	val := ctx.Value(tc.StatusKey)
-	status, ok := val.(int)
-	if ok {
-		iw.Code = status
-	}
-
-	util.WriteHeaders(w, iw.Headers)
-	if iw.Code != 200 && iw.Code != 0 {
-		log.Infof("RWR: '"+string(cacheKey)+"' writing code %v\n", iw.Code)
-		w.WriteHeader(iw.Code)
-	} else {
-		log.Infof("RWR: '" + string(cacheKey) + "' had no code, not writing code\n")
-	}
-	w.Write(iw.Body)
-
-	// run in a goroutine, so we don't block this routine, and the http request can finish
-	// TODO test performance, vs closing the writer and calling WriteQueue in this goroutine
-	// TODO test performance, of dedicated QueueWriter goroutine(s)
-	go rwr.WriteQueue(cacheKey, ReqObj{Body: iw.Body, Code: iw.Code, Headers: iw.Headers})
-}
-
 type CacheKey string
 
+// RWR contains the in-flight read-while-writer state.
+//
+// It has a map of cache keys, to queues.
+// Each unique cache key has potentially multiple queues of readers, each for a different start time.
+//
+// Ordinarily, if a client doesn't send any Cache-Control, it will use the oldest (and thus soonest-to-return) queue.
+//
+// But, if a client sends a 'Cache-Control: max-age=', for long requests, that max could be longer than the request has been going on.
+//
+// In practical terms, ClientA could do a GET, ClientB could do a POST, and then while ClientA's request and Read-While-Writer queue is still ongoing, ClientB then does a GET max-age=x.
+//
+// In that scenario, we need to start a new request queue, to avoid giving ClientB data from before its POST.
+//
+// Hence, each cache key can actually have multiple queues, each with their own start time.
+// A new requestor with no max-age will simply get the first.
+// But a requestor with a max-age will get the earliest older than its requested max age.
+//
 type RWR struct {
-	reqs map[CacheKey][]chan<- ReqObj
-	m    *sync.Mutex
+	reqs        map[CacheKey][]*RWRReqQueue
+	m           *sync.Mutex
+	nextQueueID uint64
 }
 
 func NewRWR() *RWR {
@@ -98,7 +64,7 @@ func NewRWR() *RWR {
 	// inGC := int32(0)
 	// nowP := (unsafe.Pointer)(&now)
 	return &RWR{
-		reqs: map[CacheKey][]chan<- ReqObj{},
+		reqs: map[CacheKey][]*RWRReqQueue{},
 		m:    &sync.Mutex{},
 		// CacheTime: cacheTime,
 		// InGC:      &inGC,
@@ -106,39 +72,130 @@ func NewRWR() *RWR {
 	}
 }
 
-// GetOrMakeQueue gets the queue if it exists, or creates it if it doesn't.
-// If another request is happening, chan ReqObj will not be nil. In which case, the caller must read from it to get the object when it's ready.
-// If the chan is nil, then no queue existed, and the caller must do the request itself, and then write what it gets via rwr.WriteQueue.
-func (rwr *RWR) GetOrMakeQueue(cacheKey CacheKey) <-chan ReqObj {
-	newQueue := []chan<- ReqObj{}
-	reqChan := make(chan ReqObj, 1) // buffer 1, so the WriteQueue writes don't block
-	rwr.m.Lock()
-	if reqQueue, ok := rwr.reqs[cacheKey]; ok {
-		rwr.reqs[cacheKey] = append(reqQueue, reqChan)
-		rwr.m.Unlock()
-		return reqChan
-	}
-	rwr.reqs[cacheKey] = newQueue
-	rwr.m.Unlock()
-	return nil
+type RWRReqQueue struct {
+	Start   time.Time
+	Waiters []chan<- ReqObj
+	ID      uint64 // queues need an ID, so we know which queue to delete
 }
 
-// WriteQueue should be called iff GetOrMakeQueue returned a nil chan, which means a queue was started.
-// It writes to all subscribers, and deletes the queue.
-func (rwr *RWR) WriteQueue(cacheKey CacheKey, obj ReqObj) {
-	log.Infoln("RWR rwr.WriteQueue starting")
+// GetOrMakeQueue returns a reader from the queue if it exists, or creates it if it doesn't and returns a QueueWriter.
+// Either the returned reader chan or queueWriter will be nil, but never both.
+// If a reader chan is returned, the caller must read from it, and write its object to its client.
+// If a QueueWriter is returned, the caller must execute its request as normal, write its data to its client, and then write that same data to the QueueWriter.
+//
+// If another request is happening, chan ReqObj will not be nil. In which case, the caller must read from it to get the object when it's ready.
+// If the chan is nil, then no queue existed, and the caller must do the request itself, and then write what it gets via rwr.WriteQueue.
+//
+func (rwr *RWR) GetOrMakeQueue(cacheKey CacheKey, thisReqStart time.Time, maxAge time.Duration) (RWRQueueReader, RWRQueueWriter) {
+	newQueue := &RWRReqQueue{
+		ID:      atomic.AddUint64(&rwr.nextQueueID, 1),
+		Start:   thisReqStart,
+		Waiters: []chan<- ReqObj{},
+	}
+	reqChan := make(chan ReqObj, 1) // buffer 1, so the WriteQueue writes don't block
+
+	log.Infoln("RWR GetOrMakeQueue locking")
 	rwr.m.Lock()
-	reqQueue, ok := rwr.reqs[cacheKey]
-	if !ok {
+	log.Infoln("RWR GetOrMakeQueue locked")
+
+	log.Infoln("RWR GetOrMakeQueue starting for loop")
+	for _, reqQueue := range rwr.reqs[cacheKey] {
+		if time.Since(reqQueue.Start) > maxAge {
+			continue
+		}
+		reqQueue.Waiters = append(reqQueue.Waiters, reqChan)
+		log.Infoln("RWR GetOrMakeQueue unlocking and returning reqChan")
 		rwr.m.Unlock()
-		log.Errorln("RWR.WriteQueue was called, but there's no queue. This is a critical code error, and should never happen!")
+		log.Infoln("RWR GetOrMakeQueue in-for unlocked")
+
+		return &rwrQueueReader{
+			ch:    reqChan,
+			start: reqQueue.Start,
+		}, nil
+	}
+	log.Infoln("RWR GetOrMakeQueue done for loop, unlocking and returning queueWriter")
+
+	rwr.reqs[cacheKey] = append(rwr.reqs[cacheKey], newQueue)
+	rwr.m.Unlock()
+	log.Infoln("RWR GetOrMakeQueue done-for unlocked")
+
+	return nil, &rwrQueueWriter{
+		rwr:      rwr,
+		cacheKey: cacheKey,
+		queue:    newQueue,
+	}
+}
+
+type RWRQueueReader interface {
+	// Read blocks until the original request finishes and the original request handler writes to its RWRQueueWriter.
+	// Read may only be called once. Subsequent calls will block forever.
+	Read() ReqObj
+	// Start is the time that the original requestor which created the queue started.
+	Start() time.Time
+}
+
+type rwrQueueReader struct {
+	ch    <-chan ReqObj
+	start time.Time
+}
+
+func (qr *rwrQueueReader) Start() time.Time { return qr.start }
+func (qr *rwrQueueReader) Read() ReqObj     { return <-qr.ch }
+
+type RWRQueueWriter interface {
+	Write(obj ReqObj)
+}
+
+type rwrQueueWriter struct {
+	rwr      *RWR
+	cacheKey CacheKey
+	queue    *RWRReqQueue
+}
+
+func (qw *rwrQueueWriter) Write(obj ReqObj) {
+	log.Infoln("RWR rwrQueueWriter.Write starting, locking")
+	qw.rwr.m.Lock()
+	log.Infoln("RWR rwrQueueWriter.Write starting, locked")
+
+	queueIndex := -1
+	oldQueues := qw.rwr.reqs[qw.cacheKey]
+	for i := 0; i < len(oldQueues); i++ {
+		if oldQueues[i].ID == qw.queue.ID {
+			queueIndex = i
+			break
+		}
+	}
+	if queueIndex == -1 {
+		log.Errorln("RWR.Write was called, but the queue didn't exist in RWR! This is a critical code error, and should never happen!")
+		log.Errorf("RWR rwrQueueWriter.Write crit err our queue id: %v\n", qw.queue.ID)
+		for i := 0; i < len(oldQueues); i++ {
+			log.Errorf("RWR rwrQueueWriter.Write crit err queue id: %v\n", oldQueues[i].ID)
+		}
+		log.Errorln("RWR rwrQueueWriter.Write crit err unlocking")
+		qw.rwr.m.Unlock()
+		log.Errorln("RWR rwrQueueWriter.Write crit err returning")
 		return
 	}
-	delete(rwr.reqs, cacheKey)
-	rwr.m.Unlock()
 
-	log.Infof("RWR rwr.WriteQueue writing to %v readers\n", len(reqQueue))
-	for _, ch := range reqQueue {
+	for i := queueIndex; i < len(oldQueues)-1; i++ {
+		oldQueues[i] = oldQueues[i+1]
+	}
+	oldQueues = oldQueues[:len(oldQueues)-1]
+
+	// TODO add debug prints of IDs to verify
+
+	if len(oldQueues) == 0 {
+		delete(qw.rwr.reqs, qw.cacheKey)
+	} else {
+		qw.rwr.reqs[qw.cacheKey] = oldQueues
+	}
+
+	log.Infoln("RWR rwrQueueWriter.Write removed queue, unlocking")
+	qw.rwr.m.Unlock()
+	log.Infoln("RWR rwrQueueWriter.Write removed queue, unlocked")
+
+	log.Infof("RWR rwr.WriteQueue writing to %v readers\n", len(qw.queue.Waiters))
+	for _, ch := range qw.queue.Waiters {
 		ch <- obj
 	}
 }

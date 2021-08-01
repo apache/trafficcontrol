@@ -79,6 +79,18 @@ func (ccm CacheControlMap) Has(param string) bool {
 	return ok
 }
 
+// GetTime gets the time of a Cache-Control directive, if it exists.
+// Returns false if the the given doesn't exist or is malformed.
+//
+// As of this writing, the valid Request Cache-Control directives which are times (Http Delta Seconds) are:
+//   max-age, max-stale, min-fresh
+// And the valid Response directives are:
+//  max-age, s-maxage
+//
+func (ccm CacheControlMap) GetTime(directive string) (time.Duration, bool) {
+	return getHTTPDeltaSecondsCacheControl(ccm, directive)
+}
+
 // Gets the position in the string at which a *quoted* Cache-Control parameter
 // value ends - assuming it begins with the start of such a value.
 //
@@ -545,4 +557,16 @@ func MethodIsSafe(method string) bool {
 	return method == http.MethodGet ||
 		method == http.MethodOptions ||
 		method == http.MethodHead
+}
+
+// HasPragmaNoCache returns true if headers has no Cache-Control and
+// does have a Pragma: no-cache.
+// Note if Cache-Control exists, this returns false, even if Pragma: no-cache exists.
+// This is because RFC7234§5.4 requires the legacy Pragma: no-cache be ignored if Cache-Control exists.
+func HasPragmaNoCache(hdr http.Header) bool {
+	if _, ok := hdr[CacheControl]; ok {
+		return false
+	}
+	pragmas, hasPragma := hdr["Pragma"]
+	return hasPragma && len(pragmas) > 0 && strings.HasPrefix(pragmas[0], "no-cache")
 }
