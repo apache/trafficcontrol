@@ -32,26 +32,78 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-util"
 )
 
+// ContentTypeParentDotConfig is the MIME type of the contents of a
+// parent.config file.
 const ContentTypeParentDotConfig = ContentTypeTextASCII
+
+// LineCommentParentDotConfig is the string used to begin a line comment in the
+// grammar of a parent.config file.
 const LineCommentParentDotConfig = LineCommentHash
 
+// ParentConfigFileName is the name of an ATS parent.config configuration file,
+// as well as the ConfigFile value of Parameters that can affect its contents.
+//
+// TODO: Replace instances of "parent.config" in t3c with this constant.
 const ParentConfigFileName = "parent.config"
 
+// ParentConfigParamQStringHandling is the Name of a Parameter in the ConfigFile
+// parent.config that will override the text of the argument 'qstring' in a line
+// in parent.config for ALL Delivery Services if found in the Profile of the
+// server for which parent.config is being generated, or ALL servers for the
+// Delivery Service if found in the Profile of a Delivery Service.
+//
+// Server Profiles have priority when conflicts arise.
 const ParentConfigParamQStringHandling = "psel.qstring_handling"
+
+// ParentConfigParamMSOAlgorithm is the Name of a Parameter that can be used to
+// set the parent selection algorithm for Delivery Services that use MSO, if
+// found in their Profile.
+//
+// This has no known effect if found in a server Profile.
+const ParentConfigParamMSOAlgorithm = "mso.algorithm"
+
+// ParentConfigParamMSOParentRetry is the Name of a Parameter that can be used
+// to set the retry behavior of cache servers trying to reach a parent for an
+// MSO Delivery Service, if found in the Profile of said Delivery Service.
+const ParentConfigParamMSOParentRetry = "mso.parent_retry"
+
+// ParentConfigParamMSOUnavailableServerRetryResponses is the Name of a
+// Parameter that can be used to set the HTTP response codes that a cache server
+// will consider indicative of its parent being unavailable, if found in the
+// Profile of an MSO Delivery Service.
+//
+// The format is defined by the grammar of the parent.config ATS configuration
+// file.
+const ParentConfigParamMSOUnavailableServerRetryResponses = "mso.unavailable_server_retry_responses"
+
+// ParentConfigParamMSOMaxSimpleRetries is the Name of a Parameter that can be
+// used to set the maximum number of "simple" retries a cache server will
+// attempt when its parent is unavailable, if found in the Profile of an MSO
+// Delivery Service.
+//
+// Refer to ATS Documentation for the difference between this and
+// ParentConfigParamMSOMaxUnavailableServerRetries.
+const ParentConfigParamMSOMaxSimpleRetries = "mso.max_simple_retries"
+
+// ParentConfigParamMSOMaxUnavailableServerRetries is the Name of a Parameter
+// that can be used to set the maximum number of retries a cache server will
+// attempt when its parent is unavailable, if found in the Profile of an MSO
+// Delivery Service.
+//
+// Refer to ATS Documentation for the difference between this and
+// ParentConfigParamMSOMaxSimpleRetries.
+const ParentConfigParamMSOMaxUnavailableServerRetries = "mso.max_unavailable_server_retries"
+
+// ParentConfigParamMergeGroups is the Name of a Parameter on Delivery Service
+// Profiles that is used to specify a list of Cache Group names that should
+// merge their secondary parents into their set of primary parents when
+// servicing content for said Delivery Service.
 const ParentConfigParamMergeGroups = "merge_parent_groups"
 
-const ParentConfigDSParamDefaultMSOAlgorithm = ParentAbstractionServiceRetryPolicyConsistentHash
-const ParentConfigDSParamDefaultMSOParentRetry = "both"
-const ParentConfigDSParamDefaultMSOUnavailableServerRetryResponses = ""
-const ParentConfigDSParamDefaultMaxSimpleRetries = 1
-const ParentConfigDSParamDefaultMaxUnavailableServerRetries = 1
+// ParentConfigParamAlgorithm is the Name of a Parameter that can be used to set
+// the parent selection algorithm for cache servers that use Origin Shields.
+const ParentConfigParamAlgorithm = "algorithm"
 
-const ParentConfigCacheParamWeight = "weight"
-const ParentConfigCacheParamPort = "port"
-const ParentConfigCacheParamUseIP = "use_ip_address"
-const ParentConfigCacheParamRank = "rank"
-const ParentConfigCacheParamNotAParent = "not_a_parent"
-const StrategyConfigUsePeering = "use_peering"
 const ParentConfigGoDirectParam = "go_direct"
 const ParentConfigGoDirectEdge = ParentConfigGoDirectParam + ".edge"
 const ParentConfigGoDirectMid = ParentConfigGoDirectParam + ".mid"
@@ -59,9 +111,89 @@ const ParentConfigGoDirectFirst = ParentConfigGoDirectParam + ".first"
 const ParentConfigGoDirectInner = ParentConfigGoDirectParam + ".inner"
 const ParentConfigGoDirectLast = ParentConfigGoDirectParam + ".last"
 
-// same across DS
+// ParentConfigParamQString is the Name of a Parameter that can be used to set
+// the query string handling behavior for the default destination for
+// non-top-level cache servers.
 const ParentConfigParamQString = "qstring"
 
+// ParentConfigParamSecondaryMode is the Name of a Parameter that, if it is
+// found on a server's Profile, will cause the cache server to try all primary
+// parents before resorting to a secondary parent (which presumably differs from
+// the default behavior in some way).
+//
+// The Value of these Parameters have no meaning; the Parameter's existence is
+// all of the information it conveys.
+const ParentConfigParamSecondaryMode = "try_all_primaries_before_secondary"
+
+// ParentConfigParamParentRetry is the Name of a Parameter which can be used to
+// directly set the argument to the parent_retry directive in a line in a
+// parent.config ATS configuration file, if found in the Profile of the Delivery
+// Service represented by that line.
+const ParentConfigParamParentRetry = "parent_retry"
+
+// ParentConfigParamUnavailableServerRetryResponses is the Name of a Parameter
+// that can be used to set the HTTP response codes that a cache server will
+// consider indicative of its parent being unavailable, if found in the Profile
+// of a non-MSO Delivery Service.
+//
+// The format is defined by the grammar of the parent.config ATS configuration
+// file.
+const ParentConfigParamUnavailableServerRetryResponses = "unavailable_server_retry_responses"
+
+// ParentConfigParamMaxSimpleRetries is the Name of a Parameter that can be used
+// to set the maximum number of "simple" retries a cache server will attempt
+// when its parent is unavailable, if found in the Profile of a non-MSO Delivery
+// Service.
+//
+// Refer to ATS Documentation for the difference between this and
+// ParentConfigParamMaxUnavailableServerRetries.
+const ParentConfigParamMaxSimpleRetries = "max_simple_retries"
+
+// ParentConfigParamMaxUnavailableServerRetries is the Name of a Parameter that
+// can be used to set the maximum number of retries a cache server will attempt
+// when its parent is unavailable, if found in the Profile of a non-MSO Delivery
+// Service.
+//
+// Refer to ATS Documentation for the difference between this and
+// ParentConfigParamMaxSimpleRetries.
+const ParentConfigParamMaxUnavailableServerRetries = "max_unavailable_server_retries"
+
+// ParentConfigDSParamDefaultMSOAlgorithm is the parent selection algorithm used
+// by cache servers when not overridden by any Parameters.
+const ParentConfigDSParamDefaultMSOAlgorithm = ParentAbstractionServiceRetryPolicyConsistentHash
+
+// ParentConfigDSParamDefaultMSOParentRetry is the argument to a parent_retry
+// directive in a line in a parent.config ATS configuration file that is used by
+// cache servers when not overridden by any Parameters.
+const ParentConfigDSParamDefaultMSOParentRetry = "both"
+
+// ParentConfigDSParamDefaultMSOUnavailableServerRetryResponses is the argument
+// passed to a directive used to set the HTTP response codes that will trigger a
+// cache server to retry its parent and mark it unavailable, in parent.config
+// lines that are generated for MSO Delivery Services.
+const ParentConfigDSParamDefaultMSOUnavailableServerRetryResponses = ""
+
+// ParentConfigDSParamDefaultMaxSimpleRetries is the maximum number of "simple"
+// retries a cache server will attempt when its parent is unavailable, if not
+// overridden by Parameters.
+const ParentConfigDSParamDefaultMaxSimpleRetries = 1
+
+// ParentConfigDSParamDefaultMaxUnavailableServerRetries is the maximum number
+// of retries a cache server will attempt when its parent is unavailable, if not
+// overridden by Parameters.
+const ParentConfigDSParamDefaultMaxUnavailableServerRetries = 1
+
+// StrategyConfigUsePeering is the Name of a Parameter which, if it exists on a
+// Delivery Service's Profile and has the Value of exactly "true", causes cache
+// servers assigned to service that Delivery Service's content to use "peering"
+// mode for secondary parent selection. Note that this is not (yet?) implemented
+// in strategies.yaml generation.
+const StrategyConfigUsePeering = "use_peering"
+
+// ParentConfigRetryKeys is a collection of the directives on a `parent.config`
+// line that can affect the behavior of retrying requests in the event of
+// failures; both the conditions that result in a retry as well as the mechanism
+// used for retrying.
 type ParentConfigRetryKeys struct {
 	Algorithm                 string
 	SecondaryMode             string
@@ -72,6 +204,10 @@ type ParentConfigRetryKeys struct {
 	UnavailableRetryResponses string
 }
 
+// MakeParentConfigRetryKeysWithPrefix creates a new ParentConfigRetryKeys by
+// prepending each default directive name with the given prefix. If a "." is
+// desired as a part of the prefix (almost always), it **must** be included in
+// the prefix, as this will not add it for you!
 func MakeParentConfigRetryKeysWithPrefix(prefix string) ParentConfigRetryKeys {
 	return ParentConfigRetryKeys{
 		Algorithm:                 prefix + "algorithm",
@@ -84,21 +220,42 @@ func MakeParentConfigRetryKeysWithPrefix(prefix string) ParentConfigRetryKeys {
 	}
 }
 
-var ParentConfigRetryKeysFirst = MakeParentConfigRetryKeysWithPrefix("first.")
-var ParentConfigRetryKeysInner = MakeParentConfigRetryKeysWithPrefix("inner.")
-var ParentConfigRetryKeysLast = MakeParentConfigRetryKeysWithPrefix("last.")
+// These are the standard prefixes for different kinds of Delivery Service retry
+// rules.
+var (
+	ParentConfigRetryKeysFirst   = MakeParentConfigRetryKeysWithPrefix("first.")
+	ParentConfigRetryKeysInner   = MakeParentConfigRetryKeysWithPrefix("inner.")
+	ParentConfigRetryKeysLast    = MakeParentConfigRetryKeysWithPrefix("last.")
+	ParentConfigRetryKeysMSO     = MakeParentConfigRetryKeysWithPrefix("mso.")
+	ParentConfigRetryKeysDefault = MakeParentConfigRetryKeysWithPrefix("")
+)
 
-var ParentConfigRetryKeysMSO = MakeParentConfigRetryKeysWithPrefix("mso.")
-var ParentConfigRetryKeysDefault = MakeParentConfigRetryKeysWithPrefix("")
+// These are the Names of Parameters that can affect cache server parentage in
+// unknown ways.
+//
+// TODO: determine/describe how these work.
+const (
+	ParentConfigCacheParamWeight     = "weight"
+	ParentConfigCacheParamPort       = "port"
+	ParentConfigCacheParamUseIP      = "use_ip_address"
+	ParentConfigCacheParamRank       = "rank"
+	ParentConfigCacheParamNotAParent = "not_a_parent"
+)
 
+// OriginHost is the (short) hostname of an Origin server. It has no other
+// attached semantics.
 type OriginHost string
+
+// OriginFQDN is an unused type alias of unknown purpose.
+//
+// TODO: remove this?
 type OriginFQDN string
 
 // ParentConfigOpts contains settings to configure parent.config generation options.
 type ParentConfigOpts struct {
 	// AddComments is whether to add informative comments to the generated file, about what was generated and why.
 	// Note this does not include the header comment, which is configured separately with HdrComment.
-	// These comments are human-readable and not guarnateed to be consistent between versions. Automating anything based on them is strongly discouraged.
+	// These comments are human-readable and not guaranteed to be consistent between versions. Automating anything based on them is strongly discouraged.
 	AddComments bool
 
 	// GoDirect is set with a command line argument default is true.
@@ -124,6 +281,13 @@ type ParentConfigOpts struct {
 	ATSMajorVersion uint
 }
 
+// MakeParentDotConfig constructs a parent.config file for a cache server.
+//
+// dses should be ALL of the Delivery Services in the same CDN as the cache
+// server in question, NOT just those to which the server is itself assigned.
+// tcServerParams shsould be ALL of the server's Profile's Parameters, and
+// tcParentConfigParams must be pre-filtered as the Parameters in the server's
+// Profile that have the ConfigFile value "parent.config".
 func MakeParentDotConfig(
 	dses []DeliveryService,
 	server *Server,
@@ -795,6 +959,9 @@ type parentServerParams struct {
 	NotAParent bool
 }
 
+// DefaultParentWeight is the weight given to a parent if one isn't explicitly
+// configured - *or* in the case that the parent has a Parameter set for the
+// weight, but its Value cannot be parsed.
 const DefaultParentWeight = 0.999
 
 func defaultParentServerParams() parentServerParams {
@@ -813,7 +980,7 @@ type originURI struct {
 	Port   string
 }
 
-// TODO change, this is terrible practice, using a hard-coded key. What if there were a delivery service named "all_parents" (transliterated Perl)
+// TODO change, this is terrible practice, using a hard-coded key. What if there were a delivery service named "all_parents" (transliterated Perl).
 const deliveryServicesAllParentsKey = "all_parents"
 
 type parentDSParams struct {
@@ -995,7 +1162,7 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 	return params, warnings
 }
 
-// getTopologyParentConfigLine returns the topology parent.config line, any warnings, and any error
+// getTopologyParentConfigLine returns the topology parent.config line, any warnings, and any error.
 // If the given DS is not used by the server, returns a nil ParentAbstractionService and nil error.
 func getTopologyParentConfigLine(
 	server *Server,
@@ -1259,7 +1426,6 @@ func getTopologyParentIsProxyStr(serverIsLastCacheTier bool) string {
 	return ""
 }
 
-// RetryPolicy
 func getTopologyRoundRobin(
 	ds *DeliveryService,
 	serverParams map[string]string,
@@ -1731,7 +1897,7 @@ func getMSOParentStrs(
 	return parentInfoTxt, secondaryParentInfo, secondaryMode, warnings
 }
 
-// makeParentInfos returns the parent info and any warnings
+// makeParentInfos returns the parent info and any warnings.
 func makeParentInfos(
 	serverParentCGData serverParentCacheGroupData,
 	serverDomain string, // getCDNDomainByProfileID(tx, server.ProfileID)
@@ -1976,7 +2142,7 @@ func makeDSOrigins(dsses []DeliveryServiceServer, dses []DeliveryService, server
 	return dsOrigins, warnings
 }
 
-// getProfileParentConfigParams returns a map[profileName][paramName]paramVal and any warnings
+// getProfileParentConfigParams returns a map[profileName][paramName]paramVal and any warnings.
 func getProfileParentConfigParams(tcParentConfigParams []tc.ParameterV5) (map[string]map[string]string, []string) {
 	warnings := []string{}
 	parentConfigParamsWithProfiles, err := tcParamsToParamsWithProfiles(tcParentConfigParams)
