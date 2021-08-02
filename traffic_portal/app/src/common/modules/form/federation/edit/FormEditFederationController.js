@@ -23,7 +23,7 @@ var FormEditFederationController = function(cdn, federation, resolvers, delivery
 	angular.extend(this, $controller('FormFederationController', { cdn: cdn, federation: federation, deliveryServices: deliveryServices, $scope: $scope }));
 
 	var deleteFederation = function(fed) {
-		federationService.deleteFederation(cdn.id, fed.id)
+		federationService.deleteFederation(cdn.name, fed.id)
 			.then(function() {
 				locationUtils.navigateToPath('/cdns/' + cdn.id + '/federations');
 			});

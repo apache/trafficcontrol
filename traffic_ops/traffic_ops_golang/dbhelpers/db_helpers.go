@@ -560,6 +560,39 @@ func GetFederationNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	return name, true, nil
 }
 
+// GetCDNIDFromFedID returns the ID of the CDN for the current federation.
+func GetCDNIDFromFedID(id int, tx *sql.Tx) (int, bool, error) {
+	var cdnID int
+	if err := tx.QueryRow(`SELECT cdn_id FROM deliveryservice WHERE id = (SELECT deliveryservice FROM federation_deliveryservice WHERE federation = $1)`, id).Scan(&cdnID); err != nil {
+		if err == sql.ErrNoRows {
+			return cdnID, false, nil
+		}
+		return cdnID, false, err
+	}
+	return cdnID, true, nil
+}
+
+// GetCDNIDFromFedResolverID returns the IDs of the CDNs that the fed resolver is associated with.
+func GetCDNIDsFromFedResolverID(id int, tx *sql.Tx) ([]int, bool, error) {
+	var cdnIDs []int
+	var cdnID int
+	rows, err := tx.Query(`SELECT cdn_id FROM deliveryservice WHERE id = ANY(SELECT deliveryservice FROM federation_deliveryservice fds JOIN federation_federation_resolver ffr ON ffr.federation = fds.federation WHERE ffr.federation_resolver = $1)`, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return cdnIDs, false, nil
+		}
+		return cdnIDs, false, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err := rows.Scan(&cdnID); err != nil {
+			return cdnIDs, false, errors.New("scanning cdn IDs: " + err.Error())
+		}
+		cdnIDs = append(cdnIDs, cdnID)
+	}
+	return cdnIDs, true, nil
+}
+
 // GetProfileNameFromID returns the profile's name, whether a profile with ID exists, or any error.
 func GetProfileNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	name := ""
