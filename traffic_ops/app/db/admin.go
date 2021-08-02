@@ -352,15 +352,11 @@ func down() {
 
 func redo() {
 	initMigrate()
-	{
-		if downErr := Migrate.Steps(-1); downErr != nil {
-			die("Error running migrate down 1 in 'redo': " + downErr.Error())
-		}
+	if downErr := Migrate.Steps(-1); downErr != nil {
+		die("Error running migrate down 1 in 'redo': " + downErr.Error())
 	}
-	{
-		if upErr := Migrate.Steps(1); upErr != nil {
-			die("Error running migrate up 1 in 'redo': " + upErr.Error())
-		}
+	if upErr := Migrate.Steps(1); upErr != nil {
+		die("Error running migrate up 1 in 'redo': " + upErr.Error())
 	}
 }
 
