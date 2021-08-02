@@ -185,9 +185,7 @@ authorization for a given operation.
 Structurally, the only necessary changes are to the `/roles` and `/users`
 endpoints, which will need to be updated to output structures consistent with
 the changes outlined in the Data Model Impact section. The `/capabilities` and
-`/api_capabilities` endpoints will be removed (and we might consider renaming
-the `/server_capabilities` and `/server_server_capabilities` to drop the
-now-unnecessary "server_" qualifier).
+`/api_capabilities` endpoints will be removed.
 
 The more pervasive changes will be to all authenticated API endpoints which
 shall be updated to respect Permissions given the correct configuration
