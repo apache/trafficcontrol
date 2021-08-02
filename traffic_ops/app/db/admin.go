@@ -568,10 +568,10 @@ func main() {
 func initMigrate() {
 	var err error
 	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s", DBDriver, DBUser, DBPassword, HostIP, HostPort, DBName, SSLMode)
-	if !TrafficVault {
-		Migrate, err = migrate.New(DBMigrationsSource, connectionString)
-	} else {
+	if TrafficVault {
 		Migrate, err = migrate.New(TrafficVaultMigrationsPath, connectionString)
+	} else {
+		Migrate, err = migrate.New(DBMigrationsSource, connectionString)
 	}
 	if err != nil {
 		die("Starting Migrate: " + err.Error())
