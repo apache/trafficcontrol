@@ -23,6 +23,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"net/http"
 	"strconv"
 	"strings"
@@ -169,6 +170,16 @@ func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV4, inf *api.APIInfo
 			State:           util.StrPtr("Placeholder"),
 		},
 	}
+
+	if (inf.Config.DefaultCertificateInfo != nil && *inf.Config.DefaultCertificateInfo != config.DefaultCertificateInfo{}) {
+		defaultCertInfo := inf.Config.DefaultCertificateInfo
+		req.BusinessUnit = &defaultCertInfo.BusinessUnit
+		req.City = &defaultCertInfo.City
+		req.Organization = &defaultCertInfo.Organization
+		req.Country = &defaultCertInfo.Country
+		req.State = &defaultCertInfo.State
+	}
+
 	if err := generatePutTrafficVaultSSLKeys(req, tx, inf.Vault, context); err != nil {
 		return errors.New("generating and putting SSL keys: " + err.Error()), http.StatusInternalServerError
 	}

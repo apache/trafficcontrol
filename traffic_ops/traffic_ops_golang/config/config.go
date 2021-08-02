@@ -60,6 +60,7 @@ type Config struct {
 	Version                string
 	UseIMS                 bool `json:"use_ims"`
 	RoleBasedPermissions   bool `json:"role_based_permissions"`
+	DefaultCertificateInfo *DefaultCertificateInfo `json:"default_certificate_info"`
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -171,6 +172,14 @@ type ConfigAcmeAccount struct {
 	AcmeUrl      string `json:"acme_url"`
 	Kid          string `json:"kid"`
 	HmacEncoded  string `json:"hmac_encoded"`
+}
+
+type DefaultCertificateInfo struct {
+	BusinessUnit string `json:"business_unit"`
+	City         string `json:"city"`
+	Organization string `json:"organization"`
+	Country      string `json:"country"`
+	State        string `json:"state"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
