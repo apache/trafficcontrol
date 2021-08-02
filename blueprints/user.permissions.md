@@ -219,9 +219,13 @@ columns. However, the foreign key constraint on the `role_capability` table
 that links a "Capability" name to a row in the `capability` table should be
 dropped, as that is no longer the source of truth for valid Permissions.
 
-Optionally, a migration should really be added to make a user's username
-`NOT NULL`, since that field is actually required by the API and many things
-will break if it's `NULL`.
+Roles that exist already should be ensured via database migration to have
+whatever Permissions are necessary to use the API endpoints that their
+"Privilege Level" already allows them to use. For privilege levels that fall
+between values needed for any API endpoints, the only safe thing to do is "round
+down" and only give them the Permissions they would need to have the same level
+of API access as the next-lowest Privilege Level that **is** explicitly required
+by some method and/or endpoint.
 
 ## Documentation Impact
 The new configuration option will need to be documented, documentation for
