@@ -154,7 +154,7 @@ table of user Permissions, though it is not linked to the side navigation bar.
 This should be removed.
 
 The Roles' details pages will need to be augmented with controls for adding and
-removing Permissions. The Permissions available for adding to a user should
+removing Permissions. The Permissions available for adding to a Role should
 include an autocompletion of those known by Traffic Portal to exist, but
 shouldn't restrict the addition of Permissions not known to exist to accomodate
 running older versions of Traffic Portal with newer versions of Traffic Ops, as
