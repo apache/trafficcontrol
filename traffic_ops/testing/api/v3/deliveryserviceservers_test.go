@@ -414,7 +414,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 		{
 			serverName:  "atlanta-edge-01",
 			description: "missing requirements for server -> DS assignment",
-			err:         errors.New(`Caching server cannot be assigned to this delivery service without having the required delivery service capabilities`),
+			err:         errors.New("cannot be assigned to this delivery service"),
 			ssc:         sscs[0],
 			capability: tc.DeliveryServicesRequiredCapability{
 				DeliveryServiceID:  helperGetDeliveryServiceID(t, util.StrPtr("ds-test-minor-versions")),
