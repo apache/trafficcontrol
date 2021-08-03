@@ -1,9 +1,16 @@
+// Package apicapability defines the API handlers for Traffic Ops's API's
+// /api_capabilities endpoint.
+//
+// Deprecated: "Capabilities" (now called Permissions) are no longer handled
+// this way, and this package should be removed once API versions that use it
+// have been fully removed.
 package apicapability
 
 import (
 	"fmt"
 	"net/http"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -81,7 +88,7 @@ func getAPICapabilities(tx *sqlx.Tx, params map[string]string) ([]tc.APICapabili
 		usrErr, sysErr, errCode := api.ParseDBError(err)
 		return nil, errCode, usrErr, sysErr
 	}
-	defer rows.Close()
+	defer log.Close(rows, "reading APICapabilities from database")
 
 	apiCaps := []tc.APICapability{}
 	for rows.Next() {

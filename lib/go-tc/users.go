@@ -33,6 +33,254 @@ import (
 	"github.com/go-ozzo/ozzo-validation/is"
 )
 
+// A UserV50 is a representation of a Traffic Ops user as it appears in version
+// 5.0 of Traffic Ops's API.
+type UserV50 struct {
+	AddressLine1         *string    `json:"addressLine1" db:"address_line1"`
+	AddressLine2         *string    `json:"addressLine2" db:"address_line2"`
+	ChangeLogCount       *int       `json:"changeLogCount" db:"change_log_count"`
+	City                 *string    `json:"city" db:"city"`
+	Company              *string    `json:"company" db:"company"`
+	ConfirmLocalPassword *string    `json:"confirmLocalPasswd,omitempty" db:"confirm_local_passwd"`
+	Country              *string    `json:"country" db:"country"`
+	Email                *string    `json:"email" db:"email"`
+	FullName             string     `json:"fullName" db:"full_name"`
+	GID                  *int       `json:"gid"`
+	ID                   *int       `json:"id" db:"id"`
+	LastAuthenticated    time.Time  `json:"lastAuthenticated" db:"last_authenticated"`
+	LastUpdated          time.Time  `json:"lastUpdated" db:"last_updated"`
+	LocalPassword        *string    `json:"localPasswd,omitempty" db:"local_passwd"`
+	NewUser              bool       `json:"newUser" db:"new_user"`
+	PhoneNumber          *string    `json:"phoneNumber" db:"phone_number"`
+	PostalCode           *string    `json:"postalCode" db:"postal_code"`
+	PublicSSHKey         *string    `json:"publicSshKey" db:"public_ssh_key"`
+	RegistrationSent     *time.Time `json:"registrationSent" db:"registration_sent"`
+	Role                 string     `json:"role" db:"role"`
+	StateOrProvince      *string    `json:"stateOrProvince" db:"state_or_province"`
+	Tenant               *string    `json:"tenant"`
+	TenantID             int        `json:"tenantId" db:"tenant_id"`
+	Token                *string    `json:"-" db:"token"`
+	UID                  *int       `json:"uid"`
+	Username             string     `json:"username" db:"username"`
+}
+
+// UsersResponseV50 is the type of a response from Traffic Ops to requests made
+// to /users which return more than one user.
+type UsersResponseV50 struct {
+	Response []UserV50 `json:"response"`
+	Alerts
+}
+
+// UserResponseV50 is the type of a response from Traffic Ops to requests made
+// to /users which return one user.
+type UserResponseV50 struct {
+	Response UserV50 `json:"response"`
+	Alerts
+}
+
+// copyStringIfNotNil makes a deep copy of s - unless it's nil, in which case it
+// just returns nil.
+func copyStringIfNotNil(s *string) *string {
+	if s == nil {
+		return nil
+	}
+	ret := new(string)
+	*ret = *s
+	return ret
+}
+
+// copyIntIfNotNil makes a deep copy of i - unless it's nil, in which case it
+// just returns nil.
+func copyIntIfNotNil(i *int) *int {
+	if i == nil {
+		return nil
+	}
+	ret := new(int)
+	*ret = *i
+	return ret
+}
+
+// UpgradeFromLegacyUser converts a User to a UserV50 (as seen in API versions 5.x)
+func (u User) UpgradeFromLegacyUser() UserV50 {
+	var ret UserV50
+	ret.AddressLine1 = copyStringIfNotNil(u.AddressLine1)
+	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
+	ret.City = copyStringIfNotNil(u.City)
+	ret.Company = copyStringIfNotNil(u.Company)
+	ret.ConfirmLocalPassword = copyStringIfNotNil(u.ConfirmLocalPassword)
+	ret.Country = copyStringIfNotNil(u.Country)
+	ret.Email = copyStringIfNotNil(u.Email)
+	ret.GID = copyIntIfNotNil(u.GID)
+	ret.ID = copyIntIfNotNil(u.ID)
+	ret.LocalPassword = copyStringIfNotNil(u.LocalPassword)
+	ret.PhoneNumber = copyStringIfNotNil(u.PhoneNumber)
+	ret.PostalCode = copyStringIfNotNil(u.PostalCode)
+	ret.PublicSSHKey = copyStringIfNotNil(u.PublicSSHKey)
+	ret.StateOrProvince = copyStringIfNotNil(u.StateOrProvince)
+	ret.Tenant = copyStringIfNotNil(u.Tenant)
+	ret.Token = copyStringIfNotNil(u.Token)
+	ret.UID = copyIntIfNotNil(u.UID)
+	if u.FullName != nil {
+		ret.FullName = *u.FullName
+	}
+	if u.LastUpdated != nil {
+		ret.LastUpdated = u.LastUpdated.Time
+	}
+	if u.NewUser != nil {
+		ret.NewUser = *u.NewUser
+	}
+	if u.RegistrationSent != nil {
+		ret.RegistrationSent = new(time.Time)
+		*ret.RegistrationSent = u.RegistrationSent.Time
+	}
+	if u.RoleName != nil {
+		ret.Role = *u.RoleName
+	}
+	if u.TenantID != nil {
+		ret.TenantID = *u.TenantID
+	}
+	if u.Username != nil {
+		ret.Username = *u.Username
+	}
+	return ret
+}
+
+// UpgradeFromUserV40 converts a UserV40 to a UserV50 (as seen in API versions 5.x)
+func (u UserV40) UpgradeFromUserV40() UserV50 {
+	var ret UserV50
+	ret.AddressLine1 = copyStringIfNotNil(u.AddressLine1)
+	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
+	ret.City = copyStringIfNotNil(u.City)
+	ret.Company = copyStringIfNotNil(u.Company)
+	ret.ConfirmLocalPassword = copyStringIfNotNil(u.ConfirmLocalPassword)
+	ret.Country = copyStringIfNotNil(u.Country)
+	ret.Email = copyStringIfNotNil(u.Email)
+	ret.GID = copyIntIfNotNil(u.GID)
+	ret.ID = copyIntIfNotNil(u.ID)
+	ret.LocalPassword = copyStringIfNotNil(u.LocalPassword)
+	ret.PhoneNumber = copyStringIfNotNil(u.PhoneNumber)
+	ret.PostalCode = copyStringIfNotNil(u.PostalCode)
+	ret.PublicSSHKey = copyStringIfNotNil(u.PublicSSHKey)
+	ret.StateOrProvince = copyStringIfNotNil(u.StateOrProvince)
+	ret.Tenant = copyStringIfNotNil(u.Tenant)
+	ret.Token = copyStringIfNotNil(u.Token)
+	ret.UID = copyIntIfNotNil(u.UID)
+	ret.ChangeLogCount = copyIntIfNotNil(u.ChangeLogCount)
+	if u.LastAuthenticated != nil {
+		ret.LastAuthenticated = *u.LastAuthenticated
+	}
+
+	if u.FullName != nil {
+		ret.FullName = *u.FullName
+	}
+	if u.LastUpdated != nil {
+		ret.LastUpdated = u.LastUpdated.Time
+	}
+	if u.NewUser != nil {
+		ret.NewUser = *u.NewUser
+	}
+	if u.RegistrationSent != nil {
+		ret.RegistrationSent = new(time.Time)
+		*ret.RegistrationSent = u.RegistrationSent.Time
+	}
+	if u.RoleName != nil {
+		ret.Role = *u.RoleName
+	}
+	if u.TenantID != nil {
+		ret.TenantID = *u.TenantID
+	}
+	if u.Username != nil {
+		ret.Username = *u.Username
+	}
+	return ret
+}
+
+// Downgrade converts a UserV50 to a UserV40 (as seen in API versions 4.x) and User (as seen in API versions < 4.0)
+func (u UserV50) Downgrade() (UserV40, User) {
+	var ret User
+	var retUserV40 UserV40
+	ret.FullName = new(string)
+	*ret.FullName = u.FullName
+	ret.LastUpdated = TimeNoModFromTime(u.LastUpdated)
+	ret.NewUser = new(bool)
+	*ret.NewUser = u.NewUser
+	ret.RoleName = new(string)
+	*ret.RoleName = u.Role
+	ret.Role = nil
+	ret.TenantID = new(int)
+	*ret.TenantID = u.TenantID
+	ret.Username = new(string)
+	*ret.Username = u.Username
+
+	ret.AddressLine1 = copyStringIfNotNil(u.AddressLine1)
+	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
+	ret.City = copyStringIfNotNil(u.City)
+	ret.Company = copyStringIfNotNil(u.Company)
+	ret.ConfirmLocalPassword = copyStringIfNotNil(u.ConfirmLocalPassword)
+	ret.Country = copyStringIfNotNil(u.Country)
+	ret.Email = copyStringIfNotNil(u.Email)
+	ret.GID = copyIntIfNotNil(u.GID)
+	ret.ID = copyIntIfNotNil(u.ID)
+	ret.LocalPassword = copyStringIfNotNil(u.LocalPassword)
+	ret.PhoneNumber = copyStringIfNotNil(u.PhoneNumber)
+	ret.PostalCode = copyStringIfNotNil(u.PostalCode)
+	ret.PublicSSHKey = copyStringIfNotNil(u.PublicSSHKey)
+	if u.RegistrationSent != nil {
+		ret.RegistrationSent = TimeNoModFromTime(*u.RegistrationSent)
+	}
+	ret.StateOrProvince = copyStringIfNotNil(u.StateOrProvince)
+	ret.Tenant = copyStringIfNotNil(u.Tenant)
+	ret.Token = copyStringIfNotNil(u.Token)
+	ret.UID = copyIntIfNotNil(u.UID)
+
+	retUserV40 = UserV40{
+		User:              ret,
+		ChangeLogCount:    copyIntIfNotNil(u.ChangeLogCount),
+		LastAuthenticated: &u.LastAuthenticated,
+	}
+	return retUserV40, ret
+}
+
+// Downgrade converts a UserV50 to a User as seen in API versions 2.x and 3.x
+func (u UserV50) DowngradeToLegacyUser() User {
+	var ret User
+	ret.FullName = new(string)
+	*ret.FullName = u.FullName
+	ret.LastUpdated = TimeNoModFromTime(u.LastUpdated)
+	ret.NewUser = new(bool)
+	*ret.NewUser = u.NewUser
+	ret.RoleName = new(string)
+	*ret.RoleName = u.Role
+	ret.Role = nil
+	ret.TenantID = new(int)
+	*ret.TenantID = u.TenantID
+	ret.Username = new(string)
+	*ret.Username = u.Username
+
+	ret.AddressLine1 = copyStringIfNotNil(u.AddressLine1)
+	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
+	ret.City = copyStringIfNotNil(u.City)
+	ret.Company = copyStringIfNotNil(u.Company)
+	ret.ConfirmLocalPassword = copyStringIfNotNil(u.ConfirmLocalPassword)
+	ret.Country = copyStringIfNotNil(u.Country)
+	ret.Email = copyStringIfNotNil(u.Email)
+	ret.GID = copyIntIfNotNil(u.GID)
+	ret.ID = copyIntIfNotNil(u.ID)
+	ret.LocalPassword = copyStringIfNotNil(u.LocalPassword)
+	ret.PhoneNumber = copyStringIfNotNil(u.PhoneNumber)
+	ret.PostalCode = copyStringIfNotNil(u.PostalCode)
+	ret.PublicSSHKey = copyStringIfNotNil(u.PublicSSHKey)
+	if u.RegistrationSent != nil {
+		ret.RegistrationSent = TimeNoModFromTime(*u.RegistrationSent)
+	}
+	ret.StateOrProvince = copyStringIfNotNil(u.StateOrProvince)
+	ret.Tenant = copyStringIfNotNil(u.Tenant)
+	ret.Token = copyStringIfNotNil(u.Token)
+	ret.UID = copyIntIfNotNil(u.UID)
+
+	return ret
+}
+
 // UserCredentials contains Traffic Ops login credentials.
 type UserCredentials struct {
 	Username string `json:"u"`
@@ -81,7 +329,7 @@ type User struct {
 	// https://github.com/apache/trafficcontrol/blob/3b5dd406bf1a0bb456c062b0f6a465ec0617d8ef/traffic_ops/traffic_ops_golang/user/user.go#L197
 	// It's done that way in order to maintain "rolename" vs "roleName" JSON field capitalization for the different users APIs.
 	// TODO: make the breaking API change to make all user APIs use "roleName" consistently.
-	RoleName *string `json:"roleName,omitempty" db:"-"`
+	RoleName *string `json:"roleName,omitempty" db:"role_name"`
 	commonUserFields
 }
 
