@@ -28,7 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
-const RegexRemapPrefix = "regex_remap_"
 const CacheUrlPrefix = "cacheurl_"
 const RefetchSuffix = "##REFETCH##"
 const RefreshSuffix = "##REFRESH##"

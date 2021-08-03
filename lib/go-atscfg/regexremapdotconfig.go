@@ -25,7 +25,12 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// ContentTypeRegexRemapDotConfig is the MIME type of the contents of a
+// regex_remap.config ATS configuration file.
 const ContentTypeRegexRemapDotConfig = ContentTypeTextASCII
+
+// LineCommentRegexRemapDotConfig is the string used to indicate the start of a
+// line comment in the grammar of a regex_remap.config ATS configuration file.
 const LineCommentRegexRemapDotConfig = LineCommentHash
 
 // RegexRemapDotConfigOpts contains settings to configure generation options.
@@ -36,6 +41,14 @@ type RegexRemapDotConfigOpts struct {
 	HdrComment string
 }
 
+// RegexRemapPrefix is a prefix applied to regex_remap.config ATS configuration
+// files for a sepecific Delivery Service. The rest of the name is made up of
+// the Delivery Service's XMLID, followed by '.config' as a suffix (or "file
+// extension").
+const RegexRemapPrefix = "regex_remap_"
+
+// MakeRegexRemapDotConfig constructs a regex_remap.config file (specifically
+// the name is given by 'fileName') for a cache server.
 func MakeRegexRemapDotConfig(
 	fileName string,
 	server *Server,
@@ -55,7 +68,6 @@ func MakeRegexRemapDotConfig(
 		return Cfg{}, makeErr(warnings, "file '"+fileName+"' not of the form 'regex_remap_*.config! Please file a bug with Traffic Control, this should never happen")
 	}
 
-	// TODO verify prefix and suffix exist, and warn if they don't? Perl doesn't
 	dsName := strings.TrimSuffix(strings.TrimPrefix(fileName, RegexRemapPrefix), configSuffix)
 	if dsName == "" {
 		return Cfg{}, makeErr(warnings, "file '"+fileName+"' has no delivery service name!")
