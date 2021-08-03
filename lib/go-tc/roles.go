@@ -75,8 +75,9 @@ func (roleV50 RoleV50) Downgrade() Role {
 	if len(roleV50.Permissions) == 0 {
 		role.Capabilities = nil
 	} else {
-		*role.Capabilities = make([]string, len(roleV50.Permissions))
-		copy(*role.Capabilities, roleV50.Permissions)
+		caps := make([]string, len(roleV50.Permissions))
+		copy(caps, roleV50.Permissions)
+		role.Capabilities = &caps
 	}
 	return role
 }

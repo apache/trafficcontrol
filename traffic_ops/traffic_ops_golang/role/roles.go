@@ -315,65 +315,65 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		middleware.NotImplementedHandler().ServeHTTP(w, r)
 		return
 	}
-
+	tx := inf.Tx.Tx
 	if version.Major >= 5 {
 		if err := json.NewDecoder(r.Body).Decode(&roleV50); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
 		if err := Validate(inf.Tx, role, roleV50, version); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
 		roleDesc = *roleV50.Description
 		roleCapabilities = &roleV50.Permissions
 		if roleName, ok = inf.Params["name"]; !ok {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		roleID, err = dbhelpers.GetRoleIDFromName(inf.Tx.Tx, roleName)
+		roleID, err = dbhelpers.GetRoleIDFromName(tx, roleName)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no ID exists for the supplied role name"), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no ID exists for the supplied role name"), nil)
 			return
 		}
 
 		existingLastUpdated, found, err := api.GetLastUpdated(inf.Tx, roleID, "role")
 		if err == nil && found == false {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no role found with that ID"), nil)
+			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no role found with that ID"), nil)
 			return
 		}
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 			return
 		}
 
 		if !api.IsUnmodified(r.Header, *existingLastUpdated) {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusPreconditionFailed, api.ResourceModifiedError, nil)
+			api.HandleErr(w, r, tx, http.StatusPreconditionFailed, api.ResourceModifiedError, nil)
 			return
 		}
-		rows, err := inf.Tx.Tx.Query(updateRoleQuery(), roleDesc, roleName)
+		rows, err := tx.Query(updateRoleQuery(), roleDesc, roleName)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("updating role: "+err.Error()))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("updating role: "+err.Error()))
 			return
 		}
 		defer rows.Close()
 		if !rows.Next() {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no role found with this ID"), nil)
+			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no role found with this ID"), nil)
 			return
 		}
 		lastUpdated := tc.TimeNoMod{}
 		if err := rows.Scan(&lastUpdated); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("scanning lastUpdated from role update: "+err.Error()))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning lastUpdated from role update: "+err.Error()))
 			return
 		}
 		roleV50.LastUpdated = &lastUpdated
 	} else {
 		if err := json.NewDecoder(r.Body).Decode(&role); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
 		if err := Validate(inf.Tx, role, roleV50, version); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("name and/or description and/or privLevel can not be empty"), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("name and/or description and/or privLevel can not be empty"), nil)
 			return
 		}
 		roleName = *role.Name
@@ -381,37 +381,37 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		privLevel = *role.PrivLevel
 		roleCapabilities = role.Capabilities
 		if roleIDParam, ok := inf.Params["id"]; !ok {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must supply a role ID to update"), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply a role ID to update"), nil)
 			return
 		} else {
 			roleID, err = strconv.Atoi(roleIDParam)
 			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must supply an integral role ID to update"), nil)
+				api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply an integral role ID to update"), nil)
 				return
 			}
 		}
 		if privLevel > inf.User.PrivLevel {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("can not create a role with a higher priv level than your own"), nil)
+			api.HandleErr(w, r, tx, http.StatusForbidden, errors.New("can not create a role with a higher priv level than your own"), nil)
 			return
 		}
 		existingLastUpdated, found, err := api.GetLastUpdated(inf.Tx, roleID, "role")
 		if err == nil && found == false {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no role found with that ID"), nil)
+			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no role found with that ID"), nil)
 			return
 		}
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 			return
 		}
 
 		if !api.IsUnmodified(r.Header, *existingLastUpdated) {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusPreconditionFailed, api.ResourceModifiedError, nil)
+			api.HandleErr(w, r, tx, http.StatusPreconditionFailed, api.ResourceModifiedError, nil)
 			return
 		}
 
-		rows, err := inf.Tx.Tx.Query(updateLegacyRoleQuery(), roleName, roleDesc, roleID)
+		rows, err := tx.Query(updateLegacyRoleQuery(), roleName, roleDesc, roleID)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("updating role here: "+err.Error()))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("updating role here: "+err.Error()))
 			return
 		}
 		rows.Close()
@@ -420,12 +420,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	if roleCapabilities != nil && *roleCapabilities != nil {
 		userErr, sysErr, errCode = deleteRoleCapabilityAssociations(inf.Tx, roleID)
 		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
 		}
 		userErr, sysErr, errCode = createRoleCapabilityAssociations(inf.Tx, roleID, roleCapabilities)
 		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
 		}
 	}
@@ -537,13 +537,13 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	var roleID int
 	var err error
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
+	tx := inf.Tx.Tx
 	version := inf.Version
 	if version == nil {
 		middleware.NotImplementedHandler().ServeHTTP(w, r)
@@ -552,22 +552,22 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	if version.Major >= 5 {
 		if roleName, ok = inf.Params["name"]; !ok {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must supply a role name to delete"), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply a role name to delete"), nil)
 			return
 		}
-		roleID, err = dbhelpers.GetRoleIDFromName(inf.Tx.Tx, roleName)
+		roleID, err = dbhelpers.GetRoleIDFromName(tx, roleName)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no ID exists for the supplied role name"), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no ID exists for the supplied role name"), nil)
 			return
 		}
 	} else {
 		if roleIDParam, ok := inf.Params["id"]; !ok {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must supply a role ID to delete"), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply a role ID to delete"), nil)
 			return
 		} else {
 			roleID, err = strconv.Atoi(roleIDParam)
 			if err != nil {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("must supply an integral role ID to delete"), nil)
+				api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply an integral role ID to delete"), nil)
 				return
 			}
 		}
@@ -575,22 +575,22 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	assignedUsers := 0
 	if err := inf.Tx.Get(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", roleID); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("role delete counting assigned users: "+err.Error()))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("role delete counting assigned users: "+err.Error()))
 		return
 	} else if assignedUsers != 0 {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("can not delete a role with %d assigned users", assignedUsers), nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("can not delete a role with %d assigned users", assignedUsers), nil)
 		return
 	}
 
-	rows, err := inf.Tx.Tx.Query(deleteRoleQuery(), roleID)
+	rows, err := tx.Query(deleteRoleQuery(), roleID)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting role: "+err.Error()))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("deleting role: "+err.Error()))
 		return
 	}
 	rows.Close()
 	userErr, sysErr, errCode = deleteRoleCapabilityAssociations(inf.Tx, roleID)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "role was deleted.")
@@ -625,6 +625,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	tx := inf.Tx.Tx
 	version := inf.Version
 	if version == nil {
 		middleware.NotImplementedHandler().ServeHTTP(w, r)
@@ -633,11 +634,11 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	if version.Major >= 5 {
 		if err := json.NewDecoder(r.Body).Decode(&roleV50); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
 		if err := Validate(inf.Tx, role, roleV50, version); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
 		roleName = *roleV50.Name
@@ -646,11 +647,11 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		roleCapabilities = &roleV50.Permissions
 	} else {
 		if err := json.NewDecoder(r.Body).Decode(&role); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
 		if err := Validate(inf.Tx, role, roleV50, version); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
 		roleName = *role.Name
@@ -659,9 +660,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		roleCapabilities = role.Capabilities
 	}
 
-	rows, err := inf.Tx.Tx.Query(createQuery(), roleName, roleDesc, privLevel)
+	rows, err := tx.Query(createQuery(), roleName, roleDesc, privLevel)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("creating role: "+err.Error()))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("creating role: "+err.Error()))
 		return
 	}
 	defer rows.Close()
@@ -669,7 +670,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var throwaway interface{}
 		if err := rows.Scan(&roleID, &throwaway); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("role create: scanning role ID: "+err.Error()))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("role create: scanning role ID: "+err.Error()))
 			return
 		}
 	}
@@ -677,7 +678,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	if roleCapabilities != nil && len(*roleCapabilities) > 0 {
 		userErr, sysErr, errCode = createRoleCapabilityAssociations(inf.Tx, roleID, roleCapabilities)
 		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
 		}
 	}
@@ -711,13 +712,13 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	var maxTime time.Time
 	var runSecond bool
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
+	tx := inf.Tx.Tx
 	version := inf.Version
 	if version == nil {
 		middleware.NotImplementedHandler().ServeHTTP(w, r)
