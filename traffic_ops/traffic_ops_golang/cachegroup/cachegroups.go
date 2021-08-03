@@ -414,22 +414,22 @@ func (cg *TOCacheGroup) createCoordinate() (*int, error) {
 	return coordinateID, nil
 }
 
-func (cg *TOCacheGroup) updateCoordinate() error {
+func (cg *TOCacheGroup) updateCoordinate() (*int, error, error, int) {
 	if cg.Latitude != nil && cg.Longitude != nil {
 		q := `UPDATE coordinate SET name = $1, latitude = $2, longitude = $3 WHERE id = (SELECT coordinate FROM cachegroup WHERE id = $4)`
 		result, err := cg.ReqInfo.Tx.Tx.Exec(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude, *cg.ID)
 		if err != nil {
-			return fmt.Errorf("updating coordinate for cachegroup '%s': %s", *cg.Name, err.Error())
+			return nil, errors.New("cachegroup name already exist, give different name"), tc.DBError, http.StatusBadRequest
 		}
 		rowsAffected, err := result.RowsAffected()
 		if err != nil {
-			return fmt.Errorf("updating coordinate for cachegroup '%s', getting rows affected: %s", *cg.Name, err.Error())
+			return nil, errors.New("updating coordinate for cachegroup , getting rows affected:" + *cg.Name + err.Error()), tc.DBError, http.StatusInternalServerError
 		}
 		if rowsAffected == 0 {
-			return fmt.Errorf("updating coordinate for cachegroup '%s', zero rows affected", *cg.Name)
+			return nil, errors.New("updating coordinate for cachegroup - Zero rows affected" + *cg.Name), tc.DBError, http.StatusInternalServerError
 		}
 	}
-	return nil
+	return nil, nil, nil, http.StatusBadRequest
 }
 
 func (cg *TOCacheGroup) deleteCoordinate(coordinateID int) error {
@@ -687,8 +687,8 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 		return nil, nil, nil, http.StatusOK
 	}
 
-	if err = cg.updateCoordinate(); err != nil {
-		return nil, err, tc.DBError, http.StatusInternalServerError
+	if err1, err2, DBError, statusCode := cg.updateCoordinate(); err != nil {
+		return err1, err2, DBError, statusCode
 	}
 	return coordinateID, nil, nil, http.StatusOK
 }
