@@ -63,26 +63,40 @@ func getConfigFile(prefix string, xmlId string) string {
 }
 
 const lastServerInActiveDeliveryServicesQuery = `
-SELECT deliveryservice_server.deliveryservice
-FROM deliveryservice_server
-INNER JOIN server ON server.id = deliveryservice_server.server
-INNER JOIN status ON status.id = server.status
-WHERE deliveryservice IN (
-	SELECT deliveryservice_server.deliveryservice
-	FROM deliveryservice_server
-	INNER JOIN deliveryservice ON deliveryservice.id = deliveryservice_server.deliveryservice
-	WHERE deliveryservice_server.server=$1
-	AND deliveryservice.active IS TRUE
+SELECT d.id, d.multi_site_origin
+FROM deliveryservice d
+INNER JOIN deliveryservice_server dss ON dss.deliveryservice = d.id
+INNER JOIN server s ON s.id = dss.server
+INNER JOIN status st ON st.id = s.status
+INNER JOIN type t ON t.id = s.type
+WHERE d.id IN (
+	SELECT dss.deliveryservice
+	FROM deliveryservice_server dss
+	INNER JOIN deliveryservice d ON d.id = dss.deliveryservice
+	WHERE dss.server=$1
+	AND d.active
 )
-AND NOT (deliveryservice_server.deliveryservice = ANY($2::BIGINT[]))
-AND (status.name = '` + string(tc.CacheStatusOnline) + `' OR status.name = '` + string(tc.CacheStatusReported) + `')
-GROUP BY deliveryservice_server.deliveryservice
-HAVING COUNT(deliveryservice_server.server) = 1
+AND NOT (dss.deliveryservice = ANY($2::BIGINT[]))
+AND (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
+AND t.name LIKE $3
+GROUP BY d.id, d.multi_site_origin
+HAVING COUNT(dss.server) = 1
 `
 
-func checkForLastServerInActiveDeliveryServices(serverID int, dsIDs []int, tx *sql.Tx) ([]int, error) {
+func checkForLastServerInActiveDeliveryServices(serverID int, serverType string, dsIDs []int, tx *sql.Tx) ([]int, error) {
 	violations := []int{}
-	rows, err := tx.Query(lastServerInActiveDeliveryServicesQuery, serverID, pq.Array(dsIDs))
+	var like string
+	isEdge := strings.HasPrefix(serverType, tc.CacheTypeEdge.String())
+	isOrigin := strings.HasPrefix(serverType, tc.OriginTypeName)
+	if isEdge {
+		like = tc.CacheTypeEdge.String() + "%"
+	} else if isOrigin {
+		like = tc.OriginTypeName + "%"
+	} else {
+		// by definition, only EDGE-type or ORG-type servers can be assigned
+		return violations, nil
+	}
+	rows, err := tx.Query(lastServerInActiveDeliveryServicesQuery, serverID, pq.Array(dsIDs), like)
 	if err != nil {
 		return violations, fmt.Errorf("querying: %v", err)
 	}
@@ -90,10 +104,13 @@ func checkForLastServerInActiveDeliveryServices(serverID int, dsIDs []int, tx *s
 
 	for rows.Next() {
 		var violation int
-		if err = rows.Scan(&violation); err != nil {
+		var mso bool
+		if err = rows.Scan(&violation, &mso); err != nil {
 			return violations, fmt.Errorf("scanning: %v", err)
 		}
-		violations = append(violations, violation)
+		if isEdge || (isOrigin && mso) {
+			violations = append(violations, violation)
+		}
 	}
 
 	return violations, nil
@@ -168,7 +185,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	if replace && (serverInfo.Status == tc.CacheStatusOnline.String() || serverInfo.Status == tc.CacheStatusReported.String()) {
-		currentDSIDs, err := checkForLastServerInActiveDeliveryServices(server, dsList, tx)
+		currentDSIDs, err := checkForLastServerInActiveDeliveryServices(server, serverInfo.Type, dsList, tx)
 		if err != nil {
 			sysErr = fmt.Errorf("checking for deliveryservices to which server #%d is the last assigned: %v", server, err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
@@ -176,18 +193,7 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 		}
 		if len(currentDSIDs) > 0 {
 			alertText := "Delivery Service assignment would leave Active Delivery Service"
-			if len(currentDSIDs) == 1 {
-				alertText += fmt.Sprintf(" #%d", currentDSIDs[0])
-			} else if len(currentDSIDs) == 2 {
-				alertText += fmt.Sprintf("s #%d and #%d", currentDSIDs[0], currentDSIDs[1])
-			} else {
-				dsNums := make([]string, 0, len(currentDSIDs)-1)
-				for _, dsID := range currentDSIDs[:len(currentDSIDs)-1] {
-					dsNums = append(dsNums, "#"+strconv.Itoa(dsID))
-				}
-				alertText += fmt.Sprintf("s %s, and #%d", strings.Join(dsNums, ", "), currentDSIDs[len(currentDSIDs)-1])
-			}
-			alertText += fmt.Sprintf("  with no '%s' or '%s' servers", tc.CacheStatusOnline, tc.CacheStatusReported)
+			alertText = InvalidStatusForDeliveryServicesAlertText(alertText, serverInfo.Type, currentDSIDs)
 			api.WriteAlerts(w, r, http.StatusConflict, tc.CreateAlerts(tc.ErrorLevel, alertText))
 			return
 		}
@@ -197,9 +203,6 @@ func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("getting server name from ID: "+err.Error()))
 		return
-		// TODO: Where does this 'ok' come from?
-	} else if !ok {
-		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no server with that ID found"), nil)
 	}
 
 	api.CreateChangeLogRawTx(api.ApiChange, "SERVER: "+serverInfo.HostName+", ID: "+strconv.Itoa(server)+", ACTION: Assigned "+strconv.Itoa(len(assignedDSes))+" DSes to server", inf.User, tx)
@@ -288,21 +291,20 @@ func checkTenancyAndCDN(tx *sql.Tx, serverCDN string, server int, serverInfo tc.
 
 // ValidateDSCapabilities checks that the server meets the requirements of each delivery service to be assigned.
 func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) (error, error, int) {
-	var dsCaps []string
 	sCaps, err := dbhelpers.GetServerCapabilitiesFromName(serverName, tx)
-
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
 
-	for _, id := range dsIDs {
-		dsCaps, err = dbhelpers.GetDSRequiredCapabilitiesFromID(id, tx)
-		if err != nil {
-			return nil, err, http.StatusInternalServerError
-		}
-		for _, dsc := range dsCaps {
-			if !util.ContainsStr(sCaps, dsc) {
-				return errors.New(fmt.Sprintf("Caching server cannot assign this delivery service without having the required delivery service capabilities: [%v] for server %s", dsCaps, serverName)), nil, http.StatusBadRequest
+	dsCaps, err := dbhelpers.GetRequiredCapabilitiesOfDeliveryServices(dsIDs, tx)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+
+	for id, caps := range dsCaps {
+		for _, dsrc := range caps {
+			if !util.ContainsStr(sCaps, dsrc) {
+				return errors.New(fmt.Sprintf("cache %s cannot assign delivery service %d without having the required delivery service capabilities: %v", serverName, id, dsCaps)), nil, http.StatusBadRequest
 			}
 		}
 	}
