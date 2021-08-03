@@ -40,12 +40,6 @@ if [[ ! $(su - postgres psql -w -c 'show is_superuser' </dev/null 2>/dev/null) =
 	exit 1
 fi
 
-# Install go and goose
-/opt/traffic_ops/install/bin/install_goose.sh
-
-# Add goose to the PATH
-source /etc/profile.d/traffic_ops.sh
-
 /opt/traffic_ops/install/bin/_postinstall "$@"
 
 # should all be owned by trafops user

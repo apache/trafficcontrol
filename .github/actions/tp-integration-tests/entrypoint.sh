@@ -148,7 +148,9 @@ fi
 
 to_build() {
   cd "${REPO_DIR}/traffic_ops/traffic_ops_golang"
-  go mod vendor -v
+  if  [[ ! -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]]; then
+    go mod vendor
+  fi
   go build .
 
   openssl req -new -x509 -nodes -newkey rsa:4096 -out localhost.crt -keyout localhost.key -subj "/CN=tptests";

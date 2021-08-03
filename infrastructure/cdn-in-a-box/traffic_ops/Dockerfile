@@ -56,7 +56,6 @@ RUN set -o nounset -o errexit && \
 	dnf -y $enable_repo install \
 		bind-utils           \
 		gettext              \
-		git                  \
 		# ip commands is used in set-to-ips-from-dns.sh
 		iproute              \
 		isomd5sum            \
@@ -71,8 +70,6 @@ RUN set -o nounset -o errexit && \
 		# required by the Traffic Ops RPM)
 		cpanminus            \
 		expat-devel          \
-		gcc-c++              \
-		golang               \
 		libcap               \
 		libcurl-devel        \
 		libidn-devel         \
@@ -96,8 +93,6 @@ FROM trafficops-dependencies AS trafficops
 EXPOSE 443
 
 WORKDIR /opt/traffic_ops/app
-ADD traffic_ops/install/bin/install_goose.sh ./
-RUN ./install_goose.sh && rm ./install_goose.sh
 
 ADD infrastructure/cdn-in-a-box/traffic_ops_data /traffic_ops_data
 
@@ -129,7 +124,8 @@ HEALTHCHECK --interval=10s --timeout=1s \
 
 FROM trafficops-dependencies as get-delve
 
-RUN go get -u github.com/go-delve/delve/cmd/dlv
+RUN dnf -y install git golang && \
+    go get -u github.com/go-delve/delve/cmd/dlv
 
 FROM trafficops AS trafficops-debug
 COPY --from=get-delve /root/go/bin /usr/bin

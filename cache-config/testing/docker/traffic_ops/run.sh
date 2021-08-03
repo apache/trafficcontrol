@@ -36,9 +36,6 @@
 # TO_DOMAIN
 # TRAFFIC_VAULT_PASS
 
-# make sure 'goose' is available 
-PATH=$PATH:/opt/traffic_ops/go/bin; export PATH
-
 # Check that env vars are set
 envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS TO_ADMIN_USER TO_ADMIN_PASS CERT_COUNTRY CERT_STATE CERT_CITY CERT_COMPANY TO_DOMAIN)
 for v in $envvars
@@ -125,9 +122,6 @@ EOM
 # install the golang version indicated in '/GO_VERSION'
 # exits on error.
 install_go
-
-# installs goose, exits on error
-/opt/traffic_ops/install/bin/install_goose.sh
 
 source /etc/environment
 if [ -z "$INITIALIZED" ]; then init; fi

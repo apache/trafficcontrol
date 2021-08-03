@@ -27,19 +27,18 @@ download_go() {
   go version
 }
 download_go
-GOPATH="$(mktemp -d)"
-export PATH="${GOPATH}/bin:${PATH}" GOPATH
 
-apk add --no-cache git gcc gettext postgresql-client musl-dev
-GO111MODULE=off go get -v github.com/kevinburke/goose/cmd/goose
-mv $GOPATH/bin/goose /bin/ &&\
-	apk del git gcc musl-dev
+if ! [ -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]; then
+	go mod vendor
+fi
 
-cd "traffic_ops/app/db"
+apk add --no-cache postgresql-client
 
-mv /dbconf.yml ./
+cd traffic_ops/app
 
-psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./create_tables.sql >/dev/null
-goose --env=test --path="$PWD" up
-psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./seeds.sql >/dev/null
-psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < ./patches.sql >/dev/null
+mv /dbconf.yml db/
+
+psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < db/create_tables.sql >/dev/null
+go run ./db --env=test migrate
+psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < db/seeds.sql >/dev/null
+psql -d postgresql://traffic_ops:twelve@postgres:5432/traffic_ops < db/patches.sql >/dev/null

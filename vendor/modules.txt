@@ -63,16 +63,27 @@ github.com/go-acme/lego/registration
 ## explicit
 github.com/go-ozzo/ozzo-validation
 github.com/go-ozzo/ozzo-validation/is
-# github.com/go-sql-driver/mysql v1.5.0
-## explicit
 # github.com/gofrs/flock v0.7.2-0.20190320160742-5135e617513b
 ## explicit
 github.com/gofrs/flock
-# github.com/golang/protobuf v1.4.2 => github.com/golang/protobuf v0.0.0-20171021043952-1643683e1b54
+# github.com/golang-migrate/migrate/v4 v4.14.1
+## explicit
+github.com/golang-migrate/migrate/v4
+github.com/golang-migrate/migrate/v4/database
+github.com/golang-migrate/migrate/v4/database/postgres
+github.com/golang-migrate/migrate/v4/internal/url
+github.com/golang-migrate/migrate/v4/source
+github.com/golang-migrate/migrate/v4/source/file
+github.com/golang-migrate/migrate/v4/source/httpfs
+# github.com/golang/protobuf v1.4.3
 github.com/golang/protobuf/proto
 # github.com/google/uuid v1.1.2
 ## explicit
 github.com/google/uuid
+# github.com/hashicorp/errwrap v1.0.0
+github.com/hashicorp/errwrap
+# github.com/hashicorp/go-multierror v1.1.0
+github.com/hashicorp/go-multierror
 # github.com/hydrogen18/stoppableListener v0.0.0-20151210151943-dadc9ccc400c
 ## explicit
 github.com/hydrogen18/stoppableListener
@@ -81,7 +92,7 @@ github.com/hydrogen18/stoppableListener
 github.com/influxdata/influxdb/client/v2
 github.com/influxdata/influxdb/models
 github.com/influxdata/influxdb/pkg/escape
-# github.com/jmoiron/sqlx v0.0.0-20170430194603-d9bd385d68c0
+# github.com/jmoiron/sqlx v1.2.0
 ## explicit
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
@@ -106,10 +117,11 @@ github.com/lestrrat/go-jwx/buffer
 github.com/lestrrat/go-jwx/internal/emap
 github.com/lestrrat/go-jwx/jwa
 github.com/lestrrat/go-jwx/jwk
-# github.com/lib/pq v0.0.0-20170707053602-dd1fe2071026
+# github.com/lib/pq v1.8.0
 ## explicit
 github.com/lib/pq
 github.com/lib/pq/oid
+github.com/lib/pq/scram
 # github.com/mattn/go-sqlite3 v1.14.5
 ## explicit
 # github.com/miekg/dns v1.0.6-0.20180406150955-01d59357d468
@@ -165,7 +177,7 @@ github.com/onsi/gomega/types
 # github.com/pborman/getopt/v2 v2.1.0
 ## explicit
 github.com/pborman/getopt/v2
-# github.com/pkg/errors v0.8.2-0.20190227000051-27936f6d90f9
+# github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
 # github.com/stretchr/testify v1.6.1
@@ -222,9 +234,35 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
-## explicit
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
+# google.golang.org/protobuf v1.25.0
+google.golang.org/protobuf/encoding/prototext
+google.golang.org/protobuf/encoding/protowire
+google.golang.org/protobuf/internal/descfmt
+google.golang.org/protobuf/internal/descopts
+google.golang.org/protobuf/internal/detrand
+google.golang.org/protobuf/internal/encoding/defval
+google.golang.org/protobuf/internal/encoding/messageset
+google.golang.org/protobuf/internal/encoding/tag
+google.golang.org/protobuf/internal/encoding/text
+google.golang.org/protobuf/internal/errors
+google.golang.org/protobuf/internal/fieldsort
+google.golang.org/protobuf/internal/filedesc
+google.golang.org/protobuf/internal/filetype
+google.golang.org/protobuf/internal/flags
+google.golang.org/protobuf/internal/genid
+google.golang.org/protobuf/internal/impl
+google.golang.org/protobuf/internal/mapsort
+google.golang.org/protobuf/internal/pragma
+google.golang.org/protobuf/internal/set
+google.golang.org/protobuf/internal/strs
+google.golang.org/protobuf/internal/version
+google.golang.org/protobuf/proto
+google.golang.org/protobuf/reflect/protoreflect
+google.golang.org/protobuf/reflect/protoregistry
+google.golang.org/protobuf/runtime/protoiface
+google.golang.org/protobuf/runtime/protoimpl
 # gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 ## explicit
 gopkg.in/DATA-DOG/go-sqlmock.v1
@@ -244,3 +282,4 @@ gopkg.in/tomb.v1
 # gopkg.in/yaml.v2 v2.3.0 => gopkg.in/yaml.v2 v2.2.8
 ## explicit
 gopkg.in/yaml.v2
+# github.com/golang/protobuf v1.4.2 => github.com/golang/protobuf v0.0.0-20171021043952-1643683e1b54

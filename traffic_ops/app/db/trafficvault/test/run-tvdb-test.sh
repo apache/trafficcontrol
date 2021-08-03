@@ -27,11 +27,11 @@ export PGHOST="$DB_SERVER" PGPORT="$DB_PORT" PGUSER="$DB_USER" PGDATABASE="$DB_N
 
 # Write config files
 set -x
-if [[ ! -r /goose-config.sh ]]; then
-	echo "/goose-config.sh not found/readable"
+if [[ ! -r /db-config.sh ]]; then
+	echo "/db-config.sh not found/readable"
 	exit 1
 fi
-. /goose-config.sh
+. /db-config.sh
 
 if [[ ! -r /reencrypt-config.sh ]]; then
 	echo "/reencrypt-config.sh not found/readable"
@@ -69,7 +69,7 @@ get_current_db_version() {
         echo "failed to get dbversion: $dbversion_output"
         return
     fi
-    local version=$(echo "$dbversion_output" | egrep '^goose: dbversion [[:digit:]]+$' | awk '{print $3}')
+    local version=$(echo "$dbversion_output" | egrep '^dbversion [[:digit:]]+$' | awk '{print $2}')
     if [[ -z "$version" ]]; then
         echo "failed to get dbversion from output: $db_version_output"
         return

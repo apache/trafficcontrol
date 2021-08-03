@@ -27,24 +27,31 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
+
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"gopkg.in/yaml.v2"
 )
 
 type DBConfig struct {
-	Development GooseConfig `yaml:"development"`
-	Test        GooseConfig `yaml:"test"`
-	Integration GooseConfig `yaml:"integration"`
-	Production  GooseConfig `yaml:"production"`
+	Development EnvConfig `yaml:"development"`
+	Test        EnvConfig `yaml:"test"`
+	Integration EnvConfig `yaml:"integration"`
+	Production  EnvConfig `yaml:"production"`
 }
 
-type GooseConfig struct {
+type EnvConfig struct {
 	Driver string `yaml:"driver"`
 	Open   string `yaml:"open"`
 }
 
-func (conf DBConfig) getGooseConfig(env string) (GooseConfig, error) {
+func (conf DBConfig) getEnvironmentConfig(env string) (EnvConfig, error) {
 	switch env {
 	case EnvDevelopment:
 		return conf.Development, nil
@@ -55,7 +62,7 @@ func (conf DBConfig) getGooseConfig(env string) (GooseConfig, error) {
 	case EnvProduction:
 		return conf.Production, nil
 	default:
-		return GooseConfig{}, errors.New("invalid environment: " + env)
+		return EnvConfig{}, errors.New("invalid environment: " + env)
 	}
 }
 
@@ -66,43 +73,49 @@ const (
 	EnvIntegration = "integration"
 	EnvProduction  = "production"
 
-	// keys in the goose config's "open" string value
+	// keys in the database config's "open" string value
 	HostKey     = "host"
 	PortKey     = "port"
 	UserKey     = "user"
 	PasswordKey = "password"
 	DBNameKey   = "dbname"
+	SSLModeKey  = "sslmode"
 
 	// available commands
-	CmdCreateDB   = "createdb"
-	CmdDropDB     = "dropdb"
-	CmdCreateUser = "create_user"
-	CmdDropUser   = "drop_user"
-	CmdShowUsers  = "show_users"
-	CmdReset      = "reset"
-	CmdUpgrade    = "upgrade"
-	CmdMigrate    = "migrate"
-	CmdDown       = "down"
-	CmdRedo       = "redo"
+	CmdCreateDB        = "createdb"
+	CmdDropDB          = "dropdb"
+	CmdCreateMigration = "create_migration"
+	CmdCreateUser      = "create_user"
+	CmdDropUser        = "drop_user"
+	CmdShowUsers       = "show_users"
+	CmdReset           = "reset"
+	CmdUpgrade         = "upgrade"
+	CmdMigrate         = "migrate"
+	CmdUp              = "up"
+	CmdDown            = "down"
+	CmdRedo            = "redo"
+	// Deprecated: Migrate only tracks migration version and dirty status, not a status for each migration.
+	// Use CmdDBVersion to check the migration version and dirty status.
 	CmdStatus     = "status"
 	CmdDBVersion  = "dbversion"
 	CmdSeed       = "seed"
 	CmdLoadSchema = "load_schema"
 	CmdPatch      = "patch"
 
-	// goose commands that don't match the commands for this tool
-	GooseUp = "up"
-
-	DBConfigPath       = "db/dbconf.yml"
-	DBSeedsPath        = "db/seeds.sql"
-	DBSchemaPath       = "db/create_tables.sql"
-	DBPatchesPath      = "db/patches.sql"
+	dbDir              = "db/"
+	DBConfigPath       = dbDir + "dbconf.yml"
+	DBMigrationsPath   = dbDir + "migrations"
+	DBMigrationsSource = "file:" + DBMigrationsPath
+	DBSeedsPath        = dbDir + "seeds.sql"
+	DBSchemaPath       = dbDir + "create_tables.sql"
+	DBPatchesPath      = dbDir + "patches.sql"
 	DefaultEnvironment = EnvDevelopment
 	DefaultDBSuperUser = "postgres"
 
-	TrafficVaultDBConfigPath = "db/trafficvault/dbconf.yml"
-	TrafficVaultDir          = "db/trafficvault"
-	TrafficVaultSchemaPath   = "db/trafficvault/create_tables.sql"
+	TrafficVaultDBConfigPath   = TrafficVaultDir + "dbconf.yml"
+	TrafficVaultMigrationsPath = "file:" + TrafficVaultDir + "migrations"
+	TrafficVaultDir            = dbDir + "trafficvault/"
+	TrafficVaultSchemaPath     = TrafficVaultDir + "create_tables.sql"
 )
 
 var (
@@ -111,12 +124,16 @@ var (
 	TrafficVault bool
 
 	// globals that are parsed out of DBConfigFile and used in commands
-	DBName      string
-	DBSuperUser = DefaultDBSuperUser
-	DBUser      string
-	DBPassword  string
-	HostIP      string
-	HostPort    string
+	DBDriver      string
+	DBName        string
+	DBSuperUser   = DefaultDBSuperUser
+	DBUser        string
+	DBPassword    string
+	HostIP        string
+	HostPort      string
+	SSLMode       string
+	Migrate       *migrate.Migrate
+	MigrationName string
 )
 
 func parseDBConfig() error {
@@ -135,14 +152,15 @@ func parseDBConfig() error {
 		return errors.New("unmarshalling DB conf yaml: " + err.Error())
 	}
 
-	gooseCfg, err := dbConfig.getGooseConfig(Environment)
+	envConfig, err := dbConfig.getEnvironmentConfig(Environment)
 	if err != nil {
-		return errors.New("getting goose config: " + err.Error())
+		return errors.New("getting environment config: " + err.Error())
 	}
 
+	DBDriver = envConfig.Driver
 	// parse the 'open' string into a map
 	open := make(map[string]string)
-	pairs := strings.Split(gooseCfg.Open, " ")
+	pairs := strings.Split(envConfig.Open, " ")
 	for _, pair := range pairs {
 		if pair == "" {
 			continue
@@ -155,25 +173,14 @@ func parseDBConfig() error {
 	}
 
 	ok := false
-	HostIP, ok = open[HostKey]
-	if !ok {
-		return errors.New("unable to get '" + HostKey + "' for environment '" + Environment + "'")
-	}
-	HostPort, ok = open[PortKey]
-	if !ok {
-		return errors.New("unable to get '" + PortKey + "' for environment '" + Environment + "'")
-	}
-	DBUser, ok = open[UserKey]
-	if !ok {
-		return errors.New("unable to get '" + UserKey + "' for environment '" + Environment + "'")
-	}
-	DBPassword, ok = open[PasswordKey]
-	if !ok {
-		return errors.New("unable to get '" + PasswordKey + "' for environment '" + Environment + "'")
-	}
-	DBName, ok = open[DBNameKey]
-	if !ok {
-		return errors.New("unable to get '" + DBNameKey + "' for environment '" + Environment + "'")
+	stringPointers := []*string{&HostIP, &HostPort, &DBUser, &DBPassword, &DBName, &SSLMode}
+	keys := []string{HostKey, PortKey, UserKey, PasswordKey, DBNameKey, SSLModeKey}
+	for index, stringPointer := range stringPointers {
+		key := keys[index]
+		*stringPointer, ok = open[key]
+		if !ok {
+			return errors.New("unable to get '" + key + "' for environment '" + Environment + "'")
+		}
 	}
 
 	return nil
@@ -207,6 +214,46 @@ func dropDB() {
 	fmt.Printf("%s", out)
 	if err != nil {
 		die("Can't drop db " + DBName)
+	}
+}
+
+func createMigration() {
+	const apacheLicense2 = `/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership.  The ASF
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+`
+	var err error
+	if err = os.MkdirAll(DBMigrationsPath, os.ModePerm); err != nil {
+		die("Creating migrations directory " + DBMigrationsPath + ": " + err.Error())
+	}
+	migrationTime := time.Now()
+	formattedMigrationTime := migrationTime.Format("20060102150405") + fmt.Sprintf("%02d", migrationTime.Nanosecond()%100)
+	for _, direction := range []string{"up", "down"} {
+		var migrationFile *os.File
+		basename := fmt.Sprintf("%s_%s.%s.sql", formattedMigrationTime, MigrationName, direction)
+		filename := filepath.Join(DBMigrationsPath, basename)
+		if migrationFile, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0644); err != nil {
+			die("Creating migration " + filename + ": " + err.Error())
+		}
+		defer log.Close(migrationFile, "Closing migration "+filename)
+		if migrationFile.Write([]byte(apacheLicense2)); err != nil {
+			die("Writing content to migration " + filename + ": " + err.Error())
+		}
+		fmt.Printf("Created migration %s\n", filename)
 	}
 }
 
@@ -255,35 +302,80 @@ func reset() {
 	dropDB()
 	createDB()
 	loadSchema()
-	migrate()
+	runMigrations()
 }
 
 func upgrade() {
-	goose(GooseUp)
+	runMigrations()
 	if !TrafficVault {
 		seed()
 		patch()
 	}
 }
 
-func migrate() {
-	goose(GooseUp)
+func runMigrations() {
+	initMigrate()
+	migratedFromGoose := false
+	if !TrafficVault {
+		_, _, versionErr := Migrate.Version()
+		if versionErr != nil {
+			if versionErr != migrate.ErrNilVersion {
+				die("Error running migrate version: " + versionErr.Error())
+			}
+			migratedFromGoose = true
+			if err := Migrate.Steps(1); err != nil {
+				die("Error migrating to Migrate from Goose: " + err.Error())
+			}
+		}
+	}
+	upErr := Migrate.Up()
+	if upErr == migrate.ErrNoChange {
+		if !migratedFromGoose {
+			println(upErr.Error())
+		}
+	} else if upErr != nil {
+		die("Error running migrate up: " + upErr.Error())
+	}
+
+}
+
+func runUp() {
+	runMigrations()
 }
 
 func down() {
-	goose(CmdDown)
+	initMigrate()
+	if err := Migrate.Steps(-1); err != nil {
+		die("Error running migrate down: " + err.Error())
+	}
 }
 
 func redo() {
-	goose(CmdRedo)
+	initMigrate()
+	if downErr := Migrate.Steps(-1); downErr != nil {
+		die("Error running migrate down 1 in 'redo': " + downErr.Error())
+	}
+	if upErr := Migrate.Steps(1); upErr != nil {
+		die("Error running migrate up 1 in 'redo': " + upErr.Error())
+	}
 }
 
+// Deprecated: Migrate does not track migration status of past migrations. Use dbversion() to check the migration version and dirty status.
 func status() {
-	goose(CmdStatus)
+	dbVersion()
 }
 
 func dbVersion() {
-	goose(CmdDBVersion)
+	initMigrate()
+	version, dirty, err := Migrate.Version()
+	if err != nil {
+		die("Error running migrate version: " + err.Error())
+	}
+	fmt.Printf("dbversion %d", version)
+	if dirty {
+		fmt.Printf(" (dirty)")
+	}
+	println()
 }
 
 func seed() {
@@ -344,21 +436,6 @@ func patch() {
 	}
 }
 
-func goose(arg string) {
-	fmt.Println("Running goose " + arg + "...")
-	args := []string{"--env=" + Environment}
-	if TrafficVault {
-		args = append(args, "--path="+TrafficVaultDir)
-	}
-	args = append(args, arg)
-	cmd := exec.Command("goose", args...)
-	out, err := cmd.CombinedOutput()
-	fmt.Printf("%s", out)
-	if err != nil {
-		die("Can't run goose: " + err.Error())
-	}
-}
-
 func die(message string) {
 	fmt.Println(message)
 	os.Exit(1)
@@ -408,19 +485,32 @@ without prompts.
 ===================================================================================================================
 ` + programName + ` arguments:
 
-createdb  - Execute db 'createdb' the database for the current environment.
-create_user  - Execute 'create_user' the user for the current environment (traffic_ops).
-dropdb  - Execute db 'dropdb' on the database for the current environment.
-down  - Roll back a single migration from the current version.
-drop_user  - Execute 'drop_user' the user for the current environment (traffic_ops).
-patch  - Execute sql from db/patches.sql for loading post-migration data patches (NOTE: not supported with --trafficvault option).
-redo  - Roll back the most recently applied migration, then run it again.
-reset  - Execute db 'dropdb', 'createdb', load_schema, migrate on the database for the current environment.
-seed  - Execute sql from db/seeds.sql for loading static data (NOTE: not supported with --trafficvault option).
+migrate     - Execute migrate (without seeds or patches) on the database for the
+              current environment.
+up          - Alias for 'migrate'
+down        - Roll back a single migration from the current version.
+createdb    - Execute db 'createdb' the database for the current environment.
+dropdb      - Execute db 'dropdb' on the database for the current environment.
+create_migration NAME
+            - Creates a pair of timestamped up/down migrations titled NAME.
+create_user - Execute 'create_user' the user for the current environment
+              (traffic_ops).
+dbversion   - Prints the current migration version
+drop_user   - Execute 'drop_user' the user for the current environment
+              (traffic_ops).
+patch       - Execute sql from db/patches.sql for loading post-migration data
+              patches (NOTE: not supported with --trafficvault option).
+redo        - Roll back the most recently applied migration, then run it again.
+reset       - Execute db 'dropdb', 'createdb', load_schema, migrate on the
+              database for the current environment.
+seed        - Execute sql from db/seeds.sql for loading static data (NOTE: not
+              supported with --trafficvault option).
 show_users  - Execute sql to show all of the user for the current environment.
-status  - Print the status of all migrations.
-upgrade  - Execute migrate, seed, and patches on the database for the current environment.
-migrate  - Execute migrate (without seeds or patches) on the database for the current environment.
+status      - Prints the current migration version (Deprecated, status is now an
+              alias for dbversion and will be removed in a future Traffic
+              Control release).
+upgrade     - Execute migrate, seed, and patches on the database for the current
+              environment.
 `
 }
 
@@ -428,7 +518,12 @@ func main() {
 	flag.StringVar(&Environment, "env", DefaultEnvironment, "The environment to use (defined in "+DBConfigPath+").")
 	flag.BoolVar(&TrafficVault, "trafficvault", false, "Run this for the Traffic Vault database")
 	flag.Parse()
-	if len(flag.Args()) != 1 || flag.Arg(0) == "" {
+	if flag.Arg(0) == CmdCreateMigration {
+		if len(flag.Args()) != 2 {
+			die(usage())
+		}
+		MigrationName = flag.Arg(1)
+	} else if len(flag.Args()) != 1 || flag.Arg(0) == "" {
 		die(usage())
 	}
 	if Environment == "" {
@@ -441,12 +536,14 @@ func main() {
 
 	commands[CmdCreateDB] = createDB
 	commands[CmdDropDB] = dropDB
+	commands[CmdCreateMigration] = createMigration
 	commands[CmdCreateUser] = createUser
 	commands[CmdDropUser] = dropUser
 	commands[CmdShowUsers] = showUsers
 	commands[CmdReset] = reset
 	commands[CmdUpgrade] = upgrade
-	commands[CmdMigrate] = migrate
+	commands[CmdMigrate] = runMigrations
+	commands[CmdUp] = runUp
 	commands[CmdDown] = down
 	commands[CmdRedo] = redo
 	commands[CmdStatus] = status
@@ -462,4 +559,50 @@ func main() {
 		fmt.Println(usage())
 		die("invalid command: " + userCmd)
 	}
+}
+
+func initMigrate() {
+	var err error
+	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s", DBDriver, DBUser, DBPassword, HostIP, HostPort, DBName, SSLMode)
+	if TrafficVault {
+		Migrate, err = migrate.New(TrafficVaultMigrationsPath, connectionString)
+	} else {
+		Migrate, err = migrate.New(DBMigrationsSource, connectionString)
+	}
+	if err != nil {
+		die("Starting Migrate: " + err.Error())
+	}
+	Migrate.Log = &Log{}
+}
+
+// Log represents the logger
+// https://github.com/golang-migrate/migrate/blob/v4.14.1/internal/cli/log.go#L9-L12
+type Log struct {
+	verbose bool
+}
+
+// Printf prints out formatted string into a log
+// https://github.com/golang-migrate/migrate/blob/v4.14.1/internal/cli/log.go#L14-L21
+func (l *Log) Printf(format string, v ...interface{}) {
+	if l.verbose {
+		fmt.Printf(format, v...)
+	} else {
+		fmt.Fprintf(os.Stderr, format, v...)
+	}
+}
+
+// Println prints out args into a log
+// https://github.com/golang-migrate/migrate/blob/v4.14.1/internal/cli/log.go#L23-L30
+func (l *Log) Println(args ...interface{}) {
+	if l.verbose {
+		fmt.Println(args...)
+	} else {
+		fmt.Fprintln(os.Stderr, args...)
+	}
+}
+
+// Verbose shows if verbose print enabled
+// https://github.com/golang-migrate/migrate/blob/v4.14.1/internal/cli/log.go#L32-L35
+func (l *Log) Verbose() bool {
+	return l.verbose
 }

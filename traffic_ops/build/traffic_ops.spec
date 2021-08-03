@@ -33,7 +33,7 @@ URL:              https://github.com/apache/trafficcontrol/
 Vendor:           Apache Software Foundation
 Packager:         daniel_kirkwood at Cable dot Comcast dot com
 AutoReqProv:      no
-Requires:         cpanminus, expat-devel, gcc-c++, golang >= 1.12, libcurl, libpcap-devel, mkisofs, tar
+Requires:         cpanminus, expat-devel, libcurl, libpcap-devel, mkisofs, tar
 Requires:         openssl-devel, perl, perl-core, perl-DBD-Pg, perl-DBI, perl-Digest-SHA1
 Requires:         libidn-devel, libcurl-devel, libcap
 Requires:         postgresql13 >= 13.2 , postgresql13-devel >= 13.2

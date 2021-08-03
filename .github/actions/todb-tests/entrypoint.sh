@@ -41,15 +41,18 @@ for migration_dir in ${migration_dirs[@]}; do
 	rm "$SORTED" "$SORTEDDASHN";
 
 	# No two migrations may share a timestamp
-	ls | cut -d _ -f 1 | uniq -d | while read -r file; do
-		echo "ERROR: more than one file uses timestamp $file - timestamps must be unique" >&2;
-		CODE=1;
+	for direction in up down; do
+		while read -r file; do
+			echo "ERROR: more than one file uses timestamp $file - timestamps must be unique" >&2;
+			CODE=1;
+		done < <(ls *".${direction}.sql" | cut -d_ -f1 | uniq -d)
 	done
 
-	# Files must be named like {{timestamp}}_{{migration name}}.sql
-	for file in "$(ls)"; do
-		if ! [[ "$file" =~ [0-9]+_[^\.]+\.sql ]]; then
-			echo "ERROR: $migration_dir/$file: wrong filename, must match \d+_[^\\.]+\\.sql" >&2;
+	# Files must be named like {{timestamp}}_{{migration name}}.up.sql
+	pattern='^[0-9]+_[^.]+\.(up|down)\.sql$'
+	for file in *; do
+		if ! <<<"$file" grep -qE "$pattern"; then
+			echo "ERROR: ${migration_dir}/${file}: wrong filename, must match ${pattern}" >&2;
 			CODE=1;
 		fi
 	done

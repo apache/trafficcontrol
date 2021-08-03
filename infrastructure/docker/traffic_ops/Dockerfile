@@ -49,8 +49,6 @@ RUN yum install -y /$(basename $RPM)
 # once installed, remove rpm to lower image size
 RUN rm /$(basename $RPM)
 
-RUN /opt/traffic_ops/install/bin/install_goose.sh
-
 # RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/install/lib/ \
 # 	&& export TERM=xterm \
 # 	&& export USER=root \

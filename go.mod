@@ -38,18 +38,18 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-acme/lego v2.7.2+incompatible
 	github.com/go-ozzo/ozzo-validation v3.0.3-0.20180119232150-44af65fe9adf+incompatible
-	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/gofrs/flock v0.7.2-0.20190320160742-5135e617513b
+	github.com/golang-migrate/migrate/v4 v4.14.1
 	github.com/google/uuid v1.1.2
 	github.com/hydrogen18/stoppableListener v0.0.0-20151210151943-dadc9ccc400c
 	github.com/influxdata/influxdb v1.1.1-0.20170104212736-6a94d200c826
-	github.com/jmoiron/sqlx v0.0.0-20170430194603-d9bd385d68c0
+	github.com/jmoiron/sqlx v1.2.0
 	github.com/json-iterator/go v1.1.6-0.20181024152841-05d041de1043
 	github.com/kelseyhightower/envconfig v1.3.1-0.20180308190516-b2c5c876e265
 	github.com/kylelemons/godebug v1.1.1-0.20201107061927-e693023230a4
 	github.com/lestrrat-go/jwx v0.9.1-0.20190702045520-e35178ac2b1f
 	github.com/lestrrat/go-jwx v0.0.0-20171104074836-2857e17763b6
-	github.com/lib/pq v0.0.0-20170707053602-dd1fe2071026
+	github.com/lib/pq v1.8.0
 	github.com/mattn/go-sqlite3 v1.14.5 // indirect
 	github.com/miekg/dns v1.0.6-0.20180406150955-01d59357d468
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -57,13 +57,12 @@ require (
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.3
 	github.com/pborman/getopt/v2 v2.1.0
-	github.com/pkg/errors v0.8.2-0.20190227000051-27936f6d90f9
+	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.6.1 // indirect
 	go.etcd.io/bbolt v1.3.5
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	golang.org/x/net v0.0.0-20210716203947-853a461950ff
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 	gopkg.in/asn1-ber.v1 v1.0.0-20170511165959-379148ca0225 // indirect
 	gopkg.in/ldap.v2 v2.5.1
