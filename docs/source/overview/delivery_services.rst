@@ -647,7 +647,7 @@ Describes how HTTP "Range Requests" should be handled by the Delivery Service at
 .. _ds-slice-block-size:
 
 Range Slice Request Block Size
--------------------------------------
+------------------------------
 The block size in bytes that is used for `slice <https://github.com/apache/trafficserver/tree/master/plugins/experimental/slice>`_ plugin.
 
 This can only and must be set if the :ref:`ds-range-request-handling` is set to ``3``.
