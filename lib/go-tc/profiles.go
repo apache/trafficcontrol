@@ -90,11 +90,6 @@ type ProfileCopyResponse struct {
 	Alerts
 }
 
-// ProfileTrimmed ...
-type ProfileTrimmed struct {
-	Name string `json:"name"`
-}
-
 // ProfileExportImportNullable is an object of the form used by Traffic Ops
 // to represent exported and imported profiles.
 type ProfileExportImportNullable struct {

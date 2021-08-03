@@ -146,7 +146,6 @@ func createDummyType(field string) *TOType {
 
 func TestUpdateInvalidType(t *testing.T) {
 	invalidUpdateType := createDummyType("test")
-
 	err, _, statusCode := invalidUpdateType.Update(nil)
 	if err == nil {
 		t.Fatalf("expected update type tp have an error")

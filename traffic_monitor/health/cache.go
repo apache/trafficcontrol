@@ -385,13 +385,8 @@ func CalcAvailability(
 
 		localCacheStatuses[result.ID] = availStatus
 	}
-	calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates, toData)
+	calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates)
 	localCacheStatusThreadsafe.Set(localCacheStatuses)
-}
-
-func setErr(newResult *cache.Result, err error) {
-	newResult.Error = err
-	newResult.Available = false
 }
 
 // ExceedsThresholdMsg returns a human-readable message for why the given value exceeds the threshold. It does NOT check whether the value actually exceeds the threshold; call `InThreshold` to check first.
@@ -435,52 +430,16 @@ func eventDesc(status tc.CacheStatus, message string) string {
 }
 
 //calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
-func calculateDeliveryServiceState(deliveryServiceServers map[tc.DeliveryServiceName][]tc.CacheName, states peer.CRStatesThreadsafe, toData todata.TOData) {
-	cacheStates := states.GetCaches()
-
+func calculateDeliveryServiceState(deliveryServiceServers map[tc.DeliveryServiceName][]tc.CacheName, states peer.CRStatesThreadsafe) {
 	deliveryServices := states.GetDeliveryServices()
 	for deliveryServiceName, deliveryServiceState := range deliveryServices {
 		if _, ok := deliveryServiceServers[deliveryServiceName]; !ok {
 			log.Infof("CRConfig does not have delivery service %s, but traffic monitor poller does; skipping\n", deliveryServiceName)
 			continue
 		}
-		deliveryServiceState.DisabledLocations = getDisabledLocations(deliveryServiceName, toData.DeliveryServiceServers[deliveryServiceName], cacheStates, toData.ServerCachegroups)
+		// NOTE: DisabledLocations is always empty, and it's important that it isn't nil, so it serialises to the JSON `[]` instead of `null`.
+		// It's no longer populated due to it being an unnecessary optimization for Traffic Router, but the field is kept for compatibility.
+		deliveryServiceState.DisabledLocations = []tc.CacheGroupName{}
 		states.SetDeliveryService(deliveryServiceName, deliveryServiceState)
 	}
-}
-
-func getDisabledLocations(deliveryService tc.DeliveryServiceName, deliveryServiceServers []tc.CacheName, cacheStates map[tc.CacheName]tc.IsAvailable, serverCacheGroups map[tc.CacheName]tc.CacheGroupName) []tc.CacheGroupName {
-	disabledLocations := []tc.CacheGroupName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
-	dsCacheStates := getDeliveryServiceCacheAvailability(cacheStates, deliveryServiceServers)
-	dsCachegroupsAvailable := getDeliveryServiceCachegroupAvailability(dsCacheStates, serverCacheGroups)
-	for cg, avail := range dsCachegroupsAvailable {
-		if avail {
-			continue
-		}
-		disabledLocations = append(disabledLocations, cg)
-	}
-	return disabledLocations
-}
-
-func getDeliveryServiceCacheAvailability(cacheStates map[tc.CacheName]tc.IsAvailable, deliveryServiceServers []tc.CacheName) map[tc.CacheName]tc.IsAvailable {
-	dsCacheStates := map[tc.CacheName]tc.IsAvailable{}
-	for _, server := range deliveryServiceServers {
-		dsCacheStates[server] = cacheStates[tc.CacheName(server)]
-	}
-	return dsCacheStates
-}
-
-func getDeliveryServiceCachegroupAvailability(dsCacheStates map[tc.CacheName]tc.IsAvailable, serverCachegroups map[tc.CacheName]tc.CacheGroupName) map[tc.CacheGroupName]bool {
-	cgAvail := map[tc.CacheGroupName]bool{}
-	for cache, available := range dsCacheStates {
-		cg, ok := serverCachegroups[cache]
-		if !ok {
-			log.Errorf("cache %v not found in cachegroups!\n", cache)
-			continue
-		}
-		if _, ok := cgAvail[cg]; !ok || available.IsAvailable {
-			cgAvail[cg] = available.IsAvailable
-		}
-	}
-	return cgAvail
 }

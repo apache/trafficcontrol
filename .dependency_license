@@ -47,6 +47,8 @@ CrStates$, Apache-2.0 # JSON with a specific format.
 ^docs/.*\.(png|jpe?g|ico|gif)$, Apache-2.0
 ^blueprints/.*\.(png|jpe?g|ico|gif)$, Apache-2.0
 favicon.(ico|png)$, Apache-2.0
+traffic_ops/app/db/trafficvault/test/.*\.key$, Apache-2.0 # test AES key files
+traffic_ops/app/db/trafficvault/test/data/.*\.dat$, Apache-2.0 # test data files
 ^traffic_ops/experimental/goto/testFiles/, Apache-2.0
 \.pem$, Apache-2.0 # Single certificate file.
 traffic_router/core/src/test/resources/api/2.0/cdns/name/thecdn/sslkeys(-missing-1)?, Apache-2.0 #JSON files with no extension
@@ -55,15 +57,6 @@ traffic_router/core/src/test/resources/api/2.0/federations/all, Apache-2.0
 BUILD_NUMBER$, Apache-2.0
 
 # Images, created for this project or used under an Apache license.
-^misc/traffic-control-cdn/images/atc_logo\.png, Apache-2.0
-^misc/traffic-control-cdn/images/header_bkgd\.png, Apache-2.0
-^misc/traffic-control-cdn/images/main_bkgd\.png, Apache-2.0
-^misc/traffic-control-cdn/images/tc_logo\.png, Apache-2.0
-^misc/traffic-control-cdn/images/traffic_monitor_logo\.png, Apache-2.0
-^misc/traffic-control-cdn/images/traffic_operations_logo\.png, Apache-2.0
-^misc/traffic-control-cdn/images/traffic_portal_logo\.png, Apache-2.0
-^misc/traffic-control-cdn/images/traffic_router_logo\.png, Apache-2.0
-^misc/traffic-control-cdn/images/traffic_stats_logo\.png, Apache-2.0
 ^misc/logos/ATC-PNG\.png, Apache-2.0
 ^misc/logos/ATC-PNG-FULL-BLACK\.png, Apache-2.0
 ^misc/logos/ATC-PNG-FULL-BLACK-LARGE\.png, Apache-2.0

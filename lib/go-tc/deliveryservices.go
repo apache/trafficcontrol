@@ -31,18 +31,6 @@ const DefaultMaxRequestHeaderBytes = 0
 const MinRangeSliceBlockSize = 262144   // 265Kib
 const MaxRangeSliceBlockSize = 33554432 // 32Mib
 
-// GetDeliveryServiceResponse is deprecated use DeliveryServicesResponse...
-type GetDeliveryServiceResponse struct {
-	Response []DeliveryService `json:"response"`
-}
-
-// DeliveryServicesResponse ...
-// Deprecated: use DeliveryServicesNullableResponse instead
-type DeliveryServicesResponse struct {
-	Response []DeliveryService `json:"response"`
-	Alerts
-}
-
 // DeliveryServicesResponseV30 is the type of a response from the
 // /api/3.0/deliveryservices Traffic Ops endpoint.
 // TODO: Move these into the respective clients?
@@ -70,24 +58,10 @@ type DeliveryServicesNullableResponse struct {
 	Alerts
 }
 
-// CreateDeliveryServiceResponse ...
-// Deprecated: use CreateDeliveryServiceNullableResponse instead
-type CreateDeliveryServiceResponse struct {
-	Response []DeliveryService `json:"response"`
-	Alerts
-}
-
 // CreateDeliveryServiceNullableResponse ...
 // Deprecated: Please only use the versioned structures.
 type CreateDeliveryServiceNullableResponse struct {
 	Response []DeliveryServiceNullable `json:"response"`
-	Alerts
-}
-
-// UpdateDeliveryServiceResponse ...
-// Deprecated: use UpdateDeliveryServiceNullableResponse instead
-type UpdateDeliveryServiceResponse struct {
-	Response []DeliveryService `json:"response"`
 	Alerts
 }
 
@@ -573,10 +547,10 @@ type DeliveryServiceNullableFieldsV11 struct {
 	LongDesc *string `json:"longDesc" db:"long_desc"`
 	// LongDesc1 is a description of the Delivery Service, having arbitrary
 	// length.
-	LongDesc1 *string `json:"longDesc1" db:"long_desc_1"`
+	LongDesc1 *string `json:"longDesc1,omitempty" db:"long_desc_1"`
 	// LongDesc2 is a description of the Delivery Service, having arbitrary
 	// length.
-	LongDesc2 *string `json:"longDesc2" db:"long_desc_2"`
+	LongDesc2 *string `json:"longDesc2,omitempty" db:"long_desc_2"`
 	// MatchList is a list of Regular Expressions used for routing the Delivery
 	// Service. Order matters, and the array is not allowed to be sparse.
 	MatchList *[]DeliveryServiceMatch `json:"matchList"`
@@ -778,31 +752,6 @@ type DeliveryServiceMatch struct {
 	Pattern   string      `json:"pattern"`
 }
 
-// DeliveryServiceStateResponse ...
-type DeliveryServiceStateResponse struct {
-	Response DeliveryServiceState `json:"response"`
-}
-
-// DeliveryServiceState ...
-type DeliveryServiceState struct {
-	Enabled  bool                    `json:"enabled"`
-	Failover DeliveryServiceFailover `json:"failover"`
-}
-
-// DeliveryServiceFailover ...
-type DeliveryServiceFailover struct {
-	Locations   []string                   `json:"locations"`
-	Destination DeliveryServiceDestination `json:"destination"`
-	Configured  bool                       `json:"configured"`
-	Enabled     bool                       `json:"enabled"`
-}
-
-// DeliveryServiceDestination ...
-type DeliveryServiceDestination struct {
-	Location string `json:"location"`
-	Type     string `json:"type"`
-}
-
 // DeliveryServiceHealthResponse is the type of a response from Traffic Ops to
 // a request for a Delivery Service's "health".
 type DeliveryServiceHealthResponse struct {
@@ -838,36 +787,6 @@ type DeliveryServiceCapacity struct {
 	UtilizedPercent    float64 `json:"utilizedPercent"`
 	MaintenancePercent float64 `json:"maintenancePercent"`
 }
-
-type DeliveryServiceMatchesResp []DeliveryServicePatterns
-
-type DeliveryServicePatterns struct {
-	Patterns []string            `json:"patterns"`
-	DSName   DeliveryServiceName `json:"dsName"`
-}
-
-type DeliveryServiceMatchesResponse struct {
-	Response []DeliveryServicePatterns `json:"response"`
-}
-
-// DeliveryServiceRoutingResponse ...
-type DeliveryServiceRoutingResponse struct {
-	Response DeliveryServiceRouting `json:"response"`
-}
-
-// DeliveryServiceRouting ...
-type DeliveryServiceRouting struct {
-	StaticRoute       int     `json:"staticRoute"`
-	Miss              int     `json:"miss"`
-	Geo               float64 `json:"geo"`
-	Err               int     `json:"err"`
-	CZ                float64 `json:"cz"`
-	DSR               float64 `json:"dsr"`
-	Fed               int     `json:"fed"`
-	RegionalAlternate int     `json:"regionalAlternate"`
-	RegionalDenied    int     `json:"regionalDenied"`
-}
-
 type FederationDeliveryServiceNullable struct {
 	ID    *int    `json:"id" db:"id"`
 	CDN   *string `json:"cdn" db:"cdn"`
@@ -891,10 +810,6 @@ type DeliveryServiceUserPost struct {
 type UserDeliveryServicePostResponse struct {
 	Alerts   []Alert                 `json:"alerts"`
 	Response DeliveryServiceUserPost `json:"response"`
-}
-
-type UserDeliveryServicesNullableResponse struct {
-	Response []DeliveryServiceNullable `json:"response"`
 }
 
 type DSServerIDs struct {
