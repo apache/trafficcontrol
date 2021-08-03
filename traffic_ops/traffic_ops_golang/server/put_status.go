@@ -60,7 +60,7 @@ func InvalidStatusForDeliveryServicesAlertText(prefix, serverType string, dsIDs 
 	if strings.HasPrefix(serverType, tc.OriginTypeName) {
 		typeMsg = tc.OriginTypeName
 	}
-	alertText += fmt.Sprintf("  with no '%s' or '%s' %s servers", tc.CacheStatusOnline, tc.CacheStatusReported, typeMsg)
+	alertText += fmt.Sprintf(" with no '%s' or '%s' %s servers", tc.CacheStatusOnline, tc.CacheStatusReported, typeMsg)
 	return alertText
 }
 

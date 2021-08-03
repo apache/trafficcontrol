@@ -548,8 +548,7 @@ func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, 
 				anyAvailableServers = true
 				if inf.Type == tc.OriginTypeName {
 					newOrgCount++
-				}
-				if strings.HasPrefix(inf.Type, tc.CacheTypeEdge.String()) {
+				} else if strings.HasPrefix(inf.Type, tc.CacheTypeEdge.String()) {
 					newAvailableEdgeCount++
 				}
 			}

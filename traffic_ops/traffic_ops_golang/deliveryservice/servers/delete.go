@@ -40,7 +40,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 const lastEdgeAndLastOriginQuery = `
 SELECT (
-  SELECT (CASE WHEN t.name LIKE '` + string(tc.EdgeTypePrefix) + `%' THEN TRUE ELSE FALSE END) AS available
+  SELECT (SELECT t.name LIKE '` + string(tc.EdgeTypePrefix) + `%') AS available
   FROM type t
   JOIN server s ON s.type = t.id
   WHERE s.id = $2)
@@ -55,7 +55,7 @@ SELECT (
   AND deliveryservice = $1
   AND server <> $2),
 (
-  SELECT (CASE WHEN t.name LIKE '` + string(tc.OriginTypeName) + `%' THEN TRUE ELSE FALSE END) AS available
+  SELECT (SELECT t.name LIKE '` + string(tc.OriginTypeName) + `%') AS available
   FROM type t
   JOIN server s ON s.type = t.id
   WHERE s.id = $2)
