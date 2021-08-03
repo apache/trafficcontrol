@@ -599,7 +599,7 @@ The following plugins have support for adding args with following parameter Conf
 .. seealso:: For more information about these plugin parameters, refer to `the Apache Traffic Server documentation for the background_fetch plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/background_fetch.en.html>`_, `the Apache Traffic Server documentation for the cachekey plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/cachekey.en.html>`_, `the Apache Traffic Server documentation for the cache_range_requests plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/cache_range_requests.en.html>`_, `the Apache Traffic Server documentation for the slice plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/slice.en.html>`_, and `the Apache Traffic Server documentation for the url_sig plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/url_sig.en.html>`_, respectively.
 
 .. deprecated:: ATCv6
-	``cachekey.config`` is deprecated but available for backwards compatibility. ``cachekey.config`` Parameters will be converted by :term:`t3c` to the "pparam" syntax with '--' added as a prefix to the :ref:`parameter-name`. Any "empty" param value (i.e. separator) will add an extra '=' to the key.
+	``cachekey.config`` is deprecated but available for backwards compatibility. ``cachekey.config`` Parameters will be converted by :term:`t3c` to the "pparam" syntax with ``--`` added as a prefix to the :ref:`parameter-name`. Any "empty" param value (i.e. separator) will add an extra ``=`` to the key.
 
 .. table:: Equivalent cachekey.config/cachekey.pparam entries
 
