@@ -26,11 +26,25 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// RecordsSeparator is the string used to separate Parameter Names from their
+// Values for lines in records.config configuration files.
 const RecordsSeparator = " "
+
+// RecordsFileName is the name of the configuration file used by ATS to
+// configure various miscellaneous options, as well as the ConfigFile value of
+// Parameters that can affect the contents of this file.
 const RecordsFileName = "records.config"
+
+// ContentTypeRecordsDotConfig is the MIME type of the contents of a
+// records.config ATS configuration file.
 const ContentTypeRecordsDotConfig = ContentTypeTextASCII
+
+// LineCommentRecordsDotConfig is the string that indicates the beginning of a
+// line comment in the grammar of a records.config ATS configuration file.
 const LineCommentRecordsDotConfig = LineCommentHash
 
+// RecordsConfigOpts are options that may be passed to MakeRecordsDotConfig to
+// affect generation of the records.config ATS configuration file.
 type RecordsConfigOpts struct {
 	// ReleaseViaStr is whether or not we replace the via and server strings in ATS
 	// responses to be the Release value from the rpm package. This can be a user
@@ -57,6 +71,9 @@ type RecordsConfigOpts struct {
 	NoOutgoingIP bool
 }
 
+// MakeRecordsDotConfig constructs a records.config ATS configuration file for
+// the given server with the given Parameters and header comment content, as
+// well as any customization options.
 func MakeRecordsDotConfig(
 	server *Server,
 	serverParams []tc.ParameterV5,
