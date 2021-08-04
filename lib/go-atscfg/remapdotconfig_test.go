@@ -129,7 +129,8 @@ func TestMakeRemapDotConfig0(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -246,7 +247,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -346,7 +347,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -460,7 +461,8 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -560,7 +562,8 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -698,7 +701,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -797,7 +800,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -898,7 +901,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1012,7 +1015,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1162,7 +1165,7 @@ func TestMakeRemapDotConfigMidBgFetchHandling(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1278,7 +1281,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1418,7 +1421,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1559,7 +1562,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1956,7 +1959,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2060,7 +2063,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2181,7 +2184,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2302,7 +2305,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2423,7 +2426,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2544,7 +2547,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2667,7 +2670,7 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2790,7 +2793,7 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2913,7 +2916,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3040,7 +3043,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3167,7 +3170,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3300,7 +3303,7 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3427,7 +3430,7 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3549,7 +3552,7 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3671,7 +3674,7 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3793,7 +3796,7 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3915,7 +3918,7 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4035,7 +4038,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4170,7 +4173,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4297,7 +4300,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4432,7 +4435,7 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4558,7 +4561,7 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4681,7 +4684,7 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4800,7 +4803,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4906,10 +4909,26 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 
 	remapConfigParams := []tc.Parameter{
 		tc.Parameter{
+			ConfigFile: "cacheurl.config",
+			Profiles:   []byte(`["not-dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "cachekeykey",
+			ConfigFile: "cachekey.config",
+			Value:      "cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
-			Profiles:   []byte(`["global"]`),
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["dsprofile"]`),
 		},
 	}
 
@@ -4923,7 +4942,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -4945,13 +4964,21 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
 	}
 
-	if strings.Contains(remapLine, "background_fetch.so") {
-		t.Errorf("expected remap on edge server with ds dont-cache range request handling to not contain background fetch plugin, actual '%v'", txt)
+	if !strings.Contains(remapLine, "cachekey.so") {
+		t.Errorf("expected remap on edge server with ds cache key params to contain cachekey plugin, actual '%v'", txt)
 	}
 
-	if strings.Contains(remapLine, "cache_range_requests.so") {
-		t.Errorf("expected remap on edge server with ds dont-cache range request handling to not contain cache_range_requests plugin, actual '%v'", txt)
+	if !strings.Contains(remapLine, "cachekeykey") {
+		t.Errorf("expected remap on edge server with ds cache key params to contain param keys, actual '%v'", txt)
 	}
+	if !strings.Contains(remapLine, "cachekeyval") {
+		t.Errorf("expected remap on edge server with ds cache key params to contain param vals, actual '%v'", txt)
+	}
+
+	if strings.Contains(remapLine, "shouldnotinclude") {
+		t.Errorf("expected remap on edge server to not include different ds cache key params, actual '%v'", txt)
+	}
+
 }
 
 func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
@@ -5058,7 +5085,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -5191,7 +5218,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -5325,7 +5352,7 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -5469,7 +5496,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -5609,7 +5636,7 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -5754,7 +5781,7 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -5892,7 +5919,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6019,7 +6046,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6138,7 +6165,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6257,7 +6284,7 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6376,7 +6403,7 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6499,7 +6526,7 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6618,7 +6645,7 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6727,7 +6754,7 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6841,7 +6868,7 @@ func TestMakeRemapDotConfigNoHeaderRewrite(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6960,7 +6987,7 @@ func TestMakeRemapDotConfigMidNoHeaderRewrite(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -7079,7 +7106,7 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
-	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, hdr)
+	cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, &RemapDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
