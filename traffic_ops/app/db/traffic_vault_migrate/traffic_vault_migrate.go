@@ -83,7 +83,7 @@ func init() {
 		SetFlag().
 		SetGroup("no_insert")
 
-	getopt.FlagLong(&noConfirm, "noConfirm", 'm', "Requires confirmation before inserting records").
+	getopt.FlagLong(&noConfirm, "noConfirm", 'm', "Don't require confirmation before inserting records").
 		SetFlag()
 
 	getopt.FlagLong(&dump, "dump", 'd', "Write keys (from 'from' server) to disk").
@@ -91,7 +91,7 @@ func init() {
 		SetGroup("disk_bck").
 		SetFlag()
 
-	getopt.FlagLong(&keyFile, "fill", 'i', "Insert data into `to` server with data this directory").
+	getopt.FlagLong(&keyFile, "fill", 'i', "Insert data into `to` server with data in this directory").
 		SetOptional().
 		SetGroup("disk_bck")
 
@@ -572,6 +572,13 @@ func initConfig() {
 		}
 		cfg = newCfg
 	} else if logLevel != "" {
+		cfg = config{
+			LogLocationError:   log.LogLocationNull,
+			LogLocationWarning: log.LogLocationNull,
+			LogLocationInfo:    log.LogLocationNull,
+			LogLocationDebug:   log.LogLocationNull,
+			LogLocationEvent:   log.LogLocationNull,
+		}
 		switch logLevel {
 		case "event":
 			cfg.LogLocationEvent = log.LogLocationStdout
