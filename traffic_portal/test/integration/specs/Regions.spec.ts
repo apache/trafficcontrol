@@ -47,7 +47,12 @@ regions.tests.forEach(async regionsData => {
                 await regionsPage.OpenTopologyMenu();
                 await regionsPage.OpenRegionsPage();
             });
-
+            regionsData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await regionsPage.CheckCSV(check.Name)).toBe(true);
+                    await regionsPage.OpenRegionsPage();
+                });
+            });
             regionsData.add.forEach(add => {
                 it(add.description, async () => {
                     expect(await regionsPage.CreateRegions(add)).toBeTruthy();
