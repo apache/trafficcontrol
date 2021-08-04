@@ -145,6 +145,10 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 
 	// TODO add generic where clause to api.GenericRead
 	if paramValue, ok := prof.APIInfo().Params[ParamQueryParam]; ok {
+		//Check for interger value
+		if _, err := strconv.Atoi(fmt.Sprintf("%v", paramValue)); err != nil {
+			return nil, fmt.Errorf("parsing error, provide only integer value"), errors.New("profile read querying: " + err.Error()), http.StatusBadRequest, nil
+		}
 		queryValues["parameter_id"] = paramValue
 		if len(paramValue) > 0 {
 			where += " LEFT JOIN profile_parameter pp ON prof.id  = pp.profile where pp.parameter=:parameter_id"
@@ -169,9 +173,17 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 	query := selectProfilesQuery() + where + orderBy + pagination
 	log.Debugln("Query is ", query)
 
+	//if the parameter is CDN
+	value, ok := queryValues["cdn"]
+	if ok {
+		if _, err := strconv.Atoi(fmt.Sprintf("%v", value)); err != nil {
+			return nil, fmt.Errorf("parsing error, provide only integer value"), errors.New("profile read querying: " + err.Error()), http.StatusBadRequest, nil
+		}
+	}
+
 	rows, err := prof.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, err, errors.New("profile read querying: " + err.Error()), http.StatusInternalServerError, nil
+		return nil, nil, errors.New("profile read querying: " + err.Error()), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
