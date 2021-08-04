@@ -27,8 +27,18 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// StorageFileName is the ConfigFile of Parameters which, if found on a server's
+// Profile, will affect the generation of its storage.config ATS configuration
+// file.
 const StorageFileName = "storage.config"
+
+// ContentTypeStorageDotConfig is the MIME type of the contents of a
+// storage.config ATS configuration file.
 const ContentTypeStorageDotConfig = ContentTypeTextASCII
+
+// LineCommentStorageDotConfig is the string used to indicate in the grammar of
+// a storage.config ATS configuration file that the rest of the line is a
+// comment.
 const LineCommentStorageDotConfig = LineCommentHash
 
 // StorageDotConfigOpts contains settings to configure generation options.
