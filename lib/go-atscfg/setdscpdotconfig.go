@@ -24,7 +24,13 @@ import (
 	"strings"
 )
 
+// ContentTypeSetDSCPDotConfig is the MIME type of the contents of an ATS
+// configuration file used to set the DSCP of IP packets.
 const ContentTypeSetDSCPDotConfig = ContentTypeTextASCII
+
+// LineCommentSetDSCPDotConfig is the string that, in the grammar of an ATS
+// configuration file used to set the DSCP of IP packets, indicates that the
+// rest of the line is a comment.
 const LineCommentSetDSCPDotConfig = LineCommentHash
 
 // SetDSCPDotConfigOpts contains settings to configure generation options.
@@ -35,6 +41,8 @@ type SetDSCPDotConfigOpts struct {
 	HdrComment string
 }
 
+// MakeSetDSCPDotConfig constructs a configuration file for setting the DSCP of
+// IP packets with ATS.
 func MakeSetDSCPDotConfig(
 	fileName string,
 	server *Server,
