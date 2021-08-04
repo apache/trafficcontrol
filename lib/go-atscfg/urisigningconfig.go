@@ -25,13 +25,23 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// ContentTypeURISigningDotConfig is the MIME type of the contents of a
+// uri_signing.config ATS configuration file.
 const ContentTypeURISigningDotConfig = `application/json; charset=us-ascii`
+
+// LineCommentURISigningDotConfig is the string used to indicate the start of a
+// line comment in the grammar of a uri_signing.config ATS configuration file.
+//
+// Note that uri_signing.config is a JSON-encoded object, and as such comments
+// are not allowed in that file, because the JSON lexicon has no comment token.
 const LineCommentURISigningDotConfig = ""
 
 // URISigningConfigOpts contains settings to configure generation options.
 type URISigningConfigOpts struct {
 }
 
+// MakeURISigningConfig constructs a uri_signing.config ATS configuration file
+// with the given mapping of Delivery Service XMLIDs to URI Signing keys.
 func MakeURISigningConfig(
 	fileName string,
 	uriSigningKeys map[tc.DeliveryServiceName][]byte,
