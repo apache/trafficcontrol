@@ -15,8 +15,8 @@
  * the License.
  */
 
-ALTER INDEX IF EXISTS phys_location_last_updated_idx RENAME TO pys_location_last_updated_idx;
+ALTER INDEX phys_location_last_updated_idx RENAME TO pys_location_last_updated_idx;
 
-DROP INDEX IF EXISTS topology_last_updated_idx;
+DROP INDEX topology_last_updated_idx;
 
-CREATE INDEX IF NOT EXISTS topology_last_updated_idx ON topology_cachegroup (last_updated DESC NULLS LAST);
+CREATE INDEX topology_last_updated_idx ON topology_cachegroup (last_updated DESC NULLS LAST);
