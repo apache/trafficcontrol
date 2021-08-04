@@ -27,8 +27,18 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// ContentTypeSSLMultiCertDotConfig is the MIME type of the contents of an
+// ssl_multicert.config ATS configuration file.
 const ContentTypeSSLMultiCertDotConfig = ContentTypeTextASCII
+
+// LineCommentSSLMultiCertDotConfig is the string used to indicate the start of
+// a line comment in the grammar of an ssl_multicert.config ATS configuration
+// file.
 const LineCommentSSLMultiCertDotConfig = LineCommentHash
+
+// SSLMultiCertConfigFileName is the name of an ATS configuration file which
+// contains information on the locations of one or more SSL key and certificate
+// pairs.
 const SSLMultiCertConfigFileName = `ssl_multicert.config`
 
 // SSLMultiCertDotConfigOpts contains settings to configure generation options.
@@ -39,6 +49,8 @@ type SSLMultiCertDotConfigOpts struct {
 	HdrComment string
 }
 
+// MakeSSLMultiCertDotConfig constructs an ssl_multicert.config ATS
+// configuration file for the given server.
 func MakeSSLMultiCertDotConfig(
 	server *Server,
 	deliveryServices []DeliveryService,
@@ -84,7 +96,7 @@ type sslMultiCertDS struct {
 	ExampleURLs []string
 }
 
-// deliveryServicesToSSLMultiCertDSes returns the "SSLMultiCertDS" map, and any warnings.
+// DeliveryServicesToSSLMultiCertDSes returns the "SSLMultiCertDS" map, and any warnings.
 func DeliveryServicesToSSLMultiCertDSes(dses []DeliveryService) (map[tc.DeliveryServiceName]sslMultiCertDS, []string) {
 	warnings := []string{}
 	sDSes := map[tc.DeliveryServiceName]sslMultiCertDS{}
