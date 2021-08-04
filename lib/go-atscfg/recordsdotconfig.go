@@ -179,14 +179,19 @@ func addRecordsDotConfigDNSLocal(txt string, server *Server) (string, []string) 
 	const dnsLocalV6 = `proxy.config.dns.local_ipv6`
 
 	v4, v6 := getServiceAddresses(server)
+
 	if v4 == nil {
 		warnings = append(warnings, "server had no IPv4 Service Address, not setting records.config dns v4 local bind addr!")
+	} else if strings.Contains(txt, dnsLocalV4) {
+		warnings = append(warnings, "dns local option was set, but proxy.config.dns.local_ipv4 was already in records.config, not overriding! Check the server's Parameters.")
 	} else {
 		txt += `CONFIG ` + dnsLocalV4 + ` STRING ` + v4.String() + "\n"
 	}
 
 	if v6 == nil {
 		warnings = append(warnings, "server had no IPv6 Service Address, not setting records.config dns v6 local bind addr!")
+	} else if strings.Contains(txt, dnsLocalV6) {
+		warnings = append(warnings, "dns local option was set, but proxy.config.dns.local_ipv6 was already in records.config, not overriding! Check the server's Parameters!")
 	} else {
 		txt += `CONFIG ` + dnsLocalV6 + ` STRING [` + v6.String() + `]` + "\n"
 	}
