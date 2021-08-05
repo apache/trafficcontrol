@@ -112,10 +112,10 @@ const (
 	DefaultEnvironment = EnvDevelopment
 	DefaultDBSuperUser = "postgres"
 
-	TrafficVaultDBConfigPath   = TrafficVaultDir + "dbconf.yml"
-	TrafficVaultMigrationsPath = "file:" + TrafficVaultDir + "migrations"
-	TrafficVaultDir            = dbDir + "trafficvault/"
-	TrafficVaultSchemaPath     = TrafficVaultDir + "create_tables.sql"
+	TrafficVaultDBConfigPath     = TrafficVaultDir + "dbconf.yml"
+	TrafficVaultMigrationsSource = "file:" + TrafficVaultDir + "migrations"
+	TrafficVaultDir              = dbDir + "trafficvault/"
+	TrafficVaultSchemaPath       = TrafficVaultDir + "create_tables.sql"
 )
 
 var (
@@ -566,7 +566,7 @@ func initMigrate() bool {
 	var err error
 	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s", DBDriver, DBUser, DBPassword, HostIP, HostPort, DBName, SSLMode)
 	if TrafficVault {
-		Migrate, err = migrate.New(TrafficVaultMigrationsPath, connectionString)
+		Migrate, err = migrate.New(TrafficVaultMigrationsSource, connectionString)
 	} else {
 		Migrate, err = migrate.New(DBMigrationsSource, connectionString)
 	}
