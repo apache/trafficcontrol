@@ -1,4 +1,9 @@
-# TO Client Library Golang
+# Traffic Ops Go Client
+
+## Deprecated
+The version of the Traffic Ops API supported by this client is deprecated.
+Please switch to the `github.com/apache/trafficcontrol/traffic_ops/v4-client`
+package.
 
 ## Getting Started
 1. Obtain the latest version of the library
@@ -15,7 +20,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 )
 
 const TOURL = "http://localhost"
