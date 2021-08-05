@@ -112,10 +112,10 @@ const (
 	DefaultEnvironment = EnvDevelopment
 	DefaultDBSuperUser = "postgres"
 
-	TrafficVaultDBConfigPath   = TrafficVaultDir + "dbconf.yml"
-	TrafficVaultMigrationsPath = "file:" + TrafficVaultDir + "migrations"
-	TrafficVaultDir            = dbDir + "trafficvault/"
-	TrafficVaultSchemaPath     = TrafficVaultDir + "create_tables.sql"
+	TrafficVaultDBConfigPath     = TrafficVaultDir + "dbconf.yml"
+	TrafficVaultMigrationsSource = "file:" + TrafficVaultDir + "migrations"
+	TrafficVaultDir              = dbDir + "trafficvault/"
+	TrafficVaultSchemaPath       = TrafficVaultDir + "create_tables.sql"
 )
 
 var (
@@ -313,21 +313,22 @@ func upgrade() {
 	}
 }
 
-func runMigrations() {
-	initMigrate()
-	migratedFromGoose := false
-	if !TrafficVault {
-		_, _, versionErr := Migrate.Version()
-		if versionErr != nil {
-			if versionErr != migrate.ErrNilVersion {
-				die("Error running migrate version: " + versionErr.Error())
-			}
-			migratedFromGoose = true
-			if err := Migrate.Steps(1); err != nil {
-				die("Error migrating to Migrate from Goose: " + err.Error())
-			}
-		}
+func maybeMigrateFromGoose() bool {
+	_, _, versionErr := Migrate.Version()
+	if versionErr == nil {
+		return false
 	}
+	if versionErr != migrate.ErrNilVersion {
+		die("Error running migrate version: " + versionErr.Error())
+	}
+	if err := Migrate.Steps(1); err != nil {
+		die("Error migrating to Migrate from Goose: " + err.Error())
+	}
+	return true
+}
+
+func runMigrations() {
+	migratedFromGoose := initMigrate()
 	upErr := Migrate.Up()
 	if upErr == migrate.ErrNoChange {
 		if !migratedFromGoose {
@@ -561,11 +562,11 @@ func main() {
 	}
 }
 
-func initMigrate() {
+func initMigrate() bool {
 	var err error
 	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s", DBDriver, DBUser, DBPassword, HostIP, HostPort, DBName, SSLMode)
 	if TrafficVault {
-		Migrate, err = migrate.New(TrafficVaultMigrationsPath, connectionString)
+		Migrate, err = migrate.New(TrafficVaultMigrationsSource, connectionString)
 	} else {
 		Migrate, err = migrate.New(DBMigrationsSource, connectionString)
 	}
@@ -573,6 +574,7 @@ func initMigrate() {
 		die("Starting Migrate: " + err.Error())
 	}
 	Migrate.Log = &Log{}
+	return maybeMigrateFromGoose()
 }
 
 // Log represents the logger

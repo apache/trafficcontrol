@@ -58,8 +58,8 @@ export GOPATH=/opt/traffic_ops/go
 
 # gets the current DB version. On success, output the version number. On failure, output a failure message starting with 'failed'.
 get_current_db_version() {
-    local dbversion_output=$(./db/admin --env=production dbversion 2>&1)
-    if [[ $? -ne 0 ]]; then
+    local dbversion_output
+    if ! dbversion_output="$(./db/admin --env=production dbversion 2>&1)"; then
         echo "failed to get dbversion: $dbversion_output"
         return
     fi
