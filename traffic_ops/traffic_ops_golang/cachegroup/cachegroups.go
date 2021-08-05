@@ -414,22 +414,22 @@ func (cg *TOCacheGroup) createCoordinate() (*int, error) {
 	return coordinateID, nil
 }
 
-func (cg *TOCacheGroup) updateCoordinate() (*int, error, error, int) {
+func (cg *TOCacheGroup) updateCoordinate() error {
 	if cg.Latitude != nil && cg.Longitude != nil {
 		q := `UPDATE coordinate SET name = $1, latitude = $2, longitude = $3 WHERE id = (SELECT coordinate FROM cachegroup WHERE id = $4)`
 		result, err := cg.ReqInfo.Tx.Tx.Exec(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude, *cg.ID)
 		if err != nil {
-			return nil, errors.New("cachegroup name already exist, give different name"), tc.DBError, http.StatusBadRequest
+			return fmt.Errorf("updating coordinate for cachegroup '%s': %s", *cg.Name, err.Error())
 		}
 		rowsAffected, err := result.RowsAffected()
 		if err != nil {
-			return nil, errors.New("updating coordinate for cachegroup , getting rows affected:" + *cg.Name + err.Error()), tc.DBError, http.StatusInternalServerError
+			return fmt.Errorf("updating coordinate for cachegroup '%s', getting rows affected: %s", *cg.Name, err.Error())
 		}
 		if rowsAffected == 0 {
-			return nil, errors.New("updating coordinate for cachegroup - Zero rows affected" + *cg.Name), tc.DBError, http.StatusInternalServerError
+			return fmt.Errorf("updating coordinate for cachegroup '%s', zero rows affected", *cg.Name)
 		}
 	}
-	return nil, nil, nil, http.StatusBadRequest
+	return nil
 }
 
 func (cg *TOCacheGroup) deleteCoordinate(coordinateID int) error {
@@ -593,6 +593,31 @@ LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.i
 //The TOCacheGroup implementation of the Updater interface
 func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"id":        {Column: "cachegroup.id", Checker: api.IsInt},
+		"name":      {Column: "cachegroup.name"},
+		"shortName": {Column: "cachegroup.short_name"},
+		"type":      {Column: "cachegroup.type"},
+		"topology":  {Column: "topology_cachegroup.topology"},
+	}
+	where, _, _, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(cg.ReqInfo.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return util.JoinErrs(errs), nil, http.StatusBadRequest
+	}
+	query := SelectQuery() + where
+	rows, err := cg.ReqInfo.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return nil, errors.New("cachegroup read: querying: " + err.Error()), http.StatusInternalServerError
+	}
+	count := 0
+	for rows.Next() {
+		count++
+	}
+	if count > 0 {
+		return fmt.Errorf("cachegroup name already exist, give different name"), nil, http.StatusBadRequest
+	}
+	defer rows.Close()
+
 	if cg.LocalizationMethods == nil {
 		cg.LocalizationMethods = &[]tc.LocalizationMethod{}
 	}
@@ -621,7 +646,7 @@ func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
-	err := cg.ReqInfo.Tx.Tx.QueryRow(
+	err = cg.ReqInfo.Tx.Tx.QueryRow(
 		UpdateQuery(),
 		cg.Name,
 		cg.ShortName,
@@ -687,8 +712,8 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 		return nil, nil, nil, http.StatusOK
 	}
 
-	if err1, err2, DBError, statusCode := cg.updateCoordinate(); err != nil {
-		return err1, err2, DBError, statusCode
+	if err := cg.updateCoordinate(); err != nil {
+		return nil, nil, tc.DBError, http.StatusInternalServerError
 	}
 	return coordinateID, nil, nil, http.StatusOK
 }
