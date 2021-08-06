@@ -33,10 +33,8 @@ or the Traffic Control Users mailing list (send an email to users-subscribe@traf
     * https://github.com/apache/trafficcontrol/pulls
 -->
 
-# Feature request
 <!-- Do not submit security vulnerabilities or support requests here - see above -->
-
-## Traffic Control components affected ...
+## This Feature Request affects these Traffic Control components:
 <!-- delete all those that don't apply -->
 - Traffic Control Cache Config (T3C, formerly ORT)
 - Traffic Control Client <!-- Please specify which (Python, Go, or Java) -->
