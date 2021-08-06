@@ -33,10 +33,8 @@ or the Traffic Control Users mailing list (send an email to users-subscribe@traf
     * https://github.com/apache/trafficcontrol/pulls
 -->
 
-## I'm submitting a ...
-<!-- Do not submit a security vulnerability here - see above security vulnerability info -->
-Please do not submit support requests here - see above -->
-- [x] improvement request (usability, [performance](https://github.com/apache/trafficcontrol/issues?q=is:open+is:issue+label:performance+sort:updated-desc), [tech debt](https://github.com/apache/trafficcontrol/issues?q=is:open+is:issue+label:"tech+debt"+sort:updated-desc), etc.)
+# Improvement request (usability, [performance](https://github.com/apache/trafficcontrol/issues?q=is:open+is:issue+label:performance+sort:updated-desc), [tech debt](https://github.com/apache/trafficcontrol/issues?q=is:open+is:issue+label:"tech+debt"+sort:updated-desc), etc.)
+<!-- Do not submit security vulnerabilities or support requests here - see above -->
 
 ## Traffic Control components affected ...
 <!-- delete all those that don't apply -->
