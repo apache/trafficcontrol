@@ -192,7 +192,7 @@ golang.org/x/crypto/ed25519/internal/edwards25519
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
-# golang.org/x/net v0.0.0-20210716203947-853a461950ff
+# golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
 ## explicit
 golang.org/x/net/bpf
 golang.org/x/net/html
