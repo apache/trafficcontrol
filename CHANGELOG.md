@@ -96,6 +96,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5981](https://github.com/apache/trafficcontrol/issues/5891) - `/deliveryservices/{{ID}}/safe` returns incorrect response for the requested API version
 - [#5984](https://github.com/apache/trafficcontrol/issues/5894) - `/servers/{{ID}}/deliveryservices` returns incorrect response for the requested API version
 - [#6027](https://github.com/apache/trafficcontrol/issues/6027) - Collapsed DB migrations
+- [#6091](https://github.com/apache/trafficcontrol/issues/6091) - Fixed cache config of internal cache communication for https origins
 - [#6066](https://github.com/apache/trafficcontrol/issues/6066) - Fixed missing/incorrect indices on some tables
 - [#5576](https://github.com/apache/trafficcontrol/issues/5576) - Inconsistent Profile Name restrictions
 

@@ -242,7 +242,9 @@ func getServerConfigRemapDotConfigForMid(
 			continue
 		}
 
-		if midRemaps[*ds.OrgServerFQDN] != "" {
+		remapFrom := strings.Replace(*ds.OrgServerFQDN, `https://`, `http://`, -1)
+
+		if midRemaps[remapFrom] != "" {
 			continue // skip remap rules from extra HOST_REGEXP entries
 		}
 
@@ -285,13 +287,13 @@ func getServerConfigRemapDotConfigForMid(
 		}
 
 		if midRemap != "" {
-			midRemaps[*ds.OrgServerFQDN] = midRemap
+			midRemaps[remapFrom] = *ds.OrgServerFQDN + midRemap
 		}
 	}
 
 	textLines := []string{}
 	for originFQDN, midRemap := range midRemaps {
-		textLines = append(textLines, "map "+originFQDN+" "+originFQDN+midRemap+"\n")
+		textLines = append(textLines, "map "+originFQDN+" "+midRemap+"\n")
 	}
 	sort.Strings(textLines)
 
@@ -403,6 +405,17 @@ func buildEdgeRemapLine(
 	warnings := []string{}
 	// ds = 'remap' in perl
 	mapFrom = strings.Replace(mapFrom, `__http__`, *server.HostName, -1)
+
+	isLastCache, err := serverIsLastCacheForDS(server, &ds, nameTopologies, cacheGroups)
+	if err != nil {
+		return "", warnings, errors.New("determining if cache is the last tier: " + err.Error())
+	}
+
+	// if this remap is going to a parent, use http not https.
+	// cache-to-cache communication inside the CDN is always http (though that's likely to change in the future)
+	if !isLastCache {
+		mapTo = strings.Replace(mapTo, `https://`, `http://`, -1)
+	}
 
 	if _, hasDSCPRemap := pData["dscp_remap"]; hasDSCPRemap {
 		text += "map	" + mapFrom + "     " + mapTo + ` @plugin=dscp_remap.so @pparam=` + strconv.Itoa(*ds.DSCP)
@@ -814,4 +827,29 @@ func getDSRequestFQDNs(ds *DeliveryService, regexes []tc.DeliveryServiceRegex, s
 		fqdns = append(fqdns, fqdn)
 	}
 	return fqdns, nil
+}
+
+func serverIsLastCacheForDS(server *Server, ds *DeliveryService, topologies map[TopologyName]tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable) (bool, error) {
+	if ds.Topology != nil && strings.TrimSpace(*ds.Topology) != "" {
+		if server.Cachegroup == nil {
+			return false, errors.New("Server has no CacheGroup")
+		}
+		topology, ok := topologies[TopologyName(*ds.Topology)]
+		if !ok {
+			return false, errors.New("DS topology '" + *ds.Topology + "' not found in topologies")
+		}
+		topoPlacement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
+		if err != nil {
+			return false, errors.New("getting topology placement: " + err.Error())
+		}
+		return topoPlacement.IsLastCacheTier, nil
+	}
+
+	return noTopologyServerIsLastCacheForDS(server, ds), nil
+}
+
+// noTopologyServerIsLastCacheForDS returns whether the server is the last tier for the DS, if the DS has no Topology.
+// This helper MUST NOT be called if the DS has a Topology. It does not check.
+func noTopologyServerIsLastCacheForDS(server *Server, ds *DeliveryService) bool {
+	return strings.HasPrefix(server.Type, tc.MidTypePrefix) || !ds.Type.UsesMidCache()
 }
