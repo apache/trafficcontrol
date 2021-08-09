@@ -426,6 +426,10 @@ func (tbl *riakURLSigKeyTable) gatherKeys(cluster *riak.Cluster, timeout int) er
 		if err := json.Unmarshal(obj.Value, &key); err != nil {
 			return fmt.Errorf("RiakURLSigKey gatherKeys '%s' unable to unamrshal object into tc.URLSigKeys: %w", obj.Key, err)
 		}
+		strLen := len(obj.Key)
+		if strLen > 7 && obj.Key[:8] == "url_sig_" && obj.Key[strLen-7:] == ".config" {
+			obj.Key = obj.Key[8 : strLen-7]
+		}
 		tbl.Records = append(tbl.Records, riakURLSigKeyRecord{
 			DeliveryService: obj.Key,
 			Key:             key,
