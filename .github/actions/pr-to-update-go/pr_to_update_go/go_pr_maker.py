@@ -325,9 +325,9 @@ class GoPRMaker:
 		"""
 		subprocess.run(['git', 'fetch', 'origin'], check=True)
 		subprocess.run(['git', 'checkout', previous_commit.sha], check=True)
-		script_path: str = '.github/actions/pr-to-update-go/update_golang_org_x.sh'
+		script_path: str = os.path.join(os.path.dirname(__file__), 'update_golang_org_x.sh')
 		subprocess.run([script_path], check=True)
-		files_to_check: list[str] = ['go.mod', 'go.sum', 'vendor/modules.txt']
+		files_to_check: list[str] = ['go.mod', 'go.sum', os.path.join('vendor', 'modules.txt')]
 		tree_elements: list[InputGitTreeElement] = []
 		for file in files_to_check:
 			diff_process = subprocess.run(['git', 'diff', '--exit-code', '--', file])
