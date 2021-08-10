@@ -29,5 +29,8 @@ go get -u \
 	golang.org/x/text \
 	golang.org/x/xerrors
 
+#Update go.mod and go.sum
+go mod tidy -v
+
 # update vendor/modules.txt
 go mod vendor -v
