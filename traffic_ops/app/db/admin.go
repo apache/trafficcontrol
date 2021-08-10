@@ -120,8 +120,10 @@ const (
 
 var (
 	// globals that are passed in via CLI flags and used in commands
-	Environment  string
-	TrafficVault bool
+	Environment    string
+	TrafficVault   bool
+	DBVersion      uint
+	DBVersionDirty bool
 
 	// globals that are parsed out of DBConfigFile and used in commands
 	DBDriver      string
@@ -314,7 +316,8 @@ func upgrade() {
 }
 
 func maybeMigrateFromGoose() bool {
-	_, _, versionErr := Migrate.Version()
+	var versionErr error
+	DBVersion, DBVersionDirty, versionErr = Migrate.Version()
 	if versionErr == nil {
 		return false
 	}
@@ -368,12 +371,8 @@ func status() {
 
 func dbVersion() {
 	initMigrate()
-	version, dirty, err := Migrate.Version()
-	if err != nil {
-		die("Error running migrate version: " + err.Error())
-	}
-	fmt.Printf("dbversion %d", version)
-	if dirty {
+	fmt.Printf("dbversion %d", DBVersion)
+	if DBVersionDirty {
 		fmt.Printf(" (dirty)")
 	}
 	println()
