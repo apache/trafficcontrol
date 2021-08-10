@@ -27,6 +27,7 @@ import sys
 from typing import Union
 
 import requests
+from github import GitRef
 from github.Branch import Branch
 from github.Commit import Commit
 from github.GitCommit import GitCommit
@@ -113,7 +114,7 @@ class GoPRMaker:
 		)
 		return
 
-	def run(self) -> None:
+	def run(self, update_version_only: bool = False) -> None:
 		"""
 		:return:
 		:rtype: None
@@ -128,13 +129,23 @@ class GoPRMaker:
 			print(f'Go version is up-to-date on {target_branch}, nothing to do.')
 			return
 
+		commit: Union[Commit, None] = None
 		if not self.branch_exists(source_branch_name):
-			commit: Commit = self.set_go_version(self.latest_go_version, commit_message,
+			commit = self.set_go_version(self.latest_go_version, commit_message,
 				source_branch_name)
-			update_golang_org_x_commit: Union[GitCommit, None] = self.update_golang_org_x(commit)
-			if isinstance(update_golang_org_x_commit, GitCommit):
-				sha: str = update_golang_org_x_commit.sha
-				self.update_branch(source_branch_name, sha)
+		if commit is None:
+			source_branch_ref: GitRef = self.repo.get_git_ref('heads/go-1.15.15')
+			commit = self.repo.get_commit(source_branch_ref.object.sha)
+		subprocess.run(['git', 'fetch', 'origin'], check=True)
+		subprocess.run(['git', 'checkout', commit.sha], check=True)
+		if update_version_only:
+			print(f'Branch {source_branch_name} has been created, exiting...')
+			return
+
+		update_golang_org_x_commit: Union[GitCommit, None] = self.update_golang_org_x(commit)
+		if isinstance(update_golang_org_x_commit, GitCommit):
+			sha: str = update_golang_org_x_commit.sha
+			self.update_branch(source_branch_name, sha)
 
 		owner: str = self.get_repo_owner()
 		self.create_pr(self.latest_go_version, commit_message, owner, source_branch_name,
