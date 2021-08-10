@@ -25,6 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-request/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq"
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
@@ -37,14 +38,24 @@ func main() {
 	log.Infoln("configuration initialized")
 
 	// login to traffic ops.
-	tccfg, err := t3cutil.TOConnect(&cfg.TCCfg)
+	cfg.TCCfg.TOClient, err = toreq.New(
+		cfg.TOURL,
+		cfg.TOUser,
+		cfg.TOPass,
+		cfg.TOInsecure,
+		cfg.TOTimeoutMS,
+		cfg.UserAgent,
+	)
 	if err != nil {
 		log.Errorf("%s\n", err)
 		os.Exit(2)
 	}
+	if cfg.TCCfg.TOClient.FellBack() {
+		log.Warnln("Traffic Ops does not support the latest version supported by this app! Falling back to previous major Traffic Ops API version!")
+	}
 
 	if cfg.GetData != "" {
-		if err := t3cutil.WriteData(*tccfg); err != nil {
+		if err := t3cutil.WriteData(cfg.TCCfg); err != nil {
 			log.Errorf("writing data: %s\n", err.Error())
 			os.Exit(3)
 		}

@@ -29,22 +29,37 @@ package toreq
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/toreqold"
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/torequtil"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/toreqold"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
 	"github.com/apache/trafficcontrol/lib/go-log"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client" // TODO change to v4-client when it's stabilized
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 type TOClient struct {
-	C          *toclient.Session
-	Old        *toreqold.TOClient
+	c          *toclient.Session
+	old        *toreqold.TOClient
 	NumRetries int
+}
+
+func (cl *TOClient) URL() string {
+	if cl.c == nil {
+		return cl.old.URL()
+	}
+	return cl.c.URL
+}
+
+func (cl *TOClient) SetURL(newURL string) {
+	if cl.c == nil {
+		cl.old.SetURL(newURL)
+	}
+	cl.c.URL = newURL
 }
 
 // New logs into Traffic Ops, returning the TOClient which contains the logged-in client.
@@ -55,23 +70,30 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 	log.Infoln("TO URL string: '" + toURLStr + "'")
 	log.Infoln("TO URL: '" + url.String() + "'")
 
-	opts := toclient.ClientOpts{}
+	opts := toclient.Options{}
 	opts.Insecure = insecure
 	opts.UserAgent = userAgent
 	opts.RequestTimeout = timeout
 	toClient, inf, err := toclient.Login(toURLStr, user, pass, opts)
-	if err != nil {
-		return nil, errors.New("Logging in to Traffic Ops '" + torequtil.MaybeIPStr(inf.RemoteAddr) + "': " + err.Error())
+	log.Errorf("DEBUG toreq.New reqInf %+v\n", inf)
+	latestSupported := inf.StatusCode != 404 && inf.StatusCode != 501
+	if err != nil && latestSupported {
+		return nil, fmt.Errorf("Logging in to Traffic Ops '%v' code %v: %v", torequtil.MaybeIPStr(inf.RemoteAddr), inf.StatusCode, err)
+	} else if !latestSupported {
+		log.Infof("toreqnew.New Logged into in to Traffic Ops: got %v, falling back to older client\n", inf.StatusCode)
+	} else {
+		log.Infoln("toreqnew.New Logged into in to Traffic Ops '" + torequtil.MaybeIPStr(inf.RemoteAddr) + "'")
 	}
 
-	log.Infoln("toreqnew.New Logged into in to Traffic Ops '" + torequtil.MaybeIPStr(inf.RemoteAddr) + "'")
-
-	latestSupported, toAddr, err := IsLatestSupported(toClient)
-	if err != nil {
-		return nil, errors.New("checking Traffic Ops '" + torequtil.MaybeIPStr(toAddr) + "' support: " + err.Error())
+	if latestSupported {
+		toAddr := net.Addr(nil)
+		latestSupported, toAddr, err = IsLatestSupported(toClient)
+		if err != nil {
+			return nil, errors.New("checking Traffic Ops '" + torequtil.MaybeIPStr(toAddr) + "' support: " + err.Error())
+		}
 	}
 
-	client := &TOClient{C: toClient}
+	client := &TOClient{c: toClient}
 	if !latestSupported {
 		log.Warnln("toreqnew.New Traffic Ops '" + torequtil.MaybeIPStr(inf.RemoteAddr) + "' does not support the latest client, falling back ot the previous")
 
@@ -79,8 +101,8 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 		if err != nil {
 			return nil, errors.New("logging into old client: " + err.Error())
 		}
-		client.C = nil
-		client.Old = oldClient
+		client.c = nil
+		client.old = oldClient
 	}
 
 	return client, nil
@@ -88,11 +110,11 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 
 // FellBack() returns whether the client fell back to the previous major version, because Traffic Ops didn't support the latest.
 func (cl *TOClient) FellBack() bool {
-	return cl.C == nil
+	return cl.c == nil
 }
 
 func IsLatestSupported(toClient *toclient.Session) (bool, net.Addr, error) {
-	_, inf, err := toClient.Ping()
+	_, inf, err := toClient.Ping(toclient.RequestOptions{})
 	if err != nil {
 		if errS := strings.ToLower(err.Error()); strings.Contains(errS, "not found") || strings.Contains(errS, "not implemented") {
 			return false, inf.RemoteAddr, nil

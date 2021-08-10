@@ -1,4 +1,4 @@
-package toreq
+package toreqold
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -24,15 +24,35 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+// serversToLatest converts a []tc.Server to []tc.ServerV30.
+// This is necessary, because the old Traffic Ops client doesn't return the same type as the latest client.
 func serversToLatest(svs tc.ServersV3Response) ([]atscfg.Server, error) {
-	return atscfg.ToServers(svs.Response), nil
+	nss := []atscfg.Server{}
+	for _, sv := range svs.Response {
+		svLatest, err := serverToLatest(&sv)
+		if err != nil {
+			return nil, err // serverToLatest adds context
+		}
+		nss = append(nss, atscfg.Server(*svLatest))
+	}
+	return nss, nil
 }
 
+// serverToLatest converts a tc.Server to tc.ServerV30.
+// This is necessary, because the old Traffic Ops client doesn't return the same type as the latest client.
 func serverToLatest(oldSv *tc.ServerV30) (*atscfg.Server, error) {
-	asv := atscfg.Server(*oldSv)
+	sv, err := oldSv.UpgradeToV40()
+	if err != nil {
+		return nil, err
+	}
+	asv := atscfg.Server(sv)
 	return &asv, nil
 }
 
 func dsesToLatest(dses []tc.DeliveryServiceNullableV30) []atscfg.DeliveryService {
-	return atscfg.V30ToDeliveryServices(dses)
+	newDSes := []tc.DeliveryServiceV40{}
+	for _, ds := range dses {
+		newDSes = append(newDSes, ds.UpgradeToV4())
+	}
+	return atscfg.ToDeliveryServices(newDSes)
 }

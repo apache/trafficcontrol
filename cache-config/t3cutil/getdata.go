@@ -22,16 +22,13 @@ package t3cutil
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
-	"io/ioutil"
-	"net/http"
 	"net/url"
 	"os"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/toreq"
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/torequtil"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -222,30 +219,11 @@ type ChkConfigEntry struct {
 }
 
 // SetUpdateStatus sets the queue and reval status of serverName in Traffic Ops.
-func SetUpdateStatus(cfg TCCfg, serverName string, queue bool, revalPending bool) error {
-	reqInf, err := cfg.TOClient.C.SetUpdateServerStatuses(string(serverName), &queue, &revalPending)
+func SetUpdateStatus(cfg TCCfg, serverName tc.CacheName, queue bool, revalPending bool) error {
+	// TODO need to move to toreq, add fallback
+	reqInf, err := cfg.TOClient.SetServerUpdateStatus(serverName, &queue, &revalPending)
 	if err != nil {
 		return errors.New("setting update statuses (Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "'): " + err.Error())
-	}
-	return nil
-}
-
-// setUpdateStatusLegacy sets the queue and reval status of serverName in Traffic Ops,
-// using the legacy pre-2.0 /update endpoint.
-func setUpdateStatusLegacy(cfg TCCfg, serverName tc.CacheName, queue bool, revalPending bool) error {
-	path := `/update/` + string(serverName) + `?updated=` + jsonBoolStr(queue) + `&reval_updated=` + jsonBoolStr(revalPending)
-	// C and RawRequest should generally never be used, but the alternatve here is to manually get the cookie and do an http.Get. We need to hit a non-API endpoint, no API endpoint exists for what we need.
-	resp, _, err := cfg.TOClient.C.RawRequest(http.MethodPost, path, nil)
-	if err != nil {
-		return errors.New("setting update statuses: " + err.Error())
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		bodyBts, err := ioutil.ReadAll(resp.Body)
-		if err == nil {
-			return fmt.Errorf("Traffic Ops returned %v %v", resp.StatusCode, string(bodyBts))
-		}
-		return fmt.Errorf("Traffic Ops returned %v (error reading body)", resp.StatusCode)
 	}
 	return nil
 }
