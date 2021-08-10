@@ -40,11 +40,11 @@ EDGE_123_FOO_ABC_ATS_714-RC0-27, EDGE_456_FOO_ABC_ATS_714-RC0-27, EDGE_123_BAR_A
 
 ## Proposed Change
 
-Layered Profiles allow assigning multiple Profiles, in order, to both Delivery Services and Servers. If multiple Profiles have a Parameter with the same Name and Config File, the Parameter from the last Profile in the ordering is applied.
+Layered Profiles allow assigning multiple profiles, in order, to both Delivery Services and Servers. If multiple profiles have a parameter with the same name and config File, the parameter from the last profile in the ordering is applied.
 
-Layered Profiles is exactly as powerful as the existing Profiles, it doesn't enable any new things. It makes profiles much easier to manage.
+Layered Profiles is exactly as powerful as the existing profiles, it doesn't enable any new things. It makes profiles much easier to manage.
 
-With Layered Profiles, hundreds of Profiles become a few dozen, each representing a logical group. For example, a server might have the Profiles, in order:
+With Layered Profiles, hundreds of profiles become a few dozen, each representing a logical group. For example, a server might have the profiles, in order:
 1. EDGE
 2. AMIGA_123
 3. CDN_FOO
