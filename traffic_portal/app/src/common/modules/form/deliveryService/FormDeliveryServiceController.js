@@ -29,7 +29,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     const knownVersions = new Set(["1.0", "1.1", "1.2", "1.3"]);
     $scope.tlsVersionUnknown = v => v && !knownVersions.has(v);
 
-    const insecureVersions = new Set(["1.0", "1.1"])
+    const insecureVersions = new Set(["1.0", "1.1"]);
     $scope.tlsVersionInsecure = v => v && insecureVersions.has(v);
 
     /**
@@ -65,11 +65,11 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
     $scope.removeTLSVersion = function(index) {
         deliveryService.tlsVersions.splice(index, 1);
-    }
+    };
 
     $scope.addTLSVersion = function(index) {
         deliveryService.tlsVersions.splice(index+1, 0, "");
-    }
+    };
 
     /**
      * This function is called on 'change' events for any and all TLS Version
