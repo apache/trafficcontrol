@@ -101,7 +101,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/package-lock.json traffic_portal/test/integration/package-lock.json traffic_portal/bower.json') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/package-lock.json traffic_portal/test/integration/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-modules-
       - name: Initialize Traffic Ops Database

@@ -57,10 +57,7 @@ RUN	gem install \
 		ffi:1.12.2 \
 		rb-inotify:0.9.10 \
 		compass && \
-	npm -g install bower grunt-cli
-
-# bower will not run as root by default
-RUN	echo '{ "allow_root": true }' > /root/.bowerrc
+	npm -g install grunt-cli
 
 ###
 

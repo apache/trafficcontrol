@@ -43,7 +43,7 @@ require('ui-bootstrap-tpls');
 require('contextMenu');
 
 // jquery
-require('jquery');
+window.$ = window.jQuery = require('jquery');
 
 // flot charts
 require('jquery-flot');

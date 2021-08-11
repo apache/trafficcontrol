@@ -19,7 +19,6 @@
 .sass-cache
 server/log/access.log
 node_modules
-app/bower_components
 app/dist
 Gemfile.lock
 

@@ -39,7 +39,6 @@ CHANGELOG$, Docs
 \.csv$, Apache-2.0
 \.conf$, Apache-2.0
 \.config(\.example)?$, Apache-2.0
-/\.bowerrc$, Apache-2.0
 \.traffic_ops$, Apache-2.0 # JSON with a specific format.
 \.dist$, Apache-2.0 # JSON with a specific format.
 traffic_monitor_config\.js$, Apache-2.0 # Actually JSON with a specific format.
