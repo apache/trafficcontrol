@@ -167,7 +167,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 		deleteLabel: 'Delete'
 	};
 
-    $scope.restrictTLS = deliveryService.tlsVersions instanceof Array && deliveryService.tlsVersions.length > 0;
+	$scope.restrictTLS = deliveryService.tlsVersions instanceof Array && deliveryService.tlsVersions.length > 0;
 
 	$scope.save = function(deliveryService) {
 		if (deliveryService.sslKeyVersion !== null && deliveryService.sslKeyVersion !== 0 &&
