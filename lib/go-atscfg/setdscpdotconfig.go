@@ -66,7 +66,7 @@ func MakeSetDSCPDotConfig(
 
 	if _, err := strconv.Atoi(dscpNumStr); err != nil {
 		// TODO warn? We don't generally warn for client errors, because it can be an attack vector. Provide a more informative error return? Return a 404?
-		text = "An error occured generating the DSCP header rewrite file."
+		text = "An error occurred generating the DSCP header rewrite file."
 		dscpNumStr = "" // emulates Perl
 	}
 

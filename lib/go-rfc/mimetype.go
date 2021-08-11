@@ -19,10 +19,12 @@ package rfc
  * under the License.
  */
 
-import "mime"
-import "sort"
-import "strings"
-import "strconv"
+import (
+	"mime"
+	"sort"
+	"strconv"
+	"strings"
+)
 
 /*
 MimeType represents a "Media Type" as defined by RFC6838, along with some ease-of-use functionality.
@@ -119,7 +121,7 @@ func (m MimeType) String() string {
 	return mime.FormatMediaType(m.Name, m.Parameters)
 }
 
-// Satisfy checks whether or not the MimeType "satifies" some other MimeType, o.
+// Satisfy checks whether or not the MimeType "satisfies" some other MimeType, o.
 //
 // Note that this does not check if the two are literally the *same*. Specifically, if the Type or
 // SubType of the given MimeType o is the special '*' name, then this will instead check whether or
