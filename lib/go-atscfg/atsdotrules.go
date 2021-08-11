@@ -53,10 +53,6 @@ type ATSDotRulesOpts struct {
 
 // MakeATSDotRules constructs a '50-ats.rules' file for the given server with
 // the given parameters and header comment content.
-//
-// WARNING: this will panic if parameters with the Names 'Drive_Prefix',
-// 'Drive_Letters', 'RAM_Drive_Prefix', and 'RAM_Drive_Letters' are not ALL
-// found in the passed Parameters.
 func MakeATSDotRules(
 	server *Server,
 	serverParams []tc.ParameterV5,
