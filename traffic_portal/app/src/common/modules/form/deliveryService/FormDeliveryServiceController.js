@@ -19,15 +19,49 @@
 
 var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, deliveryServiceUtils, cdnService, profileService, tenantService, propertiesModel, userModel, serviceCategoryService) {
 
+    /**
+     * This is used to cache TLS version settings when the checkbox is toggled.
+     * @type null | [string, ...string[]]
+     */
+    let cachedTLSVersions = null;
+
+
     const knownVersions = new Set(["1.0", "1.1", "1.2", "1.3"]);
     $scope.tlsVersionUnknown = v => v && !knownVersions.has(v);
 
     const insecureVersions = new Set(["1.0", "1.1"])
     $scope.tlsVersionInsecure = v => v && insecureVersions.has(v);
 
-    $scope.toggleTLSRestrict = () => {
-        deliveryService.tlsVersions = $scope.restrictTLS ? [""] : null;
+    /**
+     * This toggles whether or not TLS versions are restricted for the Delivery
+     * Service.
+     *
+     * It uses cachedTLSVersions to cache TLS version restrictions, so that the
+     * DS is always ready to submit without manipulation, but the UI "remembers"
+     * the TLS versions that existed on toggling restrictions off.
+     *
+     * This is called when the checkbox's 'change' event fires - that event is
+     * not handled here.
+     */
+    function toggleTLSRestrict() {
+        if ($scope.restrictTLS) {
+            if (cachedTLSVersions instanceof Array && cachedTLSVersions.length > 0) {
+                deliveryService.tlsVersions = cachedTLSVersions;
+            } else {
+                deliveryService.tlsVersions = [""];
+            }
+            cachedTLSVersions = null;
+            return;
+        }
+        if (deliveryService.tlsVersions instanceof Array && deliveryService.tlsVersions.length > 0) {
+            cachedTLSVersions = deliveryService.tlsVersions;
+        } else {
+            cachedTLSVersions = null;
+        }
+
+        deliveryService.tlsVersions =  null;
     }
+    $scope.toggleTLSRestrict = toggleTLSRestrict;
 
     $scope.removeTLSVersion = function(index) {
         deliveryService.tlsVersions.splice(index, 1);
