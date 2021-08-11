@@ -61,7 +61,11 @@ type CRSStatsStat struct {
 	RegionalAlternateCount uint64 `json:"regionalAlternateCount"`
 }
 
-// CRSStatsUpdateTracker ...
+// CRSStatsUpdateTracker is a collection of miscellaneous statistics about a
+// Traffic Router instance.
+//
+// This is named with "CRS" because of legacy naming conventions for Traffic
+// Router.
 type CRSStatsUpdateTracker struct {
 	LastHttpsCertificatesCheck           uint64 `json:"lastHttpsCertificatesCheck"`
 	LastGeolocationDatabaseUpdaterUpdate uint64 `json:"lastGeolocationDatabaseUpdaterUpdate"`

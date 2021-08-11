@@ -36,7 +36,7 @@ type DivisionResponse struct {
 	Response Division `json:"response"`
 }
 
-// Division ...
+// A Division is a named collection of Regions.
 type Division struct {
 
 	// Division ID

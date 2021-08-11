@@ -57,6 +57,7 @@ type DeleteCDNFederationResponse struct {
 	Alerts
 }
 
+// CDNFederation represents a Federation.
 type CDNFederation struct {
 	ID          *int       `json:"id" db:"id"`
 	CName       *string    `json:"cname" db:"cname"`
@@ -68,16 +69,23 @@ type CDNFederation struct {
 	*DeliveryServiceIDs `json:"deliveryService,omitempty"`
 }
 
+// DeliveryServiceIDs are pairs of identifiers for Delivery Services.
 type DeliveryServiceIDs struct {
 	DsId  *int    `json:"id,omitempty" db:"ds_id"`
 	XmlId *string `json:"xmlId,omitempty" db:"xml_id"`
 }
 
+// FederationNullable represents a relationship between some Federation
+// Mappings and a Delivery Service.
+//
+// This is not known to be used anywhere.
 type FederationNullable struct {
 	Mappings        []FederationMapping `json:"mappings"`
 	DeliveryService *string             `json:"deliveryService"`
 }
 
+// A FederationMapping is a Federation, without any information about its
+// resolver mappings or any relation to Delivery Services.
 type FederationMapping struct {
 	CName string `json:"cname"`
 	TTL   int    `json:"ttl"`
@@ -110,11 +118,15 @@ type AllFederationCDN struct {
 // IsAllFederations implements the IAllFederation interface. Always returns true.
 func (a AllFederationCDN) IsAllFederations() bool { return true }
 
+// A ResolverMapping is a set of Resolvers, ostensibly for a Federation.
 type ResolverMapping struct {
 	Resolve4 []string `json:"resolve4,omitempty"`
 	Resolve6 []string `json:"resolve6,omitempty"`
 }
 
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (r *ResolverMapping) Validate(tx *sql.Tx) error {
 	errs := []error{}
 	for _, res := range r.Resolve4 {
@@ -175,6 +187,9 @@ type FederationDSPost struct {
 	Replace *bool `json:"replace"`
 }
 
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (f *FederationDSPost) Validate(tx *sql.Tx) error {
 	return nil
 }
@@ -196,24 +211,31 @@ type FederationUsersResponse struct {
 	Alerts
 }
 
-// FederationUserPost represents POST body for assigning Users to Federations
+// FederationUserPost represents POST body for assigning Users to Federations.
 type FederationUserPost struct {
 	IDs     []int `json:"userIds"`
 	Replace *bool `json:"replace"`
 }
 
-// Validate validates FederationUserPost
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (f *FederationUserPost) Validate(tx *sql.Tx) error {
 	return validation.ValidateStruct(f,
 		validation.Field(&f.IDs, validation.NotNil),
 	)
 }
 
+// DeliveryServiceFederationResolverMapping structures represent resolvers to
+// which a Delivery Service maps "federated" CDN traffic.
 type DeliveryServiceFederationResolverMapping struct {
 	DeliveryService string          `json:"deliveryService"`
 	Mappings        ResolverMapping `json:"mappings"`
 }
 
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (d *DeliveryServiceFederationResolverMapping) Validate(tx *sql.Tx) error {
 	return d.Mappings.Validate(tx)
 }
