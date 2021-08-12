@@ -36,9 +36,9 @@ const ChkconfigParamConfigFile = `chkconfig`
 // ContentTypeChkconfig is the MIME content type of the contents of the
 // chkconfig configuration file.
 //
-// TODO: The GoDoc for MakeChkconfig says "This is a JSON object, and should be
-// served with an 'application/json' Content-Type." - is that right? Or is this
-// right? Or are they both right, somehow?
+// Note that the GoDoc for MakeChkconfig says "This is a JSON object, and should
+// be served with an 'application/json' Content-Type." but actually the file
+// contents on disk are not JSON-encoded.
 const ContentTypeChkconfig = ContentTypeTextASCII
 
 // LineCommentChkconfig is the string that signifies the start of a line comment
@@ -54,7 +54,9 @@ type ChkconfigOpts struct {
 // This is a JSON object, and should be served with an 'application/json'
 // Content-Type.
 //
-// TODO: rename/rework? We systemd now, after all.
+// TODO: rename/rework? We systemd now, after all. Also, this may be unused as
+// t3c now generates the contents of the file specially without calling into
+// this function, possibly.
 func MakeChkconfig(
 	serverParams []tc.ParameterV5,
 	opt *ChkconfigOpts,
