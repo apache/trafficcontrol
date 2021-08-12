@@ -171,7 +171,7 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 
 	rows, err := prof.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, errors.New("profile read querying: " + err.Error()), http.StatusInternalServerError, nil
+		return nil, errors.New("bad request"), errors.New("profile read querying: " + err.Error()), http.StatusBadRequest, nil
 	}
 	defer rows.Close()
 
