@@ -273,6 +273,10 @@ mind. For many endpoints this will probably be trivial, but must always be at
 least considered.
 
 ## Alternatives
+This section lists possible alternatives to the proposed system that were
+considered.
+
+### The current "Capabilities" system
 The current system of "Capabilities", if enforced, was a possible alternative
 to the system herein described. However, that system lacks the ability to
 express a user's permission to do something beyond a combination of HTTP
@@ -286,3 +290,53 @@ to everyone else. The system described here is far more flexible. It could even
 eliminate the need for the `/deliveryservices/safe` API endpoint, which can be
 expressed instead as two separate Permissions: one that allows making changes
 to the "safe" Delivery Service fields and one that allows all others.
+
+### Configuration file-based Role definitions
+Another alternative would have been to hard-code user Permissions and possibly
+also available Roles into a configuration file for Traffic Ops, instead of
+exposing the Role creation and Permissions assignment via the Traffic Ops API
+and storing that in the database. That approach does pose a problem for
+automatic migration on upgrade, since it's beyond the scope of a database
+migration. The new mappings would need to be constructed from the old Roles in
+some way, either by hand or with some tool created and provided by ATC. The
+reverse situation, a downgrade, is more or less impossible to handle without
+manual intervention.
+
+From a security standpoint, it could be argued that an on-disk file defining
+Roles and Permissions provides fewer attack vectors through which a privilege
+escalation could be performed.
+
+From a performance standpoint, it would also require less data to be queried
+from the DB with every single request, because the Roles-to-Permissions mappings
+would be stored in memory. Given how many API endpoints currently exist, that
+could save quite a lot of data traversal, especially for administrative-type
+users which will have most (if not all) of the available Permissions. However,
+this runs the risk of database state drifting out-of-sync with the configured
+Roles; for example if a user has the "Foo" Role and then that Role is deleted
+from the configuration file which is then reloaded, how does the API handle this
+now non-existent Role?
+
+From a developer standpoint, that is less code to implement and maintain,
+allowing us to finish the project faster and require less maintenance. Although,
+some fairly substantial API changes are still entailed, and changes to the Roles
+and Permissions-related endpoints would still need to be made so that e.g.
+Traffic Portal can decide what functionality to offer a user. This is also only
+less work if a tool is not made to handle migration.
+
+Additionally, testing this implementation would prove difficult in an end-to-end
+manner, as the current end-to-end testing using the various Go Traffic Ops
+clients does not have access to the process memory of Traffic Ops itself, so
+either end-to-end testing of Roles and Permissions as an access control measure
+would need to be abandoned, or a new testing method and/or framework would need
+to be adopted.
+
+From an operator standpoint, if a user is requesting more Permission, using the
+API would be more convenient than say, making a change to an Ansible file
+template. However, users needing more Permission should be relatively rare, and
+editing an Ansible file template is pretty straightforward anyways. However,
+users needing _less_ Permissions is much more time-sensitive than needing
+_more_, and operators would need to perform configuration deployment - whatever
+that entails for their organization (possibly including restarting Traffic Ops
+although that's not necessarily required for loading changes to the specific
+Roles and Permissions configuration file) rather than using the user-friendly
+interface of Traffic Portal.
