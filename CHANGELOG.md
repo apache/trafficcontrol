@@ -54,6 +54,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - atstccfg: add ##REFETCH## support to regex_revalidate.config processing.
 - Traffic Router: Added `svc="..."` field to request logging output.
 - Added t3c caching Traffic Ops data and using If-Modified-Since to avoid unnecessary requests.
+- Added t3c --no-outgoing-ip flags.
 - Added a Traffic Monitor integration test framework.
 - Added `traffic_ops/app/db/traffic_vault_migrate` to help with migrating Traffic Ops Traffic Vault backends
 - Added a tool at `/traffic_ops/app/db/reencrypt` to re-encrypt the data in the Postgres Traffic Vault with a new key.

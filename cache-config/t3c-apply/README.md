@@ -87,6 +87,11 @@ Typical usage is to install t3c on the cache machine, and then run it periodical
 
     Print usage information and exit
 
+-i, -\-no-outgoing-ip
+
+     Whether to not set the records.config outgoing IP to the
+     server's addresses in Traffic Ops. Default is false.
+
 -I, -\-traffic-ops-insecure
 
     [true | false] ignore certificate errors from Traffic Ops
