@@ -17,6 +17,7 @@ package v3
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -83,12 +84,29 @@ func GetTestProfilesIMS(t *testing.T) {
 		if reqInf.StatusCode != http.StatusNotModified {
 			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
 		}
-		_, reqInf, err = TOSession.GetProfileByParameterWithHdr(pr.Parameter, header)
-		if err != nil {
-			t.Fatalf("Expected no error, but got %v", err.Error())
-		}
-		if reqInf.StatusCode != http.StatusNotModified {
-			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		if len(pr.Parameters) > 0 {
+			parameter := pr.Parameters[0]
+			respParameter, _, _ := TOSession.GetParameterByName(*parameter.Name)
+			if len(respParameter) > 0 {
+				parameterID := respParameter[0].ID
+				if parameterID > 0 {
+					t.Errorf("Parameter ID %d", parameterID)
+					resp, _, err := TOSession.GetProfileByParameterWithHdr(strconv.Itoa(parameterID), header)
+					if err != nil {
+						t.Fatalf("Expected no error, but got %v", err.Error())
+					}
+					if reqInf.StatusCode != http.StatusNotModified {
+						t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+					}
+					if len(resp) < 1 {
+						t.Errorf("Expected atleast one response for Get Profile by Parameters, but found %d", len(resp))
+					}
+				} else {
+					t.Errorf("Invalid parameter ID %d", parameterID)
+				}
+			} else {
+				t.Errorf("No response found for GET Parameters by name")
+			}
 		}
 	}
 }
@@ -269,10 +287,25 @@ func GetTestProfiles(t *testing.T) {
 			t.Errorf("cannot GET Profile by name: %v - %v", err, resp)
 		}
 		profileID := resp[0].ID
-
-		resp, _, err = TOSession.GetProfileByParameter(pr.Parameter)
-		if err != nil {
-			t.Errorf("cannot GET Profile by param: %v - %v", err, resp)
+		if len(pr.Parameters) > 0 {
+			parameter := pr.Parameters[0]
+			respParameter, _, _ := TOSession.GetParameterByName(*parameter.Name)
+			if len(respParameter) > 0 {
+				parameterID := respParameter[0].ID
+				if parameterID > 0 {
+					resp, _, err = TOSession.GetProfileByParameter(strconv.Itoa(parameterID))
+					if err != nil {
+						t.Errorf("cannot GET Profile by param: %v - %v", err, resp)
+					}
+					if len(resp) < 1 {
+						t.Errorf("Expected atleast one response for Get Profile by Parameters, but found %d", len(resp))
+					}
+				} else {
+					t.Errorf("Invalid parameter ID %d", parameterID)
+				}
+			} else {
+				t.Errorf("No response found for GET Parameters by name")
+			}
 		}
 
 		resp, _, err = TOSession.GetProfileByCDNID(pr.CDNID)

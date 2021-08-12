@@ -141,12 +141,12 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(prof.APIInfo().Params, queryParamsToQueryCols)
 
+	query := selectProfilesQuery()
 	// Narrow down if the query parameter is 'param'
 	// TODO add generic where clause to api.GenericRead
 	if paramValue, ok := prof.APIInfo().Params[ParamQueryParam]; ok {
-		queryValues["parameter_id"] = paramValue
 		if len(paramValue) > 0 {
-			where = " LEFT JOIN profile_parameter pp ON prof.id = pp.profile " + where + " AND pp.parameter=:parameter_id"
+			query += " LEFT JOIN profile_parameter pp ON prof.id = pp.profile"
 		}
 	}
 
@@ -165,7 +165,7 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 		log.Debugln("Non IMS request")
 	}
 
-	query := selectProfilesQuery() + where + orderBy + pagination
+	query += where + orderBy + pagination
 	log.Debugln("Query is ", query)
 
 	rows, err := prof.ReqInfo.Tx.NamedQuery(query, queryValues)

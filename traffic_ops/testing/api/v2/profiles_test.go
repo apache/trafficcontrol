@@ -16,6 +16,7 @@
 package v2
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 
@@ -210,12 +211,26 @@ func GetTestProfiles(t *testing.T) {
 			t.Errorf("cannot GET Profile by name: %v - %v", err, resp)
 		}
 		profileID := resp[0].ID
-
-		resp, _, err = TOSession.GetProfileByParameter(pr.Parameter)
-		if err != nil {
-			t.Errorf("cannot GET Profile by param: %v - %v", err, resp)
+		if len(pr.Parameters) > 0 {
+			parameter := pr.Parameters[0]
+			respParameter, _, _ := TOSession.GetParameterByName(*parameter.Name)
+			if len(respParameter) > 0 {
+				parameterID := respParameter[0].ID
+				if parameterID > 0 {
+					resp, _, err = TOSession.GetProfileByParameter(strconv.Itoa(parameterID))
+					if err != nil {
+						t.Errorf("cannot GET Profile by param: %v - %v", err, resp)
+					}
+					if len(resp) < 1 {
+						t.Errorf("Expected atleast one response for Get Profile by Parameters, but found %d", len(resp))
+					}
+				} else {
+					t.Errorf("Invalid parameter ID %d", parameterID)
+				}
+			} else {
+				t.Errorf("No response found for GET Parameters by name")
+			}
 		}
-
 		resp, _, err = TOSession.GetProfileByCDNID(pr.CDNID)
 		if err != nil {
 			t.Errorf("cannot GET Profile by cdn: %v - %v", err, resp)
