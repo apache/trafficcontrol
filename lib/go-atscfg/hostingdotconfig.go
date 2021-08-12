@@ -55,23 +55,11 @@ const ParamRAMDrivePrefix = "RAM_Drive_Prefix"
 // ServerHostingDotConfigMidIncludeInactive controls whether or not to include
 // configurations for inactive Delivery Services in hosting.config for mid-tier
 // cache servers.
-//
-// TODO: remove this? It's only used in one place, where it's used as:
-//
-//     ... && !ServerHostingDotConfigMidIncludeInactive
-//
-// which tautologically reduces to whatever the rest of the condition was.
 const ServerHostingDotConfigMidIncludeInactive = false
 
 // ServerHostingDotConfigEdgeIncludeInactive controls whether or not to include
 // configurations for inactive Delivery Services in hosting.config for edge-tier
 // cache servers.
-//
-// TODO: remove this? It's only used in one place, where it's used as:
-//
-//     ... && !ServerHostingDotConfigEdgeIncludeInactive
-//
-// which tautologically reduces whatever's ANDed with it to 'false'.
 const ServerHostingDotConfigEdgeIncludeInactive = true
 
 // HostingDotConfigOpts contains settings to configure generation options.

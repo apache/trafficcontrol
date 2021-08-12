@@ -30,11 +30,6 @@ import (
 // ServerCacheDotConfigIncludeInactiveDSes is the definition of whether or not
 // inactive Delivery Services should be considered when generating the contents
 // of a cache.config ATS configuration file.
-//
-// TODO: This is used in only one place where it is used in a condition where
-// its negation is combined with something else by '&&' - which tautologically
-// reduces the condition to just whatever the rest of it was without this.
-// Should this be removed?
 const ServerCacheDotConfigIncludeInactiveDSes = false
 
 func makeCacheDotConfigMid(
