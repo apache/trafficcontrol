@@ -97,11 +97,8 @@ func (t *PollingProtocol) UnmarshalJSON(b []byte) error {
 
 // Config is the configuration for the application. It includes myriad data, such as polling intervals and log locations.
 type Config struct {
-	CacheHealthPollingInterval   time.Duration   `json:"-"`
-	CacheStatPollingInterval     time.Duration   `json:"-"`
 	MonitorConfigPollingInterval time.Duration   `json:"-"`
 	HTTPTimeout                  time.Duration   `json:"-"`
-	PeerPollingInterval          time.Duration   `json:"-"`
 	PeerOptimistic               bool            `json:"peer_optimistic"`
 	PeerOptimisticQuorumMin      int             `json:"peer_optimistic_quorum_min"`
 	MaxEvents                    uint64          `json:"max_events"`
@@ -115,7 +112,6 @@ type Config struct {
 	LogLocationEvent             string          `json:"log_location_event"`
 	ServeReadTimeout             time.Duration   `json:"-"`
 	ServeWriteTimeout            time.Duration   `json:"-"`
-	HealthToStatRatio            uint64          `json:"health_to_stat_ratio"`
 	StaticFileDir                string          `json:"static_file_dir"`
 	CRConfigHistoryCount         uint64          `json:"crconfig_history_count"`
 	TrafficOpsMinRetryInterval   time.Duration   `json:"-"`
@@ -136,11 +132,8 @@ func (c Config) EventLog() log.LogLocation   { return log.LogLocation(c.LogLocat
 
 // DefaultConfig is the default configuration for the application, if no configuration file is given, or if a given config setting doesn't exist in the config file.
 var DefaultConfig = Config{
-	CacheHealthPollingInterval:   6 * time.Second,
-	CacheStatPollingInterval:     6 * time.Second,
 	MonitorConfigPollingInterval: 5 * time.Second,
 	HTTPTimeout:                  2 * time.Second,
-	PeerPollingInterval:          5 * time.Second,
 	PeerOptimistic:               true,
 	PeerOptimisticQuorumMin:      0,
 	MaxEvents:                    200,
@@ -154,7 +147,6 @@ var DefaultConfig = Config{
 	LogLocationEvent:             LogLocationStdout,
 	ServeReadTimeout:             10 * time.Second,
 	ServeWriteTimeout:            10 * time.Second,
-	HealthToStatRatio:            4,
 	StaticFileDir:                StaticFileDir,
 	CRConfigHistoryCount:         20000,
 	TrafficOpsMinRetryInterval:   100 * time.Millisecond,
@@ -172,11 +164,8 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 	type Alias Config
 	json := jsoniter.ConfigFastest // TODO make configurable?
 	return json.Marshal(&struct {
-		CacheHealthPollingIntervalMs   uint64 `json:"cache_health_polling_interval_ms"`
-		CacheStatPollingIntervalMs     uint64 `json:"cache_stat_polling_interval_ms"`
 		MonitorConfigPollingIntervalMs uint64 `json:"monitor_config_polling_interval_ms"`
 		HTTPTimeoutMS                  uint64 `json:"http_timeout_ms"`
-		PeerPollingIntervalMs          uint64 `json:"peer_polling_interval_ms"`
 		PeerOptimistic                 bool   `json:"peer_optimistic"`
 		PeerOptimisticQuorumMin        int    `json:"peer_optimistic_quorum_min"`
 		HealthFlushIntervalMs          uint64 `json:"health_flush_interval_ms"`
@@ -186,11 +175,8 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 		ServeWriteTimeoutMs            uint64 `json:"serve_write_timeout_ms"`
 		*Alias
 	}{
-		CacheHealthPollingIntervalMs:   uint64(c.CacheHealthPollingInterval / time.Millisecond),
-		CacheStatPollingIntervalMs:     uint64(c.CacheStatPollingInterval / time.Millisecond),
 		MonitorConfigPollingIntervalMs: uint64(c.MonitorConfigPollingInterval / time.Millisecond),
 		HTTPTimeoutMS:                  uint64(c.HTTPTimeout / time.Millisecond),
-		PeerPollingIntervalMs:          uint64(c.PeerPollingInterval / time.Millisecond),
 		PeerOptimistic:                 bool(true),
 		PeerOptimisticQuorumMin:        int(c.PeerOptimisticQuorumMin),
 		HealthFlushIntervalMs:          uint64(c.HealthFlushInterval / time.Millisecond),
@@ -204,11 +190,8 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 func (c *Config) UnmarshalJSON(data []byte) error {
 	type Alias Config
 	aux := &struct {
-		CacheHealthPollingIntervalMs   *uint64 `json:"cache_health_polling_interval_ms"`
-		CacheStatPollingIntervalMs     *uint64 `json:"cache_stat_polling_interval_ms"`
 		MonitorConfigPollingIntervalMs *uint64 `json:"monitor_config_polling_interval_ms"`
 		HTTPTimeoutMS                  *uint64 `json:"http_timeout_ms"`
-		PeerPollingIntervalMs          *uint64 `json:"peer_polling_interval_ms"`
 		PeerOptimistic                 *bool   `json:"peer_optimistic"`
 		PeerOptimisticQuorumMin        *int    `json:"peer_optimistic_quorum_min"`
 		HealthFlushIntervalMs          *uint64 `json:"health_flush_interval_ms"`
@@ -231,20 +214,11 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	if aux.CacheHealthPollingIntervalMs != nil {
-		c.CacheHealthPollingInterval = time.Duration(*aux.CacheHealthPollingIntervalMs) * time.Millisecond
-	}
-	if aux.CacheStatPollingIntervalMs != nil {
-		c.CacheStatPollingInterval = time.Duration(*aux.CacheStatPollingIntervalMs) * time.Millisecond
-	}
 	if aux.MonitorConfigPollingIntervalMs != nil {
 		c.MonitorConfigPollingInterval = time.Duration(*aux.MonitorConfigPollingIntervalMs) * time.Millisecond
 	}
 	if aux.HTTPTimeoutMS != nil {
 		c.HTTPTimeout = time.Duration(*aux.HTTPTimeoutMS) * time.Millisecond
-	}
-	if aux.PeerPollingIntervalMs != nil {
-		c.PeerPollingInterval = time.Duration(*aux.PeerPollingIntervalMs) * time.Millisecond
 	}
 	if aux.HealthFlushIntervalMs != nil {
 		c.HealthFlushInterval = time.Duration(*aux.HealthFlushIntervalMs) * time.Millisecond

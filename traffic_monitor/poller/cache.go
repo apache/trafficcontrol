@@ -56,11 +56,9 @@ type CachePollerConfig struct {
 	PollingProtocol config.PollingProtocol
 }
 
-// NewHTTP creates and returns a new CachePoller.
+// NewCache creates and returns a new CachePoller.
 // If tick is false, CachePoller.TickChan() will return nil.
-// TODO: rename to not "http", since it's now pluggable
 func NewCache(
-	interval time.Duration,
 	tick bool,
 	handler handler.Handler,
 	cfg config.Config,
@@ -75,7 +73,6 @@ func NewCache(
 		TickChan:      tickChan,
 		ConfigChannel: make(chan CachePollerConfig),
 		Config: CachePollerConfig{
-			Interval:        interval,
 			PollingProtocol: pollingProtocol,
 		},
 		GlobalContexts: GetGlobalContexts(cfg, appData),
@@ -130,15 +127,6 @@ func (p CachePoller) Poll() {
 		}
 		p.Config = newConfig
 	}
-}
-
-func mustDie(die <-chan struct{}) bool {
-	select {
-	case <-die:
-		return true
-	default:
-	}
-	return false
 }
 
 // TODO iterationCount and/or p.TickChan?
