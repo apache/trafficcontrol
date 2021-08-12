@@ -157,6 +157,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 		}
 		return
 	}
+	defer tx.Commit()
 
 	logTx, err := db.Begin()
 	if err != nil {
