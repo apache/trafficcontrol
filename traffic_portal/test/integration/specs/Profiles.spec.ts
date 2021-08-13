@@ -38,52 +38,64 @@ describe('Setup API for Profiles', () => {
 profiles.tests.forEach(async profilesData => {
     profilesData.logins.forEach(login => {
         describe(`Traffic Portal - Profiles - ${login.description}`, () => {
+            afterEach(async function () {
+                await profilesPage.OpenProfilesPage();
+            });
+            afterAll(async function () {
+                expect(await topNavigation.Logout()).toBeTruthy();
+            })
             it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
                 await profilesPage.OpenConfigureMenu();
-                await profilesPage.OpenProfilesPage();
             });
-            profilesData.check.forEach(check => {
-                it(check.description, async () => {
-                    expect(await profilesPage.CheckCSV(check.Name)).toBe(true);
-                });
-            });
-            profilesData.toggle.forEach(toggle => {
-                it(toggle.description, async () => {
-                    if (toggle.description.includes('hide')) {
-                        expect(await profilesPage.ToggleTableColumn(toggle.Name)).toBe(false);
-                    } else {
-                        expect(await profilesPage.ToggleTableColumn(toggle.Name)).toBe(true);
-                    }
+            it('can perform check test suits', async () => {
+                profilesData.check.forEach(check => {
+                    it(check.description, async () => {
+                        expect(await profilesPage.CheckCSV(check.Name)).toBe(true);
+                    });
                 });
             })
-            profilesData.add.forEach(add => {
-                it(add.description, async () => {
-                    expect(await profilesPage.CreateProfile(add)).toBeTruthy();
+            it('can perform toggle test suits', async () => {
+                profilesData.toggle.forEach(toggle => {
+                    it(toggle.description, async () => {
+                        if (toggle.description.includes('hide')) {
+                            expect(await profilesPage.ToggleTableColumn(toggle.Name)).toBe(false);
+                        } else {
+                            expect(await profilesPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                        }
+                    });
+                })
+            })
+            it('can perform add test suits', async () => {
+                profilesData.add.forEach(add => {
+                    it(add.description, async () => {
+                        expect(await profilesPage.CreateProfile(add)).toBeTruthy();
+                    });
                 });
-            });
-            profilesData.update.forEach(update => {
-                it(update.description, async () => {
-                    await profilesPage.SearchProfile(update.Name);
-                    expect(await profilesPage.UpdateProfile(update)).toBeTruthy();
+            })
+            it('can perform update test suits', async () => {
+                profilesData.update.forEach(update => {
+                    it(update.description, async () => {
+                        await profilesPage.SearchProfile(update.Name);
+                        expect(await profilesPage.UpdateProfile(update)).toBeTruthy();
+                    });
                 });
-            });
-            profilesData.remove.forEach(remove => {
-                it(remove.description, async () => {
-                    await profilesPage.SearchProfile(remove.Name);
-                    expect(await profilesPage.DeleteProfile(remove)).toBeTruthy();
+            })
+            it('can perform remove test suits', async () => {
+                profilesData.remove.forEach(remove => {
+                    it(remove.description, async () => {
+                        await profilesPage.SearchProfile(remove.Name);
+                        expect(await profilesPage.DeleteProfile(remove)).toBeTruthy();
+                    });
                 });
-            });
-            it('can log out', async () => {
-                expect(await topNavigation.Logout()).toBeTruthy();
             })
         });
     });
 });
 
-describe('Clean Up Profiles Test', () => {
+describe('Clean up API for Profiles', () => {
     it('Cleanup', async () => {
         await api.UseAPI(profiles.cleanup);
     });
