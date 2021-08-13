@@ -47,6 +47,7 @@ type InvalidationJob struct {
 	tc.InvalidationJob
 }
 
+// Deprecated, only to be used with versions below 4.0
 const insertQuery = `
 INSERT INTO job (
 	ttl_hr,
@@ -82,6 +83,44 @@ RETURNING
 	'PURGE' AS keyword,
 	CONCAT('TTL:', ttl_hr, 'h') AS parameters,
 	start_time
+`
+
+// Almost the same as the above insert, but returns appropriate values for API 4.0+
+const insertQueryV40 = `
+INSERT INTO job (
+	ttl_hr,
+	asset_url,
+	start_time,
+	entered_time,
+	job_user,
+	job_deliveryservice,
+	invalidation_type)
+VALUES (
+	$1,
+	(
+		SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
+		FROM origin o
+		WHERE o.deliveryservice = $2
+		AND o.is_primary
+	) || $3,
+	$4,
+	$5,
+	$6,
+	$7,
+	$8
+)
+RETURNING
+	id,
+	asset_url,
+	(SELECT tm_user.username
+		FROM tm_user
+		WHERE tm_user.id=job_user) AS createdBy,
+	(SELECT deliveryservice.xml_id
+	 FROM deliveryservice
+	 WHERE deliveryservice.id=job_deliveryservice) AS deliveryServiceXML,
+	ttl_hr as ttlHrs,
+	invalidation_type as invalidationType,
+	start_time as startTime
 `
 
 const revalQuery = `
@@ -172,6 +211,11 @@ RETURNING job.asset_url,
 type apiResponse struct {
 	Alerts   []tc.Alert         `json:"alerts,omitempty"`
 	Response tc.InvalidationJob `json:"response,omitempty"`
+}
+
+type apiResponseV40 struct {
+	Alerts   []tc.Alert            `json:"alerts,omitempty"`
+	Response tc.InvalidationJobV40 `json:"response,omitempty"`
 }
 
 func selectMaxLastUpdatedQuery(where string) string {
@@ -299,6 +343,152 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
 
 // Used by POST requests to `/jobs`, creates a new content invalidation job
 // from the provided request body.
+func CreateV40(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	job := tc.InvalidationJobCreateV40{}
+	if err := json.NewDecoder(r.Body).Decode(&job); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Unable to parse Invalidation Job"), fmt.Errorf("parsing jobs/ POST: %v", err))
+		return
+	}
+
+	// Check if request object is valid
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	if err := job.Validate(inf.Tx.Tx); err != nil {
+		response := tc.Alerts{
+			Alerts: []tc.Alert{
+				{
+					Text:  err.Error(),
+					Level: tc.ErrorLevel.String(),
+				},
+			},
+		}
+
+		resp, err := json.Marshal(response)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Encoding bad request response: %v", err))
+			return
+		}
+
+		w.WriteHeader(http.StatusBadRequest)
+		api.WriteAndLogErr(w, r, append(resp, '\n'))
+		return
+	}
+
+	// Check if authorized
+	if ok, err := IsUserAuthorizedToModifyDSXMLID(inf, job.DeliveryService); err != nil {
+		sysErr = fmt.Errorf("failed checking current user permissions for DS #%s: %v", job.DeliveryService, err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	} else if !ok {
+		userErr = fmt.Errorf("failed to authorize based on tenancy")
+		errCode = http.StatusNotFound
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+		return
+	}
+
+	// DS existence was already verified in the Validate() function
+	dsid, err := job.GetDSIDfromDSXMLID(inf.Tx.Tx)
+	if err != nil {
+		sysErr = fmt.Errorf("failed to match XML ID to int ID for Delivery Service %s: %v", job.DeliveryService, err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+	}
+
+	row := inf.Tx.Tx.QueryRow(insertQueryV40,
+		job.TTLHours,
+		dsid, // Used in inner select for deliveryservice
+		job.Regex,
+		job.StartTime,
+		time.Now(),
+		inf.User.ID,
+		dsid,
+		job.InvalidationType) // Defaults for all api versions below 4.0
+
+	result := tc.InvalidationJobV40{}
+	err = row.Scan(
+		&result.ID,
+		&result.AssetURL,
+		&result.CreatedBy,
+		&result.DeliveryServiceXMLID,
+		&result.TTLHours,
+		&result.InvalidationType,
+		&result.StartTime)
+	if err != nil {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if err := setRevalFlags(dsid, inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("setting reval flags: %v", err))
+		return
+	}
+
+	conflicts := tc.ValidateJobUniqueness(inf.Tx.Tx, dsid, *result.StartTime, *result.AssetURL, *result.TTLHours)
+	response := apiResponseV40{
+		make([]tc.Alert, len(conflicts)+1),
+		result,
+	}
+	for i, conflict := range conflicts {
+		response.Alerts[i] = tc.Alert{
+			Text:  conflict,
+			Level: tc.WarnLevel.String(),
+		}
+	}
+	response.Alerts[len(conflicts)] = tc.Alert{
+		Text: fmt.Sprintf("Invalidation (%s) request created for %v, start:%v end %v",
+			*result.InvalidationType,
+			*result.AssetURL,
+			*result.StartTime,
+			result.StartTime.Add(time.Hour*time.Duration(job.TTLHours))),
+		Level: tc.SuccessLevel.String(),
+	}
+	resp, err := json.Marshal(response)
+
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Marshaling JSON: %v", err))
+		return
+	}
+
+	if inf.Version == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("nil API version"))
+		return
+	}
+
+	w.Header().Set(http.CanonicalHeaderKey("location"), fmt.Sprintf("%s://%s/api/%d.%d/jobs?id=%d", inf.Config.URL.Scheme, r.Host, inf.Version.Major, inf.Version.Minor, *result.ID))
+	w.WriteHeader(http.StatusOK)
+	api.WriteAndLogErr(w, r, append(resp, '\n'))
+
+	duplicate := ""
+	if len(conflicts) > 0 {
+		duplicate = "(duplicate) "
+	}
+	changeLogMsg := fmt.Sprintf("%s content invalidation job %s- ID: %d DSXMLID: %s ASSET_URL: %s TTLHRs: %d INVALIDATION: %s",
+		api.Created,
+		duplicate,
+		*result.ID,
+		*result.DeliveryServiceXMLID,
+		*result.AssetURL,
+		*result.TTLHours,
+		*result.InvalidationType,
+	)
+	api.CreateChangeLogRawTx(api.ApiChange,
+		changeLogMsg,
+		inf.User,
+		inf.Tx.Tx)
+}
+
+// Used by POST requests to `/jobs`, creates a new content invalidation job
+// from the provided request body.
+//
+// Deprecated. To be used only with versions less than 4.0
 func Create(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -383,7 +573,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		time.Now(),
 		inf.User.ID,
 		dsid,
-		"REFRESH")
+		tc.REFRESH) // Defaults for all api versions below 4.0
 
 	result := tc.InvalidationJob{}
 	err = row.Scan(&result.AssetURL,
@@ -719,6 +909,9 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, api.Deleted+" content invalidation job - ID: "+strconv.FormatUint(*result.ID, 10)+" DS: "+*result.DeliveryService+" URL: '"+*result.AssetURL+"' Params: '"+*result.Parameters+"'", inf.User, inf.Tx.Tx)
 }
 
+// API versions below 4.0 allowed for either the Delivery Service ID (uint) OR Delivery Service XML-ID (string).
+// This can be refactored once api versions below 4.0 are removed to take a Delivery Service XML-ID (string), rather
+// than an empty interface {}.
 func setRevalFlags(d interface{}, tx *sql.Tx) error {
 	var useReval string
 	row := tx.QueryRow(`SELECT value FROM parameter WHERE name=$1 AND config_file=$2`, tc.UseRevalPendingParameterName, tc.GlobalConfigFileName)
@@ -764,7 +957,7 @@ func setRevalFlags(d interface{}, tx *sql.Tx) error {
 // user isn't authorized.
 func IsUserAuthorizedToModifyDSID(inf *api.APIInfo, ds uint) (bool, error) {
 	var t uint
-	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id=$1`, ds)
+	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM deliveryservice WHERE id=$1`, ds)
 	if err := row.Scan(&t); err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil //I do this to conceal the existence of DSes for which the user has no permission to see
@@ -788,7 +981,7 @@ func IsUserAuthorizedToModifyDSID(inf *api.APIInfo, ds uint) (bool, error) {
 // user isn't authorized.
 func IsUserAuthorizedToModifyDSXMLID(inf *api.APIInfo, ds string) (bool, error) {
 	var t uint
-	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM deliveryservice where xml_id=$1`, ds)
+	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM deliveryservice WHERE xml_id=$1`, ds)
 	if err := row.Scan(&t); err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil //I do this to conceal the existence of DSes for which the user has no permission to see
@@ -812,7 +1005,7 @@ func IsUserAuthorizedToModifyDSXMLID(inf *api.APIInfo, ds string) (bool, error) 
 // user isn't authorized.
 func IsUserAuthorizedToModifyJobsMadeByUserID(inf *api.APIInfo, u uint) (bool, error) {
 	var t uint
-	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM tm_user where id=$1`, u)
+	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM tm_user WHERE id=$1`, u)
 	if err := row.Scan(&t); err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil //I do this to conceal the existence of DSes for which the user has no permission to see
@@ -836,7 +1029,7 @@ func IsUserAuthorizedToModifyJobsMadeByUserID(inf *api.APIInfo, u uint) (bool, e
 // user isn't authorized.
 func IsUserAuthorizedToModifyJobsMadeByUsername(inf *api.APIInfo, u string) (bool, error) {
 	var t uint
-	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM tm_user where username=$1`, u)
+	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM tm_user WHERE username=$1`, u)
 	if err := row.Scan(&t); err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil //I do this to conceal the existence of DSes for which the user has no permission to see

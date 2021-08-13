@@ -59,6 +59,17 @@ type InvalidationJob struct {
 	StartTime *Time `json:"startTime"`
 }
 
+// InvalidationJobV40 represents a content invalidation job as returned by the API.
+type InvalidationJobV40 struct {
+	ID                   *uint64    `json:"id"`
+	AssetURL             *string    `json:"assetUrl"`
+	CreatedBy            *string    `json:"createdBy"`
+	DeliveryServiceXMLID *string    `json:"deliveryService"`
+	TTLHours             *uint      `json:"ttlHours"`
+	InvalidationType     *string    `json:"invalidationType"`
+	StartTime            *time.Time `json:"startTime"`
+}
+
 // InvalidationJobsResponse is the type of a response from Traffic Ops to a
 // request made to its /jobs API endpoint.
 type InvalidationJobsResponse struct {
@@ -246,6 +257,12 @@ func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
 	return nil
 }
 
+type compareJob struct {
+	AssetURL  *string
+	TTLHours  *uint
+	StartTime *time.Time
+}
+
 // ValidateJobUniqueness returns a message describing each overlap between
 // existing content invalidation jobs for the same assetURL as the one passed.
 //
@@ -255,35 +272,35 @@ func ValidateJobUniqueness(tx *sql.Tx, dsID uint, startTime time.Time, assetURL 
 	var errs []string
 
 	const readQuery = `
-SELECT job.id,
-       'PURGE' as keyword,
-       CONCAT('TTL:', ttl_hr, 'h') AS parameters,
-       asset_url,
+SELECT asset_url,
+	   ttl_hr,
        start_time
 FROM job
 WHERE job.job_deliveryservice = $1
 `
 	rows, err := tx.Query(readQuery, dsID)
 	if err != nil {
-		errs = append(errs, "unable to query for other invalidation jobs")
+		errs = append(errs, "unable to query for invalidation jobs while validating job uniqueness")
 	} else {
 		defer rows.Close()
 		jobStart := startTime
 		for rows.Next() {
-			testJob := InvalidationJob{}
-			err = rows.Scan(&testJob.ID, &testJob.Keyword, &testJob.Parameters, &testJob.AssetURL, &testJob.StartTime)
+			testJob := compareJob{}
+			err = rows.Scan(
+				&testJob.AssetURL,
+				&testJob.TTLHours,
+				&testJob.StartTime)
 			if err != nil {
 				continue
 			}
 			if !strings.HasSuffix(*testJob.AssetURL, assetURL) {
 				continue
 			}
-			testJobTTL := testJob.TTLHours()
-			if testJobTTL == 0 {
+			if *testJob.TTLHours == 0 {
 				continue
 			}
-			testJobStart := testJob.StartTime.Time
-			testJobEnd := testJobStart.Add(time.Hour * time.Duration(testJobTTL))
+			testJobStart := testJob.StartTime
+			testJobEnd := testJobStart.Add(time.Hour * time.Duration(*testJob.TTLHours))
 			jobEnd := jobStart.Add(time.Hour * time.Duration(ttlHours))
 			// jobStart in testJob range
 			if (testJobStart.Before(jobStart) && jobStart.Before(testJobEnd)) ||
@@ -455,4 +472,121 @@ func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 		return errors.New(strings.Join(errs, ", "))
 	}
 	return nil
+}
+
+const REFRESH = "REFRESH"
+const REFETCH = "REFETCH"
+
+// InvalidationJobCreateV40 represents user input intending to create a content invalidation job.
+type InvalidationJobCreateV40 struct {
+	// The Delivery Service XML-ID for which the Invalidation Job is to be applied.
+	DeliveryService string `json:"deliveryService"`
+
+	// Regex is a regular expression which not only must be valid, but should also start with '/'
+	// (or escaped: '\/')
+	Regex string `json:"regex"`
+
+	// StartTime is the time at which the job will come into effect. Must be in the future.
+	StartTime time.Time `json:"startTime"`
+
+	// TTLHours indicates the Time-to-Live of the job in hours. Must be a positive integer value.
+	TTLHours uint32 `json:"ttlHours"`
+
+	// InvalidationType must be either REFRESH (default behavior) or REFETCH. If REFETCH, must
+	// also comply with global parameter setting
+	InvalidationType string `json:"invalidationType"`
+}
+
+// Validates the fields submitted for an InvalidationJobCreateV40. These errors
+// are ultimately returned to the user
+func (job *InvalidationJobCreateV40) Validate(tx *sql.Tx) error {
+	errs := []string{}
+	err := validation.ValidateStruct(job,
+		validation.Field(&job.DeliveryService, validation.Required),
+		validation.Field(&job.Regex, validation.Required, validation.NewStringRule(func(s string) bool {
+			return strings.HasPrefix(s, `\/`) || strings.HasPrefix(s, "/")
+		}, `must start with '/' (or '\/')`)),
+		validation.Field(&job.StartTime, validation.Required),
+		validation.Field(&job.TTLHours, validation.Required),
+		validation.Field(&job.InvalidationType, validation.Required, validation.NewStringRule(func(s string) bool {
+			return s == REFRESH || s == REFETCH
+		}, fmt.Sprintf("must be either %s or %s (case sensitive)", REFRESH, REFETCH))),
+	)
+	if err != nil {
+		errs = append(errs, err.Error())
+	}
+
+	if err := job.validateDeliveryService(tx); err != nil {
+		errs = append(errs, "Delivery Service is invalid: "+err.Error())
+	}
+
+	if _, err := regexp.Compile(job.Regex); err != nil {
+		errs = append(errs, "regex: is not a valid Regular Expression: "+err.Error())
+	}
+
+	if job.StartTime.Before(time.Now()) {
+		errs = append(errs, "startTime: must be in the future")
+	}
+
+	if err := job.validateTLLHours(tx); err != nil {
+		errs = append(errs, "TTL is invalid: "+err.Error())
+	}
+
+	if err := job.validateRefetch(tx); err != nil {
+		errs = append(errs, "InvalidationType is invalid: "+err.Error())
+	}
+
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, ", "))
+	}
+
+	return nil
+}
+
+// validateDeliveryService ensures the supplied (required) Delivery Service XML ID exists
+func (job *InvalidationJobCreateV40) validateDeliveryService(tx *sql.Tx) error {
+	var exists bool
+	row := tx.QueryRow(`SELECT EXISTS(SELECT * FROM deliveryservice WHERE xml_id=$1)`, job.DeliveryService)
+	if err := row.Scan(&exists); err != nil {
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("No DeliveryService exists matching identifier: %v", job.DeliveryService)
+		}
+		return errors.New("Unknown error occurred")
+	}
+	return nil
+}
+
+// validateDeliveryService ensures the supplied (required) Delivery Service XML ID exists
+func (job *InvalidationJobCreateV40) validateTLLHours(tx *sql.Tx) error {
+	var maxDays uint
+	err := tx.QueryRow(`SELECT value FROM parameter WHERE name='maxRevalDurationDays' AND config_file='regex_revalidate.config'`).Scan(&maxDays)
+	maxHours := maxDays * 24
+	if err == nil && uint(job.TTLHours) > maxHours { // silently ignore other errors too
+		return fmt.Errorf("cannot exceed %s", strconv.FormatUint(uint64(maxHours), 10))
+	}
+	return nil
+}
+
+// validateDeliveryService ensures the supplied (required) Delivery Service XML ID exists
+func (job *InvalidationJobCreateV40) validateRefetch(tx *sql.Tx) error {
+	if job.InvalidationType == REFETCH {
+		var refetchEnabled bool
+		err := tx.QueryRow(`SELECT value FROM parameter WHERE name='refetch_enabled' AND config_file='global'`).Scan(&refetchEnabled)
+		if err == nil && !refetchEnabled { // silently ignore other errors too
+			return fmt.Errorf("%s has not been enabled for this CDN", REFETCH)
+		}
+	}
+	return nil
+}
+
+func (job *InvalidationJobCreateV40) GetDSIDfromDSXMLID(tx *sql.Tx) (uint, error) {
+	var dsID uint
+	row := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id=$1`, job.DeliveryService)
+	if err := row.Scan(&dsID); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, fmt.Errorf("No DeliveryService exists matching identifier: %v", job.DeliveryService)
+		}
+		return 0, errors.New("Unknown error occurred")
+	}
+	return dsID, nil
 }
