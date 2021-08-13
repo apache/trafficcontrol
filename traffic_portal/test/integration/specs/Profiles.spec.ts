@@ -29,29 +29,24 @@ const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const profilesPage = new ProfilesPage();
 
-describe('Setup API for Profiles', () => {
-    it('Setup', async () => {
-        await api.UseAPI(profiles.setup);
-    });
-});
-
 profiles.tests.forEach(async profilesData => {
     profilesData.logins.forEach(login => {
+        beforeAll(async function(){
+            await api.UseAPI(profiles.setup);
+        });
         afterEach(async function() {
             await profilesPage.OpenProfilesPage();
          });
         afterAll(async function() {
             await topNavigation.Logout();
+            await api.UseAPI(profiles.cleanup);
         })
         describe(`Traffic Portal - Profiles - ${login.description}`, () => {
             it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            });
-            it('can open profiles page', async () => {
                 await profilesPage.OpenConfigureMenu();
-                await profilesPage.OpenProfilesPage();
             });
             it('can perform check test suits', async () => {
                 profilesData.check.forEach(check => {
@@ -59,7 +54,6 @@ profiles.tests.forEach(async profilesData => {
                         expect(await profilesPage.CheckCSV(check.Name)).toBe(true);
                     });
                 });
-
             })
             it('can perform toggle test suits', async () => {
                 profilesData.toggle.forEach(toggle => {
@@ -99,8 +93,3 @@ profiles.tests.forEach(async profilesData => {
     });
 });
 
-describe('Clean up API for Profiles', () => {
-    it('Cleanup', async () => {
-        await api.UseAPI(profiles.cleanup);
-    });
-});
