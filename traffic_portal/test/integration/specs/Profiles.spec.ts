@@ -34,6 +34,7 @@ describe('Setup API for Profiles', () => {
         await api.UseAPI(profiles.setup);
     });
 });
+
 profiles.tests.forEach(async profilesData => {
     profilesData.logins.forEach(login => {
         afterEach(async function() {
