@@ -29,19 +29,21 @@ const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const profilesPage = new ProfilesPage();
 
+describe('Setup API for Profiles', () => {
+    it('Setup', async () => {
+        await api.UseAPI(profiles.setup);
+    });
+});
+
 profiles.tests.forEach(async profilesData => {
     profilesData.logins.forEach(login => {
-        beforeAll(async function(){
-            await api.UseAPI(profiles.setup);
-        });
-        afterEach(async function() {
-            await profilesPage.OpenProfilesPage();
-         });
-        afterAll(async function() {
-            await topNavigation.Logout();
-            await api.UseAPI(profiles.cleanup);
-        })
         describe(`Traffic Portal - Profiles - ${login.description}`, () => {
+            afterEach(async function () {
+                await profilesPage.OpenProfilesPage();
+            });
+            afterAll(async function () {
+                expect(await topNavigation.Logout()).toBeTruthy();
+            })
             it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
@@ -58,9 +60,9 @@ profiles.tests.forEach(async profilesData => {
             it('can perform toggle test suits', async () => {
                 profilesData.toggle.forEach(toggle => {
                     it(toggle.description, async () => {
-                        if(toggle.description.includes('hide')){
+                        if (toggle.description.includes('hide')) {
                             expect(await profilesPage.ToggleTableColumn(toggle.Name)).toBe(false);
-                        }else{
+                        } else {
                             expect(await profilesPage.ToggleTableColumn(toggle.Name)).toBe(true);
                         }
                     });
@@ -93,3 +95,8 @@ profiles.tests.forEach(async profilesData => {
     });
 });
 
+describe('Clean up API for Profiles', () => {
+    it('Cleanup', async () => {
+        await api.UseAPI(profiles.cleanup);
+    });
+});
