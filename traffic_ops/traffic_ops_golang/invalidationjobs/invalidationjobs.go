@@ -85,7 +85,7 @@ RETURNING
 	start_time
 `
 
-// Almost the same as the above insert, but returns appropriate values for API 4.0+
+// Almost the same as insertQuery, but returns appropriate values for API 4.0+
 const insertQueryV40 = `
 INSERT INTO job (
 	ttl_hr,
@@ -170,6 +170,31 @@ RETURNING asset_url,
           start_time
 `
 
+// Almost the same as putInfoQuery, but returns appropriate values for API 4.0+
+const updateQueryV40 = `
+UPDATE job
+SET asset_url=$1,
+    ttl_hr=$2,
+    start_time=$3,
+	invalidation_type=$4
+WHERE job.id=$5
+RETURNING asset_url,
+          (
+           SELECT tm_user.username
+           FROM tm_user
+           WHERE tm_user.id=job.job_user
+          ) AS created_by,
+          (
+           SELECT deliveryservice.xml_id
+           FROM deliveryservice
+           WHERE deliveryservice.id=job.job_deliveryservice
+          ) AS delivery_service,
+          job.id,
+		  ttl_hr,
+          start_time,
+		  invalidation_type
+`
+
 const putInfoQuery = `
 SELECT job.id AS id,
        tm_user.username AS createdBy,
@@ -179,6 +204,25 @@ SELECT job.id AS id,
        job.asset_url AS assetURL,
        CONCAT('TTL:', ttl_hr, 'h') AS parameters,
        job.start_time AS start_time,
+       origin.protocol || '://' || origin.fqdn || rtrim(concat(':', origin.port), ':') AS OFQDN
+FROM job
+INNER JOIN origin ON origin.deliveryservice=job.job_deliveryservice AND origin.is_primary
+INNER JOIN tm_user ON tm_user.id=job.job_user
+INNER JOIN deliveryservice ON deliveryservice.id=job.job_deliveryservice
+WHERE job.id=$1
+`
+
+// Almost the same as putInfoQuery, but returns appropriate values for API 4.0+
+const putInfoQueryV40 = `
+SELECT job.id AS id,
+	   tm_user.username AS createdBy,
+	   job.job_user AS createdByID,
+       job.job_deliveryservice AS dsid,
+       deliveryservice.xml_id AS dsxmlid,
+       job.asset_url AS assetURL,
+       job.ttl_hr AS ttlhrs,
+       job.start_time AS start_time,
+	   job.invalidation_type as invalidationType,
        origin.protocol || '://' || origin.fqdn || rtrim(concat(':', origin.port), ':') AS OFQDN
 FROM job
 INNER JOIN origin ON origin.deliveryservice=job.job_deliveryservice AND origin.is_primary
@@ -470,7 +514,7 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 	if len(conflicts) > 0 {
 		duplicate = "(duplicate) "
 	}
-	changeLogMsg := fmt.Sprintf("%s content invalidation job %s- ID: %d DSXMLID: %s ASSET_URL: %s TTLHRs: %d INVALIDATION: %s",
+	changeLogMsg := fmt.Sprintf("%s content invalidation job %s- ID: %d DSXMLID: %s ASSET_URL: '%s' TTLHRs: %d INVALIDATION: %s",
 		api.Created,
 		duplicate,
 		*result.ID,
@@ -637,6 +681,198 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 // Used by PUT requests to `/jobs`, replaces an existing content invalidation job
 // with the provided request body.
+func UpdateV40(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var oFQDN string
+	var dsid uint
+	var uid uint
+	job := tc.InvalidationJobV40{}
+	row := inf.Tx.Tx.QueryRow(putInfoQueryV40, inf.Params["id"])
+	err := row.Scan(&job.ID,
+		&job.CreatedBy,
+		&uid,
+		&dsid,
+		&job.DeliveryServiceXMLID,
+		&job.AssetURL,
+		&job.TTLHours,
+		&job.StartTime,
+		&job.InvalidationType,
+		&oFQDN)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			userErr = fmt.Errorf("No job by id '%s'!", inf.Params["id"])
+			errCode = http.StatusNotFound
+		} else {
+			sysErr = fmt.Errorf("fetching job update info: %v", err)
+			errCode = http.StatusInternalServerError
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if ok, err := IsUserAuthorizedToModifyDSID(inf, dsid); err != nil {
+		sysErr = fmt.Errorf("Checking user permissions on DS #%d: %v", dsid, err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	} else if !ok {
+		userErr = errors.New("No such Delivery Service!")
+		errCode = http.StatusNotFound
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+		return
+	}
+
+	if ok, err := IsUserAuthorizedToModifyJobsMadeByUsername(inf, *job.CreatedBy); err != nil {
+		sysErr = fmt.Errorf("Checking user permissions against user %s: %v", *job.CreatedBy, err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	} else if !ok {
+		userErr = fmt.Errorf("No job by id '%s'!", inf.Params["id"])
+		errCode = http.StatusNotFound
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+		return
+	}
+
+	input := tc.InvalidationJobV40{}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		userErr = fmt.Errorf("Unable to parse input: %v", err)
+		sysErr = fmt.Errorf("parsing input to PUT jobs?id=%s: %v", inf.Params["id"], err)
+		errCode = http.StatusBadRequest
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if err := input.Validate(); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if !strings.HasPrefix(*input.AssetURL, oFQDN) {
+		userErr = fmt.Errorf("Cannot set asset URL that does not start with Delivery Service origin URL: %s", oFQDN)
+		errCode = http.StatusBadRequest
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+		return
+	}
+
+	if job.StartTime.Before(time.Now()) {
+		userErr = errors.New("Cannot modify a job that has already started!")
+		errCode = http.StatusMethodNotAllowed
+		w.Header().Set(http.CanonicalHeaderKey("allow"), "GET,HEAD,DELETE")
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+		return
+	}
+
+	if *job.DeliveryServiceXMLID != *input.DeliveryServiceXMLID {
+		userErr = errors.New("Cannot change 'deliveryService' of existing invalidation job!")
+		errCode = http.StatusConflict
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+		return
+	}
+
+	if *job.CreatedBy != *input.CreatedBy {
+		userErr = errors.New("Cannot change 'createdBy' of existing invalidation jobs!")
+		errCode = http.StatusConflict
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+		return
+	}
+
+	if *job.ID != *input.ID {
+		userErr = errors.New("Cannot change an invalidation job 'id'!")
+		errCode = http.StatusConflict
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+		return
+	}
+
+	if *job.InvalidationType != *input.InvalidationType {
+		if *input.InvalidationType == tc.REFETCH && !tc.RefetchAllowed(inf.Tx.Tx) {
+			userErr = errors.New("Invalidation Type REFRESH is disallowed")
+			errCode = http.StatusBadRequest
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+			return
+		}
+	}
+
+	row = inf.Tx.Tx.QueryRow(updateQueryV40,
+		input.AssetURL,
+		input.TTLHours,
+		input.StartTime,
+		input.InvalidationType,
+		*job.ID)
+	err = row.Scan(&job.AssetURL,
+		&job.CreatedBy,
+		&job.DeliveryServiceXMLID,
+		&job.ID,
+		&job.TTLHours,
+		&job.StartTime,
+		&job.InvalidationType)
+	if err != nil {
+		sysErr = fmt.Errorf("Updating a job: %v", err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	}
+
+	if err = setRevalFlags(*job.DeliveryServiceXMLID, inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Setting reval flags: %v", err))
+		return
+	}
+
+	conflicts := tc.ValidateJobUniqueness(inf.Tx.Tx, dsid, *input.StartTime, *input.AssetURL, *input.TTLHours)
+	response := apiResponseV40{
+		make([]tc.Alert, len(conflicts)+1),
+		job,
+	}
+	for i, conflict := range conflicts {
+		response.Alerts[i] = tc.Alert{
+			Text:  conflict,
+			Level: tc.WarnLevel.String(),
+		}
+	}
+	response.Alerts[len(conflicts)] = tc.Alert{
+		Text: fmt.Sprintf("Invalidation request created for %s, start: %v end: %v invalidation type: %v",
+			*job.AssetURL,
+			job.StartTime,
+			job.StartTime.Add(time.Hour*time.Duration(*job.TTLHours)),
+			*job.InvalidationType),
+		Level: tc.SuccessLevel.String(),
+	}
+
+	resp, err := json.Marshal(response)
+	if err != nil {
+		sysErr = fmt.Errorf("encoding response: %v", err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	}
+
+	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
+	api.WriteAndLogErr(w, r, append(resp, '\n'))
+
+	changeLogMsg := fmt.Sprintf("%s content invalidation job - ID: %d DSXMLID: %s ASSET_URL: '%s' TTLHRs: %d INVALIDATION: %s",
+		api.Updated,
+		*input.ID,
+		*input.DeliveryServiceXMLID,
+		*input.AssetURL,
+		*input.TTLHours,
+		*input.InvalidationType,
+	)
+	api.CreateChangeLogRawTx(api.ApiChange,
+		changeLogMsg,
+		inf.User,
+		inf.Tx.Tx)
+}
+
+// Used by PUT requests to `/jobs`, replaces an existing content invalidation job
+// with the provided request body.
+//
+// Deprecated. To be used only with versions less than 4.0
 func Update(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
