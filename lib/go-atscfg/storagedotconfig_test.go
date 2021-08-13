@@ -100,7 +100,7 @@ func TestMakeStorageDotConfigNoParams(t *testing.T) {
 
 	params := makeParamsFromMap(*server.Profile, StorageFileName, paramData)
 
-	cfg, err := MakeStorageDotConfig(server, params, hdr)
+	cfg, err := MakeStorageDotConfig(server, params, &StorageDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,7 +141,7 @@ func TestMakeStorageDotConfigNoDriveLetters(t *testing.T) {
 
 	params := makeParamsFromMap(*server.Profile, StorageFileName, paramData)
 
-	cfg, err := MakeStorageDotConfig(server, params, hdr)
+	cfg, err := MakeStorageDotConfig(server, params, &StorageDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -184,7 +184,7 @@ func TestMakeStorageDotConfigSomeDriveLetters(t *testing.T) {
 
 	params := makeParamsFromMap(*server.Profile, StorageFileName, paramData)
 
-	cfg, err := MakeStorageDotConfig(server, params, hdr)
+	cfg, err := MakeStorageDotConfig(server, params, &StorageDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
