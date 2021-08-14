@@ -216,7 +216,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `logs/newcount/?$`, logs.GetNewCount, auth.PrivLevelReadOnly, []string{"LOG:READ"}, Authenticated, nil, 44058330123},
 
 		//Content invalidation jobs
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `jobs/?$`, api.ReadHandler(&invalidationjobs.InvalidationJob{}), auth.PrivLevelReadOnly, nil, Authenticated, nil, 49667820413},
+		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `jobs/?$`, api.ReadHandler(&invalidationjobs.InvalidationJobV40{}), auth.PrivLevelReadOnly, nil, Authenticated, nil, 49667820413},
 		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `jobs/?$`, invalidationjobs.DeleteV40, auth.PrivLevelPortal, nil, Authenticated, nil, 4167807763},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `jobs/?$`, invalidationjobs.UpdateV40, auth.PrivLevelPortal, nil, Authenticated, nil, 4861342263},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `jobs/?`, invalidationjobs.CreateV40, auth.PrivLevelPortal, nil, Authenticated, nil, 404509553},

@@ -42,9 +42,15 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 )
 
+// Deprecated, only to be used with versions below 4.0
 type InvalidationJob struct {
 	api.APIInfoImpl `json:"-"`
 	tc.InvalidationJob
+}
+
+type InvalidationJobV40 struct {
+	api.APIInfoImpl `json:"-"`
+	tc.InvalidationJobV40
 }
 
 // Deprecated, only to be used with versions below 4.0
@@ -195,6 +201,7 @@ RETURNING asset_url,
 		  invalidation_type
 `
 
+// Deprecated, only to be used with versions below 4.0
 const putInfoQuery = `
 SELECT job.id AS id,
        tm_user.username AS createdBy,
@@ -231,6 +238,7 @@ INNER JOIN deliveryservice ON deliveryservice.id=job.job_deliveryservice
 WHERE job.id=$1
 `
 
+// Deprecated, only to be used with versions below 4.0
 const deleteQuery = `
 DELETE
 FROM job
@@ -293,6 +301,7 @@ func selectMaxLastUpdatedQuery(where string) string {
 	select max(last_updated) as t from last_deleted l where l.table_name='job') as res`
 }
 
+// Deprecated, only to be used with versions below 4.0
 const readQuery = `
 SELECT job.id,
         'PURGE' AS keyword,
@@ -306,8 +315,101 @@ JOIN tm_user u ON job.job_user = u.id
 JOIN deliveryservice ds ON job.job_deliveryservice = ds.id
 `
 
+// Almost the same as readQuery, but returns appropriate values for API 4.0+
+const readQueryV40 = `
+SELECT job.id,
+	   asset_url,
+	   u.username as createdBy,
+	   ds.xml_id,
+	   ttl_hr,
+	   invalidation_type,
+	   start_time
+FROM job
+JOIN tm_user u ON job.job_user = u.id
+JOIN deliveryservice ds ON job.job_deliveryservice = ds.id
+`
+
 // Used by GET requests to `/jobs`, simply returns a filtered list of
 // content invalidation jobs according to the provided query parameters.
+func (job *InvalidationJobV40) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	var maxTime time.Time
+	var runSecond bool
+	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
+		"id":               dbhelpers.WhereColumnInfo{Column: "job.id", Checker: api.IsInt},
+		"assetUrl":         dbhelpers.WhereColumnInfo{Column: "asset_url"},
+		"startTime":        dbhelpers.WhereColumnInfo{Column: "start_time"},
+		"userId":           dbhelpers.WhereColumnInfo{Column: "job_user", Checker: api.IsInt},
+		"createdBy":        dbhelpers.WhereColumnInfo{Column: `(SELECT tm_user.username FROM tm_user WHERE tm_user.id=job.job_user)`},
+		"deliveryService":  dbhelpers.WhereColumnInfo{Column: `(SELECT deliveryservice.xml_id FROM deliveryservice WHERE deliveryservice.id=job.job_deliveryservice)`},
+		"dsId":             dbhelpers.WhereColumnInfo{Column: "job.job_deliveryservice", Checker: api.IsInt},
+		"invalidationType": dbhelpers.WhereColumnInfo{Column: "invalidation_type"},
+	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(job.APIInfo().Params, queryParamsToSQLCols)
+	if len(errs) > 0 {
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
+	}
+
+	accessibleTenants, err := tenant.GetUserTenantIDListTx(job.APIInfo().Tx.Tx, job.APIInfo().User.TenantID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("getting accessible tenants for user - %v", err), http.StatusInternalServerError, nil
+	}
+	if len(where) > 0 {
+		where += " AND ds.tenant_id = ANY(:tenants) "
+	} else {
+		where = dbhelpers.BaseWhere + " ds.tenant_id = ANY(:tenants) "
+	}
+	queryValues["tenants"] = pq.Array(accessibleTenants)
+
+	if useIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(job.APIInfo().Tx, h, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
+	query := readQueryV40 + where + orderBy + pagination
+	log.Debugln("generated job query: " + query)
+	log.Debugf("executing with values: %++v\n", queryValues)
+
+	returnable := []interface{}{}
+	rows, err := job.APIInfo().Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return nil, nil, fmt.Errorf("querying: %v", err), http.StatusInternalServerError, nil
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		job := tc.InvalidationJobV40{}
+		err := rows.Scan(&job.ID,
+			&job.AssetURL,
+			&job.CreatedBy,
+			&job.DeliveryServiceXMLID,
+			&job.TTLHours,
+			&job.InvalidationType,
+			&job.StartTime)
+		if err != nil {
+			return nil, nil, fmt.Errorf("parsing db response: %v", err), http.StatusInternalServerError, nil
+		}
+
+		returnable = append(returnable, job)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, nil, fmt.Errorf("Parsing db responses: %v", err), http.StatusInternalServerError, nil
+	}
+
+	return returnable, nil, nil, http.StatusOK, &maxTime
+}
+
+// Used by GET requests to `/jobs`, simply returns a filtered list of
+// content invalidation jobs according to the provided query parameters.
+//
+// Deprecated. To be used only with versions less than 4.0
 func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
