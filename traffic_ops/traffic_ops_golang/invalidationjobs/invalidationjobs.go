@@ -170,7 +170,7 @@ RETURNING asset_url,
           start_time
 `
 
-// Almost the same as putInfoQuery, but returns appropriate values for API 4.0+
+// Almost the same as updateQuery, but returns appropriate values for API 4.0+
 const updateQueryV40 = `
 UPDATE job
 SET asset_url=$1,
@@ -236,8 +236,7 @@ DELETE
 FROM job
 WHERE job.id=$1
 RETURNING job.asset_url,
-          (
-           SELECT tm_user.username
+          ( SELECT tm_user.username
            FROM tm_user
            WHERE tm_user.id=job.job_user
           ) AS created_by,
@@ -249,6 +248,29 @@ RETURNING job.asset_url,
           job.id,          
 		  'PURGE' as keyword,
           CONCAT('TTL:', ttl_hr, 'h') AS parameters,
+          job.start_time
+`
+
+// Almost the same as deleteQuery, but returns appropriate values for API 4.0+
+const deleteQueryV40 = `
+DELETE
+FROM job
+WHERE job.id=$1
+RETURNING 
+		  job.id,
+		  job.asset_url,
+          (
+           SELECT tm_user.username
+           FROM tm_user
+           WHERE tm_user.id=job.job_user
+          ) AS created_by,
+          (
+           SELECT deliveryservice.xml_id
+           FROM deliveryservice
+           WHERE deliveryservice.id=job.job_deliveryservice
+          ) AS deliveryservice,
+          ttl_hr,
+		  job.invalidation_type,
           job.start_time
 `
 
@@ -1049,6 +1071,110 @@ func Update(w http.ResponseWriter, r *http.Request) {
 }
 
 // Used by DELETE requests to `/jobs`, deletes an existing content invalidation job
+func DeleteV40(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var dsid uint
+	var createdBy uint
+	row := inf.Tx.Tx.QueryRow(`SELECT job_deliveryservice, job_user FROM job WHERE id=$1`, inf.Params["id"])
+	if err := row.Scan(&dsid, &createdBy); err != nil {
+		if err == sql.ErrNoRows {
+			userErr = fmt.Errorf("No job by id '%s'!", inf.Params["id"])
+			errCode = http.StatusNotFound
+		} else {
+			sysErr = fmt.Errorf("Getting info for job #%s: %v", inf.Params["id"], err)
+			errCode = http.StatusInternalServerError
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if ok, err := IsUserAuthorizedToModifyDSID(inf, dsid); err != nil {
+		sysErr = fmt.Errorf("Checking user permissions on DS #%d: %v", dsid, err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	} else if !ok {
+		userErr = errors.New("No such Delivery Service!")
+		errCode = http.StatusNotFound
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+		return
+	}
+
+	if ok, err := IsUserAuthorizedToModifyJobsMadeByUserID(inf, createdBy); err != nil {
+		sysErr = fmt.Errorf("Checking user permissions against user %v: %v", createdBy, err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	} else if !ok {
+		userErr = fmt.Errorf("No job by id '%s'!", inf.Params["id"])
+		errCode = http.StatusNotFound
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
+		return
+	}
+
+	result := tc.InvalidationJobV40{}
+	row = inf.Tx.Tx.QueryRow(deleteQueryV40, inf.Params["id"])
+	err := row.Scan(
+		&result.ID,
+		&result.AssetURL,
+		&result.CreatedBy,
+		&result.DeliveryServiceXMLID,
+		&result.TTLHours,
+		&result.InvalidationType,
+		&result.StartTime)
+	if err != nil {
+		sysErr = fmt.Errorf("deleting job #%s: %v", inf.Params["id"], err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	}
+
+	if err = setRevalFlags(dsid, inf.Tx.Tx); err != nil {
+		sysErr = fmt.Errorf("setting reval_pending after deleting job #%s: %v", inf.Params["id"], err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	}
+
+	response := apiResponseV40{[]tc.Alert{
+		{Text: "Content invalidation job was deleted", Level: tc.SuccessLevel.String()},
+	},
+		result,
+	}
+	resp, err := json.Marshal(response)
+	if err != nil {
+		sysErr = fmt.Errorf("encoding response: %v", err)
+		errCode = http.StatusInternalServerError
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
+		return
+	}
+
+	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
+	api.WriteAndLogErr(w, r, append(resp, '\n'))
+
+	changeLogMsg := fmt.Sprintf("%s content invalidation job - ID: %d DSXMLID: %s ASSET_URL: '%s' TTLHRs: %d INVALIDATION: %s",
+		api.Deleted,
+		*result.ID,
+		*result.DeliveryServiceXMLID,
+		*result.AssetURL,
+		*result.TTLHours,
+		*result.InvalidationType,
+	)
+	api.CreateChangeLogRawTx(api.ApiChange,
+		changeLogMsg,
+		inf.User,
+		inf.Tx.Tx)
+}
+
+// Used by DELETE requests to `/jobs`, deletes an existing content invalidation job
+//
+// Deprecated. To be used only with versions less than 4.0
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
