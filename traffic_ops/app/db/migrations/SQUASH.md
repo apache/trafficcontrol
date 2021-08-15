@@ -20,7 +20,7 @@ And suppose the ATC [`master`](https://github.com/apache/trafficcontrol/commits/
 
 1. In order to prepare database migrations for the next major release, in this case, ATC 148.0.0, migrations `1` and `3` should be collapsed into `create_tables.sql` and migrations `4` and `9` should remain in [`traffic_ops/app/db/migrations/`](https://github.com/apache/trafficcontrol/tree/master/traffic_ops/app/db/migrations/).
 
-2. Note that `3` is the migration version version of the last up/down migration set. Find the definition for `LastSquashedMigrationVersion` in [`traffic_ops/app/db/admin.go`](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/app/db/admin.go) and change it to `3`.
+2. Note that `3` is the migration version of the last up/down migration set. Find the definition for `LastSquashedMigrationVersion` in [`traffic_ops/app/db/admin.go`](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/app/db/admin.go) and change it to `3`.
 
 Past PRs that have collapsed the DB migrations:
 - https://github.com/apache/trafficcontrol/pull/6065
