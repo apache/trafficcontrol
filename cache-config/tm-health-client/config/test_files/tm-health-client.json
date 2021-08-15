@@ -1,0 +1,15 @@
+{
+  "cdn-name": "over-the-top",
+  "enable-active-markdowns": false,
+  "reason-code": "active",
+  "to-credential-file": "test_files/credentials",
+  "to-url": "https://tp.cdn.com:443", 
+  "to-request-timeout-seconds": "5s",
+  "tm-poll-interval-seconds": "15s",
+  "trafficserver-config-dir": "./test_files/etc",
+  "trafficserver-bin-dir": "./test_files/bin",
+  "trafficmonitors":{
+    "tm-01.foo.com": true,
+    "tm-02.foo.com": false
+  }
+}
