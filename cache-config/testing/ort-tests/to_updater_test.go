@@ -106,7 +106,6 @@ func ExecTOUpdater(host string, reval_status bool, update_status bool) error {
 	args := []string{
 		"update",
 		"--traffic-ops-insecure=true",
-		"--login-dispersion=0",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
 		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,

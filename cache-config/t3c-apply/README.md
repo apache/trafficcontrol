@@ -38,7 +38,7 @@ t3c-apply - Traffic Control Cache Configuration applicator
 
 # SYNOPSIS
 
-t3c-apply [-2AbceFhIknopsSvW] [-a service-action] [-D seconds] [-f \<all|reval|none\>] [-g \<yes|no|auto\>] [-H hostname] [-l seconds] [-M location] [-m \<badass|report|revalidate|syncds\>] [-P password] [-r retries] [-R path] [-T seconds] [-t milliseconds] [-u url] [-U username] [-V tls-versions]
+t3c-apply [-2AbceFhIknopsSvW] [-a service-action] [-f \<all|reval|none\>] [-g \<yes|no|auto\>] [-H hostname] [-M location] [-m \<badass|report|revalidate|syncds\>] [-P password] [-r retries] [-R path] [-t milliseconds] [-u url] [-U username] [-V tls-versions]
 
 [\-\-help]
 
@@ -89,11 +89,6 @@ Typical usage is to install t3c on the cache machine, and then run it periodical
                     test or debug configuration from a production Traffic Ops
                     without un-setting queue or reval flags. Default is false.
 
--D, -\-dispersion=value
-
-                    [seconds] wait a random number of seconds between 0 and
-                    [seconds] before starting, default 300 [300]
-
 -e, -\-omit-via-string-release
 
                     Whether to set the records.config via header to the ATS
@@ -138,11 +133,6 @@ Typical usage is to install t3c on the cache machine, and then run it periodical
 -k, -\-install-packages
 
                     Whether to install necessary packages. Default is false.
-
--l, -\-login-dispersion=value
-
-                    [seconds] wait a random number of seconds between 0 and
-                    [seconds] before login to traffic ops, default 0
 
 -M, -\-maxmind-location=value
 
@@ -207,11 +197,6 @@ Typical usage is to install t3c on the cache machine, and then run it periodical
                     Silent. Errors are not logged, and the 'verbose' flag is
                     ignored. If a fatal error occurs, the return code will be
                     non-zero but no text will be output to stderr
-
--T, -\-reval-wait-time=value
-
-                    [seconds] wait a random number of seconds between 0 and
-                    [seconds] before revlidation, default is 60 [60]
 
 -t, -\-traffic-ops-timeout-milliseconds=value
 

@@ -70,8 +70,6 @@ func t3cUpdateCreateEmptyFile(host string, run_mode string) error {
 	args := []string{
 		"apply",
 		"--traffic-ops-insecure=true",
-		"--dispersion=0",
-		"--login-dispersion=0",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
 		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,

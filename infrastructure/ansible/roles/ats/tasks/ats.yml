@@ -67,7 +67,7 @@
     executable: "{{ lookup('pipe','command -v bash') }}"
     cmd: >-
       {%- if ort_version is not defined or ort_version == omit or ort_version >= '6.0.0.11351' -%}
-        pkill -9 t3c || true; t3c apply --run-mode=badass --cache-host-name='{{ (ansible_nodename.split('.')) | first }}' -vv --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' --login-dispersion=0 --dispersion=0 --wait-for-parents=false 2>&1 | tee /tmp/trafficcontrol-cache-config/badass_out; exit ${PIPESTATUS[0]}
+        pkill -9 t3c || true; t3c apply --run-mode=badass --cache-host-name='{{ (ansible_nodename.split('.')) | first }}' -vv --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' --wait-for-parents=false 2>&1 | tee /tmp/trafficcontrol-cache-config/badass_out; exit ${PIPESTATUS[0]}
       {%- else -%}
         pkill -9 _ort || true; traffic_ops_ort.pl -dispersion=0 --wait_for_parents=0 --login_dispersion=0 --retries=1 badass warn {{ ort_traffic_ops_url }} '{{ ort_traffic_ops_username }}:{{ ort_traffic_ops_password }}' 2>&1 | tee /tmp/badass_out; exit ${PIPESTATUS[0]}
       {%- endif -%}

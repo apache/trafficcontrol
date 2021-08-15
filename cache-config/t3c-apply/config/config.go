@@ -71,16 +71,13 @@ func (s SvcManagement) String() string {
 }
 
 type Cfg struct {
-	Dispersion          time.Duration
 	LogLocationDebug    string
 	LogLocationErr      string
 	LogLocationInfo     string
 	LogLocationWarn     string
-	LoginDispersion     time.Duration
 	CacheHostName       string
 	SvcManagement       SvcManagement
 	Retries             int
-	RevalWaitTime       time.Duration
 	ReverseProxyDisable bool
 	SkipOSCheck         bool
 	TOInsecure          bool
@@ -219,11 +216,8 @@ func GetTSPackageHome() string {
 func GetCfg() (Cfg, error) {
 	var err error
 
-	dispersionPtr := getopt.IntLong("dispersion", 'D', 300, "[seconds] wait a random number of seconds between 0 and [seconds] before starting, default 300")
-	loginDispersionPtr := getopt.IntLong("login-dispersion", 'l', 0, "[seconds] wait a random number of seconds between 0 and [seconds] before login to traffic ops, default 0")
 	cacheHostNamePtr := getopt.StringLong("cache-host-name", 'H', "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
 	retriesPtr := getopt.IntLong("num-retries", 'r', 3, "[number] retry connection to Traffic Ops URL [number] times, default is 3")
-	revalWaitTimePtr := getopt.IntLong("reval-wait-time", 'T', 60, "[seconds] wait a random number of seconds between 0 and [seconds] before revlidation, default is 60")
 	reverseProxyDisablePtr := getopt.BoolLong("reverse-proxy-disable", 'p', "[false | true] bypass the reverse proxy even if one has been configured default is false")
 	skipOSCheckPtr := getopt.BoolLong("skip-os-check", 'C', "[false | true] skip os check, default is false")
 	toInsecurePtr := getopt.BoolLong("traffic-ops-insecure", 'I', "[true | false] ignore certificate errors from Traffic Ops")
@@ -347,9 +341,6 @@ If any of the related flags are also set, they override the mode's default behav
 		*filesPtr = defaultFiles.String()
 	}
 
-	dispersion := time.Second * time.Duration(*dispersionPtr)
-	loginDispersion := time.Second * time.Duration(*loginDispersionPtr)
-
 	logLocationError := log.LogLocationStderr
 	logLocationWarn := log.LogLocationNull
 	logLocationInfo := log.LogLocationNull
@@ -387,7 +378,6 @@ If any of the related flags are also set, they override the mode's default behav
 	}
 
 	retries := *retriesPtr
-	revalWaitTime := time.Second * time.Duration(*revalWaitTimePtr)
 	reverseProxyDisable := *reverseProxyDisablePtr
 	skipOsCheck := *skipOSCheckPtr
 	toInsecure := *toInsecurePtr
@@ -475,16 +465,13 @@ If any of the related flags are also set, they override the mode's default behav
 	yumOptions := os.Getenv("YUM_OPTIONS")
 
 	cfg := Cfg{
-		Dispersion:                  dispersion,
 		LogLocationDebug:            logLocationDebug,
 		LogLocationErr:              logLocationError,
 		LogLocationInfo:             logLocationInfo,
 		LogLocationWarn:             logLocationWarn,
-		LoginDispersion:             loginDispersion,
 		CacheHostName:               cacheHostName,
 		SvcManagement:               svcManagement,
 		Retries:                     retries,
-		RevalWaitTime:               revalWaitTime,
 		ReverseProxyDisable:         reverseProxyDisable,
 		SkipOSCheck:                 skipOsCheck,
 		TOInsecure:                  toInsecure,
@@ -570,16 +557,13 @@ func getOSSvcManagement() SvcManagement {
 
 func printConfig(cfg Cfg) {
 	// TODO add new flags
-	log.Debugf("Dispersion: %d\n", cfg.Dispersion)
 	log.Debugf("LogLocationDebug: %s\n", cfg.LogLocationDebug)
 	log.Debugf("LogLocationErr: %s\n", cfg.LogLocationErr)
 	log.Debugf("LogLocationInfo: %s\n", cfg.LogLocationInfo)
 	log.Debugf("LogLocationWarn: %s\n", cfg.LogLocationWarn)
-	log.Debugf("LoginDispersion: %d\n", cfg.LoginDispersion)
 	log.Debugf("CacheHostName: %s\n", cfg.CacheHostName)
 	log.Debugf("SvcManagement: %s\n", cfg.SvcManagement)
 	log.Debugf("Retries: %d\n", cfg.Retries)
-	log.Debugf("RevalWaitTime: %d\n", cfg.RevalWaitTime)
 	log.Debugf("ReverseProxyDisable: %t\n", cfg.ReverseProxyDisable)
 	log.Debugf("SkipOSCheck: %t\n", cfg.SkipOSCheck)
 	log.Debugf("TOInsecure: %t\n", cfg.TOInsecure)
