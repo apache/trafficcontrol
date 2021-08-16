@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -34,6 +35,10 @@ import (
 // EmailTemplate is an html/template.Template for formatting DeliveryServiceRequestRequests into
 // text/html email bodies. Its direct use is discouraged, instead use
 // DeliveryServiceRequestRequest.Format.
+//
+// Deprecated: Delivery Services Requests have been deprecated in favor of
+// Delivery Service Requests, and will be removed from the Traffic Ops API at
+// some point in the future.
 var EmailTemplate = template.Must(template.New("Email Template").Parse(`<!DOCTYPE html>
 <html lang="en-US">
 <head>
@@ -157,6 +162,10 @@ pre {
 type IDNoMod int
 
 // DeliveryServiceRequestRequest is a literal request to make a Delivery Service.
+//
+// Deprecated: Delivery Services Requests have been deprecated in favor of
+// Delivery Service Requests, and will be removed from the Traffic Ops API at
+// some point in the future.
 type DeliveryServiceRequestRequest struct {
 	// EmailTo is the email address that is ultimately the destination of a formatted DeliveryServiceRequestRequest.
 	EmailTo string `json:"emailTo"`
@@ -166,6 +175,10 @@ type DeliveryServiceRequestRequest struct {
 
 // DeliveryServiceRequestDetails holds information about what a user is trying
 // to change, with respect to a delivery service.
+//
+// Deprecated: Delivery Services Requests have been deprecated in favor of
+// Delivery Service Requests, and will be removed from the Traffic Ops API at
+// some point in the future.
 type DeliveryServiceRequestDetails struct {
 	// ContentType is the type of content to be delivered, e.g. "static", "VOD" etc.
 	ContentType string `json:"contentType"`
@@ -253,7 +266,7 @@ func (d DeliveryServiceRequestDetails) Format() (string, error) {
 	b := &strings.Builder{}
 
 	if err := EmailTemplate.Execute(b, d); err != nil {
-		return "", fmt.Errorf("Failed to apply template: %v", err)
+		return "", fmt.Errorf("Failed to apply template: %w", err)
 	}
 	return b.String(), nil
 }
@@ -273,7 +286,7 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 	details := d.Details
 	err = validation.ValidateStruct(&details,
 		validation.Field(&details.ContentType, validation.Required),
-		validation.Field(&details.Customer, validation.Required),
+		validation.Field(&details.Customer, validation.Required, validation.Match(regexp.MustCompile(`^[\w@!#$%^&\*\(\)\[\]\. -]+$`))),
 		validation.Field(&details.DeepCachingType, validation.By(
 			func(t interface{}) error {
 				if t != (*DeepCachingType)(nil) && *t.(*DeepCachingType) == DeepCachingTypeInvalid {

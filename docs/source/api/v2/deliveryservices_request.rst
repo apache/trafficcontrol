@@ -33,7 +33,11 @@ Request Structure
 -----------------
 :details: An object describing the actual parameters for the Delivery Service request
 
-	:customer:        Name of the customer associated with the :term:`Delivery Service`
+	:customer: Name of the customer associated with the :term:`Delivery Service` - must only contain alphanumeric characters and the characters :kbd:`@`, :kbd:`!`, :kbd:`#`, :kbd:`$`, :kbd:`%`, :kbd:`^`, :kbd:`&`, :kbd:`*`, :kbd:`(`, :kbd:`)`, :kbd:`[`, :kbd:`]`, :kbd:`.`, :kbd:` `, and :kbd:`-`
+
+		.. versionchanged:: ATCv6
+			Prior to ATC version 6, this field had no restrictions.
+
 	:deepCachingType: An optional string describing when to do Deep Caching for this :term:`Delivery Service` - one of:
 
 		NEVER
@@ -112,8 +116,8 @@ Request Structure
 		"hasNegativeCachingCustomization": false,
 		"negativeCachingCustomizationNote": "",
 		"serviceAliases": [],
-		"rateLimitingGBPS": "less than 50",
-		"rateLimitingTPS": "no more than 5000",
+		"rateLimitingGBPS": 50,
+		"rateLimitingTPS": 5000,
 		"overflowService": null,
 		"headerRewriteEdge": "",
 		"headerRewriteMid": "",
