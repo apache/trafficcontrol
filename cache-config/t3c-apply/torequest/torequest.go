@@ -36,7 +36,6 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/util"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 type UpdateStatus int
@@ -518,65 +517,6 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 	return nil
 }
 
-func (r *TrafficOpsReq) sleepTimer(serverStatus *tc.ServerUpdateStatus) {
-	randDispSec := time.Duration(0)
-	revalClockSec := time.Duration(0)
-
-	if r.Cfg.Dispersion > 0 {
-		randDispSec = util.RandomDuration(r.Cfg.Dispersion) / time.Second
-	}
-	if r.Cfg.RevalWaitTime > 0 {
-		revalClockSec = r.Cfg.RevalWaitTime / time.Second
-	}
-
-	if serverStatus.UseRevalPending {
-		log.Infoln("Performing a revalidation check before sleeping...")
-		_, err := r.RevalidateWhileSleeping()
-		if err != nil {
-			log.Errorf("Revalidation check completed with error: %s\n", err)
-		} else {
-			log.Infoln("Revalidation check complete.")
-		}
-	}
-
-	if randDispSec < revalClockSec || serverStatus.UseRevalPending == false {
-		log.Infof("Sleeping for %d seconds: ", randDispSec)
-	} else {
-		log.Infof("%d seconds until next revalidation check.\n", revalClockSec)
-		log.Infof("%d seconds remaining in dispersion sleep period\n", randDispSec)
-		log.Infof("Sleeping for %d seconds: ", revalClockSec)
-	}
-
-	for randDispSec > 0 {
-		fmt.Printf(".")
-		time.Sleep(time.Second)
-		revalClockSec--
-		if revalClockSec < 1 && serverStatus.UseRevalPending {
-			fmt.Printf("\n")
-			log.Infoln("Interrupting dispersion sleep period for revalidation check.")
-			_, err := r.RevalidateWhileSleeping()
-			if r.Cfg.RevalWaitTime > 0 {
-				revalClockSec = r.Cfg.RevalWaitTime / time.Second
-			}
-			if err != nil {
-				log.Errorf("Revalidation check completed with error: %s\n", err)
-			} else {
-				log.Infoln("Revalidation check complete.")
-			}
-			if revalClockSec < randDispSec {
-				log.Infof("Revalidation check complete. %d seconds until next revalidation check.", revalClockSec)
-				log.Infof("%d seconds remaining in dispersion sleep period\n", randDispSec)
-				log.Infof("Sleeping for %d seconds: ", revalClockSec)
-			} else {
-				log.Infof("Revalidation check complete. %d seconds remaining in dispersion sleep period.\n", randDispSec)
-				log.Infof("Sleeping for %d seconds: ", randDispSec)
-			}
-		}
-		randDispSec--
-	}
-	fmt.Printf("\n")
-}
-
 // CheckSystemServices is used to verify that packages installed
 // are enabled for startup.
 func (r *TrafficOpsReq) CheckSystemServices() error {
@@ -778,9 +718,6 @@ func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, 
 func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 	updateStatus := UpdateTropsNotNeeded
 	randDispSec := time.Duration(0)
-	if r.Cfg.Dispersion > 0 {
-		randDispSec = util.RandomDuration(r.Cfg.Dispersion)
-	}
 	log.Debugln("Checking syncds state.")
 	//	if r.Cfg.RunMode == t3cutil.ModeSyncDS || r.Cfg.RunMode == t3cutil.ModeBadAss || r.Cfg.RunMode == t3cutil.ModeReport {
 	if r.Cfg.Files != t3cutil.ApplyFilesFlagReval {
@@ -791,10 +728,6 @@ func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 		}
 
 		if serverStatus.UpdatePending {
-			if r.Cfg.Dispersion > 0 {
-				log.Infof("Sleeping for %ds (dispersion) before proceeding with updates.\n\n", (randDispSec / time.Second))
-				r.sleepTimer(serverStatus)
-			}
 			updateStatus = UpdateTropsNeeded
 			log.Errorln("Traffic Ops is signaling that an update is waiting to be applied")
 
@@ -803,7 +736,6 @@ func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 				// TODO should reval really not sleep?
 				if !r.Cfg.ReportOnly && r.Cfg.Files != t3cutil.ApplyFilesFlagReval {
 					log.Infof("sleeping for %ds to see if the update my parents need is cleared.", randDispSec/time.Second)
-					r.sleepTimer(serverStatus)
 					serverStatus, err = getUpdateStatus(r.Cfg)
 					if err != nil {
 						return updateStatus, err
