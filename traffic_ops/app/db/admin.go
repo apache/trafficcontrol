@@ -117,7 +117,8 @@ const (
 	TrafficVaultDir              = dbDir + "trafficvault/"
 	TrafficVaultSchemaPath       = TrafficVaultDir + "create_tables.sql"
 
-	LastSquashedMigrationTimestamp uint = 2021012200000000
+	LastSquashedMigrationTimestamp uint = 2021012200000000 // 2021012200000000_max_request_header_bytes_default_zero.sql
+	FirstMigrationTimestamp        uint = 2021012700000000 // 2021012700000000_update_interfaces_multiple_routers.up.sql
 )
 
 var (
@@ -335,9 +336,8 @@ func maybeMigrateFromGoose() bool {
 func runMigrations() {
 	migratedFromGoose := initMigrate()
 	if !TrafficVault && DBVersion == LastSquashedMigrationTimestamp && !DBVersionDirty {
-		const tempVersion = 0
-		if forceErr := Migrate.Force(tempVersion); forceErr != nil {
-			die(fmt.Sprintf("Error temporarily forcing the DB version from %d to %d: %s", LastSquashedMigrationTimestamp, tempVersion, forceErr.Error()))
+		if migrateErr := Migrate.Migrate(FirstMigrationTimestamp); migrateErr != nil {
+			die(fmt.Sprintf("Error migrating from DB version %d to %d: %s", LastSquashedMigrationTimestamp, FirstMigrationTimestamp, migrateErr.Error()))
 		}
 	}
 	if upErr := Migrate.Up(); upErr == migrate.ErrNoChange {
