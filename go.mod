@@ -17,7 +17,7 @@ module github.com/apache/trafficcontrol
 // specific language governing permissions and limitations
 // under the License.
 
-go 1.15
+go 1.16
 
 replace (
 	github.com/fsnotify/fsnotify v1.4.9 => github.com/fsnotify/fsnotify v1.3.0
