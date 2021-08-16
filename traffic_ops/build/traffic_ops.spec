@@ -236,6 +236,8 @@ fi
 %config(noreplace) %attr(750,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) /opt/traffic_ops/app/db/dbconf.yml
 %config(noreplace)/var/www/files/osversions.json
 %attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/db/admin
+%exclude %{PACKAGEDIR}/app/db/SQUASH.md
+%exclude %{PACKAGEDIR}/app/db/squash_migrations.sh
 %attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/install/bin/convert_profile/convert_profile
 %attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/db/reencrypt/reencrypt
 %attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/db/traffic_vault_migrate/traffic_vault_migrate

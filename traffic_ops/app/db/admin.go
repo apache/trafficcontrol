@@ -94,8 +94,8 @@ const (
 	CmdUp              = "up"
 	CmdDown            = "down"
 	CmdRedo            = "redo"
-	// Deprecated: Migrate only tracks migration version and dirty status, not a status for each migration.
-	// Use CmdDBVersion to check the migration version and dirty status.
+	// Deprecated: Migrate only tracks migration timestamp and dirty status, not a status for each migration.
+	// Use CmdDBVersion to check the migration timestamp and dirty status.
 	CmdStatus     = "status"
 	CmdDBVersion  = "dbversion"
 	CmdSeed       = "seed"
@@ -116,12 +116,17 @@ const (
 	TrafficVaultMigrationsSource = "file:" + TrafficVaultDir + "migrations"
 	TrafficVaultDir              = dbDir + "trafficvault/"
 	TrafficVaultSchemaPath       = TrafficVaultDir + "create_tables.sql"
+
+	LastSquashedMigrationTimestamp uint = 2021012200000000 // 2021012200000000_max_request_header_bytes_default_zero.sql
+	FirstMigrationTimestamp        uint = 2021012700000000 // 2021012700000000_update_interfaces_multiple_routers.up.sql
 )
 
 var (
 	// globals that are passed in via CLI flags and used in commands
-	Environment  string
-	TrafficVault bool
+	Environment    string
+	TrafficVault   bool
+	DBVersion      uint
+	DBVersionDirty bool
 
 	// globals that are parsed out of DBConfigFile and used in commands
 	DBDriver      string
@@ -314,7 +319,8 @@ func upgrade() {
 }
 
 func maybeMigrateFromGoose() bool {
-	_, _, versionErr := Migrate.Version()
+	var versionErr error
+	DBVersion, DBVersionDirty, versionErr = Migrate.Version()
 	if versionErr == nil {
 		return false
 	}
@@ -329,15 +335,18 @@ func maybeMigrateFromGoose() bool {
 
 func runMigrations() {
 	migratedFromGoose := initMigrate()
-	upErr := Migrate.Up()
-	if upErr == migrate.ErrNoChange {
+	if !TrafficVault && DBVersion == LastSquashedMigrationTimestamp && !DBVersionDirty {
+		if migrateErr := Migrate.Migrate(FirstMigrationTimestamp); migrateErr != nil {
+			die(fmt.Sprintf("Error migrating from DB version %d to %d: %s", LastSquashedMigrationTimestamp, FirstMigrationTimestamp, migrateErr.Error()))
+		}
+	}
+	if upErr := Migrate.Up(); upErr == migrate.ErrNoChange {
 		if !migratedFromGoose {
 			println(upErr.Error())
 		}
 	} else if upErr != nil {
 		die("Error running migrate up: " + upErr.Error())
 	}
-
 }
 
 func runUp() {
@@ -361,19 +370,15 @@ func redo() {
 	}
 }
 
-// Deprecated: Migrate does not track migration status of past migrations. Use dbversion() to check the migration version and dirty status.
+// Deprecated: Migrate does not track migration status of past migrations. Use dbversion() to check the migration timestamp and dirty status.
 func status() {
 	dbVersion()
 }
 
 func dbVersion() {
 	initMigrate()
-	version, dirty, err := Migrate.Version()
-	if err != nil {
-		die("Error running migrate version: " + err.Error())
-	}
-	fmt.Printf("dbversion %d", version)
-	if dirty {
+	fmt.Printf("dbversion %d", DBVersion)
+	if DBVersionDirty {
 		fmt.Printf(" (dirty)")
 	}
 	println()
@@ -496,7 +501,7 @@ create_migration NAME
             - Creates a pair of timestamped up/down migrations titled NAME.
 create_user - Execute 'create_user' the user for the current environment
               (traffic_ops).
-dbversion   - Prints the current migration version
+dbversion   - Prints the current migration timestamp
 drop_user   - Execute 'drop_user' the user for the current environment
               (traffic_ops).
 patch       - Execute sql from db/patches.sql for loading post-migration data
@@ -507,7 +512,7 @@ reset       - Execute db 'dropdb', 'createdb', load_schema, migrate on the
 seed        - Execute sql from db/seeds.sql for loading static data (NOTE: not
               supported with --trafficvault option).
 show_users  - Execute sql to show all of the user for the current environment.
-status      - Prints the current migration version (Deprecated, status is now an
+status      - Prints the current migration timestamp (Deprecated, status is now an
               alias for dbversion and will be removed in a future Traffic
               Control release).
 upgrade     - Execute migrate, seed, and patches on the database for the current
