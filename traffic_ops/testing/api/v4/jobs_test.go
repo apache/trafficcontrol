@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
@@ -352,7 +353,13 @@ func GetTestInvalidationJobs(t *testing.T) {
 }
 
 func GetTestJobsByValidData(t *testing.T) {
+	log.Infof("GetTestJobsByValidData")
+
 	toJobs, _, err := TOSession.GetInvalidationJobs(client.RequestOptions{})
+	log.Infof("toJobs len: %d", len(toJobs.Response))
+	for _, job := range toJobs.Response {
+		log.Infof("Job: %v\n", job)
+	}
 	if err != nil {
 		t.Fatalf("error getting jobs %v - alerts: %+v", err, toJobs.Alerts)
 	}

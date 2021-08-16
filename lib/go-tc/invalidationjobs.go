@@ -551,6 +551,41 @@ type InvalidationJobV40 struct {
 	StartTime        *time.Time `json:"startTime"`
 }
 
+func (job InvalidationJobV40) String() string {
+	var ID, AssetURL, CreatedBy, DeliveryService, TTLHours, InvalidationType, StartTime string
+	if job.ID != nil {
+		ID = strconv.FormatUint(*job.ID, 10)
+	} else {
+		ID = "-1"
+	}
+	if job.AssetURL != nil {
+		AssetURL = *job.AssetURL
+	}
+	if job.CreatedBy != nil {
+		CreatedBy = *job.CreatedBy
+	}
+	if job.DeliveryService != nil {
+		DeliveryService = *job.DeliveryService
+	}
+	if job.TTLHours != nil {
+		TTLHours = strconv.FormatUint(uint64(*job.TTLHours), 10)
+	}
+	if job.InvalidationType != nil {
+		InvalidationType = *job.InvalidationType
+	}
+	if job.StartTime != nil {
+		StartTime = job.StartTime.String()
+	}
+	return fmt.Sprintf("{\nID:\t\t\t\t\t%s,\nAssetURL:\t\t\t%s,\nCreatedBy:\t\t\t%s,\nDeliveryService:\t%s,\nTTLHours:\t\t\t%s,\nInvalidationType:\t%s,\nStartTime:\t\t\t%s,\n}",
+		ID,
+		AssetURL,
+		CreatedBy,
+		DeliveryService,
+		TTLHours,
+		InvalidationType,
+		StartTime)
+}
+
 // Validate checks that the InvalidationJob is valid, by ensuring all of its fields are well-defined.
 //
 // This returns an error describing any and all problematic fields encountered during validation.
