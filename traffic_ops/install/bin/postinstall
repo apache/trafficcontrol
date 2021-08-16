@@ -25,10 +25,17 @@ for arg in "$@"; do
 	esac
 done
 
+PATH+=:/usr/libexec/
+python_bin="$(command -v {python,platform-python}{3{8,.8,6,.6,},2{7,.7,},} | head -n1)"
+if [[ -z "$python_bin" ]]; then
+	echo 'No python3 or python2 executable was found. Python is required to run the Postinstall script.' >/dev/stderr
+	exit 1
+fi
+
 # above options don't require any of the extra processing -- just kick off the script with
 # options intact.
 if [[ -v action && "$action" == "bypass" ]]; then
-	/opt/traffic_ops/install/bin/_postinstall.py "$@"
+	"$python_bin" /opt/traffic_ops/install/bin/_postinstall.py "$@"
 	exit
 fi
 
@@ -40,7 +47,7 @@ if [[ ! $(su - postgres psql -w -c 'show is_superuser' </dev/null 2>/dev/null) =
 	exit 1
 fi
 
-/opt/traffic_ops/install/bin/_postinstall.py "$@"
+"$python_bin" /opt/traffic_ops/install/bin/_postinstall.py "$@"
 
 # should all be owned by trafops user
 chown -R trafops:trafops /opt/traffic_ops

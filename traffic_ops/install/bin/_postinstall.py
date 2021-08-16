@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-"exec" "bash" "-c" "PATH+=:/usr/libexec/; exec \$(type -p python38 python3.8 python36 python3.6 python3 python27 python2.7 python2 python platform-python38 platform-python3.8 platform-python36 platform-python3.6 platform-python3 platform-python27 platform-python2.7 platform-python2 platform-python | head -n1) \"$0\" $*"
+#!/usr/bin/env python3
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
