@@ -20,8 +20,7 @@ last_release="$(git tag --list --sort=v:refname | grep -E '^RELEASE-[0-9]+[.][0-
 migrations_to_squash="$(git ls-tree -r "$last_release" -- migrations | grep -o 'migrations/[0-9].*')"
 
 cp create_tables.sql to_squash.sql
-# shellcheck disable=SC2016
-echo "$migrations_to_squash" | xargs -L1 sed '/+goose Down/,$d' >>to_squash.sql
+echo "$migrations_to_squash" | grep '\.up\.sql$' | xargs cat >>to_squash.sql
 last_squashed_migration="$(<<<"$migrations_to_squash" tail -n1)"
 last_squashed_migration_timestamp="$(<<<"$last_squashed_migration" sed -E 's|migrations/([0-9]+).*|\1|')"
 first_migration="$(ls migrations/*.sql | grep -A1 "/${last_squashed_migration_timestamp}_" | tail -n1)"
