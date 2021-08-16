@@ -19,6 +19,10 @@ under the License.
 
 # Squashing database migrations
 
+For convenience, [`squash_migrations.sh`](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/app/db/squash_migrations.sh) script squashes the migrations, but whoever PRs the result is responsible for verifying that the migrations are squashed and `LastSquashedMigrationVersion` in [`db/admin.go`](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/app/db/admin.go) is updated correctly, regardless of the result of having run the script.
+
+--------
+
 Each major release of Apache Traffic Control combines database migrations from previous ATC releases into [`create_tables.sql`](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/app/db/create_tables.sql).
 
 For example, suppose the latest version of Apache Traffic Control is 147.5.8 and contains these migrations:
