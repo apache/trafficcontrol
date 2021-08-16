@@ -60,9 +60,10 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.6.1 // indirect
 	go.etcd.io/bbolt v1.3.5
-	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
-	golang.org/x/net v0.0.0-20210716203947-853a461950ff
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
+	golang.org/x/crypto v0.0.0-20210813211128-0a44fdfbc16e
+	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
+	golang.org/x/sys v0.0.0-20210816183151-1e6c022a8912
+	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 	gopkg.in/asn1-ber.v1 v1.0.0-20170511165959-379148ca0225 // indirect
 	gopkg.in/ldap.v2 v2.5.1
