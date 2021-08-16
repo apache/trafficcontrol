@@ -94,8 +94,8 @@ const (
 	CmdUp              = "up"
 	CmdDown            = "down"
 	CmdRedo            = "redo"
-	// Deprecated: Migrate only tracks migration version and dirty status, not a status for each migration.
-	// Use CmdDBVersion to check the migration version and dirty status.
+	// Deprecated: Migrate only tracks migration timestamp and dirty status, not a status for each migration.
+	// Use CmdDBVersion to check the migration timestamp and dirty status.
 	CmdStatus     = "status"
 	CmdDBVersion  = "dbversion"
 	CmdSeed       = "seed"
@@ -117,7 +117,7 @@ const (
 	TrafficVaultDir              = dbDir + "trafficvault/"
 	TrafficVaultSchemaPath       = TrafficVaultDir + "create_tables.sql"
 
-	LastSquashedMigrationVersion uint = 2021012200000000
+	LastSquashedMigrationTimestamp uint = 2021012200000000
 )
 
 var (
@@ -334,10 +334,10 @@ func maybeMigrateFromGoose() bool {
 
 func runMigrations() {
 	migratedFromGoose := initMigrate()
-	if !TrafficVault && DBVersion == LastSquashedMigrationVersion && !DBVersionDirty {
+	if !TrafficVault && DBVersion == LastSquashedMigrationTimestamp && !DBVersionDirty {
 		const tempVersion = 0
 		if forceErr := Migrate.Force(tempVersion); forceErr != nil {
-			die(fmt.Sprintf("Error temporarily forcing the DB version from %d to %d: %s", LastSquashedMigrationVersion, tempVersion, forceErr.Error()))
+			die(fmt.Sprintf("Error temporarily forcing the DB version from %d to %d: %s", LastSquashedMigrationTimestamp, tempVersion, forceErr.Error()))
 		}
 	}
 	if upErr := Migrate.Up(); upErr == migrate.ErrNoChange {
@@ -370,7 +370,7 @@ func redo() {
 	}
 }
 
-// Deprecated: Migrate does not track migration status of past migrations. Use dbversion() to check the migration version and dirty status.
+// Deprecated: Migrate does not track migration status of past migrations. Use dbversion() to check the migration timestamp and dirty status.
 func status() {
 	dbVersion()
 }
@@ -501,7 +501,7 @@ create_migration NAME
             - Creates a pair of timestamped up/down migrations titled NAME.
 create_user - Execute 'create_user' the user for the current environment
               (traffic_ops).
-dbversion   - Prints the current migration version
+dbversion   - Prints the current migration timestamp
 drop_user   - Execute 'drop_user' the user for the current environment
               (traffic_ops).
 patch       - Execute sql from db/patches.sql for loading post-migration data
@@ -512,7 +512,7 @@ reset       - Execute db 'dropdb', 'createdb', load_schema, migrate on the
 seed        - Execute sql from db/seeds.sql for loading static data (NOTE: not
               supported with --trafficvault option).
 show_users  - Execute sql to show all of the user for the current environment.
-status      - Prints the current migration version (Deprecated, status is now an
+status      - Prints the current migration timestamp (Deprecated, status is now an
               alias for dbversion and will be removed in a future Traffic
               Control release).
 upgrade     - Execute migrate, seed, and patches on the database for the current
