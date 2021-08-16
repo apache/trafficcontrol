@@ -21,9 +21,11 @@ package t3cutil
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"os/exec"
 	"regexp"
@@ -166,4 +168,17 @@ func DoInput(input []byte, cmdStr string, args ...string) ([]byte, []byte, int) 
 	}
 
 	return outbuf.Bytes(), errbuf.Bytes(), code
+}
+
+func ValidateURL(u *url.URL) error {
+	if u == nil {
+		return errors.New("nil url")
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return errors.New("scheme expected 'http' or 'https', actual '" + u.Scheme + "'")
+	}
+	if strings.TrimSpace(u.Host) == "" {
+		return errors.New("no host")
+	}
+	return nil
 }

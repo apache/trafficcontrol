@@ -120,10 +120,11 @@ func setIP6(sv *Server, ip6Address string) {
 
 func setIPInfo(sv *Server, interfaceName string, ipAddress string, ip6Address string) {
 	if len(sv.Interfaces) == 0 {
-		sv.Interfaces = []tc.ServerInterfaceInfo{
-			tc.ServerInterfaceInfo{
-				Name: interfaceName,
-			},
+		sv.Interfaces = []tc.ServerInterfaceInfoV40{}
+		{
+			si := tc.ServerInterfaceInfoV40{}
+			si.Name = interfaceName
+			sv.Interfaces = append(sv.Interfaces, si)
 		}
 	}
 	if ipAddress != "" {

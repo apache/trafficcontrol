@@ -278,22 +278,23 @@ func randServer() *atscfg.Server {
 	sv.ILOPassword = randStr()
 	sv.ILOUsername = randStr()
 
-	sv.Interfaces = []tc.ServerInterfaceInfo{
-		tc.ServerInterfaceInfo{
-			Name: *randStr(),
-			IPAddresses: []tc.ServerIPAddress{
-				tc.ServerIPAddress{
-					Address:        *randStr(),
-					Gateway:        randStr(),
-					ServiceAddress: true,
-				},
-				tc.ServerIPAddress{
-					Address:        *randStr(),
-					Gateway:        randStr(),
-					ServiceAddress: true,
-				},
+	sv.Interfaces = []tc.ServerInterfaceInfoV40{}
+	{
+		ssi := tc.ServerInterfaceInfoV40{}
+		ssi.Name = *randStr()
+		ssi.IPAddresses = []tc.ServerIPAddress{
+			tc.ServerIPAddress{
+				Address:        *randStr(),
+				Gateway:        randStr(),
+				ServiceAddress: true,
 			},
-		},
+			tc.ServerIPAddress{
+				Address:        *randStr(),
+				Gateway:        randStr(),
+				ServiceAddress: true,
+			},
+		}
+		sv.Interfaces = append(sv.Interfaces, ssi)
 	}
 
 	sv.LastUpdated = &tc.TimeNoMod{Time: time.Now()}

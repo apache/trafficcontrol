@@ -27,7 +27,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/toreq"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
@@ -206,12 +206,12 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			}
 		}
 		if toProxyURLStr != "" {
-			realTOURL := toClient.C.URL
-			toClient.C.URL = toProxyURLStr
+			realTOURL := toClient.URL()
+			toClient.SetURL(toProxyURLStr)
 			log.Infoln("using Traffic Ops proxy '" + toProxyURLStr + "'")
-			if _, _, err := toClient.C.GetCDNs(); err != nil {
+			if _, _, err := toClient.GetCDNs(nil); err != nil {
 				log.Warnln("Traffic Ops proxy '" + toProxyURLStr + "' failed to get CDNs, falling back to real Traffic Ops")
-				toClient.C.URL = realTOURL
+				toClient.SetURL(realTOURL)
 			}
 		} else {
 			log.Infoln("Traffic Ops proxy enabled, but GLOBAL Parameter '" + TrafficOpsProxyParameterName + "' missing or empty, not using proxy")
@@ -754,7 +754,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 	for addr, _ := range toAddrSet {
 		toData.TrafficOpsAddresses = append(toData.TrafficOpsAddresses, addr)
 	}
-	toData.TrafficOpsURL = toClient.C.URL
+	toData.TrafficOpsURL = toClient.URL()
 
 	return toData, util.JoinErrs(errs)
 }

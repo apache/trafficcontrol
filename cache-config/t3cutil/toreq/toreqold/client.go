@@ -1,8 +1,8 @@
-// toreqold implements a Traffic Ops client vendored one version back.
+// Package toreqold calls the previous Traffic Ops API major version.
 //
-// This should be used for all requests, unless they require an endpoint or field added in the latest version.
+// This should never be imported by anything except toreq.
 //
-// If a feature in the latest Traffic Ops is required, toreqnew should be used with a fallback to this client if the Traffic Ops is not the latest (which can be determined by the bool returned by all toreqnew.TOClient funcs).
+// The toreq.Client will automatically fall back to the older client if necessary.
 //
 package toreqold
 
@@ -31,17 +31,23 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/torequtil"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 )
 
 type TOClient struct {
-	C          *toclient.Session
+	c          *toclient.Session
 	NumRetries int
 }
 
-const isFallback = true
+func (cl *TOClient) URL() string {
+	return cl.c.URL
+}
+
+func (cl *TOClient) SetURL(newURL string) {
+	cl.c.URL = newURL
+}
 
 // New logs into Traffic Ops, returning the TOClient which contains the logged-in client.
 func New(url *url.URL, user string, pass string, insecure bool, timeout time.Duration, userAgent string) (*TOClient, error) {
@@ -60,5 +66,5 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 		return nil, errors.New("Logging in to Traffic Ops '" + torequtil.MaybeIPStr(inf.RemoteAddr) + "': " + err.Error())
 	}
 
-	return &TOClient{C: toClient}, nil
+	return &TOClient{c: toClient}, nil
 }
