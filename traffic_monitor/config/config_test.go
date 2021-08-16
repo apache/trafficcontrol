@@ -25,11 +25,8 @@ import (
 
 const exampleTMConfig = `
 {
-	"cache_health_polling_interval_ms": 120000,
-	"cache_stat_polling_interval_ms": 120000,
 	"monitor_config_polling_interval_ms": 5000,
 	"http_timeout_ms": 30000,
-	"peer_polling_interval_ms": 120000,
 	"peer_optimistic": true,
 	"peer_optimistic_quorum_min": 0,
 	"max_events": 200,

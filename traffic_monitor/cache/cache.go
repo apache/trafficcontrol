@@ -38,7 +38,7 @@ func (h Handler) ResultChan() <-chan Result {
 	return h.resultChan
 }
 
-// NewHandler returns a new cache handler. Note this handler does NOT precomputes stat data before calling ResultChan, and Result.Precomputed will be nil
+// NewHandler returns a new cache handler. Note this handler does NOT precompute stat data before calling ResultChan, and Result.Precomputed will be nil.
 func NewHandler() Handler {
 	return Handler{resultChan: make(chan Result)}
 }
@@ -119,7 +119,7 @@ func (result *Result) HasStat(stat string) bool {
 	return false
 }
 
-// InterfaceNames returns the names of all network interfaces used by the cache
+// InterfacesNames returns the names of all network interfaces used by the cache
 // server that was monitored to obtain the result.
 func (result *Result) InterfacesNames() []string {
 	interfaceNames := make([]string, 0, len(result.Statistics.Interfaces))
