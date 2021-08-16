@@ -20,7 +20,7 @@
 from __future__ import print_function
 
 """
-This script is meant as a drop-in replacement for the old _postinstall Perl script.
+This script is meant as a drop-in replacement for the old _postinstall.pl Perl script.
 
 It does, however, offer several more command-line flags not present in the original, to aid in
 testing.
