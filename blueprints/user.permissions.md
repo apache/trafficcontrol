@@ -199,6 +199,18 @@ Permissions, the API MUST respond with a `403 Forbidden` response containing an
 error-level Alert that describes what operation is not permitted and what
 Permission the user is missing that would allow them to proceed.
 
+Also, the `admin` Role that comes with new Traffic Ops installations currently
+has two "Capabilities" - `all-read` and `all-write`; this intention should be
+replicated, but not necessarily the implementation. The Role named `admin` is to
+be treated specially in that it has *all* Permissions - it should, therefore, be
+impossible to delete the Role or to update its Permissions or Name. This writer
+suggests that for display purposes the Permissions used to communicate this
+ability be reduced to simply `all`, and that rather than checking for this
+Permission endpoints would only consider the Name of the Role. It's not terribly
+important that users be disallowed to alter the `admin` Role's Description, but
+it may be easier to implement the other restrictions in a way that does disallow
+that.
+
 #### Client Impact
 As Permissions are defined by the Role of the authenticated user, the only
 client changes are necessary beyond those necessitated by the removal of two
@@ -225,6 +237,9 @@ down" and only give them the Permissions they would need to have the same level
 of API access as the next-lowest Privilege Level that **is** explicitly required
 by some method and/or endpoint.
 
+If the `admin` Role does not exist, the database migrations for this change
+should create it.
+
 ## Documentation Impact
 The new configuration option will need to be documented, documentation for
 removed API endpoints will itself need to be removed, documentation for the
@@ -232,6 +247,9 @@ removed API endpoints will itself need to be removed, documentation for the
 request and response structures, and as Permissions are implemented on each
 endpoint the Permissions it requires for various actions will need to be
 defined.
+
+The special `admin` Role must also be documented somewhere (most appropriately
+in an overview section on Roles and Permissions).
 
 ## Testing Impact
 The most significant testing changes will need to be made to the Go Traffic Ops
