@@ -11,8 +11,7 @@ guidelines at https://apache.org/security regarding vulnerability disclosure.
 -->
 
 
------------------------------------------------
-<!-- **^ Add meaningful description above** -->
+<!-- **^ Add meaningful description above** --><hr>
 
 ## Which Traffic Control components are affected by this PR?
 <!-- Please delete all components from this list that are NOT affected by this PR.
