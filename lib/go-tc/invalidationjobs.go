@@ -59,57 +59,6 @@ type InvalidationJob struct {
 	StartTime *Time `json:"startTime"`
 }
 
-// InvalidationJobV40 represents a content invalidation job as returned by the API.
-// Also used for Update calls.
-type InvalidationJobV40 struct {
-	ID                   *uint64    `json:"id"`
-	AssetURL             *string    `json:"assetUrl"`
-	CreatedBy            *string    `json:"createdBy"`
-	DeliveryServiceXMLID *string    `json:"deliveryService"`
-	TTLHours             *uint      `json:"ttlHours"`
-	InvalidationType     *string    `json:"invalidationType"`
-	StartTime            *time.Time `json:"startTime"`
-}
-
-// Validate checks that the InvalidationJob is valid, by ensuring all of its fields are well-defined.
-//
-// This returns an error describing any and all problematic fields encountered during validation.
-func (job *InvalidationJobV40) Validate() error {
-	errs := []string{}
-	err := validation.ValidateStruct(job,
-		validation.Field(&job.DeliveryServiceXMLID, validation.Required),
-		validation.Field(&job.AssetURL, validation.Required, is.URL),
-		validation.Field(&job.CreatedBy, validation.Required),
-		validation.Field(&job.ID, validation.Required),
-		validation.Field(&job.TTLHours, validation.Required),
-		validation.Field(&job.InvalidationType, validation.Required, validation.NewStringRule(func(s string) bool {
-			return s == REFRESH || s == REFETCH
-		}, fmt.Sprintf("must be either %s or %s (case sensitive)", REFRESH, REFETCH))),
-	)
-
-	if err != nil {
-		errs = append(errs, err.Error())
-	}
-
-	if job.StartTime == nil {
-		return errors.New(strings.Join(append(errs, "startTime: cannot be blank"), ", "))
-	}
-
-	if job.StartTime.After(time.Now().Add(twoDays)) {
-		errs = append(errs, "startTime: must be within two days from now")
-	}
-
-	if job.StartTime.Before(time.Now()) {
-		errs = append(errs, "startTime: cannot be in the past")
-	}
-
-	if len(errs) > 0 {
-		return errors.New(strings.Join(errs, ", "))
-	}
-
-	return nil
-}
-
 // InvalidationJobsResponse is the type of a response from Traffic Ops to a
 // request made to its /jobs API endpoint.
 type InvalidationJobsResponse struct {
@@ -517,6 +466,13 @@ func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 const REFRESH = "REFRESH"
 const REFETCH = "REFETCH"
 
+// InvalidationJobsResponse is the type of a response from Traffic Ops to a
+// request made to its /jobs API endpoint for v 4.0+
+type InvalidationJobsResponseV40 struct {
+	Response []InvalidationJobV40 `json:"response"`
+	Alerts
+}
+
 // InvalidationJobCreateV40 represents user input intending to create a content invalidation job.
 type InvalidationJobCreateV40 struct {
 	// The Delivery Service XML-ID for which the Invalidation Job is to be applied.
@@ -574,6 +530,57 @@ func (job *InvalidationJobCreateV40) Validate(tx *sql.Tx) error {
 
 	if job.InvalidationType == REFETCH && !RefetchAllowed(tx) {
 		errs = append(errs, "InvalidationType is invalid")
+	}
+
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, ", "))
+	}
+
+	return nil
+}
+
+// InvalidationJobV40 represents a content invalidation job as returned by the API.
+// Also used for Update calls.
+type InvalidationJobV40 struct {
+	ID               *uint64    `json:"id"`
+	AssetURL         *string    `json:"assetUrl"`
+	CreatedBy        *string    `json:"createdBy"`
+	DeliveryService  *string    `json:"deliveryService"`
+	TTLHours         *uint      `json:"ttlHours"`
+	InvalidationType *string    `json:"invalidationType"`
+	StartTime        *time.Time `json:"startTime"`
+}
+
+// Validate checks that the InvalidationJob is valid, by ensuring all of its fields are well-defined.
+//
+// This returns an error describing any and all problematic fields encountered during validation.
+func (job *InvalidationJobV40) Validate() error {
+	errs := []string{}
+	err := validation.ValidateStruct(job,
+		validation.Field(&job.DeliveryService, validation.Required),
+		validation.Field(&job.AssetURL, validation.Required, is.URL),
+		validation.Field(&job.CreatedBy, validation.Required),
+		validation.Field(&job.ID, validation.Required),
+		validation.Field(&job.TTLHours, validation.Required),
+		validation.Field(&job.InvalidationType, validation.Required, validation.NewStringRule(func(s string) bool {
+			return s == REFRESH || s == REFETCH
+		}, fmt.Sprintf("must be either %s or %s (case sensitive)", REFRESH, REFETCH))),
+	)
+
+	if err != nil {
+		errs = append(errs, err.Error())
+	}
+
+	if job.StartTime == nil {
+		return errors.New(strings.Join(append(errs, "startTime: cannot be blank"), ", "))
+	}
+
+	if job.StartTime.After(time.Now().Add(twoDays)) {
+		errs = append(errs, "startTime: must be within two days from now")
+	}
+
+	if job.StartTime.Before(time.Now()) {
+		errs = append(errs, "startTime: cannot be in the past")
 	}
 
 	if len(errs) > 0 {

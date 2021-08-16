@@ -388,7 +388,7 @@ func (job *InvalidationJobV40) Read(h http.Header, useIMS bool) ([]interface{}, 
 		err := rows.Scan(&job.ID,
 			&job.AssetURL,
 			&job.CreatedBy,
-			&job.DeliveryServiceXMLID,
+			&job.DeliveryService,
 			&job.TTLHours,
 			&job.InvalidationType,
 			&job.StartTime)
@@ -584,7 +584,7 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 		&result.ID,
 		&result.AssetURL,
 		&result.CreatedBy,
-		&result.DeliveryServiceXMLID,
+		&result.DeliveryService,
 		&result.TTLHours,
 		&result.InvalidationType,
 		&result.StartTime)
@@ -642,7 +642,7 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 		api.Created,
 		duplicate,
 		*result.ID,
-		*result.DeliveryServiceXMLID,
+		*result.DeliveryService,
 		*result.AssetURL,
 		*result.TTLHours,
 		*result.InvalidationType,
@@ -822,7 +822,7 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		&job.CreatedBy,
 		&uid,
 		&dsid,
-		&job.DeliveryServiceXMLID,
+		&job.DeliveryService,
 		&job.AssetURL,
 		&job.TTLHours,
 		&job.StartTime,
@@ -893,7 +893,7 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if *job.DeliveryServiceXMLID != *input.DeliveryServiceXMLID {
+	if *job.DeliveryService != *input.DeliveryService {
 		userErr = errors.New("Cannot change 'deliveryService' of existing invalidation job!")
 		errCode = http.StatusConflict
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
@@ -931,7 +931,7 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		*job.ID)
 	err = row.Scan(&job.AssetURL,
 		&job.CreatedBy,
-		&job.DeliveryServiceXMLID,
+		&job.DeliveryService,
 		&job.ID,
 		&job.TTLHours,
 		&job.StartTime,
@@ -943,7 +943,7 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = setRevalFlags(*job.DeliveryServiceXMLID, inf.Tx.Tx); err != nil {
+	if err = setRevalFlags(*job.DeliveryService, inf.Tx.Tx); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Setting reval flags: %v", err))
 		return
 	}
@@ -982,7 +982,7 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 	changeLogMsg := fmt.Sprintf("%s content invalidation job - ID: %d DSXMLID: %s ASSET_URL: '%s' TTLHRs: %d INVALIDATION: %s",
 		api.Updated,
 		*input.ID,
-		*input.DeliveryServiceXMLID,
+		*input.DeliveryService,
 		*input.AssetURL,
 		*input.TTLHours,
 		*input.InvalidationType,
@@ -1226,7 +1226,7 @@ func DeleteV40(w http.ResponseWriter, r *http.Request) {
 		&result.ID,
 		&result.AssetURL,
 		&result.CreatedBy,
-		&result.DeliveryServiceXMLID,
+		&result.DeliveryService,
 		&result.TTLHours,
 		&result.InvalidationType,
 		&result.StartTime)
@@ -1263,7 +1263,7 @@ func DeleteV40(w http.ResponseWriter, r *http.Request) {
 	changeLogMsg := fmt.Sprintf("%s content invalidation job - ID: %d DSXMLID: %s ASSET_URL: '%s' TTLHRs: %d INVALIDATION: %s",
 		api.Deleted,
 		*result.ID,
-		*result.DeliveryServiceXMLID,
+		*result.DeliveryService,
 		*result.AssetURL,
 		*result.TTLHours,
 		*result.InvalidationType,
