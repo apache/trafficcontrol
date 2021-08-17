@@ -56,9 +56,6 @@ else
   exit 1
 fi
 
-# fetch dependent packages for tests
-go mod vendor -v
-
 if [[ -f /systemctl.sh ]]; then
   mv /bin/systemctl /bin/systemctl.save
   cp /systemctl.sh /bin/systemctl
@@ -66,7 +63,9 @@ if [[ -f /systemctl.sh ]]; then
 fi
 
 cd /ort-tests
-go get -u ./...
+# fetch dependent packages for tests
+go mod vendor -v
+
 cp /ort-tests/tc-fixtures.json /tc-fixtures.json
 ATS_RPM=`basename /yumserver/test-rpms/trafficserver-[0-9]*.rpm |
   gawk 'match($0, /trafficserver\-(.+)\.rpm$/, arr) {print arr[1]}'`
