@@ -477,6 +477,12 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	.. versionadded:: 5.0
 		This is an optional boolean value to enable the handling of the "If-Modified-Since" HTTP request header. Default: false
 
+:role_based_permissions: Toggle whether or not to use Role Based Permissions.
+
+	.. versionadded:: 7.0
+		The blueprint can be seen :pr:`{{5848}}`
+
+
 Example cdn.conf
 ''''''''''''''''
 .. include:: ../../../traffic_ops/app/conf/cdn.conf
