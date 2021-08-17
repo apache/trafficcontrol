@@ -62,7 +62,8 @@ if [[ -f /systemctl.sh ]]; then
   chmod 0755 /bin/systemctl
 fi
 
-cd /ort-tests
+cd "$(realpath /ort-tests)"
+
 # fetch dependent packages for tests
 go mod vendor -v
 
