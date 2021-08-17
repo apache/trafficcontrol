@@ -24,7 +24,7 @@ import os
 import re
 import subprocess
 import sys
-from typing import Union
+from typing import Optional
 
 import requests
 from github import GitRef
@@ -129,7 +129,7 @@ class GoPRMaker:
 			print(f'Go version is up-to-date on {target_branch}, nothing to do.')
 			return
 
-		commit: Union[Commit, None] = None
+		commit: Optional[Commit] = None
 		if not self.branch_exists(source_branch_name):
 			commit = self.set_go_version(self.latest_go_version, commit_message,
 				source_branch_name)
@@ -142,7 +142,7 @@ class GoPRMaker:
 			print(f'Branch {source_branch_name} has been created, exiting...')
 			return
 
-		update_golang_org_x_commit: Union[GitCommit, None] = self.update_golang_org_x(commit)
+		update_golang_org_x_commit: Optional[GitCommit] = self.update_golang_org_x(commit)
 		if isinstance(update_golang_org_x_commit, GitCommit):
 			sha: str = update_golang_org_x_commit.sha
 			self.update_branch(source_branch_name, sha)
@@ -327,12 +327,12 @@ class GoPRMaker:
 		print(f'Updated {go_version_file} on {self.repo.name}')
 		return commit
 
-	def update_golang_org_x(self, previous_commit: Commit) -> Union[GitCommit, None]:
+	def update_golang_org_x(self, previous_commit: Commit) -> Optional[GitCommit]:
 		"""
 		:param previous_commit:
 		:type previous_commit:
 		:return:
-		:rtype: Union[GitCommit, None]
+		:rtype: Optional[GitCommit]
 		"""
 		subprocess.run(['git', 'fetch', 'origin'], check=True)
 		subprocess.run(['git', 'checkout', previous_commit.sha], check=True)
