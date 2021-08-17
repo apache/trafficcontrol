@@ -21,7 +21,4 @@ runs:
   using: 'composite'
   steps:
     - run: ${{ github.action_path }}/build-rpms.sh
-      env:
-        # Base commit, if run on a Pull Request
-        INPUT_BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
       shell: bash
