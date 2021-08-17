@@ -22,7 +22,7 @@ from pr_to_update_go.constants import ENV_GITHUB_TOKEN
 
 def main() -> None:
 	parser = ArgumentParser()
-	parser.add_argument('--update_version_only', type=bool, default=False)
+	parser.add_argument('--update-version-only', type=bool, default=False)
 	args: Namespace = parser.parse_args()
 
 	try:
