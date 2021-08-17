@@ -33,6 +33,152 @@ import (
 	"github.com/go-ozzo/ozzo-validation/is"
 )
 
+// copyStringIfNotNil makes a deep copy of s - unless it's nil, in which case it
+// just returns nil.
+func copyStringIfNotNil(s *string) *string {
+	if s == nil {
+		return nil
+	}
+	ret := new(string)
+	*ret = *s
+	return ret
+}
+
+// copyIntIfNotNil makes a deep copy of i - unless it's nil, in which case it
+// just returns nil.
+func copyIntIfNotNil(i *int) *int {
+	if i == nil {
+		return nil
+	}
+	ret := new(int)
+	*ret = *i
+	return ret
+}
+
+// Upgrade converts a User to a UserV4 (as seen in API versions 4.x)
+func (u User) Upgrade() UserV4 {
+	var ret UserV4
+	ret.AddressLine1 = copyStringIfNotNil(u.AddressLine1)
+	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
+	ret.City = copyStringIfNotNil(u.City)
+	ret.Company = copyStringIfNotNil(u.Company)
+	ret.ConfirmLocalPassword = copyStringIfNotNil(u.ConfirmLocalPassword)
+	ret.Country = copyStringIfNotNil(u.Country)
+	ret.Email = copyStringIfNotNil(u.Email)
+	ret.GID = copyIntIfNotNil(u.GID)
+	ret.ID = copyIntIfNotNil(u.ID)
+	ret.LocalPassword = copyStringIfNotNil(u.LocalPassword)
+	ret.PhoneNumber = copyStringIfNotNil(u.PhoneNumber)
+	ret.PostalCode = copyStringIfNotNil(u.PostalCode)
+	ret.PublicSSHKey = copyStringIfNotNil(u.PublicSSHKey)
+	ret.StateOrProvince = copyStringIfNotNil(u.StateOrProvince)
+	ret.Tenant = copyStringIfNotNil(u.Tenant)
+	ret.Token = copyStringIfNotNil(u.Token)
+	ret.UID = copyIntIfNotNil(u.UID)
+	ret.FullName = u.FullName
+	if u.LastUpdated != nil {
+		ret.LastUpdated = u.LastUpdated.Time
+	}
+	if u.NewUser != nil {
+		ret.NewUser = *u.NewUser
+	}
+	if u.RegistrationSent != nil {
+		ret.RegistrationSent = new(time.Time)
+		*ret.RegistrationSent = u.RegistrationSent.Time
+	}
+	if u.RoleName != nil {
+		ret.Role = *u.RoleName
+	}
+	if u.TenantID != nil {
+		ret.TenantID = *u.TenantID
+	}
+	if u.Username != nil {
+		ret.Username = *u.Username
+	}
+	return ret
+}
+
+// Downgrade converts a UserV4 to a User (as seen in API versions < 4.0)
+func (u UserV4) Downgrade() User {
+	var ret User
+	ret.FullName = new(string)
+	ret.FullName = u.FullName
+	ret.LastUpdated = TimeNoModFromTime(u.LastUpdated)
+	ret.NewUser = new(bool)
+	*ret.NewUser = u.NewUser
+	ret.RoleName = new(string)
+	*ret.RoleName = u.Role
+	ret.Role = nil
+	ret.TenantID = new(int)
+	*ret.TenantID = u.TenantID
+	ret.Username = new(string)
+	*ret.Username = u.Username
+
+	ret.AddressLine1 = copyStringIfNotNil(u.AddressLine1)
+	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
+	ret.City = copyStringIfNotNil(u.City)
+	ret.Company = copyStringIfNotNil(u.Company)
+	ret.ConfirmLocalPassword = copyStringIfNotNil(u.ConfirmLocalPassword)
+	ret.Country = copyStringIfNotNil(u.Country)
+	ret.Email = copyStringIfNotNil(u.Email)
+	ret.GID = copyIntIfNotNil(u.GID)
+	ret.ID = copyIntIfNotNil(u.ID)
+	ret.LocalPassword = copyStringIfNotNil(u.LocalPassword)
+	ret.PhoneNumber = copyStringIfNotNil(u.PhoneNumber)
+	ret.PostalCode = copyStringIfNotNil(u.PostalCode)
+	ret.PublicSSHKey = copyStringIfNotNil(u.PublicSSHKey)
+	if u.RegistrationSent != nil {
+		ret.RegistrationSent = TimeNoModFromTime(*u.RegistrationSent)
+	}
+	ret.StateOrProvince = copyStringIfNotNil(u.StateOrProvince)
+	ret.Tenant = copyStringIfNotNil(u.Tenant)
+	ret.Token = copyStringIfNotNil(u.Token)
+	ret.UID = copyIntIfNotNil(u.UID)
+
+	return ret
+}
+
+// Downgrade converts a UserV4 to a User as seen in API versions 2.x and 3.x
+func (u UserV4) DowngradeToLegacyUser() User {
+	var ret User
+	ret.FullName = new(string)
+	ret.FullName = u.FullName
+	ret.LastUpdated = TimeNoModFromTime(u.LastUpdated)
+	ret.NewUser = new(bool)
+	*ret.NewUser = u.NewUser
+	ret.RoleName = new(string)
+	*ret.RoleName = u.Role
+	ret.Role = nil
+	ret.TenantID = new(int)
+	*ret.TenantID = u.TenantID
+	ret.Tenant = u.Tenant
+	ret.Username = new(string)
+	*ret.Username = u.Username
+
+	ret.AddressLine1 = copyStringIfNotNil(u.AddressLine1)
+	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
+	ret.City = copyStringIfNotNil(u.City)
+	ret.Company = copyStringIfNotNil(u.Company)
+	ret.ConfirmLocalPassword = copyStringIfNotNil(u.ConfirmLocalPassword)
+	ret.Country = copyStringIfNotNil(u.Country)
+	ret.Email = copyStringIfNotNil(u.Email)
+	ret.GID = copyIntIfNotNil(u.GID)
+	ret.ID = copyIntIfNotNil(u.ID)
+	ret.LocalPassword = copyStringIfNotNil(u.LocalPassword)
+	ret.PhoneNumber = copyStringIfNotNil(u.PhoneNumber)
+	ret.PostalCode = copyStringIfNotNil(u.PostalCode)
+	ret.PublicSSHKey = copyStringIfNotNil(u.PublicSSHKey)
+	if u.RegistrationSent != nil {
+		ret.RegistrationSent = TimeNoModFromTime(*u.RegistrationSent)
+	}
+	ret.StateOrProvince = copyStringIfNotNil(u.StateOrProvince)
+	ret.Tenant = copyStringIfNotNil(u.Tenant)
+	ret.Token = copyStringIfNotNil(u.Token)
+	ret.UID = copyIntIfNotNil(u.UID)
+
+	return ret
+}
+
 // UserCredentials contains Traffic Ops login credentials.
 type UserCredentials struct {
 	Username string `json:"u"`
@@ -80,15 +226,8 @@ type User struct {
 	// https://github.com/apache/trafficcontrol/blob/3b5dd406bf1a0bb456c062b0f6a465ec0617d8ef/traffic_ops/traffic_ops_golang/user/user.go#L197
 	// It's done that way in order to maintain "rolename" vs "roleName" JSON field capitalization for the different users APIs.
 	// TODO: make the breaking API change to make all user APIs use "roleName" consistently.
-	RoleName *string `json:"roleName,omitempty" db:"-"`
+	RoleName *string `json:"roleName,omitempty" db:"role_name"`
 	commonUserFields
-}
-
-// UserV40 contains ChangeLogCount field.
-type UserV40 struct {
-	User
-	ChangeLogCount    *int       `json:"changeLogCount" db:"change_log_count"`
-	LastAuthenticated *time.Time `json:"lastAuthenticated" db:"last_authenticated"`
 }
 
 // UserCurrent represents the profile for the authenticated user.
@@ -99,10 +238,120 @@ type UserCurrent struct {
 	commonUserFields
 }
 
-// UserCurrentV40 contains LastAuthenticated field.
+// UserCurrentV4 is an alias for the UserCurrent struct used for the latest minor version associated with api major version 4.
+type UserCurrentV4 UserCurrentV40
+
+// UserCurrentV40 represents the structure for the "current" user, and has the "Role" field as a *string, as opposed to a *int found in the older versions
 type UserCurrentV40 struct {
-	UserCurrent
-	LastAuthenticated *time.Time `json:"lastAuthenticated" db:"last_authenticated"`
+	UserName          string    `json:"username"`
+	LocalUser         *bool     `json:"localUser"`
+	AddressLine1      *string   `json:"addressLine1"`
+	AddressLine2      *string   `json:"addressLine2"`
+	City              *string   `json:"city"`
+	Company           *string   `json:"company"`
+	Country           *string   `json:"country"`
+	Email             *string   `json:"email"`
+	FullName          *string   `json:"fullName"`
+	GID               *int      `json:"gid"`
+	ID                *int      `json:"id"`
+	NewUser           *bool     `json:"newUser"`
+	PhoneNumber       *string   `json:"phoneNumber"`
+	PostalCode        *string   `json:"postalCode"`
+	PublicSSHKey      *string   `json:"publicSshKey"`
+	Role              string    `json:"role"`
+	StateOrProvince   *string   `json:"stateOrProvince"`
+	Tenant            *string   `json:"tenant"`
+	TenantID          *int      `json:"tenantId"`
+	Token             *string   `json:"-"`
+	UID               *int      `json:"uid"`
+	LastUpdated       time.Time `json:"lastUpdated"`
+	LastAuthenticated time.Time `json:"lastAuthenticated"`
+}
+
+func (u UserCurrentV4) Downgrade() UserCurrent {
+	var ret UserCurrent
+	ret.FullName = new(string)
+	ret.FullName = u.FullName
+	ret.LastUpdated = TimeNoModFromTime(u.LastUpdated)
+	ret.NewUser = new(bool)
+	ret.NewUser = u.NewUser
+	ret.RoleName = new(string)
+	*ret.RoleName = u.Role
+	ret.Role = nil
+	ret.TenantID = new(int)
+	ret.TenantID = u.TenantID
+	ret.Tenant = u.Tenant
+	ret.UserName = &u.UserName
+	ret.LocalUser = u.LocalUser
+	ret.Token = copyStringIfNotNil(u.Token)
+	ret.AddressLine1 = copyStringIfNotNil(u.AddressLine1)
+	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
+	ret.City = copyStringIfNotNil(u.City)
+	ret.Company = copyStringIfNotNil(u.Company)
+	ret.Country = copyStringIfNotNil(u.Country)
+	ret.Email = copyStringIfNotNil(u.Email)
+	ret.GID = copyIntIfNotNil(u.GID)
+	ret.ID = copyIntIfNotNil(u.ID)
+	ret.UID = copyIntIfNotNil(u.UID)
+	ret.PhoneNumber = copyStringIfNotNil(u.PhoneNumber)
+	ret.PostalCode = copyStringIfNotNil(u.PostalCode)
+	ret.PublicSSHKey = copyStringIfNotNil(u.PublicSSHKey)
+	ret.StateOrProvince = copyStringIfNotNil(u.StateOrProvince)
+	ret.Tenant = copyStringIfNotNil(u.Tenant)
+	ret.Token = copyStringIfNotNil(u.Token)
+	ret.UID = copyIntIfNotNil(u.UID)
+
+	return ret
+}
+
+// UserV4 is an alias for the User struct used for the latest minor version associated with api major version 4.
+type UserV4 UserV40
+
+// A UserV40 is a representation of a Traffic Ops user as it appears in version
+// 4.0 of Traffic Ops's API.
+type UserV40 struct {
+	AddressLine1         *string    `json:"addressLine1" db:"address_line1"`
+	AddressLine2         *string    `json:"addressLine2" db:"address_line2"`
+	ChangeLogCount       *int       `json:"changeLogCount" db:"change_log_count"`
+	City                 *string    `json:"city" db:"city"`
+	Company              *string    `json:"company" db:"company"`
+	ConfirmLocalPassword *string    `json:"confirmLocalPasswd,omitempty" db:"confirm_local_passwd"`
+	Country              *string    `json:"country" db:"country"`
+	Email                *string    `json:"email" db:"email"`
+	FullName             *string    `json:"fullName" db:"full_name"`
+	GID                  *int       `json:"gid"`
+	ID                   *int       `json:"id" db:"id"`
+	LastAuthenticated    *time.Time `json:"lastAuthenticated" db:"last_authenticated"`
+	LastUpdated          time.Time  `json:"lastUpdated" db:"last_updated"`
+	LocalPassword        *string    `json:"localPasswd,omitempty" db:"local_passwd"`
+	NewUser              bool       `json:"newUser" db:"new_user"`
+	PhoneNumber          *string    `json:"phoneNumber" db:"phone_number"`
+	PostalCode           *string    `json:"postalCode" db:"postal_code"`
+	PublicSSHKey         *string    `json:"publicSshKey" db:"public_ssh_key"`
+	RegistrationSent     *time.Time `json:"registrationSent" db:"registration_sent"`
+	Role                 string     `json:"role" db:"role"`
+	StateOrProvince      *string    `json:"stateOrProvince" db:"state_or_province"`
+	Tenant               *string    `json:"tenant"`
+	TenantID             int        `json:"tenantId" db:"tenant_id"`
+	Token                *string    `json:"-" db:"token"`
+	UID                  *int       `json:"uid"`
+	Username             string     `json:"username" db:"username"`
+}
+
+// UsersResponseV4 is the type of a response from Traffic Ops to requests made
+// to /users which return more than one user for api major version 4 and the latest
+// minor version associated with it.
+type UsersResponseV4 struct {
+	Response []UserV4 `json:"response"`
+	Alerts
+}
+
+// UserResponseV4 is the type of a response from Traffic Ops to requests made
+// to /users which return one user for api major version 4 and the latest
+// minor version associated with it.
+type UserResponseV4 struct {
+	Response UserV4 `json:"response"`
+	Alerts
 }
 
 // CurrentUserUpdateRequest differs from a regular User/UserCurrent in that many of its fields are
@@ -136,9 +385,47 @@ type CurrentUserUpdateRequestUser struct {
 	Username           json.RawMessage `json:"username"`
 }
 
+// Upgrade converts a UserCurrent struct into an instance of UserCurrentV4.
+func (u UserCurrent) Upgrade() UserCurrentV4 {
+	var ret UserCurrentV4
+	ret.AddressLine1 = copyStringIfNotNil(u.AddressLine1)
+	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
+	ret.City = copyStringIfNotNil(u.City)
+	ret.Company = copyStringIfNotNil(u.Company)
+	ret.Country = copyStringIfNotNil(u.Country)
+	ret.Email = copyStringIfNotNil(u.Email)
+	ret.GID = copyIntIfNotNil(u.GID)
+	ret.ID = copyIntIfNotNil(u.ID)
+	ret.PhoneNumber = copyStringIfNotNil(u.PhoneNumber)
+	ret.PostalCode = copyStringIfNotNil(u.PostalCode)
+	ret.PublicSSHKey = copyStringIfNotNil(u.PublicSSHKey)
+	ret.StateOrProvince = copyStringIfNotNil(u.StateOrProvince)
+	ret.Tenant = copyStringIfNotNil(u.Tenant)
+	ret.Token = copyStringIfNotNil(u.Token)
+	ret.UID = copyIntIfNotNil(u.UID)
+	ret.FullName = u.FullName
+	if u.LastUpdated != nil {
+		ret.LastUpdated = u.LastUpdated.Time
+	}
+	if u.NewUser != nil {
+		ret.NewUser = u.NewUser
+	}
+
+	if u.RoleName != nil {
+		ret.Role = *u.RoleName
+	}
+	if u.TenantID != nil {
+		ret.TenantID = u.TenantID
+	}
+	if u.UserName != nil {
+		ret.UserName = *u.UserName
+	}
+	return ret
+}
+
 // UnmarshalAndValidate validates the request and returns a User into which the request's information
 // has been unmarshalled.
-func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
+func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User, useV4User bool) error {
 	errs := []error{}
 	if u.AddressLine1 != nil {
 		if err := json.Unmarshal(u.AddressLine1, &user.AddressLine1); err != nil {
@@ -228,11 +515,20 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 	}
 
 	if u.Role != nil {
-		if err := json.Unmarshal(u.Role, &user.Role); err != nil {
-			errs = append(errs, fmt.Errorf("role: %v", err))
-		} else if user.Role == nil {
-			errs = append(errs, errors.New("role: cannot be null"))
+		if useV4User {
+			if err := json.Unmarshal(u.Role, &user.RoleName); err != nil {
+				errs = append(errs, fmt.Errorf("role: %v", err))
+			} else if user.RoleName == nil {
+				errs = append(errs, errors.New("role: cannot be null"))
+			}
+		} else {
+			if err := json.Unmarshal(u.Role, &user.Role); err != nil {
+				errs = append(errs, fmt.Errorf("role: %v", err))
+			} else if user.Role == nil {
+				errs = append(errs, errors.New("role: cannot be null"))
+			}
 		}
+
 	}
 
 	if u.StateOrProvince != nil {
@@ -277,9 +573,9 @@ type UsersResponse struct {
 	Alerts
 }
 
-// UsersResponseV40 is the Traffic Ops API version 4.0 variant of UserResponse.
-type UsersResponseV40 struct {
-	Response []UserV40 `json:"response"`
+// UserResponse can hold a Traffic Ops API response to a request to get a user.
+type UserResponse struct {
+	Response User `json:"response"`
 	Alerts
 }
 
@@ -289,9 +585,22 @@ type CreateUserResponse struct {
 	Alerts
 }
 
+// CreateUserResponseV4 can hold a Traffic Ops API response to a POST request to create a user in api v4.
+type CreateUserResponseV4 struct {
+	Response UserV4 `json:"response"`
+	Alerts
+}
+
 // UpdateUserResponse can hold a Traffic Ops API response to a PUT request to update a user.
 type UpdateUserResponse struct {
 	Response User `json:"response"`
+	Alerts
+}
+
+// UpdateUserResponseV4 can hold a Traffic Ops API response to a PUT request to update a user for api major version 4 and the latest
+// minor version associated with it..
+type UpdateUserResponseV4 struct {
+	Response UserV4 `json:"response"`
 	Alerts
 }
 
@@ -308,9 +617,10 @@ type UserCurrentResponse struct {
 	Alerts
 }
 
-// UserCurrentResponseV40 is the Traffic Ops API version 4.0 variant of UserResponse.
-type UserCurrentResponseV40 struct {
-	Response UserCurrentV40 `json:"response"`
+// UserCurrentResponseV4 is the Traffic Ops API version 4.0 variant of UserResponse for api major version 4 and the latest
+// minor version associated with it.
+type UserCurrentResponseV4 struct {
+	Response UserCurrentV4 `json:"response"`
 	Alerts
 }
 
@@ -332,6 +642,41 @@ type UserRegistrationRequest struct {
 	// Role - despite being named "Role" - is actually merely the *ID* of a Role to give the new user.
 	Role     uint `json:"role"`
 	TenantID uint `json:"tenantId"`
+}
+
+// UserRegistrationRequestV4 is the alias for the UserRegistrationRequest for api major version 4 and the latest
+// minor version associated with it..
+type UserRegistrationRequestV4 UserRegistrationRequestV40
+
+// UserRegistrationRequestV40 is the request submitted by operators when they want to register a new
+// user in api V4.
+type UserRegistrationRequestV40 struct {
+	Email rfc.EmailAddress `json:"email"`
+	// Role - despite being named "Role" - is actually merely the *ID* of a Role to give the new user.
+	Role     string `json:"role"`
+	TenantID uint   `json:"tenantId"`
+}
+
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
+func (urr *UserRegistrationRequestV4) Validate(tx *sql.Tx) error {
+	var errs = []error{}
+	if urr.Role == "" {
+		errs = append(errs, errors.New("role: required and cannot be empty."))
+	}
+
+	if urr.TenantID == 0 {
+		errs = append(errs, errors.New("tenantId: required and cannot be zero."))
+	}
+
+	// This can only happen if an email isn't present in the request; the JSON parse handles actually
+	// invalid email addresses.
+	if urr.Email.Address.Address == "" {
+		errs = append(errs, errors.New("email: required"))
+	}
+
+	return util.JoinErrs(errs)
 }
 
 // Validate implements the

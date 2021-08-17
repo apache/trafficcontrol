@@ -390,7 +390,7 @@ func GetTestJobsByValidData(t *testing.T) {
 	keyword := jobs.Keyword
 
 	//Get Jobs by Asset URL
-	if len(*assetUrl) > 1 {
+	if len(*assetUrl) > 0 {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("assetUrl", *assetUrl)
 		toJobs, _, _ = TOSession.GetInvalidationJobs(opts)
@@ -414,7 +414,7 @@ func GetTestJobsByValidData(t *testing.T) {
 	}
 
 	//Get Jobs by ID
-	if *id > 1 {
+	if id != nil && *id >= 1 {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("id", strconv.FormatUint(uint64(*id), 10))
 		toJobs, _, _ = TOSession.GetInvalidationJobs(opts)
@@ -426,7 +426,7 @@ func GetTestJobsByValidData(t *testing.T) {
 	}
 
 	//Get Jobs by Keyword
-	if len(*keyword) > 1 {
+	if keyword != nil && len(*keyword) > 1 {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("Keyword", *keyword)
 		toJobs, _, _ = TOSession.GetInvalidationJobs(opts)
@@ -438,7 +438,7 @@ func GetTestJobsByValidData(t *testing.T) {
 	}
 
 	//Get Delivery Service ID by Name
-	if len(*dsName) > 0 {
+	if dsName != nil && len(*dsName) > 0 {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("xmlId", *dsName)
 		toDSes, _, _ := TOSession.GetDeliveryServices(opts)
@@ -468,7 +468,7 @@ func GetTestJobsByValidData(t *testing.T) {
 	userResp, _, _ := TOSession.GetUsers(opts)
 	if len(userResp.Response) > 0 {
 		userId := userResp.Response[0].ID
-		if *userId > 0 {
+		if userId != nil && *userId > 0 {
 			//Get Jobs by userID
 			opts := client.NewRequestOptions()
 			opts.QueryParameters.Set("userId", strconv.Itoa(*userId))

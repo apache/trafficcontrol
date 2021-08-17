@@ -419,12 +419,33 @@ func GetPrivLevelFromRoleID(tx *sql.Tx, id int) (int, bool, error) {
 	var privLevel int
 	err := tx.QueryRow(`SELECT priv_level FROM role WHERE role.id = $1`, id).Scan(&privLevel)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return 0, false, nil
 	}
 
 	if err != nil {
-		return 0, false, fmt.Errorf("getting priv_level from role: %v", err)
+		return 0, false, fmt.Errorf("getting priv_level from role ID: %w", err)
+	}
+	return privLevel, true, nil
+}
+
+// GetPrivLevelFromRole returns the priv_level associated with a role, whether it exists, and any error.
+// This method exists on a temporary basis. After priv_level is fully deprecated and capabilities take over,
+// this method will not only no longer be needed, but the corresponding new privilege check should be done
+// via the primary database query for the users endpoint. The users json response will contain a list of
+// capabilities in the future, whereas now the users json response currently does not contain privLevel.
+// See the wiki page on the roles/capabilities as a system:
+// https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=68715910
+func GetPrivLevelFromRole(tx *sql.Tx, role string) (int, bool, error) {
+	var privLevel int
+	err := tx.QueryRow(`SELECT priv_level FROM role WHERE role.name = $1`, role).Scan(&privLevel)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, false, nil
+	}
+
+	if err != nil {
+		return 0, false, fmt.Errorf("getting priv_level from role: %w", err)
 	}
 	return privLevel, true, nil
 }
@@ -1602,4 +1623,42 @@ func GetDSIDFromStaticDNSEntry(tx *sql.Tx, staticDNSEntryID int) (int, error) {
 		return -1, errors.New("querying DS ID from static dns entry: " + err.Error())
 	}
 	return dsID, nil
+}
+
+// AppendWhere appends 'extra' safely to the WHERE clause 'where'. What is
+// returned is guaranteed to be a valid WHERE clause (including a blank string).
+func AppendWhere(where, extra string) string {
+	if where == "" && extra == "" {
+		return ""
+	}
+	if where == "" {
+		where = BaseWhere + " "
+	} else {
+		where += " AND "
+	}
+	return where + extra
+}
+
+// GetRoleIDFromName returns the ID of the role associated with the supplied name.
+func GetRoleIDFromName(tx *sql.Tx, roleName string) (int, bool, error) {
+	var id int
+	if err := tx.QueryRow(`SELECT id FROM role WHERE name = $1`, roleName).Scan(&id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return id, false, nil
+		}
+		return id, false, errors.New("querying role ID from name: " + err.Error())
+	}
+	return id, true, nil
+}
+
+// GetRoleNameFromID returns the name of the role associated with the supplied ID.
+func GetRoleNameFromID(tx *sql.Tx, roleID int) (string, bool, error) {
+	var name string
+	if err := tx.QueryRow(`SELECT name FROM role WHERE id = $1`, roleID).Scan(&name); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return name, false, nil
+		}
+		return name, false, errors.New("querying role name from ID: " + err.Error())
+	}
+	return name, true, nil
 }

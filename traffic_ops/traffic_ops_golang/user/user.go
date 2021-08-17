@@ -21,23 +21,28 @@ package user
 
 import (
 	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
+	"github.com/jmoiron/sqlx"
 )
 
 type TOUser struct {
@@ -120,6 +125,13 @@ func (user *TOUser) postValidate() error {
 	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
 }
 
+func postValidateV40(user tc.UserV4) error {
+	validateErrs := validation.Errors{
+		"localPasswd": validation.Validate(user.LocalPassword, validation.Required),
+	}
+	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
+}
+
 // Note: Not using GenericCreate because Scan also needs to scan tenant and rolename
 func (user *TOUser) Create() (error, error, int) {
 
@@ -189,7 +201,7 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("getting tenant list for user: %v\n", err), http.StatusInternalServerError, nil
+		return nil, nil, fmt.Errorf("getting tenant list for user: %w", err), http.StatusInternalServerError, nil
 	}
 	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "u.tenant_id", tenantIDs)
 
@@ -219,7 +231,7 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, fmt.Errorf("querying users : %v", err), http.StatusInternalServerError, nil
+		return nil, nil, fmt.Errorf("querying users : %w", err), http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
@@ -239,12 +251,12 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	for rows.Next() {
 		if version.Major >= 4 {
 			if err = rows.StructScan(user40); err != nil {
-				return nil, nil, fmt.Errorf("parsing user rows: %v", err), http.StatusInternalServerError, nil
+				return nil, nil, fmt.Errorf("parsing user rows: %w", err), http.StatusInternalServerError, nil
 			}
 			users = append(users, *user40)
 		} else {
 			if err = rows.StructScan(user); err != nil {
-				return nil, nil, fmt.Errorf("parsing user rows: %v", err), http.StatusInternalServerError, nil
+				return nil, nil, fmt.Errorf("parsing user rows: %w", err), http.StatusInternalServerError, nil
 			}
 			users = append(users, *user)
 		}
@@ -263,7 +275,13 @@ func selectMaxLastUpdatedQuery(where string) string {
 }
 
 func (user *TOUser) privCheck() (error, error, int) {
-	requestedPrivLevel, _, err := dbhelpers.GetPrivLevelFromRoleID(user.ReqInfo.Tx.Tx, *user.Role)
+	var requestedPrivLevel int
+	var err error
+	if user.Role == nil {
+		requestedPrivLevel, _, err = dbhelpers.GetPrivLevelFromRole(user.ReqInfo.Tx.Tx, *user.RoleName)
+	} else {
+		requestedPrivLevel, _, err = dbhelpers.GetPrivLevelFromRoleID(user.ReqInfo.Tx.Tx, *user.Role)
+	}
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
@@ -464,6 +482,506 @@ func (user *TOUser) UpdateQuery() string {
 	 (SELECT r.name FROM role r WHERE id = u.role)`
 }
 
+func UpdateQueryV40() string {
+	return `
+	UPDATE tm_user u SET
+	username=:username,
+	public_ssh_key=:public_ssh_key,
+	role=(SELECT id FROM role WHERE role.name = :role),
+	company=:company,
+	email=:email,
+	full_name=:full_name,
+	new_user=COALESCE(:new_user, FALSE),
+	address_line1=:address_line1,
+	address_line2=:address_line2,
+	city=:city,
+	state_or_province=:state_or_province,
+	phone_number=:phone_number,
+	postal_code=:postal_code,
+	country=:country,
+	tenant_id=:tenant_id,
+	local_passwd=COALESCE(:local_passwd, local_passwd)
+	WHERE id=:id
+	RETURNING last_updated,
+	 (SELECT t.name FROM tenant t WHERE id = u.tenant_id),
+	 (SELECT r.name FROM role r WHERE id = u.role)`
+}
+
+func InsertQueryV40() string {
+	return `
+	INSERT INTO tm_user (
+	username,
+	public_ssh_key,
+	role,
+	company,
+	email,
+	full_name,
+	new_user,
+	address_line1,
+	address_line2,
+	city,
+	state_or_province,
+	phone_number,
+	postal_code,
+	country,
+	tenant_id,
+	local_passwd
+	) VALUES (
+	:username,
+	:public_ssh_key,
+	(SELECT id FROM role WHERE name = :role),
+	:company,
+	:email,
+	:full_name,
+	COALESCE(:new_user, FALSE),
+	:address_line1,
+	:address_line2,
+	:city,
+	:state_or_province,
+	:phone_number,
+	:postal_code,
+	:country,
+	:tenant_id,
+	:local_passwd
+	) RETURNING id, last_updated,
+	(SELECT t.name FROM tenant t WHERE id = tm_user.tenant_id),
+	(SELECT r.name FROM role r WHERE id = tm_user.role)`
+}
+
+func (user *TOUser) DeleteQuery() string {
+	return `DELETE FROM tm_user WHERE id = :id`
+}
+
+const readBaseQuery = `
+SELECT
+	u.id,
+	u.username AS username,
+	u.public_ssh_key,
+	u.company,
+	u.email,
+	u.full_name,
+	u.new_user,
+	u.address_line1,
+	u.address_line2,
+	u.city,
+	u.state_or_province,
+	u.phone_number,
+	u.postal_code,
+	u.country,
+	u.registration_sent,
+	u.tenant_id,
+	t.name AS tenant,
+	u.last_updated,`
+
+const readQuery = readBaseQuery + `
+u.last_authenticated,
+(SELECT count(l.tm_user) FROM log as l WHERE l.tm_user = u.id) as change_log_count,
+r.name as role
+FROM tm_user u
+LEFT JOIN tenant t ON u.tenant_id = t.id
+LEFT JOIN role r ON u.role = r.id
+`
+
+const legacyReadQuery = readBaseQuery + `
+	r.name AS rolename,
+	u.role
+FROM tm_user u
+LEFT JOIN tenant t ON u.tenant_id = t.id
+LEFT JOIN role r ON u.role = r.id
+`
+
+// this is necessary because tc.User doesn't read its RoleName field in sql
+// driver scans.
+type userGet struct {
+	RoleName *string `json:"rolename" db:"rolename"`
+	tc.User
+}
+
+type userGet40 struct {
+	userGet
+	ChangeLogCount    *int       `json:"changeLogCount" db:"change_log_count"`
+	LastAuthenticated *time.Time `json:"lastAuthenticated" db:"last_authenticated"`
+}
+
+func readLegacy(rows *sqlx.Rows) ([]userGet, error) {
+	if rows == nil {
+		return nil, errors.New("cannot read from nil rows")
+	}
+
+	users := []userGet{}
+	for rows.Next() {
+		var user userGet
+		if err := rows.StructScan(&user); err != nil {
+			return nil, fmt.Errorf("scanning User row: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func readV4(rows *sqlx.Rows) ([]userGet40, error) {
+	if rows == nil {
+		return nil, errors.New("cannot read from nil rows")
+	}
+
+	users := []userGet40{}
+	for rows.Next() {
+		var user userGet40
+		if err := rows.StructScan(&user); err != nil {
+			return nil, fmt.Errorf("scanning User row: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func read(rows *sqlx.Rows) ([]tc.UserV4, error) {
+	if rows == nil {
+		return nil, errors.New("cannot read from nil rows")
+	}
+
+	users := []tc.UserV4{}
+	for rows.Next() {
+		var user tc.UserV4
+		if err := rows.StructScan(&user); err != nil {
+			return nil, fmt.Errorf("scanning UserV4 row: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func getMaxLastUpdated(where string, queryValues map[string]interface{}, tx *sqlx.Tx) (time.Time, error) {
+	query := selectMaxLastUpdatedQuery(where)
+	var t time.Time
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return t, fmt.Errorf("query for max user last updated time: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err = rows.Scan(&t); err != nil {
+			return t, fmt.Errorf("scanning user max last updated time: %w", err)
+		}
+	}
+	return t, nil
+}
+
+// Get is the handler for GET requests made to /users.
+func Get(w http.ResponseWriter, r *http.Request) {
+	var query string
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	api.DefaultSort(inf, "username")
+	params := map[string]dbhelpers.WhereColumnInfo{
+		"id":       {Column: "u.id", Checker: api.IsInt},
+		"role":     {Column: "r.name"},
+		"tenant":   {Column: "t.name"},
+		"username": {Column: "u.username"},
+	}
+	if inf.Version.Major >= 4 {
+		params["company"] = dbhelpers.WhereColumnInfo{Column: "u.company"}
+		params["email"] = dbhelpers.WhereColumnInfo{Column: "u.email"}
+		params["fullName"] = dbhelpers.WhereColumnInfo{Column: "u.full_name"}
+		params["newUser"] = dbhelpers.WhereColumnInfo{Column: "u.new_user"}
+		params["city"] = dbhelpers.WhereColumnInfo{Column: "u.city"}
+		params["stateOrProvince"] = dbhelpers.WhereColumnInfo{Column: "u.state_or_province"}
+		params["country"] = dbhelpers.WhereColumnInfo{Column: "u.country"}
+		params["postalCode"] = dbhelpers.WhereColumnInfo{Column: "u.postal_code"}
+	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, params)
+	if len(errs) != 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
+	}
+
+	tenantIDs, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("getting tenant list for user: %w", err))
+		return
+	}
+	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "u.tenant_id", tenantIDs)
+
+	if inf.Config.UseIMS {
+		runSecond, maxTime := ims.TryIfModifiedSinceQuery(inf.Tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			w.Header().Add(rfc.LastModified, maxTime.Format(rfc.LastModifiedFormat))
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
+	groupBy := "\n" + `GROUP BY u.id, r.name, t.name`
+	orderBy = groupBy + orderBy
+
+	if inf.Version.Major >= 4 {
+		query = readQuery
+	} else {
+		query = legacyReadQuery
+	}
+
+	query = query + where + orderBy + pagination
+
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("querying Users: %w", err))
+		return
+	}
+	defer log.Close(rows, "reading in Users from the database")
+
+	var response interface{}
+
+	if inf.Version.Major >= 4 {
+		response, err = read(rows)
+	} else {
+		response, err = readLegacy(rows)
+	}
+
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	if inf.UseIMS() {
+		maxTime, err := getMaxLastUpdated(where, queryValues, inf.Tx)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		w.Header().Add(rfc.LastModified, maxTime.Format(rfc.LastModifiedFormat))
+	}
+	api.WriteResp(w, r, response)
+}
+
+func validate(user TOUser) error {
+	validateErrs := validation.Errors{
+		"email":    validation.Validate(user.Email, validation.Required, is.Email),
+		"fullName": validation.Validate(user.FullName, validation.Required),
+		"role":     validation.Validate(user.Role, validation.Required),
+		"username": validation.Validate(user.Username, validation.Required),
+		"tenantID": validation.Validate(user.TenantID, validation.Required),
+	}
+
+	// Password is not required for update
+	if user.LocalPassword != nil {
+		_, err := auth.IsGoodLoginPair(*user.Username, *user.LocalPassword)
+		if err != nil {
+			return err
+		}
+	}
+
+	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
+}
+
+func validateUserV4(user tc.UserV4) error {
+	validateErrs := validation.Errors{
+		"email":    validation.Validate(user.Email, validation.Required, is.Email),
+		"fullName": validation.Validate(user.FullName, validation.Required),
+		"role":     validation.Validate(user.Role, validation.Required),
+		"username": validation.Validate(user.Username, validation.Required),
+		"tenantID": validation.Validate(user.TenantID, validation.Required),
+	}
+
+	// Password is not required for update
+	if user.LocalPassword != nil {
+		_, err := auth.IsGoodLoginPair(user.Username, *user.LocalPassword)
+		if err != nil {
+			return err
+		}
+	}
+
+	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
+}
+
+func Create(w http.ResponseWriter, r *http.Request) {
+	var userV4 tc.UserV4
+	var user TOUser
+	var err error
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	tx := inf.Tx.Tx
+	version := inf.Version
+	if version == nil {
+		middleware.NotImplementedHandler().ServeHTTP(w, r)
+		return
+	}
+
+	if version.Major >= 4 {
+		if err := json.NewDecoder(r.Body).Decode(&userV4); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+		if err := validateUserV4(userV4); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+		if err := postValidateV40(userV4); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+	} else {
+		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+		if err := validate(user); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+		if err := user.postValidate(); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+	}
+
+	toUser := TOUser{
+		APIInfoImpl: api.APIInfoImpl{ReqInfo: inf},
+	}
+
+	if version.Major >= 4 {
+		toUser.User = userV4.DowngradeToLegacyUser()
+	} else {
+		user.APIInfoImpl = api.APIInfoImpl{ReqInfo: inf}
+		toUser = user
+	}
+
+	authorized, err := toUser.IsTenantAuthorized(inf.User)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+		return
+	}
+	if !authorized {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+	// make sure the userV4 cannot create someone with a higher priv_level than themselves
+	if userErr, sysErr, code := toUser.privCheck(); code != http.StatusOK {
+		api.HandleErr(w, r, tx, code, userErr, sysErr)
+		return
+	}
+
+	if version.Major >= 4 {
+		// Convert password to SCRYPT
+		*userV4.LocalPassword, err = auth.DerivePassword(*userV4.LocalPassword)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+	} else {
+		// Convert password to SCRYPT
+		*user.LocalPassword, err = auth.DerivePassword(*user.LocalPassword)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+	}
+
+	var resultRows *sqlx.Rows
+	if version.Major >= 4 {
+		_, ok, err := dbhelpers.GetRoleIDFromName(tx, userV4.Role)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no ID exists for the supplied role name"), nil)
+			return
+		} else if !ok {
+			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("role not found"), nil)
+			return
+		}
+		resultRows, err = inf.Tx.NamedQuery(InsertQueryV40(), userV4)
+	} else {
+		resultRows, err = inf.Tx.NamedQuery(user.InsertQuery(), user)
+	}
+	if err != nil {
+		userErr, sysErr, statusCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		return
+	}
+	defer resultRows.Close()
+
+	var id int
+	var lastUpdated time.Time
+	var lastUpdatedDeprecated tc.TimeNoMod
+	var tenant string
+	var rolename string
+	var changeLogMsg string
+
+	rowsAffected := 0
+	if version.Major >= 4 {
+		for resultRows.Next() {
+			rowsAffected++
+			if err = resultRows.Scan(&id, &lastUpdated, &tenant, &rolename); err != nil {
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("could not scan after insert: %s\n)", err))
+				return
+			}
+		}
+	} else {
+		for resultRows.Next() {
+			rowsAffected++
+			if err = resultRows.Scan(&id, &lastUpdatedDeprecated, &tenant, &rolename); err != nil {
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("could not scan after insert: %s\n)", err))
+				return
+			}
+		}
+	}
+
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("no userV4 was inserted, nothing was returned"))
+		return
+	} else if rowsAffected > 1 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("too many rows affected from userV4 insert"))
+		return
+	}
+
+	if version.Major >= 4 {
+		userV4.ID = &id
+		userV4.LastUpdated = lastUpdated
+		userV4.Tenant = &tenant
+		userV4.Role = rolename
+		userV4.LocalPassword = nil
+
+		userResponse := tc.UserResponseV4{
+			Response: userV4,
+			Alerts:   tc.CreateAlerts(tc.SuccessLevel, "user was created."),
+		}
+		api.WriteAlertsObj(w, r, http.StatusOK, userResponse.Alerts, userResponse.Response)
+		changeLogMsg = fmt.Sprintf("USER: %s, ID: %d, ACTION: Created User", userV4.Username, *userV4.ID)
+	} else {
+		user.ID = &id
+		user.LastUpdated = &lastUpdatedDeprecated
+		user.Tenant = &tenant
+		user.RoleName = &rolename
+		user.LocalPassword = nil
+
+		userResponse := tc.UserResponse{
+			Response: user.User,
+			Alerts:   tc.CreateAlerts(tc.SuccessLevel, "user was created."),
+		}
+		api.WriteAlertsObj(w, r, http.StatusOK, userResponse.Alerts, userResponse.Response)
+		changeLogMsg = fmt.Sprintf("USER: %s, ID: %d, ACTION: Created User", *user.Username, *user.ID)
+	}
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	return
+}
+
 func (user *TOUser) InsertQuery() string {
 	return `
 	INSERT INTO tm_user (
@@ -505,6 +1023,192 @@ func (user *TOUser) InsertQuery() string {
 	(SELECT r.name FROM role r WHERE id = tm_user.role)`
 }
 
-func (user *TOUser) DeleteQuery() string {
-	return `DELETE FROM tm_user WHERE id = :id`
+// Update is the handler for PUT requests made to /users.
+func Update(w http.ResponseWriter, r *http.Request) {
+	var userV4 tc.UserV4
+	var user TOUser
+	var roleID int
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	idParam, ok := inf.Params["id"]
+	if !ok {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no ID supplied"), nil)
+		return
+	}
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("couldn't convert id into an int"), nil)
+		return
+	}
+	if inf.Version.Major >= 4 {
+		if err := json.NewDecoder(r.Body).Decode(&userV4); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+		if err := validateUserV4(userV4); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+		userV4.ID = &id
+	} else {
+		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+		if err := validate(user); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
+		user.ID = &id
+	}
+
+	if inf.Version.Major >= 4 {
+		roleID, ok, err = dbhelpers.GetRoleIDFromName(inf.Tx.Tx, userV4.Role)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		} else if !ok {
+			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
+			return
+		}
+		// make sure current userV4 cannot update their own role to a new value
+		if inf.User.ID == *userV4.ID && inf.User.Role != roleID {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("users cannot update their own role"), nil)
+			return
+		}
+	} else {
+		// make sure current userV4 cannot update their own role to a new value
+		if inf.User.ID == *user.ID && inf.User.Role != *user.Role {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("users cannot update their own role"), nil)
+			return
+		}
+	}
+
+	toUser := TOUser{
+		APIInfoImpl: api.APIInfoImpl{ReqInfo: inf},
+	}
+
+	if inf.Version.Major >= 4 {
+		toUser.User = userV4.DowngradeToLegacyUser()
+	} else {
+		user.APIInfoImpl = api.APIInfoImpl{ReqInfo: inf}
+		toUser = user
+	}
+
+	authorized, err := toUser.IsTenantAuthorized(inf.User)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+		return
+	}
+	if !authorized {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+	// make sure the userV4 cannot create someone with a higher priv_level than themselves
+	if userErr, sysErr, code := toUser.privCheck(); code != http.StatusOK {
+		api.HandleErr(w, r, tx, code, userErr, sysErr)
+		return
+	}
+
+	if inf.Version.Major >= 4 {
+		if userV4.LocalPassword != nil {
+			// Convert password to SCRYPT
+			*userV4.LocalPassword, err = auth.DerivePassword(*userV4.LocalPassword)
+			if err != nil {
+				api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+				return
+			}
+		}
+	} else {
+		if user.LocalPassword != nil {
+			// Convert password to SCRYPT
+			*user.LocalPassword, err = auth.DerivePassword(*user.LocalPassword)
+			if err != nil {
+				api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+				return
+			}
+		}
+	}
+
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, id, "tm_user")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	var resultRows *sqlx.Rows
+	if inf.Version.Major >= 4 {
+		resultRows, err = inf.Tx.NamedQuery(UpdateQueryV40(), userV4)
+	} else {
+		resultRows, err = inf.Tx.NamedQuery(user.UpdateQuery(), user)
+	}
+
+	if err != nil {
+		api.ParseDBError(err)
+		return
+	}
+	defer resultRows.Close()
+
+	var lastUpdatedDeprecated tc.TimeNoMod
+	var lastUpdated time.Time
+	var tenant string
+	var rolename string
+	var changeLogMsg string
+
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if inf.Version.Major >= 4 {
+			if err := resultRows.Scan(&lastUpdated, &tenant, &rolename); err != nil {
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("could not scan lastUpdated from insert: %s\n", err))
+				return
+			}
+		} else {
+			if err := resultRows.Scan(&lastUpdatedDeprecated, &tenant, &rolename); err != nil {
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("could not scan lastUpdated from insert: %s\n", err))
+				return
+			}
+		}
+	}
+
+	if rowsAffected != 1 {
+		if rowsAffected < 1 {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no user found with this id"), nil)
+			return
+		}
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("this update affected too many rows: %d", rowsAffected))
+		return
+	}
+
+	if inf.Version.Major >= 4 {
+		userV4.LastUpdated = lastUpdated
+		userV4.Tenant = &tenant
+		userV4.Role = rolename
+		userV4.LocalPassword = nil
+
+		userResponse := tc.UserResponseV4{
+			Response: userV4,
+			Alerts:   tc.CreateAlerts(tc.SuccessLevel, "user was updated."),
+		}
+		api.WriteAlertsObj(w, r, http.StatusOK, userResponse.Alerts, userResponse.Response)
+		changeLogMsg = fmt.Sprintf("USER: %s, ID: %d, ACTION: Updated User", userV4.Username, *userV4.ID)
+	} else {
+		user.LastUpdated = &lastUpdatedDeprecated
+		user.Tenant = &tenant
+		user.RoleName = &rolename
+		user.LocalPassword = nil
+
+		userResponse := tc.UserResponse{
+			Response: user.User,
+			Alerts:   tc.CreateAlerts(tc.SuccessLevel, "user was updated."),
+		}
+		api.WriteAlertsObj(w, r, http.StatusOK, userResponse.Alerts, userResponse.Response)
+		changeLogMsg = fmt.Sprintf("USER: %s, ID: %d, ACTION: Updated User", *user.Username, *user.ID)
+	}
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }

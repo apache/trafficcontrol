@@ -64,8 +64,7 @@ Response Structure
 :postalCode:        The postal code of the area in which the user resides
 :publicSshKey:      The user's public key used for the SSH protocol
 :registrationSent:  If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
-:role:              The integral, unique identifier of the highest-privilege role assigned to this user
-:rolename:          The name of the highest-privilege role assigned to this user
+:role:              The name of the highest-privilege role assigned to this user
 :stateOrProvince:   The name of the state or province where this user resides
 :tenant:            The name of the tenant to which this user belongs
 :tenantId:          The integral, unique identifier of the tenant to which this user belongs
@@ -85,33 +84,33 @@ Response Structure
 	Whole-Content-Sha512: 9vqUmt8fWEuDb+9LQJ4sGbbF4Z0a7uNyBNSWhyzAi3fBUZ5mGhd4Jx5IuSlEqiLZnYeViJJL8mpRortkHCgp5Q==
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 13 Dec 2018 17:46:00 GMT
-	Content-Length: 588
+	Content-Length: 454
 
 	{ "response": [
 		{
-			"username": "admin",
-			"registrationSent": null,
-			"addressLine1": "not a real address",
-			"addressLine2": "not a real address either",
-			"city": "not a real city",
-			"company": "not a real company",
-			"country": "not a real country",
-			"email": "not@real.email",
-			"fullName": "Not a real Full Name",
+			"addressLine1": null,
+			"addressLine2": null,
+			"changeLogCount": null,
+			"city": null,
+			"company": null,
+			"country": null,
+			"email": null,
+			"fullName": null,
 			"gid": null,
 			"id": 2,
+			"lastAuthenticated": "0001-01-01T00:00:00Z",
+			"lastUpdated": "2021-08-25T14:08:13.974447-06:00",
 			"newUser": false,
-			"phoneNumber": "not a real phone number",
-			"postalCode": "not a real postal code",
-			"publicSshKey": "not a real ssh key",
-			"role": 1,
-			"rolename": "admin",
-			"stateOrProvince": "not a real state or province",
+			"phoneNumber": null,
+			"postalCode": null,
+			"publicSshKey": null,
+			"registrationSent": null,
+			"role": "admin",
+			"stateOrProvince": null,
 			"tenant": "root",
 			"tenantId": 1,
 			"uid": null,
-			"lastUpdated": "2018-12-13 17:24:23+00",
-			"lastAuthenticated": "2021-07-09T14:44:10.371708-06:00"
+			"username": "admin"
 		}
 	]}
 
@@ -151,7 +150,7 @@ Request Structure
 
 	.. note:: This field is optional if and only if tenancy is not enabled in Traffic Control
 
-:username: The new user's username
+:username: The user's username
 
 .. code-block:: http
 	:caption: Request Structure
@@ -177,7 +176,7 @@ Request Structure
 		"publicSshKey": "not a real ssh key",
 		"stateOrProvince": "not a real state or province",
 		"tenantId": 1,
-		"role": 1,
+		"role": "admin",
 		"username": "admin"
 	}
 
@@ -198,8 +197,7 @@ Response Structure
 :postalCode:       The postal code of the area in which the user resides
 :publicSshKey:     The user's public key used for the SSH protocol
 :registrationSent: If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
-:role:             The integral, unique identifier of the highest-privilege role assigned to this user
-:roleName:         The name of the highest-privilege role assigned to this user
+:role:             The name of the highest-privilege role assigned to this user
 :stateOrProvince:  The name of the state or province where this user resides
 :tenant:           The name of the tenant to which this user belongs
 :tenantId:         The integral, unique identifier of the tenant to which this user belongs
@@ -221,35 +219,36 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: QKvGSIwSdreMI/OdgWv9WQfI/C1JbXSoQGGospTGfCVUJ32XNWMhmREGzojWsilW8os8b14TGYeyMLUWunf2Ug==
-	Content-Length: 661
+	Content-Length: 478
 
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "User update was successful."
+			"text": "user was updated."
 		}
 	],
 	"response": {
-		"registrationSent": null,
-		"email": "not@real.email",
-		"tenantId": 1,
-		"city": "not a real city",
-		"tenant": "root",
-		"id": 2,
-		"company": "not a real company",
-		"roleName": "admin",
-		"phoneNumber": "not a real phone number",
-		"country": "not a real country",
-		"fullName": "Not a real Full Name",
-		"publicSshKey": "not a real ssh key",
-		"uid": null,
-		"stateOrProvince": "not a real state or province",
-		"lastUpdated": "2018-12-12 16:26:32.821187+00",
-		"username": "admin",
-		"newUser": false,
-		"addressLine2": "not a real address either",
-		"role": 1,
 		"addressLine1": "not a real address",
+		"addressLine2": "not a real address either",
+		"changeLogCount": null,
+		"city": "not a real city",
+		"company": "not a real company",
+		"country": "not a real country",
+		"email": "not@real.email",
+		"fullName": "Not a real fullName",
+		"gid": null,
+		"id": 2,
+		"lastAuthenticated": "2021-07-09T14:44:10.371708-06:00",
+		"lastUpdated": "2021-08-25T15:05:16.32163-06:00",
+		"newUser": false,
+		"phoneNumber": "not a real phone number",
 		"postalCode": "not a real postal code",
-		"gid": null
+		"publicSshKey": "not a real ssh key",
+		"registrationSent": null,
+		"role": "admin",
+		"stateOrProvince": "not a real state or province",
+		"tenant": "root",
+		"tenantId": 1,
+		"uid": null,
+		"username": "admin"
 	}}

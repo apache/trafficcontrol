@@ -991,17 +991,15 @@ func CRUDTopologyReadOnlyUser(t *testing.T) {
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	user := tc.UserV40{
-		User: tc.User{
-			Username:             util.StrPtr("test_user"),
-			RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
-			LocalPassword:        util.StrPtr("test_pa$$word"),
-			ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-			RoleName:             util.StrPtr("read-only user"),
-		},
+	user := tc.UserV4{
+		Username:             "test_user",
+		RegistrationSent:     new(time.Time),
+		LocalPassword:        util.StrPtr("test_pa$$word"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+		Role:                 "read-only user",
 	}
 	user.Email = util.StrPtr("email@domain.com")
-	user.TenantID = util.IntPtr(resp.Response[0].ID)
+	user.TenantID = resp.Response[0].ID
 	user.FullName = util.StrPtr("firstName LastName")
 
 	u, _, err := TOSession.CreateUser(user, client.RequestOptions{})
@@ -1065,9 +1063,7 @@ func CRUDTopologyReadOnlyUser(t *testing.T) {
 		t.Errorf("expected error about Read-Only users not being able to delete topologies, but got nothing")
 	}
 
-	if u.Response.Username != nil {
-		ForceDeleteTestUsersByUsernames(t, []string{"test_user"})
-	}
+	ForceDeleteTestUsersByUsernames(t, []string{"test_user"})
 }
 
 func UpdateTopologyWithCachegroupAssignedToBecomeParentOfItself(t *testing.T) {

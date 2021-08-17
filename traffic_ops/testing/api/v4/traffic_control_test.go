@@ -41,7 +41,7 @@ type TrafficControl struct {
 	ProfileParameters                                 []tc.ProfileParameter                   `json:"profileParameters"`
 	PhysLocations                                     []tc.PhysLocation                       `json:"physLocations"`
 	Regions                                           []tc.Region                             `json:"regions"`
-	Roles                                             []tc.Role                               `json:"roles"`
+	Roles                                             []tc.RoleV4                             `json:"roles"`
 	Servers                                           []tc.ServerV40                          `json:"servers"`
 	ServerServerCapabilities                          []tc.ServerServerCapability             `json:"serverServerCapabilities"`
 	ServerCapabilities                                []tc.ServerCapability                   `json:"serverCapabilities"`
@@ -55,6 +55,6 @@ type TrafficControl struct {
 	Types                                             []tc.Type                               `json:"types"`
 	SteeringTargets                                   []tc.SteeringTargetNullable             `json:"steeringTargets"`
 	Serverchecks                                      []tc.ServercheckRequestNullable         `json:"serverchecks"`
-	Users                                             []tc.UserV40                            `json:"users"`
+	Users                                             []tc.UserV4                             `json:"users"`
 	InvalidationJobs                                  []tc.InvalidationJobInput               `json:"invalidationJobs"`
 }

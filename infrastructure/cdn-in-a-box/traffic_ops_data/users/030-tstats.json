@@ -3,7 +3,7 @@
   "fullName": "Traffic Stats",
   "localPasswd": "$TS_PASSWORD",
   "confirmLocalPasswd": "$TS_PASSWORD",
-  "rolename": "operations",
+  "role": "operations",
   "tenant": "root",
   "username": "$TS_USER"
 }

@@ -1,5 +1,14 @@
 package tc
 
+import (
+	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
+
+	validation "github.com/go-ozzo/ozzo-validation"
+)
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +27,70 @@ package tc
  * specific language governing permissions and limitations
  * under the License.
  */
+
+// RoleV4 is an alias for the latest minor version for the major version 4.
+type RoleV4 RoleV40
+
+// RolesResponseV4 is a list of RoleV4 as a response.
+type RolesResponseV4 struct {
+	Response []RoleV4 `json:"response"`
+	Alerts
+}
+
+// RoleResponseV4 is a RoleV4 as a response.
+type RoleResponseV4 struct {
+	Response RoleV4 `json:"response"`
+	Alerts
+}
+
+// RoleV40 is the structure used to depict roles in API v4.0.
+type RoleV40 struct {
+	Name        string     `json:"name" db:"name"`
+	Permissions []string   `json:"permissions" db:"permissions"`
+	Description string     `json:"description" db:"description"`
+	LastUpdated *time.Time `json:"lastUpdated,omitempty" db:"last_updated"`
+}
+
+func (role RoleV4) Validate() error {
+	errs := validation.Errors{
+		"name":        validation.Validate(role.Name, validation.Required),
+		"description": validation.Validate(role.Description, validation.Required),
+	}
+	return util.JoinErrs(tovalidate.ToErrors(errs))
+}
+
+// Upgrade will convert the passed in instance of Role struct into an instance of RoleV4 struct.
+func (role Role) Upgrade() RoleV4 {
+	var roleV4 RoleV4
+	if role.Name != nil {
+		roleV4.Name = *role.Name
+	}
+	if role.Description != nil {
+		roleV4.Description = *role.Description
+	}
+	if role.Capabilities == nil {
+		roleV4.Permissions = nil
+	} else {
+		roleV4.Permissions = make([]string, len(*role.Capabilities))
+		copy(roleV4.Permissions, *role.Capabilities)
+	}
+	return roleV4
+}
+
+// Downgrade will convert the passed in instance of RoleV4 struct into an instance of Role struct.
+func (roleV4 RoleV4) Downgrade() Role {
+	var role Role
+	role.Name = &roleV4.Name
+	role.Description = &roleV4.Description
+	if len(roleV4.Permissions) == 0 {
+		role.Capabilities = nil
+	} else {
+		caps := make([]string, len(roleV4.Permissions))
+		copy(caps, roleV4.Permissions)
+		role.Capabilities = &caps
+	}
+	return role
+}
 
 // RolesResponse is a list of Roles as a response.
 // swagger:response RolesResponse
