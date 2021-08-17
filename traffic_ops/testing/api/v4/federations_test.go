@@ -19,6 +19,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
+	"sort"
 	"testing"
 	"time"
 
@@ -33,6 +35,7 @@ func TestFederations(t *testing.T) {
 		GetTestFederations(t)
 		GetTestFederationsIMS(t)
 		AddFederationResolversForCurrentUserTest(t)
+		ReplaceFederationResolversForCurrentUserTest(t)
 		RemoveFederationResolversForCurrentUserTest(t)
 	})
 }
@@ -265,6 +268,112 @@ func AddFederationResolversForCurrentUserTest(t *testing.T) {
 	for _, a := range alerts.Alerts {
 		if a.Level == tc.SuccessLevel.String() {
 			t.Errorf("Unexpected success from adding Federation Resolver mappings for the current user: %s", a.Text)
+		}
+	}
+}
+
+func ReplaceFederationResolversForCurrentUserTest(t *testing.T) {
+	fedID, ds, ds1, err := createFederationToDeliveryServiceAssociation()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	// need to assign myself the federation to set its mappings
+	me, _, err := TOSession.GetUserCurrent(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("Couldn't figure out who I am: %v - alerts: %+v", err, me.Alerts)
+	}
+	if me.Response.ID == nil {
+		t.Fatal("Current user has no ID, cannot continue.")
+	}
+
+	fedUsers, _, err := TOSession.GetFederationUsers(fedID, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("unexpected error getting federation users: %v", err)
+	}
+	foundFedUser := false
+	for _, fedUser := range fedUsers.Response {
+		if *fedUser.ID == *me.Response.ID {
+			foundFedUser = true
+			break
+		}
+	}
+	if !foundFedUser {
+		alerts, _, err := TOSession.CreateFederationUsers(fedID, []int{*me.Response.ID}, false, client.RequestOptions{})
+		if err != nil {
+			t.Fatalf("Failed to assign Federation to current user: %v - alerts: %+v", err, alerts.Alerts)
+		}
+	}
+	expectedResolve4 := []string{"192.0.2.0/25", "192.0.2.128/25"}
+	expectedResolve6 := []string{"2001:db8::/33", "2001:db8:8000::/33"}
+	sort.Strings(expectedResolve4)
+	sort.Strings(expectedResolve6)
+
+	mappings := tc.DeliveryServiceFederationResolverMappingRequest{
+		tc.DeliveryServiceFederationResolverMapping{
+			DeliveryService: *ds.XMLID,
+			Mappings: tc.ResolverMapping{
+				Resolve4: expectedResolve4,
+				Resolve6: expectedResolve6,
+			},
+		},
+		// for the purpose of this test, it's important that at least two different mappings have the same resolvers
+		tc.DeliveryServiceFederationResolverMapping{
+			DeliveryService: *ds1.XMLID,
+			Mappings: tc.ResolverMapping{
+				Resolve4: expectedResolve4,
+				Resolve6: expectedResolve6,
+			},
+		},
+	}
+
+	alerts, _, err := TOSession.ReplaceFederationResolverMappingsForCurrentUser(mappings, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("Unexpected error replacing Federation Resolver mappings for the current user: %v - alerts: %+v", err, alerts.Alerts)
+	}
+	for _, a := range alerts.Alerts {
+		if a.Level == tc.ErrorLevel.String() {
+			t.Errorf("Unexpected error-level alert from replacing Federation Resolver mappings for the current user: %s", a.Text)
+		}
+	}
+
+	feds, _, err := TOSession.Federations(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("unexpected error getting federations: %v", err)
+	}
+	for _, fed := range feds.Response {
+		if fed.DeliveryService.String() == *ds.XMLID || fed.DeliveryService.String() == *ds1.XMLID {
+			if len(fed.Mappings) != 1 {
+				t.Fatalf("expected 1 mapping, got %d", len(fed.Mappings))
+			}
+			sort.Strings(fed.Mappings[0].Resolve4)
+			sort.Strings(fed.Mappings[0].Resolve6)
+			if !reflect.DeepEqual(expectedResolve4, fed.Mappings[0].Resolve4) {
+				t.Errorf("checking federation resolver mappings, expected: %+v, actual: %+v", expectedResolve4, fed.Mappings[0].Resolve4)
+			}
+			if !reflect.DeepEqual(expectedResolve6, fed.Mappings[0].Resolve6) {
+				t.Errorf("checking federation resolver mappings, expected: %+v, actual: %+v", expectedResolve6, fed.Mappings[0].Resolve6)
+			}
+		}
+	}
+
+	mappings = tc.DeliveryServiceFederationResolverMappingRequest{
+		tc.DeliveryServiceFederationResolverMapping{
+			DeliveryService: "aoeuhtns",
+			Mappings: tc.ResolverMapping{
+				Resolve4: []string{},
+				Resolve6: []string{"dead::beef", "f1d0::f00d/82"},
+			},
+		},
+	}
+
+	alerts, _, err = TOSession.ReplaceFederationResolverMappingsForCurrentUser(mappings, client.RequestOptions{})
+	if err == nil {
+		t.Fatal("Expected error replacing Federation Resolver mappings for the current user, but didn't get one")
+	}
+	for _, a := range alerts.Alerts {
+		if a.Level == tc.SuccessLevel.String() {
+			t.Errorf("Unexpected success from replacing Federation Resolver mappings for the current user: %s", a.Text)
 		}
 	}
 }

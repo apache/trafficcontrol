@@ -41,7 +41,8 @@ const MaxTTL = math.MaxInt64 / 3600000000000
 
 const twoDays = time.Hour * 48
 
-// ValidJobRegexPrefix matches the only valid prefixes for a relative-path Content Invalidation Job regex
+// ValidJobRegexPrefix matches the only valid prefixes for a relative-path
+// Content Invalidation Job regular expression.
 var ValidJobRegexPrefix = regexp.MustCompile(`^\?/.*$`)
 
 // InvalidationJob represents a content invalidation job as returned by the API.
@@ -58,7 +59,7 @@ type InvalidationJob struct {
 	StartTime *Time `json:"startTime"`
 }
 
-// InvalidationJobsResponseV40 is the type of a response from Traffic Ops to a
+// InvalidationJobsResponse is the type of a response from Traffic Ops to a
 // request made to its /jobs API endpoint.
 type InvalidationJobsResponse struct {
 	Response []InvalidationJob `json:"response"`
@@ -245,6 +246,11 @@ func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
 	return nil
 }
 
+// ValidateJobUniqueness returns a message describing each overlap between
+// existing content invalidation jobs for the same assetURL as the one passed.
+//
+// TODO: This doesn't belong in the lib, and it swallows errors because it
+// can't log them.
 func ValidateJobUniqueness(tx *sql.Tx, dsID uint, startTime time.Time, assetURL string, ttlHours uint) []string {
 	var errs []string
 
@@ -334,8 +340,8 @@ func (j *InvalidationJobInput) TTLHours() (uint, error) {
 	return ret, nil
 }
 
-// TTLHours will parse job.Parameters to find TTL, returns an int representing number of hours. Returns 0
-// in case of issue (0 is an invalid TTL)
+// TTLHours will parse job.Parameters to find TTL, returns an int representing
+// number of hours. Returns 0 in case of issue (0 is an invalid TTL).
 func (job *InvalidationJob) TTLHours() uint {
 	if job.Parameters == nil {
 		return 0

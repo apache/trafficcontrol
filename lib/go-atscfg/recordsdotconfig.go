@@ -41,14 +41,30 @@ type RecordsConfigOpts struct {
 	// DNSLocalBindServiceAddr is whether to set the server's service addresses
 	// as the records.config proxy.config.dns.local_ipv* settings.
 	DNSLocalBindServiceAddr bool
+
+	// HdrComment is the header comment to include at the beginning of the file.
+	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
+	// To omit the header comment, pass the empty string.
+	HdrComment string
+
+	// NoOutgoingIP is whether to omit adding a records.config entry for
+	// proxy.local.outgoing_ip_to_bind set to the server's IP addresses (V4 and V6).
+	// By default, this entry is added, unless it already exists in records.config
+	// (probably from a Parameter).
+	//
+	// The default, setting the IP to bind, is usually the right solution, unless
+	// the server's addresses are unusual or not public, such as NAT.
+	NoOutgoingIP bool
 }
 
 func MakeRecordsDotConfig(
 	server *Server,
 	serverParams []tc.Parameter,
-	hdrComment string,
-	opt RecordsConfigOpts,
+	opt *RecordsConfigOpts,
 ) (Cfg, error) {
+	if opt == nil {
+		opt = &RecordsConfigOpts{}
+	}
 	warnings := []string{}
 	if server.Profile == nil {
 		return Cfg{}, makeErr(warnings, "server profile missing")
@@ -57,7 +73,7 @@ func MakeRecordsDotConfig(
 	params, paramWarns := paramsToMap(filterParams(serverParams, RecordsFileName, "", "", "location"))
 	warnings = append(warnings, paramWarns...)
 
-	hdr := makeHdrComment(hdrComment)
+	hdr := makeHdrComment(opt.HdrComment)
 	txt := genericProfileConfig(params, RecordsSeparator)
 	if txt == "" {
 		txt = "\n" // If no params exist, don't send "not found," but an empty file. We know the profile exists.
@@ -78,10 +94,14 @@ func MakeRecordsDotConfig(
 
 // addRecordsDotConfigOverrides modifies the records.config text and adds any overrides.
 // Returns the modified text and any warnings.
-func addRecordsDotConfigOverrides(txt string, server *Server, opt RecordsConfigOpts) (string, []string) {
+func addRecordsDotConfigOverrides(txt string, server *Server, opt *RecordsConfigOpts) (string, []string) {
 	warnings := []string{}
-	txt, ipWarns := addRecordsDotConfigOutgoingIP(txt, server)
-	warnings = append(warnings, ipWarns...)
+
+	if !opt.NoOutgoingIP {
+		ipWarns := []string{}
+		txt, ipWarns = addRecordsDotConfigOutgoingIP(txt, server)
+		warnings = append(warnings, ipWarns...)
+	}
 
 	if opt.ReleaseViaStr {
 		viaWarns := []string{}
@@ -172,14 +192,19 @@ func addRecordsDotConfigDNSLocal(txt string, server *Server) (string, []string) 
 	const dnsLocalV6 = `proxy.config.dns.local_ipv6`
 
 	v4, v6 := getServiceAddresses(server)
+
 	if v4 == nil {
 		warnings = append(warnings, "server had no IPv4 Service Address, not setting records.config dns v4 local bind addr!")
+	} else if strings.Contains(txt, dnsLocalV4) {
+		warnings = append(warnings, "dns local option was set, but proxy.config.dns.local_ipv4 was already in records.config, not overriding! Check the server's Parameters.")
 	} else {
 		txt += `CONFIG ` + dnsLocalV4 + ` STRING ` + v4.String() + "\n"
 	}
 
 	if v6 == nil {
 		warnings = append(warnings, "server had no IPv6 Service Address, not setting records.config dns v6 local bind addr!")
+	} else if strings.Contains(txt, dnsLocalV6) {
+		warnings = append(warnings, "dns local option was set, but proxy.config.dns.local_ipv6 was already in records.config, not overriding! Check the server's Parameters!")
 	} else {
 		txt += `CONFIG ` + dnsLocalV6 + ` STRING [` + v6.String() + `]` + "\n"
 	}

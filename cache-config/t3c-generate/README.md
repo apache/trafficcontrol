@@ -81,6 +81,11 @@ The output is a JSON array of objects containing the file and its metadata.
 
     Print usage information and exit
 
+-i, -\-no-outgoing-ip
+
+    Whether to not set the records.config outgoing IP to the
+    server's addresses in Traffic Ops. Default is false.
+
 -l, -\-list-plugins
 
     Print the list of plugins.

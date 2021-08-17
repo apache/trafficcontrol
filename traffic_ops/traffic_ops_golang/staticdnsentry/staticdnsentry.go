@@ -20,6 +20,7 @@ package staticdnsentry
  */
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -174,15 +175,22 @@ func (en *TOStaticDNSEntry) Update(h http.Header) (error, error, int) {
 func (en *TOStaticDNSEntry) Delete() (error, error, int) {
 	var cdnName tc.CDNName
 	var err error
+	var dsID int
 	if en.DeliveryServiceID != nil {
-		_, cdnName, _, err = dbhelpers.GetDSNameAndCDNFromID(en.ReqInfo.Tx.Tx, *en.DeliveryServiceID)
+		dsID = *en.DeliveryServiceID
+	} else if en.ID != nil {
+		dsID, err = dbhelpers.GetDSIDFromStaticDNSEntry(en.ReqInfo.Tx.Tx, *en.ID)
 		if err != nil {
-			return nil, err, http.StatusInternalServerError
+			return nil, errors.New("couldn't get DS ID from static dns entry ID: " + err.Error()), http.StatusInternalServerError
 		}
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, string(cdnName), en.ReqInfo.User.UserName)
-		if userErr != nil || sysErr != nil {
-			return userErr, sysErr, errCode
-		}
+	}
+	_, cdnName, _, err = dbhelpers.GetDSNameAndCDNFromID(en.ReqInfo.Tx.Tx, dsID)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(en.ReqInfo.Tx.Tx, string(cdnName), en.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 	return api.GenericDelete(en)
 }

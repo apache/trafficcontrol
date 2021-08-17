@@ -61,6 +61,22 @@ export const parameters = {
 					password: "pa$$word"
 				}
 			],
+			check: [
+				{
+					description: "check CSV link from Parameter page",
+					Name: "Export as CSV"
+				}
+			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "Config File"
+				},
+				{
+					description: "redisplay first table column",
+					Name: "Config File"
+				}
+			],
 			add: [
 				{
 					description: "create a Parameters",
@@ -95,6 +111,22 @@ export const parameters = {
 					password: "pa$$word"
 				}
 			],
+			check: [
+				{
+					description: "check CSV link from Parameter page",
+					Name: "Export as CSV"
+				}
+			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "Config File"
+				},
+				{
+					description: "redisplay first table column",
+					Name: "Config File"
+				}
+			],
 			add: [
 				{
 					description: "create a Parameters",
@@ -127,6 +159,22 @@ export const parameters = {
 					description: "Operation Role",
 					username: "TPOperator",
 					password: "pa$$word"
+				}
+			],
+			check: [
+				{
+					description: "check CSV link from Parameter page",
+					Name: "Export as CSV"
+				}
+			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "Config File"
+				},
+				{
+					description: "redisplay first table column",
+					Name: "Config File"
 				}
 			],
 			add: [

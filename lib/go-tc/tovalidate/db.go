@@ -25,12 +25,17 @@ import (
 	"fmt"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 )
 
-// DBExistsRule checks if value is in column in this table
-// TODO: DBExistsRule ?   what about DBUniqueRule?
+// DBExistsRule is a rule used to check if a given value is in a certain column
+// of a specific table.
+//
+// DBExistsRule is not known to be used anywhere, and likely only has meaning
+// for Traffic Ops internals even if it was. Therefore, its use is discouraged
+// as it may be removed/relocated in the future.
 type DBExistsRule struct {
 	db      *sqlx.DB
 	table   string
@@ -38,7 +43,8 @@ type DBExistsRule struct {
 	message string
 }
 
-// NewDBExistsRule is a validation rule that checks if the given value is in the column in this table
+// NewDBExistsRule creates a new validation rule that checks if a value is in
+// the given column of the given table.
 func NewDBExistsRule(db *sqlx.DB, table string, column string) *DBExistsRule {
 	return &DBExistsRule{
 		db:      db,
@@ -48,7 +54,7 @@ func NewDBExistsRule(db *sqlx.DB, table string, column string) *DBExistsRule {
 	}
 }
 
-// Validate checks if the given value is valid or not.
+// Validate checks if the given value is valid or not according to this rule.
 func (r *DBExistsRule) Validate(value interface{}) error {
 	if r.db == nil {
 		return nil
@@ -76,8 +82,13 @@ func (r *DBExistsRule) Error(message string) *DBExistsRule {
 	return r
 }
 
-// DBUniqueRule checks if value is in column in this table
-// TODO: DBUniqueRule ?   what about DBUniqueRule?
+// DBUniqueRule is a rule used to check if a given value is in a certain column
+// of a specific table, and that there is exactly one row containing that value
+// in said table.
+//
+// DBUniqueRule is not known to be used anywhere, and likely only has meaning
+// for Traffic Ops internals even if it was. Therefore, its use is discouraged
+// as it may be removed/relocated in the future.
 type DBUniqueRule struct {
 	db      *sqlx.DB
 	table   string
@@ -86,7 +97,14 @@ type DBUniqueRule struct {
 	message string
 }
 
-// NewDBUniqueRule is a validation rule that checks if the given value is in the column in this table
+// NewDBUniqueRule creates a validation rule that checks if a value is in the
+// given column of the given table, and that there is exactly one row
+// containing that value in said table.
+//
+// The idCheck function must be given and must be capable of determining
+// uniqueness of the single numeric ID parameter given to it. Note that the
+// DBUniqueRule is, therefore, incapable of verifying the uniqueness of a value
+// in a table that uses non-numeric and/or compound keys.
 func NewDBUniqueRule(db *sqlx.DB, table string, column string, idCheck func(int) bool) *DBUniqueRule {
 	return &DBUniqueRule{
 		db:      db,
@@ -97,7 +115,8 @@ func NewDBUniqueRule(db *sqlx.DB, table string, column string, idCheck func(int)
 	}
 }
 
-// Validate returns an error if the value already exists in the table in this column
+// Validate returns an error if the value already exists in the table in this
+// column.
 func (r *DBUniqueRule) Validate(value interface{}) error {
 	if r.db == nil {
 		return nil

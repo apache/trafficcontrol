@@ -144,7 +144,9 @@ type ServercheckRequestNullable struct {
 	HostName *string `json:"host_name"`
 }
 
-// Validate ServercheckRequestNullable
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidate
+// interface.
 func (scp ServercheckRequestNullable) Validate(tx *sql.Tx) error {
 	errs := []string{}
 

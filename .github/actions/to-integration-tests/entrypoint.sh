@@ -86,7 +86,10 @@ if [[ ! -e "$repo_dir" ]]; then
 fi
 
 cd "${repo_dir}/traffic_ops/traffic_ops_golang"
-go mod vendor -v
+
+if  [[ ! -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]]; then
+	go mod vendor
+fi
 go build .
 
 echo "

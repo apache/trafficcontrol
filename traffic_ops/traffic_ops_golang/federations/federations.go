@@ -49,7 +49,7 @@ VALUES ($1, (
 	FROM type
 	WHERE type.name = $2
 ))
-ON CONFLICT DO NOTHING
+ON CONFLICT (ip_address) DO UPDATE SET ip_address = federation_resolver.ip_address
 RETURNING federation_resolver.ip_address, federation_resolver.id
 `
 
@@ -324,7 +324,7 @@ WHERE
 	return feds, nil, http.StatusOK, &maxTime
 }
 
-// AddFederationResorverMappingsForCurrentUser is the handler for a POST request to /federations.
+// AddFederationResolverMappingsForCurrentUser is the handler for a POST request to /federations.
 // Confusingly, it does not create a federation, but is instead used to manipulate the resolvers
 // used by one or more particular Delivery Services for one or more particular Federations.
 func AddFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.Request) {
@@ -426,14 +426,12 @@ func addFederationResolver(res []string, t tc.FederationResolverType, fedID uint
 	for _, r := range res {
 		var ip string
 		var id uint
-		if err := tx.QueryRow(insertResolverQuery, r, t).Scan(&ip, &id); err != nil && err != sql.ErrNoRows {
+		if err := tx.QueryRow(insertResolverQuery, r, t).Scan(&ip, &id); err != nil {
 			return nil, err
 		}
-		if ip != "" && id > 0 {
-			inserted = append(inserted, ip)
-			if _, err := tx.Exec(associateFederationWithResolverQuery, fedID, id); err != nil {
-				return nil, err
-			}
+		inserted = append(inserted, ip)
+		if _, err := tx.Exec(associateFederationWithResolverQuery, fedID, id); err != nil {
+			return nil, err
 		}
 
 	}

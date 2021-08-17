@@ -86,69 +86,92 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 		t.Fatalf("Need at least one status with a name other than '%s' or '%s'", tc.CacheStatusOnline, tc.CacheStatusReported)
 	}
 
-	// TODO: this isn't sufficient to define a single server, so there might be
-	// a better way to do this.
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("hostName", dssaTestingXMLID)
-	opts.QueryParameters.Set("domainName", dssaTestingXMLID)
-	servers, _, err := TOSession.GetServers(opts)
+	server := getServer(dssaTestingXMLID, t)
+	orgServer := getServer("test-mso-org-01", t)
+
+	resp, _, err := TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*server.ID, *orgServer.ID}, true, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("Unexpected error fetching server '%s.%s': %v - alerts: %+v", dssaTestingXMLID, dssaTestingXMLID, err, servers.Alerts)
-	}
-	if len(servers.Response) != 1 {
-		t.Fatalf("Expected exactly one server with FQDN '%s.%s', got: %d", dssaTestingXMLID, dssaTestingXMLID, len(servers.Response))
-	}
-	server := servers.Response[0]
-	if server.ID == nil {
-		t.Fatal("Server had null/undefined ID after creation")
+		t.Fatalf("Failed to assign servers to Delivery Service: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	resp, _, err := TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*server.ID}, true, client.RequestOptions{})
-	if err != nil {
-		t.Fatalf("Failed to assign server to Delivery Service: %v - alerts: %+v", err, resp.Alerts)
-	}
-
-	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{}, true, client.RequestOptions{})
+	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*orgServer.ID}, true, client.RequestOptions{})
 	if err == nil {
-		t.Error("Didn't get expected error trying to remove the only server assigned to a Delivery Service")
+		t.Error("Didn't get expected error trying to remove the only EDGE server assigned to a Delivery Service")
+	}
+
+	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*server.ID}, true, client.RequestOptions{})
+	if err == nil {
+		t.Error("Didn't get expected error trying to remove the only ORG server assigned to an MSO-enabled Delivery Service")
 	}
 
 	_, _, err = TOSession.DeleteDeliveryServiceServer(*ds.ID, *server.ID, client.RequestOptions{})
 	if err == nil {
-		t.Error("Didn't get expected error trying to remove the only server assigned to a Delivery Service")
+		t.Error("Didn't get expected error trying to remove the only EDGE server assigned to a Delivery Service")
+	}
+
+	_, _, err = TOSession.DeleteDeliveryServiceServer(*ds.ID, *orgServer.ID, client.RequestOptions{})
+	if err == nil {
+		t.Error("Didn't get expected error trying to remove the only ORG server assigned to an MSO-enabled Delivery Service")
 	}
 
 	alerts, _, err := TOSession.DeleteServer(*server.ID, client.RequestOptions{})
 	if err == nil {
-		t.Error("Didn't get expected error trying to delete the only server assigned to a Delivery Service")
+		t.Error("Didn't get expected error trying to delete the only EDGE server assigned to a Delivery Service")
 	} else {
-		t.Logf("Got expected error trying to delete the only server assigned to a Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
+		t.Logf("Got expected error trying to delete the only EDGE server assigned to a Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
+	}
+
+	alerts, _, err = TOSession.DeleteServer(*orgServer.ID, client.RequestOptions{})
+	if err == nil {
+		t.Error("Didn't get expected error trying to delete the only ORG server assigned to an MSO-enabled Delivery Service")
+	} else {
+		t.Logf("Got expected error trying to delete the only ORG server assigned to an MSO-enabled Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
 	alerts, _, err = TOSession.AssignDeliveryServiceIDsToServerID(*server.ID, []int{}, true, client.RequestOptions{})
 	if err == nil {
-		t.Error("Didn't get expected error trying to remove a Delivery Service from the only server to which it is assigned")
+		t.Error("Didn't get expected error trying to remove a Delivery Service from the only EDGE server to which it is assigned")
 	} else {
-		t.Logf("Got expected error trying to remove a Delivery Service from the only server to which it is assigned: %v - alerts: %+v", err, alerts.Alerts)
+		t.Logf("Got expected error trying to remove a Delivery Service from the only EDGE server to which it is assigned: %v - alerts: %+v", err, alerts.Alerts)
+	}
+
+	alerts, _, err = TOSession.AssignDeliveryServiceIDsToServerID(*orgServer.ID, []int{}, true, client.RequestOptions{})
+	if err == nil {
+		t.Error("Didn't get expected error trying to remove a Delivery Service from the only EDGE server to which it is assigned")
+	} else {
+		t.Logf("Got expected error trying to remove a Delivery Service from the only EDGE server to which it is assigned: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
 	server.StatusID = &badStatusID
+	orgServer.StatusID = &badStatusID
 	putRequest := tc.ServerPutStatus{
 		Status:        util.JSONNameOrIDStr{ID: &badStatusID},
 		OfflineReason: util.StrPtr("test"),
 	}
 	alerts, _, err = TOSession.UpdateServerStatus(*server.ID, putRequest, client.RequestOptions{})
 	if err == nil {
-		t.Error("Didn't get expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service")
+		t.Error("Didn't get expected error trying to put server into a bad state when it's the only EDGE assigned to a Delivery Service")
 	} else {
-		t.Logf("Got expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
+		t.Logf("Got expected error trying to put server into a bad state when it's the only EDGE assigned to a Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
+	}
+	alerts, _, err = TOSession.UpdateServerStatus(*orgServer.ID, putRequest, client.RequestOptions{})
+	if err == nil {
+		t.Error("Didn't get expected error trying to put server into a bad state when it's the only ORG assigned to an MSO Delivery Service")
+	} else {
+		t.Logf("Got expected error trying to put server into a bad state when it's the only ORG assigned to an MSO Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
 	alerts, _, err = TOSession.UpdateServer(*server.ID, server, client.RequestOptions{})
 	if err == nil {
-		t.Error("Didn't get expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service")
+		t.Error("Didn't get expected error trying to put server into a bad state when it's the only EDGE assigned to a Delivery Service")
 	} else {
-		t.Logf("Got expected error trying to put server into a bad state when it's the only one assigned to a Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
+		t.Logf("Got expected error trying to put server into a bad state when it's the only EDGE assigned to a Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
+	}
+	alerts, _, err = TOSession.UpdateServer(*orgServer.ID, orgServer, client.RequestOptions{})
+	if err == nil {
+		t.Error("Didn't get expected error trying to put server into a bad state when it's the only ORG assigned to an MSO Delivery Service")
+	} else {
+		t.Logf("Got expected error trying to put server into a bad state when it's the only ORG assigned to an MSO Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
 	}
 
 	server.HostName = util.StrPtr(dssaTestingXMLID + "-quest")
@@ -170,22 +193,11 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create server: %v - alerts: %+v", err, alerts.Alerts)
 	}
-	opts.QueryParameters.Set("hostName", *server.HostName)
-	servers, _, err = TOSession.GetServers(opts)
-	if err != nil {
-		t.Fatalf("Could not fetch server after creation: %v - alerts: %+v", err, servers.Alerts)
-	}
-	if len(servers.Response) != 1 {
-		t.Fatalf("Expected exactly 1 server with hostname '%s'; got: %d", *server.HostName, len(servers.Response))
-	}
-	server = servers.Response[0]
-	if server.ID == nil {
-		t.Fatal("Server had null/undefined ID after creation")
-	}
+	server = getServer(*server.HostName, t)
 
 	_, _, err = TOSession.CreateDeliveryServiceServers(*ds.ID, []int{*server.ID}, true, client.RequestOptions{})
 	if err == nil {
-		t.Error("Didn't get expected error trying to replace the last server assigned to a Delivery Service with a server in a bad state")
+		t.Error("Didn't get expected error trying to replace the last EDGE server assigned to a Delivery Service with a server in a bad state")
 	}
 
 	// Cleanup
@@ -194,6 +206,24 @@ func TryToRemoveLastServerInDeliveryService(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to delete server: %v - alerts: %+v", err, alerts.Alerts)
 	}
+}
+
+func getServer(hostname string, t *testing.T) tc.ServerV4 {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("hostName", hostname)
+	servers, _, err := TOSession.GetServers(opts)
+	if err != nil {
+		t.Fatalf("Unexpected error fetching server '%s': %v - alerts: %+v", hostname, err, servers.Alerts)
+	}
+	if len(servers.Response) != 1 {
+		t.Fatalf("Expected exactly one server with FQDN '%s', got: %d", hostname, len(servers.Response))
+	}
+	server := servers.Response[0]
+	if server.ID == nil {
+		t.Fatal("Server had null/undefined ID after creation")
+	}
+	return server
 }
 
 func GetTestDSSIMS(t *testing.T) {
@@ -409,7 +439,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 		{
 			serverName:  "atlanta-edge-01",
 			description: "missing requirements for server -> DS assignment",
-			err:         errors.New(`Caching server cannot be assigned to this delivery service without having the required delivery service capabilities`),
+			err:         errors.New("cannot be assigned to this delivery service"),
 			ssc:         sscs[0],
 			capability: tc.DeliveryServicesRequiredCapability{
 				DeliveryServiceID:  helperGetDeliveryServiceID(t, util.StrPtr("ds-test-minor-versions")),
@@ -471,7 +501,7 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 					}
 				}
 				if !found {
-					t.Fatalf("Expected to find an error-level alert relating to '%v', but it wasn't found", ctc.err)
+					t.Fatalf("Expected to find an error-level alert relating to '%v', but it wasn't found. Actual alerts: %v", ctc.err, assignResp.Alerts.Alerts)
 				}
 			}
 

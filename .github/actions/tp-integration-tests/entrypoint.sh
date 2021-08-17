@@ -40,10 +40,17 @@ PHYS="aloc"
 COORD="acoord"
 CDN="zcdn"
 CG="acg"
+to_admin_username="$(jq -r '.params.login.username' "${GITHUB_WORKSPACE}/traffic_portal/test/integration/config.json")"
+to_admin_password="$(jq -r '.params.login.password' "${GITHUB_WORKSPACE}/traffic_portal/test/integration/config.json")"
+password_hash="$(<<PYTHON_COMMANDS PYTHONPATH="${GITHUB_WORKSPACE}/traffic_ops/install/bin" python
+import _postinstall
+print(_postinstall.hash_pass('${to_admin_password}'))
+PYTHON_COMMANDS
+)"
 <<QUERY psql
 INSERT INTO tm_user (username, role, tenant_id, local_passwd)
-  VALUES ('admin', 1, 1,
-    'SCRYPT:16384:8:1:vVw4X6mhoEMQXVGB/ENaXJEcF4Hdq34t5N8lapIjDQEAS4hChfMJMzwwmHfXByqUtjmMemapOPsDQXG+BAX/hA==:vORiLhCm1EtEQJULvPFteKbAX2DgxanPhHdrYN8VzhZBNF81NRxxpo7ig720KcrjH1XFO6BUTDAYTSBGU9KO3Q=='
+  VALUES ('${to_admin_username}', 1, 1,
+    '${password_hash}'
   );
 INSERT INTO division(name) VALUES('${DIVISION}');
 INSERT INTO region(name, division) VALUES('${REGION}', 1);
@@ -148,7 +155,9 @@ fi
 
 to_build() {
   cd "${REPO_DIR}/traffic_ops/traffic_ops_golang"
-  go mod vendor -v
+  if  [[ ! -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]]; then
+    go mod vendor
+  fi
   go build .
 
   openssl req -new -x509 -nodes -newkey rsa:4096 -out localhost.crt -keyout localhost.key -subj "/CN=tptests";

@@ -39,11 +39,8 @@ init() {
 	mkdir -p /opt/traffic_monitor/conf
 	cat > /opt/traffic_monitor/conf/traffic_monitor.cfg <<- EOF
 		{
-				"cache_health_polling_interval_ms": 6000,
-				"cache_stat_polling_interval_ms": 6000,
 				"monitor_config_polling_interval_ms": 15000,
 				"http_timeout_ms": 2000,
-				"peer_polling_interval_ms": 5000,
 				"peer_optimistic": true,
 				"max_events": 200,
 				"health_flush_interval_ms": 20,

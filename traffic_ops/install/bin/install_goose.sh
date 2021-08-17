@@ -14,12 +14,7 @@
 # limitations under the License.
 #
 
-trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
-set -o errexit -o nounset
-echo "Now installing goose"
-export GOPATH=/opt/traffic_ops/go
-mkdir -p $GOPATH
-
-GO111MODULE=off go get -v github.com/kevinburke/goose/cmd/goose
-
-echo "Successfully installed goose to $GOPATH/bin/goose"
+<<'MESSAGE' cat >/dev/stderr
+Traffic Ops no longer uses goose. install_goose.sh no longer installs goose and
+will be removed in a future Traffic Control release.
+MESSAGE

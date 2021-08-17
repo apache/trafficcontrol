@@ -29,13 +29,24 @@ const VolumeFileName = StorageFileName
 const ContentTypeVolumeDotConfig = ContentTypeTextASCII
 const LineCommentVolumeDotConfig = LineCommentHash
 
+// VolumeDotConfigOpts contains settings to configure generation options.
+type VolumeDotConfigOpts struct {
+	// HdrComment is the header comment to include at the beginning of the file.
+	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
+	// To omit the header comment, pass the empty string.
+	HdrComment string
+}
+
 // MakeVolumeDotConfig creates volume.config for a given ATS Profile.
 // The paramData is the map of parameter names to values, for all parameters assigned to the given profile, with the config_file "storage.config".
 func MakeVolumeDotConfig(
 	server *Server,
 	serverParams []tc.Parameter,
-	hdrComment string,
+	opt *VolumeDotConfigOpts,
 ) (Cfg, error) {
+	if opt == nil {
+		opt = &VolumeDotConfigOpts{}
+	}
 	warnings := []string{}
 
 	if server.Profile == nil {
@@ -45,11 +56,12 @@ func MakeVolumeDotConfig(
 	paramData, paramWarns := paramsToMap(filterParams(serverParams, VolumeFileName, "", "", ""))
 	warnings = append(warnings, paramWarns...)
 
-	text := makeHdrComment(hdrComment)
+	hdr := makeHdrComment(opt.HdrComment)
 
 	numVolumes := getNumVolumes(paramData)
 
-	text += "# TRAFFIC OPS NOTE: This is running with forced volumes - the size is irrelevant\n"
+	hdr += "# TRAFFIC OPS NOTE: This is running with forced volumes - the size is irrelevant\n"
+	text := ""
 	nextVolume := 1
 	if drivePrefix := paramData["Drive_Prefix"]; drivePrefix != "" {
 		text += volumeText(strconv.Itoa(nextVolume), numVolumes)
@@ -69,7 +81,7 @@ func MakeVolumeDotConfig(
 	}
 
 	return Cfg{
-		Text:        text,
+		Text:        hdr + text,
 		ContentType: ContentTypeVolumeDotConfig,
 		LineComment: LineCommentVolumeDotConfig,
 		Warnings:    warnings,

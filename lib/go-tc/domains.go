@@ -25,10 +25,11 @@ type DomainsResponse struct {
 	Alerts
 }
 
-// Domain contains information about a single domain and its profile.
+// Domain contains information about a single Profile within a Domain.
 type Domain struct {
 	ProfileID int `json:"profileId" db:"profile_id"`
 
+	// This property serves no known purpose; it is always -1.
 	ParameterID int `json:"parameterId" db:"parameter_id"`
 
 	ProfileName string `json:"profileName" db:"profile_name"`
@@ -39,7 +40,8 @@ type Domain struct {
 	DomainName string `json:"domainName" db:"domain_name"`
 }
 
-// DomainNullable - a struct version that allows for all fields to be null, mostly used by the API side
+// DomainNullable is identical to a Domain but with reference properties that
+// can have nil values, mostly used by the Traffic Ops API.
 type DomainNullable struct {
 	ProfileID          *int    `json:"profileId" db:"profile_id"`
 	ParameterID        *int    `json:"parameterId" db:"parameter_id"`

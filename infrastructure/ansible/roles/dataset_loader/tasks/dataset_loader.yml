@@ -52,7 +52,7 @@
     name: "{{ dl_ds_merged_cdns[cdnDelegationPrimary].name | default(cdnDelegationPrimary) }}"
     domainName: "{{ cdnDelegationPrimary }}.{{ (groups['traffic_ops'] | first).split('.')[1:] | join('.') | lower }}"
     dnssecEnabled: "{{ dl_ds_merged_cdns[cdnDelegationPrimary].dnssecEnabled | default(false) | lower }}"
-    cdn_query: "response[?starts_with(domainName,`{{ cdnDelegationPrimary }}`) == `true`].id | [0]"
+    cdn_query: "response[?starts_with(domainName,`{{ cdnDelegationPrimary | lower }}`) == `true`].id | [0]"
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: update_cdn_out
   failed_when: (update_cdn_out.status == 400 and update_cdn_out.json | to_json | from_json | json_query(error_query) | length != 0) or (update_cdn_out.status > 400 and update_cdn_out.status < 600)
@@ -172,7 +172,7 @@
   with_items: "{{ dl_ds_merged_cachegroups | json_query(type_filter) }}"
   vars:
     type_query: "response[?name == '{{ item.type | default('EDGE_LOC') }}'].id | [0]"
-    type_filter: "[?type == 'INFRA_LOC']"
+    type_filter: "[?type == 'TC_LOC']"
     error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
   register: create_cachegroup_out
   failed_when: (create_cachegroup_out.status == 400 and create_cachegroup_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_cachegroup_out.status > 400 and create_cachegroup_out.status < 600 and create_cachegroup_out.status != 500)
@@ -703,9 +703,11 @@
     updPending: True
     interfaceName: "{{ hostvars[item].ansible_default_ipv4.interface | default('eth0') }}"
     ipAddress: "{{ hostvars[item].ansible_default_ipv4.address | default(hostvars[item].ansible_host) }}"
+    ipIsService: true
     ipNetmask: "{{ hostvars[item].ansible_default_ipv4.netmask | default('255.255.255.0') }}"
     ipGateway: "{{ hostvars[item].ansible_default_ipv4.gateway | default('127.0.0.0') }}"
     ip6Address: "{{ hostvars[item].ansible_default_ipv6.address | default(omit) }}"
+    ip6IsService: true
     ip6Gateway: "{{ hostvars[item].ansible_default_ipv6.gateway | default(omit) }}"
     interfaceMtu: "{{ hostvars[item].ansible_default_ipv4.mtu | default('9000') }}"
     tcpPort: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).tcpPort | default(omit) }}"
@@ -772,10 +774,12 @@
     cdnId: "{{ cdn_id }}"
     updPending: True
     interfaceName: "eth0"
+    ipIsService: true
     ipAddress: "{{ hostvars[item].ansible_host }}"
     ipNetmask: "255.255.255.0"
     ipGateway: "127.0.0.0"
     ip6Address: "{{ omit }}"
+    ip6IsService: true
     ip6Gateway: "{{ omit }}"
     interfaceMtu: "9000"
     tcpPort: "{{ (dl_ds_merged_servers[item] | default(dl_ds_merged_servers['server.kabletown.invalid'])).tcpPort | default(omit) }}"
@@ -966,7 +970,7 @@
 
 - name: Snapshot all CDNs
   uri:
-    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/snapshot/{{ item.name }}"
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/snapshot?cdn={{ item.name }}"
     method: PUT
   with_items: "{{ get_all_cdns.json.response[1:] }}"
   register: snapshot_out
