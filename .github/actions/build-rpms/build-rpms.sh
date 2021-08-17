@@ -26,7 +26,7 @@ pkg_command=(./pkg -v)
 if [[ "$GITHUB_REF" == refs/pull/*/merge ]]; then
 	sudo apt-get install jq
 	pr_number="$(<<<"$GITHUB_REF" grep -o '[0-9]\+')"
-	files_changed="$(curl -v "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${pr_number}/files" | jq -r '.[].filename')"
+	files_changed="$(curl "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/pulls/${pr_number}/files" | jq -r .[].filename)"
 else
 	files_changed="$(git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA")"
 fi
