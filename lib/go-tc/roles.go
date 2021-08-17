@@ -82,7 +82,7 @@ func (roleV50 RoleV50) Downgrade() Role {
 	return role
 }
 
-// Role ...
+// A Role is a definition of the permissions afforded to a user with that Role.
 type Role struct {
 	RoleV11
 
