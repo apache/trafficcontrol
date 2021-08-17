@@ -123,7 +123,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - CDN in a Box now uses `t3c` for cache configuration.
 - CDN in a Box now uses Apache Traffic Server 8.1.
 - Customer names in payloads sent to the `/deliveryservices/request` Traffic Ops API endpoint can no longer contain characters besides alphanumerics, @, !, #, $, %, ^, &amp;, *, (, ), [, ], '.', ' ', and '-'. This fixes a vulnerability that allowed email content injection.
-- Go version 1.16 is used to compile Traffic Ops, T3C, Traffic Monitor, Traffic Stats, and Grove.
+- Go version 1.17 is used to compile Traffic Ops, T3C, Traffic Monitor, Traffic Stats, and Grove.
 
 ### Deprecated
 - The Riak Traffic Vault backend is now deprecated and its support may be removed in a future release. It is highly recommended to use the new PostgreSQL backend instead.
