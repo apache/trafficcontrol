@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,10 +16,21 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: 'build-rpms'
-description: 'Builds RPMs for a single ATC component'
-runs:
-  using: 'composite'
-  steps:
-    - run: ${{ github.action_path }}/build-rpms.sh
-      shell: bash
+set -o errexit -o nounset
+trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
+
+export GOPATH="${HOME}/go"
+
+# update all golang.org/x dependencies in go.mod/go.sum
+go get -u \
+	golang.org/x/crypto \
+	golang.org/x/net \
+	golang.org/x/sys \
+	golang.org/x/text \
+	golang.org/x/xerrors
+
+#Update go.mod and go.sum
+go mod tidy -v
+
+# update vendor/modules.txt
+go mod vendor -v

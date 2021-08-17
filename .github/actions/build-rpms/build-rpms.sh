@@ -16,18 +16,28 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -o errexit -o nounset
+set -o errexit -o nounset -o pipefail -o xtrace
 trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
 
-export GOPATH="${HOME}/go"
+export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
 
-# update all golang.org/x dependencies in go.mod/go.sum
-go get -u \
-	golang.org/x/crypto \
-	golang.org/x/net \
-	golang.org/x/sys \
-	golang.org/x/text \
-	golang.org/x/xerrors
+pkg_command=(./pkg -v)
+# If the Action is being run on a Pull Request
+if [[ "$GITHUB_REF" == refs/pull/*/merge ]]; then
+	sudo apt-get install jq
+	pr_number="$(<<<"$GITHUB_REF" grep -o '[0-9]\+')"
+	files_changed="$(curl "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/pulls/${pr_number}/files" | jq -r .[].filename)"
+else
+	files_changed="$(git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA")"
+fi
+if <<<"$files_changed" grep '^GO_VERSION$'; then
+	pkg_command+=(-b)
+fi
 
-# update vendor/modules.txt
-go mod vendor -v
+if [[ -z "${ATC_COMPONENT:-}" ]]; then
+	echo 'Missing environment variable ATC_COMPONENT' >/dev/stderr
+	exit 1
+fi
+ATC_COMPONENT+='_build'
+
+"${pkg_command[@]}" "$ATC_COMPONENT"

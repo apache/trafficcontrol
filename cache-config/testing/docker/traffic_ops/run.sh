@@ -49,17 +49,6 @@ start() {
 	exec tail -f $TO_LOG
 }
 
-install_go() {
-  if [ -f /GO_VERSION ]; then
-    go_version=$(cat /GO_VERSION) && \
-      curl -Lo go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \
-      tar -C /usr/local -xvzf go.tar.gz && rm go.tar.gz
-  else
-    echo "no GO_VERSION file, unable to install go"
-    exit 1
-  fi
-}
-
 # generates and saves SSL certificates, database and RIAK config files.
 init() {
   # install certificates for TO
@@ -118,10 +107,6 @@ EOM
 
   touch $LOG_DEBUG $LOG_ERROR $LOG_EVENT $LOG_INFO $LOG_WARN $TO_LOG
 }
-
-# install the golang version indicated in '/GO_VERSION'
-# exits on error.
-install_go
 
 source /etc/environment
 if [ -z "$INITIALIZED" ]; then init; fi
