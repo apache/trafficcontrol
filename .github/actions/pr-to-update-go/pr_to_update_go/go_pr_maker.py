@@ -62,10 +62,6 @@ class GoPRMaker:
 	author: InputGitAuthor
 
 	def __init__(self, gh: Github) -> None:
-		"""
-		:param gh: Github
-		:rtype: None
-		"""
 		self.gh = gh
 		repo_name: str = self.get_repo_name()
 		self.repo = self.get_repo(repo_name)
@@ -79,12 +75,6 @@ class GoPRMaker:
 			print('Will commit using the default author')
 
 	def branch_exists(self, branch: str) -> bool:
-		"""
-		:param branch:
-		:type branch:
-		:return:
-		:rtype: bool
-		"""
 		try:
 			repo_go_version = self.get_repo_go_version(branch)
 			if self.latest_go_version == repo_go_version:
@@ -97,14 +87,6 @@ class GoPRMaker:
 		return False
 
 	def update_branch(self, branch_name: str, sha: str) -> None:
-		"""
-		:param branch_name:
-		:type branch_name:
-		:param sha:
-		:type sha:
-		:return:
-		:rtype: None
-		"""
 		requester: Requester = self.repo._requester
 		patch_parameters = {
 			'sha': sha,
@@ -115,10 +97,6 @@ class GoPRMaker:
 		return
 
 	def run(self, update_version_only: bool = False) -> None:
-		"""
-		:return:
-		:rtype: None
-		"""
 		repo_go_version = self.get_repo_go_version()
 		self.latest_go_version = self.get_latest_major_upgrade(repo_go_version)
 		commit_message: str = f'Update Go version to {self.latest_go_version}'
@@ -153,19 +131,9 @@ class GoPRMaker:
 
 	@staticmethod
 	def getenv(env_name: str) -> str:
-		"""
-		:param env_name: str
-		:return:
-		:rtype: str
-		"""
 		return os.environ[env_name]
 
 	def get_repo(self, repo_name: str) -> Repository:
-		"""
-		:param repo_name: str
-		:return:
-		:rtype: Repository
-		"""
 		try:
 			repo: Repository = self.gh.get_repo(repo_name)
 		except BadCredentialsException:
@@ -175,19 +143,9 @@ class GoPRMaker:
 
 	@staticmethod
 	def get_major_version(from_go_version: str) -> str:
-		"""
-		:param from_go_version: str
-		:return:
-		:rtype: str
-		"""
 		return re.search(pattern=r'^\d+\.\d+', string=from_go_version).group(0)
 
 	def get_latest_major_upgrade(self, from_go_version: str) -> str:
-		"""
-		:param from_go_version: str
-		:return:
-		:rtype: str
-		"""
 		major_version = self.get_major_version(from_go_version)
 		go_version_response: Response = requests.get(GO_VERSION_URL)
 		go_version_response.raise_for_status()
@@ -208,26 +166,14 @@ class GoPRMaker:
 		return fetched_go_version
 
 	def get_repo_name(self) -> str:
-		"""
-		:return:
-		:rtype: str
-		"""
 		repo_name: str = self.getenv(ENV_GITHUB_REPOSITORY)
 		return repo_name
 
 	def get_repo_owner(self) -> str:
-		"""
-		:return:
-		:rtype: str
-		"""
 		repo_name: str = self.getenv(ENV_GITHUB_REPOSITORY_OWNER)
 		return repo_name
 
 	def get_go_milestone(self, go_version: str) -> str:
-		"""
-		:param go_version: str
-		:return:
-		"""
 		go_repo: Repository = self.get_repo(GO_REPO_NAME)
 		milestones: PaginatedList[Milestone] = go_repo.get_milestones(state='all', sort='due_on',
 			direction='desc')
@@ -240,22 +186,12 @@ class GoPRMaker:
 
 	@staticmethod
 	def get_release_notes_page() -> str:
-		"""
-		:return:
-		:rtype: str
-		"""
 		release_history_response: Response = requests.get(RELEASE_PAGE_URL)
 		release_history_response.raise_for_status()
 		return release_history_response.content.decode()
 
 	@staticmethod
 	def get_release_notes(go_version: str, release_notes_content: str) -> str:
-		"""
-		:param go_version: str
-		:param release_notes_content: str
-		:return:
-		:rtype: str
-		"""
 		go_version_pattern = go_version.replace('.', '\\.')
 		release_notes_pattern: str = f'<p>\\s*\\n\\s*go{go_version_pattern}.*?</p>'
 		release_notes_matches = re.search(release_notes_pattern, release_notes_content,
@@ -266,12 +202,6 @@ class GoPRMaker:
 		return release_notes
 
 	def get_pr_body(self, go_version: str, milestone_url: str) -> str:
-		"""
-		:param go_version: str
-		:param milestone_url: str
-		:return:
-		:rtype: str
-		"""
 		with open(os.path.dirname(__file__) + '/pr_template.md') as file:
 			pr_template = file.read()
 		go_major_version = self.get_major_version(go_version)
@@ -283,23 +213,11 @@ class GoPRMaker:
 		return pr_body
 
 	def get_repo_go_version(self, branch: str = 'master') -> str:
-		"""
-		:param branch: str
-		:return:
-		:rtype: str
-		"""
 		return self.repo.get_contents(self.getenv(ENV_GO_VERSION_FILE),
 			f'refs/heads/{branch}').decoded_content.rstrip().decode()
 
 	def set_go_version(self, go_version: str, commit_message: str,
 			source_branch_name: str) -> Commit:
-		"""
-		:param go_version: str
-		:param commit_message: str
-		:param source_branch_name: str
-		:return:
-		:rtype: str
-		"""
 		master: Branch = self.repo.get_branch('master')
 		sha: str = master.commit.sha
 		ref: str = f'refs/heads/{source_branch_name}'
@@ -328,12 +246,6 @@ class GoPRMaker:
 		return commit
 
 	def update_golang_org_x(self, previous_commit: Commit) -> Optional[GitCommit]:
-		"""
-		:param previous_commit:
-		:type previous_commit:
-		:return:
-		:rtype: Optional[GitCommit]
-		"""
 		subprocess.run(['git', 'fetch', 'origin'], check=True)
 		subprocess.run(['git', 'checkout', previous_commit.sha], check=True)
 		script_path: str = os.path.join(os.path.dirname(__file__), 'update_golang_org_x.sh')
@@ -366,15 +278,6 @@ class GoPRMaker:
 
 	def create_pr(self, latest_go_version: str, commit_message: str, owner: str,
 			source_branch_name: str, target_branch: str) -> None:
-		"""
-		:param latest_go_version: str
-		:param commit_message: str
-		:param owner: str
-		:param source_branch_name: str
-		:param target_branch: str
-		:return:
-		:rtype: None
-		"""
 		prs: PaginatedList = self.gh.search_issues(
 			f'repo:{self.repo.full_name} is:pr is:open head:{source_branch_name}')
 		for list_item in prs:
