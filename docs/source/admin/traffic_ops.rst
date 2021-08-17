@@ -479,8 +479,8 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 :role_based_permissions: Toggle whether or not to use Role Based Permissions.
 
-	.. versionadded:: 7.0
-		The blueprint can be seen :pr:`{{5848}}`
+	.. versionadded:: 6.1
+		The blueprint can be seen :pr:`5848`
 
 
 Example cdn.conf
