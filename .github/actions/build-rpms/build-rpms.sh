@@ -23,7 +23,7 @@ export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
 
 pkg_command=(./pkg -v)
 # If the Action is being run on a Pull Request
-if [[ -n "$GITHUB_BASE_REF" ]]; then
+if [[ "$GITHUB_REF" == refs/pull/*/merge ]]; then
 	sudo apt-get install jq
 	pr_number="$(<<<"$GITHUB_REF" grep -o '[0-9]\+')"
 	files_changed="$(curl -v "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${pr_number}/files" | jq -r '.[].filename')"
