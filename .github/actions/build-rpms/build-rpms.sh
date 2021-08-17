@@ -22,9 +22,10 @@ trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
 export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
 
 pkg_command=(./pkg -v)
-ref="${GITHUB_REF#refs/heads/}"
-if [[ -n "$GITHUB_HEAD_REF" ]]; then
-	ref="${GITHUB_HEAD_REF#refs/heads/}~..${ref}"
+if [[ -n "$GITHUB_BASE_REF" ]]; then
+	ref="${GITHUB_BASE_REF#refs/heads/}..${GITHUB_HEAD_REF#refs/heads/}"
+else
+	ref="$GITHUB_SHA"
 fi
 if ! git diff --name-only "$ref" --exit-code -- GO_VERSION; then
 	pkg_command+=(-b)
