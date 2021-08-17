@@ -92,7 +92,12 @@ type Role struct {
 	Capabilities *[]string `json:"capabilities" db:"-"`
 }
 
-// RoleV11 ...
+// RoleV11 is a representation of a Role as it appeared in version 1.1 of the
+// Traffic Ops API.
+//
+// Deprecated: Traffic Ops API version 1.1 no longer exists - the ONLY reason
+// this structure still exists is because it is nested in newer structures - DO
+// NOT USE THIS!
 type RoleV11 struct {
 	// ID of the Role
 	//
