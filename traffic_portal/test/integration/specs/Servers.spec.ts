@@ -41,34 +41,52 @@ servers.tests.forEach(async serversData => {
             it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
-                expect(await loginPage.CheckUserName(login)).toBeTruthy();
+                expect(await loginPage.CheckUserName(login)).toBe(true);
             });
             it('can open servers page', async () => {
                 await serversPage.OpenConfigureMenu();
                 await serversPage.OpenServerPage();
             });
+            serversData.toggle.forEach(toggle => {
+                it(toggle.description, async () => {
+                    if(toggle.description.includes('hide')){
+                        expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(false);
+                        await serversPage.OpenServerPage();
+                    }else{
+                        expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                        await serversPage.OpenServerPage();
+                    }
+                    
+                });
+            })
             serversData.add.forEach(add => {
                 it(add.description, async () => {
-                    expect(await serversPage.CreateServer(add)).toBeTruthy();
+                    expect(await serversPage.CreateServer(add)).toBe(true);
                     await serversPage.OpenServerPage();
                 });
             });
             serversData.update.forEach(update => {
                 it(update.description, async () => {
                     await serversPage.SearchServer(update.Name);
-                    expect(await serversPage.UpdateServer(update)).toBeTruthy();
+                    expect(await serversPage.UpdateServer(update)).toBe(true);
+                    await serversPage.OpenServerPage();
+                });
+            });
+            serversData.addCapabilities.forEach(addCapabilities => {
+                it(addCapabilities.description, async () => {
+                    expect(await serversPage.AddServerCapabilitiesToServer(addCapabilities)).toBe(true);
                     await serversPage.OpenServerPage();
                 });
             });
             serversData.remove.forEach(remove => {
                 it(remove.description, async () => {
                     await serversPage.SearchServer(remove.Name);
-                    expect(await serversPage.DeleteServer(remove)).toBeTruthy();
+                    expect(await serversPage.DeleteServer(remove)).toBe(true);
                     await serversPage.OpenServerPage();
                 });
             });
             it('can logout', async () => {
-                expect(await topNavigation.Logout()).toBeTruthy();
+                expect(await topNavigation.Logout()).toBe(true);
             });
         })
     })
