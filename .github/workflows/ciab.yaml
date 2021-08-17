@@ -83,6 +83,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 0
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -99,6 +101,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 0
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -115,6 +119,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 0
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -131,6 +137,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 0
       - name: Cache node modules
         uses: actions/cache@v2
         with:
@@ -163,6 +171,8 @@ jobs:
             ${{ runner.os }}-maven-
       - name: Build RPM
         uses: ./.github/actions/build-rpms
+        with:
+          fetch-depth: 0
         env:
           ATC_COMPONENT: ${{ github.job }}
       - name: Upload RPM
@@ -177,6 +187,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 0
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -193,6 +205,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 0
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -209,6 +223,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          fetch-depth: 0
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
