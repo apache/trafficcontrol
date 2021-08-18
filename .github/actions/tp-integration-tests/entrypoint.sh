@@ -81,18 +81,18 @@ QUERY
 
 sudo useradd trafops
 
-gray_bg="$(printf '%s%s' $'\x1B' '[100m')";
-red_bg="$(printf '%s%s' $'\x1B' '[41m')";
-yellow_bg="$(printf '%s%s' $'\x1B' '[43m')";
-black_fg="$(printf '%s%s' $'\x1B' '[30m')";
-color_and_prefix() {
-	color="$1";
-	shift;
-	prefix="$1";
-	normal_bg="$(printf '%s%s' $'\x1B' '[49m')";
-	normal_fg="$(printf '%s%s' $'\x1B' '[39m')";
-	sed "s/^/${color}${black_fg}${prefix}: /" | sed "s/$/${normal_bg}${normal_fg}/";
-}
+# gray_bg="$(printf '%s%s' $'\x1B' '[100m')";
+# red_bg="$(printf '%s%s' $'\x1B' '[41m')";
+# yellow_bg="$(printf '%s%s' $'\x1B' '[43m')";
+# black_fg="$(printf '%s%s' $'\x1B' '[30m')";
+# color_and_prefix() {
+# 	color="$1";
+# 	shift;
+# 	prefix="$1";
+# 	normal_bg="$(printf '%s%s' $'\x1B' '[49m')";
+# 	normal_fg="$(printf '%s%s' $'\x1B' '[39m')";
+# 	sed "s/^/${color}${black_fg}${prefix}: /" | sed "s/$/${normal_bg}${normal_fg}/";
+# }
 
 ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
 trafficvault=trafficvault;
@@ -167,12 +167,13 @@ to_build() {
 
   export $(<"${ciab_dir}/variables.env" sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
   envsubst <"${resources}/riak.json" >riak.conf
-  truncate --size=0 warning.log error.log event.log info.log
+  # truncate --size=0 warning.log error.log event.log info.log
+  truncate -s0 out.log
 
-  ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf &
-  tail -f warning.log 2>&1 | color_and_prefix "${yellow_bg}" 'Traffic Ops WARN' &
-  tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops ERR' &
-  tail -f event.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Ops EVT' &
+  ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf >out.log 2>&1 &
+  # tail -f warning.log 2>&1 | color_and_prefix "${yellow_bg}" 'Traffic Ops WARN' &
+  # tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops ERR' &
+  # tail -f event.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Ops EVT' &
 }
 
 tp_build() {
@@ -184,28 +185,39 @@ tp_build() {
   cp "${resources}/config.js" ./conf/
   touch tp.log access.log out.log err.log
   sudo forever --minUptime 5000 --spinSleepTime 2000 -f -o out.log start server.js &
-  tail -f err.log 2>&1 | color_and_prefix "${red_bg}" "Node Err" &
+  # tail -f err.log 2>&1 | color_and_prefix "${red_bg}" "Node Err" &
 }
 
 (to_build) &
-(tp_build) &
+tp_build
 
 onFail() {
+  if ! [[ -d Reports ]]; then
+    mkdir Reports;
+  fi
 	docker logs "$trafficvault"  > Reports/traffic_vault.log
-  mv tp.log Reports/forever.log
-  mv access.log Reports/tp-access.log
-  mv out.log Reports/node.log
+  if [[ -f tp.log ]]; then
+    mv tp.log Reports/forever.log
+  fi
+  if [[ -f access.log ]]; then
+    mv access.log Reports/tp-access.log
+  fi
+  if [[ -f out.log ]]; then
+    mv out.log Reports/node.log
+  fi
   docker logs $CHROMIUM_CONTAINER > Reports/chromium.log
   docker logs $HUB_CONTAINER > Reports/hub.log
+  if [[ -f "${REPO_DIR}/traffic_ops/traffic_ops_golang" ]]; then
+    mv "${REPO_DIR}/traffic_ops/traffic_ops_golang" Reports/to.log;
+  fi
   echo "Detailed logs produced info Reports artifact"
   exit 1
 }
 
 cd "${REPO_DIR}/traffic_portal/test/integration"
 npm ci
-PATH=$(pwd)/node_modules/.bin/:$PATH
 
-webdriver-manager update --gecko false --versions.chrome "LATEST_RELEASE_$CHROMIUM_VER"
+./node_modules/.bin/webdriver-manager update --gecko false --versions.chrome "LATEST_RELEASE_$CHROMIUM_VER"
 
 jq " .capabilities.chromeOptions.args = [
     \"--headless\",
@@ -216,7 +228,7 @@ jq " .capabilities.chromeOptions.args = [
   | .capabilities[\"goog:chromeOptions\"].w3c = false | .capabilities.chromeOptions.w3c = false" \
   config.json > config.json.tmp && mv config.json.tmp config.json
 
-tsc
+npm run build
 
 # Wait for tp/to build
 timeout 5m bash <<TMOUT
@@ -227,4 +239,4 @@ timeout 5m bash <<TMOUT
 TMOUT
 
 trap - ERR
-protractor ./GeneratedCode/config.js --params.baseUrl="${tp_fqdn}" --params.apiUrl="${to_fqdn}/api/4.0" || onFail
+npm test -- --params.baseUrl="${tp_fqdn}" --params.apiUrl="${to_fqdn}/api/4.0" || onFail
