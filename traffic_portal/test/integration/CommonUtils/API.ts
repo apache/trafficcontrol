@@ -26,6 +26,7 @@ import randomIpv6 from "random-ipv6";
 
 import { hasProperty } from "./utils";
 import { randomize } from '../config';
+import { AlertLevel, isAlert, logAlert, TestingConfig } from "../config.model";
 
 interface GetRequest {
     queryKey: string;
@@ -70,13 +71,39 @@ function isAxiosError(e: unknown): e is AxiosError {
 export class API {
 
     private cookie = "";
-    private readonly config = config;
 
-    constructor() {
+    /**
+     * This controls the alert levels that get logged - levels not in this set
+     * are not logged
+     */
+    private readonly alertLevels = new Set<AlertLevel>(["warning", "error", "info"]);
+    /**
+     * Stores login information for the admin-level user.
+     */
+    private readonly loginInfo;
+    /**
+     * The URL base used for the Traffic Ops API.
+     *
+     * Trailing `/` is guaranteed.
+     *
+     * @example
+     * "https://localhost:6443/api/4.0/"
+     */
+    private readonly apiURL: string;
+
+    /**
+     * @param cfg The testing configuration.
+     */
+    constructor(cfg: TestingConfig) {
         axios.defaults.headers.common['Accept'] = 'application/json'
         axios.defaults.headers.common['Authorization'] = 'No-Auth'
         axios.defaults.headers.common['Content-Type'] = 'application/json'
         axios.defaults.httpsAgent = new Agent({ rejectUnauthorized: false })
+        if (cfg.alertLevels) {
+            this.alertLevels = new Set(cfg.alertLevels);
+        }
+        this.loginInfo = cfg.login;
+        this.apiURL = cfg.apiUrl.endsWith("/") ? cfg.apiUrl : `${cfg.apiUrl}/`;
     }
 
     /**
@@ -273,7 +300,7 @@ export class API {
                 }
             }
         } else if (response.status == undefined) {
-            throw new Error(`Error requesting ${this.config.params.apiUrl}: ${response}`);
+            throw new Error(`Error requesting ${this.apiURL}: ${response}`);
         } else {
             throw new Error(`Login failed: Response Status: '${response.statusText}'' Response Data: '${response.data}'`);
         }
