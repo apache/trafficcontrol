@@ -127,7 +127,7 @@ start_traffic_vault() {
 		--publish=8087:8087 \
 		--rm \
 		"$trafficvault" \
-		/usr/lib/riak/riak-cluster.sh;
+		/usr/lib/riak/riak-cluster.sh >tv.log 2>&1
 }
 start_traffic_vault &
 
@@ -195,7 +195,10 @@ onFail() {
   if ! [[ -d Reports ]]; then
     mkdir Reports;
   fi
-	docker logs "$trafficvault"  > Reports/traffic_vault.log
+  if [[ -f tv.log ]]; then
+    mv tv.log Reports/traffic_vault.docker.log;
+  fi
+	docker logs "$trafficvault" > Reports/traffic_vault.log
   if [[ -f tp.log ]]; then
     mv tp.log Reports/forever.log
   fi
