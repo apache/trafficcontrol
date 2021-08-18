@@ -231,7 +231,7 @@ jq " .capabilities.chromeOptions.args = [
     \"--no-sandbox\",
     \"--disable-gpu\",
     \"--ignore-certificate-errors\"
-  ] | .params.apiUrl = \"${tp_fqdn}/api/4.0\" | .params.baseUrl =\"${tp_fqdn}\"
+  ] | .params.apiUrl = \"${to_fqdn}/api/4.0\" | .params.baseUrl =\"${tp_fqdn}\"
   | .capabilities[\"goog:chromeOptions\"].w3c = false | .capabilities.chromeOptions.w3c = false" \
   config.json > config.json.tmp && mv config.json.tmp config.json
 
