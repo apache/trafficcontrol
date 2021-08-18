@@ -182,7 +182,7 @@ if [[ ! -e "$REPO_DIR" ]]; then
 fi
 
 to_build() {
-  cd "${REPO_DIR}/traffic_ops/traffic_ops_golang"
+  pushd "${REPO_DIR}/traffic_ops/traffic_ops_golang"
   if  [[ ! -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]]; then
     go mod vendor
   fi
@@ -202,6 +202,7 @@ to_build() {
   # tail -f warning.log 2>&1 | color_and_prefix "${yellow_bg}" 'Traffic Ops WARN' &
   # tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops ERR' &
   # tail -f event.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Ops EVT' &
+  popd
 }
 
 tp_build() {
@@ -217,7 +218,7 @@ tp_build() {
   # tail -f err.log 2>&1 | color_and_prefix "${red_bg}" "Node Err" &
 }
 
-(to_build) &
+to_build
 tp_build
 
 cd "${REPO_DIR}/traffic_portal/test/integration"
