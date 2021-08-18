@@ -24,7 +24,7 @@ onFail() {
   if [[ -f tv.log ]]; then
     cp tv.log Reports/traffic_vault.docker.log;
   fi
-	docker logs "$trafficvault" > Reports/traffic_vault.log
+	docker logs "$trafficvault" > Reports/traffic_vault.log 2>&1;
   if [[ -f tp.log ]]; then
     mv tp.log Reports/forever.log
   fi
@@ -34,8 +34,8 @@ onFail() {
   if [[ -f out.log ]]; then
     mv out.log Reports/node.log
   fi
-  docker logs $CHROMIUM_CONTAINER > Reports/chromium.log
-  docker logs $HUB_CONTAINER > Reports/hub.log
+  docker logs $CHROMIUM_CONTAINER > Reports/chromium.log 2>&1;
+  docker logs $HUB_CONTAINER > Reports/hub.log 2>&1;
   if [[ -f "${REPO_DIR}/traffic_ops/traffic_ops_golang" ]]; then
     cp "${REPO_DIR}/traffic_ops/traffic_ops_golang" Reports/to.log;
   fi
