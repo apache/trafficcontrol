@@ -1,4 +1,4 @@
-# TO Client Library Golang
+# Traffic Ops Go Client
 
 ## Getting Started
 1. Obtain the latest version of the library

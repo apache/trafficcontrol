@@ -483,9 +483,9 @@ RETURNING
 `
 
 const originServerQuery = `
-JOIN deliveryservice_server dsorg 
-ON dsorg.server = s.id 
-WHERE t.name = '` + tc.OriginTypeName + `' 
+JOIN deliveryservice_server dsorg
+ON dsorg.server = s.id
+WHERE t.name = '` + tc.OriginTypeName + `'
 AND dsorg.deliveryservice=:dsId
 `
 const deleteServerQuery = `DELETE FROM server WHERE id=$1`
@@ -880,20 +880,6 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if version.Major <= 1 {
-		legacyServers := make([]tc.ServerNullableV11, 0, len(servers))
-		for _, server := range servers {
-			legacyServer, err := server.ToServerV2FromV4()
-			if err != nil {
-				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err))
-				return
-			}
-			legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
-		}
-		api.WriteResp(w, r, legacyServers)
-		return
-	}
-
 	legacyServers := make([]tc.ServerNullableV2, 0, len(servers))
 	for _, server := range servers {
 		legacyServer, err := server.ToServerV2FromV4()
@@ -904,58 +890,6 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		legacyServers = append(legacyServers, legacyServer)
 	}
 	api.WriteResp(w, r, legacyServers)
-}
-
-// ReadID is the handler for GET requests to /servers/{{ID}}.
-func ReadID(w http.ResponseWriter, r *http.Request) {
-	alternative := "GET /servers with query parameter id"
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleDeprecatedErr(w, r, tx, errCode, userErr, sysErr, &alternative)
-		return
-	}
-	defer inf.Close()
-
-	// Middleware should've already handled this, so idk why this is a pointer at all tbh
-	version := inf.Version
-	if version == nil {
-		middleware.NotImplementedHandler().ServeHTTP(w, r)
-		return
-	}
-
-	servers := []tc.ServerV40{}
-	cfg, e := api.GetConfig(r.Context())
-	useIMS := false
-	if e == nil && cfg != nil {
-		useIMS = cfg.UseIMS
-	} else {
-		log.Warnf("Couldn't get config %v", e)
-	}
-	servers, _, userErr, sysErr, errCode, _ = getServers(r.Header, inf.Params, inf.Tx, inf.User, useIMS, *version)
-	if len(servers) > 1 {
-		api.HandleDeprecatedErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("ID '%d' matched more than one server (%d total)", inf.IntParams["id"], len(servers)), &alternative)
-		return
-	}
-	deprecationAlerts := api.CreateDeprecationAlerts(&alternative)
-
-	// No need to bother converting if there's no data
-	if len(servers) < 1 {
-		api.WriteAlertsObj(w, r, http.StatusOK, deprecationAlerts, servers)
-		return
-	}
-	legacyServers := make([]tc.ServerNullableV11, 0, len(servers))
-	for _, server := range servers {
-		legacyServer, err := server.ToServerV2FromV4()
-		if err != nil {
-			api.HandleDeprecatedErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err), &alternative)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("failed to convert servers to legacy format: %v", err))
-			return
-		}
-		legacyServers = append(legacyServers, legacyServer.ServerNullableV11)
-	}
-	api.WriteAlertsObj(w, r, http.StatusOK, deprecationAlerts, legacyServers)
-	return
 }
 
 func selectMaxLastUpdatedQuery(queryAddition string, where string) string {
@@ -1274,8 +1208,8 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 		capabilities.array_agg
 		@>
 		(
-		SELECT ARRAY_AGG(drc.required_capability) 
-		FROM deliveryservices_required_capability drc 
+		SELECT ARRAY_AGG(drc.required_capability)
+		FROM deliveryservices_required_capability drc
 		WHERE drc.deliveryservice_id=:ds_id)
 		)`
 	} else {
@@ -1538,7 +1472,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
-	} else if inf.Version.Major == 2 {
+	} else {
 		var legacyServer tc.ServerNullableV2
 		if err := json.NewDecoder(r.Body).Decode(&legacyServer); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -1553,31 +1487,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		server, err = legacyServer.UpgradeToV40()
 		if err != nil {
 			sysErr = fmt.Errorf("error upgrading valid V2 server to V3 structure: %v", err)
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-			return
-		}
-	} else {
-		var legacyServer tc.ServerNullableV11
-		if err := json.NewDecoder(r.Body).Decode(&legacyServer); err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-			return
-		}
-
-		err := validateV1(&legacyServer, tx)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-			return
-		}
-
-		v2Server := tc.ServerNullableV2{
-			ServerNullableV11: legacyServer,
-			IPIsService:       util.BoolPtr(true),
-			IP6IsService:      util.BoolPtr(true),
-		}
-
-		server, err = v2Server.UpgradeToV40()
-		if err != nil {
-			sysErr = fmt.Errorf("error upgrading valid V1 server to V3 structure: %v", err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
@@ -1621,14 +1530,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if *status.Name != string(tc.CacheStatusOnline) && *status.Name != string(tc.CacheStatusReported) {
-		dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx)
+		dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, original.Type, tx)
 		if err != nil {
 			sysErr = fmt.Errorf("getting Delivery Services to which server #%d is assigned that have no other servers: %v", id, err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
 		if len(dsIDs) > 0 {
-			alertText := InvalidStatusForDeliveryServicesAlertText(*status.Name, dsIDs)
+			prefix := fmt.Sprintf("setting server status to '%s' would leave Active Delivery Service", *status.Name)
+			alertText := InvalidStatusForDeliveryServicesAlertText(prefix, original.Type, dsIDs)
 			api.WriteAlerts(w, r, http.StatusConflict, tc.CreateAlerts(tc.ErrorLevel, alertText))
 			return
 		}
@@ -1648,6 +1558,20 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
+	}
+
+	if server.CDNName != nil {
+		userErr, sysErr, statusCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	} else if server.CDNID != nil {
+		userErr, sysErr, statusCode = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
 	}
 
 	rows, err := inf.Tx.NamedQuery(updateQuery, server)
@@ -1710,75 +1634,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
-func createV1(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
-	var server tc.ServerNullableV11
-
-	tx := inf.Tx.Tx
-
-	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-		return
-	}
-
-	if server.ID != nil {
-		var prevID int
-		err := tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
-		if err != nil && err != sql.ErrNoRows {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID))
-			return
-		}
-		if prevID != 0 {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil)
-			return
-		}
-	}
-
-	if err := validateV1(&server, tx); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-		return
-	}
-
-	resultRows, err := inf.Tx.NamedQuery(insertQuery, server)
-	if err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
-	}
-	defer resultRows.Close()
-
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.StructScan(&server.CommonServerProperties); err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("server create scanning: %v", err))
-			return
-		}
-	}
-	if rowsAffected == 0 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("server create: no server was inserted, no id was returned"))
-		return
-	} else if rowsAffected > 1 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("too many ids returned from server insert"))
-	}
-
-	ifaces, err := server.LegacyInterfaceDetails.ToInterfacesV4(true, true, server.RouterHostName, server.RouterPortName)
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		return
-	}
-
-	if userErr, sysErr, errCode := createInterfaces(*server.ID, ifaces, tx); userErr != nil || sysErr != nil || errCode != http.StatusOK {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
-	}
-
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "server was created.")
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
-
-	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
-}
-
 func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	var server tc.ServerNullableV2
 
@@ -1808,7 +1663,19 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
-
+	if server.CDNName != nil {
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	} else if server.CDNID != nil {
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
 	resultRows, err := inf.Tx.NamedQuery(insertQuery, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
@@ -1881,6 +1748,20 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	currentTime := time.Now()
 	server.StatusLastUpdated = &currentTime
+
+	if server.CDNName != nil {
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	} else if server.CDNID != nil {
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
 
 	resultRows, err := inf.Tx.NamedQuery(insertQueryV3, server)
 	if err != nil {
@@ -1956,6 +1837,20 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 	server.StatusLastUpdated = &currentTime
 
+	if server.CDNName != nil {
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	} else if server.CDNID != nil {
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
+
 	resultRows, err := inf.Tx.NamedQuery(insertQueryV4, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
@@ -2003,9 +1898,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	switch {
-	case inf.Version.Major <= 1:
-		createV1(inf, w, r)
-	case inf.Version.Major == 2:
+	case inf.Version.Major <= 2:
 		createV2(inf, w, r)
 	case inf.Version.Major == 3:
 		createV3(inf, w, r)
@@ -2014,28 +1907,37 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-const lastServerOfDSesQuery = `
-SELECT "deliveryservice"
-FROM deliveryservice_server
-WHERE "deliveryservice" IN (
-	SELECT deliveryservice_server.deliveryservice
-	FROM deliveryservice_server
-	INNER JOIN deliveryservice
-	ON deliveryservice_server.deliveryservice = deliveryservice.id
-	WHERE deliveryservice_server."server" = $1
-	AND deliveryservice.active
-)
-GROUP BY "deliveryservice"
-HAVING COUNT("server") = 1;
+const lastServerTypeOfDSesQuery = `
+SELECT ds.id, ds.multi_site_origin
+FROM deliveryservice_server dss
+JOIN server s ON dss.server = s.id
+JOIN type t ON s.type = t.id
+JOIN deliveryservice ds ON dss.deliveryservice = ds.id
+WHERE t.name LIKE $1 AND ds.active
+GROUP BY ds.id, ds.multi_site_origin
+HAVING COUNT(dss.server) = 1 AND $2 = ANY(ARRAY_AGG(dss.server));
 `
 
-func getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id int, tx *sql.Tx) ([]int, error) {
+// getActiveDeliveryServicesThatOnlyHaveThisServerAssigned returns the IDs of active delivery services for which the given
+// server ID is either the last EDGE-type server or last ORG-type server (if MSO is enabled) assigned to them.
+func getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id int, serverType string, tx *sql.Tx) ([]int, error) {
 	var ids []int
+	var like string
+	isEdge := strings.HasPrefix(serverType, tc.CacheTypeEdge.String())
+	isOrigin := strings.HasPrefix(serverType, tc.OriginTypeName)
+	if isEdge {
+		like = tc.CacheTypeEdge.String() + "%"
+	} else if isOrigin {
+		like = tc.OriginTypeName + "%"
+	} else {
+		// by definition, only EDGE-type or ORG-type servers can be assigned
+		return ids, nil
+	}
 	if tx == nil {
 		return ids, errors.New("nil transaction")
 	}
 
-	rows, err := tx.Query(lastServerOfDSesQuery, id)
+	rows, err := tx.Query(lastServerTypeOfDSesQuery, like, id)
 	if err != nil {
 		return ids, fmt.Errorf("querying: %v", err)
 	}
@@ -2043,11 +1945,14 @@ func getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id int, tx *sql.Tx)
 
 	for rows.Next() {
 		var dsID int
-		err = rows.Scan(&dsID)
+		var mso bool
+		err = rows.Scan(&dsID, &mso)
 		if err != nil {
 			return ids, fmt.Errorf("scanning: %v", err)
 		}
-		ids = append(ids, dsID)
+		if isEdge || (isOrigin && mso) {
+			ids = append(ids, dsID)
+		}
 	}
 
 	return ids, nil
@@ -2071,25 +1976,23 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := inf.IntParams["id"]
+	serverInfo, exists, err := dbhelpers.GetServerInfo(id, tx)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !exists {
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no server exists by id #%d", id), nil)
+		return
+	}
 
-	if dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx); err != nil {
+	if dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, serverInfo.Type, tx); err != nil {
 		sysErr = fmt.Errorf("checking if server #%d is the last server assigned to any Delivery Services: %v", id, err)
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	} else if len(dsIDs) > 0 {
 		alertText := fmt.Sprintf("deleting server #%d would leave Active Delivery Service", id)
-		if len(dsIDs) == 1 {
-			alertText += fmt.Sprintf(" #%d", dsIDs[0])
-		} else if len(dsIDs) == 2 {
-			alertText += fmt.Sprintf("s #%d and #%d", dsIDs[0], dsIDs[1])
-		} else {
-			dsNums := make([]string, 0, len(dsIDs)-1)
-			for _, dsID := range dsIDs[:len(dsIDs)-1] {
-				dsNums = append(dsNums, "#"+strconv.Itoa(dsID))
-			}
-			alertText += fmt.Sprintf("s %s, and #%d", strings.Join(dsNums, ", "), dsIDs[len(dsIDs)-1])
-		}
-		alertText += fmt.Sprintf("  with no '%s' or '%s' servers", tc.CacheStatusOnline, tc.CacheStatusReported)
+		alertText = InvalidStatusForDeliveryServicesAlertText(alertText, serverInfo.Type, dsIDs)
 
 		api.WriteAlerts(w, r, http.StatusConflict, tc.CreateAlerts(tc.ErrorLevel, alertText))
 		return
@@ -2111,6 +2014,19 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	server := servers[0]
+	if server.CDNName != nil {
+		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
+	} else if server.CDNID != nil {
+		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
+	}
 	cacheGroupIds := []int{*server.CachegroupID}
 	serverIds := []int{*server.ID}
 	hasDSOnCDN, err := dbhelpers.CachegroupHasTopologyBasedDeliveryServicesOnCDN(inf.Tx.Tx, *server.CachegroupID, *server.CDNID)
@@ -2149,12 +2065,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 			return
 		}
-
-		if inf.Version.Major <= 1 {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server was deleted.", serverV2.ServerNullableV11)
-		} else {
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server was deleted.", serverV2)
-		}
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server was deleted.", serverV2)
 	}
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: deleted", *server.HostName, *server.DomainName, *server.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)

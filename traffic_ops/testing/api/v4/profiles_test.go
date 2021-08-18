@@ -32,25 +32,156 @@ import (
 
 func TestProfiles(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Profiles, Parameters}, func() {
-		CreateBadProfiles(t)
-		UpdateTestProfiles(t)
+		t.Run("Attempt to create invalid Profiles", CreateBadProfiles)
+		t.Run("Basic update of properties", UpdateTestProfiles)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfUnmodifiedSince, time)
-		UpdateTestProfilesWithHeaders(t, header)
-		GetTestProfilesIMS(t)
-		GetTestProfiles(t)
-		GetTestProfilesWithParameters(t)
-		ImportProfile(t)
-		CopyProfile(t)
+		t.Run("Try to update a Profile with If-Unmodified-Since set to 5 seconds ago - presumably before its creation", testPreconditionFailed(header))
+		t.Run("Support for If-Modified-Since in GET", GetTestProfilesIMS)
+		t.Run("Basic GET request for /profiles and export endpoint", GetTestProfiles)
+		t.Run("Check 'parameters' property returned in GET requsets", GetTestProfilesWithParameters)
+		t.Run("Import endpoint basic operation", ImportProfile)
+		t.Run("Copy endpoint basic operation", CopyProfile)
 		header = make(map[string][]string)
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
-		UpdateTestProfilesWithHeaders(t, header)
-		GetTestPaginationSupportProfiles(t)
+		t.Run("Try to update a Profile with If-Match set", testPreconditionFailed(header))
+		t.Run("Verify pagination query string parameters support", GetTestPaginationSupportProfiles)
+		t.Run("Verify Profile endpoints are locked by CDN locks", CUDProfileWithLocks)
 	})
+}
+
+func CUDProfileWithLocks(t *testing.T) {
+	resp, _, err := TOSession.GetTenants(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("could not GET tenants: %v", err)
+	}
+	if len(resp.Response) == 0 {
+		t.Fatalf("didn't get any tenant in response")
+	}
+
+	// Create a new user with operations level privileges
+	user1 := tc.UserV40{
+		User: tc.User{
+			Username:             util.StrPtr("lock_user1"),
+			RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
+			LocalPassword:        util.StrPtr("test_pa$$word"),
+			ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+			RoleName:             util.StrPtr("operations"),
+		},
+	}
+	user1.Email = util.StrPtr("lockuseremail@domain.com")
+	user1.TenantID = util.IntPtr(resp.Response[0].ID)
+	user1.FullName = util.StrPtr("firstName LastName")
+	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("could not create test user with username: %s", *user1.Username)
+	}
+	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
+
+	// Establish a session with the newly created non admin level user
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, *user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	if err != nil {
+		t.Fatalf("could not login with user lock_user1: %v", err)
+	}
+	if len(testData.Profiles) == 0 {
+		t.Fatalf("no profiles to run the test on, quitting")
+	}
+
+	cdnsResp, _, err := TOSession.GetCDNs(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("couldn't get CDNs: %v", err)
+	}
+	if len(cdnsResp.Response) == 0 {
+		t.Fatal("got no cdns in the response, quitting")
+	}
+	// Create a lock for this user
+	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
+		CDN:     cdnsResp.Response[0].Name,
+		Message: util.StrPtr("test lock"),
+		Soft:    util.BoolPtr(false),
+	}, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("couldn't create cdn lock: %v", err)
+	}
+	if len(testData.Profiles) == 0 {
+		t.Fatal("no profiles to run tests on, quitting")
+	}
+	pr := testData.Profiles[0]
+	pr.Name = "cdn_locks_test_profile"
+	pr.CDNID = cdnsResp.Response[0].ID
+	pr.CDNName = cdnsResp.Response[0].Name
+
+	// Try to create a new profile on a CDN that another user has a hard lock on -> this should fail
+	_, reqInf, err := TOSession.CreateProfile(pr, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while creating a new profile for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while creating a new profile for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to create a new profile on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.CreateProfile(pr, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while creating a new profile for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", pr.Name)
+	profile, _, err := userSession.GetProfiles(opts)
+	if err != nil {
+		t.Fatalf("couldn't get profile: %v", err)
+	}
+	if len(profile.Response) != 1 {
+		t.Fatal("couldn't get exactly one profile in the response, quitting")
+	}
+	profileID := profile.Response[0].ID
+	// Try to update a profile on a CDN that another user has a hard lock on -> this should fail
+	pr.Description = "changed description"
+	_, reqInf, err = TOSession.UpdateProfile(profileID, pr, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while updating a profile for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while updating a profile for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to update a profile on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.UpdateProfile(profileID, pr, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while updating a profile for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	// Try to delete a profile on a CDN that another user has a hard lock on -> this should fail
+	_, reqInf, err = TOSession.DeleteProfile(profileID, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while deleting a profile for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while deleting a profile for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to delete a profile on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.DeleteProfile(profileID, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while deleting a profile for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	// Delete the lock
+	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{cdnsResp.Response[0].Name}}})
+	if err != nil {
+		t.Errorf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
+	}
+}
+
+func testPreconditionFailed(h http.Header) func(*testing.T) {
+	return func(t *testing.T) {
+		UpdateTestProfilesWithHeaders(t, h)
+	}
 }
 
 func UpdateTestProfilesWithHeaders(t *testing.T, header http.Header) {
@@ -128,6 +259,14 @@ func CopyProfile(t *testing.T) {
 		expectedResp string
 		err          string
 	}{
+		{
+			description: "new profile name contains spaces",
+			profile: tc.ProfileCopy{
+				ExistingName: "EDGE1",
+				Name:         "Profile Copy",
+			},
+			err: "cannot contain spaces",
+		},
 		{
 			description: "copy profile",
 			profile: tc.ProfileCopy{
@@ -207,7 +346,11 @@ func CopyProfile(t *testing.T) {
 
 func CreateTestProfiles(t *testing.T) {
 	opts := client.NewRequestOptions()
+	var cdnID int
+	var typ string
 	for _, pr := range testData.Profiles {
+		cdnID = pr.CDNID
+		typ = pr.Type
 		resp, _, err := TOSession.CreateProfile(pr, client.RequestOptions{})
 		if err != nil {
 			t.Errorf("could not create Profile '%s': %v - alerts: %+v", pr.Name, err, resp.Alerts)
@@ -262,6 +405,19 @@ func CreateTestProfiles(t *testing.T) {
 			}
 		}
 
+	}
+
+	p := tc.Profile{
+		CDNID:       cdnID,
+		Description: "test Profile creation with a name that contains spaces",
+		Name:        "A Profile that has spaces in its name",
+		Type:        typ,
+	}
+	resp, _, err := TOSession.CreateProfile(p, client.RequestOptions{})
+	if err == nil {
+		t.Error("Expected an error trying to create a Profile with a Name that has spaces in it")
+	} else if !alertsHaveError(resp.Alerts, "cannot contain spaces") {
+		t.Errorf("Expected an error about spaces in the Profile name, got: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
@@ -442,6 +598,15 @@ func ImportProfile(t *testing.T) {
 		Name:       *newParam.Name,
 		Value:      *newParam.Value,
 	})
+
+	*profile.Name = "Test Profile Import"
+	importReq.Profile = profile
+	importResp, _, err = TOSession.ImportProfile(importReq, client.RequestOptions{})
+	if err == nil {
+		t.Error("Expected an error importing a Profile with a space in its name")
+	} else if !alertsHaveError(importResp.Alerts.Alerts, "cannot contain spaces") {
+		t.Errorf("Expected an error about the Profile name containing spaces, got: %v - alerts: %+v", err, importResp.Alerts)
+	}
 }
 
 func GetTestProfilesWithParameters(t *testing.T) {

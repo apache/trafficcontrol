@@ -49,7 +49,7 @@ VALUES ($1, (
 	FROM type
 	WHERE type.name = $2
 ))
-ON CONFLICT DO NOTHING
+ON CONFLICT (ip_address) DO UPDATE SET ip_address = federation_resolver.ip_address
 RETURNING federation_resolver.ip_address, federation_resolver.id
 `
 
@@ -324,7 +324,7 @@ WHERE
 	return feds, nil, http.StatusOK, &maxTime
 }
 
-// AddFederationResorverMappingsForCurrentUser is the handler for a POST request to /federations.
+// AddFederationResolverMappingsForCurrentUser is the handler for a POST request to /federations.
 // Confusingly, it does not create a federation, but is instead used to manipulate the resolvers
 // used by one or more particular Delivery Services for one or more particular Federations.
 func AddFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.Request) {
@@ -336,7 +336,7 @@ func AddFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.
 	}
 	defer inf.Close()
 
-	mappings, userErr, sysErr := getMappingsFromRequestBody(*inf.Version, r.Body)
+	mappings, userErr, sysErr := getMappingsFromRequestBody(r.Body)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, sysErr)
 		return
@@ -356,11 +356,7 @@ func AddFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.
 	}
 
 	msg := fmt.Sprintf("%s successfully created federation resolvers.", inf.User.UserName)
-	if inf.Version.Major <= 1 && inf.Version.Minor <= 3 {
-		api.WriteResp(w, r, msg)
-	} else {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, msg, msg)
-	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, msg, msg)
 }
 
 // handles the main logic of the POST handler, separated out for convenience
@@ -430,14 +426,12 @@ func addFederationResolver(res []string, t tc.FederationResolverType, fedID uint
 	for _, r := range res {
 		var ip string
 		var id uint
-		if err := tx.QueryRow(insertResolverQuery, r, t).Scan(&ip, &id); err != nil && err != sql.ErrNoRows {
+		if err := tx.QueryRow(insertResolverQuery, r, t).Scan(&ip, &id); err != nil {
 			return nil, err
 		}
-		if ip != "" && id > 0 {
-			inserted = append(inserted, ip)
-			if _, err := tx.Exec(associateFederationWithResolverQuery, fedID, id); err != nil {
-				return nil, err
-			}
+		inserted = append(inserted, ip)
+		if _, err := tx.Exec(associateFederationWithResolverQuery, fedID, id); err != nil {
+			return nil, err
 		}
 
 	}
@@ -476,11 +470,7 @@ func RemoveFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *ht
 	changelogMsg := fmt.Sprintf("USER: %s, ID: %d, ACTION: %s", inf.User.UserName, inf.User.ID, msg)
 	api.CreateChangeLogRawTx(api.ApiChange, changelogMsg, inf.User, tx)
 
-	if inf.Version.Major <= 1 && inf.Version.Minor <= 3 {
-		api.WriteResp(w, r, msg)
-	} else {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, msg, msg)
-	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, msg, msg)
 }
 
 // handles the main logic of the DELETE handler, separated out for convenience
@@ -526,7 +516,7 @@ func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *h
 	changelogMsg := fmt.Sprintf("USER: %s, ID: %d, ACTION: %s", inf.User.UserName, inf.User.ID, deletedMsg)
 	api.CreateChangeLogRawTx(api.ApiChange, changelogMsg, inf.User, tx)
 
-	mappings, userErr, sysErr := getMappingsFromRequestBody(*inf.Version, r.Body)
+	mappings, userErr, sysErr := getMappingsFromRequestBody(r.Body)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, sysErr)
 		return
@@ -546,10 +536,6 @@ func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *h
 	}
 
 	createdMsg := fmt.Sprintf("%s successfully created federation resolvers.", inf.User.UserName)
-	if inf.Version.Major <= 1 && inf.Version.Minor <= 3 {
-		api.WriteResp(w, r, createdMsg)
-		return
-	}
 
 	alerts := tc.Alerts{
 		Alerts: []tc.Alert{
@@ -580,11 +566,11 @@ func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *h
 	}
 
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-	w.Write(append(respBts, '\n'))
+	api.WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
 // retrieves mappings from the given request body using the rules of the given api Version
-func getMappingsFromRequestBody(v api.Version, body io.ReadCloser) (tc.DeliveryServiceFederationResolverMappingRequest, error, error) {
+func getMappingsFromRequestBody(body io.ReadCloser) (tc.DeliveryServiceFederationResolverMappingRequest, error, error) {
 	defer body.Close()
 	var mappings tc.DeliveryServiceFederationResolverMappingRequest
 
@@ -592,26 +578,17 @@ func getMappingsFromRequestBody(v api.Version, body io.ReadCloser) (tc.DeliveryS
 	if err != nil {
 		return mappings, errors.New("Couldn't read request"), fmt.Errorf("Reading request body: %v", err)
 	}
+	var req tc.DeliveryServiceFederationResolverMappingRequest
 
-	if v.Major <= 1 && v.Minor <= 3 {
-		var req tc.LegacyDeliveryServiceFederationResolverMappingRequest
-		if err := json.Unmarshal(b, &req); err != nil {
+	// fall back on legacy behavior
+	if err := json.Unmarshal(b, &req); err != nil {
+		var request tc.LegacyDeliveryServiceFederationResolverMappingRequest
+		if err = json.Unmarshal(b, &request); err != nil {
 			return mappings, fmt.Errorf("parsing request: %v", err), nil
 		}
-		mappings = req.Federations
-	} else {
-		var req tc.DeliveryServiceFederationResolverMappingRequest
-
-		// fall back on legacy behavior
-		if err := json.Unmarshal(b, &req); err != nil {
-			var request tc.LegacyDeliveryServiceFederationResolverMappingRequest
-			if err = json.Unmarshal(b, &request); err != nil {
-				return mappings, fmt.Errorf("parsing request: %v", err), nil
-			}
-			req = request.Federations
-		}
-		mappings = req
+		req = request.Federations
 	}
+	mappings = req
 
 	return mappings, nil, nil
 

@@ -1,3 +1,8 @@
+// Package profile includes logic and handlers for Profile-related API
+// endpoints, including /profiles, /profiles/name/{{name}}/parameters,
+// /profiles/{{ID}}/parameters,
+// /profiles/name/{{New Profile Name}}/copy/{{existing Profile Name}},
+// /profiles/import, and /profiles/{{ID}}/export.
 package profile
 
 /*
@@ -21,9 +26,10 @@ package profile
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -34,11 +40,13 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 )
 
+// Supported (non-pagination) query string parameters for /profiles.
 const (
 	CDNQueryParam         = "cdn"
 	DescriptionQueryParam = "description"
@@ -96,7 +104,21 @@ func (prof *TOProfile) GetType() string {
 
 func (prof *TOProfile) Validate() error {
 	errs := validation.Errors{
-		NameQueryParam:        validation.Validate(prof.Name, validation.Required),
+		NameQueryParam: validation.Validate(prof.Name, validation.By(
+			func(value interface{}) error {
+				name, ok := value.(*string)
+				if !ok {
+					return fmt.Errorf("wrong type, need: string, got: %T", value)
+				}
+				if name == nil || *name == "" {
+					return errors.New("required and cannot be blank")
+				}
+				if strings.Contains(*name, " ") {
+					return errors.New("cannot contain spaces")
+				}
+				return nil
+			},
+		)),
 		DescriptionQueryParam: validation.Validate(prof.Description, validation.Required),
 		CDNQueryParam:         validation.Validate(prof.CDNID, validation.Required),
 		TypeQueryParam:        validation.Validate(prof.Type, validation.Required),
@@ -247,9 +269,66 @@ JOIN profile_parameter pp ON pp.parameter = p.id
 WHERE pp.profile = :profile_id`
 }
 
-func (pr *TOProfile) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, pr) }
-func (pr *TOProfile) Create() (error, error, int)              { return api.GenericCreate(pr) }
-func (pr *TOProfile) Delete() (error, error, int)              { return api.GenericDelete(pr) }
+func (pr *TOProfile) checkIfProfileCanBeAlteredByCurrentUser() (error, error, int) {
+	var cdnName string
+	if pr.CDNName != nil {
+		cdnName = *pr.CDNName
+	} else {
+		if pr.CDNID != nil {
+			cdn, ok, err := dbhelpers.GetCDNNameFromID(pr.ReqInfo.Tx.Tx, int64(*pr.CDNID))
+			if err != nil {
+				return nil, err, http.StatusInternalServerError
+			} else if !ok {
+				return nil, nil, http.StatusNotFound
+			}
+			cdnName = string(cdn)
+		} else {
+			return errors.New("no cdn found for this profile"), nil, http.StatusBadRequest
+		}
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(pr.ReqInfo.Tx.Tx, cdnName, pr.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
+	}
+	return nil, nil, http.StatusOK
+}
+
+func (pr *TOProfile) Update(h http.Header) (error, error, int) {
+	if pr.CDNName != nil || pr.CDNID != nil {
+		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, statusCode
+		}
+	}
+	return api.GenericUpdate(h, pr)
+}
+
+func (pr *TOProfile) Create() (error, error, int) {
+	if pr.CDNName != nil || pr.CDNID != nil {
+		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, statusCode
+		}
+	}
+	return api.GenericCreate(pr)
+}
+
+func (pr *TOProfile) Delete() (error, error, int) {
+	if pr.CDNName == nil && pr.CDNID == nil {
+		cdnName, err := dbhelpers.GetCDNNameFromProfileID(pr.APIInfo().Tx.Tx, *pr.ID)
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		pr.CDNName = util.StrPtr(string(cdnName))
+	}
+	if pr.CDNName != nil || pr.CDNID != nil {
+		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, statusCode
+		}
+	}
+	return api.GenericDelete(pr)
+}
 
 func updateQuery() string {
 	query := `UPDATE

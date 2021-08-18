@@ -26,6 +26,7 @@ import (
 	"github.com/lestrrat/go-jwx/jwk"
 )
 
+// Authentication methods used for signing Delivery Service SSL certificates.
 const (
 	SelfSignedCertAuthType           = "Self Signed"
 	CertificateAuthorityCertAuthType = "Certificate Authority"
@@ -33,19 +34,22 @@ const (
 )
 
 // SSLKeysAddResponse is a struct to store the response of addition of ssl keys for a DS,
-// along with any alert messages
+// along with any alert messages.
 type SSLKeysAddResponse struct {
 	Response string `json:"response"`
 	Alerts
 }
 
-// DeliveryServiceSSLKeysResponse ...
+// DeliveryServiceSSLKeysResponse is the type of a response from Traffic Ops to
+// GET requests made to its /deliveryservices/xmlId/{{XML ID}}/sslkeys API
+// endpoint.
 type DeliveryServiceSSLKeysResponse struct {
 	Response DeliveryServiceSSLKeys `json:"response"`
 	Alerts
 }
 
-// DeliveryServiceSSLKeys ...
+// DeliveryServiceSSLKeys contains information about an SSL key and certificate
+// used by a Delivery Service to secure its HTTP-delivered content.
 type DeliveryServiceSSLKeys struct {
 	AuthType        string                            `json:"authType,omitempty"`
 	CDN             string                            `json:"cdn,omitempty"`
@@ -61,11 +65,26 @@ type DeliveryServiceSSLKeys struct {
 	Certificate     DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
 }
 
+// DeliveryServiceSSLKeysV15 structures contain information about an SSL key
+// certificate pair used by a Delivery Service.
+//
+// "V15" is used because this structure was first introduced in version 1.5 of
+// the Traffic Ops API.
+//
+// This is, ostensibly, an updated version of DeliveryServiceSSLKeys, but
+// beware that this may not be completely accurate as the predecessor structure
+// appears to be used in many more contexts than this this structure.
 type DeliveryServiceSSLKeysV15 struct {
 	DeliveryServiceSSLKeys
 	Expiration time.Time `json:"expiration,omitempty"`
 }
 
+// SSLKeyRequestFields contain metadata information for generating SSL keys for
+// Delivery Services through the Traffic Ops API. Specifically, they contain
+// everything except the manner in which the generated certificates should be
+// signed, information that can be extracted from the Delivery Service for
+// which the request is being made, and any key/certificate pair being added
+// rather than generated from this information.
 type SSLKeyRequestFields struct {
 	BusinessUnit *string `json:"businessUnit,omitempty"`
 	City         *string `json:"city,omitempty"`
@@ -76,6 +95,10 @@ type SSLKeyRequestFields struct {
 	Version      *int    `json:"version,omitempty"`
 }
 
+// DeliveryServiceSSLKeysReq structures are requests for the generation of SSL
+// key certificate pairs for a Delivery Service, and this is, in fact, the
+// structure required for POST request bodies to the
+// /deliveryservices/sslkeys/generate Traffic Ops API endpoint.
 type DeliveryServiceSSLKeysReq struct {
 	AuthType        *string `json:"authType,omitempty"`
 	CDN             *string `json:"cdn,omitempty"`
@@ -99,13 +122,21 @@ type DeliveryServiceSSLKeysGenerationResponse struct {
 	Alerts
 }
 
-// DeliveryServiceSSLKeysCertificate ...
+// DeliveryServiceSSLKeysCertificate contains an SSL key/certificate pair for a
+// Delivery Service, as well as the Certificate Signing Request associated with
+// them.
 type DeliveryServiceSSLKeysCertificate struct {
 	Crt string `json:"crt"`
 	Key string `json:"key"`
 	CSR string `json:"csr"`
 }
 
+// Sanitize ensures that if either the DeliveryService or Key property of a
+// DeliveryServiceSSLKeysReq is nil, it will be set to a reference to a copy of
+// the value of the other property (if that is not nil).
+//
+// This does NOT ensure that both fields are not nil, nor does it ensure that
+// they match.
 func (r *DeliveryServiceSSLKeysReq) Sanitize() {
 	// DeliveryService and Key are the same value, so if the user sent one but not the other, set the missing one, in the principle of "be liberal in what you accept."
 	if r.DeliveryService == nil && r.Key != nil {
@@ -117,7 +148,7 @@ func (r *DeliveryServiceSSLKeysReq) Sanitize() {
 	}
 }
 
-// validateSharedRequiredRequestFields validates the request fields that are shared and required by both 'add' and 'generate' requests
+// validateSharedRequiredRequestFields validates the request fields that are shared and required by both 'add' and 'generate' requests.
 func (r *DeliveryServiceSSLKeysReq) validateSharedRequiredRequestFields() []string {
 	errs := []string{}
 	if checkNilOrEmpty(r.CDN) {
@@ -141,10 +172,17 @@ func (r *DeliveryServiceSSLKeysReq) validateSharedRequiredRequestFields() []stri
 	return errs
 }
 
+// DeliveryServiceAddSSLKeysReq structures are requests to import
+// key/certificate pairs for a Delivery Service directly, and are the type of
+// structures required for POST request bodies to the
+// /deliveryservices/sslkeys/add endpoint of the Traffic Ops API.
 type DeliveryServiceAddSSLKeysReq struct {
 	DeliveryServiceSSLKeysReq
 }
 
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (r *DeliveryServiceAddSSLKeysReq) Validate(tx *sql.Tx) error {
 	r.Sanitize()
 	errs := r.validateSharedRequiredRequestFields()
@@ -167,10 +205,17 @@ func (r *DeliveryServiceAddSSLKeysReq) Validate(tx *sql.Tx) error {
 	return nil
 }
 
+// DeliveryServiceGenSSLKeysReq structures are requests to generate new
+// key/certificate pairs for a Delivery Service, and are the type of structures
+// required for POST request bodies to the /deliveryservices/sslkeys/generate
+// endpoint of the Traffic Ops API.
 type DeliveryServiceGenSSLKeysReq struct {
 	DeliveryServiceSSLKeysReq
 }
 
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (r *DeliveryServiceGenSSLKeysReq) Validate(tx *sql.Tx) error {
 	r.Sanitize()
 	errs := r.validateSharedRequiredRequestFields()
@@ -195,10 +240,18 @@ func (r *DeliveryServiceGenSSLKeysReq) Validate(tx *sql.Tx) error {
 	return nil
 }
 
+// DeliveryServiceAcmeSSLKeysReq structures are requests to generate new
+// key/certificate pairs for a Delivery Service using an ACME provider, and are
+// the type of structures required for POST request bodies to the
+// /deliveryservices/sslkeys/generate/letsencrypt endpoint of the Traffic Ops
+// API.
 type DeliveryServiceAcmeSSLKeysReq struct {
 	DeliveryServiceSSLKeysReq
 }
 
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (r *DeliveryServiceAcmeSSLKeysReq) Validate(tx *sql.Tx) error {
 	r.Sanitize()
 	errs := r.validateSharedRequiredRequestFields()
@@ -230,9 +283,6 @@ type URISignerKeyset struct {
 	Keys       []jwk.EssentialHeader `json:"keys"`
 }
 
-// Deprecated: use TrafficVaultPing instead.
-type RiakPingResp TrafficVaultPing
-
 // TrafficVaultPing represents the status of a given Traffic Vault server.
 type TrafficVaultPing struct {
 	Status string `json:"status"`
@@ -245,6 +295,9 @@ type TrafficVaultPingResponse struct {
 	Alerts
 }
 
+// URLSigKeys is the type of the `response` property of responses from Traffic
+// Ops to GET requests made to the /deliverservices/xmlId/{{XML ID}}/urlkeys
+// endpoint of its API.
 type URLSigKeys map[string]string
 
 // URLSignatureKeysResponse is the type of a response from Traffic Ops to a request
@@ -254,24 +307,42 @@ type URLSignatureKeysResponse struct {
 	Alerts
 }
 
+// CDNSSLKeysResp is a slice of CDNSSLKeys.
+//
+// Deprecated: This is not used by any known ATC code and has no known purpose.
+// Therefore, it's probably just technical debt subject to removal in the near
+// future.
 type CDNSSLKeysResp []CDNSSLKey
 
+// CDNSSLKey structures represent an SSL key/certificate pair used by a CDN.
+// This is the structure used by each entry of the `response` array property of
+// responses from Traffic Ops to GET requests made to its
+// /cdns/name/{{Name}}/sslkeys API endpoint.
 type CDNSSLKey struct {
 	DeliveryService string        `json:"deliveryservice"`
 	HostName        string        `json:"hostname"`
 	Certificate     CDNSSLKeyCert `json:"certificate"`
 }
 
+// A CDNSSLKeyCert represents an SSL key/certificate pair used by a CDN,
+// without any other associated data.
 type CDNSSLKeyCert struct {
 	Crt string `json:"crt"`
 	Key string `json:"key"`
 }
 
+// A CDNGenerateKSKReq is a request to generate Key-Signing Keys for CDNs for
+// use in DNSSEC operations, and is the structure required for the bodies of
+// POST requests made to the /cdns/{{Name}}/dnsseckeys/ksk/generate endpoint of
+// the Traffic Ops API.
 type CDNGenerateKSKReq struct {
 	ExpirationDays *uint64    `json:"expirationDays"`
 	EffectiveDate  *time.Time `json:"effectiveDate"`
 }
 
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (r *CDNGenerateKSKReq) Validate(tx *sql.Tx) error {
 	r.Sanitize()
 	errs := []string{}
@@ -285,6 +356,9 @@ func (r *CDNGenerateKSKReq) Validate(tx *sql.Tx) error {
 	return nil
 }
 
+// Sanitize ensures that the CDNGenerateKSKReq's EffectiveDate is not nil.
+//
+// If it was nil, this will set it to the current time.
 func (r *CDNGenerateKSKReq) Sanitize() {
 	if r.EffectiveDate == nil {
 		now := time.Now()

@@ -44,8 +44,7 @@ type MonitorConfigPoller struct {
 	OpsConfig        handler.OpsConfig
 }
 
-// Creates and returns a new CachePoller.
-// If tick is false, CachePoller.TickChan() will return nil
+// NewMonitorConfig Creates and returns a new MonitorConfigPoller.
 func NewMonitorConfig(interval time.Duration) MonitorConfigPoller {
 	return MonitorConfigPoller{
 		Interval:       interval,

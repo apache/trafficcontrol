@@ -77,11 +77,12 @@ func Login(url, user, pass string, opts ClientOpts, apiVersions []string) (*TOCl
 	to.forceLatestAPI = opts.ForceLatestAPI
 	to.apiVerCheckInterval = opts.APIVersionCheckInterval
 
-	remoteAddr, err := to.login()
+	reqInf, err := to.login()
 	if err != nil {
-		return nil, ReqInf{RemoteAddr: remoteAddr}, errors.New("logging in: " + err.Error())
+		log.Errorf("DEBUG toclientlib.Login err reqInf %+v\n", reqInf)
+		return nil, reqInf, errors.New("logging in: " + err.Error())
 	}
-	return to, ReqInf{RemoteAddr: remoteAddr}, nil
+	return to, reqInf, nil
 }
 
 // ClientOpts is the options to configure the creation of the Client.
@@ -217,7 +218,7 @@ func loginToken(token string) ([]byte, error) {
 }
 
 // login tries to log in to Traffic Ops, and set the auth cookie in the Client. Returns the IP address of the remote Traffic Ops.
-func (to *TOClient) login() (net.Addr, error) {
+func (to *TOClient) login() (ReqInf, error) {
 	path := "/user/login"
 	body := tc.UserCredentials{Username: to.UserName, Password: to.Password}
 	alerts := tc.Alerts{}
@@ -227,7 +228,7 @@ func (to *TOClient) login() (net.Addr, error) {
 
 	reqInf, err := reqF(to, http.MethodPost, path, body, nil, &alerts, true)
 	if err != nil {
-		return reqInf.RemoteAddr, fmt.Errorf("Login error %w, alerts string: %+v", err, alerts)
+		return reqInf, fmt.Errorf("Login error %w, alerts string: %+v", err, alerts)
 	}
 
 	success := false
@@ -239,10 +240,10 @@ func (to *TOClient) login() (net.Addr, error) {
 	}
 
 	if !success {
-		return reqInf.RemoteAddr, fmt.Errorf("Login failed, alerts string: %+v", alerts)
+		return reqInf, fmt.Errorf("Login failed, alerts string: %+v", alerts)
 	}
 
-	return reqInf.RemoteAddr, nil
+	return reqInf, nil
 }
 
 func (to *TOClient) loginWithToken(token []byte) (net.Addr, error) {
@@ -360,11 +361,11 @@ func LoginWithAgent(
 		Jar: jar,
 	}, apiVersions)
 
-	remoteAddr, err := to.login()
+	reqInf, err := to.login()
 	if err != nil {
-		return nil, remoteAddr, errors.New("logging in: " + err.Error())
+		return nil, reqInf.RemoteAddr, errors.New("logging in: " + err.Error())
 	}
-	return to, remoteAddr, nil
+	return to, reqInf.RemoteAddr, nil
 }
 
 // LoginWithToken returns an authenticated TOClient, using a token for said
@@ -664,6 +665,7 @@ func makeRequestWithHeader(to *TOClient, method, path string, body interface{}, 
 	}
 	reqInf.RemoteAddr = remoteAddr
 	if resp != nil {
+		reqInf.RespHeaders = resp.Header.Clone()
 		reqInf.StatusCode = resp.StatusCode
 		if reqInf.StatusCode == http.StatusNotModified {
 			return reqInf, nil
@@ -808,6 +810,7 @@ type ReqInf struct {
 	CacheHitStatus CacheHitStatus
 	RemoteAddr     net.Addr
 	StatusCode     int
+	RespHeaders    http.Header
 }
 
 // CacheHitStatus is deprecated and will be removed in the next major version.

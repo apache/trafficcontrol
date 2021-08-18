@@ -79,14 +79,8 @@ func getMockLastHealthTimes() map[tc.CacheName]time.Duration {
 }
 
 func getMockCRStatesDeliveryService() tc.CRStatesDeliveryService {
-	numCGs := 10
-	disabledLocations := []tc.CacheGroupName{}
-	for i := 0; i < numCGs; i++ {
-		disabledLocations = append(disabledLocations, tc.CacheGroupName(randStr()))
-	}
-
 	return tc.CRStatesDeliveryService{
-		DisabledLocations: disabledLocations,
+		DisabledLocations: []tc.CacheGroupName{},
 		IsAvailable:       randBool(),
 	}
 }

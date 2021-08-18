@@ -15,7 +15,7 @@
 
 package data;
 
-import com.comcast.cdn.traffic_control.traffic_router.neustar.data.TarExtractor;
+import org.apache.traffic_control.traffic_router.neustar.data.TarExtractor;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.log4j.ConsoleAppender;
@@ -36,8 +36,8 @@ import java.io.InputStream;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;

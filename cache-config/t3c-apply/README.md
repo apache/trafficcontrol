@@ -38,7 +38,7 @@ t3c-apply - Traffic Control Cache Configuration applicator
 
 # SYNOPSIS
 
-t3c-apply [-2bchIpsSvW] [-D seconds] [-d location] [-e location] [-g \<yes|no|auto\>] [-H hostname] [-i location] [-l seconds] [-M location] [-m \<badass|report|revalidate|syncds\>] [-P password] [-r retries] [-R path] [-T seconds] [-t milliseconds] [-u url] [-U username] [-V versions] [-w \<true|false\>]
+t3c-apply [-2AbceFhIknopsSvW] [-a service-action] [-f \<all|reval|none\>] [-g \<yes|no|auto\>] [-H hostname] [-M location] [-m \<badass|report|revalidate|syncds\>] [-P password] [-r retries] [-R path] [-t milliseconds] [-u url] [-U username] [-V tls-versions]
 
 [\-\-help]
 
@@ -50,150 +50,187 @@ Typical usage is to install t3c on the cache machine, and then run it periodical
 
 # OPTIONS
 
--2, --default-client-enable-h2
+-2, -\-default-client-enable-h2
 
-    Whether to enable HTTP/2 on Delivery Services by default, if
-    they have no explicit Parameter. This is irrelevant if ATS
-    records.config is not serving H2. If omitted, H2 is
-    disabled.
+                    Whether to enable HTTP/2 on Delivery Services by default, if
+                    they have no explicit Parameter. This is irrelevant if ATS
+                    records.config is not serving H2. If omitted, H2 is
+                    disabled.
 
--b, --dns-local-bind
+-a, -\-service-action=value
 
-    [true | false] whether to use the server's Service Addresses
-    to set the ATS DNS local bind address
+                    action to perform on Traffic Server and other system
+                    services. Only reloads if necessary, but always restarts.
+                    Default is 'reload'
 
--c, --disable-parent-config-comments
+-A, -\-update-ipallow
 
-    Whether to disable verbose parent.config comments. Default
-    false.
+                    Whether ipallow file will be updated if necessary. This
+                    exists because ATS had a bug where reloading after changing
+                    ipallow would block everything. Default is false.
+-b, -\-dns-local-bind
 
--D, --dispersion=value
+                    [true | false] whether to use the server's Service Addresses
+                    to set the ATS DNS local bind address
 
-    [seconds] wait a random number of seconds between 0 and
-    [seconds] before starting, default 300 [300]
+-c, -\-disable-parent-config-comments
 
--d, --log-location-debug=value
+                    Whether to disable verbose parent.config comments. Default
+                    false.
 
-    Where to log debugs. May be a file path, stdout, stderr, or
-    null, default ''
+-C, -\-skip-os-check
 
--e, --log-location-error=value
+                    [false | true] skip os check, default is false
 
-    Where to log errors. May be a file path, stdout, stderr, or
-    null, default stderr [stderr]
+-d, -\-no-unset-update-flag
 
--g, --git=value
+                    Whether to not unset the update flag in Traffic Ops after
+                    applying files. This option makes it possible to generate
+                    test or debug configuration from a production Traffic Ops
+                    without un-setting queue or reval flags. Default is false.
 
-    Create and use a git repo in the config directory. Options
-    are yes, no, and auto. If yes, create and use. If auto, use
-    if it exist. Default is auto. [auto]
+-e, -\-omit-via-string-release
 
--H, --cache-host-name=value
+                    Whether to set the records.config via header to the ATS
+                    release from the RPM. Default true.
 
-    Host name of the cache to generate config for. Must be the
-    server host name in Traffic Ops, not a URL, and not the FQDN
+-f, -\-files=value  [all | reval]
 
--h, --help
+                    Which files to generate. If reval, the Traffic
+                    Ops server reval_pending flag is used instead of the
+                    upd_pending flag. Default is 'all'
 
-    Print usage information and exit
+-F, -\-ignore-update-flag
 
--i, --log-location-info=value
+                    Whether to ignore the upd_pending or reval_pending flag in
+                    Traffic Ops, and always generate and apply files. If true,
+                    the flag is still unset in Traffic Ops after files are
+                    applied. Default is false.
 
-    Where to log info. May be a file path, stdout, stderr, or
-    null, default stderr [stderr]
+-g, -\-git=value
+                    Create and use a git repo in the config directory. Options
+                    are yes, no, and auto. If yes, create and use. If auto, use
+                    if it exist. Default is auto. [auto]
 
--I, --traffic-ops-insecure
+-H, -\-cache-host-name=value
 
-    [true | false] ignore certificate errors from Traffic Ops
+                    Host name of the cache to generate config for. Must be the
+                    server host name in Traffic Ops, not a URL, and not the FQDN
 
--l, --login-dispersion=value
+-h, -\-help
 
-    [seconds] wait a random number of seconds between 0 and
-    [seconds] before login to traffic ops, default 0
+                    Print usage information and exit
 
--M, --maxmind-location=value
+-i, -\-no-outgoing-ip
 
-    URL of a maxmind gzipped database file, to be installed into
-    the trafficserver etc directory.
+     Whether to not set the records.config outgoing IP to the
+     server's addresses in Traffic Ops. Default is false.
 
--m, --run-mode=value
+-I, -\-traffic-ops-insecure
 
-    [badass | report | revalidate | syncds] run mode, default is
-    'report' [report]
+                    [true | false] ignore certificate errors from Traffic Ops
 
--p, --reverse-proxy-disable
+-k, -\-install-packages
 
-    [false | true] bypass the reverse proxy even if one has been
-    configured default is false
+                    Whether to install necessary packages. Default is false.
 
--P, --traffic-ops-password=value
+-M, -\-maxmind-location=value
 
-    Traffic Ops password. Required. May also be set with the
-    environment variable TO_PASS
+                    URL of a maxmind gzipped database file, to be installed into
+                    the trafficserver etc directory.
 
--r, --num-retries=value
+-m, -\-run-mode=value
 
-    [number] retry connection to Traffic Ops URL [number] times,
-    default is 3 [3]
+                    [badass | report | revalidate | syncds] run mode. Optional, convenience flag which sets other flags for common usage scenarios.
+                    syncds     keeps the defaults:
+                                    --report-only=false
+                                    --files=all
+                                    --install-packages=false
+                                    --service-action=reload
+                                    --ignore-update-flag=false
+                                    --update-ipallow=false
+                                    --no-unset-update-flag=false
+                    revalidate sets --files=reval
+                                    --wait-for-parents=true
+                    badass     sets --install-packages=true
+                                    --service-action=restart
+                                    --ignore-update-flag=true
+                                    --update-ipallow=true
+                    report     sets --report-only=true
 
--R, --trafficserver-home=value
+                    Note the 'syncds' settings are all the flag defaults. Hence, if no mode is set, the default is effectively 'syncds'.
 
-    Trafficserver Package directory. May also be set with the
-    environment variable TS_HOME
+                    If any of the related flags are also set, they override the mode's default behavior.
 
--s, --skip-os-check
+ -n, -\-no-cache
 
-    [false | true] skip os check, default is false
+    Whether to not use a cache and make conditional requests to
+    Traffic Ops. Default is false: use cache.
 
--S, --syncds-updates-ipallow
+-o, -\-report-only
 
-    Whether syncds mode will update ipallow. This exists because
-    ATS had a bug where reloading after changing ipallow would
-    block everything. Default is false.
+                    Log information about necessary files and actions, but take
+                    no action. Default is false
 
--T, --reval-wait-time=value
+-p, -\-reverse-proxy-disable
 
-    [seconds] wait a random number of seconds between 0 and
-    [seconds] before revlidation, default is 60 [60]
+                    [false | true] bypass the reverse proxy even if one has been
+                    configured default is false
 
--t, --traffic-ops-timeout-milliseconds=value
+-P, -\-traffic-ops-password=value
 
-    Timeout in milli-seconds for Traffic Ops requests, default
-    is 30000 [30000]
+                    Traffic Ops password. Required. May also be set with the
+                    environment variable TO_PASS
 
--u, --traffic-ops-url=value
+-r, -\-num-retries=value
 
-    Traffic Ops URL. Must be the full URL, including the scheme.
-    Required. May also be set with the environment variable
-    TO_URL
+                    [number] retry connection to Traffic Ops URL [number] times,
+                    default is 3 [3]
 
--U, --traffic-ops-user=value
+-R, -\-trafficserver-home=value
 
-    Traffic Ops username. Required. May also be set with the
-    environment variable TO_USER
+                    Trafficserver Package directory. May also be set with the
+                    environment variable TS_HOME
 
--V, --default-client-tls-versions=value
+-s, -\-silent
 
-    Comma-delimited list of default TLS versions for Delivery
-    Services with no Parameter, e.g.
-    --default-tls-versions='1.1,1.2,1.3'. If omitted, all
-    versions are enabled.
+                    Silent. Errors are not logged, and the 'verbose' flag is
+                    ignored. If a fatal error occurs, the return code will be
+                    non-zero but no text will be output to stderr
 
--v, --omit-via-string-release
+-t, -\-traffic-ops-timeout-milliseconds=value
 
-    Whether to set the records.config via header to the ATS
-    release from the RPM. Default true.
+                    Timeout in milli-seconds for Traffic Ops requests, default
+                    is 30000 [30000]
 
--w, --log-location-warning=value
+-u, -\-traffic-ops-url=value
 
-    Where to log warnings. May be a file path, stdout, stderr,
-    or null, default stderr [stderr]
+                    Traffic Ops URL. Must be the full URL, including the scheme.
+                    Required. May also be set with the environment variable
+                    TO_URL
 
--W, --wait-for-parents
+-U, -\-traffic-ops-user=value
 
-    [true | false | reval] do not update if parent_pending = 1 in the
-    update json. Default is 'reval', wait for parents in revalidate
-    mode, but not syncds (unless Traffic Ops has !use_reval_pending)
+                    Traffic Ops username. Required. May also be set with the
+                    environment variable TO_USER
+
+-V, -\-default-client-tls-versions=value
+
+                    Comma-delimited list of default TLS versions for Delivery
+                    Services with no Parameter, e.g.
+                    --default-tls-versions='1.1,1.2,1.3'. If omitted, all
+                    versions are enabled.
+
+-v, -\-verbose
+
+                    Log verbosity. Logging is output to stderr. By default,
+                    errors are logged. To log warnings, pass '-v'. To log info,
+                    pass '-vv'. To omit error logging, see '-s' [0]
+
+-W, -\-wait-for-parents
+
+                    [true | false] do not update if parent_pending = 1 in the
+                    update json. Default is false
 
 # MODES
 

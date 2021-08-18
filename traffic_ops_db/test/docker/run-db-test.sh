@@ -27,11 +27,11 @@ export PGHOST="$DB_SERVER" PGPORT="$DB_PORT" PGUSER="$DB_USER" PGDATABASE="$DB_N
 
 # Write config files
 set -x
-if [[ ! -r /goose-config.sh ]]; then
-	echo "/goose-config.sh not found/readable"
+if [[ ! -r /db-config.sh ]]; then
+	echo "/db-config.sh not found/readable"
 	exit 1
 fi
-. /goose-config.sh
+. /db-config.sh
 
 postgresql_package="$(<<<"postgresql${POSTGRES_VERSION}" sed 's/\.//g' |
 	sed -E 's/([0-9]{2})[0-9]+/\1/g'
@@ -58,12 +58,12 @@ export GOPATH=/opt/traffic_ops/go
 
 # gets the current DB version. On success, output the version number. On failure, output a failure message starting with 'failed'.
 get_current_db_version() {
-    local dbversion_output=$(./db/admin --env=production dbversion 2>&1)
-    if [[ $? -ne 0 ]]; then
+    local dbversion_output
+    if ! dbversion_output="$(./db/admin --env=production dbversion 2>&1)"; then
         echo "failed to get dbversion: $dbversion_output"
         return
     fi
-    local version=$(echo "$dbversion_output" | egrep '^goose: dbversion [[:digit:]]+$' | awk '{print $3}')
+    local version=$(echo "$dbversion_output" | egrep '^dbversion [[:digit:]]+$' | awk '{print $2}')
     if [[ -z "$version" ]]; then
         echo "failed to get dbversion from output: $db_version_output"
         return

@@ -19,6 +19,8 @@
 ``cachegroupparameters/{{ID}}/{{parameterID}}``
 ***********************************************
 
+.. deprecated:: ATCv6
+
 ``DELETE``
 ==========
 Dissociate a :term:`Parameter` with a :term:`Cache Group`

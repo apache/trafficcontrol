@@ -33,9 +33,7 @@ function ping_to {
 		"--traffic-ops-password=$TO_ADMIN_PASS" \
 		"--traffic-ops-url=$TO_URI" \
 		"--cache-host-name=atlanta-edge-03" \
-		"--log-location-error=stderr" \
-		"--log-location-info=stderr" \
-		"--log-location-debug=stderr" \
+		"-vv" \
 		"--run-mode=badass"
 }
 
@@ -58,17 +56,17 @@ else
   exit 1
 fi
 
-# fetch dependent packages for tests
-go mod vendor -v
-
 if [[ -f /systemctl.sh ]]; then
   mv /bin/systemctl /bin/systemctl.save
   cp /systemctl.sh /bin/systemctl
   chmod 0755 /bin/systemctl
 fi
 
-cd /ort-tests
-go get -u ./...
+cd "$(realpath /ort-tests)"
+
+# fetch dependent packages for tests
+go mod vendor -v
+
 cp /ort-tests/tc-fixtures.json /tc-fixtures.json
 ATS_RPM=`basename /yumserver/test-rpms/trafficserver-[0-9]*.rpm |
   gawk 'match($0, /trafficserver\-(.+)\.rpm$/, arr) {print arr[1]}'`

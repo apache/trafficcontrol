@@ -23,6 +23,8 @@ import (
 	"strings"
 )
 
+const ApplyCachePath = `/var/lib/trafficcontrol-cache-config/config-data.json`
+
 // ServiceNeeds represents whether we need to reload or restart Traffic Server,
 // as returned by t3c-check-reload.
 //
@@ -53,6 +55,53 @@ func StrToServiceNeeds(str string) ServiceNeeds {
 		return ServiceNeedsReload
 	default:
 		return ServiceNeedsInvalid
+	}
+}
+
+type ApplyServiceActionFlag string
+
+const (
+	ApplyServiceActionFlagNone    ApplyServiceActionFlag = "none"
+	ApplyServiceActionFlagReload  ApplyServiceActionFlag = "reload"
+	ApplyServiceActionFlagRestart ApplyServiceActionFlag = "restart"
+	ApplyServiceActionFlagInvalid ApplyServiceActionFlag = ""
+)
+
+func (af ApplyServiceActionFlag) String() string { return string(af) }
+
+func StrToApplyServiceActionFlag(str string) ApplyServiceActionFlag {
+	switch str {
+	case string(ApplyServiceActionFlagNone):
+		return ApplyServiceActionFlagNone
+	case string(ApplyServiceActionFlagReload):
+		return ApplyServiceActionFlagReload
+	case string(ApplyServiceActionFlagRestart):
+		return ApplyServiceActionFlagRestart
+	default:
+		return ApplyServiceActionFlagInvalid
+	}
+}
+
+type ApplyFilesFlag string
+
+const (
+	ApplyFilesFlagInvalid ApplyFilesFlag = ""
+	ApplyFilesFlagAll     ApplyFilesFlag = "all"
+	ApplyFilesFlagReval   ApplyFilesFlag = "reval"
+)
+
+func (ff ApplyFilesFlag) String() string {
+	return string(ff)
+}
+
+func StrToApplyFilesFlag(str string) ApplyFilesFlag {
+	switch ApplyFilesFlag(strings.TrimSpace(strings.ToLower(str))) {
+	case ApplyFilesFlagAll:
+		return ApplyFilesFlagAll
+	case ApplyFilesFlagReval:
+		return ApplyFilesFlagReval
+	default:
+		return ApplyFilesFlagInvalid
 	}
 }
 

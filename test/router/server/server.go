@@ -56,7 +56,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, string(data))
 	}
 
-	if r.Method == "POST" && r.URL.Path == "/api/1.2/user/login" {
+	if r.Method == "POST" && r.URL.Path == "/api/4.0/user/login" {
 
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -64,7 +64,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		client := &http.Client{Transport: tr}
 
-		url := fmt.Sprintf("https://%v/api/1.2/user/login", r.URL.Query().Get("opsHost"))
+		url := fmt.Sprintf("https://%v/api/4.0/user/login", r.URL.Query().Get("opsHost"))
 
 		resp, err := client.Post(url, "application/json", r.Body)
 

@@ -74,7 +74,7 @@ func TestT3cTOUpdates(t *testing.T) {
 		}
 
 		// run t3c syncds and verify only the queue update flag is reset to 'false'
-		err = runApply("atlanta-edge-03", "syncds", 0)
+		err = runApply("atlanta-edge-03", "syncds")
 		if err != nil {
 			t.Fatalf("ERROR: t3c syncds failed: %v\n", err)
 		}
@@ -95,7 +95,7 @@ func TestT3cTOUpdates(t *testing.T) {
 
 		// run t3c revalidate and verify only the queue update flag is still 'false'
 		// and that the revalidate flag is now 'false'
-		err = runApply("atlanta-edge-03", "revalidate", 0)
+		err = runApply("atlanta-edge-03", "revalidate")
 		if err != nil {
 			t.Fatalf("ERROR: t3c syncds failed: %v\n", err)
 		}

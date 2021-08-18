@@ -28,6 +28,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/lib/pq"
 )
@@ -44,6 +45,18 @@ func PostParamProfile(w http.ResponseWriter, r *http.Request) {
 	if err := api.Parse(r.Body, inf.Tx.Tx, &paramProfile); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parse error: "+err.Error()), nil)
 		return
+	}
+	if paramProfile.ProfileIDs != nil {
+		cdnNames, err := dbhelpers.GetCDNNamesFromProfileIDs(inf.Tx.Tx, *paramProfile.ProfileIDs)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNs(inf.Tx.Tx, cdnNames, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
 	}
 	if err := insertParameterProfile(paramProfile, inf.Tx.Tx); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("posting parameter profile: "+err.Error()))

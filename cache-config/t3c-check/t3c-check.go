@@ -22,7 +22,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
+	"os/exec"
 	"syscall" // TODO change to x/unix ?
 
 	"github.com/pborman/getopt/v2"
@@ -38,6 +38,7 @@ const ExitCodeNoCommand = 1
 const ExitCodeUnknownCommand = 2
 const ExitCodeCommandErr = 3
 const ExitCodeExeErr = 4
+const ExitCodeCommandLookupErr = 5
 
 func main() {
 	flagHelp := getopt.BoolLong("help", 'h', "Print usage information and exit")
@@ -59,19 +60,18 @@ func main() {
 	}
 
 	app := "t3c-check-" + cmd
-	args := append([]string{app}, os.Args[2:]...)
 
-	ex, err := os.Executable()
+	appPath, err := exec.LookPath(app)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error getting application information: "+err.Error()+"\n")
-		os.Exit(ExitCodeExeErr)
+		fmt.Fprintf(os.Stderr, "error finding path to '"+app+"': "+err.Error())
+		os.Exit(ExitCodeCommandLookupErr)
 	}
-	dir := filepath.Dir(ex)
-	appDir := filepath.Join(dir, app) // TODO use path, not exact dir of this exe
+
+	args := append([]string{app}, os.Args[2:]...)
 
 	env := os.Environ()
 
-	if err := syscall.Exec(appDir, args, env); err != nil {
+	if err := syscall.Exec(appPath, args, env); err != nil {
 		fmt.Fprintf(os.Stderr, "error executing sub-command: "+err.Error()+"\n")
 		os.Exit(ExitCodeCommandErr)
 	}

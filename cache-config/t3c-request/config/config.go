@@ -20,10 +20,12 @@ package config
  */
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
@@ -38,6 +40,7 @@ const UserAgent = AppName + "/" + Version
 type Cfg struct {
 	CommandArgs      []string
 	LogLocationDebug string
+	LogLocationWarn  string
 	LogLocationError string
 	LogLocationInfo  string
 	LoginDispersion  time.Duration
@@ -47,7 +50,7 @@ type Cfg struct {
 func (cfg Cfg) DebugLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationDebug) }
 func (cfg Cfg) ErrorLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationError) }
 func (cfg Cfg) InfoLog() log.LogLocation    { return log.LogLocation(cfg.LogLocationInfo) }
-func (cfg Cfg) WarningLog() log.LogLocation { return log.LogLocation(log.LogLocationNull) } // warn logging is not used.
+func (cfg Cfg) WarningLog() log.LogLocation { return log.LogLocation(cfg.LogLocationWarn) }
 func (cfg Cfg) EventLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // event logging is not used.
 
 // Usage() writes command line options and usage to 'stderr'
@@ -58,10 +61,6 @@ func Usage() {
 
 // InitConfig() intializes the configuration variables and loggers.
 func InitConfig() (Cfg, error) {
-
-	logLocationDebugPtr := getopt.StringLong("log-location-debug", 'd', "", "Where to log debugs. May be a file path, stdout, stderr")
-	logLocationErrorPtr := getopt.StringLong("log-location-error", 'e', "stderr", "Where to log errors. May be a file path, stdout, stderr")
-	logLocationInfoPtr := getopt.StringLong("log-location-info", 'i', "stderr", "Where to log infos. May be a file path, stdout, stderr")
 	dispersionPtr := getopt.IntLong("login-dispersion", 'l', 0, "[seconds] wait a random number of seconds between 0 and [seconds] before login to traffic ops, default 0")
 	cacheHostNamePtr := getopt.StringLong("cache-host-name", 'H', "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
 	getDataPtr := getopt.StringLong("get-data", 'D', "system-info", "non-config-file Traffic Ops Data to get. Valid values are update-status, packages, chkconfig, system-info, and statuses")
@@ -72,9 +71,11 @@ func InitConfig() (Cfg, error) {
 	revalOnlyPtr := getopt.BoolLong("reval-only", 'r', "[true | false] whether to only fetch data needed to revalidate, versus all config data. Only used if get-data is config")
 	disableProxyPtr := getopt.BoolLong("traffic-ops-disable-proxy", 'p', "[true | false] whether to not use any configure Traffic Ops proxy parameter. Only used if get-data is config")
 	toPassPtr := getopt.StringLong("traffic-ops-password", 'P', "", "Traffic Ops password. Required. May also be set with the environment variable TO_PASS    ")
-
+	oldCfgPtr := getopt.StringLong("old-config", 'c', "", "Old config from a previous config request. Optional. May be a file path, or 'stdin' to read from stdin. Used to make conditional requests.")
 	helpPtr := getopt.BoolLong("help", 'h', "Print usage information and exit")
-	versionPtr := getopt.BoolLong("version", 'v', "Print the app version")
+	versionPtr := getopt.BoolLong("version", 'V', "Print the app version")
+	verbosePtr := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
+	silentPtr := getopt.BoolLong("silent", 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
 
 	getopt.Parse()
 
@@ -83,6 +84,27 @@ func InitConfig() (Cfg, error) {
 	}
 	if *versionPtr == true {
 		fmt.Println(AppName + " v" + Version)
+		os.Exit(0)
+	}
+
+	logLocationError := log.LogLocationStderr
+	logLocationWarn := log.LogLocationNull
+	logLocationInfo := log.LogLocationNull
+	logLocationDebug := log.LogLocationNull
+	if *silentPtr {
+		logLocationError = log.LogLocationNull
+	} else {
+		if *verbosePtr >= 1 {
+			logLocationWarn = log.LogLocationStderr
+		}
+		if *verbosePtr >= 2 {
+			logLocationInfo = log.LogLocationStderr
+			logLocationDebug = log.LogLocationStderr // t3c only has 3 verbosity options: none (-s), error (default or --verbose=0), warning (-v), and info (-vv). Any code calling log.Debug is treated as Info.
+		}
+	}
+
+	if *verbosePtr > 2 {
+		return Cfg{}, errors.New("Too many verbose options. The maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
 	}
 
 	dispersion := time.Second * time.Duration(*dispersionPtr)
@@ -122,9 +144,10 @@ func InitConfig() (Cfg, error) {
 
 	cfg := Cfg{
 		CommandArgs:      getopt.Args(),
-		LogLocationDebug: *logLocationDebugPtr,
-		LogLocationError: *logLocationErrorPtr,
-		LogLocationInfo:  *logLocationInfoPtr,
+		LogLocationDebug: logLocationDebug,
+		LogLocationError: logLocationError,
+		LogLocationInfo:  logLocationInfo,
+		LogLocationWarn:  logLocationWarn,
 		LoginDispersion:  dispersion,
 		TCCfg: t3cutil.TCCfg{
 			CacheHostName:  cacheHostName,
@@ -144,6 +167,13 @@ func InitConfig() (Cfg, error) {
 		return Cfg{}, errors.New("initializing loggers: " + err.Error())
 	}
 
+	// load old config after initializing the loggers, because we want to log how long it takes
+	oldCfg, err := LoadOldCfg(*oldCfgPtr)
+	if err != nil {
+		return Cfg{}, errors.New("loading old config: " + err.Error())
+	}
+	cfg.OldCfg = oldCfg
+
 	return cfg, nil
 }
 
@@ -152,6 +182,7 @@ func (cfg Cfg) PrintConfig() {
 	fmt.Printf("LogLocationDebug: %s\n", cfg.LogLocationDebug)
 	fmt.Printf("LogLocationError: %s\n", cfg.LogLocationError)
 	fmt.Printf("LogLocationInfo: %s\n", cfg.LogLocationInfo)
+	fmt.Printf("LogLocationWarn: %s\n", cfg.LogLocationWarn)
 	fmt.Printf("LoginDispersion : %s\n", cfg.LoginDispersion)
 	fmt.Printf("CacheHostName: %s\n", cfg.CacheHostName)
 	fmt.Printf("TOInsecure: %v\n", cfg.TOInsecure)
@@ -159,4 +190,33 @@ func (cfg Cfg) PrintConfig() {
 	fmt.Printf("TOUser: %s\n", cfg.TOUser)
 	fmt.Printf("TOPass: xxxxxx\n")
 	fmt.Printf("TOURL: %s\n", cfg.TOURL)
+}
+
+func LoadOldCfg(path string) (*t3cutil.ConfigData, error) {
+	defer func(start time.Time) { log.Infof("loading old config took %v\n", time.Since(start)) }(time.Now())
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return nil, nil // old config is optional.
+	}
+
+	if strings.ToLower(path) == "stdin" {
+		cfg := &t3cutil.ConfigData{}
+		if err := json.NewDecoder(os.Stdin).Decode(cfg); err != nil {
+			return nil, errors.New("decoding old config from stdin: " + err.Error())
+		}
+		return cfg, nil
+	}
+
+	fi, err := os.Open(path)
+	if err != nil {
+		return nil, errors.New("opening old config file '" + path + "': " + err.Error())
+	}
+	defer fi.Close()
+
+	cfg := &t3cutil.ConfigData{}
+	if err := json.NewDecoder(fi).Decode(cfg); err != nil {
+		return nil, errors.New("decoding old config file '" + path + "': " + err.Error())
+	}
+
+	return cfg, nil
 }

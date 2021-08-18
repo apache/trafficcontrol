@@ -153,6 +153,16 @@ func (ssc *TOServerServerCapability) Delete() (error, error, int) {
 		return userErr, sysErr, status
 	}
 
+	if ssc.ServerID != nil {
+		cdnName, err := dbhelpers.GetCDNNameFromServerID(ssc.APIInfo().Tx.Tx, int64(*ssc.ServerID))
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(ssc.APIInfo().Tx.Tx, string(cdnName), ssc.APIInfo().User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+	}
 	return api.GenericDelete(ssc)
 }
 
@@ -292,6 +302,15 @@ func (ssc *TOServerServerCapability) Create() (error, error, int) {
 	}
 	if !correctType {
 		return fmt.Errorf("server %v has an incorrect server type. Server capabilities can only be assigned to EDGE or MID servers", *ssc.ServerID), nil, http.StatusBadRequest
+	}
+
+	cdnName, err := dbhelpers.GetCDNNameFromServerID(tx.Tx, int64(*ssc.ServerID))
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx.Tx, string(cdnName), ssc.APIInfo().User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 
 	resultRows, err := tx.NamedQuery(scInsertQuery(), ssc)

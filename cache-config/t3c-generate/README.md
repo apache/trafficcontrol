@@ -54,70 +54,72 @@ The output is a JSON array of objects containing the file and its metadata.
 
 # OPTIONS
 
--2, --default-client-enable-h2
+-2, -\-default-client-enable-h2
 
     Whether to enable HTTP/2 on Delivery Services by default, if
     they have no explicit Parameter. This is irrelevant if ATS
     records.config is not serving H2. If omitted, H2 is
     disabled.
 
--b, --dns-local-bind
+-b, -\-dns-local-bind
 
     Whether to use the server's Service Addresses to set the ATS
     DNS local bind address.
 
--c, --disable-parent-config-comments
+-c, -\-disable-parent-config-comments
 
     Disable adding a comments to parent.config individual lines.
 
--D, --dir=value
+-D, -\-dir=value
 
     ATS config directory, used for config files without location
     parameters or with relative paths. May be blank. If blank
     and any required config file location parameter is missing
     or relative, will error.
 
- -e, --log-location-error=value
-
-    Where to log errors. May be a file path, stdout, stderr, or
-    null. [stderr]
-
--h, --help
+-h, -\-help
 
     Print usage information and exit
 
--i, --log-location-info=value
+-i, -\-no-outgoing-ip
 
-    Where to log information messages. May be a file path,
-    stdout, stderr, or null. [stderr]
+    Whether to not set the records.config outgoing IP to the
+    server's addresses in Traffic Ops. Default is false.
 
--l, --list-plugins
+-l, -\-list-plugins
 
     Print the list of plugins.
 
--T, --default-client-tls-versions=value
-
-    Comma-delimited list of default TLS versions for Delivery
-    Services with no Parameter, e.g.
-    '--default-tls-versions=1.1,1.2,1.3'. If omitted, all
-    versions are enabled.
-
--v, --version
-
-    Print version information and exit.
-
--V, --via-string-release
+-r, -\-via-string-release
 
     Whether to use the Release value from the RPM package as a
     replacement for the ATS version specified in the build that
     is returned in the Via and Server headers from ATS.
 
--w, --log-location-warning=value
+-s, -\-silent
 
-    Where to log warnings. May be a file path, stdout, stderr,
-    or null. [stderr]
+    Silent. Errors are not logged, and the 'verbose' flag is
+    ignored. If a fatal error occurs, the return code will be
+    non-zero but no text will be output to stderr
 
--y, --revalidate-only
+-T, -\-default-client-tls-versions=value
+
+    Comma-delimited list of default TLS versions for Delivery
+    Services with no Parameter, e.g.
+    '-\-default-tls-versions=1.1,1.2,1.3'. If omitted, all
+    versions are enabled.
+
+-v, -\-verbose
+
+    Log verbosity. Logging is output to stderr. By default,
+    errors are logged. To log warnings, pass '-v'. To log info,
+    pass '-vv'. To omit error logging, see '-s'.
+
+-V, -\-version
+
+    Print version information and exit.
+
+-y, -\-revalidate-only
 
     Whether to exclude files not named 'regex_revalidate.config'
 

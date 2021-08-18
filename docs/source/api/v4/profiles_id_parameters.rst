@@ -90,14 +90,6 @@ Response Structure
 			"value": "Traffic Ops"
 		},
 		{
-			"configFile": "global",
-			"id": 6,
-			"lastUpdated": "2018-12-05 17:50:51+00",
-			"name": "use_tenancy",
-			"secure": false,
-			"value": "1"
-		},
-		{
 			"configFile": "regex_revalidate.config",
 			"id": 7,
 			"lastUpdated": "2018-12-05 17:50:49+00",

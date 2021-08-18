@@ -19,81 +19,58 @@ package tc
  * under the License.
  */
 
-import "database/sql"
-import "encoding/json"
-import "errors"
-import "fmt"
+import (
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"time"
 
-import "github.com/apache/trafficcontrol/lib/go-rfc"
-import "github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 
-import "github.com/go-ozzo/ozzo-validation"
-import "github.com/go-ozzo/ozzo-validation/is"
+	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
+)
 
-// UserCredentials contains Traffic Ops login credentials
+// UserCredentials contains Traffic Ops login credentials.
 type UserCredentials struct {
 	Username string `json:"u"`
 	Password string `json:"p"`
 }
 
-// UserToken represents a request payload containing a UUID token for authentication
+// UserToken represents a request payload containing a UUID token for
+// authentication.
 type UserToken struct {
 	Token string `json:"t"`
 }
 
-// UserV13 contains non-nullable TO user information
-type UserV13 struct {
-	Username         string    `json:"username"`
-	PublicSSHKey     string    `json:"publicSshKey"`
-	Role             int       `json:"role"`
-	RoleName         string    `json:"rolename"`
-	ID               int       `json:"id"`
-	UID              int       `json:"uid"`
-	GID              int       `json:"gid"`
-	Company          string    `json:"company"`
-	Email            string    `json:"email"`
-	FullName         string    `json:"fullName"`
-	NewUser          bool      `json:"newUser"`
-	LastUpdated      string    `json:"lastUpdated"`
-	AddressLine1     string    `json:"addressLine1"`
-	AddressLine2     string    `json:"addressLine2"`
-	City             string    `json:"city"`
-	Country          string    `json:"country"`
-	PhoneNumber      string    `json:"phoneNumber"`
-	PostalCode       string    `json:"postalCode"`
-	RegistrationSent TimeNoMod `json:"registrationSent"`
-	StateOrProvince  string    `json:"stateOrProvince"`
-	Tenant           string    `json:"tenant"`
-	TenantID         int       `json:"tenantId"`
-}
-
 // commonUserFields is unexported, but its contents are still visible when it is embedded
-// LastUpdated is a new field for some structs
+// LastUpdated is a new field for some structs.
 type commonUserFields struct {
-	AddressLine1    *string `json:"addressLine1" db:"address_line1"`
-	AddressLine2    *string `json:"addressLine2" db:"address_line2"`
-	City            *string `json:"city" db:"city"`
-	Company         *string `json:"company" db:"company"`
-	Country         *string `json:"country" db:"country"`
-	Email           *string `json:"email" db:"email"`
-	FullName        *string `json:"fullName" db:"full_name"`
-	GID             *int    `json:"gid"`
-	ID              *int    `json:"id" db:"id"`
-	NewUser         *bool   `json:"newUser" db:"new_user"`
-	PhoneNumber     *string `json:"phoneNumber" db:"phone_number"`
-	PostalCode      *string `json:"postalCode" db:"postal_code"`
-	PublicSSHKey    *string `json:"publicSshKey" db:"public_ssh_key"`
-	Role            *int    `json:"role" db:"role"`
-	StateOrProvince *string `json:"stateOrProvince" db:"state_or_province"`
-	Tenant          *string `json:"tenant"`
-	TenantID        *int    `json:"tenantId" db:"tenant_id"`
-	Token           *string `json:"-" db:"token"`
-	UID             *int    `json:"uid"`
-	//Username        *string    `json:"username" db:"username"`  //not including major change due to naming incompatibility
-	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	AddressLine1    *string    `json:"addressLine1" db:"address_line1"`
+	AddressLine2    *string    `json:"addressLine2" db:"address_line2"`
+	City            *string    `json:"city" db:"city"`
+	Company         *string    `json:"company" db:"company"`
+	Country         *string    `json:"country" db:"country"`
+	Email           *string    `json:"email" db:"email"`
+	FullName        *string    `json:"fullName" db:"full_name"`
+	GID             *int       `json:"gid"`
+	ID              *int       `json:"id" db:"id"`
+	NewUser         *bool      `json:"newUser" db:"new_user"`
+	PhoneNumber     *string    `json:"phoneNumber" db:"phone_number"`
+	PostalCode      *string    `json:"postalCode" db:"postal_code"`
+	PublicSSHKey    *string    `json:"publicSshKey" db:"public_ssh_key"`
+	Role            *int       `json:"role" db:"role"`
+	StateOrProvince *string    `json:"stateOrProvince" db:"state_or_province"`
+	Tenant          *string    `json:"tenant"`
+	TenantID        *int       `json:"tenantId" db:"tenant_id"`
+	Token           *string    `json:"-" db:"token"`
+	UID             *int       `json:"uid"`
+	LastUpdated     *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
-// User fields in v14 have been updated to be nullable
+// User represents a user of Traffic Ops.
 type User struct {
 	Username             *string    `json:"username" db:"username"`
 	RegistrationSent     *TimeNoMod `json:"registrationSent" db:"registration_sent"`
@@ -107,12 +84,25 @@ type User struct {
 	commonUserFields
 }
 
-// UserCurrent represents the profile for the authenticated user
+// UserV40 contains ChangeLogCount field.
+type UserV40 struct {
+	User
+	ChangeLogCount    *int       `json:"changeLogCount" db:"change_log_count"`
+	LastAuthenticated *time.Time `json:"lastAuthenticated" db:"last_authenticated"`
+}
+
+// UserCurrent represents the profile for the authenticated user.
 type UserCurrent struct {
 	UserName  *string `json:"username"`
 	LocalUser *bool   `json:"localUser"`
 	RoleName  *string `json:"roleName"`
 	commonUserFields
+}
+
+// UserCurrentV40 contains LastAuthenticated field.
+type UserCurrentV40 struct {
+	UserCurrent
+	LastAuthenticated *time.Time `json:"lastAuthenticated" db:"last_authenticated"`
 }
 
 // CurrentUserUpdateRequest differs from a regular User/UserCurrent in that many of its fields are
@@ -281,16 +271,15 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 //  The client's use of these will eventually be deprecated  //
 // --------------------------------------------------------- //
 
-// UsersResponseV13 is the Traffic Ops API version 1.3 variant of UserResponse.
-// It is unused.
-type UsersResponseV13 struct {
-	Response []UserV13 `json:"response"`
-	Alerts
-}
-
 // UsersResponse can hold a Traffic Ops API response to a request to get a list of users.
 type UsersResponse struct {
 	Response []User `json:"response"`
+	Alerts
+}
+
+// UsersResponseV40 is the Traffic Ops API version 4.0 variant of UserResponse.
+type UsersResponseV40 struct {
+	Response []UserV40 `json:"response"`
 	Alerts
 }
 
@@ -319,6 +308,12 @@ type UserCurrentResponse struct {
 	Alerts
 }
 
+// UserCurrentResponseV40 is the Traffic Ops API version 4.0 variant of UserResponse.
+type UserCurrentResponseV40 struct {
+	Response UserCurrentV40 `json:"response"`
+	Alerts
+}
+
 // UserDeliveryServiceDeleteResponse can hold a Traffic Ops API response to
 // a request to remove a delivery service from a user.
 type UserDeliveryServiceDeleteResponse struct {
@@ -340,7 +335,8 @@ type UserRegistrationRequest struct {
 }
 
 // Validate implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator interface.
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (urr *UserRegistrationRequest) Validate(tx *sql.Tx) error {
 	var errs = []error{}
 	if urr.Role == 0 {

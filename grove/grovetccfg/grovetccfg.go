@@ -192,7 +192,6 @@ func main() {
 	pretty := flag.Bool("pretty", false, "Whether to pretty-print output")
 	ignoreUpdateFlag := flag.Bool("ignore-update-flag", false, "Whether to fetch and apply the config, without checking or updating the Traffic Ops Update Pending flag")
 	host := flag.String("host", "", "The hostname of the server whose config to generate")
-	// api := flag.String("api", "1.2", "API version. Determines whether to use /api/1.3/configs/ or older, less efficient 1.2 APIs")
 	toInsecure := flag.Bool("insecure", false, "Whether to allow invalid certificates with Traffic Ops")
 	certDir := flag.String("certdir", DefaultCertificateDir, "Directory to save certificates to")
 	noServiceReload := flag.Bool("no-service-reload", false, "Whether to avoid trying to reload the Grove service")

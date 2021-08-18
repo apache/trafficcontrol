@@ -33,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 )
 
@@ -79,13 +80,12 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 		return
 	}
 	defer inf.Close()
-
 	if !inf.Config.TrafficVaultEnabled {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("the Traffic Vault service is unavailable"), errors.New("getting SSL keys from Traffic Vault by xml id: Traffic Vault is not configured"), deprecated, deprecation)
 		return
 	}
 
-	rows, err := inf.Tx.Tx.Query(`SELECT xml_id, ssl_key_version FROM deliveryservice WHERE ssl_key_version != 0`)
+	rows, err := inf.Tx.Tx.Query(`SELECT xml_id, ssl_key_version, cdn_id FROM deliveryservice WHERE ssl_key_version != 0`)
 	if err != nil {
 		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err, deprecated, deprecation)
 		return
@@ -93,16 +93,27 @@ func renewCertificates(w http.ResponseWriter, r *http.Request, deprecated bool) 
 	defer rows.Close()
 
 	existingCerts := []ExistingCerts{}
+	cdnMap := make(map[int]bool)
+	cdns := []int{}
+	var cdn int
 	for rows.Next() {
 		ds := DsKey{}
-		err := rows.Scan(&ds.XmlId, &ds.Version)
+		err := rows.Scan(&ds.XmlId, &ds.Version, &cdn)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 			return
 		}
+		cdnMap[cdn] = true
 		existingCerts = append(existingCerts, ExistingCerts{Version: ds.Version, XmlId: ds.XmlId})
 	}
-
+	for k, _ := range cdnMap {
+		cdns = append(cdns, k)
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNsByID(inf.Tx.Tx, cdns, inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
 	ctx, cancelTx := context.WithTimeout(r.Context(), AcmeTimeout*time.Duration(len(existingCerts)))
 
 	asyncStatusId, errCode, userErr, sysErr := api.InsertAsyncStatus(inf.Tx.Tx, "ACME async job has started.")
@@ -146,6 +157,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 		}
 		return
 	}
+	defer tx.Commit()
 
 	logTx, err := db.Begin()
 	if err != nil {

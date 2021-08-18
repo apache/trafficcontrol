@@ -22,19 +22,20 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
+	"os/exec"
 	"syscall" // TODO change to x/unix ?
 
 	"github.com/pborman/getopt/v2"
 )
 
 var commands = map[string]struct{}{
-	"apply":    struct{}{},
-	"check":    struct{}{},
-	"diff":     struct{}{},
-	"generate": struct{}{},
-	"request":  struct{}{},
-	"update":   struct{}{},
+	"apply":      struct{}{},
+	"check":      struct{}{},
+	"diff":       struct{}{},
+	"generate":   struct{}{},
+	"preprocess": struct{}{},
+	"request":    struct{}{},
+	"update":     struct{}{},
 }
 
 const ExitCodeSuccess = 0
@@ -42,6 +43,7 @@ const ExitCodeNoCommand = 1
 const ExitCodeUnknownCommand = 2
 const ExitCodeCommandErr = 3
 const ExitCodeExeErr = 4
+const ExitCodeCommandLookupErr = 5
 
 func main() {
 	flagHelp := getopt.BoolLong("help", 'h', "Print usage information and exit")
@@ -63,20 +65,19 @@ func main() {
 	}
 
 	app := "t3c-" + cmd
-	args := append([]string{app}, os.Args[2:]...)
 
-	ex, err := os.Executable()
+	appPath, err := exec.LookPath(app)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error getting application information: "+err.Error()+"\n")
-		os.Exit(ExitCodeExeErr)
+		fmt.Fprintf(os.Stderr, "error finding path to '"+app+"': "+err.Error())
+		os.Exit(ExitCodeCommandLookupErr)
 	}
-	dir := filepath.Dir(ex)
-	appDir := filepath.Join(dir, app) // TODO use path, not exact dir of this exe
+
+	args := append([]string{app}, os.Args[2:]...)
 
 	env := os.Environ()
 
-	if err := syscall.Exec(appDir, args, env); err != nil {
-		fmt.Fprintf(os.Stderr, "error executing sub-command: "+err.Error()+"\n")
+	if err := syscall.Exec(appPath, args, env); err != nil {
+		fmt.Fprintf(os.Stderr, "error executing sub-command '"+appPath+"': "+err.Error()+"\n")
 		os.Exit(ExitCodeCommandErr)
 	}
 }
@@ -89,12 +90,13 @@ For the arguments of a command, see 't3c <command> --help'.
 
 These are the available commands:
 
-  apply     generate and apply configuration
+  apply      generate and apply configuration
 
-  check     check that new config can be applied
-  diff      diff config files, with logic like ignoring comments
-  generate  generate configuration from Traffic Ops data
-  request   request Traffic Ops data
-  update    update a cache's queue and reval status in Traffic Ops
+  check      check that new config can be applied
+  diff       diff config files, with logic like ignoring comments
+  generate   generate configuration from Traffic Ops data
+  preprocess preprocess generated config files
+  request    request Traffic Ops data
+  update     update a cache's queue and reval status in Traffic Ops
 `
 }

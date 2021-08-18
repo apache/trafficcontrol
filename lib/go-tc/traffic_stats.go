@@ -33,16 +33,8 @@ import (
 	influx "github.com/influxdata/influxdb/client/v2"
 )
 
-// TRAFFIC_STATS_VERSION was supposed to be the "API version", but actually the plugin (this route
-// used to be a plugin in Perl) always returned this static value
-const TRAFFIC_STATS_VERSION = "1.2"
-
-// TRAFFIC_STATS_SOURCE is the value of the "source" field in an API response. Perl always returned
-// source="TrafficStats", so we do too
-const TRAFFIC_STATS_SOURCE = "TrafficStats"
-
 // TrafficStatsDurationPattern reflects all the possible durations that can be requested via the
-// deliveryservice_stats endpoint
+// /deliveryservice_stats endpoint.
 var TrafficStatsDurationPattern = regexp.MustCompile(`^\d+[mhdw]$`)
 
 // DurationLiteralToSeconds returns the number of seconds to which an InfluxQL duration literal is
@@ -75,10 +67,8 @@ func DurationLiteralToSeconds(d string) (int64, error) {
 // may be ordered.
 type TrafficStatsOrderable string
 
-const (
-	// TimeOrder indicates an ordering by time at which the measurement was taken
-	TimeOrder TrafficStatsOrderable = "time"
-)
+// TimeOrder indicates an ordering by time at which the measurement was taken.
+const TimeOrder TrafficStatsOrderable = "time"
 
 // OrderableFromString parses the passed string and returns the corresponding value as a pointer to
 // a TrafficStatsOrderable - or nil if the value was invalid.
@@ -136,49 +126,36 @@ type TrafficStatsConfig struct {
 	Unix           bool
 }
 
-// TrafficDSStatsConfig represents the configuration of a request made to Traffic Stats for delivery services
+// TrafficDSStatsConfig represents the configuration of a request made to
+// Traffic Stats for Delivery Service stats.
 type TrafficDSStatsConfig struct {
 	DeliveryService string
 	TrafficStatsConfig
 }
 
-// TrafficCacheStatsConfig represents the configuration of a request made to Traffic Stats for caches
+// TrafficCacheStatsConfig represents the configuration of a request made to
+// Traffic Stats for cache server stats.
 type TrafficCacheStatsConfig struct {
 	CDN string
 	TrafficStatsConfig
 }
 
 // OffsetString is a stupid, dirty hack to try to convince Influx to not
-// giveback data that's outside of the range in a WHERE clause. It doesn't work,
-// but it helps.
+// give back data that's outside of the range in a WHERE clause. It doesn't
+// work, but it helps.
 // (https://github.com/influxdata/influxdb/issues/8010)
 func (c *TrafficStatsConfig) OffsetString() string {
 	iSecs, err := DurationLiteralToSeconds(c.Interval)
 	if err != nil {
+		// TODO: Don't log in library function - return error if there is one.
 		log.Errorf("Parsing duration literal: %v", err)
 		return "0s"
 	}
 	return fmt.Sprintf("%ds", int64(c.Start.Sub(time.Unix(0, 0))/time.Second)%iSecs)
 }
 
-// TrafficDSStatsResponseV1 represents a response from the
-// deliveryservice_stats "Traffic Stats" endpoints.
-// It contains the deprecated, legacy fields "Source" and "Version"
-type TrafficDSStatsResponseV1 struct {
-	// Series holds the actual data - it is NOT in general the same as a github.com/influxdata/influxdb1-client/models.Row
-	Series *TrafficStatsSeries `json:"series,omitempty"`
-	// Summary contains summary statistics of the data in Series
-	Summary *LegacyTrafficDSStatsSummary `json:"summary,omitempty"`
-	// Source has an unknown purpose. I believe this is supposed to name the "plugin" that provided
-	// the data - kept for compatibility with the Perl version(s) of the "Traffic Stats endpoints".
-	Source string `json:"source"`
-	// Version is supposed to represent the API version - but actually the API just reports a static
-	// number (TRAFFIC_STATS_VERSION).
-	Version string `json:"version"`
-}
-
 // TrafficDSStatsResponse represents a response from the
-// deliveryservice_stats` "Traffic Stats" endpoints.
+// /deliveryservice_stats "Traffic Stats" endpoints.
 type TrafficDSStatsResponse struct {
 	// Series holds the actual data - it is NOT in general the same as a github.com/influxdata/influxdb1-client/models.Row
 	Series *TrafficStatsSeries `json:"series,omitempty"`
@@ -209,6 +186,11 @@ type TrafficStatsSummary struct {
 	NinetyFifthPercentile  float64 `json:"ninetyFifthPercentile"`
 }
 
+// LegacyTrafficDSStatsSummary contains summary statistics for a data series
+// for Delivery Service stats.
+//
+// Deprecated: This uses a confusing, incorrect name for the total number of
+// kilobytes served, so new code should use TrafficDSStatsSummary instead.
 type LegacyTrafficDSStatsSummary struct {
 	TrafficStatsSummary
 	// TotalBytes is the total number of kilobytes served when the "metric type" requested is "kbps"
@@ -280,7 +262,8 @@ func (s TrafficStatsSeries) FormatTimestamps() error {
 	return nil
 }
 
-// MessagesToString converts a set of messages from an InfluxDB node into a single, print-able string
+// MessagesToString converts a set of messages from an InfluxDB node into a
+// single, print-able string.
 func MessagesToString(msgs []influx.Message) string {
 	if msgs == nil || len(msgs) == 0 {
 		return ""
@@ -298,7 +281,7 @@ func MessagesToString(msgs []influx.Message) string {
 	return b.String()
 }
 
-// TrafficStatsCDNStats contains summary statistics for a given CDN
+// TrafficStatsCDNStats contains summary statistics for a given CDN.
 type TrafficStatsCDNStats struct {
 	Bandwidth    *float64 `json:"bandwidth"`
 	Capacity     *float64 `json:"capacity"`
@@ -306,8 +289,9 @@ type TrafficStatsCDNStats struct {
 	Connnections *float64 `json:"connections"`
 }
 
-// TrafficStatsTotalStats contains summary statistics across CDNs
-// Different then TrafficStatsCDNStats as it omits Capacity
+// TrafficStatsTotalStats contains summary statistics across CDNs.
+//
+// This differs from TrafficStatsCDNStats in that it omits Capacity.
 type TrafficStatsTotalStats struct {
 	Bandwidth    *float64 `json:"bandwidth"`
 	CDN          string   `json:"cdn"`
@@ -324,7 +308,7 @@ type TrafficStatsCDNStatsResponse struct {
 // to a request to its /current_stats endpoint.
 type CurrentStatsResponse = TrafficStatsCDNStatsResponse
 
-// TrafficStatsCDNsStats contains a list of CDN summary statistics
+// TrafficStatsCDNsStats contains a list of CDN summary statistics.
 type TrafficStatsCDNsStats struct {
 	Stats []TrafficStatsCDNStats `json:"currentStats"`
 }

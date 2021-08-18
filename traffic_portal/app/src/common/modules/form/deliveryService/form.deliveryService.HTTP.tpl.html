@@ -254,6 +254,90 @@ under the License.
                             </aside>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="restrictTLS">
+                            Restrict TLS Versions
+                            <div class="helptooltip">
+                                <div class="helptext">
+                                    Limit the TLS versions that cache servers will accept for HTTPs connections.
+                                    <aside class="warning">
+                                        <h6>Warning</h6>
+                                        <p>Setting TLS Versions that are explicitly supported may break older clients that can't use the specified versions</p>
+                                    </aside>
+                                </div>
+                            </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12" style="display:inline-grid;grid-template-columns:auto;justify-content:start;">
+                            <input
+                                type="checkbox"
+                                id="restrictTLS"
+                                name="restrictTLS"
+                                class="form-control"
+                                ng-model="restrictTLS"
+                                style="max-width: max-content; min-width: 1em;"
+                                ng-change="toggleTLSRestrict()"
+                            />
+                            <small class="input-warning" ng-if="restrictTLS && dsCurrent.protocol === 0">Delivery Service doesn't use HTTPS - this will have no effect</small>
+                        </div>
+                    </div>
+                    <div
+                        class="form-group"
+                        ng-if="restrictTLS"
+                        ng-repeat="ver in deliveryService.tlsVersions track by $index"
+                        ng-class="{'has-error': tlsVersionHasError($index), 'has-feedback': tlsVersionHasError($index)}"
+                    >
+                        <div>
+                            <label class="control-label col-md-2 col-sm-2 col-xs-12" for="tlsVersion1">
+                                TLS Version #{{$index+1}}
+                            </label>
+                            <div class="col-md-10 col-sm-10 col-xs-12">
+                                <div>
+                                    <div class="input-group add-more-inputs">
+                                        <input
+                                            id="tlsVersion{{$index+1}}"
+                                            name="tlsVersion{{$index+1}}"
+                                            type="text"
+                                            class="form-control"
+                                            ng-model="deliveryService.tlsVersions[$index]"
+                                            pattern="[0-9]+\.[0-9]+"
+                                            placeholder="1.3"
+                                            required
+                                            ng-change="validateTLS()"
+                                        />
+                                        <span class="form-input-group-btn input-group-btn">
+                                            <button
+                                                type="button"
+                                                title="remove support for this TLS version"
+                                                class="btn btn-default"
+                                                ng-show="deliveryService.tlsVersions.length > 1"
+                                                ng-click="removeTLSVersion($index)"
+                                            >
+                                                <i class="fa fa-minus"></i>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                title="add a supported TLS version"
+                                                class="btn btn-default"
+                                                ng-click="addTLSVersion($index)"
+                                            >
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+                                <small class="input-error" ng-show="tlsVersionHasPropertyError($index, 'duplicates')">Duplicate TLS Version</small>
+                                <small class="input-error" ng-show="tlsVersionHasPropertyError($index, 'required')">Required</small>
+                                <small class="input-error" ng-show="tlsVersionHasPropertyError($index, 'pattern')">Invalid version number - must be "X.Y"</small>
+                                <small class="input-warning" ng-show="tlsVersionInsecure(ver)">TLS Version {{ver}} is known to be insecure!</small>
+                                <small class="input-warning" ng-show="tlsVersionUnknown(ver)">Unknown version</small>
+                                <aside class="current-value" ng-if="settings.isRequest" ng-show="dsCurrent.tlsVersions instanceof Array && dsCurrent.tlsVersions.length === deliveryService.tlsVersions.length && dsCurrent.tlsVersions[$index] !== dsCurrent.tlsVersions[$index]">
+                                    <h3 ng-if="open()">Current Value</h3>
+                                    <h3 ng-if="!open()">Previous Value</h3>
+                                    <pre>{{::dsCurrent.tlsVersions[$index]}}</pre>
+                                </aside>
+                            </div>
+                        </div>
+                    </div>
                     <div class="form-group" ng-class="{'has-error': hasError(generalConfig.serviceCategory), 'has-feedback': hasError(generalConfig.serviceCategory)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="serviceCategory">Service Category<div class="helptooltip">
                                 <div class="helptext">The type of content being delivered. Some examples are linear and vod.</div>
@@ -272,7 +356,7 @@ under the License.
                         </div>
                     </div>
                     <div class="form-group" ng-class="{'has-error': hasError(generalConfig.longDesc), 'has-feedback': hasError(generalConfig.longDesc)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="longDesc">Long Description 1<div class="helptooltip">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="longDesc">Long Description<div class="helptooltip">
                             <div class="helptext">Free text field not currently used in configuration.</div>
                         </div>
                         </label>
@@ -282,34 +366,6 @@ under the License.
                                 <h3 ng-if="open()">Current Value</h3>
                                 <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.longDesc}}</pre>
-                            </aside>
-                        </div>
-                    </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.longDesc1), 'has-feedback': hasError(generalConfig.longDesc1)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="longDesc1">Long Description 2<div class="helptooltip">
-                            <div class="helptext">Free text field not currently used in configuration.</div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="longDesc1" name="longDesc1" class="form-control" ng-model="deliveryService.longDesc1" spellcheck="true" rows="3"></textarea>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.longDesc1 != dsCurrent.longDesc1">
-                                <h3 ng-if="open()">Current Value</h3>
-                                <h3 ng-if="!open()">Previous Value</h3>
-                                <pre>{{::dsCurrent.longDesc1}}</pre>
-                            </aside>
-                        </div>
-                    </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.longDesc2), 'has-feedback': hasError(generalConfig.longDesc2)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">Long Description 3<div class="helptooltip">
-                            <div class="helptext">Free text field not currently used in configuration.</div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <textarea id="longDesc2" name="longDesc2" class="form-control" ng-model="deliveryService.longDesc2" rows="3" spellcheck="true"></textarea>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.longDesc2 != dsCurrent.longDesc2">
-                                <h3 ng-if="open()">Current Value</h3>
-                                <h3 ng-if="!open()">Previous Value</h3>
-                                <pre>{{::dsCurrent.longDesc2}}</pre>
                             </aside>
                         </div>
                     </div>

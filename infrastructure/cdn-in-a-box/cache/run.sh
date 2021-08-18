@@ -118,7 +118,7 @@ hostname="${hostname^^}" # uppercase
 debug_variable_name="T3C_DEBUG_COMPONENT_${hostname}"
 debug_binary="${!debug_variable_name}"
 if ! type -p "$debug_binary"; then
-	t3c apply --run-mode=badass --traffic-ops-url="$TO_URL" --traffic-ops-user="$TO_USER" --traffic-ops-password="$TO_PASSWORD" --git=yes --dispersion=0 --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout all || { echo "Failed"; }
+	t3c apply --run-mode=badass --traffic-ops-url="$TO_URL" --traffic-ops-user="$TO_USER" --traffic-ops-password="$TO_PASSWORD" --git=yes -vv || { echo "Failed"; }
 fi
 
 envsubst < "/etc/cron.d/traffic_ops_ort-cron-template" > "/etc/cron.d/traffic_ops_ort-cron" && rm -f "/etc/cron.d/traffic_ops_ort-cron-template"

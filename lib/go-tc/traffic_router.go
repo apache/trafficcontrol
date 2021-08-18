@@ -38,32 +38,36 @@ type SOA struct {
 	RetrySecondsTime   time.Time `json:"-"`
 }
 
-// MissLocation ...
+// MissLocation is a geographic location that will be used in the event that a
+// client request cannot be localized (a "Geo Miss").
 type MissLocation struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 }
 
-// MatchSet ...
+// MatchSet structures are a list of MatchList structures with an associated
+// Protocol.
 type MatchSet struct {
 	Protocol  string      `json:"protocol"`
 	MatchList []MatchList `json:"matchlist"`
 }
 
-// MatchList ...
+// A MatchList is actually just a single match item in a match list.
 type MatchList struct {
 	Regex     string `json:"regex"`
 	MatchType string `json:"match-type"`
 }
 
-// BypassDestination ...
+// A BypassDestination is an FQDN, IP address, or CNAME to use for redirection
+// in the event that bypass becomes necessary.
 type BypassDestination struct {
 	FQDN string `json:"fqdn"`
 	Type string `json:"type"`
 	Port int    `json:"Port"`
 }
 
-// TTLS ...
+// TTLS is a structure that contains Time-To-Live values for different types of
+// DNS records (in seconds).
 type TTLS struct {
 	Arecord    int `json:"A"`
 	SoaRecord  int `json:"SOA"`
@@ -71,7 +75,8 @@ type TTLS struct {
 	AaaaRecord int `json:"AAAA"`
 }
 
-// TrafficRouter ...
+// TrafficRouter is a subset of a server that contains all the information a
+// Traffic Router instance may need to know about one of its peers.
 type TrafficRouter struct {
 	Port         int    `json:"port"`
 	IP6          string `json:"ip6"`
@@ -95,7 +100,16 @@ type TrafficRouterConfig struct {
 	Config           map[string]interface{} `json:"config,omitempty"`
 }
 
-// TrafficRouterConfigMap ...
+// TrafficRouterConfigMap is a set of mappings of various objects important to
+// Traffic Router to the structural data a Traffic Router needs to know about
+// them.
+//
+// In general, the objects herein contained do not strictly correspond to other
+// structures that represent the same concept defined in this package - Traffic
+// Router only gets exactly what information it needs, as keeping the size of
+// this structure low is important for performance.
+//
+// TODO: Why isn't this used instead of legacy-named things like CRConfig?
 type TrafficRouterConfigMap struct {
 	TrafficServer   map[string]TrafficServer
 	TrafficMonitor  map[string]TrafficMonitor
@@ -106,8 +120,8 @@ type TrafficRouterConfigMap struct {
 	Stat            map[string]interface{}
 }
 
-// TRDeliveryService ...
-// TODO JvD: move to deliveryservice.go ??
+// TRDeliveryService structures contain all the information about a Delivery
+// Service that are important to Traffic Routers.
 type TRDeliveryService struct {
 	XMLID             string            `json:"xmlId"`
 	Domains           []string          `json:"domains"`
@@ -122,7 +136,7 @@ type TRDeliveryService struct {
 	Soa               SOA               `json:"soa"`
 }
 
-// StaticDNS ...
+// A StaticDNS is a somewhat arbitrary static DNS entry of some kind.
 type StaticDNS struct {
 	Value string `json:"value"`
 	TTL   int    `json:"ttl"`
@@ -130,7 +144,13 @@ type StaticDNS struct {
 	Type  string `json:"type"`
 }
 
-// LegacyTrafficServer ...
+// A LegacyTrafficServer is a representation of a cache server containing a
+// subset of the information available in a server structure that conveys all
+// the information important for Traffic Router and Traffic Monitor to handle
+// it.
+//
+// Deprecated: The configuration versions that use this structure to represent
+// a cache server are deprecated, new code should use TrafficServer instead.
 type LegacyTrafficServer struct {
 	CacheGroup       string              `json:"cacheGroup"`
 	DeliveryServices []tsdeliveryService `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
@@ -151,6 +171,8 @@ type LegacyTrafficServer struct {
 //
 // Note that the DeliveryServices slice is a "shallow" copy of the original, so
 // making changes to the original slice will affect the upgraded copy.
+//
+// Deprecated: LegacyTrafficServer is deprecated.
 func (s LegacyTrafficServer) Upgrade() TrafficServer {
 	upgraded := TrafficServer{
 		CacheGroup:       s.CacheGroup,
@@ -218,6 +240,8 @@ func GetVIPInterface(ts TrafficServer) ServerInterfaceInfo {
 }
 
 // ToLegacyServer converts a TrafficServer to LegacyTrafficServer.
+//
+// Deprecated: LegacyTrafficServer is deprecated.
 func (ts *TrafficServer) ToLegacyServer() LegacyTrafficServer {
 	vipInterface := GetVIPInterface(*ts)
 	ipv4, ipv6 := vipInterface.GetDefaultAddress()

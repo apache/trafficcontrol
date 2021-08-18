@@ -314,7 +314,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write(append(resp, '\n'))
+		api.WriteAndLogErr(w, r, append(resp, '\n'))
 		return
 	}
 
@@ -348,6 +348,16 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, int(dsid))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service and CDN name from ID: "+err.Error()))
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
 	row := inf.Tx.Tx.QueryRow(insertQuery,
 		dsid,
 		*job.Regex,
@@ -399,9 +409,14 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set(http.CanonicalHeaderKey("location"), inf.Config.URL.Scheme+"://"+r.Host+"/api/1.4/jobs?id="+strconv.FormatUint(uint64(*result.ID), 10))
+	if inf.Version == nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("nil API version"))
+		return
+	}
+
+	w.Header().Set(http.CanonicalHeaderKey("location"), fmt.Sprintf("%s://%s/api/%d.%d/jobs?id=%d", inf.Config.URL.Scheme, r.Host, inf.Version.Major, inf.Version.Minor, *result.ID))
 	w.WriteHeader(http.StatusOK)
-	w.Write(append(resp, '\n'))
+	api.WriteAndLogErr(w, r, append(resp, '\n'))
 
 	duplicate := ""
 	if len(conflicts) > 0 {
@@ -522,6 +537,17 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, int(dsid))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service and CDN name from ID: "+err.Error()))
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+
 	row = inf.Tx.Tx.QueryRow(updateQuery,
 		input.AssetURL,
 		input.Keyword,
@@ -574,7 +600,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
-	w.Write(append(resp, '\n'))
+	api.WriteAndLogErr(w, r, append(resp, '\n'))
 
 	api.CreateChangeLogRawTx(api.ApiChange, api.Updated+" content invalidation job - ID: "+strconv.FormatUint(*job.ID, 10)+" DS: "+*job.DeliveryService+" URL: '"+*job.AssetURL+"' Params: '"+*job.Parameters+"'", inf.User, inf.Tx.Tx)
 }
@@ -627,9 +653,20 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, int(dsid))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service and CDN name from ID: "+err.Error()))
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+
 	result := tc.InvalidationJob{}
 	row = inf.Tx.Tx.QueryRow(deleteQuery, inf.Params["id"])
-	err := row.Scan(&result.AssetURL,
+	err = row.Scan(&result.AssetURL,
 		&result.CreatedBy,
 		&result.DeliveryService,
 		&result.ID,
@@ -660,7 +697,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
-	w.Write(append(resp, '\n'))
+	api.WriteAndLogErr(w, r, append(resp, '\n'))
 
 	api.CreateChangeLogRawTx(api.ApiChange, api.Deleted+" content invalidation job - ID: "+strconv.FormatUint(*result.ID, 10)+" DS: "+*result.DeliveryService+" URL: '"+*result.AssetURL+"' Params: '"+*result.Parameters+"'", inf.User, inf.Tx.Tx)
 }

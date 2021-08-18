@@ -39,9 +39,15 @@ serverCapabilities.tests.forEach(serverCapabilitiesData => {
                 await serverCapabilitiesPage.OpenConfigureMenu();
                 await serverCapabilitiesPage.OpenServerCapabilityPage();
             });
+            serverCapabilitiesData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await serverCapabilitiesPage.CheckCSV(check.Name)).toBe(true);
+                    await serverCapabilitiesPage.OpenServerCapabilityPage();
+                });
+            });
             serverCapabilitiesData.add.forEach(add => {
                 it(add.description, async () => {
-                    expect(await serverCapabilitiesPage.CreateServerCapabilities(add.name, add.validationMessage)).toBeTruthy();
+                    expect(await serverCapabilitiesPage.CreateServerCapabilities(add.name, add.validationMessage)).toBe(true);
                     await serverCapabilitiesPage.OpenServerCapabilityPage();
                 });
             });
@@ -49,13 +55,13 @@ serverCapabilities.tests.forEach(serverCapabilitiesData => {
                 if (remove.invalid) {
                     it(remove.description, async () => {
                         await serverCapabilitiesPage.SearchServerCapabilities(remove.name)
-                        expect(await serverCapabilitiesPage.DeleteServerCapabilities(remove.invalidName, remove.validationMessage)).toBeFalsy();
+                        expect(await serverCapabilitiesPage.DeleteServerCapabilities(remove.invalidName, remove.validationMessage)).toBe(false);
                         await serverCapabilitiesPage.OpenServerCapabilityPage();
                     });
                 } else {
                     it(remove.description, async () => {
                         await serverCapabilitiesPage.SearchServerCapabilities(remove.name)
-                        expect(await serverCapabilitiesPage.DeleteServerCapabilities(remove.name, remove.validationMessage)).toBeTruthy();
+                        expect(await serverCapabilitiesPage.DeleteServerCapabilities(remove.name, remove.validationMessage)).toBe(true);
                         await serverCapabilitiesPage.OpenServerCapabilityPage();
                     });
                 }

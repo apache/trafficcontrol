@@ -29,36 +29,59 @@ type DeliveryServiceServerResponse struct {
 	Alerts
 }
 
+// DSSMapResponse is the type of the `response` property of a response from
+// Traffic Ops to a PUT request made to the /deliveryserviceserver endpoint of
+// its API.
 type DSSMapResponse struct {
 	DsId    int   `json:"dsId"`
 	Replace bool  `json:"replace"`
 	Servers []int `json:"servers"`
 }
 
+// DSSReplaceResponse is the type of a response from Traffic Ops to a PUT
+// request made to the /deliveryserviceserver endpoint of its API.
 type DSSReplaceResponse struct {
 	Alerts
 	Response DSSMapResponse `json:"response"`
 }
 
+// DSServersResponse is the type of a response from Traffic Ops to a POST
+// request made to the /deliveryservices/{{XML ID}}/servers endpoint of its
+// API.
 type DSServersResponse struct {
 	Response DeliveryServiceServers `json:"response"`
 	Alerts
 }
 
+// DeliveryServiceServers structures represent the servers assigned to a
+// Delivery Service.
 type DeliveryServiceServers struct {
 	ServerNames []string `json:"serverNames"`
 	XmlId       string   `json:"xmlId"`
 }
 
-// DeliveryServiceServer ...
+// DeliveryServiceServer is the type of each entry in the `response` array
+// property of responses from Traffic Ops to GET requests made to the
+// /deliveryserviceservers endpoint of its API.
 type DeliveryServiceServer struct {
 	Server          *int       `json:"server" db:"server"`
 	DeliveryService *int       `json:"deliveryService" db:"deliveryservice"`
 	LastUpdated     *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
+// Filter is a type of unknown purpose - though it appears related to the
+// removed APIv1 endpoints regarding the servers which are assigned to a
+// Delivery Service, not assigned to a Delivery Service, and eligible for
+// assignment to a Delivery Service.
+//
+// Deprecated: This is not used by any known ATC code, and is likely a remnant
+// of legacy behavior that will be removed in the future.
 type Filter int
 
+// Enumerated values of the Filter type.
+//
+// Deprecated: These are not used by any known ATC code, and are likely
+// remnants of legacy behavior that will be removed in the future.
 const (
 	Assigned Filter = iota
 	Unassigned
@@ -159,6 +182,13 @@ type DSServer struct {
 	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
 }
 
+// DSServerResponseV30 is the type of a response from Traffic Ops to a request
+// for servers assigned to a Delivery Service - in API version 3.0.
+type DSServerResponseV30 struct {
+	Response []DSServer `json:"response"`
+	Alerts
+}
+
 // DSServerV4 contains information for a V4.x Delivery Service Server.
 type DSServerV4 struct {
 	DSServerBaseV4
@@ -177,6 +207,8 @@ type DSServerResponseV40 struct {
 // API version 4.
 type DSServerResponseV4 = DSServerResponseV40
 
+// ToDSServerBaseV4 upgrades the DSServerBase to the structure used by the
+// latest minor version of version 4 of Traffic Ops's API.
 func (oldBase DSServerBase) ToDSServerBaseV4() DSServerBaseV4 {
 	var dsServerBaseV4 DSServerBaseV4
 	dsServerBaseV4.Cachegroup = oldBase.Cachegroup
@@ -218,6 +250,8 @@ func (oldBase DSServerBase) ToDSServerBaseV4() DSServerBaseV4 {
 	return dsServerBaseV4
 }
 
+// ToDSServerBase downgrades the DSServerBaseV4 to the structure used by the
+// Traffic Ops API in versions earlier than 4.0.
 func (baseV4 DSServerBaseV4) ToDSServerBase(routerHostName, routerPort *string) DSServerBase {
 	var dsServerBase DSServerBase
 	dsServerBase.Cachegroup = baseV4.Cachegroup

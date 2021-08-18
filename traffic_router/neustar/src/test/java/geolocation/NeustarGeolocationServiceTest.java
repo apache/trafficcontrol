@@ -15,9 +15,9 @@
 
 package geolocation;
 
-import com.comcast.cdn.traffic_control.traffic_router.neustar.NeustarGeolocationService;
-import com.comcast.cdn.traffic_control.traffic_router.neustar.data.NeustarDatabaseUpdater;
-import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
+import org.apache.traffic_control.traffic_router.neustar.NeustarGeolocationService;
+import org.apache.traffic_control.traffic_router.neustar.data.NeustarDatabaseUpdater;
+import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
 import com.maxmind.db.Reader;
 import com.quova.bff.reader.io.GPDatabaseReader;
 import com.quova.bff.reader.model.GeoPointResponse;

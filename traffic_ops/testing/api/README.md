@@ -41,33 +41,24 @@ In order to run the tests you will need the following:
     and here: `traffic-ops-test.conf` 
 
     The Traffic Ops users will be created by the tool for accessing the API once the database is accessible.
-    
-    Note that for the database to successfully set up the tables and run the migrations, you will need `goose`.
-    On your local machines(Macs), DO NOT install `goose` using `homebrew`. It will install a different version
-    `goose`. Instead, install it using the script located at
-    `traffic_ops/install/bin/install_goose.sh`. 
-    To test if `goose` migrated everything correctly, you can run the following command from the `traffic_ops/app`
+
+    Note that for the database to successfully set up the tables and run the migrations, you will the `db/admin` tool.
+    To test if `db/admin` ran all migrations successfully, you can run the following command from the `traffic_ops/app`
     directory:
-    `goose -env=test status "user=traffic_ops dbname=to_test sslmode=disable"`
-    
+    ```shell
+    db/admin -env=test dbversion
+    ```
+
     The result should be something similar to:
     ```
-     goose: status for environment 'test'
-     Applied At                  Migration
-     =======================================
-     Thu Apr  9 21:55:29 2020 -- 20181206000000_create_monitor_snapshots.sql
-     Thu Apr  9 21:55:29 2020 -- 20190219000000_add_consistent_hash_regex.sql
-     Thu Apr  9 21:55:29 2020 -- 20190319000000_add_max_origin_connections.sql
-     Thu Apr  9 21:55:30 2020 -- 20190513000000_add-allowed_query_keys.sql
-     Thu Apr  9 21:55:30 2020 -- 20191004000000_add_server_capabilities.sql
-     Thu Apr  9 21:55:30 2020 -- 20191005000000_add_server_server_capability.sql
-     Thu Apr  9 21:55:30 2020 -- 20191024000000_add_deliveryservices_required_capability.sql
-     Thu Apr  9 21:55:30 2020 -- 20191215000000_add_ecs_enabled.sql
-     Thu Apr  9 21:55:30 2020 -- 20200218000000_add_dns_challenges.sql
-     Thu Apr  9 21:55:30 2020 -- 20200227000000_add_ds_slice_block_size.sql
-     Thu Apr  9 21:55:30 2020 -- 20200313000000_add_server_ip_toggles.sql
-     ```
-    
+    dbversion 2021070800000000
+    ```
+
+    If migrations did not run successfully, you may see:
+    ```
+    dbversion 20181206000000 (dirty)
+    ```
+
     For more info see: http://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html?highlight=reset
 
 3. A running Traffic Ops instance running with the `secure` (https) and is pointing to the `to_test` 

@@ -33,6 +33,7 @@ const (
 	ETagHeader        = "ETag"
 	IfMatch           = "If-Match"
 	IfUnmodifiedSince = "If-Unmodified-Since"
+	Date              = "Date"
 	ETagVersion       = 1
 )
 

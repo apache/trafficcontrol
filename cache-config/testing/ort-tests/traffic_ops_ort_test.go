@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strconv"
 	"testing"
 	"time"
 
@@ -124,7 +123,7 @@ func TestMain(m *testing.M) {
 
 func runCheckRefs(config_file string) error {
 	args := []string{
-		"--log-location-debug=test.log",
+		"--verbose=2",
 		config_file,
 	}
 	cmd := exec.Command("t3c-check-refs", args...)
@@ -143,15 +142,12 @@ func runRequest(host string, getData string) ([]byte, error) {
 	args := []string{
 		"request",
 		"--traffic-ops-insecure=true",
-		"--login-dispersion=0",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
 		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
 		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
 		"--cache-host-name=" + host,
-		"--log-location-error=test.log",
-		"--log-location-info=test.log",
-		"--log-location-debug=test.log",
+		"--verbose=2", // errors, warnings, and info+debug
 		"--get-data=" + getData,
 	}
 	cmd := exec.Command("t3c", args...)
@@ -166,20 +162,16 @@ func runRequest(host string, getData string) ([]byte, error) {
 	return out.Bytes(), nil
 }
 
-func runApply(host string, run_mode string, dispersion time.Duration) error {
+func runApply(host string, run_mode string) error {
 	args := []string{
 		"apply",
 		"--traffic-ops-insecure=true",
-		"--dispersion=" + strconv.FormatInt(int64(dispersion/time.Second), 10),
-		"--login-dispersion=0",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
 		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
 		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
 		"--cache-host-name=" + host,
-		"--log-location-error=test.log",
-		"--log-location-info=test.log",
-		"--log-location-debug=test.log",
+		"-vv",
 		"--omit-via-string-release=true",
 		"--git=no",
 		"--run-mode=" + run_mode,

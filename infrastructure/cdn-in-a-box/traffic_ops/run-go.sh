@@ -121,9 +121,6 @@ done
 
 cd /opt/traffic_ops/app;
 
-# Add admin user -- all other users should be created using the API
-/adduser.pl "$TO_ADMIN_USER" "$TO_ADMIN_PASSWORD" "admin" "root" | psql -v ON_ERROR_STOP=1 -U "$DB_USER" -h "$DB_SERVER" -d "$DB_NAME";
-
 (
 maxtries=10
 for ((tries = 0; tries < maxtries; tries++)); do
@@ -164,11 +161,6 @@ until [[ -f "$ENROLLER_DIR/enroller-started" ]]; do
 	echo "waiting for enroller";
 	sleep 3;
 done
-
-/trafficops-init.sh;
-
-# enroll in the background so traffic_ops_golang can run in foreground
-TO_USER=$TO_ADMIN_USER TO_PASSWORD=$TO_ADMIN_PASSWORD to-enroll $(hostname -s) &
 
 # Add initial data to traffic ops
 /trafficops-init.sh

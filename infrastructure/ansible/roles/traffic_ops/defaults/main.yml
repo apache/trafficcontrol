@@ -32,7 +32,6 @@ to_conf_installdir: "{{ to_app_installdir }}/conf"
 to_install_installdir: "{{ to_base_installdir }}/install"
 to_install_json_installdir: "{{ to_install_installdir }}/data/json"
 to_install_bin_installdir: "{{ to_install_installdir }}/bin"
-to_install_goose_script: "{{ to_install_bin_installdir }}/install_goose.sh"
 
 # URL users should use to reach TO
 to_url: "https://{{ ansible_fqdn }}"

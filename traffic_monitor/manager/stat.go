@@ -83,7 +83,6 @@ func StartStatHistoryManager(
 	precomputedData := map[tc.CacheName]cache.PrecomputedData{}
 
 	lastResults := map[tc.CacheName]cache.Result{}
-	overrideMap := map[tc.CacheName]bool{}
 
 	haveCachesChanged := func() bool {
 		select {
@@ -98,7 +97,7 @@ func StartStatHistoryManager(
 		if haveCachesChanged() {
 			unpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
 		}
-		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates, lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, events, localCacheStatus, overrideMap, combineState, cfg.CachePollingProtocol)
+		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates, lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, events, localCacheStatus, combineState, cfg.CachePollingProtocol)
 	}
 
 	go func() {
@@ -252,7 +251,6 @@ func processStatResults(
 	localStates peer.CRStatesThreadsafe,
 	events health.ThreadsafeEvents,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
-	overrideMap map[tc.CacheName]bool,
 	combineState func(),
 	pollingProtocol config.PollingProtocol,
 ) {
@@ -262,7 +260,6 @@ func processStatResults(
 	combinedStates := combinedStatesThreadsafe.Get()
 	defer func() {
 		for _, r := range results {
-			// log.Debugf("poll %v %v statfinish\n", result.PollID, endTime)
 			r.PollFinished <- r.PollID
 		}
 	}()

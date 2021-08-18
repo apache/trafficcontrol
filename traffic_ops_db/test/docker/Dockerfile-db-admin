@@ -39,12 +39,10 @@ RUN yum install -y \
         rm /$(basename $TRAFFIC_OPS_RPM) && \
     yum clean all
 
-RUN /opt/traffic_ops/install/bin/install_goose.sh
-
 WORKDIR /opt/traffic_ops/app
 
 ADD run-db-test.sh \
-    goose-config.sh \
+    db-config.sh \
     /
 
 COPY initdb.d/ /db_dumps/

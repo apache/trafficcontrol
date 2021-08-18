@@ -25,16 +25,11 @@ import (
 
 const exampleTMConfig = `
 {
-	"cache_health_polling_interval_ms": 120000,
-	"cache_stat_polling_interval_ms": 120000,
 	"monitor_config_polling_interval_ms": 5000,
 	"http_timeout_ms": 30000,
-	"peer_polling_interval_ms": 120000,
 	"peer_optimistic": true,
 	"peer_optimistic_quorum_min": 0,
 	"max_events": 200,
-	"max_stat_history": 5,
-	"max_health_history": 5,
 	"health_flush_interval_ms": 1000,
 	"stat_flush_interval_ms": 1000,
 	"log_location_event": "event.log",
@@ -45,7 +40,6 @@ const exampleTMConfig = `
 	"serve_read_timeout_ms": 10000,
 	"serve_write_timeout_ms": 10000,
 	"stat_buffer_interval_ms": 20000,
-	"http_poll_no_sleep": false,
 	"static_file_dir": "static/"
 }
 `

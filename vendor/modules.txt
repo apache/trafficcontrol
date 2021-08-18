@@ -63,16 +63,30 @@ github.com/go-acme/lego/registration
 ## explicit
 github.com/go-ozzo/ozzo-validation
 github.com/go-ozzo/ozzo-validation/is
-# github.com/go-sql-driver/mysql v1.5.0
-## explicit
 # github.com/gofrs/flock v0.7.2-0.20190320160742-5135e617513b
 ## explicit
 github.com/gofrs/flock
-# github.com/golang/protobuf v1.4.2 => github.com/golang/protobuf v0.0.0-20171021043952-1643683e1b54
+# github.com/golang-migrate/migrate/v4 v4.14.1
+## explicit; go 1.13
+github.com/golang-migrate/migrate/v4
+github.com/golang-migrate/migrate/v4/database
+github.com/golang-migrate/migrate/v4/database/postgres
+github.com/golang-migrate/migrate/v4/internal/url
+github.com/golang-migrate/migrate/v4/source
+github.com/golang-migrate/migrate/v4/source/file
+github.com/golang-migrate/migrate/v4/source/httpfs
+# github.com/golang/protobuf v1.4.3
+## explicit; go 1.9
 github.com/golang/protobuf/proto
 # github.com/google/uuid v1.1.2
 ## explicit
 github.com/google/uuid
+# github.com/hashicorp/errwrap v1.0.0
+## explicit
+github.com/hashicorp/errwrap
+# github.com/hashicorp/go-multierror v1.1.0
+## explicit; go 1.14
+github.com/hashicorp/go-multierror
 # github.com/hydrogen18/stoppableListener v0.0.0-20151210151943-dadc9ccc400c
 ## explicit
 github.com/hydrogen18/stoppableListener
@@ -81,7 +95,7 @@ github.com/hydrogen18/stoppableListener
 github.com/influxdata/influxdb/client/v2
 github.com/influxdata/influxdb/models
 github.com/influxdata/influxdb/pkg/escape
-# github.com/jmoiron/sqlx v0.0.0-20170430194603-d9bd385d68c0
+# github.com/jmoiron/sqlx v1.2.0
 ## explicit
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
@@ -92,7 +106,7 @@ github.com/json-iterator/go
 ## explicit
 github.com/kelseyhightower/envconfig
 # github.com/kylelemons/godebug v1.1.1-0.20201107061927-e693023230a4
-## explicit
+## explicit; go 1.11
 github.com/kylelemons/godebug/diff
 # github.com/lestrrat-go/jwx v0.9.1-0.20190702045520-e35178ac2b1f
 ## explicit
@@ -106,12 +120,13 @@ github.com/lestrrat/go-jwx/buffer
 github.com/lestrrat/go-jwx/internal/emap
 github.com/lestrrat/go-jwx/jwa
 github.com/lestrrat/go-jwx/jwk
-# github.com/lib/pq v0.0.0-20170707053602-dd1fe2071026
-## explicit
+# github.com/lib/pq v1.8.0
+## explicit; go 1.13
 github.com/lib/pq
 github.com/lib/pq/oid
+github.com/lib/pq/scram
 # github.com/mattn/go-sqlite3 v1.14.5
-## explicit
+## explicit; go 1.10
 # github.com/miekg/dns v1.0.6-0.20180406150955-01d59357d468
 ## explicit
 github.com/miekg/dns
@@ -122,16 +137,14 @@ github.com/modern-go/concurrent
 ## explicit
 github.com/modern-go/reflect2
 # github.com/nxadm/tail v1.4.4
+## explicit; go 1.13
 github.com/nxadm/tail
 github.com/nxadm/tail/ratelimiter
 github.com/nxadm/tail/util
 github.com/nxadm/tail/watch
 github.com/nxadm/tail/winfile
-# github.com/ogier/pflag v0.0.2-0.20201025181535-73e519546fc0
-## explicit
-github.com/ogier/pflag
 # github.com/onsi/ginkgo v1.14.2
-## explicit
+## explicit; go 1.13
 github.com/onsi/ginkgo
 github.com/onsi/ginkgo/config
 github.com/onsi/ginkgo/internal/codelocation
@@ -152,7 +165,7 @@ github.com/onsi/ginkgo/reporters/stenographer/support/go-colorable
 github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty
 github.com/onsi/ginkgo/types
 # github.com/onsi/gomega v1.10.3
-## explicit
+## explicit; go 1.14
 github.com/onsi/gomega
 github.com/onsi/gomega/format
 github.com/onsi/gomega/internal/assertion
@@ -166,25 +179,25 @@ github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
 github.com/onsi/gomega/types
 # github.com/pborman/getopt/v2 v2.1.0
-## explicit
+## explicit; go 1.13
 github.com/pborman/getopt/v2
-# github.com/pkg/errors v0.8.2-0.20190227000051-27936f6d90f9
+# github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
 # github.com/stretchr/testify v1.6.1
-## explicit
+## explicit; go 1.13
 # go.etcd.io/bbolt v1.3.5
-## explicit
+## explicit; go 1.12
 go.etcd.io/bbolt
-# golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf
-## explicit
+# golang.org/x/crypto v0.0.0-20210813211128-0a44fdfbc16e
+## explicit; go 1.17
 golang.org/x/crypto/ed25519
 golang.org/x/crypto/ed25519/internal/edwards25519
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
-# golang.org/x/net v0.0.0-20210505214959-0714010a04ed
-## explicit
+# golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
+## explicit; go 1.17
 golang.org/x/net/bpf
 golang.org/x/net/html
 golang.org/x/net/html/atom
@@ -198,13 +211,13 @@ golang.org/x/net/internal/socket
 golang.org/x/net/ipv4
 golang.org/x/net/ipv6
 golang.org/x/net/publicsuffix
-# golang.org/x/sys v0.0.0-20210503173754-0981d6026fa6
-## explicit
+# golang.org/x/sys v0.0.0-20210816183151-1e6c022a8912
+## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.3.6
-## explicit
+# golang.org/x/text v0.3.7
+## explicit; go 1.17
 golang.org/x/text/encoding
 golang.org/x/text/encoding/charmap
 golang.org/x/text/encoding/htmlindex
@@ -226,9 +239,37 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
-## explicit
+## explicit; go 1.11
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
+# google.golang.org/protobuf v1.25.0
+## explicit; go 1.9
+google.golang.org/protobuf/encoding/prototext
+google.golang.org/protobuf/encoding/protowire
+google.golang.org/protobuf/internal/descfmt
+google.golang.org/protobuf/internal/descopts
+google.golang.org/protobuf/internal/detrand
+google.golang.org/protobuf/internal/encoding/defval
+google.golang.org/protobuf/internal/encoding/messageset
+google.golang.org/protobuf/internal/encoding/tag
+google.golang.org/protobuf/internal/encoding/text
+google.golang.org/protobuf/internal/errors
+google.golang.org/protobuf/internal/fieldsort
+google.golang.org/protobuf/internal/filedesc
+google.golang.org/protobuf/internal/filetype
+google.golang.org/protobuf/internal/flags
+google.golang.org/protobuf/internal/genid
+google.golang.org/protobuf/internal/impl
+google.golang.org/protobuf/internal/mapsort
+google.golang.org/protobuf/internal/pragma
+google.golang.org/protobuf/internal/set
+google.golang.org/protobuf/internal/strs
+google.golang.org/protobuf/internal/version
+google.golang.org/protobuf/proto
+google.golang.org/protobuf/reflect/protoreflect
+google.golang.org/protobuf/reflect/protoregistry
+google.golang.org/protobuf/runtime/protoiface
+google.golang.org/protobuf/runtime/protoimpl
 # gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 ## explicit
 gopkg.in/DATA-DOG/go-sqlmock.v1
@@ -244,7 +285,9 @@ gopkg.in/square/go-jose.v2
 gopkg.in/square/go-jose.v2/cipher
 gopkg.in/square/go-jose.v2/json
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
+## explicit
 gopkg.in/tomb.v1
-# gopkg.in/yaml.v2 v2.3.0 => gopkg.in/yaml.v2 v2.2.1
+# gopkg.in/yaml.v2 v2.3.0 => gopkg.in/yaml.v2 v2.2.8
 ## explicit
 gopkg.in/yaml.v2
+# github.com/golang/protobuf v1.4.2 => github.com/golang/protobuf v0.0.0-20171021043952-1643683e1b54

@@ -115,8 +115,11 @@ func MakeSSLServerNameYAML(
 	cacheGroupArr []tc.CacheGroupNullable,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
-	opt SSLServerNameYAMLOpts,
+	opt *SSLServerNameYAMLOpts,
 ) (Cfg, error) {
+	if opt == nil {
+		opt = &SSLServerNameYAMLOpts{}
+	}
 	if len(opt.DefaultTLSVersions) == 0 {
 		opt.DefaultTLSVersions = DefaultDefaultTLSVersions
 	}
@@ -264,6 +267,18 @@ func GetServerSSLData(
 		enableH2 := defaultEnableH2
 		tlsVersions := defaultTLSVersions
 
+		dsTLSVersions := []TLSVersion{}
+		for _, tlsVersion := range ds.TLSVersions {
+			if _, ok := tlsVersionsToATS[TLSVersion(tlsVersion)]; !ok {
+				warnings = append(warnings, "ds '"+*ds.XMLID+"' had unknown TLS Version '"+tlsVersion+"' - ignoring!")
+				continue
+			}
+			dsTLSVersions = append(dsTLSVersions, TLSVersion(tlsVersion))
+		}
+		if len(dsTLSVersions) > 0 {
+			tlsVersions = dsTLSVersions
+		}
+
 		paramValEnableH2 := dsParentConfigParams[SSLServerNameYAMLParamEnableH2]
 		paramValEnableH2 = strings.TrimSpace(paramValEnableH2)
 		paramValEnableH2 = strings.ToLower(paramValEnableH2)
@@ -300,6 +315,10 @@ func GetServerSSLData(
 			}
 		}
 
+		// let Parameters override the Delivery Service field, for backward-compatibility,
+		// and also because this lets tenants who own multiple DSes set them all in a single
+		// place, instead of duplicating for every DS (which will be even more de-duplicated
+		// when Layered Profiles are implemented)
 		if len(paramTLSVersions) != 0 {
 			tlsVersions = paramTLSVersions
 		}

@@ -157,6 +157,11 @@ func randInt64() *int64 {
 	return &i
 }
 
+func randUint64() *uint64 {
+	i := uint64(rand.Int63())
+	return &i
+}
+
 func randFloat64() *float64 {
 	f := rand.Float64()
 	return &f
@@ -273,22 +278,23 @@ func randServer() *atscfg.Server {
 	sv.ILOPassword = randStr()
 	sv.ILOUsername = randStr()
 
-	sv.Interfaces = []tc.ServerInterfaceInfo{
-		tc.ServerInterfaceInfo{
-			Name: *randStr(),
-			IPAddresses: []tc.ServerIPAddress{
-				tc.ServerIPAddress{
-					Address:        *randStr(),
-					Gateway:        randStr(),
-					ServiceAddress: true,
-				},
-				tc.ServerIPAddress{
-					Address:        *randStr(),
-					Gateway:        randStr(),
-					ServiceAddress: true,
-				},
+	sv.Interfaces = []tc.ServerInterfaceInfoV40{}
+	{
+		ssi := tc.ServerInterfaceInfoV40{}
+		ssi.Name = *randStr()
+		ssi.IPAddresses = []tc.ServerIPAddress{
+			tc.ServerIPAddress{
+				Address:        *randStr(),
+				Gateway:        randStr(),
+				ServiceAddress: true,
 			},
-		},
+			tc.ServerIPAddress{
+				Address:        *randStr(),
+				Gateway:        randStr(),
+				ServiceAddress: true,
+			},
+		}
+		sv.Interfaces = append(sv.Interfaces, ssi)
 	}
 
 	sv.LastUpdated = &tc.TimeNoMod{Time: time.Now()}
@@ -345,15 +351,16 @@ func randParam() *tc.Parameter {
 	}
 }
 
-func randJob() *tc.Job {
-	return &tc.Job{
-		Parameters:      *randStr(),
-		Keyword:         *randStr(),
-		AssetURL:        *randStr(),
-		CreatedBy:       *randStr(),
-		StartTime:       *randStr(),
-		ID:              *randInt64(),
-		DeliveryService: *randStr(),
+func randJob() *tc.InvalidationJob {
+	now := &tc.Time{Time: time.Now(), Valid: true}
+	return &tc.InvalidationJob{
+		Parameters:      randStr(),
+		Keyword:         randStr(),
+		AssetURL:        randStr(),
+		CreatedBy:       randStr(),
+		StartTime:       now,
+		ID:              randUint64(),
+		DeliveryService: randStr(),
 	}
 }
 
@@ -459,7 +466,7 @@ func MakeFakeTOData() *t3cutil.ConfigData {
 			*randParam(),
 			*randParam(),
 		},
-		CacheKeyParams: []tc.Parameter{
+		RemapConfigParams: []tc.Parameter{
 			*randParam(),
 			*randParam(),
 			*randParam(),
@@ -479,7 +486,7 @@ func MakeFakeTOData() *t3cutil.ConfigData {
 		},
 		DeliveryServiceServers: dss,
 		Server:                 sv0,
-		Jobs: []tc.Job{
+		Jobs: []tc.InvalidationJob{
 			*randJob(),
 			*randJob(),
 		},

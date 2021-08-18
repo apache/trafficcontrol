@@ -178,6 +178,8 @@ func (user *TOUser) Create() (error, error, int) {
 func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
+	var query string
+
 	inf := this.APIInfo()
 	api.DefaultSort(inf, "username")
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, this.ParamColumns())
@@ -201,7 +203,20 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 	} else {
 		log.Debugln("Non IMS request")
 	}
-	query := this.SelectQuery() + where + orderBy + pagination
+
+	groupBy := "\n" + `GROUP BY u.id, r.name, t.name`
+	orderBy = groupBy + orderBy
+
+	version := inf.Version
+	if version == nil {
+		return nil, nil, fmt.Errorf("TOUsers.Read called with invalid API version"), http.StatusInternalServerError, nil
+	}
+	if version.Major >= 4 {
+		query = this.SelectQuery40() + where + orderBy + pagination
+	} else {
+		query = this.SelectQuery() + where + orderBy + pagination
+	}
+
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, fmt.Errorf("querying users : %v", err), http.StatusInternalServerError, nil
@@ -212,14 +227,27 @@ func (this *TOUser) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 		RoleName *string `json:"rolename" db:"rolename"`
 		tc.User
 	}
+	type UserGet40 struct {
+		UserGet
+		ChangeLogCount    *int       `json:"changeLogCount" db:"change_log_count"`
+		LastAuthenticated *time.Time `json:"lastAuthenticated" db:"last_authenticated"`
+	}
 
 	user := &UserGet{}
+	user40 := &UserGet40{}
 	users := []interface{}{}
 	for rows.Next() {
-		if err = rows.StructScan(user); err != nil {
-			return nil, nil, fmt.Errorf("parsing user rows: %v", err), http.StatusInternalServerError, nil
+		if version.Major >= 4 {
+			if err = rows.StructScan(user40); err != nil {
+				return nil, nil, fmt.Errorf("parsing user rows: %v", err), http.StatusInternalServerError, nil
+			}
+			users = append(users, *user40)
+		} else {
+			if err = rows.StructScan(user); err != nil {
+				return nil, nil, fmt.Errorf("parsing user rows: %v", err), http.StatusInternalServerError, nil
+			}
+			users = append(users, *user)
 		}
-		users = append(users, *user)
 	}
 
 	return users, nil, nil, http.StatusOK, &maxTime
@@ -376,6 +404,36 @@ func (user *TOUser) SelectQuery() string {
 	u.tenant_id,
 	t.name as tenant,
 	u.last_updated
+	FROM tm_user u
+	LEFT JOIN tenant t ON u.tenant_id = t.id
+	LEFT JOIN role r ON u.role = r.id`
+}
+
+func (user *TOUser) SelectQuery40() string {
+	return `
+	SELECT
+	u.id,
+	u.username as username,
+	u.public_ssh_key,
+	u.role,
+	r.name as rolename,
+	u.company,
+	u.email,
+	u.full_name,
+	u.new_user,
+	u.address_line1,
+	u.address_line2,
+	u.city,
+	u.state_or_province,
+	u.phone_number,
+	u.postal_code,
+	u.country,
+	u.registration_sent,
+	u.tenant_id,
+	t.name as tenant,
+	u.last_updated,
+	u.last_authenticated,
+	(SELECT count(l.tm_user) FROM log as l WHERE l.tm_user = u.id) as change_log_count
 	FROM tm_user u
 	LEFT JOIN tenant t ON u.tenant_id = t.id
 	LEFT JOIN role r ON u.role = r.id`

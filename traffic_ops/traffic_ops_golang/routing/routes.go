@@ -30,7 +30,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/acme"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -60,7 +59,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/division"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federation_resolvers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federations"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/hwinfo"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/invalidationjobs"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/iso"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/login"
@@ -74,7 +72,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/profileparameter"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/region"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/role"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/server"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercapability"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercheck"
@@ -182,12 +179,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `cachegroups/{id}/queue_update$`, cachegroup.QueueUpdates, auth.PrivLevelOperations, Authenticated, nil, 40716441103},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `cachegroups/{id}/deliveryservices/?$`, cachegroup.DSPostHandlerV40, auth.PrivLevelOperations, Authenticated, nil, 45202404313},
 
-		//CacheGroup Parameters: CRUD
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cachegroupparameters/?$`, cachegroupparameter.ReadAllCacheGroupParameters, auth.PrivLevelReadOnly, Authenticated, nil, 4124497243},
-		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `cachegroupparameters/?$`, cachegroupparameter.AddCacheGroupParameters, auth.PrivLevelOperations, Authenticated, nil, 4124497253},
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cachegroups/{id}/parameters/?$`, api.ReadHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 4124497233},
-		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `cachegroupparameters/{cachegroupID}/{parameterId}$`, api.DeleteHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelOperations, Authenticated, nil, 4124497333},
-
 		//Capabilities
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `capabilities/?$`, capabilities.Read, auth.PrivLevelReadOnly, Authenticated, nil, 40081353},
 
@@ -211,7 +202,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `cdns/name/{name}/dnsseckeys?$`, cdn.DeleteDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil, 4711042073},
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdns/name/{name}/dnsseckeys/?$`, cdn.GetDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil, 4790106093},
 
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdns/dnsseckeys/refresh/?$`, cdn.RefreshDNSSECKeys, auth.PrivLevelOperations, Authenticated, nil, 47719971163},
+		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `cdns/dnsseckeys/refresh/?$`, cdn.RefreshDNSSECKeysV4, auth.PrivLevelOperations, Authenticated, nil, 47719971163},
 
 		//CDN: Monitoring: Traffic Monitor
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdns/{cdn}/configs/monitoring?$`, crconfig.SnapshotGetMonitoringHandler, auth.PrivLevelReadOnly, Authenticated, nil, 42408478923},
@@ -273,7 +264,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Profile: CRUD
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `profiles/?$`, api.ReadHandler(&profile.TOProfile{}), auth.PrivLevelReadOnly, Authenticated, nil, 4687585893},
-
 		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `profiles/{id}$`, api.UpdateHandler(&profile.TOProfile{}), auth.PrivLevelOperations, Authenticated, nil, 484391723},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `profiles/?$`, api.CreateHandler(&profile.TOProfile{}), auth.PrivLevelOperations, Authenticated, nil, 45402115563},
 		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `profiles/{id}$`, api.DeleteHandler(&profile.TOProfile{}), auth.PrivLevelOperations, Authenticated, nil, 42055944653},
@@ -299,7 +289,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// get all edge servers associated with a delivery service (from deliveryservice_server table)
 
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `deliveryserviceserver/?$`, dsserver.ReadDSSHandlerV14, auth.PrivLevelReadOnly, Authenticated, nil, 49461450333},
+		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `deliveryserviceserver/?$`, dsserver.ReadDSSHandler, auth.PrivLevelReadOnly, Authenticated, nil, 49461450333},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `deliveryserviceserver$`, dsserver.GetReplaceHandler, auth.PrivLevelOperations, Authenticated, nil, 4297997883},
 		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `deliveryserviceserver/{dsid}/{serverid}`, dsserver.Delete, auth.PrivLevelOperations, Authenticated, nil, 45321845233},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler, auth.PrivLevelOperations, Authenticated, nil, 44281812063},
@@ -580,8 +570,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//CacheGroup Parameters: CRUD
 		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `cachegroupparameters/?$`, cachegroupparameter.ReadAllCacheGroupParameters, auth.PrivLevelReadOnly, Authenticated, nil, 2124497243},
 		{api.Version{Major: 3, Minor: 0}, http.MethodPost, `cachegroupparameters/?$`, cachegroupparameter.AddCacheGroupParameters, auth.PrivLevelOperations, Authenticated, nil, 2124497253},
-		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `cachegroups/{id}/parameters/?$`, api.ReadHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 2124497233},
-		{api.Version{Major: 3, Minor: 0}, http.MethodDelete, `cachegroupparameters/{cachegroupID}/{parameterId}$`, api.DeleteHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelOperations, Authenticated, nil, 2124497333},
+		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `cachegroups/{id}/parameters/?$`, api.DeprecatedReadHandler(&cachegroupparameter.TOCacheGroupParameter{}, nil), auth.PrivLevelReadOnly, Authenticated, nil, 2124497233},
+		{api.Version{Major: 3, Minor: 0}, http.MethodDelete, `cachegroupparameters/{cachegroupID}/{parameterId}$`, api.DeprecatedDeleteHandler(&cachegroupparameter.TOCacheGroupParameter{}, nil), auth.PrivLevelOperations, Authenticated, nil, 2124497333},
 
 		//Capabilities
 		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `capabilities/?$`, capabilities.Read, auth.PrivLevelReadOnly, Authenticated, nil, 20081353},
@@ -694,7 +684,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// get all edge servers associated with a delivery service (from deliveryservice_server table)
 
-		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `deliveryserviceserver/?$`, dsserver.ReadDSSHandlerV14, auth.PrivLevelReadOnly, Authenticated, nil, 29461450333},
+		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `deliveryserviceserver/?$`, dsserver.ReadDSSHandler, auth.PrivLevelReadOnly, Authenticated, nil, 29461450333},
 		{api.Version{Major: 3, Minor: 0}, http.MethodPost, `deliveryserviceserver$`, dsserver.GetReplaceHandler, auth.PrivLevelOperations, Authenticated, nil, 2297997883},
 		{api.Version{Major: 3, Minor: 0}, http.MethodDelete, `deliveryserviceserver/{dsid}/{serverid}`, dsserver.Delete, auth.PrivLevelOperations, Authenticated, nil, 25321845233},
 		{api.Version{Major: 3, Minor: 0}, http.MethodPost, `deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler, auth.PrivLevelOperations, Authenticated, nil, 24281812063},
@@ -957,8 +947,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//CacheGroup Parameters: CRUD
 		{api.Version{Major: 2, Minor: 0}, http.MethodGet, `cachegroupparameters/?$`, cachegroupparameter.ReadAllCacheGroupParameters, auth.PrivLevelReadOnly, Authenticated, nil, 212449724},
 		{api.Version{Major: 2, Minor: 0}, http.MethodPost, `cachegroupparameters/?$`, cachegroupparameter.AddCacheGroupParameters, auth.PrivLevelOperations, Authenticated, nil, 212449725},
-		{api.Version{Major: 2, Minor: 0}, http.MethodGet, `cachegroups/{id}/parameters/?$`, api.ReadHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 212449723},
-		{api.Version{Major: 2, Minor: 0}, http.MethodDelete, `cachegroupparameters/{cachegroupID}/{parameterId}$`, api.DeleteHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelOperations, Authenticated, nil, 212449733},
+		{api.Version{Major: 2, Minor: 0}, http.MethodGet, `cachegroups/{id}/parameters/?$`, api.DeprecatedReadHandler(&cachegroupparameter.TOCacheGroupParameter{}, nil), auth.PrivLevelReadOnly, Authenticated, nil, 212449723},
+		{api.Version{Major: 2, Minor: 0}, http.MethodDelete, `cachegroupparameters/{cachegroupID}/{parameterId}$`, api.DeprecatedDeleteHandler(&cachegroupparameter.TOCacheGroupParameter{}, nil), auth.PrivLevelOperations, Authenticated, nil, 212449733},
 
 		//Capabilities
 		{api.Version{Major: 2, Minor: 0}, http.MethodGet, `capabilities/?$`, capabilities.Read, auth.PrivLevelReadOnly, Authenticated, nil, 2008135},
@@ -1064,7 +1054,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// get all edge servers associated with a delivery service (from deliveryservice_server table)
 
-		{api.Version{Major: 2, Minor: 0}, http.MethodGet, `deliveryserviceserver/?$`, dsserver.ReadDSSHandlerV14, auth.PrivLevelReadOnly, Authenticated, nil, 2946145033},
+		{api.Version{Major: 2, Minor: 0}, http.MethodGet, `deliveryserviceserver/?$`, dsserver.ReadDSSHandler, auth.PrivLevelReadOnly, Authenticated, nil, 2946145033},
 		{api.Version{Major: 2, Minor: 0}, http.MethodPost, `deliveryserviceserver$`, dsserver.GetReplaceHandler, auth.PrivLevelOperations, Authenticated, nil, 229799788},
 		{api.Version{Major: 2, Minor: 0}, http.MethodDelete, `deliveryserviceserver/{dsid}/{serverid}`, dsserver.Delete, auth.PrivLevelOperations, Authenticated, nil, 2532184523},
 		{api.Version{Major: 2, Minor: 0}, http.MethodPost, `deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler, auth.PrivLevelOperations, Authenticated, nil, 2428181206},
@@ -1285,471 +1275,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// Plugins
 		{api.Version{Major: 2, Minor: 0}, http.MethodGet, `plugins/?$`, plugins.Get(d.Plugins), auth.PrivLevelReadOnly, Authenticated, nil, 283498539},
-
-		// API 1.x routes will be deprecated.  Please add all new routes to 2.x.
-		// API Capability
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `api_capabilities/?(\.json)?$`, apicapability.GetAPICapabilitiesHandler, auth.PrivLevelReadOnly, Authenticated, nil, 1813206589},
-
-		//ASN: CRUD
-		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `asns/?(\.json)?$`, api.ReadHandler(&asn.TOASNV11{}), auth.PrivLevelReadOnly, Authenticated, nil, 473877722},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `asns/?(\.json)?$`, asn.V11ReadAll, auth.PrivLevelReadOnly, Authenticated, nil, 570341929},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `asns/{id}$`, api.DeprecatedReadHandler(&asn.TOASNV11{}, util.StrPtr("GET /asns")), auth.PrivLevelReadOnly, Authenticated, nil, 123008984},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `asns/{id}$`, api.UpdateHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, Authenticated, nil, 1951198629},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `asns/?$`, api.CreateHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, Authenticated, nil, 1999492188},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `asns/{id}$`, api.DeleteHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, Authenticated, nil, 1672524769},
-
-		// Traffic Stats access
-		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `deliveryservice_stats`, trafficstats.GetDSStats, auth.PrivLevelReadOnly, Authenticated, nil, 1319569028},
-		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `cache_stats`, trafficstats.GetCacheStats, auth.PrivLevelReadOnly, Authenticated, nil, 1497997906},
-		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `current_stats/?(\.json)?$`, trafficstats.GetCurrentStats, auth.PrivLevelReadOnly, Authenticated, nil, 1785442893},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `caches/stats/?(\.json)?$`, cachesstats.Get, auth.PrivLevelReadOnly, Authenticated, nil, 1813206588},
-
-		//CacheGroup: CRUD
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cachegroups/trimmed/?(\.json)?$`, cachegroup.GetTrimmed, auth.PrivLevelReadOnly, Authenticated, nil, 329527916},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cachegroups/?(\.json)?$`, api.ReadHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelReadOnly, Authenticated, nil, 123079110},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cachegroups/{id}$`, api.DeprecatedReadHandler(&cachegroup.TOCacheGroup{}, util.StrPtr("GET /cachegroups with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 691886338},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `cachegroups/{id}$`, api.UpdateHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 112954546},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `cachegroups/?$`, api.CreateHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 32982665},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `cachegroups/{id}$`, api.DeleteHandler(&cachegroup.TOCacheGroup{}), auth.PrivLevelOperations, Authenticated, nil, 257869365},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `cachegroups/{id}/queue_update$`, cachegroup.QueueUpdates, auth.PrivLevelOperations, Authenticated, nil, 1071644110},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `cachegroups/{id}/deliveryservices/?$`, cachegroup.DSPostHandlerV31, auth.PrivLevelOperations, Authenticated, nil, 1520240431},
-
-		//CacheGroup Parameters: CRUD
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cachegroupparameters/?(\.json)?$`, cachegroupparameter.ReadAllCacheGroupParameters, auth.PrivLevelReadOnly, Authenticated, nil, 912449724},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `cachegroupparameters/?(\.json)?$`, cachegroupparameter.AddCacheGroupParameters, auth.PrivLevelOperations, Authenticated, nil, 912449725},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cachegroups/{id}/parameters/?(\.json)?$`, api.ReadHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 912449723},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cachegroups/{id}/unassigned_parameters/?(\.json)?$`, api.DeprecatedReadHandler(&cachegroupparameter.TOCacheGroupUnassignedParameter{}, util.StrPtr("GET /cachegroupparameters & GET /parameters")), auth.PrivLevelReadOnly, Authenticated, nil, 1457339250},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `cachegroupparameters/{cachegroupID}/{parameterId}$`, api.DeleteHandler(&cachegroupparameter.TOCacheGroupParameter{}), auth.PrivLevelOperations, Authenticated, nil, 912449733},
-
-		//Capabilities
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `capabilities(/|\.json)?$`, capabilities.Read, auth.PrivLevelReadOnly, Authenticated, nil, 8008135},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `capabilities(/|\.json)?$`, capabilities.Create, auth.PrivLevelOperations, Authenticated, nil, -1},
-
-		//CDN
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/name/{name}/sslkeys/?(\.json)?$`, cdn.GetSSLKeys, auth.PrivLevelAdmin, Authenticated, nil, 1278581772},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/metric_types`, notImplementedHandler, 0, NoAuth, nil, 683165463}, // MUST NOT end in $, because the 1.x route is longer
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/capacity$`, cdn.GetCapacity, auth.PrivLevelReadOnly, Authenticated, nil, 697185281},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/configs/?(\.json)?$`, api.DeprecatedReadHandler(&cdn.TOCDNConf{}, util.StrPtr("GET /cdns")), auth.PrivLevelReadOnly, Authenticated, nil, 1768437852},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{name}/health/?(\.json)?$`, cdn.GetNameHealth, auth.PrivLevelReadOnly, Authenticated, nil, 1135348194},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/health/?(\.json)?$`, cdn.GetHealth, auth.PrivLevelReadOnly, Authenticated, nil, 1085381134},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/domains/?(\.json)?$`, cdn.DomainsHandler, auth.PrivLevelReadOnly, Authenticated, nil, 296902560},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/routing$`, crstats.GetCDNRouting, auth.PrivLevelReadOnly, Authenticated, nil, 66722982},
-
-		//CDN: CRUD
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/name/{name}/?(\.json)?$`, api.DeprecatedReadHandler(&cdn.TOCDN{}, util.StrPtr("GET /cdns with query parameter name")), auth.PrivLevelReadOnly, Authenticated, nil, 2135233288},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `cdns/name/{name}$`, cdn.DeleteName, auth.PrivLevelOperations, Authenticated, nil, 408804959},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/?(\.json)?$`, api.ReadHandler(&cdn.TOCDN{}), auth.PrivLevelReadOnly, Authenticated, nil, 1345914650},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{id}$`, api.DeprecatedReadHandler(&cdn.TOCDN{}, util.StrPtr("GET /cdns with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 2122954075},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `cdns/{id}$`, api.UpdateHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 549326357},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `cdns/?$`, api.CreateHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 24013912},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `cdns/{id}$`, api.DeleteHandler(&cdn.TOCDN{}), auth.PrivLevelOperations, Authenticated, nil, 1595587002},
-
-		//CDN: queue updates
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `cdns/{id}/queue_update$`, cdn.Queue, auth.PrivLevelOperations, Authenticated, nil, 271515980},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `cdns/dnsseckeys/generate(\.json)?$`, cdn.CreateDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil, 675336},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/name/{name}/dnsseckeys/delete/?(\.json)?$`, cdn.DeleteDNSSECKeysDeprecated, auth.PrivLevelAdmin, Authenticated, nil, 571104207},
-		{api.Version{Major: 1, Minor: 4}, http.MethodGet, `cdns/name/{name}/dnsseckeys/?(\.json)?$`, cdn.GetDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil, 479010609},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/name/{name}/dnsseckeys/?(\.json)?$`, cdn.GetDNSSECKeysV11, auth.PrivLevelAdmin, Authenticated, nil, 1427173311},
-
-		{api.Version{Major: 1, Minor: 4}, http.MethodGet, `cdns/dnsseckeys/refresh/?(\.json)?$`, cdn.RefreshDNSSECKeys, auth.PrivLevelOperations, Authenticated, nil, 1771997116},
-
-		//CDN: Monitoring: Traffic Monitor
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{cdn}/configs/monitoring(\.json)?$`, crconfig.SnapshotGetMonitoringLegacyHandler, auth.PrivLevelReadOnly, Authenticated, nil, 2140847892},
-
-		//Database dumps
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `dbdump/?`, dbdump.DBDump, auth.PrivLevelAdmin, Authenticated, nil, 274016647},
-
-		//Division: CRUD
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `divisions/?(\.json)?$`, api.ReadHandler(&division.TODivision{}), auth.PrivLevelReadOnly, Authenticated, nil, 1085181534},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `divisions/{id}$`, api.DeprecatedReadHandler(&division.TODivision{}, util.StrPtr("GET /divisions with the 'id' parameter")), auth.PrivLevelReadOnly, Authenticated, nil, 1241497902},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `divisions/{id}$`, api.UpdateHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 306369140},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `divisions/?$`, api.CreateHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 553713800},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `divisions/{id}$`, api.DeleteHandler(&division.TODivision{}), auth.PrivLevelOperations, Authenticated, nil, 1325382237},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `divisions/name/{name}/?(\.json)?$`, api.DeprecatedReadHandler(&division.TODivision{}, util.StrPtr("GET /divisions with the 'name' parameter")), auth.PrivLevelReadOnly, Authenticated, nil, 1211408769},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `logs/?(\.json)?$`, logs.Get, auth.PrivLevelReadOnly, Authenticated, nil, 848340550},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `logs/{days}/days/?(\.json)?$`, logs.GetDeprecated, auth.PrivLevelReadOnly, Authenticated, nil, 1192414145},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `logs/newcount/?(\.json)?$`, logs.GetNewCount, auth.PrivLevelReadOnly, Authenticated, nil, 1405833012},
-
-		//HWInfo
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `hwinfo/?(\.json)?$`, hwinfo.Get, auth.PrivLevelReadOnly, Authenticated, nil, 621685998},
-
-		//Content invalidation jobs
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `jobs(/|\.json/?)?$`, api.ReadHandler(&invalidationjobs.InvalidationJob{}), auth.PrivLevelReadOnly, Authenticated, nil, 1966782041},
-		{api.Version{Major: 1, Minor: 4}, http.MethodDelete, `jobs/?$`, invalidationjobs.Delete, auth.PrivLevelPortal, Authenticated, nil, 616780776},
-		{api.Version{Major: 1, Minor: 4}, http.MethodPut, `jobs/?$`, invalidationjobs.Update, auth.PrivLevelPortal, Authenticated, nil, 186134226},
-		{api.Version{Major: 1, Minor: 4}, http.MethodPost, `jobs/?`, invalidationjobs.Create, auth.PrivLevelPortal, Authenticated, nil, 80450955},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `jobs/{id}(/|\.json/?)?$`, api.DeprecatedReadHandler(&invalidationjobs.InvalidationJob{}, util.StrPtr("GET /jobs with the 'id' parameter")), auth.PrivLevelReadOnly, Authenticated, nil, 2085189426},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `user/current/jobs(/|\.json/?)?$`, invalidationjobs.CreateUserJob, auth.PrivLevelPortal, Authenticated, nil, 611328688},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `user/current/jobs(/|\.json/?)?$`, invalidationjobs.GetUserJobs, auth.PrivLevelReadOnly, Authenticated, nil, 349163540},
-
-		//Login
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `users/{id}/deliveryservices/?(\.json)?$`, user.GetDSes, auth.PrivLevelReadOnly, Authenticated, nil, 988787789},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `user/{id}/deliveryservices/available/?(\.json)?$`, user.GetAvailableDSes, auth.PrivLevelReadOnly, Authenticated, nil, 757082995},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `user/login/?$`, login.LoginHandler(d.DB, d.Config), 0, NoAuth, nil, 1392670821},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `user/logout(/|\.json)?$`, login.LogoutHandler(d.Config.Secrets[0]), 0, Authenticated, nil, 443434825},
-		{api.Version{Major: 1, Minor: 4}, http.MethodPost, `user/login/oauth/?$`, login.OauthLoginHandler(d.DB, d.Config), 0, NoAuth, nil, 1415886009},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `user/login/token(/|\.json)?$`, login.TokenLoginHandler(d.DB, d.Config), 0, NoAuth, nil, 402408841},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `user/reset_password(/|\.json)?$`, login.ResetPassword(d.DB, d.Config), 0, NoAuth, nil, 2092914630},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `users/register(/|\.json)?$`, login.RegisterUser, auth.PrivLevelOperations, Authenticated, nil, 1337},
-
-		//ISO
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `osversions(/|\.json)?$`, iso.GetOSVersions, auth.PrivLevelReadOnly, Authenticated, nil, 576088657},
-
-		//User: CRUD
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `users/?(\.json)?$`, api.ReadHandler(&user.TOUser{}), auth.PrivLevelReadOnly, Authenticated, nil, 1491929900},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `users/{id}$`, api.ReadHandler(&user.TOUser{}), auth.PrivLevelReadOnly, Authenticated, nil, 713809980},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `users/{id}$`, api.UpdateHandler(&user.TOUser{}), auth.PrivLevelOperations, Authenticated, nil, 135433404},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `users/?(\.json)?$`, api.CreateHandler(&user.TOUser{}), auth.PrivLevelOperations, Authenticated, nil, 876244816},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `user/current/?(\.json)?$`, user.Current, auth.PrivLevelReadOnly, Authenticated, nil, 1610701614},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `user/current(/|\.json)?$`, user.ReplaceCurrent, auth.PrivLevelReadOnly, Authenticated, nil, 420},
-
-		//Parameter: CRUD
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `parameters/?(\.json)?$`, api.ReadHandler(&parameter.TOParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 2012554292},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `parameters/{id}$`, api.DeprecatedReadHandler(&parameter.TOParameter{}, util.StrPtr("GET /parameters with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 1221666841},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `parameters/{id}$`, api.UpdateHandler(&parameter.TOParameter{}), auth.PrivLevelOperations, Authenticated, nil, 1873936115},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `parameters/?$`, api.CreateHandler(&parameter.TOParameter{}), auth.PrivLevelOperations, Authenticated, nil, 1669510859},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `parameters/{id}$`, api.DeleteHandler(&parameter.TOParameter{}), auth.PrivLevelOperations, Authenticated, nil, 276277118},
-
-		//Phys_Location: CRUD
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `phys_locations/?(\.json)?$`, api.ReadHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelReadOnly, Authenticated, nil, 120405182},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `phys_locations/trimmed/?(\.json)?$`, physlocation.GetTrimmed, auth.PrivLevelReadOnly, Authenticated, nil, 1097221000},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `phys_locations/{id}$`, api.DeprecatedReadHandler(&physlocation.TOPhysLocation{}, util.StrPtr("GET /phys_locations with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 1554216025},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `phys_locations/{id}$`, api.UpdateHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelOperations, Authenticated, nil, 226795021},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `phys_locations/?$`, api.CreateHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelOperations, Authenticated, nil, 2146456648},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `phys_locations/{id}$`, api.DeleteHandler(&physlocation.TOPhysLocation{}), auth.PrivLevelOperations, Authenticated, nil, 15614221},
-
-		//Ping
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `ping$`, ping.Handler, 0, NoAuth, nil, 1555661597},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `riak/ping/?(\.json)?$`, ping.Riak, auth.PrivLevelReadOnly, Authenticated, nil, 1884012114},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `keys/ping/?(\.json)?$`, ping.Keys, auth.PrivLevelReadOnly, Authenticated, nil, 318416022},
-
-		//Profile: CRUD
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/?(\.json)?$`, api.ReadHandler(&profile.TOProfile{}), auth.PrivLevelReadOnly, Authenticated, nil, 668758589},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/trimmed/?(\.json)?$`, profile.Trimmed, auth.PrivLevelReadOnly, Authenticated, nil, 644942941},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{id}$`, api.DeprecatedReadHandler(&profile.TOProfile{}, util.StrPtr("GET /profiles with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 1570260672},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `profiles/{id}$`, api.UpdateHandler(&profile.TOProfile{}), auth.PrivLevelOperations, Authenticated, nil, 98439172},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `profiles/?$`, api.CreateHandler(&profile.TOProfile{}), auth.PrivLevelOperations, Authenticated, nil, 1540211556},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `profiles/{id}$`, api.DeleteHandler(&profile.TOProfile{}), auth.PrivLevelOperations, Authenticated, nil, 2005594465},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{id}/export/?(\.json)?$`, profile.ExportProfileHandler, auth.PrivLevelReadOnly, Authenticated, nil, 30133517},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `profiles/import/?(\.json)?$`, profile.ImportProfileHandler, auth.PrivLevelOperations, Authenticated, nil, 806143208},
-
-		// Copy Profile
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `profiles/name/{new_profile}/copy/{existing_profile}`, profile.CopyProfileHandler, auth.PrivLevelOperations, Authenticated, nil, 806143209},
-
-		//Region: CRUDs
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `regions/?(\.json)?$`, api.ReadHandler(&region.TORegion{}), auth.PrivLevelReadOnly, Authenticated, nil, 410037085},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `regions/{id}$`, api.DeprecatedReadHandler(&region.TORegion{}, util.StrPtr("GET /regions with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 2024440051},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `regions/name/{name}/?(\.json)?$`, region.GetName, auth.PrivLevelReadOnly, Authenticated, nil, 503583197},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `regions/{id}$`, api.UpdateHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 226308224},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `regions/?$`, api.CreateHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 1288334488},
-		{api.Version{Major: 1, Minor: 5}, http.MethodDelete, `regions/?$`, api.DeleteHandler(&region.TORegion{}), auth.PrivLevelOperations, Authenticated, nil, 2032626758},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `regions/name/{name}$`, handlerToFunc(proxyHandler), 0, NoAuth, nil, 1925881096},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `regions/{id}$`, api.DeprecatedDeleteHandler(&region.TORegion{}, util.StrPtr("DELETE /regions with query parameter id")), auth.PrivLevelOperations, Authenticated, nil, 1181575271},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `deliveryservice_server/{dsid}/{serverid}`, dsserver.DeleteDeprecated, auth.PrivLevelOperations, Authenticated, nil, 1532184523},
-
-		// get all edge servers associated with a delivery service (from deliveryservice_server table)
-
-		{api.Version{Major: 1, Minor: 4}, http.MethodGet, `deliveryserviceserver/?(\.json)?$`, dsserver.ReadDSSHandlerV14, auth.PrivLevelReadOnly, Authenticated, nil, 1946145033},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryserviceserver/?(\.json)?$`, dsserver.ReadDSSHandler, auth.PrivLevelReadOnly, Authenticated, nil, 1928775049},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `deliveryserviceserver$`, dsserver.GetReplaceHandler, auth.PrivLevelOperations, Authenticated, nil, 429799788},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler, auth.PrivLevelOperations, Authenticated, nil, 1428181206},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `servers/{id}/deliveryservices?(\/.json)?$`, api.ReadHandler(&dsserver.TODSSDeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil, 133115411},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler, auth.PrivLevelOperations, Authenticated, nil, 880128253},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices/{id}/servers$`, dsserver.GetReadAssigned, auth.PrivLevelReadOnly, Authenticated, nil, 1345121223},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices/{id}/unassigned_servers$`, dsserver.GetReadUnassigned, auth.PrivLevelReadOnly, Authenticated, nil, 2023944221},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `deliveryservices/request`, deliveryservicerequests.Request, auth.PrivLevelPortal, Authenticated, nil, 740875299},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservice_matches/?(\.json)?$`, deliveryservice.GetMatches, auth.PrivLevelReadOnly, Authenticated, nil, 1191301170},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices/{id}/capacity/?(\.json)?$`, deliveryservice.GetCapacity, auth.PrivLevelReadOnly, Authenticated, nil, 1231409110},
-
-		//Server
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `servers/status$`, server.GetServersStatusCountsHandler, auth.PrivLevelReadOnly, Authenticated, nil, 2052786293},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `servers/totals$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 2037840835},
-
-		//Serverchecks
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `servers/checks(/|\.json)?$`, servercheck.DeprecatedReadServersChecks, auth.PrivLevelReadOnly, Authenticated, nil, 1796112922},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `servercheck/?(\.json)?$`, servercheck.CreateUpdateServercheck, auth.PrivLevelInvalid, Authenticated, nil, 1764281568},
-
-		//Server Details
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `servers/details/?(\.json)?$`, server.GetDetailParamHandler, auth.PrivLevelReadOnly, Authenticated, nil, 1261264714},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `servers/hostname/{hostName}/details/?(\.json)?$`, server.GetDetailHandler, auth.PrivLevelReadOnly, Authenticated, nil, 372366128},
-
-		//Server status
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `servers/{id}/status$`, server.UpdateStatusHandler, auth.PrivLevelOperations, Authenticated, nil, 776663851},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `servers/{id}/queue_update$`, server.QueueUpdateHandler, auth.PrivLevelOperations, Authenticated, nil, 9189471},
-		{api.Version{Major: 1, Minor: 3}, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler, auth.PrivLevelReadOnly, Authenticated, nil, 438451599},
-
-		//Server: CRUD
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `servers/?(\.json)?$`, server.Read, auth.PrivLevelReadOnly, Authenticated, nil, 1720959285},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `servers/{id}$`, server.ReadID, auth.PrivLevelReadOnly, Authenticated, nil, 1543122028},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `servers/{id}$`, server.Update, auth.PrivLevelOperations, Authenticated, nil, 958634103},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `servers/?$`, server.Create, auth.PrivLevelOperations, Authenticated, nil, 2025558061},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `servers/{id}$`, server.Delete, auth.PrivLevelOperations, Authenticated, nil, 192322233},
-
-		//Server Capability
-		{api.Version{Major: 1, Minor: 4}, http.MethodGet, `server_capabilities$`, api.ReadHandler(&servercapability.TOServerCapability{}), auth.PrivLevelReadOnly, Authenticated, nil, 610407391},
-		{api.Version{Major: 1, Minor: 4}, http.MethodPost, `server_capabilities$`, api.CreateHandler(&servercapability.TOServerCapability{}), auth.PrivLevelOperations, Authenticated, nil, 1074470708},
-		{api.Version{Major: 1, Minor: 4}, http.MethodDelete, `server_capabilities$`, api.DeleteHandler(&servercapability.TOServerCapability{}), auth.PrivLevelOperations, Authenticated, nil, 736415038},
-
-		//Server Server Capabilities: CRUD
-		{api.Version{Major: 1, Minor: 4}, http.MethodGet, `server_server_capabilities/?$`, api.ReadHandler(&server.TOServerServerCapability{}), auth.PrivLevelReadOnly, Authenticated, nil, 1800231889},
-		{api.Version{Major: 1, Minor: 4}, http.MethodPost, `server_server_capabilities/?$`, api.CreateHandler(&server.TOServerServerCapability{}), auth.PrivLevelOperations, Authenticated, nil, 2093166834},
-		{api.Version{Major: 1, Minor: 4}, http.MethodDelete, `server_server_capabilities/?$`, api.DeleteHandler(&server.TOServerServerCapability{}), auth.PrivLevelOperations, Authenticated, nil, 1058714058},
-
-		//Status: CRUD
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `statuses/?(\.json)?$`, api.ReadHandler(&status.TOStatus{}), auth.PrivLevelReadOnly, Authenticated, nil, 2044905656},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `statuses/{id}$`, api.DeprecatedReadHandler(&status.TOStatus{}, util.StrPtr("GET /statuses with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 1899095947},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `statuses/{id}$`, api.UpdateHandler(&status.TOStatus{}), auth.PrivLevelOperations, Authenticated, nil, 1207966504},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `statuses/?$`, api.CreateHandler(&status.TOStatus{}), auth.PrivLevelOperations, Authenticated, nil, 1369123612},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `statuses/{id}$`, api.DeleteHandler(&status.TOStatus{}), auth.PrivLevelOperations, Authenticated, nil, 755111360},
-
-		//System
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `system/info/?(\.json)?$`, systeminfo.Get, auth.PrivLevelReadOnly, Authenticated, nil, 211047475},
-
-		//Type: CRUD
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `types/trimmed/?(\.json)?$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 666},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `types/?(\.json)?$`, api.ReadHandler(&types.TOType{}), auth.PrivLevelReadOnly, Authenticated, nil, 2026701823},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `types/{id}$`, api.DeprecatedReadHandler(&types.TOType{}, util.StrPtr("GET /types with the 'id' query parameter")), auth.PrivLevelReadOnly, Authenticated, nil, 86037256},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `types/{id}$`, api.UpdateHandler(&types.TOType{}), auth.PrivLevelOperations, Authenticated, nil, 68860115},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `types/?$`, api.CreateHandler(&types.TOType{}), auth.PrivLevelOperations, Authenticated, nil, 1513308195},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `types/{id}$`, api.DeleteHandler(&types.TOType{}), auth.PrivLevelOperations, Authenticated, nil, 93175773},
-
-		//About
-		{api.Version{Major: 1, Minor: 3}, http.MethodGet, `about/?(\.json)?$`, about.Handler(), auth.PrivLevelReadOnly, Authenticated, nil, 1317501166},
-
-		//Coordinates
-		{api.Version{Major: 1, Minor: 3}, http.MethodGet, `coordinates/?(\.json)?$`, api.ReadHandler(&coordinate.TOCoordinate{}), auth.PrivLevelReadOnly, Authenticated, nil, 696700745},
-		{api.Version{Major: 1, Minor: 3}, http.MethodGet, `coordinates/?$`, api.ReadHandler(&coordinate.TOCoordinate{}), auth.PrivLevelReadOnly, Authenticated, nil, 244546706},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPut, `coordinates/?$`, api.UpdateHandler(&coordinate.TOCoordinate{}), auth.PrivLevelOperations, Authenticated, nil, 368926174},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPost, `coordinates/?$`, api.CreateHandler(&coordinate.TOCoordinate{}), auth.PrivLevelOperations, Authenticated, nil, 1428112157},
-		{api.Version{Major: 1, Minor: 3}, http.MethodDelete, `coordinates/?$`, api.DeleteHandler(&coordinate.TOCoordinate{}), auth.PrivLevelOperations, Authenticated, nil, 1303849889},
-
-		//ASNs
-		{api.Version{Major: 1, Minor: 3}, http.MethodGet, `asns/?(\.json)?$`, api.ReadHandler(&asn.TOASNV11{}), auth.PrivLevelReadOnly, Authenticated, nil, 2017162392},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPut, `asns/?$`, api.UpdateHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, Authenticated, nil, 2064172317},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPost, `asns/?$`, api.CreateHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, Authenticated, nil, 859114392},
-		{api.Version{Major: 1, Minor: 3}, http.MethodDelete, `asns/?$`, api.DeleteHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, Authenticated, nil, 680204898},
-
-		//Delivery service requests
-		{api.Version{Major: 1, Minor: 3}, http.MethodGet, `deliveryservice_requests/?(\.json)?$`, dsrequest.Get, auth.PrivLevelReadOnly, Authenticated, nil, 1681163935},
-		{api.Version{Major: 1, Minor: 3}, http.MethodGet, `deliveryservice_requests/?$`, dsrequest.Get, auth.PrivLevelReadOnly, Authenticated, nil, 286812311},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPut, `deliveryservice_requests/?$`, dsrequest.Put, auth.PrivLevelPortal, Authenticated, nil, 2049907918},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPost, `deliveryservice_requests/?$`, dsrequest.Post, auth.PrivLevelPortal, Authenticated, nil, 59385039},
-		{api.Version{Major: 1, Minor: 3}, http.MethodDelete, `deliveryservice_requests/?$`, dsrequest.Delete, auth.PrivLevelPortal, Authenticated, nil, 1296985025},
-
-		//Delivery service request: Actions
-		{api.Version{Major: 1, Minor: 3}, http.MethodPut, `deliveryservice_requests/{id}/assign$`, dsrequest.PutAssignment, auth.PrivLevelOperations, Authenticated, nil, 1703160290},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPut, `deliveryservice_requests/{id}/status$`, dsrequest.PutStatus, auth.PrivLevelPortal, Authenticated, nil, 668415099},
-
-		//Delivery service request comment: CRUD
-		{api.Version{Major: 1, Minor: 3}, http.MethodGet, `deliveryservice_request_comments/?(\.json)?$`, api.ReadHandler(&comment.TODeliveryServiceRequestComment{}), auth.PrivLevelReadOnly, Authenticated, nil, 1032650737},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPut, `deliveryservice_request_comments/?$`, api.UpdateHandler(&comment.TODeliveryServiceRequestComment{}), auth.PrivLevelPortal, Authenticated, nil, 860487847},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPost, `deliveryservice_request_comments/?$`, api.CreateHandler(&comment.TODeliveryServiceRequestComment{}), auth.PrivLevelPortal, Authenticated, nil, 727227672},
-		{api.Version{Major: 1, Minor: 3}, http.MethodDelete, `deliveryservice_request_comments/?$`, api.DeleteHandler(&comment.TODeliveryServiceRequestComment{}), auth.PrivLevelPortal, Authenticated, nil, 199504668},
-
-		//Delivery service uri signing keys: CRUD
-		{api.Version{Major: 1, Minor: 3}, http.MethodGet, `deliveryservices/{xmlID}/urisignkeys$`, urisigning.GetURIsignkeysHandler, auth.PrivLevelAdmin, Authenticated, nil, 1293078558},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPost, `deliveryservices/{xmlID}/urisignkeys$`, urisigning.SaveDeliveryServiceURIKeysHandler, auth.PrivLevelAdmin, Authenticated, nil, 508466335},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPut, `deliveryservices/{xmlID}/urisignkeys$`, urisigning.SaveDeliveryServiceURIKeysHandler, auth.PrivLevelAdmin, Authenticated, nil, 47648969},
-		{api.Version{Major: 1, Minor: 3}, http.MethodDelete, `deliveryservices/{xmlID}/urisignkeys$`, urisigning.RemoveDeliveryServiceURIKeysHandler, auth.PrivLevelAdmin, Authenticated, nil, 429925417},
-
-		//Delivery Service Required Capabilities: CRUD
-		{api.Version{Major: 1, Minor: 4}, http.MethodGet, `deliveryservices_required_capabilities/?$`, api.ReadHandler(&deliveryservice.RequiredCapability{}), auth.PrivLevelReadOnly, Authenticated, nil, 1158522227},
-		{api.Version{Major: 1, Minor: 4}, http.MethodPost, `deliveryservices_required_capabilities/?$`, api.CreateHandler(&deliveryservice.RequiredCapability{}), auth.PrivLevelOperations, Authenticated, nil, 1096873992},
-		{api.Version{Major: 1, Minor: 4}, http.MethodDelete, `deliveryservices_required_capabilities/?$`, api.DeleteHandler(&deliveryservice.RequiredCapability{}), auth.PrivLevelOperations, Authenticated, nil, 1496289304},
-
-		// Federations by CDN (the actual table for federation)
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{name}/federations/?(\.json)?$`, api.ReadHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelReadOnly, Authenticated, nil, 989225032},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{name}/federations/{id}$`, api.DeprecatedReadHandler(&cdnfederation.TOCDNFederation{}, util.StrPtr("GET /cdns/{name}/federations with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 21850599},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `cdns/{name}/federations/?(\.json)?$`, api.CreateHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelAdmin, Authenticated, nil, 1954894219},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `cdns/{name}/federations/{id}$`, api.UpdateHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelAdmin, Authenticated, nil, 2106065466},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `cdns/{name}/federations/{id}$`, api.DeleteHandler(&cdnfederation.TOCDNFederation{}), auth.PrivLevelAdmin, Authenticated, nil, 1442852902},
-
-		{api.Version{Major: 1, Minor: 4}, http.MethodPost, `cdns/{name}/dnsseckeys/ksk/generate$`, cdn.GenerateKSK, auth.PrivLevelAdmin, Authenticated, nil, 872924281},
-
-		//Origins
-		{api.Version{Major: 1, Minor: 3}, http.MethodGet, `origins/?(\.json)?$`, api.ReadHandler(&origin.TOOrigin{}), auth.PrivLevelReadOnly, Authenticated, nil, 844649256},
-		{api.Version{Major: 1, Minor: 3}, http.MethodGet, `origins/?$`, api.ReadHandler(&origin.TOOrigin{}), auth.PrivLevelReadOnly, Authenticated, nil, 1945936793},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPut, `origins/?$`, api.UpdateHandler(&origin.TOOrigin{}), auth.PrivLevelOperations, Authenticated, nil, 141567746},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPost, `origins/?$`, api.CreateHandler(&origin.TOOrigin{}), auth.PrivLevelOperations, Authenticated, nil, 1099561643},
-		{api.Version{Major: 1, Minor: 3}, http.MethodDelete, `origins/?$`, api.DeleteHandler(&origin.TOOrigin{}), auth.PrivLevelOperations, Authenticated, nil, 460273263},
-
-		//Roles
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `roles/?(\.json)?$`, api.ReadHandler(&role.TORole{}), auth.PrivLevelReadOnly, Authenticated, nil, 187088583},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPut, `roles/?$`, api.UpdateHandler(&role.TORole{}), auth.PrivLevelAdmin, Authenticated, nil, 1612897489},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPost, `roles/?$`, api.CreateHandler(&role.TORole{}), auth.PrivLevelAdmin, Authenticated, nil, 430652406},
-		{api.Version{Major: 1, Minor: 3}, http.MethodDelete, `roles/?$`, api.DeleteHandler(&role.TORole{}), auth.PrivLevelAdmin, Authenticated, nil, 1356705982},
-
-		//Delivery Services Regexes
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices_regexes/?(\.json)?$`, deliveryservicesregexes.Get, auth.PrivLevelReadOnly, Authenticated, nil, 605501453},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices/{dsid}/regexes/?(\.json)?$`, deliveryservicesregexes.DSGet, auth.PrivLevelReadOnly, Authenticated, nil, 577432763},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices/{dsid}/regexes/{regexid}?(\.json)?$`, deliveryservicesregexes.DSGetID, auth.PrivLevelReadOnly, Authenticated, nil, 1044974567},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `deliveryservices/{dsid}/regexes/?(\.json)?$`, deliveryservicesregexes.Post, auth.PrivLevelOperations, Authenticated, nil, 412737800},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `deliveryservices/{dsid}/regexes/{regexid}?(\.json)?$`, deliveryservicesregexes.Put, auth.PrivLevelOperations, Authenticated, nil, 1248339691},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `deliveryservices/{dsid}/regexes/{regexid}?(\.json)?$`, deliveryservicesregexes.Delete, auth.PrivLevelOperations, Authenticated, nil, 2046731663},
-
-		//StaticDNSEntries
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `staticdnsentries/?(\.json)?$`, api.ReadHandler(&staticdnsentry.TOStaticDNSEntry{}), auth.PrivLevelReadOnly, Authenticated, nil, 258939477},
-		{api.Version{Major: 1, Minor: 3}, http.MethodGet, `staticdnsentries/?$`, api.ReadHandler(&staticdnsentry.TOStaticDNSEntry{}), auth.PrivLevelReadOnly, Authenticated, nil, 1116932668},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPut, `staticdnsentries/?$`, api.UpdateHandler(&staticdnsentry.TOStaticDNSEntry{}), auth.PrivLevelOperations, Authenticated, nil, 142457111},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPost, `staticdnsentries/?$`, api.CreateHandler(&staticdnsentry.TOStaticDNSEntry{}), auth.PrivLevelOperations, Authenticated, nil, 1629148238},
-		{api.Version{Major: 1, Minor: 3}, http.MethodDelete, `staticdnsentries/?$`, api.DeleteHandler(&staticdnsentry.TOStaticDNSEntry{}), auth.PrivLevelOperations, Authenticated, nil, 1846031132},
-
-		//ProfileParameters
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{id}/parameters/?(\.json)?$`, profileparameter.GetProfileID, auth.PrivLevelReadOnly, Authenticated, nil, 876464975},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{id}/unassigned_parameters/?(\.json)?$`, profileparameter.GetUnassigned, auth.PrivLevelReadOnly, Authenticated, nil, 574429262},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/name/{name}/parameters/?(\.json)?$`, profileparameter.GetProfileName, auth.PrivLevelReadOnly, Authenticated, nil, 2067737832},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `parameters/profile/{name}/?(\.json)?$`, profileparameter.GetProfileNameDeprecated, auth.PrivLevelReadOnly, Authenticated, nil, 1802599194},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `profiles/name/{name}/parameters/?$`, profileparameter.PostProfileParamsByName, auth.PrivLevelOperations, Authenticated, nil, 1355945582},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `profiles/{id}/parameters/?$`, profileparameter.PostProfileParamsByID, auth.PrivLevelOperations, Authenticated, nil, 316818708},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profileparameters/?(\.json)?$`, api.ReadHandler(&profileparameter.TOProfileParameter{}), auth.PrivLevelReadOnly, Authenticated, nil, 850609805},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `profileparameters/?$`, api.CreateHandler(&profileparameter.TOProfileParameter{}), auth.PrivLevelOperations, Authenticated, nil, 218809693},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `profileparameter/?$`, profileparameter.PostProfileParam, auth.PrivLevelOperations, Authenticated, nil, 234275},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `parameterprofile/?$`, profileparameter.PostParamProfile, auth.PrivLevelOperations, Authenticated, nil, 1080610861},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `profileparameters/{profileId}/{parameterId}$`, api.DeleteHandler(&profileparameter.TOProfileParameter{}), auth.PrivLevelOperations, Authenticated, nil, 254839529},
-
-		//Tenants
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `tenants/?(\.json)?$`, api.ReadHandler(&apitenant.TOTenant{}), auth.PrivLevelReadOnly, Authenticated, nil, 1677967814},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `tenants/{id}$`, api.DeprecatedReadHandler(&apitenant.TOTenant{}, util.StrPtr("GET /tenants with query parameter id")), auth.PrivLevelReadOnly, Authenticated, nil, 171544338},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `tenants/{id}$`, api.UpdateHandler(&apitenant.TOTenant{}), auth.PrivLevelOperations, Authenticated, nil, 1094131478},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `tenants/?$`, api.CreateHandler(&apitenant.TOTenant{}), auth.PrivLevelOperations, Authenticated, nil, 917248013},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `tenants/{id}$`, api.DeleteHandler(&apitenant.TOTenant{}), auth.PrivLevelOperations, Authenticated, nil, 516365558},
-
-		//CRConfig
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{cdn}/snapshot/?$`, crconfig.SnapshotGetHandler, auth.PrivLevelReadOnly, Authenticated, nil, 1957273695},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{cdn}/snapshot/new/?$`, crconfig.Handler, auth.PrivLevelReadOnly, Authenticated, nil, 676716889},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `cdns/{id}/snapshot/?$`, crconfig.SnapshotHandlerDeprecated, auth.PrivLevelOperations, Authenticated, nil, 854424150},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `snapshot/{cdn}/?$`, crconfig.SnapshotHandlerDeprecated, auth.PrivLevelOperations, Authenticated, nil, 1969911829},
-
-		// Legacy Configfile routes
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `servers/{server-name-or-id}/configfiles/ats/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1755842214},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/regex_revalidate\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1810067775},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/hdr_rw_mid_{xml-id}\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 658322121},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/hdr_rw_{xml-id}\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1894063777},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/bg_fetch\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 160404036},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/cacheurl{filename}\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1373111113},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/regex_remap_{ds-name}\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1283602930},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/set_dscp_{dscp}\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1889993740},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `cdns/{cdn-name-or-id}/configfiles/ats/ssl_multicert\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1113687166},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/12M_facts/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 2146608231},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/50-ats\.rules/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1101032000},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/astats\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1362661662},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/cache\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 292387870},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/drop_qstring\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1097869291},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/logging\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 172702063},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/logging\.yaml/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 453568059},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/logs_xml\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1309053227},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/plugin\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 274047559},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/records\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 469014057},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/storage\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 121977329},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/sysctl\.conf/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1202950646},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/url_sig_{file}\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 448450070},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/uri_signing_{file}\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 125995582},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/volume\.config/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 792704719},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `profiles/{profile-name-or-id}/configfiles/ats/{file}/?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1651257268},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/cache\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 34686861},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/hosting\.config/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1387459113},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/packages/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 245024839},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/chkconfig/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 1012457987},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `servers/{id-or-host}/configfiles/ats/{file}/?(\.json)?$`, api.GoneHandler, auth.PrivLevelOperations, Authenticated, nil, 322079218},
-
-		// Federations
-		{api.Version{Major: 1, Minor: 4}, http.MethodGet, `federations/all/?(\.json)?$`, federations.GetAll, auth.PrivLevelAdmin, Authenticated, nil, 61059986},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `federations/?(\.json)?$`, federations.Get, auth.PrivLevelFederation, Authenticated, nil, 154954994},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `federations(/|\.json)?$`, federations.AddFederationResolverMappingsForCurrentUser, auth.PrivLevelFederation, Authenticated, nil, 1894064742},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `federations(/|\.json)?$`, federations.RemoveFederationResolverMappingsForCurrentUser, auth.PrivLevelFederation, Authenticated, nil, 592098323},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `federations(/|\.json)?$`, federations.ReplaceFederationResolverMappingsForCurrentUser, auth.PrivLevelFederation, Authenticated, nil, 1283182516},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `federations/{id}/deliveryservices/?(\.json)?$`, federations.PostDSes, auth.PrivLevelAdmin, Authenticated, nil, 1682863513},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `federations/{id}/deliveryservices/?(\.json)?$`, api.ReadHandler(&federations.TOFedDSes{}), auth.PrivLevelReadOnly, Authenticated, nil, 353773034},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `federations/{id}/deliveryservices/{dsID}/?(\.json)?$`, api.DeleteHandler(&federations.TOFedDSes{}), auth.PrivLevelAdmin, Authenticated, nil, 1417402570},
-
-		// Federation Resolvers
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `federation_resolvers(/|\.json)?$`, federation_resolvers.Create, auth.PrivLevelAdmin, Authenticated, nil, 1134373661},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `federation_resolvers(/|\.json)?$`, federation_resolvers.Read, auth.PrivLevelReadOnly, Authenticated, nil, 556608759},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `federations/{id}/federation_resolvers(/|\.json)?$`, federations.AssignFederationResolversToFederationHandler, auth.PrivLevelAdmin, Authenticated, nil, 556608760},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `federations/{id}/federation_resolvers(/|\.json)?$`, federations.GetFederationFederationResolversHandler, auth.PrivLevelReadOnly, Authenticated, nil, 556608761},
-		{api.Version{Major: 1, Minor: 5}, http.MethodDelete, `federation_resolvers(/|\.json)?$`, federation_resolvers.Delete, auth.PrivLevelAdmin, Authenticated, nil, 9001},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `federation_resolvers/{id}(/|\.json)?$`, federation_resolvers.DeleteByID, auth.PrivLevelAdmin, Authenticated, nil, 42},
-
-		// Federations Users
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `federations/{id}/users/?(\.json)?$`, federations.PostUsers, auth.PrivLevelAdmin, Authenticated, nil, 1779334930},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `federations/{id}/users/?(\.json)?$`, api.ReadHandler(&federations.TOUsers{}), auth.PrivLevelReadOnly, Authenticated, nil, 394075015},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `federations/{id}/users/{userID}/?(\.json)?$`, api.DeleteHandler(&federations.TOUsers{}), auth.PrivLevelAdmin, Authenticated, nil, 1949102882},
-
-		////DeliveryServices
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices/?(\.json)?$`, api.ReadHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelReadOnly, Authenticated, nil, 1238317294},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices/{id}/?(\.json)?$`, api.DeprecatedReadHandler(&deliveryservice.TODeliveryService{}, util.StrPtr("GET deliveryservices/ with the id query parameter")), auth.PrivLevelReadOnly, Authenticated, nil, 444348195},
-
-		{api.Version{Major: 1, Minor: 5}, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV15, auth.PrivLevelOperations, Authenticated, nil, 506431432},
-		{api.Version{Major: 1, Minor: 4}, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV14, auth.PrivLevelOperations, Authenticated, nil, 506431431},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV13, auth.PrivLevelOperations, Authenticated, nil, 1705681904},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV12, auth.PrivLevelOperations, Authenticated, nil, 652813412},
-
-		{api.Version{Major: 1, Minor: 5}, http.MethodPut, `deliveryservices/{id}/?(\.json)?$`, deliveryservice.UpdateV15, auth.PrivLevelOperations, Authenticated, nil, 1766567527},
-		{api.Version{Major: 1, Minor: 4}, http.MethodPut, `deliveryservices/{id}/?(\.json)?$`, deliveryservice.UpdateV14, auth.PrivLevelOperations, Authenticated, nil, 1766567526},
-		{api.Version{Major: 1, Minor: 3}, http.MethodPut, `deliveryservices/{id}/?(\.json)?$`, deliveryservice.UpdateV13, auth.PrivLevelOperations, Authenticated, nil, 1559124565},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `deliveryservices/{id}/?(\.json)?$`, deliveryservice.UpdateV12, auth.PrivLevelOperations, Authenticated, nil, 597160536},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `deliveryservices/{id}/safe/?(\.json)?$`, deliveryservice.UpdateSafe, auth.PrivLevelOperations, Authenticated, nil, 547210931},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `deliveryservices/{id}/?(\.json)?$`, api.DeleteHandler(&deliveryservice.TODeliveryService{}), auth.PrivLevelOperations, Authenticated, nil, 242642074},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices/{id}/servers/eligible/?(\.json)?$`, deliveryservice.GetServersEligible, auth.PrivLevelReadOnly, Authenticated, nil, 474761584},
-
-		{api.Version{Major: 1, Minor: 5}, http.MethodGet, `deliveryservices/{id}/routing$`, crstats.GetDSRouting, auth.PrivLevelReadOnly, Authenticated, nil, 66733982},
-
-		{api.Version{Major: 1, Minor: 5}, http.MethodGet, `deliveryservices/xmlId/{xmlid}/sslkeys$`, deliveryservice.GetSSLKeysByXMLIDV15, auth.PrivLevelAdmin, Authenticated, nil, 1135772906},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices/xmlId/{xmlid}/sslkeys$`, deliveryservice.GetSSLKeysByXMLID, auth.PrivLevelAdmin, Authenticated, nil, 1135772907},
-		{api.Version{Major: 1, Minor: 5}, http.MethodGet, `deliveryservices/hostname/{hostname}/sslkeys$`, deliveryservice.GetSSLKeysByHostNameV15, auth.PrivLevelAdmin, Authenticated, nil, 2105792224},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices/hostname/{hostname}/sslkeys$`, deliveryservice.GetSSLKeysByHostName, auth.PrivLevelAdmin, Authenticated, nil, 2105792225},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `deliveryservices/sslkeys/add$`, deliveryservice.AddSSLKeys, auth.PrivLevelAdmin, Authenticated, nil, 1872878583},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices/xmlId/{xmlid}/sslkeys/delete$`, deliveryservice.DeleteSSLKeysDeprecated, auth.PrivLevelOperations, Authenticated, nil, 1926734},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `deliveryservices/sslkeys/generate/?(\.json)?$`, deliveryservice.GenerateSSLKeys, auth.PrivLevelOperations, Authenticated, nil, 753439051},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `deliveryservices/xmlId/{name}/urlkeys/copyFromXmlId/{copy-name}/?(\.json)?$`, deliveryservice.CopyURLKeys, auth.PrivLevelOperations, Authenticated, nil, 1262501076},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `deliveryservices/xmlId/{name}/urlkeys/generate/?(\.json)?$`, deliveryservice.GenerateURLKeys, auth.PrivLevelOperations, Authenticated, nil, 1530482824},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices/xmlId/{name}/urlkeys/?(\.json)?$`, deliveryservice.GetURLKeysByName, auth.PrivLevelReadOnly, Authenticated, nil, 2102719211},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices/{id}/urlkeys/?(\.json)?$`, deliveryservice.GetURLKeysByID, auth.PrivLevelReadOnly, Authenticated, nil, 393197114},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `riak/bucket/{bucket}/key/{key}/values/?(\.json)?$`, vault.GetBucketKeyDeprecated, auth.PrivLevelAdmin, Authenticated, nil, 2020510801},
-
-		//Delivery service LetsEncrypt
-		{api.Version{Major: 1, Minor: 5}, http.MethodPost, `deliveryservices/sslkeys/generate/letsencrypt/?(\.json)?$`, deliveryservice.GenerateLetsEncryptCertificates, auth.PrivLevelOperations, Authenticated, nil, 753439052},
-		{api.Version{Major: 1, Minor: 5}, http.MethodGet, `letsencrypt/dnsrecords/?(\.json)?$`, deliveryservice.GetDnsChallengeRecords, auth.PrivLevelOperations, Authenticated, nil, 753439055},
-		{api.Version{Major: 1, Minor: 5}, http.MethodPost, `letsencrypt/autorenew/?(\.json)?$`, deliveryservice.RenewCertificates, auth.PrivLevelOperations, Authenticated, nil, 753439056},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `deliveryservices/{id}/health/?(\.json)?$`, deliveryservice.GetHealth, auth.PrivLevelReadOnly, Authenticated, nil, 2034590101},
-
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `steering/{deliveryservice}/targets/?(\.json)?$`, api.ReadHandler(&steeringtargets.TOSteeringTargetV11{}), auth.PrivLevelReadOnly, Authenticated, nil, 1569607824},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `steering/{deliveryservice}/targets/{target}$`, api.DeprecatedReadHandler(&steeringtargets.TOSteeringTargetV11{}, util.StrPtr("GET steering/{deliveryservice}/targets with the query parameter target")), auth.PrivLevelReadOnly, Authenticated, nil, 105995849},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `steering/{deliveryservice}/targets/?(\.json)?$`, api.CreateHandler(&steeringtargets.TOSteeringTargetV11{}), auth.PrivLevelSteering, Authenticated, nil, 1338216397},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPut, `steering/{deliveryservice}/targets/{target}/?(\.json)?$`, api.UpdateHandler(&steeringtargets.TOSteeringTargetV11{}), auth.PrivLevelSteering, Authenticated, nil, 1438608295},
-		{api.Version{Major: 1, Minor: 1}, http.MethodDelete, `steering/{deliveryservice}/targets/{target}/?(\.json)?$`, api.DeleteHandler(&steeringtargets.TOSteeringTargetV11{}), auth.PrivLevelSteering, Authenticated, nil, 2088021515},
-
-		// Stats Summary
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `stats_summary/?(\.json)?$`, trafficstats.GetStatsSummary, auth.PrivLevelReadOnly, Authenticated, nil, 380498598},
-		{api.Version{Major: 1, Minor: 5}, http.MethodPost, `stats_summary/?(\.json)?$`, trafficstats.CreateStatsSummary, auth.PrivLevelReadOnly, Authenticated, nil, 380491598},
-
-		// TO Extensions
-		{api.Version{Major: 1, Minor: 5}, http.MethodPost, `to_extensions$`, extensions.Create, auth.PrivLevelReadOnly, Authenticated, nil, 380498599},
-		{api.Version{Major: 1, Minor: 1}, http.MethodGet, `to_extensions$`, extensions.Get, auth.PrivLevelReadOnly, Authenticated, nil, 383498599},
-		{api.Version{Major: 1, Minor: 1}, http.MethodPost, `to_extensions/{id}/delete$`, extensions.Delete, auth.PrivLevelReadOnly, Authenticated, nil, 385118599},
-
-		//Pattern based consistent hashing endpoint
-		{api.Version{Major: 1, Minor: 4}, http.MethodPost, `consistenthash/?$`, consistenthash.Post, auth.PrivLevelReadOnly, Authenticated, nil, 1960755076},
-
-		{api.Version{Major: 1, Minor: 4}, http.MethodGet, `steering/?(\.json)?$`, steering.Get, auth.PrivLevelSteering, Authenticated, nil, 1174852457},
 	}
 
 	// sanity check to make sure all Route IDs are unique
@@ -1782,12 +1307,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 	}
 
 	// rawRoutes are served at the root path. These should be almost exclusively old Perl pre-API routes, which have yet to be converted in all clients. New routes should be in the versioned API path.
-	rawRoutes := []RawRoute{
-		// DEPRECATED - use PUT /api/1.2/snapshot/{cdn}
-		{http.MethodGet, `tools/write_crconfig/{cdn}/?$`, crconfig.SnapshotOldGUIHandler, auth.PrivLevelOperations, Authenticated, nil},
-		// DEPRECATED - use GET /api/1.2/cdns/{cdn}/snapshot
-		{http.MethodGet, `CRConfig-Snapshots/{cdn}/CRConfig.json?$`, crconfig.SnapshotOldGetHandler, auth.PrivLevelReadOnly, Authenticated, nil},
-	}
+	rawRoutes := []RawRoute{}
 
 	return routes, rawRoutes, proxyHandler, nil
 }
@@ -1805,7 +1325,7 @@ func MemoryStatsHandler() http.HandlerFunc {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(bytes)
+		api.WriteAndLogErr(w, r, bytes)
 	}
 }
 
@@ -1821,7 +1341,7 @@ func DBStatsHandler(db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(bytes)
+		api.WriteAndLogErr(w, r, bytes)
 	}
 }
 
@@ -1837,13 +1357,6 @@ func (root) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // rootHandler returns the / handler for the service, which simply returns a "not found" response.
 func rootHandler(d ServerData) http.Handler {
 	return root{}
-}
-
-// notImplementedHandler returns a 501 Not Implemented to the client. This should be used very rarely, and primarily for old API Perl routes which were broken long ago, which we don't have the resources to rewrite in Go for the time being.
-func notImplementedHandler(w http.ResponseWriter, r *http.Request) {
-	code := http.StatusNotImplemented
-	w.WriteHeader(code)
-	w.Write([]byte(http.StatusText(code)))
 }
 
 //CreateThrottledHandler takes a handler, and a max and uses a channel to insure the handler is used concurrently by only max number of routines

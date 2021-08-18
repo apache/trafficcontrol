@@ -19,8 +19,10 @@ package util
  * under the License.
  */
 
-import "errors"
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 func ExampleJoinErrsSep() {
 	errs := []error{
@@ -32,4 +34,17 @@ func ExampleJoinErrsSep() {
 
 	// Output: test
 	// quest
+}
+
+func ExampleCamelToSnakeCase() {
+	camel := "camelCase"
+	fmt.Println(CamelToSnakeCase(camel))
+	camel = "PascalCase"
+	fmt.Println(CamelToSnakeCase(camel))
+	camel = "IPIsAnInitialismForInternetProtocol"
+	fmt.Println(CamelToSnakeCase(camel))
+
+	// Output: camel_case
+	// pascal_case
+	// ipis_an_initialism_for_internet_protocol
 }

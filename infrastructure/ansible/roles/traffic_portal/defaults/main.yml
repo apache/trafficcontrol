@@ -80,7 +80,10 @@ tp_default_properties_template:
         _comments: "The snapshot diff may contains nested json objects. You can specify if you want these objects expanded, and if so, how many levels. 0 = not expanded, n = expanded to n levels. Set this to a high number (i.e. 100) to ensure full expansion."
         expandLevel: 0
     cacheChecks:
-      _comments: These are configurable properties for the cache checks view. The data for the cache checks view is derived from TO extensions. The extensions array should include an entry for each of your extensions or you can check the /servers/checks Traffic Ops API endpoint to see which checks you have configured.
+      _comments: These are configurable properties for the cache checks view. The data
+        for the cache checks view is derived from TO extensions. The extensions array
+        should include an entry for each of your extensions or you can check GET api/{{ to_api_version }}/servers/checks
+        to see which checks you have configured.
       show: true
       updatePending:
         show: true
