@@ -80,7 +80,10 @@ export class API {
     /**
      * Stores login information for the admin-level user.
      */
-    private readonly loginInfo;
+    private readonly loginInfo: {
+        password: string;
+        username: string;
+    };
     /**
      * The URL base used for the Traffic Ops API.
      *
