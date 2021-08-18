@@ -177,7 +177,7 @@ to_build() {
 }
 
 tp_build() {
-  cd "${REPO_DIR}/traffic_portal"
+  pushd "${REPO_DIR}/traffic_portal"
   npm ci
   bower install
   grunt dist
@@ -185,6 +185,7 @@ tp_build() {
   cp "${resources}/config.js" ./conf/
   touch tp.log access.log out.log err.log
   sudo forever --minUptime 5000 --spinSleepTime 2000 -f -o out.log start server.js &
+  popd
   # tail -f err.log 2>&1 | color_and_prefix "${red_bg}" "Node Err" &
 }
 
@@ -196,7 +197,7 @@ onFail() {
     mkdir Reports;
   fi
   if [[ -f tv.log ]]; then
-    mv tv.log Reports/traffic_vault.docker.log;
+    cp tv.log Reports/traffic_vault.docker.log;
   fi
 	docker logs "$trafficvault" > Reports/traffic_vault.log
   if [[ -f tp.log ]]; then
@@ -211,7 +212,7 @@ onFail() {
   docker logs $CHROMIUM_CONTAINER > Reports/chromium.log
   docker logs $HUB_CONTAINER > Reports/hub.log
   if [[ -f "${REPO_DIR}/traffic_ops/traffic_ops_golang" ]]; then
-    mv "${REPO_DIR}/traffic_ops/traffic_ops_golang" Reports/to.log;
+    cp "${REPO_DIR}/traffic_ops/traffic_ops_golang" Reports/to.log;
   fi
   echo "Detailed logs produced info Reports artifact"
   exit 1
