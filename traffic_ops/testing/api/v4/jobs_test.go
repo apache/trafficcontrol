@@ -399,7 +399,7 @@ func GetTestJobsByValidData(t *testing.T) {
 	}
 
 	//Get Jobs by ID
-	if id != nil && *id >= 1 {
+	if *id >= 1 {
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("id", strconv.FormatUint(uint64(*id), 10))
 		toJobs, _, _ = TOSession.GetInvalidationJobs(opts)

@@ -20,7 +20,7 @@
 var JobService = function($http, ENV) {
 
 	this.getJobs = function(queryParams) {
-		return $http.get(ENV.api.unstable + 'jobs', {params: queryParams}).then(
+		return $http.get(ENV.api.stable + 'jobs', {params: queryParams}).then(
 			function(result) {
 				return result.data.response;
 			},
@@ -31,7 +31,7 @@ var JobService = function($http, ENV) {
 	};
 
 	this.createJob = function(job) {
-		return $http.post(ENV.api.unstable + 'jobs', job).then(
+		return $http.post(ENV.api.stable + 'jobs', job).then(
 			function (result) {
 				return result;
 			},
@@ -42,7 +42,7 @@ var JobService = function($http, ENV) {
 	};
 
 	this.deleteJob = function(id) {
-		return $http.delete(ENV.api.unstable + 'jobs', {params: {id: id}}).then(
+		return $http.delete(ENV.api.stable + 'jobs', {params: {id: id}}).then(
 			function(result) {
 				return result;
 			},
