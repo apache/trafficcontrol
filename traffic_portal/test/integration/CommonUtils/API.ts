@@ -113,16 +113,91 @@ export class API {
      * @throws {Error} when login fails, or when Traffic Ops doesn't return a cookie.
      */
     public async Login(): Promise<AxiosResponse<unknown>> {
-        const response = await axios({
-            method: 'post',
-            url: this.config.params.apiUrl + '/user/login',
-            data: {
-                u: this.config.params.login.username,
-                p: this.config.params.login.password
+        const data = {
+            p: this.loginInfo.password,
+            u: this.loginInfo.username,
+        }
+        const response = await this.getResponse("post", "/user/login", data);
+        const h = response.headers;
+        if (!hasProperty(h, "set-cookie")) {
+            throw new Error("Traffic Ops response did not set a cookie");
+        }
+        if (h["set-cookie"] instanceof Array) {
+            if (h["set-cookie"].length < 1) {
+                throw new Error("no cookies present in set-cookie header");
             }
-        });
-        this.cookie = await response.headers["set-cookie"][0];
+            this.cookie = await h["set-cookie"][0];
+        } else {
+            throw new Error(`unsupported cookie structure: ${h["set-cookie"]}`);
+        }
         return response
+    }
+
+    /**
+     * Retrieves a response from the API.
+     *
+     * Alerts will be logged if they are found - even if an error occurs and is
+     * thrown.
+     *
+     * @param method The request method to use.
+     * @param path The path to request, relative to the configured TO API URL.
+     * @returns The server's response.
+     * @throws {unknown} when the request fails for any reason. If an error
+     * response was returned from the API, it was logged, so there's no need to
+     * dig into the properties of these errors, really.
+     */
+    private async getResponse(method: "get" | "delete", path: string): Promise<AxiosResponse>;
+    /**
+     * Retrieves a response from the API.
+     *
+     * Alerts will be logged if they are found - even if an error occurs and is
+     * thrown.
+     *
+     * @param method The request method to use.
+     * @param path The path to request, relative to the configured TO API URL.
+     * @param data Data to send in the body of the POST request.
+     * @returns The server's response.
+     * @throws {unknown} when the request fails for any reason. If an error
+     * response was returned from the API, it was logged, so there's no need to
+     * dig into the properties of these errors, really.
+     */
+    private async getResponse(method: "post", path: string, data: unknown): Promise<AxiosResponse>;
+    private async getResponse(method: "post" | "get" | "delete", path: string, data?: unknown): Promise<AxiosResponse> {
+        if (method === "post" && data === undefined) {
+            throw new TypeError("request body must be given for POST requests");
+        }
+
+        const url = `${this.apiURL}/${path.replace(/^\/+/g, "")}`;
+        const conf = {
+            method,
+            url,
+            headers: { Cookie: this.cookie },
+            data
+        }
+
+        let throwable;
+        let resp: AxiosResponse<unknown>;
+        try {
+            resp = await axios(conf);
+        } catch(e) {
+            if (!isAxiosError(e) || !e.response) {
+                console.debug("non-axios error or axios error with no response thrown");
+                throw e;
+            }
+            resp = e.response;
+            throwable = e;
+        }
+        if (typeof(resp.data) === "object" && resp.data !== null && hasProperty(resp.data, "alerts") && resp.data.alerts instanceof Array) {
+            for (const a of resp.data.alerts) {
+                if (isAlert(a) && this.alertLevels.has(a.level)) {
+                    logAlert(a, `${method} ${path} (${resp.status} ${resp.statusText}):`);
+                }
+            }
+        }
+        if (throwable) {
+            throw throwable;
+        }
+        return resp;
     }
 
     public async SendRequest<T extends IDData>(route: string, method: string, data: T): Promise<void> {
@@ -144,19 +219,10 @@ export class API {
 
         switch (method) {
             case "post":
-                response = await axios({
-                    method: method,
-                    url: this.config.params.apiUrl + route,
-                    headers: { Cookie: this.cookie},
-                    data: data
-                });
+                response = await this.getResponse("post", route, data);
                 break;
             case "get":
-                response = await axios({
-                    method: method,
-                    url: this.config.params.apiUrl + route,
-                    headers: { Cookie: this.cookie},
-                });
+                response = await this.getResponse("get", route);
                 break;
             case "delete":
                 if (!data.route) {
@@ -174,11 +240,7 @@ export class API {
                 if((data.route).includes('/service_categories/')){
                     data.route = data.route + randomize
                 }
-                response = await axios({
-                    method: method,
-                    url: this.config.params.apiUrl + data.route,
-                    headers: { Cookie: this.cookie},
-                });
+                response = await this.getResponse("delete", data.route);
                 break;
             default:
                 throw new Error(`unrecognized request method: '${method}'`);
@@ -198,11 +260,7 @@ export class API {
         }
         for (const request of data.getRequest) {
             const query = `?${encodeURIComponent(request.queryKey)}=${encodeURIComponent(request.queryValue)}${randomize}`;
-            const response = await axios({
-                method: 'get',
-                url: this.config.params.apiUrl + request.route + query,
-                headers: { Cookie: this.cookie},
-            });
+            const response = await this.getResponse("get", request.route + query)
 
             if (response.status == 200) {
                 if(request.hasOwnProperty('isArray')){
