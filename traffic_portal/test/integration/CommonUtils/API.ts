@@ -170,7 +170,7 @@ export class API {
             throw new TypeError("request body must be given for POST requests");
         }
 
-        const url = `${this.apiURL}/${path.replace(/^\/+/g, "")}`;
+        const url = `${this.apiURL}${path.replace(/^\/+/g, "")}`;
         const conf = {
             method,
             url,
