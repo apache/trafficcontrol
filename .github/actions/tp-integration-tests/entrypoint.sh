@@ -15,7 +15,35 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
+
+onFail() {
+  echo "Error on line ${1} of ${2}" >&2;
+  if ! [[ -d Reports ]]; then
+    mkdir Reports;
+  fi
+  if [[ -f tv.log ]]; then
+    cp tv.log Reports/traffic_vault.docker.log;
+  fi
+	docker logs "$trafficvault" > Reports/traffic_vault.log
+  if [[ -f tp.log ]]; then
+    mv tp.log Reports/forever.log
+  fi
+  if [[ -f access.log ]]; then
+    mv access.log Reports/tp-access.log
+  fi
+  if [[ -f out.log ]]; then
+    mv out.log Reports/node.log
+  fi
+  docker logs $CHROMIUM_CONTAINER > Reports/chromium.log
+  docker logs $HUB_CONTAINER > Reports/hub.log
+  if [[ -f "${REPO_DIR}/traffic_ops/traffic_ops_golang" ]]; then
+    cp "${REPO_DIR}/traffic_ops/traffic_ops_golang" Reports/to.log;
+  fi
+  echo "Detailed logs produced info Reports artifact"
+  exit 1
+}
+
+trap 'onFail "${LINENO}" "${0}"' ERR
 set -o errexit -o nounset -o pipefail
 
 hub_fqdn="http://localhost:4444/wd/hub/status"
@@ -23,7 +51,7 @@ to_fqdn="https://localhost:6443"
 tp_fqdn="https://172.18.0.1:8443"
 
 if ! curl -Lvsk "${hub_fqdn}" >/dev/null 2>&1; then
-  echo "Selenium not started on ${hub_fqdn}"
+  echo "Selenium not started on ${hub_fqdn}" >&2;
   exit 1
 fi
 
@@ -127,9 +155,9 @@ start_traffic_vault() {
 		--publish=8087:8087 \
 		--rm \
 		"$trafficvault" \
-		/usr/lib/riak/riak-cluster.sh >tv.log 2>&1
+		/usr/lib/riak/riak-cluster.sh
 }
-start_traffic_vault &
+start_traffic_vault >tv.log 2>&1 &
 
 sudo apt-get install -y --no-install-recommends gettext \
 	ruby ruby-dev libc-dev curl \
@@ -184,39 +212,13 @@ tp_build() {
 
   cp "${resources}/config.js" ./conf/
   touch tp.log access.log out.log err.log
-  sudo forever --minUptime 5000 --spinSleepTime 2000 -f -o out.log start server.js &
+  sudo forever --minUptime 5000 --spinSleepTime 2000 -f -o out.log start server.js >out.log 2>&1 &
   popd
   # tail -f err.log 2>&1 | color_and_prefix "${red_bg}" "Node Err" &
 }
 
 (to_build) &
 tp_build
-
-onFail() {
-  if ! [[ -d Reports ]]; then
-    mkdir Reports;
-  fi
-  if [[ -f tv.log ]]; then
-    cp tv.log Reports/traffic_vault.docker.log;
-  fi
-	docker logs "$trafficvault" > Reports/traffic_vault.log
-  if [[ -f tp.log ]]; then
-    mv tp.log Reports/forever.log
-  fi
-  if [[ -f access.log ]]; then
-    mv access.log Reports/tp-access.log
-  fi
-  if [[ -f out.log ]]; then
-    mv out.log Reports/node.log
-  fi
-  docker logs $CHROMIUM_CONTAINER > Reports/chromium.log
-  docker logs $HUB_CONTAINER > Reports/hub.log
-  if [[ -f "${REPO_DIR}/traffic_ops/traffic_ops_golang" ]]; then
-    cp "${REPO_DIR}/traffic_ops/traffic_ops_golang" Reports/to.log;
-  fi
-  echo "Detailed logs produced info Reports artifact"
-  exit 1
-}
 
 cd "${REPO_DIR}/traffic_portal/test/integration"
 npm ci
@@ -242,5 +244,4 @@ timeout 5m bash <<TMOUT
   done
 TMOUT
 
-trap - ERR
-npm test -- --params.baseUrl="${tp_fqdn}" --params.apiUrl="${to_fqdn}/api/4.0" || onFail
+npm test -- --params.baseUrl="${tp_fqdn}" --params.apiUrl="${to_fqdn}/api/4.0"
