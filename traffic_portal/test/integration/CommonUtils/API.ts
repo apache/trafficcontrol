@@ -193,7 +193,7 @@ export class API {
         if (typeof(resp.data) === "object" && resp.data !== null && hasProperty(resp.data, "alerts") && resp.data.alerts instanceof Array) {
             for (const a of resp.data.alerts) {
                 if (isAlert(a) && this.alertLevels.has(a.level)) {
-                    logAlert(a, `${method} ${path} (${resp.status} ${resp.statusText}):`);
+                    logAlert(a, `${method.toUpperCase()} ${url} (${resp.status} ${resp.statusText}):`);
                 }
             }
         }
@@ -281,7 +281,7 @@ export class API {
         return null
     }
 
-   public Randomize(data: object): void {
+    public Randomize(data: object): void {
        if (hasProperty(data, "fullName")) {
            if (hasProperty(data, "email")) {
                data.email = data.fullName + randomize + data.email;
