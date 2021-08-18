@@ -21,10 +21,11 @@
 import { Agent } from "https";
 
 import axios from 'axios';
-import type {AxiosResponse} from "axios";
+import type {AxiosResponse, AxiosError} from "axios";
 import randomIpv6 from "random-ipv6";
 
-import { config, randomize } from '../config';
+import { hasProperty } from "./utils";
+import { randomize } from '../config';
 
 interface GetRequest {
     queryKey: string;
@@ -50,21 +51,20 @@ export interface APIData {
 }
 
 /**
- * hasProperty checks, generically, whether some variable passed as `o` has the
- * property `k`.
+ * Checks if an object is an AxiosError, usually useful in `try`/`catch` blocks
+ * around axios calls.
  *
- * @example
- * hasProperty({}, "id"); // returns false
- * hasProperty({id: 8}); // returns true
- * hasProperty({id: undefined}); // returns true
- *
- * @param o The object to check.
- * @param k The key for which to check in the object.
- * @returns Whether or not `o` has the property `k`.
- * @throws {Error} when the type check fails.
+ * @param e The object to check.
+ * @returns Whether or not `e` is an AxiosError.
  */
- export function hasProperty<T extends object, K extends PropertyKey, S>(o: T, k: K): o is T & Record<K, S | unknown> {
-	return Object.prototype.hasOwnProperty.call(o, k);
+function isAxiosError(e: unknown): e is AxiosError {
+    if (typeof(e) !== "object" || e === null) {
+        return false;
+    }
+    if (!hasProperty(e, "isAxiosError") || typeof(e.isAxiosError) !== "boolean") {
+        return false;
+    }
+    return e.isAxiosError;
 }
 
 export class API {
