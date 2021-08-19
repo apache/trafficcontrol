@@ -57,10 +57,7 @@ export function isAlert(a: unknown): a is Alert {
     if (typeof(a) !== "object" || a === null) {
         return false;
     }
-    if (!hasProperty(a, "level") || !hasProperty(a, "text")) {
-        return false;
-    }
-    if (typeof(a.text) !== "string") {
+    if (!hasProperty(a, "level") || !hasProperty(a, "text", "string")) {
         return false;
     }
     return isAlertLevel(a.level);

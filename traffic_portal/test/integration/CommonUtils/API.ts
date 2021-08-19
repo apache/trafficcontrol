@@ -62,7 +62,7 @@ function isAxiosError(e: unknown): e is AxiosError {
     if (typeof(e) !== "object" || e === null) {
         return false;
     }
-    if (!hasProperty(e, "isAxiosError") || typeof(e.isAxiosError) !== "boolean") {
+    if (!hasProperty(e, "isAxiosError", "boolean")) {
         return false;
     }
     return e.isAxiosError;
@@ -121,18 +121,15 @@ export class API {
             u: this.loginInfo.username,
         }
         const response = await this.getResponse("post", "/user/login", data);
-        const h = response.headers;
-        if (!hasProperty(h, "set-cookie")) {
+        const h = response.headers as object;
+        if (!hasProperty(h, "set-cookie", "Array") || h["set-cookie"].length < 1) {
             throw new Error("Traffic Ops response did not set a cookie");
         }
-        if (h["set-cookie"] instanceof Array) {
-            if (h["set-cookie"].length < 1) {
-                throw new Error("no cookies present in set-cookie header");
-            }
-            this.cookie = await h["set-cookie"][0];
-        } else {
-            throw new Error(`unsupported cookie structure: ${h["set-cookie"]}`);
+        const cookie = await h["set-cookie"][0];
+        if (typeof(cookie) !== "string") {
+            throw new Error(`non-string cookie: ${cookie}`);
         }
+        this.cookie = cookie;
         return response
     }
 
@@ -190,7 +187,7 @@ export class API {
             resp = e.response;
             throwable = e;
         }
-        if (typeof(resp.data) === "object" && resp.data !== null && hasProperty(resp.data, "alerts") && resp.data.alerts instanceof Array) {
+        if (typeof(resp.data) === "object" && resp.data !== null && hasProperty(resp.data, "alerts", "Array")) {
             for (const a of resp.data.alerts) {
                 if (isAlert(a) && this.alertLevels.has(a.level)) {
                     logAlert(a, `${method.toUpperCase()} ${url} (${resp.status} ${resp.statusText}):`);
@@ -319,23 +316,19 @@ export class API {
         if(hasProperty(data, 'domainName')) {
             data.domainName = data.domainName + randomize;
         }
-        if(hasProperty(data, 'nodes')){
-            if (data.nodes instanceof Array) {
-                data.nodes.map(i => {
-                    if (typeof(i) === "object" && i !== null && hasProperty(i, "cachegroup")) {
-                        i.cachegroup = i.cachegroup + randomize;
-                    }
-                });
-            }
+        if(hasProperty(data, 'nodes', "Array")){
+            data.nodes.map(i => {
+                if (typeof(i) === "object" && i !== null && hasProperty(i, "cachegroup")) {
+                    i.cachegroup = i.cachegroup + randomize;
+                }
+            });
         }
-        if(hasProperty(data, 'interfaces')){
-            if (data.interfaces instanceof Array) {
-                const ipv6 = randomIpv6();
-                for (const inf of data.interfaces) {
-                    if (typeof(inf) === "object" && inf !== null && hasProperty(inf, "ipAddresses") && inf.ipAddresses instanceof Array) {
-                        for (const ip of inf.ipAddresses) {
-                           ip.address = ipv6.toString();
-                        }
+        if(hasProperty(data, 'interfaces', "Array")){
+            const ipv6 = randomIpv6();
+            for (const inf of data.interfaces) {
+                if (typeof(inf) === "object" && inf !== null && hasProperty(inf, "ipAddresses", "Array")) {
+                    for (const ip of inf.ipAddresses) {
+                        (ip as Record<"address", string>).address = ipv6.toString();
                     }
                 }
             }
