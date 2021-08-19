@@ -196,7 +196,7 @@ tp_build() {
 
   cp "${resources}/config.js" ./conf/
   touch tp.log access.log out.log err.log
-  sudo forever --minUptime 5000 --spinSleepTime 2000 -f -o out.log start server.js >out.log 2>&1 &
+  sudo forever --minUptime 5000 --spinSleepTime 2000 -f start server.js >out.log 2>&1 &
   popd
 }
 
