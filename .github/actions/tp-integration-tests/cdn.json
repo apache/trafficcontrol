@@ -16,7 +16,7 @@
 		"port": "6443",
 		"log_location_error": "stderr",
 		"log_location_warning": "stderr",
-		"log_location_info": "out",
+		"log_location_info": "stdout",
 		"log_location_debug": "stderr",
 		"log_location_event": "stdout",
 		"max_db_connections": 20,

@@ -109,19 +109,6 @@ QUERY
 
 sudo useradd trafops
 
-# gray_bg="$(printf '%s%s' $'\x1B' '[100m')";
-# red_bg="$(printf '%s%s' $'\x1B' '[41m')";
-# yellow_bg="$(printf '%s%s' $'\x1B' '[43m')";
-# black_fg="$(printf '%s%s' $'\x1B' '[30m')";
-# color_and_prefix() {
-# 	color="$1";
-# 	shift;
-# 	prefix="$1";
-# 	normal_bg="$(printf '%s%s' $'\x1B' '[49m')";
-# 	normal_fg="$(printf '%s%s' $'\x1B' '[39m')";
-# 	sed "s/^/${color}${black_fg}${prefix}: /" | sed "s/$/${normal_bg}${normal_fg}/";
-# }
-
 ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
 trafficvault=trafficvault;
 start_traffic_vault() {
@@ -195,13 +182,9 @@ to_build() {
 
   export $(<"${ciab_dir}/variables.env" sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
   envsubst <"${resources}/riak.json" >riak.conf
-  # truncate --size=0 warning.log error.log event.log info.log
   truncate -s0 out.log
 
   ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf >out.log 2>&1 &
-  # tail -f warning.log 2>&1 | color_and_prefix "${yellow_bg}" 'Traffic Ops WARN' &
-  # tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops ERR' &
-  # tail -f event.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Ops EVT' &
   popd
 }
 
@@ -215,7 +198,6 @@ tp_build() {
   touch tp.log access.log out.log err.log
   sudo forever --minUptime 5000 --spinSleepTime 2000 -f -o out.log start server.js >out.log 2>&1 &
   popd
-  # tail -f err.log 2>&1 | color_and_prefix "${red_bg}" "Node Err" &
 }
 
 to_build
