@@ -50,6 +50,7 @@
       "address" : "{{ to_smtp_address }}"
    },
    "use_ims": {{ to_use_ims | bool | lower }},
+   "role_based_permissions": {{{ to_use_rbp | bool | lower }},
    "traffic_ops_golang" : {
       "idle_timeout" : {{ to_go_inactive_timeout }},
       "log_location_debug" : "{{ to_go_logging_file_debug }}",

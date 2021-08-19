@@ -10,6 +10,7 @@
 		"workers": 12
 	},
 	"use_ims": true,
+	"role_based_permissions": false,
 	"traffic_ops_golang": {
 		"insecure": true,
 		"port": "6443",
