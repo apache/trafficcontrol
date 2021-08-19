@@ -34,7 +34,9 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"gopkg.in/yaml.v2"
 )
@@ -335,10 +337,37 @@ func maybeMigrateFromGoose() bool {
 	return true
 }
 
+// runFirstMigration is essentially Migrate.Migrate(FirstMigrationTimestamp) but without the obligatory Migrate.versionExists() call.
+// If calling Migrate.versionExists() is made optional, runFirstMigration() can be replaced.
+func runFirstMigration() error {
+	sourceDriver, sourceDriverErr := source.Open(DBMigrationsSource)
+	if sourceDriverErr != nil {
+		return fmt.Errorf("opening the migration source driver: " + sourceDriverErr.Error())
+	}
+	dbDriver, dbDriverErr := database.Open(ConnectionString)
+	if dbDriverErr != nil {
+		return fmt.Errorf("opening the dbdriver: " + dbDriverErr.Error())
+	}
+	firstMigration, firstMigrationName, migrationReadErr := sourceDriver.ReadUp(FirstMigrationTimestamp)
+	if migrationReadErr != nil {
+		return fmt.Errorf("reading migration %s: %s", firstMigrationName, migrationReadErr.Error())
+	}
+	if setDirtyVersionErr := dbDriver.SetVersion(int(FirstMigrationTimestamp), true); setDirtyVersionErr != nil {
+		return fmt.Errorf("setting the dirty version: %s", setDirtyVersionErr.Error())
+	}
+	if migrateErr := dbDriver.Run(firstMigration); migrateErr != nil {
+		return fmt.Errorf("running the migration: %s", migrateErr.Error())
+	}
+	if setVersionErr := dbDriver.SetVersion(int(FirstMigrationTimestamp), false); setVersionErr != nil {
+		return fmt.Errorf("setting the version after successfully running the migration: %s", setVersionErr.Error())
+	}
+	return nil
+}
+
 func runMigrations() {
 	migratedFromGoose := initMigrate()
 	if !TrafficVault && DBVersion == LastSquashedMigrationTimestamp && !DBVersionDirty {
-		if migrateErr := Migrate.Migrate(FirstMigrationTimestamp); migrateErr != nil {
+		if migrateErr := runFirstMigration(); migrateErr != nil {
 			die(fmt.Sprintf("Error migrating from DB version %d to %d: %s", LastSquashedMigrationTimestamp, FirstMigrationTimestamp, migrateErr.Error()))
 		}
 	}
