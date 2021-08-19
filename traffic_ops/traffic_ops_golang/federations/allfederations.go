@@ -89,17 +89,7 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fedsResolvers, err, code, maxTime := getFederationResolvers(inf.Tx.Tx, fedInfoIDs(feds), useIMS, r.Header)
-	if code == http.StatusNotModified {
-		if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
-			// RFC1123
-			date := maxTime.Format("Mon, 02 Jan 2006 15:04:05 MST")
-			w.Header().Add(rfc.LastModified, date)
-		}
-		w.WriteHeader(code)
-		api.WriteResp(w, r, []tc.IAllFederation{})
-		return
-	}
+	fedsResolvers, err := getFederationResolvers(inf.Tx.Tx, fedInfoIDs(feds))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.Get getting federations resolvers: "+err.Error()))
 		return
@@ -125,13 +115,15 @@ FROM
 ORDER BY
   ds.xml_id
 `
-	imsQuery := `SELECT max(t) from (
-		SELECT max(fds.last_updated) as t FROM
-  federation_deliveryservice fds
-  JOIN deliveryservice ds ON ds.id = fds.deliveryservice
-  JOIN federation fd ON fd.id = fds.federation
-	UNION ALL
-	select max(last_updated) as t from last_deleted l where l.table_name='federation_deliveryservice') as res`
+	imsQuery := `SELECT max(last_updated) FROM (SELECT last_updated FROM federation_deliveryservice fds
+        UNION ALL SELECT last_updated FROM federation_federation_resolver ffr
+        UNION ALL SELECT last_updated FROM federation fd
+		UNION ALL
+    		SELECT max(last_updated) AS t FROM last_deleted l 
+			WHERE l.table_name='federation_deliveryservice' 
+			OR l.table_name = 'federation' 
+			OR l.table_name = 'federation_federation_resolver')
+	AS res;`
 
 	if useIMS {
 		runSecond, maxTime = tryIfModifiedSinceQuery(header, tx, "", imsQuery)
@@ -181,14 +173,16 @@ ORDER BY
   ds.xml_id
 `
 
-	imsQuery := `SELECT max(t) from (
-		SELECT max(fds.last_updated) as t from federation_deliveryservice fds
-	JOIN deliveryservice ds ON ds.id = fds.deliveryservice
-	JOIN federation fd ON fd.id = fds.federation
-	JOIN cdn on cdn.id = ds.cdn_id
-	WHERE cdn.name = $1
-	UNION ALL
-	select max(last_updated) as t from last_deleted l where l.table_name='federation_deliveryservice') as res`
+	// TODO improve query to be CDN-specific
+	imsQuery := `SELECT max(last_updated) FROM (SELECT last_updated FROM federation_deliveryservice fds
+        UNION ALL SELECT last_updated FROM federation_federation_resolver ffr
+        UNION ALL SELECT last_updated FROM federation fd
+		UNION ALL
+    		SELECT max(last_updated) AS t FROM last_deleted l 
+			WHERE l.table_name='federation_deliveryservice' 
+			OR l.table_name = 'federation' 
+			OR l.table_name = 'federation_federation_resolver')
+	AS res;`
 
 	if useIMS {
 		runSecond, maxTime = tryIfModifiedSinceQuery(header, tx, string(cdn), imsQuery)

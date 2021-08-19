@@ -182,6 +182,10 @@ func (fed *TOCDNFederation) Read(h http.Header, useIMS bool) ([]interface{}, err
 		return nil, userErr, sysErr, errCode, nil
 	}
 
+	if errCode == http.StatusNotModified {
+		return []interface{}{}, nil, nil, http.StatusNotModified, maxTime
+	}
+
 	filteredFederations := []interface{}{}
 	for _, ifederation := range federations {
 		federation := ifederation.(*TOCDNFederation)
