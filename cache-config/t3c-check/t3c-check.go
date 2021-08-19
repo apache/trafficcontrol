@@ -63,16 +63,16 @@ func main() {
 	app := "t3c-check-" + cmd
 
 	appPath, err := exec.LookPath(app)
-  if err != nil {
-    log.Errorf("error finding path to '%s': %s\n", app, err.Error())
-    os.Exit(ExitCodeCommandLookupErr)
+	if err != nil {
+		log.Errorf("error finding path to '%s': %s\n", app, err.Error())
+		os.Exit(ExitCodeCommandLookupErr)
 	}
 
 	args := append([]string{app}, os.Args[2:]...)
 
 	env := os.Environ()
-  
-  if err := syscall.Exec(appPath, args, env); err != nil {
+
+	if err := syscall.Exec(appPath, args, env); err != nil {
 		log.Errorf("error executing sub-command: %s\n", err.Error())
 		os.Exit(ExitCodeCommandErr)
 	}

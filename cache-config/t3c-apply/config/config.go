@@ -434,8 +434,8 @@ If any of the related flags are also set, they override the mode's default behav
 	}
 
 	tsConfigDir := DefaultTSConfigDir
-  
-  if tsHome != "" {
+
+	if tsHome != "" {
 		TSHome = tsHome
 		tsConfigDir = tsHome + "/etc/trafficserver"
 		toInfoLog = append(toInfoLog, fmt.Sprintf("TSHome: %s, TSConfigDir: %s\n", TSHome, tsConfigDir))
@@ -511,10 +511,9 @@ If any of the related flags are also set, they override the mode's default behav
 	for _, str := range modeLogStrs {
 		log.Infoln(str)
 	}
-  
-  for msg := range toInfoLog {
+	for msg := range toInfoLog {
 		log.Infoln(msg)
-  }
+	}
 
 	printConfig(cfg)
 
