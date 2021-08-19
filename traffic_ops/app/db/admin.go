@@ -331,6 +331,7 @@ func maybeMigrateFromGoose() bool {
 	if err := Migrate.Steps(1); err != nil {
 		die("Error migrating to Migrate from Goose: " + err.Error())
 	}
+	DBVersion, DBVersionDirty, _ = Migrate.Version()
 	return true
 }
 
