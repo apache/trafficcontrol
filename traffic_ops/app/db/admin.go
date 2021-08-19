@@ -129,16 +129,17 @@ var (
 	DBVersionDirty bool
 
 	// globals that are parsed out of DBConfigFile and used in commands
-	DBDriver      string
-	DBName        string
-	DBSuperUser   = DefaultDBSuperUser
-	DBUser        string
-	DBPassword    string
-	HostIP        string
-	HostPort      string
-	SSLMode       string
-	Migrate       *migrate.Migrate
-	MigrationName string
+	ConnectionString string
+	DBDriver         string
+	DBName           string
+	DBSuperUser      = DefaultDBSuperUser
+	DBUser           string
+	DBPassword       string
+	HostIP           string
+	HostPort         string
+	SSLMode          string
+	Migrate          *migrate.Migrate
+	MigrationName    string
 )
 
 func parseDBConfig() error {
@@ -569,11 +570,11 @@ func main() {
 
 func initMigrate() bool {
 	var err error
-	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s", DBDriver, DBUser, DBPassword, HostIP, HostPort, DBName, SSLMode)
+	ConnectionString = fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s", DBDriver, DBUser, DBPassword, HostIP, HostPort, DBName, SSLMode)
 	if TrafficVault {
-		Migrate, err = migrate.New(TrafficVaultMigrationsSource, connectionString)
+		Migrate, err = migrate.New(TrafficVaultMigrationsSource, ConnectionString)
 	} else {
-		Migrate, err = migrate.New(DBMigrationsSource, connectionString)
+		Migrate, err = migrate.New(DBMigrationsSource, ConnectionString)
 	}
 	if err != nil {
 		die("Starting Migrate: " + err.Error())
