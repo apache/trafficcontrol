@@ -50,10 +50,12 @@ GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "disable_parent_config_comments=i" => \$disable_parent_config_comments,
           );
 
-my $cmd = 't3c apply --log-location-error=stdout --log-location-warning=stdout --log-location-info=stdout';
+my $cmd = 't3c apply -vv';
 
 if ( defined $dispersion ) {
-	$cmd .= ' --dispersion=' . $dispersion;
+	my $sleeptime = rand($dispersion);
+	print "ERROR t3c no longer has a dispersion feature, Please upgrade to t3c, and use shell commands to randomly sleep if necessary. Sleeping for rand($dispersion)=$sleeptime\n";
+	sleep($sleeptime);
 }
 if ( defined $retries ) {
 	$cmd .= ' --num-retries=' . $retries;
@@ -62,7 +64,9 @@ if ( defined  $wait_for_parents && $wait_for_parents == 0 ) {
 	$cmd .= ' --wait-for-parents=false';
 }
 if ( defined $login_dispersion ) {
-	$cmd .= ' --login-dispersion=' . $login_dispersion;
+	my $sleeptime = rand($login_dispersion);
+	print "ERROR t3c no longer has any dispersion feature, Please upgrade to t3c, and use shell commands to randomly sleep if necessary. Sleeping for rand($login_dispersion)=$sleeptime\n";
+	sleep($sleeptime);
 }
 if ( defined $rev_proxy_disable && $rev_proxy_disable == 1 ) {
 	$cmd .= ' --rev-proxy-disable=true';

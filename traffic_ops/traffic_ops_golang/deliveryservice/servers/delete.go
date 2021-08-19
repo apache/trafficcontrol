@@ -35,50 +35,68 @@ import (
 
 // Delete handler for deleting the association between a Delivery Service and a Server
 func Delete(w http.ResponseWriter, r *http.Request) {
-	delete(w, r)
+	deleteDSS(w, r)
 }
 
-const lastServerQuery = `
-SELECT
-(SELECT (CASE WHEN t.name LIKE '` + string(tc.EdgeTypePrefix) + `%' THEN TRUE ELSE FALSE END) AS available
-FROM type t
-JOIN server s ON s.type = t.id
-WHERE s.id = $2)
-AND
-(SELECT COUNT(*) = 0 AS available
-FROM deliveryservice_server
-JOIN server s ON deliveryservice_server.server = s.id
-JOIN type t ON t.id = s.type
-JOIN status st ON st.id = s.status
-WHERE (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
-AND t.name LIKE '` + string(tc.EdgeTypePrefix) + `%'
-AND deliveryservice = $1
-AND server <> $2)
+const lastEdgeAndLastOriginQuery = `
+SELECT (
+  SELECT (SELECT t.name LIKE '` + string(tc.EdgeTypePrefix) + `%') AS available
+  FROM type t
+  JOIN server s ON s.type = t.id
+  WHERE s.id = $2)
+  AND (
+  SELECT COUNT(*) = 0 AS available
+  FROM deliveryservice_server
+  JOIN server s ON deliveryservice_server.server = s.id
+  JOIN type t ON t.id = s.type
+  JOIN status st ON st.id = s.status
+  WHERE (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
+  AND t.name LIKE '` + string(tc.EdgeTypePrefix) + `%'
+  AND deliveryservice = $1
+  AND server <> $2),
+(
+  SELECT (SELECT t.name LIKE '` + string(tc.OriginTypeName) + `%') AS available
+  FROM type t
+  JOIN server s ON s.type = t.id
+  WHERE s.id = $2)
+  AND (
+  SELECT COUNT(*) = 0 AS available
+  FROM deliveryservice_server
+  JOIN server s ON deliveryservice_server.server = s.id
+  JOIN type t ON t.id = s.type
+  JOIN status st ON st.id = s.status
+  WHERE (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
+  AND t.name LIKE '` + string(tc.OriginTypeName) + `%'
+  AND deliveryservice = $1
+  AND server <> $2)
 `
 
-// checkLastServer checks if the given Server ID identifies the last server
-// assigned to the Delivery Service identified by its passed ID. It returns -
-// in order - an HTTP status code (useful only if an error occurs), an error
-// suitable for reporting back to the user, and an error that must not be shown
-// to the user. If the server is, in fact, the last server assigned to the
-// Delivery Service, the "user error" will be set to an appropriate, non-nil
-// value.
-func checkLastServer(dsID, serverID int, tx *sql.Tx) (int, error, error) {
-	var isLast bool
+// checkLastAvailableEdgeOrOrigin checks if the given Server ID identifies the last ONLINE/REPORTED
+// edge or origin assigned to the Delivery Service identified by its passed ID. It returns - in
+// order - an HTTP status code (useful only if an error occurs), an error suitable for reporting
+// back to the user, and an error that must not be shown to the user. If the server is, in fact,
+// the last available edge or origin assigned to the Delivery Service, the "user error" will be
+// set to an appropriate, non-nil value.
+func checkLastAvailableEdgeOrOrigin(dsID, serverID int, usesMSO bool, tx *sql.Tx) (int, error, error) {
+	var isLastEdge bool
+	var isLastOrigin bool
 	if tx == nil {
 		return http.StatusInternalServerError, nil, errors.New("nil transaction")
 	}
-	err := tx.QueryRow(lastServerQuery, dsID, serverID).Scan(&isLast)
+	err := tx.QueryRow(lastEdgeAndLastOriginQuery, dsID, serverID).Scan(&isLastEdge, &isLastOrigin)
 	if err != nil {
 		return http.StatusInternalServerError, nil, fmt.Errorf("checking if server #%d is the last one assigned to DS #%d: %v", serverID, dsID, err)
 	}
-	if isLast {
-		return http.StatusConflict, fmt.Errorf("removing server #%d from active Delivery Service #%d would leave it with no REPORTED/ONLINE assigned servers", serverID, dsID), nil
+	if isLastEdge {
+		return http.StatusConflict, fmt.Errorf("removing server #%d from active Delivery Service #%d would leave it with no REPORTED/ONLINE EDGE servers", serverID, dsID), nil
+	}
+	if usesMSO && isLastOrigin {
+		return http.StatusConflict, fmt.Errorf("removing server #%d from active, MSO-enabled Delivery Service #%d would leave it with no REPORTED/ONLINE ORG servers", serverID, dsID), nil
 	}
 	return http.StatusOK, nil, nil
 }
 
-func delete(w http.ResponseWriter, r *http.Request) {
+func deleteDSS(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"serverid", "dsid"}, []string{"serverid", "dsid"})
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
@@ -132,7 +150,8 @@ func delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if *ds.Active {
-		errCode, userErr, sysErr = checkLastServer(dsID, serverID, tx)
+		usesMSO := ds.MultiSiteOrigin == nil || *ds.MultiSiteOrigin
+		errCode, userErr, sysErr = checkLastAvailableEdgeOrOrigin(dsID, serverID, usesMSO, tx)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return

@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strconv"
 	"testing"
 	"time"
 
@@ -143,7 +142,6 @@ func runRequest(host string, getData string) ([]byte, error) {
 	args := []string{
 		"request",
 		"--traffic-ops-insecure=true",
-		"--login-dispersion=0",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
 		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
@@ -164,12 +162,10 @@ func runRequest(host string, getData string) ([]byte, error) {
 	return out.Bytes(), nil
 }
 
-func runApply(host string, run_mode string, dispersion time.Duration) error {
+func runApply(host string, run_mode string) error {
 	args := []string{
 		"apply",
 		"--traffic-ops-insecure=true",
-		"--dispersion=" + strconv.FormatInt(int64(dispersion/time.Second), 10),
-		"--login-dispersion=0",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
 		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,

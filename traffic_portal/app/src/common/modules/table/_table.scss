@@ -221,6 +221,21 @@ div.dropdown button.menu-item-button {
   }
 }
 
+div.grid-comp {
+  div.pull-left {
+    display: flex;
+    align-items: center;
+    button {
+      margin-top: 4px;
+    }
+
+    .breadcrumb > li + li::before {
+      padding: 0 0 0 5px;
+      margin-right: -5px;
+    }
+  }
+}
+
 .ds-requests-table {
   .ag-row.draft-request {
     background-color: #e2e3e5;

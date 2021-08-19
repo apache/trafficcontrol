@@ -79,7 +79,18 @@ func AssignFederationResolversToFederationHandler(w http.ResponseWriter, r *http
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, fmt.Errorf("'%d': no such Federation", fedID), nil)
 		return
 	}
-
+	cdnID, ok, err := dbhelpers.GetCDNIDFromFedID(fedID, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("database exception: %v", err))
+		return
+	}
+	if ok {
+		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(cdnID), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
+	}
 	if reqObj.Replace {
 		if _, err := inf.Tx.Tx.Exec(deleteFederationFederationResolversQuery, fedID); err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("database exception: %v", err))

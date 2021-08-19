@@ -17,7 +17,7 @@ module github.com/apache/trafficcontrol
 // specific language governing permissions and limitations
 // under the License.
 
-go 1.15
+go 1.17
 
 replace (
 	github.com/fsnotify/fsnotify v1.4.9 => github.com/fsnotify/fsnotify v1.3.0
@@ -38,18 +38,18 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-acme/lego v2.7.2+incompatible
 	github.com/go-ozzo/ozzo-validation v3.0.3-0.20180119232150-44af65fe9adf+incompatible
-	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/gofrs/flock v0.7.2-0.20190320160742-5135e617513b
+	github.com/golang-migrate/migrate/v4 v4.14.1
 	github.com/google/uuid v1.1.2
 	github.com/hydrogen18/stoppableListener v0.0.0-20151210151943-dadc9ccc400c
 	github.com/influxdata/influxdb v1.1.1-0.20170104212736-6a94d200c826
-	github.com/jmoiron/sqlx v0.0.0-20170430194603-d9bd385d68c0
+	github.com/jmoiron/sqlx v1.2.0
 	github.com/json-iterator/go v1.1.6-0.20181024152841-05d041de1043
 	github.com/kelseyhightower/envconfig v1.3.1-0.20180308190516-b2c5c876e265
 	github.com/kylelemons/godebug v1.1.1-0.20201107061927-e693023230a4
 	github.com/lestrrat-go/jwx v0.9.1-0.20190702045520-e35178ac2b1f
 	github.com/lestrrat/go-jwx v0.0.0-20171104074836-2857e17763b6
-	github.com/lib/pq v0.0.0-20170707053602-dd1fe2071026
+	github.com/lib/pq v1.8.0
 	github.com/mattn/go-sqlite3 v1.14.5 // indirect
 	github.com/miekg/dns v1.0.6-0.20180406150955-01d59357d468
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -57,16 +57,26 @@ require (
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.3
 	github.com/pborman/getopt/v2 v2.1.0
-	github.com/pkg/errors v0.8.2-0.20190227000051-27936f6d90f9
+	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.6.1 // indirect
 	go.etcd.io/bbolt v1.3.5
-	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf
-	golang.org/x/net v0.0.0-20210505214959-0714010a04ed
-	golang.org/x/sys v0.0.0-20210503173754-0981d6026fa6
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	golang.org/x/crypto v0.0.0-20210813211128-0a44fdfbc16e
+	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
+	golang.org/x/sys v0.0.0-20210816183151-1e6c022a8912
+	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 	gopkg.in/asn1-ber.v1 v1.0.0-20170511165959-379148ca0225 // indirect
 	gopkg.in/ldap.v2 v2.5.1
 	gopkg.in/square/go-jose.v2 v2.3.1 // indirect
 	gopkg.in/yaml.v2 v2.3.0
+)
+
+require (
+	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/hashicorp/errwrap v1.0.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.0 // indirect
+	github.com/nxadm/tail v1.4.4 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	google.golang.org/protobuf v1.25.0 // indirect
+	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )

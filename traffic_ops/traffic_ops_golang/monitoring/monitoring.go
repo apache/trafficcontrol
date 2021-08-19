@@ -24,14 +24,11 @@ package monitoring
 import (
 	"database/sql"
 	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
 	"github.com/lib/pq"
 )
@@ -133,16 +130,6 @@ type DeliveryService struct {
 	TotalTPSThreshold  float64 `json:"totalTpsThreshold"`
 	Status             string  `json:"status"`
 	TotalKBPSThreshold float64 `json:"totalKbpsThreshold"`
-}
-
-func Get(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-	api.RespWriter(w, r, inf.Tx.Tx)(GetMonitoringJSON(inf.Tx.Tx, inf.Params["cdn"]))
 }
 
 func GetMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {

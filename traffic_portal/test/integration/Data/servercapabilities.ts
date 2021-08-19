@@ -45,6 +45,12 @@ export const serverCapabilities = {
 					password: "pa$$word"
 				}
 			],
+			check: [
+				{
+					description: "check CSV link from Server Capabilities page",
+					Name: "Export as CSV"
+				}
+			],
 			add: [
 				{
 					description: "can create a server capability",
@@ -116,6 +122,12 @@ export const serverCapabilities = {
 					password: "pa$$word"
 				}
 			],
+			check: [
+				{
+					description: "check CSV link from Server Capabilities page",
+					Name: "Export as CSV"
+				}
+			],
 			add: [
 				{
 					description: "can handle readonly role creating a server capability",
@@ -138,6 +150,12 @@ export const serverCapabilities = {
 				{
 					username: "TPOperator",
 					password: "pa$$word"
+				}
+			],
+			check: [
+				{
+					description: "check CSV link from Server Capabilities page",
+					Name: "Export as CSV"
 				}
 			],
 			add: [

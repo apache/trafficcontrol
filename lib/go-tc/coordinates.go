@@ -38,7 +38,8 @@ type CoordinateResponse struct {
 	Alerts
 }
 
-// Coordinate ...
+// Coordinate is a representation of a Coordinate as it relates to the Traffic
+// Ops data model.
 type Coordinate struct {
 
 	// The Coordinate to retrieve
@@ -68,7 +69,8 @@ type Coordinate struct {
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
-// CoordinateNullable ...
+// CoordinateNullable is identical to Coordinate except that its fields are
+// reference values, which allows them to be nil.
 type CoordinateNullable struct {
 
 	// The Coordinate to retrieve

@@ -36,8 +36,7 @@ ENV PATH="${PATH}:${GOPATH}/bin"
 
 RUN apk add --no-cache --update git gcc
 
-RUN go get -u github.com/jstemmer/go-junit-report
-RUN cd /go/src/github.com/jstemmer/go-junit-report && go build
+RUN go install github.com/jstemmer/go-junit-report@latest
 
 COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
 

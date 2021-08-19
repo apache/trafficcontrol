@@ -48,6 +48,24 @@ parameters.tests.forEach(async parametersData => {
                 await parametersPage.OpenConfigureMenu();
                 await parametersPage.OpenParametersPage();
             });
+            parametersData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await parametersPage.CheckCSV(check.Name)).toBe(true);
+                    await parametersPage.OpenParametersPage();
+                });
+            });
+            parametersData.toggle.forEach(toggle => {
+                it(toggle.description, async () => {
+                    if(toggle.description.includes('hide')){
+                        expect(await parametersPage.ToggleTableColumn(toggle.Name)).toBe(false);
+                        await parametersPage.OpenParametersPage();
+                    }else{
+                        expect(await parametersPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                        await parametersPage.OpenParametersPage();
+                    }
+                    
+                });
+            })
             parametersData.add.forEach(add => {
                 it(add.description, async () => {
                     expect(await parametersPage.CreateParameter(add)).toBeTruthy();

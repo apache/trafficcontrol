@@ -560,6 +560,39 @@ func GetFederationNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	return name, true, nil
 }
 
+// GetCDNIDFromFedID returns the ID of the CDN for the current federation.
+func GetCDNIDFromFedID(id int, tx *sql.Tx) (int, bool, error) {
+	var cdnID int
+	if err := tx.QueryRow(`SELECT cdn_id FROM deliveryservice WHERE id = (SELECT deliveryservice FROM federation_deliveryservice WHERE federation = $1)`, id).Scan(&cdnID); err != nil {
+		if err == sql.ErrNoRows {
+			return cdnID, false, nil
+		}
+		return cdnID, false, err
+	}
+	return cdnID, true, nil
+}
+
+// GetCDNIDFromFedResolverID returns the IDs of the CDNs that the fed resolver is associated with.
+func GetCDNIDsFromFedResolverID(id int, tx *sql.Tx) ([]int, bool, error) {
+	var cdnIDs []int
+	var cdnID int
+	rows, err := tx.Query(`SELECT cdn_id FROM deliveryservice WHERE id = ANY(SELECT deliveryservice FROM federation_deliveryservice fds JOIN federation_federation_resolver ffr ON ffr.federation = fds.federation WHERE ffr.federation_resolver = $1)`, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return cdnIDs, false, nil
+		}
+		return cdnIDs, false, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err := rows.Scan(&cdnID); err != nil {
+			return cdnIDs, false, errors.New("scanning cdn IDs: " + err.Error())
+		}
+		cdnIDs = append(cdnIDs, cdnID)
+	}
+	return cdnIDs, true, nil
+}
+
 // GetProfileNameFromID returns the profile's name, whether a profile with ID exists, or any error.
 func GetProfileNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	name := ""
@@ -600,6 +633,70 @@ func GetServerCapabilitiesFromName(name string, tx *sql.Tx) ([]string, error) {
 		}
 	}
 	return caps, nil
+}
+
+// GetServerCapabilitiesOfServers gets all of the server capabilities of the given server hostnames.
+func GetServerCapabilitiesOfServers(names []string, tx *sql.Tx) (map[string][]string, error) {
+	serverCaps := make(map[string][]string, len(names))
+	q := `
+SELECT
+  s.host_name,
+  ARRAY_REMOVE(ARRAY_AGG(ssc.server_capability ORDER BY ssc.server_capability), NULL) AS capabilities
+FROM server s
+LEFT JOIN server_server_capability ssc ON s.id = ssc.server
+WHERE
+  s.host_name = ANY($1)
+GROUP BY s.host_name
+`
+	rows, err := tx.Query(q, pq.Array(&names))
+	if err != nil {
+		return nil, errors.New("querying server capabilities by host names: " + err.Error())
+	}
+	defer log.Close(rows, "closing rows in GetServerCapabilitiesOfServers")
+
+	for rows.Next() {
+		hostname := ""
+		caps := []string{}
+		if err := rows.Scan(&hostname, pq.Array(&caps)); err != nil {
+			return nil, errors.New("scanning server capabilities: " + err.Error())
+		}
+		serverCaps[hostname] = caps
+	}
+	return serverCaps, nil
+}
+
+// GetRequiredCapabilitiesOfDeliveryServices gets all of the required capabilities of the given delivery service IDs.
+func GetRequiredCapabilitiesOfDeliveryServices(ids []int, tx *sql.Tx) (map[int][]string, error) {
+	queryIDs := make([]int64, 0, len(ids))
+	for _, id := range ids {
+		queryIDs = append(queryIDs, int64(id))
+	}
+	dsCaps := make(map[int][]string, len(ids))
+	q := `
+SELECT
+  d.id,
+  ARRAY_REMOVE(ARRAY_AGG(dsrc.required_capability ORDER BY dsrc.required_capability), NULL) AS required_capabilities
+FROM deliveryservice d
+LEFT JOIN deliveryservices_required_capability dsrc on d.id = dsrc.deliveryservice_id
+WHERE
+  d.id = ANY($1)
+GROUP BY d.id
+`
+	rows, err := tx.Query(q, pq.Array(&queryIDs))
+	if err != nil {
+		return nil, errors.New("querying delivery service required capabilities by IDs: " + err.Error())
+	}
+	defer log.Close(rows, "closing rows in GetRequiredCapabilitiesOfDeliveryServices")
+
+	for rows.Next() {
+		id := 0
+		caps := []string{}
+		if err := rows.Scan(&id, pq.Array(&caps)); err != nil {
+			return nil, errors.New("scanning required capabilities: " + err.Error())
+		}
+		dsCaps[id] = caps
+	}
+	return dsCaps, nil
 }
 
 const dsrExistsQuery = `
@@ -1495,4 +1592,14 @@ func GetCDNNamesFromProfileIDs(tx *sql.Tx, profileIDs []int64) ([]string, error)
 		cdns = append(cdns, cdn)
 	}
 	return cdns, nil
+}
+
+// GetDSIDFromStaticDNSEntry returns the delivery service ID associated with the static DNS entry
+func GetDSIDFromStaticDNSEntry(tx *sql.Tx, staticDNSEntryID int) (int, error) {
+	var dsID int
+	query := `SELECT deliveryservice FROM staticdnsentry WHERE id = $1`
+	if err := tx.QueryRow(query, staticDNSEntryID).Scan(&dsID); err != nil {
+		return -1, errors.New("querying DS ID from static dns entry: " + err.Error())
+	}
+	return dsID, nil
 }

@@ -39,15 +39,10 @@ init() {
 	mkdir -p /opt/traffic_monitor/conf
 	cat > /opt/traffic_monitor/conf/traffic_monitor.cfg <<- EOF
 		{
-				"cache_health_polling_interval_ms": 6000,
-				"cache_stat_polling_interval_ms": 6000,
 				"monitor_config_polling_interval_ms": 15000,
 				"http_timeout_ms": 2000,
-				"peer_polling_interval_ms": 5000,
 				"peer_optimistic": true,
 				"max_events": 200,
-				"max_stat_history": 5,
-				"max_health_history": 5,
 				"health_flush_interval_ms": 20,
 				"stat_flush_interval_ms": 20,
 				"log_location_event": "/opt/traffic_monitor/var/log/event.log",
@@ -57,7 +52,6 @@ init() {
 				"log_location_debug": "null",
 				"serve_read_timeout_ms": 10000,
 				"serve_write_timeout_ms": 10000,
-				"http_poll_no_sleep": false,
 				"static_file_dir": "/opt/traffic_monitor/static/"
 		}
 EOF

@@ -23,13 +23,18 @@ type DeliveryServiceRegexResponse struct {
 	Alerts
 }
 
-// DeliveryServiceRegexes ...
+// DeliveryServiceRegexes structures associate a set of Delivery Service
+// Regular Expressions (Delivery Service "Regexes") with a particular Delivery
+// Service.
 type DeliveryServiceRegexes struct {
 	Regexes []DeliveryServiceRegex `json:"regexes"`
-	DSName  string                 `json:"dsName"`
+	// The XMLID of the Delivery Service to which the Regexes belong - NOT its
+	// Display Name.
+	DSName string `json:"dsName"`
 }
 
-// DeliveryServiceRegex ...
+// DeliveryServiceRegex is a regular expression used for routing to a Delivery
+// Service.
 type DeliveryServiceRegex struct {
 	Type      string `json:"type"`
 	SetNumber int    `json:"setNumber"`
@@ -53,7 +58,11 @@ type DeliveryServiceIDRegex struct {
 	Pattern   string `json:"pattern"`
 }
 
-// Used to represent the entire deliveryservice_regex for testing
+// DeliveryServiceRegexesTest is used to represent the entire
+// deliveryservice_regex for testing.
+//
+// This is ONLY meant to be used by testing code internal to ATC, do NOT use
+// this to represent real CDN objects of any kind.
 type DeliveryServiceRegexesTest struct {
 	DSName string `json:"dsName"`
 	DSID   int

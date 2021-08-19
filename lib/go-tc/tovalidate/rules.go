@@ -1,3 +1,5 @@
+package tovalidate
+
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -9,8 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-package tovalidate
 
 import (
 	"errors"
@@ -28,7 +28,7 @@ import (
 var rxAlphanumericUnderscoreDash = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 var rxAlphanumericDash = regexp.MustCompile(`^[a-zA-Z0-9\-]+$`)
 
-// NoSpaces returns true if the string has no spaces
+// NoSpaces returns true if the string has no spaces.
 func NoSpaces(str string) bool {
 	return !strings.ContainsAny(str, " ")
 }
@@ -38,22 +38,25 @@ func NoLineBreaks(str string) bool {
 	return !strings.ContainsAny(str, "\n\r")
 }
 
-// IsAlphanumericUnderscoreDash returns true if the string consists of only alphanumeric, underscore, or dash characters.
+// IsAlphanumericUnderscoreDash returns true if the string consists of only
+// alphanumeric, underscore, or dash characters.
 func IsAlphanumericUnderscoreDash(str string) bool {
 	return rxAlphanumericUnderscoreDash.MatchString(str)
 }
 
-// IsAlphanumericDash returns true if the string consists of only alphanumeric or dash characters.
+// IsAlphanumericDash returns true if the string consists of only alphanumeric
+// or dash characters.
 func IsAlphanumericDash(str string) bool {
 	return rxAlphanumericDash.MatchString(str)
 }
 
-// NoPeriods returns true if the string has no periods
+// NoPeriods returns true if the string has no periods.
 func NoPeriods(str string) bool {
 	return !strings.ContainsAny(str, ".")
 }
 
-// IsOneOfString generates a validator function returning whether string is in the set of strings
+// IsOneOfString generates a validator function returning whether a passed
+// string is in the given set of strings.
 func IsOneOfString(set ...string) func(string) bool {
 	return func(s string) bool {
 		for _, x := range set {
@@ -65,7 +68,7 @@ func IsOneOfString(set ...string) func(string) bool {
 	}
 }
 
-// IsOneOfStringICase is a case-insensitive version of IsOneOfString
+// IsOneOfStringICase is a case-insensitive version of IsOneOfString.
 func IsOneOfStringICase(set ...string) func(string) bool {
 	var lowcased []string
 	for _, s := range set {
@@ -76,8 +79,11 @@ func IsOneOfStringICase(set ...string) func(string) bool {
 	}
 }
 
-// IsPtrToSliceOfUniqueStringersICase returns a validator function which returns an error if the argument is a non-nil
-// pointer to a slice of Stringers whose String() values are not in the set of strings or there are duplicate strings
+// IsPtrToSliceOfUniqueStringersICase returns a validator function which
+// returns an error if the argument is a non-nil pointer to a slice of
+// fmt.Stringers whose String() values are not in the set of strings or if the
+// argument contains more than one entry that produce the same value from their
+// String() method.
 func IsPtrToSliceOfUniqueStringersICase(set ...string) func(interface{}) error {
 	lowcased := make(map[string]bool, len(set))
 	for _, s := range set {
@@ -122,6 +128,11 @@ func IsPtrToSliceOfUniqueStringersICase(set ...string) func(interface{}) error {
 	}
 }
 
+// IsGreaterThanZero returns an error if the given value is not nil and is not
+// a pointer to a value that is strictly greater than zero.
+//
+// The argument to this function must be a pointer to an int or a float64 -
+// other types will cause it to return an error (not panic).
 func IsGreaterThanZero(value interface{}) error {
 	switch v := value.(type) {
 	case *int:
@@ -138,6 +149,11 @@ func IsGreaterThanZero(value interface{}) error {
 	return errors.New("must be greater than zero")
 }
 
+// IsValidPortNumber returns an error if the given value is not nil and is not
+// a valid network port number or a pointer to a valid network port number.
+//
+// The argument to this function must be either an int or a pointer to an int
+// float64 - other types will cause it to return an error (not panic).
 func IsValidPortNumber(value interface{}) error {
 	switch v := value.(type) {
 	case int:
@@ -158,6 +174,12 @@ func IsValidPortNumber(value interface{}) error {
 	return errors.New("must be a valid port number")
 }
 
+// IsValidIPv6CIDROrAddress returns an error if the given value is not a
+// pointer to a string that is a valid IPv6 address with optional CIDR-notation
+// network prefix.
+//
+// The argument to this function must be a pointer to a string - other types
+// will cause it to return an error (not panic).
 func IsValidIPv6CIDROrAddress(value interface{}) error {
 	switch v := value.(type) {
 	case *string:

@@ -40,10 +40,17 @@ PHYS="aloc"
 COORD="acoord"
 CDN="zcdn"
 CG="acg"
+to_admin_username="$(jq -r '.params.login.username' "${GITHUB_WORKSPACE}/traffic_portal/test/integration/config.json")"
+to_admin_password="$(jq -r '.params.login.password' "${GITHUB_WORKSPACE}/traffic_portal/test/integration/config.json")"
+password_hash="$(<<PYTHON_COMMANDS PYTHONPATH="${GITHUB_WORKSPACE}/traffic_ops/install/bin" python
+import _postinstall
+print(_postinstall.hash_pass('${to_admin_password}'))
+PYTHON_COMMANDS
+)"
 <<QUERY psql
 INSERT INTO tm_user (username, role, tenant_id, local_passwd)
-  VALUES ('admin', 1, 1,
-    'SCRYPT:16384:8:1:vVw4X6mhoEMQXVGB/ENaXJEcF4Hdq34t5N8lapIjDQEAS4hChfMJMzwwmHfXByqUtjmMemapOPsDQXG+BAX/hA==:vORiLhCm1EtEQJULvPFteKbAX2DgxanPhHdrYN8VzhZBNF81NRxxpo7ig720KcrjH1XFO6BUTDAYTSBGU9KO3Q=='
+  VALUES ('${to_admin_username}', 1, 1,
+    '${password_hash}'
   );
 INSERT INTO division(name) VALUES('${DIVISION}');
 INSERT INTO region(name, division) VALUES('${REGION}', 1);
@@ -73,24 +80,6 @@ JOIN CG ON 1=1;
 QUERY
 
 sudo useradd trafops
-
-download_go() {
-	. build/functions.sh
-	if verify_and_set_go_version; then
-		return
-	fi
-	go_version="$(cat "${GITHUB_WORKSPACE}/GO_VERSION")"
-	wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz" --no-verbose
-	echo "Extracting Go ${go_version}..."
-	<<-'SUDO_COMMANDS' sudo sh
-		set -o errexit
-    go_dir="$(command -v go | xargs realpath | xargs dirname | xargs dirname)"
-		mv "$go_dir" "${go_dir}.unused"
-		tar -C /usr/local -xzf go.tar.gz
-	SUDO_COMMANDS
-	rm go.tar.gz
-	go version
-}
 
 gray_bg="$(printf '%s%s' $'\x1B' '[100m')";
 red_bg="$(printf '%s%s' $'\x1B' '[41m')";
@@ -153,9 +142,6 @@ CHROMIUM_CONTAINER=$(docker ps -qf name=chromium)
 HUB_CONTAINER=$(docker ps -qf name=hub)
 CHROMIUM_VER=$(docker exec "$CHROMIUM_CONTAINER" chromium --version | grep -Eo '[0-9.]+')
 
-GOROOT=/usr/local/go
-export PATH="${PATH}:${GOROOT}/bin"
-download_go
 export GOPATH="${HOME}/go"
 readonly ORG_DIR="$GOPATH/src/github.com/apache"
 readonly REPO_DIR="${ORG_DIR}/trafficcontrol"
@@ -169,7 +155,9 @@ fi
 
 to_build() {
   cd "${REPO_DIR}/traffic_ops/traffic_ops_golang"
-  go mod vendor -v
+  if  [[ ! -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]]; then
+    go mod vendor
+  fi
   go build .
 
   openssl req -new -x509 -nodes -newkey rsa:4096 -out localhost.crt -keyout localhost.key -subj "/CN=tptests";
@@ -212,7 +200,6 @@ onFail() {
   echo "Detailed logs produced info Reports artifact"
   exit 1
 }
-
 
 cd "${REPO_DIR}/traffic_portal/test/integration"
 npm ci

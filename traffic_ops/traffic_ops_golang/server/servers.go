@@ -1530,14 +1530,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if *status.Name != string(tc.CacheStatusOnline) && *status.Name != string(tc.CacheStatusReported) {
-		dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx)
+		dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, original.Type, tx)
 		if err != nil {
 			sysErr = fmt.Errorf("getting Delivery Services to which server #%d is assigned that have no other servers: %v", id, err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
 		if len(dsIDs) > 0 {
-			alertText := InvalidStatusForDeliveryServicesAlertText(*status.Name, dsIDs)
+			prefix := fmt.Sprintf("setting server status to '%s' would leave Active Delivery Service", *status.Name)
+			alertText := InvalidStatusForDeliveryServicesAlertText(prefix, original.Type, dsIDs)
 			api.WriteAlerts(w, r, http.StatusConflict, tc.CreateAlerts(tc.ErrorLevel, alertText))
 			return
 		}
@@ -1906,28 +1907,37 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-const lastServerOfDSesQuery = `
-SELECT "deliveryservice"
-FROM deliveryservice_server
-WHERE "deliveryservice" IN (
-	SELECT deliveryservice_server.deliveryservice
-	FROM deliveryservice_server
-	INNER JOIN deliveryservice
-	ON deliveryservice_server.deliveryservice = deliveryservice.id
-	WHERE deliveryservice_server."server" = $1
-	AND deliveryservice.active
-)
-GROUP BY "deliveryservice"
-HAVING COUNT("server") = 1;
+const lastServerTypeOfDSesQuery = `
+SELECT ds.id, ds.multi_site_origin
+FROM deliveryservice_server dss
+JOIN server s ON dss.server = s.id
+JOIN type t ON s.type = t.id
+JOIN deliveryservice ds ON dss.deliveryservice = ds.id
+WHERE t.name LIKE $1 AND ds.active
+GROUP BY ds.id, ds.multi_site_origin
+HAVING COUNT(dss.server) = 1 AND $2 = ANY(ARRAY_AGG(dss.server));
 `
 
-func getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id int, tx *sql.Tx) ([]int, error) {
+// getActiveDeliveryServicesThatOnlyHaveThisServerAssigned returns the IDs of active delivery services for which the given
+// server ID is either the last EDGE-type server or last ORG-type server (if MSO is enabled) assigned to them.
+func getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id int, serverType string, tx *sql.Tx) ([]int, error) {
 	var ids []int
+	var like string
+	isEdge := strings.HasPrefix(serverType, tc.CacheTypeEdge.String())
+	isOrigin := strings.HasPrefix(serverType, tc.OriginTypeName)
+	if isEdge {
+		like = tc.CacheTypeEdge.String() + "%"
+	} else if isOrigin {
+		like = tc.OriginTypeName + "%"
+	} else {
+		// by definition, only EDGE-type or ORG-type servers can be assigned
+		return ids, nil
+	}
 	if tx == nil {
 		return ids, errors.New("nil transaction")
 	}
 
-	rows, err := tx.Query(lastServerOfDSesQuery, id)
+	rows, err := tx.Query(lastServerTypeOfDSesQuery, like, id)
 	if err != nil {
 		return ids, fmt.Errorf("querying: %v", err)
 	}
@@ -1935,11 +1945,14 @@ func getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id int, tx *sql.Tx)
 
 	for rows.Next() {
 		var dsID int
-		err = rows.Scan(&dsID)
+		var mso bool
+		err = rows.Scan(&dsID, &mso)
 		if err != nil {
 			return ids, fmt.Errorf("scanning: %v", err)
 		}
-		ids = append(ids, dsID)
+		if isEdge || (isOrigin && mso) {
+			ids = append(ids, dsID)
+		}
 	}
 
 	return ids, nil
@@ -1963,25 +1976,23 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := inf.IntParams["id"]
+	serverInfo, exists, err := dbhelpers.GetServerInfo(id, tx)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !exists {
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no server exists by id #%d", id), nil)
+		return
+	}
 
-	if dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx); err != nil {
+	if dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, serverInfo.Type, tx); err != nil {
 		sysErr = fmt.Errorf("checking if server #%d is the last server assigned to any Delivery Services: %v", id, err)
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
 	} else if len(dsIDs) > 0 {
 		alertText := fmt.Sprintf("deleting server #%d would leave Active Delivery Service", id)
-		if len(dsIDs) == 1 {
-			alertText += fmt.Sprintf(" #%d", dsIDs[0])
-		} else if len(dsIDs) == 2 {
-			alertText += fmt.Sprintf("s #%d and #%d", dsIDs[0], dsIDs[1])
-		} else {
-			dsNums := make([]string, 0, len(dsIDs)-1)
-			for _, dsID := range dsIDs[:len(dsIDs)-1] {
-				dsNums = append(dsNums, "#"+strconv.Itoa(dsID))
-			}
-			alertText += fmt.Sprintf("s %s, and #%d", strings.Join(dsNums, ", "), dsIDs[len(dsIDs)-1])
-		}
-		alertText += fmt.Sprintf("  with no '%s' or '%s' servers", tc.CacheStatusOnline, tc.CacheStatusReported)
+		alertText = InvalidStatusForDeliveryServicesAlertText(alertText, serverInfo.Type, dsIDs)
 
 		api.WriteAlerts(w, r, http.StatusConflict, tc.CreateAlerts(tc.ErrorLevel, alertText))
 		return

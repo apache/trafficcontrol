@@ -27,24 +27,6 @@ colored_text() {
 	sed "s/^/${color}/" | sed "s/$/${normal_fg}/"
 }
 
-download_go() {
-	. build/functions.sh
-	if verify_and_set_go_version; then
-		return
-	fi
-	go_version="$(cat "${GITHUB_WORKSPACE}/GO_VERSION")"
-	wget -O go.tar.gz "https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz" --no-verbose
-	echo "Extracting Go ${go_version}..."
-	<<-'SUDO_COMMANDS' sudo sh
-		set -o errexit
-    go_dir="$(command -v go | xargs realpath | xargs dirname | xargs dirname)"
-		mv "$go_dir" "${go_dir}.unused"
-		tar -C /usr/local -xzf go.tar.gz
-	SUDO_COMMANDS
-	rm go.tar.gz
-	go version
-}
-
 vendor_dependencies() {
 	go mod tidy
 	go mod vendor
@@ -78,7 +60,7 @@ check_vendored_deps() {
 
 check_go_file() {
 	go_file="$1"
-	if git diff --exit-code --no-patch -- "$go_file"; then
+	if git diff --exit-code -- "$go_file"; then
 		echo "${go_file} is up-to-date." | colored_text "$green_fg"
 		return
 	fi
@@ -86,13 +68,10 @@ check_go_file() {
 	exit_code=1
 }
 
-GOROOT=/usr/local/go
-export PATH="${PATH}:${GOROOT}/bin"
 export GOPATH="${HOME}/go"
 
 exit_code=0
 declare -A command_exists
-command_exists[download_go]=1
 command_exists[vendor_dependencies]=1
 command_exists[check_vendored_deps]=1
 command_exists[check_go_file]=1

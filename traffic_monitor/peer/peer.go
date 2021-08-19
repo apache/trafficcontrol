@@ -65,7 +65,7 @@ func (handler Handler) Handle(id string, r io.Reader, format string, reqTime tim
 	}
 
 	if r != nil {
-		json := jsoniter.ConfigFastest // TODo make configurable?
+		json := jsoniter.ConfigFastest // TODO make configurable?
 		err = json.NewDecoder(r).Decode(&result.PeerStates)
 		if err == nil {
 			result.Available = true

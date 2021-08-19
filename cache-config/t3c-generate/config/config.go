@@ -55,6 +55,7 @@ type Cfg struct {
 	Dir                string
 	ViaRelease         bool
 	SetDNSLocalBind    bool
+	NoOutgoingIP       bool
 	ParentComments     bool
 	DefaultEnableH2    bool
 	DefaultTLSVersions []atscfg.TLSVersion
@@ -78,6 +79,7 @@ func GetCfg() (Cfg, error) {
 	disableParentConfigComments := getopt.BoolLong("disable-parent-config-comments", 'c', "Disable adding a comments to parent.config individual lines")
 	defaultEnableH2 := getopt.BoolLong("default-client-enable-h2", '2', "Whether to enable HTTP/2 on Delivery Services by default, if they have no explicit Parameter. This is irrelevant if ATS records.config is not serving H2. If omitted, H2 is disabled.")
 	defaultTLSVersionsStr := getopt.StringLong("default-client-tls-versions", 'T', "", "Comma-delimited list of default TLS versions for Delivery Services with no Parameter, e.g. '--default-tls-versions=1.1,1.2,1.3'. If omitted, all versions are enabled.")
+	noOutgoingIP := getopt.BoolLong("no-outgoing-ip", 'i', "Whether to not set the records.config outgoing IP to the server's addresses in Traffic Ops. Default is false.")
 	verbosePtr := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
 	silentPtr := getopt.BoolLong("silent", 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
 
@@ -139,6 +141,7 @@ func GetCfg() (Cfg, error) {
 		Dir:                *dir,
 		ViaRelease:         *viaRelease,
 		SetDNSLocalBind:    *dnsLocalBind,
+		NoOutgoingIP:       *noOutgoingIP,
 		ParentComments:     !(*disableParentConfigComments),
 		DefaultEnableH2:    *defaultEnableH2,
 		DefaultTLSVersions: defaultTLSVersions,
@@ -180,8 +183,8 @@ type TOData struct {
 	// ServerParams must be all Parameters on the Profile of the current server. Must not include other Parameters.
 	ServerParams []tc.Parameter
 
-	// CacheKeyParams must be all Parameters with the ConfigFile atscfg.CacheKeyParameterConfigFile.
-	CacheKeyParams []tc.Parameter
+	// RemapConfigParams must be all Parameters with the ConfigFile "remap.config". Also includes cachekey.config parameters
+	RemapConfigParams []tc.Parameter
 
 	// ParentConfigParams must be all Parameters with the ConfigFile "parent.config.
 	ParentConfigParams []tc.Parameter

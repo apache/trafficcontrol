@@ -80,7 +80,7 @@ $ua->timeout(30);
 $ua->ssl_opts(verify_hostname => 0);
 $ua->cookie_jar( {} );
 
-my $login_url = "$b_url/api/2.0/user/login";
+my $login_url = "$b_url/api/4.0/user/login";
 TRACE "posting $login_url";
 my $req = HTTP::Request->new( 'POST', $login_url );
 $req->header( 'Content-Type' => 'application/json' );
@@ -92,9 +92,10 @@ if ( ! $login_response->is_success ) {
 	exit(1);
 }
 
-my $url       = "$b_url/api/2.0/cdns/dnsseckeys/refresh";
-TRACE "getting $url";
-my $response = $ua->get($url);
+my $url       = "$b_url/api/4.0/cdns/dnsseckeys/refresh";
+TRACE "putting $url";
+my $dns_req = HTTP::Request->new( 'PUT', $url );
+my $response = $ua->request($dns_req);
 if ( $response->is_success ) {
 	DEBUG "Successfully refreshed dnssec keys response was " . $response->decoded_content;
 }

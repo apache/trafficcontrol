@@ -93,8 +93,11 @@ func MakeParentDotConfig(
 	cacheGroupArr []tc.CacheGroupNullable,
 	dss []DeliveryServiceServer,
 	cdn *tc.CDN,
-	opt ParentConfigOpts,
+	opt *ParentConfigOpts,
 ) (Cfg, error) {
+	if opt == nil {
+		opt = &ParentConfigOpts{}
+	}
 	warnings := []string{}
 
 	if server.HostName == nil || *server.HostName == "" {
@@ -332,10 +335,15 @@ func MakeParentDotConfig(
 				parentQStr = "consider"
 			}
 
-			orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN)
+			orgFQDNStr := *ds.OrgServerFQDN
+			// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
+			if isLastCacheTier := noTopologyServerIsLastCacheForDS(server, &ds); !isLastCacheTier {
+				orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
+			}
+			orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
 			warnings = append(warnings, orgWarns...)
 			if err != nil {
-				warnings = append(warnings, "DS '"+*ds.XMLID+"' has malformed origin URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
+				warnings = append(warnings, "DS '"+*ds.XMLID+"' has malformed origin URI: '"+orgFQDNStr+"': skipping!"+err.Error())
 				continue
 			}
 
@@ -378,7 +386,13 @@ func MakeParentDotConfig(
 			warnings = append(warnings, parentWarns...)
 
 			text := ""
-			orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN)
+
+			orgFQDNStr := *ds.OrgServerFQDN
+			// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
+			if isLastCacheTier := noTopologyServerIsLastCacheForDS(server, &ds); !isLastCacheTier {
+				orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
+			}
+			orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
 			warnings = append(warnings, orgWarns...)
 			if err != nil {
 				warnings = append(warnings, "DS '"+*ds.XMLID+"' had malformed origin  URI: '"+*ds.OrgServerFQDN+"': skipping!"+err.Error())
@@ -386,6 +400,7 @@ func MakeParentDotConfig(
 			}
 
 			text += makeParentComment(opt.AddComments, *ds.XMLID, "")
+
 			// TODO encode this in a DSType func, IsGoDirect() ?
 			if *ds.Type == tc.DSTypeHTTPNoCache || *ds.Type == tc.DSTypeHTTPLive || *ds.Type == tc.DSTypeDNSLive {
 				text += `dest_domain=` + orgURI.Hostname() + ` port=` + orgURI.Port() + ` go_direct=true` + "\n"
@@ -754,19 +769,10 @@ func getTopologyParentConfigLine(
 		return "", warnings, nil
 	}
 
-	orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN)
-	warnings = append(warnings, orgWarns...)
-	if err != nil {
-		return "", warnings, errors.New("DS '" + *ds.XMLID + "' has malformed origin URI: '" + *ds.OrgServerFQDN + "': skipping!" + err.Error())
-	}
-
 	topology := nameTopologies[TopologyName(*ds.Topology)]
 	if topology.Name == "" {
 		return "", warnings, errors.New("DS " + *ds.XMLID + " topology '" + *ds.Topology + "' not found in Topologies!")
 	}
-
-	txt += makeParentComment(addComments, *ds.XMLID, *ds.Topology)
-	txt += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port()
 
 	serverPlacement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
 	if err != nil {
@@ -775,7 +781,20 @@ func getTopologyParentConfigLine(
 	if !serverPlacement.InTopology {
 		return "", warnings, nil // server isn't in topology, no error
 	}
-	// TODO add Topology/Capabilities to remap.config
+
+	orgFQDNStr := *ds.OrgServerFQDN
+	// if this cache isn't the last tier, i.e. we're not going to the origin, use http not https
+	if !serverPlacement.IsLastCacheTier {
+		orgFQDNStr = strings.Replace(orgFQDNStr, `https://`, `http://`, -1)
+	}
+	orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
+	warnings = append(warnings, orgWarns...)
+	if err != nil {
+		return "", warnings, errors.New("DS '" + *ds.XMLID + "' has malformed origin URI: '" + *ds.OrgServerFQDN + "': skipping!" + err.Error())
+	}
+
+	txt += makeParentComment(addComments, *ds.XMLID, *ds.Topology)
+	txt += "dest_domain=" + orgURI.Hostname() + " port=" + orgURI.Port()
 
 	parents, secondaryParents, parentWarnings, err := getTopologyParents(server, ds, servers, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins)
 	warnings = append(warnings, parentWarnings...)

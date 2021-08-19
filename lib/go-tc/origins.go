@@ -25,13 +25,14 @@ type OriginsResponse struct {
 	Alerts
 }
 
-// OriginDetailResponse is the JSON object returned for a single origin
+// OriginDetailResponse is the JSON object returned for a single origin.
 type OriginDetailResponse struct {
 	Response Origin `json:"response"`
 	Alerts
 }
 
-// Origin contains information relating to an origin server.
+// Origin contains information relating to an Origin, which is NOT, in general,
+// the same as an origin *server*.
 type Origin struct {
 	Cachegroup        *string    `json:"cachegroup" db:"cachegroup"`
 	CachegroupID      *int       `json:"cachegroupId" db:"cachegroup_id"`

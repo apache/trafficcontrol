@@ -61,29 +61,17 @@ var (
 )
 
 func init() {
-	fromTypePtr := getopt.StringLong("fromType", 't', riakBE.Name(), fmt.Sprintf("From server types (%v)", strings.Join(supportedTypes(), "|")))
-	if fromTypePtr == nil {
-		stdlog.Fatal("unable to load fromType")
-	}
-	fromType = *fromTypePtr
+	fromType = riakBE.Name()
+	getopt.FlagLong(&fromType, "fromType", 't', fmt.Sprintf("From server types (%v)", strings.Join(supportedTypes(), "|")))
 
-	toTypePtr := getopt.StringLong("toType", 'o', pgBE.Name(), fmt.Sprintf("From server types (%v)", strings.Join(supportedTypes(), "|")))
-	if toTypePtr == nil {
-		stdlog.Fatal("unable to load toType")
-	}
-	toType = *toTypePtr
+	toType = pgBE.Name()
+	getopt.FlagLong(&toType, "toType", 'o', fmt.Sprintf("To server types (%v)", strings.Join(supportedTypes(), "|")))
 
-	toCfgPtr := getopt.StringLong("toCfgPath", 'g', "pg.json", "To server config file")
-	if toCfgPtr == nil {
-		stdlog.Fatal("unable to load toCfg")
-	}
-	toCfgPath = *toCfgPtr
+	toCfgPath = "pg.json"
+	getopt.FlagLong(&toCfgPath, "toCfgPath", 'g', "To server config file")
 
-	fromCfgPtr := getopt.StringLong("fromCfgPath", 'f', "riak.json", "From server config file")
-	if fromCfgPtr == nil {
-		stdlog.Fatal("unable to load fromCfg")
-	}
-	fromCfgPath = *fromCfgPtr
+	fromCfgPath = "riak.json"
+	getopt.FlagLong(&fromCfgPath, "fromCfgPath", 'f', "From server config file")
 
 	getopt.FlagLong(&dry, "dry", 'r', "Do not perform writes").
 		SetOptional().
@@ -95,7 +83,7 @@ func init() {
 		SetFlag().
 		SetGroup("no_insert")
 
-	getopt.FlagLong(&noConfirm, "noConfirm", 'm', "Requires confirmation before inserting records").
+	getopt.FlagLong(&noConfirm, "noConfirm", 'm', "Don't require confirmation before inserting records").
 		SetFlag()
 
 	getopt.FlagLong(&dump, "dump", 'd', "Write keys (from 'from' server) to disk").
@@ -103,7 +91,7 @@ func init() {
 		SetGroup("disk_bck").
 		SetFlag()
 
-	getopt.FlagLong(&keyFile, "fill", 'i', "Insert data into `to` server with data this directory").
+	getopt.FlagLong(&keyFile, "fill", 'i', "Insert data into `to` server with data in this directory").
 		SetOptional().
 		SetGroup("disk_bck")
 
@@ -584,6 +572,13 @@ func initConfig() {
 		}
 		cfg = newCfg
 	} else if logLevel != "" {
+		cfg = config{
+			LogLocationError:   log.LogLocationNull,
+			LogLocationWarning: log.LogLocationNull,
+			LogLocationInfo:    log.LogLocationNull,
+			LogLocationDebug:   log.LogLocationNull,
+			LogLocationEvent:   log.LogLocationNull,
+		}
 		switch logLevel {
 		case "event":
 			cfg.LogLocationEvent = log.LogLocationStdout

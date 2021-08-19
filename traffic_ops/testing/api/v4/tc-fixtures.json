@@ -1446,7 +1446,7 @@
             "logsEnabled": false,
             "missLat": 0,
             "missLong": 0,
-            "multiSiteOrigin": false,
+            "multiSiteOrigin": true,
             "orgServerFqdn": "https://example.com",
             "protocol": 0,
             "qstringIgnore": 0,
@@ -1643,17 +1643,21 @@
         {
             "name": "origin1",
             "cachegroup": "originCachegroup",
+            "Coordinate": "coordinate1",
             "deliveryService": "ds1",
             "fqdn": "origin1.example.com",
             "ipAddress": "1.2.3.4",
             "ip6Address": "dead:beef:cafe::42",
             "port": 1234,
+            "Profile" : "ATS_EDGE_TIER_CACHE",
             "protocol": "http",
-            "tenant": "tenant1"
+            "tenant": "tenant1",
+            "isPrimary" : true
         },
         {
             "name": "origin2",
             "cachegroup": "originCachegroup",
+            "Coordinate": "coordinate1",
             "deliveryService": "ds2",
             "fqdn": "origin2.example.com",
             "ipAddress": "5.6.7.8",
@@ -3130,6 +3134,55 @@
             "type": "ORG",
             "updPending": true,
             "xmppId": "denver-mso-org-01\\\\@ocdn.kabletown.net",
+            "xmppPasswd": "X"
+        },
+        {
+            "cachegroup": "multiOriginCachegroup",
+            "cdnName": "cdn1",
+            "domainName": "ga.denver.kabletown.net",
+            "guid": null,
+            "hostName": "test-mso-org-01",
+            "httpsPort": 443,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaces": [
+                {
+                    "ipAddresses": [
+                        {
+                            "address": "127.0.4.1/30",
+                            "gateway": "127.0.4.1",
+                            "serviceAddress": true
+                        },
+                        {
+                            "address": "2345:1244:12:8::20/64",
+                            "gateway": "2345:1244:12:8::20",
+                            "serviceAddress": false
+                        }
+                    ],
+                    "maxBandwidth": null,
+                    "monitor": true,
+                    "mtu": 9000,
+                    "name": "bond0",
+                    "routerHostName": "router16",
+                    "routerPort": "9015"
+                }
+            ],
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "physLocation": "Denver",
+            "profile": "MSO",
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "status": "ONLINE",
+            "tcpPort": 80,
+            "type": "ORG",
+            "updPending": false,
+            "xmppId": "test-mso-org-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
         },
         {

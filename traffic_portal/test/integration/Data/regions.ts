@@ -72,6 +72,12 @@ export const regions = {
                     password: "pa$$word"
                 }
             ],
+            check: [
+				{
+					description: "check CSV link from Regions page",
+					Name: "Export as CSV"
+				}
+			],
             add: [
                 {
                     description: "create a Regions",
@@ -110,6 +116,12 @@ export const regions = {
                     password: "pa$$word"
                 }
             ],
+            check: [
+				{
+					description: "check CSV link from Regions page",
+					Name: "Export as CSV"
+				}
+			],
             add: [
                 {
                     description: "create a Regions",
@@ -142,6 +154,12 @@ export const regions = {
                     password: "pa$$word"
                 }
             ],
+            check: [
+				{
+					description: "check CSV link from Regions page",
+					Name: "Export as CSV"
+				}
+			],
             add: [
                 {
                     description: "create a Regions",

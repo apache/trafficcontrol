@@ -130,8 +130,15 @@ func (fed *TOCDNFederation) Validate() error {
 
 // fedAPIInfo.Params["name"] is not used on creation, rather the cdn name
 // is connected when the federations/:id/deliveryservice links a federation
+// However, we use fedAPIInfo.Params["name"] to check whether or not another user has a hard lock on the CDN.
 // Note: cdns and deliveryservies have a 1-1 relationship
 func (fed *TOCDNFederation) Create() (error, error, int) {
+	if cdn, ok := fed.APIInfo().Params["name"]; ok {
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+	}
 	// Deliveryservice IDs should not be included on create.
 	if fed.DeliveryServiceIDs != nil {
 		fed.DsId = nil
@@ -202,6 +209,12 @@ func (fed *TOCDNFederation) Update(h http.Header) (error, error, int) {
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
+	if cdn, ok := fed.APIInfo().Params["name"]; ok {
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+	}
 	// Deliveryservice IDs should not be included on update.
 	if fed.DeliveryServiceIDs != nil {
 		fed.DsId = nil
@@ -212,12 +225,16 @@ func (fed *TOCDNFederation) Update(h http.Header) (error, error, int) {
 }
 
 // Delete implements the Deleter interface for TOCDNFederation.
-// In the perl version, :name is ignored. It is not even verified whether or not
-// :name is a real cdn that exists. This mimicks the perl behavior.
 func (fed *TOCDNFederation) Delete() (error, error, int) {
 	userErr, sysErr, errCode := fed.isTenantAuthorized()
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
+	}
+	if cdn, ok := fed.APIInfo().Params["name"]; ok {
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
 	}
 	return api.GenericDelete(fed)
 }

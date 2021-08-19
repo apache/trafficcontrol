@@ -52,15 +52,15 @@ type ServerCapability string
 // Server is a tc.Server for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
 // but to only have to change it here, and the places where breaking symbol changes were made.
-type Server tc.ServerV30
+type Server tc.ServerV40
 
 // DeliveryService is a tc.DeliveryService for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
 // but to only have to change it here, and the places where breaking symbol changes were made.
-type DeliveryService tc.DeliveryServiceNullableV30
+type DeliveryService tc.DeliveryServiceV40
 
 // ToDeliveryServices converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
-func ToDeliveryServices(dses []tc.DeliveryServiceNullableV30) []DeliveryService {
+func ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 	ad := []DeliveryService{}
 	for _, ds := range dses {
 		ad = append(ad, DeliveryService(ds))
@@ -68,8 +68,8 @@ func ToDeliveryServices(dses []tc.DeliveryServiceNullableV30) []DeliveryService 
 	return ad
 }
 
-// V30ToDeliveryServices converts a slice of the old traffic_ops/client type to the local alias.
-func V30ToDeliveryServices(dses []tc.DeliveryServiceNullableV30) []DeliveryService {
+// V40ToDeliveryServices converts a slice of the old traffic_ops/client type to the local alias.
+func V40ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 	ad := []DeliveryService{}
 	for _, ds := range dses {
 		ad = append(ad, DeliveryService(ds))
@@ -78,7 +78,7 @@ func V30ToDeliveryServices(dses []tc.DeliveryServiceNullableV30) []DeliveryServi
 }
 
 // ToServers converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
-func ToServers(servers []tc.ServerV30) []Server {
+func ToServers(servers []tc.ServerV40) []Server {
 	as := []Server{}
 	for _, sv := range servers {
 		as = append(as, Server(sv))

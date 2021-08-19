@@ -386,7 +386,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysRe
 	deliveryService := *req.DeliveryService
 	provider := *req.AuthType
 
-	dsID, ok, err := getDSIDFromName(tx, *req.DeliveryService)
+	dsID, _, ok, err := getDSIDAndCDNIDFromName(tx, *req.DeliveryService)
 	if err != nil {
 		log.Errorf("deliveryservice.GenerateSSLKeys: getting DS ID from name " + err.Error())
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)

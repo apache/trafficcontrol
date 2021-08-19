@@ -22,7 +22,7 @@ package main
 import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"os"
-	"path/filepath"
+	"os/exec"
 	"syscall" // TODO change to x/unix ?
 
 	"github.com/pborman/getopt/v2"
@@ -38,6 +38,7 @@ const ExitCodeNoCommand = 1
 const ExitCodeUnknownCommand = 2
 const ExitCodeCommandErr = 3
 const ExitCodeExeErr = 4
+const ExitCodeCommandLookupErr = 5
 
 func main() {
 	flagHelp := getopt.BoolLong("help", 'h', "Print usage information and exit")
@@ -60,19 +61,18 @@ func main() {
 	}
 
 	app := "t3c-check-" + cmd
+
+	appPath, err := exec.LookPath(app)
+  if err != nil {
+    log.Errorf("error finding path to '%s': %s\n", app, err.Error())
+    os.Exit(ExitCodeCommandLookupErr)
+	}
+
 	args := append([]string{app}, os.Args[2:]...)
 
-	ex, err := os.Executable()
-	if err != nil {
-		log.Errorf("error getting application information: %s\n", err.Error())
-		os.Exit(ExitCodeExeErr)
-	}
-	dir := filepath.Dir(ex)
-	appDir := filepath.Join(dir, app) // TODO use path, not exact dir of this exe
-
 	env := os.Environ()
-
-	if err := syscall.Exec(appDir, args, env); err != nil {
+  
+  if err := syscall.Exec(appPath, args, env); err != nil {
 		log.Errorf("error executing sub-command: %s\n", err.Error())
 		os.Exit(ExitCodeCommandErr)
 	}

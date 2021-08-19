@@ -33,3 +33,5 @@ None
 ```yaml
 uses: .github/actions/build-rpms
 ```
+
+Note that fetch-depth needs to be set to `0` when checking out the repo before running the *build-rpms* action.
