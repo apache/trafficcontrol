@@ -26,7 +26,6 @@ export * from "./login";
 export * from "./origins";
 export * from "./parameters";
 export * from "./physlocations";
-export * from "./prerequisites";
 export * from "./profiles";
 export * from "./regions";
 export * from "./servercapabilities";
