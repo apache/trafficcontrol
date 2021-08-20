@@ -40,8 +40,11 @@ distributed TMs to focus on _health polling_.
 This proposal does not require any TP changes.
 
 ### Traffic Ops Impact
-This proposal should have no impact on TO. The existing TO API endpoints
-already provide the data that TM will need to run in a distributed manner.
+This proposal might have limited impact on TO. The existing TO API endpoints
+already provide the data that TM will need to run in a distributed manner, and
+any changes made to TM APIs that TO uses will remain backwards-compatible.
+However, TO may need to be updated if it uses any stat-polling-related TM APIs
+so that it only requests from TMs that have stat-polling enabled.
 
 ### t3c Impact
 This proposal does not require `t3c` changes.
@@ -57,6 +60,10 @@ TM will gain at least two more configuration options:
   `distributed_polling_enabled` is also set to true. In a later phase of
   development, we will add the ability to enable stat polling in distributed
   mode.
+
+Note: these are configuration options as opposed to profile parameters because
+we currently do not have the capability to have per-profile monitoring.json
+snapshots (or per-TM-server configuration in one snapshot).
 
 To use _distributed mode_, generally all TMs in the CDN need to be running in
 distributed mode (if they're taking part in the health protocol). It should
