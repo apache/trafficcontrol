@@ -20,11 +20,10 @@
 import { browser } from 'protractor';
 import { LoginPage } from '../PageObjects/LoginPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-import { API } from '../CommonUtils/API';
+import { api } from "../config";
 import { TopologiesPage } from '../PageObjects/TopologiesPage.po';
 import { topologies } from "../Data/topologies";
 
-const api = new API();
 const loginPage = new LoginPage();
 const topologiesPage = new TopologiesPage();
 const topNavigation = new TopNavigationPage();
@@ -56,7 +55,7 @@ topologies.tests.forEach(async  topologiesData =>{
             it('can logout', async function(){
                 expect(await topNavigation.Logout()).toBeTruthy();
             })
-        
+
         })
     })
 })
@@ -66,4 +65,3 @@ describe('Clean Up API for Topologies Test', () => {
         await api.UseAPI(topologies.cleanup);
     });
 });
-
