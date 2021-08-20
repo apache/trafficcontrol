@@ -54,12 +54,12 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 	toData := todata.NewThreadsafe()
 
 	cacheHealthHandler := cache.NewHandler()
-	cacheHealthPoller := poller.NewCache(cfg.CacheHealthPollingInterval, true, cacheHealthHandler, cfg, appData, cfg.CachePollingProtocol)
+	cacheHealthPoller := poller.NewCache(true, cacheHealthHandler, cfg, appData, cfg.CachePollingProtocol)
 	cacheStatHandler := cache.NewPrecomputeHandler(toData)
-	cacheStatPoller := poller.NewCache(cfg.CacheStatPollingInterval, false, cacheStatHandler, cfg, appData, cfg.CachePollingProtocol)
+	cacheStatPoller := poller.NewCache(false, cacheStatHandler, cfg, appData, cfg.CachePollingProtocol)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
-	peerPoller := poller.NewCache(cfg.PeerPollingInterval, false, peerHandler, cfg, appData, cfg.PeerPollingProtocol)
+	peerPoller := poller.NewCache(false, peerHandler, cfg, appData, cfg.PeerPollingProtocol)
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()
@@ -121,7 +121,7 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		localCacheStatus,
 	)
 
-	StartOpsConfigManager(
+	if _, err := StartOpsConfigManager(
 		opsConfigFile,
 		toSession,
 		toData,
@@ -147,7 +147,9 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		unpolledCaches,
 		monitorConfig,
 		cfg,
-	)
+	); err != nil {
+		return fmt.Errorf("starting ops config manager: %v", err)
+	}
 
 	if err := startMonitorConfigFilePoller(trafficMonitorConfigFileName); err != nil {
 		return fmt.Errorf("starting monitor config file poller: %v", err)

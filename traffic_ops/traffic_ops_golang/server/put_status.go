@@ -40,11 +40,11 @@ import (
 // identified in 'dsIDs'.
 //
 // If 'dsIDs' is empty/nil, returns an empty string.
-func InvalidStatusForDeliveryServicesAlertText(status string, dsIDs []int) string {
+func InvalidStatusForDeliveryServicesAlertText(prefix, serverType string, dsIDs []int) string {
 	if len(dsIDs) < 1 {
 		return ""
 	}
-	alertText := fmt.Sprintf("setting server status to '%s' would leave Active Delivery Service", status)
+	alertText := prefix
 	if len(dsIDs) == 1 {
 		alertText += fmt.Sprintf(" #%d", dsIDs[0])
 	} else if len(dsIDs) == 2 {
@@ -56,7 +56,11 @@ func InvalidStatusForDeliveryServicesAlertText(status string, dsIDs []int) strin
 		}
 		alertText += fmt.Sprintf("s %s, and #%d", strings.Join(dsNums, ", "), dsIDs[len(dsIDs)-1])
 	}
-	alertText += fmt.Sprintf("  with no '%s' or '%s' servers", tc.CacheStatusOnline, tc.CacheStatusReported)
+	typeMsg := tc.CacheTypeEdge.String()
+	if strings.HasPrefix(serverType, tc.OriginTypeName) {
+		typeMsg = tc.OriginTypeName
+	}
+	alertText += fmt.Sprintf(" with no '%s' or '%s' %s servers", tc.CacheStatusOnline, tc.CacheStatusReported, typeMsg)
 	return alertText
 }
 
@@ -129,14 +133,15 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	existingStatus, existingStatusUpdatedTime := checkExistingStatusInfo(id, tx)
 	if *status.Name != string(tc.CacheStatusOnline) && *status.Name != string(tc.CacheStatusReported) && *status.ID != existingStatus {
-		dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, tx)
+		dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, serverInfo.Type, tx)
 		if err != nil {
 			sysErr = fmt.Errorf("getting Delivery Services to which server #%d is assigned that have no other servers: %v", id, err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
 		if len(dsIDs) > 0 {
-			alertText := InvalidStatusForDeliveryServicesAlertText(*status.Name, dsIDs)
+			prefix := fmt.Sprintf("setting server status to '%s' would leave Active Delivery Service", *status.Name)
+			alertText := InvalidStatusForDeliveryServicesAlertText(prefix, serverInfo.Type, dsIDs)
 			api.WriteAlerts(w, r, http.StatusConflict, tc.CreateAlerts(tc.ErrorLevel, alertText))
 			return
 		}

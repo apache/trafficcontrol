@@ -18,7 +18,7 @@
 -->
 
 # todb-tests Docker action
-This action runs Traffic Ops database tests.
+This action runs Traffic Ops and Traffic Vault PostgreSQL database tests.
 
 ## Outputs
 

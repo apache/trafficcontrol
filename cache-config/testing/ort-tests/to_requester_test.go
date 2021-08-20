@@ -117,7 +117,6 @@ func TestTORequester(t *testing.T) {
 func ExecTORequester(host string, data_req string) (string, error) {
 	args := []string{
 		"--traffic-ops-insecure=true",
-		"--login-dispersion=0",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
 		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,

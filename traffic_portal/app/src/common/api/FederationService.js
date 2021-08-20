@@ -90,8 +90,8 @@ var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 		);
 	};
 
-	this.deleteFederation = function(cdnId, fedId) {
-		return $http.delete(ENV.api['root'] + 'cdns/' + cdnId + '/federations/' + fedId).then(
+	this.deleteFederation = function(cdnName, fedId) {
+		return $http.delete(ENV.api['root'] + 'cdns/' + cdnName + '/federations/' + fedId).then(
 			function(result) {
 				messageModel.setMessages([{level: 'success', text: 'Federation deleted'}], true);
 				return result;

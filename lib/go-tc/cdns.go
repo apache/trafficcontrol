@@ -1,9 +1,5 @@
 package tc
 
-import (
-	"database/sql"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -22,6 +18,10 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"database/sql"
+)
 
 // CDNsResponse is a list of CDNs as a response.
 // swagger:response CDNsResponse
@@ -42,7 +42,8 @@ type CDNResponse struct {
 	Alerts
 }
 
-// CDN ...
+// A CDN represents a set of configuration and hardware that can be used to
+// serve content within a specific top-level domain.
 type CDN struct {
 
 	// The CDN to retrieve
@@ -72,7 +73,8 @@ type CDN struct {
 	Name string `json:"name" db:"name"`
 }
 
-// CDNNullable ...
+// CDNNullable is identical to CDN except that its fields are reference values,
+// which allows them to be nil.
 type CDNNullable struct {
 
 	// The CDN to retrieve
@@ -109,14 +111,14 @@ type CDNSSLKeysResponse struct {
 	Alerts
 }
 
-// CDNSSLKeys ...
+// CDNSSLKeys is an SSL key/certificate pair for a certain Delivery Service.
 type CDNSSLKeys struct {
 	DeliveryService string                `json:"deliveryservice"`
 	Certificate     CDNSSLKeysCertificate `json:"certificate"`
 	Hostname        string                `json:"hostname"`
 }
 
-// CDNSSLKeysCertificate ...
+// CDNSSLKeysCertificate is an SSL key/certificate pair.
 type CDNSSLKeysCertificate struct {
 	Crt string `json:"crt"`
 	Key string `json:"key"`

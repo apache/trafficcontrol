@@ -32,7 +32,9 @@ type TenantResponse struct {
 	Alerts
 }
 
-// Tenant ...
+// A Tenant is a scope that can be applied to groups of users to limit their
+// Delivery Service-related actions to specific sets of similarly "Tenanted"
+// Delivery Services.
 type Tenant struct {
 	Active      bool      `json:"active"`
 	ID          int       `json:"id"`
@@ -42,7 +44,8 @@ type Tenant struct {
 	ParentName  string    `json:"parentName,omitempty" db:"parent_name"`
 }
 
-// TenantNullable ...
+// TenantNullable is identical to Tenant, but its fields are reference values,
+// which allows them to be nil.
 type TenantNullable struct {
 	ID          *int       `json:"id" db:"id"`
 	Name        *string    `json:"name" db:"name"`
@@ -52,12 +55,19 @@ type TenantNullable struct {
 	ParentName  *string    `json:"parentName,omitempty" db:"parent_name"`
 }
 
-// DeleteTenantResponse ...
+// DeleteTenantResponse is a legacy structure used to represent responses to
+// DELETE requests made to Traffic Ops's /tenants API endpoint.
+//
+// Deprecated: This uses a deprecated type for its Alerts property and drops
+// information returned by the TO API - new code should use TenantResponse
+// instead.
 type DeleteTenantResponse struct {
 	Alerts []TenantAlert `json:"alerts"`
 }
 
-// TenantAlert ...
+// TenantAlert is an unnecessary and less type-safe duplicate of Alert.
+//
+// Deprecated: Use Alert instead.
 type TenantAlert struct {
 	Level string `json:"level"`
 	Text  string `json:"text"`

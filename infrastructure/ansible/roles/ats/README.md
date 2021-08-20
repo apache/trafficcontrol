@@ -55,11 +55,11 @@ Example Playbook
         syncds:
           schedule: '0,20,40 * * * *'
           user: root
-          job: "t3c apply --run-mode=syncds --log-location-warning=stderr --log-location-error=stderr --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' --login-dispersion=35 --dispersion=420 &> /tmp/trafficcontrol-cache-config/syncds.log"
+          job: "t3c apply --run-mode=syncds --log-location-warning=stderr --log-location-error=stderr --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' &> /tmp/trafficcontrol-cache-config/syncds.log"
         reval:
           schedule: '1-19,21-39,41-59 * * * *'
           user: root
-          job:  "t3c apply --run-mode=revalidate --log-location-warning=stderr --log-location-error=stderr --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' --login-dispersion=35 &> /tmp/trafficcontrol-cache-config/reval.log"
+          job:  "t3c apply --run-mode=revalidate --log-location-warning=stderr --log-location-error=stderr --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' &> /tmp/trafficcontrol-cache-config/reval.log"
 ```
 
 License

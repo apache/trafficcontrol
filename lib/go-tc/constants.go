@@ -20,6 +20,15 @@ package tc
  */
 
 // ErrorConstant is used for error messages.
+//
+// Note that the ErrorConstant constants exported by this package most usually
+// are values that have the same string value as an error-level Alert returned
+// by the Traffic Ops API. Because those are arising from Alerts, one cannot
+// actually use e.g. err == TenantUserNotAuthError or even
+// errors.Is(err, TenantUserNotAuthError) to check for equivalence with these
+// exported errors. Because of this, the use of these constants outside of
+// Traffic Ops-internal code is discouraged, and these constants may be moved
+// into that package (or a sub-package thereof) at some point in the future.
 type ErrorConstant string
 
 // Error converts ErrorConstants to a string.
@@ -41,8 +50,29 @@ const TenantUserNotAuthError = ErrorConstant("user not authorized for requested 
 // TenantDSUserNotAuthError is used when a user does not have access to a
 // requested resource tenant for a delivery service.
 const TenantDSUserNotAuthError = ErrorConstant("user not authorized for requested delivery service tenant")
+
+// NeedsAtLeastOneIPError is the client-facing error returned from the Traffic
+// Ops API's /servers endpoint when the client is attempting to update or
+// create a server without an IPv4 or IPv6 address.
+//
+// Deprecated: This error's wording is only used in a deprecated version of the API.
 const NeedsAtLeastOneIPError = ErrorConstant("both IP and IP6 addresses are empty")
+
+// EmptyAddressCannotBeAServiceAddressError is the client-facing error returned
+// from the Traffic Ops API's /servers endpoint when the client is attempting
+// to update or create a server that has an IP address marked as the
+// "service address" which was not provided in the request (although the other
+// address family address may have been provided).
+//
+// Deprecated: This error's wording is only used in a deprecated version of the API.
 const EmptyAddressCannotBeAServiceAddressError = ErrorConstant("an empty IP or IPv6 address cannot be marked as a service address")
+
+// NeedsAtLeastOneServiceAddressError is the client-facing error returned from
+// the Traffic Ops API's /servers endpoint when the client is attempting to
+// update or create a server without an IP address marked as its
+// "service address".
+//
+// Deprecated: This error's wording is only used in a deprecated version of the API.
 const NeedsAtLeastOneServiceAddressError = ErrorConstant("at least one address must be marked as a service address")
 
 // AlertLevel is used for specifying or comparing different levels of alerts.

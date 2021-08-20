@@ -884,6 +884,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		"midInParentCachegroup":          false,
 		"midInSecondaryCachegroup":       false,
 		"midInSecondaryCachegroupInCDN1": false,
+		"test-mso-org-01":                false,
 	}
 	response, _, err = TOSession.GetServers(opts)
 	if err != nil {
@@ -1212,7 +1213,7 @@ func UpdateTestServers(t *testing.T) {
 
 	typeOpts := client.NewRequestOptions()
 	typeOpts.QueryParameters.Set("useInTable", "server")
-	serverTypes, _, err := TOSession.GetTypes(opts)
+	serverTypes, _, err := TOSession.GetTypes(typeOpts)
 	if err != nil {
 		t.Fatalf("cannot get Server Types: %v - alerts: %+v", err, serverTypes.Alerts)
 	}
@@ -1237,7 +1238,7 @@ func UpdateTestServers(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected error when updating Server Type of a server assigned to DSes")
 	} else {
-		t.Logf("type change update alerts: %+v", alerts)
+		t.Logf("got expected error when updating Server Type of a server assigned to DSes - type change update alerts: %+v, err: %v", alerts, err)
 	}
 }
 

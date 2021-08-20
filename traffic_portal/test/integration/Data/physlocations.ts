@@ -252,6 +252,12 @@ export const physLocations = {
 					password: "pa$$word"
 				}
 			],
+			check: [
+				{
+					description: "check CSV link from Physical Location page",
+					Name: "Export as CSV"
+				}
+			],
 			add: [
 				{
 					description: "create a PhysLocation",
@@ -296,6 +302,12 @@ export const physLocations = {
 					description: "Read Only Role",
 					username: "TPReadOnly",
 					password: "pa$$word"
+				}
+			],
+			check: [
+				{
+					description: "check CSV link from Physical Location page",
+					Name: "Export as CSV"
 				}
 			],
 			add: [

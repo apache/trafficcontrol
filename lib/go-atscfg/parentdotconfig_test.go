@@ -28,7 +28,7 @@ import (
 )
 
 func TestMakeParentDotConfig(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -146,7 +146,7 @@ func TestMakeParentDotConfig(t *testing.T) {
 }
 
 func TestMakeParentDotConfigCapabilities(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -290,7 +290,7 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 }
 
 func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -405,7 +405,7 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologies(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -547,7 +547,7 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 
 // TestMakeParentDotConfigNotInTopologies tests when a given edge is NOT in a Topology, that it doesn't add a remap line.
 func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -677,7 +677,7 @@ func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds0 := makeParentDS()
 	ds0.ID = util.IntPtr(42)
@@ -835,7 +835,7 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesOmitOfflineParents(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -978,7 +978,7 @@ func TestMakeParentDotConfigTopologiesOmitOfflineParents(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesOmitDifferentCDNParents(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -1122,7 +1122,7 @@ func TestMakeParentDotConfigTopologiesOmitDifferentCDNParents(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds1 := makeParentDS()
 	ds1.ID = util.IntPtr(43)
@@ -1254,7 +1254,7 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesMSOWithCapabilities(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds1 := makeParentDS()
 	ds1.ID = util.IntPtr(43)
@@ -1395,7 +1395,7 @@ func TestMakeParentDotConfigTopologiesMSOWithCapabilities(t *testing.T) {
 }
 
 func TestMakeParentDotConfigMSOWithCapabilities(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds1 := makeParentDS()
 	ds1.ID = util.IntPtr(43)
@@ -1522,7 +1522,7 @@ func TestMakeParentDotConfigMSOWithCapabilities(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesMSOParams(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds1 := makeParentDS()
 	ds1.ID = util.IntPtr(43)
@@ -1698,7 +1698,7 @@ func TestMakeParentDotConfigTopologiesMSOParams(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesParams(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds1 := makeParentDS()
 	ds1.ID = util.IntPtr(43)
@@ -1874,7 +1874,7 @@ func TestMakeParentDotConfigTopologiesParams(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesNonStandardServerTypes(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -2018,7 +2018,7 @@ func TestMakeParentDotConfigTopologiesNonStandardServerTypes(t *testing.T) {
 
 func TestMakeParentDotConfigSecondaryMode(t *testing.T) {
 
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -2179,7 +2179,7 @@ func TestMakeParentDotConfigSecondaryMode(t *testing.T) {
 }
 
 func TestMakeParentDotConfigNoSecondaryMode(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -2341,7 +2341,7 @@ func TestMakeParentDotConfigNoSecondaryMode(t *testing.T) {
 }
 
 func TestMakeParentDotConfigComments(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment"}
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -2462,7 +2462,7 @@ func TestMakeParentDotConfigComments(t *testing.T) {
 }
 
 func TestMakeParentDotConfigCommentTopology(t *testing.T) {
-	hdr := ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment"}
+	hdr := &ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment"}
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTP
@@ -2616,6 +2616,264 @@ func TestMakeParentDotConfigCommentTopology(t *testing.T) {
 	}
 	if !strings.Contains(txt, `# ds 'ds1' topology 't0'`) {
 		t.Errorf("expected comment with delivery service and topology, actual: '%v'", txt)
+	}
+}
+
+func TestMakeParentDotConfigHTTPSOrigin(t *testing.T) {
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("https://ds0.example.net")
+
+	ds1 := makeParentDS()
+	ds1.ID = util.IntPtr(43)
+	ds1Type := tc.DSTypeDNS
+	ds1.Type = &ds1Type
+	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
+	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
+
+	dses := []DeliveryService{*ds0, *ds1}
+
+	parentConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	server := makeTestParentServer()
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG")
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	servers := []Server{*server, *mid0, *mid1}
+
+	topologies := []tc.Topology{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *server.ID,
+			DeliveryService: *ds0.ID,
+		},
+		DeliveryServiceServer{
+			Server:          *server.ID,
+			DeliveryService: *ds1.ID,
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr.HdrComment)
+
+	if !strings.Contains(txt, "dest_domain=ds0.example.net port=80") {
+		t.Errorf("expected edge parent.config of https origin to use internal http port 80 (not https/443), actual: '%v'", txt)
+	}
+}
+
+func TestMakeParentDotConfigHTTPSOriginTopology(t *testing.T) {
+	hdr := &ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment"}
+
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("https://ds0.example.net")
+	ds0.ProfileID = util.IntPtr(311)
+	ds0.ProfileName = util.StrPtr("ds0Profile")
+
+	ds1 := makeParentDS()
+	ds1.ID = util.IntPtr(43)
+	ds1Type := tc.DSTypeDNS
+	ds1.Type = &ds1Type
+	ds1.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
+	ds1.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
+	ds1.Topology = util.StrPtr("t0")
+	ds1.ProfileID = util.IntPtr(312)
+	ds1.ProfileName = util.StrPtr("ds1Profile")
+
+	dses := []DeliveryService{*ds0, *ds1}
+
+	parentConfigParams := []tc.Parameter{
+		{
+			Name:       ParentConfigParamQStringHandling,
+			ConfigFile: "parent.config",
+			Value:      "myQStringHandlingParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		{
+			Name:       ParentConfigParamAlgorithm,
+			ConfigFile: "parent.config",
+			Value:      tc.AlgorithmConsistentHash,
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+		{
+			Name:       ParentConfigParamQString,
+			ConfigFile: "parent.config",
+			Value:      "myQstringParam",
+			Profiles:   []byte(`["serverprofile"]`),
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "8",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	server := makeTestParentServer()
+	server.Cachegroup = util.StrPtr("edgeCG")
+	server.CachegroupID = util.IntPtr(400)
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.CachegroupID = util.IntPtr(500)
+	mid0.HostName = util.StrPtr("mymid")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG2")
+	mid1.CachegroupID = util.IntPtr(501)
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	servers := []Server{*server, *mid0, *mid1}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1, 2},
+				},
+				{
+					Cachegroup: "midCG",
+				},
+				{
+					Cachegroup: "midCG2",
+				},
+			},
+		},
+	}
+
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.SecondaryParentName = mid1.Cachegroup
+	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	mCG2 := &tc.CacheGroupNullable{}
+	mCG2.Name = mid1.Cachegroup
+	mCG2.ID = mid1.CachegroupID
+	mCGType2 := tc.CacheGroupMidTypeName
+	mCG2.Type = &mCGType2
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+
+	dss := []DeliveryServiceServer{
+		{
+			Server:          *server.ID,
+			DeliveryService: *ds0.ID,
+		},
+		{
+			Server:          *server.ID,
+			DeliveryService: *ds1.ID,
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr.HdrComment)
+
+	if !strings.Contains(txt, "dest_domain=ds0.example.net port=80") {
+		t.Errorf("expected topology parent.config of https origin to be http/80 not https/443, actual: '%v'", txt)
 	}
 }
 

@@ -302,12 +302,14 @@ The rest of the API documentation will only document the ``200 OK`` case, where 
 
 TrafficOps Native Client Libraries
 ==================================
-TrafficOps client libraries are available in Java, Go and Python. You can read (very little) more about them in `the client README <https://github.com/apache/trafficcontrol/tree/master/traffic_control/clients>`_.
-
+TrafficOps client libraries are available in Java, Go and Python. You can read (very little) more about them in the client README at :atc-file:`traffic_control/clients`.
 
 API V2 Routes
 =============
 API routes available in version 2.
+
+.. deprecated:: ATCv6
+	Traffic Ops API version 2 is deprecated in favor of version 4.
 
 .. toctree::
 	:maxdepth: 4
@@ -318,6 +320,9 @@ API routes available in version 2.
 API V3 Routes
 =============
 API routes available in version 3.
+
+.. deprecated:: ATCv6
+	Traffic Ops API version 3 is deprecated in favor of version 4.
 
 .. toctree::
 	:maxdepth: 4

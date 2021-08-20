@@ -121,9 +121,6 @@ done
 
 cd /opt/traffic_ops/app;
 
-# Add admin user -- all other users should be created using the API
-/adduser.pl "$TO_ADMIN_USER" "$TO_ADMIN_PASSWORD" "admin" "root" | psql -v ON_ERROR_STOP=1 -U "$DB_USER" -h "$DB_SERVER" -d "$DB_NAME";
-
 (
 maxtries=10
 for ((tries = 0; tries < maxtries; tries++)); do

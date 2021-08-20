@@ -25,7 +25,9 @@ import (
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-update/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 var (
@@ -43,20 +45,29 @@ func main() {
 		log.Infoln("configuration initialized")
 	}
 
-	// login to TrafficOps
-	tccfg, err := t3cutil.TOConnect(&cfg.TCCfg)
+	cfg.TCCfg.TOClient, err = toreq.New(
+		cfg.TOURL,
+		cfg.TOUser,
+		cfg.TOPass,
+		cfg.TOInsecure,
+		cfg.TOTimeoutMS,
+		cfg.UserAgent,
+	)
 	if err != nil {
 		log.Errorf("%s\n", err)
 		os.Exit(2)
 	}
+	if cfg.TCCfg.TOClient.FellBack() {
+		log.Warnln("Traffic Ops does not support the latest version supported by this app! Falling back to previous major Traffic Ops API version!")
+	}
 
-	err = t3cutil.SetUpdateStatus(*tccfg, cfg.TCCfg.CacheHostName, cfg.UpdatePending, cfg.RevalPending)
+	err = t3cutil.SetUpdateStatus(cfg.TCCfg, tc.CacheName(cfg.TCCfg.CacheHostName), cfg.UpdatePending, cfg.RevalPending)
 	if err != nil {
 		log.Errorf("%s, %s\n", err, cfg.TCCfg.CacheHostName)
 		os.Exit(3)
 	}
 
-	cur_status, err := t3cutil.GetServerUpdateStatus(*tccfg)
+	cur_status, err := t3cutil.GetServerUpdateStatus(cfg.TCCfg)
 	if err != nil {
 		log.Errorf("%s, %s\n", err, cfg.TCCfg.CacheHostName)
 		os.Exit(4)

@@ -32,16 +32,16 @@ export class ServerCapabilitiesPage extends BasePage{
      private randomize = randomize;
 
 
-     async OpenServerCapabilityPage(){
+     public async OpenServerCapabilityPage(){
       let snp = new SideNavigationPage();
       await snp.NavigateToServerCapabilitiesPage();
      }
-     async OpenConfigureMenu(){
+     public async OpenConfigureMenu(){
       let snp = new SideNavigationPage();
       await snp.ClickConfigureMenu();
      }
 
-      async CreateServerCapabilities(nameSC: string, outputMessage:string){
+      public async CreateServerCapabilities(nameSC: string, outputMessage:string){
         let result = false
         let basePage = new BasePage();
         let snp= new SideNavigationPage();
@@ -68,7 +68,7 @@ export class ServerCapabilitiesPage extends BasePage{
       }
 
 
-    async SearchServerCapabilities(nameSC:string){
+    public async SearchServerCapabilities(nameSC:string){
       let name = nameSC+this.randomize;
       await this.searchFilter.clear();
       await this.searchFilter.sendKeys(name);
@@ -79,7 +79,7 @@ export class ServerCapabilitiesPage extends BasePage{
       }).first().click();
     }
 
-     async DeleteServerCapabilities(nameSC:string, outputMessage:string){
+     public async DeleteServerCapabilities(nameSC:string, outputMessage:string){
       let result = false;
       let basePage = new BasePage();
       let name = nameSC+this.randomize;
@@ -99,4 +99,8 @@ export class ServerCapabilitiesPage extends BasePage{
       }
       return result;
      }
+
+     public async CheckCSV(name: string): Promise<boolean> {
+      return element(by.cssContainingText("span", name)).isPresent();
+  }
 }

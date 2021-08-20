@@ -32,15 +32,16 @@ func TestPreprocessConfigFile(t *testing.T) {
 	{
 		server := &atscfg.Server{}
 		server.TCPPort = util.IntPtr(8080)
-		server.Interfaces = []tc.ServerInterfaceInfo{
-			tc.ServerInterfaceInfo{
-				IPAddresses: []tc.ServerIPAddress{
-					tc.ServerIPAddress{
-						Address:        "127.0.2.1",
-						ServiceAddress: true,
-					},
+		server.Interfaces = []tc.ServerInterfaceInfoV40{}
+		{
+			ssi := tc.ServerInterfaceInfoV40{}
+			ssi.IPAddresses = []tc.ServerIPAddress{
+				tc.ServerIPAddress{
+					Address:        "127.0.2.1",
+					ServiceAddress: true,
 				},
-			},
+			}
+			server.Interfaces = append(server.Interfaces, ssi)
 		}
 		server.HostName = util.StrPtr("my-edge")
 		server.DomainName = util.StrPtr("example.net")
@@ -58,15 +59,16 @@ func TestPreprocessConfigFile(t *testing.T) {
 	{
 		server := &atscfg.Server{}
 		server.TCPPort = util.IntPtr(80)
-		server.Interfaces = []tc.ServerInterfaceInfo{
-			tc.ServerInterfaceInfo{
-				IPAddresses: []tc.ServerIPAddress{
-					tc.ServerIPAddress{
-						Address:        "127.0.2.1",
-						ServiceAddress: true,
-					},
+		server.Interfaces = []tc.ServerInterfaceInfoV40{}
+		{
+			si := tc.ServerInterfaceInfoV40{}
+			si.IPAddresses = []tc.ServerIPAddress{
+				tc.ServerIPAddress{
+					Address:        "127.0.2.1",
+					ServiceAddress: true,
 				},
-			},
+			}
+			server.Interfaces = append(server.Interfaces, si)
 		}
 		server.HostName = util.StrPtr("my-edge")
 		server.DomainName = util.StrPtr("example.net")

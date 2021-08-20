@@ -97,6 +97,7 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, http
 		log.Errorf(dsName+": Error getting tx: %s", err.Error())
 		return nil, err, http.StatusInternalServerError
 	}
+	defer tx.Commit()
 
 	userTx, err := db.Begin()
 	if err != nil {

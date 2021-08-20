@@ -22,10 +22,9 @@ import { LoginPage } from '../PageObjects/LoginPage.po'
 import { ServerCapabilitiesPage } from '../PageObjects/ServerCapabilitiesPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { ServersPage } from '../PageObjects/ServersPage.po';
-import { API } from '../CommonUtils/API';
+import { api } from "../config";
 import { serverServerCapabilities } from "../Data";
 
-const api = new API();
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const serverCapabilitiesPage = new ServerCapabilitiesPage();

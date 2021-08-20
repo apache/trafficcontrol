@@ -23,9 +23,10 @@ import { Config, browser } from 'protractor';
 import { JUnitXmlReporter } from 'jasmine-reporters';
 import HtmlReporter from "protractor-beautiful-reporter";
 
-import { API } from './CommonUtils/API';
+import { API } from './CommonUtils';
 import * as conf from "./config.json"
 import { prerequisites, profiles } from "./Data";
+import { isTestingConfig } from "./config.model";
 
 const downloadsPath = resolve('Downloads');
 export const randomize = Math.random().toString(36).substring(3, 7);
@@ -37,6 +38,23 @@ if (config.capabilities) {
 } else {
   config.capabilities = {chromeOptions: {prefs: {download: {default_directory: downloadsPath}}}};
 }
+
+if (!config.params) {
+  throw new Error("no testing parameters provided - cannot proceed");
+}
+
+try {
+  if (!isTestingConfig(config.params)) {
+    throw new Error();
+  }
+} catch (e) {
+  const msg = e instanceof Error ? e.message : String(e);
+  throw new Error(`invalid testing params: ${msg}`);
+}
+
+export const testingConfig = config.params;
+export const api = new API(testingConfig);
+
 config.onPrepare = async function () {
     await browser.waitForAngularEnabled(true);
     await browser.driver.manage().window().maximize();
@@ -67,7 +85,6 @@ config.onPrepare = async function () {
         }).getJasmine2Reporter());
     }
 
-    const api = new API();
     await api.UseAPI(prerequisites);
     await api.UseAPI(profiles.setup);
 }

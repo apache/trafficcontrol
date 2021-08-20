@@ -428,6 +428,4 @@ sub run_command {
 
 		return $?;
 	}
-
-	#system( 'goose --env=' . $environment . ' ' . $command );
 }

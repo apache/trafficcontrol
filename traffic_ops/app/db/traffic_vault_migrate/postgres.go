@@ -701,6 +701,9 @@ func decryptInto(aesKey []byte, encData []byte, value interface{}) error {
 	return nil
 }
 func insertIntoTable(db *sql.DB, queryBase string, stride int, queryArgs []interface{}) error {
+	if len(queryArgs) == 0 {
+		return nil
+	}
 	rows := len(queryArgs) / stride
 	workStr := ""
 	queryValueStr := make([]string, rows)

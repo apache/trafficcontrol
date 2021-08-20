@@ -32,7 +32,7 @@ type DurationMap struct {
 	m           *sync.RWMutex
 }
 
-// Copy copies this duration map.
+// CopyDurationMap copies this duration map.
 func CopyDurationMap(a map[tc.CacheName]time.Duration) map[tc.CacheName]time.Duration {
 	b := map[tc.CacheName]time.Duration{}
 	for k, v := range a {

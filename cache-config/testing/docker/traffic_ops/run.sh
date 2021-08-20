@@ -36,9 +36,6 @@
 # TO_DOMAIN
 # TRAFFIC_VAULT_PASS
 
-# make sure 'goose' is available 
-PATH=$PATH:/opt/traffic_ops/go/bin; export PATH
-
 # Check that env vars are set
 envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS TO_ADMIN_USER TO_ADMIN_PASS CERT_COUNTRY CERT_STATE CERT_CITY CERT_COMPANY TO_DOMAIN)
 for v in $envvars
@@ -50,17 +47,6 @@ start() {
   traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DATABASECONF" -riakcfg "$RIAKCONF");
   "${traffic_ops_golang_command[@]}" &
 	exec tail -f $TO_LOG
-}
-
-install_go() {
-  if [ -f /GO_VERSION ]; then
-    go_version=$(cat /GO_VERSION) && \
-      curl -Lo go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \
-      tar -C /usr/local -xvzf go.tar.gz && rm go.tar.gz
-  else
-    echo "no GO_VERSION file, unable to install go"
-    exit 1
-  fi
 }
 
 # generates and saves SSL certificates, database and RIAK config files.
@@ -121,13 +107,6 @@ EOM
 
   touch $LOG_DEBUG $LOG_ERROR $LOG_EVENT $LOG_INFO $LOG_WARN $TO_LOG
 }
-
-# install the golang version indicated in '/GO_VERSION'
-# exits on error.
-install_go
-
-# installs goose, exits on error
-/opt/traffic_ops/install/bin/install_goose.sh
 
 source /etc/environment
 if [ -z "$INITIALIZED" ]; then init; fi

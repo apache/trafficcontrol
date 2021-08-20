@@ -28,7 +28,6 @@ Software Requirements
 =====================
 Traffic Ops is only supported on CentOS 7+ systems (although many developers do use Mac OS with some success). Here are the requirements:
 
-- `Goose <https://github.com/kevinburke/goose>`_ (although the ``postinstall`` script will install this)
 - `PostgreSQL 13.2 <https://www.postgresql.org/download/>`_ - the machine where Traffic Ops is running must have the client tool set (e.g. :manpage:`psql(1)`), but the actual database can be run anywhere so long as it is accessible.
 
 	.. note:: Prior to version 13.2, Traffic Ops used version 9.6. For upgrading an existing Mac OS Homebrew-based PostgreSQL instance, you can use `Homebrew <https://brew.sh/>`_ to easily upgrade from 9.6 to 13.2:
@@ -180,7 +179,7 @@ Traffic Ops Project Tree Overview
 
 app/db/admin
 ============
-The :program:`app/db/admin` binary is for use in managing the Traffic Ops (and Traffic Vault PostgreSQL backend) database tables. This essentially serves as a front-end for `Goose <https://github.com/kevinburke/goose>`_.
+The :program:`app/db/admin` binary is for use in managing the Traffic Ops (and Traffic Vault PostgreSQL backend) database tables. This essentially serves as a front-end for `Migrate <https://github.com/golang-migrate/migrate>`_, though  ``dbconf.yml`` comes from `Goose <https://github.com/kevinburke/goose/blob/1.15/db-sample/dbconf.yml>`_, which Traffic Ops used to use before switching to Migrate.
 
 .. note:: For proper resolution of configuration and SOL statement files, it's recommended that this binary be run from the ``app`` directory
 
@@ -192,7 +191,7 @@ Options and Arguments
 ---------------------
 .. option:: --env ENVIRONMENT
 
-	An optional environment specification that causes the database configuration to be read out of the corresponding section of the :file:`app/db/dbconf.yml` configuration file. One of:
+	An optional environment specification that causes the database configuration to be read out of the corresponding section of the :atc-file:`app/db/dbconf.yml` configuration file. One of:
 
 	- development
 	- integration
@@ -203,7 +202,7 @@ Options and Arguments
 
 .. option:: --trafficvault
 
-	When used, commands will be run against the Traffic Vault PostgreSQL backend database as specified in the :file:`app/db/trafficvault/dbconf.yml` configuration file.
+	When used, commands will be run against the Traffic Vault PostgreSQL backend database as specified in the :atc-file:`app/db/trafficvault/dbconf.yml` configuration file.
 
 .. option:: command
 
@@ -211,6 +210,8 @@ Options and Arguments
 
 	createdb
 		Creates the database for the current environment
+	create_migration
+		Creates a pair of timestamped up/down migrations titled NAME.
 	create_user
 		Creates the user defined for the current environment
 	dbversion
@@ -236,7 +237,7 @@ Options and Arguments
 	show_users
 		Displays a list of all users registered with the PostgreSQL server
 	status
-		Prints the status of all migrations
+		Deprecated, ``status`` is now an alias for ``dbversion`` and will be removed in a future Traffic Control release.
 	upgrade
 		Performs a migration on the database for the current environment, then seeds it and patches it using the SQL statements from the ``app/db/patches.sql`` file
 
@@ -246,6 +247,27 @@ Options and Arguments
 	db/admin --env=test reset
 
 The environments are defined in the :atc-file:`traffic_ops/app/db/dbconf.yml` file, and the name of the database generated will be the name of the environment for which it was created. If the ``--trafficvault`` option is used, the :file:`app/db/trafficvault/dbconf.yml` file defines this information.
+
+Resolving Migration Failures
+----------------------------
+
+If you encounter an error running a migration, you will see a message like
+
+.. code-block:: bash
+	:caption: db/admin error example
+
+	[root@trafficops app]# db/admin -env production migrate
+	Error running migrate up: migration failed: syntax error at or near "This_is_a_syntax_error" (column 1) in line 18: /*
+
+That means that the migration timestamp in the ``version`` column of the ``schema_migrations`` table has been updated to the version of the migration that failed, but the ``dirty`` column is also set, and if you try to run another migration (either up or down), you will see
+
+.. code-block:: bash
+	:caption: db/admin error migrating when the database version is dirty
+
+	[root@trafficops app]# db/admin -env production migrate
+	Error running migrate up: Dirty database version 2021070800000000. Fix and force version.
+
+You will need to manually fix the database. When you are sure that it is fixed, you can unset the ``dirty`` column manually using an SQL client.
 
 Installing The Developer Environment
 ====================================
@@ -318,7 +340,7 @@ Usage
 
 .. option:: -i DIR, --fill DIR
 
-		Insert data into `to` server with data this directory
+		Insert data into `to` server with data in this directory
 
 		.. note:: Mutually exclusive with :option:`-d`/:option:`--dump`
 
@@ -334,7 +356,7 @@ Usage
 
 .. option:: -m, --noConfirm
 
-		Do not require confirmation before inserting records
+		Don't require confirmation before inserting records
 
 .. option:: -r, --dry
 
