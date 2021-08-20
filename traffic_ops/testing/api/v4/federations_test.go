@@ -42,10 +42,10 @@ func TestFederations(t *testing.T) {
 
 func GetTestFederationsIMS(t *testing.T) {
 	futureTime := time.Now().AddDate(0, 0, 1)
-	time := futureTime.Format(time.RFC1123)
+	fmtFutureTime := futureTime.Format(time.RFC1123)
 
 	opts := client.NewRequestOptions()
-	opts.Header.Set(rfc.IfModifiedSince, time)
+	opts.Header.Set(rfc.IfModifiedSince, fmtFutureTime)
 	if len(testData.Federations) == 0 {
 		t.Error("no federations test data")
 	}
@@ -56,6 +56,23 @@ func GetTestFederationsIMS(t *testing.T) {
 	}
 	if reqInf.StatusCode != http.StatusNotModified {
 		t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+	}
+
+	pastTime := time.Now().AddDate(0, 0, -1)
+	fmtPastTime := pastTime.Format(time.RFC1123)
+
+	opts = client.NewRequestOptions()
+	opts.Header.Set(rfc.IfModifiedSince, fmtPastTime)
+	if len(testData.Federations) == 0 {
+		t.Error("no federations test data")
+	}
+
+	resp, reqInf, err = TOSession.AllFederations(opts)
+	if err != nil {
+		t.Fatalf("No error expected, but got: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
 	}
 }
 
