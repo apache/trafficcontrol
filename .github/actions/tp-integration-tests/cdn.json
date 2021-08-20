@@ -17,7 +17,7 @@
 		"log_location_error": "stderr",
 		"log_location_warning": "stderr",
 		"log_location_info": "stdout",
-		"log_location_debug": "stderr",
+		"log_location_debug": "stdout",
 		"log_location_event": "stdout",
 		"max_db_connections": 20,
 		"db_conn_max_lifetime_seconds": 60,
