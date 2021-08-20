@@ -953,7 +953,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 			// uninstall packages marked for removal
 			if len(install) > 0 && r.Cfg.InstallPackages {
 				for jj := range uninstall {
-					log.Infof("Uninstalling %s\n", install[jj])
+					log.Infof("Uninstalling %s\n", uninstall[jj])
 					r, err := util.PackageAction("remove", uninstall[jj])
 					if err != nil {
 						return errors.New("Unable to uninstall " + uninstall[jj] + " : " + err.Error())
