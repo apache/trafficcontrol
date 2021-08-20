@@ -25,7 +25,7 @@ import HtmlReporter from "protractor-beautiful-reporter";
 
 import { API } from './CommonUtils';
 import * as conf from "./config.json"
-import { prerequisites} from "./Data";
+import { prerequisites } from "./Data";
 import { isTestingConfig } from "./config.model";
 
 const downloadsPath = resolve('Downloads');
@@ -58,7 +58,6 @@ export const api = new API(testingConfig);
 config.onPrepare = async function () {
     await browser.waitForAngularEnabled(true);
     await browser.driver.manage().window().maximize();
-    
     emptyDir('./Reports/', function (err) {
       console.log(err);
     });

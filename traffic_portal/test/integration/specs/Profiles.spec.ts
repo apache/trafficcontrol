@@ -21,10 +21,10 @@ import { browser } from 'protractor'
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { ProfilesPage } from '../PageObjects/ProfilesPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-import { API } from '../CommonUtils/API';
+import { api } from "../config";
 import { profiles } from "../Data";
 
-const api = new API();
+
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const profilesPage = new ProfilesPage();
@@ -96,7 +96,10 @@ profiles.tests.forEach(async profilesData => {
 });
 
 describe('Clean up API for Profiles', () => {
-    it('Cleanup', async () => {
-        await api.UseAPI(profiles.cleanup);
-    });
+    afterAll(async function () {
+        it('Cleanup', async () => {
+            await api.UseAPI(profiles.cleanup);
+        });
+    })
 });
+
