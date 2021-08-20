@@ -258,21 +258,25 @@ WHERE
 ORDER BY
   ds.xml_id
 `
-	imsQuery := `SELECT max(t) FROM (
-    (SELECT GREATEST(fdsmax, ffrmax, fdmax) AS t FROM
-        (SELECT max(fds.last_updated) AS fdsmax, max(ffr.last_updated) AS ffrmax, max(fd.last_updated) AS fdmax FROM federation_deliveryservice fds
-        JOIN federation_federation_resolver ffr ON ffr.federation = fds.federation
-        JOIN federation fd ON fd.id = fds.federation
-		JOIN federation_tmuser fu on fu.federation = fd.id
-		JOIN tm_user u on u.id = fu.tm_user
-		WHERE u.username = $1
-    ) AS t
-    UNION ALL
-    SELECT max(last_updated) AS t FROM last_deleted l 
-		WHERE l.table_name='federation_deliveryservice' 
-		OR l.table_name = 'federation' 
-		OR l.table_name = 'federation_federation_resolver')) 
-	AS res;`
+	imsQuery := `SELECT Max(t)
+         FROM   ((SELECT Greatest(fdsmax, ffrmax, fdmax) AS t
+         FROM   (SELECT Max(fds.last_updated) AS fdsmax,
+                        Max(ffr.last_updated) AS ffrmax,
+                        Max(fd.last_updated)  AS fdmax
+                 FROM   federation_deliveryservice fds
+                        JOIN federation_federation_resolver ffr
+                          ON ffr.federation = fds.federation
+                        JOIN federation fd
+                          ON fd.id = fds.federation
+                        JOIN federation_tmuser fu
+                          ON fu.federation = fd.id
+                        JOIN tm_user u
+                          ON u.id = fu.tm_user
+                 WHERE  u.username = $1) AS t
+         UNION ALL
+         SELECT Max(last_updated) AS t
+         FROM   last_deleted l
+         WHERE  l.table_name IN ( 'federation_deliveryservice', 'federation', 'federation_federation_resolver' ))) AS res;`
 
 	if useIMS {
 		runSecond, maxTime = tryIfModifiedSinceQuery(header, tx, userName, imsQuery)

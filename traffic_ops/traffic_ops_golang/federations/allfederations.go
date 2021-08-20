@@ -115,15 +115,19 @@ FROM
 ORDER BY
   ds.xml_id
 `
-	imsQuery := `SELECT max(last_updated) FROM (SELECT last_updated FROM federation_deliveryservice fds
-        UNION ALL SELECT last_updated FROM federation_federation_resolver ffr
-        UNION ALL SELECT last_updated FROM federation fd
-		UNION ALL
-    		SELECT max(last_updated) AS t FROM last_deleted l 
-			WHERE l.table_name='federation_deliveryservice' 
-			OR l.table_name = 'federation' 
-			OR l.table_name = 'federation_federation_resolver')
-	AS res;`
+	imsQuery := `SELECT Max(last_updated)
+        FROM   (SELECT last_updated
+        FROM   federation_deliveryservice fds
+        UNION ALL
+        SELECT last_updated
+        FROM   federation_federation_resolver ffr
+        UNION ALL
+        SELECT last_updated
+        FROM   federation fd
+        UNION ALL
+        SELECT Max(last_updated) AS t
+        FROM   last_deleted l
+        WHERE  l.table_name IN ( 'federation_deliveryservice', 'federation', 'federation_federation_resolver' )) AS res;`
 
 	if useIMS {
 		runSecond, maxTime = tryIfModifiedSinceQuery(header, tx, "", imsQuery)
@@ -174,15 +178,19 @@ ORDER BY
 `
 
 	// TODO improve query to be CDN-specific
-	imsQuery := `SELECT max(last_updated) FROM (SELECT last_updated FROM federation_deliveryservice fds
-        UNION ALL SELECT last_updated FROM federation_federation_resolver ffr
-        UNION ALL SELECT last_updated FROM federation fd
-		UNION ALL
-    		SELECT max(last_updated) AS t FROM last_deleted l 
-			WHERE l.table_name='federation_deliveryservice' 
-			OR l.table_name = 'federation' 
-			OR l.table_name = 'federation_federation_resolver')
-	AS res;`
+	imsQuery := `SELECT Max(last_updated)
+        FROM   (SELECT last_updated
+        FROM   federation_deliveryservice fds
+        UNION ALL
+        SELECT last_updated
+        FROM   federation_federation_resolver ffr
+        UNION ALL
+        SELECT last_updated
+        FROM   federation fd
+        UNION ALL
+        SELECT Max(last_updated) AS t
+        FROM   last_deleted l
+        WHERE  l.table_name IN ( 'federation_deliveryservice', 'federation', 'federation_federation_resolver' )) AS res;`
 
 	if useIMS {
 		runSecond, maxTime = tryIfModifiedSinceQuery(header, tx, string(cdn), imsQuery)
