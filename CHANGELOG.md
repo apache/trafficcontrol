@@ -100,6 +100,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6091](https://github.com/apache/trafficcontrol/issues/6091) - Fixed cache config of internal cache communication for https origins
 - [#6066](https://github.com/apache/trafficcontrol/issues/6066) - Fixed missing/incorrect indices on some tables
 - [#5576](https://github.com/apache/trafficcontrol/issues/5576) - Inconsistent Profile Name restrictions
+- Fixed Federations IMS so TR federations watcher will get updates.
 
 ### Changed
 - Updated the Traffic Ops Python client to 3.0

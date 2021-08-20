@@ -35,6 +35,7 @@ func TestCDNFederations(t *testing.T) {
 		SortTestCDNFederations(t)
 		UpdateTestCDNFederations(t)
 		GetTestCDNFederations(t)
+		GetTestCDNFederationsIMS(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
 		var header http.Header
@@ -192,6 +193,38 @@ func GetTestCDNFederations(t *testing.T) {
 		data, _, err := TOSession.GetCDNFederationsByName("foo", opts)
 		if err != nil {
 			t.Errorf("could not get federations: %v - alerts: %+v", err, data.Alerts)
+		}
+	}
+}
+
+func GetTestCDNFederationsIMS(t *testing.T) {
+	futureTime := time.Now().AddDate(0, 0, 1)
+	fmtFutureTime := futureTime.Format(time.RFC1123)
+	opts := client.NewRequestOptions()
+	opts.Header.Set(rfc.IfModifiedSince, fmtFutureTime)
+	for _, id := range fedIDs {
+		opts.QueryParameters.Set("id", strconv.Itoa(id))
+		data, reqInf, err := TOSession.GetCDNFederationsByName("foo", opts)
+		if err != nil {
+			t.Errorf("could not get federations: %v - alerts: %+v", err, data.Alerts)
+		}
+		if reqInf.StatusCode != http.StatusNotModified {
+			t.Fatalf("Expected 304 status code, got %v", reqInf.StatusCode)
+		}
+	}
+
+	pastTime := time.Now().AddDate(0, 0, -1)
+	fmtPastTime := pastTime.Format(time.RFC1123)
+	opts = client.NewRequestOptions()
+	opts.Header.Set(rfc.IfModifiedSince, fmtPastTime)
+	for _, id := range fedIDs {
+		opts.QueryParameters.Set("id", strconv.Itoa(id))
+		data, reqInf, err := TOSession.GetCDNFederationsByName("foo", opts)
+		if err != nil {
+			t.Errorf("could not get federations: %v - alerts: %+v", err, data.Alerts)
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Fatalf("Expected 200 status code, got %v", reqInf.StatusCode)
 		}
 	}
 }
