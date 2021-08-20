@@ -21,19 +21,26 @@ import { browser } from 'protractor'
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { ProfilesPage } from '../PageObjects/ProfilesPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-import { api } from "../config";
+import { API } from '../CommonUtils/API';
 import { profiles } from "../Data";
 
+const api = new API();
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const profilesPage = new ProfilesPage();
 
+describe('Setup API for Profiles', () => {
+    it('Setup', async () => {
+        await api.UseAPI(profiles.setup);
+    });
+});
+
 profiles.tests.forEach(async profilesData => {
     profilesData.logins.forEach(login => {
-        afterEach(async function () {
-            await profilesPage.OpenProfilesPage();
-        });
         describe(`Traffic Portal - Profiles - ${login.description}`, () => {
+            afterEach(async function () {
+                await profilesPage.OpenProfilesPage();
+            });
             afterAll(async function () {
                 expect(await topNavigation.Logout()).toBeTruthy();
             })
@@ -89,7 +96,7 @@ profiles.tests.forEach(async profilesData => {
 });
 
 describe('Clean up API for Profiles', () => {
-    afterAll(async function () {
+    it('Cleanup', async () => {
         await api.UseAPI(profiles.cleanup);
-    })
+    });
 });

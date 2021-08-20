@@ -25,7 +25,7 @@ import HtmlReporter from "protractor-beautiful-reporter";
 
 import { API } from './CommonUtils';
 import * as conf from "./config.json"
-import { prerequisites, profiles } from "./Data";
+import { prerequisites} from "./Data";
 import { isTestingConfig } from "./config.model";
 
 const downloadsPath = resolve('Downloads');
@@ -86,5 +86,4 @@ config.onPrepare = async function () {
     }
 
     await api.UseAPI(prerequisites);
-    await api.UseAPI(profiles.setup);
 }
