@@ -29,10 +29,6 @@ const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const profilesPage = new ProfilesPage();
 
-beforeAll(async function () {
-    await api.UseAPI(profiles.setup);
-})
-
 profiles.tests.forEach(async profilesData => {
     profilesData.logins.forEach(login => {
         afterEach(async function () {
@@ -94,7 +90,7 @@ profiles.tests.forEach(async profilesData => {
 });
 
 describe('Clean up API for Profiles', () => {
-    it('Cleanup', async () => {
+    afterAll(async function () {
         await api.UseAPI(profiles.cleanup);
-    });
+    })
 });

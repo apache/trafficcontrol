@@ -25,7 +25,7 @@ import HtmlReporter from "protractor-beautiful-reporter";
 
 import { API } from './CommonUtils/API';
 import * as conf from "./config.json"
-import { prerequisites } from "./Data";
+import { prerequisites, profiles } from "./Data";
 
 const downloadsPath = resolve('Downloads');
 export const randomize = Math.random().toString(36).substring(3, 7);
@@ -40,6 +40,7 @@ if (config.capabilities) {
 config.onPrepare = async function () {
     await browser.waitForAngularEnabled(true);
     await browser.driver.manage().window().maximize();
+    
     emptyDir('./Reports/', function (err) {
       console.log(err);
     });
@@ -68,4 +69,5 @@ config.onPrepare = async function () {
 
     const api = new API();
     await api.UseAPI(prerequisites);
+    await api.UseAPI(profiles.setup);
 }
