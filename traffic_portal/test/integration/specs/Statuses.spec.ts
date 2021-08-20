@@ -20,11 +20,10 @@ import { browser } from 'protractor';
 
 import { LoginPage } from '../PageObjects/LoginPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-import { API } from '../CommonUtils/API';
+import { api } from "../config";
 import { StatusesPage } from '../PageObjects/Statuses.po'
 import { statuses } from "../Data";
 
-const api = new API();
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const statusesPage = new StatusesPage();

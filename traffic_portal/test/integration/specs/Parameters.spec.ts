@@ -20,11 +20,10 @@ import { browser } from 'protractor';
 
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { ParametersPage } from '../PageObjects/ParametersPage.po';
-import { API } from '../CommonUtils/API';
+import { api } from "../config";
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { parameters } from "../Data";
 
-const api = new API();
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const parametersPage = new ParametersPage();
@@ -63,7 +62,7 @@ parameters.tests.forEach(async parametersData => {
                         expect(await parametersPage.ToggleTableColumn(toggle.Name)).toBe(true);
                         await parametersPage.OpenParametersPage();
                     }
-                    
+
                 });
             })
             parametersData.add.forEach(add => {

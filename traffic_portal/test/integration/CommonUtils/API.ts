@@ -21,10 +21,12 @@
 import { Agent } from "https";
 
 import axios from 'axios';
-import type {AxiosResponse} from "axios";
+import type {AxiosResponse, AxiosError} from "axios";
 import randomIpv6 from "random-ipv6";
 
-import { config, randomize } from '../config';
+import { hasProperty } from "./utils";
+import { randomize } from '../config';
+import { AlertLevel, isAlert, logAlert, TestingConfig } from "../config.model";
 
 interface GetRequest {
     queryKey: string;
@@ -50,33 +52,61 @@ export interface APIData {
 }
 
 /**
- * hasProperty checks, generically, whether some variable passed as `o` has the
- * property `k`.
+ * Checks if an object is an AxiosError, usually useful in `try`/`catch` blocks
+ * around axios calls.
  *
- * @example
- * hasProperty({}, "id"); // returns false
- * hasProperty({id: 8}); // returns true
- * hasProperty({id: undefined}); // returns true
- *
- * @param o The object to check.
- * @param k The key for which to check in the object.
- * @returns Whether or not `o` has the property `k`.
- * @throws {Error} when the type check fails.
+ * @param e The object to check.
+ * @returns Whether or not `e` is an AxiosError.
  */
- export function hasProperty<T extends object, K extends PropertyKey, S>(o: T, k: K): o is T & Record<K, S | unknown> {
-	return Object.prototype.hasOwnProperty.call(o, k);
+function isAxiosError(e: unknown): e is AxiosError {
+    if (typeof(e) !== "object" || e === null) {
+        return false;
+    }
+    if (!hasProperty(e, "isAxiosError", "boolean")) {
+        return false;
+    }
+    return e.isAxiosError;
 }
 
 export class API {
 
     private cookie = "";
-    private readonly config = config;
 
-    constructor() {
+    /**
+     * This controls the alert levels that get logged - levels not in this set
+     * are not logged
+     */
+    private readonly alertLevels = new Set<AlertLevel>(["warning", "error", "info"]);
+    /**
+     * Stores login information for the admin-level user.
+     */
+    private readonly loginInfo: {
+        password: string;
+        username: string;
+    };
+    /**
+     * The URL base used for the Traffic Ops API.
+     *
+     * Trailing `/` is guaranteed.
+     *
+     * @example
+     * "https://localhost:6443/api/4.0/"
+     */
+    private readonly apiURL: string;
+
+    /**
+     * @param cfg The testing configuration.
+     */
+    constructor(cfg: TestingConfig) {
         axios.defaults.headers.common['Accept'] = 'application/json'
         axios.defaults.headers.common['Authorization'] = 'No-Auth'
         axios.defaults.headers.common['Content-Type'] = 'application/json'
         axios.defaults.httpsAgent = new Agent({ rejectUnauthorized: false })
+        if (cfg.alertLevels) {
+            this.alertLevels = new Set(cfg.alertLevels);
+        }
+        this.loginInfo = cfg.login;
+        this.apiURL = cfg.apiUrl.endsWith("/") ? cfg.apiUrl : `${cfg.apiUrl}/`;
     }
 
     /**
@@ -86,16 +116,88 @@ export class API {
      * @throws {Error} when login fails, or when Traffic Ops doesn't return a cookie.
      */
     public async Login(): Promise<AxiosResponse<unknown>> {
-        const response = await axios({
-            method: 'post',
-            url: this.config.params.apiUrl + '/user/login',
-            data: {
-                u: this.config.params.login.username,
-                p: this.config.params.login.password
-            }
-        });
-        this.cookie = await response.headers["set-cookie"][0];
+        const data = {
+            p: this.loginInfo.password,
+            u: this.loginInfo.username,
+        }
+        const response = await this.getResponse("post", "/user/login", data);
+        const h = response.headers as object;
+        if (!hasProperty(h, "set-cookie", "Array") || h["set-cookie"].length < 1) {
+            throw new Error("Traffic Ops response did not set a cookie");
+        }
+        const cookie = await h["set-cookie"][0];
+        if (typeof(cookie) !== "string") {
+            throw new Error(`non-string cookie: ${cookie}`);
+        }
+        this.cookie = cookie;
         return response
+    }
+
+    /**
+     * Retrieves a response from the API.
+     *
+     * Alerts will be logged if they are found - even if an error occurs and is
+     * thrown.
+     *
+     * @param method The request method to use.
+     * @param path The path to request, relative to the configured TO API URL.
+     * @returns The server's response.
+     * @throws {unknown} when the request fails for any reason. If an error
+     * response was returned from the API, it was logged, so there's no need to
+     * dig into the properties of these errors, really.
+     */
+    private async getResponse(method: "get" | "delete", path: string): Promise<AxiosResponse>;
+    /**
+     * Retrieves a response from the API.
+     *
+     * Alerts will be logged if they are found - even if an error occurs and is
+     * thrown.
+     *
+     * @param method The request method to use.
+     * @param path The path to request, relative to the configured TO API URL.
+     * @param data Data to send in the body of the POST request.
+     * @returns The server's response.
+     * @throws {unknown} when the request fails for any reason. If an error
+     * response was returned from the API, it was logged, so there's no need to
+     * dig into the properties of these errors, really.
+     */
+    private async getResponse(method: "post", path: string, data: unknown): Promise<AxiosResponse>;
+    private async getResponse(method: "post" | "get" | "delete", path: string, data?: unknown): Promise<AxiosResponse> {
+        if (method === "post" && data === undefined) {
+            throw new TypeError("request body must be given for POST requests");
+        }
+
+        const url = `${this.apiURL}${path.replace(/^\/+/g, "")}`;
+        const conf = {
+            method,
+            url,
+            headers: { Cookie: this.cookie },
+            data
+        }
+
+        let throwable;
+        let resp: AxiosResponse<unknown>;
+        try {
+            resp = await axios(conf);
+        } catch(e) {
+            if (!isAxiosError(e) || !e.response) {
+                console.debug("non-axios error or axios error with no response thrown");
+                throw e;
+            }
+            resp = e.response;
+            throwable = e;
+        }
+        if (typeof(resp.data) === "object" && resp.data !== null && hasProperty(resp.data, "alerts", "Array")) {
+            for (const a of resp.data.alerts) {
+                if (isAlert(a) && this.alertLevels.has(a.level)) {
+                    logAlert(a, `${method.toUpperCase()} ${url} (${resp.status} ${resp.statusText}):`);
+                }
+            }
+        }
+        if (throwable) {
+            throw throwable;
+        }
+        return resp;
     }
 
     public async SendRequest<T extends IDData>(route: string, method: string, data: T): Promise<void> {
@@ -117,19 +219,10 @@ export class API {
 
         switch (method) {
             case "post":
-                response = await axios({
-                    method: method,
-                    url: this.config.params.apiUrl + route,
-                    headers: { Cookie: this.cookie},
-                    data: data
-                });
+                response = await this.getResponse("post", route, data);
                 break;
             case "get":
-                response = await axios({
-                    method: method,
-                    url: this.config.params.apiUrl + route,
-                    headers: { Cookie: this.cookie},
-                });
+                response = await this.getResponse("get", route);
                 break;
             case "delete":
                 if (!data.route) {
@@ -147,11 +240,7 @@ export class API {
                 if((data.route).includes('/service_categories/')){
                     data.route = data.route + randomize
                 }
-                response = await axios({
-                    method: method,
-                    url: this.config.params.apiUrl + data.route,
-                    headers: { Cookie: this.cookie},
-                });
+                response = await this.getResponse("delete", data.route);
                 break;
             default:
                 throw new Error(`unrecognized request method: '${method}'`);
@@ -171,11 +260,7 @@ export class API {
         }
         for (const request of data.getRequest) {
             const query = `?${encodeURIComponent(request.queryKey)}=${encodeURIComponent(request.queryValue)}${randomize}`;
-            const response = await axios({
-                method: 'get',
-                url: this.config.params.apiUrl + request.route + query,
-                headers: { Cookie: this.cookie},
-            });
+            const response = await this.getResponse("get", request.route + query)
 
             if (response.status == 200) {
                 if(request.hasOwnProperty('isArray')){
@@ -193,7 +278,7 @@ export class API {
         return null
     }
 
-   public Randomize(data: object): void {
+    public Randomize(data: object): void {
        if (hasProperty(data, "fullName")) {
            if (hasProperty(data, "email")) {
                data.email = data.fullName + randomize + data.email;
@@ -231,23 +316,19 @@ export class API {
         if(hasProperty(data, 'domainName')) {
             data.domainName = data.domainName + randomize;
         }
-        if(hasProperty(data, 'nodes')){
-            if (data.nodes instanceof Array) {
-                data.nodes.map(i => {
-                    if (typeof(i) === "object" && i !== null && hasProperty(i, "cachegroup")) {
-                        i.cachegroup = i.cachegroup + randomize;
-                    }
-                });
-            }
+        if(hasProperty(data, 'nodes', "Array")){
+            data.nodes.map(i => {
+                if (typeof(i) === "object" && i !== null && hasProperty(i, "cachegroup")) {
+                    i.cachegroup = i.cachegroup + randomize;
+                }
+            });
         }
-        if(hasProperty(data, 'interfaces')){
-            if (data.interfaces instanceof Array) {
-                const ipv6 = randomIpv6();
-                for (const inf of data.interfaces) {
-                    if (typeof(inf) === "object" && inf !== null && hasProperty(inf, "ipAddresses") && inf.ipAddresses instanceof Array) {
-                        for (const ip of inf.ipAddresses) {
-                           ip.address = ipv6.toString();
-                        }
+        if(hasProperty(data, 'interfaces', "Array")){
+            const ipv6 = randomIpv6();
+            for (const inf of data.interfaces) {
+                if (typeof(inf) === "object" && inf !== null && hasProperty(inf, "ipAddresses", "Array")) {
+                    for (const ip of inf.ipAddresses) {
+                        (ip as Record<"address", string>).address = ipv6.toString();
                     }
                 }
             }
@@ -273,7 +354,7 @@ export class API {
                 }
             }
         } else if (response.status == undefined) {
-            throw new Error(`Error requesting ${this.config.params.apiUrl}: ${response}`);
+            throw new Error(`Error requesting ${this.apiURL}: ${response}`);
         } else {
             throw new Error(`Login failed: Response Status: '${response.statusText}'' Response Data: '${response.data}'`);
         }
