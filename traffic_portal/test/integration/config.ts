@@ -285,4 +285,76 @@ config.onPrepare = async function () {
     }
 
     await api.UseAPI(prerequisites);
+function leafTenants(ts: Array<Tenant & {parentId: number}>): Array<Tenant & {parentId: number}> {
+	const parents = new Set(ts.map(t=>t.parentName));
+	return ts.filter(t=>!parents.has(t.name));
 }
+
+function handleErr(thing: string, id: number): (e: unknown) => void {
+	const tmpl = `failed to clean up ${thing} #${id}:`;
+	return (e: unknown) => {
+		const msg = e instanceof Error ? e.message : e;
+		console.error(tmpl, msg);
+	};
+}
+
+async function cleanUpTenants(ts: Array<Tenant & {parentId: number}>): Promise<void> {
+	if (ts.length === 0) {
+		return;
+	}
+
+	const leaves = leafTenants(ts);
+	if (leaves.length === 0) {
+		const msg = leaves.map(t=>`'${t.name.replace(new RegExp(`${randomize}$`), "")}'`).join(", ");
+		throw new Error(`The following Tenants could not be cleaned up because of bad parentage: ${msg}`);
+	}
+
+	const leafIDs = new Set<number>();
+	await Promise.all(leaves.map(
+		t => {
+			leafIDs.add(t.id);
+			return api.delete(`tenants/${t.id}`).catch(handleErr("Tenant", t.id));
+		}
+	));
+
+	const unDeleted = ts.filter(t=>!leafIDs.has(t.id));
+	return cleanUpTenants(unDeleted);
+}
+
+const teardownTimingLabel = "testing data torn down";
+
+async function teardownAPI(): Promise<void> {
+	console.debug("tearing down testing data");
+	// TODO: delete when users can be deleted.
+	console.warn("users cannot be cleaned up, so they will be left in the testing environment");
+	console.time(teardownTimingLabel);
+
+	let promises = profiles.map(p=>api.delete(`profiles/${p.id}`).catch(handleErr("Profile", p.id)));
+	promises = promises.concat(promises, cacheGroups.map(
+		cg=>api.delete(`cachegroups/${cg.id}`).catch(handleErr("Cache Group", cg.id))
+	));
+	// TODO: uncomment once users can be deleted.
+	// promises = promises.concat(promises, users.map(
+	// 	u=>api.delete(`users/${u.id}`).catch(handleErr("User", u.id))
+	// ));
+	await Promise.all(promises);
+
+	promises = Array.from(cdns.values()).map(
+		c=>api.delete(`cdns/${c.id}`).catch(handleErr("CDN", c.id))
+	);
+	const noRoots = createdTenants.filter(
+		(t): t is Tenant & {parentId: number} => typeof(t.parentId) === "number"
+	);
+	if (noRoots.length < createdTenants.length) {
+		console.warn("refusing to delete the 'root' Tenant");
+	}
+	promises.push(cleanUpTenants(noRoots).catch(
+		err => {
+			console.error("Failed to clean up Tenants:", err instanceof Error ? err.message : err);
+		}
+	));
+	await Promise.all(promises);
+
+	console.timeEnd(teardownTimingLabel);
+}
+
