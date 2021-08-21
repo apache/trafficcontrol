@@ -25,7 +25,6 @@ import type {AxiosResponse, AxiosError} from "axios";
 import randomIpv6 from "random-ipv6";
 
 import { hasProperty } from "./utils";
-import { randomize } from '../config';
 import { AlertLevel, isAlert, logAlert, TestingConfig } from "../config.model";
 
 interface GetRequest {
@@ -101,6 +100,10 @@ export class API {
     public get loggedIn(): boolean {
         return this.authenticated;
     }
+
+    /** The randomization string used to generate testing API data. */
+    protected readonly randomize;
+
     /**
      * @param cfg The testing configuration.
      */
@@ -114,6 +117,7 @@ export class API {
         }
         this.loginInfo = cfg.login;
         this.apiURL = cfg.apiUrl.endsWith("/") ? cfg.apiUrl : `${cfg.apiUrl}/`;
+        this.randomize = cfg.randomize;
     }
 
     /**
@@ -341,7 +345,7 @@ export class API {
                     throw new Error("DELETE requests must include a 'route' data property")
                 }
                 if ((data.route).includes('?name')){
-                    data.route = data.route + randomize
+                    data.route = data.route + this.randomize;
                 }
                 if ((data.route).includes('?id')){
                     if (!hasProperty(data, "id")) {
@@ -350,7 +354,7 @@ export class API {
                     data.route = data.route + data.id;
                 }
                 if((data.route).includes('/service_categories/')){
-                    data.route = data.route + randomize
+                    data.route = data.route + this.randomize;
                 }
                 response = await this.getResponse("delete", data.route);
                 break;
@@ -393,45 +397,45 @@ export class API {
     public Randomize(data: object): void {
        if (hasProperty(data, "fullName")) {
            if (hasProperty(data, "email")) {
-               data.email = data.fullName + randomize + data.email;
+               data.email = data.fullName + this.randomize + data.email;
            }
-           data.fullName = data.fullName + randomize;
+           data.fullName = data.fullName + this.randomize;
        }
         if (hasProperty(data, "hostName")) {
-            data.hostName = data.hostName + randomize;
+            data.hostName = data.hostName + this.randomize;
         }
         if (hasProperty(data, "ipAddress")) {
             const rand = () => Math.floor(Math.random()*255)+1;
             data.ipAddress = `${rand()}.${rand()}.${rand()}.${rand()}`;
         }
         if(hasProperty(data, 'name')) {
-            data.name = data.name + randomize;
+            data.name = data.name + this.randomize;
         }
         if(hasProperty(data, 'requiredCapability')) {
-            data.requiredCapability = data.requiredCapability + randomize;
+            data.requiredCapability = data.requiredCapability + this.randomize;
         }
         if(hasProperty(data, 'serverCapability')) {
-            data.serverCapability = data.serverCapability + randomize;
+            data.serverCapability = data.serverCapability + this.randomize;
         }
         if(hasProperty(data, 'username')) {
-            data.username = data.username + randomize;
+            data.username = data.username + this.randomize;
         }
         if(hasProperty(data, 'xmlId')) {
-            data.xmlId = data.xmlId + randomize;
+            data.xmlId = data.xmlId + this.randomize;
         }
         if(hasProperty(data, 'shortName')) {
-            data.shortName = data.shortName + randomize;
+            data.shortName = data.shortName + this.randomize;
         }
         if(hasProperty(data, 'divisionName')) {
-            data.divisionName = data.divisionName + randomize;
+            data.divisionName = data.divisionName + this.randomize;
         }
         if(hasProperty(data, 'domainName')) {
-            data.domainName = data.domainName + randomize;
+            data.domainName = data.domainName + this.randomize;
         }
         if(hasProperty(data, 'nodes', "Array")){
             data.nodes.map(i => {
                 if (typeof(i) === "object" && i !== null && hasProperty(i, "cachegroup")) {
-                    i.cachegroup = i.cachegroup + randomize;
+                    i.cachegroup = i.cachegroup + this.randomize;
                 }
             });
         }
