@@ -106,6 +106,7 @@ export interface TestingConfig {
 	readonly baseUrl: string;
 	/** Logging alert levels that are enabled. */
 	readonly alertLevels?: Array<AlertLevel>;
+    randomize: string;
 }
 
 /**
