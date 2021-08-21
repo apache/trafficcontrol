@@ -255,6 +255,12 @@ async function setupAPI(): Promise<void> {
 	await Promise.all(prerequisites.users.map(loadUser));
 	console.timeEnd("testing dataset loaded");
 }
+
+config.beforeLaunch = async function () {
+	await api.Login();
+	await setupAPI();
+};
+
 config.onPrepare = async function () {
     await browser.waitForAngularEnabled(true);
     await browser.driver.manage().window().maximize();
@@ -262,29 +268,35 @@ config.onPrepare = async function () {
       console.log(err);
     });
 
-    if (config.params.junitReporter === true) {
-        jasmine.getEnv().addReporter(
-            new JUnitXmlReporter({
-                savePath: '/portaltestresults',
-                filePrefix: 'portaltestresults',
-                consolidateAll: true
-            }));
-    }
-    else {
-        jasmine.getEnv().addReporter(new HtmlReporter({
-            baseDirectory: './Reports/',
-            clientDefaults: {
-                showTotalDurationIn: "header",
-                totalDurationFormat: "hms"
-            },
-            jsonsSubfolder: 'jsons',
-            screenshotsSubfolder: 'images',
-            takeScreenShotsOnlyForFailedSpecs: true,
-            docTitle: 'Traffic Portal Test Cases'
-        }).getJasmine2Reporter());
-    }
+	await browser.waitForAngularEnabled(true);
+	await browser.driver.manage().window().maximize();
+	emptyDir('./Reports/', function (err) {
+		console.error(err);
+	});
 
-    await api.UseAPI(prerequisites);
+	if (config.params.junitReporter === true) {
+		jasmine.getEnv().addReporter(
+			new JUnitXmlReporter({
+				savePath: '/portaltestresults',
+				filePrefix: 'portaltestresults',
+				consolidateAll: true
+			}));
+	}
+	else {
+		jasmine.getEnv().addReporter(new HtmlReporter({
+			baseDirectory: './Reports/',
+			clientDefaults: {
+				showTotalDurationIn: "header",
+				totalDurationFormat: "hms"
+			},
+			jsonsSubfolder: 'jsons',
+			screenshotsSubfolder: 'images',
+			takeScreenShotsOnlyForFailedSpecs: true,
+			docTitle: 'Traffic Portal Test Cases'
+		}).getJasmine2Reporter());
+	}
+};
+
 function leafTenants(ts: Array<Tenant & {parentId: number}>): Array<Tenant & {parentId: number}> {
 	const parents = new Set(ts.map(t=>t.parentName));
 	return ts.filter(t=>!parents.has(t.name));
@@ -358,3 +370,5 @@ async function teardownAPI(): Promise<void> {
 	console.timeEnd(teardownTimingLabel);
 }
 
+
+config.afterLaunch = teardownAPI;
