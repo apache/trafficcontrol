@@ -202,7 +202,7 @@ export class API {
         if (typeof(resp.data) === "object" && resp.data !== null && hasProperty(resp.data, "alerts", "Array")) {
             for (const a of resp.data.alerts) {
                 if (isAlert(a) && this.alertLevels.has(a.level)) {
-                    logAlert(a, `${method.toUpperCase()} ${url} (${resp.status} ${resp.statusText}):`);
+                    logAlert(a, `${method.toUpperCase()} ${path} (${resp.status} ${resp.statusText}):`);
                 }
             }
         }
