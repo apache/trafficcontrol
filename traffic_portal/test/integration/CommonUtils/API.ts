@@ -208,6 +208,110 @@ export class API {
         return resp;
     }
 
+    /**
+     * Retrieves a response from the API - specifically this gives back the
+     * response object's `response` property, so the type parameter should be
+     * the type of that property.
+     *
+     * @param method The request method to use.
+     * @param path The path to request, relative to the configured TO API URL.
+     * @param params Optionally, any query string parameters to pass in the request.
+     * @returns The response property - which isn't type-checked at all, this
+     * just assumes that whatever type parameter used is what the `response`
+     * type will be.
+     * @throws {unknown} when the request fails for any reason. If an error
+     * response was returned from the API, it was logged, so there's no need to
+     * dig into the properties of these errors, really.
+     */
+    private async request<T>(method: "get" | "delete", path: string, params?: Record<PropertyKey, string>): Promise<T>;
+    /**
+     * Retrieves a response from the API - specifically this gives back the
+     * response object's `response` property, so the type parameter should be
+     * the type of that property.
+     *
+     * @param method The request method to use.
+     * @param path The path to request, relative to the configured TO API URL.
+     * @param params Optionally, any query string parameters to pass in the request.
+     * @param data Data to send in the body of the POST request.
+     * @returns The response property - which isn't type-checked at all, this
+     * just assumes that whatever type parameter used is what the `response`
+     * type will be.
+     * @throws {unknown} when the request fails for any reason. If an error
+     * response was returned from the API, it was logged, so there's no need to
+     * dig into the properties of these errors, really.
+     */
+    private async request<T>(method: "post", path: string, params: Record<PropertyKey, string> | undefined, data: unknown): Promise<T>;
+    private async request<T>(method: "post" | "get" | "delete", path: string, params?: Record<PropertyKey, string>, data?: unknown): Promise<T> {
+        let p = path;
+        if (params) {
+            if (!p.includes("?")) {
+                p += "?";
+            }
+            p += Object.entries(params).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join("&");
+        }
+
+        let rawResp;
+        if (method === "post") {
+            rawResp = this.getResponse(method, p, data);
+        } else {
+            rawResp = this.getResponse(method, p);
+        }
+        return rawResp.then(
+            response => {
+                if (!hasProperty(response.data, "response")) {
+                    throw new Error(`response from Traffic Ops had no 'response' property: ${Object.entries(response.data)}`);
+                }
+                return response.data.response;
+            }
+        );
+    }
+
+    /**
+     * Performs a GET request to the given API path.
+     *
+     * @param path The path to request, which should be relative to the
+     * configured TO API URL, so e.g. `/users` not
+     * `https://localhost:6443/api/4.0/users`.
+     * @param params Optionally any request query parameters to pass.
+     * @returns The `response` property of the response object. The return type
+     * is whatever the caller says to expect that response object to be in the
+     * type parameter.
+     */
+    public async get<T>(path: string, params?: Record<PropertyKey, string>): Promise<T> {
+        return this.request("get", path, params);
+    }
+
+    /**
+     * Performs a DELETE request to the given API path.
+     *
+     * @param path The path to request, which should be relative to the
+     * configured TO API URL, so e.g. `/users` not
+     * `https://localhost:6443/api/4.0/users`.
+     * @param params Optionally any request query parameters to pass.
+     * @returns The `response` property of the response object. The return type
+     * is whatever the caller says to expect that response object to be in the
+     * type parameter.
+     */
+    public async delete<T>(path: string, params?: Record<PropertyKey, string>): Promise<T> {
+        return this.request("delete", path, params);
+    }
+
+    /**
+     * Performs a POST request to the given API path.
+     *
+     * @param path The path to request, which should be relative to the
+     * configured TO API URL, so e.g. `/users` not
+     * `https://localhost:6443/api/4.0/users`.
+     * @param data The body of the request.
+     * @param params Optionally any request query parameters to pass.
+     * @returns The `response` property of the response object. The return type
+     * is whatever the caller says to expect that response object to be in the
+     * type parameter.
+     */
+    public async post<T>(path: string, data: unknown, params?: Record<PropertyKey, string>): Promise<T> {
+        return this.request("post", path, params, data);
+    }
+
     public async SendRequest<T extends IDData>(route: string, method: string, data: T): Promise<void> {
         let response
         this.Randomize(data)
