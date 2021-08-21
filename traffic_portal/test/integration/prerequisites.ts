@@ -17,8 +17,10 @@
  * under the License.
  */
 
+import type { LocalizationMethodArray, ProfileType } from "./model";
+
 /** These are the Tenants the tests need. Parents need to be replaced with IDs. */
-export const tenants = [
+const tenants = [
 	{
 		name: "tenantParent",
 		parent: "root"
@@ -37,8 +39,12 @@ export const tenants = [
 	}
 ];
 
-/** These are the Roles the tests need. */
-export const roles = [
+/**
+ * These are the Roles the tests need - these are not randomized and will only
+ * be created if necessary. If these roles _do_ exist but don't have _at least_
+ * the privLevel specified, the tests will refuse to run.
+ */
+const roles = [
 	{
 		name: "admin",
 		privLevel: 30
@@ -69,7 +75,7 @@ export const roles = [
  * Password fields can be arbitrary as long as they are valid and match per
  * object.
  */
-export const users = [
+const users = [
 	{
 		username: "TPAdmin",
 		role: "admin",
@@ -133,30 +139,26 @@ export const users = [
 ];
 
 /** These are the CDNs the tests need. */
-export const CDNs = [
+const CDNs = [
 	{
 		name: "dummyCDN",
 		domainName: "cdnp3"
 	}
 ];
 
-/** Allowed values for a Cache Group's `localizationMethods` entries. */
-type LocalizationMethod = "DEEP_CZ" | "CZ" | "GEO";
-
 /**
- * Represents a TO Cache Group. This exists to enforce the `type` and
- * `localizationMethods` properties being valid on members of the exported
- * `cacheGroups` array.
+ * This exists to enforce the `type` and `localizationMethods` properties being
+ * valid on members of the exported `cacheGroups` array in the `prerequisites`
+ * module.
+ *
+ * Parents and secondary parents are not supported, since that's an annoying
+ * thing to load.
  */
-interface CacheGroup {
+export interface LoadCacheGroup {
+	fallbacks?: null | Array<string>;
 	fallbackToClosest: boolean;
 	latitude: number;
-	localizationMethods:
-		null |
-		[] |
-		[LocalizationMethod] |
-		[LocalizationMethod, LocalizationMethod] |
-		[LocalizationMethod, LocalizationMethod, LocalizationMethod];
+	localizationMethods?: null | LocalizationMethodArray;
 	longitude: number;
 	name: string;
 	shortName: string;
@@ -167,15 +169,14 @@ interface CacheGroup {
 	 */
 	type: "EDGE_LOC" | "MID_LOC" | "ORG_LOC" | "TR_LOC" | "TC_LOC";
 }
-
 /**
  * These are the Cache Groups the tests need.
  *
  * Types need to be replaced by IDs. Also, since non-server Type creation is not
  * allowed, the tests can't just create them if they don't exist. Any Types used
- * here MUST exist in Traffic Ops. Since new
+ * here MUST exist in Traffic Ops.
  */
-export const cacheGroups: Array<CacheGroup> = [
+const cacheGroups: Array<LoadCacheGroup> = [
 	{
 		name: "testCG",
 		shortName: "testCG",
@@ -195,30 +196,16 @@ export const cacheGroups: Array<CacheGroup> = [
  * Represents a TO Profile. This exists to enforce the `type` being valid on
  * members of the exported `profiles` array.
  */
-interface Profile {
+export interface LoadProfile {
 	name: string;
 	description: string;
 	cdn: string;
-	type: "ATS_PROFILE" |
-	"TR_PROFILE" |
-	"TM_PROFILE" |
-	"TS_PROFILE" |
-	"TP_PROFILE" |
-	"INFLUXDB_PROFILE" |
-	"RIAK_PROFILE" |
-	"SPLUNK_PROFILE" |
-	"DS_PROFILE" |
-	"ORG_PROFILE" |
-	"KAFKA_PROFILE" |
-	"LOGSTASH_PROFILE" |
-	"ES_PROFILE" |
-	"UNK_PROFILE" |
-	"GROVE_PROFILE";
+	type: ProfileType;
 	routingDisabled: boolean;
 }
 
 /** These are the Profiles the tests need. CDNs need to be replaced with IDs. */
-export const profiles: Array<Profile> = [
+const profiles: Array<LoadProfile> = [
 	{
 		name: "testProfile",
 		description: "A Profile used in testing",
@@ -227,3 +214,12 @@ export const profiles: Array<Profile> = [
 		routingDisabled: false
 	}
 ];
+
+export const prerequisites = {
+	cacheGroups,
+	CDNs,
+	profiles,
+	roles,
+	tenants,
+	users,
+}
