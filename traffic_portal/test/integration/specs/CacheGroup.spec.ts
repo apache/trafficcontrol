@@ -23,38 +23,34 @@ import { CacheGroupPage } from '../PageObjects/CacheGroup.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { cachegroups } from "../Data";
 
-
-
 let loginPage = new LoginPage();
 let topNavigation = new TopNavigationPage();
 let cacheGroupPage = new CacheGroupPage();
 
+fdescribe("Cache Groups Page", ()=>{
 cachegroups.tests.forEach(cacheGroupData => {
     describe(`Traffic Portal - CacheGroup - ${cacheGroupData.testName}`, () => {
         cacheGroupData.logins.forEach(login => {
-            it('can login', async function () {
+            beforeAll(async function () {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            })
-            it('can open cache group page', async function () {
                 await cacheGroupPage.OpenTopologyMenu();
+            });
+            beforeEach(async () => {
                 await cacheGroupPage.OpenCacheGroupsPage();
-            })
+            });
             cacheGroupData.check.forEach(check => {
                 it(check.description, async () => {
                     expect(await cacheGroupPage.CheckCSV(check.Name)).toBe(true);
-                    await cacheGroupPage.OpenCacheGroupsPage();
                 });
             });
             cacheGroupData.toggle.forEach(toggle => {
                 it(toggle.description, async () => {
                     if(toggle.description.includes('hide')){
                         expect(await cacheGroupPage.ToggleTableColumn(toggle.Name)).toBe(false);
-                        await cacheGroupPage.OpenCacheGroupsPage();
                     }else{
                         expect(await cacheGroupPage.ToggleTableColumn(toggle.Name)).toBe(true);
-                        await cacheGroupPage.OpenCacheGroupsPage();
                     }
                     
                 });
@@ -62,7 +58,6 @@ cachegroups.tests.forEach(cacheGroupData => {
             cacheGroupData.create.forEach(create => {
                 it(create.Description, async function () {
                     expect(await cacheGroupPage.CreateCacheGroups(create, create.validationMessage)).toBeTruthy();
-                    await cacheGroupPage.OpenCacheGroupsPage();
                 })
             })
             cacheGroupData.update.forEach(update => {
@@ -70,13 +65,11 @@ cachegroups.tests.forEach(cacheGroupData => {
                     it(update.Description, async function () {
                         await cacheGroupPage.SearchCacheGroups(update.Name)
                         expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeUndefined();
-                        await cacheGroupPage.OpenCacheGroupsPage();
                     })
                 } else {
                     it(update.Description, async function () {
                         await cacheGroupPage.SearchCacheGroups(update.Name)
                         expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeTruthy();
-                        await cacheGroupPage.OpenCacheGroupsPage();
                     })
                 }
 
@@ -87,9 +80,10 @@ cachegroups.tests.forEach(cacheGroupData => {
                     expect(await cacheGroupPage.DeleteCacheGroups(remove.Name, remove.validationMessage)).toBeTruthy();
                 })
             })
-            it('can logout', async function () {
+            afterAll(async function () {
                 expect(await topNavigation.Logout()).toBeTruthy();
             })
         })
     })
+})
 })
