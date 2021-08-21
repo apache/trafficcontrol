@@ -94,6 +94,13 @@ export class API {
      */
     private readonly apiURL: string;
 
+    /** keeps track internally of logged-in state */
+    private authenticated = false;
+
+    /** Whether or not the API client has already logged in. */
+    public get loggedIn(): boolean {
+        return this.authenticated;
+    }
     /**
      * @param cfg The testing configuration.
      */
@@ -130,7 +137,8 @@ export class API {
             throw new Error(`non-string cookie: ${cookie}`);
         }
         this.cookie = cookie;
-        return response
+        this.authenticated = true;
+        return response;
     }
 
     /**
