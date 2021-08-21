@@ -18,7 +18,6 @@
  */
 import { browser, by, element} from 'protractor';
 
-import { randomize } from "../config";
 import { BasePage } from './BasePage.po'
 
 /**
@@ -40,36 +39,31 @@ interface LoginData {
 	validationMessage?: string;
 }
 
-export class LoginPage extends BasePage{
-    private txtUserName = element(by.id("loginUsername"))
-    private txtPassword = element(by.id("loginPass"))
-    private btnLogin = element(by.name("loginSubmit"))
-    private lnkResetPassword= element (by.xpath("//button[text()='Reset Password']"))
-    private lblUserName = element(by.xpath("//span[@id='headerUsername']"))
-    private bannerEnvironment = element(by.css('.enviro-banner.prod'));
-    private randomize = randomize;
+export class LoginPage extends BasePage {
+    private readonly txtUserName = element(by.id("loginUsername"))
+    private readonly txtPassword = element(by.id("loginPass"))
+    private readonly btnLogin = element(by.name("loginSubmit"))
+    private readonly lnkResetPassword= element(by.buttonText("Reset Password"))
+    private readonly lblUserName = element(by.id("headerUsername"))
+    private readonly bannerEnvironment = element(by.className('enviro-banner.prod'));
 
 
     public async Login(login: LoginData){
-        let result = false;
-        const basePage = new BasePage();
-        if(login.username === 'admin'){
-            await this.txtUserName.sendKeys(login.username)
-            await this.txtPassword.sendKeys(login.password)
-            await browser.actions().mouseMove(this.btnLogin).perform();
-            await browser.actions().click(this.btnLogin).perform();
-        }else{
-            await this.txtUserName.sendKeys(login.username+this.randomize)
-            await this.txtPassword.sendKeys(login.password)
-            await browser.actions().mouseMove(this.btnLogin).perform();
-            await browser.actions().click(this.btnLogin).perform();
+        let username = login.username;
+        if (login.username !== this.login.username) {
+            username += this.randomize;
         }
+
+        await this.txtUserName.sendKeys(username)
+        await this.txtPassword.sendKeys(login.password)
+        await browser.actions().mouseMove(this.btnLogin).perform();
+        await browser.actions().click(this.btnLogin).perform();
+
+        const val = await this.GetOutputMessage();
         if(await browser.getCurrentUrl() === browser.params.baseUrl + "/#!/login"){
-            result = await basePage.GetOutputMessage().then(value => value === login.validationMessage);
-        }else{
-            result = true;
+            return val === login.validationMessage;
         }
-        return result;
+        return true;
     }
 
     public async ClickResetPassword(): Promise<void> {
@@ -77,18 +71,11 @@ export class LoginPage extends BasePage{
     }
 
     public async CheckUserName(login: LoginData): Promise<boolean> {
-        if(await this.lblUserName.getText() === 'admin' || await this.lblUserName.getText() === login.username+this.randomize){
-            return true;
-        }else{
-            return false;
-        }
+        const txt = await this.lblUserName.getText();
+        return txt === 'admin' || txt === login.username+this.randomize;
     }
 
     public async CheckBanner(): Promise<boolean> {
-        if(await this.bannerEnvironment.isPresent()){
-            return true;
-        }else{
-            return false;
-        }
+        return this.bannerEnvironment.isPresent();
     }
 };
