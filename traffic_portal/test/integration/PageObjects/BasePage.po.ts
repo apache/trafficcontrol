@@ -17,6 +17,9 @@
  * under the License.
  */
 import { browser, element, by, ExpectedConditions } from 'protractor';
+
+import { testingConfig } from "../config";
+
 /**
  * Class representing generic page.
  * Methods/properties for global elements should go here. 
@@ -25,6 +28,13 @@ import { browser, element, by, ExpectedConditions } from 'protractor';
  * @class BasePage
  */
 export class BasePage {
+
+  /** The randomization string used to generate testing API data. */
+  protected readonly randomize = testingConfig.randomize;
+
+  /** The login info for the user used to set up and manipulate API data. */
+  protected readonly login = testingConfig.login;
+
   constructor() {}
 
   protected lblPageTitle = element(by.xpath("//ol[@class='breadcrumb pull-left']//li[@class='active']"))
