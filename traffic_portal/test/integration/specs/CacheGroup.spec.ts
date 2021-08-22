@@ -27,7 +27,6 @@ let loginPage = new LoginPage();
 let topNavigation = new TopNavigationPage();
 let cacheGroupPage = new CacheGroupPage();
 
-fdescribe("Cache Groups Page", ()=>{
 cachegroups.tests.forEach(cacheGroupData => {
     describe(`Traffic Portal - CacheGroup - ${cacheGroupData.testName}`, () => {
         cacheGroupData.logins.forEach(login => {
@@ -85,5 +84,4 @@ cachegroups.tests.forEach(cacheGroupData => {
             })
         })
     })
-})
 })
