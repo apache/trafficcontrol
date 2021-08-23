@@ -43,20 +43,22 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// RoutePrefix ...
+// RoutePrefix is a prefix that all API routes must match.
 const RoutePrefix = "^api" // TODO config?
 
-// Route ...
+// A Route defines an association with a client request and a handler for that
+// request.
 type Route struct {
 	// Order matters! Do not reorder this! Routes() uses positional construction for readability.
-	Version           api.Version
-	Method            string
-	Path              string
-	Handler           http.HandlerFunc
-	RequiredPrivLevel int
-	Authenticated     bool
-	Middlewares       []middleware.Middleware
-	ID                int // unique ID for referencing this Route
+	Version             api.Version
+	Method              string
+	Path                string
+	Handler             http.HandlerFunc
+	RequiredPrivLevel   int
+	RequiredPermissions []string
+	Authenticated       bool
+	Middlewares         []middleware.Middleware
+	ID                  int // unique ID for referencing this Route
 }
 
 func (r Route) String() string {
