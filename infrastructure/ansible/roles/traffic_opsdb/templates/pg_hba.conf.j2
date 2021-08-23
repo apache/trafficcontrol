@@ -275,7 +275,7 @@
 #  TELEGRAF
 # ------------------------------------------------------
   host    {{ todb_db_name }}     {{ telegraf_db_user }}        127.0.0.1/32  md5
-  host    {{ todb_db_name }}     {{ telegraf_db_user }}        [::1/128]  md5
+  host    {{ todb_db_name }}     {{ telegraf_db_user }}        ::1/128  md5
 {% if groups['traffic_stats'] is defined %}
 {% for host_obj in (groups['traffic_stats']) %}
   {% if hostvars[host_obj].ansible_default_ipv4.address|default(hostvars[host_obj].ansible_all_ipv4_addresses[0]) is defined %}
@@ -288,7 +288,7 @@
 {% endif %}
 {% endif %}
 
-{% if grafana_db_user is defined and grafana_db_user is not none groups['traffic_stats'] is defined %}
+{% if grafana_db_user is defined and grafana_db_user is not none and groups['traffic_stats'] is defined %}
 # ------------------------------------------------------
 #  GRAFANA
 # ------------------------------------------------------
