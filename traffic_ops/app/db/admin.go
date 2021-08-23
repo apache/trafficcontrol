@@ -34,7 +34,9 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"gopkg.in/yaml.v2"
 )
@@ -129,16 +131,17 @@ var (
 	DBVersionDirty bool
 
 	// globals that are parsed out of DBConfigFile and used in commands
-	DBDriver      string
-	DBName        string
-	DBSuperUser   = DefaultDBSuperUser
-	DBUser        string
-	DBPassword    string
-	HostIP        string
-	HostPort      string
-	SSLMode       string
-	Migrate       *migrate.Migrate
-	MigrationName string
+	ConnectionString string
+	DBDriver         string
+	DBName           string
+	DBSuperUser      = DefaultDBSuperUser
+	DBUser           string
+	DBPassword       string
+	HostIP           string
+	HostPort         string
+	SSLMode          string
+	Migrate          *migrate.Migrate
+	MigrationName    string
 )
 
 func parseDBConfig() error {
@@ -330,13 +333,41 @@ func maybeMigrateFromGoose() bool {
 	if err := Migrate.Steps(1); err != nil {
 		die("Error migrating to Migrate from Goose: " + err.Error())
 	}
+	DBVersion, DBVersionDirty, _ = Migrate.Version()
 	return true
+}
+
+// runFirstMigration is essentially Migrate.Migrate(FirstMigrationTimestamp) but without the obligatory Migrate.versionExists() call.
+// If calling Migrate.versionExists() is made optional, runFirstMigration() can be replaced.
+func runFirstMigration() error {
+	sourceDriver, sourceDriverErr := source.Open(DBMigrationsSource)
+	if sourceDriverErr != nil {
+		return fmt.Errorf("opening the migration source driver: " + sourceDriverErr.Error())
+	}
+	dbDriver, dbDriverErr := database.Open(ConnectionString)
+	if dbDriverErr != nil {
+		return fmt.Errorf("opening the dbdriver: " + dbDriverErr.Error())
+	}
+	firstMigration, firstMigrationName, migrationReadErr := sourceDriver.ReadUp(FirstMigrationTimestamp)
+	if migrationReadErr != nil {
+		return fmt.Errorf("reading migration %s: %s", firstMigrationName, migrationReadErr.Error())
+	}
+	if setDirtyVersionErr := dbDriver.SetVersion(int(FirstMigrationTimestamp), true); setDirtyVersionErr != nil {
+		return fmt.Errorf("setting the dirty version: %s", setDirtyVersionErr.Error())
+	}
+	if migrateErr := dbDriver.Run(firstMigration); migrateErr != nil {
+		return fmt.Errorf("running the migration: %s", migrateErr.Error())
+	}
+	if setVersionErr := dbDriver.SetVersion(int(FirstMigrationTimestamp), false); setVersionErr != nil {
+		return fmt.Errorf("setting the version after successfully running the migration: %s", setVersionErr.Error())
+	}
+	return nil
 }
 
 func runMigrations() {
 	migratedFromGoose := initMigrate()
 	if !TrafficVault && DBVersion == LastSquashedMigrationTimestamp && !DBVersionDirty {
-		if migrateErr := Migrate.Migrate(FirstMigrationTimestamp); migrateErr != nil {
+		if migrateErr := runFirstMigration(); migrateErr != nil {
 			die(fmt.Sprintf("Error migrating from DB version %d to %d: %s", LastSquashedMigrationTimestamp, FirstMigrationTimestamp, migrateErr.Error()))
 		}
 	}
@@ -569,11 +600,11 @@ func main() {
 
 func initMigrate() bool {
 	var err error
-	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s", DBDriver, DBUser, DBPassword, HostIP, HostPort, DBName, SSLMode)
+	ConnectionString = fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s", DBDriver, DBUser, DBPassword, HostIP, HostPort, DBName, SSLMode)
 	if TrafficVault {
-		Migrate, err = migrate.New(TrafficVaultMigrationsSource, connectionString)
+		Migrate, err = migrate.New(TrafficVaultMigrationsSource, ConnectionString)
 	} else {
-		Migrate, err = migrate.New(DBMigrationsSource, connectionString)
+		Migrate, err = migrate.New(DBMigrationsSource, ConnectionString)
 	}
 	if err != nil {
 		die("Starting Migrate: " + err.Error())
