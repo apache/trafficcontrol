@@ -164,7 +164,8 @@ func (to *Session) GetProfileByName(name string) ([]tc.Profile, ReqInf, error) {
 
 // GetProfileByParameter GETs a Profile by the Profile "param".
 func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, ReqInf, error) {
-	URI := fmt.Sprintf("%s?param=%s", API_PROFILES, url.QueryEscape(param))
+	paramId, _ := strconv.Atoi(url.QueryEscape(param))
+	URI := fmt.Sprintf("%s?param=%d", API_PROFILES, paramId)
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
