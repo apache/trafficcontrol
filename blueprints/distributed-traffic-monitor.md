@@ -47,7 +47,11 @@ However, TO may need to be updated if it uses any stat-polling-related TM APIs
 so that it only requests from TMs that have stat-polling enabled.
 
 ### t3c Impact
-This proposal does not require `t3c` changes.
+This proposal does not require `t3c` changes. Note: the `tm-health-client`
+periodically polls a random TM to get cache health states, and because
+distributed TMs will still serve the cache health states of all caches in a
+CDN, there will be no impact to the `tm-health-client`. It can continue to poll
+any random TM and still get all the cache health data for the entire CDN.
 
 ### Traffic Monitor Impact
 TM will gain at least two more configuration options:
