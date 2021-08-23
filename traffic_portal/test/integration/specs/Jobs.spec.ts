@@ -18,13 +18,12 @@
  */
 
 import { browser } from 'protractor';
-import { API } from '../CommonUtils/API';
+import { api } from "../config";
 import { LoginPage } from '../PageObjects/LoginPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { JobsPage } from '../PageObjects/Jobs.po'
 import { jobs } from '../Data/jobs';
 
-const api = new API();
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const jobsPage = new JobsPage();

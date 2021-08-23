@@ -80,6 +80,7 @@ cdn_conf=/opt/traffic_ops/app/conf/cdn.conf
         ]
     },
     "use_ims": true,
+    "role_based_permissions": false,
     "traffic_ops_golang" : {
           "traffic_vault_backend": "$TV_BACKEND",
           "traffic_vault_config": {
