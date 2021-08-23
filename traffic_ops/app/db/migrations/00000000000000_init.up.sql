@@ -33,6 +33,6 @@ BEGIN
 END$$;
 
 CREATE TRIGGER fast_forward_schema_migrations_trigger
-	AFTER INSERT
+	AFTER UPDATE
 	ON schema_migrations
 	EXECUTE PROCEDURE fast_forward_schema_migrations_version();
