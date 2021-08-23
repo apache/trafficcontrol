@@ -18,7 +18,6 @@
  */
 import { browser, by, element } from 'protractor';
 
-import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -46,7 +45,6 @@ export class ServiceCategoriesPage extends BasePage {
 
     private btnDelete = element(by.buttonText('Delete'));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private randomize = randomize;
 
     async OpenServicesMenu() {
         let snp = new SideNavigationPage();

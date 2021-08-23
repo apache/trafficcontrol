@@ -17,7 +17,6 @@
  * under the License.
  */
 import { browser, by, element } from 'protractor';
-import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -53,7 +52,6 @@ export class CDNPage extends BasePage {
   private btnDiffSnapshot = element(by.xpath("//button[@title='Diff CDN Snapshot']"));
   private btnYes = element((by.xpath("//button[text()='Yes']")));
   private btnQueueUpdates = element((by.xpath("//button[contains(text(),'Queue Updates')]")));
-  private randomize = randomize;
 
   public async OpenCDNsPage(): Promise<void> {
     let snp = new SideNavigationPage();

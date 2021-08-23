@@ -20,7 +20,6 @@ import { ExpectedConditions, browser, by, element } from 'protractor';
 
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
-import { randomize } from '../config';
 
 export class ServerCapabilitiesPage extends BasePage{
 
@@ -29,7 +28,6 @@ export class ServerCapabilitiesPage extends BasePage{
      private searchFilter = element(by.id('serverCapabilitiesTable_filter')).element(by.css('label input'));
      private btnDelete = element(by.buttonText('Delete'))
      private txtConfirmCapabilitiesName = element(by.name('confirmWithNameInput'));
-     private randomize = randomize;
 
 
      public async OpenServerCapabilityPage(){

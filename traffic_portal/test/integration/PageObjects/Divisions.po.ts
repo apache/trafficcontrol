@@ -18,7 +18,6 @@
  */
 import { browser, by, element } from 'protractor';
 
-import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -38,7 +37,6 @@ export class DivisionsPage extends BasePage {
     private txtName = element(by.id('name'));
     private btnDelete = element(by.xpath("//button[text()='Delete']"));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private randomize = randomize;
 
     public async OpenDivisionsPage(){
         let snp = new SideNavigationPage();

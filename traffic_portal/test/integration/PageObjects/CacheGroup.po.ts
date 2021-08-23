@@ -18,7 +18,6 @@
  */
 import { browser, by, element } from 'protractor';
 
-import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from '../PageObjects/SideNavigationPage.po';
 
@@ -50,8 +49,7 @@ export class CacheGroupPage extends BasePage {
     private txtSearch = element(by.id('cacheGroupsTable_filter')).element(by.css('label input'));
     private txtConfirmCacheGroupName = element(by.name("confirmWithNameInput"));
     private btnDelete = element(by.buttonText('Delete'));
-    private randomize = randomize;
-    private btnTableColumn = element(by.className("caret"))
+        private btnTableColumn = element(by.className("caret"))
     async OpenTopologyMenu() {
         let snp = new SideNavigationPage();
         await snp.ClickTopologyMenu();

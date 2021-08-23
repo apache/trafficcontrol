@@ -20,7 +20,6 @@
 import { by, element } from 'protractor';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
-import { randomize } from '../config';
 interface User {
   FullName: string;
   Username: string;
@@ -68,7 +67,6 @@ export class UsersPage extends BasePage {
     private txtPublicSSHKey = element(by.name('publicSshKey'));
     private txtSearch = element(by.id('usersTable_filter')).element(by.css('label input'));
     private btnTableColumn = element(by.css('[title="Select Table Columns"]'));
-    private randomize = randomize;
 
     public async OpenUserPage(): Promise<void> {
         const snp = new SideNavigationPage();

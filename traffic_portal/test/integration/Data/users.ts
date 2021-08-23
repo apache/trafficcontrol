@@ -17,7 +17,9 @@
  * under the License.
  */
 
-import {randomize} from "../config";
+import { testingConfig } from "../config";
+
+const randomize = testingConfig.randomize;
 
 export const users = {
     tests: [

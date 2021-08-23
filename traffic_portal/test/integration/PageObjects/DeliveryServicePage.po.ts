@@ -18,7 +18,6 @@
  */
 
 import { BasePage } from './BasePage.po';
-import { randomize } from "../config";
 import { SideNavigationPage } from './SideNavigationPage.po';
 import {browser, by, element} from 'protractor';
 
@@ -70,7 +69,6 @@ export class DeliveryServicePage extends BasePage {
   private txtProtocol = element(by.name('protocol'));
   private txtRemapText = element(by.name('remapText'));
   private btnCreateDeliveryServices = element(by.buttonText('Create'));
-  private randomize = randomize;
 
   public async OpenDeliveryServicePage() {
     const snp = new SideNavigationPage();

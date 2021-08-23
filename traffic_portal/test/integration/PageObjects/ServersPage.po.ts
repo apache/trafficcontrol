@@ -22,7 +22,6 @@ import randomIpv6 from "random-ipv6";
 
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
-import { randomize } from '../config';
 
 interface CreateServer {
   Status: string;
@@ -85,7 +84,6 @@ export class ServersPage extends BasePage {
   private btnMoreCreateServer = element(by.name("moreBtn"))
   private btnCreateServer = element(by.name("createServerMenuItem"))
   private txtQuickSearch = element(by.id("quickSearch"));
-  private randomize = randomize;
 
   async OpenServerPage(){
     let snp = new SideNavigationPage();

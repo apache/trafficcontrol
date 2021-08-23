@@ -18,7 +18,6 @@
  */
 import { by, element } from 'protractor';
 
-import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import {SideNavigationPage} from './SideNavigationPage.po';
 
@@ -39,7 +38,6 @@ export class TenantsPage extends BasePage {
     private txtSearch = element(by.id('tenantsTable_filter')).element(by.css('label input'));
     private btnDelete = element(by.buttonText('Delete'));
     private txtConfirmTenantName = element(by.name('confirmWithNameInput'));
-    private randomize = randomize;
 
     async OpenTenantPage(){
       let snp = new SideNavigationPage();

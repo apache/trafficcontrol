@@ -42,8 +42,7 @@ export class TopologiesPage extends BasePage {
     private txtSearchCacheGroup = element(by.id('availableCacheGroupsTable_filter')).element(by.css('label input'));
     private btnDelete = element(by.xpath("//button[text()='Delete']"));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private config = require('../config');
-    private randomize = this.config.randomize;
+
     async OpenTopologiesPage(){
         let snp = new SideNavigationPage();
         await snp.NavigateToTopologiesPage();

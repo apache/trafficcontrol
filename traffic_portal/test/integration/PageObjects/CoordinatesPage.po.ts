@@ -18,7 +18,6 @@
  */
 import { by, element, browser } from 'protractor';
 
-import { randomize } from "../config";
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
 
@@ -50,7 +49,6 @@ export class CoordinatesPage extends BasePage {
     private txtSearch = element(by.id('coordinatesTable_filter')).element(by.css('label input'));
     private btnDelete = element(by.buttonText('Delete'));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private randomize = randomize;
 
     async OpenCoordinatesPage() {
         let snp = new SideNavigationPage();
