@@ -102,7 +102,7 @@ export class API {
     }
 
     /** The randomization string used to generate testing API data. */
-    protected readonly randomize;
+    protected readonly randomize: string;
 
     /**
      * @param cfg The testing configuration.
@@ -375,7 +375,7 @@ export class API {
             return null;
         }
         for (const request of data.getRequest) {
-            const query = `?${encodeURIComponent(request.queryKey)}=${encodeURIComponent(request.queryValue)}${randomize}`;
+            const query = `?${encodeURIComponent(request.queryKey)}=${encodeURIComponent(request.queryValue)}${this.randomize}`;
             const response = await this.getResponse("get", request.route + query)
 
             if (response.status == 200) {
