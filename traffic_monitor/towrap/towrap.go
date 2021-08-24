@@ -22,9 +22,12 @@ package towrap
  */
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"os"
 	"strconv"
@@ -36,6 +39,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	legacyClient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	"golang.org/x/net/publicsuffix"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -193,7 +197,6 @@ type TrafficOpsSessionThreadsafe struct {
 	m                  *sync.Mutex
 	lastCRConfig       ByteMapCache
 	crConfigHist       CRConfigHistoryThreadsafe
-	useLegacy          bool
 	CRConfigBackupFile string
 	TMConfigBackupFile string
 }
@@ -209,17 +212,13 @@ func NewTrafficOpsSessionThreadsafe(s *client.Session, ls *legacyClient.Session,
 		session:            &s,
 		legacySession:      &ls,
 		TMConfigBackupFile: cfg.TMConfigBackupFile,
-		useLegacy:          false,
 	}
 }
 
 // Initialized tells whether or not the TrafficOpsSessionThreadsafe has been
-// properly initialized (by calling 'Update').
+// properly initialized with non-nil sessions.
 func (s TrafficOpsSessionThreadsafe) Initialized() bool {
-	if s.useLegacy {
-		return s.legacySession != nil && *s.legacySession != nil
-	}
-	return s.session != nil && *s.session != nil
+	return s.session != nil && *s.session != nil && s.legacySession != nil && *s.legacySession != nil
 }
 
 // Update updates the TrafficOpsSessionThreadsafe's connection information with
@@ -240,21 +239,67 @@ func (s *TrafficOpsSessionThreadsafe) Update(
 	s.m.Lock()
 	defer s.m.Unlock()
 
+	// always set unauthenticated sessions first which can eventually authenticate themselves when attempting requests
+	if err := s.setSession(url, username, password, insecure, userAgent, useCache, timeout); err != nil {
+		return err
+	}
+	if err := s.setLegacySession(url, username, password, insecure, userAgent, useCache, timeout); err != nil {
+		return err
+	}
+
 	session, _, err := client.LoginWithAgent(url, username, password, insecure, userAgent, useCache, timeout)
 	if err != nil {
-		log.Errorf("Error logging in using up-to-date client: %v", err)
+		log.Errorf("logging in using up-to-date client: %v", err)
 		legacySession, _, err := legacyClient.LoginWithAgent(url, username, password, insecure, userAgent, useCache, timeout)
 		if err != nil || legacySession == nil {
 			err = fmt.Errorf("logging in using legacy client: %v", err)
 			return err
 		}
 		*s.legacySession = legacySession
-		s.useLegacy = true
 	} else {
 		*s.session = session
-		s.useLegacy = false
 	}
 
+	return nil
+}
+
+// setSession sets the session for the up-to-date client without logging in.
+func (s *TrafficOpsSessionThreadsafe) setSession(url, username, password string, insecure bool, userAgent string, useCache bool, timeout time.Duration) error {
+	options := cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	}
+	jar, err := cookiejar.New(&options)
+	if err != nil {
+		return err
+	}
+	to := client.NewSession(username, password, url, userAgent, &http.Client{
+		Timeout: timeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+		},
+		Jar: jar,
+	}, useCache)
+	*s.session = to
+	return nil
+}
+
+// setSession sets the session for the legacy client without logging in.
+func (s *TrafficOpsSessionThreadsafe) setLegacySession(url, username, password string, insecure bool, userAgent string, useCache bool, timeout time.Duration) error {
+	options := cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	}
+	jar, err := cookiejar.New(&options)
+	if err != nil {
+		return err
+	}
+	to := legacyClient.NewSession(username, password, url, userAgent, &http.Client{
+		Timeout: timeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+		},
+		Jar: jar,
+	}, useCache)
+	*s.legacySession = to
 	return nil
 }
 
@@ -334,44 +379,47 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 	var remoteAddr string
 	var err error
 	var data []byte
+	var legacyReqInf legacyClient.ReqInf
 
-	if s.useLegacy {
-		ss := s.getLegacy()
-		if ss == nil {
+	ss := s.get()
+	if ss == nil {
+		return nil, ErrNilSession
+	}
+	data, reqInf, err := ss.GetCRConfig(cdn)
+	if reqInf.RemoteAddr != nil {
+		remoteAddr = reqInf.RemoteAddr.String()
+	}
+	if err != nil {
+		log.Warnln("getting CRConfig from Traffic Ops using up-to-date client: " + err.Error() + ". Retrying with legacy client")
+		ls := s.getLegacy()
+		if ls == nil {
 			return nil, ErrNilSession
 		}
-		b, reqInf, e := ss.GetCRConfig(cdn)
-		err = e
-		data = b
-		if reqInf.RemoteAddr != nil {
-			remoteAddr = reqInf.RemoteAddr.String()
+		data, legacyReqInf, err = ls.GetCRConfig(cdn)
+		if legacyReqInf.RemoteAddr != nil {
+			remoteAddr = legacyReqInf.RemoteAddr.String()
 		}
-	} else {
-		ss := s.get()
-		if ss == nil {
-			return nil, ErrNilSession
-		}
-		b, reqInf, e := ss.GetCRConfig(cdn)
-		err = e
-		data = b
-		if reqInf.RemoteAddr != nil {
-			remoteAddr = reqInf.RemoteAddr.String()
+		if err != nil {
+			log.Errorln("getting CRConfig from Traffic Ops using legacy client: " + err.Error() + ". Checking for backup")
 		}
 	}
 
 	if err == nil {
-		ioutil.WriteFile(s.CRConfigBackupFile, data, 0644)
+		log.Infoln("successfully got CRConfig from Traffic Ops. Writing to backup file")
+		if wErr := ioutil.WriteFile(s.CRConfigBackupFile, data, 0644); wErr != nil {
+			log.Errorf("failed to write CRConfig backup file: %v", wErr)
+		}
 	} else {
 		if s.BackupFileExists() {
 			log.Errorln("using backup file for CRConfig snapshot due to error fetching CRConfig snapshot from Traffic Ops: " + err.Error())
 			data, err = ioutil.ReadFile(s.CRConfigBackupFile)
 			if err != nil {
-				return nil, fmt.Errorf("file Read Error: %v", err)
+				return nil, fmt.Errorf("reading CRConfig backup file: %v", err)
 			}
 			remoteAddr = localHostIP
 			err = nil
 		} else {
-			return nil, fmt.Errorf("Failed to get CRConfig from Traffic Ops (%v), and there is no backup file", err)
+			return nil, fmt.Errorf("failed to get CRConfig from Traffic Ops (%v), and there is no backup file", err)
 		}
 	}
 
@@ -382,11 +430,6 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 		Stats:   tc.CRConfigStats{},
 	}
 	defer s.crConfigHist.Add(hist)
-
-	// TODO: per the above logic, I don't think this is possible
-	if err != nil {
-		return data, err
-	}
 
 	crc := &tc.CRConfig{}
 	json := jsoniter.ConfigFastest
@@ -438,6 +481,9 @@ func (s TrafficOpsSessionThreadsafe) fetchLegacyTMConfig(cdn string) (*tc.Traffi
 	}
 
 	m, _, e := ss.GetTrafficMonitorConfig(cdn)
+	if m == nil {
+		return nil, e
+	}
 	return m.Upgrade(), e
 }
 
@@ -451,20 +497,20 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 	var configMap *tc.TrafficMonitorConfigMap
 	var err error
 
-	if s.useLegacy {
+	config, err = s.fetchTMConfig(cdn)
+	if err != nil {
+		log.Warnln("getting Traffic Monitor config from Traffic Ops using up-to-date client: " + err.Error() + ". Retrying with legacy client")
 		config, err = s.fetchLegacyTMConfig(cdn)
-	} else {
-		config, err = s.fetchTMConfig(cdn)
-	}
-
-	if config == nil {
 		if err != nil {
-			return nil, fmt.Errorf("getting Traffic Monitor configuration map: %v", err)
+			log.Errorln("getting Traffic Monitor config from Traffic Ops using legacy client: " + err.Error())
 		}
-		return nil, errors.New("nil configMap after fetching")
 	}
 
 	if err == nil {
+		log.Infoln("successfully got Traffic Monitor config from Traffic Ops")
+		if config == nil {
+			return nil, fmt.Errorf("nil Traffic Monitor config after successful fetch")
+		}
 		configMap, err = tc.TrafficMonitorTransformToMap(config)
 	}
 
@@ -491,7 +537,9 @@ func (s TrafficOpsSessionThreadsafe) trafficMonitorConfigMapRaw(cdn string) (*tc
 	json := jsoniter.ConfigFastest
 	data, err := json.Marshal(*config)
 	if err == nil {
-		ioutil.WriteFile(s.TMConfigBackupFile, data, 0644)
+		if wErr := ioutil.WriteFile(s.TMConfigBackupFile, data, 0644); wErr != nil {
+			log.Errorf("failed to write TM config backup file: %v", wErr)
+		}
 	}
 
 	return configMap, err
@@ -613,10 +661,10 @@ func (s TrafficOpsSessionThreadsafe) MonitorCDN(hostName string) (string, error)
 	var server tc.ServerV30
 	var err error
 
-	if s.useLegacy {
+	server, err = s.fetchServerByHostname(hostName)
+	if err != nil {
+		log.Warnln("getting server by hostname '" + hostName + "' using up-to-date client: " + err.Error() + ". Retrying with legacy client")
 		server, err = s.fetchLegacyServerByHostname(hostName)
-	} else {
-		server, err = s.fetchServerByHostname(hostName)
 	}
 
 	if err != nil {
