@@ -101,7 +101,13 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 				api.HandleErr(w, r, nil, errCode, userErr, sysErr)
 				return
 			}
-			if user.PrivLevel < privLevelRequired {
+			ctx := r.Context()
+			cfg, err := api.GetConfig(ctx)
+			if err != nil {
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("getting configuration from request context: %w", err))
+				return
+			}
+			if !cfg.RoleBasedPermissions && user.PrivLevel < privLevelRequired {
 				api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
 				return
 			}
