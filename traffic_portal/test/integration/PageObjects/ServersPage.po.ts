@@ -88,15 +88,15 @@ export class ServersPage extends BasePage {
   private btnTableColumn = element(by.className("caret"))
   private randomize = randomize;
 
-  async OpenServerPage() {
+  public async OpenServerPage() {
     let snp = new SideNavigationPage();
     await snp.NavigateToServersPage();
   }
-  async OpenConfigureMenu() {
+  public async OpenConfigureMenu() {
     let snp = new SideNavigationPage();
     await snp.ClickConfigureMenu();
   }
-  GetInputErrorDisplayed() {
+  public GetInputErrorDisplayed() {
     return this.lblInputError.getText()
   }
 
