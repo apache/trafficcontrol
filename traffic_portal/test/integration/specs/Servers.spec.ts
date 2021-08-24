@@ -38,45 +38,42 @@ describe('Setup API call for Servers Test', () =>{
 servers.tests.forEach(async serversData => {
     serversData.logins.forEach(login => {
         describe(`Traffic Portal - Servers - ${login.description}`, () =>{
+            afterEach(async function () {
+                await serversPage.OpenServerPage();
+            });
+            afterAll(async function () {
+                expect(await topNavigation.Logout()).toBeTruthy();
+            })
             it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBe(true);
-            });
-            it('can open servers page', async () => {
                 await serversPage.OpenConfigureMenu();
-                await serversPage.OpenServerPage();
             });
             serversData.toggle.forEach(toggle => {
                 it(toggle.description, async () => {
                     if(toggle.description.includes('hide')){
                         expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(false);
-                        await serversPage.OpenServerPage();
                     }else{
                         expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(true);
-                        await serversPage.OpenServerPage();
-                    }
-                    
+                    } 
                 });
             })
             serversData.add.forEach(add => {
                 it(add.description, async () => {
                     expect(await serversPage.CreateServer(add)).toBe(true);
-                    await serversPage.OpenServerPage();
                 });
             });
             serversData.update.forEach(update => {
                 it(update.description, async () => {
                     await serversPage.SearchServer(update.Name);
                     expect(await serversPage.UpdateServer(update)).toBe(true);
-                    await serversPage.OpenServerPage();
                 });
             });
             serversData.remove.forEach(remove => {
                 it(remove.description, async () => {
                     await serversPage.SearchServer(remove.Name);
                     expect(await serversPage.DeleteServer(remove)).toBe(true);
-                    await serversPage.OpenServerPage();
                 });
             });
             it('can logout', async () => {
@@ -87,7 +84,9 @@ servers.tests.forEach(async serversData => {
 })
 
 describe('API Clean Up for Servers Test', () => {
-    it('Cleanup', async () => {
-        await api.UseAPI(servers.cleanup);
-    });
+    afterAll(async function () {
+        it('Cleanup', async () => {
+            await api.UseAPI(servers.cleanup);
+        });
+    })
 });
