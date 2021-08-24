@@ -781,11 +781,11 @@ export const servers = {
 			toggle:[
 				{
 					description: "hide first table column",
-					Name: "blank"
+					Name: "Cache Group"
 				},
 				{
 					description: "redisplay first table column",
-					Name: "blank"
+					Name: "Cache Group"
 				}
 			],
 			add: [

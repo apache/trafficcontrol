@@ -72,12 +72,6 @@ servers.tests.forEach(async serversData => {
                     await serversPage.OpenServerPage();
                 });
             });
-            serversData.addCapabilities.forEach(addCapabilities => {
-                it(addCapabilities.description, async () => {
-                    expect(await serversPage.AddServerCapabilitiesToServer(addCapabilities)).toBe(true);
-                    await serversPage.OpenServerPage();
-                });
-            });
             serversData.remove.forEach(remove => {
                 it(remove.description, async () => {
                     await serversPage.SearchServer(remove.Name);
