@@ -140,14 +140,14 @@ func TestCompileRoutes(t *testing.T) {
 		t.Error("error parsing test url")
 	}
 	d := ServerData{Config: config.Config{URL: url, Secrets: []string{"n0SeCr3t$"}}}
-	// TODO: not currently checking rawRoutes or catchall
-	routeSlice, _ /*rawRoutes*/, _ /*catchall*/, err := Routes(d)
+	// TODO: not currently checking catchall
+	routeSlice, _ /*catchall*/, err := Routes(d)
 	if err != nil {
 		t.Error("error fetching routes: ", err.Error())
 	}
 
 	authBase := middleware.AuthBase{Secret: d.Secrets[0], Override: nil}
-	routes, versions := CreateRouteMap(routeSlice, nil, nil, nil, authBase, 1)
+	routes, versions := CreateRouteMap(routeSlice, nil, nil, authBase, 1)
 	if len(routes) == 0 {
 		t.Error("no routes handler defined")
 	}
@@ -186,7 +186,7 @@ func TestCompileRoutes(t *testing.T) {
 
 func TestRoutes(t *testing.T) {
 	fake := ServerData{Config: config.NewFakeConfig()}
-	routes, _, _, err := Routes(fake)
+	routes, _, err := Routes(fake)
 	if err != nil {
 		t.Fatalf("expected: no error getting Routes, actual: %v", err)
 	}
@@ -247,8 +247,7 @@ func TestCreateRouteMap(t *testing.T) {
 
 	disabledRoutesIDs := []int{4}
 
-	rawRoutes := []RawRoute{}
-	routeMap, _ := CreateRouteMap(routes, rawRoutes, disabledRoutesIDs, CatchallHandler, authBase, 60)
+	routeMap, _ := CreateRouteMap(routes, disabledRoutesIDs, CatchallHandler, authBase, 60)
 
 	route1Handler := routeMap["GET"][0].Handler
 

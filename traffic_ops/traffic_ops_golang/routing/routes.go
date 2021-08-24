@@ -114,7 +114,7 @@ func GetRouteIDMap(IDs []int) map[int]struct{} {
 }
 
 // Routes returns the API routes, raw non-API root level routes, and a catchall route for when no route matches.
-func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
+func Routes(d ServerData) ([]Route, http.Handler, error) {
 	proxyHandler := rootHandler(d)
 
 	routes := []Route{
@@ -1283,7 +1283,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		if _, found := knownRouteIDs[r.ID]; !found {
 			knownRouteIDs[r.ID] = struct{}{}
 		} else {
-			return nil, nil, nil, fmt.Errorf("route ID %d is already taken. Please give it a unique Route ID", r.ID)
+			return nil, nil, fmt.Errorf("route ID %d is already taken. Please give it a unique Route ID", r.ID)
 		}
 	}
 
@@ -1302,14 +1302,11 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		if d.IgnoreUnknownRoutes {
 			log.Warnln(msg)
 		} else {
-			return nil, nil, nil, errors.New(msg)
+			return nil, nil, errors.New(msg)
 		}
 	}
 
-	// rawRoutes are served at the root path. These should be almost exclusively old Perl pre-API routes, which have yet to be converted in all clients. New routes should be in the versioned API path.
-	rawRoutes := []RawRoute{}
-
-	return routes, rawRoutes, proxyHandler, nil
+	return routes, proxyHandler, nil
 }
 
 func MemoryStatsHandler() http.HandlerFunc {
