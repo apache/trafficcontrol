@@ -44,6 +44,24 @@ type CurrentUser struct {
 	Capabilities pq.StringArray `json:"capabilities" db:"capabilities"`
 	perms        map[string]struct{}
 }
+
+// Can returns whether or not the user has the specified Permission, i.e.
+// whether or not they "can" do something.
+func (cu CurrentUser) Can(permission string) bool {
+	_, ok := cu.perms[permission]
+	return ok
+}
+
+// MissingPermissions returns all of the passed Permissions that the user does
+// not have.
+func (cu CurrentUser) MissingPermissions(permissions ...string) []string {
+	var ret []string
+	for _, perm := range permissions {
+		if !cu.Can(perm) {
+			ret = append(ret, perm)
+		}
+	}
+	return ret
 }
 
 type PasswordForm struct {
