@@ -28,6 +28,7 @@ import (
 	"net/url"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -313,4 +314,18 @@ func getAuthWasCalled(ctx context.Context) string {
 		return val.(string)
 	}
 	return "false"
+}
+
+func TestRoute_SetMiddlewares(t *testing.T) {
+	r := Route{}
+	r.SetMiddleware(middleware.AuthBase{Secret: "secret"}, 600*time.Second)
+	preLen := len(r.Middlewares)
+	if preLen != 5 {
+		t.Errorf("Unauthenticated routes should have 5 middlewares by default, actual default: %d", preLen)
+	}
+	r.Authenticated = true
+	r.SetMiddleware(middleware.AuthBase{Secret: "secret", Override: nil}, 600*time.Second)
+	if len(r.Middlewares) != preLen+2 {
+		t.Errorf("Authenticated routes that start with %d middlewares should wind up with %d after setting up defaults, actual amount: %d", preLen, preLen+2, len(r.Middlewares))
+	}
 }

@@ -65,6 +65,19 @@ func (r Route) String() string {
 	return fmt.Sprintf("id=%d\tmethod=%s\tversion=%d.%d\tpath=%s", r.ID, r.Method, r.Version.Major, r.Version.Minor, r.Path)
 }
 
+// SetMiddleware sets up a Route's Middlewares to include the default set of
+// Middlewares if necessary.
+func (r *Route) SetMiddleware(authBase middleware.AuthBase, requestTimeout time.Duration) {
+	if r.Middlewares == nil {
+		r.Middlewares = middleware.GetDefault(authBase.Secret, requestTimeout)
+	}
+	if r.Authenticated { // a privLevel of zero is an unauthenticated endpoint.
+		authWrapper := authBase.GetWrapper(r.RequiredPrivLevel)
+		r.Middlewares = append(r.Middlewares, authWrapper)
+	}
+	r.Middlewares = append(r.Middlewares, middleware.RequiredPermissionsMiddleware(r.RequiredPermissions))
+}
+
 // ServerData ...
 type ServerData struct {
 	config.Config
@@ -159,12 +172,12 @@ func CreateRouteMap(rs []Route, disabledRouteIDs []int, perlHandler http.Handler
 			}
 			vstr := strconv.FormatUint(version.Major, 10) + "." + strconv.FormatUint(version.Minor, 10)
 			path := RoutePrefix + "/" + vstr + "/" + r.Path
-			middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
+			r.SetMiddleware(authBase, requestTimeout)
 
 			if isDisabledRoute {
 				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.WrapAccessLog(authBase.Secret, middleware.DisabledRouteHandler()), ID: r.ID})
 			} else {
-				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.Use(r.Handler, middlewares), ID: r.ID})
+				m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: middleware.Use(r.Handler, r.Middlewares), ID: r.ID})
 			}
 			log.Infof("adding route %v %v\n", r.Method, path)
 		}
@@ -175,17 +188,6 @@ func CreateRouteMap(rs []Route, disabledRouteIDs []int, perlHandler http.Handler
 		versionSet[version] = struct{}{}
 	}
 	return m, versionSet
-}
-
-func getRouteMiddleware(middlewares []middleware.Middleware, authBase middleware.AuthBase, authenticated bool, privLevel int, requestTimeout time.Duration) []middleware.Middleware {
-	if middlewares == nil {
-		middlewares = middleware.GetDefault(authBase.Secret, requestTimeout)
-	}
-	if authenticated { // a privLevel of zero is an unauthenticated endpoint.
-		authWrapper := authBase.GetWrapper(privLevel)
-		middlewares = append(middlewares, authWrapper)
-	}
-	return middlewares
 }
 
 // CompileRoutes - takes a map of methods to paths and handlers, and returns a map of methods to CompiledRoutes
