@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 - Removed the `user_role` table.
+- The `traffic_ops.sh` shell profile no longer sets `GOPATH` or adds its `bin` folder to the `PATH`
 
 ## [6.0.0] - 2021-08-30
 ### Added
