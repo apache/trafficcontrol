@@ -58,8 +58,9 @@ func (cl *TOClient) URL() string {
 func (cl *TOClient) SetURL(newURL string) {
 	if cl.c == nil {
 		cl.old.SetURL(newURL)
+	} else {
+		cl.c.URL = newURL
 	}
-	cl.c.URL = newURL
 }
 
 // New logs into Traffic Ops, returning the TOClient which contains the logged-in client.
