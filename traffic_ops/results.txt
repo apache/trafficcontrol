@@ -1,0 +1,1204 @@
+?   	github.com/apache/trafficcontrol/traffic_ops/app/bin/checks/DnssecRefresh	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/app/bin/checks/DnssecRefresh/config	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/app/db	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/app/db/reencrypt	[no test files]
+=== RUN   TestRiakBackend
+--- PASS: TestRiakBackend (0.00s)
+=== RUN   TestPGBackend
+--- PASS: TestPGBackend (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/app/db/traffic_vault_migrate	(cached)
+=== RUN   TestValidateParameter
+[ERROR] Parameter trafficserver does not match value
+[ERROR]   Actual Value: 6.2.2 Expected Value: 622
+--- PASS: TestValidateParameter (0.00s)
+=== RUN   TestDeleteParameter
+Deleting parameter {"proxy.cluster.a", "records.config", "INT 1"}
+Deleting parameter {"proxy.cluster.b", "records.config", "STRING abc"}
+--- PASS: TestDeleteParameter (0.00s)
+=== RUN   TestModifyConfigFile
+Updating parameter {"LogFormat.Format", "logs_xml.config", "<abcdef> <ghi>>"} to {"LogFormat.Format", "logging.config", "<abcdef> <ghi>>"}
+Updating parameter {"LogFormat.Name", "logs_xml.config", "custom_ats"} to {"LogFormat.Name", "logging.config", "custom_ats"}
+--- PASS: TestModifyConfigFile (0.00s)
+=== RUN   TestModifyValueForce
+Updating parameter {"proxy.config.hostdb.timeout", "records.config", "INT 1440"} to {"proxy.config.hostdb.timeout", "records.config", "INT 86400"}
+--- PASS: TestModifyValueForce (0.00s)
+=== RUN   TestModifyValueSkip
+[ACTION REQUIRED] Found modified value. Skip modifying {"proxy.config.hostdb.timeout", "records.config", "INT 5000"}. Please update manually
+--- PASS: TestModifyValueSkip (0.00s)
+=== RUN   TestModifyNameValue
+Updating parameter {"proxy.config.log.xml_config_file", "records.config", "logs_xml.config"} to {"proxy.config.log.config.filename", "records.config", "logging.config"}
+--- PASS: TestModifyNameValue (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/install/bin/convert_profile	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/testing/api/config	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/testing/api/utils	[no test files]
+Error Loading Config: failed to read CDN configuration: open traffic-ops-test.conf: no such file or directory
+FAIL	github.com/apache/trafficcontrol/traffic_ops/testing/api/v2	0.203s
+Error Loading Config: failed to read CDN configuration: open traffic-ops-test.conf: no such file or directory
+FAIL	github.com/apache/trafficcontrol/traffic_ops/testing/api/v3	0.289s
+INFO: traffic_ops_test.go:71: 2021-08-19T21:50:36.492742Z: Using Config values:
+			   TO Config File:       traffic-ops-test.conf
+			   TO Fixtures:          tc-fixtures.json
+			   TO URL:               https://localhost:8443
+			   TO Session Timeout In Secs:  60
+			   DB Server:            localhost
+			   DB User:              traffic_ops
+			   DB Name:              to_test
+			   DB Ssl:               false
+               UseIMS:               true
+
+Error creating session to https://localhost:8443 - traffic_ops, logging in: Login error Post "https://localhost:8443/api/4.0/user/login": dial tcp [::1]:8443: connect: connection refused, alerts string: {Alerts:[]}
+FAIL	github.com/apache/trafficcontrol/traffic_ops/testing/api/v4	0.431s
+?   	github.com/apache/trafficcontrol/traffic_ops/toclientlib	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang	[no test files]
+=== RUN   TestSplitRPMVersion
+--- PASS: TestSplitRPMVersion (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/acme	[no test files]
+=== RUN   TestCamelCase
+--- PASS: TestCamelCase (0.00s)
+=== RUN   TestRespWrittenAfterErrFails
+--- PASS: TestRespWrittenAfterErrFails (0.00s)
+=== RUN   TestWriteAlertsObjEmpty
+--- PASS: TestWriteAlertsObjEmpty (0.00s)
+=== RUN   TestWriteAlertsObj
+--- PASS: TestWriteAlertsObj (0.00s)
+=== RUN   TestWriteResp
+--- PASS: TestWriteResp (0.00s)
+=== RUN   TestWriteRespRaw
+--- PASS: TestWriteRespRaw (0.00s)
+=== RUN   TestWriteRespVals
+--- PASS: TestWriteRespVals (0.00s)
+=== RUN   TestRespWriter
+--- PASS: TestRespWriter (0.00s)
+=== RUN   TestRespWriterVals
+--- PASS: TestRespWriterVals (0.00s)
+=== RUN   TestWriteRespAlert
+--- PASS: TestWriteRespAlert (0.00s)
+=== RUN   TestWriteRespAlertObj
+--- PASS: TestWriteRespAlertObj (0.00s)
+=== RUN   TestParseRestrictFKConstraint
+=== RUN   TestParseRestrictFKConstraint/FK_Constraint_Error
+    api_test.go:245: Starting test scenario:  FK Constraint Error
+=== RUN   TestParseRestrictFKConstraint/FK_Constraint_Error_with_underscores_in_table_name
+    api_test.go:245: Starting test scenario:  FK Constraint Error with underscores in table name
+=== RUN   TestParseRestrictFKConstraint/Non_FK_Constraint_Error
+    api_test.go:245: Starting test scenario:  Non FK Constraint Error
+--- PASS: TestParseRestrictFKConstraint (0.00s)
+    --- PASS: TestParseRestrictFKConstraint/FK_Constraint_Error (0.00s)
+    --- PASS: TestParseRestrictFKConstraint/FK_Constraint_Error_with_underscores_in_table_name (0.00s)
+    --- PASS: TestParseRestrictFKConstraint/Non_FK_Constraint_Error (0.00s)
+=== RUN   TestInsertAsyncStatus
+--- PASS: TestInsertAsyncStatus (0.00s)
+=== RUN   TestUpdateAsyncStatus
+--- PASS: TestUpdateAsyncStatus (0.00s)
+=== RUN   TestUpdateAsyncStatusFinished
+--- PASS: TestUpdateAsyncStatusFinished (0.00s)
+=== RUN   TestCreateChangeLog
+--- PASS: TestCreateChangeLog (0.00s)
+=== RUN   TestCreateHandler
+--- PASS: TestCreateHandler (0.00s)
+=== RUN   TestReadHandler
+--- PASS: TestReadHandler (0.00s)
+=== RUN   TestReadHandlerIMS
+--- PASS: TestReadHandlerIMS (0.00s)
+=== RUN   TestUpdateHandler
+--- PASS: TestUpdateHandler (0.00s)
+=== RUN   TestDeleteHandler
+--- PASS: TestDeleteHandler (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api	(cached)
+=== RUN   TestGetAPICapabilities
+--- PASS: TestGetAPICapabilities (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apicapability	(cached)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestIsUpdateable
+--- PASS: TestIsUpdateable (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apitenant	(cached)
+=== RUN   TestGetASNs
+--- PASS: TestGetASNs (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestValidate
+--- PASS: TestValidate (0.00s)
+=== RUN   TestCheckNumberForUpdate
+--- PASS: TestCheckNumberForUpdate (0.00s)
+=== RUN   TestASNExistsForUpdateFailure
+--- PASS: TestASNExistsForUpdateFailure (0.00s)
+=== RUN   TestASNExistsForUpdateSuccess
+--- PASS: TestASNExistsForUpdateSuccess (0.00s)
+=== RUN   TestASNExists
+--- PASS: TestASNExists (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/asn	(cached)
+=== RUN   TestDeriveGoodPassword
+--- PASS: TestDeriveGoodPassword (0.08s)
+=== RUN   TestDeriveBadPassword
+--- PASS: TestDeriveBadPassword (0.08s)
+=== RUN   TestScryptPasswordIsRequired
+--- PASS: TestScryptPasswordIsRequired (0.00s)
+=== RUN   TestUsernamePassword
+--- PASS: TestUsernamePassword (0.01s)
+=== RUN   TestCommonPassword
+--- PASS: TestCommonPassword (0.01s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth	(cached)
+=== RUN   TestReadCacheGroups
+--- PASS: TestReadCacheGroups (0.00s)
+=== RUN   TestFuncs
+--- PASS: TestFuncs (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestValidate
+--- PASS: TestValidate (0.00s)
+=== RUN   TestBadTypeParamCacheGroups
+--- PASS: TestBadTypeParamCacheGroups (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup	(cached)
+=== RUN   TestReadCacheGroupParameters
+=== RUN   TestReadCacheGroupParameters/Success:_Read_Cache_Group_Parameters_-_Parameters
+    parameters_test.go:160: Starting test scenario:  Success: Read Cache Group Parameters - Parameters
+=== RUN   TestReadCacheGroupParameters/Success:_Read_Cache_Group_Parameters_with_parameter_id_-_Parameters
+    parameters_test.go:160: Starting test scenario:  Success: Read Cache Group Parameters with parameter id - Parameters
+=== RUN   TestReadCacheGroupParameters/Success:_Read_Cache_Group_Parameters_no_data_-_Parameters
+    parameters_test.go:160: Starting test scenario:  Success: Read Cache Group Parameters no data - Parameters
+=== RUN   TestReadCacheGroupParameters/Failure:_Storage_Error_reading_Cache_Group_Parameters_-_Parameters
+    parameters_test.go:160: Starting test scenario:  Failure: Storage Error reading Cache Group Parameters - Parameters
+=== RUN   TestReadCacheGroupParameters/Failure:_User_Error_invalid_params_-_Parameters
+    parameters_test.go:160: Starting test scenario:  Failure: User Error invalid params - Parameters
+=== RUN   TestReadCacheGroupParameters/Failure:_System_Error_getting_cache_group_-_Parameters
+    parameters_test.go:160: Starting test scenario:  Failure: System Error getting cache group - Parameters
+=== RUN   TestReadCacheGroupParameters/Failure:_Cache_group_does_not_exist_-_Parameters
+    parameters_test.go:160: Starting test scenario:  Failure: Cache group does not exist - Parameters
+--- PASS: TestReadCacheGroupParameters (0.00s)
+    --- PASS: TestReadCacheGroupParameters/Success:_Read_Cache_Group_Parameters_-_Parameters (0.00s)
+    --- PASS: TestReadCacheGroupParameters/Success:_Read_Cache_Group_Parameters_with_parameter_id_-_Parameters (0.00s)
+    --- PASS: TestReadCacheGroupParameters/Success:_Read_Cache_Group_Parameters_no_data_-_Parameters (0.00s)
+    --- PASS: TestReadCacheGroupParameters/Failure:_Storage_Error_reading_Cache_Group_Parameters_-_Parameters (0.00s)
+    --- PASS: TestReadCacheGroupParameters/Failure:_User_Error_invalid_params_-_Parameters (0.00s)
+    --- PASS: TestReadCacheGroupParameters/Failure:_System_Error_getting_cache_group_-_Parameters (0.00s)
+    --- PASS: TestReadCacheGroupParameters/Failure:_Cache_group_does_not_exist_-_Parameters (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroupparameter	(cached)
+=== RUN   TestAddStatsInvalidString
+--- PASS: TestAddStatsInvalidString (0.00s)
+=== RUN   TestAddStatsValidString
+--- PASS: TestAddStatsValidString (0.00s)
+=== RUN   TestAddStatsEmptyJsonObject
+--- PASS: TestAddStatsEmptyJsonObject (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachesstats	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/capabilities	[no test files]
+=== RUN   TestGetStatsFromServiceInterface
+--- PASS: TestGetStatsFromServiceInterface (0.00s)
+=== RUN   TestReadCDNs
+--- PASS: TestReadCDNs (0.00s)
+=== RUN   TestFuncs
+--- PASS: TestFuncs (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestValidate
+--- PASS: TestValidate (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdn	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdn_lock	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdnfederation	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cdnnotification	[no test files]
+=== RUN   TestLogLocation
+--- PASS: TestLogLocation (0.00s)
+=== RUN   TestLoadConfig
+--- PASS: TestLoadConfig (0.00s)
+=== RUN   TestValidateRoutingBlacklist
+--- PASS: TestValidateRoutingBlacklist (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config	(cached)
+=== RUN   TestReadCoordinates
+--- PASS: TestReadCoordinates (0.00s)
+=== RUN   TestFuncs
+--- PASS: TestFuncs (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestValidate
+--- PASS: TestValidate (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/coordinate	(cached)
+=== RUN   TestGetConfigParams
+--- PASS: TestGetConfigParams (0.00s)
+=== RUN   TestMakeCRConfigConfig
+--- PASS: TestMakeCRConfigConfig (0.00s)
+=== RUN   TestGetTMURLHost
+--- PASS: TestGetTMURLHost (0.00s)
+=== RUN   TestMakeDSes
+--- PASS: TestMakeDSes (0.01s)
+=== RUN   TestGetServerProfileParams
+--- PASS: TestGetServerProfileParams (0.00s)
+=== RUN   TestGetDSRegexesDomains
+--- PASS: TestGetDSRegexesDomains (0.00s)
+=== RUN   TestGetStaticDNSEntries
+--- PASS: TestGetStaticDNSEntries (0.00s)
+=== RUN   TestMakeLocations
+--- PASS: TestMakeLocations (0.00s)
+=== RUN   TestGetServerParams
+--- PASS: TestGetServerParams (0.00s)
+=== RUN   TestGetAllServers
+--- PASS: TestGetAllServers (0.00s)
+=== RUN   TestGetAllServersNonService
+--- PASS: TestGetAllServersNonService (0.00s)
+=== RUN   TestGetServerDSNames
+--- PASS: TestGetServerDSNames (0.00s)
+=== RUN   TestGetServerDSes
+--- PASS: TestGetServerDSes (0.00s)
+=== RUN   TestGetCDNInfo
+--- PASS: TestGetCDNInfo (0.00s)
+=== RUN   TestGetCDNNameFromID
+--- PASS: TestGetCDNNameFromID (0.00s)
+=== RUN   TestGetSnapshot
+--- PASS: TestGetSnapshot (0.00s)
+=== RUN   TestSnapshot
+--- PASS: TestSnapshot (0.00s)
+=== RUN   TestMakeStats
+--- PASS: TestMakeStats (0.00s)
+=== RUN   TestMakeTops
+--- PASS: TestMakeTops (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crconfig	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/crstats	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbdump	[no test files]
+=== RUN   TestBuildQuery
+--- PASS: TestBuildQuery (0.00s)
+=== RUN   TestGetCacheGroupByName
+=== RUN   TestGetCacheGroupByName/Success:_Cache_Group_exists
+    db_helpers_test.go:116: Starting test scenario:  Success: Cache Group exists
+=== RUN   TestGetCacheGroupByName/Failure:_Cache_Group_does_not_exist
+    db_helpers_test.go:116: Starting test scenario:  Failure: Cache Group does not exist
+=== RUN   TestGetCacheGroupByName/Failure:_Storage_error_getting_Cache_Group
+    db_helpers_test.go:116: Starting test scenario:  Failure: Storage error getting Cache Group
+--- PASS: TestGetCacheGroupByName (0.00s)
+    --- PASS: TestGetCacheGroupByName/Success:_Cache_Group_exists (0.00s)
+    --- PASS: TestGetCacheGroupByName/Failure:_Cache_Group_does_not_exist (0.00s)
+    --- PASS: TestGetCacheGroupByName/Failure:_Storage_error_getting_Cache_Group (0.00s)
+=== RUN   TestGetServerInterfaces
+--- PASS: TestGetServerInterfaces (0.00s)
+=== RUN   TestGetDSIDAndCDNFromName
+=== RUN   TestGetDSIDAndCDNFromName/Success:_DS_ID_and_CDN_Name_found
+    db_helpers_test.go:311: Starting test scenario:  Success: DS ID and CDN Name found
+=== RUN   TestGetDSIDAndCDNFromName/Failure:_DS_ID_or_CDN_Name_not_found
+    db_helpers_test.go:311: Starting test scenario:  Failure: DS ID or CDN Name not found
+=== RUN   TestGetDSIDAndCDNFromName/Failure:_Storage_error_getting_DS_ID_or_CDN_Name
+    db_helpers_test.go:311: Starting test scenario:  Failure: Storage error getting DS ID or CDN Name
+--- PASS: TestGetDSIDAndCDNFromName (0.00s)
+    --- PASS: TestGetDSIDAndCDNFromName/Success:_DS_ID_and_CDN_Name_found (0.00s)
+    --- PASS: TestGetDSIDAndCDNFromName/Failure:_DS_ID_or_CDN_Name_not_found (0.00s)
+    --- PASS: TestGetDSIDAndCDNFromName/Failure:_Storage_error_getting_DS_ID_or_CDN_Name (0.00s)
+=== RUN   TestGetCDNIDFromName
+=== RUN   TestGetCDNIDFromName/Success:_CDN_ID_found
+    db_helpers_test.go:372: Starting test scenario:  Success: CDN ID found
+=== RUN   TestGetCDNIDFromName/Failure:_CDN_ID_not_found
+    db_helpers_test.go:372: Starting test scenario:  Failure: CDN ID not found
+=== RUN   TestGetCDNIDFromName/Failure:_Storage_error_getting_CDN_ID
+    db_helpers_test.go:372: Starting test scenario:  Failure: Storage error getting CDN ID
+--- PASS: TestGetCDNIDFromName (0.00s)
+    --- PASS: TestGetCDNIDFromName/Success:_CDN_ID_found (0.00s)
+    --- PASS: TestGetCDNIDFromName/Failure:_CDN_ID_not_found (0.00s)
+    --- PASS: TestGetCDNIDFromName/Failure:_Storage_error_getting_CDN_ID (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers	(cached)
+=== RUN   TestDeliveryServicesRequiredCapabilityInterfaces
+--- PASS: TestDeliveryServicesRequiredCapabilityInterfaces (0.00s)
+=== RUN   TestCreateDeliveryServicesRequiredCapability
+--- PASS: TestCreateDeliveryServicesRequiredCapability (0.00s)
+=== RUN   TestUnauthorizedCreateDeliveryServicesRequiredCapability
+--- PASS: TestUnauthorizedCreateDeliveryServicesRequiredCapability (0.00s)
+=== RUN   TestReadDeliveryServicesRequiredCapability
+--- PASS: TestReadDeliveryServicesRequiredCapability (0.00s)
+=== RUN   TestDeleteDeliveryServicesRequiredCapability
+--- PASS: TestDeleteDeliveryServicesRequiredCapability (0.00s)
+=== RUN   TestUnauthorizedDeleteDeliveryServicesRequiredCapability
+--- PASS: TestUnauthorizedDeleteDeliveryServicesRequiredCapability (0.00s)
+=== RUN   TestCreateDeliveryServicesRequiredCapabilityInvalidDSType
+--- PASS: TestCreateDeliveryServicesRequiredCapabilityInvalidDSType (0.00s)
+=== RUN   TestGetDetails
+--- PASS: TestGetDetails (0.00s)
+=== RUN   TestGetOldDetailsError
+--- PASS: TestGetOldDetailsError (0.00s)
+=== RUN   TestGetDeliveryServicesMatchLists
+--- PASS: TestGetDeliveryServicesMatchLists (0.00s)
+=== RUN   TestGetDSTLSVersions
+--- PASS: TestGetDSTLSVersions (0.00s)
+=== RUN   TestMakeExampleURLs
+--- PASS: TestMakeExampleURLs (0.00s)
+=== RUN   TestReadGetDeliveryServices
+--- PASS: TestReadGetDeliveryServices (0.00s)
+=== RUN   TestGetEligibleServers
+--- PASS: TestGetEligibleServers (0.00s)
+=== RUN   TestDecodePrivateKeyPKCS8RSA2048
+--- PASS: TestDecodePrivateKeyPKCS8RSA2048 (0.00s)
+=== RUN   TestDecodePrivateKeyPKCS1RSA2048
+--- PASS: TestDecodePrivateKeyPKCS1RSA2048 (0.00s)
+=== RUN   TestDecodePrivateKeyECDSANISTPrime256V1
+--- PASS: TestDecodePrivateKeyECDSANISTPrime256V1 (0.00s)
+=== RUN   TestDecodePrivateKeyECDSANISTPrime256V1WithoutParams
+--- PASS: TestDecodePrivateKeyECDSANISTPrime256V1WithoutParams (0.00s)
+=== RUN   TestDecodePrivateKeyECDSANISTSecP384R1
+--- PASS: TestDecodePrivateKeyECDSANISTSecP384R1 (0.00s)
+=== RUN   TestDecodePrivateKeyECDSANISTSecP384R1WithoutParams
+--- PASS: TestDecodePrivateKeyECDSANISTSecP384R1WithoutParams (0.00s)
+=== RUN   TestDecodeRSAPrivateKeyBadData
+    keys_test.go:2202: expected error message: private key validation error: no RSA private key PEM blocks found
+--- PASS: TestDecodeRSAPrivateKeyBadData (0.00s)
+=== RUN   TestDecodeECDSAPrivateKeyBadData
+    keys_test.go:2213: expected error message: private key validation error: no EC private key PEM blocks found
+--- PASS: TestDecodeECDSAPrivateKeyBadData (0.00s)
+=== RUN   TestDecodePrivateKeyRSAEncrypted
+    keys_test.go:2224: expected error message: private key validation error: encrypted private key not supported - header: 4,ENCRYPTED
+--- PASS: TestDecodePrivateKeyRSAEncrypted (0.00s)
+=== RUN   TestDecodePrivateKeyECDSAEncrypted
+    keys_test.go:2235: expected error message: private key validation error: encrypted private key not supported - header: 4,ENCRYPTED
+--- PASS: TestDecodePrivateKeyECDSAEncrypted (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateBadData
+--- PASS: TestVerifyAndEncodeCertificateBadData (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateSelfSignedCertKeyPairDSA
+    keys_test.go:2254: expected error message: cert/key validation error: DSA public key algorithm unsupported
+--- PASS: TestVerifyAndEncodeCertificateSelfSignedCertKeyPairDSA (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateSelfSignedX509v1
+--- PASS: TestVerifyAndEncodeCertificateSelfSignedX509v1 (0.11s)
+=== RUN   TestVerifyAndEncodeCertificateSelfSignedNoSkiAkiCertKeyPair
+--- PASS: TestVerifyAndEncodeCertificateSelfSignedNoSkiAkiCertKeyPair (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateSelfSignedCertKeyPair
+--- PASS: TestVerifyAndEncodeCertificateSelfSignedCertKeyPair (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateSelfSignedCertKeyPairMisMatchedPrivateKey
+    keys_test.go:2344: expected error message: cert/key (rsa) mismatch error: RSA public N modulus value mismatch
+--- PASS: TestVerifyAndEncodeCertificateSelfSignedCertKeyPairMisMatchedPrivateKey (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateSelfSignedNoServerAuthExtKeyUsage
+    keys_test.go:2356: expected error message: certificate (x509v3) validation error: server certificate missing 'serverAuth' extended key usage
+--- PASS: TestVerifyAndEncodeCertificateSelfSignedNoServerAuthExtKeyUsage (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateSelfSignedRSANoKeyEnciphermentKeyUsage
+    keys_test.go:2369: expected error message: cert/key (rsa) validation: no keyEncipherment keyUsage extension present in x509v3 server certificate
+--- PASS: TestVerifyAndEncodeCertificateSelfSignedRSANoKeyEnciphermentKeyUsage (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateCASignedCertKeyPair
+--- PASS: TestVerifyAndEncodeCertificateCASignedCertKeyPair (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateCASignedCertKeyPairWithRootCA
+--- PASS: TestVerifyAndEncodeCertificateCASignedCertKeyPairWithRootCA (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPair
+--- PASS: TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPair (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPairWithRootCA
+--- PASS: TestVerifyAndEncodeCertificateCASignedNoSkiAkiCertKeyPairWithRootCA (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutDigitalSignatureKeyUsage
+    keys_test.go:2489: expected error message: cert/key (ecdsa) validation error: no digitalSignature keyUsage extension present in x509v3 server certificate
+--- PASS: TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutDigitalSignatureKeyUsage (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPair
+--- PASS: TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPair (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairECDisabled
+    keys_test.go:2509: expected error message: cert/key validation error: ECDSA public key algorithm unsupported for non-DNS delivery service type
+--- PASS: TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairECDisabled (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutParams
+--- PASS: TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairWithoutParams (0.00s)
+=== RUN   TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairMisMatchedPrivateKey
+    keys_test.go:2529: expected error message: cert/key (ecdsa) mismatch error: ECDSA public X value mismatch
+--- PASS: TestVerifyAndEncodeCertificateECDSASelfSignedCertificateKeyPairMisMatchedPrivateKey (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/consistenthash	[no test files]
+=== RUN   TestGetAssignee
+--- PASS: TestGetAssignee (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request	(cached)
+=== RUN   TestFuncs
+--- PASS: TestFuncs (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestValidate
+--- PASS: TestValidate (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request/comment	(cached)
+=== RUN   TestValidateDSSAssignments
+--- PASS: TestValidateDSSAssignments (0.00s)
+=== RUN   TestReadServers
+--- PASS: TestReadServers (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/servers	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservicerequests	[no test files]
+=== RUN   TestValidateDSRegexOrderExisting
+--- PASS: TestValidateDSRegexOrderExisting (0.00s)
+=== RUN   TestValidateDSRegex
+--- PASS: TestValidateDSRegex (0.00s)
+=== RUN   TestUpdateImmutableRegex
+--- PASS: TestUpdateImmutableRegex (0.00s)
+=== RUN   TestGetCurrentDetails
+--- PASS: TestGetCurrentDetails (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservicesregexes	(cached)
+=== RUN   TestGetDivisions
+--- PASS: TestGetDivisions (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestValidation
+--- PASS: TestValidation (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/division	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federation_resolvers	[no test files]
+=== RUN   TestCheckFedDSDeletion
+=== RUN   TestCheckFedDSDeletion/Success:_Deleted_Federation_Delivery_Service
+    ds_test.go:68: Starting test scenario:  Success: Deleted Federation Delivery Service
+=== RUN   TestCheckFedDSDeletion/Failure:_Remove_last_Federation_Delivery_Service
+    ds_test.go:68: Starting test scenario:  Failure: Remove last Federation Delivery Service
+=== RUN   TestCheckFedDSDeletion/Failure:_Federation_not_found
+    ds_test.go:68: Starting test scenario:  Failure: Federation not found
+=== RUN   TestCheckFedDSDeletion/Failure:_Delivery_Service_not_found
+    ds_test.go:68: Starting test scenario:  Failure: Delivery Service not found
+--- PASS: TestCheckFedDSDeletion (0.00s)
+    --- PASS: TestCheckFedDSDeletion/Success:_Deleted_Federation_Delivery_Service (0.00s)
+    --- PASS: TestCheckFedDSDeletion/Failure:_Remove_last_Federation_Delivery_Service (0.00s)
+    --- PASS: TestCheckFedDSDeletion/Failure:_Federation_not_found (0.00s)
+    --- PASS: TestCheckFedDSDeletion/Failure:_Delivery_Service_not_found (0.00s)
+=== RUN   TestAddFederationResolverMappingsForCurrentUser
+=== RUN   TestAddFederationResolverMappingsForCurrentUser/add_Federation_Resolver_Mappings_for_the_current_user
+=== RUN   TestAddFederationResolverMappingsForCurrentUser/add_Federation_Resolver_Mappings_for_the_current_user_when_no_federations_exist/are_assigned_to_them
+    federations_test.go:156: Got expected user error: No federation(s) found for user test on delivery service 'test'.
+=== RUN   TestAddFederationResolverMappingsForCurrentUser/add_Federation_Resolver_Mappings_for_a_DS_unauthorized_to_the_current_user's_tenant
+    federations_test.go:210: Got expected user error: 'test' - no such Delivery Service
+    federations_test.go:215: Got expected system error: User 'test' requested unauthorized federation resolver mapping modification on the 'test' Delivery Service
+--- PASS: TestAddFederationResolverMappingsForCurrentUser (0.00s)
+    --- PASS: TestAddFederationResolverMappingsForCurrentUser/add_Federation_Resolver_Mappings_for_the_current_user (0.00s)
+    --- PASS: TestAddFederationResolverMappingsForCurrentUser/add_Federation_Resolver_Mappings_for_the_current_user_when_no_federations_exist/are_assigned_to_them (0.00s)
+    --- PASS: TestAddFederationResolverMappingsForCurrentUser/add_Federation_Resolver_Mappings_for_a_DS_unauthorized_to_the_current_user's_tenant (0.00s)
+=== RUN   TestGetMappingsFromRequestBody
+--- PASS: TestGetMappingsFromRequestBody (0.00s)
+=== RUN   TestRemoveFederationResolverMappingsForCurrentUser
+--- PASS: TestRemoveFederationResolverMappingsForCurrentUser (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/federations	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/invalidationjobs	[no test files]
+=== RUN   TestCrypt
+=== RUN   TestCrypt/#00
+    crypt_test.go:68: crypt("password", "salt") = "$1$salt$qJH7.N4xYta3aEG/dfqo/0"
+=== RUN   TestCrypt/#01
+    crypt_test.go:68: crypt("Traffic Ops", "pepper") = "$1$pepper$AHauHHBeRPuBP0LCO0oBW0"
+=== RUN   TestCrypt/#02
+    crypt_test.go:68: crypt("T0p S3cr3T", "N4xYta3a") = "$1$N4xYta3a$E4g3CFzttHfxgEvY4PmrI/"
+=== RUN   TestCrypt/#03
+    crypt_test.go:68: crypt("a", "b") = "$1$b$J4vSIPg.1IiJxJ.JOHsOS1"
+=== RUN   TestCrypt/#04
+    crypt_test.go:68: crypt("", "salt") = "$1$salt$UsdFqFVB.FsuinRDK5eE.."
+=== RUN   TestCrypt/#05
+    crypt_test.go:68: crypt("pw", "") = "$1$$F0Fc2lbYpzr3KKdKkM0Wj."
+=== RUN   TestCrypt/#06
+    crypt_test.go:68: crypt("", "") = "$1$$qRPK7m23GJusamGpoGLby/"
+--- PASS: TestCrypt (0.00s)
+    --- PASS: TestCrypt/#00 (0.00s)
+    --- PASS: TestCrypt/#01 (0.00s)
+    --- PASS: TestCrypt/#02 (0.00s)
+    --- PASS: TestCrypt/#03 (0.00s)
+    --- PASS: TestCrypt/#04 (0.00s)
+    --- PASS: TestCrypt/#05 (0.00s)
+    --- PASS: TestCrypt/#06 (0.00s)
+=== RUN   TestRndSalt
+=== RUN   TestRndSalt/0
+=== RUN   TestRndSalt/1
+=== RUN   TestRndSalt/2
+=== RUN   TestRndSalt/3
+=== RUN   TestRndSalt/4
+=== RUN   TestRndSalt/5
+=== RUN   TestRndSalt/6
+=== RUN   TestRndSalt/7
+=== RUN   TestRndSalt/8
+=== RUN   TestRndSalt/9
+--- PASS: TestRndSalt (0.00s)
+    --- PASS: TestRndSalt/0 (0.00s)
+    --- PASS: TestRndSalt/1 (0.00s)
+    --- PASS: TestRndSalt/2 (0.00s)
+    --- PASS: TestRndSalt/3 (0.00s)
+    --- PASS: TestRndSalt/4 (0.00s)
+    --- PASS: TestRndSalt/5 (0.00s)
+    --- PASS: TestRndSalt/6 (0.00s)
+    --- PASS: TestRndSalt/7 (0.00s)
+    --- PASS: TestRndSalt/8 (0.00s)
+    --- PASS: TestRndSalt/9 (0.00s)
+=== RUN   TestHelperMockCmd
+--- PASS: TestHelperMockCmd (0.00s)
+=== RUN   TestISOS
+=== RUN   TestISOS/cmd_success
+    iso_test.go:83: response status = 200
+    iso_test.go:90: header "Content-Type" = "attachment; filename=\"db.infra.ciab.test-centos72.iso\""
+    iso_test.go:97: header "Content-Type" = "application/octet-stream"
+    iso_test.go:106: got command: "mkisofs -joliet-long -input-charset utf-8 -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -v -T /var/folders/r5/snb0k76d0n742rp0mtwzmx_80000gp/T/TestISOS2460179975/centos72"
+=== RUN   TestISOS/cmd_failure
+    iso_test.go:144: header "Content-Type" = "application/json"
+    iso_test.go:153: response: tc.Alerts{Alerts:[]tc.Alert{tc.Alert{Text:"Internal Server Error", Level:"error"}}}
+--- PASS: TestISOS (2.87s)
+    --- PASS: TestISOS/cmd_success (0.81s)
+    --- PASS: TestISOS/cmd_failure (2.06s)
+=== RUN   TestISORequest_validate
+=== RUN   TestISORequest_validate/valid_with_dhcp_false
+    iso_test.go:487: isoRequest.validate() = <nil>
+=== RUN   TestISORequest_validate/valid_with_CIDR_prefix_on_IPv6_address
+    iso_test.go:487: isoRequest.validate() = <nil>
+=== RUN   TestISORequest_validate/valid_with_valid_IPv6_address
+    iso_test.go:487: isoRequest.validate() = <nil>
+=== RUN   TestISORequest_validate/invalid_with_valid_IPv4_address_as_an_IPv6
+    iso_test.go:487: isoRequest.validate() = ip6Address must be a valid IPv6 address (with optional CIDR prefix)
+=== RUN   TestISORequest_validate/invalid_with_invalid_IPv6
+    iso_test.go:487: isoRequest.validate() = ip6Address must be a valid IPv6 address (with optional CIDR prefix)
+=== RUN   TestISORequest_validate/valid_with_dhcp_true
+    iso_test.go:487: isoRequest.validate() = <nil>
+=== RUN   TestISORequest_validate/invalid_with_dhcp_false
+    iso_test.go:487: isoRequest.validate() = ipAddress is required if DHCP is no, ipNetmask is required if DHCP is no, ipGateway is required if DHCP is no
+=== RUN   TestISORequest_validate/valid_with_mgmt_addr
+    iso_test.go:487: isoRequest.validate() = <nil>
+=== RUN   TestISORequest_validate/invalid_with_mgmt_addr
+    iso_test.go:487: isoRequest.validate() = mgmtInterface is required when mgmtIpAddress is provided
+=== RUN   TestISORequest_validate/invalid_with_zero_values
+    iso_test.go:487: isoRequest.validate() = osversionDir is required, hostName is required, domainName is required, rootPass is required, dhcp is required, interfaceMtu is required, disk is required
+--- PASS: TestISORequest_validate (0.00s)
+    --- PASS: TestISORequest_validate/valid_with_dhcp_false (0.00s)
+    --- PASS: TestISORequest_validate/valid_with_CIDR_prefix_on_IPv6_address (0.00s)
+    --- PASS: TestISORequest_validate/valid_with_valid_IPv6_address (0.00s)
+    --- PASS: TestISORequest_validate/invalid_with_valid_IPv4_address_as_an_IPv6 (0.00s)
+    --- PASS: TestISORequest_validate/invalid_with_invalid_IPv6 (0.00s)
+    --- PASS: TestISORequest_validate/valid_with_dhcp_true (0.00s)
+    --- PASS: TestISORequest_validate/invalid_with_dhcp_false (0.00s)
+    --- PASS: TestISORequest_validate/valid_with_mgmt_addr (0.00s)
+    --- PASS: TestISORequest_validate/invalid_with_mgmt_addr (0.00s)
+    --- PASS: TestISORequest_validate/invalid_with_zero_values (0.00s)
+=== RUN   TestBoolStr_UnmarshalText
+=== RUN   TestBoolStr_UnmarshalText/no
+    iso_test.go:530: got {isSet:true v:false}
+=== RUN   TestBoolStr_UnmarshalText/No
+    iso_test.go:530: got {isSet:true v:false}
+=== RUN   TestBoolStr_UnmarshalText/YES
+    iso_test.go:530: got {isSet:true v:true}
+=== RUN   TestBoolStr_UnmarshalText/other
+    iso_test.go:530: got {isSet:false v:false}
+=== RUN   TestBoolStr_UnmarshalText/#00
+    iso_test.go:530: got {isSet:false v:false}
+--- PASS: TestBoolStr_UnmarshalText (0.00s)
+    --- PASS: TestBoolStr_UnmarshalText/no (0.00s)
+    --- PASS: TestBoolStr_UnmarshalText/No (0.00s)
+    --- PASS: TestBoolStr_UnmarshalText/YES (0.00s)
+    --- PASS: TestBoolStr_UnmarshalText/other (0.00s)
+    --- PASS: TestBoolStr_UnmarshalText/#00 (0.00s)
+=== RUN   TestISORequest_validateOSDir
+=== RUN   TestISORequest_validateOSDir/VALID-OS-DIR
+    iso_test.go:617: validateOSDir() got true
+=== RUN   TestISORequest_validateOSDir/ANOTHER-VALID-OS-DIR
+    iso_test.go:617: validateOSDir() got true
+=== RUN   TestISORequest_validateOSDir/INVALID-OS-DIR
+    iso_test.go:617: validateOSDir() got false
+--- PASS: TestISORequest_validateOSDir (0.00s)
+    --- PASS: TestISORequest_validateOSDir/VALID-OS-DIR (0.00s)
+    --- PASS: TestISORequest_validateOSDir/ANOTHER-VALID-OS-DIR (0.00s)
+    --- PASS: TestISORequest_validateOSDir/INVALID-OS-DIR (0.00s)
+=== RUN   TestStreamISOCmd_stdout
+    mkisofs_test.go:67: got: "mkisofs -joliet-long -input-charset utf-8 -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -v -T /tmp/nothing/here"
+--- PASS: TestStreamISOCmd_stdout (1.36s)
+=== RUN   TestStreamISOCmd_stdout_err
+    mkisofs_test.go:96: got (expected) error: "exit status 1: mkisofs -joliet-long -input-charset utf-8 -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -v -T /tmp/nothing/here"
+--- PASS: TestStreamISOCmd_stdout_err (0.87s)
+=== RUN   TestStreamISOCmd_file
+    mkisofs_test.go:125: isoDest = "/var/folders/r5/snb0k76d0n742rp0mtwzmx_80000gp/T/genISO2108450873/tmp.iso"
+    mkisofs_test.go:143: got: "/var/folders/r5/snb0k76d0n742rp0mtwzmx_80000gp/T/TestStreamISOCmd_file2029127300/generate /var/folders/r5/snb0k76d0n742rp0mtwzmx_80000gp/T/genISO2108450873/tmp.iso"
+    mkisofs_test.go:153: stat of "/var/folders/r5/snb0k76d0n742rp0mtwzmx_80000gp/T/genISO2108450873" (expected): stat /var/folders/r5/snb0k76d0n742rp0mtwzmx_80000gp/T/genISO2108450873: no such file or directory
+--- PASS: TestStreamISOCmd_file (0.03s)
+=== RUN   TestStreamISOCmd_file_err
+    mkisofs_test.go:182: isoDest = "/var/folders/r5/snb0k76d0n742rp0mtwzmx_80000gp/T/genISO732973818/tmp.iso"
+    mkisofs_test.go:197: got (expected) error: "exit status 1: /var/folders/r5/snb0k76d0n742rp0mtwzmx_80000gp/T/TestStreamISOCmd_file_err3515397006/generate /var/folders/r5/snb0k76d0n742rp0mtwzmx_80000gp/T/genISO732973818/tmp.iso"
+--- PASS: TestStreamISOCmd_file_err (0.02s)
+=== RUN   TestKickstarterDir
+=== RUN   TestKickstarterDir/default
+    mkisofs_test.go:267: kickstarterDir(tx, "templeOS") = "/var/www/files/templeOS"
+=== RUN   TestKickstarterDir/param-override
+    mkisofs_test.go:267: kickstarterDir(tx, "anotherOS/dir") = "/var/override/dir/anotherOS/dir"
+--- PASS: TestKickstarterDir (0.00s)
+    --- PASS: TestKickstarterDir/default (0.00s)
+    --- PASS: TestKickstarterDir/param-override (0.00s)
+=== RUN   TestWriteKSCfgs
+=== RUN   TestWriteKSCfgs/empty
+    mkisofs_test.go:321: writeKSCfgs("/var/folders/r5/snb0k76d0n742rp0mtwzmx_80000gp/T/TestWriteKSCfgs4024128887", isoRequest):
+    mkisofs_test.go:348: state.out:
+        Dir== /var/folders/r5/snb0k76d0n742rp0mtwzmx_80000gp/T/TestWriteKSCfgs4024128887
+        
+    mkisofs_test.go:348: network.cfg:
+        IPADDR=""
+        NETMASK=""
+        GATEWAY=""
+        DEVICE=""
+        MTU="0"
+        NAMESERVER="192.168.1.1"
+        HOSTNAME=""
+        NETWORKING_IPV6="yes"
+        IPV6ADDR=""
+        IPV6_DEFAULTGW=""
+        DHCP="no"
+    mkisofs_test.go:348: mgmt_network.cfg:
+        IPADDR=""
+        NETMASK=""
+        GATEWAY=""
+        DEVICE=""
+    mkisofs_test.go:348: password.cfg:
+        rootpw --iscrypted $1$62fSX9Hf$oqtWslyzKZzqQIemUMaij0
+    mkisofs_test.go:348: disk.cfg:
+        boot_drives=""
+=== RUN   TestWriteKSCfgs/complete
+    mkisofs_test.go:321: writeKSCfgs("/var/folders/r5/snb0k76d0n742rp0mtwzmx_80000gp/T/TestWriteKSCfgs1059205786", isoRequest):
+    mkisofs_test.go:348: state.out:
+        Dir== /var/folders/r5/snb0k76d0n742rp0mtwzmx_80000gp/T/TestWriteKSCfgs1059205786
+        /usr/local/bin mkisofs arg1 -opt1 -opt2
+    mkisofs_test.go:348: network.cfg:
+        IPADDR="192.168.1.2"
+        NETMASK="255.255.255.0"
+        GATEWAY="192.168.1.255"
+        BOND_DEVICE="bond0"
+        MTU="1500"
+        NAMESERVER="192.168.1.1"
+        HOSTNAME="test.server.cdn.example"
+        NETWORKING_IPV6="yes"
+        IPV6ADDR="beef::1"
+        IPV6_DEFAULTGW="::1"
+        BONDING_OPTS="miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4"
+        DHCP="yes"
+    mkisofs_test.go:348: mgmt_network.cfg:
+        IPADDR="10.10.0.1"
+        NETMASK="10.10.255.255"
+        GATEWAY="10.10.0.255"
+        DEVICE="eth0"
+    mkisofs_test.go:348: password.cfg:
+        rootpw --iscrypted $1$PdibCMHc$.8C8L6Ig7jSgGeHebVP5y0
+    mkisofs_test.go:348: disk.cfg:
+        boot_drives="sda1"
+--- PASS: TestWriteKSCfgs (0.01s)
+    --- PASS: TestWriteKSCfgs/empty (0.00s)
+    --- PASS: TestWriteKSCfgs/complete (0.00s)
+=== RUN   TestWriteNetworkCfg
+=== RUN   TestWriteNetworkCfg/empty
+    mkisofs_test.go:489: writeNetworkCfg():
+        IPADDR=""
+        NETMASK=""
+        GATEWAY=""
+        DEVICE=""
+        MTU="0"
+        NAMESERVER=""
+        HOSTNAME=""
+        NETWORKING_IPV6="yes"
+        IPV6ADDR=""
+        IPV6_DEFAULTGW=""
+        DHCP="no"
+=== RUN   TestWriteNetworkCfg/no_domain
+    mkisofs_test.go:489: writeNetworkCfg():
+        IPADDR="192.168.1.2"
+        NETMASK="255.255.255.0"
+        GATEWAY="192.168.1.255"
+        DEVICE="eth0"
+        MTU="1500"
+        NAMESERVER="8.8.8.8,1.1.1.1"
+        HOSTNAME="test.server"
+        NETWORKING_IPV6="yes"
+        IPV6ADDR="beef::1"
+        IPV6_DEFAULTGW="::1"
+        DHCP="yes"
+=== RUN   TestWriteNetworkCfg/non-bonded
+    mkisofs_test.go:489: writeNetworkCfg():
+        IPADDR="192.168.1.2"
+        NETMASK="255.255.255.0"
+        GATEWAY="192.168.1.255"
+        DEVICE="eth0"
+        MTU="1500"
+        NAMESERVER="8.8.8.8,1.1.1.1"
+        HOSTNAME="test.server.example.com"
+        NETWORKING_IPV6="yes"
+        IPV6ADDR="beef::1"
+        IPV6_DEFAULTGW="::1"
+        DHCP="yes"
+=== RUN   TestWriteNetworkCfg/bonded
+    mkisofs_test.go:489: writeNetworkCfg():
+        IPADDR="192.168.1.2"
+        NETMASK="255.255.255.0"
+        GATEWAY="192.168.1.255"
+        BOND_DEVICE="bond01"
+        MTU="1500"
+        NAMESERVER="8.8.8.8,1.1.1.1"
+        HOSTNAME="test.server"
+        NETWORKING_IPV6="yes"
+        IPV6ADDR="beef::1"
+        IPV6_DEFAULTGW="::1"
+        BONDING_OPTS="miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4"
+        DHCP="yes"
+--- PASS: TestWriteNetworkCfg (0.00s)
+    --- PASS: TestWriteNetworkCfg/empty (0.00s)
+    --- PASS: TestWriteNetworkCfg/no_domain (0.00s)
+    --- PASS: TestWriteNetworkCfg/non-bonded (0.00s)
+    --- PASS: TestWriteNetworkCfg/bonded (0.00s)
+=== RUN   TestWriteMgmtNetworkCfg
+=== RUN   TestWriteMgmtNetworkCfg/empty
+    mkisofs_test.go:560: writeMgmtNetworkCfg():
+        IPADDR=""
+        NETMASK=""
+        GATEWAY=""
+        DEVICE=""
+=== RUN   TestWriteMgmtNetworkCfg/IPv4
+    mkisofs_test.go:560: writeMgmtNetworkCfg():
+        IPADDR="192.168.2.3"
+        NETMASK="255.255.255.255"
+        GATEWAY="192.168.1.255"
+        DEVICE="eth0"
+=== RUN   TestWriteMgmtNetworkCfg/IPv6
+    mkisofs_test.go:560: writeMgmtNetworkCfg():
+        IPV6ADDR="beef::1"
+        NETMASK="255.255.255.255"
+        GATEWAY="192.168.1.255"
+        DEVICE="eth0"
+--- PASS: TestWriteMgmtNetworkCfg (0.00s)
+    --- PASS: TestWriteMgmtNetworkCfg/empty (0.00s)
+    --- PASS: TestWriteMgmtNetworkCfg/IPv4 (0.00s)
+    --- PASS: TestWriteMgmtNetworkCfg/IPv6 (0.00s)
+=== RUN   TestWriteDiskCfg
+=== RUN   TestWriteDiskCfg/empty
+    mkisofs_test.go:603: writeDiskCfg():
+        boot_drives=""
+=== RUN   TestWriteDiskCfg/non-empty
+    mkisofs_test.go:603: writeDiskCfg():
+        boot_drives="sda1"
+--- PASS: TestWriteDiskCfg (0.00s)
+    --- PASS: TestWriteDiskCfg/empty (0.00s)
+    --- PASS: TestWriteDiskCfg/non-empty (0.00s)
+=== RUN   TestWritePasswordCfg
+=== RUN   TestWritePasswordCfg/empty
+    mkisofs_test.go:644: writePasswordCfg():
+        "rootpw --iscrypted $1$salt$UsdFqFVB.FsuinRDK5eE..\n"
+=== RUN   TestWritePasswordCfg/non-empty
+    mkisofs_test.go:644: writePasswordCfg():
+        "rootpw --iscrypted $1$salt$17HeaymOIi.65dl76MkK01\n"
+--- PASS: TestWritePasswordCfg (0.00s)
+    --- PASS: TestWritePasswordCfg/empty (0.00s)
+    --- PASS: TestWritePasswordCfg/non-empty (0.00s)
+=== RUN   TestWritePasswordCfg_rndSalt
+=== RUN   TestWritePasswordCfg_rndSalt/empty
+    mkisofs_test.go:696: writePasswordCfg():
+        "rootpw --iscrypted $1$09R4vGuA$0shIp9zZOCLhGHv9KEt3a1\n"
+=== RUN   TestWritePasswordCfg_rndSalt/non-empty
+    mkisofs_test.go:696: writePasswordCfg():
+        "rootpw --iscrypted $1$ZZ4mQA5e$0/TxriFqQkychTbb0oZux/\n"
+=== RUN   TestWritePasswordCfg_rndSalt/long
+    mkisofs_test.go:696: writePasswordCfg():
+        "rootpw --iscrypted $1$BjbBMl5B$qswW3lFyMdSmhyPfzVYCI.\n"
+--- PASS: TestWritePasswordCfg_rndSalt (0.00s)
+    --- PASS: TestWritePasswordCfg_rndSalt/empty (0.00s)
+    --- PASS: TestWritePasswordCfg_rndSalt/non-empty (0.00s)
+    --- PASS: TestWritePasswordCfg_rndSalt/long (0.00s)
+=== RUN   TestGetOSVersions
+=== RUN   TestGetOSVersions/valid-file
+    osversions_test.go:94: getOSVersions(): tc.OSVersionsResponse{"TempleOS":"temple503"}
+=== RUN   TestGetOSVersions/invalid-file
+    osversions_test.go:137: getOSVersions() err (expected) = open /var/folders/r5/snb0k76d0n742rp0mtwzmx_80000gp/T/TestGetOSVersions1146670759/osversions.json: no such file or directory
+--- PASS: TestGetOSVersions (0.00s)
+    --- PASS: TestGetOSVersions/valid-file (0.00s)
+    --- PASS: TestGetOSVersions/invalid-file (0.00s)
+=== RUN   TestOsversionsCfgPath
+=== RUN   TestOsversionsCfgPath/default
+    osversions_test.go:205: osversionCfgPath(): "/var/www/files/osversions.json"
+=== RUN   TestOsversionsCfgPath/override
+    osversions_test.go:205: osversionCfgPath(): "/this/is/not/the/default/osversions.json"
+=== RUN   TestOsversionsCfgPath/override-cwd
+    osversions_test.go:205: osversionCfgPath(): "osversions.json"
+--- PASS: TestOsversionsCfgPath (0.00s)
+    --- PASS: TestOsversionsCfgPath/default (0.00s)
+    --- PASS: TestOsversionsCfgPath/override (0.00s)
+    --- PASS: TestOsversionsCfgPath/override-cwd (0.00s)
+=== RUN   TestParseResolve
+=== RUN   TestParseResolve/empty
+    resolve_test.go:92: parseResolve(): []
+=== RUN   TestParseResolve/comments
+    resolve_test.go:92: parseResolve(): []
+=== RUN   TestParseResolve/invalid_IPs
+    resolve_test.go:92: parseResolve(): []
+=== RUN   TestParseResolve/single
+    resolve_test.go:92: parseResolve(): [127.0.0.1]
+=== RUN   TestParseResolve/multi
+    resolve_test.go:92: parseResolve(): [127.0.0.1 192.168.1.10 beef::1 ::0]
+--- PASS: TestParseResolve (0.00s)
+    --- PASS: TestParseResolve/empty (0.00s)
+    --- PASS: TestParseResolve/comments (0.00s)
+    --- PASS: TestParseResolve/invalid_IPs (0.00s)
+    --- PASS: TestParseResolve/single (0.00s)
+    --- PASS: TestParseResolve/multi (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/iso	(cached)
+=== RUN   TestLoginWithEmptyCredentials
+--- PASS: TestLoginWithEmptyCredentials (0.00s)
+=== RUN   TestVerifyUrlOnWhiteList
+--- PASS: TestVerifyUrlOnWhiteList (0.00s)
+=== RUN   TestTemplateRender
+    login_test.go:117: From: no-reply@test.quest
+        To: em@i.l
+        Content-Type: text/html
+        Subject: TO API Unit Tests Password Reset Request
+        
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        	<title>TO API Unit Tests Password Reset Request</title>
+        	<meta charset="utf-8"/>
+        	<style>
+        		.button_link {
+        			display: block;
+        			width: 130px;
+        			height: 35px;
+        			background: #2682AF;
+        			padding: 5px;
+        			text-align: center;
+        			border-radius: 5px;
+        			color: white;
+        			font-weight: bold;
+        			text-decoration: none;
+        			cursor: pointer;
+        		}
+        	</style>
+        </head>
+        <body>
+          	<main>
+          		<p>Someone has requested to change your password for the TO API Unit Tests. If you requested this change, please click the link below and change your password. Otherwise, you can disregard this email.</p>
+        		<p><a class="button_link" target="_blank" href="https://example.test/#!/user?token=test">Click to Reset Your Password</a></p>
+        	</main>
+        	<footer>
+        		<p>Thank you,<br/>
+        		The TO API Unit Tests Team</p>
+        	</footer>
+        </body>
+        </html>
+--- PASS: TestTemplateRender (0.00s)
+=== RUN   TestLogout
+--- PASS: TestLogout (0.00s)
+=== RUN   TestRegistrationTemplateRender
+    register_test.go:57: From: no-reply@test.quest
+        To: em@i.l
+        Content-Type: text/html
+        Subject: test New User Registration
+        
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        	<title>test New User Registration</title>
+        	<meta charset="utf-8"/>
+        	<style>
+        		.button_link {
+        			display: block;
+        			width: 130px;
+        			background: #2682AF;
+        			padding: 5px;
+        			text-align: center;
+        			border-radius: 5px;
+        			color: white;
+        			font-weight: bold;
+        			text-decoration: none;
+        			cursor: pointer;
+        		}
+        	</style>
+        </head>
+        <body>
+        	<main>
+        		<p>A new account has been created for you on the test Portal. In the
+        		test Portal, you'll find a dashboard that provides access to all of your
+        		Delivery Services.</p>
+        		<p><a class="button_link" href="http://localhost/#!/user?token=token" target="_blank">Click here to finish your registration</a></p>
+        	</main>
+        	<footer>
+        		<p>Thank you,<br/>
+        		The test Team</p>
+        	</footer>
+        </body>
+        </html>
+--- PASS: TestRegistrationTemplateRender (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/login	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/logs	[no test files]
+=== RUN   TestGetMonitoringServers
+--- PASS: TestGetMonitoringServers (0.00s)
+=== RUN   TestGetProfileWithParams
+--- PASS: TestGetProfileWithParams (0.00s)
+=== RUN   TestGetCachegroups
+--- PASS: TestGetCachegroups (0.00s)
+=== RUN   TestGetProfiles
+--- PASS: TestGetProfiles (0.00s)
+=== RUN   TestGetDeliveryServices
+--- PASS: TestGetDeliveryServices (0.00s)
+=== RUN   TestGetConfig
+--- PASS: TestGetConfig (0.00s)
+=== RUN   TestGetMonitoringJSON
+--- PASS: TestGetMonitoringJSON (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/monitoring	(cached)
+=== RUN   TestReadOrigins
+--- PASS: TestReadOrigins (0.00s)
+=== RUN   TestFuncs
+--- PASS: TestFuncs (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestValidate
+--- PASS: TestValidate (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/origin	(cached)
+=== RUN   TestGetParameters
+--- PASS: TestGetParameters (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter	(cached)
+=== RUN   TestGetPhysLocations
+--- PASS: TestGetPhysLocations (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestValidate
+--- PASS: TestValidate (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/physlocation	(cached)
+=== RUN   TestPingHandler
+--- PASS: TestPingHandler (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ping	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugins	[no test files]
+=== RUN   TestCopyProfileInvalidExistingProfile
+=== RUN   TestCopyProfileInvalidExistingProfile/multiple_profiles_with_existing_name_returned
+=== RUN   TestCopyProfileInvalidExistingProfile/existing_profile_does_not_exist
+--- PASS: TestCopyProfileInvalidExistingProfile (0.00s)
+    --- PASS: TestCopyProfileInvalidExistingProfile/multiple_profiles_with_existing_name_returned (0.00s)
+    --- PASS: TestCopyProfileInvalidExistingProfile/existing_profile_does_not_exist (0.00s)
+=== RUN   TestCopyNewProfileExists
+--- PASS: TestCopyNewProfileExists (0.00s)
+=== RUN   TestCopyProfile
+--- PASS: TestCopyProfile (0.00s)
+=== RUN   TestGetExportProfileResponse
+=== RUN   TestGetExportProfileResponse/Success:_Read_export_profile_successful
+    profile_export_test.go:74: Starting test scenario:  Success: Read export profile successful
+=== RUN   TestGetExportProfileResponse/Success:_Read_export_profile_with_no_parameters_successful
+    profile_export_test.go:74: Starting test scenario:  Success: Read export profile with no parameters successful
+=== RUN   TestGetExportProfileResponse/Failure:_Storage_error_reading_profile
+    profile_export_test.go:74: Starting test scenario:  Failure: Storage error reading profile
+--- PASS: TestGetExportProfileResponse (0.00s)
+    --- PASS: TestGetExportProfileResponse/Success:_Read_export_profile_successful (0.00s)
+    --- PASS: TestGetExportProfileResponse/Success:_Read_export_profile_with_no_parameters_successful (0.00s)
+    --- PASS: TestGetExportProfileResponse/Failure:_Storage_error_reading_profile (0.00s)
+=== RUN   TestGetImportProfile
+=== RUN   TestGetImportProfile/Success:_Import_profile_successful
+    profile_import_test.go:86: Starting test scenario:  Success: Import profile successful
+=== RUN   TestGetImportProfile/Failure:_Import_profile_didn't_insert_row
+    profile_import_test.go:86: Starting test scenario:  Failure: Import profile didn't insert row
+=== RUN   TestGetImportProfile/Failure:_Import_profile_storage_error
+    profile_import_test.go:86: Starting test scenario:  Failure: Import profile storage error
+--- PASS: TestGetImportProfile (0.00s)
+    --- PASS: TestGetImportProfile/Success:_Import_profile_successful (0.00s)
+    --- PASS: TestGetImportProfile/Failure:_Import_profile_didn't_insert_row (0.00s)
+    --- PASS: TestGetImportProfile/Failure:_Import_profile_storage_error (0.00s)
+=== RUN   TestGetImportProfileParameters
+=== RUN   TestGetImportProfileParameters/Success:_All_import_parameters_new
+    profile_import_test.go:292: Starting test scenario:  Success: All import parameters new
+=== RUN   TestGetImportProfileParameters/Success:_All_parameters_exisiting
+    profile_import_test.go:292: Starting test scenario:  Success: All parameters exisiting
+=== RUN   TestGetImportProfileParameters/Success:_Mix_of_existing/new_parameters
+    profile_import_test.go:292: Starting test scenario:  Success: Mix of existing/new parameters
+=== RUN   TestGetImportProfileParameters/Success:_Dup_of_existing
+    profile_import_test.go:292: Starting test scenario:  Success: Dup of existing
+=== RUN   TestGetImportProfileParameters/Fail:_Storage_error_selecting_param
+    profile_import_test.go:292: Starting test scenario:  Fail: Storage error selecting param
+=== RUN   TestGetImportProfileParameters/Fail:_Storage_error_inserting_param
+    profile_import_test.go:292: Starting test scenario:  Fail: Storage error inserting param
+--- PASS: TestGetImportProfileParameters (0.00s)
+    --- PASS: TestGetImportProfileParameters/Success:_All_import_parameters_new (0.00s)
+    --- PASS: TestGetImportProfileParameters/Success:_All_parameters_exisiting (0.00s)
+    --- PASS: TestGetImportProfileParameters/Success:_Mix_of_existing/new_parameters (0.00s)
+    --- PASS: TestGetImportProfileParameters/Success:_Dup_of_existing (0.00s)
+    --- PASS: TestGetImportProfileParameters/Fail:_Storage_error_selecting_param (0.00s)
+    --- PASS: TestGetImportProfileParameters/Fail:_Storage_error_inserting_param (0.00s)
+=== RUN   TestGetProfiles
+--- PASS: TestGetProfiles (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestValidate
+--- PASS: TestValidate (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/profile	(cached)
+=== RUN   TestGetProfileParameters
+--- PASS: TestGetProfileParameters (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/profileparameter	(cached)
+=== RUN   TestReadRegions
+--- PASS: TestReadRegions (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestValidation
+    regions_test.go:137: Got expected error validating region with no division: region 'division' is required
+--- PASS: TestValidation (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/region	(cached)
+=== RUN   TestFuncs
+--- PASS: TestFuncs (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestValidate
+--- PASS: TestValidate (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/role	(cached)
+=== RUN   TestCompileRoutes
+    routing_test.go:160: testing path GET api/2.0/cdns
+    routing_test.go:160: testing path POST api/1.4/users/login
+    routing_test.go:160: testing path POST api/3.0/cdns
+    routing_test.go:160: testing path POST api/3.0/users
+    routing_test.go:160: testing path PUT api/3.0/deliveryservices/3
+    routing_test.go:160: testing path DELETE api/3.0/servers/777
+    routing_test.go:160: testing path GET api/3.0/cdns/1
+    routing_test.go:160: testing path GET /api/1.1/about
+    routing_test.go:160: testing path GET api/3.0/notatypeweknowabout
+    routing_test.go:160: testing path GET api/99999.99999/cdns
+    routing_test.go:160: testing path GET blahblah/api/3.0/cdns
+    routing_test.go:160: testing path GET internal/api/2.0/federations.json
+    routing_test.go:160: testing path GET api/3.0/servers
+    routing_test.go:160: testing path GET api/2.0/servers
+--- PASS: TestCompileRoutes (0.01s)
+=== RUN   TestRoutes
+--- PASS: TestRoutes (0.00s)
+=== RUN   TestCreateRouteMap
+--- PASS: TestCreateRouteMap (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing	(cached)
+=== RUN   TestWrapHeaders
+--- PASS: TestWrapHeaders (0.00s)
+=== RUN   TestWrapPanicRecover
+--- PASS: TestWrapPanicRecover (0.00s)
+=== RUN   TestGzip
+--- PASS: TestGzip (0.00s)
+=== RUN   TestWrapAuth
+--- PASS: TestWrapAuth (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware	(cached)
+=== RUN   TestGetDetailServers
+--- PASS: TestGetDetailServers (0.00s)
+=== RUN   TestAssignDsesToServer
+--- PASS: TestAssignDsesToServer (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestUpdateServer
+--- PASS: TestUpdateServer (0.00s)
+=== RUN   TestGetServersByCachegroup
+--- PASS: TestGetServersByCachegroup (0.00s)
+=== RUN   TestGetMidServers
+--- PASS: TestGetMidServers (0.00s)
+=== RUN   TestV3Validations
+    servers_test.go:578: Got expected error validating server with no interfaces: a server must have at least one interface
+    servers_test.go:592: Got expected error validating server with nil interfaces: a server must have at least one interface
+    servers_test.go:609: Got expected error validating server with an MTU < 1280: 'interface 'eth0' mtu' must be at least 1280
+    servers_test.go:625: Got expected error validating server with no IP addresses: 'interface 'eth0' ipAddresses' cannot be blank, a server must have at least one service address
+    servers_test.go:640: Got expected error validating server with nil IP addresses: 'interface 'eth0' ipAddresses' cannot be blank, a server must have at least one service address
+    servers_test.go:661: Got expected error validating server with no service addresses: a server must have at least one service address
+    servers_test.go:675: Got expected error validating server with too many interfaces with service addresses: interfaces: address '127.0.0.1/32' of interface 'eth0' is marked as a service address, but an IPv4 service address appears earlier in the list
+    servers_test.go:695: Got expected error validating server with no service addresses: interfaces: address '1.2.3.4/1' of interface 'eth0' is marked as a service address, but an IPv4 service address appears earlier in the list
+--- PASS: TestV3Validations (0.00s)
+=== RUN   TestGetServerUpdateStatus
+--- PASS: TestGetServerUpdateStatus (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/server	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercapability	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercheck	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servercheck/extensions	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/servicecategory	[no test files]
+=== RUN   TestFuncs
+--- PASS: TestFuncs (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestValidate
+--- PASS: TestValidate (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/staticdnsentry	(cached)
+=== RUN   TestReadStatuses
+--- PASS: TestReadStatuses (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/status	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/steering	[no test files]
+=== RUN   TestInvalidSteeringTargetType
+--- PASS: TestInvalidSteeringTargetType (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/steeringtargets	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/swaggerdocs/v13	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/swaggerdocs/v13/swaggerspec-server	[no test files]
+=== RUN   TestGetSystemInfo
+--- PASS: TestGetSystemInfo (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/systeminfo	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant	[no test files]
+=== RUN   TestErrorCode
+--- PASS: TestErrorCode (0.00s)
+=== RUN   TestErrorContextPanicMode
+--- PASS: TestErrorContextPanicMode (0.00s)
+=== RUN   TestErrorContextMapping
+--- PASS: TestErrorContextMapping (0.00s)
+=== RUN   TestErrorContextMisc
+--- PASS: TestErrorContextMisc (0.00s)
+=== RUN   TestErrorContext
+--- PASS: TestErrorContext (0.00s)
+=== RUN   TestColsFromStructByTag
+--- PASS: TestColsFromStructByTag (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology/topology_validation	[no test files]
+=== RUN   TestTSConfigFromRequest
+--- PASS: TestTSConfigFromRequest (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficstats	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres/hashicorpvault	[no test files]
+=== RUN   TestFetchObjectValues
+--- PASS: TestFetchObjectValues (0.00s)
+=== RUN   TestSaveObject
+--- PASS: TestSaveObject (0.00s)
+=== RUN   TestDeleteObject
+--- PASS: TestDeleteObject (0.00s)
+=== RUN   TestSetTLSVersion
+--- PASS: TestSetTLSVersion (0.00s)
+=== RUN   TestGetRiakCluster
+--- PASS: TestGetRiakCluster (0.10s)
+=== RUN   TestUnmarshalGoodRiakConfig
+--- PASS: TestUnmarshalGoodRiakConfig (0.00s)
+=== RUN   TestUnmarshalBadRiakConfig
+--- PASS: TestUnmarshalBadRiakConfig (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/riaksvc	(cached)
+=== RUN   TestGetType
+--- PASS: TestGetType (0.00s)
+=== RUN   TestInterfaces
+--- PASS: TestInterfaces (0.00s)
+=== RUN   TestUpdateInvalidType
+--- PASS: TestUpdateInvalidType (0.00s)
+=== RUN   TestDeleteInvalidType
+--- PASS: TestDeleteInvalidType (0.00s)
+=== RUN   TestCreateInvalidType
+--- PASS: TestCreateInvalidType (0.00s)
+=== RUN   TestValidate
+--- PASS: TestValidate (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/types	(cached)
+=== RUN   TestValidateURIKeyset
+--- PASS: TestValidateURIKeyset (0.00s)
+PASS
+ok  	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/urisigning	(cached)
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/user	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/monitorhlp	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/vault	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/v2-client	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/v3-client	[no test files]
+?   	github.com/apache/trafficcontrol/traffic_ops/v4-client	[no test files]
+FAIL

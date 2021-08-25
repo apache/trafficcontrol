@@ -57,7 +57,7 @@ func MakeRegexRevalidateDotConfig(
 	server *Server,
 	deliveryServices []DeliveryService,
 	globalParams []tc.Parameter,
-	jobs []tc.InvalidationJob,
+	jobs []tc.InvalidationJobV40,
 	opt *RegexRevalidateDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -80,7 +80,7 @@ func MakeRegexRevalidateDotConfig(
 		dsNames[*ds.XMLID] = struct{}{}
 	}
 
-	dsJobs := []tc.InvalidationJob{}
+	dsJobs := []tc.InvalidationJobV40{}
 	for _, job := range jobs {
 		if job.DeliveryService == nil {
 			warnings = append(warnings, "got job from Traffic Ops with a nil DeliveryService! Skipping!")
@@ -150,7 +150,7 @@ func (jb jobsSort) Less(i, j int) bool {
 //   - are "purge" jobs
 //   - have a start_time+ttl > now. That is, jobs that haven't expired yet.
 // Returns the filtered jobs, and any warnings.
-func filterJobs(tcJobs []tc.InvalidationJob, maxReval time.Duration, minTTL time.Duration) ([]revalJob, []string) {
+func filterJobs(tcJobs []tc.InvalidationJobV40, maxReval time.Duration, minTTL time.Duration) ([]revalJob, []string) {
 	warnings := []string{}
 
 	jobMap := map[string]revalJob{}
@@ -159,26 +159,8 @@ func filterJobs(tcJobs []tc.InvalidationJob, maxReval time.Duration, minTTL time
 		if tcJob.DeliveryService == nil || *tcJob.DeliveryService == "" {
 			continue
 		}
-		if tcJob.Parameters == nil {
-			continue
-		}
-		if !strings.HasPrefix(*tcJob.Parameters, `TTL:`) {
-			continue
-		}
-		if !strings.HasSuffix(*tcJob.Parameters, `h`) {
-			continue
-		}
 
-		ttlHoursStr := *tcJob.Parameters
-		ttlHoursStr = strings.TrimPrefix(ttlHoursStr, `TTL:`)
-		ttlHoursStr = strings.TrimSuffix(ttlHoursStr, `h`)
-		ttlHours, err := strconv.Atoi(ttlHoursStr)
-		if err != nil {
-			warnings = append(warnings, fmt.Sprintf("job %+v has unexpected parameters ttl format, config generation skipping!\n", tcJob))
-			continue
-		}
-
-		ttl := time.Duration(ttlHours) * time.Hour
+		ttl := time.Duration(*tcJob.TTLHours) * time.Hour
 		if ttl > maxReval {
 			ttl = maxReval
 		} else if ttl < minTTL {
@@ -197,25 +179,13 @@ func filterJobs(tcJobs []tc.InvalidationJob, maxReval time.Duration, minTTL time
 		if tcJob.StartTime.Add(ttl).Before(time.Now()) {
 			continue
 		}
-		if tcJob.Keyword == nil || *tcJob.Keyword != JobKeywordPurge {
-			continue
-		}
-
 		if tcJob.AssetURL == nil {
 			continue
 		}
 
 		// process the __REFETCH__ keyword
-		assetURL := *tcJob.AssetURL
-		var jobType string
-
-		if strings.HasSuffix(assetURL, RefetchSuffix) {
-			assetURL = strings.TrimSuffix(assetURL, RefetchSuffix)
-			jobType = "MISS"
-		} else if strings.HasSuffix(assetURL, RefreshSuffix) { // also default
-			assetURL = strings.TrimSuffix(assetURL, RefreshSuffix)
-			jobType = "STALE"
-		}
+		// There is no InvalidationType string before TO v4.0, so pass empty string
+		jobType, assetURL := ProcessRefetch(*tcJob.InvalidationType, *tcJob.AssetURL)
 
 		purgeEnd := tcJob.StartTime.Add(ttl)
 
@@ -231,4 +201,23 @@ func filterJobs(tcJobs []tc.InvalidationJob, maxReval time.Duration, minTTL time
 	sort.Sort(jobsSort(newJobs))
 
 	return newJobs, warnings
+}
+
+const MISS = "MISS"
+const STALE = "STALE"
+
+// ProcessRefetch determines the type of Invalidation, returns the corresponding jobtype
+// and "cleans" the regex URL for the asset to be invalidated. REFETCH trumps REFRESH,
+// whether in the AssetURL or as InvalidationType
+func ProcessRefetch(invalidationType, assetURL string) (string, string) {
+
+	if (len(invalidationType) > 0 && invalidationType == tc.REFETCH) || strings.HasSuffix(assetURL, RefetchSuffix) {
+		assetURL = strings.TrimSuffix(assetURL, RefetchSuffix)
+		return MISS, assetURL
+	}
+
+	// Default value. Either the InvalidationType == REFRESH
+	// or the suffix is ##REFRESH## or neither
+	assetURL = strings.TrimSuffix(assetURL, RefreshSuffix)
+	return STALE, assetURL
 }

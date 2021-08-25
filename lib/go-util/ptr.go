@@ -1,5 +1,7 @@
 package util
 
+import "time"
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -53,4 +55,8 @@ func FloatPtr(f float64) *float64 {
 
 func InterfacePtr(i interface{}) *interface{} {
 	return &i
+}
+
+func TimePtr(t time.Time) *time.Time {
+	return &t
 }
