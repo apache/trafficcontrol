@@ -126,8 +126,8 @@ func (to *Session) GetProfileByName(name string) ([]tc.Profile, toclientlib.ReqI
 	return to.GetProfileByNameWithHdr(name, nil)
 }
 
-func (to *Session) GetProfileByParameterWithHdr(param int, header http.Header) ([]tc.Profile, toclientlib.ReqInf, error) {
-	URI := fmt.Sprintf("%s?param=%d", APIProfiles, param)
+func (to *Session) GetProfileByParameterWithHdr(param string, header http.Header) ([]tc.Profile, toclientlib.ReqInf, error) {
+	URI := fmt.Sprintf("%s?param=%s", APIProfiles, param)
 	var data tc.ProfilesResponse
 	reqInf, err := to.get(URI, header, &data)
 	return data.Response, reqInf, err
@@ -135,7 +135,7 @@ func (to *Session) GetProfileByParameterWithHdr(param int, header http.Header) (
 
 // GetProfileByParameter GETs a Profile by the Profile "param".
 // Deprecated: GetProfileByParameter will be removed in 6.0. Use GetProfileByParameterWithHdr.
-func (to *Session) GetProfileByParameter(param int) ([]tc.Profile, toclientlib.ReqInf, error) {
+func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, toclientlib.ReqInf, error) {
 	return to.GetProfileByParameterWithHdr(param, nil)
 }
 
