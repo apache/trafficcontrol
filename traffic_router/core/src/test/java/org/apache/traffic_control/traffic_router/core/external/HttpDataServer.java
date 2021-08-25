@@ -32,6 +32,7 @@ import java.net.URI;
 public class HttpDataServer implements HttpHandler {
 	private HttpServer httpServer;
 	private int testHttpServerPort;
+	private static String apiVersion = "2.0";
 
 	public HttpDataServer(int testHttpServerPort) {
 		this.testHttpServerPort = testHttpServerPort;
@@ -119,7 +120,7 @@ public class HttpDataServer implements HttpHandler {
 					path += ".json";
 				}
 
-				if ("api/2.0/user/login".equals(path)) {
+				if (("api/" + apiVersion + "/user/login").equals(path)) {
 					try {
 						Headers headers = httpExchange.getResponseHeaders();
 						headers.set("Set-Cookie", new HttpCookie("mojolicious","fake-cookie").toString());
@@ -130,12 +131,12 @@ public class HttpDataServer implements HttpHandler {
 				}
 
 				// Pretend that someone externally changed steering.json data
-				if (receivedSteeringPost && "api/2.0/steering".equals(path)) {
-					path = "api/2.0/steering2";
+				if (receivedSteeringPost && ("api/" + apiVersion + "/steering").equals(path)) {
+					path = "api/" + apiVersion + "/steering2";
 				}
 
 				// pretend certificates have not been updated
-				if (!receivedCertificatesPost && "api/2.0/cdns/name/thecdn/sslkeys".equals(path)) {
+				if (!receivedCertificatesPost && ("api/" + apiVersion + "/cdns/name/thecdn/sslkeys").equals(path)) {
 					path = path.replace("/sslkeys", "/sslkeys-missing-1");
 				}
 

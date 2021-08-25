@@ -17,6 +17,7 @@ package org.apache.traffic_control.traffic_router.core.router;
 
 import org.apache.traffic_control.traffic_router.core.util.IntegrationTest;
 import org.apache.log4j.Logger;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -29,12 +30,6 @@ import org.apache.traffic_control.traffic_router.core.loc.NetworkUpdater;
 import org.apache.traffic_control.traffic_router.core.request.HTTPRequest;
 import org.apache.traffic_control.traffic_router.core.router.StatTracker.Track;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-
 @Category(IntegrationTest.class)
 public class StatelessTrafficRouterTest {
 	private static final Logger LOGGER = Logger.getLogger(StatelessTrafficRouterTest.class);
@@ -45,7 +40,7 @@ public class StatelessTrafficRouterTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		assertThat("Copy core/src/main/conf/traffic_monitor.properties to core/src/test/conf and set 'traffic_monitor.bootstrap.hosts' to a real traffic monitor", Files.exists(Paths.get(TestBase.monitorPropertiesPath)), equalTo(true));
+		TestBase.setupFakeServers();
 		context = TestBase.getContext();
 	}
 
@@ -76,6 +71,11 @@ public class StatelessTrafficRouterTest {
 		req.setRequestedUrl("http://somehost.cdn.net/QualityLevels(96000)/Fragments(audio_eng=20720000000)");
 		Track track = StatTracker.getTrack();
 		trafficRouterManager.getTrafficRouter().route(req, track);
+	}
+
+	@AfterClass
+	public static void tearDown() throws Exception {
+		TestBase.tearDownFakeServers();
 	}
 
 }
