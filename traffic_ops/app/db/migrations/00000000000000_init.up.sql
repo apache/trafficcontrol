@@ -28,7 +28,7 @@ BEGIN
 			RENAME TO goose_db_version_unused;
 	END IF;
 	DROP TRIGGER fast_forward_schema_migrations_trigger ON schema_migrations;
-	DROP FUNCTION fast_forward_schema_migrations_version;
+	DROP FUNCTION fast_forward_schema_migrations_version();
 	RETURN NULL;
 END$$;
 
