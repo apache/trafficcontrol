@@ -21,8 +21,6 @@
 
 The Traffic Ops Client API tests are used to validate the clients responses against those from the Traffic Ops API.  
 
-The v1 tests are for regression purposes, and the v2 tests were forked from them when Traffic Ops API v2 was merged. All further feature development will only occur in v2.
-
 In order to run the tests you will need the following:
 
 1. Port access to both the Postgres port (usually 5432) that your Traffic Ops instance is using as well as the Traffic Ops configured port (usually 443 or 60443).

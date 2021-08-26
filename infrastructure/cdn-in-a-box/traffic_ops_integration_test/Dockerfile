@@ -46,6 +46,7 @@ COPY ./traffic_ops/toclientlib/ /go/src/github.com/apache/trafficcontrol/traffic
 COPY ./traffic_ops/v2-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v2-client/
 COPY ./traffic_ops/v3-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v3-client/
 COPY ./traffic_ops/v4-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v4-client/
+COPY ./traffic_ops/v5-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v5-client/
 COPY ./traffic_ops/testing/api /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
 COPY ./traffic_ops/traffic_ops_golang /go/src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
 

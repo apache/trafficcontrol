@@ -163,3 +163,24 @@ jobs:
         path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
     - name: Save Alpine Docker image
       run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
+    - name: Run API v5 tests
+      id: v5Tests
+      if: ${{ steps.todb.outcome == 'success' && always() }}
+      uses: ./.github/actions/to-integration-tests
+      with:
+        version: 4
+        smtp_address: 172.17.0.1
+    - name: Upload v5 Vault logs
+      if: ${{ steps.v5Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v5 Traffic Vault logs
+        path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
+    - name: Upload v5 Ops logs
+      if: ${{ steps.v5Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v5 Traffic Ops logs
+        path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
+    - name: Save Alpine Docker image
+      run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}

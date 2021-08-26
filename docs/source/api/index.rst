@@ -342,3 +342,16 @@ API routes available in version 4.
 
 
 .. [1] A cookie obtained by logging in through Traffic Portal can be used to access API endpoints under the Traffic Portal domain name - since it will proxy such requests back to Traffic Ops. This is not recommended in actual deployments, however, because it will involve an extra network connection which could be avoided by simply using the Traffic Ops domain itself.
+
+API V5 Routes
+=============
+API routes available in version 5.
+
+.. toctree::
+	:maxdepth: 4
+	:glob:
+
+	v5/*
+
+
+.. [1] A cookie obtained by logging in through Traffic Portal can be used to access API endpoints under the Traffic Portal domain name - since it will proxy such requests back to Traffic Ops. This is not recommended in actual deployments, however, because it will involve an extra network connection which could be avoided by simply using the Traffic Ops domain itself.

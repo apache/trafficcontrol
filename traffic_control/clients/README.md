@@ -16,3 +16,6 @@ There are two client libraries supported:
 
 ### TO API v4
 * [Documentation](https://github.com/apache/trafficcontrol/tree/master/traffic_ops/v4-client)
+
+### TO API v5
+* [Documentation](https://github.com/apache/trafficcontrol/tree/master/traffic_ops/v5-client)
