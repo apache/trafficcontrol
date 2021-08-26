@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-id-server_types-type-metric_types-start_date-start-end_date-end:
+.. _to-api-v4-deliveryservices-id-server_types-type-metric_types-start_date-start-end_date-end:
 
 ****************************************************************************************************
 ``deliveryservices/{{id}}/server_types/{{type}}/metric_types/start_date/{{start}}/end_date/{{end}}``

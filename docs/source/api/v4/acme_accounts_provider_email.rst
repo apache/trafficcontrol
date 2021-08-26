@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-acme-accounts-provider-email:
+.. _to-api-v5-acme-accounts-provider-email:
 
 ****************************************
 ``acme_accounts/{{provider}}/{{email}}``

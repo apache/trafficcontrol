@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-snapshot:
+.. _to-api-v4-snapshot:
 
 ************
 ``snapshot``

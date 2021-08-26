@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-id-routing:
+.. _to-api-v4-deliveryservices-id-routing:
 
 ***********************************
 ``deliveryservices/{{ID}}/routing``

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-phys_locations-id:
+.. _to-api-v4-phys_locations-id:
 
 *************************
 ``phys_locations/{{ID}}``

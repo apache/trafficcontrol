@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servercheck:
+.. _to-api-v4-servercheck:
 
 ***************
 ``servercheck``

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns-dnsseckeys-generate:
+.. _to-api-v4-cdns-dnsseckeys-generate:
 
 ****************************
 ``cdns/dnsseckeys/generate``

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-id-urlkeys:
+.. _to-api-v4-deliveryservices-id-urlkeys:
 
 ***********************************
 ``deliveryservices/{{ID}}/urlkeys``

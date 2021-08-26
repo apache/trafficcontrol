@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-divisions-id:
+.. _to-api-v4-divisions-id:
 
 ********************
 ``divisions/{{ID}}``

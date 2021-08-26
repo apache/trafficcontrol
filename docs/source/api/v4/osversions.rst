@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-osversions:
+.. _to-api-v4-osversions:
 
 **************
 ``osversions``

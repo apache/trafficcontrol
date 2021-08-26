@@ -14,7 +14,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-isos:
+.. _to-api-v4-isos:
 
 ********
 ``isos``

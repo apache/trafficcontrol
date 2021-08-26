@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-xmlid-xmlid-urlkeys:
+.. _to-api-v4-deliveryservices-xmlid-xmlid-urlkeys:
 
 ********************************************
 ``deliveryservices/xmlId/{{xmlid}}/urlkeys``

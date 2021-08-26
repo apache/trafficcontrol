@@ -12,7 +12,7 @@
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
 ..
-.. _to-api-logs:
+.. _to-api-v4-logs:
 
 ********
 ``logs``

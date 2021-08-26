@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-user-reset_password:
+.. _to-api-v4-user-reset_password:
 
 ***********************
 ``user/reset_password``

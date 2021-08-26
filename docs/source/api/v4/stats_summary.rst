@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-stats-summary:
+.. _to-api-v4-stats-summary:
 
 *****************
 ``stats_summary``

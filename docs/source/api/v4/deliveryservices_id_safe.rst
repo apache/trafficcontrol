@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-id-safe:
+.. _to-api-v4-deliveryservices-id-safe:
 
 ********************************
 ``deliveryservices/{{ID}}/safe``

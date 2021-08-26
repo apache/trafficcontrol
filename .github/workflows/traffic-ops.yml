@@ -168,7 +168,7 @@ jobs:
       if: ${{ steps.todb.outcome == 'success' && always() }}
       uses: ./.github/actions/to-integration-tests
       with:
-        version: 4
+        version: 5
         smtp_address: 172.17.0.1
     - name: Upload v5 Vault logs
       if: ${{ steps.v5Tests.outcome != 'success' && always() }}

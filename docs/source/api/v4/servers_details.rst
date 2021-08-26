@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servers-details:
+.. _to-api-v4-servers-details:
 
 *******************
 ``servers/details``

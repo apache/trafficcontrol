@@ -14,7 +14,7 @@
 ..
 
 
-.. _to-api-cache_stats:
+.. _to-api-v4-cache_stats:
 
 ***************
 ``cache_stats``

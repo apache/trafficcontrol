@@ -14,7 +14,7 @@
 ..
 
 
-.. _to-api-cdn-notifications:
+.. _to-api-v4-cdn-notifications:
 
 *********************
 ``cdn_notifications``

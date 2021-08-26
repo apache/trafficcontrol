@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-letsencrypt-dnsrecord:
+.. _to-api-v4-letsencrypt-dnsrecord:
 
 **************************
 ``letsencrypt/dnsrecords``

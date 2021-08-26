@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servers-id-queue_update:
+.. _to-api-v4-servers-id-queue_update:
 
 *******************************
 ``servers/{{ID}}/queue_update``

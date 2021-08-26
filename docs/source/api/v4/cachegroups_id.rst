@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cachegroups-id:
+.. _to-api-v4-cachegroups-id:
 
 **********************
 ``cachegroups/{{ID}}``

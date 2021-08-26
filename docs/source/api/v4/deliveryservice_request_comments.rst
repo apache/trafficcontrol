@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservice_request_comments:
+.. _to-api-v4-deliveryservice_request_comments:
 
 ************************************
 ``deliveryservice_request_comments``

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-servers-id-status:
+.. _to-api-v4-servers-id-status:
 
 *************************
 ``servers/{{ID}}/status``

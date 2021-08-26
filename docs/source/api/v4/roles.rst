@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-roles:
+.. _to-api-v4-roles:
 
 *********
 ``roles``

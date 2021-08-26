@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns-name-dnsseckeys-ksk-generate:
+.. _to-api-v4-cdns-name-dnsseckeys-ksk-generate:
 
 *****************************************
 ``cdns/{{name}}/dnsseckeys/ksk/generate``

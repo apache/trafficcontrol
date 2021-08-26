@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-dbdump:
+.. _to-api-v4-dbdump:
 
 **********
 ``dbdump``

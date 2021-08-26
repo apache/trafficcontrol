@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-user-current:
+.. _to-api-v4-user-current:
 
 ****************
 ``user/current``

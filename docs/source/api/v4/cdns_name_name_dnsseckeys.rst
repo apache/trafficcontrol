@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cdns-name-name-dnsseckeys:
+.. _to-api-v4-cdns-name-name-dnsseckeys:
 
 *********************************
 ``cdns/name/{{name}}/dnsseckeys``

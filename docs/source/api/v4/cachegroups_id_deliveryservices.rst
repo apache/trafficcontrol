@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-cachegroups-id-deliveryservices:
+.. _to-api-v4-cachegroups-id-deliveryservices:
 
 ***************************************
 ``cachegroups/{{ID}}/deliveryservices``
