@@ -25,7 +25,7 @@ BEGIN
 	SET last_updated=now()
 	WHERE id IN (
 		SELECT deliveryservice
-		FROM new_table
+		FROM deliveryservice_tls_version
 	);
 	RETURN NULL;
 END;
@@ -39,7 +39,7 @@ BEGIN
 	SET last_updated=now()
 	WHERE id IN (
 		SELECT deliveryservice
-		FROM old_table
+		FROM deliveryservice_tls_version
 	);
 	RETURN NULL;
 END;
@@ -47,12 +47,10 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER update_ds_timestamp_on_tls_version_insertion
 	AFTER INSERT ON public.deliveryservice_tls_version
-	REFERENCING NEW TABLE AS new_table
 	FOR EACH STATEMENT EXECUTE PROCEDURE update_ds_timestamp_on_insert();
 
 CREATE TRIGGER update_ds_timestamp_on_tls_version_delete
 	AFTER DELETE ON public.deliveryservice_tls_version
-	REFERENCING OLD TABLE AS old_table
 	FOR EACH STATEMENT EXECUTE PROCEDURE update_ds_timestamp_on_delete();
 
 UPDATE public.deliveryservice_request
