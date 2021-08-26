@@ -25,7 +25,7 @@ BEGIN
 	SET last_updated=now()
 	WHERE id IN (
 		SELECT deliveryservice
-		FROM deliveryservice_tls_version
+		FROM NEW
 	);
 	RETURN NULL;
 END;
@@ -39,7 +39,7 @@ BEGIN
 	SET last_updated=now()
 	WHERE id IN (
 		SELECT deliveryservice
-		FROM deliveryservice_tls_version
+		FROM OLD
 	);
 	RETURN NULL;
 END;
