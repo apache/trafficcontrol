@@ -23,7 +23,7 @@ SET
 WHERE
 	original IS NOT NULL;
 
-DROP TRIGGER IF EXISTS update_ds_timestamp_on_tls_version_insertion_or_update ON public.deliveryservice_tls_version;
+DROP TRIGGER IF EXISTS update_ds_timestamp_on_tls_version_insertion ON public.deliveryservice_tls_version;
 DROP TRIGGER IF EXISTS update_ds_timestamp_on_tls_version_delete ON public.deliveryservice_tls_version;
 DROP TABLE IF EXISTS public.deliveryservice_tls_version;
 DROP FUNCTION IF EXISTS update_ds_timestamp_on_insert;
