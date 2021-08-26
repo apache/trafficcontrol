@@ -259,11 +259,11 @@ export class API {
             return null;
         }
         for (const request of data.getRequest) {
-            let query = '';
-            if (`${encodeURIComponent(request.queryValue)}` === 'admin' || `${encodeURIComponent(request.queryValue)}` === 'operations' || `${encodeURIComponent(request.queryValue)}` === 'read-only'){
-                query = `?${encodeURIComponent(request.queryKey)}=${encodeURIComponent(request.queryValue)}`;
+            let query = `?${encodeURIComponent(request.queryKey)}=`;
+            if (`${request.queryValue}` === 'admin' || `${request.queryValue}` === 'operations' || `${request.queryValue}` === 'read-only'){
+                query += `${encodeURIComponent(request.queryValue)}`;
             }else{
-                query = `?${encodeURIComponent(request.queryKey)}=${encodeURIComponent(request.queryValue)}${randomize}`;
+                query += `${encodeURIComponent(request.queryValue)}${encodeURIComponent(randomize)}`;
             }
             const response = await this.getResponse("get", request.route + query)
             if (response.status == 200) {
