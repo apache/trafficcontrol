@@ -28,6 +28,7 @@ import (
 	"net/url"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -140,14 +141,14 @@ func TestCompileRoutes(t *testing.T) {
 		t.Error("error parsing test url")
 	}
 	d := ServerData{Config: config.Config{URL: url, Secrets: []string{"n0SeCr3t$"}}}
-	// TODO: not currently checking rawRoutes or catchall
-	routeSlice, _ /*rawRoutes*/, _ /*catchall*/, err := Routes(d)
+	// TODO: not currently checking catchall
+	routeSlice, _ /*catchall*/, err := Routes(d)
 	if err != nil {
 		t.Error("error fetching routes: ", err.Error())
 	}
 
 	authBase := middleware.AuthBase{Secret: d.Secrets[0], Override: nil}
-	routes, versions := CreateRouteMap(routeSlice, nil, nil, nil, authBase, 1)
+	routes, versions := CreateRouteMap(routeSlice, nil, nil, authBase, 1)
 	if len(routes) == 0 {
 		t.Error("no routes handler defined")
 	}
@@ -186,7 +187,7 @@ func TestCompileRoutes(t *testing.T) {
 
 func TestRoutes(t *testing.T) {
 	fake := ServerData{Config: config.NewFakeConfig()}
-	routes, _, _, err := Routes(fake)
+	routes, _, err := Routes(fake)
 	if err != nil {
 		t.Fatalf("expected: no error getting Routes, actual: %v", err)
 	}
@@ -238,17 +239,16 @@ func TestCreateRouteMap(t *testing.T) {
 	}
 
 	routes := []Route{
-		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path1`, PathOneHandler, auth.PrivLevelReadOnly, true, nil, 0},
-		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path2`, PathTwoHandler, 0, false, nil, 1},
-		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path3`, PathThreeHandler, 0, false, []middleware.Middleware{}, 2},
-		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path4`, PathFourHandler, 0, false, []middleware.Middleware{}, 3},
-		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path5`, PathFiveHandler, 0, false, []middleware.Middleware{}, 4},
+		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path1`, PathOneHandler, auth.PrivLevelReadOnly, nil, true, nil, 0},
+		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path2`, PathTwoHandler, 0, nil, false, nil, 1},
+		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path3`, PathThreeHandler, 0, nil, false, []middleware.Middleware{}, 2},
+		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path4`, PathFourHandler, 0, nil, false, []middleware.Middleware{}, 3},
+		{api.Version{Major: 1, Minor: 2}, http.MethodGet, `path5`, PathFiveHandler, 0, nil, false, []middleware.Middleware{}, 4},
 	}
 
 	disabledRoutesIDs := []int{4}
 
-	rawRoutes := []RawRoute{}
-	routeMap, _ := CreateRouteMap(routes, rawRoutes, disabledRoutesIDs, CatchallHandler, authBase, 60)
+	routeMap, _ := CreateRouteMap(routes, disabledRoutesIDs, CatchallHandler, authBase, 60)
 
 	route1Handler := routeMap["GET"][0].Handler
 
@@ -314,4 +314,18 @@ func getAuthWasCalled(ctx context.Context) string {
 		return val.(string)
 	}
 	return "false"
+}
+
+func TestRoute_SetMiddlewares(t *testing.T) {
+	r := Route{}
+	r.SetMiddleware(middleware.AuthBase{Secret: "secret"}, 600*time.Second)
+	preLen := len(r.Middlewares)
+	if preLen != 5 {
+		t.Errorf("Unauthenticated routes should have 5 middlewares by default, actual default: %d", preLen)
+	}
+	r.Authenticated = true
+	r.SetMiddleware(middleware.AuthBase{Secret: "secret", Override: nil}, 600*time.Second)
+	if len(r.Middlewares) != preLen+2 {
+		t.Errorf("Authenticated routes that start with %d middlewares should wind up with %d after setting up defaults, actual amount: %d", preLen, preLen+2, len(r.Middlewares))
+	}
 }

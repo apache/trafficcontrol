@@ -76,7 +76,7 @@ func main() {
 	}
 	if *showRoutes {
 		fake := routing.ServerData{Config: config.NewFakeConfig()}
-		routes, _, _, _ := routing.Routes(fake)
+		routes, _, _ := routing.Routes(fake)
 		if len(*configFileName) != 0 {
 			cfg, err := config.LoadCdnConfig(*configFileName)
 			if err != nil {
