@@ -261,9 +261,9 @@ export class API {
         for (const request of data.getRequest) {
             let query = `?${encodeURIComponent(request.queryKey)}=`;
             if (`${request.queryValue}` === 'admin' || `${request.queryValue}` === 'operations' || `${request.queryValue}` === 'read-only'){
-                query += `${encodeURIComponent(request.queryValue)}`;
+                query += encodeURIComponent(request.queryValue);
             }else{
-                query += `${encodeURIComponent(request.queryValue)}${encodeURIComponent(randomize)}`;
+                query += encodeURIComponent(request.queryValue+randomize);
             }
             const response = await this.getResponse("get", request.route + query)
             if (response.status == 200) {
