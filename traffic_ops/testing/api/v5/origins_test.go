@@ -727,7 +727,7 @@ func CreateTestOriginInvalidData(t *testing.T) {
 		t.Errorf("Expected 400 Status code, but found %d", reqInf.StatusCode)
 	}
 	if err == nil {
-		t.Errorf("Expected 'ipAddress' must be a valid IPv5 address - Alerts %v", resp.Alerts)
+		t.Errorf("Expected 'ipAddress' must be a valid IPv4 address - Alerts %v", resp.Alerts)
 	}
 
 	//invalid IPV6
@@ -855,7 +855,7 @@ func updateTestOriginsWithInvalidData(t *testing.T) {
 	remoteOrigin.IPAddress = &updatedIpv5
 	updResp, reqInf, err = TOSession.UpdateOrigin(*remoteOrigin.ID, remoteOrigin, client.RequestOptions{})
 	if err == nil {
-		t.Errorf("Expected - IpAddress must be a valid IPv5 address. IPV4 - %s, Alerts %v", updatedIpv5, updResp.Alerts)
+		t.Errorf("Expected - IpAddress must be a valid IPv4 address. IPV4 - %s, Alerts %v", updatedIpv5, updResp.Alerts)
 	}
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Errorf("Expected 400 Status Code, but found %d", reqInf.StatusCode)

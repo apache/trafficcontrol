@@ -325,7 +325,7 @@ func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
 	}
 
 	expectedAlerts := []string{
-		"'address' must be a valid IPv5 address",
+		"'address' must be a valid IPv4 address",
 		"'address' must be a valid DNS name",
 		"'address' for type: CNAME_RECORD must have a trailing period",
 		"'address' must be a valid IPv6 address",
