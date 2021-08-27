@@ -161,8 +161,6 @@ jobs:
       with:
         name: v4 Traffic Ops logs
         path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
-    - name: Save Alpine Docker image
-      run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
     - name: Run API v5 tests
       id: v5Tests
       if: ${{ steps.todb.outcome == 'success' && always() }}
