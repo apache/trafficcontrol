@@ -49,13 +49,9 @@ ADD COLUMN IF NOT EXISTS invalidation_type text NOT NULL DEFAULT 'REFRESH';
  * (adding ##REFETCH## to the end of the url) then assign the
  * correct invalidation_type.
  */
-UPDATE public.job 
+UPDATE public.job
 SET invalidation_type = 'REFETCH'
-WHERE id IN (
-	SELECT id 
-	FROM public.job 
-	WHERE asset_url LIKE '%##REFETCH##'
-);
+WHERE asset_url LIKE '%##REFETCH##%';
 
 ALTER TABLE public.job
 RENAME COLUMN parameters TO ttl_hr;
