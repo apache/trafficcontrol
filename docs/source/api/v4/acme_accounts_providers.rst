@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v5-acme-accounts-providers:
+.. _to-api-v4-acme-accounts-providers:
 
 ***************************
 ``acme_accounts/providers``
