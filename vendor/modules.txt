@@ -130,20 +130,12 @@ github.com/lestrrat/go-jwx/internal/emap
 github.com/lestrrat/go-jwx/jwa
 github.com/lestrrat/go-jwx/jwk
 # github.com/lib/pq v1.8.0
-<<<<<<< HEAD
 ## explicit; go 1.13
-=======
-## explicit
->>>>>>> 7ab736e82... Change mod file to match master, run go vendor
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
 # github.com/mattn/go-sqlite3 v1.14.5
-<<<<<<< HEAD
 ## explicit; go 1.10
-=======
-## explicit
->>>>>>> 7ab736e82... Change mod file to match master, run go vendor
 # github.com/miekg/dns v1.0.6-0.20180406150955-01d59357d468
 ## explicit
 github.com/miekg/dns
