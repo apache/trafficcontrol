@@ -40,8 +40,8 @@
   },
   "dependencies": {
     "@uirouter/angularjs": "0.4.2",
-    "ag-grid-community": "^23.2.0",
-    "angular": "^1.8.0",
+    "ag-grid-community": "23.2.0",
+    "angular": "1.8.0",
     "angular-animate": "1.8.0",
     "angular-bootstrap-contextmenu": "1.2.1",
     "angular-jwt": "0.0.9",
@@ -50,12 +50,12 @@
     "angular-route": "1.8.0",
     "angular-sanitize": "1.8.0",
     "angular-ui-bootstrap": "0.14.3",
-    "bootstrap-sass": "^3.3.6",
-    "es5-shim": "^4.5.6",
-    "flot": "^2.1.6",
-    "font-awesome": "^4.5.0",
-    "jquery": "^2.1.4",
-    "jquery.flot.tooltip": "^0.9.0",
-    "json3": "^3.3.2"
+    "bootstrap-sass": "3.3.6",
+    "es5-shim": "4.5.6",
+    "flot": "2.1.6",
+    "font-awesome": "4.5.0",
+    "jquery": "2.1.4",
+    "jquery.flot.tooltip": "0.9.0",
+    "json3": "3.3.2"
   }
 }
