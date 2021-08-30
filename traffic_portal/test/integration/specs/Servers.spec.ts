@@ -48,35 +48,41 @@ servers.tests.forEach(async serversData => {
                 expect(await loginPage.CheckUserName(login)).toBe(true);
                 await serversPage.OpenConfigureMenu();
             });
-            serversData.toggle.forEach(toggle => {
-                it(toggle.description, async () => {
-                    if(toggle.description.includes('hide')){
-                        expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(true);
-                    }else{
-                        expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(true);
-                    } 
+
+            it('can perform toggle test suits', async () => {
+                serversData.toggle.forEach(toggle => {
+                    it(toggle.description, async () => {
+                        if(toggle.description.includes('hide')){
+                            expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                        }else{
+                            expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                        } 
+                    });
+                })
+            })
+            it('can perform add test suits', async () => {
+                serversData.add.forEach(add => {
+                    it(add.description, async () => {
+                        expect(await serversPage.CreateServer(add)).toBe(true);
+                    });
                 });
             })
-            serversData.add.forEach(add => {
-                it(add.description, async () => {
-                    expect(await serversPage.CreateServer(add)).toBe(true);
+            it('can perform update test suits', async () => {
+                serversData.update.forEach(update => {
+                    it(update.description, async () => {
+                        await serversPage.SearchServer(update.Name);
+                        expect(await serversPage.UpdateServer(update)).toBe(true);
+                    });
                 });
-            });
-            serversData.update.forEach(update => {
-                it(update.description, async () => {
-                    await serversPage.SearchServer(update.Name);
-                    expect(await serversPage.UpdateServer(update)).toBe(true);
+            })
+            it('can perform remove test suits', async () => {
+                serversData.remove.forEach(remove => {
+                    it(remove.description, async () => {
+                        await serversPage.SearchServer(remove.Name);
+                        expect(await serversPage.DeleteServer(remove)).toBe(true);
+                    });
                 });
-            });
-            serversData.remove.forEach(remove => {
-                it(remove.description, async () => {
-                    await serversPage.SearchServer(remove.Name);
-                    expect(await serversPage.DeleteServer(remove)).toBe(true);
-                });
-            });
-            it('can logout', async () => {
-                expect(await topNavigation.Logout()).toBe(true);
-            });
+            }) 
         })
     })
 })
