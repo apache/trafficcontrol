@@ -155,8 +155,8 @@ export class ServersPage extends BasePage {
     return false;
   }
 
-  public async AddDeliveryServiceToServer(deliveryServiceName: string, outputMessage: string): Promise<boolean | undefined> {
-    let result: boolean | undefined = false;
+  public async AddDeliveryServiceToServer(deliveryServiceName: string, outputMessage: string): Promise<boolean> {
+    let result = false;
     let basePage = new BasePage();
     let deliveryService = deliveryServiceName + this.randomize;
     const serverNameRandomized = await this.txtHostName.getText();
@@ -184,7 +184,7 @@ export class ServersPage extends BasePage {
         })
       }
     } else {
-      result = undefined;
+      result = false;
     }
     return result;
 
@@ -234,8 +234,8 @@ export class ServersPage extends BasePage {
   }
 
 
-  public async RemoveServerCapabilitiesFromServer(serverCapabilities: string, outputMessage: string): Promise<boolean | undefined> {
-    let result: boolean | undefined = false;
+  public async RemoveServerCapabilitiesFromServer(serverCapabilities: string, outputMessage: string): Promise<boolean> {
+    let result = false;
     let basePage = new BasePage();
     let serverCapabilitiesname = serverCapabilities + this.randomize;
     const url = (await browser.getCurrentUrl()).toString();
@@ -261,13 +261,13 @@ export class ServersPage extends BasePage {
         }
       })
     } else {
-      result = undefined;
+      result = false;
     }
     await this.OpenServerPage();
     return result;
   }
 
-  public async UpdateServer(server: UpdateServer): Promise<boolean | undefined> {
+  public async UpdateServer(server: UpdateServer): Promise<boolean> {
     let result = false;
     let basePage = new BasePage();
     if (server.description.includes('change the cdn of a Server')) {
@@ -281,8 +281,8 @@ export class ServersPage extends BasePage {
           return false;
         }
       })
-      return result;
     }
+    return result;
   }
 
   public async DeleteServer(server: DeleteServer) {

@@ -52,7 +52,7 @@ servers.tests.forEach(async serversData => {
             serversData.toggle.forEach(toggle => {
                 it(toggle.description, async () => {
                     if(toggle.description.includes('hide')){
-                        expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(false);
+                        expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(true);
                     }else{
                         expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(true);
                     } 
