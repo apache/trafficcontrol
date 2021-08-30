@@ -172,6 +172,7 @@ func StartOpsConfigManager(
 				time.Sleep(duration)
 
 				if toSession.BackupFileExists() && (toLoginCount >= cfg.TrafficOpsDiskRetryMax) {
+					newOpsConfig.UsingDummyTO = true
 					log.Errorf("error instantiating authenticated session with Traffic Ops, backup disk files exist, continuing with unauthenticated session")
 					break
 				}
@@ -179,6 +180,7 @@ func StartOpsConfigManager(
 				toLoginCount++
 				continue
 			} else {
+				newOpsConfig.UsingDummyTO = false
 				break
 			}
 		}

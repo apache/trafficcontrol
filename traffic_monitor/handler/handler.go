@@ -40,6 +40,7 @@ type OpsConfig struct {
 	HttpsListener string `json:"httpsListener"`
 	CertFile      string `json:"certFile"`
 	KeyFile       string `json:"keyFile"`
+	UsingDummyTO  bool   `json:"usingDummyTO"` // only used in the TM UI to indicate if TM started up with on-disk backup snapshots
 }
 
 type Handler interface {

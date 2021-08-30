@@ -39,9 +39,9 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	legacyClient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
-	"golang.org/x/net/publicsuffix"
 
 	jsoniter "github.com/json-iterator/go"
+	"golang.org/x/net/publicsuffix"
 )
 
 const localHostIP = "127.0.0.1"
