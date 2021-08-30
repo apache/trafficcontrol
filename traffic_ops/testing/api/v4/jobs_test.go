@@ -482,6 +482,73 @@ func GetTestJobsByValidData(t *testing.T) {
 	} else {
 		t.Error("No user response available for get user by name")
 	}
+
+	// get maxRevalDurationDays parameter value
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "maxRevalDurationDays")
+	params, _, err := TOSession.GetParameters(opts)
+	if err != nil {
+		t.Fatalf("unexpected error getting maxRevalDurationDays parameter")
+	}
+	if len(params.Response) != 1 {
+		t.Fatalf("expected 1 maxRevalDurationDays parameter, got %d", len(params.Response))
+	}
+	maxRevalDurationDays, err := strconv.Atoi(params.Response[0].Value)
+	if err != nil {
+		t.Fatalf("unexpected error converting maxRevalDurationDays value to int: %v", err)
+	}
+
+	// get jobs created within maxRevalDurationDays window
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("maxRevalDurationDays", "")
+	maxRevalJobs, _, err := TOSession.GetInvalidationJobs(opts)
+	if err != nil {
+		t.Errorf("unexpected error getting jobs by maxRevalDurationDays: %v", err)
+	} else if len(maxRevalJobs.Response) < 1 {
+		t.Errorf("GET /jobs by maxRevalDurationDays - expected at least 1 job")
+	}
+	for _, j := range maxRevalJobs.Response {
+		if time.Since((*j.StartTime).Time) > time.Duration(maxRevalDurationDays)*24*time.Hour {
+			t.Errorf("GET /jobs by maxRevalDurationDays returned job that is older than %d days: {%s, %s, %v}", maxRevalDurationDays, *j.DeliveryService, *j.AssetURL, *j.StartTime)
+		}
+	}
+
+	// get cdn2 id
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "cdn2")
+	cdns, _, err := TOSession.GetCDNs(opts)
+	if err != nil {
+		t.Fatalf("unexpected error getting CDNs by name: %v", err)
+	}
+	if len(cdns.Response) != 1 {
+		t.Fatalf("expected 1 CDN to be returned by name, got %d", len(cdns.Response))
+	}
+	cdnID := cdns.Response[0].ID
+
+	// create DS xml_id -> cdn_id lookup map
+	dses, _, err := TOSession.GetDeliveryServices(client.NewRequestOptions())
+	if err != nil {
+		t.Fatalf("unexpectd error getting delivery services: %v", err)
+	}
+	dsToCDN := make(map[string]int, len(dses.Response))
+	for _, ds := range dses.Response {
+		dsToCDN[*ds.XMLID] = *ds.CDNID
+	}
+
+	// get jobs by CDN ID
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("cdnId", strconv.Itoa(cdnID))
+	cdnJobs, _, err := TOSession.GetInvalidationJobs(opts)
+	if err != nil {
+		t.Errorf("unexpected error getting jobs by cdnId: %v", err)
+	} else if len(cdnJobs.Response) < 1 {
+		t.Errorf("GET /jobs by cdnId - expected at least 1 job")
+	}
+	for _, j := range cdnJobs.Response {
+		if dsToCDN[*j.DeliveryService] != cdnID {
+			t.Errorf("GET /jobs by cdnId returned job that does not belong to CDN %d: {%s, %s, %v}", cdnID, *j.DeliveryService, *j.AssetURL, *j.StartTime)
+		}
+	}
 }
 
 func GetTestJobsByInvalidData(t *testing.T) {
