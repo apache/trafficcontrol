@@ -3,7 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [unreleased]
+## unreleased
+### Changed
+* Migrated completely off of bower in favor of npm
+
+## [6.0.x](https://github.com/apache/trafficcontrol/tree/6.0.x) - branched
 ### Added
 - [#4982](https://github.com/apache/trafficcontrol/issues/4982) Added the ability to support queueing updates by server type and profile
 - [#5412](https://github.com/apache/trafficcontrol/issues/5412) Added last authenticated time to user API's (`GET /user/current, GET /users, GET /user?id=`) response payload
