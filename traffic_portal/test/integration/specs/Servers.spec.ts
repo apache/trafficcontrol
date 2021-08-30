@@ -17,7 +17,6 @@
  * under the License.
  */
 import { browser } from 'protractor';
-
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { ServersPage } from '../PageObjects/ServersPage.po';
 import { API } from '../CommonUtils/API';
