@@ -54,8 +54,6 @@ ALTER FUNCTION on_update_current_timestamp_last_updated() OWNER TO traffic_vault
 
 SET default_tablespace = '';
 
-SET default_table_access_method = heap;
-
 --
 -- Name: dnssec; Type: TABLE; Schema: public; Owner: traffic_vault
 --
@@ -169,28 +167,28 @@ CREATE INDEX sslkey_version_idx ON sslkey USING btree (version);
 -- Name: dnssec dnssec_last_updated; Type: TRIGGER; Schema: public; Owner: traffic_vault
 --
 
-CREATE TRIGGER dnssec_last_updated BEFORE UPDATE ON dnssec FOR EACH ROW EXECUTE FUNCTION on_update_current_timestamp_last_updated();
+CREATE TRIGGER dnssec_last_updated BEFORE UPDATE ON dnssec FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
 -- Name: sslkey sslkey_last_updated; Type: TRIGGER; Schema: public; Owner: traffic_vault
 --
 
-CREATE TRIGGER sslkey_last_updated BEFORE UPDATE ON sslkey FOR EACH ROW EXECUTE FUNCTION on_update_current_timestamp_last_updated();
+CREATE TRIGGER sslkey_last_updated BEFORE UPDATE ON sslkey FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
 -- Name: uri_signing_key uri_signing_key_last_updated; Type: TRIGGER; Schema: public; Owner: traffic_vault
 --
 
-CREATE TRIGGER uri_signing_key_last_updated BEFORE UPDATE ON uri_signing_key FOR EACH ROW EXECUTE FUNCTION on_update_current_timestamp_last_updated();
+CREATE TRIGGER uri_signing_key_last_updated BEFORE UPDATE ON uri_signing_key FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
 -- Name: url_sig_key url_sig_key_last_updated; Type: TRIGGER; Schema: public; Owner: traffic_vault
 --
 
-CREATE TRIGGER url_sig_key_last_updated BEFORE UPDATE ON url_sig_key FOR EACH ROW EXECUTE FUNCTION on_update_current_timestamp_last_updated();
+CREATE TRIGGER url_sig_key_last_updated BEFORE UPDATE ON url_sig_key FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --

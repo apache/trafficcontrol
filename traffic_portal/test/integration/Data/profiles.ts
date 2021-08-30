@@ -107,6 +107,22 @@ export const profiles = {
 					password: "pa$$word"
 				}
 			],
+			check: [
+				{
+					description: "check CSV link from Profiles page",
+					Name: "Export as CSV"
+				}
+			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "CDN"
+				},
+				{
+					description: "redisplay first table column",
+					Name: "CDN"
+				}
+			],
 			add: [
 				{
 					description: "create a Profiles",
@@ -140,6 +156,22 @@ export const profiles = {
 					description: "Read Only Role",
 					username: "TPReadOnly",
 					password: "pa$$word"
+				}
+			],
+			check: [
+				{
+					description: "check CSV link from Profiles page",
+					Name: "Export as CSV"
+				}
+			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "CDN"
+				},
+				{
+					description: "redisplay first table column",
+					Name: "CDN"
 				}
 			],
 			add: [

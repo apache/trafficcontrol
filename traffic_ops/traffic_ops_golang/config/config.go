@@ -59,6 +59,7 @@ type Config struct {
 	InfluxDBConfPath       string `json:"influxdb_conf_path"`
 	Version                string
 	UseIMS                 bool `json:"use_ims"`
+	RoleBasedPermissions   bool `json:"role_based_permissions"`
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server

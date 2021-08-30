@@ -132,7 +132,7 @@ fi
 # test full restoration of the initial DB dump
 for d in $(get_db_dumps); do
     echo "testing restoration of DB dump: $d"
-    dropdb --echo --if-exists < "$d" > /dev/null || echo "Dropping DB ${DB_NAME} failed: $d"
+    dropdb --echo --if-exists "$DB_NAME" < "$d" > /dev/null || echo "Dropping DB ${DB_NAME} failed: $d"
     createdb --echo < "$d" > /dev/null || echo "Creating DB ${DB_NAME} failed: $d"
     pg_restore --verbose --clean --if-exists --exit-on-error -d "$DB_NAME" < "$d" > /dev/null || { echo "DB restoration failed: $d"; exit 1; }
 done

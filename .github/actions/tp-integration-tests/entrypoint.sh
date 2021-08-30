@@ -15,7 +15,35 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
+
+onFail() {
+  echo "Error on line ${1} of ${2}" >&2;
+  if ! [[ -d Reports ]]; then
+    mkdir Reports;
+  fi
+  if [[ -f tv.log ]]; then
+    cp tv.log Reports/traffic_vault.docker.log;
+  fi
+	docker logs "$trafficvault" > Reports/traffic_vault.log 2>&1;
+  if [[ -f tp.log ]]; then
+    mv tp.log Reports/forever.log
+  fi
+  if [[ -f access.log ]]; then
+    mv access.log Reports/tp-access.log
+  fi
+  if [[ -f out.log ]]; then
+    mv out.log Reports/node.log
+  fi
+  docker logs $CHROMIUM_CONTAINER > Reports/chromium.log 2>&1;
+  docker logs $HUB_CONTAINER > Reports/hub.log 2>&1;
+  if [[ -f "${REPO_DIR}/traffic_ops/traffic_ops_golang" ]]; then
+    cp "${REPO_DIR}/traffic_ops/traffic_ops_golang" Reports/to.log;
+  fi
+  echo "Detailed logs produced info Reports artifact"
+  exit 1
+}
+
+trap 'onFail "${LINENO}" "${0}"' ERR
 set -o errexit -o nounset -o pipefail
 
 hub_fqdn="http://localhost:4444/wd/hub/status"
@@ -23,7 +51,7 @@ to_fqdn="https://localhost:6443"
 tp_fqdn="https://172.18.0.1:8443"
 
 if ! curl -Lvsk "${hub_fqdn}" >/dev/null 2>&1; then
-  echo "Selenium not started on ${hub_fqdn}"
+  echo "Selenium not started on ${hub_fqdn}" >&2;
   exit 1
 fi
 
@@ -81,19 +109,6 @@ QUERY
 
 sudo useradd trafops
 
-gray_bg="$(printf '%s%s' $'\x1B' '[100m')";
-red_bg="$(printf '%s%s' $'\x1B' '[41m')";
-yellow_bg="$(printf '%s%s' $'\x1B' '[43m')";
-black_fg="$(printf '%s%s' $'\x1B' '[30m')";
-color_and_prefix() {
-	color="$1";
-	shift;
-	prefix="$1";
-	normal_bg="$(printf '%s%s' $'\x1B' '[49m')";
-	normal_fg="$(printf '%s%s' $'\x1B' '[39m')";
-	sed "s/^/${color}${black_fg}${prefix}: /" | sed "s/$/${normal_bg}${normal_fg}/";
-}
-
 ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
 trafficvault=trafficvault;
 start_traffic_vault() {
@@ -127,9 +142,9 @@ start_traffic_vault() {
 		--publish=8087:8087 \
 		--rm \
 		"$trafficvault" \
-		/usr/lib/riak/riak-cluster.sh;
+		/usr/lib/riak/riak-cluster.sh
 }
-start_traffic_vault &
+start_traffic_vault >tv.log 2>&1 &
 
 sudo apt-get install -y --no-install-recommends gettext \
 	ruby ruby-dev libc-dev curl \
@@ -154,7 +169,7 @@ if [[ ! -e "$REPO_DIR" ]]; then
 fi
 
 to_build() {
-  cd "${REPO_DIR}/traffic_ops/traffic_ops_golang"
+  pushd "${REPO_DIR}/traffic_ops/traffic_ops_golang"
   if  [[ ! -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]]; then
     go mod vendor
   fi
@@ -167,56 +182,42 @@ to_build() {
 
   export $(<"${ciab_dir}/variables.env" sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
   envsubst <"${resources}/riak.json" >riak.conf
-  truncate --size=0 warning.log error.log event.log info.log
+  truncate -s0 out.log
 
-  ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf &
-  tail -f warning.log 2>&1 | color_and_prefix "${yellow_bg}" 'Traffic Ops WARN' &
-  tail -f error.log 2>&1 | color_and_prefix "${red_bg}" 'Traffic Ops ERR' &
-  tail -f event.log 2>&1 | color_and_prefix "${gray_bg}" 'Traffic Ops EVT' &
+  ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf >out.log 2>&1 &
+  popd
 }
 
 tp_build() {
-  cd "${REPO_DIR}/traffic_portal"
+  pushd "${REPO_DIR}/traffic_portal"
   npm ci
   bower install
   grunt dist
 
   cp "${resources}/config.js" ./conf/
   touch tp.log access.log out.log err.log
-  sudo forever --minUptime 5000 --spinSleepTime 2000 -f -o out.log start server.js &
-  tail -f err.log 2>&1 | color_and_prefix "${red_bg}" "Node Err" &
+  sudo forever --minUptime 5000 --spinSleepTime 2000 -f start server.js >out.log 2>&1 &
+  popd
 }
 
-(to_build) &
-(tp_build) &
-
-onFail() {
-	docker logs "$trafficvault"  > Reports/traffic_vault.log
-  mv tp.log Reports/forever.log
-  mv access.log Reports/tp-access.log
-  mv out.log Reports/node.log
-  docker logs $CHROMIUM_CONTAINER > Reports/chromium.log
-  docker logs $HUB_CONTAINER > Reports/hub.log
-  echo "Detailed logs produced info Reports artifact"
-  exit 1
-}
+to_build
+tp_build
 
 cd "${REPO_DIR}/traffic_portal/test/integration"
 npm ci
-PATH=$(pwd)/node_modules/.bin/:$PATH
 
-webdriver-manager update --gecko false --versions.chrome "LATEST_RELEASE_$CHROMIUM_VER"
+./node_modules/.bin/webdriver-manager update --gecko false --versions.chrome "LATEST_RELEASE_$CHROMIUM_VER"
 
 jq " .capabilities.chromeOptions.args = [
     \"--headless\",
     \"--no-sandbox\",
     \"--disable-gpu\",
     \"--ignore-certificate-errors\"
-  ] | .params.apiUrl = \"${tp_fqdn}/api/4.0\" | .params.baseUrl =\"${tp_fqdn}\"
+  ] | .params.apiUrl = \"${to_fqdn}/api/4.0\" | .params.baseUrl =\"${tp_fqdn}\"
   | .capabilities[\"goog:chromeOptions\"].w3c = false | .capabilities.chromeOptions.w3c = false" \
   config.json > config.json.tmp && mv config.json.tmp config.json
 
-tsc
+npm run build
 
 # Wait for tp/to build
 timeout 5m bash <<TMOUT
@@ -226,5 +227,4 @@ timeout 5m bash <<TMOUT
   done
 TMOUT
 
-trap - ERR
-protractor ./GeneratedCode/config.js --params.baseUrl="${tp_fqdn}" --params.apiUrl="${to_fqdn}/api/4.0" || onFail
+npm test -- --params.baseUrl="${tp_fqdn}" --params.apiUrl="${to_fqdn}/api/4.0"

@@ -42,6 +42,26 @@ type CurrentUser struct {
 	TenantID     int            `json:"tenantId" db:"tenant_id"`
 	Role         int            `json:"role" db:"role"`
 	Capabilities pq.StringArray `json:"capabilities" db:"capabilities"`
+	perms        map[string]struct{}
+}
+
+// Can returns whether or not the user has the specified Permission, i.e.
+// whether or not they "can" do something.
+func (cu CurrentUser) Can(permission string) bool {
+	_, ok := cu.perms[permission]
+	return ok
+}
+
+// MissingPermissions returns all of the passed Permissions that the user does
+// not have.
+func (cu CurrentUser) MissingPermissions(permissions ...string) []string {
+	var ret []string
+	for _, perm := range permissions {
+		if !cu.Can(perm) {
+			ret = append(ret, perm)
+		}
+	}
+	return ret
 }
 
 type PasswordForm struct {
@@ -95,22 +115,28 @@ WHERE
 
 	var currentUserInfo CurrentUser
 	if DB == nil {
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}}, nil, errors.New("no db provided to GetCurrentUserFromDB"), http.StatusInternalServerError
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}, nil}, nil, errors.New("no db provided to GetCurrentUserFromDB"), http.StatusInternalServerError
 	}
 	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
 	defer dbClose()
 
 	err := DB.GetContext(dbCtx, &currentUserInfo, qry, user)
-	switch {
-	case err == sql.ErrNoRows:
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}}, errors.New("user not found"), fmt.Errorf("checking user %v info: user not in database", user), http.StatusUnauthorized
-	case err == context.DeadlineExceeded || err == context.Canceled:
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}}, nil, fmt.Errorf("db access timed out: %s number of open connections: %d\n", err, DB.Stats().OpenConnections), http.StatusServiceUnavailable
-	case err != nil:
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}}, nil, fmt.Errorf("Error checking user %v info: %v", user, err.Error()), http.StatusInternalServerError
-	default:
-		return currentUserInfo, nil, nil, http.StatusOK
+	if err != nil {
+		invalidUser := CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}, nil}
+		if errors.Is(err, sql.ErrNoRows) {
+			return invalidUser, errors.New("user not found"), fmt.Errorf("checking user %v info: user not in database", user), http.StatusUnauthorized
+		}
+		if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+			return invalidUser, nil, fmt.Errorf("db access timed out: %w number of open connections: %d", err, DB.Stats().OpenConnections), http.StatusServiceUnavailable
+		}
+		return invalidUser, nil, fmt.Errorf("checking user %v info: %w", user, err), http.StatusInternalServerError
 	}
+
+	currentUserInfo.perms = make(map[string]struct{}, len(currentUserInfo.Capabilities))
+	for _, perm := range currentUserInfo.Capabilities {
+		currentUserInfo.perms[perm] = struct{}{}
+	}
+	return currentUserInfo, nil, nil, http.StatusOK
 }
 
 func GetCurrentUser(ctx context.Context) (*CurrentUser, error) {
@@ -123,7 +149,7 @@ func GetCurrentUser(ctx context.Context) (*CurrentUser, error) {
 			return nil, fmt.Errorf("CurrentUser found with bad type: %T", v)
 		}
 	}
-	return &CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}}, errors.New("No user found in Context")
+	return &CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, []string{}, nil}, errors.New("No user found in Context")
 }
 
 func CheckLocalUserIsAllowed(form PasswordForm, db *sqlx.DB, timeout time.Duration) (bool, error, error) {

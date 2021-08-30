@@ -49,7 +49,7 @@ VALUES ($1, (
 	FROM type
 	WHERE type.name = $2
 ))
-ON CONFLICT DO NOTHING
+ON CONFLICT (ip_address) DO UPDATE SET ip_address = federation_resolver.ip_address
 RETURNING federation_resolver.ip_address, federation_resolver.id
 `
 
@@ -103,12 +103,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.Get getting federations: "+err.Error()))
 		return
 	}
-	fedsResolvers, err, code, maxTime := getFederationResolvers(inf.Tx.Tx, fedInfoIDs(feds), useIMS, r.Header)
-	if code == http.StatusNotModified {
-		w.WriteHeader(code)
-		api.WriteResp(w, r, []tc.IAllFederation{})
-		return
-	}
+	fedsResolvers, err := getFederationResolvers(inf.Tx.Tx, fedInfoIDs(feds))
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.Get getting federations resolvers: "+err.Error()))
 		return
@@ -166,9 +161,7 @@ type FedResolverInfo struct {
 }
 
 // getFederationResolvers takes a slice of federation IDs, and returns a map[federationID]info.
-func getFederationResolvers(tx *sql.Tx, fedIDs []int, useIMS bool, header http.Header) (map[int][]FedResolverInfo, error, int, *time.Time) {
-	var runSecond bool
-	var maxTime time.Time
+func getFederationResolvers(tx *sql.Tx, fedIDs []int) (map[int][]FedResolverInfo, error) {
 	feds := map[int][]FedResolverInfo{}
 	qry := `
 SELECT
@@ -182,29 +175,9 @@ FROM
 WHERE
   ffr.federation = ANY($1)
 `
-	imsQuery := `SELECT max(t) from (
-		SELECT max(ffr.last_updated) as t FROM
-  federation_federation_resolver ffr
-  JOIN federation_resolver fr ON ffr.federation_resolver = fr.id
-  JOIN type frt on fr.type = frt.id
-WHERE ffr.federation = ANY($1)
-	UNION ALL
-	select max(last_updated) as t from last_deleted l where l.table_name='federation_federation_resolver') as res`
-
-	if useIMS {
-		runSecond, maxTime = tryIfModifiedSinceQueryFederations(header, tx, pq.Array(fedIDs), imsQuery)
-		if !runSecond {
-			log.Debugln("IMS HIT")
-			return feds, nil, http.StatusNotModified, &maxTime
-		}
-		log.Debugln("IMS MISS")
-	} else {
-		log.Debugln("Non IMS request")
-	}
-
 	rows, err := tx.Query(qry, pq.Array(fedIDs))
 	if err != nil {
-		return nil, errors.New("all federations resolvers querying: " + err.Error()), http.StatusInternalServerError, nil
+		return nil, errors.New("all federations resolvers querying: " + err.Error())
 	}
 	defer rows.Close()
 
@@ -213,12 +186,12 @@ WHERE ffr.federation = ANY($1)
 		f := FedResolverInfo{}
 		fType := ""
 		if err := rows.Scan(&fedID, &fType, &f.IP); err != nil {
-			return nil, errors.New("all federations resolvers scanning: " + err.Error()), http.StatusInternalServerError, nil
+			return nil, errors.New("all federations resolvers scanning: " + err.Error())
 		}
 		f.Type = tc.FederationResolverTypeFromString(fType)
 		feds[fedID] = append(feds[fedID], f)
 	}
-	return feds, nil, http.StatusOK, &maxTime
+	return feds, nil
 }
 
 func tryIfModifiedSinceQueryFederations(header http.Header, tx *sql.Tx, fedID interface{}, query string) (bool, time.Time) {
@@ -285,17 +258,25 @@ WHERE
 ORDER BY
   ds.xml_id
 `
-	imsQuery := `SELECT max(t) from (
-		SELECT max(fds.last_updated) as t FROM
-  federation_deliveryservice fds
-  JOIN deliveryservice ds ON ds.id = fds.deliveryservice
-  JOIN federation fd ON fd.id = fds.federation
-  JOIN federation_tmuser fu on fu.federation = fd.id
-  JOIN tm_user u on u.id = fu.tm_user
-WHERE
-  u.username = $1
-	UNION ALL
-	select max(last_updated) as t from last_deleted l where l.table_name='federation_deliveryservice') as res`
+	imsQuery := `SELECT Max(t)
+         FROM   ((SELECT Greatest(fdsmax, ffrmax, fdmax) AS t
+         FROM   (SELECT Max(fds.last_updated) AS fdsmax,
+                        Max(ffr.last_updated) AS ffrmax,
+                        Max(fd.last_updated)  AS fdmax
+                 FROM   federation_deliveryservice fds
+                        JOIN federation_federation_resolver ffr
+                          ON ffr.federation = fds.federation
+                        JOIN federation fd
+                          ON fd.id = fds.federation
+                        JOIN federation_tmuser fu
+                          ON fu.federation = fd.id
+                        JOIN tm_user u
+                          ON u.id = fu.tm_user
+                 WHERE  u.username = $1) AS t
+         UNION ALL
+         SELECT Max(last_updated) AS t
+         FROM   last_deleted l
+         WHERE  l.table_name IN ( 'federation_deliveryservice', 'federation', 'federation_federation_resolver' ))) AS res;`
 
 	if useIMS {
 		runSecond, maxTime = tryIfModifiedSinceQuery(header, tx, userName, imsQuery)
@@ -324,7 +305,7 @@ WHERE
 	return feds, nil, http.StatusOK, &maxTime
 }
 
-// AddFederationResorverMappingsForCurrentUser is the handler for a POST request to /federations.
+// AddFederationResolverMappingsForCurrentUser is the handler for a POST request to /federations.
 // Confusingly, it does not create a federation, but is instead used to manipulate the resolvers
 // used by one or more particular Delivery Services for one or more particular Federations.
 func AddFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *http.Request) {
@@ -426,14 +407,12 @@ func addFederationResolver(res []string, t tc.FederationResolverType, fedID uint
 	for _, r := range res {
 		var ip string
 		var id uint
-		if err := tx.QueryRow(insertResolverQuery, r, t).Scan(&ip, &id); err != nil && err != sql.ErrNoRows {
+		if err := tx.QueryRow(insertResolverQuery, r, t).Scan(&ip, &id); err != nil {
 			return nil, err
 		}
-		if ip != "" && id > 0 {
-			inserted = append(inserted, ip)
-			if _, err := tx.Exec(associateFederationWithResolverQuery, fedID, id); err != nil {
-				return nil, err
-			}
+		inserted = append(inserted, ip)
+		if _, err := tx.Exec(associateFederationWithResolverQuery, fedID, id); err != nil {
+			return nil, err
 		}
 
 	}

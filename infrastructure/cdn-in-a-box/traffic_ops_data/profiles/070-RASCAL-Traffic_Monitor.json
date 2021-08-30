@@ -6,28 +6,8 @@
   "params": [
     {
       "configFile": "rascal-config.txt",
-      "name": "hack.ttl",
-      "value": "30"
-    },
-    {
-      "configFile": "rascal-config.txt",
-      "name": "health.event-count",
-      "value": "200"
-    },
-    {
-      "configFile": "rascal-config.txt",
       "name": "health.polling.interval",
       "value": "6000"
-    },
-    {
-      "configFile": "rascal-config.txt",
-      "name": "health.threadPool",
-      "value": "4"
-    },
-    {
-      "configFile": "rascal-config.txt",
-      "name": "health.timepad",
-      "value": "0"
     },
     {
       "configFile": "rascal-config.txt",
@@ -36,28 +16,8 @@
     },
     {
       "configFile": "rascal-config.txt",
-      "name": "location",
-      "value": "/opt/traffic_monitor/conf"
-    },
-    {
-      "configFile": "rascal-config.txt",
       "name": "peers.polling.interval",
       "value": "3000"
-    },
-    {
-      "configFile": "rascal-config.txt",
-      "name": "tm.crConfig.polling.url",
-      "value": "https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.xml"
-    },
-    {
-      "configFile": "rascal-config.txt",
-      "name": "tm.dataServer.polling.url",
-      "value": "https://${tmHostname}/dataserver/orderby/id"
-    },
-    {
-      "configFile": "rascal-config.txt",
-      "name": "tm.healthParams.polling.url",
-      "value": "https://${tmHostname}/health/${cdnName}"
     },
     {
       "configFile": "rascal-config.txt",
