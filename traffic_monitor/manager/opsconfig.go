@@ -39,7 +39,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 // StartOpsConfigManager starts the ops config manager goroutine, returning the (threadsafe) variables which it sets.
@@ -172,8 +172,8 @@ func StartOpsConfigManager(
 				time.Sleep(duration)
 
 				if toSession.BackupFileExists() && (toLoginCount >= cfg.TrafficOpsDiskRetryMax) {
-					log.Errorf("error instantiating Session with traffic_ops, backup disk files exist, creating empty traffic_ops session to read")
 					newOpsConfig.UsingDummyTO = true
+					log.Errorf("error instantiating authenticated session with Traffic Ops, backup disk files exist, continuing with unauthenticated session")
 					break
 				}
 

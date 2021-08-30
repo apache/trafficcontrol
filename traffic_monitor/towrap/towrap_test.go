@@ -1,4 +1,4 @@
-package handler
+package towrap
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,29 +20,18 @@ package handler
  */
 
 import (
-	"io"
+	"testing"
 	"time"
+
+	"github.com/apache/trafficcontrol/traffic_monitor/config"
 )
 
-const (
-	NOTIFY_NEVER = iota
-	NOTIFY_CHANGE
-	NOTIFY_ALWAYS
-)
-
-type OpsConfig struct {
-	Username      string `json:"username"`
-	Password      string `json:"password"`
-	Url           string `json:"url"`
-	Insecure      bool   `json:"insecure"`
-	CdnName       string `json:"cdnName"`
-	HttpListener  string `json:"httpListener"`
-	HttpsListener string `json:"httpsListener"`
-	CertFile      string `json:"certFile"`
-	KeyFile       string `json:"keyFile"`
-	UsingDummyTO  bool   `json:"usingDummyTO"` // only used in the TM UI to indicate if TM started up with on-disk backup snapshots
-}
-
-type Handler interface {
-	Handle(string, io.Reader, string, time.Duration, time.Time, error, uint64, bool, interface{}, chan<- uint64)
+func TestTrafficOpsSessionThreadsafeUpdateSetsNonNilSessions(t *testing.T) {
+	s := NewTrafficOpsSessionThreadsafe(nil, nil, 5, config.Config{})
+	err := s.Update("", "", "", true, "", false, 10*time.Second)
+	if err == nil {
+		t.Error("expected an error, got nil")
+	} else if s.session == nil || *s.session == nil || s.legacySession == nil || *s.legacySession == nil {
+		t.Errorf("expected non-nil sessions after getting error from Update()")
+	}
 }
