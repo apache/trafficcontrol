@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## unreleased (but not 6.0)
+## unreleased
 ### Added
 - [#5674](https://github.com/apache/trafficcontrol/issues/5674) Added new query parameters `cdn` and `maxRevalDurationDays` to the `GET /api/x/jobs` Traffic Ops API to filter by CDN name and within the start_time window defined by the `maxRevalDurationDays` GLOBAL profile parameter, respectively.
 - [#6034](https://github.com/apache/trafficcontrol/issues/6034) Added new query parameter `cdn` to the `GET /api/x/deliveryserviceserver` Traffic Ops API to filter by CDN name
@@ -11,7 +11,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Updated `t3c` to request less unnecessary deliveryservice-server assignment and invalidation jobs data via new query params supported by Traffic Ops
 
-## unreleased
+### Deprecated
+
+### Removed
+
+## [6.0.0] - 2021-08-30
 ### Added
 - [#4982](https://github.com/apache/trafficcontrol/issues/4982) Added the ability to support queueing updates by server type and profile
 - [#5412](https://github.com/apache/trafficcontrol/issues/5412) Added last authenticated time to user API's (`GET /user/current, GET /users, GET /user?id=`) response payload
@@ -741,7 +745,8 @@ will be returned indicating that overlap exists.
 ### Changed
 - Reformatted this CHANGELOG file to the keep-a-changelog format
 
-[unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-5.0.0...HEAD
+[unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-6.0.0...HEAD
+[6.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-6.0.0...RELEASE-5.0.0
 [5.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.1.0...RELEASE-5.0.0
 [4.1.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.0.0...RELEASE-4.1.0
 [4.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-3.0.0...RELEASE-4.0.0
