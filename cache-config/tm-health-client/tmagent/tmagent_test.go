@@ -1,4 +1,4 @@
-package tmutil
+package tmagent
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -22,6 +22,7 @@ package tmutil
 import (
 	"fmt"
 	"github.com/apache/trafficcontrol/cache-config/tm-health-client/config"
+	"github.com/apache/trafficcontrol/cache-config/tm-health-client/util"
 	"testing"
 )
 
@@ -30,11 +31,17 @@ const (
 )
 
 func TestReadParentDotConfig(t *testing.T) {
-	cfg := config.Cfg{
-		TrafficMonitors: make(map[string]bool, 0),
+	cf := util.ConfigFile{
+		Filename:       test_config_file,
+		LastModifyTime: 0,
 	}
 
-	parentDotConfig := ParentConfigFile{
+	cfg := config.Cfg{
+		TrafficMonitors:        make(map[string]bool, 0),
+		HealthClientConfigFile: cf,
+	}
+
+	parentDotConfig := util.ConfigFile{
 		Filename:       "test_files/etc/parent.config",
 		LastModifyTime: 1,
 	}
@@ -44,7 +51,7 @@ func TestReadParentDotConfig(t *testing.T) {
 		Cfg:             cfg,
 	}
 
-	err := config.LoadConfig(&cfg, test_config_file)
+	_, err := config.LoadConfig(&cfg)
 	if err != nil {
 		t.Fatalf("failed to load %s: %s\n", test_config_file, err.Error())
 	}
@@ -61,11 +68,17 @@ func TestReadParentDotConfig(t *testing.T) {
 }
 
 func TestReadStrategiesDotYaml(t *testing.T) {
-	cfg := config.Cfg{
-		TrafficMonitors: make(map[string]bool, 0),
+	cf := util.ConfigFile{
+		Filename:       test_config_file,
+		LastModifyTime: 0,
 	}
 
-	strategiesDotYaml := ParentConfigFile{
+	cfg := config.Cfg{
+		TrafficMonitors:        make(map[string]bool, 0),
+		HealthClientConfigFile: cf,
+	}
+
+	strategiesDotYaml := util.ConfigFile{
 		Filename:       "test_files/etc/strategies.yaml",
 		LastModifyTime: 1,
 	}
@@ -75,7 +88,7 @@ func TestReadStrategiesDotYaml(t *testing.T) {
 		Cfg:               cfg,
 	}
 
-	err := config.LoadConfig(&cfg, test_config_file)
+	_, err := config.LoadConfig(&cfg)
 	if err != nil {
 		t.Fatalf("failed to load %s: %s\n", test_config_file, err.Error())
 	}
@@ -92,8 +105,14 @@ func TestReadStrategiesDotYaml(t *testing.T) {
 }
 
 func TestReadHostStatus(t *testing.T) {
+	cf := util.ConfigFile{
+		Filename:       test_config_file,
+		LastModifyTime: 0,
+	}
+
 	cfg := config.Cfg{
-		TrafficMonitors: make(map[string]bool, 0),
+		TrafficMonitors:        make(map[string]bool, 0),
+		HealthClientConfigFile: cf,
 	}
 
 	pi := ParentInfo{
@@ -101,7 +120,7 @@ func TestReadHostStatus(t *testing.T) {
 		Cfg:                 cfg,
 	}
 
-	err := config.LoadConfig(&cfg, test_config_file)
+	_, err := config.LoadConfig(&cfg)
 	if err != nil {
 		t.Fatalf("failed to load %s: %s\n", test_config_file, err.Error())
 	}
@@ -119,15 +138,21 @@ func TestReadHostStatus(t *testing.T) {
 }
 
 func TestFindATrafficMonitor(t *testing.T) {
+	cf := util.ConfigFile{
+		Filename:       test_config_file,
+		LastModifyTime: 0,
+	}
+
 	cfg := config.Cfg{
-		TrafficMonitors: make(map[string]bool, 0),
+		TrafficMonitors:        make(map[string]bool, 0),
+		HealthClientConfigFile: cf,
 	}
 
 	pi := ParentInfo{
 		Cfg: cfg,
 	}
 
-	err := config.LoadConfig(&cfg, test_config_file)
+	_, err := config.LoadConfig(&cfg)
 	if err != nil {
 		t.Fatalf("failed to load %s: %s\n", test_config_file, err.Error())
 	}
@@ -154,7 +179,7 @@ func TestParentStatus(t *testing.T) {
 		ManualReason: false,
 	}
 
-	available := pstat.available()
+	available := pstat.available("manual")
 	if available {
 		t.Fatalf("expected parent status for %s to be false, got %v\n",
 			pstat.Fqdn, available)
@@ -164,7 +189,7 @@ func TestParentStatus(t *testing.T) {
 		t.Fatalf("expected status 'DOWN' got %s\n", status)
 	}
 	pstat.ManualReason = true
-	available = pstat.available()
+	available = pstat.available("active")
 	if !available {
 		t.Fatalf("expected parent status for %s to be true, got %v\n",
 			pstat.Fqdn, available)
@@ -174,7 +199,7 @@ func TestParentStatus(t *testing.T) {
 		t.Fatalf("expected status 'UP' got %s\n", status)
 	}
 	pstat.LocalReason = false
-	available = pstat.available()
+	available = pstat.available("local")
 	if available {
 		t.Fatalf("expected parent status for %s to be false, got %v\n",
 			pstat.Fqdn, available)
@@ -186,7 +211,7 @@ func TestParentStatus(t *testing.T) {
 
 	pstat.LocalReason = true
 	pstat.ActiveReason = false
-	available = pstat.available()
+	available = pstat.available("active")
 	if available {
 		t.Fatalf("expected parent status for %s to be false, got %v\n",
 			pstat.Fqdn, available)
@@ -196,7 +221,7 @@ func TestParentStatus(t *testing.T) {
 		t.Fatalf("expected status 'DOWN' got %s\n", status)
 	}
 	pstat.ActiveReason = true
-	available = pstat.available()
+	available = pstat.available("active")
 	if !available {
 		t.Fatalf("expected parent status for %s to be false, got %v\n",
 			pstat.Fqdn, available)
