@@ -18,6 +18,7 @@ package v4
 import (
 	"net/http"
 	"net/url"
+	"reflect"
 	"sort"
 	"strconv"
 	"testing"
@@ -36,14 +37,17 @@ func TestServerServerCapabilities(t *testing.T) {
 		GetTestServerServerCapabilities(t)
 		GetDeliveryServiceServersWithCapabilities(t)
 		UpdateTestServerServerCapabilities(t)
+		GetTestPaginationSupportSsc(t)
+		DeleteTestServerServerCapabilityWithInvalidData(t)
 	})
 }
 
+/*
 func TestServerServerCapabilitiesForTopologies(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, ServerCapabilities, ServerServerCapabilitiesForTopologies, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
 		DeleteTestServerServerCapabilitiesForTopologiesValidation(t)
 	})
-}
+}*/
 
 func GetTestServerServerCapabilitiesIMS(t *testing.T) {
 	futureTime := time.Now().AddDate(0, 0, 1)
@@ -421,7 +425,6 @@ func DeleteTestServerServerCapabilities(t *testing.T) {
 			t.Errorf("could not remove Capability '%s' from server '%s' (#%d): %v - alerts: %+v", *ssc.ServerCapability, *ssc.Server, *ssc.ServerID, err, alerts.Alerts)
 		}
 	}
-
 }
 
 func DeleteTestServerServerCapabilitiesForTopologiesValidation(t *testing.T) {
@@ -502,7 +505,6 @@ func DeleteTestServerServerCapabilitiesForTopologies(t *testing.T) {
 			t.Errorf("could not remove Capability '%s' from server '%s': %v - alerts: %+v", *ssc.ServerCapability, *ssc.Server, err, resp.Alerts)
 		}
 	}
-
 }
 
 func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
@@ -594,5 +596,115 @@ func GetDeliveryServiceServersWithCapabilities(t *testing.T) {
 	alerts, _, err = TOSession.DeleteDeliveryServiceServer(*ds.ID, midID, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("Unexpected error removing server #%d from Delivery Service #%d: %v - alerts: %+v", midID, *ds.ID, err, alerts.Alerts)
+	}
+}
+
+func GetTestPaginationSupportSsc(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetServerServerCapabilities(opts)
+	if err != nil {
+		t.Fatalf("cannot get server server capabilities: %v - alerts: %+v", err, resp.Alerts)
+	}
+	ServerServerCapabilities := resp.Response
+	if len(ServerServerCapabilities) < 3 {
+		t.Fatalf("Need at least 3 server server capabilities in Traffic Ops to test pagination support, found: %d", len(ServerServerCapabilities))
+	}
+
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	serverServerCapWithLimit, _, err := TOSession.GetServerServerCapabilities(opts)
+	if err != nil {
+		t.Fatalf("cannot get server server capabilities by Order and Limit: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if !reflect.DeepEqual(ServerServerCapabilities[:1], serverServerCapWithLimit.Response) {
+		t.Error("expected GET Server Server Capabilities with limit = 1 to return first result")
+	}
+
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "1")
+	serverServerCapWithOffset, _, err := TOSession.GetServerServerCapabilities(opts)
+	if err != nil {
+		t.Fatalf("cannot get server server capabilities by Order, Limit and Offset: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if !reflect.DeepEqual(ServerServerCapabilities[1:2], serverServerCapWithOffset.Response) {
+		t.Error("expected GET server server capabilities with limit = 1, offset = 1 to return second result")
+	}
+
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "2")
+	serverServerCapWithPage, _, err := TOSession.GetServerServerCapabilities(opts)
+	if err != nil {
+		t.Fatalf("cannot get server server capabilities by Order, Limit and Page: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if !reflect.DeepEqual(ServerServerCapabilities[1:2], serverServerCapWithPage.Response) {
+		t.Error("expected GET Server Server Capabilities with limit = 1, page = 2 to return second result")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, _, err = TOSession.GetServerServerCapabilities(opts)
+	if err == nil {
+		t.Error("expected GET Server Server Capabilities to return an error when limit is not bigger than -1")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
+		t.Errorf("expected GET Server Server Capabilities to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, _, err = TOSession.GetServerServerCapabilities(opts)
+	if err == nil {
+		t.Error("expected GET Server Server Capabilities to return an error when offset is not a positive integer")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET Server Server Capabilities to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, _, err = TOSession.GetServerServerCapabilities(opts)
+	if err == nil {
+		t.Error("expected GET Server Server Capabilities to return an error when page is not a positive integer")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET Server Server Capabilities to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+}
+
+func DeleteTestServerServerCapabilityWithInvalidData(t *testing.T) {
+
+	// Get Server server Capabilities to delete them
+	sscs, _, err := TOSession.GetServerServerCapabilities(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("cannot get server/Capability associations: %v - alerts: %+v", err, sscs.Alerts)
+	}
+	if len(sscs.Response) < 1 {
+		t.Fatalf("No Server Server Capability available to test invalid scenario")
+	}
+
+	//Delete Server Server Capability with Invalid Server Capability
+	alerts, _, err := TOSession.DeleteServerServerCapability(*sscs.Response[0].ServerID, "abcd", client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected no server server_capability with that key found, actual: %v - alerts: %+v", err, alerts.Alerts)
+	}
+
+	//Missing Server Capability
+	alerts, _, err = TOSession.DeleteServerServerCapability(*sscs.Response[0].ServerID, "", client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected missing key: serverCapability, actual: %v - alerts: %+v", err, alerts.Alerts)
+	}
+
+	//Missing Server ID
+	var nullvalue int
+	alerts, _, err = TOSession.DeleteServerServerCapability(nullvalue, *sscs.Response[0].ServerCapability, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected missing key: serverId, actual: %v - alerts: %+v", err, alerts.Alerts)
+	}
+
+	//Delete Server Capability with No Parameters
+	alerts, _, err = TOSession.DeleteServerServerCapability(nullvalue, "", client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("Expected no server server_capability with that key found, actual: %v - alerts: %+v", err, alerts.Alerts)
 	}
 }
