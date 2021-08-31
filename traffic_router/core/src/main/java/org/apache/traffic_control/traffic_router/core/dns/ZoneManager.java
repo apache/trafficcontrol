@@ -946,7 +946,7 @@ public class ZoneManager extends Resolver {
 				        builder.deliveryServiceXmlIds(result.getDeliveryService().getId());
 			        }
         			return dynamicZone;
-      			} else {
+			} else {
 				return null;
 			}
 		} catch (final Exception e) {
