@@ -41,6 +41,7 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
                 await deliveryservicesPage.OpenDeliveryServicePage();
             });
             afterAll(async function () {
+                await deliveryservicesPage.OpenServicesMenu();
                 expect(await topNavigation.Logout()).toBe(true);
             })
             it('can login', async () => {
