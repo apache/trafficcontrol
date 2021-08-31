@@ -26,3 +26,5 @@ github:
   - hacktoberfest
   features:
     wiki: true
+    issues: true
+    projects: true
