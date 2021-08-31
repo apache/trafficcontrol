@@ -942,11 +942,11 @@ public class ZoneManager extends Resolver {
 				track.setResultCode(dynamicZone, request.getName(), request.getQueryType());
 				if (result.getDeliveryService() == null) {
 					builder.deliveryServiceXmlIds(null);
-        } else {
-          builder.deliveryServiceXmlIds(result.getDeliveryService().getId());
-      }
-        return dynamicZone;
-      } else {
+        			} else {
+				        builder.deliveryServiceXmlIds(result.getDeliveryService().getId());
+			        }
+        			return dynamicZone;
+      			} else {
 				return null;
 			}
 		} catch (final Exception e) {
