@@ -37,63 +37,70 @@ describe('Setup API for delivery service test', function () {
 deliveryservices.tests.forEach(async deliveryservicesData => {
     deliveryservicesData.logins.forEach(login =>{
         describe(`Traffic Portal - Delivery Service - ${login.description}`, () =>{
+            afterEach(async function () {
+                await deliveryservicesPage.OpenDeliveryServicePage();
+            });
+            afterAll(async function () {
+                expect(await topNavigation.Logout()).toBe(true);
+            })
             it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBe(true);
-            });
-            it('can open delivery service page', async () => {
                 await deliveryservicesPage.OpenServicesMenu();
-                await deliveryservicesPage.OpenDeliveryServicePage();
             });
-            deliveryservicesData.add.forEach(add => {
-                it(add.description, async function () {
-                    expect(await deliveryservicesPage.CreateDeliveryService(add)).toBe(true);
-                    await deliveryservicesPage.OpenDeliveryServicePage();
-                });
-            });
-            deliveryservicesData.update.forEach(update => {
-                it(update.description, async function () {
-                    await deliveryservicesPage.SearchDeliveryService(update.Name);
-                    expect(await deliveryservicesPage.UpdateDeliveryService(update)).toBe(true);
-                    await deliveryservicesPage.OpenDeliveryServicePage();
+            it('can perform add test suits', async () => {
+                deliveryservicesData.add.forEach(add => {
+                    it(add.description, async function () {
+                        expect(await deliveryservicesPage.CreateDeliveryService(add)).toBe(true);
+                        await deliveryservicesPage.OpenDeliveryServicePage();
+                    });
                 });
             })
-            deliveryservicesData.assignserver.forEach(assignserver => {
-                it(assignserver.description, async function(){
-                    await deliveryservicesPage.SearchDeliveryService(assignserver.DSName);
-                    expect(await deliveryservicesPage.AssignServerToDeliveryService(assignserver)).toBe(true);
-                    await deliveryservicesPage.OpenDeliveryServicePage();
-                }
-
-                )
-            })
-            deliveryservicesData.assignrequiredcapabilities.forEach(assignrc => {
-                it(assignrc.description, async function(){
-                    await deliveryservicesPage.SearchDeliveryService(assignrc.DSName);
-                    expect(await deliveryservicesPage.AssignRequiredCapabilitiesToDS(assignrc)).toBe(true);
-                    await deliveryservicesPage.OpenDeliveryServicePage();
+            it('can perform add update suits', async () => {
+                deliveryservicesData.update.forEach(update => {
+                    it(update.description, async function () {
+                        await deliveryservicesPage.SearchDeliveryService(update.Name);
+                        expect(await deliveryservicesPage.UpdateDeliveryService(update)).toBe(true);
+                        await deliveryservicesPage.OpenDeliveryServicePage();
+                    });
                 })
             })
-            deliveryservicesData.remove.forEach(remove => {
-                it(remove.description, async () => {
-                    await deliveryservicesPage.SearchDeliveryService(remove.Name);
-                    expect(await deliveryservicesPage.DeleteDeliveryService(remove)).toBe(true);
-                    await deliveryservicesPage.OpenDeliveryServicePage();
-                });
-            });
-            it('can close service menu tab', async () => {
-                await deliveryservicesPage.OpenServicesMenu();
-            });
-            it('can logout', async () => {
-                expect(await topNavigation.Logout()).toBe(true);
-            });
+            it('can perform add assignserver suits', async () => {
+                deliveryservicesData.assignserver.forEach(assignserver => {
+                    it(assignserver.description, async function(){
+                        await deliveryservicesPage.SearchDeliveryService(assignserver.DSName);
+                        expect(await deliveryservicesPage.AssignServerToDeliveryService(assignserver)).toBe(true);
+                        await deliveryservicesPage.OpenDeliveryServicePage();
+                    })
+                })
+            })
+            it('can perform add assignrequirecapabilities suits', async () => {
+                deliveryservicesData.assignrequiredcapabilities.forEach(assignrc => {
+                    it(assignrc.description, async function(){
+                        await deliveryservicesPage.SearchDeliveryService(assignrc.DSName);
+                        expect(await deliveryservicesPage.AssignRequiredCapabilitiesToDS(assignrc)).toBe(true);
+                        await deliveryservicesPage.OpenDeliveryServicePage();
+                    })
+                })  
+            })
+            it('can perform remove test suits', async () => {
+                deliveryservicesData.remove.forEach(remove => {
+                    it(remove.description, async () => {
+                        await deliveryservicesPage.SearchDeliveryService(remove.Name);
+                        expect(await deliveryservicesPage.DeleteDeliveryService(remove)).toBe(true);
+                        await deliveryservicesPage.OpenDeliveryServicePage();
+                    });
+                });  
+            })
         })
     })
-
 })
+
 describe('Clean up API for delivery service test', () => {
-    it('Cleanup', async () => {
-        await api.UseAPI(deliveryservices.cleanup);
-    });
+    afterAll(async function () {
+        it('Cleanup', async () => {
+            await api.UseAPI(deliveryservices.cleanup);
+        });
+    })
 });
