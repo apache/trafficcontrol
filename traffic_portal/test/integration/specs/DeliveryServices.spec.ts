@@ -57,7 +57,7 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
                     });
                 });
             })
-            it('can perform add update suits', async () => {
+            it('can perform update suits', async () => {
                 deliveryservicesData.update.forEach(update => {
                     it(update.description, async function () {
                         await deliveryservicesPage.SearchDeliveryService(update.Name);
@@ -66,7 +66,7 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
                     });
                 })
             })
-            it('can perform add assignserver suits', async () => {
+            it('can perform assignserver suits', async () => {
                 deliveryservicesData.assignserver.forEach(assignserver => {
                     it(assignserver.description, async function(){
                         await deliveryservicesPage.SearchDeliveryService(assignserver.DSName);
@@ -75,7 +75,7 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
                     })
                 })
             })
-            it('can perform add assignrequirecapabilities suits', async () => {
+            it('can perform assignrequirecapabilities suits', async () => {
                 deliveryservicesData.assignrequiredcapabilities.forEach(assignrc => {
                     it(assignrc.description, async function(){
                         await deliveryservicesPage.SearchDeliveryService(assignrc.DSName);
