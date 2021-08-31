@@ -24,3 +24,5 @@ github:
   - cdn
   - contentdelivery
   - hacktoberfest
+  features:
+    wiki: true
