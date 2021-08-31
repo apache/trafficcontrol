@@ -1,4 +1,4 @@
-package main
+package util
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,34 +20,26 @@ package main
  */
 
 import (
+	"errors"
 	"os"
-
-	"github.com/apache/trafficcontrol/cache-config/tm-health-client/config"
-	"github.com/apache/trafficcontrol/cache-config/tm-health-client/tmagent"
-	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
-const (
-	Success     = 0
-	ConfigError = 166
-)
+type ConfigFile struct {
+	Filename       string
+	LastModifyTime int64
+}
 
-func main() {
-	cfg, err, helpflag := config.GetConfig()
+// get the file modification times for a configuration file.
+func GetFileModificationTime(fn string) (int64, error) {
+	f, err := os.Open(fn)
 	if err != nil {
-		log.Errorln(err.Error())
-		os.Exit(ConfigError)
-	} else {
-		log.Infoln("startup complete, the config has been loaded")
+		return 0, errors.New("opening " + fn + ": " + err.Error())
 	}
-	if helpflag { // user used --help option
-		os.Exit(Success)
-	}
+	defer f.Close()
 
-	tmInfo, err := tmagent.NewParentInfo(cfg)
+	finfo, err := f.Stat()
 	if err != nil {
-		log.Errorf("startup could not initialize ATS parent info: %s\n", err.Error())
+		return 0, errors.New("unable to get file status for " + fn + ": " + err.Error())
 	}
-
-	tmInfo.PollAndUpdateCacheStatus()
+	return finfo.ModTime().UnixNano(), nil
 }

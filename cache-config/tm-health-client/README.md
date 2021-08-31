@@ -58,6 +58,17 @@ otherwise unavailable, the tm-health-client will utilize the **Traffic Server**
 and **Traffic Monitor** has determined that the marked down host is now available, 
 the client will then utilize the **Traffic Server** tool to mark the host back up.
 
+Also on each polling cycle the configuration file, **tm-health-client.json** is 
+checked and a new config is reloaded if the file has changed since the last 
+polling cycle.  The **Traffic Monitors** list is refreshed from **Traffic Ops**.
+
+If errors are encountered while polling a Traffic Monitor, the error is logged
+and the **Traffic Monitors** list is refreshed from **Traffic Ops**.
+
+# REQUIREMENTS
+
+Requires Apache TrafficServer 8.1.0 or later.
+
 # OPTIONS
 
 -f, -\-config-file=config-file 
@@ -97,6 +108,7 @@ Sample configuarion file:
     "to-url": "https://tp.cdn.com:443", 
     "to-request-timeout-seconds": "5s",
     "tm-poll-interval-seconds": "60s",
+    "tm-update-cycles": 5,
     "trafficserver-config-dir": "/opt/trafficserver/etc/trafficserver",
     "trafficserver-bin-dir": "/opt/trafficserver/bin",
   }
@@ -110,7 +122,8 @@ Sample configuarion file:
 
   When enabled, the client will actively mark down Traffic Server parents.
   When disabled, the client will only log that it would have marked down
-  Traffic Server parents
+  Traffic Server parents.  Down Parents are always marked UP if Traffic Monitor
+  reports them available irregardless of this setting.
 
 ### reason-code
 
@@ -139,6 +152,12 @@ Sample configuarion file:
 
   The polling interval in seconds used to update **Traffic Server** parent
   status.
+
+### tm-update-cycles
+
+  Each time a polling cycle completes a count is incremented. When the count
+  reaches **tm-update-cycles**, TrafficOps is polled for a new list of available
+  TrafficMonitors for the CDN and the poll count is reset to 0.
 
 ### trafficserver-config-dir
 

@@ -21,6 +21,8 @@ package config
 
 import (
 	"testing"
+
+	"github.com/apache/trafficcontrol/cache-config/tm-health-client/util"
 )
 
 const (
@@ -28,11 +30,17 @@ const (
 )
 
 func TestLoadConfig(t *testing.T) {
-	cfg := Cfg{
-		TrafficMonitors: make(map[string]bool, 0),
+	cf := util.ConfigFile{
+		Filename:       test_config_file,
+		LastModifyTime: 0,
 	}
 
-	err := LoadConfig(&cfg, test_config_file)
+	cfg := Cfg{
+		TrafficMonitors:        make(map[string]bool, 0),
+		HealthClientConfigFile: cf,
+	}
+
+	_, err := LoadConfig(&cfg)
 	if err != nil {
 		t.Fatalf("failed to load %s: %s\n", test_config_file, err.Error())
 	}
@@ -61,7 +69,7 @@ func TestLoadConfig(t *testing.T) {
 		t.Fatalf("expected '%s', got %s\n", expect, creds)
 	}
 
-	readCredentials(&cfg)
+	ReadCredentials(&cfg)
 
 	expect = "https://tp.cdn.com:443"
 	tourl := cfg.TOUrl

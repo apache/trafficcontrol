@@ -30,6 +30,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/cache-config/tm-health-client/util"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
 
@@ -45,6 +46,7 @@ const (
 	DefaultLogFile                = "tm-health-client.log"
 	DefaultTrafficServerConfigDir = "/opt/trafficserver/etc/trafficserver"
 	DefaultTrafficServerBinDir    = "/opt/trafficserver/bin"
+	DefaultTmUpdateCycles         = 10
 )
 
 type Cfg struct {
@@ -57,9 +59,11 @@ type Cfg struct {
 	TOUrl                   string
 	TOUser                  string
 	TmPollIntervalSeconds   string          `json:"tm-poll-interval-seconds"`
+	TmUpdateCycles          int             `json:"tm-update-cycles"`
 	TrafficServerConfigDir  string          `json:"trafficserver-config-dir"`
 	TrafficServerBinDir     string          `json:"trafficserver-bin-dir"`
 	TrafficMonitors         map[string]bool `json:"trafficmonitors,omitempty"`
+	HealthClientConfigFile  util.ConfigFile
 }
 
 type LogCfg struct {
@@ -75,7 +79,7 @@ func (lcfg LogCfg) InfoLog() log.LogLocation    { return log.LogLocation(lcfg.Lo
 func (lcfg LogCfg) DebugLog() log.LogLocation   { return log.LogLocation(lcfg.LogLocationDebug) }
 func (lcfg LogCfg) EventLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // not used
 
-func readCredentials(cfg *Cfg) error {
+func ReadCredentials(cfg *Cfg) error {
 	fn := cfg.TOCredentialFile
 	f, err := os.Open(fn)
 
@@ -179,19 +183,24 @@ func GetConfig() (Cfg, error, bool) {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n"), false
 	}
 
-	cfg := Cfg{
-		TrafficMonitors: make(map[string]bool, 0),
+	cf := util.ConfigFile{
+		Filename:       configFile,
+		LastModifyTime: 0,
 	}
 
-	if err = LoadConfig(&cfg, configFile); err != nil {
+	cfg := Cfg{
+		HealthClientConfigFile: cf,
+	}
+
+	if _, err = LoadConfig(&cfg); err != nil {
 		return Cfg{}, errors.New(err.Error() + "\n"), false
 	}
 
-	if err = readCredentials(&cfg); err != nil {
+	if err = ReadCredentials(&cfg); err != nil {
 		return cfg, err, false
 	}
 
-	err = GetTrafficMonitorsStatus(&cfg)
+	err = GetTrafficMonitors(&cfg)
 	if err != nil {
 		return cfg, err, false
 	}
@@ -199,7 +208,7 @@ func GetConfig() (Cfg, error, bool) {
 	return cfg, nil, false
 }
 
-func GetTrafficMonitorsStatus(cfg *Cfg) error {
+func GetTrafficMonitors(cfg *Cfg) error {
 	u, err := url.Parse(cfg.TOUrl)
 	if err != nil {
 		return errors.New("error parsing TOURL parameters: " + err.Error())
@@ -215,6 +224,7 @@ func GetTrafficMonitorsStatus(cfg *Cfg) error {
 		return errors.New("error fetching Trafficmonitor server list: " + err.Error())
 	}
 
+	cfg.TrafficMonitors = make(map[string]bool, 0)
 	for _, v := range srvs {
 		if v.CDNName == cfg.CDNName && v.Status == "ONLINE" {
 			hostname := v.HostName + "." + v.DomainName
@@ -233,26 +243,65 @@ func GetRequestTimeout() time.Duration {
 	return toRequestTimeout
 }
 
-func LoadConfig(cfg *Cfg, configFile string) error {
-	content, err := ioutil.ReadFile(configFile)
+func LoadConfig(cfg *Cfg) (bool, error) {
+	updated := false
+	configFile := cfg.HealthClientConfigFile.Filename
+	modTime, err := util.GetFileModificationTime(configFile)
 	if err != nil {
-		return errors.New(err.Error())
-	}
-	if err = json.Unmarshal(content, cfg); err == nil {
-		tmPollingInterval, err = time.ParseDuration(cfg.TmPollIntervalSeconds)
-		if err != nil {
-			return errors.New("parsing TMPollingIntervalSeconds: " + err.Error())
-		}
-		toRequestTimeout, err = time.ParseDuration(cfg.TORequestTimeOutSeconds)
-		if err != nil {
-			return errors.New("parsing TORequestTimeOutSeconds: " + err.Error())
-		}
-		if cfg.ReasonCode != "active" && cfg.ReasonCode != "local" {
-			return errors.New("invalid reason-code: " + cfg.ReasonCode + ", valid reason codes are 'active' or 'local'")
-		}
+		return updated, errors.New(err.Error())
 	}
 
-	return err
+	if modTime > cfg.HealthClientConfigFile.LastModifyTime {
+		log.Infoln("Loading a new config file.")
+		content, err := ioutil.ReadFile(configFile)
+		if err != nil {
+			return updated, errors.New(err.Error())
+		}
+		if err = json.Unmarshal(content, cfg); err == nil {
+			tmPollingInterval, err = time.ParseDuration(cfg.TmPollIntervalSeconds)
+			if err != nil {
+				return updated, errors.New("parsing TMPollingIntervalSeconds: " + err.Error())
+			}
+			toRequestTimeout, err = time.ParseDuration(cfg.TORequestTimeOutSeconds)
+			if err != nil {
+				return updated, errors.New("parsing TORequestTimeOutSeconds: " + err.Error())
+			}
+			if cfg.ReasonCode != "active" && cfg.ReasonCode != "local" {
+				return updated, errors.New("invalid reason-code: " + cfg.ReasonCode + ", valid reason codes are 'active' or 'local'")
+			}
+			if cfg.TrafficServerConfigDir == "" {
+				cfg.TrafficServerConfigDir = DefaultTrafficServerConfigDir
+			}
+			if cfg.TrafficServerBinDir == "" {
+				cfg.TrafficServerBinDir = DefaultTrafficServerBinDir
+			}
+			if cfg.TmUpdateCycles == 0 {
+				cfg.TmUpdateCycles = DefaultTmUpdateCycles
+			}
+		}
+
+		cfg.HealthClientConfigFile.LastModifyTime = modTime
+		updated = true
+	}
+	return updated, nil
+}
+
+func UpdateConfig(cfg *Cfg, newCfg *Cfg) {
+	log.Infoln("Installing config updates")
+	cfg.CDNName = newCfg.CDNName
+	cfg.EnableActiveMarkdowns = newCfg.EnableActiveMarkdowns
+	cfg.ReasonCode = newCfg.ReasonCode
+	cfg.TOCredentialFile = newCfg.TOCredentialFile
+	cfg.TORequestTimeOutSeconds = newCfg.TORequestTimeOutSeconds
+	cfg.TOPass = newCfg.TOPass
+	cfg.TOUrl = newCfg.TOUrl
+	cfg.TOUser = newCfg.TOUser
+	cfg.TmPollIntervalSeconds = newCfg.TmPollIntervalSeconds
+	cfg.TmUpdateCycles = newCfg.TmUpdateCycles
+	cfg.TrafficServerConfigDir = newCfg.TrafficServerConfigDir
+	cfg.TrafficServerBinDir = newCfg.TrafficServerBinDir
+	cfg.TrafficMonitors = newCfg.TrafficMonitors
+	cfg.HealthClientConfigFile = newCfg.HealthClientConfigFile
 }
 
 func Usage() {
