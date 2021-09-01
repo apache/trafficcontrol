@@ -736,7 +736,7 @@ func insertIntoTable(db *sql.DB, queryBase string, stride int, queryArgs []inter
 	if rows, err := res.RowsAffected(); err != nil {
 		return rollback(tx, fmt.Errorf("error getting rows affected: %w", err))
 	} else if rows != int64(len(queryValueStr)) {
-		return rollback(tx, fmt.Errorf("wanted to insert %d rows, but inserted %d\n", len(queryValueStr), rows))
+		return rollback(tx, fmt.Errorf("wanted to insert %d rows, but inserted %d", len(queryValueStr), rows))
 	}
 	return tx.Commit()
 }
