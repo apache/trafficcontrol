@@ -52,7 +52,7 @@
     "angular-ui-bootstrap": "0.14.3",
     "bootstrap-sass": "3.3.6",
     "es5-shim": "4.5.6",
-    "flot": "2.1.6",
+    "flot": "2.3.2",
     "font-awesome": "4.5.0",
     "jquery": "2.1.4",
     "jquery.flot.tooltip": "0.9.0",
