@@ -513,40 +513,29 @@ func GetTestJobsByValidData(t *testing.T) {
 		}
 	}
 
-	// get cdn2 id
-	opts = client.NewRequestOptions()
-	opts.QueryParameters.Set("name", "cdn2")
-	cdns, _, err := TOSession.GetCDNs(opts)
-	if err != nil {
-		t.Fatalf("unexpected error getting CDNs by name: %v", err)
-	}
-	if len(cdns.Response) != 1 {
-		t.Fatalf("expected 1 CDN to be returned by name, got %d", len(cdns.Response))
-	}
-	cdnID := cdns.Response[0].ID
-
 	// create DS xml_id -> cdn_id lookup map
 	dses, _, err := TOSession.GetDeliveryServices(client.NewRequestOptions())
 	if err != nil {
 		t.Fatalf("unexpectd error getting delivery services: %v", err)
 	}
-	dsToCDN := make(map[string]int, len(dses.Response))
+	dsToCDN := make(map[string]string, len(dses.Response))
 	for _, ds := range dses.Response {
-		dsToCDN[*ds.XMLID] = *ds.CDNID
+		dsToCDN[*ds.XMLID] = *ds.CDNName
 	}
 
+	cdn := "cdn2"
 	// get jobs by CDN ID
 	opts = client.NewRequestOptions()
-	opts.QueryParameters.Set("cdnId", strconv.Itoa(cdnID))
+	opts.QueryParameters.Set("cdn", cdn)
 	cdnJobs, _, err := TOSession.GetInvalidationJobs(opts)
 	if err != nil {
-		t.Errorf("unexpected error getting jobs by cdnId: %v", err)
+		t.Errorf("unexpected error getting jobs by cdn: %v", err)
 	} else if len(cdnJobs.Response) < 1 {
-		t.Errorf("GET /jobs by cdnId - expected at least 1 job")
+		t.Errorf("GET /jobs by cdn - expected at least 1 job")
 	}
 	for _, j := range cdnJobs.Response {
-		if dsToCDN[*j.DeliveryService] != cdnID {
-			t.Errorf("GET /jobs by cdnId returned job that does not belong to CDN %d: {%s, %s, %v}", cdnID, *j.DeliveryService, *j.AssetURL, *j.StartTime)
+		if dsToCDN[*j.DeliveryService] != cdn {
+			t.Errorf("GET /jobs by cdn returned job that does not belong to CDN %s: {%s, %s, %v}", cdn, *j.DeliveryService, *j.AssetURL, *j.StartTime)
 		}
 	}
 }

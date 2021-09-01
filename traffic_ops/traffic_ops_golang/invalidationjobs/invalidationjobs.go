@@ -217,7 +217,6 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
 		"createdBy":       dbhelpers.WhereColumnInfo{Column: `(SELECT tm_user.username FROM tm_user WHERE tm_user.id=job.job_user)`},
 		"deliveryService": dbhelpers.WhereColumnInfo{Column: `(SELECT deliveryservice.xml_id FROM deliveryservice WHERE deliveryservice.id=job.job_deliveryservice)`},
 		"dsId":            dbhelpers.WhereColumnInfo{Column: "job.job_deliveryservice", Checker: api.IsInt},
-		"cdnId":           dbhelpers.WhereColumnInfo{Column: "ds.cdn_id", Checker: api.IsInt},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(job.APIInfo().Params, queryParamsToSQLCols)
@@ -228,6 +227,11 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
 	accessibleTenants, err := tenant.GetUserTenantIDListTx(job.APIInfo().Tx.Tx, job.APIInfo().User.TenantID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("getting accessible tenants for user - %v", err), http.StatusInternalServerError, nil
+	}
+	cdn := ""
+	if cdnName, ok := job.APIInfo().Params["cdn"]; ok {
+		queryValues["cdn"] = cdnName
+		cdn = ` AND ds.cdn_id = (SELECT id FROM cdn WHERE name = :cdn) `
 	}
 	maxDays := ""
 	if _, ok := job.APIInfo().Params["maxRevalDurationDays"]; ok {
@@ -243,9 +247,9 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
                                                        || ' days' AS INTERVAL) `
 	}
 	if len(where) > 0 {
-		where += " AND ds.tenant_id = ANY(:tenants) " + maxDays
+		where += " AND ds.tenant_id = ANY(:tenants) " + maxDays + cdn
 	} else {
-		where = dbhelpers.BaseWhere + " ds.tenant_id = ANY(:tenants) " + maxDays
+		where = dbhelpers.BaseWhere + " ds.tenant_id = ANY(:tenants) " + maxDays + cdn
 	}
 	queryValues["tenants"] = pq.Array(accessibleTenants)
 
