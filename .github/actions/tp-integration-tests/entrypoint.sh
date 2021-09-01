@@ -151,7 +151,7 @@ sudo apt-get install -y --no-install-recommends gettext \
 	gcc
 
 sudo gem install sass compass
-sudo npm i -g forever bower grunt
+sudo npm i -g forever grunt
 
 CHROMIUM_CONTAINER=$(docker ps -qf name=chromium)
 HUB_CONTAINER=$(docker ps -qf name=hub)
@@ -191,7 +191,6 @@ to_build() {
 tp_build() {
   pushd "${REPO_DIR}/traffic_portal"
   npm ci
-  bower install
   grunt dist
 
   cp "${resources}/config.js" ./conf/

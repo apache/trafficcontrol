@@ -104,6 +104,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Fixed Federations IMS so TR federations watcher will get updates.
 
 ### Changed
+- Migrated completely off of bower in favor of npm
 - Updated the Traffic Ops Python client to 3.0
 - Updated Flot libraries to supported versions
 - [apache/trafficcontrol](https://github.com/apache/trafficcontrol) is now a Go module
