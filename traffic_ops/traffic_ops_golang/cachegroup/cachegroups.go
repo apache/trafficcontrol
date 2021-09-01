@@ -414,26 +414,34 @@ func (cg *TOCacheGroup) createCoordinate() (*int, error) {
 	return coordinateID, nil
 }
 
+const numberOfDuplicatesQuery = `
+SELECT COUNT(*)
+FROM public.coordinate
+WHERE id NOT IN (
+    SELECT coordinate
+    FROM public.cachegroup
+    WHERE id = $1
+)
+AND name = $2`
+
 func (cg *TOCacheGroup) updateCoordinate() error {
 	if cg.Latitude != nil && cg.Longitude != nil {
-		q := `SELECT * FROM coordinate WHERE id != (SELECT coordinate FROM cachegroup WHERE id = $1) AND name =$2`
-		result, err := cg.ReqInfo.Tx.Tx.Exec(q, *cg.ID, tc.CachegroupCoordinateNamePrefix+*cg.Name)
-		if err != nil {
-			return fmt.Errorf("getting coordinate for cachegroup '%s': %s", *cg.Name, err.Error())
+		var count uint
+		if err := cg.ReqInfo.Tx.Tx.QueryRow(numberOfDuplicatesQuery, *cg.ID, tc.CachegroupCoordinateNamePrefix+*cg.Name).Scan(&count); err != nil {
+			return fmt.Errorf("getting coordinate for Cache Group '%s': %w", *cg.Name, err)
 		}
-		rowsAffected, _ := result.RowsAffected()
-		if rowsAffected > 0 {
+		if count > 0 {
 			return errors.New("cachegroup name already exists, please choose a different name")
 		}
-		q = `UPDATE coordinate SET name = $1, latitude = $2, longitude = $3 WHERE id = (SELECT coordinate FROM cachegroup WHERE id = $4)`
-		result, err = cg.ReqInfo.Tx.Tx.Exec(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude, *cg.ID)
+		q := `UPDATE coordinate SET name = $1, latitude = $2, longitude = $3 WHERE id = (SELECT coordinate FROM cachegroup WHERE id = $4)`
+		result, err := cg.ReqInfo.Tx.Tx.Exec(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude, *cg.ID)
 
 		if err != nil {
-			return fmt.Errorf("updating coordinate for cachegroup '%s': %s", *cg.Name, err.Error())
+			return fmt.Errorf("updating coordinate for cachegroup '%s': %w", *cg.Name, err)
 		}
-		rowsAffected, err = result.RowsAffected()
+		rowsAffected, err := result.RowsAffected()
 		if err != nil {
-			return fmt.Errorf("updating coordinate for cachegroup '%s', getting rows affected: %s", *cg.Name, err.Error())
+			return fmt.Errorf("updating coordinate for cachegroup '%s', getting rows affected: %w", *cg.Name, err)
 		}
 		if rowsAffected == 0 {
 			return fmt.Errorf("updating coordinate for cachegroup '%s', zero rows affected", *cg.Name)
