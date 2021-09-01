@@ -32,7 +32,6 @@ describe('Setup API call for Servers Test', () => {
         await api.UseAPI(servers.setup);
     });
 });
-
 servers.tests.forEach(async serversData => {
     serversData.logins.forEach(login => {
         describe(`Traffic Portal - Servers - ${login.description}`, () => {
@@ -77,7 +76,6 @@ servers.tests.forEach(async serversData => {
         })
     })
 })
-
 describe('API Clean Up for Servers Test', () => {
     it('Cleanup', async () => {
         await api.UseAPI(servers.cleanup);
