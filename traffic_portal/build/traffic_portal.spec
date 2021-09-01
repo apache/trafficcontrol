@@ -41,7 +41,6 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 
 %build
 		npm install
-		bower install
 		grunt dist
 
 %install
