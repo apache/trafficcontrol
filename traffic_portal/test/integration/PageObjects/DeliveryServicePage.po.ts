@@ -156,8 +156,8 @@ export class DeliveryServicePage extends BasePage {
     return !result;
   }
 
-  public async UpdateDeliveryService(deliveryservice: UpdateDeliveryService): Promise<boolean | undefined> {
-    let result: boolean | undefined = false;
+  public async UpdateDeliveryService(deliveryservice: UpdateDeliveryService): Promise<boolean> {
+    let result = false;
     const basePage = new BasePage();
     if (deliveryservice.validationMessage.includes("updated")) {
       deliveryservice.validationMessage = deliveryservice.validationMessage.replace(deliveryservice.Name, deliveryservice.Name + this.randomize)
@@ -169,9 +169,9 @@ export class DeliveryServicePage extends BasePage {
         await basePage.ClickUpdate();
         break;
       default:
-        result = undefined;
+        result = false;
     }
-    if (result = !undefined) {
+    if (result = !false) {
       result = await basePage.GetOutputMessage().then(value => value === deliveryservice.validationMessage);
     }
     return result;
