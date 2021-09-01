@@ -54,7 +54,6 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
                 deliveryservicesData.add.forEach(add => {
                     it(add.description, async function () {
                         expect(await deliveryservicesPage.CreateDeliveryService(add)).toBe(true);
-                        await deliveryservicesPage.OpenDeliveryServicePage();
                     });
                 });
             })
@@ -63,7 +62,6 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
                     it(update.description, async function () {
                         await deliveryservicesPage.SearchDeliveryService(update.Name);
                         expect(await deliveryservicesPage.UpdateDeliveryService(update)).toBe(true);
-                        await deliveryservicesPage.OpenDeliveryServicePage();
                     });
                 })
             })
@@ -72,7 +70,6 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
                     it(assignserver.description, async function(){
                         await deliveryservicesPage.SearchDeliveryService(assignserver.DSName);
                         expect(await deliveryservicesPage.AssignServerToDeliveryService(assignserver)).toBe(true);
-                        await deliveryservicesPage.OpenDeliveryServicePage();
                     })
                 })
             })
@@ -81,7 +78,6 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
                     it(assignrc.description, async function(){
                         await deliveryservicesPage.SearchDeliveryService(assignrc.DSName);
                         expect(await deliveryservicesPage.AssignRequiredCapabilitiesToDS(assignrc)).toBe(true);
-                        await deliveryservicesPage.OpenDeliveryServicePage();
                     })
                 })  
             })
@@ -90,7 +86,6 @@ deliveryservices.tests.forEach(async deliveryservicesData => {
                     it(remove.description, async () => {
                         await deliveryservicesPage.SearchDeliveryService(remove.Name);
                         expect(await deliveryservicesPage.DeleteDeliveryService(remove)).toBe(true);
-                        await deliveryservicesPage.OpenDeliveryServicePage();
                     });
                 });  
             })
