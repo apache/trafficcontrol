@@ -17,7 +17,7 @@ package orttest
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"os/exec"
 	"strings"
 	"testing"
@@ -142,7 +142,7 @@ func ExecTORequester(host string, data_req string) (string, error) {
 	cmd.Stderr = &errOut
 	err := cmd.Run()
 	if err != nil {
-		return "", errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+		return "", fmt.Errorf("%w: stdout: %s stderr: %s", err, out.String(), errOut.String())
 	}
 
 	// capture the last line of JSON in the 'Stdout' buffer 'out'

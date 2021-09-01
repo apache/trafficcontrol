@@ -172,7 +172,7 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	}
 
 	if *verbosePtr > 2 {
-		return Cfg{}, errors.New("Too many verbose options. The maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
+		return Cfg{}, errors.New("too many verbose options; the maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
 	}
 
 	dispersion := time.Second * time.Duration(*dispersionPtr)
@@ -195,9 +195,9 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 
 	toURLParsed, err := url.Parse(toURL)
 	if err != nil {
-		return Cfg{}, errors.New("parsing Traffic Ops URL from " + urlSourceStr + " '" + toURL + "': " + err.Error())
+		return Cfg{}, fmt.Errorf("parsing Traffic Ops URL from %s '%s': %w", urlSourceStr, toURL, err)
 	} else if err := t3cutil.ValidateURL(toURLParsed); err != nil {
-		return Cfg{}, errors.New("invalid Traffic Ops URL from " + urlSourceStr + " '" + toURL + "': " + err.Error())
+		return Cfg{}, fmt.Errorf("invalid Traffic Ops URL from %s '%s': %w", urlSourceStr, toURL, err)
 	}
 
 	var cacheHostName string
@@ -206,7 +206,7 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	} else {
 		cacheHostName, err = os.Hostname()
 		if err != nil {
-			return Cfg{}, errors.New("could not get the OS hostname, please supply a hostname: " + err.Error())
+			return Cfg{}, fmt.Errorf("could not get the OS hostname, please supply a hostname: %w", err)
 		}
 	}
 
@@ -235,7 +235,7 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	}
 
 	if err := log.InitCfg(cfg); err != nil {
-		return Cfg{}, errors.New("initializing loggers: " + err.Error())
+		return Cfg{}, fmt.Errorf("initializing loggers: %w", err)
 	}
 
 	return cfg, nil

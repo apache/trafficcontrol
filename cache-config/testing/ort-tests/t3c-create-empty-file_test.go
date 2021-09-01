@@ -16,7 +16,7 @@ package orttest
 
 import (
 	"bytes"
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
@@ -87,7 +87,7 @@ func t3cUpdateCreateEmptyFile(host string, run_mode string) error {
 	cmd.Stderr = &errOut
 	err := cmd.Run()
 	if err != nil {
-		return errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+		return fmt.Errorf("%w: stdout: %s stderr: %s", err, out.String(), errOut.String())
 	}
 	return nil
 }

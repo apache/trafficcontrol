@@ -21,6 +21,7 @@ package t3cutil
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"strconv"
@@ -209,7 +210,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 		globalParams, reqInf, err := toClient.GetGlobalParameters(reqHdr)
 		log.Infoln(toreq.RequestInfoStr(reqInf, "GetGlobalParameters"))
 		if err != nil {
-			return nil, errors.New("getting global parameters: " + err.Error())
+			return nil, fmt.Errorf("getting global parameters: %w", err)
 		}
 		if reqInf.StatusCode == http.StatusNotModified {
 			log.Infof("Getting config: %v not modified, using old config", "Global Params")
@@ -267,7 +268,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			servers, reqInf, err := toClient.GetServers(reqHdr)
 			log.Infoln(toreq.RequestInfoStr(reqInf, "GetServers"))
 			if err != nil {
-				return errors.New("getting servers: " + err.Error())
+				return fmt.Errorf("getting servers: %w", err)
 			}
 			if reqInf.StatusCode == http.StatusNotModified {
 				log.Infof("Getting config: %v not modified, using old config", "Servers")
@@ -311,7 +312,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				keys, reqInf, err := toClient.GetCDNSSLKeys(tc.CDNName(server.CDN), reqHdr)
 				log.Infoln(toreq.RequestInfoStr(reqInf, "GetCDNSSLKeys("+server.CDN+")"))
 				if err != nil {
-					return errors.New("getting cdn '" + server.CDN + "': " + err.Error())
+					return fmt.Errorf("getting cdn '%s': %w", server.CDN, err)
 				}
 
 				if reqInf.StatusCode == http.StatusNotModified {
@@ -337,7 +338,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				dses, reqInf, err := toClient.GetCDNDeliveryServices(server.CDNID, reqHdr)
 				log.Infoln(toreq.RequestInfoStr(reqInf, "GetCDNDeliveryServices("+strconv.Itoa(server.CDNID)+")"))
 				if err != nil {
-					return errors.New("getting delivery services: " + err.Error())
+					return fmt.Errorf("getting delivery services: %w", err)
 				}
 
 				if reqInf.StatusCode == http.StatusNotModified {
@@ -374,7 +375,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					dss, reqInf, err := toClient.GetDeliveryServiceServers(nil, nil, server.CDN, reqHdr)
 					log.Infoln(toreq.RequestInfoStr(reqInf, "GetDeliveryServiceServers("+server.CDN+")"))
 					if err != nil {
-						return errors.New("getting delivery service servers: " + err.Error())
+						return fmt.Errorf("getting delivery service servers: %w", err)
 					}
 
 					if reqInf.StatusCode == http.StatusNotModified {
@@ -414,7 +415,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 							log.Errorln("Delivery service '" + ds.XMLID + "' is uri_signing, but keys not found! Skipping!")
 							continue
 						} else {
-							return errors.New("getting uri signing keys for ds '" + ds.XMLID + "': " + err.Error())
+							return fmt.Errorf("getting uri signing keys for ds '%s': %w", ds.XMLID, err)
 						}
 					}
 
@@ -456,7 +457,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 							log.Errorln("Delivery service '" + ds.XMLID + "' is url_sig, but keys not found! Skipping!: " + err.Error())
 							continue
 						} else {
-							return errors.New("getting url sig keys for ds '" + ds.XMLID + "': " + err.Error())
+							return fmt.Errorf("getting url sig keys for ds '%s': %w", ds.XMLID, err)
 						}
 					}
 
@@ -499,7 +500,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				params, reqInf, err := toClient.GetServerProfileParameters(string(profileName), reqHdr)
 				log.Infoln(toreq.RequestInfoStr(reqInf, "GetServerProfileParameters("+string(profileName)+")"))
 				if err != nil {
-					return errors.New("getting server profile '" + string(profileName) + "' parameters: " + err.Error())
+					return fmt.Errorf("getting server profile '%s' parameters: %w", profileName, err)
 				} else if len(params) == 0 {
 					return errors.New("getting server profile '" + string(profileName) + "' parameters: no parameters (profile not found?)")
 				}
@@ -532,7 +533,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				cdn, reqInf, err := toClient.GetCDN(tc.CDNName(server.CDN), reqHdr)
 				log.Infoln(toreq.RequestInfoStr(reqInf, "GetCDN("+server.CDN+")"))
 				if err != nil {
-					return errors.New("getting cdn '" + server.CDN + "': " + err.Error())
+					return fmt.Errorf("getting cdn '%s': %w", server.CDN, err)
 				}
 				if reqInf.StatusCode == http.StatusNotModified {
 					log.Infof("Getting config: %v not modified, using old config", "CDN")
@@ -556,7 +557,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				jobs, reqInf, err := toClient.GetJobs(reqHdr, server.CDN)
 				log.Infoln(toreq.RequestInfoStr(reqInf, "GetJobs("+server.CDN+")"))
 				if err != nil {
-					return errors.New("getting jobs: " + err.Error())
+					return fmt.Errorf("getting jobs: %w", err)
 				}
 				if reqInf.StatusCode == http.StatusNotModified {
 					log.Infof("Getting config: %v not modified, using old config", "Jobs")
@@ -588,7 +589,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			cacheGroups, reqInf, err := toClient.GetCacheGroups(reqHdr)
 			log.Infoln(toreq.RequestInfoStr(reqInf, "GetCacheGroups"))
 			if err != nil {
-				return errors.New("getting cachegroups: " + err.Error())
+				return fmt.Errorf("getting cachegroups: %w", err)
 			}
 			if reqInf.StatusCode == http.StatusNotModified {
 				log.Infof("Getting config: %v not modified, using old config", "CacheGroups")
@@ -613,7 +614,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			caps, reqInf, err := toClient.GetServerCapabilitiesByID(nil, reqHdr) // TODO change to not take a param; it doesn't use it to request TO anyway.
 			log.Infoln(toreq.RequestInfoStr(reqInf, "GetServerCapabilitiesByID"))
 			if err != nil {
-				return errors.New("getting server caps from Traffic Ops: " + err.Error())
+				return fmt.Errorf("getting server caps from Traffic Ops: %w", err)
 			} else {
 				if reqInf.StatusCode == http.StatusNotModified {
 					log.Infof("Getting config: %v not modified, using old config", "ServerCapabilities")
@@ -644,7 +645,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					log.Infof("This endpoint was removed in APIv5 %s", err.Error())
 					return nil
 				}
-				return errors.New("getting DS required capabilities: " + err.Error())
+				return fmt.Errorf("getting DS required capabilities: %w", err)
 			} else {
 				if reqInf.StatusCode == http.StatusNotModified {
 					log.Infof("Getting config: %v not modified, using old config", "DSRequiredCapabilities")
@@ -669,7 +670,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			dsr, reqInf, err := toClient.GetDeliveryServiceRegexes(reqHdr)
 			log.Infoln(toreq.RequestInfoStr(reqInf, "GetDeliveryServiceRegexes"))
 			if err != nil {
-				return errors.New("getting delivery service regexes: " + err.Error())
+				return fmt.Errorf("getting delivery service regexes: %w", err)
 			}
 			if reqInf.StatusCode == http.StatusNotModified {
 				log.Infof("Getting config: %v not modified, using old config", "DeliveryServiceRegexes")
@@ -694,7 +695,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			params, reqInf, err := toClient.GetConfigFileParameters("cachekey.config", reqHdr)
 			log.Infoln(toreq.RequestInfoStr(reqInf, "GetConfigFileParameters(cachekey.config)"))
 			if err != nil {
-				return errors.New("getting cache key parameters: " + err.Error())
+				return fmt.Errorf("getting cache key parameters: %w", err)
 			}
 			if reqInf.StatusCode == http.StatusNotModified {
 				log.Infof("Getting config: %v not modified, using old config", "CacheKeyParams")
@@ -719,7 +720,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			params, reqInf, err := toClient.GetConfigFileParameters("remap.config", reqHdr)
 			log.Infoln(toreq.RequestInfoStr(reqInf, "GetConfigFileParameters(remap.config)"))
 			if err != nil {
-				return errors.New("getting cache key parameters: " + err.Error())
+				return fmt.Errorf("getting cache key parameters: %w", err)
 			}
 			if reqInf.StatusCode == http.StatusNotModified {
 				log.Infof("Getting config: %v not modified, using old config", "RemapConfigParams")
@@ -744,7 +745,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			parentConfigParams, reqInf, err := toClient.GetConfigFileParameters("parent.config", reqHdr) // TODO make const in lib/go-atscfg
 			log.Infoln(toreq.RequestInfoStr(reqInf, "GetConfigFileParameters(parent.config)"))
 			if err != nil {
-				return errors.New("getting parent.config parameters: " + err.Error())
+				return fmt.Errorf("getting parent.config parameters: %w", err)
 			}
 			if reqInf.StatusCode == http.StatusNotModified {
 				log.Infof("Getting config: %v not modified, using old config", "ParentConfigParams")
@@ -769,7 +770,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			topologies, reqInf, err := toClient.GetTopologies(reqHdr)
 			log.Infoln(toreq.RequestInfoStr(reqInf, "GetTopologies"))
 			if err != nil {
-				return errors.New("getting topologies: " + err.Error())
+				return fmt.Errorf("getting topologies: %w", err)
 			}
 			if reqInf.StatusCode == http.StatusNotModified {
 				log.Infof("Getting config: %v not modified, using old config", "Topologies")

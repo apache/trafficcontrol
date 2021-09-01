@@ -16,7 +16,6 @@ package orttest
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -94,7 +93,7 @@ func gitNumCommits(dir string) (int, error) {
 	cmd.Dir = dir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return 0, fmt.Errorf("git error: in dir '%s' returned err %v msg '%s'", dir, err, string(output))
+		return 0, fmt.Errorf("git error: in dir '%s' returned err %w msg '%s'", dir, err, string(output))
 	}
 	numChanges, err := strconv.Atoi(strings.TrimSpace(string(output)))
 	if err != nil {
@@ -108,7 +107,7 @@ func gitShow(n int, dir string) (string, error) {
 	cmd.Dir = dir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("git error: in dir '%s' returned err %v msg '%s'", dir, err, string(output))
+		return "", fmt.Errorf("git error: in dir '%s' returned err %w msg '%s'", dir, err, string(output))
 	}
 	return strings.TrimSpace(string(output)), nil
 }
@@ -118,7 +117,7 @@ func gitLogOneline(dir string) (string, error) {
 	cmd.Dir = dir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("git error: in dir '%s' returned err %v msg '%s'", dir, err, string(output))
+		return "", fmt.Errorf("git error: in dir '%s' returned err %w msg '%s'", dir, err, string(output))
 	}
 	return strings.TrimSpace(string(output)), nil
 }
@@ -146,7 +145,7 @@ func t3cUpdateGit(host string, run_mode string) error {
 	cmd.Stderr = &errOut
 	err := cmd.Run()
 	if err != nil {
-		return errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+		return fmt.Errorf("%w: stdout: %s stderr: %s", err, out.String(), errOut.String())
 	}
 	return nil
 }

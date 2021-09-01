@@ -20,7 +20,7 @@ package tmagent
  */
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -153,7 +153,7 @@ func (pi *ParentInfo) GetCacheStatuses() (tc.CRStates, error) {
 
 	tmHostName, err := pi.findATrafficMonitor()
 	if err != nil {
-		return tc.CRStates{}, errors.New("monitor=finding a trafficmonitor: " + err.Error())
+		return tc.CRStates{}, fmt.Errorf("monitor=finding a trafficmonitor: %w", err)
 	}
 	tmc := tmclient.New("http://"+tmHostName, cfg.TORequestTimeout)
 

@@ -24,6 +24,7 @@ package sar
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"sync"
@@ -54,7 +55,7 @@ func MultiSAR(log llog.Log, hosts []HostPort, timeout time.Duration) ([]SARResul
 
 	localAddrStr, err := GetLocalAddr()
 	if err != nil {
-		return nil, errors.New("getting local address: " + err.Error())
+		return nil, fmt.Errorf("getting local address: %w", err)
 	}
 
 	localAddr := net.ParseIP(localAddrStr)
@@ -67,7 +68,7 @@ func MultiSAR(log llog.Log, hosts []HostPort, timeout time.Duration) ([]SARResul
 
 	ephemeralPortHolder, err := GetAndHoldEphemeralPort(localAddrStr)
 	if err != nil {
-		return nil, errors.New("failed to listen on ephemeral port: " + err.Error())
+		return nil, fmt.Errorf("failed to listen on ephemeral port: %w", err)
 	}
 	defer ephemeralPortHolder.Close()
 
@@ -109,7 +110,7 @@ func MultiSAR(log llog.Log, hosts []HostPort, timeout time.Duration) ([]SARResul
 			// host isn't an IP, assume FQDN
 			addrs, err := net.LookupHost(host.Host)
 			if err != nil {
-				results = append(results, makeHostErrResult(errors.New("lookup up host '"+host.Host+"': "+err.Error())))
+				results = append(results, makeHostErrResult(fmt.Errorf("lookup up host '%s': %w", host.Host, err)))
 				continue
 			}
 			if len(addrs) == 0 {
@@ -145,7 +146,7 @@ func MultiSAR(log llog.Log, hosts []HostPort, timeout time.Duration) ([]SARResul
 		}
 		hdrBts, err := TCPHdrFromNative(native)
 		if err != nil {
-			return nil, errors.New("converting native header to byte: " + err.Error())
+			return nil, fmt.Errorf("converting native header to byte: %w", err)
 		}
 		hdrBts.SetChecksum(MakeTCPChecksum(hdrBts, localAddr, remoteAddr))
 		packets = append(packets, HostPortPacket{HostPort: host, TCPHdr: hdrBts})
@@ -184,7 +185,7 @@ func MultiSAR(log llog.Log, hosts []HostPort, timeout time.Duration) ([]SARResul
 	for _, packet := range packets {
 		sendTime, err := SendPacket(packet.TCPHdr, packet.HostPort.Host)
 		if err != nil {
-			return nil, errors.New("sending packet: " + err.Error())
+			return nil, fmt.Errorf("sending packet: %w", err)
 		}
 		sendTimes[packet.HostPort] = sendTime
 	}
@@ -195,7 +196,7 @@ func MultiSAR(log llog.Log, hosts []HostPort, timeout time.Duration) ([]SARResul
 	wg.Wait()                 // wait for the listener to return and set sarListenerResp and sarListenerErr
 
 	if sarListenerErr != nil {
-		return nil, errors.New("listening for ACKs: " + sarListenerErr.Error())
+		return nil, fmt.Errorf("listening for ACKs: %w", sarListenerErr)
 	}
 
 	for _, listenResp := range sarListenerResp {
@@ -240,7 +241,7 @@ func sarListener(log llog.Log, localAddrStr string, localAddrIP net.IP, remoteAr
 
 	localAddr, err := net.ResolveIPAddr("ip4", localAddrStr)
 	if err != nil {
-		return nil, errors.New("resolving local address: " + err.Error())
+		return nil, fmt.Errorf("resolving local address: %w", err)
 	}
 
 	// remotes is used to quickly, progressively match multiple requests
@@ -256,7 +257,7 @@ func sarListener(log llog.Log, localAddrStr string, localAddrIP net.IP, remoteAr
 	// TODO should this ListenPacket, to let Go automatically choose the port for us?
 	conn, err := net.ListenIP("ip4:tcp", localAddr)
 	if err != nil {
-		return nil, errors.New("listening for syn-ack response: " + err.Error())
+		return nil, fmt.Errorf("listening for syn-ack response: %w", err)
 	}
 	defer conn.Close()
 
@@ -279,7 +280,7 @@ func sarListener(log llog.Log, localAddrStr string, localAddrIP net.IP, remoteAr
 			// If we wanted to set the timeout for each individual packet read,
 			// we could call conn.SetDeadline inside the for-loop immediately before each conn.ReadFrom call.
 			if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
-				return nil, errors.New("setting deadline timeout to listen for syn-ack response: " + err.Error())
+				return nil, fmt.Errorf("setting deadline timeout to listen for syn-ack response: %w", err)
 			}
 		default:
 		}
@@ -302,7 +303,7 @@ func sarListener(log llog.Log, localAddrStr string, localAddrIP net.IP, remoteAr
 			}
 
 			// wasn't a read deadline error, some other kind of error
-			return nil, errors.New("reading response: " + err.Error())
+			return nil, fmt.Errorf("reading response: %w", err)
 		}
 		if numBts < 14 { // 14 because the last data we need to look at, the flags, are at index 13
 			// log.Warnf("receiveSAR got malformed packet, too short")
