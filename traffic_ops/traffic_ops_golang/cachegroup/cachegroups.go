@@ -707,7 +707,7 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 
 	err = cg.updateCoordinate()
 	if err != nil {
-		if err == errors.New("cachegroup name already exists, please choose a different name") {
+		if errors.Is(err, errors.New("cachegroup name already exists, please choose a different name")) {
 			return nil, err, tc.DBError, http.StatusBadRequest
 		}
 		return nil, nil, tc.DBError, http.StatusInternalServerError
