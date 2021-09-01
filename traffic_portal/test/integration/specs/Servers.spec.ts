@@ -27,7 +27,7 @@ const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const serversPage = new ServersPage();
 
-describe('Setup API call for Servers Test', () =>{
+describe('Setup API call for Servers Test', () => {
     it('Setup', async () => {
         await api.UseAPI(servers.setup);
     });
@@ -35,7 +35,7 @@ describe('Setup API call for Servers Test', () =>{
 
 servers.tests.forEach(async serversData => {
     serversData.logins.forEach(login => {
-        describe(`Traffic Portal - Servers - ${login.description}`, () =>{
+        describe(`Traffic Portal - Servers - ${login.description}`, () => {
             afterEach(async function () {
                 await serversPage.OpenServerPage();
             });
@@ -48,49 +48,38 @@ servers.tests.forEach(async serversData => {
                 expect(await loginPage.CheckUserName(login)).toBe(true);
                 await serversPage.OpenConfigureMenu();
             });
-
-            it('can perform toggle test suits', async () => {
-                serversData.toggle.forEach(toggle => {
-                    it(toggle.description, async () => {
-                        if(toggle.description.includes('hide')){
-                            expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(true);
-                        }else{
-                            expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(true);
-                        } 
-                    });
-                })
-            })
-            it('can perform add test suits', async () => {
-                serversData.add.forEach(add => {
-                    it(add.description, async () => {
-                        expect(await serversPage.CreateServer(add)).toBe(true);
-                    });
+            serversData.toggle.forEach(toggle => {
+                it(toggle.description, async () => {
+                    if (toggle.description.includes('hide')) {
+                        expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                    } else {
+                        expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                    }
                 });
             })
-            it('can perform update test suits', async () => {
-                serversData.update.forEach(update => {
-                    it(update.description, async () => {
-                        await serversPage.SearchServer(update.Name);
-                        expect(await serversPage.UpdateServer(update)).toBe(true);
-                    });
+            serversData.add.forEach(add => {
+                it(add.description, async () => {
+                    expect(await serversPage.CreateServer(add)).toBe(true);
                 });
-            })
-            it('can perform remove test suits', async () => {
-                serversData.remove.forEach(remove => {
-                    it(remove.description, async () => {
-                        await serversPage.SearchServer(remove.Name);
-                        expect(await serversPage.DeleteServer(remove)).toBe(true);
-                    });
+            });
+            serversData.update.forEach(update => {
+                it(update.description, async () => {
+                    await serversPage.SearchServer(update.Name);
+                    expect(await serversPage.UpdateServer(update)).toBe(true);
                 });
-            }) 
+            });
+            serversData.remove.forEach(remove => {
+                it(remove.description, async () => {
+                    await serversPage.SearchServer(remove.Name);
+                    expect(await serversPage.DeleteServer(remove)).toBe(true);
+                });
+            });
         })
     })
 })
 
 describe('API Clean Up for Servers Test', () => {
-    afterAll(async function () {
-        it('Cleanup', async () => {
-            await api.UseAPI(servers.cleanup);
-        });
-    })
+    it('Cleanup', async () => {
+        await api.UseAPI(servers.cleanup);
+    });
 });
