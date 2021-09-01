@@ -681,7 +681,7 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 		return nil, fmt.Errorf("no cachegroup with id %d found", *cg.ID), nil, http.StatusNotFound
 	}
 	if err != nil {
-		return nil, nil, tc.DBError, http.StatusInternalServerError
+		return nil, nil, nil, http.StatusInternalServerError
 	}
 
 	// If partial coordinate information is given or the coordinate information is wholly
@@ -698,7 +698,7 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 	//
 	if cg.Latitude == nil || cg.Longitude == nil {
 		if err = cg.deleteCoordinate(*coordinateID); err != nil {
-			return nil, nil, tc.DBError, http.StatusInternalServerError
+			return nil, nil, nil, http.StatusInternalServerError
 		}
 		cg.Latitude = nil
 		cg.Longitude = nil
@@ -708,9 +708,9 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 	err = cg.updateCoordinate()
 	if err != nil {
 		if errors.Is(err, errors.New("cachegroup name already exists, please choose a different name")) {
-			return nil, err, tc.DBError, http.StatusBadRequest
+			return nil, err, err, http.StatusBadRequest
 		}
-		return nil, nil, tc.DBError, http.StatusInternalServerError
+		return nil, nil, nil, http.StatusInternalServerError
 	}
 	return coordinateID, nil, nil, http.StatusOK
 }
