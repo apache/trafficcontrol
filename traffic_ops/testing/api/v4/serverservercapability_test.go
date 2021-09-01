@@ -673,7 +673,6 @@ func GetTestPaginationSupportSsc(t *testing.T) {
 }
 
 func DeleteTestServerServerCapabilityWithInvalidData(t *testing.T) {
-
 	// Get Server server Capabilities to delete them
 	sscs, _, err := TOSession.GetServerServerCapabilities(client.RequestOptions{})
 	if err != nil {
@@ -693,18 +692,5 @@ func DeleteTestServerServerCapabilityWithInvalidData(t *testing.T) {
 	alerts, _, err = TOSession.DeleteServerServerCapability(*sscs.Response[0].ServerID, "", client.RequestOptions{})
 	if err == nil {
 		t.Fatalf("Expected missing key: serverCapability, actual: %v - alerts: %+v", err, alerts.Alerts)
-	}
-
-	//Missing Server ID
-	var nullvalue int
-	alerts, _, err = TOSession.DeleteServerServerCapability(nullvalue, *sscs.Response[0].ServerCapability, client.RequestOptions{})
-	if err == nil {
-		t.Fatalf("Expected missing key: serverId, actual: %v - alerts: %+v", err, alerts.Alerts)
-	}
-
-	//Delete Server Capability with No Parameters
-	alerts, _, err = TOSession.DeleteServerServerCapability(nullvalue, "", client.RequestOptions{})
-	if err == nil {
-		t.Fatalf("Expected no server server_capability with that key found, actual: %v - alerts: %+v", err, alerts.Alerts)
 	}
 }

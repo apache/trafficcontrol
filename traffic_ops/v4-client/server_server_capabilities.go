@@ -39,9 +39,7 @@ func (to *Session) DeleteServerServerCapability(serverID int, serverCapability s
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
-	if serverID != 0 {
-		opts.QueryParameters.Set("serverId", strconv.Itoa(serverID))
-	}
+	opts.QueryParameters.Set("serverId", strconv.Itoa(serverID))
 	opts.QueryParameters.Set("serverCapability", serverCapability)
 	var alerts tc.Alerts
 	reqInf, err := to.del(apiServerServerCapabilities, opts, &alerts)
