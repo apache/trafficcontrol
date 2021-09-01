@@ -423,7 +423,7 @@ func (cg *TOCacheGroup) updateCoordinate() error {
 		}
 		rowsAffected, _ := result.RowsAffected()
 		if rowsAffected > 0 {
-			return errors.New("cachegroup name already exist, please choose a different name")
+			return errors.New("cachegroup name already exists, please choose a different name")
 		}
 		q = `UPDATE coordinate SET name = $1, latitude = $2, longitude = $3 WHERE id = (SELECT coordinate FROM cachegroup WHERE id = $4)`
 		result, err = cg.ReqInfo.Tx.Tx.Exec(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude, *cg.ID)
@@ -699,7 +699,7 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 
 	err = cg.updateCoordinate()
 	if err != nil {
-		if err == errors.New("cachegroup name already exist, please choose a different name") {
+		if err == errors.New("cachegroup name already exists, please choose a different name") {
 			return nil, err, tc.DBError, http.StatusBadRequest
 		}
 		return nil, nil, tc.DBError, http.StatusInternalServerError
