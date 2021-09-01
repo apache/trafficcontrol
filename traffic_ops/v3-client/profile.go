@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -127,7 +128,11 @@ func (to *Session) GetProfileByName(name string) ([]tc.Profile, toclientlib.ReqI
 }
 
 func (to *Session) GetProfileByParameterWithHdr(param string, header http.Header) ([]tc.Profile, toclientlib.ReqInf, error) {
-	URI := fmt.Sprintf("%s?param=%s", APIProfiles, param)
+	paramId, err := strconv.Atoi(url.QueryEscape(param))
+	if err != nil {
+		return nil, toclientlib.ReqInf{}, fmt.Errorf("error in converting integer to string %w", err)
+	}
+	URI := fmt.Sprintf("%s?param=%d", APIProfiles, paramId)
 	var data tc.ProfilesResponse
 	reqInf, err := to.get(URI, header, &data)
 	return data.Response, reqInf, err
