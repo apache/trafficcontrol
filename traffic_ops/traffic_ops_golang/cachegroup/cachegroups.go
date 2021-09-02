@@ -424,6 +424,14 @@ WHERE id NOT IN (
 )
 AND name = $2`
 
+type userError string
+
+func (e userError) Error() string {
+	return string(e)
+}
+
+const duplicateExist userError = "cachegroup name already exists, please choose a different name"
+
 func (cg *TOCacheGroup) updateCoordinate() error {
 	if cg.Latitude != nil && cg.Longitude != nil {
 		var count uint
@@ -431,7 +439,7 @@ func (cg *TOCacheGroup) updateCoordinate() error {
 			return fmt.Errorf("getting coordinate for Cache Group '%s': %w", *cg.Name, err)
 		}
 		if count > 0 {
-			return errors.New("cachegroup name already exists, please choose a different name")
+			return duplicateExist
 		}
 		q := `UPDATE coordinate SET name = $1, latitude = $2, longitude = $3 WHERE id = (SELECT coordinate FROM cachegroup WHERE id = $4)`
 		result, err := cg.ReqInfo.Tx.Tx.Exec(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude, *cg.ID)
@@ -681,7 +689,7 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 		return nil, fmt.Errorf("no cachegroup with id %d found", *cg.ID), nil, http.StatusNotFound
 	}
 	if err != nil {
-		return nil, nil, nil, http.StatusInternalServerError
+		return nil, nil, err, http.StatusInternalServerError
 	}
 
 	// If partial coordinate information is given or the coordinate information is wholly
@@ -698,7 +706,7 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 	//
 	if cg.Latitude == nil || cg.Longitude == nil {
 		if err = cg.deleteCoordinate(*coordinateID); err != nil {
-			return nil, nil, nil, http.StatusInternalServerError
+			return nil, nil, err, http.StatusInternalServerError
 		}
 		cg.Latitude = nil
 		cg.Longitude = nil
@@ -707,10 +715,10 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 
 	err = cg.updateCoordinate()
 	if err != nil {
-		if errors.Is(err, errors.New("cachegroup name already exists, please choose a different name")) {
+		if errors.Is(err, duplicateExist) {
 			return nil, err, err, http.StatusBadRequest
 		}
-		return nil, nil, nil, http.StatusInternalServerError
+		return nil, err, err, http.StatusInternalServerError
 	}
 	return coordinateID, nil, nil, http.StatusOK
 }
@@ -720,7 +728,6 @@ func (cg *TOCacheGroup) getCoordinateID() (*int, error) {
 
 	var coordinateID *int
 	if err := cg.ReqInfo.Tx.Tx.QueryRow(q, *cg.ID).Scan(&coordinateID); err != nil {
-
 		return nil, err
 	}
 
