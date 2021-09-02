@@ -49,5 +49,6 @@ Once everything is installed, you will need to configure the servers to talk to 
 	traffic_router.rst
 	traffic_stats.rst
 	traffic_server.rst
+	t3c/index.rst
 	traffic_vault.rst
 	quick_howto/index.rst
