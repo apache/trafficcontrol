@@ -102,7 +102,7 @@ func (m *SimpleOrderedMapUInt64Node) Insert(key uint64, val *ATSConsistentHashNo
 
 func (m *SimpleOrderedMapUInt64Node) InsertBulk(keys []uint64, vals []*ATSConsistentHashNode) error {
 	if len(keys) != len(vals) {
-		return fmt.Errorf("SimpleOrderedMapUInt64Node InsertBulk failed - len(keys) != len(vals)")
+		return fmt.Errorf("failure in SimpleOrderedMapUInt64Node InsertBulk - len(keys) != len(vals)")
 	}
 
 	for i := 0; i < len(keys); i++ {

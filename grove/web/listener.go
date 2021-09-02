@@ -17,6 +17,7 @@ package web
 import (
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"time"
@@ -158,7 +159,7 @@ func (c *InterceptConn) SetDSCP(dscp int) error {
 		return nil
 	}
 	if c == nil {
-		return errors.New("Conn is nil")
+		return errors.New("conn is nil")
 	}
 	realConn := c.Real()
 	if realConn == nil {
@@ -167,17 +168,18 @@ func (c *InterceptConn) SetDSCP(dscp int) error {
 	ipv4Err := ipv4.NewConn(realConn).SetTOS(dscp)
 	ipv6Err := ipv6.NewConn(realConn).SetTrafficClass(dscp)
 	if ipv4Err != nil || ipv6Err != nil {
-		errStr := ""
+		var err error
 		if ipv4Err != nil {
-			errStr = "setting IPv4 TOS: " + ipv4Err.Error()
+			err = fmt.Errorf("setting IPv4 TOS: %w", ipv4Err)
 		}
 		if ipv6Err != nil {
 			if ipv4Err != nil {
-				errStr += "; "
+				err = fmt.Errorf("%v; setting IPv6 TrafficClass: %w", err, ipv6Err)
+			} else {
+				err = fmt.Errorf("setting IPv6 TrafficClass: %w", ipv6Err)
 			}
-			errStr += "setting IPv6 TrafficClass: " + ipv6Err.Error()
 		}
-		return errors.New(errStr)
+		return err
 	}
 	return nil
 }

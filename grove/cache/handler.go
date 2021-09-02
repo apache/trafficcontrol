@@ -15,6 +15,7 @@ package cache
 */
 
 import (
+	"errors"
 	"net/http"
 	"os"
 	"strconv"
@@ -203,14 +204,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	responder := NewResponder(w, pluginCfg, pluginContext, srvrData, reqData, h.plugins, h.stats, reqID)
 
 	if err != nil {
-		switch err {
-		case remap.ErrRuleNotFound:
+		if errors.Is(err, remap.ErrRuleNotFound) {
 			log.Debugf("rule not found for %v (reqid %v)\n", r.RequestURI, reqID)
 			*responder.ResponseCode = http.StatusNotFound
-		case remap.ErrIPNotAllowed:
+		} else if errors.Is(err, remap.ErrIPNotAllowed) {
 			log.Debugf("IP %v not allowed (reqid %v)\n", r.RemoteAddr, reqID)
 			*responder.ResponseCode = http.StatusForbidden
-		default:
+		} else {
 			log.Debugf("request error: %v (reqid %v)\n", err, reqID)
 		}
 		responder.OriginConnectFailed = true

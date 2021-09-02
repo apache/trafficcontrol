@@ -16,6 +16,7 @@ package web
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -116,7 +117,7 @@ func Request(transport *http.Transport, r *http.Request) (int, http.Header, []by
 	resp, err := transport.RoundTrip(rr)
 	respTime := time.Now()
 	if err != nil {
-		return 0, nil, nil, reqTime, respTime, errors.New("request error: " + err.Error())
+		return 0, nil, nil, reqTime, respTime, fmt.Errorf("request error: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -124,7 +125,7 @@ func Request(transport *http.Transport, r *http.Request) (int, http.Header, []by
 	// TODO determine if respTime should go here
 
 	if err != nil {
-		return 0, nil, nil, reqTime, respTime, errors.New("reading response body: " + err.Error())
+		return 0, nil, nil, reqTime, respTime, fmt.Errorf("reading response body: %w", err)
 	}
 
 	return resp.StatusCode, resp.Header, body, reqTime, respTime, nil

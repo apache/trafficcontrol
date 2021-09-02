@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"sync/atomic"
 	"time"
 
@@ -41,17 +42,17 @@ const BucketName = "b"
 func New(path string, cacheSizeBytes uint64) (*DiskCache, error) {
 	db, err := bolt.Open(path, 0600, &bolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
-		return nil, errors.New("opening database '" + path + "': " + err.Error())
+		return nil, fmt.Errorf("opening database '%s': %w", path, err)
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
 		if _, err := tx.CreateBucketIfNotExists([]byte(BucketName)); err != nil {
-			return errors.New("creating bucket: " + err.Error())
+			return fmt.Errorf("creating bucket: %w", err)
 		}
 		return nil
 	})
 	if err != nil {
-		return nil, errors.New("creating bucket for database '" + path + "': " + err.Error())
+		return nil, fmt.Errorf("creating bucket for database '%s': %w", path, err)
 	}
 
 	return &DiskCache{db: db, maxSizeBytes: cacheSizeBytes, lru: lru.NewLRU(), sizeBytes: 0}, nil

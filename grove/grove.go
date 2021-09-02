@@ -365,15 +365,15 @@ func loadCerts(rules []remapdata.RemapRule) ([]tls.Certificate, error) {
 			continue
 		}
 		if rule.CertificateFile == "" {
-			return nil, errors.New("rule " + rule.Name + " has a certificate but no key, using default certificate\n")
+			return nil, errors.New("rule " + rule.Name + " has a certificate but no key, using default certificate")
 		}
 		if rule.CertificateKeyFile == "" {
-			return nil, errors.New("rule " + rule.Name + " has a key but no certificate, using default certificate\n")
+			return nil, errors.New("rule " + rule.Name + " has a key but no certificate, using default certificate")
 		}
 
 		cert, err := tls.LoadX509KeyPair(rule.CertificateFile, rule.CertificateKeyFile)
 		if err != nil {
-			return nil, errors.New("loading rule " + rule.Name + " certificate: " + err.Error() + "\n")
+			return nil, fmt.Errorf("loading rule %s certificate: %w", rule.Name, err)
 		}
 		certs = append(certs, cert)
 	}
@@ -388,7 +388,7 @@ func createCaches(nameFiles map[string][]config.CacheFile, nameMemBytes uint64, 
 	for name, files := range nameFiles {
 		multiDiskCache, err := diskcache.NewMulti(files)
 		if err != nil {
-			return nil, errors.New("creating cache '" + name + "': " + err.Error())
+			return nil, fmt.Errorf("creating cache '%s': %w", name, err)
 		}
 		caches[name] = tiercache.New(memcache.New(nameMemBytes), multiDiskCache)
 	}

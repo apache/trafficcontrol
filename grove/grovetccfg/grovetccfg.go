@@ -71,7 +71,7 @@ func AvailableStatuses() map[string]struct{} {
 func GetRemapPath() (string, error) {
 	cfg, err := config.LoadConfig(GroveConfigPath)
 	if err != nil {
-		return "", errors.New("loading Grove config file: " + err.Error())
+		return "", fmt.Errorf("loading Grove config file: %w", err)
 	}
 	return cfg.RemapRulesFile, nil
 }
@@ -80,25 +80,25 @@ func GetRemapPath() (string, error) {
 func CopyAndGzipFile(src, dst string) error {
 	srcF, err := os.Open(src)
 	if err != nil {
-		return errors.New("opening source file: " + err.Error())
+		return fmt.Errorf("opening source file: %w", err)
 	}
 	defer srcF.Close()
 	dstF, err := os.Create(dst)
 	if err != nil {
-		return errors.New("creating destination file: " + err.Error())
+		return fmt.Errorf("creating destination file: %w", err)
 	}
 	defer dstF.Close()
 
 	dstFGzip := gzip.NewWriter(dstF)
 
 	if _, err = io.Copy(dstFGzip, srcF); err != nil {
-		return errors.New("copying source to destination: " + err.Error())
+		return fmt.Errorf("copying source to destination: %w", err)
 	}
 	if err := dstFGzip.Close(); err != nil {
-		return errors.New("closing destination gzip writer: " + err.Error())
+		return fmt.Errorf("closing destination gzip writer: %w", err)
 	}
 	if err := dstF.Sync(); err != nil {
-		return errors.New("flushing copy to destination: " + err.Error())
+		return fmt.Errorf("flushing copy to destination: %w", err)
 	}
 	return nil
 }
@@ -117,7 +117,7 @@ func BackupFile(path string, backupDirectory string) error {
 	os.MkdirAll(backupDir, os.ModePerm)
 
 	if err := CopyAndGzipFile(path, backupPath); err != nil {
-		return errors.New("backuping up remap file: " + err.Error())
+		return fmt.Errorf("backuping up remap file: %w", err)
 	}
 	return nil
 }
@@ -130,14 +130,14 @@ func WriteNewFile(path string, bts []byte) error {
 	newPath := NewFilename(path)
 	f, err := os.Create(newPath)
 	if err != nil {
-		return errors.New("creating file: " + err.Error())
+		return fmt.Errorf("creating file: %w", err)
 	}
 	defer f.Close()
 	if _, err := f.Write(bts); err != nil {
-		return errors.New("writing file: " + err.Error())
+		return fmt.Errorf("writing file: %w", err)
 	}
 	if err := f.Sync(); err != nil {
-		return errors.New("flushing file: " + err.Error())
+		return fmt.Errorf("flushing file: %w", err)
 	}
 	return nil
 }
@@ -145,13 +145,13 @@ func WriteNewFile(path string, bts []byte) error {
 // WriteAndBackup creates a backup of the existing file at the given path, then writes the given bytes to the path. The write is fail-safe on operating systems with atomic file rename (Linux is).
 func WriteAndBackup(path string, backupDirectory string, bts []byte) error {
 	if err := BackupFile(path, backupDirectory); err != nil {
-		return errors.New("backing up file: " + err.Error())
+		return fmt.Errorf("backing up file: %w", err)
 	}
 	if err := WriteNewFile(path, bts); err != nil {
-		return errors.New("writing new file: " + err.Error())
+		return fmt.Errorf("writing new file: %w", err)
 	}
 	if err := os.Rename(NewFilename(path), path); err != nil {
-		return errors.New("copying new file to real location: " + err.Error())
+		return fmt.Errorf("copying new file to real location: %w", err)
 	}
 	return nil
 }
@@ -160,9 +160,9 @@ func WriteAndBackup(path string, backupDirectory string, bts []byte) error {
 func hasUpdatePending(toc *to.Session, hostname string) (bool, bool, error) {
 	upd, _, err := toc.GetServerByHostName(hostname)
 	if err != nil {
-		return false, false, errors.New("getting update from Traffic Ops: " + err.Error())
+		return false, false, fmt.Errorf("getting update from Traffic Ops: %w", err)
 	} else if len(upd) != 1 {
-		return false, false, fmt.Errorf("Want exactly one server with hostname '%s', got %d", hostname, len(upd))
+		return false, false, fmt.Errorf("want exactly one server with hostname '%s', got %d", hostname, len(upd))
 	}
 	return upd[0].UpdPending, upd[0].RevalPending, nil
 }
@@ -171,16 +171,16 @@ func hasUpdatePending(toc *to.Session, hostname string) (bool, bool, error) {
 func clearUpdatePending(toc *to.Session, hostname string, revalPending bool) error {
 	srv, _, err := toc.GetServerByHostName(hostname)
 	if err != nil {
-		return fmt.Errorf("Failed to update reval_pending: %v", err)
+		return fmt.Errorf("failed to update reval_pending: %w", err)
 	} else if len(srv) != 1 {
-		return fmt.Errorf("Want exactly one server with hostname '%s', got '%d'", hostname, len(srv))
+		return fmt.Errorf("want exactly one server with hostname '%s', got '%d'", hostname, len(srv))
 	}
 
 	srv[0].RevalPending = revalPending
 	srv[0].UpdPending = false
 	alerts, _, err := toc.UpdateServerByID(srv[0].ID, srv[0])
 	if err != nil {
-		return fmt.Errorf("setting update pending on Traffic Ops: %v (Alerts: %+v)", err, alerts.Alerts)
+		return fmt.Errorf("setting update pending on Traffic Ops: %w (Alerts: %+v)", err, alerts.Alerts)
 	}
 	return nil
 }
@@ -535,7 +535,7 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map
 
 // 	allowedIPs, err := makeAllowIP(cacheCfg.AllowIP)
 // 	if err != nil {
-// 		return remap.RemapRules{}, fmt.Errorf("creating allowed IPs: %v", err)
+// 		return remap.RemapRules{}, fmt.Errorf("creating allowed IPs: %w", err)
 // 	}
 
 // 	cdnSSLKeys, err := toc.CDNSSLKeys(cacheCfg.CDN)
@@ -554,7 +554,7 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string, servers map
 // 		protocol := ds.Protocol
 // 		queryStringRule, err := getQueryStringRule(ds.QueryStringIgnore)
 // 		if err != nil {
-// 			return remap.RemapRules{}, fmt.Errorf("getting deliveryservice %v Query String Rule: %v", ds.XMLID, err)
+// 			return remap.RemapRules{}, fmt.Errorf("getting deliveryservice %v Query String Rule: %w", ds.XMLID, err)
 // 		}
 
 // 		protocolStrs := []ProtocolStr{}
@@ -846,7 +846,7 @@ func makeAllowIP(ips []string) ([]*net.IPNet, error) {
 		}
 		_, cidrnet, err := net.ParseCIDR(ip)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing CIDR '%s': %v", ip, err)
+			return nil, fmt.Errorf("error parsing CIDR '%s': %w", ip, err)
 		}
 		cidrs[i] = cidrnet
 	}
@@ -866,7 +866,7 @@ func createRulesOld(
 	rules := []remapdata.RemapRule{}
 	allowedIPs, err := getAllowIP(hostParams)
 	if err != nil {
-		return remap.RemapRules{}, fmt.Errorf("getting allowed IPs: %v", err)
+		return remap.RemapRules{}, fmt.Errorf("getting allowed IPs: %w", err)
 	}
 
 	weight := DefaultRuleWeight
@@ -878,7 +878,7 @@ func createRulesOld(
 		protocol := *ds.Protocol
 		queryStringRule, err := getQueryStringRule(ds.QStringIgnore)
 		if err != nil {
-			return remap.RemapRules{}, fmt.Errorf("getting deliveryservice %v Query String Rule: %v", ds.XMLID, err)
+			return remap.RemapRules{}, fmt.Errorf("getting deliveryservice %v Query String Rule: %w", ds.XMLID, err)
 		}
 
 		cdn, ok := cdns[*ds.CDNName]
@@ -917,7 +917,7 @@ func createRulesOld(
 
 		toClientHeaders, toOriginHeaders, err := makeModHdrs(ds.EdgeHeaderRewrite, ds.RemapText)
 		if err != nil {
-			return remap.RemapRules{}, errors.New("Making headers for delivery service '" + *ds.XMLID + "':" + err.Error())
+			return remap.RemapRules{}, fmt.Errorf("making headers for delivery service '%s': %w", *ds.XMLID, err)
 		}
 		dsRemap := ""
 		if ds.RemapText != nil {
@@ -984,7 +984,7 @@ func createRulesOld(
 					rule.Plugins["modify_parent_request_headers"] = toOriginHeaders
 					remapTextJSON, err := json.Marshal(dsRemap)
 					if err != nil {
-						return remap.RemapRules{}, fmt.Errorf("parsing deliveryservice '%v' remap text '%v' marshalling JSON: %v", *ds.XMLID, dsRemap, err)
+						return remap.RemapRules{}, fmt.Errorf("parsing deliveryservice '%v' remap text '%v' marshalling JSON: %w", *ds.XMLID, dsRemap, err)
 					}
 					rule.PluginsShared[web.RemapTextKey] = remapTextJSON
 				} else {
@@ -1020,7 +1020,7 @@ func createRulesOld(
 						rule.Plugins["modify_parent_request_headers"] = toOriginHeaders
 						remapTextJSON, err := json.Marshal(dsRemap)
 						if err != nil {
-							return remap.RemapRules{}, fmt.Errorf("parsing deliveryservice '%v' remap text '%v' marshalling JSON: %v", *ds.XMLID, dsRemap, err)
+							return remap.RemapRules{}, fmt.Errorf("parsing deliveryservice '%v' remap text '%v' marshalling JSON: %w", *ds.XMLID, dsRemap, err)
 						}
 						rule.PluginsShared[web.RemapTextKey] = remapTextJSON
 					}
@@ -1060,19 +1060,19 @@ func createCertificateFiles(cert tc.CDNSSLKeys, dir string) error {
 	certFileName := getCertFileName(cert, dir)
 	crt, err := base64.StdEncoding.DecodeString(cert.Certificate.Crt)
 	if err != nil {
-		return errors.New("base64decoding certificate file " + certFileName + ": " + err.Error())
+		return fmt.Errorf("base64decoding certificate file %s: %w", certFileName, err)
 	}
 	if err := ioutil.WriteFile(certFileName, crt, 0644); err != nil {
-		return errors.New("writing certificate file " + certFileName + ": " + err.Error())
+		return fmt.Errorf("writing certificate file %s: %w", certFileName, err)
 	}
 
 	keyFileName := getCertKeyFileName(cert, dir)
 	key, err := base64.StdEncoding.DecodeString(cert.Certificate.Key)
 	if err != nil {
-		return errors.New("base64decoding certificate key " + keyFileName + ": " + err.Error())
+		return fmt.Errorf("base64decoding certificate key %s: %w", keyFileName, err)
 	}
 	if err := ioutil.WriteFile(keyFileName, key, 0644); err != nil {
-		return errors.New("writing certificate key file " + keyFileName + ": " + err.Error())
+		return fmt.Errorf("writing certificate key file %s: %w", keyFileName, err)
 	}
 	return nil
 }
