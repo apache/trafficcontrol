@@ -109,11 +109,5 @@ func (b *backoff) BackoffDuration() time.Duration {
 
 	dur := time.Duration(durFloat)
 
-	if dur < b.Min {
-		return b.Min
-	}
-	if dur > b.Max {
-		return b.Max
-	}
 	return dur
 }
