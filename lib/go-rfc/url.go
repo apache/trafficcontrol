@@ -19,10 +19,12 @@ package rfc
  * under the License.
  */
 
-import "encoding/json"
-import "fmt"
-import "net/url"
-import "strconv"
+import (
+	"encoding/json"
+	"fmt"
+	"net/url"
+	"strconv"
+)
 
 // URL is an alias of net/url.URL that implements JSON encoding and decoding, as well as scanning
 // from database driver values.
@@ -36,11 +38,11 @@ func (u *URL) UnmarshalJSON(data []byte) error {
 	}
 	s, err := strconv.Unquote(string(data))
 	if err != nil {
-		return fmt.Errorf("JSON %s not quoted: %v", data, err)
+		return fmt.Errorf("url string in JSON %s not quoted: %w", data, err)
 	}
 	addr, err := url.Parse(s)
 	if err != nil {
-		return fmt.Errorf("Couldn't parse '%s' as a URL: %v", s, err)
+		return fmt.Errorf("couldn't parse '%s' as a URL: %w", s, err)
 	}
 	*u = URL{*addr}
 	return nil
@@ -72,6 +74,6 @@ func (u *URL) Scan(src interface{}) error {
 		}
 		return err
 	default:
-		return fmt.Errorf("Type %T cannot represent a URL!", src)
+		return fmt.Errorf("type %T cannot represent a URL", src)
 	}
 }
