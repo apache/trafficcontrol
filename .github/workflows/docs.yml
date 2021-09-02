@@ -48,7 +48,7 @@ jobs:
         uses: ./.github/actions/sphinx-action
         with:
           docs-folder: "docs/"
-          pre-build-command: "apt-get update -y && apt-get install -y pandoc"
+          pre-build-command: "apt-get install -y pandoc"
       - uses: actions/upload-artifact@v1
         with:
           name: HTMLDocumentation
