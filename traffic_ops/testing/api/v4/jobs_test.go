@@ -488,7 +488,7 @@ func GetTestJobsByValidData(t *testing.T) {
 	opts.QueryParameters.Set("name", "maxRevalDurationDays")
 	params, _, err := TOSession.GetParameters(opts)
 	if err != nil {
-		t.Fatalf("unexpected error getting maxRevalDurationDays parameter")
+		t.Fatalf("unexpected error getting maxRevalDurationDays parameter: %v", err)
 	}
 	if len(params.Response) != 1 {
 		t.Fatalf("expected 1 maxRevalDurationDays parameter, got %d", len(params.Response))

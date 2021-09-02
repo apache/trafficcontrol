@@ -48,7 +48,7 @@ Request Structure
 	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| keyword              | no       | Return only invalidation jobs that have this "keyword" - only "PURGE" should exist                                                                               |
 	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| maxRevalDurationDays | no       | Return only invalidation jobs with a start_time that is within the window defined by the ``maxRevalDurationDays`` :term:`Parameter` in :ref:`the-global-profile` |
+	| maxRevalDurationDays | no       | Return only invalidation jobs with a startTime that is within the window defined by the ``maxRevalDurationDays`` :term:`Parameter` in :ref:`the-global-profile`  |
 	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| userId               | no       | Return only invalidation jobs created by the user identified by this integral, unique identifier                                                                 |
 	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
