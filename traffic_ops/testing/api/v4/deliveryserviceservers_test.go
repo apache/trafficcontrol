@@ -38,6 +38,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 		TryToRemoveLastServerInDeliveryService(t)
 		AssignServersToNonTopologyBasedDeliveryServiceThatUsesMidTier(t)
 		GetTestDSSIMS(t)
+		GetTestDSServerByCDN(t)
 	})
 }
 
@@ -510,6 +511,90 @@ func CreateTestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
 				t.Fatalf("Unexpected error deleting a relationship between a Delivery Service and a Capability it requires: %v - alerts: %+v", err, alerts.Alerts)
 			}
 		})
+	}
+}
+
+func GetTestDSServerByCDN(t *testing.T) {
+	opts := client.NewRequestOptions()
+	cdns, _, err := TOSession.GetCDNs(opts)
+	if err != nil {
+		t.Fatalf("unexpected error getting CDNs: %v", err)
+	} else if len(cdns.Response) < 2 {
+		t.Fatalf("expected at least 2 CDNs but got %d instead", len(cdns.Response))
+	}
+	dses, _, err := TOSession.GetDeliveryServices(opts)
+	if err != nil {
+		t.Fatalf("unexpected error getting delivery services: %v", err)
+	}
+	cdnDSMap := make(map[int][]int)
+	dsCDNMap := make(map[int]int)
+	for _, ds := range dses.Response {
+		if ds.Topology != nil && *ds.Topology != "" {
+			continue
+		}
+		cdnDSMap[*ds.CDNID] = append(cdnDSMap[*ds.CDNID], *ds.ID)
+		dsCDNMap[*ds.ID] = *ds.CDNID
+	}
+	servers, _, err := TOSession.GetServers(opts)
+	if err != nil {
+		t.Fatalf("unexpected error getting servers: %v", err)
+	}
+	cdnServerMap := make(map[int][]int)
+	for _, server := range servers.Response {
+		if !strings.HasPrefix(server.Type, tc.EdgeTypePrefix) {
+			continue
+		}
+		cdnServerMap[*server.CDNID] = append(cdnServerMap[*server.CDNID], *server.ID)
+	}
+	emptyCDN := tc.CDN{}
+	cdn1 := tc.CDN{}
+	cdn2 := tc.CDN{}
+	for i, cdn := range cdns.Response {
+		if len(cdnDSMap[cdn.ID]) > 0 && len(cdnServerMap[cdn.ID]) > 0 {
+			if cdn1 == emptyCDN {
+				cdn1 = cdns.Response[i]
+			} else {
+				cdn2 = cdns.Response[i]
+				break
+			}
+		}
+	}
+	if cdn1 == emptyCDN || cdn2 == emptyCDN {
+		t.Fatalf("expected at least 2 CDNs with at least 1 non-topology-based deliveryservice and 1 edge each")
+	}
+	_, _, err = TOSession.CreateDeliveryServiceServers(cdnDSMap[cdn1.ID][0], []int{cdnServerMap[cdn1.ID][0]}, true, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("unexpected error creating delivery service servers: %v", err)
+	}
+	_, _, err = TOSession.CreateDeliveryServiceServers(cdnDSMap[cdn2.ID][0], []int{cdnServerMap[cdn2.ID][0]}, true, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("unexpected error creating delivery service servers: %v", err)
+	}
+
+	opts.QueryParameters.Set("cdn", cdn1.Name)
+	opts.QueryParameters.Set("limit", "999999999")
+	dss, _, err := TOSession.GetDeliveryServiceServers(opts)
+	if err != nil {
+		t.Fatalf("unexpected error getting delivery service servers by cdn: %v", err)
+	} else if len(dss.Response) < 1 {
+		t.Fatalf("getting delivery service servers - expected: at least 1, actual: %d", len(dss.Response))
+	}
+	for _, d := range dss.Response {
+		if dsCDNMap[*d.DeliveryService] != cdn1.ID {
+			t.Errorf("getting delivery service servers by cdn (%s) - found entry that did not match the given cdn", cdn1.Name)
+		}
+	}
+	opts.QueryParameters.Set("cdn", cdn2.Name)
+	dss, _, err = TOSession.GetDeliveryServiceServers(opts)
+	if err != nil {
+		t.Fatalf("unexpected error getting delivery service servers by cdn: %v", err)
+	} else if len(dss.Response) < 1 {
+		t.Fatalf("getting delivery service servers - expected: at least 1, actual: %d", len(dss.Response))
+	}
+	for _, d := range dss.Response {
+		if dsCDNMap[*d.DeliveryService] != cdn2.ID {
+			t.Errorf("getting delivery service servers by cdn (%s) - found entry that did not match the given cdn", cdn2.Name)
+		}
 	}
 }
 

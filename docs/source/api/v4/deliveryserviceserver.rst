@@ -34,11 +34,13 @@ Request Structure
 	+-----------+----------+-------------------+---------------------------------------------------------------------------------------------------------------------+
 	|    Name   | Required | Default           |                                                       Description                                                   |
 	+===========+==========+===================+=====================================================================================================================+
+	| cdn       | no       | None              | Limit the results to delivery service servers for the given CDN name                                                |
+	+-----------+----------+-------------------+---------------------------------------------------------------------------------------------------------------------+
 	| page      | no       | 0                 | The page number for use in pagination - ``0`` means "no pagination"                                                 |
 	+-----------+----------+-------------------+---------------------------------------------------------------------------------------------------------------------+
 	| limit     | no       | 20                | Limits the results to a maximum of this number - if pagination is used, this defines the number of results per page |
 	+-----------+----------+-------------------+---------------------------------------------------------------------------------------------------------------------+
-	| orderby   | no       | "deliveryservice" | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array |
+	| orderby   | no       | None              | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array |
 	+-----------+----------+-------------------+---------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
