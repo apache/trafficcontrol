@@ -45,6 +45,7 @@ FROM common-dependencies AS docs
 
 ADD docs/source/requirements.txt /docs.requirements.txt
 RUN	yum -y install \
+		pandoc \
 		python3 \
 		python3-pip \
 		make && \
