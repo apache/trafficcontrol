@@ -42,9 +42,20 @@ man: $(MANPAGES)
 
 rst: $(RST)
 
+%.rst: APP=$(subst /,,$(dir $@))
 .SECONDEXPANSION:
 %.rst: $$(dir %)/README.md
-	pandoc $(PANDOC_FLAGS) --to rst $? -o $@
+	echo ".. highlight:: text" > $@
+	echo "" >> $@
+	echo ".. program:: $(APP)" >> $@
+	echo "" >> $@
+	echo ".. _t3c-$(APP):" >> $@
+	echo "" >> $@
+	echo $(APP) | tr '[:alnum:]-' '*' >> $@
+	echo $(APP) >> $@
+	echo $(APP) | tr '[:alnum:]-' '*' >> $@
+	echo "" >> $@
+	pandoc $(PANDOC_FLAGS) --to rst $? >> $@
 
 
 clean:

@@ -26,3 +26,10 @@ These are provided in the RPM `trafficcontrol-cache-config`.
 To apply Traffic Control configuration and changes to caches, users will typically run `t3c` periodically via `cron` or some other system automation mechanism. See [t3c](./t3c/README.md).
 
 The `t3c` app is an ecosystem of apps that work together, similar to `git` and other Linux tools. The `t3c` app itself has commands to proxy the other apps, as well as a mode to generate and apply the entire configuration.
+
+## Documentation
+Each sub-command provides a README.md file. If your system has Pandoc and GNU
+`make` and `date` (UNIX `date` untested, might work - UNIX `make` definitely
+won't), they can also be transformed into Linux/UNIX "manual pages" using
+`make` (or explicitly `make man`) and reStructuredText documentation using
+`make rst`.
