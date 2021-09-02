@@ -29,6 +29,9 @@ import (
 //
 // This can be used, for example, to remove duplicates from multiple lists of strings, in order, using a shared map of seen strings.
 func RemoveStrDuplicates(inputStrings []string, seenStrings map[string]struct{}) ([]string, map[string]struct{}) {
+	if seenStrings == nil {
+		seenStrings = make(map[string]struct{})
+	}
 	uniqueStrings := []string{}
 	for _, str := range inputStrings {
 		if _, ok := seenStrings[str]; !ok {
