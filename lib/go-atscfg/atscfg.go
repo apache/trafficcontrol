@@ -334,14 +334,14 @@ nodeFor:
 		// TODO extra safety: check other parents, and warn if parents have different types?
 		parentI := serverNode.Parents[0]
 		if parentI >= len(topology.Nodes) {
-			return TopologyPlacement{}, errors.New("topology '" + topology.Name + "' has node with parent larger than nodes size! Config Generation will be malformed!")
+			return TopologyPlacement{}, errors.New("topology '" + topology.Name + "' has node with parent larger than nodes size - config generation will be malformed")
 		}
 		parentNode := topology.Nodes[parentI]
 		parentCG, ok := cacheGroups[tc.CacheGroupName(parentNode.Cachegroup)]
 		if !ok {
-			return TopologyPlacement{}, errors.New("topology '" + topology.Name + "' has node with cachegroup '" + parentNode.Cachegroup + "' that wasn't found in cachegroups! Config Generation will be malformed!")
+			return TopologyPlacement{}, errors.New("topology '" + topology.Name + "' has node with cachegroup '" + parentNode.Cachegroup + "' that wasn't found in cachegroups - config generation will be malformed")
 		} else if parentCG.Type == nil {
-			return TopologyPlacement{}, errors.New("ATS config generation: cachegroup '" + parentNode.Cachegroup + "' with nil type! Config Generation will be malformed!")
+			return TopologyPlacement{}, errors.New("cachegroup '" + parentNode.Cachegroup + "' with nil type - config generation will be malformed")
 		}
 		parentIsOrigin = *parentCG.Type == tc.CacheGroupOriginTypeName
 	}
@@ -411,7 +411,7 @@ func tcParamsToParamsWithProfiles(tcParams []tc.Parameter) ([]parameterWithProfi
 
 		profiles := []string{}
 		if err := json.Unmarshal(tcParam.Profiles, &profiles); err != nil {
-			return nil, errors.New("unmarshalling JSON from parameter '" + strconv.Itoa(param.ID) + "': " + err.Error())
+			return nil, fmt.Errorf("unmarshalling JSON from parameter '%d': %w", param.ID, err)
 		}
 		param.ProfileNames = profiles
 		param.Profiles = nil
@@ -675,7 +675,7 @@ func JobsToInvalidationJobs(oldJobs []tc.Job) ([]tc.InvalidationJob, error) {
 	for i, oldJob := range oldJobs {
 		jobs[i], err = JobToInvalidationJob(oldJob)
 		if err != nil {
-			return nil, errors.New("converting old tc.Job to tc.InvalidationJob: " + err.Error())
+			return nil, fmt.Errorf("converting old tc.Job to tc.InvalidationJob: %w", err)
 		}
 	}
 	return jobs, nil
@@ -684,7 +684,7 @@ func JobsToInvalidationJobs(oldJobs []tc.Job) ([]tc.InvalidationJob, error) {
 func JobToInvalidationJob(jb tc.Job) (tc.InvalidationJob, error) {
 	startTime := tc.Time{}
 	if err := json.Unmarshal([]byte(`"`+jb.StartTime+`"`), &startTime); err != nil {
-		return tc.InvalidationJob{}, errors.New("unmarshalling time: " + err.Error())
+		return tc.InvalidationJob{}, fmt.Errorf("unmarshalling time: %w", err)
 	}
 	return tc.InvalidationJob{
 		AssetURL:        util.StrPtr(jb.AssetURL),

@@ -51,7 +51,7 @@ func makeCacheDotConfigMid(
 		if ds.XMLID == nil || ds.Active == nil || ds.OrgServerFQDN == nil || ds.Type == nil {
 			// TODO orgserverfqdn is nil for some DSes - MSO? Verify.
 			continue
-			//			return "", fmt.Errorf("getting delivery services: got DS with nil values! '%v' %v %+v\n", *ds.XMLID, *ds.ID, ds)
+			//			return "", fmt.Errorf("getting delivery services: got DS with nil values '%s' %d %+v", *ds.XMLID, *ds.ID, ds)
 		}
 		if !ServerCacheDotConfigIncludeInactiveDSes && !*ds.Active {
 			continue
