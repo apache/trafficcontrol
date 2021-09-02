@@ -137,7 +137,7 @@ func (i *JSONNameOrIDStr) UnmarshalJSON(d []byte) error {
 			i.Name = &name
 			return nil
 		}
-		return errors.New("expected an integer value: " + err.Error())
+		return fmt.Errorf("expected an integer value: %w", err)
 	}
 	conv := int(di)
 	i.ID = &conv
