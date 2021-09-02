@@ -237,23 +237,23 @@ func GetLogWriters(cfg Config) (io.WriteCloser, io.WriteCloser, io.WriteCloser, 
 
 	eventW, err := GetLogWriter(eventLoc)
 	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log event writer %v: %v", eventLoc, err)
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log event writer %v: %w", eventLoc, err)
 	}
 	errW, err := GetLogWriter(errLoc)
 	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log error writer %v: %v", errLoc, err)
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log error writer %v: %w", errLoc, err)
 	}
 	warnW, err := GetLogWriter(warnLoc)
 	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log warning writer %v: %v", warnLoc, err)
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log warning writer %v: %w", warnLoc, err)
 	}
 	infoW, err := GetLogWriter(infoLoc)
 	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log info writer %v: %v", infoLoc, err)
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log info writer %v: %w", infoLoc, err)
 	}
 	debugW, err := GetLogWriter(debugLoc)
 	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("getting log debug writer %v: %v", debugLoc, err)
+		return nil, nil, nil, nil, nil, fmt.Errorf("getting log debug writer %v: %w", debugLoc, err)
 	}
 	return eventW, errW, warnW, infoW, debugW, nil
 }
