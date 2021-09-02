@@ -142,10 +142,10 @@ func (j *InvalidationJobInput) DSID(tx *sql.Tx) (uint, error) {
 	}
 
 	if j.DeliveryService == nil {
-		return 0, errors.New("Attempted to turn a nil DeliveryService into a DSID")
+		return 0, errors.New("attempted to turn a nil DeliveryService into a DSID")
 	}
 	if tx == nil {
-		return 0, errors.New("Attempted to turn a DeliveryService into a DSID with no DB connection")
+		return 0, errors.New("attempted to turn a DeliveryService into a DSID with no DB connection")
 	}
 
 	var ret uint
@@ -153,7 +153,7 @@ func (j *InvalidationJobInput) DSID(tx *sql.Tx) (uint, error) {
 	case float64:
 		v := (*j.DeliveryService).(float64)
 		if v < 0 {
-			return 0, errors.New("Delivery Service ID cannot be negative")
+			return 0, errors.New("delivery service ID cannot be negative")
 		}
 
 		u := uint(v)
@@ -161,9 +161,9 @@ func (j *InvalidationJobInput) DSID(tx *sql.Tx) (uint, error) {
 		row := tx.QueryRow(`SELECT EXISTS(SELECT * FROM deliveryservice WHERE id=$1)`, u)
 		if err := row.Scan(&exists); err != nil {
 			log.Errorf("Error checking for deliveryservice existence in DSID: %v\n", err)
-			return 0, errors.New("Unknown error occurred")
+			return 0, errors.New("unknown error occurred")
 		} else if !exists {
-			return 0, fmt.Errorf("No Delivery Service exists matching identifier: %v", *j.DeliveryService)
+			return 0, fmt.Errorf("no Delivery Service exists matching identifier: %v", *j.DeliveryService)
 		}
 
 		j.dsid = &u
@@ -173,16 +173,16 @@ func (j *InvalidationJobInput) DSID(tx *sql.Tx) (uint, error) {
 		row := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id=$1`, *j.DeliveryService)
 		if err := row.Scan(&ret); err != nil {
 			if err == sql.ErrNoRows {
-				return 0, fmt.Errorf("No DeliveryService exists matching identifier: %v", *j.DeliveryService)
+				return 0, fmt.Errorf("no DeliveryService exists matching identifier: %v", *j.DeliveryService)
 			}
-			return 0, errors.New("Unknown error occurred")
+			return 0, errors.New("unknown error occurred")
 		}
 		j.dsid = &ret
 		return ret, nil
 
 	default:
 		log.Errorf("unsupported DS key type: %T\n", t)
-		return 0, errors.New("Unknown error occurred")
+		return 0, errors.New("unknown error occurred")
 
 	}
 }
@@ -307,7 +307,7 @@ func (j *InvalidationJobInput) TTLHours() (uint, error) {
 		return uint((*j.ttl).Hours()), nil
 	}
 	if j.TTL == nil {
-		return 0, errors.New("Attempted to convert a nil TTL into hours")
+		return 0, errors.New("attempted to convert a nil TTL into hours")
 	}
 
 	var ret uint
@@ -315,10 +315,10 @@ func (j *InvalidationJobInput) TTLHours() (uint, error) {
 	case float64:
 		v := (*j.TTL).(float64)
 		if v < 0 {
-			return 0, errors.New("TTL cannot be negative!")
+			return 0, errors.New("ttl cannot be negative")
 		}
 		if v >= MaxTTL {
-			return 0, fmt.Errorf("TTL cannot exceed %d hours!", MaxTTL)
+			return 0, fmt.Errorf("ttl cannot exceed %d hours", MaxTTL)
 		}
 		ttl := time.Duration(int64(v * 3600000000000))
 		j.ttl = &ttl
@@ -327,14 +327,14 @@ func (j *InvalidationJobInput) TTLHours() (uint, error) {
 	case string:
 		d, err := time.ParseDuration((*j.TTL).(string))
 		if err != nil || d.Hours() < 1 {
-			return 0, fmt.Errorf("Invalid duration entered for TTL! Must be at least one hour, but no more than %d hours!", MaxTTL)
+			return 0, fmt.Errorf("invalid duration entered for TTL - must be at least one hour, but no more than %d hours", MaxTTL)
 		}
 		j.ttl = &d
 		ret = uint(d.Hours())
 
 	default:
 		log.Errorf("unsupported TTL key type: %T\n", t)
-		return 0, errors.New("Unknown error occurred")
+		return 0, errors.New("unknown error occurred")
 	}
 
 	return ret, nil

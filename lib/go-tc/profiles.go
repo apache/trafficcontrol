@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -190,7 +189,7 @@ func (profileImport *ProfileImportRequest) Validate(tx *sql.Tx) error {
 			log.Errorf("%v: %v", errString, err.Error())
 			errs = append(errs, errors.New(errString))
 		} else if ok {
-			errs = append(errs, fmt.Errorf("A profile with the name \"%v\" already exists", *profile.Name))
+			errs = append(errs, fmt.Errorf("a profile with the name \"%v\" already exists", *profile.Name))
 		}
 	}
 
@@ -201,7 +200,7 @@ func (profileImport *ProfileImportRequest) Validate(tx *sql.Tx) error {
 	for i, pp := range profileImport.Parameters {
 		if ppErrs := validateProfileParamPostFields(pp.ConfigFile, pp.Name, pp.Value, &secure); len(ppErrs) > 0 {
 			for _, err := range ppErrs {
-				errs = append(errs, errors.New("parameter "+strconv.Itoa(i)+": "+err.Error()))
+				errs = append(errs, fmt.Errorf("parameter %d: %w", i, err))
 			}
 		}
 	}
@@ -218,7 +217,7 @@ func (profileImport *ProfileImportRequest) Validate(tx *sql.Tx) error {
 func ProfilesExistByIDs(ids []int64, tx *sql.Tx) (bool, error) {
 	count := 0
 	if err := tx.QueryRow(`SELECT count(*) from profile where id = ANY($1)`, pq.Array(ids)).Scan(&count); err != nil {
-		return false, errors.New("querying profiles existence from id: " + err.Error())
+		return false, fmt.Errorf("querying profiles existence from id: %w", err)
 	}
 	return count == len(ids), nil
 }
@@ -228,7 +227,7 @@ func ProfilesExistByIDs(ids []int64, tx *sql.Tx) (bool, error) {
 func ProfileExistsByID(id int64, tx *sql.Tx) (bool, error) {
 	count := 0
 	if err := tx.QueryRow(`SELECT count(*) from profile where id = $1`, id).Scan(&count); err != nil {
-		return false, errors.New("querying profile existence from id: " + err.Error())
+		return false, fmt.Errorf("querying profile existence from id: %w", err)
 	}
 	return count > 0, nil
 }
@@ -238,7 +237,7 @@ func ProfileExistsByID(id int64, tx *sql.Tx) (bool, error) {
 func ProfileExistsByName(name string, tx *sql.Tx) (bool, error) {
 	count := 0
 	if err := tx.QueryRow(`SELECT count(*) from profile where name = $1`, name).Scan(&count); err != nil {
-		return false, errors.New("querying profile existence from name: " + err.Error())
+		return false, fmt.Errorf("querying profile existence from name: %w", err)
 	}
 	return count > 0, nil
 }

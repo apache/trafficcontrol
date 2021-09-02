@@ -225,7 +225,7 @@ func (lid *LegacyInterfaceDetails) ToInterfaces(ipv4IsService, ipv6IsService boo
 		if lid.IPNetmask != nil && *lid.IPNetmask != "" {
 			mask := net.ParseIP(*lid.IPNetmask).To4()
 			if mask == nil {
-				return nil, fmt.Errorf("Failed to parse netmask '%s'", *lid.IPNetmask)
+				return nil, fmt.Errorf("failed to parse netmask '%s'", *lid.IPNetmask)
 			}
 			cidr, _ := net.IPv4Mask(mask[0], mask[1], mask[2], mask[3]).Size()
 			ipStr = fmt.Sprintf("%s/%d", ipStr, cidr)
@@ -317,7 +317,7 @@ func (lid *LegacyInterfaceDetails) ToInterfacesV4(ipv4IsService, ipv6IsService b
 		if lid.IPNetmask != nil && *lid.IPNetmask != "" {
 			mask := net.ParseIP(*lid.IPNetmask).To4()
 			if mask == nil {
-				return nil, fmt.Errorf("Failed to parse netmask '%s'", *lid.IPNetmask)
+				return nil, fmt.Errorf("failed to parse netmask '%s'", *lid.IPNetmask)
 			}
 			cidr, _ := net.IPv4Mask(mask[0], mask[1], mask[2], mask[3]).Size()
 			ipStr = fmt.Sprintf("%s/%d", ipStr, cidr)
@@ -468,7 +468,7 @@ func V4InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfoV40
 			if err != nil {
 				parsedIp = net.ParseIP(address)
 				if parsedIp == nil {
-					return legacyDetails, fmt.Errorf("Failed to parse '%s' as network or CIDR string: %v", address, err)
+					return legacyDetails, fmt.Errorf("failed to parse '%s' as network or CIDR string: %w", address, err)
 				}
 			}
 
@@ -542,7 +542,7 @@ func InterfaceInfoToLegacyInterfaces(serverInterfaces []ServerInterfaceInfo) (Le
 			if err != nil {
 				parsedIp = net.ParseIP(address)
 				if parsedIp == nil {
-					return legacyDetails, fmt.Errorf("Failed to parse '%s' as network or CIDR string: %v", address, err)
+					return legacyDetails, fmt.Errorf("failed to parse '%s' as network or CIDR string: %w", address, err)
 				}
 			}
 

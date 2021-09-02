@@ -349,34 +349,34 @@ func (t *ResultStatVal) UnmarshalJSON(data []byte) error {
 // - or the Config mapping has no 'health.polling.interval' key.
 func (cfg *TrafficMonitorConfigMap) Valid() error {
 	if cfg == nil {
-		return errors.New("MonitorConfig is nil")
+		return errors.New("monitoring configuration is nil")
 	}
 	if len(cfg.TrafficServer) == 0 {
-		return errors.New("MonitorConfig.TrafficServer empty (is the monitoring.json an empty object?)")
+		return errors.New("traffic server map empty (is the monitoring.json an empty object?)")
 	}
 	if len(cfg.CacheGroup) == 0 {
-		return errors.New("MonitorConfig.CacheGroup empty")
+		return errors.New("cache group map empty")
 	}
 	if len(cfg.TrafficMonitor) == 0 {
-		return errors.New("MonitorConfig.TrafficMonitor empty")
+		return errors.New("traffic monitor map empty")
 	}
 	if len(cfg.DeliveryService) == 0 {
-		return errors.New("MonitorConfig.DeliveryService empty")
+		return errors.New("delivery service map empty")
 	}
 	if len(cfg.Profile) == 0 {
-		return errors.New("MonitorConfig.Profile empty")
+		return errors.New("profile map empty")
 	}
 
 	if intervalI, ok := cfg.Config["peers.polling.interval"]; !ok {
-		return errors.New(`MonitorConfig.Config["peers.polling.interval"] missing, peers.polling.interval parameter required`)
+		return errors.New(`configuration property "peers.polling.interval" missing, peers.polling.interval parameter required`)
 	} else if _, ok := intervalI.(float64); !ok {
-		return fmt.Errorf(`MonitorConfig.Config["peers.polling.interval"] '%v' not a number, parameter peers.polling.interval must be a number`, intervalI)
+		return fmt.Errorf(`configuration property "peers.polling.interval" '%v' not a number, parameter peers.polling.interval must be a number`, intervalI)
 	}
 
 	if intervalI, ok := cfg.Config["health.polling.interval"]; !ok {
-		return errors.New(`MonitorConfig.Config["health.polling.interval"] missing, health.polling.interval parameter required`)
+		return errors.New(`configuration property "health.polling.interval" missing, health.polling.interval parameter required`)
 	} else if _, ok := intervalI.(float64); !ok {
-		return fmt.Errorf(`MonitorConfig.Config["health.polling.interval"] '%v' not a number, parameter health.polling.interval must be a number`, intervalI)
+		return fmt.Errorf(`configuration property "health.polling.interval" '%v' not a number, parameter health.polling.interval must be a number`, intervalI)
 	}
 
 	return nil
@@ -545,14 +545,14 @@ func StrToThreshold(s string) (HealthThreshold, error) {
 			valStr := s[len(comparator):]
 			val, err := strconv.ParseFloat(valStr, 64)
 			if err != nil {
-				return HealthThreshold{}, fmt.Errorf("invalid threshold: NaN (%v)", err)
+				return HealthThreshold{}, fmt.Errorf("invalid threshold: NaN (%w)", err)
 			}
 			return HealthThreshold{Val: val, Comparator: comparator}, nil
 		}
 	}
 	val, err := strconv.ParseFloat(s, 64)
 	if err != nil {
-		return HealthThreshold{}, fmt.Errorf("invalid threshold: NaN (%v)", err)
+		return HealthThreshold{}, fmt.Errorf("invalid threshold: NaN (%w)", err)
 	}
 	return HealthThreshold{Val: val, Comparator: DefaultHealthThresholdComparator}, nil
 }
@@ -566,7 +566,7 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 
 	if vi, ok := raw["health.connection.timeout"]; ok {
 		if v, ok := vi.(float64); !ok {
-			return fmt.Errorf("Unmarshalling TMParameters health.connection.timeout expected integer, got %v", vi)
+			return fmt.Errorf("unmarshalling TMParameters health.connection.timeout expected integer, got %v", vi)
 		} else {
 			params.HealthConnectionTimeout = int(v)
 		}
@@ -574,7 +574,7 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 
 	if vi, ok := raw["health.polling.url"]; ok {
 		if v, ok := vi.(string); !ok {
-			return fmt.Errorf("Unmarshalling TMParameters health.polling.url expected string, got %v", vi)
+			return fmt.Errorf("unmarshalling TMParameters health.polling.url expected string, got %v", vi)
 		} else {
 			params.HealthPollingURL = v
 		}
@@ -582,7 +582,7 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 
 	if vi, ok := raw["health.polling.format"]; ok {
 		if v, ok := vi.(string); !ok {
-			return fmt.Errorf("Unmarshalling TMParameters health.polling.format expected string, got %v", vi)
+			return fmt.Errorf("unmarshalling TMParameters health.polling.format expected string, got %v", vi)
 		} else {
 			params.HealthPollingFormat = v
 		}
@@ -590,7 +590,7 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 
 	if vi, ok := raw["health.polling.type"]; ok {
 		if v, ok := vi.(string); !ok {
-			return fmt.Errorf("Unmarshalling TMParameters health.polling.type expected string, got %v", vi)
+			return fmt.Errorf("unmarshalling TMParameters health.polling.type expected string, got %v", vi)
 		} else {
 			params.HealthPollingType = v
 		}
@@ -598,7 +598,7 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 
 	if vi, ok := raw["history.count"]; ok {
 		if v, ok := vi.(float64); !ok {
-			return fmt.Errorf("Unmarshalling TMParameters history.count expected integer, got %v", vi)
+			return fmt.Errorf("unmarshalling TMParameters history.count expected integer, got %v", vi)
 		} else {
 			params.HistoryCount = int(v)
 		}
@@ -610,7 +610,7 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 			stat := k[len(ThresholdPrefix):]
 			vStr := fmt.Sprintf("%v", v) // allows string or numeric JSON types. TODO check if a type switch is faster.
 			if t, err := StrToThreshold(vStr); err != nil {
-				return fmt.Errorf("Unmarshalling TMParameters `%s` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v': %v", ThresholdPrefix, k, v, err)
+				return fmt.Errorf("unmarshalling TMParameters `%s` parameter value not of the form `(>|)(=|)\\d+`: stat '%s' value '%v': %w", ThresholdPrefix, k, v, err)
 			} else {
 				params.Thresholds[stat] = t
 			}
@@ -716,36 +716,36 @@ func LegacyTrafficMonitorTransformToMap(tmConfig *LegacyTrafficMonitorConfig) (*
 // TrafficMonitorConfigMap instead.
 func LegacyMonitorConfigValid(cfg *LegacyTrafficMonitorConfigMap) error {
 	if cfg == nil {
-		return errors.New("MonitorConfig is nil")
+		return errors.New("monitoring configuration is nil")
 	}
 	if len(cfg.TrafficServer) == 0 {
-		return errors.New("MonitorConfig.TrafficServer empty (is the monitoring.json an empty object?)")
+		return errors.New("traffic server map empty (is the monitoring.json an empty object?)")
 	}
 	if len(cfg.CacheGroup) == 0 {
-		return errors.New("MonitorConfig.CacheGroup empty")
+		return errors.New("cache group map empty")
 	}
 	if len(cfg.TrafficMonitor) == 0 {
-		return errors.New("MonitorConfig.TrafficMonitor empty")
+		return errors.New("traffic monitor map empty")
 	}
 	// TODO uncomment this, when TO is fixed to include DeliveryServices.
 	// See https://github.com/apache/trafficcontrol/issues/3528
 	// if len(cfg.DeliveryService) == 0 {
-	// 	return errors.New("MonitorConfig.DeliveryService empty")
+	// 	return errors.New("delivery service map empty")
 	// }
 	if len(cfg.Profile) == 0 {
-		return errors.New("MonitorConfig.Profile empty")
+		return errors.New("profile map empty")
 	}
 
 	if intervalI, ok := cfg.Config["peers.polling.interval"]; !ok {
-		return errors.New(`MonitorConfig.Config["peers.polling.interval"] missing, peers.polling.interval parameter required`)
+		return errors.New(`configuration property "peers.polling.interval" missing, peers.polling.interval parameter required`)
 	} else if _, ok := intervalI.(float64); !ok {
-		return fmt.Errorf(`MonitorConfig.Config["peers.polling.interval"] '%v' not a number, parameter peers.polling.interval must be a number`, intervalI)
+		return fmt.Errorf(`configuration property "peers.polling.interval" '%v' not a number, parameter peers.polling.interval must be a number`, intervalI)
 	}
 
 	if intervalI, ok := cfg.Config["health.polling.interval"]; !ok {
-		return errors.New(`MonitorConfig.Config["health.polling.interval"] missing, health.polling.interval parameter required`)
+		return errors.New(`configuration property "health.polling.interval" missing, health.polling.interval parameter required`)
 	} else if _, ok := intervalI.(float64); !ok {
-		return fmt.Errorf(`MonitorConfig.Config["health.polling.interval"] '%v' not a number, parameter health.polling.interval must be a number`, intervalI)
+		return fmt.Errorf(`configuration property "health.polling.interval" '%v' not a number, parameter health.polling.interval must be a number`, intervalI)
 	}
 
 	return nil

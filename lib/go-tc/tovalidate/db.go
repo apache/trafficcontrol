@@ -131,7 +131,7 @@ func (r *DBUniqueRule) Validate(value interface{}) error {
 	var id int
 	err := row.Scan(&id)
 	// ok if no rows found or only one belongs to row being updated
-	if err == sql.ErrNoRows || r.idCheck(id) {
+	if errors.Is(err, sql.ErrNoRows) || r.idCheck(id) {
 		return nil
 	}
 	return errors.New(r.message)

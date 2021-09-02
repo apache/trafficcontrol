@@ -268,7 +268,7 @@ func (d DeliveryServiceRequestDetails) Format() (string, error) {
 	b := &strings.Builder{}
 
 	if err := EmailTemplate.Execute(b, d); err != nil {
-		return "", fmt.Errorf("Failed to apply template: %w", err)
+		return "", fmt.Errorf("failed to apply template: %w", err)
 	}
 	return b.String(), nil
 }
@@ -393,7 +393,7 @@ func (o *OriginHeaders) UnmarshalJSON(data []byte) error {
 
 	s, err := strconv.Unquote(string(data))
 	if err != nil {
-		return fmt.Errorf("%s does not represent Origin Headers: %v", string(data), err)
+		return fmt.Errorf("%s does not represent Origin Headers: %w", string(data), err)
 	}
 
 	*o = OriginHeaders(strings.Split(s, ","))
@@ -679,7 +679,7 @@ func (dsrct *DSRChangeType) UnmarshalJSON(b []byte) error {
 	// This should only happen if this method is called directly; encoding/json
 	// itself guards against this.
 	if dsrct == nil {
-		return errors.New("UnmarshalJSON(nil *tc.DSRChangeType)")
+		return errors.New("invalid call: UnmarshalJSON(nil *tc.DSRChangeType)")
 	}
 
 	ctStr, err := strconv.Unquote(string(b))

@@ -60,7 +60,7 @@ func DurationLiteralToSeconds(d string) (int64, error) {
 		return v * 604800, err
 	}
 
-	return -1, errors.New("Invalid duration literal, no recognized suffix")
+	return -1, errors.New("invalid duration literal, no recognized suffix")
 }
 
 // TrafficStatsOrderable encodes what columns by which the data returned from a Traffic Stats query
@@ -241,7 +241,7 @@ type TrafficStatsSeries struct {
 func (s TrafficStatsSeries) FormatTimestamps() error {
 	for i, v := range s.Values {
 		if len(v) != 2 {
-			return fmt.Errorf("Datapoint %d (%v) malformed", i, v)
+			return fmt.Errorf("datapoint %d (%v) malformed", i, v)
 		}
 
 		switch v[0].(type) {
@@ -252,11 +252,11 @@ func (s TrafficStatsSeries) FormatTimestamps() error {
 		case json.Number:
 			val, err := v[0].(json.Number).Int64()
 			if err != nil {
-				return fmt.Errorf("Datapoint %d (%v) malformed: %v", i, v, err)
+				return fmt.Errorf("datapoint %d (%v) malformed: %w", i, v, err)
 			}
 			s.Values[i][0] = time.Unix(0, val).Format(time.RFC3339)
 		default:
-			return fmt.Errorf("Invalid type %T for datapoint %d (%v)", v[0], i, v)
+			return fmt.Errorf("invalid type %T for datapoint %d (%v)", v[0], i, v)
 		}
 	}
 	return nil
