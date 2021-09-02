@@ -164,11 +164,22 @@ func (to *Session) GetProfileByName(name string) ([]tc.Profile, ReqInf, error) {
 
 // GetProfileByParameter GETs a Profile by the Profile "param".
 func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, ReqInf, error) {
-	paramId, err := strconv.Atoi(url.QueryEscape(param))
+	URI := fmt.Sprintf("%s?param=%s", API_PROFILES, url.QueryEscape(param))
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, ReqInf{}, fmt.Errorf("error in converting integer to string %w", err)
+		return nil, reqInf, err
 	}
-	URI := fmt.Sprintf("%s?param=%d", API_PROFILES, paramId)
+	defer resp.Body.Close()
+
+	var data tc.ProfilesResponse
+	err = json.NewDecoder(resp.Body).Decode(&data)
+
+	return data.Response, reqInf, err
+}
+
+func (to *Session) GetProfileByParameterId(param int) ([]tc.Profile, ReqInf, error) {
+	URI := fmt.Sprintf("%s?param=%d", API_PROFILES, param)
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

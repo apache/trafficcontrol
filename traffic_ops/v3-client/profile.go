@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -128,11 +127,7 @@ func (to *Session) GetProfileByName(name string) ([]tc.Profile, toclientlib.ReqI
 }
 
 func (to *Session) GetProfileByParameterWithHdr(param string, header http.Header) ([]tc.Profile, toclientlib.ReqInf, error) {
-	paramId, err := strconv.Atoi(url.QueryEscape(param))
-	if err != nil {
-		return nil, toclientlib.ReqInf{}, fmt.Errorf("error in converting integer to string %w", err)
-	}
-	URI := fmt.Sprintf("%s?param=%d", APIProfiles, paramId)
+	URI := fmt.Sprintf("%s?param=%s", APIProfiles, url.QueryEscape(param))
 	var data tc.ProfilesResponse
 	reqInf, err := to.get(URI, header, &data)
 	return data.Response, reqInf, err
@@ -142,6 +137,19 @@ func (to *Session) GetProfileByParameterWithHdr(param string, header http.Header
 // Deprecated: GetProfileByParameter will be removed in 6.0. Use GetProfileByParameterWithHdr.
 func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, toclientlib.ReqInf, error) {
 	return to.GetProfileByParameterWithHdr(param, nil)
+}
+
+func (to *Session) GetProfileByParameterIdWithHdr(param int, header http.Header) ([]tc.Profile, toclientlib.ReqInf, error) {
+	URI := fmt.Sprintf("%s?param=%d", APIProfiles, param)
+	var data tc.ProfilesResponse
+	reqInf, err := to.get(URI, header, &data)
+	return data.Response, reqInf, err
+}
+
+// GetProfileByParameterId GETs a Profile by the Profile "param".
+// Deprecated: GetProfileByParameterId will be removed in 6.0. Use GetProfileByParameterIdWithHdr.
+func (to *Session) GetProfileByParameterId(param int) ([]tc.Profile, toclientlib.ReqInf, error) {
+	return to.GetProfileByParameterIdWithHdr(param, nil)
 }
 
 func (to *Session) GetProfileByCDNIDWithHdr(cdnID int, header http.Header) ([]tc.Profile, toclientlib.ReqInf, error) {

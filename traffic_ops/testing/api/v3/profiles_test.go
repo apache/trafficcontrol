@@ -17,7 +17,6 @@ package v3
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -90,7 +89,7 @@ func GetTestProfilesIMS(t *testing.T) {
 			if len(respParameter) > 0 {
 				parameterID := respParameter[0].ID
 				if parameterID > 0 {
-					resp, _, err := TOSession.GetProfileByParameterWithHdr(strconv.Itoa(parameterID), nil)
+					resp, _, err := TOSession.GetProfileByParameterIdWithHdr(parameterID, nil)
 					if err != nil {
 						t.Fatalf("Expected no error, but got %v", err.Error())
 					}
@@ -292,7 +291,7 @@ func GetTestProfiles(t *testing.T) {
 			if len(respParameter) > 0 {
 				parameterID := respParameter[0].ID
 				if parameterID > 0 {
-					resp, _, err = TOSession.GetProfileByParameter(strconv.Itoa(parameterID))
+					resp, _, err = TOSession.GetProfileByParameterId(parameterID)
 					if err != nil {
 						t.Errorf("cannot GET Profile by param: %v - %v", err, resp)
 					}

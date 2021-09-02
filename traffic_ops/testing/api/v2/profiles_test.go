@@ -16,7 +16,6 @@
 package v2
 
 import (
-	"strconv"
 	"strings"
 	"testing"
 
@@ -217,7 +216,7 @@ func GetTestProfiles(t *testing.T) {
 			if len(respParameter) > 0 {
 				parameterID := respParameter[0].ID
 				if parameterID > 0 {
-					resp, _, err = TOSession.GetProfileByParameter(strconv.Itoa(parameterID))
+					resp, _, err = TOSession.GetProfileByParameterId(parameterID)
 					if err != nil {
 						t.Errorf("cannot GET Profile by param: %v - %v", err, resp)
 					}
