@@ -42,12 +42,11 @@ func TestServerServerCapabilities(t *testing.T) {
 	})
 }
 
-/*
 func TestServerServerCapabilitiesForTopologies(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, ServerCapabilities, ServerServerCapabilitiesForTopologies, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
 		DeleteTestServerServerCapabilitiesForTopologiesValidation(t)
 	})
-}*/
+}
 
 func GetTestServerServerCapabilitiesIMS(t *testing.T) {
 	futureTime := time.Now().AddDate(0, 0, 1)
