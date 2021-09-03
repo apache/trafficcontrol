@@ -680,6 +680,10 @@ func DeleteTestServerServerCapabilityWithInvalidData(t *testing.T) {
 	if len(sscs.Response) < 1 {
 		t.Fatalf("No Server Server Capability available to test invalid scenario")
 	}
+	ssc := sscs.Response[0]
+	if ssc.ServerID == nil {
+		t.Fatal("Cache Group selected for testing had a null or undefined name")
+	}
 
 	//Delete Server Server Capability with Invalid Server Capability
 	alerts, _, err := TOSession.DeleteServerServerCapability(*sscs.Response[0].ServerID, "abcd", client.RequestOptions{})
