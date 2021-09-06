@@ -21,6 +21,7 @@ package region
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -116,8 +117,38 @@ JOIN division d ON r.division = d.id ` + where + orderBy + pagination +
 }
 
 func (rg *TORegion) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, rg) }
-func (rg *TORegion) Create() (error, error, int)              { return api.GenericCreate(rg) }
-func (rg *TORegion) Delete() (error, error, int)              { return api.GenericDelete(rg) }
+
+func (rg *TORegion) Create() (error, error, int) {
+	resultRows, err := rg.APIInfo().Tx.NamedQuery(rg.InsertQuery(), rg)
+	if err != nil {
+		return api.ParseDBError(err)
+	}
+	defer resultRows.Close()
+
+	var divisionName string
+	var id int
+	var lastUpdated tc.TimeNoMod
+
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err = resultRows.Scan(&id, &lastUpdated, &divisionName); err != nil {
+			return nil, fmt.Errorf("could not scan after insert: %s\n)", err), http.StatusInternalServerError
+		}
+	}
+
+	if rowsAffected == 0 {
+		return nil, fmt.Errorf("no region was inserted, nothing was returned"), http.StatusInternalServerError
+	} else if rowsAffected > 1 {
+		return nil, fmt.Errorf("too many rows affected from region insert"), http.StatusInternalServerError
+	}
+
+	rg.DivisionName = divisionName
+	rg.ID = id
+	rg.LastUpdated = lastUpdated
+	return nil, nil, http.StatusOK
+}
+func (rg *TORegion) Delete() (error, error, int) { return api.GenericDelete(rg) }
 
 // OptionsDelete deletes a resource identified either as a route parameter or as a query string parameter.
 func (rg *TORegion) OptionsDelete() (error, error, int) { return api.GenericOptionsDelete(rg) }
@@ -147,7 +178,8 @@ func insertQuery() string {
 division,
 name) VALUES (
 :division,
-:name) RETURNING id,last_updated`
+:name) RETURNING id,last_updated,
+(SELECT d.name FROM division d WHERE id = region.division)`
 	return query
 }
 
