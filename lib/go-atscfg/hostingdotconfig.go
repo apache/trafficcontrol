@@ -125,25 +125,28 @@ func MakeHostingDotConfig(
 		if *ds.CDNID != *server.CDNID {
 			continue
 		}
-		if ds.Topology == nil {
-			if !*ds.Active && ((!isMid && !ServerHostingDotConfigEdgeIncludeInactive) || (isMid && !ServerHostingDotConfigMidIncludeInactive)) {
+
+		if !*ds.Active && ((!isMid && !ServerHostingDotConfigEdgeIncludeInactive) || (isMid && !ServerHostingDotConfigMidIncludeInactive)) {
+			continue
+		}
+
+		if isMid {
+			if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) {
 				continue
 			}
 
-			if isMid {
-				if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) {
-					continue
-				}
-
+			if ds.Topology == nil {
 				// mids: include all DSes with at least one server assigned
 				if len(dsServerMap[*ds.ID]) == 0 {
 					continue
 				}
-			} else {
-				if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) && !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveSuffix) {
-					continue
-				}
+			}
+		} else {
+			if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) && !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveSuffix) {
+				continue
+			}
 
+			if ds.Topology == nil {
 				// edges: only include DSes assigned to this edge
 				if dsServerMap[*ds.ID] == nil {
 					continue
@@ -194,6 +197,9 @@ func MakeHostingDotConfig(
 						topoHasServer = false
 					}
 					if !topoHasServer {
+						continue
+					}
+					if !ds.Type.IsLive() {
 						continue
 					}
 				}

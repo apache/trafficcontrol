@@ -159,7 +159,7 @@ func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
 	dsTopology.ID = util.IntPtr(900)
 	dsTopology.Topology = util.StrPtr("t0")
 	dsTopology.Active = util.BoolPtr(true)
-	dsType := tc.DSTypeHTTP
+	dsType := tc.DSTypeHTTPLive
 	dsTopology.Type = &dsType
 
 	dsTopologyWithoutServer := makeGenericDS()
