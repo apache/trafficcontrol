@@ -37,6 +37,7 @@ type ATSConfigFile struct {
 	Path        string `json:"path"`
 	ContentType string `json:"content_type"`
 	LineComment string `json:"line_comment"`
+	Secure      bool   `json:"secure"`
 	Text        string `json:"text"`
 }
 
