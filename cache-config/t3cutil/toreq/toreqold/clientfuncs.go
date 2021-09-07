@@ -570,7 +570,7 @@ func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName) (tc.Server
 func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, updateStatus *bool, revalStatus *bool) (toclientlib.ReqInf, error) {
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "server_update_status_"+string(cacheHostName), nil, func(obj interface{}) error {
-		_, toReqInf, err := cl.c.GetServerUpdateStatus(string(cacheHostName))
+		toReqInf, err := cl.c.SetUpdateServerStatuses(string(cacheHostName), updateStatus, revalStatus)
 		if err != nil {
 			return errors.New("setting server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
