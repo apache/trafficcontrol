@@ -18,9 +18,9 @@ package v4
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"reflect"
 	"sort"
-	"net/url"
 	"strconv"
 	"testing"
 	"time"
@@ -108,7 +108,7 @@ func CreateTestTenants(t *testing.T) {
 	}
 }
 
-func GetTestTenantsByActive(t *testing.T){
+func GetTestTenantsByActive(t *testing.T) {
 	opts := client.NewRequestOptions()
 	for _, ten := range testData.Tenants {
 		opts.QueryParameters.Set("active", strconv.FormatBool(ten.Active))
@@ -471,7 +471,7 @@ func GetTestPaginationSupportTenant(t *testing.T) {
 	tenantsWithLimit, _, err := TOSession.GetTenants(opts)
 	if err != nil {
 		t.Fatalf("cannot Get Tenant with Limit: %v - alerts: %+v", err, tenantsWithLimit.Alerts)
-	} 
+	}
 	if !reflect.DeepEqual(tenant[:1], tenantsWithLimit.Response) {
 		t.Error("expected GET tenants with limit = 1 to return first result")
 	}
@@ -480,7 +480,7 @@ func GetTestPaginationSupportTenant(t *testing.T) {
 	tenantsWithOffset, _, err := TOSession.GetTenants(opts)
 	if err != nil {
 		t.Fatalf("cannot Get Tenant with Limit and Offset: %v - alerts: %+v", err, tenantsWithOffset.Alerts)
-	} 
+	}
 	if !reflect.DeepEqual(tenant[1:2], tenantsWithOffset.Response) {
 		t.Error("expected GET tenant with limit = 1, offset = 1 to return second result")
 	}
@@ -490,7 +490,7 @@ func GetTestPaginationSupportTenant(t *testing.T) {
 	tenantsWithPage, _, err := TOSession.GetTenants(opts)
 	if err != nil {
 		t.Fatalf("cannot Get Tenant with Limit and Page: %v - alerts: %+v", err, tenantsWithPage.Alerts)
-	} 
+	}
 	if !reflect.DeepEqual(tenant[1:2], tenantsWithPage.Response) {
 		t.Error("expected GET tenant with limit = 1, page = 2 to return second result")
 	}
@@ -532,7 +532,7 @@ func SortTestTenantDesc(t *testing.T) {
 	respAsc := resp.Response
 	if len(respAsc) < 1 {
 		t.Fatal("Need at least one Tenant in Traffic Ops to test Tenant sort ordering")
-	} 
+	}
 
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("sortOrder", "desc")
@@ -543,7 +543,7 @@ func SortTestTenantDesc(t *testing.T) {
 	respDesc := resp.Response
 	if len(respDesc) < 1 {
 		t.Fatal("Need at least one Tenant in Traffic Ops to test Tenant sort ordering")
-	} 
+	}
 
 	if len(respAsc) != len(respDesc) {
 		t.Fatalf("Traffic Ops returned %d Tenant using default sort order, but %d Tenant when sort order was explicitly set to descending", len(respAsc), len(respDesc))
