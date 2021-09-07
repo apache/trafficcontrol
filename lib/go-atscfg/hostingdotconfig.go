@@ -135,22 +135,26 @@ func MakeHostingDotConfig(
 				continue
 			}
 
-			// mids: include all DSes with at least one server assigned
-			if len(dsServerMap[*ds.ID]) == 0 {
-				continue
+			if ds.Topology == nil {
+				// mids: include all DSes with at least one server assigned
+				if len(dsServerMap[*ds.ID]) == 0 {
+					continue
+				}
 			}
 		} else {
 			if !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveNationalSuffix) && !strings.HasSuffix(string(*ds.Type), tc.DSTypeLiveSuffix) {
 				continue
 			}
 
-			// edges: only include DSes assigned to this edge
-			if dsServerMap[*ds.ID] == nil {
-				continue
-			}
+			if ds.Topology == nil {
+				// edges: only include DSes assigned to this edge
+				if dsServerMap[*ds.ID] == nil {
+					continue
+				}
 
-			if _, ok := dsServerMap[*ds.ID][*server.ID]; !ok {
-				continue
+				if _, ok := dsServerMap[*ds.ID][*server.ID]; !ok {
+					continue
+				}
 			}
 		}
 
