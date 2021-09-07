@@ -632,7 +632,11 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 	}
 
 	r.configFiles = map[string]*ConfigFile{}
+	mode := os.FileMode(0644)
 	for _, file := range allFiles {
+		if file.Secure {
+			mode = 0600
+		}
 		r.configFiles[file.Name] = &ConfigFile{
 			Name: file.Name,
 			Path: filepath.Join(file.Path, file.Name),
@@ -640,7 +644,7 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 			Body: []byte(file.Text),
 			Uid:  atsUid,
 			Gid:  atsGid,
-			Perm: 0644,
+			Perm: mode,
 		}
 	}
 	return nil
