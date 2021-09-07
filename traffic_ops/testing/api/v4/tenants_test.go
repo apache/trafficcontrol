@@ -18,7 +18,9 @@ package v4
 import (
 	"fmt"
 	"net/http"
+	"reflect"
 	"sort"
+	"net/url"
 	"strconv"
 	"testing"
 	"time"
@@ -44,6 +46,9 @@ func TestTenants(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestTenantsWithHeaders(t, header)
+		GetTestTenantsByActive(t)
+		GetTestPaginationSupportTenant(t)
+		SortTestTenantDesc(t)
 	})
 }
 
@@ -99,6 +104,23 @@ func CreateTestTenants(t *testing.T) {
 			t.Errorf("could not create Tenant '%s': %v - alerts: %+v", ten.Name, err, resp.Alerts)
 		} else if resp.Response.Name != ten.Name {
 			t.Errorf("expected tenant '%s'; got '%s'", ten.Name, resp.Response.Name)
+		}
+	}
+}
+
+func GetTestTenantsByActive(t *testing.T){
+	opts := client.NewRequestOptions()
+	for _, ten := range testData.Tenants {
+		opts.QueryParameters.Set("active", strconv.FormatBool(ten.Active))
+		resp, reqInf, err := TOSession.GetTenants(opts)
+		if len(resp.Response) < 1 {
+			t.Fatalf("Expected atleast one Tenants response %v", resp)
+		}
+		if err != nil {
+			t.Errorf("cannot get Tenant by Active: %v - alerts: %+v", err, resp.Alerts)
+		}
+		if reqInf.StatusCode != http.StatusOK {
+			t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
 		}
 	}
 }
@@ -430,5 +452,114 @@ func setTenantActive(t *testing.T, name string, active bool) {
 	response, _, err := TOSession.UpdateTenant(tn.ID, tn, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("cannot update Tenant: %v - alerts: %+v", err, response.Alerts)
+	}
+}
+
+func GetTestPaginationSupportTenant(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetTenants(opts)
+	if err != nil {
+		t.Fatalf("cannot Get Tenant: %v - alerts: %+v", err, resp.Alerts)
+	}
+	tenant := resp.Response
+	if len(tenant) < 3 {
+		t.Fatalf("Need at least 3 Tenants in Traffic Ops to test pagination support, found: %d", len(tenant))
+	}
+
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	tenantsWithLimit, _, err := TOSession.GetTenants(opts)
+	if err != nil {
+		t.Fatalf("cannot Get Tenant with Limit: %v - alerts: %+v", err, tenantsWithLimit.Alerts)
+	} 
+	if !reflect.DeepEqual(tenant[:1], tenantsWithLimit.Response) {
+		t.Error("expected GET tenants with limit = 1 to return first result")
+	}
+
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "1")
+	tenantsWithOffset, _, err := TOSession.GetTenants(opts)
+	if err != nil {
+		t.Fatalf("cannot Get Tenant with Limit and Offset: %v - alerts: %+v", err, tenantsWithOffset.Alerts)
+	} 
+	if !reflect.DeepEqual(tenant[1:2], tenantsWithOffset.Response) {
+		t.Error("expected GET tenant with limit = 1, offset = 1 to return second result")
+	}
+
+	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "2")
+	tenantsWithPage, _, err := TOSession.GetTenants(opts)
+	if err != nil {
+		t.Fatalf("cannot Get Tenant with Limit and Page: %v - alerts: %+v", err, tenantsWithPage.Alerts)
+	} 
+	if !reflect.DeepEqual(tenant[1:2], tenantsWithPage.Response) {
+		t.Error("expected GET tenant with limit = 1, page = 2 to return second result")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, _, err = TOSession.GetTenants(opts)
+	if err == nil {
+		t.Error("expected GET tenant to return an error when limit is not bigger than -1")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
+		t.Errorf("expected GET tenant to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, _, err = TOSession.GetTenants(opts)
+	if err == nil {
+		t.Error("expected GET tenant to return an error when offset is not a positive integer")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET tenant to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, _, err = TOSession.GetTenants(opts)
+	if err == nil {
+		t.Error("expected GET tenant to return an error when page is not a positive integer")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET tenant to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+}
+
+func SortTestTenantDesc(t *testing.T) {
+	resp, _, err := TOSession.GetTenants(client.RequestOptions{})
+	if err != nil {
+		t.Errorf("Expected no error, but got error in Tenant with default ordering: %v - alerts: %+v", err, resp.Alerts)
+	}
+	respAsc := resp.Response
+	if len(respAsc) < 1 {
+		t.Fatal("Need at least one Tenant in Traffic Ops to test Tenant sort ordering")
+	} 
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("sortOrder", "desc")
+	resp, _, err = TOSession.GetTenants(opts)
+	if err != nil {
+		t.Errorf("Expected no error, but got error in Tenant with Descending ordering: %v - alerts: %+v", err, resp.Alerts)
+	}
+	respDesc := resp.Response
+	if len(respDesc) < 1 {
+		t.Fatal("Need at least one Tenant in Traffic Ops to test Tenant sort ordering")
+	}
+
+	if len(respAsc) != len(respDesc) {
+		t.Fatalf("Traffic Ops returned %d Tenant using default sort order, but %d Tenant when sort order was explicitly set to descending", len(respAsc), len(respDesc))
+	}
+
+	// reverse the descending-sorted response and compare it to the ascending-sorted one
+	// TODO ensure at least two in each slice? A list of length one is
+	// trivially sorted both ascending and descending.
+	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
+	}
+	if respDesc[0].Name != respAsc[0].Name {
+		t.Errorf("Tenant responses are not equal after reversal: Asc: %s - Desc: %s", respDesc[0].Name, respAsc[0].Name)
 	}
 }
