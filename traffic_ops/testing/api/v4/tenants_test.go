@@ -467,7 +467,6 @@ func GetTestPaginationSupportTenant(t *testing.T) {
 		t.Fatalf("Need at least 3 Tenants in Traffic Ops to test pagination support, found: %d", len(tenant))
 	}
 
-	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
 	tenantsWithLimit, _, err := TOSession.GetTenants(opts)
 	if err != nil {
@@ -477,8 +476,6 @@ func GetTestPaginationSupportTenant(t *testing.T) {
 		t.Error("expected GET tenants with limit = 1 to return first result")
 	}
 
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("offset", "1")
 	tenantsWithOffset, _, err := TOSession.GetTenants(opts)
 	if err != nil {
@@ -488,8 +485,7 @@ func GetTestPaginationSupportTenant(t *testing.T) {
 		t.Error("expected GET tenant with limit = 1, offset = 1 to return second result")
 	}
 
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Del("offset")
 	opts.QueryParameters.Set("page", "2")
 	tenantsWithPage, _, err := TOSession.GetTenants(opts)
 	if err != nil {
@@ -547,7 +543,7 @@ func SortTestTenantDesc(t *testing.T) {
 	respDesc := resp.Response
 	if len(respDesc) < 1 {
 		t.Fatal("Need at least one Tenant in Traffic Ops to test Tenant sort ordering")
-	}
+	} 
 
 	if len(respAsc) != len(respDesc) {
 		t.Fatalf("Traffic Ops returned %d Tenant using default sort order, but %d Tenant when sort order was explicitly set to descending", len(respAsc), len(respDesc))
