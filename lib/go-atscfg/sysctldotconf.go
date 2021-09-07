@@ -63,6 +63,7 @@ func MakeSysCtlDotConf(
 		Text:        txt,
 		ContentType: ContentTypeSysctlDotConf,
 		LineComment: LineCommentSysctlDotConf,
+		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

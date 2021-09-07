@@ -147,6 +147,7 @@ func MakeLoggingDotConfig(
 		Text:        text,
 		ContentType: ContentTypeLoggingDotConfig,
 		LineComment: LineCommentLoggingDotConfig,
+		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

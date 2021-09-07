@@ -77,6 +77,7 @@ func MakeATSDotRules(
 		Text:        text,
 		ContentType: ContentTypeATSDotRules,
 		LineComment: LineCommentATSDotRules,
+		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

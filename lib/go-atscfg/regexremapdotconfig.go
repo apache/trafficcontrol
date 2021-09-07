@@ -93,6 +93,7 @@ func MakeRegexRemapDotConfig(
 		Text:        text,
 		ContentType: ContentTypeRegexRemapDotConfig,
 		LineComment: LineCommentRegexRemapDotConfig,
+		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

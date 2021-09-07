@@ -343,6 +343,7 @@ ip_allow:`
 		Text:        text,
 		ContentType: ContentTypeHostingDotConfig,
 		LineComment: LineCommentHostingDotConfig,
+		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

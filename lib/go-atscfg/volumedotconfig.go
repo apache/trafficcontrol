@@ -84,6 +84,7 @@ func MakeVolumeDotConfig(
 		Text:        hdr + text,
 		ContentType: ContentTypeVolumeDotConfig,
 		LineComment: LineCommentVolumeDotConfig,
+		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

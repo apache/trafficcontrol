@@ -57,6 +57,7 @@ func MakeURISigningConfig(
 		Text:        string(uriSigningKeyBts),
 		ContentType: ContentTypeURISigningDotConfig,
 		LineComment: LineCommentURISigningDotConfig,
+		Secure:      true,
 		Warnings:    warnings,
 	}, nil
 }

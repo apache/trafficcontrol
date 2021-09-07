@@ -86,6 +86,7 @@ func MakeServerUnknown(
 		Text:        txt,
 		ContentType: ContentTypeServerUnknownConfig,
 		LineComment: lineComment,
+		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

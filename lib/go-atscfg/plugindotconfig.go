@@ -63,6 +63,7 @@ func MakePluginDotConfig(
 		Text:        txt,
 		ContentType: ContentTypePluginDotConfig,
 		LineComment: LineCommentPluginDotConfig,
+		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

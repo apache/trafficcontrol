@@ -50,6 +50,7 @@ func MakeBGFetchDotConfig(
 		Text:        text,
 		ContentType: ContentTypeBGFetchDotConfig,
 		LineComment: LineCommentBGFetchDotConfig,
+		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

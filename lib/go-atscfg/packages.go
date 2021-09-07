@@ -66,6 +66,7 @@ func MakePackages(
 		Text:        string(bts),
 		ContentType: ContentTypePackages,
 		LineComment: LineCommentPackages,
+		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

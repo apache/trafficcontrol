@@ -127,6 +127,7 @@ func MakeSNIDotYAML(
 		Text:        txt,
 		ContentType: ContentTypeSNIDotYAML,
 		LineComment: LineCommentSNIDotYAML,
+		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

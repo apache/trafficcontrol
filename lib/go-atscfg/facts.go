@@ -51,6 +51,7 @@ func Make12MFacts(
 		Text:        txt,
 		ContentType: ContentType12MFacts,
 		LineComment: LineComment12MFacts,
+		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }
