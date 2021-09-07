@@ -405,7 +405,7 @@ func (c *ParentInfo) findATrafficMonitor() (string, error) {
 		return "", errors.New("there are no available traffic monitors")
 	}
 
-	log.Infof("polling: %s\n", tmHostname)
+	log.Debugf("polling: %s\n", tmHostname)
 
 	return tmHostname, nil
 }
