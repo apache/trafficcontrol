@@ -199,7 +199,7 @@ func MakeHostingDotConfig(
 					if !topoHasServer {
 						continue
 					}
-					if !strings.Contains(string(*ds.Type), "LIVE") {
+					if !ds.Type.IsLive() {
 						continue
 					}
 				}
