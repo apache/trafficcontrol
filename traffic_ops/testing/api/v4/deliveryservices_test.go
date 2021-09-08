@@ -1877,28 +1877,30 @@ func VerifyPaginationSupportDS(t *testing.T) {
 		t.Fatalf("Need at least three Delivery Services to test pagination, found: %d", len(deliveryservice.Response))
 	}
 
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("orderby", "id")
 	opts.QueryParameters.Set("limit", "1")
 	deliveryserviceWithLimit, _, err := TOSession.GetDeliveryServices(opts)
+	if err != nil {
+		t.Fatalf("cannot Get Delivery Service with Limit: %v - alerts: %+v", err, deliveryserviceWithLimit.Alerts)
+	}
 	if !reflect.DeepEqual(deliveryservice.Response[:1], deliveryserviceWithLimit.Response) {
 		t.Error("expected GET deliveryservice with limit = 1 to return first result")
 	}
 
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("offset", "1")
 	deliveryserviceWithOffset, _, err := TOSession.GetDeliveryServices(opts)
+	if err != nil {
+		t.Fatalf("cannot Get Delivery service with Limit and Offset: %v - alerts: %+v", err, deliveryserviceWithOffset.Alerts)
+	}
 	if !reflect.DeepEqual(deliveryservice.Response[1:2], deliveryserviceWithOffset.Response) {
 		t.Error("expected GET deliveryservice with limit = 1, offset = 1 to return second result")
 	}
 
-	opts.QueryParameters = url.Values{}
-	opts.QueryParameters.Set("orderby", "id")
-	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Del("offset")
 	opts.QueryParameters.Set("page", "2")
 	deliveryserviceWithPage, _, err := TOSession.GetDeliveryServices(opts)
+	if err != nil {
+		t.Fatalf("cannot Get Delivery Service with Limit and Page: %v - alerts: %+v", err, deliveryserviceWithPage.Alerts)
+	}
 	if !reflect.DeepEqual(deliveryservice.Response[1:2], deliveryserviceWithPage.Response) {
 		t.Error("expected GET deliveryservice with limit = 1, page = 2 to return second result")
 	}
