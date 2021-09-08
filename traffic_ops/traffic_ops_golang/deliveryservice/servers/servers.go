@@ -176,7 +176,13 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *auth.CurrentUser, params map[string]string, intParams map[string]int, dsIDs []int64, serverIDs []int64, useIMS bool) (*tc.DeliveryServiceServerResponse, error, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
-	orderby := params["orderby"]
+	// NOTE: if the 'orderby' query param exists but has an empty value, that means no ordering should be done.
+	// If the 'orderby' query param does not exist, order by "deliveryService" by default. This allows clients to
+	// specifically skip sorting if it's unnecessary, reducing load on the DB.
+	orderby, ok := params["orderby"]
+	if !ok {
+		orderby = "deliveryService"
+	}
 	limit := 20
 	offset := 0
 	page := 0
