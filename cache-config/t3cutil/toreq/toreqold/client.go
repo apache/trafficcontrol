@@ -49,6 +49,10 @@ func (cl *TOClient) SetURL(newURL string) {
 	cl.c.URL = newURL
 }
 
+func (cl *TOClient) APIVersion() string {
+	return cl.c.APIVersion()
+}
+
 // New logs into Traffic Ops, returning the TOClient which contains the logged-in client.
 func New(url *url.URL, user string, pass string, insecure bool, timeout time.Duration, userAgent string) (*TOClient, error) {
 	log.Infoln("URL: '" + url.String() + "' User: '" + user + "' Pass len: '" + strconv.Itoa(len(pass)) + "'")

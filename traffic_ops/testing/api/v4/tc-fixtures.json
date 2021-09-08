@@ -5476,6 +5476,30 @@
             "regex": "\\/some-path?.+\\.jpg",
             "startTime": "2100-06-19T13:57:51-06:00",
             "ttl": 2.1
+        },
+        {
+            "deliveryService": "ds1",
+            "regex": "/oldest",
+            "startTime": 1000,
+            "ttl": 2160
+        },
+        {
+            "deliveryService": "ds1",
+            "regex": "/older",
+            "startTime": 1001,
+            "ttl": 2160
+        },
+        {
+            "deliveryService": "ds1",
+            "regex": "/old",
+            "startTime": 1002,
+            "ttl": 2160
+        },
+        {
+            "deliveryService": "ds-forked-topology",
+            "regex": "/this-ds-is-in-cdn2",
+            "startTime": 4117118271000,
+            "ttl": 2160
         }
     ],
     "statsSummaries": [
