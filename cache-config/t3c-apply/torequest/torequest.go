@@ -230,7 +230,7 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 			return errors.New("unable to process udev rules in '" + cfg.Name + "': " + err.Error())
 		}
 	}
-
+	log.Infof("File mode is: %o", cfg.Perm)
 	log.Infof("======== End processing config file: %s for service: %s ========\n", cfg.Name, cfg.Service)
 	return nil
 }
@@ -784,7 +784,6 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 
 	for _, cfg := range r.configFiles {
 		// add service metadata
-		log.Infof("File mode is: %d", cfg.Perm)
 		if strings.Contains(cfg.Path, "/opt/trafficserver/") || strings.Contains(cfg.Dir, "udev") {
 			cfg.Service = "trafficserver"
 			if !r.Cfg.InstallPackages && !r.IsPackageInstalled("trafficserver") {
