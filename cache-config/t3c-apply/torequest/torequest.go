@@ -784,6 +784,7 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 
 	for _, cfg := range r.configFiles {
 		// add service metadata
+		log.Infof("File mode is: %d", cfg.Perm)
 		if strings.Contains(cfg.Path, "/opt/trafficserver/") || strings.Contains(cfg.Dir, "udev") {
 			cfg.Service = "trafficserver"
 			if !r.Cfg.InstallPackages && !r.IsPackageInstalled("trafficserver") {
