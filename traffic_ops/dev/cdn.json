@@ -1,0 +1,40 @@
+{
+	"hypnotoad" : {
+		"listen" : [
+			"https://[::]:60443?cert=/server.csr&key=/server.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
+		],
+	},
+	"traffic_ops_golang" : {
+		"port" : 443,
+		"log_location_error": "stderr",
+		"log_location_warning": "stderr",
+		"log_location_info": "stdout",
+		"log_location_debug": "stdout",
+		"log_location_event": "stdout",
+		"whitelisted_oauth_urls": [],
+		"oauth_client_secret": "",
+		"traffic_vault_backend": "postgres",
+		"traffic_vault_config": {},
+		"supported_ds_metrics": [ "kbps", "tps_total", "tps_2xx", "tps_3xx", "tps_4xx", "tps_5xx" ],
+	},
+	"use_ims": true,
+	"role_based_permissions": false,
+	"cors" : {
+		"access_control_allow_origin" : "*"
+	},
+	"to" : {
+		"base_url" : "https://localhost:6443",
+		"email_from" : "no-reply@traffic-ops-domain.com",
+		"no_account_found_msg" : "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator."
+	},
+	"portal" : {
+		"base_url" : "https://localhost/#!/",
+		"docs_url" : "https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_portal/usingtrafficportal.html",
+		"email_from" : "no-reply@traffic-portal-domain.com",
+		"pass_reset_path" : "user",
+		"user_register_path" : "user"
+	},
+	"secrets" : [
+		"mONKEYDOmONKEYSEE."
+	],
+}
