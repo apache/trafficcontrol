@@ -21,6 +21,9 @@ onFail() {
   if ! [[ -d Reports ]]; then
     mkdir Reports;
   fi
+  if [[ -f tp.log ]]; then
+    mv tp.log Reports/forever.log
+  fi
   if [[ -f access.log ]]; then
     mv access.log Reports/tp-access.log
   fi
