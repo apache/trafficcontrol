@@ -21,13 +21,6 @@ onFail() {
   if ! [[ -d Reports ]]; then
     mkdir Reports;
   fi
-  if [[ -f tv.log ]]; then
-    cp tv.log Reports/traffic_vault.docker.log;
-  fi
-	docker logs "$trafficvault" > Reports/traffic_vault.log 2>&1;
-  if [[ -f tp.log ]]; then
-    mv tp.log Reports/forever.log
-  fi
   if [[ -f access.log ]]; then
     mv access.log Reports/tp-access.log
   fi
@@ -110,41 +103,7 @@ QUERY
 sudo useradd trafops
 
 ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
-trafficvault=trafficvault;
-start_traffic_vault() {
-	<<-'/ETC/HOSTS' sudo tee --append /etc/hosts
-		172.17.0.1    trafficvault.infra.ciab.test
-	/ETC/HOSTS
-
-	<<-'BASH_LINES' cat >infrastructure/cdn-in-a-box/traffic_vault/prestart.d/00-0-standalone-config.sh;
-		TV_FQDN="${TV_HOST}.${INFRA_SUBDOMAIN}.${TLD_DOMAIN}" # Also used in 02-add-search-schema.sh
-		certs_dir=/etc/ssl/certs;
-		X509_INFRA_CERT_FILE="${certs_dir}/trafficvault.crt";
-		X509_INFRA_KEY_FILE="${certs_dir}/trafficvault.key";
-
-		# Generate x509 certificate
-		openssl req -new -x509 -nodes -newkey rsa:4096 -out "$X509_INFRA_CERT_FILE" -keyout "$X509_INFRA_KEY_FILE" -subj "/CN=${TV_FQDN}";
-
-		# Do not wait for CDN in a Box to generate SSL keys
-		sed -i '0,/^update-ca-certificates/d' /etc/riak/prestart.d/00-config.sh;
-
-		# Do not try to source to-access.sh
-		sed -i '/to-access\.sh\|^to-enroll/d' /etc/riak/{prestart.d,poststart.d}/*
-	BASH_LINES
-
-	DOCKER_BUILDKIT=1 docker build "$ciab_dir" -f "${ciab_dir}/traffic_vault/Dockerfile" -t "$trafficvault" >/dev/null
-	echo 'Starting Traffic Vault...';
-	docker run \
-		--detach \
-		--env-file="${ciab_dir}/variables.env" \
-		--hostname="${trafficvault}.infra.ciab.test" \
-		--name="$trafficvault" \
-		--publish=8087:8087 \
-		--rm \
-		"$trafficvault" \
-		/usr/lib/riak/riak-cluster.sh
-}
-start_traffic_vault >tv.log 2>&1 &
+openssl rand 32 | base64 | sudo tee /aes.key
 
 sudo apt-get install -y --no-install-recommends gettext \
 	ruby ruby-dev libc-dev curl \
