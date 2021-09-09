@@ -18,13 +18,14 @@
 #
 [Unit]
 Description=Traffic monitor health service for Trafficserver
-After=trafficserver
+After=trafficserver.service
+Requires=trafficserver.service
 
 [Service]
 ExecStart=/usr/bin/tm-health-client -vv
-RequiredBy=trafficserver
 Restart=always
-ExecStop=/bin/kill -s $MAINPID
+RestartSec=5
 
 [Install]
-
+RequiredBy=trafficserver.service
+WantedBy=trafficserver.service
