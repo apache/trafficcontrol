@@ -143,10 +143,9 @@ to_build() {
   cp "${resources}/database.json" database.conf
 
   export $(<"${ciab_dir}/variables.env" sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
-  envsubst <"${resources}/riak.json" >riak.conf
   truncate -s0 out.log
 
-  ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf >out.log 2>&1 &
+  ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf >out.log 2>&1 &
   popd
 }
 
