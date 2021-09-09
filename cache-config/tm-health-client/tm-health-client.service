@@ -24,7 +24,7 @@ Requires=trafficserver.service
 [Service]
 ExecStart=/usr/bin/tm-health-client -vv
 Restart=always
-ExecStop=/bin/kill -p $MAINPID
+RestartSec=5
 
 [Install]
 RequiredBy=trafficserver.service
