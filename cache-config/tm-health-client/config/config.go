@@ -23,6 +23,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -50,14 +51,14 @@ const (
 )
 
 type Cfg struct {
-	CDNName                 string `json:"cdn-name"`
-	EnableActiveMarkdowns   bool   `json:"enable-active-markdowns"`
-	ReasonCode              string `json:"reason-code"`
-	TOCredentialFile        string `json:"to-credential-file"`
-	TORequestTimeOutSeconds string `json:"to-request-timeout-seconds"`
-	TOPass                  string
-	TOUrl                   string
-	TOUser                  string
+	CDNName                 string          `json:"cdn-name"`
+	EnableActiveMarkdowns   bool            `json:"enable-active-markdowns"`
+	ReasonCode              string          `json:"reason-code"`
+	TOCredentialFile        string          `json:"to-credential-file"`
+	TORequestTimeOutSeconds string          `json:"to-request-timeout-seconds"`
+	TOPass                  string          `json:"to-pass"`
+	TOUrl                   string          `json:"to-url"`
+	TOUser                  string          `json:"to-user"`
 	TmPollIntervalSeconds   string          `json:"tm-poll-interval-seconds"`
 	TmUpdateCycles          int             `json:"tm-update-cycles"`
 	TrafficServerConfigDir  string          `json:"trafficserver-config-dir"`
@@ -196,8 +197,13 @@ func GetConfig() (Cfg, error, bool) {
 		return Cfg{}, errors.New(err.Error() + "\n"), false
 	}
 
-	if err = ReadCredentials(&cfg); err != nil {
-		return cfg, err, false
+	if cfg.TOPass == "" || cfg.TOUser == "" || cfg.TOUrl == "" {
+		if cfg.TOCredentialFile == "" {
+			return Cfg{}, errors.New("cannot continue, no TO credentials have been specified"), false
+		}
+		if err = ReadCredentials(&cfg); err != nil {
+			return cfg, err, false
+		}
 	}
 
 	err = GetTrafficMonitors(&cfg)
@@ -219,6 +225,9 @@ func GetTrafficMonitors(cfg *Cfg) error {
 
 	// login to traffic ops.
 	session, _, err := toclient.LoginWithAgent(cfg.TOUrl, cfg.TOUser, cfg.TOPass, true, "tm-health-client", false, GetRequestTimeout())
+	if err != nil {
+		return fmt.Errorf("could not establish a TrafficOps session: %w", err)
+	}
 	srvs, _, err := session.GetServers(&qry)
 	if err != nil {
 		return errors.New("error fetching Trafficmonitor server list: " + err.Error())
