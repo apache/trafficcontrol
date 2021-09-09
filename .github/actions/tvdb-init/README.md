@@ -24,7 +24,7 @@ instance. It creates the `traffic_vault` user and database.
 ## Outputs
 
 ### `exit-code`
-1 if the database initialized successfully.$^
+1 if the database initialized successfully.
 
 ## Example usage
 ```yaml
