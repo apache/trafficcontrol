@@ -177,7 +177,7 @@ func (cl *TOClient) GetCacheGroups(reqHdr http.Header) ([]tc.CacheGroupNullable,
 // If your use case is more efficient to only get the needed objects, for example if you're frequently requesting one file, set this false to get and cache the specific needed delivery services and servers.
 const DeliveryServiceServersAlwaysGetAll = true
 
-func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int, reqHdr http.Header) ([]tc.DeliveryServiceServer, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int, cdnName string, reqHdr http.Header) ([]tc.DeliveryServiceServer, toclientlib.ReqInf, error) {
 	if cl.c == nil {
 		return cl.old.GetDeliveryServiceServers(dsIDs, serverIDs)
 	}
@@ -200,7 +200,7 @@ func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int, reqH
 	}
 
 	dsServers := []tc.DeliveryServiceServer{}
-	err := torequtil.GetRetry(cl.NumRetries, "deliveryservice_servers_s"+serverIDsStr+"_d_"+dsIDsStr, &dsServers, func(obj interface{}) error {
+	err := torequtil.GetRetry(cl.NumRetries, "deliveryservice_servers_s"+serverIDsStr+"_d_"+dsIDsStr+"_cdn_"+cdnName, &dsServers, func(obj interface{}) error {
 
 		dsIDStrs := []string{}
 		for _, dsID := range dsIDsToFetch {
@@ -214,6 +214,8 @@ func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int, reqH
 
 		queryParams := url.Values{}
 		queryParams.Set("limit", "999999") // TODO add "no limit" param to DSS endpoint
+		queryParams.Set("cdn", cdnName)
+		queryParams.Set("orderby", "") // prevent unnecessary sorting of the response
 		if len(dsIDsToFetch) > 0 {
 			queryParams.Set("deliveryserviceids", strings.Join(dsIDStrs, ","))
 		}
@@ -513,7 +515,7 @@ func (cl *TOClient) GetDeliveryServiceRegexes(reqHdr http.Header) ([]tc.Delivery
 	return regexes, reqInf, nil
 }
 
-func (cl *TOClient) GetJobs(reqHdr http.Header) ([]tc.InvalidationJob, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetJobs(reqHdr http.Header, cdnName string) ([]tc.InvalidationJob, toclientlib.ReqInf, error) {
 	if cl.c == nil {
 		oldJobs, inf, err := cl.old.GetJobs()
 		jobs, err := atscfg.JobsToInvalidationJobs(oldJobs)
@@ -525,8 +527,11 @@ func (cl *TOClient) GetJobs(reqHdr http.Header) ([]tc.InvalidationJob, toclientl
 
 	jobs := []tc.InvalidationJob{}
 	reqInf := toclientlib.ReqInf{}
-	err := torequtil.GetRetry(cl.NumRetries, "jobs", &jobs, func(obj interface{}) error {
-		toJobs, toReqInf, err := cl.c.GetInvalidationJobs(*ReqOpts(reqHdr))
+	err := torequtil.GetRetry(cl.NumRetries, "jobs_cdn_"+cdnName, &jobs, func(obj interface{}) error {
+		opts := *ReqOpts(reqHdr)
+		opts.QueryParameters.Set("maxRevalDurationDays", "") // only get jobs with a start time within the window defined by the GLOBAL parameter 'maxRevalDurationDays'
+		opts.QueryParameters.Set("cdn", cdnName)             // only get jobs for delivery services in this server's CDN
+		toJobs, toReqInf, err := cl.c.GetInvalidationJobs(opts)
 		if err != nil {
 			return errors.New("getting jobs from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
