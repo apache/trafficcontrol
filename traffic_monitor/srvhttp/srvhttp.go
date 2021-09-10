@@ -259,6 +259,11 @@ func (s *Server) handleFile(name string) (http.HandlerFunc, error) {
 	}
 	contentType := http.DetectContentType(bytes)
 	return func(w http.ResponseWriter, req *http.Request) {
+		if req.URL.Path != "/" {
+			http.NotFound(w, req)
+			return
+		}
+
 		w.Header().Set(rfc.ContentType, contentType)
 		w.Header().Set(rfc.PermissionsPolicy, "interest-cohort=()")
 		fmt.Fprintf(w, "%s", bytes)
