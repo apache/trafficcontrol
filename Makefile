@@ -14,14 +14,27 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-DC_OPTS ?= "--no-ansi"
+CACHE_CONFIG_DIRS=$(filter-out cache-config/testing/ cache-config/build/,$(wildcard cache-config/*/))
+TO_SOURCE=$(filter-out %_test.go,$(wildcard traffic_ops/traffic_ops_golang/**.go))
 
-.PHONY: lint unit
+.PHONY: lint unit all check
+
+all: traffic_ops/traffic_ops_golang/traffic_ops_golang traffic_ops/app/db/admin
+
+traffic_ops/traffic_ops_golang/traffic_ops_golang: $(TO_SOURCE)
+	cd traffic_ops/traffic_ops_golang && go build
+
+traffic_ops/app/db/admin: traffic_ops/app/db/admin.go
+	cd $(dir $@) && go build -o $(notdir $@) .
+
+check: unit lint
 
 lint:
-	@echo -n '? '
-	docker-compose $(DC_OPTS) -f tools/golang/docker-compose.yml up lint
+	golangci-lint run ./...
 
-unit:
-	@echo -n '? '
-	docker-compose $(DC_OPTS) -f tools/golang/docker-compose.yml up unit
+cache-config/t3c-check-refs/t3c-check-refs: cache-config/t3c-check-refs/config/config.go cache-config/t3c-check-refs/t3c-check-refs.go
+	go build "github.com/apache/trafficcontrol/cache-config/t3c-check-refs"
+	mv -f t3c-check-refs $@
+
+unit: cache-config/t3c-check-refs/t3c-check-refs
+	go test $(addsuffix ...,$(addprefix ./,$(CACHE_CONFIG_DIRS))) ./grove/... ./lib/... ./traffic_monitor/... ./traffic_ops/traffic_ops_golang/... ./traffic_stats/...
