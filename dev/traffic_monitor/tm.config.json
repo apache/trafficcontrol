@@ -13,5 +13,7 @@
 	"log_location_debug": "stdout",
 	"serve_read_timeout_ms": 86400000,
 	"serve_write_timeout_ms": 86400000,
-	"static_file_dir": "/root/go/src/github.com/apache/trafficcontrol/traffic_monitor/static/"
+	"static_file_dir": "/root/go/src/github.com/apache/trafficcontrol/traffic_monitor/static/",
+	"crconfig_backup_file": "/root/go/src/github.com/apache/trafficcontrol/dev/traffic_monitor/snapshot.backup.json",
+	"tmconfig_backup_file": "/root/go/src/github.com/apache/trafficcontrol/dev/traffic_monitor/monitoring.snapshot.backup.json"
 }
