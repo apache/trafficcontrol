@@ -44,9 +44,13 @@ if (process.argv.length === 3 || process.argv.length === 4 && process.argv.slice
     }
 }
 
-var logStream = fs.createWriteStream(config.log.stream, { flags: 'a' }),
-    useSSL = config.useSSL;
-
+const useSSL = config.useSSL;
+let logStream;
+if (!Object.prototype.hasOwnProperty.call(config, "log") || !config.log || !Object.prototype.hasOwnProperty.call(config.log, "stream") || !config.log.stream) {
+    logStream = null;
+} else {
+    logStream = fs.createWriteStream(config.log.stream, { flags: 'a' })
+}
 // Disable for self-signed certs in dev/test
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = config.reject_unauthorized;
 
@@ -90,10 +94,15 @@ app.use(modRewrite([
 ]));
 
 app.use(express.static(config.files.static));
-app.use(morgan('combined', {
-    stream: logStream,
-    skip: function (req, res) { return res.statusCode < 400 }
-}));
+
+let morganOpts = {
+    skip: (_, res) => res.statusCode < 400
+};
+if (logStream !== null) {
+    morganOpts.stream = logStream;
+}
+
+app.use(morgan('combined', morganOpts));
 app.use(timeout(config.timeout));
 
 if (app.get('env') === 'dev') {
