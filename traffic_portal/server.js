@@ -28,14 +28,20 @@ var constants = require('constants'),
 
 var config;
 
-try {
-    config = require('/etc/traffic_portal/conf/config');
-}
-catch(e) {
-    let file = "./conf/config";
-    if((process.env.NODE_ENV || "prod") === "dev")
-        file = './conf/configDev';
-    config = require(file);
+// forward-compatible in case this script becomes executable with a node
+// shebang.
+if (process.argv.length === 3 || process.argv.length === 4 && process.argv.slice(-2)[0] === "-c") {
+    config = require(process.argv.slice(-1)[0]);
+} else {
+    try {
+        config = require('/etc/traffic_portal/conf/config');
+    }
+    catch(e) {
+        let file = "./conf/config";
+        if((process.env.NODE_ENV || "prod") === "dev")
+            file = './conf/configDev';
+        config = require(file);
+    }
 }
 
 var logStream = fs.createWriteStream(config.log.stream, { flags: 'a' }),
