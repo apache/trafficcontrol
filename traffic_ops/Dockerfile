@@ -33,7 +33,7 @@ COPY dev/.pgpass /root/.pgpass
 RUN chmod 0600 /root/.pgpass
 COPY app/db/admin dev/run.sh dev/dbconf.yml dev/traffic.vault.dbconf.yml app/db/create_tables.sql app/db/patches.sql app/db/seeds.sql /
 COPY app/db/migrations/ /migrations/
-COPY app/db/trafficvault/migrations/ /traffic_vault_migrations/
-COPY app/db/trafficvault/create_tables.sql /traffic_vault_schema.psql
+COPY app/db/trafficvault/migrations/ /traffic.vault.migrations/
+COPY app/db/trafficvault/create_tables.sql /traffic.vault.schema.psql
 
 ENTRYPOINT /run.sh

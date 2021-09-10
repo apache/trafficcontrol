@@ -10,8 +10,10 @@ done
 
 /admin -c /dbconf.yml -s /create_tables.sql -S /seeds.sql -p /patches.sql -m /migrations reset
 /admin -c /dbconf.yml -s /create_tables.sql -S /seeds.sql -p /patches.sql -m /migrations upgrade
+/admin -v -c /traffic.vault.dbconf.yml -s /traffic.vault.schema.psql -m /traffic.vault.migrations reset
+/admin -v -c /traffic.vault.dbconf.yml -s /traffic.vault.schema.psql -m /traffic.vault.migrations upgrade
 
-rm -rf /dbconf.yml /create_tables.sql /seeds.sql /patches.sql /migrations /admin
+rm -rf /dbconf.yml /create_tables.sql /seeds.sql /patches.sql /migrations /admin /traffic.vault.dbconf.yml /traffic.vault.schema.psql /traffic.vault.migrations
 
 cd /traffic_ops_golang
 
