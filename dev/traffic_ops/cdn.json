@@ -17,11 +17,20 @@
 		"traffic_vault_config": {
 			"aes_key_location": "/aes.key",
 			"dbname": "traffic_vault_development",
+			"conn_max_lifetime_seconds": 86400,
+			"query_timeout_seconds": 86400,
 			"hostname": "db",
 			"user": "traffic_vault",
 			"password": "twelve12",
 			"port": 5432
 		},
+		"read_timeout": 86400,
+		"read_header_timeout": 86400,
+		"request_timeout": 86400,
+		"write_timeout": 86400,
+		"idle_timeout": 86400,
+		"db_conn_max_lifetime_seconds": 86400,
+		"db_query_timeout_seconds": 86400,
 		"supported_ds_metrics": [ "kbps", "tps_total", "tps_2xx", "tps_3xx", "tps_4xx", "tps_5xx" ]
 	},
 	"use_ims": true,
