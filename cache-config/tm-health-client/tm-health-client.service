@@ -27,5 +27,4 @@ Restart=always
 RestartSec=5
 
 [Install]
-RequiredBy=trafficserver.service
 WantedBy=trafficserver.service
