@@ -8,14 +8,16 @@ while ! pg_isready -h db -p 5432 -d postgres; do
 	sleep 3;
 done
 
-exit 0
+/admin -c /dbconf.yml -s /create_tables.sql -S /seeds.sql -p /patches.sql -m /migrations reset
+/admin -c /dbconf.yml -s /create_tables.sql -S /seeds.sql -p /patches.sql -m /migrations upgrade
 
-DB_CFG_FILE="$(mktemp)"
+rm -rf /dbconf.yml /create_tables.sql /seeds.sql /patches.sql /migrations /admin
 
-mkdir -p git
 cd /traffic_ops_golang
 
-dlv --accept-multiclient --continue --listen=:6444 --headless --api-version=2 debug -- --cfg="$CFG_FILE" --dbcfg="$DB_CFG_FILE"
+exit 0
+
+dlv --accept-multiclient --continue --listen=:6444 --headless --api-version=2 debug -- --cfg=/cdn.json --dbcfg=/dbconf.yml
 
 
 while inotifywait --exclude .swp -e modify -r . ;

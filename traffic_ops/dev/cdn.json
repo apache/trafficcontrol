@@ -2,7 +2,7 @@
 	"hypnotoad" : {
 		"listen" : [
 			"https://[::]:60443?cert=/server.csr&key=/server.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
-		],
+		]
 	},
 	"traffic_ops_golang" : {
 		"port" : 443,
@@ -14,8 +14,14 @@
 		"whitelisted_oauth_urls": [],
 		"oauth_client_secret": "",
 		"traffic_vault_backend": "postgres",
-		"traffic_vault_config": {},
-		"supported_ds_metrics": [ "kbps", "tps_total", "tps_2xx", "tps_3xx", "tps_4xx", "tps_5xx" ],
+		"traffic_vault_config": {
+			"dbname": "traffic_vault_development",
+			"hostname": "db",
+			"user": "postgres",
+			"password": "twelve12",
+			"port": 5432
+		},
+		"supported_ds_metrics": [ "kbps", "tps_total", "tps_2xx", "tps_3xx", "tps_4xx", "tps_5xx" ]
 	},
 	"use_ims": true,
 	"role_based_permissions": false,
@@ -36,5 +42,5 @@
 	},
 	"secrets" : [
 		"mONKEYDOmONKEYSEE."
-	],
+	]
 }

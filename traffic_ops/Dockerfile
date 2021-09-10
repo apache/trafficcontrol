@@ -27,7 +27,11 @@ EXPOSE 443
 
 COPY --from=certbuilder /server.key /server.csr /
 RUN apk add --no-cache inotify-tools go postgresql-client && go install github.com/go-delve/delve/cmd/dlv@latest && ln -s /root/go/bin/dlv /usr/bin/dlv
+RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
-COPY dev/run.sh /
+COPY app/db/admin dev/run.sh dev/dbconf.yml dev/traffic.vault.dbconf.yml app/db/create_tables.sql app/db/patches.sql app/db/seeds.sql /
+COPY app/db/migrations/ /migrations/
+COPY app/db/trafficvault/migrations/ /traffic_vault_migrations/
+COPY app/db/trafficvault/create_tables.sql /traffic_vault_schema.psql
 
 ENTRYPOINT /run.sh
