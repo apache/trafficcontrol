@@ -617,8 +617,8 @@ func main() {
 
 	var shortSeeds string
 	var longSeeds string
-	flag.StringVar(&shortEnv, "S", "", "Provide a path to a seeds statements file, instead of using the default (./db/seeds.sql)")
-	flag.StringVar(&longEnv, "seeds", "", "Provide a path to a seeds statements file, instead of using the default (./db/seeds.sql)")
+	flag.StringVar(&shortSeeds, "S", "", "Provide a path to a seeds statements file, instead of using the default (./db/seeds.sql)")
+	flag.StringVar(&longSeeds, "seeds", "", "Provide a path to a seeds statements file, instead of using the default (./db/seeds.sql)")
 
 	flag.BoolVar(&TrafficVault, "v", false, "Perform operations for Traffic Vault instead of the Traffic Ops database")
 	flag.BoolVar(&TrafficVault, "trafficvault", false, "Perform operations for Traffic Vault instead of the Traffic Ops database")
