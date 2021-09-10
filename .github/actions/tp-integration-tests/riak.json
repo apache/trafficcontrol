@@ -1,8 +1,0 @@
-{
-	"user": "${TV_RIAK_USER}",
-	"password": "${TV_RIAK_PASSWORD}",
-	"MaxTLSVersion": "1.1",
-	"tlsConfig": {
-		"insecureSkipVerify": true
-	}
-}

@@ -14,11 +14,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-node_modules/
-cdn.conf
-database.conf
-error.log
-localhost.crt
-localhost.key
-warning.log
+
+name: 'tvdb-init'
+description: 'Initializes a Traffic Vault database using a local PostgreSQL instance'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
