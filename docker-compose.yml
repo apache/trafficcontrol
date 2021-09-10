@@ -30,6 +30,7 @@ services:
         image: trafficops-dev
         ports:
             - 6443:443
+            - 6444:6444
         volumes:
             - .:/root/go/src/github.com/apache/trafficcontrol/
 
