@@ -49,9 +49,22 @@ services:
         depends_on:
             - trafficops
         hostname: trafficportal
-        domainname: trafficportal
+        domainname: dev.ciab.test
         image: trafficportal-dev
         ports:
             - 444:443
+        volumes:
+            - .:/root/go/src/github.com/apache/trafficcontrol
+
+    tpv2:
+        build:
+            context: dev/tpv2
+        depends_on:
+            - trafficops
+        hostname: tpv2
+        domainname: dev.ciab.test
+        image: tpv2-dev
+        ports:
+            - 443:443
         volumes:
             - .:/root/go/src/github.com/apache/trafficcontrol
