@@ -20,7 +20,6 @@
 # to-integration-tests JavaScript action
 This action runs the Traffic Ops Go client integration tests with the Traffic Ops API.
 - Requires an SMTP service (see `smtp_address` input)
-- Provides a Riak server at address `trafficvault.infra.ciab.test`
 
 ## Inputs
 

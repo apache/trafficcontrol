@@ -14,11 +14,10 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-node_modules/
-cdn.conf
-database.conf
-error.log
-localhost.crt
-localhost.key
-warning.log
+version: "1.0"
+name: dbconf.yml
+
+test:
+  driver: postgres
+  open: host=postgres port=5432 user=traffic_vault password=twelve dbname=traffic_vault sslmode=disable
+
