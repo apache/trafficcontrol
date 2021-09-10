@@ -19,7 +19,6 @@
 version: '3.5'
 
 services:
-    # trafficops runs Traffic Ops in a container.
     trafficops:
         build:
             context: dev/traffic_ops/
@@ -66,5 +65,19 @@ services:
         image: tpv2-dev
         ports:
             - 443:443
+        volumes:
+            - .:/root/go/src/github.com/apache/trafficcontrol
+
+    trafficmonitor:
+        build:
+            context: dev/traffic_monitor
+        depends_on:
+            - trafficops
+        hostname: trafficmonitor
+        domainname: dev.ciab.test
+        image: trafficmonitor-dev
+        ports:
+            - 80:80
+            - 81:81
         volumes:
             - .:/root/go/src/github.com/apache/trafficcontrol
