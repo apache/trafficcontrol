@@ -471,7 +471,7 @@ func loadSchema() {
 	}
 	schemaBytes, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
-		die("unable to read '" + defaultDBSchemaPath + "': " + err.Error())
+		die("unable to read '" + schemaPath + "': " + err.Error())
 	}
 	cmd := exec.Command("psql", "-h", HostIP, "-p", HostPort, "-d", DBName, "-U", DBUser, "-e", "-v", "ON_ERROR_STOP=1")
 	cmd.Stdin = bytes.NewBuffer(schemaBytes)
