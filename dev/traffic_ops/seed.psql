@@ -1,0 +1,244 @@
+/* Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+INSERT INTO tm_user (
+	username,
+	tenant_id,
+	"role",
+	local_passwd,
+	confirm_local_passwd
+) VALUES (
+	'admin',
+	(SELECT id FROM tenant WHERE "name" = 'root'),
+	(SELECT id FROM "role" WHERE "name" = 'admin'),
+	-- 'twelve12' encrypted with SCRYPT
+	'SCRYPT:16384:8:1:p0Bppp/6IBeYxSwdLuYddsdMLBU/BNSlLY6fSIF7H1XW4eTbNVeMPVm7TuTEG4FM8PbqLlVwi8sPy8ZJznAlaQ==:sRcHWGe43mm/uEmXTIw37GcLEQZTlWAdf4vJqK8f0MDh8P+8gXoNx+nxWyb3r/0Bh+yyg0g/dUvti/ePZJL+Jw==',
+	'SCRYPT:16384:8:1:p0Bppp/6IBeYxSwdLuYddsdMLBU/BNSlLY6fSIF7H1XW4eTbNVeMPVm7TuTEG4FM8PbqLlVwi8sPy8ZJznAlaQ==:sRcHWGe43mm/uEmXTIw37GcLEQZTlWAdf4vJqK8f0MDh8P+8gXoNx+nxWyb3r/0Bh+yyg0g/dUvti/ePZJL+Jw=='
+)
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO profile (
+	"name",
+	description,
+	"type",
+	cdn
+) VALUES (
+	'RASCAL_TM_dev',
+	'dev TM Profile',
+	'TM_PROFILE',
+	(SELECT id FROM cdn WHERE "name" = 'ALL')
+), (
+	'EDGE_dev',
+	'dev edge Profile',
+	'ATS_PROFILE',
+	(SELECT id FROM cdn WHERE "name" = 'ALL')
+);
+
+INSERT INTO parameter (
+	config_file,
+	"name",
+	"value"
+) VALUES (
+	'rascal-config.txt',
+	'health.polling.interval',
+	'6000'
+), (
+	'rascal-config.txt',
+	'heartbeat.polling.interval',
+	'3000'
+), (
+	'rascal-config.txt',
+	'peers.polling.interval',
+	'3000'
+), (
+	'rascal-config.txt',
+	'tm.polling.interval',
+	'2000'
+);
+
+INSERT INTO profile_parameter
+SELECT profile.id, parameter.id
+FROM profile, parameter
+WHERE parameter.config_file = 'rascal-config.txt'
+AND parameter."name" LIKE '%.polling.%'
+AND profile."name" = 'RASCAL_TM_dev';
+
+INSERT INTO division ("name") VALUES ('dev');
+INSERT INTO region (
+	"name",
+	division
+) VALUES (
+	'dev',
+	(SELECT id FROM division WHERE "name" = 'dev')
+);
+INSERT INTO phys_location (
+	"name",
+	short_name,
+	address,
+	city,
+	state,
+	zip,
+	region
+) VALUES (
+	'dev',
+	'dev',
+	'address',
+	'city',
+	'state',
+	'zip',
+	(SELECT id from region WHERE "name" = 'dev')
+);
+
+INSERT INTO coordinate (
+	"name",
+	latitude,
+	longitude
+) VALUES (
+	'dev',
+	0,
+	0
+);
+
+INSERT INTO cachegroup (
+	"name",
+	short_name,
+	"type",
+	coordinate
+) VALUES (
+	'dev',
+	'dev',
+	(SELECT id FROM "type" WHERE "name" = 'EDGE_LOC'),
+	(SELECT id FROM coordinate WHERE "name" = 'dev')
+);
+
+INSERT INTO "server" (
+	host_name,
+	domain_name,
+	tcp_port,
+	https_port,
+	phys_location,
+	cachegroup,
+	type,
+	status,
+	profile,
+	cdn_id
+) VALUES (
+	'trafficmonitor',
+	'dev.ciab.test',
+	80,
+	NULL,
+	(SELECT id FROM phys_location WHERE "name" = 'dev'),
+	(SELECT id FROM cachegroup WHERE "name" = 'dev'),
+	(SELECT id FROM "type" WHERE "name" = 'RASCAL'),
+	(SELECT id FROM status WHERE "name" = 'ONLINE'),
+	(SELECT id FROM profile WHERE "name"= 'RASCAL_TM_dev'),
+	(SELECT id FROM cdn WHERE "name" = 'ALL')
+), (
+	'edge',
+	'dev.ciab.test',
+	80,
+	443,
+	(SELECT id FROM phys_location WHERE "name" = 'dev'),
+	(SELECT id FROM cachegroup WHERE "name" = 'dev'),
+	(SELECT id FROM "type" WHERE "name" = 'EDGE'),
+	(SELECT id FROM status WHERE "name" = 'REPORTED'),
+	(SELECT id FROM profile WHERE "name"= 'EDGE_dev'),
+	(SELECT id FROM cdn WHERE "name" = 'ALL')
+);
+
+INSERT INTO interface (
+	monitor,
+	"name",
+	"server"
+) VALUES (
+	FALSE,
+	'eth0',
+	(SELECT id FROM "server" WHERE host_name = 'trafficmonitor' LIMIT 1)
+), (
+	TRUE,
+	'eth0',
+	(SELECT id FROM "server" WHERE host_name = 'edge' LIMIT 1)
+);
+
+INSERT INTO ip_address (
+	address,
+	interface,
+	"server",
+	service_address
+) VALUES (
+	'129.0.0.1'::inet,
+	'eth0',
+	(SELECT id FROM "server" WHERE host_name = 'trafficmonitor' LIMIT 1),
+	TRUE
+), (
+	'129.0.0.2'::inet,
+	'eth0',
+	(SELECT id FROM "server" WHERE host_name = 'edge' LIMIT 1),
+	TRUE
+);
+
+INSERT INTO deliveryservice (
+	xml_id,
+	active,
+	dscp,
+	qstring_ignore,
+	type,
+	cdn_id,
+	display_name,
+	tenant_id
+) VALUES (
+	'dev',
+	TRUE,
+	1,
+	0,
+	(SELECT id FROM "type" WHERE "name" = 'HTTP'),
+	(SELECT id FROM cdn WHERE "name" = 'ALL'),
+	'dev',
+	(SELECT id FROM tenant WHERE "name" = 'root')
+);
+
+INSERT INTO regex (
+	"type",
+	pattern
+) VALUES (
+	(SELECT id FROM "type" WHERE "name" = 'HOST_REGEXP'),
+	'.*\\.dev\\..*'
+);
+
+INSERT INTO deliveryservice_regex (
+	deliveryservice,
+	regex,
+	set_number
+) VALUES (
+	(SELECT id FROM deliveryservice WHERE xml_id = 'dev') ,
+	(SELECT id FROM regex WHERE pattern = '.*\\.dev\\..*' LIMIT 1),
+	0
+);
+
+INSERT INTO origin (
+	"name",
+	fqdn,
+	protocol,
+	is_primary,
+	port,
+	deliveryservice,
+	tenant
+) VALUES (
+	'dev',
+	'origin.infra.ciab.test',
+	'http',
+	TRUE,
+	80,
+	(SELECT id FROM deliveryservice WHERE xml_id = 'dev'),
+	(SELECT id FROM tenant WHERE "name" = 'root')
+);
