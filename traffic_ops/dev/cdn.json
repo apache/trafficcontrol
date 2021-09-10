@@ -17,7 +17,7 @@
 		"traffic_vault_config": {
 			"dbname": "traffic_vault_development",
 			"hostname": "db",
-			"user": "postgres",
+			"user": "traffic_ops",
 			"password": "twelve12",
 			"port": 5432
 		},

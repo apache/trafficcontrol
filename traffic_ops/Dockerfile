@@ -22,13 +22,15 @@ RUN openssl genrsa -passout pass:x -out server.pass.key 2048 && \
 
 FROM alpine:latest AS trafficops-dev
 
-VOLUME /root/go/src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
+VOLUME /root/go/src/github.com/apache/trafficcontrol
 EXPOSE 443
 
 COPY --from=certbuilder /server.key /server.csr /
 RUN apk add --no-cache inotify-tools go postgresql-client && go install github.com/go-delve/delve/cmd/dlv@latest && ln -s /root/go/bin/dlv /usr/bin/dlv
 RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
+COPY dev/.pgpass /root/.pgpass
+RUN chmod 0600 /root/.pgpass
 COPY app/db/admin dev/run.sh dev/dbconf.yml dev/traffic.vault.dbconf.yml app/db/create_tables.sql app/db/patches.sql app/db/seeds.sql /
 COPY app/db/migrations/ /migrations/
 COPY app/db/trafficvault/migrations/ /traffic_vault_migrations/
