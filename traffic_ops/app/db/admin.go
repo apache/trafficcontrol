@@ -174,7 +174,7 @@ var (
 func parseDBConfig() error {
 	var cfgPath string
 	if TrafficVault {
-		cfgPath = defaultTrafficVaultDBConfigPath
+		cfgPath = trafficVaultDBConfigPath
 	} else {
 		cfgPath = dbConfigPath
 	}
