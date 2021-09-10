@@ -42,3 +42,16 @@ services:
             - POSTGRES_PASSWORD=twelve12
         hostname: db
         domainname: dev.ciab.test
+
+    trafficportal:
+        build:
+            context: dev/traffic_portal
+        depends_on:
+            - trafficops
+        hostname: trafficportal
+        domainname: trafficportal
+        image: trafficportal-dev
+        ports:
+            - 444:443
+        volumes:
+            - .:/root/go/src/github.com/apache/trafficcontrol
