@@ -58,8 +58,8 @@ type Config struct {
 	InfluxEnabled          bool
 	InfluxDBConfPath       string `json:"influxdb_conf_path"`
 	Version                string
-	UseIMS                 bool `json:"use_ims"`
-	RoleBasedPermissions   bool `json:"role_based_permissions"`
+	UseIMS                 bool                    `json:"use_ims"`
+	RoleBasedPermissions   bool                    `json:"role_based_permissions"`
 	DefaultCertificateInfo *DefaultCertificateInfo `json:"default_certificate_info"`
 }
 
