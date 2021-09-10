@@ -22,7 +22,7 @@ services:
     # trafficops runs Traffic Ops in a container.
     trafficops:
         build:
-            context: traffic_ops/
+            context: dev/traffic_ops/
         depends_on:
             - db
         domainname: dev.ciab.test

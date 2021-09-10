@@ -30,7 +30,7 @@ COPY --from=certbuilder /server.key /server.crt /aes.key /
 RUN apk add --no-cache make inotify-tools go postgresql-client && go install github.com/go-delve/delve/cmd/dlv@latest && ln -s /root/go/bin/dlv /usr/bin/dlv
 RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
-COPY dev/.pgpass /root/.pgpass
+COPY .pgpass /root/.pgpass
 RUN chmod 0600 /root/.pgpass
 
-ENTRYPOINT /root/go/src/github.com/apache/trafficcontrol/traffic_ops/dev/run.sh
+ENTRYPOINT /root/go/src/github.com/apache/trafficcontrol/dev/traffic_ops/run.sh
