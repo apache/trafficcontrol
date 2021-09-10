@@ -477,7 +477,7 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 	// If we just wrote to the real location and the app or OS or anything crashed,
 	// we'd end up with malformed files.
 
-	if _, err := util.WriteFileWithOwner(tmpFileName, cfg.Body, &cfg.Uid, &cfg.Gid, 0644); err != nil {
+	if _, err := util.WriteFileWithOwner(tmpFileName, cfg.Body, &cfg.Uid, &cfg.Gid, cfg.Perm); err != nil {
 		return errors.New("Failed to write temp config file '" + tmpFileName + "': " + err.Error())
 	}
 
