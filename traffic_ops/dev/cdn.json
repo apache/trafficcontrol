@@ -1,11 +1,11 @@
 {
 	"hypnotoad" : {
 		"listen" : [
-			"https://[::]:60443?cert=/server.csr&key=/server.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
+			"https://[::]:60443?cert=/server.crt&key=/server.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
 		]
 	},
 	"traffic_ops_golang" : {
-		"port" : 443,
+		"port" : "443",
 		"log_location_error": "stderr",
 		"log_location_warning": "stderr",
 		"log_location_info": "stdout",
@@ -15,6 +15,7 @@
 		"oauth_client_secret": "",
 		"traffic_vault_backend": "postgres",
 		"traffic_vault_config": {
+			"aes_key_location": "/aes.key",
 			"dbname": "traffic_vault_development",
 			"hostname": "db",
 			"user": "traffic_vault",

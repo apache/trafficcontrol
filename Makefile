@@ -19,10 +19,7 @@ TO_SOURCE=$(filter-out %_test.go,$(wildcard traffic_ops/traffic_ops_golang/**.go
 
 .PHONY: lint unit all check
 
-all: traffic_ops/traffic_ops_golang/traffic_ops_golang traffic_ops/app/db/admin
-
-traffic_ops/traffic_ops_golang/traffic_ops_golang: $(TO_SOURCE)
-	cd traffic_ops/traffic_ops_golang && go build
+all: traffic_ops/app/db/admin
 
 traffic_ops/app/db/admin: traffic_ops/app/db/admin.go
 	cd $(dir $@) && go build -o $(notdir $@) .

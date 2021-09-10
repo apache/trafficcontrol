@@ -18,22 +18,19 @@ RUN openssl genrsa -passout pass:x -out server.pass.key 2048 && \
 	rm server.pass.key && \
 	openssl req -new -key server.key -out server.csr \
 		-subj "/C=US/ST=CO/L=Denver/O=Apache/OU=Traffic Control/CN=trafficops.dev.ciab.test" && \
-	openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
+	openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt && \
+	openssl rand 32 | base64 > /aes.key
 
 FROM alpine:latest AS trafficops-dev
 
 VOLUME /root/go/src/github.com/apache/trafficcontrol
 EXPOSE 443
 
-COPY --from=certbuilder /server.key /server.csr /
-RUN apk add --no-cache inotify-tools go postgresql-client && go install github.com/go-delve/delve/cmd/dlv@latest && ln -s /root/go/bin/dlv /usr/bin/dlv
+COPY --from=certbuilder /server.key /server.crt /aes.key /
+RUN apk add --no-cache make inotify-tools go postgresql-client && go install github.com/go-delve/delve/cmd/dlv@latest && ln -s /root/go/bin/dlv /usr/bin/dlv
 RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
 COPY dev/.pgpass /root/.pgpass
 RUN chmod 0600 /root/.pgpass
-COPY app/db/admin dev/run.sh dev/dbconf.yml dev/traffic.vault.dbconf.yml app/db/create_tables.sql app/db/patches.sql app/db/seeds.sql /
-COPY app/db/migrations/ /migrations/
-COPY app/db/trafficvault/migrations/ /traffic.vault.migrations/
-COPY app/db/trafficvault/create_tables.sql /traffic.vault.schema.psql
 
-ENTRYPOINT /run.sh
+ENTRYPOINT /root/go/src/github.com/apache/trafficcontrol/traffic_ops/dev/run.sh
