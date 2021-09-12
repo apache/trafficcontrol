@@ -17,9 +17,14 @@
 CACHE_CONFIG_DIRS=$(filter-out cache-config/testing/ cache-config/build/,$(wildcard cache-config/*/))
 TO_SOURCE=$(filter-out %_test.go,$(wildcard traffic_ops/traffic_ops_golang/**.go))
 
+T3C_TARGETS := cache-config/t3c/t3c cache-config/t3c-apply/t3c-apply cache-config/t3c-check/t3c-check t3c-check-refs/t3c-check-refs t3c-check-reload/t3c-check-reload cache-config/t3c-diff/t3c-diff cache-config/t3c-generate/t3c-generate cache-config/t3c-preprocess/t3c-preprocess cache-config/t3c-request/t3c-request cache-config/t3c-update/t3c-update cache-config/tm-health-client/tm-health-client
+
 .PHONY: lint unit all check
 
-all: traffic_ops/app/db/admin
+all: traffic_ops/app/db/admin $(T3C_TARGETS)
+
+$(T3C_TARGETS):
+	$(MAKE) -C cache-config/ $@
 
 traffic_ops/app/db/admin: traffic_ops/app/db/admin.go
 	cd $(dir $@) && go build -o $(notdir $@) .
