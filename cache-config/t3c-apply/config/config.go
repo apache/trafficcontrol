@@ -369,6 +369,8 @@ If any of the related flags are also set, they override the mode's default behav
 		if err != nil {
 			return Cfg{}, errors.New("Could not get the hostname from the O.S., please supply a hostname: " + err.Error())
 		}
+		// strings.Split always returns a slice with at least 1 element, so we don't need a len check
+		cacheHostName = strings.Split(cacheHostName, ".")[0]
 	}
 
 	useGit := StrToUseGitFlag(*useGitStr)
