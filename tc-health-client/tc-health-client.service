@@ -22,7 +22,7 @@ After=trafficserver.service
 Requires=trafficserver.service
 
 [Service]
-ExecStart=/usr/bin/tm-health-client -vv
+ExecStart=/usr/bin/tc-health-client -vv
 Restart=always
 RestartSec=5
 

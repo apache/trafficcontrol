@@ -33,13 +33,13 @@ type ConfigFile struct {
 func GetFileModificationTime(fn string) (int64, error) {
 	f, err := os.Open(fn)
 	if err != nil {
-		return 0, errors.New("opening " + fn + ": " + err.Error())
+		return 0, errors.New("Opening " + fn + ": " + err.Error())
 	}
 	defer f.Close()
 
 	finfo, err := f.Stat()
 	if err != nil {
-		return 0, errors.New("unable to get file status for " + fn + ": " + err.Error())
+		return 0, errors.New("Unable to get file status for " + fn + ": " + err.Error())
 	}
 	return finfo.ModTime().UnixNano(), nil
 }

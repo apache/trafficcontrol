@@ -123,17 +123,6 @@ go_t3c_preprocess_dir="$ccpath"/t3c-preprocess
 	cp "$TC_DIR"/"$ccdir"/t3c-preprocess/t3c-preprocess.1 .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
-# copy tm-health-client binary
-go_tm_health_client_dir="$ccpath"/tm-health-client
-( mkdir -p "$go_tm_health_client_dir" && \
-	cd "$go_tm_health_client_dir" && \
-	cp "$TC_DIR"/"$ccdir"/tm-health-client/tm-health-client .
-	cp "$TC_DIR"/"$ccdir"/tm-health-client/tm-health-client.1 .
-	cp "$TC_DIR"/"$ccdir"/tm-health-client/tm-health-client.json ./tm-health-client.json.sample
-	cp "$TC_DIR"/"$ccdir"/tm-health-client/tm-health-client-logrotate .
-	cp "$TC_DIR"/"$ccdir"/tm-health-client/tm-health-client.service .
-) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
-
 %install
 ccdir="cache-config/"
 installdir="/usr/bin"
@@ -144,7 +133,6 @@ mkdir -p ${RPM_BUILD_ROOT}/"$installdir"
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 mkdir -p "${RPM_BUILD_ROOT}"/var/log/trafficcontrol-cache-config
 mkdir -p ${RPM_BUILD_ROOT}/"$mandir"/"$man1dir"
-mkdir -p ${RPM_BUILD_ROOT}/etc/trafficcontrol-cache-config
 mkdir -p ${RPM_BUILD_ROOT}/usr/lib/systemd/system
 
 cp -p ${RPM_SOURCE_DIR}/trafficcontrol-cache-config-%{version}/traffic_ops_ort.pl ${RPM_BUILD_ROOT}/"$installdir"
@@ -193,13 +181,6 @@ t3c_preprocess_src=src/github.com/apache/trafficcontrol/"$ccdir"/t3c-preprocess
 cp -p "$t3c_preprocess_src"/t3c-preprocess ${RPM_BUILD_ROOT}/"$installdir"
 gzip -c -9 "$src"/t3c-preprocess/t3c-preprocess.1 > ${RPM_BUILD_ROOT}/"$mandir"/"$man1dir"/t3c-preprocess.1.gz
 
-tm_health_client_src=src/github.com/apache/trafficcontrol/"$ccdir"/tm-health-client
-cp -p "$tm_health_client_src"/tm-health-client ${RPM_BUILD_ROOT}/"$installdir"
-cp -p "$tm_health_client_src"/tm-health-client.json.sample ${RPM_BUILD_ROOT}/etc/trafficcontrol-cache-config
-cp -p "$tm_health_client_src"/tm-health-client-logrotate ${RPM_BUILD_ROOT}/etc/logrotate.d
-cp -p "$tm_health_client_src"/tm-health-client.service ${RPM_BUILD_ROOT}/usr/lib/systemd/system
-gzip -c -9 "$src"/tm-health-client/tm-health-client.1 > ${RPM_BUILD_ROOT}/"$mandir"/"$man1dir"/tm-health-client.1.gz
-
 mkdir -p ${RPM_BUILD_ROOT}/var/lib/trafficcontrol-cache-config
 
 ls ${RPM_BUILD_ROOT}/"$mandir"/"$man1dir"/
@@ -244,7 +225,6 @@ fi
 /usr/bin/t3c-preprocess
 /usr/bin/t3c-request
 /usr/bin/t3c-update
-/usr/bin/tm-health-client
 /usr/share/man/man1/t3c.1.gz
 /usr/share/man/man1/t3c-apply.1.gz
 /usr/share/man/man1/t3c-check.1.gz
@@ -255,10 +235,6 @@ fi
 /usr/share/man/man1/t3c-preprocess.1.gz
 /usr/share/man/man1/t3c-request.1.gz
 /usr/share/man/man1/t3c-update.1.gz
-/usr/share/man/man1/tm-health-client.1.gz
-/etc/trafficcontrol-cache-config/tm-health-client.json.sample
-/etc/logrotate.d/tm-health-client-logrotate
-/usr/lib/systemd/system/tm-health-client.service
 
 %dir /var/lib/trafficcontrol-cache-config
 

@@ -64,6 +64,16 @@ services:
     volumes:
       - ../../..:/trafficcontrol:z
 
+  tc-health-client_build:
+    image: apache/trafficcontrol-tc-health-client_builder:master
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-tc-health-client
+      context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+    volumes:
+      - ../../..:/trafficcontrol:z
+
   traffic_portal_build:
     image: apache/traffic_portal_builder:master
     build:

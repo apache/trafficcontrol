@@ -23,6 +23,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net"
@@ -32,10 +33,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/tm-health-client/config"
-	"github.com/apache/trafficcontrol/cache-config/tm-health-client/util"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/tc-health-client/config"
+	"github.com/apache/trafficcontrol/tc-health-client/util"
 	"github.com/apache/trafficcontrol/traffic_monitor/datareq"
 	"github.com/apache/trafficcontrol/traffic_monitor/tmclient"
 	"gopkg.in/yaml.v2"
@@ -183,7 +184,7 @@ func NewParentInfo(cfg config.Cfg) (*ParentInfo, error) {
 	parentConfig := filepath.Join(cfg.TrafficServerConfigDir, ParentsFile)
 	modTime, err := util.GetFileModificationTime(parentConfig)
 	if err != nil {
-		return nil, errors.New("error reading " + ParentsFile + ": " + err.Error())
+		return nil, errors.New("Error reading " + ParentsFile + ": " + err.Error())
 	}
 	parents := util.ConfigFile{
 		Filename:       parentConfig,
@@ -193,7 +194,7 @@ func NewParentInfo(cfg config.Cfg) (*ParentInfo, error) {
 	stratyaml := filepath.Join(cfg.TrafficServerConfigDir, StrategiesFile)
 	modTime, err = util.GetFileModificationTime(stratyaml)
 	if err != nil {
-		return nil, errors.New("error reading " + StrategiesFile + ": " + err.Error())
+		return nil, errors.New("Error reading " + StrategiesFile + ": " + err.Error())
 	}
 
 	strategies := util.ConfigFile{
@@ -218,15 +219,15 @@ func NewParentInfo(cfg config.Cfg) (*ParentInfo, error) {
 
 	// read the strategies.yaml.
 	if err := parentInfo.readStrategies(parentStatus); err != nil {
-		return nil, errors.New("loading parent " + StrategiesFile + " file: " + err.Error())
+		return nil, errors.New("Loading parent " + StrategiesFile + " file: " + err.Error())
 	}
 
 	// collect the trafficserver parent status from the HostStatus subsystem.
 	if err := parentInfo.readHostStatus(parentStatus); err != nil {
-		return nil, errors.New("reading trafficserver host status: " + err.Error())
+		return nil, fmt.Errorf("Reading trafficserver host status: %w", err)
 	}
 
-	log.Infof("startup loaded %d parent records\n", len(parentStatus))
+	log.Infof("Startup loaded %d parent records\n", len(parentStatus))
 
 	parentInfo.Parents = parentStatus
 	parentInfo.Cfg = cfg
@@ -240,7 +241,7 @@ func (c *ParentInfo) GetCacheStatuses() (map[tc.CacheName]datareq.CacheStatus, e
 
 	tmHostName, err := c.findATrafficMonitor()
 	if err != nil {
-		return nil, errors.New("finding a trafficmonitor: " + err.Error())
+		return nil, errors.New("Finding a trafficmonitor: " + err.Error())
 	}
 	tmc := tmclient.New("http://"+tmHostName, config.GetRequestTimeout())
 
@@ -258,7 +259,7 @@ func (c *ParentInfo) GetCacheStatuses() (map[tc.CacheName]datareq.CacheStatus, e
 func (c *ParentInfo) PollAndUpdateCacheStatus() {
 	cycleCount := 0
 	pollingInterval := config.GetTMPollingInterval()
-	log.Infoln("polling started")
+	log.Infoln("Polling started")
 
 	for {
 		// check for config file updates
@@ -267,17 +268,30 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 		}
 		isNew, err := config.LoadConfig(&newCfg)
 		if err != nil {
-			log.Errorf("error reading changed config file %s: %s\n", c.Cfg.HealthClientConfigFile.Filename, err.Error())
+			log.Errorf("Error reading changed config file %s: %s\n", c.Cfg.HealthClientConfigFile.Filename, err.Error())
 		}
 		if isNew {
-			if err = config.ReadCredentials(&newCfg); err != nil {
-				log.Errorln("could not load credentials for config updates, keeping the old config")
+			if err = config.ReadCredentials(&newCfg, false); err != nil {
+				log.Errorln("Could not load credentials for config updates, keeping the old config")
 			} else {
 				if err = config.GetTrafficMonitors(&newCfg); err != nil {
-					log.Errorln("could not update the list of trafficmonitors, keeping the old config")
+					log.Errorln("Could not update the list of trafficmonitors, keeping the old config")
 				} else {
 					config.UpdateConfig(&c.Cfg, &newCfg)
-					log.Infof("the configuration has been successfully updated")
+					log.Infoln("The configuration has been successfully updated")
+				}
+			}
+		} else { // check for updates to the credentials file
+			if c.Cfg.CredentialFile.Filename != "" {
+				modTime, err := util.GetFileModificationTime(c.Cfg.CredentialFile.Filename)
+				if err != nil {
+					log.Errorf("Could not stat the credential file %s", c.Cfg.CredentialFile.Filename)
+				}
+				if modTime > c.Cfg.CredentialFile.LastModifyTime {
+					log.Infoln("The credential file has changed, loading new credentials")
+					if err = config.ReadCredentials(&c.Cfg, true); err != nil {
+						log.Errorf("Could not load credentials from the updated credential file: %s", c.Cfg.CredentialFile.Filename)
+					}
 				}
 			}
 		}
@@ -286,17 +300,17 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 		// host status changes.  If an error is encountered reading data the current
 		// parents lists and hoststatus remains unchanged.
 		if err := c.UpdateParentInfo(); err != nil {
-			log.Errorf("could not load new ATS parent info: %s\n", err.Error())
+			log.Errorf("Could not load new ATS parent info: %s\n", err.Error())
 		} else {
-			log.Debugf("updated parent info, total number of parents: %d\n", len(c.Parents))
+			log.Debugf("Updated parent info, total number of parents: %d\n", len(c.Parents))
 		}
 
 		// read traffic manager cache statuses.
 		caches, err := c.GetCacheStatuses()
 		if err != nil {
-			log.Errorf("error in TrafficMonitor polling: %s\n", err.Error())
+			log.Errorf("Error in TrafficMonitor polling: %s\n", err.Error())
 			if err = config.GetTrafficMonitors(&c.Cfg); err != nil {
-				log.Errorln("could not update the list of trafficmonitors, keeping the old config")
+				log.Errorln("Could not update the list of trafficmonitors, keeping the old config")
 			} else {
 				log.Infoln("Updated TrafficMonitor statuses from TrafficOps")
 			}
@@ -326,7 +340,7 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 		if cycleCount == c.Cfg.TmUpdateCycles {
 			cycleCount = 0
 			if err = config.GetTrafficMonitors(&c.Cfg); err != nil {
-				log.Errorln("could not update the list of trafficmonitors, keeping the old config")
+				log.Errorln("Could not update the list of trafficmonitors, keeping the old config")
 			} else {
 				log.Infoln("Updated TrafficMonitor statuses from TrafficOps")
 			}
@@ -345,33 +359,33 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 func (c *ParentInfo) UpdateParentInfo() error {
 	ptime, err := util.GetFileModificationTime(c.ParentDotConfig.Filename)
 	if err != nil {
-		return errors.New("error reading " + ParentsFile + ": " + err.Error())
+		return errors.New("Error reading " + ParentsFile + ": " + err.Error())
 	}
 	stime, err := util.GetFileModificationTime(c.StrategiesDotYaml.Filename)
 	if err != nil {
-		return errors.New("error reading " + StrategiesFile + ": " + err.Error())
+		return errors.New("Error reading " + StrategiesFile + ": " + err.Error())
 	}
 	if c.ParentDotConfig.LastModifyTime < ptime {
 		// read the 'parent.config'.
 		if err := c.readParentConfig(c.Parents); err != nil {
-			return errors.New("updating " + ParentsFile + " file: " + err.Error())
+			return errors.New("Updating " + ParentsFile + " file: " + err.Error())
 		} else {
-			log.Infof("updated parents from new %s, total parents: %d\n", ParentsFile, len(c.Parents))
+			log.Infof("Updated parents from new %s, total parents: %d\n", ParentsFile, len(c.Parents))
 		}
 	}
 
 	if c.StrategiesDotYaml.LastModifyTime < stime {
 		// read the 'strategies.yaml'.
 		if err := c.readStrategies(c.Parents); err != nil {
-			return errors.New("updating parent " + StrategiesFile + " file: " + err.Error())
+			return errors.New("Updating parent " + StrategiesFile + " file: " + err.Error())
 		} else {
-			log.Infof("updated parents from new %s total parents: %d\n", StrategiesFile, len(c.Parents))
+			log.Infof("Updated parents from new %s total parents: %d\n", StrategiesFile, len(c.Parents))
 		}
 	}
 
 	// collect the trafficserver current host status.
 	if err := c.readHostStatus(c.Parents); err != nil {
-		return errors.New("reading latest trafficserver host status: " + err.Error())
+		return errors.New("Trafficserver may not be running: " + err.Error())
 	}
 
 	return nil
@@ -383,14 +397,14 @@ func (c *ParentInfo) findATrafficMonitor() (string, error) {
 	var tmHostname string
 	lth := len(c.Cfg.TrafficMonitors)
 	if lth == 0 {
-		return "", errors.New("there are no available traffic monitors")
+		return "", errors.New("There are no available traffic monitors")
 	}
 
 	// build an array of available traffic monitors.
 	tms := make([]string, 0)
 	for k, v := range c.Cfg.TrafficMonitors {
 		if v == true {
-			log.Debugf("traffic monitor %s is available\n", k)
+			log.Debugf("Traffic monitor %s is available\n", k)
 			tms = append(tms, k)
 		}
 	}
@@ -402,10 +416,10 @@ func (c *ParentInfo) findATrafficMonitor() (string, error) {
 		r := (rand.Intn(lth))
 		tmHostname = tms[r]
 	} else {
-		return "", errors.New("there are no available traffic monitors")
+		return "", errors.New("There are no available traffic monitors")
 	}
 
-	log.Debugf("polling: %s\n", tmHostname)
+	log.Debugf("Polling: %s\n", tmHostname)
 
 	return tmHostname, nil
 }
@@ -444,7 +458,7 @@ func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool)
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		return errors.New("marking " + fqdn + " " + status + ": " + TrafficCtl + " error: " + err.Error())
+		return errors.New("Marking " + fqdn + " " + status + ": " + TrafficCtl + " error: " + err.Error())
 	}
 	pv, ok := c.Parents[hostName]
 	if ok {
@@ -458,9 +472,9 @@ func (c *ParentInfo) markParent(fqdn string, cacheStatus string, available bool)
 	c.Parents[hostName] = pv
 
 	if !available {
-		log.Infof("marked parent %s DOWN, cache status was: %s\n", hostName, cacheStatus)
+		log.Infof("Marked parent %s DOWN, cache status was: %s\n", hostName, cacheStatus)
 	} else {
-		log.Infof("marked parent %s UP, cache status was: %s\n", hostName, cacheStatus)
+		log.Infof("Marked parent %s UP, cache status was: %s\n", hostName, cacheStatus)
 	}
 	return nil
 }
@@ -477,7 +491,7 @@ func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error 
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		return errors.New(TrafficCtl + " error: " + err.Error())
+		return fmt.Errorf("%s error: %s", TrafficCtl, stderr.String())
 	}
 
 	if len((stdout.Bytes())) > 0 {
@@ -527,18 +541,18 @@ func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error 
 					// already exist.
 					if !ok {
 						parentStatus[hostName] = pstat
-						log.Infof("added Host '%s' from ATS Host Status to the parents map\n", hostName)
+						log.Infof("Added Host '%s' from ATS Host Status to the parents map\n", hostName)
 					} else {
 						available := pstat.available(c.Cfg.ReasonCode)
 						if pv.available(c.Cfg.ReasonCode) != available {
-							log.Infof("host status for '%s' has changed to %s\n", hostName, pstat.Status())
+							log.Infof("Host status for '%s' has changed to %s\n", hostName, pstat.Status())
 							parentStatus[hostName] = pstat
 						}
 					}
 				}
 			}
 		}
-		log.Debugf("processed trafficserver host status results, total parents: %d\n", len(parentStatus))
+		log.Debugf("Processed trafficserver host status results, total parents: %d\n", len(parentStatus))
 	}
 	return nil
 }
@@ -549,22 +563,22 @@ func (c *ParentInfo) readParentConfig(parentStatus map[string]ParentStatus) erro
 
 	_, err := os.Stat(fn)
 	if err != nil {
-		log.Warnf("skipping 'parents': %s\n", err.Error())
+		log.Warnf("Skipping 'parents': %s\n", err.Error())
 		return nil
 	}
 
-	log.Debugf("loading %s\n", fn)
+	log.Debugf("Loading %s\n", fn)
 
 	f, err := os.Open(fn)
 
 	if err != nil {
-		return errors.New("failed to open + " + fn + " :" + err.Error())
+		return errors.New("Failed to open + " + fn + " :" + err.Error())
 	}
 	defer f.Close()
 
 	finfo, err := os.Stat(fn)
 	if err != nil {
-		return errors.New("failed to Stat + " + fn + " :" + err.Error())
+		return errors.New("Failed to Stat + " + fn + " :" + err.Error())
 	}
 	c.ParentDotConfig.LastModifyTime = finfo.ModTime().UnixNano()
 
@@ -603,7 +617,7 @@ func (c *ParentInfo) readParentConfig(parentStatus map[string]ParentStatus) erro
 								ManualReason: true,
 							}
 							parentStatus[hostName] = pstat
-							log.Debugf("added Host '%s' from %s to the parents map\n", hostName, fn)
+							log.Debugf("Added Host '%s' from %s to the parents map\n", hostName, fn)
 						}
 					}
 				}
@@ -620,22 +634,22 @@ func (c *ParentInfo) readStrategies(parentStatus map[string]ParentStatus) error 
 
 	_, err := os.Stat(fn)
 	if err != nil {
-		log.Warnf("skipping 'strategies': %s\n", err.Error())
+		log.Warnf("Skipping 'strategies': %s\n", err.Error())
 		return nil
 	}
 
-	log.Debugf("loading %s\n", fn)
+	log.Debugf("Loading %s\n", fn)
 
 	// open the strategies file for scanning.
 	f, err := os.Open(fn)
 	if err != nil {
-		return errors.New("failed to open + " + fn + " :" + err.Error())
+		return errors.New("Failed to open + " + fn + " :" + err.Error())
 	}
 	defer f.Close()
 
 	finfo, err := os.Stat(fn)
 	if err != nil {
-		return errors.New("failed to Stat + " + fn + " :" + err.Error())
+		return errors.New("Failed to Stat + " + fn + " :" + err.Error())
 	}
 	c.StrategiesDotYaml.LastModifyTime = finfo.ModTime().UnixNano()
 
@@ -661,7 +675,7 @@ func (c *ParentInfo) readStrategies(parentStatus map[string]ParentStatus) error 
 	// load all included and 'strategies yaml' files to
 	// the yamlContent.
 	for _, includeFile := range includes {
-		log.Debugf("loading %s\n", includeFile)
+		log.Debugf("Loading %s\n", includeFile)
 		content, err := ioutil.ReadFile(includeFile)
 		if err != nil {
 			return errors.New(err.Error())
@@ -673,7 +687,7 @@ func (c *ParentInfo) readStrategies(parentStatus map[string]ParentStatus) error 
 	strategies := Strategies{}
 
 	if err := yaml.Unmarshal([]byte(yamlContent), &strategies); err != nil {
-		return errors.New("failed to unmarshall " + fn + ": " + err.Error())
+		return errors.New("Failed to unmarshall " + fn + ": " + err.Error())
 	}
 
 	for _, host := range strategies.Hosts {
@@ -691,7 +705,7 @@ func (c *ParentInfo) readStrategies(parentStatus map[string]ParentStatus) error 
 				ManualReason: true,
 			}
 			parentStatus[hostName] = pstat
-			log.Debugf("added Host '%s' from %s to the parents map\n", hostName, fn)
+			log.Debugf("Added Host '%s' from %s to the parents map\n", hostName, fn)
 		}
 	}
 	return nil

@@ -33,18 +33,18 @@
 -->
 # NAME
 
-tm-health-client - Traffic Monitor Health Client service
+tc-health-client - Traffic Control Health Client service
 
 # SYNOPSIS
 
-tm-health-client [-f config-file]  -h  [-l logging-directory]  -v 
+tc-health-client [-f config-file]  -h  [-l logging-directory]  -v 
 
 # DESCRIPTION
 
-The tm-health-client command is used to manage **Apache Traffic Server** parents on a
+The tc-health-client command is used to manage **Apache Traffic Server** parents on a
 host running **Apache Traffic Server**.  The command should be started by **systemd** 
 and run as a service. On startup, the command reads its default configuration file
-**/etc/trafficcontrol-cache-config/tm-health-client.json**.  After reading the config
+**/etc/trafficcontrol-health-client/tc-health-client.json**.  After reading the config
 file it polls the configured **Traffic OPs** to obtain a list of **Traffic Monitors**
 for the configured **CDN** and begins polling the available **Traffic Monitors** for
 Traffic Server cache statuses.
@@ -53,12 +53,12 @@ On each polling cycle, defined in the configuration file, the Traffic Server par
 statuses are updated from the Traffic Server **parent.config**, **strategies.yaml** 
 files, and the Traffic Server **HostStatus** subsystem.  If **Traffic Monitor** has
 determined that a parent utilized by the **Traffic Server** instance is un-healthy or
-otherwise unavailable, the tm-health-client will utilize the **Traffic Server** 
+otherwise unavailable, the tc-health-client will utilize the **Traffic Server** 
 **traffic_ctl** tool to mark down the parent host.  If a parent host is marked down 
 and **Traffic Monitor** has determined that the marked down host is now available, 
 the client will then utilize the **Traffic Server** tool to mark the host back up.
 
-Also on each polling cycle the configuration file, **tm-health-client.json** is 
+Also on each polling cycle the configuration file, **tc-health-client.json** is 
 checked and a new config is reloaded if the file has changed since the last 
 polling cycle.  The **Traffic Monitors** list is refreshed from **Traffic Ops**.
 
@@ -74,7 +74,7 @@ Requires Apache TrafficServer 8.1.0 or later.
 -f, -\-config-file=config-file 
   
   Specify the config file to use.  
-  Defaults to /etc/trafficcontro-cache-config/tm-health-client.json
+  Defaults to /etc/trafficcontro-health-client/tc-health-client.json
 
 -h, -\-help 
 
@@ -83,19 +83,19 @@ Requires Apache TrafficServer 8.1.0 or later.
 -l, -\-logging-dir=logging-directory
 
   Specify the directory where log files are kept.  The default location
-  is **/var/log/trafficcontrol-cache-config/**
+  is **/var/log/trafficcontrol-health-client/**
 
 -v, -\-verbose
 
   Logging verbosity.  Errors are logged to the default log file 
-  **/var/log/trafficcontrol-cache-config/tm-health-client.log**
+  **/var/log/trafficcontrol-health-client/tc-health-client.log**
   To add Warnings, use -v.  To add Warnings and Informational 
   logging, use -vv.  Finally you may add Debug logging using -vvv.
 
 # CONFIGURATION
 
 The configuration file is a **JSON** file and is looked for by default
-at **/etc/trafficcontrol-cache-config/tm-health-client.json**
+at **/etc/trafficcontrol-health-client/tc-health-client.json**
 
 Sample configuarion file:
 
@@ -171,11 +171,11 @@ Sample configuarion file:
 
 # Files
 
-* /etc/trafficcontrol-cache-config/tm-health-client.json
-* /etc/logrotate.d/tm-health-client-logrotate
-* /usr/bin/tm-health-client
-* /usr/lib/systemd/system/tm-health-client.service
-* /var/log/trafficcontrol-cache-config/tm-health-client.json
+* /etc/trafficcontrol-health-client/tc-health-client.json
+* /etc/logrotate.d/tc-health-client-logrotate
+* /usr/bin/tc-health-client
+* /usr/lib/systemd/system/tc-health-client.service
+* /var/log/trafficcontrol-health-client/tc-health-client.json
 * Traffic Server **parent.config**
 * Traffic Server **strategies.yaml**
 * Traffic Server **traffic_ctl** command
