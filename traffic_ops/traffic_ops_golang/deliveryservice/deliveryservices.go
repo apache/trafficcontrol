@@ -549,7 +549,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 t
 
 	dsV40 = ds
 
-	if inf.Config.TrafficVaultEnabled && (*ds.Protocol == tc.DSProtocolHTTPS || *ds.Protocol == tc.DSProtocolHTTPAndHTTPS || *ds.Protocol == tc.DSProtocolHTTPToHTTPS) {
+	if inf.Config.TrafficVaultEnabled && ds.Protocol != nil && (*ds.Protocol == tc.DSProtocolHTTPS || *ds.Protocol == tc.DSProtocolHTTPAndHTTPS || *ds.Protocol == tc.DSProtocolHTTPToHTTPS) {
 		err, errCode := GeneratePlaceholderSelfSignedCert(dsV40, inf, r.Context())
 		if err != nil || errCode != http.StatusOK {
 			return nil, http.StatusInternalServerError, nil, fmt.Errorf("creating self signed default cert: %v", err)
@@ -1134,7 +1134,7 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 
 	dsV40 = (*tc.DeliveryServiceV40)(&ds)
 
-	if inf.Config.TrafficVaultEnabled && (*ds.Protocol == tc.DSProtocolHTTPS || *ds.Protocol == tc.DSProtocolHTTPAndHTTPS || *ds.Protocol == tc.DSProtocolHTTPToHTTPS) {
+	if inf.Config.TrafficVaultEnabled && ds.Protocol != nil && (*ds.Protocol == tc.DSProtocolHTTPS || *ds.Protocol == tc.DSProtocolHTTPAndHTTPS || *ds.Protocol == tc.DSProtocolHTTPToHTTPS) {
 		err, errCode := GeneratePlaceholderSelfSignedCert(*dsV40, inf, r.Context())
 		if err != nil || errCode != http.StatusOK {
 			return nil, http.StatusInternalServerError, nil, fmt.Errorf("creating self signed default cert: %v", err)
