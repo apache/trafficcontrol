@@ -470,7 +470,7 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 	}
 
 	tmpFileName := cfg.Path + configFileTempSuffix
-	log.Infof("Writing temp file '%s'\n", tmpFileName)
+	log.Infof("Writing temp file '%s' with file mode: %o \n", tmpFileName, cfg.Perm)
 
 	// write a new file, then move to the real location
 	// because moving is atomic but writing is not.
@@ -632,11 +632,14 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 	}
 
 	r.configFiles = map[string]*ConfigFile{}
-	mode := os.FileMode(0644)
+	var mode os.FileMode
 	for _, file := range allFiles {
 		if file.Secure {
 			mode = 0600
+		} else {
+			mode = 0644
 		}
+
 		r.configFiles[file.Name] = &ConfigFile{
 			Name: file.Name,
 			Path: filepath.Join(file.Path, file.Name),
