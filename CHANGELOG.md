@@ -102,6 +102,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6066](https://github.com/apache/trafficcontrol/issues/6066) - Fixed missing/incorrect indices on some tables
 - [#6169](https://github.com/apache/trafficcontrol/issues/6169) - Fixed t3c-update not updating server status when a fallback to a previous Traffic Ops API version occurred
 - [#5576](https://github.com/apache/trafficcontrol/issues/5576) - Inconsistent Profile Name restrictions
+- [#6174](https://github.com/apache/trafficcontrol/issues/6174) - Fixed t3c-apply with no hostname failing if the OS hostname returns a full FQDN
 - Fixed Federations IMS so TR federations watcher will get updates.
 - [#5129](https://github.com/apache/trafficcontrol/issues/5129) - Updated TM so that it returns a 404 if the endpoint is not supported.
 
