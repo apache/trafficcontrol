@@ -16,6 +16,7 @@
 use strict;
 use warnings;
 use Getopt::Long;
+use feature qw(switch);
 
 my $dispersion = undef;
 my $retries = 5;
@@ -50,7 +51,7 @@ GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "disable_parent_config_comments=i" => \$disable_parent_config_comments,
           );
 
-my $cmd = 't3c apply -vv';
+my $cmd = 't3c apply';
 
 if ( defined $dispersion ) {
 	my $sleeptime = rand($dispersion);
@@ -102,6 +103,23 @@ my $mode = $ARGV[0];
 if ( defined $mode ) {
 	$cmd .= ' --run-mode=' . $mode;
 }
+
+if ( defined( $ARGV[1] ) ) {
+	my $log_level = "";
+        my $ort_log_level = uc($ARGV[1]);
+	given ( $ort_log_level ) {
+                when ("ALL")   { $log_level = "-vv"; }
+                when ("TRACE") { $log_level = "-vv"; }
+                when ("DEBUG") { $log_level = "-vv"; }
+                when ("INFO")  { $log_level = "-v"; }
+                when ("WARN")  { $log_level = ""; }
+                when ("ERROR") { $log_level = ""; }
+                when ("FATAL") { $log_level = ""; }
+                when ("NONE")  { $log_level = ""; }
+	}
+	$cmd .= ' ' . $log_level;
+}
+
 if ( defined( $ARGV[2] ) ) {
 	my $to_url = $ARGV[2];
 	$to_url =~ s/\/*$//g;
