@@ -89,6 +89,8 @@ func TestDeliveryServices(t *testing.T) {
 		t.Run("GET request using the 'tenant' query string parameter", GetDeliveryServiceByValidTenant)
 		t.Run("GET request using the 'type' query string parameter", GetDeliveryServiceByValidType)
 		t.Run("GET request using the 'xmlId' query string parameter", GetDeliveryServiceByValidXmlId)
+		t.Run("GET request using the 'topology' query string parameter", GetDeliveryServiceByTopology)
+		t.Run("GET request using the 'servicecategory' query string parameter", GetDeliveryServiceByServiceCategory)
 		t.Run("Descending order sorted response to GET request", SortTestDeliveryServicesDesc)
 		t.Run("Create/ Update/ Delete delivery services with locks", CUDDeliveryServiceWithLocks)
 		t.Run("TLS Versions property", addTLSVersionsToDeliveryService)
@@ -1035,11 +1037,45 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	updatedLongDesc := "something different"
 	updatedMaxDNSAnswers := 164598
 	updatedMaxOriginConnections := 100
+	updatedActive := false
+	//updatedCdnId : =
+	updatedDisplayName := "newds1displayname"
+	updatedDscp := 41
+	updatedGeoLimit := 1
+	updatedInitialDispersion := 2
+	updatedIpv6RoutingEnabled := false
+	updatedLogsEnabled := false
+	updatedMissLat := 42.881944
+	updatedMissLong := -88.627778
+	updateMultisiteOrigin := true
+	updatedOrgServerFqdn := "http://origin.example.net"
+	//updatedProfile :=
+	//updateProtocol :=
+	updateQstringIgnore := 0
+	updateRegionalGeoBlocking := true
+	//updateTypeId :=
+
 	remoteDS.LongDesc = &updatedLongDesc
 	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
 	remoteDS.MaxOriginConnections = &updatedMaxOriginConnections
 	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
 	remoteDS.MaxRequestHeaderBytes = &updatedMaxRequestHeaderSize
+	remoteDS.Active = &updatedActive
+	remoteDS.DisplayName = &updatedDisplayName
+	remoteDS.DSCP = &updatedDscp
+	remoteDS.GeoLimit = &updatedGeoLimit
+	remoteDS.InitialDispersion = &updatedInitialDispersion
+	remoteDS.IPV6RoutingEnabled = &updatedIpv6RoutingEnabled
+	remoteDS.LogsEnabled = &updatedLogsEnabled
+	remoteDS.MissLat = &updatedMissLat
+	remoteDS.MissLong = &updatedMissLong
+	remoteDS.MultiSiteOrigin = &updateMultisiteOrigin
+	remoteDS.OrgServerFQDN = &updatedOrgServerFqdn
+	//remoteDS.ProfileID = &updatedProfile
+	//remoteDS.Protocol = &updateProtocol
+	remoteDS.QStringIgnore = &updateQstringIgnore
+	remoteDS.RegionalGeoBlocking = &updateRegionalGeoBlocking
+	//remoteDS.Type = &updateTypeId
 
 	if updateResp, _, err := TOSession.UpdateDeliveryService(*remoteDS.ID, remoteDS, client.RequestOptions{}); err != nil {
 		t.Errorf("cannot update Delivery Service: %v - %v", err, updateResp)
@@ -2589,5 +2625,51 @@ func addTLSVersionsToDeliveryService(t *testing.T) {
 		if err != nil {
 			t.Errorf("Failed to clean up newly created Delivery Service: %v - alerts: %+v", err, alerts.Alerts)
 		}
+	}
+}
+
+func GetDeliveryServiceByTopology(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", "ds-with-topology")
+	resp, _, err := TOSession.GetDeliveryServices(opts)
+	if err != nil {
+		t.Fatalf("couldn't get ds %v - alerts: %+v", err, resp.Alerts)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected only one Delivery Service for this XML ds-with-topology")
+	}
+
+	ds := resp.Response[0]
+	opts.QueryParameters.Del("xmlId")
+	opts.QueryParameters.Set("topology", *ds.Topology)
+	resp, _, err = TOSession.GetDeliveryServices(opts)
+	if err != nil {
+		t.Fatalf("couldn't get ds by topology %v - alerts: %+v", err, resp.Alerts)
+	}
+	if len(resp.Response) == 0 {
+		t.Fatalf("Expected at least one Delivery Service for this topology")
+	}
+}
+
+func GetDeliveryServiceByServiceCategory(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", "DS5")
+	resp, _, err := TOSession.GetDeliveryServices(opts)
+	if err != nil {
+		t.Fatalf("couldn't get ds %v - alerts: %+v", err, resp.Alerts)
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("Expected only one Delivery Service for this XML DS5")
+	}
+
+	ds := resp.Response[0]
+	opts.QueryParameters.Del("xmlId")
+	opts.QueryParameters.Set("serviceCategory", *ds.ServiceCategory)
+	resp, _, err = TOSession.GetDeliveryServices(opts)
+	if err != nil {
+		t.Fatalf("couldn't get ds by service category %v - alerts: %+v", err, resp.Alerts)
+	}
+	if len(resp.Response) == 0 {
+		t.Fatalf("Expected at least one Delivery Service for this service category")
 	}
 }
