@@ -331,6 +331,10 @@ If any of the related flags are also set, they override the mode's default behav
 				modeLogStrs = append(modeLogStrs, runMode.String()+" setting --"+reportOnlyFlagName+"="+"true")
 				*reportOnlyPtr = true
 			}
+			if !getopt.IsSet(ignoreUpdateFlagName) {
+                                modeLogStrs = append(modeLogStrs, runMode.String()+" setting --"+ignoreUpdateFlagName+"="+"true")
+                                *ignoreUpdateFlagPtr = true
+                        }
 		}
 	}
 
