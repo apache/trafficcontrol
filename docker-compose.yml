@@ -81,3 +81,17 @@ services:
             - 81:81
         volumes:
             - .:/root/go/src/github.com/apache/trafficcontrol
+
+    t3c:
+        build:
+            context: dev/t3c
+        depends_on:
+            - trafficops
+        hostname: edge
+        domainname: dev.ciab.test
+        image: t3c-dev
+        ports:
+            - 8080:80
+            - 8081:8081
+        volumes:
+            - .:/root/go/src/github.com/apache/trafficcontrol
