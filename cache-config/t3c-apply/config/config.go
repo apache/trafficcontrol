@@ -281,6 +281,7 @@ badass     sets --install-packages=true
                 --ignore-update-flag=true
                 --update-ipallow=true
 report     sets --report-only=true
+                --ignore-update-flag=true
 
 Note the 'syncds' settings are all the flag defaults. Hence, if no mode is set, the default is effectively 'syncds'.
 
