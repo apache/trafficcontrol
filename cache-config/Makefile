@@ -30,8 +30,6 @@ TARGETS := t3c/t3c t3c-apply/t3c-apply t3c-check/t3c-check t3c-check-refs/t3c-ch
 
 all: $(TARGETS)
 
-<<<<<<< HEAD
-
 man: $(MANPAGES)
 
 %.1: APP=$(subst /,,$(dir $@))
