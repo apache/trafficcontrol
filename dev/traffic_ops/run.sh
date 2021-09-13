@@ -12,7 +12,7 @@ TC=/root/go/src/github.com/apache/trafficcontrol
 ADMIN="$TC/traffic_ops/app/db/admin"
 
 cd "$TC"
-make
+make traffic_ops/app/db/admin
 cd "$TC/dev/traffic_ops"
 
 "$ADMIN" -c ./dbconf.yml -s "$TC/traffic_ops/app/db/create_tables.sql" -S "$TC/traffic_ops/app/db/seeds.sql" -p "$TC/traffic_ops/app/db/patches.sql" -m "$TC/traffic_ops/app/db/migrations" reset
