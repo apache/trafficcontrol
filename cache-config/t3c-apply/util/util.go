@@ -200,7 +200,7 @@ func ServiceStart(service string, cmd string) (bool, error) {
 }
 
 func WriteFileWithOwner(fn string, data []byte, uid *int, gid *int, perm os.FileMode) (int, error) {
-	fd, err := os.OpenFile(fn, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	fd, err := os.OpenFile(fn, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, perm)
 	if err != nil {
 		return 0, errors.New("unable to open '" + fn + "' for writing: " + err.Error())
 	}
