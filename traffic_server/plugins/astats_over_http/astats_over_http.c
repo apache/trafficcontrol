@@ -65,7 +65,7 @@ static int config_handler(TSCont cont, TSEvent event, void *edata);
 static config_t* get_config(TSCont cont);
 static config_holder_t* new_config_holder(const char* path);
 
-#define STR_BUFFER_SIZE 	1024
+#define STR_BUFFER_SIZE 	65536
 
 #define SYSTEM_RECORD_TYPE 		(0x100)
 #define DEFAULT_RECORD_TYPES	(SYSTEM_RECORD_TYPE | TS_RECORDTYPE_PROCESS | TS_RECORDTYPE_PLUGIN)
