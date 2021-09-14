@@ -375,7 +375,7 @@ WITH cdn_profile_ids AS (
     MAX(p.id) as profile_id -- We only want 1 profile, so get the probably-newest if there's more than one.
   FROM
     cdn c
-    LEFT JOIN profile p ON c.id = p.cdn AND (p.name like 'CCR%' OR p.name like 'TR%')
+    LEFT JOIN profile p ON c.id = p.cdn AND (p.type = 'TR_PROFILE')
     GROUP BY c.name, c.dnssec_enabled, c.domain_name
 )
 SELECT
