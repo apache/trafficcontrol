@@ -1079,7 +1079,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	typeOpts.QueryParameters.Set("name", "ANY_MAP")
 	typeResp, _, err := TOSession.GetTypes(typeOpts)
 	if err != nil {
-		t.Errorf("cannot get type id by name: %w - alerts: %w", err, typeResp.Alerts)
+		t.Errorf("cannot get type id by name: %v - alerts: %v", err, typeResp.Alerts)
 	}
 	if len(typeResp.Response) == 0 {
 		t.Fatal("got an empty response for types")
