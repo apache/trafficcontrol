@@ -27,7 +27,8 @@ RUN apk add --no-cache \
 ADD traffic_router /go/src/$DIR/traffic_router
 
 ENTRYPOINT /bin/bash "$@"
-CMD set -o xtrace && \
+CMD set -o xtrace -o nounset && \
+	export JAVA_HOME="$(command -v java | xargs realpath | xargs dirname)/.." && \
 	mvn_command=(mvn) && \
 	if [[ "$DEBUG_ENABLE" == true ]]; then\
 		set -o nounset && \

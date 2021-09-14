@@ -30,6 +30,7 @@ RUN set -o errexit; \
 ADD traffic_router /go/src/$DIR/traffic_router
 
 CMD set -o xtrace && \
+	export JAVA_HOME="$(command -v java | xargs realpath | xargs dirname)/.." && \
 	mvn_command=(mvn) && \
 	if [[ "$DEBUG_ENABLE" == true ]]; then\
 		set -o nounset && \
