@@ -95,3 +95,22 @@ services:
             - 8081:8081
         volumes:
             - .:/root/go/src/github.com/apache/trafficcontrol
+
+    trafficrouter:
+        build:
+            context: dev/traffic_router
+        depends_on:
+            - trafficmonitor
+        hostname: trafficrouter
+        domainname: dev.ciab.test
+        image: trafficrouter-dev
+        ports:
+            - 3053:53/tcp
+            - 3053:53/udp
+            - 3080:80
+            - 3443:443
+            - 3333:3333
+            - 2222:3443
+            - 5005:5005
+        volumes:
+            - .:/root/go/src/github.com/apache/trafficcontrol
