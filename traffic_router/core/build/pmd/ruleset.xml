@@ -39,7 +39,6 @@
 	<rule ref="category/java/codestyle.xml/UnnecessaryReturn" />
 	<rule ref="category/java/errorprone.xml/UnconditionalIfStatement" />
 	<rule ref="category/java/errorprone.xml/EmptyStatementNotInLoop" />
-	<rule ref="category/java/performance.xml/BooleanInstantiation" />
 	<rule ref="category/java/codestyle.xml/UnnecessaryModifier" />
 	<rule ref="category/java/design.xml/CollapsibleIfStatements" />
 	<rule ref="category/java/design.xml/UselessOverridingMethod" />
@@ -57,13 +56,8 @@
 	<rule ref="category/java/errorprone.xml/AvoidMultipleUnaryOperators" />
 	<rule ref="category/java/errorprone.xml/EmptyInitializer" />
 
-    <rule ref="category/java/codestyle.xml/IfStmtsMustUseBraces" />
-    <rule ref="category/java/codestyle.xml/WhileLoopsMustUseBraces" />
-    <rule ref="category/java/codestyle.xml/IfElseStmtsMustUseBraces" />
-    <rule ref="category/java/codestyle.xml/ForLoopsMustUseBraces" />
 
     <rule ref="category/java/errorprone.xml/ProperCloneImplementation" />
-    <rule ref="category/java/errorprone.xml/CloneThrowsCloneNotSupportedException" />
     <rule ref="category/java/errorprone.xml/CloneMethodMustImplementCloneable" />
 
 	<rule ref="category/java/design.xml/NPathComplexity" />
@@ -71,9 +65,6 @@
 	<rule ref="category/java/design.xml/CyclomaticComplexity" />
 	<rule ref="category/java/design.xml/ExcessivePublicCount" />
 	<rule ref="category/java/design.xml/TooManyFields" />
-	<rule ref="category/java/design.xml/NcssMethodCount" />
-	<rule ref="category/java/design.xml/NcssTypeCount" />
-	<rule ref="category/java/design.xml/NcssConstructorCount" />
 
     <rule ref="category/java/errorprone.xml/DontImportSun" />
     <rule ref="category/java/errorprone.xml/SuspiciousOctalEscape" />
@@ -108,9 +99,7 @@
     <rule ref="category/java/errorprone.xml/AvoidInstanceofChecksInCatchClause" />
     <rule ref="category/java/bestpractices.xml/AbstractClassWithoutAbstractMethod" />
     <rule ref="category/java/design.xml/SimplifyConditional" />
-    <rule ref="category/java/bestpractices.xml/PositionLiteralsFirstInComparisons" />
     <rule ref="category/java/multithreading.xml/NonThreadSafeSingleton" />
-    <rule ref="category/java/multithreading.xml/UnsynchronizedStaticDateFormatter" />
     <rule ref="category/java/bestpractices.xml/PreserveStackTrace" />
     <rule ref="category/java/bestpractices.xml/UseCollectionIsEmpty" />
     <rule ref="category/java/design.xml/ClassWithOnlyPrivateConstructorsShouldBeFinal" />
@@ -124,16 +113,11 @@
     <rule ref="category/java/errorprone.xml/FinalizeShouldBeProtected" />
     <rule ref="category/java/errorprone.xml/AvoidCallingFinalize" />
 
-    <rule ref="category/java/codestyle.xml/DuplicateImports" />
-    <rule ref="category/java/codestyle.xml/DontImportJavaLang" />
-    <rule ref="category/java/bestpractices.xml/UnusedImports" />
-    <rule ref="category/java/errorprone.xml/ImportFromSamePackage" />
     <rule ref="category/java/codestyle.xml/TooManyStaticImports" />
 
     <rule ref="category/java/errorprone.xml/MissingSerialVersionUID" />
 
     <rule ref="category/java/errorprone.xml/MoreThanOneLogger" />
-    <rule ref="category/java/errorprone.xml/LoggerIsNotStaticFinal" />
     <rule ref="category/java/bestpractices.xml/SystemPrintln" />
     <rule ref="category/java/bestpractices.xml/AvoidPrintStackTrace" />
 
@@ -145,17 +129,14 @@
     <rule ref="category/java/codestyle.xml/ShortMethodName" />
     <rule ref="category/java/codestyle.xml/MethodNamingConventions" />
     <rule ref="category/java/codestyle.xml/ClassNamingConventions" />
-    <rule ref="category/java/codestyle.xml/AbstractNaming" />
     <rule ref="category/java/codestyle.xml/AvoidDollarSigns" />
     <rule ref="category/java/errorprone.xml/MethodWithSameNameAsEnclosingClass" />
     <rule ref="category/java/errorprone.xml/SuspiciousHashcodeMethodName" />
-    <rule ref="category/java/codestyle.xml/SuspiciousConstantFieldName" />
     <rule ref="category/java/errorprone.xml/SuspiciousEqualsMethodName" />
     <rule ref="category/java/errorprone.xml/AvoidFieldNameMatchingTypeName" />
     <!--<rule ref="rulesets/java/naming.xml/AvoidFieldNameMatchingMethodName" />-->
     <rule ref="category/java/codestyle.xml/NoPackage" />
     <rule ref="category/java/codestyle.xml/PackageCase" />
-    <rule ref="category/java/codestyle.xml/MIsLeadingVariableName" />
     <rule ref="category/java/codestyle.xml/BooleanGetMethodName" />
 
     <rule ref="category/java/codestyle.xml/LocalVariableCouldBeFinal" />
@@ -164,7 +145,6 @@
     <rule ref="category/java/performance.xml/UseStringBufferForStringAppends" />
     <rule ref="category/java/performance.xml/UseArraysAsList" />
     <rule ref="category/java/performance.xml/AvoidArrayLoops" />
-    <rule ref="category/java/performance.xml/UnnecessaryWrapperObjectCreation" />
     <rule ref="category/java/performance.xml/AddEmptyString" />
 
     <rule ref="category/java/errorprone.xml/AvoidCatchingThrowable" />
