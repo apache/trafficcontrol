@@ -212,7 +212,10 @@ func GetTestProfiles(t *testing.T) {
 		profileID := resp[0].ID
 		if len(pr.Parameters) > 0 {
 			parameter := pr.Parameters[0]
-			respParameter, _, _ := TOSession.GetParameterByName(*parameter.Name)
+			respParameter, _, err := TOSession.GetParameterByName(*parameter.Name)
+			if err != nil{
+				t.Errorf("Cannot GET Parameter by name: %v - %v", err, resp)
+			}
 			if len(respParameter) > 0 {
 				parameterID := respParameter[0].ID
 				if parameterID > 0 {

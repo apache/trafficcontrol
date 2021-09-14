@@ -517,7 +517,6 @@ func GetTestProfiles(t *testing.T) {
 		}
 		profileID := resp.Response[0].ID
 
-		// TODO: figure out what the 'Parameter' field of a Profile is and how
 		if len(pr.Parameters) > 0 {
 			parameter := pr.Parameters[0]
 			opts.QueryParameters.Set("name", *parameter.Name)
