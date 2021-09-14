@@ -12,6 +12,7 @@
 #  limitations under the License.
 #
 FROM alpine:latest AS certbuilder
+
 RUN apk add --no-cache openssl
 RUN openssl genrsa -passout pass:x -out server.pass.key 2048 && \
 	openssl rsa -passin pass:x -in server.pass.key -out server.key && \
@@ -23,6 +24,7 @@ RUN openssl genrsa -passout pass:x -out server.pass.key 2048 && \
 
 FROM node:alpine AS tpv2-dev
 
+ENV TC="/root/go/src/github.com/apache/trafficcontrol/"
 VOLUME /root/go/src/github.com/apache/trafficcontrol
 EXPOSE 443
 

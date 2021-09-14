@@ -23,8 +23,10 @@ RUN openssl genrsa -passout pass:x -out server.pass.key 2048 && \
 
 FROM node:alpine AS trafficportal-dev
 
+ENV TC="/root/go/src/github.com/apache/trafficcontrol/"
 VOLUME /root/go/src/github.com/apache/trafficcontrol
 EXPOSE 443
+ENV TP_SERVER_CONFIG_FILE="$TC/dev/traffic_portal/config.js"
 
 RUN apk add --no-cache ruby ruby-dev gcc musl-dev make && gem update --system && gem install sass compass
 COPY --from=certbuilder /server.key /server.crt /

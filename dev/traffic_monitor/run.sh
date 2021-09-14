@@ -3,8 +3,6 @@
 set -o errexit
 trap '[ $? -eq 0 ] && exit 0 || echo "Error on line ${LINENO} of ${0}"; exit 1' EXIT
 
-TC=/root/go/src/github.com/apache/trafficcontrol
-
 cd "$TC/traffic_monitor"
 
 dlv --accept-multiclient --continue --listen=:81 --headless --api-version=2 debug -- --opsCfg="$TC/dev/traffic_monitor/ops.config.json" --config="$TC/dev/traffic_monitor/tm.config.json" &

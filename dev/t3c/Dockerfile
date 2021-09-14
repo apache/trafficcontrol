@@ -22,8 +22,9 @@ RUN tar -xf trafficserver-9.1.0.tar.bz2 && cd trafficserver-9.1.0 && mkdir /ats 
 
 FROM alpine:latest AS t3c-dev
 
+ENV TC="/root/go/src/github.com/apache/trafficcontrol/"
 VOLUME /root/go/src/github.com/apache/trafficcontrol
-EXPOSE 443
+EXPOSE 80 8081
 
 COPY --from=traffic-server-builder /bin/traffic_cache_tool /bin/traffic_crashlog /bin/traffic_ctl /bin/traffic_layout /bin/traffic_logcat /bin/traffic_logstats /bin/traffic_manager /bin/traffic_server /bin/traffic_via /bin/trafficserver /bin/tspush /bin/tsxs /bin/
 COPY --from=traffic-server-builder /etc/trafficserver /etc/trafficserver

@@ -8,9 +8,6 @@ while ! pg_isready -h db -p 5432 -d postgres; do
 	sleep 3;
 done
 
-TC=/root/go/src/github.com/apache/trafficcontrol
-ADMIN="$TC/traffic_ops/app/db/admin"
-
 cd "$TC"
 make traffic_ops/app/db/admin
 cd "$TC/dev/traffic_ops"

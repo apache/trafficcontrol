@@ -15,7 +15,6 @@
 
 set -o errexit
 
-TC="/root/go/src/github.com/apache/trafficcontrol/"
 cd "$TC/experimental/traffic-portal"
 npm install
 ./node_modules/.bin/ng serve --ssl --ssl-cert /server.crt --ssl-key /server.key --watch --progress --proxy-config "$TC/dev/tpv2/proxy.json" --port 443 --host "::0" --live-reload

@@ -15,7 +15,6 @@
 
 set -o errexit
 
-TC="/root/go/src/github.com/apache/trafficcontrol/"
 cd "$TC/traffic_portal"
 npm install
-TP_SERVER_CONFIG_FILE="$TC/dev/traffic_portal/config.js" ./node_modules/.bin/grunt
+./node_modules/.bin/grunt

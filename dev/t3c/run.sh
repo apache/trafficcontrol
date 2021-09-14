@@ -21,8 +21,6 @@ set -o errexit
 trap '[ $? -eq 0 ] && exit 0 || echo "Error on line ${LINENO} of ${0}"; exit 1' EXIT
 
 
-TC=/root/go/src/github.com/apache/trafficcontrol
-
 cd "$TC/cache-config"
 
 # Build area may contain non-debug binaries

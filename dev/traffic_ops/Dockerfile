@@ -23,8 +23,10 @@ RUN openssl genrsa -passout pass:x -out server.pass.key 2048 && \
 
 FROM alpine:latest AS trafficops-dev
 
+ENV TC="/root/go/src/github.com/apache/trafficcontrol/"
 VOLUME /root/go/src/github.com/apache/trafficcontrol
-EXPOSE 443
+ENV ADMIN="$TC/traffic_ops/app/db/admin"
+EXPOSE 443 6444
 
 COPY --from=certbuilder /server.key /server.crt /aes.key /
 RUN apk add --no-cache make inotify-tools go postgresql-client && go install github.com/go-delve/delve/cmd/dlv@latest && ln -s /root/go/bin/dlv /usr/bin/dlv
