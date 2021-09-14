@@ -20,6 +20,8 @@ package atscfg
  */
 
 import (
+	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -8577,5 +8579,1453 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 	}
 	if !strings.Contains(txt, `http://origin.example.test`) {
 		t.Errorf("expected mid with a parent mid cache to set remap target scheme to http, actual: %v", txt)
+	}
+}
+
+func TestMakeRemapDotConfigE2ESSLPreTopology(t *testing.T) {
+	hdr := "myHeaderComment"
+
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
+
+	ds := DeliveryService{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("http://origin.example.test")
+	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
+	ds.RangeRequestHandling = util.IntPtr(0)
+	ds.RemapText = util.StrPtr("myremaptext")
+	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(0)
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.FQPacingRate = util.IntPtr(0)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.Protocol = util.IntPtr(0)
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	remapConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "cachekey.pparam",
+			ConfigFile: "remap.config",
+			Value:      "--cachekeykey=cachekeyval",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.Topology{}
+	cgs := []tc.CacheGroupNullable{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	opt := &RemapDotConfigOpts{HdrComment: hdr}
+
+	t.Run("test Edge InternalHTTPSNoChild remap is identical to InternalHTTPSNo", func(t *testing.T) {
+		opt.InternalHTTPS = InternalHTTPSNoChild
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		dses := []DeliveryService{ds}
+
+		configDir := "/my/config/dir"
+
+		cfgNoChild, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		opt.InternalHTTPS = InternalHTTPSNo
+		cfgNo, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if cfgNo.Text != cfgNoChild.Text {
+			t.Errorf("expected Edge InternalHTTPSNoChild to be identical to InternalHTTPSNo, actual NoChild '%v' No '%v'", cfgNoChild.Text, cfgNo.Text)
+		}
+	})
+
+	t.Run("test Edge InternalHTTPS default remap is identical to InternalHTTPSNo", func(t *testing.T) {
+		// test Edge default InternalHTTPS defaults to InternalHTTPSNo
+
+		opt.InternalHTTPS = InternalHTTPS("")
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		dses := []DeliveryService{ds}
+
+		configDir := "/my/config/dir"
+
+		cfgDefault, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		opt.InternalHTTPS = InternalHTTPSNo
+		cfgNo, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if cfgDefault.Text != cfgNo.Text {
+			t.Errorf("expected Edge InternalHTTPS default to be identical to InternalHTTPSNo, actual default '%v' No '%v'", cfgDefault.Text, cfgNo.Text)
+		}
+	})
+
+	t.Run("test Edge nil opt defaults to InternalHTTPSNo", func(t *testing.T) {
+
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		dses := []DeliveryService{ds}
+
+		configDir := "/my/config/dir"
+
+		cfgDefault, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, nil)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		opt := &RemapDotConfigOpts{}
+
+		opt.InternalHTTPS = InternalHTTPSNo
+		cfgNo, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if cfgDefault.Text != cfgNo.Text {
+			t.Errorf("expected Edge nil opt to be identical to InternalHTTPSNo, actual nil '%v' No '%v'", cfgDefault.Text, cfgNo.Text)
+		}
+	})
+
+	type testdat struct {
+		CacheType            tc.CacheType
+		DSType               tc.DSType
+		InternalHTTPS        InternalHTTPS
+		OriginScheme         string
+		ExpectedSourceScheme string
+		ExpectedTargetScheme string
+	}
+
+	const schemeHTTP = "http"
+	const schemeHTTPS = "https"
+	const schemeBoth = "both" // used to indicate a 2 remap lines with an ExpectedSourceScheme of each
+
+	cases := []testdat{
+		{tc.CacheTypeEdge, tc.DSTypeHTTP, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTP, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTP, InternalHTTPSNoChild, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTP, InternalHTTPSNoChild, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTP, InternalHTTPSYes, schemeHTTP, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeEdge, tc.DSTypeHTTP, InternalHTTPSYes, schemeHTTPS, schemeHTTP, schemeHTTPS},
+
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLive, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLive, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLive, InternalHTTPSNoChild, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLive, InternalHTTPSNoChild, schemeHTTPS, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLive, InternalHTTPSYes, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLive, InternalHTTPSYes, schemeHTTPS, schemeHTTP, schemeHTTPS},
+
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLiveNational, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLiveNational, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLiveNational, InternalHTTPSNoChild, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLiveNational, InternalHTTPSNoChild, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLiveNational, InternalHTTPSYes, schemeHTTP, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLiveNational, InternalHTTPSYes, schemeHTTPS, schemeHTTP, schemeHTTPS},
+
+		{tc.CacheTypeEdge, tc.DSTypeDNS, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNS, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNS, InternalHTTPSNoChild, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNS, InternalHTTPSNoChild, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNS, InternalHTTPSYes, schemeHTTP, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeEdge, tc.DSTypeDNS, InternalHTTPSYes, schemeHTTPS, schemeHTTP, schemeHTTPS},
+
+		{tc.CacheTypeEdge, tc.DSTypeDNSLive, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLive, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLive, InternalHTTPSNoChild, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLive, InternalHTTPSNoChild, schemeHTTPS, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLive, InternalHTTPSYes, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLive, InternalHTTPSYes, schemeHTTPS, schemeHTTP, schemeHTTPS},
+
+		{tc.CacheTypeEdge, tc.DSTypeDNSLiveNational, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLiveNational, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLiveNational, InternalHTTPSNoChild, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLiveNational, InternalHTTPSNoChild, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLiveNational, InternalHTTPSYes, schemeHTTP, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLiveNational, InternalHTTPSYes, schemeHTTPS, schemeHTTP, schemeHTTPS},
+
+		// CacheType DSType InternalHTTPS OriginScheme ExpectedSourceScheme ExpectedTargetScheme
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSNoChild, schemeHTTP, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSNoChild, schemeHTTPS, schemeBoth, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSYes, schemeHTTP, schemeHTTPS, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSYes, schemeHTTPS, schemeHTTPS, schemeHTTPS},
+
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSNoChild, schemeHTTP, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSNoChild, schemeHTTPS, schemeBoth, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSYes, schemeHTTP, schemeHTTPS, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSYes, schemeHTTPS, schemeHTTPS, schemeHTTPS},
+
+		// HTTPLive DSes don't use Mids; other tests already verify that doesn't create any remap rules
+
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSNoChild, schemeHTTP, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSNoChild, schemeHTTPS, schemeBoth, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSYes, schemeHTTP, schemeHTTPS, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSYes, schemeHTTPS, schemeHTTPS, schemeHTTPS},
+
+		// DNSLive DSes don't use Mids; other tests already verify that doesn't create any remap rules
+
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSNoChild, schemeHTTP, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSNoChild, schemeHTTPS, schemeBoth, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSYes, schemeHTTP, schemeHTTPS, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSYes, schemeHTTPS, schemeHTTPS, schemeHTTPS},
+	}
+	// casesno = casesno //debug
+
+	// cases := []testdat{
+	// 	{tc.CacheTypeEdge, tc.DSTypeHTTP, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTPS},
+	// }
+
+	for _, ca := range cases {
+		t.Run(fmt.Sprintf("%v %v internal-https %v origin %v", ca.CacheType, ca.DSType, ca.InternalHTTPS, ca.OriginScheme), func(t *testing.T) {
+			server.Type = string(ca.CacheType)
+			opt.InternalHTTPS = ca.InternalHTTPS
+			dsType := ca.DSType
+			ds.Type = &dsType
+			ds.OrgServerFQDN = util.StrPtr(ca.OriginScheme + "://origin.example.test")
+
+			configDir := "/my/config/dir"
+			dses := []DeliveryService{ds}
+			cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			txt := cfg.Text
+			txt = strings.TrimSpace(txt)
+			testComment(t, txt, hdr)
+			txtLines := strings.Split(txt, "\n")
+
+			expectedRemapLineNum := 2 // 1 line plus comment
+			if ca.ExpectedSourceScheme == schemeBoth {
+				expectedRemapLineNum++
+			}
+			if len(txtLines) != expectedRemapLineNum {
+				t.Log(cfg.Warnings)
+				t.Fatalf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
+			}
+
+			// sourceFQDN := "myregexpattern"
+			// if server.Type == string(tc.CacheTypeMid) {
+			// 	sourceFQDN = "origin.example.test"
+			// }
+
+			remapLine := txtLines[1]
+			re := regexp.MustCompile(`map\s+(http|https)\:\/\/(.*)\s+(http|https)\:\/\/(.*)\s+.*`)
+			match := re.FindStringSubmatch(remapLine)
+			if match == nil {
+				t.Fatalf("expected remap line to match regex 'map source target', actual: '%v'", txt)
+			}
+			if len(match) < 5 {
+				t.Fatalf("expected remap line match to have 5 entries, actual: text '%v' match %+v", txt, match)
+			}
+
+			actualSourceScheme := match[1]
+			// actualSourceFQDN := match[2]
+			actualTargetScheme := match[3]
+			// acutalTargetFQDN := match[4]
+
+			sawHTTP := false
+			if ca.ExpectedSourceScheme != schemeBoth {
+				if actualSourceScheme != ca.ExpectedSourceScheme {
+					t.Errorf("expected source scheme '%v', actual: '%v'", ca.ExpectedSourceScheme, txt)
+				}
+			} else {
+				if actualSourceScheme != schemeHTTP && actualSourceScheme != schemeHTTPS {
+					t.Fatalf("expected source scheme http or https, actual: '%v'", txt)
+				}
+				sawHTTP = actualSourceScheme == schemeHTTP
+			}
+			if actualTargetScheme != ca.ExpectedTargetScheme {
+				t.Errorf("expected target scheme '%v', actual: '%v'", ca.ExpectedTargetScheme, txt)
+			}
+
+			if ca.ExpectedSourceScheme == schemeBoth {
+				remapLine := txtLines[2]
+				match := re.FindStringSubmatch(remapLine)
+				if match == nil {
+					t.Fatalf("expected second remap line to match regex 'map source target', actual: '%v'", txt)
+				}
+				if len(match) < 5 {
+					t.Fatalf("expected second remap line match to have 5 entries, actual: text '%v' match %+v", txt, match)
+				}
+
+				actualSourceScheme := match[1]
+				// actualSourceFQDN := match[2]
+				actualTargetScheme := match[3]
+				// acutalTargetFQDN := match[4]
+
+				if sawHTTP {
+					if actualSourceScheme != schemeHTTPS {
+						t.Fatalf("expected source scheme https after seeing http, actual: '%v'", txt)
+					}
+				} else {
+					if actualSourceScheme != schemeHTTP {
+						t.Fatalf("expected source scheme http after seeing https, actual: '%v'", txt)
+					}
+				}
+				if actualTargetScheme != ca.ExpectedTargetScheme {
+					t.Errorf("expected second target scheme '%v', actual: '%v'", ca.ExpectedTargetScheme, txt)
+				}
+			}
+		})
+	}
+}
+
+func TestMakeRemapDotConfigE2ESSLTopologyIsParentNotChild(t *testing.T) {
+	// is parent, not child => traditional mid
+
+	hdr := "myHeaderComment"
+
+	server := makeTestRemapServer()
+	server.Type = "MID"
+	server.Cachegroup = util.StrPtr("midCG")
+
+	ds := DeliveryService{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("DNS")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("https://origin.example.test")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(314159)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	ds.Topology = util.StrPtr("t0")
+
+	// non-nil default values should not trigger header rewrite plugin directive
+	ds.EdgeHeaderRewrite = util.StrPtr("")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.ServiceCategory = util.StrPtr("")
+	ds.MaxOriginConnections = util.IntPtr(0)
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(*server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(*server.Profile),
+		},
+	}
+
+	remapConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1, 2},
+				},
+				{
+					Cachegroup: "midCG",
+				},
+				{
+					Cachegroup: "midCG2",
+				},
+			},
+		},
+	}
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG")
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.SecondaryParentName = mid1.Cachegroup
+	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	mCG2 := &tc.CacheGroupNullable{}
+	mCG2.Name = mid1.Cachegroup
+	mCG2.ID = mid1.CachegroupID
+	mCGType2 := tc.CacheGroupMidTypeName
+	mCG2.Type = &mCGType2
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	opt := &RemapDotConfigOpts{HdrComment: hdr}
+	opt.InternalHTTPS = InternalHTTPSNo
+
+	t.Run("test Edge InternalHTTPS default remap is identical to InternalHTTPSNo", func(t *testing.T) {
+		// test Edge default InternalHTTPS defaults to InternalHTTPSNo
+
+		opt.InternalHTTPS = InternalHTTPS("")
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		dses := []DeliveryService{ds}
+
+		configDir := "/my/config/dir"
+
+		cfgDefault, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		opt.InternalHTTPS = InternalHTTPSNo
+		cfgNo, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if cfgDefault.Text != cfgNo.Text {
+			t.Errorf("expected Edge InternalHTTPS default to be identical to InternalHTTPSNo, actual default '%v' No '%v'", cfgDefault.Text, cfgNo.Text)
+		}
+	})
+
+	t.Run("test Edge nil opt defaults to InternalHTTPSNo", func(t *testing.T) {
+
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		dses := []DeliveryService{ds}
+
+		configDir := "/my/config/dir"
+
+		cfgDefault, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, nil)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		opt := &RemapDotConfigOpts{}
+
+		opt.InternalHTTPS = InternalHTTPSNo
+		cfgNo, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if cfgDefault.Text != cfgNo.Text {
+			t.Errorf("expected Edge nil opt to be identical to InternalHTTPSNo, actual nil '%v' No '%v'", cfgDefault.Text, cfgNo.Text)
+		}
+	})
+
+	type testdat struct {
+		CacheType            tc.CacheType
+		DSType               tc.DSType
+		InternalHTTPS        InternalHTTPS
+		OriginScheme         string
+		ExpectedSourceScheme string
+		ExpectedTargetScheme string
+	}
+
+	const schemeHTTP = "http"
+	const schemeHTTPS = "https"
+	const schemeBoth = "both" // used to indicate a 2 remap lines with an ExpectedSourceScheme of each
+
+	// TODO: add Edge tests here, once the server type is fixed to not matter for Topologies
+	// TODO: add test field for DS HTTP/HTTPS/HTTP-and-HTTPS/HTTP-to-HTTPS options
+
+	cases := []testdat{
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSNoChild, schemeHTTP, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSNoChild, schemeHTTPS, schemeBoth, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSYes, schemeHTTP, schemeHTTPS, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSYes, schemeHTTPS, schemeHTTPS, schemeHTTPS},
+
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSNoChild, schemeHTTP, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSNoChild, schemeHTTPS, schemeBoth, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSYes, schemeHTTP, schemeHTTPS, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSYes, schemeHTTPS, schemeHTTPS, schemeHTTPS},
+
+		// HTTPLive DSes don't use Mids; other tests already verify that doesn't create any remap rules
+
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSNoChild, schemeHTTP, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSNoChild, schemeHTTPS, schemeBoth, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSYes, schemeHTTP, schemeHTTPS, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSYes, schemeHTTPS, schemeHTTPS, schemeHTTPS},
+
+		// DNSLive DSes don't use Mids; other tests already verify that doesn't create any remap rules
+
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSNoChild, schemeHTTP, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSNoChild, schemeHTTPS, schemeBoth, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSYes, schemeHTTP, schemeHTTPS, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSYes, schemeHTTPS, schemeHTTPS, schemeHTTPS},
+	}
+
+	for _, ca := range cases {
+		t.Run(fmt.Sprintf("%v %v internal-https %v origin %v", ca.CacheType, ca.DSType, ca.InternalHTTPS, ca.OriginScheme), func(t *testing.T) {
+			server.Type = string(ca.CacheType)
+			opt.InternalHTTPS = ca.InternalHTTPS
+			dsType := ca.DSType
+			ds.Type = &dsType
+			ds.OrgServerFQDN = util.StrPtr(ca.OriginScheme + "://origin.example.test")
+
+			configDir := "/my/config/dir"
+			dses := []DeliveryService{ds}
+			cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			txt := cfg.Text
+			txt = strings.TrimSpace(txt)
+			testComment(t, txt, hdr)
+			txtLines := strings.Split(txt, "\n")
+
+			expectedRemapLineNum := 2 // 1 line plus comment
+			if ca.ExpectedSourceScheme == schemeBoth {
+				expectedRemapLineNum++
+			}
+			if len(txtLines) != expectedRemapLineNum {
+				t.Log(cfg.Warnings)
+				t.Fatalf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
+			}
+
+			// sourceFQDN := "myregexpattern"
+			// if server.Type == string(tc.CacheTypeMid) {
+			// 	sourceFQDN = "origin.example.test"
+			// }
+
+			remapLine := txtLines[1]
+			re := regexp.MustCompile(`map\s+(http|https)\:\/\/(.*)\s+(http|https)\:\/\/(.*)\s+.*`)
+			match := re.FindStringSubmatch(remapLine)
+			if match == nil {
+				t.Fatalf("expected remap line to match regex 'map source target', actual: '%v'", txt)
+			}
+			if len(match) < 5 {
+				t.Fatalf("expected remap line match to have 5 entries, actual: text '%v' match %+v", txt, match)
+			}
+
+			actualSourceScheme := match[1]
+			// actualSourceFQDN := match[2]
+			actualTargetScheme := match[3]
+			// acutalTargetFQDN := match[4]
+
+			sawHTTP := false
+			if ca.ExpectedSourceScheme != schemeBoth {
+				if actualSourceScheme != ca.ExpectedSourceScheme {
+					t.Errorf("expected source scheme '%v', actual: '%v'", ca.ExpectedSourceScheme, txt)
+				}
+			} else {
+				if actualSourceScheme != schemeHTTP && actualSourceScheme != schemeHTTPS {
+					t.Fatalf("expected source scheme http or https, actual: '%v'", txt)
+				}
+				sawHTTP = actualSourceScheme == schemeHTTP
+			}
+			if actualTargetScheme != ca.ExpectedTargetScheme {
+				t.Errorf("expected target scheme '%v', actual: '%v'", ca.ExpectedTargetScheme, txt)
+			}
+
+			if ca.ExpectedSourceScheme == schemeBoth {
+				remapLine := txtLines[2]
+				match := re.FindStringSubmatch(remapLine)
+				if match == nil {
+					t.Fatalf("expected second remap line to match regex 'map source target', actual: '%v'", txt)
+				}
+				if len(match) < 5 {
+					t.Fatalf("expected second remap line match to have 5 entries, actual: text '%v' match %+v", txt, match)
+				}
+
+				actualSourceScheme := match[1]
+				// actualSourceFQDN := match[2]
+				actualTargetScheme := match[3]
+				// acutalTargetFQDN := match[4]
+
+				if sawHTTP {
+					if actualSourceScheme != schemeHTTPS {
+						t.Fatalf("expected source scheme https after seeing http, actual: '%v'", txt)
+					}
+				} else {
+					if actualSourceScheme != schemeHTTP {
+						t.Fatalf("expected source scheme http after seeing https, actual: '%v'", txt)
+					}
+				}
+				if actualTargetScheme != ca.ExpectedTargetScheme {
+					t.Errorf("expected second target scheme '%v', actual: '%v'", ca.ExpectedTargetScheme, txt)
+				}
+			}
+		})
+	}
+}
+
+func TestMakeRemapDotConfigE2ESSLTopologyNotParentIsChild(t *testing.T) {
+	// not parent, is child => traditional edge that uses mids
+
+	hdr := "myHeaderComment"
+
+	server := makeTestRemapServer()
+	server.Type = "Edge"
+	server.Cachegroup = util.StrPtr("edgeCG")
+
+	ds := DeliveryService{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("DNS")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("https://origin.example.test")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(314159)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	ds.Topology = util.StrPtr("t0")
+
+	// non-nil default values should not trigger header rewrite plugin directive
+	ds.EdgeHeaderRewrite = util.StrPtr("")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.ServiceCategory = util.StrPtr("")
+	ds.MaxOriginConnections = util.IntPtr(0)
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(*server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(*server.Profile),
+		},
+	}
+
+	remapConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1, 2},
+				},
+				{
+					Cachegroup: "midCG",
+				},
+				{
+					Cachegroup: "midCG2",
+				},
+			},
+		},
+	}
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG")
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = server.Cachegroup
+	eCG.ID = server.CachegroupID
+	eCG.ParentName = mid0.Cachegroup
+	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.SecondaryParentName = mid1.Cachegroup
+	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	mCG2 := &tc.CacheGroupNullable{}
+	mCG2.Name = mid1.Cachegroup
+	mCG2.ID = mid1.CachegroupID
+	mCGType2 := tc.CacheGroupMidTypeName
+	mCG2.Type = &mCGType2
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	opt := &RemapDotConfigOpts{HdrComment: hdr}
+	opt.InternalHTTPS = InternalHTTPSNo
+
+	t.Run("test Edge InternalHTTPSNoChild remap is identical to InternalHTTPSNo", func(t *testing.T) {
+		opt.InternalHTTPS = InternalHTTPSNoChild
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		dses := []DeliveryService{ds}
+
+		configDir := "/my/config/dir"
+		cfgNoChild, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		opt.InternalHTTPS = InternalHTTPSNo
+		cfgNo, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if cfgNo.Text != cfgNoChild.Text {
+			t.Errorf("expected Edge InternalHTTPSNoChild to be identical to InternalHTTPSNo, actual NoChild '%v' No '%v'", cfgNoChild.Text, cfgNo.Text)
+		}
+	})
+
+	t.Run("test Edge InternalHTTPS default remap is identical to InternalHTTPSNo", func(t *testing.T) {
+		// test Edge default InternalHTTPS defaults to InternalHTTPSNo
+
+		opt.InternalHTTPS = InternalHTTPS("")
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		dses := []DeliveryService{ds}
+
+		configDir := "/my/config/dir"
+
+		cfgDefault, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		opt.InternalHTTPS = InternalHTTPSNo
+		cfgNo, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if cfgDefault.Text != cfgNo.Text {
+			t.Errorf("expected Edge InternalHTTPS default to be identical to InternalHTTPSNo, actual default '%v' No '%v'", cfgDefault.Text, cfgNo.Text)
+		}
+	})
+
+	t.Run("test Edge nil opt defaults to InternalHTTPSNo", func(t *testing.T) {
+
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		dses := []DeliveryService{ds}
+
+		configDir := "/my/config/dir"
+
+		cfgDefault, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, nil)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		opt := &RemapDotConfigOpts{}
+
+		opt.InternalHTTPS = InternalHTTPSNo
+		cfgNo, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if cfgDefault.Text != cfgNo.Text {
+			t.Errorf("expected Edge nil opt to be identical to InternalHTTPSNo, actual nil '%v' No '%v'", cfgDefault.Text, cfgNo.Text)
+		}
+	})
+
+	type testdat struct {
+		CacheType            tc.CacheType
+		DSType               tc.DSType
+		InternalHTTPS        InternalHTTPS
+		OriginScheme         string
+		ExpectedSourceScheme string
+		ExpectedTargetScheme string
+	}
+
+	const schemeHTTP = "http"
+	const schemeHTTPS = "https"
+	const schemeBoth = "both" // used to indicate a 2 remap lines with an ExpectedSourceScheme of each
+
+	// TODO: add Mid tests here, once the server type is fixed to not matter for Topologies
+	// TODO: add test field for DS HTTP/HTTPS/HTTP-and-HTTPS/HTTP-to-HTTPS options
+
+	cases := []testdat{
+		{tc.CacheTypeEdge, tc.DSTypeHTTP, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTP, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTP, InternalHTTPSNoChild, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTP, InternalHTTPSNoChild, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTP, InternalHTTPSYes, schemeHTTP, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeEdge, tc.DSTypeHTTP, InternalHTTPSYes, schemeHTTPS, schemeHTTP, schemeHTTPS},
+
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLive, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLive, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLive, InternalHTTPSNoChild, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLive, InternalHTTPSNoChild, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLive, InternalHTTPSYes, schemeHTTP, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLive, InternalHTTPSYes, schemeHTTPS, schemeHTTP, schemeHTTPS},
+
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLiveNational, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLiveNational, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLiveNational, InternalHTTPSNoChild, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLiveNational, InternalHTTPSNoChild, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLiveNational, InternalHTTPSYes, schemeHTTP, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeEdge, tc.DSTypeHTTPLiveNational, InternalHTTPSYes, schemeHTTPS, schemeHTTP, schemeHTTPS},
+
+		{tc.CacheTypeEdge, tc.DSTypeDNS, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNS, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNS, InternalHTTPSNoChild, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNS, InternalHTTPSNoChild, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNS, InternalHTTPSYes, schemeHTTP, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeEdge, tc.DSTypeDNS, InternalHTTPSYes, schemeHTTPS, schemeHTTP, schemeHTTPS},
+
+		{tc.CacheTypeEdge, tc.DSTypeDNSLive, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLive, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLive, InternalHTTPSNoChild, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLive, InternalHTTPSNoChild, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLive, InternalHTTPSYes, schemeHTTP, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLive, InternalHTTPSYes, schemeHTTPS, schemeHTTP, schemeHTTPS},
+
+		{tc.CacheTypeEdge, tc.DSTypeDNSLiveNational, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLiveNational, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLiveNational, InternalHTTPSNoChild, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLiveNational, InternalHTTPSNoChild, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLiveNational, InternalHTTPSYes, schemeHTTP, schemeHTTP, schemeHTTPS},
+		{tc.CacheTypeEdge, tc.DSTypeDNSLiveNational, InternalHTTPSYes, schemeHTTPS, schemeHTTP, schemeHTTPS},
+	}
+
+	for _, ca := range cases {
+		t.Run(fmt.Sprintf("%v %v internal-https %v origin %v", ca.CacheType, ca.DSType, ca.InternalHTTPS, ca.OriginScheme), func(t *testing.T) {
+			server.Type = string(ca.CacheType)
+			opt.InternalHTTPS = ca.InternalHTTPS
+			dsType := ca.DSType
+			ds.Type = &dsType
+			ds.OrgServerFQDN = util.StrPtr(ca.OriginScheme + "://origin.example.test")
+
+			configDir := "/my/config/dir"
+			dses := []DeliveryService{ds}
+			cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			txt := cfg.Text
+			txt = strings.TrimSpace(txt)
+			testComment(t, txt, hdr)
+			txtLines := strings.Split(txt, "\n")
+
+			expectedRemapLineNum := 2 // 1 line plus comment
+			if ca.ExpectedSourceScheme == schemeBoth {
+				expectedRemapLineNum++
+			}
+			if len(txtLines) != expectedRemapLineNum {
+				t.Log(cfg.Warnings)
+				t.Fatalf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
+			}
+
+			// sourceFQDN := "myregexpattern"
+			// if server.Type == string(tc.CacheTypeMid) {
+			// 	sourceFQDN = "origin.example.test"
+			// }
+
+			remapLine := txtLines[1]
+			re := regexp.MustCompile(`map\s+(http|https)\:\/\/(.*)\s+(http|https)\:\/\/(.*)\s+.*`)
+			match := re.FindStringSubmatch(remapLine)
+			if match == nil {
+				t.Fatalf("expected remap line to match regex 'map source target', actual: '%v'", txt)
+			}
+			if len(match) < 5 {
+				t.Fatalf("expected remap line match to have 5 entries, actual: text '%v' match %+v", txt, match)
+			}
+
+			actualSourceScheme := match[1]
+			// actualSourceFQDN := match[2]
+			actualTargetScheme := match[3]
+			// acutalTargetFQDN := match[4]
+
+			sawHTTP := false
+			if ca.ExpectedSourceScheme != schemeBoth {
+				if actualSourceScheme != ca.ExpectedSourceScheme {
+					t.Errorf("expected source scheme '%v', actual: '%v'", ca.ExpectedSourceScheme, txt)
+				}
+			} else {
+				if actualSourceScheme != schemeHTTP && actualSourceScheme != schemeHTTPS {
+					t.Fatalf("expected source scheme http or https, actual: '%v'", txt)
+				}
+				sawHTTP = actualSourceScheme == schemeHTTP
+			}
+			if actualTargetScheme != ca.ExpectedTargetScheme {
+				t.Errorf("expected target scheme '%v', actual: '%v'", ca.ExpectedTargetScheme, txt)
+			}
+
+			if ca.ExpectedSourceScheme == schemeBoth {
+				remapLine := txtLines[2]
+				match := re.FindStringSubmatch(remapLine)
+				if match == nil {
+					t.Fatalf("expected second remap line to match regex 'map source target', actual: '%v'", txt)
+				}
+				if len(match) < 5 {
+					t.Fatalf("expected second remap line match to have 5 entries, actual: text '%v' match %+v", txt, match)
+				}
+
+				actualSourceScheme := match[1]
+				// actualSourceFQDN := match[2]
+				actualTargetScheme := match[3]
+				// acutalTargetFQDN := match[4]
+
+				if sawHTTP {
+					if actualSourceScheme != schemeHTTPS {
+						t.Fatalf("expected source scheme https after seeing http, actual: '%v'", txt)
+					}
+				} else {
+					if actualSourceScheme != schemeHTTP {
+						t.Fatalf("expected source scheme http after seeing https, actual: '%v'", txt)
+					}
+				}
+				if actualTargetScheme != ca.ExpectedTargetScheme {
+					t.Errorf("expected second target scheme '%v', actual: '%v'", ca.ExpectedTargetScheme, txt)
+				}
+			}
+		})
+	}
+}
+
+func TestMakeRemapDotConfigE2ESSLTopologyIsParentIsChild(t *testing.T) {
+	// is parent, is child => intermediary server with edge->interm->mid
+
+	hdr := "myHeaderComment"
+
+	server := makeTestRemapServer()
+	server.Type = "MID"
+	server.Cachegroup = util.StrPtr("intermCG")
+
+	ds := DeliveryService{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("DNS")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("https://origin.example.test")
+	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.StrPtr("")
+	ds.FQPacingRate = util.IntPtr(314159)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	ds.Topology = util.StrPtr("t0")
+
+	// non-nil default values should not trigger header rewrite plugin directive
+	ds.EdgeHeaderRewrite = util.StrPtr("")
+	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.ServiceCategory = util.StrPtr("")
+	ds.MaxOriginConnections = util.IntPtr(0)
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *server.ID,
+			DeliveryService: *ds.ID,
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `.*\.mypattern\..*`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "7",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(*server.Profile),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(*server.Profile),
+		},
+	}
+
+	remapConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1},
+				},
+				{
+					Cachegroup: "intermCG",
+					Parents:    []int{2, 3},
+				},
+				{
+					Cachegroup: "midCG",
+				},
+				{
+					Cachegroup: "midCG2",
+				},
+			},
+		},
+	}
+
+	edge0 := makeTestParentServer()
+	edge0.Cachegroup = util.StrPtr("edgeCG")
+	edge0.HostName = util.StrPtr("myedge0")
+	edge0.ID = util.IntPtr(47)
+	setIP(edge0, "192.168.2.4")
+
+	mid0 := makeTestParentServer()
+	mid0.Cachegroup = util.StrPtr("midCG")
+	mid0.HostName = util.StrPtr("mymid0")
+	mid0.ID = util.IntPtr(45)
+	setIP(mid0, "192.168.2.2")
+
+	mid1 := makeTestParentServer()
+	mid1.Cachegroup = util.StrPtr("midCG")
+	mid1.HostName = util.StrPtr("mymid1")
+	mid1.ID = util.IntPtr(46)
+	setIP(mid1, "192.168.2.3")
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = edge0.Cachegroup
+	eCG.ID = edge0.CachegroupID
+	eCG.ParentName = server.Cachegroup
+	eCG.ParentCachegroupID = server.CachegroupID
+	// eCG.SecondaryParentName = mid1.Cachegroup
+	// eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	iCG := &tc.CacheGroupNullable{}
+	iCG.Name = server.Cachegroup
+	iCG.ID = server.CachegroupID
+	iCG.ParentName = mid0.Cachegroup
+	iCG.ParentCachegroupID = mid0.CachegroupID
+	iCG.SecondaryParentName = mid1.Cachegroup
+	iCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	iCGType := tc.CacheGroupMidTypeName
+	iCG.Type = &iCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid0.Cachegroup
+	mCG.ID = mid0.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	mCG2 := &tc.CacheGroupNullable{}
+	mCG2.Name = mid1.Cachegroup
+	mCG2.ID = mid1.CachegroupID
+	mCGType2 := tc.CacheGroupMidTypeName
+	mCG2.Type = &mCGType2
+
+	cgs := []tc.CacheGroupNullable{*eCG, *iCG, *mCG, *mCG2}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	opt := &RemapDotConfigOpts{HdrComment: hdr}
+	opt.InternalHTTPS = InternalHTTPSNo
+
+	t.Run("nil opt defaults to InternalHTTPSNo", func(t *testing.T) {
+
+		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.Type = &dsType
+		dses := []DeliveryService{ds}
+
+		configDir := "/my/config/dir"
+
+		cfgDefault, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, nil)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		opt := &RemapDotConfigOpts{}
+
+		opt.InternalHTTPS = InternalHTTPSNo
+		cfgNo, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if cfgDefault.Text != cfgNo.Text {
+			t.Errorf("expected nil opt to be identical to InternalHTTPSNo, actual nil '%v' No '%v'", cfgDefault.Text, cfgNo.Text)
+		}
+	})
+
+	type testdat struct {
+		CacheType            tc.CacheType
+		DSType               tc.DSType
+		InternalHTTPS        InternalHTTPS
+		OriginScheme         string
+		ExpectedSourceScheme string
+		ExpectedTargetScheme string
+	}
+
+	const schemeHTTP = "http"
+	const schemeHTTPS = "https"
+	const schemeBoth = "both" // used to indicate a 2 remap lines with an ExpectedSourceScheme of each
+
+	// TODO: add Edge tests here, once the server type is fixed to not matter for Topologies
+	// TODO: add test field for DS HTTP/HTTPS/HTTP-and-HTTPS/HTTP-to-HTTPS options
+
+	cases := []testdat{
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSNoChild, schemeHTTP, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSNoChild, schemeHTTPS, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSYes, schemeHTTP, schemeHTTPS, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeHTTP, InternalHTTPSYes, schemeHTTPS, schemeHTTPS, schemeHTTPS},
+
+		{tc.CacheTypeMid, tc.DSTypeHTTPLive, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLive, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLive, InternalHTTPSNoChild, schemeHTTP, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLive, InternalHTTPSNoChild, schemeHTTPS, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLive, InternalHTTPSYes, schemeHTTP, schemeHTTPS, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLive, InternalHTTPSYes, schemeHTTPS, schemeHTTPS, schemeHTTPS},
+
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSNoChild, schemeHTTP, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSNoChild, schemeHTTPS, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSYes, schemeHTTP, schemeHTTPS, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeHTTPLiveNational, InternalHTTPSYes, schemeHTTPS, schemeHTTPS, schemeHTTPS},
+
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSNoChild, schemeHTTP, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSNoChild, schemeHTTPS, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSYes, schemeHTTP, schemeHTTPS, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeDNS, InternalHTTPSYes, schemeHTTPS, schemeHTTPS, schemeHTTPS},
+
+		{tc.CacheTypeMid, tc.DSTypeDNSLive, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNSLive, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNSLive, InternalHTTPSNoChild, schemeHTTP, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNSLive, InternalHTTPSNoChild, schemeHTTPS, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNSLive, InternalHTTPSYes, schemeHTTP, schemeHTTPS, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeDNSLive, InternalHTTPSYes, schemeHTTPS, schemeHTTPS, schemeHTTPS},
+
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSNo, schemeHTTP, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSNo, schemeHTTPS, schemeHTTP, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSNoChild, schemeHTTP, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSNoChild, schemeHTTPS, schemeBoth, schemeHTTP},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSYes, schemeHTTP, schemeHTTPS, schemeHTTPS},
+		{tc.CacheTypeMid, tc.DSTypeDNSLiveNational, InternalHTTPSYes, schemeHTTPS, schemeHTTPS, schemeHTTPS},
+	}
+
+	for _, ca := range cases {
+		t.Run(fmt.Sprintf("%v %v internal-https %v origin %v", ca.CacheType, ca.DSType, ca.InternalHTTPS, ca.OriginScheme), func(t *testing.T) {
+			server.Type = string(ca.CacheType)
+			opt.InternalHTTPS = ca.InternalHTTPS
+			dsType := ca.DSType
+			ds.Type = &dsType
+			ds.OrgServerFQDN = util.StrPtr(ca.OriginScheme + "://origin.example.test")
+			dses := []DeliveryService{ds}
+			configDir := "/my/config/dir"
+
+			cfg, err := MakeRemapDotConfig(server, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			txt := cfg.Text
+			txt = strings.TrimSpace(txt)
+			testComment(t, txt, hdr)
+			txtLines := strings.Split(txt, "\n")
+
+			expectedRemapLineNum := 2 // 1 line plus comment
+			if ca.ExpectedSourceScheme == schemeBoth {
+				expectedRemapLineNum++
+			}
+			if len(txtLines) != expectedRemapLineNum {
+				t.Log(cfg.Warnings)
+				t.Fatalf("expected one line for each remap plus a comment, actual: '%v' count %v", txt, len(txtLines))
+			}
+
+			// sourceFQDN := "myregexpattern"
+			// if server.Type == string(tc.CacheTypeMid) {
+			// 	sourceFQDN = "origin.example.test"
+			// }
+
+			remapLine := txtLines[1]
+			re := regexp.MustCompile(`map\s+(http|https)\:\/\/(.*)\s+(http|https)\:\/\/(.*)\s+.*`)
+			match := re.FindStringSubmatch(remapLine)
+			if match == nil {
+				t.Fatalf("expected remap line to match regex 'map source target', actual: '%v'", txt)
+			}
+			if len(match) < 5 {
+				t.Fatalf("expected remap line match to have 5 entries, actual: text '%v' match %+v", txt, match)
+			}
+
+			actualSourceScheme := match[1]
+			// actualSourceFQDN := match[2]
+			actualTargetScheme := match[3]
+			// acutalTargetFQDN := match[4]
+
+			sawHTTP := false
+			if ca.ExpectedSourceScheme != schemeBoth {
+				if actualSourceScheme != ca.ExpectedSourceScheme {
+					t.Errorf("expected source scheme '%v', actual: '%v'", ca.ExpectedSourceScheme, txt)
+				}
+			} else {
+				if actualSourceScheme != schemeHTTP && actualSourceScheme != schemeHTTPS {
+					t.Fatalf("expected source scheme http or https, actual: '%v'", txt)
+				}
+				sawHTTP = actualSourceScheme == schemeHTTP
+			}
+			if actualTargetScheme != ca.ExpectedTargetScheme {
+				t.Errorf("expected target scheme '%v', actual: '%v'", ca.ExpectedTargetScheme, txt)
+			}
+
+			if ca.ExpectedSourceScheme == schemeBoth {
+				remapLine := txtLines[2]
+				match := re.FindStringSubmatch(remapLine)
+				if match == nil {
+					t.Fatalf("expected second remap line to match regex 'map source target', actual: '%v'", txt)
+				}
+				if len(match) < 5 {
+					t.Fatalf("expected second remap line match to have 5 entries, actual: text '%v' match %+v", txt, match)
+				}
+
+				actualSourceScheme := match[1]
+				// actualSourceFQDN := match[2]
+				actualTargetScheme := match[3]
+				// acutalTargetFQDN := match[4]
+
+				if sawHTTP {
+					if actualSourceScheme != schemeHTTPS {
+						t.Fatalf("expected source scheme https after seeing http, actual: '%v'", txt)
+					}
+				} else {
+					if actualSourceScheme != schemeHTTP {
+						t.Fatalf("expected source scheme http after seeing https, actual: '%v'", txt)
+					}
+				}
+				if actualTargetScheme != ca.ExpectedTargetScheme {
+					t.Errorf("expected second target scheme '%v', actual: '%v'", ca.ExpectedTargetScheme, txt)
+				}
+			}
+		})
 	}
 }

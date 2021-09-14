@@ -21,12 +21,12 @@ package atscfg
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -54,6 +54,10 @@ type RemapDotConfigOpts struct {
 	// UseCoreStrategies is whether to use the ATS core strategies, rather than the parent_select plugin.
 	// This has no effect if UseStrategies is false.
 	UseStrategiesCore bool
+
+	// InternalHTTPS is whether to generate rules for internal https communication.
+	// If omitted, the default is 'no'
+	InternalHTTPS InternalHTTPS
 }
 
 func MakeRemapDotConfig(
@@ -73,6 +77,9 @@ func MakeRemapDotConfig(
 ) (Cfg, error) {
 	if opt == nil {
 		opt = &RemapDotConfigOpts{}
+	}
+	if opt.InternalHTTPS == InternalHTTPSInvalid {
+		opt.InternalHTTPS = DefaultInternalHTTPS
 	}
 	warnings := []string{}
 
@@ -266,6 +273,11 @@ func getServerConfigRemapDotConfigForMid(
 			continue
 		}
 
+		_, isChild, _, err := dsCacheIsParentChildEdge(&ds, server, nameTopologies, cacheGroups)
+		if err != nil {
+			return "", warnings, errors.New("checking ds '" + *ds.XMLID + "' server parentage: " + err.Error())
+		}
+
 		topology, hasTopology := nameTopologies[TopologyName(*ds.Topology)]
 		if *ds.Topology != "" && hasTopology {
 			topoIncludesServer, err := topologyIncludesServerNullable(topology, server)
@@ -346,7 +358,16 @@ func getServerConfigRemapDotConfigForMid(
 		}
 
 		if midRemap != "" {
-			midRemaps[remapFrom] = mapTo + midRemap
+			target := *ds.OrgServerFQDN
+			if isChild {
+				// if we're a child requesting of a parent, make the target scheme the internal HTTPS setting
+				if opts.InternalHTTPS == InternalHTTPSNo || opts.InternalHTTPS == InternalHTTPSNoChild {
+					target = strings.Replace(target, `https://`, `http://`, -1)
+				} else {
+					target = strings.Replace(target, `http://`, `https://`, -1)
+				}
+			}
+			midRemaps[remapFrom] = target + midRemap
 		}
 
 		// Any raw pre or post pend
@@ -362,9 +383,16 @@ func getServerConfigRemapDotConfigForMid(
 	}
 
 	textLines := []string{}
-
-	for originFQDN, midRemap := range midRemaps {
-		textLines = append(textLines, "map "+originFQDN+" "+midRemap+"\n")
+	for originURI, midRemap := range midRemaps {
+		// above, we made originURI always be http.
+		// Now, we decide whether to insert http, https, or both, based on the InternalHTTPS setting
+		if opts.InternalHTTPS == InternalHTTPSNo || opts.InternalHTTPS == InternalHTTPSNoChild {
+			textLines = append(textLines, "map "+originURI+" "+midRemap+"\n")
+		}
+		if opts.InternalHTTPS == InternalHTTPSYes || opts.InternalHTTPS == InternalHTTPSNoChild {
+			originURIHTTPS := strings.Replace(originURI, `http://`, `https://`, -1)
+			textLines = append(textLines, "map "+originURIHTTPS+" "+midRemap+"\n")
+		}
 	}
 
 	sort.Strings(preRemapLines)
@@ -518,10 +546,13 @@ func buildEdgeRemapLine(
 		return remapLines, warnings, errors.New("determining if cache is the last tier: " + err.Error())
 	}
 
-	// if this remap is going to a parent, use http not https.
-	// cache-to-cache communication inside the CDN is always http (though that's likely to change in the future)
+	// if this remap is going to a parent, use the internal protocol, not the origin protocol
 	if !isLastCache {
-		mapTo = strings.Replace(mapTo, `https://`, `http://`, -1)
+		if opts.InternalHTTPS == InternalHTTPSNo || opts.InternalHTTPS == InternalHTTPSNoChild {
+			mapTo = strings.Replace(mapTo, `https://`, `http://`, -1)
+		} else {
+			mapTo = strings.Replace(mapTo, `http://`, `https://`, -1)
+		}
 	}
 
 	text += "map	" + mapFrom + "     " + mapTo

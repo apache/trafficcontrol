@@ -26,10 +26,12 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 
 	"github.com/pborman/getopt/v2"
@@ -42,8 +44,9 @@ var TSHome string = "/opt/trafficserver"
 const DefaultTSConfigDir = "/opt/trafficserver/etc/trafficserver"
 
 const (
+	EtcDir             = "/etc/trafficcontrol-cache-config"
+	VarDir             = "/var/lib/trafficcontrol-cache-config"
 	StatusDir          = "/var/lib/trafficcontrol-cache-config/status"
-	GenerateCmd        = "/usr/bin/t3c-generate" // TODO don't make absolute?
 	Chkconfig          = "/sbin/chkconfig"
 	Service            = "/sbin/service"
 	SystemCtl          = "/bin/systemctl"
@@ -117,6 +120,15 @@ type Cfg struct {
 	UpdateIPAllow     bool
 	Version           string
 	GitRevision       string
+	E2ESSLCAKeyPath   string // E2ESSLCAKeyPath is the path to the certificate authority key for end-to-end TLS.
+	E2ESSLCACertPath  string // E2ESSLCACertPath is the path to the certificate authority certificate for end-to-end TLS.
+	InternalHTTPS     atscfg.InternalHTTPS
+}
+
+// GenInf is data needed to generate config files.
+type GenInf struct {
+	HasClientCerts bool
+	CACertPath     string
 }
 
 func (cfg Cfg) AppVersion() string { return t3cutil.VersionStr(AppName, cfg.Version, cfg.GitRevision) }
@@ -221,6 +233,12 @@ func GetTSPackageHome() string {
 	return tsHome
 }
 
+var DefaultE2ESSLCABase = "e2e-ssl-ca"
+var DefaultE2ESSLCAKeyFileName = DefaultE2ESSLCABase + ".key"
+var DefaultE2ESSLCACertFileName = DefaultE2ESSLCABase + ".cert"
+var DefaultE2ESSLCAKeyPath = filepath.Join(EtcDir, DefaultE2ESSLCAKeyFileName)
+var DefaultE2ESSLCACertPath = filepath.Join(EtcDir, DefaultE2ESSLCACertFileName)
+
 func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	var err error
 	toInfoLog := []string{}
@@ -265,6 +283,10 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	const defaultFiles = t3cutil.ApplyFilesFlagAll
 	filesPtr := getopt.EnumLong(filesFlagName, 'f', []string{string(t3cutil.ApplyFilesFlagAll), string(t3cutil.ApplyFilesFlagReval), ""}, "", "[all | reval] Which files to generate. If reval, the Traffic Ops server reval_pending flag is used instead of the upd_pending flag. Default is 'all'")
 
+	const internalHTTPSFlagName = "internal-https"
+	const defaultInternalHTTPS = atscfg.InternalHTTPSNo
+	internalHTTPSPtr := getopt.EnumLong(internalHTTPSFlagName, 'O', []string{string(atscfg.InternalHTTPSNo), string(atscfg.InternalHTTPSYes), string(atscfg.InternalHTTPSNoChild), ""}, "", "[no | yes | no-child] Whether to use HTTPS for internal cache communication. The no-child flag will generate config for both http and https on parents, and http on children; this makes it possible to upgrade without downtime: generate 'no-child' on all caches first, then 'yes'. Default is 'no'.")
+
 	const installPackagesFlagName = "install-packages"
 	installPackagesPtr := getopt.BoolLong(installPackagesFlagName, 'k', "Whether to install necessary packages. Default is false.")
 
@@ -302,6 +324,9 @@ report     sets --report-only=true
 Note the 'syncds' settings are all the flag defaults. Hence, if no mode is set, the default is effectively 'syncds'.
 
 If any of the related flags are also set, they override the mode's default behavior.`)
+
+	caCertPathPtr := getopt.StringLong("e2e-ca-cert", 'j', "", "Path to the certificate authority certificate to use for end-to-end tls. The file must be in the ATS records.config proxy.config.ssl.server.cert.path directory (typically etc/trafficserver/ssl/).")
+	caKeyPathPtr := getopt.StringLong("e2e-ca-key", 'J', "", "Path to the certificate authority key to use for end-to-end tls. The file must be in the ATS records.config proxy.config.ssl.server.cert.path directory (typically etc/trafficserver/ssl/)")
 
 	getopt.Parse()
 
@@ -364,6 +389,9 @@ If any of the related flags are also set, they override the mode's default behav
 	}
 	if *filesPtr == "" {
 		*filesPtr = defaultFiles.String()
+	}
+	if *internalHTTPSPtr == "" {
+		*internalHTTPSPtr = defaultInternalHTTPS.String()
 	}
 
 	if !getopt.IsSet(useStrategiesFlagName) {
@@ -499,6 +527,14 @@ If any of the related flags are also set, they override the mode's default behav
 	svcManagement := getOSSvcManagement()
 	yumOptions := os.Getenv("YUM_OPTIONS")
 
+	if *caCertPathPtr == "" {
+		*caCertPathPtr = DefaultE2ESSLCACertPath
+	}
+
+	if *caKeyPathPtr == "" {
+		*caKeyPathPtr = DefaultE2ESSLCAKeyPath
+	}
+
 	cfg := Cfg{
 		LogLocationDebug:            logLocationDebug,
 		LogLocationErr:              logLocationError,
@@ -534,11 +570,14 @@ If any of the related flags are also set, they override the mode's default behav
 		ServiceAction:     t3cutil.ApplyServiceActionFlag(*serviceActionPtr),
 		ReportOnly:        *reportOnlyPtr,
 		Files:             t3cutil.ApplyFilesFlag(*filesPtr),
+		InternalHTTPS:     atscfg.InternalHTTPS(*internalHTTPSPtr),
 		InstallPackages:   *installPackagesPtr,
 		IgnoreUpdateFlag:  *ignoreUpdateFlagPtr,
 		NoUnsetUpdateFlag: *noUnsetUpdateFlagPtr,
 		Version:           appVersion,
 		GitRevision:       gitRevision,
+		E2ESSLCACertPath:  *caCertPathPtr,
+		E2ESSLCAKeyPath:   *caKeyPathPtr,
 	}
 
 	if err = log.InitCfg(cfg); err != nil {

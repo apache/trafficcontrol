@@ -161,6 +161,11 @@ func MakeSNIDotYAML(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt s
 			VerboseComments:    true, // TODO add a CLI flag
 			DefaultTLSVersions: cfg.DefaultTLSVersions,
 			DefaultEnableH2:    cfg.DefaultEnableH2,
+			E2ESSLData: atscfg.SNIDotYAMLE2EInf{
+				ClientCAPath:      cfg.ClientCAPath,
+				ClientCertPath:    cfg.ClientCertPath,
+				ClientCertKeyPath: cfg.ClientCertKeyPath,
+			},
 		},
 	)
 }
@@ -188,8 +193,9 @@ func MakeParentDotConfig(toData *t3cutil.ConfigData, fileName string, hdrComment
 		toData.DeliveryServiceServers,
 		toData.CDN,
 		&atscfg.ParentConfigOpts{
-			HdrComment:  hdrCommentTxt,
-			AddComments: cfg.ParentComments, // TODO add a CLI flag?
+			HdrComment:    hdrCommentTxt,
+			AddComments:   cfg.ParentComments, // TODO add a CLI flag?
+			InternalHTTPS: cfg.InternalHTTPS,
 		},
 	)
 }
@@ -237,6 +243,7 @@ func MakeRemapDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentT
 		&atscfg.RemapDotConfigOpts{
 			HdrComment:        hdrCommentTxt,
 			VerboseComments:   true,
+			InternalHTTPS:     cfg.InternalHTTPS,
 			UseStrategies:     cfg.UseStrategies == t3cutil.UseStrategiesFlagTrue || cfg.UseStrategies == t3cutil.UseStrategiesFlagCore,
 			UseStrategiesCore: cfg.UseStrategies == t3cutil.UseStrategiesFlagCore,
 		},
@@ -244,7 +251,7 @@ func MakeRemapDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentT
 }
 
 func MakeSSLMultiCertDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
-	opts := &atscfg.SSLMultiCertDotConfigOpts{HdrComment: hdrCommentTxt}
+	opts := &atscfg.SSLMultiCertDotConfigOpts{HdrComment: hdrCommentTxt, Certificates: cfg.ExtraCertificates}
 	return atscfg.MakeSSLMultiCertDotConfig(toData.Server, toData.DeliveryServices, opts)
 }
 
@@ -264,7 +271,6 @@ func MakeVolumeDotConfig(toData *t3cutil.ConfigData, fileName string, hdrComment
 }
 
 func MakeHeaderRewrite(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
-	opts := &atscfg.HeaderRewriteDotConfigOpts{HdrComment: hdrCommentTxt}
 	return atscfg.MakeHeaderRewriteDotConfig(
 		fileName,
 		toData.DeliveryServices,
@@ -276,7 +282,14 @@ func MakeHeaderRewrite(toData *t3cutil.ConfigData, fileName string, hdrCommentTx
 		toData.ServerCapabilities,
 		toData.DSRequiredCapabilities,
 		toData.Topologies,
-		opts,
+		&atscfg.HeaderRewriteDotConfigOpts{
+			HdrComment: hdrCommentTxt,
+			E2ESSLData: atscfg.HeaderRewriteE2EInf{
+				ServerCAPath:      cfg.ServerCAPath,
+				ClientCertPath:    cfg.ClientCertPath,
+				ClientCertKeyPath: cfg.ClientCertKeyPath,
+			},
+		},
 	)
 }
 

@@ -22,6 +22,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
@@ -125,6 +126,35 @@ func Main() int {
 		}
 	}
 
+	e2eSSLDir := filepath.Join(cfg.TsConfigDir, "ssl") // TODO make configurable
+	hasClientCerts := false
+	clientCertBasePath := filepath.Join(e2eSSLDir, util.E2ESSLPathClientBase)
+
+	log.Infoln("DEBUG e2eSSLDir '" + e2eSSLDir + "'")
+
+	e2eSSLCADestFile := "e2e-ssl-ca.cert"
+	e2eSSLCADestDir := filepath.Join(cfg.TsConfigDir, "ssl")
+	e2eCACertDestPath := filepath.Join(e2eSSLCADestDir, e2eSSLCADestFile)
+
+	if _, err := os.Stat(cfg.E2ESSLCACertPath); os.IsNotExist(err) {
+		log.Errorf("end-to-end ssl certificate authority certificate '%v' does not exist, not creating certificates", cfg.E2ESSLCACertPath)
+	} else if err != nil {
+		log.Errorf("end-to-end ssl certificate authority certificate '%v' error reading file: %v", cfg.E2ESSLCACertPath, err)
+	} else if _, err := os.Stat(cfg.E2ESSLCAKeyPath); os.IsNotExist(err) {
+		log.Errorf("end-to-end ssl certificate authority key '%v' does not exist, not creating certificates", cfg.E2ESSLCAKeyPath)
+	} else if err != nil {
+		log.Errorf("end-to-end ssl certificate authority key '%v' error reading file: %v", cfg.E2ESSLCACertPath, err)
+	} else if err := util.E2ESSLGenerateKeysIfNotExist(e2eSSLDir, cfg.E2ESSLCAKeyPath, cfg.E2ESSLCACertPath, e2eCACertDestPath); err != nil {
+		log.Errorf("generating end-to-end ssl client certificate: %v", err)
+	} else {
+		log.Errorf("successfully generated end-to-end ssl client certificate " + clientCertBasePath + ".cert")
+		hasClientCerts = true
+	}
+
+	genInf := config.GenInf{}
+	genInf.HasClientCerts = hasClientCerts
+	genInf.CACertPath = e2eCACertDestPath
+
 	trops := torequest.NewTrafficOpsReq(cfg)
 
 	// if doing os checks, insure there is a 'systemctl' or 'service' and 'chkconfig' commands.
@@ -157,7 +187,7 @@ func Main() int {
 	// if running in Revalidate mode, check to see if it's
 	// necessary to continue
 	if cfg.Files == t3cutil.ApplyFilesFlagReval {
-		syncdsUpdate, err = trops.CheckRevalidateState(false)
+		syncdsUpdate, err = trops.CheckRevalidateState(false, genInf)
 
 		if err != nil {
 			log.Errorln("Checking revalidate state: " + err.Error())
@@ -169,7 +199,7 @@ func Main() int {
 		}
 
 	} else {
-		syncdsUpdate, err = trops.CheckSyncDSState()
+		syncdsUpdate, err = trops.CheckSyncDSState(genInf)
 		if err != nil {
 			log.Errorln("Checking syncds state: " + err.Error())
 			return GitCommitAndExit(ExitCodeSyncDSError, FailureExitMsg, cfg)
@@ -223,7 +253,7 @@ func Main() int {
 	}
 
 	log.Debugf("Preparing to fetch the config files for %s, files: %s, syncdsUpdate: %s\n", cfg.CacheHostName, cfg.Files, syncdsUpdate)
-	err = trops.GetConfigFileList()
+	err = trops.GetConfigFileList(genInf)
 	if err != nil {
 		log.Errorf("Getting config file list: %s\n", err)
 		return GitCommitAndExit(ExitCodeConfigFilesError, FailureExitMsg, cfg)

@@ -37,6 +37,22 @@ type SSLMultiCertDotConfigOpts struct {
 	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
 	// To omit the header comment, pass the empty string.
 	HdrComment string
+
+	// Certificates is a list of additional certificates to manually enter into ssl_multicert.config.
+	// These certificates must already exist, and not be managed by Traffic Ops.
+	//
+	// The most common use for this is the client and server certificates for
+	// intra-cdn child-parent communication a.k.a. "end-to-end ssl".
+	Certificates []SSLMultiCertDotConfigCertInf
+}
+
+// SSLMultiCertDotConfigCertInf is the information for a certificate in the Apache Traffic Server ssl_multicert.config config file.
+// The paths are relative to the ATS records.config proxy.config.ssl.server.cert.path, and certificates should generally be put there (typically etc/trafficserver/ssl/), and their relative filenames used here.
+// The CAPath is the path to the Certificate Authority file. This is optional, and only necessary if the certificates are signed by a CA not in the system CA bundle.
+type SSLMultiCertDotConfigCertInf struct {
+	CertPath string
+	KeyPath  string
+	CAPath   string
 }
 
 func MakeSSLMultiCertDotConfig(
@@ -64,6 +80,17 @@ func MakeSSLMultiCertDotConfig(
 		cerName, keyName := GetSSLMultiCertDotConfigCertAndKeyName(dsName, ds)
 		lines = append(lines, `ssl_cert_name=`+cerName+"\t"+` ssl_key_name=`+keyName+"\n")
 	}
+
+	for _, certInf := range opt.Certificates {
+		// TODO check that files exist, and error if they don't? Ideally that they're valid certs and keys?
+		line := `ssl_cert_name=` + certInf.CertPath + "\t" + ` ssl_key_name=` + certInf.KeyPath
+		if strings.TrimSpace(certInf.CAPath) != "" {
+			line += "\t" + ` ssl_ca_name=` + certInf.CAPath
+		}
+		line += "\n"
+		lines = append(lines, line)
+	}
+
 	sort.Strings(lines)
 
 	txt := hdr + strings.Join(lines, "")

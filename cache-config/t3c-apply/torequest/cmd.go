@@ -32,11 +32,13 @@ import (
 	golog "log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
+	"github.com/apache/trafficcontrol/cache-config/t3c-apply/util"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -49,7 +51,7 @@ type ServerAndConfigs struct {
 }
 
 // generate runs t3c-generate and returns the result.
-func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
+func generate(cfg config.Cfg, genInf config.GenInf) ([]t3cutil.ATSConfigFile, error) {
 	configData, err := requestConfig(cfg)
 	if err != nil {
 		return nil, errors.New("requesting: " + err.Error())
@@ -85,7 +87,30 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))
 	args = append(args, "--use-strategies="+cfg.UseStrategies.String())
 
-	generatedFiles, stdErr, code := t3cutil.DoInput(configData, config.GenerateCmd, args...)
+	if genInf.HasClientCerts {
+		args = append(args, "--extra-certificates="+makeGenerateClientCertsArgVal(genInf.CACertPath))
+
+		clientCACertFile := genInf.CACertPath
+		// this value in sni.yaml is relative to the ATS config dir
+		if strings.HasPrefix(clientCACertFile, cfg.TsConfigDir) {
+			clientCACertFile = strings.TrimPrefix(clientCACertFile, cfg.TsConfigDir)
+			clientCACertFile = strings.TrimPrefix(clientCACertFile, string(filepath.Separator))
+		}
+
+		// this value in header rewrite is relative to the config dir /ssl
+		// which should be just the file name
+		serverCACertFile := filepath.Base(genInf.CACertPath)
+
+		args = append(args, "--client-ca-path="+clientCACertFile)
+		args = append(args, "--server-ca-path="+serverCACertFile)
+		args = append(args, "--client-cert-path="+util.E2ESSLPathClientBase+`.cert`)
+		args = append(args, "--client-cert-key-path="+util.E2ESSLPathBase+`.key`)
+		args = append(args, "--internal-https="+cfg.InternalHTTPS.String())
+	}
+
+	log.Infof("DEBUG t3c-apply calling t3c-generate with args '''%+v'''\n", args)
+
+	generatedFiles, stdErr, code := t3cutil.DoInput(configData, "t3c-generate", args...)
 	if code != 0 {
 		logSubAppErr(`t3c-generate stdout`, generatedFiles)
 		logSubAppErr(`t3c-generate stderr`, stdErr)
@@ -104,6 +129,16 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	}
 
 	return allFiles, nil
+}
+
+func makeGenerateClientCertsArgVal(caCertPath string) string {
+	// Get just the caCertPath file name. We currently require it to be in the
+	// records.config proxy.config.ssl.server.cert.path, which is where ATS will look.
+	// TODO add support for other directories
+	caCertFile := filepath.Base(caCertPath)
+
+	return util.E2ESSLPathClientBase + `.cert,` + util.E2ESSLPathBase + `.key,` + caCertFile +
+		`;` + util.E2ESSLPathServerBase + `.cert,` + util.E2ESSLPathBase + `.key,` + caCertFile
 }
 
 // preprocess takes the to Data from 't3c-request --get-data=config' and the generated files from 't3c-generate', passes them to `t3c-preprocess`, and returns the result.

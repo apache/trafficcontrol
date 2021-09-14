@@ -606,7 +606,7 @@ func (r *TrafficOpsReq) GetConfigFile(name string) (*ConfigFile, bool) {
 
 // GetConfigFileList fetches and parses the multipart config files
 // for a cache from traffic ops and loads them into the configFiles map.
-func (r *TrafficOpsReq) GetConfigFileList() error {
+func (r *TrafficOpsReq) GetConfigFileList(genInf config.GenInf) error {
 	var atsUid int = 0
 	var atsGid int = 0
 
@@ -627,7 +627,7 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 		}
 	}
 
-	allFiles, err := generate(r.Cfg)
+	allFiles, err := generate(r.Cfg, genInf)
 	if err != nil {
 		return errors.New("requesting data generating config files: " + err.Error())
 	}
@@ -690,7 +690,7 @@ func (r *TrafficOpsReq) GetHeaderComment() string {
 }
 
 // CheckRevalidateState retrieves and returns the revalidate status from Traffic Ops.
-func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, error) {
+func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool, genInf config.GenInf) (UpdateStatus, error) {
 	log.Infoln("Checking revalidate state.")
 	if !sleepOverride &&
 		(r.Cfg.ReportOnly || r.Cfg.Files != t3cutil.ApplyFilesFlagReval) {
@@ -742,7 +742,7 @@ func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, 
 }
 
 // CheckSYncDSState retrieves and returns the DS Update status from Traffic Ops.
-func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
+func (r *TrafficOpsReq) CheckSyncDSState(genInf config.GenInf) (UpdateStatus, error) {
 	updateStatus := UpdateTropsNotNeeded
 	randDispSec := time.Duration(0)
 	log.Debugln("Checking syncds state.")
@@ -779,7 +779,7 @@ func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 			}
 		} else if !r.Cfg.IgnoreUpdateFlag {
 			log.Errorln("no queued update needs to be applied.  Running revalidation before exiting.")
-			r.RevalidateWhileSleeping()
+			r.RevalidateWhileSleeping(genInf)
 			return UpdateTropsNotNeeded, nil
 		} else {
 			log.Errorln("Traffic Ops is signaling that no update is waiting to be applied.")
@@ -1032,8 +1032,8 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 	return nil
 }
 
-func (r *TrafficOpsReq) RevalidateWhileSleeping() (UpdateStatus, error) {
-	updateStatus, err := r.CheckRevalidateState(true)
+func (r *TrafficOpsReq) RevalidateWhileSleeping(genInf config.GenInf) (UpdateStatus, error) {
+	updateStatus, err := r.CheckRevalidateState(true, genInf)
 	if err != nil {
 		return updateStatus, err
 	}
@@ -1043,7 +1043,7 @@ func (r *TrafficOpsReq) RevalidateWhileSleeping() (UpdateStatus, error) {
 		// The better solution is to gut the RevalidateWhileSleeping stuff, once TO can handle more load
 		r.Cfg.WaitForParents = true
 
-		err = r.GetConfigFileList()
+		err = r.GetConfigFileList(genInf)
 		if err != nil {
 			return updateStatus, err
 		}
