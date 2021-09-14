@@ -86,7 +86,7 @@ import java.util.stream.Collectors;
 /**
  * TrafficRouter is the main router class that handles Traffic Router logic.
  */
-@SuppressWarnings({"PMD.TooManyFields", "PMD.ExcessivePublicCount"})
+@SuppressWarnings({"PMD.TooManyFields", "PMD.ExcessivePublicCount", "PMD.CyclomaticComplexity"})
 public class TrafficRouter {
 	public static final Logger LOGGER = Logger.getLogger(TrafficRouter.class);
 

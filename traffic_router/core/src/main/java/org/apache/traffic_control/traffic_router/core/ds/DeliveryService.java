@@ -118,6 +118,7 @@ public class DeliveryService {
 		ALWAYS
 	}
 
+	@SuppressWarnings("PMD.NPathComplexity")
 	public DeliveryService(final String id, final JsonNode dsJo) throws JsonUtilsException {
 		this.id = id;
 		this.props = dsJo;

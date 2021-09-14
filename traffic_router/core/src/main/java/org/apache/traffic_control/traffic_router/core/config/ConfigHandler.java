@@ -71,7 +71,7 @@ import org.apache.traffic_control.traffic_router.core.loc.AnonymousIp;
 import org.apache.traffic_control.traffic_router.core.loc.AnonymousIpConfigUpdater;
 import org.apache.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseUpdater;
 
-@SuppressWarnings("PMD.TooManyFields")
+@SuppressWarnings({"PMD.TooManyFields", "PMD.CyclomaticComplexity"})
 public class ConfigHandler {
 	private static final Logger LOGGER = Logger.getLogger(ConfigHandler.class);
 

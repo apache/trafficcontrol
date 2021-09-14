@@ -95,6 +95,7 @@ import com.google.common.cache.RemovalNotification;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public class ZoneManager extends Resolver {
 	private static final Logger LOGGER = Logger.getLogger(ZoneManager.class);
 
