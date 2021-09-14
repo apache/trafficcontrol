@@ -44,6 +44,52 @@ function atc-connect {
 	return $?;
 }
 
+function atc {
+	if [[ $# -lt 1 ]]; then
+		echo "Usage: atc OPERATION" >&2;
+		return 1;
+	fi
+	local arg="$1";
+	shift;
+	case "$arg" in
+		start)
+			atc-start $@;;
+		stop)
+			atc-stop $@;;
+		restart)
+			atc-restart $@;;
+		ready)
+			atc-ready $@;;
+		exec)
+			atc-exec $@;;
+		connect)
+			atc-connect $@;;
+		-h|--help|/\?)
+			echo "Usage: atc OPERATION";
+			echo "";
+			echo "Valid OPERATIONs:";
+			echo "  start   Start up the development environment";
+			echo "  stop    Stop the development environment";
+			echo "  restart Retart up the development environment";
+			echo "  ready   Check if the development environment is ready";
+			echo "  exec    Run a command in a dev container";
+			echo "  connect Connect to a shell session inside a dev container";
+			;;
+		*)
+			echo "Usage: atc OPERATION" >&2;
+			echo "" >&2;
+			echo "Valid OPERATIONs:" >&2;
+			echo "  start   Start up the development environment" >&2;
+			echo "  stop    Stop the development environment" >&2;
+			echo "  restart Retart up the development environment" >&2;
+			echo "  ready   Check if the development environment is ready" >&2;
+			echo "  exec    Run a command in a dev container" >&2;
+			echo "  connect Connect to a shell session inside a dev container" >&2;
+			return 2;;
+	esac
+	return "$?";
+}
+
 export t3cDir="/root/go/src/github.com/apache/trafficcontrol/cache-config";
 
 function t3c {
