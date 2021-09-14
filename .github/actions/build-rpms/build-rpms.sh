@@ -30,7 +30,10 @@ if [[ "$GITHUB_REF" == refs/pull/*/merge ]]; then
 else
 	files_changed="$(git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA")"
 fi
-if <<<"$files_changed" grep '^GO_VERSION$'; then
+if <<<"$files_changed" grep '^GO_VERSION$' ||
+	{ [[ "$ATC_COMPONENT" == traffic_router ]] &&
+		<<<"$files_changed" grep '^infrastructure/docker/build/Dockerfile-traffic_router$'; };
+then
 	pkg_command+=(-b)
 fi
 
