@@ -22,7 +22,7 @@ RUN set -o errexit; \
 	yum -y update; \
 	yum -y install \
 		maven \
-		java-1.8.0-openjdk \
+		java-11-openjdk \
 		epel-release; \
 	yum -y install tomcat-native; \
 	yum -y clean all

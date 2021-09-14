@@ -19,7 +19,7 @@ VOLUME ["/junit"]
 WORKDIR /go/src/$DIR/traffic_router
 
 RUN apk add --no-cache \
-		openjdk8 \
+		openjdk11 \
 		maven \
 		tomcat-native \
 		bash
