@@ -8,7 +8,7 @@ cd "$TC/traffic_router"
 mvn -Dmaven.test.skip=true compile -P \!rpm-build
 mvn -Dmaven.test.skip=true package -P \!rpm-build
 
-/opt/tomcat/bin/catalina.sh jpda debug
+/opt/tomcat/bin/catalina.sh jpda run
 # java -agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=n StartTrafficRouter
 
 # while inotifywait --exclude '.*(\.md|_test\.go|\.gitignore|__debug_bin)$' -e modify -r . ; do
