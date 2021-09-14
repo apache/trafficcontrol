@@ -133,7 +133,7 @@ func (rg *TORegion) Create() (error, error, int) {
 	for resultRows.Next() {
 		rowsAffected++
 		if err = resultRows.Scan(&id, &lastUpdated, &divisionName); err != nil {
-			return nil, fmt.Errorf("could not scan after insert: %s\n)", err), http.StatusInternalServerError
+			return nil, fmt.Errorf("could not scan after insert: %w)", err), http.StatusInternalServerError
 		}
 	}
 
