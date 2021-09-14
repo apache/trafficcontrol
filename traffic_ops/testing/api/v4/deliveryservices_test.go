@@ -1050,10 +1050,9 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	updateMultisiteOrigin := true
 	updatedOrgServerFqdn := "http://origin.example.net"
 	//updatedProfile :=
-	//updateProtocol :=
+	updateProtocol := 2
 	updateQstringIgnore := 0
 	updateRegionalGeoBlocking := true
-	//updateTypeId :=
 
 	remoteDS.LongDesc = &updatedLongDesc
 	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
@@ -1072,10 +1071,21 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	remoteDS.MultiSiteOrigin = &updateMultisiteOrigin
 	remoteDS.OrgServerFQDN = &updatedOrgServerFqdn
 	//remoteDS.ProfileID = &updatedProfile
-	//remoteDS.Protocol = &updateProtocol
+	remoteDS.Protocol = &updateProtocol
 	remoteDS.QStringIgnore = &updateQstringIgnore
 	remoteDS.RegionalGeoBlocking = &updateRegionalGeoBlocking
-	//remoteDS.Type = &updateTypeId
+
+	typeOpts := client.NewRequestOptions()
+	typeOpts.QueryParameters.Set("name", "ANY_MAP")
+	typeResp, _, err := TOSession.GetTypes(typeOpts)
+	if err != nil {
+		t.Errorf("cannot get type id by name: %w - alerts: %w", err, typeResp.Alerts)
+	}
+	if len(typeResp.Response) == 0 {
+		t.Fatal("got an empty response for types")
+	}
+	remoteDS.TypeID = &typeResp.Response[0].ID
+
 
 	if updateResp, _, err := TOSession.UpdateDeliveryService(*remoteDS.ID, remoteDS, client.RequestOptions{}); err != nil {
 		t.Errorf("cannot update Delivery Service: %v - %v", err, updateResp)
