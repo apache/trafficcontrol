@@ -114,7 +114,7 @@ func GetTestTenantsByActive(t *testing.T) {
 		opts.QueryParameters.Set("active", strconv.FormatBool(ten.Active))
 		resp, reqInf, err := TOSession.GetTenants(opts)
 		if len(resp.Response) < 1 {
-			t.Fatalf("Expected atleast one Tenants response %v", resp)
+			t.Errorf("Expected atleast one Tenants response %v", resp)
 		}
 		if err != nil {
 			t.Errorf("cannot get Tenant by Active: %v - alerts: %+v", err, resp.Alerts)
