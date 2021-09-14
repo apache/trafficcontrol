@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5674](https://github.com/apache/trafficcontrol/issues/5674) Added new query parameters `cdn` and `maxRevalDurationDays` to the `GET /api/x/jobs` Traffic Ops API to filter by CDN name and within the start_time window defined by the `maxRevalDurationDays` GLOBAL profile parameter, respectively.
 - [#6034](https://github.com/apache/trafficcontrol/issues/6034) Added new query parameter `cdn` to the `GET /api/x/deliveryserviceserver` Traffic Ops API to filter by CDN name
 
+### Fixed
+- Fixed Traffic Router crs/stats to prevent overflow and to correctly record the time used in averages.
+
 ### Changed
 - Updated `t3c` to request less unnecessary deliveryservice-server assignment and invalidation jobs data via new query params supported by Traffic Ops
 

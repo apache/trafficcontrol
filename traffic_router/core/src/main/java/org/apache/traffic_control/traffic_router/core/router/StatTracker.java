@@ -368,6 +368,11 @@ public class StatTracker {
 			if (t.routeType == RouteType.DNS) {
 				totalDnsCount++;
 				totalDnsTime += t.time;
+				if (totalDnsTime < 0 || totalDnsCount < 0) {
+					this.resetDnsStatsFromOverflow();
+					totalDnsCount++;
+					totalDnsTime += t.time;
+				}
 				map = dnsMap;
 
 				if (t.resultDetails == Track.ResultDetails.LOCALIZED_DNS) {
@@ -377,6 +382,11 @@ public class StatTracker {
 			} else {
 				totalHttpCount++;
 				totalHttpTime += t.time;
+				if (totalHttpTime < 0 || totalHttpCount < 0) {
+					this.resetHttpStatsFromOverflow();
+					totalHttpCount++;
+					totalHttpTime += t.time;
+				}
 				map = httpMap;
 			}
 			map.putIfAbsent(fqdn, new Tallies());
@@ -452,11 +462,20 @@ public class StatTracker {
 
 					t.setRouteType(rt, dsName.toString());
 					t.setResult(ResultType.INIT);
-					t.end();
 
 					saveTrack(t);
 				}
 			}
 		}
 	}
+
+	private void resetHttpStatsFromOverflow() {
+		totalHttpCount = 0;
+		totalHttpTime = 0;
+	}
+
+	private void resetDnsStatsFromOverflow() {
+    	totalDnsCount = 0;
+    	totalDnsTime = 0;
+    }
 }
