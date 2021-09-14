@@ -34,7 +34,7 @@ import (
 )
 
 func TestDeliveryServices(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices}, func() {
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		ti := currentTime.Format(time.RFC1123)
 		var header http.Header
@@ -2630,7 +2630,7 @@ func addTLSVersionsToDeliveryService(t *testing.T) {
 
 func GetDeliveryServiceByTopology(t *testing.T) {
 	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("xmlId", "ds-with-topology")
+	opts.QueryParameters.Set("xmlId", "ds-top")
 	resp, _, err := TOSession.GetDeliveryServices(opts)
 	if err != nil {
 		t.Fatalf("couldn't get ds %v - alerts: %+v", err, resp.Alerts)
