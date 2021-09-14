@@ -122,12 +122,12 @@ public class DNSAccessEventBuilder {
                 .append(" rdtl=-")
                 .append(" rerr=\"")
                 .append(rerr)
-                .append("\"")
+                .append('\"')
                 .append(" ttl=\"-\"")
                 .append(" ans=\"-\"")
                 .append(" svc=\"")
                 .append(dsID)
-                .append("\"")
+                .append('\"')
                 .toString();
     }
 
@@ -145,12 +145,12 @@ public class DNSAccessEventBuilder {
                 .append(" rdtl=-")
                 .append(" rerr=\"")
                 .append(rerr)
-                .append("\"")
+                .append('\"')
                 .append(" ttl=\"-\"")
                 .append(" ans=\"-\"")
                 .append(" svc=\"")
                 .append(dsID)
-                .append("\"").toString();
+                .append('\"').toString();
     }
 
     private static String createQuery(final Record query) {

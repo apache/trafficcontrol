@@ -116,7 +116,7 @@ public class ZoneManager extends Resolver {
 	private static Name topLevelDomain;
 	private static final String AAAA = "AAAA";
 
-	protected static enum ZoneCacheType {
+	protected enum ZoneCacheType {
 		DYNAMIC, STATIC
 	}
 
@@ -327,11 +327,11 @@ public class ZoneManager extends Resolver {
 			}
 
 			final File zoneFile = new File(getZoneDirectory(), zone.getOrigin().toString());
-			final FileWriter w = new FileWriter(zoneFile);
-			LOGGER.info("writing: " + zoneFile.getAbsolutePath());
-			IOUtils.write(zone.toMasterFile(), w);
-			w.flush();
-			w.close();
+			try (FileWriter w = new FileWriter(zoneFile)) {
+				LOGGER.info("writing: " + zoneFile.getAbsolutePath());
+				IOUtils.write(zone.toMasterFile(), w);
+				w.flush();
+			}
 		}
 	}
 
@@ -384,7 +384,7 @@ public class ZoneManager extends Resolver {
 			records = signatureManager.signZone(name, records, (SignedZoneKey) zoneKey);
 		}
 
-		final Zone zone = new Zone(name, records.toArray(new Record[records.size()]));
+		final Zone zone = new Zone(name, records.toArray(new Record[0]));
 
 		if (writeZone) {
 			writeZone(zone);
@@ -712,7 +712,7 @@ public class ZoneManager extends Resolver {
 							list.add(new CNAMERecord(name, DClass.IN, ttl, new Name(value)));
 							break;
 						case "TXT":
-							list.add(new TXTRecord(name, DClass.IN, ttl, new String(value)));
+							list.add(new TXTRecord(name, DClass.IN, ttl, value));
 							break;
 					}
 				} catch (JsonUtilsException ex) {
@@ -801,7 +801,7 @@ public class ZoneManager extends Resolver {
 	}
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
-	private static final Map<String, List<Record>> populateZoneMap(final Map<String, List<Record>> zoneMap,
+	private static Map<String, List<Record>> populateZoneMap(final Map<String, List<Record>> zoneMap,
 			final Map<String, DeliveryService> dsMap, final CacheRegister data) throws IOException {
 		final Map<String, List<Record>> superDomains = new HashMap<String, List<Record>>();
 
@@ -1026,7 +1026,7 @@ public class ZoneManager extends Resolver {
 					LOGGER.error(e, e);
 				}
 
-				return new Zone(staticZone.getOrigin(), records.toArray(new Record[records.size()]));
+				return new Zone(staticZone.getOrigin(), records.toArray(new Record[0]));
 			}
 		} catch (final IOException e) {
 			LOGGER.error(e.getMessage(), e);

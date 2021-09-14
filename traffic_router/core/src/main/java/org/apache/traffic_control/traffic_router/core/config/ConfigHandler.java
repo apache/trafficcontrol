@@ -592,7 +592,7 @@ public class ConfigHandler {
 				ds.setGeoRedirectFile(url.getFile());
 				//try select the ds by the redirect fake HTTPRequest
 				final DeliveryService rds = cacheRegister.getDeliveryService(req);
-				if (rds == null || rds.getId() != ds.getId()) {
+				if (rds == null || !Objects.equals(rds.getId(), ds.getId())) {
 					//the redirect url not belongs to this ds
 					ds.setGeoRedirectUrlType("NOT_DS_URL");
 					continue;

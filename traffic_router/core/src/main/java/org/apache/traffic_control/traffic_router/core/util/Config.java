@@ -17,6 +17,7 @@ package org.apache.traffic_control.traffic_router.core.util;
 
 import java.io.File;
 
+@SuppressWarnings("PMD.ClassNamingConventions")
 public class Config {
 
 	private static String confDir = null;

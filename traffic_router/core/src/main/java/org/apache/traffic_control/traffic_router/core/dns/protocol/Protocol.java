@@ -19,5 +19,5 @@ public interface Protocol extends Runnable {
     /**
      * Shuts down the protocol canceling all pending and running requests.
      */
-    public void shutdown();
+    void shutdown();
 }

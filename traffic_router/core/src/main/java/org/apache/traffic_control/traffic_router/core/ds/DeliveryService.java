@@ -531,8 +531,8 @@ public class DeliveryService {
 	}
 
 	private String getEncryptedTrans(final TransInfoType type, final byte[] ipBytes) throws IOException, GeneralSecurityException {
-		try (final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		     final DataOutputStream dos = new DataOutputStream(baos)) {
+		try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		     DataOutputStream dos = new DataOutputStream(baos)) {
 
 			dos.write(ipBytes);
 

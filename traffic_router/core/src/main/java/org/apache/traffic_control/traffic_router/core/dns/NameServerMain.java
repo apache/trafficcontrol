@@ -90,8 +90,7 @@ public final class NameServerMain {
      * @param args
      */
     public static void main(final String[] args) {
-        try {
-            final ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("/dns-traffic-router.xml");
+        try (ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("/dns-traffic-router.xml")) {
             ctx.getBean("NameServerMain");
             LOGGER.info("PROCESS_SUCCEEDED");
         } catch (final Exception e) {
