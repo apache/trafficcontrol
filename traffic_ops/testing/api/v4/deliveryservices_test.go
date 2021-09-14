@@ -2645,11 +2645,15 @@ func GetDeliveryServiceByTopology(t *testing.T) {
 		t.Fatalf("couldn't get ds %v - alerts: %+v", err, resp.Alerts)
 	}
 	if len(resp.Response) != 1 {
-		t.Fatalf("Expected only one Delivery Service for this XML ds-with-topology")
+		t.Fatalf("Expected only one Delivery Service for this XML ds-top")
 	}
 
 	ds := resp.Response[0]
 	opts.QueryParameters.Del("xmlId")
+
+	if ds.Topology == nil {
+		t.Fatalf("No topology found to test GET delivery service by Topology")
+	}
 	opts.QueryParameters.Set("topology", *ds.Topology)
 	resp, _, err = TOSession.GetDeliveryServices(opts)
 	if err != nil {
@@ -2673,6 +2677,10 @@ func GetDeliveryServiceByServiceCategory(t *testing.T) {
 
 	ds := resp.Response[0]
 	opts.QueryParameters.Del("xmlId")
+
+	if ds.ServiceCategory == nil {
+		t.Fatalf("No Service Category found to test GET delivery service by Service Category")
+	}
 	opts.QueryParameters.Set("serviceCategory", *ds.ServiceCategory)
 	resp, _, err = TOSession.GetDeliveryServices(opts)
 	if err != nil {
