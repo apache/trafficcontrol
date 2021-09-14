@@ -1086,7 +1086,6 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	}
 	remoteDS.TypeID = &typeResp.Response[0].ID
 
-
 	if updateResp, _, err := TOSession.UpdateDeliveryService(*remoteDS.ID, remoteDS, client.RequestOptions{}); err != nil {
 		t.Errorf("cannot update Delivery Service: %v - %v", err, updateResp)
 	}
