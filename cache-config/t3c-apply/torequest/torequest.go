@@ -217,7 +217,7 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 		log.Infoln("Successfully verified plugins used by '" + cfg.Name + "'")
 	}
 
-	changeNeeded, err := diff(r.Cfg, cfg.Body, cfg.Path)
+	changeNeeded, err := diff(r.Cfg, cfg.Body, cfg.Path, cfg.Perm)
 	if err != nil {
 		return errors.New("getting diff: " + err.Error())
 	}
