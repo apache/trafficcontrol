@@ -21,5 +21,4 @@ database.conf
 error.log
 localhost.crt
 localhost.key
-riak.conf
 warning.log

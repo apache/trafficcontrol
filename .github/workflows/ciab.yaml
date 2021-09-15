@@ -135,7 +135,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/.npm
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/**/package*.json traffic_portal/bower.json') }}-
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/**/package*.json') }}-
           restore-keys: |
             ${{ runner.os }}-node-modules-
       - name: Build RPM

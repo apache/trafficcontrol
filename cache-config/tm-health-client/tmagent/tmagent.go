@@ -1,4 +1,4 @@
-package tmutil
+package tmagent
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -33,6 +33,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/tm-health-client/config"
+	"github.com/apache/trafficcontrol/cache-config/tm-health-client/util"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/datareq"
@@ -48,22 +49,15 @@ const (
 )
 
 type ParentAvailable interface {
-	available() bool
-}
-
-// the necessary fields of a trafficserver parents config file needed to
-// read the file and keep track of it's modification time.
-type ParentConfigFile struct {
-	Filename       string
-	LastModifyTime int64
+	available(reasonCode string) bool
 }
 
 // the necessary data required to keep track of trafficserver config
 // files, lists of parents a trafficserver instance uses, and directory
 // locations used for configuration and trafficserver executables.
 type ParentInfo struct {
-	ParentDotConfig        ParentConfigFile
-	StrategiesDotYaml      ParentConfigFile
+	ParentDotConfig        util.ConfigFile
+	StrategiesDotYaml      util.ConfigFile
 	TrafficServerBinDir    string
 	TrafficServerConfigDir string
 	Parents                map[string]ParentStatus
@@ -93,15 +87,18 @@ type ParentStatus struct {
 // used to get the overall parent availablity from the
 // HostStatus markdown reasons.  all markdown reasons
 // must be true for a parent to be considered available.
-func (p ParentStatus) available() bool {
-	if !p.ActiveReason {
-		return false
-	} else if !p.LocalReason {
-		return false
-	} else if !p.ManualReason {
-		return false
+func (p ParentStatus) available(reasonCode string) bool {
+	rc := false
+
+	switch reasonCode {
+	case "active":
+		rc = p.ActiveReason
+	case "local":
+		rc = p.LocalReason
+	case "manual":
+		rc = p.ManualReason
 	}
-	return true
+	return rc
 }
 
 // used to log that a parent's status is either UP or
@@ -184,22 +181,22 @@ type Strategies struct {
 func NewParentInfo(cfg config.Cfg) (*ParentInfo, error) {
 
 	parentConfig := filepath.Join(cfg.TrafficServerConfigDir, ParentsFile)
-	modTime, err := getFileModificationTime(parentConfig)
+	modTime, err := util.GetFileModificationTime(parentConfig)
 	if err != nil {
 		return nil, errors.New("error reading " + ParentsFile + ": " + err.Error())
 	}
-	parents := ParentConfigFile{
+	parents := util.ConfigFile{
 		Filename:       parentConfig,
 		LastModifyTime: modTime,
 	}
 
 	stratyaml := filepath.Join(cfg.TrafficServerConfigDir, StrategiesFile)
-	modTime, err = getFileModificationTime(stratyaml)
+	modTime, err = util.GetFileModificationTime(stratyaml)
 	if err != nil {
 		return nil, errors.New("error reading " + StrategiesFile + ": " + err.Error())
 	}
 
-	strategies := ParentConfigFile{
+	strategies := util.ConfigFile{
 		Filename:       filepath.Join(cfg.TrafficServerConfigDir, StrategiesFile),
 		LastModifyTime: modTime,
 	}
@@ -259,10 +256,35 @@ func (c *ParentInfo) GetCacheStatuses() (map[tc.CacheName]datareq.CacheStatus, e
 // down in the trafficserver subsystem based upon that hosts current status and
 // the status that trafficmonitor health protocol has determined for a parent.
 func (c *ParentInfo) PollAndUpdateCacheStatus() {
+	cycleCount := 0
 	pollingInterval := config.GetTMPollingInterval()
 	log.Infoln("polling started")
 
 	for {
+		// check for config file updates
+		newCfg := config.Cfg{
+			HealthClientConfigFile: c.Cfg.HealthClientConfigFile,
+		}
+		isNew, err := config.LoadConfig(&newCfg)
+		if err != nil {
+			log.Errorf("error reading changed config file %s: %s\n", c.Cfg.HealthClientConfigFile.Filename, err.Error())
+		}
+		if isNew {
+			if err = config.ReadCredentials(&newCfg); err != nil {
+				log.Errorln("could not load credentials for config updates, keeping the old config")
+			} else {
+				if err = config.GetTrafficMonitors(&newCfg); err != nil {
+					log.Errorln("could not update the list of trafficmonitors, keeping the old config")
+				} else {
+					config.UpdateConfig(&c.Cfg, &newCfg)
+					log.Infof("the configuration has been successfully updated")
+				}
+			}
+		}
+
+		// check for parent and strategies config file updates, and trafficserver
+		// host status changes.  If an error is encountered reading data the current
+		// parents lists and hoststatus remains unchanged.
 		if err := c.UpdateParentInfo(); err != nil {
 			log.Errorf("could not load new ATS parent info: %s\n", err.Error())
 		} else {
@@ -272,7 +294,14 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 		// read traffic manager cache statuses.
 		caches, err := c.GetCacheStatuses()
 		if err != nil {
-			log.Errorln(err.Error())
+			log.Errorf("error in TrafficMonitor polling: %s\n", err.Error())
+			if err = config.GetTrafficMonitors(&c.Cfg); err != nil {
+				log.Errorln("could not update the list of trafficmonitors, keeping the old config")
+			} else {
+				log.Infoln("Updated TrafficMonitor statuses from TrafficOps")
+			}
+			time.Sleep(pollingInterval)
+			continue
 		}
 
 		for k, v := range caches {
@@ -280,13 +309,10 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 			cs, ok := c.Parents[hostName]
 			if ok {
 				tmAvailable := *v.CombinedAvailable
-				if cs.available() != tmAvailable {
-					if !c.Cfg.EnableActiveMarkdowns {
-						if !tmAvailable {
-							log.Infof("TM reports that %s is not available and should be marked DOWN but, mark downs are disabled by configuration", hostName)
-						} else {
-							log.Infof("TM reports that %s is available and should be marked UP but, mark up is disabled by configuration", hostName)
-						}
+				if cs.available(c.Cfg.ReasonCode) != tmAvailable {
+					// do not mark down if the configuration disables mark downs.
+					if !c.Cfg.EnableActiveMarkdowns && !tmAvailable {
+						log.Infof("TM reports that %s is not available and should be marked DOWN but, mark downs are disabled by configuration", hostName)
 					} else {
 						if err = c.markParent(cs.Fqdn, *v.Status, tmAvailable); err != nil {
 							log.Errorln(err.Error())
@@ -294,6 +320,18 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 					}
 				}
 			}
+		}
+
+		// periodically update the TrafficMonitor list and statuses
+		if cycleCount == c.Cfg.TmUpdateCycles {
+			cycleCount = 0
+			if err = config.GetTrafficMonitors(&c.Cfg); err != nil {
+				log.Errorln("could not update the list of trafficmonitors, keeping the old config")
+			} else {
+				log.Infoln("Updated TrafficMonitor statuses from TrafficOps")
+			}
+		} else {
+			cycleCount++
 		}
 
 		time.Sleep(pollingInterval)
@@ -305,11 +343,11 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 // availability is also updated to reflect the current state from
 // the trafficserver HostStatus subsystem.
 func (c *ParentInfo) UpdateParentInfo() error {
-	ptime, err := getFileModificationTime(c.ParentDotConfig.Filename)
+	ptime, err := util.GetFileModificationTime(c.ParentDotConfig.Filename)
 	if err != nil {
 		return errors.New("error reading " + ParentsFile + ": " + err.Error())
 	}
-	stime, err := getFileModificationTime(c.StrategiesDotYaml.Filename)
+	stime, err := util.GetFileModificationTime(c.StrategiesDotYaml.Filename)
 	if err != nil {
 		return errors.New("error reading " + StrategiesFile + ": " + err.Error())
 	}
@@ -367,25 +405,9 @@ func (c *ParentInfo) findATrafficMonitor() (string, error) {
 		return "", errors.New("there are no available traffic monitors")
 	}
 
-	log.Infof("polling: %s\n", tmHostname)
+	log.Debugf("polling: %s\n", tmHostname)
 
 	return tmHostname, nil
-}
-
-// get the file modification times for a trafficserver configuration
-// file.
-func getFileModificationTime(fn string) (int64, error) {
-	f, err := os.Open(fn)
-	if err != nil {
-		return 0, errors.New("opening " + fn + ": " + err.Error())
-	}
-	defer f.Close()
-
-	finfo, err := f.Stat()
-	if err != nil {
-		return 0, errors.New("unable to get file status for " + fn + ": " + err.Error())
-	}
-	return finfo.ModTime().UnixNano(), nil
 }
 
 // parse out the hostname of a parent listed in parents.config
@@ -507,8 +529,8 @@ func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error 
 						parentStatus[hostName] = pstat
 						log.Infof("added Host '%s' from ATS Host Status to the parents map\n", hostName)
 					} else {
-						available := pstat.available()
-						if pv.available() != available {
+						available := pstat.available(c.Cfg.ReasonCode)
+						if pv.available(c.Cfg.ReasonCode) != available {
 							log.Infof("host status for '%s' has changed to %s\n", hostName, pstat.Status())
 							parentStatus[hostName] = pstat
 						}

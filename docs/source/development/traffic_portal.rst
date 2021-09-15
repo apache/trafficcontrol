@@ -32,7 +32,6 @@ To work on Traffic Portal you need a \*nix (MacOS and Linux are most commonly us
 	* `Ruby Devel 2.0.x or above <https://www.rpmfind.net/linux/rpm2html/search.php?query=ruby-devel>`_
 	* `Compass 1.0.x or above <http://compass-style.org/>`_
 	* `Node.js 12.0.x or above <https://nodejs.org/en/>`_
-	* `Bower 1.7.9 or above <https://www.npmjs.com/package/bower>`_
 	* `Grunt CLI 1.2.0 or above <https://github.com/gruntjs/grunt-cli>`_
 	* Access to a working instance of Traffic Ops
 
@@ -41,12 +40,12 @@ To work on Traffic Portal you need a \*nix (MacOS and Linux are most commonly us
 Install Global NPM Packages
 ---------------------------
 
-Bower and the Grunt CLI can be installed using NPM.
+Grunt CLI can be installed using NPM.
 
 .. code-block:: shell
-	:caption: Install Bower and Grunt CLI
+	:caption: Install Grunt CLI
 
-	npm -g install bower grunt-cli
+	npm -g install grunt-cli
 
 .. _dev-tp-compass:
 
@@ -100,7 +99,6 @@ Installing The Traffic Portal Developer Environment
 #. Clone the `Traffic Control Repository <https://github.com/apache/trafficcontrol>`_
 #. Navigate to the ``traffic_portal`` subdirectory of your cloned repository.
 #. Run ``npm install`` to install application dependencies into ``traffic_portal/node_modules``. Only needs to be done the first time unless ``traffic_portal/package.json`` changes.
-#. Run ``bower install`` to install client-side dependencies into ``traffic_portal/app/bower_components``. Only needs to be done the first time unless ``traffic_portal/bower.json`` changes.
 #. Make sure that compass is installed and functioning correctly by running ``compass version``. If compass is not available, then it can be installed following the instructions under :ref:`dev-tp-compass`.
 
 #. Modify ``traffic_portal/conf/configDev.js``:

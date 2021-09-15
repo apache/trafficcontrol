@@ -6,6 +6,7 @@
   "to-url": "https://tp.cdn.com:443", 
   "to-request-timeout-seconds": "5s",
   "tm-poll-interval-seconds": "15s",
+  "tm-update-cycles": 5,
   "trafficserver-config-dir": "/opt/trafficserver/etc/trafficserver",
-  "trafficserver-bin-dir": "/opt/trafficserver/bin",
+  "trafficserver-bin-dir": "/opt/trafficserver/bin"
 }

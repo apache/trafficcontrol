@@ -15,4 +15,4 @@
 # specific language governing permissions and limitations
 # under the License.
 
-*/1 * * * * t3c apply --run-mode=syncds --traffic-ops-url=$TO_URL --traffic-ops-user=$TO_USER --traffic-ops-password=$TO_PASSWORD --git=yes -vv 2>&1 >> /var/log/ort.log
+*/1 * * * * root t3c apply --run-mode=syncds --traffic-ops-url=$TO_URL --traffic-ops-user=$TO_USER --traffic-ops-password=$TO_PASSWORD --git=yes -vv --cache-host-name=$(hostname -s) >> /var/log/ort.log 2>&1

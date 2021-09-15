@@ -25,6 +25,7 @@ on:
   push:
     paths:
       - .github/actions/todb-init/**
+      - .github/actions/tvdb-init/**
       - .github/actions/tp-integration-tests/**
       - .github/workflows/tp.integration.tests.yml
       - GO_VERSION
@@ -37,6 +38,7 @@ on:
   pull_request:
     paths:
       - .github/actions/todb-init/**
+      - .github/actions/tvdb-init/**
       - .github/actions/tp-integration-tests/**
       - .github/workflows/tp.integration.tests.yml
       - GO_VERSION
@@ -101,12 +103,15 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/package-lock.json traffic_portal/test/integration/package-lock.json traffic_portal/bower.json') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/package-lock.json traffic_portal/test/integration/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-modules-
       - name: Initialize Traffic Ops Database
         id: todb
         uses: ./.github/actions/todb-init
+      - name: Initialize Traffic Vault Database
+        id: tvdb
+        uses: ./.github/actions/tvdb-init
       - name: Check Go Version
         run: echo "::set-output name=value::$(cat GO_VERSION)"
         id: go-version

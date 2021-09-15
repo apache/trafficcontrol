@@ -24,6 +24,7 @@ import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { api } from "../config";
 import { profiles } from "../Data";
 
+
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const profilesPage = new ProfilesPage();
@@ -33,46 +34,72 @@ describe('Setup API for Profiles', () => {
         await api.UseAPI(profiles.setup);
     });
 });
+
 profiles.tests.forEach(async profilesData => {
     profilesData.logins.forEach(login => {
         describe(`Traffic Portal - Profiles - ${login.description}`, () => {
+            afterEach(async function () {
+                await profilesPage.OpenProfilesPage();
+            });
+            afterAll(async function () {
+                expect(await topNavigation.Logout()).toBeTruthy();
+            })
             it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            });
-            it('can open profiles page', async () => {
                 await profilesPage.OpenConfigureMenu();
-                await profilesPage.OpenProfilesPage();
             });
-            profilesData.add.forEach(add => {
-                it(add.description, async () => {
-                    expect(await profilesPage.CreateProfile(add)).toBeTruthy();
-                    await profilesPage.OpenProfilesPage();
+            it('can perform check test suits', async () => {
+                profilesData.check.forEach(check => {
+                    it(check.description, async () => {
+                        expect(await profilesPage.CheckCSV(check.Name)).toBe(true);
+                    });
                 });
-            });
-            profilesData.update.forEach(update => {
-                it(update.description, async () => {
-                    await profilesPage.SearchProfile(update.Name);
-                    expect(await profilesPage.UpdateProfile(update)).toBeTruthy();
-                    await profilesPage.OpenProfilesPage();
+            })
+            it('can perform toggle test suits', async () => {
+                profilesData.toggle.forEach(toggle => {
+                    it(toggle.description, async () => {
+                        if (toggle.description.includes('hide')) {
+                            expect(await profilesPage.ToggleTableColumn(toggle.Name)).toBe(false);
+                        } else {
+                            expect(await profilesPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                        }
+                    });
+                })
+            })
+            it('can perform add test suits', async () => {
+                profilesData.add.forEach(add => {
+                    it(add.description, async () => {
+                        expect(await profilesPage.CreateProfile(add)).toBeTruthy();
+                    });
                 });
-            });
-            profilesData.remove.forEach(remove => {
-                it(remove.description, async () => {
-                    await profilesPage.SearchProfile(remove.Name);
-                    expect(await profilesPage.DeleteProfile(remove)).toBeTruthy();
-                    await profilesPage.OpenProfilesPage();
+            })
+            it('can perform update test suits', async () => {
+                profilesData.update.forEach(update => {
+                    it(update.description, async () => {
+                        await profilesPage.SearchProfile(update.Name);
+                        expect(await profilesPage.UpdateProfile(update)).toBeTruthy();
+                    });
                 });
-            });
-            it('can logout', async () => {
-                expect(await topNavigation.Logout()).toBeTruthy();
-            });
+            })
+            it('can perform remove test suits', async () => {
+                profilesData.remove.forEach(remove => {
+                    it(remove.description, async () => {
+                        await profilesPage.SearchProfile(remove.Name);
+                        expect(await profilesPage.DeleteProfile(remove)).toBeTruthy();
+                    });
+                });
+            })
         });
     });
 });
+
 describe('Clean up API for Profiles', () => {
-    it('Cleanup', async () => {
-        await api.UseAPI(profiles.cleanup);
-    });
+    afterAll(async function () {
+        it('Cleanup', async () => {
+            await api.UseAPI(profiles.cleanup);
+        });
+    })
 });
+

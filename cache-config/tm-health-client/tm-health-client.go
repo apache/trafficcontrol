@@ -23,7 +23,7 @@ import (
 	"os"
 
 	"github.com/apache/trafficcontrol/cache-config/tm-health-client/config"
-	"github.com/apache/trafficcontrol/cache-config/tm-health-client/tmutil"
+	"github.com/apache/trafficcontrol/cache-config/tm-health-client/tmagent"
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
@@ -44,7 +44,7 @@ func main() {
 		os.Exit(Success)
 	}
 
-	tmInfo, err := tmutil.NewParentInfo(cfg)
+	tmInfo, err := tmagent.NewParentInfo(cfg)
 	if err != nil {
 		log.Errorf("startup could not initialize ATS parent info: %s\n", err.Error())
 	}

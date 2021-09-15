@@ -58,8 +58,9 @@ func (cl *TOClient) URL() string {
 func (cl *TOClient) SetURL(newURL string) {
 	if cl.c == nil {
 		cl.old.SetURL(newURL)
+	} else {
+		cl.c.URL = newURL
 	}
-	cl.c.URL = newURL
 }
 
 // New logs into Traffic Ops, returning the TOClient which contains the logged-in client.
@@ -103,6 +104,11 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 		}
 		client.c = nil
 		client.old = oldClient
+
+		{
+			newClient := toclient.NewNoAuthSession("", false, "", false, 0) // only used for the version, because toClient could be nil if it had an error
+			log.Infof("cache-config Traffic Ops client: %v not supported, falling back to %v\n", newClient.APIVersion(), oldClient.APIVersion())
+		}
 	}
 
 	return client, nil

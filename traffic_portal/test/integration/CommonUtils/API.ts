@@ -259,9 +259,13 @@ export class API {
             return null;
         }
         for (const request of data.getRequest) {
-            const query = `?${encodeURIComponent(request.queryKey)}=${encodeURIComponent(request.queryValue)}${randomize}`;
+            let query = `?${encodeURIComponent(request.queryKey)}=`;
+            if (request.queryValue === 'admin' || request.queryValue === 'operations' || request.queryValue === 'read-only'){
+                query += encodeURIComponent(request.queryValue);
+            }else{
+                query += encodeURIComponent(request.queryValue+randomize);
+            }
             const response = await this.getResponse("get", request.route + query)
-
             if (response.status == 200) {
                 if(request.hasOwnProperty('isArray')){
                     data[request.replace] = [await response.data.response[0].id];

@@ -28,11 +28,11 @@ BEGIN
 			RENAME TO goose_db_version_unused;
 	END IF;
 	DROP TRIGGER fast_forward_schema_migrations_trigger ON schema_migrations;
-	DROP FUNCTION fast_forward_schema_migrations_version;
+	DROP FUNCTION fast_forward_schema_migrations_version();
 	RETURN NULL;
 END$$;
 
 CREATE TRIGGER fast_forward_schema_migrations_trigger
-	AFTER INSERT
+	AFTER UPDATE
 	ON schema_migrations
 	EXECUTE PROCEDURE fast_forward_schema_migrations_version();
