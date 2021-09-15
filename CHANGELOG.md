@@ -33,7 +33,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added ORT flag to set local.dns bind address from server service addresses
 - Added an endpoint for statuses on asynchronous jobs and applied it to the ACME renewal endpoint.
 - Added two new cdn.conf options to make Traffic Vault configuration more backend-agnostic: `traffic_vault_backend` and `traffic_vault_config`
-- Traffic Ops API version 4.0
+- Traffic Ops API version 4.0 - This version is **unstable** meaning that breaking changes can occur at any time - use at your own peril!
 - `GET` request method for `/deliveryservices/{{ID}}/assign`
 - `GET` request method for `/deliveryservices/{{ID}}/status`
 - [#5644](https://github.com/apache/trafficcontrol/issues/5644) ORT config generation: Added ATS9 ip_allow.yaml support, and automatic generation if the server's package Parameter is 9.\*
@@ -139,7 +139,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - The Traffic Ops API routes `GET /api/{version}/cachegroupparameters`, `POST /api/{version}/cachegroupparameters`, `GET /api/{version}/cachegroups/{id}/parameters`, and `DELETE /api/{version}/cachegroupparameters/{cachegroupID}/{parameterId}` have been deprecated and will no longer be available as of Traffic Ops API v4
 - The `riak_port` option in cdn.conf is now deprecated. Please use the `"port"` field in `traffic_vault_config` instead.
 - The `traffic_ops_ort.pl` tool has been deprecated in favor of `t3c`, and will be removed in the next major version.
-- With the release of Traffic Ops API version 4.0, major API versions 2 and 3 are now deprecated, subject to removal with the next ATC major version release, at the earliest.
+- With the release of ATC v6.0, major API version 2 is now deprecated, subject to removal with the next ATC major version release, at the earliest.
 
 ### Removed
 - Removed the unused `backend_max_connections` option from `cdn.conf`.

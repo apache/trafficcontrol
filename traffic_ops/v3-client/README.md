@@ -1,14 +1,9 @@
 # Traffic Ops Go Client
 
-## Deprecated
-The version of the Traffic Ops API supported by this client is deprecated.
-Please switch to the `github.com/apache/trafficcontrol/traffic_ops/v4-client`
-package.
-
 ## Getting Started
 1. Obtain the latest version of the library
 
-`go get github.com/apache/trafficcontrol/traffic_ops/client`
+`go get github.com/apache/trafficcontrol/traffic_ops/v3-client`
 
 2. Get a basic TO session started and fetch a list of CDNs
 ```go
