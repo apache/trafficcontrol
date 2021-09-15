@@ -47,8 +47,8 @@ public class TCP extends AbstractProtocol {
     public void run() {
         while (!isShutdownRequested()) {
             final TCPSocketHandler handler;
-            try (Socket socket = getServerSocket().accept()) {
-                handler = new TCPSocketHandler(socket);
+            try {
+                handler = new TCPSocketHandler(getServerSocket().accept());
                 submit(handler);
             } catch (final IOException e) {
 				LOGGER.warn("error: " + e);
