@@ -944,7 +944,7 @@ dl_ds_default_profile_layers:
           value: http://${hostname}/_astats?application=&inf.name=${interface_name}
         - name: health.threshold.kbps
           configFile: rascal.properties
-          value: "<{{ (Target_hardware_profile.value.network_bandwidth_limit | default('1000') | float * ((100 - dl_ds_reserved_bandwidth_percentage | float) / 100)) | int }}"
+          value: "<{{ (Target_hardware_profile.value.network_bandwidth_limit | default('1000') | float - (Target_hardware_profile.value.network_bandwidth_limit | default('1000') | float * ((100 - dl_ds_reserved_bandwidth_percentage | float) / 100))) | int }}"
         - name: health.threshold.loadavg
           configFile: rascal.properties
           value: "{{ Target_hardware_profile.value.load_avg_limit | default('10') }}.0"
