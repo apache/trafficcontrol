@@ -23,7 +23,7 @@ var FormEditRoleController = function(roles, $scope, $controller, $uibModal, $an
 	angular.extend(this, $controller('FormRoleController', { roles: roles, $scope: $scope }));
 
 	var deleteRole = function(role) {
-		roleService.deleteRole(role.id)
+		roleService.deleteRole(role.name)
 			.then(function(result) {
 				messageModel.setMessages(result.alerts, true);
 				locationUtils.navigateToPath('/roles');

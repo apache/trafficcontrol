@@ -27,7 +27,7 @@ var RoleService = function($http, messageModel, ENV) {
             function (err) {
                 throw err;
             }
-        )
+        );
     };
 
     this.createRole = function(role) {
@@ -43,7 +43,7 @@ var RoleService = function($http, messageModel, ENV) {
     };
 
     this.updateRole = function(role) {
-        return $http.put(ENV.api['root'] + "roles", role, {params: {id: role.id}}).then(
+        return $http.put(ENV.api['root'] + "roles", role, {params: {name: role.name}}).then(
             function(result) {
                 return result.data;
             },

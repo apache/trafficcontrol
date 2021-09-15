@@ -34,14 +34,12 @@ under the License.
             <thead>
             <tr class="headings">
                 <th>Name</th>
-                <th>Privilege Level</th>
                 <th>Description</th>
             </tr>
             </thead>
             <tbody>
             <tr ng-click="editRole(r.id)" ng-repeat="r in ::roles">
                 <td>{{::r.name}}</td>
-                <td>{{::r.privLevel}}</td>
                 <td>{{::r.description}}</td>
             </tr>
             </tbody>
