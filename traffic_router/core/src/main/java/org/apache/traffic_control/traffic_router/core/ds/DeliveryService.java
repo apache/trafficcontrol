@@ -118,7 +118,6 @@ public class DeliveryService {
 		ALWAYS
 	}
 
-	@SuppressWarnings("PMD.NPathComplexity")
 	public DeliveryService(final String id, final JsonNode dsJo) throws JsonUtilsException {
 		this.id = id;
 		this.props = dsJo;
@@ -146,48 +145,16 @@ public class DeliveryService {
 		this.shouldAppendQueryString = JsonUtils.optBoolean(dsJo, "appendQueryString", true);
 		this.ecsEnabled = JsonUtils.optBoolean(dsJo, "ecsEnabled");
 
-		if (dsJo.has("topology")) {
-			this.topology = JsonUtils.optString(dsJo, "topology");
-		}
+		initTopology(dsJo);
 		this.requiredCapabilities = new HashSet<>();
-		if (dsJo.has("requiredCapabilities")) {
-			final JsonNode requiredCapabilitiesNode = dsJo.get("requiredCapabilities");
-			if (!requiredCapabilitiesNode.isArray()) {
-				LOGGER.error("Delivery Service '" + id + "' has malformed requiredCapabilities. Disregarding.");
-			} else {
-				requiredCapabilitiesNode.forEach((requiredCapabilityNode) -> {
-					final String requiredCapability = requiredCapabilityNode.asText();
-					if (!requiredCapability.isEmpty()) {
-						this.requiredCapabilities.add(requiredCapability);
-					}
-				});
-			}
-		}
+		initRequiredCapabilities(dsJo);
 
-		this.consistentHashQueryParams = new HashSet<String>();
-		if (dsJo.has("consistentHashQueryParams")) {
-			final JsonNode cqpNode = dsJo.get("consistentHashQueryParams");
-			if (!cqpNode.isArray()) {
-				LOGGER.error("Delivery Service '" + id + "' has malformed consistentHashQueryParams. Disregarding.");
-			} else {
-				for (final JsonNode n : cqpNode) {
-					final String s = n.asText();
-					if (!s.isEmpty()) {
-						this.consistentHashQueryParams.add(s);
-					}
-				}
-			}
-		}
+		this.consistentHashQueryParams = new HashSet<>();
+		initConsistentHashQueryParams(dsJo);
 
 		// missLocation: {lat: , long: }
 		final JsonNode mlJo = dsJo.get("missLocation");
-		if(mlJo != null) {
-			final double lat = JsonUtils.optDouble(mlJo, "lat");
-			final double longitude = JsonUtils.optDouble(mlJo, "long");
-			missLocation = new Geolocation(lat, longitude);
-		} else {
-			missLocation = null;
-		}
+		missLocation = initMissLocation(mlJo);
 
 		this.dispersion = new Dispersion(dsJo);
 		this.ip6RoutingEnabled = JsonUtils.optBoolean(dsJo, "ip6RoutingEnabled");
@@ -216,6 +183,54 @@ public class DeliveryService {
 			LOGGER.error("DeliveryService '" + id + "' has an unrecognized deepCachingType: '" + dctString + "'. Defaulting to 'NEVER' instead");
 		} finally {
 			this.deepCache = dct;
+		}
+	}
+
+	private void initRequiredCapabilities(final JsonNode dsJo) {
+		if (dsJo.has("requiredCapabilities")) {
+			final JsonNode requiredCapabilitiesNode = dsJo.get("requiredCapabilities");
+			if (!requiredCapabilitiesNode.isArray()) {
+				LOGGER.error("Delivery Service '" + id + "' has malformed requiredCapabilities. Disregarding.");
+			} else {
+				requiredCapabilitiesNode.forEach((requiredCapabilityNode) -> {
+					final String requiredCapability = requiredCapabilityNode.asText();
+					if (!requiredCapability.isEmpty()) {
+						this.requiredCapabilities.add(requiredCapability);
+					}
+				});
+			}
+		}
+	}
+
+	private void initConsistentHashQueryParams(final JsonNode dsJo) {
+		if (dsJo.has("consistentHashQueryParams")) {
+			final JsonNode cqpNode = dsJo.get("consistentHashQueryParams");
+			if (!cqpNode.isArray()) {
+				LOGGER.error("Delivery Service '" + id + "' has malformed consistentHashQueryParams. Disregarding.");
+			} else {
+				for (final JsonNode n : cqpNode) {
+					final String s = n.asText();
+					if (!s.isEmpty()) {
+						this.consistentHashQueryParams.add(s);
+					}
+				}
+			}
+		}
+	}
+
+	private void initTopology(final JsonNode dsJo) {
+		if (dsJo.has("topology")) {
+			this.topology = JsonUtils.optString(dsJo, "topology");
+		}
+	}
+
+	private Geolocation initMissLocation(final JsonNode mlJo) {
+		if(mlJo != null) {
+			final double lat = JsonUtils.optDouble(mlJo, "lat");
+			final double longitude = JsonUtils.optDouble(mlJo, "long");
+			return new Geolocation(lat, longitude);
+		} else {
+			return null;
 		}
 	}
 
