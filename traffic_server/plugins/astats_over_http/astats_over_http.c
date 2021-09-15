@@ -541,6 +541,8 @@ static int astats_origin(TSCont cont, TSEvent event, void *edata) {
 	const struct sockaddr *addr = TSHttpTxnClientAddrGet(txnp);
 	if(!is_ip_allowed(config, addr)) {
 		TSDebug(PLUGIN_TAG, "not right ip");
+		TSHttpTxnStatusSet(txnp, TS_HTTP_STATUS_FORBIDDEN);
+		reenable = TS_EVENT_HTTP_ERROR;
 		goto notforme;
 	}
 
