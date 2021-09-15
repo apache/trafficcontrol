@@ -39,7 +39,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 
-	log "github.com/cihub/seelog"
+	"github.com/cihub/seelog"
 	influx "github.com/influxdata/influxdb/client/v2"
 )
 
@@ -115,14 +115,14 @@ func main() {
 
 	if err != nil {
 		err = fmt.Errorf("could not load startup config: %v", err)
-		log.Error(err)
+		seelog.Error(err)
 		panic(err)
 	}
 
 	Bps = make(map[string]influx.BatchPoints)
 	config.BpsChan = make(chan influx.BatchPoints)
 
-	defer log.Flush()
+	defer seelog.Flush()
 
 	configChan := make(chan RunningConfig)
 	go getToData(config, true, configChan)
@@ -139,16 +139,16 @@ func main() {
 	for {
 		select {
 		case <-hupChan:
-			log.Info("HUP Received - reloading config")
+			seelog.Info("HUP Received - reloading config")
 			newConfig, err := loadStartupConfig(*configFile, config)
 			if err != nil {
-				log.Errorf("could not load startup config: %v", err)
+				seelog.Errorf("could not load startup config: %v", err)
 			} else {
 				config = newConfig
 				tickers = setTimers(config)
 			}
 		case <-termChan:
-			log.Info("Shutdown Request Received - Sending stored metrics then quitting")
+			seelog.Info("Shutdown Request Received - Sending stored metrics then quitting")
 			for _, val := range Bps {
 				sendMetrics(config, val, false)
 			}
@@ -164,24 +164,24 @@ func main() {
 		case <-tickers.Poll:
 			for cdnName, urls := range runningConfig.HealthUrls {
 				for _, u := range urls {
-					log.Debug(cdnName, " -> ", u)
+					seelog.Debug(cdnName, " -> ", u)
 					go calcMetrics(cdnName, u, runningConfig.CacheMap, config)
 				}
 			}
 		case now := <-tickers.DailySummary:
 			go calcDailySummary(now, config, runningConfig)
 		case batchPoints := <-config.BpsChan:
-			log.Debug("Received ", len(batchPoints.Points()), " stats")
+			seelog.Debug("Received ", len(batchPoints.Points()), " stats")
 			key := fmt.Sprintf("%s%s", batchPoints.Database(), batchPoints.RetentionPolicy())
 			bp, ok := Bps[key]
 			if ok {
 				for _, p := range batchPoints.Points() {
 					bp.AddPoint(p)
 				}
-				log.Debug("Aggregating ", len(bp.Points()), " stats to ", key)
+				seelog.Debug("Aggregating ", len(bp.Points()), " stats to ", key)
 			} else {
 				Bps[key] = batchPoints
-				log.Debug("Created ", key)
+				seelog.Debug("Created ", key)
 			}
 		}
 	}
@@ -234,12 +234,12 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 		config.MaxPublishSize = defaultMaxPublishSize
 	}
 
-	logger, err := log.LoggerFromConfigAsFile(config.SeelogConfig)
+	logger, err := seelog.LoggerFromConfigAsFile(config.SeelogConfig)
 	if err != nil {
 		return config, fmt.Errorf("error reading Seelog config %s", config.SeelogConfig)
 	}
-	log.ReplaceLogger(logger)
-	log.Info("Replaced logger, see log file according to", config.SeelogConfig)
+	seelog.ReplaceLogger(logger)
+	seelog.Info("Replaced logger, see seelog file according to", config.SeelogConfig)
 
 	if len(config.InfluxURLs) == 0 {
 		return config, fmt.Errorf("No InfluxDB urls provided in influxUrls, please provide at least one valid URL.  e.g. \"influxUrls\": [\"http://localhost:8086\"]")
@@ -262,16 +262,16 @@ func loadStartupConfig(configFile string, oldConfig StartupConfig) (StartupConfi
 }
 
 func calcDailySummary(now time.Time, config StartupConfig, runningConfig RunningConfig) {
-	log.Infof("lastSummaryTime is %v", runningConfig.LastSummaryTime)
+	seelog.Infof("lastSummaryTime is %v", runningConfig.LastSummaryTime)
 	if runningConfig.LastSummaryTime.Day() != now.Day() {
 		startTime := now.Truncate(24 * time.Hour).Add(-24 * time.Hour)
 		endTime := startTime.Add(24 * time.Hour)
-		log.Info("Summarizing from ", startTime, " (", startTime.Unix(), ") to ", endTime, " (", endTime.Unix(), ")")
+		seelog.Info("Summarizing from ", startTime, " (", startTime.Unix(), ") to ", endTime, " (", endTime.Unix(), ")")
 
 		// influx connection
 		influxClient, err := influxConnect(config)
 		if err != nil {
-			log.Errorf("could not connect to InfluxDb to get daily summary stats: %v", err)
+			seelog.Errorf("could not connect to InfluxDb to get daily summary stats: %v", err)
 			return
 		}
 
@@ -283,17 +283,17 @@ func calcDailySummary(now time.Time, config StartupConfig, runningConfig Running
 
 		calcDailyMaxGbps(influxClient, bp, startTime, endTime, config)
 		calcDailyBytesServed(influxClient, bp, startTime, endTime, config)
-		log.Info("Collected daily stats @ ", now)
+		seelog.Info("Collected daily stats @ ", now)
 	}
 }
 
 func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime time.Time, endTime time.Time, config StartupConfig) {
 	kilobitsToGigabits := 1000000.00
 	queryString := fmt.Sprintf(`select time, cdn, max(value) from "monthly"."bandwidth.cdn.1min" where time > '%s' and time < '%s' group by cdn`, startTime.Format(time.RFC3339), endTime.Format(time.RFC3339))
-	log.Infof("queryString = %v\n", queryString)
+	seelog.Infof("queryString = %v\n", queryString)
 	res, err := queryDB(client, queryString, "cache_stats")
 	if err != nil {
-		log.Errorf("An error occured getting max bandwidth! %v\n", err)
+		seelog.Errorf("An error occured getting max bandwidth! %v\n", err)
 		return
 	}
 	if res != nil && len(res[0].Series) > 0 {
@@ -304,12 +304,12 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 					cdn := record[1].(string)
 					value, err := record[2].(json.Number).Float64()
 					if err != nil {
-						log.Errorf("Couldn't parse value from record %v\n", record)
+						seelog.Errorf("Couldn't parse value from record %v\n", record)
 						continue
 					}
 					value = value / kilobitsToGigabits
 					statTime, _ := time.Parse(time.RFC3339, t)
-					log.Infof("max gbps for cdn %v = %v", cdn, value)
+					seelog.Infof("max gbps for cdn %v = %v", cdn, value)
 					var statsSummary tc.StatsSummary
 					statsSummary.CDNName = util.StrPtr(cdn)
 					statsSummary.DeliveryService = util.StrPtr("all")
@@ -331,7 +331,7 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 						statTime,
 					)
 					if err != nil {
-						log.Errorf("error adding data point for max Gbps...%v\n", err)
+						seelog.Errorf("error adding data point for max Gbps...%v\n", err)
 						continue
 					}
 					bp.AddPoint(pt)
@@ -347,10 +347,10 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 	sampleTimeSecs := 60.00
 	bitsTobytes := 8.00
 	queryString := fmt.Sprintf(`select mean(value) from "monthly"."bandwidth.cdn.1min" where time > '%s' and time < '%s' group by time(1m), cdn`, startTime.Format(time.RFC3339), endTime.Format(time.RFC3339))
-	log.Infof("queryString = %v\n", queryString)
+	seelog.Infof("queryString = %v\n", queryString)
 	res, err := queryDB(client, queryString, "cache_stats")
 	if err != nil {
-		log.Error("An error occured getting max bandwidth!\n")
+		seelog.Error("An error occured getting max bandwidth!\n")
 		return
 	}
 	if res != nil && len(res[0].Series) > 0 {
@@ -361,14 +361,14 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 				if record[1] != nil {
 					value, err := record[1].(json.Number).Float64()
 					if err != nil {
-						log.Errorf("Couldn't parse value from record %v\n", record)
+						seelog.Errorf("Couldn't parse value from record %v\n", record)
 						continue
 					}
 					bytesServed += value * sampleTimeSecs / bitsTobytes
 				}
 			}
 			bytesServedTB := bytesServed / bytesToTerabytes
-			log.Infof("TBytes served for cdn %v = %v", cdn, bytesServedTB)
+			seelog.Infof("TBytes served for cdn %v = %v", cdn, bytesServedTB)
 			//write to Traffic Ops
 			var statsSummary tc.StatsSummary
 			statsSummary.CDNName = util.StrPtr(cdn)
@@ -390,7 +390,7 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 				startTime,
 			)
 			if err != nil {
-				log.Errorf("error adding creating data point for max Gbps...%v\n", err)
+				seelog.Errorf("error adding creating data point for max Gbps...%v\n", err)
 				continue
 			}
 			bp.AddPoint(pt)
@@ -417,12 +417,12 @@ func writeSummaryStats(config StartupConfig, statsSummary tc.StatsSummary) {
 	to, _, err := client.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, TrafficOpsRequestTimeout)
 	if err != nil {
 		newErr := fmt.Errorf("Could not store summary stats! Error logging in to %v: %v", config.ToURL, err)
-		log.Error(newErr)
+		seelog.Error(newErr)
 		return
 	}
 	_, _, err = to.CreateSummaryStats(statsSummary)
 	if err != nil {
-		log.Errorf("could not create summary stats: %v", err)
+		seelog.Errorf("could not create summary stats: %v", err)
 	}
 }
 
@@ -434,7 +434,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		if init {
 			panic(msg)
 		}
-		log.Error(msg)
+		seelog.Error(msg)
 		return
 	}
 
@@ -444,7 +444,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		if init {
 			panic(msg)
 		}
-		log.Error(msg)
+		seelog.Error(msg)
 		return
 	}
 
@@ -461,7 +461,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		if init {
 			panic(msg)
 		}
-		log.Error(msg)
+		seelog.Error(msg)
 		return
 	}
 
@@ -480,9 +480,9 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 
 	lastSummaryTimeResponse, _, err := to.GetSummaryStatsLastUpdated(util.StrPtr("daily_maxgbps"))
 	if err != nil {
-		log.Errorf("unable to get summary stats last updated: %v", err)
+		seelog.Errorf("unable to get summary stats last updated: %v", err)
 	} else if lastSummaryTimeResponse.Response.SummaryTime == nil {
-		log.Warn("unable to get last updated stats summary timestamp: daily_maxgbps stats summary not reported yet")
+		seelog.Warn("unable to get last updated stats summary timestamp: daily_maxgbps stats summary not reported yet")
 	} else {
 		runningConfig.LastSummaryTime = *lastSummaryTimeResponse.Response.SummaryTime
 	}
@@ -494,14 +494,14 @@ func setHealthURLs(config StartupConfig, runningConfig *RunningConfig, cacheStat
 	runningConfig.HealthUrls = make(map[string]map[string][]string)
 	for _, server := range runningConfig.CacheMap {
 		if server.Type == tc.MonitorTypeName && server.Status != config.StatusToMon {
-			log.Debugf("Skipping %s.%s.  Looking for status %s but got status %s", server.HostName, server.DomainName, config.StatusToMon, server.Status)
+			seelog.Debugf("Skipping %s.%s.  Looking for status %s but got status %s", server.HostName, server.DomainName, config.StatusToMon, server.Status)
 			continue
 		}
 
 		if server.Type == tc.MonitorTypeName && server.Status == config.StatusToMon {
 			cdnName := server.CDNName
 			if cdnName == "" {
-				log.Error("Unable to find CDN name for " + server.HostName + ".. skipping")
+				seelog.Error("Unable to find CDN name for " + server.HostName + ".. skipping")
 				continue
 			}
 
@@ -525,30 +525,30 @@ func calcMetrics(cdnName string, urls []string, cacheMap map[string]tc.Server, c
 	for _, u := range urls {
 		trafMonData, err = getURL(u)
 		if err != nil {
-			log.Errorf("error getting %s stats URL %s: %v", cdnName, u, err)
+			seelog.Errorf("error getting %s stats URL %s: %v", cdnName, u, err)
 			continue
 		}
 		healthURL = u
-		log.Infof("successfully got %s stats URL %s", cdnName, u)
+		seelog.Infof("successfully got %s stats URL %s", cdnName, u)
 		break
 	}
 	if healthURL == "" {
-		log.Errorf("unable to get any %s stats URL - skipping timeslot", cdnName)
+		seelog.Errorf("unable to get any %s stats URL - skipping timeslot", cdnName)
 		return
 	}
 
 	if strings.Contains(healthURL, "CacheStats") {
 		err = calcCacheValues(trafMonData, cdnName, sampleTime, cacheMap, config)
 		if err != nil {
-			log.Errorf("error calculating cache metric values for CDN %s: %v", cdnName, err)
+			seelog.Errorf("error calculating cache metric values for CDN %s: %v", cdnName, err)
 		}
 	} else if strings.Contains(healthURL, "DsStats") {
 		err = calcDsValues(trafMonData, cdnName, sampleTime, config)
 		if err != nil {
-			log.Errorf("error calculating delivery service metric values for CDN %s: %v", cdnName, err)
+			seelog.Errorf("error calculating delivery service metric values for CDN %s: %v", cdnName, err)
 		}
 	} else {
-		log.Warn("Don't know what to do with given %s stats URL: ", cdnName, healthURL)
+		seelog.Warn("Don't know what to do with given %s stats URL: ", cdnName, healthURL)
 	}
 }
 
@@ -582,7 +582,7 @@ func calcDsValues(tmData []byte, cdnName string, sampleTime int64, config Startu
 			validTime := time.Now().AddDate(0, 0, -1).UnixNano() / 1000000
 			timeStamp := int64(dsMetricData[0].Time)
 			if timeStamp < validTime {
-				log.Info(fmt.Sprintf("Skipping %v %v: %v is greater than 24 hours old.", dsName, dsMetric, timeStamp))
+				seelog.Info(fmt.Sprintf("Skipping %v %v: %v is greater than 24 hours old.", dsName, dsMetric, timeStamp))
 				continue
 			}
 			var cachegroup, statName string
@@ -608,7 +608,7 @@ func calcDsValues(tmData []byte, cdnName string, sampleTime int64, config Startu
 			statTime := strconv.Itoa(dsMetricData[0].Time)
 			msInt, err := strconv.ParseInt(statTime, 10, 64)
 			if err != nil {
-				log.Errorf("calculating delivery service metric values: error parsing stat time: %v", err)
+				seelog.Errorf("calculating delivery service metric values: error parsing stat time: %v", err)
 			}
 
 			newTime := time.Unix(0, msInt*int64(time.Millisecond))
@@ -628,7 +628,7 @@ func calcDsValues(tmData []byte, cdnName string, sampleTime int64, config Startu
 				newTime,
 			)
 			if err != nil {
-				log.Errorf("calculating delivery service metric values: error creating new influxDB point: %v", err)
+				seelog.Errorf("calculating delivery service metric values: error creating new influxDB point: %v", err)
 				continue
 			}
 			bps.AddPoint(pt)
@@ -636,7 +636,7 @@ func calcDsValues(tmData []byte, cdnName string, sampleTime int64, config Startu
 		}
 	}
 	config.BpsChan <- bps
-	log.Info("Collected ", statCount, " deliveryservice stats values for ", cdnName, " @ ", sampleTime)
+	seelog.Info("Collected ", statCount, " deliveryservice stats values for ", cdnName, " @ ", sampleTime)
 	return nil
 }
 
@@ -654,7 +654,7 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 		RetentionPolicy: config.CacheRetentionPolicy,
 	})
 	if err != nil {
-		log.Errorf("calculating cache metric values: creating new influxDB batch points: %v", err)
+		seelog.Errorf("calculating cache metric values: creating new influxDB batch points: %v", err)
 	}
 
 	for cacheName, cacheData := range jData.Caches {
@@ -667,7 +667,7 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 			//Get the stat time and make sure it's greater than the time 24 hours ago.  If not, skip it so influxdb doesn't throw retention policy errors.
 			validTime := time.Now().AddDate(0, 0, -1)
 			if statData[0].Time.Before(validTime) {
-				log.Info(fmt.Sprintf("Skipping %v %v: %v is greater than 24 hours old.", cacheName, statName, statData[0].Time))
+				seelog.Info(fmt.Sprintf("Skipping %v %v: %v is greater than 24 hours old.", cacheName, statName, statData[0].Time))
 				continue
 			}
 			dataKey := statName
@@ -677,11 +677,11 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 			//Get the stat value and convert to float
 			statFloatValue := 0.0
 			if statsValue, ok := statData[0].Val.(string); !ok {
-				log.Warnf("stat data %s with value %v couldn't be converted into string", statName, statData[0].Val)
+				seelog.Warnf("stat data %s with value %v couldn't be converted into string", statName, statData[0].Val)
 			} else {
 				statFloatValue, err = strconv.ParseFloat(statsValue, 64)
 				if err != nil {
-					log.Warnf("stat %s with value %v couldn't be converted into a float", statName, statsValue)
+					seelog.Warnf("stat %s with value %v couldn't be converted into a float", statName, statsValue)
 				}
 			}
 
@@ -702,7 +702,7 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 				statData[0].Time,
 			)
 			if err != nil {
-				log.Errorf("calculating cache metric values: error creating new influxDB point: %v", err)
+				seelog.Errorf("calculating cache metric values: error creating new influxDB point: %v", err)
 				continue
 			}
 			bps.AddPoint(pt)
@@ -710,7 +710,7 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 		}
 	}
 	config.BpsChan <- bps
-	log.Info("Collected ", statCount, " cache stats values for ", cdnName, " @ ", sampleTime)
+	seelog.Info("Collected ", statCount, " cache stats values for ", cdnName, " @ ", sampleTime)
 	return nil
 }
 
@@ -740,7 +740,7 @@ func influxConnect(config StartupConfig) (influx.Client, error) {
 			}
 			con, err := influx.NewUDPClient(conf)
 			if err != nil {
-				log.Errorf("An error occurred creating InfluxDB UDP client: %v", err)
+				seelog.Errorf("An error occurred creating InfluxDB UDP client: %v", err)
 				continue
 			}
 			return con, nil
@@ -753,7 +753,7 @@ func influxConnect(config StartupConfig) (influx.Client, error) {
 		}
 		con, err := influx.NewHTTPClient(conf)
 		if err != nil {
-			log.Errorf("An error occurred creating InfluxDB HTTP client: %v", err)
+			seelog.Errorf("An error occurred creating InfluxDB HTTP client: %v", err)
 			continue
 		}
 		//Close old connections explicitly
@@ -763,7 +763,7 @@ func influxConnect(config StartupConfig) (influx.Client, error) {
 		host.InfluxClient = con
 		_, _, err = con.Ping(10)
 		if err != nil {
-			log.Warnf("pinging InfluxDB: %v", err)
+			seelog.Warnf("pinging InfluxDB: %v", err)
 			continue
 		}
 		return con, nil
@@ -778,7 +778,7 @@ func sendMetrics(config StartupConfig, bps influx.BatchPoints, retry bool) {
 		if retry {
 			config.BpsChan <- bps
 		}
-		log.Errorf("sending metrics to InfluxDB: unable to get InfluxDB client: %v", err)
+		seelog.Errorf("sending metrics to InfluxDB: unable to get InfluxDB client: %v", err)
 		return
 	}
 
@@ -793,7 +793,7 @@ func sendMetrics(config StartupConfig, bps influx.BatchPoints, retry bool) {
 			if retry {
 				config.BpsChan <- chunkBps
 			}
-			log.Errorf("sending metrics to InfluxDB: error creating new batch points: %v", err)
+			seelog.Errorf("sending metrics to InfluxDB: error creating new batch points: %v", err)
 		}
 		for _, p := range pts[:intMin(config.MaxPublishSize, len(pts))] {
 			chunkBps.AddPoint(p)
@@ -805,9 +805,9 @@ func sendMetrics(config StartupConfig, bps influx.BatchPoints, retry bool) {
 			if retry {
 				config.BpsChan <- chunkBps
 			}
-			log.Errorf("sending metrics to InfluxDB: error writing batch points: %v", err)
+			seelog.Errorf("sending metrics to InfluxDB: error writing batch points: %v", err)
 		} else {
-			log.Info(fmt.Sprintf("Sent %v stats for %v", len(chunkBps.Points()), chunkBps.Database()))
+			seelog.Info(fmt.Sprintf("Sent %v stats for %v", len(chunkBps.Points()), chunkBps.Database()))
 		}
 	}
 }
