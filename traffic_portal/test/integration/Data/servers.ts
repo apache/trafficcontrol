@@ -778,6 +778,16 @@ export const servers = {
 					password: "pa$$word"
 				}
 			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "Cache Group"
+				},
+				{
+					description: "redisplay first table column",
+					Name: "Cache Group"
+				}
+			],
 			add: [
 				{
 					description: "create a Server",
@@ -843,6 +853,16 @@ export const servers = {
 					password: "pa$$word"
 				}
 			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "Cache Group"
+				},
+				{
+					description: "redisplay first table column",
+					Name: "Cache Group"
+				}
+			],
 			add: [
 				{
 					description: "create a Server",
@@ -881,6 +901,16 @@ export const servers = {
 					description: "Operator Role",
 					username: "TPOperator",
 					password: "pa$$word"
+				}
+			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "Cache Group"
+				},
+				{
+					description: "redisplay first table column",
+					Name: "Cache Group"
 				}
 			],
 			add: [
