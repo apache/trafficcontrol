@@ -35,9 +35,9 @@ import (
 func main() {
 	help := getopt.BoolLong("help", 'h', "Print usage info and exit")
 	lineComment := getopt.StringLong("line_comment", 'l', "#", "Comment symbol")
-	mode := getopt.IntLong("mode", 'm', 0644, "file mode default is 644")
-	fa := getopt.StringLong("file_a", 'a', "", "first diff file")
-	fb := getopt.StringLong("file_b", 'b', "", "second diff file")
+	mode := getopt.IntLong("file-mode", 'm', 0644, "file mode default is 644")
+	fa := getopt.StringLong("file-a", 'a', "", "first diff file")
+	fb := getopt.StringLong("file-b", 'b', "", "second diff file")
 	getopt.ParseV2()
 
 	if *help {
@@ -95,12 +95,12 @@ func main() {
 	switch {
 	case fileNameA != "stdin":
 		if t3cutil.PermCk(fileNameA, *mode) {
-			fmt.Println("File permissions differ")
+			fmt.Println("File permissions are incorrect, should be ", *mode)
 			os.Exit(1)
 		}
 	case fileNameB != "stdin":
 		if t3cutil.PermCk(fileNameB, *mode) {
-			fmt.Println("File permissions differ")
+			fmt.Println("File permissions are incorrect, should be ", *mode)
 			os.Exit(1)
 		}
 	}

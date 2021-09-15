@@ -258,8 +258,13 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 // Logs the difference.
 // If the file on disk doesn't exist, returns true and logs the entire file as a diff.
 func diff(cfg config.Cfg, newFile []byte, fileLocation string, perm os.FileMode) (bool, error) {
-	mode := fmt.Sprintf("%o", perm)
-	stdOut, stdErr, code := t3cutil.DoInput(newFile, `t3c-diff`, ` -a stdin -b `, fileLocation, ` -m `, mode)
+	args := []string{
+		"--file-a=stdin",
+		"--file-b=" + fileLocation,
+		"--file-mode=" + fmt.Sprintf("%o", perm),
+	}
+
+	stdOut, stdErr, code := t3cutil.DoInput(newFile, `t3c-diff`, args...)
 	if code > 1 {
 		return false, fmt.Errorf("t3c-diff returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}
@@ -268,7 +273,7 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string, perm os.FileMode)
 	}
 
 	if code == 0 {
-		log.Infof("All lines match TrOps for config file: %s\n", fileLocation)
+		log.Infof("All lines and file permissions match TrOps for config file: %s\n", fileLocation)
 		return false, nil // 0 is only returned if there's no diff
 	}
 	// code 1 means a diff, difference text will be on stdout
