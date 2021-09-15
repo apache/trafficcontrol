@@ -53,23 +53,35 @@ func (fs ATSConfigFiles) Less(i, j int) bool {
 }
 func (fs ATSConfigFiles) Swap(i, j int) { fs[i], fs[j] = fs[j], fs[i] }
 
-// commentsFilter is used to remove comment
+// CommentsFilter is used to remove comment
 // lines from config files while making
 // comparisons.
-func CommentsFilter(body []string) []string {
+func CommentsFilter(body []string, lineComment string) []string {
 	var newlines []string
 
 	newlines = make([]string, 0)
 
 	for ii := range body {
 		line := body[ii]
-		if strings.HasPrefix(line, "#") {
+		if strings.HasPrefix(line, lineComment) {
 			continue
 		}
 		newlines = append(newlines, line)
 	}
 
 	return newlines
+}
+
+// PermCk will compare file permissions against existing file and octal permission provided.
+func PermCk(path string, perm int) bool {
+	file, err := os.Stat(path)
+	if err != nil {
+		fmt.Println("Error opening file ", path)
+	}
+	if file.Mode() != os.FileMode(perm) {
+		return true
+	}
+	return false
 }
 
 // NewLineFilter removes carriage returns
