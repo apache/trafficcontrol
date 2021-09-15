@@ -34,7 +34,12 @@ import (
 
 func main() {
 	help := getopt.BoolLong("help", 'h', "Print usage info and exit")
+	lineComment := getopt.StringLong("line_comment", 'l', "#", "Comment symbol")
+	mode := getopt.IntLong("mode", 'm', 0644, "file mode default is 644")
+	fa := getopt.StringLong("file_a", 'a', "", "first diff file")
+	fb := getopt.StringLong("file_b", 'b', "", "second diff file")
 	getopt.ParseV2()
+
 	if *help {
 		fmt.Println(usageStr)
 		os.Exit(0)
@@ -45,8 +50,8 @@ func main() {
 		os.Exit(3)
 	}
 
-	fileNameA := strings.TrimSpace(os.Args[1])
-	fileNameB := strings.TrimSpace(os.Args[2])
+	fileNameA := strings.TrimSpace(*fa)
+	fileNameB := strings.TrimSpace(*fb)
 
 	if len(fileNameA) == 0 || len(fileNameB) == 0 {
 		fmt.Println(usageStr)
@@ -66,13 +71,13 @@ func main() {
 
 	fileALines := strings.Split(string(fileA), "\n")
 	fileALines = t3cutil.UnencodeFilter(fileALines)
-	fileALines = t3cutil.CommentsFilter(fileALines)
+	fileALines = t3cutil.CommentsFilter(fileALines, *lineComment)
 	fileA = strings.Join(fileALines, "\n")
 	fileA = t3cutil.NewLineFilter(fileA)
 
 	fileBLines := strings.Split(string(fileB), "\n")
 	fileBLines = t3cutil.UnencodeFilter(fileBLines)
-	fileBLines = t3cutil.CommentsFilter(fileBLines)
+	fileBLines = t3cutil.CommentsFilter(fileBLines, *lineComment)
 	fileB = strings.Join(fileBLines, "\n")
 	fileB = t3cutil.NewLineFilter(fileB)
 
@@ -87,18 +92,33 @@ func main() {
 	if fileAExisted != fileBExisted {
 		os.Exit(1)
 	}
+	switch {
+	case fileNameA != "stdin":
+		if t3cutil.PermCk(fileNameA, *mode) {
+			fmt.Println("File permissions differ")
+			os.Exit(1)
+		}
+	case fileNameB != "stdin":
+		if t3cutil.PermCk(fileNameB, *mode) {
+			fmt.Println("File permissions differ")
+			os.Exit(1)
+		}
+	}
 	os.Exit(0)
 
 }
 
 const usageStr = `usage: t3c-diff [--help]
-       <file-a> <file-b>
+        -a <file-a> -b <file-b> -l <line comment> -m <file mode>
 
 Either file may be 'stdin', in which case that file is read from stdin.
 Either file may not exist.
 
 Prints the diff to stdout, and returns the exit code 0 if there was no diff, 1 if there was a diff.
 If one file exists but the other doesn't, it will always be a diff.
+
+Mode is file permissions in octal format, default is 0644.
+Line comment is a character that signals the line is a comment, default is #
 
 Note this means there may be no diff text printed to stdout but still exit 1 indicating a diff
 if the file being created or deleted is semantically empty.`
