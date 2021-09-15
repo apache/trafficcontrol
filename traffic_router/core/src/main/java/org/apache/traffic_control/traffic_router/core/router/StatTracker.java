@@ -475,7 +475,7 @@ public class StatTracker {
 	}
 
 	private void resetDnsStatsFromOverflow() {
-    	totalDnsCount = 0;
-    	totalDnsTime = 0;
-    }
+		totalDnsCount = 0;
+		totalDnsTime = 0;
+	}
 }
