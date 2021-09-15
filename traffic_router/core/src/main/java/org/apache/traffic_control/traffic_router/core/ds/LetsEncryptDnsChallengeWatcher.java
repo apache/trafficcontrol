@@ -127,11 +127,10 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
         return "dnschallengemapping";
     }
 
-    @SuppressWarnings("PMD.CloseResource")
     private String readConfigFile() {
-        try {
-            final InputStream is = new FileInputStream(databasesDirectory.resolve(configFile).toString());
-            final BufferedReader buf = new BufferedReader(new InputStreamReader(is));
+        try (InputStream is = new FileInputStream(databasesDirectory.resolve(configFile).toString());
+             BufferedReader buf = new BufferedReader(new InputStreamReader(is))
+        ) {
             String line = buf.readLine();
             final StringBuilder sb = new StringBuilder();
             while (line != null) {
