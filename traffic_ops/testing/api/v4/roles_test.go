@@ -79,6 +79,9 @@ func UpdateTestRolesWithHeaders(t *testing.T, header http.Header) {
 	remoteRole.Description = expectedDescription
 	opts.QueryParameters.Del("name")
 	_, reqInf, err := TOSession.UpdateRole(remoteRole.Name, remoteRole, opts)
+	if err == nil {
+		t.Errorf("updating role with name: %s, expected an error stating resource was modified, but got nothing", remoteRole.Name)
+	}
 	if reqInf.StatusCode != http.StatusPreconditionFailed {
 		t.Errorf("Expected status code 412, got %v", reqInf.StatusCode)
 	}

@@ -859,7 +859,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if version.Major >= 4 {
-		toUser.User = userV4.DowngradeToLegacyUser()
+		toUser.User = userV4.Downgrade()
 	} else {
 		user.APIInfoImpl = api.APIInfoImpl{ReqInfo: inf}
 		toUser = user
@@ -1095,7 +1095,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if inf.Version.Major >= 4 {
-		toUser.User = userV4.DowngradeToLegacyUser()
+		toUser.User = userV4.Downgrade()
 	} else {
 		user.APIInfoImpl = api.APIInfoImpl{ReqInfo: inf}
 		toUser = user

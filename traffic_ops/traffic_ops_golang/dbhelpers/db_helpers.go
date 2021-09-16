@@ -1626,7 +1626,8 @@ func GetDSIDFromStaticDNSEntry(tx *sql.Tx, staticDNSEntryID int) (int, error) {
 }
 
 // AppendWhere appends 'extra' safely to the WHERE clause 'where'. What is
-// returned is guaranteed to be a valid WHERE clause (including a blank string).
+// returned is guaranteed to be a valid WHERE clause (including a blank string),
+// provided the supplied 'where' and 'extra' clauses are valid.
 func AppendWhere(where, extra string) string {
 	if where == "" && extra == "" {
 		return ""

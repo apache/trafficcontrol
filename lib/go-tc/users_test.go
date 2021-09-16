@@ -189,7 +189,7 @@ func TestUser_UpgradeFromLegacyUser(t *testing.T) {
 		t.Errorf("Incorrect Username after upgrade; want: '%s', got: '%s'", username, upgraded.Username)
 	}
 
-	user = upgraded.DowngradeToLegacyUser()
+	user = upgraded.Downgrade()
 	if user.Role != nil {
 		t.Errorf("Expected Role to be nil after downgrade, got: %d", *user.Role)
 	}

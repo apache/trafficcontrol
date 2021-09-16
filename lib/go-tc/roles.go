@@ -51,6 +51,7 @@ type RoleV40 struct {
 	LastUpdated *time.Time `json:"lastUpdated,omitempty" db:"last_updated"`
 }
 
+// Validate will validate and make sure all that the fields in the supplied RoleV4 struct are semantically correct.
 func (role RoleV4) Validate() error {
 	errs := validation.Errors{
 		"name":        validation.Validate(role.Name, validation.Required),

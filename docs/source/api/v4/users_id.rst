@@ -64,7 +64,7 @@ Response Structure
 :postalCode:        The postal code of the area in which the user resides
 :publicSshKey:      The user's public key used for the SSH protocol
 :registrationSent:  If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
-:role:              The name of the highest-privilege role assigned to this user
+:role:              The name of the role assigned to this user
 :stateOrProvince:   The name of the state or province where this user resides
 :tenant:            The name of the tenant to which this user belongs
 :tenantId:          The integral, unique identifier of the tenant to which this user belongs
@@ -197,7 +197,7 @@ Response Structure
 :postalCode:       The postal code of the area in which the user resides
 :publicSshKey:     The user's public key used for the SSH protocol
 :registrationSent: If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
-:role:             The name of the highest-privilege role assigned to this user
+:role:             The name of the role assigned to this user
 :stateOrProvince:  The name of the state or province where this user resides
 :tenant:           The name of the tenant to which this user belongs
 :tenantId:         The integral, unique identifier of the tenant to which this user belongs

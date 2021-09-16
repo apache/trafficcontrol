@@ -327,3 +327,5 @@ Response Structure
 		"text": "role was deleted.",
 		"level": "success"
 	}]}
+
+.. [#permissions] ``permissions`` cannot include permissions that are not included in the permissions of the requesting user.

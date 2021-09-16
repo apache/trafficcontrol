@@ -55,7 +55,7 @@ func copyIntIfNotNil(i *int) *int {
 	return ret
 }
 
-// Upgrade converts a User to a UserV4 (as seen in API versions 4.x)
+// Upgrade converts a User to a UserV4 (as seen in API versions 4.x).
 func (u User) Upgrade() UserV4 {
 	var ret UserV4
 	ret.AddressLine1 = copyStringIfNotNil(u.AddressLine1)
@@ -98,7 +98,7 @@ func (u User) Upgrade() UserV4 {
 	return ret
 }
 
-// Downgrade converts a UserV4 to a User (as seen in API versions < 4.0)
+// Downgrade converts a UserV4 to a User (as seen in API versions < 4.0).
 func (u UserV4) Downgrade() User {
 	var ret User
 	ret.FullName = new(string)
@@ -111,47 +111,6 @@ func (u UserV4) Downgrade() User {
 	ret.Role = nil
 	ret.TenantID = new(int)
 	*ret.TenantID = u.TenantID
-	ret.Username = new(string)
-	*ret.Username = u.Username
-
-	ret.AddressLine1 = copyStringIfNotNil(u.AddressLine1)
-	ret.AddressLine2 = copyStringIfNotNil(u.AddressLine2)
-	ret.City = copyStringIfNotNil(u.City)
-	ret.Company = copyStringIfNotNil(u.Company)
-	ret.ConfirmLocalPassword = copyStringIfNotNil(u.ConfirmLocalPassword)
-	ret.Country = copyStringIfNotNil(u.Country)
-	ret.Email = copyStringIfNotNil(u.Email)
-	ret.GID = copyIntIfNotNil(u.GID)
-	ret.ID = copyIntIfNotNil(u.ID)
-	ret.LocalPassword = copyStringIfNotNil(u.LocalPassword)
-	ret.PhoneNumber = copyStringIfNotNil(u.PhoneNumber)
-	ret.PostalCode = copyStringIfNotNil(u.PostalCode)
-	ret.PublicSSHKey = copyStringIfNotNil(u.PublicSSHKey)
-	if u.RegistrationSent != nil {
-		ret.RegistrationSent = TimeNoModFromTime(*u.RegistrationSent)
-	}
-	ret.StateOrProvince = copyStringIfNotNil(u.StateOrProvince)
-	ret.Tenant = copyStringIfNotNil(u.Tenant)
-	ret.Token = copyStringIfNotNil(u.Token)
-	ret.UID = copyIntIfNotNil(u.UID)
-
-	return ret
-}
-
-// Downgrade converts a UserV4 to a User as seen in API versions 2.x and 3.x
-func (u UserV4) DowngradeToLegacyUser() User {
-	var ret User
-	ret.FullName = new(string)
-	ret.FullName = u.FullName
-	ret.LastUpdated = TimeNoModFromTime(u.LastUpdated)
-	ret.NewUser = new(bool)
-	*ret.NewUser = u.NewUser
-	ret.RoleName = new(string)
-	*ret.RoleName = u.Role
-	ret.Role = nil
-	ret.TenantID = new(int)
-	*ret.TenantID = u.TenantID
-	ret.Tenant = u.Tenant
 	ret.Username = new(string)
 	*ret.Username = u.Username
 
@@ -241,7 +200,7 @@ type UserCurrent struct {
 // UserCurrentV4 is an alias for the UserCurrent struct used for the latest minor version associated with api major version 4.
 type UserCurrentV4 UserCurrentV40
 
-// UserCurrentV40 represents the structure for the "current" user, and has the "Role" field as a *string, as opposed to a *int found in the older versions
+// UserCurrentV40 represents the structure for the "current" user, and has the "Role" field as a *string, as opposed to a *int found in the older versions.
 type UserCurrentV40 struct {
 	UserName          string    `json:"username"`
 	LocalUser         *bool     `json:"localUser"`
@@ -268,6 +227,7 @@ type UserCurrentV40 struct {
 	LastAuthenticated time.Time `json:"lastAuthenticated"`
 }
 
+// Downgrade will convert a UserCurrentV4 struct into an instance of the UserCurrent struct.
 func (u UserCurrentV4) Downgrade() UserCurrent {
 	var ret UserCurrent
 	ret.FullName = new(string)
@@ -339,16 +299,14 @@ type UserV40 struct {
 }
 
 // UsersResponseV4 is the type of a response from Traffic Ops to requests made
-// to /users which return more than one user for api major version 4 and the latest
-// minor version associated with it.
+// to /users which return more than one user for the latest 4.x api version variant.
 type UsersResponseV4 struct {
 	Response []UserV4 `json:"response"`
 	Alerts
 }
 
 // UserResponseV4 is the type of a response from Traffic Ops to requests made
-// to /users which return one user for api major version 4 and the latest
-// minor version associated with it.
+// to /users which return one user for the latest 4.x api version variant.
 type UserResponseV4 struct {
 	Response UserV4 `json:"response"`
 	Alerts
@@ -597,8 +555,7 @@ type UpdateUserResponse struct {
 	Alerts
 }
 
-// UpdateUserResponseV4 can hold a Traffic Ops API response to a PUT request to update a user for api major version 4 and the latest
-// minor version associated with it..
+// UpdateUserResponseV4 can hold a Traffic Ops API response to a PUT request to update a user for the latest 4.x api version variant.
 type UpdateUserResponseV4 struct {
 	Response UserV4 `json:"response"`
 	Alerts
@@ -617,8 +574,7 @@ type UserCurrentResponse struct {
 	Alerts
 }
 
-// UserCurrentResponseV4 is the Traffic Ops API version 4.0 variant of UserResponse for api major version 4 and the latest
-// minor version associated with it.
+// UserCurrentResponseV4 is the latest 4.x Traffic Ops API version variant of UserResponse.
 type UserCurrentResponseV4 struct {
 	Response UserCurrentV4 `json:"response"`
 	Alerts
@@ -644,17 +600,15 @@ type UserRegistrationRequest struct {
 	TenantID uint `json:"tenantId"`
 }
 
-// UserRegistrationRequestV4 is the alias for the UserRegistrationRequest for api major version 4 and the latest
-// minor version associated with it..
+// UserRegistrationRequestV4 is the alias for the UserRegistrationRequest for the latest 4.x api version variant.
 type UserRegistrationRequestV4 UserRegistrationRequestV40
 
 // UserRegistrationRequestV40 is the request submitted by operators when they want to register a new
 // user in api V4.
 type UserRegistrationRequestV40 struct {
-	Email rfc.EmailAddress `json:"email"`
-	// Role - despite being named "Role" - is actually merely the *ID* of a Role to give the new user.
-	Role     string `json:"role"`
-	TenantID uint   `json:"tenantId"`
+	Email    rfc.EmailAddress `json:"email"`
+	Role     string           `json:"role"`
+	TenantID uint             `json:"tenantId"`
 }
 
 // Validate implements the
