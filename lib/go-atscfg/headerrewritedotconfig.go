@@ -136,7 +136,6 @@ func MakeHeaderRewriteDotConfig(
 			Text:        "",
 			ContentType: ContentTypeHeaderRewriteDotConfig,
 			LineComment: LineCommentHeaderRewriteDotConfig,
-			Secure:      false,
 			Warnings:    warnings,
 		}, nil
 	}
@@ -200,7 +199,6 @@ func MakeHeaderRewriteDotConfig(
 		Text:        text,
 		ContentType: ContentTypeHeaderRewriteDotConfig,
 		LineComment: LineCommentHeaderRewriteDotConfig,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

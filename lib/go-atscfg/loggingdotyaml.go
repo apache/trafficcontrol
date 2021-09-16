@@ -163,7 +163,6 @@ func MakeLoggingDotYAML(
 		Text:        text,
 		ContentType: ContentTypeLoggingDotYAML,
 		LineComment: LineCommentLoggingDotYAML,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

@@ -112,7 +112,6 @@ func MakeRemapDotConfig(
 		Text:        txt,
 		ContentType: ContentTypeRemapDotConfig,
 		LineComment: LineCommentRemapDotConfig,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

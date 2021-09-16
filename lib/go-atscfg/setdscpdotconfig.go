@@ -68,7 +68,6 @@ func MakeSetDSCPDotConfig(
 		Text:        text,
 		ContentType: ContentTypeSetDSCPDotConfig,
 		LineComment: LineCommentSetDSCPDotConfig,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

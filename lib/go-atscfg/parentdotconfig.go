@@ -463,7 +463,6 @@ func MakeParentDotConfig(
 		Text:        text,
 		ContentType: ContentTypeParentDotConfig,
 		LineComment: LineCommentParentDotConfig,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

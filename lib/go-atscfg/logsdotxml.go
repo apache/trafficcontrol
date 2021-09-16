@@ -118,7 +118,6 @@ func MakeLogsXMLDotConfig(
 		Text:        text,
 		ContentType: ContentTypeLogsDotXML,
 		LineComment: LineCommentLogsDotXML,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

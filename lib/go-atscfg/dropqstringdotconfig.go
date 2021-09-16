@@ -73,7 +73,6 @@ func MakeDropQStringDotConfig(
 		Text:        text,
 		ContentType: ContentTypeDropQStringDotConfig,
 		LineComment: LineCommentDropQStringDotConfig,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

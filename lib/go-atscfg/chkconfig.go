@@ -64,7 +64,6 @@ func MakeChkconfig(
 		Text:        string(bts),
 		ContentType: ContentTypeChkconfig,
 		LineComment: LineCommentChkconfig,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

@@ -181,7 +181,6 @@ func MakeSSLServerNameYAML(
 		Text:        txt,
 		ContentType: ContentTypeSSLServerNameYAML,
 		LineComment: LineCommentSSLServerNameYAML,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

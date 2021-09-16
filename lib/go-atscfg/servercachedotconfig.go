@@ -87,7 +87,6 @@ func makeCacheDotConfigMid(
 		Text:        text,
 		ContentType: ContentTypeCacheDotConfig,
 		LineComment: LineCommentCacheDotConfig,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

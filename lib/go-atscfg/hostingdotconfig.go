@@ -222,7 +222,6 @@ func MakeHostingDotConfig(
 		Text:        text,
 		ContentType: ContentTypeHostingDotConfig,
 		LineComment: LineCommentHostingDotConfig,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

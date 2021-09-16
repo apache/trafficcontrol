@@ -65,7 +65,6 @@ func MakeAStatsDotConfig(
 		Text:        txt,
 		ContentType: ContentTypeAstatsDotConfig,
 		LineComment: LineCommentAstatsDotConfig,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

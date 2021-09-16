@@ -88,7 +88,6 @@ func MakeRecordsDotConfig(
 		Text:        txt,
 		ContentType: ContentTypeRecordsDotConfig,
 		LineComment: LineCommentRecordsDotConfig,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

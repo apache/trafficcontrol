@@ -122,7 +122,6 @@ func MakeRegexRevalidateDotConfig(
 		Text:        txt,
 		ContentType: ContentTypeRegexRevalidateDotConfig,
 		LineComment: LineCommentRegexRevalidateDotConfig,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

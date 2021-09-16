@@ -98,7 +98,6 @@ func MakeStorageDotConfig(
 		Text:        text,
 		ContentType: ContentTypeStorageDotConfig,
 		LineComment: LineCommentStorageDotConfig,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }

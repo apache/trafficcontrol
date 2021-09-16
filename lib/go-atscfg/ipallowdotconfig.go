@@ -330,7 +330,6 @@ func MakeIPAllowDotConfig(
 		Text:        text,
 		ContentType: ContentTypeHostingDotConfig,
 		LineComment: LineCommentHostingDotConfig,
-		Secure:      false,
 		Warnings:    warnings,
 	}, nil
 }
