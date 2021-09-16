@@ -21,10 +21,6 @@ onFail() {
   if ! [[ -d Reports ]]; then
     mkdir Reports;
   fi
-  if [[ -f tv.log ]]; then
-    cp tv.log Reports/traffic_vault.docker.log;
-  fi
-	docker logs "$trafficvault" > Reports/traffic_vault.log 2>&1;
   if [[ -f tp.log ]]; then
     mv tp.log Reports/forever.log
   fi
@@ -61,13 +57,6 @@ export PGHOST="localhost"
 export PGDATABASE="traffic_ops"
 export PGPORT="5432"
 
-# For TV Setup
-DIVISION="adivision"
-REGION="aregion"
-PHYS="aloc"
-COORD="acoord"
-CDN="zcdn"
-CG="acg"
 to_admin_username="$(jq -r '.params.login.username' "${GITHUB_WORKSPACE}/traffic_portal/test/integration/config.json")"
 to_admin_password="$(jq -r '.params.login.password' "${GITHUB_WORKSPACE}/traffic_portal/test/integration/config.json")"
 password_hash="$(<<PYTHON_COMMANDS PYTHONPATH="${GITHUB_WORKSPACE}/traffic_ops/install/bin" python
@@ -80,71 +69,12 @@ INSERT INTO tm_user (username, role, tenant_id, local_passwd)
   VALUES ('${to_admin_username}', 1, 1,
     '${password_hash}'
   );
-INSERT INTO division(name) VALUES('${DIVISION}');
-INSERT INTO region(name, division) VALUES('${REGION}', 1);
-INSERT INTO phys_location(name, short_name, region, address, city, state, zip)
-  VALUES('${PHYS}', '${PHYS}', 1, 'some place idk', 'Denver', 'CO', '88888');
-INSERT INTO coordinate(name) VALUES('${COORD}');
-INSERT INTO cdn(name, domain_name) VALUES('${CDN}', 'infra.ciab.test');
-WITH TYPE AS (SELECT id FROM type WHERE name = 'TC_LOC')
-INSERT INTO cachegroup(name, short_name, type, coordinate)
-SELECT '${CG}', '${CG}', TYPE.id, 1
-FROM TYPE;
-
-WITH TYPE AS (SELECT id FROM type WHERE name = 'RIAK'),
-PROFILE AS (SELECT id FROM profile WHERE name = 'RIAK_ALL'),
-STATUS AS (SELECT id FROM status WHERE name = 'ONLINE'),
-PHYS AS (SELECT id FROM phys_location WHERE name = '${PHYS}'),
-CDN AS (SELECT id FROM cdn WHERE name = '${CDN}'),
-CG AS (SELECT id from cachegroup WHERE name = '${CG}')
-INSERT INTO server(host_name, domain_name, cachegroup, type, status, profile, phys_location, cdn_id)
-SELECT 'trafficvault', 'infra.ciab.test', CG.ID, TYPE.id, STATUS.id, PROFILE.id, PHYS.id, CDN.id
-FROM TYPE
-JOIN STATUS ON 1=1
-JOIN PROFILE ON 1=1
-JOIN PHYS ON 1=1
-JOIN CDN ON 1=1
-JOIN CG ON 1=1;
 QUERY
 
 sudo useradd trafops
 
 ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
-trafficvault=trafficvault;
-start_traffic_vault() {
-	<<-'/ETC/HOSTS' sudo tee --append /etc/hosts
-		172.17.0.1    trafficvault.infra.ciab.test
-	/ETC/HOSTS
-
-	<<-'BASH_LINES' cat >infrastructure/cdn-in-a-box/traffic_vault/prestart.d/00-0-standalone-config.sh;
-		TV_FQDN="${TV_HOST}.${INFRA_SUBDOMAIN}.${TLD_DOMAIN}" # Also used in 02-add-search-schema.sh
-		certs_dir=/etc/ssl/certs;
-		X509_INFRA_CERT_FILE="${certs_dir}/trafficvault.crt";
-		X509_INFRA_KEY_FILE="${certs_dir}/trafficvault.key";
-
-		# Generate x509 certificate
-		openssl req -new -x509 -nodes -newkey rsa:4096 -out "$X509_INFRA_CERT_FILE" -keyout "$X509_INFRA_KEY_FILE" -subj "/CN=${TV_FQDN}";
-
-		# Do not wait for CDN in a Box to generate SSL keys
-		sed -i '0,/^update-ca-certificates/d' /etc/riak/prestart.d/00-config.sh;
-
-		# Do not try to source to-access.sh
-		sed -i '/to-access\.sh\|^to-enroll/d' /etc/riak/{prestart.d,poststart.d}/*
-	BASH_LINES
-
-	DOCKER_BUILDKIT=1 docker build "$ciab_dir" -f "${ciab_dir}/traffic_vault/Dockerfile" -t "$trafficvault" >/dev/null
-	echo 'Starting Traffic Vault...';
-	docker run \
-		--detach \
-		--env-file="${ciab_dir}/variables.env" \
-		--hostname="${trafficvault}.infra.ciab.test" \
-		--name="$trafficvault" \
-		--publish=8087:8087 \
-		--rm \
-		"$trafficvault" \
-		/usr/lib/riak/riak-cluster.sh
-}
-start_traffic_vault >tv.log 2>&1 &
+openssl rand 32 | base64 | sudo tee /aes.key
 
 sudo apt-get install -y --no-install-recommends gettext \
 	ruby ruby-dev libc-dev curl \
@@ -181,10 +111,9 @@ to_build() {
   cp "${resources}/database.json" database.conf
 
   export $(<"${ciab_dir}/variables.env" sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
-  envsubst <"${resources}/riak.json" >riak.conf
   truncate -s0 out.log
 
-  ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf >out.log 2>&1 &
+  ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf >out.log 2>&1 &
   popd
 }
 

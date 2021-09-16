@@ -53,6 +53,7 @@ type TODeliveryServiceServer struct {
 	TenantIDs          pq.Int64Array `json:"-" db:"accessibleTenants"`
 	DeliveryServiceIDs pq.Int64Array `json:"-" db:"dsids"`
 	ServerIDs          pq.Int64Array `json:"-" db:"serverids"`
+	CDN                string        `json:"-" db:"cdn"`
 }
 
 func (dss TODeliveryServiceServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -175,7 +176,13 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *auth.CurrentUser, params map[string]string, intParams map[string]int, dsIDs []int64, serverIDs []int64, useIMS bool) (*tc.DeliveryServiceServerResponse, error, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
-	orderby := params["orderby"]
+	// NOTE: if the 'orderby' query param exists but has an empty value, that means no ordering should be done.
+	// If the 'orderby' query param does not exist, order by "deliveryService" by default. This allows clients to
+	// specifically skip sorting if it's unnecessary, reducing load on the DB.
+	orderby, ok := params["orderby"]
+	if !ok {
+		orderby = "deliveryService"
+	}
 	limit := 20
 	offset := 0
 	page := 0
@@ -191,9 +198,6 @@ func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *au
 		}
 		offset *= limit
 	}
-	if orderby == "" {
-		orderby = "deliveryService"
-	}
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
 	if err != nil {
@@ -204,7 +208,9 @@ func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *au
 	}
 	dss.ServerIDs = serverIDs
 	dss.DeliveryServiceIDs = dsIDs
-	query1, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset), dsIDs, serverIDs, true)
+	cdn := params["cdn"]
+	dss.CDN = cdn
+	query1, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset), dsIDs, serverIDs, true, cdn)
 	if err != nil {
 		log.Warnf("Error getting the max last updated query %v", err)
 	}
@@ -221,7 +227,7 @@ func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *au
 	} else {
 		log.Debugln("Non IMS request")
 	}
-	query, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset), dsIDs, serverIDs, false)
+	query, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset), dsIDs, serverIDs, false, cdn)
 	if err != nil {
 		return nil, errors.New("creating query for DeliveryserviceServers: " + err.Error()), nil
 	}
@@ -243,7 +249,7 @@ func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *au
 	return &tc.DeliveryServiceServerResponse{Orderby: orderby, Response: servers, Size: page, Limit: limit}, nil, &maxTime
 }
 
-func selectQuery(orderBy string, limit string, offset string, dsIDs []int64, serverIDs []int64, getMaxQuery bool) (string, error) {
+func selectQuery(orderBy string, limit string, offset string, dsIDs []int64, serverIDs []int64, getMaxQuery bool, cdn string) (string, error) {
 	selectStmt := `SELECT
 	s.deliveryService,
 	s.server,
@@ -281,6 +287,11 @@ AND s.deliveryservice = ANY(:dsids)
 	if len(serverIDs) > 0 {
 		selectStmt += `
 AND s.server = ANY(:serverids)
+`
+	}
+	if len(cdn) > 0 {
+		selectStmt += `
+AND d.cdn_id = (SELECT id FROM cdn WHERE name = :cdn)
 `
 	}
 

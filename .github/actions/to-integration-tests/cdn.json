@@ -22,6 +22,20 @@
 		"max_db_connections": 20,
 		"db_conn_max_lifetime_seconds": 60,
 		"db_query_timeout_seconds": 20,
+		"traffic_vault_backend": "postgres",
+		"traffic_vault_config": {
+			"dbname": "traffic_vault",
+			"hostname": "localhost",
+			"user": "traffic_vault",
+			"password": "twelve",
+			"port": 5432,
+			"ssl": false,
+			"conn_max_lifetime_seconds": 60,
+			"max_connections": 500,
+			"max_idle_connections": 30,
+			"query_timeout_seconds": 10,
+			"aes_key_location": "/aes.key"
+		},
 		"supported_ds_metrics": [ "kbps", "tps_total", "tps_2xx", "tps_3xx", "tps_4xx", "tps_5xx" ]
 	},
 	"cors": {
