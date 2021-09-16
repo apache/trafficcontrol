@@ -141,7 +141,7 @@ Creates a new :term:`Role`.
 
 Request Structure
 -----------------
-:permissions:  An optional array of permission names that will be granted to the new :term:`Role`
+:permissions:  An optional array of permission names that will be granted to the new :term:`Role`\ [#permissions]_
 :description:  A helpful description of the :term:`Role`'s purpose.
 :name:         The name of the new :term:`Role`
 
