@@ -16,7 +16,7 @@ import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 
 import { User } from "./models";
-import { AuthenticationService } from "./services";
+import {AuthenticationService} from "./shared/authentication/authentication.service";
 
 /**
  * The most basic component that contains everything else. This should be kept pretty simple.

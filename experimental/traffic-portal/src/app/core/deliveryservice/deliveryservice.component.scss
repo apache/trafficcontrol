@@ -11,13 +11,33 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-export * from "./cache-groups";
-export * from "./cdn";
-export * from "./data";
-export * from "./deliveryservice";
-export * from "./invalidation";
-export * from "./physical.location";
-export * from "./profile";
-export * from "./server";
-export * from "./type";
-export * from "./user";
+@import 'src/theme';
+main {
+	width: 80%;
+	margin: 1em auto 0;
+}
+
+hr {
+	margin: 5vh 0;
+}
+
+form {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	justify-items: center;
+	margin-bottom: 16px;
+
+	button {
+		margin-top: 15px;
+		grid-column: 1 / span 2;
+	}
+}
+
+#invalidate {
+	right: 5px;
+	position: fixed;
+	bottom: 5px;
+	img {
+		height: 2em;
+	}
+}

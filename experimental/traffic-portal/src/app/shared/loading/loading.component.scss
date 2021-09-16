@@ -11,13 +11,30 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-export * from "./cache-groups";
-export * from "./cdn";
-export * from "./data";
-export * from "./deliveryservice";
-export * from "./invalidation";
-export * from "./physical.location";
-export * from "./profile";
-export * from "./server";
-export * from "./type";
-export * from "./user";
+@import 'src/theme';
+:host {
+	flex: auto;
+	display: flex;
+	flex-direction: column;
+	cursor: wait;
+}
+#container {
+	text-align: center;
+	flex: auto;
+	display: flex;
+	flex-direction: column;
+
+	#svg-container {
+		width: 20%;
+		max-width: 10em;
+		min-width: 2em;
+		margin: auto;
+		svg {
+			margin-bottom: 1.2em;
+		}
+	}
+}
+
+#spacer {
+	flex: auto;
+}

@@ -1,0 +1,58 @@
+/*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+@import 'src/theme';
+h1 {
+	display: inline-block;
+	color: $theme_tertiary;
+	font-size: 3em;
+}
+header {
+	margin: auto;
+	max-width: 85vw;
+	text-align: center;
+}
+img {
+	height: 3em;
+}
+form {
+	margin: auto;
+	display: grid;
+	grid-template-columns: auto 1fr;
+	grid-column-gap: normal;
+	grid-row-gap: 15px;
+	width: 30em;
+	max-width: 85vw;
+	border: 3px outset $theme_secondary;
+	border-radius: 5px;
+	padding: 15px;
+	label {
+		margin: 5px 0 5px auto;
+		text-align: right;
+		&::after {
+			content: ":";
+		}
+	}
+	input {
+		margin-left: 5px;
+		text-align: left;
+	}
+
+	div {
+		grid-column: span 2;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		justify-content: space-between;
+		grid-column-gap: 60%;
+	}
+}
