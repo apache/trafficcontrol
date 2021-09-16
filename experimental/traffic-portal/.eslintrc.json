@@ -87,7 +87,7 @@
 					{
 						"accessibility": "explicit",
 						"overrides": {
-							"constructors": "no-public"
+							"constructors": "off"
 						}
 					}
 				],
