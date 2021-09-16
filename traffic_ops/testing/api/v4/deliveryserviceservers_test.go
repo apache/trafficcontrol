@@ -31,7 +31,7 @@ import (
 )
 
 func TestDeliveryServiceServers(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices}, func() {
 		DeleteTestDeliveryServiceServers(t)
 		AssignServersToTopologyBasedDeliveryService(t)
 		AssignOriginsToTopologyBasedDeliveryServices(t)
@@ -43,7 +43,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 }
 
 func TestDeliveryServiceServersWithRequiredCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, Topologies, DeliveryServices, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, Topologies, ServiceCategories, DeliveryServices, DeliveryServicesRequiredCapabilities, ServerServerCapabilities}, func() {
 		CreateTestDeliveryServiceServersWithRequiredCapabilities(t)
 		CreateTestMSODSServerWithReqCap(t)
 	})

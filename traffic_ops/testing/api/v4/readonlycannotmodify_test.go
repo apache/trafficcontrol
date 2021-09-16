@@ -26,7 +26,7 @@ import (
 )
 
 func TestReadOnlyCannotModify(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, Users}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, Users}, func() {
 		CreateTestCDNWithReadOnlyUser(t)
 	})
 }
