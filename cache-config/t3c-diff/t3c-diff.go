@@ -21,7 +21,7 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -35,13 +35,14 @@ import (
 func main() {
 	help := getopt.BoolLong("help", 'h', "Print usage info and exit")
 	getopt.ParseV2()
+	log.Init(os.Stderr, os.Stderr, os.Stderr, os.Stderr, os.Stderr)
 	if *help {
-		fmt.Println(usageStr)
+		log.Errorln(usageStr)
 		os.Exit(0)
 	}
 
 	if len(os.Args) < 3 {
-		fmt.Println(usageStr)
+		log.Errorln(usageStr)
 		os.Exit(3)
 	}
 
@@ -49,18 +50,18 @@ func main() {
 	fileNameB := strings.TrimSpace(os.Args[2])
 
 	if len(fileNameA) == 0 || len(fileNameB) == 0 {
-		fmt.Println(usageStr)
+		log.Errorln(usageStr)
 		os.Exit(4)
 	}
 
 	fileA, fileAExisted, err := readFileOrStdin(fileNameA)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error reading first: "+err.Error())
+		log.Errorf("error reading first: %s\n", err.Error())
 		os.Exit(5)
 	}
 	fileB, fileBExisted, err := readFileOrStdin(fileNameB)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error reading second: "+err.Error())
+		log.Errorf("error reading second: %s\n", err.Error())
 		os.Exit(6)
 	}
 
@@ -80,7 +81,7 @@ func main() {
 		match := regexp.MustCompile(`(?m)^\+.*|^-.*`)
 		changes := diff.Diff(fileA, fileB)
 		for _, change := range match.FindAllString(changes, -1) {
-			fmt.Println(change)
+			log.Infoln(change)
 		}
 		os.Exit(1)
 	}
