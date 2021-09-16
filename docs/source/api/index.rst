@@ -309,7 +309,7 @@ API V2 Routes
 API routes available in version 2.
 
 .. deprecated:: ATCv6
-	Traffic Ops API version 2 is deprecated in favor of version 4.
+	Traffic Ops API version 2 is deprecated in favor of version 3.
 
 .. toctree::
 	:maxdepth: 4
@@ -321,9 +321,6 @@ API V3 Routes
 =============
 API routes available in version 3.
 
-.. deprecated:: ATCv6
-	Traffic Ops API version 3 is deprecated in favor of version 4.
-
 .. toctree::
 	:maxdepth: 4
 	:glob:
@@ -333,6 +330,8 @@ API routes available in version 3.
 API V4 Routes
 =============
 API routes available in version 4.
+
+.. danger:: API version 4 is *unstable*, meaning that breaking changes can occur at any time. Use at your own peril!
 
 .. toctree::
 	:maxdepth: 4

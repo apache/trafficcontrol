@@ -119,5 +119,7 @@ func GetDeliveryServiceURLSigKeys(toClient *toclient.Session, dsName string, opt
 // ReqOpts takes an http.Header and returns a traffic_ops/v4-client.RequestOptions with that header.
 // This is a helper function, for brevity.
 func ReqOpts(hdr http.Header) *toclient.RequestOptions {
-	return &toclient.RequestOptions{Header: hdr}
+	opts := toclient.NewRequestOptions()
+	opts.Header = hdr
+	return &opts
 }

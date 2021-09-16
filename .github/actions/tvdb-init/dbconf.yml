@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,16 +14,10 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-[Unit]
-Description=Traffic monitor health service for Trafficserver
-After=trafficserver.service
-Requires=trafficserver.service
+version: "1.0"
+name: dbconf.yml
 
-[Service]
-ExecStart=/usr/bin/tm-health-client -vv
-Restart=always
-RestartSec=5
+test:
+  driver: postgres
+  open: host=postgres port=5432 user=traffic_vault password=twelve dbname=traffic_vault sslmode=disable
 
-[Install]
-WantedBy=trafficserver.service
