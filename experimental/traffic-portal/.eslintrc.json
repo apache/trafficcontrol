@@ -159,7 +159,7 @@
 				"@typescript-eslint/no-dynamic-delete": "error",
 				"@typescript-eslint/no-floating-promises": "off",
 				"@typescript-eslint/no-inferrable-types": [
-					"error",
+					"warn",
 					{
 						"ignoreParameters": true
 					}
