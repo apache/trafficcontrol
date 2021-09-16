@@ -1012,9 +1012,7 @@ func (r *TrafficOpsReq) RevalidateWhileSleeping() (UpdateStatus, error) {
 			return updateStatus, errors.New("failed to start services: " + err.Error())
 		}
 
-		// update Traffic Ops
-		_, err = r.UpdateTrafficOps(&updateStatus)
-		if err != nil {
+		if err := r.UpdateTrafficOps(&updateStatus); err != nil {
 			log.Errorf("failed to update Traffic Ops: %s\n", err.Error())
 		}
 
@@ -1117,12 +1115,12 @@ func (r *TrafficOpsReq) getPluginPackagesInstalled() []string {
 	return installedPluginPkgs
 }
 
-func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) (bool, error) {
+func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 	var updateResult bool
 
 	serverStatus, err := getUpdateStatus(r.Cfg)
 	if err != nil {
-		return false, errors.New("failed to update Traffic Ops: " + err.Error())
+		return errors.New("failed to update Traffic Ops: " + err.Error())
 	}
 
 	if *syncdsUpdate == UpdateTropsNotNeeded && (serverStatus.UpdatePending == true || serverStatus.RevalPending == true) {
@@ -1130,21 +1128,21 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) (bool, erro
 		log.Errorln("Traffic Ops is signaling that an update is ready to be applied but, none was found! Clearing update state in Traffic Ops anyway.")
 	} else if *syncdsUpdate == UpdateTropsNotNeeded {
 		log.Errorln("Traffic Ops does not require an update at this time")
-		return true, nil
+		return nil
 	} else if *syncdsUpdate == UpdateTropsFailed {
 		log.Errorln("Traffic Ops requires an update but, applying the update locally failed.  Traffic Ops is not being updated.")
-		return true, nil
+		return nil
 	} else if *syncdsUpdate == UpdateTropsSuccessful {
 		updateResult = true
 		log.Errorln("Traffic Ops requires an update and it was applied successfully.  Clearing update state in Traffic Ops.")
 	}
 
 	if !updateResult {
-		return true, nil
+		return nil
 	}
 	if r.Cfg.ReportOnly {
 		log.Errorln("In Report mode and Traffic Ops needs updated you should probably do that manually.")
-		return true, nil
+		return nil
 	}
 
 	if !r.Cfg.ReportOnly && !r.Cfg.NoUnsetUpdateFlag {
@@ -1161,12 +1159,10 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) (bool, erro
 				err = sendUpdate(r.Cfg, false, false)
 			}
 		}
+		if err != nil {
+			return errors.New("Traffic Ops Update failed: " + err.Error())
+		}
+		log.Infoln("Traffic Ops has been updated.")
 	}
-
-	if err != nil {
-		return false, errors.New("Traffic Ops Update failed: " + err.Error())
-	}
-
-	log.Errorln("Traffic Ops has been updated.")
-	return true, nil
+	return nil
 }

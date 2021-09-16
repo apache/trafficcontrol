@@ -522,9 +522,17 @@ If any of the related flags are also set, they override the mode's default behav
 	}
 
 	for _, str := range modeLogStrs {
+		str = strings.TrimSpace(str)
+		if str == "" {
+			continue
+		}
 		log.Infoln(str)
 	}
-	for msg := range toInfoLog {
+	for _, msg := range toInfoLog {
+		msg = strings.TrimSpace(msg)
+		if msg == "" {
+			continue
+		}
 		log.Infoln(msg)
 	}
 
