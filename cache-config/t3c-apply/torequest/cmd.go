@@ -257,7 +257,9 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 // diff calls t3c-diff to diff the given new file and the file on disk. Returns whether they're different.
 // Logs the difference.
 // If the file on disk doesn't exist, returns true and logs the entire file as a diff.
-func diff(cfg config.Cfg, newFile []byte, fileLocation string) (bool, error) {
+func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool) (bool, error) {
+	diffMsg := ""
+
 	stdOut, stdErr, code := t3cutil.DoInput(newFile, `t3c-diff`, `stdin`, fileLocation)
 	if code > 1 {
 		return false, fmt.Errorf("t3c-diff returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
@@ -267,17 +269,26 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string) (bool, error) {
 	}
 
 	if code == 0 {
-		log.Infof("All lines match TrOps for config file: %s\n", fileLocation)
+		diffMsg += fmt.Sprintf("All lines match TrOps for config file: %s\n", fileLocation)
 		return false, nil // 0 is only returned if there's no diff
 	}
 	// code 1 means a diff, difference text will be on stdout
 
 	lines := strings.Split(string(stdOut), "\n")
-	log.Infoln("file '" + fileLocation + "' changes begin")
+	diffMsg += "file '" + fileLocation + "' changes begin\n"
 	for _, line := range lines {
-		log.Infoln("diff: " + line)
+		diffMsg += "diff: " + line + "\n"
 	}
-	log.Infoln("file '" + fileLocation + "' changes end")
+	diffMsg += "file '" + fileLocation + "' changes end\n"
+
+	if reportOnly {
+		reportLocation := os.Stdout
+		fmt.Fprintf(reportLocation, diffMsg)
+	} else {
+		for _, line := range strings.Split(diffMsg, "\n") {
+			log.Infoln(line)
+		}
+	}
 
 	return true, nil
 }

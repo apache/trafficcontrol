@@ -110,7 +110,7 @@ func main() {
 		}
 	}
 
-	log.Infoln(time.Now().Format(time.UnixDate))
+	log.Infoln(time.Now().Format(time.RFC3339))
 
 	if !util.CheckUser(cfg) {
 		lock.UnlockAndExit(UserCheckError)
