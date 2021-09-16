@@ -43,7 +43,7 @@ func main() {
 	}
 
 	if cfg.ListPlugins {
-		fmt.Println(strings.Join(plugin.List(), "\n"))
+		log.Errorln(strings.Join(plugin.List(), "\n"))
 		os.Exit(0)
 	}
 

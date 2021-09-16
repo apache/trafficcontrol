@@ -110,7 +110,7 @@ func main() {
 		}
 	}
 
-	fmt.Println(time.Now().Format(time.UnixDate))
+	log.Infoln(time.Now().Format(time.UnixDate))
 
 	if !util.CheckUser(cfg) {
 		lock.UnlockAndExit(UserCheckError)

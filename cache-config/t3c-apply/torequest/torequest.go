@@ -160,7 +160,7 @@ func unencodeFilter(body []string) []string {
 // DumpConfigFiles is used for debugging
 func (r *TrafficOpsReq) DumpConfigFiles() {
 	for _, cfg := range r.configFiles {
-		fmt.Printf("Name: %s, Dir: %s, Service: %s\n",
+		log.Infof("Name: %s, Dir: %s, Service: %s\n",
 			cfg.Name, cfg.Dir, cfg.Service)
 	}
 }
