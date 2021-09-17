@@ -14,6 +14,7 @@
 import { NgModule } from "@angular/core";
 import { Routes, RouterModule } from "@angular/router";
 import { CacheGroupTableComponent } from "./components/cache-groups/cache-group-table/cache-group-table.component";
+import { ChartsComponent } from "./components/charts/charts.component";
 
 import { CurrentuserComponent } from "./components/currentuser/currentuser.component";
 import { DashboardComponent } from "./components/dashboard/dashboard.component";
@@ -35,7 +36,8 @@ const routes: Routes = [
 	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs"},
 	{ component: ServersTableComponent, path: "servers"},
 	{ component: CacheGroupTableComponent, path: "cache-groups"},
-	{ component: ServerDetailsComponent, path: "server/:id"}
+	{ component: ServerDetailsComponent, path: "server/:id"},
+	{ component: ChartsComponent, path: "charts"}
 ];
 
 /**

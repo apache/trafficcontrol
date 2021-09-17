@@ -72,6 +72,7 @@ import {
 	NewInvalidationJobDialogComponent
 } from "./components/invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 import { UpdatePasswordDialogComponent } from "./components/currentuser/update-password-dialog/update-password-dialog.component";
+import { ChartsComponent } from './components/charts/charts.component';
 
 // TODO: Figure out the actual typing here.
 Chart.plugins.register({
@@ -122,7 +123,8 @@ Chart.plugins.register({
 		UpdateCellRendererComponent,
 		UpdateStatusComponent,
 		NewInvalidationJobDialogComponent,
-		UpdatePasswordDialogComponent
+		UpdatePasswordDialogComponent,
+  		ChartsComponent
 	],
 	entryComponents: [
 		SSHCellRendererComponent
