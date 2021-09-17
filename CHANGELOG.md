@@ -121,6 +121,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6174](https://github.com/apache/trafficcontrol/issues/6174) - Fixed t3c-apply with no hostname failing if the OS hostname returns a full FQDN
 - Fixed Federations IMS so TR federations watcher will get updates.
 - [#5129](https://github.com/apache/trafficcontrol/issues/5129) - Updated TM so that it returns a 404 if the endpoint is not supported.
+- [#5992](https://github.com/apache/trafficcontrol/issues/5992) - Updated Traffic Router Integration tests to use a mock Traffic Monitor and Traffic Ops server
 
 ### Changed
 - Migrated completely off of bower in favor of npm
