@@ -29,7 +29,7 @@ var SteeringUserSession *client.Session
 
 func TestSteeringTargets(t *testing.T) {
 
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, Users, SteeringTargets}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, Users, SteeringTargets}, func() {
 		GetTestSteeringTargetsIMS(t)
 		GetTestSteeringTargets(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)

@@ -148,7 +148,7 @@ func UpdateDeleteCDNWithLocks(t *testing.T) {
 }
 
 func TestCDNsDNSSEC(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices}, func() {
 		if includeSystemTests {
 			GenerateDNSSECKeys(t)
 			RefreshDNSSECKeys(t) // NOTE: testing refresh last (while no keys exist) because it's asynchronous and might affect other tests

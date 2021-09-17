@@ -29,7 +29,7 @@ import (
 )
 
 func TestCDNLocks(t *testing.T) {
-	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, Tenants, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities, Roles, Users}, func() {
+	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, Tenants, ServiceCategories, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities, Roles, Users}, func() {
 		CRDCdnLocks(t)
 		AdminCdnLocks(t)
 		SnapshotWithLock(t)

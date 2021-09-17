@@ -30,7 +30,7 @@ import (
 )
 
 func TestFederations(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, CDNFederations}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, CDNFederations}, func() {
 		PostDeleteTestFederationsDeliveryServices(t)
 		GetTestFederations(t)
 		GetTestFederationsIMS(t)
