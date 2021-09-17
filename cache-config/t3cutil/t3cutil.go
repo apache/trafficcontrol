@@ -74,11 +74,12 @@ func CommentsFilter(body []string, lineComment string) []string {
 
 // PermCk will compare file permissions against existing file and octal permission provided.
 func PermCk(path string, perm int) bool {
+	mode := os.FileMode(perm)
 	file, err := os.Stat(path)
 	if err != nil {
-		fmt.Println("Error opening file ", path)
+		fmt.Println("Error getting file status", path)
 	}
-	if file.Mode() != os.FileMode(perm) {
+	if file.Mode() != mode.Perm() {
 		return true
 	}
 	return false
