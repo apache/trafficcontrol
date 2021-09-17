@@ -1074,11 +1074,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 
 	//Get TypeId by TypeName
 	typeOpts := client.NewRequestOptions()
-	if len(testData.Types) < 1 {
-		t.Fatal("Need at least one Types to update Delivery Service type")
-	}
-	firstTypes := testData.Types[0]
-	typeOpts.QueryParameters.Set("name", firstTypes.Name)
+	typeOpts.QueryParameters.Set("name", "HTTP_LIVE")
 	typeResp, _, err := TOSession.GetTypes(typeOpts)
 	if err != nil {
 		t.Errorf("cannot get type id by name: %v - alerts: %v", err, typeResp.Alerts)
