@@ -1038,7 +1038,6 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	updatedMaxDNSAnswers := 164598
 	updatedMaxOriginConnections := 100
 	updatedActive := false
-	//updatedCdnId : =
 	updatedDisplayName := "newds1displayname"
 	updatedDscp := 41
 	updatedGeoLimit := 1
@@ -1049,16 +1048,15 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	updatedMissLong := -88.627778
 	updateMultisiteOrigin := true
 	updatedOrgServerFqdn := "http://origin.example.net"
-	//updatedProfile :=
 	updateProtocol := 2
 	updateQstringIgnore := 0
 	updateRegionalGeoBlocking := true
 
+	remoteDS.MaxRequestHeaderBytes = &updatedMaxRequestHeaderSize
 	remoteDS.LongDesc = &updatedLongDesc
 	remoteDS.MaxDNSAnswers = &updatedMaxDNSAnswers
 	remoteDS.MaxOriginConnections = &updatedMaxOriginConnections
 	remoteDS.MatchList = nil // verify that this field is optional in a PUT request, doesn't cause nil dereference panic
-	remoteDS.MaxRequestHeaderBytes = &updatedMaxRequestHeaderSize
 	remoteDS.Active = &updatedActive
 	remoteDS.DisplayName = &updatedDisplayName
 	remoteDS.DSCP = &updatedDscp
@@ -1070,13 +1068,17 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	remoteDS.MissLong = &updatedMissLong
 	remoteDS.MultiSiteOrigin = &updateMultisiteOrigin
 	remoteDS.OrgServerFQDN = &updatedOrgServerFqdn
-	//remoteDS.ProfileID = &updatedProfile
 	remoteDS.Protocol = &updateProtocol
 	remoteDS.QStringIgnore = &updateQstringIgnore
 	remoteDS.RegionalGeoBlocking = &updateRegionalGeoBlocking
 
+	//Get TypeId by TypeName
 	typeOpts := client.NewRequestOptions()
-	typeOpts.QueryParameters.Set("name", "ANY_MAP")
+	if len(testData.Types) < 1 {
+		t.Fatal("Need at least one Types to update Delivery Service type")
+	}
+	firstTypes := testData.Types[0]
+	typeOpts.QueryParameters.Set("name", firstTypes.Name)
 	typeResp, _, err := TOSession.GetTypes(typeOpts)
 	if err != nil {
 		t.Errorf("cannot get type id by name: %v - alerts: %v", err, typeResp.Alerts)
@@ -1086,11 +1088,43 @@ func UpdateTestDeliveryServices(t *testing.T) {
 	}
 	remoteDS.TypeID = &typeResp.Response[0].ID
 
+	//Get CDNId by CDNName
+	cdnOpts := client.NewRequestOptions()
+	if len(testData.CDNs) < 1 {
+		t.Fatal("Need at least one CDN to update Delivery Service CDN")
+	}
+	firstCDN := testData.CDNs[0]
+	cdnOpts.QueryParameters.Set("name", firstCDN.Name)
+	cdnResp, _, err := TOSession.GetCDNs(cdnOpts)
+	if err != nil {
+		t.Fatalf("getting CDNs with name '%s': %v - alerts: %+v", "cdn1", err, cdnResp.Alerts)
+	}
+	if len(cdnResp.Response) != 1 {
+		t.Fatalf("expected exactly 1 CDN named '%s' but found %d CDNs", "cdn1", len(cdnResp.Response))
+	}
+	remoteDS.CDNID = &cdnResp.Response[0].ID
+
+	//Get ProfileId by ProfileName
+	profileOpts := client.NewRequestOptions()
+	if len(testData.Profiles) < 1 {
+		t.Fatal("Need at least one Profile to update Delivery Service Profiles")
+	}
+	firstProfile := testData.Profiles[0]
+	profileOpts.QueryParameters.Set("name", firstProfile.Name)
+	profilesResp, _, err := TOSession.GetProfiles(profileOpts)
+	if err != nil {
+		t.Fatalf("couldn't get profiles: %v", err)
+	}
+	if len(profilesResp.Response) != 1 {
+		t.Fatalf("expected just one profile in the response, but got %d", len(profilesResp.Response))
+	}
+	remoteDS.ProfileID = &profilesResp.Response[0].ID
+
 	if updateResp, _, err := TOSession.UpdateDeliveryService(*remoteDS.ID, remoteDS, client.RequestOptions{}); err != nil {
 		t.Errorf("cannot update Delivery Service: %v - %v", err, updateResp)
 	}
 
-	// Retrieve the server to check rack and interfaceName values were updated
+	// Retrieve the delivery service to check whether the values were updated
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("id", strconv.Itoa(*remoteDS.ID))
 	apiResp, _, err := TOSession.GetDeliveryServices(opts)
@@ -1123,6 +1157,90 @@ func UpdateTestDeliveryServices(t *testing.T) {
 		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined max request header bytes")
 	} else if *resp.MaxRequestHeaderBytes != updatedMaxRequestHeaderSize {
 		t.Errorf("max request header sizes do not match actual: %d, expected: %d", resp.MaxRequestHeaderBytes, updatedMaxRequestHeaderSize)
+	}
+
+	if resp.Active == nil {
+		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined Active")
+	} else if *resp.Active != updatedActive {
+		t.Errorf("Active do not match actual: %t, expected: %t", *resp.Active, updatedActive)
+	}
+
+	if resp.DisplayName == nil {
+		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined DisplayName")
+	} else if *resp.DisplayName != updatedDisplayName {
+		t.Errorf("DisplayName do not match actual: %s, expected: %s", *resp.DisplayName, updatedDisplayName)
+	}
+
+	if resp.DSCP == nil {
+		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined DSCP")
+	} else if *resp.DSCP != updatedDscp {
+		t.Errorf("DSCP do not match actual: %d, expected: %d", resp.DSCP, updatedDscp)
+	}
+
+	if resp.GeoLimit == nil {
+		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined GeoLimit")
+	} else if *resp.GeoLimit != updatedGeoLimit {
+		t.Errorf("GeoLimit do not match actual: %d, expected: %d", resp.GeoLimit, updatedGeoLimit)
+	}
+
+	if resp.InitialDispersion == nil {
+		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined InitialDispersion")
+	} else if *resp.InitialDispersion != updatedInitialDispersion {
+		t.Errorf("InitialDispersion do not match actual: %d, expected: %d", resp.InitialDispersion, updatedInitialDispersion)
+	}
+
+	if resp.IPV6RoutingEnabled == nil {
+		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined IPV6RoutingEnabled")
+	} else if *resp.IPV6RoutingEnabled != updatedIpv6RoutingEnabled {
+		t.Errorf("IPV6RoutingEnabled do not match actual: %t, expected: %t", *resp.IPV6RoutingEnabled, updatedIpv6RoutingEnabled)
+	}
+
+	if resp.LogsEnabled == nil {
+		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined LogsEnabled")
+	} else if *resp.LogsEnabled != updatedLogsEnabled {
+		t.Errorf("LogsEnabled do not match actual: %t, expected: %t", *resp.LogsEnabled, updatedLogsEnabled)
+	}
+
+	if resp.MissLat == nil {
+		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined MissLat")
+	} else if *resp.MissLat != updatedMissLat {
+		t.Errorf("MissLat do not match actual: %b, expected: %b", resp.MissLat, updatedMissLat)
+	}
+
+	if resp.MissLong == nil {
+		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined MissLong")
+	} else if *resp.MissLong != updatedMissLong {
+		t.Errorf("MissLong do not match actual: %b, expected: %b", resp.MissLong, updatedMissLong)
+	}
+
+	if resp.MultiSiteOrigin == nil {
+		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined MultiSiteOrigin")
+	} else if *resp.MultiSiteOrigin != updateMultisiteOrigin {
+		t.Errorf("MultiSiteOrigin do not match actual: %t, expected: %t", *resp.MultiSiteOrigin, updateMultisiteOrigin)
+	}
+
+	if resp.OrgServerFQDN == nil {
+		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined OrgServerFQDN")
+	} else if *resp.OrgServerFQDN != updatedOrgServerFqdn {
+		t.Errorf("OrgServerFQDN do not match actual: %s, expected: %s", *resp.OrgServerFQDN, updatedOrgServerFqdn)
+	}
+
+	if resp.Protocol == nil {
+		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined Protocol")
+	} else if *resp.Protocol != updateProtocol {
+		t.Errorf("Protocol do not match actual: %d, expected: %d", resp.Protocol, updateProtocol)
+	}
+
+	if resp.QStringIgnore == nil {
+		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined QStringIgnore")
+	} else if *resp.QStringIgnore != updateQstringIgnore {
+		t.Errorf("QStringIgnore do not match actual: %d, expected: %d", resp.QStringIgnore, updateQstringIgnore)
+	}
+
+	if resp.RegionalGeoBlocking == nil {
+		t.Error("Traffic Ops returned a representation for a Delivery Service with null or undefined RegionalGeoBlocking")
+	} else if *resp.RegionalGeoBlocking != updateRegionalGeoBlocking {
+		t.Errorf("RegionalGeoBlocking do not match actual: %t, expected: %t", *resp.RegionalGeoBlocking, updateRegionalGeoBlocking)
 	}
 }
 
