@@ -136,58 +136,58 @@ type Timers struct {
 
 func info(args ...interface{}) {
 	if useSeelog {
-		seelog.Info(args)
+		seelog.Info(args...)
 	} else {
-		log.Infoln(args)
+		log.Infoln(args...)
 	}
 }
 func infof(format string, args ...interface{}) {
 	if useSeelog {
-		seelog.Infof(format, args)
+		seelog.Infof(format, args...)
 	} else {
-		log.Infof(format, args)
+		log.Infof(format, args...)
 	}
 }
 func errorln(args ...interface{}) {
 	if useSeelog {
-		seelog.Error(args)
+		seelog.Error(args...)
 	} else {
-		log.Errorln(args)
+		log.Errorln(args...)
 	}
 }
 func errorf(format string, args ...interface{}) {
 	if useSeelog {
-		seelog.Errorf(format, args)
+		seelog.Errorf(format, args...)
 	} else {
-		log.Errorf(format, args)
+		log.Errorf(format, args...)
 	}
 }
 func warn(args ...interface{}) {
 	if useSeelog {
-		seelog.Warn(args)
+		seelog.Warn(args...)
 	} else {
-		log.Warnln(args)
+		log.Warnln(args...)
 	}
 }
 func warnf(format string, args ...interface{}) {
 	if useSeelog {
-		seelog.Warnf(format, args)
+		seelog.Warnf(format, args...)
 	} else {
-		log.Warnf(format, args)
+		log.Warnf(format, args...)
 	}
 }
 func debug(args ...interface{}) {
 	if useSeelog {
-		seelog.Debug(args)
+		seelog.Debug(args...)
 	} else {
-		log.Debugln(args)
+		log.Debugln(args...)
 	}
 }
 func debugf(format string, args ...interface{}) {
 	if useSeelog {
-		seelog.Debugf(format, args)
+		seelog.Debugf(format, args...)
 	} else {
-		log.Debugf(format, args)
+		log.Debugf(format, args...)
 	}
 }
 
