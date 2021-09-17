@@ -1,3 +1,6 @@
+% tc-health-client(1) tc-health-client 6.1.0 | ATC t3c Manual
+%
+% 2021-09-17
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
@@ -44,7 +47,7 @@ tc-health-client [-f config-file]  -h  [-l logging-directory]  -v
 The tc-health-client command is used to manage **Apache Traffic Server** parents on a
 host running **Apache Traffic Server**.  The command should be started by **systemd** 
 and run as a service. On startup, the command reads its default configuration file
-**/etc/trafficcontrol-health-client/tc-health-client.json**.  After reading the config
+**/etc/trafficcontrol/tc-health-client.json**.  After reading the config
 file it polls the configured **Traffic OPs** to obtain a list of **Traffic Monitors**
 for the configured **CDN** and begins polling the available **Traffic Monitors** for
 Traffic Server cache statuses.
@@ -83,19 +86,19 @@ Requires Apache TrafficServer 8.1.0 or later.
 -l, -\-logging-dir=logging-directory
 
   Specify the directory where log files are kept.  The default location
-  is **/var/log/trafficcontrol-health-client/**
+  is **/var/log/trafficcontrol/**
 
 -v, -\-verbose
 
   Logging verbosity.  Errors are logged to the default log file 
-  **/var/log/trafficcontrol-health-client/tc-health-client.log**
+  **/var/log/trafficcontrol/tc-health-client.log**
   To add Warnings, use -v.  To add Warnings and Informational 
   logging, use -vv.  Finally you may add Debug logging using -vvv.
 
 # CONFIGURATION
 
 The configuration file is a **JSON** file and is looked for by default
-at **/etc/trafficcontrol-health-client/tc-health-client.json**
+at **/etc/trafficcontrol/tc-health-client.json**
 
 Sample configuarion file:
 
@@ -171,16 +174,13 @@ Sample configuarion file:
 
 # Files
 
-* /etc/trafficcontrol-health-client/tc-health-client.json
+* /etc/trafficcontrol/tc-health-client.json
 * /etc/logrotate.d/tc-health-client-logrotate
 * /usr/bin/tc-health-client
 * /usr/lib/systemd/system/tc-health-client.service
-* /var/log/trafficcontrol-health-client/tc-health-client.json
+* /var/log/trafficcontrol/tc-health-client.json
 * Traffic Server **parent.config**
 * Traffic Server **strategies.yaml**
 * Traffic Server **traffic_ctl** command
   
    
-
-
-

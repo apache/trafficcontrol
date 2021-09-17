@@ -43,8 +43,8 @@ var tmPollingInterval time.Duration
 var toRequestTimeout time.Duration
 
 const (
-	DefaultConfigFile             = "/etc/trafficcontrol-health-client/tc-health-client.json"
-	DefaultLogDirectory           = "/var/log/trafficcontrol-health-client"
+	DefaultConfigFile             = "/etc/trafficcontrol/tc-health-client.json"
+	DefaultLogDirectory           = "/var/log/trafficcontrol"
 	DefaultLogFile                = "tc-health-client.log"
 	DefaultTrafficServerConfigDir = "/opt/trafficserver/etc/trafficserver"
 	DefaultTrafficServerBinDir    = "/opt/trafficserver/bin"

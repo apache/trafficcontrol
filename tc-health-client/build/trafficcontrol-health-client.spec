@@ -46,7 +46,7 @@ was_active="unk"
 
 %pre
 
-if [[ -f /etc/trafficcontrol-health-client/tc-health-client.json ]]; then
+if [[ -f /etc/trafficcontrol/tc-health-client.json ]]; then
   active=`systemctl status tc-health-client | awk '/Active:/ {print $2}'`
   if [[ ${active} = "active" ]]; then
     ${was_active}="yes"
@@ -63,14 +63,14 @@ man1dir="man1"
 mkdir -p ${RPM_BUILD_ROOT}/${installdir}
 mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
 mkdir -p ${RPM_BUILD_ROOT}/${mandir}/${man1dir}
-mkdir -p ${RPM_BUILD_ROOT}/etc/trafficcontrol-health-client
+mkdir -p ${RPM_BUILD_ROOT}/etc/trafficcontrol
 mkdir -p ${RPM_BUILD_ROOT}/usr/lib/systemd/system
 
 cp -p ${RPM_SOURCE_DIR}/trafficcontrol-health-client-%{version}/tc-health-client.logrotate ${RPM_BUILD_ROOT}/etc/logrotate.d/tc-health-client.logrotate
 
 src="trafficcontrol-health-client-%{version}"
 cp -p ${RPM_SOURCE_DIR}/${src}/tc-health-client ${RPM_BUILD_ROOT}/${installdir}
-cp -p ${RPM_SOURCE_DIR}/${src}/tc-health-client.json.sample ${RPM_BUILD_ROOT}/etc/trafficcontrol-health-client
+cp -p ${RPM_SOURCE_DIR}/${src}/tc-health-client.json.sample ${RPM_BUILD_ROOT}/etc/trafficcontrol
 cp -p ${RPM_SOURCE_DIR}/${src}/tc-health-client.logrotate ${RPM_BUILD_ROOT}/etc/logrotate.d
 cp -p ${RPM_SOURCE_DIR}/${src}/tc-health-client.service ${RPM_BUILD_ROOT}/usr/lib/systemd/system
 gzip -c -9 ${RPM_SOURCE_DIR}/${src}/tc-health-client.1 > ${RPM_BUILD_ROOT}/${mandir}/${man1dir}/tc-health-client.1.gz
@@ -83,9 +83,9 @@ rm -rf ${RPM_BUILD_ROOT}
 %post
 
 # we want all the cache logs under /var/log/trafficcontrol-cache-config
-if [[ ! -s /var/log/trafficcontrol-health-client ]]; then
-  ln -s /var/log/trafficcontrol-cache-config /var/log/trafficcontrol-health-client
-  touch /var/log/trafficcontrol-health-client/tc-health-client.log
+if [[ ! -d /var/log/trafficcontrol ]]; then
+  mkdir -p /var/log/trafficcontrol
+  touch /var/log/trafficcontrol/tc-health-client.log
 fi
 
 if [[ ${was_active} = "yes" ]]; then
@@ -103,7 +103,7 @@ fi
 
 %preun
 
-if [[ -f /etc/trafficcontrol-health-client/tc-health-client.json ]]; then
+if [[ -f /etc/trafficcontrol/tc-health-client.json ]]; then
   active=`systemctl status tc-health-client | awk '/Active:/ {print $2}'`
   if [[ ${active} = "active" ]]; then
     systemctl stop tc-health-client
@@ -126,7 +126,7 @@ fi
 %attr(755, root, root)
 /usr/bin/tc-health-client
 /usr/share/man/man1/tc-health-client.1.gz
-/etc/trafficcontrol-health-client/tc-health-client.json.sample
+/etc/trafficcontrol/tc-health-client.json.sample
 /etc/logrotate.d/tc-health-client.logrotate
 /usr/lib/systemd/system/tc-health-client.service
 
