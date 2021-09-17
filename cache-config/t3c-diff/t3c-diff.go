@@ -95,12 +95,12 @@ func main() {
 	switch {
 	case fileNameA != "stdin":
 		if t3cutil.PermCk(fileNameA, *mode) {
-			fmt.Println("File permissions are incorrect, should be ", *mode)
+			fmt.Println("File permissions are incorrect, should be ", fmt.Sprintf("%#o", *mode))
 			os.Exit(1)
 		}
 	case fileNameB != "stdin":
 		if t3cutil.PermCk(fileNameB, *mode) {
-			fmt.Println("File permissions are incorrect, should be ", *mode)
+			fmt.Println("File permissions are incorrect, should be ", fmt.Sprintf("%#o", *mode))
 			os.Exit(1)
 		}
 	}
