@@ -32,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
@@ -116,32 +117,6 @@ func (role TORole) GetType() string {
 func (role *TORole) SetKeys(keys map[string]interface{}) {
 	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
 	role.ID = &i
-}
-
-func (role TORole) validate(tx *sqlx.Tx) error {
-	var capabilities *[]string
-	errs := make(map[string]error)
-	errs = validation.Errors{
-		"name":        validation.Validate(role.Name, validation.Required),
-		"description": validation.Validate(role.Description, validation.Required),
-		"privLevel":   validation.Validate(role.PrivLevel, validation.Required),
-	}
-	capabilities = role.Capabilities
-
-	errsToReturn := tovalidate.ToErrors(errs)
-	checkCaps := `SELECT cap FROM UNNEST($1::text[]) AS cap WHERE NOT cap =  ANY(ARRAY(SELECT c.name FROM capability AS c WHERE c.name = ANY($1)))`
-	var badCaps []string
-	if tx != nil {
-		err := tx.Select(&badCaps, checkCaps, pq.Array(capabilities))
-		if err != nil {
-			log.Errorf("got error from selecting bad capabilities: %v", err)
-			return err
-		}
-		if len(badCaps) > 0 {
-			errsToReturn = append(errsToReturn, fmt.Errorf("can not add non-existent capabilities: %v", badCaps))
-		}
-	}
-	return util.JoinErrs(errsToReturn)
 }
 
 // Validate fulfills the api.Validator interface
@@ -352,6 +327,16 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
+		current, err := auth.GetCurrentUser(r.Context())
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		missing := current.MissingPermissions(roleV4.Permissions...)
+		if len(missing) != 0 {
+			api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("cannot request more than assigned permissions"), nil)
+			return
+		}
 		roleDesc = roleV4.Description
 		roleCapabilities = &roleV4.Permissions
 		if roleName, ok = inf.Params["name"]; !ok {
@@ -383,7 +368,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 		rows, err := tx.Query(updateRoleQuery(), roleDesc, roleName)
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("updating role: "+err.Error()))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("updating role: %w", err))
 			return
 		}
 		defer rows.Close()
@@ -394,7 +379,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		lastUpdated := tc.TimeNoMod{}
 		for rows.Next() {
 			if err := rows.Scan(&lastUpdated); err != nil {
-				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning lastUpdated from role update: "+err.Error()))
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning lastUpdated from role update: %w", err))
 				return
 			}
 			roleV4.LastUpdated = &lastUpdated.Time
@@ -404,7 +389,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		if err := role.validate(inf.Tx); err != nil {
+		if err := role.Validate(); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("name and/or description and/or privLevel can not be empty"), nil)
 			return
 		}
@@ -412,15 +397,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		roleDesc = *role.Description
 		privLevel = *role.PrivLevel
 		roleCapabilities = role.Capabilities
-		if roleIDParam, ok := inf.Params["id"]; !ok {
+		var roleIDParam string
+		if roleIDParam, ok = inf.Params["id"]; !ok {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply a role ID to update"), nil)
 			return
-		} else {
-			roleID, err = strconv.Atoi(roleIDParam)
-			if err != nil {
-				api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply an integral role ID to update"), nil)
-				return
-			}
+		}
+		roleID, err = strconv.Atoi(roleIDParam)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply an integral role ID to update"), nil)
+			return
 		}
 		if privLevel > inf.User.PrivLevel {
 			api.HandleErr(w, r, tx, http.StatusForbidden, errors.New("can not create a role with a higher priv level than your own"), nil)
@@ -443,10 +428,18 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 		rows, err := tx.Query(updateLegacyRoleQuery(), roleName, roleDesc, roleID)
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("updating role here: "+err.Error()))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("updating role here: %w", err))
 			return
 		}
-		rows.Close()
+		defer rows.Close()
+		for rows.Next() {
+			lastUpdated := tc.TimeNoMod{}
+			if err := rows.Scan(&lastUpdated); err != nil {
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning lastUpdated from role update: %w", err))
+				return
+			}
+			role.LastUpdated = &lastUpdated
+		}
 	}
 
 	if roleCapabilities != nil && *roleCapabilities != nil {
@@ -520,13 +513,24 @@ RETURNING id, last_updated`
 func createRoleCapabilityAssociations(tx *sqlx.Tx, roleID int, permissions *[]string) (error, error, int) {
 	result, err := tx.Exec(associateCapabilities(), roleID, pq.Array(permissions))
 	if err != nil {
-		return nil, errors.New("creating role capabilities: " + err.Error()), http.StatusInternalServerError
+		return nil, fmt.Errorf("creating role capabilities: %w", err), http.StatusInternalServerError
 	}
 
 	if rows, err := result.RowsAffected(); err != nil {
-		log.Errorf("could not check result after inserting role_capability relations: %v", err)
+		return nil, fmt.Errorf("could not check result after inserting role_capability relations: %w", err), http.StatusInternalServerError
 	} else if expected := len(*permissions); int(rows) != expected {
-		log.Errorf("wrong number of role_capability rows created: %d expected: %d", rows, expected)
+		return fmt.Errorf("wrong number of role_capability rows created: %d expected: %d", rows, expected), nil, http.StatusBadRequest
+	}
+	return nil, nil, http.StatusOK
+}
+
+func deleteRoleCapabilityAssociations(tx *sqlx.Tx, roleID int) (error, error, int) {
+	result, err := tx.Exec(deleteAssociatedCapabilities(), roleID)
+	if err != nil {
+		return nil, fmt.Errorf("deleting role capabilities: %w", err), http.StatusInternalServerError
+	}
+	if _, err := result.RowsAffected(); err != nil {
+		return nil, fmt.Errorf("could not check result after inserting role_capability relations: %w", err), http.StatusInternalServerError
 	}
 	return nil, nil, http.StatusOK
 }
@@ -603,18 +607,6 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
-func deleteRoleCapabilityAssociations(tx *sqlx.Tx, roleID int) (error, error, int) {
-	result, err := tx.Exec(deleteAssociatedCapabilities(), roleID)
-	if err != nil {
-		return nil, errors.New("deleting role capabilities: " + err.Error()), http.StatusInternalServerError
-	}
-	if _, err = result.RowsAffected(); err != nil {
-		log.Errorf("could not check result after inserting role_capability relations: %v", err)
-	}
-	// TODO verify expected row count shouldn't be checked?
-	return nil, nil, http.StatusOK
-}
-
 // Create will create a new role based on the struct supplied.
 func Create(w http.ResponseWriter, r *http.Request) {
 	var roleID int
@@ -648,6 +640,16 @@ func Create(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
+		current, err := auth.GetCurrentUser(r.Context())
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+		missing := current.MissingPermissions(roleV4.Permissions...)
+		if len(missing) != 0 {
+			api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("cannot request more than assigned permissions"), nil)
+			return
+		}
 		roleName = roleV4.Name
 		roleDesc = roleV4.Description
 		privLevel = inf.User.PrivLevel
@@ -657,7 +659,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
-		if err := role.validate(inf.Tx); err != nil {
+		if err := role.Validate(); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
@@ -669,7 +671,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := tx.Query(createQuery(), roleName, roleDesc, privLevel)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("creating role: "+err.Error()))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("creating role: %w", err))
 		return
 	}
 	defer rows.Close()
@@ -677,7 +679,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var throwaway interface{}
 		if err := rows.Scan(&roleID, &throwaway); err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("role create: scanning role ID: "+err.Error()))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("role create: scanning role ID: %w", err))
 			return
 		}
 	}
@@ -712,7 +714,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 			Capabilities: roleCapabilities,
 		}
 	}
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, roleResponse)
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, roleResponse)
 	changeLogMsg := fmt.Sprintf("ROLE: %s, ID: %d, ACTION: Created Role", roleName, roleID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
@@ -811,8 +813,8 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 func selectMaxLastUpdatedQuery(where string) string {
 	return `SELECT max(t) FROM (
-		SELECT max(r.last_updated) AS t from role r ` + where + ` UNION ALL
-		SELECT max(l.last_updated) AS t from last_deleted l WHERE l.table_name='role' OR l.table_name='role_capability' UNION ALL
-		SELECT max(rc.last_updated) AS t from role_capability rc INNER JOIN role ON rc.role_id = role.id)
-		as res`
+		SELECT max(r.last_updated) AS t FROM role r ` + where + ` UNION ALL
+		SELECT max(l.last_updated) AS t FROM last_deleted l WHERE l.table_name='role' OR l.table_name='role_capability' UNION ALL
+		SELECT max(rc.last_updated) AS t FROM role_capability rc INNER JOIN role ON rc.role_id = role.id)
+		AS res`
 }

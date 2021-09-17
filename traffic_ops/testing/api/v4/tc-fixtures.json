@@ -2401,8 +2401,7 @@
             "description": "super-user 2",
             "permissions": [
                 "all-read",
-                "all-write",
-                "cdn-read"
+                "all-write"
             ]
         },
         {
