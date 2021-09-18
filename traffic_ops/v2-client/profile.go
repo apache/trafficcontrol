@@ -178,6 +178,7 @@ func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, ReqInf, er
 	return data.Response, reqInf, err
 }
 
+// GetProfileByParameterId GETs a Profile by Parameter ID
 func (to *Session) GetProfileByParameterId(param int) ([]tc.Profile, ReqInf, error) {
 	URI := fmt.Sprintf("%s?param=%d", API_PROFILES, param)
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)

@@ -139,6 +139,7 @@ func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, toclientli
 	return to.GetProfileByParameterWithHdr(param, nil)
 }
 
+// GetProfileByParameterIdWithHdr GETs a Profile by the ParameterID and Header.
 func (to *Session) GetProfileByParameterIdWithHdr(param int, header http.Header) ([]tc.Profile, toclientlib.ReqInf, error) {
 	URI := fmt.Sprintf("%s?param=%d", APIProfiles, param)
 	var data tc.ProfilesResponse

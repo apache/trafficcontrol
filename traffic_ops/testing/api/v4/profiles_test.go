@@ -520,7 +520,10 @@ func GetTestProfiles(t *testing.T) {
 		if len(pr.Parameters) > 0 {
 			parameter := pr.Parameters[0]
 			opts.QueryParameters.Set("name", *parameter.Name)
-			respParameter, _, _ := TOSession.GetParameters(opts)
+			respParameter, _, err := TOSession.GetParameters(opts)
+			if err != nil {
+				t.Errorf("cannot get parameter '%s' by name: %v - alerts: %+v", *parameter.Name, err, resp.Alerts)
+			}
 			opts.QueryParameters.Del("name")
 			if len(respParameter.Response) > 0 {
 				parameterID := respParameter.Response[0].ID

@@ -214,14 +214,14 @@ func GetTestProfiles(t *testing.T) {
 			parameter := pr.Parameters[0]
 			respParameter, _, err := TOSession.GetParameterByName(*parameter.Name)
 			if err != nil {
-				t.Errorf("Cannot GET Parameter by name: %v - %v", err, resp)
+				t.Errorf("Cannot GET Parameter by name: %v", err)
 			}
 			if len(respParameter) > 0 {
 				parameterID := respParameter[0].ID
 				if parameterID > 0 {
 					resp, _, err = TOSession.GetProfileByParameterId(parameterID)
 					if err != nil {
-						t.Errorf("cannot GET Profile by param: %v - %v", err, resp)
+						t.Errorf("cannot GET Profile by param: %v", err)
 					}
 					if len(resp) < 1 {
 						t.Errorf("Expected atleast one response for Get Profile by Parameters, but found %d", len(resp))
