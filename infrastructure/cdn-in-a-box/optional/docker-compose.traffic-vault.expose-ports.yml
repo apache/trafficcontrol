@@ -18,7 +18,7 @@
 # Expose the trafficvault container on the host on ports 8087, 8088, and 8098
 
 ---
-version: '2.1'
+version: '3.8'
 
 services:
   trafficvault:
