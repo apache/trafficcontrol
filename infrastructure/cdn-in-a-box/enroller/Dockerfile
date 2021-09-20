@@ -60,7 +60,7 @@ RUN set -o errexit -o nounset; \
     go build -ldflags "$ldflags" -gcflags "$gcflags" -tags "$tags"
 
 FROM enroller-dependencies as get-delve
-RUN go get -u github.com/go-delve/delve/cmd/dlv
+RUN go get github.com/go-delve/delve/cmd/dlv
 
 FROM debian:bullseye AS enroller
 
