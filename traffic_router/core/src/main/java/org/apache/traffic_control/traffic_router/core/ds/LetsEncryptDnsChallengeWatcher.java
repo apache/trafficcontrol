@@ -31,6 +31,7 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
@@ -57,35 +58,33 @@ public class LetsEncryptDnsChallengeWatcher extends AbstractResourceWatcher {
 
 
             challengeList.forEach(challenge -> {
-                final StringBuilder sb = new StringBuilder();
-                sb.append(challenge.getFqdn());
-                if (!challenge.getFqdn().endsWith(".")) {
-                    sb.append('.');
-                }
-                final String challengeDomain = sb.toString();
-                final String fqdn = challengeDomain.substring(0, challengeDomain.length() - 1).replace("_acme-challenge.", "");
-
-                ObjectNode deliveryServiceConfig = null;
-                String dsLabel = "";
-                final StringBuilder nameSb = new StringBuilder();
-                nameSb.append("_acme-challenge");
-                for (final String label : fqdn.split("\\.")) {
-                    deliveryServiceConfig = (ObjectNode) deliveryServicesNode.get(label);
-                    if (deliveryServiceConfig != null) {
-                        dsLabel = label;
-                        break;
-                    } else {
-                        nameSb.append('.');
-                        nameSb.append(label);
-                    }
+                final ObjectNode deliveryServiceConfig = (ObjectNode) deliveryServicesNode.get(challenge.getXmlId());
+                if (deliveryServiceConfig == null) {
+                    LOGGER.error("finding deliveryservice in cr-config for " + challenge.getXmlId());
+                    return;
                 }
 
-                final String name = nameSb.toString();
+                String staticEntryString = challenge.getFqdn();
+                final ArrayNode domains = (ArrayNode) deliveryServiceConfig.get("domains");
+                if (domains == null || domains.size() == 0) {
+                    LOGGER.error("no domains found in cr-config for deliveryservice " + challenge.getXmlId());
+                    return;
+                }
 
-                final ArrayNode staticDnsEntriesNode = updateStaticEntries(challenge, name, mapper, deliveryServiceConfig);
+                final Iterator<JsonNode> domainIter = domains.iterator();
+                while(domainIter.hasNext()) {
+                    final JsonNode domainNode = domainIter.next();
+                    staticEntryString = staticEntryString.replace(domainNode.asText() + ".", "");
+                }
+
+                if (staticEntryString.endsWith(".")) {
+                    staticEntryString = staticEntryString.substring(0, staticEntryString.length() - 1);
+                }
+
+                final ArrayNode staticDnsEntriesNode = updateStaticEntries(challenge, staticEntryString, mapper, deliveryServiceConfig);
 
                 deliveryServiceConfig.set("staticDnsEntries", staticDnsEntriesNode);
-                deliveryServicesNode.set(dsLabel, deliveryServiceConfig);
+                deliveryServicesNode.set(challenge.getXmlId(), deliveryServiceConfig);
 
             });
 

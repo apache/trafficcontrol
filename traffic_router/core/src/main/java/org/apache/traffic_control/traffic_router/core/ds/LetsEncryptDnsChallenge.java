@@ -26,6 +26,9 @@ public class LetsEncryptDnsChallenge {
     @JsonProperty
     private String record;
 
+    @JsonProperty
+    private String xmlId;
+
     public String getFqdn() {
         return fqdn;
     }
@@ -42,6 +45,14 @@ public class LetsEncryptDnsChallenge {
         this.record = record;
     }
 
+    public String getXmlId() {
+        return xmlId;
+    }
+
+    public void setXmlId(final String xmlId) {
+        this.xmlId = xmlId;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -52,11 +63,12 @@ public class LetsEncryptDnsChallenge {
         }
         final LetsEncryptDnsChallenge that = (LetsEncryptDnsChallenge) o;
         return fqdn.equals(that.fqdn) &&
-                record.equals(that.record);
+                record.equals(that.record) &&
+                xmlId.equals(that.xmlId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(fqdn, record);
+        return Objects.hash(fqdn, record, xmlId);
     }
 }

@@ -33,6 +33,7 @@ import (
 type DnsRecord struct {
 	Fqdn   *string `json:"fqdn" db:"fqdn"`
 	Record *string `json:"record" db:"record"`
+	XmlId  *string `json:"xmlId" db:"xml_id"`
 }
 
 func GetDnsChallengeRecords(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +44,7 @@ func GetDnsChallengeRecords(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	getQuery := `SELECT fqdn, record FROM dnschallenges`
+	getQuery := `SELECT fqdn, record, xml_id FROM dnschallenges`
 
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"fqdn": dbhelpers.WhereColumnInfo{Column: "fqdn"},
@@ -73,7 +74,7 @@ func getDnsRecords(tx *sqlx.Tx, getQuery string, queryValues map[string]interfac
 	defer rows.Close()
 	for rows.Next() {
 		record := DnsRecord{}
-		if err := rows.Scan(&record.Fqdn, &record.Record); err != nil {
+		if err := rows.Scan(&record.Fqdn, &record.Record, &record.XmlId); err != nil {
 			return nil, errors.New("scanning dns challenge records: " + err.Error())
 		}
 		records = append(records, record)
