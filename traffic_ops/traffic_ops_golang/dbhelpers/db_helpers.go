@@ -450,6 +450,48 @@ func GetPrivLevelFromRole(tx *sql.Tx, role string) (int, bool, error) {
 	return privLevel, true, nil
 }
 
+// GetCapabilitiesFromRoleID returns the capabilities for the supplied role ID.
+func GetCapabilitiesFromRoleID(tx *sql.Tx, roleID int) ([]string, error) {
+	var caps []string
+	var cap string
+
+	rows, err := tx.Query(`SELECT cap_name FROM role_capability WHERE role_id = $1`, roleID)
+
+	if err != nil {
+		return caps, fmt.Errorf("getting capabilities from role ID: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&cap)
+		if err != nil {
+			return caps, fmt.Errorf("scanning capabilities: %w", err)
+		}
+		caps = append(caps, cap)
+	}
+	return caps, nil
+}
+
+// GetCapabilitiesFromRoleName returns the capabilities for the supplied role name.
+func GetCapabilitiesFromRoleName(tx *sql.Tx, role string) ([]string, error) {
+	var caps []string
+	var cap string
+
+	rows, err := tx.Query(`SELECT cap_name FROM role_capability rc JOIN role r ON r.id = rc.role_id WHERE r.name = $1`, role)
+
+	if err != nil {
+		return caps, fmt.Errorf("getting capabilities from role name: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&cap)
+		if err != nil {
+			return caps, fmt.Errorf("scanning capabilities: %w", err)
+		}
+		caps = append(caps, cap)
+	}
+	return caps, nil
+}
+
 // GetDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
 func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 	name := tc.DeliveryServiceName("")

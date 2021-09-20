@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -34,7 +35,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -146,7 +146,11 @@ func (role *TORole) Create() (error, error, int) {
 	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
 		return errors.New("can not create a role with a higher priv level than your own"), nil, http.StatusBadRequest
 	}
-
+	caps := *role.Capabilities
+	missing := role.ReqInfo.User.MissingPermissions(caps...)
+	if len(missing) != 0 {
+		return fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil, http.StatusForbidden
+	}
 	userErr, sysErr, errCode := api.GenericCreate(role)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
@@ -212,6 +216,11 @@ func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 func (role *TORole) Update(h http.Header) (error, error, int) {
 	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
 		return errors.New("can not create a role with a higher priv level than your own"), nil, http.StatusForbidden
+	}
+	caps := *role.Capabilities
+	missing := role.ReqInfo.User.MissingPermissions(caps...)
+	if len(missing) != 0 {
+		return fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil, http.StatusForbidden
 	}
 	userErr, sysErr, errCode := api.GenericUpdate(h, role)
 	if userErr != nil || sysErr != nil {
@@ -298,10 +307,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	var roleID int
 	var roleName string
 	var roleDesc string
-	var privLevel int
 	var roleCapabilities *[]string
 	var roleV4 tc.RoleV4
-	var role TORole
 	var ok bool
 	var err error
 
@@ -312,134 +319,71 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	version := inf.Version
-	if version == nil {
-		middleware.NotImplementedHandler().ServeHTTP(w, r)
+	tx := inf.Tx.Tx
+	if err := json.NewDecoder(r.Body).Decode(&roleV4); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
-	tx := inf.Tx.Tx
-	if version.Major >= 4 {
-		if err := json.NewDecoder(r.Body).Decode(&roleV4); err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-			return
-		}
-		if err := roleV4.Validate(); err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-			return
-		}
-		current, err := auth.GetCurrentUser(r.Context())
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-		missing := current.MissingPermissions(roleV4.Permissions...)
-		if len(missing) != 0 {
-			api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("cannot request more than assigned permissions"), nil)
-			return
-		}
-		roleDesc = roleV4.Description
-		roleCapabilities = &roleV4.Permissions
-		if roleName, ok = inf.Params["name"]; !ok {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-			return
-		}
-		roleID, ok, err = dbhelpers.GetRoleIDFromName(tx, roleName)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no ID exists for the supplied role name"), nil)
-			return
-		} else if !ok {
-			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
-			return
-		}
+	if err := roleV4.Validate(); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+	current, err := auth.GetCurrentUser(r.Context())
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	missing := current.MissingPermissions(roleV4.Permissions...)
+	if len(missing) != 0 {
+		api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil)
+		return
+	}
+	roleDesc = roleV4.Description
+	roleCapabilities = &roleV4.Permissions
+	if roleName, ok = inf.Params["name"]; !ok {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+	roleID, ok, err = dbhelpers.GetRoleIDFromName(tx, roleName)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no ID exists for the supplied role name"), nil)
+		return
+	} else if !ok {
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
+		return
+	}
 
-		existingLastUpdated, found, err := api.GetLastUpdated(inf.Tx, roleID, "role")
-		if err == nil && found == false {
-			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no role found with that ID"), nil)
-			return
-		}
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-			return
-		}
+	existingLastUpdated, found, err := api.GetLastUpdated(inf.Tx, roleID, "role")
+	if err == nil && found == false {
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no role found with that ID"), nil)
+		return
+	}
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
 
-		if !api.IsUnmodified(r.Header, *existingLastUpdated) {
-			api.HandleErr(w, r, tx, http.StatusPreconditionFailed, api.ResourceModifiedError, nil)
+	if !api.IsUnmodified(r.Header, *existingLastUpdated) {
+		api.HandleErr(w, r, tx, http.StatusPreconditionFailed, api.ResourceModifiedError, nil)
+		return
+	}
+	rows, err := tx.Query(updateRoleQuery(), roleDesc, roleName)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("updating role: %w", err))
+		return
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no role found with this ID"), nil)
+		return
+	}
+	lastUpdated := tc.TimeNoMod{}
+	for rows.Next() {
+		if err := rows.Scan(&lastUpdated); err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning lastUpdated from role update: %w", err))
 			return
 		}
-		rows, err := tx.Query(updateRoleQuery(), roleDesc, roleName)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("updating role: %w", err))
-			return
-		}
-		defer rows.Close()
-		if !rows.Next() {
-			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no role found with this ID"), nil)
-			return
-		}
-		lastUpdated := tc.TimeNoMod{}
-		for rows.Next() {
-			if err := rows.Scan(&lastUpdated); err != nil {
-				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning lastUpdated from role update: %w", err))
-				return
-			}
-			roleV4.LastUpdated = &lastUpdated.Time
-		}
-	} else {
-		if err := json.NewDecoder(r.Body).Decode(&role); err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-			return
-		}
-		if err := role.Validate(); err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("name and/or description and/or privLevel can not be empty"), nil)
-			return
-		}
-		roleName = *role.Name
-		roleDesc = *role.Description
-		privLevel = *role.PrivLevel
-		roleCapabilities = role.Capabilities
-		var roleIDParam string
-		if roleIDParam, ok = inf.Params["id"]; !ok {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply a role ID to update"), nil)
-			return
-		}
-		roleID, err = strconv.Atoi(roleIDParam)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply an integral role ID to update"), nil)
-			return
-		}
-		if privLevel > inf.User.PrivLevel {
-			api.HandleErr(w, r, tx, http.StatusForbidden, errors.New("can not create a role with a higher priv level than your own"), nil)
-			return
-		}
-		existingLastUpdated, found, err := api.GetLastUpdated(inf.Tx, roleID, "role")
-		if err == nil && found == false {
-			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no role found with that ID"), nil)
-			return
-		}
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-
-		if !api.IsUnmodified(r.Header, *existingLastUpdated) {
-			api.HandleErr(w, r, tx, http.StatusPreconditionFailed, api.ResourceModifiedError, nil)
-			return
-		}
-
-		rows, err := tx.Query(updateLegacyRoleQuery(), roleName, roleDesc, roleID)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("updating role here: %w", err))
-			return
-		}
-		defer rows.Close()
-		for rows.Next() {
-			lastUpdated := tc.TimeNoMod{}
-			if err := rows.Scan(&lastUpdated); err != nil {
-				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning lastUpdated from role update: %w", err))
-				return
-			}
-			role.LastUpdated = &lastUpdated
-		}
+		roleV4.LastUpdated = &lastUpdated.Time
 	}
 
 	if roleCapabilities != nil && *roleCapabilities != nil {
@@ -456,26 +400,14 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "role was updated.")
 	var roleResponse interface{}
-	if version.Major >= 4 {
-		var capabilities []string
-		if roleCapabilities != nil {
-			capabilities = *roleCapabilities
-		}
-		roleResponse = tc.RoleV4{
-			Name:        roleName,
-			Permissions: capabilities,
-			Description: roleDesc,
-		}
-	} else {
-		roleResponse = tc.Role{
-			RoleV11: tc.RoleV11{
-				ID:          util.IntPtr(roleID),
-				Name:        util.StrPtr(roleName),
-				Description: util.StrPtr(roleDesc),
-				PrivLevel:   util.IntPtr(privLevel),
-			},
-			Capabilities: roleCapabilities,
-		}
+	var capabilities []string
+	if roleCapabilities != nil {
+		capabilities = *roleCapabilities
+	}
+	roleResponse = tc.RoleV4{
+		Name:        roleName,
+		Permissions: capabilities,
+		Description: roleDesc,
 	}
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, roleResponse)
 	changeLogMsg := fmt.Sprintf("ROLE: %s, ID: %d, ACTION: Updated Role", roleName, roleID)
@@ -549,36 +481,17 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	tx := inf.Tx.Tx
-	version := inf.Version
-	if version == nil {
-		middleware.NotImplementedHandler().ServeHTTP(w, r)
+	if roleName, ok = inf.Params["name"]; !ok {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply a role name to delete"), nil)
 		return
 	}
-
-	if version.Major >= 4 {
-		if roleName, ok = inf.Params["name"]; !ok {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply a role name to delete"), nil)
-			return
-		}
-		roleID, ok, err = dbhelpers.GetRoleIDFromName(tx, roleName)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no ID exists for the supplied role name"), nil)
-			return
-		} else if !ok {
-			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
-			return
-		}
-	} else {
-		if roleIDParam, ok := inf.Params["id"]; !ok {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply a role ID to delete"), nil)
-			return
-		} else {
-			roleID, err = strconv.Atoi(roleIDParam)
-			if err != nil {
-				api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply an integral role ID to delete"), nil)
-				return
-			}
-		}
+	roleID, ok, err = dbhelpers.GetRoleIDFromName(tx, roleName)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no ID exists for the supplied role name"), nil)
+		return
+	} else if !ok {
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
+		return
 	}
 
 	assignedUsers := 0
@@ -615,7 +528,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	var privLevel int
 	var roleCapabilities *[]string
 	var roleV4 tc.RoleV4
-	var role TORole
 
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -625,49 +537,28 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	tx := inf.Tx.Tx
-	version := inf.Version
-	if version == nil {
-		middleware.NotImplementedHandler().ServeHTTP(w, r)
+	if err := json.NewDecoder(r.Body).Decode(&roleV4); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
-
-	if version.Major >= 4 {
-		if err := json.NewDecoder(r.Body).Decode(&roleV4); err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-			return
-		}
-		if err := roleV4.Validate(); err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-			return
-		}
-		current, err := auth.GetCurrentUser(r.Context())
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-		missing := current.MissingPermissions(roleV4.Permissions...)
-		if len(missing) != 0 {
-			api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("cannot request more than assigned permissions"), nil)
-			return
-		}
-		roleName = roleV4.Name
-		roleDesc = roleV4.Description
-		privLevel = inf.User.PrivLevel
-		roleCapabilities = &roleV4.Permissions
-	} else {
-		if err := json.NewDecoder(r.Body).Decode(&role); err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-			return
-		}
-		if err := role.Validate(); err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
-			return
-		}
-		roleName = *role.Name
-		roleDesc = *role.Description
-		privLevel = *role.PrivLevel
-		roleCapabilities = role.Capabilities
+	if err := roleV4.Validate(); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
 	}
+	current, err := auth.GetCurrentUser(r.Context())
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	missing := current.MissingPermissions(roleV4.Permissions...)
+	if len(missing) != 0 {
+		api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil)
+		return
+	}
+	roleName = roleV4.Name
+	roleDesc = roleV4.Description
+	privLevel = inf.User.PrivLevel
+	roleCapabilities = &roleV4.Permissions
 
 	rows, err := tx.Query(createQuery(), roleName, roleDesc, privLevel)
 	if err != nil {
@@ -693,26 +584,14 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "role was created.")
 	var roleResponse interface{}
-	if version.Major >= 4 {
-		var capabilities []string
-		if roleCapabilities != nil {
-			capabilities = *roleCapabilities
-		}
-		roleResponse = tc.RoleV4{
-			Name:        roleName,
-			Permissions: capabilities,
-			Description: roleDesc,
-		}
-	} else {
-		roleResponse = tc.Role{
-			RoleV11: tc.RoleV11{
-				ID:          util.IntPtr(roleID),
-				Name:        util.StrPtr(roleName),
-				Description: util.StrPtr(roleDesc),
-				PrivLevel:   util.IntPtr(privLevel),
-			},
-			Capabilities: roleCapabilities,
-		}
+	var capabilities []string
+	if roleCapabilities != nil {
+		capabilities = *roleCapabilities
+	}
+	roleResponse = tc.RoleV4{
+		Name:        roleName,
+		Permissions: capabilities,
+		Description: roleDesc,
 	}
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, roleResponse)
 	changeLogMsg := fmt.Sprintf("ROLE: %s, ID: %d, ACTION: Created Role", roleName, roleID)
@@ -731,20 +610,8 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	tx := inf.Tx.Tx
-	version := inf.Version
-	if version == nil {
-		middleware.NotImplementedHandler().ServeHTTP(w, r)
-		return
-	}
-
 	params := make(map[string]dbhelpers.WhereColumnInfo, 0)
-	if version.Major >= 4 {
-		params["name"] = dbhelpers.WhereColumnInfo{Column: "name"}
-	} else {
-		params["name"] = dbhelpers.WhereColumnInfo{Column: "name"}
-		params["id"] = dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt}
-		params["privLevel"] = dbhelpers.WhereColumnInfo{Column: "priv_level", Checker: api.IsInt}
-	}
+	params["name"] = dbhelpers.WhereColumnInfo{Column: "name"}
 
 	if _, ok := inf.Params["orderby"]; !ok {
 		inf.Params["orderby"] = "name"
@@ -754,11 +621,9 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
 		return
 	}
-	if version.Major >= 4 {
-		if perm, ok := inf.Params["can"]; ok {
-			queryValues["can"] = perm
-			where = dbhelpers.AppendWhere(where, "permissions @> :can")
-		}
+	if perm, ok := inf.Params["can"]; ok {
+		queryValues["can"] = perm
+		where = dbhelpers.AppendWhere(where, "permissions @> :can")
 	}
 	if inf.Config.UseIMS {
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(inf.Tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where))
@@ -784,31 +649,15 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	var roleV4 tc.RoleV4
 	rolesV4 := []tc.RoleV4{}
 
-	var role tc.Role
-	roles := []tc.Role{}
-	if version.Major >= 4 {
-		for rows.Next() {
-			throwAway := new(interface{})
-			if err = rows.Scan(throwAway, &roleV4.Name, &roleV4.Description, throwAway, &roleV4.LastUpdated, pq.Array(&roleV4.Permissions)); err != nil {
-				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning RoleV4 row: %w", err))
-				return
-			}
-			rolesV4 = append(rolesV4, roleV4)
+	for rows.Next() {
+		throwAway := new(interface{})
+		if err = rows.Scan(throwAway, &roleV4.Name, &roleV4.Description, throwAway, &roleV4.LastUpdated, pq.Array(&roleV4.Permissions)); err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning RoleV4 row: %w", err))
+			return
 		}
-		api.WriteResp(w, r, rolesV4)
-	} else {
-		for rows.Next() {
-			throwAway := new(interface{})
-			var capabilities []string
-			if err = rows.Scan(&role.ID, &role.Name, &role.Description, &role.PrivLevel, throwAway, pq.Array(&capabilities)); err != nil {
-				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning RoleV11 row: %w", err))
-				return
-			}
-			role.Capabilities = &capabilities
-			roles = append(roles, role)
-		}
-		api.WriteResp(w, r, roles)
+		rolesV4 = append(rolesV4, roleV4)
 	}
+	api.WriteResp(w, r, rolesV4)
 }
 
 func selectMaxLastUpdatedQuery(where string) string {
