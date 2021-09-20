@@ -469,7 +469,7 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 	}
 
 	tmpFileName := cfg.Path + configFileTempSuffix
-	log.Infof("Writing temp file '%s' with file mode: %o \n", tmpFileName, cfg.Perm)
+	log.Infof("Writing temp file '%s' with file mode: '%#o' \n", tmpFileName, cfg.Perm)
 
 	// write a new file, then move to the real location
 	// because moving is atomic but writing is not.
