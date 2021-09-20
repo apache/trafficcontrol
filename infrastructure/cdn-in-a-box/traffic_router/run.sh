@@ -49,7 +49,7 @@ CATALINA_OPTS="\
   -XX:InitiatingHeapOccupancyPercent=30"
 
 if [[ "$TR_DEBUG_ENABLE" == true ]]; then
-    export JPDA_OPTS="-agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=n";
+    export JPDA_OPTS="-agentlib:jdwp=transport=dt_socket,address=*:5005,server=y,suspend=n";
     longer_dns_timeout;
 fi;
 
