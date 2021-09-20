@@ -48,7 +48,7 @@ func main() {
 	log.Infof("Polling interval: %d\n", config.GetTMPollingInterval())
 	tmInfo, err := tmagent.NewParentInfo(cfg)
 	if err != nil {
-		log.Errorf("Startup could not initialize parent info, check that trafficserver is running: %s\n", err.Error())
+		log.Errorf("startup could not initialize parent info, check that trafficserver is running: %s\n", err.Error())
 		os.Exit(RunTimeError)
 	}
 

@@ -37,6 +37,7 @@ or the Traffic Control Users mailing list (send an email to users-subscribe@traf
 ## This Bug Report affects these Traffic Control components:
 <!-- delete all those that don't apply -->
 - Traffic Control Cache Config (T3C, formerly ORT)
+- Traffic Control Health Client (t3c-health-client)
 - Traffic Control Client <!-- Please specify which (Python, Go, or Java) -->
 - Traffic Monitor
 - Traffic Ops

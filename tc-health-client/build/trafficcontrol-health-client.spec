@@ -82,7 +82,7 @@ rm -rf ${RPM_BUILD_ROOT}
 
 %post
 
-# we want all the cache logs under /var/log/trafficcontrol-cache-config
+# we want all the cache logs under /var/log/trafficcontrol
 if [[ ! -d /var/log/trafficcontrol ]]; then
   mkdir -p /var/log/trafficcontrol
   touch /var/log/trafficcontrol/tc-health-client.log
@@ -112,7 +112,7 @@ fi
 
 %postun
 
-# update whatis database, to remove t3c data
+# update whatis database, to remove tc-health-client data
 mandb_out="$(mandb 2>&1)"
 mandb_ret=$?
 if [ $mandb_ret -eq 0 ]; then

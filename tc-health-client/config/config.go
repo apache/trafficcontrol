@@ -83,6 +83,8 @@ func (lcfg LogCfg) DebugLog() log.LogLocation   { return log.LogLocation(lcfg.Lo
 func (lcfg LogCfg) EventLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // not used
 
 /**
+ * ReadCredentials
+ *
  * cfg - the existing config
  * updating - when true, existing credentials may be updated from the credential file
  */
@@ -106,14 +108,14 @@ func ReadCredentials(cfg *Cfg, updating bool) error {
 	// config file.  Either use an external credential file or put the credentials in the health client
 	// config.  Precedence is given to credentials in the health client config file.
 	if !updating && (cfg.TOPass != "" && cfg.TOUser != "" && cfg.TOUrl != "") {
-		log.Warnf("Credentials are defined in the %s file, will not override them with those in the %s file", cfg.HealthClientConfigFile.Filename, cfg.CredentialFile.Filename)
+		log.Warnf("credentials are defined in the %s file, will not override them with those in the %s file", cfg.HealthClientConfigFile.Filename, cfg.CredentialFile.Filename)
 		cfg.CredentialFile.LastModifyTime = math.MaxInt64
 		return nil
 	}
 
 	f, err := os.Open(fn.Filename)
 	if err != nil {
-		return errors.New("Failed to open + " + fn.Filename + " :" + err.Error())
+		return errors.New("failed to open + " + fn.Filename + " :" + err.Error())
 	}
 	defer f.Close()
 
@@ -215,7 +217,7 @@ func GetConfig() (Cfg, error, bool) {
 	}
 
 	if err := log.InitCfg(&lcfg); err != nil {
-		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n"), false
+		return Cfg{}, errors.New("initializing loggers: " + err.Error() + "\n"), false
 	}
 
 	cf := util.ConfigFile{
@@ -298,11 +300,11 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 		}
 		err = json.Unmarshal(content, cfg)
 		if err != nil {
-			return updated, fmt.Errorf("Config parsing failed: %w", err)
+			return updated, fmt.Errorf("config parsing failed: %w", err)
 		}
 		tmPollingInterval, err = time.ParseDuration(cfg.TmPollIntervalSeconds)
 		if err != nil {
-			return updated, errors.New("Parsing TMPollingIntervalSeconds: " + err.Error())
+			return updated, errors.New("parsing TMPollingIntervalSeconds: " + err.Error())
 		}
 		toRequestTimeout, err = time.ParseDuration(cfg.TORequestTimeOutSeconds)
 		if err != nil {

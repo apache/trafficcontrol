@@ -1,4 +1,7 @@
-% tc-health-client(1) tc-health-client 6.1.0 | ATC t3c Manual
+% tc-health-client(1) tc-health-client 6.1.0 | ATC tc-health-client Manual
+%
+% 2021-09-20
+% tc-health-client(1) tc-health-client 6.1.0 
 %
 % 2021-09-17
 <!--
@@ -26,11 +29,6 @@
       Please make sure changes appear properly with man,
       and follow man conventions, such as:
       https://www.bell-labs.com/usr/dmr/www/manintro.html
-
-      A primary goal of t3c is to follow POSIX and LSB standards
-      and conventions, so it's easy to learn and use by people
-      who know Linux and other *nix systems. Providing a proper
-      manpage is a big part of that.
   !!!
 
 -->

@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-/var/log/trafficcontrol-cache-config/tc-health-client.log {
+/var/log/trafficcontrol/tc-health-client.log {
     compress
     copytruncate
     maxage 90
