@@ -76,7 +76,6 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 	opts.UserAgent = userAgent
 	opts.RequestTimeout = timeout
 	toClient, inf, err := toclient.Login(toURLStr, user, pass, opts)
-	log.Errorf("DEBUG toreq.New reqInf %+v\n", inf)
 	latestSupported := inf.StatusCode != 404 && inf.StatusCode != 501
 	if err != nil && latestSupported {
 		return nil, fmt.Errorf("Logging in to Traffic Ops '%v' code %v: %v", torequtil.MaybeIPStr(inf.RemoteAddr), inf.StatusCode, err)
