@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM debian:buster AS enroller-dependencies
+FROM debian:bullseye AS enroller-dependencies
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -50,7 +50,7 @@ RUN set -o errexit -o nounset; \
     gcflags= ldflags=; \
     tags='usergo netgo'; \
     if [ "$ENROLLER_DEBUG_BUILD" = true ]; then \
-        apt-get install -y --no-install-recommends gcc libstdc++-8-dev; \
+        apt-get install -y --no-install-recommends gcc libstdc++-9-dev; \
         echo 'Building Enroller without optimization or inlining'; \
         gcflags='all=-N -l'; \
     else \
@@ -60,9 +60,9 @@ RUN set -o errexit -o nounset; \
     go build -ldflags "$ldflags" -gcflags "$gcflags" -tags "$tags"
 
 FROM enroller-dependencies as get-delve
-RUN go get -u github.com/go-delve/delve/cmd/dlv
+RUN go get github.com/go-delve/delve/cmd/dlv
 
-FROM debian:buster AS enroller
+FROM debian:bullseye AS enroller
 
 RUN apt-get update && apt-get install -y \
         netcat curl dnsutils net-tools \
