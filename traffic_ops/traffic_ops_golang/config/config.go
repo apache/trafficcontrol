@@ -182,6 +182,30 @@ type DefaultCertificateInfo struct {
 	State        string `json:"state"`
 }
 
+func (d *DefaultCertificateInfo) Validate() (error, bool) {
+	missingList := []string{}
+	if d.BusinessUnit == "" {
+		missingList = append(missingList, "BusinessUnit")
+	}
+	if d.City == "" {
+		missingList = append(missingList, "City")
+	}
+	if d.Organization == "" {
+		missingList = append(missingList, "Organization")
+	}
+	if d.Country == "" {
+		missingList = append(missingList, "Country")
+	}
+	if d.State == "" {
+		missingList = append(missingList, "State")
+	}
+
+	if len(missingList) != 0 {
+		return fmt.Errorf("default certificate information is missing: %s", missingList), false
+	}
+	return nil, true
+}
+
 // ConfigDatabase reflects the structure of the database.conf file
 type ConfigDatabase struct {
 	Description string `json:"description"`

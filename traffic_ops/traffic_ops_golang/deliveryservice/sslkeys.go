@@ -23,7 +23,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"net/http"
 	"strconv"
 	"strings"
@@ -31,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
@@ -117,16 +117,7 @@ func generatePutTrafficVaultSSLKeys(req tc.DeliveryServiceGenSSLKeysReq, tx *sql
 // GeneratePlaceholderSelfSignedCert generates a self-signed SSL certificate as a placeholder when a new HTTPS
 // delivery service is created or an HTTP delivery service is updated to use HTTPS.
 func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV4, inf *api.APIInfo, context context.Context) (error, int) {
-	db, err := api.GetDB(context)
-	if err != nil {
-		return err, http.StatusInternalServerError
-	}
-	tx, err := db.Begin()
-	if err != nil {
-		return err, http.StatusInternalServerError
-	}
-	defer tx.Commit()
-
+	tx := inf.Tx.Tx
 	tv := inf.Vault
 	_, ok, err := tv.GetDeliveryServiceSSLKeys(*ds.XMLID, "", tx, context)
 	if err != nil {
@@ -173,6 +164,10 @@ func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV4, inf *api.APIInfo
 
 	if (inf.Config.DefaultCertificateInfo != nil && *inf.Config.DefaultCertificateInfo != config.DefaultCertificateInfo{}) {
 		defaultCertInfo := inf.Config.DefaultCertificateInfo
+		if err, ok := defaultCertInfo.Validate(); !ok {
+			return err, http.StatusInternalServerError
+		}
+
 		req.BusinessUnit = &defaultCertInfo.BusinessUnit
 		req.City = &defaultCertInfo.City
 		req.Organization = &defaultCertInfo.Organization
