@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fixed Traffic Router crs/stats to prevent overflow and to correctly record the time used in averages.
+- [#5893](https://github.com/apache/trafficcontrol/issues/5893) - A self signed certificate is created when an HTTPS delivery service is created or an HTTP delivery service is updated to HTTPS.
 
 ### Changed
 - Updated `t3c` to request less unnecessary deliveryservice-server assignment and invalidation jobs data via new query params supported by Traffic Ops
