@@ -315,6 +315,14 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:renew_days_before_expiration: Set the number of days before expiration date to renew certificates.
 	:summary_email: The email address to use for summarizing certificate expiration and renewal status. If it is blank, no email will be sent.
 
+:default_certificate_info: This is an optional object to define default values when generating a self signed certificate when an HTTPS delivery service is created or updated. If this is an empty object or not present in the :ref:`cdn.conf` then the term "Placeholder" will be used for all fields.
+
+ 	:business_unit: An optional field which, if present, will represent the business unit for which the SSL certificate was generated
+	:city: An optional field which, if present, will represent the resident city of the generated SSL certificate
+	:organization: An optional field which, if present, will represent the organization for which the SSL certificate was generated
+	:country: An optional field which, if present, will represent the resident country of the generated SSL certificate
+	:state: An optional field which, if present, will represent the resident state or province of the generated SSL certificate
+
 :geniso: This object contains configuration options for system ISO generation.
 
 	:iso_root_path: Sets the filesystem path to the root of the ISO generation directory. For default installations, this should usually be set to :file:`/opt/traffic_ops/app/public`.

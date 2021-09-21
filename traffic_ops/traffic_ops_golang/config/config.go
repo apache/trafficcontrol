@@ -58,7 +58,9 @@ type Config struct {
 	InfluxEnabled          bool
 	InfluxDBConfPath       string `json:"influxdb_conf_path"`
 	Version                string
-	UseIMS                 bool `json:"use_ims"`
+	UseIMS                 bool                    `json:"use_ims"`
+	RoleBasedPermissions   bool                    `json:"role_based_permissions"`
+	DefaultCertificateInfo *DefaultCertificateInfo `json:"default_certificate_info"`
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -170,6 +172,38 @@ type ConfigAcmeAccount struct {
 	AcmeUrl      string `json:"acme_url"`
 	Kid          string `json:"kid"`
 	HmacEncoded  string `json:"hmac_encoded"`
+}
+
+type DefaultCertificateInfo struct {
+	BusinessUnit string `json:"business_unit"`
+	City         string `json:"city"`
+	Organization string `json:"organization"`
+	Country      string `json:"country"`
+	State        string `json:"state"`
+}
+
+func (d *DefaultCertificateInfo) Validate() (error, bool) {
+	missingList := []string{}
+	if d.BusinessUnit == "" {
+		missingList = append(missingList, "BusinessUnit")
+	}
+	if d.City == "" {
+		missingList = append(missingList, "City")
+	}
+	if d.Organization == "" {
+		missingList = append(missingList, "Organization")
+	}
+	if d.Country == "" {
+		missingList = append(missingList, "Country")
+	}
+	if d.State == "" {
+		missingList = append(missingList, "State")
+	}
+
+	if len(missingList) != 0 {
+		return fmt.Errorf("default certificate information is missing: %s", missingList), false
+	}
+	return nil, true
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
