@@ -484,7 +484,11 @@
             "cdnName": "cdn1",
             "ccrDnsTtl": 3600,
             "checkPath": "",
-            "consistentHashQueryParams": ["fmt", "limit", "somethingelse"],
+            "consistentHashQueryParams": [
+                "fmt",
+                "limit",
+                "somethingelse"
+            ],
             "deepCachingType": "NEVER",
             "displayName": "d s 1",
             "dnsBypassCname": null,
@@ -675,7 +679,11 @@
             "cdnName": "cdn1",
             "ccrDnsTtl": 3600,
             "checkPath": "",
-            "consistentHashQueryParams": ["a", "b", "c"],
+            "consistentHashQueryParams": [
+                "a",
+                "b",
+                "c"
+            ],
             "consistentHashRegex": "foo",
             "deepCachingType": "ALWAYS",
             "displayName": "ds-test-minor-versions",
@@ -1593,25 +1601,25 @@
             "dsName": "ds1",
             "typeName": "HOST_REGEXP",
             "setNumber": 1,
-            "pattern" : ".*"
+            "pattern": ".*"
         },
         {
             "dsName": "ds1",
             "typeName": "HOST_REGEXP",
             "setNumber": 2,
-            "pattern" : "\\d+"
+            "pattern": "\\d+"
         },
         {
             "dsName": "ds2",
             "typeName": "HOST_REGEXP",
             "setNumber": 1,
-            "pattern" : ".*"
+            "pattern": ".*"
         },
         {
             "dsName": "ds1",
             "typeName": "HOST_REGEXP",
             "setNumber": 3,
-            "pattern" : ""
+            "pattern": ""
         }
     ],
     "deliveryservicesRequiredCapabilities": [
@@ -1711,10 +1719,10 @@
             "ipAddress": "1.2.3.4",
             "ip6Address": "dead:beef:cafe::42",
             "port": 1234,
-            "Profile" : "ATS_EDGE_TIER_CACHE",
+            "Profile": "ATS_EDGE_TIER_CACHE",
             "protocol": "http",
             "tenant": "tenant1",
-            "isPrimary" : true
+            "isPrimary": true
         },
         {
             "name": "origin2",
@@ -4916,15 +4924,22 @@
                 },
                 {
                     "cachegroup": "parentCachegroup",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "secondaryCachegroup",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "cachegroup3",
-                    "parents": [1, 2]
+                    "parents": [
+                        1,
+                        2
+                    ]
                 }
             ]
         },
@@ -5106,11 +5121,15 @@
                 },
                 {
                     "cachegroup": "dtrc2",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "dtrc3",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 }
             ]
         },
@@ -5124,11 +5143,15 @@
                 },
                 {
                     "cachegroup": "dtrc1",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "dtrc2",
-                    "parents": [1]
+                    "parents": [
+                        1
+                    ]
                 }
             ]
         },
@@ -5142,11 +5165,15 @@
                 },
                 {
                     "cachegroup": "dtrc2",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "dtrc3",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 }
             ]
         },
@@ -5534,7 +5561,7 @@
             "ttl": 2160
         },
         {
-            "deliveryService":  "ds2",
+            "deliveryService": "ds2",
             "regex": "\\/some-path?.+\\.jpg",
             "startTime": "2100-06-19T13:57:51-06:00",
             "ttl": 2.1
