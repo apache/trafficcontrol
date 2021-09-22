@@ -51,7 +51,7 @@ types.tests.forEach(async typesData => {
             typesData.toggle.forEach(toggle => {
                 it(toggle.description, async () => {
                     if(toggle.description.includes('hide')){
-                        expect(await typesPage.ToggleTableColumn(toggle.Name)).toBe(false);
+                        expect(await typesPage.ToggleTableColumn(toggle.Name)).toBe(true);
                     }else{
                         expect(await typesPage.ToggleTableColumn(toggle.Name)).toBe(true);
                     }
