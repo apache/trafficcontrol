@@ -81,6 +81,9 @@ export class CurrentUserService {
 		const queryParams: Record<string | symbol, string> = {};
 		if (withRedirect) {
 			queryParams.returnUrl = this.router.url;
+			if (queryParams.returnUrl.startsWith("/login")) {
+				queryParams.returnUrl = "/core";
+			}
 		}
 		console.log("query params:", queryParams);
 		this.router.navigate(["/login"], {queryParams});

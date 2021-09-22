@@ -381,7 +381,7 @@ export class ServersTableComponent implements OnInit {
 		let observables;
 		switch (action.action) {
 			case "viewDetails":
-				this.router.navigate(["/server", (action.data as AugmentedServer).id]);
+				this.router.navigate(["/core/server", (action.data as AugmentedServer).id]);
 				break;
 			case "updateStatus":
 				console.log("'Update Status' clicked - not yet implemented");

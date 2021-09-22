@@ -15,6 +15,7 @@ import {NgModule} from "@angular/core";
 import {RouterModule, Routes} from "@angular/router";
 
 import {LoginComponent} from "./login/login.component";
+import {DemoComponent} from "./demo/demo.component";
 
 const routes: Routes = [
 	{component: LoginComponent, path: "login"},
@@ -25,7 +26,8 @@ const routes: Routes = [
 			path: ""
 		}],
 		path: "core"
-	}
+	},
+	{ component: DemoComponent, path: "demo" }
 ];
 
 /**

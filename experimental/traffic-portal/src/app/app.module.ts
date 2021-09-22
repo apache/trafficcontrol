@@ -31,6 +31,8 @@ import { LoginComponent } from "./login/login.component";
 import { SSHCellRendererComponent } from "./shared/table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 import {AppUIModule} from "./app.ui.module";
 import {SharedModule} from "./shared/shared.module";
+import {AuthenticationGuard} from "./authentication.guard";
+import { DemoComponent } from "./demo/demo.component";
 
 // TODO: Figure out the actual typing here.
 Chart.plugins.register({
@@ -60,6 +62,7 @@ Chart.plugins.register({
 	declarations: [
 		AppComponent,
 		LoginComponent,
+		DemoComponent,
 	],
 	entryComponents: [
 		SSHCellRendererComponent
@@ -72,6 +75,9 @@ Chart.plugins.register({
 		SharedModule,
 		BrowserAnimationsModule
 	],
+	providers: [
+		AuthenticationGuard
+	]
 })
 // This is a necessary empty class. All of its data/logic come from the decorator.
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
