@@ -65,6 +65,22 @@ export const types = {
 					password: "pa$$word"
 				}
 			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "description"
+				},
+				{
+					description: "redisplay first table column",
+					Name: "description"
+				}
+			],
+			check: [
+				{
+					description: "check CSV link from Type page",
+					Name: "Export as CSV"
+				}
+			],
 			add: [
 				{
 					description: "create a Type",
@@ -101,6 +117,22 @@ export const types = {
 					description: "Read Only Role",
 					username: "TPReadOnly",
 					password: "pa$$word"
+				}
+			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "description"
+				},
+				{
+					description: "redisplay first table column",
+					Name: "description"
+				}
+			],
+			check: [
+				{
+					description: "check CSV link from Type page",
+					Name: "Export as CSV"
 				}
 			],
 			add: [
