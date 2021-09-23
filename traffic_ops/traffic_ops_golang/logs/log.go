@@ -38,9 +38,9 @@ import (
 // These are the default values for query string parameters if not provided.
 const (
 	// For the 'limit' parameter.
-	DefaultLogLimit = 1000
+	//DefaultLogLimit = 1000
 	// For the 'limit' parameter when 'days' is given and 'limit' is not.
-	DefaultLogLimitForDays = 1000000
+	//DefaultLogLimitForDays = 1000000
 	// For the 'days' parameter.
 	DefaultLogDays = 30
 )
@@ -54,11 +54,10 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	limit := DefaultLogLimit
+	var limit int
 	days := DefaultLogDays
 	if pDays, ok := inf.IntParams["days"]; ok {
 		days = pDays
-		limit = DefaultLogLimitForDays
 	}
 	if pLimit, ok := inf.IntParams["limit"]; ok {
 		limit = pLimit
@@ -67,6 +66,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	a := tc.Alerts{}
 	setLastSeenCookie(w)
 	logs, count, err := getLog(inf, days, limit)
+
 	if err != nil {
 		a.AddNewAlert(tc.ErrorLevel, err.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, a)
@@ -138,12 +138,13 @@ const countQuery = `SELECT count(l.tm_user) FROM log as l`
 func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 	var count = uint64(0)
 	var whereCount string
-	if _, ok := inf.Params["limit"]; !ok {
+	/*if _, ok := inf.Params["limit"]; !ok {
 		inf.Params["limit"] = strconv.Itoa(DefaultLogLimit)
 	} else {
 		inf.Params["limit"] = strconv.Itoa(limit)
-	}
+	}*/
 
+	inf.Params["limit"] = strconv.Itoa(limit)
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"username": {Column: "u.username", Checker: nil},
 	}
