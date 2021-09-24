@@ -26,7 +26,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -37,10 +36,6 @@ import (
 
 // These are the default values for query string parameters if not provided.
 const (
-	// For the 'limit' parameter.
-	//DefaultLogLimit = 1000
-	// For the 'limit' parameter when 'days' is given and 'limit' is not.
-	//DefaultLogLimitForDays = 1000000
 	// For the 'days' parameter.
 	DefaultLogDays = 30
 )
@@ -53,19 +48,14 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	fmt.Println("adding test comments")
-	var limit int
 	days := DefaultLogDays
 	if pDays, ok := inf.IntParams["days"]; ok {
 		days = pDays
 	}
-	if pLimit, ok := inf.IntParams["limit"]; ok {
-		limit = pLimit
-	}
 
 	a := tc.Alerts{}
 	setLastSeenCookie(w)
-	logs, count, err := getLog(inf, days, limit)
+	logs, count, err := getLog(inf, days)
 
 	if err != nil {
 		a.AddNewAlert(tc.ErrorLevel, err.Error())
@@ -135,21 +125,16 @@ FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id`
 
 const countQuery = `SELECT count(l.tm_user) FROM log as l`
 
-func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
+func getLog(inf *api.APIInfo, days int) ([]tc.Log, uint64, error) {
 	var count = uint64(0)
 	var whereCount string
-	/*if _, ok := inf.Params["limit"]; !ok {
-		inf.Params["limit"] = strconv.Itoa(DefaultLogLimit)
-	} else {
-		inf.Params["limit"] = strconv.Itoa(limit)
-	}*/
 
-	inf.Params["limit"] = strconv.Itoa(limit)
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"username": {Column: "u.username", Checker: nil},
 	}
 	where, _, pagination, queryValues, errs :=
 		dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+
 	if len(errs) > 0 {
 		return nil, 0, util.JoinErrs(errs)
 	}
@@ -162,7 +147,6 @@ func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 		whereCount = where
 		where = "\nWHERE " + timeInterval
 	}
-
 	queryCount := countQuery + whereCount
 	rowCount, err := inf.Tx.NamedQuery(queryCount, queryValues)
 	if err != nil {
