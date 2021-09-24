@@ -53,7 +53,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-
+	fmt.Println("adding test comments")
 	var limit int
 	days := DefaultLogDays
 	if pDays, ok := inf.IntParams["days"]; ok {
