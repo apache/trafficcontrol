@@ -837,7 +837,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	var resultRows *sqlx.Rows
 	_, ok, err := dbhelpers.GetRoleIDFromName(tx, userV4.Role)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no ID exists for the supplied role name"), nil)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("no ID exists for the supplied role name"))
 		return
 	} else if !ok {
 		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("role not found"), nil)

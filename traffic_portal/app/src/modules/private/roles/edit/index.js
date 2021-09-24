@@ -28,7 +28,7 @@ module.exports = angular.module('trafficPortal.private.roles.edit', [])
 						controller: 'FormEditRoleController',
 						resolve: {
 							roles: function($stateParams, roleService) {
-								return roleService.getRoles({ id: $stateParams.roleId });
+								return roleService.getRoles({ name: $stateParams.roleName });
 							}
 						}
 					}

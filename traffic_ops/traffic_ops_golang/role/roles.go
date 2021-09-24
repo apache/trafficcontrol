@@ -33,7 +33,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
@@ -181,7 +180,7 @@ func (role *TORole) createRoleCapabilityAssociations(tx *sqlx.Tx) (error, error,
 }
 
 func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) (error, error, int) {
-	result, err := tx.Exec(deleteAssociatedCapabilities(), role.ID)
+	result, err := tx.Exec(deleteAssociatedCapabilities(), role.Name)
 	if err != nil {
 		return nil, errors.New("deleting role capabilities: " + err.Error()), http.StatusInternalServerError
 	}
@@ -273,7 +272,7 @@ WHERE id=:id RETURNING last_updated`
 
 func deleteAssociatedCapabilities() string {
 	return `DELETE FROM role_capability
-WHERE role_id=$1`
+WHERE role_id=(SELECT id from role r WHERE r.name=$1)`
 }
 
 func associateCapabilities() string {
@@ -307,7 +306,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	var roleID int
 	var roleName string
 	var roleDesc string
-	var roleCapabilities *[]string
+	var roleCapabilities []string
 	var roleV4 tc.RoleV4
 	var ok bool
 	var err error
@@ -328,34 +327,29 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
-	current, err := auth.GetCurrentUser(r.Context())
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		return
-	}
-	missing := current.MissingPermissions(roleV4.Permissions...)
+	missing := inf.User.MissingPermissions(roleV4.Permissions...)
 	if len(missing) != 0 {
 		api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil)
 		return
 	}
 	roleDesc = roleV4.Description
-	roleCapabilities = &roleV4.Permissions
+	roleCapabilities = roleV4.Permissions
 	if roleName, ok = inf.Params["name"]; !ok {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no role name supplied"), nil)
 		return
 	}
 	roleID, ok, err = dbhelpers.GetRoleIDFromName(tx, roleName)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no ID exists for the supplied role name"), nil)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	} else if !ok {
 		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
 		return
 	}
 
-	existingLastUpdated, found, err := api.GetLastUpdated(inf.Tx, roleID, "role")
+	existingLastUpdated, found, err := api.GetLastUpdatedByName(inf.Tx, roleName, "role")
 	if err == nil && found == false {
-		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no role found with that ID"), nil)
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
 		return
 	}
 	if err != nil {
@@ -374,36 +368,31 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 	if !rows.Next() {
-		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no role found with this ID"), nil)
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
 		return
 	}
-	lastUpdated := tc.TimeNoMod{}
+	var lastUpdated time.Time
 	for rows.Next() {
 		if err := rows.Scan(&lastUpdated); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning lastUpdated from role update: %w", err))
 			return
 		}
-		roleV4.LastUpdated = &lastUpdated.Time
+		roleV4.LastUpdated = &lastUpdated
 	}
 
-	if roleCapabilities != nil && *roleCapabilities != nil {
-		userErr, sysErr, errCode = deleteRoleCapabilityAssociations(inf.Tx, roleID)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-			return
-		}
-		userErr, sysErr, errCode = createRoleCapabilityAssociations(inf.Tx, roleID, roleCapabilities)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-			return
-		}
+	userErr, sysErr, errCode = deleteRoleCapabilityAssociations(inf.Tx, roleName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	userErr, sysErr, errCode = createRoleCapabilityAssociations(inf.Tx, roleID, &roleCapabilities)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "role was updated.")
 	var roleResponse interface{}
-	var capabilities []string
-	if roleCapabilities != nil {
-		capabilities = *roleCapabilities
-	}
+	capabilities := roleCapabilities
 	roleResponse = tc.RoleV4{
 		Name:        roleName,
 		Permissions: capabilities,
@@ -415,15 +404,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteRoleQuery() string {
-	return `DELETE FROM role WHERE id = $1`
+	return `DELETE FROM role WHERE name = $1`
 }
 
 func readQuery() string {
 	return `SELECT
-id,
 name,
 description,
-priv_level,
 last_updated,
 ARRAY(SELECT rc.cap_name FROM role_capability AS rc WHERE rc.role_id=id) AS permissions
 FROM role`
@@ -450,19 +437,16 @@ func createRoleCapabilityAssociations(tx *sqlx.Tx, roleID int, permissions *[]st
 
 	if rows, err := result.RowsAffected(); err != nil {
 		return nil, fmt.Errorf("could not check result after inserting role_capability relations: %w", err), http.StatusInternalServerError
-	} else if expected := len(*permissions); int(rows) != expected {
-		return fmt.Errorf("wrong number of role_capability rows created: %d expected: %d", rows, expected), nil, http.StatusBadRequest
+	} else if expected := int64(len(*permissions)); rows != expected {
+		return nil, fmt.Errorf("wrong number of role_capability rows created: %d expected: %d", rows, expected), http.StatusInternalServerError
 	}
 	return nil, nil, http.StatusOK
 }
 
-func deleteRoleCapabilityAssociations(tx *sqlx.Tx, roleID int) (error, error, int) {
-	result, err := tx.Exec(deleteAssociatedCapabilities(), roleID)
+func deleteRoleCapabilityAssociations(tx *sqlx.Tx, roleName string) (error, error, int) {
+	_, err := tx.Exec(deleteAssociatedCapabilities(), roleName)
 	if err != nil {
 		return nil, fmt.Errorf("deleting role capabilities: %w", err), http.StatusInternalServerError
-	}
-	if _, err := result.RowsAffected(); err != nil {
-		return nil, fmt.Errorf("could not check result after inserting role_capability relations: %w", err), http.StatusInternalServerError
 	}
 	return nil, nil, http.StatusOK
 }
@@ -471,7 +455,6 @@ func deleteRoleCapabilityAssociations(tx *sqlx.Tx, roleID int) (error, error, in
 func Delete(w http.ResponseWriter, r *http.Request) {
 	var roleName string
 	var ok bool
-	var roleID int
 	var err error
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -485,38 +468,25 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply a role name to delete"), nil)
 		return
 	}
-	roleID, ok, err = dbhelpers.GetRoleIDFromName(tx, roleName)
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no ID exists for the supplied role name"), nil)
-		return
-	} else if !ok {
-		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
-		return
-	}
 
 	assignedUsers := 0
-	if err := inf.Tx.Get(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", roleID); err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("role delete counting assigned users: "+err.Error()))
+	if err := inf.Tx.Get(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role= (SELECT id FROM role r WHERE r.name=$1)", roleName); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("role delete counting assigned users: %w", err))
 		return
 	} else if assignedUsers != 0 {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("can not delete a role with %d assigned users", assignedUsers), nil)
 		return
 	}
 
-	rows, err := tx.Query(deleteRoleQuery(), roleID)
+	rows, err := tx.Query(deleteRoleQuery(), roleName)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("deleting role: "+err.Error()))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("deleting role: %w", err))
 		return
 	}
 	rows.Close()
-	userErr, sysErr, errCode = deleteRoleCapabilityAssociations(inf.Tx, roleID)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
-	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "role was deleted.")
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
-	changeLogMsg := fmt.Sprintf("ROLE: %s, ID: %d, ACTION: Deleted Role", roleName, roleID)
+	changeLogMsg := fmt.Sprintf("ROLE: %s, ACTION: Deleted Role", roleName)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
@@ -526,7 +496,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	var roleName string
 	var roleDesc string
 	var privLevel int
-	var roleCapabilities *[]string
+	var roleCapabilities []string
+	var lastUpdated time.Time
 	var roleV4 tc.RoleV4
 
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -545,12 +516,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
-	current, err := auth.GetCurrentUser(r.Context())
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		return
-	}
-	missing := current.MissingPermissions(roleV4.Permissions...)
+	missing := inf.User.MissingPermissions(roleV4.Permissions...)
 	if len(missing) != 0 {
 		api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil)
 		return
@@ -558,7 +524,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	roleName = roleV4.Name
 	roleDesc = roleV4.Description
 	privLevel = inf.User.PrivLevel
-	roleCapabilities = &roleV4.Permissions
+	roleCapabilities = roleV4.Permissions
 
 	rows, err := tx.Query(createQuery(), roleName, roleDesc, privLevel)
 	if err != nil {
@@ -568,15 +534,14 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var throwaway interface{}
-		if err := rows.Scan(&roleID, &throwaway); err != nil {
+		if err := rows.Scan(&roleID, &lastUpdated); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("role create: scanning role ID: %w", err))
 			return
 		}
 	}
 
-	if roleCapabilities != nil && len(*roleCapabilities) > 0 {
-		userErr, sysErr, errCode = createRoleCapabilityAssociations(inf.Tx, roleID, roleCapabilities)
+	if len(roleCapabilities) > 0 {
+		userErr, sysErr, errCode = createRoleCapabilityAssociations(inf.Tx, roleID, &roleCapabilities)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
@@ -584,14 +549,12 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "role was created.")
 	var roleResponse interface{}
-	var capabilities []string
-	if roleCapabilities != nil {
-		capabilities = *roleCapabilities
-	}
+	capabilities := roleCapabilities
 	roleResponse = tc.RoleV4{
 		Name:        roleName,
 		Permissions: capabilities,
 		Description: roleDesc,
+		LastUpdated: &lastUpdated,
 	}
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, roleResponse)
 	changeLogMsg := fmt.Sprintf("ROLE: %s, ID: %d, ACTION: Created Role", roleName, roleID)
@@ -610,7 +573,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	tx := inf.Tx.Tx
-	params := make(map[string]dbhelpers.WhereColumnInfo, 0)
+	params := make(map[string]dbhelpers.WhereColumnInfo, 1)
 	params["name"] = dbhelpers.WhereColumnInfo{Column: "name"}
 
 	if _, ok := inf.Params["orderby"]; !ok {
@@ -650,8 +613,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	rolesV4 := []tc.RoleV4{}
 
 	for rows.Next() {
-		throwAway := new(interface{})
-		if err = rows.Scan(throwAway, &roleV4.Name, &roleV4.Description, throwAway, &roleV4.LastUpdated, pq.Array(&roleV4.Permissions)); err != nil {
+		if err = rows.Scan(&roleV4.Name, &roleV4.Description, &roleV4.LastUpdated, pq.Array(&roleV4.Permissions)); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning RoleV4 row: %w", err))
 			return
 		}

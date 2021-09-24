@@ -21,8 +21,8 @@ var TableRolesController = function(roles, $scope, $state, locationUtils) {
 
 	$scope.roles = roles;
 
-	$scope.editRole = function(id) {
-		locationUtils.navigateToPath('/roles/' + id);
+	$scope.editRole = function(name) {
+		locationUtils.navigateToPath('/roles/' + name);
 	};
 
 	$scope.createRole = function() {

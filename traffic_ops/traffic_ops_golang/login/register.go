@@ -228,7 +228,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		dbhelpers.GetRoleIDFromName(tx, reqV4.Role)
 		roleID, ok, err := dbhelpers.GetRoleIDFromName(tx, reqV4.Role)
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no ID exists for the supplied role name"), nil)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("no ID exists for the supplied role name"))
 			return
 		} else if !ok {
 			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
