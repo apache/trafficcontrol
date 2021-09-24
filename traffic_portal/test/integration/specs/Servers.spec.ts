@@ -17,7 +17,6 @@
  * under the License.
  */
 import { browser } from 'protractor';
-
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { ServersPage } from '../PageObjects/ServersPage.po';
 import { api } from "../config";
@@ -28,51 +27,55 @@ const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const serversPage = new ServersPage();
 
-describe('Setup API call for Servers Test', () =>{
+describe('Setup API call for Servers Test', () => {
     it('Setup', async () => {
         await api.UseAPI(servers.setup);
     });
 });
-
 servers.tests.forEach(async serversData => {
     serversData.logins.forEach(login => {
-        describe(`Traffic Portal - Servers - ${login.description}`, () =>{
+        describe(`Traffic Portal - Servers - ${login.description}`, () => {
+            afterEach(async function () {
+                await serversPage.OpenServerPage();
+            });
+            afterAll(async function () {
+                expect(await topNavigation.Logout()).toBeTruthy();
+            })
             it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
-                expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            });
-            it('can open servers page', async () => {
+                expect(await loginPage.CheckUserName(login)).toBe(true);
                 await serversPage.OpenConfigureMenu();
-                await serversPage.OpenServerPage();
             });
+            serversData.toggle.forEach(toggle => {
+                it(toggle.description, async () => {
+                    if (toggle.description.includes('hide')) {
+                        expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                    } else {
+                        expect(await serversPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                    }
+                });
+            })
             serversData.add.forEach(add => {
                 it(add.description, async () => {
-                    expect(await serversPage.CreateServer(add)).toBeTruthy();
-                    await serversPage.OpenServerPage();
+                    expect(await serversPage.CreateServer(add)).toBe(true);
                 });
             });
             serversData.update.forEach(update => {
                 it(update.description, async () => {
                     await serversPage.SearchServer(update.Name);
-                    expect(await serversPage.UpdateServer(update)).toBeTruthy();
-                    await serversPage.OpenServerPage();
+                    expect(await serversPage.UpdateServer(update)).toBe(true);
                 });
             });
             serversData.remove.forEach(remove => {
                 it(remove.description, async () => {
                     await serversPage.SearchServer(remove.Name);
-                    expect(await serversPage.DeleteServer(remove)).toBeTruthy();
-                    await serversPage.OpenServerPage();
+                    expect(await serversPage.DeleteServer(remove)).toBe(true);
                 });
-            });
-            it('can logout', async () => {
-                expect(await topNavigation.Logout()).toBeTruthy();
             });
         })
     })
 })
-
 describe('API Clean Up for Servers Test', () => {
     it('Cleanup', async () => {
         await api.UseAPI(servers.cleanup);

@@ -1705,3 +1705,14 @@ func GetRoleNameFromID(tx *sql.Tx, roleID int) (string, bool, error) {
 	}
 	return name, true, nil
 }
+
+// GetCDNNameDomain returns the name and domain for a given CDN ID.
+func GetCDNNameDomain(cdnID int, tx *sql.Tx) (string, string, error) {
+	q := `SELECT cdn.name, cdn.domain_name from cdn where cdn.id = $1`
+	cdnName := ""
+	cdnDomain := ""
+	if err := tx.QueryRow(q, cdnID).Scan(&cdnName, &cdnDomain); err != nil {
+		return "", "", fmt.Errorf("getting cdn name and domain for cdn '%v': "+err.Error(), cdnID)
+	}
+	return cdnName, cdnDomain, nil
+}

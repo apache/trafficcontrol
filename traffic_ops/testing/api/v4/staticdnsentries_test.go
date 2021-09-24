@@ -30,7 +30,7 @@ import (
 )
 
 func TestStaticDNSEntries(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, StaticDNSEntries}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, StaticDNSEntries}, func() {
 		GetTestStaticDNSEntriesIMS(t)
 		GetTestStaticDNSEntries(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)

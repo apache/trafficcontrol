@@ -26,20 +26,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.log4j.Logger;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.context.ApplicationContext;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
 import static org.apache.traffic_control.traffic_router.core.ds.SteeringWatcher.DEFAULT_STEERING_DATA_URL;
 import static org.apache.traffic_control.traffic_router.core.loc.FederationsWatcher.DEFAULT_FEDERATION_DATA_URL;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.endsWith;
-import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNull;
 
 
@@ -56,8 +53,8 @@ public class AbstractResourceWatcherTest {
     private String oldFedUrl;
 
     @BeforeClass
-    public static void setUpBeforeClass() {
-        assertThat("Copy core/src/main/conf/traffic_monitor.properties to core/src/test/conf and set 'traffic_monitor.bootstrap.hosts' to a real traffic monitor", Files.exists(Paths.get(TestBase.monitorPropertiesPath)), equalTo(true));
+    public static void setUpBeforeClass() throws Exception {
+        TestBase.setupFakeServers();
         context = TestBase.getContext();
     }
 
@@ -105,6 +102,11 @@ public class AbstractResourceWatcherTest {
         federationsWatcher.trafficOpsUtils.setConfig(config);
         federationsWatcher.configure(config);
         assertThat(federationsWatcher.getDataBaseURL(), endsWith(DEFAULT_FEDERATION_DATA_URL.split("api")[1]));
+    }
+
+    @AfterClass
+    public static void tearDownServers() throws Exception {
+        TestBase.tearDownFakeServers();
     }
 
     @Test

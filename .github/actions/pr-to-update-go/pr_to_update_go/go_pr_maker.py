@@ -112,7 +112,7 @@ class GoPRMaker:
 			commit = self.set_go_version(self.latest_go_version, commit_message,
 				source_branch_name)
 		if commit is None:
-			source_branch_ref: GitRef = self.repo.get_git_ref('heads/go-1.15.15')
+			source_branch_ref: GitRef = self.repo.get_git_ref(f'heads/{source_branch_name}')
 			commit = self.repo.get_commit(source_branch_ref.object.sha)
 		subprocess.run(['git', 'fetch', 'origin'], check=True)
 		subprocess.run(['git', 'checkout', commit.sha], check=True)
