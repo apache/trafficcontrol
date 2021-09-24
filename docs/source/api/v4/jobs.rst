@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieve content invalidation jobs.
+Retrieve :term:`Content Invalidation Jobs`.
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
@@ -35,23 +35,24 @@ Request Structure
 	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| Name                 | Required | Description                                                                                                                                                      |
 	+======================+==========+==================================================================================================================================================================+
-	| assetUrl             | no       | Return only invalidation jobs that operate on URLs by matching this regular expression                                                                           |
+	| assetUrl             | no       | Return only :term:`Content Invalidation Jobs` that operate on URLs by matching this regular expression                                                           |
 	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| cdn                  | no       | Return only invalidation jobs for delivery services with this CDN name                                                                                           |
+	| cdn                  | no       | Return only :term:`Content Invalidation Jobs` for delivery services with this CDN name                                                                           |
 	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| createdBy            | no       | Return only invalidation jobs that were created by the user with this username                                                                                   |
+	| createdBy            | no       | Return only :term:`Content Invalidation Jobs` that were created by the user with this username                                                                   |
 	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| deliveryService      | no       | Return only invalidation jobs that operate on the :term:`Delivery Service` with this :ref:`ds-xmlid`                                                             |
+	| deliveryService      | no       | Return only :term:`Content Invalidation Jobs` that operate on the :term:`Delivery Service` with this :ref:`ds-xmlid`                                             |
 	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| dsId                 | no       | Return only invalidation jobs pending on the :term:`Delivery Service` identified by this integral, unique identifier                                             |
+	| dsId                 | no       | Return only :term:`Content Invalidation Jobs` pending on the :term:`Delivery Service` identified by this integral, unique identifier                             |
 	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 	| id                   | no       | Return only the single invalidation job identified by this integral, unique identifer                                                                            |
 	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| keyword              | no       | Return only invalidation jobs that have this "keyword" - only "PURGE" should exist                                                                               |
+	| keyword              | no       | Return only :term:`Content Invalidation Jobs` that have this "keyword" - only "PURGE" should exist                                                               |
 	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| maxRevalDurationDays | no       | Return only invalidation jobs with a startTime that is within the window defined by the ``maxRevalDurationDays`` :term:`Parameter` in :ref:`the-global-profile`  |
+	| maxRevalDurationDays | no       | Return only :term:`Content Invalidation Jobs` with a startTime that is within the window defined by the ``maxRevalDurationDays`` :term:`Parameter` in            |
+	|                      |          | :ref:`the-global-profile`                                                                                                                                        |
 	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-	| userId               | no       | Return only invalidation jobs created by the user identified by this integral, unique identifier                                                                 |
+	| userId               | no       | Return only :term:`Content Invalidation Jobs` created by the user identified by this integral, unique identifier                                                 |
 	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
@@ -109,9 +110,9 @@ Response Structure
 
 ``POST``
 ========
-Creates a new content invalidation job.
+Creates a new :term:`Content Invalidation Jobs`.
 
-.. caution:: Creating a content invalidation job immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that content invalidation jobs become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
+.. caution:: Creating a :term:`Content Invalidation Jobs` immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that :term:`Content Invalidation Jobs` become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
 
 :Auth. Required: Yes
 :Roles Required: "operations" or "admin"\ [#tenancy]_
@@ -123,7 +124,7 @@ Request Structure
 :deliveryService: This should either be the integral, unique identifier of a :term:`Delivery Service`, or a string containing an :ref:`ds-xmlid`
 :startTime: This can be a string in the legacy ``YYYY-MM-DD HH:MM:SS`` format, or a string in :rfc:`3339` format, or a string representing a date in the same non-standard format as the ``last_updated`` fields common in other API responses, or finally it can be a number indicating the number of milliseconds since the Unix Epoch (January 1, 1970 UTC). This date must be in the future.
 :regex: A regular expression that will be used to match the path part of URIs for content stored on :term:`cache servers` that service traffic for the :term:`Delivery Service` identified by ``deliveryService``.
-:ttl: Either the number of hours for which the content invalidation job should remain active, or a "duration" string, which is a sequence of numbers followed by units. The accepted units are:
+:ttl: Either the number of hours for which the :term:`Content Invalidation Jobs` should remain active, or a "duration" string, which is a sequence of numbers followed by units. The accepted units are:
 
 	- ``h`` gives a duration in hours
 	- ``m`` gives a duration in minutes
@@ -206,9 +207,9 @@ Response Structure
 
 ``PUT``
 =======
-Replaces an existing content invalidation job with a new one provided in the request. This method of editing a content invalidation job does not prevent the requesting user from changing fields that normally only have one value. Use with care.
+Replaces an existing :term:`Content Invalidation Jobs` with a new one provided in the request. This method of editing a :term:`Content Invalidation Jobs` does not prevent the requesting user from changing fields that normally only have one value. Use with care.
 
-.. caution:: Modifying a content invalidation job immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that content invalidation jobs become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
+.. caution:: Modifying a :term:`Content Invalidation Jobs` immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that :term:`Content Invalidation Jobs` become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
 
 :Auth. Required: Yes
 :Roles Required: "operations" or "admin"\ [#tenancy]_
@@ -222,7 +223,7 @@ Request Structure
 	+------+----------+--------------------------------------------------------------------------------+
 	| Name | Required | Description                                                                    |
 	+======+==========+================================================================================+
-	| id   | yes      | The integral, unique identifier of the content invalidation job being modified |
+	| id   | yes      | The integral, unique identifier of the :term:`Content Invalidation Jobs` being modified |
 	+------+----------+--------------------------------------------------------------------------------+
 
 :assetUrl: A regular expression - matching URLs will be operated upon according to ``keyword``
@@ -310,11 +311,11 @@ Response Structure
 
 ``DELETE``
 ==========
-Deletes a content invalidation job.
+Deletes a :term:`Content Invalidation Jobs`.
 
-.. tip:: Content invalidation jobs that have passed their :abbr:`TTL (Time To Live)` are not automatically deleted - for record-keeping purposes - so use this to clean up old jobs that are no longer useful.
+.. tip:: Content :term:`Content Invalidation Jobs` that have passed their :abbr:`TTL (Time To Live)` are not automatically deleted - for record-keeping purposes - so use this to clean up old jobs that are no longer useful.
 
-.. caution:: Deleting a content invalidation job immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that content invalidation jobs become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
+.. caution:: Deleting a :term:`Content Invalidation Jobs` immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that :term:`Content Invalidation Jobs` become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
 
 :Auth. Required: Yes
 :Roles Required: "operations" or "admin"\ [#tenancy]_
@@ -328,7 +329,7 @@ Request Structure
 	+------+----------+--------------------------------------------------------------------------------+
 	| Name | Required | Description                                                                    |
 	+======+==========+================================================================================+
-	| id   | yes      | The integral, unique identifier of the content invalidation job being modified |
+	| id   | yes      | The integral, unique identifier of the :term:`Content Invalidation Jobs` being modified |
 	+------+----------+--------------------------------------------------------------------------------+
 
 .. code-block:: http
@@ -390,5 +391,5 @@ Response Structure
 	}}
 
 
-.. [#tenancy] When viewing content invalidation jobs, only those jobs that operate on a :term:`Delivery Service` visible to the requesting user's :term:`Tenant` will be returned. Likewise, creating a new content invalidation job requires that the target :term:`Delivery Service` is modifiable by the requesting user's :term:`Tenant`. However, when modifying or deleting an existing content invalidation job, the operation can be completed if and only if the requesting user's :term:`Tenant` is the same as the job's :term:`Delivery Service`'s :term:`Tenant` or a descendant thereof, **and** if the requesting user's :term:`Tenant` is the same as the :term:`Tenant` of the *user who initially created the job* or a descendant thereof.
+.. [#tenancy] When viewing :term:`Content Invalidation Jobs`, only those jobs that operate on a :term:`Delivery Service` visible to the requesting user's :term:`Tenant` will be returned. Likewise, creating a new :term:`Content Invalidation Jobs` requires that the target :term:`Delivery Service` is modifiable by the requesting user's :term:`Tenant`. However, when modifying or deleting an existing :term:`Content Invalidation Jobs`, the operation can be completed if and only if the requesting user's :term:`Tenant` is the same as the job's :term:`Delivery Service`'s :term:`Tenant` or a descendant thereof, **and** if the requesting user's :term:`Tenant` is the same as the :term:`Tenant` of the *user who initially created the job* or a descendant thereof.
 .. [#readonly] This field must exist, but it must *not* be different than the same field of the existing job (i.e. as seen in a GET_ response)

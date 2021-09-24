@@ -52,6 +52,14 @@ Glossary
 
 		.. seealso:: For a more complete description of Cache Groups, see the :ref:`cache-groups` overview section.
 
+	Content Invalidation Job
+	Content Invalidation Jobs
+	job
+	jobs
+		:dfn:`Content Invalidation Jobs` are a way to force :term:`cache servers` to treat their cached content as stale (or even not in cache at all).
+
+		.. seealso:: For a more complete description of Content Invalidation Jobs, see the :ref:`jobs` overview section.
+
 	content routing
 		Directing clients (or client systems) to a particular location or device in a location for optimal delivery of content See also :ref:`http-cr` and :ref:`dns-cr`.
 

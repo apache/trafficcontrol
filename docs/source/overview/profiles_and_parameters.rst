@@ -202,8 +202,8 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	|                          |                         | recommended that this be set on a production  system.                                                                                 |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| use_reval_pending        | global                  | When this Parameter is present and its Value_ is exactly "1", Traffic Ops will separately keep track of :term:`cache servers`'        |
-	|                          |                         | updates and pending content invalidation jobs. This behavior should be enabled by default, and disabling it, while still possible, is |
-	|                          |                         | **EXTREMELY DISCOURAGED**.                                                                                                            |
+	|                          |                         | updates and pending :term:`Content Invalidation Jobs`. This behavior should be enabled by default, and disabling it, while still      |
+	|                          |                         | possible is **EXTREMELY DISCOURAGED**.                                                                                                |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| geolocation.polling.url  | CRConfig.json           | The location of a geographic IP mapping database for Traffic Router instances to use.                                                 |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
@@ -215,13 +215,13 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	|                          |                         | is MaxMind's GeoIP2 database. The format of this :ref:`Parameter <parameters>`'s Value_ is:                                           |
 	|                          |                         | :file:`{Country Code};{Latitude},{Longitude}`, e.g. ``US;37.751,-97.822``                                                             |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| maxRevalDurationDays     | regex_revalidate.config | This :ref:`Parameter <parameters>` sets the maximum duration, in days, for which a content invalidation job may run. This is          |
-	|                          |                         | **extremely** important, as there is currently no way to delete a content invalidation job once it has been created. Furthermore,     |
+	| maxRevalDurationDays     | regex_revalidate.config | This :ref:`Parameter <parameters>` sets the maximum duration, in days, for which a :term:`Content Invalidation Jobs` may run. This is          |
+	|                          |                         | **extremely** important, as there is currently no way to delete a :term:`Content Invalidation Jobs` once it has been created. Furthermore,     |
 	|                          |                         | while there is no restriction placed on creating multiple Parameters_ with this :ref:`parameter-name` and `Config File`_ -            |
 	|                          |                         | potentially with differing :ref:`Values <parameter-value>` - this is **EXTREMELY DISCOURAGED as any** :ref:`Parameter <parameters>`   |
 	|                          |                         | **that has both that** :ref:`parameter-name` **and** `Config File`_ **might be used when generating any given**                       |
 	|                          |                         | `regex_revalidate.config`_ **file for any given** :term:`cache server` **and whenever such** Parameters_ **exist, the actual maximum  |
-	|                          |                         | duration for content invalidation jobs is undefined, and CAN and WILL differ from server to server, and configuration file to         |
+	|                          |                         | duration for :term:`Content Invalidation Jobs` is undefined, and CAN and WILL differ from server to server, and configuration file to         |
 	|                          |                         | configuration file.**                                                                                                                 |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 

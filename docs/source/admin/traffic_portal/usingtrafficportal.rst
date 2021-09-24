@@ -645,21 +645,21 @@ Tools
 
 Invalidate Content
 ------------------
-Here, specific assets can be invalidated in all caches of a :term:`Delivery Service`, forcing content to be updated from the origin. Specifically, this *doesn't* mean that :term:`cache servers` will immediately remove items from their caches, but rather will fetch new copies whenever a request is made matching the 'Asset URL' regular expression. This behavior persists until the Invalidate Content Job's :abbr:`TTL (Time To Live)` expires.
+Here, specific assets can be invalidated in all caches of a :term:`Delivery Service`, forcing content to be updated from the origin. Specifically, this *doesn't* mean that :term:`cache servers` will immediately remove items from their caches, but rather will fetch new copies whenever a request is made matching the 'Asset URL' regular expression. This behavior persists until the :term:`Content Invalidate Content Job`'s :ref:`job-ttl` expires.
 
-.. Warning:: This method forces :term:`cache servers` to "re-validate" content, so in order to work properly the :term:`Origin` needs to support revalidation according to section 4.3.2 of :rfc:`7234`.
+.. warning:: This method forces :term:`cache servers` to "re-validate" content, so in order to work properly the :term:`Origin` needs to support revalidation according to section 4.3.2 of :rfc:`7234`.
 
 Each entry in the table on this page has the following fields:
 
-:term:`Delivery Service`: The :term:`Delivery Service` to which to apply this Invalidate Content Job
+:Delivery Service: The :term:`Delivery Service` to which to apply this :term:`Content Invalidation Job`
 :Asset URL:        A URL or regular expression which describes the asset(s) to be invalidated
-:Parameters:       So far, the only use for this is setting a :abbr:`TTL (Time To Live)` over which the Invalidate Content Job shall remain active
-:Start:            An effective start time until which the job is delayed
-:Created By:       The user name of the person who created this Invalidate Content Job
+:Parameters:       So far, the only use for this is setting a :abbr:`TTL (Time To Live)` over which the :term:`Content Invalidation Job` shall remain active
+:Start:            An effective start time until which the :term:`job` is delayed
+:Created By:       The user name of the person who created this :term:`Content Invalidation Job`
 
 Invalidate content includes the ability to (where applicable):
 
-- create a new invalidate content job
+- create a new :term:`Content Invalidation Job`
 
 .. _tp-tools-generate-iso:
 
