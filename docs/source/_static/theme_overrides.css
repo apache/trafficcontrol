@@ -99,3 +99,15 @@ ul, ol, ul > li, ol > li {
 ul > li > p, ol > li > p {
 	margin: 0;
 }
+
+kbd {
+	display: inline-block;
+	padding: 4px 5px;
+	font: smaller ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+	line-height: 10px;
+	vertical-align: middle;
+	background-color: white;
+	border: solid 1px rgba(99,110,123,0.4);
+	border-radius: 6px;
+	box-shadow: inset 0 -1px 0 rgba(99,110,123,0.4);
+}
