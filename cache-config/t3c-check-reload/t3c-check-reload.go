@@ -20,21 +20,21 @@ package main
  */
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/pborman/getopt/v2"
 	"os"
 	"strings"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-
-	"github.com/pborman/getopt/v2"
 )
 
 func main() {
 	// presumably calculated by by t3c-check-refs
 	// TODO remove? The blueprint says t3c/ORT will no longer install packages
-	pluginPackagesInstalledStr := getopt.StringLong("plugin-packages-installed", 'p', "", "comma-delimited list of ATS plugin packages which were installed by t3c")
+	//pluginPackagesInstalledStr := getopt.StringLong("plugin-packages-installed", 'p', "", "comma-delimited list of ATS plugin packages which were installed by t3c")
 	// presumably calculated by t3c-diff
-	changedConfigFilesStr := getopt.StringLong("changed-config-paths", 'c', "", "comma-delimited list of the full paths of all files changed by t3c")
+	//changedConfigFilesStr := getopt.StringLong("changed-config-paths", 'c', "", "comma-delimited list of the full paths of all files changed by t3c")
 	help := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	getopt.Parse()
 
@@ -43,7 +43,12 @@ func main() {
 		os.Exit(0)
 	}
 
-	changedConfigFiles := strings.Split(*changedConfigFilesStr, ",")
+	changedCfg := &ChangedCfg{}
+	if err := json.NewDecoder(os.Stdin).Decode(changedCfg); err != nil {
+		fmt.Println("Error reading json input", err)
+	}
+
+	changedConfigFiles := strings.Split(changedCfg.ChangedFiles, ",")
 	changedConfigFiles = StrMap(changedConfigFiles, strings.TrimSpace)
 	changedConfigFiles = StrRemoveIf(changedConfigFiles, StrIsEmpty)
 
@@ -51,7 +56,7 @@ func main() {
 	// Probably not, because whatever told the installer to install them already knew that,
 	// we shouldn't re-calculate it.
 
-	pluginPackagesInstalled := strings.Split(*pluginPackagesInstalledStr, ",")
+	pluginPackagesInstalled := strings.Split(changedCfg.InstalledPlugins, ",")
 	pluginPackagesInstalled = StrMap(pluginPackagesInstalled, strings.TrimSpace)
 	pluginPackagesInstalled = StrRemoveIf(pluginPackagesInstalled, StrIsEmpty)
 
@@ -97,6 +102,11 @@ func main() {
 	}
 
 	ExitNothing()
+}
+
+type ChangedCfg struct {
+	ChangedFiles     string `json:"changed_files"`
+	InstalledPlugins string `json:"installed_plugins"`
 }
 
 // ExitRestart returns the "needs restart" message and exits.
