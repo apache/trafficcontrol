@@ -331,10 +331,49 @@ func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 func checkReload(pluginPackagesInstalled []string, changedConfigFiles []string) (t3cutil.ServiceNeeds, error) {
 	log.Infof("t3c-check-reload calling with pluginPackagesInstalled '%v' changedConfigFiles '%v'\n", pluginPackagesInstalled, changedConfigFiles)
 
-	stdOut, stdErr, code := t3cutil.Do(`t3c`, `check`, `reload`,
-		"--plugin-packages-installed="+strings.Join(pluginPackagesInstalled, ","),
-		"--changed-config-paths="+strings.Join(changedConfigFiles, ","),
-	)
+	changedFiles := []byte(strings.Join(changedConfigFiles, ","))
+	installedPlugins := []byte(strings.Join(pluginPackagesInstalled, ","))
+
+	cmd := exec.Command(`t3c-check-reload`)
+	outBuf := bytes.Buffer{}
+	errBuf := bytes.Buffer{}
+	cmd.Stdout = &outBuf
+	cmd.Stderr = &errBuf
+
+	stdinPipe, err := cmd.StdinPipe()
+	if err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("getting command pipe: " + err.Error())
+	}
+
+	if err := cmd.Start(); err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("starting command: " + err.Error())
+	}
+
+	if _, err := stdinPipe.Write([]byte(`{"changed_files":"`)); err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("writing opening json to input: " + err.Error())
+	} else if _, err := stdinPipe.Write(changedFiles); err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("writing changed files to input: " + err.Error())
+	} else if _, err := stdinPipe.Write([]byte(`","installed_plugins":"`)); err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("writing installed_plugins key to input: " + err.Error())
+	} else if _, err := stdinPipe.Write(installedPlugins); err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("writing plugins to input: " + err.Error())
+	} else if _, err := stdinPipe.Write([]byte(`"}`)); err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("writing closing json input: " + err.Error())
+	} else if err := stdinPipe.Close(); err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("closing stdin writer: " + err.Error())
+	}
+
+	code := 0 // if cmd.Wait returns no error, that means the command returned 0
+	if err := cmd.Wait(); err != nil {
+		if exitErr, ok := err.(*exec.ExitError); !ok {
+			return t3cutil.ServiceNeedsInvalid, errors.New("error running command: " + err.Error())
+		} else {
+			code = exitErr.ExitCode()
+		}
+	}
+
+	stdOut := outBuf.Bytes()
+	stdErr := errBuf.Bytes()
 
 	if code != 0 {
 		log.Errorf(`t3c-check-reload errors start
