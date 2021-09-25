@@ -215,14 +215,13 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	|                          |                         | is MaxMind's GeoIP2 database. The format of this :ref:`Parameter <parameters>`'s Value_ is:                                           |
 	|                          |                         | :file:`{Country Code};{Latitude},{Longitude}`, e.g. ``US;37.751,-97.822``                                                             |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| maxRevalDurationDays     | regex_revalidate.config | This :ref:`Parameter <parameters>` sets the maximum duration, in days, for which a :term:`Content Invalidation Jobs` may run. This is          |
-	|                          |                         | **extremely** important, as there is currently no way to delete a :term:`Content Invalidation Jobs` once it has been created. Furthermore,     |
-	|                          |                         | while there is no restriction placed on creating multiple Parameters_ with this :ref:`parameter-name` and `Config File`_ -            |
-	|                          |                         | potentially with differing :ref:`Values <parameter-value>` - this is **EXTREMELY DISCOURAGED as any** :ref:`Parameter <parameters>`   |
+	| maxRevalDurationDays     | regex_revalidate.config | This :ref:`Parameter <parameters>` sets the maximum duration, in days, for which a :term:`Content Invalidation Job` may run.          |
+	|                          |                         | Furthermore, while there is no restriction placed on creating multiple Parameters_ with this :ref:`parameter-name` and `Config File`  |
+	|                          |                         | - potentially with differing :ref:`Values <parameter-value>` - this is **EXTREMELY DISCOURAGED as any** :ref:`Parameter <parameters>` |
 	|                          |                         | **that has both that** :ref:`parameter-name` **and** `Config File`_ **might be used when generating any given**                       |
 	|                          |                         | `regex_revalidate.config`_ **file for any given** :term:`cache server` **and whenever such** Parameters_ **exist, the actual maximum  |
-	|                          |                         | duration for :term:`Content Invalidation Jobs` is undefined, and CAN and WILL differ from server to server, and configuration file to         |
-	|                          |                         | configuration file.**                                                                                                                 |
+	|                          |                         | duration for** :term:`Content Invalidation Jobs` **is undefined, and CAN and WILL differ from server to server, and configuration     |
+	|                          |                         | file to configuration file.**                                                                                                         |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 
 

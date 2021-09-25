@@ -111,7 +111,7 @@ Response Structure
 ========
 Creates a new :term:`Content Invalidation Jobs`.
 
-.. caution:: Creating a :term:`Content Invalidation Jobs` immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that :term:`Content Invalidation Jobs` become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
+.. caution:: Creating a :term:`Content Invalidation Job` immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that :term:`Content Invalidation Jobs` become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
 
 :Auth. Required: Yes
 :Roles Required: "operations" or "admin"\ [#tenancy]_
@@ -122,7 +122,7 @@ Request Structure
 :deliveryService: This should either be the integral, unique identifier of a :term:`Delivery Service`, or a string containing an :ref:`ds-xmlid`
 :startTime: This can be a string in the legacy ``YYYY-MM-DD HH:MM:SS`` format, or a string in :rfc:`3339` format, or a string representing a date in the same non-standard format as the ``last_updated`` fields common in other API responses, or finally it can be a number indicating the number of milliseconds since the Unix Epoch (January 1, 1970 UTC). This date must be in the future.
 :regex: A regular expression that will be used to match the path part of URIs for content stored on :term:`cache servers` that service traffic for the :term:`Delivery Service` identified by ``deliveryService``.
-:ttl: Either the number of hours for which the :term:`Content Invalidation Jobs` should remain active, or a "duration" string, which is a sequence of numbers followed by units. The accepted units are:
+:ttl: Either the number of hours for which the :term:`Content Invalidation Job` should remain active, or a "duration" string, which is a sequence of numbers followed by units. The accepted units are:
 
 	- ``h`` gives a duration in hours
 	- ``m`` gives a duration in minutes
@@ -205,9 +205,9 @@ Response Structure
 
 ``PUT``
 =======
-Replaces an existing :term:`Content Invalidation Jobs` with a new one provided in the request. This method of editing a :term:`Content Invalidation Jobs` does not prevent the requesting user from changing fields that normally only have one value. Use with care.
+Replaces an existing :term:`Content Invalidation Job` with a new one provided in the request. This method of editing a :term:`Content Invalidation Job` does not prevent the requesting user from changing fields that normally only have one value. Use with care.
 
-.. caution:: Modifying a :term:`Content Invalidation Jobs` immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that :term:`Content Invalidation Jobs` become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
+.. caution:: Modifying a :term:`Content Invalidation Job` immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that :term:`Content Invalidation Jobs` become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
 
 :Auth. Required: Yes
 :Roles Required: "operations" or "admin"\ [#tenancy]_
@@ -308,11 +308,11 @@ Response Structure
 
 ``DELETE``
 ==========
-Deletes a :term:`Content Invalidation Jobs`.
+Deletes a :term:`Content Invalidation Job`.
 
 .. tip:: Content :term:`Content Invalidation Jobs` that have passed their :abbr:`TTL (Time To Live)` are not automatically deleted - for record-keeping purposes - so use this to clean up old :term:`jobs` that are no longer useful.
 
-.. caution:: Deleting a :term:`Content Invalidation Jobs` immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that :term:`Content Invalidation Jobs` become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
+.. caution:: Deleting a :term:`Content Invalidation Job` immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that :term:`Content Invalidation Jobs` become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
 
 :Auth. Required: Yes
 :Roles Required: "operations" or "admin"\ [#tenancy]_
