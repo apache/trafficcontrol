@@ -15,6 +15,8 @@ package orttest
 */
 
 import (
+	"encoding/json"
+	tc_log "github.com/apache/trafficcontrol/lib/go-log"
 	"strings"
 	"testing"
 
@@ -113,12 +115,26 @@ func TestCheckReload(t *testing.T) {
 	}
 }
 
+type ChangedCfg struct {
+	ChangedFiles     string `json:"changed_files"`
+	InstalledPlugins string `json:"installed_plugins"`
+}
+
 func t3cCheckReload(changedConfigPaths []string, packagesInstalled []string) (string, int) {
+	config := ChangedCfg{
+		ChangedFiles:     strings.Join(changedConfigPaths, ","),
+		InstalledPlugins: strings.Join(packagesInstalled, ","),
+	}
 	args := []string{
 		"check", "reload",
-		"--changed-config-paths=" + strings.Join(changedConfigPaths, ","),
-		"--plugin-packages-installed=" + strings.Join(packagesInstalled, ","),
+		//"--changed-config-paths=" + strings.Join(changedConfigPaths, ","),
+		//"--plugin-packages-installed=" + strings.Join(packagesInstalled, ","),
 	}
-	stdOut, _, exitCode := t3cutil.Do("t3c", args...)
+	data, err := json.Marshal(config)
+	if err != nil {
+		tc_log.Errorln("error")
+	}
+	stdOut, _, exitCode := t3cutil.DoInput(data, "t3c", args...)
+	//stdOut, _, exitCode := t3cutil.Do("t3c", args...)
 	return string(stdOut), exitCode
 }
