@@ -230,6 +230,7 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 			return errors.New("unable to process udev rules in '" + cfg.Name + "': " + err.Error())
 		}
 	}
+
 	log.Infof("======== End processing config file: %s for service: %s ========\n", cfg.Name, cfg.Service)
 	return nil
 }
