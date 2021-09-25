@@ -22,11 +22,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pborman/getopt/v2"
 	"os"
 	"strings"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+
+	"github.com/pborman/getopt/v2"
 )
 
 func main() {
