@@ -21,13 +21,13 @@ package tmagent
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/cache-config/tm-health-client/config"
-	"github.com/apache/trafficcontrol/cache-config/tm-health-client/util"
+	"github.com/apache/trafficcontrol/tc-health-client/config"
+	"github.com/apache/trafficcontrol/tc-health-client/util"
 	"testing"
 )
 
 const (
-	test_config_file = "test_files/tm-health-client.json"
+	test_config_file = "test_files/tc-health-client.json"
 )
 
 func TestReadParentDotConfig(t *testing.T) {
