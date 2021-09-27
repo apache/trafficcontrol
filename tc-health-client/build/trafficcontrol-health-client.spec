@@ -70,7 +70,7 @@ cp -p ${RPM_SOURCE_DIR}/trafficcontrol-health-client-%{version}/tc-health-client
 
 src="trafficcontrol-health-client-%{version}"
 cp -p ${RPM_SOURCE_DIR}/${src}/tc-health-client ${RPM_BUILD_ROOT}/${installdir}
-cp -p ${RPM_SOURCE_DIR}/${src}/tc-health-client.json.sample ${RPM_BUILD_ROOT}/etc/trafficcontrol
+cp -p ${RPM_SOURCE_DIR}/${src}/tc-health-client.sample.json ${RPM_BUILD_ROOT}/etc/trafficcontrol
 cp -p ${RPM_SOURCE_DIR}/${src}/tc-health-client.logrotate ${RPM_BUILD_ROOT}/etc/logrotate.d
 cp -p ${RPM_SOURCE_DIR}/${src}/tc-health-client.service ${RPM_BUILD_ROOT}/usr/lib/systemd/system
 gzip -c -9 ${RPM_SOURCE_DIR}/${src}/tc-health-client.1 > ${RPM_BUILD_ROOT}/${mandir}/${man1dir}/tc-health-client.1.gz
@@ -126,7 +126,7 @@ fi
 %attr(755, root, root)
 /usr/bin/tc-health-client
 /usr/share/man/man1/tc-health-client.1.gz
-/etc/trafficcontrol/tc-health-client.json.sample
+/etc/trafficcontrol/tc-health-client.sample.json
 /etc/logrotate.d/tc-health-client.logrotate
 /usr/lib/systemd/system/tc-health-client.service
 

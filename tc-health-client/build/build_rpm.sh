@@ -76,7 +76,7 @@ initBuildArea() {
   cp -p tc-health-client "$dest";
   cp -p tc-health-client.go "$dest";
   cp -p tc-health-client.1 "$dest";
-  cp -p tc-health-client.json "$dest"/tc-health-client.json.sample;
+  cp -p tc-health-client.json "$dest"/tc-health-client.sample.json;
   cp -p tc-health-client.service "$dest";
 	cp -p build/tc-health-client.logrotate "$dest";
 
