@@ -45,6 +45,7 @@ const (
 	DefaultLogDays = 30
 )
 
+// Get is the handler for GET requests to /logs.
 func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"days", "limit"})
 	if userErr != nil || sysErr != nil {
@@ -62,7 +63,6 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	if pLimit, ok := inf.IntParams["limit"]; ok {
 		limit = pLimit
 	}
-
 	a := tc.Alerts{}
 	setLastSeenCookie(w)
 	logs, count, err := getLog(inf, days, limit)
@@ -218,7 +218,9 @@ func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 	var count = uint64(0)
 	var whereCount string
 	if _, ok := inf.Params["limit"]; !ok {
-		inf.Params["limit"] = strconv.Itoa(DefaultLogLimit)
+		if _, ok := inf.Params["days"]; !ok {
+			inf.Params["limit"] = strconv.Itoa(DefaultLogLimit)
+		}
 	} else {
 		inf.Params["limit"] = strconv.Itoa(limit)
 	}
