@@ -135,19 +135,19 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		CDNQueryParam:  dbhelpers.WhereColumnInfo{Column: "c.id"},
-		NameQueryParam: dbhelpers.WhereColumnInfo{Column: "prof.name"},
-		IDQueryParam:   dbhelpers.WhereColumnInfo{Column: "prof.id", Checker: api.IsInt},
+		CDNQueryParam:   dbhelpers.WhereColumnInfo{Column: "c.id", Checker: api.IsInt},
+		NameQueryParam:  dbhelpers.WhereColumnInfo{Column: "prof.name"},
+		IDQueryParam:    dbhelpers.WhereColumnInfo{Column: "prof.id", Checker: api.IsInt},
+		ParamQueryParam: dbhelpers.WhereColumnInfo{Column: "pp.parameter", Checker: api.IsInt},
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(prof.APIInfo().Params, queryParamsToQueryCols)
 
+	query := selectProfilesQuery()
 	// Narrow down if the query parameter is 'param'
-
 	// TODO add generic where clause to api.GenericRead
 	if paramValue, ok := prof.APIInfo().Params[ParamQueryParam]; ok {
-		queryValues["parameter_id"] = paramValue
 		if len(paramValue) > 0 {
-			where += " LEFT JOIN profile_parameter pp ON prof.id  = pp.profile where pp.parameter=:parameter_id"
+			query += " LEFT JOIN profile_parameter pp ON prof.id = pp.profile"
 		}
 	}
 
@@ -166,7 +166,7 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 		log.Debugln("Non IMS request")
 	}
 
-	query := selectProfilesQuery() + where + orderBy + pagination
+	query += where + orderBy + pagination
 	log.Debugln("Query is ", query)
 
 	rows, err := prof.ReqInfo.Tx.NamedQuery(query, queryValues)

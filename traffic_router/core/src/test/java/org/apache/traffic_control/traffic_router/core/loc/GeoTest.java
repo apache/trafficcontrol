@@ -17,22 +17,16 @@ package org.apache.traffic_control.traffic_router.core.loc;
 
 import org.apache.traffic_control.traffic_router.core.util.IntegrationTest;
 import org.apache.log4j.Logger;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.Assert;
 import org.junit.experimental.categories.Category;
 import org.springframework.context.ApplicationContext;
 
-import org.junit.Assert;
-
 import org.apache.traffic_control.traffic_router.core.TestBase;
 import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
-
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 
 @Category(IntegrationTest.class)
 public class GeoTest {
@@ -44,7 +38,7 @@ public class GeoTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		assertThat("Copy core/src/main/conf/traffic_monitor.properties to core/src/test/conf and set 'traffic_monitor.bootstrap.hosts' to a real traffic monitor", Files.exists(Paths.get(TestBase.monitorPropertiesPath)), equalTo(true));
+		TestBase.setupFakeServers();
 		context = TestBase.getContext();
 	}
 
@@ -77,5 +71,10 @@ public class GeoTest {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	@AfterClass
+	public static void tearDown() throws Exception {
+		TestBase.tearDownFakeServers();
 	}
 }

@@ -517,12 +517,34 @@ func GetTestProfiles(t *testing.T) {
 		}
 		profileID := resp.Response[0].ID
 
-		// TODO: figure out what the 'Parameter' field of a Profile is and how
-		// passing it to this is supposed to work.
-		// resp, _, err = TOSession.GetProfileByParameter(pr.Parameter)
-		// if err != nil {
-		// 	t.Errorf("cannot GET Profile by param: %v - %v", err, resp)
-		// }
+		if len(pr.Parameters) > 0 {
+			parameter := pr.Parameters[0]
+			opts.QueryParameters.Set("name", *parameter.Name)
+			respParameter, _, err := TOSession.GetParameters(opts)
+			if err != nil {
+				t.Errorf("cannot get parameter '%s' by name: %v - alerts: %+v", *parameter.Name, err, resp.Alerts)
+			}
+			opts.QueryParameters.Del("name")
+			if len(respParameter.Response) > 0 {
+				parameterID := respParameter.Response[0].ID
+				if parameterID > 0 {
+					opts.QueryParameters.Set("params", strconv.Itoa(parameterID))
+					resp, _, err = TOSession.GetProfiles(opts)
+					opts.QueryParameters.Del("params")
+					if err != nil {
+						t.Errorf("cannot GET Profile by param: %v - %v", err, resp)
+					}
+					if len(resp.Response) < 1 {
+						t.Errorf("Expected atleast one response for Get Profile by Parameters, but found %d", len(resp.Response))
+					}
+				} else {
+					t.Errorf("Invalid parameter ID %d", parameterID)
+				}
+			} else {
+				t.Errorf("No response found for GET Parameters by name")
+			}
+
+		}
 
 		opts.QueryParameters.Set("cdn", strconv.Itoa(pr.CDNID))
 		resp, _, err = TOSession.GetProfiles(opts)

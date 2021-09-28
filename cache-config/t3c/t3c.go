@@ -20,7 +20,7 @@ package main
  */
 
 import (
-	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"os"
 	"os/exec"
 	"syscall" // TODO change to x/unix ?
@@ -48,19 +48,20 @@ const ExitCodeCommandLookupErr = 5
 func main() {
 	flagHelp := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	getopt.Parse()
+	log.Init(os.Stderr, os.Stderr, os.Stderr, os.Stderr, os.Stderr)
 	if *flagHelp {
-		fmt.Println(usageStr())
+		log.Errorln(usageStr())
 		os.Exit(ExitCodeSuccess)
 	}
 
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "no command\n\n"+usageStr())
+		log.Errorf("no command\n\n%s", usageStr())
 		os.Exit(ExitCodeNoCommand)
 	}
 
 	cmd := os.Args[1]
 	if _, ok := commands[cmd]; !ok {
-		fmt.Fprintf(os.Stderr, "unknown command\n") // TODO print usage
+		log.Errorf("unknown command\n%s", usageStr())
 		os.Exit(ExitCodeUnknownCommand)
 	}
 
@@ -68,7 +69,7 @@ func main() {
 
 	appPath, err := exec.LookPath(app)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error finding path to '"+app+"': "+err.Error())
+		log.Errorf("error finding path to '%s': %s\n", app, err.Error())
 		os.Exit(ExitCodeCommandLookupErr)
 	}
 
@@ -77,7 +78,7 @@ func main() {
 	env := os.Environ()
 
 	if err := syscall.Exec(appPath, args, env); err != nil {
-		fmt.Fprintf(os.Stderr, "error executing sub-command '"+appPath+"': "+err.Error()+"\n")
+		log.Errorf("error executing sub-command '%s': %s\n", appPath, err.Error())
 		os.Exit(ExitCodeCommandErr)
 	}
 }

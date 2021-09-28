@@ -3,17 +3,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## unreleased
+## [unreleased]
 ### Added
 - [#5674](https://github.com/apache/trafficcontrol/issues/5674) Added new query parameters `cdn` and `maxRevalDurationDays` to the `GET /api/x/jobs` Traffic Ops API to filter by CDN name and within the start_time window defined by the `maxRevalDurationDays` GLOBAL profile parameter, respectively.
 - [#6034](https://github.com/apache/trafficcontrol/issues/6034) Added new query parameter `cdn` to the `GET /api/x/deliveryserviceserver` Traffic Ops API to filter by CDN name
+- A new Traffic Portal server command-line option `-c` to specify a configuration file, and the ability to set `log: null` to log to stdout (consult documentation for details).
 - [#6032](https://github.com/apache/trafficcontrol/issues/6032) Add t3c setting mode 0600 for secure files
 
 ### Fixed
 - Fixed Traffic Router crs/stats to prevent overflow and to correctly record the time used in averages.
+- [#5893](https://github.com/apache/trafficcontrol/issues/5893) - A self signed certificate is created when an HTTPS delivery service is created or an HTTP delivery service is updated to HTTPS.
 
 ### Changed
 - Updated `t3c` to request less unnecessary deliveryservice-server assignment and invalidation jobs data via new query params supported by Traffic Ops
+- [#6179](https://github.com/apache/trafficcontrol/issues/6179) Updated the Traffic Ops rpm to include the `ToDnssecRefresh` binary and make the `trafops_dnssec_refresh` cron job use it
 
 ### Deprecated
 
@@ -26,6 +29,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5451](https://github.com/apache/trafficcontrol/issues/5451) Added change log count to user API's response payload and query param (username) to logs API
 - Added support for CDN locks
 - Added support for PostgreSQL as a Traffic Vault backend
+- Added the tc-health-client to Trafficcontrol used to manage traffic server parents.
 - [#5449](https://github.com/apache/trafficcontrol/issues/5449) The `todb-tests` GitHub action now runs the Traffic Ops DB tests
 - Python client: [#5611](https://github.com/apache/trafficcontrol/pull/5611) Added server_detail endpoint
 - Ported the Postinstall script to Python. The Perl version has been moved to `install/bin/_postinstall.pl` and has been deprecated, pending removal in a future release.
@@ -121,6 +125,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6174](https://github.com/apache/trafficcontrol/issues/6174) - Fixed t3c-apply with no hostname failing if the OS hostname returns a full FQDN
 - Fixed Federations IMS so TR federations watcher will get updates.
 - [#5129](https://github.com/apache/trafficcontrol/issues/5129) - Updated TM so that it returns a 404 if the endpoint is not supported.
+- [#5992](https://github.com/apache/trafficcontrol/issues/5992) - Updated Traffic Router Integration tests to use a mock Traffic Monitor and Traffic Ops server
+- [#6093](https://github.com/apache/trafficcontrol/issues/6093) - Fixed Let's Encrypt to work for delivery services where the domain does not contain the XMLID.
 
 ### Changed
 - Migrated completely off of bower in favor of npm

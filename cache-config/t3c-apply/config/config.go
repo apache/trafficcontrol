@@ -215,6 +215,7 @@ func GetTSPackageHome() string {
 
 func GetCfg() (Cfg, error) {
 	var err error
+	toInfoLog := []string{}
 
 	cacheHostNamePtr := getopt.StringLong("cache-host-name", 'H', "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
 	retriesPtr := getopt.IntLong("num-retries", 'r', 3, "[number] retry connection to Traffic Ops URL [number] times, default is 3")
@@ -418,18 +419,18 @@ If any of the related flags are also set, they override the mode's default behav
 	var tsHome = ""
 	if *tsHomePtr != "" {
 		tsHome = *tsHomePtr
-		fmt.Printf("set TSHome from command line: '%s'\n\n", TSHome)
+		toInfoLog = append(toInfoLog, fmt.Sprintf("set TSHome from command line: '%s'", TSHome))
 	}
 	if *tsHomePtr == "" { // evironment or rpm check.
 		tsHome = os.Getenv("TS_HOME") // check for the environment variable.
 		if tsHome != "" {
-			fmt.Printf("set TSHome from TS_HOME environment variable '%s'\n", TSHome)
+			toInfoLog = append(toInfoLog, fmt.Sprintf("set TSHome from TS_HOME environment variable '%s'\n", TSHome))
 		} else { // finally check using the config file listing from the rpm package.
 			tsHome = GetTSPackageHome()
 			if tsHome != "" {
-				fmt.Printf("set TSHome from the RPM config file  list '%s'\n", tsHome)
+				toInfoLog = append(toInfoLog, fmt.Sprintf("set TSHome from the RPM config file  list '%s'\n", TSHome))
 			} else {
-				fmt.Printf("no override for TSHome was found, using the configured default: '%s'\n", TSHome)
+				toInfoLog = append(toInfoLog, fmt.Sprintf("no override for TSHome was found, using the configured default: '%s'\n", TSHome))
 			}
 		}
 	}
@@ -439,7 +440,7 @@ If any of the related flags are also set, they override the mode's default behav
 	if tsHome != "" {
 		TSHome = tsHome
 		tsConfigDir = tsHome + "/etc/trafficserver"
-		fmt.Printf("TSHome: %s, TSConfigDir: %s\n", TSHome, tsConfigDir)
+		toInfoLog = append(toInfoLog, fmt.Sprintf("TSHome: %s, TSConfigDir: %s\n", TSHome, tsConfigDir))
 	}
 
 	usageStr := "basic usage: t3c-apply --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache"
@@ -511,6 +512,9 @@ If any of the related flags are also set, they override the mode's default behav
 
 	for _, str := range modeLogStrs {
 		log.Infoln(str)
+	}
+	for msg := range toInfoLog {
+		log.Infoln(msg)
 	}
 
 	printConfig(cfg)

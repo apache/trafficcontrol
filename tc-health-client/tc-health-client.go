@@ -22,14 +22,15 @@ package main
 import (
 	"os"
 
-	"github.com/apache/trafficcontrol/cache-config/tm-health-client/config"
-	"github.com/apache/trafficcontrol/cache-config/tm-health-client/tmagent"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/tc-health-client/config"
+	"github.com/apache/trafficcontrol/tc-health-client/tmagent"
 )
 
 const (
-	Success     = 0
-	ConfigError = 166
+	Success      = 0
+	ConfigError  = 166
+	RunTimeError = 167
 )
 
 func main() {
@@ -38,15 +39,17 @@ func main() {
 		log.Errorln(err.Error())
 		os.Exit(ConfigError)
 	} else {
-		log.Infoln("startup complete, the config has been loaded")
+		log.Infoln("Startup complete, the config has been loaded")
 	}
 	if helpflag { // user used --help option
 		os.Exit(Success)
 	}
 
+	log.Infof("Polling interval: %d\n", config.GetTMPollingInterval())
 	tmInfo, err := tmagent.NewParentInfo(cfg)
 	if err != nil {
-		log.Errorf("startup could not initialize ATS parent info: %s\n", err.Error())
+		log.Errorf("startup could not initialize parent info, check that trafficserver is running: %s\n", err.Error())
+		os.Exit(RunTimeError)
 	}
 
 	tmInfo.PollAndUpdateCacheStatus()
