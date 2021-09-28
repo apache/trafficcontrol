@@ -26,6 +26,7 @@ Get all requested :term:`Service Categories`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: SERVICE-CATEGORY:READ
 :Response Type:  Array
 
 Request Structure
@@ -95,6 +96,7 @@ Create a new service category.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: SERVICE-CATEGORY:CREATE
 :Response Type:  Object
 
 Request Structure
@@ -155,6 +157,7 @@ Deletes a specific :term:`Service Category`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: SERVICE-CATEGORY:DELETE
 :Response Type:  ``undefined``
 
 

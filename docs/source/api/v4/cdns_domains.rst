@@ -25,6 +25,7 @@ Gets a list of domains and their related Traffic Router :term:`Profiles` for all
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: CDN:READ
 :Response Type:  Array
 
 Request Structure

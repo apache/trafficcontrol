@@ -25,6 +25,7 @@ Returns SSL certificates for all :term:`Delivery Services` that are a part of th
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: CDN-SECURITY-KEY:READ
 :Response Type:  Array
 
 Request Structure

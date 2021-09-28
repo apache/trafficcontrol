@@ -25,6 +25,7 @@ Retrieves all :term:`Delivery Services` assigned to a specific server.
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
+:Permission Required: DS-SERVER:READ
 :Response Type:  Array
 
 Request Structure
@@ -256,6 +257,7 @@ Assign an arbitrary number of :term:`Delivery Services` to a single server.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: DS-SERVER:CREATE
 :Response Type:  Object
 
 Request Structure

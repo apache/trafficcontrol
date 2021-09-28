@@ -26,6 +26,7 @@ Retrieves the list of Traffic Ops extensions.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: SERVER-CHECK:READ
 :Response Type:  Array
 
 Request Structure
@@ -136,6 +137,7 @@ Creates a new Traffic Ops check extension.
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
+:Permissions Required: SERVER-CHECK:CREATE
 :Response Type:  ``undefined``
 
 Request Structure

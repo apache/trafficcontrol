@@ -25,6 +25,7 @@ Retrieves a list of :term:`Federation` mappings (also called :term:`Federation` 
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: FEDERATION:READ
 :Response Type:  Array
 
 Request Structure

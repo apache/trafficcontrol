@@ -25,6 +25,7 @@ Retrieves details of :ref:`tp-configure-servers`.
 =======
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: SERVERS:READ
 :Response Type:  Array
 
 .. note:: On top of the response including the response key that is of type array it will also include the keys ``limit``, ``orderby``, and ``size``.

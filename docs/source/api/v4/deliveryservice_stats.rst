@@ -25,6 +25,7 @@ Retrieves time-aggregated statistics on a specific :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
+:Permissions Required: STATS:READ
 :Response Type:  Object
 
 Request Structure

@@ -25,6 +25,7 @@ Updates a type
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: TYPES:UPDATE
 :Response Type:  Object
 
 Request Structure
@@ -105,6 +106,7 @@ Deletes a type
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: TYPES:DELETE
 :Response Type: Object
 
 

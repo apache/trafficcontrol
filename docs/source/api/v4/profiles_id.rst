@@ -25,6 +25,7 @@ Replaces the specified :term:`Profile` with the one in the request payload
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: PROFILES:UPDATE
 :Response Type:  Object
 
 Request Structure
@@ -114,6 +115,7 @@ Allows user to delete a :term:`Profile`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: PROFILES:DELETE
 :Response Type:  ``undefined``
 
 Request Structure

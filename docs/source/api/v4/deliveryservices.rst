@@ -25,6 +25,7 @@ Retrieves :term:`Delivery Services`
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
+:Permissions Required: DELIVERY-SERVICE:READ
 :Response Type:  Array
 
 Request Structure
@@ -271,6 +272,7 @@ Allows users to create :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [#tenancy]_
+:Permissions Required: DELIVERY-SERVICE:CREATE
 :Response Type:  Array
 
 Request Structure

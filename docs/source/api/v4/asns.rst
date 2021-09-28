@@ -27,6 +27,7 @@ List all :abbr:`ASNs (Autonomous System Numbers)`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: ASNS:READ
 :Response Type:  Array
 
 Request Structure
@@ -111,6 +112,7 @@ Creates a new :abbr:`ASN (Autonomous System Number)`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required:  ASNS:CREATE
 :Response Type: Object
 
 Request Structure
@@ -180,6 +182,7 @@ Updates an existing :abbr:`ASN (Autonomous System Number)`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: ASNS:UPDATE
 :Response Type: Object
 
 Request Structure
@@ -251,6 +254,7 @@ Deletes an existing :abbr:`ASN (Autonomous System Number)`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: ASNS:DELETE
 :Response Type: ``undefined``
 
 Request Structure

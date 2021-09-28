@@ -25,6 +25,7 @@ Gets all associations of :term:`Server Capability` to :term:`Delivery Services`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: DS-REQUIRED-CAPABILITY:READ
 :Response Type:  Array
 
 Request Structure
@@ -108,6 +109,7 @@ Associates a :term:`Server Capability` with a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: DS-REQUIRED-CAPABILITY:CREATE
 :Response Type:  Object
 
 .. note:: A :term:`Server Capability` can only be made required on a :term:`Delivery Service` if its associated Servers already have that :term:`Server Capability` assigned.
@@ -174,6 +176,7 @@ Dissociate a :term:`Server Capability` from a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: DS-REQUIRED-CAPABILITY:DELETE
 :Response Type:  ``undefined``
 
 Request Structure

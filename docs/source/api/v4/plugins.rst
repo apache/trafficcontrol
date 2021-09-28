@@ -26,6 +26,7 @@ Retrieves the list of configured enabled Traffic Ops plugins.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: None
 :Response Type:  Array
 
 Request Structure

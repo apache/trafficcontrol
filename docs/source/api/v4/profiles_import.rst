@@ -28,6 +28,7 @@ Imports a :term:`Profile` that was exported via :ref:`to-api-profiles-id-export`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: PROFILES:CREATE, PARAMETER:CREATE, PROFILE-PARAMETER:CREATE
 :Response Type:  Object
 
 Request Structure

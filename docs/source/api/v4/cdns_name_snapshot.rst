@@ -26,6 +26,7 @@ Retrieves the *current* :term:`Snapshot` for a CDN, which represents the current
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CDN-SNAPSHOT:READ
 :Response Type:  Object
 
 Request Structure

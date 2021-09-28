@@ -25,6 +25,7 @@ Retrieves :term:`Physical Locations`
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: PHYSICAL-LOCATION:READ
 :Response Type:  Array
 
 Request Structure
@@ -120,6 +121,7 @@ Creates a new physical location
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: PHYSICAL-LOCATION:CREATE
 :Response Type:  Object
 
 Request Structure

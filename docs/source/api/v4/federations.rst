@@ -25,6 +25,7 @@ Retrieves a list of :term:`Federation` mappings (i.e. :term:`Federation` Resolve
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: FEDERATIONS:READ
 :Response Type:  Array
 
 Request Structure
@@ -85,6 +86,7 @@ Allows a user to create :term:`Federation` Resolvers for :term:`Delivery Service
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: FEDERATIONS:CREATE
 :Response Type:  Object (string)
 
 Request Structure
@@ -151,6 +153,7 @@ Deletes **all** :term:`Federation` Resolvers associated with the logged-in user'
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: FEDERATIONS:DELETE
 :Response Type:  Object (string)
 
 Request Structure
@@ -198,6 +201,7 @@ Replaces **all** :term:`Federations` associated with a user's :term:`Delivery Se
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: FEDERATIONS:UPDATE
 :Response Type:  Object (string)
 
 Request Structure

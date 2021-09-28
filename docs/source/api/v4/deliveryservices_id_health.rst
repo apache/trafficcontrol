@@ -27,6 +27,7 @@ Retrieves the health of all :term:`Cache Groups` assigned to a particular :term:
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
+:Permissions Required: DELIVERY-SERVICE:READ
 :Response Type:  Object
 
 Request Structure

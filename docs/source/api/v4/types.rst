@@ -25,6 +25,7 @@ Retrieves all of the :term:`Types` of things configured in Traffic Ops. Yes, tha
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: TYPES:READ
 :Response Type:  Array
 
 Request Structure
@@ -89,6 +90,7 @@ Creates a type
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: TYPES:CREATE
 :Response Type: Object
 
 Request Structure

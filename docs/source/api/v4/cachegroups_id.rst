@@ -25,6 +25,7 @@ Update :term:`Cache Group`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CACHE-GROUP:UPDATE
 :Response Type:  Object
 
 Request Structure
@@ -144,6 +145,7 @@ Delete a :term:`Cache Group`. A :term:`Cache Group` which has assigned servers o
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CACHE-GROUP:DELETE
 :Response Type:  ``undefined``
 
 Request Structure

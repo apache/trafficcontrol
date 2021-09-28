@@ -25,6 +25,7 @@ Retrieves properties of all servers across all CDNs.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: SERVERS:READ
 :Response Type:  Array
 
 Request Structure
@@ -236,6 +237,7 @@ Allows a user to create a new server.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: SERVERS:CREATE
 :Response Type:  Object
 
 Request Structure

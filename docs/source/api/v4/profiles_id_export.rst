@@ -24,6 +24,7 @@
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: PROFILES-PARAMETER:READ
 :Response Type:  Object
 
 Request Structure

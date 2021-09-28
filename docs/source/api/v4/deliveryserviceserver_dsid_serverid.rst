@@ -25,6 +25,7 @@ Removes a :term:`cache server` from a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [1]_
+:Permissions Required: DS-SERVER:DELETE
 :Response Type:  ``undefined``
 
 Request Structure

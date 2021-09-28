@@ -25,6 +25,7 @@ Retrieves a list of federations in use by a specific CDN.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: CDN:READ, FEDERATION:READ
 :Response Type:  Array
 
 Request Structure
@@ -117,6 +118,7 @@ Creates a new federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: FEDERATION:CREATE
 :Response Type:  Object
 
 Request Structure

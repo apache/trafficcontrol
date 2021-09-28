@@ -25,6 +25,7 @@ Gets all :term:`Parameters` configured in Traffic Ops
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: PARAMETER:READ
 :Response Type:  Array
 
 Request Structure
@@ -111,6 +112,7 @@ Creates one or more new :term:`Parameters`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: PARAMETER:CREATE
 :Response Type:  Array
 
 Request Structure

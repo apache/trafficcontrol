@@ -25,6 +25,7 @@ Retrieves all requested users.
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
+:Permissions Required: USERS:READ
 :Response Type:  Array
 
 Request Structure
@@ -143,6 +144,7 @@ Creates a new user.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [1]_
+:Permissions Required: USERS:CREATE
 :Response Type:  Object
 
 Request Structure

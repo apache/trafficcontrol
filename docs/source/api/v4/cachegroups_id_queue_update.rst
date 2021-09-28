@@ -25,6 +25,7 @@
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CACHE-GROUP:UPDATE
 :Response Type:  Object
 
 Request Structure

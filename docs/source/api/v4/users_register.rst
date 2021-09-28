@@ -25,6 +25,7 @@ Register a user and send registration email.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: USERS:CREATE
 :Response Type:  ``undefined``
 
 Request Structure

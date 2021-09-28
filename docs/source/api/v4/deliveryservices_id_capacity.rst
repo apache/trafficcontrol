@@ -27,6 +27,7 @@ Retrieves the usage percentages of a servers associated with a :term:`Delivery S
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
+:Permissions Required: DELIVERY-SERVICE:READ
 :Response Type:  Object
 
 Request Structure

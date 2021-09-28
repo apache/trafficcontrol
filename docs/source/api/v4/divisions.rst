@@ -25,6 +25,7 @@ Returns a JSON representation of all configured :term:`Divisions`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: DIVISION:READ
 :Response Type:  Array
 
 Request Structure
@@ -93,6 +94,7 @@ Creates a new Division.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: DIVISION:CREATE
 :Response Type:  Object
 
 Request Structure

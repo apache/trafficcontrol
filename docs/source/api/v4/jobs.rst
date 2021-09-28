@@ -25,6 +25,7 @@ Retrieve content invalidation jobs.
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
+:Permissions Required: JOBS:READ
 :Response Type:  Array
 
 Request Structure
@@ -114,6 +115,7 @@ Creates a new content invalidation job.
 
 :Auth. Required: Yes
 :Roles Required: "operations" or "admin"\ [#tenancy]_
+:Permissions Required: JOBS:CREATE
 :Response Type:  Object
 
 Request Structure
@@ -210,6 +212,7 @@ Replaces an existing content invalidation job with a new one provided in the req
 
 :Auth. Required: Yes
 :Roles Required: "operations" or "admin"\ [#tenancy]_
+:Permissions Required: JOBS:UPDATE
 :Response Type:  Object
 
 Request Structure
@@ -315,6 +318,7 @@ Deletes a content invalidation job.
 
 :Auth. Required: Yes
 :Roles Required: "operations" or "admin"\ [#tenancy]_
+:Permissions Required: JOBS:DELETE
 :Response Type:  Object
 
 Request Structure

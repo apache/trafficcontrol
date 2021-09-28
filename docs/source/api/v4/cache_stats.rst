@@ -29,6 +29,7 @@ Retrieves statistics about the caches within the CDN
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: STATS:READ
 :Response Type: Object
 
 Request Structure

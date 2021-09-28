@@ -25,6 +25,7 @@ Removes a user from a federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: FEDERATIONS:UPDATE, USERS:UPDATE
 :Response Type:  ``undefined``
 
 Request Structure

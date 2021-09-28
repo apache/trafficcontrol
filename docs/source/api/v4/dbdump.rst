@@ -30,6 +30,7 @@ Fetches the database dump.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: DBDUMP:GET
 :Response Type:  ``undefined`` - outputs an SQL script, not JSON
 
 Request Structure

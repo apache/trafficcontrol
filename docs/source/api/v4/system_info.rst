@@ -23,6 +23,7 @@
 =======
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: None
 :Response Type:  Object
 
 Request Structure

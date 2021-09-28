@@ -25,6 +25,7 @@ Allows a user to copy URL signing keys from a specified :term:`Delivery Service`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: DS-SECURITY-KEY:READ, DS-SECURITY-KEY:CREATE
 :Response Type:  Object (string)
 
 Request Structure

@@ -25,6 +25,7 @@ Gets a list of all :ref:`Steering Targets <steering-qht>` in the Traffic Ops dat
 
 :Auth. Required: Yes
 :Roles Required: "Portal", "Steering", "Federation", "operations" or "admin"
+:Permissions Required: STEERING:READ
 :Response Type:  Array
 
 Request Structure

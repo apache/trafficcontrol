@@ -29,7 +29,12 @@ Every endpoint is documented with a section for each method, containing the subs
 Auth. Required
 	This will either be 'Yes' to indicate that a user must be authenticated (or "logged-in") via e.g. :ref:`to-api-user-login` to use this method of the endpoint, or 'No' to indicate that this is not required.
 Roles Required
-	Any permissions roles that are allowed to use this method of the endpoint will be listed here. Users with roles not listed here will be unable to properly use these endpoints
+	.. deprecated:: ATCv7.0
+		Roles have been deprecated in favor of role based permissions, see :pr:`5848`.
+
+	Any permissions roles that are allowed to use this method of the endpoint will be listed here. Users with roles not listed here will be unable to properly use these endpoints.
+Permissions Required
+	Any permissions that are needed to use this endpoint. Users with roles that don't have the permissions will be unable to properly use these endpoints.
 Response Type
 	Unless otherwise noted, all responses are JSON objects. See `Response Structure`_ for more information.
 

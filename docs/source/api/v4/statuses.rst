@@ -25,6 +25,7 @@ Retrieves a list of all server :term:`Statuses`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: STATUS:READ
 :Response Type:  Array
 
 Request Structure

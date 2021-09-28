@@ -25,6 +25,7 @@ Retrieves :term:`Delivery Services` assigned to a :term:`Federation`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: FEDERATION:READ, DELIVERY-SERVICE:READ
 :Response Type:  Array
 
 Request Structure
@@ -105,6 +106,7 @@ Assigns one or more :term:`Delivery Services` to a federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: FEDERATION:UPDATE, DELIVERY-SERVICE:UPDATE
 :Response Type:  Object
 
 Request Structure

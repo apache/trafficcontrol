@@ -25,6 +25,7 @@ Retrieves users assigned to a federation.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: FEDERATION:READ, USERS:READ
 :Response Type:  Array
 
 Request Structure
@@ -103,6 +104,7 @@ Assigns one or more users to a federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: FEDERATIONS:UPDATE, USERS:UPDATE
 :Response Type:  Object
 
 Request Structure

@@ -25,6 +25,7 @@ Retrieve information about the assignment of servers to :term:`Delivery Services
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
+:Permissions Required: DS-SERVER:READ
 :Response Type:  Array
 
 Request Structure
@@ -105,6 +106,7 @@ Assign a set of one or more servers to a :term:`Delivery Service`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [2]_
+:Permissions Required: DS-SERVER:CREATE
 :Response Type:  Object
 
 Request Structure

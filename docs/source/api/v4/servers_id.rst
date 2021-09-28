@@ -25,6 +25,7 @@ Allow user to edit a server.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: SERVERS:UPDATE
 :Response Type:  Object
 
 Request Structure
@@ -326,6 +327,7 @@ Allow user to delete server through api.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: SERVERS:DELETE
 :Response Type:  Object
 
 	.. versionchanged:: 3.0

@@ -25,6 +25,7 @@ Updates a :term:`Region`.
 
 :Auth. Required: Yes
 :Role(s) Required: "admin" or "operator"
+:Permissions Required: REGIONS:UPDATE
 :Response Type: Object
 
 Request Structure

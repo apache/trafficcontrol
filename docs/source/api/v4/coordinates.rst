@@ -25,6 +25,7 @@ Gets a list of all coordinates in the Traffic Ops database
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: COORDINATES:READ
 :Response Type:  Array
 
 Request Structure
@@ -133,6 +134,7 @@ Creates a new coordinate pair
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: COORDINATES:CREATE
 :Response Type:  Object
 
 Request Structure
@@ -198,6 +200,7 @@ Updates a coordinate
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: COORDINATES:UPDATE
 :Response Type:  Object
 
 Request Structure
@@ -270,6 +273,7 @@ Deletes a coordinate
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: COORDINATES:DELETE
 :Response Type:  ``undefined``
 
 Request Structure
