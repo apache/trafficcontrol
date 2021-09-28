@@ -216,7 +216,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `divisions/?$`, api.CreateHandler(&division.TODivision{}), auth.PrivLevelOperations, nil, Authenticated, nil, 4537138003},
 		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `divisions/{id}$`, api.DeleteHandler(&division.TODivision{}), auth.PrivLevelOperations, nil, Authenticated, nil, 43253822373},
 
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `logs/?$`, logs.Get, auth.PrivLevelReadOnly, nil, Authenticated, nil, 4483405503},
+		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `logs/?$`, logs.Getv40, auth.PrivLevelReadOnly, nil, Authenticated, nil, 4483405503},
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `logs/newcount/?$`, logs.GetNewCount, auth.PrivLevelReadOnly, nil, Authenticated, nil, 44058330123},
 
 		//Content invalidation jobs
