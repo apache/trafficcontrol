@@ -112,7 +112,7 @@ Creates a new :abbr:`ASN (Autonomous System Number)`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required:  ASNS:CREATE
+:Permissions Required: ASNS:CREATE
 :Response Type: Object
 
 Request Structure
