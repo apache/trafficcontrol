@@ -63,19 +63,13 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	if pLimit, ok := inf.IntParams["limit"]; ok {
 		limit = pLimit
 	}
-	a := tc.Alerts{}
 	setLastSeenCookie(w)
 	logs, count, err := getLog(inf, days, limit)
 	if err != nil {
-		a.AddNewAlert(tc.ErrorLevel, err.Error())
-		api.WriteAlerts(w, r, http.StatusInternalServerError, a)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, err)
 		return
 	}
-	if a.HasAlerts() {
-		api.WriteAlertsObj(w, r, 200, a, logs)
-	} else {
-		api.WriteRespWithSummary(w, r, logs, count)
-	}
+	api.WriteRespWithSummary(w, r, logs, count)
 }
 
 // Get is the handler for GET requests to /logs V4.0.
@@ -177,7 +171,7 @@ func getLogV40(inf *api.APIInfo, days int) ([]tc.Log, uint64, error) {
 		return nil, 0, util.JoinErrs(errs)
 	}
 
-	timeInterval := fmt.Sprintf("l.last_updated > now() - INTERVAL '%v' DAY", days)
+	timeInterval := fmt.Sprintf("l.last_updated > now() - INTERVAL '%d' DAY", days)
 	if where != "" {
 		whereCount = ", tm_user as u\n" + where + " AND l.tm_user = u.id"
 		where = where + " AND " + timeInterval
