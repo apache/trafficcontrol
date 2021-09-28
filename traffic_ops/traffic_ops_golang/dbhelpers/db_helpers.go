@@ -1689,7 +1689,7 @@ func GetRoleIDFromName(tx *sql.Tx, roleName string) (int, bool, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return id, false, nil
 		}
-		return id, false, errors.New("querying role ID from name: " + err.Error())
+		return id, false, fmt.Errorf("querying role ID from name: %w", err)
 	}
 	return id, true, nil
 }
@@ -1701,7 +1701,7 @@ func GetRoleNameFromID(tx *sql.Tx, roleID int) (string, bool, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return name, false, nil
 		}
-		return name, false, errors.New("querying role name from ID: " + err.Error())
+		return name, false, fmt.Errorf("querying role name from ID: %w", err)
 	}
 	return name, true, nil
 }

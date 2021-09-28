@@ -205,7 +205,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if inf.Version.Major < 4 {
 		privLevel, ok, err := dbhelpers.GetPrivLevelFromRoleID(tx, int(req.Role))
 		if err != nil {
-			sysErr = fmt.Errorf("Checking role #%d privilege level: %v", req.Role, err)
+			sysErr = fmt.Errorf("checking role #%d privilege level: %w", req.Role, err)
 			errCode = http.StatusInternalServerError
 			api.HandleErr(w, r, tx, errCode, nil, sysErr)
 			return
@@ -228,7 +228,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		dbhelpers.GetRoleIDFromName(tx, reqV4.Role)
 		roleID, ok, err := dbhelpers.GetRoleIDFromName(tx, reqV4.Role)
 		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("no ID exists for the supplied role name"))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error fetching ID from role name: %w", err))
 			return
 		} else if !ok {
 			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)

@@ -311,7 +311,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	var ok bool
 	var err error
 
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -334,10 +334,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	roleDesc = roleV4.Description
 	roleCapabilities = roleV4.Permissions
-	if roleName, ok = inf.Params["name"]; !ok {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("no role name supplied"), nil)
-		return
-	}
+	roleName = inf.Params["name"]
 	roleID, ok, err = dbhelpers.GetRoleIDFromName(tx, roleName)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)

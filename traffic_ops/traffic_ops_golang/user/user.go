@@ -837,12 +837,26 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	var resultRows *sqlx.Rows
 	_, ok, err := dbhelpers.GetRoleIDFromName(tx, userV4.Role)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("no ID exists for the supplied role name"))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error fetching ID from role name: %w", err))
 		return
 	} else if !ok {
 		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("role not found"), nil)
 		return
 	}
+
+	var caps []string
+	caps, err = dbhelpers.GetCapabilitiesFromRoleName(tx, userV4.Role)
+
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	missing := inf.User.MissingPermissions(caps...)
+	if len(missing) != 0 {
+		api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil)
+		return
+	}
+
 	resultRows, err = inf.Tx.NamedQuery(InsertQueryV40(), userV4)
 	if err != nil {
 		userErr, sysErr, statusCode := api.ParseDBError(err)
@@ -861,7 +875,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	for resultRows.Next() {
 		rowsAffected++
 		if err = resultRows.Scan(&id, &lastUpdated, &tenant, &rolename); err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("could not scan after insert: %s\n)", err))
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("could not scan after insert: %w)", err))
 			return
 		}
 	}
@@ -884,7 +898,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		Response: userV4,
 		Alerts:   tc.CreateAlerts(tc.SuccessLevel, "user was created."),
 	}
-	api.WriteAlertsObj(w, r, http.StatusOK, userResponse.Alerts, userResponse.Response)
+	w.Header().Set("Location", fmt.Sprintf("/api/4.0/users?id=%d", *userV4.ID))
+	api.WriteAlertsObj(w, r, http.StatusCreated, userResponse.Alerts, userResponse.Response)
 	changeLogMsg = fmt.Sprintf("USER: %s, ID: %d, ACTION: Created User", userV4.Username, *userV4.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 	return
@@ -1005,6 +1020,19 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 			return
 		}
+	}
+
+	var caps []string
+	caps, err = dbhelpers.GetCapabilitiesFromRoleName(tx, userV4.Role)
+
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	missing := inf.User.MissingPermissions(caps...)
+	if len(missing) != 0 {
+		api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("cannot request more than assigned permissions, current user needs %s permissions", strings.Join(missing, ",")), nil)
+		return
 	}
 
 	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, id, "tm_user")
