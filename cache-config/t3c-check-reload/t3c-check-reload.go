@@ -33,14 +33,12 @@ import (
 func main() {
 	// presumably calculated by by t3c-check-refs
 	// TODO remove? The blueprint says t3c/ORT will no longer install packages
-	//pluginPackagesInstalledStr := getopt.StringLong("plugin-packages-installed", 'p', "", "comma-delimited list of ATS plugin packages which were installed by t3c")
-	// presumably calculated by t3c-diff
-	//changedConfigFilesStr := getopt.StringLong("changed-config-paths", 'c', "", "comma-delimited list of the full paths of all files changed by t3c")
+
 	help := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	getopt.Parse()
 
 	if *help {
-		getopt.PrintUsage(os.Stdout)
+		fmt.Println(usageStr())
 		os.Exit(0)
 	}
 
@@ -152,3 +150,9 @@ func StrRemoveIf(strs []string, fn func(str string) bool) []string {
 
 // StrIsEmpty returns whether str == "". Helper function for composing with other functions.
 func StrIsEmpty(str string) bool { return str == "" }
+
+func usageStr() string {
+	return `usage: t3c-check-reload [--help]
+Accepts json data from stdin in in the following format:
+{"changed_files":"<comma separated list of files>","installed_plugins":"<comma separated list of plugins>"}`
+}
