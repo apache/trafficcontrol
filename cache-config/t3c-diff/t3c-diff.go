@@ -21,6 +21,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"io/ioutil"
 	"os"
@@ -39,9 +40,9 @@ func main() {
 	fa := getopt.StringLong("file-a", 'a', "", "first diff file")
 	fb := getopt.StringLong("file-b", 'b', "", "second diff file")
 	getopt.ParseV2()
-  
+
 	log.Init(os.Stderr, os.Stderr, os.Stderr, os.Stderr, os.Stderr)
-  
+
 	if *help {
 		log.Errorln(usageStr)
 		os.Exit(0)
@@ -97,12 +98,12 @@ func main() {
 	switch {
 	case fileNameA != "stdin":
 		if t3cutil.PermCk(fileNameA, *mode) {
-			fmt.Println("File permissions are incorrect, should be ", fmt.Sprintf("%#o", *mode))
+			log.Infoln("File permissions are incorrect, should be ", fmt.Sprintf("%#o", *mode))
 			os.Exit(1)
 		}
 	case fileNameB != "stdin":
 		if t3cutil.PermCk(fileNameB, *mode) {
-			fmt.Println("File permissions are incorrect, should be ", fmt.Sprintf("%#o", *mode))
+			log.Infoln("File permissions are incorrect, should be ", fmt.Sprintf("%#o", *mode))
 			os.Exit(1)
 		}
 	}
