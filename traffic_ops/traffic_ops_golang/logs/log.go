@@ -188,26 +188,26 @@ func getLogV40(inf *api.APIInfo, days int) ([]tc.Log, uint64, error) {
 	queryCount := countQuery + whereCount
 	rowCount, err := inf.Tx.NamedQuery(queryCount, queryValues)
 	if err != nil {
-		return nil, count, errors.New("querying log count for a given user: " + err.Error())
+		return nil, count, fmt.Errorf("querying log count for a given user: %w", err)
 	}
 	defer rowCount.Close()
 	for rowCount.Next() {
 		if err = rowCount.Scan(&count); err != nil {
-			return nil, count, errors.New("scanning logs: " + err.Error())
+			return nil, count, fmt.Errorf("scanning logs: %w", err)
 		}
 	}
 
 	query := selectFromQuery + where + "\n ORDER BY last_updated DESC" + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, count, errors.New("querying logs: " + err.Error())
+		return nil, count, fmt.Errorf("querying logs: %w", err)
 	}
 	defer rows.Close()
 	ls := []tc.Log{}
 	for rows.Next() {
 		l := tc.Log{}
 		if err = rows.Scan(&l.ID, &l.Level, &l.Message, &l.User, &l.TicketNum, &l.LastUpdated); err != nil {
-			return nil, count, errors.New("scanning logs: " + err.Error())
+			return nil, count, fmt.Errorf("scanning logs: %w", err)
 		}
 		ls = append(ls, l)
 	}
