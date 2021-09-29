@@ -607,6 +607,7 @@ r.name as role
 FROM tm_user u
 LEFT JOIN tenant t ON u.tenant_id = t.id
 LEFT JOIN role r ON u.role = r.id
+LEFT JOIN role_capability rc on rc.role_id = r.id
 `
 
 const legacyReadQuery = readBaseQuery + `
@@ -690,7 +691,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	params["stateOrProvince"] = dbhelpers.WhereColumnInfo{Column: "u.state_or_province"}
 	params["country"] = dbhelpers.WhereColumnInfo{Column: "u.country"}
 	params["postalCode"] = dbhelpers.WhereColumnInfo{Column: "u.postal_code"}
-
+	params["capability"] = dbhelpers.WhereColumnInfo{Column: "rc.cap_name"}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, params)
 	if len(errs) != 0 {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
