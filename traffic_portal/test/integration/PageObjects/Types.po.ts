@@ -124,7 +124,7 @@ export class TypesPage extends BasePage {
     }
     public async ToggleTableColumn(name: string): Promise<boolean> {
         await this.btnTableColumn.click();
-        const result = await element(by.cssContainingText("th", name)).isPresent();
+        const result = await element(by.cssContainingText("th", name.charAt(0).toUpperCase() + name.slice(1))).isPresent();
         await element(by.cssContainingText("label", name)).click();
         await this.btnTableColumn.click();
         return result;
