@@ -127,7 +127,7 @@ export class TypesPage extends BasePage {
         const result = await element(by.cssContainingText("th", name)).isPresent();
         await element(by.cssContainingText("label", name)).click();
         await this.btnTableColumn.click();
-        return !result;
+        return result;
     }
 
 
