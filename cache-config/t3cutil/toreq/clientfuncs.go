@@ -515,11 +515,7 @@ func (cl *TOClient) GetDeliveryServiceRegexes(reqHdr http.Header) ([]tc.Delivery
 	return regexes, reqInf, nil
 }
 
-<<<<<<< HEAD
-func (cl *TOClient) GetJobs(reqHdr http.Header, cdnName string) ([]tc.InvalidationJob, toclientlib.ReqInf, error) {
-=======
-func (cl *TOClient) GetJobs(reqHdr http.Header) ([]tc.InvalidationJobV40, toclientlib.ReqInf, error) {
->>>>>>> Update T3C to account for new InvalidationJob type
+func (cl *TOClient) GetJobs(reqHdr http.Header, cdnName string) ([]tc.InvalidationJobV40, toclientlib.ReqInf, error) {
 	if cl.c == nil {
 		oldJobs, inf, err := cl.old.GetJobs()
 		jobs, err := atscfg.JobsToInvalidationJobsV40(oldJobs)
