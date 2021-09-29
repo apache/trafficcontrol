@@ -140,6 +140,7 @@ func MakeGitCommitAll(cfg config.Cfg, self bool, success bool) error {
 		cmd := exec.Command("git", "status", "--porcelain")
 		cmd.Dir = cfg.TsConfigDir
 		output, err := cmd.CombinedOutput()
+		output = bytes.TrimSpace(output)
 		if err != nil {
 			return fmt.Errorf("git status error: in config dir '%v' returned err %v msg '%v'", cfg.TsConfigDir, err, string(output))
 		}

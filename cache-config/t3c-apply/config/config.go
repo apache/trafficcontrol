@@ -239,7 +239,8 @@ func GetCfg() (Cfg, error) {
 	defaultClientTLSVersions := getopt.StringLong("default-client-tls-versions", 'V', "", "Comma-delimited list of default TLS versions for Delivery Services with no Parameter, e.g. --default-tls-versions='1.1,1.2,1.3'. If omitted, all versions are enabled.")
 	maxmindLocationPtr := getopt.StringLong("maxmind-location", 'M', "", "URL of a maxmind gzipped database file, to be installed into the trafficserver etc directory.")
 	verbosePtr := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
-	silentPtr := getopt.BoolLong("silent", 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
+	const silentFlagName = "silent"
+	silentPtr := getopt.BoolLong(silentFlagName, 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
 
 	const waitForParentsFlagName = "wait-for-parents"
 	waitForParentsPtr := getopt.BoolLong(waitForParentsFlagName, 'W', "[true | false] do not update if parent_pending = 1 in the update json. Default is false")
@@ -282,6 +283,8 @@ badass     sets --install-packages=true
                 --ignore-update-flag=true
                 --update-ipallow=true
 report     sets --report-only=true
+                --no-unset-update-flag=true
+                --silent
 
 Note the 'syncds' settings are all the flag defaults. Hence, if no mode is set, the default is effectively 'syncds'.
 
@@ -331,6 +334,14 @@ If any of the related flags are also set, they override the mode's default behav
 			if !getopt.IsSet(reportOnlyFlagName) {
 				modeLogStrs = append(modeLogStrs, runMode.String()+" setting --"+reportOnlyFlagName+"="+"true")
 				*reportOnlyPtr = true
+			}
+			if !getopt.IsSet(ignoreUpdateFlagName) {
+				modeLogStrs = append(modeLogStrs, runMode.String()+" setting --"+ignoreUpdateFlagName+"="+"true")
+				*ignoreUpdateFlagPtr = true
+			}
+			if !getopt.IsSet(silentFlagName) {
+				modeLogStrs = append(modeLogStrs, runMode.String()+" setting --"+silentFlagName+"="+"true")
+				*silentPtr = true
 			}
 		}
 	}
@@ -511,9 +522,17 @@ If any of the related flags are also set, they override the mode's default behav
 	}
 
 	for _, str := range modeLogStrs {
+		str = strings.TrimSpace(str)
+		if str == "" {
+			continue
+		}
 		log.Infoln(str)
 	}
-	for msg := range toInfoLog {
+	for _, msg := range toInfoLog {
+		msg = strings.TrimSpace(msg)
+		if msg == "" {
+			continue
+		}
 		log.Infoln(msg)
 	}
 
