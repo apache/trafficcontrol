@@ -20,80 +20,82 @@ import { by, element } from 'protractor';
 
 import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
-import {SideNavigationPage} from './SideNavigationPage.po';
+import { SideNavigationPage } from './SideNavigationPage.po';
 
 interface Tenant {
   ParentTenant: string;
   Name: string;
   Active: string;
-  existsMessage?: string;
   validationMessage?: string;
+}
+interface DeleteTenant {
+  Name: string;
+  validationMessage: string;
+}
+interface UpdateTenant {
+  Active: string;
+  validationMessage: string;
 }
 
 export class TenantsPage extends BasePage {
 
-    private btnCreateNewTenant = element(by.xpath("//button[@title='Create New Tenant']"));
-    private txtName = element(by.name('name'));
-    private txtActive = element(by.name('active'));
-    private txtParentTenant = element(by.name('parentId'));
-    private txtSearch = element(by.id('tenantsTable_filter')).element(by.css('label input'));
-    private btnDelete = element(by.buttonText('Delete'));
-    private txtConfirmTenantName = element(by.name('confirmWithNameInput'));
-    private randomize = randomize;
+  private btnCreateNewTenant = element(by.xpath("//button[@title='Create New Tenant']"));
+  private txtName = element(by.name('name'));
+  private txtActive = element(by.name('active'));
+  private txtParentTenant = element(by.name('parentId'));
+  private txtSearch = element(by.id('tenantsTable_filter')).element(by.css('label input'));
+  private btnDelete = element(by.buttonText('Delete'));
+  private txtConfirmTenantName = element(by.name('confirmWithNameInput'));
+  private randomize = randomize;
 
-    async OpenTenantPage(){
-      let snp = new SideNavigationPage();
-      await snp.ClickUserAdminMenu();
-      await snp.NavigateToTenantsPage();
-    }
+  public async OpenUserAdminMenu() {
+    let snp = new SideNavigationPage();
+    await snp.ClickUserAdminMenu();
+  }
 
-    public async CreateTenant(tenant: Tenant): Promise<boolean> {
-        let result = false;
-        let basePage = new BasePage();
-        let snp = new SideNavigationPage();
-        await this.btnCreateNewTenant.click();
-        await this.txtName.sendKeys(tenant.Name+this.randomize);
-        await this.txtActive.sendKeys(tenant.Active);
-        if(tenant.ParentTenant == '- root'){
-          await this.txtParentTenant.sendKeys(tenant.ParentTenant);
-        }else{
-          await this.txtParentTenant.sendKeys(tenant.ParentTenant+this.randomize);
-        }
-        await basePage.ClickCreate();
-        if(await basePage.GetOutputMessage() == tenant.existsMessage){
-          await snp.NavigateToTenantsPage();
-          result = true;
-        }else if(await basePage.GetOutputMessage() == tenant.validationMessage){
-          result = true;
-        }else{
-          result = false;
-        }
-        return result;
+  public async OpenTenantsPage() {
+    let snp = new SideNavigationPage();
+    await snp.NavigateToTenantsPage();
+  }
+
+  public async CreateTenant(tenant: Tenant): Promise<boolean> {
+    const basePage = new BasePage();
+    await this.btnCreateNewTenant.click();
+    await this.txtName.sendKeys(tenant.Name + this.randomize);
+    await this.txtActive.sendKeys(tenant.Active);
+    if (tenant.ParentTenant == '- root') {
+      await this.txtParentTenant.sendKeys(tenant.ParentTenant);
+    } else {
+      await this.txtParentTenant.sendKeys(tenant.ParentTenant + this.randomize);
     }
-    async SearchTenant(name:string){
-        let snp = new SideNavigationPage();
-        await snp.NavigateToTenantsPage();
-        await this.txtSearch.clear();
-        await this.txtSearch.sendKeys(name);
-        await element.all(by.repeater('t in ::tenants')).filter(function(row){
-            return row.element(by.name('name')).getText().then(function(val){
-              return val === name;
-            });
-          }).first().click();
-    }
-    async DeleteTenant(name:string,outputMessage:string){
-        let result = false;
-        let basePage = new BasePage();
-        await this.btnDelete.click();
-        await this.txtConfirmTenantName.sendKeys(name);
-        await basePage.ClickDeletePermanently();
-        result = await basePage.GetOutputMessage().then(function(value){
-            if(outputMessage == value){
-              return true;
-            }else{
-              return false;
-            }
-          })
-          return result;
-    }
+    await basePage.ClickCreate();
+    return await basePage.GetOutputMessage().then(value => tenant.validationMessage === value);
+  }
+
+  public async SearchTenant(name: string) {
+    let snp = new SideNavigationPage();
+    await snp.NavigateToTenantsPage();
+    await this.txtSearch.clear();
+    await this.txtSearch.sendKeys(name);
+    await element.all(by.repeater('t in ::tenants')).filter(function (row) {
+      return row.element(by.name('name')).getText().then(function (val) {
+        return val === name;
+      });
+    }).first().click();
+  }
+
+  public async DeleteTenant(tenant: DeleteTenant) {
+    let basePage = new BasePage();
+    await this.btnDelete.click();
+    await this.txtConfirmTenantName.sendKeys(tenant.Name + this.randomize);
+    await basePage.ClickDeletePermanently();
+    return await basePage.GetOutputMessage().then(value => tenant.validationMessage === value);
+  }
+
+  public async UpdateTenant(tenant: UpdateTenant) {
+    const basePage = new BasePage();
+    await this.txtActive.sendKeys(tenant.Active);
+    await basePage.ClickUpdate();
+    return await basePage.GetOutputMessage().then(value => tenant.validationMessage === value);
+  }
 }
