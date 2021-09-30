@@ -48,29 +48,23 @@ tenants.tests.forEach(async tenantsData => {
                 expect(await loginPage.CheckUserName(login)).toBe(true);
                 await tenantsPage.OpenUserAdminMenu();
             });
-            it('can perform add test suits', async () => {
-                tenantsData.add.forEach(add => {
-                    it(add.description, async () => {
-                        expect(await tenantsPage.CreateTenant(add)).toBe(true);
-                    });
+            tenantsData.add.forEach(add => {
+                it(add.description, async () => {
+                    expect(await tenantsPage.CreateTenant(add)).toBe(true);
                 });
-            })
-            it('can perform update test suits', async () => {
-                tenantsData.update.forEach(update => {
-                    it(update.description, async () => {
-                        await tenantsPage.SearchTenant(update.Name);
-                        expect(await tenantsPage.UpdateTenant(update)).toBe(true);
-                    });
+            });
+            tenantsData.update.forEach(update => {
+                it(update.description, async () => {
+                    await tenantsPage.SearchTenant(update.Name);
+                    expect(await tenantsPage.UpdateTenant(update)).toBe(true);
                 });
-            })
-            it('can perform remove test suits', async () => {
-                tenantsData.remove.forEach(remove => {
-                    it(remove.description, async () => {
-                        await tenantsPage.SearchTenant(remove.Name);
-                        expect(await tenantsPage.DeleteTenant(remove)).toBe(true);
-                    });
+            });
+            tenantsData.remove.forEach(remove => {
+                it(remove.description, async () => {
+                    await tenantsPage.SearchTenant(remove.Name);
+                    expect(await tenantsPage.DeleteTenant(remove)).toBe(true);
                 });
-            })
+            });
         });
     });
 });
