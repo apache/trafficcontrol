@@ -95,8 +95,10 @@ profiles.tests.forEach(async profilesData => {
     });
 });
 describe('Clean up API for Profiles', () => {
-    it('Cleanup', async () => {
+    afterAll(async () => {
         await api.UseAPI(profiles.cleanup);
     });
+    it('Cleanup', async() => {
+      expect(true).toBeTruthy();
+    });
 });
-

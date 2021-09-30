@@ -84,7 +84,10 @@ types.tests.forEach(async typesData => {
     });
 });
 describe('Clean Up API for Types Test', () => {
-    it('Cleanup', async () => {
+    afterAll(async () => {
         await api.UseAPI(types.cleanup);
+    });
+    it('Cleanup', async() => {
+      expect(true).toBeTruthy();
     });
 });
