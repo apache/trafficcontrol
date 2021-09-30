@@ -54,8 +54,8 @@ var RoleService = function($http, messageModel, ENV) {
         );
     };
 
-    this.deleteRole = function(id) {
-        return $http.delete(ENV.api['root'] + "roles", {params: {id: id}}).then(
+    this.deleteRole = function(name) {
+        return $http.delete(ENV.api['root'] + "roles", {params: {name: name}}).then(
             function(result) {
                 return result.data;
             },

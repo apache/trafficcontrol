@@ -21,7 +21,7 @@ module.exports = angular.module('trafficPortal.private.roles.edit', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.roles.edit', {
-				url: '/{roleName}',
+				url: '/edit/{roleName}',
 				views: {
 					rolesContent: {
 						templateUrl: 'common/modules/form/role/form.role.tpl.html',

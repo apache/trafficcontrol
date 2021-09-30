@@ -22,7 +22,7 @@ var TableRolesController = function(roles, $scope, $state, locationUtils) {
 	$scope.roles = roles;
 
 	$scope.editRole = function(name) {
-		locationUtils.navigateToPath('/roles/' + name);
+		locationUtils.navigateToPath('/roles/edit/' + name);
 	};
 
 	$scope.createRole = function() {
