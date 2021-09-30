@@ -24,7 +24,7 @@
 Performs a CDN :term:`Snapshot`. Effectively, this propagates the new *configuration* of the CDN to its *operating state*, which replaces the output of the :ref:`to-api-v3-cdns-name-snapshot` endpoint with the output of the :ref:`to-api-v3-cdns-name-snapshot-new` endpoint.
 This also changes the output of the :ref:`to-api-v3-cdns-name-configs-monitoring` endpoint since that endpoint returns the latest monitoring information from the *operating state*.
 
-.. Note:: Snapshotting the CDN also deletes all HTTPS certificates for every :term:`Delivery Service` which has been deleted since the last :term:`Snapshot`.
+.. Note:: By default, snapshotting the CDN also deletes all HTTPS certificates for every :term:`Delivery Service` which has been deleted since the last :term:`Snapshot`. In order to disable this behavior, set ``disable_auto_cert_deletion`` in :ref:`cdn.conf` to ``true``.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
