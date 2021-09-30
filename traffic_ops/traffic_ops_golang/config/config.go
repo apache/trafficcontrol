@@ -37,36 +37,37 @@ import (
 
 // Config reflects the structure of the cdn.conf file
 type Config struct {
-	URL                    *url.URL `json:"-"`
-	CertPath               string   `json:"-"`
-	KeyPath                string   `json:"-"`
-	ConfigHypnotoad        `json:"hypnotoad"`
-	ConfigTrafficOpsGolang `json:"traffic_ops_golang"`
-	ConfigTO               *ConfigTO   `json:"to"`
-	SMTP                   *ConfigSMTP `json:"smtp"`
-	ConfigPortal           `json:"portal"`
-	ConfigLetsEncrypt      `json:"lets_encrypt"`
-	ConfigAcmeRenewal      `json:"acme_renewal"`
-	AcmeAccounts           []ConfigAcmeAccount `json:"acme_accounts"`
-	DB                     ConfigDatabase      `json:"db"`
-	Secrets                []string            `json:"secrets"`
-	TrafficVaultEnabled    bool
-	ConfigLDAP             *ConfigLDAP
-	LDAPEnabled            bool
-	LDAPConfPath           string `json:"ldap_conf_location"`
-	ConfigInflux           *ConfigInflux
-	InfluxEnabled          bool
-	InfluxDBConfPath       string `json:"influxdb_conf_path"`
-	Version                string
-	UseIMS                 bool                    `json:"use_ims"`
-	RoleBasedPermissions   bool                    `json:"role_based_permissions"`
-	DefaultCertificateInfo *DefaultCertificateInfo `json:"default_certificate_info"`
+	URL                     *url.URL `json:"-"`
+	CertPath                string   `json:"-"`
+	KeyPath                 string   `json:"-"`
+	ConfigHypnotoad         `json:"hypnotoad"`
+	ConfigTrafficOpsGolang  `json:"traffic_ops_golang"`
+	ConfigTO                *ConfigTO   `json:"to"`
+	SMTP                    *ConfigSMTP `json:"smtp"`
+	ConfigPortal            `json:"portal"`
+	ConfigLetsEncrypt       `json:"lets_encrypt"`
+	ConfigAcmeRenewal       `json:"acme_renewal"`
+	AcmeAccounts            []ConfigAcmeAccount `json:"acme_accounts"`
+	DB                      ConfigDatabase      `json:"db"`
+	Secrets                 []string            `json:"secrets"`
+	TrafficVaultEnabled     bool
+	ConfigLDAP              *ConfigLDAP
+	LDAPEnabled             bool
+	LDAPConfPath            string `json:"ldap_conf_location"`
+	ConfigInflux            *ConfigInflux
+	InfluxEnabled           bool
+	InfluxDBConfPath        string `json:"influxdb_conf_path"`
+	Version                 string
+	DisableAutoCertDeletion bool                    `json:"disable_auto_cert_deletion"`
+	UseIMS                  bool                    `json:"use_ims"`
+	RoleBasedPermissions    bool                    `json:"role_based_permissions"`
+	DefaultCertificateInfo  *DefaultCertificateInfo `json:"default_certificate_info"`
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
 type ConfigHypnotoad struct {
 	Listen []string `json:"listen"`
-	// NOTE: don't care about any other fields for now..
+	// NOTE: don't care about any other fields for now
 }
 
 // ConfigTrafficOpsGolang carries settings specific to traffic_ops_golang server
