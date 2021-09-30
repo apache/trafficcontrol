@@ -899,8 +899,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		Response: userV4,
 		Alerts:   tc.CreateAlerts(tc.SuccessLevel, "user was created."),
 	}
-	version := fmt.Sprintf("%s.%s", strconv.FormatUint(inf.Version.Major, 10), strconv.FormatUint(inf.Version.Minor, 10))
-	w.Header().Set("Location", fmt.Sprintf("/api/%s/users?id=%d", version, *userV4.ID))
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/users?id=%d", inf.Version.Major, inf.Version.Minor, *userV4.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, userResponse.Alerts, userResponse.Response)
 	changeLogMsg = fmt.Sprintf("USER: %s, ID: %d, ACTION: Created User", userV4.Username, *userV4.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
