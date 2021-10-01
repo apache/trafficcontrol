@@ -2526,21 +2526,17 @@
         {
             "name": "new_admin",
             "description": "super-user 2",
-            "privLevel": 30,
-            "capabilities": [
+            "permissions": [
                 "all-read",
-                "all-write",
-                "cdn-read"
+                "all-write"
             ]
         },
         {
-            "name": "bad_admin",
+            "name": "another_role",
             "description": "super-user 3",
-            "privLevel": 30,
-            "capabilities": [
+            "permissions": [
                 "all-read",
-                "all-write",
-                "invalid-capability"
+                "all-write"
             ]
         }
     ],
@@ -5466,7 +5462,7 @@
             "phoneNumber": "810-555-9876",
             "postalCode": "55443",
             "publicSshKey": "",
-            "role": 4,
+            "role": "admin",
             "stateOrProvince": "LA",
             "tenant": "root",
             "token": "test",
@@ -5488,8 +5484,7 @@
             "phoneNumber": "",
             "postalCode": "",
             "publicSshKey": "",
-            "registrationSent": "",
-            "role": 1,
+            "role": "disallowed",
             "stateOrProvince": "",
             "tenant": "tenant1",
             "token": "quest",
@@ -5511,8 +5506,7 @@
             "phoneNumber": "",
             "postalCode": "",
             "publicSshKey": "",
-            "registrationSent": "",
-            "role": 2,
+            "role": "read-only user",
             "stateOrProvince": "",
             "tenant": "tenant1",
             "uid": 0,
@@ -5533,7 +5527,7 @@
             "phoneNumber": "810-555-9876",
             "postalCode": "55443",
             "publicSshKey": "",
-            "role": 4,
+            "role": "admin",
             "stateOrProvince": "LA",
             "tenant": "tenant3",
             "uid": 0,
@@ -5554,7 +5548,7 @@
             "phoneNumber": "810-555-9876",
             "postalCode": "55443",
             "publicSshKey": "",
-            "role": 4,
+            "role": "admin",
             "stateOrProvince": "LA",
             "tenant": "tenant4",
             "uid": 0,
@@ -5575,8 +5569,7 @@
             "phoneNumber": "",
             "postalCode": "",
             "publicSshKey": "",
-            "registrationSent": "",
-            "role": 3,
+            "role": "operations",
             "stateOrProvince": "",
             "tenant": "root",
             "uid": 0,
@@ -5597,8 +5590,7 @@
             "phoneNumber": "",
             "postalCode": "",
             "publicSshKey": "",
-            "registrationSent": "",
-            "role": 6,
+            "role": "steering",
             "stateOrProvince": "",
             "tenant": "root",
             "uid": 0,

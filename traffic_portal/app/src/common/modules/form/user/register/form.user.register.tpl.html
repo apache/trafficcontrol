@@ -42,7 +42,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(registerForm.role), 'has-feedback': hasError(registerForm.role)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Role (privilege level) *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select name="role" class="form-control" ng-model="registration.role" ng-options="role.id as roleLabel(role) for role in roles" required>
+                    <select name="role" class="form-control" ng-model="registration.role" ng-options="role.name as roleLabel(role) for role in roles" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(registerForm.role, 'required')">Required</small>

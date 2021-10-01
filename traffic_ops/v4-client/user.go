@@ -25,11 +25,11 @@ import (
 )
 
 // UserCurrentResponseV4 is an alias to avoid client breaking changes. In-case of a minor or major version change, we replace the below alias with a new structure.
-type UserCurrentResponseV4 = tc.UserCurrentResponseV40
+type UserCurrentResponseV4 = tc.UserCurrentResponseV4
 
 // GetUsers retrieves all (Tenant-accessible) Users stored in Traffic Ops.
-func (to *Session) GetUsers(opts RequestOptions) (tc.UsersResponseV40, toclientlib.ReqInf, error) {
-	data := tc.UsersResponseV40{}
+func (to *Session) GetUsers(opts RequestOptions) (tc.UsersResponseV4, toclientlib.ReqInf, error) {
+	data := tc.UsersResponseV4{}
 	route := "/users"
 	inf, err := to.get(route, opts, &data)
 	return data, inf, err
@@ -43,54 +43,54 @@ func (to *Session) GetUserCurrent(opts RequestOptions) (UserCurrentResponseV4, t
 	return resp, reqInf, err
 }
 
-// UpdateCurrentUser replaces the current user data with the provided tc.UserV40 structure.
-func (to *Session) UpdateCurrentUser(u tc.UserV40, opts RequestOptions) (tc.UpdateUserResponse, toclientlib.ReqInf, error) {
+// UpdateCurrentUser replaces the current user data with the provided tc.UserV4 structure.
+func (to *Session) UpdateCurrentUser(u tc.UserV4, opts RequestOptions) (tc.UpdateUserResponseV4, toclientlib.ReqInf, error) {
 	user := struct {
-		User tc.UserV40 `json:"user"`
+		User tc.UserV4 `json:"user"`
 	}{u}
-	var clientResp tc.UpdateUserResponse
+	var clientResp tc.UpdateUserResponseV4
 	reqInf, err := to.put("/user/current", opts, user, &clientResp)
 	return clientResp, reqInf, err
 }
 
 // CreateUser creates the given user.
-func (to *Session) CreateUser(user tc.UserV40, opts RequestOptions) (tc.CreateUserResponse, toclientlib.ReqInf, error) {
-	if user.TenantID == nil && user.Tenant != nil {
+func (to *Session) CreateUser(user tc.UserV4, opts RequestOptions) (tc.CreateUserResponseV4, toclientlib.ReqInf, error) {
+	if user.Tenant != nil {
 		innerOpts := NewRequestOptions()
 		innerOpts.QueryParameters.Set("name", *user.Tenant)
 		tenant, _, err := to.GetTenants(innerOpts)
 		if err != nil {
-			return tc.CreateUserResponse{Alerts: tenant.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("resolving Tenant name '%s' to an ID: %w", *user.Tenant, err)
+			return tc.CreateUserResponseV4{Alerts: tenant.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("resolving Tenant name '%s' to an ID: %w", *user.Tenant, err)
 		}
 		if len(tenant.Response) < 1 {
-			return tc.CreateUserResponse{Alerts: tenant.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("no such Tenant: '%s'", *user.Tenant)
+			return tc.CreateUserResponseV4{Alerts: tenant.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("no such Tenant: '%s'", *user.Tenant)
 		}
-		user.TenantID = &tenant.Response[0].ID
+		user.TenantID = tenant.Response[0].ID
 	}
 
-	if user.RoleName != nil && *user.RoleName != "" {
+	if user.Role != "" {
 		innerOpts := NewRequestOptions()
-		innerOpts.QueryParameters.Set("name", *user.RoleName)
+		innerOpts.QueryParameters.Set("name", user.Role)
 		roles, _, err := to.GetRoles(innerOpts)
 		if err != nil {
-			return tc.CreateUserResponse{Alerts: roles.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("resolving Role name '%s' to an ID: %w", *user.RoleName, err)
+			return tc.CreateUserResponseV4{Alerts: roles.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("resolving Role name '%s' to an ID: %w", user.Role, err)
 		}
-		if len(roles.Response) == 0 || roles.Response[0].ID == nil {
-			return tc.CreateUserResponse{Alerts: roles.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("no such Role: '%s'", *user.RoleName)
+		if len(roles.Response) == 0 {
+			return tc.CreateUserResponseV4{Alerts: roles.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("no such Role: '%s'", user.Role)
 		}
-		user.Role = roles.Response[0].ID
+		user.Role = roles.Response[0].Name
 	}
 
 	route := "/users"
-	var clientResp tc.CreateUserResponse
+	var clientResp tc.CreateUserResponseV4
 	reqInf, err := to.post(route, opts, user, &clientResp)
 	return clientResp, reqInf, err
 }
 
 // UpdateUser replaces the User identified by 'id' with the one provided.
-func (to *Session) UpdateUser(id int, u tc.UserV40, opts RequestOptions) (tc.UpdateUserResponse, toclientlib.ReqInf, error) {
+func (to *Session) UpdateUser(id int, u tc.UserV4, opts RequestOptions) (tc.UpdateUserResponseV4, toclientlib.ReqInf, error) {
 	route := "/users/" + strconv.Itoa(id)
-	var clientResp tc.UpdateUserResponse
+	var clientResp tc.UpdateUserResponseV4
 	reqInf, err := to.put(route, opts, u, &clientResp)
 	return clientResp, reqInf, err
 }
@@ -105,12 +105,12 @@ func (to *Session) DeleteUser(id int, opts RequestOptions) (tc.Alerts, toclientl
 
 // RegisterNewUser requests the registration of a new user with the given tenant ID and role ID,
 // through their email.
-func (to *Session) RegisterNewUser(tenantID uint, roleID uint, email rfc.EmailAddress, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) RegisterNewUser(tenantID uint, role string, email rfc.EmailAddress, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	reqBody := tc.UserRegistrationRequest{
+	reqBody := tc.UserRegistrationRequestV40{
 		Email:    email,
 		TenantID: tenantID,
-		Role:     roleID,
+		Role:     role,
 	}
 	reqInf, err := to.post("/users/register", opts, reqBody, &alerts)
 	return alerts, reqInf, err
