@@ -21,7 +21,7 @@ import { browser, by, element, ExpectedConditions } from 'protractor';
 import randomIpv6 from "random-ipv6";
 
 import { BasePage } from './BasePage.po';
-import {SideNavigationPage} from '../PageObjects/SideNavigationPage.po';
+import { SideNavigationPage } from '../PageObjects/SideNavigationPage.po';
 import { randomize } from '../config';
 
 interface CreateServer {
@@ -85,17 +85,18 @@ export class ServersPage extends BasePage {
   private btnMoreCreateServer = element(by.name("moreBtn"))
   private btnCreateServer = element(by.name("createServerMenuItem"))
   private txtQuickSearch = element(by.id("quickSearch"));
+  private btnTableColumn = element(by.className("caret"))
   private randomize = randomize;
 
-  async OpenServerPage(){
+  public async OpenServerPage() {
     let snp = new SideNavigationPage();
     await snp.NavigateToServersPage();
-   }
-   async OpenConfigureMenu(){
+  }
+  public async OpenConfigureMenu() {
     let snp = new SideNavigationPage();
     await snp.ClickConfigureMenu();
-   }
-  GetInputErrorDisplayed() {
+  }
+  public GetInputErrorDisplayed() {
     return this.lblInputError.getText()
   }
 
@@ -103,7 +104,7 @@ export class ServersPage extends BasePage {
     return element(by.xpath("//table[@id='serversTable']//tr/td[text()='" + "']")).isPresent()
   }
 
-  async ClickAddServer() {
+  public async ClickAddServer() {
     await this.btnCreateServer.click()
   }
 
@@ -114,7 +115,7 @@ export class ServersPage extends BasePage {
     await this.btnMoreCreateServer.click();
     await this.btnCreateServer.click();
     await this.txtStatus.sendKeys(server.Status);
-    await this.txtHostname.sendKeys(server.Hostname+this.randomize);
+    await this.txtHostname.sendKeys(server.Hostname + this.randomize);
     await this.txtDomainName.sendKeys(server.Domainname);
     await this.txtCDN.sendKeys("ALL");
     await this.txtCDN.sendKeys(server.CDN + this.randomize);
@@ -123,13 +124,13 @@ export class ServersPage extends BasePage {
     await this.txtProfile.sendKeys(server.Profile + this.randomize);
     await this.txtPhysLocation.sendKeys(server.PhysLocation);
     await this.txtInterfaceName.sendKeys(server.InterfaceName);
-    await element(by.id(""+server.InterfaceName+"-")).sendKeys(ipv6.toString());
+    await element(by.id("" + server.InterfaceName + "-")).sendKeys(ipv6.toString());
     if (!await basePage.ClickCreate())
-        result = false;
-    await basePage.GetOutputMessage().then(function(value){
-      if(server.validationMessage == value){
+      result = false;
+    await basePage.GetOutputMessage().then(function (value) {
+      if (server.validationMessage == value) {
         result = true;
-      }else{
+      } else {
         result = false;
       }
     })
@@ -137,172 +138,180 @@ export class ServersPage extends BasePage {
     return result;
   }
 
-  async SearchServer(nameServer:string){
-    let name = nameServer+this.randomize;
+  public async SearchServer(nameServer: string) {
+    let name = nameServer + this.randomize;
     await this.txtQuickSearch.clear();
     await this.txtQuickSearch.sendKeys(name);
     await browser.actions().click(element(by.cssContainingText("span", name))).perform();
   }
 
-  public async SearchDeliveryServiceFromServerPage(name:string): Promise<boolean> {
+  public async SearchDeliveryServiceFromServerPage(name: string): Promise<boolean> {
     await this.txtDSSearch.clear();
     await this.txtDSSearch.sendKeys(name);
-    if(await browser.isElementPresent(element(by.xpath("//td[@data-search='^"+name+"$']"))) == true){
-      await element(by.xpath("//td[@data-search='^"+name+"$']")).click();
+    if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
+      await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
       return true;
     }
     return false;
   }
 
-  public async AddDeliveryServiceToServer(deliveryServiceName:string,outputMessage:string): Promise<boolean | undefined> {
-    let result: boolean | undefined = false;
+  public async AddDeliveryServiceToServer(deliveryServiceName: string, outputMessage: string): Promise<boolean> {
+    let result = false;
     let basePage = new BasePage();
-    let deliveryService = deliveryServiceName+this.randomize;
+    let deliveryService = deliveryServiceName + this.randomize;
     const serverNameRandomized = await this.txtHostName.getText();
-    let serverName = serverNameRandomized.replace(this.randomize,"")
-    if(outputMessage.includes("delivery services assigned")){
-      outputMessage = outputMessage.replace(serverName,serverNameRandomized)
+    let serverName = serverNameRandomized.replace(this.randomize, "")
+    if (outputMessage.includes("delivery services assigned")) {
+      outputMessage = outputMessage.replace(serverName, serverNameRandomized)
     }
-    if(outputMessage.includes("cannot assign")){
-      let dsCapRequired = outputMessage.slice(112,118);
-      outputMessage = outputMessage.replace(dsCapRequired,dsCapRequired+this.randomize)
-      outputMessage = outputMessage.replace(serverName,serverNameRandomized)
+    if (outputMessage.includes("cannot assign")) {
+      let dsCapRequired = outputMessage.slice(112, 118);
+      outputMessage = outputMessage.replace(dsCapRequired, dsCapRequired + this.randomize)
+      outputMessage = outputMessage.replace(serverName, serverNameRandomized)
     }
     await this.btnMore.click();
-    if(await this.btnManageDeliveryService.isPresent() == true){
+    if (await this.btnManageDeliveryService.isPresent() == true) {
       await this.btnManageDeliveryService.click();
       await this.btnLinkDStoServer.click();
-      if(await this.SearchDeliveryServiceFromServerPage(deliveryService) == true){
+      if (await this.SearchDeliveryServiceFromServerPage(deliveryService) == true) {
         await basePage.ClickSubmit();
-         result = await basePage.GetOutputMessage().then(function(value){
-          if(value == outputMessage){
-            return true;
-          }else{
-            return false;
-          }
-        })
-      }
-    }else{
-      result = undefined;
-    }
-    return result;
-
-  }
-
-  public async AddServerCapabilitiesToServer(serverCapabilities: ServerCapability): Promise<boolean | undefined> {
-    let result: boolean | undefined = false;
-    let basePage = new BasePage();
-    let serverCapabilitiesName = serverCapabilities.ServerCapability + this.randomize;
-    await this.btnMore.click();
-    if((await this.btnManageCapabilities.isPresent()) == true){
-      await this.btnManageCapabilities.click();
-      await this.btnAddCapabilities.click();
-      await this.selectCapabilities.sendKeys(serverCapabilitiesName);
-      await basePage.ClickSubmit();
-      result = await basePage.GetOutputMessage().then(function(value){
-        if(serverCapabilities.validationMessage === value || serverCapabilities.validationMessage && value.includes(serverCapabilities.validationMessage)){
-          result = true;
-        }else{
-          result = false;
-        }
-        return result;
-      })
-    }else{
-      result = undefined;
-    }
-    await this.OpenServerPage();
-    return result;
-   }
-
-   async SearchServerServerCapabilities(name:string){
-    let result = false;
-    await this.searchFilter.clear();
-    await this.searchFilter.sendKeys(name);
-    result = await element.all(by.repeater('sc in ::serverCapabilities')).filter(function(row){
-      return row.element(by.name('name')).getText().then(function(val){
-        return val === name;
-      });
-    }).first().getText().then(function(value){
-      if(value == name){
-        return true;
-      }else{
-        return false;
-      }
-    })
-    return result;
-   }
-
-
-   public async RemoveServerCapabilitiesFromServer(serverCapabilities:string,outputMessage:string): Promise<boolean | undefined> {
-    let result: boolean | undefined = false;
-    let basePage = new BasePage();
-    let serverCapabilitiesname = serverCapabilities+this.randomize;
-    const url = (await browser.getCurrentUrl()).toString();
-    let serverNumber = url.substring(url.lastIndexOf('/') + 1);
-    if(outputMessage.includes("cannot remove")){
-      outputMessage = outputMessage.replace(serverCapabilities,serverCapabilitiesname)
-      outputMessage = outputMessage.slice(0,56) + serverNumber + " " + outputMessage.slice(56);
-    }
-    await this.btnMore.click();
-    if((await this.btnManageCapabilities.isPresent()) == true){
-      await this.btnManageCapabilities.click();
-      if(await this.SearchServerServerCapabilities(serverCapabilitiesname) == true){
-        await element(by.xpath("//td[text()='"+ serverCapabilitiesname +"']/following-sibling::td/a[@title='Remove Server Capability']")).click();
-      }
-      await this.btnYesRemoveSC.click();
-      result = await basePage.GetOutputMessage().then(function(value){
-        if(outputMessage == value){
-          return true;
-        }else if(value.includes(outputMessage)){
-          return true;
-        }else{
-          return false;
-        }
-      })
-    }else{
-      result = undefined;
-    }
-    await this.OpenServerPage();
-    return result;
-   }
-
-  public async UpdateServer(server: UpdateServer): Promise<boolean | undefined> {
-    let result = false;
-    let basePage = new BasePage();
-    if(server.description.includes('change the cdn of a Server')){
-      await this.txtCDN.sendKeys(server.CDN + this.randomize);
-      await this.txtProfile.sendKeys(server.Profile + this.randomize)
-      await basePage.ClickUpdate();
-      result = await basePage.GetOutputMessage().then(function (value) {
-          if (server.validationMessage == value) {
+        result = await basePage.GetOutputMessage().then(function (value) {
+          if (value == outputMessage) {
             return true;
           } else {
             return false;
           }
         })
-        return result;
+      }
+    } else {
+      result = false;
     }
+    return result;
+
   }
 
-  async DeleteServer(server: DeleteServer){
+  public async AddServerCapabilitiesToServer(serverCapabilities: ServerCapability): Promise<boolean> {
+    let result = false;
+    let basePage = new BasePage();
+    let serverCapabilitiesName = serverCapabilities.ServerCapability + this.randomize;
+    await this.btnMore.click();
+    if ((await this.btnManageCapabilities.isPresent()) == true) {
+      await this.btnManageCapabilities.click();
+      await this.btnAddCapabilities.click();
+      await this.selectCapabilities.sendKeys(serverCapabilitiesName);
+      await basePage.ClickSubmit();
+      result = await basePage.GetOutputMessage().then(function (value) {
+        if (serverCapabilities.validationMessage === value || serverCapabilities.validationMessage && value.includes(serverCapabilities.validationMessage)) {
+          result = true;
+        } else {
+          result = false;
+        }
+        return result;
+      })
+    } else {
+      result = false;
+    }
+    await this.OpenServerPage();
+    return result;
+  }
+
+  public async SearchServerServerCapabilities(name: string) {
+    let result = false;
+    await this.searchFilter.clear();
+    await this.searchFilter.sendKeys(name);
+    result = await element.all(by.repeater('sc in ::serverCapabilities')).filter(function (row) {
+      return row.element(by.name('name')).getText().then(function (val) {
+        return val === name;
+      });
+    }).first().getText().then(function (value) {
+      if (value == name) {
+        return true;
+      } else {
+        return false;
+      }
+    })
+    return result;
+  }
+
+
+  public async RemoveServerCapabilitiesFromServer(serverCapabilities: string, outputMessage: string): Promise<boolean> {
+    let result = false;
+    let basePage = new BasePage();
+    let serverCapabilitiesname = serverCapabilities + this.randomize;
+    const url = (await browser.getCurrentUrl()).toString();
+    let serverNumber = url.substring(url.lastIndexOf('/') + 1);
+    if (outputMessage.includes("cannot remove")) {
+      outputMessage = outputMessage.replace(serverCapabilities, serverCapabilitiesname)
+      outputMessage = outputMessage.slice(0, 56) + serverNumber + " " + outputMessage.slice(56);
+    }
+    await this.btnMore.click();
+    if ((await this.btnManageCapabilities.isPresent()) == true) {
+      await this.btnManageCapabilities.click();
+      if (await this.SearchServerServerCapabilities(serverCapabilitiesname) == true) {
+        await element(by.xpath("//td[text()='" + serverCapabilitiesname + "']/following-sibling::td/a[@title='Remove Server Capability']")).click();
+      }
+      await this.btnYesRemoveSC.click();
+      result = await basePage.GetOutputMessage().then(function (value) {
+        if (outputMessage == value) {
+          return true;
+        } else if (value.includes(outputMessage)) {
+          return true;
+        } else {
+          return false;
+        }
+      })
+    } else {
+      result = false;
+    }
+    await this.OpenServerPage();
+    return result;
+  }
+
+  public async UpdateServer(server: UpdateServer): Promise<boolean> {
+    let result = false;
+    let basePage = new BasePage();
+    if (server.description.includes('change the cdn of a Server')) {
+      await this.txtCDN.sendKeys(server.CDN + this.randomize);
+      await this.txtProfile.sendKeys(server.Profile + this.randomize)
+      await basePage.ClickUpdate();
+      result = await basePage.GetOutputMessage().then(function (value) {
+        if (server.validationMessage == value) {
+          return true;
+        } else {
+          return false;
+        }
+      })
+    }
+    return result;
+  }
+
+  public async DeleteServer(server: DeleteServer) {
     let result = false;
     let basePage = new BasePage();
     let name = server.Name + this.randomize
     await this.btnDelete.click();
     await browser.wait(ExpectedConditions.visibilityOf(this.txtConfirmServerName), 1000);
     await this.txtConfirmServerName.sendKeys(name);
-    if(await basePage.ClickDeletePermanently() == true){
-      result = await basePage.GetOutputMessage().then(function(value){
-        if(server.validationMessage == value){
+    if (await basePage.ClickDeletePermanently() == true) {
+      result = await basePage.GetOutputMessage().then(function (value) {
+        if (server.validationMessage == value) {
           return true
-        }else{
+        } else {
           return false;
         }
       })
-    }else{
+    } else {
       await basePage.ClickCancel();
     }
     await this.OpenServerPage();
     return result;
-   }
+  }
+
+  public async ToggleTableColumn(name: string): Promise<boolean> {
+    await this.btnTableColumn.click();
+    const result = await element(by.cssContainingText("th", name)).isPresent();
+    await element(by.cssContainingText("label", name)).click();
+    await this.btnTableColumn.click();
+    return !result;
+  }
 }

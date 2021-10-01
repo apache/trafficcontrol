@@ -43,6 +43,6 @@ type standardLoggerWriter struct {
 // The writer.realLogger may be nil, in which case this does nothing.
 // This always returns len(p) and nil, claiming it successfully wrote even if it didn't.
 func (writer *standardLoggerWriter) Write(p []byte) (n int, err error) {
-	logln(writer.realLogger, writer.prefix+strings.TrimSpace(string(p)))
+	Logln(writer.realLogger, writer.prefix+strings.TrimSpace(string(p)))
 	return len(p), nil
 }

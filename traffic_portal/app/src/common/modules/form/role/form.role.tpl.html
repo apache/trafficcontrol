@@ -41,16 +41,6 @@ under the License.
                     <span ng-show="hasError(roleForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(roleForm.privLevel), 'has-feedback': hasError(roleForm.privLevel)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Privilege Level *</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="privLevel" type="number" class="form-control" ng-model="role.privLevel" ng-maxlength="3" ng-pattern="/^\d+$/" required autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(roleForm.privLevel, 'required')">Required Whole Number</small>
-                    <small class="input-error" ng-show="hasPropertyError(roleForm.privLevel, 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(roleForm.privLevel, 'pattern')">Whole Number</small>
-                    <span ng-show="hasError(roleForm.privLevel)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                </div>
-            </div>
             <div class="form-group" ng-class="{'has-error': hasError(roleForm.description), 'has-feedback': hasError(roleForm.description)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Description *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">

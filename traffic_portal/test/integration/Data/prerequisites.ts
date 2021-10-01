@@ -69,7 +69,7 @@ export const prerequisites = [
 				fullName: "TPAdmin",
 				username: "TPAdmin",
 				email: "@test.com",
-				role: 0,
+				role: "admin",
 				tenantId: 1,
 				localPasswd: "pa$$word",
 				confirmLocalPasswd: "pa$$word",
@@ -79,12 +79,6 @@ export const prerequisites = [
 						queryKey: "name",
 						queryValue: "tenantSame",
 						replace: "tenantId"
-					},
-					{
-						route: "/roles",
-						queryKey: "name",
-						queryValue: "admin",
-						replace: "role"
 					}
 				]
 			},
@@ -92,7 +86,7 @@ export const prerequisites = [
 				fullName: "TPOperator",
 				username: "TPOperator",
 				email: "@test.com",
-				role: 0,
+				role: "operations",
 				tenantId: 1,
 				localPasswd: "pa$$word",
 				confirmLocalPasswd: "pa$$word",
@@ -102,12 +96,6 @@ export const prerequisites = [
 						queryKey: "name",
 						queryValue: "tenantSame",
 						replace: "tenantId"
-					},
-					{
-						route: "/roles",
-						queryKey: "name",
-						queryValue: "operations",
-						replace: "role"
 					}
 				]
 			},
@@ -115,7 +103,7 @@ export const prerequisites = [
 				fullName: "TPReadOnly",
 				username: "TPReadOnly",
 				email: "@test.com",
-				role: 0,
+				role: "read-only",
 				tenantId: 1,
 				localPasswd: "pa$$word",
 				confirmLocalPasswd: "pa$$word",
@@ -125,12 +113,6 @@ export const prerequisites = [
 						queryKey: "name",
 						queryValue: "tenantSame",
 						replace: "tenantId"
-					},
-					{
-						route: "/roles",
-						queryKey: "name",
-						queryValue: "read-only",
-						replace: "role"
 					}
 				]
 			},
@@ -138,7 +120,7 @@ export const prerequisites = [
 				fullName: "TPAdminDiff",
 				username: "TPAdminDiff",
 				email: "@test.com",
-				role: 0,
+				role: "admin",
 				tenantId: 1,
 				localPasswd: "pa$$word",
 				confirmLocalPasswd: "pa$$word",
@@ -148,12 +130,6 @@ export const prerequisites = [
 						queryKey: "name",
 						queryValue: "tenantDifferent",
 						replace: "tenantId"
-					},
-					{
-						route: "/roles",
-						queryKey: "name",
-						queryValue: "admin",
-						replace: "role"
 					}
 				]
 			},
@@ -161,7 +137,7 @@ export const prerequisites = [
 				fullName: "TPOperatorDiff",
 				username: "TPOperatorDiff",
 				email: "@test.com",
-				role: 0,
+				role: "operations",
 				tenantId: 1,
 				localPasswd: "pa$$word",
 				confirmLocalPasswd: "pa$$word",
@@ -171,12 +147,6 @@ export const prerequisites = [
 						queryKey: "name",
 						queryValue: "tenantDifferent",
 						replace: "tenantId"
-					},
-					{
-						route: "/roles",
-						queryKey: "name",
-						queryValue: "operations",
-						replace: "role"
 					}
 				]
 			},
@@ -184,7 +154,7 @@ export const prerequisites = [
 				fullName: "TPReadOnlyDiff",
 				username: "TPReadOnlyDiff",
 				email: "@test.com",
-				role: 0,
+				role: "read-only",
 				tenantId: 1,
 				localPasswd: "pa$$word",
 				confirmLocalPasswd: "pa$$word",
@@ -194,12 +164,6 @@ export const prerequisites = [
 						queryKey: "name",
 						queryValue: "tenantDifferent",
 						replace: "tenantId"
-					},
-					{
-						route: "/roles",
-						queryKey: "name",
-						queryValue: "read-only",
-						replace: "role"
 					}
 				]
 			},
@@ -207,7 +171,7 @@ export const prerequisites = [
 				fullName: "TPAdminParent",
 				username: "TPAdminParent",
 				email: "@test.com",
-				role: 0,
+				role: "admin",
 				tenantId: 1,
 				localPasswd: "pa$$word",
 				confirmLocalPasswd: "pa$$word",
@@ -217,12 +181,6 @@ export const prerequisites = [
 						queryKey: "name",
 						queryValue: "tenantParent",
 						replace: "tenantId"
-					},
-					{
-						route: "/roles",
-						queryKey: "name",
-						queryValue: "admin",
-						replace: "role"
 					}
 				]
 			},
@@ -230,7 +188,7 @@ export const prerequisites = [
 				fullName: "TPOperatorParent",
 				username: "TPOperatorParent",
 				email: "@test.com",
-				role: 0,
+				role: "operations",
 				tenantId: 1,
 				localPasswd: "pa$$word",
 				confirmLocalPasswd: "pa$$word",
@@ -240,12 +198,6 @@ export const prerequisites = [
 						queryKey: "name",
 						queryValue: "tenantParent",
 						replace: "tenantId"
-					},
-					{
-						route: "/roles",
-						queryKey: "name",
-						queryValue: "operations",
-						replace: "role"
 					}
 				]
 			},
@@ -253,7 +205,7 @@ export const prerequisites = [
 				fullName: "TPReadOnlyParent",
 				username: "TPReadOnlyParent",
 				email: "@test.com",
-				role: 0,
+				role: "read-only",
 				tenantId: 1,
 				localPasswd: "pa$$word",
 				confirmLocalPasswd: "pa$$word",
@@ -263,12 +215,6 @@ export const prerequisites = [
 						queryKey: "name",
 						queryValue: "tenantParent",
 						replace: "tenantId"
-					},
-					{
-						route: "/roles",
-						queryKey: "name",
-						queryValue: "read-only",
-						replace: "role"
 					}
 				]
 			},
@@ -276,7 +222,7 @@ export const prerequisites = [
 				fullName: "TPAdminChild",
 				username: "TPAdminChild",
 				email: "@test.com",
-				role: 0,
+				role: "admin",
 				tenantId: 1,
 				localPasswd: "pa$$word",
 				confirmLocalPasswd: "pa$$word",
@@ -286,12 +232,6 @@ export const prerequisites = [
 						queryKey: "name",
 						queryValue: "tenantChild",
 						replace: "tenantId"
-					},
-					{
-						route: "/roles",
-						queryKey: "name",
-						queryValue: "admin",
-						replace: "role"
 					}
 				]
 			},
@@ -299,7 +239,7 @@ export const prerequisites = [
 				fullName: "TPOperatorChild",
 				username: "TPOperatorChild",
 				email: "@test.com",
-				role: 0,
+				role: "operations",
 				tenantId: 1,
 				localPasswd: "pa$$word",
 				confirmLocalPasswd: "pa$$word",
@@ -309,12 +249,6 @@ export const prerequisites = [
 						queryKey: "name",
 						queryValue: "tenantChild",
 						replace: "tenantId"
-					},
-					{
-						route: "/roles",
-						queryKey: "name",
-						queryValue: "operations",
-						replace: "role"
 					}
 				]
 			},
@@ -322,7 +256,7 @@ export const prerequisites = [
 				fullName: "TPReadOnlyChild",
 				username: "TPReadOnlyChild",
 				email: "@test.com",
-				role: 0,
+				role: "read-only",
 				tenantId: 1,
 				localPasswd: "pa$$word",
 				confirmLocalPasswd: "pa$$word",
@@ -332,12 +266,6 @@ export const prerequisites = [
 						queryKey: "name",
 						queryValue: "tenantChild",
 						replace: "tenantId"
-					},
-					{
-						route: "/roles",
-						queryKey: "name",
-						queryValue: "read-only",
-						replace: "role"
 					}
 				]
 			}

@@ -23,6 +23,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net"
@@ -32,10 +33,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/tm-health-client/config"
-	"github.com/apache/trafficcontrol/cache-config/tm-health-client/util"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/tc-health-client/config"
+	"github.com/apache/trafficcontrol/tc-health-client/util"
 	"github.com/apache/trafficcontrol/traffic_monitor/datareq"
 	"github.com/apache/trafficcontrol/traffic_monitor/tmclient"
 	"gopkg.in/yaml.v2"
@@ -223,7 +224,7 @@ func NewParentInfo(cfg config.Cfg) (*ParentInfo, error) {
 
 	// collect the trafficserver parent status from the HostStatus subsystem.
 	if err := parentInfo.readHostStatus(parentStatus); err != nil {
-		return nil, errors.New("reading trafficserver host status: " + err.Error())
+		return nil, fmt.Errorf("reading trafficserver host status: %w", err)
 	}
 
 	log.Infof("startup loaded %d parent records\n", len(parentStatus))
@@ -270,14 +271,27 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 			log.Errorf("error reading changed config file %s: %s\n", c.Cfg.HealthClientConfigFile.Filename, err.Error())
 		}
 		if isNew {
-			if err = config.ReadCredentials(&newCfg); err != nil {
+			if err = config.ReadCredentials(&newCfg, false); err != nil {
 				log.Errorln("could not load credentials for config updates, keeping the old config")
 			} else {
 				if err = config.GetTrafficMonitors(&newCfg); err != nil {
 					log.Errorln("could not update the list of trafficmonitors, keeping the old config")
 				} else {
 					config.UpdateConfig(&c.Cfg, &newCfg)
-					log.Infof("the configuration has been successfully updated")
+					log.Infoln("the configuration has been successfully updated")
+				}
+			}
+		} else { // check for updates to the credentials file
+			if c.Cfg.CredentialFile.Filename != "" {
+				modTime, err := util.GetFileModificationTime(c.Cfg.CredentialFile.Filename)
+				if err != nil {
+					log.Errorf("could not stat the credential file %s", c.Cfg.CredentialFile.Filename)
+				}
+				if modTime > c.Cfg.CredentialFile.LastModifyTime {
+					log.Infoln("the credential file has changed, loading new credentials")
+					if err = config.ReadCredentials(&c.Cfg, true); err != nil {
+						log.Errorf("could not load credentials from the updated credential file: %s", c.Cfg.CredentialFile.Filename)
+					}
 				}
 			}
 		}
@@ -298,7 +312,7 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 			if err = config.GetTrafficMonitors(&c.Cfg); err != nil {
 				log.Errorln("could not update the list of trafficmonitors, keeping the old config")
 			} else {
-				log.Infoln("Updated TrafficMonitor statuses from TrafficOps")
+				log.Infoln("updated TrafficMonitor statuses from TrafficOps")
 			}
 			time.Sleep(pollingInterval)
 			continue
@@ -328,7 +342,7 @@ func (c *ParentInfo) PollAndUpdateCacheStatus() {
 			if err = config.GetTrafficMonitors(&c.Cfg); err != nil {
 				log.Errorln("could not update the list of trafficmonitors, keeping the old config")
 			} else {
-				log.Infoln("Updated TrafficMonitor statuses from TrafficOps")
+				log.Infoln("updated TrafficMonitor statuses from TrafficOps")
 			}
 		} else {
 			cycleCount++
@@ -371,7 +385,7 @@ func (c *ParentInfo) UpdateParentInfo() error {
 
 	// collect the trafficserver current host status.
 	if err := c.readHostStatus(c.Parents); err != nil {
-		return errors.New("reading latest trafficserver host status: " + err.Error())
+		return errors.New("trafficserver may not be running: " + err.Error())
 	}
 
 	return nil
@@ -477,7 +491,7 @@ func (c *ParentInfo) readHostStatus(parentStatus map[string]ParentStatus) error 
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		return errors.New(TrafficCtl + " error: " + err.Error())
+		return fmt.Errorf("%s error: %s", TrafficCtl, stderr.String())
 	}
 
 	if len((stdout.Bytes())) > 0 {

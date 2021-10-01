@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,11 +17,19 @@
  * under the License.
  */
 
-module.exports = {
+const process = require("process");
+
+const defaultTask = {
     dev: {
         options: {
-            script: './server.js',
-            node_env: 'dev'
+            script: "./server.js",
+            node_env: "dev"
         }
     }
 };
+
+if (Object.prototype.hasOwnProperty.call(process.env, "TP_SERVER_CONFIG_FILE")) {
+    defaultTask.dev.options.args = ["-c", process.env.TP_SERVER_CONFIG_FILE];
+}
+
+module.exports = defaultTask;

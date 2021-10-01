@@ -143,6 +143,16 @@ To install the Traffic Router Developer environment:
 
 Once running, the :ref:`tr-api` is available over HTTP at http://localhost:3333 and over HTTPS at https://localhost:3443,  the HTTP routing interface is available on http://localhost:8888 and HTTPS is available on http://localhost:8443. The DNS server and routing interface is available on localhost:53 via TCP and UDP.
 
+Development Environment Upgrade
+-------------------------------
+If a development environment is already set up for the previous version of Traffic Router, then ``openssl``, ``apr`` and ``tomcat-native`` will need to be manually installed with :manpage:`yum(8)` or :manpage:`rpm(8)`. Also, whenever either ``mvn clean verify`` or ``TrafficRouterStart`` is/are run, the location of the ``tomcat-native`` libraries will need to be made known to the :abbr:`JVM (Java Virtual Machine)` via command line arguments.
+
+.. code-block:: shell
+	:caption: Example Commands Specifying a Path to the tomcat-native Library
+
+	mvn clean verify -Djava.library.path=[tomcat native library path on your box]
+	java -Djava.library.path=[tomcat native library path on your box] TrafficRouterStart
+
 Manual Testing
 ==============
 Look up the URL for a test HTTP :term:`Delivery Service` in Traffic Ops and then make a request. When Traffic Router is running and used as a resolver for the host in the :term:`Delivery Service` URL, the requested origin content should be found through an Edge-tier :term:`cache server`.

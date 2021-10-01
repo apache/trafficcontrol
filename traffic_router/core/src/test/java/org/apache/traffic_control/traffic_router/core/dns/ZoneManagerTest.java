@@ -16,7 +16,6 @@
 package org.apache.traffic_control.traffic_router.core.dns;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -25,8 +24,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.math.BigInteger;
 import java.net.InetAddress;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +34,7 @@ import java.util.Iterator;
 import org.apache.traffic_control.traffic_router.core.util.IntegrationTest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -66,7 +64,7 @@ public class ZoneManagerTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		assertThat("Copy core/src/main/conf/traffic_monitor.properties to core/src/test/conf and set 'traffic_monitor.bootstrap.hosts' to a real traffic monitor", Files.exists(Paths.get(TestBase.monitorPropertiesPath)), equalTo(true));
+		TestBase.setupFakeServers();
 		context = TestBase.getContext();
 	}
 
@@ -152,6 +150,11 @@ public class ZoneManagerTest {
 				}
 			}
 		}
+	}
+
+	@AfterClass
+	public static void tearDown() throws Exception {
+		TestBase.tearDownFakeServers();
 	}
 
 	private BigInteger fact(final int n) {

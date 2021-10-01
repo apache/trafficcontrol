@@ -35,9 +35,9 @@ Request Structure
 	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
 	| Name      | Required | Description                                                                                                                         |
 	+===========+==========+=====================================================================================================================================+
-	| days      | no       | An integer number of days of change logs to return                                                                                  |
+	| days      | no       | An integer number of days of change logs to return, by default there is no limit applied                                            |
 	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
-	| limit     | no       | The number of records to which to limit the response                                                                                |
+	| limit     | no       | The number of records to which to limit the response, if there is no limit query params, it limits to 1000                          |
 	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
 	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                |
 	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+

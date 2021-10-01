@@ -82,7 +82,8 @@ func (u *MyUser) GetPrivateKey() crypto.PrivateKey {
 
 // DNSProviderTrafficRouter is used in the lego library and contains a database in order to store the DNS challenges for ACME protocol.
 type DNSProviderTrafficRouter struct {
-	db *sqlx.DB
+	db    *sqlx.DB
+	xmlId *string
 }
 
 // NewDNSProviderTrafficRouter returns a new DNSProviderTrafficRouter object.
@@ -100,8 +101,8 @@ func (d *DNSProviderTrafficRouter) Present(domain, token, keyAuth string) error 
 	tx, err := d.db.Begin()
 	fqdn, value := dns01.GetRecord(domain, keyAuth)
 
-	q := `INSERT INTO dnschallenges (fqdn, record) VALUES ($1, $2)`
-	response, err := tx.Exec(q, fqdn, value)
+	q := `INSERT INTO dnschallenges (fqdn, record, xml_id) VALUES ($1, $2, $3)`
+	response, err := tx.Exec(q, fqdn, value, *d.xmlId)
 	tx.Commit()
 	if err != nil {
 		log.Errorf("Inserting dns txt record for fqdn '" + fqdn + "' record '" + value + "': " + err.Error())
@@ -439,7 +440,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysRe
 		account = acmeAccount
 	}
 
-	client, err := GetAcmeClient(account, userTx, db)
+	client, err := GetAcmeClient(account, userTx, db, req.Key)
 	if err != nil {
 		log.Errorf("acme: getting acme client for provider %s: %v", provider, err)
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
@@ -560,7 +561,7 @@ func GetAcmeAccountConfig(cfg *config.Config, acmeProvider string) *config.Confi
 }
 
 // GetAcmeClient uses the ACME account information in either cdn.conf or the database to create and register an ACME client.
-func GetAcmeClient(acmeAccount *config.ConfigAcmeAccount, userTx *sql.Tx, db *sqlx.DB) (*lego.Client, error) {
+func GetAcmeClient(acmeAccount *config.ConfigAcmeAccount, userTx *sql.Tx, db *sqlx.DB, xmlId *string) (*lego.Client, error) {
 	if acmeAccount.UserEmail == "" {
 		log.Errorf("An email address must be provided to use ACME with %v", acmeAccount.AcmeProvider)
 		return nil, errors.New("An email address must be provided to use ACME with " + acmeAccount.AcmeProvider)
@@ -610,6 +611,7 @@ func GetAcmeClient(acmeAccount *config.ConfigAcmeAccount, userTx *sql.Tx, db *sq
 		client.Challenge.Remove(challenge.TLSALPN01)
 		trafficRouterDns := NewDNSProviderTrafficRouter()
 		trafficRouterDns.db = db
+		trafficRouterDns.xmlId = xmlId
 		if err != nil {
 			log.Errorf("Error creating Traffic Router DNS provider: %s", err.Error())
 			return nil, err

@@ -22,7 +22,7 @@ var FormUserController = function(user, $scope, $location, formUtils, stringUtil
     var getRoles = function() {
         roleService.getRoles()
             .then(function(result) {
-                $scope.roles = _.sortBy(result, 'privLevel').reverse();
+                $scope.roles = _.sortBy(result, 'name').reverse();
             });
     };
 
@@ -40,7 +40,7 @@ var FormUserController = function(user, $scope, $location, formUtils, stringUtil
     $scope.user = user;
 
     $scope.label = function(role) {
-        return role.name + ' (' + role.privLevel + ')';
+        return role.name;
     };
 
     $scope.tenantLabel = function(tenant) {

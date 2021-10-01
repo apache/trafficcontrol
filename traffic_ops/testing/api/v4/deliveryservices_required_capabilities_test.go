@@ -31,7 +31,7 @@ import (
 )
 
 func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, Topologies, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, Topologies, ServiceCategories, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
 		GetTestDeliveryServicesRequiredCapabilitiesIMS(t)
 		InvalidDeliveryServicesRequiredCapabilityAddition(t)
 		GetTestDeliveryServicesRequiredCapabilities(t)
@@ -45,7 +45,7 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 }
 
 func TestTopologyBasedDeliveryServicesRequiredCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, ServiceCategories, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
 		GetTestDeliveryServicesRequiredCapabilities(t)
 		OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t)
 	})

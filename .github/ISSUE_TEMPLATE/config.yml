@@ -17,5 +17,5 @@ contact_links:
     url: http://trafficcontrol.apache.org/mailing_lists
     about: Reach out to one of the Traffic Control mailing lists for discussion.
   - name: Support questions
-    url: https://s.apache.org/slack-invite
+    url: https://s.apache.org/tc-slack-request
     about: Visit us at ‌#traffic-control on Slack to ask a question.

@@ -44,10 +44,9 @@ Once everything is installed, you will need to configure the servers to talk to 
 
 	traffic_ops.rst
 	environment_creation.rst
-	traffic_portal/*
+	traffic_portal/index.rst
 	traffic_monitor.rst
 	traffic_router.rst
-	traffic_router/migrationto2-3.rst
 	traffic_stats.rst
 	traffic_server.rst
 	traffic_vault.rst

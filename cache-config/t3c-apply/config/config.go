@@ -215,6 +215,7 @@ func GetTSPackageHome() string {
 
 func GetCfg() (Cfg, error) {
 	var err error
+	toInfoLog := []string{}
 
 	cacheHostNamePtr := getopt.StringLong("cache-host-name", 'H', "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
 	retriesPtr := getopt.IntLong("num-retries", 'r', 3, "[number] retry connection to Traffic Ops URL [number] times, default is 3")
@@ -238,7 +239,8 @@ func GetCfg() (Cfg, error) {
 	defaultClientTLSVersions := getopt.StringLong("default-client-tls-versions", 'V', "", "Comma-delimited list of default TLS versions for Delivery Services with no Parameter, e.g. --default-tls-versions='1.1,1.2,1.3'. If omitted, all versions are enabled.")
 	maxmindLocationPtr := getopt.StringLong("maxmind-location", 'M', "", "URL of a maxmind gzipped database file, to be installed into the trafficserver etc directory.")
 	verbosePtr := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
-	silentPtr := getopt.BoolLong("silent", 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
+	const silentFlagName = "silent"
+	silentPtr := getopt.BoolLong(silentFlagName, 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
 
 	const waitForParentsFlagName = "wait-for-parents"
 	waitForParentsPtr := getopt.BoolLong(waitForParentsFlagName, 'W', "[true | false] do not update if parent_pending = 1 in the update json. Default is false")
@@ -281,6 +283,8 @@ badass     sets --install-packages=true
                 --ignore-update-flag=true
                 --update-ipallow=true
 report     sets --report-only=true
+                --no-unset-update-flag=true
+                --silent
 
 Note the 'syncds' settings are all the flag defaults. Hence, if no mode is set, the default is effectively 'syncds'.
 
@@ -330,6 +334,14 @@ If any of the related flags are also set, they override the mode's default behav
 			if !getopt.IsSet(reportOnlyFlagName) {
 				modeLogStrs = append(modeLogStrs, runMode.String()+" setting --"+reportOnlyFlagName+"="+"true")
 				*reportOnlyPtr = true
+			}
+			if !getopt.IsSet(ignoreUpdateFlagName) {
+				modeLogStrs = append(modeLogStrs, runMode.String()+" setting --"+ignoreUpdateFlagName+"="+"true")
+				*ignoreUpdateFlagPtr = true
+			}
+			if !getopt.IsSet(silentFlagName) {
+				modeLogStrs = append(modeLogStrs, runMode.String()+" setting --"+silentFlagName+"="+"true")
+				*silentPtr = true
 			}
 		}
 	}
@@ -418,18 +430,18 @@ If any of the related flags are also set, they override the mode's default behav
 	var tsHome = ""
 	if *tsHomePtr != "" {
 		tsHome = *tsHomePtr
-		fmt.Printf("set TSHome from command line: '%s'\n\n", TSHome)
+		toInfoLog = append(toInfoLog, fmt.Sprintf("set TSHome from command line: '%s'", TSHome))
 	}
 	if *tsHomePtr == "" { // evironment or rpm check.
 		tsHome = os.Getenv("TS_HOME") // check for the environment variable.
 		if tsHome != "" {
-			fmt.Printf("set TSHome from TS_HOME environment variable '%s'\n", TSHome)
+			toInfoLog = append(toInfoLog, fmt.Sprintf("set TSHome from TS_HOME environment variable '%s'\n", TSHome))
 		} else { // finally check using the config file listing from the rpm package.
 			tsHome = GetTSPackageHome()
 			if tsHome != "" {
-				fmt.Printf("set TSHome from the RPM config file  list '%s'\n", tsHome)
+				toInfoLog = append(toInfoLog, fmt.Sprintf("set TSHome from the RPM config file  list '%s'\n", TSHome))
 			} else {
-				fmt.Printf("no override for TSHome was found, using the configured default: '%s'\n", TSHome)
+				toInfoLog = append(toInfoLog, fmt.Sprintf("no override for TSHome was found, using the configured default: '%s'\n", TSHome))
 			}
 		}
 	}
@@ -439,7 +451,7 @@ If any of the related flags are also set, they override the mode's default behav
 	if tsHome != "" {
 		TSHome = tsHome
 		tsConfigDir = tsHome + "/etc/trafficserver"
-		fmt.Printf("TSHome: %s, TSConfigDir: %s\n", TSHome, tsConfigDir)
+		toInfoLog = append(toInfoLog, fmt.Sprintf("TSHome: %s, TSConfigDir: %s\n", TSHome, tsConfigDir))
 	}
 
 	usageStr := "basic usage: t3c-apply --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache"
@@ -510,7 +522,18 @@ If any of the related flags are also set, they override the mode's default behav
 	}
 
 	for _, str := range modeLogStrs {
+		str = strings.TrimSpace(str)
+		if str == "" {
+			continue
+		}
 		log.Infoln(str)
+	}
+	for _, msg := range toInfoLog {
+		msg = strings.TrimSpace(msg)
+		if msg == "" {
+			continue
+		}
+		log.Infoln(msg)
 	}
 
 	printConfig(cfg)

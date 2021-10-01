@@ -67,7 +67,7 @@ func PostTestLoginFail(t *testing.T) {
 }
 
 func LoginWithEmptyCredentialsTest(t *testing.T) {
-	userAgent := "to-api-v3-client-tests-loginfailtest"
+	userAgent := "to-api-v4-client-tests-loginfailtest"
 	_, _, err := toclient.LoginWithAgent(Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, "", true, userAgent, false, time.Second*time.Duration(Config.Default.Session.TimeoutInSecs))
 	if err == nil {
 		t.Fatal("expected error when logging in with empty credentials, actual nil")

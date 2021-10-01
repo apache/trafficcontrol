@@ -419,14 +419,77 @@ func GetPrivLevelFromRoleID(tx *sql.Tx, id int) (int, bool, error) {
 	var privLevel int
 	err := tx.QueryRow(`SELECT priv_level FROM role WHERE role.id = $1`, id).Scan(&privLevel)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return 0, false, nil
 	}
 
 	if err != nil {
-		return 0, false, fmt.Errorf("getting priv_level from role: %v", err)
+		return 0, false, fmt.Errorf("getting priv_level from role ID: %w", err)
 	}
 	return privLevel, true, nil
+}
+
+// GetPrivLevelFromRole returns the priv_level associated with a role, whether it exists, and any error.
+// This method exists on a temporary basis. After priv_level is fully deprecated and capabilities take over,
+// this method will not only no longer be needed, but the corresponding new privilege check should be done
+// via the primary database query for the users endpoint. The users json response will contain a list of
+// capabilities in the future, whereas now the users json response currently does not contain privLevel.
+// See the wiki page on the roles/capabilities as a system:
+// https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=68715910
+func GetPrivLevelFromRole(tx *sql.Tx, role string) (int, bool, error) {
+	var privLevel int
+	err := tx.QueryRow(`SELECT priv_level FROM role WHERE role.name = $1`, role).Scan(&privLevel)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, false, nil
+	}
+
+	if err != nil {
+		return 0, false, fmt.Errorf("getting priv_level from role: %w", err)
+	}
+	return privLevel, true, nil
+}
+
+// GetCapabilitiesFromRoleID returns the capabilities for the supplied role ID.
+func GetCapabilitiesFromRoleID(tx *sql.Tx, roleID int) ([]string, error) {
+	var caps []string
+	var cap string
+
+	rows, err := tx.Query(`SELECT cap_name FROM role_capability WHERE role_id = $1`, roleID)
+
+	if err != nil {
+		return caps, fmt.Errorf("getting capabilities from role ID: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&cap)
+		if err != nil {
+			return caps, fmt.Errorf("scanning capabilities: %w", err)
+		}
+		caps = append(caps, cap)
+	}
+	return caps, nil
+}
+
+// GetCapabilitiesFromRoleName returns the capabilities for the supplied role name.
+func GetCapabilitiesFromRoleName(tx *sql.Tx, role string) ([]string, error) {
+	var caps []string
+	var cap string
+
+	rows, err := tx.Query(`SELECT cap_name FROM role_capability rc JOIN role r ON r.id = rc.role_id WHERE r.name = $1`, role)
+
+	if err != nil {
+		return caps, fmt.Errorf("getting capabilities from role name: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&cap)
+		if err != nil {
+			return caps, fmt.Errorf("scanning capabilities: %w", err)
+		}
+		caps = append(caps, cap)
+	}
+	return caps, nil
 }
 
 // GetDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
@@ -1602,4 +1665,54 @@ func GetDSIDFromStaticDNSEntry(tx *sql.Tx, staticDNSEntryID int) (int, error) {
 		return -1, errors.New("querying DS ID from static dns entry: " + err.Error())
 	}
 	return dsID, nil
+}
+
+// AppendWhere appends 'extra' safely to the WHERE clause 'where'. What is
+// returned is guaranteed to be a valid WHERE clause (including a blank string),
+// provided the supplied 'where' and 'extra' clauses are valid.
+func AppendWhere(where, extra string) string {
+	if where == "" && extra == "" {
+		return ""
+	}
+	if where == "" {
+		where = BaseWhere + " "
+	} else {
+		where += " AND "
+	}
+	return where + extra
+}
+
+// GetRoleIDFromName returns the ID of the role associated with the supplied name.
+func GetRoleIDFromName(tx *sql.Tx, roleName string) (int, bool, error) {
+	var id int
+	if err := tx.QueryRow(`SELECT id FROM role WHERE name = $1`, roleName).Scan(&id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return id, false, nil
+		}
+		return id, false, fmt.Errorf("querying role ID from name: %w", err)
+	}
+	return id, true, nil
+}
+
+// GetRoleNameFromID returns the name of the role associated with the supplied ID.
+func GetRoleNameFromID(tx *sql.Tx, roleID int) (string, bool, error) {
+	var name string
+	if err := tx.QueryRow(`SELECT name FROM role WHERE id = $1`, roleID).Scan(&name); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return name, false, nil
+		}
+		return name, false, fmt.Errorf("querying role name from ID: %w", err)
+	}
+	return name, true, nil
+}
+
+// GetCDNNameDomain returns the name and domain for a given CDN ID.
+func GetCDNNameDomain(cdnID int, tx *sql.Tx) (string, string, error) {
+	q := `SELECT cdn.name, cdn.domain_name from cdn where cdn.id = $1`
+	cdnName := ""
+	cdnDomain := ""
+	if err := tx.QueryRow(q, cdnID).Scan(&cdnName, &cdnDomain); err != nil {
+		return "", "", fmt.Errorf("getting cdn name and domain for cdn '%v': "+err.Error(), cdnID)
+	}
+	return cdnName, cdnDomain, nil
 }

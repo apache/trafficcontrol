@@ -22,11 +22,11 @@ package config
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/cache-config/tm-health-client/util"
+	"github.com/apache/trafficcontrol/tc-health-client/util"
 )
 
 const (
-	test_config_file = "test_files/tm-health-client.json"
+	test_config_file = "test_files/tc-health-client.json"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -69,7 +69,7 @@ func TestLoadConfig(t *testing.T) {
 		t.Fatalf("expected '%s', got %s\n", expect, creds)
 	}
 
-	ReadCredentials(&cfg)
+	ReadCredentials(&cfg, false)
 
 	expect = "https://tp.cdn.com:443"
 	tourl := cfg.TOUrl

@@ -334,7 +334,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
     this.exportCSV = function() {
         const params = {
             allColumns: true,
-            fileName: this.tablName + ".csv",
+            fileName: this.tableName + ".csv",
         };
         this.gridOptions.api.exportDataAsCsv(params);
     };
@@ -346,7 +346,7 @@ let CommonGridController = function ($scope, $document, $state, userModel, dateU
 
     this.onQuickSearchChanged = function() {
         this.gridOptions.api.setQuickFilter(this.quickSearch);
-        localStorage.setItem(this.title + "_quick_search", this.quickSearch);
+        localStorage.setItem(this.tableName + "_quick_search", this.quickSearch);
     };
 
     this.onPageSizeChanged = function() {

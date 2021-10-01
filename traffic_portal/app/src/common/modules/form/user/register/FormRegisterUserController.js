@@ -22,7 +22,7 @@ var FormRegisterUserController = function($scope, $location, formUtils, tenantUt
 	var getRoles = function() {
 		roleService.getRoles()
 			.then(function(result) {
-				$scope.roles = _.sortBy(result, 'privLevel').reverse();
+				$scope.roles = _.sortBy(result, 'name');
 			});
 	};
 
@@ -48,7 +48,7 @@ var FormRegisterUserController = function($scope, $location, formUtils, tenantUt
 	};
 
 	$scope.roleLabel = function(role) {
-		return role.name + ' (' + role.privLevel + ')';
+		return role.name;
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;

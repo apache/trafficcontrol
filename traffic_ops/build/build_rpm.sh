@@ -75,6 +75,11 @@ initBuildArea() {
 	go build -v -o admin -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
 								{ echo "Could not build db/admin binary"; return 1;})
 
+	# compile ToDnssecRefresh.go
+	(cd app/bin/checks/DnssecRefresh
+	go build -v -o ToDnssecRefresh -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
+								{ echo "Could not build ToDnssecRefresh binary"; return 1;})
+
 	# compile db/reencrypt
 		(cd app/db/reencrypt
 	go build -v -o reencrypt || \
