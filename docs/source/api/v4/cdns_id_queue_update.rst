@@ -25,7 +25,7 @@
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: CDN:UPDATE
+:Permissions Required: CDN:UPDATE, SERVER:UPDATE, CDN:READ, TYPE:READ, PROFILE:READ
 :Response Type:  Object
 
 Request Structure

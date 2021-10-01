@@ -25,7 +25,7 @@ Updates a specific tenant.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: TENANTS:UPDATE
+:Permissions Required: TENANT:UPDATE, TENANT:READ
 :Response Type:  Object
 
 Request Structure
@@ -101,7 +101,7 @@ Deletes a specific tenant.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: TENANTS:DELETE
+:Permissions Required: TENANT:DELETE, TENANT:READ
 :Response Type:  ``undefined``
 
 

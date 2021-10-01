@@ -25,7 +25,7 @@ Retrieves a specific user.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: USERS:READ
+:Permissions Required: USER:READ
 :Response Type:  Array
 
 Request Structure
@@ -120,7 +120,7 @@ Response Structure
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: USERS:UPDATE
+:Permissions Required: USER:UPDATE, USER:READ
 :Response Type:  Object
 
 Request Structure

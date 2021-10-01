@@ -25,7 +25,7 @@ Deletes URISigning objects for a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: admin\ [#tenancy]_
-:Permissions Required: DS-SECURITY-KEY:DELETE
+:Permissions Required: DS-SECURITY-KEY:DELETE, DS-SECURITY-KEY:READ, DELIVERY-SERVICE:READ, DELIVERY-SERVICE:UPDATE
 :Response Type:  ``undefined``
 
 Request Structure

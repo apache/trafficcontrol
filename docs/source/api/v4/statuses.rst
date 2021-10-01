@@ -102,7 +102,7 @@ Creates a Server :term:`Status`.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: STATUS:CREATE
+:Permissions Required: STATUS:CREATE, STATUS:READ
 :Response Type:  Array
 
 Request Structure

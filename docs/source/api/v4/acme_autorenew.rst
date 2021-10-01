@@ -25,7 +25,7 @@ Generates SSL certificates and private keys for all :term:`Delivery Services` th
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: ACME:READ, DS-SECURITY-KEY:UPDATE
+:Permissions Required: ACME:READ, DS-SECURITY-KEY:UPDATE, DELIVERY-SERVICE:UPDATE
 :Response Type:  ``undefined``
 
 Request Structure

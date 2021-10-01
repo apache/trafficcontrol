@@ -26,7 +26,7 @@ Retrieves all :term:`Parameter`/:term:`Profile` assignments.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: PROFILE-PARAMETER:READ
+:Permissions Required: PROFILE-PARAMETER:READ, PROFILE:READ, PARAMETER:READ
 :Response Type:  Array
 
 Request Structure
@@ -92,8 +92,7 @@ Associate a :term:`Parameter` to a :term:`Profile`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: PROFILE-PARAMETER:CREATE
-:Response Type:  Object
+:Permissions Required: PROFILE-PARAMETER:CREATE, PROFILE-PARAMETER:READ, PROFILE:READ, PARAMETER:READ
 
 Request Structure
 -----------------

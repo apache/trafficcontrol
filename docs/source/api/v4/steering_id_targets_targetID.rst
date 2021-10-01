@@ -25,7 +25,7 @@ Updates a steering target.
 
 :Auth. Required: Yes
 :Roles Required: Portal, Steering, Federation, "operations" or "admin"
-:Permissions Required: STEERING:UPDATE
+:Permissions Required: STEERING:UPDATE, STEERING:READ, DELIVERY-SERVICE:READ, TYPE:READ
 :Response Type:  Object
 
 Request Structure
@@ -106,7 +106,7 @@ Removes a specific target mapping from a specific :term:`Delivery Service`
 
 :Auth. Required: Yes
 :Roles Required: Portal, Steering, Federation, "operations" or "admin"
-:Permissions Required: STEERING:DELETE
+:Permissions Required: STEERING:DELETE, STEERING:READ, DELIVERY-SERVICE:READ, TYPE:READ, DELIVERY-SERVICE:UPDATE
 :Response Type:  ``undefined``
 
 Request Structure

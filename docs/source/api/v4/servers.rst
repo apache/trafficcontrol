@@ -25,7 +25,7 @@ Retrieves properties of all servers across all CDNs.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: SERVERS:READ
+:Permissions Required: SERVER:READ, DELIVERY-SERVICE:READ, CDN:READ, PHYSICAL-LOCATION:READ, CACHE-GROUP:READ, TYPE:READ, PROFILE:READ
 :Response Type:  Array
 
 Request Structure
@@ -237,7 +237,7 @@ Allows a user to create a new server.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVERS:CREATE
+:Permissions Required: SERVER:CREATE, CACHE-GROUP:UPDATE, DELIVERY-SERVICE:UPDATE, CDN:UPDATE, SERVER:READ, DELIVERY-SERVICE:READ, CDN:READ, PHYSICAL-LOCATION:READ, CACHE-GROUP:READ, TYPE:READ, PROFILE:READ
 :Response Type:  Object
 
 Request Structure

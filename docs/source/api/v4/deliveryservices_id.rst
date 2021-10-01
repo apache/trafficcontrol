@@ -25,7 +25,7 @@ Allows users to edit an existing :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [#tenancy]_
-:Permissions Required: DELIVERY-SERVICE:UPDATE
+:Permissions Required: DELIVERY-SERVICE:UPDATE, DELIVERY-SERVICE:READ, CDN:READ
 :Response Type:  Array (should always have a length of exactly one on success)
 
 Request Structure
@@ -374,7 +374,7 @@ Deletes the target :term:`Delivery Service`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [#tenancy]_
-:Permissions Required: DELIVERY-SERVICE:DELETE
+:Permissions Required: DELIVERY-SERVICE:DELETE, DELIVERY-SERVICE:READ, CDN:READ
 :Response Type:  ``undefined``
 
 Request Structure

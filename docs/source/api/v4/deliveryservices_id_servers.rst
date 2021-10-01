@@ -26,7 +26,7 @@ Retrieves properties of Edge-Tier servers assigned to a :term:`Delivery Service`
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: DS-SERVER:READ
+:Permissions Required: DS-SERVER:READ, CACHE-GROUP:READ, CDN:READ, TYPE:READ, PROFILE:READ
 :Response Type:  Array
 
 Request Structure

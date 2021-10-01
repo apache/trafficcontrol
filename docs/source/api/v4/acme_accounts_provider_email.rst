@@ -27,7 +27,7 @@ Delete :term:`ACME Account` information.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: ACME:DELETE
+:Permissions Required: ACME:DELETE, ACME:READ
 :Response Type:  Object
 
 Request Structure

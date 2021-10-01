@@ -130,7 +130,7 @@ Creates a new, static DNS entry.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: STATIC-DNS:CREATE
+:Permissions Required: STATIC-DNS:CREATE, STATIC-DNS:READ
 :Response Type:  Object
 
 Request Structure
@@ -326,7 +326,7 @@ Delete staticdnsentries.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: STATIC-DNS:DELETE
+:Permissions Required: STATIC-DNS:DELETE, STATIC-DNS:READ
 :Response Type:  ``undefined``
 
 Request Structure

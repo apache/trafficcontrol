@@ -72,7 +72,7 @@ Allows user to acquire a lock on a CDN.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: CDNLOCK:CREATE
+:Permissions Required: CDN-LOCK:CREATE, CDN:READ
 :Response Type:  Object
 
 Request Structure
@@ -142,7 +142,7 @@ Deletes an existing ``CDN Lock``.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: CDNLOCK:DELETE
+:Permissions Required: CDN-LOCK:DELETE, CDN:READ
 :Response Type: Object
 
 Request Structure

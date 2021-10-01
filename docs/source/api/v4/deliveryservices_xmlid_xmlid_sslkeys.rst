@@ -25,7 +25,7 @@ Retrieves SSL keys for a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: DS-SECURITY-KEY:READ
+:Permissions Required: DS-SECURITY-KEY:READ, DELIVERY-SERVICE:READ
 :Response Type:  Object
 
 Request Structure
@@ -100,7 +100,7 @@ Response Structure
 ==========
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: DS-SECURITY-KEY:DELETE
+:Permissions Required: DS-SECURITY-KEY:DELETE, DELIVERY-SERVICE:READ, DS-SECURITY-KEY:READ
 :Response Type:  Object (string)
 
 Request Structure

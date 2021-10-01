@@ -112,7 +112,7 @@ Creates one or more new :term:`Parameters`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: PARAMETER:CREATE
+:Permissions Required: PARAMETER:CREATE, PARAMETER:READ
 :Response Type:  Array
 
 Request Structure

@@ -25,7 +25,7 @@ Generates :abbr:`ZSK (Zone-Signing Key)` and :abbr:`KSK (Key-Signing Key)` keypa
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: CDN-SECURITY-KEY:CREATE
+:Permissions Required: DNS-SEC:CREATE, CDN:UPDATE, CDN:READ
 :Response Type:  Object (string)
 
 Request Structure

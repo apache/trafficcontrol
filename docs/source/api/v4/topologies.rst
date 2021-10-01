@@ -25,7 +25,7 @@ Retrieves :term:`Topologies`.
 
 :Auth. Required: Yes
 :Roles Required: "read-only"
-:Permissions Required: TOPOLOGY:READ
+:Permissions Required: TOPOLOGY:READ, CACHE-GROUP:READ
 :Response Type:  Array
 
 Request Structure
@@ -153,7 +153,7 @@ Create a new :term:`Topology`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: TOPOLOGY:CREATE
+:Permissions Required: TOPOLOGY:CREATE, TOPOLOGY:READ, CACHE-GROUP:READ, CACHE-GROUP:UPDATE
 :Response Type:  Object
 
 Request Structure
@@ -542,7 +542,7 @@ Deletes a specific :term:`Topology`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: TOPOLOGY:DELETE
+:Permissions Required: TOPOLOGY:DELETE, TOPOLOGY:READ, CACHE-GROUP:READ, CACHE-GROUP:UPDATE
 :Response Type:  ``undefined``
 
 

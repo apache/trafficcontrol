@@ -104,7 +104,7 @@ Creates a new federation resolver.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: FEDERATION:CREATE
+:Permissions Required: FEDERATION:CREATE, FEDERATION:READ
 :Response Type:  Object
 
 Request Structure
@@ -174,7 +174,7 @@ Deletes a federation resolver.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: FEDERATION:DELETE
+:Permissions Required: FEDERATION:DELETE, FEDERATION:READ
 :Response Type:  Object
 
 Request Structure

@@ -25,7 +25,7 @@ Assigns :term:`cache servers` to a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [#tenancy]_
-:Permissions Required: DELIVERY-SERVICE:UPDATE, SERVER:UPDATE
+:Permissions Required: DELIVERY-SERVICE:UPDATE, SERVER:UPDATE, DELIVERY-SERVICE:READ, SERVER:READ
 :Response Type:  Object
 
 Request Structure

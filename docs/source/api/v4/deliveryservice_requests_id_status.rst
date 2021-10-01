@@ -79,7 +79,7 @@ The response is the status of the requested :term:`DSR`.
 =======
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
-:Permissions Required: DS-REQUESTS:UPDATE
+:Permissions Required: DS-REQUESTS:UPDATE, DS-REQUESTS:READ
 :Response Type:  Object
 
 Request Structure

@@ -25,7 +25,7 @@ Retrieves :term:`Delivery Service Requests`.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: DS-REQUEST:READ
+:Permissions Required: DS-REQUEST:READ, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  Array
 
 Request Structure
@@ -202,7 +202,7 @@ Creates a new :term:`Delivery Service Request`. "Closed" :term:`Delivery Service
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
-:Permissions Required: DS-REQUEST:CREATE
+:Permissions Required: DS-REQUEST:CREATE, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  Object
 
 Request Structure
@@ -528,7 +528,7 @@ Updates an existing :term:`Delivery Service Request`. Note that "closed" :term:`
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
-:Permissions Required: DS-REQUEST:UPDATE
+:Permissions Required: DS-REQUEST:UPDATE, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  Object
 
 Request Structure
@@ -777,7 +777,7 @@ Deletes a :term:`Delivery Service Request`.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
-:Permissions Required: DS-REQUEST:DELETE
+:Permissions Required: DS-REQUEST:DELETE, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  Object
 
 Request Structure

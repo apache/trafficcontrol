@@ -27,7 +27,7 @@ Retrieves information regarding pending updates and revalidation jobs for a give
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: SERVERS:READ
+:Permissions Required: SERVER:READ
 :Response Type: Array
 
 .. versionchanged:: 4.0

@@ -25,7 +25,7 @@ Extract information about :term:`Cache Groups`.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: CACHE-GROUP:READ
+:Permissions Required: CACHE-GROUP:READ, TYPE:READ
 :Response Type:  Array
 
 Request Structure
@@ -128,7 +128,7 @@ Creates a :term:`Cache Group`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: CACHE-GROUP:CREATE
+:Permissions Required: CACHE-GROUP:CREATE, CACHE-GROUP:READ, TYPE:READ
 :Response Type:  Object
 
 Request Structure

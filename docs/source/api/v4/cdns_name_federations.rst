@@ -118,7 +118,7 @@ Creates a new federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: FEDERATION:CREATE
+:Permissions Required: FEDERATION:CREATE, FEDERATION:READ, CDN:READ
 :Response Type:  Object
 
 Request Structure

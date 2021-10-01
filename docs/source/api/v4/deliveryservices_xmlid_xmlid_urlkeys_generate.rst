@@ -25,7 +25,7 @@ Generates URL signing keys for a :term:`Delivery Service`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: DS-SECURITY-KEY:CREATE
+:Permissions Required: DS-SECURITY-KEY:CREATE, DELIVERY-SERVICE:READ, DELIVERY-SERVICE:UPDATE
 :Response Type:  Object (string)
 
 Request Structure

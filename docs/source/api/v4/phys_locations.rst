@@ -121,7 +121,7 @@ Creates a new physical location
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: PHYSICAL-LOCATION:CREATE
+:Permissions Required: PHYSICAL-LOCATION:CREATE, PHYSICAL-LOCATION:READ
 :Response Type:  Object
 
 Request Structure

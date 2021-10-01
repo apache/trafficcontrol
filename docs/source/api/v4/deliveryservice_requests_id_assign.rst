@@ -26,7 +26,7 @@ Assign a :term:`Delivery Service Request` to a user.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: DS-REQUESTS:READ
+:Permissions Required: DS-REQUESTS:READ, USER:READ
 :Response Type:  Object (string)
 
 Request Structure
@@ -76,7 +76,7 @@ The response is the username of the user to whom the :term:`Delivery Service Req
 =======
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: DS-REQUESTS:UPDATE
+:Permissions Required: DS-REQUESTS:UPDATE, DS-REQUESTS:READ
 :Response Type:  Object
 
 Request Structure

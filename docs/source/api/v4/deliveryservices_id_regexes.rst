@@ -102,7 +102,7 @@ Creates a routing regular expression for a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [#tenancy]_
-:Permissions Required: DELIVERY-SERVICE:CREATE
+:Permissions Required: DELIVERY-SERVICE:CREATE, DELIVERY-SERVICE:READ
 :Response Type:  Object
 
 Request Structure

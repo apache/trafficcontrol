@@ -25,7 +25,7 @@ Update a service category.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVICE-CATEGORY:UPDATE
+:Permissions Required: SERVICE-CATEGORY:UPDATE, SERVICE-CATEGORY:READ
 :Response Type:  Object
 
 Request Structure
@@ -86,7 +86,7 @@ Deletes a specific :term:`Service Category`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVICE-CATEGORY:DELETE
+:Permissions Required: SERVICE-CATEGORY:DELETE, SERVICE-CATEGROY:READ
 :Response Type:  ``undefined``
 
 

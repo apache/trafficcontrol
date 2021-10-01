@@ -25,7 +25,7 @@ Removes a :term:`Delivery Service` from a federation. A :term:`Delivery Service`
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: FEDERATION:DELETE, DELIVERY-SERVICE:UPDATE
+:Permissions Required: FEDERATION:DELETE, DELIVERY-SERVICE:UPDATE, FEDERATION:READ, DELIVERY-SERVICE:READ
 :Response Type:  ``undefined``
 
 Request Structure

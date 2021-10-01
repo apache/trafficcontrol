@@ -82,7 +82,7 @@ Create a new :term:`Server Capability`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVER-CAPABILITY:CREATE
+:Permissions Required: SERVER-CAPABILITY:CREATE, SERVER-CAPABILITY:READ
 :Response Type:  Object
 
 Request Structure
@@ -143,7 +143,7 @@ Update an existing :term:`Server Capability`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVER-CAPABILITY:UPDATE
+:Permissions Required: SERVER-CAPABILITY:UPDATE, SERVER-CAPABILITY:READ
 :Response Type:  Object
 
 Request Structure
@@ -204,7 +204,7 @@ Deletes a specific :term:`Server Capability`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVER-CAPABILITY:DELETE
+:Permissions Required: SERVER-CAPABILITY:DELETE, SERVER-CAPABILITY:READ
 :Response Type:  ``undefined``
 
 

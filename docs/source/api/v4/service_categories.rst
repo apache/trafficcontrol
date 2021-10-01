@@ -96,7 +96,7 @@ Create a new service category.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVICE-CATEGORY:CREATE
+:Permissions Required: SERVICE-CATEGORY:CREATE, SERVICE-CATEGORY:READ
 :Response Type:  Object
 
 Request Structure

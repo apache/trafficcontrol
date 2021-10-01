@@ -106,7 +106,7 @@ Assigns one or more :term:`Delivery Services` to a federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: FEDERATION:UPDATE, DELIVERY-SERVICE:UPDATE
+:Permissions Required: FEDERATION:UPDATE, DELIVERY-SERVICE:UPDATE, FEDERATION:READ, DELIVERY-SERVICE:READ
 :Response Type:  Object
 
 Request Structure

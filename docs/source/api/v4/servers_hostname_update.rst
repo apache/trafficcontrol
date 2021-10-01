@@ -25,7 +25,7 @@
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVERS:UPDATE
+:Permissions Required: SERVER:UPDATE, SERVER:READ
 :Response Type:  undefined
 
 Request Structure

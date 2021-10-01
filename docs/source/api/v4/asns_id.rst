@@ -27,7 +27,7 @@ Allows user to edit an existing :abbr:`ASN (Autonomous System Number)`-to-:term:
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: ASNS:UPDATE
+:Permissions Required: ASN:UPDATE, ASN:READ, CACHE-GROUP:UPDATE, CACHE-GROUP:READ
 :Response Type: Object
 
 Request Structure
@@ -105,7 +105,7 @@ Deletes an association between an :abbr:`ASN (Autonomous System Number)` and a :
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: ASNS:DELETE
+:Permissions Required: ASN:DELETE, ASN:READ, CACHE-GROUP:READ, CACHE-GROUP:UPDATE
 :Response Type:  ``undefined``
 
 Request Structure

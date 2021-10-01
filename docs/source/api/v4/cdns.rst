@@ -24,7 +24,7 @@ Extract information about all CDNs
 =======
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: CDN:GET
+:Permissions Required: CDN:READ
 :Response Type:  Array
 
 Request Structure
@@ -107,7 +107,7 @@ Allows user to create a CDN
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: CDN:CREATE
+:Permissions Required: CDN:CREATE, CDN:READ
 :Response Type:  Object
 
 Request Structure

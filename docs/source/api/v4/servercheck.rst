@@ -27,7 +27,7 @@ Fetches identifying and meta information as well as "check" values regarding all
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: SERVER-CHECK:READ
+:Permissions Required: SERVER-CHECK:READ, SERVER:READ
 :Response Type:  Array
 
 Request Structure
@@ -106,7 +106,7 @@ Post a server check result to the "serverchecks" table. Updates the resulting va
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
-:Permissions Required: SERVER-CHECK:CREATE
+:Permissions Required: SERVER-CHECK:CREATE, SERVER-CHECK:READ, SERVER:READ
 :Response Type: Object
 
 Request Structure

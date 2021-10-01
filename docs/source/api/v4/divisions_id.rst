@@ -25,7 +25,7 @@ Updates a specific Division
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: DIVISION:UPDATE
+:Permissions Required: DIVISION:UPDATE, DIVISION:READ
 
 
 Request Structure
@@ -93,7 +93,7 @@ Deletes a specific Division
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: DIVISION:DELETE
+:Permissions Required: DIVISION:DELETE, DIVISION:READ
 
 
 Request Structure

@@ -94,7 +94,7 @@ Creates a new Division.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: DIVISION:CREATE
+:Permissions Required: DIVISION:CREATE, DIVISION:READ
 :Response Type:  Object
 
 Request Structure

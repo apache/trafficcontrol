@@ -89,7 +89,7 @@ Assigns one or more resolvers to a federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: FEDERATION:CREATE
+:Permissions Required: FEDERATION:CREATE, FEDERATION:READ
 :Response Type:  Object
 
 Request Structure

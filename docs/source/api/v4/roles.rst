@@ -25,7 +25,7 @@ Retrieves all user :term:`Roles`.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: ROLES:READ
+:Permissions Required: ROLE:READ
 :Response Type:  Array
 
 Request Structure
@@ -138,7 +138,7 @@ Creates a new :term:`Role`.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: ROLES:CREATE
+:Permissions Required: ROLE:CREATE, ROLE:READ
 :Response Type: Object
 
 Request Structure
@@ -205,7 +205,7 @@ Replaces an existing :term:`Role` with one provided by the request.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: ROLES:UPDATE
+:Permissions Required: ROLE:UPDATE, ROLE:READ
 :Response Type:
 
 Request Structure
@@ -288,7 +288,7 @@ Deletes a :term:`Role`
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: ROLES:DELETE
+:Permissions Required: ROLE:DELETE, ROLE:READ
 :Response Type: ``undefined``
 
 Request Structure

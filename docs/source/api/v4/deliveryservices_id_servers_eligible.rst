@@ -31,7 +31,7 @@ Retrieves properties of :term:`Edge-tier cache servers` eligible for assignment 
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: DELIVERY-SERVICE:READ, SERVER:READ
+:Permissions Required: DELIVERY-SERVICE:READ, SERVER:READ, CACHE-GROUP:READ, TYPE:READ, CDN:READ
 :Response Type:  Array
 
 Request Structure

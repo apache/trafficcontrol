@@ -23,7 +23,7 @@
 =======
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: PROFILES:READ
+:Permissions Required: PROFILE:READ
 :Response Type:  Array
 
 Request Structure
@@ -96,7 +96,7 @@ Creates a new :term:`Profile`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: PROFILES:CREATE
+:Permissions Required: PROFILE:CREATE, PROFILE:READ
 :Response Type:  Object
 
 Request Structure

@@ -134,7 +134,7 @@ Creates a new coordinate pair
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: COORDINATES:CREATE
+:Permissions Required: COORDINATES:CREATE, COORDINATES:READ
 :Response Type:  Object
 
 Request Structure
@@ -200,7 +200,7 @@ Updates a coordinate
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: COORDINATES:UPDATE
+:Permissions Required: COORDINATES:UPDATE, COORDINATES:READ
 :Response Type:  Object
 
 Request Structure
@@ -273,7 +273,7 @@ Deletes a coordinate
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: COORDINATES:DELETE
+:Permissions Required: COORDINATES:DELETE, COORDINATES:READ
 :Response Type:  ``undefined``
 
 Request Structure
