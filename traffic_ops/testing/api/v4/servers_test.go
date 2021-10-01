@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -56,6 +57,7 @@ func TestServers(t *testing.T) {
 		LastServerInTopologyCacheGroup(t)
 		GetServersForNonExistentDeliveryService(t)
 		CUDServerWithLocks(t)
+		GetTestPaginationSupportServers(t)
 	})
 }
 
@@ -1300,5 +1302,74 @@ func GetServersForNonExistentDeliveryService(t *testing.T) {
 	}
 	if len(resp.Response) != 0 {
 		t.Errorf("expected an empty list of servers associated with a non existent DS, but got %d servers", len(resp.Response))
+	}
+}
+
+func GetTestPaginationSupportServers(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetServers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get Servers: %v - alerts: %+v", err, resp.Alerts)
+	}
+	server := resp.Response
+	if len(server) < 3 {
+		t.Fatalf("Need at least 3 server in Traffic Ops to test pagination support, found: %d", len(server))
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	serversWithLimit, _, err := TOSession.GetServers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get server with Limit: %v - alerts: %+v", err, serversWithLimit.Alerts)
+	}
+	if !reflect.DeepEqual(server[:1], serversWithLimit.Response) {
+		t.Error("expected GET server with limit = 1 to return first result")
+	}
+
+	opts.QueryParameters.Set("offset", "1")
+	serversWithOffset, _, err := TOSession.GetServers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get server with Limit and Offset: %v - alerts: %+v", err, serversWithOffset.Alerts)
+	}
+	if !reflect.DeepEqual(server[1:2], serversWithOffset.Response) {
+		t.Error("expected GET server with limit = 1, offset = 1 to return second result")
+	}
+
+	opts.QueryParameters.Del("offset")
+	opts.QueryParameters.Set("page", "2")
+	serversWithPage, _, err := TOSession.GetServers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get server with Limit and Page: %v - alerts: %+v", err, serversWithPage.Alerts)
+	}
+	if !reflect.DeepEqual(server[1:2], serversWithPage.Response) {
+		t.Error("expected GET server with limit = 1, page = 2 to return second result")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, _, err = TOSession.GetServers(opts)
+	if err == nil {
+		t.Error("expected GET server to return an error when limit is not bigger than -1")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
+		t.Errorf("expected GET server to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, _, err = TOSession.GetServers(opts)
+	if err == nil {
+		t.Error("expected GET server to return an error when offset is not a positive integer")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET server to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, _, err = TOSession.GetServers(opts)
+	if err == nil {
+		t.Error("expected GET server to return an error when page is not a positive integer")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET server to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
