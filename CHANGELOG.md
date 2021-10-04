@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Deprecated
 
 ### Removed
+- Removed the `user_role` and `api_capability` tables, and the associated endpoints and docs
 
 ## [6.0.0] - 2021-08-30
 ### Added
