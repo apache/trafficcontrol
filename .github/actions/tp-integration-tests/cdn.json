@@ -9,6 +9,7 @@
 		"pid_file": "/var/run/traffic_ops.pid",
 		"workers": 12
 	},
+	"disable_auto_cert_deletion": false,
 	"use_ims": true,
 	"role_based_permissions": false,
 	"traffic_ops_golang": {

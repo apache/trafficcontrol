@@ -490,6 +490,10 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	.. versionadded:: 6.1
 		The blueprint can be seen :pr:`5848`
 
+:disable_auto_cert_deletion: This optional boolean value can be used to disable the automatic deletion of certificates for Delivery Services that no longer exist (which happens after a CDN Snapshot is taken). Default: false.
+
+	.. versionadded:: 6.1
+
 
 Example cdn.conf
 ''''''''''''''''
