@@ -17,7 +17,6 @@
  * under the License.
  */
 import { by, element } from 'protractor';
-
 import { randomize } from '../config';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from './SideNavigationPage.po';
