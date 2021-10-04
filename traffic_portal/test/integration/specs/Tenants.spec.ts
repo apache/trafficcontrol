@@ -27,15 +27,9 @@ const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const tenantsPage = new TenantsPage();
 
-describe('Setup API for Tenants', () => {
-    it('Setup', async () => {
-        await api.UseAPI(tenants.setup);
-    });
-});
-
 tenants.tests.forEach(async tenantsData => {
     tenantsData.logins.forEach(login => {
-        describe(`Traffic Portal - tenants - ${login.description}`, () => {
+        describe(`Traffic Portal - Tenants - ${login.description}`, () => {
             afterEach(async function () {
                 await tenantsPage.OpenTenantsPage();
             });
@@ -69,11 +63,4 @@ tenants.tests.forEach(async tenantsData => {
     });
 });
 
-describe('Clean Up API for Tenants Test', () => {
-    afterAll(async () => {
-        await api.UseAPI(tenants.cleanup);
-    });
-    it('Cleanup', async() => {
-      expect(true).toBeTruthy();
-    });
-});
+
