@@ -110,7 +110,7 @@ export const tenants = {
             update: [
                 {
                     description: "update a tenant",
-                    Name: "TPTestReadOnly",
+                    Name: "tenantChild",
                     Active: "false",
                     validationMessage: "Forbidden."
                 }
@@ -118,7 +118,7 @@ export const tenants = {
             remove: [
                 {
                     description: "delete a tenant",
-                    Name: "TPTestReadOnly",
+                    Name: "tenantChild",
                     validationMessage: "Forbidden."
                 }
             ]
