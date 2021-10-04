@@ -258,13 +258,13 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 // Logs the difference.
 // If the file on disk doesn't exist, returns true and logs the entire file as a diff.
 func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, perm os.FileMode) (bool, error) {
+	diffMsg := ""
 	args := []string{
 		"--file-a=stdin",
 		"--file-b=" + fileLocation,
 		"--file-mode=" + fmt.Sprintf("%#o", perm),
 	}
-	diffMsg := ""
-	
+
 	stdOut, stdErr, code := t3cutil.DoInput(newFile, `t3c-diff`, args...)
 	if code > 1 {
 		return false, fmt.Errorf("t3c-diff returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
