@@ -43,7 +43,6 @@ export class TenantsPage extends BasePage {
   private txtName = element(by.name('name'));
   private txtActive = element(by.name('active'));
   private txtParentTenant = element(by.name('parentId'));
-  private txtSearch = element(by.id('tenantsTable_filter')).element(by.css('label input'));
   private btnDelete = element(by.buttonText('Delete'));
   private txtConfirmTenantName = element(by.name('confirmWithNameInput'));
   private randomize = randomize;
@@ -75,13 +74,7 @@ export class TenantsPage extends BasePage {
   public async SearchTenant(name: string) {
     let snp = new SideNavigationPage();
     await snp.NavigateToTenantsPage();
-    await this.txtSearch.clear();
-    await this.txtSearch.sendKeys(name);
-    await element.all(by.repeater('t in ::tenants')).filter(function (row) {
-      return row.element(by.name('name')).getText().then(function (val) {
-        return val === name;
-      });
-    }).first().click();
+    await element(by.linkText(name)).click();
   }
 
   public async DeleteTenant(tenant: DeleteTenant) {
