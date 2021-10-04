@@ -263,10 +263,9 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, 
 		"--file-b=" + fileLocation,
 		"--file-mode=" + fmt.Sprintf("%#o", perm),
 	}
-	
 	diffMsg := ""
+	
 	stdOut, stdErr, code := t3cutil.DoInput(newFile, `t3c-diff`, args...)
-
 	if code > 1 {
 		return false, fmt.Errorf("t3c-diff returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}
