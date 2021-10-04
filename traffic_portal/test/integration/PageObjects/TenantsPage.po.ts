@@ -74,7 +74,7 @@ export class TenantsPage extends BasePage {
   public async SearchTenant(name: string) {
     let snp = new SideNavigationPage();
     await snp.NavigateToTenantsPage();
-    await element(by.linkText(name)).click();
+    await element(by.linkText(name+this.randomize)).click();
   }
 
   public async DeleteTenant(tenant: DeleteTenant) {
