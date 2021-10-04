@@ -33,7 +33,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/acme"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apicapability"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apitenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/asn"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -149,9 +148,6 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `deliveryservices/xmlId/{xmlid}/sslkeys/renew$`, deliveryservice.RenewAcmeCertificate, auth.PrivLevelOperations, nil, Authenticated, nil, 2534390573},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `acme_autorenew/?$`, deliveryservice.RenewCertificates, auth.PrivLevelOperations, nil, Authenticated, nil, 2534390574},
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `async_status/{id}$`, api.GetAsyncStatus, auth.PrivLevelOperations, nil, Authenticated, nil, 2534390575},
-
-		// API Capability
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `api_capabilities/?$`, apicapability.GetAPICapabilitiesHandler, auth.PrivLevelReadOnly, nil, Authenticated, nil, 48132065893},
 
 		//ASNs
 		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `asns/?$`, api.UpdateHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, nil, Authenticated, nil, 42641723173},
@@ -538,9 +534,6 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{api.Version{Major: 3, Minor: 1}, http.MethodPut, `acme_accounts/?$`, acme.Update, auth.PrivLevelAdmin, nil, Authenticated, nil, 2034390563},
 		{api.Version{Major: 3, Minor: 1}, http.MethodDelete, `acme_accounts/{provider}/{email}?$`, acme.Delete, auth.PrivLevelAdmin, nil, Authenticated, nil, 2034390564},
 
-		// API Capability
-		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `api_capabilities/?$`, apicapability.GetAPICapabilitiesHandler, auth.PrivLevelReadOnly, nil, Authenticated, nil, 28132065893},
-
 		//ASNs
 		{api.Version{Major: 3, Minor: 0}, http.MethodPut, `asns/?$`, api.UpdateHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, nil, Authenticated, nil, 22641723173},
 		{api.Version{Major: 3, Minor: 0}, http.MethodDelete, `asns/?$`, api.DeleteHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, nil, Authenticated, nil, 202048983},
@@ -915,9 +908,6 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		/**
 		 * 2.x API
 		 */
-		// API Capability
-		{api.Version{Major: 2, Minor: 0}, http.MethodGet, `api_capabilities/?$`, apicapability.GetAPICapabilitiesHandler, auth.PrivLevelReadOnly, nil, Authenticated, nil, 2813206589},
-
 		//ASNs
 		{api.Version{Major: 2, Minor: 0}, http.MethodPut, `asns/?$`, api.UpdateHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, nil, Authenticated, nil, 2264172317},
 		{api.Version{Major: 2, Minor: 0}, http.MethodDelete, `asns/?$`, api.DeleteHandler(&asn.TOASNV11{}), auth.PrivLevelOperations, nil, Authenticated, nil, 20204898},
