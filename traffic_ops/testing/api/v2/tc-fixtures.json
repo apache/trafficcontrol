@@ -1512,8 +1512,7 @@
             "privLevel": 30,
             "capabilities": [
                 "all-read",
-                "all-write",
-                "cdn-read"
+                "all-write"
             ]
         },
         {

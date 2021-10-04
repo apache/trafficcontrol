@@ -110,7 +110,7 @@ func main() {
 		}
 	}
 
-	log.Infoln(time.Now().Format(time.UnixDate))
+	log.Infoln(time.Now().Format(time.RFC3339))
 
 	if !util.CheckUser(cfg) {
 		lock.UnlockAndExit(UserCheckError)
@@ -231,12 +231,8 @@ func main() {
 		runSysctl(cfg)
 	}
 
-	// update Traffic Ops
-	result, err := trops.UpdateTrafficOps(&syncdsUpdate)
-	if err != nil {
+	if err := trops.UpdateTrafficOps(&syncdsUpdate); err != nil {
 		log.Errorf("failed to update Traffic Ops: %s\n", err.Error())
-	} else if result {
-		log.Infoln("Traffic Ops has been updated.")
 	}
 
 	GitCommitAndExit(Success, cfg)

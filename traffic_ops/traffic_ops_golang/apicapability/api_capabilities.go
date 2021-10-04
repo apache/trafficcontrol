@@ -1,3 +1,9 @@
+// Package apicapability defines the API handlers for Traffic Ops's API's
+// /api_capabilities endpoint.
+//
+// Deprecated: "Capabilities" (now called Permissions) are no longer handled
+// this way, and this package should be removed once API versions that use it
+// have been fully removed.
 package apicapability
 
 import (

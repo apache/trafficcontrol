@@ -85,8 +85,7 @@ Response Structure
 :postalCode:        The postal code of the area in which the user resides
 :publicSshKey:      The user's public key used for the SSH protocol
 :registrationSent:  If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
-:role:              The integral, unique identifier of the highest-privilege role assigned to this user
-:rolename:          The name of the highest-privilege role assigned to this user
+:role:              The name of the role assigned to this user
 :stateOrProvince:   The name of the state or province where this user resides
 :tenant:            The name of the tenant to which this user belongs
 :tenantId:          The integral, unique identifier of the tenant to which this user belongs
@@ -106,7 +105,7 @@ Response Structure
 	Whole-Content-Sha512: YBJLN8NbOxOvECe1RGtcwCzIPDhyhLpW56nTJHQM5WI2WUDe2mAKREpaEE72nzrfBliq1GABwJlsxq2OdhcFkw==
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 13 Dec 2018 01:03:53 GMT
-	Content-Length: 391
+	Content-Length: 454
 
 	{ "response": [
 		{
@@ -125,13 +124,12 @@ Response Structure
 			"phoneNumber": null,
 			"postalCode": null,
 			"publicSshKey": null,
-			"role": 1,
-			"rolename": "admin",
+			"role": "admin",
 			"stateOrProvince": null,
 			"tenant": "root",
 			"tenantId": 1,
 			"uid": null,
-			"lastUpdated": "2018-12-12 16:26:32+00",
+			"lastUpdated": "2021-08-25T14:08:13.974447-06:00",
 			"changeLogCount": 20,
 			"lastAuthenticated": "2021-07-09T14:44:10.371708-06:00"
 		}
@@ -162,7 +160,7 @@ Request Structure
 :phoneNumber:        An optional field which should contain the user's phone number
 :postalCode:         An optional field which should contain the user's postal code
 :publicSshKey:       An optional field which should contain the user's public encryption key used for the SSH protocol
-:role:               The number that corresponds to the highest permission role which will be permitted to the user
+:role:               The name that corresponds to the highest permission role which will be permitted to the user
 :stateOrProvince:    An optional field which should contain the name of the state or province in which the user resides
 :tenantId:           The integral, unique identifier of the tenant to which the new user shall belong
 
@@ -191,7 +189,7 @@ Request Structure
 		"localPasswd": "BFFsully",
 		"confirmLocalPasswd": "BFFsully",
 		"newUser": true,
-		"role": 1,
+		"role": "admin",
 		"tenantId": 1
 	}
 
@@ -212,8 +210,7 @@ Response Structure
 :postalCode:       The postal code of the area in which the user resides
 :publicSshKey:     The user's public key used for the SSH protocol
 :registrationSent: If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
-:role:             The integral, unique identifier of the highest-privilege role assigned to this user
-:roleName:         The name of the highest-privilege role assigned to this user
+:role:             The name of the role assigned to this user
 :stateOrProvince:  The name of the state or province where this user resides
 :tenant:           The name of the tenant to which this user belongs
 :tenantId:         The integral, unique identifier of the tenant to which this user belongs
@@ -223,47 +220,50 @@ Response Structure
 .. code-block:: http
 	:caption: Response Example
 
-	HTTP/1.1 200 OK
+	HTTP/1.1 201 Created
 	Access-Control-Allow-Credentials: true
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 	Content-Type: application/json
+	Location: /api/4.0/users?id=44
 	Date: Thu, 13 Dec 2018 02:28:27 GMT
 	X-Server-Name: traffic_ops_golang/
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: vDqbaMvgeeoIds1czqvIWlyDG8WLnCCJdF14Ub05nsE+oJOakkyeZ8odf4d0Zjtqpk01hoVo14H2tjuWPdqwgw==
-	Content-Length: 520
+	Content-Length: 623
 
 	{ "alerts": [
 		{
 			"level": "success",
-			"text": "User creation was successful."
+			"text": "user was created."
 		}
 	],
 	"response": {
-		"registrationSent": null,
-		"email": "mwazowski@minc.biz",
-		"tenantId": 1,
-		"city": "Monstropolis",
-		"tenant": "root",
-		"id": 8,
-		"company": null,
-		"roleName": "admin",
-		"phoneNumber": null,
-		"country": null,
-		"fullName": "Mike Wazowski",
-		"publicSshKey": null,
-		"uid": null,
-		"stateOrProvince": null,
-		"lastUpdated": null,
-		"username": "mike",
-		"newUser": false,
-		"addressLine2": null,
-		"role": 1,
 		"addressLine1": "22 Mike Wazowski You've Got Your Life Back Lane",
+		"addressLine2": null,
+		"changeLogCount": null,
+		"city": "Monstropolis",
+		"company": null,
+		"confirmLocalPasswd": "BFFsully",
+		"country": null,
+		"email": "mwazowski@minc.biz",
+		"fullName": "Mike Wazowski",
+		"gid": null,
+		"id": 26,
+		"lastAuthenticated": "2021-07-09T14:44:10.371708-06:00",
+		"lastUpdated": "2021-08-25T14:43:10.466412-06:00",
+		"newUser": true,
+		"phoneNumber": null,
 		"postalCode": null,
-		"gid": null
+		"publicSshKey": null,
+		"registrationSent": null,
+		"role": "admin",
+		"stateOrProvince": null,
+		"tenant": "root",
+		"tenantId": 1,
+		"uid": null,
+		"username": "mike"
 	}}

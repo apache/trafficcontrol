@@ -22,13 +22,14 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-log"
+
 	"github.com/kylelemons/godebug/diff"
 	"github.com/pborman/getopt/v2"
 )
@@ -88,7 +89,7 @@ func main() {
 		match := regexp.MustCompile(`(?m)^\+.*|^-.*`)
 		changes := diff.Diff(fileA, fileB)
 		for _, change := range match.FindAllString(changes, -1) {
-			log.Infoln(change)
+			fmt.Println(change)
 		}
 		os.Exit(1)
 	}
