@@ -81,19 +81,11 @@
         group: "1234"
         uid: "1234"
 
-    - name: Temporary try/catch to get logs
-      block:
-        - name: Deploy Traffic_opsdb
-          import_role:
-            name: traffic_opsdb
-          vars:
-            install_traffic_opsdb: true
-      rescue:
-        - name: Dump systemd logs
-          command: journalctl -xe
-
-        - name: Rethrow failure
-          fail:
+    - name: Deploy Traffic_opsdb
+      import_role:
+        name: traffic_opsdb
+      vars:
+        install_traffic_opsdb: true
 
 - name: Deploy primary TODB
   hosts: traffic_opsdb-primary
