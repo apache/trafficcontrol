@@ -17,6 +17,40 @@
  * under the License.
  */
 export const tenants = {
+    cleanup: [
+        {
+            action: "DeleteTenants",
+            route: "/tenants",
+            method: "delete",
+            data: [
+                {
+                    route: "/tenants/",
+                    getRequest: [
+                        {
+                            route: "/tenants",
+                            queryKey: "name",
+                            queryValue: "TPTestReadOnly",
+                            replace: "route"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    setup: [
+        {
+            action: "CreateTenants",
+            route: "/tenants",
+            method: "post",
+            data: [
+                {
+                    active: true,
+                    name: "TPTestReadOnly",
+                    parentId: 1
+                }
+            ]
+        }
+    ],
     tests: [
         {
             logins: [
@@ -76,7 +110,7 @@ export const tenants = {
             update: [
                 {
                     description: "update a tenant",
-                    Name: "tenantChild",
+                    Name: "TPTestReadOnly",
                     Active: "false",
                     validationMessage: "Forbidden."
                 }
@@ -84,7 +118,7 @@ export const tenants = {
             remove: [
                 {
                     description: "delete a tenant",
-                    Name: "tenantChild",
+                    Name: "TPTestReadOnly",
                     validationMessage: "Forbidden."
                 }
             ]
