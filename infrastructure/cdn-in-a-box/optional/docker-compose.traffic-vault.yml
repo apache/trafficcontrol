@@ -44,10 +44,6 @@ services:
     env_file:
       - variables.env
     hostname: trafficvault
-    ports:
-      - "8087:8087"
-      - "8088:8088"
-      - "8098:8098"
 
 volumes:
   schemas:
