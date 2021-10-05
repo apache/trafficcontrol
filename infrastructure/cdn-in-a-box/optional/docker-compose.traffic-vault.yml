@@ -15,57 +15,42 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# This compose file will expose the ports of each service on the host.
 #
-#      docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up
+# This compose file will runs a riak container to store private keys.
+#
+# Below is an example of how to run the main compose with this file:
+#
+#      docker-compose -f docker-compose.yml -f optional/docker-compose.traffic-vault.yml up
 #
 
 ---
 version: '2.1'
 
 services:
-  db:
+  trafficvault:
+    build:
+      context: ""
+      dockerfile: optional/traffic_vault/Dockerfile
+    depends_on:
+      - enroller
+    environment:
+      - CLUSTER_NAME=trafficvault
+    labels:
+      - "com.basho.riak.cluster.name=trafficvault"
+    volumes:
+      - schemas:/etc/riak/schemas
+      - shared:/shared
+    domainname: infra.ciab.test
+    env_file:
+      - variables.env
+    hostname: trafficvault
     ports:
-      - "5432:5432"
-  trafficops:
-    ports:
-      - "6443:443"
-  trafficportal:
-    ports:
-      - "443:443"
-  trafficmonitor:
-    ports:
-      - "80:80"
-  trafficrouter:
-    ports:
-      - "3053:53/tcp"
-      - "3053:53/udp"
-      - "3080:80"
-      - "3443:443"
-      - "3333:3333"
-      - "2222:3443"
-  influxdb:
-    ports:
-      - "8086:8086"
-  edge:
-    ports:
-      - "9000:80"
-  mid-01:
-    ports:
-      - "9100:80"
-  mid-02:
-    ports:
-      - "9200:80"
-  origin:
-    ports:
-      - "9300:80"
-  dns:
-    ports:
-      - "9353:53/tcp"
-      - "9353:53/udp"
-  smtp:
-    ports:
-      - "4443:443"
-  static:
-    ports:
-      - "9443:443"
+      - "8087:8087"
+      - "8088:8088"
+      - "8098:8098"
+
+volumes:
+  schemas:
+    external: false
+  shared:
+    external: false
