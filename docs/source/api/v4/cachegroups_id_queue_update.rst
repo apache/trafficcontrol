@@ -25,7 +25,7 @@
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: CACHE-GROUP:UPDATE, CACHE-GROUP:READ, CDN:READ, SERVER:READ, SERVER:UPDATE
+:Permissions Required: CACHE-GROUP:READ, CDN:READ, SERVER:READ, SERVER:QUEUE
 :Response Type:  Object
 
 Request Structure

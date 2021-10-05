@@ -26,7 +26,7 @@ Extract health information from all :term:`Cache Groups` across all CDNs
 =======
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: CDN:READ
+:Permissions Required: CACHE-GROUP:READ
 :Response Type:  Object
 
 Request Structure

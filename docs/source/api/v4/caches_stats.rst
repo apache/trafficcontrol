@@ -29,7 +29,7 @@ Retrieves cache stats from Traffic Monitor. Also includes rows for aggregates.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: STAT:READ, CACHE-GROUP:READ, PROFILE:READ
+:Permissions Required: CACHE-GROUP:READ, PROFILE:READ
 :Response Type:  Array
 
 Request Structure

@@ -32,6 +32,14 @@ Request Structure
 -----------------
 :name:        This :term:`Service Category`'s name
 
+.. table:: Request Query Parameters
+
+	+------------+------------------------------------------------------------------------+
+	| Name       | Description                                                            |
+	+============+========================================================================+
+	| name       | The new name of the :term:`Service Category`                           |
+	+------------+------------------------------------------------------------------------+
+
 .. code-block:: http
 	:caption: Request Example
 
@@ -92,6 +100,13 @@ Deletes a specific :term:`Service Category`.
 
 Request Structure
 -----------------
+.. table:: Request Query Parameters
+
+	+------------+------------------------------------------------------------------------+
+	| Name       | Description                                                            |
+	+============+========================================================================+
+	| name       | The name of the :term:`Service Category` to be deleted                 |
+	+------------+------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -103,6 +118,7 @@ Request Structure
 	Connection: keep-alive
 	Cookie: mojolicious=...
 	Content-Length: 0
+
 
 Response Structure
 ------------------
@@ -121,12 +137,12 @@ Response Structure
 	Whole-Content-Sha512: yErJobzG9IA0khvqZQK+Yi7X4pFVvOqxn6PjrdzN5DnKVm/K8Kka3REul1XmKJnMXVRY8RayoEVGDm16mBFe4Q==
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 17 Aug 2020 15:13:31 GMT
-	Content-Length: 93
+	Content-Length: 103
 
 	{
 		"alerts": [
 			{
-				"text": "serviceCategory was deleted.",
+				"text": "my-service-category was deleted.",
 				"level": "success"
 			}
 		]

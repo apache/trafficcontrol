@@ -25,7 +25,7 @@ Retrieves :term:`Federation` Resolvers.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: FEDERATION:READ
+:Permissions Required: FEDERATION-RESOLVER:READ, TYPE:READ
 :Response Type: Array
 
 Request Structure
@@ -104,7 +104,7 @@ Creates a new federation resolver.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: FEDERATION:CREATE, FEDERATION:READ
+:Permissions Required: FEDERATION-RESOLVER:CREATE, TYPE:READ
 :Response Type:  Object
 
 Request Structure
@@ -174,7 +174,7 @@ Deletes a federation resolver.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: FEDERATION:DELETE, FEDERATION:READ
+:Permissions Required: FEDERATION-RESOLVER:DELETE, TYPE:READ
 :Response Type:  Object
 
 Request Structure

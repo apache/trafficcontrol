@@ -25,7 +25,7 @@
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVER:UPDATE, TOPOLOGY:READ, SERVER:READ, CACHE-GROUP:READ
+:Permissions Required: SERVER:QUEUE, TOPOLOGY:READ, SERVER:READ, CACHE-GROUP:READ
 :Response Type:  Object
 
 Request Structure

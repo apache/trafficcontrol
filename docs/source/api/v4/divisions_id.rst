@@ -107,8 +107,6 @@ Request Structure
 	+------+-----------------------------------------------------------+
 
 
-:name: The new name of the Division
-
 .. code-block:: http
 	:caption: Request Example
 
@@ -117,10 +115,10 @@ Request Structure
 	User-Agent: curl/7.47.0
 	Accept: */*
 	Cookie: mojolicious=...
-	Content-Length: 17
+	Content-Length: 2
 	Content-Type: application/json
 
-	{"name": "quest"}
+	{}
 
 Response Structure
 ------------------

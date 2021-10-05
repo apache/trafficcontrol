@@ -378,7 +378,7 @@ Deletes an :term:`Origin` definition.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: ORIGIN:DELETE
+:Permissions Required: ORIGIN:DELETE, DELIVERY-SERVICE:UPDATE
 :Response Type:  ``undefined``
 
 Request Structure

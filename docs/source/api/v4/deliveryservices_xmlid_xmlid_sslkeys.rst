@@ -100,7 +100,7 @@ Response Structure
 ==========
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: DS-SECURITY-KEY:DELETE, DELIVERY-SERVICE:READ, DS-SECURITY-KEY:READ
+:Permissions Required: DS-SECURITY-KEY:DELETE, DELIVERY-SERVICE:READ, DS-SECURITY-KEY:READ, DELIVERY-SERVICE:UPDATE
 :Response Type:  Object (string)
 
 Request Structure

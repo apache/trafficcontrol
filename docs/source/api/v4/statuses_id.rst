@@ -107,9 +107,15 @@ Creates a Server :term:`Status`.
 
 Request Structure
 -----------------
-:description:	Return only :term:`Statuses` with this *exact* description                                           |
-:id:			Return only the :term:`Status` with this integral, unique identifier                                 |
-:name:			Return only :term:`Statuses` with this name                                                          |
+.. table:: Request Query Parameters
+
+	+--------------------+-------------------------------------------------------------------+
+	| Name               | Description                                                       |
+	+====================+===================================================================+
+	| :description:      | The description of the new :term:`Status`                         |
+	+--------------------+-------------------------------------------------------------------+
+	| :name:             | The name of the new :term:`Status`                                |
+	+--------------------+-------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

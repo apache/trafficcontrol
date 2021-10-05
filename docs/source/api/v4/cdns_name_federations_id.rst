@@ -111,7 +111,7 @@ Deletes a specific federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: FEDERATION:DELETE, FEDERAATION:READ, CDN:READ
+:Permissions Required: FEDERATION:DELETE, FEDERATION:READ, CDN:READ
 :Response Type:  ``undefined``
 
 Request Structure

@@ -26,7 +26,7 @@ Create one or more :term:`Profile`/:term:`Parameter` assignments.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: PROFILE-PARAMETER:CREATE, PROFILE-PARAMETER:READ, PROFILE:READ, PARAMETER:READ
+:Permissions Required: PROFILE:READ, PARAMETER:READ, PROFILE:UPDATE
 :Response Type:  Object
 
 Request Structure

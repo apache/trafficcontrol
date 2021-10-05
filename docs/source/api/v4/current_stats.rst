@@ -27,7 +27,7 @@ Retrieves current stats for each CDN. Also includes aggregate stats across them.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: STAT:READ, CDN:READ
+:Permissions Required: CDN:READ
 :Response Type:  Array
 
 Request Structure

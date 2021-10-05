@@ -25,7 +25,7 @@ Updates server status and queues updates on all descendant :term:`Topology` node
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVER:UPDATE, SERVER:READ
+:Permissions Required: SERVER:UPDATE, SERVER:READ, STATUS:READ
 :Response Type:  ``undefined``
 
 Request Structure

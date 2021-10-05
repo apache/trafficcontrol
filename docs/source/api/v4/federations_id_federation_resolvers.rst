@@ -25,7 +25,7 @@ Retrieves federation resolvers assigned to a federation.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: FEDERATION:READ
+:Permissions Required: FEDERATION:READ, FEDERATION-RESOLVER:READ
 :Response Type:  Array
 
 Request Structure
@@ -89,7 +89,7 @@ Assigns one or more resolvers to a federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: FEDERATION:CREATE, FEDERATION:READ
+:Permissions Required: FEDERATION:UPDATE, FEDERATION:READ, FEDERATION-RESOLVER:READ
 :Response Type:  Object
 
 Request Structure

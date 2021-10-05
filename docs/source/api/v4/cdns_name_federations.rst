@@ -25,7 +25,7 @@ Retrieves a list of federations in use by a specific CDN.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: CDN:READ, FEDERATION:READ
+:Permissions Required: CDN:READ, FEDERATION:READ, DELIVERY-SERVICE:READ
 :Response Type:  Array
 
 Request Structure

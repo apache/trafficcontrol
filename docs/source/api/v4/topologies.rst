@@ -153,7 +153,7 @@ Create a new :term:`Topology`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: TOPOLOGY:CREATE, TOPOLOGY:READ, CACHE-GROUP:READ, CACHE-GROUP:UPDATE
+:Permissions Required: TOPOLOGY:CREATE, TOPOLOGY:READ, CACHE-GROUP:READ
 :Response Type:  Object
 
 Request Structure
@@ -542,7 +542,7 @@ Deletes a specific :term:`Topology`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: TOPOLOGY:DELETE, TOPOLOGY:READ, CACHE-GROUP:READ, CACHE-GROUP:UPDATE
+:Permissions Required: TOPOLOGY:DELETE, TOPOLOGY:READ, CACHE-GROUP:READ
 :Response Type:  ``undefined``
 
 

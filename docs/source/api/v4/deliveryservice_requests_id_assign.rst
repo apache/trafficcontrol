@@ -76,7 +76,7 @@ The response is the username of the user to whom the :term:`Delivery Service Req
 =======
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: DS-REQUEST:UPDATE, DS-REQUEST:READ
+:Permissions Required: DS-REQUEST:UPDATE, DS-REQUEST:READ, USER:READ
 :Response Type:  Object
 
 Request Structure
