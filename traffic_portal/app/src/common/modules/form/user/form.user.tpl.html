@@ -69,7 +69,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(userForm.role, 'required')">Required</small>
-                    <small ng-show="user.role"><a href="/#!/roles/{{user.role}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="user.role"><a href="/#!/roles/edit/{{user.role}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(userForm.tenantId), 'has-feedback': hasError(userForm.tenantId)}">
