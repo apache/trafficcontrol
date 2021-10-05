@@ -18,7 +18,7 @@
 
 	<artifactId>traffic_router</artifactId>
 	<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-	<version>5.0.0</version>
+	<version>5.1.3</version>
 	<packaging>pom</packaging>
 	<name>traffic_router</name>
 
