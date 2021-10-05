@@ -40,11 +40,11 @@ const exampleTMConfig = `
 	"serve_read_timeout_ms": 10000,
 	"serve_write_timeout_ms": 10000,
 	"stat_buffer_interval_ms": 20000,
-    "short_hostname_override": "foobar",
-    "traffic_ops_disk_retry_max": 35,
-    "crconfig_backup_file": "crconfig.asdf",
-    "tmconfig_backup_file": "tmconfig.asdf",
-    "http_polling_format": "thisformatdoesnotexist",
+	"short_hostname_override": "foobar",
+	"traffic_ops_disk_retry_max": 35,
+	"crconfig_backup_file": "crconfig.asdf",
+	"tmconfig_backup_file": "tmconfig.asdf",
+	"http_polling_format": "thisformatdoesnotexist",
 	"static_file_dir": "static/"
 }
 `
