@@ -21,7 +21,7 @@ module.exports = angular.module('trafficPortal.private.roles.users', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.roles.users', {
-				url: '/{roleName}/users',
+				url: '/edit/{roleName}/users',
 				views: {
 					rolesContent: {
 						templateUrl: 'common/modules/table/roleUsers/table.roleUsers.tpl.html',
