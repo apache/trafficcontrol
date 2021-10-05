@@ -29,7 +29,7 @@ If the parameter is set it will return an object with the latest timestamp, else
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: STATS:READ, CDN:READ, DELIVERY-SERVICE:READ
+:Permissions Required: STAT:READ, CDN:READ, DELIVERY-SERVICE:READ
 :Response Type:  Array or Object
 
 Request Structure
@@ -186,7 +186,7 @@ Post a stats summary for a given stat.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: STATS:CREATE, STATS:READ, CDN:READ, DELIVERY-SERVICE:READ
+:Permissions Required: STAT:CREATE, STAT:READ, CDN:READ, DELIVERY-SERVICE:READ
 :Response Type: Object
 
 Request Structure
