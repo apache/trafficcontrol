@@ -69,6 +69,12 @@ func (r *TCData) SetupTestData(*sql.DB) error {
 		os.Exit(1)
 	}
 
+	err = SetupAPICapabilities(db)
+	if err != nil {
+		fmt.Printf("\nError setting up APICapabilities %s - %s, %v\n", r.Config.TrafficOps.URL, r.Config.TrafficOps.Users.Admin, err)
+		os.Exit(1)
+	}
+
 	err = SetupTenants(db)
 	if err != nil {
 		fmt.Printf("\nError setting up tenant %s - %s, %v\n", r.Config.TrafficOps.URL, r.Config.TrafficOps.Users.Admin, err)
@@ -298,6 +304,7 @@ INSERT INTO to_extension (name, version, info_url, isactive, script_file, server
 func (r *TCData) Teardown(db *sql.DB) error {
 
 	sqlStmt := `
+	DELETE FROM api_capability;
 	DELETE FROM deliveryservices_required_capability;
 	DELETE FROM server_server_capability;
 	DELETE FROM server_capability;

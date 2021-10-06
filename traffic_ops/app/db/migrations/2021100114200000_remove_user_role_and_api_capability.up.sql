@@ -18,7 +18,4 @@
 ALTER TABLE user_role DROP CONSTRAINT fk_user_id;
 ALTER TABLE user_role DROP CONSTRAINT fk_role_id;
 
-ALTER TABLE api_capability DROP CONSTRAINT fk_capability;
-
 DROP TABLE IF EXISTS user_role;
-DROP TABLE IF EXISTS api_capability;

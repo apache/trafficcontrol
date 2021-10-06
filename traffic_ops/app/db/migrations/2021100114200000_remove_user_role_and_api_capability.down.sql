@@ -23,18 +23,6 @@ last_updated timestamp with time zone NOT NULL DEFAULT now()
 
 ALTER TABLE user_role OWNER TO traffic_ops;
 
-CREATE TABLE IF NOT EXISTS api_capability (
-id bigserial PRIMARY KEY,
-http_method http_method_t NOT NULL,
-route text NOT NULL,
-capability text NOT NULL,
-last_updated timestamp with time zone NOT NULL DEFAULT now(),
-UNIQUE (http_method, route, capability)
-);
-
-ALTER TABLE api_capability OWNER TO traffic_ops;
-
-
 CREATE OR REPLACE FUNCTION create_constraint_if_not_exists (c_name text, t_name text, constraint_string text)
 RETURNS void AS
 $$
@@ -46,4 +34,3 @@ $$ LANGUAGE PLPGSQL;
 
 SELECT create_constraint_if_not_exists('fk_user_id', 'user_role', 'ALTER TABLE ONLY user_role ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES tm_user (id) ON DELETE CASCADE;');
 SELECT create_constraint_if_not_exists('fk_role_id', 'user_role', 'ALTER TABLE ONLY user_role ADD CONSTRAINT fk_role_id FOREIGN KEY (role_id) REFERENCES role (id) ON DELETE RESTRICT;');
-SELECT create_constraint_if_not_exists('fk_capability', 'api_capability', 'ALTER TABLE ONLY api_capability ADD CONSTRAINT fk_capability FOREIGN KEY (capability) REFERENCES capability (name) ON DELETE RESTRICT;');
