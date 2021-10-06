@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5674](https://github.com/apache/trafficcontrol/issues/5674) Added new query parameters `cdn` and `maxRevalDurationDays` to the `GET /api/x/jobs` Traffic Ops API to filter by CDN name and within the start_time window defined by the `maxRevalDurationDays` GLOBAL profile parameter, respectively.
 - Added a new Traffic Ops cdn.conf option -- `disable_auto_cert_deletion` -- in order to optionally prevent the automatic deletion of certificates for delivery services that no longer exist whenever a CDN snapshot is taken.
 - [#6034](https://github.com/apache/trafficcontrol/issues/6034) Added new query parameter `cdn` to the `GET /api/x/deliveryserviceserver` Traffic Ops API to filter by CDN name
+- Added a new Traffic Monitor configuration option -- `short_hostname_override` -- to traffic_monitor.cfg to allow overriding the system hostname that Traffic Monitor uses.
 - A new Traffic Portal server command-line option `-c` to specify a configuration file, and the ability to set `log: null` to log to stdout (consult documentation for details).
 
 ### Fixed
