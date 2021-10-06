@@ -619,7 +619,7 @@ func CreateTestServerWithoutProfileID(t *testing.T) {
 
 	*server.Profile = ""
 	server.ProfileID = nil
-	_, reqInfo, err := TOSession.CreateServer(server, client.RequestOptions{})
+	_, reqInfo, _ := TOSession.CreateServer(server, client.RequestOptions{})
 	if reqInfo.StatusCode != 400 {
 		t.Fatalf("Expected status code: %v but got: %v", "400", reqInfo.StatusCode)
 	}
@@ -1091,6 +1091,66 @@ func UpdateTestServers(t *testing.T) {
 
 	originalHostname := *remoteServer.HostName
 	originalXMPIDD := *remoteServer.XMPPID
+	originalDomainName := remoteServer.DomainName
+	originalHttpsPort := remoteServer.HTTPSPort
+	originalTcpPort := remoteServer.TCPPort
+	originalupdpending := remoteServer.UpdPending
+	originalCgid := remoteServer.CachegroupID
+	originalPhysLocId := remoteServer.PhysLocationID
+	originalTypeId := remoteServer.TypeID
+
+	//Get cachegroup id
+	if len(testData.CacheGroups) < 1 {
+		t.Fatal("Need at least one Cache Group to test updating servers")
+	}
+	firstCG := testData.CacheGroups[0]
+	if firstCG.Name == nil {
+		t.Fatal("Found Cache Group with null or undefined name in testing data")
+	}
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("name", *firstCG.Name)
+	cachegroupResp, _, err := TOSession.GetCacheGroups(opts)
+	if err != nil {
+		t.Fatalf("cannot get Cache Group '%s': %v - alerts: %+v", *firstCG.Name, err, cachegroupResp.Alerts)
+	}
+	if len(cachegroupResp.Response) != 1 {
+		t.Fatalf("Expected exactly one Cache Group to exist with name '%s', but got: %d", *firstCG.Name, len(cachegroupResp.Response))
+	}
+	cg := cachegroupResp.Response[0]
+	if cg.ID == nil {
+		t.Fatalf("Traffic Ops returned Cache Group '%s' with null or undefined ID", *cg.Name)
+	}
+
+	// Retrieve the PhysLocation ID by name
+	if len(testData.PhysLocations) < 1 {
+		t.Fatal("Need at least one Physical Location to test updating servers")
+	}
+	firstPhysLocation := testData.PhysLocations[0]
+	if firstPhysLocation.Name == "" {
+		t.Fatal("Found Physical location with null or undefined name in testing data")
+	}
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstPhysLocation.Name)
+	physicalLocResp, _, err := TOSession.GetPhysLocations(opts)
+	if err != nil {
+		t.Errorf("cannot get Physical Location by name '%s': %v - alerts: %+v", firstPhysLocation.Name, err, physicalLocResp.Alerts)
+	}
+	if len(physicalLocResp.Response) != 1 {
+		t.Fatalf("Expected exactly one Physical Location to exist with name '%s', found: %d", firstPhysLocation.Name, len(physicalLocResp.Response))
+	}
+	phylocation := physicalLocResp.Response[0]
+
+	// Retrieve the type ID by useInTable
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("useInTable", "server")
+	typeResp, _, err := TOSession.GetTypes(opts)
+	if err != nil {
+		t.Errorf("cannot get Types by useInTable '%s': %v - alerts: %+v", "server", err, typeResp.Alerts)
+	}
+	if len(typeResp.Response) < 1 {
+		t.Fatalf("Expected atleast one Types to exist with useInTable '%s', found: %d", "server", len(typeResp.Response))
+	}
+	types := typeResp.Response[0]
 
 	// Creating idParam to get server when hostname changes.
 	id := fmt.Sprintf("%v", *remoteServer.ID)
@@ -1112,6 +1172,10 @@ func UpdateTestServers(t *testing.T) {
 	updatedHostName := "atl-edge-01"
 	updatedXMPPID := "change-it"
 	updatedMTU := uint64(1280)
+	updateDomainName := "updateddomainname"
+	updateHttpsPort := 8080
+	updatedTcpPort := 8080
+	updatedPending := true
 
 	// update rack, interfaceName and hostName values on server
 	inf.Name = updatedServerInterface
@@ -1120,6 +1184,13 @@ func UpdateTestServers(t *testing.T) {
 	remoteServer.Rack = &updatedServerRack
 	remoteServer.HostName = &updatedHostName
 	remoteServer.Interfaces[0].MTU = &updatedMTU
+	remoteServer.CachegroupID = cg.ID
+	remoteServer.DomainName = &updateDomainName
+	remoteServer.HTTPSPort = &updateHttpsPort
+	remoteServer.PhysLocationID = &phylocation.ID
+	remoteServer.TCPPort = &updatedTcpPort
+	remoteServer.TypeID = &types.ID
+	remoteServer.UpdPending = &updatedPending
 
 	alerts, _, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, client.RequestOptions{})
 	if err != nil {
@@ -1180,6 +1251,28 @@ func UpdateTestServers(t *testing.T) {
 		t.Errorf("HostName didn't change. Expected: %s, actual: %s", updatedHostName, originalHostname)
 	}
 
+	if *respServer.CachegroupID != *remoteServer.CachegroupID {
+		t.Errorf("Cachegroup ID is not updated while updating the servers")
+	}
+	if *respServer.DomainName != *remoteServer.DomainName {
+		t.Errorf("DomainName is not updated while updating the servers")
+	}
+	if *respServer.HTTPSPort != *remoteServer.HTTPSPort {
+		t.Errorf("Https Port ID is not updated while updating the servers")
+	}
+	if *respServer.PhysLocationID != *remoteServer.PhysLocationID {
+		t.Errorf("Physical Location ID is not updated while updating the servers")
+	}
+	if *respServer.TCPPort != *remoteServer.TCPPort {
+		t.Errorf("TCP Port is not updated while updating the servers")
+	}
+	if *respServer.TypeID != *remoteServer.TypeID {
+		t.Errorf("Type ID is not updated while updating the servers")
+	}
+	if *respServer.UpdPending != *remoteServer.UpdPending {
+		t.Errorf("Updpending is not updated while updating the servers")
+	}
+
 	//Check to verify XMPPID never gets updated
 	remoteServer.XMPPID = &updatedXMPPID
 	al, reqInf, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, client.RequestOptions{})
@@ -1191,6 +1284,14 @@ func UpdateTestServers(t *testing.T) {
 	remoteServer.HostName = &originalHostname
 	remoteServer.XMPPID = &originalXMPIDD
 	remoteServer.Interfaces[0].MTU = &originalMTU
+	remoteServer.CachegroupID = originalCgid
+	remoteServer.DomainName = originalDomainName
+	remoteServer.HTTPSPort = originalHttpsPort
+	remoteServer.PhysLocationID = originalPhysLocId
+	remoteServer.TCPPort = originalTcpPort
+	remoteServer.TypeID = originalTypeId
+	remoteServer.UpdPending = originalupdpending
+
 	alert, _, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alert)
