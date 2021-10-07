@@ -181,7 +181,7 @@
   z-index: 2
 }
 .nav-sm .nav.side-menu li a {
-  text-align: center !important;
+  text-align: center;
   font-weight: 400;
   font-size: 10px;
   padding: 10px 5px
@@ -202,12 +202,6 @@
 .nav-sm .nav.side-menu li a i.toggle-up {
   display: none !important
 }
-.nav-sm .nav.side-menu li a i {
-  font-size: 25px !important;
-  text-align: center;
-  width: 100% !important;
-  margin-bottom: 5px
-}
 .nav-sm ul.nav.child_menu {
   left: 100%;
   position: absolute;
@@ -219,9 +213,6 @@
 }
 .nav-sm ul.nav.child_menu li {
   padding: 0 10px
-}
-.nav-sm ul.nav.child_menu li a {
-  text-align: left !important
 }
 .nav-sm .profile {
   display: none
@@ -688,9 +679,6 @@ a:focus {
 .nav.side-menu>li>a {
   margin-bottom: 6px
 }
-.nav.side-menu>li>a:hover {
-  color: #F2F5F7 !important
-}
 .nav.side-menu>li>a:hover,
 .nav>li>a:focus {
   text-decoration: none;
@@ -756,30 +744,12 @@ a:focus {
   background: none
 }
 .nav li li.current-page a {
-  color: #fff
+  color: #1ABB9C;
 }
 .nav.side-menu>li.active>a {
   text-shadow: rgba(0, 0, 0, 0.25) 0 -1px 0;
   background: linear-gradient(#334556, #2C4257), #2A3F54;
   box-shadow: rgba(0, 0, 0, 0.25) 0 1px 0, inset rgba(255, 255, 255, 0.16) 0 1px 0
-}
-.site_title {
-  text-overflow: ellipsis;
-  overflow: hidden;
-  font-weight: 400;
-  font-size: 22px;
-  width: 100%;
-  color: #ECF0F1 !important;
-  margin-left: 0 !important;
-  line-height: 59px;
-  display: block;
-  height: 55px;
-  margin: 0;
-  padding-left: 10px
-}
-.site_title:hover,
-.site_title:focus {
-  text-decoration: none
 }
 .nav>li>a:hover,
 .nav>li>a:focus {
