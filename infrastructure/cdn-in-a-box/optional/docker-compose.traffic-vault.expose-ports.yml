@@ -15,8 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-*.rpm
-/cache/ATS_VERSION
-/optional/vpn/vpnca
-/traffic_ops/ca
-/optional/traffic_vault/prestart.d/00-0-standalone-config.sh
+# Expose the trafficvault container on the host on ports 8087, 8088, and 8098
+
+---
+version: '2.1'
+
+services:
+  trafficvault:
+    ports:
+      - "8087:8087"
+      - "8088:8088"
+      - "8098:8098"
