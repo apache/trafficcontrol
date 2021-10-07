@@ -37,57 +37,56 @@ interface UpdateTenant {
 }
 
 export class TenantsPage extends BasePage {
+    private btnCreateNewTenant = element(by.xpath("//button[@title='Create New Tenant']"));
+    private txtName = element(by.name('name'));
+    private txtActive = element(by.name('active'));
+    private txtParentTenant = element(by.name('parentId'));
+    private btnDelete = element(by.buttonText('Delete'));
+    private txtConfirmTenantName = element(by.name('confirmWithNameInput'));
+    private randomize = randomize;
 
-  private btnCreateNewTenant = element(by.xpath("//button[@title='Create New Tenant']"));
-  private txtName = element(by.name('name'));
-  private txtActive = element(by.name('active'));
-  private txtParentTenant = element(by.name('parentId'));
-  private btnDelete = element(by.buttonText('Delete'));
-  private txtConfirmTenantName = element(by.name('confirmWithNameInput'));
-  private randomize = randomize;
-
-  public async OpenUserAdminMenu() {
-    let snp = new SideNavigationPage();
-    await snp.ClickUserAdminMenu();
-  }
-
-  public async OpenTenantsPage() {
-    let snp = new SideNavigationPage();
-    await snp.NavigateToTenantsPage();
-  }
-
-  public async CreateTenant(tenant: Tenant): Promise<boolean> {
-    const basePage = new BasePage();
-    await this.btnCreateNewTenant.click();
-    await this.txtName.sendKeys(tenant.Name + this.randomize);
-    await this.txtActive.sendKeys(tenant.Active);
-    if (tenant.ParentTenant == '- root') {
-      await this.txtParentTenant.sendKeys(tenant.ParentTenant);
-    } else {
-      await this.txtParentTenant.sendKeys(tenant.ParentTenant + this.randomize);
+    public async OpenUserAdminMenu() {
+      let snp = new SideNavigationPage();
+      await snp.ClickUserAdminMenu();
     }
-    await basePage.ClickCreate();
-    return await basePage.GetOutputMessage().then(value => tenant.validationMessage === value);
-  }
 
-  public async SearchTenant(name: string) {
-    let snp = new SideNavigationPage();
-    await snp.NavigateToTenantsPage();
-    await element(by.linkText(name+this.randomize)).click();
-  }
+    public async OpenTenantsPage() {
+      let snp = new SideNavigationPage();
+      await snp.NavigateToTenantsPage();
+    }
 
-  public async DeleteTenant(tenant: DeleteTenant) {
-    let basePage = new BasePage();
-    await this.btnDelete.click();
-    await this.txtConfirmTenantName.sendKeys(tenant.Name + this.randomize);
-    await basePage.ClickDeletePermanently();
-    return await basePage.GetOutputMessage().then(value => tenant.validationMessage === value);
-  }
+    public async CreateTenant(tenant: Tenant): Promise<boolean> {
+      const basePage = new BasePage();
+      await this.btnCreateNewTenant.click();
+      await this.txtName.sendKeys(tenant.Name + this.randomize);
+      await this.txtActive.sendKeys(tenant.Active);
+      if (tenant.ParentTenant == '- root') {
+        await this.txtParentTenant.sendKeys(tenant.ParentTenant);
+      } else {
+        await this.txtParentTenant.sendKeys(tenant.ParentTenant + this.randomize);
+      }
+      await basePage.ClickCreate();
+      return basePage.GetOutputMessage().then(value => tenant.validationMessage === value);
+    }
 
-  public async UpdateTenant(tenant: UpdateTenant) {
-    const basePage = new BasePage();
-    await this.txtActive.sendKeys(tenant.Active);
-    await basePage.ClickUpdate();
-    return await basePage.GetOutputMessage().then(value => tenant.validationMessage === value);
-  }
+    public async SearchTenant(name: string) {
+      let snp = new SideNavigationPage();
+      await snp.NavigateToTenantsPage();
+      await element(by.linkText(name + this.randomize)).click();
+    }
+
+    public async DeleteTenant(tenant: DeleteTenant) {
+      let basePage = new BasePage();
+      await this.btnDelete.click();
+      await this.txtConfirmTenantName.sendKeys(tenant.Name + this.randomize);
+      await basePage.ClickDeletePermanently();
+      return basePage.GetOutputMessage().then(value => tenant.validationMessage === value);
+    }
+
+    public async UpdateTenant(tenant: UpdateTenant) {
+      const basePage = new BasePage();
+      await this.txtActive.sendKeys(tenant.Active);
+      await basePage.ClickUpdate();
+      return basePage.GetOutputMessage().then(value => tenant.validationMessage === value);
+    }
 }
