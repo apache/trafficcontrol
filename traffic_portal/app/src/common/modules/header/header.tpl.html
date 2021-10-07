@@ -20,7 +20,7 @@ under the License.
 <div id="header" class="nav_menu" ng-class="{ 'prod': isProd }">
     <nav role="navigation">
         <div class="nav toggle">
-            <a id="menu_toggle" class="btn-link"><i class="fa fa-bars"></i></a>
+            <a id="menu_toggle" class="btn-link nav-link"><i class="fa fa-bars"></i></a>
         </div>
         <div class="navbar enviro-banner" ng-class="{ 'prod': isProd }">
             <span class="enviro_name" ng-class="{ 'prod': isProd }">{{enviroName}}</span>
@@ -28,7 +28,7 @@ under the License.
         <ul class="nav navbar-nav navbar-right" ng-if="userLoaded">
             <li>
                 <div class="btn-group" uib-dropdown is-open="userMenu.isopen">
-                    <button id="userButton" type="button" class="btn btn-link" uib-dropdown-toggle>
+                    <button id="userButton" type="button" class="btn btn-link nav-link" uib-dropdown-toggle>
                         <span id="headerUsername">{{::user.username}}</span> <i class="fa fa-angle-down fa-lg"></i>
                     </button>
                     <ul class="uib-dropdown-menu dropdown-usermenu animated fadeInDown" role="menu" aria-labelledby="userMenu-button">
@@ -39,7 +39,7 @@ under the License.
             </li>
             <li role="presentation" class="dropdown" ng-if="hasCapability('change-logs-read')">
                 <div class="btn-group" title="Change Logs" uib-dropdown is-open="alerts.isopen">
-                    <button id="alertsButton" type="button" class="btn btn-link" ng-click="getChangeLogs()" uib-dropdown-toggle>
+                    <button id="alertsButton" type="button" class="btn btn-link nav-link" ng-click="getChangeLogs()" uib-dropdown-toggle>
                         <i class="fa" ng-class="{ 'fa-comment': newLogCount() > 0, 'fa-comment-o': newLogCount() == 0 }"></i>
                         <span class="badge bg-blue">{{newLogCount()}}</span>
                     </button>
@@ -67,27 +67,27 @@ under the License.
             </li>
             <li>
                 <div class="btn-group" title="DB Dump">
-                    <button type="button" class="btn btn-link" ng-if="hasCapability('db-dump')" ng-click="dbDump()"><i class="fa fa-download"></i></button>
+                    <button type="button" class="btn btn-link nav-link" ng-if="hasCapability('db-dump')" ng-click="dbDump()"><i class="fa fa-download"></i></button>
                 </div>
             </li>
             <li>
                 <div class="btn-group" title="Lock CDN">
-                    <button type="button" class="btn btn-link" ng-if="hasCapability('cdns-lock')" ng-click="lockCDN()"><i class="fa fa-lock"></i></button>
+                    <button type="button" class="btn btn-link nav-link" ng-if="hasCapability('cdns-lock')" ng-click="lockCDN()"><i class="fa fa-lock"></i></button>
                 </div>
             </li>
             <li>
                 <div class="btn-group" title="Queue CDN Server Updates">
-                    <button type="button" class="btn btn-link" ng-if="hasCapability('servers-write')" ng-click="confirmQueueServerUpdates()"><i class="fa fa-flag"></i></button>
+                    <button type="button" class="btn btn-link nav-link" ng-if="hasCapability('servers-write')" ng-click="confirmQueueServerUpdates()"><i class="fa fa-flag"></i></button>
                 </div>
             </li>
             <li>
                 <div class="btn-group" title="Diff CDN Config Snapshot">
-                    <button type="button" class="btn btn-link" ng-if="hasCapability('cdns-snapshot')" ng-click="snapshot()"><i class="fa fa-camera"></i></button>
+                    <button type="button" class="btn btn-link nav-link" ng-if="hasCapability('cdns-snapshot')" ng-click="snapshot()"><i class="fa fa-camera"></i></button>
                 </div>
             </li>
             <li role="presentation" class="dropdown" ng-repeat="cdn in cdns | orderBy: '-name'">
                 <div class="btn-group" title="{{cdn.name}} Notifications" uib-dropdown is-open="{{cdn.name}}-notifications.isopen">
-                    <button id="{{cdn.name}}-notifications" type="button" class="btn btn-link" ng-click="getNotifications(cdn)" uib-dropdown-toggle>
+                    <button id="{{cdn.name}}-notifications" type="button" class="btn btn-link nav-link" ng-click="getNotifications(cdn)" uib-dropdown-toggle>
                         {{cdn.name}} <i class="fa" ng-class="{ 'fa-bell': cdn.hasNotifications, 'fa-bell-o': !cdn.hasNotifications }"></i>
                     </button>
                     <ul class="uib-dropdown-menu list-unstyled msg_list animated fadeInDown" role="menu">
