@@ -20,8 +20,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6179](https://github.com/apache/trafficcontrol/issues/6179) Updated the Traffic Ops rpm to include the `ToDnssecRefresh` binary and make the `trafops_dnssec_refresh` cron job use it
 
 ### Deprecated
+- Deprecated the endpoints and docs associated with `api_capability`.
 
 ### Removed
+- Removed the `user_role` table.
 
 ## [6.0.0] - 2021-08-30
 ### Added

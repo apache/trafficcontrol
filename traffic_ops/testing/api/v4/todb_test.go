@@ -68,12 +68,6 @@ func SetupTestData(*sql.DB) error {
 		os.Exit(1)
 	}
 
-	err = SetupAPICapabilities(db)
-	if err != nil {
-		fmt.Printf("\nError setting up APICapabilities %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
-	}
-
 	err = SetupTenants(db)
 	if err != nil {
 		fmt.Printf("\nError setting up tenant %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
