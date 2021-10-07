@@ -31,8 +31,6 @@ services:
     build:
       context: ""
       dockerfile: optional/traffic_vault/Dockerfile
-    depends_on:
-      - enroller
     environment:
       - CLUSTER_NAME=trafficvault
     labels:
