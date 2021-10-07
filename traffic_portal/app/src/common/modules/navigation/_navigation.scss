@@ -41,7 +41,7 @@ body.nav-sm .navbar.nav_title a i {
 }
 
 body.nav-sm .nav.side-menu li a {
-  text-align: center !important;
+  text-align: center;
   font-weight: 400;
   font-size: 10px;
   padding: 10px 5px;
@@ -51,18 +51,14 @@ body.nav-sm .nav.side-menu li.active-sm {
   border-right: 5px solid #1ABB9C;
 }
 
-body.nav-sm > .nav.side-menu > li.active-sm > a {
-  color: #1ABB9C !important;
-}
-
-body.nav-sm .nav.side-menu li a i.toggle-up {
-  display: none !important;
+body.nav-sm .side-menu-category.active-sm > a {
+  color: #1ABB9C;
 }
 
 body.nav-sm .nav.side-menu li a i {
-  font-size: 25px !important;
+  font-size: 25px;
   text-align: center;
-  width: 100% !important;
+  width: 100%;
   margin-bottom: 5px;
 }
 
@@ -82,7 +78,7 @@ body.nav-sm ul.nav.child_menu li {
 }
 
 body.nav-sm ul.nav.child_menu li a {
-  text-align: left !important;
+  text-align: left;
 }
 
 body.nav-sm .profile {
@@ -109,45 +105,8 @@ body.nav-sm .profile {
   margin-top: 10px;
 }
 
-#sidebar-menu span.fa {
-  float: right;
-  text-align: center;
-  margin-top: 5px;
-  font-size: 10px !important;
-  min-width: inherit;
-  color: #C4CFDA;
-}
-
-.active a span.fa {
-  text-align: right !important;
-  margin-right: 4px;
-}
-
 body.nav-sm .menu_section {
   margin: 0;
-}
-
-body.nav-sm span.fa,
-body.nav-sm .menu_section h3 {
-  display: none !important;
-}
-
-.nav_menu {
-  float: left;
-  /*background: #F4F6F9;
-  border-bottom: 1px solid #E6E9ED;*/
-
-  background: #EDEDED;
-  border-bottom: 1px solid #D9DEE4;
-  margin-bottom: 10px;
-  width: 100%;
-}
-
-.nav_menu.prod {
-  background: #B22222;
-  .btn-link {
-    color: white !important;
-  }
 }
 
 .main_menu .fa-sm {
@@ -164,21 +123,7 @@ body.nav-md .container.body .col-md-3.main-nav {
   display: flex;
 }
 
-.nav_title {
-  width: 230px;
-  float: left;
-  background: #2A3F54;
-  border-radius: 0;
-  height: 57px;
-  text-align: center;
-}
-
-.nav_title.prod {
-  background: #B22222;
-}
-
 .nav.child_menu > li > a {
-  color: rgba(255, 255, 255, 0.75) !important;
   font-size: 14px;
   padding: 9px;
 }
@@ -202,7 +147,7 @@ body.nav-md .container.body .col-md-3.main-nav {
 }
 
 .nav.side-menu> li > a:hover {
-  color: #F2F5F7 !important;
+  color: #F2F5F7;
 }
 
 .nav.side-menu>li>a:hover,
@@ -211,8 +156,8 @@ body.nav-md .container.body .col-md-3.main-nav {
   background: transparent;
 }
 
-.nav.child_menu li:hover {
-  background-color: rgba(255, 255, 255, 0.06);
+.side-menu-category .nav.child_menu li:hover a {
+  background: transparent;
 }
 
 .nav.child_menu li {
@@ -246,7 +191,7 @@ body.nav-md ul.nav.child_menu li:after {
 
 .nav.side-menu>li>a,
 .nav.child_menu>li>a {
-  color: #E7E7E7 !important;
+  color: #E7E7E7;
   font-weight: 500;
 }
 
@@ -266,7 +211,6 @@ li.current-page {
 }
 
 .nav.side-menu> li.active > a {
-  color: #ff0000;
   text-shadow: rgba(0, 0, 0, 0.25) 0 -1px 0;
   background: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #5b6479), color-stop(100%, #4c5566)), #686e78;
   background: -webkit-linear-gradient(#334556, #2C4257), #2A3F54;
@@ -278,57 +222,30 @@ li.current-page {
   box-shadow: rgba(0, 0, 0, 0.25) 0 1px 0, inset rgba(255, 255, 255, 0.16) 0 1px 0;
 }
 
-li.current-page a {
-  color: #1ABB9C !important
-}
-
 .site_title {
   text-overflow: ellipsis;
   overflow: hidden;
   font-weight: 400;
   font-size: 22px;
   width: 100%;
-  color: #ECF0F1 !important;
-  margin-left: 0 !important;
+  color: #ECF0F1;
   line-height: 59px;
   display: block;
   height: 55px;
   margin: 0;
   padding-left: 10px;
   text-transform: uppercase;
+  text-decoration: none;
 }
-
-.enviro_name {
-  text-overflow: ellipsis;
-  overflow: hidden;
-  font-weight: 400;
-  font-size: 18px;
-  width: 100%;
-  color: #777 !important;
-  margin-left: 0 !important;
-  line-height: 59px;
-  display: block;
-  height: 55px;
-  margin: 0;
-  padding-left: 10px;
-  text-transform: uppercase;
-}
-
-.enviro_name.prod {
-  color: #ECF0F1 !important;
-}
-
-.site_title:hover,
-.site_title:focus {
-  text-decoration: none
-}
-
-
-
 
 @media (max-width: 991px) {
-  body.nav-md .container.body .col-md-3.main-nav {
-    display: none;
+  body.nav-md .container.body {
+    .col-md-3.main-nav {
+      display: none;
+    }
+    .top_nav {
+      width: 100%;
+      margin: 0;
+    }
   }
 }
-

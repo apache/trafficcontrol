@@ -27,10 +27,11 @@
   }
 }
 
+/* is this used anywhere? Possibly content dynamically inserted by a library? */
 .x_content {
   div.legend {
     table {
-      width: initial !important;
+      width: initial;
     }
   }
 }
@@ -47,6 +48,3 @@
   }
 
 }
-
-
-

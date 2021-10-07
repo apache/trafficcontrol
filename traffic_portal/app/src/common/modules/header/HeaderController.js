@@ -17,6 +17,13 @@
  * under the License.
  */
 
+const defaultBannerColor = "#EDEDED";
+const defaultSidebarColor = "#2A3F54";
+const defaultTextColor = "#515356";
+
+const prodTextColor = "white";
+const prodBannerColor = "#B22222";
+
 var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel, propertiesModel) {
 
     let getCDNs = function(notifications) {
@@ -35,7 +42,15 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
 
     $scope.enviroName = (propertiesModel.properties.environment) ? propertiesModel.properties.environment.name : '';
 
-    $scope.isProd = (propertiesModel.properties.environment) ? propertiesModel.properties.environment.isProd : false;
+    if (propertiesModel.properties.environment && propertiesModel.properties.environment.isProd) {
+        document.documentElement.style.setProperty("--banner-color", prodBannerColor);
+        document.documentElement.style.setProperty("--sidebar-color", prodBannerColor);
+        document.documentElement.style.setProperty("--banner-text-color", prodTextColor);
+    } else {
+        document.documentElement.style.setProperty("--banne-color", defaultBannerColor);
+        document.documentElement.style.setProperty("--sidebar-color", defaultSidebarColor);
+        document.documentElement.style.setProperty("--banner-text-color", defaultTextColor);
+    }
 
     /* we don't want real time changes to the user showing up. we want the ability to revert changes
     if necessary. thus, we will only update this on save. see userModel::userUpdated event below.
