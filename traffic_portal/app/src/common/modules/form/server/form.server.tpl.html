@@ -258,10 +258,8 @@ under the License.
                         <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-router-hostname'], 'maxlength')">Too long</small>
                         <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-router-hostname'], 'pattern')">No Spaces</small>
                         <label for="{{inf.name}}-router-portname" ng-class="{'has-error': hasError(serverForm[inf.name+'-router-portname'])}">Router Port Name</label>
-                        <input id="{{inf.name}}-router-portname" ng-model="inf.routerPortName" ng-class="{'has-error': hasError(serverForm[inf.name+'-router-portname'])}" type="text" name="{{inf.name}}-router-portname" maxlength="256" pattern="\S*"/>
+                        <input id="{{inf.name}}-router-portname" ng-model="inf.routerPortName" ng-class="{'has-error': hasError(serverForm[inf.name+'-router-portname'])}" type="text" name="{{inf.name}}-router-portname" maxlength="256"/>
                         <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-router-portname'], 'maxlength')">Too long</small>
-                        <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-router-portname'], 'pattern')">No Spaces</small>
-
                     </div>
 
                     <fieldset>
