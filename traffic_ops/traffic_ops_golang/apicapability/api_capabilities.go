@@ -39,6 +39,7 @@ import (
 // GetAPICapabilitiesHandler implements an http handler that returns
 // API Capabilities. In the event a capability parameter is supplied,
 // it will return only those with an exact match.
+// Deprecated: This API endpoint is deprecated, and will be removed in api v4 and above.
 func GetAPICapabilitiesHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
