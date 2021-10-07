@@ -1,6 +1,4 @@
 /*
-
-
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -12,135 +10,149 @@
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-
 */
-body.nav-sm .main_container .top_nav {
-  padding: 0 !important;
-  display: block;
-  margin-left: 70px;
-  z-index: 2;
+
+:root {
+	--banner-color: #EDEDED;
+	--sidebar-color: #2A3F54;
+	--banner-text-color: #515356;
+}
+
+@media (min-width: 480px) {
+	#header {
+		position: static
+	}
+}
+
+#header {
+	float: left;
+	background: var(--banner-color);
+	border-bottom: 1px solid #D9DEE4;
+	margin-bottom: 10px;
+	width: 100%;
+	position: relative;
+
+	.navbar-right {
+		margin: 0;
+		width: 70%;
+		float: right;
+
+		li {
+			display: inline-block;
+		}
+	}
+
+	.dropdown-menu {
+		min-width: 220px;
+
+		li {
+			width: 100%;
+
+			a {
+				width: 100%;
+				padding: 12px 20px;
+			}
+		}
+	}
+
+	li a i {
+		font-size: 15px;
+	}
+
+	.btn-link {
+		margin-bottom: 5px;
+		color: var(--banner-text-color);
+
+		&:hover {
+			text-decoration: none;
+		}
+	}
+
+	.uib-dropdown-menu {
+		padding: 0;
+		.btn-link {
+			color: #337ab7;
+		}
+	}
+
+	.toggle {
+		float: left;
+		margin: 0;
+		padding-top: 16px;
+		padding-bottom: 16px;
+		width: 70px;
+
+		a {
+			padding: 15px 15px 0;
+			margin: 0;
+
+			i {
+				font-size: 26px;
+			}
+		}
+	}
 }
 
 #alertsButton, #userButton {
-  &:hover, &:focus {
-    text-decoration: none;
-  }
+	&:hover, &:focus {
+		text-decoration: none;
+	}
 }
 
-.main_container .top_nav {
-  padding: 0 !important;
-  display: block;
-  padding: 10px 20px 0;
-  margin-left: 230px;
+#enviro-banner {
+	background: transparent;
+	float: left;
+	border-radius: 0;
+	margin-bottom: 0;
+	height: 57px;
+	text-align: center;
+
+	span {
+		text-overflow: ellipsis;
+		overflow: hidden;
+		font-weight: 400;
+		font-size: 18px;
+		width: 100%;
+		color: var(--banner-text-color);
+		margin-left: 0;
+		line-height: 59px;
+		display: block;
+		height: 55px;
+		margin: 0;
+		padding-left: 10px;
+		text-transform: uppercase;
+	}
 }
 
-.top_nav .navbar-right {
-  margin: 0;
-  width: 70%;
-  float: right;
+.nav_title {
+	width: 230px;
+	float: left;
+	background: var(--sidebar-color);
+	border-radius: 0;
+	height: 57px;
+	text-align: center;
 }
 
-.top_nav .navbar-right li {
-  display: inline-block;
-  float: right;
+.navbar-nav {
+	&>li>a {
+		font-weight: 500;
+		color: #515356 !important;
+		margin-left: 0 !important;
+		line-height: 32px
+	}
+
+	.open .dropdown-menu {
+		position: absolute;
+		background: #fff;
+		margin-top: 0;
+		border: 1px solid #D9DEE4;
+		box-shadow: none;
+		right: 0;
+		left: auto;
+		width: 220px;
+
+		&.msg_list {
+			width: 300px;
+		}
+	}
 }
-
-.top_nav .dropdown-menu {
-  min-width: 220px;
-}
-
-.top_nav .dropdown-menu li {
-  width: 100%;
-}
-
-.top_nav .dropdown-menu li a {
-  width: 100%;
-  padding: 12px 20px;
-}
-
-.top_nav li a i {
-  font-size: 15px
-}
-
-.navbar {
-  margin-bottom: 0
-}
-
-.navbar-header {
-  background: #34495E;
-}
-
-.navbar-right {
-  margin-right: 0;
-}
-
-.navbar-static-top {
-  position: fixed;
-  top: 0;
-  width: 100%;
-}
-
-.navbar-brand,
-.navbar-nav>li>.btn-group>.btn-link {
-  margin-bottom: 5px
-}
-
-.nav.navbar-nav>li>.btn-group>.btn-link {
-  color: #515356;
-}
-
-.nav.top_menu>li>a {
-  position: relative;
-  display: block;
-  padding: 10px 15px;
-  color: #34495E;
-}
-
-.nav>li>a:hover,
-.nav>li>a:focus {
-  background-color: transparent;
-}
-
-.toggle {
-  float: left;
-  margin: 0;
-  padding-top: 16px;
-  padding-bottom: 16px;
-  width: 70px;
-}
-
-.toggle a {
-  padding: 15px 15px 0;
-  margin: 0;
-}
-
-.toggle a i {
-  font-size: 26px;
-}
-
-.enviro-banner {
-  float: left;
-  border-radius: 0;
-  height: 57px;
-  text-align: center;
-}
-
-.enviro-banner.prod {
-  background: #B22222;
-}
-
-.notification.btn-link:hover {
-  text-decoration: none;
-}
-
-@media (max-width: 991px) {
-
-  body.nav-md .container.body .top_nav {
-    width: 100%;
-    margin: 0;
-  }
-
-}
-
-
-

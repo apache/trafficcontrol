@@ -132,24 +132,6 @@ body.nav-sm .menu_section h3 {
   display: none !important;
 }
 
-.nav_menu {
-  float: left;
-  /*background: #F4F6F9;
-  border-bottom: 1px solid #E6E9ED;*/
-
-  background: #EDEDED;
-  border-bottom: 1px solid #D9DEE4;
-  margin-bottom: 10px;
-  width: 100%;
-}
-
-.nav_menu.prod {
-  background: #B22222;
-  .btn-link {
-    color: white !important;
-  }
-}
-
 .main_menu .fa-sm {
   font-size: 12px;
 }
@@ -162,19 +144,6 @@ body.nav-md .container.body .col-md-3.main-nav {
   padding: 0;
   position: absolute;
   display: flex;
-}
-
-.nav_title {
-  width: 230px;
-  float: left;
-  background: #2A3F54;
-  border-radius: 0;
-  height: 57px;
-  text-align: center;
-}
-
-.nav_title.prod {
-  background: #B22222;
 }
 
 .nav.child_menu > li > a {
@@ -298,37 +267,19 @@ li.current-page a {
   text-transform: uppercase;
 }
 
-.enviro_name {
-  text-overflow: ellipsis;
-  overflow: hidden;
-  font-weight: 400;
-  font-size: 18px;
-  width: 100%;
-  color: #777 !important;
-  margin-left: 0 !important;
-  line-height: 59px;
-  display: block;
-  height: 55px;
-  margin: 0;
-  padding-left: 10px;
-  text-transform: uppercase;
-}
-
-.enviro_name.prod {
-  color: #ECF0F1 !important;
-}
-
 .site_title:hover,
 .site_title:focus {
   text-decoration: none
 }
 
-
-
-
 @media (max-width: 991px) {
-  body.nav-md .container.body .col-md-3.main-nav {
-    display: none;
+  body.nav-md .container.body {
+    .col-md-3.main-nav {
+      display: none;
+    }
+    .top_nav {
+      width: 100%;
+      margin: 0;
+    }
   }
 }
-
