@@ -93,7 +93,7 @@ Associate a :term:`Parameter` to a :term:`Profile`.
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
 :Response Type: Object
-:Permissions Required: PROFILE:UPDATE, PROFILE:READ, PARAMETER:READ
+:Permissions Required: PROFILE:READ, PARAMETER:READ, PROFILE:UPDATE
 
 Request Structure
 -----------------

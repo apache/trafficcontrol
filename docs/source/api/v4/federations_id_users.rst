@@ -104,7 +104,7 @@ Assigns one or more users to a federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
-:Permissions Required: FEDERATION:UPDATE, USER:UPDATE, USER:READ, FEDERATION:READ
+:Permissions Required: FEDERATION:UPDATE, USER:READ, FEDERATION:READ
 :Response Type:  Object
 
 Request Structure

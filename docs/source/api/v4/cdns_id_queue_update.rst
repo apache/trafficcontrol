@@ -25,7 +25,7 @@
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVER:QUEUE, CDN:READ, TYPE:READ, PROFILE:READ
+:Permissions Required: SERVER:QUEUE, CDN:READ
 :Response Type:  Object
 
 Request Structure

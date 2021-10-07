@@ -32,7 +32,7 @@ Request Structure
 -----------------
 :name:        This :term:`Service Category`'s name
 
-.. table:: Request Query Parameters
+.. table:: Request Path Parameters
 
 	+------------+------------------------------------------------------------------------+
 	| Name       | Description                                                            |
@@ -100,12 +100,12 @@ Deletes a specific :term:`Service Category`.
 
 Request Structure
 -----------------
-.. table:: Request Query Parameters
+.. table:: Request Path Parameters
 
 	+------------+------------------------------------------------------------------------+
 	| Name       | Description                                                            |
 	+============+========================================================================+
-	| name       | The name of the :term:`Service Category` to be deleted                 |
+	| name       | The current name of the :term:`Service Category` to be deleted         |
 	+------------+------------------------------------------------------------------------+
 
 .. code-block:: http

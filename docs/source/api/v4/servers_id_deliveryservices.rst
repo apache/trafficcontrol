@@ -257,7 +257,7 @@ Assign an arbitrary number of :term:`Delivery Services` to a single server.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: DELIVERY-SERVICE:READ, SERVER:READ
+:Permissions Required: DELIVERY-SERVICE:READ, SERVER:READ, DELIVERY-SERVICE:UPDATE, SERVER:UPDATE
 :Response Type:  Object
 
 Request Structure
