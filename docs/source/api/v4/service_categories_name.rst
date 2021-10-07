@@ -30,14 +30,14 @@ Update a service category.
 
 Request Structure
 -----------------
-:name:        This :term:`Service Category`'s name
+:name:        The :term:`Service Category`'s new name
 
 .. table:: Request Path Parameters
 
 	+------------+------------------------------------------------------------------------+
 	| Name       | Description                                                            |
 	+============+========================================================================+
-	| name       | The new name of the :term:`Service Category`                           |
+	| name       | The current name of the :term:`Service Category`                           |
 	+------------+------------------------------------------------------------------------+
 
 .. code-block:: http
