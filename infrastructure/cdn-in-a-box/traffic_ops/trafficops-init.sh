@@ -108,6 +108,14 @@ load_data_from() {
            touch "$ENROLLER_DIR/initial-load-done"
            sync
         fi
+        if [[ "$d" = 'deliveryservices' ]]; then
+        	# Traffic Vault must be accepting connections before enroller can start
+          until tv-ping; do
+            echo "Waiting for Traffic Vault to accept connections"
+            sleep 5
+          done
+        fi
+
         [[ -d $d ]] || continue
         for f in $(find "$d" -name "*.json" -type f); do
             echo "Loading $f"

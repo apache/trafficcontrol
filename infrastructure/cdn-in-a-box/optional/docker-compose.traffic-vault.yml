@@ -15,8 +15,36 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-*.rpm
-/cache/ATS_VERSION
-/optional/vpn/vpnca
-/traffic_ops/ca
-/optional/traffic_vault/prestart.d/00-0-standalone-config.sh
+#
+# This compose file will runs a riak container to store private keys.
+#
+# Below is an example of how to run the main compose with this file:
+#
+#      docker-compose -f docker-compose.yml -f optional/docker-compose.traffic-vault.yml up
+#
+
+---
+version: '2.1'
+
+services:
+  trafficvault:
+    build:
+      context: ""
+      dockerfile: optional/traffic_vault/Dockerfile
+    environment:
+      - CLUSTER_NAME=trafficvault
+    labels:
+      - "com.basho.riak.cluster.name=trafficvault"
+    volumes:
+      - schemas:/etc/riak/schemas
+      - shared:/shared
+    domainname: infra.ciab.test
+    env_file:
+      - variables.env
+    hostname: trafficvault
+
+volumes:
+  schemas:
+    external: false
+  shared:
+    external: false

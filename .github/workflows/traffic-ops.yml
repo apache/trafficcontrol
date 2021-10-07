@@ -31,7 +31,7 @@ on:
       - go.mod
       - go.sum
       - GO_VERSION
-      - infrastructure/cdn-in-a-box/traffic_vault/**
+      - infrastructure/cdn-in-a-box/optional/traffic_vault/**
       - traffic_ops/*client/**.go
       - traffic_ops/testing/api/**.go
       - traffic_ops/traffic_ops_golang/**.go
@@ -47,7 +47,7 @@ on:
       - go.mod
       - go.sum
       - GO_VERSION
-      - infrastructure/cdn-in-a-box/traffic_vault/**
+      - infrastructure/cdn-in-a-box/optional/traffic_vault/**
       - traffic_ops/*client/**.go
       - traffic_ops/testing/api/**.go
       - traffic_ops/traffic_ops_golang/**.go
