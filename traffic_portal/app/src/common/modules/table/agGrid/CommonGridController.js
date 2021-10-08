@@ -423,19 +423,17 @@ angular.module("trafficPortal.table").component("commonGridController", {
     templateUrl: "common/modules/table/agGrid/grid.tpl.html",
     controller: CommonGridController,
     bindings: {
-        title: "@", // string
+        title: "@",
         tableName: "@",
-        options: "<", // expression
+        options: "<",
         columns: "<",
         data: "<",
-        selectedData: "=?", // two way data binding
+        selectedData: "=?",
         dropDownOptions: "<?",
         contextMenuOptions: "<?",
         defaultData: "<?",
         titleButton: "<?",
-        breadCrumbs: "<?",
-        // &,
-
+        breadCrumbs: "<?"
     }
 });
 

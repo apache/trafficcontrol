@@ -32,7 +32,7 @@ import {MatExpansionModule} from "@angular/material/expansion";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
 
 /**
- * AppServerModule is the Angular Module that contains the whole server part of
+ * AppUIModule is the Angular Module that contains the ui dependencies of
  * the app.
  */
 @NgModule({
