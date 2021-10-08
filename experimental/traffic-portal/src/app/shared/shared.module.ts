@@ -3,11 +3,6 @@ import {HTTP_INTERCEPTORS} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {RouterModule} from "@angular/router";
 import {AppUIModule} from "../app.ui.module";
-import {DashboardComponent} from "../core/dashboard/dashboard.component";
-import {DsCardComponent} from "../core/ds-card/ds-card.component";
-import {InvalidationJobsComponent} from "../core/invalidation-jobs/invalidation-jobs.component";
-import {CacheGroupTableComponent} from "../core/cache-groups/cache-group-table/cache-group-table.component";
-import {NewInvalidationJobDialogComponent} from "../core/invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 import {AlertComponent} from "./alert/alert.component";
 import {ErrorInterceptor} from "./interceptor/error.interceptor";
 import {AlertInterceptor} from "./interceptor/alerts.interceptor";
@@ -32,8 +27,6 @@ import {OpenableDirective} from "./openable/openable.directive";
 import {SSHCellRendererComponent} from "./table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 import {UpdateCellRendererComponent} from "./table-components/update-cell-renderer/update-cell-renderer.component";
 import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-filter.component";
-import {CurrentuserComponent} from "./currentuser/currentuser.component";
-import {UpdatePasswordDialogComponent} from "./currentuser/update-password-dialog/update-password-dialog.component";
 
 
 
@@ -48,13 +41,6 @@ import {UpdatePasswordDialogComponent} from "./currentuser/update-password-dialo
 		GenericTableComponent,
 		BooleanFilterComponent,
 		UpdateCellRendererComponent,
-		CurrentuserComponent,
-		UpdatePasswordDialogComponent,
-		DashboardComponent,
-		DsCardComponent,
-		InvalidationJobsComponent,
-		CacheGroupTableComponent,
-		NewInvalidationJobDialogComponent,
 
 		CustomvalidityDirective,
 		LinechartDirective,
@@ -70,8 +56,6 @@ import {UpdatePasswordDialogComponent} from "./currentuser/update-password-dialo
 		GenericTableComponent,
 		BooleanFilterComponent,
 		UpdateCellRendererComponent,
-		CurrentuserComponent,
-		UpdatePasswordDialogComponent,
 
 		CustomvalidityDirective,
 		LinechartDirective,

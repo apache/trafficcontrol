@@ -28,11 +28,9 @@ import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
 import { LoginComponent } from "./login/login.component";
-import { SSHCellRendererComponent } from "./shared/table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 import {AppUIModule} from "./app.ui.module";
 import {SharedModule} from "./shared/shared.module";
-import {AuthenticationGuard} from "./authentication.guard";
-import { DemoComponent } from "./demo/demo.component";
+import {AuthenticatedGuard} from "./guards/authenticated-guard.service";
 
 // TODO: Figure out the actual typing here.
 Chart.plugins.register({
@@ -61,11 +59,7 @@ Chart.plugins.register({
 	bootstrap: [AppComponent],
 	declarations: [
 		AppComponent,
-		LoginComponent,
-		DemoComponent,
-	],
-	entryComponents: [
-		SSHCellRendererComponent
+		LoginComponent
 	],
 	imports: [
 		BrowserModule.withServerTransition({ appId: "serverApp" }),
@@ -76,7 +70,7 @@ Chart.plugins.register({
 		BrowserAnimationsModule
 	],
 	providers: [
-		AuthenticationGuard
+		AuthenticatedGuard
 	]
 })
 // This is a necessary empty class. All of its data/logic come from the decorator.

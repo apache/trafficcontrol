@@ -16,7 +16,7 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatDialogModule, MatDialogRef } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
 import { User } from "src/app/models";
-import { AuthenticationService } from "src/app/services";
+import { AuthenticationService } from "src/app/shared/authentication/authentication.service";
 import { UserService } from "src/app/shared/api";
 
 import { UpdatePasswordDialogComponent } from "./update-password-dialog.component";

@@ -15,15 +15,21 @@ import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 
 import { UpdateStatusComponent } from "./update-status.component";
+import {ServerService} from "../../../shared/api";
 
 describe("UpdateStatusComponent", () => {
 	let component: UpdateStatusComponent;
 	let fixture: ComponentFixture<UpdateStatusComponent>;
 
 	beforeEach(async () => {
+		const mockAPIService = jasmine.createSpyObj(["getServers", "getStatuses"]);
+		mockAPIService.getStatuses.and.returnValue(new Promise(r => r([])));
 		await TestBed.configureTestingModule({
 			declarations: [ UpdateStatusComponent ],
-			imports: [ HttpClientModule ]
+			imports: [ HttpClientModule ],
+			providers: [
+				{ provide: ServerService, useValue: mockAPIService }
+			]
 		})
 			.compileComponents();
 	});

@@ -3,8 +3,7 @@ import {RouterModule, Routes} from "@angular/router";
 import {CommonModule} from "@angular/common";
 import {AppUIModule} from "../app.ui.module";
 import {SharedModule} from "../shared/shared.module";
-import {CurrentuserComponent} from "../shared/currentuser/currentuser.component";
-import {AuthenticationGuard} from "../authentication.guard";
+import {AuthenticatedGuard} from "../guards/authenticated-guard.service";
 import {InvalidationJobsComponent} from "./invalidation-jobs/invalidation-jobs.component";
 import {UsersComponent} from "./users/users.component";
 import {ServerDetailsComponent} from "./servers/server-details/server-details.component";
@@ -14,18 +13,22 @@ import {DeliveryserviceComponent} from "./deliveryservice/deliveryservice.compon
 import {NewDeliveryServiceComponent} from "./new-delivery-service/new-delivery-service.component";
 import {DashboardComponent} from "./dashboard/dashboard.component";
 import {CacheGroupTableComponent} from "./cache-groups/cache-group-table/cache-group-table.component";
+import {CurrentuserComponent} from "./currentuser/currentuser.component";
+import {UpdatePasswordDialogComponent} from "./currentuser/update-password-dialog/update-password-dialog.component";
+import {DsCardComponent} from "./ds-card/ds-card.component";
+import {NewInvalidationJobDialogComponent} from "./invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 
 
 const routes: Routes = [
-	{ component: DashboardComponent, path: "", canActivate: [AuthenticationGuard]},
-	{ component: UsersComponent, path: "users", canActivate: [AuthenticationGuard], data:{animation:"users"}},
-	{ component: ServersTableComponent, path: "servers", canActivate: [AuthenticationGuard], data:{animation:"servers"}},
-	{ component: ServerDetailsComponent, path: "server/:id", canActivate: [AuthenticationGuard] },
-	{ component: DeliveryserviceComponent, path: "deliveryservice/:id", canActivate: [AuthenticationGuard] },
-	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs", canActivate: [AuthenticationGuard] },
-	{ component: CurrentuserComponent, path: "me", canActivate: [AuthenticationGuard] },
-	{ component: NewDeliveryServiceComponent, path: "new.Delivery.Service", canActivate: [AuthenticationGuard] },
-	{ component: CacheGroupTableComponent, path: "cache-groups", canActivate: [AuthenticationGuard] }
+	{ component: DashboardComponent, path: "", canActivate: [AuthenticatedGuard]},
+	{ component: UsersComponent, path: "users", canActivate: [AuthenticatedGuard]},
+	{ component: ServersTableComponent, path: "servers", canActivate: [AuthenticatedGuard]},
+	{ component: ServerDetailsComponent, path: "server/:id", canActivate: [AuthenticatedGuard] },
+	{ component: DeliveryserviceComponent, path: "deliveryservice/:id", canActivate: [AuthenticatedGuard] },
+	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs", canActivate: [AuthenticatedGuard] },
+	{ component: CurrentuserComponent, path: "me", canActivate: [AuthenticatedGuard] },
+	{ component: NewDeliveryServiceComponent, path: "new.Delivery.Service", canActivate: [AuthenticatedGuard] },
+	{ component: CacheGroupTableComponent, path: "cache-groups", canActivate: [AuthenticatedGuard] }
 ];
 
 /**
@@ -38,15 +41,16 @@ const routes: Routes = [
 		ServersTableComponent,
 		DeliveryserviceComponent,
 		NewDeliveryServiceComponent,
+		CurrentuserComponent,
+		UpdatePasswordDialogComponent,
+		DashboardComponent,
+		DsCardComponent,
+		InvalidationJobsComponent,
+		CacheGroupTableComponent,
+		NewInvalidationJobDialogComponent,
 		UpdateStatusComponent
 	],
 	exports: [
-		UsersComponent,
-		ServerDetailsComponent,
-		ServersTableComponent,
-		DeliveryserviceComponent,
-		NewDeliveryServiceComponent,
-		UpdateStatusComponent
 	],
 	imports: [
 		SharedModule,

@@ -18,9 +18,11 @@ import { RouterTestingModule } from "@angular/router/testing";
 
 import { User } from "../../models";
 import { APIService } from "../../shared/api/APIService";
-import { LoadingComponent } from "../../common/loading/loading.component";
-import { TpHeaderComponent } from "../../common/tp-header/tp-header.component";
 import { UsersComponent } from "./users.component";
+import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
+import {LoadingComponent} from "../../shared/loading/loading.component";
+import {UserService} from "../../shared/api";
+import {AuthenticationService} from "../../shared/authentication/authentication.service";
 
 describe("UsersComponent", () => {
 	let component: UsersComponent;
@@ -36,6 +38,8 @@ describe("UsersComponent", () => {
 			newUser: false,
 			username: "test"
 		} as User)));
+		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		mockAuthenticationService.updateCurrentUser.and.returnValue(new Promise(r => r(false)));
 
 		TestBed.configureTestingModule({
 			declarations: [
@@ -49,8 +53,11 @@ describe("UsersComponent", () => {
 				ReactiveFormsModule,
 				RouterTestingModule
 			],
+			providers: [
+				{ provide: UserService, useValue: mockAPIService },
+				{ provide: AuthenticationService, useValue: mockAuthenticationService }
+			]
 		});
-		TestBed.overrideProvider(APIService, { useValue: mockAPIService });
 		TestBed.compileComponents();
 	}));
 

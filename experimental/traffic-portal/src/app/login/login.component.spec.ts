@@ -17,12 +17,14 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { LoginComponent } from "./login.component";
+import {AuthenticationService} from "../shared/authentication/authentication.service";
 
 describe("LoginComponent", () => {
 	let component: LoginComponent;
 	let fixture: ComponentFixture<LoginComponent>;
 
 	beforeEach(waitForAsync(() => {
+		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		TestBed.configureTestingModule({
 			declarations: [ LoginComponent ],
 			imports: [
@@ -30,7 +32,8 @@ describe("LoginComponent", () => {
 				HttpClientModule,
 				ReactiveFormsModule,
 				RouterTestingModule
-			]
+			],
+			providers: [ { provide: AuthenticationService, useValue: mockAuthenticationService }]
 		})
 			.compileComponents();
 	}));

@@ -18,15 +18,36 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { ServerDetailsComponent } from "./server-details.component";
+import {CacheGroupService, CDNService, ProfileService, ServerService, TypeService} from "../../../shared/api";
+import {PhysicalLocationService} from "../../../shared/api/PhysicalLocationService";
+import {of} from "rxjs";
 
 describe("ServerDetailsComponent", () => {
 	let component: ServerDetailsComponent;
 	let fixture: ComponentFixture<ServerDetailsComponent>;
 
 	beforeEach(async () => {
+		const mockAPIService = jasmine.createSpyObj(["getServers", "getCacheGroups", "getCDNs",
+			"getProfiles", "getTypes", "getPhysicalLocations", "getStatuses", "getServerTypes"]);
+		mockAPIService.getCacheGroups.and.returnValue(new Promise(r => r([])));
+		mockAPIService.getCDNs.and.returnValue(new Promise(r => r([])));
+		mockAPIService.getStatuses.and.returnValue(new Promise(r => r([])));
+		mockAPIService.getProfiles.and.returnValue(new Promise(r => r([])));
+		mockAPIService.getPhysicalLocations.and.returnValues(new Promise(r => r([])));
+		mockAPIService.getServers.and.returnValues(new Promise(r => r([])));
+		mockAPIService.getServerTypes.and.returnValues(new Promise(r => r([])));
+
 		await TestBed.configureTestingModule({
 			declarations: [ ServerDetailsComponent ],
-			imports: [ HttpClientModule, RouterTestingModule, FormsModule, ReactiveFormsModule ]
+			imports: [ HttpClientModule, RouterTestingModule, FormsModule, ReactiveFormsModule ],
+			 providers: [
+				 { provide: ServerService, useValue: mockAPIService },
+				 { provide: CacheGroupService, useValue: mockAPIService },
+				 { provide: CDNService, useValue: mockAPIService },
+				 { provide: TypeService, useValue: mockAPIService },
+				 { provide: PhysicalLocationService, useValue: mockAPIService },
+				 { provide: ProfileService, useValue: mockAPIService }
+			 ]
 		}).compileComponents();
 	});
 

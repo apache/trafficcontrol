@@ -17,15 +17,20 @@ import { ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { CacheGroupTableComponent } from "./cache-group-table.component";
+import {CacheGroupService} from "../../../shared/api";
 
 describe("CacheGroupTableComponent", () => {
 	let component: CacheGroupTableComponent;
 	let fixture: ComponentFixture<CacheGroupTableComponent>;
 
 	beforeEach(async () => {
+		const mockAPIService = jasmine.createSpyObj(["getCacheGroups"]);
 		await TestBed.configureTestingModule({
 			declarations: [ CacheGroupTableComponent ],
-			imports: [ReactiveFormsModule, HttpClientModule, RouterTestingModule]
+			imports: [ReactiveFormsModule, HttpClientModule, RouterTestingModule],
+			providers: [
+				{ provide: CacheGroupService, useValue: mockAPIService }
+			]
 		})
 			.compileComponents();
 	});

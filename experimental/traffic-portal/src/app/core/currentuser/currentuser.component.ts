@@ -18,7 +18,7 @@ import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { UserService } from "src/app/shared/api";
 
 import { User } from "src/app/models";
-import {AuthenticationService} from "../authentication/authentication.service";
+import {AuthenticationService} from "../../shared/authentication/authentication.service";
 import { UpdatePasswordDialogComponent } from "./update-password-dialog/update-password-dialog.component";
 
 /**

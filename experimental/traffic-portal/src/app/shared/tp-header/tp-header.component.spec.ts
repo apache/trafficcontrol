@@ -16,15 +16,23 @@ import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { TpHeaderComponent } from "./tp-header.component";
+import {AuthenticationService} from "../authentication/authentication.service";
+import {UserService} from "../api";
 
 describe("TpHeaderComponent", () => {
 	let component: TpHeaderComponent;
 	let fixture: ComponentFixture<TpHeaderComponent>;
 
 	beforeEach(waitForAsync(() => {
+		const mockAPIService = jasmine.createSpyObj(["getUsers"]);
+		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		TestBed.configureTestingModule({
 			declarations: [ TpHeaderComponent ],
-			imports: [ HttpClientModule, RouterTestingModule ]
+			imports: [ HttpClientModule, RouterTestingModule ],
+			providers: [
+				{ provide: AuthenticationService, useValue: mockAuthenticationService },
+				{ provide: UserService, useValue: mockAPIService}
+			]
 		})
 			.compileComponents();
 	}));

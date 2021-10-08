@@ -15,7 +15,7 @@ import { Injectable } from "@angular/core";
 
 import { BehaviorSubject, Observable } from "rxjs";
 
-import { Alert, AlertLevel } from "./alert.model";
+import { Alert, AlertLevel } from "../../models/alert.model";
 
 /**
  * This class is responsible for populating an alerts Observable that can be

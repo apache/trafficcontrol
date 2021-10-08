@@ -21,8 +21,9 @@ import { of } from "rxjs";
 import { LinechartDirective } from "../../shared/charts/linechart.directive";
 import { DeliveryService } from "../../models";
 import { APIService } from "../../shared/api/APIService";
-import { LoadingComponent } from "../../common/loading/loading.component";
 import { DsCardComponent } from "./ds-card.component";
+import {LoadingComponent} from "../../shared/loading/loading.component";
+import {DeliveryServiceService} from "../../shared/api";
 
 describe("DsCardComponent", () => {
 	let component: DsCardComponent;
@@ -30,7 +31,7 @@ describe("DsCardComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		// mock the API
-		const mockAPIService = jasmine.createSpyObj(["getDSKBPS", "getDSCapacity", "getDSHealth"]);
+		const mockAPIService = jasmine.createSpyObj(["getDSKBPS", "getDSCapacity", "getDSHealth", "getDeliveryServices"]);
 		mockAPIService.getDSKBPS.and.returnValue(of([]), of([]));
 		mockAPIService.getDSCapacity.and.returnValue(of({
 			availablePercent: 34,
@@ -51,9 +52,11 @@ describe("DsCardComponent", () => {
 			imports: [
 				HttpClientModule,
 				RouterTestingModule
+			],
+			providers: [
+				{ provide: DeliveryServiceService, useValue: mockAPIService }
 			]
 		});
-		TestBed.overrideProvider(APIService, { useValue: mockAPIService });
 		TestBed.compileComponents();
 	}));
 

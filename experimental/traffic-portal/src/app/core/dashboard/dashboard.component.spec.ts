@@ -15,15 +15,18 @@ import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
-import { DeliveryServiceService } from "src/app/shared/api";
+import {DeliveryServiceService, UserService} from "src/app/shared/api";
 
 
 import { LinechartDirective } from "../../shared/charts/linechart.directive";
 import { DeliveryService } from "../../models";
 import { DsCardComponent } from "../ds-card/ds-card.component";
-import { LoadingComponent } from "../../common/loading/loading.component";
-import { TpHeaderComponent } from "../../common/tp-header/tp-header.component";
 import { DashboardComponent } from "./dashboard.component";
+import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
+import {LoadingComponent} from "../../shared/loading/loading.component";
+import {AuthenticationService} from "../../shared/authentication/authentication.service";
+import {AlertService} from "../../shared/alert/alert.service";
+import {of} from "rxjs";
 
 describe("DashboardComponent", () => {
 	let component: DashboardComponent;
@@ -31,6 +34,10 @@ describe("DashboardComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		const mockAPIService = jasmine.createSpyObj(["getDeliveryServices"]);
+		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"],
+			{capabilities: new Set<string>()});
+
+		const mockAlertService = jasmine.createSpyObj(["newAlert"]);
 		mockAPIService.getDeliveryServices.and.returnValue(new Promise(resolve=>resolve([])));
 
 		TestBed.configureTestingModule({
@@ -46,9 +53,14 @@ describe("DashboardComponent", () => {
 				HttpClientModule,
 				ReactiveFormsModule,
 				RouterTestingModule
+			],
+			providers: [
+				{ provide: AuthenticationService, useValue: mockAuthenticationService },
+				{ provide: DeliveryServiceService, useValue: mockAPIService },
+				{ provide: UserService, useValue: mockAPIService },
+				{ provide: AlertService, useValue: mockAlertService }
 			]
 		});
-		TestBed.overrideProvider(DeliveryServiceService, { useValue: mockAPIService });
 		TestBed.compileComponents();
 	}));
 

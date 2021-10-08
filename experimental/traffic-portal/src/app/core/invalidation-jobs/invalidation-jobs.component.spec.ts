@@ -18,14 +18,15 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { MatDialogModule } from "@angular/material/dialog";
 
 import { of } from "rxjs";
-import { InvalidationJobService } from "src/app/shared/api";
+import {DeliveryServiceService, InvalidationJobService, UserService} from "src/app/shared/api";
 
 
 import { CustomvalidityDirective } from "../../shared/validation/customvalidity.directive";
 import { OpenableDirective } from "../../shared/openable/openable.directive";
 import { DeliveryService, GeoLimit, GeoProvider, InvalidationJob } from "../../models";
-import { TpHeaderComponent } from "../../common/tp-header/tp-header.component";
 import { InvalidationJobsComponent } from "./invalidation-jobs.component";
+import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
+import {AuthenticationService} from "../../shared/authentication/authentication.service";
 
 describe("InvalidationJobsComponent", () => {
 	let component: InvalidationJobsComponent;
@@ -34,6 +35,7 @@ describe("InvalidationJobsComponent", () => {
 	beforeEach(waitForAsync(() => {
 		// mock the API
 		const mockAPIService = jasmine.createSpyObj(["getInvalidationJobs", "getDeliveryServices"]);
+		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		mockAPIService.getInvalidationJobs.and.returnValue(of({
 			startTime: new Date(),
 		} as InvalidationJob));
@@ -71,10 +73,15 @@ describe("InvalidationJobsComponent", () => {
 				ReactiveFormsModule,
 				RouterTestingModule,
 				MatDialogModule
+			],
+			providers: [
+				{ provide: InvalidationJobService, useValue: mockAPIService },
+				{ provide: DeliveryServiceService, useValue: mockAPIService },
+				{ provide: UserService, useValue: mockAPIService },
+				{ provide: AuthenticationService, useValue: mockAuthenticationService }
 			]
 		});
 
-		TestBed.overrideProvider(InvalidationJobService, { useValue: mockAPIService });
 		TestBed.compileComponents();
 	}));
 

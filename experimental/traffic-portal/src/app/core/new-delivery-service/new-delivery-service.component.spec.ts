@@ -24,11 +24,12 @@ import {MatStepperHarness} from "@angular/material/stepper/testing";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import { UserService } from "src/app/shared/api";
+import {CDNService, DeliveryServiceService, UserService} from "src/app/shared/api";
 
 import { Protocol } from "../../models";
-import { TpHeaderComponent } from "../../common/tp-header/tp-header.component";
 import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
+import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
+import {AuthenticationService} from "../../shared/authentication/authentication.service";
 
 
 describe("NewDeliveryServiceComponent", () => {
@@ -39,6 +40,8 @@ describe("NewDeliveryServiceComponent", () => {
 	beforeEach(async () => {
 		// mock the API
 		const mockAPIService = jasmine.createSpyObj(["getRoles", "getCurrentUser"]);
+		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		mockAuthenticationService.updateCurrentUser.and.returnValue(new Promise(r => r(false)));
 		mockAPIService.getRoles.and.returnValue(new Promise(resolve => resolve([])));
 		mockAPIService.getCurrentUser.and.returnValue(new Promise(resolve => resolve({
 			id: 0,
@@ -61,7 +64,12 @@ describe("NewDeliveryServiceComponent", () => {
 				MatButtonModule,
 				MatRadioModule
 			],
-			providers: [{provide: UserService, useValue: mockAPIService}]
+			providers: [
+				{provide: DeliveryServiceService, useValue: mockAPIService},
+				{provide: CDNService, useValue: mockAPIService},
+				{provide: UserService, useValue: mockAPIService},
+				{ provide: AuthenticationService, useValue: mockAuthenticationService }
+			]
 		}).compileComponents();
 		// TestBed.overrideProvider(UserService, { useValue: mockAPIService });
 		// TestBed.compileComponents();

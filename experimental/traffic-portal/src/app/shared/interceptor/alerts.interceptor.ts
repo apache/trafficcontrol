@@ -17,7 +17,7 @@ import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { tap } from "rxjs/operators";
 import {AlertService} from "../alert/alert.service";
-import {Alert} from "../alert/alert.model";
+import {Alert} from "../../models/alert.model";
 
 
 /**

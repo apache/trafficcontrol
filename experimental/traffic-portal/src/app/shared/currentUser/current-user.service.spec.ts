@@ -22,7 +22,8 @@ describe("CurrentUserService", () => {
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
-			imports: [RouterTestingModule.withRoutes([{component: LoginComponent, path: "login"}])]
+			imports: [RouterTestingModule.withRoutes([{component: LoginComponent, path: "login"}])],
+			providers: [CurrentUserService]
 		});
 		service = TestBed.inject(CurrentUserService);
 	});

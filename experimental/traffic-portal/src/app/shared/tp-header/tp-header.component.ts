@@ -42,17 +42,6 @@ export class TpHeaderComponent implements OnInit {
 	 */
 	@Input() public title?: string;
 
-	/**
-	 *
-	 */
-	public routerLinks: any[] = [
-		{ name: "Home", route: "/" },
-		{ name: "Users", route: "/users" },
-		{ name: "Servers", route: "/servers" },
-		{ name: "Logout" },
-		{ name: "Profile", route: "/me" }
-	];
-
 	/** Constructor */
 	constructor(private readonly auth: AuthenticationService, private readonly api: UserService) {
 	}

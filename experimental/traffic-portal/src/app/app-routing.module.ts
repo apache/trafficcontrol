@@ -15,19 +15,19 @@ import {NgModule} from "@angular/core";
 import {RouterModule, Routes} from "@angular/router";
 
 import {LoginComponent} from "./login/login.component";
-import {DemoComponent} from "./demo/demo.component";
+import {AuthenticatedGuard} from "./guards/authenticated-guard.service";
 
 const routes: Routes = [
 	{component: LoginComponent, path: "login"},
 	{
+		canLoad: [AuthenticatedGuard],
 		children: [{
 			loadChildren: async () => import("./core/core.module")
 				.then(mod => mod.CoreModule),
 			path: ""
 		}],
 		path: "core"
-	},
-	{ component: DemoComponent, path: "demo" }
+	}
 ];
 
 /**

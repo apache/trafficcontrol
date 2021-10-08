@@ -16,12 +16,14 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 
 import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog.component";
+import {InvalidationJobService} from "../../../shared/api";
 
 describe("NewInvalidationJobDialogComponent", () => {
 	let component: NewInvalidationJobDialogComponent;
 	let fixture: ComponentFixture<NewInvalidationJobDialogComponent>;
 
 	beforeEach(async () => {
+		const mockAPIService = jasmine.createSpyObj(["getInvalidationJobs"]);
 		await TestBed.configureTestingModule({
 			declarations: [ NewInvalidationJobDialogComponent ],
 			imports: [
@@ -32,7 +34,8 @@ describe("NewInvalidationJobDialogComponent", () => {
 				{provide: MatDialogRef, useValue: {close: (): void => {
 					console.log("dialog closed");
 				}}},
-				{provide: MAT_DIALOG_DATA, useValue: -1}
+				{provide: MAT_DIALOG_DATA, useValue: -1},
+				{ provide: InvalidationJobService, useValue: mockAPIService}
 			]
 		}).compileComponents();
 	});

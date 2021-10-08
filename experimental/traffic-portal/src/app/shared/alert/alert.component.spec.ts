@@ -19,7 +19,7 @@ import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 
 import { AlertService } from "./alert.service";
-import { AlertLevel } from "./alert.model";
+import { AlertLevel } from "../../models/alert.model";
 import { AlertComponent } from "./alert.component";
 
 describe("AlertComponent", () => {
@@ -31,14 +31,15 @@ describe("AlertComponent", () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [ AlertComponent ],
-			imports: [MatSnackBarModule, NoopAnimationsModule]
+			imports: [MatSnackBarModule, NoopAnimationsModule],
+			providers: [ AlertService ]
 		}).compileComponents();
+		service = TestBed.inject(AlertService);
 		fixture = TestBed.createComponent(AlertComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 		fixture.componentInstance.duration = undefined;
 		loader = TestbedHarnessEnvironment.documentRootLoader(fixture);
-		service = TestBed.inject(AlertService);
 	});
 
 	it("should exist", () => {

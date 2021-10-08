@@ -16,7 +16,7 @@ import { MatDialogRef } from "@angular/material/dialog";
 import { Subject } from "rxjs";
 
 import { UserService } from "src/app/shared/api";
-import {AuthenticationService} from "../../authentication/authentication.service";
+import {AuthenticationService} from "../../../shared/authentication/authentication.service";
 
 /**
  * This is the controller for the "Update Password" dialog box/form.

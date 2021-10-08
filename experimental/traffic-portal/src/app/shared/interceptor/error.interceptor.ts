@@ -18,7 +18,7 @@ import { Observable, throwError } from "rxjs";
 import { catchError } from "rxjs/operators";
 
 import {AlertService} from "../alert/alert.service";
-import {Alert} from "../alert/alert.model";
+import {Alert} from "../../models/alert.model";
 import {CurrentUserService} from "../currentUser/current-user.service";
 
 /**

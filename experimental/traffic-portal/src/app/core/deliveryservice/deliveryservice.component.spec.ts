@@ -21,9 +21,11 @@ import { of } from "rxjs";
 
 import { LinechartDirective } from "../../shared/charts/linechart.directive";
 import { DeliveryService, GeoLimit, GeoProvider, TPSData } from "../../models";
-import { APIService } from "../../shared/api/APIService";
-import { TpHeaderComponent } from "../../common/tp-header/tp-header.component";
 import { DeliveryserviceComponent } from "./deliveryservice.component";
+import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
+import {DeliveryServiceService, UserService} from "../../shared/api";
+import {AlertService} from "../../shared/alert/alert.service";
+import {AuthenticationService} from "../../shared/authentication/authentication.service";
 
 
 describe("DeliveryserviceComponent", () => {
@@ -33,6 +35,8 @@ describe("DeliveryserviceComponent", () => {
 	beforeEach(waitForAsync(() => {
 		// mock the API
 		const mockAPIService = jasmine.createSpyObj(["getDeliveryServices", "getDSKBPS", "getAllDSTPSData"]);
+		const mockAlertService = jasmine.createSpyObj(["newAlert"]);
+		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		mockAPIService.getDeliveryServices.and.returnValue(of({
 			active: true,
 			anonymousBlockingEnabled: false,
@@ -128,9 +132,14 @@ describe("DeliveryserviceComponent", () => {
 				HttpClientModule,
 				ReactiveFormsModule,
 				RouterTestingModule
+			],
+			providers: [
+				{ provide: DeliveryServiceService, useValue: mockAPIService },
+				{ provide: AlertService, useValue: mockAlertService },
+				{ provide: AuthenticationService, useValue: mockAuthenticationService },
+				{ provide: UserService, useValue: mockAPIService }
 			]
 		});
-		TestBed.overrideProvider(APIService, { useValue: mockAPIService });
 		TestBed.compileComponents();
 	}));
 
