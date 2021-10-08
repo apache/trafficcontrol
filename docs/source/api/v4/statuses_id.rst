@@ -107,8 +107,8 @@ Creates a Server :term:`Status`.
 
 Request Structure
 -----------------
-:description:	The description of the new :term:`Status`
-:name:			The name of the new :term:`Status`
+:description:	The description of the updated :term:`Status`
+:name:			The name of the updated :term:`Status`
 
 .. code-block:: http
 	:caption: Request Example
