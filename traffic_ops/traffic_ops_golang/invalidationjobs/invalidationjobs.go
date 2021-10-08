@@ -48,9 +48,9 @@ type InvalidationJob struct {
 	tc.InvalidationJob
 }
 
-type InvalidationJobV40 struct {
+type InvalidationJobV4 struct {
 	api.APIInfoImpl `json:"-"`
-	tc.InvalidationJobV40
+	tc.InvalidationJobV4
 }
 
 // Deprecated, only to be used with versions below 4.0
@@ -92,7 +92,7 @@ RETURNING
 `
 
 // Almost the same as insertQuery, but returns appropriate values for API 4.0+
-const insertQueryV40 = `
+const insertQueryV4 = `
 INSERT INTO job (
 	ttl_hr,
 	asset_url,
@@ -177,7 +177,7 @@ RETURNING asset_url,
 `
 
 // Almost the same as updateQuery, but returns appropriate values for API 4.0+
-const updateQueryV40 = `
+const updateQueryV4 = `
 UPDATE job
 SET asset_url=$1,
     ttl_hr=$2,
@@ -220,7 +220,7 @@ WHERE job.id=$1
 `
 
 // Almost the same as putInfoQuery, but returns appropriate values for API 4.0+
-const putInfoQueryV40 = `
+const putInfoQueryV4 = `
 SELECT job.id AS id,
 	   tm_user.username AS createdBy,
 	   job.job_user AS createdByID,
@@ -260,7 +260,7 @@ RETURNING job.asset_url,
 `
 
 // Almost the same as deleteQuery, but returns appropriate values for API 4.0+
-const deleteQueryV40 = `
+const deleteQueryV4 = `
 DELETE
 FROM job
 WHERE job.id=$1
@@ -287,9 +287,9 @@ type apiResponse struct {
 	Response tc.InvalidationJob `json:"response,omitempty"`
 }
 
-type apiResponseV40 struct {
-	Alerts   []tc.Alert            `json:"alerts,omitempty"`
-	Response tc.InvalidationJobV40 `json:"response,omitempty"`
+type apiResponseV4 struct {
+	Alerts   []tc.Alert           `json:"alerts,omitempty"`
+	Response tc.InvalidationJobV4 `json:"response,omitempty"`
 }
 
 func selectMaxLastUpdatedQuery(where string) string {
@@ -316,7 +316,7 @@ JOIN deliveryservice ds ON job.job_deliveryservice = ds.id
 `
 
 // Almost the same as readQuery, but returns appropriate values for API 4.0+
-const readQueryV40 = `
+const readQueryV4 = `
 SELECT job.id,
 	   asset_url,
 	   u.username as createdBy,
@@ -331,7 +331,7 @@ JOIN deliveryservice ds ON job.job_deliveryservice = ds.id
 
 // Used by GET requests to `/jobs`, simply returns a filtered list of
 // content invalidation jobs according to the provided query parameters.
-func (job *InvalidationJobV40) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+func (job *InvalidationJobV4) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	var maxTime time.Time
 	var runSecond bool
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
@@ -372,7 +372,7 @@ func (job *InvalidationJobV40) Read(h http.Header, useIMS bool) ([]interface{}, 
 		log.Debugln("Non IMS request")
 	}
 
-	query := readQueryV40 + where + orderBy + pagination
+	query := readQueryV4 + where + orderBy + pagination
 	log.Debugln("generated job query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)
 
@@ -384,7 +384,7 @@ func (job *InvalidationJobV40) Read(h http.Header, useIMS bool) ([]interface{}, 
 	defer rows.Close()
 
 	for rows.Next() {
-		job := tc.InvalidationJobV40{}
+		job := tc.InvalidationJobV4{}
 		err := rows.Scan(&job.ID,
 			&job.AssetURL,
 			&job.CreatedBy,
@@ -511,7 +511,7 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
 
 // Used by POST requests to `/jobs`, creates a new content invalidation job
 // from the provided request body.
-func CreateV40(w http.ResponseWriter, r *http.Request) {
+func CreateV4(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -519,7 +519,7 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	job := tc.InvalidationJobCreateV40{}
+	job := tc.InvalidationJobCreateV4{}
 	if err := json.NewDecoder(r.Body).Decode(&job); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Unable to parse Invalidation Job"), fmt.Errorf("parsing jobs/ POST: %v", err))
 		return
@@ -539,12 +539,11 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 
 		resp, err := json.Marshal(response)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Encoding bad request response: %v", err))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("encoding bad request response: %v", err))
 			return
 		}
 
-		w.WriteHeader(http.StatusBadRequest)
-		api.WriteAndLogErr(w, r, append(resp, '\n'))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New(string(append(resp, '\n'))), fmt.Errorf("error validating job: %v", err))
 		return
 	}
 
@@ -569,7 +568,7 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
 	}
 
-	row := inf.Tx.Tx.QueryRow(insertQueryV40,
+	row := inf.Tx.Tx.QueryRow(insertQueryV4,
 		job.TTLHours,
 		dsid, // Used in inner select for deliveryservice
 		job.Regex,
@@ -579,7 +578,7 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 		dsid,
 		job.InvalidationType) // Defaults for all api versions below 4.0
 
-	result := tc.InvalidationJobV40{}
+	result := tc.InvalidationJobV4{}
 	err = row.Scan(
 		&result.ID,
 		&result.AssetURL,
@@ -600,7 +599,7 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 	}
 
 	conflicts := tc.ValidateJobUniqueness(inf.Tx.Tx, dsid, *result.StartTime, *result.AssetURL, *result.TTLHours)
-	response := apiResponseV40{
+	response := apiResponseV4{
 		make([]tc.Alert, len(conflicts)+1),
 		result,
 	}
@@ -688,8 +687,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.WriteHeader(http.StatusBadRequest)
-		api.WriteAndLogErr(w, r, append(resp, '\n'))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New(string(append(resp, '\n'))), fmt.Errorf("error validating job: %v", err))
 		return
 	}
 
@@ -805,7 +803,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 // Used by PUT requests to `/jobs`, replaces an existing content invalidation job
 // with the provided request body.
-func UpdateV40(w http.ResponseWriter, r *http.Request) {
+func UpdateV4(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -816,8 +814,8 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 	var oFQDN string
 	var dsid uint
 	var uid uint
-	job := tc.InvalidationJobV40{}
-	row := inf.Tx.Tx.QueryRow(putInfoQueryV40, inf.Params["id"])
+	job := tc.InvalidationJobV4{}
+	row := inf.Tx.Tx.QueryRow(putInfoQueryV4, inf.Params["id"])
 	err := row.Scan(&job.ID,
 		&job.CreatedBy,
 		&uid,
@@ -864,7 +862,7 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	input := tc.InvalidationJobV40{}
+	input := tc.InvalidationJobV4{}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		userErr = fmt.Errorf("Unable to parse input: %v", err)
 		sysErr = fmt.Errorf("parsing input to PUT jobs?id=%s: %v", inf.Params["id"], err)
@@ -923,7 +921,7 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	row = inf.Tx.Tx.QueryRow(updateQueryV40,
+	row = inf.Tx.Tx.QueryRow(updateQueryV4,
 		input.AssetURL,
 		input.TTLHours,
 		input.StartTime,
@@ -949,7 +947,7 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 	}
 
 	conflicts := tc.ValidateJobUniqueness(inf.Tx.Tx, dsid, *input.StartTime, *input.AssetURL, *input.TTLHours)
-	response := apiResponseV40{
+	response := apiResponseV4{
 		make([]tc.Alert, len(conflicts)+1),
 		job,
 	}
@@ -1173,7 +1171,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 }
 
 // Used by DELETE requests to `/jobs`, deletes an existing content invalidation job
-func DeleteV40(w http.ResponseWriter, r *http.Request) {
+func DeleteV4(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -1220,8 +1218,8 @@ func DeleteV40(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := tc.InvalidationJobV40{}
-	row = inf.Tx.Tx.QueryRow(deleteQueryV40, inf.Params["id"])
+	result := tc.InvalidationJobV4{}
+	row = inf.Tx.Tx.QueryRow(deleteQueryV4, inf.Params["id"])
 	err := row.Scan(
 		&result.ID,
 		&result.AssetURL,
@@ -1244,7 +1242,7 @@ func DeleteV40(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := apiResponseV40{[]tc.Alert{
+	response := apiResponseV4{[]tc.Alert{
 		{Text: "Content invalidation job was deleted", Level: tc.SuccessLevel.String()},
 	},
 		result,

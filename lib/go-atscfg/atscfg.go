@@ -697,8 +697,8 @@ func JobToInvalidationJob(jb tc.Job) (tc.InvalidationJob, error) {
 	}, nil
 }
 
-func JobsToInvalidationJobsV40(oldJobs []tc.Job) ([]tc.InvalidationJobV40, error) {
-	jobs := make([]tc.InvalidationJobV40, len(oldJobs), len(oldJobs))
+func JobsToInvalidationJobsV4(oldJobs []tc.Job) ([]tc.InvalidationJobV4, error) {
+	jobs := make([]tc.InvalidationJobV4, len(oldJobs), len(oldJobs))
 	err := error(nil)
 	for i, oldJob := range oldJobs {
 		jobs[i], err = JobToInvalidationJobV40(oldJob)
@@ -709,16 +709,16 @@ func JobsToInvalidationJobsV40(oldJobs []tc.Job) ([]tc.InvalidationJobV40, error
 	return jobs, nil
 }
 
-func JobToInvalidationJobV40(jb tc.Job) (tc.InvalidationJobV40, error) {
+func JobToInvalidationJobV40(jb tc.Job) (tc.InvalidationJobV4, error) {
 	startTime := tc.Time{}
 	if err := json.Unmarshal([]byte(`"`+jb.StartTime+`"`), &startTime); err != nil {
-		return tc.InvalidationJobV40{}, errors.New("unmarshalling time: " + err.Error())
+		return tc.InvalidationJobV4{}, errors.New("unmarshalling time: " + err.Error())
 	}
 	ttl, err := strconv.Atoi(strings.TrimSuffix(strings.TrimPrefix(jb.Parameters, "TTL:"), "h"))
 	if err != nil {
-		return tc.InvalidationJobV40{}, errors.New("unmarshalling ttl: " + err.Error())
+		return tc.InvalidationJobV4{}, errors.New("unmarshalling ttl: " + err.Error())
 	}
-	return tc.InvalidationJobV40{
+	return tc.InvalidationJobV4{
 		AssetURL:         util.StrPtr(jb.AssetURL),
 		CreatedBy:        util.StrPtr(jb.CreatedBy),
 		DeliveryService:  util.StrPtr(jb.DeliveryService),

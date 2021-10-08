@@ -132,7 +132,7 @@ func JobCollisionWarningTest(t *testing.T) {
 		t.Fatalf("unable to get invalidation jobs: %v - alerts: %+v", err, jobs.Alerts)
 	}
 
-	var realJob *tc.InvalidationJobV40
+	var realJob *tc.InvalidationJobV4
 	for i, job := range jobs.Response {
 		if job.StartTime == nil || job.DeliveryService == nil || job.CreatedBy == nil {
 			t.Error("Traffic Ops returned a representation of a content invalidation Job that had null or undefined Start Time and/or Delivery Service and/or Created By")
@@ -941,7 +941,7 @@ func UpdateTestJobsInvalidDS(t *testing.T) {
 		t.Fatalf("unable to get invalidation jobs: %v - alerts: %+v", err, jobs.Alerts)
 	}
 
-	var realJob tc.InvalidationJobV40
+	var realJob tc.InvalidationJobV4
 	for i, job := range jobs.Response {
 		if job.StartTime == nil || job.DeliveryService == nil || job.CreatedBy == nil {
 			t.Error("Traffic Ops returned a representation of a content invalidation Job that had null or undefined Start Time and/or Delivery Service and/or Created By")

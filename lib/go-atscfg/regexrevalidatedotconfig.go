@@ -57,7 +57,7 @@ func MakeRegexRevalidateDotConfig(
 	server *Server,
 	deliveryServices []DeliveryService,
 	globalParams []tc.Parameter,
-	jobs []tc.InvalidationJobV40,
+	jobs []tc.InvalidationJobV4,
 	opt *RegexRevalidateDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -80,7 +80,7 @@ func MakeRegexRevalidateDotConfig(
 		dsNames[*ds.XMLID] = struct{}{}
 	}
 
-	dsJobs := []tc.InvalidationJobV40{}
+	dsJobs := []tc.InvalidationJobV4{}
 	for _, job := range jobs {
 		if job.DeliveryService == nil {
 			warnings = append(warnings, "got job from Traffic Ops with a nil DeliveryService! Skipping!")
@@ -150,7 +150,7 @@ func (jb jobsSort) Less(i, j int) bool {
 //   - are "purge" jobs
 //   - have a start_time+ttl > now. That is, jobs that haven't expired yet.
 // Returns the filtered jobs, and any warnings.
-func filterJobs(tcJobs []tc.InvalidationJobV40, maxReval time.Duration, minTTL time.Duration) ([]revalJob, []string) {
+func filterJobs(tcJobs []tc.InvalidationJobV4, maxReval time.Duration, minTTL time.Duration) ([]revalJob, []string) {
 	warnings := []string{}
 
 	jobMap := map[string]revalJob{}

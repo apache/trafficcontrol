@@ -468,10 +468,13 @@ const REFETCH = "REFETCH"
 
 // InvalidationJobsResponse is the type of a response from Traffic Ops to a
 // request made to its /jobs API endpoint for v 4.0+
-type InvalidationJobsResponseV40 struct {
-	Response []InvalidationJobV40 `json:"response"`
+type InvalidationJobsResponseV4 struct {
+	Response []InvalidationJobV4 `json:"response"`
 	Alerts
 }
+
+// InvalidationJobCreateV4 is an alias for the InvalidationJobCreateV40 struct used for the latest minor version associated with api major version 4.
+type InvalidationJobCreateV4 InvalidationJobCreateV40
 
 // InvalidationJobCreateV40 represents user input intending to create a content invalidation job.
 type InvalidationJobCreateV40 struct {
@@ -495,7 +498,7 @@ type InvalidationJobCreateV40 struct {
 
 // Validates the fields submitted for an InvalidationJobCreateV40. These errors
 // are ultimately returned to the user
-func (job *InvalidationJobCreateV40) Validate(tx *sql.Tx) error {
+func (job *InvalidationJobCreateV4) Validate(tx *sql.Tx) error {
 	errs := []string{}
 	err := validation.ValidateStruct(job,
 		validation.Field(&job.DeliveryService, validation.Required),
@@ -539,6 +542,9 @@ func (job *InvalidationJobCreateV40) Validate(tx *sql.Tx) error {
 	return nil
 }
 
+// InvalidationJobV4 is an alias for the InvalidationJobV4 struct used for the latest minor version associated with api major version 4.
+type InvalidationJobV4 InvalidationJobV40
+
 // InvalidationJobV40 represents a content invalidation job as returned by the API.
 // Also used for Update calls.
 type InvalidationJobV40 struct {
@@ -551,7 +557,7 @@ type InvalidationJobV40 struct {
 	StartTime        *time.Time `json:"startTime"`
 }
 
-func (job InvalidationJobV40) String() string {
+func (job InvalidationJobV4) String() string {
 	var ID, AssetURL, CreatedBy, DeliveryService, TTLHours, InvalidationType, StartTime string
 	if job.ID != nil {
 		ID = strconv.FormatUint(*job.ID, 10)
@@ -589,7 +595,7 @@ func (job InvalidationJobV40) String() string {
 // Validate checks that the InvalidationJob is valid, by ensuring all of its fields are well-defined.
 //
 // This returns an error describing any and all problematic fields encountered during validation.
-func (job *InvalidationJobV40) Validate() error {
+func (job *InvalidationJobV4) Validate() error {
 	errs := []string{}
 	err := validation.ValidateStruct(job,
 		validation.Field(&job.DeliveryService, validation.Required),
@@ -626,7 +632,7 @@ func (job *InvalidationJobV40) Validate() error {
 }
 
 // validateDeliveryService ensures the supplied (required) Delivery Service XML ID exists
-func (job *InvalidationJobCreateV40) validateDeliveryService(tx *sql.Tx) error {
+func (job *InvalidationJobCreateV4) validateDeliveryService(tx *sql.Tx) error {
 	var exists bool
 	row := tx.QueryRow(`SELECT EXISTS(SELECT * FROM deliveryservice WHERE xml_id=$1)`, job.DeliveryService)
 	if err := row.Scan(&exists); err != nil {
@@ -639,7 +645,7 @@ func (job *InvalidationJobCreateV40) validateDeliveryService(tx *sql.Tx) error {
 }
 
 // validateTLLHours ensures the supplied TTL hours is within acceptable limits
-func (job *InvalidationJobCreateV40) validateTLLHours(tx *sql.Tx) error {
+func (job *InvalidationJobCreateV4) validateTLLHours(tx *sql.Tx) error {
 	var maxDays uint
 	err := tx.QueryRow(`SELECT value FROM parameter WHERE name='maxRevalDurationDays' AND config_file='regex_revalidate.config'`).Scan(&maxDays)
 	maxHours := maxDays * 24
@@ -657,7 +663,7 @@ func RefetchAllowed(tx *sql.Tx) bool {
 	return refetchEnabled
 }
 
-func (job *InvalidationJobCreateV40) GetDSIDfromDSXMLID(tx *sql.Tx) (uint, error) {
+func (job *InvalidationJobCreateV4) GetDSIDfromDSXMLID(tx *sql.Tx) (uint, error) {
 	var dsID uint
 	row := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id=$1`, job.DeliveryService)
 	if err := row.Scan(&dsID); err != nil {

@@ -515,17 +515,17 @@ func (cl *TOClient) GetDeliveryServiceRegexes(reqHdr http.Header) ([]tc.Delivery
 	return regexes, reqInf, nil
 }
 
-func (cl *TOClient) GetJobs(reqHdr http.Header, cdnName string) ([]tc.InvalidationJobV40, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetJobs(reqHdr http.Header, cdnName string) ([]tc.InvalidationJobV4, toclientlib.ReqInf, error) {
 	if cl.c == nil {
 		oldJobs, inf, err := cl.old.GetJobs()
-		jobs, err := atscfg.JobsToInvalidationJobsV40(oldJobs)
+		jobs, err := atscfg.JobsToInvalidationJobsV4(oldJobs)
 		if err != nil {
 			return nil, inf, errors.New("converting old []tc.Job to []tc.InvalidationJob: " + err.Error())
 		}
 		return jobs, inf, err
 	}
 
-	jobs := []tc.InvalidationJobV40{}
+	jobs := []tc.InvalidationJobV4{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "jobs_cdn_"+cdnName, &jobs, func(obj interface{}) error {
 		opts := *ReqOpts(reqHdr)
@@ -535,7 +535,7 @@ func (cl *TOClient) GetJobs(reqHdr http.Header, cdnName string) ([]tc.Invalidati
 		if err != nil {
 			return errors.New("getting jobs from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		jobs := obj.(*[]tc.InvalidationJobV40)
+		jobs := obj.(*[]tc.InvalidationJobV4)
 		*jobs = toJobs.Response
 		reqInf = toReqInf
 		return nil
