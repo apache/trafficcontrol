@@ -701,7 +701,7 @@ func JobsToInvalidationJobsV4(oldJobs []tc.Job) ([]tc.InvalidationJobV4, error) 
 	jobs := make([]tc.InvalidationJobV4, len(oldJobs), len(oldJobs))
 	err := error(nil)
 	for i, oldJob := range oldJobs {
-		jobs[i], err = JobToInvalidationJobV40(oldJob)
+		jobs[i], err = JobToInvalidationJobV4(oldJob)
 		if err != nil {
 			return nil, errors.New("converting old tc.Job to tc.InvalidationJob: " + err.Error())
 		}
@@ -709,7 +709,7 @@ func JobsToInvalidationJobsV4(oldJobs []tc.Job) ([]tc.InvalidationJobV4, error) 
 	return jobs, nil
 }
 
-func JobToInvalidationJobV40(jb tc.Job) (tc.InvalidationJobV4, error) {
+func JobToInvalidationJobV4(jb tc.Job) (tc.InvalidationJobV4, error) {
 	startTime := tc.Time{}
 	if err := json.Unmarshal([]byte(`"`+jb.StartTime+`"`), &startTime); err != nil {
 		return tc.InvalidationJobV4{}, errors.New("unmarshalling time: " + err.Error())

@@ -79,13 +79,15 @@ VALUES (
 )
 RETURNING
 	asset_url,
-	(SELECT deliveryservice.xml_id
-	 FROM deliveryservice
-	 WHERE deliveryservice.id=job_deliveryservice) AS deliveryservice,
+	(
+		SELECT deliveryservice.xml_id
+		FROM deliveryservice
+		WHERE deliveryservice.id=job_deliveryservice) AS deliveryservice,
 	id,
-	(SELECT tm_user.username
-	 FROM tm_user
-	 WHERE tm_user.id=job_user) AS createdBy,
+	(
+		SELECT tm_user.username
+		FROM tm_user
+		WHERE tm_user.id=job_user) AS createdBy,
 	'PURGE' AS keyword,
 	CONCAT('TTL:', ttl_hr, 'h') AS parameters,
 	start_time
@@ -118,12 +120,14 @@ VALUES (
 RETURNING
 	id,
 	asset_url,
-	(SELECT tm_user.username
+	(
+		SELECT tm_user.username
 		FROM tm_user
 		WHERE tm_user.id=job_user) AS createdBy,
-	(SELECT deliveryservice.xml_id
-	 FROM deliveryservice
-	 WHERE deliveryservice.id=job_deliveryservice) AS deliveryServiceXML,
+	(
+		SELECT deliveryservice.xml_id
+		FROM deliveryservice
+		WHERE deliveryservice.id=job_deliveryservice) AS deliveryServiceXML,
 	ttl_hr as ttlHrs,
 	invalidation_type as invalidationType,
 	start_time as startTime
@@ -160,20 +164,20 @@ SET asset_url=$1,
     start_time=$3
 WHERE job.id=$4
 RETURNING asset_url,
-          (
-           SELECT tm_user.username
-           FROM tm_user
-           WHERE tm_user.id=job.job_user
-          ) AS created_by,
-          (
-           SELECT deliveryservice.xml_id
-           FROM deliveryservice
-           WHERE deliveryservice.id=job.job_deliveryservice
-          ) AS delivery_service,
-          job.id,
-          'PURGE' as keyword,
-          CONCAT('TTL:', ttl_hr, 'h') AS parameters,
-          start_time
+	(
+		SELECT tm_user.username
+		FROM tm_user
+		WHERE tm_user.id=job.job_user
+	) AS created_by,
+	(
+		SELECT deliveryservice.xml_id
+		FROM deliveryservice
+		WHERE deliveryservice.id=job.job_deliveryservice
+	) AS delivery_service,
+	job.id,
+	'PURGE' as keyword,
+	CONCAT('TTL:', ttl_hr, 'h') AS parameters,
+	start_time
 `
 
 // Almost the same as updateQuery, but returns appropriate values for API 4.0+
@@ -185,33 +189,33 @@ SET asset_url=$1,
 	invalidation_type=$4
 WHERE job.id=$5
 RETURNING asset_url,
-          (
-           SELECT tm_user.username
-           FROM tm_user
-           WHERE tm_user.id=job.job_user
-          ) AS created_by,
-          (
-           SELECT deliveryservice.xml_id
-           FROM deliveryservice
-           WHERE deliveryservice.id=job.job_deliveryservice
-          ) AS delivery_service,
-          job.id,
-		  ttl_hr,
-          start_time,
-		  invalidation_type
+	(
+		SELECT tm_user.username
+		FROM tm_user
+		WHERE tm_user.id=job.job_user
+	) AS created_by,
+	(
+		SELECT deliveryservice.xml_id
+		FROM deliveryservice
+		WHERE deliveryservice.id=job.job_deliveryservice
+	) AS delivery_service,
+	job.id,
+	ttl_hr,
+	start_time,
+	invalidation_type
 `
 
 // Deprecated, only to be used with versions below 4.0
 const putInfoQuery = `
 SELECT job.id AS id,
-       tm_user.username AS createdBy,
-       job.job_user AS createdByID,
-       job.job_deliveryservice AS dsid,
-       deliveryservice.xml_id AS dsxmlid,
-       job.asset_url AS assetURL,
-       CONCAT('TTL:', ttl_hr, 'h') AS parameters,
-       job.start_time AS start_time,
-       origin.protocol || '://' || origin.fqdn || rtrim(concat(':', origin.port), ':') AS OFQDN
+	tm_user.username AS createdBy,
+	job.job_user AS createdByID,
+	job.job_deliveryservice AS dsid,
+	deliveryservice.xml_id AS dsxmlid,
+	job.asset_url AS assetURL,
+	CONCAT('TTL:', ttl_hr, 'h') AS parameters,
+	job.start_time AS start_time,
+	origin.protocol || '://' || origin.fqdn || rtrim(concat(':', origin.port), ':') AS OFQDN
 FROM job
 INNER JOIN origin ON origin.deliveryservice=job.job_deliveryservice AND origin.is_primary
 INNER JOIN tm_user ON tm_user.id=job.job_user
@@ -222,15 +226,15 @@ WHERE job.id=$1
 // Almost the same as putInfoQuery, but returns appropriate values for API 4.0+
 const putInfoQueryV4 = `
 SELECT job.id AS id,
-	   tm_user.username AS createdBy,
-	   job.job_user AS createdByID,
-       job.job_deliveryservice AS dsid,
-       deliveryservice.xml_id AS dsxmlid,
-       job.asset_url AS assetURL,
-       job.ttl_hr AS ttlhrs,
-       job.start_time AS start_time,
-	   job.invalidation_type as invalidationType,
-       origin.protocol || '://' || origin.fqdn || rtrim(concat(':', origin.port), ':') AS OFQDN
+	tm_user.username AS createdBy,
+	job.job_user AS createdByID,
+	job.job_deliveryservice AS dsid,
+	deliveryservice.xml_id AS dsxmlid,
+	job.asset_url AS assetURL,
+	job.ttl_hr AS ttlhrs,
+	job.start_time AS start_time,
+	job.invalidation_type as invalidationType,
+	origin.protocol || '://' || origin.fqdn || rtrim(concat(':', origin.port), ':') AS OFQDN
 FROM job
 INNER JOIN origin ON origin.deliveryservice=job.job_deliveryservice AND origin.is_primary
 INNER JOIN tm_user ON tm_user.id=job.job_user
@@ -244,19 +248,20 @@ DELETE
 FROM job
 WHERE job.id=$1
 RETURNING job.asset_url,
-          ( SELECT tm_user.username
-           FROM tm_user
-           WHERE tm_user.id=job.job_user
-          ) AS created_by,
-          (
-           SELECT deliveryservice.xml_id
-           FROM deliveryservice
-           WHERE deliveryservice.id=job.job_deliveryservice
-          ) AS deliveryservice,
-          job.id,          
-		  'PURGE' as keyword,
-          CONCAT('TTL:', ttl_hr, 'h') AS parameters,
-          job.start_time
+	(
+		SELECT tm_user.username
+		FROM tm_user
+		WHERE tm_user.id=job.job_user
+	) AS created_by,
+	(
+		SELECT deliveryservice.xml_id
+		FROM deliveryservice
+		WHERE deliveryservice.id=job.job_deliveryservice
+	) AS deliveryservice,
+	job.id,          
+	'PURGE' as keyword,
+	CONCAT('TTL:', ttl_hr, 'h') AS parameters,
+	job.start_time
 `
 
 // Almost the same as deleteQuery, but returns appropriate values for API 4.0+
@@ -265,21 +270,21 @@ DELETE
 FROM job
 WHERE job.id=$1
 RETURNING 
-		  job.id,
-		  job.asset_url,
-          (
-           SELECT tm_user.username
-           FROM tm_user
-           WHERE tm_user.id=job.job_user
-          ) AS created_by,
-          (
-           SELECT deliveryservice.xml_id
-           FROM deliveryservice
-           WHERE deliveryservice.id=job.job_deliveryservice
-          ) AS deliveryservice,
-          ttl_hr,
-		  job.invalidation_type,
-          job.start_time
+	job.id,
+	job.asset_url,
+	(
+		SELECT tm_user.username
+		FROM tm_user
+		WHERE tm_user.id=job.job_user
+	) AS created_by,
+	(
+		SELECT deliveryservice.xml_id
+		FROM deliveryservice
+		WHERE deliveryservice.id=job.job_deliveryservice
+	) AS deliveryservice,
+	ttl_hr,
+	job.invalidation_type,
+	job.start_time
 `
 
 type apiResponse struct {
@@ -304,12 +309,12 @@ func selectMaxLastUpdatedQuery(where string) string {
 // Deprecated, only to be used with versions below 4.0
 const readQuery = `
 SELECT job.id,
-        'PURGE' AS keyword,
-		ttl_hr,
-		asset_url,
-		start_time,
-		u.username as createdBy,
-		ds.xml_id as dsId
+	'PURGE' AS keyword,
+	ttl_hr,
+	asset_url,
+	start_time,
+	u.username as createdBy,
+	ds.xml_id as dsId
 FROM job
 JOIN tm_user u ON job.job_user = u.id
 JOIN deliveryservice ds ON job.job_deliveryservice = ds.id
@@ -318,12 +323,12 @@ JOIN deliveryservice ds ON job.job_deliveryservice = ds.id
 // Almost the same as readQuery, but returns appropriate values for API 4.0+
 const readQueryV4 = `
 SELECT job.id,
-	   asset_url,
-	   u.username as createdBy,
-	   ds.xml_id,
-	   ttl_hr,
-	   invalidation_type,
-	   start_time
+	asset_url,
+	u.username as createdBy,
+	ds.xml_id,
+	ttl_hr,
+	invalidation_type,
+	start_time
 FROM job
 JOIN tm_user u ON job.job_user = u.id
 JOIN deliveryservice ds ON job.job_deliveryservice = ds.id
@@ -385,14 +390,13 @@ func (job *InvalidationJobV4) Read(h http.Header, useIMS bool) ([]interface{}, e
 
 	for rows.Next() {
 		job := tc.InvalidationJobV4{}
-		err := rows.Scan(&job.ID,
+		if err := rows.Scan(&job.ID,
 			&job.AssetURL,
 			&job.CreatedBy,
 			&job.DeliveryService,
 			&job.TTLHours,
 			&job.InvalidationType,
-			&job.StartTime)
-		if err != nil {
+			&job.StartTime); err != nil {
 			return nil, nil, fmt.Errorf("parsing db response: %v", err), http.StatusInternalServerError, nil
 		}
 
