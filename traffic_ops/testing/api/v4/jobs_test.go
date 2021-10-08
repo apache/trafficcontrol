@@ -62,7 +62,7 @@ func CreateTestJobs(t *testing.T) {
 	}
 
 	for _, job := range testData.InvalidationJobs {
-		request := tc.InvalidationJobCreateV40{
+		request := tc.InvalidationJobCreateV4{
 			DeliveryService:  job.DeliveryService,
 			Regex:            job.Regex,
 			StartTime:        job.StartTime,
@@ -85,7 +85,7 @@ func JobCollisionWarningTest(t *testing.T) {
 	}
 	xmlID := *testData.DeliveryServices[0].XMLID
 
-	firstJob := tc.InvalidationJobCreateV40{
+	firstJob := tc.InvalidationJobCreateV4{
 		DeliveryService:  xmlID,
 		Regex:            `/\.*([A-Z]0?)`,
 		TTLHours:         16,
@@ -98,7 +98,7 @@ func JobCollisionWarningTest(t *testing.T) {
 		t.Fatalf("Unexpected error creating a content invalidation Job: %v - alerts: %+v", err, resp.Alerts)
 	}
 
-	newJob := tc.InvalidationJobCreateV40{
+	newJob := tc.InvalidationJobCreateV4{
 		DeliveryService:  firstJob.DeliveryService,
 		Regex:            firstJob.Regex,
 		TTLHours:         firstJob.TTLHours,
@@ -586,7 +586,7 @@ func CreateTestJobsInvalidDS(t *testing.T) {
 	testData.InvalidationJobs[0] = job
 
 	//Invalid DS XML ID (Does not exist)
-	request := tc.InvalidationJobCreateV40{
+	request := tc.InvalidationJobCreateV4{
 		DeliveryService:  "invalid",
 		Regex:            job.Regex,
 		StartTime:        job.StartTime,
@@ -602,7 +602,7 @@ func CreateTestJobsInvalidDS(t *testing.T) {
 	}
 
 	//Missing DS
-	request = tc.InvalidationJobCreateV40{
+	request = tc.InvalidationJobCreateV4{
 		Regex:            job.Regex,
 		StartTime:        job.StartTime,
 		TTLHours:         job.TTLHours,
@@ -617,7 +617,7 @@ func CreateTestJobsInvalidDS(t *testing.T) {
 	}
 
 	//Empty DS
-	request = tc.InvalidationJobCreateV40{
+	request = tc.InvalidationJobCreateV4{
 		DeliveryService:  "",
 		Regex:            job.Regex,
 		StartTime:        job.StartTime,
@@ -641,7 +641,7 @@ func CreateTestJobsAlreadyExistTTL(t *testing.T) {
 	job.StartTime = time.Now().Add(time.Minute).UTC()
 	testData.InvalidationJobs[0] = job
 
-	request := tc.InvalidationJobCreateV40{
+	request := tc.InvalidationJobCreateV4{
 		DeliveryService:  job.DeliveryService,
 		Regex:            job.Regex,
 		StartTime:        job.StartTime,
@@ -664,7 +664,7 @@ func CreateTestJobsWithPastDate(t *testing.T) {
 	job := testData.InvalidationJobs[0]
 	job.StartTime = dt.AddDate(0, 0, -1)
 	testData.InvalidationJobs[0] = job
-	request := tc.InvalidationJobCreateV40{
+	request := tc.InvalidationJobCreateV4{
 		DeliveryService:  job.DeliveryService,
 		Regex:            job.Regex,
 		StartTime:        job.StartTime,
@@ -685,7 +685,7 @@ func CreateTestJobsWithPastDate(t *testing.T) {
 	job = testData.InvalidationJobs[0]
 	job.StartTime = dt.AddDate(0, 0, -1)
 	testData.InvalidationJobs[0] = job
-	request = tc.InvalidationJobCreateV40{
+	request = tc.InvalidationJobCreateV4{
 		DeliveryService:  job.DeliveryService,
 		Regex:            job.Regex,
 		StartTime:        job.StartTime,
@@ -706,7 +706,7 @@ func CreateTestJobsWithPastDate(t *testing.T) {
 	job = testData.InvalidationJobs[0]
 	job.StartTime = dt.AddDate(0, 0, -5)
 	testData.InvalidationJobs[0] = job
-	request = tc.InvalidationJobCreateV40{
+	request = tc.InvalidationJobCreateV4{
 		DeliveryService:  job.DeliveryService,
 		Regex:            job.Regex,
 		StartTime:        job.StartTime,
@@ -725,7 +725,7 @@ func CreateTestJobsWithPastDate(t *testing.T) {
 	job = testData.InvalidationJobs[0]
 	job.StartTime = time.Unix(1, 0)
 	testData.InvalidationJobs[0] = job
-	request = tc.InvalidationJobCreateV40{
+	request = tc.InvalidationJobCreateV4{
 		DeliveryService:  job.DeliveryService,
 		Regex:            job.Regex,
 		StartTime:        job.StartTime,
@@ -751,7 +751,7 @@ func CreateTestJobsWithFutureDate(t *testing.T) {
 	job := testData.InvalidationJobs[0]
 	job.StartTime = dt.AddDate(0, 0, 1)
 	testData.InvalidationJobs[0] = job
-	request := tc.InvalidationJobCreateV40{
+	request := tc.InvalidationJobCreateV4{
 		DeliveryService:  job.DeliveryService,
 		Regex:            job.Regex,
 		StartTime:        job.StartTime,
@@ -772,7 +772,7 @@ func CreateTestJobsWithFutureDate(t *testing.T) {
 	job = testData.InvalidationJobs[0]
 	job.StartTime = dt.AddDate(0, 0, 1)
 	testData.InvalidationJobs[0] = job
-	request = tc.InvalidationJobCreateV40{
+	request = tc.InvalidationJobCreateV4{
 		DeliveryService:  job.DeliveryService,
 		Regex:            job.Regex,
 		StartTime:        job.StartTime,
@@ -793,7 +793,7 @@ func CreateTestJobsWithFutureDate(t *testing.T) {
 	job = testData.InvalidationJobs[0]
 	job.StartTime = dt.AddDate(0, 0, 1)
 	testData.InvalidationJobs[0] = job
-	request = tc.InvalidationJobCreateV40{
+	request = tc.InvalidationJobCreateV4{
 		DeliveryService:  job.DeliveryService,
 		Regex:            job.Regex,
 		StartTime:        job.StartTime,
@@ -815,7 +815,7 @@ func CreateJobsMissingDate(t *testing.T) {
 	}
 	//Missing start date
 	job := testData.InvalidationJobs[0]
-	request := tc.InvalidationJobCreateV40{
+	request := tc.InvalidationJobCreateV4{
 		DeliveryService:  job.DeliveryService,
 		Regex:            job.Regex,
 		TTLHours:         job.TTLHours,
@@ -841,7 +841,7 @@ func CreateJobsMissingRegex(t *testing.T) {
 	job := testData.InvalidationJobs[0]
 	job.StartTime = dt.AddDate(0, 0, 1)
 	testData.InvalidationJobs[0] = job
-	request := tc.InvalidationJobCreateV40{
+	request := tc.InvalidationJobCreateV4{
 		DeliveryService:  job.DeliveryService,
 		TTLHours:         job.TTLHours,
 		InvalidationType: job.InvalidationType,
@@ -856,7 +856,7 @@ func CreateJobsMissingRegex(t *testing.T) {
 
 	//Empty Regex
 	job.Regex = ""
-	request = tc.InvalidationJobCreateV40{
+	request = tc.InvalidationJobCreateV4{
 		DeliveryService: job.DeliveryService,
 		Regex:           job.Regex,
 		TTLHours:        job.TTLHours,
@@ -882,7 +882,7 @@ func CreateJobsMissingTtl(t *testing.T) {
 	job := testData.InvalidationJobs[0]
 	job.StartTime = dt.AddDate(0, 0, 1)
 	testData.InvalidationJobs[0] = job
-	request := tc.InvalidationJobCreateV40{
+	request := tc.InvalidationJobCreateV4{
 		DeliveryService:  job.DeliveryService,
 		Regex:            job.Regex,
 		InvalidationType: job.InvalidationType,
@@ -897,7 +897,7 @@ func CreateJobsMissingTtl(t *testing.T) {
 
 	//Invalid TTL
 	job.TTLHours = 0
-	request = tc.InvalidationJobCreateV40{
+	request = tc.InvalidationJobCreateV4{
 		DeliveryService:  job.DeliveryService,
 		Regex:            job.Regex,
 		TTLHours:         job.TTLHours,
@@ -922,7 +922,7 @@ func UpdateTestJobsInvalidDS(t *testing.T) {
 	}
 	xmlID := *testData.DeliveryServices[0].XMLID
 	startTime := time.Now().Add(time.Hour)
-	firstJob := tc.InvalidationJobCreateV40{
+	firstJob := tc.InvalidationJobCreateV4{
 		DeliveryService:  xmlID,
 		Regex:            `/\.*([A-Z]0?)`,
 		TTLHours:         16,

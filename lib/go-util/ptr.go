@@ -1,7 +1,3 @@
-package util
-
-import "time"
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,6 +16,10 @@ import "time"
  * specific language governing permissions and limitations
  * under the License.
  */
+
+package util
+
+import "time"
 
 func StrPtr(str string) *string {
 	return &str

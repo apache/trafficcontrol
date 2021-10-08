@@ -183,9 +183,7 @@ func filterJobs(tcJobs []tc.InvalidationJobV4, maxReval time.Duration, minTTL ti
 			continue
 		}
 
-		// process the __REFETCH__ keyword
-		// There is no InvalidationType string before TO v4.0, so pass empty string
-		jobType, assetURL := ProcessRefetch(*tcJob.InvalidationType, *tcJob.AssetURL)
+		jobType, assetURL := processRefetch(*tcJob.InvalidationType, *tcJob.AssetURL)
 
 		purgeEnd := tcJob.StartTime.Add(ttl)
 
@@ -206,10 +204,10 @@ func filterJobs(tcJobs []tc.InvalidationJobV4, maxReval time.Duration, minTTL ti
 const MISS = "MISS"
 const STALE = "STALE"
 
-// ProcessRefetch determines the type of Invalidation, returns the corresponding jobtype
+// processRefetch determines the type of Invalidation, returns the corresponding jobtype
 // and "cleans" the regex URL for the asset to be invalidated. REFETCH trumps REFRESH,
 // whether in the AssetURL or as InvalidationType
-func ProcessRefetch(invalidationType, assetURL string) (string, string) {
+func processRefetch(invalidationType, assetURL string) (string, string) {
 
 	if (len(invalidationType) > 0 && invalidationType == tc.REFETCH) || strings.HasSuffix(assetURL, RefetchSuffix) {
 		assetURL = strings.TrimSuffix(assetURL, RefetchSuffix)

@@ -247,9 +247,9 @@ func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
 }
 
 type compareJob struct {
-	AssetURL  *string
-	TTLHours  *uint
-	StartTime *time.Time
+	AssetURL  string
+	TTLHours  uint
+	StartTime time.Time
 }
 
 // ValidateJobUniqueness returns a message describing each overlap between
@@ -282,14 +282,14 @@ WHERE job.job_deliveryservice = $1
 			if err != nil {
 				continue
 			}
-			if !strings.HasSuffix(*testJob.AssetURL, assetURL) {
+			if !strings.HasSuffix(testJob.AssetURL, assetURL) {
 				continue
 			}
-			if *testJob.TTLHours == 0 {
+			if testJob.TTLHours == 0 {
 				continue
 			}
 			testJobStart := testJob.StartTime
-			testJobEnd := testJobStart.Add(time.Hour * time.Duration(*testJob.TTLHours))
+			testJobEnd := testJobStart.Add(time.Hour * time.Duration(testJob.TTLHours))
 			jobEnd := jobStart.Add(time.Hour * time.Duration(ttlHours))
 			// jobStart in testJob range
 			if (testJobStart.Before(jobStart) && jobStart.Before(testJobEnd)) ||
@@ -298,7 +298,7 @@ WHERE job.job_deliveryservice = $1
 				// job range encaspulates testJob range
 				(testJobEnd.Before(jobEnd) && jobStart.Before(jobStart)) {
 				errs = append(errs, fmt.Sprintf("Invalidation request duplicate found for %v, start:%v end:%v",
-					*testJob.AssetURL, testJobStart, testJobEnd))
+					testJob.AssetURL, testJobStart, testJobEnd))
 			}
 		}
 	}
@@ -659,7 +659,7 @@ func (job *InvalidationJobCreateV4) validateTLLHours(tx *sql.Tx) error {
 func RefetchAllowed(tx *sql.Tx) bool {
 	refetchEnabled := false
 	// Silently ignore paramter error
-	tx.QueryRow(`SELECT value FROM parameter WHERE name='refetch_enabled' AND config_file='global'`).Scan(&refetchEnabled)
+	_ = tx.QueryRow(`SELECT value FROM parameter WHERE name='refetch_enabled' AND config_file='global'`).Scan(&refetchEnabled)
 	return refetchEnabled
 }
 

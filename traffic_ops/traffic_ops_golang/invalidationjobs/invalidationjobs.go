@@ -511,7 +511,7 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
 
 // Used by POST requests to `/jobs`, creates a new content invalidation job
 // from the provided request body.
-func CreateV4(w http.ResponseWriter, r *http.Request) {
+func CreateV40(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -803,7 +803,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 // Used by PUT requests to `/jobs`, replaces an existing content invalidation job
 // with the provided request body.
-func UpdateV4(w http.ResponseWriter, r *http.Request) {
+func UpdateV40(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -1171,7 +1171,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 }
 
 // Used by DELETE requests to `/jobs`, deletes an existing content invalidation job
-func DeleteV4(w http.ResponseWriter, r *http.Request) {
+func DeleteV40(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
