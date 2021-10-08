@@ -13,8 +13,8 @@
 */
 import { TestBed } from "@angular/core/testing";
 
-import { AuthenticatedGuard } from "./authenticated-guard.service";
 import {AuthenticationService} from "../shared/authentication/authentication.service";
+import { AuthenticatedGuard } from "./authenticated-guard.service";
 
 describe("AuthenticationGuard", () => {
 	let guard: AuthenticatedGuard;

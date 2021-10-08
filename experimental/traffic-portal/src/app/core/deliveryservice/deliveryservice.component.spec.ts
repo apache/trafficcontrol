@@ -21,11 +21,11 @@ import { of } from "rxjs";
 
 import { LinechartDirective } from "../../shared/charts/linechart.directive";
 import { DeliveryService, GeoLimit, GeoProvider, TPSData } from "../../models";
-import { DeliveryserviceComponent } from "./deliveryservice.component";
 import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
 import {DeliveryServiceService, UserService} from "../../shared/api";
 import {AlertService} from "../../shared/alert/alert.service";
 import {AuthenticationService} from "../../shared/authentication/authentication.service";
+import { DeliveryserviceComponent } from "./deliveryservice.component";
 
 
 describe("DeliveryserviceComponent", () => {

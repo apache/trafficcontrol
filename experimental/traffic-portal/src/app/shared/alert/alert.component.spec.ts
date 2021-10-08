@@ -18,8 +18,8 @@ import {HarnessLoader} from "@angular/cdk/testing";
 import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 
-import { AlertService } from "./alert.service";
 import { AlertLevel } from "../../models/alert.model";
+import { AlertService } from "./alert.service";
 import { AlertComponent } from "./alert.component";
 
 describe("AlertComponent", () => {

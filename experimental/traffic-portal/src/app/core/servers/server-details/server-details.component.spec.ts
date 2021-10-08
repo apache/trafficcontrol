@@ -17,10 +17,9 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import { ServerDetailsComponent } from "./server-details.component";
 import {CacheGroupService, CDNService, ProfileService, ServerService, TypeService} from "../../../shared/api";
 import {PhysicalLocationService} from "../../../shared/api/PhysicalLocationService";
-import {of} from "rxjs";
+import { ServerDetailsComponent } from "./server-details.component";
 
 describe("ServerDetailsComponent", () => {
 	let component: ServerDetailsComponent;

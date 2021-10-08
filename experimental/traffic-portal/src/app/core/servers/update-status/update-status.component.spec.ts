@@ -14,8 +14,8 @@
 import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { UpdateStatusComponent } from "./update-status.component";
 import {ServerService} from "../../../shared/api";
+import { UpdateStatusComponent } from "./update-status.component";
 
 describe("UpdateStatusComponent", () => {
 	let component: UpdateStatusComponent;

@@ -27,9 +27,9 @@ import { RouterTestingModule } from "@angular/router/testing";
 import {CDNService, DeliveryServiceService, UserService} from "src/app/shared/api";
 
 import { Protocol } from "../../models";
-import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
 import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
 import {AuthenticationService} from "../../shared/authentication/authentication.service";
+import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
 
 
 describe("NewDeliveryServiceComponent", () => {

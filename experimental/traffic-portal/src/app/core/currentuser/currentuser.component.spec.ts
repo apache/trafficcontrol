@@ -19,10 +19,10 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { UserService } from "src/app/shared/api";
 
 import { User } from "../../models";
-import { CurrentuserComponent } from "./currentuser.component";
 import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
 import {CurrentUserService} from "../../shared/currentUser/current-user.service";
 import {AuthenticationService} from "../../shared/authentication/authentication.service";
+import { CurrentuserComponent } from "./currentuser.component";
 
 describe("CurrentuserComponent", () => {
 	let component: CurrentuserComponent;

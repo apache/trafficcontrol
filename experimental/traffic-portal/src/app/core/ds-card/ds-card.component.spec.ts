@@ -20,10 +20,9 @@ import { of } from "rxjs";
 
 import { LinechartDirective } from "../../shared/charts/linechart.directive";
 import { DeliveryService } from "../../models";
-import { APIService } from "../../shared/api/APIService";
-import { DsCardComponent } from "./ds-card.component";
 import {LoadingComponent} from "../../shared/loading/loading.component";
 import {DeliveryServiceService} from "../../shared/api";
+import { DsCardComponent } from "./ds-card.component";
 
 describe("DsCardComponent", () => {
 	let component: DsCardComponent;

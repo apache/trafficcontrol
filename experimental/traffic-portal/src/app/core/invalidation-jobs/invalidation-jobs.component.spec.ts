@@ -24,9 +24,9 @@ import {DeliveryServiceService, InvalidationJobService, UserService} from "src/a
 import { CustomvalidityDirective } from "../../shared/validation/customvalidity.directive";
 import { OpenableDirective } from "../../shared/openable/openable.directive";
 import { DeliveryService, GeoLimit, GeoProvider, InvalidationJob } from "../../models";
-import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
 import {AuthenticationService} from "../../shared/authentication/authentication.service";
+import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 
 describe("InvalidationJobsComponent", () => {
 	let component: InvalidationJobsComponent;

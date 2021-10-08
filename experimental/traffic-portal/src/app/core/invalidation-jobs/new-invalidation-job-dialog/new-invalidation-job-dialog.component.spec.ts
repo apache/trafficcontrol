@@ -15,8 +15,8 @@ import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 
-import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog.component";
 import {InvalidationJobService} from "../../../shared/api";
+import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog.component";
 
 describe("NewInvalidationJobDialogComponent", () => {
 	let component: NewInvalidationJobDialogComponent;

@@ -16,8 +16,8 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import { CacheGroupTableComponent } from "./cache-group-table.component";
 import {CacheGroupService} from "../../../shared/api";
+import { CacheGroupTableComponent } from "./cache-group-table.component";
 
 describe("CacheGroupTableComponent", () => {
 	let component: CacheGroupTableComponent;

@@ -33,15 +33,15 @@ import {NewInvalidationJobDialogComponent} from "./invalidation-jobs/new-invalid
 
 
 const routes: Routes = [
-	{ component: DashboardComponent, path: "", canActivate: [AuthenticatedGuard]},
-	{ component: UsersComponent, path: "users", canActivate: [AuthenticatedGuard]},
-	{ component: ServersTableComponent, path: "servers", canActivate: [AuthenticatedGuard]},
-	{ component: ServerDetailsComponent, path: "server/:id", canActivate: [AuthenticatedGuard] },
-	{ component: DeliveryserviceComponent, path: "deliveryservice/:id", canActivate: [AuthenticatedGuard] },
-	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs", canActivate: [AuthenticatedGuard] },
-	{ component: CurrentuserComponent, path: "me", canActivate: [AuthenticatedGuard] },
-	{ component: NewDeliveryServiceComponent, path: "new.Delivery.Service", canActivate: [AuthenticatedGuard] },
-	{ component: CacheGroupTableComponent, path: "cache-groups", canActivate: [AuthenticatedGuard] }
+	{ canActivate: [AuthenticatedGuard], component: DashboardComponent, path: "" },
+	{ canActivate: [AuthenticatedGuard], component: UsersComponent, path: "users" },
+	{ canActivate: [AuthenticatedGuard], component: ServersTableComponent, path: "servers" },
+	{ canActivate: [AuthenticatedGuard], component: ServerDetailsComponent, path: "server/:id" },
+	{ canActivate: [AuthenticatedGuard], component: DeliveryserviceComponent, path: "deliveryservice/:id" },
+	{ canActivate: [AuthenticatedGuard], component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs" },
+	{ canActivate: [AuthenticatedGuard], component: CurrentuserComponent, path: "me" },
+	{ canActivate: [AuthenticatedGuard], component: NewDeliveryServiceComponent, path: "new.Delivery.Service" },
+	{ canActivate: [AuthenticatedGuard], component: CacheGroupTableComponent, path: "cache-groups" }
 ];
 
 /**

@@ -17,12 +17,11 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { User } from "../../models";
-import { APIService } from "../../shared/api/APIService";
-import { UsersComponent } from "./users.component";
 import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
 import {LoadingComponent} from "../../shared/loading/loading.component";
 import {UserService} from "../../shared/api";
 import {AuthenticationService} from "../../shared/authentication/authentication.service";
+import { UsersComponent } from "./users.component";
 
 describe("UsersComponent", () => {
 	let component: UsersComponent;

@@ -47,7 +47,13 @@ export class AppComponent implements OnInit {
 		this.router.navigate(["/login"]);
 	}
 
-	public getState(route: RouterOutlet) {
+	/**
+	 * getState is used to provide states to the router for the purpose of animation.
+	 *
+	 * @param route Current router outlet.
+	 * @returns the current route animation data.
+	 */
+	public getState(route: RouterOutlet): string | undefined | null {
 		return route && route.activatedRouteData && route.activatedRouteData.animation;
 	}
 

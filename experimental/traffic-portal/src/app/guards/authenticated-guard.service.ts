@@ -29,10 +29,25 @@ export class AuthenticatedGuard implements CanActivate, CanLoad {
 	constructor(private readonly auth: AuthenticationService) {
 	}
 
-	public canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+	/**
+	 * canActivate determines whether or not a user can activate an already loaded route.
+	 *
+	 * @param route Route snapshot.
+	 * @param state Route state snapshot.
+	 * @returns many
+	 */
+	public canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean | UrlTree>
+	| Promise<boolean | UrlTree> | boolean | UrlTree {
 		return this.auth.currentUser !== null;
 	}
 
+	/**
+	 * canLoad determines whether or not the current user can load/request the given route.
+	 *
+	 * @param route Requested route.
+	 * @param segments URL segments.
+	 * @returns many
+	 */
 	public canLoad(route: Route, segments: UrlSegment[]): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
 		return this.auth.currentUser !== null;
 	}
