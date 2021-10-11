@@ -202,6 +202,7 @@ func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int, us
 	var runSecond bool
 	var results []tc.DeliveryServicesRequiredCapability
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(rc.APIInfo().Params, rc.ParamColumns())
+
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
