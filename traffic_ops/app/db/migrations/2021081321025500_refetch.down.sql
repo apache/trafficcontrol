@@ -121,7 +121,9 @@ UPDATE public.job
 SET agent = 1;
 
 UPDATE public.job 
-SET status = 1;
+SET status = (
+	SELECT id FROM public.job_status WHERE name = 'PENDING'
+);
 ALTER TABLE public.job 
 ALTER COLUMN status SET NOT NULL;
 

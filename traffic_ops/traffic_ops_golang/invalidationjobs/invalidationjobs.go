@@ -184,8 +184,8 @@ RETURNING asset_url,
 const updateQueryV4 = `
 UPDATE job
 SET asset_url=$1,
-    ttl_hr=$2,
-    start_time=$3,
+	ttl_hr=$2,
+	start_time=$3,
 	invalidation_type=$4
 WHERE job.id=$5
 RETURNING asset_url,
@@ -258,7 +258,7 @@ RETURNING job.asset_url,
 		FROM deliveryservice
 		WHERE deliveryservice.id=job.job_deliveryservice
 	) AS deliveryservice,
-	job.id,          
+	job.id,
 	'PURGE' as keyword,
 	CONCAT('TTL:', ttl_hr, 'h') AS parameters,
 	job.start_time
@@ -359,10 +359,28 @@ func (job *InvalidationJobV4) Read(h http.Header, useIMS bool) ([]interface{}, e
 	if err != nil {
 		return nil, nil, fmt.Errorf("getting accessible tenants for user - %v", err), http.StatusInternalServerError, nil
 	}
+	cdn := ""
+	if cdnName, ok := job.APIInfo().Params["cdn"]; ok {
+		queryValues["cdn"] = cdnName
+		cdn = ` AND ds.cdn_id = (SELECT id FROM cdn WHERE name = :cdn) `
+	}
+	maxDays := ""
+	if _, ok := job.APIInfo().Params["maxRevalDurationDays"]; ok {
+		// jobs started within the last $maxRevalDurationDays days (defaulting to 90 days if the parameter doesn't exist)
+		maxDays = ` AND job.start_time >= NOW() - CAST(
+                                                       (SELECT COALESCE(
+                                                                       (SELECT value
+                                                                        FROM parameter
+                                                                        WHERE name = 'maxRevalDurationDays'
+                                                                        AND config_file = 'regex_revalidate.config'
+                                                                        LIMIT 1),
+                                                                       '90'))
+                                                       || ' days' AS INTERVAL) `
+	}
 	if len(where) > 0 {
-		where += " AND ds.tenant_id = ANY(:tenants) "
+		where += " AND ds.tenant_id = ANY(:tenants) " + maxDays + cdn
 	} else {
-		where = dbhelpers.BaseWhere + " ds.tenant_id = ANY(:tenants) "
+		where = dbhelpers.BaseWhere + " ds.tenant_id = ANY(:tenants) " + maxDays + cdn
 	}
 	queryValues["tenants"] = pq.Array(accessibleTenants)
 
