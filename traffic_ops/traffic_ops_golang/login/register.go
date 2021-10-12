@@ -225,7 +225,6 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	} else {
 		req.Email = reqV4.Email
 		req.TenantID = reqV4.TenantID
-		dbhelpers.GetRoleIDFromName(tx, reqV4.Role)
 		roleID, ok, err := dbhelpers.GetRoleIDFromName(tx, reqV4.Role)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error fetching ID from role name: %w", err))

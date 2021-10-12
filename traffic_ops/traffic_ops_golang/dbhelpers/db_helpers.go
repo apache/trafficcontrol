@@ -1716,3 +1716,15 @@ func GetCDNNameDomain(cdnID int, tx *sql.Tx) (string, string, error) {
 	}
 	return cdnName, cdnDomain, nil
 }
+
+// GetRegionNameFromID returns the name of the region associated with the supplied ID.
+func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
+	var regionName string
+	if err := tx.QueryRow(`SELECT name FROM region WHERE id = $1`, regionID).Scan(&regionName); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return regionName, false, nil
+		}
+		return regionName, false, fmt.Errorf("querying region name from ID: %w", err)
+	}
+	return regionName, true, nil
+}
