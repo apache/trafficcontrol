@@ -5695,6 +5695,34 @@
             "startTime": "2100-06-19T13:57:51Z",
             "ttlHours": 144,
             "invalidationType" : "REFRESH"
+        },
+        {
+            "deliveryService":  "ds1",
+            "regex": "/oldest",
+            "startTime": "1970-01-01T12:00:00Z",
+            "ttlHours": 2160,
+            "invalidationType" : "REFRESH"
+        },
+        {
+            "deliveryService":  "ds1",
+            "regex": "/older",
+            "startTime": "1970-01-01T12:00:00Z",
+            "ttlHours": 2160,
+            "invalidationType" : "REFRESH"
+        },
+        {
+            "deliveryService":  "ds1",
+            "regex": "/old",
+            "startTime": "1970-01-01T12:00:00Z",
+            "ttlHours": 2160,
+            "invalidationType" : "REFRESH"
+        },
+        {
+            "deliveryService":  "ds-forked-topology",
+            "regex": "/this-ds-is-in-cdn2",
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 2160,
+            "invalidationType" : "REFRESH"
         }
     ],
     "statsSummaries": [

@@ -504,6 +504,18 @@ func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 	return name, true, nil
 }
 
+// GetDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
+func GetDSIDFromXMLID(tx *sql.Tx, xmlID string) (int, bool, error) {
+	var id int
+	if err := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id = $1`, xmlID).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return id, false, nil
+		}
+		return id, false, fmt.Errorf("querying ID for delivery service XMLID '%v': %v", xmlID, err)
+	}
+	return id, true, nil
+}
+
 // GetDSCDNIdFromID loads the DeliveryService's cdn ID from the database, from the delivery service ID. Returns whether the delivery service was found, and any error.
 func GetDSCDNIdFromID(tx *sql.Tx, dsID int) (int, bool, error) {
 	var cdnID int

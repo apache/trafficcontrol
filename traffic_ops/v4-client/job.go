@@ -16,7 +16,6 @@ package client
 */
 
 import (
-	"errors"
 	"net/url"
 	"strconv"
 
@@ -50,13 +49,10 @@ func (to *Session) DeleteInvalidationJob(jobID uint64, opts RequestOptions) (tc.
 // expected to have an ID).
 func (to *Session) UpdateInvalidationJob(job tc.InvalidationJobV4, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	if job.ID == nil {
-		return alerts, toclientlib.ReqInf{}, errors.New("job has a nil ID")
-	}
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
-	opts.QueryParameters.Set("id", strconv.FormatUint(*job.ID, 10))
+	opts.QueryParameters.Set("id", strconv.FormatUint(job.ID, 10))
 	reqInf, err := to.put(apiJobs, opts, job, &alerts)
 	return alerts, reqInf, err
 }

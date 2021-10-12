@@ -359,13 +359,13 @@ func randParam() *tc.Parameter {
 func randJob() *tc.InvalidationJobV4 {
 	now := time.Now()
 	return &tc.InvalidationJobV4{
-		AssetURL:         randStr(),
-		CreatedBy:        randStr(),
-		StartTime:        &now,
-		ID:               randUint64(),
-		DeliveryService:  randStr(),
-		TTLHours:         randUint(),
-		InvalidationType: util.StrPtr(tc.REFRESH),
+		AssetURL:         *randStr(),
+		CreatedBy:        *randStr(),
+		StartTime:        now,
+		ID:               *randUint64(),
+		DeliveryService:  *randStr(),
+		TTLHours:         *randUint(),
+		InvalidationType: tc.REFRESH,
 	}
 }
 

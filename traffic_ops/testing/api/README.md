@@ -61,22 +61,13 @@ In order to run the tests you will need the following:
 
     For more info see: http://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html?highlight=reset
 
-3. A running Traffic Ops instance running with the `secure` (https) and is pointing to the `to_test` 
-   database by running in `MOJO_MODE=test` which will point to your `to_test` database.
-    To get your to_test database setup do the following:
-    
-   	`$ export MOJO_MODE=test`  
-   	
-   	`$ cd trafficcontrol/traffic_ops/app`
-   	
-    `$ bin/start.pl --secure`
+3. A running Traffic Ops Golang instance pointing to the `to_test` database.
 
-4. A running Traffic Ops Golang proxy pointing to the to_test database.
-	`$ cd trafficcontrol/traffic_ops/traffic_ops_golang`
-	`$ cp ../app/conf/cdn.conf $HOME/cdn.conf`
-	change `traffic_ops_golang->port` to 8443
-
-    `$ go build && ./traffic_ops_golang -cfg $HOME/cdn.conf -dbcfg ../app/conf/test/database.conf`
+    ```shell
+	$ cd trafficcontrol/traffic_ops/traffic_ops_golang
+    $ cp ../app/conf/cdn.conf $HOME/cdn.conf # change `traffic_ops_golang->port` to 8443
+    $ go build && ./traffic_ops_golang -cfg $HOME/cdn.conf -dbcfg ../app/conf/test/database.conf
+    ```
     
     In your local development environment, if the above command fails for an error similar to 
     `ERROR: traffic_ops_golang.go:193: 2020-04-10T10:55:53.190298-06:00: cannot open /etc/pki/tls/certs/localhost.crt for read: open /etc/pki/tls/certs/localhost.crt: no such file or directory`

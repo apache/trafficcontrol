@@ -22,7 +22,6 @@ package atscfg
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net"
 	"sort"
 	"strconv"
@@ -655,12 +654,6 @@ func makeErr(warnings []string, err string) error {
 	return errors.New(`(warnings: ` + strings.Join(warnings, `, `) + `) ` + err)
 }
 
-// makeErrf is a convenience for formatting errors for makeErr.
-// todo also unused, maybe remove?
-func makeErrf(warnings []string, format string, v ...interface{}) error {
-	return makeErr(warnings, fmt.Sprintf(format, v...))
-}
-
 // DeliveryServiceServer is a compact version of DeliveryServiceServer.
 // The Delivery Service Servers is massive on large CDNs not using Topologies, compacting it in JSON and dropping the timestamp drastically reduces the size.
 // The t3c apps will also drop any DSS from Traffic Ops with null values, which are invalid and useless, to avoid pointers and further reduce size.
@@ -719,12 +712,12 @@ func JobToInvalidationJobV4(jb tc.Job) (tc.InvalidationJobV4, error) {
 		return tc.InvalidationJobV4{}, errors.New("unmarshalling ttl: " + err.Error())
 	}
 	return tc.InvalidationJobV4{
-		AssetURL:         util.StrPtr(jb.AssetURL),
-		CreatedBy:        util.StrPtr(jb.CreatedBy),
-		DeliveryService:  util.StrPtr(jb.DeliveryService),
-		ID:               util.Uint64Ptr(uint64(jb.ID)),
-		TTLHours:         util.UIntPtr(uint(ttl)),
-		InvalidationType: util.StrPtr(tc.REFRESH),
-		StartTime:        &startTime.Time,
+		AssetURL:         jb.AssetURL,
+		CreatedBy:        jb.CreatedBy,
+		DeliveryService:  jb.DeliveryService,
+		ID:               uint64(jb.ID),
+		TTLHours:         uint(ttl),
+		InvalidationType: tc.REFRESH,
+		StartTime:        startTime.Time,
 	}, nil
 }

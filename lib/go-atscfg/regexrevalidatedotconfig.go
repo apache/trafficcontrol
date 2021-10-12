@@ -20,7 +20,6 @@ package atscfg
  */
 
 import (
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -82,11 +81,11 @@ func MakeRegexRevalidateDotConfig(
 
 	dsJobs := []tc.InvalidationJobV4{}
 	for _, job := range jobs {
-		if job.DeliveryService == nil {
-			warnings = append(warnings, "got job from Traffic Ops with a nil DeliveryService! Skipping!")
+		if job.DeliveryService == "" {
+			warnings = append(warnings, "got job from Traffic Ops with an empty DeliveryService! Skipping!")
 			continue
 		}
-		if _, ok := dsNames[*job.DeliveryService]; !ok {
+		if _, ok := dsNames[job.DeliveryService]; !ok {
 			continue
 		}
 		dsJobs = append(dsJobs, job)
@@ -106,8 +105,7 @@ func MakeRegexRevalidateDotConfig(
 
 	maxReval := time.Duration(maxDays) * time.Hour * 24
 
-	cfgJobs, jobWarns := filterJobs(dsJobs, maxReval, RegexRevalidateMinTTL)
-	warnings = append(warnings, jobWarns...)
+	cfgJobs := filterJobs(dsJobs, maxReval, RegexRevalidateMinTTL)
 
 	txt := makeHdrComment(opt.HdrComment)
 	for _, job := range cfgJobs {
@@ -144,32 +142,24 @@ func (jb jobsSort) Less(i, j int) bool {
 }
 
 // filterJobs returns only jobs which:
-//   - have a non-null deliveryservice
-//   - have parameters of the form TTL:%dh
+//   - have a non-empty deliveryservice
 //   - have a start time later than (now + maxReval days). That is, we don't query jobs older than maxReval in the past.
-//   - are "purge" jobs
 //   - have a start_time+ttl > now. That is, jobs that haven't expired yet.
-// Returns the filtered jobs, and any warnings.
-func filterJobs(tcJobs []tc.InvalidationJobV4, maxReval time.Duration, minTTL time.Duration) ([]revalJob, []string) {
-	warnings := []string{}
+// Returns the filtered jobs.
+func filterJobs(tcJobs []tc.InvalidationJobV4, maxReval time.Duration, minTTL time.Duration) []revalJob {
 
 	jobMap := map[string]revalJob{}
 
 	for _, tcJob := range tcJobs {
-		if tcJob.DeliveryService == nil || *tcJob.DeliveryService == "" {
+		if tcJob.DeliveryService == "" {
 			continue
 		}
 
-		ttl := time.Duration(*tcJob.TTLHours) * time.Hour
+		ttl := time.Duration(tcJob.TTLHours) * time.Hour
 		if ttl > maxReval {
 			ttl = maxReval
 		} else if ttl < minTTL {
 			ttl = minTTL
-		}
-
-		if tcJob.StartTime == nil {
-			warnings = append(warnings, fmt.Sprintf("job %+v had nil start time, config generation skipping!\n", tcJob))
-			continue
 		}
 
 		if tcJob.StartTime.Add(maxReval).Before(time.Now()) {
@@ -179,11 +169,8 @@ func filterJobs(tcJobs []tc.InvalidationJobV4, maxReval time.Duration, minTTL ti
 		if tcJob.StartTime.Add(ttl).Before(time.Now()) {
 			continue
 		}
-		if tcJob.AssetURL == nil {
-			continue
-		}
 
-		jobType, assetURL := processRefetch(*tcJob.InvalidationType, *tcJob.AssetURL)
+		jobType, assetURL := processRefetch(tcJob.InvalidationType, tcJob.AssetURL)
 
 		purgeEnd := tcJob.StartTime.Add(ttl)
 
@@ -198,7 +185,7 @@ func filterJobs(tcJobs []tc.InvalidationJobV4, maxReval time.Duration, minTTL ti
 	}
 	sort.Sort(jobsSort(newJobs))
 
-	return newJobs, warnings
+	return newJobs
 }
 
 const MISS = "MISS"
