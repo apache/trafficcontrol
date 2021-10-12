@@ -83,35 +83,43 @@ if [ ${#COMPOSECMD[@]} -eq 0 ]; then
 	COMPOSECMD=(docker run --rm "${DOCKER_ADDR[@]}" $COMPOSE_OPTIONS "${VOLUMES[@]}" -w "$(pwd)" $IMAGE)
 fi
 
+PROJECTS=`"${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services | sed "s/^/  - /"`
+HELP_TEXT="Usage: $SELF [options] [projects]
+	-h           Print help message and exit
+	-7           Build RPMs targeting CentOS 7
+	-8           Build RPMs targeting CentOS 8 (default)
+	-a           Build all projects, including optional ones.
+	-b           Build builder Docker images before building projects
+	-d           Disable compiler optimizations for debugging.
+	-f <file>    Use <file> as the docker-compose. Default: $COMPOSE_FILE
+	-l           List available projects.
+	-o           Build from the optional list. Same as -f \"$COMPOSE_FILE_OPT\"
+	-p           Pull builder Docker images, do not build them (default)
+	-q           Quiet mode. Supresses output. (default)
+	-v           Verbose mode. Lists all build output.
+	-s           Simple output filenames - e.g. traffic_ops.rpm instead of traffic_ops-6.1.0-11637.ec9ff6a6.el8.x86_64.rpm
+	-S           Skip building \"source rpms\"
+	-L           Don't write logs to files - respects output levels on stderr/stdout as set by -q/-v
+
+If no projects are listed, all projects will be packaged.
+Valid projects:
+$PROJECTS
+";
+
 # Parse command line arguments
 verbose=0
 debug=0
 quiet=0
 all=0
 build_images=0
-while getopts :?78abdf:lopqv opt; do
+NO_LOG_FILES=0
+NO_SOURCE=0
+SIMPLE=0
+while getopts h78abdf:lopqvsSL opt; do
 	case $opt in
 		\?)
-			PROJECTS=`$SELF -l | sed "s/^/  - /"`
-			<<-HELP_TEXT cat
-			Usage: $SELF [options] [projects]
-			  -7           Build RPMs targeting CentOS 7
-			  -8           Build RPMs targeting CentOS 8 (default)
-			  -a           Build all projects, including optional ones.
-			  -b           Build builder Docker images before building projects
-			  -d           Disable compiler optimizations for debugging.
-			  -f <file>    Use <file> as the docker-compose. Default: $COMPOSE_FILE
-			  -l           List available projects.
-			  -o           Build from the optional list. Same as -f "$COMPOSE_FILE_OPT"
-			  -p           Pull builder Docker images, do not build them (default)
-			  -q           Quiet mode. Supresses output. (default)
-			  -v           Verbose mode. Lists all build output.
-
-			If no projects are listed, all projects will be packaged.
-			Valid projects:
-			$PROJECTS
-			HELP_TEXT
-			exit 0
+			echo "$HELP_TEXT" >&2;
+			exit 1;
 			;;
 		7)
 			RHEL_VERSION=7
@@ -136,8 +144,8 @@ while getopts :?78abdf:lopqv opt; do
 			COMPOSE_FILE="$OPTARG"
 			;;
 		l)
-			"${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services
-			exit $?
+			echo "$PROJECTS";
+			exit $?;
 			;;
 		o)
 			COMPOSE_FILE="$COMPOSE_FILE_OPT"
@@ -152,15 +160,40 @@ while getopts :?78abdf:lopqv opt; do
 		v)
 			verbose=1
 			;;
+		h)
+			echo "$HELP_TEXT";
+			exit 0;
+			;;
+		s)
+			SIMPLE=1
+			;;
+		S)
+			NO_SOURCE=1
+			;;
+		L)
+			NO_LOG_FILES=1
+			;;
 	esac
 done
 
 shift $((OPTIND-1))
 
 # Mark RHEL_VERSION for export
-export RHEL_VERSION
+export RHEL_VERSION;
 if [[ -n "$RHEL_VERSION" ]]; then
-	RUN_OPTIONS+=(-e RHEL_VERSION)
+	RUN_OPTIONS+=(-e RHEL_VERSION);
+fi
+export SIMPLE;
+if [[ -n "$SIMPLE" ]]; then
+	RUN_OPTIONS+=(-e SIMPLE);
+fi
+export NO_SOURCE;
+if [[ -n "$NO_SOURCE" ]]; then
+	RUN_OPTIONS+=(-e NO_SOURCE);
+fi
+export NO_LOG_FILES;
+if [[ -n "$NO_LOG_FILES" ]]; then
+	RUN_OPTIONS+=(-e NO_LOG_FILES);
 fi
 
 # If no specific packages are listed, or -a is used, run them all.
