@@ -79,7 +79,7 @@ openssl rand 32 | base64 | sudo tee /aes.key
 sudo apt-get install -y --no-install-recommends gettext \
 	curl gcc
 
-sudo npm i -g forever grunt
+sudo npm i -g forever grunt sass
 
 CHROMIUM_CONTAINER=$(docker ps -qf name=chromium)
 HUB_CONTAINER=$(docker ps -qf name=hub)
