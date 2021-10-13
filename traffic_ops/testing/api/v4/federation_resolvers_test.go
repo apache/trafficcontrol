@@ -20,6 +20,8 @@ import (
 	"strconv"
 	"testing"
 	"time"
+	"net/url"
+	"reflect"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -31,6 +33,7 @@ func TestFederationResolvers(t *testing.T) {
 	WithObjs(t, []TCObj{Types, FederationResolvers}, func() {
 		GetTestFederationResolversIMS(t)
 		GetTestFederationResolvers(t)
+		GetTestPaginationSupportFedResolver(t)
 	})
 }
 func GetTestFederationResolversIMS(t *testing.T) {
@@ -258,4 +261,73 @@ func DeleteTestFederationResolvers(t *testing.T) {
 		}
 	}
 
+}
+
+func GetTestPaginationSupportFedResolver(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetFederationResolvers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get FederationResolver: %v - alerts: %+v", err, resp.Alerts)
+	}
+	fedResolver := resp.Response
+	if len(fedResolver) < 3 {
+		t.Fatalf("Need at least 3 FederationResolver in Traffic Ops to test pagination support, found: %d", len(fedResolver))
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	fedResolverWithLimit, _, err := TOSession.GetFederationResolvers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get FederationResolver with Limit: %v - alerts: %+v", err, fedResolverWithLimit.Alerts)
+	}
+	if !reflect.DeepEqual(fedResolver[:1], fedResolverWithLimit.Response) {
+		t.Error("expected GET FederationResolver with limit = 1 to return first result")
+	}
+
+	opts.QueryParameters.Set("offset", "1")
+	fedResolverWithOffset, _, err := TOSession.GetFederationResolvers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get FederationResolver with Limit and Offset: %v - alerts: %+v", err, fedResolverWithOffset.Alerts)
+	}
+	if !reflect.DeepEqual(fedResolver[1:2], fedResolverWithOffset.Response) {
+		t.Error("expected GET FederationResolver with limit = 1, offset = 1 to return second result")
+	}
+
+	opts.QueryParameters.Del("offset")
+	opts.QueryParameters.Set("page", "2")
+	fedResolverWithPage, _, err := TOSession.GetFederationResolvers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get FederationResolver with Limit and Page: %v - alerts: %+v", err, fedResolverWithPage.Alerts)
+	}
+	if !reflect.DeepEqual(fedResolver[1:2], fedResolverWithPage.Response) {
+		t.Error("expected GET FederationResolver with limit = 1, page = 2 to return second result")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, _, err = TOSession.GetFederationResolvers(opts)
+	if err == nil {
+		t.Error("expected GET FederationResolver to return an error when limit is not bigger than -1")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
+		t.Errorf("expected GET FederationResolver to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, _, err = TOSession.GetFederationResolvers(opts)
+	if err == nil {
+		t.Error("expected GET FederationResolver to return an error when offset is not a positive integer")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET FederationResolver to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, _, err = TOSession.GetFederationResolvers(opts)
+	if err == nil {
+		t.Error("expected GET FederationResolver to return an error when page is not a positive integer")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET FederationResolver to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
 }
