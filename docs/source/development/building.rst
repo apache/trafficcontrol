@@ -128,10 +128,9 @@ Options
 
 If present, ``projects`` should be one or more project names. When no specific project or project list is given the default projects will be built. Valid projects:
 
-- docs
+- docs\ [#default-project]_
 - grove_build\ [#default-project]_
-- grovetccfg_build
-- weasel
+- grovetccfg_build\ [#default-project]_
 - source\ [#default-project]_
 - traffic_monitor_build\ [#default-project]_
 - traffic_ops_build\ [#default-project]_
@@ -139,6 +138,7 @@ If present, ``projects`` should be one or more project names. When no specific p
 - traffic_portal_build\ [#default-project]_
 - traffic_router_build\ [#default-project]_
 - traffic_stats_build\ [#default-project]_
+- weasel\ [#default-project]_
 
 Output :file:`{component}-{version}.rpm` files, build logs and source tarballs will be output to the ``dist/`` directory at the root of the Traffic Control repository directory.
 
