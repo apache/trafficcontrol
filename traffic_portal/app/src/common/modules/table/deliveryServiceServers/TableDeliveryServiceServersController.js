@@ -50,7 +50,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, f
 				return !$scope.isEdge(row) && !$scope.isOrigin(row);
 			},
 			getText: function(row) {
-				return "Remove " + row.type + "Server";
+				return "Remove " + row.type + " Server";
 			}
 		});
 		$scope.contextMenuOptions.push({
@@ -65,7 +65,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, f
 				return !$scope.isOrigin(row);
 			},
 			getText: function(row) {
-				return "Remove " + row.type + "Server";
+				return "Remove " + row.type + " Server";
 			}
 		});
 
