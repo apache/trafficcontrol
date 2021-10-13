@@ -76,8 +76,7 @@ sudo useradd trafops
 ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
 openssl rand 32 | base64 | sudo tee /aes.key
 
-sudo apt-get install -y --no-install-recommends gettext \
-	curl gcc
+sudo apt-get install -y --no-install-recommends gettext curl
 
 sudo npm i -g forever grunt sass
 

@@ -45,8 +45,6 @@ FROM common-dependencies AS traffic-portal
 
 RUN	curl -sL https://rpm.nodesource.com/setup_12.x | bash - && \
 	yum -y install \
-		gcc \
-		libffi-devel \
 		make \
 		nodejs && \
 	npm -g install grunt-cli sass
