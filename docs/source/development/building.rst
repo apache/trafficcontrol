@@ -44,18 +44,87 @@ Usage
 -----
 ``./pkg [options] [projects]``
 
-.. note:: The ``pkg`` script often needs to be run as ``sudo``, as certain privileges are required to run Docker containers
-
 Options
+"""""""
 
--7    Build RPMs targeting CentOS 7 (default)
--8    Build RPMs targeting CentOS 8
--b    Build builder Docker images before building projects
--d    Disable compiler optimizations for debugging.
--l    List available projects.
--p    Pull builder Docker images, do not build them (default)
--q    Quiet mode. Supresses output. (default)
--v    Verbose mode. Lists all build output.
+.. option:: -7
+
+	Build RPMs targeting CentOS 7.
+
+	.. versionchanged:: ATCv6.0.0
+
+		Previously, :option:`-7` was implicit if not given. As of ATC version 6.0.0, this is no longer the case, and :option:`-8` is implicit instead.
+
+.. option:: -8
+
+	Build RPMs targeting CentOS 8 (default).
+
+	.. versionchanged:: ATCv6.0.0
+
+		Previously, :option:`-7` was implicit if not given. As of ATC version 6.0.0, this is no longer the case, and :option:`-8` is implicit instead.
+
+.. option:: a
+
+	Build all projects, including optional ones.
+
+.. option:: -b
+
+	Build builder Docker images before building projects.
+
+.. option:: -d
+
+	Disable compiler optimizations for debugging.
+
+.. option:: -f FILE
+
+	Use ``FILE`` instead of the default Docker-Compose file (``./infrastructure/docker/build/docker-compose.yml``).
+
+.. option:: -h
+
+	Print help message and exit.
+
+	.. versionadded:: ATCv6.1.0
+
+.. option:: -l
+
+	List available projects.
+
+	.. caution:: This lists only the projects that are built by default if none are specified, not *all* projects that can be built. See :issue:`6272`.
+
+.. option:: -L
+
+	Don't write logs to files - respects output levels on STDERR/STDOUT as set by :option:`-q`/:option:`-v`.
+
+.. option:: -o
+
+	Build from the optional list. Same as passing :option:`-f` with the option-argument ``./infrastructure/docker/build/docker-compose-opt.yml``.
+
+.. option:: -p
+
+	Pull builder Docker images, do not build them (default).
+
+.. option:: -q
+
+	Quiet mode. Suppresses output (default).
+
+.. option:: -s
+
+	Simple output filenames - e.g. ``traffic_ops.rpm`` instead of ``traffic_ops-6.1.0-11637.ec9ff6a6.el8.x86_64.rpm``.
+
+	.. versionadded:: ATCv6.1.0
+
+.. option:: -S
+
+	Skip building "source RPMs".
+
+	.. versionadded:: ATCv6.1.0
+
+.. option:: -v
+
+	Verbose mode. Lists all build output.
+
+	.. versionadded:: ATCv6.1.0
+
 
 If present, ``projects`` should be one or more project names. When no specific project or project list is given the default projects will be built. Valid projects:
 
