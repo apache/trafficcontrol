@@ -37,7 +37,7 @@ This is the easiest way to build all the components of Traffic Control; all requ
 Requirements
 ------------
 - `Docker <https://docs.docker.com/engine/installation/>`_
-- `Docker Compose <https://docs.docker.com/compose/install/>`_\ [1]_
+- `Docker Compose <https://docs.docker.com/compose/install/>`_\ [#compose-optional]_
 
 
 Usage
@@ -142,7 +142,6 @@ If present, ``projects`` should be one or more project names. When no specific p
 
 Output :file:`{component}-{version}.rpm` files, build logs and source tarballs will be output to the ``dist/`` directory at the root of the Traffic Control repository directory.
 
-.. [1] This is optional, but recommended. If a ``docker-compose`` executable is not available the ``pkg`` script will automatically download and run it using a container. This is noticeably slower than running it natively.
 .. [2] This is a default project, which will be built if ``pkg`` is run with no ``projects`` argument
 
 .. _build-with-dc:
@@ -246,3 +245,5 @@ Each Traffic Control component can be individually built, and the instructions f
 Building This Documentation
 ---------------------------
 See instructions for :ref:`building the documentation <docs-build>`.
+
+.. [#compose-optional] This is optional, but recommended. If a ``docker-compose`` executable is not available the ``pkg`` script will automatically download and run it using a container. This is noticeably slower than running it natively.
