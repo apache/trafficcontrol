@@ -128,7 +128,9 @@ Options
 
 If present, ``projects`` should be one or more project names. When no specific project or project list is given the default projects will be built. Valid projects:
 
+- ats\ [#optional-project]_
 - docs\ [#default-project]_
+- fakeorigin_build\ [#optional-project]_
 - grove_build\ [#default-project]_
 - grovetccfg_build\ [#default-project]_
 - source\ [#default-project]_
@@ -245,4 +247,5 @@ Building This Documentation
 See instructions for :ref:`building the documentation <docs-build>`.
 
 .. [#compose-optional] This is optional, but recommended. If a ``docker-compose`` executable is not available the ``pkg`` script will automatically download and run it using a container. This is noticeably slower than running it natively.
+.. [#optional-project] This project is "optional", which means that it cannot be built unless :option:`-o` is given.
 .. [#default-project] This is a default project, which will be built if ``pkg`` is run with no ``projects`` argument
