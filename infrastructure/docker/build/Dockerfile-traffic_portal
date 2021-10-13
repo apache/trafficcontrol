@@ -43,21 +43,13 @@ RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
 ### traffic_portal specific
 FROM common-dependencies AS traffic-portal
 
-RUN	yum -y install \
+RUN	curl -sL https://rpm.nodesource.com/setup_12.x | bash - && \
+	yum -y install \
 		gcc \
 		libffi-devel \
 		make \
-		nodejs \
-		npm \
-		ruby-devel \
-		rubygems
-
-RUN	gem install \
-		# FFI 1.13 cannot be installed with Ruby 2.0
-		ffi:1.12.2 \
-		rb-inotify:0.9.10 \
-		compass && \
-	npm -g install grunt-cli
+		nodejs && \
+	npm -g install grunt-cli sass
 
 ###
 

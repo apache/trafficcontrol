@@ -106,19 +106,17 @@ Install the Dependencies
 	| CentOS/Red Hat/Fedora (yum_)\ [4]_ | - git               |                            |                        | - epel-release            | - java-1.8.0-openjdk      |                          |          |                              | - python3-devel          |
 	|                                    | - rpm-build         |                            |                        | - npm                     | - maven                   |                          |          |                              | - gcc                    |
 	|                                    | - rsync             |                            |                        | - nodejs-grunt-cli        |                           |                          |          |                              | - make                   |
-	|                                    |                     |                            |                        | - ruby-devel              |                           |                          |          |                              |                          |
 	|                                    |                     |                            |                        | - gcc                     |                           |                          |          |                              |                          |
 	|                                    |                     |                            |                        | - make                    |                           |                          |          |                              |                          |
 	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
 	| Arch Linux (pacman_)               | - git               | - go                       | - go                   | - npm                     | - jdk8-openjdk            | - go                     | - go     | - go                         | - python-pip             |
 	|                                    | - rpm-tools         |                            |                        | - make                    | - maven                   |                          |          |                              | - python-sphinx          |
 	|                                    | - diff              |                            |                        | - grunt-cli               |                           |                          |          |                              | - make                   |
-	|                                    | - rsync             |                            |                        | - ruby                    |                           |                          |          |                              |                          |
 	|                                    |                     |                            |                        | - gcc                     |                           |                          |          |                              |                          |
 	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	| Windows (cygwin_)\ [5]_            | - git               |                            |                        | - ruby-devel              | - curl                    |                          |          |                              |                          |
+	| Windows (cygwin_)\ [5]_            | - git               |                            |                        | - gcc-g++                 | - curl                    |                          |          |                              |                          |
 	|                                    | - rpm-build         |                            |                        | - make                    |                           |                          |          |                              |                          |
-	|                                    | - rsync             |                            |                        | - gcc-g++                 |                           |                          |          |                              |                          |
+	|                                    | - rsync             |                            |                        |                           |                           |                          |          |                              |                          |
 	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
 	| Windows (chocolatey_)\ [5]_        |                     | - golang                   | - golang               | - nodejs                  | - openjdk8                | - golang                 | - golang | - golang                     | - python                 |
 	|                                    |                     |                            |                        |                           | - maven                   |                          |          |                              | - pip                    |
@@ -142,7 +140,7 @@ Install the Dependencies
 
 After installing the packages using your platform's package manager,
 
-	- Install the :ref:`global NPM packages <dev-tp-global-npm>` and :ref:`Compass <dev-tp-compass>` to build Traffic Portal.
+	- Install the :ref:`global NPM packages <dev-tp-global-npm>` to build Traffic Portal.
 
 	- Install the Python 3 modules used to :ref:`build the documentation <docs-build>`.
 
