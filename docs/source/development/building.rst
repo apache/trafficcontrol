@@ -129,20 +129,18 @@ Options
 If present, ``projects`` should be one or more project names. When no specific project or project list is given the default projects will be built. Valid projects:
 
 - docs
-- grove_build\ [2]_
+- grove_build\ [#default-project]_
 - grovetccfg_build
-- source\ [2]_
-- traffic_monitor_build\ [2]_
-- traffic_ops_build\ [2]_
-- cache-config_build\ [2]_
-- traffic_portal_build\ [2]_
-- traffic_router_build\ [2]_
-- traffic_stats_build\ [2]_
 - weasel
+- source\ [#default-project]_
+- traffic_monitor_build\ [#default-project]_
+- traffic_ops_build\ [#default-project]_
+- cache-config_build\ [#default-project]_
+- traffic_portal_build\ [#default-project]_
+- traffic_router_build\ [#default-project]_
+- traffic_stats_build\ [#default-project]_
 
 Output :file:`{component}-{version}.rpm` files, build logs and source tarballs will be output to the ``dist/`` directory at the root of the Traffic Control repository directory.
-
-.. [2] This is a default project, which will be built if ``pkg`` is run with no ``projects`` argument
 
 .. _build-with-dc:
 
@@ -247,3 +245,4 @@ Building This Documentation
 See instructions for :ref:`building the documentation <docs-build>`.
 
 .. [#compose-optional] This is optional, but recommended. If a ``docker-compose`` executable is not available the ``pkg`` script will automatically download and run it using a container. This is noticeably slower than running it natively.
+.. [#default-project] This is a default project, which will be built if ``pkg`` is run with no ``projects`` argument
