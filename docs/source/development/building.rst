@@ -165,41 +165,35 @@ Install the Dependencies
 
 .. table:: Build dependencies for Traffic Control
 
-	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	|                                    | Common dependencies | :ref:`dev-traffic-monitor` | :ref:`dev-traffic-ops` | :ref:`dev-traffic-portal` | :ref:`dev-traffic-router` | :ref:`dev-traffic-stats` | Grove    | Grove TC Config (grovetccfg) | :ref:`Docs <docs-guide>` |
-	+====================================+=====================+============================+========================+===========================+===========================+==========================+==========+==============================+==========================+
-	| macOS (homebrew_)\ [3]_            | - rpm               | - go                       | - go                   | - npm                     | - maven                   | - go                     | - go     | - go                         | - python3                |
-	|                                    |                     |                            |                        | - grunt-cli               |                           |                          |          |                              |                          |
-	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	| CentOS/Red Hat/Fedora (yum_)\ [4]_ | - git               |                            |                        | - epel-release            | - java-1.8.0-openjdk      |                          |          |                              | - python3-devel          |
-	|                                    | - rpm-build         |                            |                        | - npm                     | - maven                   |                          |          |                              | - gcc                    |
-	|                                    | - rsync             |                            |                        | - nodejs-grunt-cli        |                           |                          |          |                              | - make                   |
-	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	| Arch Linux (pacman_)               | - git               | - go                       | - go                   | - npm                     | - jdk8-openjdk            | - go                     | - go     | - go                         | - python-pip             |
-	|                                    | - rpm-tools         |                            |                        | - grunt-cli               | - maven                   |                          |          |                              | - python-sphinx          |
-	|                                    | - diff              |                            |                        |                           |                           |                          |          |                              | - make                   |
-	|                                    | - rsync             |                            |                        |                           |                           |                          |          |                              |                          |
-	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	| Windows (cygwin_)\ [5]_            | - git               |                            |                        |                           | - curl                    |                          |          |                              |                          |
-	|                                    | - rpm-build         |                            |                        |                           |                           |                          |          |                              |                          |
-	|                                    | - rsync             |                            |                        |                           |                           |                          |          |                              |                          |
-	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	| Windows (chocolatey_)\ [5]_        |                     | - golang                   | - golang               | - nodejs                  | - openjdk8                | - golang                 | - golang | - golang                     | - python                 |
-	|                                    |                     |                            |                        |                           | - maven                   |                          |          |                              | - pip                    |
-	|                                    |                     |                            |                        |                           |                           |                          |          |                              | - make                   |
-	+------------------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	| OS/Package Manager         | Common dependencies | :ref:`dev-traffic-monitor` | :ref:`dev-traffic-ops` | :ref:`dev-traffic-portal` | :ref:`dev-traffic-router` | :ref:`dev-traffic-stats` | Grove    | Grove TC Config (grovetccfg) | :ref:`Docs <docs-guide>` |
+	+============================+=====================+============================+========================+===========================+===========================+==========================+==========+==============================+==========================+
+	| macOS\ [#mac-jdk]_         | - rpm               | - go                       | - go                   | - npm                     | - maven                   | - go                     | - go     | - go                         | - python3                |
+	| (homebrew_)                |                     |                            |                        | - grunt-cli               |                           |                          |          |                              |                          |
+	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	| CentOS\ [#centos-go]_,     | - git               |                            |                        | - epel-release            | - java-1.8.0-openjdk      |                          |          |                              | - python3-devel          |
+	| Red Hat,                   | - rpm-build         |                            |                        | - npm                     | - maven                   |                          |          |                              | - gcc                    |
+	| Fedora                     | - rsync             |                            |                        | - nodejs-grunt-cli        |                           |                          |          |                              | - make                   |
+	| (yum_)                     |                     |                            |                        |                           |                           |                          |          |                              |                          |
+	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	| Arch Linux,                | - git               | - go                       | - go                   | - npm                     | - jdk8-openjdk            | - go                     | - go     | - go                         | - python-pip             |
+	| Manjaro                    | - rpm-tools         |                            |                        | - grunt-cli               | - maven                   |                          |          |                              | - python-sphinx          |
+	| (pacman_)                  | - diff              |                            |                        |                           |                           |                          |          |                              | - make                   |
+	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	| Windows                    | - git               |                            |                        |                           | - curl                    |                          |          |                              |                          |
+	| (cygwin_)\ [#windeps]_     | - rpm-build         |                            |                        |                           |                           |                          |          |                              |                          |
+	|                            | - rsync             |                            |                        |                           |                           |                          |          |                              |                          |
+	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
+	| Windows                    |                     | - golang                   | - golang               | - nodejs                  | - openjdk8                | - golang                 | - golang | - golang                     | - python                 |
+	| (chocolatey_)\ [#windeps]_ |                     |                            |                        |                           | - maven                   |                          |          |                              | - pip                    |
+	|                            |                     |                            |                        |                           |                           |                          |          |                              | - make                   |
+	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
 
 .. _homebrew:   https://brew.sh/
 .. _yum:        https://wiki.centos.org/PackageManagement/Yum
 .. _pacman:     https://www.archlinux.org/pacman/
 .. _cygwin:     https://cygwin.com/
 .. _chocolatey: https://chocolatey.org/
-
-.. [3] If you are on macOS, you additionally need to :ref:`dev-tr-mac-jdk`.
-
-.. [4] If you are on CentOS, you need to `download Go directly <https://golang.org/dl/>`_ instead of using a package manager in order to get the latest Go version. For most users, the desired architecture is AMD64/x86_64.
-
-.. [5] If you are on Windows, you need to install both the Cygwin packages and the Chocolatey packages in order to build the Apache Traffic Control RPMs natively.
 
 .. |AdoptOpenJDK instructions| replace:: add the AdoptOpenJDK tap and install the ``adoptopenjdk8`` cask
 .. _AdoptOpenJDK instructions: https://github.com/AdoptOpenJDK/homebrew-openjdk#other-versions
@@ -249,3 +243,6 @@ See instructions for :ref:`building the documentation <docs-build>`.
 .. [#compose-optional] This is optional, but recommended. If a ``docker-compose`` executable is not available the ``pkg`` script will automatically download and run it using a container. This is noticeably slower than running it natively.
 .. [#optional-project] This project is "optional", which means that it cannot be built unless :option:`-o` is given.
 .. [#default-project] This is a default project, which will be built if ``pkg`` is run with no ``projects`` argument
+.. [#mac-jdk] If you are on macOS, you additionally need to :ref:`dev-tr-mac-jdk`.
+.. [#centos-go] If you are on CentOS, you need to `download Go directly <https://golang.org/dl/>`_ instead of using a package manager in order to get the latest Go version. For most users, the desired architecture is AMD64/x86_64.
+.. [#windeps] If you are on Windows, you need to install **both** the Cygwin packages and the Chocolatey packages in order to build the Apache Traffic Control RPMs natively.
