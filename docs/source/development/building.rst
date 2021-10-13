@@ -200,9 +200,8 @@ Install the Dependencies
 
 After installing the packages using your platform's package manager,
 
-	- Install the :ref:`global NPM packages <dev-tp-global-npm>` to build Traffic Portal.
-
-	- Install the Python 3 modules used to :ref:`build the documentation <docs-build>`.
+- Install the :ref:`global NPM packages <dev-tp-global-npm>` to build Traffic Portal.
+- Install the Python 3 modules used to :ref:`build the documentation <docs-build>`.
 
 Run ``build/clean_build.sh`` directly
 -------------------------------------
