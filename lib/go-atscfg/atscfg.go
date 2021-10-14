@@ -22,6 +22,7 @@ package atscfg
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net"
 	"sort"
 	"strconv"
@@ -652,6 +653,12 @@ func makeErr(warnings []string, err string) error {
 		return errors.New(err)
 	}
 	return errors.New(`(warnings: ` + strings.Join(warnings, `, `) + `) ` + err)
+}
+
+// makeErrf is a convenience for formatting errors for makeErr.
+// todo also unused, maybe remove?
+func makeErrf(warnings []string, format string, v ...interface{}) error {
+	return makeErr(warnings, fmt.Sprintf(format, v...))
 }
 
 // DeliveryServiceServer is a compact version of DeliveryServiceServer.

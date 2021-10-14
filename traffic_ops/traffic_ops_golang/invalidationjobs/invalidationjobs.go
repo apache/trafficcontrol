@@ -312,7 +312,7 @@ func selectMaxLastUpdatedQuery(where string) string {
 const readQuery = `
 SELECT job.id,
 	'PURGE' AS keyword,
-	ttl_hr,
+	CONCAT('TTL::', ttl_hr, 'h') AS parameters,
 	asset_url,
 	start_time,
 	u.username as createdBy,
@@ -516,12 +516,6 @@ func (job *InvalidationJob) Read(h http.Header, useIMS bool) ([]interface{}, err
 		if err != nil {
 			return nil, nil, fmt.Errorf("parsing db response: %v", err), http.StatusInternalServerError, nil
 		}
-
-		// NamedQuery (nor prepare statements) cannot handle string functions in SELECT such as:
-		// 	CONCAT('TTL:', ttl_hr, 'h') AS parameters
-		// So it is necessary to modify the value after it's been queried.
-		fmtTTL := fmt.Sprintf("TTL:%sh", *j.Parameters)
-		j.Parameters = &fmtTTL
 
 		returnable = append(returnable, j)
 	}
@@ -838,7 +832,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 // Used by PUT requests to `/jobs`, replaces an existing content invalidation job
 // with the provided request body.
 func UpdateV40(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -1508,7 +1502,8 @@ func validateTLLHours(ttlHours uint32, tx *sql.Tx) (bool, error) {
 // refetchAllowed checks whether Refetch is allowed and enabled in the parameter table
 func refetchAllowed(tx *sql.Tx) bool {
 	refetchEnabled := false
-	err := tx.QueryRow(`SELECT 'true' = lower(trim(p.value)) FROM "parameter" p WHERE p.name='refetch_enabled' AND p.config_file='global'`).Scan(&refetchEnabled)
+	err := tx.QueryRow(`SELECT 'true' = lower(trim(p.value)) FROM "parameter" p WHERE p.name=$1 AND p.config_file=$2`,
+		tc.RefetchEnabled, tc.GlobalConfigFileName).Scan(&refetchEnabled)
 	if err != nil {
 		log.Errorf("error querying \"refetch_enabled\" from parameter: %v", err)
 		return refetchEnabled // sent to the user, hide server error

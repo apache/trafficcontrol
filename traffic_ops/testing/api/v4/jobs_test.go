@@ -16,6 +16,7 @@ package v4
 */
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -28,25 +29,27 @@ import (
 
 func TestJobs(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices}, func() {
-		CreateTestJobs(t)
-		CreateTestInvalidationJobs(t)
-		CreateTestInvalidJob(t)
-		GetTestJobsQueryParams(t)
-		GetTestJobs(t)
-		GetTestInvalidationJobs(t)
-		JobCollisionWarningTest(t)
-		GetTestJobsByValidData(t)
-		GetTestJobsByInvalidData(t)
-		CreateTestJobsInvalidDS(t)
-		CreateTestJobsAlreadyExistTTL(t)
-		CreateTestJobsWithPastDate(t)
-		CreateTestJobsWithFutureDate(t)
-		CreateJobsMissingDate(t)
-		CreateJobsMissingRegex(t)
-		CreateJobsMissingTtl(t)
-		UpdateTestJobsInvalidDS(t)
-		DeleteTestJobs(t)
-		DeleteTestJobsByInvalidId(t)
+		// CreateTestJobs(t)
+		// CreateTestInvalidationJobs(t)
+		// CreateTestInvalidJob(t)
+		// GetTestJobsQueryParams(t)
+		// GetTestJobs(t)
+		// GetTestInvalidationJobs(t)
+		// JobCollisionWarningTest(t)
+		// GetTestJobsByValidData(t)
+		// GetTestJobsByInvalidData(t)
+		// CreateTestJobsInvalidDS(t)
+		// CreateTestJobsAlreadyExistTTL(t)
+		// CreateTestJobsWithPastDate(t)
+		// CreateTestJobsWithFutureDate(t)
+		// CreateJobsMissingDate(t)
+		// CreateJobsMissingRegex(t)
+		// CreateJobsMissingTtl(t)
+		// UpdateTestJobsInvalidDS(t)
+		// DeleteTestJobs(t)
+		// DeleteTestJobsByInvalidId(t)
+		CreateRefetchJobParameterFail(t)
+		CreateRefetchJobParameterSuccess(t)
 	})
 }
 
@@ -1203,4 +1206,101 @@ func DeleteTestJobsByInvalidId(t *testing.T) {
 	if reqInf.StatusCode != http.StatusNotFound {
 		t.Errorf("Expected status code 404, got %v", reqInf.StatusCode)
 	}
+}
+
+func CreateRefetchJobParameterFail(t *testing.T) {
+
+	// Ensure clean slate for parameters
+	err := clearRefetchEnabledParameter()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Attempt to create Refetch job w/o refetch_enabled
+	job := testData.InvalidationJobsRefetch[0]
+	createJob := tc.InvalidationJobCreateV4{
+		DeliveryService:  job.DeliveryService,
+		Regex:            job.Regex,
+		TTLHours:         job.TTLHours,
+		StartTime:        time.Now().Add(time.Hour).UTC(),
+		InvalidationType: job.InvalidationType,
+	}
+
+	_, _, err = TOSession.CreateInvalidationJob(createJob, client.RequestOptions{})
+	if err == nil {
+		t.Fatalf("expected error preventing the creation of the Refetch Invalidation Job.")
+	}
+
+}
+
+func CreateRefetchJobParameterSuccess(t *testing.T) {
+
+	// Ensure clean slate for parameters
+	err := clearRefetchEnabledParameter()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create refetch_enabled parameter
+	param := tc.Parameter{
+		ConfigFile: string(tc.GlobalConfigFileName),
+		Name:       string(tc.RefetchEnabled),
+		Secure:     false,
+		Value:      "true",
+	}
+
+	paramsResp, _, err := TOSession.CreateParameter(param, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("error creating RefetchEnabled parameter. err: %v \n alerts: %v", err, paramsResp.Alerts)
+	}
+
+	// Create Refetch jobs
+	for _, job := range testData.InvalidationJobsRefetch {
+		createJob := tc.InvalidationJobCreateV4{
+			DeliveryService:  job.DeliveryService,
+			Regex:            job.Regex,
+			TTLHours:         job.TTLHours,
+			StartTime:        time.Now().Add(time.Hour).UTC(),
+			InvalidationType: job.InvalidationType,
+		}
+
+		createResp, _, err := TOSession.CreateInvalidationJob(createJob, client.RequestOptions{})
+		if err != nil {
+			t.Fatalf("error posting Refetch Invalidation Job. err: %v \n alerts: %v", err, createResp.Alerts)
+		}
+	}
+
+	// Get all jobs
+	jobsResp, _, err := TOSession.GetInvalidationJobs(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("error requesting Invalidation Jobs. err: %v \n alerts: %v", err, jobsResp.Alerts)
+	}
+
+	// Ensure expected created refetch jobs matches actual
+	var refetchJobs int
+	for _, job := range jobsResp.Response {
+		if job.InvalidationType == tc.REFETCH {
+			refetchJobs++
+		}
+	}
+
+	if refetchJobs != len(testData.InvalidationJobsRefetch) {
+		t.Fatalf("failed to verify creation of Refetch Invalidation Jobs. Refetch Job count: %v Expected job count: %v", refetchJobs, len(testData.InvalidationJobsRefetch))
+	}
+
+}
+
+func clearRefetchEnabledParameter() error {
+	// Ensure Parameter is not set
+	paramsResp, _, err := TOSession.GetParameters(client.RequestOptions{})
+	if err != nil {
+		return fmt.Errorf("error retrieving parameters. err: %v \n alerts: %v", err, paramsResp.Alerts)
+	}
+
+	for _, param := range paramsResp.Response {
+		if param.Name == string(tc.RefetchEnabled) {
+			TOSession.DeleteParameter(param.ID, client.RequestOptions{})
+		}
+	}
+	return nil
 }

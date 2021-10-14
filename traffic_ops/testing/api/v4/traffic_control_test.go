@@ -57,4 +57,5 @@ type TrafficControl struct {
 	Serverchecks                                      []tc.ServercheckRequestNullable         `json:"serverchecks"`
 	Users                                             []tc.UserV4                             `json:"users"`
 	InvalidationJobs                                  []tc.InvalidationJobCreateV4            `json:"invalidationJobs"`
+	InvalidationJobsRefetch                           []tc.InvalidationJobCreateV4            `json:"invalidationJobsRefetch"`
 }

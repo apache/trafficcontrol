@@ -5725,6 +5725,22 @@
             "invalidationType" : "REFRESH"
         }
     ],
+    "invalidationJobsRefetch": [
+        {
+            "deliveryService": "ds1",
+            "regex": "/.*",
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 72,
+            "invalidationType" : "REFETCH"
+        },
+        {
+            "deliveryService": "ds1",
+            "regex": "/foo",
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 36,
+            "invalidationType" : "REFETCH"
+        }
+    ],
     "statsSummaries": [
         {
             "cdnName": "cdn1",
