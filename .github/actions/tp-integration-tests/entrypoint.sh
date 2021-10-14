@@ -110,9 +110,7 @@ to_build() {
   envsubst <"${resources}/cdn.json" >cdn.conf
   cp "${resources}/database.json" database.conf
 
-  export $(<"${ciab_dir}/variables.env" sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
   truncate -s0 out.log
-
   ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf >out.log 2>&1 &
   popd
 }

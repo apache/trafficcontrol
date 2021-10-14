@@ -109,8 +109,6 @@ resources="$(dirname "$0")"
 envsubst <"${resources}/cdn.json" >cdn.conf
 cp "${resources}/database.json" database.conf
 
-export $(<"${ciab_dir}/variables.env" sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
-
 truncate --size=0 traffic.ops.log # Removes output from previous API versions and makes sure files exist
 ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf &
 
