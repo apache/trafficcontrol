@@ -42,7 +42,7 @@ func GetTestFederations(t *testing.T) {
 		t.Errorf("getting federations: " + err.Error())
 	}
 
-	if len(feds) != 1 {
+	if len(feds) != 2 {
 		t.Errorf("federations expected 1, actual: %+v", len(feds))
 	}
 	fed := feds[0]
