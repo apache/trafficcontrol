@@ -30,7 +30,7 @@ Auth. Required
 	This will either be 'Yes' to indicate that a user must be authenticated (or "logged-in") via e.g. :ref:`to-api-user-login` to use this method of the endpoint, or 'No' to indicate that this is not required.
 Roles Required
 	.. deprecated:: ATCv7.0
-		Roles have been deprecated in favor of role based permissions, see :pr:`5848`.
+		Roles for the use of authentication/permissions have been deprecated in favor of role based permissions, see :pr:`5848`.
 
 	Any permissions roles that are allowed to use this method of the endpoint will be listed here. Users with roles not listed here will be unable to properly use these endpoints.
 Permissions Required

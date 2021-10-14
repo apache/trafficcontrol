@@ -98,7 +98,7 @@ Response Structure
 
 ``PUT``
 =======
-Creates a Server :term:`Status`.
+Updates a Server's :term:`Status`.
 
 :Auth. Required: Yes
 :Roles Required: None
