@@ -45,7 +45,7 @@ func TestMakeRegexRevalidateDotConfig(t *testing.T) {
 		"unrelated": {"unrelated0", "unrelated1"},
 	})
 
-	jobs := []tc.InvalidationJobV4{
+	jobs := []InvalidationJob{
 		{
 			AssetURL:         "assetURL0",
 			StartTime:        time.Now().Add(42*24*time.Hour + time.Hour),

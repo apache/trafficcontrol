@@ -356,9 +356,9 @@ func randParam() *tc.Parameter {
 	}
 }
 
-func randJob() *tc.InvalidationJobV4 {
+func randJob() *atscfg.InvalidationJob {
 	now := time.Now()
-	return &tc.InvalidationJobV4{
+	return &atscfg.InvalidationJob{
 		AssetURL:         *randStr(),
 		CreatedBy:        *randStr(),
 		StartTime:        now,
@@ -491,7 +491,7 @@ func MakeFakeTOData() *t3cutil.ConfigData {
 		},
 		DeliveryServiceServers: dss,
 		Server:                 sv0,
-		Jobs: []tc.InvalidationJobV4{
+		Jobs: []atscfg.InvalidationJob{
 			*randJob(),
 			*randJob(),
 		},

@@ -56,7 +56,7 @@ func MakeRegexRevalidateDotConfig(
 	server *Server,
 	deliveryServices []DeliveryService,
 	globalParams []tc.Parameter,
-	jobs []tc.InvalidationJobV4,
+	jobs []InvalidationJob,
 	opt *RegexRevalidateDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -79,7 +79,7 @@ func MakeRegexRevalidateDotConfig(
 		dsNames[*ds.XMLID] = struct{}{}
 	}
 
-	dsJobs := []tc.InvalidationJobV4{}
+	dsJobs := []InvalidationJob{}
 	for _, job := range jobs {
 		if job.DeliveryService == "" {
 			warnings = append(warnings, "got job from Traffic Ops with an empty DeliveryService! Skipping!")
@@ -146,7 +146,7 @@ func (jb jobsSort) Less(i, j int) bool {
 //   - have a start time later than (now + maxReval days). That is, we don't query jobs older than maxReval in the past.
 //   - have a start_time+ttl > now. That is, jobs that haven't expired yet.
 // Returns the filtered jobs.
-func filterJobs(tcJobs []tc.InvalidationJobV4, maxReval time.Duration, minTTL time.Duration) []revalJob {
+func filterJobs(tcJobs []InvalidationJob, maxReval time.Duration, minTTL time.Duration) []revalJob {
 
 	jobMap := map[string]revalJob{}
 
