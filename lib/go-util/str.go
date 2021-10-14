@@ -49,6 +49,16 @@ func StrInArray(strs []string, s string) bool {
 	return false
 }
 
+// RemoveStrFromArray removes a specific string from a string slice.
+func RemoveStrFromArray(strs []string, s string) []string {
+	for idx, str := range strs {
+		if str == s {
+			strs = append(strs[:idx], strs[idx+1:]...)
+		}
+	}
+	return strs
+}
+
 func ContainsStr(a []string, x string) bool {
 	for _, n := range a {
 		if x == n {
