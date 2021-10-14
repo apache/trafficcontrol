@@ -207,8 +207,7 @@ func getCRSStats(respond chan<- RouterResp, wg *sync.WaitGroup, routerFQDN, cdn 
 
 // getCDNRouterFQDNs returns an FQDN, including port, of an online router for each CDN, for each router. If a CDN has no online routers, that CDN will not have an entry in the map. The port returned is the API port.
 func getCDNRouterFQDNs(tx *sql.Tx, requiredCDN *string) (map[tc.CDNName][]string, error) {
-	var args interface{}
-	query := `
+	rows, err := tx.Query(`
 SELECT s.host_name, s.domain_name, max(pa.value) as port, c.name as cdn
 FROM server as s
 JOIN type as t ON s.type = t.id
@@ -219,15 +218,8 @@ JOIN profile_parameter as pp ON pp.profile = pr.id
 LEFT JOIN parameter as pa ON (pp.parameter = pa.id AND pa.name = 'api.port' AND pa.config_file = 'server.xml')
 WHERE t.name = '` + tc.RouterTypeName + `'
 AND st.name = '` + RouterOnlineStatus + `'
-`
-	if requiredCDN != nil {
-		query += `AND c.name = '$1'`
-		args = *requiredCDN
-	}
-	query += `
 GROUP BY s.host_name, s.domain_name, c.name
-`
-	rows, err := tx.Query(query, args)
+`)
 	if err != nil {
 		return nil, errors.New("querying routers: " + err.Error())
 	}

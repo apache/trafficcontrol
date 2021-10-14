@@ -1421,17 +1421,16 @@ func CachegroupParameterAssociationExists(id int, cachegroup int, tx *sql.Tx) (b
 	return count > 0, nil
 }
 
-// GetDeliveryServiceTypeAndCDNName returns the type and the CDN name of the deliveryservice.
-func GetDeliveryServiceTypeAndCDNName(dsID int, tx *sql.Tx) (tc.DSType, string, bool, error) {
+// GetDeliveryServiceType returns the type of the deliveryservice.
+func GetDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, bool, error) {
 	var dsType tc.DSType
-	var cdnName string
-	if err := tx.QueryRow(`SELECT t.name, c.name as cdn FROM deliveryservice as ds JOIN type t ON ds.type = t.id JOIN cdn c ON c.id = ds.cdn_id WHERE ds.id=$1`, dsID).Scan(&dsType, &cdnName); err != nil {
+	if err := tx.QueryRow(`SELECT t.name FROM deliveryservice as ds JOIN type t ON ds.type = t.id WHERE ds.id=$1`, dsID).Scan(&dsType); err != nil {
 		if err == sql.ErrNoRows {
-			return tc.DSTypeInvalid, cdnName, false, nil
+			return tc.DSTypeInvalid, false, nil
 		}
-		return tc.DSTypeInvalid, cdnName, false, errors.New("querying type from delivery service: " + err.Error())
+		return tc.DSTypeInvalid, false, errors.New("querying type from delivery service: " + err.Error())
 	}
-	return dsType, cdnName, true, nil
+	return dsType, true, nil
 }
 
 // GetDeliveryServiceTypeAndTopology returns the type of the deliveryservice and the name of its topology.

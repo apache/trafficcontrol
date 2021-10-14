@@ -53,7 +53,7 @@ func GetDSRouting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dsType, cdnName, exists, err := dbhelpers.GetDeliveryServiceTypeAndCDNName(dsID, tx)
+	dsType, exists, err := dbhelpers.GetDeliveryServiceType(dsID, tx)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("getting delivery service type: %v", err))
 		return
@@ -85,7 +85,7 @@ func GetDSRouting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	routers, err := getCDNRouterFQDNs(tx, &cdnName)
+	routers, err := getCDNRouterFQDNs(tx, nil)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("getting monitors: "+err.Error()))
 		return
