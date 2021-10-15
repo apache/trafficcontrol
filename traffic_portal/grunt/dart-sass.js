@@ -17,9 +17,37 @@
  * under the License.
  */
 
+
 module.exports = {
-    which_ruby: {
-        cmd: "which",
-        args: ["ruby", "compass"]
+    options: {
+        includePaths: [
+            "<%= globalConfig.importdir %>"
+        ],
+        quietDeps: true,
+        precision: 10,
     },
+    dev: {
+        options: {
+            sourceMap: true
+        },
+        files: [{
+            expand: true,
+            cwd: "<%= globalConfig.srcdir %>",
+            src: ["styles/*.scss"],
+            dest: "<%= globalConfig.resourcesdir %>",
+            ext: ".css",
+        }],
+    },
+    prod: {
+        options: {
+            outputStyle: "compressed"
+        },
+        files: [{
+            expand: true,
+            cwd: "<%= globalConfig.srcdir %>",
+            src: ["styles/*.scss"],
+            dest: "<%= globalConfig.resourcesdir %>",
+            ext: ".css",
+        }],
+    }
 };

@@ -76,12 +76,9 @@ sudo useradd trafops
 ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
 openssl rand 32 | base64 | sudo tee /aes.key
 
-sudo apt-get install -y --no-install-recommends gettext \
-	ruby ruby-dev libc-dev curl \
-	gcc
+sudo apt-get install -y --no-install-recommends gettext curl
 
-sudo gem install sass compass
-sudo npm i -g forever grunt
+sudo npm i -g forever grunt sass
 
 CHROMIUM_CONTAINER=$(docker ps -qf name=chromium)
 HUB_CONTAINER=$(docker ps -qf name=hub)
@@ -132,7 +129,7 @@ tp_build
 cd "${REPO_DIR}/traffic_portal/test/integration"
 npm ci
 
-./node_modules/.bin/webdriver-manager update --gecko false --versions.chrome "LATEST_RELEASE_$CHROMIUM_VER"
+npx webdriver-manager update --gecko false --versions.chrome "LATEST_RELEASE_$CHROMIUM_VER"
 
 jq " .capabilities.chromeOptions.args = [
     \"--headless\",
