@@ -25,6 +25,7 @@ Generates an SSL certificate and private key using Let's Encrypt for a :term:`De
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: DS-SECURITY-KEY:CREATE, DELIVERY-SERVICE:READ, DELIVERY-SERVICE:UPDATE
 :Response Type:  Object
 
 Request Structure

@@ -25,6 +25,7 @@ Retrieves routing regular expressions for a specific :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
+:Permissions Required: DELIVERY-SERVICE:READ, TYPE:READ
 :Response Type:  Array
 
 Request Structure
@@ -101,6 +102,7 @@ Creates a routing regular expression for a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [#tenancy]_
+:Permissions Required: DELIVERY-SERVICE:UPDATE, DELIVERY-SERVICE:READ, TYPE:READ
 :Response Type:  Object
 
 Request Structure

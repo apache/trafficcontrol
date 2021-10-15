@@ -27,6 +27,7 @@ Gets a list of all :abbr:`ACME (Automatic Certificate Management Environment)` p
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: ACME:READ
 :Response Type:  Array
 
 Request Structure

@@ -13,11 +13,11 @@
 .. limitations under the License.
 ..
 
-.. _to-api-statuses:
+.. _to-api-statuses-id:
 
-************
-``statuses``
-************
+*********************
+``statuses/{{ID}}``
+*********************
 
 ``GET``
 =======
@@ -59,7 +59,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/4.0/statuses?name=REPORTED HTTP/1.1
+	GET /api/4.0/statuses/3 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -96,24 +96,24 @@ Response Structure
 		}
 	]}
 
-``POST``
-==========
-Creates a Server :term:`Status`.
+``PUT``
+=======
+Updates a :term:`Status`.
 
 :Auth. Required: Yes
 :Roles Required: None
-:Permissions Required: STATUS:CREATE, STATUS:READ
+:Permissions Required: STATUS:UPDATE, STATUS:READ
 :Response Type:  Array
 
 Request Structure
 -----------------
-:description:	Create a :term:`Status` with this description
-:name:			Create a :term:`Status` with this name
+:description:	The description of the updated :term:`Status`
+:name:			The name of the updated :term:`Status`
 
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/4.0/statuses HTTP/1.1
+	POST /api/4.0/statuses/3 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

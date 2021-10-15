@@ -25,6 +25,7 @@ Updates a :term:`Physical Location`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: PHYSICAL-LOCATION:UPDATE, PHYSICAL-LOCATION:READ
 :Response Type:  Array
 
 Request Structure
@@ -138,6 +139,7 @@ Deletes a :term:`Physical Location`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: PHYSICAL-LOCATION:DELETE, PHYSICAL-LOCATION:READ
 :Response Type:  ``undefined``
 
 Request Structure

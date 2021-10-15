@@ -25,6 +25,7 @@ Gets delivery service request comments.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: DS-REQUEST:READ, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  Array
 
 Request Structure
@@ -109,6 +110,7 @@ Allows user to create a :term:`Delivery Service Request` comment.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: DS-REQUEST:UPDATE, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  Object
 
 Request Structure
@@ -183,6 +185,7 @@ Updates a delivery service request comment.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: DS-REQUEST:UPDATE, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  Object
 
 
@@ -267,6 +270,7 @@ Deletes a delivery service request comment.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: DS-REQUEST:UPDATE, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  ``undefined``
 
 Request Structure

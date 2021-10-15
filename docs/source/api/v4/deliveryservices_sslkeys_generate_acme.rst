@@ -27,6 +27,7 @@ Generates an SSL certificate and private key using :abbr:`ACME (Automatic Certif
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: DS-SECURITY-KEY:UPDATE, ACME:READ, DELIVERY-SERVICE:READ, DELIVERY-SERVICE:UPDATE
 :Response Type:  Object (string)
 
 Request Structure

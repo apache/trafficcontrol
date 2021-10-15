@@ -25,6 +25,7 @@ Gets a list of DNSSEC keys for CDN and all associated :term:`Delivery Services`.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: DNS-SEC:READ, CDN:READ, DELIVERY-SERVICE:READ
 :Response Type:  Object
 
 Request Structure
@@ -117,6 +118,7 @@ Delete DNSSEC keys for a CDN and all associated :term:`Delivery Services`.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: DNS-SEC:DELETE, CDN:UPDATE, DELIVERY-SERVICE:UPDATE, CDN:READ
 :Response Type:  Object (string)
 
 Request Structure

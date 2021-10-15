@@ -27,6 +27,7 @@ Retrieves information concerning the monitoring configuration for a specific CDN
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: MONITOR-CONFIG:READ
 :Response Type:  Object
 
 Request Structure

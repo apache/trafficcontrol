@@ -25,6 +25,7 @@ Allows a user to delete a CDN by name
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CDN:DELETE
 :Response Type:  ``undefined``
 
 Request Structure

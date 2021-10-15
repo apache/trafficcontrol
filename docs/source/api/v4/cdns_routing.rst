@@ -25,6 +25,7 @@ Retrieves the aggregated routing percentages across all CDNs. This is accomplish
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: CDN:READ
 :Response Type:  Object
 
 Request Structure

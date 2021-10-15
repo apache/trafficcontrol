@@ -25,6 +25,7 @@ Gets all associations of :term:`Server Capabilities` to :term:`cache servers`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: SERVER:READ, SERVER-CAPABILITY:READ
 :Response Type:  Array
 
 Request Structure
@@ -106,6 +107,7 @@ Associates a :term:`Server Capability` to a server.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: SERVER:UPDATE, SERVER:READ, SERVER-CAPABILITY:READ
 :Response Type:  Object
 
 Request Structure
@@ -174,6 +176,7 @@ Disassociate a server from a :term:`Server Capability`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: SERVER:UPDATE, SERVER:READ, SERVER-CAPABILITY:READ
 :Response Type:  ``undefined``
 
 Request Structure

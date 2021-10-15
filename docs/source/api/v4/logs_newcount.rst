@@ -28,6 +28,7 @@ Gets the number of new changes made to the Traffic Control system - "new" being 
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: LOG:READ
 :Response Type:  Object
 
 Request Structure

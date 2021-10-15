@@ -25,6 +25,7 @@ User logout. Invalidates the session cookie of the currently logged-in user.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: None
 :Response Type:  ``undefined``
 
 Request Structure

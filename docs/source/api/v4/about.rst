@@ -26,6 +26,7 @@ Returns info about the Traffic Ops build that is currently running, generated at
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: None
 :Response Type:  Object
 
 Request Structure

@@ -25,6 +25,7 @@ Authentication of a user by exchanging a code for an encrypted JSON Web Token fr
 
 :Auth. Required: No
 :Roles Required: None
+:Permissions Required: None
 :Response Type:  ``undefined``
 
 Request Structure
