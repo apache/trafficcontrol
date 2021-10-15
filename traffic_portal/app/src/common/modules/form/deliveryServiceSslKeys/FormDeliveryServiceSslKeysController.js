@@ -65,6 +65,7 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	$scope.formattedExpiration = $scope.sslKeys.expiration !== undefined ? $filter('date')($scope.sslKeys.expiration, 'MM/dd/yyyy') : undefined;
+	$scope.sans = $scope.sslKeys.sans !== undefined ? sslKeys.sans.join(', ') : ""
 
 	$scope.generateKeys = function() {
 		locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys/generate');

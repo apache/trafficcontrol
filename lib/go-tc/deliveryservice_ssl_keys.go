@@ -65,6 +65,20 @@ type DeliveryServiceSSLKeys struct {
 	Certificate     DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
 }
 
+// DeliveryServiceSSLKeysV4 is the representation of a DeliveryServiceSSLKeys in the latest minor version of
+// version 4 of the Traffic Ops API.
+type DeliveryServiceSSLKeysV4 = DeliveryServiceSSLKeysV41
+
+// DeliveryServiceSSLKeysV41 structures contain information about an SSL key
+// certificate pair used by a Delivery Service.
+//
+// "V41" is used because this structure was first introduced in version 4.1 of
+// the Traffic Ops API.
+type DeliveryServiceSSLKeysV41 struct {
+	DeliveryServiceSSLKeysV15
+	Sans []string `json:"sans,omitempty"`
+}
+
 // DeliveryServiceSSLKeysV15 structures contain information about an SSL key
 // certificate pair used by a Delivery Service.
 //
@@ -73,7 +87,7 @@ type DeliveryServiceSSLKeys struct {
 //
 // This is, ostensibly, an updated version of DeliveryServiceSSLKeys, but
 // beware that this may not be completely accurate as the predecessor structure
-// appears to be used in many more contexts than this this structure.
+// appears to be used in many more contexts than this structure.
 type DeliveryServiceSSLKeysV15 struct {
 	DeliveryServiceSSLKeys
 	Expiration time.Time `json:"expiration,omitempty"`

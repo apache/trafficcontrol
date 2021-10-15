@@ -71,6 +71,9 @@ Response Structure
 :state:           An optional field which, if present, contains the state entered by the user when generating certificate\ [1]_
 :version:         An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
 :expiration:      The expiration date of the certificate for the :term:`Delivery Service` in :rfc:`3339` format
+:sans:            The :abbr:`SANs (Subject Alternate Names)` from the SSL certificate.
+
+	.. versionadded:: 4.1
 
 .. code-block:: http
 	:caption: Response Example
@@ -93,7 +96,8 @@ Response Structure
 		"country": "US",
 		"state": "Colorado",
 		"version": "1",
-		"expiration": "2020-08-18T13:53:06Z"
+		"expiration": "2020-08-18T13:53:06Z",
+		"sans": ["*.foober.com", "*.foober2.com"]
 	}}
 
 ``DELETE``
