@@ -51,12 +51,13 @@ func StrInArray(strs []string, s string) bool {
 
 // RemoveStrFromArray removes a specific string from a string slice.
 func RemoveStrFromArray(strs []string, s string) []string {
-	for idx, str := range strs {
-		if str == s {
-			strs = append(strs[:idx], strs[idx+1:]...)
+	newStrArray := []string{}
+	for _, str := range strs {
+		if str != s {
+			newStrArray = append(newStrArray, str)
 		}
 	}
-	return strs
+	return newStrArray
 }
 
 func ContainsStr(a []string, x string) bool {
