@@ -223,13 +223,15 @@ will have two options: "Copy Resolvers From..." and "Clone Resolvers To...".
 These buttons will open dialog boxes that will prompt the user to choose a
 Federation from which to copy Resolvers onto the Federation being edited, and
 to choose one or more Federations to which to copy the Federation being edited's
-Resolvers, respectively. Each dialog will have a checkbox to control whether the
-existing Resolvers should be wiped away before assigning new ones to the
-affected Federation(s). Sample Dialogs for each are shown below.
+Resolvers, respectively. Sample Dialogs for each are shown below.
 
 ![Mock UI for Federation Copy Resolvers From dialog](img/federations.copy.from.dialog.png)
 
 ![Mock UI for Federation Clone Resolvers To dialog](img/federations.clone.to.dialog.png)
+
+(Note that these feature a "Replace Existing Resolvers?" checkbox, which has
+since been reconsidered and should not actually be included in the UI - instead
+the resolvers should *always* be overwritten)
 
 If desired, the markup used for these samples may be found in
 [Appendix A](#appendix-a).
@@ -509,8 +511,6 @@ changes.
 					</tr>
 				</tbody>
 			</table>
-			<label class="control-label" for="override-feds">Replace Existing Resolvers?</label>
-			<input type="checkbox" id="override-feds" style="margin-left: 5px;"/>
 		</form>
 	</div>
 	<div class="modal-footer ng-scope">
@@ -536,8 +536,6 @@ changes.
 			<select class="form-control">
 				<option selected>#2 (some.other.cname.)</option>
 			</select>
-			<label class="control-label" for="override-feds">Replace Existing Resolvers?</label>
-			<input type="checkbox" id="override-feds" style="margin-left: 5px;"/>
 		</form>
 	</div>
 	<div class="modal-footer ng-scope">
