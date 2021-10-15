@@ -105,30 +105,6 @@ func addAvailableData(dsStats *dsdata.Stats, crStates tc.CRStates, serverCachegr
 		}
 	}
 
-	for dsName, stat := range dsStats.DeliveryService {
-		lastStat, lastStatExists := lastStats.DeliveryServices[dsName]
-		if !lastStatExists {
-			continue
-		}
-
-		getEvent := func(desc string) health.Event {
-			// TODO sync.Pool?
-			return health.Event{
-				Time:        health.Time(time.Now()),
-				Description: desc,
-				Name:        dsName.String(),
-				Hostname:    dsName.String(),
-				Type:        "Delivery Service",
-				Available:   stat.CommonStats.IsAvailable.Value,
-			}
-		}
-		if stat.CommonStats.IsAvailable.Value == false && lastStat.Available == true {
-			events.Add(getEvent("no available caches"))
-		} else if stat.CommonStats.IsAvailable.Value == true && lastStat.Available == false {
-			events.Add(getEvent("available caches"))
-		}
-	}
-
 	// TODO move to its own func?
 	for dsName := range crStates.DeliveryService {
 		stat, ok := dsStats.DeliveryService[dsName]
@@ -325,14 +301,18 @@ func addDSPerSecStats(lastStats *dsdata.LastStats, dsStats *dsdata.Stats, dsName
 			Description: desc,
 			Name:        dsName.String(),
 			Hostname:    dsName.String(),
-			Type:        "DELIVERYSERVICE",
+			Type:        health.DeliveryServiceEventType,
 			Available:   stat.CommonStats.IsAvailable.Value,
 		}
 	}
-	if stat.CommonStats.IsAvailable.Value == false && lastStat.Available == true && dsErr != nil {
-		events.Add(getEvent(dsErr.Error())) // TODO change events.Add to not allocate new memory, after the limit is reached.
+	if stat.CommonStats.IsAvailable.Value == false && lastStat.Available == true {
+		eventDesc := "Unavailable"
+		if dsErr != nil {
+			eventDesc = eventDesc + " err: " + dsErr.Error()
+		}
+		events.Add(getEvent(eventDesc)) // TODO change events.Add to not allocate new memory, after the limit is reached.
 	} else if stat.CommonStats.IsAvailable.Value == true && lastStat.Available == false {
-		events.Add(getEvent("REPORTED - available"))
+		events.Add(getEvent("Available caches"))
 	}
 
 	lastStat.Available = stat.CommonStats.IsAvailable.Value
