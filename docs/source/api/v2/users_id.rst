@@ -197,7 +197,7 @@ Response Structure
 :publicSshKey:     The user's public key used for the SSH protocol
 :registrationSent: If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
 :role:             The integral, unique identifier of the highest-privilege role assigned to this user
-:roleName:         The name of the highest-privilege role assigned to this user
+:rolename:         The name of the highest-privilege role assigned to this user
 :stateOrProvince:  The name of the state or province where this user resides
 :tenant:           The name of the tenant to which this user belongs
 :tenantId:         The integral, unique identifier of the tenant to which this user belongs
@@ -235,7 +235,7 @@ Response Structure
 		"tenant": "root",
 		"id": 2,
 		"company": "not a real company",
-		"roleName": "admin",
+		"rolename": "admin",
 		"phoneNumber": "not a real phone number",
 		"country": "not a real country",
 		"fullName": "Not a real Full Name",
