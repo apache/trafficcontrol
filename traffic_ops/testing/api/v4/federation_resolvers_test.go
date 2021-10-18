@@ -17,11 +17,11 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
+	"reflect"
 	"strconv"
 	"testing"
 	"time"
-	"net/url"
-	"reflect"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -305,29 +305,32 @@ func GetTestPaginationSupportFedResolver(t *testing.T) {
 
 	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("limit", "-2")
-	resp, _, err = TOSession.GetFederationResolvers(opts)
+	resp, reqInf, err := TOSession.GetFederationResolvers(opts)
 	if err == nil {
 		t.Error("expected GET FederationResolver to return an error when limit is not bigger than -1")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
-		t.Errorf("expected GET FederationResolver to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
 	}
 
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("offset", "0")
-	resp, _, err = TOSession.GetFederationResolvers(opts)
+	resp, reqInf, err = TOSession.GetFederationResolvers(opts)
 	if err == nil {
 		t.Error("expected GET FederationResolver to return an error when offset is not a positive integer")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
-		t.Errorf("expected GET FederationResolver to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
 	}
 
 	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("limit", "1")
 	opts.QueryParameters.Set("page", "0")
-	resp, _, err = TOSession.GetFederationResolvers(opts)
+	resp, reqInf, err = TOSession.GetFederationResolvers(opts)
 	if err == nil {
 		t.Error("expected GET FederationResolver to return an error when page is not a positive integer")
-	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
-		t.Errorf("expected GET FederationResolver to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
 	}
 }
