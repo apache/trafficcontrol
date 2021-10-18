@@ -1617,6 +1617,17 @@ func GetCDNNamesFromServerIds(tx *sql.Tx, serverIds []int64) ([]string, error) {
 	return cdns, nil
 }
 
+// GetCDNNameFromDSXMLID returns the CDN name of the DS associated with the supplied XML ID
+func GetCDNNameFromDSXMLID(tx *sql.Tx, dsXMLID string) (string, error) {
+	var cdnName string
+	query := `SELECT name FROM cdn JOIN deliveryservice ON cdn.id = deliveryservice.cdn_id WHERE deliveryservice.xml_id = $1`
+	err := tx.QueryRow(query, dsXMLID).Scan(&cdnName)
+	if err != nil {
+		return "", err
+	}
+	return cdnName, nil
+}
+
 // GetCDNNamesFromDSIds returns a list of cdn names for a list of DS IDs.
 func GetCDNNamesFromDSIds(tx *sql.Tx, dsIds []int) ([]string, error) {
 	var cdns []string
