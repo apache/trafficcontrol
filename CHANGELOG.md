@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added a new Traffic Monitor configuration option -- `short_hostname_override` -- to traffic_monitor.cfg to allow overriding the system hostname that Traffic Monitor uses.
 - A new Traffic Portal server command-line option `-c` to specify a configuration file, and the ability to set `log: null` to log to stdout (consult documentation for details).
 - SANs information to the SSL key endpoint and Traffic Portal page.
+- Added definition for `heartbeat.polling.interval` for CDN Traffic Monitor config in API documentation.
 
 ### Fixed
 - Fixed Traffic Router crs/stats to prevent overflow and to correctly record the time used in averages.
