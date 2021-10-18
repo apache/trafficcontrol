@@ -73,7 +73,7 @@ Response Structure
 :expiration:      The expiration date of the certificate for the :term:`Delivery Service` in :rfc:`3339` format
 :sans:            The :abbr:`SANs (Subject Alternate Names)` from the SSL certificate.
 
-	.. versionadded:: 4.1
+	.. versionadded:: 4.0
 
 .. code-block:: http
 	:caption: Response Example

@@ -67,14 +67,14 @@ type DeliveryServiceSSLKeys struct {
 
 // DeliveryServiceSSLKeysV4 is the representation of a DeliveryServiceSSLKeys in the latest minor version of
 // version 4 of the Traffic Ops API.
-type DeliveryServiceSSLKeysV4 = DeliveryServiceSSLKeysV41
+type DeliveryServiceSSLKeysV4 = DeliveryServiceSSLKeysV40
 
 // DeliveryServiceSSLKeysV41 structures contain information about an SSL key
 // certificate pair used by a Delivery Service.
 //
 // "V41" is used because this structure was first introduced in version 4.1 of
 // the Traffic Ops API.
-type DeliveryServiceSSLKeysV41 struct {
+type DeliveryServiceSSLKeysV40 struct {
 	DeliveryServiceSSLKeysV15
 	Sans []string `json:"sans,omitempty"`
 }
