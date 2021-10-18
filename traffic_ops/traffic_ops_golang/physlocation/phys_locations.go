@@ -134,12 +134,7 @@ func (pl *TOPhysLocation) MatchRegionNameAndID() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func (pl *TOPhysLocation) Update(h http.Header) (error, error, int) {
-	if userErr, sysErr, statusCode := pl.MatchRegionNameAndID(); userErr != nil || sysErr != nil {
-		return userErr, sysErr, statusCode
-	}
-	return api.GenericUpdate(h, pl)
-}
+func (pl *TOPhysLocation) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, pl) }
 func (pl *TOPhysLocation) Create() (error, error, int) {
 	if userErr, sysErr, statusCode := pl.MatchRegionNameAndID(); userErr != nil || sysErr != nil {
 		return userErr, sysErr, statusCode
