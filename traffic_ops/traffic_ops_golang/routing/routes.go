@@ -130,9 +130,6 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		 * 4.x API
 		 */
 
-		// SSL Keys
-		{api.Version{Major: 4, Minor: 1}, http.MethodGet, `deliveryservices/xmlId/{xmlid}/sslkeys$`, deliveryservice.GetSSLKeysByXMLID, auth.PrivLevelAdmin, nil, Authenticated, nil, 41357729074},
-
 		// CDN lock
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdn_locks/?$`, cdn_lock.Read, auth.PrivLevelReadOnly, nil, Authenticated, nil, 4134390561},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `cdn_locks/?$`, cdn_lock.Create, auth.PrivLevelOperations, nil, Authenticated, nil, 4134390562},
