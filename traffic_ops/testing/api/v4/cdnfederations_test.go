@@ -54,14 +54,14 @@ func UpdateTestCDNFederationsWithHeaders(t *testing.T, h http.Header) {
 	opts.Header = h
 	for _, id := range fedIDs {
 		opts.QueryParameters.Set("id", strconv.Itoa(id))
-		fed, _, err := TOSession.GetCDNFederationsByName("foo", opts)
+		fed, _, err := TOSession.GetCDNFederationsByName("cdn1", opts)
 		if err != nil {
 			t.Errorf("cannot GET federation by id: %v - alerts: %+v", err, fed.Alerts)
 		}
 		if len(fed.Response) > 0 {
 			expectedCName := "new.cname."
 			fed.Response[0].CName = &expectedCName
-			_, reqInf, err := TOSession.UpdateCDNFederation(fed.Response[0], "foo", id, opts)
+			_, reqInf, err := TOSession.UpdateCDNFederation(fed.Response[0], "cdn1", id, opts)
 			if err == nil {
 				t.Errorf("Expected an error saying precondition failed, but got none")
 			}
@@ -88,8 +88,16 @@ func CreateTestCDNFederations(t *testing.T) {
 		if i >= len(testData.CDNs) {
 			break
 		}
-
-		data, _, err := TOSession.CreateCDNFederation(f, testData.CDNs[i].Name, client.RequestOptions{})
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("xmlId", "ds1")
+		resp, _, err := TOSession.GetDeliveryServices(opts)
+		if err != nil {
+			t.Errorf("could not get delivery service by xml ID: %v", err)
+		}
+		if len(resp.Response) != 1 {
+			t.Fatalf("expected one response for delivery service, but got %d", len(resp.Response))
+		}
+		data, _, err := TOSession.CreateCDNFederation(f, "cdn1", client.RequestOptions{})
 		if err != nil {
 			t.Errorf("could not create CDN Federations: %v - alerts: %+v", err, data.Alerts)
 		}
@@ -99,6 +107,10 @@ func CreateTestCDNFederations(t *testing.T) {
 			t.Error("Federation id is nil after posting")
 		} else {
 			fedIDs = append(fedIDs, *data.Response.ID)
+			_, _, err = TOSession.CreateFederationDeliveryServices(*data.Response.ID, []int{*resp.Response[0].ID}, false, client.NewRequestOptions())
+			if err != nil {
+				t.Errorf("could not create federation delivery service: %v", err)
+			}
 		}
 	}
 }
@@ -119,7 +131,9 @@ func SortTestCDNFederations(t *testing.T) {
 	id := *data.Response.ID
 
 	//Get list of federations for one type of cdn
-	resp, _, err := TOSession.GetCDNFederationsByName("cdn1", client.RequestOptions{})
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "cname")
+	resp, _, err := TOSession.GetCDNFederationsByName("cdn1", opts)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v - alerts: %+v", err, resp.Alerts)
 	}
@@ -146,7 +160,7 @@ func UpdateTestCDNFederations(t *testing.T) {
 	opts := client.NewRequestOptions()
 	for _, id := range fedIDs {
 		opts.QueryParameters.Set("id", strconv.Itoa(id))
-		fed, _, err := TOSession.GetCDNFederationsByName("foo", opts)
+		fed, _, err := TOSession.GetCDNFederationsByName("cdn1", opts)
 		if err != nil {
 			t.Errorf("cannot get federation by id: %v - alerts: %+v", err, fed.Alerts)
 			continue
@@ -158,12 +172,12 @@ func UpdateTestCDNFederations(t *testing.T) {
 
 		expectedCName := "new.cname."
 		fed.Response[0].CName = &expectedCName
-		resp, _, err := TOSession.UpdateCDNFederation(fed.Response[0], "foo", id, client.RequestOptions{})
+		resp, _, err := TOSession.UpdateCDNFederation(fed.Response[0], "cdn1", id, client.RequestOptions{})
 		if err != nil {
 			t.Errorf("cannot update federation by id: %v - alerts: %+v", err, resp.Alerts)
 		}
 
-		resp2, _, err := TOSession.GetCDNFederationsByName("foo", opts)
+		resp2, _, err := TOSession.GetCDNFederationsByName("cdn1", opts)
 		if err != nil {
 			t.Errorf("cannot get federation by id after update: %v - alerts: %+v", err, resp2.Alerts)
 		}
@@ -190,7 +204,7 @@ func GetTestCDNFederations(t *testing.T) {
 	opts := client.NewRequestOptions()
 	for _, id := range fedIDs {
 		opts.QueryParameters.Set("id", strconv.Itoa(id))
-		data, _, err := TOSession.GetCDNFederationsByName("foo", opts)
+		data, _, err := TOSession.GetCDNFederationsByName("cdn1", opts)
 		if err != nil {
 			t.Errorf("could not get federations: %v - alerts: %+v", err, data.Alerts)
 		}
@@ -204,7 +218,7 @@ func GetTestCDNFederationsIMS(t *testing.T) {
 	opts.Header.Set(rfc.IfModifiedSince, fmtFutureTime)
 	for _, id := range fedIDs {
 		opts.QueryParameters.Set("id", strconv.Itoa(id))
-		data, reqInf, err := TOSession.GetCDNFederationsByName("foo", opts)
+		data, reqInf, err := TOSession.GetCDNFederationsByName("cdn1", opts)
 		if err != nil {
 			t.Errorf("could not get federations: %v - alerts: %+v", err, data.Alerts)
 		}
@@ -219,7 +233,7 @@ func GetTestCDNFederationsIMS(t *testing.T) {
 	opts.Header.Set(rfc.IfModifiedSince, fmtPastTime)
 	for _, id := range fedIDs {
 		opts.QueryParameters.Set("id", strconv.Itoa(id))
-		data, reqInf, err := TOSession.GetCDNFederationsByName("foo", opts)
+		data, reqInf, err := TOSession.GetCDNFederationsByName("cdn1", opts)
 		if err != nil {
 			t.Errorf("could not get federations: %v - alerts: %+v", err, data.Alerts)
 		}
@@ -358,13 +372,13 @@ func GetTestFederationFederationResolvers(t *testing.T) {
 func DeleteTestCDNFederations(t *testing.T) {
 	opts := client.NewRequestOptions()
 	for _, id := range fedIDs {
-		resp, _, err := TOSession.DeleteCDNFederation("foo", id, opts)
+		resp, _, err := TOSession.DeleteCDNFederation("cdn1", id, opts)
 		if err != nil {
 			t.Errorf("cannot delete federation #%d: %v - alerts: %+v", id, err, resp.Alerts)
 		}
 
 		opts.QueryParameters.Set("id", strconv.Itoa(id))
-		data, _, err := TOSession.GetCDNFederationsByName("foo", opts)
+		data, _, err := TOSession.GetCDNFederationsByName("cdn1", opts)
 		if len(data.Response) != 0 {
 			t.Error("expected federation to be deleted")
 		}
