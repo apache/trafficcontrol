@@ -25,6 +25,7 @@ Retrieves the aggregated routing percentages for a given :term:`Delivery Service
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
+:Permissions Required: DELIVERY-SERVICE:READ
 :Response Type:  Object
 
 .. note:: Only HTTP or DNS :term:`Delivery Services` can be requested.

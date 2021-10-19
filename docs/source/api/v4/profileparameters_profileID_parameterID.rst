@@ -25,6 +25,7 @@ Deletes a :term:`Profile`/:term:`Parameter` association.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: PROFILE:UPDATE, PROFILE:READ, PARAMETER:READ
 :Response Type:  ``undefined``
 
 Request Structure

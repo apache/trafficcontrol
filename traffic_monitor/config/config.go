@@ -118,10 +118,12 @@ type Config struct {
 	TrafficOpsMaxRetryInterval   time.Duration   `json:"-"`
 	CRConfigBackupFile           string          `json:"crconfig_backup_file"`
 	TMConfigBackupFile           string          `json:"tmconfig_backup_file"`
-	TrafficOpsDiskRetryMax       uint64          `json:"-"`
+	TrafficOpsDiskRetryMax       uint64          `json:"traffic_ops_disk_retry_max"`
 	CachePollingProtocol         PollingProtocol `json:"cache_polling_protocol"`
 	PeerPollingProtocol          PollingProtocol `json:"peer_polling_protocol"`
 	HTTPPollingFormat            string          `json:"http_polling_format"`
+	// ShortHostnameOverride is for explicitly setting a hostname rather than using the output of `hostname -s`.
+	ShortHostnameOverride string `json:"short_hostname_override"`
 }
 
 func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
@@ -157,6 +159,7 @@ var DefaultConfig = Config{
 	CachePollingProtocol:         Both,
 	PeerPollingProtocol:          Both,
 	HTTPPollingFormat:            HTTPPollingFormat,
+	ShortHostnameOverride:        "",
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/
@@ -166,8 +169,6 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		MonitorConfigPollingIntervalMs uint64 `json:"monitor_config_polling_interval_ms"`
 		HTTPTimeoutMS                  uint64 `json:"http_timeout_ms"`
-		PeerOptimistic                 bool   `json:"peer_optimistic"`
-		PeerOptimisticQuorumMin        int    `json:"peer_optimistic_quorum_min"`
 		HealthFlushIntervalMs          uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            uint64 `json:"stat_flush_interval_ms"`
 		StatBufferIntervalMs           uint64 `json:"stat_buffer_interval_ms"`
@@ -177,8 +178,6 @@ func (c *Config) MarshalJSON() ([]byte, error) {
 	}{
 		MonitorConfigPollingIntervalMs: uint64(c.MonitorConfigPollingInterval / time.Millisecond),
 		HTTPTimeoutMS:                  uint64(c.HTTPTimeout / time.Millisecond),
-		PeerOptimistic:                 bool(true),
-		PeerOptimisticQuorumMin:        int(c.PeerOptimisticQuorumMin),
 		HealthFlushIntervalMs:          uint64(c.HealthFlushInterval / time.Millisecond),
 		StatFlushIntervalMs:            uint64(c.StatFlushInterval / time.Millisecond),
 		StatBufferIntervalMs:           uint64(c.StatBufferInterval / time.Millisecond),
@@ -192,8 +191,6 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	aux := &struct {
 		MonitorConfigPollingIntervalMs *uint64 `json:"monitor_config_polling_interval_ms"`
 		HTTPTimeoutMS                  *uint64 `json:"http_timeout_ms"`
-		PeerOptimistic                 *bool   `json:"peer_optimistic"`
-		PeerOptimisticQuorumMin        *int    `json:"peer_optimistic_quorum_min"`
 		HealthFlushIntervalMs          *uint64 `json:"health_flush_interval_ms"`
 		StatFlushIntervalMs            *uint64 `json:"stat_flush_interval_ms"`
 		StatBufferIntervalMs           *uint64 `json:"stat_buffer_interval_ms"`
@@ -201,10 +198,6 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 		ServeWriteTimeoutMs            *uint64 `json:"serve_write_timeout_ms"`
 		TrafficOpsMinRetryIntervalMs   *uint64 `json:"traffic_ops_min_retry_interval_ms"`
 		TrafficOpsMaxRetryIntervalMs   *uint64 `json:"traffic_ops_max_retry_interval_ms"`
-		TrafficOpsDiskRetryMax         *uint64 `json:"traffic_ops_disk_retry_max"`
-		CRConfigBackupFile             *string `json:"crconfig_backup_file"`
-		TMConfigBackupFile             *string `json:"tmconfig_backup_file"`
-		HTTPPollingFormat              *string `json:"http_polling_format"`
 		*Alias
 	}{
 		Alias: (*Alias)(c),
@@ -235,29 +228,11 @@ func (c *Config) UnmarshalJSON(data []byte) error {
 	if aux.ServeWriteTimeoutMs != nil {
 		c.ServeWriteTimeout = time.Duration(*aux.ServeWriteTimeoutMs) * time.Millisecond
 	}
-	if aux.PeerOptimistic != nil {
-		c.PeerOptimistic = *aux.PeerOptimistic
-	}
-	if aux.PeerOptimisticQuorumMin != nil {
-		c.PeerOptimisticQuorumMin = *aux.PeerOptimisticQuorumMin
-	}
 	if aux.TrafficOpsMinRetryIntervalMs != nil {
 		c.TrafficOpsMinRetryInterval = time.Duration(*aux.TrafficOpsMinRetryIntervalMs) * time.Millisecond
 	}
 	if aux.TrafficOpsMaxRetryIntervalMs != nil {
 		c.TrafficOpsMaxRetryInterval = time.Duration(*aux.TrafficOpsMaxRetryIntervalMs) * time.Millisecond
-	}
-	if aux.TrafficOpsDiskRetryMax != nil {
-		c.TrafficOpsDiskRetryMax = *aux.TrafficOpsDiskRetryMax
-	}
-	if aux.CRConfigBackupFile != nil {
-		c.CRConfigBackupFile = *aux.CRConfigBackupFile
-	}
-	if aux.TMConfigBackupFile != nil {
-		c.TMConfigBackupFile = *aux.TMConfigBackupFile
-	}
-	if aux.HTTPPollingFormat != nil {
-		c.HTTPPollingFormat = *aux.HTTPPollingFormat
 	}
 	return nil
 }

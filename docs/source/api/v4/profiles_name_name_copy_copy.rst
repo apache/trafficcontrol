@@ -25,6 +25,7 @@ Copy :term:`Profile` to a new :term:`Profile`. The new :term:`Profile`'s :ref:`p
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: PROFILE:CREATE, PROFILE:READ, PARAMETER:READ
 :Response Type:  Object
 
 Request Structure

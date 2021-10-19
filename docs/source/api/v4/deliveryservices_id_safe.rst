@@ -25,6 +25,7 @@ Allows a user to edit metadata fields of a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
+:Permissions Required: DELIVERY-SERVICE-SAFE:UPDATE, DELIVERY-SERVICE:READ, TYPE:READ
 :Response Type:  Array
 
 Request Structure

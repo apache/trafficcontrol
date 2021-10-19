@@ -45,7 +45,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 						{ id: $scope.DRAFT, name: 'Save Request as Draft' },
 						{ id: $scope.SUBMITTED, name: 'Submit Request for Review and Deployment' }
 					];
-					if (userModel.user.roleName == propertiesModel.properties.dsRequests.overrideRole) {
+					if (userModel.user.role == propertiesModel.properties.dsRequests.overrideRole) {
 						statuses.push({ id: $scope.COMPLETE, name: 'Fulfill Request Immediately' });
 					}
 					return statuses;
@@ -218,7 +218,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 							{ id: $scope.DRAFT, name: 'Save Request as Draft' },
 							{ id: $scope.SUBMITTED, name: 'Submit Request for Review and Deployment' }
 						];
-						if (userModel.user.roleName == propertiesModel.properties.dsRequests.overrideRole) {
+						if (userModel.user.role == propertiesModel.properties.dsRequests.overrideRole) {
 							statuses.push({ id: $scope.COMPLETE, name: 'Fulfill Request Immediately' });
 						}
 						return statuses;

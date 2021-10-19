@@ -70,12 +70,11 @@ module.exports = function (grunt) {
 
     // css
     grunt.registerTask('build-css', [
-        'compass:prod'
+        'dart-sass:prod'
     ]);
 
     grunt.registerTask('build-css-dev', [
-        'run:which_ruby',
-        'compass:dev'
+        'dart-sass:dev'
     ]);
 
     // js (custom)

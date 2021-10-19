@@ -18,7 +18,7 @@
 # Expose the Grafana container on the host on port 3000
 
 ---
-version: '2.1'
+version: '3.8'
 
 services:
   grafana:

@@ -27,6 +27,7 @@ Gets information for all CDN locks.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: CDN:READ
 :Response Type:  Array
 
 Request Structure
@@ -71,6 +72,7 @@ Allows user to acquire a lock on a CDN.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CDN-LOCK:CREATE, CDN:READ
 :Response Type:  Object
 
 Request Structure
@@ -140,6 +142,7 @@ Deletes an existing ``CDN Lock``.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CDN-LOCK:DELETE, CDN:READ
 :Response Type: Object
 
 Request Structure

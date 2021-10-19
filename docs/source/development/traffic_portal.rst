@@ -29,8 +29,6 @@ Software Requirements
 =====================
 To work on Traffic Portal you need a \*nix (MacOS and Linux are most commonly used) environment that has the following installed:
 
-* `Ruby Devel 2.0.x or above <https://www.rpmfind.net/linux/rpm2html/search.php?query=ruby-devel>`_
-* `Compass 1.0.x or above <http://compass-style.org/>`_
 * `Node.js 12.0.x or above <https://nodejs.org/en/>`_
 * `Grunt CLI 1.2.0 or above <https://github.com/gruntjs/grunt-cli>`_
 * Access to a working instance of Traffic Ops
@@ -47,48 +45,6 @@ Grunt CLI can be installed using NPM.
 
 	npm -g install grunt-cli
 
-.. _dev-tp-compass:
-
-Install Compass
----------------
-
-Compass can be installed using ``gem`` manually, or by using ``bundle``
-
-.. tip:: Bundle will automatically install the correct version of the gems.
-
-#. ``brew install ruby``/``apt-get install ruby``/``yum install ruby``
-
-#. ``gem update --system``
-
-#. At this point, you can either manually install the gems or use bundler
-
-	#. For manually: ``gem install sass compass``
-
-	#. For automatically: ``gem install bundle && bundle install``
-
-	.. note:: Bundle requires ruby versions > 2.3.0, so if you're using a version of ruby < 2.3.0 then this will not work.
-
-#. Make sure that ``compass`` and ``sass`` are part of your ``PATH`` environment variable.
-
-#. If not, you can see where gem installs ``compass`` and ``sass`` by running:
-	``gem environment``
-
-#. In there, you can see where ruby is installing all the gems. Add that path to your ``PATH`` environment variable.
-	For example, it is ``/usr/local/lib/ruby/gems/2.7.0/gems/compass-1.0.3/bin/`` for this test setup.
-
-#. Once you have installed ``compass`` successfully, make sure you can reach it by typing:
-	``compass version``
-	This should give a valid output. For example, for the test setup, the output is:
-
-.. code-block:: text
-	:caption: Compass version output
-
-	Compass 1.0.3 (Polaris)
-	Copyright (c) 2008-2020 Chris Eppstein
-	Released under the MIT License.
-	Compass is charityware.
-	Please make a tax deductable donation for a worthy cause: http://umdf.org/compass
-
 
 Traffic Portal Project Tree Overview
 =====================================
@@ -99,7 +55,6 @@ Installing The Traffic Portal Developer Environment
 #. Clone the `Traffic Control Repository <https://github.com/apache/trafficcontrol>`_
 #. Navigate to the ``traffic_portal`` subdirectory of your cloned repository.
 #. Run ``npm install`` to install application dependencies into ``traffic_portal/node_modules``. Only needs to be done the first time unless ``traffic_portal/package.json`` changes.
-#. Make sure that compass is installed and functioning correctly by running ``compass version``. If compass is not available, then it can be installed following the instructions under :ref:`dev-tp-compass`.
 
 #. Modify :atc-file:`traffic_portal/conf/configDev.js`:
 

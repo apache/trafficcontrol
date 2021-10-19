@@ -26,6 +26,7 @@ Gets all available :abbr:`OS (Operating System)` versions for ISO generation, as
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: ISO:READ
 :Response Type:  Object
 
 Request Structure

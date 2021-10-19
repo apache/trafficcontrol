@@ -66,6 +66,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	if cfg.ShortHostnameOverride != "" {
+		staticData.Hostname = cfg.ShortHostnameOverride
+	}
+
 	log.Infof("Starting with config %+v\n", cfg)
 
 	err = manager.Start(*opsConfigFile, cfg, staticData, *configFileName)

@@ -25,6 +25,7 @@ Gets DNS challenge records for Let's Encrypt DNS challenge for a specified :abbr
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: DS-SECURITY-KEY:READ
 :Response Type:  Array
 
 Request Structure

@@ -25,6 +25,7 @@ Authentication of a user using a token. Normally, the token is obtained via a ca
 
 :Auth. Required: No
 :Roles Required: None
+:Permissions Required: None
 :Response Type:  ``undefined``
 
 Request Structure

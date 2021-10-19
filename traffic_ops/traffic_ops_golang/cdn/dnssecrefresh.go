@@ -185,6 +185,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, asyncDB *sqlx.DB, tv trafficvault.TrafficVau
 
 	errCount := 0
 	updateCount := 0
+	putErr := false
 	for _, cdnInf := range cdnDNSSECKeyParams {
 		keys, ok, err := tv.GetDNSSECKeys(string(cdnInf.CDNName), tx, context.Background()) // TODO get all in a map beforehand
 		if err != nil {
@@ -327,19 +328,25 @@ func doDNSSECKeyRefresh(tx *sql.Tx, asyncDB *sqlx.DB, tv trafficvault.TrafficVau
 		if updateCount > 0 {
 			if err := tv.PutDNSSECKeys(string(cdnInf.CDNName), keys, tx, context.Background()); err != nil {
 				log.Errorln("refreshing DNSSEC Keys: putting keys into Traffic Vault for cdn '" + string(cdnInf.CDNName) + "': " + err.Error())
-				errCount++
+				putErr = true
 			}
 		}
 	}
 	clMsg := fmt.Sprintf("Refreshed %d DNSSEC keys", updateCount)
 	status := api.AsyncSucceeded
 	msg := fmt.Sprintf("DNSSEC refresh completed successfully (%d keys were updated)", updateCount)
-	if errCount > 0 {
+	if putErr {
 		status = api.AsyncFailed
-		msg = fmt.Sprintf("DNSSEC refresh failed (%d keys were updated, but %d errors occurred)", updateCount, errCount)
+		msg = fmt.Sprintf("DNSSEC refresh failed (attempted to update %d keys, but an error occurred while attempting to store in Traffic Vault)", updateCount)
+		clMsg = fmt.Sprintf("Attempted to refresh %d DNSSEC keys, but an error occurred while attempting to store in Traffic Vault", updateCount)
+	} else if errCount > 0 {
+		status = api.AsyncFailed
+		msg = fmt.Sprintf("DNSSEC refresh failed (updated %d keys, but %d errors occurred)", updateCount, errCount)
 		clMsg = fmt.Sprintf("Refreshed %d DNSSEC keys, but %d errors occurred", updateCount, errCount)
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, clMsg, user, tx)
+	if updateCount > 0 || errCount > 0 || putErr {
+		api.CreateChangeLogRawTx(api.ApiChange, clMsg, user, tx)
+	}
 	if asyncErr := api.UpdateAsyncStatus(asyncDB, status, msg, jobID, true); asyncErr != nil {
 		log.Errorf("updating async status for id %d: %v", jobID, asyncErr)
 	}

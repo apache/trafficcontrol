@@ -27,6 +27,7 @@ Allows user to upload an SSL certificate, csr, and private key for a :term:`Deli
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: DS-SECURITY-KEY:CREATE, DELIVERY-SERVICE:READ
 :Response Type:  Object (string)
 
 Request Structure

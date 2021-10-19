@@ -25,6 +25,7 @@ Retrieves information about :term:`Regions`
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: REGION:READ
 :Response Type:  Object
 
 Request Structure
@@ -102,6 +103,7 @@ Creates a new region
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: REGION:CREATE, REGION:READ
 :Response Type:  Object
 
 Request Structure
@@ -172,6 +174,7 @@ Deletes a region. If no query parameter is specified, a ``400 Bad Request`` resp
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: REGION:DELETE
 :Response Type:  Object
 
 Request Structure

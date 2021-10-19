@@ -14,8 +14,15 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
+# Expose the trafficvault container on the host on ports 8087, 8088, and 8098
 
-source 'https://rubygems.org'
+---
+version: '3.8'
 
-ruby ">= 2.0.0"
-gem "compass", ">= 1.0.0"
+services:
+  trafficvault:
+    ports:
+      - "8087:8087"
+      - "8088:8088"
+      - "8098:8098"

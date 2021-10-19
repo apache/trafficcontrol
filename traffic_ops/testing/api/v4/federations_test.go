@@ -86,8 +86,8 @@ func GetTestFederations(t *testing.T) {
 		t.Errorf("getting federations: %v - alerts: %+v", err, feds.Alerts)
 	}
 
-	if len(feds.Response) != 1 {
-		t.Fatalf("federations expected 1, actual: %d", len(feds.Response))
+	if len(feds.Response) < 1 {
+		t.Errorf("expected atleast 1 federation, but got none")
 	}
 	fed := feds.Response[0]
 

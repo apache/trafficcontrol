@@ -24,7 +24,7 @@
 # docker-compose -f docker-compose.traffic-ops-test.yml logs -f integration
 
 ---
-version: '2.1'
+version: '3.8'
 
 services:
   integration:

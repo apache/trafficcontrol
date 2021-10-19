@@ -26,6 +26,7 @@ List CDN notifications.
 
 :Auth. Required: Yes
 :Roles Required: Read-Only
+:Permissions Required: CDN:READ
 :Response Type: Array
 
 Request Structure
@@ -94,6 +95,7 @@ Creates a notification for a specific CDN.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CDN:UPDATE
 :Response Type: Object
 
 Request Structure
@@ -163,6 +165,7 @@ Deletes an existing CDN notification.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CDN:UPDATE
 :Response Type: ``undefined``
 
 Request Structure

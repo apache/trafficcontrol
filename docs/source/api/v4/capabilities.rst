@@ -25,6 +25,7 @@ Get all capabilities.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: CAPABILITY:READ
 :Response Type:  Array
 
 Request Structure

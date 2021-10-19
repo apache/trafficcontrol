@@ -21,7 +21,7 @@
 #
 
 ---
-version: '2.1'
+version: '3.8'
 
 services:
   db:
@@ -47,11 +47,6 @@ services:
   influxdb:
     ports:
       - "8086:8086"
-  trafficvault:
-    ports:
-      - "8087:8087"
-      - "8088:8088"
-      - "8098:8098"
   edge:
     ports:
       - "9000:80"

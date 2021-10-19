@@ -48,6 +48,10 @@ func DeleteOldCerts(db *sql.DB, tx *sql.Tx, cfg *config.Config, cdn tc.CDNName, 
 		log.Infoln("deleting old delivery service certificates: Traffic Vault is not enabled, returning without cleaning up old certificates.")
 		return nil
 	}
+	if cfg.DisableAutoCertDeletion {
+		log.Infoln("automatic certificate deletion is disabled, returning without cleaning up old certificates")
+		return nil
+	}
 	if db == nil {
 		return errors.New("nil db")
 	}

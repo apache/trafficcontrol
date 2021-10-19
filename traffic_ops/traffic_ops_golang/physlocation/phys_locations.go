@@ -20,6 +20,8 @@ package physlocation
  */
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -116,9 +118,30 @@ JOIN region r ON pl.region = r.id ` + where + orderBy + pagination +
 	select max(last_updated) as t from last_deleted l where l.table_name='phys_location') as res`
 }
 
+// MatchRegionNameAndID checks to see if the supplied region name and ID in the phys_location body correspond to each other.
+func (pl *TOPhysLocation) MatchRegionNameAndID() (error, error, int) {
+	if pl.RegionName != nil {
+		regionName, ok, err := dbhelpers.GetRegionNameFromID(pl.APIInfo().Tx.Tx, *pl.RegionID)
+		if err != nil {
+			return nil, fmt.Errorf("error fetching name from region ID: %w", err), http.StatusInternalServerError
+		} else if !ok {
+			return errors.New("no such region"), nil, http.StatusNotFound
+		}
+		if regionName != *pl.RegionName {
+			return errors.New("region name and ID do not match"), nil, http.StatusBadRequest
+		}
+	}
+	return nil, nil, http.StatusOK
+}
+
 func (pl *TOPhysLocation) Update(h http.Header) (error, error, int) { return api.GenericUpdate(h, pl) }
-func (pl *TOPhysLocation) Create() (error, error, int)              { return api.GenericCreate(pl) }
-func (pl *TOPhysLocation) Delete() (error, error, int)              { return api.GenericDelete(pl) }
+func (pl *TOPhysLocation) Create() (error, error, int) {
+	if userErr, sysErr, statusCode := pl.MatchRegionNameAndID(); userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
+	}
+	return api.GenericCreate(pl)
+}
+func (pl *TOPhysLocation) Delete() (error, error, int) { return api.GenericDelete(pl) }
 
 func selectQuery() string {
 	return `

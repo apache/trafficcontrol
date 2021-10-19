@@ -27,8 +27,8 @@ const exampleTMConfig = `
 {
 	"monitor_config_polling_interval_ms": 5000,
 	"http_timeout_ms": 30000,
-	"peer_optimistic": true,
-	"peer_optimistic_quorum_min": 0,
+	"peer_optimistic": false,
+	"peer_optimistic_quorum_min": 3,
 	"max_events": 200,
 	"health_flush_interval_ms": 1000,
 	"stat_flush_interval_ms": 1000,
@@ -40,6 +40,11 @@ const exampleTMConfig = `
 	"serve_read_timeout_ms": 10000,
 	"serve_write_timeout_ms": 10000,
 	"stat_buffer_interval_ms": 20000,
+	"short_hostname_override": "foobar",
+	"traffic_ops_disk_retry_max": 35,
+	"crconfig_backup_file": "crconfig.asdf",
+	"tmconfig_backup_file": "tmconfig.asdf",
+	"http_polling_format": "thisformatdoesnotexist",
 	"static_file_dir": "static/"
 }
 `
@@ -63,5 +68,26 @@ func TestLoggingConfig(t *testing.T) {
 	}
 	if string(c.DebugLog()) != c.LogLocationDebug {
 		t.Errorf("debug log location - expected: %s, actual: %s\n", c.LogLocationDebug, string(c.DebugLog()))
+	}
+	if c.ShortHostnameOverride != "foobar" {
+		t.Errorf("ShortHostnameOverride - expected: foobar, actual: %s", c.ShortHostnameOverride)
+	}
+	if c.PeerOptimistic != false {
+		t.Errorf("PeerOmptimistic - expected: false, actual: %t", c.PeerOptimistic)
+	}
+	if c.PeerOptimisticQuorumMin != 3 {
+		t.Errorf("PeerOmptimisticQuorumMin - expected: 3, actual: %d", c.PeerOptimisticQuorumMin)
+	}
+	if c.TrafficOpsDiskRetryMax != 35 {
+		t.Errorf("TrafficOpsDiskRetryMax - expected: 35, actual: %d", c.TrafficOpsDiskRetryMax)
+	}
+	if c.CRConfigBackupFile != "crconfig.asdf" {
+		t.Errorf("CRConfigBackupFile - expected: crconfig.asdf, actual: %s", c.CRConfigBackupFile)
+	}
+	if c.TMConfigBackupFile != "tmconfig.asdf" {
+		t.Errorf("TMConfigBackupFile - expected: tmconfig.asdf, actual: %s", c.TMConfigBackupFile)
+	}
+	if c.HTTPPollingFormat != "thisformatdoesnotexist" {
+		t.Errorf("HTTPPollingFormat - expected: thisformatdoesnotexist, actual: %s", c.HTTPPollingFormat)
 	}
 }
