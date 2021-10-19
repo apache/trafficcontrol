@@ -29,7 +29,11 @@
         <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
         <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
 
+{% if tr_version is defined and tr_version != omit and tr_version and tr_version.split(".")[0] | int < 6 %}
+        <Listener className="com.comcast.cdn.traffic_control.traffic_router.tomcat.TomcatLifecycleListener" />
+{% else %}
         <Listener className="org.apache.traffic_control.traffic_router.tomcat.TomcatLifecycleListener" />
+{% endif %}
         <!-- A "Service" is a collection of one or more "Connectors" that share
                 a single "Container" Note: A "Service" is not itself a "Container", so you
                 may not define subcomponents such as "Valves" at this level. Documentation
