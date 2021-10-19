@@ -574,7 +574,6 @@ func (r *TrafficOpsReq) CheckSystemServices() error {
 func (r *TrafficOpsReq) IsPackageInstalled(name string) bool {
 	for k, v := range r.pkgs {
 		if strings.HasPrefix(k, name) {
-			log.Infof("IsPackageInstalled '%v' found '%v' in cache, returning %v\n", name, k, v)
 			return v
 		}
 	}
