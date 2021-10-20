@@ -103,26 +103,12 @@ fi
 new_db_version=$(get_current_db_version)
 [[ "$new_db_version" =~ ^failed ]] && { echo "get_current_db_version failed: $new_db_version"; exit 1; }
 
-run_db_downgrades=true
-
-if [[ "$old_db_version" = "$new_db_version" ]]; then
-	echo "new DB version matches old DB version, no downgrade migrations to test"
-	run_db_downgrades=false
-fi
-
-if [[ "$db_is_empty" = true ]]; then
-	echo "starting DB was empty, skipping DB downgrades"
-	run_db_downgrades=false
-fi
-
-if [[ "$run_db_downgrades" = true ]]; then
-	# downgrade the DB until the initial DB version
-	while [[ "$new_db_version" != "$old_db_version" ]]; do
-		./db/admin --env=production down || { echo "DB downgrade failed!"; exit 1; }
-		new_db_version=$(get_current_db_version)
-		[[ "$new_db_version" =~ ^failed ]] && { echo "get_current_db_version failed: $new_db_version"; exit 1; }
-	done
-fi
+# downgrade the DB until the initial DB version
+while [[ "$new_db_version" != "$old_db_version" ]]; do
+	./db/admin --env=production down || { echo "DB downgrade failed!"; exit 1; }
+	new_db_version=$(get_current_db_version)
+	[[ "$new_db_version" =~ ^failed ]] && { echo "get_current_db_version failed: $new_db_version"; exit 1; }
+done
 
 # test full restoration of the initial DB dump
 for d in $(get_db_dumps); do
