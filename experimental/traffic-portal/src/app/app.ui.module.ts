@@ -30,6 +30,7 @@ import {MatDatepickerModule} from "@angular/material/datepicker";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 
 /**
  * AppUIModule is the Angular Module that contains the ui dependencies of
@@ -39,6 +40,8 @@ import {MatButtonToggleModule} from "@angular/material/button-toggle";
 	bootstrap: [],
 	exports: [
 		AgGridModule,
+
+		BrowserAnimationsModule,
 
 		ReactiveFormsModule,
 		FormsModule,

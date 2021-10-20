@@ -24,7 +24,8 @@ const routes: Routes = [
 		canLoad: [AuthenticatedGuard],
 		children: [{
 			loadChildren: async (): Promise<CoreModule> => import("./core/core.module")
-				.then(mod => mod.CoreModule)
+				.then(mod => mod.CoreModule),
+			path: ""
 		}],
 		path: "core"
 	}

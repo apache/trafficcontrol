@@ -24,7 +24,6 @@ import { BrowserModule } from "@angular/platform-browser";
 import * as Chart from "chart.js";
 
 // Routing, Components, Directives and Interceptors
-import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
 import { LoginComponent } from "./login/login.component";
@@ -66,8 +65,7 @@ Chart.plugins.register({
 		AppRoutingModule,
 		HttpClientModule,
 		AppUIModule,
-		SharedModule,
-		BrowserAnimationsModule
+		SharedModule
 	],
 	providers: [
 		AuthenticatedGuard
