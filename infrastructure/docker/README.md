@@ -75,7 +75,7 @@ You can create block RAM devices on Linux with, for example, `sudo modprobe brd 
 Privileged containers
 ---------------------
 
-The Traffic Server containers must be run with `--privileged` and `--cap-add NET_BIND_SERVICE` in order for Apache Traffic Server to bind on port 80. If you don't want to run privileged containers, you can try modifying the containers to run on another port (you will also need to update their ports in the Traffic Ops server entry, update the Traffic Ops `server_ports` parameters, re-generate the CRConfig in Traffic Ops, and re-run the `ort` script on the caches). However, there are known issues with using caches on ports other than 80. See [issue #1134](https://github.com/Comcast/traffic_control/issues/1134).
+The Traffic Server containers must be run with `--privileged` and `--cap-add NET_BIND_SERVICE` in order for Apache Traffic Server to bind on port 80. If you don't want to run privileged containers, you can try modifying the containers to run on another port (you will also need to update their ports in the Traffic Ops server entry, update the Traffic Ops `server_ports` parameters, re-generate the CRConfig in Traffic Ops, and re-run the `ort` script on the caches).
 
 Example
 --------
