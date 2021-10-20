@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"reflect"
 	"sort"
 	"testing"
@@ -37,6 +38,7 @@ func TestFederations(t *testing.T) {
 		AddFederationResolversForCurrentUserTest(t)
 		ReplaceFederationResolversForCurrentUserTest(t)
 		RemoveFederationResolversForCurrentUserTest(t)
+		GetTestPaginationSupportFedDeliveryServices(t)
 	})
 }
 
@@ -155,6 +157,38 @@ func createFederationToDeliveryServiceAssociation() (int, tc.DeliveryServiceV4, 
 	}
 
 	return fedID, ds, ds1, err
+
+}
+
+func createFederationToMultipleDeliveryServiceAssociation() (int, tc.DeliveryServiceV4, tc.DeliveryServiceV4, tc.DeliveryServiceV4, error) {
+	var ds tc.DeliveryServiceV4
+	var ds1 tc.DeliveryServiceV4
+	var ds2 tc.DeliveryServiceV4
+	dses, _, err := TOSession.GetDeliveryServices(client.RequestOptions{})
+	if err != nil {
+		return -1, ds, ds1, ds2, fmt.Errorf("cannot get Delivery Services: %v - alerts: %+v", err, dses.Alerts)
+	}
+	if len(dses.Response) < 3 {
+		return -1, ds, ds1, ds2, errors.New("no delivery services, must have at least 3 Delivery Services to test federations deliveryservices")
+	}
+	ds = dses.Response[0]
+	ds1 = dses.Response[1]
+	ds2 = dses.Response[2]
+	if ds.ID == nil || ds1.ID == nil || ds2.ID == nil {
+		return -1, ds, ds1, ds2, errors.New("Traffic Ops returned at least one representation of a Delivery Service that had a null or undefined ID")
+	}
+
+	if len(fedIDs) == 0 {
+		return -1, ds, ds1, ds2, errors.New("no federations, must have at least 1 federation to test federations deliveryservices")
+	}
+	fedID := fedIDs[1]
+
+	alerts, _, err := TOSession.CreateFederationDeliveryServices(fedID, []int{*ds.ID, *ds1.ID, *ds2.ID}, true, client.RequestOptions{})
+	if err != nil {
+		err = fmt.Errorf("creating federations delivery services: %v - alerts: %+v", err, alerts.Alerts)
+	}
+
+	return fedID, ds, ds1, ds2, err
 
 }
 
@@ -392,5 +426,82 @@ func ReplaceFederationResolversForCurrentUserTest(t *testing.T) {
 		if a.Level == tc.SuccessLevel.String() {
 			t.Errorf("Unexpected success from replacing Federation Resolver mappings for the current user: %s", a.Text)
 		}
+	}
+}
+
+func GetTestPaginationSupportFedDeliveryServices(t *testing.T) {
+
+	fedID, _, _, _, err := createFederationToMultipleDeliveryServiceAssociation()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetFederationDeliveryServices(fedID, opts)
+	if err != nil {
+		t.Fatalf("cannot get Federation #%d Delivery Services: %v - alerts: %+v", fedID, err, resp.Alerts)
+	}
+	fedDs := resp.Response
+	if len(fedDs) < 3 {
+		t.Fatalf("Need at least 3 FederationResolver in Traffic Ops to test pagination support, found: %d", len(fedDs))
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	/*fedDsWithLimit, _, err := TOSession.GetFederationDeliveryServices(fedID, opts)
+	if err != nil {
+		t.Fatalf("cannot Get FederationResolver with Limit: %v - alerts: %+v", err, fedDsWithLimit.Alerts)
+	}
+	if !reflect.DeepEqual(fedDs[:1], fedDsWithLimit.Response) {
+		t.Error("expected GET FederationResolver with limit = 1 to return first result")
+	}*/
+
+	opts.QueryParameters.Set("offset", "1")
+	fedDsWithOffset, _, err := TOSession.GetFederationDeliveryServices(fedID, opts)
+	if err != nil {
+		t.Fatalf("cannot Get FederationResolver with Limit and Offset: %v - alerts: %+v", err, fedDsWithOffset.Alerts)
+	}
+	if !reflect.DeepEqual(fedDs[1:2], fedDsWithOffset.Response) {
+		t.Error("expected GET FederationResolver with limit = 1, offset = 1 to return second result")
+	}
+
+	opts.QueryParameters.Del("offset")
+	opts.QueryParameters.Set("page", "2")
+	fedDsWithPage, _, err := TOSession.GetFederationDeliveryServices(fedID, opts)
+	if err != nil {
+		t.Fatalf("cannot Get FederationResolver with Limit and Page: %v - alerts: %+v", err, fedDsWithPage.Alerts)
+	}
+	if !reflect.DeepEqual(fedDs[1:2], fedDsWithPage.Response) {
+		t.Error("expected GET FederationResolver with limit = 1, page = 2 to return second result")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, reqInf, err := TOSession.GetFederationDeliveryServices(fedID, opts)
+	if err == nil {
+		t.Error("expected GET FederationResolver to return an error when limit is not bigger than -1")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, reqInf, err = TOSession.GetFederationDeliveryServices(fedID, opts)
+	if err == nil {
+		t.Error("expected GET FederationResolver to return an error when offset is not a positive integer")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, reqInf, err = TOSession.GetFederationDeliveryServices(fedID, opts)
+	if err == nil {
+		t.Error("expected GET FederationResolver to return an error when page is not a positive integer")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
 	}
 }

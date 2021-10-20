@@ -364,7 +364,7 @@ func DeleteTestCDNFederations(t *testing.T) {
 		}
 
 		opts.QueryParameters.Set("id", strconv.Itoa(id))
-		data, _, err := TOSession.GetCDNFederationsByName("foo", opts)
+		data, _, _ := TOSession.GetCDNFederationsByName("foo", opts)
 		if len(data.Response) != 0 {
 			t.Error("expected federation to be deleted")
 		}
