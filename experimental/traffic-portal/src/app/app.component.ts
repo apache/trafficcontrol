@@ -15,8 +15,8 @@
 import { Component, OnInit } from "@angular/core";
 import {Router, RouterOutlet} from "@angular/router";
 
-import { User } from "./models";
-import {AuthenticationService} from "./shared/authentication/authentication.service";
+import {AuthenticationService} from "src/app/shared/authentication/authentication.service";
+import { User } from "src/app/models";
 
 /**
  * The most basic component that contains everything else. This should be kept pretty simple.
@@ -27,7 +27,7 @@ import {AuthenticationService} from "./shared/authentication/authentication.serv
 	templateUrl: "./app.component.html",
 })
 export class AppComponent implements OnInit {
-	/** The app"s title */
+	/** The app's title */
 	public title = "Traffic Portal";
 
 	/** The currently logged-in user */
@@ -54,7 +54,7 @@ export class AppComponent implements OnInit {
 	 * @returns the current route animation data.
 	 */
 	public getState(route: RouterOutlet): string | undefined | null {
-		return route && route.activatedRouteData && route.activatedRouteData.animation;
+		return route?.activatedRouteData?.animation;
 	}
 
 	/**

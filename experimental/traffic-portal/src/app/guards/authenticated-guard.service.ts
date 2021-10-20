@@ -11,15 +11,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Injectable } from "@angular/core";
-import {
-	ActivatedRouteSnapshot,
-	CanActivate, CanLoad, Route,
-	RouterStateSnapshot, UrlSegment,
-	UrlTree
-} from "@angular/router";
-import { Observable } from "rxjs";
-import {AuthenticationService} from "../shared/authentication/authentication.service";
+import {Injectable} from "@angular/core";
+import {ActivatedRouteSnapshot, CanActivate, CanLoad, Route, RouterStateSnapshot, UrlSegment,} from "@angular/router";
+import {AuthenticationService} from "src/app/shared/authentication/authentication.service";
 
 /**
  * AuthenticationGuard ensures that the user is logged in.
@@ -34,10 +28,9 @@ export class AuthenticatedGuard implements CanActivate, CanLoad {
 	 *
 	 * @param route Route snapshot.
 	 * @param state Route state snapshot.
-	 * @returns many
+	 * @returns boolean
 	 */
-	public canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean | UrlTree>
-	| Promise<boolean | UrlTree> | boolean | UrlTree {
+	public canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean  {
 		return this.auth.currentUser !== null;
 	}
 
@@ -46,9 +39,9 @@ export class AuthenticatedGuard implements CanActivate, CanLoad {
 	 *
 	 * @param route Requested route.
 	 * @param segments URL segments.
-	 * @returns many
+	 * @returns boolean
 	 */
-	public canLoad(route: Route, segments: UrlSegment[]): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+	public canLoad(route: Route, segments: UrlSegment[]): boolean {
 		return this.auth.currentUser !== null;
 	}
 }

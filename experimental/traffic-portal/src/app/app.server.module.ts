@@ -29,6 +29,4 @@ import { AppModule } from "./app.module";
 		ServerModule,
 	],
 })
-// This empty class needs to exist; the decorator provides all of its data/logic
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class AppServerModule {}

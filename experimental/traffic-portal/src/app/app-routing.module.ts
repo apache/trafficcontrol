@@ -40,6 +40,4 @@ const routes: Routes = [
 		relativeLinkResolution: "legacy"
 	})],
 })
-// This is a necessary empty class. All of its data/logic come from the decorator.
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class AppRoutingModule { }

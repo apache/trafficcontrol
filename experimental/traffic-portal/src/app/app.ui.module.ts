@@ -61,6 +61,4 @@ import {MatButtonToggleModule} from "@angular/material/button-toggle";
 		MatButtonToggleModule
 	],
 })
-// This empty class needs to exist; the decorator provides all of its data/logic
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class AppUIModule {}
