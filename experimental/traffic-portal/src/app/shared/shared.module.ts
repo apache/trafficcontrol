@@ -24,7 +24,6 @@ import {TpHeaderComponent} from "./tp-header/tp-header.component";
 import {GenericTableComponent} from "./generic-table/generic-table.component";
 import {LinechartDirective} from "./charts/linechart.directive";
 import {AlertService} from "./alert/alert.service";
-import {AuthenticationService} from "./authentication/authentication.service";
 import {
 	CacheGroupService,
 	CDNService,
@@ -83,7 +82,6 @@ import {BooleanFilterComponent} from "./table-components/boolean-filter/boolean-
 		{multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor},
 		{multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor},
 		AlertService,
-		AuthenticationService,
 		CacheGroupService,
 		CDNService,
 		CurrentUserService,

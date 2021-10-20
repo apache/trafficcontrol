@@ -17,7 +17,7 @@ import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 
 import { ICellRendererAngularComp } from "ag-grid-angular";
 import { ICellRendererParams } from "ag-grid-community";
-import {AuthenticationService} from "../../authentication/authentication.service";
+import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
 
 
 /**
@@ -50,7 +50,7 @@ export class SSHCellRendererComponent implements ICellRendererAngularComp {
 	/**
 	 * Constructor.
 	 */
-	constructor(private readonly auth: AuthenticationService, private readonly sanitizer: DomSanitizer) {
+	constructor(private readonly auth: CurrentUserService, private readonly sanitizer: DomSanitizer) {
 		this.auth.updateCurrentUser().then(
 			success => {
 				if (success) {

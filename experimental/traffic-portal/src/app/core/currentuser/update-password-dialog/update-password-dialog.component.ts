@@ -15,8 +15,7 @@ import { Component } from "@angular/core";
 import { MatDialogRef } from "@angular/material/dialog";
 import { Subject } from "rxjs";
 
-import { UserService } from "src/app/shared/api";
-import {AuthenticationService} from "../../../shared/authentication/authentication.service";
+import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
 
 /**
  * This is the controller for the "Update Password" dialog box/form.
@@ -37,8 +36,7 @@ export class UpdatePasswordDialogComponent {
 
 	constructor(
 		private readonly dialog: MatDialogRef<UpdatePasswordDialogComponent>,
-		private readonly auth: AuthenticationService,
-		private readonly api: UserService
+		private readonly auth: CurrentUserService
 	) { }
 
 	/**
@@ -72,7 +70,7 @@ export class UpdatePasswordDialogComponent {
 
 		user.localPasswd = this.password;
 		user.confirmLocalPasswd = this.confirm;
-		return this.api.updateCurrentUser(user).then(
+		return this.auth.savewCurrentUser(user).then(
 			success => {
 				if (success) {
 					this.dialog.close(true);

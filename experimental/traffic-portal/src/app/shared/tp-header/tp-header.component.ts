@@ -13,7 +13,7 @@
 */
 import { Component, Input, OnInit } from "@angular/core";
 import { UserService } from "src/app/shared/api";
-import {AuthenticationService} from "../authentication/authentication.service";
+import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
 
 /**
  * TpHeaderComponent is the controller for the standard Traffic Portal header.
@@ -43,7 +43,7 @@ export class TpHeaderComponent implements OnInit {
 	@Input() public title?: string;
 
 	/** Constructor */
-	constructor(private readonly auth: AuthenticationService, private readonly api: UserService) {
+	constructor(private readonly auth: CurrentUserService, private readonly api: UserService) {
 	}
 
 	/** Sets up data dependencies. */

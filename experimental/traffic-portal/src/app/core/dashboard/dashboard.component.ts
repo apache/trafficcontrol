@@ -18,7 +18,7 @@ import { ActivatedRoute, Router } from "@angular/router";
 import { DeliveryService } from "../../models";
 import { DeliveryServiceService } from "../../shared/api";
 import { orderBy, fuzzyScore } from "../../utils";
-import {AuthenticationService} from "../../shared/authentication/authentication.service";
+import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
 
 /**
  * DashboardComponent is the controller for the dashboard, where a user sees all
@@ -82,7 +82,7 @@ export class DashboardComponent implements OnInit {
 		private readonly dsAPI: DeliveryServiceService,
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
-		private readonly auth: AuthenticationService
+		private readonly auth: CurrentUserService
 	) {
 		this.now = new Date();
 		this.now.setUTCMilliseconds(0);

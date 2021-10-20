@@ -27,7 +27,7 @@ import {
 } from "../../models";
 import { User } from "../../models/user";
 import { CDNService, DeliveryServiceService } from "../../shared/api";
-import {AuthenticationService} from "../../shared/authentication/authentication.service";
+import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
 
 /**
  * A regular expression that matches character strings that are illegal in `xml_id`s
@@ -126,7 +126,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	constructor(
 		private readonly dsAPI: DeliveryServiceService,
 		private readonly cdnAPI: CDNService,
-		private readonly auth: AuthenticationService,
+		private readonly auth: CurrentUserService,
 		private readonly router: Router
 	) { }
 

@@ -19,7 +19,6 @@ import { catchError } from "rxjs/operators";
 
 import {AlertService} from "../alert/alert.service";
 import {Alert} from "../../models/alert.model";
-import {CurrentUserService} from "../currentUser/current-user.service";
 
 /**
  * This class intercepts any and all HTTP error responses and checks for
@@ -29,7 +28,6 @@ import {CurrentUserService} from "../currentUser/current-user.service";
 export class ErrorInterceptor implements HttpInterceptor {
 
 	constructor(
-		private readonly currentUserService: CurrentUserService,
 		private readonly alerts: AlertService
 	) {}
 
@@ -50,9 +48,6 @@ export class ErrorInterceptor implements HttpInterceptor {
 				for (const a of (err as {error: {alerts: Alert[]}}).error.alerts) {
 					this.alerts.alertsSubject.next(a);
 				}
-			}
-			if (err.status === 401 || err.status === 403) {
-				this.currentUserService.logout(true);
 			}
 
 			return throwError(err);

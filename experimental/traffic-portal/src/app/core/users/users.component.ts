@@ -16,10 +16,10 @@ import { FormControl } from "@angular/forms";
 
 import { BehaviorSubject, Observable } from "rxjs";
 
+import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
 import { Role, User } from "../../models";
 import { UserService } from "../../shared/api";
 import { orderBy } from "../../utils";
-import {AuthenticationService} from "../../shared/authentication/authentication.service";
 
 /**
  * UsersComponent is the controller for the "users" page.
@@ -53,7 +53,7 @@ export class UsersComponent implements OnInit {
 	/**
 	 * Constructor.
 	 */
-	constructor(private readonly api: UserService, private readonly auth: AuthenticationService) {
+	constructor(private readonly api: UserService, private readonly auth: CurrentUserService) {
 		this.rolesMapSubject = new BehaviorSubject<Map<number, string>>(new Map<number, string>());
 		this.rolesMap = this.rolesMapSubject.asObservable();
 		this.users = new Array<User>();

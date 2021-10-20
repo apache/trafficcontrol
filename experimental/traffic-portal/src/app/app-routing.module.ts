@@ -16,19 +16,19 @@ import {RouterModule, Routes} from "@angular/router";
 
 import {LoginComponent} from "./login/login.component";
 import {AuthenticatedGuard} from "./guards/authenticated-guard.service";
-import {CoreModule} from "./core/core.module";
 
 const routes: Routes = [
 	{component: LoginComponent, path: "login"},
 	{
 		canLoad: [AuthenticatedGuard],
 		children: [{
-			loadChildren: async (): Promise<CoreModule> => import("./core/core.module")
+			loadChildren: async (): Promise<object> => import("./core/core.module")
 				.then(mod => mod.CoreModule),
 			path: ""
 		}],
 		path: "core"
-	}
+	},
+	{path: "", pathMatch: "full", redirectTo: "core"}
 ];
 
 /**

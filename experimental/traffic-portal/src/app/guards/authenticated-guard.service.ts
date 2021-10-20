@@ -12,36 +12,36 @@
 * limitations under the License.
 */
 import {Injectable} from "@angular/core";
-import {CanActivate, CanLoad} from "@angular/router";
-import {AuthenticationService} from "src/app/shared/authentication/authentication.service";
+import {CanActivate, CanLoad } from "@angular/router";
+import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
 
 /**
  * AuthenticationGuard ensures that the user is logged in.
  */
 @Injectable()
 export class AuthenticatedGuard implements CanActivate, CanLoad {
-	constructor(private readonly auth: AuthenticationService) {
+	constructor(private readonly auth: CurrentUserService) {
 	}
 
 	/**
 	 * canActivate determines whether or not a user can activate an already loaded route.
 	 *
-	 * @param route Route snapshot.
-	 * @param state Route state snapshot.
 	 * @returns boolean
 	 */
-	public canActivate(): boolean  {
-		return this.auth.currentUser !== null;
+	public async canActivate(): Promise<boolean>  {
+		return this.auth.fetchCurrentUser().then(res => {
+			return res;
+		});
 	}
 
 	/**
 	 * canLoad determines whether or not the current user can load/request the given route.
 	 *
-	 * @param route Requested route.
-	 * @param segments URL segments.
 	 * @returns boolean
 	 */
-	public canLoad(): boolean {
-		return this.auth.currentUser !== null;
+	public async canLoad(): Promise<boolean> {
+		return this.auth.fetchCurrentUser().then(res => {
+			return res;
+		});
 	}
 }

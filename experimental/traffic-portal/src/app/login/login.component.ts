@@ -14,7 +14,7 @@
 import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { Router, ActivatedRoute } from "@angular/router";
-import {AuthenticationService} from "../shared/authentication/authentication.service";
+import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
 
 
 /**
@@ -40,7 +40,7 @@ export class LoginComponent implements OnInit {
 	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
-		private readonly auth: AuthenticationService) { }
+		private readonly auth: CurrentUserService) { }
 
 	/**
 	 * Runs initialization, setting up the post-login redirection from the query

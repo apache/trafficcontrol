@@ -15,8 +15,8 @@
 import { Component, OnInit } from "@angular/core";
 import {Router, RouterOutlet} from "@angular/router";
 
-import {AuthenticationService} from "src/app/shared/authentication/authentication.service";
 import { User } from "src/app/models";
+import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
 
 /**
  * The most basic component that contains everything else. This should be kept pretty simple.
@@ -36,7 +36,7 @@ export class AppComponent implements OnInit {
 	/**
 	 * Constructor.
 	 */
-	constructor(private readonly router: Router, private readonly auth: AuthenticationService) {
+	constructor(private readonly router: Router, private readonly auth: CurrentUserService) {
 	}
 
 	/**
@@ -48,26 +48,12 @@ export class AppComponent implements OnInit {
 	}
 
 	/**
-	 * getState is used to provide states to the router for the purpose of animation.
-	 *
-	 * @param route Current router outlet.
-	 * @returns the current route animation data.
-	 */
-	public getState(route: RouterOutlet): string | undefined | null {
-		return route?.activatedRouteData?.animation;
-	}
-
-	/**
 	 * Sets up the current user.
 	 */
 	public ngOnInit(): void {
-		this.auth.updateCurrentUser().then(
-			success =>  {
-				if (success) {
-					this.currentUser = this.auth.currentUser;
-				}
-			}
-		);
+		this.auth.userChanged.subscribe(user => {
+			this.currentUser = user;
+		});
 	}
 
 }

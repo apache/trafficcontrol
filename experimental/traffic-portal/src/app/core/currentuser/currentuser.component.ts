@@ -18,7 +18,7 @@ import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { UserService } from "src/app/shared/api";
 
 import { User } from "src/app/models";
-import {AuthenticationService} from "../../shared/authentication/authentication.service";
+import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
 import { UpdatePasswordDialogComponent } from "./update-password-dialog/update-password-dialog.component";
 
 /**
@@ -48,7 +48,7 @@ export class CurrentuserComponent implements OnInit {
 	public editUser: User | null = null;
 
 	constructor(
-		private readonly auth: AuthenticationService,
+		private readonly auth: CurrentUserService,
 		private readonly api: UserService,
 		private readonly dialog: MatDialog,
 		private readonly route: ActivatedRoute,
