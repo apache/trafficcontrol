@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 import {Injectable} from "@angular/core";
-import {ActivatedRouteSnapshot, CanActivate, CanLoad, Route, RouterStateSnapshot, UrlSegment,} from "@angular/router";
+import {CanActivate, CanLoad} from "@angular/router";
 import {AuthenticationService} from "src/app/shared/authentication/authentication.service";
 
 /**
@@ -30,7 +30,7 @@ export class AuthenticatedGuard implements CanActivate, CanLoad {
 	 * @param state Route state snapshot.
 	 * @returns boolean
 	 */
-	public canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean  {
+	public canActivate(): boolean  {
 		return this.auth.currentUser !== null;
 	}
 
@@ -41,7 +41,7 @@ export class AuthenticatedGuard implements CanActivate, CanLoad {
 	 * @param segments URL segments.
 	 * @returns boolean
 	 */
-	public canLoad(route: Route, segments: UrlSegment[]): boolean {
+	public canLoad(): boolean {
 		return this.auth.currentUser !== null;
 	}
 }
