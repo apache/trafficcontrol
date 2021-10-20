@@ -1,5 +1,5 @@
 #!/bin/sh
-#
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,13 +16,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+# golangci-lint pre-commit hook
 #
-# Source this file to use PKGS, which is a space delimited list of packges
-# to be tested, linted, etc. This avoids running tests on vendored, non Traffic Control packages.
-#
-# Note the trailing "..." to make the paths recursive.
-# See "go help packages" for more info.
-#
-PKGS="github.com/Comcast/traffic_control/traffic_ops/client/ \
-github.com/Comcast/traffic_control/traffic_ops/client/tests/... \
-github.com/Comcast/traffic_control/traffic_ops/client/fixtures/..."
+# Runs golangci-lint
+if ! golangci-lint run; then
+	echo golangci-lint hook failed >&2
+	exit 1
+fi

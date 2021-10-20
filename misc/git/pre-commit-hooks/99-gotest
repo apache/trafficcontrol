@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -19,24 +19,27 @@
 
 # git gotest pre-commit hook
 #
-# Runs go tests and also ensures that packages with no tests compile, ie
-# the tests dir.
+# Directories to exclude
+exclude=(
+	cache-config/testing/ort-tests
+	cache-config/testing/ort-tests
+	.github/actions/license-file-coverage
+	test/router/dnssec
+	traffic_monitor/tests/_integration
+	traffic_ops/testing/api
+	vendor
+)
 
-# Executes tests on the non-external packages (ie packages from github)
-__DIR__="$(cd "$(dirname "${0}")"; echo $(pwd))"
-source "$__DIR__/pkgs"
-
-# run tests. go test outputs compilation errors to STDERR, which is why it's redirected.
-tests=$(go test $PKGS -timeout=10s 2>&1)
-[ $? == 0 ] && exit 0
-
-# There are failing tests. Packages with compilation errors start with #, failures with FAIL. Print them and fail.
-failing=$(echo "$tests" | grep '^\#\|^FAIL' | awk '{print $2}' | grep -ve '^$' | sort -u)
-
-echo >&2 "There are failing tests or compilation errors. Please fix these packages:"
-for pkg in $failing
-do
-  echo >&2 "  go test -v -short $pkg"
-done
-
-exit 1
+set -o pipefail;
+# Runs go tests
+if
+	! git ls-files '**.go' |
+	grep -vE "$(printf '^%s|' "${exclude[@]}")^$" |
+	xargs dirname |
+	uniq |
+	sed 's|^|./|' |
+	xargs go test;
+then
+	echo go test hook failed >&2
+	exit 1
+fi
