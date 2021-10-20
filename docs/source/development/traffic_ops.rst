@@ -147,13 +147,13 @@ Traffic Ops Project Tree Overview
 	- ort/ - Contains :term:`ORT` and :abbr:`ATS (Apache Traffic Server)` configuration file-generation logic and tooling
 	- testing/ - Holds utilities for testing the :ref:`to-api`
 
-		- api/ - Integration testing for the `Traffic Ops Go client <https://pkg.go.dev/github.com/apache/trafficcontrol/traffic_ops/v4-client>`_ and Traffic Ops
+		- api/ - Integration testing for the Traffic Ops Go client (:atc-godoc:`traffic_ops/v4-client`) and Traffic Ops
 
 	- traffic_ops_golang/ - The root of the Go implementation's code-base
 
 		.. note:: The vast majority of subdirectories of :atc-file:`traffic_ops/traffic_ops_golang/` contain handlers for the :ref:`to-api`, and are named according to the endpoint they handle. What follows is a list of subdirectories of interest that have a special role (i.e. don't handle a :ref:`to-api` endpoint).
 
-		.. seealso:: `The GoDoc documentation for this package <https://pkg.go.dev/apache/trafficcontrol/traffic_ops/traffic_ops_golang>`_
+		.. seealso:: The GoDoc documentation for this package: :atc-godoc:`/`
 
 		- api/ - A library for use by :ref:`to-api` handlers that provides helpful utilities for common tasks like obtaining a database transaction handle or accessing Traffic Ops configuration
 		- auth/ - Contains definitions of privilege levels and access control code used in routing and provides a library for dealing with password and token-based authentication
@@ -570,7 +570,7 @@ The configuration file for the tests (defined by :option:`--cfg`) is a JSON-enco
 
 :default: An object containing sub-objects relating to default configuration settings for connecting to external resources during testing
 
-	:logLocations: An object containing key/value pairs where the keys are log levels and each associated value is the file location to which logs of that level will be written. The allowed values respect the `reserved special names used by the github.com/apache/trafficcontrol/lib/go-log package <https://pkg.go.dev/github.com/apache/trafficcontrol/lib/go-log#pkg-constants>`_. Omitted keys are treated as though their values were ``null``, in which case that level is written to `/dev/null`. The allowed keys are:
+	:logLocations: An object containing key/value pairs where the keys are log levels and each associated value is the file location to which logs of that level will be written. The allowed values respect the reserved special names used by the :atc-godoc:`lib/go-log` package. Omitted keys are treated as though their values were ``null``, in which case that level is written to `/dev/null`. The allowed keys are:
 
 		- debug
 		- error
