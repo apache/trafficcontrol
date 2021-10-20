@@ -29,7 +29,7 @@ ENV GOPATH=/go
 COPY ./tests/_integration/ /tm
 WORKDIR /tm
 
-RUN go get -u  github.com/apache/trafficcontrol/lib/go-log github.com/apache/trafficcontrol/lib/go-tc github.com/apache/trafficcontrol/traffic_monitor
+RUN go get -u  github.com/apache/trafficcontrol/v6/lib/go-log github.com/apache/trafficcontrol/v6/lib/go-tc github.com/apache/trafficcontrol/v6/traffic_monitor
 COPY . ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/
 
 RUN go test -c -o /traffic_monitor_integration_test
