@@ -15,5 +15,5 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-*/5 * * * * trafops /opt/traffic_ops/app/bin/checks/DnssecRefresh/ToDnssecRefresh --traffic-ops-url https://localhost --traffic-ops-user admin --traffic-ops-password twelve --log-location-error /var/log/traffic_ops/trafops_dnssec_refresh.log --log-location-warning /var/log/traffic_ops/trafops_dnssec_refresh.log --log-location-info /var/log/traffic_ops/trafops_dnssec_refresh.log
+*/5 * * * * trafops > /var/log/traffic_ops/trafops_dnssec_refresh.log && /opt/traffic_ops/app/bin/checks/DnssecRefresh/ToDnssecRefresh --traffic-ops-url https://localhost --traffic-ops-user admin --traffic-ops-password twelve --log-location-error /var/log/traffic_ops/trafops_dnssec_refresh.log --log-location-warning /var/log/traffic_ops/trafops_dnssec_refresh.log --log-location-info /var/log/traffic_ops/trafops_dnssec_refresh.log
 
