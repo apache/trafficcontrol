@@ -213,7 +213,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
                 return result;
             },
             function(err) {
-                messageModel.setMessages(err.data.alerts, true);
+                messageModel.setMessages(err.data.alerts, false);
                 throw err;
             }
         );
