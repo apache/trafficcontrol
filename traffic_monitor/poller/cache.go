@@ -27,9 +27,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_monitor/config"
-	"github.com/apache/trafficcontrol/traffic_monitor/handler"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/config"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/handler"
 )
 
 type CachePoller struct {

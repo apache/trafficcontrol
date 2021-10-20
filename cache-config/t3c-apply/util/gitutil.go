@@ -29,7 +29,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
+	"github.com/apache/trafficcontrol/v6/cache-config/t3c-apply/config"
 )
 
 func EnsureConfigDirIsGitRepo(cfg config.Cfg) error {

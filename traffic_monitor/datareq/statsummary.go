@@ -24,13 +24,13 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_monitor/cache"
-	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
-	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/cache"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/srvhttp"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/todata"
 	jsoniter "github.com/json-iterator/go"
 )
 

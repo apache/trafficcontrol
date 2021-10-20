@@ -18,7 +18,7 @@ package v2
 import (
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/v2-client"
 	_ "github.com/lib/pq"
 )
 

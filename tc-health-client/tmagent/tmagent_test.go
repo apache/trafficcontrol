@@ -21,8 +21,8 @@ package tmagent
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/tc-health-client/config"
-	"github.com/apache/trafficcontrol/tc-health-client/util"
+	"github.com/apache/trafficcontrol/v6/tc-health-client/config"
+	"github.com/apache/trafficcontrol/v6/tc-health-client/util"
 	"testing"
 )
 

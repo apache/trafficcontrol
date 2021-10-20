@@ -19,7 +19,7 @@ import "net/http"
 import "net/url"
 import "strconv"
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/v6/lib/go-tc"
 
 func (to *Session) getFederationResolvers(id *uint, ip *string, t *string) ([]tc.FederationResolver, ReqInf, error) {
 	var vals = url.Values{}

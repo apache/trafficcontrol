@@ -24,9 +24,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/tmcheck"
-	to "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/tmcheck"
+	to "github.com/apache/trafficcontrol/v6/traffic_ops/v2-client"
 	"io"
 	"net/http"
 	"sort"

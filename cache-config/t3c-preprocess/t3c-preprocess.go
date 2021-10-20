@@ -29,10 +29,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-preprocess/util"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/cache-config/t3c-preprocess/util"
+	"github.com/apache/trafficcontrol/v6/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v6/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
 )
 
 var returnRegex = regexp.MustCompile(`\s*__RETURN__\s*`)

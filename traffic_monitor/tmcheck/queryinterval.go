@@ -23,8 +23,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	to "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	to "github.com/apache/trafficcontrol/v6/traffic_ops/v2-client"
 )
 
 const QueryIntervalMax = time.Duration(10) * time.Second

@@ -27,9 +27,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/lib/pq"
 )
 

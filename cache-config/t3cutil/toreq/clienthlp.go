@@ -24,9 +24,9 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/toclientlib"
+	toclient "github.com/apache/trafficcontrol/v6/traffic_ops/v4-client"
 )
 
 // GetProfileByName returns the profile with the given name from Traffic Ops.

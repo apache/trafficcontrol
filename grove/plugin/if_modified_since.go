@@ -17,7 +17,7 @@ package plugin
 import (
 	"net/http"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v6/lib/go-rfc"
 )
 
 func init() {

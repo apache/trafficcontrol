@@ -23,11 +23,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-update/config"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/cache-config/t3c-update/config"
+	"github.com/apache/trafficcontrol/v6/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v6/cache-config/t3cutil/toreq"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
 )
 
 var (

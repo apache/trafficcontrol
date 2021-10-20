@@ -22,7 +22,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -71,8 +71,8 @@ Be aware! It can and will modify all .go files in the given directory! Back up a
 Also be aware! This is very specific to the current code. If symbols or patterns are changed around how the master vs vendored client are used, this script will have to be updated.
 
 Expecations:
-- t3c-generate is at github.com/apache/trafficcontrol/cache-config/t3c-generate
-- The master TO client is at github.com/apache/trafficcontrol/traffic_ops/client
+- t3c-generate is at github.com/apache/trafficcontrol/v6/cache-config/t3c-generate
+- The master TO client is at github.com/apache/trafficcontrol/v6/traffic_ops/client
 - The previous major version client is vendored at t3c-generate/toreq/vendor
 - The master client wrapper for t3c-generate is at t3c-generate/toreqnew
 - The clients are stored in config.TCCfg.TOClient and config.TCCfg.TOClientNew

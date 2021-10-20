@@ -29,7 +29,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
 )
 
 // ServersV4Response is the format of a response to a GET request for API v4.x /servers.

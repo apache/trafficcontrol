@@ -33,12 +33,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/plugin"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/routing/middleware"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/trafficvault"
 
 	"github.com/jmoiron/sqlx"
 )

@@ -25,10 +25,10 @@ import (
 
 	"github.com/lib/pq"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/config"
 )
 
 func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {

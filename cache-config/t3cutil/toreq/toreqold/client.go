@@ -31,9 +31,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	"github.com/apache/trafficcontrol/v6/cache-config/t3cutil/toreq/torequtil"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
+	toclient "github.com/apache/trafficcontrol/v6/traffic_ops/v3-client"
 )
 
 type TOClient struct {

@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/apache/trafficcontrol/traffic_stats/assert"
+	"github.com/apache/trafficcontrol/v6/traffic_stats/assert"
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/influxdata/influxdb/models"
 )

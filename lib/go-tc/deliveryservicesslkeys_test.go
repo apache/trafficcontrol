@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
 )
 
 // - Perl: 2018-08-21+14:26:06

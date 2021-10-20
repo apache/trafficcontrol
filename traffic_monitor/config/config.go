@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
 
 	jsoniter "github.com/json-iterator/go"
 )

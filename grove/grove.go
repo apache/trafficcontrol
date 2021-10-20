@@ -34,19 +34,19 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/sys/unix"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
 
-	"github.com/apache/trafficcontrol/grove/cache"
-	"github.com/apache/trafficcontrol/grove/config"
-	"github.com/apache/trafficcontrol/grove/diskcache"
-	"github.com/apache/trafficcontrol/grove/icache"
-	"github.com/apache/trafficcontrol/grove/memcache"
-	"github.com/apache/trafficcontrol/grove/plugin"
-	"github.com/apache/trafficcontrol/grove/remap"
-	"github.com/apache/trafficcontrol/grove/remapdata"
-	"github.com/apache/trafficcontrol/grove/stat"
-	"github.com/apache/trafficcontrol/grove/tiercache"
-	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/v6/grove/cache"
+	"github.com/apache/trafficcontrol/v6/grove/config"
+	"github.com/apache/trafficcontrol/v6/grove/diskcache"
+	"github.com/apache/trafficcontrol/v6/grove/icache"
+	"github.com/apache/trafficcontrol/v6/grove/memcache"
+	"github.com/apache/trafficcontrol/v6/grove/plugin"
+	"github.com/apache/trafficcontrol/v6/grove/remap"
+	"github.com/apache/trafficcontrol/v6/grove/remapdata"
+	"github.com/apache/trafficcontrol/v6/grove/stat"
+	"github.com/apache/trafficcontrol/v6/grove/tiercache"
+	"github.com/apache/trafficcontrol/v6/grove/web"
 )
 
 const ShutdownTimeout = 60 * time.Second

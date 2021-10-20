@@ -18,7 +18,7 @@ import (
 	"net"
 	"net/url"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	tc "github.com/apache/trafficcontrol/v6/lib/go-tc"
 )
 
 const (

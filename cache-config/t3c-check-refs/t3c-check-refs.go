@@ -29,8 +29,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-check-refs/config"
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/cache-config/t3c-check-refs/config"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
 )
 
 var (

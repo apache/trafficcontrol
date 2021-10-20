@@ -25,9 +25,9 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_monitor/config"
-	"github.com/apache/trafficcontrol/traffic_monitor/manager"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/config"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/manager"
 )
 
 // GitRevision is the git revision of the app. The app SHOULD always be built with this set via the `-X` flag.

@@ -28,8 +28,8 @@ import (
 
 	"github.com/lestrrat/go-jwx/jwk"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
 )
 
 func testBackend(t *testing.T, backend TVBackend) {

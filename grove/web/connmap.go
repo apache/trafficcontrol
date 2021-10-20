@@ -17,7 +17,7 @@ package web
 import (
 	"net"
 	"sync"
-	// "github.com/apache/trafficcontrol/traffic_monitor_golang/common/log"
+	// "github.com/apache/trafficcontrol/v6/traffic_monitor_golang/common/log"
 )
 
 type ConnMap struct {

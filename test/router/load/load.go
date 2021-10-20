@@ -24,8 +24,8 @@ import (
 	"sync"
 
 	"fmt"
-	"github.com/apache/trafficcontrol/test/router/client"
-	"github.com/apache/trafficcontrol/test/router/data"
+	"github.com/apache/trafficcontrol/v6/test/router/client"
+	"github.com/apache/trafficcontrol/v6/test/router/data"
 )
 
 type LoadTest struct {

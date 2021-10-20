@@ -22,9 +22,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
+	client "github.com/apache/trafficcontrol/v6/traffic_ops/v4-client"
 )
 
 func TestCDNLocks(t *testing.T) {

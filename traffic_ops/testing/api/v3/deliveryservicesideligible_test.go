@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v6/lib/go-rfc"
 )
 
 func TestDeliveryServicesEligible(t *testing.T) {

@@ -30,7 +30,7 @@ import (
 
 	"github.com/lib/pq"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
 )
 
 func TestCamelCase(t *testing.T) {

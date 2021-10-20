@@ -25,10 +25,10 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/apache/trafficcontrol/grove/stat"
-	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/v6/grove/stat"
+	"github.com/apache/trafficcontrol/v6/grove/web"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
 )
 
 func init() {

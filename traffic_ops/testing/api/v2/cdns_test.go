@@ -19,7 +19,7 @@ import (
 	"sort"
 	"testing"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	tc "github.com/apache/trafficcontrol/v6/lib/go-tc"
 )
 
 func TestCDNs(t *testing.T) {

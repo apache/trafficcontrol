@@ -16,8 +16,8 @@ package orttest
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
+	"github.com/apache/trafficcontrol/v6/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/v6/cache-config/testing/ort-tests/util"
 	"os"
 	"os/user"
 	"strconv"

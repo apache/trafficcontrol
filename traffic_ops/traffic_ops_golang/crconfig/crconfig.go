@@ -25,8 +25,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
 )
 
 // Make creates and returns the CRConfig from the database.

@@ -23,7 +23,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api"
 	"io/ioutil"
 	"net/http"
 	"net/url"

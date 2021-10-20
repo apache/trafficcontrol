@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
 )
 
 // DefaultRoutingName is the Routing Name given to Delivery Services upon
@@ -1059,7 +1059,7 @@ type DeliveryServiceSafeUpdateRequest struct {
 	LongDesc1   *string `json:"longDesc1,omitempty"`
 }
 
-// Validate implements the github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// Validate implements the github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (r *DeliveryServiceSafeUpdateRequest) Validate(*sql.Tx) error {
 	if r.DisplayName == nil {

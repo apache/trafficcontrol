@@ -23,9 +23,9 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/peer"
-	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/todata"
 )
 
 func srvCacheStats(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe,

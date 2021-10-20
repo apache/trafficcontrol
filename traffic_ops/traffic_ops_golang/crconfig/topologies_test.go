@@ -22,7 +22,7 @@ package crconfig
 import (
 	"context"
 	"encoding/json"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"reflect"
 	"strings"

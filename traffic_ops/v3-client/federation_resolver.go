@@ -19,8 +19,8 @@ import "net/http"
 import "net/url"
 import "strconv"
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
-import "github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+import "github.com/apache/trafficcontrol/v6/lib/go-tc"
+import "github.com/apache/trafficcontrol/v6/traffic_ops/toclientlib"
 
 func (to *Session) getFederationResolvers(id *uint, ip *string, t *string, header http.Header) ([]tc.FederationResolver, toclientlib.ReqInf, error) {
 	var vals = url.Values{}

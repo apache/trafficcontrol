@@ -32,9 +32,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/tc-health-client/util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/tc-health-client/util"
+	toclient "github.com/apache/trafficcontrol/v6/traffic_ops/v3-client"
 
 	"github.com/pborman/getopt/v2"
 )

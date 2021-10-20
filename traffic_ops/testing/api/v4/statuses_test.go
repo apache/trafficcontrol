@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/v6/lib/go-rfc"
+	client "github.com/apache/trafficcontrol/v6/traffic_ops/v4-client"
 )
 
 func TestStatuses(t *testing.T) {

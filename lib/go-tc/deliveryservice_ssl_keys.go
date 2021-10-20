@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
 
 	"github.com/lestrrat/go-jwx/jwk"
 )
@@ -195,7 +195,7 @@ type DeliveryServiceAddSSLKeysReq struct {
 }
 
 // Validate implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (r *DeliveryServiceAddSSLKeysReq) Validate(tx *sql.Tx) error {
 	r.Sanitize()
@@ -228,7 +228,7 @@ type DeliveryServiceGenSSLKeysReq struct {
 }
 
 // Validate implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (r *DeliveryServiceGenSSLKeysReq) Validate(tx *sql.Tx) error {
 	r.Sanitize()
@@ -264,7 +264,7 @@ type DeliveryServiceAcmeSSLKeysReq struct {
 }
 
 // Validate implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (r *DeliveryServiceAcmeSSLKeysReq) Validate(tx *sql.Tx) error {
 	r.Sanitize()
@@ -355,7 +355,7 @@ type CDNGenerateKSKReq struct {
 }
 
 // Validate implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (r *CDNGenerateKSKReq) Validate(tx *sql.Tx) error {
 	r.Sanitize()

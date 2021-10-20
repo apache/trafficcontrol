@@ -23,8 +23,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v6/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
 )
 
 func TestT3CNoOutgoingIP(t *testing.T) {

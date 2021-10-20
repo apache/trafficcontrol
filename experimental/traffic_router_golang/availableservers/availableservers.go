@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
 )
 
 type AvailableServersMap map[tc.DeliveryServiceName]map[tc.CacheGroupName][]tc.CacheName

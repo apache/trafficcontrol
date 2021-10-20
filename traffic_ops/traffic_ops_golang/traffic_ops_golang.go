@@ -34,16 +34,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
-	_ "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends" // init traffic vault backends
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/riaksvc"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/about"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/plugin"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/routing"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/trafficvault"
+	_ "github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/trafficvault/backends" // init traffic vault backends
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/trafficvault/backends/riaksvc"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"

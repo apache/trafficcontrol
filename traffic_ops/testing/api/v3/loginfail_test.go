@@ -24,7 +24,7 @@ import (
 
 	"golang.org/x/net/publicsuffix"
 
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	toclient "github.com/apache/trafficcontrol/v6/traffic_ops/v3-client"
 )
 
 func TestLoginFail(t *testing.T) {

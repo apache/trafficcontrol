@@ -18,7 +18,7 @@ package tcdata
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
 )
 
 func (r *TCData) CreateTestCacheGroups(t *testing.T) {

@@ -22,7 +22,7 @@ package crconfig
 import (
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
 )
 
 func makeStats(cdn string, user string, host string, version string) tc.CRConfigStats {

@@ -19,8 +19,8 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/toclientlib"
 )
 
 // apiServerServerCapabilities is the API version-relative path to the

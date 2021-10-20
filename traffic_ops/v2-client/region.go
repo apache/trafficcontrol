@@ -24,7 +24,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
 )
 
 const (

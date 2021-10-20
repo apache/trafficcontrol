@@ -30,9 +30,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
 )
 
 // Config reflects the structure of the cdn.conf file

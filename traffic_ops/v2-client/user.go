@@ -24,8 +24,8 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
 )
 
 // GetUsers returns all users accessible from current user

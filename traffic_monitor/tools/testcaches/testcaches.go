@@ -25,7 +25,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/fakesrvr"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/tools/testcaches/fakesrvr"
 )
 
 func makeFakeRemaps(n int) []string {

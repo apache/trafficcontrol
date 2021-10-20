@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
@@ -125,7 +125,7 @@ type ResolverMapping struct {
 }
 
 // Validate implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (r *ResolverMapping) Validate(tx *sql.Tx) error {
 	errs := []error{}
@@ -188,7 +188,7 @@ type FederationDSPost struct {
 }
 
 // Validate implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (f *FederationDSPost) Validate(tx *sql.Tx) error {
 	return nil
@@ -218,7 +218,7 @@ type FederationUserPost struct {
 }
 
 // Validate implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (f *FederationUserPost) Validate(tx *sql.Tx) error {
 	return validation.ValidateStruct(f,
@@ -234,7 +234,7 @@ type DeliveryServiceFederationResolverMapping struct {
 }
 
 // Validate implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (d *DeliveryServiceFederationResolverMapping) Validate(tx *sql.Tx) error {
 	return d.Mappings.Validate(tx)
@@ -247,7 +247,7 @@ type LegacyDeliveryServiceFederationResolverMappingRequest struct {
 	Federations []DeliveryServiceFederationResolverMapping `json:"federations"`
 }
 
-// Validate implements the github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// Validate implements the github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (req *LegacyDeliveryServiceFederationResolverMappingRequest) Validate(tx *sql.Tx) error {
 	if len(req.Federations) < 1 {
@@ -262,7 +262,7 @@ func (req *LegacyDeliveryServiceFederationResolverMappingRequest) Validate(tx *s
 // only with API versions 1.4 and newer.
 type DeliveryServiceFederationResolverMappingRequest []DeliveryServiceFederationResolverMapping
 
-// Validate implements the github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// Validate implements the github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (req *DeliveryServiceFederationResolverMappingRequest) Validate(tx *sql.Tx) error {
 	if len(*req) < 1 {

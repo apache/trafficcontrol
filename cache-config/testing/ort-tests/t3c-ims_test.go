@@ -18,9 +18,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	testutil "github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
+	"github.com/apache/trafficcontrol/v6/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v6/cache-config/testing/ort-tests/tcdata"
+	testutil "github.com/apache/trafficcontrol/v6/cache-config/testing/ort-tests/util"
 )
 
 func TestIMS(t *testing.T) {

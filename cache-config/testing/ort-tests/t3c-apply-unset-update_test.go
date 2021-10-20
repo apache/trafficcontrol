@@ -21,9 +21,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v6/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
 )
 
 func TestT3cUnsetsUpdateFlag(t *testing.T) {

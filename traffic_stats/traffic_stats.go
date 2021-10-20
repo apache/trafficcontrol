@@ -35,9 +35,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
+	client "github.com/apache/trafficcontrol/v6/traffic_ops/v2-client"
 
 	log "github.com/cihub/seelog"
 	influx "github.com/influxdata/influxdb/client/v2"

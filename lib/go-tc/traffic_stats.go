@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
 
 	influx "github.com/influxdata/influxdb/client/v2"
 )

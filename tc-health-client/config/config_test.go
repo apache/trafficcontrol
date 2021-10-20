@@ -22,7 +22,7 @@ package config
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/tc-health-client/util"
+	"github.com/apache/trafficcontrol/v6/tc-health-client/util"
 )
 
 const (

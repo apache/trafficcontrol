@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_stats/influxdb"
+	"github.com/apache/trafficcontrol/v6/traffic_stats/influxdb"
 	influx "github.com/influxdata/influxdb/client/v2"
 )
 

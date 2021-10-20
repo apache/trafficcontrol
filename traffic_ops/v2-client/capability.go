@@ -19,7 +19,7 @@ import "errors"
 import "net/http"
 import "net/url"
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/v6/lib/go-tc"
 
 const API_CAPABILITIES = apiBase + "/capabilities"
 

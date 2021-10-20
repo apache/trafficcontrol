@@ -25,9 +25,9 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
 
 	"github.com/basho/riak-go-client"
 )

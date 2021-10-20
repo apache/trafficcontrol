@@ -20,9 +20,9 @@ package cfgfile
  */
 
 import (
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v6/cache-config/t3c-generate/config"
+	"github.com/apache/trafficcontrol/v6/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v6/lib/go-atscfg"
 )
 
 //

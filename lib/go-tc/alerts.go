@@ -26,8 +26,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/lib/go-rfc"
 )
 
 // Alert represents an informational message, typically returned through the Traffic Ops API.
@@ -72,7 +72,7 @@ func CreateAlerts(level AlertLevel, messages ...string) Alerts {
 // errors to display as alerts.
 //
 // Deprecated: Traffic Ops API handlers should use
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.HandleErr instead.
+// github.com/apache/trafficcontrol/v6/traffic_ops/traffic_ops_golang/api.HandleErr instead.
 func GetHandleErrorsFunc(w http.ResponseWriter, r *http.Request) func(status int, errs ...error) {
 	return func(status int, errs ...error) {
 		log.Errorf("%v %v\n", r.RemoteAddr, errs)

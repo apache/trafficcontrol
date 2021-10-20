@@ -24,7 +24,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v6/cache-config/t3cutil"
 
 	"github.com/pborman/getopt/v2"
 )

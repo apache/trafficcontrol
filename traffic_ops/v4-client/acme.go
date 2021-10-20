@@ -16,8 +16,8 @@ package client
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/traffic_ops/toclientlib"
 )
 
 // apiAcmeAutorenew is the API version-relative path for the /acme_autorenew API endpoint.

@@ -25,9 +25,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
+	toclient "github.com/apache/trafficcontrol/v6/traffic_ops/v2-client"
 )
 
 func TestDeliveryServices(t *testing.T) {

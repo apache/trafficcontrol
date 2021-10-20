@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
 )
 
 // These capabilities are defined during the setup process in todb.go.

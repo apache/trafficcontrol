@@ -22,7 +22,7 @@ package threadsafe
 import (
 	"sync"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/cache"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/cache"
 )
 
 // CacheAvailableStatus wraps a map of cache available statuses to be safe for

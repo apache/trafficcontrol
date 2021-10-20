@@ -23,8 +23,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/grove/web"
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/grove/web"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
 )
 
 type byteRange struct {

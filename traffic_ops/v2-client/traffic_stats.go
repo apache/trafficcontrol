@@ -15,7 +15,7 @@ package client
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
 )
 
 // GetCurrentStats gets current stats for each CDNs and a total across them

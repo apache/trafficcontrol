@@ -16,8 +16,8 @@
 package tcdata
 
 import (
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/config"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/cache-config/testing/ort-tests/config"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
 )
 
 type TCData struct {

@@ -24,8 +24,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	client "github.com/apache/trafficcontrol/v6/traffic_ops/v4-client"
 )
 
 type topologiesQueueUpdateTestCase struct {

@@ -20,12 +20,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/apache/trafficcontrol/grove/cacheobj"
-	"github.com/apache/trafficcontrol/grove/icache"
-	"github.com/apache/trafficcontrol/grove/remapdata"
-	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/v6/grove/cacheobj"
+	"github.com/apache/trafficcontrol/v6/grove/icache"
+	"github.com/apache/trafficcontrol/v6/grove/remapdata"
+	"github.com/apache/trafficcontrol/v6/grove/web"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
 )
 
 type StatsSystem interface {

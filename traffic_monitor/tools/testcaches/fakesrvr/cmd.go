@@ -27,7 +27,7 @@ import (
 	"sync/atomic"
 	"unsafe"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/fakesrvrdata"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/tools/testcaches/fakesrvrdata"
 )
 
 type CmdFunc = func(http.ResponseWriter, *http.Request, fakesrvrdata.Ths)

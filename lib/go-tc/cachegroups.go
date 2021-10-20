@@ -20,7 +20,7 @@ package tc
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
 )
 
 // CacheGroupsResponse is a list of CacheGroups as a response.

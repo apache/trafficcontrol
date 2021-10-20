@@ -30,7 +30,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apache/trafficcontrol/test/router/data"
+	"github.com/apache/trafficcontrol/v6/test/router/data"
 )
 
 func MustLoadCertificates(cafile string) *x509.CertPool {

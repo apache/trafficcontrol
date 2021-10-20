@@ -26,7 +26,7 @@ import (
 	"flag"
 	"testing"
 
-	"github.com/apache/trafficcontrol/test/router/dnssec"
+	"github.com/apache/trafficcontrol/v6/test/router/dnssec"
 	"github.com/miekg/dns"
 )
 

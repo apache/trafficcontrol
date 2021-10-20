@@ -21,8 +21,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	toclient "github.com/apache/trafficcontrol/v6/traffic_ops/v2-client"
 )
 
 func TestCookies(t *testing.T) {

@@ -22,9 +22,9 @@ package main
 import (
 	"os"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/tc-health-client/config"
-	"github.com/apache/trafficcontrol/tc-health-client/tmagent"
+	"github.com/apache/trafficcontrol/v6/lib/go-log"
+	"github.com/apache/trafficcontrol/v6/tc-health-client/config"
+	"github.com/apache/trafficcontrol/v6/tc-health-client/tmagent"
 )
 
 const (

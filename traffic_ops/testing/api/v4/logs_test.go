@@ -18,7 +18,7 @@ package v4
 import (
 	"testing"
 
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	client "github.com/apache/trafficcontrol/v6/traffic_ops/v4-client"
 )
 
 func TestLogs(t *testing.T) {

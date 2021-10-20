@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
 )
 
 func TestInvalidationJobGetTTL(t *testing.T) {

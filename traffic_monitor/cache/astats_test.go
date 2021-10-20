@@ -27,9 +27,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/poller"
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v6/lib/go-tc"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/poller"
+	"github.com/apache/trafficcontrol/v6/traffic_monitor/todata"
 )
 
 func TestAstatsJson(t *testing.T) {

@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v6/lib/go-util"
 )
 
 func TestMakeServerUnknown(t *testing.T) {
