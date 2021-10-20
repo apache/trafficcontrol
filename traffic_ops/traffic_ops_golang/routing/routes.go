@@ -427,7 +427,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `service_categories/?$`, api.ReadHandler(&servicecategory.TOServiceCategory{}), auth.PrivLevelReadOnly, []string{"SERVICE-CATEGORY:READ"}, Authenticated, nil, 4085181543},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `service_categories/{name}/?$`, servicecategory.Update, auth.PrivLevelOperations, []string{"SERVICE-CATEGORY:UPDATE", "SERVICE-CATEGORY:READ"}, Authenticated, nil, 406369141},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `service_categories/?$`, api.CreateHandler(&servicecategory.TOServiceCategory{}), auth.PrivLevelOperations, []string{"SERVICE-CATEGORY:CREATE", "SERVICE-CATEGORY:READ"}, Authenticated, nil, 453713801},
-		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `service_categories/{name}$`, api.DeleteHandler(&servicecategory.TOServiceCategory{}), auth.PrivLevelOperations, []string{"SERVICE-CATEGORY:DELETE", "SERVICE-CATEGROY:READ"}, Authenticated, nil, 4325382238},
+		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `service_categories/{name}$`, api.DeleteHandler(&servicecategory.TOServiceCategory{}), auth.PrivLevelOperations, []string{"SERVICE-CATEGORY:DELETE", "SERVICE-CATEGORY:READ"}, Authenticated, nil, 4325382238},
 
 		//StaticDNSEntries
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `staticdnsentries/?$`, api.ReadHandler(&staticdnsentry.TOStaticDNSEntry{}), auth.PrivLevelReadOnly, []string{"STATIC-DN:READ", "CACHE-GROUP:READ", "DELIVERY-SERVICE:READ"}, Authenticated, nil, 4289394773},

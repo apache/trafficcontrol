@@ -90,7 +90,7 @@ type AuthBase struct {
 
 // GetWrapper returns a Middleware which performs authentication of the current user at the given privilege level.
 // The returned Middleware also adds the auth.CurrentUser object to the request context, which may be retrieved by a handler via api.NewInfo or auth.GetCurrentUser.
-func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
+func (a AuthBase) GetWrapper(privLevelRequired int, version *api.Version) Middleware {
 	if a.Override != nil {
 		return a.Override
 	}
@@ -107,9 +107,18 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("getting configuration from request context: %w", err))
 				return
 			}
-			if !cfg.RoleBasedPermissions && user.PrivLevel < privLevelRequired {
-				api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
-				return
+			if version != nil {
+				if version.Major < 4 {
+					if user.PrivLevel < privLevelRequired {
+						api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
+						return
+					}
+				} else {
+					if !cfg.RoleBasedPermissions && user.PrivLevel < privLevelRequired {
+						api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
+						return
+					}
+				}
 			}
 			api.AddUserToReq(r, user)
 			handlerFunc(w, r)

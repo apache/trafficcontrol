@@ -72,7 +72,7 @@ func (r *Route) SetMiddleware(authBase middleware.AuthBase, requestTimeout time.
 		r.Middlewares = middleware.GetDefault(authBase.Secret, requestTimeout)
 	}
 	if r.Authenticated { // a privLevel of zero is an unauthenticated endpoint.
-		authWrapper := authBase.GetWrapper(r.RequiredPrivLevel)
+		authWrapper := authBase.GetWrapper(r.RequiredPrivLevel, &r.Version)
 		r.Middlewares = append(r.Middlewares, authWrapper)
 	}
 	r.Middlewares = append(r.Middlewares, middleware.RequiredPermissionsMiddleware(r.RequiredPermissions))
