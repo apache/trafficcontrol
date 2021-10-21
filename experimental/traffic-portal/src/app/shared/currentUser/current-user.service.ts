@@ -19,7 +19,7 @@ import { Capability, User } from "../../models";
 /**
  * This service keeps track of the currently authenticated user.
  *
- * This needs to be done separately from the AuthenticationService's
+ * This needs to be done separately from the CurrentUserService's
  * methods, because those depend on the API services and the API services use
  * an implicitly injected ErrorInterceptor which clears the authenticated user
  * value when it hits a 401 error - so that would be a circular dependency.
@@ -92,9 +92,12 @@ export class CurrentUserService {
 	}
 
 	/**
+	 * Saves the user
 	 *
+	 * @param user User to e saved
+	 * @returns Promise<boolean> promise returning the status of the update.
 	 */
-	public async savewCurrentUser(user: User): Promise<boolean> {
+	public async saveCurrentUser(user: User): Promise<boolean> {
 		return this.api.updateCurrentUser(user);
 	}
 

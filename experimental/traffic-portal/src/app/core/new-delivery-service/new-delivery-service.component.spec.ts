@@ -26,9 +26,9 @@ import { RouterTestingModule } from "@angular/router/testing";
 
 import {CDNService, DeliveryServiceService, UserService} from "src/app/shared/api";
 
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { Protocol } from "../../models";
 import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
-import {AuthenticationService} from "../../shared/authentication/authentication.service";
 import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
 
 
@@ -40,8 +40,8 @@ describe("NewDeliveryServiceComponent", () => {
 	beforeEach(async () => {
 		// mock the API
 		const mockAPIService = jasmine.createSpyObj(["getRoles", "getCurrentUser"]);
-		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
-		mockAuthenticationService.updateCurrentUser.and.returnValue(new Promise(r => r(false)));
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		mockCurrentUserService.updateCurrentUser.and.returnValue(new Promise(r => r(false)));
 		mockAPIService.getRoles.and.returnValue(new Promise(resolve => resolve([])));
 		mockAPIService.getCurrentUser.and.returnValue(new Promise(resolve => resolve({
 			id: 0,
@@ -68,7 +68,7 @@ describe("NewDeliveryServiceComponent", () => {
 				{provide: DeliveryServiceService, useValue: mockAPIService},
 				{provide: CDNService, useValue: mockAPIService},
 				{provide: UserService, useValue: mockAPIService},
-				{ provide: AuthenticationService, useValue: mockAuthenticationService }
+				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]
 		}).compileComponents();
 		// TestBed.overrideProvider(UserService, { useValue: mockAPIService });

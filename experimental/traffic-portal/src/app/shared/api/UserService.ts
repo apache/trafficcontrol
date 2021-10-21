@@ -63,7 +63,7 @@ export class UserService extends APIService {
 
 	/**
 	 * Ends the current user's session - but does *not* affect the
-	 * AuthenticationService's user data, which must be separately cleared.
+	 * CurrentUserService's user data, which must be separately cleared.
 	 *
 	 * @returns The entire HTTP response on succes, or `null` on failure.
 	 */

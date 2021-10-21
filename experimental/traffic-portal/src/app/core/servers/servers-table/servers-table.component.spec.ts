@@ -16,9 +16,9 @@ import { HttpClientModule } from "@angular/common/http";
 import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import {TpHeaderComponent} from "../../../shared/tp-header/tp-header.component";
 import {ServerService, UserService} from "../../../shared/api";
-import {AuthenticationService} from "../../../shared/authentication/authentication.service";
 import { ServersTableComponent } from "./servers-table.component";
 
 
@@ -29,14 +29,14 @@ describe("ServersTableComponent", () => {
 	beforeEach(waitForAsync(() => {
 		const mockAPIService = jasmine.createSpyObj(["getServers", "getUsers"]);
 		mockAPIService.getServers.and.returnValue(new Promise(r => r([])));
-		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		TestBed.configureTestingModule({
 			declarations: [ ServersTableComponent, TpHeaderComponent ],
 			imports: [HttpClientModule, RouterTestingModule],
 			providers: [
 				{ provide: ServerService, useValue: mockAPIService },
 				{ provide: UserService, useValue: mockAPIService },
-				{ provide: AuthenticationService, useValue: mockAuthenticationService }
+				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]
 		})
 			.compileComponents();

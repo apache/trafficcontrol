@@ -16,11 +16,11 @@ import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { User } from "../../models";
 import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
 import {LoadingComponent} from "../../shared/loading/loading.component";
 import {UserService} from "../../shared/api";
-import {AuthenticationService} from "../../shared/authentication/authentication.service";
 import { UsersComponent } from "./users.component";
 
 describe("UsersComponent", () => {
@@ -37,8 +37,8 @@ describe("UsersComponent", () => {
 			newUser: false,
 			username: "test"
 		} as User)));
-		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
-		mockAuthenticationService.updateCurrentUser.and.returnValue(new Promise(r => r(false)));
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		mockCurrentUserService.updateCurrentUser.and.returnValue(new Promise(r => r(false)));
 
 		TestBed.configureTestingModule({
 			declarations: [
@@ -54,7 +54,7 @@ describe("UsersComponent", () => {
 			],
 			providers: [
 				{ provide: UserService, useValue: mockAPIService },
-				{ provide: AuthenticationService, useValue: mockAuthenticationService }
+				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]
 		});
 		TestBed.compileComponents();

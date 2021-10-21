@@ -29,9 +29,7 @@ export class AuthenticatedGuard implements CanActivate, CanLoad {
 	 * @returns boolean
 	 */
 	public async canActivate(): Promise<boolean>  {
-		return this.auth.fetchCurrentUser().then(res => {
-			return res;
-		});
+		return this.auth.fetchCurrentUser().then(res => res);
 	}
 
 	/**
@@ -40,8 +38,6 @@ export class AuthenticatedGuard implements CanActivate, CanLoad {
 	 * @returns boolean
 	 */
 	public async canLoad(): Promise<boolean> {
-		return this.auth.fetchCurrentUser().then(res => {
-			return res;
-		});
+		return this.auth.fetchCurrentUser().then(res => res);
 	}
 }

@@ -18,12 +18,12 @@ import { RouterTestingModule } from "@angular/router/testing";
 import {DeliveryServiceService, UserService} from "src/app/shared/api";
 
 
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { LinechartDirective } from "../../shared/charts/linechart.directive";
 import { DeliveryService } from "../../models";
 import { DsCardComponent } from "../ds-card/ds-card.component";
 import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
 import {LoadingComponent} from "../../shared/loading/loading.component";
-import {AuthenticationService} from "../../shared/authentication/authentication.service";
 import {AlertService} from "../../shared/alert/alert.service";
 import { DashboardComponent } from "./dashboard.component";
 
@@ -33,7 +33,7 @@ describe("DashboardComponent", () => {
 
 	beforeEach(waitForAsync(() => {
 		const mockAPIService = jasmine.createSpyObj(["getDeliveryServices"]);
-		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"],
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"],
 			{capabilities: new Set<string>()});
 
 		const mockAlertService = jasmine.createSpyObj(["newAlert"]);
@@ -54,7 +54,7 @@ describe("DashboardComponent", () => {
 				RouterTestingModule
 			],
 			providers: [
-				{ provide: AuthenticationService, useValue: mockAuthenticationService },
+				{ provide: CurrentUserService, useValue: mockCurrentUserService },
 				{ provide: DeliveryServiceService, useValue: mockAPIService },
 				{ provide: UserService, useValue: mockAPIService },
 				{ provide: AlertService, useValue: mockAlertService }

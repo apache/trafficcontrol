@@ -13,17 +13,17 @@
 */
 import { TestBed } from "@angular/core/testing";
 
-import {AuthenticationService} from "../shared/authentication/authentication.service";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { AuthenticatedGuard } from "./authenticated-guard.service";
 
 describe("AuthenticationGuard", () => {
 	let guard: AuthenticatedGuard;
 
 	beforeEach(() => {
-		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		TestBed.configureTestingModule({
 			providers: [
-				{ provide: AuthenticationService, useValue: mockAuthenticationService },
+				{ provide: CurrentUserService, useValue: mockCurrentUserService },
 				AuthenticatedGuard
 			]
 		});

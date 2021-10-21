@@ -21,11 +21,11 @@ import { of } from "rxjs";
 import {DeliveryServiceService, InvalidationJobService, UserService} from "src/app/shared/api";
 
 
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { CustomvalidityDirective } from "../../shared/validation/customvalidity.directive";
 import { OpenableDirective } from "../../shared/openable/openable.directive";
 import { DeliveryService, GeoLimit, GeoProvider, InvalidationJob } from "../../models";
 import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
-import {AuthenticationService} from "../../shared/authentication/authentication.service";
 import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 
 describe("InvalidationJobsComponent", () => {
@@ -35,7 +35,7 @@ describe("InvalidationJobsComponent", () => {
 	beforeEach(waitForAsync(() => {
 		// mock the API
 		const mockAPIService = jasmine.createSpyObj(["getInvalidationJobs", "getDeliveryServices"]);
-		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		mockAPIService.getInvalidationJobs.and.returnValue(of({
 			startTime: new Date(),
 		} as InvalidationJob));
@@ -78,7 +78,7 @@ describe("InvalidationJobsComponent", () => {
 				{ provide: InvalidationJobService, useValue: mockAPIService },
 				{ provide: DeliveryServiceService, useValue: mockAPIService },
 				{ provide: UserService, useValue: mockAPIService },
-				{ provide: AuthenticationService, useValue: mockAuthenticationService }
+				{ provide: CurrentUserService, useValue: mockCurrentUserService }
 			]
 		});
 

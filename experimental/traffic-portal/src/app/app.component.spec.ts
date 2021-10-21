@@ -17,12 +17,12 @@ import { TestBed, waitForAsync } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { AppComponent } from "./app.component";
-import {AuthenticationService} from "./shared/authentication/authentication.service";
 
 describe("AppComponent", () => {
 	beforeEach(waitForAsync(() => {
-		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		TestBed.configureTestingModule({
 			declarations: [
 				AppComponent
@@ -32,7 +32,7 @@ describe("AppComponent", () => {
 				RouterTestingModule,
 				MatSnackBarModule
 			],
-			providers: [ { provide: AuthenticationService, useValue: mockAuthenticationService }]
+			providers: [ { provide: CurrentUserService, useValue: mockCurrentUserService }]
 		}).compileComponents();
 	}));
 

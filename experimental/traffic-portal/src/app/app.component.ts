@@ -13,7 +13,7 @@
 */
 
 import { Component, OnInit } from "@angular/core";
-import {Router, RouterOutlet} from "@angular/router";
+import {Router} from "@angular/router";
 
 import { User } from "src/app/models";
 import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";

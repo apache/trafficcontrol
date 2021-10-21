@@ -16,7 +16,7 @@ import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import {AuthenticationService} from "../shared/authentication/authentication.service";
+import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
 import { LoginComponent } from "./login.component";
 
 describe("LoginComponent", () => {
@@ -24,7 +24,7 @@ describe("LoginComponent", () => {
 	let fixture: ComponentFixture<LoginComponent>;
 
 	beforeEach(waitForAsync(() => {
-		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		TestBed.configureTestingModule({
 			declarations: [ LoginComponent ],
 			imports: [
@@ -33,7 +33,7 @@ describe("LoginComponent", () => {
 				ReactiveFormsModule,
 				RouterTestingModule
 			],
-			providers: [ { provide: AuthenticationService, useValue: mockAuthenticationService }]
+			providers: [ { provide: CurrentUserService, useValue: mockCurrentUserService }]
 		})
 			.compileComponents();
 	}));

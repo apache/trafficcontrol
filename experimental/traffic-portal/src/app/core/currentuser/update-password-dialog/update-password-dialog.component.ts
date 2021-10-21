@@ -70,7 +70,7 @@ export class UpdatePasswordDialogComponent {
 
 		user.localPasswd = this.password;
 		user.confirmLocalPasswd = this.confirm;
-		return this.auth.savewCurrentUser(user).then(
+		return this.auth.saveCurrentUser(user).then(
 			success => {
 				if (success) {
 					this.dialog.close(true);

@@ -19,12 +19,12 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { of } from "rxjs";
 
 
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { LinechartDirective } from "../../shared/charts/linechart.directive";
 import { DeliveryService, GeoLimit, GeoProvider, TPSData } from "../../models";
 import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
 import {DeliveryServiceService, UserService} from "../../shared/api";
 import {AlertService} from "../../shared/alert/alert.service";
-import {AuthenticationService} from "../../shared/authentication/authentication.service";
 import { DeliveryserviceComponent } from "./deliveryservice.component";
 
 
@@ -36,7 +36,7 @@ describe("DeliveryserviceComponent", () => {
 		// mock the API
 		const mockAPIService = jasmine.createSpyObj(["getDeliveryServices", "getDSKBPS", "getAllDSTPSData"]);
 		const mockAlertService = jasmine.createSpyObj(["newAlert"]);
-		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
 		mockAPIService.getDeliveryServices.and.returnValue(of({
 			active: true,
 			anonymousBlockingEnabled: false,
@@ -136,7 +136,7 @@ describe("DeliveryserviceComponent", () => {
 			providers: [
 				{ provide: DeliveryServiceService, useValue: mockAPIService },
 				{ provide: AlertService, useValue: mockAlertService },
-				{ provide: AuthenticationService, useValue: mockAuthenticationService },
+				{ provide: CurrentUserService, useValue: mockCurrentUserService },
 				{ provide: UserService, useValue: mockAPIService }
 			]
 		});

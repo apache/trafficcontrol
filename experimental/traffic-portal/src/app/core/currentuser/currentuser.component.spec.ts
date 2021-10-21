@@ -18,10 +18,9 @@ import { RouterTestingModule } from "@angular/router/testing";
 
 import { UserService } from "src/app/shared/api";
 
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { User } from "../../models";
 import {TpHeaderComponent} from "../../shared/tp-header/tp-header.component";
-import {CurrentUserService} from "../../shared/currentUser/current-user.service";
-import {AuthenticationService} from "../../shared/authentication/authentication.service";
 import { CurrentuserComponent } from "./currentuser.component";
 
 describe("CurrentuserComponent", () => {
@@ -31,8 +30,7 @@ describe("CurrentuserComponent", () => {
 	beforeEach(waitForAsync(() => {
 		const mockAPIService = jasmine.createSpyObj(["getRoles", "getCurrentUser"]);
 		const mockCurrentUserService = jasmine.createSpyObj(["getCurrentUser", "getCapabilities",
-			"getLoggedIn", "setUser", "hasPermission", "logout"]);
-		const mockAuthenticationService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+			"getLoggedIn", "setUser", "hasPermission", "logout", "updateCurrentUser", "login", "logout"]);
 		mockAPIService.getRoles.and.returnValue(new Promise(resolve => resolve([])));
 		mockAPIService.getCurrentUser.and.returnValue(new Promise(resolve => resolve({
 			id: 0,
@@ -53,7 +51,6 @@ describe("CurrentuserComponent", () => {
 			providers: [
 				{ provide: UserService, useValue: mockAPIService},
 				{ provide: CurrentUserService, useValue: mockCurrentUserService},
-				{ provide: AuthenticationService, useValue: mockAuthenticationService }
 			]
 		});
 		TestBed.compileComponents();

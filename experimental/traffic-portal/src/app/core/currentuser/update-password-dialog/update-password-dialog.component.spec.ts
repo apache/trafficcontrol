@@ -16,7 +16,7 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatDialogModule, MatDialogRef } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
 import { User } from "src/app/models";
-import { AuthenticationService } from "src/app/shared/authentication/authentication.service";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { UserService } from "src/app/shared/api";
 
 import { UpdatePasswordDialogComponent } from "./update-password-dialog.component";
@@ -27,9 +27,10 @@ describe("UpdatePasswordDialogComponent", () => {
 	let dialogOpen = true;
 	let updated = false;
 
-	const mockAPIService = jasmine.createSpyObj(["updateCurrentUser", "getCurrentUser"]);
+	const mockAPIService = jasmine.createSpyObj(["updateCurrentUser", "getCurrentUser", "saveCurrentUser"], );
 	mockAPIService.updateCurrentUser.and.returnValue(new Promise(resolve => resolve(true)));
 	mockAPIService.getCurrentUser.and.returnValue(new Promise<User>(resolve => resolve({id: -1, newUser: false, username: ""})));
+	mockAPIService.currentUser = {id: 1, newUser: false, username: "hello"};
 
 	beforeEach(async () => {
 		dialogOpen = true;
@@ -43,7 +44,7 @@ describe("UpdatePasswordDialogComponent", () => {
 					updated = upd ?? false;
 				}}},
 				{provide: UserService, useValue: mockAPIService},
-				{provide: AuthenticationService, useValue: {currentUser: {id: -1, newUser: false, username: ""}}}
+				{provide: CurrentUserService, useValue: mockAPIService}
 			]
 		}).compileComponents();
 	});
@@ -66,6 +67,7 @@ describe("UpdatePasswordDialogComponent", () => {
 			}
 		);
 		component.confirm = component.password;
+		mockAPIService.saveCurrentUser.and.returnValue(new Promise(r => r(true)));
 		await component.submit(new Event("submit"));
 		expect(dialogOpen).toBeFalse();
 		expect(updated).toBeTrue();
