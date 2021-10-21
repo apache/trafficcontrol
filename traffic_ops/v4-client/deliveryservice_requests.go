@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -76,6 +77,9 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV4,
 	}
 
 	if ds.CDNID == nil && ds.CDNName != nil {
+		if strings.ToUpper(*ds.CDNName) == "ALL"{
+			return resp, _, fmt.Errorf("CDN Name: \"'%s'\" is not allowed", *ds.CDNName)
+		}
 		cdnOpts := NewRequestOptions()
 		cdnOpts.QueryParameters.Set("name", *ds.CDNName)
 		cdns, reqInf, err := to.GetCDNs(cdnOpts)
