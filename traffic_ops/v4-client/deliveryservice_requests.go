@@ -78,7 +78,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV4,
 
 	if ds.CDNID == nil && ds.CDNName != nil {
 		if strings.ToUpper(*ds.CDNName) == "ALL"{
-			return resp, _, fmt.Errorf("CDN Name: \"'%s'\" is not allowed", *ds.CDNName)
+			return resp, toclientlib.ReqInf{}, fmt.Errorf("CDN Name: \"'%s'\" is not allowed", *ds.CDNName)
 		}
 		cdnOpts := NewRequestOptions()
 		cdnOpts.QueryParameters.Set("name", *ds.CDNName)
