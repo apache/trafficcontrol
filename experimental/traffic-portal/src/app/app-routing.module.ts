@@ -26,9 +26,9 @@ const routes: Routes = [
 				.then(mod => mod.CoreModule),
 			path: ""
 		}],
-		path: "core"
+		path: "core",
 	},
-	{path: "", pathMatch: "full", redirectTo: "core"}
+	{path: "", pathMatch: "full", redirectTo: "login"}
 ];
 
 /**
