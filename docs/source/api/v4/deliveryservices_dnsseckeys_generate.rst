@@ -25,6 +25,7 @@ Generates :abbr:`ZSK (Zone-Signing Key)` and :abbr:`KSK (Key-Signing Key)` keypa
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: DS-SECURITY-KEY:CREATE, DELIVERY-SERVICE:UPDATE, DELIVERY-SERVICE:READ
 :Response Type:  Object (string)
 
 Request Structure

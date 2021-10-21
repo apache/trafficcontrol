@@ -25,6 +25,7 @@ Get all targets for a steering :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: STEERING:READ, DELIVERY-SERVICE:READ, TYPE:READ
 :Response Type:  Array
 
 Request Structure
@@ -109,6 +110,7 @@ Create a steering target.
 
 :Auth. Required: Yes
 :Roles Required: Portal, Steering, Federation, "operations" or "admin"
+:Permissions Required: STEERING:CREATE, STEERING:READ, DELIVERY-SERVICE:READ, TYPE:READ
 :Response Type:  Object
 
 Request Structure

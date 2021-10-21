@@ -25,6 +25,7 @@ Authentication of a user using username and password. Traffic Ops will send back
 
 :Auth. Required: No
 :Roles Required: None
+:Permissions Required: None
 :Response Type:  ``undefined``
 
 Request Structure

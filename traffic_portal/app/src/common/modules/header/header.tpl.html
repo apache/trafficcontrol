@@ -17,13 +17,13 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<div id="header" class="nav_menu" ng-class="{ 'prod': isProd }">
+<div id="header">
     <nav role="navigation">
         <div class="nav toggle">
             <a id="menu_toggle" class="btn-link"><i class="fa fa-bars"></i></a>
         </div>
-        <div class="navbar enviro-banner" ng-class="{ 'prod': isProd }">
-            <span class="enviro_name" ng-class="{ 'prod': isProd }">{{enviroName}}</span>
+        <div id="enviro-banner" class="navbar">
+            <span>{{enviroName}}</span>
         </div>
         <ul class="nav navbar-nav navbar-right" ng-if="userLoaded">
             <li>

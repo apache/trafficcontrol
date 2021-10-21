@@ -26,6 +26,7 @@ Fetches a list of changes that have been made to the Traffic Control system
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: LOG:READ
 :Response Type:  Array
 
 Request Structure

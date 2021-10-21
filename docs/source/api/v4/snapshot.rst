@@ -28,6 +28,7 @@ This also changes the output of the :ref:`to-api-cdns-name-configs-monitoring` e
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CDN-SNAPSHOT:CREATE, CDN-SNAPSHOT:READ
 :Response Type:  ``undefined``
 
 Request Structure

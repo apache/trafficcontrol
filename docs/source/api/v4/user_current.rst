@@ -27,6 +27,7 @@ Retrieves the details of the authenticated user.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: None
 :Response Type:  Object
 
 Request Structure
@@ -108,6 +109,7 @@ Updates the date for the authenticated user.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required:  None
 :Response Type:  Object
 
 Request Structure

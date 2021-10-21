@@ -76,12 +76,9 @@ sudo useradd trafops
 ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
 openssl rand 32 | base64 | sudo tee /aes.key
 
-sudo apt-get install -y --no-install-recommends gettext \
-	ruby ruby-dev libc-dev curl \
-	gcc
+sudo apt-get install -y --no-install-recommends gettext curl
 
-sudo gem install sass compass
-sudo npm i -g forever grunt
+sudo npm i -g forever grunt sass
 
 CHROMIUM_CONTAINER=$(docker ps -qf name=chromium)
 HUB_CONTAINER=$(docker ps -qf name=hub)
@@ -110,9 +107,7 @@ to_build() {
   envsubst <"${resources}/cdn.json" >cdn.conf
   cp "${resources}/database.json" database.conf
 
-  export $(<"${ciab_dir}/variables.env" sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
   truncate -s0 out.log
-
   ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf >out.log 2>&1 &
   popd
 }
@@ -134,7 +129,7 @@ tp_build
 cd "${REPO_DIR}/traffic_portal/test/integration"
 npm ci
 
-./node_modules/.bin/webdriver-manager update --gecko false --versions.chrome "LATEST_RELEASE_$CHROMIUM_VER"
+npx webdriver-manager update --gecko false --versions.chrome "LATEST_RELEASE_$CHROMIUM_VER"
 
 jq " .capabilities.chromeOptions.args = [
     \"--headless\",

@@ -429,7 +429,7 @@ def hash_pass(passwd): # type: (str) -> str
 	p_val = 1
 	dklen = 64
 	salt = os.urandom(dklen)
-	if sys.version_info.major >= 3:
+	if sys.version_info.major >= 3 and hasattr(hashlib, 'scrypt'): # Python 2.7 and CentOS 7's Python 3.6 do not include hashlib.scrypt()
 		hashed = hashlib.scrypt(passwd.encode(), salt=salt, n=n, r=r_val, p=p_val, dklen=dklen)
 	else:
 		hashed = Scrypt(password=passwd.encode(), salt=salt, cost_factor=n, block_size_factor=r_val, parallelization_factor=p_val, key_length=dklen).derive()

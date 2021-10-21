@@ -29,6 +29,7 @@ Retrieves URL signing keys for a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: DS-SECURITY-KEY:READ, DELIVERY-SERVICE:READ
 :Response Type:  Object
 
 Request Structure
@@ -76,6 +77,7 @@ Deletes URL signing keys for a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: DS-SECURITY-KEY:DELETE, DS-SECURITY-KEY:READ, DELIVERY-SERVICE:READ, DELIVERY-SERVICE:UPDATE
 :Response Type:  Object
 
 Request Structure

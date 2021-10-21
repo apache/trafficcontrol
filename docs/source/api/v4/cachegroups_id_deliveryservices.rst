@@ -27,6 +27,7 @@ Assigns all of the "assignable" servers within a :term:`Cache Group` to one or m
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CACHE-GROUP:UPDATE, DELIVERY-SERVICE:UPDATE, CACHE-GROUP:READ, DELIVERY-SERVICE:READ
 :Response Type:  Object
 
 Request Structure

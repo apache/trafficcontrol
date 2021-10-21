@@ -1617,6 +1617,17 @@ func GetCDNNamesFromServerIds(tx *sql.Tx, serverIds []int64) ([]string, error) {
 	return cdns, nil
 }
 
+// GetCDNNameFromDSXMLID returns the CDN name of the DS associated with the supplied XML ID
+func GetCDNNameFromDSXMLID(tx *sql.Tx, dsXMLID string) (string, error) {
+	var cdnName string
+	query := `SELECT name FROM cdn JOIN deliveryservice ON cdn.id = deliveryservice.cdn_id WHERE deliveryservice.xml_id = $1`
+	err := tx.QueryRow(query, dsXMLID).Scan(&cdnName)
+	if err != nil {
+		return "", err
+	}
+	return cdnName, nil
+}
+
 // GetCDNNamesFromDSIds returns a list of cdn names for a list of DS IDs.
 func GetCDNNamesFromDSIds(tx *sql.Tx, dsIds []int) ([]string, error) {
 	var cdns []string
@@ -1715,4 +1726,16 @@ func GetCDNNameDomain(cdnID int, tx *sql.Tx) (string, string, error) {
 		return "", "", fmt.Errorf("getting cdn name and domain for cdn '%v': "+err.Error(), cdnID)
 	}
 	return cdnName, cdnDomain, nil
+}
+
+// GetRegionNameFromID returns the name of the region associated with the supplied ID.
+func GetRegionNameFromID(tx *sql.Tx, regionID int) (string, bool, error) {
+	var regionName string
+	if err := tx.QueryRow(`SELECT name FROM region WHERE id = $1`, regionID).Scan(&regionName); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return regionName, false, nil
+		}
+		return regionName, false, fmt.Errorf("querying region name from ID: %w", err)
+	}
+	return regionName, true, nil
 }

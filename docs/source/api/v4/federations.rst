@@ -25,6 +25,7 @@ Retrieves a list of :term:`Federation` mappings (i.e. :term:`Federation` Resolve
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: FEDERATION-RESOLVER:READ, DELIVERY-SERVICE:READ
 :Response Type:  Array
 
 Request Structure
@@ -85,6 +86,7 @@ Allows a user to create :term:`Federation` Resolvers for :term:`Delivery Service
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: FEDERATION-RESOLVER:CREATE, FEDERATION-RESOLVER:READ, DELIVERY-SERVICE:READ
 :Response Type:  Object (string)
 
 Request Structure
@@ -151,6 +153,7 @@ Deletes **all** :term:`Federation` Resolvers associated with the logged-in user'
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: FEDERATION-RESOLVER:DELETE
 :Response Type:  Object (string)
 
 Request Structure
@@ -194,10 +197,11 @@ Response Structure
 
 ``PUT``
 =======
-Replaces **all** :term:`Federations` associated with a user's :term:`Delivery Service`\ (s) with those defined inside the request payload.
+Replaces **all** :term:`Federations` Resolvers associated with a user's :term:`Delivery Service`\ (s) with those defined inside the request payload.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: FEDERATION-RESOLVER:DELETE, FEDERATION-RESOLVER:CREATE, DELIVERY-SERVICE:READ
 :Response Type:  Object (string)
 
 Request Structure

@@ -30,7 +30,7 @@ func (to *Session) CreatePhysLocation(pl tc.PhysLocation, opts RequestOptions) (
 	if pl.RegionID == 0 && pl.RegionName != "" {
 		regionOpts := NewRequestOptions()
 		regionOpts.QueryParameters.Set("name", pl.RegionName)
-		regions, reqInf, err := to.GetRegions(opts)
+		regions, reqInf, err := to.GetRegions(regionOpts)
 		if err != nil {
 			err = fmt.Errorf("resolving Region name '%s' to an ID", pl.RegionName)
 			return regions.Alerts, reqInf, err
