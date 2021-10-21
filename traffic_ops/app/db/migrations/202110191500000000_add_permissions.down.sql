@@ -37,6 +37,7 @@ DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='opera
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='operations') AND cap_name='COORDINATE:CREATE';
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='operations') AND cap_name='COORDINATE:READ';
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='operations') AND cap_name='COORDINATE:UPDATE';
+DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='operations') AND cap_name='COORDINATE:DELETE';
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='operations') AND cap_name='DELIVERY-SERVICE-SAFE:UPDATE';
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='operations') AND cap_name='DELIVERY-SERVICE:CREATE';
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='operations') AND cap_name='DELIVERY-SERVICE:DELETE';
@@ -189,8 +190,8 @@ DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name = 'por
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name = 'portal') AND cap_name='STATIC-DN:READ';
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name = 'portal') AND cap_name='STEERING:READ';
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name = 'portal') AND cap_name='TENANT:READ';
-DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name = 'portal') AND cap_name='TYPE-READ';
-DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name = 'portal') AND cap_name='USER-READ';
+DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name = 'portal') AND cap_name='TYPE:READ';
+DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name = 'portal') AND cap_name='USER:READ';
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name = 'portal') AND cap_name='USER:CREATE';
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name = 'portal') AND cap_name='DS-REQUEST:READ';
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name = 'portal') AND cap_name='DS-REQUEST:CREATE';

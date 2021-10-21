@@ -182,6 +182,7 @@ INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHE
 INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'COORDINATE:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'COORDINATE:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'COORDINATE:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'COORDINATE:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DELIVERY-SERVICE-SAFE:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DELIVERY-SERVICE:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DELIVERY-SERVICE:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;

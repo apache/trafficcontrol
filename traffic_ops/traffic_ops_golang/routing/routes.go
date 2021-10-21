@@ -190,7 +190,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdns/health/?$`, cdn.GetHealth, auth.PrivLevelReadOnly, []string{"CACHE-GROUP:READ"}, Authenticated, nil, 40853811343},
 
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdns/domains/?$`, cdn.DomainsHandler, auth.PrivLevelReadOnly, []string{"CDN:READ", "PROFILE:READ", "PARAMETER:READ"}, Authenticated, nil, 4269025603},
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdns/routing$`, crstats.GetCDNRouting, auth.PrivLevelReadOnly, nil, Authenticated, nil, 467229823},
+		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdns/routing$`, crstats.GetCDNRouting, auth.PrivLevelReadOnly, []string{"CDN:READ"}, Authenticated, nil, 467229823},
 
 		//CDN: CRUD
 		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `cdns/name/{name}$`, cdn.DeleteName, auth.PrivLevelOperations, []string{"CDN:DELETE"}, Authenticated, nil, 4088049593},
@@ -354,7 +354,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `coordinates/?$`, api.ReadHandler(&coordinate.TOCoordinate{}), auth.PrivLevelReadOnly, []string{"COORDINATE:READ"}, Authenticated, nil, 4967007453},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `coordinates/?$`, api.UpdateHandler(&coordinate.TOCoordinate{}), auth.PrivLevelOperations, []string{"COORDINATE:UPDATE", "COORDINATE:READ"}, Authenticated, nil, 4689261743},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `coordinates/?$`, api.CreateHandler(&coordinate.TOCoordinate{}), auth.PrivLevelOperations, []string{"COORDINATE:CREATE", "COORDINATE:READ"}, Authenticated, nil, 44281121573},
-		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `coordinates/?$`, api.DeleteHandler(&coordinate.TOCoordinate{}), auth.PrivLevelOperations, []string{"COORDINATE:UPDATE", "COORDINATE:READ"}, Authenticated, nil, 43038498893},
+		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `coordinates/?$`, api.DeleteHandler(&coordinate.TOCoordinate{}), auth.PrivLevelOperations, []string{"COORDINATE:DELETE", "COORDINATE:READ"}, Authenticated, nil, 43038498893},
 
 		//CDN notification
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdn_notifications/?$`, cdnnotification.Read, auth.PrivLevelReadOnly, []string{"CDN:READ"}, Authenticated, nil, 2221224514},
@@ -584,7 +584,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `cdns/health/?$`, cdn.GetHealth, auth.PrivLevelReadOnly, nil, Authenticated, nil, 20853811343},
 
 		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `cdns/domains/?$`, cdn.DomainsHandler, auth.PrivLevelReadOnly, nil, Authenticated, nil, 2269025603},
-		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `cdns/routing$`, crstats.GetCDNRouting, auth.PrivLevelReadOnly, []string{"CDN:READ"}, Authenticated, nil, 267229823},
+		{api.Version{Major: 3, Minor: 0}, http.MethodGet, `cdns/routing$`, crstats.GetCDNRouting, auth.PrivLevelReadOnly, nil, Authenticated, nil, 267229823},
 
 		//CDN: CRUD
 		{api.Version{Major: 3, Minor: 0}, http.MethodDelete, `cdns/name/{name}$`, cdn.DeleteName, auth.PrivLevelOperations, nil, Authenticated, nil, 2088049593},
@@ -1196,7 +1196,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{api.Version{Major: 2, Minor: 0}, http.MethodPost, `profileparameters/?$`, api.CreateHandler(&profileparameter.TOProfileParameter{}), auth.PrivLevelOperations, nil, Authenticated, nil, 228809693},
 		{api.Version{Major: 2, Minor: 0}, http.MethodPost, `profileparameter/?$`, profileparameter.PostProfileParam, auth.PrivLevelOperations, nil, Authenticated, nil, 224275},
 		{api.Version{Major: 2, Minor: 0}, http.MethodPost, `parameterprofile/?$`, profileparameter.PostParamProfile, auth.PrivLevelOperations, nil, Authenticated, nil, 2080610861},
-		{api.Version{Major: 2, Minor: 0}, http.MethodDelete, `profileparameters/{profileId}/{parameterId}$`, api.DeleteHandler(&profileparameter.TOProfileParameter{}), auth.PrivLevelOperations, []string{"PROFILE:UPDATE", "PROFILE:READ", "PARAMETER:READ"}, Authenticated, nil, 224839529},
+		{api.Version{Major: 2, Minor: 0}, http.MethodDelete, `profileparameters/{profileId}/{parameterId}$`, api.DeleteHandler(&profileparameter.TOProfileParameter{}), auth.PrivLevelOperations, nil, Authenticated, nil, 224839529},
 
 		//Tenants
 		{api.Version{Major: 2, Minor: 0}, http.MethodGet, `tenants/?$`, api.ReadHandler(&apitenant.TOTenant{}), auth.PrivLevelReadOnly, nil, Authenticated, nil, 2677967814},
