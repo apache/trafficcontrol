@@ -436,49 +436,49 @@ func GetTestPaginationSupportFedDeliveryServices(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("orderby", "id")
+	opts.QueryParameters.Set("orderby", "dsID")
 	resp, _, err := TOSession.GetFederationDeliveryServices(fedID, opts)
 	if err != nil {
 		t.Fatalf("cannot get Federation #%d Delivery Services: %v - alerts: %+v", fedID, err, resp.Alerts)
 	}
 	fedDs := resp.Response
 	if len(fedDs) < 3 {
-		t.Fatalf("Need at least 3 FederationResolver in Traffic Ops to test pagination support, found: %d", len(fedDs))
+		t.Fatalf("Need at least 3 Federation Delivery services in Traffic Ops to test pagination support, found: %d", len(fedDs))
 	}
 
 	opts.QueryParameters.Set("limit", "1")
-	/*fedDsWithLimit, _, err := TOSession.GetFederationDeliveryServices(fedID, opts)
+	fedDsWithLimit, _, err := TOSession.GetFederationDeliveryServices(fedID, opts)
 	if err != nil {
-		t.Fatalf("cannot Get FederationResolver with Limit: %v - alerts: %+v", err, fedDsWithLimit.Alerts)
+		t.Fatalf("cannot Get Federation deliveryservices with Limit: %v - alerts: %+v", err, fedDsWithLimit.Alerts)
 	}
 	if !reflect.DeepEqual(fedDs[:1], fedDsWithLimit.Response) {
-		t.Error("expected GET FederationResolver with limit = 1 to return first result")
-	}*/
+		t.Error("expected GET Federation deliveryservices with limit = 1 to return first result")
+	}
 
 	opts.QueryParameters.Set("offset", "1")
 	fedDsWithOffset, _, err := TOSession.GetFederationDeliveryServices(fedID, opts)
 	if err != nil {
-		t.Fatalf("cannot Get FederationResolver with Limit and Offset: %v - alerts: %+v", err, fedDsWithOffset.Alerts)
+		t.Fatalf("cannot Get Federation deliveryservices with Limit and Offset: %v - alerts: %+v", err, fedDsWithOffset.Alerts)
 	}
 	if !reflect.DeepEqual(fedDs[1:2], fedDsWithOffset.Response) {
-		t.Error("expected GET FederationResolver with limit = 1, offset = 1 to return second result")
+		t.Error("expected GET Federation deliveryservices with limit = 1, offset = 1 to return second result")
 	}
 
 	opts.QueryParameters.Del("offset")
 	opts.QueryParameters.Set("page", "2")
 	fedDsWithPage, _, err := TOSession.GetFederationDeliveryServices(fedID, opts)
 	if err != nil {
-		t.Fatalf("cannot Get FederationResolver with Limit and Page: %v - alerts: %+v", err, fedDsWithPage.Alerts)
+		t.Fatalf("cannot Get Federation deliveryservices with Limit and Page: %v - alerts: %+v", err, fedDsWithPage.Alerts)
 	}
 	if !reflect.DeepEqual(fedDs[1:2], fedDsWithPage.Response) {
-		t.Error("expected GET FederationResolver with limit = 1, page = 2 to return second result")
+		t.Error("expected GET Federation deliveryservices with limit = 1, page = 2 to return second result")
 	}
 
 	opts.QueryParameters = url.Values{}
 	opts.QueryParameters.Set("limit", "-2")
 	resp, reqInf, err := TOSession.GetFederationDeliveryServices(fedID, opts)
 	if err == nil {
-		t.Error("expected GET FederationResolver to return an error when limit is not bigger than -1")
+		t.Error("expected GET Federation deliveryservices to return an error when limit is not bigger than -1")
 	}
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
@@ -488,7 +488,7 @@ func GetTestPaginationSupportFedDeliveryServices(t *testing.T) {
 	opts.QueryParameters.Set("offset", "0")
 	resp, reqInf, err = TOSession.GetFederationDeliveryServices(fedID, opts)
 	if err == nil {
-		t.Error("expected GET FederationResolver to return an error when offset is not a positive integer")
+		t.Error("expected GET Federation deliveryservices to return an error when offset is not a positive integer")
 	}
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
@@ -499,7 +499,7 @@ func GetTestPaginationSupportFedDeliveryServices(t *testing.T) {
 	opts.QueryParameters.Set("page", "0")
 	resp, reqInf, err = TOSession.GetFederationDeliveryServices(fedID, opts)
 	if err == nil {
-		t.Error("expected GET FederationResolver to return an error when page is not a positive integer")
+		t.Error("expected GET Federation deliveryservices to return an error when page is not a positive integer")
 	}
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)

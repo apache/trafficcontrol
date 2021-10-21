@@ -17,6 +17,8 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
+	"reflect"
 	"testing"
 	"time"
 
@@ -35,6 +37,7 @@ func TestFederationUsers(t *testing.T) {
 		GetTestInvalidFederationIDUsers(t)
 		CreateTestValidFederationUsers(t)
 		GetTestValidFederationIDUsersIMSAfterChange(t, header)
+		GetTestPaginationSupportFedUsers(t)
 	})
 }
 
@@ -234,5 +237,83 @@ func DeleteTestFederationUsers(t *testing.T) {
 	}
 	if len(fedUsers.Response) != 0 {
 		t.Errorf("federation users expected 0, actual: %+v", len(fedUsers.Response))
+	}
+}
+
+func GetTestPaginationSupportFedUsers(t *testing.T) {
+
+	if len(fedIDs) < 1 {
+		t.Fatal("need at least one stored Federation ID to test Federations")
+	}
+	fedID := fedIDs[0]
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "userID")
+	resp, _, err := TOSession.GetFederationUsers(fedID, opts)
+	if err != nil {
+		t.Fatalf("cannot get Federation #%d Users: %v - alerts: %+v", fedID, err, resp.Alerts)
+	}
+	fedUser := resp.Response
+	if len(fedUser) < 3 {
+		t.Fatalf("Need at least 3 Federation users in Traffic Ops to test pagination support, found: %d", len(fedUser))
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	fedUserWithLimit, _, err := TOSession.GetFederationUsers(fedID, opts)
+	if err != nil {
+		t.Fatalf("cannot Get Federation user with Limit: %v - alerts: %+v", err, fedUserWithLimit.Alerts)
+	}
+	if !reflect.DeepEqual(fedUser[:1], fedUserWithLimit.Response) {
+		t.Error("expected GET Federation user with limit = 1 to return first result")
+	}
+
+	opts.QueryParameters.Set("offset", "1")
+	fedUserWithOffset, _, err := TOSession.GetFederationUsers(fedID, opts)
+	if err != nil {
+		t.Fatalf("cannot Get Federation user with Limit and Offset: %v - alerts: %+v", err, fedUserWithOffset.Alerts)
+	}
+	if !reflect.DeepEqual(fedUser[1:2], fedUserWithOffset.Response) {
+		t.Error("expected GET Federation user with limit = 1, offset = 1 to return second result")
+	}
+
+	opts.QueryParameters.Del("offset")
+	opts.QueryParameters.Set("page", "2")
+	fedUserWithPage, _, err := TOSession.GetFederationUsers(fedID, opts)
+	if err != nil {
+		t.Fatalf("cannot Get Federation user with Limit and Page: %v - alerts: %+v", err, fedUserWithPage.Alerts)
+	}
+	if !reflect.DeepEqual(fedUser[1:2], fedUserWithPage.Response) {
+		t.Error("expected GET Federation user with limit = 1, page = 2 to return second result")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, reqInf, err := TOSession.GetFederationUsers(fedID, opts)
+	if err == nil {
+		t.Error("expected GET Federation user to return an error when limit is not bigger than -1")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, reqInf, err = TOSession.GetFederationUsers(fedID, opts)
+	if err == nil {
+		t.Error("expected GET Federation user to return an error when offset is not a positive integer")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, reqInf, err = TOSession.GetFederationUsers(fedID, opts)
+	if err == nil {
+		t.Error("expected GET Federation user to return an error when page is not a positive integer")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
 	}
 }
