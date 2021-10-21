@@ -295,8 +295,9 @@ INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHE
 INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'TYPE:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'USER:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'SERVER-CHECK:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'SERVER-CHECK:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'STEERING:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'LOG:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'STAT:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {

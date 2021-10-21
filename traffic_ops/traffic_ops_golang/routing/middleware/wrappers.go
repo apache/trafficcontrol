@@ -28,6 +28,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -88,9 +90,29 @@ type AuthBase struct {
 	Override Middleware
 }
 
+func getVersionFromURL(url *url.URL) (int, error) {
+	var version int
+	var err error
+	if url == nil {
+		return version, errors.New("no path supplied to get version from")
+	}
+	res := strings.Split(url.Path, "/")
+	if len(res) > 2 {
+		versionList := strings.Split(res[2], ".")
+		if len(versionList) > 1 {
+			version, err = strconv.Atoi(versionList[0])
+		} else {
+			return version, errors.New("couldn't get major version from request path")
+		}
+	} else {
+		return version, errors.New("couldn't get version from request path")
+	}
+	return version, err
+}
+
 // GetWrapper returns a Middleware which performs authentication of the current user at the given privilege level.
 // The returned Middleware also adds the auth.CurrentUser object to the request context, which may be retrieved by a handler via api.NewInfo or auth.GetCurrentUser.
-func (a AuthBase) GetWrapper(privLevelRequired int, version *api.Version) Middleware {
+func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 	if a.Override != nil {
 		return a.Override
 	}
@@ -107,17 +129,20 @@ func (a AuthBase) GetWrapper(privLevelRequired int, version *api.Version) Middle
 				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("getting configuration from request context: %w", err))
 				return
 			}
-			if version != nil {
-				if version.Major < 4 {
-					if user.PrivLevel < privLevelRequired {
-						api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
-						return
-					}
-				} else {
-					if !cfg.RoleBasedPermissions && user.PrivLevel < privLevelRequired {
-						api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
-						return
-					}
+			v, err := getVersionFromURL(r.URL)
+			if err != nil {
+				api.HandleErr(w, r, nil, http.StatusBadRequest, err, nil)
+				return
+			}
+			if v < 4 {
+				if user.PrivLevel < privLevelRequired {
+					api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
+					return
+				}
+			} else {
+				if !cfg.RoleBasedPermissions && user.PrivLevel < privLevelRequired {
+					api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
+					return
 				}
 			}
 			api.AddUserToReq(r, user)

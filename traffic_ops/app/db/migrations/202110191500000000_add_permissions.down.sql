@@ -150,8 +150,9 @@ DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='read-
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='read-only') AND cap_name='TYPE:READ';
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='read-only') AND cap_name='USER:READ';
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='read-only') AND cap_name='SERVER-CHECK:READ';
-DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='read-only') AND cap_name='SERVER-CHECK:READ';
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='read-only') AND cap_name='STEERING:READ';
+DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='read-only') AND cap_name='LOG:READ';
+DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name='read-only') AND cap_name='STAT:READ';
 
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name = 'federation')AND cap_name='FEDERATION:READ';
 DELETE FROM role_capability WHERE role_id=(SELECT id FROM role WHERE name = 'federation')AND cap_name='FEDERATION:CREATE';

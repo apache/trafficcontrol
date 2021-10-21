@@ -208,7 +208,7 @@ func TestWrapAuth(t *testing.T) {
 		fmt.Fprintf(w, "%s", respBts)
 	}
 
-	authWrapper := authBase.GetWrapper(15, nil)
+	authWrapper := authBase.GetWrapper(15)
 
 	f := authWrapper(handler)
 
@@ -270,7 +270,7 @@ func TestRequiredPermissionsMiddleware(t *testing.T) {
 		w.Write([]byte("success\n"))
 	}
 
-	authWrapper := authBase.GetWrapper(0, nil)
+	authWrapper := authBase.GetWrapper(0)
 
 	f := authWrapper(RequiredPermissionsMiddleware([]string{"foo"})(handler))
 
@@ -351,7 +351,7 @@ func TestConfigRoleBasedPermissionsHandling(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("successs\n"))
 	}
-	f := AuthBase{secret, nil}.GetWrapper(5, &api.Version{Major: 4})(RequiredPermissionsMiddleware([]string{"foo"})(handler))
+	f := AuthBase{secret, nil}.GetWrapper(5)(RequiredPermissionsMiddleware([]string{"foo"})(handler))
 
 	w, r := newRWPair(t, cookie)
 	r = r.WithContext(ctx)
