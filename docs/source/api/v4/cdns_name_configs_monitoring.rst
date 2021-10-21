@@ -53,7 +53,8 @@ Response Structure
 
 :config: A collection of parameters used to configure the monitoring behaviour of Traffic Monitor
 
-	:health.polling.interval:     An interval in milliseconds on which to poll for health statistics
+	:health.polling.interval:     An interval in milliseconds on which to poll for cache statistics
+	:heartbeat.polling.interval:  An interval in milliseconds on which to poll for health statistics. If missing, defaults to ``health.polling.interval``.
 	:tm.polling.interval:         The interval at which to poll for configuration updates
 
 :deliveryServices: An array of objects representing each :term:`Delivery Service` provided by this CDN
