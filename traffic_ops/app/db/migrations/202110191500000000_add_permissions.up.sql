@@ -15,14 +15,6 @@
  * the License.
  */
 
--- add built-in roles
-INSERT INTO role (name, description, priv_level) VALUES ('operations', 'Has all reads and most write capabilities', 20) ON CONFLICT (name) DO NOTHING;
-INSERT INTO role (name, description, priv_level) VALUES ('read-only', 'Has access to all read capabilities', 10) ON CONFLICT (name) DO NOTHING;
-INSERT INTO role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
-INSERT INTO role (name, description, priv_level) VALUES ('portal','Portal User', 2) ON CONFLICT DO NOTHING;
-INSERT INTO role (name, description, priv_level) VALUES ('steering','Steering User', 15) ON CONFLICT DO NOTHING;
-INSERT INTO role (name, description, priv_level) VALUES ('federation','Role for Secondary CZF', 15) ON CONFLICT DO NOTHING;
-
 -- add permissions to roles
 INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
 ('ASN:CREATE'),
@@ -92,7 +84,7 @@ INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
 ('USER:UPDATE'),
 ('SERVER-CHECK:CREATE'),
 ('SERVER-CHECK:DELETE')) AS perms(perm)
-WHERE priv_level >= 20;
+WHERE priv_level >= 20 ON CONFLICT DO NOTHING;
 
 INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
 ('FEDERATION:CREATE'),
@@ -110,7 +102,7 @@ INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
 ('STEERING:CREATE'),
 ('STEERING:UPDATE'),
 ('STEERING:DELETE')) AS perms(perm)
-WHERE priv_level >= 15;
+WHERE priv_level >= 15 ON CONFLICT DO NOTHING;
 
 INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
 ('ASN:READ'),
@@ -151,9 +143,9 @@ INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
 ('TYPE:READ'),
 ('USER:READ'),
 ('STAT:CREATE')) AS perms(perm)
-WHERE priv_level >= 10;
+WHERE priv_level >= 10 ON CONFLICT DO NOTHING;
 
-INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:CREATE') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension');
-INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:DELETE') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension');
-INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:READ') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension');
-INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER:READ') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension');
+INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:CREATE') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:DELETE') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:READ') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER:READ') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension') ON CONFLICT DO NOTHING;
