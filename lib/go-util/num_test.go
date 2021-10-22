@@ -17,12 +17,14 @@ package util
 // When adding symbols, document the RFC and section they correspond to.
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"testing"
 )
 
-func TestJSONNameOrIDStr(t *testing.T) {
+func TestJSONNameOrIDStr_UnmarshalJSON(t *testing.T) {
 	type testCase struct {
 		input     string
 		expected  JSONNameOrIDStr
@@ -83,15 +85,170 @@ func TestJSONNameOrIDStr(t *testing.T) {
 	}
 }
 
+func TestJSONNameOrIDStr_MarshalJSON(t *testing.T) {
+	type marshalTestStruct = struct {
+		Val JSONNameOrIDStr `json:"val"`
+	}
+	type testCase = struct {
+		input          marshalTestStruct
+		expectedOutput string
+		expectErr      bool
+	}
+
+	testName := "test"
+	testID := 7
+
+	testCases := []testCase{
+		{
+			input: marshalTestStruct{
+				Val: JSONNameOrIDStr{
+					Name: &testName,
+				},
+			},
+			expectedOutput: `{"val":"` + testName + `"}`,
+		},
+		{
+			input: marshalTestStruct{
+				Val: JSONNameOrIDStr{
+					ID: &testID,
+				},
+			},
+			expectedOutput: fmt.Sprintf(`{"val":%d}`, testID),
+		},
+		{
+			input: marshalTestStruct{
+				Val: JSONNameOrIDStr{
+					Name: &testName,
+					ID:   &testID,
+				},
+			},
+			expectedOutput: fmt.Sprintf(`{"val":%d}`, testID),
+		},
+		{
+			input: marshalTestStruct{
+				Val: JSONNameOrIDStr{},
+			},
+			expectedOutput: ``,
+			expectErr:      true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		bts, err := json.Marshal(testCase.input)
+		if testCase.expectErr {
+			if err == nil {
+				t.Errorf("Expected marshaling %+v to produce an error", testCase.input)
+			}
+		} else if err != nil {
+			t.Errorf("Unexpected error marshalling %+v: %v", testCase.input, err)
+		} else if string(bts) != testCase.expectedOutput {
+			t.Errorf("Incorrect marshal output, expected: '%s', got: '%s'", testCase.expectedOutput, string(bts))
+		}
+	}
+}
+
 func TestToNumeric(t *testing.T) {
-	var number interface{} = "34.59354233"
-	val, success := ToNumeric(number)
+	number := "34.59354233"
+	val, success := ToNumeric("34.59354233")
 	if !success {
-		t.Errorf("expected ToNumeric to succeed for string %v", number)
+		t.Errorf("expected ToNumeric to succeed for string %s", number)
 	}
 	if val != 34.59354233 {
-		t.Errorf("expected ToNumeric to return %v, got %v", number, val)
+		t.Errorf("expected ToNumeric to return %s, got %f", number, val)
 	}
+	_, success = ToNumeric("Not a number")
+	if success {
+		t.Error("expected ToNumeric to fail to convert a non-numeric string")
+	}
+
+	validInputs := []interface{}{
+		uint8(12),
+		uint16(12),
+		uint32(12),
+		uint64(12),
+		int8(12),
+		int16(12),
+		int32(12),
+		int64(12),
+		float32(12),
+		float64(12),
+		int(12),
+		uint(12),
+	}
+	for _, input := range validInputs {
+		val, success = ToNumeric(input)
+		if !success {
+			t.Errorf("Expected to be able to convert %T to a float64", input)
+		} else if val != float64(val) {
+			t.Errorf("Incorrect conversion - went from %v (%T) to %v (float64)", input, input, val)
+		}
+	}
+
+	_, success = ToNumeric(1 + 2i)
+	if success {
+		t.Error("Expected to be unable to convert complex numbers to a numeric")
+	}
+}
+
+func TestJSONIntStr_UnmarshalJSON(t *testing.T) {
+	type unmarshalTestStruct = struct {
+		Test JSONIntStr `json:"test"`
+	}
+
+	data := []byte(`{"test": null}`)
+	var uts unmarshalTestStruct
+	if err := json.Unmarshal(data, &uts); err == nil {
+		t.Error("Expected an error unmarshalling 'null' as an int or string int")
+	}
+
+	data = []byte(`{"test": []}`)
+	if err := json.Unmarshal(data, &uts); err == nil {
+		t.Error("Expected an error unmarshalling an array as an int or string int")
+	}
+
+	data = []byte(`{"test": ""}`)
+	if err := json.Unmarshal(data, &uts); err == nil {
+		t.Error("Expected an error unmarshalling an empty string as an int or string int")
+	}
+
+	data = []byte(`{"test": true}`)
+	if err := json.Unmarshal(data, &uts); err == nil {
+		t.Error("Expected an error unmarshalling a boolean as an int or string int")
+	}
+
+	data = []byte(`{"test": 12.1}`)
+	if err := json.Unmarshal(data, &uts); err == nil {
+		t.Error("Expected an error unmarshalling a floating-point number as an int or string int")
+	}
+
+	data = []byte(`{"test": "12.1"}`)
+	if err := json.Unmarshal(data, &uts); err == nil {
+		t.Error("Expected an error unmarshalling a string containing a floating-point number as an int or string int")
+	}
+
+	data = []byte(`{"test": 12}`)
+	if err := json.Unmarshal(data, &uts); err != nil {
+		t.Errorf("Unexpected error unmarshalling an integer as an int or string int: %v", err)
+	}
+
+	data = []byte(`{"test": "12"}`)
+	if err := json.Unmarshal(data, &uts); err != nil {
+		t.Errorf("Unexpected error unmarshalling a string containing an integer as an int or string int: %v", err)
+	}
+}
+
+func ExampleJSONIntStr_ToInt64() {
+	var a JSONIntStr = 5
+	fmt.Printf("%d (%T)\n", a, a)
+	fmt.Printf("%d (%T)\n", a.ToInt64(), a.ToInt64())
+	// Output: 5 (util.JSONIntStr)
+	// 5 (int64)
+}
+
+func ExampleJSONIntStr_String() {
+	var a JSONIntStr = 5
+	fmt.Println(a)
+	// Output: 5
 }
 
 func TestBytesLenSplit(t *testing.T) {
@@ -250,4 +407,23 @@ func TestBytesLenSplit(t *testing.T) {
 			t.Errorf("BytesLenSplit expected: %+v actual: %+v\n", expected, actual)
 		}
 	}
+}
+
+func TestHashInts(t *testing.T) {
+	ints := []int{1, 3, 2}
+	hash := HashInts(ints, false)
+	hashAgain := HashInts(ints, false)
+	if !bytes.Equal(hash, hashAgain) {
+		t.Errorf("Expected hashing the same things to yield the same hash, got '%v' first and '%v' the second time", hash, hashAgain)
+	}
+	sortedHash := HashInts(ints, true)
+	if bytes.Equal(hash, sortedHash) {
+		t.Error("Expected hashing with sort first to yield a different hash than without the sort")
+	}
+}
+
+func ExampleIntSliceToMap() {
+	ints := []int{1, 2, 3}
+	fmt.Printf("%+v", IntSliceToMap(ints))
+	// Output: map[1:{} 2:{} 3:{}]
 }

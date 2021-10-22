@@ -19,57 +19,45 @@ package util
  * under the License.
  */
 
-import (
-	"errors"
-	"fmt"
-)
+import "fmt"
 
-func ExampleJoinErrsStr() {
-	errs := []error{
-		errors.New("test"),
-		errors.New("quest"),
-	}
-
-	fmt.Println(JoinErrsStr(errs))
-	fmt.Println(JoinErrsStr(nil))
-	// Output: test, quest
-	//
-
+func ExampleStrInArray() {
+	arr := []string{"test", "quest"}
+	fmt.Println(StrInArray(arr, "test"))
+	fmt.Println(StrInArray(arr, "foo"))
+	// Output: true
+	// false
 }
 
-func ExampleErrsToStrs() {
-	errs := []error{
-		errors.New("test"),
-		errors.New("quest"),
+func ExampleContainsStr() {
+	arr := []string{"test", "quest"}
+	fmt.Println(ContainsStr(arr, "test"))
+	fmt.Println(ContainsStr(arr, "foo"))
+	// Output: true
+	// false
+}
+
+func ExampleStripAllWhitespace() {
+	input := "\n\t \vtest\t\v\r\n quest\v\n \t"
+	fmt.Println(StripAllWhitespace(input))
+	// Output: testquest
+}
+
+func ExampleRemoveStrDuplicates() {
+	strs := []string{
+		"test",
+		"quest",
+		"foo",
+		"test",
+		"foo",
+		"bar",
 	}
-	strs := ErrsToStrs(errs)
-	fmt.Println(strs[0])
-	fmt.Println(strs[1])
+	unDuped, _ := RemoveStrDuplicates(strs, nil)
+	for _, str := range unDuped {
+		fmt.Println(str)
+	}
 	// Output: test
 	// quest
-}
-
-func ExampleJoinErrsSep() {
-	errs := []error{
-		errors.New("test"),
-		errors.New("quest"),
-	}
-
-	fmt.Println(JoinErrsSep(errs, "\n"))
-
-	// Output: test
-	// quest
-}
-
-func ExampleCamelToSnakeCase() {
-	camel := "camelCase"
-	fmt.Println(CamelToSnakeCase(camel))
-	camel = "PascalCase"
-	fmt.Println(CamelToSnakeCase(camel))
-	camel = "IPIsAnInitialismForInternetProtocol"
-	fmt.Println(CamelToSnakeCase(camel))
-
-	// Output: camel_case
-	// pascal_case
-	// ipis_an_initialism_for_internet_protocol
+	// foo
+	// bar
 }
