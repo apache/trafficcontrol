@@ -15,8 +15,7 @@
  * the License.
  */
 
--- delete from role_capability
-
+-- remove from role_capability table
 DELETE FROM role_capability WHERE cap_name='ASN:CREATE';
 DELETE FROM role_capability WHERE cap_name='ASN:DELETE';
 DELETE FROM role_capability WHERE cap_name='ASN:UPDATE';
