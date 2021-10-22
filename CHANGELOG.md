@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6259](https://github.com/apache/trafficcontrol/issues/6259) - Traffic Portal No Longer Allows Spaces in Server Object "Router Port Name"
 - [#6175](https://github.com/apache/trafficcontrol/issues/6175) - POST request to /api/4.0/phys_locations accepts mismatch values for regionName.
 - [#6283](https://github.com/apache/trafficcontrol/issues/6283) - The Traffic Ops Postinstall script will work in CentOS 7, even if Python 3 is installed
+- [#5373](https://github.com/apache/trafficcontrol/issues/5373) - Traffic Monitor logs not consistent
 
 ### Changed
 - Updated `t3c` to request less unnecessary deliveryservice-server assignment and invalidation jobs data via new query params supported by Traffic Ops
