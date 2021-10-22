@@ -11,22 +11,33 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+@import 'src/theme';
+main {
+	width: 80%;
+	margin: 1em auto 0;
+}
 
-import { NgModule } from "@angular/core";
-import { ServerModule } from "@angular/platform-server";
+hr {
+	margin: 5vh 0;
+}
 
-import { AppComponent } from "./app.component";
-import { AppModule } from "./app.module";
+form {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	justify-items: center;
+	margin-bottom: 16px;
 
-/**
- * AppServerModule is the Angular Module that contains the whole server part of
- * the app.
- */
-@NgModule({
-	bootstrap: [AppComponent],
-	imports: [
-		AppModule,
-		ServerModule,
-	],
-})
-export class AppServerModule {}
+	button {
+		margin-top: 15px;
+		grid-column: 1 / span 2;
+	}
+}
+
+#invalidate {
+	right: 5px;
+	position: fixed;
+	bottom: 5px;
+	img {
+		height: 2em;
+	}
+}

@@ -11,40 +11,35 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
 import { HttpClientModule } from "@angular/common/http";
-import { TestBed, waitForAsync } from "@angular/core/testing";
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
-import { MatSnackBarModule } from "@angular/material/snack-bar";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { AppComponent } from "./app.component";
+import { SSHCellRendererComponent } from "./ssh-cell-renderer.component";
 
-describe("AppComponent", () => {
+describe("SshCellRendererComponent", () => {
+	let component: SSHCellRendererComponent;
+	let fixture: ComponentFixture<SSHCellRendererComponent>;
+
 	beforeEach(waitForAsync(() => {
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "login", "logout"]);
+		mockCurrentUserService.updateCurrentUser.and.returnValue(new Promise(r => r(false)));
 		TestBed.configureTestingModule({
-			declarations: [
-				AppComponent
-			],
-			imports: [
-				HttpClientModule,
-				RouterTestingModule,
-				MatSnackBarModule
-			],
-			providers: [ { provide: CurrentUserService, useValue: mockCurrentUserService }]
-		}).compileComponents();
+			declarations: [ SSHCellRendererComponent ],
+			imports: [HttpClientModule, RouterTestingModule],
+			providers: [ { provide: CurrentUserService, useValue: mockCurrentUserService} ]
+		})
+			.compileComponents();
 	}));
 
-	it("should create the app", () => {
-		const fixture = TestBed.createComponent(AppComponent);
-		const app = fixture.componentInstance;
-		expect(app).toBeTruthy();
+	beforeEach(() => {
+		fixture = TestBed.createComponent(SSHCellRendererComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
 	});
 
-	it("should have as title 'Traffic Portal'", () => {
-		const fixture = TestBed.createComponent(AppComponent);
-		const app = fixture.componentInstance;
-		expect(app.title).toEqual("Traffic Portal");
+	it("should create", () => {
+		expect(component).toBeTruthy();
 	});
 });

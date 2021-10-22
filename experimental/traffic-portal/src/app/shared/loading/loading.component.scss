@@ -11,22 +11,30 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+@import 'src/theme';
+:host {
+	flex: auto;
+	display: flex;
+	flex-direction: column;
+	cursor: wait;
+}
+#container {
+	text-align: center;
+	flex: auto;
+	display: flex;
+	flex-direction: column;
 
-import { NgModule } from "@angular/core";
-import { ServerModule } from "@angular/platform-server";
+	#svg-container {
+		width: 20%;
+		max-width: 10em;
+		min-width: 2em;
+		margin: auto;
+		svg {
+			margin-bottom: 1.2em;
+		}
+	}
+}
 
-import { AppComponent } from "./app.component";
-import { AppModule } from "./app.module";
-
-/**
- * AppServerModule is the Angular Module that contains the whole server part of
- * the app.
- */
-@NgModule({
-	bootstrap: [AppComponent],
-	imports: [
-		AppModule,
-		ServerModule,
-	],
-})
-export class AppServerModule {}
+#spacer {
+	flex: auto;
+}

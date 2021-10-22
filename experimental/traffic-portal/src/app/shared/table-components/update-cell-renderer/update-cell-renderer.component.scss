@@ -12,21 +12,12 @@
 * limitations under the License.
 */
 
-import { NgModule } from "@angular/core";
-import { ServerModule } from "@angular/platform-server";
+@import "src/theme";
 
-import { AppComponent } from "./app.component";
-import { AppModule } from "./app.module";
+fa-icon {
+	color: darkgray;
 
-/**
- * AppServerModule is the Angular Module that contains the whole server part of
- * the app.
- */
-@NgModule({
-	bootstrap: [AppComponent],
-	imports: [
-		AppModule,
-		ServerModule,
-	],
-})
-export class AppServerModule {}
+	&.cleared {
+		color: $success;
+	}
+}

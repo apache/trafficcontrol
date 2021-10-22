@@ -1,0 +1,64 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<mat-card [ngClass]="{'inactive': !deliveryService.active, 'open': open, 'first': first, 'last': last}">
+	<mat-card-title-group (click)="toggle()">
+		<mat-card-title>{{deliveryService.displayName}}{{deliveryService.active ? '' : ' (inactive)'}}
+			<a href="{{deliveryService.infoUrl}}" *ngIf="deliveryService.infoUrl" class="color-accent-inverted info" rel="noopener" target="_blank" title="More Information"><fa-icon [icon]="infoIcon"></fa-icon></a>
+		</mat-card-title>
+		<mat-card-subtitle>{{deliveryService.type ? deliveryService.type : ''}}</mat-card-subtitle>
+	</mat-card-title-group>
+	<mat-card-content class="card-content" *ngIf="open" [@enterAnimation]>
+		<div>
+			<span>Key:&nbsp;{{deliveryService.xmlId}}&nbsp;({{deliveryService.id}})</span><br/>
+			<span *ngIf="deliveryService.protocol">Protocol:&nbsp;{{protocolString}}</span>
+			<mat-divider></mat-divider>
+			<p>{{deliveryService.longDesc ? deliveryService.longDesc : 'NO DESCRIPTION'}}</p>
+			<mat-divider *ngIf="deliveryService.longDesc1"></mat-divider>
+			<p *ngIf="deliveryService.longDesc1">{{deliveryService.longDesc1}}</p>
+			<mat-divider *ngIf="deliveryService.longDesc2"></mat-divider>
+			<p *ngIf="deliveryService.longDesc2">{{deliveryService.longDesc2}}</p>
+			<mat-divider></mat-divider>
+			<h3 *ngIf="deliveryService.exampleURLs">URLs</h3>
+			<mat-nav-list *ngIf="deliveryService.exampleURLs">
+				<a mat-list-item *ngFor="let url of deliveryService.exampleURLs" href="{{url}}">{{url}}</a>
+			</mat-nav-list>
+			<span class="warning" *ngIf="!deliveryService.exampleURLs || deliveryService.exampleURLs.length < 1">No URLs configured!</span>
+		</div>
+		<div>
+			<div class="canvas-container" [ngClass]="{'graph-loading': !graphDataLoaded}">
+				<canvas *ngIf="open" linechart chartTitle="Today's Bandwidth" [chartDataSets]="chartData" chartYAxisLabel="Bandwidth (Kilobytes per second)" [chartDisplayLegend]="true" chartType="time">
+					Your browser does not support canvases or Javascript. Normally, this would be a graph of the bandwidth data so far today.
+				</canvas>
+				<div class="loading" *ngIf="!graphDataLoaded"><tp-loading></tp-loading></div>
+			</div>
+			<fieldset>
+				<legend>Capacity</legend>
+				<div class="capacity">
+					<label for="{{deliveryService.id}}-utilized">Utilized:</label><meter id="{{deliveryService.id}}-utilized" max="100" low="25" high="75" optimum="5" value="{{utilized}}" title="{{utilized}} percent">{{utilized}}%</meter>
+					<label for="{{deliveryService.id}}-available">Available:</label><meter id="{{deliveryService.id}}-available" max="100" low="25" high="75" optimum="95" value="{{available}}" title="{{available}} percent">{{available}}%</meter>
+					<label for="{{deliveryService.id}}-maintenance">Under Mainenance:</label><meter id="{{deliveryService.id}}-maintenance" max="100" low="10" high="20" optimum="0" value="{{maintenance}}" title="{{maintenance}} percent">{{maintenance}}%</meter>
+				</div>
+			</fieldset>
+			<fieldset class="health">
+				<legend>Cache Group Health</legend>
+				<meter low="0.5" high="0.8" optimum="1" value="{{healthy}}" title="{{healthy*100}} percent">{{healthy*100}}%</meter>
+			</fieldset>
+		</div>
+	</mat-card-content>
+	<mat-card-actions *ngIf="open">
+		<a mat-raised-button color="accent" class="view-details" routerLink="/core/deliveryservice/{{deliveryService.id}}" title="View Details" aria-label="View Details">
+			View Details
+		</a>
+	</mat-card-actions>
+</mat-card>
