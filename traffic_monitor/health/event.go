@@ -29,6 +29,10 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
+const (
+	DeliveryServiceEventType = "DELIVERYSERVICE"
+)
+
 type Time time.Time
 
 func (t Time) MarshalJSON() ([]byte, error) {
