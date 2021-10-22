@@ -132,7 +132,7 @@ func UpdateTestDeliveryServiceRequestsWithLongDescFields(t *testing.T) {
 	}
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func UpdateTestDeliveryServiceRequestsWithHeaders(t *testing.T, header http.Header) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
@@ -186,7 +186,7 @@ func UpdateTestDeliveryServiceRequestsWithHeaders(t *testing.T, header http.Head
 	}
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func GetTestDeliveryServiceRequestsIMSAfterChange(t *testing.T, header http.Header) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
@@ -228,7 +228,7 @@ func GetTestDeliveryServiceRequestsIMSAfterChange(t *testing.T, header http.Head
 	}
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func CreateTestDeliveryServiceRequests(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
@@ -244,7 +244,7 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func TestDeliveryServiceRequestRequired(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
@@ -261,7 +261,7 @@ func TestDeliveryServiceRequestRequired(t *testing.T) {
 	})
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func TestDeliveryServiceRequestRules(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
@@ -295,7 +295,7 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 	})
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrBadTenant+1 {
@@ -354,7 +354,7 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 	})
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func TestDeliveryServiceRequestBad(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrDraft+1 {
@@ -373,7 +373,7 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 	})
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrDraft+1 {
@@ -500,7 +500,7 @@ func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequ
 	return resp
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func GetTestDeliveryServiceRequestsIMS(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
@@ -535,7 +535,7 @@ func GetTestDeliveryServiceRequestsIMS(t *testing.T) {
 	}
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func GetTestDeliveryServiceRequests(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
@@ -562,7 +562,7 @@ func GetTestDeliveryServiceRequests(t *testing.T) {
 	}
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func UpdateTestDeliveryServiceRequests(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
@@ -637,7 +637,7 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 	}
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func DeleteTestDeliveryServiceRequests(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
