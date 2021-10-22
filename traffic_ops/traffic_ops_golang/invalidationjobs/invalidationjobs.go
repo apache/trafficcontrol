@@ -715,7 +715,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New(string(append(resp, '\n'))), fmt.Errorf("error validating job: %v", err))
+		w.WriteHeader(http.StatusBadRequest)
+		api.WriteAndLogErr(w, r, append(resp, '\n'))
 		return
 	}
 
