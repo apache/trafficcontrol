@@ -56,7 +56,7 @@ export class CurrentUserService {
 	/**
 	 * Gets the current user if currentuser is not already set
 	 *
-	 * @returns Promise<boolean> a value indicating the success of the update
+	 * @returns A promise containing the value indicating the success of the update
 	 */
 	public async fetchCurrentUser(): Promise<boolean> {
 		if(this.currentUser !== null){
@@ -66,12 +66,12 @@ export class CurrentUserService {
 	}
 
 	/**
-	 * Updates the current user, and provides a way for callers to check if the update was succesful.
+	 * Updates the current user, and provides a way for callers to check if the update was successful.
 	 *
-	 * @returns Promise<boolean> a value indicating the success of the update
+	 * @returns A boolean value indicating the success of the update
 	 */
 	public async updateCurrentUser(): Promise<boolean> {
-		if (this.updatingUserPromise == null) {
+		if (this.updatingUserPromise === null) {
 			this.updatingUserPromise = this.api.getCurrentUser().then(
 				async u => {
 					if (u.role === undefined) {
@@ -95,7 +95,7 @@ export class CurrentUserService {
 	 * Saves the user
 	 *
 	 * @param user User to e saved
-	 * @returns Promise<boolean> promise returning the status of the update.
+	 * @returns A promise returning the status of the update.
 	 */
 	public async saveCurrentUser(user: User): Promise<boolean> {
 		return this.api.updateCurrentUser(user);

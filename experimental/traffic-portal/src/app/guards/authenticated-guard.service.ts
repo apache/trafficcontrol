@@ -26,18 +26,18 @@ export class AuthenticatedGuard implements CanActivate, CanLoad {
 	/**
 	 * canActivate determines whether or not a user can activate an already loaded route.
 	 *
-	 * @returns boolean
+	 * @returns Whether or not the route can be activated.
 	 */
 	public async canActivate(): Promise<boolean>  {
-		return this.auth.fetchCurrentUser().then(res => res);
+		return this.auth.fetchCurrentUser();
 	}
 
 	/**
 	 * canLoad determines whether or not the current user can load/request the given route.
 	 *
-	 * @returns boolean
+	 * @returns Whether or not the route can be loaded.
 	 */
 	public async canLoad(): Promise<boolean> {
-		return this.auth.fetchCurrentUser().then(res => res);
+		return this.auth.fetchCurrentUser();
 	}
 }
