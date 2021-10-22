@@ -97,8 +97,7 @@ if [[ "$old_db_version" -eq 0 ]]; then
     ./db/admin --env=production reset || { echo "DB reset failed!"; exit 1; }
 fi
 
-if ! ./db/admin -env=production load_schema ||
-  ! ./db/admin -env=production load_schema; then
+if ! ./db/admin -env=production load_schema; then
   echo 'Could not re-run create_tables.sql!'
   exit 1
 fi;

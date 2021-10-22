@@ -15,7 +15,7 @@
  * the License.
  */
 
--- add permissions to roles in order of decreasing priv level
+-- add permissions to roles
 INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
 ('ASN:CREATE'),
 ('ASN:DELETE'),
