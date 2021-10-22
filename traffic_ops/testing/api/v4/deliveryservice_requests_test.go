@@ -50,7 +50,6 @@ func resetDS(ds *tc.DeliveryServiceV4) {
 		return
 	}
 	ds.CDNID = nil
-	ds.CDNName = nil
 	ds.ID = nil
 	ds.ProfileID = nil
 	ds.TenantID = nil
