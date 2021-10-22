@@ -49,9 +49,6 @@ type CurrentUser struct {
 // Can returns whether or not the user has the specified Permission, i.e.
 // whether or not they "can" do something.
 func (cu CurrentUser) Can(permission string) bool {
-	if cu.RoleName == "admin" {
-		return true
-	}
 	_, ok := cu.perms[permission]
 	return ok
 }
@@ -60,6 +57,9 @@ func (cu CurrentUser) Can(permission string) bool {
 // not have.
 func (cu CurrentUser) MissingPermissions(permissions ...string) []string {
 	var ret []string
+	if cu.RoleName == "admin" {
+		return ret
+	}
 	for _, perm := range permissions {
 		if !cu.Can(perm) {
 			ret = append(ret, perm)

@@ -158,147 +158,139 @@ INSERT INTO api_capability (http_method, route, capability) VALUES ('GET', '/cac
 
 func SetupRoleCapabilities(db *sql.DB) error {
 	sqlStmt := `
-INSERT INTO role_capability (role_id, cap_name) VALUES (4,'all-write') ON CONFLICT DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES (4,'all-read') ON CONFLICT DO NOTHING;
--- add permissions to roles
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'ACME:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'ASN:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'ASN:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'ASN:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'ASN:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'ASYNC-STATUS:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'CACHE-GROUP:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'CACHE-GROUP:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'CACHE-GROUP:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'CACHE-GROUP:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'CDN-LOCK:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'CDN-LOCK:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'CDN-SNAPSHOT:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'CDN-SNAPSHOT:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'CDN:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'CDN:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'CDN:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'CDN:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'COORDINATE:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'COORDINATE:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'COORDINATE:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'COORDINATE:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DELIVERY-SERVICE-SAFE:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DELIVERY-SERVICE:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DELIVERY-SERVICE:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DELIVERY-SERVICE:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DELIVERY-SERVICE:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DIVISION:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DIVISION:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DIVISION:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DIVISION:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DNS-SEC:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DS-REQUEST:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DS-REQUEST:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DS-SECURITY-KEY:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DS-SECURITY-KEY:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DS-SECURITY-KEY:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'DS-SECURITY-KEY:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'ISO:GENERATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'ISO:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'ORIGIN:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'ORIGIN:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'ORIGIN:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'ORIGIN:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'PARAMETER:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'PARAMETER:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'PARAMETER:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'PARAMETER:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'PHYSICAL-LOCATION:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'PHYSICAL-LOCATION:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'PHYSICAL-LOCATION:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'PHYSICAL-LOCATION:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'PROFILE:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'PROFILE:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'PROFILE:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'PROFILE:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'REGION:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'REGION:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'REGION:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'REGION:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVER-CAPABILITY:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVER-CAPABILITY:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVER-CAPABILITY:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVER-CAPABILITY:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVER:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVER:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVER:QUEUE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVER:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVER:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVICE-CATEGORY:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVICE-CATEGORY:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVICE-CATEGORY:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVICE-CATEGORY:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'STATIC-DN:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'STATIC-DN:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'STATIC-DN:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'STATIC-DN:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'STATUS:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'STATUS:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'STATUS:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'STATUS:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'TENANT:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'TENANT:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'TENANT:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'TENANT:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'TOPOLOGY:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'TOPOLOGY:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'TOPOLOGY:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'TOPOLOGY:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'TYPE:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'TYPE:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'TYPE:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'TYPE:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'USER:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'USER:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'USER:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVER-CHECK:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVER-CHECK:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVER-CHECK:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='operations'), 'SERVER-CHECK:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='steering'), 'DELIVERY-SERVICE:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='steering'), 'CDN:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='steering'), 'TYPE:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='steering'), 'STEERING:CREATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='steering'), 'STEERING:DELETE') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='steering'), 'STEERING:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='steering'), 'STEERING:UPDATE') ON CONFLICT (role_id, cap_name) DO NOTHING;
+INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
+('ASN:CREATE'),
+('ASN:DELETE'),
+('ASN:UPDATE'),
+('CACHE-GROUP:CREATE'),
+('CACHE-GROUP:DELETE'),
+('CACHE-GROUP:UPDATE'),
+('CDN-LOCK:CREATE'),
+('CDN-LOCK:DELETE'),
+('CDN-SNAPSHOT:CREATE'),
+('CDN:CREATE'),
+('CDN:DELETE'),
+('CDN:UPDATE'),
+('COORDINATE:CREATE'),
+('COORDINATE:UPDATE'),
+('COORDINATE:DELETE'),
+('DELIVERY-SERVICE-SAFE:UPDATE'),
+('DELIVERY-SERVICE:CREATE'),
+('DELIVERY-SERVICE:DELETE'),
+('DIVISION:CREATE'),
+('DIVISION:DELETE'),
+('DIVISION:UPDATE'),
+('DNS-SEC:UPDATE'),
+('ISO:GENERATE'),
+('ORIGIN:CREATE'),
+('ORIGIN:DELETE'),
+('ORIGIN:UPDATE'),
+('PARAMETER:CREATE'),
+('PARAMETER:DELETE'),
+('PARAMETER:UPDATE'),
+('PHYSICAL-LOCATION:CREATE'),
+('PHYSICAL-LOCATION:DELETE'),
+('PHYSICAL-LOCATION:UPDATE'),
+('PROFILE:CREATE'),
+('PROFILE:DELETE'),
+('PROFILE:UPDATE'),
+('REGION:CREATE'),
+('REGION:DELETE'),
+('REGION:UPDATE'),
+('SERVER-CAPABILITY:CREATE'),
+('SERVER-CAPABILITY:DELETE'),
+('SERVER-CAPABILITY:UPDATE'),
+('SERVER:CREATE'),
+('SERVER:DELETE'),
+('SERVER:QUEUE'),
+('SERVER:UPDATE'),
+('SERVICE-CATEGORY:CREATE'),
+('SERVICE-CATEGORY:DELETE'),
+('SERVICE-CATEGORY:UPDATE'),
+('STATIC-DN:CREATE'),
+('STATIC-DN:DELETE'),
+('STATIC-DN:UPDATE'),
+('STATUS:CREATE'),
+('STATUS:DELETE'),
+('STATUS:UPDATE'),
+('TENANT:CREATE'),
+('TENANT:DELETE'),
+('TENANT:UPDATE'),
+('TOPOLOGY:CREATE'),
+('TOPOLOGY:DELETE'),
+('TOPOLOGY:UPDATE'),
+('TYPE:CREATE'),
+('TYPE:DELETE'),
+('TYPE:UPDATE'),
+('USER:CREATE'),
+('USER:UPDATE'),
+('SERVER-CHECK:CREATE'),
+('SERVER-CHECK:DELETE')) AS perms(perm)
+WHERE priv_level >= 20;
 
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'ACME:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'ASN:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'ASYNC-STATUS:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'CACHE-GROUP:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'CDN-SNAPSHOT:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'CDN:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'COORDINATE:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'DELIVERY-SERVICE:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'DIVISION:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'DS-REQUEST:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'DS-SECURITY-KEY:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'ISO:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'ORIGIN:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'PARAMETER:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'PHYSICAL-LOCATION:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'PROFILE:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'REGION:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'SERVER-CAPABILITY:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'SERVER:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'SERVICE-CATEGORY:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'STATIC-DN:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'STATUS:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'TENANT:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'TOPOLOGY:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'TYPE:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'USER:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'SERVER-CHECK:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'STEERING:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'LOG:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name='read-only user'), 'STAT:READ') ON CONFLICT (role_id, cap_name) DO NOTHING;
+INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
+('FEDERATION:CREATE'),
+('FEDERATION:UPDATE'),
+('FEDERATION:DELETE'),
+('FEDERATION-RESOLVER:CREATE'),
+('FEDERATION-RESOLVER:DELETE'),
+('DELIVERY-SERVICE:UPDATE'),
+('JOB:CREATE'),
+('JOB:UPDATE'),
+('JOB:DELETE'),
+('DS-REQUEST:UPDATE'),
+('DS-REQUEST:CREATE'),
+('DS-REQUEST:DELETE'),
+('STEERING:CREATE'),
+('STEERING:UPDATE'),
+('STEERING:DELETE')) AS perms(perm)
+WHERE priv_level >= 15;
+
+INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
+('ASN:READ'),
+('ASYNC-STATUS:READ'),
+('CACHE-GROUP:READ'),
+('CAPABILITY:READ'),
+('CDN-SNAPSHOT:READ'),
+('CDN:READ'),
+('COORDINATE:READ'),
+('DELIVERY-SERVICE:READ'),
+('DIVISION:READ'),
+('DS-REQUEST:READ'),
+('DS-SECURITY-KEY:READ'),
+('FEDERATION:READ'),
+('FEDERATION-RESOLVER:READ'),
+('ISO:READ'),
+('JOB:READ'),
+('LOG:READ'),
+('MONITOR-CONFIG:READ'),
+('ORIGIN:READ'),
+('PARAMETER:READ'),
+('PHYSICAL-LOCATION:READ'),
+('PLUGIN-READ'),
+('PROFILE:READ'),
+('REGION:READ'),
+('ROLE:READ'),
+('SERVER-CAPABILITY:READ'),
+('SERVER:READ'),
+('SERVICE-CATEGORY:READ'),
+('STATIC-DN:READ'),
+('STATUS:READ'),
+('SERVER-CHECK:READ'),
+('STEERING:READ'),
+('STAT:READ'),
+('TENANT:READ'),
+('TOPOLOGY:READ'),
+('TRAFFIC-VAULT:READ'),
+('TYPE:READ'),
+('USER:READ'),
+('STAT:CREATE')) AS perms(perm)
+WHERE priv_level >= 10;
+
+INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:CREATE') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension');
+INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:DELETE') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension');
+INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:READ') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension');
+INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER:READ') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension');
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
