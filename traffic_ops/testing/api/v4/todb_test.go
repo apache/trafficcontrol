@@ -319,6 +319,7 @@ INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + Confi
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Federation + `','` + encryptedPassword + `', 6, 1);
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Extension + `','` + encryptedPassword + `', 3, 1);
 `
+
 	err = execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
