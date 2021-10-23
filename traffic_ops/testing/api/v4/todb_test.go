@@ -292,6 +292,7 @@ INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT ro
 INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:READ') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension') ON CONFLICT DO NOTHING;
 INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER:READ') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension') ON CONFLICT DO NOTHING;
 `
+
 	err := execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)

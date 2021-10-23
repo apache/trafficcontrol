@@ -97,11 +97,6 @@ if [[ "$old_db_version" -eq 0 ]]; then
     ./db/admin --env=production reset || { echo "DB reset failed!"; exit 1; }
 fi
 
-if ! ./db/admin -env=production load_schema; then
-  echo 'Could not re-run create_tables.sql!'
-  exit 1
-fi;
-
 ./db/admin --env=production upgrade || { echo "DB upgrade failed!"; exit 1; }
 
 new_db_version=$(get_current_db_version)
