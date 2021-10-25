@@ -122,8 +122,14 @@ while getopts h78abdf:lopqvsSL opt; do
 		f)
 			COMPOSE_FILE="$OPTARG"
 			;;
+		h)
+			print_help=1;
+			;;
 		l)
 			list=1;
+			;;
+		L)
+			NO_LOG_FILES=1
 			;;
 		o)
 			COMPOSE_FILE="$COMPOSE_FILE_OPT";
@@ -138,17 +144,11 @@ while getopts h78abdf:lopqvsSL opt; do
 		v)
 			verbose=1
 			;;
-		h)
-			print_help=1;
-			;;
 		s)
 			SIMPLE=1
 			;;
 		S)
 			NO_SOURCE=1
-			;;
-		L)
-			NO_LOG_FILES=1
 			;;
 	esac
 done
