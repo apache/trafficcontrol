@@ -46,7 +46,7 @@ var TrafficPortalService = function($http, messageModel, ENV) {
         responseType=arraybuffer is important if you want to create a blob of your data
         See: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Sending_and_Receiving_Binary_Data
         */
-        return $http.get(ENV.api['root'] + 'dbdump', { responseType:'arraybuffer' } ).then(
+        return $http.get(ENV.api.unstable + 'dbdump', { responseType:'arraybuffer' } ).then(
             function(result) {
                 download(result.data, moment().format() + '.pg_dump');
                 return result;
