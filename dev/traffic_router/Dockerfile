@@ -11,7 +11,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-FROM alpine:latest AS trafficops-dev
+FROM alpine:latest AS trafficrouter-dev
 
 ENV TC=/root/go/src/github.com/apache/trafficcontrol
 VOLUME /root/go/src/github.com/apache/trafficcontrol
@@ -20,8 +20,8 @@ EXPOSE 3053:53/tcp 3053:53/udp 3080:80 3443:443 3333:3333 2222:3443 5005:5005
 
 RUN apk add --no-cache openjdk8 inotify-tools maven && ln -s /usr/lib/jvm/java-1.8-openjdk/bin/jdb /bin/jdb
 
-ADD https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.53/bin/apache-tomcat-9.0.53.tar.gz /opt/tomcat.tgz
-RUN cd /opt && tar -xf tomcat.tgz && mv apache-tomcat-9.0.53 tomcat && rm /usr/share/java/maven-3/conf/settings.xml
+ADD https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.54/bin/apache-tomcat-9.0.54.tar.gz /opt/tomcat.tgz
+RUN cd /opt && tar -xf tomcat.tgz && mv apache-tomcat-9.0.54 tomcat && rm /usr/share/java/maven-3/conf/settings.xml
 
 COPY settings.xml /usr/share/java/maven-3/conf/settings.xml
 
