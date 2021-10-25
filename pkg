@@ -153,7 +153,7 @@ while getopts h78abdf:lopqvsSL opt; do
 	esac
 done
 
-PROJECTS=`"${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services`
+PROJECTS="$("${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services)"
 HELP_TEXT="Usage: $SELF [options] [projects]
 	-7           Build RPMs targeting CentOS 7
 	-8           Build RPMs targeting CentOS 8 (default)
