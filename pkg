@@ -155,21 +155,21 @@ done
 
 PROJECTS="$("${COMPOSECMD[@]}" -f $COMPOSE_FILE config --services)"
 HELP_TEXT="Usage: $SELF [options] [projects]
-	-7           Build RPMs targeting CentOS 7
-	-8           Build RPMs targeting CentOS 8 (default)
-	-a           Build all projects, including optional ones.
-	-b           Build builder Docker images before building projects
-	-d           Disable compiler optimizations for debugging.
-	-f <file>    Use <file> as the docker-compose. Default: $COMPOSE_FILE
-	-h           Print help message and exit
-	-l           List available projects.
-	-L           Don't write logs to files - respects output levels on stderr/stdout as set by -q/-v
-	-o           Build from the optional list. Same as -f \"$COMPOSE_FILE_OPT\"
-	-p           Pull builder Docker images, do not build them (default)
-	-q           Quiet mode. Supresses output. (default)
-	-s           Simple output filenames - e.g. traffic_ops.rpm instead of traffic_ops-6.1.0-11637.ec9ff6a6.el8.x86_64.rpm
-	-S           Skip building \"source rpms\"
-	-v           Verbose mode. Lists all build output.
+  -7           Build RPMs targeting CentOS 7
+  -8           Build RPMs targeting CentOS 8 (default)
+  -a           Build all projects, including optional ones.
+  -b           Build builder Docker images before building projects
+  -d           Disable compiler optimizations for debugging.
+  -f <file>    Use <file> as the docker-compose. Default: $COMPOSE_FILE
+  -h           Print help message and exit
+  -l           List available projects.
+  -L           Don't write logs to files - respects output levels on stderr/stdout as set by -q/-v
+  -o           Build from the optional list. Same as -f \"$COMPOSE_FILE_OPT\"
+  -p           Pull builder Docker images, do not build them (default)
+  -q           Quiet mode. Supresses output. (default)
+  -s           Simple output filenames - e.g. traffic_ops.rpm instead of traffic_ops-6.1.0-11637.ec9ff6a6.el8.x86_64.rpm
+  -S           Skip building \"source rpms\"
+  -v           Verbose mode. Lists all build output.
 
 If no projects are listed, all projects will be packaged.
 Valid projects:
