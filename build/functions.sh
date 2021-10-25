@@ -259,14 +259,14 @@ buildRpm() {
 		echo "========================================================================================"
 		echo
 
-		dest=".";
-		srcdest=".";
+		rpmDest=".";
+		srcRPMDest=".";
 		if [[ "$SIMPLE" -eq 1 ]]; then
-			dest="${package}.rpm";
-			srcdest="${package}.srpm";
+			rpmDest="${package}.rpm";
+			srcRPMDest="${package}.src.rpm";
 		fi
 
-		cp -f "$RPMBUILD/RPMS/$(uname -m)/$rpm" "$DIST/$dest";
+		cp -f "$RPMBUILD/RPMS/$(uname -m)/$rpm" "$DIST/$rpmDest";
 		code="$?";
 		if [[ "$code" -ne 0 ]]; then
 			echo "Could not copy $rpm to $DIST: $code" >&2;
@@ -277,7 +277,7 @@ buildRpm() {
 			return 0;
 		fi
 
-		cp -f "$RPMBUILD/SRPMS/$srpm" "$DIST/$srcdest";
+		cp -f "$RPMBUILD/SRPMS/$srpm" "$DIST/$srcRPMDest";
 		code="$?";
 		if [[ "$code" -ne 0 ]]; then
 			echo "Could not copy $srpm to $DIST: $code" >&2;
