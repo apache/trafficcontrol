@@ -199,17 +199,11 @@ if [[ -n "$RHEL_VERSION" ]]; then
 	RUN_OPTIONS+=(-e RHEL_VERSION);
 fi
 export SIMPLE;
-if [[ -n "$SIMPLE" ]]; then
-	RUN_OPTIONS+=(-e SIMPLE);
-fi
 export NO_SOURCE;
-if [[ -n "$NO_SOURCE" ]]; then
-	RUN_OPTIONS+=(-e NO_SOURCE);
-fi
 export NO_LOG_FILES;
-if [[ -n "$NO_LOG_FILES" ]]; then
-	RUN_OPTIONS+=(-e NO_LOG_FILES);
-fi
+RUN_OPTIONS+=(-e SIMPLE);
+RUN_OPTIONS+=(-e NO_SOURCE);
+RUN_OPTIONS+=(-e NO_LOG_FILES);
 
 # If no specific packages are listed, or -a is used, run them all.
 if (( ! "$#" || "$all" == 1 )); then
