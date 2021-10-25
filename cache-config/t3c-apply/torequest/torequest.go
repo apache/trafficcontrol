@@ -784,6 +784,8 @@ func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 	}
 	return updateStatus, nil
 }
+
+// CheckReloadRestart determines the final reload/restart state after all config files are processed.
 func (r *TrafficOpsReq) CheckReloadRestart(data []RestartData) (bool, bool, bool, bool, bool, bool) {
 	trafficCtlReload := false
 	sysCtlReload := false
