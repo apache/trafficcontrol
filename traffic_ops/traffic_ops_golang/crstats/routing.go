@@ -221,7 +221,7 @@ WHERE t.name = '` + tc.RouterTypeName + `'
 AND st.name = '` + RouterOnlineStatus + `'
 `
 	if requiredCDN != nil {
-		query += `AND c.name = '$1'`
+		query += `AND c.name = $1`
 		args = *requiredCDN
 	}
 	query += `
