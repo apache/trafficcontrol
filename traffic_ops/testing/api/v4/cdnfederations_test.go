@@ -17,6 +17,8 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -46,6 +48,7 @@ func TestCDNFederations(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestCDNFederationsWithHeaders(t, header)
+		GetTestPaginationSupportCdnFederation(t)
 	})
 }
 
@@ -385,4 +388,77 @@ func DeleteTestCDNFederations(t *testing.T) {
 		opts.QueryParameters.Del("id")
 	}
 	fedIDs = nil // reset the global variable for the next test
+}
+
+func GetTestPaginationSupportCdnFederation(t *testing.T) {
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetCDNFederationsByName("cdn1", opts)
+	if err != nil {
+		t.Fatalf("cannot Get CDN Federation by name: %v - alerts: %+v", err, resp.Alerts)
+	}
+	cdnFederation := resp.Response
+	if len(cdnFederation) < 3 {
+		t.Fatalf("Need at least 3 CDN Federation by name in Traffic Ops to test pagination support, found: %d", len(cdnFederation))
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	cdnFederationWithLimit, _, err := TOSession.GetCDNFederationsByName("cdn1", opts)
+	if err != nil {
+		t.Fatalf("cannot Get CDN Federation by name with Limit: %v - alerts: %+v", err, cdnFederationWithLimit.Alerts)
+	}
+	if !reflect.DeepEqual(cdnFederation[:1], cdnFederationWithLimit.Response) {
+		t.Error("expected GET CDN Federation by name with limit = 1 to return first result")
+	}
+
+	opts.QueryParameters.Set("offset", "1")
+	cdnFederationWithOffset, _, err := TOSession.GetCDNFederationsByName("cdn1", opts)
+	if err != nil {
+		t.Fatalf("cannot Get CDN Federation by name with Limit and Offset: %v - alerts: %+v", err, cdnFederationWithOffset.Alerts)
+	}
+	if !reflect.DeepEqual(cdnFederation[1:2], cdnFederationWithOffset.Response) {
+		t.Error("expected GET CDN Federation by name with limit = 1, offset = 1 to return second result")
+	}
+
+	opts.QueryParameters.Del("offset")
+	opts.QueryParameters.Set("page", "2")
+	cdnFederationWithPage, _, err := TOSession.GetCDNFederationsByName("cdn1", opts)
+	if err != nil {
+		t.Fatalf("cannot Get CDN Federation by name with Limit and Page: %v - alerts: %+v", err, cdnFederationWithPage.Alerts)
+	}
+	if !reflect.DeepEqual(cdnFederation[1:2], cdnFederationWithPage.Response) {
+		t.Error("expected GET CDN Federation by name with limit = 1, page = 2 to return second result")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, reqInf, err := TOSession.GetCDNFederationsByName("cdn1", opts)
+	if err == nil {
+		t.Error("expected GET CDN Federation by name to return an error when limit is not bigger than -1")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, reqInf, err = TOSession.GetCDNFederationsByName("cdn1", opts)
+	if err == nil {
+		t.Error("expected GET CDN Federation by name to return an error when offset is not a positive integer")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, reqInf, err = TOSession.GetCDNFederationsByName("cdn1", opts)
+	if err == nil {
+		t.Error("expected GET CDN Federation by name to return an error when page is not a positive integer")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
 }
