@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"sort"
 	"strconv"
 	"testing"
 	"time"
@@ -34,6 +35,8 @@ func TestFederationResolvers(t *testing.T) {
 		GetTestFederationResolversIMS(t)
 		GetTestFederationResolvers(t)
 		GetTestPaginationSupportFedResolver(t)
+		SortTestFederationResolver(t)
+		SortTestFederationsResolverDesc(t)
 	})
 }
 func GetTestFederationResolversIMS(t *testing.T) {
@@ -332,5 +335,54 @@ func GetTestPaginationSupportFedResolver(t *testing.T) {
 	}
 	if reqInf.StatusCode != http.StatusBadRequest {
 		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func SortTestFederationResolver(t *testing.T) {
+	var sortedList []uint
+	resp, _, err := TOSession.GetFederationResolvers(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v - alerts: %+v", err, resp.Alerts)
+	}
+	for _, fedRes := range resp.Response {
+		sortedList = append(sortedList, *fedRes.ID)
+	}
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their ID: %v", sortedList)
+	}
+}
+
+func SortTestFederationsResolverDesc(t *testing.T) {
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetFederationResolvers(opts)
+	if err != nil {
+		t.Fatalf("Expected no error, but got error in Federation Resolver default ordering %v - alerts: %+v", err, resp.Alerts)
+	}
+	respAsc := resp.Response
+	if len(respAsc) < 1 {
+		t.Fatal("Need at least one Federation Resolver in Traffic Ops to test Federation Resolver sort ordering")
+	}
+	opts.QueryParameters.Set("sortOrder", "desc")
+	resp, _, err = TOSession.GetFederationResolvers(opts)
+	if err != nil {
+		t.Errorf("Expected no error, but got error in Federation Resolver with Descending ordering: %v - alerts: %+v", err, resp.Alerts)
+	}
+	respDesc := resp.Response
+	if len(respDesc) < 1 {
+		t.Fatal("Need at least one Federation Resolver in Traffic Ops to test Federation resolver sort ordering")
+	}
+	if len(respAsc) != len(respDesc) {
+		t.Fatalf("Traffic Ops returned %d Federation Resolver using default sort order, but %d Federation Resolver when sort order was explicitly set to descending", len(respAsc), len(respDesc))
+	}
+	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
+	}
+	if *respDesc[0].ID != *respAsc[0].ID {
+		t.Errorf("Federation Resolver responses are not equal after reversal: Asc: %d - Desc: %d", *respDesc[0].ID, *respAsc[0].ID)
 	}
 }
