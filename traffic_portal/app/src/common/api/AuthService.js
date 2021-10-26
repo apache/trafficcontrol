@@ -21,7 +21,7 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
 
     this.login = function(username, password) {
         userModel.resetUser();
-        return $http.post(ENV.api['root'] + 'user/login', { u: username, p: password }).then(
+        return $http.post(ENV.api.unstable + 'user/login', { u: username, p: password }).then(
             function(result) {
                 $rootScope.$broadcast('authService::login');
                 const redirect = decodeURIComponent($location.search().redirect);
@@ -41,7 +41,7 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
 
     this.tokenLogin = function(token) {
         userModel.resetUser();
-        return $http.post(ENV.api['root'] + "user/login/token", { t: token }).then(
+        return $http.post(ENV.api.unstable + "user/login/token", { t: token }).then(
             function(result) {
                 $rootScope.$broadcast('authService::login');
                 return result;
@@ -53,7 +53,7 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
     };
 
     this.oauthLogin = function(authCodeTokenUrl, code, clientId, redirectUri) {
-        return $http.post(ENV.api['root'] + 'user/login/oauth', { authCodeTokenUrl: authCodeTokenUrl, code: code, clientId: clientId, redirectUri: redirectUri})
+        return $http.post(ENV.api.unstable + 'user/login/oauth', { authCodeTokenUrl: authCodeTokenUrl, code: code, clientId: clientId, redirectUri: redirectUri})
             .then(
                 function(result) {
                     $rootScope.$broadcast('authService::login');
@@ -78,7 +78,7 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
 
     this.logout = function() {
         userModel.resetUser();
-        return $http.post(ENV.api['root'] + 'user/logout').then(
+        return $http.post(ENV.api.unstable + 'user/logout').then(
             function(result) {
                 $rootScope.$broadcast('trafficPortal::exit');
                 if ($state.current.name == 'trafficPortal.public.login') {

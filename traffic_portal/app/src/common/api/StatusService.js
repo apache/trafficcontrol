@@ -20,7 +20,7 @@
 var StatusService = function($http, ENV, locationUtils, messageModel) {
 
     this.getStatuses = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'statuses', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'statuses', {params: queryParams}).then(
             function (result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var StatusService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.getStatus = function(id) {
-        return $http.get(ENV.api['root'] + 'statuses', {params: {id: id}}).then(
+        return $http.get(ENV.api.unstable + 'statuses', {params: {id: id}}).then(
             function (result) {
                 return result.data.response[0];
             },
@@ -42,7 +42,7 @@ var StatusService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.createStatus = function(status) {
-        return $http.post(ENV.api['root'] + 'statuses', status).then(
+        return $http.post(ENV.api.unstable + 'statuses', status).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Status created' } ], true);
                 locationUtils.navigateToPath('/statuses');
@@ -57,7 +57,7 @@ var StatusService = function($http, ENV, locationUtils, messageModel) {
 
     // todo: change to use query param when it is supported
     this.updateStatus = function(status) {
-        return $http.put(ENV.api['root'] + 'statuses/' + status.id, status).then(
+        return $http.put(ENV.api.unstable + 'statuses/' + status.id, status).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Status updated' } ], false);
                 return result;
@@ -71,7 +71,7 @@ var StatusService = function($http, ENV, locationUtils, messageModel) {
 
     // todo: change to use query param when it is supported
     this.deleteStatus = function(id) {
-        return $http.delete(ENV.api['root'] + "statuses/" + id).then(
+        return $http.delete(ENV.api.unstable + "statuses/" + id).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Status deleted' } ], true);
                 return result;

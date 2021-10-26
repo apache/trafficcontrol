@@ -20,7 +20,7 @@
 var ServerService = function($http, locationUtils, messageModel, ENV) {
 
     this.getServers = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'servers', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'servers', {params: queryParams}).then(
             function (result){
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.createServer = function(server) {
-        return $http.post(ENV.api['root'] + 'servers', server).then(
+        return $http.post(ENV.api.unstable + 'servers', server).then(
             function(result) {
                 return result;
             },
@@ -43,7 +43,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
 
     // todo: change to use query param when it is supported
     this.updateServer = function(server) {
-        return $http.put(ENV.api['root'] + 'servers/' + server.id, server).then(
+        return $http.put(ENV.api.unstable + 'servers/' + server.id, server).then(
             function(result) {
                 return result;
             },
@@ -55,7 +55,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
 
     // todo: change to use query param when it is supported
     this.deleteServer = function(id) {
-        return $http.delete(ENV.api['root'] + "servers/" + id).then(
+        return $http.delete(ENV.api.unstable + "servers/" + id).then(
             function(result) {
                 return result.data;
             },
@@ -67,7 +67,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getServerCapabilities = function(id) {
-        return $http.get(ENV.api['root'] + 'server_server_capabilities', { params: { serverId: id } }).then(
+        return $http.get(ENV.api.unstable + 'server_server_capabilities', { params: { serverId: id } }).then(
             function (result) {
                 return result.data.response;
             },
@@ -78,7 +78,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.addServerCapability = function(serverId, capabilityName) {
-        return $http.post(ENV.api['root'] + 'server_server_capabilities', { serverId: serverId, serverCapability: capabilityName}).then(
+        return $http.post(ENV.api.unstable + 'server_server_capabilities', { serverId: serverId, serverCapability: capabilityName}).then(
             function(result) {
                 return result.data;
             },
@@ -90,7 +90,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.removeServerCapability = function(serverId, capabilityName) {
-        return $http.delete(ENV.api['root'] + 'server_server_capabilities', { params: { serverId: serverId, serverCapability: capabilityName} }).then(
+        return $http.delete(ENV.api.unstable + 'server_server_capabilities', { params: { serverId: serverId, serverCapability: capabilityName} }).then(
             function(result) {
                 return result.data;
             },
@@ -102,7 +102,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getEligibleDeliveryServiceServers = function(dsId) {
-        return $http.get(ENV.api['root'] + 'deliveryservices/' + dsId + '/servers/eligible').then(
+        return $http.get(ENV.api.unstable + 'deliveryservices/' + dsId + '/servers/eligible').then(
             function (result) {
                 return result.data.response;
             },
@@ -113,7 +113,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.assignDeliveryServices = function(server, dsIds, replace, delay) {
-        return $http.post(ENV.api['root'] + 'servers/' + server.id + '/deliveryservices', dsIds, {params: {replace: replace}}).then(
+        return $http.post(ENV.api.unstable + 'servers/' + server.id + '/deliveryservices', dsIds, {params: {replace: replace}}).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: dsIds.length + ' delivery services assigned to ' + server.hostName + '.' + server.domainName } ], delay);
                 return result;
@@ -126,7 +126,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.queueServerUpdates = function(id) {
-        return $http.post(ENV.api['root'] + "servers/" + id + '/queue_update', { action: "queue"}).then(
+        return $http.post(ENV.api.unstable + "servers/" + id + '/queue_update', { action: "queue"}).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Queued server updates' } ], false);
                 return result;
@@ -139,7 +139,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.clearServerUpdates = function(id) {
-        return $http.post(ENV.api['root'] + "servers/" + id + '/queue_update', { action: "dequeue"}).then(
+        return $http.post(ENV.api.unstable + "servers/" + id + '/queue_update', { action: "dequeue"}).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Cleared server updates' } ], false);
                 return result;
@@ -152,7 +152,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getCacheStats = function() {
-        return $http.get(ENV.api['root'] + "caches/stats").then(
+        return $http.get(ENV.api.unstable + "caches/stats").then(
             function(result) {
                 return result.data.response;
             },
@@ -163,7 +163,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getCacheChecks = function() {
-        return $http.get(ENV.api['root'] + "servercheck").then(
+        return $http.get(ENV.api.unstable + "servercheck").then(
             function(result) {
                 return result.data.response;
             },
@@ -174,7 +174,7 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.updateStatus = function(id, payload) {
-        return $http.put(ENV.api['root'] + "servers/" + id + "/status", payload).then(
+        return $http.put(ENV.api.unstable + "servers/" + id + "/status", payload).then(
             function(result) {
                 return result;
             },

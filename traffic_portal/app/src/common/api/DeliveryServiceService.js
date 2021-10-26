@@ -20,7 +20,7 @@
 var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 
     this.getDeliveryServices = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'deliveryservices', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'deliveryservices', {params: queryParams}).then(
             function(result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getDeliveryService = function(id) {
-        return $http.get(ENV.api['root'] + 'deliveryservices', {params: {id: id}}).then(
+        return $http.get(ENV.api.unstable + 'deliveryservices', {params: {id: id}}).then(
             function(result) {
                 return result.data.response[0];
             },
@@ -45,7 +45,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
         // strip out any falsy values or duplicates from consistentHashQueryParams
         ds.consistentHashQueryParams = Array.from(new Set(ds.consistentHashQueryParams)).filter(function(i){return i;});
 
-        return $http.post(ENV.api['root'] + "deliveryservices", ds).then(
+        return $http.post(ENV.api.unstable + "deliveryservices", ds).then(
             function(response) {
                 return response;
             },
@@ -59,7 +59,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
         // strip out any falsy values or duplicates from consistentHashQueryParams
         ds.consistentHashQueryParams = Array.from(new Set(ds.consistentHashQueryParams)).filter(function(i){return i;});
 
-        return $http.put(ENV.api['root'] + "deliveryservices/" + ds.id, ds).then(
+        return $http.put(ENV.api.unstable + "deliveryservices/" + ds.id, ds).then(
             function(response) {
                 return response;
             },
@@ -71,7 +71,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
 
     // todo: change to use query param when it is supported
     this.deleteDeliveryService = function(ds) {
-        return $http.delete(ENV.api['root'] + "deliveryservices/" + ds.id).then(
+        return $http.delete(ENV.api.unstable + "deliveryservices/" + ds.id).then(
             function(response) {
                 return response;
             },
@@ -82,7 +82,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getServerCapabilities = function(id) {
-        return $http.get(ENV.api['root'] + 'deliveryservices_required_capabilities', { params: { deliveryServiceID: id } }).then(
+        return $http.get(ENV.api.unstable + 'deliveryservices_required_capabilities', { params: { deliveryServiceID: id } }).then(
             function (result) {
                 return result.data.response;
             },
@@ -93,7 +93,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.addServerCapability = function(deliveryServiceId, capabilityName) {
-        return $http.post(ENV.api['root'] + 'deliveryservices_required_capabilities', { deliveryServiceID: deliveryServiceId, requiredCapability: capabilityName}).then(
+        return $http.post(ENV.api.unstable + 'deliveryservices_required_capabilities', { deliveryServiceID: deliveryServiceId, requiredCapability: capabilityName}).then(
             function(result) {
                 return result.data;
             },
@@ -107,7 +107,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.removeServerCapability = function(deliveryServiceId, capabilityName) {
-        return $http.delete(ENV.api['root'] + 'deliveryservices_required_capabilities', { params: { deliveryServiceID: deliveryServiceId, requiredCapability: capabilityName} }).then(
+        return $http.delete(ENV.api.unstable + 'deliveryservices_required_capabilities', { params: { deliveryServiceID: deliveryServiceId, requiredCapability: capabilityName} }).then(
             function(result) {
                 return result.data;
             },
@@ -121,7 +121,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getServerDeliveryServices = function(serverId) {
-        return $http.get(ENV.api['root'] + 'servers/' + serverId + '/deliveryservices').then(
+        return $http.get(ENV.api.unstable + 'servers/' + serverId + '/deliveryservices').then(
             function(result) {
                 return result.data.response;
             },
@@ -132,7 +132,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getDeliveryServiceTargets = function(dsId) {
-        return $http.get(ENV.api['root'] + 'steering/' + dsId + '/targets').then(
+        return $http.get(ENV.api.unstable + 'steering/' + dsId + '/targets').then(
             function(result) {
                 return result.data.response;
             },
@@ -143,7 +143,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getDeliveryServiceTarget = function(dsId, targetId) {
-        return $http.get(ENV.api['root'] + 'steering/' + dsId + '/targets', {params: {target: targetId}}).then(
+        return $http.get(ENV.api.unstable + 'steering/' + dsId + '/targets', {params: {target: targetId}}).then(
             function(result) {
                 return result.data.response[0];
             },
@@ -154,7 +154,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.updateDeliveryServiceTarget = function(dsId, targetId, target) {
-        return $http.put(ENV.api['root'] + "steering/" + dsId + "/targets/" + targetId, target).then(
+        return $http.put(ENV.api.unstable + "steering/" + dsId + "/targets/" + targetId, target).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 locationUtils.navigateToPath('/delivery-services/' + dsId + '/targets');
@@ -168,7 +168,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.createDeliveryServiceTarget = function(dsId, target) {
-        return $http.post(ENV.api['root'] + 'steering/' + dsId + '/targets', target).then(
+        return $http.post(ENV.api.unstable + 'steering/' + dsId + '/targets', target).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 locationUtils.navigateToPath('/delivery-services/' + dsId + '/targets');
@@ -182,7 +182,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.deleteDeliveryServiceTarget = function(dsId, targetId) {
-        return $http.delete(ENV.api['root'] + 'steering/' + dsId + '/targets/' + targetId).then(
+        return $http.delete(ENV.api.unstable + 'steering/' + dsId + '/targets/' + targetId).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 locationUtils.navigateToPath('/delivery-services/' + dsId + '/targets');
@@ -196,7 +196,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getUserDeliveryServices = function(userId) {
-        return $http.get(ENV.api['root'] + 'users/' + userId + '/deliveryservices').then(
+        return $http.get(ENV.api.unstable + 'users/' + userId + '/deliveryservices').then(
             function(result) {
                 return result.data.response;
             },
@@ -207,7 +207,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.deleteDeliveryServiceServer = function(dsId, serverId) {
-        return $http.delete(ENV.api['root'] + 'deliveryserviceserver/' + dsId + '/' + serverId).then(
+        return $http.delete(ENV.api.unstable + 'deliveryserviceserver/' + dsId + '/' + serverId).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
                 return result;
@@ -220,7 +220,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.assignDeliveryServiceServers = function(dsId, servers) {
-        return $http.post(ENV.api['root'] + 'deliveryserviceserver',{ dsId: dsId, servers: servers, replace: true } ).then(
+        return $http.post(ENV.api.unstable + 'deliveryserviceserver',{ dsId: dsId, servers: servers, replace: true } ).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
                 return result;
@@ -233,7 +233,7 @@ var DeliveryServiceService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getConsistentHashResult = function (regex, requestPath, cdnId) {
-        const url = ENV.api['root'] + "consistenthash";
+        const url = ENV.api.unstable + "consistenthash";
         const params = {regex: regex, requestPath: requestPath, cdnId: cdnId};
 
         return $http.post(url, params).then(

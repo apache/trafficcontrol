@@ -20,7 +20,7 @@
 var DeliveryServiceStatsService = function($http, ENV, messageModel) {
 
 	this.getBPS = function(xmlId, start, end) {
-		const url = ENV.api['root'] + "deliveryservice_stats";
+		const url = ENV.api.unstable + "deliveryservice_stats";
 		const params = {
 			deliveryServiceName: xmlId,
 			metricType: 'kbps',
@@ -42,7 +42,7 @@ var DeliveryServiceStatsService = function($http, ENV, messageModel) {
 	};
 
 	this.getTPS = function(xmlId, start, end) {
-		const url = ENV.api['root'] + "deliveryservice_stats";
+		const url = ENV.api.unstable + "deliveryservice_stats";
 		const params = {
 			deliveryServiceName: xmlId,
 			metricType: 'tps_total',
@@ -64,7 +64,7 @@ var DeliveryServiceStatsService = function($http, ENV, messageModel) {
 	};
 
 	this.getHttpStatusByGroup = function(xmlId, httpStatus, start, end) {
-		const url = ENV.api['root'] + "deliveryservice_stats";
+		const url = ENV.api.unstable + "deliveryservice_stats";
 		const params = {
 			deliveryServiceName: xmlId,
 			metricType: 'tps_' + httpStatus,

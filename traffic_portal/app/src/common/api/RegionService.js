@@ -20,7 +20,7 @@
 var RegionService = function($http, ENV, messageModel) {
 
     this.getRegions = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'regions', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'regions', {params: queryParams}).then(
             function (result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var RegionService = function($http, ENV, messageModel) {
     };
 
     this.getRegion = function(id) {
-        return $http.get(ENV.api['root'] + 'regions', {params: {id: id}}).then(
+        return $http.get(ENV.api.unstable + 'regions', {params: {id: id}}).then(
             function (result) {
                 return result.data.response[0];
             },
@@ -42,7 +42,7 @@ var RegionService = function($http, ENV, messageModel) {
     };
 
     this.createRegion = function(region) {
-        return $http.post(ENV.api['root'] + 'regions', region).then(
+        return $http.post(ENV.api.unstable + 'regions', region).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Region created' } ], true);
                 return result;
@@ -56,7 +56,7 @@ var RegionService = function($http, ENV, messageModel) {
 
     // todo: change to use query param when it is supported
     this.updateRegion = function(region) {
-        return $http.put(ENV.api['root'] + 'regions/' + region.id, region).then(
+        return $http.put(ENV.api.unstable + 'regions/' + region.id, region).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Region updated' } ], false);
                 return result;
@@ -70,7 +70,7 @@ var RegionService = function($http, ENV, messageModel) {
 
     // todo: change to use query param when it is supported
     this.deleteRegion = function(id) {
-        return $http.delete(ENV.api['root'] + "regions", {params: {id: id}}).then(
+        return $http.delete(ENV.api.unstable + "regions", {params: {id: id}}).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Region deleted' } ], true);
                 return result;

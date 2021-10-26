@@ -20,7 +20,7 @@
 var CoordinateService = function($http, locationUtils, messageModel, ENV) {
 
     this.getCoordinates = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'coordinates', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'coordinates', {params: queryParams}).then(
             function(result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var CoordinateService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.createCoordinate = function(coordinate) {
-        return $http.post(ENV.api['root'] + "coordinates", coordinate).then(
+        return $http.post(ENV.api.unstable + "coordinates", coordinate).then(
             function(response) {
                 messageModel.setMessages(response.data.alerts, true);
                 locationUtils.navigateToPath('/coordinates');
@@ -45,7 +45,7 @@ var CoordinateService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.updateCoordinate = function(id, coordinate) {
-        return $http.put(ENV.api['root'] + "coordinates", coordinate, {params: {id: id}}).then(
+        return $http.put(ENV.api.unstable + "coordinates", coordinate, {params: {id: id}}).then(
             function(response) {
                 messageModel.setMessages(response.data.alerts, false);
                 return response;
@@ -58,7 +58,7 @@ var CoordinateService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.deleteCoordinate = function(id) {
-        return $http.delete(ENV.api['root'] + "coordinates", {params: {id: id}}).then(
+        return $http.delete(ENV.api.unstable + "coordinates", {params: {id: id}}).then(
             function(response) {
                 messageModel.setMessages(response.data.alerts, true);
                 return response;
