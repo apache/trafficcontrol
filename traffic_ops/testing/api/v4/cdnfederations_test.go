@@ -35,6 +35,7 @@ var fedIDs []int
 func TestCDNFederations(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Tenants, CacheGroups, Statuses, Divisions, Regions, PhysLocations, Servers, Topologies, ServiceCategories, DeliveryServices, CDNFederations}, func() {
 		SortTestCDNFederations(t)
+		SortTestCDNFederationsDesc(t)
 		UpdateTestCDNFederations(t)
 		GetTestCDNFederations(t)
 		GetTestCDNFederationsIMS(t)
@@ -156,6 +157,38 @@ func SortTestCDNFederations(t *testing.T) {
 	resp1, _, err := TOSession.DeleteCDNFederation("cdn1", id, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("cannot delete federation #%d: %v - alerts: %+v", id, err, resp1.Alerts)
+	}
+}
+
+func SortTestCDNFederationsDesc(t *testing.T) {
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetCDNFederationsByName("cdn1", opts)
+	if err != nil {
+		t.Fatalf("Expected no error, but got error in CDN Federation default ordering %v - alerts: %+v", err, resp.Alerts)
+	}
+	respAsc := resp.Response
+	if len(respAsc) < 1 {
+		t.Fatal("Need at least one CDN Federation in Traffic Ops to test CDN Federation sort ordering")
+	}
+	opts.QueryParameters.Set("sortOrder", "desc")
+	resp, _, err = TOSession.GetCDNFederationsByName("cdn1", opts)
+	if err != nil {
+		t.Errorf("Expected no error, but got error in CDN Federation with Descending ordering: %v - alerts: %+v", err, resp.Alerts)
+	}
+	respDesc := resp.Response
+	if len(respDesc) < 1 {
+		t.Fatal("Need at least one CDN Federation in Traffic Ops to test CDN Federation sort ordering")
+	}
+	if len(respAsc) != len(respDesc) {
+		t.Fatalf("Traffic Ops returned %d CDN Federation using default sort order, but %d CDN Federation when sort order was explicitly set to descending", len(respAsc), len(respDesc))
+	}
+	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
+	}
+	if *respDesc[0].ID != *respAsc[0].ID {
+		t.Errorf("CDN Federation responses are not equal after reversal: Asc: %d - Desc: %d", *respDesc[0].ID, *respAsc[0].ID)
 	}
 }
 
