@@ -144,11 +144,11 @@ while getopts h78abdf:lopqvsSL opt; do
 		v)
 			verbose=1
 			;;
-		S)
-			NO_SOURCE=1
-			;;
 		s)
 			SIMPLE=1
+			;;
+		S)
+			NO_SOURCE=1
 			;;
 	esac
 done
@@ -168,8 +168,8 @@ Usage: $SELF [options] [projects]
   -o           Build from the optional list. Same as -f "$COMPOSE_FILE_OPT"
   -p           Pull builder Docker images, do not build them (default)
   -q           Quiet mode. Supresses output. (default)
-  -S           Skip building "source rpms"
   -s           Simple output filenames - e.g. traffic_ops.rpm instead of traffic_ops-6.1.0-11637.ec9ff6a6.el8.x86_64.rpm
+  -S           Skip building "source rpms"
   -v           Verbose mode. Lists all build output.
 
 If no projects are listed, all projects will be packaged.
