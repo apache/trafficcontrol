@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6125](https://github.com/apache/trafficcontrol/issues/6125) - Fix `/cdns/{name}/federations?id=#` to search for CDN.
 - [#6283](https://github.com/apache/trafficcontrol/issues/6283) - The Traffic Ops Postinstall script will work in CentOS 7, even if Python 3 is installed
 - [#5373](https://github.com/apache/trafficcontrol/issues/5373) - Traffic Monitor logs not consistent
+- [#6197](https://github.com/apache/trafficcontrol/issues/6197) - TO `/deliveryservices/:id/routing` makes requests to all TRs instead of by CDN.
 
 ### Changed
 - [#5927](https://github.com/apache/trafficcontrol/issues/5927) Updated CDN-in-a-Box to not run a Riak container by default but instead only run it if the optional flag is provided.
