@@ -232,17 +232,26 @@ buildRpm() {
 		set -- "$@" --define '%_binary_payload w2.xzdio' # xz level 2 compression for binary files
 		set -o nounset; }
 
-		(cd "$RPMBUILD" && \
-			rpmbuild --define "_topdir $(pwd)" \
-				--define "traffic_control_version $TC_VERSION" \
-				--define "go_version $GO_VERSION" \
-				--define "commit $(getCommit)" \
-				--define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
-				--define "_target_os $RPM_TARGET_OS" \
-				 -ba SPECS/$package.spec \
-				"$@" # variable number of arguments
-				) || \
-				 { echo "RPM BUILD FAILED: $?"; return 1; }
+		build_flags="-ba";
+		if [[ "$NO_SOURCE" -eq 1 ]]; then
+			build_flags="-bb";
+		fi
+
+		pushd "$RPMBUILD";
+
+		rpmbuild --define "_topdir $(pwd)" \
+			--define "traffic_control_version $TC_VERSION" \
+			--define "go_version $GO_VERSION" \
+			--define "commit $(getCommit)" \
+			--define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
+			--define "_target_os $RPM_TARGET_OS" \
+			"$build_flags" SPECS/$package.spec \
+			"$@";
+		code=$?
+		if [[ "$code" -ne 0 ]]; then
+			echo "RPM BUILD FAILED: $code" >&2;
+			return $code;
+		fi
 
 		echo
 		echo "========================================================================================"
@@ -250,8 +259,30 @@ buildRpm() {
 		echo "========================================================================================"
 		echo
 
-		cp "$RPMBUILD/RPMS/$(uname -m)/$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; return 1; }
-		cp "$RPMBUILD/SRPMS/$srpm" "$DIST/." || { echo "Could not copy $srpm to $DIST: $?"; return 1; }
+		rpmDest=".";
+		srcRPMDest=".";
+		if [[ "$SIMPLE" -eq 1 ]]; then
+			rpmDest="${package}.rpm";
+			srcRPMDest="${package}.src.rpm";
+		fi
+
+		cp -f "$RPMBUILD/RPMS/$(uname -m)/$rpm" "$DIST/$rpmDest";
+		code="$?";
+		if [[ "$code" -ne 0 ]]; then
+			echo "Could not copy $rpm to $DIST: $code" >&2;
+			return "$code";
+		fi
+
+		if [[ "$NO_SOURCE" -eq 1 ]]; then
+			return 0;
+		fi
+
+		cp -f "$RPMBUILD/SRPMS/$srpm" "$DIST/$srcRPMDest";
+		code="$?";
+		if [[ "$code" -ne 0 ]]; then
+			echo "Could not copy $srpm to $DIST: $code" >&2;
+			return "$code";
+		fi
 	done
 }
 
@@ -349,4 +380,3 @@ verify_and_set_go_version() {
 		return 1
 	fi
 }
-
