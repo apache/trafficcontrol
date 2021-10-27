@@ -16,15 +16,15 @@
  */
 
 -- add built-in roles
-INSERT INTO role (name, description, priv_level) VALUES ('operations', 'Has all reads and most write capabilities', 20) ON CONFLICT (name) DO NOTHING;
-INSERT INTO role (name, description, priv_level) VALUES ('read-only', 'Has access to all read capabilities', 10) ON CONFLICT (name) DO NOTHING;
-INSERT INTO role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
-INSERT INTO role (name, description, priv_level) VALUES ('portal','Portal User', 2) ON CONFLICT DO NOTHING;
-INSERT INTO role (name, description, priv_level) VALUES ('steering','Steering User', 15) ON CONFLICT DO NOTHING;
-INSERT INTO role (name, description, priv_level) VALUES ('federation','Role for Secondary CZF', 15) ON CONFLICT DO NOTHING;
+INSERT INTO public.role (name, description, priv_level) VALUES ('operations', 'Has all reads and most write capabilities', 20) ON CONFLICT (name) DO NOTHING;
+INSERT INTO public.role (name, description, priv_level) VALUES ('read-only', 'Has access to all read capabilities', 10) ON CONFLICT (name) DO NOTHING;
+INSERT INTO public.role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
+INSERT INTO public.role (name, description, priv_level) VALUES ('portal','Portal User', 2) ON CONFLICT DO NOTHING;
+INSERT INTO public.role (name, description, priv_level) VALUES ('steering','Steering User', 15) ON CONFLICT DO NOTHING;
+INSERT INTO public.role (name, description, priv_level) VALUES ('federation','Role for Secondary CZF', 15) ON CONFLICT DO NOTHING;
 
 -- add permissions to roles in order of decreasing priv level
-INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
+INSERT INTO public.role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
 ('ASN:CREATE'),
 ('ASN:DELETE'),
 ('ASN:UPDATE'),
@@ -94,7 +94,7 @@ INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
 ('SERVER-CHECK:DELETE')) AS perms(perm)
 WHERE priv_level >= 20 ON CONFLICT DO NOTHING;
 
-INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
+INSERT INTO public.role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
 ('FEDERATION:CREATE'),
 ('FEDERATION:UPDATE'),
 ('FEDERATION:DELETE'),
@@ -112,7 +112,7 @@ INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
 ('STEERING:DELETE')) AS perms(perm)
 WHERE priv_level >= 15 ON CONFLICT DO NOTHING;
 
-INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
+INSERT INTO public.role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
 ('ASN:READ'),
 ('ASYNC-STATUS:READ'),
 ('CACHE-GROUP:READ'),
@@ -153,7 +153,12 @@ INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
 ('STAT:CREATE')) AS perms(perm)
 WHERE priv_level >= 10 ON CONFLICT DO NOTHING;
 
-INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:CREATE') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension') ON CONFLICT DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:DELETE') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension') ON CONFLICT DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:READ') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension') ON CONFLICT DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER:READ') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension') ON CONFLICT DO NOTHING;
+INSERT INTO public.role_capability
+SELECT role, perm
+FROM public.tm_user
+CROSS JOIN (VALUES
+('SERVER-CHECK:CREATE'),
+('SERVER-CHECK:DELETE'),
+('SERVER-CHECK:READ'),
+('SERVER:READ')) AS perms(perm)
+WHERE username = 'extension' ON CONFLICT DO NOTHING;

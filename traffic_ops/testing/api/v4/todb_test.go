@@ -287,10 +287,15 @@ INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
 ('STAT:CREATE')) AS perms(perm)
 WHERE priv_level >= 10 ON CONFLICT DO NOTHING;
 
-INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:CREATE') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension') ON CONFLICT DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:DELETE') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension') ON CONFLICT DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER-CHECK:READ') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension') ON CONFLICT DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) SELECT * FROM (SELECT (SELECT role FROM tm_user WHERE username='extension'), 'SERVER:READ') AS i(role_id, cap_name) WHERE EXISTS (SELECT 1 FROM tm_user WHERE username='extension') ON CONFLICT DO NOTHING;
+INSERT INTO public.role_capability
+SELECT role, perm
+FROM public.tm_user
+CROSS JOIN (VALUES
+('SERVER-CHECK:CREATE'),
+('SERVER-CHECK:DELETE'),
+('SERVER-CHECK:READ'),
+('SERVER:READ')) AS perms(perm)
+WHERE username = 'extension' ON CONFLICT DO NOTHING;
 `
 
 	err := execSQL(db, sqlStmt)
