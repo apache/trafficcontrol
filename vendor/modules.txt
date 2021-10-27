@@ -283,10 +283,6 @@ google.golang.org/protobuf/runtime/protoimpl
 # gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 ## explicit
 gopkg.in/DATA-DOG/go-sqlmock.v1
-# gopkg.in/asn1-ber.v1 v1.0.0-20170511165959-379148ca0225
-## explicit
-# gopkg.in/ldap.v2 v2.5.1
-## explicit
 # gopkg.in/square/go-jose.v2 v2.3.1
 ## explicit
 gopkg.in/square/go-jose.v2
