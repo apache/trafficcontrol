@@ -472,11 +472,6 @@ This product bundles miekg/dns, which is available under a BSD-3-Clause license.
 ./vendor/github.com/miekg/dns/LICENSE
 Refer to the above license for the full text.
 
-This product bundles asn1-ber.v1, which is available under an MIT license.
-@vendor/gopkg.in/asn1-ber.v1/*
-./vendor/gopkg.in/asn1-ber.v1/LICENSE
-Refer to the above license for the full text.
-
 This product bundles ldap/v3 component, which is available under an MIT license.
 @vendor/github.com/go-ldap/ldap/v3/*
 ./vendor/github.com/go-ldap/ldap/v3/LICENSE
