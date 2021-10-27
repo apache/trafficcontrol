@@ -1,6 +1,9 @@
 # code.cloudfoundry.org/bytefmt v0.0.0-20180108190415-b31f603f5e1e
 ## explicit
 code.cloudfoundry.org/bytefmt
+# github.com/Azure/go-ntlmssp v0.0.0-20200615164410-66371956d46c
+## explicit
+github.com/Azure/go-ntlmssp
 # github.com/GehirnInc/crypt v0.0.0-20190301055215-6c0105aabd46
 ## explicit
 github.com/GehirnInc/crypt
@@ -59,6 +62,12 @@ github.com/go-acme/lego/lego
 github.com/go-acme/lego/log
 github.com/go-acme/lego/platform/wait
 github.com/go-acme/lego/registration
+# github.com/go-asn1-ber/asn1-ber v1.5.1
+## explicit; go 1.13
+github.com/go-asn1-ber/asn1-ber
+# github.com/go-ldap/ldap/v3 v3.4.1
+## explicit; go 1.13
+github.com/go-ldap/ldap/v3
 # github.com/go-ozzo/ozzo-validation v3.0.3-0.20180119232150-44af65fe9adf+incompatible
 ## explicit
 github.com/go-ozzo/ozzo-validation
@@ -193,6 +202,7 @@ go.etcd.io/bbolt
 ## explicit; go 1.17
 golang.org/x/crypto/ed25519
 golang.org/x/crypto/ed25519/internal/edwards25519
+golang.org/x/crypto/md4
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
@@ -275,10 +285,8 @@ google.golang.org/protobuf/runtime/protoimpl
 gopkg.in/DATA-DOG/go-sqlmock.v1
 # gopkg.in/asn1-ber.v1 v1.0.0-20170511165959-379148ca0225
 ## explicit
-gopkg.in/asn1-ber.v1
 # gopkg.in/ldap.v2 v2.5.1
 ## explicit
-gopkg.in/ldap.v2
 # gopkg.in/square/go-jose.v2 v2.3.1
 ## explicit
 gopkg.in/square/go-jose.v2

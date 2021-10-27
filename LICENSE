@@ -477,9 +477,19 @@ This product bundles asn1-ber.v1, which is available under an MIT license.
 ./vendor/gopkg.in/asn1-ber.v1/LICENSE
 Refer to the above license for the full text.
 
-This product bundles ldap.v2 component, which is available under an MIT license.
-@vendor/gopkg.in/ldap.v2/*
-./vendor/gopkg.in/ldap.v2/LICENSE
+This product bundles ldap/v3 component, which is available under an MIT license.
+@vendor/github.com/go-ldap/ldap/v3/*
+./vendor/github.com/go-ldap/ldap/v3/LICENSE
+Refer to the above license for the full text.
+
+This product bundles go-ntlmssp component, which is available under an MIT license.
+@vendor/github.com/Azure/go-ntlmssp/*
+./vendor/github.com/Azure/go-ntlmssp/LICENSE
+Refer to the above license for the full text.
+
+This product bundles go-asn1-ber component, which is available under an MIT license.
+@vendor/github.com/go-asn1-ber/asn1-ber/*
+vendor/github.com/go-asn1-ber/asn1-ber/LICENSE
 Refer to the above license for the full text.
 
 This product bundles an example video for fakeOrigin, which is available under an CC-PDM-1.0 license.
