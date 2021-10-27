@@ -22,8 +22,8 @@ env:
   ATS_VERSION: 8.1.x
 
 on:
-  push:
   workflow_dispatch:
+  push:
     paths:
       - .github/workflows/cache-config-tests.yml
       - go.mod
