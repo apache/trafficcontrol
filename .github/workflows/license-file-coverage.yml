@@ -69,7 +69,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.PKGSITE_DIR }}/vendor
-          key: ${{ runner.os }}-go-${{ steps.go-version.outputs.value }}-${{ hashFiles('**/go.sum') }}-${{ hashFiles(format('{0}/{1}/{2}', env.PKGSITE_DIR, env.COVERAGE_TEST_NAME, format('{0}.go', env.COVERAGE_TEST_NAME))) }}
+          key: ${{ runner.os }}-go-${{ steps.go-version.outputs.value }}-tidy-${{ hashFiles('**/go.sum') }}-${{ hashFiles(format('{0}/{1}/{2}', env.PKGSITE_DIR, env.COVERAGE_TEST_NAME, format('{0}.go', env.COVERAGE_TEST_NAME))) }}
       - name: Download Go modules for ${{ env.PKGSITE_REPO }}
         run: |
           set -o errexit -o nounset -o xtrace -o pipefail
