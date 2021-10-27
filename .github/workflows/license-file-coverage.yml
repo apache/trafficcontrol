@@ -44,7 +44,8 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
-      - name: go-version
+      - name: Go version
+        id: go-version
         run: |
           go_version="$(curl -L "${BLOB_URL}/GO_VERSION")" &&
           echo "::set-output name=value::${go_version}"
