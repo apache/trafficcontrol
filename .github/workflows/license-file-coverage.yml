@@ -72,12 +72,19 @@ jobs:
           key: ${{ runner.os }}-go-${{ steps.go-version.outputs.value }}-${{ hashFiles('**/go.sum') }}-${{ hashFiles(format('{0}/{1}/{2}', env.PKGSITE_DIR, env.COVERAGE_TEST_NAME, format('{0}.go', env.COVERAGE_TEST_NAME))) }}
       - name: Download Go modules for ${{ env.PKGSITE_REPO }}
         run: |
-          set -o errexit -o nounset -o xtrace
+          set -o errexit -o nounset -o xtrace -o pipefail
           cd "$PKGSITE_DIR"
+          go_major_version_escaped="$(<<<"${{ steps.go-version.outputs.value }}" grep -Eo '^[0-9]+\.[0-9]+' | sed 's/\./\\\./g')"
           if [[ ! -e vendor/modules.txt ]]; then
+            if ! grep -q "go ${go_major_version_escaped}" go.mod; then
+              echo 'Go version in go.mod does not match, tidying modules...'
+              sed -Ei "s/^(go )[0-9].*/\1${go_major_version_escaped}/" go.mod
+            fi
             go mod vendor
+            cp go.mod go.sum vendor/
           else
             echo "Modules are already downloaded."
+            mv vendor/{go.mod,go.sum} .
           fi
       - name: Run the License file coverage check
         run: |
