@@ -540,7 +540,7 @@ func SortTestFederationsDsDesc(t *testing.T) {
 
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("orderby", "dsID")
-	resp, _, err := TOSession.GetFederationDeliveryServices(fedID,opts)
+	resp, _, err := TOSession.GetFederationDeliveryServices(fedID, opts)
 	if err != nil {
 		t.Fatalf("Expected no error, but got error in Federation DS default ordering %v - alerts: %+v", err, resp.Alerts)
 	}
@@ -549,7 +549,7 @@ func SortTestFederationsDsDesc(t *testing.T) {
 		t.Fatal("Need at least one Federation DS in Traffic Ops to test Federation DS sort ordering")
 	}
 	opts.QueryParameters.Set("sortOrder", "desc")
-	resp, _, err = TOSession.GetFederationDeliveryServices(fedID,opts)
+	resp, _, err = TOSession.GetFederationDeliveryServices(fedID, opts)
 	if err != nil {
 		t.Errorf("Expected no error, but got error in Federation DS with Descending ordering: %v - alerts: %+v", err, resp.Alerts)
 	}
