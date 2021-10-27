@@ -17,11 +17,14 @@
  * under the License.
  */
 
-var PercentFilter = function() {
-	return function(input) {
+var PercentFilter = function () {
+	return function (input) {
 		input = parseFloat(input);
+		if (!isFinite(input)) {
+			return input
+		}
 		input *= 100;
-		if(input % 1 === 0) {
+		if (input % 1 === 0) {
 			input = input.toFixed(0);
 		}
 		else {
