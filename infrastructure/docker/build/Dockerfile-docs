@@ -42,6 +42,7 @@ RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
 
 ### docs specific requirements
 FROM common-dependencies AS docs
+ARG RHEL_VERSION=8
 
 RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
 		yum -y install dnf-plugins-core && \
