@@ -24,7 +24,7 @@ TC_VERSION ?= $(shell cat ../VERSION)
 GO_FLAGS ?=
 PANDOC_FLAGS := --strip-comments
 
-TARGETS := t3c/t3c t3c-apply/t3c-apply t3c-check/t3c-check t3c-check-refs/t3c-check-refs t3c-check-reload/t3c-check-reload t3c-diff/t3c-diff t3c-generate/t3c-generate t3c-preprocess/t3c-preprocess t3c-request/t3c-request t3c-update/t3c-update tm-health-client/tm-health-client
+TARGETS := t3c/t3c t3c-apply/t3c-apply t3c-check/t3c-check t3c-check-refs/t3c-check-refs t3c-check-reload/t3c-check-reload t3c-diff/t3c-diff t3c-generate/t3c-generate t3c-preprocess/t3c-preprocess t3c-request/t3c-request t3c-update/t3c-update
 
 .PHONY: debug all man rst clean
 
@@ -82,8 +82,6 @@ t3c-preprocess/t3c-preprocess: $(wildcard t3c-preprocess/**/*.go) $(wildcard t3c
 t3c-request/t3c-request: $(wildcard t3c-request/**/*.go) $(wildcard t3c-request/*.go)
 	go build -o $@ $(GO_FLAGS) github.com/apache/trafficcontrol/cache-config/$(dir $@)
 t3c-update/t3c-update: $(wildcard t3c-update/**/*.go) $(wildcard t3c-update/*.go)
-	go build -o $@ $(GO_FLAGS) github.com/apache/trafficcontrol/cache-config/$(dir $@)
-tm-health-client/tm-health-client: $(wildcard tm-health-client/**/*.go) $(wildcard tm-health-client/*.go)
 	go build -o $@ $(GO_FLAGS) github.com/apache/trafficcontrol/cache-config/$(dir $@)
 
 debug: GO_FLAGS=--gcflags "all=-N -l"
