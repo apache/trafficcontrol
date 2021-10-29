@@ -87,7 +87,7 @@ func LookupUserDN(username string, cfg *config.ConfigLDAP) (string, bool, error)
 	searchRequest := ldap.NewSearchRequest(
 		cfg.SearchBase,
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
-		fmt.Sprintf(cfg.SearchQuery, username),
+		fmt.Sprintf(cfg.SearchQuery, ldap.EscapeFilter(username)),
 		[]string{"dn"},
 		nil,
 	)
