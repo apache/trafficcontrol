@@ -208,7 +208,7 @@ export const ASNs = {
 					description: "create an ASN",
 					ASNs: "1111",
 					CacheGroup: "asntestcg1",
-					validationMessage: "missing required Permissions: ASN:UPDATE, CACHE-GROUP:UPDATE"
+					validationMessage: "missing required Permissions: ASN:CREATE, CACHE-GROUP:UPDATE"
 				}
 			],
 			update: [
