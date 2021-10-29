@@ -348,7 +348,11 @@ Response Structure
 
 ``PUT``
 =======
-Updates a specific :term:`Topology`
+Updates a specific :term:`Topology`.
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Response Type:  Object
 
 Request Structure
 -----------------
