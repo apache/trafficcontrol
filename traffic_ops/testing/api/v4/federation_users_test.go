@@ -45,7 +45,7 @@ func TestFederationUsers(t *testing.T) {
 }
 
 func GetTestValidFederationIDUsersIMSAfterChange(t *testing.T, header http.Header) {
-	if len(fedIDs) < 0 {
+	if len(fedIDs) < 1 {
 		t.Fatal("Need at least one Federation ID to test Federation ID Users change")
 	}
 	opts := client.RequestOptions{Header: header}

@@ -340,7 +340,9 @@ func GetTestPaginationSupportFedResolver(t *testing.T) {
 
 func SortTestFederationResolver(t *testing.T) {
 	var sortedList []uint
-	resp, _, err := TOSession.GetFederationResolvers(client.RequestOptions{})
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetFederationResolvers(opts)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v - alerts: %+v", err, resp.Alerts)
 	}
