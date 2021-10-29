@@ -458,7 +458,7 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 	infof("queryString = %s", queryString)
 	res, err := queryDB(client, queryString, "cache_stats")
 	if err != nil {
-		errorln("An error occured getting max bandwidth: %v", err)
+		errorln("An error occured getting max bandwidth: ", err)
 		return
 	}
 	if res != nil && len(res[0].Series) > 0 {
@@ -656,7 +656,7 @@ func calcMetrics(cdnName string, urls []string, cacheMap map[string]tc.Server, c
 			errorf("error calculating delivery service metric values for CDN %s: %v", cdnName, err)
 		}
 	} else {
-		warn("Don't know what to do with given %s stats URL: ", cdnName, healthURL)
+		warn("Don't know what to do with given ", cdnName, " stats URL: ", healthURL)
 	}
 }
 
