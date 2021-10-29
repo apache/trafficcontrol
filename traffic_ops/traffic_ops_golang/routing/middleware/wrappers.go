@@ -129,12 +129,12 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("getting configuration from request context: %w", err))
 				return
 			}
-			v, err := getVersionFromURL(r.URL)
-			if err != nil {
-				api.HandleErr(w, r, nil, http.StatusBadRequest, err, nil)
+			v := api.GetRequestedAPIVersion(r.URL.Path)
+			if v == nil {
+				api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("couldn't get a valid version from the requested path"), nil)
 				return
 			}
-			if v < 4 {
+			if v.Major < 4 {
 				if user.PrivLevel < privLevelRequired {
 					api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
 					return
