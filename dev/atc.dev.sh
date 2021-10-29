@@ -21,7 +21,29 @@ alias atc-stop="docker-compose down -v --remove-orphans";
 alias atc-restart="atc-stop && atc-start";
 
 function atc-ready {
-	curl -skL https://localhost:6443/api/4.0/ping >/dev/null 2>&1;
+	local url="https://localhost:6443/api/4.0/ping";
+	if [[ $# -gt 0 ]]; then
+		case "$1" in
+			-w|--wait)
+				while ! curl -skL "$url" >/dev/null 2>&1; do
+					sleep 1;
+				done
+				return 0;;
+			-h|--help)
+				echo "Usage: $0 [-h] [-w]";
+				echo "";
+				echo "-h, --help  print usage information and exit";
+				echo "-w, --wait  wait for ATC to be ready, instead of just checking if it is ready";
+				return 0;;
+			*)
+				echo "Usage: $0 [-h] [-w]" >&2;
+				echo "" >&2;
+				echo "-h, --help  print usage information and exit" >&2;
+				echo "-w, --wait  wait for ATC to be ready, instead of just checking if it is ready" >&2;
+				return 1;;
+		esac
+	fi
+	curl -skL "$url" >/dev/null 2>&1;
 	return $?;
 }
 
