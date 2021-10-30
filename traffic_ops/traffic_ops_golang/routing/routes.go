@@ -178,6 +178,9 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `cachegroups/{id}/queue_update$`, cachegroup.QueueUpdates, auth.PrivLevelOperations, []string{"CACHE-GROUP:READ", "CDN:READ", "SERVER:READ", "SERVER:QUEUE"}, Authenticated, nil, 40716441103},
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `cachegroups/{id}/deliveryservices/?$`, cachegroup.DSPostHandlerV40, auth.PrivLevelOperations, []string{"CACHE-GROUP:UPDATE", "DELIVERY-SERVICE:UPDATE", "CACHE-GROUP:READ", "DELIVERY-SERVICE:READ"}, Authenticated, nil, 45202404313},
 
+		//Capabilities
+		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `capabilities/?$`, capabilities.Read, auth.PrivLevelReadOnly, []string{"CAPABILITY:READ"}, Authenticated, nil, 40081353},
+
 		//CDN
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `cdns/name/{name}/sslkeys/?$`, cdn.GetSSLKeys, auth.PrivLevelAdmin, []string{"DS-SECURITY-KEY:READ", "CDN:READ", "DELIVERY-SERVICE:READ"}, Authenticated, nil, 42785817723},
 

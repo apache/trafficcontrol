@@ -28,8 +28,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -88,26 +86,6 @@ func Use(h http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {
 type AuthBase struct {
 	Secret   string
 	Override Middleware
-}
-
-func getVersionFromURL(url *url.URL) (int, error) {
-	var version int
-	var err error
-	if url == nil {
-		return version, errors.New("no path supplied to get version from")
-	}
-	res := strings.Split(url.Path, "/")
-	if len(res) > 2 {
-		versionList := strings.Split(res[2], ".")
-		if len(versionList) > 1 {
-			version, err = strconv.Atoi(versionList[0])
-		} else {
-			return version, errors.New("couldn't get major version from request path")
-		}
-	} else {
-		return version, errors.New("couldn't get version from request path")
-	}
-	return version, err
 }
 
 // GetWrapper returns a Middleware which performs authentication of the current user at the given privilege level.
