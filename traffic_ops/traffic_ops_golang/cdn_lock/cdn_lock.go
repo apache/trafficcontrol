@@ -150,7 +150,9 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	tx := inf.Tx.Tx
 	var result tc.CDNLock
 	var err error
-	if inf.User.PrivLevel == auth.PrivLevelAdmin {
+	adminPerms := inf.Config.RoleBasedPermissions && inf.User.Can("CDN-LOCK:DELETE-OTHERS")
+
+	if adminPerms || inf.User.PrivLevel == auth.PrivLevelAdmin {
 		err = inf.Tx.Tx.QueryRow(deleteAdminQuery, cdn).Scan(&result.UserName, &result.CDN, &result.Message, &result.Soft, &result.LastUpdated)
 	} else {
 		err = inf.Tx.Tx.QueryRow(deleteQuery, cdn, inf.User.UserName).Scan(&result.UserName, &result.CDN, &result.Message, &result.Soft, &result.LastUpdated)

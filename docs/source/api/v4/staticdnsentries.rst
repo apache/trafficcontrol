@@ -224,6 +224,7 @@ Updates a static DNS entry.
 
 :Auth. Required:   Yes
 :Role(s) Required: "admin" or "operator"
+:Permissions Required: STATIC-DN:UPDATE, STATIC-DN:READ, CACHE-GROUP:READ, DELIVERY-SERVICE:READ
 :Response Type:    Object
 
 Request Structure

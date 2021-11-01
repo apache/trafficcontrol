@@ -343,7 +343,7 @@ export const origins = {
 					FQDN: "0",
 					Protocol: "https",
 					deliveryServiceId: "ds1",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: ORIGIN:CREATE, DELIVERY-SERVICE:UPDATE"
 				}
 			],
 			update: [
@@ -351,14 +351,14 @@ export const origins = {
 					description: "update Origin Delivery Service",
 					Name: "TP_Origins3",
 					NewDeliveryService: "ds1",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: ORIGIN:UPDATE, DELIVERY-SERVICE:UPDATE"
 				}
 			],
 			remove: [
 				{
 					description: "delete an Origins",
 					Name: "TP_Origins3",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: ORIGIN:DELETE, DELIVERY-SERVICE:UPDATE"
 				}
 			]
 		}

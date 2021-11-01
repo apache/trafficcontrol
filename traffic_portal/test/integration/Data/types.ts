@@ -140,7 +140,7 @@ export const types = {
 					description: "create a Type",
 					Name: "TPType1",
 					DescriptionData: "This is a test",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: TYPE:CREATE"
 				}
 			],
 			update: [
@@ -148,14 +148,14 @@ export const types = {
 					description: "update description type",
 					Name: "TPType3",
 					DescriptionData: "Change description",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: TYPE:UPDATE"
 				}
 			],
 			remove: [
 				{
 					description: "delete a type",
 					Name: "TPType3",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: TYPE:DELETE"
 				}
 			]
 		}

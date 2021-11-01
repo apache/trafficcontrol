@@ -99,12 +99,6 @@ fi
 
 ./db/admin --env=production upgrade || { echo "DB upgrade failed!"; exit 1; }
 
-if ! ./db/admin -env=production load_schema ||
-  ! ./db/admin -env=production load_schema; then
-  echo 'Could not re-run create_tables.sql!'
-  exit 1
-fi;
-
 new_db_version=$(get_current_db_version)
 [[ "$new_db_version" =~ ^failed ]] && { echo "get_current_db_version failed: $new_db_version"; exit 1; }
 

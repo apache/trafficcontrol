@@ -90,7 +90,7 @@ export const serviceCategories = {
 				{
 					description: "create a Service Categories",
 					Name: "TPServiceCategories1",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVICE-CATEGORY:CREATE"
 				}
 			],
 			update: [
@@ -98,14 +98,14 @@ export const serviceCategories = {
 					description: "update service categories name",
 					Name: "TPTest2",
 					NewName: "TPSCNew1",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVICE-CATEGORY:UPDATE"
 				}
 			],
 			remove: [
 				{
 					description: "delete a service categories",
 					Name: "TPTest2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVICE-CATEGORY:DELETE"
 				}
 			]
 		}

@@ -132,7 +132,7 @@ export const serverCapabilities = {
 				{
 					description: "can handle readonly role creating a server capability",
 					name: "TP_SC",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER-CAPABILITY:CREATE"
 				}
 			],
 			remove: [
@@ -140,7 +140,7 @@ export const serverCapabilities = {
 					description: "can handle readonly role deleting a server capability",
 					invalid: false,
 					name: "TP_SC_3",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER-CAPABILITY:DELETE"
 				}
 			] as Array<PossiblyInvalidRemoval>
 		},

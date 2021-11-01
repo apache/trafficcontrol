@@ -155,7 +155,7 @@ export const cachegroups = {
 					ParentCacheGroup: "infrastructure",
 					SecondaryParentCG: "infrastructure",
 					FailoverCG: "albany-ny-usa",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: CACHE-GROUP:CREATE"
 				}
 			],
 			update: [
@@ -163,14 +163,14 @@ export const cachegroups = {
 					Description: "update CacheGroup",
 					Name: "TP_Cache2",
 					Type: "MID_LOC",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: CACHE-GROUP:UPDATE"
 				}
 			],
 			remove: [
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: CACHE-GROUP:DELETE"
 				}
 			]
 		},
