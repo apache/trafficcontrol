@@ -38,8 +38,9 @@ import (
 )
 
 type TMClient struct {
-	url     string
-	timeout time.Duration
+	url       string
+	timeout   time.Duration
+	Transport *http.Transport // optional http Transport
 }
 
 func New(url string, timeout time.Duration) *TMClient {
@@ -198,6 +199,9 @@ func (c *TMClient) ConfigDoc() (handler.OpsConfig, error) {
 func (c *TMClient) getBytes(path string) ([]byte, error) {
 	url := c.url + path
 	httpClient := http.Client{Timeout: c.timeout}
+	if c.Transport != nil {
+		httpClient.Transport = c.Transport
+	}
 	resp, err := httpClient.Get(url)
 	if err != nil {
 		return nil, errors.New("getting from '" + url + "': " + err.Error())
