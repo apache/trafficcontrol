@@ -152,7 +152,7 @@ func (pp *ProfileParametersByNamePost) Validate(tx *sql.Tx) error {
 	for i, profileParam := range ppArr {
 		if ppErrs := profileParam.Validate(tx); len(ppErrs) > 0 {
 			for _, err := range ppErrs {
-				errs = append(errs, errors.New("object "+strconv.Itoa(i)+": "+err.Error()))
+				errs = append(errs, fmt.Errorf("object %d: %w", i, err))
 			}
 		}
 	}
@@ -204,16 +204,16 @@ func (pp *PostProfileParam) Validate(tx *sql.Tx) error {
 	if pp.ProfileID == nil {
 		errs = append(errs, errors.New("profileId missing"))
 	} else if ok, err := ProfileExistsByID(*pp.ProfileID, tx); err != nil {
-		errs = append(errs, errors.New("checking profile ID "+strconv.Itoa(int(*pp.ProfileID))+" existence: "+err.Error()))
+		errs = append(errs, fmt.Errorf("checking profile ID %d existence: %w", *pp.ProfileID, err))
 	} else if !ok {
 		errs = append(errs, errors.New("no profile with ID "+strconv.Itoa(int(*pp.ProfileID))+" exists"))
 	}
 	if pp.ParamIDs == nil {
 		errs = append(errs, errors.New("paramIds missing"))
 	} else if ok, err := ParamsExist(*pp.ParamIDs, tx); err != nil {
-		errs = append(errs, errors.New(fmt.Sprintf("checking parameter IDs %v existence: "+err.Error(), *pp.ParamIDs)))
+		errs = append(errs, fmt.Errorf("checking parameter IDs %v existence: %w", *pp.ParamIDs, err))
 	} else if !ok {
-		errs = append(errs, errors.New(fmt.Sprintf("parameters with IDs %v don't all exist", *pp.ParamIDs)))
+		errs = append(errs, fmt.Errorf("parameters with IDs %v don't all exist", *pp.ParamIDs))
 	}
 	if len(errs) > 0 {
 		return util.JoinErrs(errs)
@@ -248,16 +248,16 @@ func (pp *PostParamProfile) Validate(tx *sql.Tx) error {
 	if pp.ParamID == nil {
 		errs = append(errs, errors.New("paramId missing"))
 	} else if ok, err := ParamExists(*pp.ParamID, tx); err != nil {
-		errs = append(errs, errors.New("checking param ID "+strconv.Itoa(int(*pp.ParamID))+" existence: "+err.Error()))
+		errs = append(errs, fmt.Errorf("checking param ID %d existence: %w", *pp.ParamID, err))
 	} else if !ok {
 		errs = append(errs, errors.New("no parameter with ID "+strconv.Itoa(int(*pp.ParamID))+" exists"))
 	}
 	if pp.ProfileIDs == nil {
 		errs = append(errs, errors.New("profileIds missing"))
 	} else if ok, err := ProfilesExistByIDs(*pp.ProfileIDs, tx); err != nil {
-		errs = append(errs, errors.New(fmt.Sprintf("checking profiles IDs %v existence: "+err.Error(), *pp.ProfileIDs)))
+		errs = append(errs, fmt.Errorf("checking profiles IDs %v existence: %w", *pp.ProfileIDs, err))
 	} else if !ok {
-		errs = append(errs, errors.New(fmt.Sprintf("profiles with IDs %v don't all exist", *pp.ProfileIDs)))
+		errs = append(errs, fmt.Errorf("profiles with IDs %v don't all exist", *pp.ProfileIDs))
 	}
 	if len(errs) > 0 {
 		return util.JoinErrs(errs)
@@ -270,7 +270,7 @@ func (pp *PostParamProfile) Validate(tx *sql.Tx) error {
 func ParamExists(id int64, tx *sql.Tx) (bool, error) {
 	count := 0
 	if err := tx.QueryRow(`SELECT count(*) from parameter where id = $1`, id).Scan(&count); err != nil {
-		return false, errors.New("querying param existence from id: " + err.Error())
+		return false, fmt.Errorf("querying param existence from id: %w", err)
 	}
 	return count > 0, nil
 }
@@ -280,7 +280,7 @@ func ParamExists(id int64, tx *sql.Tx) (bool, error) {
 func ParamsExist(ids []int64, tx *sql.Tx) (bool, error) {
 	count := 0
 	if err := tx.QueryRow(`SELECT count(*) from parameter where id = ANY($1)`, pq.Array(ids)).Scan(&count); err != nil {
-		return false, errors.New("querying parameters existence from id: " + err.Error())
+		return false, fmt.Errorf("querying parameters existence from id: %w", err)
 	}
 	return count == len(ids), nil
 }

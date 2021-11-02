@@ -212,7 +212,7 @@ func headerRewriteServerIsLastTier(server *Server, ds *DeliveryService, fileName
 		// serverPlacement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
 		// fmt.Printf("DEBUG ds '%v' topo placement %+v\n", *ds.XMLID, serverPlacement)
 		// if err != nil {
-		// 	return false, errors.New("getting topology placement: " + err.Error())
+		// 	return false, fmt.Errorf("getting topology placement: %w", err)
 		// }
 		// if !serverPlacement.InTopology {
 		// 	return false, errors.New("server not in topology")
@@ -265,7 +265,7 @@ func getTierHeaderRewriteTopology(server *Server, ds *DeliveryService, fileName 
 	case TopologyCacheTierLast:
 		return ds.LastHeaderRewrite, nil
 	default:
-		return nil, errors.New("Topology Header Rewrite called for DS '" + *ds.XMLID + "' on server '" + *server.HostName + "' file '" + fileName + "' had unknown topology cache tier '" + string(tier) + "'!")
+		return nil, errors.New("topology header rewrite called for DS '" + *ds.XMLID + "' on server '" + *server.HostName + "' file '" + fileName + "' had unknown topology cache tier '" + string(tier) + "'")
 	}
 }
 

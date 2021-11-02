@@ -387,25 +387,25 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User, useV4Use
 	errs := []error{}
 	if u.AddressLine1 != nil {
 		if err := json.Unmarshal(u.AddressLine1, &user.AddressLine1); err != nil {
-			errs = append(errs, fmt.Errorf("addressLine1: %v", err))
+			errs = append(errs, fmt.Errorf("addressLine1: %w", err))
 		}
 	}
 
 	if u.AddressLine2 != nil {
 		if err := json.Unmarshal(u.AddressLine2, &user.AddressLine2); err != nil {
-			errs = append(errs, fmt.Errorf("addressLine2: %v", err))
+			errs = append(errs, fmt.Errorf("addressLine2: %w", err))
 		}
 	}
 
 	if u.City != nil {
 		if err := json.Unmarshal(u.City, &user.City); err != nil {
-			errs = append(errs, fmt.Errorf("city: %v", err))
+			errs = append(errs, fmt.Errorf("city: %w", err))
 		}
 	}
 
 	if u.Company != nil {
 		if err := json.Unmarshal(u.Company, &user.Company); err != nil {
-			errs = append(errs, fmt.Errorf("company: %v", err))
+			errs = append(errs, fmt.Errorf("company: %w", err))
 		}
 	}
 
@@ -414,13 +414,13 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User, useV4Use
 
 	if u.Country != nil {
 		if err := json.Unmarshal(u.Country, &user.Country); err != nil {
-			errs = append(errs, fmt.Errorf("country: %v", err))
+			errs = append(errs, fmt.Errorf("country: %w", err))
 		}
 	}
 
 	if u.Email != nil {
 		if err := json.Unmarshal(u.Email, &user.Email); err != nil {
-			errs = append(errs, fmt.Errorf("email: %v", err))
+			errs = append(errs, fmt.Errorf("email: %w", err))
 		} else if user.Email == nil || *user.Email == "" {
 			errs = append(errs, errors.New("email: cannot be null or an empty string"))
 		} else if err = validation.Validate(*user.Email, is.Email); err != nil {
@@ -430,7 +430,7 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User, useV4Use
 
 	if u.FullName != nil {
 		if err := json.Unmarshal(u.FullName, &user.FullName); err != nil {
-			errs = append(errs, fmt.Errorf("fullName: %v", err))
+			errs = append(errs, fmt.Errorf("fullName: %w", err))
 		} else if user.FullName == nil || *user.FullName == "" {
 			// Perl enforced this
 			errs = append(errs, errors.New("fullName: cannot be set to 'null' or empty string"))
@@ -439,14 +439,14 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User, useV4Use
 
 	if u.GID != nil {
 		if err := json.Unmarshal(u.GID, &user.GID); err != nil {
-			errs = append(errs, fmt.Errorf("gid: %v", err))
+			errs = append(errs, fmt.Errorf("gid: %w", err))
 		}
 	}
 
 	if u.ID != nil {
 		var uid int
 		if err := json.Unmarshal(u.ID, &uid); err != nil {
-			errs = append(errs, fmt.Errorf("id: %v", err))
+			errs = append(errs, fmt.Errorf("id: %w", err))
 		} else if user.ID != nil && *user.ID != uid {
 			errs = append(errs, errors.New("id: cannot change user id"))
 		} else {
@@ -456,32 +456,32 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User, useV4Use
 
 	if u.PhoneNumber != nil {
 		if err := json.Unmarshal(u.PhoneNumber, &user.PhoneNumber); err != nil {
-			errs = append(errs, fmt.Errorf("phoneNumber: %v", err))
+			errs = append(errs, fmt.Errorf("phoneNumber: %w", err))
 		}
 	}
 
 	if u.PostalCode != nil {
 		if err := json.Unmarshal(u.PostalCode, &user.PostalCode); err != nil {
-			errs = append(errs, fmt.Errorf("postalCode: %v", err))
+			errs = append(errs, fmt.Errorf("postalCode: %w", err))
 		}
 	}
 
 	if u.PublicSSHKey != nil {
 		if err := json.Unmarshal(u.PublicSSHKey, &user.PublicSSHKey); err != nil {
-			errs = append(errs, fmt.Errorf("publicSshKey: %v", err))
+			errs = append(errs, fmt.Errorf("publicSshKey: %w", err))
 		}
 	}
 
 	if u.Role != nil {
 		if useV4User {
 			if err := json.Unmarshal(u.Role, &user.RoleName); err != nil {
-				errs = append(errs, fmt.Errorf("role: %v", err))
+				errs = append(errs, fmt.Errorf("role: %w", err))
 			} else if user.RoleName == nil {
 				errs = append(errs, errors.New("role: cannot be null"))
 			}
 		} else {
 			if err := json.Unmarshal(u.Role, &user.Role); err != nil {
-				errs = append(errs, fmt.Errorf("role: %v", err))
+				errs = append(errs, fmt.Errorf("role: %w", err))
 			} else if user.Role == nil {
 				errs = append(errs, errors.New("role: cannot be null"))
 			}
@@ -491,13 +491,13 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User, useV4Use
 
 	if u.StateOrProvince != nil {
 		if err := json.Unmarshal(u.StateOrProvince, &user.StateOrProvince); err != nil {
-			errs = append(errs, fmt.Errorf("stateOrProvince: %v", err))
+			errs = append(errs, fmt.Errorf("stateOrProvince: %w", err))
 		}
 	}
 
 	if u.TenantID != nil {
 		if err := json.Unmarshal(u.TenantID, &user.TenantID); err != nil {
-			errs = append(errs, fmt.Errorf("tenantID: %v", err))
+			errs = append(errs, fmt.Errorf("tenantID: %w", err))
 		} else if user.TenantID == nil {
 			errs = append(errs, errors.New("tenantID: cannot be null"))
 		}
@@ -505,13 +505,13 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User, useV4Use
 
 	if u.UID != nil {
 		if err := json.Unmarshal(u.UID, &user.UID); err != nil {
-			errs = append(errs, fmt.Errorf("uid: %v", err))
+			errs = append(errs, fmt.Errorf("uid: %w", err))
 		}
 	}
 
 	if u.Username != nil {
 		if err := json.Unmarshal(u.Username, &user.Username); err != nil {
-			errs = append(errs, fmt.Errorf("username: %v", err))
+			errs = append(errs, fmt.Errorf("username: %w", err))
 		} else if user.Username == nil || *user.Username == "" {
 			errs = append(errs, errors.New("username: cannot be null or empty string"))
 		}
@@ -639,11 +639,11 @@ func (urr *UserRegistrationRequestV4) Validate(tx *sql.Tx) error {
 func (urr *UserRegistrationRequest) Validate(tx *sql.Tx) error {
 	var errs = []error{}
 	if urr.Role == 0 {
-		errs = append(errs, errors.New("role: required and cannot be zero."))
+		errs = append(errs, errors.New("role: required and cannot be zero"))
 	}
 
 	if urr.TenantID == 0 {
-		errs = append(errs, errors.New("tenantId: required and cannot be zero."))
+		errs = append(errs, errors.New("tenantId: required and cannot be zero"))
 	}
 
 	// This can only happen if an email isn't present in the request; the JSON parse handles actually

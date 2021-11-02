@@ -22,6 +22,7 @@ package tc
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 )
 
 // TypesResponse is the type of a response from Traffic Ops to a GET request
@@ -60,7 +61,7 @@ func GetTypeData(tx *sql.Tx, id int) (string, string, bool, error) {
 		if err == sql.ErrNoRows {
 			return "", "", false, nil
 		}
-		return "", "", false, errors.New("querying type data: " + err.Error())
+		return "", "", false, fmt.Errorf("querying type data: %w", err)
 	}
 	useInTable := ""
 	if useInTablePtr != nil {
@@ -81,7 +82,7 @@ func ValidateTypeID(tx *sql.Tx, typeID *int, expectedUseInTable string) (string,
 
 	typeName, useInTable, ok, err := GetTypeData(tx, *typeID)
 	if err != nil {
-		return "", errors.New("validating type: " + err.Error())
+		return "", fmt.Errorf("validating type: %w", err)
 	}
 	if !ok {
 		return "", errors.New("type not found")

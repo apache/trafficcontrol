@@ -76,10 +76,10 @@ func (e *TOExtensionNullable) Validate(tx *sql.Tx) error {
 		"isactive":    validation.Validate(e.IsActive, validation.NotNil),
 	})
 	if e.ID != nil {
-		errs = append(errs, errors.New("ToExtension update not supported; delete and re-add."))
+		errs = append(errs, errors.New("update not supported; delete and re-add"))
 	}
 	if e.IsActive != nil && !(*e.IsActive == 0 || *e.IsActive == 1) {
-		errs = append(errs, errors.New("isactive can only be 0 or 1."))
+		errs = append(errs, errors.New("isactive can only be 0 or 1"))
 	}
 	if len(errs) > 0 {
 		return util.JoinErrs(errs)

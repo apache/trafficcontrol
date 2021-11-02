@@ -21,6 +21,7 @@ package atscfg
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -167,7 +168,7 @@ func addMetaObjConfigDir(
 
 	cacheGroups, err := makeCGMap(cacheGroupArr)
 	if err != nil {
-		return nil, warnings, errors.New("making CG map: " + err.Error())
+		return nil, warnings, fmt.Errorf("making CG map: %w", err)
 	}
 
 	// Note there may be multiple files with the same name in different directories.
@@ -185,7 +186,7 @@ func addMetaObjConfigDir(
 			continue
 		}
 		if configDir == "" {
-			return nil, warnings, errors.New("required file '" + fileName + "' has no location Parameter, and ATS config directory not found.")
+			return nil, warnings, errors.New("required file '" + fileName + "' has no location Parameter, and ATS config directory not found")
 		}
 		configFilesM[fileName] = []CfgMeta{{
 			Name: fileName,
@@ -198,7 +199,7 @@ func addMetaObjConfigDir(
 		for _, fi := range fis {
 			if !filepath.IsAbs(fi.Path) {
 				if configDir == "" {
-					return nil, warnings, errors.New("file '" + fileName + "' has location Parameter with relative path '" + fi.Path + "', but ATS config directory was not found.")
+					return nil, warnings, errors.New("file '" + fileName + "' has location Parameter with relative path '" + fi.Path + "', but ATS config directory was not found")
 				}
 				absPath := filepath.Join(configDir, fi.Path)
 				fi.Path = absPath
@@ -224,7 +225,7 @@ func addMetaObjConfigDir(
 
 			placement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, &ds)
 			if err != nil {
-				return nil, warnings, errors.New("getting topology placement: " + err.Error())
+				return nil, warnings, fmt.Errorf("getting topology placement: %w", err)
 			}
 			if placement.IsFirstCacheTier {
 				if (ds.FirstHeaderRewrite != nil && *ds.FirstHeaderRewrite != "") || ds.MaxOriginConnections != nil || ds.ServiceCategory != nil {
@@ -473,7 +474,7 @@ func ensureConfigFile(files map[string][]CfgMeta, fileName string, configDir str
 		return files, nil
 	}
 	if configDir == "" {
-		return files, errors.New("required file '" + fileName + "' has no location Parameter, and ATS config directory not found.")
+		return files, errors.New("required file '" + fileName + "' has no location Parameter, and ATS config directory not found")
 	}
 	files[fileName] = []CfgMeta{{
 		Name: fileName,

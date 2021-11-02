@@ -144,7 +144,7 @@ func IsGreaterThanZero(value interface{}) error {
 			return nil
 		}
 	default:
-		return fmt.Errorf("IsGreaterThanZero validation failure: unknown type %T", value)
+		return fmt.Errorf("unknown type %T", value)
 	}
 	return errors.New("must be greater than zero")
 }
@@ -169,7 +169,7 @@ func IsValidPortNumber(value interface{}) error {
 			return nil
 		}
 	default:
-		return fmt.Errorf("IsValidPortNumber validation failure: unknown type %T", value)
+		return fmt.Errorf("unknown type %T", value)
 	}
 	return errors.New("must be a valid port number")
 }
@@ -205,7 +205,7 @@ func IsValidIPv6CIDROrAddress(value interface{}) error {
 		}
 		return fmt.Errorf("unable to parse an IPv6 address or CIDR from: %s", *v)
 	default:
-		return fmt.Errorf("IsValidIPv6CIDROrAddress validation failure: unknown type %T", value)
+		return fmt.Errorf("unknown type %T", value)
 	}
 }
 

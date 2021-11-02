@@ -133,13 +133,13 @@ func (r *ResolverMapping) Validate(tx *sql.Tx) error {
 		ip := net.ParseIP(res)
 		if ip != nil {
 			if ip.To4() == nil {
-				errs = append(errs, fmt.Errorf("[ %s ] is not a valid ip address.", res))
+				errs = append(errs, fmt.Errorf("[ %s ] is not a valid ip address", res))
 			}
 			continue
 		}
 
 		if ip, _, err := net.ParseCIDR(res); err != nil || ip.To4() == nil {
-			errs = append(errs, fmt.Errorf("[ %s ] is not a valid ip address.", res))
+			errs = append(errs, fmt.Errorf("[ %s ] is not a valid ip address", res))
 		}
 	}
 
@@ -147,13 +147,13 @@ func (r *ResolverMapping) Validate(tx *sql.Tx) error {
 		ip := net.ParseIP(res)
 		if ip != nil {
 			if ip.To16() == nil {
-				errs = append(errs, fmt.Errorf("[ %s ] is not a valid ip address.", res))
+				errs = append(errs, fmt.Errorf("[ %s ] is not a valid ip address", res))
 			}
 			continue
 		}
 
 		if ip, _, err := net.ParseCIDR(res); err != nil || ip.To16() == nil {
-			errs = append(errs, fmt.Errorf("[ %s ] is not a valid ip address.", res))
+			errs = append(errs, fmt.Errorf("[ %s ] is not a valid ip address", res))
 		}
 	}
 	if len(errs) > 0 {

@@ -19,10 +19,12 @@ package rfc
  * under the License.
  */
 
-import "encoding/json"
-import "fmt"
-import "net/mail"
-import "strconv"
+import (
+	"encoding/json"
+	"fmt"
+	"net/mail"
+	"strconv"
+)
 
 // EmailAddress is an alias of net/mail.Address that implements JSON encoding and decoding, as well
 // as scanning from database driver values.
@@ -36,11 +38,11 @@ func (a *EmailAddress) UnmarshalJSON(data []byte) error {
 	}
 	s, err := strconv.Unquote(string(data))
 	if err != nil {
-		return fmt.Errorf("JSON %s not quoted: %v", data, err)
+		return fmt.Errorf("email string in JSON %s not quoted: %w", data, err)
 	}
 	addr, err := mail.ParseAddress(s)
 	if err != nil {
-		return fmt.Errorf("Couldn't parse '%s' as an email address: %v", s, err)
+		return fmt.Errorf("couldn't parse '%s' as an email address: %w", s, err)
 	}
 	*a = EmailAddress{*addr}
 	return nil
@@ -72,6 +74,6 @@ func (a *EmailAddress) Scan(src interface{}) error {
 		}
 		return err
 	default:
-		return fmt.Errorf("Type %T cannot represent an EmailAddress!", src)
+		return fmt.Errorf("type %T cannot represent an EmailAddress", src)
 	}
 }

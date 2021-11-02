@@ -456,11 +456,11 @@ func ProtocolFromString(s string) Protocol {
 // UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (p *Protocol) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
-		return errors.New("Protocol cannot be null")
+		return errors.New("protocol cannot be null")
 	}
 	s, err := strconv.Unquote(string(data))
 	if err != nil {
-		return fmt.Errorf("JSON %s not quoted: %v", data, err)
+		return fmt.Errorf("protocol string in JSON %s not quoted: %w", data, err)
 	}
 	*p = ProtocolFromString(s)
 	if *p == ProtocolInvalid {
@@ -521,7 +521,7 @@ func LocalizationMethodFromString(s string) LocalizationMethod {
 // UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (m *LocalizationMethod) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
-		return errors.New("LocalizationMethod cannot be null")
+		return errors.New("localizationMethod cannot be null")
 	}
 	s, err := strconv.Unquote(string(data))
 	if err != nil {
@@ -542,11 +542,11 @@ func (m LocalizationMethod) MarshalJSON() ([]byte, error) {
 // Scan implements the database/sql.Scanner interface.
 func (m *LocalizationMethod) Scan(value interface{}) error {
 	if value == nil {
-		return errors.New("LocalizationMethod cannot be null")
+		return errors.New("localizationMethod cannot be null")
 	}
 	sv, err := driver.String.ConvertValue(value)
 	if err != nil {
-		return errors.New("failed to scan LocalizationMethod: " + err.Error())
+		return fmt.Errorf("failed to scan LocalizationMethod: %w", err)
 	}
 
 	switch v := sv.(type) {

@@ -21,11 +21,12 @@ package atscfg
 
 import (
 	"errors"
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -226,7 +227,7 @@ func getServerConfigRemapDotConfigForMid(
 		if *ds.Topology != "" && hasTopology {
 			topoIncludesServer, err := topologyIncludesServerNullable(topology, server)
 			if err != nil {
-				return "", warnings, errors.New("getting Topology Server inclusion: " + err.Error())
+				return "", warnings, fmt.Errorf("getting Topology Server inclusion: %w", err)
 			}
 			if !topoIncludesServer {
 				continue
@@ -329,7 +330,7 @@ func getServerConfigRemapDotConfigForEdge(
 		if *ds.Topology != "" && hasTopology {
 			topoIncludesServer, err := topologyIncludesServerNullable(topology, server)
 			if err != nil {
-				return "", warnings, errors.New("getting topology server inclusion: " + err.Error())
+				return "", warnings, fmt.Errorf("getting topology server inclusion: %w", err)
 			}
 			if !topoIncludesServer {
 				continue
@@ -408,7 +409,7 @@ func buildEdgeRemapLine(
 
 	isLastCache, err := serverIsLastCacheForDS(server, &ds, nameTopologies, cacheGroups)
 	if err != nil {
-		return "", warnings, errors.New("determining if cache is the last tier: " + err.Error())
+		return "", warnings, fmt.Errorf("determining if cache is the last tier: %w", err)
 	}
 
 	// if this remap is going to a parent, use http not https.
@@ -521,7 +522,7 @@ func buildEdgeRemapLine(
 func makeDSTopologyHeaderRewriteTxt(ds DeliveryService, cg tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable) (string, error) {
 	placement, err := getTopologyPlacement(cg, topology, cacheGroups, &ds)
 	if err != nil {
-		return "", errors.New("getting topology placement: " + err.Error())
+		return "", fmt.Errorf("getting topology placement: %w", err)
 	}
 	txt := ""
 	const pluginTxt = ` @plugin=header_rewrite.so @pparam=`
@@ -722,7 +723,7 @@ func makeDSProfilesConfigParams(server *Server, dses []DeliveryService, remapCon
 	warnings := []string{}
 	dsConfigParamsWithProfiles, err := tcParamsToParamsWithProfiles(remapConfigParams)
 	if err != nil {
-		return nil, warnings, errors.New("decoding cache key parameter profiles: " + err.Error())
+		return nil, warnings, fmt.Errorf("decoding cache key parameter profiles: %w", err)
 	}
 
 	configParamsWithProfilesMap := parameterWithProfilesToMap(dsConfigParamsWithProfiles)
@@ -832,15 +833,15 @@ func getDSRequestFQDNs(ds *DeliveryService, regexes []tc.DeliveryServiceRegex, s
 func serverIsLastCacheForDS(server *Server, ds *DeliveryService, topologies map[TopologyName]tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable) (bool, error) {
 	if ds.Topology != nil && strings.TrimSpace(*ds.Topology) != "" {
 		if server.Cachegroup == nil {
-			return false, errors.New("Server has no CacheGroup")
+			return false, errors.New("server has no Cache Group")
 		}
 		topology, ok := topologies[TopologyName(*ds.Topology)]
 		if !ok {
-			return false, errors.New("DS topology '" + *ds.Topology + "' not found in topologies")
+			return false, errors.New("deliver service topology '" + *ds.Topology + "' not found in topologies")
 		}
 		topoPlacement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
 		if err != nil {
-			return false, errors.New("getting topology placement: " + err.Error())
+			return false, fmt.Errorf("getting topology placement: %w", err)
 		}
 		return topoPlacement.IsLastCacheTier, nil
 	}

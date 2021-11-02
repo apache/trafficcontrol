@@ -771,12 +771,12 @@ func getTopologyParentConfigLine(
 
 	topology := nameTopologies[TopologyName(*ds.Topology)]
 	if topology.Name == "" {
-		return "", warnings, errors.New("DS " + *ds.XMLID + " topology '" + *ds.Topology + "' not found in Topologies!")
+		return "", warnings, errors.New("delivery service " + *ds.XMLID + " topology '" + *ds.Topology + "' not found in Topologies")
 	}
 
 	serverPlacement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
 	if err != nil {
-		return "", warnings, errors.New("getting topology placement: " + err.Error())
+		return "", warnings, fmt.Errorf("getting topology placement: %w", err)
 	}
 	if !serverPlacement.InTopology {
 		return "", warnings, nil // server isn't in topology, no error
@@ -790,7 +790,7 @@ func getTopologyParentConfigLine(
 	orgURI, orgWarns, err := getOriginURI(orgFQDNStr)
 	warnings = append(warnings, orgWarns...)
 	if err != nil {
-		return "", warnings, errors.New("DS '" + *ds.XMLID + "' has malformed origin URI: '" + *ds.OrgServerFQDN + "': skipping!" + err.Error())
+		return "", warnings, fmt.Errorf("delivery service '%s' has malformed origin URI: '%s': skipping: %w", *ds.XMLID, *ds.OrgServerFQDN, err)
 	}
 
 	txt += makeParentComment(addComments, *ds.XMLID, *ds.Topology)
@@ -799,10 +799,10 @@ func getTopologyParentConfigLine(
 	parents, secondaryParents, parentWarnings, err := getTopologyParents(server, ds, servers, parentConfigParams, topology, serverPlacement.IsLastTier, serverCapabilities, dsRequiredCapabilities, dsOrigins)
 	warnings = append(warnings, parentWarnings...)
 	if err != nil {
-		return "", warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': skipping! " + err.Error())
+		return "", warnings, fmt.Errorf("getting topology parents for '%s': skipping %w", *ds.XMLID, err)
 	}
 	if len(parents) == 0 {
-		return "", warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': no parents found! skipping! (Does your Topology have a CacheGroup with no servers in it?)")
+		return "", warnings, errors.New("getting topology parents for '" + *ds.XMLID + "': no parents found - skipping (does your Topology have a Cache Group with no servers in it?)")
 	}
 
 	txt += ` parent="` + strings.Join(parents, `;`) + `"`
@@ -1017,17 +1017,17 @@ func getTopologyParents(
 		}
 	}
 	if svNode.Cachegroup == "" {
-		return nil, nil, warnings, errors.New("This server '" + *server.HostName + "' not in DS " + *ds.XMLID + " topology, skipping")
+		return nil, nil, warnings, errors.New("this server '" + *server.HostName + "' not in DS " + *ds.XMLID + " topology, skipping")
 	}
 
 	if len(svNode.Parents) == 0 {
-		return nil, nil, warnings, errors.New("DS " + *ds.XMLID + " topology '" + *ds.Topology + "' is last tier, but NonLastTier called! Should never happen")
+		return nil, nil, warnings, errors.New("delivery service " + *ds.XMLID + " topology '" + *ds.Topology + "' is last tier, but NonLastTier called - should never happen")
 	}
 	if numParents := len(svNode.Parents); numParents > 2 {
 		warnings = append(warnings, "DS "+*ds.XMLID+" topology '"+*ds.Topology+"' has "+strconv.Itoa(numParents)+" parent nodes, but Apache Traffic Server only supports Primary and Secondary (2) lists of parents. CacheGroup nodes after the first 2 will be ignored!")
 	}
 	if len(topology.Nodes) <= svNode.Parents[0] {
-		return nil, nil, warnings, errors.New("DS " + *ds.XMLID + " topology '" + *ds.Topology + "' node parent " + strconv.Itoa(svNode.Parents[0]) + " greater than number of topology nodes " + strconv.Itoa(len(topology.Nodes)) + ". Cannot create parents!")
+		return nil, nil, warnings, errors.New("delivery service " + *ds.XMLID + " topology '" + *ds.Topology + "' node parent " + strconv.Itoa(svNode.Parents[0]) + " greater than number of topology nodes " + strconv.Itoa(len(topology.Nodes)) + " - cannot create parents")
 	}
 	if len(svNode.Parents) > 1 && len(topology.Nodes) <= svNode.Parents[1] {
 		warnings = append(warnings, "DS "+*ds.XMLID+" topology '"+*ds.Topology+"' node secondary parent "+strconv.Itoa(svNode.Parents[1])+" greater than number of topology nodes "+strconv.Itoa(len(topology.Nodes))+". Secondary parent will be ignored!")
@@ -1040,7 +1040,7 @@ func getTopologyParents(
 	}
 
 	if parentCG == "" {
-		return nil, nil, warnings, errors.New("Server '" + *server.HostName + "' DS " + *ds.XMLID + " topology '" + *ds.Topology + "' cachegroup '" + *server.Cachegroup + "' topology node parent " + strconv.Itoa(svNode.Parents[0]) + " is not in the topology!")
+		return nil, nil, warnings, errors.New("server '" + *server.HostName + "' DS " + *ds.XMLID + " topology '" + *ds.Topology + "' cachegroup '" + *server.Cachegroup + "' topology node parent " + strconv.Itoa(svNode.Parents[0]) + " is not in the topology")
 	}
 
 	parentStrs := []string{}
@@ -1091,7 +1091,7 @@ func getTopologyParents(
 		if *sv.Cachegroup == parentCG {
 			parentStr, err := serverParentStr(&sv.Server, sv.Params)
 			if err != nil {
-				return nil, nil, warnings, errors.New("getting server parent string: " + err.Error())
+				return nil, nil, warnings, fmt.Errorf("getting server parent string: %w", err)
 			}
 			if parentStr != "" { // will be empty if server is not_a_parent (possibly other reasons)
 				parentStrs = append(parentStrs, parentStr)
@@ -1100,7 +1100,7 @@ func getTopologyParents(
 		if *sv.Cachegroup == secondaryParentCG {
 			parentStr, err := serverParentStr(&sv.Server, sv.Params)
 			if err != nil {
-				return nil, nil, warnings, errors.New("getting server parent string: " + err.Error())
+				return nil, nil, warnings, fmt.Errorf("getting server parent string: %w", err)
 			}
 			secondaryParentStrs = append(secondaryParentStrs, parentStr)
 		}
@@ -1115,7 +1115,7 @@ func getOriginURI(fqdn string) (*url.URL, []string, error) {
 
 	orgURI, err := url.Parse(fqdn) // TODO verify origin is always a host:port
 	if err != nil {
-		return nil, warnings, errors.New("parsing: " + err.Error())
+		return nil, warnings, fmt.Errorf("parsing: %w", err)
 	}
 	if orgURI.Port() == "" {
 		if orgURI.Scheme == "http" {
@@ -1322,7 +1322,7 @@ func getOriginServersAndProfileCaches(
 	dsIDMap := map[int]DeliveryService{}
 	for _, ds := range dses {
 		if ds.ID == nil {
-			return nil, nil, warnings, errors.New("delivery services got nil ID!")
+			return nil, nil, warnings, errors.New("delivery services got nil ID")
 		}
 		if !ds.Type.IsHTTP() && !ds.Type.IsDNS() {
 			continue // skip ANY_MAP, STEERING, etc
@@ -1349,7 +1349,7 @@ func getOriginServersAndProfileCaches(
 	dsOrigins, dsOriginWarns, err := getDSOrigins(allDSMap)
 	warnings = append(warnings, dsOriginWarns...)
 	if err != nil {
-		return nil, nil, warnings, errors.New("getting DS origins: " + err.Error())
+		return nil, nil, warnings, fmt.Errorf("getting DS origins: %w", err)
 	}
 
 	profileParams, profParamWarns := getParentConfigProfileParams(cgServers, profileParentConfigParams)
@@ -1505,7 +1505,7 @@ func getDSOrigins(dses map[int]DeliveryService) (map[int]*originURI, []string, e
 		}
 		orgURL, err := url.Parse(*ds.OrgServerFQDN)
 		if err != nil {
-			return nil, warnings, errors.New("parsing ds '" + *ds.XMLID + "' OrgServerFQDN '" + *ds.OrgServerFQDN + "': " + err.Error())
+			return nil, warnings, fmt.Errorf("parsing ds '%s' OrgServerFQDN '%s': %w", *ds.XMLID, *ds.OrgServerFQDN, err)
 		}
 		if orgURL.Scheme == "" {
 			return nil, warnings, errors.New("parsing ds '" + *ds.XMLID + "' OrgServerFQDN '" + *ds.OrgServerFQDN + "': " + "missing scheme")

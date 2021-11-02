@@ -21,6 +21,7 @@ package atscfg
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -234,7 +235,7 @@ func GetServerSSLData(
 
 	cacheGroups, err := makeCGMap(cacheGroupArr)
 	if err != nil {
-		return nil, warnings, errors.New("making cachegroup map: " + err.Error())
+		return nil, warnings, fmt.Errorf("making cachegroup map: %w", err)
 	}
 
 	nameTopologies := makeTopologyNameMap(topologies)
@@ -359,7 +360,7 @@ func dsUsesServer(
 
 	serverParentCGData, err := getParentCacheGroupData(server, cacheGroups)
 	if err != nil {
-		return false, errors.New("getting server parent cachegroup data: " + err.Error())
+		return false, fmt.Errorf("getting server parent cachegroup data: %w", err)
 	}
 	cacheIsTopLevel := isTopLevelCache(serverParentCGData)
 
@@ -377,7 +378,7 @@ func dsUsesServer(
 
 		serverPlacement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
 		if err != nil {
-			return false, errors.New("getting topology placement: " + err.Error())
+			return false, fmt.Errorf("getting topology placement: %w", err)
 		}
 		if !serverPlacement.InTopology {
 			return false, nil
