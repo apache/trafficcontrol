@@ -61,13 +61,19 @@ func MakeDispatchMap(
 	toData todata.TODataThreadsafe,
 	localCacheStatus threadsafe.CacheAvailableStatus,
 	lastStats threadsafe.LastStats,
-	unpolledCaches threadsafe.UnpolledCaches,
+	statUnpolledCaches threadsafe.UnpolledCaches,
+	healthUnpolledCaches threadsafe.UnpolledCaches,
 	monitorConfig threadsafe.TrafficMonitorConfigMap,
+	statPollingEnabled bool,
 ) map[string]http.HandlerFunc {
 
 	// wrap composes all universal wrapper functions. Right now, it's only the UnpolledCheck, but there may be others later. For example, security headers.
 	wrap := func(f http.HandlerFunc) http.HandlerFunc {
-		return wrapUnpolledCheck(unpolledCaches, errorCount, f)
+		if statPollingEnabled {
+			return wrapUnpolledCheck(statUnpolledCaches, errorCount, f)
+		} else {
+			return wrapUnpolledCheck(healthUnpolledCaches, errorCount, f)
+		}
 	}
 
 	dispatchMap := map[string]http.HandlerFunc{
