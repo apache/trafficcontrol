@@ -108,6 +108,7 @@ type ConfigData struct {
 }
 
 type ConfigDataMetaData struct {
+	CacheHostName          string                                 `json:"cache_host_name"`
 	Servers                ReqMetaData                            `json:"servers"`
 	CacheGroups            ReqMetaData                            `json:"cache_groups"`
 	GlobalParams           ReqMetaData                            `json:"global_parameters"`
@@ -176,6 +177,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 
 	toIPs := &sync.Map{} // each Traffic Ops request could get a different IP, so track them all
 	toData := &ConfigData{}
+	toData.MetaData.CacheHostName = cacheHostName
 
 	{
 		reqHdr := (http.Header)(nil)
@@ -218,6 +220,16 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 		}
 	} else {
 		log.Infoln("Traffic Ops proxy is disabled, not checking or using GLOBAL Parameter '" + TrafficOpsProxyParameterName)
+	}
+
+	oldServer := &atscfg.Server{}
+	if oldCfg != nil {
+		for _, toServer := range oldCfg.Servers {
+			if toServer.HostName != nil && *toServer.HostName == oldCfg.MetaData.CacheHostName {
+				oldServer = &toServer
+				break
+			}
+		}
 	}
 
 	serversF := func() error {
@@ -267,8 +279,9 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			defer func(start time.Time) { log.Infof("sslF took %v\n", time.Since(start)) }(time.Now())
 
 			{
+
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil {
+				if oldCfg != nil && oldServer.CDNName != nil && *oldServer.CDNName == *server.CDNName {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.SSLKeys)
 				}
 				keys, reqInf, err := toClient.GetCDNSSLKeys(tc.CDNName(*server.CDNName), reqHdr)
@@ -293,7 +306,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil {
+				if oldCfg != nil && oldServer.CDNName != nil && *oldServer.CDNName == *server.CDNName {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.DeliveryServices)
 				}
 				dses, reqInf, err := toClient.GetCDNDeliveryServices(*server.CDNID, reqHdr)
@@ -329,7 +342,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 
 				{
 					reqHdr := (http.Header)(nil)
-					if oldCfg != nil {
+					if oldCfg != nil && oldServer.CDNName != nil && *oldServer.CDNName == *server.CDNName {
 						reqHdr = MakeReqHdr(oldCfg.MetaData.DeliveryServiceServers)
 					}
 					dss, reqInf, err := toClient.GetDeliveryServiceServers(nil, nil, *server.CDNName, reqHdr)
@@ -447,7 +460,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			defer func(start time.Time) { log.Infof("serverParamsF took %v\n", time.Since(start)) }(time.Now())
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil {
+				if oldCfg != nil && oldServer.Profile != nil && *oldServer.Profile == *server.Profile {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.ServerParams)
 				}
 				params, reqInf, err := toClient.GetServerProfileParameters(*server.Profile, reqHdr)
@@ -473,7 +486,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			defer func(start time.Time) { log.Infof("cdnF took %v\n", time.Since(start)) }(time.Now())
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil {
+				if oldCfg != nil && oldServer.CDNName != nil && *oldServer.CDNName == *server.CDNName {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.CDN)
 				}
 				cdn, reqInf, err := toClient.GetCDN(tc.CDNName(*server.CDNName), reqHdr)
@@ -496,8 +509,8 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			defer func(start time.Time) { log.Infof("profileF took %v\n", time.Since(start)) }(time.Now())
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil {
-					reqHdr = MakeReqHdr(oldCfg.MetaData.GlobalParams)
+				if oldCfg != nil && oldServer.Profile != nil && *oldServer.Profile == *server.Profile {
+					reqHdr = MakeReqHdr(oldCfg.MetaData.Profile)
 				}
 				profile, reqInf, err := toClient.GetProfileByName(*server.Profile, reqHdr)
 				if err != nil {
@@ -519,7 +532,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			defer func(start time.Time) { log.Infof("jobsF took %v\n", time.Since(start)) }(time.Now())
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil {
+				if oldCfg != nil && oldServer.CDNName != nil && *oldServer.CDNName == *server.CDNName {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.Jobs)
 				}
 				jobs, reqInf, err := toClient.GetJobs(reqHdr, *server.CDNName)
