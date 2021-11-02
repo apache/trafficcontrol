@@ -96,7 +96,8 @@ export const jobs = {
 					description: "create an invalidation request",
                     DeliveryService: "dstestjob1",
                     Regex: "/test",
-                    Ttl: "1",
+                    TtlHours: "1",
+                    InvalidationType: "REFRESH",
 					validationMessage: "Invalidation request created"
 				}
 			],

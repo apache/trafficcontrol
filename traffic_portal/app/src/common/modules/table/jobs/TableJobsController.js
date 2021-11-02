@@ -34,8 +34,8 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 			hide: false
 		},
 		{
-			headerName: "Parameters",
-			field: "parameters",
+			headerName: "TTL (Hours)",
+			field: "ttlHours",
 			hide: false
 		},
 		{
@@ -63,8 +63,7 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 			// need to convert this to a date object for ag-grid filter to work properly
 			x.startTime = new Date(x.startTime.replace("+00", "Z"));
 
-			// going to derive the expires date from start + TTL (hours). Format: TTL:24h
-			let ttl = parseInt(x.parameters.slice('TTL:'.length, x.parameters.length-1), 10);
+			let ttl = parseInt(x.ttlHours, 10);
 			x.expires = new Date(x.startTime.getTime() + ttl*3600*1000);
 			return x;
 		});
