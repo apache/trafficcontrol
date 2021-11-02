@@ -95,7 +95,7 @@ $ TO_URL=https://localhost:8443 go test -v -cfg=traffic-ops-test.conf -run TestC
 or, since the cfg file location is inferred, the call could be shortened to test a specific API version with something like:
 
 ```shell
-$ go test -v run TestJobs ./v4
+$ go test -v -run TestJobs ./v4
 ```
 
 
