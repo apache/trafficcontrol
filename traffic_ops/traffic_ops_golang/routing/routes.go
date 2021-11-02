@@ -216,10 +216,10 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `logs/newcount/?$`, logs.GetNewCount, auth.PrivLevelReadOnly, []string{"LOG:READ"}, Authenticated, nil, 44058330123},
 
 		//Content invalidation jobs
-		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `jobs/?$`, api.ReadHandler(&invalidationjobs.InvalidationJob{}), auth.PrivLevelReadOnly, []string{"JOB:READ", "DELIVERY-SERVICE:READ"}, Authenticated, nil, 49667820413},
-		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `jobs/?$`, invalidationjobs.Delete, auth.PrivLevelPortal, []string{"JOB:DELETE", "JOB:READ", "DELIVERY-SERVICE:UPDATE", "DELIVERY-SERVICE:READ"}, Authenticated, nil, 4167807763},
-		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `jobs/?$`, invalidationjobs.Update, auth.PrivLevelPortal, []string{"JOB:UPDATE", "DELIVERY-SERVICE:UPDATE", "JOB:READ", "DELIVERY-SERVICE:READ"}, Authenticated, nil, 4861342263},
-		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `jobs/?`, invalidationjobs.Create, auth.PrivLevelPortal, []string{"JOB:CREATE", "JOB:READ", "DELIVERY-SERVICE:READ", "DELIVERY-SERVICE:UPDATE"}, Authenticated, nil, 404509553},
+		{api.Version{Major: 4, Minor: 0}, http.MethodGet, `jobs/?$`, api.ReadHandler(&invalidationjobs.InvalidationJobV4{}), auth.PrivLevelReadOnly, nil, Authenticated, nil, 49667820413},
+		{api.Version{Major: 4, Minor: 0}, http.MethodDelete, `jobs/?$`, invalidationjobs.DeleteV40, auth.PrivLevelPortal, nil, Authenticated, nil, 4167807763},
+		{api.Version{Major: 4, Minor: 0}, http.MethodPut, `jobs/?$`, invalidationjobs.UpdateV40, auth.PrivLevelPortal, nil, Authenticated, nil, 4861342263},
+		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `jobs/?`, invalidationjobs.CreateV40, auth.PrivLevelPortal, nil, Authenticated, nil, 404509553},
 
 		//Login
 		{api.Version{Major: 4, Minor: 0}, http.MethodPost, `user/login/?$`, login.LoginHandler(d.DB, d.Config), 0, nil, NoAuth, nil, 43926708213},

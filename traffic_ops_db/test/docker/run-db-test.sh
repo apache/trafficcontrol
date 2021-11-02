@@ -97,6 +97,7 @@ if [[ "$old_db_version" -eq 0 ]]; then
     ./db/admin --env=production reset || { echo "DB reset failed!"; exit 1; }
 fi
 
+# applies migrations then performs seeding and patching
 ./db/admin --env=production upgrade || { echo "DB upgrade failed!"; exit 1; }
 
 new_db_version=$(get_current_db_version)

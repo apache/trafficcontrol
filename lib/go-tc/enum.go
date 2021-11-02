@@ -219,6 +219,19 @@ type ParameterName string
 // fetched by t3c.
 const UseRevalPendingParameterName = ParameterName("use_reval_pending")
 
+// RefetchEnabled is the name of a Parameter used to determine if the
+// Refetch feature is enabled. If enabled, this allows a consumer of the TO API
+// to submit Refetch InvalidationJob types. These will subsequently be treated
+// as a MISS by cache servers. Previously, the only capability was Refresh
+// which was, in turn, treated as a STALE by cache servers. This value should
+// be used with caution, since coupled with regex, could cause significant
+// performance impacts by implementing cache servers if used incorrectly.
+//
+// Note that there is no guarantee that a Parameter with this name exists in
+// Traffic Ops at any given time, and while it's implementation relies on
+// a boolean Value, this it not gauranteed either.
+const RefetchEnabled = ParameterName("refetch_enabled")
+
 // ConfigFileName is a Parameter ConfigFile value.
 //
 // This has no additional attached semantics, and so while it is known to most
