@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#5927](https://github.com/apache/trafficcontrol/issues/5927) Updated CDN-in-a-Box to not run a Riak container by default but instead only run it if the optional flag is provided.
 - Traffic Portal no longer uses `ruby compass` to compile sass and now uses `dart-sass`.
 - Changed Invalidation Jobs throughout (TO, TP, T3C, etc.) to account for the ability to do both REFRESH and REFETCH requests for resources.
+- The `admin` Role is now always guaranteed to exist, and can't be deleted or modified.
 
 ### Deprecated
 - Deprecated the endpoints and docs associated with `api_capability`.
