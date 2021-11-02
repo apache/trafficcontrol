@@ -47,7 +47,9 @@ func (e roleError) Error() string {
 	return string(e)
 }
 
-const cannotModifyAdminError roleError = "the 'admin' Role cannot be deleted or modified"
+const cannotModifyAdminError roleError = "the '" + tc.AdminRoleName + "' Role cannot be deleted or modified"
+
+const isAdminQuery = `SELECT name='` + tc.AdminRoleName + `' FROM public.role WHERE id=$1`
 
 type TORole struct {
 	api.APIInfoImpl `json:"-"`
@@ -222,8 +224,8 @@ func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 
 func (role *TORole) Update(h http.Header) (error, error, int) {
 	var isAdmin bool
-	if err := role.ReqInfo.Tx.Get(&isAdmin, `SELECT name='admin' FROM public.role WHERE id=$1`, role.ID); err != nil {
-		return nil, fmt.Errorf("checking if Role to be modified is 'admin': %w", err), http.StatusInternalServerError
+	if err := role.ReqInfo.Tx.Get(&isAdmin, isAdminQuery, role.ID); err != nil {
+		return nil, fmt.Errorf("checking if Role to be modified is '%s': %w", tc.AdminRoleName, err), http.StatusInternalServerError
 	} else if isAdmin {
 		return cannotModifyAdminError, nil, http.StatusBadRequest
 	}
@@ -261,8 +263,8 @@ func (role *TORole) Delete() (error, error, int) {
 	}
 
 	var isAdmin bool
-	if err := role.ReqInfo.Tx.Get(&isAdmin, `SELECT name='admin' FROM public.role WHERE id=$1`, role.ID); err != nil {
-		return nil, fmt.Errorf("checking if Role to be deleted is 'admin': %w", err), http.StatusInternalServerError
+	if err := role.ReqInfo.Tx.Get(&isAdmin, isAdminQuery, role.ID); err != nil {
+		return nil, fmt.Errorf("checking if Role to be deleted is '%s': %w", tc.AdminRoleName, err), http.StatusInternalServerError
 	} else if isAdmin {
 		return cannotModifyAdminError, nil, http.StatusBadRequest
 	}
@@ -346,7 +348,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	roleName := inf.Params["name"]
-	if roleName == "admin" {
+	if roleName == tc.AdminRoleName {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, cannotModifyAdminError, nil)
 		return
 	}
@@ -488,7 +490,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	roleName := inf.Params["name"]
 
-	if roleName == "admin" {
+	if roleName == tc.AdminRoleName {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, cannotModifyAdminError, nil)
 		return
 	}
