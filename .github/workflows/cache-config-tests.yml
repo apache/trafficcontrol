@@ -31,14 +31,16 @@ on:
       - GO_VERSION
       - lib/go-atscfg/**.go
       - traffic_ops/*client/**.go
+      - traffic_ops/toclientlib/**.go
+      - lib/atscfg-go/**.go
       - traffic_ops/traffic_ops_golang/**.go
       - cache-config/**.go
       - cache-config/testing/**
       - vendor/**.go
       - vendor/modules.txt
-      - .github/actions/build-ats-test-rpm
-      - .github/actions/fetch-github-branch-sha
-      - .github/actions/cache-config-integration-tests
+      - .github/actions/build-ats-test-rpm/**
+      - .github/actions/fetch-github-branch-sha/**
+      - .github/actions/cache-config-integration-tests/**
   create:
   pull_request:
     paths:
@@ -55,9 +57,9 @@ on:
       - cache-config/testing/**
       - vendor/**.go
       - vendor/modules.txt
-      - .github/actions/build-ats-test-rpm
-      - .github/actions/fetch-github-branch-sha
-      - .github/actions/cache-config-integration-tests
+      - .github/actions/build-ats-test-rpm/**
+      - .github/actions/fetch-github-branch-sha/**
+      - .github/actions/cache-config-integration-tests/**
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
