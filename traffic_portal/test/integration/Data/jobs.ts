@@ -98,7 +98,7 @@ export const jobs = {
                     Regex: "/test",
                     TtlHours: "1",
                     InvalidationType: "REFRESH",
-					validationMessage: "Invalidation request created"
+					validationMessage: "Invalidation (REFRESH) request created"
 				}
 			],
 		}
