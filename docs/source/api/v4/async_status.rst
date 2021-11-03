@@ -25,6 +25,7 @@ Returns a status update for an asynchronous task.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: ASYNC-STATUS:READ
 :Response Type:  Object
 
 Request Structure

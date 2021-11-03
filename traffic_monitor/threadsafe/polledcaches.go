@@ -184,3 +184,48 @@ func (t *UnpolledCaches) SetPolled(results []cache.Result, lastStats dsdata.Last
 		log.Infof("all caches polled, ready to serve!\n")
 	}
 }
+
+// SetHealthPolled sets caches which have been *health* polled (as opposed to *stat* polled).
+// This is used, when stat polling is disabled, to determine when the app has fully started up,
+// and we can start serving. Serving Traffic Router with caches as 'down' which simply haven't
+// been polled yet would be bad. Therefore, a cache is set as 'polled' if it has given TM two
+// results, OR if the cache is marked as down (and thus we don't need a 2nd result).
+// TODO: for distributed polling, this needs to account for the fact that TM will only get results
+//  for a subset of caches in the CDN. So, it should start serving only after it has received
+//  remote peer states from at least 1 TM in every other TM group. This means that remote peers
+//  should be able to request local states from a TM once that TM has polled its specific subset
+//  of the CDN.
+func (t *UnpolledCaches) SetHealthPolled(results []cache.Result) {
+	unpolledCaches := copyCaches(t.UnpolledCaches())
+	seenCaches := copyCachesTime(*t.seenCaches)
+	numUnpolledCaches := len(unpolledCaches)
+	if numUnpolledCaches == 0 {
+		return
+	}
+	for cache := range unpolledCaches {
+	innerLoop:
+		for _, result := range results {
+			if result.ID != string(cache) {
+				continue
+			}
+
+			// TODO fix "whether a cache has ever been polled" to be generic somehow. The result.System.NotAvailable check is duplicated in health.EvalCache, and is fragile. What if another "successfully polled but unavailable" flag were added?
+			if !result.Available || result.Error != nil || result.Statistics.NotAvailable {
+				log.Debugf("polled %v\n", cache)
+				delete(unpolledCaches, cache)
+				delete(seenCaches, cache)
+				break innerLoop
+			} else {
+				// if this cache has already been seen once before, consider it polled
+				if _, ok := seenCaches[cache]; ok {
+					delete(unpolledCaches, cache)
+					delete(seenCaches, cache)
+				} else {
+					seenCaches[cache] = time.Time{}
+				}
+			}
+		}
+	}
+	t.setUnpolledCaches(unpolledCaches)
+	t.setSeenCaches(seenCaches)
+}

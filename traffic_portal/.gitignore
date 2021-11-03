@@ -19,6 +19,11 @@
 .sass-cache
 server/log/access.log
 node_modules
-app/bower_components
 app/dist
 Gemfile.lock
+
+# SSL keys/certs for testing with the dev configuration
+localhost.cert
+localhost.crt
+localhost.key
+localhost.csr

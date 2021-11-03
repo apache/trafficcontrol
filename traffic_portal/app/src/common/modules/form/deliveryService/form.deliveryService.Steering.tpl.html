@@ -67,7 +67,7 @@ under the License.
         <div id="deliveryServiceURLs">
             <fieldset ng-if="!settings.isNew && !settings.isRequest">
                 <legend>Delivery Service URL(s)</legend>
-                <p ng-repeat="url in deliveryService.exampleURLs"><a href="{{::url}}" target="_blank">{{::url}}</a> </p>
+                <p ng-repeat="url in deliveryService.exampleURLs"><a href="{{::url}}" rel="noreferrer" target="_blank">{{::url}}</a> </p>
             </fieldset>
         </div>
         <form id="deliveryServiceForm" name="deliveryServiceForm" class="form-horizontal form-label-left">

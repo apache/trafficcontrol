@@ -54,21 +54,32 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 	toData := todata.NewThreadsafe()
 
 	cacheHealthHandler := cache.NewHandler()
-	cacheHealthPoller := poller.NewCache(cfg.CacheHealthPollingInterval, true, cacheHealthHandler, cfg, appData, cfg.CachePollingProtocol)
+	cacheHealthPoller := poller.NewCache(true, cacheHealthHandler, cfg, appData, cfg.CachePollingProtocol)
 	cacheStatHandler := cache.NewPrecomputeHandler(toData)
-	cacheStatPoller := poller.NewCache(cfg.CacheStatPollingInterval, false, cacheStatHandler, cfg, appData, cfg.CachePollingProtocol)
+	cacheStatPoller := poller.NewCache(false, cacheStatHandler, cfg, appData, cfg.CachePollingProtocol)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
-	peerPoller := poller.NewCache(cfg.PeerPollingInterval, false, peerHandler, cfg, appData, cfg.PeerPollingProtocol)
+	peerPoller := poller.NewCache(false, peerHandler, cfg, appData, cfg.PeerPollingProtocol)
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()
-	go cacheStatPoller.Poll()
+	if cfg.StatPolling {
+		go cacheStatPoller.Poll()
+	}
 	go peerPoller.Poll()
 
 	events := health.NewThreadsafeEvents(cfg.MaxEvents)
 
-	cachesChanged := make(chan struct{})
+	var cachesChangedForStatMgr chan struct{}
+	var cachesChangedForHealthMgr chan struct{}
+	var cachesChanged chan struct{}
+	if cfg.StatPolling {
+		cachesChangedForStatMgr = make(chan struct{})
+		cachesChanged = cachesChangedForStatMgr
+	} else {
+		cachesChangedForHealthMgr = make(chan struct{})
+		cachesChanged = cachesChangedForHealthMgr
+	}
 	peerStates := peer.NewCRStatesPeersThreadsafe(cfg.PeerOptimisticQuorumMin) // each peer's last state is saved in this map
 
 	monitorConfig := StartMonitorConfigManager(
@@ -95,12 +106,12 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		combineStateFunc,
 	)
 
-	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, unpolledCaches, localCacheStatus := StartStatHistoryManager(
+	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, statUnpolledCaches, localCacheStatus := StartStatHistoryManager(
 		cacheStatHandler.ResultChan(),
 		localStates,
 		combinedStates,
 		toData,
-		cachesChanged,
+		cachesChangedForStatMgr,
 		errorCount,
 		cfg,
 		monitorConfig,
@@ -108,20 +119,19 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		combineStateFunc,
 	)
 
-	lastHealthDurations, healthHistory := StartHealthResultManager(
+	lastHealthDurations, healthHistory, healthUnpolledCaches := StartHealthResultManager(
 		cacheHealthHandler.ResultChan(),
 		toData,
 		localStates,
 		monitorConfig,
-		combinedStates,
 		fetchCount,
-		errorCount,
 		cfg,
 		events,
 		localCacheStatus,
+		cachesChangedForHealthMgr,
 	)
 
-	StartOpsConfigManager(
+	if _, err := StartOpsConfigManager(
 		opsConfigFile,
 		toSession,
 		toData,
@@ -144,10 +154,13 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		healthIteration,
 		errorCount,
 		localCacheStatus,
-		unpolledCaches,
+		statUnpolledCaches,
+		healthUnpolledCaches,
 		monitorConfig,
 		cfg,
-	)
+	); err != nil {
+		return fmt.Errorf("starting ops config manager: %v", err)
+	}
 
 	if err := startMonitorConfigFilePoller(trafficMonitorConfigFileName); err != nil {
 		return fmt.Errorf("starting monitor config file poller: %v", err)

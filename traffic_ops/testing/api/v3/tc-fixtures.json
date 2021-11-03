@@ -1594,12 +1594,20 @@
         {
             "cname": "the.cname.com.",
             "ttl": 48,
-            "description": "the description"
+            "description": "the description",
+            "deliveryService":
+            {
+                "xmlId": "ds1"
+            }
         },
         {
             "cname": "booya.com.",
             "ttl": 34,
-            "description": "fooya"
+            "description": "fooya",
+            "deliveryService":
+            {
+                "xmlId": "ds1"
+            }
         }
     ],
     "federation_resolvers": [
@@ -2395,8 +2403,7 @@
             "privLevel": 30,
             "capabilities": [
                 "all-read",
-                "all-write",
-                "cdn-read"
+                "all-write"
             ]
         },
         {

@@ -107,7 +107,7 @@ go_t3c_diff_dir="$ccpath"/t3c-diff
 	cp "$TC_DIR"/"$ccdir"/t3c-diff/t3c-diff.1 .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
-# copy t3c-diff binary
+# copy t3c-check-reload binary
 go_t3c_check_reload_dir="$ccpath"/t3c-check-reload
 ( mkdir -p "$go_t3c_check_reload_dir" && \
 	cd "$go_t3c_check_reload_dir" && \
@@ -123,8 +123,6 @@ go_t3c_preprocess_dir="$ccpath"/t3c-preprocess
 	cp "$TC_DIR"/"$ccdir"/t3c-preprocess/t3c-preprocess.1 .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
-
-
 %install
 ccdir="cache-config/"
 installdir="/usr/bin"
@@ -135,6 +133,7 @@ mkdir -p ${RPM_BUILD_ROOT}/"$installdir"
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 mkdir -p "${RPM_BUILD_ROOT}"/var/log/trafficcontrol-cache-config
 mkdir -p ${RPM_BUILD_ROOT}/"$mandir"/"$man1dir"
+mkdir -p ${RPM_BUILD_ROOT}/usr/lib/systemd/system
 
 cp -p ${RPM_SOURCE_DIR}/trafficcontrol-cache-config-%{version}/traffic_ops_ort.pl ${RPM_BUILD_ROOT}/"$installdir"
 cp -p ${RPM_SOURCE_DIR}/trafficcontrol-cache-config-%{version}/supermicro_udev_mapper.pl ${RPM_BUILD_ROOT}/"$installdir"

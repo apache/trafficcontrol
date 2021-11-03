@@ -45,34 +45,38 @@ Configuration
 
 Configuring Traffic Stats
 -------------------------
-Traffic Stats's configuration file can be found in :file:`/opt/traffic_stats/conf/traffic_stats.cfg`. The following values need to be configured:
+Traffic Stats's configuration file can be found in :file:`/opt/traffic_stats/conf/traffic_stats.cfg`. It is a JSON-format file with the following properties.
 
-toUser
-	The user used to connect to Traffic Ops
-toPasswd
-	The password to use when connecting to Traffic Ops
-toUrl
-	The URL of the Traffic Ops server used by Traffic Stats
-influxUser
-	The user to use when connecting to InfluxDB (if configured on InfluxDB, else leave default)
-influxPassword
-	That password to use when connecting to InfluxDB (if configured, else leave blank)
-pollingInterval
-	The interval at which Traffic Monitor is polled and stats are stored in InfluxDB
-statusToMon
-	The status of Traffic Monitor to poll (poll ONLINE or OFFLINE Traffic Monitors)
-seelogConfig
-	The absolute path of the seelog configuration file
-dailySummaryPollingInterval
-	The interval, in seconds, at which Traffic Stats checks to see if daily stats need to be computed and stored.
-cacheRetentionPolicy
-	The default retention policy for cache stats
-dsRetentionPolicy
-	The default retention policy for :term:`Delivery Service` statistics
-dailySummaryRetentionPolicy
-	The retention policy to be used for the daily statistics
-influxUrls
-	An array of InfluxDB hosts for Traffic Stats to write stats to.
+:toUser: The username of the user as whom to connect to Traffic Ops
+:toPasswd: The password to use when authenticating with Traffic Ops
+:toUrl: The URL of the Traffic Ops server used by Traffic Stats
+:influxUser: Optionally specify the user to use when connecting to InfluxDB (if InfluxDB is not configured to require authentication, has no effect)
+:influxPassword: Optionally specify the password to use when connecting to InfluxDB (if InfluxDB is not configured to require authentication, has no effect)
+:pollingInterval: The interval in seconds for which Traffic Monitor will wait between polling for stats and storing them in InfluxDB
+:statusToMon: The name of the :term:`Status` of the Traffic Monitors to poll (e.g. ``ONLINE`` or ``OFFLINE``)
+:seelogConfig: Optionally specify the absolute path to a `seelog <https://github.com/cihub/seelog>`_ configuration file. Has no effect if the ``logs`` property is present.
+
+	.. deprecated:: ATCv6.1
+		This will be removed in the future, configurations should be migrated to the new ``logs`` property.
+
+:logs: This property is an object containing keys that specify locations for different log streams.
+
+	.. versionadded:: ATCv6.1
+
+	:error: The location of error-level logs. If omitted, ``null``, an empty string (``""``), or the special path ``/dev/null`` (even on Windows), error-level logs will not be emitted. The special values "stderr" and "stdout" cause logging to use STDOUT or STDERR, respectively\ [#logfiles]_.
+	:warning: The location of warning-level logs. If omitted, ``null``, an empty string (``""``), or the special path ``/dev/null`` (even on Windows), warning-level logs will not be emitted. The special values "stderr" and "stdout" cause logging to use STDOUT or STDERR, respectively\ [#logfiles]_.
+	:info: The location of info-level logs. If omitted, ``null``, an empty string (``""``), or the special path ``/dev/null`` (even on Windows), info-level logs will not be emitted. The special values "stderr" and "stdout" cause logging to use STDOUT or STDERR, respectively\ [#logfiles]_.
+	:debug: The location of debug-level logs. If omitted, ``null``, an empty string (``""``), or the special path ``/dev/null`` (even on Windows), debug-level logs will not be emitted. The special values "stderr" and "stdout" cause logging to use STDOUT or STDERR, respectively\ [#logfiles]_.
+	:event: The location of event-level logs. If omitted, ``null``, an empty string (``""``), or the special path ``/dev/null`` (even on Windows), event-level logs will not be emitted. The special values "stderr" and "stdout" cause logging to use STDOUT or STDERR, respectively\ [#logfiles]_.
+
+		.. note:: At the time of this writing, Traffic Stats does not make use of the "event" log level.
+
+
+:dailySummaryPollingInterval: The interval, in seconds, on which Traffic Stats checks to see if daily stats need to be computed and stored.
+:cacheRetentionPolicy: The default retention policy for cache stats
+:dsRetentionPolicy: The default retention policy for :term:`Delivery Service` statistics
+:dailySummaryRetentionPolicy: The retention policy to be used for the daily statistics
+:influxUrls: An array of InfluxDB hosts for Traffic Stats to write stats to.
 
 Configuring InfluxDB
 --------------------
@@ -248,3 +252,5 @@ Options and Arguments
 .. option:: --target-user username
 
 	The name of the user as whom the utility will connect to the target InfluxDB instance
+
+.. [#logfiles] To log to files named literally "stdout" or "stderr", use an absolute or relative file path e.g. "./stdout" or "/path/to/stderr".

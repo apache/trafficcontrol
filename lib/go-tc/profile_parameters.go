@@ -19,7 +19,8 @@ package tc
  * under the License.
  */
 
-// ProfileParametersResponse ...
+// ProfileParametersResponse is the type of the response from Traffic Ops to
+// GET requests made to its /profileparameters API endpoint.
 type ProfileParametersResponse struct {
 	Response []ProfileParameter `json:"response"`
 	Alerts
@@ -35,7 +36,12 @@ type ProfileParameterResponse struct {
 	Alerts
 }
 
-// ProfileParameter ...
+// ProfileParameter is a representation of a relationship between a Parameter
+// and a Profile to which it is assigned.
+//
+// Note that not all unique identifiers for each represented object in this
+// relationship structure are guaranteed to be populated by the Traffic Ops
+// API.
 type ProfileParameter struct {
 	LastUpdated TimeNoMod `json:"lastUpdated"`
 	Profile     string    `json:"profile"`
@@ -44,7 +50,8 @@ type ProfileParameter struct {
 	ParameterID int       `json:"parameterId"`
 }
 
-// ProfileParameterNullable ...
+// ProfileParameterNullable is identical to ProfileParameter, except that its
+// fields are reference values, which allows them to be nil.
 type ProfileParameterNullable struct {
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Profile     *string    `json:"profile" db:"profile"`

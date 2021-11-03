@@ -31,12 +31,27 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
 .PHONY: all help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
 
+T3C_SOURCE_DIRS := $(patsubst %/,%,$(dir $(wildcard ../cache-config/**/README.md)))
+T3C_RST_SRC := $(join $(T3C_SOURCE_DIRS), $(T3C_SOURCE_DIRS:../cache-config/%=/%.rst))
+T3C_RST_OUT := $(patsubst %,source/admin/t3c/%,$(notdir $(T3C_RST_SRC)))
+
+
+
 # WARNING!!!!!!
 # 1) do not use underscores, _, in source/conf.py
 # 2) do not use incomplete tables in source; tables that contain blank areas between row cell borders cause latex to blow up.
 # 3) do not use spaces in file names
 # Failure to heed the above will break the latexpdf build target.
 all: html
+
+$(T3C_RST_SRC):
+	@echo $(T3C_SOURCE_DIRS)
+	@echo $(T3C_RST_SRC)
+	@echo $(T3C_RST_OUT)
+	$(MAKE) -C ../cache-config/ rst
+
+$(T3C_RST_OUT): $(T3C_RST_SRC)
+	cp -f $? source/admin/t3c/
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -62,43 +77,43 @@ help:
 	@echo "  coverage   to run coverage check of the documentation (if enabled)"
 
 clean:
-	-rm -rf $(BUILDDIR)
+	-rm -rf $(BUILDDIR) $(T3C_RST_OUT)
 
 $(BUILDDIR):
 	-mkdir $(BUILDDIR)
 
-html: $(BUILDDIR)
+html: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-dirhtml: $(BUILDDIR)
+dirhtml: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
 
-singlehtml: $(BUILDDIR)
+singlehtml: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
 	@echo
 	@echo "Build finished. The HTML page is in $(BUILDDIR)/singlehtml."
 
-pickle: $(BUILDDIR)
+pickle: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) $(BUILDDIR)/pickle
 	@echo
 	@echo "Build finished; now you can process the pickle files."
 
-json: $(BUILDDIR)
+json: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b json $(ALLSPHINXOPTS) $(BUILDDIR)/json
 	@echo
 	@echo "Build finished; now you can process the JSON files."
 
-htmlhelp: $(BUILDDIR)
+htmlhelp: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) $(BUILDDIR)/htmlhelp
 	@echo
 	@echo "Build finished; now you can run HTML Help Workshop with the" \
 	      ".hhp project file in $(BUILDDIR)/htmlhelp."
 
-qthelp: $(BUILDDIR)
+qthelp: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b qthelp $(ALLSPHINXOPTS) $(BUILDDIR)/qthelp
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
@@ -107,7 +122,7 @@ qthelp: $(BUILDDIR)
 	@echo "To view the help file:"
 	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/IPCDN_Architecture.qhc"
 
-devhelp: $(BUILDDIR)
+devhelp: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
 	@echo
 	@echo "Build finished."
@@ -116,68 +131,68 @@ devhelp: $(BUILDDIR)
 	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/IPCDN_Architecture"
 	@echo "# devhelp"
 
-epub: $(BUILDDIR)
+epub: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b epub $(ALLSPHINXOPTS) $(BUILDDIR)/epub
 	@echo
 	@echo "Build finished. The epub file is in $(BUILDDIR)/epub."
 
-latex: $(BUILDDIR)
+latex: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
 	@echo
 	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
 	@echo "Run \`make' in that directory to run these through (pdf)latex" \
 	      "(use \`make latexpdf' here to do that automatically)."
 
-latexpdf: $(BUILDDIR) latex
+latexpdf: $(BUILDDIR) latex $(T3C_RST_OUT)
 	@echo "Running LaTeX files through pdflatex..."
 	$(MAKE) -C $(BUILDDIR)/latex all-pdf
 	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
 
-text: $(BUILDDIR)
+text: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b text $(ALLSPHINXOPTS) $(BUILDDIR)/text
 	@echo
 	@echo "Build finished. The text files are in $(BUILDDIR)/text."
 
-man: $(BUILDDIR)
+man: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(BUILDDIR)/man
 	@echo
 	@echo "Build finished. The manual pages are in $(BUILDDIR)/man."
 
-texinfo: $(BUILDDIR)
+texinfo: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
 	@echo
 	@echo "Build finished. The Texinfo files are in $(BUILDDIR)/texinfo."
 	@echo "Run \`make' in that directory to run these through makeinfo" \
 	      "(use \`make info' here to do that automatically)."
 
-info: $(BUILDDIR)
+info: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
 	@echo "Running Texinfo files through makeinfo..."
 	make -C $(BUILDDIR)/texinfo info
 	@echo "makeinfo finished; the Info files are in $(BUILDDIR)/texinfo."
 
-gettext: $(BUILDDIR)
+gettext: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b gettext $(I18NSPHINXOPTS) $(BUILDDIR)/locale
 	@echo
 	@echo "Build finished. The message catalogs are in $(BUILDDIR)/locale."
 
-changes: $(BUILDDIR)
+changes: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) $(BUILDDIR)/changes
 	@echo
 	@echo "The overview file is in $(BUILDDIR)/changes."
 
-linkcheck: $(BUILDDIR)
+linkcheck: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
 	@echo
 	@echo "Link check complete; look for any errors in the above output " \
 	      "or in $(BUILDDIR)/linkcheck/output.txt."
 
-doctest: $(BUILDDIR)
+doctest: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
-coverage: $(BUILDDIR)
+coverage: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b coverage $(ALLSPHINXOPTS) $(BUILDDIR)/coverage
 	@echo "Testing of coverage in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/coverage/python.txt."

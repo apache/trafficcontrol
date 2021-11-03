@@ -27,6 +27,7 @@ Retrieves the details of the authenticated user.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: None
 :Response Type:  Object
 
 Request Structure
@@ -51,8 +52,7 @@ Response Structure
 :postalCode:        The postal code of the area in which the user resides
 :publicSshKey:      The user's public key used for the SSH protocol
 :registrationSent:  If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
-:role:              The integral, unique identifier of the highest-privilege :term:`Role` assigned to this user
-:rolename:          The name of the highest-privilege :term:`Role` assigned to this user
+:role:              The name of the :term:`Role` assigned to this user
 :stateOrProvince:   The name of the state or province where this user resides
 :tenant:            The name of the :term:`Tenant` to which this user belongs
 :tenantId:          The integral, unique identifier of the :term:`Tenant` to which this user belongs
@@ -72,32 +72,31 @@ Response Structure
 	Whole-Content-Sha512: HQwu9FxFyinXSVFK5+wpEhSxU60KbqXuokFbMZ3OoerOoM5ZpWpglsHz7mRch8VAw0dzwsJzpPJivj07RiKaJg==
 	X-Server-Name: traffic_ops_golang/
 	Date: Thu, 13 Dec 2018 15:14:45 GMT
-	Content-Length: 382
+	Content-Length: 631
 
 	{ "response": {
 		"username": "admin",
 		"localUser": true,
-		"addressLine1": null,
-		"addressLine2": null,
-		"city": null,
-		"company": null,
-		"country": null,
-		"email": null,
-		"fullName": "admin",
+		"addressLine1": "not a real address",
+		"addressLine2": "not a real address either",
+		"city": "not a real city",
+		"company": "not a real company",
+		"country": "not a real country",
+		"email": "not@real.email",
+		"fullName": "Not a real fullName",
 		"gid": null,
 		"id": 2,
 		"newUser": false,
-		"phoneNumber": null,
-		"postalCode": null,
-		"publicSshKey": null,
-		"role": 1,
-		"rolename": "admin",
-		"stateOrProvince": null,
+		"phoneNumber": "not a real phone number",
+		"postalCode": "not a real postal code",
+		"publicSshKey": "not a real ssh key",
+		"role": "admin",
+		"stateOrProvince": "not a real state or province",
 		"tenant": "root",
 		"tenantId": 1,
 		"uid": null,
-		"lastUpdated": "2018-12-12 16:26:32+00",
-		"lastAuthenticated": "2021-07-09T14:44:10.371708-06:00"
+		"lastUpdated": "2021-09-16T09:55:09.309863-06:00",
+		"lastAuthenticated": "2021-09-16T09:55:09.309863-06:00"
 	}}
 
 ``PUT``
@@ -110,6 +109,7 @@ Updates the date for the authenticated user.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required:  None
 :Response Type:  Object
 
 Request Structure
@@ -144,7 +144,7 @@ Request Structure
 	User-Agent: curl/7.47.0
 	Accept: */*
 	Cookie: mojolicious=...
-	Content-Length: 465
+	Content-Length: 469
 	Content-Type: application/json
 
 	{ "user": {
@@ -160,7 +160,7 @@ Request Structure
 		"phoneNumber": null,
 		"postalCode": null,
 		"publicSshKey": null,
-		"role": 1,
+		"role": "admin",
 		"stateOrProvince": null,
 		"tenantId": 1,
 		"uid": null,
@@ -184,8 +184,7 @@ Response Structure
 :postalCode:       The postal code of the area in which the user resides
 :publicSshKey:     The user's public key used for the SSH protocol
 :registrationSent: If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
-:role:             The integral, unique identifier of the highest-privilege :term:`Role` assigned to this user
-:rolename:         The name of the highest-privilege :term:`Role` assigned to this user
+:role:             The name of the :term:`Role` assigned to this user
 :stateOrProvince:  The name of the state or province where this user resides
 :tenant:           The name of the :term:`Tenant` to which this user belongs
 :tenantId:         The integral, unique identifier of the :term:`Tenant` to which this user belongs
@@ -206,7 +205,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	Whole-Content-Sha512: sHFqZQ4Cv7IIWaIejoAvM2Fr/HSupcX3D16KU/etjw+4jcK9EME3Bq5ohLC+eQ52BDCKW2Ra+AC3TfFtworJww==
-	Content-Length: 478
+	Content-Length: 462
 
 	{ "alerts": [
 		{
@@ -230,8 +229,7 @@ Response Structure
 		"postalCode": null,
 		"publicSshKey": null,
 		"registrationSent": null,
-		"role": 1,
-		"roleName": "admin",
+		"role": "admin",
 		"stateOrProvince": null,
 		"tenant": "root",
 		"tenantId": 1,

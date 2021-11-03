@@ -178,6 +178,22 @@ func (to *Session) GetProfileByParameter(param string) ([]tc.Profile, ReqInf, er
 	return data.Response, reqInf, err
 }
 
+// GetProfileByParameterId GETs a Profile by Parameter ID
+func (to *Session) GetProfileByParameterId(param int) ([]tc.Profile, ReqInf, error) {
+	URI := fmt.Sprintf("%s?param=%d", API_PROFILES, param)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ProfilesResponse
+	err = json.NewDecoder(resp.Body).Decode(&data)
+
+	return data.Response, reqInf, err
+}
+
 // GetProfileByCDNID GETs a Profile by the Profile CDN ID.
 func (to *Session) GetProfileByCDNID(cdnID int) ([]tc.Profile, ReqInf, error) {
 	URI := fmt.Sprintf("%s?cdn=%s", API_PROFILES, strconv.Itoa(cdnID))

@@ -759,7 +759,7 @@ export const serverServerCapabilities = {
 					description: "link server capability to server",
 					Server: "testserver1",
 					ServerCapability: "servercap1",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER:UPDATE"
 				}
 			],
 			remove: [
@@ -767,14 +767,14 @@ export const serverServerCapabilities = {
 					description: "remove server capability from server",
 					Server: "testserver1",
 					ServerCapability: "servercap2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER:UPDATE"
 				}
 			],
 			deleteServerCapability: [
 				{
 					description: "delete server capability linked with one or more servers",
 					ServerCapability: "servercap2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER-CAPABILITY:DELETE"
 				}
 			]
 		},

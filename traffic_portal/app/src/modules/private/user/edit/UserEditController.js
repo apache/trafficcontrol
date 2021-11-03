@@ -25,7 +25,7 @@ var UserEditController = function($scope) {
     };
 
     $scope.label = function(role) {
-        return role.name + ' (' + role.privLevel + ')';
+        return role.name;
     };
 
     $scope.tenantLabel = function(tenant) {

@@ -45,6 +45,12 @@ export const serverCapabilities = {
 					password: "pa$$word"
 				}
 			],
+			check: [
+				{
+					description: "check CSV link from Server Capabilities page",
+					Name: "Export as CSV"
+				}
+			],
 			add: [
 				{
 					description: "can create a server capability",
@@ -116,11 +122,17 @@ export const serverCapabilities = {
 					password: "pa$$word"
 				}
 			],
+			check: [
+				{
+					description: "check CSV link from Server Capabilities page",
+					Name: "Export as CSV"
+				}
+			],
 			add: [
 				{
 					description: "can handle readonly role creating a server capability",
 					name: "TP_SC",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER-CAPABILITY:CREATE"
 				}
 			],
 			remove: [
@@ -128,7 +140,7 @@ export const serverCapabilities = {
 					description: "can handle readonly role deleting a server capability",
 					invalid: false,
 					name: "TP_SC_3",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER-CAPABILITY:DELETE"
 				}
 			] as Array<PossiblyInvalidRemoval>
 		},
@@ -138,6 +150,12 @@ export const serverCapabilities = {
 				{
 					username: "TPOperator",
 					password: "pa$$word"
+				}
+			],
+			check: [
+				{
+					description: "check CSV link from Server Capabilities page",
+					Name: "Export as CSV"
 				}
 			],
 			add: [

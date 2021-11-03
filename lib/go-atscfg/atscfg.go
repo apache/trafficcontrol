@@ -29,7 +29,6 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 const InvalidID = -1
@@ -52,15 +51,20 @@ type ServerCapability string
 // Server is a tc.Server for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
 // but to only have to change it here, and the places where breaking symbol changes were made.
-type Server tc.ServerV30
+type Server tc.ServerV40
 
 // DeliveryService is a tc.DeliveryService for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
 // but to only have to change it here, and the places where breaking symbol changes were made.
-type DeliveryService tc.DeliveryServiceNullableV30
+type DeliveryService tc.DeliveryServiceV40
+
+// InvalidationJob is a tc.InvalidationJob for the latest lib/go-tc and traffic_ops/vx-client type.
+// This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
+// but to only have to change it here, and the places where breaking symbol changes were made.
+type InvalidationJob tc.InvalidationJobV4
 
 // ToDeliveryServices converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
-func ToDeliveryServices(dses []tc.DeliveryServiceNullableV30) []DeliveryService {
+func ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 	ad := []DeliveryService{}
 	for _, ds := range dses {
 		ad = append(ad, DeliveryService(ds))
@@ -68,17 +72,26 @@ func ToDeliveryServices(dses []tc.DeliveryServiceNullableV30) []DeliveryService 
 	return ad
 }
 
-// V30ToDeliveryServices converts a slice of the old traffic_ops/client type to the local alias.
-func V30ToDeliveryServices(dses []tc.DeliveryServiceNullableV30) []DeliveryService {
+// V40ToDeliveryServices converts a slice of the old traffic_ops/client type to the local alias.
+func V40ToDeliveryServices(dses []tc.DeliveryServiceV40) []DeliveryService {
 	ad := []DeliveryService{}
 	for _, ds := range dses {
 		ad = append(ad, DeliveryService(ds))
 	}
 	return ad
+}
+
+// ToInvalidationJobs converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
+func ToInvalidationJobs(jobs []tc.InvalidationJobV4) []InvalidationJob {
+	aj := []InvalidationJob{}
+	for _, job := range jobs {
+		aj = append(aj, InvalidationJob(job))
+	}
+	return aj
 }
 
 // ToServers converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
-func ToServers(servers []tc.ServerV30) []Server {
+func ToServers(servers []tc.ServerV40) []Server {
 	as := []Server{}
 	for _, sv := range servers {
 		as = append(as, Server(sv))
@@ -669,8 +682,8 @@ type DeliveryServiceServer struct {
 	DeliveryService int `json:"d"`
 }
 
-func JobsToInvalidationJobs(oldJobs []tc.Job) ([]tc.InvalidationJob, error) {
-	jobs := make([]tc.InvalidationJob, len(oldJobs), len(oldJobs))
+func JobsToInvalidationJobs(oldJobs []tc.Job) ([]InvalidationJob, error) {
+	jobs := make([]InvalidationJob, len(oldJobs), len(oldJobs))
 	err := error(nil)
 	for i, oldJob := range oldJobs {
 		jobs[i], err = JobToInvalidationJob(oldJob)
@@ -681,18 +694,22 @@ func JobsToInvalidationJobs(oldJobs []tc.Job) ([]tc.InvalidationJob, error) {
 	return jobs, nil
 }
 
-func JobToInvalidationJob(jb tc.Job) (tc.InvalidationJob, error) {
+func JobToInvalidationJob(jb tc.Job) (InvalidationJob, error) {
 	startTime := tc.Time{}
 	if err := json.Unmarshal([]byte(`"`+jb.StartTime+`"`), &startTime); err != nil {
-		return tc.InvalidationJob{}, errors.New("unmarshalling time: " + err.Error())
+		return InvalidationJob{}, errors.New("unmarshalling time: " + err.Error())
 	}
-	return tc.InvalidationJob{
-		AssetURL:        util.StrPtr(jb.AssetURL),
-		CreatedBy:       util.StrPtr(jb.CreatedBy),
-		DeliveryService: util.StrPtr(jb.DeliveryService),
-		ID:              util.Uint64Ptr(uint64(jb.ID)),
-		Keyword:         util.StrPtr(jb.Keyword),
-		Parameters:      util.StrPtr(jb.Parameters),
-		StartTime:       &startTime,
+	ttl, err := strconv.Atoi(strings.TrimSuffix(strings.TrimPrefix(jb.Parameters, "TTL:"), "h"))
+	if err != nil {
+		return InvalidationJob{}, errors.New("unmarshalling ttl: " + err.Error())
+	}
+	return InvalidationJob{
+		AssetURL:         jb.AssetURL,
+		CreatedBy:        jb.CreatedBy,
+		DeliveryService:  jb.DeliveryService,
+		ID:               uint64(jb.ID),
+		TTLHours:         uint(ttl),
+		InvalidationType: tc.REFRESH,
+		StartTime:        startTime.Time,
 	}, nil
 }

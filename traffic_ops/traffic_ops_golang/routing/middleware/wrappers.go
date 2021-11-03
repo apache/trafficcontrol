@@ -28,6 +28,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -36,6 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 )
 
@@ -99,9 +101,27 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 				api.HandleErr(w, r, nil, errCode, userErr, sysErr)
 				return
 			}
-			if user.PrivLevel < privLevelRequired {
-				api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
+			ctx := r.Context()
+			cfg, err := api.GetConfig(ctx)
+			if err != nil {
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("getting configuration from request context: %w", err))
 				return
+			}
+			v := api.GetRequestedAPIVersion(r.URL.Path)
+			if v == nil {
+				api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("couldn't get a valid version from the requested path"), nil)
+				return
+			}
+			if v.Major < 4 {
+				if user.PrivLevel < privLevelRequired {
+					api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
+					return
+				}
+			} else {
+				if !cfg.RoleBasedPermissions && user.PrivLevel < privLevelRequired {
+					api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
+					return
+				}
 			}
 			api.AddUserToReq(r, user)
 			handlerFunc(w, r)
@@ -264,4 +284,65 @@ func DisabledRouteHandler() http.Handler {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		api.WriteAndLogErr(w, r, []byte(`{"alerts":[{"level":"error","text":"The requested route is currently disabled."}]}`+"\n"))
 	})
+}
+
+// RequiredPermissionsMiddleware produces a Middleware that checks that the
+// authenticated user has all of the passed Permissions. If they are missing one
+// or more Permissions, an error is returned to the client and handling is
+// terminated early.
+//
+// This will try to deduce the authenticated user regardless of Middleware
+// order, but calling an AuthBase.GetWrapper-produced Middleware *after* this
+// Middleware will result in extra db calls, so for best results this should
+// always be used after that Middleware.
+func RequiredPermissionsMiddleware(requiredPerms []string) Middleware {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		if len(requiredPerms) < 1 {
+			return next
+		}
+
+		return func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			cfg, err := api.GetConfig(ctx)
+			if err != nil {
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("getting configuration from request context: %w", err))
+				return
+			}
+			if !cfg.RoleBasedPermissions {
+				next(w, r)
+				return
+			}
+
+			var user auth.CurrentUser
+
+			u := ctx.Value(auth.CurrentUserKey)
+			if u == nil {
+				var userErr error
+				var sysErr error
+				var errCode int
+				user, userErr, sysErr, errCode = api.GetUserFromReq(w, r, cfg.Secrets[0])
+				if userErr != nil || sysErr != nil {
+					api.HandleErr(w, r, nil, errCode, userErr, sysErr)
+					return
+				}
+			} else {
+				switch v := u.(type) {
+				case auth.CurrentUser:
+					user = v
+				default:
+					api.HandleErr(w, r, nil, http.StatusUnauthorized, errors.New("unauthenticated - please log in"), nil)
+					return
+				}
+			}
+
+			missingPerms := user.MissingPermissions(requiredPerms...)
+			if len(missingPerms) > 0 {
+				msg := strings.Join(missingPerms, ", ")
+				api.HandleErr(w, r, nil, http.StatusForbidden, fmt.Errorf("missing required Permissions: %s", msg), nil)
+				return
+			}
+
+			next(w, r)
+		}
+	}
 }

@@ -1,12 +1,12 @@
 {
     "name": "traffic_portal",
     "dependencies": {
-        "forever": "2.0.0",
-        "morgan": "1.9.1",
         "connect-modrewrite": "0.10.2",
         "connect-timeout": "1.9.0",
-        "ssl-root-cas": "1.3.1",
         "express": "4.17.1",
-        "requirejs": "2.3.6"
+        "forever": "4.0.1",
+        "morgan": "1.10.0",
+        "requirejs": "2.3.6",
+        "ssl-root-cas": "1.3.1"
     }
 }

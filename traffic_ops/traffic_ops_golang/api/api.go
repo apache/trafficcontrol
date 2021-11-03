@@ -272,6 +272,7 @@ func handleSimpleErr(w http.ResponseWriter, r *http.Request, statusCode int, use
 		return
 	}
 	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.WriteHeader(statusCode)
 	WriteAndLogErr(w, r, append(respBts, '\n'))
 }
 
@@ -553,7 +554,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	if err != nil {
 		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
 	}
-	version := getRequestedAPIVersion(r.URL.Path)
+	version := GetRequestedAPIVersion(r.URL.Path)
 
 	user, err := auth.GetCurrentUser(r.Context())
 	if err != nil {
@@ -786,8 +787,8 @@ type Version struct {
 	Minor uint64
 }
 
-// getRequestedAPIVersion returns a pointer to the requested API Version from the request if it exists or returns nil otherwise.
-func getRequestedAPIVersion(path string) *Version {
+// GetRequestedAPIVersion returns a pointer to the requested API Version from the request if it exists or returns nil otherwise.
+func GetRequestedAPIVersion(path string) *Version {
 	pathParts := strings.Split(path, "/")
 	if len(pathParts) < 2 {
 		return nil // path doesn't start with `/api`, so it's not an api request

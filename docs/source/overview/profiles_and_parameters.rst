@@ -56,6 +56,11 @@ Name
 """"
 Ostensibly this is simply the Profile's name. However, the name of a Profile has drastic consequences for how Traffic Control treats it. Particularly, the name of a Profile is heavily conflated with its Type_. These relationships are discussed further in the Type_ section, on a Type-by-Type basis.
 
+The Name of a Profile may not contain spaces.
+
+.. versionchanged:: ATCv6
+	In older versions of :abbr:`ATC (Apache Traffic Control)`, Profile Names were allowed to contain spaces. The :ref:`to-api` will reject creation or update of Profiles that have spaces in their Names as of :abbr:`ATC (Apache Traffic Control)` version 6, so legacy Profiles will need to be updated to meet this constraint before they can be modified.
+
 .. _profile-routing-disabled:
 
 Routing Disabled
@@ -119,7 +124,7 @@ SPLUNK_PROFILE
 TM_PROFILE
 	A Traffic Monitor Profile.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``RASCAL_`` or ``TM_``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
+	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``RASCAL_``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
 
 TP_PROFILE
 	A Traffic Portal Profile. This has no known special meaning to any Traffic Control component(s) (not even Traffic Portal itself), but its use is suggested for the profiles used by any and all Traffic Portal servers anyway.

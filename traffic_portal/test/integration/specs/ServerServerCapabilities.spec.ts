@@ -22,10 +22,9 @@ import { LoginPage } from '../PageObjects/LoginPage.po'
 import { ServerCapabilitiesPage } from '../PageObjects/ServerCapabilitiesPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { ServersPage } from '../PageObjects/ServersPage.po';
-import { API } from '../CommonUtils/API';
+import { api } from "../config";
 import { serverServerCapabilities } from "../Data";
 
-const api = new API();
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const serverCapabilitiesPage = new ServerCapabilitiesPage();
@@ -42,7 +41,7 @@ serverServerCapabilities.tests.forEach(async serverServerCapData => {
             it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
-                expect(await loginPage.CheckUserName(login)).toBeTruthy();
+                expect(await loginPage.CheckUserName(login)).toBe(true);
             });
             it('can open server page', async () => {
                 await serverPage.OpenConfigureMenu();
@@ -52,13 +51,13 @@ serverServerCapabilities.tests.forEach(async serverServerCapData => {
                 if(link.description.includes("cannot")){
                     it(link.description, async () => {
                         await serverPage.SearchServer(link.Server);
-                        expect(await serverPage.AddServerCapabilitiesToServer(link)).toBeUndefined();
+                        expect(await serverPage.AddServerCapabilitiesToServer(link)).toBe(false);
                         await serverPage.OpenServerPage();
                     });
                 } else {
                     it(link.description, async () => {
                         await serverPage.SearchServer(link.Server);
-                        expect(await serverPage.AddServerCapabilitiesToServer(link)).toBeTruthy();
+                        expect(await serverPage.AddServerCapabilitiesToServer(link)).toBe(true);
                         await serverPage.OpenServerPage();
                     });
                 }
@@ -66,7 +65,7 @@ serverServerCapabilities.tests.forEach(async serverServerCapData => {
             serverServerCapData.remove.forEach(remove => {
                 it(remove.description, async () => {
                     await serverPage.SearchServer(remove.Server);
-                    expect(await serverPage.RemoveServerCapabilitiesFromServer(remove.ServerCapability, remove.validationMessage)).toBeTruthy();
+                    expect(await serverPage.RemoveServerCapabilitiesFromServer(remove.ServerCapability, remove.validationMessage)).toBe(true);
                     await serverPage.OpenServerPage();
                 });
             });
@@ -76,12 +75,12 @@ serverServerCapabilities.tests.forEach(async serverServerCapData => {
             serverServerCapData.deleteServerCapability.forEach(deleteSC => {
                 it(deleteSC.description, async () => {
                     await serverCapabilitiesPage.SearchServerCapabilities(deleteSC.ServerCapability);
-                    expect(await serverCapabilitiesPage.DeleteServerCapabilities(deleteSC.ServerCapability, deleteSC.validationMessage)).toBeTruthy();
+                    expect(await serverCapabilitiesPage.DeleteServerCapabilities(deleteSC.ServerCapability, deleteSC.validationMessage)).toBe(true);
                     await serverCapabilitiesPage.OpenServerCapabilityPage();
                 });
             });
             it('can logout', async () => {
-                expect(await topNavigation.Logout()).toBeTruthy();
+                expect(await topNavigation.Logout()).toBe(true);
             });
         });
     });

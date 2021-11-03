@@ -18,6 +18,15 @@
 
 set -e
 
+files_changed_in_pr() {
+	if [[ "$GITHUB_REF" == refs/pull/*/merge ]]; then
+		pr_number="$(<<<"$GITHUB_REF" grep -o '[0-9]\+')"
+		files_changed="$(curl "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/pulls/${pr_number}/files" | jq -r .[].filename)"
+	else
+		files_changed="$(git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA")"
+	fi
+}
+
 CODE=0;
 
 migration_dirs=(traffic_ops/app/db/migrations traffic_ops/app/db/trafficvault/migrations);
@@ -69,14 +78,14 @@ for migration_dir in ${migration_dirs[@]}; do
 	done
 	mtime_length=${#mtime_array[@]}
 
-	if [[ $LATEST_FILE_TIME != ${mtime_array[$mtime_length-1]} ]]; then
+	if [[ $LATEST_FILE_TIME != ${mtime_array[$mtime_length-1]} ]] && <<<"$(files_changed_in_pr)" grep -q "^${LATEST_FILE}$"; then
 		echo "ERROR: latest added/modified file: $LATEST_FILE is not in the right order" >&2;
 		CODE=1;
 	fi
 
 	set +e;
 	# All new migrations must use 16-digit timestamps.
-	VIOLATING_FILES="$(ls | sort | cut -d _ -f 1 | sed -n -e '/2020061622101648/,$p' | tr '[:space:]' '\n' | grep -vE '^[0-9]{16}$')";
+	VIOLATING_FILES="$(ls | sort | cut -d _ -f 1 | grep -vE '^[0-9]{16}$' | grep -vE '^00000000000000$')";
 	set -e;
 
 	if [[ ! -z "$VIOLATING_FILES" ]]; then

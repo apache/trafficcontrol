@@ -16,7 +16,7 @@
 # under the License.
 
 ---
-version: '2.1'
+version: '3.8'
 
 networks:
   default:

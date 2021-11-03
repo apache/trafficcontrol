@@ -27,6 +27,12 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
+// A SteeringTarget is a relationship between a Steering Delivery Service and
+// another Delivery Service which is one of its Targets.
+//
+// Deprecated: As far as this author is aware, this structure has never served
+// any purpose. Modelling the Steering Target/Delivery Service relationship is
+// better accomplished by the SteeringTargetNullable type.
 type SteeringTarget struct {
 	DeliveryService   DeliveryServiceName `json:"deliveryService" db:"deliveryservice_name"`
 	DeliveryServiceID int                 `json:"deliveryServiceId" db:"deliveryservice"`
@@ -37,6 +43,8 @@ type SteeringTarget struct {
 	Value             util.JSONIntStr     `json:"value" db:"value"`
 }
 
+// A SteeringTargetNullable is a relationship between a Steering Delivery
+// Service and another Delivery Service which is one of its Targets.
 type SteeringTargetNullable struct {
 	DeliveryService   *DeliveryServiceName `json:"deliveryService" db:"deliveryservice_name"`
 	DeliveryServiceID *uint64              `json:"deliveryServiceId" db:"deliveryservice"`
@@ -47,6 +55,9 @@ type SteeringTargetNullable struct {
 	Value             *util.JSONIntStr     `json:"value" db:"value"`
 }
 
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (st SteeringTargetNullable) Validate(tx *sql.Tx) error {
 	errs := []string{}
 	if st.TypeID == nil {

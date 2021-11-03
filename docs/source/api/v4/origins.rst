@@ -25,6 +25,7 @@ Gets all requested :term:`Origins`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: ORIGIN:READ, DELIVERY-SERVICE:READ
 :Response Type:  Array
 
 Request Structure
@@ -144,6 +145,7 @@ Creates a new origin definition.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: ORIGIN:CREATE, ORIGIN:READ, DELIVERY-SERVICE:READ, DELIVERY-SERVICE:UPDATE
 :Response Type:  Object
 
 Request Structure
@@ -257,6 +259,7 @@ Updates an :term:`Origin` definition.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: ORIGIN:UPDATE, ORIGIN:READ, DELIVERY-SERVICE:READ, DELIVERY-SERVICE:UPDATE
 :Response Type:  Object
 
 Request Structure
@@ -375,6 +378,7 @@ Deletes an :term:`Origin` definition.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: ORIGIN:DELETE, DELIVERY-SERVICE:UPDATE
 :Response Type:  ``undefined``
 
 Request Structure

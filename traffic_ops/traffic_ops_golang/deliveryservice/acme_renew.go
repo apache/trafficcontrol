@@ -97,6 +97,7 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, http
 		log.Errorf(dsName+": Error getting tx: %s", err.Error())
 		return nil, err, http.StatusInternalServerError
 	}
+	defer tx.Commit()
 
 	userTx, err := db.Begin()
 	if err != nil {
@@ -144,7 +145,7 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, http
 		return nil, errors.New("No acme account information in cdn.conf for " + keyObj.AuthType), http.StatusInternalServerError
 	}
 
-	client, err := GetAcmeClient(acmeAccount, userTx, db)
+	client, err := GetAcmeClient(acmeAccount, userTx, db, &dsName)
 	if err != nil {
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: FAILED to add SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
 		return nil, errors.New("getting acme client: " + err.Error()), http.StatusInternalServerError

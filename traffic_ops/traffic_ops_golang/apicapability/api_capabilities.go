@@ -1,3 +1,9 @@
+// Package apicapability defines the API handlers for Traffic Ops's API's
+// /api_capabilities endpoint.
+//
+// Deprecated: "Capabilities" (now called Permissions) are no longer handled
+// this way, and this package should be removed once API versions that use it
+// have been fully removed.
 package apicapability
 
 import (
@@ -33,6 +39,7 @@ import (
 // GetAPICapabilitiesHandler implements an http handler that returns
 // API Capabilities. In the event a capability parameter is supplied,
 // it will return only those with an exact match.
+// Deprecated: This API endpoint is deprecated, and will be removed in api v4 and above.
 func GetAPICapabilitiesHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {

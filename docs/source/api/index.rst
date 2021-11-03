@@ -29,7 +29,12 @@ Every endpoint is documented with a section for each method, containing the subs
 Auth. Required
 	This will either be 'Yes' to indicate that a user must be authenticated (or "logged-in") via e.g. :ref:`to-api-user-login` to use this method of the endpoint, or 'No' to indicate that this is not required.
 Roles Required
-	Any permissions roles that are allowed to use this method of the endpoint will be listed here. Users with roles not listed here will be unable to properly use these endpoints
+	.. deprecated:: ATCv7.0
+		Roles for the use of authentication/permissions have been deprecated in favor of role based permissions, see :pr:`5848`.
+
+	Any permissions roles that are allowed to use this method of the endpoint will be listed here. Users with roles not listed here will be unable to properly use these endpoints.
+Permissions Required
+	Any permissions that are needed to use this endpoint. Users with roles that don't have the permissions will be unable to properly use these endpoints.
 Response Type
 	Unless otherwise noted, all responses are JSON objects. See `Response Structure`_ for more information.
 
@@ -309,7 +314,7 @@ API V2 Routes
 API routes available in version 2.
 
 .. deprecated:: ATCv6
-	Traffic Ops API version 2 is deprecated in favor of version 4.
+	Traffic Ops API version 2 is deprecated in favor of version 3.
 
 .. toctree::
 	:maxdepth: 4
@@ -321,9 +326,6 @@ API V3 Routes
 =============
 API routes available in version 3.
 
-.. deprecated:: ATCv6
-	Traffic Ops API version 3 is deprecated in favor of version 4.
-
 .. toctree::
 	:maxdepth: 4
 	:glob:
@@ -333,6 +335,8 @@ API routes available in version 3.
 API V4 Routes
 =============
 API routes available in version 4.
+
+.. danger:: API version 4 is *unstable*, meaning that breaking changes can occur at any time. Use at your own peril!
 
 .. toctree::
 	:maxdepth: 4

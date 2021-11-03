@@ -29,66 +29,21 @@ Software Requirements
 =====================
 To work on Traffic Portal you need a \*nix (MacOS and Linux are most commonly used) environment that has the following installed:
 
-	* `Ruby Devel 2.0.x or above <https://www.rpmfind.net/linux/rpm2html/search.php?query=ruby-devel>`_
-	* `Compass 1.0.x or above <http://compass-style.org/>`_
-	* `Node.js 12.0.x or above <https://nodejs.org/en/>`_
-	* `Bower 1.7.9 or above <https://www.npmjs.com/package/bower>`_
-	* `Grunt CLI 1.2.0 or above <https://github.com/gruntjs/grunt-cli>`_
-	* Access to a working instance of Traffic Ops
+* `Node.js 12.0.x or above <https://nodejs.org/en/>`_
+* `Grunt CLI 1.2.0 or above <https://github.com/gruntjs/grunt-cli>`_
+* Access to a working instance of Traffic Ops
 
 .. _dev-tp-global-npm:
 
 Install Global NPM Packages
 ---------------------------
 
-Bower and the Grunt CLI can be installed using NPM.
+Grunt CLI can be installed using NPM.
 
 .. code-block:: shell
-	:caption: Install Bower and Grunt CLI
+	:caption: Install Grunt CLI
 
-	npm -g install bower grunt-cli
-
-.. _dev-tp-compass:
-
-Install Compass
----------------
-
-Compass can be installed using ``gem`` manually, or by using ``bundle``
-
-.. tip:: Bundle will automatically install the correct version of the gems.
-
-#. ``brew install ruby``/``apt-get install ruby``/``yum install ruby``
-
-#. ``gem update --system``
-
-#. At this point, you can either manually install the gems or use bundler
-
-	#. For manually: ``gem install sass compass``
-
-	#. For automatically: ``gem install bundle && bundle install``
-
-	.. note:: Bundle requires ruby versions > 2.3.0, so if you're using a version of ruby < 2.3.0 then this will not work.
-
-#. Make sure that ``compass`` and ``sass`` are part of your ``PATH`` environment variable.
-
-#. If not, you can see where gem installs ``compass`` and ``sass`` by running:
-	``gem environment``
-
-#. In there, you can see where ruby is installing all the gems. Add that path to your ``PATH`` environment variable.
-	For example, it is ``/usr/local/lib/ruby/gems/2.7.0/gems/compass-1.0.3/bin/`` for this test setup.
-
-#. Once you have installed ``compass`` successfully, make sure you can reach it by typing:
-	``compass version``
-	This should give a valid output. For example, for the test setup, the output is:
-
-.. code-block:: text
-	:caption: Compass version output
-
-	Compass 1.0.3 (Polaris)
-	Copyright (c) 2008-2020 Chris Eppstein
-	Released under the MIT License.
-	Compass is charityware.
-	Please make a tax deductable donation for a worthy cause: http://umdf.org/compass
+	npm -g install grunt-cli
 
 
 Traffic Portal Project Tree Overview
@@ -100,13 +55,11 @@ Installing The Traffic Portal Developer Environment
 #. Clone the `Traffic Control Repository <https://github.com/apache/trafficcontrol>`_
 #. Navigate to the ``traffic_portal`` subdirectory of your cloned repository.
 #. Run ``npm install`` to install application dependencies into ``traffic_portal/node_modules``. Only needs to be done the first time unless ``traffic_portal/package.json`` changes.
-#. Run ``bower install`` to install client-side dependencies into ``traffic_portal/app/bower_components``. Only needs to be done the first time unless ``traffic_portal/bower.json`` changes.
-#. Make sure that compass is installed and functioning correctly by running ``compass version``. If compass is not available, then it can be installed following the instructions under :ref:`dev-tp-compass`.
 
-#. Modify ``traffic_portal/conf/configDev.js``:
+#. Modify :atc-file:`traffic_portal/conf/configDev.js`:
+
 	#. Valid SSL certificates and keys are needed for Traffic Portal to run. Generate these (e.g. using `this SuperUser answer <https://superuser.com/questions/226192/avoid-password-prompt-for-keys-and-prompts-for-dn-information#answer-226229>`_) and update ``ssl``.
 	#. Modify ``api.base_url`` to point to your Traffic Ops API endpoint.
-#. Run ``grunt`` to package the application into ``traffic_portal/app/dist``, start a local HTTPS server (Express), and start a file watcher.
-#. Navigate to http(s)://localhost:[port|sslPort defined in ``traffic_portal/conf/configDev.js``]
 
-.. note:: The Traffic Portal consumes the Traffic Ops API. Modify traffic_portal/conf/configDev.js to specify the location of Traffic Ops.
+#. Run ``grunt`` to package the application into ``traffic_portal/app/dist``, start a local HTTPS server (Express), and start a file watcher. To use a custom configuration file (not just :atc-file:`traffic_portal/conf/config.js` or :atc-file:`traffic_portal/conf/configDev.js`), set the `TP_SERVER_CONFIG_FILE` environment variable to the location of the desired file.
+#. Navigate to http(s)://localhost:[port|sslPort defined in the configuration file used (default: :atc-file:`traffic_portal/conf/configDev.js`)]

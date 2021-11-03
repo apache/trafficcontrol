@@ -63,10 +63,32 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	if pLimit, ok := inf.IntParams["limit"]; ok {
 		limit = pLimit
 	}
+	setLastSeenCookie(w)
+	logs, count, err := getLog(inf, days, limit)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, err, err)
+		return
+	}
+	api.WriteRespWithSummary(w, r, logs, count)
+}
+
+// Get is the handler for GET requests to /logs V4.0.
+func Getv40(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"days", "limit"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	days := DefaultLogDays
+	if pDays, ok := inf.IntParams["days"]; ok {
+		days = pDays
+	}
 
 	a := tc.Alerts{}
 	setLastSeenCookie(w)
-	logs, count, err := getLog(inf, days, limit)
+	logs, count, err := getLogV40(inf, days)
+
 	if err != nil {
 		a.AddNewAlert(tc.ErrorLevel, err.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, a)
@@ -135,11 +157,64 @@ FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id`
 
 const countQuery = `SELECT count(l.tm_user) FROM log as l`
 
+func getLogV40(inf *api.APIInfo, days int) ([]tc.Log, uint64, error) {
+	var count = uint64(0)
+	var whereCount string
+
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"username": {Column: "u.username", Checker: nil},
+	}
+	where, _, pagination, queryValues, errs :=
+		dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+
+	if len(errs) > 0 {
+		return nil, 0, util.JoinErrs(errs)
+	}
+
+	timeInterval := fmt.Sprintf("l.last_updated > now() - INTERVAL '%d' DAY", days)
+	if where != "" {
+		whereCount = ", tm_user as u\n" + where + " AND l.tm_user = u.id"
+		where = where + " AND " + timeInterval
+	} else {
+		whereCount = where
+		where = "\nWHERE " + timeInterval
+	}
+	queryCount := countQuery + whereCount
+	rowCount, err := inf.Tx.NamedQuery(queryCount, queryValues)
+	if err != nil {
+		return nil, count, fmt.Errorf("querying log count for a given user: %w", err)
+	}
+	defer rowCount.Close()
+	for rowCount.Next() {
+		if err = rowCount.Scan(&count); err != nil {
+			return nil, count, fmt.Errorf("scanning logs: %w", err)
+		}
+	}
+
+	query := selectFromQuery + where + "\n ORDER BY last_updated DESC" + pagination
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return nil, count, fmt.Errorf("querying logs: %w", err)
+	}
+	defer rows.Close()
+	ls := []tc.Log{}
+	for rows.Next() {
+		l := tc.Log{}
+		if err = rows.Scan(&l.ID, &l.Level, &l.Message, &l.User, &l.TicketNum, &l.LastUpdated); err != nil {
+			return nil, count, fmt.Errorf("scanning logs: %w", err)
+		}
+		ls = append(ls, l)
+	}
+	return ls, count, nil
+}
+
 func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 	var count = uint64(0)
 	var whereCount string
 	if _, ok := inf.Params["limit"]; !ok {
-		inf.Params["limit"] = strconv.Itoa(DefaultLogLimit)
+		if _, ok := inf.Params["days"]; !ok {
+			inf.Params["limit"] = strconv.Itoa(DefaultLogLimit)
+		}
 	} else {
 		inf.Params["limit"] = strconv.Itoa(limit)
 	}

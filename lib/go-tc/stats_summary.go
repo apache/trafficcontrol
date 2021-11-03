@@ -1,16 +1,5 @@
 package tc
 
-import (
-	"database/sql"
-	"encoding/json"
-	"errors"
-	"time"
-
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	validation "github.com/go-ozzo/ozzo-validation"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -30,24 +19,43 @@ import (
  * under the License.
  */
 
+import (
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
+	validation "github.com/go-ozzo/ozzo-validation"
+)
+
 const dateFormat = "2006-01-02"
 
-// StatsSummaryResponse ...
+// StatsSummaryResponse is the structure of a response from Traffic Ops to
+// GET requests made to its /stats_summary API endpoint.
 type StatsSummaryResponse struct {
 	Response []StatsSummary `json:"response"`
 	Alerts
 }
 
-// StatsSummary ...
+// StatsSummary is a summary of some kind of statistic for a CDN and/or
+// Delivery Service.
 type StatsSummary struct {
-	CDNName         *string    `json:"cdnName"  db:"cdn_name"`
-	DeliveryService *string    `json:"deliveryServiceName"  db:"deliveryservice_name"`
-	StatName        *string    `json:"statName"  db:"stat_name"`
-	StatValue       *float64   `json:"statValue"  db:"stat_value"`
-	SummaryTime     time.Time  `json:"summaryTime"  db:"summary_time"`
-	StatDate        *time.Time `json:"statDate"  db:"stat_date"`
+	CDNName         *string `json:"cdnName"  db:"cdn_name"`
+	DeliveryService *string `json:"deliveryServiceName"  db:"deliveryservice_name"`
+	// The name of the stat, which can be whatever the TO API client wants.
+	StatName *string `json:"statName"  db:"stat_name"`
+	// The value of the stat - this cannot actually be nil in a valid
+	// StatsSummary.
+	StatValue   *float64   `json:"statValue"  db:"stat_value"`
+	SummaryTime time.Time  `json:"summaryTime"  db:"summary_time"`
+	StatDate    *time.Time `json:"statDate"  db:"stat_date"`
 }
 
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (ss StatsSummary) Validate(tx *sql.Tx) error {
 	errs := tovalidate.ToErrors(validation.Errors{
 		"statName":  validation.Validate(ss.StatName, validation.Required),
@@ -56,7 +64,8 @@ func (ss StatsSummary) Validate(tx *sql.Tx) error {
 	return util.JoinErrs(errs)
 }
 
-// UnmarshalJSON Customized Unmarshal to force date format on statDate
+// UnmarshalJSON implements the encoding/json.Unmarshaler interface with a
+// customized decoding to force the date format on StatDate.
 func (ss *StatsSummary) UnmarshalJSON(data []byte) error {
 	type Alias StatsSummary
 	resp := struct {
@@ -97,7 +106,8 @@ func parseTime(ts string) (time.Time, error) {
 	return time.Parse(dateFormat, ts)
 }
 
-// MarshalJSON Customized Marshal to force date format on statDate
+// MarshalJSON implements the encoding/json.Marshaler interface with a
+// customized encoding to force the date format on StatDate.
 func (ss StatsSummary) MarshalJSON() ([]byte, error) {
 	type Alias StatsSummary
 	resp := struct {
@@ -114,12 +124,15 @@ func (ss StatsSummary) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&resp)
 }
 
-// StatsSummaryLastUpdated ...
+// StatsSummaryLastUpdated is the type of the `response` property of a response
+// from Traffic Ops to a GET request made to its /stats_summary endpoint when
+// the 'lastSummaryDate' query string parameter is passed as 'true'.
 type StatsSummaryLastUpdated struct {
 	SummaryTime *time.Time `json:"summaryTime"  db:"summary_time"`
 }
 
-// MarshalJSON is a customized marshal to force date format on SummaryTime.
+// MarshalJSON implements the encoding/json.Marshaler interface with a
+// customized encoding to force the date format on SummaryTime.
 func (ss StatsSummaryLastUpdated) MarshalJSON() ([]byte, error) {
 	resp := struct {
 		SummaryTime *string `json:"summaryTime"`
@@ -130,7 +143,8 @@ func (ss StatsSummaryLastUpdated) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&resp)
 }
 
-// UnmarshalJSON Customized Unmarshal to force timestamp format
+// UnmarshalJSON implements the encoding/json.Unmarshaler interface with a
+// customized decoding to force the SummaryTime format.
 func (ss *StatsSummaryLastUpdated) UnmarshalJSON(data []byte) error {
 	resp := struct {
 		SummaryTime *string `json:"summaryTime"`
@@ -153,7 +167,15 @@ func (ss *StatsSummaryLastUpdated) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// StatsSummaryLastUpdatedResponse is the type of a response from Traffic Ops
+// to a GET request made to its /stats_summary endpoint when the
+// 'lastSummaryDate' query string parameter is passed as 'true'.
+//
+// Deprecated: This structure includes an unknown field and drops Alerts
+// returned by the API - use StatsSummaryLastUpdatedAPIResponse instead.
 type StatsSummaryLastUpdatedResponse struct {
+	// This field has unknown purpose and meaning - do not depend on its value
+	// for anything.
 	Version  string                  `json:"version"`
 	Response StatsSummaryLastUpdated `json:"response"`
 }

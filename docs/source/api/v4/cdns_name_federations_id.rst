@@ -25,6 +25,7 @@ Updates a federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: FEDERATION:UPDATE, FEDERATION:READ, CDN:READ
 :Response Type:  Object
 
 Request Structure
@@ -110,6 +111,7 @@ Deletes a specific federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: FEDERATION:DELETE, FEDERATION:READ, CDN:READ
 :Response Type:  ``undefined``
 
 Request Structure

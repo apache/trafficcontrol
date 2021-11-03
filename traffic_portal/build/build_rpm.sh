@@ -61,6 +61,6 @@ initBuildArea() {
 # ---------------------------------------
 
 importFunctions
-checkEnvironment -i npm,bower,grunt,compass,rsync
+checkEnvironment -i npm,grunt,rsync,sass
 initBuildArea
 buildRpm traffic_portal

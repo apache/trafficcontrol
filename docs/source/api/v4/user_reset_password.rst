@@ -25,6 +25,7 @@ Sends an email to reset a user's password.
 
 :Auth. Required: No
 :Roles Required: None
+:Permissions Required: None
 :Response Type:  ``undefined``
 
 Request Structure

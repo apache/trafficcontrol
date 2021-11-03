@@ -27,6 +27,7 @@ Gets information for all :term:`ACME Account` s.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: ACME:READ
 :Response Type:  Array
 
 Request Structure
@@ -63,6 +64,7 @@ Creates a new :term:`ACME Account`.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: ACME:CREATE, ACME:READ
 :Response Type:  Object
 
 Request Structure
@@ -134,6 +136,7 @@ Updates an existing :term:`ACME Account`.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: ACME:UPDATE, ACME:READ
 :Response Type:  Object
 
 Request Structure

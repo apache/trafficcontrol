@@ -25,10 +25,11 @@ on:
   push:
     paths:
       - .github/actions/todb-init/**
+      - .github/actions/tvdb-init/**
       - .github/actions/tp-integration-tests/**
       - .github/workflows/tp.integration.tests.yml
       - GO_VERSION
-      - infrastructure/cdn-in-a-box/traffic_vault/**
+      - infrastructure/cdn-in-a-box/optional/traffic_vault/**
       - traffic_ops/*client/**.go
       - traffic_ops/testing/api/**.go
       - traffic_ops/traffic_ops_golang/**.go
@@ -37,10 +38,11 @@ on:
   pull_request:
     paths:
       - .github/actions/todb-init/**
+      - .github/actions/tvdb-init/**
       - .github/actions/tp-integration-tests/**
       - .github/workflows/tp.integration.tests.yml
       - GO_VERSION
-      - infrastructure/cdn-in-a-box/traffic_vault/**
+      - infrastructure/cdn-in-a-box/optional/traffic_vault/**
       - traffic_ops/*client/**.go
       - traffic_ops/testing/api/**.go
       - traffic_ops/traffic_ops_golang/**.go
@@ -55,13 +57,16 @@ jobs:
       hub:
         image: selenium/hub
         ports:
-          - "4444:4444"
+          - 4442:4442
+          - 4443:4443
+          - 4444:4444
         options: --health-cmd=/opt/bin/check-grid.sh --health-interval=5s --health-timeout=15s --health-retries=5
       chromium:
         image: ossalternatives/selenium-node-chromium
         env:
-          HUB_HOST: hub
-          HUB_PORT: 4444
+          SE_EVENT_BUS_HOST: hub
+          SE_EVENT_BUS_PUBLISH_PORT: 4442
+          SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
         volumes:
           - /dev/shm:/dev/shm
       postgres:
@@ -101,12 +106,15 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/package-lock.json traffic_portal/test/integration/package-lock.json traffic_portal/bower.json') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/package-lock.json traffic_portal/test/integration/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-modules-
       - name: Initialize Traffic Ops Database
         id: todb
         uses: ./.github/actions/todb-init
+      - name: Initialize Traffic Vault Database
+        id: tvdb
+        uses: ./.github/actions/tvdb-init
       - name: Check Go Version
         run: echo "::set-output name=value::$(cat GO_VERSION)"
         id: go-version

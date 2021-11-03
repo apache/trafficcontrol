@@ -33,13 +33,17 @@ import (
  * under the License.
  */
 
-// ParametersResponse ...
+// ParametersResponse is the type of the response from Traffic Ops to GET
+// requests made to the /parameters and /profiles/name/{{Name}}/parameters
+// endpoints of its API.
 type ParametersResponse struct {
 	Response []Parameter `json:"response"`
 	Alerts
 }
 
-// Parameter ...
+// A Parameter defines some configuration setting (which is usually but
+// definitely not always a line in a configuration file) used by some Profile
+// or Cache Group.
 type Parameter struct {
 	ConfigFile  string          `json:"configFile" db:"config_file"`
 	ID          int             `json:"id" db:"id"`
@@ -50,7 +54,8 @@ type Parameter struct {
 	Value       string          `json:"value" db:"value"`
 }
 
-// ParameterNullable - a struct version that allows for all fields to be null, mostly used by the API side
+// ParameterNullable is exactly like Parameter except that its properties are
+// reference values, so they can be nil.
 type ParameterNullable struct {
 	//
 	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
@@ -64,6 +69,9 @@ type ParameterNullable struct {
 	Value       *string         `json:"value" db:"value"`
 }
 
+// ProfileParameterByName is a structure that's used to represent a Parameter
+// in a context where they are associated with some Profile specified by a
+// client of the Traffic Ops API by its Name.
 type ProfileParameterByName struct {
 	ConfigFile  string    `json:"configFile"`
 	ID          int       `json:"id"`
@@ -73,6 +81,11 @@ type ProfileParameterByName struct {
 	Value       string    `json:"value"`
 }
 
+// ProfileParameterByNamePost is a structure that's only used internally to
+// represent a Parameter that has been requested by a client of the Traffic Ops
+// API to be associated with some Profile which was specified by Name.
+//
+// TODO: This probably shouldn't exist, or at least not be in the lib.
 type ProfileParameterByNamePost struct {
 	ConfigFile *string `json:"configFile"`
 	Name       *string `json:"name"`
@@ -80,6 +93,9 @@ type ProfileParameterByNamePost struct {
 	Value      *string `json:"value"`
 }
 
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (p *ProfileParameterByNamePost) Validate(tx *sql.Tx) []error {
 	return validateProfileParamPostFields(p.ConfigFile, p.Name, p.Value, p.Secure)
 }
@@ -107,6 +123,7 @@ func validateProfileParamPostFields(configFile, name, value *string, secure *int
 // ProfileParametersByNamePost is the object posted to profile/name/parameter endpoints. This object may be posted as either a single JSON object, or an array of objects. Either will unmarshal into this object; a single object will unmarshal into an array of 1 element.
 type ProfileParametersByNamePost []ProfileParameterByNamePost
 
+// UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (pp *ProfileParametersByNamePost) UnmarshalJSON(bts []byte) error {
 	bts = bytes.TrimLeft(bts, " \n\t\r")
 	if len(bts) == 0 {
@@ -126,6 +143,9 @@ func (pp *ProfileParametersByNamePost) UnmarshalJSON(bts []byte) error {
 	return nil
 }
 
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (pp *ProfileParametersByNamePost) Validate(tx *sql.Tx) error {
 	errs := []error{}
 	ppArr := ([]ProfileParameterByNamePost)(*pp)
@@ -142,29 +162,42 @@ func (pp *ProfileParametersByNamePost) Validate(tx *sql.Tx) error {
 	return nil
 }
 
+// ProfileParameterPostRespObj is a single Parameter in the Parameters slice of
+// a ProfileParameterPostResp.
 type ProfileParameterPostRespObj struct {
 	ProfileParameterByNamePost
 	ID int64 `json:"id"`
 }
 
+// ProfileParameterPostResp is the type of the `response` property of responses
+// from Traffic Ops to POST requests made to its
+// /profiles/name/{{Name}}/parameters API endpoint.
 type ProfileParameterPostResp struct {
 	Parameters  []ProfileParameterPostRespObj `json:"parameters"`
 	ProfileID   int                           `json:"profileId"`
 	ProfileName string                        `json:"profileName"`
 }
 
+// A PostProfileParam is a request to associate zero or more Parameters with a
+// particular Profile.
 type PostProfileParam struct {
 	ProfileID *int64   `json:"profileId"`
 	ParamIDs  *[]int64 `json:"paramIds"`
 	Replace   *bool    `json:"replace"`
 }
 
+// Sanitize ensures that Replace is not nil, setting it to false if it is.
+//
+// TODO: Figure out why this is taking a db transaction - should this be moved?
 func (pp *PostProfileParam) Sanitize(tx *sql.Tx) {
 	if pp.Replace == nil {
 		pp.Replace = util.BoolPtr(false)
 	}
 }
 
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (pp *PostProfileParam) Validate(tx *sql.Tx) error {
 	pp.Sanitize(tx)
 	errs := []error{}
@@ -188,18 +221,26 @@ func (pp *PostProfileParam) Validate(tx *sql.Tx) error {
 	return nil
 }
 
+// A PostParamProfile is a request to associate a particular Parameter with
+// zero or more Profiles.
 type PostParamProfile struct {
 	ParamID    *int64   `json:"paramId"`
 	ProfileIDs *[]int64 `json:"profileIds"`
 	Replace    *bool    `json:"replace"`
 }
 
+// Sanitize ensures that Replace is not nil, setting it to false if it is.
+//
+// TODO: Figure out why this is taking a db transaction - should this be moved?
 func (pp *PostParamProfile) Sanitize(tx *sql.Tx) {
 	if pp.Replace == nil {
 		pp.Replace = util.BoolPtr(false)
 	}
 }
 
+// Validate implements the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (pp *PostParamProfile) Validate(tx *sql.Tx) error {
 	pp.Sanitize(tx)
 
@@ -251,6 +292,11 @@ type ProfileParametersNullable struct {
 	Parameter   *int       `json:"parameter" db:"parameter_id"`
 }
 
+// ProfileParametersNullableResponse is the structure of a response from
+// Traffic Ops to GET requests made to its /profileparameters API endpoint.
+//
+// TODO: This is only used internally in a v3 client method (not its call
+// signature) - deprecate? Remove?
 type ProfileParametersNullableResponse struct {
 	Response []ProfileParametersNullable `json:"response"`
 }

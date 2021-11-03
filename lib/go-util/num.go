@@ -168,7 +168,7 @@ func BytesLenSplit(s []byte, n int) [][]byte {
 func HashInts(ints []int, sortIntsBeforeHashing bool) []byte {
 	sortedInts := ints
 	if sortIntsBeforeHashing {
-		sortedInts := make([]int, 0, len(ints))
+		sortedInts = make([]int, 0, len(ints))
 		for _, in := range ints {
 			sortedInts = append(sortedInts, in)
 		}

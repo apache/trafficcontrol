@@ -22,6 +22,7 @@ package cdnfederation
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -52,24 +53,23 @@ func (v *TOCDNFederation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOCDNFederation) InsertQuery() string           { return insertQuery() }
 func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
-        SELECT max(last_updated) as t from federation ` + where + orderBy + pagination +
+		SELECT max(federation.last_updated) as t from federation 
+		join federation_deliveryservice fds on fds.federation = federation.id 
+		join deliveryservice ds on ds.id = fds.deliveryservice 
+		join cdn c on c.id = ds.cdn_id ` + where + orderBy + pagination +
 		` UNION ALL
-    select max(last_updated) as t from last_deleted l where l.table_name='federation') as res`
+		select max(last_updated) as t from last_deleted l where l.table_name='federation') as res`
 }
 
 func (v *TOCDNFederation) NewReadObj() interface{} { return &TOCDNFederation{} }
 func (v *TOCDNFederation) SelectQuery() string {
-	if v.ID != nil {
-		return selectByID()
-	}
 	return selectByCDNName()
 }
 func (v *TOCDNFederation) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	cols := map[string]dbhelpers.WhereColumnInfo{
-		"id": dbhelpers.WhereColumnInfo{Column: "federation.id", Checker: api.IsInt},
-	}
-	if v.ID == nil {
-		cols["name"] = dbhelpers.WhereColumnInfo{Column: "cdn.name", Checker: nil}
+		"id":    dbhelpers.WhereColumnInfo{Column: "federation.id", Checker: api.IsInt},
+		"name":  dbhelpers.WhereColumnInfo{Column: "c.name", Checker: nil},
+		"cname": dbhelpers.WhereColumnInfo{Column: "federation.cname", Checker: nil},
 	}
 	return cols
 }
@@ -128,13 +128,48 @@ func (fed *TOCDNFederation) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
 }
 
+func (fed *TOCDNFederation) CheckIfCDNAndFederationMatch(cdnName string) (error, error, int) {
+	var cdnFromDS string
+	var err error
+	if fed.DeliveryServiceIDs != nil {
+		if fed.DsId != nil {
+			cdnNames, err := dbhelpers.GetCDNNamesFromDSIds(fed.APIInfo().Tx.Tx, []int{*fed.DsId})
+			if err != nil {
+				return nil, fmt.Errorf("getting CDN names from DS IDs: %w", err), http.StatusInternalServerError
+			}
+			if len(cdnNames) != 1 {
+				return fmt.Errorf("%d CDNs returned for one DS ID", len(cdnNames)), nil, http.StatusBadRequest
+			}
+			cdnFromDS = cdnNames[0]
+		} else if fed.XmlId != nil {
+			cdnFromDS, err = dbhelpers.GetCDNNameFromDSXMLID(fed.APIInfo().Tx.Tx, *fed.XmlId)
+			if err != nil {
+				return nil, fmt.Errorf("getting CDN name from DS XMLID: %w", err), http.StatusInternalServerError
+			}
+		}
+	}
+	if cdnFromDS != "" && cdnFromDS != cdnName {
+		return errors.New("cdn names in request path and payload do not match"), nil, http.StatusBadRequest
+	}
+	return nil, nil, http.StatusOK
+}
+
 // fedAPIInfo.Params["name"] is not used on creation, rather the cdn name
 // is connected when the federations/:id/deliveryservice links a federation
 // However, we use fedAPIInfo.Params["name"] to check whether or not another user has a hard lock on the CDN.
 // Note: cdns and deliveryservies have a 1-1 relationship
 func (fed *TOCDNFederation) Create() (error, error, int) {
 	if cdn, ok := fed.APIInfo().Params["name"]; ok {
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
+		if ok, err := dbhelpers.CDNExists(fed.APIInfo().Params["name"], fed.APIInfo().Tx.Tx); err != nil {
+			return nil, errors.New("verifying CDN exists: " + err.Error()), http.StatusInternalServerError
+		} else if !ok {
+			return errors.New("cdn not found"), nil, http.StatusNotFound
+		}
+		userErr, sysErr, errCode := fed.CheckIfCDNAndFederationMatch(cdn)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
 		}
@@ -177,9 +212,18 @@ func (fed *TOCDNFederation) Read(h http.Header, useIMS bool) ([]interface{}, err
 	}
 
 	api.DefaultSort(fed.APIInfo(), "cname")
+	if ok, err := dbhelpers.CDNExists(fed.APIInfo().Params["name"], fed.APIInfo().Tx.Tx); err != nil {
+		return nil, nil, errors.New("verifying CDN exists: " + err.Error()), http.StatusInternalServerError, nil
+	} else if !ok {
+		return nil, errors.New("cdn not found"), nil, http.StatusNotFound, nil
+	}
 	federations, userErr, sysErr, errCode, maxTime := api.GenericRead(h, fed, useIMS)
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode, nil
+	}
+
+	if errCode == http.StatusNotModified {
+		return []interface{}{}, nil, nil, http.StatusNotModified, maxTime
 	}
 
 	filteredFederations := []interface{}{}
@@ -195,11 +239,6 @@ func (fed *TOCDNFederation) Read(h http.Header, useIMS bool) ([]interface{}, err
 		if fed.ID != nil {
 			return nil, errors.New("not found"), nil, http.StatusNotFound, nil
 		}
-		if ok, err := dbhelpers.CDNExists(fed.APIInfo().Params["name"], fed.APIInfo().Tx.Tx); err != nil {
-			return nil, nil, errors.New("verifying CDN exists: " + err.Error()), http.StatusInternalServerError, nil
-		} else if !ok {
-			return nil, errors.New("cdn not found"), nil, http.StatusNotFound, nil
-		}
 	}
 	return filteredFederations, nil, nil, errCode, maxTime
 }
@@ -210,7 +249,16 @@ func (fed *TOCDNFederation) Update(h http.Header) (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 	if cdn, ok := fed.APIInfo().Params["name"]; ok {
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
+		if ok, err := dbhelpers.CDNExists(fed.APIInfo().Params["name"], fed.APIInfo().Tx.Tx); err != nil {
+			return nil, errors.New("verifying CDN exists: " + err.Error()), http.StatusInternalServerError
+		} else if !ok {
+			return errors.New("cdn not found"), nil, http.StatusNotFound
+		}
+		userErr, sysErr, errCode := fed.CheckIfCDNAndFederationMatch(cdn)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
 		}
@@ -231,7 +279,16 @@ func (fed *TOCDNFederation) Delete() (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 	if cdn, ok := fed.APIInfo().Params["name"]; ok {
-		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
+		if ok, err := dbhelpers.CDNExists(fed.APIInfo().Params["name"], fed.APIInfo().Tx.Tx); err != nil {
+			return nil, errors.New("verifying CDN exists: " + err.Error()), http.StatusInternalServerError
+		} else if !ok {
+			return errors.New("cdn not found"), nil, http.StatusNotFound
+		}
+		userErr, sysErr, errCode := fed.CheckIfCDNAndFederationMatch(cdn)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(fed.APIInfo().Tx.Tx, cdn, fed.APIInfo().User.UserName)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, errCode
 		}
@@ -305,7 +362,7 @@ func selectByCDNName() string {
 	FROM federation
 	JOIN federation_deliveryservice AS fd ON federation.id = fd.federation
 	JOIN deliveryservice AS ds ON ds.id = fd.deliveryservice
-	JOIN cdn ON cdn.id = cdn_id`
+	JOIN cdn c ON c.id = ds.cdn_id`
 	// WHERE cdn.name = :cdn_name (determined by dbhelper)
 }
 

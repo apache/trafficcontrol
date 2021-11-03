@@ -20,7 +20,7 @@
 var StaticDnsEntryService = function($http, locationUtils, messageModel, ENV) {
 
 	this.getStaticDnsEntries = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'staticdnsentries', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'staticdnsentries', {params: queryParams}).then(
             function (result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var StaticDnsEntryService = function($http, locationUtils, messageModel, ENV) {
 	};
 
 	this.getStaticDnsEntry = function(id) {
-        return $http.get(ENV.api['root'] + 'staticdnsentries', {params: {id: id}}).then(
+        return $http.get(ENV.api.unstable + 'staticdnsentries', {params: {id: id}}).then(
             function (result) {
                 return result.data.response[0];
             },
@@ -42,7 +42,7 @@ var StaticDnsEntryService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.createDeliveryServiceStaticDnsEntry = function(staticDnsEntry) {
-        return $http.post(ENV.api['root'] + "staticdnsentries", staticDnsEntry).then(
+        return $http.post(ENV.api.unstable + "staticdnsentries", staticDnsEntry).then(
             function(response) {
                 messageModel.setMessages(response.data.alerts, true);
                 locationUtils.navigateToPath('/delivery-services/' + staticDnsEntry.deliveryServiceId + '/static-dns-entries');
@@ -56,7 +56,7 @@ var StaticDnsEntryService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.deleteDeliveryServiceStaticDnsEntry = function(id) {
-        return $http.delete(ENV.api['root'] + "staticdnsentries", {params: {id: id}}).then(
+        return $http.delete(ENV.api.unstable + "staticdnsentries", {params: {id: id}}).then(
             function(response) {
                 messageModel.setMessages(response.data.alerts, true);
                 return response;
@@ -69,7 +69,7 @@ var StaticDnsEntryService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.updateDeliveryServiceStaticDnsEntry = function(id, staticDnsEntry) {
-        return $http.put(ENV.api['root'] + "staticdnsentries", staticDnsEntry, {params: {id: id}}).then(
+        return $http.put(ENV.api.unstable + "staticdnsentries", staticDnsEntry, {params: {id: id}}).then(
             function(response) {
                 messageModel.setMessages(response.data.alerts, false);
                 return response;

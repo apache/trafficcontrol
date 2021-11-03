@@ -616,49 +616,17 @@ dl_ds_default_profile_cdntemplates:
     type: TM_PROFILE
     routingDisabled: false
     parameters:
-      - name: hack.ttl
-        configFile: rascal-config.txt
-        value: '30'
-        secure: 0
-      - name: health.event-count
-        configFile: rascal-config.txt
-        value: '200'
-        secure: 0
       - name: health.polling.interval
         configFile: rascal-config.txt
         value: '6000'
-        secure: 0
-      - name: health.threadPool
-        configFile: rascal-config.txt
-        value: '4'
-        secure: 0
-      - name: health.timepad
-        configFile: rascal-config.txt
-        value: '0'
         secure: 0
       - name: heartbeat.polling.interval
         configFile: rascal-config.txt
         value: '2000'
         secure: 0
-      - name: location
-        configFile: rascal-config.txt
-        value: "/opt/traffic_monitor/conf"
-        secure: 0
       - name: peers.polling.interval
         configFile: rascal-config.txt
         value: '1000'
-        secure: 0
-      - name: tm.crConfig.polling.url
-        configFile: rascal-config.txt
-        value: https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.xml
-        secure: 0
-      - name: tm.dataServer.polling.url
-        configFile: rascal-config.txt
-        value: https://${tmHostname}/dataserver/orderby/id
-        secure: 0
-      - name: tm.healthParams.polling.url
-        configFile: rascal-config.txt
-        value: https://${tmHostname}/health/${cdnName}
         secure: 0
       - name: tm.polling.interval
         configFile: rascal-config.txt

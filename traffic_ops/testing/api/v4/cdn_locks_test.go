@@ -16,7 +16,6 @@ package v4
 */
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -29,7 +28,7 @@ import (
 )
 
 func TestCDNLocks(t *testing.T) {
-	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, Tenants, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities, Roles, Users}, func() {
+	WithObjs(t, []TCObj{Types, CacheGroups, CDNs, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, Tenants, ServiceCategories, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities, Roles, Users}, func() {
 		CRDCdnLocks(t)
 		AdminCdnLocks(t)
 		SnapshotWithLock(t)
@@ -186,52 +185,47 @@ func AdminCdnLocks(t *testing.T) {
 	}
 
 	// Create a new user with operations level privileges
-	user1 := tc.UserV40{
-		User: tc.User{
-			Username:             util.StrPtr("lock_user1"),
-			RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
-			LocalPassword:        util.StrPtr("test_pa$$word"),
-			ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-			RoleName:             util.StrPtr("operations"),
-		},
+	user1 := tc.UserV4{
+		Username:             "lock_user1",
+		RegistrationSent:     new(time.Time),
+		LocalPassword:        util.StrPtr("test_pa$$word"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+		Role:                 "operations",
 	}
 	user1.Email = util.StrPtr("lockuseremail@domain.com")
-	user1.TenantID = util.IntPtr(resp.Response[0].ID)
+	user1.TenantID = resp.Response[0].ID
 	user1.FullName = util.StrPtr("firstName LastName")
 	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("could not create test user with username: %s", *user1.Username)
+		t.Fatalf("could not create test user with username: %s", user1.Username)
 	}
 	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
 
 	// Create another new user with operations level privileges
-	user2 := tc.UserV40{
-		User: tc.User{
-			Username:             util.StrPtr("lock_user2"),
-			RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
-			LocalPassword:        util.StrPtr("test_pa$$word2"),
-			ConfirmLocalPassword: util.StrPtr("test_pa$$word2"),
-			RoleName:             util.StrPtr("operations"),
-		},
+	user2 := tc.UserV4{
+		Username:             "lock_user2",
+		RegistrationSent:     new(time.Time),
+		LocalPassword:        util.StrPtr("test_pa$$word2"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word2"),
+		Role:                 "operations",
 	}
 	user2.Email = util.StrPtr("newlockuseremail@domain.com")
-	user2.TenantID = util.IntPtr(resp.Response[0].ID)
+	user2.TenantID = resp.Response[0].ID
 	user2.FullName = util.StrPtr("firstName2 LastName2")
 	_, _, err = TOSession.CreateUser(user2, client.RequestOptions{})
 	if err != nil {
-		fmt.Println(err)
-		t.Fatalf("could not create test user with username: %s", *user2.Username)
+		t.Fatalf("could not create test user with username: %s, err: %v", user2.Username, err)
 	}
 	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user2"})
 
 	// Establish a session with the newly created non admin level user
-	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, *user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
 	if err != nil {
 		t.Fatalf("could not login with user lock_user1: %v", err)
 	}
 
 	// Establish another session with the newly created non admin level user
-	userSession2, _, err := client.LoginWithAgent(Config.TrafficOps.URL, *user2.Username, *user2.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	userSession2, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user2.Username, *user2.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
 	if err != nil {
 		t.Fatalf("could not login with user lock_user1: %v", err)
 	}
@@ -276,26 +270,24 @@ func SnapshotWithLock(t *testing.T) {
 	}
 
 	// Create a new user with operations level privileges
-	user1 := tc.UserV40{
-		User: tc.User{
-			Username:             util.StrPtr("lock_user1"),
-			RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
-			LocalPassword:        util.StrPtr("test_pa$$word"),
-			ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-			RoleName:             util.StrPtr("operations"),
-		},
+	user1 := tc.UserV4{
+		Username:             "lock_user1",
+		RegistrationSent:     new(time.Time),
+		LocalPassword:        util.StrPtr("test_pa$$word"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+		Role:                 "operations",
 	}
 	user1.Email = util.StrPtr("lockuseremail@domain.com")
-	user1.TenantID = util.IntPtr(resp.Response[0].ID)
+	user1.TenantID = resp.Response[0].ID
 	user1.FullName = util.StrPtr("firstName LastName")
 	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("could not create test user with username: %s", *user1.Username)
+		t.Fatalf("could not create test user with username: %s", user1.Username)
 	}
 	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
 
 	// Establish a session with the newly created non admin level user
-	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, *user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
 	if err != nil {
 		t.Fatalf("could not login with user lock_user1: %v", err)
 	}
@@ -307,7 +299,7 @@ func SnapshotWithLock(t *testing.T) {
 	opts.QueryParameters.Set("cdn", cdn)
 	_, _, err = userSession.SnapshotCRConfig(opts)
 	if err != nil {
-		t.Errorf("expected no error while snapping cdn %s by user %s, but got %v", cdn, *user1.Username, err)
+		t.Errorf("expected no error while snapping cdn %s by user %s, but got %v", cdn, user1.Username, err)
 	}
 
 	// Create a lock for this user
@@ -323,7 +315,7 @@ func SnapshotWithLock(t *testing.T) {
 	// "lock_user1", which has the lock on CDN "bar", tries to snap it -> this should pass
 	_, _, err = userSession.SnapshotCRConfig(opts)
 	if err != nil {
-		t.Errorf("expected no error while snapping cdn %s by user %s, but got %v", cdn, *user1.Username, err)
+		t.Errorf("expected no error while snapping cdn %s by user %s, but got %v", cdn, user1.Username, err)
 	}
 
 	// Admin user, which doesn't have the lock on the CDN "bar", is trying to snap it -> this should fail
@@ -352,26 +344,24 @@ func QueueUpdatesWithLock(t *testing.T) {
 	}
 
 	// Create a new user with operations level privileges
-	user1 := tc.UserV40{
-		User: tc.User{
-			Username:             util.StrPtr("lock_user1"),
-			RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
-			LocalPassword:        util.StrPtr("test_pa$$word"),
-			ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-			RoleName:             util.StrPtr("operations"),
-		},
+	user1 := tc.UserV4{
+		Username:             "lock_user1",
+		RegistrationSent:     new(time.Time),
+		LocalPassword:        util.StrPtr("test_pa$$word"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+		Role:                 "operations",
 	}
 	user1.Email = util.StrPtr("lockuseremail@domain.com")
-	user1.TenantID = util.IntPtr(resp.Response[0].ID)
+	user1.TenantID = resp.Response[0].ID
 	user1.FullName = util.StrPtr("firstName LastName")
 	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("could not create test user with username: %s", *user1.Username)
+		t.Fatalf("could not create test user with username: %s", user1.Username)
 	}
 	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
 
 	// Establish a session with the newly created non admin level user
-	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, *user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
 	if err != nil {
 		t.Fatalf("could not login with user lock_user1: %v", err)
 	}
@@ -384,7 +374,7 @@ func QueueUpdatesWithLock(t *testing.T) {
 	// Currently, no user has a lock on the "bar" CDN, so when "lock_user1", which does not have the lock on CDN "bar", tries to queue updates on a server in the same CDN, this should pass
 	_, _, err = userSession.SetServerQueueUpdate(serverID, true, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("expected no error while queueing updates for a server in cdn %s by user %s, but got %v", cdn, *user1.Username, err)
+		t.Errorf("expected no error while queueing updates for a server in cdn %s by user %s, but got %v", cdn, user1.Username, err)
 	}
 
 	// Create a lock for this user
@@ -400,7 +390,7 @@ func QueueUpdatesWithLock(t *testing.T) {
 	// "lock_user1", which has the lock on CDN "bar", tries to queue updates on a server in it -> this should pass
 	_, _, err = userSession.SetServerQueueUpdate(serverID, true, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("expected no error while queueing updates for a server in cdn %s by user %s, but got %v", cdn, *user1.Username, err)
+		t.Errorf("expected no error while queueing updates for a server in cdn %s by user %s, but got %v", cdn, user1.Username, err)
 	}
 
 	// Admin user, which doesn't have the lock on the CDN "bar", is trying to queue updates on a server in it -> this should fail
@@ -429,26 +419,24 @@ func QueueUpdatesFromTopologiesWithLock(t *testing.T) {
 	}
 
 	// Create a new user with operations level privileges
-	user1 := tc.UserV40{
-		User: tc.User{
-			Username:             util.StrPtr("lock_user1"),
-			RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
-			LocalPassword:        util.StrPtr("test_pa$$word"),
-			ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-			RoleName:             util.StrPtr("operations"),
-		},
+	user1 := tc.UserV4{
+		Username:             "lock_user1",
+		RegistrationSent:     new(time.Time),
+		LocalPassword:        util.StrPtr("test_pa$$word"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+		Role:                 "operations",
 	}
 	user1.Email = util.StrPtr("lockuseremail@domain.com")
-	user1.TenantID = util.IntPtr(resp.Response[0].ID)
+	user1.TenantID = resp.Response[0].ID
 	user1.FullName = util.StrPtr("firstName LastName")
 	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("could not create test user with username: %s", *user1.Username)
+		t.Fatalf("could not create test user with username: %s", user1.Username)
 	}
 	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
 
 	// Establish a session with the newly created non admin level user
-	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, *user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
 	if err != nil {
 		t.Fatalf("could not login with user lock_user1: %v", err)
 	}
@@ -461,7 +449,7 @@ func QueueUpdatesFromTopologiesWithLock(t *testing.T) {
 	// Currently, no user has a lock on the "bar" CDN, so when "lock_user1", which does not have the lock on CDN "bar", tries to queue updates on a topology in the same CDN, this should pass
 	_, _, err = userSession.TopologiesQueueUpdate(topology, tc.TopologiesQueueUpdateRequest{Action: "queue", CDNID: int64(cdnID)}, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("expected no error while queueing updates for a topology server in cdn %s by user %s, but got %v", cdnName, *user1.Username, err)
+		t.Errorf("expected no error while queueing updates for a topology server in cdn %s by user %s, but got %v", cdnName, user1.Username, err)
 	}
 
 	// Create a lock for this user
@@ -477,7 +465,7 @@ func QueueUpdatesFromTopologiesWithLock(t *testing.T) {
 	// "lock_user1", which has the lock on CDN "bar", tries to queue updates on a topology in it -> this should pass
 	_, _, err = userSession.TopologiesQueueUpdate(topology, tc.TopologiesQueueUpdateRequest{Action: "queue", CDNID: int64(cdnID)}, client.RequestOptions{})
 	if err != nil {
-		t.Errorf("expected no error while queueing updates for a topology server in cdn %s by user %s, but got %v", cdnName, *user1.Username, err)
+		t.Errorf("expected no error while queueing updates for a topology server in cdn %s by user %s, but got %v", cdnName, user1.Username, err)
 	}
 
 	// Admin user, which doesn't have the lock on the CDN "bar", is trying to queue updates on a topology in it -> this should fail

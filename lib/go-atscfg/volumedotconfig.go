@@ -56,11 +56,12 @@ func MakeVolumeDotConfig(
 	paramData, paramWarns := paramsToMap(filterParams(serverParams, VolumeFileName, "", "", ""))
 	warnings = append(warnings, paramWarns...)
 
-	text := makeHdrComment(opt.HdrComment)
+	hdr := makeHdrComment(opt.HdrComment)
 
 	numVolumes := getNumVolumes(paramData)
 
-	text += "# TRAFFIC OPS NOTE: This is running with forced volumes - the size is irrelevant\n"
+	hdr += "# TRAFFIC OPS NOTE: This is running with forced volumes - the size is irrelevant\n"
+	text := ""
 	nextVolume := 1
 	if drivePrefix := paramData["Drive_Prefix"]; drivePrefix != "" {
 		text += volumeText(strconv.Itoa(nextVolume), numVolumes)
@@ -80,7 +81,7 @@ func MakeVolumeDotConfig(
 	}
 
 	return Cfg{
-		Text:        text,
+		Text:        hdr + text,
 		ContentType: ContentTypeVolumeDotConfig,
 		LineComment: LineCommentVolumeDotConfig,
 		Warnings:    warnings,

@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -48,7 +49,9 @@ type ProfileResponse struct {
 	Alerts
 }
 
-// Profile ...
+// A Profile represents a set of configuration for a server or Delivery Service
+// which may be reused to allow sharing configuration across the objects to
+// which it is assigned.
 type Profile struct {
 	ID              int                 `json:"id" db:"id"`
 	LastUpdated     TimeNoMod           `json:"lastUpdated"`
@@ -62,7 +65,8 @@ type Profile struct {
 	Parameters      []ParameterNullable `json:"params,omitempty"`
 }
 
-// ProfileNullable allows all fields to be 'null'
+// ProfileNullable is exactly the same as Profile except that its fields are
+// reference values, so they may be nil.
 type ProfileNullable struct {
 	ID              *int                `json:"id" db:"id"`
 	LastUpdated     *TimeNoMod          `json:"lastUpdated" db:"last_updated"`
@@ -84,7 +88,8 @@ type ProfileCopy struct {
 	Description  string `json:"description"`
 }
 
-// ProfileCopyResponse represents the API response when a profile is copied
+// ProfileCopyResponse represents the Traffic Ops API's response when a Profile
+// is copied.
 type ProfileCopyResponse struct {
 	Response ProfileCopy `json:"response"`
 	Alerts
@@ -100,7 +105,7 @@ type ProfileExportImportNullable struct {
 }
 
 // ProfileExportResponse is an object of the form used by Traffic Ops
-// to represent exported profile response
+// to represent exported profile response.
 type ProfileExportResponse struct {
 	// Parameters associated to the profile
 	//
@@ -114,7 +119,7 @@ type ProfileExportResponse struct {
 }
 
 // ProfileImportRequest is an object of the form used by Traffic Ops
-// to represent a request to import a profile
+// to represent a request to import a profile.
 type ProfileImportRequest struct {
 	// Parameters associated to the profile
 	//
@@ -126,26 +131,42 @@ type ProfileImportRequest struct {
 }
 
 // ProfileImportResponse is an object of the form used by Traffic Ops
-// to represent a response from importing a profile
+// to represent a response from importing a profile.
 type ProfileImportResponse struct {
 	Response ProfileImportResponseObj `json:"response"`
 	Alerts
 }
 
-// ProfileImportResponseObj contains data about the profile being imported
+// ProfileImportResponseObj contains data about the profile being imported.
 type ProfileImportResponseObj struct {
 	ProfileExportImportNullable
 	ID *int `json:"id"`
 }
 
-// Validate validates an profile import request
+// Validate validates an profile import request, implementing the
+// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// interface.
 func (profileImport *ProfileImportRequest) Validate(tx *sql.Tx) error {
 
 	profile := profileImport.Profile
 
 	// Profile fields are valid
 	errs := tovalidate.ToErrors(validation.Errors{
-		"name":        validation.Validate(profile.Name, validation.Required),
+		"name": validation.Validate(profile.Name, validation.By(
+			func(value interface{}) error {
+				name, ok := value.(*string)
+				if !ok {
+					return fmt.Errorf("wrong type, need: string, got: %T", value)
+				}
+				if name == nil || *name == "" {
+					return errors.New("required and cannot be blank")
+				}
+				if strings.Contains(*name, " ") {
+					return errors.New("cannot contain spaces")
+				}
+				return nil
+			},
+		)),
 		"description": validation.Validate(profile.Description, validation.Required),
 		"cdnName":     validation.Validate(profile.CDNName, validation.Required),
 		"type":        validation.Validate(profile.Type, validation.Required),

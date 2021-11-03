@@ -26,6 +26,8 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 
 	$scope.changeType = $scope.dsRequest.changeType;
 
+	$scope.restrictTLS = ((dsr)=>dsr.tlsVersions instanceof Array && dsr.tlsVersions.length > 0)($scope.dsRequest.requested ?? $scope.dsRequest.original);
+
 	$scope.requestStatus = $scope.dsRequest.status;
 
 	$scope.deliveryServiceName = angular.copy(($scope.dsRequest.requested) ? $scope.dsRequest.requested.xmlId : $scope.dsRequest.original.xmlId);

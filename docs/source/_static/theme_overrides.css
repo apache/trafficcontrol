@@ -19,27 +19,25 @@
 
 /* override table width restrictions */
 .wy-table-responsive table td, .wy-table-responsive table th {
-    /* !important prevents the common CSS stylesheets from
-       overriding this as on RTD they are loaded after this stylesheet */
-    white-space: normal !important;
+	/*
+	 * !important prevents the common CSS stylesheets from
+	 * overriding this as on RTD they are loaded after this stylesheet
+	 */
+	white-space: normal !important;
 	word-wrap: break-word !important;
 }
 
-/*.wy-table-responsive {
-    overflow: visible !important;
-}
-*/
 .wy-side-nav-search {
-  background-color: #000000;
+	background-color: #000000;
 }
 
 .adminition-title {
-  background-color: #404040;
+	background-color: #404040;
 }
 .wy-alert.wy-alert-info, .rst-content .note, .rst-content .wy-alert-info.attention, .rst-content .wy-alert-info.caution, .rst-content
 .wy-alert-info.danger, .rst-content .wy-alert-info.error, .rst-content .wy-alert-info.hint, .rst-content .wy-alert-info.important,
 .rst-content .wy-alert-info.tip, .rst-content .wy-alert-info.warning, .rst-content .seealso, .rst-content .wy-alert-info.admonition-todo {
-  background: #dde0e2;
+	background: #dde0e2;
 }
 
 .wy-alert.wy-alert-info .wy-alert-title, .rst-content .note .wy-alert-title, .rst-content .wy-alert-info.attention .wy-alert-title,
@@ -51,41 +49,53 @@
 .admonition-title, .rst-content .wy-alert-info.danger .admonition-title, .rst-content .wy-alert-info.error .admonition-title, .rst-content
 .wy-alert-info.hint .admonition-title, .rst-content .wy-alert-info.important .admonition-title, .rst-content .wy-alert-info.tip .admonition-title,
 .rst-content .wy-alert-info.warning .admonition-title, .rst-content .seealso .admonition-title, .rst-content .wy-alert-info.admonition-todo .admonition-title {
-  background: #404040;
+	background: #404040;
 }
 
 .section {
-  margin-top: 20px;
+	margin-top: 20px;
 }
 .wy-nav-content {
-  padding:1.618em 3.236em;
-  height:100%;
-  /*max-width:1100px;*/
-  max-width: none;
-  /*margin:auto;*/
+	padding: 1.618em 3.236em;
+	height: 100%;
+	max-width: none;
 }
 
-/*   Darker Table borders (they're hard to see imo)   */
+/* Darker Table borders (they're hard to see imo) */
 .wy-table-responsive > table, .wy-table-responsive > table th, .wy-table-responsive > table td {
-  border-color: #989898 !important;
+	border-color: #989898 !important;
 }
 
 abbr {
-  cursor: help;
+	cursor: help;
 }
 
-/* On small screens, content can get cut off. It *should* squeeze as much as it can, but some tables
-   will refuse to squeeze beyodn a certain point. */
+/*
+ * On small screens, content can get cut off. It *should* squeeze as much as it
+ * can, but some tables will refuse to squeeze beyond a certain point.
+ */
 html, html body {
-  overflow-x: auto;
+	overflow-x: auto;
 }
 
 .same {
-    font-weight: 700;
-    color: #050;
+	font-weight: 700;
+	color: #050;
 }
 
 .none {
-    font-weight: 700;
-    color: #800;
+	font-weight: 700;
+	color: #800;
+}
+
+/*
+ * Some versions of the sphinx-rtd theme are making lists unstyled, which makes
+ * it hard to tell something's a list.
+ */
+ul, ol, ul > li, ol > li {
+	list-style: unset;
+}
+
+ul > li > p, ol > li > p {
+	margin: 0;
 }

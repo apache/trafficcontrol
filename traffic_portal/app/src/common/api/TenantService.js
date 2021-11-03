@@ -20,7 +20,7 @@
 var TenantService = function($http, ENV, messageModel) {
 
     this.getTenants = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'tenants', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'tenants', {params: queryParams}).then(
             function (result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var TenantService = function($http, ENV, messageModel) {
     };
 
     this.getTenant = function(id) {
-        return $http.get(ENV.api['root'] + 'tenants', {params: {id: id}}).then(
+        return $http.get(ENV.api.unstable + 'tenants', {params: {id: id}}).then(
             function (result) {
                 return result.data.response[0];
             },
@@ -42,7 +42,7 @@ var TenantService = function($http, ENV, messageModel) {
     };
 
     this.createTenant = function(tenant) {
-        return $http.post(ENV.api['root'] + 'tenants', tenant).then(
+        return $http.post(ENV.api.unstable + 'tenants', tenant).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Tenant created' } ], true);
                 return result;
@@ -56,7 +56,7 @@ var TenantService = function($http, ENV, messageModel) {
 
     // todo: change to use query param when it is supported
     this.updateTenant = function(tenant) {
-        return $http.put(ENV.api['root'] + 'tenants/' + tenant.id, tenant).then(
+        return $http.put(ENV.api.unstable + 'tenants/' + tenant.id, tenant).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Tenant updated' } ], false);
                 return result;
@@ -70,7 +70,7 @@ var TenantService = function($http, ENV, messageModel) {
 
     // todo: change to use query param when it is supported
     this.deleteTenant = function(id) {
-        return $http.delete(ENV.api['root'] + "tenants/" + id).then(
+        return $http.delete(ENV.api.unstable + "tenants/" + id).then(
             function(result) {
                 return result;
             },

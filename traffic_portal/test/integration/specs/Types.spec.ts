@@ -20,11 +20,10 @@ import { browser } from 'protractor';
 
 import { LoginPage } from '../PageObjects/LoginPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-import { API } from '../CommonUtils/API';
+import { api } from "../config";
 import { TypesPage } from '../PageObjects/Types.po'
 import { types } from "../Data";
 
-const api = new API();
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const typesPage = new TypesPage();
@@ -37,44 +36,58 @@ describe('Setup API for Types Test', () => {
 types.tests.forEach(async typesData => {
     typesData.logins.forEach(login => {
         describe(`Traffic Portal - Types - ${login.description}`, () => {
+            afterEach(async function () {
+                await typesPage.OpenTypesPage();
+            });
+            afterAll(async function () {
+                expect(await topNavigation.Logout()).toBe(true);
+            })
             it('can login', async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
-                expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            });
-            it('can open types page', async () => {
+                expect(await loginPage.CheckUserName(login)).toBe(true);
                 await typesPage.OpenConfigureMenu();
-                await typesPage.OpenTypesPage();
             });
-
+            typesData.toggle.forEach(toggle => {
+                it(toggle.description, async () => {
+                    if(toggle.description.includes('hide')){
+                        expect(await typesPage.ToggleTableColumn(toggle.Name)).toBe(false);
+                    }else{
+                        expect(await typesPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                    }
+                    
+                });
+            });
+            typesData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await typesPage.CheckCSV(check.Name)).toBe(true);
+                });
+            });
             typesData.add.forEach(add => {
                 it(add.description, async () => {
-                    expect(await typesPage.CreateType(add)).toBeTruthy();
-                    await typesPage.OpenTypesPage();
+                    expect(await typesPage.CreateType(add)).toBe(true);
                 });
             });
             typesData.update.forEach(update => {
                 it(update.description, async () => {
                     await typesPage.SearchType(update.Name);
-                    expect(await typesPage.UpdateType(update)).toBeTruthy();
-                    await typesPage.OpenTypesPage();
+                    expect(await typesPage.UpdateType(update)).toBe(true);
                 });
             });
             typesData.remove.forEach(remove => {
                 it(remove.description, async () => {
                     await typesPage.SearchType(remove.Name);
-                    expect(await typesPage.DeleteTypes(remove)).toBeTruthy();
-                    await typesPage.OpenTypesPage();
+                    expect(await typesPage.DeleteTypes(remove)).toBe(true);
                 });
-            });
-            it('can logout', async () => {
-                expect(await topNavigation.Logout()).toBeTruthy();
             });
         });
     });
 });
 describe('Clean Up API for Types Test', () => {
-    it('Cleanup', async () => {
+    afterAll(async () => {
         await api.UseAPI(types.cleanup);
+    });
+    it('Cleanup', async() => {
+      expect(true).toBeTruthy();
     });
 });

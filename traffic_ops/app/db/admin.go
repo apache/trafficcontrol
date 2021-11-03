@@ -34,7 +34,9 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"gopkg.in/yaml.v2"
 )
@@ -94,56 +96,91 @@ const (
 	CmdUp              = "up"
 	CmdDown            = "down"
 	CmdRedo            = "redo"
-	// Deprecated: Migrate only tracks migration version and dirty status, not a status for each migration.
-	// Use CmdDBVersion to check the migration version and dirty status.
+	// Deprecated: Migrate only tracks migration timestamp and dirty status, not a status for each migration.
+	// Use CmdDBVersion to check the migration timestamp and dirty status.
 	CmdStatus     = "status"
 	CmdDBVersion  = "dbversion"
 	CmdSeed       = "seed"
 	CmdLoadSchema = "load_schema"
 	CmdPatch      = "patch"
+)
 
-	dbDir              = "db/"
-	DBConfigPath       = dbDir + "dbconf.yml"
-	DBMigrationsPath   = dbDir + "migrations"
-	DBMigrationsSource = "file:" + DBMigrationsPath
-	DBSeedsPath        = dbDir + "seeds.sql"
-	DBSchemaPath       = dbDir + "create_tables.sql"
-	DBPatchesPath      = dbDir + "patches.sql"
-	DefaultEnvironment = EnvDevelopment
-	DefaultDBSuperUser = "postgres"
+// Default file system paths for TODB files.
+const (
+	defaultDBDir            = "db/"
+	defaultDBConfigPath     = defaultDBDir + "dbconf.yml"
+	defaultDBMigrationsPath = defaultDBDir + "migrations"
+	defaultDBSeedsPath      = defaultDBDir + "seeds.sql"
+	defaultDBSchemaPath     = defaultDBDir + "create_tables.sql"
+	defaultDBPatchesPath    = defaultDBDir + "patches.sql"
+)
 
-	TrafficVaultDBConfigPath     = TrafficVaultDir + "dbconf.yml"
-	TrafficVaultMigrationsSource = "file:" + TrafficVaultDir + "migrations"
-	TrafficVaultDir              = dbDir + "trafficvault/"
-	TrafficVaultSchemaPath       = TrafficVaultDir + "create_tables.sql"
+// Default file system paths for TV files.
+const (
+	defaultTrafficVaultDir            = defaultDBDir + "trafficvault/"
+	defaultTrafficVaultDBConfigPath   = defaultTrafficVaultDir + "dbconf.yml"
+	defaultTrafficVaultMigrationsPath = defaultTrafficVaultDir + "migrations"
+	defaultTrafficVaultSchemaPath     = defaultTrafficVaultDir + "create_tables.sql"
+)
+
+// Default connection information
+const (
+	defaultEnvironment = EnvDevelopment
+	defaultDBSuperUser = "postgres"
+)
+
+const (
+	LastSquashedMigrationTimestamp uint = 2021012200000000 // 2021012200000000_max_request_header_bytes_default_zero.sql
+	FirstMigrationTimestamp        uint = 2021012700000000 // 2021012700000000_update_interfaces_multiple_routers.up.sql
 )
 
 var (
 	// globals that are passed in via CLI flags and used in commands
-	Environment  string
-	TrafficVault bool
+	Environment    string
+	TrafficVault   bool
+	DBVersion      uint
+	DBVersionDirty bool
 
 	// globals that are parsed out of DBConfigFile and used in commands
-	DBDriver      string
-	DBName        string
-	DBSuperUser   = DefaultDBSuperUser
-	DBUser        string
-	DBPassword    string
-	HostIP        string
-	HostPort      string
-	SSLMode       string
-	Migrate       *migrate.Migrate
-	MigrationName string
+	ConnectionString string
+	DBDriver         string
+	DBName           string
+	DBSuperUser      = defaultDBSuperUser
+	DBUser           string
+	DBPassword       string
+	HostIP           string
+	HostPort         string
+	SSLMode          string
+	Migrate          *migrate.Migrate
+	MigrationName    string
+)
+
+// Actual TODB file paths.
+var (
+	dbConfigPath    = defaultDBConfigPath
+	dbMigrationsDir = defaultDBMigrationsPath
+	dbSeedsPath     = defaultDBSeedsPath
+	dbSchemaPath    = defaultDBSchemaPath
+	dbPatchesPath   = defaultDBPatchesPath
+)
+
+// Actual TV file paths.
+var (
+	trafficVaultDBConfigPath   = defaultTrafficVaultDBConfigPath
+	trafficVaultMigrationsPath = defaultTrafficVaultMigrationsPath
+	trafficVaultSchemaPath     = defaultTrafficVaultSchemaPath
 )
 
 func parseDBConfig() error {
-	dbConfigPath := DBConfigPath
+	var cfgPath string
 	if TrafficVault {
-		dbConfigPath = TrafficVaultDBConfigPath
+		cfgPath = trafficVaultDBConfigPath
+	} else {
+		cfgPath = dbConfigPath
 	}
-	confBytes, err := ioutil.ReadFile(dbConfigPath)
+	confBytes, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
-		return errors.New("reading DB conf '" + dbConfigPath + "': " + err.Error())
+		return fmt.Errorf("reading DB conf '%s': %w", cfgPath, err)
 	}
 
 	dbConfig := DBConfig{}
@@ -193,7 +230,7 @@ func createDB() {
 	out, err := dbExistsCmd.Output()
 	// An error is returned if the database could not be found, which is to be expected. Don't exit on this error.
 	if err != nil {
-		fmt.Println("unable to check if DB already exists: " + err.Error() + ", stderr: " + stderr.String())
+		fmt.Fprintln(os.Stderr, "unable to check if DB already exists: "+err.Error()+", stderr: "+stderr.String())
 	}
 	if len(out) > 0 {
 		fmt.Println("Database " + DBName + " already exists")
@@ -203,7 +240,7 @@ func createDB() {
 	out, err = createDBCmd.CombinedOutput()
 	fmt.Printf("%s", out)
 	if err != nil {
-		die("Can't create db " + DBName)
+		die("Can't create db " + DBName + ": " + err.Error())
 	}
 }
 
@@ -213,7 +250,7 @@ func dropDB() {
 	out, err := cmd.CombinedOutput()
 	fmt.Printf("%s", out)
 	if err != nil {
-		die("Can't drop db " + DBName)
+		die("Can't drop db " + DBName + ": " + err.Error())
 	}
 }
 
@@ -237,15 +274,15 @@ func createMigration() {
 
 `
 	var err error
-	if err = os.MkdirAll(DBMigrationsPath, os.ModePerm); err != nil {
-		die("Creating migrations directory " + DBMigrationsPath + ": " + err.Error())
+	if err = os.MkdirAll(dbMigrationsDir, os.ModePerm); err != nil {
+		die("Creating migrations directory " + dbMigrationsDir + ": " + err.Error())
 	}
 	migrationTime := time.Now()
 	formattedMigrationTime := migrationTime.Format("20060102150405") + fmt.Sprintf("%02d", migrationTime.Nanosecond()%100)
 	for _, direction := range []string{"up", "down"} {
 		var migrationFile *os.File
 		basename := fmt.Sprintf("%s_%s.%s.sql", formattedMigrationTime, MigrationName, direction)
-		filename := filepath.Join(DBMigrationsPath, basename)
+		filename := filepath.Join(dbMigrationsDir, basename)
 		if migrationFile, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0644); err != nil {
 			die("Creating migration " + filename + ": " + err.Error())
 		}
@@ -265,7 +302,7 @@ func createUser() {
 	out, err := userExistsCmd.Output()
 	// An error is returned if the user could not be found, which is to be expected. Don't exit on this error.
 	if err != nil {
-		fmt.Println("unable to check if user already exists: " + err.Error() + ", stderr: " + stderr.String())
+		fmt.Fprintln(os.Stderr, "unable to check if user already exists: "+err.Error()+", stderr: "+stderr.String())
 	}
 	if len(out) > 0 {
 		fmt.Println("User " + DBUser + " already exists")
@@ -314,7 +351,8 @@ func upgrade() {
 }
 
 func maybeMigrateFromGoose() bool {
-	_, _, versionErr := Migrate.Version()
+	var versionErr error
+	DBVersion, DBVersionDirty, versionErr = Migrate.Version()
 	if versionErr == nil {
 		return false
 	}
@@ -324,20 +362,51 @@ func maybeMigrateFromGoose() bool {
 	if err := Migrate.Steps(1); err != nil {
 		die("Error migrating to Migrate from Goose: " + err.Error())
 	}
+	DBVersion, DBVersionDirty, _ = Migrate.Version()
 	return true
+}
+
+// runFirstMigration is essentially Migrate.Migrate(FirstMigrationTimestamp) but without the obligatory Migrate.versionExists() call.
+// If calling Migrate.versionExists() is made optional, runFirstMigration() can be replaced.
+func runFirstMigration() error {
+	sourceDriver, sourceDriverErr := source.Open("file:" + dbMigrationsDir)
+	if sourceDriverErr != nil {
+		return fmt.Errorf("opening the migration source driver: " + sourceDriverErr.Error())
+	}
+	dbDriver, dbDriverErr := database.Open(ConnectionString)
+	if dbDriverErr != nil {
+		return fmt.Errorf("opening the dbdriver: " + dbDriverErr.Error())
+	}
+	firstMigration, firstMigrationName, migrationReadErr := sourceDriver.ReadUp(FirstMigrationTimestamp)
+	if migrationReadErr != nil {
+		return fmt.Errorf("reading migration %s: %s", firstMigrationName, migrationReadErr.Error())
+	}
+	if setDirtyVersionErr := dbDriver.SetVersion(int(FirstMigrationTimestamp), true); setDirtyVersionErr != nil {
+		return fmt.Errorf("setting the dirty version: %s", setDirtyVersionErr.Error())
+	}
+	if migrateErr := dbDriver.Run(firstMigration); migrateErr != nil {
+		return fmt.Errorf("running the migration: %s", migrateErr.Error())
+	}
+	if setVersionErr := dbDriver.SetVersion(int(FirstMigrationTimestamp), false); setVersionErr != nil {
+		return fmt.Errorf("setting the version after successfully running the migration: %s", setVersionErr.Error())
+	}
+	return nil
 }
 
 func runMigrations() {
 	migratedFromGoose := initMigrate()
-	upErr := Migrate.Up()
-	if upErr == migrate.ErrNoChange {
+	if !TrafficVault && DBVersion == LastSquashedMigrationTimestamp && !DBVersionDirty {
+		if migrateErr := runFirstMigration(); migrateErr != nil {
+			die(fmt.Sprintf("Error migrating from DB version %d to %d: %s", LastSquashedMigrationTimestamp, FirstMigrationTimestamp, migrateErr.Error()))
+		}
+	}
+	if upErr := Migrate.Up(); upErr == migrate.ErrNoChange {
 		if !migratedFromGoose {
 			println(upErr.Error())
 		}
 	} else if upErr != nil {
 		die("Error running migrate up: " + upErr.Error())
 	}
-
 }
 
 func runUp() {
@@ -361,19 +430,15 @@ func redo() {
 	}
 }
 
-// Deprecated: Migrate does not track migration status of past migrations. Use dbversion() to check the migration version and dirty status.
+// Deprecated: Migrate does not track migration status of past migrations. Use dbversion() to check the migration timestamp and dirty status.
 func status() {
 	dbVersion()
 }
 
 func dbVersion() {
 	initMigrate()
-	version, dirty, err := Migrate.Version()
-	if err != nil {
-		die("Error running migrate version: " + err.Error())
-	}
-	fmt.Printf("dbversion %d", version)
-	if dirty {
+	fmt.Printf("dbversion %d", DBVersion)
+	if DBVersionDirty {
 		fmt.Printf(" (dirty)")
 	}
 	println()
@@ -384,9 +449,9 @@ func seed() {
 		die("seed not supported for trafficvault environment")
 	}
 	fmt.Println("Seeding database w/ required data.")
-	seedsBytes, err := ioutil.ReadFile(DBSeedsPath)
+	seedsBytes, err := ioutil.ReadFile(dbSeedsPath)
 	if err != nil {
-		die("unable to read '" + DBSeedsPath + "': " + err.Error())
+		die("unable to read '" + dbSeedsPath + "': " + err.Error())
 	}
 	cmd := exec.Command("psql", "-h", HostIP, "-p", HostPort, "-d", DBName, "-U", DBUser, "-e", "-v", "ON_ERROR_STOP=1")
 	cmd.Stdin = bytes.NewBuffer(seedsBytes)
@@ -400,13 +465,13 @@ func seed() {
 
 func loadSchema() {
 	fmt.Println("Creating database tables.")
-	schemaPath := DBSchemaPath
+	schemaPath := dbSchemaPath
 	if TrafficVault {
-		schemaPath = TrafficVaultSchemaPath
+		schemaPath = trafficVaultSchemaPath
 	}
 	schemaBytes, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
-		die("unable to read '" + DBSchemaPath + "': " + err.Error())
+		die("unable to read '" + schemaPath + "': " + err.Error())
 	}
 	cmd := exec.Command("psql", "-h", HostIP, "-p", HostPort, "-d", DBName, "-U", DBUser, "-e", "-v", "ON_ERROR_STOP=1")
 	cmd.Stdin = bytes.NewBuffer(schemaBytes)
@@ -423,9 +488,9 @@ func patch() {
 		die("patch not supported for trafficvault environment")
 	}
 	fmt.Println("Patching database with required data fixes.")
-	patchesBytes, err := ioutil.ReadFile(DBPatchesPath)
+	patchesBytes, err := ioutil.ReadFile(dbPatchesPath)
 	if err != nil {
-		die("unable to read '" + DBPatchesPath + "': " + err.Error())
+		die("unable to read '" + dbPatchesPath + "': " + err.Error())
 	}
 	cmd := exec.Command("psql", "-h", HostIP, "-p", HostPort, "-d", DBName, "-U", DBUser, "-e", "-v", "ON_ERROR_STOP=1")
 	cmd.Stdin = bytes.NewBuffer(patchesBytes)
@@ -438,87 +503,140 @@ func patch() {
 }
 
 func die(message string) {
-	fmt.Println(message)
+	fmt.Fprintln(os.Stderr, message)
 	os.Exit(1)
 }
 
 func usage() string {
 	programName := os.Args[0]
-	home := "$HOME"
-	home = os.Getenv("HOME")
-	return `
-Usage:  ` + programName + ` [--trafficvault] [--env (development|test|production|integration)] [arguments]
+	var buff strings.Builder
+	buff.WriteString("Usage: ")
+	buff.WriteString(programName)
+	buff.WriteString(` [OPTION] OPERATION [ARGUMENT(S)]
 
-Example:  ` + programName + ` --env=test reset
+-c, --config CFG         Provide a path to a database configuration file,
+                         instead of using the default (./db/dbconf.yml or
+                         ./db/trafficvault/dbconf.yml for Traffic Vault)
+-e, --env ENV            Use configuration for environment ENV (defined in
+                         the database configuration file)
+-h, --help               Show usage information and exit
+-m, --migrations-dir DIR Use DIR as the migrations directory, instead of the
+                         default (./db/migrations/ or
+                         ./db/trafficvault/migrations for Traffic Vault)
+-p, --patches PATCH      Provide a path to a set of database patch statements,
+                         instead of using the default (./db/patches.sql)
+-s, --schema SCHEMA      Provide a path to a schema file, instead of using the
+                         default (./db/create_tables.sql or
+                         ./db/trafficvault/create_tables.sql for Traffic Vault)
+-S, --seeds SEEDS        Provide a path to a seeds statements file, instead of
+                         using the default (./db/seeds.sql)
+-v, --trafficvault       Perform operations for Traffic Vault instead of the
+                         Traffic Ops database
 
-Purpose:  This script is used to manage the Traffic Ops database and Traffic Vault PostgreSQL backend database.
-          The Traffic Ops environments and database names are defined in the dbconf.yml, and for Traffic Vault
-          they are defined in trafficvault/dbconf.yml. In order to execute commands against the Traffic Vault
-          database, the the --trafficvault option.
+OPERATION      The operation to perform; one of the following:
 
-NOTE:
-Postgres Superuser: The 'postgres' superuser needs to be created to run ` + programName + ` and setup databases.
-If the 'postgres' superuser has not been created or password has not been set then run the following commands accordingly.
+    migrate     - Execute migrate (without seeds or patches) on the database for the
+                  current environment.
+    up          - Alias for 'migrate'
+    down        - Roll back a single migration from the current version.
+    createdb    - Execute db 'createdb' the database for the current environment.
+    dropdb      - Execute db 'dropdb' on the database for the current environment.
+    create_migration NAME
+                - Creates a pair of timestamped up/down migrations titled NAME.
+    create_user - Execute 'create_user' the user for the current environment
+                  (traffic_ops).
+    dbversion   - Prints the current migration timestamp
+    drop_user   - Execute 'drop_user' the user for the current environment
+                  (traffic_ops).
+    patch       - Execute sql from db/patches.sql for loading post-migration data
+                  patches (NOTE: not supported with --trafficvault option).
+    redo        - Roll back the most recently applied migration, then run it again.
+    reset       - Execute db 'dropdb', 'createdb', load_schema, migrate on the
+                  database for the current environment.
+    seed        - Execute sql from db/seeds.sql for loading static data (NOTE: not
+                  supported with --trafficvault option).
+    show_users  - Execute sql to show all of the user for the current environment.
+    status      - Prints the current migration timestamp (Deprecated, status is now an
+                  alias for dbversion and will be removed in a future Traffic
+                  Control release).
+    upgrade     - Execute migrate, seed, and patches on the database for the current
+                  environment.`)
+	return buff.String()
+}
 
-Create the 'postgres' user as a super user (if not created):
-
-     $ createuser postgres --superuser --createrole --createdb --login --pwprompt
-
-Modify your ` + home + `/.pgpass file which allows for easy command line access by defaulting the user and password for the database
-without prompts.
-
- Postgres .pgpass file format:
- hostname:port:database:username:password
-
- ----------------------
- Example Contents
- ----------------------
- *:*:*:postgres:your-postgres-password
- *:*:*:traffic_ops:the-password-in-dbconf.yml
- *:*:*:traffic_vault:the-password-in-trafficvault-dbconf.yml
- ----------------------
-
- Save the following example into this file ` + home + `/.pgpass with the permissions of this file
- so only your user can read and write.
-
-     $ chmod 0600 ` + home + `/.pgpass
-
-===================================================================================================================
-` + programName + ` arguments:
-
-migrate     - Execute migrate (without seeds or patches) on the database for the
-              current environment.
-up          - Alias for 'migrate'
-down        - Roll back a single migration from the current version.
-createdb    - Execute db 'createdb' the database for the current environment.
-dropdb      - Execute db 'dropdb' on the database for the current environment.
-create_migration NAME
-            - Creates a pair of timestamped up/down migrations titled NAME.
-create_user - Execute 'create_user' the user for the current environment
-              (traffic_ops).
-dbversion   - Prints the current migration version
-drop_user   - Execute 'drop_user' the user for the current environment
-              (traffic_ops).
-patch       - Execute sql from db/patches.sql for loading post-migration data
-              patches (NOTE: not supported with --trafficvault option).
-redo        - Roll back the most recently applied migration, then run it again.
-reset       - Execute db 'dropdb', 'createdb', load_schema, migrate on the
-              database for the current environment.
-seed        - Execute sql from db/seeds.sql for loading static data (NOTE: not
-              supported with --trafficvault option).
-show_users  - Execute sql to show all of the user for the current environment.
-status      - Prints the current migration version (Deprecated, status is now an
-              alias for dbversion and will be removed in a future Traffic
-              Control release).
-upgrade     - Execute migrate, seed, and patches on the database for the current
-              environment.
-`
+// collapses two options for 'name', using a default if given, stored into 'dest'.
+// if the two option values conflict, the whole program dies and an error is printed to
+// stderr.
+func collapse(o1, o2, name, def string, dest *string) {
+	if o1 == "" {
+		if o2 == "" {
+			*dest = def
+			return
+		}
+		*dest = o2
+		return
+	}
+	if o2 == "" {
+		*dest = o1
+		return
+	}
+	if o1 != o2 {
+		die("conflicting definitions of '" + name + "' - must be specified only once\n" + usage())
+	}
+	*dest = o1
+	return
 }
 
 func main() {
-	flag.StringVar(&Environment, "env", DefaultEnvironment, "The environment to use (defined in "+DBConfigPath+").")
-	flag.BoolVar(&TrafficVault, "trafficvault", false, "Run this for the Traffic Vault database")
+	flag.Usage = func() { fmt.Fprintln(os.Stderr, usage()) }
+
+	var shortCfg string
+	var longCfg string
+	flag.StringVar(&shortCfg, "c", "", "Provide a path to a database configuration file, instead of using the default (./db/dbconf.yml or ./db/trafficvault/dbconf.yml for Traffic Vault)")
+	flag.StringVar(&longCfg, "config", "", "Provide a path to a database configuration file, instead of using the default (./db/dbconf.yml or ./db/trafficvault/dbconf.yml for Traffic Vault)")
+
+	var shortEnv string
+	var longEnv string
+	flag.StringVar(&shortEnv, "e", "", "Use configuration for environment ENV (defined in the database configuration file)")
+	flag.StringVar(&longEnv, "env", "", "Use configuration for environment ENV (defined in the database configuration file)")
+
+	var shortMigrations string
+	var longMigrations string
+	flag.StringVar(&shortMigrations, "m", "", "Use DIR as the migrations directory, instead of the default (./db/migrations/ or ./db/trafficvault/migrations for Traffic Vault)")
+	flag.StringVar(&longMigrations, "migrations-dir", "", "Use DIR as the migrations directory, instead of the default (./db/migrations/ or ./db/trafficvault/migrations for Traffic Vault)")
+
+	var shortPatches string
+	var longPatches string
+	flag.StringVar(&shortPatches, "p", "", "Provide a path to a set of database patch statements, instead of using the default (./db/patches.sql)")
+	flag.StringVar(&longPatches, "patches", "", "Provide a path to a set of database patch statements, instead of using the default (./db/patches.sql)")
+
+	var shortSchema string
+	var longSchema string
+	flag.StringVar(&shortSchema, "s", "", "Provide a path to a schema file, instead of using the default (./db/create_tables.sql or ./db/trafficvault/create_tables.sql for Traffic Vault)")
+	flag.StringVar(&longSchema, "schema", "", "Provide a path to a schema file, instead of using the default (./db/create_tables.sql or ./db/trafficvault/create_tables.sql for Traffic Vault)")
+
+	var shortSeeds string
+	var longSeeds string
+	flag.StringVar(&shortSeeds, "S", "", "Provide a path to a seeds statements file, instead of using the default (./db/seeds.sql)")
+	flag.StringVar(&longSeeds, "seeds", "", "Provide a path to a seeds statements file, instead of using the default (./db/seeds.sql)")
+
+	flag.BoolVar(&TrafficVault, "v", false, "Perform operations for Traffic Vault instead of the Traffic Ops database")
+	flag.BoolVar(&TrafficVault, "trafficvault", false, "Perform operations for Traffic Vault instead of the Traffic Ops database")
 	flag.Parse()
+
+	if TrafficVault {
+		collapse(shortCfg, longCfg, "config", defaultTrafficVaultDBConfigPath, &trafficVaultDBConfigPath)
+		collapse(shortMigrations, longMigrations, "migrations-dir", defaultTrafficVaultMigrationsPath, &trafficVaultMigrationsPath)
+		collapse(shortSchema, longSchema, "schema", defaultTrafficVaultSchemaPath, &trafficVaultSchemaPath)
+	} else {
+		collapse(shortCfg, longCfg, "config", defaultDBConfigPath, &dbConfigPath)
+		collapse(shortMigrations, longMigrations, "migrations-dir", defaultDBMigrationsPath, &dbMigrationsDir)
+		collapse(shortSchema, longSchema, "schema", defaultDBSchemaPath, &dbSchemaPath)
+	}
+	collapse(shortEnv, longEnv, "environment", defaultEnvironment, &Environment)
+	collapse(shortPatches, longPatches, "patches", defaultDBPatchesPath, &dbPatchesPath)
+	collapse(shortSeeds, longSeeds, "seeds", defaultDBSeedsPath, &dbSeedsPath)
+
 	if flag.Arg(0) == CmdCreateMigration {
 		if len(flag.Args()) != 2 {
 			die(usage())
@@ -557,18 +675,17 @@ func main() {
 	if cmd, ok := commands[userCmd]; ok {
 		cmd()
 	} else {
-		fmt.Println(usage())
-		die("invalid command: " + userCmd)
+		die("invalid command: " + userCmd + "\n" + usage())
 	}
 }
 
 func initMigrate() bool {
 	var err error
-	connectionString := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s", DBDriver, DBUser, DBPassword, HostIP, HostPort, DBName, SSLMode)
+	ConnectionString = fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s", DBDriver, DBUser, DBPassword, HostIP, HostPort, DBName, SSLMode)
 	if TrafficVault {
-		Migrate, err = migrate.New(TrafficVaultMigrationsSource, connectionString)
+		Migrate, err = migrate.New("file:"+trafficVaultMigrationsPath, ConnectionString)
 	} else {
-		Migrate, err = migrate.New(DBMigrationsSource, connectionString)
+		Migrate, err = migrate.New("file:"+dbMigrationsDir, ConnectionString)
 	}
 	if err != nil {
 		die("Starting Migrate: " + err.Error())

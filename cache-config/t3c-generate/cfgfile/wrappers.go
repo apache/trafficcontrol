@@ -206,6 +206,7 @@ func MakeRecordsDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommen
 			ReleaseViaStr:           cfg.ViaRelease,
 			DNSLocalBindServiceAddr: cfg.SetDNSLocalBind,
 			HdrComment:              hdrCommentTxt,
+			NoOutgoingIP:            cfg.NoOutgoingIP,
 		},
 	)
 }

@@ -178,18 +178,18 @@ func InitConfig() (Cfg, error) {
 }
 
 func (cfg Cfg) PrintConfig() {
-	fmt.Printf("CommandArgs: %s\n", cfg.CommandArgs)
-	fmt.Printf("LogLocationDebug: %s\n", cfg.LogLocationDebug)
-	fmt.Printf("LogLocationError: %s\n", cfg.LogLocationError)
-	fmt.Printf("LogLocationInfo: %s\n", cfg.LogLocationInfo)
-	fmt.Printf("LogLocationWarn: %s\n", cfg.LogLocationWarn)
-	fmt.Printf("LoginDispersion : %s\n", cfg.LoginDispersion)
-	fmt.Printf("CacheHostName: %s\n", cfg.CacheHostName)
-	fmt.Printf("TOInsecure: %v\n", cfg.TOInsecure)
-	fmt.Printf("TOTimeoutMS: %s\n", cfg.TOTimeoutMS)
-	fmt.Printf("TOUser: %s\n", cfg.TOUser)
-	fmt.Printf("TOPass: xxxxxx\n")
-	fmt.Printf("TOURL: %s\n", cfg.TOURL)
+	log.Debugf("CommandArgs: %s\n", cfg.CommandArgs)
+	log.Debugf("LogLocationDebug: %s\n", cfg.LogLocationDebug)
+	log.Debugf("LogLocationError: %s\n", cfg.LogLocationError)
+	log.Debugf("LogLocationInfo: %s\n", cfg.LogLocationInfo)
+	log.Debugf("LogLocationWarn: %s\n", cfg.LogLocationWarn)
+	log.Debugf("LoginDispersion : %s\n", cfg.LoginDispersion)
+	log.Debugf("CacheHostName: %s\n", cfg.CacheHostName)
+	log.Debugf("TOInsecure: %v\n", cfg.TOInsecure)
+	log.Debugf("TOTimeoutMS: %s\n", cfg.TOTimeoutMS)
+	log.Debugf("TOUser: %s\n", cfg.TOUser)
+	log.Debugf("TOPass: xxxxxx\n")
+	log.Debugf("TOURL: %s\n", cfg.TOURL)
 }
 
 func LoadOldCfg(path string) (*t3cutil.ConfigData, error) {

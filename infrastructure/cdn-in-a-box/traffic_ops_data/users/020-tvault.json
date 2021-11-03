@@ -3,7 +3,7 @@
   "fullName": "Traffic Vault",
   "localPasswd": "$TV_PASSWORD",
   "confirmLocalPasswd": "$TV_PASSWORD",
-  "rolename": "operations",
+  "role": "operations",
   "tenant": "root",
   "username": "$TV_USER"
 }

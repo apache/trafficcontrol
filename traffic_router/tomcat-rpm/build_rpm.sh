@@ -42,6 +42,7 @@ checkEnvironment() {
 	# Forcing BUILD NUMBER to 1 since this is outside the tree and related to Tomcat Release
 	export BUILD_NUMBER=1
 	export RPM="${PACKAGE}-${TOMCAT_VERSION}.${TOMCAT_RELEASE}-${BUILD_NUMBER}.${RHEL_VERSION}.noarch.rpm"
+	export SRPM="${PACKAGE}-${TOMCAT_VERSION}.${TOMCAT_RELEASE}-${BUILD_NUMBER}.${RHEL_VERSION}.src.rpm"
 
 
 	echo "=================================================="
@@ -55,21 +56,21 @@ checkEnvironment() {
 
 # ---------------------------------------
 initBuildArea() {
-				echo "Initializing the build area."
-				(mkdir -p "$RPMBUILD"
-				 cd "$RPMBUILD"
-				 mkdir -p SPECS SOURCES RPMS SRPMS BUILD BUILDROOT) || { echo "Could not create $RPMBUILD: $?"; return 1; }
-				export VERSION=$TOMCAT_VERSION
-				export RELEASE=$TOMCAT_RELEASE
+	echo "Initializing the build area."
+	(mkdir -p "$RPMBUILD"
+	 cd "$RPMBUILD"
+	 mkdir -p SPECS SOURCES RPMS SRPMS BUILD BUILDROOT) || { echo "Could not create $RPMBUILD: $?"; return 1; }
+	export VERSION=$TOMCAT_VERSION
+	export RELEASE=$TOMCAT_RELEASE
 
-				echo "Downloading Tomcat $VERSION.$RELEASE..."
-				curl -fo "${RPMBUILD}/SOURCES/apache-tomcat-${VERSION}.${RELEASE}.tar.gz" "https://archive.apache.org/dist/tomcat/tomcat-${VERSION%.*}/v${VERSION}.${RELEASE}/bin/apache-tomcat-${VERSION}.${RELEASE}.tar.gz" || \
-				{ echo "Could not download Tomcat $VERSION.$RELEASE: $?"; exit 1; }
+	echo "Downloading Tomcat $VERSION.$RELEASE..."
+	curl -fo "${RPMBUILD}/SOURCES/apache-tomcat-${VERSION}.${RELEASE}.tar.gz" "https://archive.apache.org/dist/tomcat/tomcat-${VERSION%.*}/v${VERSION}.${RELEASE}/bin/apache-tomcat-${VERSION}.${RELEASE}.tar.gz" || \
+	{ echo "Could not download Tomcat $VERSION.$RELEASE: $?"; exit 1; }
 
-				cp "$TR_DIR/tomcat-rpm/tomcat.service" "$RPMBUILD/SOURCES/" || { echo "Could not copy source files: $?"; exit 1; }
-				cp "$TR_DIR/tomcat-rpm/tomcat.spec" "$RPMBUILD/SPECS/" || { echo "Could not copy spec files: $?"; exit 1; }
+	cp "$TR_DIR/tomcat-rpm/tomcat.service" "$RPMBUILD/SOURCES/" || { echo "Could not copy source files: $?"; exit 1; }
+	cp "$TR_DIR/tomcat-rpm/tomcat.spec" "$RPMBUILD/SPECS/" || { echo "Could not copy spec files: $?"; exit 1; }
 
-				echo "The build area has been initialized."
+	echo "The build area has been initialized."
 }
 
 #----------------------------------------
@@ -79,31 +80,63 @@ buildRpmTomcat () {
 }
 
 buildRpmForEl () {
-				echo "Building the rpm for ${RHEL_VERSION}."
+	echo "Building the rpm for ${RHEL_VERSION}."
 
-				cd "$RPMBUILD"
-				# build RPM with xz level 2 compression
-				rpmbuild --define "_topdir $(pwd)" \
-								 --define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
-								 --define "tomcat_version $TOMCAT_VERSION.$TOMCAT_RELEASE" \
-								 --define "_target_os ${RPM_TARGET_OS}" \
-								 --define '%_source_payload w2.xzdio' \
-								 --define '%_binary_payload w2.xzdio' \
-								 -ba SPECS/$SPEC_FILE_NAME ||
-								 { echo "RPM BUILD FAILED: $?"; exit 1; }
-				local rpm
-				rpm="$(find ./RPMS -name "$RPM")"
-				if [ -z "$rpm" ]; then
-								echo "Could not find rpm file $RPM in $(pwd)"
-								exit 1;
-				fi
-				echo "========================================================================================"
-				echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
-				echo "========================================================================================"
-				echo
-				mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
+	cd "$RPMBUILD"
 
-				cp "$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
+	build_flags="-ba";
+	if [[ "$NO_SOURCE" -eq 1 ]]; then
+		build_flags="-bb";
+	fi
+
+
+	# build RPM with xz level 2 compression
+	rpmbuild --define "_topdir $(pwd)" \
+		--define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
+		--define "tomcat_version $TOMCAT_VERSION.$TOMCAT_RELEASE" \
+		--define "_target_os ${RPM_TARGET_OS}" \
+		--define '%_source_payload w2.xzdio' \
+		--define '%_binary_payload w2.xzdio' \
+		$build_flags SPECS/$SPEC_FILE_NAME ||
+		{ echo "RPM BUILD FAILED: $?"; exit 1; }
+	local rpm
+	local srpm
+	rpm="$(find ./RPMS -name "$RPM")"
+	srpm="$(find ./SRPMS -name "$SRPM")";
+	if [ -z "$rpm" ]; then
+		echo "Could not find rpm file $RPM in $(pwd)"
+		exit 1;
+	fi
+	echo "========================================================================================"
+	echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
+	echo "========================================================================================"
+	echo
+	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
+
+	rpmDest="."
+	srcRPMDest="."
+	if [[ "$SIMPLE" -eq 1 ]]; then
+		rpmDest="tomcat.rpm";
+		srcRPMDest="tomcat.src.rpm";
+	fi
+
+	cp -f "$RPMBUILD/RPMS/noarch/${RPM}" "$DIST/$rpmDest";
+	code="$?";
+	if [[ "$code" -ne 0 ]]; then
+		echo "Could not copy $rpm to $DIST: $code" >&2;
+		return "$code";
+	fi
+
+	if [[ "$NO_SOURCE" -eq 1 ]]; then
+		return 0;
+	fi
+
+	cp -f "$RPMBUILD/SRPMS/${SRPM}" "$DIST/$srcRPMDest";
+	code="$?";
+	if [[ "$code" -ne 0 ]]; then
+		echo "Could not copy $srpm to $DIST: $code" >&2;
+		return "$code";
+	fi
 }
 
 checkEnvironment -i curl

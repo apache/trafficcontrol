@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -31,7 +32,7 @@ import (
 )
 
 func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, Topologies, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, Topologies, ServiceCategories, DeliveryServices, DeliveryServicesRequiredCapabilities}, func() {
 		GetTestDeliveryServicesRequiredCapabilitiesIMS(t)
 		InvalidDeliveryServicesRequiredCapabilityAddition(t)
 		GetTestDeliveryServicesRequiredCapabilities(t)
@@ -41,11 +42,12 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
 		GetTestDeliveryServicesRequiredCapabilitiesIMSAfterChange(t, header)
+		GetTestPaginationSupportDsrc(t)
 	})
 }
 
 func TestTopologyBasedDeliveryServicesRequiredCapabilities(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServerCapabilities, ServerServerCapabilitiesForTopologies, Topologies, ServiceCategories, DeliveryServices, TopologyBasedDeliveryServiceRequiredCapabilities}, func() {
 		GetTestDeliveryServicesRequiredCapabilities(t)
 		OriginAssignTopologyBasedDeliveryServiceWithRequiredCapabilities(t)
 	})
@@ -644,4 +646,72 @@ func helperGetDeliveryServiceID(t *testing.T, xmlID *string) *int {
 		return nil
 	}
 	return ds.Response[0].ID
+}
+
+func GetTestPaginationSupportDsrc(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "requiredCapability")
+	resp, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(opts)
+	if err != nil {
+		t.Fatalf("cannot Get DeliveryServicesRequiredCapabilities: %v - alerts: %+v", err, resp.Alerts)
+	}
+	dsrc := resp.Response
+	if len(dsrc) < 3 {
+		t.Fatalf("Need at least 3 DeliveryServicesRequiredCapabilities in Traffic Ops to test pagination support, found: %d", len(dsrc))
+	}
+	opts.QueryParameters.Set("limit", "1")
+	dsrcWithLimit, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(opts)
+	if err != nil {
+		t.Fatalf("cannot Get DeliveryServicesRequiredCapabilities with Limit: %v - alerts: %+v", err, dsrcWithLimit.Alerts)
+	}
+	if !reflect.DeepEqual(dsrc[:1], dsrcWithLimit.Response) {
+		t.Error("expected GET DeliveryServicesRequiredCapabilities with limit = 1 to return first result")
+	}
+
+	opts.QueryParameters.Set("offset", "1")
+	dsrcWithOffset, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(opts)
+	if err != nil {
+		t.Fatalf("cannot Get DeliveryServicesRequiredCapabilities with Limit and Offset: %v - alerts: %+v", err, dsrcWithOffset.Alerts)
+	}
+	if !reflect.DeepEqual(dsrc[1:2], dsrcWithOffset.Response) {
+		t.Error("expected GET DeliveryServicesRequiredCapabilities with limit = 1, offset = 1 to return second result")
+	}
+
+	opts.QueryParameters.Del("offset")
+	opts.QueryParameters.Set("page", "2")
+	dsrcWithPage, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(opts)
+	if err != nil {
+		t.Fatalf("cannot Get DeliveryServicesRequiredCapabilities with Limit and Page: %v - alerts: %+v", err, dsrcWithPage.Alerts)
+	}
+	if !reflect.DeepEqual(dsrc[1:2], dsrcWithPage.Response) {
+		t.Error("expected GET DeliveryServicesRequiredCapabilities with limit = 1, page = 2 to return second result")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, _, err = TOSession.GetDeliveryServicesRequiredCapabilities(opts)
+	if err == nil {
+		t.Error("expected GET DeliveryServicesRequiredCapabilities to return an error when limit is not bigger than -1")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
+		t.Errorf("expected GET DeliveryServicesRequiredCapabilities to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, _, err = TOSession.GetDeliveryServicesRequiredCapabilities(opts)
+	if err == nil {
+		t.Error("expected GET DeliveryServicesRequiredCapabilities to return an error when offset is not a positive integer")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET DeliveryServicesRequiredCapabilities to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, _, err = TOSession.GetDeliveryServicesRequiredCapabilities(opts)
+	if err == nil {
+		t.Error("expected GET DeliveryServicesRequiredCapabilities to return an error when page is not a positive integer")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET DeliveryServicesRequiredCapabilities to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
 }

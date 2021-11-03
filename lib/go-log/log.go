@@ -63,23 +63,41 @@ func initLogger(logger **log.Logger, oldLogCloser *io.Closer, newLogWriter io.Wr
 	*oldLogCloser = newLogWriter
 }
 
+const DebugPrefix = "DEBUG: "
+const InfoPrefix = "INFO: "
+const WarnPrefix = "WARNING: "
+const ErrPrefix = "ERROR: "
+const EventPrefix = ""
+
+const DebugFlags = log.Lshortfile
+const InfoFlags = log.Lshortfile
+const WarnFlags = log.Lshortfile
+const ErrFlags = log.Lshortfile
+const EventFlags = 0
+
 // Init initailizes the logs with the given io.WriteClosers. If `Init` was previously called, existing loggers are Closed. If you have loggers which are not Closers or which must not be Closed, wrap them with `log.NopCloser`.
 func Init(eventW, errW, warnW, infoW, debugW io.WriteCloser) {
-	initLogger(&Debug, &debugCloser, debugW, "DEBUG: ", log.Lshortfile)
-	initLogger(&Info, &infoCloser, infoW, "INFO: ", log.Lshortfile)
-	initLogger(&Warning, &warnCloser, warnW, "WARNING: ", log.Lshortfile)
-	initLogger(&Error, &errCloser, errW, "ERROR: ", log.Lshortfile)
-	initLogger(&Event, &eventCloser, eventW, "", 0)
+	initLogger(&Debug, &debugCloser, debugW, DebugPrefix, DebugFlags)
+	initLogger(&Info, &infoCloser, infoW, InfoPrefix, InfoFlags)
+	initLogger(&Warning, &warnCloser, warnW, WarnPrefix, WarnFlags)
+	initLogger(&Error, &errCloser, errW, ErrPrefix, ErrFlags)
+	initLogger(&Event, &eventCloser, eventW, EventPrefix, EventFlags)
 }
 
-func logf(logger *log.Logger, format string, v ...interface{}) {
+// Logf should generally be avoided, use the built-in Init or InitCfg and Errorf, Warnln, etc functions instead.
+// It logs to the given logger, in the same format as the standard log functions.
+// This should only be used in rare and unusual circumstances when the standard loggers and functions can't.
+func Logf(logger *log.Logger, format string, v ...interface{}) {
 	if logger == nil {
 		return
 	}
 	logger.Output(stackFrame, time.Now().UTC().Format(timeFormat)+": "+fmt.Sprintf(format, v...))
 }
 
-func logln(logger *log.Logger, v ...interface{}) {
+// Logln should generally be avoided, use the built-in Init or InitCfg and Errorf, Warnln, etc functions instead.
+// It logs to the given logger, in the same format as the standard log functions.
+// This should only be used in rare and unusual circumstances when the standard loggers and functions can't.
+func Logln(logger *log.Logger, v ...interface{}) {
 	if logger == nil {
 		return
 	}
@@ -89,14 +107,14 @@ func logln(logger *log.Logger, v ...interface{}) {
 const timeFormat = time.RFC3339Nano
 const stackFrame = 3
 
-func Errorf(format string, v ...interface{}) { logf(Error, format, v...) }
-func Errorln(v ...interface{})               { logln(Error, v...) }
-func Warnf(format string, v ...interface{})  { logf(Warning, format, v...) }
-func Warnln(v ...interface{})                { logln(Warning, v...) }
-func Infof(format string, v ...interface{})  { logf(Info, format, v...) }
-func Infoln(v ...interface{})                { logln(Info, v...) }
-func Debugf(format string, v ...interface{}) { logf(Debug, format, v...) }
-func Debugln(v ...interface{})               { logln(Debug, v...) }
+func Errorf(format string, v ...interface{}) { Logf(Error, format, v...) }
+func Errorln(v ...interface{})               { Logln(Error, v...) }
+func Warnf(format string, v ...interface{})  { Logf(Warning, format, v...) }
+func Warnln(v ...interface{})                { Logln(Warning, v...) }
+func Infof(format string, v ...interface{})  { Logf(Info, format, v...) }
+func Infoln(v ...interface{})                { Logln(Info, v...) }
+func Debugf(format string, v ...interface{}) { Logf(Debug, format, v...) }
+func Debugln(v ...interface{})               { Logln(Debug, v...) }
 
 const eventFormat = "%.3f %s"
 

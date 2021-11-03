@@ -50,11 +50,11 @@ func NewRequestOptions() RequestOptions {
 // See ClientOpts for details about options, which options are required, and how they behave.
 //
 func Login(url, user, pass string, opts Options) (*Session, toclientlib.ReqInf, error) {
-	cl, ip, err := toclientlib.Login(url, user, pass, opts.ClientOpts, apiVersions())
+	cl, reqInf, err := toclientlib.Login(url, user, pass, opts.ClientOpts, apiVersions())
 	if err != nil {
-		return nil, toclientlib.ReqInf{}, err
+		return nil, reqInf, err
 	}
-	return &Session{TOClient: *cl}, ip, err
+	return &Session{TOClient: *cl}, reqInf, err
 }
 
 // Options is the options to configure the creation of the Client.

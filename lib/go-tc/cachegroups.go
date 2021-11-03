@@ -37,7 +37,7 @@ type CacheGroupsNullableResponse struct {
 	Alerts
 }
 
-// CacheGroupDetailResponse is the JSON object returned for a single CacheGroup
+// CacheGroupDetailResponse is the JSON object returned for a single Cache Group.
 type CacheGroupDetailResponse struct {
 	Response CacheGroupNullable `json:"response"`
 	Alerts

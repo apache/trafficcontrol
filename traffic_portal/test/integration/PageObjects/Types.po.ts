@@ -46,6 +46,7 @@ export class TypesPage extends BasePage {
     private txtSearch = element(by.id('typesTable_filter')).element(by.css('label input'));
     private btnDelete = element(by.buttonText('Delete'));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
+    private btnTableColumn = element(by.className("caret"))
     private randomize = randomize;
 
     async OpenTypesPage() {
@@ -117,6 +118,16 @@ export class TypesPage extends BasePage {
         })
         return result;
 
+    }
+    public async CheckCSV(name: string): Promise<boolean> {
+        return element(by.cssContainingText("span", name)).isPresent();
+    }
+    public async ToggleTableColumn(name: string): Promise<boolean> {
+        await this.btnTableColumn.click();
+        const result = await element(by.cssContainingText("th", name.charAt(0).toUpperCase() + name.slice(1))).isPresent();
+        await element(by.cssContainingText("label", name)).click();
+        await this.btnTableColumn.click();
+        return !result;
     }
 
 

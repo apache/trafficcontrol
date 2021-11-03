@@ -72,6 +72,12 @@ export const regions = {
                     password: "pa$$word"
                 }
             ],
+            check: [
+				{
+					description: "check CSV link from Regions page",
+					Name: "Export as CSV"
+				}
+			],
             add: [
                 {
                     description: "create a Regions",
@@ -110,12 +116,18 @@ export const regions = {
                     password: "pa$$word"
                 }
             ],
+            check: [
+				{
+					description: "check CSV link from Regions page",
+					Name: "Export as CSV"
+				}
+			],
             add: [
                 {
                     description: "create a Regions",
                     Name: "TPRegion1",
                     Division: "TestDivision1",
-                    validationMessage: "Forbidden."
+                    validationMessage: "missing required Permissions: REGION:CREATE"
                 }
             ],
             update: [
@@ -123,14 +135,14 @@ export const regions = {
                     description: "update Region's Division",
                     Name: "TPRegion2",
                     Division: "TestDivision1",
-                    validationMessage: "Forbidden."
+                    validationMessage: "missing required Permissions: REGION:UPDATE"
                 }
             ],
             remove: [
                 {
                     description: "delete a Region",
                     Name: "TPRegion2",
-                    validationMessage: "Forbidden."
+                    validationMessage: "missing required Permissions: REGION:DELETE"
                 }
             ]
         },
@@ -142,6 +154,12 @@ export const regions = {
                     password: "pa$$word"
                 }
             ],
+            check: [
+				{
+					description: "check CSV link from Regions page",
+					Name: "Export as CSV"
+				}
+			],
             add: [
                 {
                     description: "create a Regions",

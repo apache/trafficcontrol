@@ -25,29 +25,34 @@ Retrieve content invalidation jobs.
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
+:Permissions Required: JOB:READ, DELIVERY-SERVICE:READ
 :Response Type:  Array
 
 Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------+
-	| Name            | Required | Description                                                                                                          |
-	+=================+==========+======================================================================================================================+
-	| assetUrl        | no       | Return only invalidation jobs that operate on URLs by matching this regular expression                               |
-	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------+
-	| createdBy       | no       | Return only invalidation jobs that were created by the user with this username                                       |
-	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------+
-	| deliveryService | no       | Return only invalidation jobs that operate on the :term:`Delivery Service` with this :ref:`ds-xmlid`                 |
-	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------+
-	| dsId            | no       | Return only invalidation jobs pending on the :term:`Delivery Service` identified by this integral, unique identifier |
-	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------+
-	| id              | no       | Return only the single invalidation job identified by this integral, unique identifer                                |
-	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------+
-	| keyword         | no       | Return only invalidation jobs that have this "keyword" - only "PURGE" should exist                                   |
-	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------+
-	| userId          | no       | Return only invalidation jobs created by the user identified by this integral, unique identifier                     |
-	+-----------------+----------+----------------------------------------------------------------------------------------------------------------------+
+	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| Name                 | Required | Description                                                                                                                                                      |
+	+======================+==========+==================================================================================================================================================================+
+	| assetUrl             | no       | Return only invalidation jobs that operate on URLs by matching this regular expression                                                                           |
+	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| cdn                  | no       | Return only invalidation jobs for delivery services with this CDN name                                                                                           |
+	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| createdBy            | no       | Return only invalidation jobs that were created by the user with this username                                                                                   |
+	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| deliveryService      | no       | Return only invalidation jobs that operate on the :term:`Delivery Service` with this :ref:`ds-xmlid`                                                             |
+	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| dsId                 | no       | Return only invalidation jobs pending on the :term:`Delivery Service` identified by this integral, unique identifier                                             |
+	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| id                   | no       | Return only the single invalidation job identified by this integral, unique identifer                                                                            |
+	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| keyword              | no       | Return only invalidation jobs that have this "keyword" - only "PURGE" should exist                                                                               |
+	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| maxRevalDurationDays | no       | Return only invalidation jobs with a startTime that is within the window defined by the ``maxRevalDurationDays`` :term:`Parameter` in :ref:`the-global-profile`  |
+	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| userId               | no       | Return only invalidation jobs created by the user identified by this integral, unique identifier                                                                 |
+	+----------------------+----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
 .. code-block:: http
@@ -110,6 +115,7 @@ Creates a new content invalidation job.
 
 :Auth. Required: Yes
 :Roles Required: "operations" or "admin"\ [#tenancy]_
+:Permissions Required: JOB:CREATE, JOB:READ, DELIVERY-SERVICE:READ, DELIVERY-SERVICE:UPDATE
 :Response Type:  Object
 
 Request Structure
@@ -206,6 +212,7 @@ Replaces an existing content invalidation job with a new one provided in the req
 
 :Auth. Required: Yes
 :Roles Required: "operations" or "admin"\ [#tenancy]_
+:Permissions Required: JOB:UPDATE, DELIVERY-SERVICE:UPDATE, JOB:READ, DELIVERY-SERVICE:READ
 :Response Type:  Object
 
 Request Structure
@@ -311,6 +318,7 @@ Deletes a content invalidation job.
 
 :Auth. Required: Yes
 :Roles Required: "operations" or "admin"\ [#tenancy]_
+:Permissions Required: JOB:DELETE, JOB:READ, DELIVERY-SERVICE:UPDATE, DELIVERY-SERVICE:READ
 :Response Type:  Object
 
 Request Structure

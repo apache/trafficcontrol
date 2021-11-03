@@ -21,14 +21,14 @@ module.exports = angular.module('trafficPortal.private.roles.capabilities', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.roles.capabilities', {
-				url: '/{roleId}/capabilities',
+				url: '/{roleName}/capabilities',
 				views: {
 					rolesContent: {
 						templateUrl: 'common/modules/table/roleCapabilities/table.roleCapabilities.tpl.html',
 						controller: 'TableRoleCapabilitiesController',
 						resolve: {
 							roles: function($stateParams, roleService) {
-								return roleService.getRoles({ id: $stateParams.roleId });
+								return roleService.getRoles({ name: $stateParams.roleName });
 							}
 						}
 					}

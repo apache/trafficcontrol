@@ -30,48 +30,7 @@ color_and_prefix() {
 }
 
 ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
-trafficvault=trafficvault;
-start_traffic_vault() {
-	<<-'/ETC/HOSTS' sudo tee --append /etc/hosts
-		172.17.0.1    trafficvault.infra.ciab.test
-	/ETC/HOSTS
-
-	<<-'BASH_LINES' cat >infrastructure/cdn-in-a-box/traffic_vault/prestart.d/00-0-standalone-config.sh;
-		TV_FQDN="${TV_HOST}.${INFRA_SUBDOMAIN}.${TLD_DOMAIN}" # Also used in 02-add-search-schema.sh
-		certs_dir=/etc/ssl/certs;
-		X509_INFRA_CERT_FILE="${certs_dir}/trafficvault.crt";
-		X509_INFRA_KEY_FILE="${certs_dir}/trafficvault.key";
-
-		# Generate x509 certificate
-		openssl req -new -x509 -nodes -newkey rsa:4096 -out "$X509_INFRA_CERT_FILE" -keyout "$X509_INFRA_KEY_FILE" -subj "/CN=${TV_FQDN}";
-
-		# Do not wait for CDN in a Box to generate SSL keys
-		sed -i '0,/^update-ca-certificates/d' /etc/riak/prestart.d/00-config.sh;
-
-		# Do not try to source to-access.sh
-		sed -i '/to-access\.sh\|^to-enroll/d' /etc/riak/{prestart.d,poststart.d}/*
-	BASH_LINES
-
-	DOCKER_BUILDKIT=1 docker build "$ciab_dir" -f "${ciab_dir}/traffic_vault/Dockerfile" -t "$trafficvault" 2>&1 |
-		color_and_prefix "$gray_bg" "building Traffic Vault";
-	if [[ -n "$(docker ps -qf "name=^${trafficvault}")" ]]; then
-		echo 'Traffic Vault is already running.'
-		return;
-	fi;
-	echo 'Starting Traffic Vault...';
-	docker run \
-		--detach \
-		--env-file="${ciab_dir}/variables.env" \
-		--hostname="${trafficvault}.infra.ciab.test" \
-		--name="$trafficvault" \
-		--publish=8087:8087 \
-		--rm \
-		"$trafficvault" \
-		/usr/lib/riak/riak-cluster.sh;
-	docker logs -f "$trafficvault" 2>&1 >"${ciab_dir}/traffic.vault.logs";
-}
-truncate -s0 "${ciab_dir}/traffic.vault.logs";
-start_traffic_vault & disown
+openssl rand 32 | base64 | sudo tee /aes.key
 
 sudo apt-get install -y --no-install-recommends gettext
 
@@ -150,11 +109,8 @@ resources="$(dirname "$0")"
 envsubst <"${resources}/cdn.json" >cdn.conf
 cp "${resources}/database.json" database.conf
 
-export $(<"${ciab_dir}/variables.env" sed '/^#/d') # defines TV_ADMIN_USER/PASSWORD
-envsubst <"${resources}/riak.json" >riak.conf
-
 truncate --size=0 traffic.ops.log # Removes output from previous API versions and makes sure files exist
-./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf -riakcfg riak.conf &
+./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf &
 
 cd "../testing/api/v$INPUT_VERSION"
 

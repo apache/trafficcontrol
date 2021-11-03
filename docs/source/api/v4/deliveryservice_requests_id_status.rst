@@ -28,6 +28,7 @@ Gets the status of a :term:`DSR`.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: DS-REQUEST:READ
 :Response Type:  Object (string)
 
 Request Structure
@@ -78,6 +79,7 @@ The response is the status of the requested :term:`DSR`.
 =======
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: DS-REQUEST:UPDATE, DS-REQUEST:READ
 :Response Type:  Object
 
 Request Structure

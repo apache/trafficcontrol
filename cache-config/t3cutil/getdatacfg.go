@@ -27,7 +27,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/toreq"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
@@ -69,7 +69,7 @@ type ConfigData struct {
 	Server *atscfg.Server `json:"server,omitempty"`
 
 	// Jobs must be all Jobs on the server's CDN. May include jobs on other CDNs.
-	Jobs []tc.InvalidationJob `json:"jobs,omitempty"`
+	Jobs []atscfg.InvalidationJob `json:"jobs,omitempty"`
 
 	// CDN must be the CDN of the server.
 	CDN *tc.CDN `json:"cdn,omitempty"`
@@ -206,12 +206,12 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			}
 		}
 		if toProxyURLStr != "" {
-			realTOURL := toClient.C.URL
-			toClient.C.URL = toProxyURLStr
+			realTOURL := toClient.URL()
+			toClient.SetURL(toProxyURLStr)
 			log.Infoln("using Traffic Ops proxy '" + toProxyURLStr + "'")
-			if _, _, err := toClient.C.GetCDNs(); err != nil {
+			if _, _, err := toClient.GetCDNs(nil); err != nil {
 				log.Warnln("Traffic Ops proxy '" + toProxyURLStr + "' failed to get CDNs, falling back to real Traffic Ops")
-				toClient.C.URL = realTOURL
+				toClient.SetURL(realTOURL)
 			}
 		} else {
 			log.Infoln("Traffic Ops proxy enabled, but GLOBAL Parameter '" + TrafficOpsProxyParameterName + "' missing or empty, not using proxy")
@@ -332,7 +332,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					if oldCfg != nil {
 						reqHdr = MakeReqHdr(oldCfg.MetaData.DeliveryServiceServers)
 					}
-					dss, reqInf, err := toClient.GetDeliveryServiceServers(nil, nil, reqHdr)
+					dss, reqInf, err := toClient.GetDeliveryServiceServers(nil, nil, *server.CDNName, reqHdr)
 					if err != nil {
 						return errors.New("getting delivery service servers: " + err.Error())
 					}
@@ -515,7 +515,30 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			}
 			return nil
 		}
-		fs := []func() error{dsF, serverParamsF, cdnF, profileF}
+		jobsF := func() error {
+			defer func(start time.Time) { log.Infof("jobsF took %v\n", time.Since(start)) }(time.Now())
+			{
+				reqHdr := (http.Header)(nil)
+				if oldCfg != nil {
+					reqHdr = MakeReqHdr(oldCfg.MetaData.Jobs)
+				}
+				jobs, reqInf, err := toClient.GetJobs(reqHdr, *server.CDNName)
+				if err != nil {
+					return errors.New("getting jobs: " + err.Error())
+				}
+				if reqInf.StatusCode == http.StatusNotModified {
+					log.Infof("Getting config: %v not modified, using old config", "Jobs")
+					toData.Jobs = oldCfg.Jobs
+				} else {
+					log.Infof("Getting config: %v is modified, using new response", "Jobs")
+					toData.Jobs = jobs
+				}
+				toData.MetaData.Jobs = MakeReqMetaData(reqInf.RespHeaders)
+				toIPs.Store(reqInf.RemoteAddr, nil)
+			}
+			return nil
+		}
+		fs := []func() error{dsF, serverParamsF, cdnF, profileF, jobsF}
 		if !revalOnly {
 			fs = append([]func() error{sslF}, fs...) // skip ssl keys for reval only, which doesn't need them
 		}
@@ -541,29 +564,6 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				toData.CacheGroups = cacheGroups
 			}
 			toData.MetaData.CacheGroups = MakeReqMetaData(reqInf.RespHeaders)
-			toIPs.Store(reqInf.RemoteAddr, nil)
-		}
-		return nil
-	}
-	jobsF := func() error {
-		defer func(start time.Time) { log.Infof("jobsF took %v\n", time.Since(start)) }(time.Now())
-		{
-			reqHdr := (http.Header)(nil)
-			if oldCfg != nil {
-				reqHdr = MakeReqHdr(oldCfg.MetaData.Jobs)
-			}
-			jobs, reqInf, err := toClient.GetJobs(reqHdr) // TODO add cdn query param to jobs endpoint
-			if err != nil {
-				return errors.New("getting jobs: " + err.Error())
-			}
-			if reqInf.StatusCode == http.StatusNotModified {
-				log.Infof("Getting config: %v not modified, using old config", "Jobs")
-				toData.Jobs = oldCfg.Jobs
-			} else {
-				log.Infof("Getting config: %v is modified, using new response", "Jobs")
-				toData.Jobs = jobs
-			}
-			toData.MetaData.Jobs = MakeReqMetaData(reqInf.RespHeaders)
 			toIPs.Store(reqInf.RemoteAddr, nil)
 		}
 		return nil
@@ -739,7 +739,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 		return nil
 	}
 
-	fs := []func() error{serversF, cgF, jobsF}
+	fs := []func() error{serversF, cgF}
 	if !revalOnly {
 		// skip data not needed for reval, if we're reval-only
 		fs = append([]func() error{dsrF, cacheKeyConfigParamsF, remapConfigParamsF, parentConfigParamsF, capsF, dsCapsF, topologiesF}, fs...)
@@ -754,7 +754,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 	for addr, _ := range toAddrSet {
 		toData.TrafficOpsAddresses = append(toData.TrafficOpsAddresses, addr)
 	}
-	toData.TrafficOpsURL = toClient.C.URL
+	toData.TrafficOpsURL = toClient.URL()
 
 	return toData, util.JoinErrs(errs)
 }

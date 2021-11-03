@@ -79,7 +79,9 @@ cdn_conf=/opt/traffic_ops/app/conf/cdn.conf
             "https://[::]?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
         ]
     },
+    "disable_auto_cert_deletion": false,
     "use_ims": true,
+    "role_based_permissions": true,
     "traffic_ops_golang" : {
           "traffic_vault_backend": "$TV_BACKEND",
           "traffic_vault_config": {

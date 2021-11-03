@@ -39,7 +39,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 )
 
 // StartOpsConfigManager starts the ops config manager goroutine, returning the (threadsafe) variables which it sets.
@@ -67,7 +67,8 @@ func StartOpsConfigManager(
 	healthIteration threadsafe.Uint,
 	errorCount threadsafe.Uint,
 	localCacheStatus threadsafe.CacheAvailableStatus,
-	unpolledCaches threadsafe.UnpolledCaches,
+	statUnpolledCaches threadsafe.UnpolledCaches,
+	healthUnpolledCaches threadsafe.UnpolledCaches,
 	monitorConfig threadsafe.TrafficMonitorConfigMap,
 	cfg config.Config,
 ) (threadsafe.OpsConfig, error) {
@@ -124,8 +125,10 @@ func StartOpsConfigManager(
 			toData,
 			localCacheStatus,
 			lastStats,
-			unpolledCaches,
+			statUnpolledCaches,
+			healthUnpolledCaches,
 			monitorConfig,
+			cfg.StatPolling,
 		)
 
 		// If the HTTPS Listener is defined in the traffic_ops.cfg file then it creates the HTTPS endpoint and the corresponding HTTP endpoint as a redirect
@@ -172,8 +175,8 @@ func StartOpsConfigManager(
 				time.Sleep(duration)
 
 				if toSession.BackupFileExists() && (toLoginCount >= cfg.TrafficOpsDiskRetryMax) {
-					log.Errorf("error instantiating Session with traffic_ops, backup disk files exist, creating empty traffic_ops session to read")
 					newOpsConfig.UsingDummyTO = true
+					log.Errorf("error instantiating authenticated session with Traffic Ops, backup disk files exist, continuing with unauthenticated session")
 					break
 				}
 

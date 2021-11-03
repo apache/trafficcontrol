@@ -11,8 +11,7 @@ guidelines at https://apache.org/security regarding vulnerability disclosure.
 -->
 
 
------------------------------------------------
-<!-- **^ Add meaningful description above** -->
+<!-- **^ Add meaningful description above** --><hr>
 
 ## Which Traffic Control components are affected by this PR?
 <!-- Please delete all components from this list that are NOT affected by this PR.
@@ -20,6 +19,7 @@ Feel free to add the name of a tool or script that is affected but not on the li
 -->
 - Documentation
 - Traffic Control Cache Config (T3C, formerly ORT)
+- Traffic Control Health Client (tc-health-client)
 - Traffic Control Client <!-- Please specify which (Python, Go, or Java) -->
 - Traffic Monitor
 - Traffic Ops

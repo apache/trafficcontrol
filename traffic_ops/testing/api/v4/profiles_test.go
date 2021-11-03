@@ -32,25 +32,25 @@ import (
 
 func TestProfiles(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Profiles, Parameters}, func() {
-		CreateBadProfiles(t)
-		UpdateTestProfiles(t)
+		t.Run("Attempt to create invalid Profiles", CreateBadProfiles)
+		t.Run("Basic update of properties", UpdateTestProfiles)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
 		var header http.Header
 		header = make(map[string][]string)
 		header.Set(rfc.IfUnmodifiedSince, time)
-		UpdateTestProfilesWithHeaders(t, header)
-		GetTestProfilesIMS(t)
-		GetTestProfiles(t)
-		GetTestProfilesWithParameters(t)
-		ImportProfile(t)
-		CopyProfile(t)
+		t.Run("Try to update a Profile with If-Unmodified-Since set to 5 seconds ago - presumably before its creation", testPreconditionFailed(header))
+		t.Run("Support for If-Modified-Since in GET", GetTestProfilesIMS)
+		t.Run("Basic GET request for /profiles and export endpoint", GetTestProfiles)
+		t.Run("Check 'parameters' property returned in GET requsets", GetTestProfilesWithParameters)
+		t.Run("Import endpoint basic operation", ImportProfile)
+		t.Run("Copy endpoint basic operation", CopyProfile)
 		header = make(map[string][]string)
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
-		UpdateTestProfilesWithHeaders(t, header)
-		GetTestPaginationSupportProfiles(t)
-		CUDProfileWithLocks(t)
+		t.Run("Try to update a Profile with If-Match set", testPreconditionFailed(header))
+		t.Run("Verify pagination query string parameters support", GetTestPaginationSupportProfiles)
+		t.Run("Verify Profile endpoints are locked by CDN locks", CUDProfileWithLocks)
 	})
 }
 
@@ -64,26 +64,24 @@ func CUDProfileWithLocks(t *testing.T) {
 	}
 
 	// Create a new user with operations level privileges
-	user1 := tc.UserV40{
-		User: tc.User{
-			Username:             util.StrPtr("lock_user1"),
-			RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
-			LocalPassword:        util.StrPtr("test_pa$$word"),
-			ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-			RoleName:             util.StrPtr("operations"),
-		},
+	user1 := tc.UserV4{
+		Username:             "lock_user1",
+		RegistrationSent:     new(time.Time),
+		LocalPassword:        util.StrPtr("test_pa$$word"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+		Role:                 "operations",
 	}
 	user1.Email = util.StrPtr("lockuseremail@domain.com")
-	user1.TenantID = util.IntPtr(resp.Response[0].ID)
+	user1.TenantID = resp.Response[0].ID
 	user1.FullName = util.StrPtr("firstName LastName")
 	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
 	if err != nil {
-		t.Fatalf("could not create test user with username: %s", *user1.Username)
+		t.Fatalf("could not create test user with username: %s", user1.Username)
 	}
 	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
 
 	// Establish a session with the newly created non admin level user
-	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, *user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
 	if err != nil {
 		t.Fatalf("could not login with user lock_user1: %v", err)
 	}
@@ -178,6 +176,12 @@ func CUDProfileWithLocks(t *testing.T) {
 	}
 }
 
+func testPreconditionFailed(h http.Header) func(*testing.T) {
+	return func(t *testing.T) {
+		UpdateTestProfilesWithHeaders(t, h)
+	}
+}
+
 func UpdateTestProfilesWithHeaders(t *testing.T, header http.Header) {
 	if len(testData.Profiles) < 1 {
 		t.Fatal("Need at least one Profile to test updating a Profile with HTTP headers")
@@ -253,6 +257,14 @@ func CopyProfile(t *testing.T) {
 		expectedResp string
 		err          string
 	}{
+		{
+			description: "new profile name contains spaces",
+			profile: tc.ProfileCopy{
+				ExistingName: "EDGE1",
+				Name:         "Profile Copy",
+			},
+			err: "cannot contain spaces",
+		},
 		{
 			description: "copy profile",
 			profile: tc.ProfileCopy{
@@ -332,7 +344,11 @@ func CopyProfile(t *testing.T) {
 
 func CreateTestProfiles(t *testing.T) {
 	opts := client.NewRequestOptions()
+	var cdnID int
+	var typ string
 	for _, pr := range testData.Profiles {
+		cdnID = pr.CDNID
+		typ = pr.Type
 		resp, _, err := TOSession.CreateProfile(pr, client.RequestOptions{})
 		if err != nil {
 			t.Errorf("could not create Profile '%s': %v - alerts: %+v", pr.Name, err, resp.Alerts)
@@ -387,6 +403,19 @@ func CreateTestProfiles(t *testing.T) {
 			}
 		}
 
+	}
+
+	p := tc.Profile{
+		CDNID:       cdnID,
+		Description: "test Profile creation with a name that contains spaces",
+		Name:        "A Profile that has spaces in its name",
+		Type:        typ,
+	}
+	resp, _, err := TOSession.CreateProfile(p, client.RequestOptions{})
+	if err == nil {
+		t.Error("Expected an error trying to create a Profile with a Name that has spaces in it")
+	} else if !alertsHaveError(resp.Alerts, "cannot contain spaces") {
+		t.Errorf("Expected an error about spaces in the Profile name, got: %v - alerts: %+v", err, resp.Alerts)
 	}
 }
 
@@ -486,12 +515,34 @@ func GetTestProfiles(t *testing.T) {
 		}
 		profileID := resp.Response[0].ID
 
-		// TODO: figure out what the 'Parameter' field of a Profile is and how
-		// passing it to this is supposed to work.
-		// resp, _, err = TOSession.GetProfileByParameter(pr.Parameter)
-		// if err != nil {
-		// 	t.Errorf("cannot GET Profile by param: %v - %v", err, resp)
-		// }
+		if len(pr.Parameters) > 0 {
+			parameter := pr.Parameters[0]
+			opts.QueryParameters.Set("name", *parameter.Name)
+			respParameter, _, err := TOSession.GetParameters(opts)
+			if err != nil {
+				t.Errorf("cannot get parameter '%s' by name: %v - alerts: %+v", *parameter.Name, err, resp.Alerts)
+			}
+			opts.QueryParameters.Del("name")
+			if len(respParameter.Response) > 0 {
+				parameterID := respParameter.Response[0].ID
+				if parameterID > 0 {
+					opts.QueryParameters.Set("params", strconv.Itoa(parameterID))
+					resp, _, err = TOSession.GetProfiles(opts)
+					opts.QueryParameters.Del("params")
+					if err != nil {
+						t.Errorf("cannot GET Profile by param: %v - %v", err, resp)
+					}
+					if len(resp.Response) < 1 {
+						t.Errorf("Expected atleast one response for Get Profile by Parameters, but found %d", len(resp.Response))
+					}
+				} else {
+					t.Errorf("Invalid parameter ID %d", parameterID)
+				}
+			} else {
+				t.Errorf("No response found for GET Parameters by name")
+			}
+
+		}
 
 		opts.QueryParameters.Set("cdn", strconv.Itoa(pr.CDNID))
 		resp, _, err = TOSession.GetProfiles(opts)
@@ -567,6 +618,15 @@ func ImportProfile(t *testing.T) {
 		Name:       *newParam.Name,
 		Value:      *newParam.Value,
 	})
+
+	*profile.Name = "Test Profile Import"
+	importReq.Profile = profile
+	importResp, _, err = TOSession.ImportProfile(importReq, client.RequestOptions{})
+	if err == nil {
+		t.Error("Expected an error importing a Profile with a space in its name")
+	} else if !alertsHaveError(importResp.Alerts.Alerts, "cannot contain spaces") {
+		t.Errorf("Expected an error about the Profile name containing spaces, got: %v - alerts: %+v", err, importResp.Alerts)
+	}
 }
 
 func GetTestProfilesWithParameters(t *testing.T) {

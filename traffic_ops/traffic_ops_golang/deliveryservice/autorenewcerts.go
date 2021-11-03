@@ -157,6 +157,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 		}
 		return
 	}
+	defer tx.Commit()
 
 	logTx, err := db.Begin()
 	if err != nil {
@@ -207,7 +208,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 			continue
 		}
 
-		expiration, err := parseExpirationFromCert([]byte(keyObj.Certificate.Crt))
+		expiration, _, err := parseExpirationAndSansFromCert([]byte(keyObj.Certificate.Crt), keyObj.Hostname)
 		if err != nil {
 			log.Errorf("cert autorenewal: %s: %s", ds.XmlId, err.Error())
 			dsExpInfo.XmlId = ds.XmlId

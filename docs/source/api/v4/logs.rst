@@ -26,6 +26,7 @@ Fetches a list of changes that have been made to the Traffic Control system
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: LOG:READ
 :Response Type:  Array
 
 Request Structure
@@ -37,7 +38,7 @@ Request Structure
 	+===========+==========+=====================================================================================================================================+
 	| days      | no       | An integer number of days of change logs to return                                                                                  |
 	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
-	| limit     | no       | The number of records to which to limit the response                                                                                |
+	| limit     | no       | The number of records to which to limit the response, by default there is no limit applied                                          |
 	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+
 	| offset    | no       | The number of results to skip before beginning to return results. Must use in conjunction with limit                                |
 	+-----------+----------+-------------------------------------------------------------------------------------------------------------------------------------+

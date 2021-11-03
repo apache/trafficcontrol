@@ -60,7 +60,7 @@ check_vendored_deps() {
 
 check_go_file() {
 	go_file="$1"
-	if git diff --exit-code --no-patch -- "$go_file"; then
+	if git diff --exit-code -- "$go_file"; then
 		echo "${go_file} is up-to-date." | colored_text "$green_fg"
 		return
 	fi

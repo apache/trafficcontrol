@@ -106,7 +106,7 @@ func Current(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	currentUser, err := getUser(inf.Tx.Tx, inf.User.ID)
+	currentUser, role, err := getUser(inf.Tx.Tx, inf.User.ID)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting current user: "+err.Error()))
 		return
@@ -120,11 +120,13 @@ func Current(w http.ResponseWriter, r *http.Request) {
 	if version.Major >= 4 {
 		api.WriteResp(w, r, currentUser)
 	} else {
-		api.WriteResp(w, r, currentUser.UserCurrent)
+		legacyUser := currentUser.Downgrade()
+		legacyUser.Role = &role
+		api.WriteResp(w, r, legacyUser)
 	}
 }
 
-func getUser(tx *sql.Tx, id int) (tc.UserCurrentV40, error) {
+func getUser(tx *sql.Tx, id int) (tc.UserCurrentV4, int, error) {
 	q := `
 SELECT
 u.address_line1,
@@ -153,16 +155,19 @@ LEFT JOIN role as r ON r.id = u.role
 INNER JOIN tenant as t ON t.id = u.tenant_id
 WHERE u.id=$1
 `
-	u := tc.UserCurrentV40{}
+	u := tc.UserCurrentV4{}
 	localPassword := sql.NullString{}
-	if err := tx.QueryRow(q, id).Scan(&u.AddressLine1, &u.AddressLine2, &u.City, &u.Company, &u.Country, &u.Email, &u.FullName, &u.ID, &u.LastUpdated, &u.LastAuthenticated, &localPassword, &u.NewUser, &u.PhoneNumber, &u.PostalCode, &u.PublicSSHKey, &u.Role, &u.RoleName, &u.StateOrProvince, &u.Tenant, &u.TenantID, &u.UserName); err != nil {
-		return tc.UserCurrentV40{}, errors.New("querying current user: " + err.Error())
+	var role int
+	if err := tx.QueryRow(q, id).Scan(&u.AddressLine1, &u.AddressLine2, &u.City, &u.Company, &u.Country, &u.Email, &u.FullName, &u.ID, &u.LastUpdated, &u.LastAuthenticated, &localPassword, &u.NewUser, &u.PhoneNumber, &u.PostalCode, &u.PublicSSHKey, &role, &u.Role, &u.StateOrProvince, &u.Tenant, &u.TenantID, &u.UserName); err != nil {
+		return tc.UserCurrentV4{}, role, errors.New("querying current user: " + err.Error())
 	}
 	u.LocalUser = util.BoolPtr(localPassword.Valid)
-	return u, nil
+	return u, role, nil
 }
 
 func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
+	var useV4User bool
+	var userV4 tc.UserV4
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
@@ -174,28 +179,33 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 	var userRequest tc.CurrentUserUpdateRequest
 	if err := json.NewDecoder(r.Body).Decode(&userRequest); err != nil {
 		errCode = http.StatusBadRequest
-		userErr = fmt.Errorf("Couldn't parse request: %v", err)
+		userErr = fmt.Errorf("couldn't parse request: %v", err)
 		api.HandleErr(w, r, tx, errCode, userErr, nil)
 		return
 	}
-
+	if inf.Version.Major >= 4 {
+		useV4User = true
+	}
 	user, exists, err := dbhelpers.GetUserByID(inf.User.ID, tx)
+	if useV4User {
+		userV4 = user.Upgrade()
+	}
 	if err != nil {
-		sysErr = fmt.Errorf("Getting user by ID %d: %v", inf.User.ID, err)
+		sysErr = fmt.Errorf("getting user by ID %d: %v", inf.User.ID, err)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
 	if !exists {
-		sysErr = fmt.Errorf("Current user (#%d) doesn't exist... ??", inf.User.ID)
+		sysErr = fmt.Errorf("current user (#%d) doesn't exist... ??", inf.User.ID)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
 
-	if err := userRequest.User.UnmarshalAndValidate(&user); err != nil {
+	if err := userRequest.User.UnmarshalAndValidate(&user, useV4User); err != nil {
 		errCode = http.StatusBadRequest
-		userErr = fmt.Errorf("Couldn't parse request: %v", err)
+		userErr = fmt.Errorf("couldn't parse request: %v", err)
 		api.HandleErr(w, r, tx, errCode, userErr, nil)
 		return
 	}
@@ -241,7 +251,7 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 		changeConfirmPasswd = true
 	}
 
-	if *user.Role != inf.User.Role {
+	if *user.Role != inf.User.Role && !useV4User {
 		privLevel, exists, err := dbhelpers.GetPrivLevelFromRoleID(tx, *user.Role)
 		if err != nil {
 			sysErr = fmt.Errorf("Getting privLevel for Role #%d: %v", *user.Role, err)
@@ -301,12 +311,16 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 
 	if err = updateUser(&user, tx, changePasswd, changeConfirmPasswd); err != nil {
 		errCode = http.StatusInternalServerError
-		sysErr = fmt.Errorf("Updating user: %v", err)
+		sysErr = fmt.Errorf("updating user: %v", err)
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
 
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "User profile was successfully updated", user)
+	if useV4User {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "User profile was successfully updated", userV4)
+	} else {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "User profile was successfully updated", user)
+	}
 }
 
 func updateUser(u *tc.User, tx *sql.Tx, changePassword bool, changeConfirmPasswd bool) error {

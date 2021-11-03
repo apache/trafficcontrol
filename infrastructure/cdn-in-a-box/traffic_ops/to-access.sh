@@ -90,6 +90,11 @@ CREDS
 	fi
 }
 
+tv-ping() {
+	to-auth && \
+		curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X GET "$TO_URL/api/$TO_API_VERSION/vault/ping"
+}
+
 to-ping() {
 	# ping endpoint does not require authentication
 	curl $CURLAUTH $CURLOPTS -X GET "$TO_URL/api/$TO_API_VERSION/ping"

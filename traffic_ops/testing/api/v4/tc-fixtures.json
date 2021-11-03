@@ -484,7 +484,11 @@
             "cdnName": "cdn1",
             "ccrDnsTtl": 3600,
             "checkPath": "",
-            "consistentHashQueryParams": ["fmt", "limit", "somethingelse"],
+            "consistentHashQueryParams": [
+                "fmt",
+                "limit",
+                "somethingelse"
+            ],
             "deepCachingType": "NEVER",
             "displayName": "d s 1",
             "dnsBypassCname": null,
@@ -675,7 +679,11 @@
             "cdnName": "cdn1",
             "ccrDnsTtl": 3600,
             "checkPath": "",
-            "consistentHashQueryParams": ["a", "b", "c"],
+            "consistentHashQueryParams": [
+                "a",
+                "b",
+                "c"
+            ],
             "consistentHashRegex": "foo",
             "deepCachingType": "ALWAYS",
             "displayName": "ds-test-minor-versions",
@@ -1311,6 +1319,68 @@
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
+            "displayName": "basic-ds-in-cdn2",
+            "dnsBypassCname": null,
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": 30,
+            "dscp": 40,
+            "edgeHeaderRewrite": null,
+            "fqPacingRate": 0,
+            "geoLimit": 0,
+            "geoLimitCountries": "",
+            "geoLimitRedirectURL": null,
+            "geoProvider": 0,
+            "globalMaxMbps": 0,
+            "globalMaxTps": 0,
+            "httpBypassFqdn": "",
+            "infoUrl": "TBD",
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "logsEnabled": false,
+            "longDesc": "",
+            "longDesc1": "",
+            "longDesc2": "",
+            "matchList": [
+                {
+                    "pattern": ".*\\.basic-ds-in-cdn2\\..*",
+                    "setNumber": 0,
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": 0,
+            "midHeaderRewrite": null,
+            "missLat": 41.881944,
+            "missLong": -87.627778,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://example.org",
+            "originShield": null,
+            "profileDescription": null,
+            "profileName": null,
+            "protocol": 0,
+            "qstringIgnore": 0,
+            "rangeRequestHandling": 0,
+            "regexRemap": null,
+            "regionalGeoBlocking": false,
+            "remapText": null,
+            "routingName": "cdn",
+            "signed": false,
+            "signingAlgorithm": null,
+            "sslKeyVersion": 0,
+            "tenant": "tenant1",
+            "tenantName": "tenant1",
+            "type": "HTTP",
+            "xmlId": "basic-ds-in-cdn2",
+            "anonymousBlockingEnabled": false,
+            "maxRequestHeaderBytes": 131072
+        },
+        {
+            "active": true,
+            "cdnName": "cdn2",
+            "ccrDnsTtl": 3600,
+            "checkPath": "",
+            "consistentHashQueryParams": [],
+            "deepCachingType": "NEVER",
             "displayName": "top-ds-in-cdn2",
             "dnsBypassCname": null,
             "dnsBypassIp": "",
@@ -1524,6 +1594,133 @@
             "xmlId": "ds4",
             "anonymousBlockingEnabled": true,
             "maxRequestHeaderBytes": 131072
+        },
+        {
+            "active": false,
+            "cdnName": "cdn1",
+            "cacheurl": "cacheUrl3",
+            "ccrDnsTtl": 3600,
+            "checkPath": "",
+            "consistentHashQueryParams": null,
+            "deepCachingType": "NEVER",
+            "displayName": "d s 5",
+            "dnsBypassCname": null,
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": 30,
+            "dscp": 40,
+            "edgeHeaderRewrite": "edgeRewrite1\nedgeHeader2",
+            "exampleURLs": [
+                "http://ccr.ds4.example.net",
+                "https://ccr.ds4x.example.net"
+            ],
+            "fqPacingRate": 0,
+            "geoLimit": 0,
+            "geoLimitCountries": "",
+            "geoLimitRedirectURL": null,
+            "geoProvider": 0,
+            "globalMaxMbps": 0,
+            "globalMaxTps": 0,
+            "httpBypassFqdn": "",
+            "infoUrl": "TBD",
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "logsEnabled": false,
+            "longDesc": "d s 5",
+            "longDesc1": "ds5",
+            "longDesc2": "ds5",
+            "matchList": [
+                {
+                    "pattern": ".*\\.ds5\\..*",
+                    "setNumber": 0,
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": 0,
+            "maxOriginConnections": 0,
+            "midHeaderRewrite": "midHeader1\nmidHeader2",
+            "missLat": 41.881944,
+            "missLong": -87.627778,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://origin.ds4.example.net",
+            "originShield": null,
+            "profileDescription": null,
+            "profileName": null,
+            "protocol": 2,
+            "qstringIgnore": 1,
+            "rangeRequestHandling": 3,
+            "rangeSliceBlockSize":  1000000,
+            "regexRemap": "rr1\nrr2",
+            "regionalGeoBlocking": false,
+            "remapText": "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/ds4plugin.lua",
+            "routingName": "ccr-ds5",
+            "serviceCategory": "serviceCategory1",
+            "signed": false,
+            "signingAlgorithm": "url_sig",
+            "sslKeyVersion": 2,
+            "tenant": "tenant3",
+            "tenantName": "tenant3",
+            "type": "HTTP_LIVE",
+            "xmlId": "DS5",
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
+        },
+        {
+            "active": true,
+            "cdnName": "cdn1",
+            "ccrDnsTtl": 3600,
+            "checkPath": "",
+            "deepCachingType": "NEVER",
+            "displayName": "steering-ds",
+            "dnsBypassCname": null,
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": 30,
+            "dscp": 40,
+            "edgeHeaderRewrite": "",
+            "exampleURLs": [],
+            "fqPacingRate": 0,
+            "geoLimit": 0,
+            "geoLimitCountries": "",
+            "geoLimitRedirectURL": null,
+            "geoProvider": 0,
+            "globalMaxMbps": 0,
+            "globalMaxTps": 0,
+            "httpBypassFqdn": "",
+            "infoUrl": "",
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "logsEnabled": false,
+            "longDesc": "",
+            "longDesc1": "",
+            "longDesc2": "",
+            "matchList": [],
+            "maxDnsAnswers": 0,
+            "maxOriginConnections": 1,
+            "midHeaderRewrite": "",
+            "missLat": 41.881944,
+            "missLong": -87.627778,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://example.com",
+            "originShield": null,
+            "profileDescription": null,
+            "profileName": null,
+            "protocol": 2,
+            "qstringIgnore": 1,
+            "rangeRequestHandling": 0,
+            "regexRemap": "",
+            "regionalGeoBlocking": false,
+            "remapText": "map some raw remap text",
+            "routingName": "",
+            "signed": false,
+            "signingAlgorithm": "url_sig",
+            "sslKeyVersion": 2,
+            "tenant": "tenant3",
+            "tenantName": "tenant3",
+            "type": "STEERING",
+            "xmlId": "steering-ds",
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
         }
     ],
     "deliveryServicesRegexes": [
@@ -1531,25 +1728,25 @@
             "dsName": "ds1",
             "typeName": "HOST_REGEXP",
             "setNumber": 1,
-            "pattern" : ".*"
+            "pattern": ".*"
         },
         {
             "dsName": "ds1",
             "typeName": "HOST_REGEXP",
             "setNumber": 2,
-            "pattern" : "\\d+"
+            "pattern": "\\d+"
         },
         {
             "dsName": "ds2",
             "typeName": "HOST_REGEXP",
             "setNumber": 1,
-            "pattern" : ".*"
+            "pattern": ".*"
         },
         {
             "dsName": "ds1",
             "typeName": "HOST_REGEXP",
             "setNumber": 3,
-            "pattern" : ""
+            "pattern": ""
         }
     ],
     "deliveryservicesRequiredCapabilities": [
@@ -1592,12 +1789,20 @@
         {
             "cname": "the.cname.com.",
             "ttl": 48,
-            "description": "the description"
+            "description": "the description",
+            "deliveryService":
+            {
+                "xmlId": "ds1"
+            }
         },
         {
             "cname": "booya.com.",
             "ttl": 34,
-            "description": "fooya"
+            "description": "fooya",
+            "deliveryService":
+            {
+                "xmlId": "ds1"
+            }
         }
     ],
     "federation_resolvers": [
@@ -1649,10 +1854,10 @@
             "ipAddress": "1.2.3.4",
             "ip6Address": "dead:beef:cafe::42",
             "port": 1234,
-            "Profile" : "ATS_EDGE_TIER_CACHE",
+            "Profile": "ATS_EDGE_TIER_CACHE",
             "protocol": "http",
             "tenant": "tenant1",
-            "isPrimary" : true
+            "isPrimary": true
         },
         {
             "name": "origin2",
@@ -2337,21 +2542,17 @@
         {
             "name": "new_admin",
             "description": "super-user 2",
-            "privLevel": 30,
-            "capabilities": [
+            "permissions": [
                 "all-read",
-                "all-write",
-                "cdn-read"
+                "all-write"
             ]
         },
         {
-            "name": "bad_admin",
+            "name": "another_role",
             "description": "super-user 3",
-            "privLevel": 30,
-            "capabilities": [
+            "permissions": [
                 "all-read",
-                "all-write",
-                "invalid-capability"
+                "all-write"
             ]
         }
     ],
@@ -4854,15 +5055,22 @@
                 },
                 {
                     "cachegroup": "parentCachegroup",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "secondaryCachegroup",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "cachegroup3",
-                    "parents": [1, 2]
+                    "parents": [
+                        1,
+                        2
+                    ]
                 }
             ]
         },
@@ -5044,11 +5252,15 @@
                 },
                 {
                     "cachegroup": "dtrc2",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "dtrc3",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 }
             ]
         },
@@ -5062,11 +5274,15 @@
                 },
                 {
                     "cachegroup": "dtrc1",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "dtrc2",
-                    "parents": [1]
+                    "parents": [
+                        1
+                    ]
                 }
             ]
         },
@@ -5080,11 +5296,15 @@
                 },
                 {
                     "cachegroup": "dtrc2",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "dtrc3",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 }
             ]
         },
@@ -5277,7 +5497,7 @@
             "phoneNumber": "810-555-9876",
             "postalCode": "55443",
             "publicSshKey": "",
-            "role": 4,
+            "role": "admin",
             "stateOrProvince": "LA",
             "tenant": "root",
             "token": "test",
@@ -5299,8 +5519,7 @@
             "phoneNumber": "",
             "postalCode": "",
             "publicSshKey": "",
-            "registrationSent": "",
-            "role": 1,
+            "role": "disallowed",
             "stateOrProvince": "",
             "tenant": "tenant1",
             "token": "quest",
@@ -5322,8 +5541,7 @@
             "phoneNumber": "",
             "postalCode": "",
             "publicSshKey": "",
-            "registrationSent": "",
-            "role": 2,
+            "role": "read-only user",
             "stateOrProvince": "",
             "tenant": "tenant1",
             "uid": 0,
@@ -5344,7 +5562,7 @@
             "phoneNumber": "810-555-9876",
             "postalCode": "55443",
             "publicSshKey": "",
-            "role": 4,
+            "role": "admin",
             "stateOrProvince": "LA",
             "tenant": "tenant3",
             "uid": 0,
@@ -5365,7 +5583,7 @@
             "phoneNumber": "810-555-9876",
             "postalCode": "55443",
             "publicSshKey": "",
-            "role": 4,
+            "role": "admin",
             "stateOrProvince": "LA",
             "tenant": "tenant4",
             "uid": 0,
@@ -5386,8 +5604,7 @@
             "phoneNumber": "",
             "postalCode": "",
             "publicSshKey": "",
-            "registrationSent": "",
-            "role": 3,
+            "role": "operations",
             "stateOrProvince": "",
             "tenant": "root",
             "uid": 0,
@@ -5408,8 +5625,7 @@
             "phoneNumber": "",
             "postalCode": "",
             "publicSshKey": "",
-            "registrationSent": "",
-            "role": 6,
+            "role": "steering",
             "stateOrProvince": "",
             "tenant": "root",
             "uid": 0,
@@ -5462,20 +5678,67 @@
         {
             "deliveryService": "ds1",
             "regex": "/.*",
-            "startTime": 4117118271000,
-            "ttl": "121m"
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 72,
+            "invalidationType" : "REFRESH"
         },
         {
             "deliveryService": "ds1",
             "regex": "/foo",
-            "startTime": 4117118271000,
-            "ttl": 2160
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 36,
+            "invalidationType" : "REFRESH"
         },
         {
-            "deliveryService":  "ds2",
+            "deliveryService": "ds2",
             "regex": "\\/some-path?.+\\.jpg",
-            "startTime": "2100-06-19T13:57:51-06:00",
-            "ttl": 2.1
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 144,
+            "invalidationType" : "REFRESH"
+        },
+        {
+            "deliveryService":  "ds1",
+            "regex": "/oldest",
+            "startTime": "1970-01-01T12:00:00Z",
+            "ttlHours": 2160,
+            "invalidationType" : "REFRESH"
+        },
+        {
+            "deliveryService":  "ds1",
+            "regex": "/older",
+            "startTime": "1970-01-01T12:00:00Z",
+            "ttlHours": 2160,
+            "invalidationType" : "REFRESH"
+        },
+        {
+            "deliveryService":  "ds1",
+            "regex": "/old",
+            "startTime": "1970-01-01T12:00:00Z",
+            "ttlHours": 2160,
+            "invalidationType" : "REFRESH"
+        },
+        {
+            "deliveryService":  "ds-forked-topology",
+            "regex": "/this-ds-is-in-cdn2",
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 2160,
+            "invalidationType" : "REFRESH"
+        }
+    ],
+    "invalidationJobsRefetch": [
+        {
+            "deliveryService": "ds1",
+            "regex": "/.*",
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 72,
+            "invalidationType" : "REFETCH"
+        },
+        {
+            "deliveryService": "ds1",
+            "regex": "/foo",
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 36,
+            "invalidationType" : "REFETCH"
         }
     ],
     "statsSummaries": [

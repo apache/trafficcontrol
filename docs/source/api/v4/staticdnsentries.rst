@@ -25,6 +25,7 @@ Retrieve all static DNS entries configured within Traffic Control
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: STATIC-DN:READ, CACHE-GROUP:READ, DELIVERY-SERVICE:READ
 :Response Type:  Array
 
 Request Structure
@@ -129,6 +130,7 @@ Creates a new, static DNS entry.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: STATIC-DN:CREATE, STATIC-DN:READ, CACHE-GROUP:READ, DELIVERY-SERVICE:READ
 :Response Type:  Object
 
 Request Structure
@@ -222,6 +224,7 @@ Updates a static DNS entry.
 
 :Auth. Required:   Yes
 :Role(s) Required: "admin" or "operator"
+:Permissions Required: STATIC-DN:UPDATE, STATIC-DN:READ, CACHE-GROUP:READ, DELIVERY-SERVICE:READ
 :Response Type:    Object
 
 Request Structure
@@ -324,6 +327,7 @@ Delete staticdnsentries.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: STATIC-DN:DELETE, STATIC-DN:READ, DELIVERY-SERVICE:READ, CACHE-GROUP:READ
 :Response Type:  ``undefined``
 
 Request Structure

@@ -46,10 +46,10 @@ python_version="${python_version:-3}";
 python_bin="${python_bin:-/usr/bin/python${python_version}}";
 
 if [[ ! -x "$python_bin" && "$python_version" -ge 3 ]]; then
-	echo "Python 3.6+ is required to run - or test - _postinstall" >&2;
+	echo "Python 3.6+ is required to run - or test - _postinstall.py" >&2;
 	exit 1;
 elif [[ ! -x "$python_bin" && "$python_version" == 2 ]]; then
-	echo "Python ${python_version} is required to run - or test - _postinstall against Python 2" >&2;
+	echo "Python ${python_version} is required to run - or test - _postinstall.py against Python 2" >&2;
 fi
 
 readonly TO_PASSWORD=twelve;
@@ -62,13 +62,7 @@ from __future__ import print_function
 import importlib
 import sys
 from os.path import dirname, join
-module_name = '_postinstall'
-if sys.version_info.major >= 3:
-	from importlib.machinery import SourceFileLoader
-	Scrypt = SourceFileLoader(module_name, join(dirname(__file__), module_name)).load_module(module_name).Scrypt
-else:
-	import imp
-	Scrypt = imp.load_source(module_name, join(dirname(__file__), module_name)).Scrypt
+from _postinstall import Scrypt
 
 passwd = '${TO_PASSWORD}'
 n = 2 ** 10
@@ -120,15 +114,11 @@ EOF
 from __future__ import print_function
 import subprocess
 import sys
+import _postinstall
 from os.path import dirname, join
 
-module_name = '_postinstall'
 download_tool = '/does/not/exist'
 root = '${ROOT_DIR}'
-if sys.version_info.major >= 3:
-	import importlib
-	from importlib.machinery import SourceFileLoader
-	_postinstall = SourceFileLoader(module_name, join(dirname(__file__), module_name)).load_module(module_name)
 
 _postinstall.exec_psql('N/A', 'N/A', '--version')
 TESTS
@@ -136,7 +126,7 @@ TESTS
 mkdir -p "$ROOT_DIR/opt/traffic_ops/install/data/json";
 mkdir "$ROOT_DIR/opt/traffic_ops/install/bin";
 
-# defaults.json is used as input into the `--cfile` option of _postinstall
+# defaults.json is used as input into the `--cfile` option of _postinstall.py
 # for testing purposes
 cat <<- EOF > "$ROOT_DIR/defaults.json"
 {
@@ -359,7 +349,7 @@ cat <<- EOF > "$ROOT_DIR/defaults.json"
 }
 EOF
 
-"$python_bin" "$MY_DIR/_postinstall" --no-root --root-directory="$ROOT_DIR" --no-restart-to --no-database --ops-user="$(whoami)" --ops-group="$(id -gn)" --automatic --cfile="$ROOT_DIR/defaults.json" --debug > >(tee -a "$ROOT_DIR/stdout") 2> >(tee -a "$ROOT_DIR/stderr" >&2);
+"$python_bin" "$MY_DIR/_postinstall.py" --no-root --root-directory="$ROOT_DIR" --no-restart-to --no-database --ops-user="$(whoami)" --ops-group="$(id -gn)" --automatic --cfile="$ROOT_DIR/defaults.json" --debug > >(tee -a "$ROOT_DIR/stdout") 2> >(tee -a "$ROOT_DIR/stderr" >&2);
 
 if grep -q 'ERROR' $ROOT_DIR/stdout; then
 	echo "Errors found in script logs" >&2;
