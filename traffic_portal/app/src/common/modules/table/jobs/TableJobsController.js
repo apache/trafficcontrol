@@ -54,6 +54,11 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 			headerName: "Created By",
 			field: "createdBy",
 			hide: false
+		},
+		{
+			headerName: "Invalidation Type",
+			field: "invalidationType",
+			hide: false
 		}
 	];
 
