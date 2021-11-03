@@ -110,4 +110,6 @@ kbd {
 	border: solid 1px rgba(99,110,123,0.4);
 	border-radius: 6px;
 	box-shadow: inset 0 -1px 0 rgba(99,110,123,0.4);
+	min-height: 1.5em;
+	min-width: 1.2em;
 }
