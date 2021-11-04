@@ -50,10 +50,8 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(jobForm.ttlhours), 'has-feedback': hasError(jobForm.ttlhours)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">TTL (hours) *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ttlhours" type="number" class="form-control" placeholder="Number of hours until the invalidation request expires" ng-model="job.ttlhours" ng-maxlength="3" ng-pattern="/^\d+$/" required autofocus>
+                    <input name="ttlhours" type="number" class="form-control" placeholder="Number of hours until the invalidation request expires" ng-model="job.ttlhours" min="1" max="999" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(jobForm.ttlhours, 'required')">Required Whole Number</small>
-                    <small class="input-error" ng-show="hasPropertyError(jobForm.ttlhours, 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(jobForm.ttlhours, 'pattern')">Whole Number</small>
                     <span ng-show="hasError(jobForm.ttlhours)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>

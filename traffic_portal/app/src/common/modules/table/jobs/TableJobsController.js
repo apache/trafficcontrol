@@ -68,8 +68,7 @@ var TableJobsController = function(tableName, jobs, $document, $scope, $state, $
 			// need to convert this to a date object for ag-grid filter to work properly
 			x.startTime = new Date(x.startTime.replace("+00", "Z"));
 
-			let ttl = parseInt(x.ttlHours, 10);
-			x.expires = new Date(x.startTime.getTime() + ttl*3600*1000);
+			x.expires = new Date(x.startTime.getTime() + x.ttlHours*3600*1000);
 			return x;
 		});
 
