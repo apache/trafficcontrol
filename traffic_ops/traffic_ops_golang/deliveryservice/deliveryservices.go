@@ -1345,6 +1345,7 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV4) error {
 		"dscp":                validation.Validate(ds.DSCP, validation.NotNil, validation.Min(0)),
 		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil),
 		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil),
+		"httpByPassFqdn":      validation.Validate(ds.HTTPBypassFQDN, isDNSName),
 		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil),
 		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil),
 		"remapText":           validation.Validate(ds.RemapText, noLineBreaks),
