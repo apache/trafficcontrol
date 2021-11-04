@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [#2770](https://github.com/apache/trafficcontrol/issues/2770) Added validation for httpBypassFqdn as hostname in Traffic Ops
 - Added permission based roles for better access control.
 - [#5674](https://github.com/apache/trafficcontrol/issues/5674) Added new query parameters `cdn` and `maxRevalDurationDays` to the `GET /api/x/jobs` Traffic Ops API to filter by CDN name and within the start_time window defined by the `maxRevalDurationDays` GLOBAL profile parameter, respectively.
 - Added a new Traffic Ops cdn.conf option -- `disable_auto_cert_deletion` -- in order to optionally prevent the automatic deletion of certificates for delivery services that no longer exist whenever a CDN snapshot is taken.
