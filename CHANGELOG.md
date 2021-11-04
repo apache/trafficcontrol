@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [6.0.1] - 2021-11-04
+
 ## [6.0.0] - 2021-08-30
 ### Added
 - [#4982](https://github.com/apache/trafficcontrol/issues/4982) Added the ability to support queueing updates by server type and profile
