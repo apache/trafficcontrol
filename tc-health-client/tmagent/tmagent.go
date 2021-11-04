@@ -44,7 +44,6 @@ import (
 )
 
 const (
-	serverRequest  = "https://tp.cdn.comcast.net/api/3.0/servers?type=RASCAL"
 	TrafficCtl     = "traffic_ctl"
 	ParentsFile    = "parent.config"
 	StrategiesFile = "strategies.yaml"
