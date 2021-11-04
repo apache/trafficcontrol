@@ -18,13 +18,28 @@
 -->
 
 # fetch-github-branch-sha docker action
-This action queries for the latest git commit 
-sha on a github repo branch
+This action queries for the latest git commit sha and latest tag on a GitHub repo branch.
+
+## Inputs
+
+### `owner`
+The owner username or organization owning the GitHub repository containing the branch being queried
+
+### `repo`
+The name of the GitHub repository containing the branch being queried
+
+### `branch`
+The name of the branch being queried
 
 ## Outputs
 
-### `sha` and `exit-code`
-the commit sha from a github repo branch
+### `sha`
+the commit sha from a GitHub repo branch
+
+### `latest-tag`
+the latest tag on the branch
+
+### `exit-code`
 0 if the tests passed, 1 otherwise.
 
 ## Example usage

@@ -18,23 +18,30 @@
 name: 'fetch-github-branch-sha'
 description: 'Fetches the most recent commit from a github repository branch'
 inputs:
-  owner:  
+  owner:
     description: 'The owner of the github repository ie, "apache"'
     required: true
-  repo:  
+  repo:
     description: 'The owners github repository ie, "trafficcontrol"'
     required: true
-  branch: 
+  branch:
     description: 'The repository branch to query ie, "8.1.0-branch"'
     required: true
 outputs:
   sha:
-    description: 'The latest git commit sha'
+    description: 'The latest git commit sha on the given branch'
+    value: ${{ steps.entrypoint.outputs.sha }}
+  latest-tag:
+    description: 'The latest git tag on the given branch'
+    value: ${{ steps.entrypoint.outputs.latest-tag }}
 runs:
-  using: 'docker'
-  image:  'Dockerfile'
-  args:
-    - ${{ inputs.owner }}
-    - ${{ inputs.repo }}
-    - ${{ inputs.branch }}
-
+  using: 'composite'
+  steps:
+    - id: entrypoint
+      env:
+        # No need to specify these environment variables once actions/runner#665 is fixed
+        INPUT_OWNER: ${{ inputs.owner }}
+        INPUT_REPO: ${{ inputs.repo }}
+        INPUT_BRANCH: ${{ inputs.branch }}
+      run: "${{ github.action_path }}/entrypoint.sh"
+      shell: bash
