@@ -5547,7 +5547,7 @@
             "phoneNumber": "",
             "postalCode": "",
             "publicSshKey": "",
-            "role": "read-only user",
+            "role": "read-only",
             "stateOrProvince": "",
             "tenant": "tenant1",
             "uid": 0,

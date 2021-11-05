@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - SANs information to the SSL key endpoint and Traffic Portal page.
 - Added definition for `heartbeat.polling.interval` for CDN Traffic Monitor config in API documentation.
 - New `pkg` script options, `-h`, `-s`, `-S`, and `-L`.
+- Added `Invalidation Type` (REFRESH or REFETCH) for invalidating content to Traffic Portal.
 
 ### Fixed
 - [#6197](https://github.com/apache/trafficcontrol/issues/6197) - TO `/deliveryservices/:id/routing` makes requests to all TRs instead of by CDN.
