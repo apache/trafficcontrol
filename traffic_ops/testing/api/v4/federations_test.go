@@ -520,14 +520,17 @@ func SortTestFederationDs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v - alerts: %+v", err, resp.Alerts)
 	}
-	for _, fedRes := range resp.Response {
-		sortedList = append(sortedList, *fedRes.ID)
+	for _, fedDs := range resp.Response {
+		if fedDs.ID == nil {
+			t.Fatalf("Federation Deliveryservices ID is nil, so sorting can't be tested")
+		}
+		sortedList = append(sortedList, *fedDs.ID)
 	}
 	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
 		return sortedList[p] < sortedList[q]
 	})
 	if res != true {
-		t.Errorf("list is not sorted by their ID: %v", sortedList)
+		t.Errorf("list is not sorted by their DS ID: %v", sortedList)
 	}
 }
 
@@ -562,6 +565,9 @@ func SortTestFederationsDsDesc(t *testing.T) {
 	}
 	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
 		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
+	}
+	if respDesc[0].ID == nil || respAsc[0].ID == nil {
+		t.Fatalf("Response ID is nil in federation deliveryservices")
 	}
 	if *respDesc[0].ID != *respAsc[0].ID {
 		t.Errorf("Federation DS responses are not equal after reversal: Asc: %d - Desc: %d", *respDesc[0].ID, *respAsc[0].ID)

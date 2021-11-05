@@ -142,6 +142,9 @@ func SortTestCDNFederations(t *testing.T) {
 		t.Fatalf("Expected no error, but got %v - alerts: %+v", err, resp.Alerts)
 	}
 	for i := range resp.Response {
+		if resp.Response[i].CName == nil {
+			t.Fatalf("Federation resolver CName is nil, so sorting can't be tested")
+		}
 		sortedList = append(sortedList, *resp.Response[i].CName)
 	}
 
@@ -150,7 +153,7 @@ func SortTestCDNFederations(t *testing.T) {
 		return sortedList[p] < sortedList[q]
 	})
 	if res != true {
-		t.Errorf("list is not sorted by their names: %v", sortedList)
+		t.Errorf("list is not sorted by their CName: %v", sortedList)
 	}
 
 	// Delete the newly created federation
