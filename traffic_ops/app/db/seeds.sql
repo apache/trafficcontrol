@@ -19,12 +19,6 @@
 -- cdns
 insert into cdn (name, dnssec_enabled, domain_name) values ('ALL', false, '-') ON CONFLICT (name) DO NOTHING;
 
--- job agents
-insert into job_agent (name, description, active) values ('dummy', 'Description of Purge Agent', 1) ON CONFLICT (name) DO NOTHING;
-
--- job statuses
-insert into job_status (name, description) values ('PENDING', 'Job is queued, but has not been picked up by any agents yet') ON CONFLICT (name) DO NOTHING;
-
 -- parameters
 -- Moved into postinstall global parameters
 insert into profile (name, description, type, cdn) values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
@@ -917,8 +911,6 @@ insert into last_deleted (table_name) VALUES ('federation_resolver') ON CONFLICT
 insert into last_deleted (table_name) VALUES ('federation_tmuser') ON CONFLICT (table_name) DO NOTHING;
 insert into last_deleted (table_name) VALUES ('hwinfo') ON CONFLICT (table_name) DO NOTHING;
 insert into last_deleted (table_name) VALUES ('job') ON CONFLICT (table_name) DO NOTHING;
-insert into last_deleted (table_name) VALUES ('job_agent') ON CONFLICT (table_name) DO NOTHING;
-insert into last_deleted (table_name) VALUES ('job_status') ON CONFLICT (table_name) DO NOTHING;
 insert into last_deleted (table_name) VALUES ('log') ON CONFLICT (table_name) DO NOTHING;
 insert into last_deleted (table_name) VALUES ('origin') ON CONFLICT (table_name) DO NOTHING;
 insert into last_deleted (table_name) VALUES ('parameter') ON CONFLICT (table_name) DO NOTHING;

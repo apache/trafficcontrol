@@ -27,6 +27,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -43,7 +44,6 @@ import (
 )
 
 const (
-	serverRequest  = "https://tp.cdn.comcast.net/api/3.0/servers?type=RASCAL"
 	TrafficCtl     = "traffic_ctl"
 	ParentsFile    = "parent.config"
 	StrategiesFile = "strategies.yaml"
@@ -244,6 +244,11 @@ func (c *ParentInfo) GetCacheStatuses() (map[tc.CacheName]datareq.CacheStatus, e
 		return nil, errors.New("finding a trafficmonitor: " + err.Error())
 	}
 	tmc := tmclient.New("http://"+tmHostName, config.GetRequestTimeout())
+
+	// Use a proxy to query TM if the ProxyURL is set
+	if c.Cfg.ParsedProxyURL != nil {
+		tmc.Transport = &http.Transport{Proxy: http.ProxyURL(c.Cfg.ParsedProxyURL)}
+	}
 
 	return tmc.CacheStatuses()
 }

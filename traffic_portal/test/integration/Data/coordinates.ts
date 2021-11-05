@@ -105,7 +105,7 @@ export const coordinates = {
 					Name: "TPCoordinates1",
 					Latitude: 0,
 					Longitude: 0,
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: COORDINATE:CREATE"
 				}
 			],
 			update: [
@@ -113,14 +113,14 @@ export const coordinates = {
 					description: "update coordinates latitude",
 					Name: "TPCoordinates2",
 					Latitude: 1,
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: COORDINATE:UPDATE"
 				}
 			],
 			remove: [
 				{
 					description: "delete a Coordinates",
 					Name: "TPCoordinates2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: COORDINATE:DELETE"
 				}
 			]
 		}

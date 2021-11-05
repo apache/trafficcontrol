@@ -47,7 +47,7 @@ Installing Traffic Server
 
 #. Install the :term:`t3c` script and run it in 'badass' mode to create the initial configuration
 
-	.. seealso:: :ref:`t3c`
+	.. seealso:: `Configuring Traffic Server`_
 
 #. Start :abbr:`ATS (Apache Traffic Server)`
 
@@ -73,8 +73,6 @@ Installing Traffic Server
 				systemctl status trafficserver
 
 		#. Assuming a Traffic Monitor is already installed somewhere, check the "Cache States" table in its Web UI to verify that the :abbr:`ATS (Apache Traffic Server)` server appears.
-
-.. _t3c:
 
 Configuring Traffic Server
 ==========================

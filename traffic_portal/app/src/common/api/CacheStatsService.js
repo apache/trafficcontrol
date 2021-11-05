@@ -20,7 +20,7 @@
 var CacheStatsService = function($http, ENV, messageModel) {
 
 	this.getBandwidth = function(cdnName, start, end) {
-		const url = ENV.api['root'] + "cache_stats";
+		const url = ENV.api.unstable + "cache_stats";
 		const params = {
 			cdnName: cdnName,
 			metricType: 'bandwidth',
@@ -40,7 +40,7 @@ var CacheStatsService = function($http, ENV, messageModel) {
 	};
 
 	this.getConnections = function(cdnName, start, end) {
-		const url = ENV.api['root'] + "cache_stats";
+		const url = ENV.api.unstable + "cache_stats";
 		const params = {
 			cdnName: cdnName,
 			metricType: 'connections',

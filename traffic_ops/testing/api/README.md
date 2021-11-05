@@ -31,9 +31,10 @@ In order to run the tests you will need the following:
 
     To get your to_test database setup do the following:
     
-    `$ cd trafficcontrol/traffic_ops/app`
-    
-    `$ db/admin --env=test reset` 
+    ```shell
+    $ cd trafficcontrol/traffic_ops/app
+    $ db/admin --env=test reset
+    ```
 
     NOTE on passwords:
     Check that the passwords defined defined for your `to_test` database match 
@@ -45,6 +46,7 @@ In order to run the tests you will need the following:
     Note that for the database to successfully set up the tables and run the migrations, you will the `db/admin` tool.
     To test if `db/admin` ran all migrations successfully, you can run the following command from the `traffic_ops/app`
     directory:
+
     ```shell
     db/admin -env=test dbversion
     ```
@@ -61,29 +63,20 @@ In order to run the tests you will need the following:
 
     For more info see: http://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html?highlight=reset
 
-3. A running Traffic Ops instance running with the `secure` (https) and is pointing to the `to_test` 
-   database by running in `MOJO_MODE=test` which will point to your `to_test` database.
-    To get your to_test database setup do the following:
-    
-   	`$ export MOJO_MODE=test`  
-   	
-   	`$ cd trafficcontrol/traffic_ops/app`
-   	
-    `$ bin/start.pl --secure`
+3. A running Traffic Ops Golang instance pointing to the `to_test` database.
 
-4. A running Traffic Ops Golang proxy pointing to the to_test database.
-	`$ cd trafficcontrol/traffic_ops/traffic_ops_golang`
-	`$ cp ../app/conf/cdn.conf $HOME/cdn.conf`
-	change `traffic_ops_golang->port` to 8443
-
-    `$ go build && ./traffic_ops_golang -cfg $HOME/cdn.conf -dbcfg ../app/conf/test/database.conf`
+    ```shell
+	$ cd trafficcontrol/traffic_ops/traffic_ops_golang
+    $ cp ../app/conf/cdn.conf $HOME/cdn.conf # change `traffic_ops_golang->port` to 8443
+    $ go build && ./traffic_ops_golang -cfg $HOME/cdn.conf -dbcfg ../app/conf/test/database.conf
+    ```
     
     In your local development environment, if the above command fails for an error similar to 
     `ERROR: traffic_ops_golang.go:193: 2020-04-10T10:55:53.190298-06:00: cannot open /etc/pki/tls/certs/localhost.crt for read: open /etc/pki/tls/certs/localhost.crt: no such file or directory`
     you might not have the right certificates at the right locations. Follow the procedure listed
     [here](https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops.html#id12) to fix it. 
 ## Running the API Tests
-The integration tests are run using `go test`, however, there are some flags that need to be provided in order for the tests to work.  
+The integration tests are run using `go test` from the traffic_ops/testing/api/ directory, however, there are some flags that need to be provided in order for the tests to work.  
 
 The flags are:
 
@@ -94,9 +87,16 @@ The flags are:
 * test_data - traffic control
 * run - Go runtime flag for executing a specific test case
 
-Example command to run the tests: 
-`TO_URL=https://localhost:8443 go test -v -cfg=traffic-ops-test.conf -run TestCDNs`
+Example command to run the tests:
+```shell
+$ TO_URL=https://localhost:8443 go test -v -cfg=traffic-ops-test.conf -run TestCDNs
+```
 
+or, since the cfg file location is inferred, the call could be shortened to test a specific API version with something like:
+
+```shell
+$ go test -v -run TestJobs ./v4
+```
 
 
 * It can take several minutes for the API tests to complete, so using the `-v` flag is recommended to see progress.*

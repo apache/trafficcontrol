@@ -982,7 +982,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		queryAddition = fmt.Sprintf(deliveryServiceServersJoin, joinSubQuery)
 
 		// depending on ds type, also need to add mids
-		dsType, _, err := dbhelpers.GetDeliveryServiceType(dsID, tx.Tx)
+		dsType, _, _, err := dbhelpers.GetDeliveryServiceTypeAndCDNName(dsID, tx.Tx)
 		if err != nil {
 			return nil, 0, nil, err, http.StatusInternalServerError, nil
 		}

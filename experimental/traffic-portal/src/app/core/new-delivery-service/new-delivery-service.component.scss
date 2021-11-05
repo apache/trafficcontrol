@@ -1,0 +1,143 @@
+/*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+@import 'src/theme';
+h1, h2 {
+	text-align: center;
+	color: $theme_secondary;
+}
+
+form {
+	max-width: 80vw;
+	margin: auto;
+	margin-top: 15px;
+	text-align: center;
+
+	div.form-content, div.form-content > fieldset {
+		display: grid;
+		grid-template-columns: 1fr 2fr;
+		width: 100%;
+		grid-row-gap: 15px;
+		margin: 15px 0;
+		label {
+			margin-right: 5px;
+			color: $theme_tertiary;
+			text-align: right;
+			line-height: 25px;
+			vertical-align: middle;
+		}
+
+		fieldset {
+			grid-column: span 2;
+		}
+
+		input[type="checkbox"], input[type="radio"] {
+			justify-self: start;
+			align-self: center;
+		}
+
+		textarea {
+			// width: 100%;
+			resize: vertical;
+		}
+	}
+
+	div.buttons-holder {
+		padding-top: 15px;
+		grid-column: span 2;
+	}
+
+	button {
+		float: right;
+	}
+
+	button[type=reset] {
+		float: left;
+	}
+
+}
+
+@media (max-width: 1230px) {
+	form {
+		max-width: 95vw;
+
+		div.form-content, div.form-content > fieldset {
+			grid-template-columns: auto;
+
+			label {
+				text-align: center;
+			}
+
+			fieldset {
+				grid-column: span 1;
+				max-width: 87vw;
+			}
+		}
+
+		div.form-content input[type="checkbox"], div.form-content input[type="radio"] {
+			justify-self: center;
+		}
+	}
+
+	#protocol {
+		grid-template-columns: auto 1fr;
+	}
+
+	label.sub-form, div.buttons-holder {
+		grid-column: span 1;
+	}
+
+}
+
+hr {
+	max-width: 80%;
+	color: $theme_main;
+}
+
+label.sub-form {
+	color: white;
+	background-color: $theme_tertiary;
+	border-radius: 10px;
+	padding: 5px;
+	cursor: pointer;
+	width: auto;
+	text-align: center;
+	margin: 0 auto;
+	grid-column: span 2;
+
+	&::before {
+		color: inherit;
+		content: "+ ";
+	}
+}
+
+input.sub-form {
+	& ~ div.form-content {
+		display: none;
+	}
+	&:checked ~ label.sub-form {
+		display: none;
+	}
+	&:checked ~ div.form-content {
+		display: grid;
+	}
+}
+
+mat-radio-group {
+	display: flex;
+	flex-direction: column;
+}
+
+mat-radio-button {
+	margin: 15px auto 0 7px;
+}

@@ -110,7 +110,7 @@ export const cdns = {
 					Name: "TPCDN1",
 					Domain: "tptest1",
 					DNSSEC: "true",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: CDN:CREATE"
 				}
 			],
 			update: [
@@ -118,32 +118,32 @@ export const cdns = {
 					description: "perform snapshot",
 					Name: "TPCDN2",
 					NewName: "",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: CDN-SNAPSHOT:CREATE"
 				},
 				{
 					description: "queue CDN updates",
 					Name: "TPCDN2",
 					NewName: "",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER:QUEUE"
 				},
 				{
 					description: "clear CDN updates",
 					Name: "TPCDN2",
 					NewName: "",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER:QUEUE"
 				},
 				{
 					description: "update cdn name",
 					Name: "TPCDN2",
 					NewName: "TPNewCDN2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: CDN:UPDATE"
 				}
 			],
 			remove: [
 				{
 					description: "delete CDN",
 					Name: "TPCDN2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: CDN:DELETE"
 				}
 			]
 		},

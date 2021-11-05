@@ -20,7 +20,7 @@
 var OriginService = function($http, locationUtils, messageModel, ENV) {
 
     this.getOrigins = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'origins', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'origins', {params: queryParams}).then(
             function (result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var OriginService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.createOrigin = function(origin) {
-        return $http.post(ENV.api['root'] + 'origins', origin).then(
+        return $http.post(ENV.api.unstable + 'origins', origin).then(
             function(response) {
                 messageModel.setMessages(response.data.alerts, true);
                 locationUtils.navigateToPath('/origins');
@@ -45,7 +45,7 @@ var OriginService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.updateOrigin = function(id, origin) {
-        return $http.put(ENV.api['root'] + "origins", origin, {params: {id: id}}).then(
+        return $http.put(ENV.api.unstable + "origins", origin, {params: {id: id}}).then(
             function(response) {
                 messageModel.setMessages(response.data.alerts, false);
                 return response;
@@ -58,7 +58,7 @@ var OriginService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.deleteOrigin = function(id) {
-        return $http.delete(ENV.api['root'] + "origins", {params: {id: id}}).then(
+        return $http.delete(ENV.api.unstable + "origins", {params: {id: id}}).then(
             function(response) {
                 messageModel.setMessages(response.data.alerts, true);
                 return response;

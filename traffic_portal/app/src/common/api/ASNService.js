@@ -20,7 +20,7 @@
 var ASNService = function($http, $q, locationUtils, messageModel, ENV) {
 
     this.getASNs = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'asns', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'asns', {params: queryParams}).then(
             function(result) {
                 return result.data.response;
             },
@@ -32,7 +32,7 @@ var ASNService = function($http, $q, locationUtils, messageModel, ENV) {
     };
 
     this.getASN = function(id) {
-        return $http.get(ENV.api['root'] + 'asns', {params: {id: id}}).then(
+        return $http.get(ENV.api.unstable + 'asns', {params: {id: id}}).then(
             function(result) {
                 return result.data.response[0];
             },
@@ -44,7 +44,7 @@ var ASNService = function($http, $q, locationUtils, messageModel, ENV) {
     };
 
     this.createASN = function(asn) {
-        return $http.post(ENV.api['root'] + 'asns', asn).then(
+        return $http.post(ENV.api.unstable + 'asns', asn).then(
             function(result) {
                 messageModel.setMessages([{level: 'success', text: 'ASN created' }], true);
                 console.info("created new ASN: ", result.data.response);
@@ -59,7 +59,7 @@ var ASNService = function($http, $q, locationUtils, messageModel, ENV) {
     };
 
     this.updateASN = function(asn) {
-        return $http.put(ENV.api['root'] + 'asns', asn, {params: {id: asn.id}}).then(
+        return $http.put(ENV.api.unstable + 'asns', asn, {params: {id: asn.id}}).then(
             function(result) {
                 messageModel.setMessages([{level: 'success', text: 'ASN updated'}], false);
                 console.info('updated ASN: ', result.data.response);
@@ -73,7 +73,7 @@ var ASNService = function($http, $q, locationUtils, messageModel, ENV) {
     };
 
     this.deleteASN = function(id) {
-        return $http.delete(ENV.api['root'] + 'asns', {params: {id: id}}).then(
+        return $http.delete(ENV.api.unstable + 'asns', {params: {id: id}}).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 return result;

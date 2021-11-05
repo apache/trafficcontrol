@@ -41,7 +41,7 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
         generateSslKeyForm.key = deliveryService.xmlId;
         generateSslKeyForm.authType = sslKeys.authType;
 
-        return $http.post(ENV.api['root'] + endpoint, generateSslKeyForm).then(
+        return $http.post(ENV.api.unstable + endpoint, generateSslKeyForm).then(
             function(result) {
                 if (message === null) {
                     messageModel.setMessages(result.data.alerts, true);
@@ -60,7 +60,7 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
     };
 
     this.renewCert = function(deliveryService) {
-        return $http.post(ENV.api['root'] + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys/renew").then(
+        return $http.post(ENV.api.unstable + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys/renew").then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
                 return result.data.response;
@@ -86,7 +86,7 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
         sslKeys.cdn = deliveryService.cdnName;
         sslKeys.deliveryservice = deliveryService.xmlId;
 
-        return $http.post(ENV.api['root'] + "deliveryservices/sslkeys/add", sslKeys).then(
+        return $http.post(ENV.api.unstable + "deliveryservices/sslkeys/add", sslKeys).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
                 return result.data.response;
@@ -101,7 +101,7 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
     };
 
     this.getSslKeys = function(deliveryService) {
-        return $http.get(ENV.api['root'] + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys", {params: {decode: "true"}}).then(
+        return $http.get(ENV.api.unstable + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys", {params: {decode: "true"}}).then(
             function(result) {
                 return result.data.response;
             },
@@ -115,7 +115,7 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
     };
 
     this.getAcmeProviders = function() {
-        return $http.get(ENV.api['root'] + 'acme_accounts/providers').then(
+        return $http.get(ENV.api.unstable + 'acme_accounts/providers').then(
             function (result) {
                 return result.data.response;
             },

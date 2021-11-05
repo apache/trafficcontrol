@@ -37,10 +37,14 @@ ARG TO_HOST=$TO_HOST
 
 # Install and delete the TRAFFIC_PORTAL_RPM when finished
 RUN dnf install -y \
-    epel-release && \
+    epel-release yum-utils && \
+    ### Remove these lines once nodesource/distributions#1290 is fixed
+    set -o pipefail && \
+    yumdownloader -q --url nodejs | xargs dnf -y install && \
+    ###
     dnf install -y \
       jq \
-      nodejs \
+      #nodejs
       openssl \
       gettext \
       bind-utils \

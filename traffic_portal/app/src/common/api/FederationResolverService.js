@@ -20,7 +20,7 @@
 var FederationResolverService = function($http, ENV, locationUtils, messageModel) {
 
 	this.getFederationResolvers = function(queryParams) {
-		return $http.get(ENV.api['root'] + 'federation_resolvers', {params: queryParams}).then(
+		return $http.get(ENV.api.unstable + 'federation_resolvers', {params: queryParams}).then(
 			function (result) {
 				return result.data.response;
 			},
@@ -31,7 +31,7 @@ var FederationResolverService = function($http, ENV, locationUtils, messageModel
 	};
 
 	this.createFederationResolver = function(fedResolver) {
-		return $http.post(ENV.api['root'] + 'federation_resolvers', fedResolver).then(
+		return $http.post(ENV.api.unstable + 'federation_resolvers', fedResolver).then(
 			function(result) {
 				return result;
 			},
@@ -42,7 +42,7 @@ var FederationResolverService = function($http, ENV, locationUtils, messageModel
 	};
 
 	this.assignFederationResolvers = function(fedId, fedResIds, replace) {
-		return $http.post(ENV.api['root'] + 'federations/' + fedId + '/federation_resolvers', { fedResolverIds: fedResIds, replace: replace }).then(
+		return $http.post(ENV.api.unstable + 'federations/' + fedId + '/federation_resolvers', { fedResolverIds: fedResIds, replace: replace }).then(
 			function(result) {
 				messageModel.setMessages([ { level: 'success', text: fedResIds.length + ' resolver(s) assigned to federation' } ], false);
 				return result;

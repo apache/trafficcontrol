@@ -425,6 +425,8 @@ Glossary
 	t3c
 		The Traffic Control cache config app, used to generate and apply cache configuration files.
 
+		.. seealso:: For usage and testing documentation, refer to :ref:`t3c`.
+
 	Tenant
 	Tenants
 	Tenancy

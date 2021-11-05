@@ -35,9 +35,10 @@ on:
       - 'docs/**'
       - 'experimental/**'
       - '.github/**'
-      - '!.github/actions/build-ciab/*'
-      - '!.github/actions/build-rpms/*'
-      - '!.github/actions/run-ciab/*'
+      - '!.github/actions/build-ciab/**'
+      - '!.github/actions/build-rpms/**'
+      - '!.github/actions/fetch-github-branch-sha/**'
+      - '!.github/actions/run-ciab/**'
       - '!infrastructure/cdn-in-a-box/optional/**'
       - '!.github/workflows/ciab.yaml'
       - 'infrastructure/ansible/**'
@@ -61,9 +62,10 @@ on:
       - 'docs/**'
       - 'experimental/**'
       - '.github/**'
-      - '!.github/actions/build-ciab/*'
-      - '!.github/actions/build-rpms/*'
-      - '!.github/actions/run-ciab/*'
+      - '!.github/actions/build-ciab/**'
+      - '!.github/actions/build-rpms/**'
+      - '!.github/actions/fetch-github-branch-sha/**'
+      - '!.github/actions/run-ciab/**'
       - '!infrastructure/cdn-in-a-box/optional/**'
       - '!.github/workflows/ciab.yaml'
       - 'infrastructure/ansible/**'
@@ -225,7 +227,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Get commit sha
+      - name: Get latest commit sha and latest tag
         uses: ./.github/actions/fetch-github-branch-sha
         with:
           owner: apache
@@ -237,7 +239,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/dist
-          key: ${{ steps.git-repo-sha.outputs.sha }}-el${{ env.RHEL_VERSION }}-${{ hashFiles('cache-config/testing/docker/trafficserver/**') }}
+          key: ${{ steps.git-repo-sha.outputs.sha }}-${{ steps.git-repo-sha.outputs.latest-tag }}-el${{ env.RHEL_VERSION }}-${{ hashFiles('cache-config/testing/docker/trafficserver/**') }}
       - name: Build ATS RPM
         if: steps.ats-rpm-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/build-ats-test-rpm

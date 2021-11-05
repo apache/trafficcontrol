@@ -56,5 +56,6 @@ type TrafficControl struct {
 	SteeringTargets                                   []tc.SteeringTargetNullable             `json:"steeringTargets"`
 	Serverchecks                                      []tc.ServercheckRequestNullable         `json:"serverchecks"`
 	Users                                             []tc.UserV4                             `json:"users"`
-	InvalidationJobs                                  []tc.InvalidationJobInput               `json:"invalidationJobs"`
+	InvalidationJobs                                  []tc.InvalidationJobCreateV4            `json:"invalidationJobs"`
+	InvalidationJobsRefetch                           []tc.InvalidationJobCreateV4            `json:"invalidationJobsRefetch"`
 }

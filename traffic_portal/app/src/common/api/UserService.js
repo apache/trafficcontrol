@@ -20,7 +20,7 @@
 var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
 
     this.getCurrentUser = function() {
-        return $http.get(ENV.api['root'] + "user/current").then(
+        return $http.get(ENV.api.unstable + "user/current").then(
             function(result) {
                 userModel.setUser(result.data.response);
                 return result.data.response;
@@ -32,7 +32,7 @@ var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
     };
 
     this.resetPassword = function(email) {
-        return $http.post(ENV.api['root'] + "user/reset_password", { email: email }).then(
+        return $http.post(ENV.api.unstable + "user/reset_password", { email: email }).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
                 return result;
@@ -45,7 +45,7 @@ var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
     };
 
     this.getUsers = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'users', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'users', {params: queryParams}).then(
             function (result) {
                 return result.data.response;
             },
@@ -57,7 +57,7 @@ var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
     };
 
     this.getUser = function(id) {
-        return $http.get(ENV.api['root'] + 'users', {params: {id: id}}).then(
+        return $http.get(ENV.api.unstable + 'users', {params: {id: id}}).then(
             function (result) {
                 return result.data.response[0];
             },
@@ -69,7 +69,7 @@ var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
     };
 
     this.createUser = function(user) {
-        return $http.post(ENV.api['root'] + 'users', user).then(
+        return $http.post(ENV.api.unstable + 'users', user).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'User created' } ], true);
                 locationUtils.navigateToPath('/users');
@@ -84,7 +84,7 @@ var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
 
     // todo: change to use query param when it is supported
     this.updateUser = function(user) {
-        return $http.put(ENV.api['root'] + "users/" + user.id, user).then(
+        return $http.put(ENV.api.unstable + "users/" + user.id, user).then(
             function(result) {
                 if (userModel.user.id === user.id) {
                     // if you are updating the currently logged in user...
@@ -101,7 +101,7 @@ var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
     };
 
     this.registerUser = function(registration) {
-        return $http.post(ENV.api['root'] + "users/register", registration).then(
+        return $http.post(ENV.api.unstable + "users/register", registration).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
                 return result;

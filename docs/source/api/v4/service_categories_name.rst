@@ -94,7 +94,7 @@ Deletes a specific :term:`Service Category`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Permissions Required: SERVICE-CATEGORY:DELETE, SERVICE-CATEGROY:READ
+:Permissions Required: SERVICE-CATEGORY:DELETE, SERVICE-CATEGORY:READ
 :Response Type:  ``undefined``
 
 

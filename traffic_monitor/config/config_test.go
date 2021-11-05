@@ -32,6 +32,8 @@ const exampleTMConfig = `
 	"max_events": 200,
 	"health_flush_interval_ms": 1000,
 	"stat_flush_interval_ms": 1000,
+	"stat_polling": false,
+	"distributed_polling": true,
 	"log_location_event": "event.log",
 	"log_location_error": "error.log",
 	"log_location_warning": "warning.log",
@@ -49,10 +51,16 @@ const exampleTMConfig = `
 }
 `
 
-func TestLoggingConfig(t *testing.T) {
+func TestConfigLoad(t *testing.T) {
 	c, err := LoadBytes([]byte(exampleTMConfig))
 	if err != nil {
 		t.Fatalf("loading config bytes - expected: no error, actual: %v", err)
+	}
+	if c.StatPolling != false {
+		t.Errorf("StatPolling - expected: false, actual: %t", c.StatPolling)
+	}
+	if c.DistributedPolling != true {
+		t.Errorf("DistributedPolling - expected: true, actual: %t", c.DistributedPolling)
 	}
 	if string(c.WarningLog()) != c.LogLocationWarning {
 		t.Errorf("warning log location - expected: %s, actual: %s\n", c.LogLocationWarning, string(c.WarningLog()))
@@ -89,5 +97,21 @@ func TestLoggingConfig(t *testing.T) {
 	}
 	if c.HTTPPollingFormat != "thisformatdoesnotexist" {
 		t.Errorf("HTTPPollingFormat - expected: thisformatdoesnotexist, actual: %s", c.HTTPPollingFormat)
+	}
+}
+
+func TestConfigLoadDefaults(t *testing.T) {
+	c, err := LoadBytes([]byte(`{}`))
+	if err != nil {
+		t.Fatalf("loading empty config bytes - expected: no error, actual: %v", err)
+	}
+	if c.PeerOptimistic != true {
+		t.Errorf("PeerOptimistic default - expected: true, actual: %t", c.PeerOptimistic)
+	}
+	if c.StatPolling != true {
+		t.Errorf("StatPolling default - expected: true, actual: %t", c.StatPolling)
+	}
+	if c.DistributedPolling != false {
+		t.Errorf("DistributedPolling default - expected: false, actual: %t", c.DistributedPolling)
 	}
 }

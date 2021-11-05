@@ -110,7 +110,7 @@ export const divisions = {
 				{
 					description: "create a Divisions",
 					Name: "TPDivision1",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: DIVISION:CREATE"
 				}
 			],
 			update: [
@@ -118,14 +118,14 @@ export const divisions = {
 					description: "update Division's name",
 					Name: "TPDivision2",
 					NewName: "NewDivision2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: DIVISION:UPDATE"
 				}
 			],
 			remove: [
 				{
 					description: "delete Division",
 					Name: "TPDivision2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: DIVISION:DELETE"
 				}
 			]
 		}

@@ -80,18 +80,6 @@ func SetupTestData(*sql.DB) error {
 		os.Exit(1)
 	}
 
-	err = SetupJobAgents(db)
-	if err != nil {
-		fmt.Printf("\nError setting up job agents %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
-	}
-
-	err = SetupJobStatuses(db)
-	if err != nil {
-		fmt.Printf("\nError setting up job agents %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
-	}
-
 	err = SetupTypes(db)
 	if err != nil {
 		fmt.Printf("\nError setting up types %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
@@ -112,7 +100,7 @@ func SetupRoles(db *sql.DB) error {
 
 	sqlStmt := `
 INSERT INTO role (name, description, priv_level) VALUES ('disallowed','Block all access',0) ON CONFLICT DO NOTHING;
-INSERT INTO role (name, description, priv_level) VALUES ('read-only user','Block all access', 10) ON CONFLICT DO NOTHING;
+INSERT INTO role (name, description, priv_level) VALUES ('read-only','Block all access', 10) ON CONFLICT DO NOTHING;
 INSERT INTO role (name, description, priv_level) VALUES ('operations','Block all access', 20) ON CONFLICT DO NOTHING;
 INSERT INTO role (name, description, priv_level) VALUES ('admin','super-user', 30) ON CONFLICT DO NOTHING;
 INSERT INTO role (name, description, priv_level) VALUES ('portal','Portal User', 2) ON CONFLICT DO NOTHING;
@@ -158,9 +146,146 @@ INSERT INTO api_capability (http_method, route, capability) VALUES ('GET', '/cac
 
 func SetupRoleCapabilities(db *sql.DB) error {
 	sqlStmt := `
-INSERT INTO role_capability (role_id, cap_name) VALUES (4,'all-write') ON CONFLICT DO NOTHING;
-INSERT INTO role_capability (role_id, cap_name) VALUES (4,'all-read') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
+('ASN:CREATE'),
+('ASN:DELETE'),
+('ASN:UPDATE'),
+('CACHE-GROUP:CREATE'),
+('CACHE-GROUP:DELETE'),
+('CACHE-GROUP:UPDATE'),
+('CDN-LOCK:CREATE'),
+('CDN-LOCK:DELETE'),
+('CDN-SNAPSHOT:CREATE'),
+('CDN:CREATE'),
+('CDN:DELETE'),
+('CDN:UPDATE'),
+('COORDINATE:CREATE'),
+('COORDINATE:UPDATE'),
+('COORDINATE:DELETE'),
+('DELIVERY-SERVICE-SAFE:UPDATE'),
+('DELIVERY-SERVICE:CREATE'),
+('DELIVERY-SERVICE:DELETE'),
+('DIVISION:CREATE'),
+('DIVISION:DELETE'),
+('DIVISION:UPDATE'),
+('DNS-SEC:UPDATE'),
+('ISO:GENERATE'),
+('ORIGIN:CREATE'),
+('ORIGIN:DELETE'),
+('ORIGIN:UPDATE'),
+('PARAMETER:CREATE'),
+('PARAMETER:DELETE'),
+('PARAMETER:UPDATE'),
+('PHYSICAL-LOCATION:CREATE'),
+('PHYSICAL-LOCATION:DELETE'),
+('PHYSICAL-LOCATION:UPDATE'),
+('PROFILE:CREATE'),
+('PROFILE:DELETE'),
+('PROFILE:UPDATE'),
+('REGION:CREATE'),
+('REGION:DELETE'),
+('REGION:UPDATE'),
+('SERVER-CAPABILITY:CREATE'),
+('SERVER-CAPABILITY:DELETE'),
+('SERVER-CAPABILITY:UPDATE'),
+('SERVER:CREATE'),
+('SERVER:DELETE'),
+('SERVER:QUEUE'),
+('SERVER:UPDATE'),
+('SERVICE-CATEGORY:CREATE'),
+('SERVICE-CATEGORY:DELETE'),
+('SERVICE-CATEGORY:UPDATE'),
+('STATIC-DN:CREATE'),
+('STATIC-DN:DELETE'),
+('STATIC-DN:UPDATE'),
+('STATUS:CREATE'),
+('STATUS:DELETE'),
+('STATUS:UPDATE'),
+('TENANT:CREATE'),
+('TENANT:DELETE'),
+('TENANT:UPDATE'),
+('TOPOLOGY:CREATE'),
+('TOPOLOGY:DELETE'),
+('TOPOLOGY:UPDATE'),
+('TYPE:CREATE'),
+('TYPE:DELETE'),
+('TYPE:UPDATE'),
+('USER:CREATE'),
+('USER:UPDATE'),
+('SERVER-CHECK:CREATE'),
+('SERVER-CHECK:DELETE')) AS perms(perm)
+WHERE priv_level >= 20 ON CONFLICT DO NOTHING;
+
+INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
+('FEDERATION:CREATE'),
+('FEDERATION:UPDATE'),
+('FEDERATION:DELETE'),
+('FEDERATION-RESOLVER:CREATE'),
+('FEDERATION-RESOLVER:DELETE'),
+('DELIVERY-SERVICE:UPDATE'),
+('JOB:CREATE'),
+('JOB:UPDATE'),
+('JOB:DELETE'),
+('DS-REQUEST:UPDATE'),
+('DS-REQUEST:CREATE'),
+('DS-REQUEST:DELETE'),
+('STEERING:CREATE'),
+('STEERING:UPDATE'),
+('STEERING:DELETE')) AS perms(perm)
+WHERE priv_level >= 15 ON CONFLICT DO NOTHING;
+
+INSERT INTO role_capability SELECT id, perm FROM public.role CROSS JOIN (VALUES
+('ASN:READ'),
+('ASYNC-STATUS:READ'),
+('CACHE-GROUP:READ'),
+('CAPABILITY:READ'),
+('CDN-SNAPSHOT:READ'),
+('CDN:READ'),
+('COORDINATE:READ'),
+('DELIVERY-SERVICE:READ'),
+('DIVISION:READ'),
+('DS-REQUEST:READ'),
+('DS-SECURITY-KEY:READ'),
+('FEDERATION:READ'),
+('FEDERATION-RESOLVER:READ'),
+('ISO:READ'),
+('JOB:READ'),
+('LOG:READ'),
+('MONITOR-CONFIG:READ'),
+('ORIGIN:READ'),
+('PARAMETER:READ'),
+('PHYSICAL-LOCATION:READ'),
+('PLUGIN-READ'),
+('PROFILE:READ'),
+('REGION:READ'),
+('ROLE:READ'),
+('SERVER-CAPABILITY:READ'),
+('SERVER:READ'),
+('SERVICE-CATEGORY:READ'),
+('STATIC-DN:READ'),
+('STATUS:READ'),
+('SERVER-CHECK:READ'),
+('STEERING:READ'),
+('STAT:READ'),
+('TENANT:READ'),
+('TOPOLOGY:READ'),
+('TRAFFIC-VAULT:READ'),
+('TYPE:READ'),
+('USER:READ'),
+('STAT:CREATE')) AS perms(perm)
+WHERE priv_level >= 10 ON CONFLICT DO NOTHING;
+
+INSERT INTO public.role_capability
+SELECT role, perm
+FROM public.tm_user
+CROSS JOIN (VALUES
+('SERVER-CHECK:CREATE'),
+('SERVER-CHECK:DELETE'),
+('SERVER-CHECK:READ'),
+('SERVER:READ')) AS perms(perm)
+WHERE username = 'extension' ON CONFLICT DO NOTHING;
 `
+
 	err := execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
@@ -187,6 +312,7 @@ INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + Confi
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Federation + `','` + encryptedPassword + `', 6, 1);
 INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Extension + `','` + encryptedPassword + `', 3, 1);
 `
+
 	err = execSQL(db, sqlStmt)
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
@@ -223,39 +349,13 @@ INSERT INTO deliveryservice_tmuser (deliveryservice, tm_user_id, last_updated) V
 	return nil
 }
 
-// SetupJobStatuses ...
-func SetupJobStatuses(db *sql.DB) error {
-
-	sqlStmt := `
-INSERT INTO job_status (id, name, description, last_updated) VALUES (1, 'PENDING', 'Job is queued, but has not been picked up by any agents yet', '2018-01-19 21:19:32.444857');
-`
-	err := execSQL(db, sqlStmt)
-	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
-	}
-	return nil
-}
-
-// SetupJobAgents ...
-func SetupJobAgents(db *sql.DB) error {
-
-	sqlStmt := `
-INSERT INTO job_agent (id, name, description, active, last_updated) VALUES (1, 'agent1', 'Test Agent1', 0, '2018-01-19 21:19:32.448076');
-`
-	err := execSQL(db, sqlStmt)
-	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
-	}
-	return nil
-}
-
 // SetupJobs ...
 func SetupJobs(db *sql.DB) error {
 
 	sqlStmt := `
-INSERT INTO job (id, agent, object_type, object_name, keyword, parameters, asset_url, asset_type, status, start_time, entered_time, job_user, last_updated, job_deliveryservice) VALUES (100, 1, null, null, 'PURGE', 'TTL:48h', 'http://cdn2.edge/job1/.*', 'file', 1, '2018-01-19 21:01:14.000000', '2018-01-19 21:01:14.000000', (SELECT id FROM tm_user where username = 'admin'), '2018-01-19 21:19:32.468643', 100);
-INSERT INTO job (id, agent, object_type, object_name, keyword, parameters, asset_url, asset_type, status, start_time, entered_time, job_user, last_updated, job_deliveryservice) VALUES (200, 1, null, null, 'PURGE', 'TTL:48h', 'http://cdn2.edge/job2/.*', 'file', 1, '2018-01-19 21:09:34.000000', '2018-01-19 21:09:34.000000', (SELECT id FROM tm_user where username = 'admin'), '2018-01-19 21:19:32.450915', 200);
-INSERT INTO job (id, agent, object_type, object_name, keyword, parameters, asset_url, asset_type, status, start_time, entered_time, job_user, last_updated, job_deliveryservice) VALUES (300, 1, null, null, 'PURGE', 'TTL:48h', 'http://cdn2.edge/job3/.*', 'file', 1, '2018-01-19 21:14:34.000000', '2018-01-19 21:14:34.000000', (SELECT id FROM tm_user where username = 'admin'), '2018-01-19 21:19:32.460870', 100);
+INSERT INTO job (id, ttl_hr, asset_url, start_time, entered_time, job_user, last_updated, job_deliveryservice, invalidation_type) VALUES (100, 24, 'http://cdn2.edge/job1/.*', '2018-01-19 21:01:14.000000', '2018-01-19 21:01:14.000000', (SELECT id FROM tm_user where username = 'admin'), '2018-01-19 21:19:32.468643', 100, 'REFRESH');
+INSERT INTO job (id, ttl_hr, asset_url, start_time, entered_time, job_user, last_updated, job_deliveryservice, invalidation_type) VALUES (200, 36, 'http://cdn2.edge/job2/.*', '2018-01-19 21:09:34.000000', '2018-01-19 21:09:34.000000', (SELECT id FROM tm_user where username = 'admin'), '2018-01-19 21:19:32.450915', 200, 'REFETCH');
+INSERT INTO job (id, ttl_hr, asset_url, start_time, entered_time, job_user, last_updated, job_deliveryservice, invalidation_type) VALUES (300, 72, 'http://cdn2.edge/job3/.*', '2018-01-19 21:14:34.000000', '2018-01-19 21:14:34.000000', (SELECT id FROM tm_user where username = 'admin'), '2018-01-19 21:19:32.460870', 100, 'REFRESH');
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
@@ -304,8 +404,6 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM to_extension;
 	DELETE FROM staticdnsentry;
 	DELETE FROM job;
-	DELETE FROM job_agent;
-	DELETE FROM job_status;
 	DELETE FROM log;
 	DELETE FROM asn;
 	DELETE FROM deliveryservice_tmuser;
