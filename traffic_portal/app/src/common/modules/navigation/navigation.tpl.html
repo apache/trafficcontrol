@@ -38,6 +38,7 @@ under the License.
                         <li class="side-menu-category-item" ng-if="hasCapability('delivery-services-read')" ng-class="{'current-page': isState('trafficPortal.private.deliveryServices')}"><a href="/#!/delivery-services">Delivery Services</a></li>
                         <li class="side-menu-category-item" ng-if="::dsRequestsEnabled && hasCapability('delivery-service-requests-read')" ng-class="{'current-page': isState('trafficPortal.private.deliveryServiceRequests')}"><a href="/#!/delivery-service-requests">Delivery Service Requests</a></li>
                         <li class="side-menu-category-item" ng-if="hasCapability('service-categories-read')" ng-class="{'current-page': isState('trafficPortal.private.serviceCategories')}"><a href="/#!/service-categories">Service Categories</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.certExpirations')}"><a href="/#!/cert-expirations">Certificate Expirations</a></li>
                     </ul>
                 </li>
                 <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Configure</a>

@@ -36,6 +36,7 @@ export class SideNavigationPage extends BasePage{
     private lnkDeliveryServices = element(by.xpath("//a[@href='/#!/delivery-services']"));
     private lnkDeliveryServiceRequest = element(by.xpath("//a[@href='/#!/delivery-service-requests']"));
     private lnkServiceCategories = element(by.xpath("//a[@href='/#!/service-categories']"));
+    private lnkCertExpirations = element(by.xpath("//a[@href='/#!/cert-expirations']"));
     //Navigation for Users Admin
     private propUserAdmin  = "//div[@id='sidebar-menu']//a[contains(text(),'User Admin')]"
     private mnuUserAdmin = element(by.xpath( this.propUserAdmin ))
@@ -156,6 +157,11 @@ export class SideNavigationPage extends BasePage{
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkServiceCategories), 2000);
         await browser.actions().mouseMove(this.lnkServiceCategories).perform();
         await browser.actions().click(this.lnkServiceCategories).perform();
+    }
+    async NavigateToCertExpirationsPage(){
+        await browser.wait(ExpectedConditions.visibilityOf(this.lnkCertExpirations), 2000);
+        await browser.actions().mouseMove(this.lnkCertExpirations).perform();
+        await browser.actions().click(this.lnkCertExpirations).perform();
     }
     async NavigateToUsersPage(){
         await browser.wait(ExpectedConditions.visibilityOf(this.lnkUsers), 2000);
