@@ -150,6 +150,10 @@ func GetSSlKeyExpirationInformation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	daysParam := inf.Params["days"]
+	if _, err := strconv.Atoi(daysParam); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("days parameter must be an integer"), nil)
+		return
+	}
 
 	expirationInfos, ok, err := inf.Vault.GetExpirationInformation(inf.Tx.Tx, r.Context(), daysParam)
 	if err != nil {
