@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
+## [5.1.4] - 2021-11-05
+- Traffic Ops: Sanitize username before executing LDAP query
+
 ## [5.1.3] - 2021-10-05
 ### Changed
 - Customer names in payloads sent to the `/deliveryservices/request` Traffic Ops API endpoint can no longer contain characters besides alphanumerics, @, !, #, $, %, ^, &amp;, *, (, ), [, ], '.', ' ', and '-'. This fixes a vulnerability that allowed email content injection.
