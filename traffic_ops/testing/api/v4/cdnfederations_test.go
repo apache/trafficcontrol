@@ -187,6 +187,9 @@ func SortTestCDNFederationsDesc(t *testing.T) {
 	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
 		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
 	}
+	if respDesc[0].ID == nil || respAsc[0].ID == nil {
+		t.Fatalf("Response ID is nil in CDN Test federation")
+	}
 	if *respDesc[0].ID != *respAsc[0].ID {
 		t.Errorf("CDN Federation responses are not equal after reversal: Asc: %d - Desc: %d", *respDesc[0].ID, *respAsc[0].ID)
 	}
