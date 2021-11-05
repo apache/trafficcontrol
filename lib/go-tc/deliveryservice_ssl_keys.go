@@ -93,6 +93,15 @@ type DeliveryServiceSSLKeysV15 struct {
 	Expiration time.Time `json:"expiration,omitempty"`
 }
 
+type SSLKeyExpirationInformation struct {
+	DeliveryService   *string    `json:"deliveryservice"`
+	DeliveryServiceId *int       `json:"deliveryservice_id"`
+	Cdn               *string    `json:"cdn"`
+	Provider          *string    `json:"provider"`
+	Expiration        *time.Time `json:"expiration"`
+	Federated         *bool      `json:"federated"`
+}
+
 // SSLKeyRequestFields contain metadata information for generating SSL keys for
 // Delivery Services through the Traffic Ops API. Specifically, they contain
 // everything except the manner in which the generated certificates should be

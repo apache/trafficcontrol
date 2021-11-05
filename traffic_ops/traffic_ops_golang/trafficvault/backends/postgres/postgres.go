@@ -33,6 +33,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -156,6 +158,69 @@ func (p *Postgres) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *s
 	return sslKey, true, nil
 }
 
+// GetExpirationInformation returns the expiration information for all SSL Keys.
+func (p *Postgres) GetExpirationInformation(tx *sql.Tx, ctx context.Context, days string) ([]tc.SSLKeyExpirationInformation, bool, error) {
+	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
+	if err != nil {
+		return []tc.SSLKeyExpirationInformation{}, false, err
+	}
+	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
+
+	var fedList []string
+	fedRows, err := tx.Query("SELECT DISTINCT(ds.xml_id) FROM federation_deliveryservice AS fd JOIN deliveryservice AS ds ON ds.id = fd.deliveryservice")
+	if err != nil {
+		return []tc.SSLKeyExpirationInformation{}, false, err
+	}
+	defer fedRows.Close()
+
+	for fedRows.Next() {
+		var fedString string
+		if err = fedRows.Scan(&fedString); err != nil {
+			return []tc.SSLKeyExpirationInformation{}, false, err
+		}
+		fedList = append(fedList, fedString)
+	}
+
+	query := "SELECT deliveryservice, cdn, provider, expiration FROM sslkey WHERE version='latest'"
+
+	if days != "" {
+		query = query + " AND expiration <= (now() + '" + days + " days'::interval)"
+	}
+
+	var expirationInfos []tc.SSLKeyExpirationInformation
+
+	rows, err := tvTx.Query(query)
+	if err != nil {
+		return []tc.SSLKeyExpirationInformation{}, false, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var expirationInfo tc.SSLKeyExpirationInformation
+		if err = rows.Scan(&expirationInfo.DeliveryService, &expirationInfo.Cdn, &expirationInfo.Provider, &expirationInfo.Expiration); err != nil {
+			return []tc.SSLKeyExpirationInformation{}, false, err
+		}
+		expirationInfo.Federated = util.BoolPtr(false)
+		for _, fed := range fedList {
+			if fed == *expirationInfo.DeliveryService {
+				expirationInfo.Federated = util.BoolPtr(true)
+			}
+		}
+
+		dsID, _, ok, err := dbhelpers.GetDSIDAndCDNFromName(tx, *expirationInfo.DeliveryService)
+		if err != nil {
+			return []tc.SSLKeyExpirationInformation{}, false, fmt.Errorf("deliveryservice.GenerateLetsEncryptCertificates: getting DS ID from name: %v", err)
+		} else if !ok {
+			return []tc.SSLKeyExpirationInformation{}, false, errors.New("no DS with name " + *expirationInfo.DeliveryService)
+		}
+		expirationInfo.DeliveryServiceId = &dsID
+
+		expirationInfos = append(expirationInfos, expirationInfo)
+	}
+
+	return expirationInfos, true, nil
+}
+
 // PutDeliveryServiceSSLKeys stores the given SSL keys for a delivery service.
 func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, ctx context.Context) error {
 	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
@@ -181,8 +246,17 @@ func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *
 		return errors.New("encrypting keys: " + err.Error())
 	}
 
+	err = deliveryservice.Base64DecodeCertificate(&key.Certificate)
+	if err != nil {
+		return errors.New(fmt.Sprintf("decoding SSL keys, %s", err.Error()))
+	}
+	expiration, _, err := deliveryservice.ParseExpirationAndSansFromCert([]byte(key.Certificate.Crt), key.Hostname)
+	if err != nil {
+		return errors.New("parsing expiration from certificate: " + err.Error())
+	}
+
 	// insert the new ssl keys now
-	res, err := tvTx.Exec("INSERT INTO sslkey (deliveryservice, data, cdn, version) VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)", key.DeliveryService, encryptedKey, key.CDN, strconv.FormatInt(int64(key.Version), 10), key.DeliveryService, encryptedKey, key.CDN, latestVersion)
+	res, err := tvTx.Exec("INSERT INTO sslkey (deliveryservice, data, cdn, version, provider, expiration) VALUES ($1, $2, $3, $4, $5, $6), ($7, $8, $9, $10, $11, $12)", key.DeliveryService, encryptedKey, key.CDN, strconv.FormatInt(int64(key.Version), 10), key.AuthType, expiration, key.DeliveryService, encryptedKey, key.CDN, latestVersion, key.AuthType, expiration)
 	if err != nil {
 		e := checkErrWithContext("Traffic Vault PostgreSQL: executing INSERT SSL Key query", err, ctx.Err())
 		return e

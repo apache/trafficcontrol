@@ -44,6 +44,10 @@ func (r *Riak) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *sql.T
 	return getDeliveryServiceSSLKeysObjV15(xmlID, version, tx, &r.cfg.AuthOptions, &r.cfg.Port)
 }
 
+func (r *Riak) GetExpirationInformation(tx *sql.Tx, ctx context.Context, days string) ([]tc.SSLKeyExpirationInformation, bool, error) {
+	return []tc.SSLKeyExpirationInformation{}, false, errors.New("Not implemented for this Traffic Vault backend.")
+}
+
 func (r *Riak) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, ctx context.Context) error {
 	return putDeliveryServiceSSLKeysObj(key, tx, &r.cfg.AuthOptions, &r.cfg.Port)
 }
