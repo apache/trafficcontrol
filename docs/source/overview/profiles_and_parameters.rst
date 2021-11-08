@@ -707,6 +707,13 @@ header
 
 	.. caution:: If a single :ref:`Profile <profiles>` has multiple "header" Parameters for the same `Config File`_ with different :ref:`Values <parameter-value>`, the actual header is undefined (but will be one of those Parameters' :ref:`Values <parameter-value>`).
 
+refetch_enabled
+	When a Parameter by this Name exists, and has the `Config File`_ value of exactly "global", then its Value_ *may* be used by Traffic Ops to decide whether or not the "REFETCH" :ref:`job-invalidation-type` of :term:`Content Invalidation Jobs` are allowed to be created. The Value_ "true" (case-insensitive) indicates that such :term:`Content Invalidation Jobs` *should* be allowed, while all other :ref:`Values <parameter-value>` indicate they should not.
+
+	.. note:: Any leading or trailing whitespace in the Value_ of these Parameters is ignored.
+
+	.. caution:: There is no limit to the number of these Parameters that may exist, and no association to any existing Profiles_ is considered when choosing which Parameter to use. If more than one Parameter with the Name ``refetch_enabled`` exists with the `Config File`_ "global", then the actual Value_ used to determine if "REFETCH" :ref:`job-invalidation-type` of :term:`Content Invalidation Jobs` are allowed to be created is undefined (but will be the Value_ of one of said Parameters). In particular, there is **no special handling** when any of these Parameters is assigned to `The GLOBAL Profile`_, and being thusly assigned **in no way means that the assigned Parameter will have any kind of priority over others that collide with it in Name and Config File**.
+
 .. _parameter-secure:
 
 Secure
