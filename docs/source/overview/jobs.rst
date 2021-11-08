@@ -94,6 +94,8 @@ REFRESH
 REFETCH
 	Rather than treating the cached content as "stale", the :term:`cache servers` processing a :dfn:`REFETCH` Content Invalidation Job should fetch the cached content again, regardless of what the :term:`Origin` has to say about the validity of their caches. These types of Content Invalidation Jobs cannot be created without a proper "semi-global" :ref:`refetch_enabled Parameter <parameter-name-refetch_enabled>`.
 
+.. caution:: A "REFETCH" Content Invalidation Job should be used **only** when the :term:`Origin` is not properly configured to support HTTP caching, and will return invalid or incorrect responses to conditional requests  as described in section 4.3.2 of :rfc:`7234`. In any other case, this will cause undo load on both the :term:`Origin` and the requesting :term:`cache servers`, and "REFRESH" should be used instead.
+
 .. _job-regex:
 
 Regular Expression

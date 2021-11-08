@@ -22,8 +22,6 @@ Invalidating content on the CDN is sometimes necessary when the :term:`Origin` w
 
 .. impl-detail:: Given the size of a typical Traffic Control CDN and the amount of content that can be cached in it, removing the content from all the caches may take a long time. To speed up content invalidation, Traffic Control does not try to remove the content from the caches, but it makes the content inaccessible using the `regex_revalidate plugin for Apache Traffic Server <https://docs.trafficserver.apache.org/en/8.0.x/admin-guide/plugins/regex_revalidate.en.html>`_. This forces a "re-validation" of the content.
 
-.. Warning:: This method forces :term:`cache servers` to "re-validate" content, so in order to work properly the :term:`Origin` needs to support revalidation according to section 4.3.2 of :rfc:`7234`.
-
 To invalidate content for a specific :term:`Delivery Service`, follow these steps:
 
 #. Select the desired :term:`Delivery Service` from the :ref:`tp-services-delivery-service` view of Traffic Portal
