@@ -52,13 +52,19 @@ The model for Content Invalidation Job as API objects is given in :ref:`jobs-mod
 		ttlHours: number;
 	}
 
+.. _job-asset-url:
+
 Asset URL
 ---------
 This property only appears in responses from the :ref:`to-api`, and has no effect in requests. The :dfn:`Asset URL` is constructed from the `Regular Expression`_ used in the creation of a Content Invalidation Job and the :ref:`ds-origin-url` of the :term:`Delivery Service` for which it was created. It is a URL that has a valid regular expression as its path (and may not be "percent-encoded" where a normal URL typically would be). Requests from CDN clients for content that matches this pattern will trigger Content Invalidation behavior.
 
+.. _job-created-by:
+
 Created By
 ----------
 The username of the user who created the Content Invalidation Job is stored as the :dfn:`Created By` property of the Content Invalidation Job.
+
+.. _job-ds:
 
 Delivery Service
 ----------------
@@ -67,9 +73,13 @@ A Content Invalidation Job can only act on content for a single :term:`Delivery 
 .. versionchanged:: 4.0
 	In earlier API versions, this property was allowed to be either the integral, unique identifier of the target :term:`Delivery Service`, *or* its :ref:`ds-xmlid` - this is no longer the case, but it should always be safe to use the :ref:`ds-xmlid` in any case.
 
+.. _job-id:
+
 ID
 --
 The integral, unique identifier for the Content Invalidation Job, assigned to it upon its creation.
+
+.. _job-invalidation-type:
 
 Invalidation Type
 -----------------
@@ -83,6 +93,8 @@ REFRESH
 	A :dfn:`REFRESH` Content Invalidation Job instructs :term:`cache servers` to behave normally - when matching content is requested, send an upstream request to (eventually) the :term:`Origin` with cache-controlling HTTP headers, and trust the :term:`Origin`'s response. The vast majority of all Content Invalidation Jobs should most likely use this Invalidation Type.
 REFETCH
 	Rather than treating the cached content as "stale", the :term:`cache servers` processing a :dfn:`REFETCH` Content Invalidation Job should fetch the cached content again, regardless of what the :term:`Origin` has to say about the validity of their caches.
+
+.. _job-regex:
 
 Regular Expression
 ------------------
@@ -100,9 +112,13 @@ The :dfn:`Regular Expression` of a Content Invalidation Job defines the content 
 	| regex      | In raw :ref:`to-api` requests and responses, internally in multiple components | unchanged (String, str, etc.) |
 	+------------+--------------------------------------------------------------------------------+-------------------------------+
 
+.. _job-start-time:
+
 Start Time
 ----------
-Content Invalidation Jobs can be planned in advance, by setting their :dfn:`Start Time` to some point in the future. Content Invalidation Jobs will have no effect until their Start Time.
+Content Invalidation Jobs are planned in advance, by setting their :dfn:`Start Time` to some point in the future (the :ref:`to-api` will refuse to create Content Invalidation Jobs with a Start Time in the past). Content Invalidation Jobs will have no effect until their Start Time.
+
+.. _job-ttl:
 
 TTL
 ---
@@ -110,8 +126,10 @@ The :dfn:`TTL` of a Content Invalidation Job defines how long a Content Invalida
 
 .. table:: Aliases/Synonyms
 
-	+------------+----------------------------------+----------------------------------------------------------------------+
-	| Name       | Use(s)                           | Type                                                                 |
-	+============+==================================+======================================================================+
-	| parameters | In legacy :ref:`to-api` versions | A string, containing the TTL in the format :samp:`TTL:{Actual TTL}h` |
-	+------------+----------------------------------+----------------------------------------------------------------------+
+	+------------+-----------------------------------------+----------------------------------------------------------------------+
+	| Name       | Use(s)                                  | Type                                                                 |
+	+============+=========================================+======================================================================+
+	| parameters | In legacy :ref:`to-api` versions        | A string, containing the TTL in the format :samp:`TTL:{Actual TTL}h` |
+	+------------+-----------------------------------------+----------------------------------------------------------------------+
+	| ttlHours   | In :ref:`to-api` requests and responses | Unchanged (unsigned integer number of hours)                         |
+	+------------+-----------------------------------------+----------------------------------------------------------------------+
