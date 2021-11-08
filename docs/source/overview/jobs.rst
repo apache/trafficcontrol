@@ -92,7 +92,7 @@ The two values allowed for a Content Invalidation Job's Invalidation Type are:
 REFRESH
 	A :dfn:`REFRESH` Content Invalidation Job instructs :term:`cache servers` to behave normally - when matching content is requested, send an upstream request to (eventually) the :term:`Origin` with cache-controlling HTTP headers, and trust the :term:`Origin`'s response. The vast majority of all Content Invalidation Jobs should most likely use this Invalidation Type.
 REFETCH
-	Rather than treating the cached content as "stale", the :term:`cache servers` processing a :dfn:`REFETCH` Content Invalidation Job should fetch the cached content again, regardless of what the :term:`Origin` has to say about the validity of their caches.
+	Rather than treating the cached content as "stale", the :term:`cache servers` processing a :dfn:`REFETCH` Content Invalidation Job should fetch the cached content again, regardless of what the :term:`Origin` has to say about the validity of their caches. These types of Content Invalidation Jobs cannot be created without a proper "semi-global" :ref:`refetch_enabled Parameter <parameter-name-refetch_enabled>`.
 
 .. _job-regex:
 
