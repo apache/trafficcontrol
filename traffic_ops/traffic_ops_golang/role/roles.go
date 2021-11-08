@@ -226,7 +226,8 @@ func (role *TORole) Update(h http.Header) (error, error, int) {
 	var isAdmin bool
 	if err := role.ReqInfo.Tx.Get(&isAdmin, isAdminQuery, role.ID); err != nil {
 		return nil, fmt.Errorf("checking if Role to be modified is '%s': %w", tc.AdminRoleName, err), http.StatusInternalServerError
-	} else if isAdmin {
+	}
+	if isAdmin {
 		return cannotModifyAdminError, nil, http.StatusBadRequest
 	}
 
@@ -265,7 +266,8 @@ func (role *TORole) Delete() (error, error, int) {
 	var isAdmin bool
 	if err := role.ReqInfo.Tx.Get(&isAdmin, isAdminQuery, role.ID); err != nil {
 		return nil, fmt.Errorf("checking if Role to be deleted is '%s': %w", tc.AdminRoleName, err), http.StatusInternalServerError
-	} else if isAdmin {
+	}
+	if isAdmin {
 		return cannotModifyAdminError, nil, http.StatusBadRequest
 	}
 
