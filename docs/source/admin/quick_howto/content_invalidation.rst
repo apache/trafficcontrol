@@ -40,9 +40,17 @@ To invalidate content for a specific :term:`Delivery Service`, follow these step
 
 		Select 'Manage Invalidation Requests'
 
-#. Click/tap on the :guilabel:`+` button to open the submission form for a new content invalidation. Fill out this form. The "Path Regex" field should be a `PCRE <http://www.pcre.org/>`_-compatible regular expression that matches all content that must be invalidated - and should **not** match any content that must *not* be invalidated. "TTL (hours)" specifies the number of hours for which the invalidation should remain active. Best practice is to set this to the same as the content's cache lifetime (typically set in the :term:`Origin`'s ``Cache-Control`` response header).
+#. From the :guilabel:`More` drop-down menu on this page, select :menuselection:`Create Invalidation Request`
 
 	.. figure:: content_invalidation/03.png
+		:align: center
+		:alt: The 'Create Invalidation Request' option under 'More'
+
+		Select 'Create Invalidation Request'
+
+#. Fill out this form. The "Path Regex" field should be a `PCRE <http://www.pcre.org/>`_-compatible regular expression that matches all content that must be invalidated - and should **not** match any content that must *not* be invalidated. "TTL (hours)" specifies the number of hours for which the invalidation should remain active. Best practice is to set this to the same as the content's cache lifetime (typically set in the :term:`Origin`'s ``Cache-Control`` response header). :ref:`job-invalidation-type` describes how content will be invalidated.
+
+	.. figure:: content_invalidation/04.png
 		:align: center
 		:alt: The new content invalidation submission form
 
