@@ -18,7 +18,6 @@ package main
  */
 
 import (
-	"bytes"
 	"crypto/x509"
 	"database/sql"
 	"encoding/base64"
@@ -38,7 +37,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const PROPERTIES_FILE = "./fill_expiration_and_provider.conf"
+const PROPERTIES_FILE = "./fill_expiration_and_provider_conf.json"
 
 func main() {
 	aesKeyLocation := flag.String("aes-key", "/opt/traffic_ops/app/conf/aes.key", "(Optional) The file path for the previous base64 encoded AES key. Default is /opt/traffic_ops/app/conf/aes.key.")
@@ -111,10 +110,6 @@ func main() {
 			die("reading SSL Keys: " + err.Error())
 		}
 
-		if !bytes.HasPrefix(jsonKeys, []byte("{")) {
-			die("decrypted SSL Key did not have prefix '{' for id " + id)
-		}
-
 		sslKey := tc.DeliveryServiceSSLKeysV15{}
 		err = json.Unmarshal([]byte(jsonKeys), &sslKey)
 		if err != nil {
@@ -145,12 +140,15 @@ func main() {
 
 	for id, info := range sslKeyMap {
 		idParts := strings.Split(id, ", ")
+		if len(idParts) != 3 {
+			die(fmt.Sprintf("expected cert id string (ds, cdn, version) to have 3 parts but found %d in ", len(idParts), idParts))
+		}
 		ds := idParts[0]
 		cdn := idParts[1]
 		version := idParts[2]
 		res, err := tx.Exec(`UPDATE sslkey SET provider = $1, expiration = $2 WHERE deliveryservice = $3 AND cdn = $4 AND version = $5`, info.Provider, info.Expiration, ds, cdn, version)
 		if err != nil {
-			die(fmt.Sprintf("updating SSL Keys for %s, %s", id, err.Error()))
+			die(fmt.Sprintf("updating SSL Keys for %s, %s", id, err))
 		}
 		rowsAffected, err := res.RowsAffected()
 		if err != nil {
@@ -175,13 +173,13 @@ func readKey(keyLocation string) ([]byte, error) {
 	var keyBase64 string
 	keyBase64Bytes, err := ioutil.ReadFile(keyLocation)
 	if err != nil {
-		return []byte{}, errors.New("reading file '" + keyLocation + "':" + err.Error())
+		return []byte{}, fmt.Errorf("reading file '"+keyLocation+"': %s", err)
 	}
 	keyBase64 = string(keyBase64Bytes)
 
 	key, err := base64.StdEncoding.DecodeString(keyBase64)
 	if err != nil {
-		return []byte{}, fmt.Errorf("AES key cannot be decoded from base64: %w", err)
+		return []byte{}, fmt.Errorf("AES key cannot be decoded from base64: %s", err)
 	}
 
 	// verify the key works
