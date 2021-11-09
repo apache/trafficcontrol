@@ -141,7 +141,7 @@ func main() {
 	for id, info := range sslKeyMap {
 		idParts := strings.Split(id, ", ")
 		if len(idParts) != 3 {
-			die(fmt.Sprintf("expected cert id string (ds, cdn, version) to have 3 parts but found %d in ", len(idParts), idParts))
+			die(fmt.Sprintf("expected cert id string (ds, cdn, version) to have 3 parts but found %d in %s", len(idParts), idParts))
 		}
 		ds := idParts[0]
 		cdn := idParts[1]
