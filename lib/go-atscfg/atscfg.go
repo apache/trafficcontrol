@@ -117,6 +117,7 @@ type Cfg struct {
 	Text        string
 	ContentType string
 	LineComment string
+	Secure      bool
 	Warnings    []string
 }
 

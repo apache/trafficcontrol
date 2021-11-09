@@ -40,12 +40,14 @@ func TestWriteConfigs(t *testing.T) {
 			Name:        "config0.txt",
 			Path:        "/my/config0/location",
 			Text:        "config0",
+			Secure:      false,
 			ContentType: "text/plain",
 		},
 		{
 			Name:        "config1.txt",
 			Path:        "/my/config1/location",
 			Text:        "config2,foo",
+			Secure:      false,
 			ContentType: "text/csv",
 		},
 	}
@@ -56,18 +58,18 @@ func TestWriteConfigs(t *testing.T) {
 
 	actual := buf.String()
 
-	expected0 := `[{"name":"config0.txt","path":"/my/config0/location","content_type":"text/plain","line_comment":"","text":"config0"},{"name":"config1.txt","path":"/my/config1/location","content_type":"text/csv","line_comment":"","text":"config2,foo"}]`
+	expected0 := `[{"name":"config0.txt","path":"/my/config0/location","content_type":"text/plain","line_comment":"","secure":false,"text":"config0"},{"name":"config1.txt","path":"/my/config1/location","content_type":"text/csv","line_comment":"","secure":false,"text":"config2,foo"}]`
 
 	if !strings.Contains(actual, expected0) {
 		t.Errorf("WriteConfigs expected '%v' actual '%v'", expected0, actual)
 	}
 
-	expected1 := `[{"name":"config0.txt","path":"/my/config0/location","content_type":"text/plain","line_comment":"","text":"config0"},{"name":"config1.txt","path":"/my/config1/location","content_type":"text/csv","line_comment":"","text":"config2,foo"}]`
+	expected1 := `[{"name":"config0.txt","path":"/my/config0/location","content_type":"text/plain","line_comment":"","secure":false,"text":"config0"},{"name":"config1.txt","path":"/my/config1/location","content_type":"text/csv","line_comment":"","secure":false,"text":"config2,foo"}]`
 	if !strings.Contains(actual, expected1) {
 		t.Errorf("WriteConfigs expected config1 '%v' actual '%v'", expected1, actual)
 	}
 
-	expectedPrefix := `[{"name":"config0.txt","path":"/my/config0/location","content_type":"text/plain","line_comment":"","text":"config0"},{"name":"config1.txt","path":"/my/config1/location","content_type":"text/csv","line_comment":"","text":"config2,foo"}]`
+	expectedPrefix := `[{"name":"config0.txt","path":"/my/config0/location","content_type":"text/plain","line_comment":"","secure":false,"text":"config0"},{"name":"config1.txt","path":"/my/config1/location","content_type":"text/csv","line_comment":"","secure":false,"text":"config2,foo"}]`
 	if !strings.HasPrefix(actual, expectedPrefix) {
 		t.Errorf("WriteConfigs expected prefix '%v' actual '%v'", expectedPrefix, actual)
 	}

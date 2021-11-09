@@ -39,14 +39,15 @@ t3c-check-reload - Traffic Control Cache Configuration reload check tool
 
 # SYNOPSIS
 
-t3c-check-reload [-c paths] [-m mode] [-p packages]
+t3c-check-reload
 
 [\-\-help]
 
 # DESCRIPTION
 
-The t3c-check-reload app takes a comma-delimited list of config file paths
-being changed, and a comma-delimited a list of plugin packages being installed,
+The t3c-check-reload app takes json input from stdin.
+A comma-delimited list of config file paths being changed,
+a comma-delimited a list of plugin packages being installed,
 and returns whether a reload or restart of the caching proxy service is
 necessary.
 
@@ -58,25 +59,14 @@ Possible return values are:
 
   '' - no reload or restart is necessary.
 
+# JSON Format
+
+    {"changed_files":"<list of files>","installed_plugins":"<list of plugins>"}
 # OPTIONS
-
--c, --changed-config-paths=value
-
-    comma-delimited list of the full paths of all files changed
-    by t3c
 -h, --help
 
     Print usage information and exit
 
--m, --run-mode=value
-
-     [badass | report | revalidate | syncds] run mode, default is
-     'report' [report]
-
--p, --plugin-packages-installed=value
-
-    comma-delimited list of ATS plugin packages which were
-    installed by t3c
 
 # AUTHORS
 

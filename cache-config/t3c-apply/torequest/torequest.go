@@ -217,7 +217,8 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 		log.Infoln("Successfully verified plugins used by '" + cfg.Name + "'")
 	}
 
-	changeNeeded, err := diff(r.Cfg, cfg.Body, cfg.Path, r.Cfg.ReportOnly)
+	changeNeeded, err := diff(r.Cfg, cfg.Body, cfg.Path, r.Cfg.ReportOnly, cfg.Perm)
+
 	if err != nil {
 		return errors.New("getting diff: " + err.Error())
 	}
@@ -470,14 +471,14 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 	}
 
 	tmpFileName := cfg.Path + configFileTempSuffix
-	log.Infof("Writing temp file '%s'\n", tmpFileName)
+	log.Infof("Writing temp file '%s' with file mode: '%#o' \n", tmpFileName, cfg.Perm)
 
 	// write a new file, then move to the real location
 	// because moving is atomic but writing is not.
 	// If we just wrote to the real location and the app or OS or anything crashed,
 	// we'd end up with malformed files.
 
-	if _, err := util.WriteFileWithOwner(tmpFileName, cfg.Body, &cfg.Uid, &cfg.Gid, 0644); err != nil {
+	if _, err := util.WriteFileWithOwner(tmpFileName, cfg.Body, &cfg.Uid, &cfg.Gid, cfg.Perm); err != nil {
 		return errors.New("Failed to write temp config file '" + tmpFileName + "': " + err.Error())
 	}
 
@@ -486,7 +487,7 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) error {
 		return errors.New("Failed to move temp '" + tmpFileName + "' to real '" + cfg.Path + "': " + err.Error())
 	}
 	cfg.ChangeApplied = true
-	r.changedFiles = append(r.changedFiles, filepath.Join(cfg.Path, cfg.Name))
+	r.changedFiles = append(r.changedFiles, cfg.Path)
 
 	r.RemapConfigReload = r.RemapConfigReload ||
 		cfg.RemapPluginConfig ||
@@ -631,7 +632,14 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 	}
 
 	r.configFiles = map[string]*ConfigFile{}
+	var mode os.FileMode
 	for _, file := range allFiles {
+		if file.Secure {
+			mode = 0600
+		} else {
+			mode = 0644
+		}
+
 		r.configFiles[file.Name] = &ConfigFile{
 			Name: file.Name,
 			Path: filepath.Join(file.Path, file.Name),
@@ -639,7 +647,7 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 			Body: []byte(file.Text),
 			Uid:  atsUid,
 			Gid:  atsGid,
-			Perm: 0644,
+			Perm: mode,
 		}
 	}
 	return nil
