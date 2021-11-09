@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -50,6 +51,7 @@ func TestPhysLocations(t *testing.T) {
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestPhysLocationsWithHeaders(t, header)
 		GetTestPaginationSupportPhysLocation(t)
+		CreatePhysLocationWithMismatchedRegionNameAndID(t)
 	})
 }
 
@@ -273,6 +275,54 @@ func DeleteTestPhysLocations(t *testing.T) {
 		if len(resp.Response) > 0 {
 			t.Errorf("expected Physical Location '%s' to be deleted, but it was found in Traffic Ops", pl.Name)
 		}
+	}
+}
+
+func CreatePhysLocationWithMismatchedRegionNameAndID(t *testing.T) {
+	resp, _, err := TOSession.GetRegions(client.NewRequestOptions())
+	if err != nil {
+		t.Errorf("Unexpected error getting regions: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if len(resp.Response) < 2 {
+		t.Fatalf("expected at least two regions to be returned, but got none")
+	}
+	physLocation := tc.PhysLocation{
+		Address:    "100 blah lane",
+		City:       "foo",
+		Comments:   "comment",
+		Email:      "bar@foobar.com",
+		Name:       "testPhysicalLocation",
+		Phone:      "111-222-3333",
+		RegionID:   resp.Response[0].ID,
+		RegionName: resp.Response[1].Name,
+		ShortName:  "testLocation1",
+		State:      "CO",
+		Zip:        "80602",
+	}
+	_, _, err = TOSession.CreatePhysLocation(physLocation, client.NewRequestOptions())
+	if err == nil {
+		t.Fatalf("expected an error about mismatched region name and ID, but got nothing")
+	}
+
+	physLocation.RegionName = resp.Response[0].Name
+	_, _, err = TOSession.CreatePhysLocation(physLocation, client.NewRequestOptions())
+	if err != nil {
+		t.Fatalf("expected no error while creating phys location, but got %v", err)
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "testPhysicalLocation")
+	response, _, err := TOSession.GetPhysLocations(opts)
+	if err != nil {
+		t.Fatalf("cannot get Physical Location by name 'testPhysicalLocation': %v - alerts: %+v", err, resp.Alerts)
+	}
+	if len(response.Response) != 1 {
+		t.Fatalf("Expected exactly one Physical Location to exist with name 'testPhysicalLocation', found: %d", len(resp.Response))
+	}
+
+	_, _, err = TOSession.DeletePhysLocation(response.Response[0].ID, client.NewRequestOptions())
+	if err != nil {
+		t.Errorf("error deleteing physical location 'testPhysicalLocation': %v", err)
 	}
 }
 

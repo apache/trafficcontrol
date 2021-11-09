@@ -24,7 +24,7 @@
 # docker-compose -f docker-compose.traffic-portal-test.yml logs -f portal-integration-test
 
 ---
-version: '2.1'
+version: '3.8'
 
 services:
   portal-integration-test:

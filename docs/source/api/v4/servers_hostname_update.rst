@@ -25,6 +25,7 @@
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: SERVER:UPDATE, SERVER:READ
 :Response Type:  undefined
 
 Request Structure
@@ -50,7 +51,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/4.0/servers/my-edge/update?updated=true&reval_updated=false HTTP/1.1
+	POST /api/4.0/servers/my-edge/update?updated=true&reval_updated=false HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

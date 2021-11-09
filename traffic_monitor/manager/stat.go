@@ -77,7 +77,7 @@ func StartStatHistoryManager(
 	lastStatEndTimes := map[tc.CacheName]time.Time{}
 	lastStats := threadsafe.NewLastStats()
 	dsStats := threadsafe.NewDSStats()
-	unpolledCaches := threadsafe.NewUnpolledCaches()
+	statUnpolledCaches := threadsafe.NewUnpolledCaches()
 	localCacheStatus := threadsafe.NewCacheAvailableStatus()
 
 	precomputedData := map[tc.CacheName]cache.PrecomputedData{}
@@ -95,9 +95,9 @@ func StartStatHistoryManager(
 
 	process := func(results []cache.Result) {
 		if haveCachesChanged() {
-			unpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
+			statUnpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
 		}
-		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates, lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, events, localCacheStatus, combineState, cfg.CachePollingProtocol)
+		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates, lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, statUnpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, events, localCacheStatus, combineState, cfg.CachePollingProtocol)
 	}
 
 	go func() {
@@ -187,7 +187,8 @@ func StartStatHistoryManager(
 		}
 
 		results = []cache.Result{}
-		results = append(results, <-cacheStatChan) // no point doing anything, until we read at least one stat.
+		// no point doing anything, until we read at least one stat. If stat polling is disabled, this blocks forever
+		results = append(results, <-cacheStatChan)
 
 		// buffer loop - never breaks - calls flushLoop to actually process, when the buffer time elapses.
 		for {
@@ -216,7 +217,7 @@ func StartStatHistoryManager(
 			}
 		}
 	}()
-	return statInfoHistory, statResultHistory, statMaxKbpses, lastStatDurations, lastStats, &dsStats, unpolledCaches, localCacheStatus
+	return statInfoHistory, statResultHistory, statMaxKbpses, lastStatDurations, lastStats, &dsStats, statUnpolledCaches, localCacheStatus
 }
 
 func stacktrace() []byte {
@@ -244,7 +245,7 @@ func processStatResults(
 	dsStats threadsafe.DSStats,
 	lastStatEndTimes map[tc.CacheName]time.Time,
 	lastStatDurationsThreadsafe threadsafe.DurationMap,
-	unpolledCaches threadsafe.UnpolledCaches,
+	statUnpolledCaches threadsafe.UnpolledCaches,
 	mc tc.TrafficMonitorConfigMap,
 	precomputedData map[tc.CacheName]cache.PrecomputedData,
 	lastResults map[tc.CacheName]cache.Result,
@@ -330,5 +331,5 @@ func processStatResults(
 		lastStatEndTimes[tc.CacheName(result.ID)] = endTime
 	}
 	lastStatDurationsThreadsafe.Set(lastStatDurations)
-	unpolledCaches.SetPolled(results, lastStats.Get())
+	statUnpolledCaches.SetPolled(results, lastStats.Get())
 }

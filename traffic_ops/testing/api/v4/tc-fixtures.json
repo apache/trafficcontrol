@@ -484,7 +484,11 @@
             "cdnName": "cdn1",
             "ccrDnsTtl": 3600,
             "checkPath": "",
-            "consistentHashQueryParams": ["fmt", "limit", "somethingelse"],
+            "consistentHashQueryParams": [
+                "fmt",
+                "limit",
+                "somethingelse"
+            ],
             "deepCachingType": "NEVER",
             "displayName": "d s 1",
             "dnsBypassCname": null,
@@ -675,7 +679,11 @@
             "cdnName": "cdn1",
             "ccrDnsTtl": 3600,
             "checkPath": "",
-            "consistentHashQueryParams": ["a", "b", "c"],
+            "consistentHashQueryParams": [
+                "a",
+                "b",
+                "c"
+            ],
             "consistentHashRegex": "foo",
             "deepCachingType": "ALWAYS",
             "displayName": "ds-test-minor-versions",
@@ -1641,7 +1649,7 @@
             "protocol": 2,
             "qstringIgnore": 1,
             "rangeRequestHandling": 3,
-            "rangeSliceBlockSize":  1000000,
+            "rangeSliceBlockSize": 1000000,
             "regexRemap": "rr1\nrr2",
             "regionalGeoBlocking": false,
             "remapText": "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/ds4plugin.lua",
@@ -1720,25 +1728,25 @@
             "dsName": "ds1",
             "typeName": "HOST_REGEXP",
             "setNumber": 1,
-            "pattern" : ".*"
+            "pattern": ".*"
         },
         {
             "dsName": "ds1",
             "typeName": "HOST_REGEXP",
             "setNumber": 2,
-            "pattern" : "\\d+"
+            "pattern": "\\d+"
         },
         {
             "dsName": "ds2",
             "typeName": "HOST_REGEXP",
             "setNumber": 1,
-            "pattern" : ".*"
+            "pattern": ".*"
         },
         {
             "dsName": "ds1",
             "typeName": "HOST_REGEXP",
             "setNumber": 3,
-            "pattern" : ""
+            "pattern": ""
         }
     ],
     "deliveryservicesRequiredCapabilities": [
@@ -1781,12 +1789,26 @@
         {
             "cname": "the.cname.com.",
             "ttl": 48,
-            "description": "the description"
+            "description": "the description",
+            "deliveryService": {
+                "xmlId": "ds1"
+            }
         },
         {
             "cname": "booya.com.",
             "ttl": 34,
-            "description": "fooya"
+            "description": "fooya",
+            "deliveryService": {
+                "xmlId": "ds1"
+            }
+        },
+        {
+            "cname": "google.com.",
+            "ttl": 30,
+            "description": "google",
+            "deliveryService": {
+                "xmlId": "ds1"
+            }
         }
     ],
     "federation_resolvers": [
@@ -1838,10 +1860,10 @@
             "ipAddress": "1.2.3.4",
             "ip6Address": "dead:beef:cafe::42",
             "port": 1234,
-            "Profile" : "ATS_EDGE_TIER_CACHE",
+            "Profile": "ATS_EDGE_TIER_CACHE",
             "protocol": "http",
             "tenant": "tenant1",
-            "isPrimary" : true
+            "isPrimary": true
         },
         {
             "name": "origin2",
@@ -5039,15 +5061,22 @@
                 },
                 {
                     "cachegroup": "parentCachegroup",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "secondaryCachegroup",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "cachegroup3",
-                    "parents": [1, 2]
+                    "parents": [
+                        1,
+                        2
+                    ]
                 }
             ]
         },
@@ -5229,11 +5258,15 @@
                 },
                 {
                     "cachegroup": "dtrc2",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "dtrc3",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 }
             ]
         },
@@ -5247,11 +5280,15 @@
                 },
                 {
                     "cachegroup": "dtrc1",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "dtrc2",
-                    "parents": [1]
+                    "parents": [
+                        1
+                    ]
                 }
             ]
         },
@@ -5265,11 +5302,15 @@
                 },
                 {
                     "cachegroup": "dtrc2",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 },
                 {
                     "cachegroup": "dtrc3",
-                    "parents": [0]
+                    "parents": [
+                        0
+                    ]
                 }
             ]
         },
@@ -5506,7 +5547,7 @@
             "phoneNumber": "",
             "postalCode": "",
             "publicSshKey": "",
-            "role": "read-only user",
+            "role": "read-only",
             "stateOrProvince": "",
             "tenant": "tenant1",
             "uid": 0,
@@ -5643,44 +5684,67 @@
         {
             "deliveryService": "ds1",
             "regex": "/.*",
-            "startTime": 4117118271000,
-            "ttl": "121m"
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 72,
+            "invalidationType" : "REFRESH"
         },
         {
             "deliveryService": "ds1",
             "regex": "/foo",
-            "startTime": 4117118271000,
-            "ttl": 2160
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 36,
+            "invalidationType" : "REFRESH"
         },
         {
-            "deliveryService":  "ds2",
+            "deliveryService": "ds2",
             "regex": "\\/some-path?.+\\.jpg",
-            "startTime": "2100-06-19T13:57:51-06:00",
-            "ttl": 2.1
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 144,
+            "invalidationType" : "REFRESH"
         },
         {
-            "deliveryService": "ds1",
+            "deliveryService":  "ds1",
             "regex": "/oldest",
-            "startTime": 1000,
-            "ttl": 2160
+            "startTime": "1970-01-01T12:00:00Z",
+            "ttlHours": 2160,
+            "invalidationType" : "REFRESH"
         },
         {
-            "deliveryService": "ds1",
+            "deliveryService":  "ds1",
             "regex": "/older",
-            "startTime": 1001,
-            "ttl": 2160
+            "startTime": "1970-01-01T12:00:00Z",
+            "ttlHours": 2160,
+            "invalidationType" : "REFRESH"
+        },
+        {
+            "deliveryService":  "ds1",
+            "regex": "/old",
+            "startTime": "1970-01-01T12:00:00Z",
+            "ttlHours": 2160,
+            "invalidationType" : "REFRESH"
+        },
+        {
+            "deliveryService":  "ds-forked-topology",
+            "regex": "/this-ds-is-in-cdn2",
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 2160,
+            "invalidationType" : "REFRESH"
+        }
+    ],
+    "invalidationJobsRefetch": [
+        {
+            "deliveryService": "ds1",
+            "regex": "/.*",
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 72,
+            "invalidationType" : "REFETCH"
         },
         {
             "deliveryService": "ds1",
-            "regex": "/old",
-            "startTime": 1002,
-            "ttl": 2160
-        },
-        {
-            "deliveryService": "ds-forked-topology",
-            "regex": "/this-ds-is-in-cdn2",
-            "startTime": 4117118271000,
-            "ttl": 2160
+            "regex": "/foo",
+            "startTime": "2100-06-19T13:57:51Z",
+            "ttlHours": 36,
+            "invalidationType" : "REFETCH"
         }
     ],
     "statsSummaries": [

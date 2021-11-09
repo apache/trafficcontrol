@@ -5,22 +5,47 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [#2770](https://github.com/apache/trafficcontrol/issues/2770) Added validation for httpBypassFqdn as hostname in Traffic Ops
+- Added permission based roles for better access control.
 - [#5674](https://github.com/apache/trafficcontrol/issues/5674) Added new query parameters `cdn` and `maxRevalDurationDays` to the `GET /api/x/jobs` Traffic Ops API to filter by CDN name and within the start_time window defined by the `maxRevalDurationDays` GLOBAL profile parameter, respectively.
+- Added a new Traffic Ops cdn.conf option -- `disable_auto_cert_deletion` -- in order to optionally prevent the automatic deletion of certificates for delivery services that no longer exist whenever a CDN snapshot is taken.
 - [#6034](https://github.com/apache/trafficcontrol/issues/6034) Added new query parameter `cdn` to the `GET /api/x/deliveryserviceserver` Traffic Ops API to filter by CDN name
+- Added a new Traffic Monitor configuration option -- `short_hostname_override` -- to traffic_monitor.cfg to allow overriding the system hostname that Traffic Monitor uses.
+- Added a new Traffic Monitor configuration option -- `stat_polling` (default: true) -- to traffic_monitor.cfg to disable stat polling.
 - A new Traffic Portal server command-line option `-c` to specify a configuration file, and the ability to set `log: null` to log to stdout (consult documentation for details).
+- SANs information to the SSL key endpoint and Traffic Portal page.
+- Added definition for `heartbeat.polling.interval` for CDN Traffic Monitor config in API documentation.
+- New `pkg` script options, `-h`, `-s`, `-S`, and `-L`.
+- Added `Invalidation Type` (REFRESH or REFETCH) for invalidating content to Traffic Portal.
+- IMS warnings to Content Invalidation requests in Traffic Portal and documentation.
 - [#6032](https://github.com/apache/trafficcontrol/issues/6032) Add t3c setting mode 0600 for secure files
 
 ### Fixed
+- [#6197](https://github.com/apache/trafficcontrol/issues/6197) - TO `/deliveryservices/:id/routing` makes requests to all TRs instead of by CDN.
 - Fixed Traffic Router crs/stats to prevent overflow and to correctly record the time used in averages.
 - [#5893](https://github.com/apache/trafficcontrol/issues/5893) - A self signed certificate is created when an HTTPS delivery service is created or an HTTP delivery service is updated to HTTPS.
+- [#6125](https://github.com/apache/trafficcontrol/issues/6125) - Fix `/cdns/{name}/federations?id=#` to search for CDN.
+- [#6255](https://github.com/apache/trafficcontrol/issues/6255) - Unreadable Prod Mode CDN Notifications in Traffic Portal
+- [#6259](https://github.com/apache/trafficcontrol/issues/6259) - Traffic Portal No Longer Allows Spaces in Server Object "Router Port Name"
+- [#6175](https://github.com/apache/trafficcontrol/issues/6175) - POST request to /api/4.0/phys_locations accepts mismatch values for regionName.
+- [#6283](https://github.com/apache/trafficcontrol/issues/6283) - The Traffic Ops Postinstall script will work in CentOS 7, even if Python 3 is installed
+- [#5373](https://github.com/apache/trafficcontrol/issues/5373) - Traffic Monitor logs not consistent
+- Traffic Ops: Sanitize username before executing LDAP query
 
 ### Changed
 - Updated `t3c` to request less unnecessary deliveryservice-server assignment and invalidation jobs data via new query params supported by Traffic Ops
 - [#6179](https://github.com/apache/trafficcontrol/issues/6179) Updated the Traffic Ops rpm to include the `ToDnssecRefresh` binary and make the `trafops_dnssec_refresh` cron job use it
+- Changed the DNSSEC refresh Traffic Ops API to only create a new change log entry if any keys were actually refreshed or an error occurred (in order to reduce changelog noise)
+- [#5927](https://github.com/apache/trafficcontrol/issues/5927) Updated CDN-in-a-Box to not run a Riak container by default but instead only run it if the optional flag is provided.
+- Traffic Portal no longer uses `ruby compass` to compile sass and now uses `dart-sass`.
+- Changed Invalidation Jobs throughout (TO, TP, T3C, etc.) to account for the ability to do both REFRESH and REFETCH requests for resources.
 
 ### Deprecated
+- Deprecated the endpoints and docs associated with `api_capability`.
+- The use of a seelog configuration file to configure Traffic Stats logging is deprecated, and logging configuration should instead be present in the `logs` property of the Traffic Stats configuration file (refer to documentation for details).
 
 ### Removed
+- Removed the `user_role` table.
 
 ## [6.0.0] - 2021-08-30
 ### Added

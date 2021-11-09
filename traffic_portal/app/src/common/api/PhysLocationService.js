@@ -20,7 +20,7 @@
 var PhysLocationService = function($http, ENV, locationUtils, messageModel) {
 
     this.getPhysLocations = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'phys_locations', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'phys_locations', {params: queryParams}).then(
             function (result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var PhysLocationService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.getPhysLocation = function(id) {
-        return $http.get(ENV.api['root'] + 'phys_locations', {params: {id: id}}).then(
+        return $http.get(ENV.api.unstable + 'phys_locations', {params: {id: id}}).then(
             function(result) {
                 return result.data.response[0];
             },
@@ -42,7 +42,7 @@ var PhysLocationService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.createPhysLocation = function(physLocation) {
-        return $http.post(ENV.api['root'] + 'phys_locations', physLocation).then(
+        return $http.post(ENV.api.unstable + 'phys_locations', physLocation).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Physical location created' } ], true);
                 locationUtils.navigateToPath('/phys-locations');
@@ -57,7 +57,7 @@ var PhysLocationService = function($http, ENV, locationUtils, messageModel) {
 
     // todo: change to use query param when it is supported
     this.updatePhysLocation = function(physLocation) {
-        return $http.put(ENV.api['root'] + 'phys_locations/' + physLocation.id, physLocation).then(
+        return $http.put(ENV.api.unstable + 'phys_locations/' + physLocation.id, physLocation).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Physical location updated' } ], false);
                 return result;
@@ -71,7 +71,7 @@ var PhysLocationService = function($http, ENV, locationUtils, messageModel) {
 
     // todo: change to use query param when it is supported
     this.deletePhysLocation = function(id) {
-        return $http.delete(ENV.api['root'] + 'phys_locations/' + id).then(
+        return $http.delete(ENV.api.unstable + 'phys_locations/' + id).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Physical location deleted' } ], true);
                 return result;

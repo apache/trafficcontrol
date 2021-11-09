@@ -26,6 +26,7 @@ Retrieves routing regular expressions for all :term:`Delivery Services`.
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
+:Permissions Required: DELIVERY-SERVICE:READ
 :Response Type:  Array
 
 Request Structure

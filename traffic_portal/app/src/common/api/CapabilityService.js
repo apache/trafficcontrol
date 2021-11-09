@@ -20,7 +20,7 @@
 var CapabilityService = function($http, messageModel, ENV) {
 
 	this.getCapabilities = function(queryParams) {
-		return $http.get(ENV.api['root'] + 'capabilities', {params: queryParams}).then(
+		return $http.get(ENV.api.unstable + 'capabilities', {params: queryParams}).then(
 			function(result) {
 				return result.data.response;
 			},

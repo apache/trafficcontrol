@@ -60,18 +60,20 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.6.1 // indirect
 	go.etcd.io/bbolt v1.3.5
-	golang.org/x/crypto v0.0.0-20210915214749-c084706c2272
-	golang.org/x/net v0.0.0-20210916014120-12bc252f5db8
-	golang.org/x/sys v0.0.0-20210915083310-ed5796bab164
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	golang.org/x/net v0.0.0-20211104170005-ce137452f963
+	golang.org/x/sys v0.0.0-20211103235746-7861aae1554b
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
-	gopkg.in/asn1-ber.v1 v1.0.0-20170511165959-379148ca0225 // indirect
-	gopkg.in/ldap.v2 v2.5.1
 	gopkg.in/square/go-jose.v2 v2.3.1 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )
 
+require github.com/go-ldap/ldap/v3 v3.4.1
+
 require (
+	github.com/Azure/go-ntlmssp v0.0.0-20200615164410-66371956d46c // indirect
+	github.com/go-asn1-ber/asn1-ber v1.5.1 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect

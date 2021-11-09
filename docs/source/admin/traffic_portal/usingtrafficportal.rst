@@ -645,7 +645,11 @@ Tools
 
 Invalidate Content
 ------------------
-Here, specific assets can be invalidated in all caches of a :term:`Delivery Service`, forcing content to be updated from the origin. Specifically, this *doesn't* mean that :term:`cache servers` will immediately remove items from their caches, but rather will fetch new copies whenever a request is made matching the 'Asset URL' regular expression. This behavior persists until the Invalidate Content Job's :abbr:`TTL (Time To Live)` expires. Each entry in the table on this page has the following fields:
+Here, specific assets can be invalidated in all caches of a :term:`Delivery Service`, forcing content to be updated from the origin. Specifically, this *doesn't* mean that :term:`cache servers` will immediately remove items from their caches, but rather will fetch new copies whenever a request is made matching the 'Asset URL' regular expression. This behavior persists until the Invalidate Content Job's :abbr:`TTL (Time To Live)` expires.
+
+.. Warning:: This method forces :term:`cache servers` to "re-validate" content, so in order to work properly the :term:`Origin` needs to support revalidation according to section 4.3.2 of :rfc:`7234`.
+
+Each entry in the table on this page has the following fields:
 
 :term:`Delivery Service`: The :term:`Delivery Service` to which to apply this Invalidate Content Job
 :Asset URL:        A URL or regular expression which describes the asset(s) to be invalidated

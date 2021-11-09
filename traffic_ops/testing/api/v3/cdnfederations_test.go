@@ -49,14 +49,14 @@ func TestCDNFederations(t *testing.T) {
 
 func UpdateTestCDNFederationsWithHeaders(t *testing.T, h http.Header) {
 	for _, id := range fedIDs {
-		fed, _, err := TOSession.GetCDNFederationsByIDWithHdr("foo", id, h)
+		fed, _, err := TOSession.GetCDNFederationsByIDWithHdr("cdn1", id, h)
 		if err != nil {
 			t.Errorf("cannot GET federation by id: %v", err)
 		}
 		if fed != nil && len(fed.Response) > 0 {
 			expectedCName := "new.cname."
 			fed.Response[0].CName = &expectedCName
-			_, reqInf, err := TOSession.UpdateCDNFederationsByIDWithHdr(fed.Response[0], "foo", id, h)
+			_, reqInf, err := TOSession.UpdateCDNFederationsByIDWithHdr(fed.Response[0], "cdn1", id, h)
 			if err == nil {
 				t.Errorf("Expected an error saying precondition failed, but got none")
 			}
@@ -84,7 +84,7 @@ func CreateTestCDNFederations(t *testing.T) {
 			break
 		}
 
-		data, _, err := TOSession.CreateCDNFederationByName(f, testData.CDNs[i].Name)
+		data, _, err := TOSession.CreateCDNFederationByName(f, "cdn1")
 		if err != nil {
 			t.Errorf("could not POST federations: " + err.Error())
 		}
@@ -96,13 +96,23 @@ func CreateTestCDNFederations(t *testing.T) {
 			t.Error("Federation id is nil after posting")
 		} else {
 			fedIDs = append(fedIDs, *data.Response.ID)
+			resp, _, err := TOSession.GetDeliveryServiceByXMLIDNullable("ds1")
+			if err != nil {
+				t.Errorf("could not get delivery service by xml ID: %v", err)
+			}
+			if len(resp) != 1 {
+				t.Fatalf("expected one response for delivery service, but got %d", len(resp))
+			}
+			_, err = TOSession.CreateFederationDeliveryServices(*data.Response.ID, []int{*resp[0].ID}, false)
+			if err != nil {
+				t.Errorf("could not create federation delivery service: %v", err)
+			}
 		}
 	}
 }
 
 // This test will not work unless a given CDN has more than one federation associated with it.
 func SortTestCDNFederations(t *testing.T) {
-	var header http.Header
 	var sortedList []string
 
 	//Create a new federation under the same CDN
@@ -119,12 +129,14 @@ func SortTestCDNFederations(t *testing.T) {
 	id := *data.Response.ID
 
 	//Get list of federations for one type of cdn
-	resp, _, err := TOSession.GetCDNFederationsByNameWithHdrReturnList("cdn1", header)
+	opts := http.Header{}
+	opts.Set("orderby", "cname")
+	resp, _, err := TOSession.GetCDNFederationsByNameWithHdr("cdn1", opts)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err.Error())
 	}
-	for i, _ := range resp {
-		sortedList = append(sortedList, *resp[i].CName)
+	for i, _ := range resp.Response {
+		sortedList = append(sortedList, *resp.Response[i].CName)
 	}
 
 	// Check if list was sorted
@@ -147,21 +159,21 @@ func SortTestCDNFederations(t *testing.T) {
 func UpdateTestCDNFederations(t *testing.T) {
 
 	for _, id := range fedIDs {
-		fed, _, err := TOSession.GetCDNFederationsByID("foo", id)
+		fed, _, err := TOSession.GetCDNFederationsByID("cdn1", id)
 		if err != nil {
 			t.Errorf("cannot GET federation by id: %v", err)
 		}
 
 		expectedCName := "new.cname."
 		fed.Response[0].CName = &expectedCName
-		resp, _, err := TOSession.UpdateCDNFederationsByID(fed.Response[0], "foo", id)
+		resp, _, err := TOSession.UpdateCDNFederationsByID(fed.Response[0], "cdn1", id)
 		if err != nil {
 			t.Errorf("cannot PUT federation by id: %v", err)
 		}
 		bytes, _ := json.Marshal(resp)
 		t.Logf("PUT Response: %s\n", bytes)
 
-		resp2, _, err := TOSession.GetCDNFederationsByID("foo", id)
+		resp2, _, err := TOSession.GetCDNFederationsByID("cdn1", id)
 		if err != nil {
 			t.Errorf("cannot GET federation by id after PUT: %v", err)
 		}
@@ -185,7 +197,7 @@ func GetTestCDNFederations(t *testing.T) {
 	// clean up fedIDs connection?)
 
 	for _, id := range fedIDs {
-		data, _, err := TOSession.GetCDNFederationsByID("foo", id)
+		data, _, err := TOSession.GetCDNFederationsByID("cdn1", id)
 		if err != nil {
 			t.Errorf("could not GET federations: " + err.Error())
 		}
@@ -306,14 +318,14 @@ func GetTestFederationFederationResolvers(t *testing.T) {
 func DeleteTestCDNFederations(t *testing.T) {
 
 	for _, id := range fedIDs {
-		resp, _, err := TOSession.DeleteCDNFederationByID("foo", id)
+		resp, _, err := TOSession.DeleteCDNFederationByID("cdn1", id)
 		if err != nil {
 			t.Errorf("cannot DELETE federation by id: '%d' %v", id, err)
 		}
 		bytes, err := json.Marshal(resp)
 		t.Logf("DELETE Response: %s\n", bytes)
 
-		data, _, err := TOSession.GetCDNFederationsByID("foo", id)
+		data, _, err := TOSession.GetCDNFederationsByID("cdn1", id)
 		if len(data.Response) != 0 {
 			t.Error("expected federation to be deleted")
 		}

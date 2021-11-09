@@ -21,6 +21,7 @@ package deliveryservice
 
 import (
 	"bytes"
+	"context"
 	"crypto/ecdsa"
 	"crypto/rsa"
 	"crypto/x509"
@@ -135,8 +136,8 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, "Successfully added ssl keys for "+*req.DeliveryService)
 }
 
-// GetSSLKeysByXMLIDV15 fetches the deliveryservice ssl keys by the specified xmlID. V15 includes expiration date.
-func GetSSLKeysByXMLIDV15(w http.ResponseWriter, r *http.Request) {
+// GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID. V15 includes expiration date.
+func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -149,46 +150,26 @@ func GetSSLKeysByXMLIDV15(w http.ResponseWriter, r *http.Request) {
 	}
 	xmlID := inf.Params["xmlid"]
 	alerts := tc.Alerts{}
-	version := inf.Params["version"]
-	decode := inf.Params["decode"]
 	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
 		userErr = api.LogErr(r, errCode, userErr, sysErr)
 		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
 		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
-	keyObj, ok, err := inf.Vault.GetDeliveryServiceSSLKeys(xmlID, version, inf.Tx.Tx, r.Context())
+
+	keyObjV4, err := getSslKeys(inf, r.Context())
 	if err != nil {
-		userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
+		userErr := api.LogErr(r, http.StatusInternalServerError, nil, err)
 		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
 	}
-	if !ok {
-		keyObj = tc.DeliveryServiceSSLKeysV15{}
-	} else {
-		parsedCert := keyObj.Certificate
-		err = Base64DecodeCertificate(&parsedCert)
-		if err != nil {
-			userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+xmlID+"': "+err.Error()))
-			alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-			api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
-			return
-		}
-		if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
-			keyObj.Certificate = parsedCert
-		}
 
-		if keyObj.Certificate.Crt != "" && keyObj.Expiration.IsZero() {
-			exp, err := parseExpirationFromCert([]byte(parsedCert.Crt))
-			if err != nil {
-				userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New(xmlID+": "+err.Error()))
-				alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-				api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
-				return
-			}
-			keyObj.Expiration = exp
-		}
+	var keyObj interface{}
+	if inf.Version.Major < 4 {
+		keyObj = keyObjV4.DeliveryServiceSSLKeysV15
+	} else {
+		keyObj = keyObjV4
 	}
 
 	if len(alerts.Alerts) == 0 {
@@ -198,18 +179,54 @@ func GetSSLKeysByXMLIDV15(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func parseExpirationFromCert(cert []byte) (time.Time, error) {
+func getSslKeys(inf *api.APIInfo, ctx context.Context) (tc.DeliveryServiceSSLKeysV4, error) {
+	xmlID := inf.Params["xmlid"]
+	version := inf.Params["version"]
+	decode := inf.Params["decode"]
+
+	keyObjFromTv, ok, err := inf.Vault.GetDeliveryServiceSSLKeys(xmlID, version, inf.Tx.Tx, ctx)
+	if err != nil {
+		return tc.DeliveryServiceSSLKeysV4{}, errors.New("getting ssl keys: " + err.Error())
+	}
+	keyObj := tc.DeliveryServiceSSLKeysV4{}
+	if ok {
+		keyObj.DeliveryServiceSSLKeysV15 = keyObjFromTv
+		parsedCert := keyObj.Certificate
+		err = Base64DecodeCertificate(&parsedCert)
+		if err != nil {
+			return tc.DeliveryServiceSSLKeysV4{}, errors.New("getting SSL keys for XMLID '" + xmlID + "': " + err.Error())
+		}
+		if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
+			keyObj.Certificate = parsedCert
+		}
+
+		if keyObj.Certificate.Crt != "" && keyObj.Expiration.IsZero() {
+			exp, sans, err := parseExpirationAndSansFromCert([]byte(parsedCert.Crt), keyObj.Hostname)
+			if err != nil {
+				return tc.DeliveryServiceSSLKeysV4{}, errors.New(xmlID + ": " + err.Error())
+			}
+			keyObj.Expiration = exp
+			keyObj.Sans = sans
+		}
+	}
+
+	return keyObj, nil
+}
+
+func parseExpirationAndSansFromCert(cert []byte, commonName string) (time.Time, []string, error) {
 	block, _ := pem.Decode(cert)
 	if block == nil {
-		return time.Time{}, errors.New("Error decoding cert to parse expiration")
+		return time.Time{}, []string{}, errors.New("Error decoding cert to parse expiration")
 	}
 
 	x509cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return time.Time{}, errors.New("Error parsing cert to get expiration - " + err.Error())
+		return time.Time{}, []string{}, errors.New("Error parsing cert to get expiration - " + err.Error())
 	}
 
-	return x509cert.NotAfter, nil
+	dnsNames := util.RemoveStrFromArray(x509cert.DNSNames, commonName)
+
+	return x509cert.NotAfter, dnsNames, nil
 }
 
 func Base64DecodeCertificate(cert *tc.DeliveryServiceSSLKeysCertificate) error {

@@ -9,8 +9,9 @@
 		"pid_file": "/var/run/traffic_ops.pid",
 		"workers": 12
 	},
+	"disable_auto_cert_deletion": false,
 	"use_ims": true,
-	"role_based_permissions": false,
+	"role_based_permissions": true,
 	"traffic_ops_golang": {
 		"insecure": true,
 		"port": "6443",

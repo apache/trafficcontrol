@@ -25,6 +25,7 @@ Deletes URISigning objects for a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: admin\ [#tenancy]_
+:Permissions Required: DS-SECURITY-KEY:DELETE, DS-SECURITY-KEY:READ, DELIVERY-SERVICE:READ, DELIVERY-SERVICE:UPDATE
 :Response Type:  ``undefined``
 
 Request Structure
@@ -48,6 +49,7 @@ Retrieves one or more URISigning objects for a delivery service.
 
 :Auth. Required: Yes
 :Roles Required: admin\ [#tenancy]_
+:Permissions Required: DS-SECURITY-KEY:READ
 :Response Type:  ``undefined``
 
 Request Structure
@@ -99,6 +101,7 @@ Assigns URISigning objects to a delivery service.
 
 :Auth. Required: Yes
 :Roles Required: admin\ [#tenancy]_
+:Permissions Required: DS-SECURITY-KEY:CREATE
 :Response Type:  ``undefined``
 
 Request Structure
@@ -148,6 +151,7 @@ updates URISigning objects on a delivery service.
 
 :Auth. Required: Yes
 :Roles Required: admin\ [#tenancy]_
+:Permissions Required: DS-SECURITY-KEY:UPDATE
 :Response Type:  ``undefined``
 
 Request Structure

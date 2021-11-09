@@ -25,6 +25,7 @@ Replaces a :term:`Parameter`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: PARAMETER:UPDATE, PARAMETER:READ
 :Response Type:  Object
 
 Request Structure
@@ -107,6 +108,7 @@ Deletes the specified :term:`Parameter`. If, however, the :term:`Parameter` is a
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: PARAMETER:DELETE, PARAMETER:READ
 :Response TYpe:  ``undefined``
 
 Request Structure

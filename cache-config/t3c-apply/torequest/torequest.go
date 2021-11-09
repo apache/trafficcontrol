@@ -575,7 +575,6 @@ func (r *TrafficOpsReq) CheckSystemServices() error {
 func (r *TrafficOpsReq) IsPackageInstalled(name string) bool {
 	for k, v := range r.pkgs {
 		if strings.HasPrefix(k, name) {
-			log.Infof("IsPackageInstalled '%v' found '%v' in cache, returning %v\n", name, k, v)
 			return v
 		}
 	}
@@ -683,11 +682,11 @@ func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, 
 	updateStatus := UpdateTropsNotNeeded
 
 	serverStatus, err := getUpdateStatus(r.Cfg)
-	log.Infof("my status: %s\n", serverStatus.Status)
 	if err != nil {
 		log.Errorln("getting update status: " + err.Error())
 		return UpdateTropsNotNeeded, errors.New("getting update status: " + err.Error())
 	}
+	log.Infof("my status: %s\n", serverStatus.Status)
 	if serverStatus.UseRevalPending == false {
 		log.Errorln("Update URL: Instant invalidate is not enabled.  Separated revalidation requires upgrading to Traffic Ops version 2.2 and enabling this feature.")
 		return UpdateTropsNotNeeded, nil

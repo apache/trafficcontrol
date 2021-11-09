@@ -25,6 +25,7 @@ Get all requested :term:`Tenants`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: TENANT:READ
 :Response Type:  Array
 
 Request Structure
@@ -105,6 +106,7 @@ Create a new tenant.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: TENANT:CREATE, TENANT:READ
 :Response Type:  Object
 
 Request Structure

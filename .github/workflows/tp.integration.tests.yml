@@ -29,7 +29,7 @@ on:
       - .github/actions/tp-integration-tests/**
       - .github/workflows/tp.integration.tests.yml
       - GO_VERSION
-      - infrastructure/cdn-in-a-box/traffic_vault/**
+      - infrastructure/cdn-in-a-box/optional/traffic_vault/**
       - traffic_ops/*client/**.go
       - traffic_ops/testing/api/**.go
       - traffic_ops/traffic_ops_golang/**.go
@@ -42,7 +42,7 @@ on:
       - .github/actions/tp-integration-tests/**
       - .github/workflows/tp.integration.tests.yml
       - GO_VERSION
-      - infrastructure/cdn-in-a-box/traffic_vault/**
+      - infrastructure/cdn-in-a-box/optional/traffic_vault/**
       - traffic_ops/*client/**.go
       - traffic_ops/testing/api/**.go
       - traffic_ops/traffic_ops_golang/**.go
@@ -57,13 +57,16 @@ jobs:
       hub:
         image: selenium/hub
         ports:
-          - "4444:4444"
+          - 4442:4442
+          - 4443:4443
+          - 4444:4444
         options: --health-cmd=/opt/bin/check-grid.sh --health-interval=5s --health-timeout=15s --health-retries=5
       chromium:
         image: ossalternatives/selenium-node-chromium
         env:
-          HUB_HOST: hub
-          HUB_PORT: 4444
+          SE_EVENT_BUS_HOST: hub
+          SE_EVENT_BUS_PUBLISH_PORT: 4442
+          SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
         volumes:
           - /dev/shm:/dev/shm
       postgres:

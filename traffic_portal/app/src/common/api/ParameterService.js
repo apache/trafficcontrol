@@ -20,7 +20,7 @@
 var ParameterService = function($http, locationUtils, messageModel, ENV) {
 
     this.getParameters = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'parameters', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'parameters', {params: queryParams}).then(
             function (result) {
                 return result.data.response
             },
@@ -31,7 +31,7 @@ var ParameterService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getParameter = function(id) {
-        return $http.get(ENV.api['root'] + 'parameters', {params: {id: id}}).then(
+        return $http.get(ENV.api.unstable + 'parameters', {params: {id: id}}).then(
             function (result) {
                 return result.data.response[0];
             },
@@ -42,7 +42,7 @@ var ParameterService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.createParameter = function(parameter) {
-        return $http.post(ENV.api['root'] + 'parameters', parameter).then(
+        return $http.post(ENV.api.unstable + 'parameters', parameter).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter created' } ], true);
                 locationUtils.navigateToPath('/parameters/' + result.data.response.id + '/profiles');
@@ -57,7 +57,7 @@ var ParameterService = function($http, locationUtils, messageModel, ENV) {
 
     // todo: change to use query param when it is supported
     this.updateParameter = function(parameter) {
-        return $http.put(ENV.api['root'] + 'parameters/' + parameter.id, parameter).then(
+        return $http.put(ENV.api.unstable + 'parameters/' + parameter.id, parameter).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter updated' } ], false);
                 return result;
@@ -71,7 +71,7 @@ var ParameterService = function($http, locationUtils, messageModel, ENV) {
 
     // todo: change to use query param when it is supported
     this.deleteParameter = function(id) {
-        return $http.delete(ENV.api['root'] + "parameters/" + id).then(
+        return $http.delete(ENV.api.unstable + "parameters/" + id).then(
             function(result) {
                 return result.data;
             },
@@ -84,7 +84,7 @@ var ParameterService = function($http, locationUtils, messageModel, ENV) {
 
 
     this.getProfileParameters = function(profileId) {
-        return $http.get(ENV.api['root'] + 'profiles/' + profileId + '/parameters').then(
+        return $http.get(ENV.api.unstable + 'profiles/' + profileId + '/parameters').then(
             function (result) {
                 return result.data.response;
             },

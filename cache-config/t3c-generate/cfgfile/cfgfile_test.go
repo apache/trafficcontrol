@@ -164,6 +164,11 @@ func randUint64() *uint64 {
 	return &i
 }
 
+func randUint() *uint {
+	i := uint(rand.Int())
+	return &i
+}
+
 func randFloat64() *float64 {
 	f := rand.Float64()
 	return &f
@@ -353,16 +358,16 @@ func randParam() *tc.Parameter {
 	}
 }
 
-func randJob() *tc.InvalidationJob {
-	now := &tc.Time{Time: time.Now(), Valid: true}
-	return &tc.InvalidationJob{
-		Parameters:      randStr(),
-		Keyword:         randStr(),
-		AssetURL:        randStr(),
-		CreatedBy:       randStr(),
-		StartTime:       now,
-		ID:              randUint64(),
-		DeliveryService: randStr(),
+func randJob() *atscfg.InvalidationJob {
+	now := time.Now()
+	return &atscfg.InvalidationJob{
+		AssetURL:         *randStr(),
+		CreatedBy:        *randStr(),
+		StartTime:        now,
+		ID:               *randUint64(),
+		DeliveryService:  *randStr(),
+		TTLHours:         *randUint(),
+		InvalidationType: tc.REFRESH,
 	}
 }
 
@@ -488,7 +493,7 @@ func MakeFakeTOData() *t3cutil.ConfigData {
 		},
 		DeliveryServiceServers: dss,
 		Server:                 sv0,
-		Jobs: []tc.InvalidationJob{
+		Jobs: []atscfg.InvalidationJob{
 			*randJob(),
 			*randJob(),
 		},

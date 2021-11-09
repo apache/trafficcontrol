@@ -25,6 +25,7 @@ Deletes a Traffic Ops server check extension definition. This does **not** delet
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
+:Permissions Required: SERVER-CHECK:DELETE, SERVER-CHECK:READ, SERVER:READ
 :Response Type:  ``undefined``
 
 Request Structure

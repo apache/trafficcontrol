@@ -20,7 +20,7 @@
 var TypeService = function($http, ENV, locationUtils, messageModel) {
 
     this.getTypes = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'types', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'types', {params: queryParams}).then(
             function (result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var TypeService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.getType = function(id) {
-        return $http.get(ENV.api['root'] + 'types', {params: {id: id}}).then(
+        return $http.get(ENV.api.unstable + 'types', {params: {id: id}}).then(
             function (result) {
                 return result.data.response[0];
             },
@@ -42,7 +42,7 @@ var TypeService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.createType = function(type) {
-        return $http.post(ENV.api['root'] + 'types', type).then(
+        return $http.post(ENV.api.unstable + 'types', type).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Type created' } ], true);
                 locationUtils.navigateToPath('/types');
@@ -57,7 +57,7 @@ var TypeService = function($http, ENV, locationUtils, messageModel) {
 
     // todo: change to use query param when it is supported
     this.updateType = function(type) {
-        return $http.put(ENV.api['root'] + 'types/' + type.id, type).then(
+        return $http.put(ENV.api.unstable + 'types/' + type.id, type).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Type updated' } ], false);
                 return result;
@@ -71,7 +71,7 @@ var TypeService = function($http, ENV, locationUtils, messageModel) {
 
     // todo: change to use query param when it is supported
     this.deleteType = function(id) {
-        return $http.delete(ENV.api['root'] + "types/" + id).then(
+        return $http.delete(ENV.api.unstable + "types/" + id).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Type deleted' } ], true);
                 return result;
@@ -84,7 +84,7 @@ var TypeService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.queueServerUpdates = function(cdnID, typeName) {
-        return $http.post(ENV.api['root'] + 'cdns/' + cdnID +'/queue_update?type=' + typeName, {action: "queue"}).then(
+        return $http.post(ENV.api.unstable + 'cdns/' + cdnID +'/queue_update?type=' + typeName, {action: "queue"}).then(
             function(result) {
                 messageModel.setMessages([{level: 'success', text: 'Queued server updates by type'}], false);
                 return result;
@@ -97,7 +97,7 @@ var TypeService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.clearServerUpdates = function(cdnID, typeName) {
-        return $http.post(ENV.api['root'] + 'cdns/' + cdnID + '/queue_update?type=' + typeName, {action: "dequeue"}).then(
+        return $http.post(ENV.api.unstable + 'cdns/' + cdnID + '/queue_update?type=' + typeName, {action: "dequeue"}).then(
             function(result) {
                 messageModel.setMessages([{level: 'success', text: 'Cleared server updates by type'}], false);
                 return result;

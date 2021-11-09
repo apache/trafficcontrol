@@ -1,9 +1,3 @@
-% tc-health-client(1) tc-health-client 6.1.0 | ATC tc-health-client Manual
-%
-% 2021-09-20
-% tc-health-client(1) tc-health-client 6.1.0 
-%
-% 2021-09-17
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
@@ -109,6 +103,7 @@ Sample configuarion file:
     "to-url": "https://tp.cdn.com:443", 
     "to-request-timeout-seconds": "5s",
     "tm-poll-interval-seconds": "60s",
+    "tm-proxy-url", "http://sample-http-proxy.cdn.net:80",
     "tm-update-cycles": 5,
     "trafficserver-config-dir": "/opt/trafficserver/etc/trafficserver",
     "trafficserver-bin-dir": "/opt/trafficserver/bin",
@@ -153,6 +148,13 @@ Sample configuarion file:
 
   The polling interval in seconds used to update **Traffic Server** parent
   status.
+
+### tm-proxy-url
+
+  If not nil, all Traffic Monitor requests will be proxied through this 
+  proxy endpoint.  This is useful when there are large numbers of caches
+  polling a Traffic Monitor and you wish to funnel queries through a caching
+  proxy server to limit direct direct connections to Traffic Monitor.
 
 ### tm-update-cycles
 

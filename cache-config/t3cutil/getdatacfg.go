@@ -69,7 +69,7 @@ type ConfigData struct {
 	Server *atscfg.Server `json:"server,omitempty"`
 
 	// Jobs must be all Jobs on the server's CDN. May include jobs on other CDNs.
-	Jobs []tc.InvalidationJob `json:"jobs,omitempty"`
+	Jobs []atscfg.InvalidationJob `json:"jobs,omitempty"`
 
 	// CDN must be the CDN of the server.
 	CDN *tc.CDN `json:"cdn,omitempty"`

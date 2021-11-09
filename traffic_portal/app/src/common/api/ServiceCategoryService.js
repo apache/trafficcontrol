@@ -20,7 +20,7 @@
 var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
 
     this.getServiceCategories = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'service_categories', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'service_categories', {params: queryParams}).then(
             function(result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.getServiceCategory = function(name) {
-        return $http.get(ENV.api['root'] + 'service_categories', {params: {name: name}}).then(
+        return $http.get(ENV.api.unstable + 'service_categories', {params: {name: name}}).then(
             function(result) {
                 return result.data.response[0];
             },
@@ -42,7 +42,7 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.createServiceCategory = function(serviceCategory) {
-        return $http.post(ENV.api['root'] + 'service_categories', serviceCategory).then(
+        return $http.post(ENV.api.unstable + 'service_categories', serviceCategory).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 locationUtils.navigateToPath('/service-categories');
@@ -56,7 +56,7 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.updateServiceCategory = function(serviceCategory, oldName) {
-        return $http.put(ENV.api['root'] + 'service_categories/' + encodeURIComponent(oldName), serviceCategory).then(
+        return $http.put(ENV.api.unstable + 'service_categories/' + encodeURIComponent(oldName), serviceCategory).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
 				locationUtils.navigateToPath('/service-categories/edit?name=' + encodeURIComponent(serviceCategory.name));
@@ -69,7 +69,7 @@ var ServiceCategoryService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.deleteServiceCategory = function(name) {
-        return $http.delete(ENV.api['root'] + 'service_categories/' + encodeURIComponent(name)).then(
+        return $http.delete(ENV.api.unstable + 'service_categories/' + encodeURIComponent(name)).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 return result;

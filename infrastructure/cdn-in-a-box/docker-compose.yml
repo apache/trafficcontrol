@@ -31,7 +31,7 @@
 # Note that this setup is intended for testing and not for production use.
 
 ---
-version: '2.1'
+version: '3.8'
 
 services:
   # db is the Traffic Ops database running in postgresql.  Only trafficops needs to have access to it.
@@ -162,25 +162,6 @@ services:
       - variables.env
     volumes:
       - shared:/shared
-
-  # trafficvault runs a riak container to store private keys
-  trafficvault:
-    build:
-      context: .
-      dockerfile: traffic_vault/Dockerfile
-    depends_on:
-      - enroller
-    environment:
-      - CLUSTER_NAME=trafficvault
-    labels:
-      - "com.basho.riak.cluster.name=trafficvault"
-    volumes:
-      - schemas:/etc/riak/schemas
-      - shared:/shared
-    domainname: infra.ciab.test
-    env_file:
-      - variables.env
-    hostname: trafficvault
 
   # edge cache
   edge:

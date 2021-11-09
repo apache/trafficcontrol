@@ -26,6 +26,7 @@
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: SERVER:QUEUE, SERVER:READ
 :Response Type:  Object
 
 Request Structure

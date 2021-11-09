@@ -25,6 +25,7 @@ Retrieves the health of all :term:`Cache Groups` for a given CDN.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: CDN:READ, CACHE-GROUP:READ
 :Response Type:  Object
 
 Request Structure

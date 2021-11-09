@@ -107,9 +107,21 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("getting configuration from request context: %w", err))
 				return
 			}
-			if !cfg.RoleBasedPermissions && user.PrivLevel < privLevelRequired {
-				api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
+			v := api.GetRequestedAPIVersion(r.URL.Path)
+			if v == nil {
+				api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("couldn't get a valid version from the requested path"), nil)
 				return
+			}
+			if v.Major < 4 {
+				if user.PrivLevel < privLevelRequired {
+					api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
+					return
+				}
+			} else {
+				if !cfg.RoleBasedPermissions && user.PrivLevel < privLevelRequired {
+					api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
+					return
+				}
 			}
 			api.AddUserToReq(r, user)
 			handlerFunc(w, r)

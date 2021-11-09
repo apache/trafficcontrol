@@ -3,7 +3,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,53 +13,59 @@ limitations under the License.
 -->
 
 # Traffic Portal
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 10.2.0.
+This project was generated with
+[Angular CLI](https://github.com/angular/angular-cli) version 10.2.0.
 
-This is an attempt at making a self-service-first UI for Apache Traffic Control CDN architectures. The eventual goal is to slowly eat Traffic Portal by importing all of its functionality once the self-service UI is complete.
+This is an attempt at making a self-service-first UI for Apache Traffic Control
+CDN architectures. The eventual goal is to slowly eat Traffic Portal by
+importing all of its functionality once the self-service UI is complete.
 
 ## Prerequisites
-Traffic Portal runs on [NodeJS](https://nodejs.org/) version 13  and uses its built-in NPM package manager to manage dependencies.
+Traffic Portal runs on [NodeJS](https://nodejs.org/) version 13 (or later) and
+uses its built-in NPM package manager to manage dependencies.
 
 ## Building and Running
-To set up the Angular project, first install all dependencies, then build and run the server-side and client-side modules.
+To set up the Angular project for a production or testing environment
 
-E.g. using the [Angular CLI](https://github.com/angular/angular-cli)
+1. install all dependencies with `npm install` (`pnpm` is **not** supported with
+`ngcc` so it won't work)
 
-```bash
-# If you don't want the development dependencies, add `--production`
-# (only needs to be done once unless dependencies change)
-npm install
+	```bash
+	# If you don't want the development dependencies, add `--production`
+	# (only needs to be done once unless dependencies change)
+	npm install
+	```
 
-# If you installed @angular/cli globally (`npm install -g @angular/cli`), then you can use these
-# commands to build the modules
+1. build and run the server-side (optional; production or production-like) and
+client-side modules.
 
-# Add `--prod` for production deployment
-ng build
+	E.g. running in server-side-rendering mode using the
+	[Angular CLI](https://github.com/angular/angular-cli)
 
-# For production deployment, run ng run traffic-portal-angular8:server:production
-ng run traffic-portal-angular8:server
+	```bash
+	# Add `--prod` for production deployment
+	ng build
 
-# Runs the server locally at http://localhost:4000
-node dist/server.js
-```
+	# For production deployment, run ng run traffic-portal:server:production
+	ng run traffic-portal:server
 
-E.g. using NPM scripts
+	# Runs the server locally at http://localhost:4000
+	node dist/server.js
+	```
 
-```bash
-# If you don't want the development dependencies, add `--production`
-# (only needs to be done once unless dependencies change)
-npm install
+	E.g. running in server-side-rendering mode using NPM scripts
 
-# These commands are less verbose and don't require a globally-available `@angular/cli` install,
-# but shadow intermediate steps (mostly those are also available as NPM scripts,
-# check out package.json to see them)
+	```bash
+	# These commands don't require a globally-available `@angular/cli` install,
+	# but shadow intermediate steps (mostly those are also available as NPM
+	# scripts, check out package.json to see them)
 
-# This builds for production deployment by default
-npm run build:ssr
+	# This builds for production deployment by default
+	npm run build:ssr
 
-# Runs the server locally at http://localhost:4000
-npm run serve:ssr
-```
+	# Runs the server locally at http://localhost:4000
+	npm run serve:ssr
+	```
 
 ### Server Command Line Arguments
 By default, the Traffic Portal server will attempt to connect to a Traffic Ops server running at the location specified by the `TO_URL` environment variable. If one is not set or you wish to override it, this (and other behavior) can be configured by passing arguments on the command line. To see the available command line options, pass the `-h`/`--help` flag to the server, e.g.
@@ -93,14 +99,15 @@ Optional arguments:
                         both are omitted, will serve using HTTP)
   -C CONFIG_FILE, --config-file CONFIG_FILE
                         Specify a path to a configuration file - options are
-						overridden by command-line flags.
+                        overridden by command-line flags.
 $
 ```
 
-Note that only certificates for `localhost` are accepted at the time of this writing.
-
 ### Debug Mode
-Because we need to proxy API requests back to Traffic Ops, running in debug mode is a bit more involved than it normally would be. Specifically, it'll require making a new file somewhere with the following information in JSON format:
+Because we need to proxy API requests back to Traffic Ops, running in debug mode
+is a bit more involved than it normally would be. Specifically, unless your
+Traffic Ops instance is listening at `https://localhost:6443/` it'll require
+making a new file somewhere with the following information in JSON format:
 
 ```json
 {
@@ -111,32 +118,67 @@ Because we need to proxy API requests back to Traffic Ops, running in debug mode
 	}
 }
 ```
-More documentation on the configuration options available in this file can be found in [the relevant section of the angular-cli documentation](https://github.com/angular/angular-cli/blob/master/docs/documentation/stories/proxy.md). This step isn't necessary in a production deployment because the proxy is built into the server-side rendering server.
+More documentation on the configuration options available in this file can be
+found in
+[the relevant section of the angular-cli documentation](https://github.com/angular/angular-cli/blob/master/docs/documentation/stories/proxy.md).
+This step isn't necessary in a production deployment because the proxy is built
+into the server-side rendering server.
 
-Now, assuming this in the project directory (i.e. the same one as this README.md file) and named e.g. `proxy.json`, a debug-mode server can be started like so:
+By default the file `proxy.json` in the project directory (i.e. the same one as
+this README.md file) will be used to define proxy settings, which causes it to
+expect a TO instance at `https://localhost:6443` (CDN-in-a-Box's default Traffic
+Ops port).  To change where this looks for a TO instance, make your own proxy
+configuration file and pass it in with `--proxy-config /path/to/proxy.json`.
 
 ```bash
-# Note that this pre-supposes you've globally installed the angular-cli
-# e.g. via `npm install -g @angular/cli`
-ng serve --proxy-config ./proxy.json
+# Using globally installed Angular CLI
+## Using default proxy
+ng serve
+## Using custom proxy settings
+ng serve --proxy-config /path/to/custom-proxy.json
+# using NPM scripts:
+## Using default proxy
+npm start
+## Using custom proxy settings
+npm start -- --proxy-config /path/to/custom-proxy.json
 ```
 
-By default this will set up an Angular debug-mode server to run, listening on port 4200. Note that regardless of production-mode SSL configuration, this will **only serve unencrypted HTTP responses by default**. Also, unlike production mode which compiles things ahead of time, this will compile resources on-the-fly so that making changes to a file is immediately "live" without requiring the developer to restart the debug server. Pretty neat, desu.
+By default this will set up an Angular debug-mode server to run, listening on
+port 4200. Note that regardless of production-mode SSL configuration, this will
+**only serve unencrypted HTTP responses by default**. Also, unlike production
+mode which compiles things ahead of time, this will compile resources on-the-fly
+so that making changes to a file is immediately "live" without requiring the
+developer to restart the debug server.
+
+**This debugging mode server is NOT safe for production environments - not only
+does it not server HTTPS by default but the server itself _is not audited for
+security flaws_ - use this for development and testing ONLY.**
 
 ## Running the Tests
-Coverage is pretty abysmal at the moment, but unit tests can be run using the [Angular CLI](https://github.com/angular/angular-cli). To run the unit tests, use the command `ng test` (dependencies must first be installed). This will attempt to open Chrome, Firefox and Opera, so ideally you would have those installed prior to running the tests.
+Coverage is pretty abysmal at the moment, but unit tests can be run using the
+[Angular CLI](https://github.com/angular/angular-cli). To run the unit tests,
+use the command `ng test` (dependencies must first be installed). This will
+attempt to open Chrome, Firefox and Opera, so ideally you would have those
+installed prior to running the tests.
 
-End-to-end testing is broken at the time of this writing, but to run it anyway use `ng e2e`.
+End-to-end testing is sparse at the time of this writing, but to run it anyway
+use `ng e2e`. This demands that a TO instance be listening on
+`https://localhost:6443` and unlike in the development mode server, that cannot
+be changed.
 
 ## Contributing
-This project uses `tslint` and an `.editorconfig` file for maintaining code style. If your editor doesn't support `.editorconfig` (VS Code does out-of-the-box as I understand, but Vim and Sublime Text need plugins. Atom ~~doesn't~~ shouldn't exist) then you'll want to manually configure it so as to avoid linting errors. There's quite a bit going on, but the big ones are:
+This project uses `eslint` and an `.editorconfig` file for maintaining code
+style. If your editor doesn't support `.editorconfig` (VS Code does
+out-of-the-box as I understand, but Vim and Sublime Text need plugins) then
+you'll want to manually configure it so as to avoid linting errors. There's
+quite a bit going on, but the big ones are:
 
 These apply to all files:
 
 - No trailing whitespace before line-endings
 - Unix line-endings
 - Ensure line ending at end-of-file (POSIX-compliance)
-- Tabs not spaces for indentation (spaces may be used for alignment with multi-line statements AFTER indenting appropriately)
+- Tabs not spaces for indentation
 
 These apply to Typescript, specifically
 
@@ -144,24 +186,55 @@ These apply to Typescript, specifically
 - Prefer double quotes to single quotes for string literals
 - *Document your code - we use JSDoc here*
 
+Code _must_ pass linting to be accepted. To run the linter:
+```bash
+# Using Angular CLI
+ng lint
+# Using NPM scripts
+npm run lint
+```
+
 ## Supporting old Traffic Ops versions
-This UI is built to work with an API at version 1.5. All endpoints will use this version by default, so when pointing it at a server that only supports e.g. a max of 1.4, you'll need to do something heinous: edit a source file. In the [`src/app/services/api.service.ts`](./src/app/services/api.service.ts) file, change the line `public API_VERSION = '1.5';` to the appropriate version, e.g. `public API_VERSION = '1.4';`. This will be easier in the future<sup>Citation needed</sup>.
+This UI is built to work with an API at version 3.0 in development mode
+(configured in `./src/environments/environment.ts`) and 2.0 in production mode
+(configured in `./src/environments/environment.prod.ts`). All endpoints will use
+this version by default, so when pointing it at a server that only supports e.g.
+a max of 1.5, you'll need to do edit the source file for your environment.
 
 ## Browser Support
-This UI obviously requires Javascript, but beyond that the hope is that any HTML5/CSS3/DOM3-compliant browser should work. Specifically, testing is being done using the latest versions of:
+This UI obviously requires Javascript, but beyond that the hope is that any
+HTML5/CSS3/DOM3-compliant browser should work. Specifically, the
+`./.browserslistrc` file defines our browser support, but in terms of browsers
+supported without regard for versioning, our aim is:
 
-- Google Chrome (not Chromium atm, maybe in the future)
-- Opera
-- Vivaldi (support tenuous)
 - Mozilla Firefox
-- Microsoft Edge (Once the rendering engine turns into Chromium - Chakra is not HTML5/CSS3-compliant)
+- Google Chrome
+- Chromium
+- Opera
+- Vivaldi
+- Microsoft Edge
 
-... and the goal is to continuously support these browser in their latest and penultimate major release versions. Safari isn't tested because I don't have a Mac, but support for that would be nice given the high usage by Traffic Control users/admins/devs.
+Internet Explorer and Safari are notably absent from this list. These browsers
+are standard-defying nightmares, and we refuse to support browsers that are
+end-of-life and/or do not recevie fixes for critical bugs.
+
+The goal is to continuously support these browser in their latest and
+penultimate major release versions.
 
 ## Code scaffolding
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Run `ng generate component component-name` to generate a new component. You can
+also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
-However, the files generated via this scaffolding **will** fail linting. Generally most of those errors can be fixed automatically with `ng lint --fix`, though.
+It may ask you to then specify a module, because it doesn't know if the thing
+you're generating should be imported into the client-side code or the
+server-side code - nearly always the thing you're trying to do should be done on
+the client-side, so point it to the absolute or relative location of the
+`src/app` directory.
+
+However, the files generated via this scaffolding **will** fail linting.
+Generally most of those errors can be fixed automatically with `ng lint --fix`
+(or equivalently `npm run lint -- --fix`), though.
 
 ## Further help
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+To get more help on the Angular CLI use `ng help` or go check out the
+[Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).

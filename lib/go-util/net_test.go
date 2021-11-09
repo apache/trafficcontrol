@@ -40,6 +40,15 @@ func TestCoalesceIPs(t *testing.T) {
 			t.Errorf("expected '192.168.1.0/24' and '192.168.2.0/24', actual: %+v\n", ipnet)
 		}
 	}
+
+	nets = CoalesceIPs(nil, 0, 0)
+	if nets != nil {
+		t.Errorf("expected nil output when passing in no IPs, got: %+v", nets)
+	}
+	nets = CoalesceIPs([]net.IP{}, 0, 0)
+	if nets != nil {
+		t.Errorf("expected nil output when passing in no IPs, got: %+v", nets)
+	}
 }
 
 func TestCoalesceIPsSmallerThanNum(t *testing.T) {
@@ -213,6 +222,15 @@ func TestIP4ToNum(t *testing.T) {
 			}
 		})
 	}
+
+	_, err := IP4ToNum("invalid")
+	if err == nil {
+		t.Error("Expected an error passing invalid input, but didn't get one")
+	}
+	_, err = IP4ToNum("127.0.0.invalid")
+	if err == nil {
+		t.Error("Expected an error passing invalid input, but didn't get one")
+	}
 }
 
 func TestIP4InRange(t *testing.T) {
@@ -238,4 +256,22 @@ func TestIP4InRange(t *testing.T) {
 			}
 		})
 	}
+
+	_, err := IP4InRange("127.0.0.1", "127.0.0.0-127.0.0.2-127.0.1.2")
+	if err == nil {
+		t.Error("Expected an error passing an invalid range, but didn't get one")
+	}
+	_, err = IP4InRange("invalid", "127.0.0.0-127.0.0.2")
+	if err == nil {
+		t.Error("Expected an error passing an invalid ip, but didn't get one")
+	}
+	_, err = IP4InRange("127.0.0.1", "invalid-127.0.0.2")
+	if err == nil {
+		t.Error("Expected an error passing an invalid range start, but didn't get one")
+	}
+	_, err = IP4InRange("127.0.0.1", "127.0.0.0-invalid")
+	if err == nil {
+		t.Error("Expected an error passing an invalid range end, but didn't get one")
+	}
+
 }

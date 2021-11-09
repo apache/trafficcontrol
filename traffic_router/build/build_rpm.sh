@@ -56,7 +56,13 @@ buildRpmTrafficRouter () {
 	echo
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; return 1; }
 
-	cp "$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; return 1; }
+	rpmDest="."
+	if [[ "$SIMPLE" -eq 1 ]]; then
+		rpmDest="traffic_router.rpm";
+	fi
+
+
+	cp -f "$rpm" "$DIST/$rpmDest" || { echo "Could not copy $rpm to $DIST: $?"; return 1; }
 
 }
 

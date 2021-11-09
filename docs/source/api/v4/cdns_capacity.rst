@@ -25,6 +25,7 @@ Retrieves the aggregate capacity percentages of all :term:`Cache Groups` for a g
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: CDN:READ
 :Response Type:  Object
 
 Request Structure

@@ -107,7 +107,7 @@ export const statuses = {
 					description: "create a Statuses",
 					Name: "TPStatus1",
 					DescriptionData: "test",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: STATUS:CREATE"
 				}
 			],
 			update: [
@@ -115,14 +115,14 @@ export const statuses = {
 					description: "update Status description",
 					Name: "TPStatus2",
 					DescriptionData: "update",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: STATUS:UPDATE"
 				}
 			],
 			remove: [
 				{
 					description: "delete a Status",
 					Name: "TPStatus2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: STATUS:DELETE"
 				}
 			]
 		}

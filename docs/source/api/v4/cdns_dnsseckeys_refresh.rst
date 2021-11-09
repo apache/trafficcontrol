@@ -25,6 +25,7 @@ Refresh the DNSSEC keys for all CDNs. This call initiates a background process t
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: DNS-SEC:UPDATE, CDN:UPDATE, CDN:READ
 :Response Type:  Object (string)
 
 Request Structure

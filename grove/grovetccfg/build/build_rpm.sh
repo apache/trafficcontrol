@@ -43,6 +43,7 @@ checkGroveEnvironment() {
 	RPMBUILD="${GROVE_DIR}/rpmbuild"
 	DIST="${TC_DIR}/dist"
 	RPM="${PACKAGE}-${GROVE_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION}.x86_64.rpm"
+	SRPM="${PACKAGE}-${GROVE_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION}.src.rpm"
 	GOOS="${GOOS:-linux}"
 	RPM_TARGET_OS="${RPM_TARGET_OS:-$GOOS}"
 	export GROVETC_DIR GROVE_DIR GROVE_VERSION PACKAGE BUILD_NUMBER RPMBUILD DIST RPM GOOS RPM_TARGET_OS
@@ -99,6 +100,12 @@ buildRpmGrove() {
 		trap give_spec_back EXIT
 	fi
 
+	build_flags="-ba";
+	if [[ "$NO_SOURCE" -eq 1 ]]; then
+		build_flags="-bb";
+	fi
+
+
 	# build RPM with xz level 2 compression
 	rpmbuild \
 		--define "_topdir $RPMBUILD" \
@@ -107,12 +114,37 @@ buildRpmGrove() {
 		--define "_target_os ${RPM_TARGET_OS}" \
 		--define '%_source_payload w2.xzdio' \
 		--define '%_binary_payload w2.xzdio' \
-		-ba build/${PACKAGE}.spec ||
+		$build_flags build/${PACKAGE}.spec ||
 		{ echo "rpmbuild failed: $?" >&2; return 1; }
 
+
+	rpmDest=".";
+	srcRPMDest=".";
+	if [[ "$SIMPLE" -eq 1 ]]; then
+		rpmDest="grovetccfg.rpm";
+		srcRPMDest="grovetccfg.src.rpm";
+	fi
+
 	# copy build RPM to .
-	[ -e "$DIST" ] || mkdir -p "$DIST"
-	cp "${RPMBUILD}/RPMS/x86_64/${RPM}" "$DIST"
+	[ -d "$DIST" ] || mkdir -p "$DIST";
+
+	cp -f "$RPMBUILD/RPMS/$(uname -m)/${RPM}" "$DIST/$rpmDest";
+	code="$?";
+	if [[ "$code" -ne 0 ]]; then
+		echo "Could not copy $rpm to $DIST: $code" >&2;
+		return "$code";
+	fi
+
+	if [[ "$NO_SOURCE" -eq 1 ]]; then
+		return 0;
+	fi
+
+	cp -f "$RPMBUILD/SRPMS/${SRPM}" "$DIST/$srcRPMDest";
+	code="$?";
+	if [[ "$code" -ne 0 ]]; then
+		echo "Could not copy $srpm to $DIST: $code" >&2;
+		return "$code";
+	fi
 }
 
 importFunctions

@@ -94,12 +94,11 @@ profiles.tests.forEach(async profilesData => {
         });
     });
 });
-
 describe('Clean up API for Profiles', () => {
-    afterAll(async function () {
-        it('Cleanup', async () => {
-            await api.UseAPI(profiles.cleanup);
-        });
-    })
+    afterAll(async () => {
+        await api.UseAPI(profiles.cleanup);
+    });
+    it('Cleanup', async() => {
+      expect(true).toBeTruthy();
+    });
 });
-

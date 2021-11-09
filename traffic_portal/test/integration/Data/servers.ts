@@ -875,7 +875,7 @@ export const servers = {
 					Profile: "testProfile",
 					PhysLocation: "TPPhysLocation2",
 					InterfaceName: "test",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER:CREATE"
 				}
 			],
 			update: [
@@ -884,14 +884,14 @@ export const servers = {
 					Name: "servertestcreate2",
 					CDN: "servertestcdn1",
 					Profile: "servertestprofiles1",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER:UPDATE"
 				}
 			],
 			remove: [
 				{
 					description: "delete a Server",
 					Name: "servertestcreate2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER:DELETE"
 				}
 			]
 		},
