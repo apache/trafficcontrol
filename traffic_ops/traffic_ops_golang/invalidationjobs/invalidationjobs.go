@@ -537,8 +537,13 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	job := tc.InvalidationJobCreateV4{}
-	if err := json.NewDecoder(r.Body).Decode(&job); err != nil {
+	jsonJob := tc.InvalidationJobCreateV40PlusLegacy{}
+	if err := json.NewDecoder(r.Body).Decode(&jsonJob); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Unable to decode Invalidation Job"), fmt.Errorf("parsing jobs/ POST: %v", err))
+		return
+	}
+	job, err := tc.InvalidationJobCreateV40LegacyToNew(jsonJob, inf.Tx.Tx)
+	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Unable to parse Invalidation Job"), fmt.Errorf("parsing jobs/ POST: %v", err))
 		return
 	}

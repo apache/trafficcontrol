@@ -21,6 +21,7 @@ package tc
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -30,6 +31,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-util"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
@@ -90,6 +92,61 @@ type InvalidationJobInput struct {
 
 	dsid *uint
 	ttl  *time.Duration
+}
+
+type InvalidationJobCreateV40PlusLegacy struct {
+	InvalidationJobCreateV4
+	DeliveryService *interface{} `json:"deliveryService"`
+	StartTime       *string      `json:"startTime"`
+	TTL             *interface{} `json:"ttl"`
+}
+
+func InvalidationJobCreateV40LegacyToNew(job InvalidationJobCreateV40PlusLegacy, tx *sql.Tx) (InvalidationJobCreateV4, error) {
+	if job.DeliveryService != nil {
+		switch dsNameOrID := (*job.DeliveryService).(type) {
+		case string:
+			job.InvalidationJobCreateV4.DeliveryService = dsNameOrID
+		case float64:
+			dsName, ok, err := GetDSNameFromID(tx, int(dsNameOrID))
+			if err != nil {
+				return InvalidationJobCreateV4{}, err
+			} else if !ok {
+				return InvalidationJobCreateV4{}, errors.New("delivery service id not found")
+			}
+			job.InvalidationJobCreateV4.DeliveryService = dsName
+		default:
+			return InvalidationJobCreateV4{}, fmt.Errorf("malformed deliveryService %T", *job.DeliveryService)
+		}
+	}
+	if job.StartTime != nil {
+		err := error(nil)
+		job.InvalidationJobCreateV4.StartTime, err = time.Parse(JobV4TimeFormat, *job.StartTime)
+		if err != nil {
+			job.InvalidationJobCreateV4.StartTime, err = time.Parse(JobLegacyTimeFormat, *job.StartTime)
+			if err != nil {
+				return InvalidationJobCreateV4{}, errors.New("malformed startTime '" + *job.StartTime + "'")
+			}
+		}
+	}
+	if job.TTL != nil {
+		ttl, err := legacyTTLHours(*job.TTL)
+		if err != nil {
+			return InvalidationJobCreateV4{}, errors.New("malformed ttl: " + err.Error())
+		}
+		job.InvalidationJobCreateV4.TTLHours = uint32(ttl)
+	}
+	return job.InvalidationJobCreateV4, nil
+}
+
+func GetDSNameFromID(tx *sql.Tx, id int) (string, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT xml_id FROM deliveryservice WHERE id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, fmt.Errorf("querying xml_id for delivery service ID '%v': %v", id, err)
+	}
+	return name, true, nil
 }
 
 // UserInvalidationJobInput Represents legacy-style user input to the /user/current/jobs API endpoint.
@@ -315,35 +372,33 @@ func (j *InvalidationJobInput) TTLHours() (uint, error) {
 	if j.TTL == nil {
 		return 0, errors.New("Attempted to convert a nil TTL into hours")
 	}
+	err := error(nil)
+	ttl, err := legacyTTLHours(*j.TTL)
+	ttlDuration := time.Hour * time.Duration(ttl)
+	j.ttl = &ttlDuration
+	return ttl, err
+}
 
-	var ret uint
-	switch t := (*j.TTL).(type) {
+func legacyTTLHours(ttl interface{}) (uint, error) {
+	switch t := (ttl).(type) {
 	case float64:
-		v := (*j.TTL).(float64)
-		if v < 0 {
+		if t < 0 {
 			return 0, errors.New("TTL cannot be negative!")
 		}
-		if v >= MaxTTL {
+		if t >= MaxTTL {
 			return 0, fmt.Errorf("TTL cannot exceed %d hours!", MaxTTL)
 		}
-		ttl := time.Duration(int64(v * 3600000000000))
-		j.ttl = &ttl
-		ret = uint(ttl.Hours())
-
+		ttl := time.Duration(int64(t * 3600000000000))
+		return uint(ttl.Hours()), nil
 	case string:
-		d, err := time.ParseDuration((*j.TTL).(string))
+		d, err := time.ParseDuration(t)
 		if err != nil || d.Hours() < 1 {
 			return 0, fmt.Errorf("Invalid duration entered for TTL! Must be at least one hour, but no more than %d hours!", MaxTTL)
 		}
-		j.ttl = &d
-		ret = uint(d.Hours())
-
-	default:
-		log.Errorf("unsupported TTL key type: %T\n", t)
-		return 0, errors.New("Unknown error occurred")
+		return uint(d.Hours()), nil
 	}
-
-	return ret, nil
+	log.Errorf("unsupported TTL key type: %T\n", ttl)
+	return 0, errors.New("Unknown error occurred")
 }
 
 // TTLHours will parse job.Parameters to find TTL, returns an int representing
@@ -525,4 +580,113 @@ func (job InvalidationJobV4) String() string {
 		TTLHours,
 		job.InvalidationType,
 		StartTime)
+}
+
+// UnmarshalJSON unmarshals both the legacy and new job formats into the new type.
+//
+// This is for legacy support, once the next major version is released and legacy support is dropped,
+// a custom marshal should become unnecessary and this function can just be removed.
+func (job *InvalidationJobV4) UnmarshalJSON(b []byte) error {
+	combinedJob := InvalidationJobV4PlusLegacy{}
+	if err := json.Unmarshal(b, &combinedJob); err != nil {
+		return err
+	}
+	newJob, err := InvalidationJobV4FromLegacy(combinedJob)
+	if err != nil {
+		return err
+	}
+	*job = newJob
+	return nil
+}
+
+// MarshalJSON marshals a new InvalidationJobV4 into an object understood by both old and new clients.
+//
+// This is for legacy support, once the next major version is released and legacy support is dropped,
+// a custom marshal should become unnecessary and this function can just be removed.
+func (job InvalidationJobV4) MarshalJSON() ([]byte, error) {
+	return json.Marshal(InvalidationJobV4ToLegacy(job))
+}
+
+type InvalidationJobV4Legacy struct {
+	Keyword    *string `json:"keyword"`
+	Parameters *string `json:"parameters"`
+}
+
+// InvalidationJobV4ForLegacy is a type alias to prevent MarshalJSON recursion.
+type InvalidationJobV4ForLegacy InvalidationJobV4
+
+type InvalidationJobV4PlusLegacy struct {
+	StartTime *string `json:"startTime"`
+	InvalidationJobV4ForLegacy
+	InvalidationJobV4Legacy
+}
+
+const JobV4TimeFormat = time.RFC3339Nano
+const JobLegacyTimeFormat = "2006-01-02 15:04:05-07"
+const JobLegacyRefetchSuffix = `##REFETCH##`
+const JobLegacyRefreshSuffix = `##REFRESH##`
+const JobLegacyParamPrefix = "TTL:"
+const JobLegacyParamSuffix = "h"
+const JobLegacyKeyword = "PURGE"
+
+func InvalidationJobV4FromLegacy(job InvalidationJobV4PlusLegacy) (InvalidationJobV4, error) {
+	if job.StartTime != nil {
+		err := error(nil)
+		job.InvalidationJobV4ForLegacy.StartTime, err = time.Parse(JobV4TimeFormat, *job.StartTime)
+		if err != nil {
+			job.InvalidationJobV4ForLegacy.StartTime, err = time.Parse(JobLegacyTimeFormat, *job.StartTime)
+			if err != nil {
+				return InvalidationJobV4{}, errors.New("malformed startTime")
+			}
+		}
+	}
+
+	if job.TTLHours == 0 && job.Parameters != nil {
+		params := *job.Parameters
+		params = strings.TrimSpace(params)
+		params = strings.ToLower(params)
+		params = strings.Replace(params, " ", "", -1)
+
+		paramPrefix := strings.ToLower(JobLegacyParamPrefix)
+		paramSuffix := strings.ToLower(JobLegacyParamSuffix)
+		if !strings.HasPrefix(params, paramPrefix) || !strings.HasSuffix(params, paramSuffix) {
+			return InvalidationJobV4{}, errors.New("legacy job.Parameters was not nil, but unexpected format '" + params + "'")
+		}
+
+		hoursStr := params[len(paramPrefix) : len(params)-len(paramSuffix)]
+		hours, err := strconv.Atoi(hoursStr)
+		if err != nil {
+			return InvalidationJobV4{}, errors.New("legacy job.Parameters was not nil, but hours not an integer: '" + params + "'")
+		}
+		job.TTLHours = uint(hours)
+	}
+
+	if job.InvalidationType == "" && job.Parameters != nil {
+		job.InvalidationType = REFRESH
+		if strings.HasSuffix(job.AssetURL, JobLegacyRefetchSuffix) {
+			job.InvalidationType = REFETCH
+		}
+	}
+	job.AssetURL = strings.TrimSuffix(job.AssetURL, JobLegacyRefreshSuffix)
+	job.AssetURL = strings.TrimSuffix(job.AssetURL, JobLegacyRefetchSuffix)
+
+	return InvalidationJobV4(job.InvalidationJobV4ForLegacy), nil
+}
+
+func InvalidationJobV4ToLegacy(job InvalidationJobV4) InvalidationJobV4PlusLegacy {
+	params := (*string)(nil)
+	if job.InvalidationType != "" {
+		params = util.StrPtr(JobLegacyParamPrefix + strconv.Itoa(int(job.TTLHours)) + JobLegacyParamSuffix)
+	}
+	if job.InvalidationType == REFETCH {
+		job.AssetURL += JobLegacyRefetchSuffix
+	}
+	return InvalidationJobV4PlusLegacy{
+		StartTime:                  util.StrPtr(job.StartTime.Format(JobLegacyTimeFormat)),
+		InvalidationJobV4ForLegacy: InvalidationJobV4ForLegacy(job),
+		InvalidationJobV4Legacy: InvalidationJobV4Legacy{
+			Keyword:    util.StrPtr(JobLegacyKeyword),
+			Parameters: params,
+		},
+	}
 }
