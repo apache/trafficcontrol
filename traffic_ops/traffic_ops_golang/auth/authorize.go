@@ -160,12 +160,10 @@ func GetCurrentUser(ctx context.Context) (*CurrentUser, error) {
 	return &CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, "", []string{}, nil}, errors.New("No user found in Context")
 }
 
-func CheckLocalUserIsAllowed(form PasswordForm, db *sqlx.DB, timeout time.Duration) (bool, error, error) {
+func CheckLocalUserIsAllowed(form PasswordForm, db *sqlx.DB, ctx context.Context) (bool, error, error) {
 	var roleName string
-	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
-	defer dbClose()
 
-	err := db.GetContext(dbCtx, &roleName, "SELECT role.name FROM role INNER JOIN tm_user ON tm_user.role = role.id where username=$1", form.Username)
+	err := db.GetContext(ctx, &roleName, "SELECT role.name FROM role INNER JOIN tm_user ON tm_user.role = role.id where username=$1", form.Username)
 	if err != nil {
 		if err == context.DeadlineExceeded || err == context.Canceled {
 			return false, nil, err
@@ -180,12 +178,10 @@ func CheckLocalUserIsAllowed(form PasswordForm, db *sqlx.DB, timeout time.Durati
 	return false, nil, nil
 }
 
-func CheckLocalUserPassword(form PasswordForm, db *sqlx.DB, timeout time.Duration) (bool, error, error) {
+func CheckLocalUserPassword(form PasswordForm, db *sqlx.DB, ctx context.Context) (bool, error, error) {
 	var hashedPassword string
-	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
-	defer dbClose()
 
-	err := db.GetContext(dbCtx, &hashedPassword, "SELECT local_passwd FROM tm_user WHERE username=$1", form.Username)
+	err := db.GetContext(ctx, &hashedPassword, "SELECT local_passwd FROM tm_user WHERE username=$1", form.Username)
 	if err != nil {
 		if err == context.DeadlineExceeded || err == context.Canceled {
 			return false, nil, err
