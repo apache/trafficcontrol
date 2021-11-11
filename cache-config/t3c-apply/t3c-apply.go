@@ -69,6 +69,9 @@ func main() {
 	} else if cfg == (config.Cfg{}) { // user used the --help option
 		os.Exit(Success)
 	}
+	if !lock.GetLock("/var/run/t3c.lock") {
+		os.Exit(AlreadyRunning)
+	}
 
 	if cfg.UseGit == config.UseGitYes {
 		err := util.EnsureConfigDirIsGitRepo(cfg)
@@ -103,11 +106,6 @@ func main() {
 	} else if !util.CleanTmpDir(cfg) {
 		log.Errorln("CleanTmpDir failed, cannot continue")
 		os.Exit(GeneralFailure)
-	}
-	if !cfg.ReportOnly {
-		if !lock.GetLock(config.TmpBase + "/to_ort.lock") {
-			os.Exit(AlreadyRunning)
-		}
 	}
 
 	log.Infoln(time.Now().Format(time.RFC3339))
