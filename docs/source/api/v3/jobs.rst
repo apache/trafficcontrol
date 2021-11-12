@@ -109,7 +109,7 @@ Response Structure
 
 ``POST``
 ========
-Creates a new :term:`Content Invalidation Jobs`.
+Creates a new :term:`Content Invalidation Job`.
 
 .. caution:: Creating a :term:`Content Invalidation Job` immediately triggers a CDN-wide revalidation update. In the case that the global :term:`Parameter` ``use_reval_pending`` has a value of exactly ``"0"``, this will instead trigger a CDN-wide "Queue Updates". This means that :term:`Content Invalidation Jobs` become active **immediately** at their ``startTime`` - unlike most other configuration changes they do not wait for a :term:`Snapshot` or a "Queue Updates". Furthermore, if the global :term:`Parameter` ``use_reval_pending`` *is* ``"0"``, this will cause all pending configuration changes to propagate to all :term:`cache servers` in the CDN. Take care when using this endpoint.
 
