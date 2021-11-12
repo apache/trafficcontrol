@@ -22,7 +22,7 @@ Content Invalidation Jobs
 
 In general, this *should* be unnecessary, because a well-behaved :term:`Origin` *should* be setting its HTTP caching headers properly, so that content is only considered valid for some appropriate time intervals. Occasionally, however, an :term:`Origin` will be too optimistic with its caching instructions, and when content needs to be updated, :term:`cache servers` need to be informed that they must check back with the :term:`Origin`. Content Invalidation Jobs allow this to be done for specific patterns of assets, so that :term:`cache servers` will check back in with the :term:`Origin` and verify that the content they have cached is still valid.
 
-The model for Content Invalidation Job as API objects is given in :ref:`jobs-model` as a TypeScript interface.
+The model for Content Invalidation Job as API objects is given in :ref:`jobs-model`.
 
 .. _jobs-model:
 
