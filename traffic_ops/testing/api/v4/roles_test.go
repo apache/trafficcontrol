@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -267,5 +268,16 @@ func DeleteTestRoles(t *testing.T) {
 		if err != nil {
 			t.Errorf("expected no error while deleting role %s, but got %v", r.Name, err)
 		}
+	}
+
+	resp, reqInf, err := TOSession.DeleteRole(tc.AdminRoleName, client.NewRequestOptions())
+	if err == nil {
+		t.Errorf("Expected an error trying to delete the '%s' Role, but didn't get one", tc.AdminRoleName)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected a %d response, got: %d %s", http.StatusBadRequest, reqInf.StatusCode, http.StatusText(reqInf.StatusCode))
+	}
+	if !strings.Contains(resp.ErrorString(), tc.AdminRoleName) {
+		t.Errorf("Expected an error-level alert that mentions the special '%s' Role, got: %s", tc.AdminRoleName, resp.ErrorString())
 	}
 }

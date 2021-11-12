@@ -31,6 +31,29 @@ var FormRoleController = function(roles, $scope, $location, formUtils, locationU
 
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 
+	/**
+	 * A function that produces a regular expression that matches valid Names
+	 * for the current Role.
+	 *
+	 * In particular, non-'admin' Roles can't be named 'admin', and the 'admin'
+	 * Role can't be renamed.
+	 *
+	 * @returns {RegExp} A pattern that matches valid Role Names for the current
+	 * Role.
+	 */
+	function namePattern() {
+		if (_pattern === null) {
+			if ($scope.role.name === "admin") {
+				_pattern = /^admin$/;
+			} else {
+				_pattern = /^(?!admin$)\S+$/;
+			}
+		}
+		return _pattern;
+	}
+	$scope.namePattern = namePattern;
+	// caches the RegExp so it only needs to be compiled once
+	_pattern = null;
 };
 
 FormRoleController.$inject = ['roles', '$scope', '$location', 'formUtils', 'locationUtils'];

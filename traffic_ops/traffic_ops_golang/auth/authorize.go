@@ -29,6 +29,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 
 	"github.com/jmoiron/sqlx"
@@ -49,7 +50,7 @@ type CurrentUser struct {
 // Can returns whether or not the user has the specified Permission, i.e.
 // whether or not they "can" do something.
 func (cu CurrentUser) Can(permission string) bool {
-	if cu.RoleName == "admin" {
+	if cu.RoleName == tc.AdminRoleName {
 		return true
 	}
 	_, ok := cu.perms[permission]
@@ -60,7 +61,7 @@ func (cu CurrentUser) Can(permission string) bool {
 // not have.
 func (cu CurrentUser) MissingPermissions(permissions ...string) []string {
 	var ret []string
-	if cu.RoleName == "admin" {
+	if cu.RoleName == tc.AdminRoleName {
 		return ret
 	}
 	for _, perm := range permissions {
