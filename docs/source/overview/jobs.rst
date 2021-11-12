@@ -56,7 +56,7 @@ The model for Content Invalidation Job as API objects is given in :ref:`jobs-mod
 
 Asset URL
 ---------
-This property only appears in responses from the :ref:`to-api`, and has no effect in requests. The :dfn:`Asset URL` is constructed from the `Regular Expression`_ used in the creation of a Content Invalidation Job and the :ref:`ds-origin-url` of the :term:`Delivery Service` for which it was created. It is a URL that has a valid regular expression as its path (and may not be "percent-encoded" where a normal URL typically would be). Requests from CDN clients for content that matches this pattern will trigger Content Invalidation behavior.
+This property only appears in responses from the :ref:`to-api` (and in the bodies of ``PUT`` requests to :ref:`to-api-jobs`, where the scheme and host/authority sections of the URL is held immutable). The :dfn:`Asset URL` is constructed from the `Regular Expression`_ used in the creation of a Content Invalidation Job and the :ref:`ds-origin-url` of the :term:`Delivery Service` for which it was created. It is a URL that has a valid regular expression as its path (and may not be "percent-encoded" where a normal URL typically would be). Requests from CDN clients for content that matches this pattern will trigger Content Invalidation behavior.
 
 .. _job-created-by:
 
