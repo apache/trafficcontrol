@@ -57,7 +57,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/4.0/jobs?id=3&dsId=1&userId=2 HTTP/1.1
+	GET /api/4.0/jobs?id=1&dsId=1&userId=2 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: python-requests/2.20.1
 	Accept-Encoding: gzip, deflate
@@ -83,27 +83,25 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
-	Access-Control-Allow-Credentials: true
-	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
-	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	Access-Control-Allow-Origin: *
 	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: gH41oEi2zrd3y8yo+wfohn4/oHU098RpyPnqBzU7HlLUDkMOPKjAZnamcYqfdy7yDCFDUcgqkvbFAvnljxyb8w==
+	Permissions-Policy: interest-cohort=()
+	Set-Cookie: mojolicious=...
+	Vary: Accept-Encoding
 	X-Server-Name: traffic_ops_golang/
-	Date: Tue, 18 Jun 2019 19:47:30 GMT
-	Content-Length: 186
+	Date: Fri, 12 Nov 2021 19:30:36 GMT
+	Content-Length: 206
 
 	{ "response": [{
-		"assetUrl": "http://origin.infra.ciab.test/.*",
+		"id": 1,
+		"assetUrl": "http://origin.infra.ciab.test/.+",
 		"createdBy": "admin",
 		"deliveryService": "demo1",
-		"id": 3,
-		"keyword": "PURGE",
-		"parameters": "TTL:2h",
-		"startTime": "2019-06-18 21:28:31+00"
+		"ttlHours": 72,
+		"invalidationType": "REFETCH",
+		"startTime": "2021-11-09T01:02:03Z"
 	}]}
+
 
 
 ``POST``
