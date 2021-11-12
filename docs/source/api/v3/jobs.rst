@@ -292,7 +292,7 @@ Response Structure
 	Content-Length: 234
 
 	{ "alerts": [{
-		"text": "Content invalidation :term:`Content Invalidation Job` updated",
+		"text": "Content invalidation job updated",
 		"level": "success"
 	}],
 	"response": {
@@ -372,7 +372,7 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "Content invalidation :term:`Content Invalidation Job` was deleted",
+			"text": "Content invalidation job was deleted",
 			"level": "success"
 		}
 	],
