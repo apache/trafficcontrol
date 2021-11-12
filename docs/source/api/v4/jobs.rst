@@ -246,7 +246,7 @@ Response Structure
 :assetUrl:         The :ref:`job-asset-url`
 :createdBy:        The :ref:`job-created-by`
 :deliveryService:  The :ref:`job-ds`
-:id:               The :ref:`job-id`.
+:id:               The :ref:`job-id`
 :invalidationType: The :ref:`job-invalidation-type`
 :ttlHours:         The :ref:`job-ttl`
 :startTime:        The :ref:`job-start-time`
