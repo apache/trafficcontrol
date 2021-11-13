@@ -17,30 +17,64 @@
  * under the License.
  */
 export const deliveryservicerequest = {
+    cleanup: [
+       
+    ],
+    setup: [
+        {
+            action: "CreateDeliveryServiceRequest",
+            route: "/deliveryservice_requests",
+            method: "post",
+            data: [
+                { 
+                    changeType: "create", 
+                    status: "submitted", 
+                    requested: { 
+                        dscp: 0, 
+                        regionalGeoBlocking: false, 
+                        logsEnabled: false, 
+                        geoProvider: 0, 
+                        geoLimit: 0, 
+                        ccrDnsTtl: 30, 
+                        anonymousBlockingEnabled: false, 
+                        consistentHashQueryParams: [], 
+                        xmlId: "test212", 
+                        displayName: "testing212", 
+                        active: true, 
+                        typeId: 8, 
+                        tenantId: 1, 
+                        cdnId: 1, 
+                        remapText: "test", 
+                        tlsVersions: null 
+                    } 
+                }
+            ]
+        }
+    ],
     tests: [
         {
             logins: [
-				{
-					description: "Admin Role",
-					username: "TPAdmin",
-					password: "pa$$word"
-				}
-			],
-            add: [
                 {
-                    description: "create a delivery service with delivery service request",
-                    Type: "ANY_MAP",
-                    XmlId: "deliveryservicetesting",
-                    DisplayName: "test",
+                    description: "Admin Role",
+                    username: "TPAdmin",
+                    password: "pa$$word"
+                }
+            ],
+            create: [
+                {
+                    description: "create a delivery service request",
+                    XmlId: "cdntesting",
+                    DisplayName: "testingoverload",
                     Active: "Active",
                     ContentRoutingType: "ANY_MAP",
-                    Tenant: "-root",
-                    CDN: "CDN-in-a-Box",
-                    RawRemapText: "test",
-                    RequestStatus: "Submit Request for Review and Deployment",
-                    validationMessage: "Created request to create the test delivery service"
+                    Tenant: "-tenantSame",
+                    CDN: "dummycdn",
+                    RawText: "test",
+                    validationMessage: "Created request to create the cdntesting delivery service",
+                    FullfillMessage: "Delivery Service [ cdntesting ] created"
                 }
             ]
+
         }
     ]
 }

@@ -17,184 +17,92 @@
  * under the License.
  */
 
-import { browser, by, element, ExpectedConditions } from 'protractor';
+import {  browser, by, element} from 'protractor';
 import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from '../PageObjects/SideNavigationPage.po';
 import { randomize } from '../config';
-interface DeliveryService{
+
+interface CreateDeliveryServiceRequest{
   description: string;
   XmlId: string;
-  Type: string;
   DisplayName: string;
   Active: string;
   ContentRoutingType: string;
   Tenant: string;
   CDN: string;
-  RawRemapText: string;
-  RequestStatus: string;
-  validationMessage: string;
+  RawText: string;
+  validationMessage:string;
+}
+interface SearchDeliveryServiceRequest{
+  XmlId: string;
+}
+interface FullfillDeliveryServiceRequest{
+  XmlId: string;
+  FullfillMessage: string;
 }
 
 export class DeliveryServicesRequestPage extends BasePage {
-
-  private btnCreateNewDeliveryServices = element(by.name('createDeliveryServiceButton'));
-  private mnuFormDropDown = element(by.name('selectFormDropdown'));
-  private btnSubmitFormDropDown = element(by.buttonText('Submit'));
-  private txtSearch = element(by.id('deliveryServicesTable_filter')).element(by.css('label input'));
-  private txtConfirmName = element(by.name('confirmWithNameInput'));
-  private btnDelete = element(by.className('pull-right')).element(by.buttonText('Delete'));
-
-  private btnYesRemoveRC = element(by.buttonText('Yes'));
-  private txtRequestStatus = element(by.name('requestStatus'));
-  private txtComment = element(by.name('comment'));
-
-  private txtXmlId = element(by.name('xmlId'));
-  private txtDisplayName = element(by.name('displayName'));
-  private selectActive = element(by.name('active'));
-  private selectType = element(by.id('type'));
-  private selectTenant = element(by.name('tenantId'));
-  private selectCDN = element(by.name('cdn'));
-
-  // Cache Configuration Settings 
-  private txtRemapText = element(by.name('remapText'));
-
-  //Routing Configuration Settings 
-  private btnCreateDeliveryServices = element(by.xpath("//div[@class='pull-right']//button[text()='Create']"));
-  private btnFullfillRequest = element(by.xpath("//button[text()='Fulfill Request']"));
-  private txtSearchDSRequest = element(by.xpath("//div[@id='dsRequestsTable_filter']//input[@type='search']"));
-  private lnkCompleteRequest = element(by.css('a[title="Complete Request"]'));
-  private txtCommentCompleteDS = element(by.name("text"));
-  private txtNoMatchingError = element(by.xpath("//td[text()='No data available in table']"));
+  private btnFullfillRequest = element(by.buttonText("Fulfill Request"))
+  private btnYes = element(by.buttonText("Yes"))
+  private btnMore = element(by.name("moreBtn"))
+  private btnCreateDS = element(by.linkText("Create Delivery Service"));
+  private formDropDown = element(by.name("selectFormDropdown"))
+  private txtXmlId = element(by.id("xmlId"));
+  private txtDisplayName = element(by.id("displayName"));
+  private txtActive = element(by.id("active"));
+  private txtContentRoutingType = element(by.id("type"));
+  private txtTenant = element(by.id("tenantId"));
+  private txtCDN = element(by.id("cdn"));
+  private txtRawRemapText = element(by.id("remapText"));
+  private txtRequestStatus = element(by.name("requestStatus"))
+  private txtComment = element(by.name("comment"))
+  private txtQuickSearch = element(by.id("quickSearch"))
   private randomize = randomize;
-  async OpenDeliveryServicePage() {
-    let snp = new SideNavigationPage();
-    await snp.NavigateToDeliveryServicesPage();
+  public async OpenDeliveryServiceRequestPage(){
+    const snp = new SideNavigationPage();
+    await snp.NavigateToDeliveryServicesRequestsPage();
   }
-  async OpenServicesMenu() {
-    let snp = new SideNavigationPage();
+  public async OpenServicesMenu(){
+    const snp = new SideNavigationPage();
     await snp.ClickServicesMenu();
   }
-
-  async CreateDeliveryService(deliveryservice:DeliveryService) {
-    let result = false;
-    let type: string = deliveryservice.Type;
-    let basePage = new BasePage();
-    let snp = new SideNavigationPage();
-    if (deliveryservice.validationMessage.includes("created")) {
-      deliveryservice.validationMessage = deliveryservice.validationMessage.replace(deliveryservice.XmlId, deliveryservice.XmlId + this.randomize)
-    }
+  public async OpenDeliveryServicePage(){
+    const snp = new SideNavigationPage();
     await snp.NavigateToDeliveryServicesPage();
-    await this.btnCreateNewDeliveryServices.click();
-    await this.mnuFormDropDown.sendKeys(type);
-    await this.btnSubmitFormDropDown.click();
-    await this.txtXmlId.sendKeys(deliveryservice.XmlId + this.randomize);
-    await this.txtDisplayName.sendKeys(deliveryservice.DisplayName);
-    await this.selectActive.sendKeys(deliveryservice.Active)
-    await this.selectType.sendKeys(deliveryservice.ContentRoutingType)
-    await this.selectTenant.sendKeys(deliveryservice.Tenant + this.randomize)
-    await this.selectCDN.sendKeys(deliveryservice.CDN)
-    await this.txtRemapText.sendKeys(deliveryservice.RawRemapText)
-    await this.btnCreateDeliveryServices.click();
-    await this.txtRequestStatus.sendKeys(deliveryservice.RequestStatus);
-    await this.txtComment.sendKeys('test');
+  }
+  public async CreateDeliveryServiceRequest(deliveryservicerequest: CreateDeliveryServiceRequest){
+    const basePage = new BasePage();
+    const outPutMessage = deliveryservicerequest.validationMessage.replace(deliveryservicerequest.XmlId,deliveryservicerequest.XmlId+this.randomize)
+    await this.btnMore.click();
+    await this.btnCreateDS.click();
+    await this.formDropDown.sendKeys("ANY_MAP");
     await basePage.ClickSubmit();
-    if (deliveryservice.RequestStatus.includes('Review and Deployment')) {
-      if (await this.SearchDeliveryServiceRequest(deliveryservice.XmlId + this.randomize) == true) {
-        await browser.actions().mouseMove(this.btnFullfillRequest).perform();
-        await this.btnFullfillRequest.click();
-        await this.btnYesRemoveRC.click();
-        result = await basePage.GetOutputMessage().then(function (value) {
-          if (deliveryservice.validationMessage == value) {
-            return true;
-          } else {
-            return false;
-          }
-        })
-        await snp.NavigateToDeliveryServicesRequestsPage();
-        await this.txtSearchDSRequest.clear();
-        await this.txtSearchDSRequest.sendKeys(deliveryservice.XmlId + this.randomize);
-        await this.lnkCompleteRequest.click();
-        await this.btnYesRemoveRC.click();
-        await this.txtCommentCompleteDS.sendKeys('test');
-        await basePage.ClickSubmit();
-      }
-    }
-    return result;
-  }
-  async SearchDeliveryServiceRequest(name: string) {
-    let result = false;
-    await browser.wait(ExpectedConditions.visibilityOf(this.txtSearchDSRequest), 2000);
-    await this.txtSearchDSRequest.clear();
-    await this.txtSearchDSRequest.sendKeys(name);
-    if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
-      await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-      result = true;
-    }
-    return result;
-  }
-
-  async SearchDeliveryService(nameDS: string) {
-    let name = nameDS + this.randomize;
-    await this.txtSearch.clear();
-    await this.txtSearch.sendKeys(name);
-    if (await this.txtNoMatchingError.isPresent() == true) {
-      return undefined;
-    } else {
-      await element.all(by.repeater('ds in ::deliveryServices')).filter(function (row) {
-        return row.element(by.name('xmlId')).getText().then(function (val) {
-          return val === name;
-        });
-      }).first().click();
-    }
-  }
-
-
-  async DeleteDeliveryService(nameDS: string, requestStatus: string, outputMessage: string) {
-    let result = false;
-    let basePage = new BasePage();
-    let snp = new SideNavigationPage();
-    let name = nameDS + this.randomize;
-    if (outputMessage.includes("deleted")) {
-      outputMessage = outputMessage.replace(nameDS, name);
-    }
-    await this.btnDelete.click();
-    await this.txtConfirmName.sendKeys(name);
-    await basePage.ClickDeletePermanently();
-    await this.txtRequestStatus.sendKeys(requestStatus);
-    await this.txtComment.sendKeys('test');
+    await this.txtXmlId.sendKeys(deliveryservicerequest.XmlId + this.randomize);
+    await this.txtDisplayName.sendKeys(deliveryservicerequest.DisplayName + this.randomize);
+    await this.txtActive.sendKeys(deliveryservicerequest.Active);
+    await this.txtContentRoutingType.sendKeys(deliveryservicerequest.ContentRoutingType);
+    await this.txtTenant.sendKeys(deliveryservicerequest.Tenant);
+    await this.txtCDN.sendKeys(deliveryservicerequest.CDN);
+    await this.txtRawRemapText.sendKeys(deliveryservicerequest.RawText);
+    await basePage.ClickCreate();
+    await this.txtRequestStatus.sendKeys("Submit Request for Review and Deployment");
+    await this.txtComment.sendKeys("test");
     await basePage.ClickSubmit();
-    if (requestStatus.includes('Review and Deployment')) {
-      if (await this.SearchDeliveryServiceRequest(name) == true) {
-        await browser.actions().mouseMove(this.btnFullfillRequest).perform();
-        await this.btnFullfillRequest.click();
-        await this.btnYesRemoveRC.click();
-        await this.txtConfirmName.sendKeys(name);
-        await basePage.ClickDeletePermanently();
-        result = await basePage.GetOutputMessage().then(function (value) {
-          if (outputMessage == value) {
-            return true;
-          } else {
-            return false;
-          }
-        })
-        await snp.NavigateToDeliveryServicesRequestsPage();
-        await this.txtSearchDSRequest.clear();
-        await this.txtSearchDSRequest.sendKeys(name);
-        await this.lnkCompleteRequest.click();
-        await this.btnYesRemoveRC.click();
-        await this.txtCommentCompleteDS.sendKeys('test');
-        await basePage.ClickSubmit();
-      }
-    } else {
-      result = await basePage.GetOutputMessage().then(function (value) {
-        if (outputMessage == value) {
-          return true;
-        } else {
-          return false;
-        }
-      })
-
-    }
-    return result;
+    return await basePage.GetOutputMessage().then(value => outPutMessage === value);
   }
+  public async SearchDeliveryServiceRequest(deliveryservicerequest: SearchDeliveryServiceRequest){
+    const name = deliveryservicerequest.XmlId+this.randomize;
+    await this.txtQuickSearch.sendKeys(name)
+    await browser.actions().click(element(by.cssContainingText("span", name))).perform();
+  }
+  public async FullFillDeliveryServiceRequest(deliveryservicerequest: FullfillDeliveryServiceRequest): Promise<boolean>{
+    const basePage = new BasePage();
+    const outPutMessage = deliveryservicerequest.FullfillMessage.replace(deliveryservicerequest.XmlId,deliveryservicerequest.XmlId+this.randomize)
+    await this.btnFullfillRequest.click();
+    await this.btnYes.click();
+    return await basePage.GetOutputMessage().then(value => outPutMessage === value);
+  }
+  
 }
+
+  

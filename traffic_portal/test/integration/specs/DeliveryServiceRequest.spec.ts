@@ -27,25 +27,33 @@ const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const deliveryServiceRequestPage = new DeliveryServicesRequestPage();
 
+
+
 deliveryservicerequest.tests.forEach(deliveryServiceRequestData => {
     deliveryServiceRequestData.logins.forEach(login => {
         describe(`Traffic Portal - Delivery Service Request - ${login.description}`, () => {
+            afterEach(async function () {
+                await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
+            });
+            afterAll(async function () {
+                expect(await topNavigation.Logout()).toBeTruthy();
+            })
             it('can login', async function(){
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            })
-            it('can open delivery service page', async function () {
                 await deliveryServiceRequestPage.OpenServicesMenu();
-                await deliveryServiceRequestPage.OpenDeliveryServicePage();
             })
-            deliveryServiceRequestData.add.forEach(add => {
-                it(add.description, async () => {
-                    expect(await deliveryServiceRequestPage.CreateDeliveryService(add)).toBe(true);
+
+            deliveryServiceRequestData.create.forEach(create => {
+                it(create.description, async () => {
+                    await deliveryServiceRequestPage.OpenDeliveryServicePage();
+                    expect(await deliveryServiceRequestPage.CreateDeliveryServiceRequest(create)).toBe(true);
+                    await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
+                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(create);
+                    expect(await deliveryServiceRequestPage.FullFillDeliveryServiceRequest(create)).toBe(true);
+
                 });
-            });
-            it('can logout', async () => {
-                expect(await topNavigation.Logout()).toBeTruthy();
             });
         });
     });
