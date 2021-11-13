@@ -41,7 +41,8 @@ const MaxTTL = math.MaxInt64 / 3600000000000
 
 const twoDays = time.Hour * 48
 
-// ValidJobRegexPrefix matches the only valid prefixes for a relative-path Content Invalidation Job regex
+// ValidJobRegexPrefix matches the only valid prefixes for a relative-path
+// Content Invalidation Job regular expression.
 var ValidJobRegexPrefix = regexp.MustCompile(`^\?/.*$`)
 
 // InvalidationJob represents a content invalidation job as returned by the API.
@@ -58,7 +59,7 @@ type InvalidationJob struct {
 	StartTime *Time `json:"startTime"`
 }
 
-// InvalidationJobsResponseV40 is the type of a response from Traffic Ops to a
+// InvalidationJobsResponse is the type of a response from Traffic Ops to a
 // request made to its /jobs API endpoint.
 type InvalidationJobsResponse struct {
 	Response []InvalidationJob `json:"response"`
@@ -245,39 +246,50 @@ func (job *InvalidationJobInput) Validate(tx *sql.Tx) error {
 	return nil
 }
 
+type compareJob struct {
+	AssetURL  string
+	TTLHours  uint
+	StartTime time.Time
+}
+
+// ValidateJobUniqueness returns a message describing each overlap between
+// existing content invalidation jobs for the same assetURL as the one passed.
+//
+// TODO: This doesn't belong in the lib, and it swallows errors because it
+// can't log them.
 func ValidateJobUniqueness(tx *sql.Tx, dsID uint, startTime time.Time, assetURL string, ttlHours uint) []string {
 	var errs []string
 
 	const readQuery = `
-SELECT job.id,
-       keyword,
-       parameters,
-       asset_url,
+SELECT asset_url,
+	   ttl_hr,
        start_time
 FROM job
 WHERE job.job_deliveryservice = $1
 `
 	rows, err := tx.Query(readQuery, dsID)
 	if err != nil {
-		errs = append(errs, fmt.Sprintf("unable to query for other invalidation jobs"))
+		errs = append(errs, "unable to query for invalidation jobs while validating job uniqueness")
 	} else {
 		defer rows.Close()
 		jobStart := startTime
 		for rows.Next() {
-			testJob := InvalidationJob{}
-			err = rows.Scan(&testJob.ID, &testJob.Keyword, &testJob.Parameters, &testJob.AssetURL, &testJob.StartTime)
+			testJob := compareJob{}
+			err = rows.Scan(
+				&testJob.AssetURL,
+				&testJob.TTLHours,
+				&testJob.StartTime)
 			if err != nil {
 				continue
 			}
-			if !strings.HasSuffix(*testJob.AssetURL, assetURL) {
+			if !strings.HasSuffix(testJob.AssetURL, assetURL) {
 				continue
 			}
-			testJobTTL := testJob.TTLHours()
-			if testJobTTL == 0 {
+			if testJob.TTLHours == 0 {
 				continue
 			}
-			testJobStart := testJob.StartTime.Time
-			testJobEnd := testJobStart.Add(time.Hour * time.Duration(testJobTTL))
+			testJobStart := testJob.StartTime
+			testJobEnd := testJobStart.Add(time.Hour * time.Duration(testJob.TTLHours))
 			jobEnd := jobStart.Add(time.Hour * time.Duration(ttlHours))
 			// jobStart in testJob range
 			if (testJobStart.Before(jobStart) && jobStart.Before(testJobEnd)) ||
@@ -286,7 +298,7 @@ WHERE job.job_deliveryservice = $1
 				// job range encaspulates testJob range
 				(testJobEnd.Before(jobEnd) && jobStart.Before(jobStart)) {
 				errs = append(errs, fmt.Sprintf("Invalidation request duplicate found for %v, start:%v end:%v",
-					*testJob.AssetURL, testJobStart, testJobEnd))
+					testJob.AssetURL, testJobStart, testJobEnd))
 			}
 		}
 	}
@@ -334,8 +346,8 @@ func (j *InvalidationJobInput) TTLHours() (uint, error) {
 	return ret, nil
 }
 
-// TTLHours will parse job.Parameters to find TTL, returns an int representing number of hours. Returns 0
-// in case of issue (0 is an invalid TTL)
+// TTLHours will parse job.Parameters to find TTL, returns an int representing
+// number of hours. Returns 0 in case of issue (0 is an invalid TTL).
 func (job *InvalidationJob) TTLHours() uint {
 	if job.Parameters == nil {
 		return 0
@@ -449,4 +461,68 @@ func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 		return errors.New(strings.Join(errs, ", "))
 	}
 	return nil
+}
+
+const REFRESH = "REFRESH"
+const REFETCH = "REFETCH"
+
+// InvalidationJobsResponse is the type of a response from Traffic Ops to a
+// request made to its /jobs API endpoint for v 4.0+
+type InvalidationJobsResponseV4 struct {
+	Response []InvalidationJobV4 `json:"response"`
+	Alerts
+}
+
+// InvalidationJobCreateV4 is an alias for the InvalidationJobCreateV40 struct used for the latest minor version associated with api major version 4.
+type InvalidationJobCreateV4 InvalidationJobCreateV40
+
+// InvalidationJobCreateV40 represents user input intending to create a content invalidation job.
+type InvalidationJobCreateV40 struct {
+	// The Delivery Service XML-ID for which the Invalidation Job is to be applied.
+	DeliveryService string `json:"deliveryService"`
+
+	// Regex is a regular expression which not only must be valid, but should also start with '/'
+	// (or escaped: '\/')
+	Regex string `json:"regex"`
+
+	// StartTime is the time at which the job will come into effect. Must be in the future.
+	StartTime time.Time `json:"startTime"`
+
+	// TTLHours indicates the Time-to-Live of the job in hours. Must be a positive integer value.
+	TTLHours uint32 `json:"ttlHours"`
+
+	// InvalidationType must be either REFRESH (default behavior) or REFETCH. If REFETCH, must
+	// also comply with global parameter setting
+	InvalidationType string `json:"invalidationType"`
+}
+
+// InvalidationJobV4 is an alias for the InvalidationJobV4 struct used for the latest minor version associated with api major version 4.
+type InvalidationJobV4 InvalidationJobV40
+
+// InvalidationJobV40 represents a content invalidation job as returned by the API.
+// Also used for Update calls.
+type InvalidationJobV40 struct {
+	ID               uint64    `json:"id"`
+	AssetURL         string    `json:"assetUrl"`
+	CreatedBy        string    `json:"createdBy"`
+	DeliveryService  string    `json:"deliveryService"`
+	TTLHours         uint      `json:"ttlHours"`
+	InvalidationType string    `json:"invalidationType"`
+	StartTime        time.Time `json:"startTime"`
+}
+
+func (job InvalidationJobV4) String() string {
+
+	ID := strconv.FormatUint(job.ID, 10)
+	TTLHours := strconv.FormatUint(uint64(job.TTLHours), 10)
+	StartTime := job.StartTime.String()
+
+	return fmt.Sprintf("{\nID:\t\t\t\t\t%s,\nAssetURL:\t\t\t%s,\nCreatedBy:\t\t\t%s,\nDeliveryService:\t%s,\nTTLHours:\t\t\t%s,\nInvalidationType:\t%s,\nStartTime:\t\t\t%s,\n}",
+		ID,
+		job.AssetURL,
+		job.CreatedBy,
+		job.DeliveryService,
+		TTLHours,
+		job.InvalidationType,
+		StartTime)
 }

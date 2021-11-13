@@ -31,6 +31,7 @@ Retrieves properties of :term:`Edge-tier cache servers` eligible for assignment 
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: DELIVERY-SERVICE:READ, SERVER:READ, CACHE-GROUP:READ, TYPE:READ, CDN:READ
 :Response Type:  Array
 
 Request Structure
@@ -75,7 +76,7 @@ Response Structure
 		:gateway:       The IPv4 or IPv6 gateway address of the server - applicable for the interface ``name``
 		:service_address:  A boolean determining if content will be routed to the IP address
 
-:lastUpdated:    The time and date at which this server was last updated, in an ISO-like format
+:lastUpdated:    The time and date at which this server was last updated, in :ref:`non-rfc-datetime`
 :mgmtIpAddress:  The IPv4 address of the server's management port
 :mgmtIpGateway:  The IPv4 gateway of the server's management port
 :mgmtIpNetmask:  The IPv4 subnet mask of the server's management port

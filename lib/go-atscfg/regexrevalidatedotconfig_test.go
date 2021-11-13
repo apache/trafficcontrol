@@ -41,50 +41,70 @@ func TestMakeRegexRevalidateDotConfig(t *testing.T) {
 	dses := []DeliveryService{*ds}
 
 	params := makeParamsFromMapArr("GLOBAL", RegexRevalidateFileName, map[string][]string{
-		RegexRevalidateMaxRevalDurationDaysParamName: []string{"42"},
-		"unrelated": []string{"unrelated0", "unrelated1"},
+		RegexRevalidateMaxRevalDurationDaysParamName: {"42"},
+		"unrelated": {"unrelated0", "unrelated1"},
 	})
 
-	jobs := []tc.Job{
-		tc.Job{
-			AssetURL:        "assetURL0",
-			StartTime:       time.Now().Add(42*24*time.Hour + time.Hour).Format(tc.JobTimeFormat),
-			DeliveryService: "myds",
-			CreatedBy:       "me",
-			ID:              42,
-			Parameters:      "TTL:14h",
-			Keyword:         JobKeywordPurge,
+	jobs := []InvalidationJob{
+		{
+			AssetURL:         "assetURL0",
+			StartTime:        time.Now().Add(42*24*time.Hour + time.Hour),
+			DeliveryService:  "myds",
+			CreatedBy:        "me",
+			ID:               42,
+			TTLHours:         14,
+			InvalidationType: tc.REFRESH,
 		},
-		tc.Job{
-			AssetURL:        "expiredassetURL0",
-			StartTime:       time.Now().Add(-24 * time.Hour).Format(tc.JobTimeFormat),
-			DeliveryService: "expiredmyds",
-			CreatedBy:       "expiredme",
-			ID:              42,
-			Parameters:      "TTL:14h",
-			Keyword:         JobKeywordPurge,
+		{
+			AssetURL:         "expiredassetURL0",
+			StartTime:        time.Now().Add(-24 * time.Hour),
+			DeliveryService:  "expiredmyds",
+			CreatedBy:        "expiredme",
+			ID:               42,
+			TTLHours:         14,
+			InvalidationType: tc.REFRESH,
 		},
-		tc.Job{
-			AssetURL:        "refetchasset##REFETCH##",
-			StartTime:       time.Now().Add(24 * time.Hour).Format(tc.JobTimeFormat),
-			DeliveryService: "myds",
-			CreatedBy:       "want_refetch",
-			ID:              42,
-			Parameters:      "TTL:24h",
-			Keyword:         JobKeywordPurge,
+		{
+			AssetURL:         "refetchasset##REFETCH##",
+			StartTime:        time.Now().Add(24 * time.Hour),
+			DeliveryService:  "myds",
+			CreatedBy:        "want_refetch",
+			ID:               42,
+			TTLHours:         24,
+			InvalidationType: tc.REFETCH,
 		},
-		tc.Job{
-			AssetURL:        "refreshasset##REFRESH##",
-			StartTime:       time.Now().Add(24 * time.Hour).Format(tc.JobTimeFormat),
-			DeliveryService: "myds",
-			CreatedBy:       "want_refresh",
-			ID:              42,
-			Parameters:      "TTL:24h",
-			Keyword:         JobKeywordPurge,
+		{
+			AssetURL:         "refetchtype",
+			StartTime:        time.Now().Add(24 * time.Hour),
+			DeliveryService:  "myds",
+			CreatedBy:        "want_refetch",
+			ID:               42,
+			TTLHours:         24,
+			InvalidationType: tc.REFETCH,
+		},
+		{
+			// Mixed assetURL and invalidation type. REFETCH should trump REFRESH
+			// for backwards compatibility
+			AssetURL:         "shouldbeREFETCH##REFETCH##",
+			StartTime:        time.Now().Add(24 * time.Hour),
+			DeliveryService:  "myds",
+			CreatedBy:        "want_refetch",
+			ID:               42,
+			TTLHours:         24,
+			InvalidationType: tc.REFRESH,
+		},
+		{
+			AssetURL:         "refreshasset##REFRESH##",
+			StartTime:        time.Now().Add(24 * time.Hour),
+			DeliveryService:  "myds",
+			CreatedBy:        "want_refresh",
+			ID:               42,
+			TTLHours:         24,
+			InvalidationType: tc.REFRESH,
 		},
 	}
 
-	cfg, err := MakeRegexRevalidateDotConfig(server, dses, params, jobs, hdr)
+	cfg, err := MakeRegexRevalidateDotConfig(server, dses, params, jobs, &RegexRevalidateDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}

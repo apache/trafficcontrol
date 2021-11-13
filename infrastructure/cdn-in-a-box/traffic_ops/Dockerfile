@@ -24,7 +24,9 @@ ARG RHEL_VERSION=8
 FROM centos:${RHEL_VERSION} as trafficops-dependencies
 ARG RHEL_VERSION=8
 # Makes RHEL_VERSION available in later layers without needing to specify it again
-ENV RHEL_VERSION=$RHEL_VERSION
+ENV RHEL_VERSION="$RHEL_VERSION"
+
+VOLUME /traffic_ops_data
 
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 		yum -y install dnf || exit 1; \
@@ -54,7 +56,6 @@ RUN set -o nounset -o errexit && \
 	dnf -y $enable_repo install \
 		bind-utils           \
 		gettext              \
-		git                  \
 		# ip commands is used in set-to-ips-from-dns.sh
 		iproute              \
 		isomd5sum            \
@@ -69,8 +70,6 @@ RUN set -o nounset -o errexit && \
 		# required by the Traffic Ops RPM)
 		cpanminus            \
 		expat-devel          \
-		gcc-c++              \
-		golang               \
 		libcap               \
 		libcurl-devel        \
 		libidn-devel         \
@@ -94,8 +93,6 @@ FROM trafficops-dependencies AS trafficops
 EXPOSE 443
 
 WORKDIR /opt/traffic_ops/app
-ADD traffic_ops/install/bin/install_goose.sh ./
-RUN ./install_goose.sh && rm ./install_goose.sh
 
 ADD infrastructure/cdn-in-a-box/traffic_ops_data /traffic_ops_data
 
@@ -115,7 +112,6 @@ COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
 	infrastructure/cdn-in-a-box/dns/set-dns.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/set-to-ips-from-dns.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/generate-certs.sh \
-	infrastructure/cdn-in-a-box/traffic_ops/adduser.pl \
 	infrastructure/cdn-in-a-box/traffic_ops/trafficops-init.sh \
 	infrastructure/cdn-in-a-box/variables.env \
 	/
@@ -127,10 +123,12 @@ HEALTHCHECK --interval=10s --timeout=1s \
 
 FROM trafficops-dependencies as get-delve
 
-RUN go get -u github.com/go-delve/delve/cmd/dlv
+RUN dnf -y install git golang && \
+    go get -u github.com/go-delve/delve/cmd/dlv
 
 FROM trafficops AS trafficops-debug
 COPY --from=get-delve /root/go/bin /usr/bin
+COPY infrastructure/cdn-in-a-box/traffic_ops/tv.conf conf/production/
 
 # Makes the default target skip the trafficops-debug stage
 FROM trafficops

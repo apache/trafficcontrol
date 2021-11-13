@@ -163,16 +163,18 @@ func bindArgs(names []string, arg interface{}, m *reflectx.Mapper) ([]interface{
 		v = v.Elem()
 	}
 
-	fields := m.TraversalsByName(v.Type(), names)
-	for i, t := range fields {
+	err := m.TraversalsByNameFunc(v.Type(), names, func(i int, t []int) error {
 		if len(t) == 0 {
-			return arglist, fmt.Errorf("could not find name %s in %#v", names[i], arg)
+			return fmt.Errorf("could not find name %s in %#v", names[i], arg)
 		}
+
 		val := reflectx.FieldByIndexesReadOnly(v, t)
 		arglist = append(arglist, val.Interface())
-	}
 
-	return arglist, nil
+		return nil
+	})
+
+	return arglist, err
 }
 
 // like bindArgs, but for maps.
@@ -257,6 +259,10 @@ func compileNamedQuery(qs []byte, bindType int) (query string, names []string, e
 			}
 			inName = true
 			name = []byte{}
+		} else if inName && i > 0 && b == '=' {
+			rebound = append(rebound, ':', '=')
+			inName = false
+			continue
 			// if we're in a name, and this is an allowed character, continue
 		} else if inName && (unicode.IsOneOf(allowedBindRunes, rune(b)) || b == '_' || b == '.') && i != last {
 			// append the byte to the name if we are in a name and not on the last byte
@@ -281,6 +287,12 @@ func compileNamedQuery(qs []byte, bindType int) (query string, names []string, e
 				rebound = append(rebound, '?')
 			case DOLLAR:
 				rebound = append(rebound, '$')
+				for _, b := range strconv.Itoa(currentVar) {
+					rebound = append(rebound, byte(b))
+				}
+				currentVar++
+			case AT:
+				rebound = append(rebound, '@', 'p')
 				for _, b := range strconv.Itoa(currentVar) {
 					rebound = append(rebound, byte(b))
 				}

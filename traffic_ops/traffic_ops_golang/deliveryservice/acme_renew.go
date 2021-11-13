@@ -30,6 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
@@ -56,10 +57,25 @@ func RenewAcmeCertificate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, cdn, ok, err := dbhelpers.GetDSIDAndCDNFromName(inf.Tx.Tx, xmlID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("renew acme certificate: getting CDN from DS XML ID "+err.Error()))
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+
 	ctx, cancelTx := context.WithTimeout(r.Context(), AcmeTimeout)
 	defer cancelTx()
 
-	userErr, sysErr, statusCode := renewAcmeCerts(inf.Config, xmlID, ctx, r.Context(), inf.User, inf.Vault)
+	userErr, sysErr, statusCode = renewAcmeCerts(inf.Config, xmlID, ctx, r.Context(), inf.User, inf.Vault)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
@@ -81,6 +97,7 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, http
 		log.Errorf(dsName+": Error getting tx: %s", err.Error())
 		return nil, err, http.StatusInternalServerError
 	}
+	defer tx.Commit()
 
 	userTx, err := db.Begin()
 	if err != nil {
@@ -128,7 +145,7 @@ func renewAcmeCerts(cfg *config.Config, dsName string, ctx context.Context, http
 		return nil, errors.New("No acme account information in cdn.conf for " + keyObj.AuthType), http.StatusInternalServerError
 	}
 
-	client, err := GetAcmeClient(acmeAccount, userTx, db)
+	client, err := GetAcmeClient(acmeAccount, userTx, db, &dsName)
 	if err != nil {
 		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(*dsID)+", ACTION: FAILED to add SSL keys with "+acmeAccount.AcmeProvider, currentUser, logTx)
 		return nil, errors.New("getting acme client: " + err.Error()), http.StatusInternalServerError

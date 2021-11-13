@@ -25,6 +25,7 @@ Retrieves :term:`Physical Locations`
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: PHYSICAL-LOCATION:READ
 :Response Type:  Array
 
 Request Structure
@@ -70,7 +71,7 @@ Response Structure
 :comments:    Any and all human-readable comments
 :email:       The email address of the physical location's ``poc``
 :id:          An integral, unique identifier for the physical location
-:lastUpdated: The date and time at which the physical location was last updated, in ISO format
+:lastUpdated: The date and time at which the physical location was last updated, in :ref:`non-rfc-datetime`
 :name:        The name of the physical location
 :phone:       A phone number where the the physical location's ``poc`` might be reached
 :poc:         The name of a "point of contact" for the physical location
@@ -120,6 +121,7 @@ Creates a new physical location
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: PHYSICAL-LOCATION:CREATE, PHYSICAL-LOCATION:READ
 :Response Type:  Object
 
 Request Structure
@@ -171,7 +173,7 @@ Response Structure
 :comments:    Any and all human-readable comments
 :email:       The email address of the physical location's ``poc``
 :id:          An integral, unique identifier for the physical location
-:lastUpdated: The date and time at which the physical location was last updated, in ISO format
+:lastUpdated: The date and time at which the physical location was last updated, in :ref:`non-rfc-datetime`
 :name:        The name of the physical location
 :phone:       A phone number where the the physical location's ``poc`` might be reached
 :poc:         The name of a "point of contact" for the physical location

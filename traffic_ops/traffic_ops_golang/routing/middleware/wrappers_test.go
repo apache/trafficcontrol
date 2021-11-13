@@ -26,13 +26,16 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
@@ -151,6 +154,20 @@ func TestGzip(t *testing.T) {
 	}
 }
 
+func newRWPair(t *testing.T, cookie *http.Cookie) (*httptest.ResponseRecorder, *http.Request) {
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("", "/api/4.0/blah", nil)
+	if err != nil {
+		t.Fatalf("Failed to create new request: %v", err)
+	}
+
+	if cookie != nil {
+		r.Header.Add("Cookie", tocookie.Name+"="+cookie.Value)
+	}
+
+	return w, r
+}
+
 func TestWrapAuth(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
@@ -195,13 +212,7 @@ func TestWrapAuth(t *testing.T) {
 
 	f := authWrapper(handler)
 
-	w := httptest.NewRecorder()
-	r, err := http.NewRequest("", "/", nil)
-	if err != nil {
-		t.Error("Error creating new request")
-	}
-
-	r.Header.Add("Cookie", tocookie.Name+"="+cookie.Value)
+	w, r := newRWPair(t, cookie)
 
 	expected := auth.CurrentUser{UserName: userName, ID: id, PrivLevel: 30, TenantID: 1}
 
@@ -219,11 +230,7 @@ func TestWrapAuth(t *testing.T) {
 		t.Errorf("received: %s\n expected: %s\n", w.Body.Bytes(), expectedBody)
 	}
 
-	w = httptest.NewRecorder()
-	r, err = http.NewRequest("", "/", nil)
-	if err != nil {
-		t.Error("Error creating new request")
-	}
+	w, r = newRWPair(t, nil)
 
 	f(w, r)
 
@@ -238,4 +245,199 @@ func TestWrapAuth(t *testing.T) {
 	}
 }
 
-// TODO: TestWrapAccessLog
+func TestRequiredPermissionsMiddleware(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	userName := "user1"
+	secret := "secret"
+
+	rows := sqlmock.NewRows([]string{"priv_level", "username", "id", "tenant_id", "capabilities"})
+	rows.AddRow(30, userName, 1, 1, "{foo}")
+	mock.ExpectQuery("SELECT").WithArgs(userName).WillReturnRows(rows)
+
+	authBase := AuthBase{secret, nil}
+
+	cookie := tocookie.GetCookie(userName, time.Minute, secret)
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("success\n"))
+	}
+
+	authWrapper := authBase.GetWrapper(0)
+
+	f := authWrapper(RequiredPermissionsMiddleware([]string{"foo"})(handler))
+
+	w, r := newRWPair(t, cookie)
+
+	dbctx := context.WithValue(context.Background(), api.DBContextKey, db)
+	r = r.WithContext(dbctx)
+	conf := config.Config{
+		ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{
+			DBQueryTimeoutSeconds: 20,
+		},
+		RoleBasedPermissions: true,
+	}
+	r = r.WithContext(context.WithValue(r.Context(), api.ConfigContextKey, &conf))
+
+	f(w, r)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected a 200 OK response when the user had all the required Permissions, got: %d", w.Code)
+	}
+
+	w, r = newRWPair(t, cookie)
+	r = r.WithContext(dbctx)
+	r = r.WithContext(context.WithValue(r.Context(), api.ConfigContextKey, &conf))
+	rows = sqlmock.NewRows([]string{"priv_level", "username", "id", "tenant_id", "capabilities"})
+	rows.AddRow(30, "user1", 1, 1, "{}")
+	mock.ExpectQuery("SELECT").WithArgs(userName).WillReturnRows(rows)
+
+	f(w, r)
+
+	result := w.Result()
+	if result.StatusCode != http.StatusForbidden {
+		t.Errorf("Expected a 403 Forbidden response when the user was missing the required Permissions, got: %d", result.StatusCode)
+	}
+	rawResp, err := ioutil.ReadAll(result.Body)
+	if err != nil {
+		t.Fatalf("Failed to read response body: %v", err)
+	}
+	var alerts tc.Alerts
+	if err := json.Unmarshal(rawResp, &alerts); err != nil {
+		t.Errorf("Failed to read response recorder body: %v", err)
+	}
+	if !strings.Contains(alerts.ErrorString(), "foo") {
+		t.Errorf("Expected an error-level alert mentioning the missing Permission, got: %s", alerts.ErrorString())
+	}
+}
+
+func TestConfigRoleBasedPermissionsHandling(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	userName := "user1"
+	secret := "secret"
+	var rows *sqlmock.Rows
+	resetRows := func(privLevel int, caps ...string) {
+		rows = sqlmock.NewRows([]string{"priv_level", "username", "id", "tenant_id", "capabilities"})
+		rows.AddRow(privLevel, userName, 1, 1, fmt.Sprintf("{%s}", strings.Join(caps, ",")))
+		mock.ExpectQuery("SELECT").WithArgs(userName).WillReturnRows(rows)
+	}
+	resetRows(3, "foo")
+	cookie := tocookie.GetCookie(userName, time.Minute, secret)
+
+	conf := config.Config{
+		ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{
+			DBQueryTimeoutSeconds: 20,
+		},
+		RoleBasedPermissions: false,
+	}
+	ctx := context.WithValue(context.Background(), api.DBContextKey, db)
+	ctx = context.WithValue(ctx, api.ConfigContextKey, &conf)
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("successs\n"))
+	}
+	f := AuthBase{secret, nil}.GetWrapper(5)(RequiredPermissionsMiddleware([]string{"foo"})(handler))
+
+	w, r := newRWPair(t, cookie)
+	r = r.WithContext(ctx)
+	resetRows(3, "foo")
+
+	f(w, r)
+	result := w.Result()
+	if result.StatusCode != http.StatusForbidden {
+		t.Errorf("Expected a 403 Forbidden response when the user has insufficient PrivLevel and RoleBasedPermissions is configured to false; got: %d", result.StatusCode)
+	}
+
+	conf.RoleBasedPermissions = true
+	w, r = newRWPair(t, cookie)
+	r = r.WithContext(ctx)
+
+	f(w, r)
+	result = w.Result()
+	if result.StatusCode != http.StatusOK {
+		t.Errorf("Expected a user with the right Permissions for an endpoint to get a 200 OK response regardless of PrivLevel when RoleBasedPermissions is configured to true; got: %d", result.StatusCode)
+	}
+
+	resetRows(30)
+	w, r = newRWPair(t, cookie)
+	r = r.WithContext(ctx)
+
+	f(w, r)
+	result = w.Result()
+	if result.StatusCode != http.StatusForbidden {
+		t.Errorf("Expected a user with the wrong Permissions for an endpoint to get a 403 Forbidden response regardless of PrivLevel, got: %d", result.StatusCode)
+	}
+	var alerts tc.Alerts
+	if err := json.NewDecoder(result.Body).Decode(&alerts); err != nil {
+		t.Errorf("Failed to read and decode response body: %v", err)
+	} else {
+		errStr := alerts.ErrorString()
+		if !strings.Contains(errStr, "foo") {
+			t.Errorf("Expected the reason the user was denied access to be a missing Permission, actual: %s", errStr)
+		}
+	}
+
+	conf.RoleBasedPermissions = false
+	w, r = newRWPair(t, cookie)
+	r = r.WithContext(ctx)
+	resetRows(30)
+	f(w, r)
+	result = w.Result()
+
+	if result.StatusCode != http.StatusOK {
+		t.Errorf("Expected a user with the right PrivLevel for an endpoint to get a 200 OK response regardless of Permissions when RoleBasedPermissions is configured to false; got: %d", result.StatusCode)
+	}
+}
+
+func TestNoOpWhenNoPermissionsRequired(t *testing.T) {
+	respBts := "success"
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(respBts))
+	}
+	f := RequiredPermissionsMiddleware([]string{})(handler)
+
+	w, r := newRWPair(t, nil)
+	f(w, r)
+	result := w.Result()
+	if result.StatusCode != http.StatusOK {
+		t.Errorf("Expected checking for required Permissions to be a no-op when no Permissions are required, but response had status code %d", result.StatusCode)
+	}
+	body, err := ioutil.ReadAll(result.Body)
+	if err != nil {
+		t.Errorf("Failed to read response body: %v", err)
+	} else if string(body) != respBts {
+		t.Errorf("Expected normal response '%s' from endpoint, but got: %s", respBts, string(body))
+	}
+
+	f = RequiredPermissionsMiddleware(nil)(handler)
+
+	w, r = newRWPair(t, nil)
+	f(w, r)
+	result = w.Result()
+	if result.StatusCode != http.StatusOK {
+		t.Errorf("Expected checking for required Permissions to be a no-op when nil Permissions are required, but response had status code %d", result.StatusCode)
+	}
+	body, err = ioutil.ReadAll(result.Body)
+	if err != nil {
+		t.Errorf("Failed to read response body: %v", err)
+	} else if string(body) != respBts {
+		t.Errorf("Expected normal response '%s' from endpoint, but got: %s", respBts, string(body))
+	}
+}
+
+// TODO: TestWrapAccessLog, et. al

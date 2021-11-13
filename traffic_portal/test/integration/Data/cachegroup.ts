@@ -27,6 +27,22 @@ export const cachegroups = {
 					"password": "pa$$word"
 				}
 			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "1st Parent"
+				},
+				{
+					description: "redisplay first table column",
+					Name: "1st Parent"
+				}
+			],
+			check: [
+				{
+					description: "check CSV link from CacheGroup page",
+					Name: "Export as CSV"
+				}
+			],
 			create: [
 				{
 					Description: "create a EDGE_LOC cachegroup with FailOver CacheGroup Field",
@@ -112,6 +128,22 @@ export const cachegroups = {
 					"password": "pa$$word"
 				}
 			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "1st Parent"
+				},
+				{
+					description: "display first table column",
+					Name: "1st Parent"
+				}
+			],
+			check: [
+				{
+					description: "check CSV link from CacheGroup page",
+					Name: "Export as CSV"
+				}
+			],
 			create: [
 				{
 					Description: "create a CacheGroup",
@@ -123,7 +155,7 @@ export const cachegroups = {
 					ParentCacheGroup: "infrastructure",
 					SecondaryParentCG: "infrastructure",
 					FailoverCG: "albany-ny-usa",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: CACHE-GROUP:CREATE"
 				}
 			],
 			update: [
@@ -131,14 +163,14 @@ export const cachegroups = {
 					Description: "update CacheGroup",
 					Name: "TP_Cache2",
 					Type: "MID_LOC",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: CACHE-GROUP:UPDATE"
 				}
 			],
 			remove: [
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: CACHE-GROUP:DELETE"
 				}
 			]
 		},
@@ -148,6 +180,22 @@ export const cachegroups = {
 				{
 					"username": "TPOperator",
 					"password": "pa$$word"
+				}
+			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "1st Parent"
+				},
+				{
+					description: "display first table column",
+					Name: "1st Parent"
+				}
+			],
+			check: [
+				{
+					description: "check CSV link from CacheGroup page",
+					Name: "Export as CSV"
 				}
 			],
 			create: [

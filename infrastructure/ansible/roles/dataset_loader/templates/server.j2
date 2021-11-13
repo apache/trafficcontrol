@@ -26,6 +26,7 @@
 {% endif %}
 {% if ip6Address is defined and ip6Address is not none and ip6Address != omit and ip6Address %}
   "ip6Address": "{{ ip6Address }}",
+  "ip6IsService": {{ ip6IsService }},
 {% endif %}
 {% if ip6Gateway is defined and ip6Gateway is not none and ip6Gateway != omit and ip6Gateway %}
   "ip6Gateway": "{{ ip6Gateway }}",
@@ -68,6 +69,7 @@
   "cachegroupId": {{ cachegroupId }},
   "interfaceName": "{{ interfaceName }}",
   "ipAddress": "{{ ipAddress }}",
+  "ipIsService": {{ ipIsService }},
   "ipNetmask": "{{ ipNetmask }}",
   "ipGateway": "{{ ipGateway }}",
   "interfaceMtu": {{ interfaceMtu }},

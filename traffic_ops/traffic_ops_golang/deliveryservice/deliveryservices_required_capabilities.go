@@ -202,6 +202,7 @@ func (rc *RequiredCapability) getCapabilities(h http.Header, tenantIDs []int, us
 	var runSecond bool
 	var results []tc.DeliveryServicesRequiredCapability
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(rc.APIInfo().Params, rc.ParamColumns())
+
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
@@ -252,7 +253,14 @@ func (rc *RequiredCapability) Delete() (error, error, int) {
 	} else if err != nil {
 		return nil, fmt.Errorf("checking authorization for existing DS ID: %s" + err.Error()), http.StatusInternalServerError
 	}
-
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(rc.ReqInfo.Tx.Tx, *rc.DeliveryServiceID)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(rc.ReqInfo.Tx.Tx, string(cdnName), rc.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
 	return api.GenericDelete(rc)
 }
 
@@ -263,6 +271,15 @@ func (rc *RequiredCapability) Create() (error, error, int) {
 		return errors.New("not authorized on this tenant"), nil, http.StatusForbidden
 	} else if err != nil {
 		return nil, fmt.Errorf("checking authorization for existing DS ID: %s" + err.Error()), http.StatusInternalServerError
+	}
+
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(rc.ReqInfo.Tx.Tx, *rc.DeliveryServiceID)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(rc.ReqInfo.Tx.Tx, string(cdnName), rc.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
 
 	// Ensure DS type is only of HTTP*, DNS* types

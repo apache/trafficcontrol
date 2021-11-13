@@ -20,7 +20,7 @@
 var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $http, ENV) {
 
 	this.generateUrlSigKeys = function(dsXmlId) {
-		return $http.post(ENV.api['root'] + 'deliveryservices/xmlId/' + dsXmlId + '/urlkeys/generate').then(
+		return $http.post(ENV.api.unstable + 'deliveryservices/xmlId/' + dsXmlId + '/urlkeys/generate').then(
 			function(result) {
 				messageModel.setMessages(result.data.alerts, false);
 				return result;
@@ -33,7 +33,7 @@ var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $ht
 	};
 
 	this.copyUrlSigKeys = function(dsXmlId, copyFromXmlId) {
-		return $http.post(ENV.api['root'] + 'deliveryservices/xmlId/' + dsXmlId + '/urlkeys/copyFromXmlId/' + copyFromXmlId).then(
+		return $http.post(ENV.api.unstable + 'deliveryservices/xmlId/' + dsXmlId + '/urlkeys/copyFromXmlId/' + copyFromXmlId).then(
 			function(result) {
 				messageModel.setMessages(result.data.alerts, false);
 				return result;
@@ -46,7 +46,7 @@ var DeliveryServiceUrlSigKeysService = function(locationUtils, messageModel, $ht
 	};
 
 	this.getDeliveryServiceUrlSigKeys = function(dsId) {
-        return $http.get(ENV.api['root'] + "deliveryservices/" + dsId + "/urlkeys").then(
+        return $http.get(ENV.api.unstable + "deliveryservices/" + dsId + "/urlkeys").then(
             function(result) {
                 return result.data.response;
             },

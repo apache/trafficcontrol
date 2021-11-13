@@ -22,16 +22,13 @@ package t3cutil
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
-	"io/ioutil"
-	"net/http"
 	"net/url"
 	"os"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/toreq"
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/torequtil"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -54,6 +51,9 @@ type TCCfg struct {
 
 	// RevalOnly is whether to only fetch config data necessary to revalidate, versus all data necessary to generate config. This is only used by WriteConfig
 	RevalOnly bool
+
+	// OldCfg is the previously fetched ConfigData, for 'config' requests. May be nil.
+	OldCfg *ConfigData
 }
 
 func GetDataFuncs() map[string]func(TCCfg, io.Writer) error {
@@ -68,7 +68,7 @@ func GetDataFuncs() map[string]func(TCCfg, io.Writer) error {
 }
 
 func GetServerUpdateStatus(cfg TCCfg) (*tc.ServerUpdateStatus, error) {
-	status, _, err := cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName))
+	status, _, err := cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName), nil)
 	if err != nil {
 		return nil, errors.New("getting server '" + cfg.CacheHostName + "' update status: " + err.Error())
 	}
@@ -88,13 +88,15 @@ const SystemInfoParamConfigFile = `global`
 
 // WriteSystemInfo writes the "system info" to output.
 //
-// This is the same info at /api/1.x/system/info, which is actually just all Parameters with the config_file 'global'.
-// Note this is different than the more common "global parameters", which usually refers to all Parameters on the Profile named 'GLOBAL'.
+// This is the same info as the Traffic Ops API's /system/info endpoint, which
+// is actually just all Parameters with the config_file 'global'.
+// Note this is different than the more common "global parameters", which
+// usually refers to all Parameters on the Profile named 'GLOBAL'.
 //
-// This is identical to the /api/1.x/system/info endpoint, except it does not include a '{response: {parameters:' wrapper.
-//
+// This is identical to the /system/info endpoint, except it does not include a
+//  '{response: {parameters:' wrapper.
 func WriteSystemInfo(cfg TCCfg, output io.Writer) error {
-	paramArr, _, err := cfg.TOClient.GetConfigFileParameters(SystemInfoParamConfigFile)
+	paramArr, _, err := cfg.TOClient.GetConfigFileParameters(SystemInfoParamConfigFile, nil)
 	if err != nil {
 		return errors.New("getting system info parameters: " + err.Error())
 	}
@@ -109,9 +111,10 @@ func WriteSystemInfo(cfg TCCfg, output io.Writer) error {
 }
 
 // WriteStatuses writes the Traffic Ops statuses to output.
-// Note this is identical to /api/1.x/statuses except it omits the '{response:' wrapper.
+// Note this is identical to /statuses except it omits the '{response:'
+// wrapper.
 func WriteStatuses(cfg TCCfg, output io.Writer) error {
-	statuses, _, err := cfg.TOClient.GetStatuses()
+	statuses, _, err := cfg.TOClient.GetStatuses(nil)
 	if err != nil {
 		return errors.New("getting statuses: " + err.Error())
 	}
@@ -121,8 +124,11 @@ func WriteStatuses(cfg TCCfg, output io.Writer) error {
 	return nil
 }
 
-// WriteUpdateStatus writes the Traffic Ops server update status to output.
-// Note this is identical to /api/1.x/servers/name/update_status except it omits the '[]' wrapper.
+// WriteServerUpdateStatus writes the Traffic Ops server update status to
+// output.
+// Note this is identical to the Traffic Ops API's
+// /servers/{{host name}}/update_status endpoint except it omits the '[]'
+// wrapper.
 func WriteServerUpdateStatus(cfg TCCfg, output io.Writer) error {
 	status, err := GetServerUpdateStatus(cfg)
 	if err != nil {
@@ -148,13 +154,13 @@ func WritePackages(cfg TCCfg, output io.Writer) error {
 }
 
 func GetPackages(cfg TCCfg) ([]Package, error) {
-	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
+	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName), nil)
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
 	} else if server.Profile == nil {
 		return nil, errors.New("getting server: nil profile")
 	}
-	params, _, err := cfg.TOClient.GetServerProfileParameters(*server.Profile)
+	params, _, err := cfg.TOClient.GetServerProfileParameters(*server.Profile, nil)
 	if err != nil {
 		return nil, errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
 	}
@@ -187,13 +193,13 @@ func WriteChkconfig(cfg TCCfg, output io.Writer) error {
 }
 
 func GetChkconfig(cfg TCCfg) ([]ChkConfigEntry, error) {
-	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName))
+	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName), nil)
 	if err != nil {
 		return nil, errors.New("getting server: " + err.Error())
 	} else if server.Profile == nil {
 		return nil, errors.New("getting server: nil profile")
 	}
-	params, _, err := cfg.TOClient.GetServerProfileParameters(*server.Profile)
+	params, _, err := cfg.TOClient.GetServerProfileParameters(*server.Profile, nil)
 	if err != nil {
 		return nil, errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
 	}
@@ -213,30 +219,11 @@ type ChkConfigEntry struct {
 }
 
 // SetUpdateStatus sets the queue and reval status of serverName in Traffic Ops.
-func SetUpdateStatus(cfg TCCfg, serverName string, queue bool, revalPending bool) error {
-	reqInf, err := cfg.TOClient.C.SetUpdateServerStatuses(string(serverName), &queue, &revalPending)
+func SetUpdateStatus(cfg TCCfg, serverName tc.CacheName, queue bool, revalPending bool) error {
+	// TODO need to move to toreq, add fallback
+	reqInf, err := cfg.TOClient.SetServerUpdateStatus(serverName, &queue, &revalPending)
 	if err != nil {
 		return errors.New("setting update statuses (Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "'): " + err.Error())
-	}
-	return nil
-}
-
-// setUpdateStatusLegacy sets the queue and reval status of serverName in Traffic Ops,
-// using the legacy pre-2.0 /update endpoint.
-func setUpdateStatusLegacy(cfg TCCfg, serverName tc.CacheName, queue bool, revalPending bool) error {
-	path := `/update/` + string(serverName) + `?updated=` + jsonBoolStr(queue) + `&reval_updated=` + jsonBoolStr(revalPending)
-	// C and RawRequest should generally never be used, but the alternatve here is to manually get the cookie and do an http.Get. We need to hit a non-API endpoint, no API endpoint exists for what we need.
-	resp, _, err := cfg.TOClient.C.RawRequest(http.MethodPost, path, nil)
-	if err != nil {
-		return errors.New("setting update statuses: " + err.Error())
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		bodyBts, err := ioutil.ReadAll(resp.Body)
-		if err == nil {
-			return fmt.Errorf("Traffic Ops returned %v %v", resp.StatusCode, string(bodyBts))
-		}
-		return fmt.Errorf("Traffic Ops returned %v (error reading body)", resp.StatusCode)
 	}
 	return nil
 }
@@ -250,9 +237,9 @@ func jsonBoolStr(b bool) string {
 
 // WriteConfig writes the Traffic Ops data necessary to generate config to output.
 func WriteConfig(cfg TCCfg, output io.Writer) error {
-	cfgData, err := GetConfigData(cfg.TOClient, cfg.TODisableProxy, cfg.CacheHostName, cfg.RevalOnly)
+	cfgData, err := GetConfigData(cfg.TOClient, cfg.TODisableProxy, cfg.CacheHostName, cfg.RevalOnly, cfg.OldCfg)
 	if err != nil {
-		return errors.New("getting statuses: " + err.Error())
+		return errors.New("getting config data: " + err.Error())
 	}
 	if err := json.NewEncoder(output).Encode(cfgData); err != nil {
 		return errors.New("encoding config data: " + err.Error())

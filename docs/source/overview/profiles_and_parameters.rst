@@ -56,6 +56,11 @@ Name
 """"
 Ostensibly this is simply the Profile's name. However, the name of a Profile has drastic consequences for how Traffic Control treats it. Particularly, the name of a Profile is heavily conflated with its Type_. These relationships are discussed further in the Type_ section, on a Type-by-Type basis.
 
+The Name of a Profile may not contain spaces.
+
+.. versionchanged:: ATCv6
+	In older versions of :abbr:`ATC (Apache Traffic Control)`, Profile Names were allowed to contain spaces. The :ref:`to-api` will reject creation or update of Profiles that have spaces in their Names as of :abbr:`ATC (Apache Traffic Control)` version 6, so legacy Profiles will need to be updated to meet this constraint before they can be modified.
+
 .. _profile-routing-disabled:
 
 Routing Disabled
@@ -71,7 +76,7 @@ A Profile's :dfn:`Type` determines how its configured Parameters_ are treated by
 .. danger:: Nearly all of these Profile Types have strict naming requirements, and it may be noted that some of said requirements are prefixes ending with ``_``, while others are either not prefixes or do not end with ``_``. This is exactly true; some requirements **need** that ``_`` and some may or may not have it. It is our suggestion, therefore, that for the time being all prefixes use the ``_`` notation to separate words, so as to avoid causing headaches remembering when that matters and when it does not.
 
 ATS_PROFILE
-	A Profile that can be used with either an Edge-tier or Mid-tier :term:`cache server` (but not both, in general). This is the only Profile type that will ultimately pass its Parameters_ on to :term:`ORT` in the form of generated configuration files. For this reason, it can make use of the :ref:`ort-special-strings` in the values of some of its Parameters_.
+	A Profile that can be used with either an Edge-tier or Mid-tier :term:`cache server` (but not both, in general). This is the only Profile type that will ultimately pass its Parameters_ on to :term:`ORT` in the form of generated configuration files. For this reason, it can make use of the :ref:`t3c-special-strings` in the values of some of its Parameters_.
 
 	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``EDGE`` or ``MID``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise! This includes :ref:`to-api-caches-stats`.
 
@@ -119,7 +124,7 @@ SPLUNK_PROFILE
 TM_PROFILE
 	A Traffic Monitor Profile.
 
-	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``RASCAL_`` or ``TM_``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
+	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``RASCAL_``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
 
 TP_PROFILE
 	A Traffic Portal Profile. This has no known special meaning to any Traffic Control component(s) (not even Traffic Portal itself), but its use is suggested for the profiles used by any and all Traffic Portal servers anyway.
@@ -199,9 +204,6 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	| use_reval_pending        | global                  | When this Parameter is present and its Value_ is exactly "1", Traffic Ops will separately keep track of :term:`cache servers`'        |
 	|                          |                         | updates and pending content invalidation jobs. This behavior should be enabled by default, and disabling it, while still possible, is |
 	|                          |                         | **EXTREMELY DISCOURAGED**.                                                                                                            |
-	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| use_tenancy              | global                  | This :ref:`Parameter <parameters>`, when it exists and has a Value_ of exactly "1" enables the use :term:`Tenants` in Traffic         |
-	|                          |                         | Control. This should be enabled by default, and while disabling this is still possible, it is **EXTREMELY DISCOURAGED**.              |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| geolocation.polling.url  | CRConfig.json           | The location of a geographic IP mapping database for Traffic Router instances to use.                                                 |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
@@ -587,7 +589,39 @@ This configuration file can only be affected by the special ``maxRevalDurationDa
 
 remap.config
 ''''''''''''
-This configuration file can only be affected by one Parameter on a :ref:`Profile <profiles>` assigned to a :term:`Delivery Service`. Then, for every Parameter assigned to that :ref:`Profile <profiles>` that has the Config File value "cachekey.config" - **NOT this Config File** -, a parameter will be added to the line for that :term:`Delivery Service` like so: :file:`pparam=--{Name}={Value}` where ``Name`` is the Parameter's :ref:`parameter-name`, and ``Value`` is its Value_.
+This configuration file can only be affected by Parameters on a :ref:`Profile <profiles>` assigned to a :term:`Delivery Service`. Then, for every Parameter assigned to that :ref:`Profile <profiles>` that has the Config File value "remap.config" -, a parameter will be added to the line for that :term:`Delivery Service` of the form :samp:`@pparam={Value}` where ``Value`` is the Parameter's Value_. Each argument should have its own Parameter. Repeated arguments are allowed, but a warning is issued by :term:`t3c` when processing configuration for cache servers that serve content for the :term:`Delivery Service` with a :ref:`Profile <profiles>` that includes duplicate arguments.
+
+For backwards compatibility, a special case exists for the ``cachekey.config`` Config File for Parameters on :term:`Delivery Service` Profiles_ that can also affect this configuration file. This is of the form: :samp:`pparam=--{Name}={Value}` where ``Name`` is the Parameter's :ref:`parameter-name`, and ``Value`` is its Value_.  A warning will be issued by :term:`t3c` when processing configuration for cache servers that serve content for the :term:`Delivery Service` with a :ref:`Profile <profiles>` that uses a Parameter with the Config File ``cachekey.config`` as well as at least one with the Config File ``cachekey.pparam``.
+
+The following plugins have support for adding args with following parameter Config File values.
+
+- ``background_fetch.pparam`` Note the ``--config=bg_fetch.conf`` argument is already added to ``remap.config`` by :term:`t3c`.
+- ``cachekey.pparam``
+- ``cache_range_requests.pparam``
+- ``slice.pparam`` Note the :samp:`--blocksize={val}` plugin parameter is specifiable directly on :term:`Delivery Services` by setting their :ref:`ds-slice-block-size` property.
+- ``url_sig.pparam`` Note the configuration file for this plugin is already added by :term:`t3c`.
+
+.. seealso:: For more information about these plugin parameters, refer to `the Apache Traffic Server documentation for the background_fetch plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/background_fetch.en.html>`_, `the Apache Traffic Server documentation for the cachekey plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/cachekey.en.html>`_, `the Apache Traffic Server documentation for the cache_range_requests plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/cache_range_requests.en.html>`_, `the Apache Traffic Server documentation for the slice plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/slice.en.html>`_, and `the Apache Traffic Server documentation for the url_sig plugin <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/url_sig.en.html>`_, respectively.
+
+.. deprecated:: ATCv6
+	``cachekey.config`` is deprecated but available for backwards compatibility. ``cachekey.config`` Parameters will be converted by :term:`t3c` to the "pparam" syntax with ``--`` added as a prefix to the :ref:`parameter-name`. Any "empty" param value (i.e. separator) will add an extra ``=`` to the key.
+
+.. table:: Equivalent cachekey.config/cachekey.pparam entries
+
+	+------------------------+---------------------+------------------------------+--------------------------------------+
+	| :ref:`parameter-name`  | Config File         | Value_                       | Result                               |
+	+========================+=====================+==============================+======================================+
+	| remove-all-params      | cachekey.config     | ``true``                     | ``@pparam=--remove-all-params=true`` |
+	+------------------------+---------------------+------------------------------+--------------------------------------+
+	| cachekey.pparam        | remap.config        | ``--remove-all-params=true`` | ``@pparam=--remove-all-params=true`` |
+	+------------------------+---------------------+------------------------------+--------------------------------------+
+	| separator              | cachekey.config     | (empty value)                | ``@pparam=--separator=``             |
+	+------------------------+---------------------+------------------------------+--------------------------------------+
+	| cachekey.pparam        | remap.config        | ``--separator=``             | ``@pparam=--separator=``             |
+	+------------------------+---------------------+------------------------------+--------------------------------------+
+	| cachekey.pparam        | cachekey.pparam     | ``-o``                       | ``@pparam=-o``                       |
+	+------------------------+---------------------+------------------------------+--------------------------------------+
+
 
 .. seealso:: For an explanation of the syntax of this configuration file, refer to `the Apache Traffic Server remap.config documentation <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_.
 

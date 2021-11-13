@@ -27,18 +27,15 @@ import (
 )
 
 var testCfg config.Cfg = config.Cfg{
-	Dispersion:          300,
 	LogLocationDebug:    "stdout",
 	LogLocationErr:      "stdout",
 	LogLocationInfo:     "stdout",
 	LogLocationWarn:     "stdout",
-	LoginDispersion:     60,
 	CacheHostName:       "cache-01.cdn.com",
 	SvcManagement:       config.SystemD,
 	Retries:             3,
-	RevalWaitTime:       2,
 	ReverseProxyDisable: false,
-	RunMode:             t3cutil.ModeRevalidate,
+	Files:               t3cutil.ApplyFilesFlagReval,
 	SkipOSCheck:         false,
 	TOTimeoutMS:         1000,
 	TOUser:              "mickey",

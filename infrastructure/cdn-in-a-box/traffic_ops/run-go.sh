@@ -30,16 +30,22 @@
 # ADMIN_USER
 # ADMIN_PASS
 # DOMAIN
+# TV_AES_KEY_LOCATION
+# TV_BACKEND
+# TV_DB_NAME
+# TV_DB_PORT
+# TV_DB_SERVER
+# TV_DB_USER
+# TV_DB_USER_PASS
 
 # TODO:  Unused -- should be removed?  TRAFFIC_VAULT_PASS
-
 # Setting the monitor shell option enables job control, which we need in order
 # to bring traffic_ops_golang back to the foreground.
 trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
 set -o errexit -o monitor -o pipefail -o xtrace;
 
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS TV_AES_KEY_LOCATION TV_DB_NAME TV_DB_PORT TV_DB_SERVER TV_DB_USER TV_DB_USER_PASS)
 for v in $envvars; do
 	if [[ -z $$v ]]; then
 		echo "$v is unset" >&2;
@@ -115,9 +121,6 @@ done
 
 cd /opt/traffic_ops/app;
 
-# Add admin user -- all other users should be created using the API
-/adduser.pl "$TO_ADMIN_USER" "$TO_ADMIN_PASSWORD" "admin" "root" | psql -v ON_ERROR_STOP=1 -U "$DB_USER" -h "$DB_SERVER" -d "$DB_NAME";
-
 (
 maxtries=10
 for ((tries = 0; tries < maxtries; tries++)); do
@@ -142,7 +145,12 @@ mkdir -p /var/log/traffic_ops
 touch "$TO_LOG_ERROR" "$TO_LOG_WARNING" "$TO_LOG_INFO" "$TO_LOG_DEBUG" "$TO_LOG_EVENT"
 tail -qf "$TO_LOG_ERROR" "$TO_LOG_WARNING" "$TO_LOG_INFO" "$TO_LOG_DEBUG" "$TO_LOG_EVENT" &
 
-traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF" -riakcfg "$RIAKCONF");
+if [[ -z $TV_BACKEND ]]; then
+  traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF" -riakcfg "$RIAKCONF");
+else
+  traffic_ops_golang_command=(./bin/traffic_ops_golang -cfg "$CDNCONF" -dbcfg "$DBCONF");
+fi;
+
 if [[ "$TO_DEBUG_ENABLE" == true ]]; then
 	traffic_ops_golang_command=(dlv '--accept-multiclient' '--continue' '--listen=:2345' '--headless=true' '--api-version=2' exec
 		"${traffic_ops_golang_command[0]}" -- "${traffic_ops_golang_command[@]:1}");
@@ -153,11 +161,6 @@ until [[ -f "$ENROLLER_DIR/enroller-started" ]]; do
 	echo "waiting for enroller";
 	sleep 3;
 done
-
-/trafficops-init.sh;
-
-# enroll in the background so traffic_ops_golang can run in foreground
-TO_USER=$TO_ADMIN_USER TO_PASSWORD=$TO_ADMIN_PASSWORD to-enroll $(hostname -s) &
 
 # Add initial data to traffic ops
 /trafficops-init.sh
@@ -180,13 +183,20 @@ while true; do
 	sleep 2;
 done
 
-### Add SSL keys for demo1 delivery service
-until [[ -s "$X509_DEMO1_CERT_FILE" && -s "$X509_DEMO1_REQUEST_FILE" && -s "$X509_DEMO1_KEY_FILE" ]]; do
-	echo "Waiting on X509_DEMO1 files to exist";
-	sleep 3;
-	source "$X509_CA_ENV_FILE";
+# change loop condition to ds_index <= 3 when Delivery Service demo3 exists
+for ((ds_index = 1; ds_index <= 2; ds_index++)); do
+	ds_name="demo${ds_index}"
+	cert_file_var="X509_DEMO${ds_index}_CERT_FILE"
+	request_file_var="X509_DEMO${ds_index}_REQUEST_FILE"
+	key_file="X509_DEMO${ds_index}_KEY_FILE"
+	### Add SSL keys for delivery service
+	until [[ -s "${!cert_file_var}" && -s "${!request_file_var}" && -s "${!key_file}" ]]; do
+		echo "Waiting on X509_DEMO${ds_index} files to exist";
+		sleep 3;
+		source "$X509_CA_ENV_FILE";
+	done
+	to-add-sslkeys "$CDN_NAME" "$ds_name" "*.demo${ds_index}.mycdn.ciab.test" "${!cert_file_var}" "${!request_file_var}" "${!key_file}";
 done
-to-add-sslkeys "$CDN_NAME" "$ds_name" "*.demo1.mycdn.ciab.test" "$X509_DEMO1_CERT_FILE" "$X509_DEMO1_REQUEST_FILE" "$X509_DEMO1_KEY_FILE";
 
 ### Automatic Queue/Snapshot ###
 if [[ "$AUTO_SNAPQUEUE_ENABLED" = true ]]; then

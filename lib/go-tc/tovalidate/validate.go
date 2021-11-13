@@ -1,3 +1,5 @@
+package tovalidate
+
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -10,13 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tovalidate
-
 import (
 	"fmt"
 )
 
-// ToErrors - Flips to an array of errors
+// ToErrors converts a map of strings to errors into an array of errors.
+//
+// This is accomplished using `fmt.Errorf("'%v' %v", key, value)` where 'key'
+// is the map key and 'value' is the error value to which it points - this
+// means that error identity is NOT preserved. For example:
+//
+//     errMap := map[string]error{
+//         "sql.ErrNoRows": sql.ErrNoRows,
+//     }
+//     errs := ToErrors(errMap)
+//     if errors.Is(errs[0], sql.ErrNoRows) {
+//         fmt.Println("true")
+//     } else {
+//         fmt.Println("false")
+//     }
+//
+// ... will output 'false'.
 func ToErrors(err map[string]error) []error {
 	vErrors := []error{}
 	for key, value := range err {

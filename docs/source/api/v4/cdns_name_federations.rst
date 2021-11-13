@@ -25,6 +25,7 @@ Retrieves a list of federations in use by a specific CDN.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: CDN:READ, FEDERATION:READ, DELIVERY-SERVICE:READ
 :Response Type:  Array
 
 Request Structure
@@ -79,7 +80,7 @@ Response Structure
 
 	.. note:: This key will only be present if the description was provided when the federation was created. Refer to the ``POST`` method of this endpoint to see how federations can be created.
 
-:lastUpdated: The date and time at which this federation was last modified, in ISO format
+:lastUpdated: The date and time at which this federation was last modified, in :ref:`non-rfc-datetime`
 :ttl:         Time to Live (TTL) for the ``cname``, in hours
 
 .. code-block:: http
@@ -117,6 +118,7 @@ Creates a new federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: FEDERATION:CREATE, FEDERATION:READ, CDN:READ
 :Response Type:  Object
 
 Request Structure
@@ -161,7 +163,7 @@ Response Structure
 
 	.. note:: This key will only be present if the description was provided when the federation was created
 
-:lastUpdated: The date and time at which this federation was last modified, in ISO format
+:lastUpdated: The date and time at which this federation was last modified, in :ref:`non-rfc-datetime`
 :ttl:         Time to Live (TTL) for the ``cname``, in hours
 
 

@@ -20,18 +20,18 @@
 var RoleService = function($http, messageModel, ENV) {
 
     this.getRoles = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'roles', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'roles', {params: queryParams}).then(
             function (result) {
                 return result.data.response;
             },
             function (err) {
                 throw err;
             }
-        )
+        );
     };
 
     this.createRole = function(role) {
-        return $http.post(ENV.api['root'] + "roles", role).then(
+        return $http.post(ENV.api.unstable + "roles", role).then(
             function(result) {
                 return result.data;
             },
@@ -43,7 +43,7 @@ var RoleService = function($http, messageModel, ENV) {
     };
 
     this.updateRole = function(role) {
-        return $http.put(ENV.api['root'] + "roles", role, {params: {id: role.id}}).then(
+        return $http.put(ENV.api.unstable + "roles", role, {params: {name: role.name}}).then(
             function(result) {
                 return result.data;
             },
@@ -54,8 +54,8 @@ var RoleService = function($http, messageModel, ENV) {
         );
     };
 
-    this.deleteRole = function(id) {
-        return $http.delete(ENV.api['root'] + "roles", {params: {id: id}}).then(
+    this.deleteRole = function(name) {
+        return $http.delete(ENV.api.unstable + "roles", {params: {name: name}}).then(
             function(result) {
                 return result.data;
             },

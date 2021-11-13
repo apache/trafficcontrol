@@ -27,13 +27,11 @@ to_group: trafops # currently hardcoded into TO
 # TO Installation information
 to_base_installdir: /opt/traffic_ops
 to_app_installdir: "{{ to_base_installdir }}/app"
-to_public_dir: "{{ to_app_installdir }}/public"
 to_db_installdir: "{{ to_app_installdir }}/db"
 to_conf_installdir: "{{ to_app_installdir }}/conf"
 to_install_installdir: "{{ to_base_installdir }}/install"
 to_install_json_installdir: "{{ to_install_installdir }}/data/json"
 to_install_bin_installdir: "{{ to_install_installdir }}/bin"
-to_install_goose_script: "{{ to_install_bin_installdir }}/install_goose.sh"
 
 # URL users should use to reach TO
 to_url: "https://{{ ansible_fqdn }}"
@@ -43,7 +41,9 @@ to_admin_user:
 to_admin_user_password:
 
 # --- cdn.conf
+to_disable_auto_cert_deletion: false
 to_use_ims: true
+to_use_rbp: false
 to_heartbeat_timeout: 20
 to_hypnotoad_number_of_workers: 12
 to_cors_access_control_allow_origin: "http://localhost:8080"
@@ -112,7 +112,7 @@ to_go_supported_ds_metrics:
 
 to_plugin_config: {}
 
-to_traffic_vault_backend: "riak"
+to_traffic_vault_backend: "postgres"
 
 to_smtp_enabled: false
 to_smtp_username: ""
@@ -135,6 +135,27 @@ todb_dbconf:
     user: "{{ todb_username }}"
     password: "{{ todb_password }}"
     dbname: "{{ todb_db_name }}"
+    sslmode: disable
+    open_manual: ""
+
+# --- Traffic Vault Postgres backend traffic_vault_config (in cdn.conf) & dbconf.yml
+to_tvdb_db_name: traffic_vault
+to_tvdb_type: Pg
+to_tvdb_port: 5432
+to_tvdb_host: localhost
+to_tvdb_username:
+to_tvdb_password:
+to_tvdb_ssl_enable: false
+to_tvdb_aes_key_loc: "{{ to_conf_installdir }}/aes.key"
+to_tvdb_aes_key:
+to_tvdb_dbconf:
+  production:
+    driver: postgres
+    host: localhost
+    port: 5432
+    user: "{{ to_tvdb_username }}"
+    password: "{{ to_tvdb_password }}"
+    dbname: "{{ to_tvdb_db_name }}"
     sslmode: disable
     open_manual: ""
 

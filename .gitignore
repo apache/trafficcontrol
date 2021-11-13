@@ -33,11 +33,14 @@ docs/_build/
 docs/source/_build/
 traffic_ops/app/conf/ldap.conf
 traffic_ops/app/db/admin
+traffic_ops/app/db/reencrypt/reencrypt
+traffic_ops/app/db/traffic_vault_migrate/traffic_vault_migrate
+traffic_ops/app/db/traffic_vault_migrate/dump
 traffic_ops/**/*.log
 traffic_stats/traffic_stats
-misc/traffic-control-cdn/downloads/*.rpm
 traffic_router/*/*.log
 traffic_router/*.log
+traffic_router/core/src/test/conf/*.properties
 vendor/**/appveyor.yml
 vendor/**/.gitattributes
 vendor/**/.gitignore

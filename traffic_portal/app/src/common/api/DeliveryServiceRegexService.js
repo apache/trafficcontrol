@@ -20,7 +20,7 @@
 var DeliveryServiceRegexService = function($http, locationUtils, messageModel, ENV) {
 
 	this.getDeliveryServiceRegexes = function(dsId) {
-		return $http.get(ENV.api['root'] + 'deliveryservices/' + dsId + '/regexes').then(
+		return $http.get(ENV.api.unstable + 'deliveryservices/' + dsId + '/regexes').then(
 			function(result) {
 				return result.data.response;
 			},
@@ -31,7 +31,7 @@ var DeliveryServiceRegexService = function($http, locationUtils, messageModel, E
 	};
 
 	this.getDeliveryServiceRegex = function(dsId, regexId) {
-		return $http.get(ENV.api['root'] + 'deliveryservices/' + dsId + '/regexes', {params: {id: regexId}}).then(
+		return $http.get(ENV.api.unstable + 'deliveryservices/' + dsId + '/regexes', {params: {id: regexId}}).then(
 			function(result) {
 				return result.data.response[0];
 			},
@@ -42,7 +42,7 @@ var DeliveryServiceRegexService = function($http, locationUtils, messageModel, E
 	};
 
 	this.createDeliveryServiceRegex = function(dsId, regex) {
-		return $http.post(ENV.api['root'] + 'deliveryservices/' + dsId + '/regexes', regex).then(
+		return $http.post(ENV.api.unstable + 'deliveryservices/' + dsId + '/regexes', regex).then(
 			function(result) {
 				messageModel.setMessages(result.data.alerts, true);
 				locationUtils.navigateToPath('/delivery-services/' + dsId + '/regexes');
@@ -56,7 +56,7 @@ var DeliveryServiceRegexService = function($http, locationUtils, messageModel, E
 	};
 
 	this.updateDeliveryServiceRegex = function(dsId, regex) {
-		return $http.put(ENV.api['root'] + 'deliveryservices/' + dsId + '/regexes/' + regex.id, regex).then(
+		return $http.put(ENV.api.unstable + 'deliveryservices/' + dsId + '/regexes/' + regex.id, regex).then(
 			function(result) {
 				messageModel.setMessages([{level: 'success', text:'Regex updated'}], false);
 				return result;
@@ -69,7 +69,7 @@ var DeliveryServiceRegexService = function($http, locationUtils, messageModel, E
 	};
 
 	this.deleteDeliveryServiceRegex = function(dsId, regexId) {
-		return $http.delete(ENV.api['root'] + 'deliveryservices/' + dsId + '/regexes/' + regexId).then(
+		return $http.delete(ENV.api.unstable + 'deliveryservices/' + dsId + '/regexes/' + regexId).then(
 			function(result) {
 				messageModel.setMessages(result.data.alerts, true);
 				return result;

@@ -106,7 +106,7 @@ func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 	}
 	resetDS(ds)
 	if ds == nil || ds.XMLID == nil {
-		t.Fatal("first DSR in the test data had a nil DeliveryService or one with no XMLID")
+		t.Fatal("first DSR in the test data had a nil Delivery Service, or one with no XMLID")
 	}
 
 	opts := client.NewRequestOptions()

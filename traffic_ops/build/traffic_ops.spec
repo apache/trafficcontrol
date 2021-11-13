@@ -33,7 +33,7 @@ URL:              https://github.com/apache/trafficcontrol/
 Vendor:           Apache Software Foundation
 Packager:         daniel_kirkwood at Cable dot Comcast dot com
 AutoReqProv:      no
-Requires:         cpanminus, expat-devel, gcc-c++, golang >= 1.12, libcurl, libpcap-devel, mkisofs, tar
+Requires:         cpanminus, expat-devel, libcurl, libpcap-devel, mkisofs, tar
 Requires:         openssl-devel, perl, perl-core, perl-DBD-Pg, perl-DBI, perl-Digest-SHA1
 Requires:         libidn-devel, libcurl-devel, libcap
 Requires:         postgresql13 >= 13.2 , postgresql13-devel >= 13.2
@@ -81,6 +81,27 @@ db_admin_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/db
 	cp "$TC_DIR"/traffic_ops/app/db/admin .
 ) || { echo "Could not copy go db admin at $(pwd): $!"; exit 1; };
 
+# copy ToDnssecRefresh
+to_dnssec_refresh_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/bin/checks/DnssecRefresh
+( mkdir -p "$to_dnssec_refresh_dir" && \
+	cd "$to_dnssec_refresh_dir" && \
+	cp "$TC_DIR"/traffic_ops/app/bin/checks/DnssecRefresh/ToDnssecRefresh .
+) || { echo "Could not copy ToDnssecRefresh at $(pwd): $!"; exit 1; };
+
+# copy TV DB reencrypt
+reencrypt_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/db/reencrypt
+( mkdir -p "$reencrypt_dir" && \
+	cd "$reencrypt_dir" && \
+	cp "$TC_DIR"/traffic_ops/app/db/reencrypt/reencrypt .
+) || { echo "Could not copy go db reencrypt at $(pwd): $!"; exit 1; };
+
+# copy TV migrate
+tvm_dir=src/github.com/apache/trafficcontrol/traffic_ops/app/db/traffic_vault_migrate
+( mkdir -p "$tvm_dir" && \
+	cd "$tvm_dir" && \
+	cp "$TC_DIR"/traffic_ops/app/db/traffic_vault_migrate/traffic_vault_migrate .
+) || { echo "Could not copy go db traffic_vault_migrate at $(pwd): $!"; exit 1; };
+
 # copy TO profile converter
 convert_dir=src/github.com/apache/trafficcontrol/traffic_ops/install/bin/convert_profile
 ( mkdir -p "$convert_dir" && \
@@ -117,6 +138,20 @@ src=src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
 db_admin_src=src/github.com/apache/trafficcontrol/traffic_ops/app/db
 %__cp -p  "$db_admin_src"/admin           "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/db/admin
 %__rm $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/db/*.go
+%__rm -r $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/db/trafficvault/test
+
+to_dnssec_refresh_src=src/github.com/apache/trafficcontrol/traffic_ops/app/bin/checks/DnssecRefresh
+%__cp -p  "$to_dnssec_refresh_src"/ToDnssecRefresh           "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/bin/checks/DnssecRefresh/ToDnssecRefresh
+%__rm $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/bin/checks/DnssecRefresh/*.go
+%__rm -r $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/bin/checks/DnssecRefresh/config
+
+reencrypt_src=src/github.com/apache/trafficcontrol/traffic_ops/app/db/reencrypt
+%__cp -p  "$reencrypt_src"/reencrypt           "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/db/reencrypt/reencrypt
+%__rm $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/db/reencrypt/*.go
+
+tv_migrate_src=src/github.com/apache/trafficcontrol/traffic_ops/app/db/traffic_vault_migrate
+%__cp -p  "$tv_migrate_src"/traffic_vault_migrate           "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/db/traffic_vault_migrate/traffic_vault_migrate
+%__rm $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/db/traffic_vault_migrate/*.go
 
 convert_profile_src=src/github.com/apache/trafficcontrol/traffic_ops/install/bin/convert_profile
 %__cp -p  "$convert_profile_src"/convert_profile           "${RPM_BUILD_ROOT}"/opt/traffic_ops/install/bin/convert_profile
@@ -213,7 +248,12 @@ fi
 %config(noreplace) %attr(750,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) /opt/traffic_ops/app/db/dbconf.yml
 %config(noreplace)/var/www/files/osversions.json
 %attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/db/admin
+%exclude %{PACKAGEDIR}/app/db/SQUASH.md
+%exclude %{PACKAGEDIR}/app/db/squash_migrations.sh
 %attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/install/bin/convert_profile/convert_profile
+%attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/bin/checks/DnssecRefresh/ToDnssecRefresh
+%attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/db/reencrypt/reencrypt
+%attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/db/traffic_vault_migrate/traffic_vault_migrate
 %{PACKAGEDIR}/etc
 %{PACKAGEDIR}/app/bin/checks
 %{PACKAGEDIR}/app/bin/tests

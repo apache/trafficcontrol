@@ -25,6 +25,7 @@ Updates a routing regular expression.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [#tenancy]_
+:Permissions Required: DELIVERY-SERVICE:UPDATE, DELIVERY-SERVICE:READ, TYPE:READ
 :Response Type:  Object
 
 Request Structure
@@ -108,6 +109,7 @@ Deletes a routing regular expression.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [#tenancy]_
+:Permissions Required: DELIVERY-SERVICE:UPDATE, DELIVERY-SERVICE:READ, TYPE:READ
 :Response Type:  ``undefined``
 
 Request Structure

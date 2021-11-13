@@ -25,6 +25,7 @@ under the License.
             <li class="active">{{userName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <a class="btn btn-primary" ng-href="/#!/change-logs?username={{userName | encodeURIComponent}}">View Change Log</a>
             <a class="btn btn-primary" ng-href="/#!/tenants/{{user.tenantId}}/delivery-services?all=true">View Delivery Services</a>
         </div>
         <div class="clearfix"></div>
@@ -62,13 +63,13 @@ under the License.
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(userForm.role), 'has-feedback': hasError(userForm.role)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Role (privilege level) *</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Role*</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select name="role" class="form-control" ng-model="user.role" ng-options="role.id as label(role) for role in roles" required>
+                    <select name="role" class="form-control" ng-model="user.role" ng-options="role.name as label(role) for role in roles" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(userForm.role, 'required')">Required</small>
-                    <small ng-show="user.role"><a href="/#!/roles/{{user.role}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                    <small ng-show="user.role"><a href="/#!/roles/edit/{{user.role}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(userForm.tenantId), 'has-feedback': hasError(userForm.tenantId)}">

@@ -35,61 +35,72 @@ import (
 
 // Delete handler for deleting the association between a Delivery Service and a Server
 func Delete(w http.ResponseWriter, r *http.Request) {
-	delete(w, r, false)
+	deleteDSS(w, r)
 }
 
-// DeleteDeprecated is the deprecation handler for deleting the association
-// between a Delivery Service and a Server.
-func DeleteDeprecated(w http.ResponseWriter, r *http.Request) {
-	delete(w, r, true)
-}
-
-const lastServerQuery = `
-SELECT
-(SELECT (CASE WHEN t.name LIKE '` + string(tc.EdgeTypePrefix) + `%' THEN TRUE ELSE FALSE END) AS available
-FROM type t
-JOIN server s ON s.type = t.id
-WHERE s.id = $2)
-AND
-(SELECT COUNT(*) = 0 AS available
-FROM deliveryservice_server
-JOIN server s ON deliveryservice_server.server = s.id
-JOIN type t ON t.id = s.type
-JOIN status st ON st.id = s.status
-WHERE (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
-AND t.name LIKE '` + string(tc.EdgeTypePrefix) + `%'
-AND deliveryservice = $1
-AND server <> $2)
+const lastEdgeAndLastOriginQuery = `
+SELECT (
+  SELECT (SELECT t.name LIKE '` + string(tc.EdgeTypePrefix) + `%') AS available
+  FROM type t
+  JOIN server s ON s.type = t.id
+  WHERE s.id = $2)
+  AND (
+  SELECT COUNT(*) = 0 AS available
+  FROM deliveryservice_server
+  JOIN server s ON deliveryservice_server.server = s.id
+  JOIN type t ON t.id = s.type
+  JOIN status st ON st.id = s.status
+  WHERE (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
+  AND t.name LIKE '` + string(tc.EdgeTypePrefix) + `%'
+  AND deliveryservice = $1
+  AND server <> $2),
+(
+  SELECT (SELECT t.name LIKE '` + string(tc.OriginTypeName) + `%') AS available
+  FROM type t
+  JOIN server s ON s.type = t.id
+  WHERE s.id = $2)
+  AND (
+  SELECT COUNT(*) = 0 AS available
+  FROM deliveryservice_server
+  JOIN server s ON deliveryservice_server.server = s.id
+  JOIN type t ON t.id = s.type
+  JOIN status st ON st.id = s.status
+  WHERE (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
+  AND t.name LIKE '` + string(tc.OriginTypeName) + `%'
+  AND deliveryservice = $1
+  AND server <> $2)
 `
 
-// checkLastServer checks if the given Server ID identifies the last server
-// assigned to the Delivery Service identified by its passed ID. It returns -
-// in order - an HTTP status code (useful only if an error occurs), an error
-// suitable for reporting back to the user, and an error that must not be shown
-// to the user. If the server is, in fact, the last server assigned to the
-// Delivery Service, the "user error" will be set to an appropriate, non-nil
-// value.
-func checkLastServer(dsID, serverID int, tx *sql.Tx) (int, error, error) {
-	var isLast bool
+// checkLastAvailableEdgeOrOrigin checks if the given Server ID identifies the last ONLINE/REPORTED
+// edge or origin assigned to the Delivery Service identified by its passed ID. It returns - in
+// order - an HTTP status code (useful only if an error occurs), an error suitable for reporting
+// back to the user, and an error that must not be shown to the user. If the server is, in fact,
+// the last available edge or origin assigned to the Delivery Service, the "user error" will be
+// set to an appropriate, non-nil value.
+func checkLastAvailableEdgeOrOrigin(dsID, serverID int, usesMSO bool, tx *sql.Tx) (int, error, error) {
+	var isLastEdge bool
+	var isLastOrigin bool
 	if tx == nil {
 		return http.StatusInternalServerError, nil, errors.New("nil transaction")
 	}
-	err := tx.QueryRow(lastServerQuery, dsID, serverID).Scan(&isLast)
+	err := tx.QueryRow(lastEdgeAndLastOriginQuery, dsID, serverID).Scan(&isLastEdge, &isLastOrigin)
 	if err != nil {
 		return http.StatusInternalServerError, nil, fmt.Errorf("checking if server #%d is the last one assigned to DS #%d: %v", serverID, dsID, err)
 	}
-	if isLast {
-		return http.StatusConflict, fmt.Errorf("removing server #%d from active Delivery Service #%d would leave it with no REPORTED/ONLINE assigned servers", serverID, dsID), nil
+	if isLastEdge {
+		return http.StatusConflict, fmt.Errorf("removing server #%d from active Delivery Service #%d would leave it with no REPORTED/ONLINE EDGE servers", serverID, dsID), nil
+	}
+	if usesMSO && isLastOrigin {
+		return http.StatusConflict, fmt.Errorf("removing server #%d from active, MSO-enabled Delivery Service #%d would leave it with no REPORTED/ONLINE ORG servers", serverID, dsID), nil
 	}
 	return http.StatusOK, nil, nil
 }
 
-func delete(w http.ResponseWriter, r *http.Request, deprecated bool) {
-	alt := "DELETE deliveryserviceserver/{{Delivery Service ID}}/{{Server ID}}"
+func deleteDSS(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"serverid", "dsid"}, []string{"serverid", "dsid"})
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
-		api.HandleErrOptionalDeprecation(w, r, tx, errCode, userErr, sysErr, deprecated, &alt)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
@@ -97,7 +108,7 @@ func delete(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	if tx == nil {
 		errCode = http.StatusInternalServerError
 		sysErr = errors.New("nil transaction")
-		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, nil, sysErr, deprecated, &alt)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, nil, sysErr)
 		return
 	}
 
@@ -106,7 +117,7 @@ func delete(w http.ResponseWriter, r *http.Request, deprecated bool) {
 
 	userErr, sysErr, errCode = tenant.CheckID(tx, inf.User, dsID)
 	if userErr != nil || sysErr != nil {
-		api.HandleErrOptionalDeprecation(w, r, tx, errCode, userErr, sysErr, deprecated, &alt)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 
@@ -114,19 +125,19 @@ func delete(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	vals := map[string]interface{}{"dsid": dsID}
 	dses, userErr, sysErr, errCode := deliveryservice.GetDeliveryServices(query, vals, inf.Tx)
 	if userErr != nil || sysErr != nil {
-		api.HandleErrOptionalDeprecation(w, r, tx, errCode, userErr, sysErr, deprecated, &alt)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 	if len(dses) < 1 {
 		errCode = http.StatusNotFound
 		userErr = fmt.Errorf("no such Delivery Service: #%d", dsID)
-		api.HandleErrOptionalDeprecation(w, r, tx, errCode, userErr, nil, deprecated, &alt)
+		api.HandleErr(w, r, tx, errCode, userErr, nil)
 		return
 	}
 	if len(dses) > 1 {
 		errCode = http.StatusInternalServerError
 		sysErr = fmt.Errorf("too many Delivery Services with ID %d: %d", dsID, len(dses))
-		api.HandleErrOptionalDeprecation(w, r, tx, errCode, nil, sysErr, deprecated, &alt)
+		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
 
@@ -134,50 +145,52 @@ func delete(w http.ResponseWriter, r *http.Request, deprecated bool) {
 	if ds.Active == nil {
 		errCode = http.StatusInternalServerError
 		sysErr = fmt.Errorf("Delivery Service #%d had nil Active", dsID)
-		api.HandleErrOptionalDeprecation(w, r, tx, errCode, nil, sysErr, deprecated, &alt)
+		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
 
 	if *ds.Active {
-		errCode, userErr, sysErr = checkLastServer(dsID, serverID, tx)
+		usesMSO := ds.MultiSiteOrigin == nil || *ds.MultiSiteOrigin
+		errCode, userErr, sysErr = checkLastAvailableEdgeOrOrigin(dsID, serverID, usesMSO, tx)
 		if userErr != nil || sysErr != nil {
-			api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated, &alt)
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 	}
 	if ds.XMLID == nil {
 		errCode = http.StatusInternalServerError
 		sysErr = fmt.Errorf("Delivery Service #%d had nil XMLID", dsID)
-		api.HandleErrOptionalDeprecation(w, r, tx, errCode, nil, sysErr, deprecated, &alt)
+		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
 	}
 	dsName := *ds.XMLID
 
+	if ds.CDNName != nil {
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *ds.CDNName, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
 	serverName, exists, err := dbhelpers.GetServerNameFromID(tx, serverID)
 	if err != nil {
-		api.HandleErrOptionalDeprecation(w, r, tx, http.StatusInternalServerError, nil, errors.New("getting server name from id: "+err.Error()), deprecated, &alt)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting server name from id: "+err.Error()))
 		return
 	} else if !exists {
-		api.HandleErrOptionalDeprecation(w, r, tx, http.StatusNotFound, errors.New("server not found"), nil, deprecated, &alt)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("server not found"), nil)
 		return
 	}
 
 	ok, err := deleteDSServer(tx, dsID, serverID)
 	if err != nil {
-		api.HandleErrOptionalDeprecation(w, r, tx, http.StatusInternalServerError, nil, errors.New("deleting delivery service server: "+err.Error()), deprecated, &alt)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting delivery service server: "+err.Error()))
 		return
 	}
 	if !ok {
-		api.HandleErrOptionalDeprecation(w, r, tx, http.StatusNotFound, nil, nil, deprecated, &alt)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+dsName+", ID: "+strconv.Itoa(dsID)+", ACTION: Remove server "+string(serverName)+" from delivery service", inf.User, inf.Tx.Tx)
-	if deprecated {
-		alerts := api.CreateDeprecationAlerts(&alt)
-		alerts.AddNewAlert(tc.SuccessLevel, "Server unlinked from delivery service.")
-		api.WriteAlerts(w, r, http.StatusOK, alerts)
-		return
-	}
+	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+string(dsName)+", ID: "+strconv.Itoa(dsID)+", ACTION: Remove server "+string(serverName)+" from delivery service", inf.User, inf.Tx.Tx)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Server unlinked from delivery service.")
 }
 

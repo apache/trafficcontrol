@@ -23,28 +23,44 @@ FROM centos:7
 ARG POSTGRES_VERSION=13.2
 ENV POSTGRES_VERSION=$POSTGRES_VERSION
 
-# NOTE: temporary workaround for removal of golang packages from CentOS 7 base repo
 RUN yum install -y \
-    epel-release \
-    centos-release-scl-rh \
-    https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm \
+		epel-release \
+		centos-release-scl-rh \
+		https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm \
     git && \
-    yum -y install golang
+    yum -y install           \
+        cpanminus            \
+        expat-devel          \
+        libcap               \
+        libcurl-devel        \
+        libidn-devel         \
+        libpcap-devel        \
+        mkisofs              \
+        openssl-devel        \
+        perl-core            \
+        perl-Crypt-ScryptKDF \
+        perl-DBD-Pg          \
+        perl-DBI             \
+        perl-Digest-SHA1     \
+        perl-JSON            \
+        perl-libwww-perl     \
+        perl-TermReadKey     \
+        perl-Test-CPAN-Meta  \
+        perl-WWW-Curl        \
+        postgresql13         \
+        postgresql13-devel &&\
+    yum clean all
 
 # Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
 ARG TRAFFIC_OPS_RPM=traffic_ops.rpm
 ADD $TRAFFIC_OPS_RPM /
-RUN yum install -y \
-        /$(basename $TRAFFIC_OPS_RPM) && \
-        rm /$(basename $TRAFFIC_OPS_RPM) && \
-    yum clean all
-
-RUN /opt/traffic_ops/install/bin/install_goose.sh
+RUN rpm -Uvh $(basename $TRAFFIC_OPS_RPM) && \
+    rm $(basename $TRAFFIC_OPS_RPM)
 
 WORKDIR /opt/traffic_ops/app
 
-ADD run-db-test.sh \
-    goose-config.sh \
+COPY run-db-test.sh \
+    db-config.sh \
     /
 
 COPY initdb.d/ /db_dumps/

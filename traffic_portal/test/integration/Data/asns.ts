@@ -208,7 +208,7 @@ export const ASNs = {
 					description: "create an ASN",
 					ASNs: "1111",
 					CacheGroup: "asntestcg1",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: ASN:CREATE, CACHE-GROUP:UPDATE"
 				}
 			],
 			update: [
@@ -216,14 +216,14 @@ export const ASNs = {
 					description: "update cachegroup of an ASN",
 					ASNs: "2222",
 					CacheGroup: "asntestcg2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: ASN:UPDATE, CACHE-GROUP:UPDATE"
 				}
 			],
 			remove: [
 				{
 					description: "delete an ASN",
 					ASNs: "2222",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: ASN:DELETE, CACHE-GROUP:UPDATE"
 				}
 			]
 		},

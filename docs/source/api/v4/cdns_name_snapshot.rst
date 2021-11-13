@@ -26,6 +26,7 @@ Retrieves the *current* :term:`Snapshot` for a CDN, which represents the current
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CDN-SNAPSHOT:READ
 :Response Type:  Object
 
 Request Structure
@@ -320,7 +321,7 @@ Response Structure
 	:tm_user:    The username of the currently logged-in user
 	:tm_version: The full version number of the Traffic Ops server, including release number, git commit hash, and supported Enterprise Linux version
 
-:topologies:	An array of :term:`Topologies` where each key is the name of that Topology.
+:topologies: An array of :term:`Topologies` where each key is the name of that Topology.
 
 	:nodes: An array of the names of the :term:`Edge-Tier` :term:`Cache Groups` in this :term:`Topology`. :term:`Mid-Tier` Cache Groups in the topology are not included.
 
@@ -359,211 +360,211 @@ Response Structure
 
 	{
 		"response": {
-		    "config": {
-			"api.cache-control.max-age": "10",
-			"certificates.polling.interval": "300000",
-			"consistent.dns.routing": "true",
-			"coveragezone.polling.interval": "3600000",
-			"coveragezone.polling.url": "https://static.infra.ciab.test:443/coverage-zone.json",
-			"dnssec.dynamic.response.expiration": "300s",
-			"dnssec.enabled": "false",
-			"domain_name": "mycdn.ciab.test",
-			"federationmapping.polling.interval": "60000",
-			"federationmapping.polling.url": "https://${toHostname}/api/2.0/federations/all",
-			"geolocation.polling.interval": "86400000",
-			"geolocation.polling.url": "https://static.infra.ciab.test:443/GeoLite2-City.mmdb.gz",
-			"keystore.maintenance.interval": "300",
-			"neustar.polling.interval": "86400000",
-			"neustar.polling.url": "https://static.infra.ciab.test:443/neustar.tar.gz",
-			"soa": {
-			    "admin": "twelve_monkeys",
-			    "expire": "604800",
-			    "minimum": "30",
-			    "refresh": "28800",
-			    "retry": "7200"
+			"config": {
+				"api.cache-control.max-age": "10",
+				"certificates.polling.interval": "300000",
+				"consistent.dns.routing": "true",
+				"coveragezone.polling.interval": "3600000",
+				"coveragezone.polling.url": "https://static.infra.ciab.test:443/coverage-zone.json",
+				"dnssec.dynamic.response.expiration": "300s",
+				"dnssec.enabled": "false",
+				"domain_name": "mycdn.ciab.test",
+				"federationmapping.polling.interval": "60000",
+				"federationmapping.polling.url": "https://${toHostname}/api/2.0/federations/all",
+				"geolocation.polling.interval": "86400000",
+				"geolocation.polling.url": "https://static.infra.ciab.test:443/GeoLite2-City.mmdb.gz",
+				"keystore.maintenance.interval": "300",
+				"neustar.polling.interval": "86400000",
+				"neustar.polling.url": "https://static.infra.ciab.test:443/neustar.tar.gz",
+				"soa": {
+					"admin": "twelve_monkeys",
+					"expire": "604800",
+					"minimum": "30",
+					"refresh": "28800",
+					"retry": "7200"
+				},
+				"steeringmapping.polling.interval": "60000",
+				"ttls": {
+					"A": "3600",
+					"AAAA": "3600",
+					"DNSKEY": "30",
+					"DS": "30",
+					"NS": "3600",
+					"SOA": "86400"
+				},
+				"zonemanager.cache.maintenance.interval": "300",
+				"zonemanager.threadpool.scale": "0.50"
 			},
-			"steeringmapping.polling.interval": "60000",
-			"ttls": {
-			    "A": "3600",
-			    "AAAA": "3600",
-			    "DNSKEY": "30",
-			    "DS": "30",
-			    "NS": "3600",
-			    "SOA": "86400"
-			},
-			"zonemanager.cache.maintenance.interval": "300",
-			"zonemanager.threadpool.scale": "0.50"
-		    },
-		    "contentRouters": {
-			"trafficrouter": {
-			    "api.port": "3333",
-			    "fqdn": "trafficrouter.infra.ciab.test",
-			    "httpsPort": 443,
-			    "ip": "172.26.0.15",
-			    "ip6": "",
-			    "location": "CDN_in_a_Box_Edge",
-			    "port": 80,
-			    "profile": "CCR_CIAB",
-			    "secure.api.port": "3443",
-			    "status": "ONLINE"
-			}
-		    },
-		    "contentServers": {
-			"edge": {
-			    "cacheGroup": "CDN_in_a_Box_Edge",
-			    "capabilities": [
-				"RAM_DISK_STORAGE"
-			    ],
-			    "fqdn": "edge.infra.ciab.test",
-			    "hashCount": 999,
-			    "hashId": "edge",
-			    "httpsPort": 443,
-			    "interfaceName": "eth0",
-			    "ip": "172.26.0.3",
-			    "ip6": "",
-			    "locationId": "CDN_in_a_Box_Edge",
-			    "port": 80,
-			    "profile": "ATS_EDGE_TIER_CACHE",
-			    "routingDisabled": 0,
-			    "status": "REPORTED",
-			    "type": "EDGE"
-			},
-			"mid": {
-			    "cacheGroup": "CDN_in_a_Box_Mid",
-			    "capabilities": [
-				"RAM_DISK_STORAGE"
-			    ],
-			    "fqdn": "mid.infra.ciab.test",
-			    "hashCount": 999,
-			    "hashId": "mid",
-			    "httpsPort": 443,
-			    "interfaceName": "eth0",
-			    "ip": "172.26.0.4",
-			    "ip6": "",
-			    "locationId": "CDN_in_a_Box_Mid",
-			    "port": 80,
-			    "profile": "ATS_MID_TIER_CACHE",
-			    "routingDisabled": 0,
-			    "status": "REPORTED",
-			    "type": "MID"
-			}
-		    },
-		    "deliveryServices": {
-			"demo1": {
-			    "anonymousBlockingEnabled": "false",
-			    "consistentHashQueryParams": [
-				"abc",
-				"pdq",
-				"xxx",
-				"zyx"
-			    ],
-			    "coverageZoneOnly": "false",
-			    "deepCachingType": "NEVER",
-			    "dispersion": {
-				"limit": 1,
-				"shuffled": "true"
-			    },
-			    "domains": [
-				"demo1.mycdn.ciab.test"
-			    ],
-			    "ecsEnabled": "false",
-			    "geolocationProvider": "maxmindGeolocationService",
-			    "ip6RoutingEnabled": "true",
-			    "matchsets": [
-				{
-				    "matchlist": [
-					{
-					    "match-type": "HOST",
-					    "regex": ".*\\.demo1\\..*"
-					}
-				    ],
-				    "protocol": "HTTP"
+			"contentRouters": {
+				"trafficrouter": {
+					"api.port": "3333",
+					"fqdn": "trafficrouter.infra.ciab.test",
+					"httpsPort": 443,
+					"ip": "172.26.0.15",
+					"ip6": "",
+					"location": "CDN_in_a_Box_Edge",
+					"port": 80,
+					"profile": "CCR_CIAB",
+					"secure.api.port": "3443",
+					"status": "ONLINE"
 				}
-			    ],
-			    "missLocation": {
-				"lat": 42,
-				"long": -88
-			    },
-			    "protocol": {
-				"acceptHttps": "true",
-				"redirectToHttps": "false"
-			    },
-			    "regionalGeoBlocking": "false",
-			    "requiredCapabilities": [
-				"RAM_DISK_STORAGE"
-			    ],
-			    "routingName": "video",
-			    "soa": {
-				"admin": "traffic_ops",
-				"expire": "604800",
-				"minimum": "30",
-				"refresh": "28800",
-				"retry": "7200"
-			    },
-			    "sslEnabled": "true",
-			    "topology": "my-topology",
-			    "ttls": {
-				"A": "",
-				"AAAA": "",
-				"NS": "3600",
-				"SOA": "86400"
-			    }
+			},
+			"contentServers": {
+				"edge": {
+					"cacheGroup": "CDN_in_a_Box_Edge",
+					"capabilities": [
+						"RAM_DISK_STORAGE"
+					],
+					"fqdn": "edge.infra.ciab.test",
+					"hashCount": 999,
+					"hashId": "edge",
+					"httpsPort": 443,
+					"interfaceName": "eth0",
+					"ip": "172.26.0.3",
+					"ip6": "",
+					"locationId": "CDN_in_a_Box_Edge",
+					"port": 80,
+					"profile": "ATS_EDGE_TIER_CACHE",
+					"routingDisabled": 0,
+					"status": "REPORTED",
+					"type": "EDGE"
+				},
+				"mid": {
+					"cacheGroup": "CDN_in_a_Box_Mid",
+					"capabilities": [
+						"RAM_DISK_STORAGE"
+					],
+					"fqdn": "mid.infra.ciab.test",
+					"hashCount": 999,
+					"hashId": "mid",
+					"httpsPort": 443,
+					"interfaceName": "eth0",
+					"ip": "172.26.0.4",
+					"ip6": "",
+					"locationId": "CDN_in_a_Box_Mid",
+					"port": 80,
+					"profile": "ATS_MID_TIER_CACHE",
+					"routingDisabled": 0,
+					"status": "REPORTED",
+					"type": "MID"
+				}
+			},
+			"deliveryServices": {
+				"demo1": {
+					"anonymousBlockingEnabled": "false",
+					"consistentHashQueryParams": [
+						"abc",
+						"pdq",
+						"xxx",
+						"zyx"
+					],
+					"coverageZoneOnly": "false",
+					"deepCachingType": "NEVER",
+					"dispersion": {
+						"limit": 1,
+						"shuffled": "true"
+					},
+					"domains": [
+						"demo1.mycdn.ciab.test"
+					],
+					"ecsEnabled": "false",
+					"geolocationProvider": "maxmindGeolocationService",
+					"ip6RoutingEnabled": "true",
+					"matchsets": [
+						{
+							"matchlist": [
+								{
+									"match-type": "HOST",
+									"regex": ".*\\.demo1\\..*"
+								}
+							],
+							"protocol": "HTTP"
+						}
+					],
+					"missLocation": {
+						"lat": 42,
+						"long": -88
+					},
+					"protocol": {
+						"acceptHttps": "true",
+						"redirectToHttps": "false"
+					},
+					"regionalGeoBlocking": "false",
+					"requiredCapabilities": [
+						"RAM_DISK_STORAGE"
+					],
+					"routingName": "video",
+					"soa": {
+						"admin": "traffic_ops",
+						"expire": "604800",
+						"minimum": "30",
+						"refresh": "28800",
+						"retry": "7200"
+					},
+					"sslEnabled": "true",
+					"topology": "my-topology",
+					"ttls": {
+						"A": "",
+						"AAAA": "",
+						"NS": "3600",
+						"SOA": "86400"
+					}
+				}
+			},
+			"edgeLocations": {
+				"CDN_in_a_Box_Edge": {
+					"backupLocations": {
+						"fallbackToClosest": "true"
+					},
+					"latitude": 38.897663,
+					"localizationMethods": [
+						"GEO",
+						"CZ",
+						"DEEP_CZ"
+					],
+					"longitude": -77.036574
+				}
+			},
+			"monitors": {
+				"trafficmonitor": {
+					"fqdn": "trafficmonitor.infra.ciab.test",
+					"httpsPort": 443,
+					"ip": "172.26.0.14",
+					"ip6": "",
+					"location": "CDN_in_a_Box_Edge",
+					"port": 80,
+					"profile": "RASCAL-Traffic_Monitor",
+					"status": "ONLINE"
+				}
+			},
+			"stats": {
+				"CDN_name": "CDN-in-a-Box",
+				"date": 1590600715,
+				"tm_host": "trafficops.infra.ciab.test:443",
+				"tm_user": "admin",
+				"tm_version": "development"
+			},
+			"topologies": {
+				"my-topology": {
+					"nodes": [
+						"CDN_in_a_Box_Edge"
+					]
+				}
+			},
+			"trafficRouterLocations": {
+				"CDN_in_a_Box_Edge": {
+					"backupLocations": {
+						"fallbackToClosest": "false"
+					},
+					"latitude": 38.897663,
+					"localizationMethods": [
+						"GEO",
+						"CZ",
+						"DEEP_CZ"
+					],
+					"longitude": -77.036574
+				}
 			}
-		    },
-		    "edgeLocations": {
-			"CDN_in_a_Box_Edge": {
-			    "backupLocations": {
-				"fallbackToClosest": "true"
-			    },
-			    "latitude": 38.897663,
-			    "localizationMethods": [
-				"GEO",
-				"CZ",
-				"DEEP_CZ"
-			    ],
-			    "longitude": -77.036574
-			}
-		    },
-		    "monitors": {
-			"trafficmonitor": {
-			    "fqdn": "trafficmonitor.infra.ciab.test",
-			    "httpsPort": 443,
-			    "ip": "172.26.0.14",
-			    "ip6": "",
-			    "location": "CDN_in_a_Box_Edge",
-			    "port": 80,
-			    "profile": "RASCAL-Traffic_Monitor",
-			    "status": "ONLINE"
-			}
-		    },
-		    "stats": {
-			"CDN_name": "CDN-in-a-Box",
-			"date": 1590600715,
-			"tm_host": "trafficops.infra.ciab.test:443",
-			"tm_user": "admin",
-			"tm_version": "development"
-		    },
-		    "topologies": {
-			"my-topology": {
-			    "nodes": [
-				"CDN_in_a_Box_Edge"
-			    ]
-			}
-		    },
-		    "trafficRouterLocations": {
-			"CDN_in_a_Box_Edge": {
-			    "backupLocations": {
-				"fallbackToClosest": "false"
-			    },
-			    "latitude": 38.897663,
-			    "localizationMethods": [
-				"GEO",
-				"CZ",
-				"DEEP_CZ"
-			    ],
-			    "longitude": -77.036574
-			}
-		    }
 		}
 	}
 

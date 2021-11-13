@@ -18,7 +18,7 @@
  */
 import { existsSync, readdirSync, unlink } from "fs";
 
-import { browser, by, element, ExpectedConditions } from 'protractor';
+import { browser, by, element, until } from 'protractor';
 import { BasePage } from './BasePage.po';
 
 export class TopNavigationPage extends BasePage{
@@ -32,7 +32,6 @@ export class TopNavigationPage extends BasePage{
     private lnkUser = element(by.id('headerUsername'));
     private mnuManageUserProfile = element(by.linkText('Manage User Profile'));
     private btnLogout = element(by.xpath("//a[@uib-popover='Logout']"));
-    private txtUserName = element(by.id("loginUsername"))
     async PerformSnapshot(cdnname:string,message:string){
         let result = false;
         let basePage = new BasePage();
@@ -110,7 +109,7 @@ export class TopNavigationPage extends BasePage{
     async Logout(){
         let result = false;
         await this.btnLogout.click();
-        if(await browser.wait(ExpectedConditions.visibilityOf(this.txtUserName), 20000) == true){
+        if(await browser.wait(until.urlIs(browser.params.baseUrl + "/#!/login"), 10000) === true){
             result = true;
         }
         return result;

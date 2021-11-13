@@ -4,15 +4,14 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| < 4.0   | :x:                |
-| 4.0.x   | :x:                |
-| 4.1.x   | :white_check_mark: |
+| < 5.0   | :x:                |
 | 5.0.x   | :x:                |
 | 5.1.x   | :white_check_mark: |
+| 6.0.x   | :white_check_mark: |
 
 ## Reporting a Vulnerability
-Contact the [Apache Software Foundation Security Team](mailto:security@trafficcontrol.apache.org)
-and follow the guidelines on [the Apache Software Foundation security page](https://www.apache.org/security/)
+Contact the [Apache Traffic Control Security Team](mailto:security@trafficcontrol.apache.org)
+and follow the guidelines on [the Apache Software Foundation security page](https://apache.org/security)
 regarding vulnerability disclosure.
 
 <!--

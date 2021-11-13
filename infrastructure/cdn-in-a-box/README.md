@@ -159,13 +159,6 @@ show you the default UI for interacting with the CDN - Traffic Portal.
 > <td align="left">Web interfaces on ports 3080 (HTTP) and 3443 (HTTPS), with a DNS service on 53 and an API on 3333</td>
 > <td align="left">N/A</td>
 > <td align="left">N/A</td>
-> </tr>
-> <tr class="odd">
-> <td align="left">Traffic Vault</td>
-> <td align="left">Riak key-value store on port 8010</td>
-> <td align="left"><code>TV_ADMIN_USER</code> in variables.env</td>
-> <td align="left"><code>TV_ADMIN_PASSWORD</code> in variables.env</td>
-> </tr>
 > </tbody>
 > </table>
 >

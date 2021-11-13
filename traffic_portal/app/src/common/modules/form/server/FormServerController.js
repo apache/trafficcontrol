@@ -141,12 +141,12 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     };
 
     $scope.isLargeCIDR = function(address) {
-        if($scope.IPWithCIDRPattern.test(address) && /.+\/(\d+)/.test(address)) {
-            let ip = address.split("/")[0],
-                cidr = parseInt(address.split("/")[1],10);
-
+        const matches = /^(.+)\/(\d+)$/.exec(address);
+        if (matches && matches.length === 3) {
+            const ip = matches[1];
+            const cidr = parseInt(matches[2], 10);
             if ($scope.IPv4Pattern.test(ip)) {
-                if (cidr < 27) {
+                if (cidr < 24) {
                     return true;
                 }
             } else {

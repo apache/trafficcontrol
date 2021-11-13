@@ -25,6 +25,7 @@ Gets all :term:`Parameters` configured in Traffic Ops
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: PARAMETER:READ
 :Response Type:  Array
 
 Request Structure
@@ -69,7 +70,7 @@ Response Structure
 ------------------
 :configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
 :id:          The :term:`Parameter`'s :ref:`parameter-id`
-:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in an ISO-like format
+:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in :ref:`non-rfc-datetime`
 :name:        :ref:`parameter-name` of the :term:`Parameter`
 :profiles:    An array of :term:`Profile` :ref:`Names <profile-name>` that use this :term:`Parameter`
 :secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
@@ -111,6 +112,7 @@ Creates one or more new :term:`Parameters`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: PARAMETER:CREATE, PARAMETER:READ
 :Response Type:  Array
 
 Request Structure
@@ -168,7 +170,7 @@ Response Structure
 ------------------
 :configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
 :id:          The :term:`Parameter`'s :ref:`parameter-id`
-:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in an ISO-like format
+:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in :ref:`non-rfc-datetime`
 :name:        :ref:`parameter-name` of the :term:`Parameter`
 :profiles:    An array of :term:`Profile` :ref:`Names <profile-name>` that use this :term:`Parameter`
 :secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`

@@ -246,8 +246,6 @@ Use the `Select Columns` menu to select the delivery service columns to view and
 - :ref:`ds-ipv6-routing` (visible by default)
 - :ref:`ds-last-header-rw-rules`
 - :ref:`ds-longdesc`
-- :ref:`ds-longdesc2`
-- :ref:`ds-longdesc3`
 - :ref:`ds-max-dns-answers`
 - :ref:`ds-max-origin-connections`
 - :ref:`ds-mid-header-rw-rules`
@@ -370,7 +368,7 @@ Use the `Quick Search` to search across all table columns or the column filter t
 :Cache Group:       [Visible by default] The :ref:`Name of the Cache Group <cache-group-name>` to which this server belongs
 :CDN:               [Visible by default] The name of the CDN to which the server belongs
 :Domain:            [Visible by default] The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
-:Hash ID:			The identifier of the server used in Traffic Router's consistent hashing algorithm.
+:Hash ID:           The identifier of the server used in Traffic Router's consistent hashing algorithm.
 :Host:              [Visible by default] The (short) hostname of the server
 :HTTPS Port:        The port on which the server listens for incoming HTTPS connections/requests
 :ID:                An integral, unique identifier for this server
@@ -647,7 +645,11 @@ Tools
 
 Invalidate Content
 ------------------
-Here, specific assets can be invalidated in all caches of a :term:`Delivery Service`, forcing content to be updated from the origin. Specifically, this *doesn't* mean that :term:`cache servers` will immediately remove items from their caches, but rather will fetch new copies whenever a request is made matching the 'Asset URL' regular expression. This behavior persists until the Invalidate Content Job's :abbr:`TTL (Time To Live)` expires. Each entry in the table on this page has the following fields:
+Here, specific assets can be invalidated in all caches of a :term:`Delivery Service`, forcing content to be updated from the origin. Specifically, this *doesn't* mean that :term:`cache servers` will immediately remove items from their caches, but rather will fetch new copies whenever a request is made matching the 'Asset URL' regular expression. This behavior persists until the Invalidate Content Job's :abbr:`TTL (Time To Live)` expires.
+
+.. Warning:: This method forces :term:`cache servers` to "re-validate" content, so in order to work properly the :term:`Origin` needs to support revalidation according to section 4.3.2 of :rfc:`7234`.
+
+Each entry in the table on this page has the following fields:
 
 :term:`Delivery Service`: The :term:`Delivery Service` to which to apply this Invalidate Content Job
 :Asset URL:        A URL or regular expression which describes the asset(s) to be invalidated

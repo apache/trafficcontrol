@@ -45,3 +45,10 @@ todb_password:
 
 # TODB database name
 todb_db_name: traffic_ops
+
+# Traffic Vault Postgres database credentials
+tvdb_username:
+tvdb_password:
+
+# Traffic Vault Postgres database name
+tvdb_db_name: traffic_vault

@@ -24,6 +24,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -65,6 +66,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 		header = make(map[string][]string)
 		header.Set(rfc.IfModifiedSince, time)
 		header.Set(rfc.IfUnmodifiedSince, time)
+		UpdateTestDeliveryServiceRequestsWithLongDescFields(t)
 		UpdateTestDeliveryServiceRequests(t)
 		UpdateTestDeliveryServiceRequestsWithHeaders(t, header)
 		GetTestDeliveryServiceRequestsIMSAfterChange(t, header)
@@ -75,7 +77,62 @@ func TestDeliveryServiceRequests(t *testing.T) {
 	})
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+func UpdateTestDeliveryServiceRequestsWithLongDescFields(t *testing.T) {
+	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
+		t.Fatalf("Need at least %d Delivery Service Requests to test updating them", dsrGood+1)
+	}
+
+	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
+	dsr := testData.DeliveryServiceRequests[dsrGood]
+	var ds *tc.DeliveryServiceV4
+	if dsr.ChangeType == tc.DSRChangeTypeDelete {
+		dsr.Original.LongDesc1 = util.StrPtr("long desc 1")
+		dsr.Original.LongDesc2 = util.StrPtr("long desc 2")
+		ds = dsr.Original
+	} else {
+		dsr.Requested.LongDesc1 = util.StrPtr("long desc 1")
+		dsr.Requested.LongDesc2 = util.StrPtr("long desc 2")
+		ds = dsr.Requested
+	}
+
+	if ds == nil || ds.XMLID == nil {
+		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("xmlId", *ds.XMLID)
+	resp, _, err := TOSession.GetDeliveryServiceRequests(opts)
+	if err != nil {
+		t.Errorf("cannot get Delivery Service Request with XMLID '%s': %v - alerts: %+v", *ds.XMLID, err, resp.Alerts)
+	}
+	if len(resp.Response) == 0 {
+		t.Fatalf("Expected at least one Deliver Service Request to exist with XMLID '%s', but none were found in Traffic Ops", *ds.XMLID)
+	}
+	respDSR := resp.Response[0]
+	if respDSR.ID == nil {
+		t.Fatalf("got a DSR by XMLID '%s' with a null or undefined ID", *ds.XMLID)
+	}
+	var respDS *tc.DeliveryServiceV4
+	if dsr.ChangeType == tc.DSRChangeTypeDelete {
+		respDS = dsr.Original
+		respDSR.Original = respDS
+	} else {
+		respDS = dsr.Requested
+		respDSR.Requested = respDS
+	}
+	expDisplayName := "new display name"
+	respDS.DisplayName = &expDisplayName
+	id := *respDSR.ID
+	_, reqInf, err := TOSession.UpdateDeliveryServiceRequest(id, respDSR, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("expected an error stating that Long Desc 1 and Long Desc 2 fields are not supported in api version 4.0 onwards, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected a 400 status code, but got %d", reqInf.StatusCode)
+	}
+}
+
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func UpdateTestDeliveryServiceRequestsWithHeaders(t *testing.T, header http.Header) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
@@ -91,7 +148,7 @@ func UpdateTestDeliveryServiceRequestsWithHeaders(t *testing.T, header http.Head
 	}
 	resetDS(ds)
 	if ds == nil || ds.XMLID == nil {
-		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
+		t.Fatalf("the %dth DSR in the test data had no Delivery Service, or that Delivery Service had a null or undefined XMLID", dsrGood)
 	}
 	opts := client.NewRequestOptions()
 	opts.Header = header
@@ -129,7 +186,7 @@ func UpdateTestDeliveryServiceRequestsWithHeaders(t *testing.T, header http.Head
 	}
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func GetTestDeliveryServiceRequestsIMSAfterChange(t *testing.T, header http.Header) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
@@ -145,7 +202,7 @@ func GetTestDeliveryServiceRequestsIMSAfterChange(t *testing.T, header http.Head
 
 	resetDS(ds)
 	if ds == nil || ds.XMLID == nil {
-		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
+		t.Fatalf("the %dth DSR in the test data had no Delivery Service, or that Delivery Service had a null or undefined XMLID", dsrGood)
 	}
 
 	opts := client.NewRequestOptions()
@@ -171,7 +228,7 @@ func GetTestDeliveryServiceRequestsIMSAfterChange(t *testing.T, header http.Head
 	}
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func CreateTestDeliveryServiceRequests(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
@@ -187,7 +244,7 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func TestDeliveryServiceRequestRequired(t *testing.T) {
 	WithObjs(t, []TCObj{CDNs, Types, Parameters, Tenants}, func() {
@@ -204,7 +261,7 @@ func TestDeliveryServiceRequestRequired(t *testing.T) {
 	})
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func TestDeliveryServiceRequestRules(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
@@ -238,7 +295,7 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 	})
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrBadTenant+1 {
@@ -255,7 +312,7 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 		}
 		resetDS(ds)
 		if ds == nil || ds.XMLID == nil {
-			t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrBadTenant)
+			t.Fatalf("the %dth DSR in the test data had no Delivery Service, or that Delivery Service had a null or undefined XMLID", dsrBadTenant)
 		}
 
 		resp, _, err := TOSession.CreateDeliveryServiceRequest(dsr, client.RequestOptions{})
@@ -297,7 +354,7 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 	})
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func TestDeliveryServiceRequestBad(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrDraft+1 {
@@ -316,7 +373,7 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 	})
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrDraft+1 {
@@ -443,7 +500,7 @@ func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequ
 	return resp
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func GetTestDeliveryServiceRequestsIMS(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
@@ -465,7 +522,7 @@ func GetTestDeliveryServiceRequestsIMS(t *testing.T) {
 	}
 	resetDS(ds)
 	if ds == nil || ds.XMLID == nil {
-		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
+		t.Fatalf("the %dth DSR in the test data had no Delivery Service, or that Delivery Service had null or undefined XMLID", dsrGood)
 	}
 
 	opts.QueryParameters.Set("xmlId", *ds.XMLID)
@@ -478,7 +535,7 @@ func GetTestDeliveryServiceRequestsIMS(t *testing.T) {
 	}
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func GetTestDeliveryServiceRequests(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
@@ -494,7 +551,7 @@ func GetTestDeliveryServiceRequests(t *testing.T) {
 	resetDS(ds)
 
 	if ds == nil || ds.XMLID == nil {
-		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
+		t.Fatalf("the %dth DSR in the test data had no Delivery Service, or that Delivery Service had a null or undefined XMLID", dsrGood)
 	}
 
 	opts := client.NewRequestOptions()
@@ -505,7 +562,7 @@ func GetTestDeliveryServiceRequests(t *testing.T) {
 	}
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func UpdateTestDeliveryServiceRequests(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {
@@ -523,7 +580,7 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 
 	resetDS(ds)
 	if ds == nil || ds.XMLID == nil {
-		t.Fatalf("the %dth DSR in the test data had no DeliveryService - or that DeliveryService had no XMLID", dsrGood)
+		t.Fatalf("the %dth DSR in the test data had no Delivery Service, or that Delivery Service had a null or undefined XMLID", dsrGood)
 	}
 
 	opts := client.NewRequestOptions()
@@ -580,7 +637,7 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 	}
 }
 
-// Note that this test is suceptible to breaking if the structure of the test
+// Note that this test is susceptible to breaking if the structure of the test
 // data's DSRs is altered at all.
 func DeleteTestDeliveryServiceRequests(t *testing.T) {
 	if len(testData.DeliveryServiceRequests) < dsrGood+1 {

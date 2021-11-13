@@ -20,7 +20,7 @@
 var DivisionService = function($http, ENV, locationUtils, messageModel) {
 
     this.getDivisions = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'divisions', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'divisions', {params: queryParams}).then(
             function(result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var DivisionService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.getDivision = function(id) {
-        return $http.get(ENV.api['root'] + 'divisions', {params: {id: id}}).then(
+        return $http.get(ENV.api.unstable + 'divisions', {params: {id: id}}).then(
             function(result) {
                 return result.data.response[0];
             },
@@ -42,7 +42,7 @@ var DivisionService = function($http, ENV, locationUtils, messageModel) {
     };
 
     this.createDivision = function(division) {
-        return $http.post(ENV.api['root'] + 'divisions', division).then(
+        return $http.post(ENV.api.unstable + 'divisions', division).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 locationUtils.navigateToPath('/divisions');
@@ -57,7 +57,7 @@ var DivisionService = function($http, ENV, locationUtils, messageModel) {
 
     // todo: change to use query param when it is supported
     this.updateDivision = function(division) {
-        return $http.put(ENV.api['root'] + 'divisions/' + division.id, division).then(
+        return $http.put(ENV.api.unstable + 'divisions/' + division.id, division).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
                 return result;            },
@@ -70,7 +70,7 @@ var DivisionService = function($http, ENV, locationUtils, messageModel) {
 
     // todo: change to use query param when it is supported
     this.deleteDivision = function(id) {
-        return $http.delete(ENV.api['root'] + 'divisions/' + id).then(
+        return $http.delete(ENV.api.unstable + 'divisions/' + id).then(
                 function(result) {
                     messageModel.setMessages(result.data.alerts, true);
                     return result;

@@ -37,7 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
-	"github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -414,16 +414,42 @@ func (cg *TOCacheGroup) createCoordinate() (*int, error) {
 	return coordinateID, nil
 }
 
+const numberOfDuplicatesQuery = `
+SELECT COUNT(*)
+FROM public.coordinate
+WHERE id NOT IN (
+    SELECT coordinate
+    FROM public.cachegroup
+    WHERE id = $1
+)
+AND name = $2`
+
+type userError string
+
+func (e userError) Error() string {
+	return string(e)
+}
+
+const duplicateExist userError = "cachegroup name already exists, please choose a different name"
+
 func (cg *TOCacheGroup) updateCoordinate() error {
 	if cg.Latitude != nil && cg.Longitude != nil {
+		var count uint
+		if err := cg.ReqInfo.Tx.Tx.QueryRow(numberOfDuplicatesQuery, *cg.ID, tc.CachegroupCoordinateNamePrefix+*cg.Name).Scan(&count); err != nil {
+			return fmt.Errorf("getting coordinate for Cache Group '%s': %w", *cg.Name, err)
+		}
+		if count > 0 {
+			return duplicateExist
+		}
 		q := `UPDATE coordinate SET name = $1, latitude = $2, longitude = $3 WHERE id = (SELECT coordinate FROM cachegroup WHERE id = $4)`
 		result, err := cg.ReqInfo.Tx.Tx.Exec(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude, *cg.ID)
+
 		if err != nil {
-			return fmt.Errorf("updating coordinate for cachegroup '%s': %s", *cg.Name, err.Error())
+			return fmt.Errorf("updating coordinate for cachegroup '%s': %w", *cg.Name, err)
 		}
 		rowsAffected, err := result.RowsAffected()
 		if err != nil {
-			return fmt.Errorf("updating coordinate for cachegroup '%s', getting rows affected: %s", *cg.Name, err.Error())
+			return fmt.Errorf("updating coordinate for cachegroup '%s', getting rows affected: %w", *cg.Name, err)
 		}
 		if rowsAffected == 0 {
 			return fmt.Errorf("updating coordinate for cachegroup '%s', zero rows affected", *cg.Name)
@@ -611,6 +637,11 @@ func (cg *TOCacheGroup) Update(h http.Header) (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 
+	// CheckIfCurrentUserCanModifyCachegroup
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCachegroup(cg.ReqInfo.Tx.Tx, *cg.ID, cg.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
 	coordinateID, userErr, sysErr, errCode := cg.handleCoordinateUpdate()
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
@@ -658,7 +689,7 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 		return nil, fmt.Errorf("no cachegroup with id %d found", *cg.ID), nil, http.StatusNotFound
 	}
 	if err != nil {
-		return nil, nil, tc.DBError, http.StatusInternalServerError
+		return nil, nil, err, http.StatusInternalServerError
 	}
 
 	// If partial coordinate information is given or the coordinate information is wholly
@@ -675,25 +706,31 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 	//
 	if cg.Latitude == nil || cg.Longitude == nil {
 		if err = cg.deleteCoordinate(*coordinateID); err != nil {
-			return nil, nil, tc.DBError, http.StatusInternalServerError
+			return nil, nil, err, http.StatusInternalServerError
 		}
 		cg.Latitude = nil
 		cg.Longitude = nil
 		return nil, nil, nil, http.StatusOK
 	}
 
-	if err = cg.updateCoordinate(); err != nil {
-		return nil, nil, tc.DBError, http.StatusInternalServerError
+	err = cg.updateCoordinate()
+	if err != nil {
+		if errors.Is(err, duplicateExist) {
+			return nil, err, err, http.StatusBadRequest
+		}
+		return nil, err, err, http.StatusInternalServerError
 	}
 	return coordinateID, nil, nil, http.StatusOK
 }
 
 func (cg *TOCacheGroup) getCoordinateID() (*int, error) {
 	q := `SELECT coordinate FROM cachegroup WHERE id = $1`
+
 	var coordinateID *int
 	if err := cg.ReqInfo.Tx.Tx.QueryRow(q, *cg.ID).Scan(&coordinateID); err != nil {
 		return nil, err
 	}
+
 	return coordinateID, nil
 }
 
@@ -716,6 +753,11 @@ func (cg *TOCacheGroup) Delete() (error, error, int) {
 		return nil, errors.New("cachegroup delete: getting coord: " + err.Error()), http.StatusInternalServerError
 	}
 
+	// CheckIfCurrentUserCanModifyCachegroup
+	userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCachegroup(cg.ReqInfo.Tx.Tx, *cg.ID, cg.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
 	if err = cg.deleteCoordinate(*coordinateID); err != nil {
 		return nil, errors.New("cachegroup delete: deleting coord: " + err.Error()), http.StatusInternalServerError
 	}

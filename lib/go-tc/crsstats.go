@@ -36,15 +36,8 @@ type CRSStatsApp struct {
 
 // CRSStatsStats represents stats about a given TR.
 type CRSStatsStats struct {
-	DNSMap           map[string]CRSStatsStat
-	HTTPMap          map[string]CRSStatsStat
-	TotalDNSCount    uint64                `json:"totalDnsCount"`
-	TotalHTTPCount   uint64                `json:"totalHttpCount"`
-	TotalDSMissCount uint64                `json:"totalDsMissCount"`
-	AppStartTime     uint64                `json:"appStartTime"`
-	AverageDnsTime   uint64                `json:"averageDnsTime"`
-	AverageHttpTime  uint64                `json:"averageHttpTime"`
-	UpdateTracker    CRSStatsUpdateTracker `json:"updateTracker"`
+	DNSMap  map[string]CRSStatsStat
+	HTTPMap map[string]CRSStatsStat
 }
 
 // CRSStatsStat represents an individual stat.
@@ -59,27 +52,6 @@ type CRSStatsStat struct {
 	FedCount               uint64 `json:"fedCount"`
 	RegionalDeniedCount    uint64 `json:"regionalDeniedCount"`
 	RegionalAlternateCount uint64 `json:"regionalAlternateCount"`
-}
-
-// CRSStatsUpdateTracker ...
-type CRSStatsUpdateTracker struct {
-	LastHttpsCertificatesCheck           uint64 `json:"lastHttpsCertificatesCheck"`
-	LastGeolocationDatabaseUpdaterUpdate uint64 `json:"lastGeolocationDatabaseUpdaterUpdate"`
-	LastCacheStateCheck                  uint64 `json:"lastCacheStateCheck"`
-	LastCacheStateChange                 uint64 `json:"lastCacheStateChange"`
-	LastNetworkUpdaterUpdate             uint64 `json:"lastNetworkUpdaterUpdate"`
-	LastHTTPSCertificatesUpdate          uint64 `json:"lastHttpsCertificatesUpdate"`
-	LastConfigCheck                      uint64 `json:"lastConfigCheck"`
-	LastConfigChange                     uint64 `json:"lastConfigChange"`
-	LastHTTPSCertificatesFetchFail       uint64 `json:"lastHttpsCertificatesFetchFail"`
-	LastNetworkUpdaterCheck              uint64 `json:"lastNetworkUpdaterCheck"`
-	NewDNSSECKeysFound                   uint64 `json:"newDnsSecKeysFound"`
-	LastGeolocationDatabaseUpdaterCheck  uint64 `json:"lastGeolocationDatabaseUpdaterCheck"`
-	LastHTTPSCertificatesFetchSuccess    uint64 `json:"lastHttpsCertificatesFetchSuccess"`
-	LastSteeringWatcherCheck             uint64 `json:"lastSteeringWatcherCheck"`
-	LastDNSSECKeysCheck                  uint64 `json:"lastDnsSecKeysCheck"`
-	LastFederationsWatcherCheck          uint64 `json:"lastFederationsWatcherCheck"`
-	LastHTTPSCertificatesFetchAttempt    uint64 `json:"lastHttpsCertificatesFetchAttempt"`
 }
 
 // Routing represents the aggregated routing percentages across CDNs or for a DS.

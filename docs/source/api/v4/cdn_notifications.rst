@@ -26,6 +26,7 @@ List CDN notifications.
 
 :Auth. Required: Yes
 :Roles Required: Read-Only
+:Permissions Required: CDN:READ
 :Response Type: Array
 
 Request Structure
@@ -54,11 +55,11 @@ Request Structure
 
 Response Structure
 ------------------
-:id:			The integral, unique identifier of the notification
-:cdn:			The name of the CDN to which the notification belongs to
-:lastUpdated:	The time and date this server entry was last updated in an ISO-like format
-:notification:	The content of the notification
-:user:			The user responsible for creating the notification
+:id:           The integral, unique identifier of the notification
+:cdn:          The name of the CDN to which the notification belongs to
+:lastUpdated:  The time and date this server entry was last updated in :ref:`non-rfc-datetime`
+:notification: The content of the notification
+:user:         The user responsible for creating the notification
 
 .. code-block:: http
 	:caption: Response Example
@@ -94,12 +95,13 @@ Creates a notification for a specific CDN.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CDN:UPDATE
 :Response Type: Object
 
 Request Structure
 -----------------
-:cdn:			The name of the CDN to which the notification shall belong
-:notification:	The content of the notification
+:cdn:          The name of the CDN to which the notification shall belong
+:notification: The content of the notification
 
 .. code-block:: http
 	:caption: Request Example
@@ -117,11 +119,11 @@ Request Structure
 
 Response Structure
 ------------------
-:id:			The integral, unique identifier of the notification
-:cdn:			The name of the CDN to which the notification belongs to
-:lastUpdated:	The time and date this server entry was last updated in an ISO-like format
-:notification:	The content of the notification
-:user:			The user responsible for creating the notification
+:id:           The integral, unique identifier of the notification
+:cdn:          The name of the CDN to which the notification belongs to
+:lastUpdated:  The time and date this server entry was last updated in :ref:`non-rfc-datetime`
+:notification: The content of the notification
+:user:         The user responsible for creating the notification
 
 .. code-block:: http
 	:caption: Response Example
@@ -163,6 +165,7 @@ Deletes an existing CDN notification.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CDN:UPDATE
 :Response Type: ``undefined``
 
 Request Structure

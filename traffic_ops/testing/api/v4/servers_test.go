@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -31,7 +32,7 @@ import (
 )
 
 func TestServers(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices}, func() {
 		GetTestServersIMS(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
 		time := currentTime.Format(time.RFC1123)
@@ -55,7 +56,137 @@ func TestServers(t *testing.T) {
 		UpdateTestServerStatus(t)
 		LastServerInTopologyCacheGroup(t)
 		GetServersForNonExistentDeliveryService(t)
+		CUDServerWithLocks(t)
+		GetTestPaginationSupportServers(t)
 	})
+}
+
+func CUDServerWithLocks(t *testing.T) {
+	resp, _, err := TOSession.GetTenants(client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("could not GET tenants: %v", err)
+	}
+	if len(resp.Response) == 0 {
+		t.Fatalf("didn't get any tenant in response")
+	}
+
+	// Create a new user with operations level privileges
+	user1 := tc.UserV4{
+		Username:             "lock_user1",
+		RegistrationSent:     new(time.Time),
+		LocalPassword:        util.StrPtr("test_pa$$word"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+		Role:                 "operations",
+	}
+	user1.Email = util.StrPtr("lockuseremail@domain.com")
+	user1.TenantID = resp.Response[0].ID
+	user1.FullName = util.StrPtr("firstName LastName")
+	_, _, err = TOSession.CreateUser(user1, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("could not create test user with username: %s", user1.Username)
+	}
+	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
+
+	// Establish a session with the newly created non admin level user
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	if err != nil {
+		t.Fatalf("could not login with user lock_user1: %v", err)
+	}
+	if len(testData.Servers) == 0 {
+		t.Fatalf("no servers to run the test on, quitting")
+	}
+
+	server := testData.Servers[0]
+	server.HostName = util.StrPtr("cdn_locks_test_server")
+	server.Interfaces = []tc.ServerInterfaceInfoV40{
+		{
+			ServerInterfaceInfo: tc.ServerInterfaceInfo{
+				IPAddresses: []tc.ServerIPAddress{
+					{
+						Address:        "123.32.43.21",
+						Gateway:        util.StrPtr("100.100.100.100"),
+						ServiceAddress: true,
+					},
+				},
+				MaxBandwidth: util.Uint64Ptr(2500),
+				Monitor:      true,
+				MTU:          util.Uint64Ptr(1500),
+				Name:         "cdn_locks_interfaceName",
+			},
+			RouterHostName: "router1",
+			RouterPortName: "9090",
+		},
+	}
+	// Create a lock for this user
+	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
+		CDN:     *server.CDNName,
+		Message: util.StrPtr("test lock"),
+		Soft:    util.BoolPtr(false),
+	}, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("couldn't create cdn lock: %v", err)
+	}
+	// Try to create a new server on a CDN that another user has a hard lock on -> this should fail
+	_, reqInf, err := TOSession.CreateServer(server, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while creating a new server for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while creating a new server for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to create a new profile on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.CreateServer(server, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while creating a new server for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("hostName", *server.HostName)
+	servers, _, err := userSession.GetServers(opts)
+	if err != nil {
+		t.Fatalf("couldn't get server: %v", err)
+	}
+	if len(servers.Response) != 1 {
+		t.Fatal("couldn't get exactly one server in the response, quitting")
+	}
+	serverID := servers.Response[0].ID
+	// Try to update a server on a CDN that another user has a hard lock on -> this should fail
+	servers.Response[0].DomainName = util.StrPtr("changed_domain_name")
+	_, reqInf, err = TOSession.UpdateServer(*serverID, servers.Response[0], client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while updating a server for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while updating a server for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to update a server on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.UpdateServer(*serverID, servers.Response[0], client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while updating a server for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	// Try to delete a server on a CDN that another user has a hard lock on -> this should fail
+	_, reqInf, err = TOSession.DeleteServer(*serverID, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while deleting a server for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while deleting a server for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to delete a server on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.DeleteServer(*serverID, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while deleting a server for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	// Delete the lock
+	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{*server.CDNName}}})
+	if err != nil {
+		t.Errorf("expected no error while deleting other user's lock using admin endpoint, but got %v", err)
+	}
 }
 
 func LastServerInTopologyCacheGroup(t *testing.T) {
@@ -486,7 +617,7 @@ func CreateTestServerWithoutProfileID(t *testing.T) {
 
 	*server.Profile = ""
 	server.ProfileID = nil
-	_, reqInfo, err := TOSession.CreateServer(server, client.RequestOptions{})
+	_, reqInfo, _ := TOSession.CreateServer(server, client.RequestOptions{})
 	if reqInfo.StatusCode != 400 {
 		t.Fatalf("Expected status code: %v but got: %v", "400", reqInfo.StatusCode)
 	}
@@ -753,6 +884,7 @@ func GetTestServersQueryParameters(t *testing.T) {
 		"midInParentCachegroup":          false,
 		"midInSecondaryCachegroup":       false,
 		"midInSecondaryCachegroupInCDN1": false,
+		"test-mso-org-01":                false,
 	}
 	response, _, err = TOSession.GetServers(opts)
 	if err != nil {
@@ -957,6 +1089,66 @@ func UpdateTestServers(t *testing.T) {
 
 	originalHostname := *remoteServer.HostName
 	originalXMPIDD := *remoteServer.XMPPID
+	originalDomainName := remoteServer.DomainName
+	originalHttpsPort := remoteServer.HTTPSPort
+	originalTcpPort := remoteServer.TCPPort
+	originalupdpending := remoteServer.UpdPending
+	originalCgid := remoteServer.CachegroupID
+	originalPhysLocId := remoteServer.PhysLocationID
+	originalTypeId := remoteServer.TypeID
+
+	//Get cachegroup id
+	if len(testData.CacheGroups) < 1 {
+		t.Fatal("Need at least one Cache Group to test updating servers")
+	}
+	firstCG := testData.CacheGroups[0]
+	if firstCG.Name == nil {
+		t.Fatal("Found Cache Group with null or undefined name in testing data")
+	}
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("name", *firstCG.Name)
+	cachegroupResp, _, err := TOSession.GetCacheGroups(opts)
+	if err != nil {
+		t.Fatalf("cannot get Cache Group '%s': %v - alerts: %+v", *firstCG.Name, err, cachegroupResp.Alerts)
+	}
+	if len(cachegroupResp.Response) != 1 {
+		t.Fatalf("Expected exactly one Cache Group to exist with name '%s', but got: %d", *firstCG.Name, len(cachegroupResp.Response))
+	}
+	cg := cachegroupResp.Response[0]
+	if cg.ID == nil {
+		t.Fatalf("Traffic Ops returned Cache Group '%s' with null or undefined ID", *cg.Name)
+	}
+
+	// Retrieve the PhysLocation ID by name
+	if len(testData.PhysLocations) < 1 {
+		t.Fatal("Need at least one Physical Location to test updating servers")
+	}
+	firstPhysLocation := testData.PhysLocations[0]
+	if firstPhysLocation.Name == "" {
+		t.Fatal("Found Physical location with null or undefined name in testing data")
+	}
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("name", firstPhysLocation.Name)
+	physicalLocResp, _, err := TOSession.GetPhysLocations(opts)
+	if err != nil {
+		t.Errorf("cannot get Physical Location by name '%s': %v - alerts: %+v", firstPhysLocation.Name, err, physicalLocResp.Alerts)
+	}
+	if len(physicalLocResp.Response) != 1 {
+		t.Fatalf("Expected exactly one Physical Location to exist with name '%s', found: %d", firstPhysLocation.Name, len(physicalLocResp.Response))
+	}
+	phylocation := physicalLocResp.Response[0]
+
+	// Retrieve the type ID by useInTable
+	opts = client.NewRequestOptions()
+	opts.QueryParameters.Set("useInTable", "server")
+	typeResp, _, err := TOSession.GetTypes(opts)
+	if err != nil {
+		t.Errorf("cannot get Types by useInTable '%s': %v - alerts: %+v", "server", err, typeResp.Alerts)
+	}
+	if len(typeResp.Response) < 1 {
+		t.Fatalf("Expected atleast one Types to exist with useInTable '%s', found: %d", "server", len(typeResp.Response))
+	}
+	types := typeResp.Response[0]
 
 	// Creating idParam to get server when hostname changes.
 	id := fmt.Sprintf("%v", *remoteServer.ID)
@@ -978,6 +1170,10 @@ func UpdateTestServers(t *testing.T) {
 	updatedHostName := "atl-edge-01"
 	updatedXMPPID := "change-it"
 	updatedMTU := uint64(1280)
+	updateDomainName := "updateddomainname"
+	updateHttpsPort := 8080
+	updatedTcpPort := 8080
+	updatedPending := true
 
 	// update rack, interfaceName and hostName values on server
 	inf.Name = updatedServerInterface
@@ -986,6 +1182,13 @@ func UpdateTestServers(t *testing.T) {
 	remoteServer.Rack = &updatedServerRack
 	remoteServer.HostName = &updatedHostName
 	remoteServer.Interfaces[0].MTU = &updatedMTU
+	remoteServer.CachegroupID = cg.ID
+	remoteServer.DomainName = &updateDomainName
+	remoteServer.HTTPSPort = &updateHttpsPort
+	remoteServer.PhysLocationID = &phylocation.ID
+	remoteServer.TCPPort = &updatedTcpPort
+	remoteServer.TypeID = &types.ID
+	remoteServer.UpdPending = &updatedPending
 
 	alerts, _, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, client.RequestOptions{})
 	if err != nil {
@@ -1046,6 +1249,28 @@ func UpdateTestServers(t *testing.T) {
 		t.Errorf("HostName didn't change. Expected: %s, actual: %s", updatedHostName, originalHostname)
 	}
 
+	if *respServer.CachegroupID != *remoteServer.CachegroupID {
+		t.Errorf("Cachegroup ID is not updated while updating the servers")
+	}
+	if *respServer.DomainName != *remoteServer.DomainName {
+		t.Errorf("DomainName is not updated while updating the servers")
+	}
+	if *respServer.HTTPSPort != *remoteServer.HTTPSPort {
+		t.Errorf("Https Port ID is not updated while updating the servers")
+	}
+	if *respServer.PhysLocationID != *remoteServer.PhysLocationID {
+		t.Errorf("Physical Location ID is not updated while updating the servers")
+	}
+	if *respServer.TCPPort != *remoteServer.TCPPort {
+		t.Errorf("TCP Port is not updated while updating the servers")
+	}
+	if *respServer.TypeID != *remoteServer.TypeID {
+		t.Errorf("Type ID is not updated while updating the servers")
+	}
+	if *respServer.UpdPending != *remoteServer.UpdPending {
+		t.Errorf("Updpending is not updated while updating the servers")
+	}
+
 	//Check to verify XMPPID never gets updated
 	remoteServer.XMPPID = &updatedXMPPID
 	al, reqInf, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, client.RequestOptions{})
@@ -1057,6 +1282,14 @@ func UpdateTestServers(t *testing.T) {
 	remoteServer.HostName = &originalHostname
 	remoteServer.XMPPID = &originalXMPIDD
 	remoteServer.Interfaces[0].MTU = &originalMTU
+	remoteServer.CachegroupID = originalCgid
+	remoteServer.DomainName = originalDomainName
+	remoteServer.HTTPSPort = originalHttpsPort
+	remoteServer.PhysLocationID = originalPhysLocId
+	remoteServer.TCPPort = originalTcpPort
+	remoteServer.TypeID = originalTypeId
+	remoteServer.UpdPending = originalupdpending
+
 	alert, _, err := TOSession.UpdateServer(*remoteServer.ID, remoteServer, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("cannot UPDATE Server by ID %d (hostname '%s'): %v - %v", *remoteServer.ID, hostName, err, alert)
@@ -1081,7 +1314,7 @@ func UpdateTestServers(t *testing.T) {
 
 	typeOpts := client.NewRequestOptions()
 	typeOpts.QueryParameters.Set("useInTable", "server")
-	serverTypes, _, err := TOSession.GetTypes(opts)
+	serverTypes, _, err := TOSession.GetTypes(typeOpts)
 	if err != nil {
 		t.Fatalf("cannot get Server Types: %v - alerts: %+v", err, serverTypes.Alerts)
 	}
@@ -1106,7 +1339,7 @@ func UpdateTestServers(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected error when updating Server Type of a server assigned to DSes")
 	} else {
-		t.Logf("type change update alerts: %+v", alerts)
+		t.Logf("got expected error when updating Server Type of a server assigned to DSes - type change update alerts: %+v, err: %v", alerts, err)
 	}
 }
 
@@ -1168,5 +1401,74 @@ func GetServersForNonExistentDeliveryService(t *testing.T) {
 	}
 	if len(resp.Response) != 0 {
 		t.Errorf("expected an empty list of servers associated with a non existent DS, but got %d servers", len(resp.Response))
+	}
+}
+
+func GetTestPaginationSupportServers(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetServers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get Servers: %v - alerts: %+v", err, resp.Alerts)
+	}
+	server := resp.Response
+	if len(server) < 3 {
+		t.Fatalf("Need at least 3 server in Traffic Ops to test pagination support, found: %d", len(server))
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	serversWithLimit, _, err := TOSession.GetServers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get server with Limit: %v - alerts: %+v", err, serversWithLimit.Alerts)
+	}
+	if !reflect.DeepEqual(server[:1], serversWithLimit.Response) {
+		t.Error("expected GET server with limit = 1 to return first result")
+	}
+
+	opts.QueryParameters.Set("offset", "1")
+	serversWithOffset, _, err := TOSession.GetServers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get server with Limit and Offset: %v - alerts: %+v", err, serversWithOffset.Alerts)
+	}
+	if !reflect.DeepEqual(server[1:2], serversWithOffset.Response) {
+		t.Error("expected GET server with limit = 1, offset = 1 to return second result")
+	}
+
+	opts.QueryParameters.Del("offset")
+	opts.QueryParameters.Set("page", "2")
+	serversWithPage, _, err := TOSession.GetServers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get server with Limit and Page: %v - alerts: %+v", err, serversWithPage.Alerts)
+	}
+	if !reflect.DeepEqual(server[1:2], serversWithPage.Response) {
+		t.Error("expected GET server with limit = 1, page = 2 to return second result")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, _, err = TOSession.GetServers(opts)
+	if err == nil {
+		t.Error("expected GET server to return an error when limit is not bigger than -1")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be bigger than -1") {
+		t.Errorf("expected GET server to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, _, err = TOSession.GetServers(opts)
+	if err == nil {
+		t.Error("expected GET server to return an error when offset is not a positive integer")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET server to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, _, err = TOSession.GetServers(opts)
+	if err == nil {
+		t.Error("expected GET server to return an error when page is not a positive integer")
+	} else if !alertsHaveError(resp.Alerts.Alerts, "must be a positive integer") {
+		t.Errorf("expected GET server to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
 	}
 }

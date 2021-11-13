@@ -26,6 +26,8 @@ var FormCloneDeliveryServiceController = function(deliveryService, origin, topol
 
 	$scope.advancedShowing = true;
 
+    $scope.restrictTLS = deliveryService.tlsVersions instanceof Array && deliveryService.tlsVersions.length > 0;
+
 	$scope.settings = {
 		isNew: true,
 		saveLabel: 'Clone'

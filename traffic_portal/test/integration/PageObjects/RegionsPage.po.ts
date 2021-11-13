@@ -44,20 +44,20 @@ export class RegionsPage extends BasePage {
     private txtSearch = element(by.id('regionsTable_filter')).element(by.css('label input'));
     private txtName = element(by.id('name'));
     private txtDivision = element(by.name('division'));
-    private btnDelete = element(by.xpath("//button[text()='Delete']"));
+    private btnDelete = element(by.buttonText('Delete'));
     private txtConfirmName = element(by.name('confirmWithNameInput'));
     private randomize = randomize;
 
-    async OpenRegionsPage(){
+    public async OpenRegionsPage(){
         let snp = new SideNavigationPage();
         await snp.NavigateToRegionsPage();
     }
-    async OpenTopologyMenu(){
+    public async OpenTopologyMenu(){
         let snp = new SideNavigationPage();
         await snp.ClickTopologyMenu();
     }
 
-    async CreateRegions(regions: CreateRegion): Promise<boolean> {
+    public async CreateRegions(regions: CreateRegion): Promise<boolean> {
         let result = false;
         let basePage = new BasePage();
         let snp = new SideNavigationPage();
@@ -89,7 +89,7 @@ export class RegionsPage extends BasePage {
         return false;
     }
 
-    public async UpdateRegions(regions: UpdateRegion): Promise<boolean | undefined> {
+    public async UpdateRegions(regions: UpdateRegion): Promise<boolean> {
         let basePage = new BasePage();
         switch(regions.description){
             case "update Region's Division":
@@ -97,7 +97,7 @@ export class RegionsPage extends BasePage {
                 await basePage.ClickUpdate();
                 break;
             default:
-                return undefined;
+                return false;
         }
         return await basePage.GetOutputMessage().then(value => regions.validationMessage === value);
     }
@@ -118,4 +118,8 @@ export class RegionsPage extends BasePage {
         })
         return result;
     }
+
+    public async CheckCSV(name: string): Promise<boolean> {
+        return element(by.cssContainingText("span", name)).isPresent();
+      }
 }

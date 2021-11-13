@@ -31,7 +31,7 @@
 # Note that this setup is intended for testing and not for production use.
 
 ---
-version: '2.1'
+version: '3.8'
 
 services:
   # db is the Traffic Ops database running in postgresql.  Only trafficops needs to have access to it.
@@ -72,8 +72,9 @@ services:
     hostname: trafficops
     image: trafficops
     volumes:
-      - ./traffic_ops/ca:/ca
       - shared:/shared
+      - ./traffic_ops/ca:/ca
+      - traffic_ops_data:/traffic_ops_data
 
   # trafficportal defines the web interface for Traffic Ops.  It uses only the API exposed by Traffic Ops
   # and passes any /api/... routes directly to Traffic Ops
@@ -162,28 +163,8 @@ services:
     volumes:
       - shared:/shared
 
-  # trafficvault runs a riak container to store private keys
-  trafficvault:
-    build:
-      context: .
-      dockerfile: traffic_vault/Dockerfile
-    depends_on:
-      - enroller
-    environment:
-      - CLUSTER_NAME=trafficvault
-    labels:
-      - "com.basho.riak.cluster.name=trafficvault"
-    volumes:
-      - schemas:/etc/riak/schemas
-      - shared:/shared
-    domainname: infra.ciab.test
-    env_file:
-      - variables.env
-    hostname: trafficvault
-
   # edge cache
   edge:
-    privileged: True
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
@@ -192,15 +173,18 @@ services:
         RHEL_VERSION: ${RHEL_VERSION:-8}
         ORT_RPM: infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
     domainname: infra.ciab.test
+    environment:
+      DEBUG_PORT: '2347'
     env_file:
       - variables.env
     hostname: edge
     volumes:
+      # The /traffic_ops_data volume is included to set the ATS RPM version in the MID profile.
+      - traffic_ops_data:/traffic_ops_data
       - shared:/shared
 
   # mid cache 1
   mid-01:
-    privileged: True
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
@@ -209,15 +193,18 @@ services:
         RHEL_VERSION: ${RHEL_VERSION:-8}
         ORT_RPM: infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
     domainname: infra.ciab.test
+    environment:
+      DEBUG_PORT: '2348'
     env_file:
       - variables.env
     hostname: mid-01
     volumes:
+      # The /traffic_ops_data volume is included to set the ATS RPM version in the MID profile.
+      - traffic_ops_data:/traffic_ops_data
       - shared:/shared
 
   # mid cache 2
   mid-02:
-    privileged: True
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
@@ -226,10 +213,14 @@ services:
         RHEL_VERSION: ${RHEL_VERSION:-8}
         ORT_RPM: infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
     domainname: infra.ciab.test
+    environment:
+      DEBUG_PORT: '2349'
     env_file:
       - variables.env
     hostname: mid-02
     volumes:
+      # The /traffic_ops_data volume is included to set the ATS RPM version in the MID profile.
+      - traffic_ops_data:/traffic_ops_data
       - shared:/shared
 
   # origin provides the content to be distributed through the CDN caches
@@ -302,6 +293,8 @@ volumes:
   schemas:
     external: false
   shared:
+    external: false
+  traffic_ops_data:
     external: false
   content:
     external: false

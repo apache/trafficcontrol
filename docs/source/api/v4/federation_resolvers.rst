@@ -25,6 +25,7 @@ Retrieves :term:`Federation` Resolvers.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: FEDERATION-RESOLVER:READ, TYPE:READ
 :Response Type: Array
 
 Request Structure
@@ -69,7 +70,7 @@ Response Structure
 ------------------
 :id:          The integral, unique identifier of the resolver
 :ipAddress:   The IP address or :abbr:`CIDR (Classless Inter-Domain Routing)`-notation subnet of the resolver - may be IPv4 or IPv6
-:lastUpdated: The date and time at which this resolver was last updated, in an ISO-like format
+:lastUpdated: The date and time at which this resolver was last updated, in :ref:`non-rfc-datetime`
 :type:        The :term:`Type` of the resolver
 
 .. code-block:: http
@@ -103,6 +104,7 @@ Creates a new federation resolver.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: FEDERATION-RESOLVER:CREATE, TYPE:READ
 :Response Type:  Object
 
 Request Structure
@@ -172,6 +174,7 @@ Deletes a federation resolver.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: FEDERATION-RESOLVER:DELETE, TYPE:READ
 :Response Type:  Object
 
 Request Structure
@@ -228,4 +231,3 @@ Response Structure
 		"ipAddress": "1.2.6.4/22",
 		"type": "RESOLVE6"
 	}}
-

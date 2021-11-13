@@ -57,7 +57,7 @@ Response Structure
 :fullName:         The user's full name, e.g. "John Quincy Adams"
 :gid:              A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user - now it is always ``null``
 :id:               An integral, unique identifier for this user
-:lastUpdated:      The date and time at which the user was last modified, in ISO format
+:lastUpdated:      The date and time at which the user was last modified, in :ref:`non-rfc-datetime`
 :newUser:          A meta field with no apparent purpose that is usually ``null`` unless explicitly set during creation or modification of a user via some API endpoint
 :phoneNumber:      The user's phone number
 :postalCode:       The postal code of the area in which the user resides
@@ -190,14 +190,14 @@ Response Structure
 :fullName:         The user's full name, e.g. "John Quincy Adams"
 :gid:              A deprecated field only kept for legacy compatibility reasons that used to contain the UNIX group ID of the user - now it is always ``null``
 :id:               An integral, unique identifier for this user
-:lastUpdated:      The date and time at which the user was last modified, in ISO format
+:lastUpdated:      The date and time at which the user was last modified, in :ref:`non-rfc-datetime`
 :newUser:          A meta field with no apparent purpose that is usually ``null`` unless explicitly set during creation or modification of a user via some API endpoint
 :phoneNumber:      The user's phone number
 :postalCode:       The postal code of the area in which the user resides
 :publicSshKey:     The user's public key used for the SSH protocol
 :registrationSent: If the user was created using the :ref:`to-api-users-register` endpoint, this will be the date and time at which the registration email was sent - otherwise it will be ``null``
 :role:             The integral, unique identifier of the highest-privilege role assigned to this user
-:roleName:         The name of the highest-privilege role assigned to this user
+:rolename:         The name of the highest-privilege role assigned to this user
 :stateOrProvince:  The name of the state or province where this user resides
 :tenant:           The name of the tenant to which this user belongs
 :tenantId:         The integral, unique identifier of the tenant to which this user belongs
@@ -235,7 +235,7 @@ Response Structure
 		"tenant": "root",
 		"id": 2,
 		"company": "not a real company",
-		"roleName": "admin",
+		"rolename": "admin",
 		"phoneNumber": "not a real phone number",
 		"country": "not a real country",
 		"fullName": "Not a real Full Name",

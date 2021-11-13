@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
 	"github.com/basho/riak-go-client"
@@ -79,7 +80,7 @@ func putDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, aut
 	}
 	err = withCluster(tx, authOpts, riakPort, func(cluster StorageCluster) error {
 		obj := &riak.Object{
-			ContentType:     "application/json",
+			ContentType:     rfc.ApplicationJSON,
 			Charset:         "utf-8",
 			ContentEncoding: "utf-8",
 			Key:             makeDSSSLKeyKey(key.DeliveryService, key.Version.String()),
@@ -97,10 +98,10 @@ func putDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, aut
 	return err
 }
 
-func ping(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.RiakPingResp, error) {
+func ping(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.TrafficVaultPing, error) {
 	servers, err := getRiakServers(tx, riakPort)
 	if err != nil {
-		return tc.RiakPingResp{}, errors.New("getting riak servers: " + err.Error())
+		return tc.TrafficVaultPing{}, errors.New("getting riak servers: " + err.Error())
 	}
 	for _, server := range servers {
 		cluster, err := getRiakStorageCluster([]ServerAddr{server}, authOpts)
@@ -122,9 +123,9 @@ func ping(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.RiakPingRe
 		if err := cluster.Stop(); err != nil {
 			log.Errorln("stopping Riak cluster (after ping success): " + err.Error())
 		}
-		return tc.RiakPingResp{Status: "OK", Server: server.FQDN + ":" + server.Port}, nil
+		return tc.TrafficVaultPing{Status: "OK", Server: server.FQDN + ":" + server.Port}, nil
 	}
-	return tc.RiakPingResp{}, errors.New("failed to ping any Riak server")
+	return tc.TrafficVaultPing{}, errors.New("failed to ping any Riak server")
 }
 
 func getDNSSECKeys(cdnName string, tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint) (tc.DNSSECKeysRiak, bool, error) {
@@ -238,11 +239,7 @@ func getURISigningKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, x
 		return nil, false, errors.New("fetching riak objects: " + err.Error())
 	}
 	if len(ro) == 0 {
-		bts, err := json.Marshal(tc.URISignerKeyset{})
-		if err != nil {
-			return nil, false, errors.New("marshalling empty URISignerKeyset: " + err.Error())
-		}
-		return bts, false, nil
+		return []byte{}, false, nil
 	}
 	if ro[0].Value == nil {
 		return ro[0].Value, false, nil

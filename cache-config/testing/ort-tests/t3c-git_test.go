@@ -36,7 +36,7 @@ func TestT3cGit(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		if err := util.RMGit(base_line_dir); err != nil {
+		if err := util.RMGit(test_config_dir); err != nil {
 			t.Fatalf("removing existing git directory: %v", err)
 		}
 
@@ -128,17 +128,13 @@ func t3cUpdateGit(host string, run_mode string) error {
 	args := []string{
 		"apply",
 		"--traffic-ops-insecure=true",
-		"--dispersion=0",
-		"--login-dispersion=0",
 		"--traffic-ops-timeout-milliseconds=3000",
 		"--traffic-ops-user=" + tcd.Config.TrafficOps.Users.Admin,
 		"--traffic-ops-password=" + tcd.Config.TrafficOps.UserPassword,
 		"--traffic-ops-url=" + tcd.Config.TrafficOps.URL,
 		"--cache-host-name=" + host,
-		"--log-location-error=test.log",
-		"--log-location-info=test.log",
-		"--log-location-debug=test.log",
-		"--log-location-debug=test.log",
+		"--verbose", // first verbose option to enable warnings
+		"--verbose", // second verbose option to enable info
 		"--omit-via-string-release=true",
 		"--run-mode=" + run_mode,
 		"--git=" + "yes",

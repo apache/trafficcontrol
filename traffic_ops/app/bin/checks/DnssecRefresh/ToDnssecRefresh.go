@@ -45,7 +45,7 @@ func main() {
 		User:     cfg.TOUser,
 		Password: cfg.TOPass,
 	}
-	loginUrl := cfg.TOUrl + "/api/2.0/user/login"
+	loginUrl := cfg.TOUrl + "/api/4.0/user/login"
 	buf := &bytes.Buffer{}
 	err = json.NewEncoder(buf).Encode(body)
 	config.ErrCheck(err)
@@ -60,8 +60,8 @@ func main() {
 	res, err := client.Do(req)
 	config.ErrCheck(err)
 	defer config.Dclose(res.Body)
-	refreshUrl := cfg.TOUrl + "/api/2.0/cdns/dnsseckeys/refresh"
-	resp, err := http.NewRequest(http.MethodGet, refreshUrl, buf)
+	refreshUrl := cfg.TOUrl + "/api/4.0/cdns/dnsseckeys/refresh"
+	resp, err := http.NewRequest(http.MethodPut, refreshUrl, nil)
 	config.ErrCheck(err)
 	log.Debugf("Get req to: %s", refreshUrl)
 
@@ -71,7 +71,7 @@ func main() {
 	config.ErrCheck(err)
 	defer config.Dclose(refresh.Body)
 
-	if refresh.StatusCode != 200 {
+	if refresh.StatusCode < 200 || 299 < refresh.StatusCode {
 		log.Errorln(string(respData))
 		os.Exit(1)
 	}

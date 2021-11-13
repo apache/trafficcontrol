@@ -25,6 +25,7 @@ Gets delivery service request comments.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: DS-REQUEST:READ, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  Array
 
 Request Structure
@@ -60,7 +61,7 @@ Response Structure
 :authorId:                      The integral, unique identifier of the user who created the comment.
 :deliveryServiceRequestId:      The integral, unique identifier of the :term:`Delivery Service Request` that the comment was posted on.
 :id:                            The integral, unique identifier of the :term:`DSR` comment.
-:lastUpdated:                   The date and time at which the user was last modified, in ISO format
+:lastUpdated:                   The date and time at which the user was last modified, in :ref:`non-rfc-datetime`
 :value:                         The text of the comment that was posted.
 :xmlId:                         This is the ``xmlId`` value that you provided in the request.
 
@@ -109,6 +110,7 @@ Allows user to create a :term:`Delivery Service Request` comment.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: DS-REQUEST:UPDATE, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  Object
 
 Request Structure
@@ -139,7 +141,7 @@ Response Structure
 :authorId:                      The integral, unique identifier of the user who created the comment.
 :deliveryServiceRequestId:      The integral, unique identifier of the :term:`Delivery Service Request` that the comment was posted on.
 :id:                            The integral, unique identifier of the :term:`DSR` comment.
-:lastUpdated:                   The date and time at which the user was last modified, in ISO format
+:lastUpdated:                   The date and time at which the user was last modified, in :ref:`non-rfc-datetime`
 :value:                         The text of the comment that was posted.
 :xmlId:                         This is the ``xmlId`` value that you provided in the request.
 
@@ -183,6 +185,7 @@ Updates a delivery service request comment.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: DS-REQUEST:UPDATE, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  Object
 
 
@@ -223,7 +226,7 @@ Response Structure
 :authorId:                      The integral, unique identifier of the user who created the comment.
 :deliveryServiceRequestId:      The integral, unique identifier of the :term:`Delivery Service Request` that the comment was posted on.
 :id:                            The integral, unique identifier of the :term:`DSR` comment.
-:lastUpdated:                   The date and time at which the user was last modified, in ISO format
+:lastUpdated:                   The date and time at which the user was last modified, in :ref:`non-rfc-datetime`
 :value:                         The text of the comment that was posted.
 :xmlId:                         This is the ``xmlId`` value that you provided in the request.
 
@@ -267,6 +270,7 @@ Deletes a delivery service request comment.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: DS-REQUEST:UPDATE, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  ``undefined``
 
 Request Structure

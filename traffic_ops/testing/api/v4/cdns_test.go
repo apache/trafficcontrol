@@ -17,9 +17,11 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -46,12 +48,105 @@ func TestCDNs(t *testing.T) {
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestCDNsWithHeaders(t, header)
 		GetTestCDNs(t)
+		t.Run("get CDNs filtered by Domain Name", GetTestCDNsbyDomainName)
+		GetTestCDNsbyDnssec(t)
 		GetTestCDNsIMSAfterChange(t, header)
+		CreateTestCDNEmptyName(t)
+		CreateTestCDNEmptyDomainName(t)
+		GetTestPaginationSupportCdns(t)
+		SortTestCdnDesc(t)
+		CreateTestCDNsAlreadyExist(t)
+		DeleteTestCDNsInvalidId(t)
+		UpdateDeleteCDNWithLocks(t)
 	})
 }
 
+func UpdateDeleteCDNWithLocks(t *testing.T) {
+	// Create a new user with operations level privileges
+	user1 := tc.UserV4{
+		Username:             "lock_user1",
+		RegistrationSent:     new(time.Time),
+		LocalPassword:        util.StrPtr("test_pa$$word"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+		Role:                 "operations",
+	}
+	user1.Email = util.StrPtr("lockuseremail@domain.com")
+	user1.TenantID = 1
+	user1.FullName = util.StrPtr("firstName LastName")
+	_, _, err := TOSession.CreateUser(user1, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("could not create test user with username: %s", user1.Username)
+	}
+	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
+
+	// Establish a session with the newly created non admin level user
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	if err != nil {
+		t.Fatalf("could not login with user lock_user1: %v", err)
+	}
+
+	cdn := createBlankCDN("locksCDN", t)
+
+	// Create a lock for this user
+	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
+		CDN:     cdn.Name,
+		Message: util.StrPtr("test lock"),
+		Soft:    util.BoolPtr(false),
+	}, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("couldn't create cdn lock: %v", err)
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", cdn.Name)
+	cdns, _, err := userSession.GetCDNs(opts)
+	if err != nil {
+		t.Fatalf("couldn't get cdn: %v", err)
+	}
+	if len(cdns.Response) != 1 {
+		t.Fatal("couldn't get exactly one cdn in the response, quitting")
+	}
+	cdnID := cdns.Response[0].ID
+	// Try to update a CDN that another user has a hard lock on -> this should fail
+	cdns.Response[0].DomainName = "changed_domain_name"
+	_, reqInf, err := TOSession.UpdateCDN(cdnID, cdns.Response[0], client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while updating a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while updating a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to update a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.UpdateCDN(cdnID, cdns.Response[0], client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while updating a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	// Try to delete a CDN that another user has a hard lock on -> this should fail
+	_, reqInf, err = TOSession.DeleteCDN(cdnID, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while deleting a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while deleting a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to delete a CDN that the same user has a hard lock on -> this should succeed
+	// This should also delete the lock associated with this CDN
+	_, reqInf, err = userSession.DeleteCDN(cdnID, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while deleting a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	locks, _, _ := userSession.GetCDNLocks(client.RequestOptions{})
+	if len(locks.Response) != 0 {
+		t.Errorf("expected deletion of CDN to delete it's associated lock, and no locks in the response, but got %d locks instead", len(locks.Response))
+	}
+}
+
 func TestCDNsDNSSEC(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Users, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServerCapabilities, ServiceCategories, DeliveryServices}, func() {
 		if includeSystemTests {
 			GenerateDNSSECKeys(t)
 			RefreshDNSSECKeys(t) // NOTE: testing refresh last (while no keys exist) because it's asynchronous and might affect other tests
@@ -60,9 +155,27 @@ func TestCDNsDNSSEC(t *testing.T) {
 }
 
 func RefreshDNSSECKeys(t *testing.T) {
-	resp, _, err := TOSession.RefreshDNSSECKeys(client.RequestOptions{})
+	resp, reqInf, err := TOSession.RefreshDNSSECKeys(client.RequestOptions{})
 	if err != nil {
 		t.Errorf("unable to refresh DNSSEC keys: %v - alerts: %+v", err, resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusAccepted {
+		t.Errorf("refreshing DNSSEC keys - expected: status code %d, actual: %d", http.StatusAccepted, reqInf.StatusCode)
+	}
+	loc := reqInf.RespHeaders.Get("Location")
+	if loc == "" {
+		t.Errorf("refreshing DNSSEC keys - expected: non-empty 'Location' response header, actual: empty")
+	}
+	asyncID, err := strconv.Atoi(strings.Split(loc, "/")[4])
+	if err != nil {
+		t.Errorf("parsing async_status ID from 'Location' response header - expected: no error, actual: %v", err)
+	}
+	status, _, err := TOSession.GetAsyncStatus(asyncID, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("getting async status id %d - expected: no error, actual: %v", asyncID, err)
+	}
+	if status.Response.Message == nil {
+		t.Errorf("getting async status for DNSSEC refresh job - expected: non-nil message, actual: nil")
 	}
 }
 
@@ -278,6 +391,21 @@ func CreateTestCDNs(t *testing.T) {
 
 }
 
+func CreateTestCDNsAlreadyExist(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatal("Need at least one CDN to test duplicate CDNs")
+	}
+
+	cdn := testData.CDNs[0]
+	resp, reqInf, err := TOSession.CreateCDN(cdn, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("cdn domain_name 'mycdn.ciab.test' already exists.  but got - alerts: %+v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+}
+
 func SortTestCDNs(t *testing.T) {
 	var sortedList []string
 	resp, _, err := TOSession.GetCDNs(client.RequestOptions{})
@@ -300,6 +428,7 @@ func UpdateTestCDNs(t *testing.T) {
 	if len(testData.CDNs) < 1 {
 		t.Fatal("Need at least one CDN to test updating CDNs")
 	}
+
 	firstCDN := testData.CDNs[0]
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("name", firstCDN.Name)
@@ -312,12 +441,21 @@ func UpdateTestCDNs(t *testing.T) {
 		t.Fatalf("Expected exactly one CDN to be named '%s', found: %d", firstCDN.Name, len(resp.Response))
 	}
 	remoteCDN := resp.Response[0]
+	originalDomain := remoteCDN.DomainName
 	expectedCDNDomain := "domain2"
 	remoteCDN.DomainName = expectedCDNDomain
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateCDN(remoteCDN.ID, remoteCDN, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("cannot update CDN: %v - alerts: %+v", err, alert)
+	} else {
+		defer func(id int, cdn tc.CDN, domain string) {
+			cdn.DomainName = domain
+			alerts, _, err := TOSession.UpdateCDN(id, cdn, client.RequestOptions{})
+			if err != nil {
+				t.Errorf("Unexpected error restoring CDN domain name: %v - alerts: %+v", err, alerts.Alerts)
+			}
+		}(remoteCDN.ID, remoteCDN, originalDomain)
 	}
 
 	// Retrieve the CDN to check CDN name got updated
@@ -334,7 +472,6 @@ func UpdateTestCDNs(t *testing.T) {
 	if respCDN.DomainName != expectedCDNDomain {
 		t.Errorf("results do not match actual: %s, expected: %s", respCDN.DomainName, expectedCDNDomain)
 	}
-
 }
 
 func GetTestCDNs(t *testing.T) {
@@ -345,6 +482,46 @@ func GetTestCDNs(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot get CDN '%s': %v - alerts: %+v", cdn.Name, err, resp.Alerts)
 		}
+	}
+}
+
+func GetTestCDNsbyDomainName(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatalf("need at least one CDN to test get CDNs")
+	}
+
+	opts := client.NewRequestOptions()
+	cdn := testData.CDNs[0]
+	opts.QueryParameters.Set("domainName", cdn.DomainName)
+	cdns, reqInf, err := TOSession.GetCDNs(opts)
+	if len(cdns.Response) != 1 {
+		t.Errorf("Expected exactly one CDN to exist with domain name '%s', found: %d", cdn.DomainName, len(cdns.Response))
+	}
+	if err != nil {
+		t.Errorf("cannot get CDN by '%s': %v - alerts: %+v", cdn.DomainName, err, cdns.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func GetTestCDNsbyDnssec(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatalf("need at least one CDN to test get CDNs")
+	}
+
+	opts := client.NewRequestOptions()
+	cdn := testData.CDNs[0]
+	opts.QueryParameters.Set("dnssecEnabled", strconv.FormatBool(cdn.DNSSECEnabled))
+	cdns, reqInf, err := TOSession.GetCDNs(opts)
+	if len(cdns.Response) < 1 {
+		t.Fatalf("Expected atleast one cdn response %v", cdns)
+	}
+	if err != nil {
+		t.Errorf("cannot get CDN by '%s': %v - alerts: %+v", cdn.DomainName, err, cdns.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusOK {
+		t.Errorf("Expected 200 status code, got %v", reqInf.StatusCode)
 	}
 }
 
@@ -374,5 +551,170 @@ func DeleteTestCDNs(t *testing.T) {
 				t.Errorf("expected CDN '%s' to be deleted", cdn.Name)
 			}
 		}
+	}
+}
+
+func DeleteTestCDNsInvalidId(t *testing.T) {
+
+	delResp, reqInf, err := TOSession.DeleteCDN(100000, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected, no cdn with that key found  but got - alerts: %+v", delResp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected response status code %d, got %d", http.StatusNotFound, reqInf.StatusCode)
+	}
+}
+
+func CreateTestCDNEmptyName(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatalf("need at least one CDN to test creating CDNs")
+	}
+
+	firstData := testData.CDNs[0]
+	firstData.Name = ""
+	firstData.DomainName = "EmptyCDNName"
+	resp, reqInf, err := TOSession.CreateCDN(firstData, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected 'name' cannot be blank  but got - alerts: %+v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func CreateTestCDNEmptyDomainName(t *testing.T) {
+	if len(testData.CDNs) < 1 {
+		t.Fatalf("need at least one CDN to test creating CDNs")
+	}
+
+	firstData := testData.CDNs[0]
+	firstData.Name = "EmptyDomainName"
+	firstData.DomainName = ""
+	resp, reqInf, err := TOSession.CreateCDN(firstData, client.RequestOptions{})
+	if err == nil {
+		t.Errorf("Expected 'domainName' cannot be blank  but got - alerts: %+v", resp.Alerts)
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func GetTestPaginationSupportCdns(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetCDNs(opts)
+	if err != nil {
+		t.Errorf("Unexpected error getting CDNs: %v - alerts: %+v", err, resp.Alerts)
+	}
+	cdns := resp.Response
+
+	if len(cdns) > 0 {
+		opts.QueryParameters = url.Values{}
+		opts.QueryParameters.Set("orderby", "id")
+		opts.QueryParameters.Set("limit", "1")
+		cdnsWithLimit, _, err := TOSession.GetCDNs(opts)
+		if err == nil {
+			if !reflect.DeepEqual(cdns[:1], cdnsWithLimit.Response) {
+				t.Error("expected GET CDN with limit = 1 to return first result")
+			}
+		} else {
+			t.Errorf("Unexpected error getting CDN with a limit: %v - alerts: %+v", err, cdnsWithLimit.Alerts)
+		}
+		if len(cdns) > 1 {
+			opts.QueryParameters = url.Values{}
+			opts.QueryParameters.Set("orderby", "id")
+			opts.QueryParameters.Set("limit", "1")
+			opts.QueryParameters.Set("offset", "1")
+			cdnsWithOffset, _, err := TOSession.GetCDNs(opts)
+			if err == nil {
+				if !reflect.DeepEqual(cdns[1:2], cdnsWithOffset.Response) {
+					t.Error("expected GET CDN with limit = 1, offset = 1 to return second result")
+				}
+			} else {
+				t.Errorf("Unexpected error getting CDN with a limit and an offset: %v - alerts: %+v", err, cdnsWithOffset.Alerts)
+			}
+
+			opts.QueryParameters = url.Values{}
+			opts.QueryParameters.Set("orderby", "id")
+			opts.QueryParameters.Set("limit", "1")
+			opts.QueryParameters.Set("page", "2")
+			cdnsWithPage, _, err := TOSession.GetCDNs(opts)
+			if err == nil {
+				if !reflect.DeepEqual(cdns[1:2], cdnsWithPage.Response) {
+					t.Error("expected GET CDN with limit = 1, page = 2 to return second result")
+				}
+			} else {
+				t.Errorf("Unexpected error getting CDN with a limit and a page: %v - alerts: %+v", err, cdnsWithPage.Alerts)
+			}
+		} else {
+			t.Errorf("only one CDN found, so offset functionality can't test")
+		}
+	} else {
+		t.Errorf("No CDN found to check pagination")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, _, err = TOSession.GetCDNs(opts)
+	if err == nil {
+		t.Error("expected GET CDN to return an error when limit is not bigger than -1")
+	} else if !strings.Contains(err.Error(), "must be bigger than -1") {
+		t.Errorf("expected GET CDN to return an error for limit is not bigger than -1, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, _, err = TOSession.GetCDNs(opts)
+	if err == nil {
+		t.Error("expected GET CDN to return an error when offset is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET CDN to return an error for offset is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, _, err = TOSession.GetCDNs(opts)
+	if err == nil {
+		t.Error("expected GET CDN to return an error when page is not a positive integer")
+	} else if !strings.Contains(err.Error(), "must be a positive integer") {
+		t.Errorf("expected GET CDN to return an error for page is not a positive integer, actual error: %v - alerts: %+v", err, resp.Alerts)
+	}
+}
+
+func SortTestCdnDesc(t *testing.T) {
+	resp, _, err := TOSession.GetCDNs(client.RequestOptions{})
+	if err != nil {
+		t.Errorf("Expected no error, but got error in CDN with default ordering: %v - alerts: %+v", err, resp.Alerts)
+	}
+	respAsc := resp.Response
+	if len(respAsc) < 1 {
+		t.Fatal("Need at least one CDN in Traffic Ops to test CDN sort ordering")
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("sortOrder", "desc")
+	resp, _, err = TOSession.GetCDNs(opts)
+	if err != nil {
+		t.Errorf("Expected no error, but got error in CDN with Descending ordering: %v - alerts: %+v", err, resp.Alerts)
+	}
+	respDesc := resp.Response
+	if len(respDesc) < 1 {
+		t.Fatal("Need at least one CDN in Traffic Ops to test CDN sort ordering")
+	}
+
+	if len(respAsc) != len(respDesc) {
+		t.Fatalf("Traffic Ops returned %d CDN using default sort order, but %d CDN when sort order was explicitly set to descending", len(respAsc), len(respDesc))
+	}
+
+	// reverse the descending-sorted response and compare it to the ascending-sorted one
+	// TODO ensure at least two in each slice? A list of length one is
+	// trivially sorted both ascending and descending.
+	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
+	}
+	if respDesc[0].Name != respAsc[0].Name {
+		t.Errorf("CDN responses are not equal after reversal: Asc: %s - Desc: %s", respDesc[0].Name, respAsc[0].Name)
 	}
 }

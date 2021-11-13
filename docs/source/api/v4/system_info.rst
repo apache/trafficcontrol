@@ -23,6 +23,7 @@
 =======
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: None
 :Response Type:  Object
 
 Request Structure
@@ -47,13 +48,6 @@ Response Structure
 		"1"
 			Use pending revalidations - this effectively enables the use of "Content Invalidation Jobs"
 
-	:use_tenancy: A string containing an integer which represents a boolean value; one of:
-
-		"0"
-			Do not use tenancy - this effectively disables all ``*tenant*`` endpoints and removes tenancy restrictions on origins and :term:`Delivery Services`
-		"1"
-			Use tenancy - this effectively enables all ``*tenant*`` endpoints and enforces tenancy restrictions on origins and :term:`Delivery Services`
-
 .. code-block:: http
 	:caption: Response Example
 
@@ -76,7 +70,6 @@ Response Structure
 			"tm.instance_name": "CDN-In-A-Box",
 			"tm.toolname": "Traffic Ops",
 			"tm.url": "https://trafficops.infra.ciab.test:443/",
-			"use_reval_pending": "0",
-			"use_tenancy": "1"
+			"use_reval_pending": "0"
 		}
 	}}

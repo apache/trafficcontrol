@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 ---
-version: '2.1'
+version: '3.8'
 
 services:
   weasel:
@@ -58,6 +58,16 @@ services:
     image: apache/trafficcontrol-cache-config_builder:master
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-cache-config
+      context: ../../..
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+    volumes:
+      - ../../..:/trafficcontrol:z
+
+  tc-health-client_build:
+    image: apache/trafficcontrol-tc-health-client_builder:master
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-tc-health-client
       context: ../../..
       args:
         RHEL_VERSION: ${RHEL_VERSION:-8}

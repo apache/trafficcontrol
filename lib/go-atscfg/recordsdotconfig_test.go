@@ -46,9 +46,10 @@ func TestMakeRecordsDotConfig(t *testing.T) {
 	ip6CIDR := ip6Str + "/48" // set the ip to a cidr, to make sure addr logic removes it
 	setIP6(server, ip6CIDR)
 	server.Profile = util.StrPtr(profileName)
-	opt := RecordsConfigOpts{}
+	opt := &RecordsConfigOpts{}
 	opt.DNSLocalBindServiceAddr = true
-	cfg, err := MakeRecordsDotConfig(server, paramData, hdr, opt)
+	opt.HdrComment = hdr
+	cfg, err := MakeRecordsDotConfig(server, paramData, opt)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -162,4 +163,138 @@ STRING __FULL_HOSTNAME__
 			t.Errorf("Expected '%v' Actual '%v'", expected, actual)
 		}
 	}
+}
+
+func TestMakeRecordsDotConfigDNSLocalBindNoOverrideV4(t *testing.T) {
+	profileName := "myProfile"
+	hdr := "myHeaderComment"
+
+	paramData := makeParamsFromMap("serverProfile", RecordsFileName, map[string]string{
+		"CONFIG proxy.config.dns.local_ipv4": "STRING 1.2.3.4",
+		"param1":                             "val1",
+		"param2":                             "val2",
+		"test-hostname-replacement":          "fooSTRING __HOSTNAME__",
+	})
+
+	server := makeTestRemapServer()
+	server.Interfaces = nil
+	ipStr := "192.163.2.99"
+	ipCIDR := ipStr + "/30" // set the ip to a cidr, to make sure addr logic removes it
+	setIP(server, ipCIDR)
+	ip6Str := "2001:db8::9"
+	ip6CIDR := ip6Str + "/48" // set the ip to a cidr, to make sure addr logic removes it
+	setIP6(server, ip6CIDR)
+	server.Profile = util.StrPtr(profileName)
+	opt := &RecordsConfigOpts{}
+	opt.DNSLocalBindServiceAddr = true
+	opt.HdrComment = hdr
+	cfg, err := MakeRecordsDotConfig(server, paramData, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr)
+
+	if strings.Contains(txt, "CONFIG proxy.config.dns.local_ipv4 STRING "+ipStr) {
+		t.Errorf("expected config to not contain dns.local_ipv4 from server when Parameter exists, actual: '%v'", txt)
+	}
+	if !strings.Contains(txt, "CONFIG proxy.config.dns.local_ipv4 STRING "+"1.2.3.4") {
+		t.Errorf("expected config to contain dns.local_ipv4 Parameter when it exists, actual: '%v'", txt)
+	}
+
+	if !strings.Contains(txt, "CONFIG proxy.config.dns.local_ipv6 STRING ["+ip6Str+"]") {
+		t.Errorf("expected config to contain dns.local_ipv6 from server, actual: '%v'", txt)
+	}
+}
+
+func TestMakeRecordsDotConfigDNSLocalBindNoOverrideV6(t *testing.T) {
+	profileName := "myProfile"
+	hdr := "myHeaderComment"
+
+	paramData := makeParamsFromMap("serverProfile", RecordsFileName, map[string]string{
+		"CONFIG proxy.config.dns.local_ipv6": "STRING 2001:db8::11",
+		"param1":                             "val1",
+		"param2":                             "val2",
+		"test-hostname-replacement":          "fooSTRING __HOSTNAME__",
+	})
+
+	server := makeTestRemapServer()
+	server.Interfaces = nil
+	ipStr := "192.163.2.99"
+	ipCIDR := ipStr + "/30" // set the ip to a cidr, to make sure addr logic removes it
+	setIP(server, ipCIDR)
+	ip6Str := "2001:db8::9"
+	ip6CIDR := ip6Str + "/48" // set the ip to a cidr, to make sure addr logic removes it
+	setIP6(server, ip6CIDR)
+	server.Profile = util.StrPtr(profileName)
+	opt := &RecordsConfigOpts{}
+	opt.HdrComment = hdr
+	opt.DNSLocalBindServiceAddr = true
+	cfg, err := MakeRecordsDotConfig(server, paramData, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr)
+
+	if strings.Contains(txt, "CONFIG proxy.config.dns.local_ipv6 STRING "+ip6Str) {
+		t.Errorf("expected config to not contain dns.local_ipv6 from server when Parameter exists, actual: '%v'", txt)
+	}
+	if !strings.Contains(txt, "CONFIG proxy.config.dns.local_ipv6 STRING "+"2001:db8::11") {
+		t.Errorf("expected config to contain dns.local_ipv4 Parameter when it exists, actual: '%v'", txt)
+	}
+
+	if !strings.Contains(txt, "CONFIG proxy.config.dns.local_ipv4 STRING "+ipStr) {
+		t.Errorf("expected config to contain dns.local_ipv4 from server, actual: '%v'", txt)
+	}
+}
+
+func TestMakeRecordsDotConfigDNSLocalBindNoOverrideBoth(t *testing.T) {
+	profileName := "myProfile"
+	hdr := "myHeaderComment"
+
+	paramData := makeParamsFromMap("serverProfile", RecordsFileName, map[string]string{
+		"CONFIG proxy.config.dns.local_ipv4": "STRING 9.10.11.12",
+		"CONFIG proxy.config.dns.local_ipv6": "STRING 2001:db8::11",
+		"param1":                             "val1",
+		"param2":                             "val2",
+		"test-hostname-replacement":          "fooSTRING __HOSTNAME__",
+	})
+
+	server := makeTestRemapServer()
+	server.Interfaces = nil
+	ipStr := "192.163.2.99"
+	ipCIDR := ipStr + "/30" // set the ip to a cidr, to make sure addr logic removes it
+	setIP(server, ipCIDR)
+	ip6Str := "2001:db8::9"
+	ip6CIDR := ip6Str + "/48" // set the ip to a cidr, to make sure addr logic removes it
+	setIP6(server, ip6CIDR)
+	server.Profile = util.StrPtr(profileName)
+	opt := &RecordsConfigOpts{}
+	opt.HdrComment = hdr
+	opt.DNSLocalBindServiceAddr = true
+	cfg, err := MakeRecordsDotConfig(server, paramData, opt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr)
+
+	if strings.Contains(txt, "CONFIG proxy.config.dns.local_ipv4 STRING "+ipStr) {
+		t.Errorf("expected config to not contain dns.local_ipv4 from server when Parameter exists, actual: '%v'", txt)
+	}
+	if !strings.Contains(txt, "CONFIG proxy.config.dns.local_ipv4 STRING "+"9.10.11.12") {
+		t.Errorf("expected config to contain dns.local_ipv4 Parameter when it exists, actual: '%v'", txt)
+	}
+
+	if strings.Contains(txt, "CONFIG proxy.config.dns.local_ipv6 STRING "+ip6Str) {
+		t.Errorf("expected config to not contain dns.local_ipv6 from server when Parameter exists, actual: '%v'", txt)
+	}
+	if !strings.Contains(txt, "CONFIG proxy.config.dns.local_ipv6 STRING "+"2001:db8::11") {
+		t.Errorf("expected config to contain dns.local_ipv4 Parameter when it exists, actual: '%v'", txt)
+	}
+
 }

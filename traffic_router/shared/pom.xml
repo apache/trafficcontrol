@@ -24,8 +24,8 @@ under the License.
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
 		<artifactId>traffic_router</artifactId>
-		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-		<version>5.0.0</version>
+		<groupId>org.apache.traffic_control.traffic_router</groupId>
+		<version>6.0.0</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
@@ -80,17 +80,20 @@ under the License.
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
-			<artifactId>powermock-api-mockito</artifactId>
+			<artifactId>powermock-api-mockito2</artifactId>
+			<version>2.0.9</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
+			<artifactId>mockito-core</artifactId>
+			<version>3.11.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-module-junit4</artifactId>
+			<version>2.0.9</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

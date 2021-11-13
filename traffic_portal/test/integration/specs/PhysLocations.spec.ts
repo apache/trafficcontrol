@@ -20,11 +20,10 @@ import { browser } from 'protractor';
 
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { PhysLocationsPage } from '../PageObjects/PhysLocationsPage.po';
-import { API } from '../CommonUtils/API';
+import { api } from "../config";
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { physLocations } from "../Data";
 
-const api = new API();
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const physlocationsPage = new PhysLocationsPage();
@@ -44,9 +43,15 @@ physLocations.tests.forEach(async physlocationsData => {
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
             });
-            it('can open parameters page', async () => {
+            it('can open physical locations page', async () => {
                 await physlocationsPage.OpenConfigureMenu();
                 await physlocationsPage.OpenPhysLocationPage();
+            });
+            physlocationsData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await physlocationsPage.CheckCSV(check.Name)).toBe(true);
+                    await physlocationsPage.OpenPhysLocationPage();
+                });
             });
             physlocationsData.add.forEach(add => {
                 it(add.description, async () => {

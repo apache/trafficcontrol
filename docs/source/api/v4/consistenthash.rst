@@ -26,6 +26,7 @@ Queries database for an active Traffic Router on a given CDN and sends GET reque
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: CDN:READ
 :Response Type:  Object
 
 Request Structure

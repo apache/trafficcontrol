@@ -188,7 +188,7 @@ Edge Header Rewrite Rules
 -------------------------
 This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Edge-tier cache servers`.
 
-.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`t3c-special-strings`.
 
 .. note:: This field cannot be used if the Delivery Service is assigned to a :term:`Topology`.
 
@@ -243,7 +243,7 @@ First Header Rewrite Rules
 --------------------------
 This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`First-tier cache servers`.
 
-.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`t3c-special-strings`.
 
 .. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
 
@@ -424,7 +424,7 @@ Inner Header Rewrite Rules
 --------------------------
 This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Inner-tier cache servers`.
 
-.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`t3c-special-strings`.
 
 .. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
 
@@ -434,7 +434,7 @@ Last Header Rewrite Rules
 -------------------------
 This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Last-tier cache servers`.
 
-.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`t3c-special-strings`.
 
 .. note:: This field can only be used if the Delivery Service is assigned to a :term:`Topology`.
 
@@ -459,34 +459,6 @@ Free text field that has no strictly defined purpose, but it is suggested that i
 	+==========+=========================================================+=========================================+
 	| longDesc | Traffic Control source code and :ref:`to-api` responses | unchanged (``string``, ``String`` etc.) |
 	+----------+---------------------------------------------------------+-----------------------------------------+
-
-.. _ds-longdesc2:
-
-Long Description 2
-------------------
-Free text field that has no strictly defined purpose.
-
-.. table::
-
-	+----------------------------+---------------------------------------------------------+-----------------------------------------+
-	| Name                       | Use(s)                                                  | Type(s)                                 |
-	+============================+=========================================================+=========================================+
-	| longDesc1\ [#cardinality]_ | Traffic Control source code and :ref:`to-api` responses | unchanged (``string``, ``String`` etc.) |
-	+----------------------------+---------------------------------------------------------+-----------------------------------------+
-
-.. _ds-longdesc3:
-
-Long Description 3
-------------------
-Free text field that has no strictly defined purpose.
-
-.. table::
-
-	+----------------------------+---------------------------------------------------------+-----------------------------------------+
-	| Name                       | Use(s)                                                  | Type(s)                                 |
-	+============================+=========================================================+=========================================+
-	| longDesc2\ [#cardinality]_ | Traffic Control source code and :ref:`to-api` responses | unchanged (``string``, ``String`` etc.) |
-	+----------------------------+---------------------------------------------------------+-----------------------------------------+
 
 .. _ds-matchlist:
 
@@ -522,10 +494,10 @@ Max DNS Answers
 ---------------
 
 DNS-routed Delivery Service
-  The maximum number of :term:`Edge-tier cache server` IP addresses that the Traffic Router will include in responses to DNS requests. When provided, the :term:`cache server` IP addresses included are rotated in each response to spread traffic evenly. This number should scale according to the amount of traffic the Delivery Service is expected to serve.
+	The maximum number of :term:`Edge-tier cache server` IP addresses that the Traffic Router will include in responses to DNS requests. When provided, the :term:`cache server` IP addresses included are rotated in each response to spread traffic evenly. This number should scale according to the amount of traffic the Delivery Service is expected to serve.
 
 HTTP-routed Delivery Service
-  If the Traffic Router profile parameter "edge.http.limit" is set, setting this to a non-zero value will override that parameter for this delivery service, limiting the number of Traffic Router IP addresses (A records) that are included in responses to DNS requests for this delivery service.
+	If the Traffic Router profile parameter "edge.http.limit" is set, setting this to a non-zero value will override that parameter for this delivery service, limiting the number of Traffic Router IP addresses (A records) that are included in responses to DNS requests for this delivery service.
 
 .. _ds-max-origin-connections:
 
@@ -545,7 +517,7 @@ Mid Header Rewrite Rules
 ------------------------
 This field in general contains the contents of the a configuration file used by the `ATS Header Rewrite Plugin <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/plugins/header_rewrite.en.html>`_ when serving content for this Delivery Service - on :term:`Mid-tier cache servers`.
 
-.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`ort-special-strings`.
+.. tip:: Because this ultimately is the contents of an :abbr:`ATS (Apache Traffic Server)` configuration file, it can make use of the :ref:`t3c-special-strings`.
 
 .. note:: This field cannot be used if the Delivery Service is assigned to a :term:`Topology`.
 
@@ -675,7 +647,7 @@ Describes how HTTP "Range Requests" should be handled by the Delivery Service at
 .. _ds-slice-block-size:
 
 Range Slice Request Block Size
--------------------------------------
+------------------------------
 The block size in bytes that is used for `slice <https://github.com/apache/trafficserver/tree/master/plugins/experimental/slice>`_ plugin.
 
 This can only and must be set if the :ref:`ds-range-request-handling` is set to ``3``.
@@ -686,7 +658,7 @@ Raw Remap Text
 --------------
 For HTTP and DNS-:ref:`Routed <ds-types>` Delivery Services, this will be added to the end of a line in the `remap.config ATS configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_ line on the cache verbatim. For ANY_MAP-:ref:`Type <ds-types>` Delivery Services this must be defined.
 
-.. tip:: Because this ultimately is a raw line of content in a configuration file, it can make use of the :ref:`ort-special-strings`. Of particular note is the :ref:`ort-remap-override` template string.
+.. tip:: Because this ultimately is a raw line of content in a configuration file, it can make use of the :ref:`t3c-special-strings`. Of particular note is the :ref:`t3c-remap-override` template string.
 
 .. note:: This field **must** be defined on ANY_MAP-`Type`_ Delivery Services, but is otherwise optional.
 
@@ -822,6 +794,18 @@ The :term:`Tenant` who owns this Delivery Service. They (and their parents, if a
 	+==========+==============================================+========================================================+
 	| TenantID | Go code and :ref:`to-api` requests/responses | Integral, unique identifier (``bigint``, ``int`` etc.) |
 	+----------+----------------------------------------------+--------------------------------------------------------+
+
+.. _ds-tls-versions:
+
+TLS Versions
+------------
+The versions of TLS that can be used in HTTP requests to :term:`Edge-tier cache servers` for this Delivery Service's content can be limited using this property. When a Delivery Service has this property set to anything other than a ``null`` value, it lists the versions that will be allowed. Any versions can be added to the supported set, so long as they are of the form :samp:`{Major}.{Minor}`, e.g. ``1.1`` or ``42.0``. When this is a ``null`` value, no restrictions are placed on the TLS versions that may be used for retrieving Delivery Service content.
+
+.. impl-detail:: Traffic Ops will accept empty arrays as a synonym for ``null`` in requests, but will always represent them as ``null`` in responses. Note that this means it's impossible to create a Delivery Service that explicitly supports no TLS versions - the proper way to disable HTTPS for a Delivery Service is to set its Protocol_ accordingly.
+
+A Delivery Service that has a Type_ of ``STEERING`` or ``CLIENT_STEERING`` may not legally be set to have a TLS Versions property that is non-``null``.
+
+.. warning:: Using this setting may cause old clients that only support archaic TLS versions to break suddenly. Be sure that the security increase is worth this risk.
 
 .. _ds-topology:
 

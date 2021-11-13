@@ -45,7 +45,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 						{ id: $scope.DRAFT, name: 'Save Request as Draft' },
 						{ id: $scope.SUBMITTED, name: 'Submit Request for Review and Deployment' }
 					];
-					if (userModel.user.roleName == propertiesModel.properties.dsRequests.overrideRole) {
+					if (userModel.user.role == propertiesModel.properties.dsRequests.overrideRole) {
 						statuses.push({ id: $scope.COMPLETE, name: 'Fulfill Request Immediately' });
 					}
 					return statuses;
@@ -64,7 +64,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 				original: deliveryService
 			};
 
-			// if the user chooses to complete/fulfill the delete request immediately, a delivery service request will be made and marked as complete, 
+			// if the user chooses to complete/fulfill the delete request immediately, a delivery service request will be made and marked as complete,
 			// then if that is successful, the DS will be deleted
 			if (options.status.id === $scope.COMPLETE) {
 				// first create the ds request
@@ -167,6 +167,8 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 		deleteLabel: 'Delete'
 	};
 
+	$scope.restrictTLS = deliveryService.tlsVersions instanceof Array && deliveryService.tlsVersions.length > 0;
+
 	$scope.save = function(deliveryService) {
 		if (deliveryService.sslKeyVersion !== null && deliveryService.sslKeyVersion !== 0 &&
 			($scope.originalRoutingName !== deliveryService.routingName || $scope.originalCDN !== deliveryService.cdnId) &&
@@ -192,6 +194,11 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 			});
 			return;
 		}
+
+		if (!$scope.restrictTLS) {
+			deliveryService.tlsVersions = null;
+		}
+
 		// if ds requests are enabled in traffic_portal_properties.json, we'll create a ds request, else just update the ds
 		if ($scope.dsRequestsEnabled) {
 			var params = {
@@ -211,7 +218,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 							{ id: $scope.DRAFT, name: 'Save Request as Draft' },
 							{ id: $scope.SUBMITTED, name: 'Submit Request for Review and Deployment' }
 						];
-						if (userModel.user.roleName == propertiesModel.properties.dsRequests.overrideRole) {
+						if (userModel.user.role == propertiesModel.properties.dsRequests.overrideRole) {
 							statuses.push({ id: $scope.COMPLETE, name: 'Fulfill Request Immediately' });
 						}
 						return statuses;

@@ -25,6 +25,7 @@ Retrieves all of the :term:`Types` of things configured in Traffic Ops. Yes, tha
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: TYPE:READ
 :Response Type:  Array
 
 Request Structure
@@ -54,7 +55,7 @@ Response Structure
 ------------------
 :description: A short description of this type
 :id:          An integral, unique identifier for this type
-:lastUpdated: The date and time at which this type was last updated, in ISO format
+:lastUpdated: The date and time at which this type was last updated, in :ref:`non-rfc-datetime`
 :name:        The name of this type
 :useInTable:  The name of the Traffic Ops database table that contains objects which are grouped, identified, or described by this type
 
@@ -89,6 +90,7 @@ Creates a type
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: TYPE:CREATE, TYPE:READ
 :Response Type: Object
 
 Request Structure
@@ -122,7 +124,7 @@ Response Structure
 
 :description: A short description of this type
 :id:          An integral, unique identifier for this type
-:lastUpdated: The date and time at which this type was last updated, in ISO format
+:lastUpdated: The date and time at which this type was last updated, in :ref:`non-rfc-datetime`
 :name:        The name of this type
 :useInTable:  The name of the Traffic Ops database table that contains objects which are grouped, identified, or described by this type
 
@@ -156,5 +158,3 @@ Response Structure
 			"useInTable": "server"
 		}]
 	}
-
-

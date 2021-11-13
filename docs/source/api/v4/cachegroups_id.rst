@@ -25,6 +25,7 @@ Update :term:`Cache Group`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CACHE-GROUP:UPDATE, CACHE-GROUP:READ, TYPE:READ
 :Response Type:  Object
 
 Request Structure
@@ -83,7 +84,7 @@ Response Structure
 :fallbacks:                     An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
 :fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
 :id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
-:lastUpdated:                   The time and date at which this entry was last updated in an ISO-like format
+:lastUpdated:                   The time and date at which this entry was last updated in :ref:`non-rfc-datetime`
 :latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
 :localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
 :longitude:                     A floating-point :ref:`cache-group-longitude` for the :term:`Cache Group`
@@ -144,6 +145,7 @@ Delete a :term:`Cache Group`. A :term:`Cache Group` which has assigned servers o
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: CACHE-GROUP:DELETE, CACHE-GROUP:READ
 :Response Type:  ``undefined``
 
 Request Structure

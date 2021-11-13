@@ -21,7 +21,6 @@ package manager
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 	"time"
 
@@ -132,7 +131,16 @@ func combineCacheState(
 	}
 
 	if overrideCondition != "" {
-		events.Add(health.Event{Time: health.Time(time.Now()), Description: fmt.Sprintf("Health protocol override condition %s", overrideCondition), Name: cacheName.String(), Hostname: cacheName.String(), Type: toData.ServerTypes[cacheName].String(), Available: available, IPv4Available: ipv4Available, IPv6Available: ipv6Available})
+		events.Add(
+			health.Event{
+				Time:          health.Time(time.Now()),
+				Description:   fmt.Sprintf("Health protocol override condition %s", overrideCondition),
+				Name:          cacheName.String(),
+				Hostname:      cacheName.String(),
+				Type:          toData.ServerTypes[cacheName].String(),
+				Available:     available,
+				IPv4Available: ipv4Available,
+				IPv6Available: ipv6Available})
 	}
 
 	combinedStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: available, Ipv4Available: ipv4Available, Ipv6Available: ipv6Available})
@@ -148,7 +156,6 @@ func combineDSState(
 	if localDeliveryService.IsAvailable {
 		deliveryService.IsAvailable = true
 	}
-	deliveryService.DisabledLocations = localDeliveryService.DisabledLocations
 
 	for peerName, iPeerStates := range peerStates.GetCrstates() {
 		peerDeliveryService, ok := iPeerStates.DeliveryService[deliveryServiceName]
@@ -159,7 +166,6 @@ func combineDSState(
 		if peerDeliveryService.IsAvailable {
 			deliveryService.IsAvailable = true
 		}
-		deliveryService.DisabledLocations = intersection(deliveryService.DisabledLocations, peerDeliveryService.DisabledLocations)
 	}
 	combinedStates.SetDeliveryService(deliveryServiceName, deliveryService)
 }
@@ -218,18 +224,3 @@ type CacheGroupNameSlice []tc.CacheGroupName
 func (p CacheGroupNameSlice) Len() int           { return len(p) }
 func (p CacheGroupNameSlice) Less(i, j int) bool { return p[i] < p[j] }
 func (p CacheGroupNameSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-
-// intersection returns strings in both a and b.
-// Note this modifies a and b. Specifically, it sorts them. If that isn't acceptable, pass copies of your real data.
-func intersection(a []tc.CacheGroupName, b []tc.CacheGroupName) []tc.CacheGroupName {
-	sort.Sort(CacheGroupNameSlice(a))
-	sort.Sort(CacheGroupNameSlice(b))
-	c := []tc.CacheGroupName{} // important to initialize, so JSON is `[]` not `null`
-	for _, s := range a {
-		i := sort.Search(len(b), func(i int) bool { return b[i] >= s })
-		if i < len(b) && b[i] == s {
-			c = append(c, s)
-		}
-	}
-	return c
-}

@@ -20,11 +20,10 @@ import { browser } from 'protractor';
 
 import { LoginPage } from '../PageObjects/LoginPage.po'
 import { ParametersPage } from '../PageObjects/ParametersPage.po';
-import { API } from '../CommonUtils/API';
+import { api } from "../config";
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
 import { parameters } from "../Data";
 
-const api = new API();
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const parametersPage = new ParametersPage();
@@ -48,6 +47,24 @@ parameters.tests.forEach(async parametersData => {
                 await parametersPage.OpenConfigureMenu();
                 await parametersPage.OpenParametersPage();
             });
+            parametersData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await parametersPage.CheckCSV(check.Name)).toBe(true);
+                    await parametersPage.OpenParametersPage();
+                });
+            });
+            parametersData.toggle.forEach(toggle => {
+                it(toggle.description, async () => {
+                    if(toggle.description.includes('hide')){
+                        expect(await parametersPage.ToggleTableColumn(toggle.Name)).toBe(false);
+                        await parametersPage.OpenParametersPage();
+                    }else{
+                        expect(await parametersPage.ToggleTableColumn(toggle.Name)).toBe(true);
+                        await parametersPage.OpenParametersPage();
+                    }
+
+                });
+            })
             parametersData.add.forEach(add => {
                 it(add.description, async () => {
                     expect(await parametersPage.CreateParameter(add)).toBeTruthy();

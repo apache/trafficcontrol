@@ -59,22 +59,23 @@ export class ProfilesPage extends BasePage {
     private txtCompareDropdown2 = element(by.name('compareDropdown2'));
     private btnCompareSubmit = element(by.name('compareSubmit'));
     private mnuCompareTable = element(by.id('profilesParamsCompareTable_wrapper'));
+    private btnTableColumn = element(by.className("caret"))
     private randomize = randomize;
 
-    async OpenProfilesPage() {
-        let snp = new SideNavigationPage();
+    public async OpenProfilesPage() {
+        const snp = new SideNavigationPage();
         await snp.NavigateToProfilesPage();
     }
 
-    async OpenConfigureMenu() {
-        let snp = new SideNavigationPage();
+    public async OpenConfigureMenu() {
+        const snp = new SideNavigationPage();
         await snp.ClickConfigureMenu();
     }
 
     public async CreateProfile(profile: CreateProfile): Promise<boolean> {
         let result = false;
-        let basePage = new BasePage();
-        let snp = new SideNavigationPage();
+        const basePage = new BasePage();
+        const snp = new SideNavigationPage();
         await snp.NavigateToProfilesPage();
         await this.btnCreateNewProfile.click();
         await this.txtName.sendKeys(profile.Name + this.randomize);
@@ -94,7 +95,7 @@ export class ProfilesPage extends BasePage {
     }
 
     public async SearchProfile(nameProfiles: string): Promise<boolean> {
-        let snp = new SideNavigationPage();
+        const snp = new SideNavigationPage();
         let name = nameProfiles + this.randomize;
         await snp.NavigateToProfilesPage();
         await this.txtSearch.clear();
@@ -106,9 +107,9 @@ export class ProfilesPage extends BasePage {
         return false;
     }
 
-    async CompareProfile(profile1: string, profile2: string) {
+    public async CompareProfile(profile1: string, profile2: string) {
         let result = false;
-        let snp = new SideNavigationPage();
+        const snp = new SideNavigationPage();
         await snp.NavigateToProfilesPage();
         await this.btnMore.click();
         await this.btnCompareProfile.click();
@@ -121,22 +122,22 @@ export class ProfilesPage extends BasePage {
         }
     }
 
-    public async UpdateProfile(profile: UpdateProfile): Promise<boolean | undefined> {
-        let basePage = new BasePage();
+    public async UpdateProfile(profile: UpdateProfile): Promise<boolean> {
+        const basePage = new BasePage();
         switch (profile.description) {
             case "update profile type":
                 await this.txtType.sendKeys(profile.Type);
                 await basePage.ClickUpdate();
                 break;
             default:
-                return undefined;
+                return false;
         }
         return await basePage.GetOutputMessage().then(value => profile.validationMessage === value);
     }
 
     public async DeleteProfile(profile: DeleteProfile): Promise<boolean> {
         let result = false;
-        let basePage = new BasePage();
+        const basePage = new BasePage();
         await this.btnDelete.click();
         await this.txtConfirmName.sendKeys(profile.Name + this.randomize);
         await basePage.ClickDeletePermanently();
@@ -148,5 +149,17 @@ export class ProfilesPage extends BasePage {
             }
         })
         return result;
+    }
+
+    public async CheckCSV(name: string): Promise<boolean> {
+        return element(by.cssContainingText("span", name)).isPresent();
+    }
+
+    public async ToggleTableColumn(name: string): Promise<boolean> {
+        await this.btnTableColumn.click();
+        const result = await element(by.cssContainingText("th", name)).isPresent();
+        await element(by.cssContainingText("label", name)).click();
+        await this.btnTableColumn.click();
+        return !result;
     }
 }

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element, until} from 'protractor';
+import { browser, by, element} from 'protractor';
 
 import { randomize } from "../config";
 import { BasePage } from './BasePage.po'
@@ -46,13 +46,13 @@ export class LoginPage extends BasePage{
     private btnLogin = element(by.name("loginSubmit"))
     private lnkResetPassword= element (by.xpath("//button[text()='Reset Password']"))
     private lblUserName = element(by.xpath("//span[@id='headerUsername']"))
+    private bannerEnvironment = element(by.css('.enviro-banner.prod'));
     private randomize = randomize;
 
 
-    async Login(login: LoginData){
+    public async Login(login: LoginData){
         let result = false;
         const basePage = new BasePage();
-        await browser.wait(until.urlIs(browser.params.baseUrl + "/#!/login?redirect=%252F"), 10000)
         if(login.username === 'admin'){
             await this.txtUserName.sendKeys(login.username)
             await this.txtPassword.sendKeys(login.password)
@@ -78,6 +78,14 @@ export class LoginPage extends BasePage{
 
     public async CheckUserName(login: LoginData): Promise<boolean> {
         if(await this.lblUserName.getText() === 'admin' || await this.lblUserName.getText() === login.username+this.randomize){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    public async CheckBanner(): Promise<boolean> {
+        if(await this.bannerEnvironment.isPresent()){
             return true;
         }else{
             return false;

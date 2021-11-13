@@ -778,6 +778,16 @@ export const servers = {
 					password: "pa$$word"
 				}
 			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "Cache Group"
+				},
+				{
+					description: "redisplay first table column",
+					Name: "Cache Group"
+				}
+			],
 			add: [
 				{
 					description: "create a Server",
@@ -843,6 +853,16 @@ export const servers = {
 					password: "pa$$word"
 				}
 			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "Cache Group"
+				},
+				{
+					description: "redisplay first table column",
+					Name: "Cache Group"
+				}
+			],
 			add: [
 				{
 					description: "create a Server",
@@ -855,7 +875,7 @@ export const servers = {
 					Profile: "testProfile",
 					PhysLocation: "TPPhysLocation2",
 					InterfaceName: "test",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER:CREATE"
 				}
 			],
 			update: [
@@ -864,14 +884,14 @@ export const servers = {
 					Name: "servertestcreate2",
 					CDN: "servertestcdn1",
 					Profile: "servertestprofiles1",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER:UPDATE"
 				}
 			],
 			remove: [
 				{
 					description: "delete a Server",
 					Name: "servertestcreate2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: SERVER:DELETE"
 				}
 			]
 		},
@@ -881,6 +901,16 @@ export const servers = {
 					description: "Operator Role",
 					username: "TPOperator",
 					password: "pa$$word"
+				}
+			],
+			toggle:[
+				{
+					description: "hide first table column",
+					Name: "Cache Group"
+				},
+				{
+					description: "redisplay first table column",
+					Name: "Cache Group"
 				}
 			],
 			add: [

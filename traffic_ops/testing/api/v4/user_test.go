@@ -15,7 +15,6 @@ package v4
 */
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"net/mail"
@@ -42,7 +41,6 @@ func TestUsers(t *testing.T) {
 		SortTestUsers(t)
 		UpdateTestUsers(t)
 		GetTestUsersIMSAfterChange(t, header)
-		RolenameCapitalizationTest(t)
 		OpsUpdateAdminTest(t)
 		UserSelfUpdateTest(t)
 		UserUpdateOwnRoleTest(t)
@@ -108,71 +106,6 @@ func CreateTestUsers(t *testing.T) {
 	}
 }
 
-func RolenameCapitalizationTest(t *testing.T) {
-
-	roles, _, err := TOSession.GetRoles(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("could not get roles: %v - alerts: %+v", err, roles.Alerts)
-	}
-	if len(roles.Response) == 0 {
-		t.Fatal("there should be at least one role to test the user")
-	}
-	if roles.Response[0].ID == nil {
-		t.Fatal("Traffic Ops returned a representation of a Role that had null or undefined ID")
-	}
-
-	tenants, _, err := TOSession.GetTenants(client.RequestOptions{})
-	if err != nil {
-		t.Errorf("could not get tenants: %v", err)
-	}
-	if len(tenants.Response) == 0 {
-		t.Fatal("there should be at least one tenant to test the user")
-	}
-
-	// this user never does anything, so the role and tenant aren't important
-	blob := fmt.Sprintf(`
-	{
-		"username": "test_user",
-		"email": "cooldude6@example.com",
-		"fullName": "full name is required",
-		"localPasswd": "better_twelve",
-		"confirmLocalPasswd": "better_twelve",
-		"role": %d,
-		"tenantId": %d
-	}`, *roles.Response[0].ID, tenants.Response[0].ID)
-
-	reader := strings.NewReader(blob)
-	request, err := http.NewRequest("POST", fmt.Sprintf("%v%s/users", TOSession.URL, TestAPIBase), reader)
-	if err != nil {
-		t.Errorf("could not make new request: %v", err)
-	}
-	resp, err := TOSession.Client.Do(request)
-	if err != nil {
-		t.Errorf("could not do request: %v", err)
-	}
-
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	strResp := buf.String()
-	if !strings.Contains(strResp, "roleName") {
-		t.Error("incorrect json was returned for POST")
-	}
-
-	request, err = http.NewRequest("GET", fmt.Sprintf("%v%s/users?username=test_user", TOSession.URL, TestAPIBase), nil)
-	if err != nil {
-		t.Fatalf("Failed to create HTTP request: %v", err)
-	}
-	resp, _ = TOSession.Client.Do(request)
-
-	buf = new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	strResp = buf.String()
-	if !strings.Contains(strResp, "rolename") {
-		t.Error("incorrect json was returned for GET")
-	}
-
-}
-
 func OpsUpdateAdminTest(t *testing.T) {
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
 	opsTOClient, _, err := client.LoginWithAgent(TOSession.URL, "opsuser", "pa$$word", true, "to-api-v3-client-tests/opsuser", true, toReqTimeout)
@@ -212,11 +145,7 @@ func SortTestUsers(t *testing.T) {
 	}
 	sortedList := make([]string, 0, len(resp.Response))
 	for _, user := range resp.Response {
-		if user.Username == nil {
-			t.Errorf("Traffic Ops returned a representation for a user with null or undefined username")
-			continue
-		}
-		sortedList = append(sortedList, *user.Username)
+		sortedList = append(sortedList, user.Username)
 	}
 
 	if !sort.StringsAreSorted(sortedList) {
@@ -229,8 +158,8 @@ func UserRegistrationTest(t *testing.T) {
 	var emails []string
 	opts := client.NewRequestOptions()
 	for _, user := range testData.Users {
-		if user.Tenant == nil || user.Role == nil || user.Email == nil {
-			t.Error("Found User in the testing data with null or undefined Tenant and/or Role ID and/or Email address")
+		if user.Tenant == nil || user.Email == nil {
+			t.Error("Found User in the testing data with null or undefined Tenant and/or Email address")
 			continue
 		}
 		opts.QueryParameters.Set("name", *user.Tenant)
@@ -243,7 +172,7 @@ func UserRegistrationTest(t *testing.T) {
 		}
 		tenant := resp.Response[0]
 
-		regResp, _, err := TOSession.RegisterNewUser(uint(tenant.ID), uint(*user.Role), rfc.EmailAddress{Address: mail.Address{Address: *user.Email}}, client.RequestOptions{})
+		regResp, _, err := TOSession.RegisterNewUser(uint(tenant.ID), user.Role, rfc.EmailAddress{Address: mail.Address{Address: *user.Email}}, client.RequestOptions{})
 		if err != nil {
 			t.Fatalf("could not register user: %v - alerts: %+v", err, regResp.Alerts)
 		}
@@ -378,11 +307,11 @@ func UserUpdateOwnRoleTest(t *testing.T) {
 		t.Errorf("cannot get users filtered by username '%s': %v - alerts: %+v", SessionUserName, err, resp.Alerts)
 	}
 	user := resp.Response[0]
-	if user.Role == nil || user.ID == nil {
-		t.Fatalf("Traffic Ops returned a representation for user '%s' with null or undefined Role ID and/or ID", SessionUserName)
+	if user.ID == nil {
+		t.Fatalf("Traffic Ops returned a representation for user '%s' with null or undefined ID", SessionUserName)
 	}
 
-	*user.Role = *user.Role + 1
+	user.Role = user.Role + "_updated"
 	_, _, err = TOSession.UpdateUser(*user.ID, user, client.RequestOptions{})
 	if err == nil {
 		t.Error("user incorrectly updated their role")
@@ -393,10 +322,7 @@ func UpdateTestUsers(t *testing.T) {
 	if len(testData.Users) < 1 {
 		t.Fatal("Need at least one User to test updating users")
 	}
-	if testData.Users[0].Username == nil {
-		t.Fatal("Found a user in the test data with null or undefined username")
-	}
-	firstUsername := *testData.Users[0].Username
+	firstUsername := testData.Users[0].Username
 
 	opts := client.NewRequestOptions()
 	opts.QueryParameters.Set("username", firstUsername)
@@ -414,7 +340,7 @@ func UpdateTestUsers(t *testing.T) {
 	newCity := "kidz kable kown"
 	*user.City = newCity
 
-	var updateResp tc.UpdateUserResponse
+	var updateResp tc.UpdateUserResponseV4
 	updateResp, _, err = TOSession.UpdateUser(*user.ID, user, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("cannot update user: %v - alerts: %+v", err, updateResp.Alerts)
@@ -454,6 +380,9 @@ func GetTestUsers(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot get users: %v - alerts: %+v", err, resp.Alerts)
 	}
+	if len(resp.Response) < 1 {
+		t.Fatalf("expected a users list, got nothing")
+	}
 }
 
 func GetTestUserCurrent(t *testing.T) {
@@ -461,10 +390,8 @@ func GetTestUserCurrent(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot get current user: %v - alerts: %+v", err, user.Alerts)
 	}
-	if user.Response.UserName == nil {
-		t.Errorf("current user expected: '%s' actual: %v", SessionUserName, nil)
-	} else if *user.Response.UserName != SessionUserName {
-		t.Errorf("current user expected: '%s' actual: '%s'", SessionUserName, *user.Response.UserName)
+	if user.Response.UserName != SessionUserName {
+		t.Errorf("current user expected: '%s' actual: '%s'", SessionUserName, user.Response.UserName)
 	}
 }
 
@@ -477,18 +404,18 @@ func UserTenancyTest(t *testing.T) {
 	tenant4Found := false
 	tenant3Username := "tenant3user"
 	tenant4Username := "tenant4user"
-	tenant3User := tc.User{}
+	tenant3User := tc.UserV4{}
 
 	// assert admin user can view tenant3user and tenant4user
 	for _, user := range users.Response {
-		if user.Username == nil || user.ID == nil {
-			t.Error("Traffic Ops returned a representation for a user with null or undefined username and/or ID")
+		if user.ID == nil {
+			t.Error("Traffic Ops returned a representation for a user with null or undefined ID")
 			continue
 		}
-		if *user.Username == tenant3Username {
+		if user.Username == tenant3Username {
 			tenant3Found = true
 			tenant3User = user
-		} else if *user.Username == tenant4Username {
+		} else if user.Username == tenant4Username {
 			tenant4Found = true
 		}
 		if tenant3Found && tenant4Found {
@@ -512,16 +439,12 @@ func UserTenancyTest(t *testing.T) {
 
 	tenant4canReadItself := false
 	for _, user := range usersReadableByTenant4.Response {
-		if user.Username == nil {
-			t.Error("Traffic Ops returned a representation of a user with null or undefined username")
-			continue
-		}
 		// assert that tenant4user cannot read tenant3user
-		if *user.Username == tenant3Username {
+		if user.Username == tenant3Username {
 			t.Error("expected tenant4user to be unable to read tenant3user")
 		}
 		// assert that tenant4user can read itself
-		if *user.Username == tenant4Username {
+		if user.Username == tenant4Username {
 			tenant4canReadItself = true
 		}
 	}
@@ -551,8 +474,8 @@ func UserTenancyTest(t *testing.T) {
 	}
 	newUser := testData.Users[0]
 	newUser.Email = util.StrPtr("testusertenancy@example.com")
-	newUser.Username = util.StrPtr("testusertenancy")
-	newUser.TenantID = &rootTenant.ID
+	newUser.Username = "testusertenancy"
+	newUser.TenantID = rootTenant.ID
 	if _, _, err = tenant4TOClient.CreateUser(newUser, client.RequestOptions{}); err == nil {
 		t.Error("expected tenant4user to be unable to create a new user in the root tenant")
 	}
@@ -572,7 +495,7 @@ func ForceDeleteTestUsers(t *testing.T) {
 
 	var usernames []string
 	for _, user := range testData.Users {
-		usernames = append(usernames, `'`+*user.Username+`'`)
+		usernames = append(usernames, `'`+user.Username+`'`)
 	}
 
 	// there is a constraint that prevents users from being deleted when they have a log
@@ -620,14 +543,10 @@ func ForceDeleteTestUsersByUsernames(t *testing.T, usernames []string) {
 func DeleteTestUsers(t *testing.T) {
 	opts := client.NewRequestOptions()
 	for _, user := range testData.Users {
-		if user.Username == nil {
-			t.Error("Found a user in the testing data with null or undefined username")
-			continue
-		}
-		opts.QueryParameters.Set("username", *user.Username)
+		opts.QueryParameters.Set("username", user.Username)
 		resp, _, err := TOSession.GetUsers(opts)
 		if err != nil {
-			t.Errorf("cannot get users filtered by username '%s': %v - alerts: %+v", *user.Username, err, resp.Alerts)
+			t.Errorf("cannot get users filtered by username '%s': %v - alerts: %+v", user.Username, err, resp.Alerts)
 		}
 		if len(resp.Response) > 0 {
 			respUser := resp.Response[0]
@@ -638,7 +557,7 @@ func DeleteTestUsers(t *testing.T) {
 
 			delResp, _, err := TOSession.DeleteUser(*respUser.ID, client.RequestOptions{})
 			if err != nil {
-				t.Errorf("cannot delete user '%s': %v - alerts: %+v", *user.Username, err, delResp.Alerts)
+				t.Errorf("cannot delete user '%s': %v - alerts: %+v", user.Username, err, delResp.Alerts)
 			}
 
 			// Make sure it got deleted
@@ -647,7 +566,7 @@ func DeleteTestUsers(t *testing.T) {
 				t.Errorf("error getting users filtered by username after supposed deletion: %v - alerts: %+v", err, resp.Alerts)
 			}
 			if len(resp.Response) > 0 {
-				t.Errorf("expected user: %s to be deleted", *user.Username)
+				t.Errorf("expected user: %s to be deleted", user.Username)
 			}
 		}
 	}

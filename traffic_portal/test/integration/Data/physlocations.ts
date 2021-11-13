@@ -252,6 +252,12 @@ export const physLocations = {
 					password: "pa$$word"
 				}
 			],
+			check: [
+				{
+					description: "check CSV link from Physical Location page",
+					Name: "Export as CSV"
+				}
+			],
 			add: [
 				{
 					description: "create a PhysLocation",
@@ -298,6 +304,12 @@ export const physLocations = {
 					password: "pa$$word"
 				}
 			],
+			check: [
+				{
+					description: "check CSV link from Physical Location page",
+					Name: "Export as CSV"
+				}
+			],
 			add: [
 				{
 					description: "create a PhysLocation",
@@ -312,7 +324,7 @@ export const physLocations = {
 					Email: "emailtest@gtesting.com",
 					Region: "PhysTest",
 					Comments: "test",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: PHYSICAL-LOCATION:CREATE"
 				}
 			],
 			update: [
@@ -320,14 +332,14 @@ export const physLocations = {
 					description: "update physlocation region",
 					Name: "TPPhysLocation2",
 					Region: "PhysTest2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: PHYSICAL-LOCATION:UPDATE"
 				}
 			],
 			remove: [
 				{
 					description: "delete a PhysLocation",
 					Name: "TPPhysLocation2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: PHYSICAL-LOCATION:DELETE"
 				}
 			]
 		}

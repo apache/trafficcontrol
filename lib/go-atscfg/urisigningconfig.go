@@ -28,10 +28,18 @@ import (
 const ContentTypeURISigningDotConfig = `application/json; charset=us-ascii`
 const LineCommentURISigningDotConfig = ""
 
+// URISigningConfigOpts contains settings to configure generation options.
+type URISigningConfigOpts struct {
+}
+
 func MakeURISigningConfig(
 	fileName string,
 	uriSigningKeys map[tc.DeliveryServiceName][]byte,
+	opt *URISigningConfigOpts,
 ) (Cfg, error) {
+	if opt == nil {
+		opt = &URISigningConfigOpts{}
+	}
 	warnings := []string{}
 
 	dsName := getDSFromURISigningConfigFileName(fileName)
@@ -49,6 +57,7 @@ func MakeURISigningConfig(
 		Text:        string(uriSigningKeyBts),
 		ContentType: ContentTypeURISigningDotConfig,
 		LineComment: LineCommentURISigningDotConfig,
+		Secure:      true,
 		Warnings:    warnings,
 	}, nil
 }

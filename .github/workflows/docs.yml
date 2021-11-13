@@ -23,13 +23,13 @@ on:
     paths:
       - docs/source/**
       - .github/workflows/docs.yml
-      - traffic_control/clients/python/**
+      - traffic_control/clients/python/**.py
   pull_request:
     types: [opened, reopened, ready_for_review, synchronize]
     paths:
       - docs/source/**
       - .github/workflows/docs.yml
-      - traffic_control/clients/python/**
+      - traffic_control/clients/python/**.py
 
 jobs:
   documentation:
@@ -48,7 +48,7 @@ jobs:
         uses: ./.github/actions/sphinx-action
         with:
           docs-folder: "docs/"
-          pre-build-command: "apt-get update -y && apt-get install -y python3-dev build-essential"
+          pre-build-command: "apt-get install -y pandoc"
       - uses: actions/upload-artifact@v1
         with:
           name: HTMLDocumentation

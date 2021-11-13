@@ -27,6 +27,7 @@ List all :abbr:`ASNs (Autonomous System Numbers)`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: ASN:READ, CACHE-GROUP:READ
 :Response Type:  Array
 
 Request Structure
@@ -73,7 +74,7 @@ Response Structure
 :cachegroup:   A string that is the :ref:`cache-group-name` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :cachegroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :id:           An integral, unique identifier for this association between an :abbr:`ASN (Autonomous System Number)` and a :term:`Cache Group`
-:lastUpdated:  The time and date this server entry was last updated in an ISO-like format
+:lastUpdated:  The time and date this server entry was last updated in :ref:`non-rfc-datetime`
 
 .. code-block:: http
 	:caption: Response Example
@@ -111,6 +112,7 @@ Creates a new :abbr:`ASN (Autonomous System Number)`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: ASN:CREATE, ASN:READ, CACHE-GROUP:READ, CACHE-GROUP:UPDATE
 :Response Type: Object
 
 Request Structure
@@ -142,7 +144,7 @@ Response Structure
 :cachegroup:   A string that is the :ref:`cache-group-name` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :cachegroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :id:           An integral, unique identifier for this association between an :abbr:`ASN (Autonomous System Number)` and a :term:`Cache Group`
-:lastUpdated:  The time and date this server entry was last updated in an ISO-like format
+:lastUpdated:  The time and date this server entry was last updated in :ref:`non-rfc-datetime`
 
 .. code-block:: http
 	:caption: Response Example
@@ -180,6 +182,7 @@ Updates an existing :abbr:`ASN (Autonomous System Number)`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: ASN:UPDATE, ASN:READ, CACHE-GROUP:READ, CACHE-GROUP:UPDATE
 :Response Type: Object
 
 Request Structure
@@ -211,7 +214,7 @@ Response Structure
 :cachegroup:   A string that is the :ref:`cache-group-name` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :cachegroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :id:           An integral, unique identifier for this association between an :abbr:`ASN (Autonomous System Number)` and a :term:`Cache Group`
-:lastUpdated:  The time and date this server entry was last updated in an ISO-like format
+:lastUpdated:  The time and date this server entry was last updated in :ref:`non-rfc-datetime`
 
 .. code-block:: http
 	:caption: Response Example
@@ -251,6 +254,7 @@ Deletes an existing :abbr:`ASN (Autonomous System Number)`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: ASN:DELETE, ASN:READ, CACHE-GROUP:READ, CACHE-GROUP:UPDATE
 :Response Type: ``undefined``
 
 Request Structure

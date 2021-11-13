@@ -30,7 +30,7 @@ Who is using Traffic Control?
 
 How do I get help with Traffic Control?
 =======================================
-Join us on our `Slack <https://s.apache.org/atc-slack>`_ or send your questions to our `mailing list <mailto:users@trafficcontrol.apache.org>`_.  Slack is usually the best forum for quick Q&A type issues -- like when you are getting a Traffic Control CDN up and running or if you have a question about configuration. Any discussions that could potentially lead to decisions being made about the project -- like a new feature -- should happen on `the developer mailing list <mailto:dev@trafficcontrol.apache.org>`_-.
+Join us at ``#traffic-control`` on the `ASF Slack <https://s.apache.org/tc-slack-request>`_ or send your questions to our `mailing list <mailto:users@trafficcontrol.apache.org>`_.  Slack is usually the best forum for quick Q&A type issues -- like when you are getting a Traffic Control CDN up and running or if you have a question about configuration. Any discussions that could potentially lead to decisions being made about the project -- like a new feature -- should happen on `the developer mailing list <mailto:dev@trafficcontrol.apache.org>`_-.
 
 How do I get involved with the development of Traffic Control?
 ==============================================================

@@ -28,8 +28,8 @@ Assign a :term:`Delivery Service Request` to a user.
 
 Request Structure
 -----------------
-:id:            The integral, unique identifier assigned to the :term:`DSR <Delivery Service Request>`
-:assignee:      The username of the user to whom the :term:`Delivery Service Request` is assigned.
+:id:       The integral, unique identifier assigned to the :term:`DSR <Delivery Service Request>`
+:assignee: The username of the user to whom the :term:`Delivery Service Request` is assigned.
 
 .. code-block:: http
 	:caption: Request Example
@@ -49,12 +49,12 @@ Request Structure
 
 Response Structure
 ------------------
-:assignee:              The username of the user to whom the :term:`Delivery Service Request` is assigned.
-:author:                The author of the :term:`Delivery Service Request`
-:authorId:              The integral, unique identifier assigned to the author
-:changeType:            The change type of the :term:`DSR <Delivery Service Request>`. It can be ``create``, ``update``, or ``delete``....
-:createdAt:             The date and time at which the :term:`DSR <Delivery Service Request>` was created, in ISO format.
-:deliveryService:       The delivery service that the :term:`DSR <Delivery Service Request>` is requesting to update.
+:assignee:        The username of the user to whom the :term:`Delivery Service Request` is assigned.
+:author:          The author of the :term:`Delivery Service Request`
+:authorId:        The integral, unique identifier assigned to the author
+:changeType:      The change type of the :term:`DSR <Delivery Service Request>`. It can be ``create``, ``update``, or ``delete``....
+:createdAt:       The date and time at which the :term:`DSR <Delivery Service Request>` was created, in :ref:`non-rfc-datetime`.
+:deliveryService: The delivery service that the :term:`DSR <Delivery Service Request>` is requesting to update.
 
 	:active:                        A boolean that defines :ref:`ds-active`.
 	:anonymousBlockingEnabled:      A boolean that defines :ref:`ds-anonymous-blocking`
@@ -91,11 +91,11 @@ Response Structure
 	:infoUrl:                       An :ref:`ds-info-url`
 	:initialDispersion:             The :ref:`ds-initial-dispersion`
 	:ipv6RoutingEnabled:            A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
-	:lastUpdated:                   The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
+	:lastUpdated:                   The date and time at which this :term:`Delivery Service` was last updated, in :ref:`non-rfc-datetime`
 	:logsEnabled:                   A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 	:longDesc:                      The :ref:`ds-longdesc` of this :term:`Delivery Service`
-	:longDesc1:                     An optional field containing the :ref:`ds-longdesc2` of this :term:`Delivery Service`
-	:longDesc2:                     An optional field containing the :ref:`ds-longdesc3` of this :term:`Delivery Service`
+	:longDesc1:                     An optional field containing the 2nd long description of this :term:`Delivery Service`
+	:longDesc2:                     An optional field containing the 3rd long description of this :term:`Delivery Service`
 	:matchList:                     The :term:`Delivery Service`'s :ref:`ds-matchlist`
 
 		:pattern:               A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
@@ -131,11 +131,11 @@ Response Structure
 	:typeId:                        The integral, unique identifier of the :ref:`ds-types` of this :term:`Delivery Service`
 	:xmlId:                         This :term:`Delivery Service`'s :ref:`ds-xmlid`
 
-:id:                    The integral, unique identifier assigned to the :term:`DSR <Delivery Service Request>`
-:lastEditedBy:          The username of user who last edited this :term:`DSR <Delivery Service Request>`
-:lastEditedById:        The integral, unique identifier assigned to the user who last edited this :term:`DSR <Delivery Service Request>`
-:lastUpdated:           The date and time at which the :term:`DSR <Delivery Service Request>` was last updated, in ISO format.
-:status:                The status of the request. Can be "draft", "submitted", "rejected", "pending", or "complete".
+:id:             The integral, unique identifier assigned to the :term:`DSR <Delivery Service Request>`
+:lastEditedBy:   The username of user who last edited this :term:`DSR <Delivery Service Request>`
+:lastEditedById: The integral, unique identifier assigned to the user who last edited this :term:`DSR <Delivery Service Request>`
+:lastUpdated:    The date and time at which the :term:`DSR <Delivery Service Request>` was last updated, in :ref:`non-rfc-datetime`.
+:status:         The status of the request. Can be "draft", "submitted", "rejected", "pending", or "complete".
 
 .. code-block:: http
 	:caption: Response Example

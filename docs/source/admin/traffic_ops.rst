@@ -315,6 +315,14 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:renew_days_before_expiration: Set the number of days before expiration date to renew certificates.
 	:summary_email: The email address to use for summarizing certificate expiration and renewal status. If it is blank, no email will be sent.
 
+:default_certificate_info: This is an optional object to define default values when generating a self signed certificate when an HTTPS delivery service is created or updated. If this is an empty object or not present in the :ref:`cdn.conf` then the term "Placeholder" will be used for all fields.
+
+ 	:business_unit: An optional field which, if present, will represent the business unit for which the SSL certificate was generated
+	:city: An optional field which, if present, will represent the resident city of the generated SSL certificate
+	:organization: An optional field which, if present, will represent the organization for which the SSL certificate was generated
+	:country: An optional field which, if present, will represent the resident country of the generated SSL certificate
+	:state: An optional field which, if present, will represent the resident state or province of the generated SSL certificate
+
 :geniso: This object contains configuration options for system ISO generation.
 
 	:iso_root_path: Sets the filesystem path to the root of the ISO generation directory. For default installations, this should usually be set to :file:`/opt/traffic_ops/app/public`.
@@ -390,7 +398,6 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 :traffic_ops_golang: This group configuration options is used exclusively by `traffic_ops_golang`_.
 
-	:backend_max_connections: This optional object, if declared, is a map of back-end service names to the maximum number of allowed concurrent connections to them from the Traffic Ops server. Currently, there are no supported keys.
 	:crconfig_emulate_old_path: An optional boolean that controls the value of a part of :term:`Snapshots` that report what :ref:`to-api` endpoint is used to generate :term:`Snapshots`. If this is ``true``, it forces Traffic Ops to report that a legacy, deprecated endpoint is used, whereas if it's ``false`` Traffic Ops will report the actual, current endpoint. Default if not specified is ``false``.
 
 		.. deprecated:: 3.0
@@ -449,13 +456,13 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 	:traffic_vault_backend:
 
-	    .. versionadded:: 6.0
-		    Optional. The name of which backend to use for Traffic Vault. Currently, the only supported backend is "riak".
+		.. versionadded:: 6.0
+			Optional. The name of which backend to use for Traffic Vault. Currently, the only supported backend is "riak".
 
 	:traffic_vault_config:
 
-	    .. versionadded:: 6.0
-		    Optional. The JSON configuration which is unique to the chosen Traffic Vault backend. See :ref:`traffic_vault_admin` for the configuration options for each supported backend.
+		.. versionadded:: 6.0
+			Optional. The JSON configuration which is unique to the chosen Traffic Vault backend. See :ref:`traffic_vault_admin` for the configuration options for each supported backend.
 
 	.. _admin-routing-blacklist:
 
@@ -475,8 +482,18 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 :use_ims:
 
-    .. versionadded:: 5.0
-	    This is an optional boolean value to enable the handling of the "If-Modified-Since" HTTP request header. Default: false
+	.. versionadded:: 5.0
+		This is an optional boolean value to enable the handling of the "If-Modified-Since" HTTP request header. Default: false
+
+:role_based_permissions: Toggle whether or not to use Role Based Permissions.
+
+	.. versionadded:: 6.1
+		The blueprint can be seen :pr:`5848`
+
+:disable_auto_cert_deletion: This optional boolean value can be used to disable the automatic deletion of certificates for Delivery Services that no longer exist (which happens after a CDN Snapshot is taken). Default: false.
+
+	.. versionadded:: 6.1
+
 
 Example cdn.conf
 ''''''''''''''''
@@ -661,7 +678,7 @@ You will need to update `cdn.conf`_ with any necessary changes.
 
 	'hypnotoad' => ...
 		'listen' => 'https://[::]:443?cert=/etc/pki/tls/certs/trafficops.crt&key=/etc/pki/tls/private/trafficops.key&ca=/etc/pki/tls/certs/localhost.ca&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED'
-		 ...
+		...
 
 .. _admin-to-ext-script:
 

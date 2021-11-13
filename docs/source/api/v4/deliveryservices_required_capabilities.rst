@@ -25,6 +25,7 @@ Gets all associations of :term:`Server Capability` to :term:`Delivery Services`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: DELIVERY-SERVICE:READ
 :Response Type:  Array
 
 Request Structure
@@ -67,7 +68,7 @@ Response Structure
 ------------------
 :deliveryServiceID:   The associated :term:`Delivery Service`'s integral, unique identifier
 :xmlID:               The associated :term:`Delivery Service`'s :ref:`ds-xmlid`
-:lastUpdated:         The date and time at which this association between the :term:`Delivery Service` and the :term:`Server Capability` was last updated, in an ISO-like format
+:lastUpdated:         The date and time at which this association between the :term:`Delivery Service` and the :term:`Server Capability` was last updated, in :ref:`non-rfc-datetime`
 :requiredCapability:  The :term:`Server Capability`'s name
 
 .. code-block:: http
@@ -108,6 +109,7 @@ Associates a :term:`Server Capability` with a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: DELIVERY-SERVICE:READ, DELIVERY-SERVICE:UPDATE
 :Response Type:  Object
 
 .. note:: A :term:`Server Capability` can only be made required on a :term:`Delivery Service` if its associated Servers already have that :term:`Server Capability` assigned.
@@ -136,7 +138,7 @@ Request Structure
 Response Structure
 ------------------
 :deliveryServiceID:   The newly associated :term:`Delivery Service`'s integral, unique identifier
-:lastUpdated:         The date and time at which this association between the :term:`Delivery Service` and the :term:`Server Capability` was last updated, in an ISO-like format
+:lastUpdated:         The date and time at which this association between the :term:`Delivery Service` and the :term:`Server Capability` was last updated, in :ref:`non-rfc-datetime`
 :requiredCapability:  The newly associated :term:`Server Capability`'s name
 
 .. code-block:: http
@@ -174,6 +176,7 @@ Dissociate a :term:`Server Capability` from a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: DELIVERY-SERVICE:READ, DELIVERY-SERVICE:UPDATE
 :Response Type:  ``undefined``
 
 Request Structure

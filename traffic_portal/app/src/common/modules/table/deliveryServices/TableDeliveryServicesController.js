@@ -236,18 +236,8 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
             valueFormatter: dateCellFormatter
         },
         {
-            headerName: "Long Desc 1",
+            headerName: "Long Desc",
             field: "longDesc",
-            hide: true
-        },
-        {
-            headerName: "Long Desc 2",
-            field: "longDesc1",
-            hide: true
-        },
-        {
-            headerName: "Long Desc 3",
-            field: "longDesc2",
             hide: true
         },
         {
@@ -493,7 +483,7 @@ var TableDeliveryServicesController = function(tableName, deliveryServices, filt
                         { id: $scope.DRAFT, name: 'Save Request as Draft' },
                         { id: $scope.SUBMITTED, name: 'Submit Request for Review and Deployment' }
                     ];
-                    if (userModel.user.roleName == propertiesModel.properties.dsRequests.overrideRole) {
+                    if (userModel.user.role == propertiesModel.properties.dsRequests.overrideRole) {
                         statuses.push({ id: $scope.COMPLETE, name: 'Fulfill Request Immediately' });
                     }
                     return statuses;

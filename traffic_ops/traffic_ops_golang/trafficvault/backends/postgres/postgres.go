@@ -143,7 +143,7 @@ func (p *Postgres) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *s
 		return tc.DeliveryServiceSSLKeysV15{}, false, e
 	}
 
-	jsonKeys, err := aesDecrypt(encryptedSslKeys, p.aesKey)
+	jsonKeys, err := util.AESDecrypt(encryptedSslKeys, p.aesKey)
 	if err != nil {
 		return tc.DeliveryServiceSSLKeysV15{}, false, err
 	}
@@ -176,7 +176,7 @@ func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *
 		return e
 	}
 
-	encryptedKey, err := aesEncrypt(keyJSON, p.aesKey)
+	encryptedKey, err := util.AESEncrypt(keyJSON, p.aesKey)
 	if err != nil {
 		return errors.New("encrypting keys: " + err.Error())
 	}
@@ -267,7 +267,7 @@ func (p *Postgres) GetCDNSSLKeys(cdnName string, tx *sql.Tx, ctx context.Context
 			return keys, e
 		}
 
-		jsonKey, err := aesDecrypt(encryptedSslKeys, p.aesKey)
+		jsonKey, err := util.AESDecrypt(encryptedSslKeys, p.aesKey)
 		if err != nil {
 			log.Errorf("couldn't decrypt key: %v", err)
 			continue
@@ -298,7 +298,7 @@ func (p *Postgres) GetDNSSECKeys(cdnName string, tx *sql.Tx, ctx context.Context
 		return tc.DNSSECKeysTrafficVault{}, false, e
 	}
 
-	dnssecJSON, err := aesDecrypt(encryptedDnssecKey, p.aesKey)
+	dnssecJSON, err := util.AESDecrypt(encryptedDnssecKey, p.aesKey)
 	if err != nil {
 		return tc.DNSSECKeysTrafficVault{}, false, err
 	}
@@ -326,7 +326,7 @@ func (p *Postgres) PutDNSSECKeys(cdnName string, keys tc.DNSSECKeysTrafficVault,
 		return e
 	}
 
-	encryptedKey, err := aesEncrypt(dnssecJSON, p.aesKey)
+	encryptedKey, err := util.AESEncrypt(dnssecJSON, p.aesKey)
 	if err != nil {
 		return errors.New("encrypting keys: " + err.Error())
 	}

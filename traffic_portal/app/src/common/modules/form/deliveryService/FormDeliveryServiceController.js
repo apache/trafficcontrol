@@ -19,6 +19,106 @@
 
 var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, deliveryServiceUtils, cdnService, profileService, tenantService, propertiesModel, userModel, serviceCategoryService) {
 
+    /**
+     * This is used to cache TLS version settings when the checkbox is toggled.
+     * @type null | [string, ...string[]]
+     */
+    let cachedTLSVersions = null;
+
+
+    const knownVersions = new Set(["1.0", "1.1", "1.2", "1.3"]);
+    $scope.tlsVersionUnknown = v => v && !knownVersions.has(v);
+
+    const insecureVersions = new Set(["1.0", "1.1"]);
+    $scope.tlsVersionInsecure = v => v && insecureVersions.has(v);
+
+    /**
+     * This toggles whether or not TLS versions are restricted for the Delivery
+     * Service.
+     *
+     * It uses cachedTLSVersions to cache TLS version restrictions, so that the
+     * DS is always ready to submit without manipulation, but the UI "remembers"
+     * the TLS versions that existed on toggling restrictions off.
+     *
+     * This is called when the checkbox's 'change' event fires - that event is
+     * not handled here.
+     */
+    function toggleTLSRestrict() {
+        if ($scope.restrictTLS) {
+            if (cachedTLSVersions instanceof Array && cachedTLSVersions.length > 0) {
+                deliveryService.tlsVersions = cachedTLSVersions;
+            } else {
+                deliveryService.tlsVersions = [""];
+            }
+            cachedTLSVersions = null;
+            return;
+        }
+        if (deliveryService.tlsVersions instanceof Array && deliveryService.tlsVersions.length > 0) {
+            cachedTLSVersions = deliveryService.tlsVersions;
+        } else {
+            cachedTLSVersions = null;
+        }
+
+        deliveryService.tlsVersions =  null;
+    }
+    $scope.toggleTLSRestrict = toggleTLSRestrict;
+
+    $scope.removeTLSVersion = function(index) {
+        deliveryService.tlsVersions.splice(index, 1);
+    };
+
+    $scope.addTLSVersion = function(index) {
+        deliveryService.tlsVersions.splice(index+1, 0, "");
+    };
+
+    /**
+     * This function is called on 'change' events for any and all TLS Version
+     * inputs, and sets validity states of duplicates.
+     *
+     * This can't use a normal validator because it depends on a value checking
+     * against a list containing itself. AngularJS sets values that fail
+     * validation to `undefined`, so if there's a set of TLS versions
+     * `["1.3", "1.3"]`, then the validator will set one of them to `undefined`.
+     * Now the set is `["1.3", undefined]`, so there are no more duplicates, so
+     * the set is marked as valid.
+     */
+    function validateTLS() {
+        if (!$scope.generalConfig || !($scope.deliveryService.tlsVersions instanceof Array)) {
+            return;
+        }
+
+        const verMap = new Map();
+        for (let i = 0; i < $scope.deliveryService.tlsVersions.length; ++i) {
+            const propName = `tlsVersion${i+1}`;
+            if (propName in $scope.generalConfig) {
+                $scope.generalConfig[propName].$setValidity("duplicates", true);
+            }
+
+            const ver = $scope.deliveryService.tlsVersions[i];
+            if (ver === undefined) {
+                continue;
+            }
+            const current = verMap.get(ver);
+            if (current) {
+                current.count++;
+                current.indices.push(i);
+            } else {
+                verMap.set(ver, {
+                    count: 1,
+                    indices: [i]
+                });
+            }
+        }
+
+        for (const index of Array.from(verMap).filter(v=>v[1].count>1).flatMap(v=>v[1].indices)) {
+            const propName = `tlsVersion${index+1}`;
+            if (propName in $scope.generalConfig) {
+                $scope.generalConfig[propName].$setValidity("duplicates", false);
+            }
+        }
+    }
+    $scope.validateTLS = validateTLS;
+
     var getCDNs = function() {
         cdnService.getCDNs()
             .then(function(result) {
@@ -300,6 +400,46 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
+
+    /**
+     * Checks if a TLS Version has a specific error.
+     *
+     * @param {number} index The index of the TLS Version to check into the
+     * form's Delivery Service's `tlsVersions` array.
+     * @param {string} property The name of the error to check.
+     * @returns {boolean} Whether or not the indicated TLS Version has the given
+     * error.
+     */
+    function tlsVersionHasPropertyError(index, property) {
+        if (!$scope.generalConfig) {
+            return false;
+        }
+        const propName = `tlsVersion${index+1}`;
+        if (!(propName in $scope.generalConfig)) {
+            return false;
+        }
+        return formUtils.hasPropertyError($scope.generalConfig[propName], property);
+    };
+    $scope.tlsVersionHasPropertyError = tlsVersionHasPropertyError;
+
+    /**
+     * Checks if a TLS Version has any error.
+     *
+     * @param {number} index The index of the TLS Version to check into the
+     * form's Delivery Service's `tlsVersions` array.
+     * @returns {boolean} Whether or not the indicated TLS Version has an error.
+     */
+     function tlsVersionHasError(index) {
+        if (!$scope.generalConfig) {
+            return false;
+        }
+        const propName = `tlsVersion${index+1}`;
+        if (!(propName in $scope.generalConfig)) {
+            return false;
+        }
+        return formUtils.hasError($scope.generalConfig[propName]);
+    };
+    $scope.tlsVersionHasError = tlsVersionHasError;
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 

@@ -20,7 +20,7 @@
 var ProfileService = function($http, locationUtils, messageModel, ENV) {
 
     this.getProfiles = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'profiles', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'profiles', {params: queryParams}).then(
             function(result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getProfile = function(id) {
-        return $http.get(ENV.api['root'] + 'profiles', {params: {id: id}}).then(
+        return $http.get(ENV.api.unstable + 'profiles', {params: {id: id}}).then(
             function (result) {
                 return result.data.response[0];
             },
@@ -42,7 +42,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.createProfile = function(profile) {
-        return $http.post(ENV.api['root'] + 'profiles', profile).then(
+        return $http.post(ENV.api.unstable + 'profiles', profile).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Profile created' } ], true);
                 locationUtils.navigateToPath('/profiles/' + result.data.response.id + '/parameters');
@@ -57,7 +57,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
 
     // todo: change to use query param when it is supported
     this.updateProfile = function(profile) {
-        return $http.put(ENV.api['root'] + 'profiles/' + profile.id, profile).then(
+        return $http.put(ENV.api.unstable + 'profiles/' + profile.id, profile).then(
             function(result) {
                 messageModel.setMessages([ { level: 'success', text: 'Profile updated' } ], false);
                 return result;
@@ -71,7 +71,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
 
     // todo: change to use query param when it is supported
     this.deleteProfile = function(id) {
-        return $http.delete(ENV.api['root'] + "profiles/" + id).then(
+        return $http.delete(ENV.api.unstable + "profiles/" + id).then(
             function(result) {
                 return result.data;
             },
@@ -83,7 +83,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getParameterProfiles = function(paramId) {
-        return $http.get(ENV.api['root'] + 'profiles', {params: {param: paramId}}).then(
+        return $http.get(ENV.api.unstable + 'profiles', {params: {param: paramId}}).then(
             function (result) {
                 return result.data.response;
             },
@@ -94,7 +94,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.cloneProfile = function(sourceName, cloneName) {
-        return $http.post(ENV.api['root'] + "profiles/name/" + cloneName + "/copy/" + sourceName).then(
+        return $http.post(ENV.api.unstable + "profiles/name/" + cloneName + "/copy/" + sourceName).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 locationUtils.navigateToPath('/profiles/' + result.data.response.id);
@@ -108,7 +108,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.exportProfile = function(id) {
-        return $http.get(ENV.api['root'] + "profiles/" + id + "/export").then(
+        return $http.get(ENV.api.unstable + "profiles/" + id + "/export").then(
             function(result) {
                 return result.data;
             },
@@ -119,10 +119,36 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.importProfile = function(importJSON) {
-        return $http.post(ENV.api['root'] + "profiles/import", importJSON).then(
+        return $http.post(ENV.api.unstable + "profiles/import", importJSON).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 locationUtils.navigateToPath('/profiles/' + result.data.response.id);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
+    };
+
+    this.queueServerUpdatesByProfile = function(cdnID, profileName) {
+        return $http.post(ENV.api.unstable + 'cdns/' + cdnID + '/queue_update?profile=' + profileName, {action: "queue"}).then(
+            function(result) {
+                messageModel.setMessages([{level: 'success', text: 'Queued server updates by profile'}], false);
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
+    };
+
+    this.clearServerUpdatesByProfile = function(cdnID, profileName) {
+        return $http.post(ENV.api.unstable + 'cdns/' + cdnID + '/queue_update?profile=' + profileName, {action: "dequeue"}).then(
+            function(result) {
+                messageModel.setMessages([{level: 'success', text: 'Cleared server updates by profile'}], false);
                 return result;
             },
             function(err) {

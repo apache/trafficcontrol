@@ -25,6 +25,7 @@ Retrieves all :term:`Parameters` associated with a given :term:`Profile`
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: PROFILE:READ, PARAMETER:READ
 :Response Type:  None
 
 Request Structure
@@ -50,7 +51,7 @@ Response Structure
 ------------------
 :configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
 :id:          The :term:`Parameter`'s :ref:`parameter-id`
-:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in an ISO-like format
+:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in :ref:`non-rfc-datetime`
 :name:        :ref:`parameter-name` of the :term:`Parameter`
 :profiles:    An array of :term:`Profile` :ref:`Names <profile-name>` that use this :term:`Parameter`
 :secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
@@ -89,14 +90,6 @@ Response Structure
 			"value": "Traffic Ops"
 		},
 		{
-			"configFile": "global",
-			"id": 6,
-			"lastUpdated": "2018-12-05 17:50:51+00",
-			"name": "use_tenancy",
-			"secure": false,
-			"value": "1"
-		},
-		{
 			"configFile": "regex_revalidate.config",
 			"id": 7,
 			"lastUpdated": "2018-12-05 17:50:49+00",
@@ -112,6 +105,7 @@ Associates :term:`Parameters` to a :term:`Profile`. If the :term:`Parameter` doe
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: PROFILE:UPDATE, PROFILE:READ, PARAMETER:READ
 :Response Type:  Object
 
 Request Structure

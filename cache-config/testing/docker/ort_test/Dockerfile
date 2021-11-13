@@ -14,11 +14,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-############################################################
-# Dockerfile to build Traffic Server container images
-#   as Edges for Traffic Control 1.4
-# Based on CentOS 6.6
-############################################################
 
 # For cache, you may either use (RAM or disk) block devices or disk directories
 # To use RAM block devices, pass them as /dev/ram0 and /dev/ram1 via `docker run --device`
@@ -28,13 +23,17 @@
 # The recommended minimum size for each block devices is 1G.
 # For example, `sudo modprobe brd rd_size=1048576 rd_nr=2`
 
-FROM centos:7
+ARG RHEL_VERSION=8
+FROM centos:${RHEL_VERSION}
+ARG RHEL_VERSION=8
+# Makes RHEL_VERSION available in later layers without needing to specify it again
+ENV RHEL_VERSION=$RHEL_VERSION
 MAINTAINER dev@trafficcontrol.apache.org
 
-RUN yum install -y \
-  https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm \
-  epel-release initscripts postgresql13.x86_64 git gcc lua-5.1.4-15.el7 lua-devel-5.1.4-15.el7 \
-  ImageMagick-c++-devel
+RUN echo "Image Version: ${RHEL_VERSION}"
+
+RUN yum install -y epel-release && yum repolist && \
+  yum install -y initscripts git jq gcc lua 
 
 ADD ort_test/trafficcontrol-cache-config*.rpm /trafficcontrol-cache-config.rpm
 RUN yum install -y /trafficcontrol-cache-config.rpm
@@ -43,7 +42,6 @@ RUN sed -i 's/HOME\/bin/HOME\/bin:\/usr\/local\/go\/bin:/g' /root/.bash_profile
 RUN echo "GOPATH=/root/go; export GOPATH" >> /root/.bash_profile
 RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 RUN mkdir /root/go
-RUN mkdir -p /var/lib/trafficcontrol-cache-config/status
 
 EXPOSE 80 443
 ADD ort_test/run.sh /

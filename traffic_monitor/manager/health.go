@@ -42,15 +42,15 @@ func StartHealthResultManager(
 	toData todata.TODataThreadsafe,
 	localStates peer.CRStatesThreadsafe,
 	monitorConfig threadsafe.TrafficMonitorConfigMap,
-	combinedStates peer.CRStatesThreadsafe,
 	fetchCount threadsafe.Uint,
-	errorCount threadsafe.Uint,
 	cfg config.Config,
 	events health.ThreadsafeEvents,
 	localCacheStatus threadsafe.CacheAvailableStatus,
-) (threadsafe.DurationMap, threadsafe.ResultHistory) {
+	cachesChanged <-chan struct{},
+) (threadsafe.DurationMap, threadsafe.ResultHistory, threadsafe.UnpolledCaches) {
 	lastHealthDurations := threadsafe.NewDurationMap()
 	healthHistory := threadsafe.NewResultHistory()
+	healthUnpolledCaches := threadsafe.NewUnpolledCaches()
 	go healthResultManagerListen(
 		cacheHealthChan,
 		toData,
@@ -58,14 +58,14 @@ func StartHealthResultManager(
 		lastHealthDurations,
 		healthHistory,
 		monitorConfig,
-		combinedStates,
 		fetchCount,
-		errorCount,
 		events,
 		localCacheStatus,
 		cfg,
+		healthUnpolledCaches,
+		cachesChanged,
 	)
-	return lastHealthDurations, healthHistory
+	return lastHealthDurations, healthHistory, healthUnpolledCaches
 }
 
 func healthResultManagerListen(
@@ -75,27 +75,37 @@ func healthResultManagerListen(
 	lastHealthDurations threadsafe.DurationMap,
 	healthHistory threadsafe.ResultHistory,
 	monitorConfig threadsafe.TrafficMonitorConfigMap,
-	combinedStates peer.CRStatesThreadsafe,
 	fetchCount threadsafe.Uint,
-	errorCount threadsafe.Uint,
 	events health.ThreadsafeEvents,
 	localCacheStatus threadsafe.CacheAvailableStatus,
 	cfg config.Config,
+	healthUnpolledCaches threadsafe.UnpolledCaches,
+	cachesChanged <-chan struct{},
 ) {
+	haveCachesChanged := func() bool {
+		select {
+		case <-cachesChanged:
+			return true
+		default:
+			return false
+		}
+	}
+
 	lastHealthEndTimes := map[tc.CacheName]time.Time{}
 	// This reads at least 1 value from the cacheHealthChan. Then, we loop, and try to read from the channel some more. If there's nothing to read, we hit `default` and process. If there is stuff to read, we read it, then inner-loop trying to read more. If we're continuously reading and the channel is never empty, and we hit the tick time, process anyway even though the channel isn't empty, to prevent never processing (starvation).
 	var ticker *time.Ticker
 
 	process := func(results []cache.Result) {
+		if haveCachesChanged() {
+			healthUnpolledCaches.SetNewCaches(getNewCaches(localStates, monitorConfig))
+		}
 		processHealthResult(
-			cacheHealthChan,
 			toData,
 			localStates,
 			lastHealthDurations,
+			healthUnpolledCaches,
 			monitorConfig,
-			combinedStates,
 			fetchCount,
-			errorCount,
 			events,
 			localCacheStatus,
 			lastHealthEndTimes,
@@ -134,14 +144,12 @@ func healthResultManagerListen(
 
 // processHealthResult processes the given health results, adding their stats to the CacheAvailableStatus. Note this is NOT threadsafe, because it non-atomically gets CacheAvailableStatuses, Events, LastHealthDurations and later updates them. This MUST NOT be called from multiple threads.
 func processHealthResult(
-	cacheHealthChan <-chan cache.Result,
 	toData todata.TODataThreadsafe,
 	localStates peer.CRStatesThreadsafe,
 	lastHealthDurationsThreadsafe threadsafe.DurationMap,
+	healthUnpolledCaches threadsafe.UnpolledCaches,
 	monitorConfig threadsafe.TrafficMonitorConfigMap,
-	combinedStates peer.CRStatesThreadsafe,
 	fetchCount threadsafe.Uint,
-	errorCount threadsafe.Uint,
 	events health.ThreadsafeEvents,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	lastHealthEndTimes map[tc.CacheName]time.Time,
@@ -200,4 +208,5 @@ func processHealthResult(
 		lastHealthEndTimes[tc.CacheName(healthResult.ID)] = time.Now()
 	}
 	lastHealthDurationsThreadsafe.Set(lastHealthDurations)
+	healthUnpolledCaches.SetHealthPolled(results)
 }

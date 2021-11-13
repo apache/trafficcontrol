@@ -33,35 +33,25 @@ under the License.
         <br>
         <form name="roleForm" class="form-horizontal form-label-left" novalidate>
             <div class="form-group" ng-class="{'has-error': hasError(roleForm.name), 'has-feedback': hasError(roleForm.name)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
+                <label for="name" class="control-label col-md-2 col-sm-2 col-xs-12">Name</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="name" type="text" class="form-control" ng-model="role.name" ng-pattern="/^\S*$/" required autofocus>
+                    <input name="name" id="name" type="text" class="form-control" ng-model="role.name" ng-readonly="!hasPropertyError(roleForm.name, 'pattern') && role.name === 'admin'" ng-pattern="namePattern()" required autofocus/>
                     <small class="input-error" ng-show="hasPropertyError(roleForm.name, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(roleForm.name, 'pattern')">No spaces</small>
+                    <small class="input-error" ng-show="hasPropertyError(roleForm.name, 'pattern')">No spaces, and cannot be named "admin"</small>
                     <span ng-show="hasError(roleForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(roleForm.privLevel), 'has-feedback': hasError(roleForm.privLevel)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Privilege Level *</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="privLevel" type="number" class="form-control" ng-model="role.privLevel" ng-maxlength="3" ng-pattern="/^\d+$/" required autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(roleForm.privLevel, 'required')">Required Whole Number</small>
-                    <small class="input-error" ng-show="hasPropertyError(roleForm.privLevel, 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(roleForm.privLevel, 'pattern')">Whole Number</small>
-                    <span ng-show="hasError(roleForm.privLevel)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                </div>
-            </div>
             <div class="form-group" ng-class="{'has-error': hasError(roleForm.description), 'has-feedback': hasError(roleForm.description)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Description *</label>
+                <label for="description" class="control-label col-md-2 col-sm-2 col-xs-12">Description</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea name="description" type="text" class="form-control" ng-model="role.description" rows="10" required autofocus></textarea>
+                    <textarea name="description" id="description" ng-readonly="!hasPropertyError(roleForm.name, 'pattern') && role.name === 'admin'" type="text" class="form-control" ng-model="role.description" rows="10" required autofocus></textarea>
                     <small class="input-error" ng-show="hasPropertyError(roleForm.description, 'required')">Required</small>
                     <span ng-show="hasError(roleForm.description)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(role)">Delete</button>
-                <button type="button" class="btn btn-success" ng-disabled="roleForm.$pristine || roleForm.$invalid" ng-click="confirmSave(role)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-disabled="!hasPropertyError(roleForm.name, 'pattern') && role.name === 'admin'" ng-click="confirmDelete(role)">Delete</button>
+                <button type="button" class="btn btn-success" ng-disabled="(!hasPropertyError(roleForm.name, 'pattern') && role.name === 'admin') || roleForm.$pristine || roleForm.$invalid" ng-click="confirmSave(role)">{{settings.saveLabel}}</button>
             </div>
         </form>
     </div>

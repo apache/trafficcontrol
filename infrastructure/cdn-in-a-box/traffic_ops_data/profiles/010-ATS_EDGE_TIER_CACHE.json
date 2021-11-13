@@ -15,7 +15,7 @@
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.config_dir",
 			"secure": false,
-			"value": "STRING /etc/trafficserver"
+			"value": "STRING /opt/trafficserver/etc/trafficserver"
 		},
 		{
 			"configFile": "records.config",
@@ -87,7 +87,7 @@
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.log.logfile_dir",
 			"secure": false,
-			"value": "STRING /var/log/trafficserver"
+			"value": "(unchanged)"
 		},
 		{
 			"configFile": "records.config",
@@ -189,7 +189,7 @@
 			"configFile": "regex_revalidate.config",
 			"name": "location",
 			"secure": false,
-			"value": "/etc/trafficserver"
+			"value": "/opt/trafficserver/etc/trafficserver"
 		},
 		{
 			"configFile": "records.config",
@@ -219,7 +219,7 @@
 			"configFile": "astats.config",
 			"name": "location",
 			"secure": false,
-			"value": "/etc/trafficserver"
+			"value": "/opt/trafficserver/etc/trafficserver"
 		},
 		{
 			"configFile": "astats.config",
@@ -243,7 +243,7 @@
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.body_factory.template_sets_dir",
 			"secure": false,
-			"value": "STRING /etc/trafficserver/body_factory"
+			"value": "STRING /opt/trafficserver/etc/trafficserver/body_factory"
 		},
 		{
 			"configFile": "storage.config",
@@ -255,7 +255,7 @@
 			"configFile": "ip_allow.config",
 			"name": "location",
 			"secure": false,
-			"value": "/etc/trafficserver"
+			"value": "/opt/trafficserver/etc/trafficserver"
 		},
 		{
 			"configFile": "storage.config",
@@ -267,25 +267,25 @@
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.ssl.CA.cert.path",
 			"secure": false,
-			"value": "STRING /etc/trafficserver/ssl"
+			"value": "STRING /opt/trafficserver/etc/trafficserver/ssl"
 		},
 		{
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.ssl.client.CA.cert.path",
 			"secure": false,
-			"value": "STRING /etc/trafficserver/ssl"
+			"value": "STRING /opt/trafficserver/etc/trafficserver/ssl"
 		},
 		{
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.ssl.client.cert.path",
 			"secure": false,
-			"value": "STRING /etc/trafficserver/ssl"
+			"value": "STRING /opt/trafficserver/etc/trafficserver/ssl"
 		},
 		{
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.ssl.client.private_key.path",
 			"secure": false,
-			"value": "STRING /etc/trafficserver/ssl"
+			"value": "STRING /opt/trafficserver/etc/trafficserver/ssl"
 		},
 		{
 			"configFile": "records.config",
@@ -297,13 +297,13 @@
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.ssl.server.cert.path",
 			"secure": false,
-			"value": "STRING /etc/trafficserver/ssl"
+			"value": "STRING /opt/trafficserver/etc/trafficserver/ssl"
 		},
 		{
 			"configFile": "records.config",
 			"name": "CONFIG proxy.config.ssl.server.private_key.path",
 			"secure": false,
-			"value": "STRING /etc/trafficserver/ssl"
+			"value": "STRING /opt/trafficserver/etc/trafficserver/ssl"
 		},
 		{
 			"configFile": "records.config",
@@ -314,112 +314,117 @@
 		{
 			"configFile": "set_dscp_0.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_10.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_12.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_14.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_18.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_20.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_22.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_26.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_28.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_30.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_34.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_36.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_38.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_8.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_16.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_24.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_32.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_40.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_48.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_56.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "set_dscp_37.config",
 			"name": "location",
-			"value": "/etc/trafficserver/dscp"
+			"value": "/opt/trafficserver/etc/trafficserver/dscp"
 		},
 		{
 			"configFile": "ssl_multicert.config",
 			"name": "location",
-			"value": "/etc/trafficserver"
+			"value": "/opt/trafficserver/etc/trafficserver"
+		},
+		{
+			"configFile": "package",
+			"name": "trafficserver",
+			"value": "(unchanged)"
 		}
 	]
 }

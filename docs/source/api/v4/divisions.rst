@@ -25,6 +25,7 @@ Returns a JSON representation of all configured :term:`Divisions`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: DIVISION:READ
 :Response Type:  Array
 
 Request Structure
@@ -55,7 +56,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          An integral, unique identifier for this Division
-:lastUpdated: The date and time at which this Division was last modified, in ISO format
+:lastUpdated: The date and time at which this Division was last modified, in :ref:`non-rfc-datetime`
 :name:        The Division name
 
 .. code-block:: http
@@ -93,6 +94,7 @@ Creates a new Division.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: DIVISION:CREATE, DIVISION:READ
 :Response Type:  Object
 
 Request Structure
@@ -115,7 +117,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          An integral, unique identifier for this Division
-:lastUpdated: The date and time at which this Division was last modified, in ISO format
+:lastUpdated: The date and time at which this Division was last modified, in :ref:`non-rfc-datetime`
 :name:        The Division name
 
 .. code-block:: http

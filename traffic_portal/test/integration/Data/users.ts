@@ -31,7 +31,7 @@ export const users = {
             ],
             check: [
                 {
-                    description: "check CSV link from CDN page",
+                    description: "check CSV link from Users page",
                     Name: "Export as CSV"
                 }
             ],
@@ -65,7 +65,7 @@ export const users = {
                     Email: "test2@cdn.tc.com",
                     Role: "admin",
                     Tenant: "- tenantSame",
-                    validationMessage: `Sent user registration to {{ test2@cdn.tc.com${randomize}}} with the following permissions [ role: admin | tenant: tenantSame${randomize} ]`
+                    validationMessage: `Sent user registration to {{ ${randomize}test2@cdn.tc.com}} with the following permissions [ role: admin | tenant: tenantSame${randomize} ]`
                 }
             ],
             update: [

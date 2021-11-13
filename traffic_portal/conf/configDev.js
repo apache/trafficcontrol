@@ -21,8 +21,10 @@
 module.exports = {
     timeout: '120s',
     useSSL: true, // set to true if you plan to use https (self-signed or trusted certs).
-    port: 80, // set to http port
-    sslPort: 443, // set to https port
+    // These ports are chosen to not collide with the default CDN-in-a-Box
+    // exposed port numbers
+    port: 60444,
+    sslPort: 60443,
     // if useSSL is true, generate ssl certs and provide the proper locations.
     ssl: {
         key:    './localhost.key',
@@ -30,6 +32,7 @@ module.exports = {
         ca:     [ './localhost.crt' ]
     },
     // set api 'base_url' to the traffic ops api url (all api calls made from the traffic portal will be proxied to the api base_url)
+    // this is the default exposed port for the CDN-in-a-Box Traffic Ops service
     api: {
         base_url: 'https://localhost:6443/api/'
     },
@@ -43,4 +46,3 @@ module.exports = {
     },
     reject_unauthorized: 0 // 0 if using self-signed certs, 1 if trusted certs
 };
-

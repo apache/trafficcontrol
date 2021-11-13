@@ -20,50 +20,6 @@ Traffic Ops API
 ***************
 The Traffic Ops API provides programmatic access to read and write Traffic Control data which allows for the monitoring of CDN performance and configuration of Traffic Control settings and parameters.
 
-API V1 Routes
-=============
-Documents all API version 1 routes.
-
-.. toctree::
-	:maxdepth: 4
-	:hidden:
-	:glob:
-
-	v1/*
-
-API V2 Routes
-=============
-Documents all API version 2 routes.
-
-.. toctree::
-	:maxdepth: 4
-	:hidden:
-	:glob:
-
-	v2/*
-
-API V3 Routes
-=============
-Documents all API version 3 routes.
-
-.. toctree::
-	:maxdepth: 4
-	:hidden:
-	:glob:
-
-	v3/*
-
-API V4 Routes
-=============
-Documents all API version 4 routes.
-
-.. toctree::
-	:maxdepth: 4
-	:hidden:
-	:glob:
-
-	v4/*
-
 How to Read this Documentation
 ==============================
 Each endpoint for each version is on its own page, titled with the request path. The request paths shown on each endpoint's page are - unless otherwise noted - only usable by being appended to the request path prefix ``/api/<version>/`` where ``<version>`` is the API version being requested. The API versions officially supported as of the time of this writing are 1.1, 1.2, 1.3, 1.4, 1.5, 2.0. All endpoints are documented as though they were being used in version 1.5 in the version 1 documentation and version 2.0 in the version 2 documentation. If an endpoint or request method of an endpoint is only available after a specific version, that will be noted next to the method or endpoint name. If changes were made to the structure of an endpoint's input or output, the version number and nature of the change will be noted.
@@ -73,7 +29,12 @@ Every endpoint is documented with a section for each method, containing the subs
 Auth. Required
 	This will either be 'Yes' to indicate that a user must be authenticated (or "logged-in") via e.g. :ref:`to-api-user-login` to use this method of the endpoint, or 'No' to indicate that this is not required.
 Roles Required
-	Any permissions roles that are allowed to use this method of the endpoint will be listed here. Users with roles not listed here will be unable to properly use these endpoints
+	.. deprecated:: ATCv7.0
+		Roles for the use of authentication/permissions have been deprecated in favor of role based permissions, see :pr:`5848`.
+
+	Any permissions roles that are allowed to use this method of the endpoint will be listed here. Users with roles not listed here will be unable to properly use these endpoints.
+Permissions Required
+	Any permissions that are needed to use this endpoint. Users with roles that don't have the permissions will be unable to properly use these endpoints.
 Response Type
 	Unless otherwise noted, all responses are JSON objects. See `Response Structure`_ for more information.
 
@@ -123,6 +84,19 @@ The following, reserved properties of ``summary`` are guaranteed to always have 
 
 ``count``
 	``count`` contains an unsigned integer that defines the total number of results that could possibly be returned given the non-pagination query parameters supplied by the client.
+
+.. _non-rfc-datetime:
+
+Traffic Ops's Custom Date/Time Format
+-------------------------------------
+Traffic Ops will often return responses from its API that include dates. As of the time of this writing, the vast majority of those dates are written in a non-:rfc:3339 format (this is tracked by :issue:`5911`). This is most commonly the case in the ``last_updated`` properties of objects returned as JSON-encoded documents. The format used is :samp:`{YYYY}-{MM}-{DD} {hh}:{mm}:{ss}±{ZZ}`, where ``YYYY`` is the 4-digit year, ``MM`` is the two-digit (zero padded) month, ``DD`` is the two-digit (zero padded) day of the month, ``hh`` is the two-digit (zero padded) hour of the day, ``mm`` is the two-digit (zero padded) minute of the hour, ``ss`` is the two-digit (zero padded) second of the minute, and ``ZZ`` is the two-digit (zero padded) timezone offset in hours of the date/time's local timezone from UTC (the offset can be positive or negative as indicated by a ``+`` or a ``-`` directly before it, where the sample has a ``±``).
+
+.. note:: In practice, all Traffic Ops API responses use the UTC timezone (offset ``+00``), but do note that this custom format is not capable of representing all timezones.
+
+.. code-block:: text
+	:caption: Example Date/Timestamp
+
+	2021-06-07 08:01:02+00
 
 Using API Endpoints
 ===================
@@ -333,16 +307,42 @@ The rest of the API documentation will only document the ``200 OK`` case, where 
 
 TrafficOps Native Client Libraries
 ==================================
-TrafficOps client libraries are available in Java, Go and Python. You can read (very little) more about them in `the client README <https://github.com/apache/trafficcontrol/tree/master/traffic_control/clients>`_.
+TrafficOps client libraries are available in Java, Go and Python. You can read (very little) more about them in the client README at :atc-file:`traffic_control/clients`.
 
-.. [1] A cookie obtained by logging in through Traffic Portal can be used to access API endpoints under the Traffic Portal domain name - since it will proxy such requests back to Traffic Ops. This is not recommended in actual deployments, however, because it will involve an extra network connection which could be avoided by simply using the Traffic Ops domain itself.
+API V2 Routes
+=============
+API routes available in version 2.
 
-Migrating from API V1
-=====================
+.. deprecated:: ATCv6
+	Traffic Ops API version 2 is deprecated in favor of version 3.
 
 .. toctree::
-	:hidden:
+	:maxdepth: 4
+	:glob:
 
-	migrating-from-v1
+	v2/*
 
-See the :ref:`to-migrating` page for help migrating existing code from API v1 to a new API version.
+API V3 Routes
+=============
+API routes available in version 3.
+
+.. toctree::
+	:maxdepth: 4
+	:glob:
+
+	v3/*
+
+API V4 Routes
+=============
+API routes available in version 4.
+
+.. danger:: API version 4 is *unstable*, meaning that breaking changes can occur at any time. Use at your own peril!
+
+.. toctree::
+	:maxdepth: 4
+	:glob:
+
+	v4/*
+
+
+.. [1] A cookie obtained by logging in through Traffic Portal can be used to access API endpoints under the Traffic Portal domain name - since it will proxy such requests back to Traffic Ops. This is not recommended in actual deployments, however, because it will involve an extra network connection which could be avoided by simply using the Traffic Ops domain itself.

@@ -54,8 +54,6 @@ ALTER FUNCTION on_update_current_timestamp_last_updated() OWNER TO traffic_vault
 
 SET default_tablespace = '';
 
-SET default_table_access_method = heap;
-
 --
 -- Name: dnssec; Type: TABLE; Schema: public; Owner: traffic_vault
 --
@@ -74,7 +72,6 @@ ALTER TABLE dnssec OWNER TO traffic_vault;
 --
 
 CREATE TABLE IF NOT EXISTS sslkey (
-    id bigint NOT NULL,
     data bytea NOT NULL,
     deliveryservice text NOT NULL,
     cdn text NOT NULL,
@@ -85,25 +82,6 @@ CREATE TABLE IF NOT EXISTS sslkey (
 
 ALTER TABLE sslkey OWNER TO traffic_vault;
 
---
--- Name: sslkey_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_vault
---
-
-CREATE SEQUENCE IF NOT EXISTS sslkey_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE sslkey_id_seq OWNER TO traffic_vault;
-
---
--- Name: sslkey_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_vault
---
-
-ALTER SEQUENCE sslkey_id_seq OWNED BY sslkey.id;
 
 
 --
@@ -133,19 +111,6 @@ CREATE TABLE IF NOT EXISTS url_sig_key (
 ALTER TABLE url_sig_key OWNER TO traffic_vault;
 
 --
--- Name: sslkey id; Type: DEFAULT; Schema: public; Owner: traffic_vault
---
-
-ALTER TABLE ONLY sslkey ALTER COLUMN id SET DEFAULT nextval('sslkey_id_seq'::regclass);
-
---
--- Name: sslkey_id_seq; Type: SEQUENCE SET; Schema: public; Owner: traffic_vault
---
-
-SELECT pg_catalog.setval('sslkey_id_seq', 1, false);
-
-
---
 -- Name: dnssec dnssec_pkey; Type: CONSTRAINT; Schema: public; Owner: traffic_vault
 --
 
@@ -158,7 +123,7 @@ ALTER TABLE ONLY dnssec
 --
 
 ALTER TABLE ONLY sslkey
-    ADD CONSTRAINT sslkey_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT sslkey_pkey PRIMARY KEY (deliveryservice, cdn, version);
 
 
 --
@@ -202,28 +167,28 @@ CREATE INDEX sslkey_version_idx ON sslkey USING btree (version);
 -- Name: dnssec dnssec_last_updated; Type: TRIGGER; Schema: public; Owner: traffic_vault
 --
 
-CREATE TRIGGER dnssec_last_updated BEFORE UPDATE ON dnssec FOR EACH ROW EXECUTE FUNCTION on_update_current_timestamp_last_updated();
+CREATE TRIGGER dnssec_last_updated BEFORE UPDATE ON dnssec FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
 -- Name: sslkey sslkey_last_updated; Type: TRIGGER; Schema: public; Owner: traffic_vault
 --
 
-CREATE TRIGGER sslkey_last_updated BEFORE UPDATE ON sslkey FOR EACH ROW EXECUTE FUNCTION on_update_current_timestamp_last_updated();
+CREATE TRIGGER sslkey_last_updated BEFORE UPDATE ON sslkey FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
 -- Name: uri_signing_key uri_signing_key_last_updated; Type: TRIGGER; Schema: public; Owner: traffic_vault
 --
 
-CREATE TRIGGER uri_signing_key_last_updated BEFORE UPDATE ON uri_signing_key FOR EACH ROW EXECUTE FUNCTION on_update_current_timestamp_last_updated();
+CREATE TRIGGER uri_signing_key_last_updated BEFORE UPDATE ON uri_signing_key FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --
 -- Name: url_sig_key url_sig_key_last_updated; Type: TRIGGER; Schema: public; Owner: traffic_vault
 --
 
-CREATE TRIGGER url_sig_key_last_updated BEFORE UPDATE ON url_sig_key FOR EACH ROW EXECUTE FUNCTION on_update_current_timestamp_last_updated();
+CREATE TRIGGER url_sig_key_last_updated BEFORE UPDATE ON url_sig_key FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
 --

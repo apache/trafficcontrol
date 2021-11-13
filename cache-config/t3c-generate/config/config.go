@@ -49,11 +49,13 @@ type Cfg struct {
 	ListPlugins        bool
 	LogLocationErr     string
 	LogLocationInfo    string
+	LogLocationDebug   string
 	LogLocationWarn    string
 	RevalOnly          bool
 	Dir                string
 	ViaRelease         bool
 	SetDNSLocalBind    bool
+	NoOutgoingIP       bool
 	ParentComments     bool
 	DefaultEnableH2    bool
 	DefaultTLSVersions []atscfg.TLSVersion
@@ -62,24 +64,24 @@ type Cfg struct {
 func (cfg Cfg) ErrorLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationErr) }
 func (cfg Cfg) WarningLog() log.LogLocation { return log.LogLocation(cfg.LogLocationWarn) }
 func (cfg Cfg) InfoLog() log.LogLocation    { return log.LogLocation(cfg.LogLocationInfo) }
-func (cfg Cfg) DebugLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // app doesn't use the debug logger, use Info instead.
+func (cfg Cfg) DebugLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationDebug) }
 func (cfg Cfg) EventLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // app doesn't use the event logger.
 
 // GetCfg gets the application configuration, from arguments and environment variables.
 func GetCfg() (Cfg, error) {
-	logLocationErr := getopt.StringLong("log-location-error", 'e', "stderr", "Where to log errors. May be a file path, stdout, stderr, or null.")
-	logLocationWarn := getopt.StringLong("log-location-warning", 'w', "stderr", "Where to log warnings. May be a file path, stdout, stderr, or null.")
-	logLocationInfo := getopt.StringLong("log-location-info", 'i', "stderr", "Where to log information messages. May be a file path, stdout, stderr, or null.")
-	version := getopt.BoolLong("version", 'v', "Print version information and exit.")
+	version := getopt.BoolLong("version", 'V', "Print version information and exit.")
 	listPlugins := getopt.BoolLong("list-plugins", 'l', "Print the list of plugins.")
 	help := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	revalOnly := getopt.BoolLong("revalidate-only", 'y', "Whether to exclude files not named 'regex_revalidate.config'")
 	dir := getopt.StringLong("dir", 'D', "", "ATS config directory, used for config files without location parameters or with relative paths. May be blank. If blank and any required config file location parameter is missing or relative, will error.")
-	viaRelease := getopt.BoolLong("via-string-release", 'V', "Whether to use the Release value from the RPM package as a replacement for the ATS version specified in the build that is returned in the Via and Server headers from ATS.")
+	viaRelease := getopt.BoolLong("via-string-release", 'r', "Whether to use the Release value from the RPM package as a replacement for the ATS version specified in the build that is returned in the Via and Server headers from ATS.")
 	dnsLocalBind := getopt.BoolLong("dns-local-bind", 'b', "Whether to use the server's Service Addresses to set the ATS DNS local bind address.")
 	disableParentConfigComments := getopt.BoolLong("disable-parent-config-comments", 'c', "Disable adding a comments to parent.config individual lines")
 	defaultEnableH2 := getopt.BoolLong("default-client-enable-h2", '2', "Whether to enable HTTP/2 on Delivery Services by default, if they have no explicit Parameter. This is irrelevant if ATS records.config is not serving H2. If omitted, H2 is disabled.")
 	defaultTLSVersionsStr := getopt.StringLong("default-client-tls-versions", 'T', "", "Comma-delimited list of default TLS versions for Delivery Services with no Parameter, e.g. '--default-tls-versions=1.1,1.2,1.3'. If omitted, all versions are enabled.")
+	noOutgoingIP := getopt.BoolLong("no-outgoing-ip", 'i', "Whether to not set the records.config outgoing IP to the server's addresses in Traffic Ops. Default is false.")
+	verbosePtr := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
+	silentPtr := getopt.BoolLong("silent", 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
 
 	getopt.Parse()
 
@@ -91,6 +93,26 @@ func GetCfg() (Cfg, error) {
 		os.Exit(0)
 	} else if *listPlugins {
 		return Cfg{ListPlugins: true}, nil
+	}
+
+	logLocationError := log.LogLocationStderr
+	logLocationWarn := log.LogLocationNull
+	logLocationInfo := log.LogLocationNull
+	logLocationDebug := log.LogLocationNull
+	if *silentPtr {
+		logLocationError = log.LogLocationNull
+	} else {
+		if *verbosePtr >= 1 {
+			logLocationWarn = log.LogLocationStderr
+		}
+		if *verbosePtr >= 2 {
+			logLocationInfo = log.LogLocationStderr
+			logLocationDebug = log.LogLocationStderr // t3c only has 3 verbosity options: none (-s), error (default or --verbose=0), warning (-v), and info (-vv). Any code calling log.Debug is treated as Info.
+		}
+	}
+
+	if *verbosePtr > 2 {
+		return Cfg{}, errors.New("Too many verbose options. The maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
 	}
 
 	defaultTLSVersions := atscfg.DefaultDefaultTLSVersions
@@ -110,14 +132,16 @@ func GetCfg() (Cfg, error) {
 	}
 
 	cfg := Cfg{
-		LogLocationErr:     *logLocationErr,
-		LogLocationWarn:    *logLocationWarn,
-		LogLocationInfo:    *logLocationInfo,
+		LogLocationErr:     logLocationError,
+		LogLocationWarn:    logLocationWarn,
+		LogLocationInfo:    logLocationInfo,
+		LogLocationDebug:   logLocationDebug,
 		ListPlugins:        *listPlugins,
 		RevalOnly:          *revalOnly,
 		Dir:                *dir,
 		ViaRelease:         *viaRelease,
 		SetDNSLocalBind:    *dnsLocalBind,
+		NoOutgoingIP:       *noOutgoingIP,
 		ParentComments:     !(*disableParentConfigComments),
 		DefaultEnableH2:    *defaultEnableH2,
 		DefaultTLSVersions: defaultTLSVersions,
@@ -159,8 +183,8 @@ type TOData struct {
 	// ServerParams must be all Parameters on the Profile of the current server. Must not include other Parameters.
 	ServerParams []tc.Parameter
 
-	// CacheKeyParams must be all Parameters with the ConfigFile atscfg.CacheKeyParameterConfigFile.
-	CacheKeyParams []tc.Parameter
+	// RemapConfigParams must be all Parameters with the ConfigFile "remap.config". Also includes cachekey.config parameters
+	RemapConfigParams []tc.Parameter
 
 	// ParentConfigParams must be all Parameters with the ConfigFile "parent.config.
 	ParentConfigParams []tc.Parameter

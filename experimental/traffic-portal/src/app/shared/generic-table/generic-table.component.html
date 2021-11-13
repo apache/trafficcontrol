@@ -1,0 +1,53 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<div class="extra-actions">
+	<button type="button" title="select all rows" (click)="selectAll()">Select All</button>
+	<button type="button" title="de-select all rows" (click)="selectAll(true)">De-Select All</button>
+	<button type="button" (click)="download()" title="save as CSV"><fa-icon [icon]="downloadIcon"></fa-icon></button>
+	<div class="toggle-columns" role="group" title="Select Table Columns">
+		<button type="button" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" (click)="toggleMenu($event)">
+			<fa-icon [icon]="columnsIcon"></fa-icon>&nbsp;
+			<fa-icon [icon]="caretIcon" class="caret" [ngClass]="{'rotate': showMenu}"></fa-icon>
+		</button>
+		<menu class="column-settings" *ngIf="showMenu" (click)="$event.stopPropagation()">
+			<li role="menuitem" *ngFor="let c of columnAPI.getAllColumns(); orderBy:'colDef.headerName'">
+				<div class="checkbox">
+					<label><input type="checkbox" [checked]="c.isVisible()" (click)="toggleVisibility(c.colId)">{{c.colDef.headerName}}</label>
+				</div>
+			</li>
+		</menu>
+	</div>
+</div>
+<ag-grid-angular
+	[rowData]="data"
+	[columnDefs]="cols"
+	class="ag-theme-alpine"
+	[frameworkComponents]="components"
+	[gridOptions]="gridOptions"
+	(gridReady)="setAPI($event)"
+	(sortChanged)="storeSort()"
+	(columnMoved)="storeColumns()"
+	(columnVisible)="storeColumns(true)"
+	(cellContextMenu)="onCellContextMenu($event)"
+	(contextmenu)="preventDefault($event)">
+</ag-grid-angular>
+
+<menu #contextmenu type="contextmenu" [hidden]="!showContextMenu" [ngStyle]="menuStyle" *ngIf="contextMenuItems && contextMenuItems.length > 0">
+	<ul>
+		<li *ngFor="let item of contextMenuItems" role="menuitem">
+			<a *ngIf="!isAction(item)" [href]="item.href" [target]="item.newTab ? '_blank' : '_self'">{{item.name}}</a>
+			<button *ngIf="isAction(item)" type="button" (click)="emitContextMenuAction(item.action, item.multiRow, $event)" [disabled]="isDisabled(item)">{{item.name}}</button>
+		</li>
+	</ul>
+</menu>

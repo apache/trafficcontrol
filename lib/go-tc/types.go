@@ -1,10 +1,5 @@
 package tc
 
-import (
-	"database/sql"
-	"errors"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -24,7 +19,13 @@ import (
  * under the License.
  */
 
-// TypesResponse ...
+import (
+	"database/sql"
+	"errors"
+)
+
+// TypesResponse is the type of a response from Traffic Ops to a GET request
+// made to its /types API endpoint.
 type TypesResponse struct {
 	Response []Type `json:"response"`
 	Alerts
@@ -48,7 +49,10 @@ type TypeNullable struct {
 	UseInTable  *string    `json:"useInTable" db:"use_in_table"`
 }
 
-// GetTypeData returns the type's name and use_in_table, true/false if the query returned data, and any error
+// GetTypeData returns the type's name and use_in_table, true/false if the
+// query returned data, and any error.
+//
+// TODO: Move this to the DB helpers package.
 func GetTypeData(tx *sql.Tx, id int) (string, string, bool, error) {
 	name := ""
 	var useInTablePtr *string
@@ -65,8 +69,11 @@ func GetTypeData(tx *sql.Tx, id int) (string, string, bool, error) {
 	return name, useInTable, true, nil
 }
 
-// ValidateTypeID validates that the typeID references a type with the expected use_in_table string and
-// returns "" and an error if the typeID is invalid. If valid, the type's name is returned.
+// ValidateTypeID validates that the typeID references a type with the expected
+// use_in_table string and returns "" and an error if the typeID is invalid. If
+// valid, the type's name is returned.
+//
+// TODO: Move this to the DB helpers package.
 func ValidateTypeID(tx *sql.Tx, typeID *int, expectedUseInTable string) (string, error) {
 	if typeID == nil {
 		return "", errors.New("missing property: 'typeId'")

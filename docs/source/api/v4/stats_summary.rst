@@ -29,6 +29,7 @@ If the parameter is set it will return an object with the latest timestamp, else
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: STAT:READ, CDN:READ, DELIVERY-SERVICE:READ
 :Response Type:  Array or Object
 
 Request Structure
@@ -109,8 +110,8 @@ Summary Stats
 
 :statName:            Stat name summary stat represents
 :statValue:           Summary stat value
-:summaryTime:         Timestamp of summary, in an ISO-like format
-:statDate:            Date stat was taken, in :rfc:`3339` format
+:summaryTime:         Timestamp of summary, in :ref:`non-rfc-datetime`
+:statDate:            Date stat was taken, in ``YYYY-MM-DD`` format
 
 .. code-block:: http
 	:caption: Response Example
@@ -157,7 +158,7 @@ Summary Stats
 Last Updated Summary Stat
 """""""""""""""""""""""""
 
-:summaryTime: Timestamp of the last updated summary, in :rfc:`3339` format
+:summaryTime: Timestamp of the last updated summary, in :ref:`non-rfc-datetime`
 
 .. code-block:: http
 	:caption: Response Example
@@ -185,6 +186,7 @@ Post a stats summary for a given stat.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: STAT:CREATE, STAT:READ, CDN:READ, DELIVERY-SERVICE:READ
 :Response Type: Object
 
 Request Structure
@@ -199,8 +201,8 @@ Request Structure
 
 :statName:            Stat name summary stat represents
 :statValue:           Summary stat value
-:summaryTime:         Timestamp of summary, in an ISO-like format
-:statDate:            Date stat was taken, in :rfc:`3339` format
+:summaryTime:         Timestamp of summary, in :ref:`non-rfc-datetime`
+:statDate:            Date stat was taken, in ``YYYY-MM-DD`` format
 
 .. note:: ``statName``, ``statValue`` and ``summaryTime`` are required. If ``cdnName`` and ``deliveryServiceName`` are not given they will default to ``all``.
 

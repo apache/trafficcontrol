@@ -24,7 +24,6 @@ type TrafficControl struct {
 	ASNs                                              []tc.ASN                                `json:"asns"`
 	CDNs                                              []tc.CDN                                `json:"cdns"`
 	CacheGroups                                       []tc.CacheGroupNullable                 `json:"cachegroups"`
-	CacheGroupParameterRequests                       []tc.CacheGroupParameterRequest         `json:"cachegroupParameters"`
 	Capabilities                                      []tc.Capability                         `json:"capability"`
 	Coordinates                                       []tc.Coordinate                         `json:"coordinates"`
 	DeliveryServicesRegexes                           []tc.DeliveryServiceRegexesTest         `json:"deliveryServicesRegexes"`
@@ -42,7 +41,7 @@ type TrafficControl struct {
 	ProfileParameters                                 []tc.ProfileParameter                   `json:"profileParameters"`
 	PhysLocations                                     []tc.PhysLocation                       `json:"physLocations"`
 	Regions                                           []tc.Region                             `json:"regions"`
-	Roles                                             []tc.Role                               `json:"roles"`
+	Roles                                             []tc.RoleV4                             `json:"roles"`
 	Servers                                           []tc.ServerV40                          `json:"servers"`
 	ServerServerCapabilities                          []tc.ServerServerCapability             `json:"serverServerCapabilities"`
 	ServerCapabilities                                []tc.ServerCapability                   `json:"serverCapabilities"`
@@ -56,6 +55,7 @@ type TrafficControl struct {
 	Types                                             []tc.Type                               `json:"types"`
 	SteeringTargets                                   []tc.SteeringTargetNullable             `json:"steeringTargets"`
 	Serverchecks                                      []tc.ServercheckRequestNullable         `json:"serverchecks"`
-	Users                                             []tc.User                               `json:"users"`
-	InvalidationJobs                                  []tc.InvalidationJobInput               `json:"invalidationJobs"`
+	Users                                             []tc.UserV4                             `json:"users"`
+	InvalidationJobs                                  []tc.InvalidationJobCreateV4            `json:"invalidationJobs"`
+	InvalidationJobsRefetch                           []tc.InvalidationJobCreateV4            `json:"invalidationJobsRefetch"`
 }

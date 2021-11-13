@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-Sphinx>=3.0
+Sphinx>=4.0,<4.1
 sphinx_rtd_theme>=0.5
 sphinx_autodoc_typehints>=1.11
 Pygments>=2.6
 munch>=2.1.1
-psutil
 future>=0.16.0
 distro

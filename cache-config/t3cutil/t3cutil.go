@@ -21,9 +21,11 @@ package t3cutil
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"os/exec"
 	"regexp"
@@ -35,6 +37,7 @@ type ATSConfigFile struct {
 	Path        string `json:"path"`
 	ContentType string `json:"content_type"`
 	LineComment string `json:"line_comment"`
+	Secure      bool   `json:"secure"`
 	Text        string `json:"text"`
 }
 
@@ -50,23 +53,36 @@ func (fs ATSConfigFiles) Less(i, j int) bool {
 }
 func (fs ATSConfigFiles) Swap(i, j int) { fs[i], fs[j] = fs[j], fs[i] }
 
-// commentsFilter is used to remove comment
+// CommentsFilter is used to remove comment
 // lines from config files while making
 // comparisons.
-func CommentsFilter(body []string) []string {
+func CommentsFilter(body []string, lineComment string) []string {
 	var newlines []string
 
 	newlines = make([]string, 0)
 
 	for ii := range body {
 		line := body[ii]
-		if strings.HasPrefix(line, "#") {
+		if strings.HasPrefix(line, lineComment) {
 			continue
 		}
 		newlines = append(newlines, line)
 	}
 
 	return newlines
+}
+
+// PermCk will compare file permissions against existing file and octal permission provided.
+func PermCk(path string, perm int) bool {
+	mode := os.FileMode(perm)
+	file, err := os.Stat(path)
+	if err != nil {
+		fmt.Println("Error getting file status", path)
+	}
+	if file.Mode() != mode.Perm() {
+		return true
+	}
+	return false
 }
 
 // NewLineFilter removes carriage returns
@@ -166,4 +182,17 @@ func DoInput(input []byte, cmdStr string, args ...string) ([]byte, []byte, int) 
 	}
 
 	return outbuf.Bytes(), errbuf.Bytes(), code
+}
+
+func ValidateURL(u *url.URL) error {
+	if u == nil {
+		return errors.New("nil url")
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return errors.New("scheme expected 'http' or 'https', actual '" + u.Scheme + "'")
+	}
+	if strings.TrimSpace(u.Host) == "" {
+		return errors.New("no host")
+	}
+	return nil
 }

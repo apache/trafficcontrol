@@ -21,12 +21,14 @@ package deliveryservice
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 )
 
@@ -40,10 +42,21 @@ WHERE id = $5
 RETURNING id
 `
 
+const safeUpdateQueryWithoutLD1 = `
+UPDATE deliveryservice
+SET display_name=$1,
+    info_url=$2,
+    long_desc=$3
+WHERE id = $4
+RETURNING id
+`
+
 // UpdateSafe is the handler for PUT requests to /deliveryservices/{{ID}}/safe.
 //
 // The only fields which are "safe" to modify are the displayName, infoURL, longDesc, and longDesc1.
 func UpdateSafe(w http.ResponseWriter, r *http.Request) {
+	var ok bool
+	var err error
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
@@ -51,7 +64,15 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-
+	version := inf.Version
+	if version == nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("TODeliveryService.UpdateSafe called with nil API version"))
+		return
+	}
+	if version.Major == 1 && version.Minor < 1 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("TODeliveryService.UpdateSafe called with invalid API version: %d.%d", version.Major, version.Minor))
+		return
+	}
 	dsID := inf.IntParams["id"]
 
 	userErr, sysErr, errCode = tenant.CheckID(tx, inf.User, dsID)
@@ -65,11 +86,31 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("decoding: %s", err), nil)
 		return
 	}
-	if ok, err := updateDSSafe(tx, dsID, dsr); err != nil {
+
+	_, cdn, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, dsID)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice update safe: getting CDN from DS ID "+err.Error()))
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdn), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+	if version.Major > 3 && version.Minor >= 0 {
+		if dsr.LongDesc1 != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 field is no longer supported in API 4.0 onwards"), nil)
+			return
+		}
+		ok, err = updateDSSafe(tx, dsID, dsr, true)
+	} else {
+		ok, err = updateDSSafe(tx, dsID, dsr, false)
+	}
+	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Updating Delivery Service (safe): %s", err))
 		return
 	} else if !ok {
-		userErr = fmt.Errorf("No Delivery Service exists by ID '%d'", dsID)
+		userErr = fmt.Errorf("no Delivery Service exists by ID '%d'", dsID)
 		api.HandleErr(w, r, tx, http.StatusNotFound, userErr, nil)
 		return
 	}
@@ -92,27 +133,41 @@ func UpdateSafe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ds := dses[0]
-
+	if version.Major > 3 {
+		ds = ds.RemoveLD1AndLD2()
+	}
 	alertMsg := "Delivery Service safe update successful."
-	if inf.Version != nil && inf.Version.Major == 1 && inf.Version.Minor < 5 {
-		switch inf.Version.Minor {
-		case 4:
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV14{ds.DowngradeToV3().DeliveryServiceNullableV14})
-		case 3:
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV13{ds.DowngradeToV3().DeliveryServiceNullableV13})
-		default:
-			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV12{ds.DowngradeToV3().DeliveryServiceNullableV12})
-		}
+	if inf.Version == nil {
+		log.Warnln("API version found to be null in DS safe update")
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, dses)
 	} else {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV30{ds.DowngradeToV3()})
+		switch inf.Version.Major {
+		default:
+			fallthrough
+		case 4:
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, dses)
+		case 3:
+			if inf.Version.Minor >= 1 {
+				api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV31{tc.DeliveryServiceV31(ds.DowngradeToV3())})
+			}
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceV30{ds.DowngradeToV3().DeliveryServiceV30})
+		case 2:
+			api.WriteRespAlertObj(w, r, tc.SuccessLevel, alertMsg, []tc.DeliveryServiceNullableV15{ds.DowngradeToV3().DeliveryServiceNullableV15})
+		}
 	}
 
 	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("DS: %s, ID: %d, ACTION: Updated safe fields", *ds.XMLID, *ds.ID), inf.User, tx)
 }
 
 // updateDSSafe updates the given delivery service in the database. Returns whether the DS existed, and any error.
-func updateDSSafe(tx *sql.Tx, dsID int, ds tc.DeliveryServiceSafeUpdateRequest) (bool, error) {
-	res, err := tx.Exec(safeUpdateQuery, ds.DisplayName, ds.InfoURL, ds.LongDesc, ds.LongDesc1, dsID)
+func updateDSSafe(tx *sql.Tx, dsID int, ds tc.DeliveryServiceSafeUpdateRequest, omitLD1Field bool) (bool, error) {
+	var err error
+	var res sql.Result
+	if omitLD1Field {
+		res, err = tx.Exec(safeUpdateQueryWithoutLD1, ds.DisplayName, ds.InfoURL, ds.LongDesc, dsID)
+	} else {
+		res, err = tx.Exec(safeUpdateQuery, ds.DisplayName, ds.InfoURL, ds.LongDesc, ds.LongDesc1, dsID)
+	}
 	if err != nil {
 		return false, err
 	}

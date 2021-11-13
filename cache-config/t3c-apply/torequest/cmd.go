@@ -26,6 +26,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	golog "log"
 	"os"
 	"os/exec"
 	"strconv"
@@ -44,16 +46,24 @@ type ServerAndConfigs struct {
 
 // generate runs t3c-generate and returns the result.
 func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
-	configData, err := request(cfg, "config")
+	configData, err := requestConfig(cfg)
 	if err != nil {
 		return nil, errors.New("requesting: " + err.Error())
 	}
 	args := []string{
-		"--log-location-error=" + outToErr(cfg.LogLocationErr),
-		"--log-location-info=" + outToErr(cfg.LogLocationInfo),
-		"--log-location-warning=" + outToErr(cfg.LogLocationWarn),
-		"--dir=" + config.TSConfigDir,
+		"--dir=" + cfg.TsConfigDir,
 	}
+
+	if cfg.LogLocationErr == log.LogLocationNull {
+		args = append(args, "-s")
+	}
+	if cfg.LogLocationWarn != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+	if cfg.LogLocationInfo != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+
 	if cfg.DNSLocalBind {
 		args = append(args, "--dns-local-bind")
 	}
@@ -63,20 +73,20 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	if cfg.DefaultClientTLSVersions != nil {
 		args = append(args, "--default-client-tls-versions="+*cfg.DefaultClientTLSVersions+"")
 	}
-	if cfg.RunMode == t3cutil.ModeRevalidate {
+	if cfg.Files == t3cutil.ApplyFilesFlagReval {
 		args = append(args, "--revalidate-only")
 	}
 	args = append(args, "--via-string-release="+strconv.FormatBool(!cfg.OmitViaStringRelease))
+	args = append(args, "--no-outgoing-ip="+strconv.FormatBool(cfg.NoOutgoingIP))
 	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))
 
 	generatedFiles, stdErr, code := t3cutil.DoInput(configData, config.GenerateCmd, args...)
 	if code != 0 {
-		return nil, fmt.Errorf("t3c-generate returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(generatedFiles), string(stdErr))
+		logSubAppErr(`t3c-generate stdout`, generatedFiles)
+		logSubAppErr(`t3c-generate stderr`, stdErr)
+		return nil, fmt.Errorf("t3c-generate returned non-zero exit code %v, see log for output", code)
 	}
-	if len(bytes.TrimSpace(stdErr)) > 0 {
-		log.Warnln(`t3c-generate stderr start` + "\n" + string(stdErr))
-		log.Warnln(`t3c-generate stderr end`)
-	}
+	logSubApp(`t3c-generate`, stdErr)
 
 	preprocessedBytes, err := preprocess(cfg, configData, generatedFiles)
 	if err != nil {
@@ -93,10 +103,16 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 
 // preprocess takes the to Data from 't3c-request --get-data=config' and the generated files from 't3c-generate', passes them to `t3c-preprocess`, and returns the result.
 func preprocess(cfg config.Cfg, configData []byte, generatedFiles []byte) ([]byte, error) {
-	args := []string{
-		"--log-location-error=" + outToErr(cfg.LogLocationErr),
-		"--log-location-info=" + outToErr(cfg.LogLocationInfo),
-		"--log-location-warning=" + outToErr(cfg.LogLocationWarn),
+	args := []string{}
+
+	if cfg.LogLocationErr == log.LogLocationNull {
+		args = append(args, "-s")
+	}
+	if cfg.LogLocationWarn != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+	if cfg.LogLocationInfo != log.LogLocationNull {
+		args = append(args, "-v")
 	}
 
 	cmd := exec.Command(`t3c-preprocess`, args...)
@@ -140,11 +156,11 @@ func preprocess(cfg config.Cfg, configData []byte, generatedFiles []byte) ([]byt
 	stdOut := outbuf.Bytes()
 	stdErr := errbuf.Bytes()
 	if code != 0 {
-		return nil, fmt.Errorf("t3c-preprocess returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+		logSubAppErr(`t3c-preprocess stdout`, stdOut)
+		logSubAppErr(`t3c-preprocess stderr`, stdErr)
+		return nil, fmt.Errorf("t3c-preprocess returned non-zero exit code %v, see log for output", code)
 	}
-	if len(bytes.TrimSpace(stdErr)) > 0 {
-		log.Warnf("t3c-preprocess returned code 0 but stderr '%v'", string(stdErr)) // usually warnings
-	}
+	logSubApp(`t3c-preprocess`, stdErr)
 	return stdOut, nil
 }
 
@@ -203,12 +219,21 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 		"--traffic-ops-password=" + cfg.TOPass,
 		"--traffic-ops-url=" + cfg.TOURL,
 		"--traffic-ops-insecure=" + strconv.FormatBool(cfg.TOInsecure),
-		"--log-location-error=" + outToErr(cfg.LogLocationErr),
-		"--log-location-info=" + outToErr(cfg.LogLocationInfo),
 		"--cache-host-name=" + cfg.CacheHostName,
 		"--set-update-status=" + strconv.FormatBool(updateStatus),
 		"--set-reval-status=" + strconv.FormatBool(revalStatus),
 	}
+
+	if cfg.LogLocationErr == log.LogLocationNull {
+		args = append(args, "-s")
+	}
+	if cfg.LogLocationWarn != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+	if cfg.LogLocationInfo != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+
 	if _, used := os.LookupEnv("TO_USER"); !used {
 		args = append(args, "--traffic-ops-user="+cfg.TOUser)
 	}
@@ -220,11 +245,11 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 	}
 	stdOut, stdErr, code := t3cutil.Do(`t3c-update`, args...)
 	if code != 0 {
-		return fmt.Errorf("t3c-update returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+		logSubAppErr(`t3c-update stdout`, stdOut)
+		logSubAppErr(`t3c-update stderr`, stdErr)
+		return fmt.Errorf("t3c-update returned non-zero exit code %v, see log for output", code)
 	}
-	if len(bytes.TrimSpace(stdErr)) > 0 {
-		log.Warnf("t3c-update returned code 0 but stderr '%v'", string(stdErr)) // usually warnings
-	}
+	logSubApp(`t3c-update`, stdErr)
 	log.Infoln("t3c-update succeeded")
 	return nil
 }
@@ -232,27 +257,49 @@ func sendUpdate(cfg config.Cfg, updateStatus bool, revalStatus bool) error {
 // diff calls t3c-diff to diff the given new file and the file on disk. Returns whether they're different.
 // Logs the difference.
 // If the file on disk doesn't exist, returns true and logs the entire file as a diff.
-func diff(cfg config.Cfg, newFile []byte, fileLocation string) (bool, error) {
-	stdOut, stdErr, code := t3cutil.DoInput(newFile, `t3c-diff`, `stdin`, fileLocation)
+func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, perm os.FileMode) (bool, error) {
+	diffMsg := ""
+	args := []string{
+		"--file-a=stdin",
+		"--file-b=" + fileLocation,
+		"--file-mode=" + fmt.Sprintf("%#o", perm),
+	}
+
+	stdOut, stdErr, code := t3cutil.DoInput(newFile, `t3c-diff`, args...)
 	if code > 1 {
 		return false, fmt.Errorf("t3c-diff returned error code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
 	}
-	if len(bytes.TrimSpace(stdErr)) > 0 {
-		log.Warnf("t3c-diff returned non-error code %v but stderr '%v'", code, string(stdErr))
-	}
+	logSubApp(`t3c-diff`, stdErr)
 
 	if code == 0 {
-		log.Infof("All lines match TrOps for config file: %s\n", fileLocation)
+		diffMsg += fmt.Sprintf("All lines and file permissions match TrOps for config file: %s\n", fileLocation)
 		return false, nil // 0 is only returned if there's no diff
 	}
 	// code 1 means a diff, difference text will be on stdout
 
+	stdOut = bytes.TrimSpace(stdOut) // the shell output includes a trailing newline that isn't part of the diff; remove it
 	lines := strings.Split(string(stdOut), "\n")
-	log.Infoln("file '" + fileLocation + "' changes begin")
+	diffMsg += "file '" + fileLocation + "' changes begin\n"
 	for _, line := range lines {
-		log.Infoln("diff: " + line)
+		diffMsg += "diff: " + line + "\n"
 	}
-	log.Infoln("file '" + fileLocation + "' changes end")
+	diffMsg += "file '" + fileLocation + "' changes end" // no trailing newline, becuase we're using log*ln, the last line will get a newline appropriately
+
+	if reportOnly {
+		// Create our own info logger, to log the diff.
+		// We can't use the logger initialized in the config package because
+		// we don't want to log all the other Info logs.
+		// But we want the standard log.Info prefix, timestamp, etc.
+		reportLocation := os.Stdout
+		goLogger := golog.New(reportLocation, log.InfoPrefix, log.InfoFlags)
+		for _, line := range strings.Split(diffMsg, "\n") {
+			log.Logln(goLogger, line)
+		}
+	} else {
+		for _, line := range strings.Split(diffMsg, "\n") {
+			log.Infoln(line)
+		}
+	}
 
 	return true, nil
 }
@@ -261,56 +308,87 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string) (bool, error) {
 // The cfgFile should be the full text of either a plugin.config or remap.config.
 // Returns nil if t3c-check-refs returned no errors found, or the error found if any.
 func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
-	stdOut, stdErr, code := t3cutil.DoInput(cfgFile, `t3c`, `check`, `refs`,
-		"--log-location-error="+outToErr(cfg.LogLocationErr),
-		"--log-location-info="+outToErr(cfg.LogLocationInfo),
-		"--log-location-debug="+outToErr(cfg.LogLocationDebug),
-		"--files-adding="+strings.Join(filesAdding, ","),
-	)
+	args := []string{`check`, `refs`,
+		"--files-adding=" + strings.Join(filesAdding, ","),
+	}
+	if cfg.LogLocationErr == log.LogLocationNull {
+		args = append(args, "-s")
+	}
+	if cfg.LogLocationWarn != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+	if cfg.LogLocationInfo != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+
+	stdOut, stdErr, code := t3cutil.DoInput(cfgFile, `t3c`, args...)
+
 	if code != 0 {
-		log.Errorf(`check-refs errors start
-` + string(stdOut))
-		log.Errorf(`check-refs errors end`)
-		if strings.TrimSpace(string(stdErr)) != "" {
-			log.Errorf(`check-refs output start
-` + string(stdErr))
-			log.Errorf(`check-refs output end`)
-		}
+		logSubAppErr(`t3c-check-refs stdout`, stdOut)
+		logSubAppErr(`t3c-check-refs stderr`, stdErr)
 		return fmt.Errorf("%d plugins failed to verify. See log for details.", code)
 	}
-	if len(bytes.TrimSpace(stdErr)) > 0 {
-		log.Warnf("t3c-check-refs returned non-error code %v but stderr '%v'", code, string(stdErr))
-	}
-	if len(bytes.TrimSpace(stdOut)) > 0 {
-		log.Warnf("t3c-check-refs returned non-error code %v but output '%v'", code, string(stdOut))
-	}
+	logSubApp(`t3c-check-refs stdout`, stdOut)
+	logSubApp(`t3c-check-refs stderr`, stdErr)
 	return nil
 }
 
 // checkReload is a helper for the sub-command t3c-check-reload.
-func checkReload(mode t3cutil.Mode, pluginPackagesInstalled []string, changedConfigFiles []string) (t3cutil.ServiceNeeds, error) {
-	stdOut, stdErr, code := t3cutil.Do(`t3c`, `check`, `reload`,
-		"--run-mode="+mode.String(),
-		"--plugin-packages-installed="+strings.Join(pluginPackagesInstalled, ","),
-		"--changed-config-paths="+strings.Join(changedConfigFiles, ","),
-	)
+func checkReload(pluginPackagesInstalled []string, changedConfigFiles []string) (t3cutil.ServiceNeeds, error) {
+	log.Infof("t3c-check-reload calling with pluginPackagesInstalled '%v' changedConfigFiles '%v'\n", pluginPackagesInstalled, changedConfigFiles)
+
+	changedFiles := []byte(strings.Join(changedConfigFiles, ","))
+	installedPlugins := []byte(strings.Join(pluginPackagesInstalled, ","))
+
+	cmd := exec.Command(`t3c-check-reload`)
+	outBuf := bytes.Buffer{}
+	errBuf := bytes.Buffer{}
+	cmd.Stdout = &outBuf
+	cmd.Stderr = &errBuf
+
+	stdinPipe, err := cmd.StdinPipe()
+	if err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("getting command pipe: " + err.Error())
+	}
+
+	if err := cmd.Start(); err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("starting command: " + err.Error())
+	}
+
+	if _, err := stdinPipe.Write([]byte(`{"changed_files":"`)); err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("writing opening json to input: " + err.Error())
+	} else if _, err := stdinPipe.Write(changedFiles); err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("writing changed files to input: " + err.Error())
+	} else if _, err := stdinPipe.Write([]byte(`","installed_plugins":"`)); err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("writing installed_plugins key to input: " + err.Error())
+	} else if _, err := stdinPipe.Write(installedPlugins); err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("writing plugins to input: " + err.Error())
+	} else if _, err := stdinPipe.Write([]byte(`"}`)); err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("writing closing json input: " + err.Error())
+	} else if err := stdinPipe.Close(); err != nil {
+		return t3cutil.ServiceNeedsInvalid, errors.New("closing stdin writer: " + err.Error())
+	}
+
+	code := 0 // if cmd.Wait returns no error, that means the command returned 0
+	if err := cmd.Wait(); err != nil {
+		if exitErr, ok := err.(*exec.ExitError); !ok {
+			return t3cutil.ServiceNeedsInvalid, errors.New("error running command: " + err.Error())
+		} else {
+			code = exitErr.ExitCode()
+		}
+	}
+
+	stdOut := outBuf.Bytes()
+	stdErr := errBuf.Bytes()
 
 	if code != 0 {
-		log.Errorf(`t3c-check-reload errors start
-` + string(stdErr))
-		log.Errorf(`t3c-check-reload errors end`)
-		if strings.TrimSpace(string(stdErr)) != "" {
-			log.Errorf(`t3c-check-reload output start
-` + string(stdOut))
-			log.Errorf(`t3c-check-reload output end`)
-		}
+		logSubAppErr(`t3c-check-reload stdout`, stdOut)
+		logSubAppErr(`t3c-check-reload stderr`, stdErr)
 		return t3cutil.ServiceNeedsInvalid, fmt.Errorf("t3c-check-reload returned error code %d - see log for details.", code)
-	} else if strings.TrimSpace(string(stdErr)) != "" {
-		log.Errorf(`t3c-check-reload returned success code but nonempty stderr. determine-restart errors start
-` + string(stdErr))
-		log.Errorf(`t3c-check-reload errors end`)
-
 	}
+
+	logSubApp(`t3c-check-reload`, stdErr)
+
 	needs := t3cutil.StrToServiceNeeds(strings.TrimSpace(string(stdOut)))
 	if needs == t3cutil.ServiceNeedsInvalid {
 		return t3cutil.ServiceNeedsInvalid, errors.New("t3c-check-reload returned unknown string '" + string(stdOut) + "'")
@@ -336,10 +414,19 @@ func request(cfg config.Cfg, command string) ([]byte, error) {
 		"--traffic-ops-insecure=" + strconv.FormatBool(cfg.TOInsecure),
 		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
 		"--cache-host-name=" + cfg.CacheHostName,
-		"--log-location-error=" + outToErr(cfg.LogLocationErr),
-		"--log-location-info=" + outToErr(cfg.LogLocationInfo),
 		`--get-data=` + command,
 	}
+
+	if cfg.LogLocationErr == log.LogLocationNull {
+		args = append(args, "-s")
+	}
+	if cfg.LogLocationWarn != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+	if cfg.LogLocationInfo != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+
 	if _, used := os.LookupEnv("TO_USER"); !used {
 		args = append(args, "--traffic-ops-user="+cfg.TOUser)
 	}
@@ -351,12 +438,110 @@ func request(cfg config.Cfg, command string) ([]byte, error) {
 	}
 	stdOut, stdErr, code := t3cutil.Do(`t3c-request`, args...)
 	if code != 0 {
-		return nil, fmt.Errorf("t3c-request returned non-zero exit code %v stdout '%v' stderr '%v'", code, string(stdOut), string(stdErr))
+		logSubAppErr(`t3c-request stdout`, stdOut)
+		logSubAppErr(`t3c-request stderr`, stdErr)
+		return nil, fmt.Errorf("t3c-request returned non-zero exit code %v, see log for output", code)
 	}
-	if len(bytes.TrimSpace(stdErr)) > 0 {
-		log.Warnf("t3c-request returned code 0 but stderr '%v'", string(stdErr)) // usually warnings
-	}
+
+	logSubApp(`t3c-request`, stdErr)
+
 	return stdOut, nil
+}
+
+// requestConfig calls t3c-request and returns the stdout bytes.
+// It also caches the config in /var/lib/trafficcontrol-cache-config and uses the cache to issue IMS requests.
+func requestConfig(cfg config.Cfg) ([]byte, error) {
+	// TODO support /opt
+
+	cacheBts := ([]byte)(nil)
+	if !cfg.NoCache {
+		err := error(nil)
+		if cacheBts, err = ioutil.ReadFile(t3cutil.ApplyCachePath); err != nil {
+			// don't log an error if the cache didn't exist
+			if !os.IsNotExist(err) {
+				log.Errorln("getting cached config data failed, not using cache! Error: " + err.Error())
+			}
+			cacheBts = []byte{}
+		}
+	}
+
+	log.Infof("config cache bytes: %v\n", len(cacheBts))
+
+	args := []string{
+		"request",
+		"--traffic-ops-insecure=" + strconv.FormatBool(cfg.TOInsecure),
+		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
+		"--cache-host-name=" + cfg.CacheHostName,
+		`--get-data=config`,
+	}
+	if len(cacheBts) > 0 {
+		args = append(args, `--old-config=stdin`)
+	}
+
+	if cfg.LogLocationWarn != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+	if cfg.LogLocationInfo != log.LogLocationNull {
+		args = append(args, "-v")
+	}
+
+	if _, used := os.LookupEnv("TO_USER"); !used {
+		args = append(args, "--traffic-ops-user="+cfg.TOUser)
+	}
+	if _, used := os.LookupEnv("TO_PASS"); !used {
+		args = append(args, "--traffic-ops-password="+cfg.TOPass)
+	}
+	if _, used := os.LookupEnv("TO_URL"); !used {
+		args = append(args, "--traffic-ops-url="+cfg.TOURL)
+	}
+
+	stdOut := ([]byte)(nil)
+	stdErr := ([]byte)(nil)
+	code := 0
+	if len(cacheBts) > 0 {
+		stdOut, stdErr, code = t3cutil.DoInput(cacheBts, `t3c`, args...)
+	} else {
+		stdOut, stdErr, code = t3cutil.Do(`t3c`, args...)
+	}
+	if code != 0 {
+		logSubAppErr(`t3c-request stdout`, stdOut)
+		logSubAppErr(`t3c-request stderr`, stdErr)
+		return nil, fmt.Errorf("t3c-request returned non-zero exit code %v, see log for details", code)
+	}
+	logSubApp(`t3c-request`, stdErr)
+
+	if err := ioutil.WriteFile(t3cutil.ApplyCachePath, stdOut, 0600); err != nil {
+		log.Errorln("writing config data to cache failed: " + err.Error())
+	}
+
+	return stdOut, nil
+}
+
+func logSubApp(appName string, stdErr []byte)    { logSubAppWarnOrErr(appName, stdErr, false) }
+func logSubAppErr(appName string, stdErr []byte) { logSubAppWarnOrErr(appName, stdErr, true) }
+func logSubAppWarnOrErr(appName string, stdErr []byte, isErr bool) {
+	stdErr = bytes.TrimSpace(stdErr)
+	if len(stdErr) == 0 {
+		return
+	}
+
+	logF := log.Warnln
+	logger := log.Warning
+	if isErr {
+		logF = log.Errorln
+		logger = log.Error
+	}
+
+	if logger == nil {
+		return
+	}
+
+	logF(appName + ` start`)
+	// write directly to the underlying logger, to avoid duplicating the prefix
+	for _, msg := range bytes.Split(stdErr, []byte{'\n'}) {
+		logger.Writer().Write([]byte(string(msg) + "\n"))
+	}
+	logF(appName + ` end`)
 }
 
 // outToErr returns stderr if logLocation is stdout, otherwise returns logLocation unchanged.

@@ -39,14 +39,24 @@ func TestNewBackoff(t *testing.T) {
 		t.Errorf("un-expected error bo is nil, min: %v, max: %v, fac: %v - %v", min, max, fac, err)
 	}
 
-	bo, err = NewBackoff(0, 0, 0)
+	bo, err = NewBackoff(0, 1, 1.1)
 
 	if err == nil {
-		t.Errorf("Expected errors passing invalid arguments to NewBackOff()")
+		t.Errorf("Expected errors passing invalid minimum to NewBackOff()")
 	}
 
 	if bo != nil {
-		t.Errorf("un-expected  error passing invalid arguments to NewBackOff(), 'bo' should be nil")
+		t.Errorf("Unexpected error passing invalid minimum to NewBackOff(), 'bo' should be nil")
+	}
+
+	_, err = NewBackoff(1, 1, 1.1)
+	if err == nil {
+		t.Error("Expected passing a maximum that's not greater than a minimum to return an error")
+	}
+
+	_, err = NewBackoff(1, 2, 1.0)
+	if err == nil {
+		t.Error("Expected passing an invalid factor to return an error")
 	}
 }
 
@@ -101,6 +111,24 @@ func TestBackoffDuration(t *testing.T) {
 	// after 8 calls with the default settings, val should be '1m0s', DefaultMaxMS
 	if val != max {
 		t.Errorf("unexpected duration calculation, val: %v  != : max: %v", val, max)
+	}
+
+	fac = 1.000001
+	bo, err = NewBackoff(min, max, fac)
+	for i := 0; i < 8; i++ {
+		val = bo.BackoffDuration()
+		if val < min {
+			t.Errorf("backoff duration generated as less than the minimum")
+		}
+	}
+
+	fac = 100000
+	bo, err = NewBackoff(min, max, fac)
+	for i := 0; i < 100; i++ {
+		val = bo.BackoffDuration()
+		if val > max {
+			t.Errorf("backoff duration generated as greater than the maximum")
+		}
 	}
 }
 

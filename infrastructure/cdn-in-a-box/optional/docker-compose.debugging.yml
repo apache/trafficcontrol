@@ -18,7 +18,7 @@
 # Exposes debugging ports
 
 ---
-version: '2.1'
+version: '3.8'
 
 services:
   enroller:
@@ -28,19 +28,19 @@ services:
         ENROLLER_DEBUG_BUILD: 'true'
     image: enroller-debug
     ports:
-      - "2343:2343" #Delve debugging port
+      - "2343:2343" # Delve debugging port
   trafficmonitor:
     build:
       target: trafficmonitor-debug
     image: trafficmonitor-debug
     ports:
-      - "2344:2344" #Delve debugging port
+      - "2344:2344" # Delve debugging port
   trafficops:
     build:
       target: trafficops-debug
     image: trafficops-debug
     ports:
-      - "2345:2345" #Delve debugging port
+      - "2345:2345" # Delve debugging port
   trafficrouter:
     ports:
       - "5005:5005" # JPDA debugging port
@@ -49,4 +49,22 @@ services:
       target: trafficstats-debug
     image: trafficstats-debug
     ports:
-      - "2346:2346" #Delve debugging port
+      - "2346:2346" # Delve debugging port
+  edge:
+    build:
+      target: edge-debug
+    image: edge-debug
+    ports:
+      - "2347:2347" # Delve debugging port
+  mid-01:
+    build:
+      target: mid-debug
+    image: mid-debug
+    ports:
+      - "2348:2348" # Delve debugging port
+  mid-02:
+    build:
+      target: mid-debug
+    image: mid-debug
+    ports:
+      - "2349:2349" # Delve debugging port

@@ -17,17 +17,20 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
 	"sort"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestStaticDNSEntries(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices, StaticDNSEntries}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, StaticDNSEntries}, func() {
 		GetTestStaticDNSEntriesIMS(t)
 		GetTestStaticDNSEntries(t)
 		currentTime := time.Now().UTC().Add(-5 * time.Second)
@@ -45,7 +48,125 @@ func TestStaticDNSEntries(t *testing.T) {
 		etag := rfc.ETag(currentTime)
 		header.Set(rfc.IfMatch, etag)
 		UpdateTestStaticDNSEntriesWithHeaders(t, header)
+		CreateUpdateDeleteStaticDNSEntriesWithLocks(t)
 	})
+}
+
+func CreateUpdateDeleteStaticDNSEntriesWithLocks(t *testing.T) {
+	// Create a new user with operations level privileges
+	user1 := tc.UserV4{
+		Username:             "lock_user1",
+		RegistrationSent:     new(time.Time),
+		LocalPassword:        util.StrPtr("test_pa$$word"),
+		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
+		Role:                 "operations",
+	}
+	user1.Email = util.StrPtr("lockuseremail@domain.com")
+	user1.TenantID = 1
+	user1.FullName = util.StrPtr("firstName LastName")
+	_, _, err := TOSession.CreateUser(user1, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("could not create test user with username: %s", user1.Username)
+	}
+	defer ForceDeleteTestUsersByUsernames(t, []string{"lock_user1"})
+
+	// Establish a session with the newly created non admin level user
+	userSession, _, err := client.LoginWithAgent(Config.TrafficOps.URL, user1.Username, *user1.LocalPassword, true, "to-api-v4-client-tests", false, toReqTimeout)
+	if err != nil {
+		t.Fatalf("could not login with user lock_user1: %v", err)
+	}
+
+	staticDNSEntriesResp, _, err := TOSession.GetStaticDNSEntries(client.NewRequestOptions())
+	if err != nil {
+		t.Fatalf("couldn't get static dns entries: %v", err)
+	}
+	if len(staticDNSEntriesResp.Response) < 1 {
+		t.Fatalf("expected one or more static dns entries in the response, but got %d", len(staticDNSEntriesResp.Response))
+	}
+
+	if len(testData.DeliveryServices) < 1 {
+		t.Fatalf("need atleast one delivery service to run this test")
+	}
+	cdnName := testData.DeliveryServices[0].CDNName
+	if cdnName == nil || testData.DeliveryServices[0].XMLID == nil {
+		t.Fatalf("no CDN name or XML ID associated with this delivery service")
+	}
+	// Create a lock for this user
+	_, _, err = userSession.CreateCDNLock(tc.CDNLock{
+		CDN:     *cdnName,
+		Message: util.StrPtr("test lock"),
+		Soft:    util.BoolPtr(false),
+	}, client.RequestOptions{})
+	if err != nil {
+		t.Fatalf("couldn't create cdn lock: %v", err)
+	}
+
+	staticDNSEntry := staticDNSEntriesResp.Response[0]
+	staticDNSEntry.DeliveryService = *testData.DeliveryServices[0].XMLID
+	staticDNSEntry.Host = "cdn_locks_test_host"
+
+	// Try to create a new static dns entry on a CDN that another user has a hard lock on -> this should fail
+	_, reqInf, err := TOSession.CreateStaticDNSEntry(staticDNSEntry, client.NewRequestOptions())
+	if err == nil {
+		t.Error("expected an error while creating a new static dns entry for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while creating a new static dns entry for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to create a new static dns entry on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.CreateStaticDNSEntry(staticDNSEntry, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while creating a new static dns entry for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("host", staticDNSEntry.Host)
+
+	resp, _, err := TOSession.GetStaticDNSEntries(opts)
+	if err != nil {
+		t.Fatalf("could not get static dns entry: %v", err.Error())
+	}
+	if len(resp.Response) != 1 {
+		t.Fatalf("expected just one response, but got %d", len(resp.Response))
+	}
+	staticDNSEntryID := resp.Response[0].ID
+	staticDNSEntry.TTL = 100
+	// Try to update a static dns entry on a CDN that another user has a hard lock on -> this should fail
+	_, reqInf, err = TOSession.UpdateStaticDNSEntry(staticDNSEntryID, staticDNSEntry, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while updating a static dns entry for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while updating a static dns entry for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to update a static dns entry on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.UpdateStaticDNSEntry(staticDNSEntryID, staticDNSEntry, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while deleting a static dns entry for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	// Try to delete a static dns entry on a CDN that another user has a hard lock on -> this should fail
+	_, reqInf, err = TOSession.DeleteStaticDNSEntry(staticDNSEntryID, client.RequestOptions{})
+	if err == nil {
+		t.Error("expected an error while deleting a static dns entry for a CDN for which a hard lock is held by another user, but got nothing")
+	}
+	if reqInf.StatusCode != http.StatusForbidden {
+		t.Errorf("expected a 403 forbidden status while deleting a static dns entry for a CDN for which a hard lock is held by another user, but got %d", reqInf.StatusCode)
+	}
+
+	// Try to delete a static dns entry on a CDN that the same user has a hard lock on -> this should succeed
+	_, reqInf, err = userSession.UpdateStaticDNSEntry(staticDNSEntryID, staticDNSEntry, client.RequestOptions{})
+	if err != nil {
+		t.Errorf("expected no error while deleting a static dns entry for a CDN for which a hard lock is held by the same user, but got %v", err)
+	}
+
+	// Delete the lock
+	_, _, err = userSession.DeleteCDNLocks(client.RequestOptions{QueryParameters: url.Values{"cdn": []string{*cdnName}}})
+	if err != nil {
+		t.Errorf("expected no error while deleting user's lock, but got %v", err)
+	}
 }
 
 func UpdateTestStaticDNSEntriesWithHeaders(t *testing.T, header http.Header) {

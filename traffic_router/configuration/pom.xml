@@ -24,8 +24,8 @@ under the License.
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
 		<artifactId>traffic_router</artifactId>
-		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-		<version>5.0.0</version>
+		<groupId>org.apache.traffic_control.traffic_router</groupId>
+		<version>6.0.0</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 

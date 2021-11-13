@@ -16,7 +16,6 @@ package client
 */
 
 import (
-	"errors"
 	"net/url"
 	"strconv"
 
@@ -28,7 +27,7 @@ import (
 const apiJobs = "/jobs"
 
 // CreateInvalidationJob creates the passed Content Invalidation Job.
-func (to *Session) CreateInvalidationJob(job tc.InvalidationJobInput, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateInvalidationJob(job tc.InvalidationJobCreateV4, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiJobs, opts, job, &alerts)
 	return alerts, reqInf, err
@@ -48,23 +47,20 @@ func (to *Session) DeleteInvalidationJob(jobID uint64, opts RequestOptions) (tc.
 
 // UpdateInvalidationJob updates the passed Content Invalidation Job (it is
 // expected to have an ID).
-func (to *Session) UpdateInvalidationJob(job tc.InvalidationJob, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateInvalidationJob(job tc.InvalidationJobV4, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
-	if job.ID == nil {
-		return alerts, toclientlib.ReqInf{}, errors.New("job has a nil ID")
-	}
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
-	opts.QueryParameters.Set("id", strconv.FormatUint(*job.ID, 10))
+	opts.QueryParameters.Set("id", strconv.FormatUint(job.ID, 10))
 	reqInf, err := to.put(apiJobs, opts, job, &alerts)
 	return alerts, reqInf, err
 }
 
 // GetInvalidationJobs returns a list of Content Invalidation Jobs visible to
 // your Tenant.
-func (to *Session) GetInvalidationJobs(opts RequestOptions) (tc.InvalidationJobsResponse, toclientlib.ReqInf, error) {
-	var data tc.InvalidationJobsResponse
+func (to *Session) GetInvalidationJobs(opts RequestOptions) (tc.InvalidationJobsResponseV4, toclientlib.ReqInf, error) {
+	var data tc.InvalidationJobsResponseV4
 	reqInf, err := to.get(apiJobs, opts, &data)
 	return data, reqInf, err
 }

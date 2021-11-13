@@ -28,6 +28,7 @@ Gets the status of a :term:`DSR`.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: DS-REQUEST:READ
 :Response Type:  Object (string)
 
 Request Structure
@@ -78,6 +79,7 @@ The response is the status of the requested :term:`DSR`.
 =======
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: DS-REQUEST:UPDATE, DS-REQUEST:READ
 :Response Type:  Object
 
 Request Structure
@@ -166,11 +168,9 @@ The response is a full representation of the modified :term:`DSR`.
 			"infoUrl": null,
 			"initialDispersion": 1,
 			"ipv6RoutingEnabled": true,
-			"lastUpdated": "2020-09-25 02:09:54+00",
+			"lastUpdated": "2020-09-25T02:09:54Z",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
-			"longDesc1": null,
-			"longDesc2": null,
 			"matchList": [
 				{
 					"type": "HOST_REGEXP",
@@ -225,7 +225,8 @@ The response is a full representation of the modified :term:`DSR`.
 			"firstHeaderRewrite": null,
 			"innerHeaderRewrite": null,
 			"lastHeaderRewrite": null,
-			"serviceCategory": null
+			"serviceCategory": null,
+			"tlsVersions": null
 		},
 		"requested": {
 			"active": true,
@@ -256,8 +257,6 @@ The response is a full representation of the modified :term:`DSR`.
 			"lastUpdated": null,
 			"logsEnabled": false,
 			"longDesc": "long desc",
-			"longDesc1": null,
-			"longDesc2": null,
 			"matchList": null,
 			"maxDnsAnswers": null,
 			"midHeaderRewrite": null,
@@ -298,7 +297,8 @@ The response is a full representation of the modified :term:`DSR`.
 			"firstHeaderRewrite": null,
 			"innerHeaderRewrite": null,
 			"lastHeaderRewrite": null,
-			"serviceCategory": null
+			"serviceCategory": null,
+			"tlsVersions": null
 		},
 		"status": "submitted"
 	}}

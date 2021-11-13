@@ -26,6 +26,7 @@ Retrieves all :term:`Parameter`/:term:`Profile` assignments.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: PROFILE:READ, PARAMETER:READ
 :Response Type:  Array
 
 Request Structure
@@ -51,7 +52,7 @@ Request Structure
 
 Response Structure
 ------------------
-:lastUpdated: The date and time at which this :term:`Profile`/:term:`Parameter` association was last modified, in an ISO-like format
+:lastUpdated: The date and time at which this :term:`Profile`/:term:`Parameter` association was last modified, in :ref:`non-rfc-datetime`
 :parameter:   The :ref:`parameter-id` of a :term:`Parameter` assigned to ``profile``
 :profile:     The :ref:`profile-name` of the :term:`Profile` to which the :term:`Parameter` identified by ``parameter`` is assigned
 
@@ -91,7 +92,8 @@ Associate a :term:`Parameter` to a :term:`Profile`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
-:Response Type:  Object
+:Response Type: Object
+:Permissions Required: PROFILE:READ, PARAMETER:READ, PROFILE:UPDATE
 
 Request Structure
 -----------------
@@ -150,7 +152,7 @@ Array Format
 
 Response Structure
 ------------------
-:lastUpdated: The date and time at which the :term:`Profile`/:term:`Parameter` assignment was last modified, in an ISO-like format
+:lastUpdated: The date and time at which the :term:`Profile`/:term:`Parameter` assignment was last modified, in :ref:`non-rfc-datetime`
 :parameter:   :ref:`parameter-name` of the :term:`Parameter` which is assigned to ``profile``
 :parameterId: The :ref:`parameter-id` of the assigned :term:`Parameter`
 :profile:     :ref:`profile-name` of the :term:`Profile` to which the :term:`Parameter` is assigned

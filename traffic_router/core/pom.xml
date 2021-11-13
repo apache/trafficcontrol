@@ -16,9 +16,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+		<groupId>org.apache.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>5.0.0</version>
+		<version>6.0.0</version>
 	</parent>
 
 	<artifactId>ROOT</artifactId>
@@ -183,7 +183,7 @@
 				<version>2.19.1</version>
 				<configuration>
 					<argLine>-XX:-UseSplitVerifier -Djava.library.path=${java.library.path}</argLine>
-					<excludedGroups>com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest,com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</excludedGroups>
+					<excludedGroups>org.apache.traffic_control.traffic_router.core.util.IntegrationTest,org.apache.traffic_control.traffic_router.core.util.ExternalTest</excludedGroups>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -197,7 +197,7 @@
 						</goals>
 						<configuration>
 							<argLine>-Djava.library.path=${java.library.path}</argLine> <!-- This needs to be parameterized -->
-							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</groups>
+							<groups>org.apache.traffic_control.traffic_router.core.util.ExternalTest</groups>
 							<includes>
 								<include>**/*Suite.java</include>
 							</includes>
@@ -211,7 +211,7 @@
 						</goals>
 						<configuration>
 							<argLine>-Djava.library.path=${java.library.path}</argLine> <!-- This needs to be parameterized -->
-							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest</groups>
+							<groups>org.apache.traffic_control.traffic_router.core.util.IntegrationTest</groups>
 							<includes>
 								<include>**/*.java</include>
 							</includes>
@@ -231,19 +231,19 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<groupId>org.apache.traffic_control.traffic_router</groupId>
 			<artifactId>traffic_router_geolocation</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
 
 		<dependency>
-			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<groupId>org.apache.traffic_control.traffic_router</groupId>
 			<artifactId>traffic_router_config</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
 
 		<dependency>
-			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<groupId>org.apache.traffic_control.traffic_router</groupId>
 			<artifactId>traffic_router_shared</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
@@ -374,7 +374,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+			<groupId>org.apache.traffic_control.traffic_router</groupId>
 			<artifactId>traffic_router_connector</artifactId>
 			<version>${project.parent.version}</version>
 			<!--scope>test</scope-->
@@ -386,17 +386,20 @@
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
-			<artifactId>powermock-api-mockito</artifactId>
+			<artifactId>powermock-api-mockito2</artifactId>
+			<version>2.0.9</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
+			<artifactId>mockito-core</artifactId>
+			<version>3.11.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-module-junit4</artifactId>
+			<version>2.0.9</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -411,7 +414,7 @@
 			<id>neustar</id>
 			<dependencies>
 				<dependency>
-					<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+					<groupId>org.apache.traffic_control.traffic_router</groupId>
 					<artifactId>traffic_router_neustar</artifactId>
 					<version>${project.parent.version}</version>
 				</dependency>

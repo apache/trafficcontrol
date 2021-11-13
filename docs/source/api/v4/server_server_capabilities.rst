@@ -25,6 +25,7 @@ Gets all associations of :term:`Server Capabilities` to :term:`cache servers`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: SERVER:READ, SERVER-CAPABILITY:READ
 :Response Type:  Array
 
 Request Structure
@@ -65,7 +66,7 @@ Response Structure
 ------------------
 :serverHostName:   The server's host name
 :serverId:         The server's integral, unique identifier
-:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in an ISO-like format
+:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in :ref:`non-rfc-datetime`
 :serverCapability: The :term:`Server Capability`'s name
 
 .. code-block:: http
@@ -106,6 +107,7 @@ Associates a :term:`Server Capability` to a server.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: SERVER:UPDATE, SERVER:READ, SERVER-CAPABILITY:READ
 :Response Type:  Object
 
 Request Structure
@@ -134,7 +136,7 @@ Request Structure
 Response Structure
 ------------------
 :serverId:         The integral, unique identifier of the newly associated server
-:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in an ISO-like format
+:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in :ref:`non-rfc-datetime`
 :serverCapability: The :term:`Server Capability`'s name
 
 .. code-block:: http
@@ -174,6 +176,7 @@ Disassociate a server from a :term:`Server Capability`.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: SERVER:UPDATE, SERVER:READ, SERVER-CAPABILITY:READ
 :Response Type:  ``undefined``
 
 Request Structure

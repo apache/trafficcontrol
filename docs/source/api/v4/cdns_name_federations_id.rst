@@ -25,6 +25,7 @@ Updates a federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: FEDERATION:UPDATE, FEDERATION:READ, CDN:READ
 :Response Type:  Object
 
 Request Structure
@@ -70,7 +71,7 @@ Response Structure
 
 	.. note:: This key will only be present if the description was provided when the federation was created
 
-:lastUpdated: The date and time at which this federation was last modified, in ISO format
+:lastUpdated: The date and time at which this federation was last modified, in :ref:`non-rfc-datetime`
 :ttl:         Time to Live (TTL) for the ``cname``, in hours
 
 
@@ -110,6 +111,7 @@ Deletes a specific federation.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: FEDERATION:DELETE, FEDERATION:READ, CDN:READ
 :Response Type:  ``undefined``
 
 Request Structure

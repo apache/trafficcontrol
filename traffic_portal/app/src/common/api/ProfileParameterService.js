@@ -20,7 +20,7 @@
 var ProfileParameterService = function($http, messageModel, ENV) {
 
 	this.unlinkProfileParameter = function(profileId, paramId) {
-		return $http.delete(ENV.api['root'] + 'profileparameters/' + profileId + '/' + paramId).then(
+		return $http.delete(ENV.api.unstable + 'profileparameters/' + profileId + '/' + paramId).then(
 				function(result) {
 					messageModel.setMessages([ { level: 'success', text: 'Profile and parameter were unlinked.' } ], false);
 					return result;
@@ -33,7 +33,7 @@ var ProfileParameterService = function($http, messageModel, ENV) {
 	};
 
 	this.linkProfileParameters = function(profile, params) {
-		return $http.post(ENV.api['root'] + 'profileparameter', { profileId: profile.id, paramIds: params, replace: true }).then(
+		return $http.post(ENV.api.unstable + 'profileparameter', { profileId: profile.id, paramIds: params, replace: true }).then(
 			function(result) {
 				return result;
 			},
@@ -45,7 +45,7 @@ var ProfileParameterService = function($http, messageModel, ENV) {
 	};
 
 	this.linkParamProfiles = function(paramId, profiles) {
-		return $http.post(ENV.api['root'] + 'parameterprofile', { paramId: paramId, profileIds: profiles, replace: true }).then(
+		return $http.post(ENV.api.unstable + 'parameterprofile', { paramId: paramId, profileIds: profiles, replace: true }).then(
 			function(result) {
 				messageModel.setMessages([ { level: 'success', text: 'Profiles linked to parameter' } ], false);
 				return result;

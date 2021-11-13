@@ -25,6 +25,7 @@ Retrieves information about :term:`Regions`
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: REGION:READ
 :Response Type:  Object
 
 Request Structure
@@ -68,7 +69,7 @@ Response Structure
 :divisionName: The name of the division which contains this region
 :divisionId:   The integral, unique identifier of the division which contains this region
 :id:           An integral, unique identifier for this region
-:lastUpdated:  The date and time at which this region was last updated, in ISO format
+:lastUpdated:  The date and time at which this region was last updated, in :ref:`non-rfc-datetime`
 :name:         The region name
 
 .. code-block:: http
@@ -102,6 +103,7 @@ Creates a new region
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: REGION:CREATE, REGION:READ
 :Response Type:  Object
 
 Request Structure
@@ -134,7 +136,7 @@ Response Structure
 :divisionName: The name of the division which contains this region
 :divisionId:   The integral, unique identifier of the division which contains this region
 :id:           An integral, unique identifier for this region
-:lastUpdated:  The date and time at which this region was last updated, in ISO format
+:lastUpdated:  The date and time at which this region was last updated, in :ref:`non-rfc-datetime`
 :name:         The region name
 
 .. code-block:: http
@@ -172,6 +174,7 @@ Deletes a region. If no query parameter is specified, a ``400 Bad Request`` resp
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: REGION:DELETE
 :Response Type:  Object
 
 Request Structure

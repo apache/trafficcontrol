@@ -144,54 +144,6 @@ JOIN type as rt ON r.type = rt.id
 	api.WriteResp(w, r, regexes)
 }
 
-func DSGetID(w http.ResponseWriter, r *http.Request) {
-	alerts := tc.CreateAlerts(tc.WarnLevel, "This endpoint is deprecated, please use GET '/deliveryservices/{dsid}/regexes' with query parameter id instead")
-
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"dsid", "regexid"}, []string{"dsid", "regexid"})
-	if userErr != nil || sysErr != nil {
-		userErr = api.LogErr(r, errCode, userErr, sysErr)
-		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-		api.WriteAlerts(w, r, errCode, alerts)
-		return
-	}
-	defer inf.Close()
-
-	q := `
-SELECT dsr.set_number, r.id, r.pattern, rt.id as type, rt.name as type_name
-FROM deliveryservice_regex as dsr
-JOIN deliveryservice as ds ON dsr.deliveryservice = ds.id
-JOIN regex as r ON dsr.regex = r.id
-JOIN type as rt ON r.type = rt.id
-WHERE ds.ID = $1 AND ds.tenant_id = ANY($2)
-AND r.ID = $3
-ORDER BY dsr.set_number ASC
-`
-	accessibleTenants, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting accessible tenants for user - %v", err))
-	}
-	rows, err := inf.Tx.Tx.Query(q, inf.IntParams["dsid"], pq.Array(accessibleTenants), inf.IntParams["regexid"])
-	if err != nil {
-		userErr = api.LogErr(r, errCode, userErr, errors.New("querying deliveryserviceregexes getid: "+err.Error()))
-		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-		api.WriteAlerts(w, r, errCode, alerts)
-		return
-	}
-	defer rows.Close()
-	regexes := []tc.DeliveryServiceIDRegex{}
-	for rows.Next() {
-		rx := tc.DeliveryServiceIDRegex{}
-		if err = rows.Scan(&rx.SetNumber, &rx.ID, &rx.Pattern, &rx.Type, &rx.TypeName); err != nil {
-			userErr = api.LogErr(r, errCode, userErr, errors.New("scanning deliveryserviceregexes getid: "+err.Error()))
-			alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-			api.WriteAlerts(w, r, errCode, alerts)
-			return
-		}
-		regexes = append(regexes, rx)
-	}
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, regexes)
-}
-
 func Post(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"dsid"}, []string{"dsid"})
 	if userErr != nil || sysErr != nil {
@@ -225,6 +177,17 @@ func Post(w http.ResponseWriter, r *http.Request) {
 
 	if err := validateDSRegex(tx, dsr, inf.IntParams["dsid"], true); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, inf.IntParams["dsid"])
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
@@ -318,7 +281,16 @@ func Put(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON"), nil)
 		return
 	}
-
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, inf.IntParams["dsid"])
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
 	// Get current details to make sure that you're not trying to change a regex that has set number = 0 and type = HOST_REGEXP
 	if err := getCurrentDetails(tx, dsID, regexID); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
@@ -416,12 +388,18 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	dsID := inf.IntParams["dsid"]
-	dsName, ok, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, dsID)
+	dsName, cdnName, ok, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, inf.IntParams["dsid"])
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from id: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
-	} else if !ok {
+	}
+	if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
+		return
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	regexID := inf.IntParams["regexid"]

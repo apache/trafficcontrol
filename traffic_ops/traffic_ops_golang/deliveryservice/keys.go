@@ -21,6 +21,7 @@ package deliveryservice
 
 import (
 	"bytes"
+	"context"
 	"crypto/ecdsa"
 	"crypto/rsa"
 	"crypto/x509"
@@ -37,13 +38,12 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 )
 
 const (
-	PemCertEndMarker  = "-----END CERTIFICATE-----"
-	hostnameKeyDepMsg = "This endpoint is deprecated, please use '/deliveryservices/xmlId/{{XMLID}}/sslkeys' instead"
+	PemCertEndMarker = "-----END CERTIFICATE-----"
 )
 
 // AddSSLKeys adds the given ssl keys to the given delivery service.
@@ -68,15 +68,19 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dsID, ok, err := getDSIDFromName(inf.Tx.Tx, *req.DeliveryService)
+	dsID, cdnID, ok, err := getDSIDAndCDNIDFromName(inf.Tx.Tx, *req.DeliveryService)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.AddSSLKeys: getting DS ID from name "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.AddSSLKeys: getting DS ID and CDN ID from name "+err.Error()))
 		return
 	} else if !ok {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+*req.DeliveryService), nil)
 		return
 	}
-
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(cdnID), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
 	// ECDSA keys support is only permitted for DNS delivery services
 	// Traffic Router (HTTP* delivery service types) do not support ECDSA keys
 	dsType, dsFound, err := getDSType(inf.Tx.Tx, *req.Key)
@@ -132,92 +136,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, "Successfully added ssl keys for "+*req.DeliveryService)
 }
 
-// GetSSLKeysByHostName fetches the ssl keys for a deliveryservice specified by the fully qualified hostname
-func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
-	inf, xmlID, err := getXmlIDFromRequest(w, r)
-	if inf != nil {
-		defer inf.Close()
-	}
-	if err != nil {
-		return
-	}
-	getSSLKeysByXMLIDHelper(xmlID, inf.Vault, tc.CreateAlerts(tc.WarnLevel, hostnameKeyDepMsg), inf, w, r)
-}
-
-func getXmlIDFromRequest(w http.ResponseWriter, r *http.Request) (*api.APIInfo, string, error) {
-	alerts := tc.CreateAlerts(tc.WarnLevel, hostnameKeyDepMsg)
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"hostname"}, nil)
-	if userErr != nil || sysErr != nil {
-		userErr = api.LogErr(r, errCode, userErr, sysErr)
-		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-		api.WriteAlerts(w, r, errCode, alerts)
-		return inf, "", errors.New("getting XML ID from request")
-	}
-
-	if !inf.Config.TrafficVaultEnabled {
-		userErr = api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Traffic Vault by host name: Traffic Vault is not configured"))
-		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
-		return inf, "", errors.New("getting XML ID from request")
-	}
-
-	hostName := inf.Params["hostname"]
-	xmlID, userErr, sysErr, errCode := getXmlIdFromHostname(inf, hostName)
-	if userErr != nil || sysErr != nil {
-		userErr = api.LogErr(r, errCode, userErr, sysErr)
-		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-		api.WriteAlerts(w, r, errCode, alerts)
-		return inf, "", errors.New("getting XML ID from request")
-	}
-	return inf, xmlID, nil
-}
-
-// GetSSLKeysByHostNameV15 fetches the ssl keys for a deliveryservice specified by the fully qualified hostname. V15 includes expiration date.
-func GetSSLKeysByHostNameV15(w http.ResponseWriter, r *http.Request) {
-	inf, xmlID, err := getXmlIDFromRequest(w, r)
-	if inf != nil {
-		defer inf.Close()
-	}
-	if err != nil {
-		return
-	}
-	getSSLKeysByXMLIDHelperV15(xmlID, tc.CreateAlerts(tc.WarnLevel, hostnameKeyDepMsg), inf, w, r)
-}
-
-func getXmlIdFromHostname(inf *api.APIInfo, hostName string) (string, error, error, int) {
-	domainName := ""
-	hostRegex := ""
-	strArr := strings.Split(hostName, ".")
-	ln := len(strArr)
-	if ln > 1 {
-		for i := 2; i < ln-1; i++ {
-			domainName += strArr[i] + "."
-		}
-		domainName += strArr[ln-1]
-		hostRegex = `.*\.` + strArr[1] + `\..*`
-	}
-
-	// lookup the cdnID
-	cdnID, ok, err := getCDNIDByDomainname(domainName, inf.Tx.Tx)
-	if err != nil {
-		return "", nil, errors.New("getting cdn id by domain name: " + err.Error()), http.StatusInternalServerError
-	}
-	if !ok {
-		return "", errors.New("a CDN does not exist for the domain: " + domainName + " parsed from hostname: " + hostName), nil, http.StatusNotFound
-	}
-	// now lookup the deliveryservice xmlID
-	xmlID, ok, err := getXMLID(cdnID, hostRegex, inf.Tx.Tx)
-	if err != nil {
-		return "", nil, errors.New("getting xml id: " + err.Error()), http.StatusInternalServerError
-	}
-	if !ok {
-		return "", errors.New("a delivery service does not exist for a host with hostname of " + hostName), nil, http.StatusNotFound
-	}
-
-	return xmlID, nil, nil, http.StatusOK
-}
-
-// GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID.
+// GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID. V15 includes expiration date.
 func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -230,37 +149,27 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	xmlID := inf.Params["xmlid"]
-	getSSLKeysByXMLIDHelper(xmlID, inf.Vault, tc.Alerts{}, inf, w, r)
-}
-
-func getSSLKeysByXMLIDHelper(xmlID string, tv trafficvault.TrafficVault, alerts tc.Alerts, inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
-	version := inf.Params["version"]
-	decode := inf.Params["decode"]
+	alerts := tc.Alerts{}
 	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
 		userErr = api.LogErr(r, errCode, userErr, sysErr)
 		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
 		api.WriteAlerts(w, r, errCode, alerts)
 		return
 	}
-	keyObjV15, ok, err := tv.GetDeliveryServiceSSLKeys(xmlID, version, inf.Tx.Tx, r.Context())
+
+	keyObjV4, err := getSslKeys(inf, r.Context())
 	if err != nil {
-		userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
+		userErr := api.LogErr(r, http.StatusInternalServerError, nil, err)
 		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
 		return
 	}
-	keyObj := keyObjV15.DeliveryServiceSSLKeys
-	if !ok {
-		keyObj = tc.DeliveryServiceSSLKeys{}
-	}
-	if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
-		err = Base64DecodeCertificate(&keyObj.Certificate)
-		if err != nil {
-			userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+xmlID+"': "+err.Error()))
-			alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-			api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
-			return
-		}
+
+	var keyObj interface{}
+	if inf.Version.Major < 4 {
+		keyObj = keyObjV4.DeliveryServiceSSLKeysV15
+	} else {
+		keyObj = keyObjV4
 	}
 
 	if len(alerts.Alerts) == 0 {
@@ -270,84 +179,54 @@ func getSSLKeysByXMLIDHelper(xmlID string, tv trafficvault.TrafficVault, alerts 
 	}
 }
 
-// GetSSLKeysByXMLIDV15 fetches the deliveryservice ssl keys by the specified xmlID. V15 includes expiration date.
-func GetSSLKeysByXMLIDV15(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-	if !inf.Config.TrafficVaultEnabled {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys from Traffic Vault by xml id: Traffic Vault is not configured"))
-		return
-	}
+func getSslKeys(inf *api.APIInfo, ctx context.Context) (tc.DeliveryServiceSSLKeysV4, error) {
 	xmlID := inf.Params["xmlid"]
-	getSSLKeysByXMLIDHelperV15(xmlID, tc.Alerts{}, inf, w, r)
-}
-
-func getSSLKeysByXMLIDHelperV15(xmlID string, alerts tc.Alerts, inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	version := inf.Params["version"]
 	decode := inf.Params["decode"]
-	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
-		userErr = api.LogErr(r, errCode, userErr, sysErr)
-		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-		api.WriteAlerts(w, r, errCode, alerts)
-		return
-	}
-	keyObj, ok, err := inf.Vault.GetDeliveryServiceSSLKeys(xmlID, version, inf.Tx.Tx, r.Context())
+
+	keyObjFromTv, ok, err := inf.Vault.GetDeliveryServiceSSLKeys(xmlID, version, inf.Tx.Tx, ctx)
 	if err != nil {
-		userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
-		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
-		return
+		return tc.DeliveryServiceSSLKeysV4{}, errors.New("getting ssl keys: " + err.Error())
 	}
-	if !ok {
-		keyObj = tc.DeliveryServiceSSLKeysV15{}
-	} else {
+	keyObj := tc.DeliveryServiceSSLKeysV4{}
+	if ok {
+		keyObj.DeliveryServiceSSLKeysV15 = keyObjFromTv
 		parsedCert := keyObj.Certificate
 		err = Base64DecodeCertificate(&parsedCert)
 		if err != nil {
-			userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+xmlID+"': "+err.Error()))
-			alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-			api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
-			return
+			return tc.DeliveryServiceSSLKeysV4{}, errors.New("getting SSL keys for XMLID '" + xmlID + "': " + err.Error())
 		}
 		if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
 			keyObj.Certificate = parsedCert
 		}
 
 		if keyObj.Certificate.Crt != "" && keyObj.Expiration.IsZero() {
-			exp, err := parseExpirationFromCert([]byte(parsedCert.Crt))
+			exp, sans, err := parseExpirationAndSansFromCert([]byte(parsedCert.Crt), keyObj.Hostname)
 			if err != nil {
-				userErr := api.LogErr(r, http.StatusInternalServerError, nil, errors.New(xmlID+": "+err.Error()))
-				alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-				api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
-				return
+				return tc.DeliveryServiceSSLKeysV4{}, errors.New(xmlID + ": " + err.Error())
 			}
 			keyObj.Expiration = exp
+			keyObj.Sans = sans
 		}
 	}
 
-	if len(alerts.Alerts) == 0 {
-		api.WriteResp(w, r, keyObj)
-	} else {
-		api.WriteAlertsObj(w, r, http.StatusOK, alerts, keyObj)
-	}
+	return keyObj, nil
 }
 
-func parseExpirationFromCert(cert []byte) (time.Time, error) {
+func parseExpirationAndSansFromCert(cert []byte, commonName string) (time.Time, []string, error) {
 	block, _ := pem.Decode(cert)
 	if block == nil {
-		return time.Time{}, errors.New("Error decoding cert to parse expiration")
+		return time.Time{}, []string{}, errors.New("Error decoding cert to parse expiration")
 	}
 
 	x509cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return time.Time{}, errors.New("Error parsing cert to get expiration - " + err.Error())
+		return time.Time{}, []string{}, errors.New("Error parsing cert to get expiration - " + err.Error())
 	}
 
-	return x509cert.NotAfter, nil
+	dnsNames := util.RemoveStrFromArray(x509cert.DNSNames, commonName)
+
+	return x509cert.NotAfter, dnsNames, nil
 }
 
 func Base64DecodeCertificate(cert *tc.DeliveryServiceSSLKeysCertificate) error {
@@ -377,48 +256,41 @@ func base64EncodeCertificate(cert *tc.DeliveryServiceSSLKeysCertificate) {
 
 // DeleteSSLKeys deletes a Delivery Service's sslkeys via a DELETE method
 func DeleteSSLKeys(w http.ResponseWriter, r *http.Request) {
-	deleteSSLKeys(w, r, false)
-}
-
-// DeleteSSLKeysDeprecated deletes a Delivery Service's sslkeys via a deprecated GET method
-func DeleteSSLKeysDeprecated(w http.ResponseWriter, r *http.Request) {
-	deleteSSLKeys(w, r, true)
-}
-
-func deleteSSLKeys(w http.ResponseWriter, r *http.Request, deprecated bool) {
-	alt := "DELETE /deliveryservices/xmlId/:xmlid/sslkeys"
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated, &alt)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 	if !inf.Config.TrafficVaultEnabled {
-		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Traffic Vault is not configured"), deprecated, &alt)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Traffic Vault is not configured"))
 		return
 	}
 	xmlID := inf.Params["xmlid"]
-	dsID, ok, err := getDSIDFromName(inf.Tx.Tx, xmlID)
+	dsID, cdnID, ok, err := getDSIDAndCDNIDFromName(inf.Tx.Tx, xmlID)
 	if err != nil {
-		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteSSLKeys: getting DS ID from name "+err.Error()), deprecated, &alt)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deliveryservice.DeleteSSLKeys: getting DS ID and CDN ID from name "+err.Error()))
 		return
 	} else if !ok {
-		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+xmlID), nil, deprecated, &alt)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no DS with name "+xmlID), nil)
 		return
 	}
+
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(cdnID), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+
 	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
-		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, errCode, userErr, sysErr, deprecated, &alt)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	if err := inf.Vault.DeleteDeliveryServiceSSLKeys(xmlID, inf.Params["version"], inf.Tx.Tx, r.Context()); err != nil {
-		api.HandleErrOptionalDeprecation(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: deleting SSL keys: "+err.Error()), deprecated, &alt)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: deleting SSL keys: "+err.Error()))
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+xmlID+", ID: "+strconv.Itoa(dsID)+", ACTION: Deleted SSL keys", inf.User, inf.Tx.Tx)
-	if deprecated {
-		api.WriteAlertsObj(w, r, http.StatusOK, api.CreateDeprecationAlerts(&alt), "Successfully deleted ssl keys for "+xmlID)
-		return
-	}
 	api.WriteResp(w, r, "Successfully deleted ssl keys for "+xmlID)
 }
 
@@ -442,34 +314,17 @@ func getCDNIDByDomainname(domainName string, tx *sql.Tx) (int64, bool, error) {
 	return cdnID, true, nil
 }
 
-// getDSIDFromName loads the DeliveryService's ID from the database, from the xml_id. Returns whether the delivery service was found, and any error.
-func getDSIDFromName(tx *sql.Tx, xmlID string) (int, bool, error) {
+// getDSIDAndCDNIDFromName loads the DeliveryService's ID and CDN ID from the database, from the xml_id. Returns whether the delivery service was found, and any error.
+func getDSIDAndCDNIDFromName(tx *sql.Tx, xmlID string) (int, int, bool, error) {
 	id := 0
-	if err := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id = $1`, xmlID).Scan(&id); err != nil {
+	cdnID := 0
+	if err := tx.QueryRow(`SELECT id, cdn_id FROM deliveryservice WHERE xml_id = $1`, xmlID).Scan(&id, &cdnID); err != nil {
 		if err == sql.ErrNoRows {
-			return id, false, nil
+			return id, cdnID, false, nil
 		}
-		return id, false, fmt.Errorf("querying ID for delivery service ID '%v': %v", xmlID, err)
+		return id, cdnID, false, fmt.Errorf("querying ID for delivery service ID '%v': %v", xmlID, err)
 	}
-	return id, true, nil
-}
-
-// returns a delivery service xmlId for a cdn by host regex.
-func getXMLID(cdnID int64, hostRegex string, tx *sql.Tx) (string, bool, error) {
-	q := `
-SELECT ds.xml_id from deliveryservice ds
-JOIN deliveryservice_regex dr on ds.id = dr.deliveryservice AND ds.cdn_id = $1
-JOIN regex r on r.id = dr.regex
-WHERE r.pattern = $2
-`
-	xmlID := ""
-	if err := tx.QueryRow(q, cdnID, hostRegex).Scan(&xmlID); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("querying xml id: " + err.Error())
-	}
-	return xmlID, true, nil
+	return id, cdnID, true, nil
 }
 
 // verify the server certificate chain and return the

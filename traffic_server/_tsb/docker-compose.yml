@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 ---
-version: "2.1"
+version: '3.8'
 services:
   ats_build:
     build:
@@ -30,4 +30,4 @@ services:
     - ./src/openssl:/opt/src/openssl:Z
     - ./src/ats:/rpmbuilddir/SOURCES/src:Z
     - ./src/trafficcontrol/traffic_server/plugins/astats_over_http:/opt/src/astats_over_http:Z
-    - ./dist:/rpmbuilddir/RPMS/x86_64:Z
+    - ../../dist:/rpmbuilddir/RPMS/x86_64:Z

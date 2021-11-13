@@ -22,3 +22,9 @@
 An AngularJS client served from a lightweight Node.js web server. Traffic Portal was designed to consume the Traffic Ops API.
 
 Installation / configuration instructions may be found in [the `build/` directory](./build/)
+
+## Server Options
+`Usage: node /path/to/server.js [-c CONFIG]`
+
+`-c CONFIG`
+    Specify a configuration file to use at path `CONFIG`, rather than just one of `conf/config.js`, `conf/configDev.js`, or the RPM install location (`/etc/traffic_portal/conf/config.js`)

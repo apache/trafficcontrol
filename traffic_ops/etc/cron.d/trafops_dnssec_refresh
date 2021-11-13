@@ -15,4 +15,5 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-*/5 * * * * trafops export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5:/opt/traffic_ops/app/lib; /opt/traffic_ops/app/bin/checks/ToDnssecRefresh.pl -c '{ "base_url": "https://127.0.0.1" }' -l 1 > /var/log/traffic_ops/trafops_dnssec_refresh.log 2>&1
+*/5 * * * * trafops > /var/log/traffic_ops/trafops_dnssec_refresh.log && /opt/traffic_ops/app/bin/checks/DnssecRefresh/ToDnssecRefresh --traffic-ops-url https://localhost --traffic-ops-user admin --traffic-ops-password twelve --log-location-error /var/log/traffic_ops/trafops_dnssec_refresh.log --log-location-warning /var/log/traffic_ops/trafops_dnssec_refresh.log --log-location-info /var/log/traffic_ops/trafops_dnssec_refresh.log
+

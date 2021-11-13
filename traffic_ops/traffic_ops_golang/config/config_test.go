@@ -98,6 +98,7 @@ const (
 		"pid_file" : "/var/run/traffic_ops.pid",
 		"workers" : 12
 	},
+	"disable_auto_cert_deletion": true,
 	"traffic_ops_golang" : {
 		"port" : "443",
 		"proxy_timeout" : 60,
@@ -228,6 +229,9 @@ func TestLoadConfig(t *testing.T) {
 	}
 	if blockStartup != false {
 		t.Error("expected blockStartup to be false but it was ", blockStartup)
+	}
+	if !cfg.DisableAutoCertDeletion {
+		t.Errorf("expected disable_auto_cert_deletion to be true, actual: false")
 	}
 
 	if cfg.TrafficVaultBackend != "something" {

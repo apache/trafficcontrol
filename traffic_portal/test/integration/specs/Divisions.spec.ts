@@ -20,11 +20,11 @@ import { browser } from 'protractor';
 
 import { LoginPage } from '../PageObjects/LoginPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-import { API } from '../CommonUtils/API';
+import { api } from "../config";
 import { DivisionsPage } from '../PageObjects/Divisions.po';
 import { divisions } from "../Data";
 
-const api = new API();
+
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const divisionsPage = new DivisionsPage();
@@ -47,7 +47,12 @@ divisions.tests.forEach(divisionsData => {
                 await divisionsPage.OpenTopologyMenu();
                 await divisionsPage.OpenDivisionsPage();
             });
-
+            divisionsData.check.forEach(check => {
+                it(check.description, async () => {
+                    expect(await divisionsPage.CheckCSV(check.Name)).toBe(true);
+                    await divisionsPage.OpenDivisionsPage();
+                });
+            });
             divisionsData.add.forEach(add => {
                 it(add.description, async () => {
                     expect(await divisionsPage.CreateDivisions(add)).toBeTruthy();

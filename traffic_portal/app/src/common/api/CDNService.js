@@ -20,7 +20,7 @@
 var CDNService = function($http, locationUtils, messageModel, ENV) {
 
     this.getCDNs = function(all) {
-        return $http.get(ENV.api['root'] + 'cdns').then(
+        return $http.get(ENV.api.unstable + 'cdns').then(
             function(result) {
                 let response;
                 if (all) { // there is a CDN called "ALL" that is not really a CDN but you might want it...
@@ -40,7 +40,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
 
 
     this.getCDN = function(id) {
-        return $http.get(ENV.api['root'] + 'cdns', {params: {id: id}}).then(
+        return $http.get(ENV.api.unstable + 'cdns', {params: {id: id}}).then(
             function(result) {
                 return result.data.response[0];
             },
@@ -51,7 +51,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.createCDN = function(cdn) {
-        return $http.post(ENV.api['root'] + 'cdns', cdn).then(
+        return $http.post(ENV.api.unstable + 'cdns', cdn).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 locationUtils.navigateToPath('/cdns');
@@ -66,7 +66,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
 
     // todo: change to use query param when it is supported
     this.updateCDN = function(cdn) {
-        return $http.put(ENV.api['root'] + 'cdns/' + cdn.id, cdn).then(
+        return $http.put(ENV.api.unstable + 'cdns/' + cdn.id, cdn).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
                 return result;
@@ -80,7 +80,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
 
     // todo: change to use query param when it is supported
     this.deleteCDN = function(id) {
-        return $http.delete(ENV.api['root'] + 'cdns/' + id).then(
+        return $http.delete(ENV.api.unstable + 'cdns/' + id).then(
             function(result) {
                 return result.data;
             },
@@ -92,7 +92,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.queueServerUpdates = function(id) {
-        return $http.post(ENV.api['root'] + 'cdns/' + id + '/queue_update', {action: "queue"}).then(
+        return $http.post(ENV.api.unstable + 'cdns/' + id + '/queue_update', {action: "queue"}).then(
             function(result) {
                 messageModel.setMessages([{level: 'success', text: 'Queued CDN server updates'}], false);
                 return result;
@@ -105,7 +105,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.clearServerUpdates = function(id) {
-        return $http.post(ENV.api['root'] + 'cdns/' + id + '/queue_update', {action: "dequeue"}).then(
+        return $http.post(ENV.api.unstable + 'cdns/' + id + '/queue_update', {action: "dequeue"}).then(
             function(result) {
                 messageModel.setMessages([{ level: 'success', text: 'Cleared CDN server updates'}], false);
                 return result;
@@ -118,7 +118,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getCapacity = function() {
-        return $http.get(ENV.api['root'] + 'cdns/capacity').then(
+        return $http.get(ENV.api.unstable + 'cdns/capacity').then(
             function(result) {
                 return result.data.response;
             },
@@ -129,7 +129,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getRoutingMethods = function() {
-        return $http.get(ENV.api['root'] + 'cdns/routing').then(
+        return $http.get(ENV.api.unstable + 'cdns/routing').then(
             function(result) {
                 return result.data.response;
             },
@@ -140,7 +140,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getCurrentStats = function() {
-        return $http.get(ENV.api['root'] + 'current_stats').then(
+        return $http.get(ENV.api.unstable + 'current_stats').then(
             function(result) {
                 if (result) {
                     return result.data.response;
@@ -154,7 +154,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getCurrentSnapshot = function(cdnName) {
-       return $http.get(ENV.api['root'] + 'cdns/' + cdnName + '/snapshot').then(
+       return $http.get(ENV.api.unstable + 'cdns/' + cdnName + '/snapshot').then(
             function(result) {
                 return result.data.response;
             },
@@ -165,7 +165,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getNewSnapshot = function(cdnName) {
-        return $http.get(ENV.api['root'] + 'cdns/' + cdnName + '/snapshot/new').then(
+        return $http.get(ENV.api.unstable + 'cdns/' + cdnName + '/snapshot/new').then(
             function(result) {
                 return result.data.response;
             },
@@ -176,7 +176,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.snapshot = function(cdn) {
-        return $http.put(ENV.api['root'] + 'snapshot', undefined, {params: {cdnID: cdn.id}}).then(
+        return $http.put(ENV.api.unstable + 'snapshot', undefined, {params: {cdnID: cdn.id}}).then(
             function(result) {
                 messageModel.setMessages([{level: 'success', text: 'Snapshot performed'}], true);
                 locationUtils.navigateToPath('/cdns/' + cdn.id);
@@ -190,7 +190,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getDNSSECKeys = function(cdnName) {
-        return $http.get(ENV.api['root'] + 'cdns/name/' + cdnName + '/dnsseckeys').then(
+        return $http.get(ENV.api.unstable + 'cdns/name/' + cdnName + '/dnsseckeys').then(
             function(result) {
                 return result.data.response;
             },
@@ -201,7 +201,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.generateDNSSECKeys = function(dnssecKeysRequest) {
-        return $http.post(ENV.api['root'] + 'cdns/dnsseckeys/generate', dnssecKeysRequest).then(
+        return $http.post(ENV.api.unstable + 'cdns/dnsseckeys/generate', dnssecKeysRequest).then(
             function(result) {
                 return result;
             },
@@ -213,7 +213,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
 	this.regenerateKSK = function(kskRequest, cdnKey) {
-		return $http.post(ENV.api['root'] + 'cdns/' + cdnKey + '/dnsseckeys/ksk/generate', kskRequest).then(
+		return $http.post(ENV.api.unstable + 'cdns/' + cdnKey + '/dnsseckeys/ksk/generate', kskRequest).then(
 			function(result) {
 				return result;
 			},
@@ -225,7 +225,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
 	}
 
     this.getNotifications = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'cdn_notifications', { params: queryParams }).then(
+        return $http.get(ENV.api.unstable + 'cdn_notifications', { params: queryParams }).then(
             function(result) {
                 return result.data.response;
             },
@@ -236,7 +236,7 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.createNotification = function(cdn, notification) {
-        return $http.post(ENV.api['root'] + 'cdn_notifications', { cdn: cdn.name, notification: notification}).then(
+        return $http.post(ENV.api.unstable + 'cdn_notifications', { cdn: cdn.name, notification: notification}).then(
             function(result) {
                 return result;
             },
@@ -248,7 +248,42 @@ var CDNService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.deleteNotification = function(queryParams) {
-        return $http.delete(ENV.api['root'] + 'cdn_notifications', { params: queryParams }).then(
+        return $http.delete(ENV.api.unstable + 'cdn_notifications', { params: queryParams }).then(
+            function(result) {
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
+    };
+
+    this.getLocks = function(queryParams) {
+        return $http.get(ENV.api.unstable + 'cdn_locks', { params: queryParams }).then(
+            function(result) {
+                return result.data.response;
+            },
+            function(err) {
+                throw err;
+            }
+        );
+    };
+
+    this.createLock = function(lock) {
+        return $http.post(ENV.api.unstable + 'cdn_locks', lock).then(
+            function(result) {
+                return result;
+            },
+            function(err) {
+                messageModel.setMessages(err.data.alerts, false);
+                throw err;
+            }
+        );
+    };
+
+    this.deleteLock = function(queryParams) {
+        return $http.delete(ENV.api.unstable + 'cdn_locks', { params: queryParams }).then(
             function(result) {
                 return result;
             },

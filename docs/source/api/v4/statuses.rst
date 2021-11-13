@@ -25,6 +25,7 @@ Retrieves a list of all server :term:`Statuses`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: STATUS:READ
 :Response Type:  Array
 
 Request Structure
@@ -68,7 +69,7 @@ Response Structure
 ------------------
 :description: A short description of the status
 :id:          The integral, unique identifier of this status
-:lastUpdated: The date and time at which this status was last modified, in an ISO-like format
+:lastUpdated: The date and time at which this status was last modified, in :ref:`non-rfc-datetime`
 :name:        The name of the status
 
 .. code-block:: http
@@ -92,5 +93,66 @@ Response Structure
 			"id": 3,
 			"lastUpdated": "2018-12-10 19:11:17+00",
 			"name": "REPORTED"
+		}
+	]}
+
+``POST``
+==========
+Creates a Server :term:`Status`.
+
+:Auth. Required: Yes
+:Roles Required: None
+:Permissions Required: STATUS:CREATE, STATUS:READ
+:Response Type:  Array
+
+Request Structure
+-----------------
+:description:	Create a :term:`Status` with this description
+:name:			Create a :term:`Status` with this name
+
+.. code-block:: http
+	:caption: Request Example
+
+	POST /api/4.0/statuses HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
+	{ "description": "test", "name": "example" }
+
+Response Structure
+------------------
+:description: A short description of the status
+:id:          The integral, unique identifier of this status
+:lastUpdated: The date and time at which this status was last modified, in :ref:`non-rfc-datetime`
+:name:        The name of the status
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: dHNip9kpTGGS1w39/fWcFehNktgmXZus8XaufnmDpv0PyG/3fK/KfoCO3ZOj9V74/CCffps7doEygWeL/xRtKA==
+	X-Server-Name: traffic_ops_golang/
+	Date: Mon, 10 Dec 2018 20:56:59 GMT
+	Content-Length: 167
+
+	{ "alerts": [
+		{
+			"text": "status was created.",
+			"level": "success"
+		}
+	],"response": [
+		{
+			"description": "test",
+			"name": "example"
+			"id": 3,
+			"lastUpdated": "2018-12-10 19:11:17+00",
 		}
 	]}

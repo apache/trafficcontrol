@@ -19,6 +19,8 @@
 ``cachegroupparameters``
 ************************
 
+.. deprecated:: ATCv6
+
 ``GET``
 =======
 Extract information about the :ref:`cache-group-parameters` associated with :term:`Cache Groups`.
@@ -55,7 +57,7 @@ Response Structure
 :cachegroupParameters: An array of identifying information for the :ref:`cache-group-parameters` of :term:`Cache Groups`
 
 	:cachegroup:   A string containing the :ref:`cache-group-name` of the :term:`Cache Group`
-	:last_updated: Date and time of last modification in an ISO-like format
+	:last_updated: Date and time of last modification in :ref:`non-rfc-datetime`
 	:parameter:    An integer that is the :term:`Parameter`'s :ref:`parameter-id`
 
 .. code-block:: http
@@ -84,6 +86,8 @@ Response Structure
 			}
 		]
 	}}
+
+.. deprecated:: ATCv6
 
 ``POST``
 ========
@@ -156,7 +160,7 @@ Response Structure
 :parameterId:  An integer that is the :ref:`parameter-id` of the :term:`Parameter` which has been assigned
 
 .. code-block:: http
- 	:caption: Response Example
+	:caption: Response Example
 
 	HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
@@ -184,4 +188,3 @@ Response Structure
 			"parameterId": 124
 		}
 	]}
-

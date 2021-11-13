@@ -1,0 +1,32 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<dialog open>
+	<h2>Change status for {{serverName}}</h2>
+	<hr/>
+	<!-- method=dialog doesn't work in Firefox - even with the dialog element enabled in about:config-->
+	<!-- So we need to preventDefault on this event anyway -->
+	<form ngNativeValidate (ngSubmit)="submit($event)" method="dialog">
+		<label for="status">New Status</label>
+		<select id="status" name="status" [formControl]="statusControl" required>
+			<option *ngFor="let status of statuses | async" [ngValue]="status" [disabled]="status.id === currentStatus">{{status.name}}</option>
+		</select>
+		<label *ngIf="isOffline" for="offlineReason">Offline Reason</label>
+		<input [formControl]="offlineReasonControl" id="offlineReason" name="offlineReason" *ngIf="isOffline" required maxlength="100"/>
+		<div>
+			<button mat-raised-button color="warn" type="button" (click)="cancel()">Cancel</button>
+			<button mat-raised-button>Submit</button>
+		</div>
+	</form>
+</dialog>
+<div class="backdrop"></div>

@@ -20,20 +20,20 @@ $fa-font-path: "../assets/fonts";
 
 @import url(//fonts.googleapis.com/css?family=Lato:300,400,700,900,400italic);
 
-@import "bootstrap-sass-official/assets/stylesheets/bootstrap";
+@import "bootstrap-sass/assets/stylesheets/bootstrap";
 @import "font-awesome/scss/font-awesome";
 
 // common
-@import "../common/modules/chart/chart ";
-@import "../common/modules/compare/compare ";
+@import "../common/modules/chart/chart";
+@import "../common/modules/compare/compare";
 @import "../common/modules/dialog/dialog";
 @import "../common/modules/dialog/import/dialog.import";
 @import "../common/modules/dialog/text/dialog.text";
 @import "../common/modules/header/header";
 @import "../common/modules/form/cacheGroup/form.cacheGroup";
 @import "../common/modules/form/form";
+@import "../common/modules/locks/locks";
 @import "../common/modules/navigation/navigation";
-@import "../common/modules/notifications/notifications";
 @import "../common/modules/table/table";
 @import "../common/modules/table/parameters/table.parameters";
 @import "../common/modules/release/release";
@@ -261,4 +261,10 @@ input[type="checkbox"].dirty {
   .angular-ui-tree-handle {
     cursor: default !important;
   }
+}
+
+.alert-dark {
+  color: #141619;
+  background-color: #d3d3d4;
+  border-color: #bcbebf;
 }

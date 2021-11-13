@@ -79,6 +79,53 @@ Administration of the PostgreSQL database for Traffic Vault
 
 Similar to administering the Traffic Ops database, the :ref:`admin <database-management>` tool should be used for administering the PostgreSQL Traffic Vault backend.
 
+.. program:: reencrypt
+
+app/db/reencrypt/reencrypt
+--------------------------
+The :program:`reencrypt` binary is used to re-encrypt all data in the Postgres Traffic Vault with a new base64-encoded AES key.
+
+.. note:: For proper resolution of configuration files, it's recommended that this binary be run from the ``app/db/reencrypt`` directory.
+
+Usage
+"""""
+``./reencrypt [options]``
+
+Options and Arguments
+"""""""""""""""""""""
+.. option:: --new-key NEW_KEY
+
+	(Optional) The file path for the new base64-encoded AES key. Default is ``/opt/traffic_ops/app/conf/new.key``.
+
+.. option:: --previous-key PREVIOUS_KEY
+
+	(Optional) The file path for the previous base64-encoded AES key. Default is ``/opt/traffic_ops/app/conf/aes.key``.
+
+.. option:: --cfg CONFIG_FILE
+
+	(Optional) The path for the configuration file. Default is ``./reencrypt.conf``.
+
+.. option:: --help
+
+	(Optional) Print usage information and exit.
+
+.. code-block:: bash
+	:caption: Example Usage
+
+	./reencrypt --new-key ~/exampleNewKey.txt --previous-key ~/exampleOldKey.txt
+
+reencrypt.conf
+""""""""""""""
+This file deals with configuration of the Traffic Vault Database to be used with the :program:`reencrypt` tool.
+
+:dbname: The name of the PostgreSQL database used.
+:hostname: The hostname (:abbr:`FQDN (Fully Qualified Domain Name)`) of the server that runs the Traffic Vault Database.
+:password: The password to use when authenticating with the Traffic Vault database.
+:port: The port number on which the Traffic Vault Database is listening for incoming connections (NOTE: the PostgreSQL default is 5432).
+:ssl: A boolean that sets whether or not the Traffic Vault Database encrypts its connections with SSL.
+:user: The name of the user as whom to connect to the database.
+
+
 .. _traffic_vault_riak_backend:
 
 Riak (deprecated)
@@ -123,7 +170,7 @@ Configuring Riak
 Follow these steps to configure Riak in a production environment.
 
 Self Signed Certificate configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""""""""""""""""
 .. note:: Self-signed certificates are not recommended for production use. Intended for development or learning purposes only. Modify subject as necessary.
 
 .. code-block:: shell
@@ -145,7 +192,7 @@ Self Signed Certificate configuration
 
 
 Riak Configuration File
-^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""
 The following steps need to be performed on each Riak server in the cluster:
 
 #. Log into Riak server as root
@@ -165,14 +212,14 @@ The following steps need to be performed on each Riak server in the cluster:
 .. _tv-admin-enable-tlsv1.1:
 
 Enabling TLS 1.1 (required)
-"""""""""""""""""""""""""""
+'''''''''''''''''''''''''''
 
 #. Add a line at the bottom of the :file:`riak.conf` for TLSv1.1 by setting ``tls_protocols.tlsv1.1 = on``
 #. Once the configuration file has been updated restart Riak
 #. Consult the `Riak documentation <https://docs.riak.com/riak/kv/latest/setup/installing/verify/>`_ for instructions on how to verify the installed service
 
 ``riak-admin`` Configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""""
 ``riak-admin`` is a command line utility used to configure Riak that needs to be run as root on a server in the Riak cluster.
 
 .. seealso:: `The riak-admin documentation <https://docs.riak.com/riak/kv/latest/using/admin/riak-admin/>`_
@@ -210,7 +257,7 @@ Enabling TLS 1.1 (required)
 
 
 Traffic Ops Configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""""
 Before a fully set-up Riak instance may be used as the Traffic Vault backend, it must be added as a server to Traffic Ops. The easiest way to accomplish this is via Traffic Portal at :menuselection:`Configure --> Servers`, though :ref:`to-api-servers` may also be used by low-level tools and/or scripts. The Traffic Ops configuration file :file:`/opt/traffic_ops/app/conf/cdn.conf` must be updated to set ``traffic_vault_backend`` to ``"riak"`` and the ``traffic_vault_config`` to include the correct username and password for accessing the Riak database.
 
 Configuring Riak Search
@@ -218,7 +265,7 @@ Configuring Riak Search
 In order to more effectively support retrieval of SSL certificates by Traffic Router and :term:`ORT`, the Riak backend for Traffic Vault uses `Riak search <https://docs.riak.com/riak/kv/latest/using/reference/search/>`_. Riak Search uses `Apache Solr <https://lucene.apache.org/solr>`_ for indexing and searching of records. This section explains how to enable, configure, and validate Riak Search.
 
 Riak Configuration
-^^^^^^^^^^^^^^^^^^
+""""""""""""""""""
 On each Traffic Vault server follow these steps.
 
 #. If Java (JDKv1.8+) is not already installed on your Riak server, install Java
@@ -252,7 +299,7 @@ On each Traffic Vault server follow these steps.
 		systemctl restart riak
 
 One-time Configuration
-""""""""""""""""""""""
+''''''''''''''''''''''
 After Riak has been configured to use Riak Search, permissions still need need to be updated to allow users to utilize this feature. Unlike actually setting up Riak Search, the permissions step need only be done on any *one* of the Riak servers in the cluster.
 
 #. Use ``riak-admin`` to grant ``search.admin`` permissions to the "admin" user and ``search.query`` permissions to **both** the "admin" user and the "riakuser" user. The "admin" user will also require ``search.admin`` permissions on the ``schema`` (in addition to ``index``) and ``riak_core.set_bucket`` permissions on ``any``.

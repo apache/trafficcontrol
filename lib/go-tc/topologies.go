@@ -36,7 +36,8 @@ type TopologyNode struct {
 	LastUpdated *TimeNoMod `json:"-" db:"last_updated"`
 }
 
-// TopologiesResponse models the JSON object returned for a single topology in a response.
+// TopologyResponse models the JSON object returned for a single Topology in a
+// response from the Traffic Ops API.
 type TopologyResponse struct {
 	Response Topology `json:"response"`
 	Alerts

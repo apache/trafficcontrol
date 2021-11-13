@@ -52,6 +52,13 @@ func comparePeerState(events health.ThreadsafeEvents, result peer.Result, peerSt
 			description = "Peer is unreachable"
 		}
 
-		events.Add(health.Event{Time: health.Time(result.Time), Description: description, Name: result.ID.String(), Hostname: result.ID.String(), Type: "PEER", Available: result.Available})
+		events.Add(
+			health.Event{
+				Time:        health.Time(result.Time),
+				Description: description,
+				Name:        result.ID.String(),
+				Hostname:    result.ID.String(),
+				Type:        "PEER",
+				Available:   result.Available})
 	}
 }

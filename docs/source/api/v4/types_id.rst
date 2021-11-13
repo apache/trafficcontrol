@@ -25,6 +25,7 @@ Updates a type
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: TYPE:UPDATE, TYPE:READ
 :Response Type:  Object
 
 Request Structure
@@ -64,7 +65,7 @@ Response Structure
 ------------------
 :description: A short description of this type
 :id:          An integral, unique identifier for this type
-:lastUpdated: The date and time at which this type was last updated, in ISO format
+:lastUpdated: The date and time at which this type was last updated, in :ref:`non-rfc-datetime`
 :name:        The name of this type
 :useInTable:  The name of the Traffic Ops database table that contains objects which are grouped, identified, or described by this type
 
@@ -105,6 +106,7 @@ Deletes a type
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: TYPE:DELETE, TYPE:READ
 :Response Type: Object
 
 

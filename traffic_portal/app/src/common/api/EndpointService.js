@@ -20,7 +20,7 @@
 var EndpointService = function($http, ENV) {
 
 	this.getEndpoints = function(queryParams) {
-		return $http.get(ENV.api['root'] + 'api_capabilities', {params: queryParams}).then(
+		return $http.get(ENV.api.unstable + 'api_capabilities', {params: queryParams}).then(
 			function (result) {
 				return result.data.response;
 			},

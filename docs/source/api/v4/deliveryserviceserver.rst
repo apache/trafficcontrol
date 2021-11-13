@@ -25,21 +25,24 @@ Retrieve information about the assignment of servers to :term:`Delivery Services
 
 :Auth. Required: Yes
 :Roles Required: None\ [1]_
+:Permissions Required: SERVER:READ, DELIVERY-SERVICE:READ
 :Response Type:  Array
 
 Request Structure
 -----------------
 .. table:: Request Query Parameters
 
-	+-----------+----------+-------------------+---------------------------------------------------------------------------------------------------------------------+
-	|    Name   | Required | Default           |                                                       Description                                                   |
-	+===========+==========+===================+=====================================================================================================================+
-	| page      | no       | 0                 | The page number for use in pagination - ``0`` means "no pagination"                                                 |
-	+-----------+----------+-------------------+---------------------------------------------------------------------------------------------------------------------+
-	| limit     | no       | 20                | Limits the results to a maximum of this number - if pagination is used, this defines the number of results per page |
-	+-----------+----------+-------------------+---------------------------------------------------------------------------------------------------------------------+
-	| orderby   | no       | "deliveryservice" | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` array |
-	+-----------+----------+-------------------+---------------------------------------------------------------------------------------------------------------------+
+	+-----------+----------+-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	|    Name   | Required | Default           |                                                       Description                                                                                                            |
+	+===========+==========+===================+==============================================================================================================================================================================+
+	| cdn       | no       | None              | Limit the results to delivery service servers for the given CDN name                                                                                                         |
+	+-----------+----------+-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| page      | no       | 0                 | The page number for use in pagination - ``0`` means "no pagination"                                                                                                          |
+	+-----------+----------+-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| limit     | no       | 20                | Limits the results to a maximum of this number - if pagination is used, this defines the number of results per page                                                          |
+	+-----------+----------+-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+	| orderby   | no       | "deliveryService" | Choose the ordering of the results - the value must either be the name of one of the fields of the objects in the ``response`` array or be empty to skip ordering altogether |
+	+-----------+----------+-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example
@@ -103,6 +106,7 @@ Assign a set of one or more servers to a :term:`Delivery Service`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"\ [2]_
+:Permissions Required: DELIVERY-SERVICE:READ, SERVER:READ, SERVER:UPDATE, DELIVERY-SERVICE:UPDATE
 :Response Type:  Object
 
 Request Structure

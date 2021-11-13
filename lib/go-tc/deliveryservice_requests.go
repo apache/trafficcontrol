@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -36,6 +37,10 @@ import (
 // EmailTemplate is an html/template.Template for formatting DeliveryServiceRequestRequests into
 // text/html email bodies. Its direct use is discouraged, instead use
 // DeliveryServiceRequestRequest.Format.
+//
+// Deprecated: Delivery Services Requests have been deprecated in favor of
+// Delivery Service Requests, and will be removed from the Traffic Ops API at
+// some point in the future.
 var EmailTemplate = template.Must(template.New("Email Template").Parse(`<!DOCTYPE html>
 <html lang="en-US">
 <head>
@@ -155,10 +160,14 @@ pre {
 </html>
 `))
 
-// IDNoMod type is used to suppress JSON unmarshalling
+// IDNoMod type is used to suppress JSON unmarshalling.
 type IDNoMod int
 
 // DeliveryServiceRequestRequest is a literal request to make a Delivery Service.
+//
+// Deprecated: Delivery Services Requests have been deprecated in favor of
+// Delivery Service Requests, and will be removed from the Traffic Ops API at
+// some point in the future.
 type DeliveryServiceRequestRequest struct {
 	// EmailTo is the email address that is ultimately the destination of a formatted DeliveryServiceRequestRequest.
 	EmailTo string `json:"emailTo"`
@@ -168,6 +177,10 @@ type DeliveryServiceRequestRequest struct {
 
 // DeliveryServiceRequestDetails holds information about what a user is trying
 // to change, with respect to a delivery service.
+//
+// Deprecated: Delivery Services Requests have been deprecated in favor of
+// Delivery Service Requests, and will be removed from the Traffic Ops API at
+// some point in the future.
 type DeliveryServiceRequestDetails struct {
 	// ContentType is the type of content to be delivered, e.g. "static", "VOD" etc.
 	ContentType string `json:"contentType"`
@@ -255,7 +268,7 @@ func (d DeliveryServiceRequestDetails) Format() (string, error) {
 	b := &strings.Builder{}
 
 	if err := EmailTemplate.Execute(b, d); err != nil {
-		return "", fmt.Errorf("Failed to apply template: %v", err)
+		return "", fmt.Errorf("Failed to apply template: %w", err)
 	}
 	return b.String(), nil
 }
@@ -275,7 +288,7 @@ func (d *DeliveryServiceRequestRequest) Validate() error {
 	details := d.Details
 	err = validation.ValidateStruct(&details,
 		validation.Field(&details.ContentType, validation.Required),
-		validation.Field(&details.Customer, validation.Required),
+		validation.Field(&details.Customer, validation.Required, validation.Match(regexp.MustCompile(`^[\w@!#$%^&\*\(\)\[\]\. -]+$`))),
 		validation.Field(&details.DeepCachingType, validation.By(
 			func(t interface{}) error {
 				if t != (*DeepCachingType)(nil) && *t.(*DeepCachingType) == DeepCachingTypeInvalid {
@@ -491,21 +504,22 @@ func (a *IDNoMod) UnmarshalJSON([]byte) error {
 	return nil
 }
 
-// RequestStatus captures where in the workflow this request is
+// RequestStatus captures where in the workflow this request is.
 type RequestStatus string
 
+// The various Statuses a Delivery Service Request (DSR) may have.
 const (
-	// RequestStatusInvalid -- invalid state
+	// The state as parsed from a raw string did not represent a valid RequestStatus.
 	RequestStatusInvalid = RequestStatus("invalid")
-	// RequestStatusDraft -- newly created; not ready to be reviewed
+	// The DSR is a draft that is not ready for review.
 	RequestStatusDraft = RequestStatus("draft")
-	// RequestStatusSubmitted -- newly created; ready to be reviewed
+	// The DSR has been submitted for review.
 	RequestStatusSubmitted = RequestStatus("submitted")
-	// RequestStatusRejected -- reviewed, but problems found
+	// The DSR was rejected by a reviewer.
 	RequestStatusRejected = RequestStatus("rejected")
-	// RequestStatusPending -- reviewed and locked; ready to be implemented
+	// The DSR has been approved by a reviewer and is pending fullfillment.
 	RequestStatusPending = RequestStatus("pending")
-	// RequestStatusComplete -- implemented and locked
+	// The DSR has been approved and fully implemented.
 	RequestStatusComplete = RequestStatus("complete")
 )
 
@@ -902,19 +916,19 @@ type DeliveryServiceRequestResponseV40 struct {
 	Alerts
 }
 
-// DeliveryServiceRequestCUDResponseV4 is the type of a response from
+// DeliveryServiceRequestResponseV4 is the type of a response from
 // Traffic Ops when creating, updating, or deleting a Delivery Service Request
 // using the latest minor version of API version 4.
 type DeliveryServiceRequestResponseV4 = DeliveryServiceRequestResponseV40
 
-// DeliveryServiceRequestResponseV40 is the type of a response from Traffic Ops
+// DeliveryServiceRequestsResponseV40 is the type of a response from Traffic Ops
 // for Delivery Service Requests using API version 4.0.
 type DeliveryServiceRequestsResponseV40 struct {
 	Response []DeliveryServiceRequestV40 `json:"response"`
 	Alerts
 }
 
-// DeliveryServiceRequestResponseV4 is the type of a response from Traffic Ops
+// DeliveryServiceRequestsResponseV4 is the type of a response from Traffic Ops
 // for Delivery Service Requests using the latest minor version of API version
 // 4.
 type DeliveryServiceRequestsResponseV4 = DeliveryServiceRequestsResponseV40

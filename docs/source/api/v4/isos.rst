@@ -26,6 +26,7 @@ Generates an ISO from the requested ISO source.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: ISO:GENERATE, ISO:READ
 :Response Type:  undefined - ISO image as a streaming download
 
 Request Structure

@@ -18,5 +18,7 @@
 name: 'build-rpms'
 description: 'Builds RPMs for a single ATC component'
 runs:
-  using: 'node12'
-  main: 'main.js'
+  using: 'composite'
+  steps:
+    - run: ${{ github.action_path }}/build-rpms.sh
+      shell: bash

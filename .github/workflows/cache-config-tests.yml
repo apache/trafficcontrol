@@ -17,22 +17,30 @@
 
 name: Traffic Control Cache Config integration tests
 
-on: 
-  push:
+env:
+  RHEL_VERSION: 8
+  ATS_VERSION: 8.1.x
+
+on:
   workflow_dispatch:
+  push:
     paths:
       - .github/workflows/cache-config-tests.yml
       - go.mod
       - go.sum
       - GO_VERSION
+      - lib/go-atscfg/**.go
       - traffic_ops/*client/**.go
+      - traffic_ops/toclientlib/**.go
+      - lib/atscfg-go/**.go
       - traffic_ops/traffic_ops_golang/**.go
       - cache-config/**.go
+      - cache-config/testing/**
       - vendor/**.go
       - vendor/modules.txt
-      - .github/actions/build-ats-test-rpm
-      - .github/actions/fetch-github-branch-sha
-      - .github/actions/cache-config-integration-tests
+      - .github/actions/build-ats-test-rpm/**
+      - .github/actions/fetch-github-branch-sha/**
+      - .github/actions/cache-config-integration-tests/**
   create:
   pull_request:
     paths:
@@ -40,16 +48,18 @@ on:
       - go.mod
       - go.sum
       - GO_VERSION
+      - lib/go-atscfg/**.go
       - traffic_ops/*client/**.go
       - traffic_ops/toclientlib/**.go
       - lib/atscfg-go/**.go
       - traffic_ops/traffic_ops_golang/**.go
       - cache-config/**.go
+      - cache-config/testing/**
       - vendor/**.go
       - vendor/modules.txt
-      - .github/actions/build-ats-test-rpm
-      - .github/actions/fetch-github-branch-sha
-      - .github/actions/cache-config-integration-tests
+      - .github/actions/build-ats-test-rpm/**
+      - .github/actions/fetch-github-branch-sha/**
+      - .github/actions/cache-config-integration-tests/**
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
@@ -92,21 +102,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Get commit sha
+      - name: Get latest commit sha and latest tag
         uses: ./.github/actions/fetch-github-branch-sha
         with:
           owner: apache
           repo: trafficserver
-          branch: 8.1.x
+          branch: ${{ env.ATS_VERSION }}
         id: git-repo-sha
-      - name: Display SHA
-        run: echo "${{ steps.git-repo-sha.outputs.sha }}"
       - name: Check Cache
         id: ats-rpm-cache
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/dist
-          key: ${{ steps.git-repo-sha.outputs.sha }}
+          key: ${{ steps.git-repo-sha.outputs.sha }}-${{ steps.git-repo-sha.outputs.latest-tag }}-el${{ env.RHEL_VERSION }}-${{ hashFiles('cache-config/testing/docker/trafficserver/**') }}
       - name: Build ATS RPM
         if: steps.ats-rpm-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/build-ats-test-rpm

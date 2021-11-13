@@ -37,34 +37,37 @@ import (
 
 // Config reflects the structure of the cdn.conf file
 type Config struct {
-	URL                    *url.URL `json:"-"`
-	CertPath               string   `json:"-"`
-	KeyPath                string   `json:"-"`
-	ConfigHypnotoad        `json:"hypnotoad"`
-	ConfigTrafficOpsGolang `json:"traffic_ops_golang"`
-	ConfigTO               *ConfigTO   `json:"to"`
-	SMTP                   *ConfigSMTP `json:"smtp"`
-	ConfigPortal           `json:"portal"`
-	ConfigLetsEncrypt      `json:"lets_encrypt"`
-	ConfigAcmeRenewal      `json:"acme_renewal"`
-	AcmeAccounts           []ConfigAcmeAccount `json:"acme_accounts"`
-	DB                     ConfigDatabase      `json:"db"`
-	Secrets                []string            `json:"secrets"`
-	TrafficVaultEnabled    bool
-	ConfigLDAP             *ConfigLDAP
-	LDAPEnabled            bool
-	LDAPConfPath           string `json:"ldap_conf_location"`
-	ConfigInflux           *ConfigInflux
-	InfluxEnabled          bool
-	InfluxDBConfPath       string `json:"influxdb_conf_path"`
-	Version                string
-	UseIMS                 bool `json:"use_ims"`
+	URL                     *url.URL `json:"-"`
+	CertPath                string   `json:"-"`
+	KeyPath                 string   `json:"-"`
+	ConfigHypnotoad         `json:"hypnotoad"`
+	ConfigTrafficOpsGolang  `json:"traffic_ops_golang"`
+	ConfigTO                *ConfigTO   `json:"to"`
+	SMTP                    *ConfigSMTP `json:"smtp"`
+	ConfigPortal            `json:"portal"`
+	ConfigLetsEncrypt       `json:"lets_encrypt"`
+	ConfigAcmeRenewal       `json:"acme_renewal"`
+	AcmeAccounts            []ConfigAcmeAccount `json:"acme_accounts"`
+	DB                      ConfigDatabase      `json:"db"`
+	Secrets                 []string            `json:"secrets"`
+	TrafficVaultEnabled     bool
+	ConfigLDAP              *ConfigLDAP
+	LDAPEnabled             bool
+	LDAPConfPath            string `json:"ldap_conf_location"`
+	ConfigInflux            *ConfigInflux
+	InfluxEnabled           bool
+	InfluxDBConfPath        string `json:"influxdb_conf_path"`
+	Version                 string
+	DisableAutoCertDeletion bool                    `json:"disable_auto_cert_deletion"`
+	UseIMS                  bool                    `json:"use_ims"`
+	RoleBasedPermissions    bool                    `json:"role_based_permissions"`
+	DefaultCertificateInfo  *DefaultCertificateInfo `json:"default_certificate_info"`
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
 type ConfigHypnotoad struct {
 	Listen []string `json:"listen"`
-	// NOTE: don't care about any other fields for now..
+	// NOTE: don't care about any other fields for now
 }
 
 // ConfigTrafficOpsGolang carries settings specific to traffic_ops_golang server
@@ -90,7 +93,6 @@ type ConfigTrafficOpsGolang struct {
 	MaxDBConnections         int                        `json:"max_db_connections"`
 	DBMaxIdleConnections     int                        `json:"db_max_idle_connections"`
 	DBConnMaxLifetimeSeconds int                        `json:"db_conn_max_lifetime_seconds"`
-	BackendMaxConnections    map[string]int             `json:"backend_max_connections"`
 	DBQueryTimeoutSeconds    int                        `json:"db_query_timeout_seconds"`
 	Plugins                  []string                   `json:"plugins"`
 	PluginConfig             map[string]json.RawMessage `json:"plugin_config"`
@@ -173,6 +175,38 @@ type ConfigAcmeAccount struct {
 	HmacEncoded  string `json:"hmac_encoded"`
 }
 
+type DefaultCertificateInfo struct {
+	BusinessUnit string `json:"business_unit"`
+	City         string `json:"city"`
+	Organization string `json:"organization"`
+	Country      string `json:"country"`
+	State        string `json:"state"`
+}
+
+func (d *DefaultCertificateInfo) Validate() (error, bool) {
+	missingList := []string{}
+	if d.BusinessUnit == "" {
+		missingList = append(missingList, "BusinessUnit")
+	}
+	if d.City == "" {
+		missingList = append(missingList, "City")
+	}
+	if d.Organization == "" {
+		missingList = append(missingList, "Organization")
+	}
+	if d.Country == "" {
+		missingList = append(missingList, "Country")
+	}
+	if d.State == "" {
+		missingList = append(missingList, "State")
+	}
+
+	if len(missingList) != 0 {
+		return fmt.Errorf("default certificate information is missing: %s", missingList), false
+	}
+	return nil, true
+}
+
 // ConfigDatabase reflects the structure of the database.conf file
 type ConfigDatabase struct {
 	Description string `json:"description"`
@@ -208,8 +242,6 @@ func NewFakeConfig() Config {
 	c := Config{}
 	c.URL, _ = url.Parse("http://example.com")
 	c.Secrets = append(c.Secrets, "foo")
-	c.BackendMaxConnections = make(map[string]int, 1)
-	c.BackendMaxConnections["mojolicious"] = 42
 	return c
 }
 
@@ -348,9 +380,8 @@ func (c Config) GetKeyPath() string {
 }
 
 const (
-	MojoliciousConcurrentConnectionsDefault = 12 // MojoliciousConcurrentConnectionsDefault
-	DBMaxIdleConnectionsDefault             = 10 // if this is higher than MaxDBConnections it will be automatically adjusted below it by the db/sql library
-	DBConnMaxLifetimeSecondsDefault         = 60
+	DBMaxIdleConnectionsDefault     = 10 // if this is higher than MaxDBConnections it will be automatically adjusted below it by the db/sql library
+	DBConnMaxLifetimeSecondsDefault = 60
 )
 
 // ParseConfig validates required fields, and parses non-JSON types
@@ -376,12 +407,6 @@ func ParseConfig(cfg Config) (Config, error) {
 	}
 	if cfg.LogLocationEvent == "" {
 		cfg.LogLocationEvent = log.LogLocationNull
-	}
-	if cfg.BackendMaxConnections == nil {
-		cfg.BackendMaxConnections = make(map[string]int)
-	}
-	if cfg.BackendMaxConnections["mojolicious"] == 0 {
-		cfg.BackendMaxConnections["mojolicious"] = MojoliciousConcurrentConnectionsDefault
 	}
 	if cfg.DBMaxIdleConnections == 0 {
 		cfg.DBMaxIdleConnections = DBMaxIdleConnectionsDefault

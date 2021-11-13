@@ -217,6 +217,9 @@ Much of a Traffic Router's configuration can be obtained through the :term:`Para
 	| client.steering.forced.diversity        | CRConfig.json                | When this :term:`Parameter` exists and is exactly "true", it enables the "Client Steering Forced Diversity" feature to diversify      |
 	|                                         |                              | CLIENT_STEERING results by including more unique :term:`Edge-tier cache servers` in the response to the client's request.             |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
+	| strip.special.query.params              | CRConfig.json                | If "true", Traffic Router will strip its special query parameters (namely "trred" and "fakeClientIpAddress") from its responses.      |
+	|                                         |                              | Note: the special query parameter "format" is not stripped due to its generality.                                                     |
+	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| tld.soa.expire                          | CRConfig.json                | The value for the "expire" field the Traffic Router DNS Server will respond with on :abbr:`SOA (Start of Authority)` records.         |
 	+-----------------------------------------+------------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| tld.soa.minimum                         | CRConfig.json                | The value for the minimum field the Traffic Router DNS Server will respond with on :abbr:`SOA (Start of Authority)` records.          |
@@ -369,9 +372,9 @@ Normally, when performing consistent hashing for an HTTP-:ref:`routed <ds-types>
 
 .. caution:: Certain query parameters are reserved by Traffic Router for its own use, and thus cannot be present in any Consistent Hash Query Parameters. These reserved parameters are:
 
-	 - trred
-	 - format
-	 - fakeClientIPAddress
+	- trred
+	- format
+	- fakeClientIPAddress
 
 .. _tr-dnssec:
 
@@ -442,11 +445,11 @@ Example Request Flow
 The following is an example of the request flow when a client requests the routing name for an example delivery service, ``tr.service.cdn.example.com``. The request flow assumes that the resolver is cold and has yet to build a local cache of lookups, meaning it has to walk the domain hierarchy asking for ``NS`` records until it reaches ``service.cdn.example.com``. This example starts after the resolver has determined which name servers are authoritative for ``cdn.example.com``. Note that the same logic is applied for each of the three queries made by the resolver.
 
 .. figure:: traffic_router/images/edge_tr_example.png
-   :scale: 30%
-   :align: center
-   :alt: Example Request Flow for Edge Traffic Routing
+	:scale: 30%
+	:align: center
+	:alt: Example Request Flow for Edge Traffic Routing
 
-   Example Request Flow for Edge Traffic Routing. Note this picks up when the resolver hits the CDN managed domain.
+	Example Request Flow for Edge Traffic Routing. Note this picks up when the resolver hits the CDN managed domain.
 
 .. _tr-logs:
 

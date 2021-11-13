@@ -18,6 +18,8 @@
 ********************
 ``api_capabilities``
 ********************
+.. deprecated:: 3.1
+
 Deals with the capabilities that may be associated with API endpoints and methods. These capabilities are assigned to :term:`Roles`, of which a user may have one or more. Capabilities support "wildcarding" or "globbing" using asterisks to group multiple routes into a single capability
 
 ``GET``
@@ -60,7 +62,7 @@ Response Structure
 
 :httpRoute:   The request route for which this capability applies - relative to the Traffic Ops server's URL
 :id:          An integer which uniquely identifies this capability
-:lastUpdated: The time at which this capability was last updated, in ISO format
+:lastUpdated: The time at which this capability was last updated, in :ref:`non-rfc-datetime`
 
 .. code-block:: http
 	:caption: Response Example

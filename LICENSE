@@ -222,10 +222,6 @@ This product bundles fontawesome CSS files, which are available under an MIT lic
 ./licenses/MIT-fontawesome
 Refer to the above license for the full text.
 
-This product bundles bootstrap, which is available under an MIT license.
-@misc/traffic-control-cdn/*/bootstrap*
-Refer to the above license for the full text.
-
 This product bundles normalize.css, which is available under an MIT license.
 ./licenses/MIT-normalize
 Refer to the above license for the full text.
@@ -476,14 +472,19 @@ This product bundles miekg/dns, which is available under a BSD-3-Clause license.
 ./vendor/github.com/miekg/dns/LICENSE
 Refer to the above license for the full text.
 
-This product bundles asn1-ber.v1, which is available under an MIT license.
-@vendor/gopkg.in/asn1-ber.v1/*
-./vendor/gopkg.in/asn1-ber.v1/LICENSE
+This product bundles ldap/v3 component, which is available under an MIT license.
+@vendor/github.com/go-ldap/ldap/v3/*
+./vendor/github.com/go-ldap/ldap/v3/LICENSE
 Refer to the above license for the full text.
 
-This product bundles ldap.v2 component, which is available under an MIT license.
-@vendor/gopkg.in/ldap.v2/*
-./vendor/gopkg.in/ldap.v2/LICENSE
+This product bundles go-ntlmssp component, which is available under an MIT license.
+@vendor/github.com/Azure/go-ntlmssp/*
+./vendor/github.com/Azure/go-ntlmssp/LICENSE
+Refer to the above license for the full text.
+
+This product bundles go-asn1-ber component, which is available under an MIT license.
+@vendor/github.com/go-asn1-ber/asn1-ber/*
+vendor/github.com/go-asn1-ber/asn1-ber/LICENSE
 Refer to the above license for the full text.
 
 This product bundles an example video for fakeOrigin, which is available under an CC-PDM-1.0 license.
@@ -529,11 +530,6 @@ Refer to the above license for the full text.
 This product bundles dgrijalva/jwt-go, which is available under an MIT license.
 @vendor/github.com/dgrijalva/jwt-go/*
 ./vendor/github.com/dgrijalva/jwt-go/LICENSE
-Refer to the above license for the full text.
-
-This product bundles ogier/pflag, which is available under a BSD-3-Clause license.
-@vendor/github.com/ogier/pflag/*
-./vendor/github.com/ogier/pflag/LICENSE
 Refer to the above license for the full text.
 
 This product bundles errors, which is available under a BSD-2-Clause license.
@@ -583,5 +579,25 @@ Refer to the above license for the full text.
 
 This product bundles kylelemons/godebug, which is available under an Apache-2.0 license.
 @vendor/github.com/kylelemons/godebug/*
-.vendor/github.com/kylelemons/godebug/LICENSE
+./vendor/github.com/kylelemons/godebug/LICENSE
+Refer to the above license for the full text.
+
+This product bundles golang-migrate/migrate, which is available under an MIT license.
+@vendor/github.com/golang-migrate/migrate/v4/*
+./vendor/github.com/golang-migrate/migrate/v4/LICENSE
+Refer to the above license for the full text.
+
+This product bundles hashicorp/errwrap, which is available under an MPL-2.0 license.
+@vendor/github.com/hashicorp/errwrap/*
+./vendor/github.com/hashicorp/errwrap/LICENSE
+Refer to the above license for the full text.
+
+This product bundles hashicorp/go-multierror, which is available under an MPL-2.0 license.
+@vendor/github.com/hashicorp/go-multierror/*
+./vendor/github.com/hashicorp/go-multierror/LICENSE
+Refer to the above license for the full text.
+
+This product bundles google.golang.org/protobuf, which is available under a BSD-3-Clause license.
+@vendor/google.golang.org/protobuf/*
+./vendor/google.golang.org/protobuf/LICENSE
 Refer to the above license for the full text.

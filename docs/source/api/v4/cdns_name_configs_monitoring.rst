@@ -27,6 +27,7 @@ Retrieves information concerning the monitoring configuration for a specific CDN
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: MONITOR-CONFIG:READ
 :Response Type:  Object
 
 Request Structure
@@ -52,14 +53,8 @@ Response Structure
 
 :config: A collection of parameters used to configure the monitoring behaviour of Traffic Monitor
 
-	:hack.ttl:                    Unknown
-	:health.event-count:          The total number of health events to store
-	:health.polling.interval:     An interval in milliseconds on which to poll for health statistics
-	:health.threadPool:           The number of threads to be used for health polling
-	:health.timepad:              A 'padding time' to add to requests to spread them out for Traffic Control systems that use a large number of Traffic Monitors
-	:tm.crConfig.polling.url:     The URL from which a :term:`Snapshot` can be obtained
-	:tm.dataServer.polling.url:   The URL from which a list of data servers can be obtained
-	:tm.healthParams.polling.url: The URL from which a list of health-polling parameters can be obtained
+	:health.polling.interval:     An interval in milliseconds on which to poll for cache statistics
+	:heartbeat.polling.interval:  An interval in milliseconds on which to poll for health statistics. If missing, defaults to ``health.polling.interval``.
 	:tm.polling.interval:         The interval at which to poll for configuration updates
 
 :deliveryServices: An array of objects representing each :term:`Delivery Service` provided by this CDN
@@ -98,15 +93,15 @@ Response Structure
 
 :trafficServers: An array of objects that represent the :term:`cache servers` being monitored within this CDN
 
-	:cacheGroup:    The :term:`Cache Group` to which this :term:`cache server` belongs
-	:fqdn:          An :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the :term:`cache server`'s IPv4 (or IPv6) address
-	:hashId:        The (short) hostname for the :term:`cache server` - named "hashId" for legacy reasons
-	:hostName:      The (short) hostname of the :term:`cache server`
-	:port:          The port on which the :term:`cache server` listens for incoming connections
-	:profile:       A string that is the :ref:`profile-name` of the :term:`Profile` assigned to this :term:`cache server`
-	:status:        The status of the :term:`cache server`
-	:type:          A string that names the :term:`Type` of the :term:`cache server` - should (ideally) be either ``EDGE`` or ``MID``
-	:interfaces:		A set of the network interfaces in use by the server. In most scenarios, only one will be present, but it is illegal for this set to be an empty collection.
+	:cacheGroup: The :term:`Cache Group` to which this :term:`cache server` belongs
+	:fqdn:       An :abbr:`FQDN (Fully Qualified Domain Name)` that resolves to the :term:`cache server`'s IPv4 (or IPv6) address
+	:hashId:     The (short) hostname for the :term:`cache server` - named "hashId" for legacy reasons
+	:hostName:   The (short) hostname of the :term:`cache server`
+	:port:       The port on which the :term:`cache server` listens for incoming connections
+	:profile:    A string that is the :ref:`profile-name` of the :term:`Profile` assigned to this :term:`cache server`
+	:status:     The status of the :term:`cache server`
+	:type:       A string that names the :term:`Type` of the :term:`cache server` - should (ideally) be either ``EDGE`` or ``MID``
+	:interfaces: A set of the network interfaces in use by the server. In most scenarios, only one will be present, but it is illegal for this set to be an empty collection.
 
 		:ipAddresses: A set of objects representing IP Addresses assigned to this network interface. In most scenarios, only one or two (usually one IPv4 address and one IPv6 address) will be present, but it is illegal for this set to be an empty collection.
 
@@ -261,17 +256,9 @@ Response Structure
 		],
 		"deliveryServices": [],
 		"config": {
-			"hack.ttl": 30,
-			"health.event-count": 200,
 			"health.polling.interval": 6000,
-			"health.threadPool": 4,
-			"health.timepad": 0,
 			"heartbeat.polling.interval": 3000,
-			"location": "/opt/traffic_monitor/conf",
 			"peers.polling.interval": 3000,
-			"tm.crConfig.polling.url": "https://${tmHostname}/CRConfig-Snapshots/${cdnName}/CRConfig.xml",
-			"tm.dataServer.polling.url": "https://${tmHostname}/dataserver/orderby/id",
-			"tm.healthParams.polling.url": "https://${tmHostname}/health/${cdnName}",
 			"tm.polling.interval": 2000
 		}
 	}}

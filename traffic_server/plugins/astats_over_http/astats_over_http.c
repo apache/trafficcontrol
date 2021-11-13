@@ -65,7 +65,7 @@ static int config_handler(TSCont cont, TSEvent event, void *edata);
 static config_t* get_config(TSCont cont);
 static config_holder_t* new_config_holder(const char* path);
 
-#define STR_BUFFER_SIZE 	1024
+#define STR_BUFFER_SIZE 	65536
 
 #define SYSTEM_RECORD_TYPE 		(0x100)
 #define DEFAULT_RECORD_TYPES	(SYSTEM_RECORD_TYPE | TS_RECORDTYPE_PROCESS | TS_RECORDTYPE_PLUGIN)
@@ -541,6 +541,8 @@ static int astats_origin(TSCont cont, TSEvent event, void *edata) {
 	const struct sockaddr *addr = TSHttpTxnClientAddrGet(txnp);
 	if(!is_ip_allowed(config, addr)) {
 		TSDebug(PLUGIN_TAG, "not right ip");
+		TSHttpTxnStatusSet(txnp, TS_HTTP_STATUS_FORBIDDEN);
+		reenable = TS_EVENT_HTTP_ERROR;
 		goto notforme;
 	}
 
@@ -915,7 +917,11 @@ static void load_config_file(config_holder_t *config_holder) {
 			TSDebug(PLUGIN_TAG, "scheduling free: %p (%p)", oldconfig, newconfig);
 			free_cont = TSContCreate(free_handler, TSMutexCreate());
 			TSContDataSet(free_cont, (void *) oldconfig);
+#if TS_VERSION_MAJOR < 9
 			TSContSchedule(free_cont, FREE_TMOUT, TS_THREAD_POOL_TASK);
+#else
+			TSContScheduleOnPool(free_cont, FREE_TMOUT, TS_THREAD_POOL_TASK);
+#endif
 		}
 	}
 	if(fh)

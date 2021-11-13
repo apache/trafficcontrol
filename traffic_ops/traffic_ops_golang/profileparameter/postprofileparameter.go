@@ -58,6 +58,16 @@ func PostProfileParam(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("profile not found"), nil)
 		return
 	}
+	cdnName, err := dbhelpers.GetCDNNameFromProfileID(inf.Tx.Tx, int(*profileParam.ProfileID))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
 	api.CreateChangeLogRawTx(api.ApiChange, "PROFILE: "+profileName+", ID: "+strconv.FormatInt(*profileParam.ProfileID, 10)+", ACTION: Assigned "+strconv.Itoa(len(*profileParam.ParamIDs))+" parameters to profile", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("%d parameters were assigned to the %s profile", len(*profileParam.ParamIDs), profileName), profileParam)
 }

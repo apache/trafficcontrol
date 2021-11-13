@@ -25,6 +25,7 @@ Allows a user to edit metadata fields of a :term:`Delivery Service`.
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
+:Permissions Required: DELIVERY-SERVICE-SAFE:UPDATE, DELIVERY-SERVICE:READ, TYPE:READ
 :Response Type:  Array
 
 Request Structure
@@ -40,7 +41,6 @@ Request Structure
 :displayName: A string that is the :ref:`ds-display-name`
 :infoUrl:     An optional\ [#optional]_ string containing the :ref:`ds-info-url`
 :longDesc:    An optional\ [#optional]_ string containing the :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:   An optional\ [#optional]_ string containing the :ref:`ds-longdesc2` of this :term:`Delivery Service`
 
 .. code-block:: http
 	:caption: Request Example
@@ -52,11 +52,12 @@ Request Structure
 	Connection: keep-alive
 	Cookie: mojolicious=...
 	Content-Length: 132
+	Content-Type: application/json
 
 	{
 		"displayName": "test",
 		"infoUrl": "this is not even a real URL",
-		"longDesc": "longDesc1 is implicitly set to null in this example
+		"longDesc": "this is a description of the delivery service"
 	}
 
 Response Structure
@@ -94,11 +95,13 @@ Response Structure
 :innerHeaderRewrite:        A set of :ref:`ds-inner-header-rw-rules`
 :ipv6RoutingEnabled:        A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
 :lastHeaderRewrite:         A set of :ref:`ds-last-header-rw-rules`
-:lastUpdated:               The date and time at which this :term:`Delivery Service` was last updated, in :rfc:`3339` format
+:lastUpdated:               The date and time at which this :term:`Delivery Service` was last updated, in :rfc:3339 format
+
+	.. versionchanged:: 4.0
+		Prior to API version 4.0, this property used :ref:`non-rfc-datetime`.
+
 :logsEnabled:               A boolean that defines the :ref:`ds-logs-enabled` setting on this :term:`Delivery Service`
 :longDesc:                  The :ref:`ds-longdesc` of this :term:`Delivery Service`
-:longDesc1:                 The :ref:`ds-longdesc2` of this :term:`Delivery Service`
-:longDesc2:                 The :ref:`ds-longdesc3` of this :term:`Delivery Service`
 :matchList:                 The :term:`Delivery Service`'s :ref:`ds-matchlist`
 
 	:pattern:   A regular expression - the use of this pattern is dependent on the ``type`` field (backslashes are escaped)
@@ -127,6 +130,10 @@ Response Structure
 :rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
 :sslKeyVersion:        This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:             The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
+:tlsVersions:           A list of explicitly supported :ref:`ds-tls-versions`
+
+	.. versionadded:: 4.0
+
 :topology:             The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
 :trRequestHeaders:     If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 :trResponseHeaders:    If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
@@ -140,104 +147,98 @@ Response Structure
 	HTTP/1.1 200 OK
 	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 10 Feb 2020 16:33:03 GMT; Max-Age=3600; HttpOnly
+	Permissions-Policy: interest-cohort=()
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 08 Jun 2021 00:53:26 GMT; Max-Age=3600; HttpOnly
+	Vary: Accept-Encoding
+	Whole-Content-Sha512: Ys/SfWWijsXCNXEqZ84oldfyXTgMe8UE/wWb53VU39OH7kWOXF1BH5Hg7Y40nCgXoWEqcaBq5+WCZg0bYuJdAA==
 	X-Server-Name: traffic_ops_golang/
-	Date: Mon, 10 Feb 2020 15:33:03 GMT
-	Content-Length: 853
+	Date: Mon, 07 Jun 2021 23:53:26 GMT
+	Content-Length: 903
 
-	{ "alerts": [
-		{
-			"text": "Delivery Service safe update successful.",
-			"level": "success"
-		}
-	],
-	"response": [
-		{
-			"active": true,
-			"anonymousBlockingEnabled": false,
-			"cacheurl": null,
-			"ccrDnsTtl": null,
-			"cdnId": 2,
-			"cdnName": "CDN-in-a-Box",
-			"checkPath": null,
-			"displayName": "test",
-			"dnsBypassCname": null,
-			"dnsBypassIp": null,
-			"dnsBypassIp6": null,
-			"dnsBypassTtl": null,
-			"dscp": 0,
-			"edgeHeaderRewrite": null,
-			"firstHeaderRewrite": null,
-			"geoLimit": 0,
-			"geoLimitCountries": null,
-			"geoLimitRedirectURL": null,
-			"geoProvider": 0,
-			"globalMaxMbps": null,
-			"globalMaxTps": null,
-			"httpBypassFqdn": null,
-			"id": 1,
-			"infoUrl": "this is not even a real URL",
-			"initialDispersion": 1,
-			"innerHeaderRewrite": null,
-			"ipv6RoutingEnabled": true,
-			"lastHeaderRewrite": null,
-			"lastUpdated": "2020-02-10 15:33:03+00",
-			"logsEnabled": true,
-			"longDesc": "longDesc1 is implicitly set to null in this example",
-			"longDesc1": null,
-			"longDesc2": null,
-			"matchList": [
-				{
-					"type": "HOST_REGEXP",
-					"setNumber": 0,
-					"pattern": ".*\\.demo1\\..*"
-				}
-			],
-			"maxDnsAnswers": null,
-			"midHeaderRewrite": null,
-			"missLat": 42,
-			"missLong": -88,
-			"multiSiteOrigin": false,
-			"originShield": null,
-			"orgServerFqdn": "http://origin.infra.ciab.test",
-			"profileDescription": null,
-			"profileId": null,
-			"profileName": null,
-			"protocol": 2,
-			"qstringIgnore": 0,
-			"rangeRequestHandling": 0,
-			"regexRemap": null,
-			"regionalGeoBlocking": false,
-			"remapText": null,
-			"routingName": "video",
-			"signed": false,
-			"sslKeyVersion": 1,
-			"tenantId": 1,
-			"type": "HTTP",
-			"typeId": 1,
-			"xmlId": "demo1",
-			"exampleURLs": [
-				"http://video.demo1.mycdn.ciab.test",
-				"https://video.demo1.mycdn.ciab.test"
-			],
-			"deepCachingType": "NEVER",
-			"fqPacingRate": null,
-			"signingAlgorithm": null,
-			"tenant": "root",
-			"trResponseHeaders": null,
-			"trRequestHeaders": null,
-			"consistentHashRegex": null,
-			"consistentHashQueryParams": [
-				"abc",
-				"pdq",
-				"xxx",
-				"zyx"
-			],
-			"maxOriginConnections": 0,
-			"ecsEnabled": false,
-			"rangeSliceBlockSize": null,
-			"topology": null
-		}
+	{ "alerts": [{
+		"text": "Delivery Service safe update successful.",
+		"level": "success"
+	}],
+	"response": [{
+		"active": true,
+		"anonymousBlockingEnabled": false,
+		"ccrDnsTtl": null,
+		"cdnId": 2,
+		"cdnName": "CDN-in-a-Box",
+		"checkPath": null,
+		"consistentHashQueryParams": [],
+		"consistentHashRegex": null,
+		"deepCachingType": "NEVER",
+		"displayName": "test",
+		"dnsBypassCname": null,
+		"dnsBypassIp": null,
+		"dnsBypassIp6": null,
+		"dnsBypassTtl": null,
+		"dscp": 0,
+		"ecsEnabled": false,
+		"edgeHeaderRewrite": null,
+		"exampleURLs": [
+			"http://video.demo2.mycdn.ciab.test",
+			"https://video.demo2.mycdn.ciab.test"
+		],
+		"firstHeaderRewrite": null,
+		"fqPacingRate": null,
+		"geoLimit": 0,
+		"geoLimitCountries": null,
+		"geoLimitRedirectURL": null,
+		"geoProvider": 0,
+		"globalMaxMbps": null,
+		"globalMaxTps": null,
+		"httpBypassFqdn": null,
+		"id": 1,
+		"infoUrl": "this is not even a real URL",
+		"initialDispersion": 1,
+		"innerHeaderRewrite": null,
+		"ipv6RoutingEnabled": true,
+		"lastHeaderRewrite": null,
+		"lastUpdated": "2021-06-07T23:53:26.139899Z",
+		"logsEnabled": true,
+		"longDesc": "this is a description of the delivery service",
+		"matchList": [
+			{
+				"type": "HOST_REGEXP",
+				"setNumber": 0,
+				"pattern": ".*\\.demo2\\..*"
+			}
+		],
+		"maxDnsAnswers": null,
+		"maxOriginConnections": 0,
+		"maxRequestHeaderBytes": 0,
+		"midHeaderRewrite": null,
+		"missLat": 42,
+		"missLong": -88,
+		"multiSiteOrigin": true,
+		"originShield": null,
+		"orgServerFqdn": "http://origin.infra.ciab.test",
+		"profileDescription": null,
+		"profileId": null,
+		"profileName": null,
+		"protocol": 2,
+		"qstringIgnore": 0,
+		"rangeRequestHandling": 0,
+		"rangeSliceBlockSize": null,
+		"regexRemap": null,
+		"regionalGeoBlocking": false,
+		"remapText": null,
+		"routingName": "video",
+		"serviceCategory": null,
+		"signed": false,
+		"signingAlgorithm": null,
+		"sslKeyVersion": null,
+		"tenant": "root",
+		"tenantId": 1,
+		"tlsVersions": null,
+		"topology": "demo1-top",
+		"trResponseHeaders": null,
+		"trRequestHeaders": null,
+		"type": "DNS",
+		"typeId": 5,
+		"xmlId": "demo2"
 	]}
 
 .. [#tenancy] Only those :term:`Delivery Services` assigned to :term:`Tenants` that are the requesting user's :term:`Tenant` or children thereof may be modified with this endpoint.

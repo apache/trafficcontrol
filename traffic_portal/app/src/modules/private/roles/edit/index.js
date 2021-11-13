@@ -21,14 +21,14 @@ module.exports = angular.module('trafficPortal.private.roles.edit', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.roles.edit', {
-				url: '/{roleId:[0-9]{1,8}}',
+				url: '/edit/{roleName}',
 				views: {
 					rolesContent: {
 						templateUrl: 'common/modules/form/role/form.role.tpl.html',
 						controller: 'FormEditRoleController',
 						resolve: {
 							roles: function($stateParams, roleService) {
-								return roleService.getRoles({ id: $stateParams.roleId });
+								return roleService.getRoles({ name: $stateParams.roleName });
 							}
 						}
 					}

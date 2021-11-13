@@ -17,18 +17,83 @@
     under the License.
 -->
 
-# t3c
+<!--
 
-The `t3c` app generates and applies cache configuration for Traffic Control.
+  !!!
+      This file is both a Github Readme and manpage!
+      Please make sure changes appear properly with man,
+      and follow man conventions, such as:
+      https://www.bell-labs.com/usr/dmr/www/manintro.html
 
-# Commands
+      A primary goal of t3c is to follow POSIX and LSB standards
+      and conventions, so it's easy to learn and use by people
+      who know Linux and other *nix systems. Providing a proper
+      manpage is a big part of that.
+  !!!
 
-The `t3c` app is divided into commands, each of which can be run as an argument to `t3c` or by themselves, e.g. `t3c apply ...` or `t3c-apply ...`.
+-->
+# NAME
 
-|               command                  | description |
-| -------------------------------------: | :---------- |
-| [t3c-apply](./t3c-apply/README.md)     | Generate and apply cache configuration |
-| [t3c-check](./t3c-check/README.md)    | Check that new config can be applied |
-| [t3c-diff](./t3c-diff/README.md)       | Diff config files, like diff or git-diff but with config-specific logic |
-| [t3c-request](./t3c-request/README.md) | Request data from Traffic Ops |
-| [t3c-update](./t3c-update/README.md)   | Update a server's queue and reval status in Traffic Ops |
+t3c - Traffic Control Cache Configuration tools
+
+# SYNOPSIS
+
+t3c [\-\-help]
+    \<command\> [\<args\>]
+
+# DESCRIPTION
+
+The `t3c` app generates and applies cache configuration for Apache Traffic Control.
+
+This includes requesting Traffic Ops, generating configuration files for caching proxies such as Apache Traffic Server, verifying Traffic Ops data is valid and produces valid config files, creating a git repo for backups and history, determining whether config changes require a reload or restart of the caching proxy service, performing that restart, and more.
+
+The latest version and documentation can be found at https://github.com/apache/trafficcontrol/cache-config.
+
+# OPTIONS
+
+\-\-help
+    Prints the synopsis and usage information.
+
+# COMMANDS
+
+We divide t3c into commands for each independent operation. Each command is its own application and can be called directly or via the t3c app. For example, 't3c apply' or 't3c-apply'.
+
+t3c-apply
+
+    Generate and apply cache configuration.
+
+t3c-check
+
+    Check that new config can be applied.
+
+t3c-diff
+
+    Diff config files, like diff or git-diff but with config-specific logic.
+
+t3c-generate
+
+    Generate configuration files from Traffic Ops data.
+
+t3c-preprocess
+
+    Preprocess generated config files.
+
+t3c-request
+
+    Request data from Traffic Ops.
+
+t3c-update
+
+    Update a server's queue and reval status in Traffic Ops.
+
+# NOMENCLATURE
+
+The "t3c" stands for "Traffic Control Cache Config."
+
+# AUTHORS
+
+The t3c application is maintained by Apache Traffic Control project. For help, bug reports, contributing, or anything else, see:
+
+https://trafficcontrol.apache.org/
+
+https://github.com/apache/trafficcontrol

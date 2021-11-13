@@ -24,6 +24,7 @@ Pings Traffic Vault to retrieve status.
 
 :Auth. Required: Yes
 :Roles Required: "read-only"
+:Permissions Required: TRAFFIC-VAULT:READ
 :Response Type:  Object
 
 Request Structure

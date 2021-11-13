@@ -18,16 +18,16 @@
 # Build trafficcontrol:  
 #   Copy the traffic_ops rpm to traffic_ops/traffic_ops.rpm
 #   Copy the trafficcontrol-cache-config rpm to ort_test/trafficcontrol-cache-config.rpm
-#   Copy an ATS rpm to yumserver/test-rpms and update the 
-#     ../ort-tests/tc-fixtures.json to match the rpm version
-#     string you've chosen
+#   Copy an ATS rpm to yumserver/test-rpms (the ort_tests
+#     container updates ../ort-tests/tc-fixtures.json with
+#     the corresponding version string)
 #
 #   Run: docker-compose build
 #   Run: docker-compose run ort_test
 #
 
 ---
-version: '2'
+version: '3.8'
 
 volumes:
   trafficcontrol:
@@ -81,8 +81,11 @@ services:
     env_file:
       - variables.env
     build:
+      args:
+        RHEL_VERSION: ${RHEL_VERSION:-8}
       context: .
       dockerfile: ort_test/Dockerfile
+    cap_add: ['SYS_ADMIN'] # necessary for hostname tests
     depends_on:
       - yumserver
       - to_server

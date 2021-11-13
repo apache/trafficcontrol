@@ -25,6 +25,7 @@ Updates a specific Division
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
+:Permissions Required: DIVISION:UPDATE, DIVISION:READ
 
 
 Request Structure
@@ -56,7 +57,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          An integral, unique identifier for this Division
-:lastUpdated: The date and time at which this Division was last modified, in ISO format
+:lastUpdated: The date and time at which this Division was last modified, in :ref:`non-rfc-datetime`
 :name:        The Division name
 
 .. code-block:: http
@@ -85,3 +86,64 @@ Response Structure
 		"lastUpdated": "2018-11-29 20:10:36+00",
 		"name": "quest"
 	}}
+
+``DELETE``
+============
+Deletes a specific Division
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Permissions Required: DIVISION:DELETE, DIVISION:READ
+
+
+Request Structure
+-----------------
+.. table:: Request Path Parameters
+
+	+------+-----------------------------------------------------------+
+	| Name | Description                                               |
+	+======+===========================================================+
+	|  ID  | The integral, unique identifier of the requested Division |
+	+------+-----------------------------------------------------------+
+
+
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/4.0/divisions/3 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+	Content-Length: 2
+	Content-Type: application/json
+
+	{}
+
+Response Structure
+------------------
+:id:          An integral, unique identifier for this Division
+:lastUpdated: The date and time at which this Division was last modified, in :ref:`non-rfc-datetime`
+:name:        The Division name
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: yBd8MzBR/Qbc/xts44WEIFRTrqeMKZwUe2ufpm6JH6frh1UjFmYRs3/B7E5FTruFWRTuvEIlx5EpDmp3f9LjzA==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 29 Nov 2018 20:10:36 GMT
+	Content-Length: 83
+
+	{ "alerts": [
+		{
+			"text": "division was deleted.",
+			"level": "success"
+		}
+	]}

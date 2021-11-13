@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/v2-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v2-client"
 )
 
 func TestTenants(t *testing.T) {
@@ -38,6 +38,11 @@ func CreateTestTenants(t *testing.T) {
 
 		if err != nil {
 			t.Errorf("could not CREATE tenant %s: %v", ten.Name, err)
+			continue
+		}
+		if resp == nil {
+			t.Errorf("Traffic Ops returned null or undefined Tenant in creation response")
+			continue
 		}
 		if resp.Response.Name != ten.Name {
 			t.Errorf("expected tenant %+v; got %+v", ten, resp.Response)

@@ -75,7 +75,7 @@ const (
 	// apiDeliveryServiceGenerateSSLKeys is the API path on which Traffic Ops will generate new SSL keys.
 	apiDeliveryServiceGenerateSSLKeys = apiDeliveryServices + "/sslkeys/generate"
 
-	// apiDeliveryServiceAddSSLKeys is the API path on which Traffic Ops will add SSL keys
+	// apiDeliveryServiceAddSSLKeys is the API path on which Traffic Ops will add SSL keys.
 	apiDeliveryServiceAddSSLKeys = apiDeliveryServices + "/sslkeys/add"
 
 	// apiDeliveryServiceURISigningKeys is the API path on which Traffic Ops serves information
@@ -236,7 +236,10 @@ func (to *Session) GenerateSSLKeysForDS(
 	sslFields tc.SSLKeyRequestFields,
 	opts RequestOptions,
 ) (tc.DeliveryServiceSSLKeysGenerationResponse, toclientlib.ReqInf, error) {
-	version := util.JSONIntStr(1)
+	if sslFields.Version == nil {
+		sslFields.Version = util.IntPtr(1)
+	}
+	version := util.JSONIntStr(*sslFields.Version)
 	request := tc.DeliveryServiceSSLKeysReq{
 		BusinessUnit:    sslFields.BusinessUnit,
 		CDN:             util.StrPtr(cdnName),
@@ -254,7 +257,7 @@ func (to *Session) GenerateSSLKeysForDS(
 	return response, reqInf, err
 }
 
-// AddSSLKeysForDS adds SSL Keys for the given DS
+// AddSSLKeysForDS adds SSL Keys for the given Delivery Service.
 func (to *Session) AddSSLKeysForDS(request tc.DeliveryServiceAddSSLKeysReq, opts RequestOptions) (tc.SSLKeysAddResponse, toclientlib.ReqInf, error) {
 	var response tc.SSLKeysAddResponse
 	reqInf, err := to.post(apiDeliveryServiceAddSSLKeys, opts, request, &response)
@@ -319,7 +322,7 @@ func (to *Session) GetDeliveryServiceURISigningKeys(dsName string, opts RequestO
 }
 
 // CreateDeliveryServiceURISigningKeys creates new URI-signing keys used by the Delivery Service
-// identified by the XMLID 'dsXMLID'
+// identified by the XMLID 'dsXMLID'.
 func (to *Session) CreateDeliveryServiceURISigningKeys(dsXMLID string, body map[string]tc.URISignerKeyset, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(fmt.Sprintf(apiDeliveryServicesURISigningKeys, url.PathEscape(dsXMLID)), opts, body, &alerts)
@@ -327,7 +330,7 @@ func (to *Session) CreateDeliveryServiceURISigningKeys(dsXMLID string, body map[
 }
 
 // DeleteDeliveryServiceURISigningKeys deletes the URI-signing keys used by the Delivery Service
-// identified by the XMLID 'dsXMLID'
+// identified by the XMLID 'dsXMLID'.
 func (to *Session) DeleteDeliveryServiceURISigningKeys(dsXMLID string, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.del(fmt.Sprintf(apiDeliveryServicesURISigningKeys, url.PathEscape(dsXMLID)), opts, &alerts)

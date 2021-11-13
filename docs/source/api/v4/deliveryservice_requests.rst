@@ -25,6 +25,7 @@ Retrieves :term:`Delivery Service Requests`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: DS-REQUEST:READ, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  Array
 
 Request Structure
@@ -135,11 +136,9 @@ The response is an array of representations of :term:`Delivery Service Requests`
 			"innerHeaderRewrite": null,
 			"ipv6RoutingEnabled": true,
 			"lastHeaderRewrite": null,
-			"lastUpdated": "0001-01-01 00:00:00+00",
+			"lastUpdated": "0001-01-01T00:00:00Z",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
-			"longDesc1": null,
-			"longDesc2": null,
 			"matchList": [
 				{
 					"type": "HOST_REGEXP",
@@ -189,7 +188,8 @@ The response is an array of representations of :term:`Delivery Service Requests`
 				"zyx"
 			],
 			"maxOriginConnections": 0,
-			"ecsEnabled": false
+			"ecsEnabled": false,
+			"tlsVersions": null
 		},
 		"status": "draft"
 	}]}
@@ -200,10 +200,9 @@ The response is an array of representations of :term:`Delivery Service Requests`
 ========
 Creates a new :term:`Delivery Service Request`. "Closed" :term:`Delivery Service Requests` cannot be created, an existing :term:`Delivery Service Request` must be placed into a closed :ref:`dsr-status`. A :term:`Delivery Service Request` to create, modify or delete a :term:`Delivery Service` cannot be created if an open :term:`Delivery Service Request` exists for a :term:`Delivery Service` with the same :ref:`ds-xmlid`. Because of this, :term:`Delivery Service Requests` cannot be used to change a :term:`Delivery Service`'s :ref:`ds-xmlid`.
 
-.. warning:: This route does NOT do the same thing as :ref:`POST deliveryservices/request <to-api-deliveryservices-request>`.
-
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: DS-REQUEST:CREATE, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  Object
 
 Request Structure
@@ -253,11 +252,9 @@ The request must be a well-formed representation of a :term:`Delivery Service Re
 			"innerHeaderRewrite": null,
 			"ipv6RoutingEnabled": true,
 			"lastHeaderRewrite": null,
-			"lastUpdated": "2020-02-13 16:43:54+00",
+			"lastUpdated": "2020-02-13T16:43:54Z",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
-			"longDesc1": null,
-			"longDesc2": null,
 			"matchList": [
 				{
 					"type": "HOST_REGEXP",
@@ -308,7 +305,8 @@ The request must be a well-formed representation of a :term:`Delivery Service Re
 			],
 			"maxOriginConnections": 0,
 			"ecsEnabled": false,
-			"serviceCategory": null
+			"serviceCategory": null,
+			"tlsVersions": null
 		}
 	}
 
@@ -378,11 +376,9 @@ The response will be a representation of the created :term:`Delivery Service Req
 				"innerHeaderRewrite": null,
 				"ipv6RoutingEnabled": true,
 				"lastHeaderRewrite": null,
-				"lastUpdated": "0001-01-01 00:00:00+00",
+				"lastUpdated": "0001-01-01T00:00:00Z",
 				"logsEnabled": true,
 				"longDesc": "Apachecon North America 2018",
-				"longDesc1": null,
-				"longDesc2": null,
 				"matchList": [
 					{
 						"type": "HOST_REGEXP",
@@ -432,7 +428,8 @@ The response will be a representation of the created :term:`Delivery Service Req
 					"zyx"
 				],
 				"maxOriginConnections": 0,
-				"ecsEnabled": false
+				"ecsEnabled": false,
+				"tlsVersions": null
 			},
 			"original": {
 				"active": true,
@@ -463,11 +460,9 @@ The response will be a representation of the created :term:`Delivery Service Req
 				"innerHeaderRewrite": null,
 				"ipv6RoutingEnabled": true,
 				"lastHeaderRewrite": null,
-				"lastUpdated": "2020-02-13 16:43:54+00",
+				"lastUpdated": "2020-02-13T16:43:54Z",
 				"logsEnabled": true,
 				"longDesc": "Apachecon North America 2018",
-				"longDesc1": null,
-				"longDesc2": null,
 				"matchList": [
 					{
 						"type": "HOST_REGEXP",
@@ -518,7 +513,8 @@ The response will be a representation of the created :term:`Delivery Service Req
 				],
 				"maxOriginConnections": 0,
 				"ecsEnabled": false,
-				"serviceCategory": null
+				"serviceCategory": null,
+				"tlsVersions": null
 			},
 			"status": "draft"
 		}
@@ -532,6 +528,7 @@ Updates an existing :term:`Delivery Service Request`. Note that "closed" :term:`
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: DS-REQUEST:UPDATE, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  Object
 
 Request Structure
@@ -638,11 +635,9 @@ The response is a full representation of the edited :term:`Delivery Service Requ
 			"infoUrl": null,
 			"initialDispersion": 1,
 			"ipv6RoutingEnabled": true,
-			"lastUpdated": "2020-09-25 02:09:54+00",
+			"lastUpdated": "2020-09-25T02:09:54Z",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
-			"longDesc1": null,
-			"longDesc2": null,
 			"matchList": [
 				{
 					"type": "HOST_REGEXP",
@@ -697,7 +692,8 @@ The response is a full representation of the edited :term:`Delivery Service Requ
 			"firstHeaderRewrite": null,
 			"innerHeaderRewrite": null,
 			"lastHeaderRewrite": null,
-			"serviceCategory": null
+			"serviceCategory": null,
+			"tlsVersions": null
 		},
 		"requested": {
 			"active": true,
@@ -728,8 +724,6 @@ The response is a full representation of the edited :term:`Delivery Service Requ
 			"lastUpdated": null,
 			"logsEnabled": false,
 			"longDesc": "long desc",
-			"longDesc1": null,
-			"longDesc2": null,
 			"matchList": null,
 			"maxDnsAnswers": null,
 			"midHeaderRewrite": null,
@@ -770,7 +764,8 @@ The response is a full representation of the edited :term:`Delivery Service Requ
 			"firstHeaderRewrite": null,
 			"innerHeaderRewrite": null,
 			"lastHeaderRewrite": null,
-			"serviceCategory": null
+			"serviceCategory": null,
+			"tlsVersions": null
 		},
 		"status": "draft"
 	}}
@@ -782,6 +777,7 @@ Deletes a :term:`Delivery Service Request`.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Permissions Required: DS-REQUEST:DELETE, DELIVERY-SERVICE:READ, USER:READ
 :Response Type:  Object
 
 Request Structure

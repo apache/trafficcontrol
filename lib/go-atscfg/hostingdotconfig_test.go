@@ -77,7 +77,7 @@ func TestMakeHostingDotConfig(t *testing.T) {
 	servers := []Server{*server}
 	dss := makeDSS(servers, dses)
 
-	cfg, err := MakeHostingDotConfig(server, servers, serverParams, dses, dss, nil, hdr)
+	cfg, err := MakeHostingDotConfig(server, servers, serverParams, dses, dss, nil, &HostingDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,7 +159,7 @@ func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
 	dsTopology.ID = util.IntPtr(900)
 	dsTopology.Topology = util.StrPtr("t0")
 	dsTopology.Active = util.BoolPtr(true)
-	dsType := tc.DSTypeHTTP
+	dsType := tc.DSTypeHTTPLive
 	dsTopology.Type = &dsType
 
 	dsTopologyWithoutServer := makeGenericDS()
@@ -204,7 +204,7 @@ func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
 	servers := []Server{*server}
 	dss := makeDSS(servers, dses)
 
-	cfg, err := MakeHostingDotConfig(server, servers, serverParams, dses, dss, topologies, hdr)
+	cfg, err := MakeHostingDotConfig(server, servers, serverParams, dses, dss, topologies, &HostingDotConfigOpts{HdrComment: hdr})
 	if err != nil {
 		t.Fatal(err)
 	}

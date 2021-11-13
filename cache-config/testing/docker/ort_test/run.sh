@@ -33,9 +33,7 @@ function ping_to {
 		"--traffic-ops-password=$TO_ADMIN_PASS" \
 		"--traffic-ops-url=$TO_URI" \
 		"--cache-host-name=atlanta-edge-03" \
-		"--log-location-error=stderr" \
-		"--log-location-info=stderr" \
-		"--log-location-debug=stderr" \
+		"-vv" \
 		"--run-mode=badass"
 }
 
@@ -58,19 +56,19 @@ else
   exit 1
 fi
 
-# fetch dependent packages for tests
-go mod vendor -v
-
 if [[ -f /systemctl.sh ]]; then
   mv /bin/systemctl /bin/systemctl.save
   cp /systemctl.sh /bin/systemctl
   chmod 0755 /bin/systemctl
 fi
 
-cd /ort-tests
-go get -u ./...
+cd "$(realpath /ort-tests)"
+
+# fetch dependent packages for tests
+go mod vendor -v
+
 cp /ort-tests/tc-fixtures.json /tc-fixtures.json
-ATS_RPM=`basename /yumserver/test-rpms/trafficserver-*.rpm |
+ATS_RPM=`basename /yumserver/test-rpms/trafficserver-[0-9]*.rpm |
   gawk 'match($0, /trafficserver\-(.+)\.rpm$/, arr) {print arr[1]}'`
 
 echo "ATS_RPM: $ATS_RPM"
@@ -79,7 +77,19 @@ if [[ -z $ATS_RPM ]]; then
   echo "ERROR: No ATS RPM was found"
   exit 2
 else
-  sed -i -e "s/CHANGEME/$ATS_RPM/" /ort-tests/tc-fixtures.json
+  echo "$(</ort-tests/tc-fixtures.json jq --arg ATS_RPM "$ATS_RPM" '.profiles[] |= (
+    select(.params != null).params[] |= (
+      select(.configFile == "package" and .name == "trafficserver").value = $ATS_RPM
+    ))')" >/ort-tests/tc-fixtures.json
+  if ! </ort-tests/tc-fixtures.json jq -r --arg ATS_RPM "$ATS_RPM" '.profiles[] |
+    select(.params != null).params[] |
+    select(.configFile == "package" and .name == "trafficserver")
+    .value' |
+      grep -qF "$ATS_RPM";
+  then
+    echo "ATS RPM version ${ATS_RPM} was not set"
+    exit 2
+  fi
 fi
 
 # wake up the to_server

@@ -29,7 +29,7 @@ import (
 )
 
 func TestCRConfig(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices}, func() {
 		UpdateTestCRConfigSnapshot(t)
 		MonitoringConfig(t)
 		SnapshotTestCDNbyName(t)
@@ -56,22 +56,22 @@ func SnapshotWithReadOnlyUser(t *testing.T) {
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	user := tc.User{
-		Username:             util.StrPtr("test_user"),
-		RegistrationSent:     tc.TimeNoModFromTime(time.Now()),
+	user := tc.UserV4{
+		Username:             "test_user_tm",
+		RegistrationSent:     new(time.Time),
 		LocalPassword:        util.StrPtr("test_pa$$word"),
 		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-		RoleName:             util.StrPtr("read-only user"),
+		Role:                 "read-only",
 	}
-	user.Email = util.StrPtr("email@domain.com")
-	user.TenantID = util.IntPtr(resp.Response[0].ID)
+	user.Email = util.StrPtr("email_tm@domain.com")
+	user.TenantID = resp.Response[0].ID
 	user.FullName = util.StrPtr("firstName LastName")
 
 	u, _, err := TOSession.CreateUser(user, client.RequestOptions{})
 	if err != nil {
 		t.Fatalf("could not create read-only user: %v - alerts: %+v", err, u.Alerts)
 	}
-	client, _, err := toclient.LoginWithAgent(TOSession.URL, "test_user", "test_pa$$word", true, "to-api-v4-client-tests/tenant4user", true, toReqTimeout)
+	client, _, err := toclient.LoginWithAgent(TOSession.URL, "test_user_tm", "test_pa$$word", true, "to-api-v4-client-tests/tenant4user", true, toReqTimeout)
 	if err != nil {
 		t.Fatalf("failed to log in with test_user: %v", err.Error())
 	}
@@ -84,9 +84,7 @@ func SnapshotWithReadOnlyUser(t *testing.T) {
 	if reqInf.StatusCode != http.StatusForbidden {
 		t.Errorf("expected a 403 forbidden status code, but got %d", reqInf.StatusCode)
 	}
-	if u.Response.Username != nil {
-		ForceDeleteTestUsersByUsernames(t, []string{"test_user"})
-	}
+	ForceDeleteTestUsersByUsernames(t, []string{"test_user_tm"})
 }
 
 func UpdateTestCRConfigSnapshot(t *testing.T) {
