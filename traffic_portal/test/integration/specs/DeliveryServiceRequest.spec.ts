@@ -18,12 +18,11 @@
  */
 import { browser } from 'protractor'
 import { LoginPage } from '../PageObjects/LoginPage.po'
-import { DeliveryServicesRequestPage } from '../PageObjects/DeliveryServicesReqestPage.po';
+import { DeliveryServicesRequestPage } from '../PageObjects/DeliveryServiceRequestPage.po';
 import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
-import { API } from '../CommonUtils/API';
 import { deliveryservicerequest } from '../Data/deliveryservicerequest';
 
-const api = new API();
+
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const deliveryServiceRequestPage = new DeliveryServicesRequestPage();
@@ -31,7 +30,20 @@ const deliveryServiceRequestPage = new DeliveryServicesRequestPage();
 deliveryservicerequest.tests.forEach(deliveryServiceRequestData => {
     deliveryServiceRequestData.logins.forEach(login => {
         describe(`Traffic Portal - Delivery Service Request - ${login.description}`, () => {
-            
+            it('can login', async function(){
+                browser.get(browser.params.baseUrl);
+                await loginPage.Login(login);
+                expect(await loginPage.CheckUserName(login)).toBeTruthy();
+            })
+            it('can open delivery service page', async function () {
+                await deliveryServiceRequestPage.OpenServicesMenu();
+                await deliveryServiceRequestPage.OpenDeliveryServicePage();
+            })
+            deliveryServiceRequestData.add.forEach(add => {
+                it(add.description, async () => {
+                    expect(await deliveryServiceRequestPage.CreateDeliveryService(add)).toBe(true);
+                });
+            });
             it('can logout', async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
             });

@@ -9,7 +9,6 @@
     "acceptInsecureCerts": true,
     "acceptSslCerts": true,
     "chromeOptions": {
-      "args": ["--headless", "--no-sandbox", "--window-size=1920,1080"],
       "prefs": {
         "download": {
           "prompt_for_download": false
@@ -18,7 +17,7 @@
     }
   },
   "specs": [
-    "specs/*.spec.js"
+    "specs/DeliveryServiceRequest.spec.js"
   ],
   "framework": "jasmine",
   "getPageTimeout": 60000,
