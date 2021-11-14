@@ -17,40 +17,6 @@
  * under the License.
  */
 export const deliveryservicerequest = {
-    cleanup: [
-       
-    ],
-    setup: [
-        {
-            action: "CreateDeliveryServiceRequest",
-            route: "/deliveryservice_requests",
-            method: "post",
-            data: [
-                { 
-                    changeType: "create", 
-                    status: "submitted", 
-                    requested: { 
-                        dscp: 0, 
-                        regionalGeoBlocking: false, 
-                        logsEnabled: false, 
-                        geoProvider: 0, 
-                        geoLimit: 0, 
-                        ccrDnsTtl: 30, 
-                        anonymousBlockingEnabled: false, 
-                        consistentHashQueryParams: [], 
-                        xmlId: "test212", 
-                        displayName: "testing212", 
-                        active: true, 
-                        typeId: 8, 
-                        tenantId: 1, 
-                        cdnId: 1, 
-                        remapText: "test", 
-                        tlsVersions: null 
-                    } 
-                }
-            ]
-        }
-    ],
     tests: [
         {
             logins: [
@@ -62,7 +28,7 @@ export const deliveryservicerequest = {
             ],
             create: [
                 {
-                    description: "create a delivery service request",
+                    description: "create a delivery service request then fullfill and complete the request",
                     XmlId: "cdntesting",
                     DisplayName: "testingoverload",
                     Active: "Active",
@@ -71,10 +37,24 @@ export const deliveryservicerequest = {
                     CDN: "dummycdn",
                     RawText: "test",
                     validationMessage: "Created request to create the cdntesting delivery service",
-                    FullfillMessage: "Delivery Service [ cdntesting ] created"
+                    FullfillMessage: "Delivery Service [ cdntesting ] created",
+                    CompleteMessage: "Delivery service request status was updated"
+                }
+            ],
+            remove: [
+                {
+                    description: "create a delivery service request then delete the request",
+                    XmlId: "cdntesting2",
+                    DisplayName: "testingoverload2",
+                    Active: "Active",
+                    ContentRoutingType: "ANY_MAP",
+                    Tenant: "-tenantSame",
+                    CDN: "dummycdn",
+                    RawText: "test",
+                    validationMessage: "Created request to create the cdntesting2 delivery service",
+                    DeleteMessage: "Delivery service request was deleted"
                 }
             ]
-
         }
     ]
 }

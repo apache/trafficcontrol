@@ -52,9 +52,21 @@ deliveryservicerequest.tests.forEach(deliveryServiceRequestData => {
                     await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
                     await deliveryServiceRequestPage.SearchDeliveryServiceRequest(create);
                     expect(await deliveryServiceRequestPage.FullFillDeliveryServiceRequest(create)).toBe(true);
+                    await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
+                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(create);
+                    expect(await deliveryServiceRequestPage.CompleteDeliveryServiceRequest(create)).toBe(true);
 
                 });
             });
+            deliveryServiceRequestData.remove.forEach(remove =>{
+                it(remove.description, async () =>{
+                    await deliveryServiceRequestPage.OpenDeliveryServicePage();
+                    expect(await deliveryServiceRequestPage.CreateDeliveryServiceRequest(remove)).toBe(true);
+                    await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
+                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(remove);
+                    expect(await deliveryServiceRequestPage.DeleteDeliveryServiceRequest(remove)).toBe(true);
+                })
+            })
         });
     });
 });

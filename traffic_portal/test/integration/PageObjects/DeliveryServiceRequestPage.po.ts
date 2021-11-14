@@ -22,6 +22,7 @@ import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from '../PageObjects/SideNavigationPage.po';
 import { randomize } from '../config';
 
+
 interface CreateDeliveryServiceRequest{
   description: string;
   XmlId: string;
@@ -40,9 +41,19 @@ interface FullfillDeliveryServiceRequest{
   XmlId: string;
   FullfillMessage: string;
 }
+interface CompleteDeliveryServiceRequest{
+  XmlId: string;
+  CompleteMessage: string;
+}
+interface DeleteDeliveryServiceRequest{
+  XmlId: string;
+  DeleteMessage: string;
+}
 
 export class DeliveryServicesRequestPage extends BasePage {
   private btnFullfillRequest = element(by.buttonText("Fulfill Request"))
+  private btnCompleteRequest = element(by.buttonText("Complete Request"))
+  private btnDeleteRequest = element(by.buttonText("Delete Request"))
   private btnYes = element(by.buttonText("Yes"))
   private btnMore = element(by.name("moreBtn"))
   private btnCreateDS = element(by.linkText("Create Delivery Service"));
@@ -57,6 +68,7 @@ export class DeliveryServicesRequestPage extends BasePage {
   private txtRequestStatus = element(by.name("requestStatus"))
   private txtComment = element(by.name("comment"))
   private txtQuickSearch = element(by.id("quickSearch"))
+  private txtConfirmInput = element(by.name("confirmWithNameInput"))
   private randomize = randomize;
   public async OpenDeliveryServiceRequestPage(){
     const snp = new SideNavigationPage();
@@ -92,6 +104,7 @@ export class DeliveryServicesRequestPage extends BasePage {
   }
   public async SearchDeliveryServiceRequest(deliveryservicerequest: SearchDeliveryServiceRequest){
     const name = deliveryservicerequest.XmlId+this.randomize;
+    await this.txtQuickSearch.clear();
     await this.txtQuickSearch.sendKeys(name)
     await browser.actions().click(element(by.cssContainingText("span", name))).perform();
   }
@@ -101,6 +114,20 @@ export class DeliveryServicesRequestPage extends BasePage {
     await this.btnFullfillRequest.click();
     await this.btnYes.click();
     return await basePage.GetOutputMessage().then(value => outPutMessage === value);
+  }
+  public async CompleteDeliveryServiceRequest(deliveryservicerequest: CompleteDeliveryServiceRequest): Promise<boolean>{
+    const basePage = new BasePage();
+    await this.btnCompleteRequest.click();
+    await this.btnYes.click();
+    return await basePage.GetOutputMessage().then(value => deliveryservicerequest.CompleteMessage === value);
+
+  }
+  public async DeleteDeliveryServiceRequest(deliveryservicerequest: DeleteDeliveryServiceRequest): Promise<boolean>{
+    const basePage = new BasePage();
+    await this.btnDeleteRequest.click();
+    await this.txtConfirmInput.sendKeys(deliveryservicerequest.XmlId+this.randomize+" request");
+    await basePage.ClickDeletePermanently();
+    return await basePage.GetOutputMessage().then(value=>deliveryservicerequest.DeleteMessage === value);
   }
   
 }
