@@ -54,6 +54,22 @@ export const deliveryservicerequest = {
                     validationMessage: "Created request to create the cdntesting2 delivery service",
                     DeleteMessage: "Delivery service request was deleted"
                 }
+            ],
+            update: [
+                {
+                    description: "create a delivery service request then update the request then fullfill and complete the request",
+                    XmlId: "cdntesting3",
+                    DisplayName: "testingoverload2",
+                    Active: "Active",
+                    ContentRoutingType: "ANY_MAP",
+                    Tenant: "-tenantSame",
+                    CDN: "dummycdn",
+                    RawText: "test",
+                    validationMessage: "Created request to create the cdntesting3 delivery service",
+                    UpdateMessage: "Updated delivery service request for cdntesting3 and set status to submitted",
+                    FullfillMessage: "Delivery Service [ cdntesting3 ] created",
+                    CompleteMessage: "Delivery service request status was updated"
+                }
             ]
         }
     ]

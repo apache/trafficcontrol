@@ -49,11 +49,16 @@ interface DeleteDeliveryServiceRequest{
   XmlId: string;
   DeleteMessage: string;
 }
+interface UpdateDeliveryServiceRequest{
+  XmlId: string;
+  UpdateMessage: string;
+}
 
 export class DeliveryServicesRequestPage extends BasePage {
   private btnFullfillRequest = element(by.buttonText("Fulfill Request"))
   private btnCompleteRequest = element(by.buttonText("Complete Request"))
   private btnDeleteRequest = element(by.buttonText("Delete Request"))
+  private btnUpdateRequest = element(by.buttonText("Update Request"))
   private btnYes = element(by.buttonText("Yes"))
   private btnMore = element(by.name("moreBtn"))
   private btnCreateDS = element(by.linkText("Create Delivery Service"));
@@ -129,7 +134,17 @@ export class DeliveryServicesRequestPage extends BasePage {
     await basePage.ClickDeletePermanently();
     return await basePage.GetOutputMessage().then(value=>deliveryservicerequest.DeleteMessage === value);
   }
-  
+  public async UpdateDeliveryServiceRequest(deliveryservicerequest: UpdateDeliveryServiceRequest): Promise<boolean>{
+    const basePage = new BasePage();
+    const outPutMessage = deliveryservicerequest.UpdateMessage.replace(deliveryservicerequest.XmlId,deliveryservicerequest.XmlId+this.randomize)
+    await this.txtRawRemapText.clear();
+    await this.txtRawRemapText.sendKeys("change");
+    await this.btnUpdateRequest.click();
+    await this.txtRequestStatus.sendKeys("Submit for Review / Deployment")
+    await this.txtComment.sendKeys("test");
+    await basePage.ClickSubmit();
+    return await basePage.GetOutputMessage().then(value => outPutMessage === value);
+  }
 }
 
   

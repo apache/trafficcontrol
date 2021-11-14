@@ -44,7 +44,6 @@ deliveryservicerequest.tests.forEach(deliveryServiceRequestData => {
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
                 await deliveryServiceRequestPage.OpenServicesMenu();
             })
-
             deliveryServiceRequestData.create.forEach(create => {
                 it(create.description, async () => {
                     await deliveryServiceRequestPage.OpenDeliveryServicePage();
@@ -65,6 +64,19 @@ deliveryservicerequest.tests.forEach(deliveryServiceRequestData => {
                     await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
                     await deliveryServiceRequestPage.SearchDeliveryServiceRequest(remove);
                     expect(await deliveryServiceRequestPage.DeleteDeliveryServiceRequest(remove)).toBe(true);
+                })
+            })
+            deliveryServiceRequestData.update.forEach(update=>{
+                it(update.description, async () =>{
+                    await deliveryServiceRequestPage.OpenDeliveryServicePage();
+                    expect(await deliveryServiceRequestPage.CreateDeliveryServiceRequest(update)).toBe(true);
+                    await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
+                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(update);
+                    expect(await deliveryServiceRequestPage.UpdateDeliveryServiceRequest(update)).toBe(true);
+                    expect(await deliveryServiceRequestPage.FullFillDeliveryServiceRequest(update)).toBe(true);
+                    await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
+                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(update);
+                    expect(await deliveryServiceRequestPage.CompleteDeliveryServiceRequest(update)).toBe(true);
                 })
             })
         });
