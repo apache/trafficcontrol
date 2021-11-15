@@ -21,20 +21,8 @@
 # git go vet pre-commit hook
 #
 # Runs go vet
-
-# Executes go vet on the non-external packages (ie packages from github)
-__DIR__="$(cd "$(dirname "${0}")"; echo $(pwd))"
-source "$__DIR__/pkgs"
-
-vet=$(go vet $PKGS 2>&1)
-[ $? == 0 ] && exit 0
-
-# There are go vet errors. Print them and fail.
-
-# remove the 'exit status 1' messages
-failing=$(echo "$vet" | grep -v "exit status")
-
-echo >&2 "'go vet' errors. Please fix the following:"
-echo >&2 "$failing"
-
-exit 1
+go vet ./...
+if ! go vet ./...; then
+	echo go vet hook failed >&2
+	exit 1
+fi
