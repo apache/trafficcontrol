@@ -41,5 +41,5 @@ WHERE "name" = 'admin'
 ON CONFLICT DO NOTHING;
 
 UPDATE public.role
-SET "description" = "Has access to everything."
+SET "description" = 'Has access to everything.'
 WHERE "name" = 'admin';
