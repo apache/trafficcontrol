@@ -87,7 +87,7 @@ export class DeliveryServicesRequestPage extends BasePage {
     const snp = new SideNavigationPage();
     await snp.NavigateToDeliveryServicesPage();
   }
-  public async CreateDeliveryServiceRequest(deliveryservicerequest: CreateDeliveryServiceRequest){
+  public async CreateDeliveryServiceRequest(deliveryservicerequest: CreateDeliveryServiceRequest): Promise<boolean>{
     const basePage = new BasePage();
     const outPutMessage = deliveryservicerequest.validationMessage.replace(deliveryservicerequest.XmlId,deliveryservicerequest.XmlId+this.randomize)
     await this.btnMore.click();
