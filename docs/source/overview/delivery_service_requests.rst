@@ -60,6 +60,7 @@ The model for a :abbr:`DSR (Delivery Service Request)` in the most recent versio
 		original: DeliveryService;
 		requested: DeliveryService;
 	}
+
 .. _dsr-assignee:
 
 Assignee

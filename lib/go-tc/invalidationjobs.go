@@ -463,8 +463,12 @@ func (job *UserInvalidationJobInput) Validate(tx *sql.Tx) error {
 	return nil
 }
 
-const REFRESH = "REFRESH"
-const REFETCH = "REFETCH"
+// These are the allowed values for the InvalidationType of an
+// InvalidationJobCreateV4/InvalidationJobV4.
+const (
+	REFRESH = "REFRESH"
+	REFETCH = "REFETCH"
+)
 
 // InvalidationJobsResponse is the type of a response from Traffic Ops to a
 // request made to its /jobs API endpoint for v 4.0+
@@ -511,18 +515,16 @@ type InvalidationJobV40 struct {
 	StartTime        time.Time `json:"startTime"`
 }
 
+// String implements the fmt.Stringer interface by providing a textual
+// representation of the InvalidationJobV4.
 func (job InvalidationJobV4) String() string {
-
-	ID := strconv.FormatUint(job.ID, 10)
-	TTLHours := strconv.FormatUint(uint64(job.TTLHours), 10)
-	StartTime := job.StartTime.String()
-
-	return fmt.Sprintf("{\nID:\t\t\t\t\t%s,\nAssetURL:\t\t\t%s,\nCreatedBy:\t\t\t%s,\nDeliveryService:\t%s,\nTTLHours:\t\t\t%s,\nInvalidationType:\t%s,\nStartTime:\t\t\t%s,\n}",
-		ID,
+	return fmt.Sprintf(`InvalidationJobV4{ID: %d, AssetURL: "%s", CreatedBy: "%s", DeliveryService: "%s", TTLHours: %d, InvalidationType: "%s", StartTime: "%s"}`,
+		job.ID,
 		job.AssetURL,
 		job.CreatedBy,
 		job.DeliveryService,
-		TTLHours,
+		job.TTLHours,
 		job.InvalidationType,
-		StartTime)
+		job.StartTime.Format(time.RFC3339),
+	)
 }

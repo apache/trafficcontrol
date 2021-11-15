@@ -36,7 +36,7 @@ Request Structure
 -----------------
 :details: An object describing the actual parameters for the Delivery Service request
 
-	:customer: Name of the customer associated with the :term:`Delivery Service` - must only contain alphanumeric characters and the characters :kbd:`@`, :kbd:`!`, :kbd:`#`, :kbd:`$`, :kbd:`%`, :kbd:`^`, :kbd:`&`, :kbd:`*`, :kbd:`(`, :kbd:`)`, :kbd:`[`, :kbd:`]`, :kbd:`.`, :kbd:` `, and :kbd:`-`
+	:customer: Name of the customer associated with the :term:`Delivery Service` - must only contain alphanumeric characters and the characters :kbd:`@`, :kbd:`!`, :kbd:`#`, :kbd:`$`, :kbd:`%`, :kbd:`^`, :kbd:`&`, :kbd:`*`, :kbd:`(`, :kbd:`)`, :kbd:`[`, :kbd:`]`, :kbd:`.`, :kbd:`\ `, and :kbd:`-`
 
 		.. versionchanged:: ATCv6
 			Prior to ATC version 6, this field had no restrictions.
