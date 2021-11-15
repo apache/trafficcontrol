@@ -38,14 +38,14 @@ deliveryservicerequest.tests.forEach(deliveryServiceRequestData => {
             afterAll(async function () {
                 expect(await topNavigation.Logout()).toBeTruthy();
             })
-            it('can login', async function(){
+            xit('can login', async function(){
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
                 await deliveryServiceRequestPage.OpenServicesMenu();
             })
             deliveryServiceRequestData.create.forEach(create => {
-                it(create.description, async () => {
+                xit(create.description, async () => {
                     await deliveryServiceRequestPage.OpenDeliveryServicePage();
                     expect(await deliveryServiceRequestPage.CreateDeliveryServiceRequest(create)).toBe(true);
                     await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
@@ -58,7 +58,7 @@ deliveryservicerequest.tests.forEach(deliveryServiceRequestData => {
                 });
             });
             deliveryServiceRequestData.remove.forEach(remove =>{
-                it(remove.description, async () =>{
+                xit(remove.description, async () =>{
                     await deliveryServiceRequestPage.OpenDeliveryServicePage();
                     expect(await deliveryServiceRequestPage.CreateDeliveryServiceRequest(remove)).toBe(true);
                     await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
@@ -67,7 +67,7 @@ deliveryservicerequest.tests.forEach(deliveryServiceRequestData => {
                 })
             })
             deliveryServiceRequestData.update.forEach(update=>{
-                it(update.description, async () =>{
+                xit(update.description, async () =>{
                     await deliveryServiceRequestPage.OpenDeliveryServicePage();
                     expect(await deliveryServiceRequestPage.CreateDeliveryServiceRequest(update)).toBe(true);
                     await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
