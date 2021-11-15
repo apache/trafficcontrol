@@ -165,7 +165,7 @@ Request Structure
 	:caption: Request Example
 
 	POST /api/4.0/servercheck/extensions HTTP/1.1
-	Host: ipcdn-cache-51.cdnlab.comcast.net:6443
+	Host: cache1.example.com:6443
 	User-Agent: curl/7.47.0
 	Accept: */*
 	Cookie: mojolicious=...
