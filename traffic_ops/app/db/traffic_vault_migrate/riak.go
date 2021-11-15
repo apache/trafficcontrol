@@ -29,6 +29,7 @@ import (
 
 	"github.com/basho/riak-go-client"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -281,7 +282,7 @@ func (tbl *riakSSLKeyTable) gatherKeys(cluster *riak.Cluster, timeout int) error
 		}
 		tbl.Records[i] = riakSSLKeyRecord{
 			DeliveryServiceSSLKeys: obj,
-			Version:                strings.Split(objs[0].Key, "-")[1],
+			Version:                objs[0].Key[strings.LastIndex(objs[0].Key, "-")+1:],
 		}
 	}
 	return nil
@@ -574,7 +575,9 @@ func getObjects(cluster *riak.Cluster, bucket string, timeout int) ([]*riak.Obje
 		if err != nil {
 			return nil, err
 		}
-		if len(objects) > 1 {
+		if len(objects) == 0 {
+			continue
+		} else if len(objects) > 1 {
 			return nil, fmt.Errorf("Unexpected number of objects %d\n", len(objects))
 		}
 
@@ -601,7 +604,7 @@ func getObject(cluster *riak.Cluster, bucket string, key string, timeout int) ([
 	rsp := fvc.Response
 
 	if rsp.IsNotFound {
-		return nil, fmt.Errorf("errors executing riak fetch value command; key not found: %s:%s", bucket, key)
+		log.Warnf("got no object for bucket: %v, key: %v\n", bucket, key)
 	}
 
 	return rsp.Values, nil
