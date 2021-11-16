@@ -22,7 +22,6 @@ import { BasePage } from './BasePage.po';
 import { SideNavigationPage } from '../PageObjects/SideNavigationPage.po';
 import { randomize } from '../config';
 
-
 interface CreateDeliveryServiceRequest{
   description: string;
   XmlId: string;
@@ -34,25 +33,7 @@ interface CreateDeliveryServiceRequest{
   RawText: string;
   validationMessage:string;
 }
-interface SearchDeliveryServiceRequest{
-  XmlId: string;
-}
-interface FullfillDeliveryServiceRequest{
-  XmlId: string;
-  FullfillMessage: string;
-}
-interface CompleteDeliveryServiceRequest{
-  XmlId: string;
-  CompleteMessage: string;
-}
-interface DeleteDeliveryServiceRequest{
-  XmlId: string;
-  DeleteMessage: string;
-}
-interface UpdateDeliveryServiceRequest{
-  XmlId: string;
-  UpdateMessage: string;
-}
+
 
 export class DeliveryServicesRequestPage extends BasePage {
   private btnFullfillRequest = element(by.buttonText("Fulfill Request"))
@@ -105,45 +86,45 @@ export class DeliveryServicesRequestPage extends BasePage {
     await this.txtRequestStatus.sendKeys("Submit Request for Review and Deployment");
     await this.txtComment.sendKeys("test");
     await basePage.ClickSubmit();
-    return await basePage.GetOutputMessage().then(value => outPutMessage === value);
+    return basePage.GetOutputMessage().then(value => outPutMessage === value);
   }
-  public async SearchDeliveryServiceRequest(deliveryservicerequest: SearchDeliveryServiceRequest){
-    const name = deliveryservicerequest.XmlId+this.randomize;
+  public async SearchDeliveryServiceRequest(xmlId: string){
+    const name = xmlId+this.randomize;
     await this.txtQuickSearch.clear();
     await this.txtQuickSearch.sendKeys(name)
     await browser.actions().click(element(by.cssContainingText("span", name))).perform();
   }
-  public async FullFillDeliveryServiceRequest(deliveryservicerequest: FullfillDeliveryServiceRequest): Promise<boolean>{
+  public async FullFillDeliveryServiceRequest(xmlId: string, fullFillMessage: string): Promise<boolean>{
     const basePage = new BasePage();
-    const outPutMessage = deliveryservicerequest.FullfillMessage.replace(deliveryservicerequest.XmlId,deliveryservicerequest.XmlId+this.randomize)
+    const outPutMessage = fullFillMessage.replace(xmlId,xmlId+this.randomize)
     await this.btnFullfillRequest.click();
     await this.btnYes.click();
-    return await basePage.GetOutputMessage().then(value => outPutMessage === value);
+    return basePage.GetOutputMessage().then(value => outPutMessage === value);
   }
-  public async CompleteDeliveryServiceRequest(deliveryservicerequest: CompleteDeliveryServiceRequest): Promise<boolean>{
+  public async CompleteDeliveryServiceRequest(completeMessage: string): Promise<boolean>{
     const basePage = new BasePage();
     await this.btnCompleteRequest.click();
     await this.btnYes.click();
-    return await basePage.GetOutputMessage().then(value => deliveryservicerequest.CompleteMessage === value);
+    return basePage.GetOutputMessage().then(value => completeMessage === value);
 
   }
-  public async DeleteDeliveryServiceRequest(deliveryservicerequest: DeleteDeliveryServiceRequest): Promise<boolean>{
+  public async DeleteDeliveryServiceRequest(xmlId: string, deleteMessage: string): Promise<boolean>{
     const basePage = new BasePage();
     await this.btnDeleteRequest.click();
-    await this.txtConfirmInput.sendKeys(deliveryservicerequest.XmlId+this.randomize+" request");
+    await this.txtConfirmInput.sendKeys(xmlId+this.randomize+" request");
     await basePage.ClickDeletePermanently();
-    return await basePage.GetOutputMessage().then(value=>deliveryservicerequest.DeleteMessage === value);
+    return basePage.GetOutputMessage().then(value=>deleteMessage === value);
   }
-  public async UpdateDeliveryServiceRequest(deliveryservicerequest: UpdateDeliveryServiceRequest): Promise<boolean>{
+  public async UpdateDeliveryServiceRequest(xmlId: string, updateMessage: string): Promise<boolean>{
     const basePage = new BasePage();
-    const outPutMessage = deliveryservicerequest.UpdateMessage.replace(deliveryservicerequest.XmlId,deliveryservicerequest.XmlId+this.randomize)
+    const outPutMessage = updateMessage.replace(xmlId,xmlId+this.randomize)
     await this.txtRawRemapText.clear();
     await this.txtRawRemapText.sendKeys("change");
     await this.btnUpdateRequest.click();
     await this.txtRequestStatus.sendKeys("Submit for Review / Deployment")
     await this.txtComment.sendKeys("test");
     await basePage.ClickSubmit();
-    return await basePage.GetOutputMessage().then(value => outPutMessage === value);
+    return basePage.GetOutputMessage().then(value => outPutMessage === value);
   }
 }
 

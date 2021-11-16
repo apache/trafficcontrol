@@ -31,52 +31,52 @@ const deliveryServiceRequestPage = new DeliveryServicesRequestPage();
 
 deliveryservicerequest.tests.forEach(deliveryServiceRequestData => {
     deliveryServiceRequestData.logins.forEach(login => {
-        describe(`Traffic Portal - Delivery Service Request - ${login.description}`, () => {
+        xdescribe(`Traffic Portal - Delivery Service Request - ${login.description}`, () => {
             afterEach(async function () {
                 await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
             });
             afterAll(async function () {
                 expect(await topNavigation.Logout()).toBeTruthy();
             })
-            xit('can login', async function(){
+            it('can login', async function(){
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
                 await deliveryServiceRequestPage.OpenServicesMenu();
             })
             deliveryServiceRequestData.create.forEach(create => {
-                xit(create.description, async () => {
+                it(create.description, async () => {
                     await deliveryServiceRequestPage.OpenDeliveryServicePage();
                     expect(await deliveryServiceRequestPage.CreateDeliveryServiceRequest(create)).toBe(true);
                     await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
-                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(create);
-                    expect(await deliveryServiceRequestPage.FullFillDeliveryServiceRequest(create)).toBe(true);
+                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(create.XmlId);
+                    expect(await deliveryServiceRequestPage.FullFillDeliveryServiceRequest(create.XmlId, create.FullfillMessage)).toBe(true);
                     await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
-                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(create);
-                    expect(await deliveryServiceRequestPage.CompleteDeliveryServiceRequest(create)).toBe(true);
+                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(create.XmlId);
+                    expect(await deliveryServiceRequestPage.CompleteDeliveryServiceRequest(create.CompleteMessage)).toBe(true);
 
                 });
             });
             deliveryServiceRequestData.remove.forEach(remove =>{
-                xit(remove.description, async () =>{
+                it(remove.description, async () =>{
                     await deliveryServiceRequestPage.OpenDeliveryServicePage();
                     expect(await deliveryServiceRequestPage.CreateDeliveryServiceRequest(remove)).toBe(true);
                     await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
-                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(remove);
-                    expect(await deliveryServiceRequestPage.DeleteDeliveryServiceRequest(remove)).toBe(true);
+                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(remove.XmlId);
+                    expect(await deliveryServiceRequestPage.DeleteDeliveryServiceRequest(remove.XmlId, remove.DeleteMessage)).toBe(true);
                 })
             })
             deliveryServiceRequestData.update.forEach(update=>{
-                xit(update.description, async () =>{
+                it(update.description, async () =>{
                     await deliveryServiceRequestPage.OpenDeliveryServicePage();
                     expect(await deliveryServiceRequestPage.CreateDeliveryServiceRequest(update)).toBe(true);
                     await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
-                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(update);
-                    expect(await deliveryServiceRequestPage.UpdateDeliveryServiceRequest(update)).toBe(true);
-                    expect(await deliveryServiceRequestPage.FullFillDeliveryServiceRequest(update)).toBe(true);
+                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(update.XmlId);
+                    expect(await deliveryServiceRequestPage.UpdateDeliveryServiceRequest(update.XmlId, update.UpdateMessage)).toBe(true);
+                    expect(await deliveryServiceRequestPage.FullFillDeliveryServiceRequest(update.XmlId, update.FullfillMessage)).toBe(true);
                     await deliveryServiceRequestPage.OpenDeliveryServiceRequestPage();
-                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(update);
-                    expect(await deliveryServiceRequestPage.CompleteDeliveryServiceRequest(update)).toBe(true);
+                    await deliveryServiceRequestPage.SearchDeliveryServiceRequest(update.XmlId);
+                    expect(await deliveryServiceRequestPage.CompleteDeliveryServiceRequest(update.CompleteMessage)).toBe(true);
                 })
             })
         });
