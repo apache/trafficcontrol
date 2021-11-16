@@ -531,7 +531,7 @@ func (cl *TOClient) GetJobs(reqHdr http.Header, cdnName string) ([]atscfg.Invali
 		opts := *ReqOpts(reqHdr)
 		opts.QueryParameters.Set("maxRevalDurationDays", "") // only get jobs with a start time within the window defined by the GLOBAL parameter 'maxRevalDurationDays'
 		opts.QueryParameters.Set("cdn", cdnName)             // only get jobs for delivery services in this server's CDN
-		toJobs, toReqInf, err := cl.c.GetInvalidationJobs(opts)
+		toJobs, toReqInf, err := cl.GetJobsCompat(opts)
 		if err != nil {
 			return errors.New("getting jobs from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
