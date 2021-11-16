@@ -75,13 +75,15 @@ export class DeliveryServicesRequestPage extends BasePage {
     await this.btnCreateDS.click();
     await this.formDropDown.sendKeys("ANY_MAP");
     await basePage.ClickSubmit();
-    await this.txtXmlId.sendKeys(deliveryservicerequest.XmlId + this.randomize);
-    await this.txtDisplayName.sendKeys(deliveryservicerequest.DisplayName + this.randomize);
-    await this.txtActive.sendKeys(deliveryservicerequest.Active);
-    await this.txtContentRoutingType.sendKeys(deliveryservicerequest.ContentRoutingType);
-    await this.txtTenant.sendKeys(deliveryservicerequest.Tenant);
-    await this.txtCDN.sendKeys(deliveryservicerequest.CDN);
-    await this.txtRawRemapText.sendKeys(deliveryservicerequest.RawText);
+    await Promise.all([
+      this.txtXmlId.sendKeys(deliveryservicerequest.XmlId + this.randomize),
+      this.txtDisplayName.sendKeys(deliveryservicerequest.DisplayName + this.randomize),
+      this.txtActive.sendKeys(deliveryservicerequest.Active),
+      this.txtContentRoutingType.sendKeys(deliveryservicerequest.ContentRoutingType),
+      this.txtTenant.sendKeys(deliveryservicerequest.Tenant),
+      this.txtCDN.sendKeys(deliveryservicerequest.CDN),
+      this.txtRawRemapText.sendKeys(deliveryservicerequest.RawText)
+    ]);
     await basePage.ClickCreate();
     await this.txtRequestStatus.sendKeys("Submit Request for Review and Deployment");
     await this.txtComment.sendKeys("test");
