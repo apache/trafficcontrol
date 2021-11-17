@@ -85,6 +85,13 @@ type InvalidationJobV4ForLegacy tc.InvalidationJobV4
 
 // InvalidationJobV4PlusLegacy has the data to deserialize both the latest and older versions that Traffic Ops could return.
 type InvalidationJobV4PlusLegacy struct {
+	// StartTime overrides the StartTime in InvalidationJobV4 in order to unmarshal any string format.
+	//
+	// A json.Unmarshal will place a 'startTime' value in this field,
+	// rather than the anonymous embedded InvalidationJobV4ForLegacy (tc.InvalidationJobV4).
+	//
+	// InvalidationJobV4FromLegacy will then parse multiple time formats that different Traffic Ops servers may return,
+	// and put the parsed time in tc.InvalidationJobV4.StartTime.
 	StartTime *string `json:"startTime"`
 	InvalidationJobV4ForLegacy
 	InvalidationJobV4Legacy
