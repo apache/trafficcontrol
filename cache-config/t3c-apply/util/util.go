@@ -81,7 +81,6 @@ func (f *FileLock) GetLock(lockFile string) bool {
 		return false
 	}
 	if !f.is_locked { // another process is running.
-		log.Errorf("Another t3c process is already running, try again later\n")
 		return false
 	}
 
