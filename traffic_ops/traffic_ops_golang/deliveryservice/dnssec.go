@@ -242,7 +242,7 @@ func MakeDSRecordText(ksk tc.DNSSECKeyV11, ttl time.Duration) (string, error) {
 	publicKeyBts := make([]byte, publicKeyBtsLen)
 	publicKeyBtsLen, err := base64.StdEncoding.Decode(publicKeyBts, kskPublicBts)
 	if err != nil {
-		return "", errors.New("decoding ksk public key base64: " + err.Error())
+		return "", fmt.Errorf("decoding ksk public key base64: %w", err)
 	}
 	publicKeyBts = publicKeyBts[:publicKeyBtsLen]
 
