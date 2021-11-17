@@ -253,13 +253,13 @@ func MakeDSRecordText(ksk tc.DNSSECKeyV11, ttl time.Duration) (string, error) {
 	}
 	flagsStr := fields[4]
 	protocolStr := fields[5]
-	flags, err := strconv.Atoi(flagsStr)
+	flags, err := strconv.ParseUint(flagsStr, 10, 16)
 	if err != nil {
-		return "", errors.New("malformed ksk public key: flags '" + flagsStr + "' not a number")
+		return "", fmt.Errorf("malformed ksk public key: can't parse flags '%s' as uint16: %w", flagsStr, err)
 	}
-	protocol, err := strconv.Atoi(protocolStr)
+	protocol, err := strconv.ParseUint(protocolStr, 10, 8)
 	if err != nil {
-		return "", errors.New("malformed ksk public key: protocol '" + protocolStr + "' not a number")
+		return "", fmt.Errorf("malformed ksk public key: can't parse protocol '%s' as uint8: %w", protocolStr, err)
 	}
 
 	realPublicKey := fields[7] // the Riak ksk.Public key is actually the RFC1035 single-line zone file format. For which the 7th field from 0 is the actual public key.
