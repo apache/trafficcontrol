@@ -52,12 +52,12 @@ func TestLockfile(t *testing.T) {
 		out, code := t3cUpdateReload(hostName, "badass")
 		t.Logf("TestLockFile second t3c finished %v", time.Now())
 		if code != 0 {
-			t.Fatalf("second t3c apply badass failed: output '''%v''' code %v\n", out, code)
+			t.Fatalf("second t3c apply badass failed: output '''%v''' code %v", out, code)
 		}
 
 		wg.Wait()
 		if firstCode != 0 {
-			t.Fatalf("first t3c apply badass failed: output '''%v''' code %v\n", firstOut, firstCode)
+			t.Fatalf("first t3c apply badass failed: output '''%v''' code %v", firstOut, firstCode)
 		}
 
 		outStr := string(out)
