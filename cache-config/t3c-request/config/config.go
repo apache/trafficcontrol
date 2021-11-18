@@ -170,9 +170,11 @@ func InitConfig() (Cfg, error) {
 	// load old config after initializing the loggers, because we want to log how long it takes
 	oldCfg, err := LoadOldCfg(*oldCfgPtr)
 	if err != nil {
-		return Cfg{}, errors.New("loading old config: " + err.Error())
+		log.Warnf("loading old config failed, old config will not be used! Error: %v\n", err)
+	} else {
+		log.Infof("using old config for IMS requests")
+		cfg.OldCfg = oldCfg
 	}
-	cfg.OldCfg = oldCfg
 
 	return cfg, nil
 }

@@ -150,7 +150,7 @@ Options
 
 .. option:: -y, --revalidate-only
 
-	When given, :program:`atstccfg` will only emit files relevant for updating content invalidation jobs. for Apache Traffic Server implementations, this limits the output to be only files named ``regex_revalidate.config``. Has no effect if :option:`--get-data` or :option:`--set-queue-status`/:option:`--set-reval-status` is/are used.
+	When given, :program:`atstccfg` will only emit files relevant for updating :term:`Content Invalidation Jobs`. for Apache Traffic Server implementations, this limits the output to be only files named ``regex_revalidate.config``. Has no effect if :option:`--get-data` or :option:`--set-queue-status`/:option:`--set-reval-status` is/are used.
 
 Environment Variables
 ---------------------

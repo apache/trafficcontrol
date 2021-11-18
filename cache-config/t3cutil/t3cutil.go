@@ -37,6 +37,7 @@ type ATSConfigFile struct {
 	Path        string `json:"path"`
 	ContentType string `json:"content_type"`
 	LineComment string `json:"line_comment"`
+	Secure      bool   `json:"secure"`
 	Text        string `json:"text"`
 }
 
@@ -52,23 +53,36 @@ func (fs ATSConfigFiles) Less(i, j int) bool {
 }
 func (fs ATSConfigFiles) Swap(i, j int) { fs[i], fs[j] = fs[j], fs[i] }
 
-// commentsFilter is used to remove comment
+// CommentsFilter is used to remove comment
 // lines from config files while making
 // comparisons.
-func CommentsFilter(body []string) []string {
+func CommentsFilter(body []string, lineComment string) []string {
 	var newlines []string
 
 	newlines = make([]string, 0)
 
 	for ii := range body {
 		line := body[ii]
-		if strings.HasPrefix(line, "#") {
+		if strings.HasPrefix(line, lineComment) {
 			continue
 		}
 		newlines = append(newlines, line)
 	}
 
 	return newlines
+}
+
+// PermCk will compare file permissions against existing file and octal permission provided.
+func PermCk(path string, perm int) bool {
+	mode := os.FileMode(perm)
+	file, err := os.Stat(path)
+	if err != nil {
+		fmt.Println("Error getting file status", path)
+	}
+	if file.Mode() != mode.Perm() {
+		return true
+	}
+	return false
 }
 
 // NewLineFilter removes carriage returns

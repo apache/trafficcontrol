@@ -202,8 +202,8 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	|                          |                         | recommended that this be set on a production  system.                                                                                 |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| use_reval_pending        | global                  | When this Parameter is present and its Value_ is exactly "1", Traffic Ops will separately keep track of :term:`cache servers`'        |
-	|                          |                         | updates and pending content invalidation jobs. This behavior should be enabled by default, and disabling it, while still possible, is |
-	|                          |                         | **EXTREMELY DISCOURAGED**.                                                                                                            |
+	|                          |                         | updates and pending :term:`Content Invalidation Jobs`. This behavior should be enabled by default, and disabling it, while still      |
+	|                          |                         | possible is **EXTREMELY DISCOURAGED**.                                                                                                |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 	| geolocation.polling.url  | CRConfig.json           | The location of a geographic IP mapping database for Traffic Router instances to use.                                                 |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
@@ -215,14 +215,13 @@ There is a special Profile of Type_ UNK_PROFILE that holds global configuration 
 	|                          |                         | is MaxMind's GeoIP2 database. The format of this :ref:`Parameter <parameters>`'s Value_ is:                                           |
 	|                          |                         | :file:`{Country Code};{Latitude},{Longitude}`, e.g. ``US;37.751,-97.822``                                                             |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
-	| maxRevalDurationDays     | regex_revalidate.config | This :ref:`Parameter <parameters>` sets the maximum duration, in days, for which a content invalidation job may run. This is          |
-	|                          |                         | **extremely** important, as there is currently no way to delete a content invalidation job once it has been created. Furthermore,     |
-	|                          |                         | while there is no restriction placed on creating multiple Parameters_ with this :ref:`parameter-name` and `Config File`_ -            |
-	|                          |                         | potentially with differing :ref:`Values <parameter-value>` - this is **EXTREMELY DISCOURAGED as any** :ref:`Parameter <parameters>`   |
+	| maxRevalDurationDays     | regex_revalidate.config | This :ref:`Parameter <parameters>` sets the maximum duration, in days, for which a :term:`Content Invalidation Job` may run.          |
+	|                          |                         | Furthermore, while there is no restriction placed on creating multiple Parameters_ with this :ref:`parameter-name` and `Config File`  |
+	|                          |                         | - potentially with differing :ref:`Values <parameter-value>` - this is **EXTREMELY DISCOURAGED as any** :ref:`Parameter <parameters>` |
 	|                          |                         | **that has both that** :ref:`parameter-name` **and** `Config File`_ **might be used when generating any given**                       |
 	|                          |                         | `regex_revalidate.config`_ **file for any given** :term:`cache server` **and whenever such** Parameters_ **exist, the actual maximum  |
-	|                          |                         | duration for content invalidation jobs is undefined, and CAN and WILL differ from server to server, and configuration file to         |
-	|                          |                         | configuration file.**                                                                                                                 |
+	|                          |                         | duration for** :term:`Content Invalidation Jobs` **is undefined, and CAN and WILL differ from server to server, and configuration     |
+	|                          |                         | file to configuration file.**                                                                                                         |
 	+--------------------------+-------------------------+---------------------------------------------------------------------------------------------------------------------------------------+
 
 
@@ -707,6 +706,15 @@ header
 	If the :ref:`Profile <profiles>` containing this Parameter is assigned to a server, **and** if the `Config File`_ is not one of the special values that Traffic Ops uses to determine special syntax formatting, then the Value_ of this Parameter will be used instead of the typical Traffic Ops header - *unless* it is the special string "none", in which case no header will be inserted at all.
 
 	.. caution:: If a single :ref:`Profile <profiles>` has multiple "header" Parameters for the same `Config File`_ with different :ref:`Values <parameter-value>`, the actual header is undefined (but will be one of those Parameters' :ref:`Values <parameter-value>`).
+
+.. _parameter-name-refetch_enabled:
+
+refetch_enabled
+	When a Parameter by this Name exists, and has the `Config File`_ value of exactly "global", then its Value_ *may* be used by Traffic Ops to decide whether or not the "REFETCH" :ref:`job-invalidation-type` of :term:`Content Invalidation Jobs` are allowed to be created. The Value_ "true" (case-insensitive) indicates that such :term:`Content Invalidation Jobs` *should* be allowed, while all other :ref:`Values <parameter-value>` indicate they should not.
+
+	.. note:: Any leading or trailing whitespace in the Value_ of these Parameters is ignored.
+
+	.. caution:: There is no limit to the number of these Parameters that may exist, and no association to any existing Profiles_ is considered when choosing which Parameter to use. If more than one Parameter with the Name ``refetch_enabled`` exists with the `Config File`_ "global", then the actual Value_ used to determine if "REFETCH" :ref:`job-invalidation-type` of :term:`Content Invalidation Jobs` are allowed to be created is undefined (but will be the Value_ of one of said Parameters). In particular, there is **no special handling** when any of these Parameters is assigned to `The GLOBAL Profile`_, and being thusly assigned **in no way means that the assigned Parameter will have any kind of priority over others that collide with it in Name and Config File**.
 
 .. _parameter-secure:
 

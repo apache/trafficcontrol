@@ -72,6 +72,7 @@ func MakeSSLMultiCertDotConfig(
 		Text:        txt,
 		ContentType: ContentTypeSSLMultiCertDotConfig,
 		LineComment: LineCommentSSLMultiCertDotConfig,
+		Secure:      true,
 		Warnings:    warnings,
 	}, nil
 }
