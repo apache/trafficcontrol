@@ -27,6 +27,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -695,6 +696,14 @@ func JobsToInvalidationJobs(oldJobs []tc.Job) ([]InvalidationJob, error) {
 	return jobs, nil
 }
 
+const JobV4TimeFormat = time.RFC3339Nano
+const JobLegacyTimeFormat = "2006-01-02 15:04:05-07"
+const JobLegacyRefetchSuffix = `##REFETCH##`
+const JobLegacyRefreshSuffix = `##REFRESH##`
+const JobLegacyParamPrefix = "TTL:"
+const JobLegacyParamSuffix = "h"
+const JobLegacyKeyword = "PURGE"
+
 func JobToInvalidationJob(jb tc.Job) (InvalidationJob, error) {
 	startTime := tc.Time{}
 	if err := json.Unmarshal([]byte(`"`+jb.StartTime+`"`), &startTime); err != nil {
@@ -704,13 +713,18 @@ func JobToInvalidationJob(jb tc.Job) (InvalidationJob, error) {
 	if err != nil {
 		return InvalidationJob{}, errors.New("unmarshalling ttl: " + err.Error())
 	}
+	invalType := tc.REFRESH
+	if strings.HasSuffix(jb.AssetURL, JobLegacyRefetchSuffix) {
+		invalType = tc.REFETCH
+	}
+
 	return InvalidationJob{
 		AssetURL:         jb.AssetURL,
 		CreatedBy:        jb.CreatedBy,
 		DeliveryService:  jb.DeliveryService,
 		ID:               uint64(jb.ID),
 		TTLHours:         uint(ttl),
-		InvalidationType: tc.REFRESH,
+		InvalidationType: invalType,
 		StartTime:        startTime.Time,
 	}, nil
 }
