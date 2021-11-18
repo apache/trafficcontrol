@@ -33,7 +33,7 @@ func TestLockfile(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		hostName := "atlanta-edge-03"
+		const hostName = `atlanta-edge-03`
 		const fileName = `records.config`
 
 		firstOut := ""
