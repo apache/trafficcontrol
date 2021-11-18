@@ -194,6 +194,12 @@ Maximum path length | The maximum string length for each generated path | HTTP |
 
 Additionally, the TR Ultimate Test Harness should provide the ability to verify that a DNS-routed Delivery Service assigned to a Federation resolves to that Federation's CNAME, rather than a Cache's IP address, depending on the IP address of the client querying Traffic Router.
 
+### Automation Impact
+
+A GitHub Action to run the tests that the TR Ultimate Test Harness should be added, but only if it consistently meets a constant *requests per second* threshold. Traffic Router will perform better on some GitHub Actions runners than others, so this should be tested after writing the GitHub Action.
+
+If a meaningful *requests per second* threshold cannot be found for GitHub Actions runners, we may consider trying again in the future, in case consistency of Traffic Router performance on GitHub Actions runners improves.
+
 ### Performance Impact
 <!--
 *How* will this impact performance?
