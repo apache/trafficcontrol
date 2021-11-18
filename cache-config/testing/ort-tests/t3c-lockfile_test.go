@@ -42,22 +42,22 @@ func TestLockfile(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			t.Logf("TestLockFile first t3c starting %v", time.Now())
+			t.Logf("TestLockFile first t3c starting %s", time.Now())
 			firstOut, firstCode = t3cUpdateReload(hostName, "badass")
-			t.Logf("TestLockFile first t3c finished %v", time.Now())
+			t.Logf("TestLockFile first t3c finished %s", time.Now())
 		}()
 
 		time.Sleep(time.Millisecond * 100) // sleep long enough to ensure the concurrent t3c starts
-		t.Logf("TestLockFile second t3c starting %v", time.Now())
+		t.Logf("TestLockFile second t3c starting %s", time.Now())
 		out, code := t3cUpdateReload(hostName, "badass")
-		t.Logf("TestLockFile second t3c finished %v", time.Now())
+		t.Logf("TestLockFile second t3c finished %s", time.Now())
 		if code != 0 {
-			t.Fatalf("second t3c apply badass failed: output '''%v''' code %v", out, code)
+			t.Fatalf("second t3c apply badass failed: output '''%s''' code %d", out, code)
 		}
 
 		wg.Wait()
 		if firstCode != 0 {
-			t.Fatalf("first t3c apply badass failed: output '''%v''' code %v", firstOut, firstCode)
+			t.Fatalf("first t3c apply badass failed: output '''%s''' code %d", firstOut, firstCode)
 		}
 
 		outStr := string(out)
@@ -76,7 +76,7 @@ func TestLockfile(t *testing.T) {
 		}
 
 		if acquireStartLine == "" || acquireEndLine == "" {
-			t.Fatalf("t3c apply output expected to contain 'Trying to acquire app lock' and 'Acquired app lock', actual: '''%v'''", out)
+			t.Fatalf("t3c apply output expected to contain 'Trying to acquire app lock' and 'Acquired app lock', actual: '''%s'''", out)
 		}
 
 		acquireStart := parseLogLineTime(acquireStartLine)
@@ -90,7 +90,7 @@ func TestLockfile(t *testing.T) {
 
 		minDiff := time.Second * 1 // checking the file lock should never take 1s, so that's enough to verify it was hit
 		if diff := acquireEnd.Sub(*acquireStart); diff < minDiff {
-			t.Fatalf("t3c apply expected time to acquire while another t3c is running to be at least %v, actual %v start line '%v' end line '%v'", minDiff, diff, acquireStartLine, acquireEndLine)
+			t.Fatalf("t3c apply expected time to acquire while another t3c is running to be at least %s, actual %s start line '%s' end line '%s'", minDiff, diff, acquireStartLine, acquireEndLine)
 		}
 
 		t.Logf(testName + " succeeded")
