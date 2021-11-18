@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added definition for `heartbeat.polling.interval` for CDN Traffic Monitor config in API documentation.
 - New `pkg` script options, `-h`, `-s`, `-S`, and `-L`.
 - Added `Invalidation Type` (REFRESH or REFETCH) for invalidating content to Traffic Portal.
+- cache config t3c-apply retrying when another t3c-apply is running.
 - IMS warnings to Content Invalidation requests in Traffic Portal and documentation.
 - [#6032](https://github.com/apache/trafficcontrol/issues/6032) Add t3c setting mode 0600 for secure files
 
