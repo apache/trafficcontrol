@@ -30,7 +30,8 @@ RUN go_version=$(cat /GO_VERSION) && \
     tar -C /usr/local -xvzf go.tar.gz && \
     ln -s /usr/local/go/bin/go /usr/bin/go && \
     rm go.tar.gz
-ENV GOPATH=/go
+ENV GOPATH=/go \
+    CGO_ENABLED=0
 
 FROM enroller-dependencies AS enroller-builder
 ARG ENROLLER_DEBUG_BUILD=false
