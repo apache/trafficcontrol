@@ -40,9 +40,9 @@ import (
 const PROPERTIES_FILE = "./fill_expiration_and_provider_conf.json"
 
 func main() {
-	aesKeyLocation := flag.String("aes-key", "/opt/traffic_ops/app/conf/aes.key", "(Optional) The file path for the previous base64 encoded AES key. Default is /opt/traffic_ops/app/conf/aes.key.")
-	cfg := flag.String("cfg", PROPERTIES_FILE, "(Optional) The path for the configuration file. Default is "+PROPERTIES_FILE+".")
-	help := flag.Bool("help", false, "(Optional) Print usage information and exit.")
+	aesKeyLocation := flag.String("aes-key", "/opt/traffic_ops/app/conf/aes.key", "The file path for the previous base64 encoded AES key. Default is /opt/traffic_ops/app/conf/aes.key.")
+	cfg := flag.String("cfg", PROPERTIES_FILE, "The path for the configuration file. Default is "+PROPERTIES_FILE+".")
+	help := flag.Bool("help", false, "Print usage information and exit.")
 	flag.Parse()
 
 	if *help {
@@ -139,6 +139,9 @@ func main() {
 	}
 
 	for id, info := range sslKeyMap {
+		if strings.Count(id, ",") != 2 {
+			die("found id that does not contain 2 commas: " + id)
+		}
 		idParts := strings.Split(id, ", ")
 		if len(idParts) != 3 {
 			die(fmt.Sprintf("expected cert id string (ds, cdn, version) to have 3 parts but found %d in %s", len(idParts), idParts))
