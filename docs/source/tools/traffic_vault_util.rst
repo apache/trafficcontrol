@@ -28,7 +28,7 @@ The ``traffic_vault_util`` tool - located at :file:`tools/traffic_vault_util.go`
 
 Usage
 =====
-``traffic_vault_util [--dry_run] --vault_ip IP --vault_action ACTION [--vault_user USER] [--vault_password PASSWD] [--vault_port PORT] [--insecure] [--server_name SERVER_NAME]``
+``traffic_vault_util [--dry_run] --vault_ip IP --vault_action ACTION [--vault_user USER] [--vault_password PASSWD] [--vault_port PORT] [--insecure]``
 
 .. option:: --dry_run
 
@@ -72,9 +72,5 @@ Usage
 .. option:: --insecure
 
 	An optional flag which, if given, specifies whether to utilize TLS certificate checks when establishing a connection. Defaults to false.
-
-.. option:: --server_name
-
-	A dependent flag which is required if :option:`--skip_tls` is ``false``, otherwise optional. The server name is used to verify against TLS certificates.
 
 .. [1] These problems are all tracked by `GitHub Issue #3261 <https://github.com/apache/trafficcontrol/issues/3261>`_.
