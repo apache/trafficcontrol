@@ -70,7 +70,7 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 
 - Traffic Ops will need to add the logic to the below-mentioned existing API endpoints, in order to show/create/update/delete a sorted list of profiles for server.
 
-- `/server/  GET, POST`
+- `/servers/  GET, POST`
 - `/servers/{id} PUT, DELETE`
 - `/servers/details`
 
@@ -81,35 +81,29 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 **Existing Endpoints**
 
 - Modify JSON request and response for existing servers endpoints.
+
+#### API 5.0 GET
 - JSON **response** with the proposed change will look as follows:
-
-
 `/servers?id=5`
 ```JSON
 { 
   "id": 5,
   ⋮
   "requested": {
-    "profileNames": [
-      "MID",
-      "TOP",
-      "PRIMARY"
+    "layeredProfiles": [
+      "MID"
     ],
     ⋮
   }
 }
 ```
 
-JSON **request** with the proposed change will look as follows:
-
 `/servers`
 ```JSON
 { 
   "requested": {
-    "profileNames": [
-      "MID", 
-      "TOP", 
-      "PRIMARY"
+    "layeredProfiles": [
+      "MID"
     ],
     ⋮
   },
@@ -117,13 +111,150 @@ JSON **request** with the proposed change will look as follows:
 }
 ```
 
+#### API 5.0 POST/PUT
+JSON **request** with the proposed change will look as follows:
+
+`POST /servers `
+```JSON
+{
+    "cachegroupId": 6,
+    "cdnId": 2,
+    ⋮
+    "interfaces": [
+      ⋮
+    ],
+    ⋮
+    "profileId": [10, 11, 15],
+    ⋮
+}
+```
+
+`PUT /servers/5`
+```JSON
+{
+    "cachegroupId": 6,
+    "cdnId": 2,
+    ⋮
+    "interfaces": [
+      ⋮
+    ],
+    ⋮
+    "profileId": [10, 11, 15],
+    ⋮
+}
+```
+
+returns a **400** **response** with
+
+```JSON
+{
+  "alerts":[
+   { 
+     "text":"cannot associate multiple profiles to a server",
+     "level":"error"
+   }
+]}
+```
+
+#### API 6.0 GET
+- JSON **response** with the proposed change will look as follows:
+  `/servers?id=5`
+```JSON
+{ 
+  "id": 5,
+  ⋮
+  "requested": {
+    "layeredProfiles": [
+      "MID",
+      "AMIGA_123",
+      "CDN_FOO"
+    ],
+    ⋮
+  }
+}
+```
+
+`/servers`
+```JSON
+{ 
+  "requested": {
+    "layeredProfiles": [
+      "MID",
+      "AMIGA_123",
+      "CDN_FOO"
+    ],
+    ⋮
+  },
+  ⋮
+}
+```
+
+#### API 6.0 POST/PUT
+JSON **request** with the proposed change will look as follows:
+
+`POST /servers `
+```JSON
+{
+    "cachegroupId": 6,
+    "cdnId": 2,
+    ⋮
+    "interfaces": [
+      ⋮
+    ],
+    ⋮
+    "profileId": [10, 11, 15],
+    ⋮
+}
+```
+
+`PUT /servers/5`
+```JSON
+{
+    "cachegroupId": 6,
+    "cdnId": 2,
+    ⋮
+    "interfaces": [
+      ⋮
+    ],
+    ⋮
+    "profileId": [10, 11, 15],
+    ⋮
+}
+```
+
+return following **response**
+```JSON
+{ "alerts": [
+  {
+    "text": "Server created/updated",
+    "level": "success"
+  }
+],
+  "response": {
+    "cachegroup": "CDN_in_a_Box_Mid",
+    "cachegroupId": 6,
+    "cdnId": 2,
+    ⋮
+    "id": 5,
+    "layeredProfiles": [
+      "MID",
+      "AMIGA_123",
+      "CDN_FOO"
+    ],
+    "profileDesc": "Mid Cache - Apache Traffic Server, Amiga 123 Machine, CDN Foo",
+    "profileIds": [10, 11, 15],
+    ⋮
+  }
+}
+```
+
 The following table describes the top level `layered_profile` object for servers:
 
-| field       | type                 | optionality | description                                                    |
-| ----------- | ---------------------| ----------- | ---------------------------------------------------------------|
-| server      | bigint               | required    | the server id associated with a given profile                  |
-| profileName | string               | required    | the profile name associated with a server                      |
-| order       | bigint               | required    | the order in which a profile is applied to a server            |
+| field           | type                 | optionality | description                                              |
+| ----------------| ---------------------| ----------- | ---------------------------------------------------------|
+| server          | bigint               | required    | the server id associated with a given profile            |
+| layeredProfiles | string               | required    | the profile names associated with a server               |
+| order           | bigint               | required    | the order in which a profile is applied to a server      |
 
 **API constraints**
 - In API 5.0, GET /servers object profile and profileId fields to be arrays, but a PUT or POST with multiple values returns a 400 error. 
@@ -149,12 +280,13 @@ But the advantage is that it solves both concerns:
      Column    |  Type                    | Collation | Nullable | Default
 ---------------+--------------------------+-----------+----------+--------
  server        | bigint                   |           | not null |
- profileName   | string                   |           | not null |
+ profile_names | text                     |           | not null |
  order         | bigint                   |           | not null |
 Indexes:
-    "pk_server_profile" PRIMARY KEY(profileName, server, order)
+    "pk_server_profile" PRIMARY KEY(profile_names, server, order)
 Foreign-key constraints:
-    "fk_server" FOREIGN KEY (server, profileName) REFERENCES server(id)
+    "fk_server" FOREIGN KEY (server) REFERENCES server(id)
+    "fk_server" FOREIGN KEY (profile_names) REFERENCES profile(name)
 ```
 
 All profiles assigned to a given server will have the same values of:
