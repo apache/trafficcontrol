@@ -79,7 +79,7 @@ func TestGetCDNRouterFQDNsWithoutCDN(t *testing.T) {
 
 	rows.AddRow("host1", "test", 2500, "ott")
 	rows.AddRow("host2", "test2", 3500, "newCDN")
-	mock.ExpectQuery("SELECT").WithArgs(nil).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
 	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
