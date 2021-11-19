@@ -23,16 +23,14 @@ import (
 )
 
 func TestT3cApplyOSHostnameShort(t *testing.T) {
-	t.Log("------------- Starting TestT3cApplyOSHostnameShort tests ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
-		doTestT3cApplyOSHostnameShort(t)
+		t.Run("test t3c apply getting short hostname from the OS", doTestT3cApplyOSHostnameShort)
 	})
-	t.Log("------------- End of TestT3cApplyOSHostnameShort tests ---------------")
 }
 
 func doTestT3cApplyOSHostnameShort(t *testing.T) {
@@ -43,56 +41,54 @@ func doTestT3cApplyOSHostnameShort(t *testing.T) {
 
 	startingHost, errCode := getHostName()
 	if errCode != 0 {
-		t.Fatalf("getting the hostname failed: code %v message %v", errCode, startingHost)
+		t.Fatalf("getting the hostname failed with exit code %d, message: %s", errCode, startingHost)
 	}
 
-	t.Logf("original host is " + startingHost)
-
-	cacheHostName := "atlanta-edge-03"
+	t.Logf("original host is %s", startingHost)
 
 	if msg, code := setHostName(cacheHostName); code != 0 {
-		t.Fatalf("setting the hostname failed: code %v message %v", code, msg)
+		t.Fatalf("setting the hostname failed with exit code %d, message: %s", code, msg)
 	}
 
 	defer func() {
 		if msg, code := setHostName(startingHost); code != 0 {
-			t.Fatalf("setting the hostname back to the original '%v' failed: code %v message %v", startingHost, code, msg)
+			t.Fatalf("setting the hostname back to the original '%s' failed with exit code %d message %s", startingHost, code, msg)
 		} else {
-			t.Logf("set hostname back to original '" + startingHost + "'")
+			t.Logf("set hostname back to original '%s'", startingHost)
 		}
 	}()
 
 	// verify the host was really set
 	if newHost, errCode := getHostName(); errCode != 0 {
-		t.Fatalf("getting the hostname failed: code %v message %v", errCode, newHost)
+		t.Fatalf("getting the hostname failed with exit code %d, message: %s", errCode, newHost)
 	} else if newHost != cacheHostName {
-		t.Fatalf("setting hostname claimed it succeeded, but was '%v' expected '%v'", newHost, cacheHostName)
+		t.Fatalf("setting hostname claimed it succeeded, but was '%s' expected '%s'", newHost, cacheHostName)
 	} else {
-		t.Logf("set hostname to '" + newHost + "'")
+		t.Logf("set hostname to '%s'", newHost)
 	}
 
 	t.Logf("calling t3c-apply with no host flag, with a short hostname")
 	if stdOut, exitCode := t3cApplyNoHost(); exitCode != 0 {
-		t.Fatalf("t3c-apply with no hostname arg and and system hostname '%v' failed: code '%v' output '%v'\n", cacheHostName, exitCode, stdOut)
+		t.Fatalf("t3c-apply with no hostname arg and and system hostname '%s' failed with exit code %d, output: %s", cacheHostName, exitCode, stdOut)
 	}
 
 	fqdnHostName := cacheHostName + ".fqdn.example.test"
 	if msg, code := setHostName(fqdnHostName); code != 0 {
-		t.Fatalf("setting the hostname failed: code %v message %v", code, msg)
+		t.Fatalf("setting the hostname failed with exit code %d, message: %s", code, msg)
 	}
 
 	// verify the host was really set
 	if newHost, errCode := getHostName(); errCode != 0 {
-		t.Fatalf("getting the hostname failed: code %v message %v", errCode, newHost)
+		t.Fatalf("getting the hostname failed with exit code %d, message: %s", errCode, newHost)
 	} else if newHost != fqdnHostName {
-		t.Fatalf("setting hostname claimed it succeeded, but was '%v' expected '%v'", newHost, fqdnHostName)
+		t.Fatalf("setting hostname claimed it succeeded, but was '%s' expected '%s'", newHost, fqdnHostName)
 	} else {
-		t.Logf("set hostname to '" + newHost + "'")
+		t.Logf("set hostname to '%s'", newHost)
 	}
 
 	t.Logf("calling t3c-apply with no host flag, with a fqdn hostname")
 	if stdOut, exitCode := t3cApplyNoHost(); exitCode != 0 {
-		t.Fatalf("t3c-apply with no hostname arg and and system hostname '%v' failed: code '%v' output '%v'\n", cacheHostName, exitCode, stdOut)
+		t.Fatalf("t3c-apply with no hostname arg and and system hostname '%s' failed with exit code %d, output: %s", cacheHostName, exitCode, stdOut)
 	}
 }
 

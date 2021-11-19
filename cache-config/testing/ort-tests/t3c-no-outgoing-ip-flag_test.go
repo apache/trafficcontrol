@@ -19,16 +19,38 @@ import (
 	"errors"
 	"io/ioutil"
 	"os/exec"
-	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
+const outgoingIPToBind = "outgoing_ip_to_bind"
+
+func testNoOutgoingIPAfterUpdate(t *testing.T, noOutgoingIP *bool) {
+	if err := t3cUpdateNoOutgoingIP(cacheHostName, noOutgoingIP); err != nil {
+		t.Fatalf("t3c badass failed: %v", err)
+	}
+
+	recordsDotConfig, err := ioutil.ReadFile(recordsConfigFileName)
+	if err != nil {
+		t.Fatalf("reading %s: %v", recordsConfigFileName, err)
+	}
+	contents := string(recordsDotConfig)
+
+	if noOutgoingIP == nil || !*noOutgoingIP {
+		if !strings.Contains(contents, outgoingIPToBind) {
+			t.Errorf("expected t3c to add records.config outgoing_ip_to_bind, actual: %s", contents)
+		}
+	} else if strings.Contains(contents, outgoingIPToBind) {
+		t.Errorf("expected t3c to not add records.config outgoing_ip_to_bind, actual: %s", contents)
+	}
+
+}
+
 func TestT3CNoOutgoingIP(t *testing.T) {
-	t.Logf("------------- Starting TestT3CNoOutgoingIP ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -36,55 +58,10 @@ func TestT3CNoOutgoingIP(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		{
-			if err := t3cUpdateNoOutgoingIP("atlanta-edge-03", nil); err != nil {
-				t.Fatalf("ERROR: t3c badass failed: %v\n", err)
-			}
-
-			recordsName := filepath.Join(test_config_dir, "records.config")
-			recordsDotConfig, err := ioutil.ReadFile(recordsName)
-			if err != nil {
-				t.Fatalf("reading %v: %v\n", recordsName, err)
-			}
-
-			if !bytes.Contains(recordsDotConfig, []byte("outgoing_ip_to_bind")) {
-				t.Errorf("expected t3c with no --no-outgoing-ip to add records.config outgoing_ip_to_bind, actual: '%v'\n", string(recordsDotConfig))
-			}
-		}
-
-		{
-			if err := t3cUpdateNoOutgoingIP("atlanta-edge-03", util.BoolPtr(false)); err != nil {
-				t.Fatalf("ERROR: t3c badass failed: %v\n", err)
-			}
-
-			recordsName := filepath.Join(test_config_dir, "records.config")
-			recordsDotConfig, err := ioutil.ReadFile(recordsName)
-			if err != nil {
-				t.Fatalf("reading %v: %v\n", recordsName, err)
-			}
-
-			if !bytes.Contains(recordsDotConfig, []byte("outgoing_ip_to_bind")) {
-				t.Errorf("expected t3c with --no-outgoing-ip=false to add records.config outgoing_ip_to_bind, actual: '%v'\n", string(recordsDotConfig))
-			}
-		}
-
-		{
-			if err := t3cUpdateNoOutgoingIP("atlanta-edge-03", util.BoolPtr(true)); err != nil {
-				t.Fatalf("ERROR: t3c badass failed: %v\n", err)
-			}
-
-			recordsName := filepath.Join(test_config_dir, "records.config")
-			recordsDotConfig, err := ioutil.ReadFile(recordsName)
-			if err != nil {
-				t.Fatalf("reading %v: %v\n", recordsName, err)
-			}
-
-			if bytes.Contains(recordsDotConfig, []byte("outgoing_ip_to_bind")) {
-				t.Errorf("expected t3c with --no-outgoing-ip=true to not add records.config outgoing_ip_to_bind, actual: '%v'\n", string(recordsDotConfig))
-			}
-		}
+		t.Run("not passing a no-outgoing-ip flag", func(t *testing.T) { testNoOutgoingIPAfterUpdate(t, nil) })
+		t.Run("passing a no-outgoing-ip flag that's explicitly false", func(t *testing.T) { testNoOutgoingIPAfterUpdate(t, util.BoolPtr(false)) })
+		t.Run("passing a no-outgoing-ip flag that's true", func(t *testing.T) { testNoOutgoingIPAfterUpdate(t, util.BoolPtr(true)) })
 	})
-	t.Logf("------------- End of TestT3CNoOutgoingIP ---------------")
 }
 
 func t3cUpdateNoOutgoingIP(host string, noOutgoingIP *bool) error {

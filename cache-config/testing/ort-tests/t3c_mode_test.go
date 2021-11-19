@@ -1,3 +1,4 @@
+// Package orttest provides testing for the t3c utility(ies).
 package orttest
 
 /*
@@ -15,18 +16,19 @@ package orttest
 */
 
 import (
-	"fmt"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 	"os"
 	"os/user"
+	"path/filepath"
 	"strconv"
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 )
 
-const TrafficServerOwner = "ats"
+const trafficServerOwner = "ats"
 
 var (
 	base_line_dir   = "baseline-configs"
@@ -44,8 +46,45 @@ var (
 	}
 )
 
+func verifyPluginConfigs(t *testing.T) {
+	err := runCheckRefs("/opt/trafficserver/etc/trafficserver/remap.config")
+	if err != nil {
+		t.Errorf("Plugin verification failed for remap.config: %v", err)
+	}
+	err = runCheckRefs("/opt/trafficserver/etc/trafficserver/plugin.config")
+	if err != nil {
+		t.Errorf("Plugin verification failed for plugin.config: %v", err)
+	}
+
+}
+
+func syncDSTest(t *testing.T) {
+	// remove the remap.config in preparation for running syncds
+	remap := filepath.Join(test_config_dir, "remap.config")
+	err := os.Remove(remap)
+	if err != nil {
+		t.Fatalf("unable to remove %s: %v", remap, err)
+	}
+	// prepare for running syncds.
+	err = ExecTOUpdater(cacheHostName, false, true)
+	if err != nil {
+		t.Fatalf("queue updates failed: %v", err)
+	}
+
+	// remap.config is removed and atlanta-edge-03 should have
+	// queue updates enabled.  run t3c to verify a new remap.config
+	// is pulled down.
+	err = runApply(cacheHostName, "syncds")
+	if err != nil {
+		t.Fatalf("t3c syncds failed: %v", err)
+	}
+	if !util.FileExists(remap) {
+		t.Fatalf("syncds failed to pull down %s", remap)
+	}
+
+}
+
 func TestT3cBadassAndSyncDs(t *testing.T) {
-	fmt.Println("------------- Starting TestT3cBadassAndSyncDs ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -78,30 +117,30 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		}()
 
 		// run badass and check config files.
-		if err := runApply("atlanta-edge-03", "badass"); err != nil {
-			t.Fatalf("ERROR: t3c badass failed: %v\n", err)
+		if err := runApply(cacheHostName, "badass"); err != nil {
+			t.Fatalf("t3c badass failed: %v", err)
 		}
 
 		// Use this for uid/gid file check
-		atsUser, err := user.Lookup(TrafficServerOwner)
+		atsUser, err := user.Lookup(trafficServerOwner)
 		var atsUid string
 		var atsGid string
 
 		if err != nil {
-			t.Logf("Unable to look up user: %s: %v", TrafficServerOwner, err)
+			t.Logf("Unable to look up user: %s: %v", trafficServerOwner, err)
 		} else {
 			atsUid = atsUser.Uid
 			atsGid = atsUser.Gid
 		}
 
 		for _, v := range testFiles {
-			bfn := base_line_dir + "/" + v
+			bfn := filepath.Join(base_line_dir, v)
 			if !util.FileExists(bfn) {
-				t.Fatalf("ERROR: missing baseline config file, %s,  needed for tests", bfn)
+				t.Fatalf("missing baseline config file, %s,  needed for tests", bfn)
 			}
-			tfn := test_config_dir + "/" + v
+			tfn := filepath.Join(test_config_dir, v)
 			if !util.FileExists(tfn) {
-				t.Fatalf("ERROR: missing the expected config file, %s", tfn)
+				t.Fatalf("missing the expected config file, %s", tfn)
 			}
 
 			diffStr, err := util.DiffFiles(bfn, tfn)
@@ -132,43 +171,7 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 
 		time.Sleep(time.Second * 5)
 
-		fmt.Println("------------------------ Verify Plugin Configs ----------------")
-		err = runCheckRefs("/opt/trafficserver/etc/trafficserver/remap.config")
-		if err != nil {
-			t.Errorf("Plugin verification failed for remap.config: " + err.Error())
-		}
-		err = runCheckRefs("/opt/trafficserver/etc/trafficserver/plugin.config")
-		if err != nil {
-			t.Errorf("Plugin verification failed for plugin.config: " + err.Error())
-		}
-
-		fmt.Println("----------------- End of Verify Plugin Configs ----------------")
-
-		fmt.Println("------------------------ running SYNCDS Test ------------------")
-		// remove the remap.config in preparation for running syncds
-		remap := test_config_dir + "/remap.config"
-		err = os.Remove(remap)
-		if err != nil {
-			t.Fatalf("ERROR: unable to remove %s\n", remap)
-		}
-		// prepare for running syncds.
-		err = ExecTOUpdater("atlanta-edge-03", false, true)
-		if err != nil {
-			t.Fatalf("ERROR: queue updates failed: %v\n", err)
-		}
-
-		// remap.config is removed and atlanta-edge-03 should have
-		// queue updates enabled.  run t3c to verify a new remap.config
-		// is pulled down.
-		err = runApply("atlanta-edge-03", "syncds")
-		if err != nil {
-			t.Fatalf("ERROR: t3c syncds failed: %v\n", err)
-		}
-		if !util.FileExists(remap) {
-			t.Fatalf("ERROR: syncds failed to pull down %s\n", remap)
-		}
-		fmt.Println("------------------------ end SYNCDS Test ------------------")
-
+		t.Run("Verify Plugin Configs", verifyPluginConfigs)
+		t.Run("SyncDS Test", syncDSTest)
 	})
-	fmt.Println("------------- End of TestT3cBadassAndSyncDs ---------------")
 }

@@ -16,7 +16,6 @@ package orttest
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -26,8 +25,29 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const cacheHostName = `atlanta-edge-03`
+const cmdUpdateStatus = `update-status`
+
+func verifyUpdateStatus(t *testing.T) {
+	output, err := runRequest(cacheHostName, cmdUpdateStatus)
+	if err != nil {
+		t.Fatalf("t3c-request failed: %v", err)
+	}
+	serverStatus := tc.ServerUpdateStatus{}
+	if err = json.Unmarshal([]byte(output), &serverStatus); err != nil {
+		t.Fatalf("failed to parse t3c-request output: %v", err)
+	}
+	if serverStatus.HostName != cacheHostName {
+		t.Errorf("expected update-status host '%s', actual: '%s'", cacheHostName, serverStatus.HostName)
+	} else if serverStatus.RevalPending {
+		t.Error("expected RevalPending false after syncds run")
+	} else if serverStatus.UpdatePending {
+		t.Error("expected UpdatePending false after syncds run")
+	}
+
+}
+
 func TestT3cUnsetsUpdateFlag(t *testing.T) {
-	fmt.Println("------------- Starting TestT3cUnsetsUpdateFlag tests ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -35,24 +55,20 @@ func TestT3cUnsetsUpdateFlag(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		const cacheHostName = `atlanta-edge-03`
-		const cmdUpdateStatus = `update-status`
-
-		t.Logf("DEBUG TestT3cReload calling badass")
 		if stdOut, exitCode := t3cUpdateUnsetFlag(cacheHostName, "badass"); exitCode != 0 {
-			t.Fatalf("ERROR: t3c badass failed: code '%v' output '%v'\n", exitCode, stdOut)
+			t.Fatalf("t3c badass failed with code %d output: %s", exitCode, stdOut)
 		}
 
 		// delete a file that we know should trigger a reload.
 		fileNameToRemove := filepath.Join(test_config_dir, "hdr_rw_first_ds-top.config")
 		if err := os.Remove(fileNameToRemove); err != nil {
-			t.Fatalf("failed to remove file '" + fileNameToRemove + "': " + err.Error())
+			t.Fatalf("failed to remove file '%s': %v", fileNameToRemove, err)
 		}
 
 		t.Logf("DEBUG TestT3cReload setting upate flag")
 		// set the update flag, so syncds will run
 		if err := ExecTOUpdater(cacheHostName, false, true); err != nil {
-			t.Fatalf("t3c-update failed: %v\n", err)
+			t.Fatalf("t3c-update failed: %v", err)
 		}
 
 		{
@@ -60,14 +76,14 @@ func TestT3cUnsetsUpdateFlag(t *testing.T) {
 
 			output, err := runRequest(cacheHostName, cmdUpdateStatus)
 			if err != nil {
-				t.Fatalf("ERROR: to_requester run failed: %v\n", err)
+				t.Fatalf("to_requester run failed: %v", err)
 			}
 			serverStatus := tc.ServerUpdateStatus{}
 			if err = json.Unmarshal([]byte(output), &serverStatus); err != nil {
-				t.Fatalf("ERROR unmarshalling json output: " + err.Error())
+				t.Fatalf("failed to parse to_requester output: %v", err)
 			}
 			if serverStatus.HostName != cacheHostName {
-				t.Fatalf("expected request update-status host '%v' actual %v", cacheHostName, serverStatus.HostName)
+				t.Fatalf("expected request update-status host '%s', actual: '%s'", cacheHostName, serverStatus.HostName)
 			} else if serverStatus.RevalPending {
 				t.Fatal("expected RevalPending false after update")
 			} else if !serverStatus.UpdatePending {
@@ -80,22 +96,22 @@ func TestT3cUnsetsUpdateFlag(t *testing.T) {
 		// TODO: remove this when running ATS is added to the test framework
 
 		if err := os.Rename(`/opt/trafficserver/bin/traffic_ctl`, `/opt/trafficserver/bin/traffic_ctl.real`); err != nil {
-			t.Fatal("temporarily moving traffic_ctl: " + err.Error())
+			t.Fatalf("temporarily moving traffic_ctl: %v", err)
 		}
 
 		fi, err := os.OpenFile(`/opt/trafficserver/bin/traffic_ctl`, os.O_RDWR|os.O_CREATE, 755)
 		if err != nil {
-			t.Fatal("creating temp no-op traffic_ctl file: " + err.Error())
+			t.Fatalf("creating temp no-op traffic_ctl file: %v", err)
 		}
 		if _, err := fi.WriteString(`#!/usr/bin/env bash` + "\n"); err != nil {
 			fi.Close()
-			t.Fatal("writing temp no-op traffic_ctl file: " + err.Error())
+			t.Fatalf("writing temp no-op traffic_ctl file: %v", err)
 		}
 		fi.Close()
 
 		defer func() {
 			if err := os.Rename(`/opt/trafficserver/bin/traffic_ctl.real`, `/opt/trafficserver/bin/traffic_ctl`); err != nil {
-				t.Fatal("moving real traffic_ctl back: " + err.Error())
+				t.Fatalf("moving real traffic_ctl back: %v", err)
 			}
 		}()
 
@@ -106,29 +122,9 @@ func TestT3cUnsetsUpdateFlag(t *testing.T) {
 		// 	t.Fatalf("t3c syncds failed: %v\n", err)
 		// }
 
-		t.Logf("TestT3cTOUpdates t3cUpdateUnsetFlag stdout '''%v'''", stdOut)
-
-		{
-			// verify update status after syncds is now false
-
-			output, err := runRequest(cacheHostName, cmdUpdateStatus)
-			if err != nil {
-				t.Fatalf("t3c-request failed: %v\n", err)
-			}
-			serverStatus := tc.ServerUpdateStatus{}
-			if err = json.Unmarshal([]byte(output), &serverStatus); err != nil {
-				t.Fatalf("unmarshalling request update-status json: " + err.Error())
-			}
-			if serverStatus.HostName != cacheHostName {
-				t.Errorf("expected update-status host '%v' actual %v", cacheHostName, serverStatus.HostName)
-			} else if serverStatus.RevalPending {
-				t.Error("expected RevalPending false after syncds run")
-			} else if serverStatus.UpdatePending {
-				t.Error("expected UpdatePending false after syncds run")
-			}
-		}
+		t.Logf("TestT3cTOUpdates t3cUpdateUnsetFlag stdout: %s", stdOut)
+		t.Run("verify update status after syncds is now false", verifyUpdateStatus)
 	})
-	fmt.Println("------------- End of TestT3cUnsetsUpdateFlag tests ---------------")
 }
 
 func t3cUpdateUnsetFlag(host string, runMode string) (string, int) {

@@ -19,6 +19,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -28,7 +29,6 @@ import (
 
 func TestT3cCreateEmptyFile(t *testing.T) {
 	// t3c must create semantically blank files. Failing to do so will cause other config files that reference them to fail.
-	t.Logf("------------- Starting TestT3cCreateEmptyFile ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -36,34 +36,33 @@ func TestT3cCreateEmptyFile(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		err := t3cUpdateCreateEmptyFile("atlanta-edge-03", "badass")
+		err := t3cUpdateCreateEmptyFile(cacheHostName, "badass")
 		if err != nil {
-			t.Fatalf("ERROR: t3c badass failed: %v\n", err)
+			t.Fatalf("t3c badass failed: %v", err)
 		}
 
 		const emptyFileName = `empty-file.config`
 
-		filePath := test_config_dir + "/" + emptyFileName
+		filePath := filepath.Join(test_config_dir, emptyFileName)
 
 		if !util.FileExists(filePath) {
-			t.Fatalf("ERROR: missing empty config file, %s,  empty files must still be created", filePath)
+			t.Fatalf("missing empty config file, %s,  empty files must still be created", filePath)
 		}
 
 		emptyFile, err := ioutil.ReadFile(filePath)
 		if err != nil {
-			t.Fatalf("reading file '%v': %v\n", filePath, err)
+			t.Fatalf("reading file '%s': %v", filePath, err)
 		}
-		emptyFile = bytes.TrimSpace(emptyFile)
+		contents := string(bytes.TrimSpace(emptyFile))
 
-		lines := strings.Split(string(emptyFile), "\n")
+		lines := strings.Split(contents, "\n")
 		if len(lines) > 0 && !strings.HasPrefix(lines[0], `#`) {
-			t.Errorf("expected file '%v' to be empty except for comment, actual '%v'\n", filePath, string(emptyFile))
+			t.Errorf("expected file '%s' to be empty except for comment, actual: %s", filePath, contents)
 		}
 		if len(lines) > 1 {
-			t.Errorf("expected file '%v' to be empty for testing, actual '%v'\n", filePath, string(emptyFile))
+			t.Errorf("expected file '%s' to be empty for testing, actual: %s", filePath, contents)
 		}
 	})
-	t.Logf("------------- End of TestT3cCreateEmptyFile ---------------")
 }
 
 func t3cUpdateCreateEmptyFile(host string, run_mode string) error {

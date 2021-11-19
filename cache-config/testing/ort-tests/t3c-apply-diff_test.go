@@ -18,15 +18,55 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 )
 
+var recordsConfigFileName = filepath.Join(test_config_dir, "records.config")
+
+func writeComment(t *testing.T) {
+	f, err := os.OpenFile(recordsConfigFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		t.Fatalf("opening file '%s': %v", recordsConfigFileName, err)
+	}
+	defer f.Close()
+	_, err = f.Write([]byte(" #mycomment\n"))
+	if err != nil {
+		t.Fatalf("writing comment to file '%s': %v", recordsConfigFileName, err)
+	}
+
+}
+
+func writeNonComment(t *testing.T) {
+	f, err := os.OpenFile(recordsConfigFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		t.Fatalf("opening file '%s': %v", recordsConfigFileName, err)
+	}
+	_, err = f.Write([]byte("\nmynocomment this line isn't a comment\n"))
+	f.Close()
+	if err != nil {
+		t.Fatalf("writing line to file '%s': %v", recordsConfigFileName, err)
+	}
+}
+
+func verifyOverwritten(t *testing.T) {
+	recordsDotConfig, err := ioutil.ReadFile(recordsConfigFileName)
+	if err != nil {
+		t.Fatalf("reading %s: %v", recordsConfigFileName, err)
+	}
+	content := string(recordsDotConfig)
+	if strings.Contains(content, "#mycomment") {
+		t.Fatalf("expected records.config to have a diff and be replaced with a non-comment difference, actual: %s", content)
+	} else if strings.Contains(content, "mynocomment") {
+		t.Fatalf("expected records.config to have a diff and be replaced with a non-comment difference, actual: %s", content)
+	}
+}
+
 func TestApplyDiff(t *testing.T) {
-	testName := "TestApplyDiff"
-	t.Logf("------------- Starting " + testName + " ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -34,97 +74,51 @@ func TestApplyDiff(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		hostName := "atlanta-edge-03"
-		const fileName = `records.config`
-
 		// badass to get initial config files
 
-		if out, code := t3cUpdateReload(hostName, "badass"); code != 0 {
-			t.Fatalf("t3c apply badass failed: output '''%v''' code %v\n", out, code)
+		if out, code := t3cUpdateReload(cacheHostName, "badass"); code != 0 {
+			t.Fatalf("t3c apply badass failed with exit code %d, output: %s", code, out)
 		}
 
-		filePath := test_config_dir + "/" + fileName
-
-		if !util.FileExists(filePath) {
-			t.Fatalf("missing config file '%v' needed to test", filePath)
+		if !util.FileExists(recordsConfigFileName) {
+			t.Fatalf("missing config file '%s' needed to test", recordsConfigFileName)
 		}
 
-		// write a comment, which should diff as unchanged
-
-		{
-			f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			if err != nil {
-				t.Fatalf("opening file '%v': %v", filePath, err)
-			}
-			_, err = f.Write([]byte(" #mycomment\n"))
-			f.Close()
-			if err != nil {
-				t.Fatalf("writing comment to file '%v': %v", filePath, err)
-			}
-		}
+		t.Run("write a comment, which should diff as unchanged", writeComment)
 
 		// queue and syncds to get changes
 
-		if err := ExecTOUpdater(hostName, false, true); err != nil {
-			t.Fatalf("updating queue status failed: %v\n", err)
+		if err := ExecTOUpdater(cacheHostName, false, true); err != nil {
+			t.Fatalf("updating queue status failed: %v", err)
 		}
-		out, code := t3cUpdateReload(hostName, "syncds")
+		out, code := t3cUpdateReload(cacheHostName, "syncds")
 		if code != 0 {
-			t.Fatalf("t3c apply failed: output '''%v''' code %v\n", out, code)
+			t.Fatalf("t3c apply failed with exit code %d, output: %s", code, out)
 		}
 
 		// verify the file wasn't overwritten, as it would be if there were a diff
 
-		{
-			recordsDotConfig, err := ioutil.ReadFile(filePath)
-			if err != nil {
-				t.Fatalf("reading %v: %v\n", filePath, err)
-			}
-			if !bytes.Contains(recordsDotConfig, []byte("#mycomment")) {
-				t.Fatalf("expected records.config to diff clean and not be replaced with comment difference, actual: '%v' t3c-apply output '''%v'''\n", string(recordsDotConfig), out)
-			}
+		recordsDotConfig, err := ioutil.ReadFile(recordsConfigFileName)
+		if err != nil {
+			t.Fatalf("reading %s: %v", recordsConfigFileName, err)
+		}
+		if !bytes.Contains(recordsDotConfig, []byte("#mycomment")) {
+			t.Fatalf("expected records.config to diff clean and not be replaced with comment difference, actual: '%s' t3c-apply output: %s", string(recordsDotConfig), out)
 		}
 
-		// write a non-comment, which should diff as changed
-
-		{
-			f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			if err != nil {
-				t.Fatalf("opening file '%v': %v", filePath, err)
-			}
-			_, err = f.Write([]byte("\nmynocomment this line isn't a comment\n"))
-			f.Close()
-			if err != nil {
-				t.Fatalf("writing line to file '%v': %v", filePath, err)
-			}
-		}
+		t.Run("write a non-comment, which should diff as changed", writeNonComment)
 
 		// queue and syncds to get changes
 
-		if err := ExecTOUpdater(hostName, false, true); err != nil {
-			t.Fatalf("updating queue status failed: %v\n", err)
+		if err := ExecTOUpdater(cacheHostName, false, true); err != nil {
+			t.Fatalf("updating queue status failed: %v", err)
 		}
-		out, code = t3cUpdateReload(hostName, "syncds")
+		out, code = t3cUpdateReload(cacheHostName, "syncds")
 		if code != 0 {
-			t.Fatalf("t3c apply failed: output '''%v''' code %v\n", out, code)
+			t.Fatalf("t3c apply failed with exit code %d, output: %s", code, out)
 		}
+		t.Logf("t3c apply output: %s", out)
 
-		// verify the file was overwritten and our changes disappared, because there was a diff
-
-		{
-			recordsDotConfig, err := ioutil.ReadFile(filePath)
-			if err != nil {
-				t.Fatalf("reading %v: %v\n", filePath, err)
-			}
-			if bytes.Contains(recordsDotConfig, []byte("#mycomment")) {
-				t.Fatalf("expected records.config to have a diff and be replaced with a non-comment difference, actual: '%v' t3c-apply output '''%v'''", string(recordsDotConfig), out)
-			} else if bytes.Contains(recordsDotConfig, []byte("mynocomment")) {
-				t.Fatalf("expected records.config to have a diff and be replaced with a non-comment difference, actual: '%v' t3c-apply output '''%v'''", string(recordsDotConfig), out)
-			}
-		}
-
-		t.Logf(testName + " succeeded")
-
+		t.Run("verify the file was overwritten and our changes disappared, because there was a diff", verifyOverwritten)
 	})
-	t.Logf("------------- End of " + testName + " ---------------")
 }

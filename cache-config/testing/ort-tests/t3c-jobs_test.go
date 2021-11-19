@@ -27,7 +27,6 @@ import (
 )
 
 func TestT3CJobs(t *testing.T) {
-	t.Logf("------------- Starting TestT3CJobs ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -45,25 +44,26 @@ func TestT3CJobs(t *testing.T) {
 			TTL:             &ttli,
 		}
 		if _, _, err := tcdata.TOSession.CreateInvalidationJob(job); err != nil {
-			t.Fatalf("ERROR: create refetch job failed: %v\n", err)
+			t.Fatalf("create refetch job failed: %v", err)
 		}
 		job.Regex = util.StrPtr(`/refresh-test\.png`)
 		if _, _, err := tcdata.TOSession.CreateInvalidationJob(job); err != nil {
-			t.Fatalf("ERROR: create refresh job failed: %v\n", err)
+			t.Fatalf("create refresh job failed: %v", err)
 		}
 
-		out, err := t3cUpdateWaitForParents("atlanta-edge-03", "badass", util.StrPtr("false"))
+		out, err := t3cUpdateWaitForParents(cacheHostName, "badass", util.StrPtr("false"))
 		if err != nil {
-			t.Fatalf("ERROR: t3c badass failed: %v\n", err)
+			t.Fatalf("t3c badass failed: %v", err)
 		}
-		t.Log("TestT3CJobs t3c output: '''" + out + "'''")
+		t.Logf("t3c badass output: %s", out)
 
 		fileName := filepath.Join(test_config_dir, "regex_revalidate.config")
 		revalFileBts, err := ioutil.ReadFile(fileName)
 		if err != nil {
-			t.Fatalf("reading %v: %v\n", fileName, err)
+			t.Fatalf("reading %s: %v", fileName, err)
 		}
 		revalFile := string(revalFileBts)
+		t.Logf("revalFile full contents: %s", revalFile)
 		lines := strings.Split(revalFile, "\n")
 		sawRefresh := false
 		sawRefetch := false
@@ -75,22 +75,21 @@ func TestT3CJobs(t *testing.T) {
 			if strings.Contains(line, "refresh-test") {
 				sawRefresh = true
 				if !strings.HasSuffix(line, "STALE") {
-					t.Errorf("expected regex_revalidate.config refresh-test line to contain 'STALE', actual '''%v'''", revalFile)
+					t.Errorf("expected regex_revalidate.config refresh-test line to contain 'STALE', actual: %s", line)
 				}
 			}
 			if strings.Contains(line, "refetch-test") {
 				sawRefetch = true
 				if !strings.HasSuffix(line, "MISS") {
-					t.Errorf("expected regex_revalidate.config refetch-test line to contain 'MISS', actual '''%v'''", revalFile)
+					t.Errorf("expected regex_revalidate.config refetch-test line to contain 'MISS', actual: %s", line)
 				}
 			}
 		}
 		if !sawRefresh {
-			t.Errorf("expected regex_revalidate.config to contain refresh-test, actual '''%v'''", revalFile)
+			t.Error("expected regex_revalidate.config to contain refresh-test")
 		}
 		if !sawRefetch {
-			t.Errorf("expected regex_revalidate.config to contain refetch-test, actual '''%v'''", revalFile)
+			t.Error("expected regex_revalidate.config to contain refetch-test")
 		}
 	})
-	t.Logf("------------- End of TestT3CJobs ---------------")
 }

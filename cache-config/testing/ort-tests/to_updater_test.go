@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os/exec"
 	"strconv"
 	"testing"
@@ -28,7 +27,6 @@ import (
 )
 
 func TestTOUpdater(t *testing.T) {
-	fmt.Println("------------- Starting TestTOUpdater tests ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -37,69 +35,68 @@ func TestTOUpdater(t *testing.T) {
 		tcdata.DeliveryServices}, func() {
 
 		// retrieve the current server status
-		output, err := runRequest("atlanta-edge-03", "update-status")
+		output, err := runRequest(cacheHostName, "update-status")
 		if err != nil {
-			t.Fatalf("ERROR: t3c-request Exec failed: %v\n", err)
+			t.Fatalf("t3c-request failed: %v", err)
 		}
 		var serverStatus tc.ServerUpdateStatus
 		err = json.Unmarshal([]byte(output), &serverStatus)
 		if err != nil {
-			t.Fatalf("ERROR unmarshalling json output: " + err.Error())
+			t.Fatalf("failed to parse t3c-request output: %v", err)
 		}
-		if serverStatus.HostName != "atlanta-edge-03" {
-			t.Fatal("ERROR unexpected result, expected 'atlanta-edge-03'")
+		if serverStatus.HostName != cacheHostName {
+			t.Fatalf("expected server status host name to be '%s', actual: %s", cacheHostName, serverStatus.HostName)
 		}
 		if serverStatus.RevalPending != false {
-			t.Fatal("ERROR unexpected result, expected RevalPending is 'false'")
+			t.Fatal("expected RevalPending to be 'false'")
 		}
 		if serverStatus.UpdatePending != false {
-			t.Fatal("ERROR unexpected result, expected UpdatePending is 'false'")
+			t.Fatal("expected UpdatePending to be 'false'")
 		}
 
 		// change the server update status
-		err = ExecTOUpdater("atlanta-edge-03", false, true)
+		err = ExecTOUpdater(cacheHostName, false, true)
 		if err != nil {
-			t.Fatalf("ERROR: t3c-update Exec failed: %v\n", err)
+			t.Fatalf("t3c-update failed: %v", err)
 		}
 		// verify the update status is now 'true'
-		output, err = runRequest("atlanta-edge-03", "update-status")
+		output, err = runRequest(cacheHostName, "update-status")
 		if err != nil {
-			t.Fatalf("ERROR: t3c-request Exec failed: %v\n", err)
+			t.Fatalf("t3c-request failed: %v", err)
 		}
 		err = json.Unmarshal([]byte(output), &serverStatus)
 		if err != nil {
-			t.Fatalf("ERROR unmarshalling json output: " + err.Error())
+			t.Fatalf("failed to parse t3c-request output: %v", err)
 		}
 		if serverStatus.RevalPending != false {
-			t.Fatal("ERROR unexpected result, expected RevalPending is 'false'")
+			t.Fatal("expected RevalPending to be 'false'")
 		}
 		if serverStatus.UpdatePending != true {
-			t.Fatal("ERROR unexpected result, expected UpdatePending is 'true'")
+			t.Fatal("expected UpdatePending to be 'true'")
 		}
 
 		// now change the reval stat and put server update status back
-		err = ExecTOUpdater("atlanta-edge-03", true, false)
+		err = ExecTOUpdater(cacheHostName, true, false)
 		if err != nil {
-			t.Fatalf("ERROR: t3c-update Exec failed: %v\n", err)
+			t.Fatalf("t3c-update failed: %v", err)
 		}
 		// verify the change
-		output, err = runRequest("atlanta-edge-03", "update-status")
+		output, err = runRequest(cacheHostName, "update-status")
 		if err != nil {
-			t.Fatalf("ERROR: t3c-request Exec failed: %v\n", err)
+			t.Fatalf("t3c-request failed: %v", err)
 		}
 		err = json.Unmarshal([]byte(output), &serverStatus)
 		if err != nil {
-			t.Fatalf("ERROR unmarshalling json output: " + err.Error())
+			t.Fatalf("failed to parse t3c-request output: %v", err)
 		}
 		if serverStatus.RevalPending != true {
-			t.Fatal("ERROR unexpected result, expected RevalPending is 'false'")
+			t.Fatal("expected RevalPending to be 'false'")
 		}
 		if serverStatus.UpdatePending != false {
-			t.Fatal("ERROR unexpected result, expected UpdatePending is 'true'")
+			t.Fatal("expected UpdatePending to be 'true'")
 		}
 
 	})
-	fmt.Println("------------- End of TestTOUpdater tests ---------------")
 }
 
 func ExecTOUpdater(host string, reval_status bool, update_status bool) error {

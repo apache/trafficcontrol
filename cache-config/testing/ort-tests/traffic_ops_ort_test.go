@@ -42,6 +42,17 @@ var TCD *tcdata.TCData
 
 const TestAPIBase = "/api/3.0"
 
+const cfgFmt = `Using Config values:
+	TO Config File:              %s
+	TO Fixtures:                 %s
+	TO URL:                      %s
+	TO Session Timeout In Secs:  %d
+	DB Server:                   %s
+	DB User:                     %s
+	DB Name:                     %s
+	DB Ssl:                      %t
+	UseIMS:                      %t`
+
 func TestMain(m *testing.M) {
 	tcd = tcdata.NewTCData()
 	configFileName := flag.String("cfg", "traffic-ops-test.conf", "The config file path")
@@ -75,16 +86,8 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	log.Infof(`Using Config values:
-			   TO Config File:       %s
-			   TO Fixtures:          %s
-			   TO URL:               %s
-			   TO Session Timeout In Secs:  %d
-			   DB Server:            %s
-			   DB User:              %s
-			   DB Name:              %s
-			   DB Ssl:               %t
-               UseIMS:               %v`, *configFileName, *tcFixturesFileName, tcd.Config.TrafficOps.URL, tcd.Config.Default.Session.TimeoutInSecs, tcd.Config.TrafficOpsDB.Hostname, tcd.Config.TrafficOpsDB.User, tcd.Config.TrafficOpsDB.Name, tcd.Config.TrafficOpsDB.SSL, tcd.Config.UseIMS)
+	// TODO: does this test suite need logging?
+	log.Infof(cfgFmt, *configFileName, *tcFixturesFileName, tcd.Config.TrafficOps.URL, tcd.Config.Default.Session.TimeoutInSecs, tcd.Config.TrafficOpsDB.Hostname, tcd.Config.TrafficOpsDB.User, tcd.Config.TrafficOpsDB.Name, tcd.Config.TrafficOpsDB.SSL, tcd.Config.UseIMS)
 
 	//Load the test data
 	tcd.LoadFixtures(*tcFixturesFileName)

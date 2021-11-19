@@ -17,15 +17,16 @@ package orttest
 import (
 	"bytes"
 	"errors"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 )
 
 func TestT3CDNSLocalBind(t *testing.T) {
-	t.Logf("------------- Starting TestT3CDNSLocalBind ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -33,22 +34,22 @@ func TestT3CDNSLocalBind(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		err := t3cUpdateDNSLocalBind("atlanta-edge-03", "badass")
+		err := t3cUpdateDNSLocalBind(cacheHostName, "badass")
 		if err != nil {
-			t.Fatalf("ERROR: t3c badass failed: %v\n", err)
+			t.Fatalf("t3c badass failed: %v", err)
 		}
 
 		recordsName := filepath.Join(test_config_dir, "records.config")
 		recordsDotConfig, err := ioutil.ReadFile(recordsName)
 		if err != nil {
-			t.Fatalf("reading %v: %v\n", recordsName, err)
+			t.Fatalf("reading %s: %v", recordsName, err)
 		}
+		contents := string(recordsDotConfig)
 
-		if !bytes.Contains(recordsDotConfig, []byte("proxy.config.dns.local_ipv4")) {
-			t.Errorf("expected records.config to contain proxy.config.dns.local_ipv4, actual: '%v'\n", string(recordsDotConfig))
+		if !strings.Contains(contents, "proxy.config.dns.local_ipv4") {
+			t.Errorf("expected records.config to contain proxy.config.dns.local_ipv4, actual: %s", contents)
 		}
 	})
-	t.Logf("------------- End of TestT3CDNSLocalBind ---------------")
 }
 
 func t3cUpdateDNSLocalBind(host string, run_mode string) error {
