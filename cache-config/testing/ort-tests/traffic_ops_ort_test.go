@@ -108,7 +108,7 @@ func TestMain(m *testing.M) {
 
 	err = tcd.SetupTestData(db)
 	if err != nil {
-		log.Errorf("\nError setting up data %s - %s, %v\n", tcd.Config.TrafficOps.URL, tcd.Config.TrafficOpsDB.User, err)
+		log.Errorf("setting up data on TO instance %s as DB user '%s' failed: %v\n", tcd.Config.TrafficOps.URL, tcd.Config.TrafficOpsDB.User, err)
 		os.Exit(1)
 	}
 

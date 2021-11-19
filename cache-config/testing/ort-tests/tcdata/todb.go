@@ -18,7 +18,6 @@ package tcdata
 import (
 	"database/sql"
 	"fmt"
-	"os"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -41,65 +40,55 @@ func (r *TCData) OpenConnection() (*sql.DB, error) {
 
 	if err != nil {
 		log.Errorf("opening database: %v\n", err)
-		return nil, fmt.Errorf("transaction failed: %s", err)
+		return nil, fmt.Errorf("transaction failed: %w", err)
 	}
 	return db, err
 }
 
-// SetupTestData ...
-// TODO error does not need returned as this function can never return a non-nil error
+// SetupTestData sets up initial data needed by the test suite to perform any
+// tests.
 func (r *TCData) SetupTestData(*sql.DB) error {
-	var err error
-
-	err = SetupRoles(db)
+	err := SetupRoles(db)
 	if err != nil {
-		fmt.Printf("\nError setting up roles %s - %s, %v\n", r.Config.TrafficOps.URL, r.Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
+		return fmt.Errorf("setting up Roles: %w", err)
 	}
 
 	err = SetupCapabilities(db)
 	if err != nil {
-		fmt.Printf("\nError setting up capabilities %s - %s, %v\n", r.Config.TrafficOps.URL, r.Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
+		return fmt.Errorf("setting up capabilities: %w", err)
 	}
 
 	err = SetupRoleCapabilities(db)
 	if err != nil {
-		fmt.Printf("\nError setting up roleCapabilities %s - %s, %v\n", r.Config.TrafficOps.URL, r.Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
+		return fmt.Errorf("setting up roleCapabilities: %w", err)
 	}
 
 	err = SetupAPICapabilities(db)
 	if err != nil {
-		fmt.Printf("\nError setting up APICapabilities %s - %s, %v\n", r.Config.TrafficOps.URL, r.Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
+		return fmt.Errorf("setting up APICapabilities: %w", err)
 	}
 
 	err = SetupTenants(db)
 	if err != nil {
-		fmt.Printf("\nError setting up tenant %s - %s, %v\n", r.Config.TrafficOps.URL, r.Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
+		return fmt.Errorf("setting up tenants: %w", err)
 	}
 
 	err = r.SetupTmusers(db)
 	if err != nil {
-		fmt.Printf("\nError setting up tm_user %s - %s, %v\n", r.Config.TrafficOps.URL, r.Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
+		return fmt.Errorf("setting up tm_user: %w", err)
 	}
 
 	err = SetupTypes(db)
 	if err != nil {
-		fmt.Printf("\nError setting up types %s - %s, %v\n", r.Config.TrafficOps.URL, r.Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
+		return fmt.Errorf("setting up types: %w", err)
 	}
 
 	err = SetupToExtensions(db)
 	if err != nil {
-		fmt.Printf("\nError setting up to_extensions %s - %s, %v\n", r.Config.TrafficOps.URL, r.Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
+		return fmt.Errorf("setting up to_extensions: %w", err)
 	}
 
-	return err
+	return nil
 }
 
 // SetupRoles ...
@@ -116,7 +105,7 @@ INSERT INTO role (name, description, priv_level) VALUES ('federation','Role for 
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
+		return fmt.Errorf("exec failed %w", err)
 	}
 	return nil
 }
@@ -132,7 +121,7 @@ INSERT INTO capability (name, description) VALUES ('cache-groups-read', 'Read CG
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
+		return fmt.Errorf("exec failed %w", err)
 	}
 	return nil
 }
@@ -146,7 +135,7 @@ INSERT INTO api_capability (http_method, route, capability) VALUES ('GET', '/cac
 
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
+		return fmt.Errorf("exec failed %w", err)
 	}
 	return nil
 }
@@ -158,7 +147,7 @@ INSERT INTO role_capability (role_id, cap_name) VALUES (4,'all-read') ON CONFLIC
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
+		return fmt.Errorf("exec failed %w", err)
 	}
 	return nil
 }
@@ -169,7 +158,7 @@ func (r *TCData) SetupTmusers(db *sql.DB) error {
 	var err error
 	encryptedPassword, err := auth.DerivePassword(r.Config.TrafficOps.UserPassword)
 	if err != nil {
-		return fmt.Errorf("password encryption failed %v", err)
+		return fmt.Errorf("password encryption failed %w", err)
 	}
 
 	// Creates users in different tenants
@@ -184,7 +173,7 @@ INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + r.Con
 `
 	err = execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
+		return fmt.Errorf("exec failed %w", err)
 	}
 	return nil
 }
@@ -200,7 +189,7 @@ INSERT INTO tenant (name, active, parent_id, last_updated) VALUES ('badtenant', 
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
+		return fmt.Errorf("exec failed %w", err)
 	}
 	return nil
 }
@@ -213,7 +202,7 @@ INSERT INTO deliveryservice_tmuser (deliveryservice, tm_user_id, last_updated) V
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
+		return fmt.Errorf("exec failed %w", err)
 	}
 	return nil
 }
@@ -228,7 +217,7 @@ INSERT INTO job (id, ttl_hr, asset_url, start_time, entered_time, job_user, last
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
+		return fmt.Errorf("exec failed %w", err)
 	}
 	return nil
 }
@@ -243,7 +232,7 @@ INSERT INTO type (name, description, use_in_table) VALUES ('CHECK_EXTENSION_OPEN
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
+		return fmt.Errorf("exec failed %w", err)
 	}
 	return nil
 }
@@ -257,7 +246,7 @@ INSERT INTO to_extension (name, version, info_url, isactive, script_file, server
 	`
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
+		return fmt.Errorf("exec failed %w", err)
 	}
 	return nil
 }
@@ -309,7 +298,7 @@ func (r *TCData) Teardown(db *sql.DB) error {
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
+		return fmt.Errorf("exec failed %w", err)
 	}
 	return err
 }
@@ -320,17 +309,17 @@ func execSQL(db *sql.DB, sqlStmt string) error {
 
 	tx, err := db.Begin()
 	if err != nil {
-		return fmt.Errorf("transaction begin failed %v %v ", err, tx)
+		return fmt.Errorf("transaction begin failed %w ", err)
 	}
 
 	res, err := tx.Exec(sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %v %v", err, res)
+		return fmt.Errorf("exec failed %w %v", err, res)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return fmt.Errorf("commit failed %v %v", err, res)
+		return fmt.Errorf("commit failed %w %v", err, res)
 	}
 	return nil
 }
