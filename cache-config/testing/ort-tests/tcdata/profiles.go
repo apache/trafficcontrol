@@ -115,19 +115,18 @@ func (r *TCData) DeleteTestProfiles(t *testing.T) {
 		for _, param := range resp[0].Parameters {
 			_, _, err := TOSession.DeleteParameterByID(*param.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE parameter with parameterID %d: %s", *param.ID, err.Error())
+				t.Errorf("cannot DELETE parameter with parameterID %d: %v", *param.ID, err)
 			}
 		}
 		delResp, _, err := TOSession.DeleteProfileByID(profileID)
 		if err != nil {
 			t.Errorf("cannot DELETE Profile by name: %v - %v", err, delResp)
 		}
-		//time.Sleep(1 * time.Second)
 
 		// Retrieve the Profile to see if it got deleted
 		prs, _, err := TOSession.GetProfileByName(pr.Name)
 		if err != nil {
-			t.Errorf("error deleting Profile name: %s", err.Error())
+			t.Errorf("error deleting Profile name: %v", err)
 		}
 		if len(prs) > 0 {
 			t.Errorf("expected Profile Name: %s to be deleted", pr.Name)

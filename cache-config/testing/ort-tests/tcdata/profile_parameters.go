@@ -95,7 +95,7 @@ func DeleteTestProfileParameter(t *testing.T, pp tc.ProfileParameter) {
 		// Retrieve the Parameter to see if it got deleted
 		pps, _, err := TOSession.GetProfileParameterByQueryParams(queryParams)
 		if err != nil {
-			t.Errorf("error deleting Parameter name: %s", err.Error())
+			t.Errorf("error deleting Parameter name: %v", err)
 		}
 		if len(pps) > 0 {
 			t.Errorf("expected Parameter Name: %s and ConfigFile: %s to be deleted", pp.Profile, pp.Parameter)

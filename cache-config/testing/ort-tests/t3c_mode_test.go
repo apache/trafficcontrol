@@ -97,22 +97,22 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		// TODO: remove this when running ATS is added to the test framework
 
 		if err := os.Rename(`/opt/trafficserver/bin/traffic_ctl`, `/opt/trafficserver/bin/traffic_ctl.real`); err != nil {
-			t.Fatal("temporarily moving traffic_ctl: " + err.Error())
+			t.Fatalf("temporarily moving traffic_ctl: %v", err)
 		}
 
 		fi, err := os.OpenFile(`/opt/trafficserver/bin/traffic_ctl`, os.O_RDWR|os.O_CREATE, 755)
 		if err != nil {
-			t.Fatal("creating temp no-op traffic_ctl file: " + err.Error())
+			t.Fatalf("creating temp no-op traffic_ctl file: %v", err)
 		}
 		if _, err := fi.WriteString(`#!/usr/bin/env bash` + "\n"); err != nil {
 			fi.Close()
-			t.Fatal("writing temp no-op traffic_ctl file: " + err.Error())
+			t.Fatalf("writing temp no-op traffic_ctl file: %v", err)
 		}
 		fi.Close()
 
 		defer func() {
 			if err := os.Rename(`/opt/trafficserver/bin/traffic_ctl.real`, `/opt/trafficserver/bin/traffic_ctl`); err != nil {
-				t.Fatal("moving real traffic_ctl back: " + err.Error())
+				t.Fatalf("moving real traffic_ctl back: %v", err)
 			}
 		}()
 

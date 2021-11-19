@@ -51,13 +51,13 @@ func (r *TCData) ForceDeleteTestUsers(t *testing.T) {
 	q := `DELETE FROM log WHERE NOT tm_user = (SELECT id FROM tm_user WHERE username = 'admin')`
 	err = execSQL(db, q)
 	if err != nil {
-		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
+		t.Errorf("cannot execute SQL: %v; SQL is %s", err, q)
 	}
 
 	q = `DELETE FROM tm_user WHERE username IN (` + strings.Join(usernames, ",") + `)`
 	err = execSQL(db, q)
 	if err != nil {
-		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)
+		t.Errorf("cannot execute SQL: %v; SQL is %s", err, q)
 	}
 }
 

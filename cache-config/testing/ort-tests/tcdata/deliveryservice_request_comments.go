@@ -57,7 +57,7 @@ func (r *TCData) DeleteTestDeliveryServiceRequestComments(t *testing.T) {
 		// Retrieve the delivery service request comment to see if it got deleted
 		comments, _, err := TOSession.GetDeliveryServiceRequestCommentByID(comment.ID)
 		if err != nil {
-			t.Errorf("error deleting delivery service request comment: %s", err.Error())
+			t.Errorf("error deleting delivery service request comment: %v", err)
 		}
 		if len(comments) > 0 {
 			t.Errorf("expected delivery service request comment: %d to be deleted", comment.ID)

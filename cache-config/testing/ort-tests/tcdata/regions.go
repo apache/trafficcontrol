@@ -52,10 +52,10 @@ func (r *TCData) DeleteTestRegionsByName(t *testing.T) {
 		// Retrieve the Region to see if it got deleted
 		regionResp, _, err := TOSession.GetRegionByName(region.Name)
 		if err != nil {
-			t.Errorf("error deleting Region region: %s", err.Error())
+			t.Errorf("error deleting Region region: %v", err)
 		}
 		if len(regionResp) > 0 {
-			t.Errorf("expected Region : %s to be deleted", region.Name)
+			t.Errorf("expected Region %s to be deleted", region.Name)
 		}
 	}
 

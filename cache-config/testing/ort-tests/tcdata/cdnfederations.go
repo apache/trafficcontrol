@@ -34,7 +34,7 @@ func (r *TCData) CreateTestCDNFederations(t *testing.T) {
 
 		data, _, err := TOSession.CreateCDNFederationByName(f, r.TestData.CDNs[i].Name)
 		if err != nil {
-			t.Errorf("could not POST federations: " + err.Error())
+			t.Errorf("could not POST federations: %v", err)
 		}
 		bytes, _ := json.Marshal(data)
 		t.Logf("POST Response: %s", string(bytes))

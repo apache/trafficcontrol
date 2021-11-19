@@ -45,7 +45,7 @@ func (r *TCData) DeleteTestCoordinates(t *testing.T) {
 			// Retrieve the Coordinate to see if it got deleted
 			coords, _, err := TOSession.GetCoordinateByName(coord.Name)
 			if err != nil {
-				t.Errorf("error deleting Coordinate name: %s", err.Error())
+				t.Errorf("error deleting Coordinate name: %v", err)
 			}
 			if len(coords) > 0 {
 				t.Errorf("expected Coordinate name: %s to be deleted", coord.Name)

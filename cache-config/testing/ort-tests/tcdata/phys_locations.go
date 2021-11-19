@@ -49,7 +49,7 @@ func (r *TCData) DeleteTestPhysLocations(t *testing.T) {
 			// Retrieve the PhysLocation to see if it got deleted
 			cdns, _, err := TOSession.GetPhysLocationByName(cdn.Name)
 			if err != nil {
-				t.Errorf("error deleting PhysLocation name: %s", err.Error())
+				t.Errorf("error deleting PhysLocation name: %v", err)
 			}
 			if len(cdns) > 0 {
 				t.Errorf("expected PhysLocation name: %s to be deleted", cdn.Name)

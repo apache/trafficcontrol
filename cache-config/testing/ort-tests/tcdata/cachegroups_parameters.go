@@ -74,7 +74,7 @@ func DeleteTestCacheGroupParameter(t *testing.T, cgp tc.CacheGroupParameterReque
 
 	parameters, _, err := TOSession.GetCacheGroupParametersByQueryParams(cgp.CacheGroupID, queryParams)
 	if err != nil {
-		t.Errorf("error deleting Parameter name: %s", err.Error())
+		t.Errorf("error deleting Parameter name: %v", err)
 	}
 	if parameters == nil {
 		t.Fatal("Cache Group Parameters response should not be nil")

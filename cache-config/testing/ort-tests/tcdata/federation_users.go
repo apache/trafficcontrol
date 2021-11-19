@@ -29,7 +29,7 @@ func (r *TCData) CreateTestFederationUsers(t *testing.T) {
 	// Get Users
 	users, _, err := TOSession.GetUsers()
 	if err != nil {
-		t.Fatalf("getting users: " + err.Error())
+		t.Fatalf("getting users: %v", err)
 	}
 	if len(users) < 3 {
 		t.Fatal("need > 3 users to create federation users")
@@ -114,7 +114,7 @@ func (r *TCData) CreateTestInvalidFederationUsers(t *testing.T) {
 	// Get Users
 	users, _, err := TOSession.GetUsers()
 	if err != nil {
-		t.Fatalf("getting users: " + err.Error())
+		t.Fatalf("getting users: %v", err)
 	}
 	if len(users) == 0 {
 		t.Fatal("need at least 1 user to test invalid federation user create")

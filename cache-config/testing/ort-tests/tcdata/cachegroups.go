@@ -81,7 +81,7 @@ func (r *TCData) DeleteTestCacheGroups(t *testing.T) {
 			// Retrieve the CacheGroup to see if it got deleted
 			cgs, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 			if err != nil {
-				t.Errorf("error deleting CacheGroup by name: %s", err.Error())
+				t.Errorf("error deleting CacheGroup by name: %v", err)
 			}
 			if len(cgs) > 0 {
 				t.Errorf("expected CacheGroup name: %s to be deleted", *cg.Name)

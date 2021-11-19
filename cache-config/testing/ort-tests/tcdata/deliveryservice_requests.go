@@ -56,7 +56,7 @@ func (r *TCData) DeleteTestDeliveryServiceRequests(t *testing.T) {
 	// Retrieve the DeliveryServiceRequest to see if it got deleted
 	dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
 	if err != nil {
-		t.Errorf("error deleting DeliveryServiceRequest name: %s", err.Error())
+		t.Errorf("error deleting DeliveryServiceRequest name: %v", err)
 	}
 	if len(dsrs) > 0 {
 		t.Errorf("expected DeliveryServiceRequest XMLID: %s to be deleted", dsr.DeliveryService.XMLID)

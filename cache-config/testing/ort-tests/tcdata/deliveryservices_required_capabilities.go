@@ -128,7 +128,7 @@ func (r *TCData) CreateTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 
 			_, _, err := TOSession.CreateDeliveryServicesRequiredCapability(cap)
 			if err != nil {
-				t.Fatalf(err.Error())
+				t.Fatalf("failed to associate a capability with a Delivery Service: %v", err)
 			}
 		})
 	}
@@ -147,7 +147,7 @@ func (r *TCData) DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
 	// Get Required Capabilities to delete them
 	capabilities, _, err := TOSession.GetDeliveryServicesRequiredCapabilitiesWithHdr(nil, nil, nil, nil)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatalf("failed to fetch associations between Capabilities and the Delivery Services that require them: %v", err)
 	}
 	if len(capabilities) < 1 {
 		t.Fatal("no delivery services returned")
