@@ -28,7 +28,7 @@ The ``traffic_vault_util`` tool - located at :file:`tools/traffic_vault_util.go`
 
 Usage
 =====
-``traffic_vault_util [--dry_run] --vault_ip IP --vault_action ACTION [--vault_user USER] [--vault_password PASSWD] [--vault_port PORT] [--skip_tls] [--server_name SERVER_NAME]``
+``traffic_vault_util [--dry_run] --vault_ip IP --vault_action ACTION [--vault_user USER] [--vault_password PASSWD] [--vault_port PORT] [--insecure] [--server_name SERVER_NAME]``
 
 .. option:: --dry_run
 
@@ -69,7 +69,7 @@ Usage
 
 	.. warning:: Although this flag is optional, the utility will not work without it. It will try, but it will fail\ [1]_.
 
-.. option:: --skip_tls
+.. option:: --insecure
 
 	An optional flag which, if given, specifies whether to utilize TLS certificate checks when establishing a connection. Defaults to false.
 
