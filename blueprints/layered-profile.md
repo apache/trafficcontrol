@@ -40,7 +40,7 @@ EDGE_123_FOO_ABC_ATS_714-RC0-27, EDGE_456_FOO_ABC_ATS_714-RC0-27, EDGE_123_BAR_A
 
 ## Proposed Change
 
-Layered Profiles allow assigning multiple profiles, in order, to both Delivery Services and Servers. If multiple profiles have a parameter with the same name and config File, the parameter from the last profile in the ordering is applied.
+Layered Profiles allow assigning multiple profiles to Servers. If multiple profiles have a parameter with the same name and config file, the parameter from the last profile in the ordering is applied.
 
 Layered Profiles is exactly as powerful as the existing profiles, it doesn't enable any new things. It makes profiles much easier to manage.
 
@@ -54,7 +54,7 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 
 ### Traffic Portal Impact
 
-1. A UI to view all parameters currently applied to a delivery service/server, as well as the profile each parameter came from. A new page, linked from DS and Server pages. For eg:
+1. A UI to view all parameters currently applied to a server, as well as the profile each parameter came from. A new page, linked from Server pages. For eg:
 
 | Name                                             |Config File               | Value                                | Profile   |
 |--------------------------------------------------|--------------------------|--------------------------------------|-----------|
@@ -63,15 +63,16 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 | error_url                                        | url_sig_myotherds.config | 403                                  | EDGE      |
 | CONFIG proxy.config.exec_thread.autoconfig.scale | records.config           | FLOAT 1.5                            | ATS_714   |
 
-2. A UI change to add, remove, and reorder (sortable list) profiles for both Delivery Services and Servers, on the existing DS and Server pages.
+2. A UI change to add, remove, and reorder (sortable list) profiles for Servers, on the existing Server pages.
+3. Filtering based on Profiles will also need to be updated to take into account the plurality of Profiles.
 
 ### Traffic Ops Impact
 
-- Traffic Ops will need to add the logic to the below-mentioned existing API endpoints, in order to show/create/update/delete a sorted list of profiles for delivery services and server.
-- `/deliveryservices/ GET, POST`
-- `/deliveryservices/{id} PUT, DELETE`
+- Traffic Ops will need to add the logic to the below-mentioned existing API endpoints, in order to show/create/update/delete a sorted list of profiles for server.
+
 - `/server/  GET, POST`
 - `/servers/{id} PUT, DELETE`
+- `/servers/details`
 
 #### REST API Impact
 
@@ -79,29 +80,9 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 
 **Existing Endpoints**
 
-- Modify JSON request and response for existing delivery services and servers endpoints.
+- Modify JSON request and response for existing servers endpoints.
 - JSON **response** with the proposed change will look as follows:
 
-`/deliveryservices?id=100`
-```JSON
-{ 
-  "id": 100,
-  ⋮
-  "requested": {
-    "profileIds": [
-      1234,
-      5678,
-      9012
-    ],
-    "profileNames": [
-      "EDGE",
-      "ATS8",
-      "TOP"
-    ]
-    ⋮
-  }
-}
-```
 
 `/servers?id=5`
 ```JSON
@@ -109,11 +90,6 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
   "id": 5,
   ⋮
   "requested": {
-    "profileIds": [
-      1357,
-      2468,
-      2356
-    ],
     "profileNames": [
       "MID",
       "TOP",
@@ -126,35 +102,10 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 
 JSON **request** with the proposed change will look as follows:
 
-`/deliveryservices`
-```JSON
-{
-  "requested": {
-    "profileIds": [
-      1234,
-      5678,
-      9012
-    ],
-    "profileNames": [
-      "EDGE",
-      "ATS8",
-      "TOP"
-    ],
-    ⋮
-  },
-  ⋮
-}
-```
-
 `/servers`
 ```JSON
 { 
   "requested": {
-    "profileIds": [
-      1357, 
-      2468, 
-      2356
-    ],
     "profileNames": [
       "MID", 
       "TOP", 
@@ -166,63 +117,51 @@ JSON **request** with the proposed change will look as follows:
 }
 ```
 
-The following table describes the top level `layered_profile` object for delivery services:
-
-| field              | type          | optionality | description                                                    |
-| ------------------ | --------------| ----------- | ---------------------------------------------------------------|
-| deliveryservice    | bigint        | required    | the delivery service id associated with a given profile        |
-| profile            | bigint        | required    | the profile id associated with a delivery service              |
-| order              | bigint        | required    | the order in which a profile is applied to a delivery service  |
-| lastUpdated        | bigint        | required    | the last time this delivery service was updated                |
-
 The following table describes the top level `layered_profile` object for servers:
 
 | field       | type                 | optionality | description                                                    |
 | ----------- | ---------------------| ----------- | ---------------------------------------------------------------|
 | server      | bigint               | required    | the server id associated with a given profile                  |
-| profile     | bigint               | required    | the profile id associated with a server                        |
+| profileName | string               | required    | the profile name associated with a server                      |
 | order       | bigint               | required    | the order in which a profile is applied to a server            |
-| lastUpdated | bigint               | required    | the last time this server was updated                          |
 
 **API constraints**
-- TO REST APIs will not be backward compatibility and this feature will be a major version (v5.0) change.
-- Add `Profiles` key to API endpoints for Server and DeliveryService objects (and ProfileNames, ProfileIDs)
+- In API 5.0, GET /servers object profile and profileId fields to be arrays, but a PUT or POST with multiple values returns a 400 error. 
+  The UI may or may not display a list (which can only add 1), the client implements handling multiple, and the API is documented to potentially return multiple and how their Parameters must be applied.
+- In API 6.0 (or possibly 5.0 in the following TC major version wherein API 4.0 is removed), this feature is actually implemented, and multiple profiles can be assigned, are displayed in the UI, etc.
+
+The only disadvantage to splitting it across mulitple version is a little delay to get the feature deployed.
+But the advantage is that it solves both concerns: 
+- clients on supported APIs are never given 4xx errors even after the feature is in-use
+- we never return or apply partial data that could produce wrong results in production
+
+- Add `Profiles` key to API endpoints for Server objects (and ProfileNames, ProfileIDs)
 
 #### Client Impact
-- Existing Go client methods will be updated for the `/deliveryservices` and `/servers` endpoints in order to write TO API tests for the exising endpoints.
-- All functions which get Parameters on Delivery Services or Servers must be changed to get the Parameters of all assigned Profiles in order.
+- Existing Go client methods will be updated for the `/servers` endpoints in order to write TO API tests for the exising endpoints.
+- All functions which get Parameters on Servers must be changed to get the Parameters of all assigned Profiles in order.
 
 #### Data Model / Database Impact
 
 - A new Database Table `server_profiles` as described below, will be created:
-- A new Database Table `deliveryservice_profiles` as described below, will be created:
-```text
-            Table "traffic_ops.deliveryservice_profiles"
-     Column     |  Type                    | Collation | Nullable | Default
-----------------+--------------------------+-----------+----------+--------
-deliveryservice | bigint                   |           | not null |
-profile         | bigint                   |           | not null |
-order           | bigint                   |           | not null |
-last_updated    | timestamp with time zone |           | not null | now()
-Indexes:
-"pk_deliveryservice_profile" PRIMARY KEY(profile)
-Foreign-key constraints:
-"fk_deliveryservice" FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id)
-```
-
 ```text
             Table "traffic_ops.server_profiles"
      Column    |  Type                    | Collation | Nullable | Default
 ---------------+--------------------------+-----------+----------+--------
  server        | bigint                   |           | not null |
- profile       | bigint                   |           | not null |
+ profileName   | string                   |           | not null |
  order         | bigint                   |           | not null |
- last_updated  | timestamp with time zone |           | not null | now() 
 Indexes:
-    "pk_server_profile" PRIMARY KEY(profile)
+    "pk_server_profile" PRIMARY KEY(profileName, server, order)
 Foreign-key constraints:
-    "fk_server" FOREIGN KEY (server) REFERENCES server(id)
+    "fk_server" FOREIGN KEY (server, profileName) REFERENCES server(id)
 ```
+
+All profiles assigned to a given server will have the same values of:
+- type
+- cdn
+- routing_disabled
+If any of those differ within the same server, it's probably a mistake.
 
 ### ORT Impact
 New set of profiles will be created and the profile-parameter relationship will change.
@@ -231,7 +170,9 @@ New set of profiles will be created and the profile-parameter relationship will 
 No impact
 
 ### Traffic Router Impact
-No impact
+These changes will affect the Snapshot generation (both crconfig and monitoring). Even though that is more of a TO impact.
+Reason being that Snapshots and Monitoring Configurations for a CDN include Profile and Parameter information for the servers, Traffic Monitors, and Traffic Routersz.
+
 
 ### Traffic Stats Impact
 No impact
@@ -243,7 +184,7 @@ No impact
 All existing endpoints will need to be updated, along with the documentation explaining `layered_profile`.
 
 ### Testing Impact
-Client/API integration tests should be updated to verify the `layered_profile` functionality on existing API `/deliveryservices`, `/servers` endpoints.
+Client/API integration tests should be updated to verify the `layered_profile` functionality on existing API `/servers` endpoints.
 
 ### Performance Impact
 We do not anticipate any performance impact with layered_profile approach.
@@ -253,16 +194,16 @@ We do not anticipate any impact on security.
 
 ### Upgrade Impact
 - A Database Migration to:
-  - drop profile column in existing deliveryservice and server table
-  - insert existing server and DS profiles along with their order into the new tables(deliveryservice_profiles, server_profiles)
-- The new capability can just be added to the `seeds.sql` file.
+  - drop profile column in existing server table
+  - insert existing server and DS profiles along with their order into the new table(server_profiles)
 
 ### Operations Impact
-The profile-parameter relationship will change based on new sets of profile and Operations will have to learn on how to assign profile order to a delivery service and/or server.
+The profile-parameter relationship will change based on new sets of profile and Operations will have to learn on how to assign profile order to a server.
 
 ### Developer Impact
 Developers will most likely need to use layered_profile, so they'll need to be familiar with the process
 of adding, sorting, deleting, debugging and working with layered_profiles.
+When searching for any parameters assigned to a profile for a given server, one will need to look up all profiles assigned to the server and then process all the parameters in order to get the "final" view of the profile.
 
 ## Alternatives
 None, except to keep using existing Profiles.
