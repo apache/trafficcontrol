@@ -39,10 +39,10 @@ func (r *TCData) CreateTestCacheGroups(t *testing.T) {
 			t.Error("Parent cachegroup is null in response when it should have a value")
 		}
 		if cg.SecondaryParentName != nil && resp.Response.SecondaryParentName == nil {
-			t.Error("Secondary parent cachegroup is null in response when it should have a value\n")
+			t.Error("Secondary parent cachegroup is null in response when it should have a value")
 		}
 		if cg.Type != nil && resp.Response.Type == nil {
-			t.Error("Type is null in response when it should have a value\n")
+			t.Error("Type is null in response when it should have a value")
 		}
 		if resp.Response.LocalizationMethods == nil {
 			t.Error("Localization methods are null")

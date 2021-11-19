@@ -139,7 +139,7 @@ func (r *TCData) DeleteTestCachegroupsDeliveryServices(t *testing.T) {
 	for _, ds := range dss.Response {
 		_, _, err := TOSession.DeleteDeliveryServiceServer(*ds.DeliveryService, *ds.Server)
 		if err != nil {
-			t.Errorf("deleting delivery service servers: " + err.Error() + "\n")
+			t.Errorf("deleting delivery service servers: %v", err)
 		}
 	}
 

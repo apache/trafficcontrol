@@ -38,7 +38,7 @@ func (r *TCData) CreateBadProfiles(t *testing.T) {
 		resp, _, err := TOSession.CreateProfile(pr)
 
 		if err == nil {
-			t.Errorf("Creating bad profile succeeded: %+v\nResponse is %+v", pr, resp)
+			t.Errorf("Creating bad profile %+v succeeded, response: %+v", pr, resp)
 		}
 	}
 }

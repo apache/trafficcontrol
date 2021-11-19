@@ -40,7 +40,7 @@ func (r *TCData) CreateTestFederationResolvers(t *testing.T) {
 
 		alerts, _, err := TOSession.CreateFederationResolver(fr)
 		if err != nil {
-			t.Fatalf("failed to create Federation resolver %+v: %v\n\talerts: %+v", fr, err, alerts)
+			t.Fatalf("failed to create Federation resolver %+v: %v - alerts: %+v", fr, err, alerts)
 		}
 		for _, a := range alerts.Alerts {
 			if a.Level != tc.SuccessLevel.String() {
@@ -93,7 +93,7 @@ func (r *TCData) DeleteTestFederationResolvers(t *testing.T) {
 		}
 		alerts, _, err := TOSession.DeleteFederationResolver(*fr.ID)
 		if err != nil {
-			t.Fatalf("failed to delete Federation Resolver %+v: %v\n\talerts: %+v", fr, err, alerts)
+			t.Fatalf("failed to delete Federation Resolver %+v: %v - alerts: %+v", fr, err, alerts)
 		}
 		for _, a := range alerts.Alerts {
 			if a.Level != tc.SuccessLevel.String() {
