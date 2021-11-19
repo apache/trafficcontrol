@@ -885,6 +885,70 @@
     },
     {
       "active": true,
+      "cdnName": "cdn2",
+      "cacheurl": "",
+      "ccrDnsTtl": 3600,
+      "checkPath": "",
+      "consistentHashQueryParams": [],
+      "deepCachingType": "NEVER",
+      "displayName": "ds-on-cdn2",
+      "dnsBypassCname": null,
+      "dnsBypassIp": "",
+      "dnsBypassIp6": "",
+      "dnsBypassTtl": 30,
+      "dscp": 40,
+      "edgeHeaderRewrite": null,
+      "fqPacingRate": 0,
+      "geoLimit": 0,
+      "geoLimitCountries": "",
+      "geoLimitRedirectURL": null,
+      "geoProvider": 0,
+      "globalMaxMbps": 0,
+      "globalMaxTps": 0,
+      "httpBypassFqdn": "",
+      "infoUrl": "TBD",
+      "initialDispersion": 1,
+      "ipv6RoutingEnabled": true,
+      "lastUpdated": "2018-04-06 16:48:51+00",
+      "logsEnabled": false,
+      "longDesc": "d s top",
+      "longDesc1": "ds top",
+      "longDesc2": "ds-top",
+      "matchList": [
+        {
+          "pattern": ".*\\.ds-cdn2\\..*",
+          "setNumber": 0,
+          "type": "HOST_REGEXP"
+        }
+      ],
+      "maxDnsAnswers": 0,
+      "midHeaderRewrite": null,
+      "missLat": 41.881944,
+      "missLong": -87.627778,
+      "multiSiteOrigin": false,
+      "orgServerFqdn": "http://ds-cdn2-origin.example.net",
+      "originShield": null,
+      "profileDescription": null,
+      "profileName": null,
+      "protocol": 2,
+      "qstringIgnore": 1,
+      "rangeRequestHandling": 0,
+      "regexRemap": null,
+      "regionalGeoBlocking": false,
+      "remapText": null,
+      "routingName": "cdn",
+      "signed": false,
+      "signingAlgorithm": null,
+      "sslKeyVersion": 0,
+      "tenant": "tenant1",
+      "tenantName": "tenant1",
+      "type": "HTTP_LIVE_NATNL",
+      "xmlId": "ds-cdn2",
+      "anonymousBlockingEnabled": false,
+      "topology": "top-for-ds-cdn2"
+    },
+    {
+      "active": true,
       "cdnName": "cdn1",
       "cacheurl": "",
       "ccrDnsTtl": 3600,
@@ -1790,6 +1854,403 @@
       ]
     },
     {
+      "cdnName": "cdn2",
+      "description": "Edge Cache - Apache Traffic Server",
+      "name": "ATS_EDGE_TIER_CACHE_CDN2",
+      "routingDisabled": false,
+      "type": "ATS_PROFILE",
+      "params": [
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.proxy_name",
+          "secure": false,
+          "value": "STRING __HOSTNAME__"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.config_dir",
+          "secure": false,
+          "value": "STRING /opt/trafficserver/etc/trafficserver"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.admin.user_id",
+          "secure": false,
+          "value": "STRING ats"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.http.server_ports",
+          "secure": false,
+          "value": "STRING 8080 8080:ipv6"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.http.insert_response_via_str",
+          "secure": false,
+          "value": "INT 3"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.http.parent_proxy_routing_enable",
+          "secure": false,
+          "value": "INT 1"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.http.parent_proxy.retry_time",
+          "secure": false,
+          "value": "INT 60"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.http.connect_attempts_timeout",
+          "secure": false,
+          "value": "INT 10"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.http.cache.required_headers",
+          "secure": false,
+          "value": "INT 0"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.http.enable_http_stats",
+          "secure": false,
+          "value": "INT 1"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.dns.round_robin_nameservers",
+          "secure": false,
+          "value": "INT 0"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.log.max_space_mb_for_logs",
+          "secure": false,
+          "value": "INT 512"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.log.max_space_mb_headroom",
+          "secure": false,
+          "value": "INT 50"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.log.logfile_dir",
+          "secure": false,
+          "value": "STRING /opt/trafficserver/var/log/trafficserver"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.reverse_proxy.enabled",
+          "secure": false,
+          "value": "INT 0"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.diags.debug.enabled",
+          "secure": false,
+          "value": "INT 1"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.http.slow.log.threshold",
+          "secure": false,
+          "value": "INT 10000"
+        },
+        {
+          "configFile": "cache.config",
+          "name": "location",
+          "secure": false,
+          "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+          "configFile": "hosting.config",
+          "name": "location",
+          "secure": false,
+          "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+          "configFile": "parent.config",
+          "name": "location",
+          "secure": false,
+          "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+          "configFile": "plugin.config",
+          "name": "location",
+          "secure": false,
+          "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+          "configFile": "records.config",
+          "name": "location",
+          "secure": false,
+          "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+          "configFile": "storage.config",
+          "name": "location",
+          "secure": false,
+          "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+          "configFile": "volume.config",
+          "name": "location",
+          "secure": false,
+          "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.url_remap.remap_required",
+          "secure": false,
+          "value": "INT 0"
+        },
+        {
+          "configFile": "rascal.properties",
+          "name": "health.threshold.queryTime",
+          "secure": false,
+          "value": "1000"
+        },
+        {
+          "configFile": "rascal.properties",
+          "name": "health.polling.url",
+          "secure": false,
+          "value": "http://${hostname}/_astats?application=&inf.name=${interface_name}"
+        },
+        {
+          "configFile": "storage.config",
+          "name": "Disk_Volume",
+          "secure": false,
+          "value": "1"
+        },
+        {
+          "configFile": "rascal.properties",
+          "name": "health.connection.timeout",
+          "secure": false,
+          "value": "2000"
+        },
+        {
+          "configFile": "chkconfig",
+          "name": "trafficserver",
+          "secure": false,
+          "value": "0:off\t1:off\t2:on\t3:on\t4:on\t5:on\t6:off"
+        },
+        {
+          "configFile": "regex_revalidate.config",
+          "name": "location",
+          "secure": false,
+          "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.exec_thread.autoconfig",
+          "secure": false,
+          "value": "INT 0"
+        },
+        {
+          "configFile": "astats.config",
+          "name": "allow_ip",
+          "secure": false,
+          "value": "127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+        },
+        {
+          "configFile": "astats.config",
+          "name": "allow_ip6",
+          "secure": false,
+          "value": "::1/128,fc01:9400:1000:8::/64"
+        },
+        {
+          "configFile": "astats.config",
+          "name": "location",
+          "secure": false,
+          "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+          "configFile": "astats.config",
+          "name": "path",
+          "secure": false,
+          "value": "_astats"
+        },
+        {
+          "configFile": "astats.config",
+          "name": "record_types",
+          "secure": false,
+          "value": "122"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.http.transaction_active_timeout_in",
+          "secure": false,
+          "value": "INT 0"
+        },
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.body_factory.template_sets_dir",
+          "secure": false,
+          "value": "STRING /opt/trafficserver/etc/trafficserver/body_factory"
+        },
+        {
+          "configFile": "storage.config",
+          "name": "Drive_Letters",
+          "secure": false,
+          "value": "cache"
+        },
+        {
+          "configFile": "ip_allow.config",
+          "name": "location",
+          "secure": false,
+          "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+          "configFile": "storage.config",
+          "name": "Drive_Prefix",
+          "secure": false,
+          "value": "/var/trafficserver/"
+        },
+        {
+          "configFile": "set_dscp_0.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_10.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_12.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_14.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_18.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_20.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_22.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_26.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_28.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_30.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_34.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_36.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_38.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_8.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_16.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_24.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_32.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_40.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_48.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_56.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "set_dscp_37.config",
+          "name": "location",
+          "value": "/opt/trafficserver/etc/trafficserver/dscp"
+        },
+        {
+          "configFile": "package",
+          "lastUpdated": "2018-01-19T19:01:21.499423+00:00",
+          "name": "trafficserver",
+          "secure": true,
+          "value": "CHANGEME"
+        },
+        {
+          "configFile": "empty-file.config",
+          "name": "location",
+          "secure": false,
+          "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+          "configFile": "non-empty-file.config",
+          "name": "location",
+          "secure": false,
+          "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+          "configFile": "non-empty-file.config",
+          "name": "foo",
+          "secure": false,
+          "value": "bar"
+        },
+        {
+          "configFile": "remap.config",
+          "name": "location",
+          "secure": false,
+          "value": "/opt/trafficserver/etc/trafficserver"
+        }
+      ]
+    },
+    {
       "cdnName": "cdn1",
       "description": "edge1 description",
       "lastUpdated": "2018-03-02T17:27:11.818418+00:00",
@@ -2179,6 +2640,106 @@
       "offlineReason": null,
       "physLocation": "Denver",
       "profile": "ATS_EDGE_TIER_CACHE",
+      "rack": "RR 119.02",
+      "revalPending": false,
+      "routerHostName": "",
+      "routerPortName": "",
+      "status": "REPORTED",
+      "tcpPort": 80,
+      "type": "EDGE",
+      "updPending": false,
+      "xmppId": "atlanta-edge-03\\\\@ocdn.kabletown.net",
+      "xmppPasswd": "X"
+    },
+    {
+      "cachegroup": "cachegroup2",
+      "cdnName": "cdn1",
+      "domainName": "ga.atlanta.kabletown.net",
+      "guid": null,
+      "hostName": "atlanta-edge-03-02",
+      "httpsPort": 443,
+      "iloIpAddress": "",
+      "iloIpGateway": "",
+      "iloIpNetmask": "",
+      "iloPassword": "",
+      "iloUsername": "",
+      "interfaces": [
+        {
+          "ipAddresses": [
+            {
+              "address": "127.0.0.19/30",
+              "gateway": "127.0.0.19",
+              "serviceAddress": true
+            },
+            {
+              "address": "2345:1234:12:d::10/64",
+              "gateway": "2345:1234:12:d::10",
+              "serviceAddress": false
+            }
+          ],
+          "maxBandwidth": null,
+          "monitor": true,
+          "mtu": 9000,
+          "name": "bond0"
+        }
+      ],
+      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
+      "mgmtIpAddress": "",
+      "mgmtIpGateway": "",
+      "mgmtIpNetmask": "",
+      "offlineReason": null,
+      "physLocation": "Denver",
+      "profile": "ATS_EDGE_TIER_CACHE",
+      "rack": "RR 119.02",
+      "revalPending": false,
+      "routerHostName": "",
+      "routerPortName": "",
+      "status": "REPORTED",
+      "tcpPort": 80,
+      "type": "EDGE",
+      "updPending": false,
+      "xmppId": "atlanta-edge-03\\\\@ocdn.kabletown.net",
+      "xmppPasswd": "X"
+    },
+    {
+      "cachegroup": "cachegroup2",
+      "cdnName": "cdn2",
+      "domainName": "ga.atlanta.kabletown.net",
+      "guid": null,
+      "hostName": "atlanta-edge-03-03",
+      "httpsPort": 443,
+      "iloIpAddress": "",
+      "iloIpGateway": "",
+      "iloIpNetmask": "",
+      "iloPassword": "",
+      "iloUsername": "",
+      "interfaces": [
+        {
+          "ipAddresses": [
+            {
+              "address": "127.0.0.20/30",
+              "gateway": "127.0.0.20",
+              "serviceAddress": true
+            },
+            {
+              "address": "2345:1234:12:d::11/64",
+              "gateway": "2345:1234:12:d::11",
+              "serviceAddress": false
+            }
+          ],
+          "maxBandwidth": null,
+          "monitor": true,
+          "mtu": 9000,
+          "name": "bond0"
+        }
+      ],
+      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
+      "mgmtIpAddress": "",
+      "mgmtIpGateway": "",
+      "mgmtIpNetmask": "",
+      "offlineReason": null,
+      "physLocation": "Denver",
+      "profile": "ATS_EDGE_TIER_CACHE_CDN2",
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -4255,6 +4816,16 @@
           "parents": [
             0
           ]
+        }
+      ]
+    },
+    {
+      "name": "top-for-ds-cdn2",
+      "description": "a topology",
+      "nodes": [
+        {
+          "cachegroup": "cachegroup2",
+          "parents": []
         }
       ]
     }
