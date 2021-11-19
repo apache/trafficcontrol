@@ -52,7 +52,7 @@ func TestT3cGit(t *testing.T) {
 			}
 			tfn := filepath.Join(test_config_dir, v)
 			if !util.FileExists(tfn) {
-				t.Fatalf("ERROR: missing the expected config file, %s", tfn)
+				t.Fatalf("missing the expected config file, %s", tfn)
 			}
 
 			diffStr, err := util.DiffFiles(bfn, tfn)

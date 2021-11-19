@@ -1,3 +1,5 @@
+package tcdata
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,13 +15,11 @@
    limitations under the License.
 */
 
-package tcdata
-
 import (
 	"strings"
 	"testing"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // CreateBadProfiles ensures that profiles can't be created with bad values

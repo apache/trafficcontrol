@@ -61,7 +61,7 @@ func doTestT3cReloadHeaderRewrite(t *testing.T) {
 	// Ignore the exit code error for now, because the ORT Integration Test Framework doesn't currently start ATS.
 	// TODO check err, after running ATS is added to the tests.
 	// if err != nil {
-	// 	t.Fatalf("t3c syncds failed: %v\n", err)
+	// 	t.Fatalf("t3c syncds failed: %v", err)
 	// }
 
 	if !strings.Contains(stdOut, `Running 'traffic_ctl config reload' now`) {

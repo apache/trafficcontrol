@@ -1,3 +1,5 @@
+package tcdata
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +15,11 @@
    limitations under the License.
 */
 
-package tcdata
-
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func (r *TCData) CreateTestDeliveryServicesRegexes(t *testing.T) {

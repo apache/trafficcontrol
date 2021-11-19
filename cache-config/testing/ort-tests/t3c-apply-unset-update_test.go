@@ -119,7 +119,7 @@ func TestT3cUnsetsUpdateFlag(t *testing.T) {
 		// Ignore the exit code error for now, because the ORT Integration Test Framework doesn't currently start ATS.
 		// TODO check err, after running ATS is added to the tests.
 		// if err != nil {
-		// 	t.Fatalf("t3c syncds failed: %v\n", err)
+		// 	t.Fatalf("t3c syncds failed: %v", err)
 		// }
 
 		t.Logf("TestT3cTOUpdates t3cUpdateUnsetFlag stdout: %s", stdOut)
