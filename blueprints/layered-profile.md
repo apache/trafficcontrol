@@ -253,7 +253,7 @@ The following table describes the top level `layered_profile` object for servers
 | field           | type                 | optionality | description                                              |
 | ----------------| ---------------------| ----------- | ---------------------------------------------------------|
 | server          | bigint               | required    | the server id associated with a given profile            |
-| layeredProfiles | string               | required    | the profile names associated with a server               |
+| layeredProfiles | text                 | required    | the profile names associated with a server               |
 | order           | bigint               | required    | the order in which a profile is applied to a server      |
 
 **API constraints**
