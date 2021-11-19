@@ -30,13 +30,13 @@ func (r *TCData) CreateTestProfileParameters(t *testing.T) {
 	firstProfile := r.TestData.Profiles[0]
 	profileResp, _, err := TOSession.GetProfileByName(firstProfile.Name)
 	if err != nil {
-		t.Errorf("cannot GET Profile by name: %v - %v", firstProfile.Name, err)
+		t.Errorf("cannot GET Profile by name: %s - %v", firstProfile.Name, err)
 	}
 
 	firstParameter := r.TestData.Parameters[0]
 	paramResp, _, err := TOSession.GetParameterByName(firstParameter.Name)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		t.Errorf("cannot GET Parameter by name: %s - %v", firstParameter.Name, err)
 	}
 
 	profileID := profileResp[0].ID
@@ -82,7 +82,7 @@ func DeleteTestProfileParameter(t *testing.T, pp tc.ProfileParameter) {
 	// Retrieve the PtofileParameter by profile so we can get the id for the Update
 	resp, _, err := TOSession.GetProfileParameterByQueryParams(queryParams)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by profile: %v - %v", pp.Profile, err)
+		t.Errorf("cannot GET Parameter by profile: %s - %v", pp.Profile, err)
 	}
 	if len(resp) > 0 {
 		respPP := resp[0]

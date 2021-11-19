@@ -26,7 +26,7 @@ func (r *TCData) CreateTestUsers(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not CREATE user: %v", err)
 		}
-		t.Log("Response: ", resp.Alerts)
+		t.Logf("Alerts: %+v", resp.Alerts)
 	}
 }
 
@@ -66,7 +66,7 @@ func (r *TCData) DeleteTestUsers(t *testing.T) {
 
 		resp, _, err := TOSession.GetUserByUsername(*user.Username)
 		if err != nil {
-			t.Errorf("cannot GET user by name: %v - %v", *user.Username, err)
+			t.Errorf("cannot GET user by name: %s - %v", *user.Username, err)
 		}
 
 		if resp != nil {
@@ -80,7 +80,7 @@ func (r *TCData) DeleteTestUsers(t *testing.T) {
 			// Make sure it got deleted
 			resp, _, err := TOSession.GetUserByUsername(*user.Username)
 			if err != nil {
-				t.Errorf("error deleting user by name: %s", err.Error())
+				t.Errorf("error deleting user by name: %v", err)
 			}
 			if len(resp) > 0 {
 				t.Errorf("expected user: %s to be deleted", *user.Username)

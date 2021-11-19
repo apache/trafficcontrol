@@ -40,15 +40,15 @@ func (r *TCData) CreateTestServerServerCapabilities(t *testing.T) {
 		}
 		servResp := resp.Response
 		if len(servResp) != 1 {
-			t.Fatalf("cannot GET Server by hostname: %v. Response did not include record.", *ssc.Server)
+			t.Fatalf("cannot GET Server by hostname: %s. Response did not include record.", *ssc.Server)
 		}
 		server := servResp[0]
 		ssc.ServerID = server.ID
 		createResp, _, err := TOSession.CreateServerServerCapability(ssc)
 		if err != nil {
-			t.Errorf("could not POST the server capability %v to server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
+			t.Errorf("could not POST the server capability %s to server %s: %v", *ssc.ServerCapability, *ssc.Server, err)
 		}
-		t.Log("Response: ", *ssc.Server, " ", createResp)
+		t.Logf("Response: %s %+v", *ssc.Server, createResp)
 	}
 
 	// Invalid POSTs
@@ -186,7 +186,7 @@ func (r *TCData) DeleteTestServerServerCapabilities(t *testing.T) {
 		if assignedServers[*ssc.ServerID] {
 			_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
 			if err == nil {
-				t.Fatalf("should have gotten error when using DELETE on the server capability %v from server %v as it is required by associated dses", *ssc.ServerCapability, *ssc.Server)
+				t.Fatalf("should have gotten error when using DELETE on the server capability %s from server %s as it is required by associated dses", *ssc.ServerCapability, *ssc.Server)
 			}
 		}
 	}
@@ -194,7 +194,7 @@ func (r *TCData) DeleteTestServerServerCapabilities(t *testing.T) {
 	for _, dsServer := range dsServers {
 		_, _, err := TOSession.DeleteDeliveryServiceServer(*dsServer.DeliveryService, *dsServer.Server)
 		if err != nil {
-			t.Fatalf("could not DELETE the server %v from ds %v: %v", *dsServer.Server, *dsServer.DeliveryService, err)
+			t.Fatalf("could not DELETE the server %d from ds %d: %v", *dsServer.Server, *dsServer.DeliveryService, err)
 		}
 	}
 
@@ -203,7 +203,7 @@ func (r *TCData) DeleteTestServerServerCapabilities(t *testing.T) {
 	for _, ssc := range sscs {
 		_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
 		if err != nil {
-			t.Errorf("could not DELETE the server capability %v from server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
+			t.Errorf("could not DELETE the server capability %s from server %s: %v", *ssc.ServerCapability, *ssc.Server, err)
 		}
 	}
 
@@ -280,7 +280,7 @@ func DeleteTestServerServerCapabilitiesForTopologies(t *testing.T) {
 	for _, ssc := range sscs {
 		_, _, err := TOSession.DeleteServerServerCapability(*ssc.ServerID, *ssc.ServerCapability)
 		if err != nil {
-			t.Errorf("could not DELETE the server capability %v from server %v: %v", *ssc.ServerCapability, *ssc.Server, err)
+			t.Errorf("could not DELETE the server capability %s from server %s: %v", *ssc.ServerCapability, *ssc.Server, err)
 		}
 	}
 }

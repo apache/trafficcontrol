@@ -70,20 +70,20 @@ func (r *TCData) CreateTestProfiles(t *testing.T) {
 			if err != nil {
 				// ok if already exists
 				if !strings.Contains(err.Error(), "already exists") {
-					t.Errorf("could not CREATE parameter %+v: %s", param, err.Error())
+					t.Errorf("could not CREATE parameter %+v: %v", param, err)
 					continue
 				}
 			}
 			p, _, err := TOSession.GetParameterByNameAndConfigFileAndValue(*param.Name, *param.ConfigFile, *param.Value)
 			if err != nil {
-				t.Errorf("could not GET parameter %+v: %s", param, err.Error())
+				t.Errorf("could not GET parameter %+v: %v", param, err)
 			}
 			if len(p) == 0 {
 				t.Errorf("could not GET parameter %+v: not found", param)
 			}
 			_, _, err = TOSession.CreateProfileParameter(tc.ProfileParameter{ProfileID: profileID, ParameterID: p[0].ID})
 			if err != nil {
-				t.Errorf("could not CREATE profile_parameter %+v: %s", param, err.Error())
+				t.Errorf("could not CREATE profile_parameter %+v: %v", param, err)
 			}
 		}
 

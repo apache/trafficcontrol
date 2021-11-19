@@ -42,43 +42,43 @@ func (r *TCData) CreateTestFederationUsers(t *testing.T) {
 	// Associate one user to federation
 	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*u1}, false)
 	if err != nil {
-		t.Fatalf("assigning users %v to federation %v: %v", []int{*u1}, fedID, err.Error())
+		t.Fatalf("assigning user #%d to federation #%d: %v", *u1, fedID, err)
 	}
 
 	fedUsers, _, err := TOSession.GetFederationUsers(fedID)
 	if err != nil {
-		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
+		t.Fatalf("gettings users for federation %d: %v", fedID, err)
 	}
 	if len(fedUsers) != 1 {
-		t.Errorf("federation users expected 1, actual: %+v", len(fedUsers))
+		t.Errorf("federation users expected 1, actual: %d", len(fedUsers))
 	}
 
 	// Associate two users to federation and replace first one
 	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*u2, *u3}, true)
 	if err != nil {
-		t.Fatalf("assigning users %v to federation %v: %v", []int{*u2, *u3}, fedID, err.Error())
+		t.Fatalf("assigning users #%d and #%d to federation #%d: %v", *u2, *u3, fedID, err)
 	}
 
 	fedUsers, _, err = TOSession.GetFederationUsers(fedID)
 	if err != nil {
-		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
+		t.Fatalf("gettings users for federation #%d: %v", fedID, err)
 	}
 	if len(fedUsers) != 2 {
-		t.Errorf("federation users expected 2, actual: %+v", len(fedUsers))
+		t.Errorf("federation users expected 2, actual: %d", len(fedUsers))
 	}
 
 	// Associate one more user to federation
 	_, _, err = TOSession.CreateFederationUsers(fedID, []int{*u1}, false)
 	if err != nil {
-		t.Fatalf("assigning users %v to federation %v: %v", []int{*u1}, fedID, err.Error())
+		t.Fatalf("assigning user #%d to federation #%d: %v", *u1, fedID, err)
 	}
 
 	fedUsers, _, err = TOSession.GetFederationUsers(fedID)
 	if err != nil {
-		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
+		t.Fatalf("gettings users for federation #%d: %v", fedID, err)
 	}
 	if len(fedUsers) != 3 {
-		t.Errorf("federation users expected 2, actual: %+v", len(fedUsers))
+		t.Errorf("federation users expected 2, actual: %d", len(fedUsers))
 	}
 }
 
@@ -92,7 +92,7 @@ func (r *TCData) CreateTestValidFederationUsers(t *testing.T) {
 	// Get Users
 	users, _, err := TOSession.GetUsers()
 	if err != nil {
-		t.Fatalf("getting users: " + err.Error())
+		t.Fatalf("getting users: %v", err)
 	}
 	if len(users) == 0 {
 		t.Fatal("need at least 1 user to test invalid federation user create")
@@ -142,24 +142,24 @@ func (r *TCData) DeleteTestFederationUsers(t *testing.T) {
 
 	fedUsers, _, err := TOSession.GetFederationUsers(fedID)
 	if err != nil {
-		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
+		t.Fatalf("gettings users for federation #%d: %v", fedID, err)
 	}
 	if len(fedUsers) != 3 {
-		t.Errorf("federation users expected 3, actual: %+v", len(fedUsers))
+		t.Errorf("federation users expected 3, actual: %d", len(fedUsers))
 	}
 
 	for _, fedUser := range fedUsers {
 		_, _, err = TOSession.DeleteFederationUser(fedID, *fedUser.ID)
 		if err != nil {
-			t.Fatalf("deleting user %v from federation %v: %v", *fedUser.ID, fedID, err.Error())
+			t.Fatalf("deleting user #%d from federation #%d: %v", *fedUser.ID, fedID, err)
 		}
 	}
 
 	fedUsers, _, err = TOSession.GetFederationUsers(fedID)
 	if err != nil {
-		t.Fatalf("gettings users for federation %v: %v", fedID, err.Error())
+		t.Fatalf("gettings users for federation #%d: %v", fedID, err)
 	}
 	if len(fedUsers) != 0 {
-		t.Errorf("federation users expected 0, actual: %+v", len(fedUsers))
+		t.Errorf("federation users expected 0, actual: %d", len(fedUsers))
 	}
 }

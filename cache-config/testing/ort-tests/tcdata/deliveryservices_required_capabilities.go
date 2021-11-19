@@ -206,7 +206,7 @@ func helperGetDeliveryServiceID(t *testing.T, xmlID *string) *int {
 		t.Fatal(err)
 	}
 	if len(ds) < 1 {
-		t.Fatalf("cannot GET deliveyservice by xml id: %v. Response did not include record.", *xmlID)
+		t.Fatalf("cannot GET deliveyservice by xml id: %s, response did not include record", *xmlID)
 	}
 	return ds[0].ID
 }

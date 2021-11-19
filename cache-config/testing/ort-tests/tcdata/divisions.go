@@ -35,7 +35,7 @@ func (r *TCData) DeleteTestDivisions(t *testing.T) {
 		// Retrieve the Division by name so we can get the id
 		resp, _, err := TOSession.GetDivisionByName(division.Name)
 		if err != nil {
-			t.Errorf("cannot GET Division by name: %v - %v", division.Name, err)
+			t.Errorf("cannot GET Division by name: %s - %v", division.Name, err)
 		}
 		respDivision := resp[0]
 
@@ -47,7 +47,7 @@ func (r *TCData) DeleteTestDivisions(t *testing.T) {
 		// Retrieve the Division to see if it got deleted
 		divisionResp, _, err := TOSession.GetDivisionByName(division.Name)
 		if err != nil {
-			t.Errorf("error deleting Division division: %s", err.Error())
+			t.Errorf("error deleting Division division: %v", err)
 		}
 		if len(divisionResp) > 0 {
 			t.Errorf("expected Division : %s to be deleted", division.Name)

@@ -27,7 +27,7 @@ func (r *TCData) CreateTestCacheGroupParameters(t *testing.T) {
 	firstCacheGroup := r.TestData.CacheGroups[0]
 	cacheGroupResp, _, err := TOSession.GetCacheGroupNullableByName(*firstCacheGroup.Name)
 	if err != nil {
-		t.Errorf("cannot GET Cache Group by name: %v - %v", firstCacheGroup.Name, err)
+		t.Errorf("cannot GET Cache Group by name: %s - %v", *firstCacheGroup.Name, err)
 	}
 	if cacheGroupResp == nil {
 		t.Fatal("Cache Groups response should not be nil")
@@ -37,7 +37,7 @@ func (r *TCData) CreateTestCacheGroupParameters(t *testing.T) {
 	firstParameter := r.TestData.Parameters[0]
 	paramResp, _, err := TOSession.GetParameterByName(firstParameter.Name)
 	if err != nil {
-		t.Errorf("cannot GET Parameter by name: %v - %v", firstParameter.Name, err)
+		t.Errorf("cannot GET Parameter by name: %s - %v", firstParameter.Name, err)
 	}
 	if paramResp == nil {
 		t.Fatal("Parameter response should not be nil")

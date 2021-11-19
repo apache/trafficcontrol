@@ -34,7 +34,7 @@ func (r *TCData) DeleteTestCoordinates(t *testing.T) {
 		// Retrieve the Coordinate by name so we can get the id for the Update
 		resp, _, err := TOSession.GetCoordinateByName(coord.Name)
 		if err != nil {
-			t.Errorf("cannot GET Coordinate by name: %v - %v", coord.Name, err)
+			t.Errorf("cannot GET Coordinate by name: %s - %v", coord.Name, err)
 		}
 		if len(resp) > 0 {
 			respCoord := resp[0]

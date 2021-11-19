@@ -33,7 +33,7 @@ func (r *TCData) CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot GET DeliveryServiceServers: %v", err)
 	}
 	if len(dss.Response) > 0 {
-		t.Fatalf("cannot test cachegroups delivery services: expected no initial delivery service servers, actual %v", len(dss.Response))
+		t.Fatalf("cannot test cachegroups delivery services: expected no initial delivery service servers, actual %d", len(dss.Response))
 	}
 
 	dses, _, err := TOSession.GetDeliveryServicesV30WithHdr(nil, nil)
@@ -46,7 +46,7 @@ func (r *TCData) CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Fatalf("getting cachegroup: %v", err)
 	}
 	if len(clientCGs) != 1 {
-		t.Fatalf("getting cachegroup expected 1, got %v", len(clientCGs))
+		t.Fatalf("getting cachegroup expected 1, got %d", len(clientCGs))
 	}
 
 	clientCG := clientCGs[0]
@@ -109,7 +109,7 @@ func (r *TCData) CreateTestCachegroupsDeliveryServices(t *testing.T) {
 		}
 		servers := resp
 		if len(servers) != 1 {
-			t.Fatalf("getting servers: expected 1 got %v", len(servers))
+			t.Fatalf("getting servers: expected 1 got %d", len(servers))
 		}
 		server := servers[0]
 		serverID := server.ID
@@ -125,7 +125,7 @@ func (r *TCData) CreateTestCachegroupsDeliveryServices(t *testing.T) {
 				}
 			}
 			if !found {
-				t.Errorf("post succeeded, but didn't assign delivery service %v to server", dsID)
+				t.Errorf("post succeeded, but didn't assign delivery service #%d to server", dsID)
 			}
 		}
 	}
@@ -148,6 +148,6 @@ func (r *TCData) DeleteTestCachegroupsDeliveryServices(t *testing.T) {
 		t.Errorf("cannot GET DeliveryServiceServers: %v", err)
 	}
 	if len(dss.Response) > 0 {
-		t.Errorf("deleting delivery service servers: delete succeeded, expected empty subsequent get, actual %v", len(dss.Response))
+		t.Errorf("deleting delivery service servers: delete succeeded, expected empty subsequent get, actual %d", len(dss.Response))
 	}
 }

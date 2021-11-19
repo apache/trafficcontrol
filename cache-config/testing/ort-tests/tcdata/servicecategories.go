@@ -38,7 +38,7 @@ func (r *TCData) DeleteTestServiceCategories(t *testing.T) {
 		params.Add("name", sc.Name)
 		resp, _, err := TOSession.GetServiceCategories(&params)
 		if err != nil {
-			t.Errorf("cannot GET Service Category by name: %v - %v", sc.Name, err)
+			t.Errorf("cannot GET Service Category by name: %s - %v", sc.Name, err)
 		}
 		if len(resp) > 0 {
 			respServiceCategory := resp[0]

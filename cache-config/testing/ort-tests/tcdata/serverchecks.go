@@ -29,7 +29,7 @@ func (r *TCData) CreateTestServerChecks(t *testing.T) {
 
 	for _, servercheck := range r.TestData.Serverchecks {
 		resp, _, err := TOSession.InsertServerCheckStatus(servercheck)
-		t.Logf("Response: %v host_name %v check %v", *servercheck.HostName, *servercheck.Name, resp)
+		t.Logf("Response: %s host_name %s check %v", *servercheck.HostName, *servercheck.Name, resp)
 		if err != nil {
 			t.Errorf("could not CREATE servercheck: %v", err)
 		}

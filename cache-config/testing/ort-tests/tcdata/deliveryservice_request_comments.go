@@ -26,7 +26,7 @@ func (r *TCData) CreateTestDeliveryServiceRequestComments(t *testing.T) {
 
 	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.XMLID)
 	if err != nil {
-		t.Errorf("cannot GET delivery service request by xml id: %v - %v", dsr.XMLID, err)
+		t.Errorf("cannot GET delivery service request by xml id: %s - %v", dsr.XMLID, err)
 	}
 	if len(resp) != 1 {
 		t.Errorf("found %d delivery service request by xml id, expected %d: %s", len(resp), 1, dsr.XMLID)

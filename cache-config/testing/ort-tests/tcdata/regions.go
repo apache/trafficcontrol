@@ -68,7 +68,7 @@ func (r *TCData) DeleteTestRegions(t *testing.T) {
 		// Retrieve the Region by name so we can get the id
 		resp, _, err := TOSession.GetRegionByName(region.Name)
 		if err != nil {
-			t.Errorf("cannot GET Region by name: %v - %v", region.Name, err)
+			t.Errorf("cannot GET Region by name: %s - %v", region.Name, err)
 		}
 		respRegion := resp[0]
 
@@ -80,10 +80,10 @@ func (r *TCData) DeleteTestRegions(t *testing.T) {
 		// Retrieve the Region to see if it got deleted
 		regionResp, _, err := TOSession.GetRegionByName(region.Name)
 		if err != nil {
-			t.Errorf("error deleting Region region: %s", err.Error())
+			t.Errorf("error deleting Region region: %v", err)
 		}
 		if len(regionResp) > 0 {
-			t.Errorf("expected Region : %s to be deleted", region.Name)
+			t.Errorf("expected Region %s to be deleted", region.Name)
 		}
 	}
 }

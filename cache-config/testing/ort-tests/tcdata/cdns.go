@@ -37,7 +37,7 @@ func (r *TCData) DeleteTestCDNs(t *testing.T) {
 		// Retrieve the CDN by name so we can get the id for the Update
 		resp, _, err := TOSession.GetCDNByName(cdn.Name)
 		if err != nil {
-			t.Errorf("cannot GET CDN by name: %v - %v", cdn.Name, err)
+			t.Errorf("cannot GET CDN by name: %s - %v", cdn.Name, err)
 		}
 		if len(resp) > 0 {
 			respCDN := resp[0]
