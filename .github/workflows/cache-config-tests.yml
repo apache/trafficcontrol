@@ -31,14 +31,16 @@ on:
       - GO_VERSION
       - lib/go-atscfg/**.go
       - traffic_ops/*client/**.go
+      - traffic_ops/toclientlib/**.go
+      - lib/atscfg-go/**.go
       - traffic_ops/traffic_ops_golang/**.go
       - cache-config/**.go
       - cache-config/testing/**
       - vendor/**.go
       - vendor/modules.txt
-      - .github/actions/build-ats-test-rpm
-      - .github/actions/fetch-github-branch-sha
-      - .github/actions/cache-config-integration-tests
+      - .github/actions/build-ats-test-rpm/**
+      - .github/actions/fetch-github-branch-sha/**
+      - .github/actions/cache-config-integration-tests/**
   create:
   pull_request:
     paths:
@@ -55,9 +57,9 @@ on:
       - cache-config/testing/**
       - vendor/**.go
       - vendor/modules.txt
-      - .github/actions/build-ats-test-rpm
-      - .github/actions/fetch-github-branch-sha
-      - .github/actions/cache-config-integration-tests
+      - .github/actions/build-ats-test-rpm/**
+      - .github/actions/fetch-github-branch-sha/**
+      - .github/actions/cache-config-integration-tests/**
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
@@ -100,7 +102,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Get commit sha
+      - name: Get latest commit sha and latest tag
         uses: ./.github/actions/fetch-github-branch-sha
         with:
           owner: apache
@@ -112,7 +114,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/dist
-          key: ${{ steps.git-repo-sha.outputs.sha }}-el${{ env.RHEL_VERSION }}-${{ hashFiles('cache-config/testing/docker/trafficserver/**') }}
+          key: ${{ steps.git-repo-sha.outputs.sha }}-${{ steps.git-repo-sha.outputs.latest-tag }}-el${{ env.RHEL_VERSION }}-${{ hashFiles('cache-config/testing/docker/trafficserver/**') }}
       - name: Build ATS RPM
         if: steps.ats-rpm-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/build-ats-test-rpm

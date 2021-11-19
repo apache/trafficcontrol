@@ -17,6 +17,9 @@ package v4
 
 import (
 	"net/http"
+	"net/url"
+	"reflect"
+	"sort"
 	"strconv"
 	"testing"
 	"time"
@@ -31,6 +34,9 @@ func TestFederationResolvers(t *testing.T) {
 	WithObjs(t, []TCObj{Types, FederationResolvers}, func() {
 		GetTestFederationResolversIMS(t)
 		GetTestFederationResolvers(t)
+		GetTestPaginationSupportFedResolver(t)
+		SortTestFederationResolver(t)
+		SortTestFederationsResolverDesc(t)
 	})
 }
 func GetTestFederationResolversIMS(t *testing.T) {
@@ -258,4 +264,133 @@ func DeleteTestFederationResolvers(t *testing.T) {
 		}
 	}
 
+}
+
+func GetTestPaginationSupportFedResolver(t *testing.T) {
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetFederationResolvers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get FederationResolver: %v - alerts: %+v", err, resp.Alerts)
+	}
+	fedResolver := resp.Response
+	if len(fedResolver) < 3 {
+		t.Fatalf("Need at least 3 FederationResolver in Traffic Ops to test pagination support, found: %d", len(fedResolver))
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	fedResolverWithLimit, _, err := TOSession.GetFederationResolvers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get FederationResolver with Limit: %v - alerts: %+v", err, fedResolverWithLimit.Alerts)
+	}
+	if !reflect.DeepEqual(fedResolver[:1], fedResolverWithLimit.Response) {
+		t.Error("expected GET FederationResolver with limit = 1 to return first result")
+	}
+
+	opts.QueryParameters.Set("offset", "1")
+	fedResolverWithOffset, _, err := TOSession.GetFederationResolvers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get FederationResolver with Limit and Offset: %v - alerts: %+v", err, fedResolverWithOffset.Alerts)
+	}
+	if !reflect.DeepEqual(fedResolver[1:2], fedResolverWithOffset.Response) {
+		t.Error("expected GET FederationResolver with limit = 1, offset = 1 to return second result")
+	}
+
+	opts.QueryParameters.Del("offset")
+	opts.QueryParameters.Set("page", "2")
+	fedResolverWithPage, _, err := TOSession.GetFederationResolvers(opts)
+	if err != nil {
+		t.Fatalf("cannot Get FederationResolver with Limit and Page: %v - alerts: %+v", err, fedResolverWithPage.Alerts)
+	}
+	if !reflect.DeepEqual(fedResolver[1:2], fedResolverWithPage.Response) {
+		t.Error("expected GET FederationResolver with limit = 1, page = 2 to return second result")
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "-2")
+	resp, reqInf, err := TOSession.GetFederationResolvers(opts)
+	if err == nil {
+		t.Error("expected GET FederationResolver to return an error when limit is not bigger than -1")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("offset", "0")
+	resp, reqInf, err = TOSession.GetFederationResolvers(opts)
+	if err == nil {
+		t.Error("expected GET FederationResolver to return an error when offset is not a positive integer")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+
+	opts.QueryParameters = url.Values{}
+	opts.QueryParameters.Set("limit", "1")
+	opts.QueryParameters.Set("page", "0")
+	resp, reqInf, err = TOSession.GetFederationResolvers(opts)
+	if err == nil {
+		t.Error("expected GET FederationResolver to return an error when page is not a positive integer")
+	}
+	if reqInf.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Expected 400 status code, got %v", reqInf.StatusCode)
+	}
+}
+
+func SortTestFederationResolver(t *testing.T) {
+	var sortedList []uint
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetFederationResolvers(opts)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v - alerts: %+v", err, resp.Alerts)
+	}
+	for _, fedRes := range resp.Response {
+		if fedRes.ID == nil {
+			t.Fatalf("Federation resolver ID is nil, so sorting can't be tested")
+		}
+		sortedList = append(sortedList, *fedRes.ID)
+	}
+	res := sort.SliceIsSorted(sortedList, func(p, q int) bool {
+		return sortedList[p] < sortedList[q]
+	})
+	if res != true {
+		t.Errorf("list is not sorted by their Federation Resolver ID: %v", sortedList)
+	}
+}
+
+func SortTestFederationsResolverDesc(t *testing.T) {
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("orderby", "id")
+	resp, _, err := TOSession.GetFederationResolvers(opts)
+	if err != nil {
+		t.Fatalf("Expected no error, but got error in Federation Resolver default ordering %v - alerts: %+v", err, resp.Alerts)
+	}
+	respAsc := resp.Response
+	if len(respAsc) < 1 {
+		t.Fatal("Need at least one Federation Resolver in Traffic Ops to test Federation Resolver sort ordering")
+	}
+	opts.QueryParameters.Set("sortOrder", "desc")
+	resp, _, err = TOSession.GetFederationResolvers(opts)
+	if err != nil {
+		t.Errorf("Expected no error, but got error in Federation Resolver with Descending ordering: %v - alerts: %+v", err, resp.Alerts)
+	}
+	respDesc := resp.Response
+	if len(respDesc) < 1 {
+		t.Fatal("Need at least one Federation Resolver in Traffic Ops to test Federation resolver sort ordering")
+	}
+	if len(respAsc) != len(respDesc) {
+		t.Fatalf("Traffic Ops returned %d Federation Resolver using default sort order, but %d Federation Resolver when sort order was explicitly set to descending", len(respAsc), len(respDesc))
+	}
+	for start, end := 0, len(respDesc)-1; start < end; start, end = start+1, end-1 {
+		respDesc[start], respDesc[end] = respDesc[end], respDesc[start]
+	}
+	if respDesc[0].ID == nil || respAsc[0].ID == nil {
+		t.Fatalf("Response ID is nil in Test federation Resolver")
+	}
+	if *respDesc[0].ID != *respAsc[0].ID {
+		t.Errorf("Federation Resolver responses are not equal after reversal: Asc: %d - Desc: %d", *respDesc[0].ID, *respAsc[0].ID)
+	}
 }

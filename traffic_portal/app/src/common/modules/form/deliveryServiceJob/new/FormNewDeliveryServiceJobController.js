@@ -22,6 +22,14 @@ var FormNewDeliveryServiceJobController = function(deliveryService, job, $scope,
 	// extends the FormDeliveryServiceJobController to inherit common methods
 	angular.extend(this, $controller('FormDeliveryServiceJobController', { deliveryService: deliveryService, job: job, $scope: $scope }));
 
+	// define invalidation types
+	$scope.invalidationtypes = [
+		'REFRESH',
+		'REFETCH'
+	];
+	// set default invalidation type
+	$scope.job.invalidationType = $scope.invalidationtypes[0];
+	
 	$scope.jobName = 'New';
 
 	$scope.settings = {

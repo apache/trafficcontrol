@@ -1,14 +1,5 @@
 package tc
 
-import (
-	"time"
-
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-util"
-
-	validation "github.com/go-ozzo/ozzo-validation"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -27,6 +18,21 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
+
+	validation "github.com/go-ozzo/ozzo-validation"
+)
+
+// AdminRoleName is the Name of the special "admin" Role.
+//
+// This Role must always exist; it cannot be modified or deleted, and is
+// guaranteed to exist in all valid ATC environments.
+const AdminRoleName = "admin"
 
 // RoleV4 is an alias for the latest minor version for the major version 4.
 type RoleV4 RoleV40
@@ -79,18 +85,18 @@ func (role Role) Upgrade() RoleV4 {
 }
 
 // Downgrade will convert the passed in instance of RoleV4 struct into an instance of Role struct.
-func (roleV4 RoleV4) Downgrade() Role {
-	var role Role
-	role.Name = &roleV4.Name
-	role.Description = &roleV4.Description
-	if len(roleV4.Permissions) == 0 {
-		role.Capabilities = nil
+func (role RoleV4) Downgrade() Role {
+	var downgraded Role
+	downgraded.Name = &role.Name
+	downgraded.Description = &role.Description
+	if len(role.Permissions) == 0 {
+		downgraded.Capabilities = nil
 	} else {
-		caps := make([]string, len(roleV4.Permissions))
-		copy(caps, roleV4.Permissions)
-		role.Capabilities = &caps
+		caps := make([]string, len(role.Permissions))
+		copy(caps, role.Permissions)
+		downgraded.Capabilities = &caps
 	}
-	return role
+	return downgraded
 }
 
 // RolesResponse is a list of Roles as a response.

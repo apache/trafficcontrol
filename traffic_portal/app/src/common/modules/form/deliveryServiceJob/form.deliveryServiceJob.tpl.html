@@ -28,6 +28,12 @@ under the License.
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
+        <div class="helptext">
+            <aside class="warning">
+                <h6>Warning</h6>
+                <p>Delivery service origin(s) must support IMS in order to safely invalidate content</p>
+            </aside>
+        </div>
         <br>
         <form name="jobForm" class="form-horizontal form-label-left" novalidate>
             <div class="form-group" ng-class="{'has-error': hasError(jobForm.regex), 'has-feedback': hasError(jobForm.regex)}">
@@ -40,14 +46,20 @@ under the License.
                     <span ng-show="hasError(jobForm.regex)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(jobForm.ttl), 'has-feedback': hasError(jobForm.ttl)}">
+            <div class="form-group" ng-class="{'has-error': hasError(jobForm.ttlhours), 'has-feedback': hasError(jobForm.ttlhours)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">TTL (hours) *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ttl" type="number" class="form-control" placeholder="Number of hours until the invalidation request expires" ng-model="job.ttl" ng-maxlength="3" ng-pattern="/^\d+$/" required autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(jobForm.ttl, 'required')">Required Whole Number</small>
-                    <small class="input-error" ng-show="hasPropertyError(jobForm.ttl, 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(jobForm.ttl, 'pattern')">Whole Number</small>
-                    <span ng-show="hasError(jobForm.ttl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    <input name="ttlhours" type="number" class="form-control" placeholder="Number of hours until the invalidation request expires" ng-model="job.ttlhours" min="1" max="999" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(jobForm.ttlhours, 'required')">Required Whole Number</small>
+                    <span ng-show="hasError(jobForm.ttlhours)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(jobForm.invalidationtype), 'has-feedback': hasError(jobForm.invalidationtype)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Invalidation Type *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select name="invalidationtype" class="form-control" ng-model="job.invalidationType" ng-options="invalidationtype as invalidationtype for invalidationtype in invalidationtypes" required>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(jobForm.invalidationtype, 'required')">Required</small>
                 </div>
             </div>
             <div class="modal-footer">

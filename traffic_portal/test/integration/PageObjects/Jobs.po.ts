@@ -25,14 +25,16 @@ import { SideNavigationPage } from './SideNavigationPage.po';
 interface Job {
     DeliveryService: string;
     Regex: string;
-    Ttl: string;
+    TtlHours: string;
+    InvalidationType: string;
     validationMessage: string;
 }
 export class JobsPage extends BasePage {
     private moreBtn = element(by.name('moreBtn'));
     private createJobMenuItem = element(by.name('createJobMenuItem'));
     private txtRegex = element(by.name('regex'));
-    private txtTtl = element(by.name('ttl'));
+    private txtTtl = element(by.name('ttlhours'));
+    private txtInvalidationType = element(by.name('invalidationtype'));
     private txtDeliveryservice = element(by.name('deliveryservice'));
     private randomize = randomize;
 
@@ -55,7 +57,8 @@ export class JobsPage extends BasePage {
         await this.createJobMenuItem.click();
         await this.txtDeliveryservice.sendKeys(jobs.DeliveryService + this.randomize)
         await this.txtRegex.sendKeys(jobs.Regex);
-        await this.txtTtl.sendKeys(jobs.Ttl);
+        await this.txtTtl.sendKeys(jobs.TtlHours);
+        await this.txtInvalidationType.sendKeys(jobs.InvalidationType);
         await basePage.ClickCreate();
         result = await basePage.GetOutputMessage().then(value => value.includes(jobs.validationMessage));
         return result;

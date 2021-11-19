@@ -47,7 +47,7 @@ RUN curl -O http://traffic-control-cdn.net/downloads/trafficserver-5.3.2-599.089
 RUN yum install -y trafficserver-5.3.2-599.089d585.el6.x86_64.rpm
 
 RUN mkdir /opt/ort
-RUN cd /opt/ort && curl -O https://raw.githubusercontent.com/Comcast/traffic_control/RELEASE-1.4.0-RC0/traffic_ops/bin/traffic_ops_ort.pl
+RUN cd /opt/ort && curl -LO https://github.com/apache/trafficcontrol/raw/RELEASE-1.4.0-RC0/traffic_ops/bin/traffic_ops_ort.pl
 RUN chmod +x /opt/ort/traffic_ops_ort.pl
 RUN yum install -y "perl(JSON)"
 RUN curl -O http://traffic-control-cdn.net/downloads/astats_over_http-1.2-8.el6.x86_64.rpm
