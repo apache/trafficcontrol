@@ -13,10 +13,9 @@
 		"module": "es2020",
 		"outDir": "./dist/out-tsc",
 		"strict": true,
-		"sourceMap": true,
-		"target": "es2015",
+		"target": "es2017",
 		"lib": [
-			"es2018",
+			"es2020",
 			"dom"
 		]
 	}
