@@ -9,7 +9,7 @@
   "author": "Apache Software Foundation",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=12"
+    "node": ">=14"
   },
   "engineStrict": true,
   "scripts": {
@@ -22,7 +22,7 @@
     "e2e": "ng e2e",
     "dev:ssr": "ng run traffic-portal:serve-ssr",
     "serve:ssr": "node dist/traffic-portal/server/main.js",
-    "build:ssr": "ng build --prod && ng run traffic-portal:server:production",
+    "build:ssr": "ng build --configuration production && ng run traffic-portal:server:production",
     "prerender": "ng run traffic-portal:prerender"
   },
   "private": true,
