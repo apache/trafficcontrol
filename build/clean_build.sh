@@ -15,6 +15,11 @@
 trap 'exit_code=$?; [ $exit_code -ne 0 ] && echo "Error on line ${LINENO} of ${0}"; cleanup; exit $exit_code' EXIT;
 set -o errexit -o nounset -o pipefail;
 
+# Set defaults for environment variables inherited from pkg
+export NO_LOG_FILES="${NO_LOG_FILES:-0}"
+export NO_SOURCE="${NO_SOURCE:-0}"
+export SIMPLE="${SIMPLE:-0}"
+
 # Fix ownership of output files
 #  $1 is file or dir with correct ownership
 #  remaining args are files/dirs to be fixed, recursively
