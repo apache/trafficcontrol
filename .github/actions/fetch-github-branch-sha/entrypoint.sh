@@ -33,7 +33,7 @@ if ! _brinfo="$(curl --silent "${GITHUB_API_URL}/repos/${INPUT_OWNER}/${INPUT_RE
 fi
 
 # parse out the commit sha
-_sha="$(<<<"$_brinfo" jq -r .name)"
+_sha="$(<<<"$_brinfo" jq -r .commit.sha)"
 
 # verify the sha
 if [[ -z "${_sha}" || "${_sha}" == "null" ]]; then
