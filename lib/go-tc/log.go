@@ -19,6 +19,8 @@ package tc
  * under the License.
  */
 
+import "time"
+
 // LogsResponse is a list of Logs as a response.
 type LogsResponse struct {
 	Response []Log `json:"response"`
@@ -40,4 +42,25 @@ type Log struct {
 // time this information was requested.
 type NewLogCountResp struct {
 	NewLogCount uint64 `json:"newLogcount"`
+}
+
+// LogV40 represents a changelog entry in version 4.0 of the Traffic Ops API.
+type LogV40 struct {
+	Date    time.Time `json:"date"`
+	Message string    `json:"message"`
+	User    string    `json:"user"`
+}
+
+// LogV4 represents a changelog entry in the latest minor version of version 4
+// of the Traffic Ops API.
+type LogV4 = LogV40
+
+// LogsResponseV4 is the type of a response from the /logs Traffic Ops API
+// endpoint in API version 4.
+type LogsResponseV4 struct {
+	Response []LogV4 `json:"response"`
+	Alerts
+	Summary struct {
+		Count uint64 `json:"count"`
+	} `json:"summary"`
 }
