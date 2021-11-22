@@ -375,7 +375,7 @@ func addFederationResolverMappingsForCurrentUser(u *auth.CurrentUser, tx *sql.Tx
 
 		changelogMsg := "FEDERATION DELIVERY SERVICE: %s, ID: %d, ACTION: User %s successfully added federation resolvers [ %s ]"
 		changelogMsg = fmt.Sprintf(changelogMsg, fed.DeliveryService, fedID, u.UserName, inserted)
-		api.CreateChangeLogRawTx(api.ApiChange, changelogMsg, u, tx)
+		api.CreateChangeLogRawTx(changelogMsg, u, tx)
 	}
 	return nil, nil, http.StatusOK
 }
@@ -449,7 +449,7 @@ func RemoveFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *ht
 	ipList := fmt.Sprintf("[ %s ]", strings.Join(ips, ", "))
 	msg := fmt.Sprintf("%s successfully deleted all federation resolvers: %s", inf.User.UserName, ipList)
 	changelogMsg := fmt.Sprintf("USER: %s, ID: %d, ACTION: %s", inf.User.UserName, inf.User.ID, msg)
-	api.CreateChangeLogRawTx(api.ApiChange, changelogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changelogMsg, inf.User, tx)
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, msg, msg)
 }
@@ -495,7 +495,7 @@ func ReplaceFederationResolverMappingsForCurrentUser(w http.ResponseWriter, r *h
 	ipList := fmt.Sprintf("[ %s ]", strings.Join(ips, ", "))
 	deletedMsg := fmt.Sprintf("%s successfully deleted all federation resolvers: %s", inf.User.UserName, ipList)
 	changelogMsg := fmt.Sprintf("USER: %s, ID: %d, ACTION: %s", inf.User.UserName, inf.User.ID, deletedMsg)
-	api.CreateChangeLogRawTx(api.ApiChange, changelogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changelogMsg, inf.User, tx)
 
 	mappings, userErr, sysErr := getMappingsFromRequestBody(r.Body)
 	if userErr != nil || sysErr != nil {

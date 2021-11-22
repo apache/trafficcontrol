@@ -64,7 +64,7 @@ func DeleteName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "cdn was deleted.")
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted CDN", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx("CDN: "+string(cdnName)+", ID: "+strconv.Itoa(cdnID)+", ACTION: Deleted CDN", inf.User, inf.Tx.Tx)
 }
 
 func deleteCDNByName(tx *sql.Tx, name tc.CDNName) error {

@@ -391,14 +391,14 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysRe
 	dsID, _, ok, err := getDSIDAndCDNIDFromName(tx, *req.DeliveryService)
 	if err != nil {
 		log.Errorf("deliveryservice.GenerateSSLKeys: getting DS ID from name " + err.Error())
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		api.CreateChangeLogRawTx("DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 		if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
 			log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 		}
 		return fmt.Errorf("deliveryservice.GenerateSSLKeys: getting DS ID from name: %v", err)
 	} else if !ok {
 		log.Errorf("no DS with name " + *req.DeliveryService)
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		api.CreateChangeLogRawTx("DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 		if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
 			log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 		}
@@ -408,7 +408,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysRe
 
 	if cfg == nil {
 		log.Errorf("acme: config was nil for provider %s", provider)
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		api.CreateChangeLogRawTx("DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 		if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
 			log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 		}
@@ -432,7 +432,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysRe
 		acmeAccount := GetAcmeAccountConfig(cfg, provider)
 		if acmeAccount == nil {
 			log.Errorf("acme: no account information found for %s", provider)
-			api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+			api.CreateChangeLogRawTx("DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 			if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
 				log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 			}
@@ -444,7 +444,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysRe
 	client, err := GetAcmeClient(account, userTx, db, req.Key)
 	if err != nil {
 		log.Errorf("acme: getting acme client for provider %s: %v", provider, err)
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		api.CreateChangeLogRawTx("DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 		if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
 			log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 		}
@@ -454,7 +454,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysRe
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		log.Errorf(deliveryService + ": Error generating private key: " + err.Error())
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		api.CreateChangeLogRawTx("DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 		if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
 			log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 		}
@@ -469,7 +469,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysRe
 	certificates, err := client.Certificate.Obtain(request)
 	if err != nil {
 		log.Errorf(deliveryService+": Error obtaining acme certificate from %s: %s", provider, err.Error())
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		api.CreateChangeLogRawTx("DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 		if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
 			log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 		}
@@ -489,7 +489,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysRe
 	keyPem, err := ConvertPrivateKeyToKeyPem(priv)
 	if err != nil {
 		log.Errorf(deliveryService + ": Error converting private key to PEM: " + err.Error())
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		api.CreateChangeLogRawTx("DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 		if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
 			log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 		}
@@ -507,7 +507,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysRe
 
 	if err := tv.PutDeliveryServiceSSLKeys(dsSSLKeys, tx, context.Background()); err != nil {
 		log.Errorf("Error putting ACME certificate in Traffic Vault: %s", err.Error())
-		api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
+		api.CreateChangeLogRawTx("DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: FAILED to add SSL keys with "+provider, currentUser, logTx)
 		if asycErr := api.UpdateAsyncStatus(db, api.AsyncFailed, "ACME renewal failed.", asyncStatusId, true); asycErr != nil {
 			log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 		}
@@ -532,7 +532,7 @@ func GetAcmeCertificates(cfg *config.Config, req tc.DeliveryServiceAcmeSSLKeysRe
 	}
 	tx2.Commit()
 
-	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: Added SSL keys with "+provider, currentUser, logTx)
+	api.CreateChangeLogRawTx("DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: Added SSL keys with "+provider, currentUser, logTx)
 	if asycErr := api.UpdateAsyncStatus(db, api.AsyncSucceeded, "ACME renewal complete.", asyncStatusId, true); asycErr != nil {
 		log.Errorf("updating async status for id %v: %v", asyncStatusId, asycErr)
 	}

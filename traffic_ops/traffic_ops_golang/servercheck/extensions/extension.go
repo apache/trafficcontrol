@@ -83,7 +83,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	changeLogMsg := fmt.Sprintf("TO_EXTENSION: %s, ID: %d, ACTION: CREATED", *toExt.Name, id)
 
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, inf.Tx.Tx)
 
 	api.WriteRespRaw(w, r, resp)
 }
@@ -252,7 +252,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	changeLogMsg := fmt.Sprintf("TO_EXTENSION: %d, ID: %d, ACTION: Deleted", id, id)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, inf.Tx.Tx)
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "Extensions deleted.")
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
 }

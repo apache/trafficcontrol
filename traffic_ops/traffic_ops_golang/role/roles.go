@@ -428,7 +428,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, roleResponse)
 	changeLogMsg := fmt.Sprintf("ROLE: %s, ID: %d, ACTION: Updated Role", roleName, roleID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 }
 
 func deleteRoleQuery() string {
@@ -515,7 +515,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "role was deleted.")
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
 	changeLogMsg := fmt.Sprintf("ROLE: %s, ACTION: Deleted Role", roleName)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 }
 
 // Create will create a new role based on the struct supplied.
@@ -586,7 +586,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, roleResponse)
 	changeLogMsg := fmt.Sprintf("ROLE: %s, ID: %d, ACTION: Created Role", roleName, roleID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 }
 
 // Get will read the roles and return them to the user.

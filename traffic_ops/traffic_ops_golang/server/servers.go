@@ -1631,7 +1631,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: updated", *server.HostName, *server.DomainName, *server.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 }
 
 func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
@@ -1713,7 +1713,7 @@ func createV2(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, server)
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 }
 
 func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
@@ -1801,7 +1801,7 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 }
 
 func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
@@ -1885,7 +1885,7 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, server)
 
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 }
 
 // Create is the handler for POST requests to /servers.
@@ -2069,5 +2069,5 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server was deleted.", serverV2)
 	}
 	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: deleted", *server.HostName, *server.DomainName, *server.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 }

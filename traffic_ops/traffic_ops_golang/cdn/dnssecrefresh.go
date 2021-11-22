@@ -346,7 +346,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, asyncDB *sqlx.DB, tv trafficvault.TrafficVau
 		clMsg = fmt.Sprintf("Refreshed %d DNSSEC keys, but %d errors occurred", updateCount, errCount)
 	}
 	if updateCount > 0 || errCount > 0 || putErr {
-		api.CreateChangeLogRawTx(api.ApiChange, clMsg, user, tx)
+		api.CreateChangeLogRawTx(clMsg, user, tx)
 	}
 	if asyncErr := api.UpdateAsyncStatus(asyncDB, status, msg, jobID, true); asyncErr != nil {
 		log.Errorf("updating async status for id %d: %v", jobID, asyncErr)

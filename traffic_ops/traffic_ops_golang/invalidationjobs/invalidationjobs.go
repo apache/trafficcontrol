@@ -271,7 +271,7 @@ const deleteQueryV4 = `
 DELETE
 FROM job
 WHERE job.id=$1
-RETURNING 
+RETURNING
 	job.id,
 	job.asset_url,
 	(
@@ -675,7 +675,7 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 		result.TTLHours,
 		result.InvalidationType,
 	)
-	api.CreateChangeLogRawTx(api.ApiChange,
+	api.CreateChangeLogRawErr(
 		changeLogMsg,
 		inf.User,
 		inf.Tx.Tx)
@@ -826,7 +826,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	if len(conflicts) > 0 {
 		duplicate = "(duplicate) "
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, api.Created+" content invalidation job "+duplicate+"- ID: "+
+	api.CreateChangeLogRawTx(api.Created+" content invalidation job "+duplicate+"- ID: "+
 		strconv.FormatUint(*result.ID, 10)+" DS: "+*result.DeliveryService+" URL: '"+*result.AssetURL+
 		"' Params: '"+*result.Parameters+"'", inf.User, inf.Tx.Tx)
 }
@@ -1015,7 +1015,7 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 		input.TTLHours,
 		input.InvalidationType,
 	)
-	api.CreateChangeLogRawTx(api.ApiChange,
+	api.CreateChangeLogRawErr(
 		changeLogMsg,
 		inf.User,
 		inf.Tx.Tx)
@@ -1197,7 +1197,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
 	api.WriteAndLogErr(w, r, append(resp, '\n'))
 
-	api.CreateChangeLogRawTx(api.ApiChange, api.Updated+" content invalidation job - ID: "+strconv.FormatUint(*job.ID, 10)+" DS: "+*job.DeliveryService+" URL: '"+*job.AssetURL+"' Params: '"+*job.Parameters+"'", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.Updated+" content invalidation job - ID: "+strconv.FormatUint(*job.ID, 10)+" DS: "+*job.DeliveryService+" URL: '"+*job.AssetURL+"' Params: '"+*job.Parameters+"'", inf.User, inf.Tx.Tx)
 }
 
 // Used by DELETE requests to `/jobs`, deletes an existing content invalidation job
@@ -1296,7 +1296,7 @@ func DeleteV40(w http.ResponseWriter, r *http.Request) {
 		result.TTLHours,
 		result.InvalidationType,
 	)
-	api.CreateChangeLogRawTx(api.ApiChange,
+	api.CreateChangeLogRawErr(
 		changeLogMsg,
 		inf.User,
 		inf.Tx.Tx)
@@ -1398,7 +1398,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(http.CanonicalHeaderKey("content-type"), rfc.ApplicationJSON)
 	api.WriteAndLogErr(w, r, append(resp, '\n'))
 
-	api.CreateChangeLogRawTx(api.ApiChange, api.Deleted+" content invalidation job - ID: "+strconv.FormatUint(*result.ID, 10)+" DS: "+*result.DeliveryService+" URL: '"+*result.AssetURL+"' Params: '"+*result.Parameters+"'", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx(api.Deleted+" content invalidation job - ID: "+strconv.FormatUint(*result.ID, 10)+" DS: "+*result.DeliveryService+" URL: '"+*result.AssetURL+"' Params: '"+*result.Parameters+"'", inf.User, inf.Tx.Tx)
 }
 
 // Validates the fields submitted for an InvalidationJobCreateV40. These errors

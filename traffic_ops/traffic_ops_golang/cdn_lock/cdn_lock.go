@@ -134,7 +134,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, cdnLock)
 
 	changeLogMsg := fmt.Sprintf("USER: %s, CDN: %s, ACTION: %s lock acquired", inf.User.UserName, cdnLock.CDN, soft)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 }
 
 // Delete is the handler for DELETE requests to /cdn_locks.
@@ -172,5 +172,5 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "cdn lock deleted")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, result)
 	changeLogMsg := fmt.Sprintf("USER: %s, CDN: %s, ACTION: Lock Released", result.UserName, cdn)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 }

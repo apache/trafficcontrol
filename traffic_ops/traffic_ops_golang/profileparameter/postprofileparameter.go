@@ -68,7 +68,7 @@ func PostProfileParam(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "PROFILE: "+profileName+", ID: "+strconv.FormatInt(*profileParam.ProfileID, 10)+", ACTION: Assigned "+strconv.Itoa(len(*profileParam.ParamIDs))+" parameters to profile", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx("PROFILE: "+profileName+", ID: "+strconv.FormatInt(*profileParam.ProfileID, 10)+", ACTION: Assigned "+strconv.Itoa(len(*profileParam.ParamIDs))+" parameters to profile", inf.User, inf.Tx.Tx)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("%d parameters were assigned to the %s profile", len(*profileParam.ParamIDs), profileName), profileParam)
 }
 

@@ -130,7 +130,7 @@ func Queue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.CreateChangeLogRawTx(api.ApiChange, "CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+str+", ACTION: server updates "+reqObj.Action+"d on "+strconv.Itoa(int(rowsAffected))+" servers", inf.User, inf.Tx.Tx)
+	api.CreateChangeLogRawTx("CDN: "+string(cdnName)+", ID: "+strconv.Itoa(inf.IntParams["id"])+str+", ACTION: server updates "+reqObj.Action+"d on "+strconv.Itoa(int(rowsAffected))+" servers", inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, tc.CDNQueueUpdateResponse{Action: reqObj.Action, CDNID: int64(inf.IntParams["id"])})
 }
 

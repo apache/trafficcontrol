@@ -160,7 +160,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, acmeAccount)
 
 	changeLogMsg := fmt.Sprintf("ACME ACCOUNT: %s %s, ACTION: created", *acmeAccount.Email, *acmeAccount.Provider)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 }
 
 func Update(w http.ResponseWriter, r *http.Request) {
@@ -211,7 +211,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, acmeAccount)
 
 	changeLogMsg := fmt.Sprintf("ACME ACCOUNT: %s %s, ACTION: updated", *acmeAccount.Email, *acmeAccount.Provider)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 }
 
 // Delete removes the information about an ACME account.
@@ -247,5 +247,5 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Acme account deleted")
 
 	changeLogMsg := fmt.Sprintf("ACME ACCOUNT: %s %s, ACTION: deleted", email, provider)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	api.CreateChangeLogRawTx(changeLogMsg, inf.User, tx)
 }

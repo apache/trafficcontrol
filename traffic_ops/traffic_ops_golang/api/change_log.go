@@ -26,18 +26,8 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
-
-type ChangeLog struct {
-	ID          int          `json:"id" db:"id"`
-	Level       string       `json:"level" db:"level"`
-	Message     string       `json:"message" db:"message"`
-	TMUser      int          `json:"tmUser" db:"tm_user"`
-	TicketNum   string       `json:"ticketNum" db:"ticketnum"`
-	LastUpdated tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
-}
 
 type ChangeLogger interface {
 	ChangeLogMessage(action string) (string, error)
@@ -50,22 +40,22 @@ const (
 	Deleted   = "Deleted"
 )
 
-func CreateChangeLog(level string, action string, i Identifier, user *auth.CurrentUser, tx *sql.Tx) error {
+func CreateChangeLog(action string, i Identifier, user *auth.CurrentUser, tx *sql.Tx) error {
 	t, ok := i.(ChangeLogger)
 	if !ok {
 		keys, _ := i.GetKeys()
-		return CreateChangeLogBuildMsg(level, action, user, tx, i.GetType(), i.GetAuditName(), keys)
+		return CreateChangeLogBuildMsg(action, user, tx, i.GetType(), i.GetAuditName(), keys)
 	}
 	msg, err := t.ChangeLogMessage(action)
 	if err != nil {
 		log.Errorf("%++v creating log message for %++v", err, t)
 		keys, _ := i.GetKeys()
-		return CreateChangeLogBuildMsg(level, action, user, tx, i.GetType(), i.GetAuditName(), keys)
+		return CreateChangeLogBuildMsg(action, user, tx, i.GetType(), i.GetAuditName(), keys)
 	}
-	return CreateChangeLogRawErr(level, msg, user, tx)
+	return CreateChangeLogRawErr(msg, user, tx)
 }
 
-func CreateChangeLogBuildMsg(level string, action string, user *auth.CurrentUser, tx *sql.Tx, objType string, auditName string, keys map[string]interface{}) error {
+func CreateChangeLogBuildMsg(action string, user *auth.CurrentUser, tx *sql.Tx, objType string, auditName string, keys map[string]interface{}) error {
 	keyStr := "{ "
 	for key, value := range keys {
 		keyStr += key + ":" + fmt.Sprintf("%v", value) + " "
@@ -76,18 +66,18 @@ func CreateChangeLogBuildMsg(level string, action string, user *auth.CurrentUser
 		id = "N/A"
 	}
 	msg := fmt.Sprintf("%v: %v, ID: %v, ACTION: %v %v, keys: %v", strings.ToTitle(objType), auditName, id, strings.Title(action), objType, keyStr)
-	return CreateChangeLogRawErr(level, msg, user, tx)
+	return CreateChangeLogRawErr(msg, user, tx)
 }
 
-func CreateChangeLogRawErr(level string, msg string, user *auth.CurrentUser, tx *sql.Tx) error {
-	if _, err := tx.Exec(`INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`, level, msg, user.ID); err != nil {
-		return errors.New("Inserting change log level '" + level + "' message '" + msg + "' user '" + user.UserName + "': " + err.Error())
+func CreateChangeLogRawErr(msg string, user *auth.CurrentUser, tx *sql.Tx) error {
+	if _, err := tx.Exec(`INSERT INTO log (message, "user") VALUES ($1, $2)`, msg, user.ID); err != nil {
+		return errors.New("Inserting change log message '" + msg + "' user '" + user.UserName + "': " + err.Error())
 	}
 	return nil
 }
 
-func CreateChangeLogRawTx(level string, msg string, user *auth.CurrentUser, tx *sql.Tx) {
-	if _, err := tx.Exec(`INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`, level, msg, user.ID); err != nil {
-		log.Errorln("Inserting change log level '" + level + "' message '" + msg + "' user '" + user.UserName + "': " + err.Error())
+func CreateChangeLogRawTx(msg string, user *auth.CurrentUser, tx *sql.Tx) {
+	if _, err := tx.Exec(`INSERT INTO log (message, "user") VALUES ($1, $2)`, msg, user.ID); err != nil {
+		log.Errorln("Inserting change log message '" + msg + "' user '" + user.UserName + "': " + err.Error())
 	}
 }

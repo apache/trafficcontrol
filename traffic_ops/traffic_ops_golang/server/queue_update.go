@@ -24,8 +24,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"net/http"
+
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -76,7 +77,6 @@ func QueueUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = api.CreateChangeLogBuildMsg(
-		api.ApiChange,
 		api.Updated,
 		inf.User,
 		inf.Tx.Tx,

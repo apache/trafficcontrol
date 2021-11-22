@@ -106,7 +106,6 @@ func AssignFederationResolversToFederationHandler(w http.ResponseWriter, r *http
 	}
 
 	api.CreateChangeLogRawTx(
-		api.ApiChange,
 		fmt.Sprintf("FEDERATION: %s, ID: %d, ACTION: Assign Federation Resolvers %v to Federation", name, fedID, reqObj.FedResolverIDs),
 		inf.User,
 		inf.Tx.Tx,

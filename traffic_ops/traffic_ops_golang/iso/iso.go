@@ -167,7 +167,6 @@ func isos(w http.ResponseWriter, req *http.Request, tx *sqlx.Tx, user *auth.Curr
 
 	// Create changelog entry
 	err = api.CreateChangeLogBuildMsg(
-		api.ApiChange,
 		api.Created,
 		user,
 		tx.Tx,
