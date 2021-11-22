@@ -32,7 +32,7 @@ var ChangeLogService = function($http, $rootScope, ENV) {
 
 	this.getChangeLogs = function(queryParams) {
 		$rootScope.$broadcast('changeLogService::getChangeLogs');
-		return $http.get(ENV.api.unstable + 'logs', {params: queryParams}).then(
+		return $http.get(ENV.api.stable + 'logs', {params: queryParams}).then(
 			function(result) {
 				return result.data.response;
 			},
