@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added Rocky Linux 8 support
 - Traffic Monitors now peer with other Traffic Monitors of the same status (e.g. ONLINE with ONLINE, OFFLINE with OFFLINE), instead of all peering with ONLINE.
 - Added permissions to the role form in traffic portal
+- Changed the output of the `/logs` Traffic Ops API endpoint to be simpler and with no unnecessary fields.
 
 ## [6.1.0] - 2022-01-18
 ### Added
