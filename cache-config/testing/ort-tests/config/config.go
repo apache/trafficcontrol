@@ -157,6 +157,8 @@ type TrafficOpsDB struct {
 type Default struct {
 	Session Session   `json:"session"`
 	Log     Locations `json:"logLocations"`
+	// IncludeSystemTests has no effect or known purpose.
+	//
 	// Deprecated: This field has no effect or known purpose.
 	IncludeSystemTests bool `json:"includeSystemTests"`
 }
