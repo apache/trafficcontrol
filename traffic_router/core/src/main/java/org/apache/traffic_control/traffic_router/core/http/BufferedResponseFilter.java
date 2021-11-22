@@ -15,47 +15,25 @@
 
 package org.apache.traffic_control.traffic_router.core.http;
 
+import com.google.common.net.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.lang.reflect.Field;
 
 public class BufferedResponseFilter extends OncePerRequestFilter {
 	public static final Logger LOGGER = LogManager.getLogger(BufferedResponseFilter.class);
 
 	public void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain) throws IOException, ServletException {
-		final ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
+		final BufferedResponse responseWrapper = new BufferedResponse(response);
 
 		chain.doFilter(request, responseWrapper);
 
-		if (responseWrapper.getContentSize() == 0) {
-			int contentLength = 0;
-
-			try {
-				final Field contentLengthField = responseWrapper.getClass().getDeclaredField("contentLength");
-				contentLengthField.setAccessible(true);
-				final Object contentLengthObject = contentLengthField.get(responseWrapper);
-				/* E.g., a HEAD request whose corresponding GET request has a non-empty body */
-				if (contentLengthObject != null) {
-					contentLength = (Integer) contentLengthObject;
-				}
-			} catch (ReflectiveOperationException e) {
-				LOGGER.error("Encountered a " + e.getClass() + "exception in " + this.getClass() + ": " + e.getMessage());
-			} finally {
-				response.setContentLength(contentLength);
-			}
-		} else {
-			/* When the content size is greater than 0, copyBodyToResponse()
-			 * will set Content-Length.
-			 */
-			responseWrapper.copyBodyToResponse();
-		}
+		responseWrapper.copyBodyToResponse();
 	}
 }
