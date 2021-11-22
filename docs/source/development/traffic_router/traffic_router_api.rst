@@ -79,6 +79,7 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
+	Connection: close
 	Content-Type: application/json;charset=UTF-8
 	Content-Length: 1214
 	Date: Mon, 04 Nov 2019 19:48:04 GMT
@@ -162,6 +163,7 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
+	Connection: close
 	Content-Disposition: inline;filename=f.txt
 	Content-Type: application/json;charset=UTF-8
 	Content-Length: 131
@@ -205,6 +207,7 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
+	Connection: close
 	Content-Type: application/json;charset=UTF-8
 	Content-Length: 35
 	Date: Mon, 04 Nov 2019 19:48:04 GMT
@@ -235,6 +238,7 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
+	Connection: close
 	Content-Type: application/json;charset=UTF-8
 	Content-Length: 278
 	Date: Mon, 04 Nov 2019 19:48:04 GMT
@@ -291,6 +295,7 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
+	Connection: close
 	Content-Type: application/json;charset=UTF-8
 	Content-Length: 253
 	Date: Mon, 04 Nov 2019 19:48:04 GMT
@@ -418,6 +423,7 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
+	Connection: close
 	Content-Type: application/json;charset=UTF-8
 	Content-Length: 828
 	Date: Mon, 04 Nov 2019 19:48:04 GMT
@@ -568,6 +574,7 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
+	Connection: close
 	Content-Type: application/json;charset=UTF-8
 	Content-Length: 137
 	Date: Mon, 04 Nov 2019 19:48:04 GMT
@@ -609,6 +616,7 @@ Response Structure
 	:caption: Response Example
 
 	HTTP/1.1 200 OK
+	Connection: close
 	Content-Type: application/json;charset=UTF-8
 	Content-Length: 163
 	Date: Mon, 04 Nov 2019 19:48:04 GMT
