@@ -150,7 +150,7 @@ returns a **400** **response** with
 {
   "alerts":[
    { 
-     "text":"cannot associate multiple profiles to a server",
+     "text":"cannot associate multiple profiles to a server with current API version but can be done via 5.0+",
      "level":"error"
    }
 ]}
