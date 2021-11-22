@@ -17,12 +17,13 @@ package v2
 import (
 	"bytes"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"net/mail"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -426,7 +427,7 @@ func ForceDeleteTestUsers(t *testing.T) {
 	}
 
 	// there is a constraint that prevents users from being deleted when they have a log
-	q := `DELETE FROM log WHERE NOT tm_user = (SELECT id FROM tm_user WHERE username = 'admin')`
+	q := `DELETE FROM log WHERE NOT "user" = (SELECT id FROM tm_user WHERE username = 'admin')`
 	err = execSQL(db, q)
 	if err != nil {
 		t.Errorf("cannot execute SQL: %s; SQL is %s", err.Error(), q)

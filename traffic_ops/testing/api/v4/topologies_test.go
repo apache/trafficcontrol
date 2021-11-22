@@ -474,11 +474,8 @@ func DeleteTestTopologies(t *testing.T) {
 		if len(deleteLog.Response) != 1 {
 			t.Fatalf("log entry length - expected: 1, actual: %d", len(deleteLog.Response))
 		}
-		if deleteLog.Response[0].Message == nil {
-			t.Fatal("Traffic Ops responded with a representation of a log entry with null or undefined message")
-		}
-		if !strings.Contains(*deleteLog.Response[0].Message, top.Name) {
-			t.Errorf("topology deletion audit log entry - expected: message containing topology name '%s', actual: %s", top.Name, *deleteLog.Response[0].Message)
+		if !strings.Contains(deleteLog.Response[0].Message, top.Name) {
+			t.Errorf("topology deletion audit log entry - expected: message containing topology name '%s', actual: %s", top.Name, deleteLog.Response[0].Message)
 		}
 
 		opts.QueryParameters.Del("limit")

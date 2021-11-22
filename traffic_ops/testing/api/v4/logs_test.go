@@ -50,17 +50,17 @@ func GetTestLogsByLimit(t *testing.T) {
 
 func GetTestLogsByUsername(t *testing.T) {
 	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("username", "admin")
+	opts.QueryParameters.Set("user", "admin")
 	toLogs, _, err := TOSession.GetLogs(opts)
 	if err != nil {
-		t.Errorf("error getting logs: %v - alerts: %+v", err, toLogs.Alerts)
+		t.Errorf("error getting logs: %v", err)
 	}
 	if len(toLogs.Response) <= 0 {
 		t.Fatalf("Get logs by username: incorrect number of logs returned (%d)", len(toLogs.Response))
 	}
-	for _, user := range toLogs.Response {
-		if *user.User != TOSession.UserName {
-			t.Errorf("incorrect username seen in logs, expected: `admin`, got: %v", *user.User)
+	for _, log := range toLogs.Response {
+		if log.User != TOSession.UserName {
+			t.Errorf("incorrect username seen in logs, expected: `admin`, got: %s", log.User)
 		}
 	}
 }
