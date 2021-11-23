@@ -25,6 +25,7 @@ Retrieves SSL certificate expiration information.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: ACME:READ
 :Response Type:  Array
 
 Request Structure

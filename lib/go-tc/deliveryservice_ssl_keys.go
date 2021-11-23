@@ -93,6 +93,7 @@ type DeliveryServiceSSLKeysV15 struct {
 	Expiration time.Time `json:"expiration,omitempty"`
 }
 
+// SSLKeyExpirationInformation contains information about an SSL key's expiration.
 type SSLKeyExpirationInformation struct {
 	DeliveryService   *string    `json:"deliveryservice"`
 	DeliveryServiceId *int       `json:"deliveryservice_id"`
