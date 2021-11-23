@@ -22,6 +22,7 @@ package tc
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
@@ -65,4 +66,20 @@ func ExampleInvalidationJobInput_TTLHours_number() {
 	}
 	fmt.Println(ttl)
 	// Output: 2
+}
+
+func ExampleInvalidationJobV4_String() {
+	t, _ := time.Parse(time.RFC3339, "2021-11-08T01:02:03Z")
+	j := InvalidationJobV4{
+		AssetURL:         "https://example.com/.*",
+		CreatedBy:        "noone",
+		DeliveryService:  "demo1",
+		ID:               5,
+		InvalidationType: REFETCH,
+		StartTime:        t,
+		TTLHours:         72,
+	}
+
+	fmt.Println(j)
+	// Output: InvalidationJobV4{ID: 5, AssetURL: "https://example.com/.*", CreatedBy: "noone", DeliveryService: "demo1", TTLHours: 72, InvalidationType: "REFETCH", StartTime: "2021-11-08T01:02:03Z"}
 }

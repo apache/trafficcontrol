@@ -59,6 +59,10 @@ func runSysctl(cfg config.Cfg) {
 	}
 }
 
+const LockFilePath = "/var/run/t3c.lock"
+const LockFileRetryInterval = time.Second
+const LockFileRetryTimeout = time.Minute
+
 func main() {
 	var syncdsUpdate torequest.UpdateStatus
 	var lock util.FileLock
@@ -69,6 +73,16 @@ func main() {
 	} else if cfg == (config.Cfg{}) { // user used the --help option
 		os.Exit(Success)
 	}
+
+	log.Infoln("Trying to acquire app lock")
+	for lockStart := time.Now(); !lock.GetLock(LockFilePath); {
+		if time.Since(lockStart) > LockFileRetryTimeout {
+			log.Errorf("Failed to get app lock after %v seconds, another instance is running, exiting without running\n", int(LockFileRetryTimeout/time.Second))
+			os.Exit(AlreadyRunning)
+		}
+		time.Sleep(LockFileRetryInterval)
+	}
+	log.Infoln("Acquired app lock")
 
 	if cfg.UseGit == config.UseGitYes {
 		err := util.EnsureConfigDirIsGitRepo(cfg)
@@ -103,11 +117,6 @@ func main() {
 	} else if !util.CleanTmpDir(cfg) {
 		log.Errorln("CleanTmpDir failed, cannot continue")
 		os.Exit(GeneralFailure)
-	}
-	if !cfg.ReportOnly {
-		if !lock.GetLock(config.TmpBase + "/to_ort.lock") {
-			os.Exit(AlreadyRunning)
-		}
 	}
 
 	log.Infoln(time.Now().Format(time.RFC3339))

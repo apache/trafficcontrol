@@ -101,6 +101,8 @@ type Config struct {
 	HTTPTimeout                  time.Duration   `json:"-"`
 	PeerOptimistic               bool            `json:"peer_optimistic"`
 	PeerOptimisticQuorumMin      int             `json:"peer_optimistic_quorum_min"`
+	DistributedPolling           bool            `json:"distributed_polling"`
+	StatPolling                  bool            `json:"stat_polling"`
 	MaxEvents                    uint64          `json:"max_events"`
 	HealthFlushInterval          time.Duration   `json:"-"`
 	StatFlushInterval            time.Duration   `json:"-"`
@@ -138,6 +140,7 @@ var DefaultConfig = Config{
 	HTTPTimeout:                  2 * time.Second,
 	PeerOptimistic:               true,
 	PeerOptimisticQuorumMin:      0,
+	StatPolling:                  true,
 	MaxEvents:                    200,
 	HealthFlushInterval:          200 * time.Millisecond,
 	StatFlushInterval:            200 * time.Millisecond,

@@ -12,11 +12,4 @@
 # limitations under the License.
 #
 
-TO_DIR="/opt/traffic_ops/app"; export TO_DIR
-
-# Setup GOPATH
-GOPATH="/opt/traffic_ops/go"; export GOPATH
-GOBIN=$GOPATH/bin
-
-# Setup PATH
-PATH=$PATH:$GOBIN:/usr/local/go/bin
+export TO_DIR=/opt/traffic_ops/app;

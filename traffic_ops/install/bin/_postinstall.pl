@@ -17,8 +17,7 @@
 use lib qw(/opt/traffic_ops/install/lib /opt/traffic_ops/app/lib /opt/traffic_ops/app/local/lib/perl5);
 
 $ENV{PERL5LIB} = "/opt/traffic_ops/install/lib:/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5:$ENV{PERL5LIB}";
-$ENV{PATH}     = "/usr/bin:/opt/traffic_ops/go/bin:/usr/local/go/bin:/opt/traffic_ops/install/bin:$ENV{PATH}";
-$ENV{GOPATH} = "/opt/traffic_ops/go";
+$ENV{PATH}     = "/usr/bin:/usr/local/go/bin:/opt/traffic_ops/install/bin:$ENV{PATH}";
 
 use strict;
 use warnings;

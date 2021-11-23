@@ -13,10 +13,10 @@
 */
 
 import { Component, OnInit } from "@angular/core";
-import { Router } from "@angular/router";
+import {Router} from "@angular/router";
 
-import { User } from "./models";
-import { AuthenticationService } from "./services";
+import { User } from "src/app/models";
+import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
 
 /**
  * The most basic component that contains everything else. This should be kept pretty simple.
@@ -36,7 +36,7 @@ export class AppComponent implements OnInit {
 	/**
 	 * Constructor.
 	 */
-	constructor(private readonly router: Router, private readonly auth: AuthenticationService) {
+	constructor(private readonly router: Router, private readonly auth: CurrentUserService) {
 	}
 
 	/**
@@ -51,13 +51,9 @@ export class AppComponent implements OnInit {
 	 * Sets up the current user.
 	 */
 	public ngOnInit(): void {
-		this.auth.updateCurrentUser().then(
-			success =>  {
-				if (success) {
-					this.currentUser = this.auth.currentUser;
-				}
-			}
-		);
+		this.auth.userChanged.subscribe(user => {
+			this.currentUser = user;
+		});
 	}
 
 }

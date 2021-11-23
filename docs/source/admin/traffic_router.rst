@@ -577,7 +577,7 @@ HTTP Specifics
 .. code-block:: text
 	:caption: Sample Message
 
-	1452197640.936 qtype=HTTP chi=69.241.53.218 rhi=- url="http://foo.mm-test.jenkins.cdnlab.comcast.net/some/asset.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" pssc=302 ttms=0 rurl="http://odol-atsec-sim-114.mm-test.jenkins.cdnlab.comcast.net:8090/some/asset.m3u8" rh="Accept: */*" rh="myheader: asdasdasdasfasg"
+	1452197640.936 qtype=HTTP chi=69.241.53.218 rhi=- url="http://foo.test.example.com/some/asset.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=GEO rloc="40.252611,58.439389" rdtl=- rerr="-" pssc=302 ttms=0 rurl="http://cache1.test.example.com:8090/some/asset.m3u8" rh="Accept: */*" rh="myheader: asdasdasdasfasg"
 
 .. table:: Request Fields
 

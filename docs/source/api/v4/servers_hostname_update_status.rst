@@ -23,7 +23,7 @@
 
 ``GET``
 =======
-Retrieves information regarding pending updates and revalidation jobs for a given server
+Retrieves information regarding pending updates and :term:`Content Invalidation Jobs` for a given server
 
 :Auth. Required: Yes
 :Roles Required: None
@@ -59,14 +59,14 @@ Each object in the returned array\ [#uniqueness]_ will contain the following fie
 :host_id:              The integral, unique identifier for the server for which the other fields in this object represent the pending updates and revalidation status
 :host_name:            The (short) hostname of the server for which the other fields in this object represent the pending updates and revalidation status
 :parent_pending:       A boolean telling whether or not any :term:`Topology` ancestor or :term:`parent` of this server has pending updates
-:parent_reval_pending: A boolean telling whether or not any :term:`Topology` ancestor or :term:`parent` of this server has pending revalidation jobs
-:reval_pending:        ``true`` if the server has pending revalidation jobs, ``false`` otherwise
+:parent_reval_pending: A boolean telling whether or not any :term:`Topology` ancestor or :term:`parent` of this server has pending :term:`Content Invalidation Jobs`
+:reval_pending:        ``true`` if the server has pending :term:`Content Invalidation Jobs`, ``false`` otherwise
 :status:               The name of the status of this server
 
 	.. seealso:: :ref:`health-proto` gives more information on how these statuses are used, and the ``GET`` method of the :ref:`to-api-statuses` endpoint can be used to retrieve information about all server statuses configured in Traffic Ops.
 
 :upd_pending:       ``true`` if the server has pending updates, ``false`` otherwise
-:use_reval_pending: A boolean which tells :term:`ORT` whether or not this version of Traffic Ops should use pending revalidation jobs
+:use_reval_pending: A boolean which tells :term:`ORT` whether or not this version of Traffic Ops should use pending :term:`Content Invalidation Jobs`
 
 	.. note:: This field was introduced to give :term:`ORT` the ability to work with Traffic Control versions 1.x and 2.x seamlessly - as of Traffic Control v3.0 there is no reason for this field to ever be ``false``.
 

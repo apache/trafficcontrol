@@ -504,6 +504,18 @@ func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 	return name, true, nil
 }
 
+// GetDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
+func GetDSIDFromXMLID(tx *sql.Tx, xmlID string) (int, bool, error) {
+	var id int
+	if err := tx.QueryRow(`SELECT id FROM deliveryservice WHERE xml_id = $1`, xmlID).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return id, false, nil
+		}
+		return id, false, fmt.Errorf("querying ID for delivery service XMLID '%v': %v", xmlID, err)
+	}
+	return id, true, nil
+}
+
 // GetDSCDNIdFromID loads the DeliveryService's cdn ID from the database, from the delivery service ID. Returns whether the delivery service was found, and any error.
 func GetDSCDNIdFromID(tx *sql.Tx, dsID int) (int, bool, error) {
 	var cdnID int
@@ -1421,16 +1433,17 @@ func CachegroupParameterAssociationExists(id int, cachegroup int, tx *sql.Tx) (b
 	return count > 0, nil
 }
 
-// GetDeliveryServiceType returns the type of the deliveryservice.
-func GetDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, bool, error) {
+// GetDeliveryServiceTypeAndCDNName returns the type and the CDN name of the deliveryservice.
+func GetDeliveryServiceTypeAndCDNName(dsID int, tx *sql.Tx) (tc.DSType, string, bool, error) {
 	var dsType tc.DSType
-	if err := tx.QueryRow(`SELECT t.name FROM deliveryservice as ds JOIN type t ON ds.type = t.id WHERE ds.id=$1`, dsID).Scan(&dsType); err != nil {
+	var cdnName string
+	if err := tx.QueryRow(`SELECT t.name, c.name as cdn FROM deliveryservice as ds JOIN type t ON ds.type = t.id JOIN cdn c ON c.id = ds.cdn_id WHERE ds.id=$1`, dsID).Scan(&dsType, &cdnName); err != nil {
 		if err == sql.ErrNoRows {
-			return tc.DSTypeInvalid, false, nil
+			return tc.DSTypeInvalid, cdnName, false, nil
 		}
-		return tc.DSTypeInvalid, false, errors.New("querying type from delivery service: " + err.Error())
+		return tc.DSTypeInvalid, cdnName, false, errors.New("querying type from delivery service: " + err.Error())
 	}
-	return dsType, true, nil
+	return dsType, cdnName, true, nil
 }
 
 // GetDeliveryServiceTypeAndTopology returns the type of the deliveryservice and the name of its topology.

@@ -52,6 +52,14 @@ Glossary
 
 		.. seealso:: For a more complete description of Cache Groups, see the :ref:`cache-groups` overview section.
 
+	Content Invalidation Job
+	Content Invalidation Jobs
+	job
+	jobs
+		:dfn:`Content Invalidation Jobs` are a way to force :term:`cache servers` to treat their cached content as stale (or even not in cache at all).
+
+		.. seealso:: For a more complete description of Content Invalidation Jobs, see the :ref:`jobs` overview section.
+
 	content routing
 		Directing clients (or client systems) to a particular location or device in a location for optimal delivery of content See also :ref:`http-cr` and :ref:`dns-cr`.
 
@@ -404,6 +412,8 @@ Glossary
 	Roles
 		Permissions :dfn:`Roles` define the operations a user is allowed to perform, and are currently an ordered list of permission levels.
 
+		.. seealso:: For a more complete description of Roles, see the :ref:`roles` overview section.
+
 	Server Capability
 	Server Capabilities
 		A :dfn:`Server Capability` (not to be confused with a "Capability") expresses the capacity of a :term:`cache server` to serve a particular kind of traffic. For example, a :dfn:`Server Capability` could be created named "RAM" to be assigned to :term:`cache servers` that have RAM-disks allocated for content caching. :dfn:`Server Capabilities` can also be required by :term:`Delivery Services`, which will prevent :term:`cache servers` without that :dfn:`Server Capability` from being assigned to them. It also prevents :term:`Mid-tier cache servers` without said :term:`Server Capability` from being selected to serve upstream requests from those :term:`Edge-tier cache servers` assigned to the requiring :term:`Delivery Services`.
@@ -424,6 +434,8 @@ Glossary
 
 	t3c
 		The Traffic Control cache config app, used to generate and apply cache configuration files.
+
+		.. seealso:: For usage and testing documentation, refer to :ref:`t3c`.
 
 	Tenant
 	Tenants

@@ -60,6 +60,10 @@ Polling protocol can be set for peers and caches and has 3 options:
 
 .. Note:: ``both`` will poll IPv4 and IPv6 and report on availability based on if the respective IP addresses are defined on the server.  So if only an IPv4 address is defined and the protocol is set to ``both`` then it will only show the availability over IPv4, but if both addresses are defined then it will show availability based on IPv4 and IPv6.
 
+Optional Stat Polling
+---------------------
+Traffic Monitor has the option to disable stat polling via the ``stat_polling`` (default: ``true``) option in :file:`traffic_monitor.cfg`. If set to ``false``, Traffic Monitor will not poll caches for stats; it will only poll caches for health. This can be useful in lowering the amount of resources (CPU, bandwidth) used by Traffic Monitor while still allowing it to retain its core functionality (determining cache availability) via health polling alone. However, disabling stat polling also prevents some other ATC features from working properly (basically anything that requires stats data from caches, e.g. Traffic Stats data), so it should only be disabled when absolutely necessary.
+
 Peering and Optimistic Quorum
 -----------------------------
 As mentioned in the :ref:`health-proto` section of the :ref:`tm-overview` overview, peering a Traffic Monitor with one or more other Traffic Monitors enables the optimistic health protocol. In order to leverage the optimistic quorum feature along with the optimistic health protocol, a minimum of three Traffic Monitors are required. The optimistic quorum feature allows a Traffic Monitor to withdraw itself from the optimistic health protocol when it loses connectivity to a number of its peers.

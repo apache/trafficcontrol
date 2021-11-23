@@ -88,6 +88,9 @@ if [[ ! -d /var/log/trafficcontrol ]]; then
   touch /var/log/trafficcontrol/tc-health-client.log
 fi
 
+# make sure the service unit file is loaded
+systemctl daemon-reload
+
 if [[ ${was_active} = "yes" ]]; then
   systemctl start tc-health-client
 fi

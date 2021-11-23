@@ -29,7 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 
-	"gopkg.in/ldap.v2"
+	"github.com/go-ldap/ldap/v3"
 )
 
 var defaultSet bool
@@ -87,7 +87,7 @@ func LookupUserDN(username string, cfg *config.ConfigLDAP) (string, bool, error)
 	searchRequest := ldap.NewSearchRequest(
 		cfg.SearchBase,
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
-		fmt.Sprintf(cfg.SearchQuery, username),
+		fmt.Sprintf(cfg.SearchQuery, ldap.EscapeFilter(username)),
 		[]string{"dn"},
 		nil,
 	)

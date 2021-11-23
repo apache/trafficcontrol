@@ -15,7 +15,6 @@
 trap 'exit_code=$?; [ $exit_code -ne 0 ] && echo "Error on line ${LINENO} of ${0}"; cleanup; exit $exit_code' EXIT;
 set -o errexit -o nounset -o pipefail;
 
-
 # Fix ownership of output files
 #  $1 is file or dir with correct ownership
 #  remaining args are files/dirs to be fixed, recursively
@@ -71,5 +70,9 @@ if [ $# -eq 0 ]; then
 fi
 
 for project in "$@"; do
-	./build/build.sh "${project}" 2>&1 | tee "dist/build-${project//\//-}.log"
+	if [[ "$NO_LOG_FILES" -eq 1 ]]; then
+		./build/build.sh "${project}";
+	else
+		./build/build.sh "${project}" 2>&1 | tee "dist/build-${project//\//-}.log";
+	fi
 done

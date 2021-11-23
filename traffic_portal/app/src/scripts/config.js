@@ -23,4 +23,4 @@
 
 angular.module('config', [])
 
-.constant('ENV', { api: { root:'/api/4.0/', stable: "/api/3.1/" } });
+.constant('ENV', { api: { unstable:'/api/4.0/', stable: "/api/3.1/" } });

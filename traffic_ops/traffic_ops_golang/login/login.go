@@ -21,6 +21,7 @@ package login
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
@@ -121,7 +122,9 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		resp := struct {
 			tc.Alerts
 		}{}
-		userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form, db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+		dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+		defer cancelTx()
+		userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form, db, dbCtx)
 		if blockingErr != nil {
 			api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
 			return
@@ -130,7 +133,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			log.Errorf("checking local user: %s\n", err.Error())
 		}
 		if userAllowed {
-			authenticated, err, blockingErr = auth.CheckLocalUserPassword(form, db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+			authenticated, err, blockingErr = auth.CheckLocalUserPassword(form, db, dbCtx)
 			if blockingErr != nil {
 				api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
 				return
@@ -151,13 +154,17 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				httpCookie := tocookie.GetCookie(form.Username, defaultCookieDuration, cfg.Secrets[0])
 				http.SetCookie(w, httpCookie)
 
-				//If all's well until here, then update last authenticated time
-				tx, txErr := db.Begin()
+				// If all's well until here, then update last authenticated time
+				tx, txErr := db.BeginTx(dbCtx, nil)
 				if txErr != nil {
 					api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("beginning transaction: %w", txErr))
 					return
 				}
-				defer tx.Commit()
+				defer func() {
+					if err := tx.Commit(); err != nil && err != sql.ErrTxDone {
+						log.Errorln("committing transaction: " + err.Error())
+					}
+				}()
 				_, dbErr := tx.Exec(UpdateLoginTimeQuery, form.Username)
 				if dbErr != nil {
 					log.Errorf("unable to update authentication time for a given user: %s\n", dbErr.Error())
@@ -352,7 +359,9 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		userId := decodedToken.Claims.(jwt.MapClaims)["sub"].(string)
 		form.Username = userId
 
-		userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form, db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+		dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+		defer cancelTx()
+		userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form, db, dbCtx)
 		if blockingErr != nil {
 			api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
 			return

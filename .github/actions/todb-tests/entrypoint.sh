@@ -85,7 +85,7 @@ for migration_dir in ${migration_dirs[@]}; do
 
 	set +e;
 	# All new migrations must use 16-digit timestamps.
-	VIOLATING_FILES="$(ls | sort | cut -d _ -f 1 | sed -n -e '/2020061622101648/,$p' | tr '[:space:]' '\n' | grep -vE '^[0-9]{16}$')";
+	VIOLATING_FILES="$(ls | sort | cut -d _ -f 1 | grep -vE '^[0-9]{16}$' | grep -vE '^00000000000000$')";
 	set -e;
 
 	if [[ ! -z "$VIOLATING_FILES" ]]; then

@@ -40,7 +40,8 @@ remote_ats_version() {
 		tail -n1)"
 
 	# $release is the number of commits between $release to $branch.
-	release="$(curl -fs "${gitbox_url}?p=${repo};a=shortlog;h=${branch};hp=${last_tag}" | grep -c 'class="link"')"
+	page_output="$(curl -fs "${gitbox_url}?p=${repo};a=shortlog;h=${branch};hp=${last_tag}")"
+	release="$(<<<"$page_output" grep -c 'class="link"' || true)"
 	<<<"${last_tag}-${release}.${commit:0:9}" tee "$ats_version_file"
 }
 

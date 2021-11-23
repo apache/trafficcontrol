@@ -387,7 +387,7 @@ export const deliveryservices = {
                     description: "create ANY_MAP delivery service",
                     Name: "tpdservice1",
                     Type: "ANY_MAP",
-                    validationMessage: "Forbidden."
+                    validationMessage: "missing required Permissions: DELIVERY-SERVICE:CREATE"
                 }
             ],
             update: [
@@ -395,7 +395,7 @@ export const deliveryservices = {
                     description: "update delivery service display name",
                     Name: "dstestro1",
                     NewName: "TPServiceNew1",
-                    validationMessage: "Forbidden."
+                    validationMessage: "missing required Permissions: DELIVERY-SERVICE:UPDATE"
                 }
             ],
             assignserver: [
@@ -403,7 +403,7 @@ export const deliveryservices = {
                     description: "assign server to delivery service",
                     ServerName: "DSTest",
                     DSName: "dstestro1",
-                    validationMessage: "Forbidden."
+                    validationMessage: "missing required Permissions: SERVER:UPDATE, DELIVERY-SERVICE:UPDATE"
                 }
             ],
             assignrequiredcapabilities: [
@@ -411,14 +411,14 @@ export const deliveryservices = {
                     description: "assign required capabilities to delivery service",
                     RCName: "DSTestCap",
                     DSName: "dstestro1",
-                    validationMessage: "Forbidden."
+                    validationMessage: "missing required Permissions: DELIVERY-SERVICE:UPDATE"
                 }
             ],
             remove: [
                 {
                     description: "delete a delivery service",
                     Name: "dstestro1",
-                    validationMessage: "Forbidden."
+                    validationMessage: "missing required Permissions: DELIVERY-SERVICE:DELETE"
                 }
             ]
         },

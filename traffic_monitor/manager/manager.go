@@ -63,12 +63,23 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()
-	go cacheStatPoller.Poll()
+	if cfg.StatPolling {
+		go cacheStatPoller.Poll()
+	}
 	go peerPoller.Poll()
 
 	events := health.NewThreadsafeEvents(cfg.MaxEvents)
 
-	cachesChanged := make(chan struct{})
+	var cachesChangedForStatMgr chan struct{}
+	var cachesChangedForHealthMgr chan struct{}
+	var cachesChanged chan struct{}
+	if cfg.StatPolling {
+		cachesChangedForStatMgr = make(chan struct{})
+		cachesChanged = cachesChangedForStatMgr
+	} else {
+		cachesChangedForHealthMgr = make(chan struct{})
+		cachesChanged = cachesChangedForHealthMgr
+	}
 	peerStates := peer.NewCRStatesPeersThreadsafe(cfg.PeerOptimisticQuorumMin) // each peer's last state is saved in this map
 
 	monitorConfig := StartMonitorConfigManager(
@@ -95,12 +106,12 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		combineStateFunc,
 	)
 
-	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, unpolledCaches, localCacheStatus := StartStatHistoryManager(
+	statInfoHistory, statResultHistory, statMaxKbpses, _, lastKbpsStats, dsStats, statUnpolledCaches, localCacheStatus := StartStatHistoryManager(
 		cacheStatHandler.ResultChan(),
 		localStates,
 		combinedStates,
 		toData,
-		cachesChanged,
+		cachesChangedForStatMgr,
 		errorCount,
 		cfg,
 		monitorConfig,
@@ -108,17 +119,16 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		combineStateFunc,
 	)
 
-	lastHealthDurations, healthHistory := StartHealthResultManager(
+	lastHealthDurations, healthHistory, healthUnpolledCaches := StartHealthResultManager(
 		cacheHealthHandler.ResultChan(),
 		toData,
 		localStates,
 		monitorConfig,
-		combinedStates,
 		fetchCount,
-		errorCount,
 		cfg,
 		events,
 		localCacheStatus,
+		cachesChangedForHealthMgr,
 	)
 
 	if _, err := StartOpsConfigManager(
@@ -144,7 +154,8 @@ func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData
 		healthIteration,
 		errorCount,
 		localCacheStatus,
-		unpolledCaches,
+		statUnpolledCaches,
+		healthUnpolledCaches,
 		monitorConfig,
 		cfg,
 	); err != nil {

@@ -156,7 +156,7 @@ func TestGzip(t *testing.T) {
 
 func newRWPair(t *testing.T, cookie *http.Cookie) (*httptest.ResponseRecorder, *http.Request) {
 	w := httptest.NewRecorder()
-	r, err := http.NewRequest("", "/", nil)
+	r, err := http.NewRequest("", "/api/4.0/blah", nil)
 	if err != nil {
 		t.Fatalf("Failed to create new request: %v", err)
 	}

@@ -93,6 +93,7 @@ func MakeURLSigConfig(
 		Text:        text,
 		ContentType: ContentTypeURLSig,
 		LineComment: LineCommentURLSig,
+		Secure:      true,
 		Warnings:    warnings,
 	}, nil
 }

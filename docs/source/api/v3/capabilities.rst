@@ -19,6 +19,8 @@
 ``capabilities``
 ****************
 
+.. deprecated:: ATCv7.0
+
 ``GET``
 =======
 Get all capabilities.

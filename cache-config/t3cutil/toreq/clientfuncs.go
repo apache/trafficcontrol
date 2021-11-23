@@ -515,7 +515,7 @@ func (cl *TOClient) GetDeliveryServiceRegexes(reqHdr http.Header) ([]tc.Delivery
 	return regexes, reqInf, nil
 }
 
-func (cl *TOClient) GetJobs(reqHdr http.Header, cdnName string) ([]tc.InvalidationJob, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetJobs(reqHdr http.Header, cdnName string) ([]atscfg.InvalidationJob, toclientlib.ReqInf, error) {
 	if cl.c == nil {
 		oldJobs, inf, err := cl.old.GetJobs()
 		jobs, err := atscfg.JobsToInvalidationJobs(oldJobs)
@@ -525,18 +525,20 @@ func (cl *TOClient) GetJobs(reqHdr http.Header, cdnName string) ([]tc.Invalidati
 		return jobs, inf, err
 	}
 
-	jobs := []tc.InvalidationJob{}
+	jobs := []atscfg.InvalidationJob{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "jobs_cdn_"+cdnName, &jobs, func(obj interface{}) error {
 		opts := *ReqOpts(reqHdr)
 		opts.QueryParameters.Set("maxRevalDurationDays", "") // only get jobs with a start time within the window defined by the GLOBAL parameter 'maxRevalDurationDays'
 		opts.QueryParameters.Set("cdn", cdnName)             // only get jobs for delivery services in this server's CDN
-		toJobs, toReqInf, err := cl.c.GetInvalidationJobs(opts)
+		// GetJobsCompat can be changed back to 'cl.c.GetInvalidationJobs' when backwards compatibility
+		// with Traffic Ops from previous ATS 'master' changesets is no longer desired, presumably after the next major ATC release.
+		toJobs, toReqInf, err := cl.GetJobsCompat(opts)
 		if err != nil {
 			return errors.New("getting jobs from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		jobs := obj.(*[]tc.InvalidationJob)
-		*jobs = toJobs.Response
+		jobs := obj.(*[]atscfg.InvalidationJob)
+		*jobs = jobsToLatest(toJobs.Response)
 		reqInf = toReqInf
 		return nil
 	})

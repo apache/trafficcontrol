@@ -131,7 +131,16 @@ func combineCacheState(
 	}
 
 	if overrideCondition != "" {
-		events.Add(health.Event{Time: health.Time(time.Now()), Description: fmt.Sprintf("Health protocol override condition %s", overrideCondition), Name: cacheName.String(), Hostname: cacheName.String(), Type: toData.ServerTypes[cacheName].String(), Available: available, IPv4Available: ipv4Available, IPv6Available: ipv6Available})
+		events.Add(
+			health.Event{
+				Time:          health.Time(time.Now()),
+				Description:   fmt.Sprintf("Health protocol override condition %s", overrideCondition),
+				Name:          cacheName.String(),
+				Hostname:      cacheName.String(),
+				Type:          toData.ServerTypes[cacheName].String(),
+				Available:     available,
+				IPv4Available: ipv4Available,
+				IPv6Available: ipv6Available})
 	}
 
 	combinedStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: available, Ipv4Available: ipv4Available, Ipv6Available: ipv6Available})

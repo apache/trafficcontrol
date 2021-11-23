@@ -20,7 +20,7 @@
 var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) {
 
 	this.getServerCapabilities = function(queryParams) {
-		return $http.get(ENV.api['root'] + 'server_capabilities', {params: queryParams}).then(
+		return $http.get(ENV.api.unstable + 'server_capabilities', {params: queryParams}).then(
 			function(result) {
 				return result.data.response;
 			},
@@ -31,7 +31,7 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 	};
 
 	this.getServerCapability = function(name) {
-		return $http.get(ENV.api['root'] + 'server_capabilities', {params: {"name": name}}).then(
+		return $http.get(ENV.api.unstable + 'server_capabilities', {params: {"name": name}}).then(
 			function(result) {
 				return result.data.response[0];
 			},
@@ -42,7 +42,7 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 	};
 
 	this.createServerCapability = function(serverCap) {
-		return $http.post(ENV.api['root'] + 'server_capabilities', serverCap).then(
+		return $http.post(ENV.api.unstable + 'server_capabilities', serverCap).then(
 			function(result) {
 				messageModel.setMessages(result.data.alerts, true);
 				locationUtils.navigateToPath('/server-capabilities');
@@ -56,7 +56,7 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 	};
 
 	this.deleteServerCapability = function(name) {
-		return $http.delete(ENV.api['root'] + 'server_capabilities', {params: {"name": name}}).then(
+		return $http.delete(ENV.api.unstable + 'server_capabilities', {params: {"name": name}}).then(
 			function(result) {
 				messageModel.setMessages(result.data.alerts, true);
 				return result;
@@ -69,7 +69,7 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 	};
 
 	this.updateServerCapability = function(currentName, serverCapability) {
-		return $http.put(ENV.api['root'] + 'server_capabilities', serverCapability, {params: {"name": currentName}}).then(
+		return $http.put(ENV.api.unstable + 'server_capabilities', serverCapability, {params: {"name": currentName}}).then(
 			function(result) {
 				return result;
 			},
@@ -81,7 +81,7 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 	};
 
 	this.getServerCapabilityServers = function(capabilityName) {
-		return $http.get(ENV.api['root'] + 'server_server_capabilities', { params: { serverCapability: capabilityName } }).then(
+		return $http.get(ENV.api.unstable + 'server_server_capabilities', { params: { serverCapability: capabilityName } }).then(
 			function (result) {
 				return result.data.response;
 			},
@@ -92,7 +92,7 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 	};
 
 	this.getServerCapabilityDeliveryServices = function(capabilityName) {
-		return $http.get(ENV.api['root'] + 'deliveryservices_required_capabilities', { params: { requiredCapability: capabilityName } }).then(
+		return $http.get(ENV.api.unstable + 'deliveryservices_required_capabilities', { params: { requiredCapability: capabilityName } }).then(
 			function (result) {
 				return result.data.response;
 			},

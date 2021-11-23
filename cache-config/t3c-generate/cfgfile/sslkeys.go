@@ -65,12 +65,14 @@ func GetSSLCertsAndKeyFiles(toData *t3cutil.ConfigData) ([]t3cutil.ATSConfigFile
 		keyFile.Name = keyName
 		keyFile.Path = "/opt/trafficserver/etc/trafficserver/ssl/" // TODO read config, don't hard code
 		keyFile.Text = string(key)
+		keyFile.Secure = true
 		configs = append(configs, keyFile)
 
 		certFile := t3cutil.ATSConfigFile{}
 		certFile.Name = certName
 		certFile.Path = "/opt/trafficserver/etc/trafficserver/ssl/" // TODO read config, don't hard code
 		certFile.Text = string(cert)
+		certFile.Secure = true
 		configs = append(configs, certFile)
 	}
 

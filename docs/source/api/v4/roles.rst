@@ -201,7 +201,7 @@ Response Structure
 
 ``PUT``
 =======
-Replaces an existing :term:`Role` with one provided by the request.
+Replaces an existing :term:`Role` with one provided by the request\ [#admin]_.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -284,7 +284,7 @@ Response Structure
 
 ``DELETE``
 ==========
-Deletes a :term:`Role`
+Deletes a :term:`Role`\ [#admin]_.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -332,4 +332,5 @@ Response Structure
 		"level": "success"
 	}]}
 
-.. [#permissions] ``permissions`` cannot include permissions that are not included in the permissions of the requesting user.
+.. [#permissions] ``permissions`` cannot include permissions that are not included in the permissions of the requesting user. In POST requests, if ``permissions`` is omitted or explicitly ``null``, it is treated as an empty set/array.
+.. [#admin] The special :term:`Role` with the name "admin" cannot be modified or deleted - regardless of user Permissions.

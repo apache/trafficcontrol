@@ -41,6 +41,16 @@ import (
 	"github.com/lib/pq"
 )
 
+type roleError string
+
+func (e roleError) Error() string {
+	return string(e)
+}
+
+const cannotModifyAdminError roleError = "the '" + tc.AdminRoleName + "' Role cannot be deleted or modified"
+
+const isAdminQuery = `SELECT name='` + tc.AdminRoleName + `' FROM public.role WHERE id=$1`
+
 type TORole struct {
 	api.APIInfoImpl `json:"-"`
 	tc.Role
@@ -213,6 +223,14 @@ func (role *TORole) Read(h http.Header, useIMS bool) ([]interface{}, error, erro
 }
 
 func (role *TORole) Update(h http.Header) (error, error, int) {
+	var isAdmin bool
+	if err := role.ReqInfo.Tx.Get(&isAdmin, isAdminQuery, role.ID); err != nil {
+		return nil, fmt.Errorf("checking if Role to be modified is '%s': %w", tc.AdminRoleName, err), http.StatusInternalServerError
+	}
+	if isAdmin {
+		return cannotModifyAdminError, nil, http.StatusBadRequest
+	}
+
 	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
 		return errors.New("can not create a role with a higher priv level than your own"), nil, http.StatusForbidden
 	}
@@ -239,10 +257,18 @@ func (role *TORole) Update(h http.Header) (error, error, int) {
 
 func (role *TORole) Delete() (error, error, int) {
 	assignedUsers := 0
-	if err := role.ReqInfo.Tx.Get(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", role.ID); err != nil {
+	if err := role.ReqInfo.Tx.Get(&assignedUsers, "SELECT COUNT(id) FROM public.tm_user WHERE role=$1", role.ID); err != nil {
 		return nil, errors.New("role delete counting assigned users: " + err.Error()), http.StatusInternalServerError
 	} else if assignedUsers != 0 {
 		return fmt.Errorf("can not delete a role with %d assigned users", assignedUsers), nil, http.StatusBadRequest
+	}
+
+	var isAdmin bool
+	if err := role.ReqInfo.Tx.Get(&isAdmin, isAdminQuery, role.ID); err != nil {
+		return nil, fmt.Errorf("checking if Role to be deleted is '%s': %w", tc.AdminRoleName, err), http.StatusInternalServerError
+	}
+	if isAdmin {
+		return cannotModifyAdminError, nil, http.StatusBadRequest
 	}
 
 	userErr, sysErr, errCode := api.GenericDelete(role)
@@ -304,7 +330,6 @@ func deleteQuery() string {
 // Update will modify the role identified by the role name.
 func Update(w http.ResponseWriter, r *http.Request) {
 	var roleID int
-	var roleName string
 	var roleDesc string
 	var roleCapabilities []string
 	var roleV4 tc.RoleV4
@@ -323,6 +348,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
+
+	roleName := inf.Params["name"]
+	if roleName == tc.AdminRoleName {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, cannotModifyAdminError, nil)
+		return
+	}
+
 	if err := roleV4.Validate(); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
@@ -334,7 +366,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	roleDesc = roleV4.Description
 	roleCapabilities = roleV4.Permissions
-	roleName = inf.Params["name"]
 	roleID, ok, err = dbhelpers.GetRoleIDFromName(tx, roleName)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
@@ -450,10 +481,7 @@ func deleteRoleCapabilityAssociations(tx *sqlx.Tx, roleName string) (error, erro
 
 // Delete will delete the role identified by the role name.
 func Delete(w http.ResponseWriter, r *http.Request) {
-	var roleName string
-	var ok bool
-	var err error
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -461,8 +489,11 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	tx := inf.Tx.Tx
-	if roleName, ok = inf.Params["name"]; !ok {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("must supply a role name to delete"), nil)
+
+	roleName := inf.Params["name"]
+
+	if roleName == tc.AdminRoleName {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, cannotModifyAdminError, nil)
 		return
 	}
 

@@ -67,7 +67,8 @@ func StartOpsConfigManager(
 	healthIteration threadsafe.Uint,
 	errorCount threadsafe.Uint,
 	localCacheStatus threadsafe.CacheAvailableStatus,
-	unpolledCaches threadsafe.UnpolledCaches,
+	statUnpolledCaches threadsafe.UnpolledCaches,
+	healthUnpolledCaches threadsafe.UnpolledCaches,
 	monitorConfig threadsafe.TrafficMonitorConfigMap,
 	cfg config.Config,
 ) (threadsafe.OpsConfig, error) {
@@ -124,8 +125,10 @@ func StartOpsConfigManager(
 			toData,
 			localCacheStatus,
 			lastStats,
-			unpolledCaches,
+			statUnpolledCaches,
+			healthUnpolledCaches,
 			monitorConfig,
+			cfg.StatPolling,
 		)
 
 		// If the HTTPS Listener is defined in the traffic_ops.cfg file then it creates the HTTPS endpoint and the corresponding HTTP endpoint as a redirect

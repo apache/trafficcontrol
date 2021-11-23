@@ -134,7 +134,7 @@ export const parameters = {
 					ConfigFile: "test.config",
 					Value: "90",
 					Secure: "true",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: PARAMETER:CREATE"
 				}
 			],
 			update: [
@@ -142,14 +142,14 @@ export const parameters = {
 					description: "update parameter configfile",
 					Name: "TPParamtest2",
 					ConfigFile: "newtest.config",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: PARAMETER:UPDATE"
 				}
 			],
 			remove: [
 				{
 					description: "delete a Parameters",
 					Name: "TPParamtest2",
-					validationMessage: "Forbidden."
+					validationMessage: "missing required Permissions: PARAMETER:DELETE"
 				}
 			]
 		},

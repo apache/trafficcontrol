@@ -24,6 +24,31 @@ import (
 	"fmt"
 )
 
+func ExampleJoinErrsStr() {
+	errs := []error{
+		errors.New("test"),
+		errors.New("quest"),
+	}
+
+	fmt.Println(JoinErrsStr(errs))
+	fmt.Println(JoinErrsStr(nil))
+	// Output: test, quest
+	//
+
+}
+
+func ExampleErrsToStrs() {
+	errs := []error{
+		errors.New("test"),
+		errors.New("quest"),
+	}
+	strs := ErrsToStrs(errs)
+	fmt.Println(strs[0])
+	fmt.Println(strs[1])
+	// Output: test
+	// quest
+}
+
 func ExampleJoinErrsSep() {
 	errs := []error{
 		errors.New("test"),

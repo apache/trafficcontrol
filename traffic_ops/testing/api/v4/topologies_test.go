@@ -996,7 +996,7 @@ func CRUDTopologyReadOnlyUser(t *testing.T) {
 		RegistrationSent:     new(time.Time),
 		LocalPassword:        util.StrPtr("test_pa$$word"),
 		ConfirmLocalPassword: util.StrPtr("test_pa$$word"),
-		Role:                 "read-only user",
+		Role:                 "read-only",
 	}
 	user.Email = util.StrPtr("email@domain.com")
 	user.TenantID = resp.Response[0].ID

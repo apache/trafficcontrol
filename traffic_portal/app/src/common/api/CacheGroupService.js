@@ -20,7 +20,7 @@
 var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
 
     this.getCacheGroups = function(queryParams) {
-        return $http.get(ENV.api['root'] + 'cachegroups', {params: queryParams}).then(
+        return $http.get(ENV.api.unstable + 'cachegroups', {params: queryParams}).then(
             function(result) {
                 return result.data.response;
             },
@@ -31,7 +31,7 @@ var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getCacheGroup = function(id) {
-        return $http.get(ENV.api['root'] + 'cachegroups', {params: {'id': id}}).then(
+        return $http.get(ENV.api.unstable + 'cachegroups', {params: {'id': id}}).then(
             function (result) {
                 return result.data.response[0];
             },
@@ -42,7 +42,7 @@ var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.createCacheGroup = function(cacheGroup) {
-        return $http.post(ENV.api['root'] + 'cachegroups', cacheGroup).then(
+        return $http.post(ENV.api.unstable + 'cachegroups', cacheGroup).then(
             function (result) {
                 messageModel.setMessages(result.data.alerts, true);
                 locationUtils.navigateToPath('/cache-groups');
@@ -57,7 +57,7 @@ var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
 
     // todo: change to use query param when it is supported
     this.updateCacheGroup = function(cacheGroup) {
-        return $http.put(ENV.api['root'] + 'cachegroups/' + cacheGroup.id, cacheGroup).then(
+        return $http.put(ENV.api.unstable + 'cachegroups/' + cacheGroup.id, cacheGroup).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, false);
                 return result;
@@ -71,7 +71,7 @@ var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
 
     // todo: change to use query param when it is supported
     this.deleteCacheGroup = function(id) {
-        return $http.delete(ENV.api['root'] + "cachegroups/" + id).then(
+        return $http.delete(ENV.api.unstable + "cachegroups/" + id).then(
             function(result) {
                 return result.data;
             },
@@ -83,7 +83,7 @@ var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.queueServerUpdates = function(cgId, cdnId) {
-        return $http.post(ENV.api['root'] + 'cachegroups/' + cgId + '/queue_update', {action: "queue", cdnId: cdnId}).then(
+        return $http.post(ENV.api.unstable + 'cachegroups/' + cgId + '/queue_update', {action: "queue", cdnId: cdnId}).then(
             function(result) {
                 messageModel.setMessages([{level: 'success', text: 'Queued Cache Group server updates'}], false);
                 return result;
@@ -96,7 +96,7 @@ var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.clearServerUpdates = function(cgId, cdnId) {
-        return $http.post(ENV.api['root'] + 'cachegroups/' + cgId + '/queue_update', {action: "dequeue", cdnId: cdnId}).then(
+        return $http.post(ENV.api.unstable + 'cachegroups/' + cgId + '/queue_update', {action: "dequeue", cdnId: cdnId}).then(
             function(result) {
                 messageModel.setMessages([{level: 'success', text: 'Cleared Cache Group server updates'}], false);
                 return result;
@@ -109,7 +109,7 @@ var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.getCacheGroupHealth = function() {
-        return $http.get(ENV.api['root'] + "cdns/health").then(
+        return $http.get(ENV.api.unstable + "cdns/health").then(
             function(result) {
                 return result.data.response;
             },

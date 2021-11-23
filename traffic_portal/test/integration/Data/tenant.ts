@@ -104,7 +104,7 @@ export const tenants = {
                     Name: "TPTenantTest",
                     Active: "true",
                     ParentTenant: "- root",
-                    validationMessage: "Forbidden."
+                    validationMessage: "missing required Permissions: TENANT:CREATE"
                 }
             ],
             update: [
@@ -112,14 +112,14 @@ export const tenants = {
                     description: "update a tenant",
                     Name: "tenantChild",
                     Active: "false",
-                    validationMessage: "Forbidden."
+                    validationMessage: "missing required Permissions: TENANT:UPDATE"
                 }
             ],
             remove: [
                 {
                     description: "delete a tenant",
                     Name: "tenantChild",
-                    validationMessage: "Forbidden."
+                    validationMessage: "missing required Permissions: TENANT:DELETE"
                 }
             ]
         }

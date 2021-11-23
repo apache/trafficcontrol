@@ -60,6 +60,7 @@ type Cfg struct {
 	TOPass                  string          `json:"to-pass"`
 	TOUrl                   string          `json:"to-url"`
 	TOUser                  string          `json:"to-user"`
+	TmProxyURL              string          `json:"tm-proxy-url"`
 	TmPollIntervalSeconds   string          `json:"tm-poll-interval-seconds"`
 	TmUpdateCycles          int             `json:"tm-update-cycles"`
 	TrafficServerConfigDir  string          `json:"trafficserver-config-dir"`
@@ -67,6 +68,7 @@ type Cfg struct {
 	TrafficMonitors         map[string]bool `json:"trafficmonitors,omitempty"`
 	HealthClientConfigFile  util.ConfigFile
 	CredentialFile          util.ConfigFile
+	ParsedProxyURL          *url.URL
 }
 
 type LogCfg struct {
@@ -327,6 +329,22 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 
 		if cfg.TOCredentialFile != "" {
 			cfg.CredentialFile.Filename = cfg.TOCredentialFile
+		}
+
+		// if tm-proxy-url is set in the config, verify the proxy
+		// url
+		if cfg.TmProxyURL != "" {
+			if cfg.ParsedProxyURL, err = url.Parse(cfg.TmProxyURL); err != nil {
+				cfg.ParsedProxyURL = nil
+				return false, errors.New("parsing TmProxyUrl: " + err.Error())
+			}
+			if cfg.ParsedProxyURL.Port() == "" {
+				cfg.ParsedProxyURL = nil
+				return false, errors.New("TmProxyUrl invalid port specified")
+			}
+			log.Infof("TM queries will use the proxy: %s", cfg.TmProxyURL)
+		} else {
+			cfg.ParsedProxyURL = nil
 		}
 		updated = true
 	}

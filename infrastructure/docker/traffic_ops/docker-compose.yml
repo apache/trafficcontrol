@@ -74,7 +74,7 @@ services:
       CERT_COUNTRY: US
       CERT_STATE: Colorado
       CERT_CITY: Denver
-      CERT_COMPANY: NotComcast
+      CERT_COMPANY: Kabletown
       TRAFFIC_VAULT_PASS: tvsecret
       DOMAIN: trafficops_default
     ports: 

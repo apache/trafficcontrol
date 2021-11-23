@@ -41,46 +41,66 @@ func TestMakeRegexRevalidateDotConfig(t *testing.T) {
 	dses := []DeliveryService{*ds}
 
 	params := makeParamsFromMapArr("GLOBAL", RegexRevalidateFileName, map[string][]string{
-		RegexRevalidateMaxRevalDurationDaysParamName: []string{"42"},
-		"unrelated": []string{"unrelated0", "unrelated1"},
+		RegexRevalidateMaxRevalDurationDaysParamName: {"42"},
+		"unrelated": {"unrelated0", "unrelated1"},
 	})
 
-	jobs := []tc.InvalidationJob{
-		tc.InvalidationJob{
-			AssetURL:        util.StrPtr("assetURL0"),
-			StartTime:       &tc.Time{Time: time.Now().Add(42*24*time.Hour + time.Hour), Valid: true},
-			DeliveryService: util.StrPtr("myds"),
-			CreatedBy:       util.StrPtr("me"),
-			ID:              util.UInt64Ptr(42),
-			Parameters:      util.StrPtr("TTL:14h"),
-			Keyword:         util.StrPtr(JobKeywordPurge),
+	jobs := []InvalidationJob{
+		{
+			AssetURL:         "assetURL0",
+			StartTime:        time.Now().Add(42*24*time.Hour + time.Hour),
+			DeliveryService:  "myds",
+			CreatedBy:        "me",
+			ID:               42,
+			TTLHours:         14,
+			InvalidationType: tc.REFRESH,
 		},
-		tc.InvalidationJob{
-			AssetURL:        util.StrPtr("expiredassetURL0"),
-			StartTime:       &tc.Time{Time: time.Now().Add(-24 * time.Hour), Valid: true},
-			DeliveryService: util.StrPtr("expiredmyds"),
-			CreatedBy:       util.StrPtr("expiredme"),
-			ID:              util.UInt64Ptr(42),
-			Parameters:      util.StrPtr("TTL:14h"),
-			Keyword:         util.StrPtr(JobKeywordPurge),
+		{
+			AssetURL:         "expiredassetURL0",
+			StartTime:        time.Now().Add(-24 * time.Hour),
+			DeliveryService:  "expiredmyds",
+			CreatedBy:        "expiredme",
+			ID:               42,
+			TTLHours:         14,
+			InvalidationType: tc.REFRESH,
 		},
-		tc.InvalidationJob{
-			AssetURL:        util.StrPtr("refetchasset##REFETCH##"),
-			StartTime:       &tc.Time{Time: time.Now().Add(24 * time.Hour), Valid: true},
-			DeliveryService: util.StrPtr("myds"),
-			CreatedBy:       util.StrPtr("want_refetch"),
-			ID:              util.UInt64Ptr(42),
-			Parameters:      util.StrPtr("TTL:24h"),
-			Keyword:         util.StrPtr(JobKeywordPurge),
+		{
+			AssetURL:         "refetchasset##REFETCH##",
+			StartTime:        time.Now().Add(24 * time.Hour),
+			DeliveryService:  "myds",
+			CreatedBy:        "want_refetch",
+			ID:               42,
+			TTLHours:         24,
+			InvalidationType: tc.REFETCH,
 		},
-		tc.InvalidationJob{
-			AssetURL:        util.StrPtr("refreshasset##REFRESH##"),
-			StartTime:       &tc.Time{Time: time.Now().Add(24 * time.Hour), Valid: true},
-			DeliveryService: util.StrPtr("myds"),
-			CreatedBy:       util.StrPtr("want_refresh"),
-			ID:              util.UInt64Ptr(42),
-			Parameters:      util.StrPtr("TTL:24h"),
-			Keyword:         util.StrPtr(JobKeywordPurge),
+		{
+			AssetURL:         "refetchtype",
+			StartTime:        time.Now().Add(24 * time.Hour),
+			DeliveryService:  "myds",
+			CreatedBy:        "want_refetch",
+			ID:               42,
+			TTLHours:         24,
+			InvalidationType: tc.REFETCH,
+		},
+		{
+			// Mixed assetURL and invalidation type. REFETCH should trump REFRESH
+			// for backwards compatibility
+			AssetURL:         "shouldbeREFETCH##REFETCH##",
+			StartTime:        time.Now().Add(24 * time.Hour),
+			DeliveryService:  "myds",
+			CreatedBy:        "want_refetch",
+			ID:               42,
+			TTLHours:         24,
+			InvalidationType: tc.REFRESH,
+		},
+		{
+			AssetURL:         "refreshasset##REFRESH##",
+			StartTime:        time.Now().Add(24 * time.Hour),
+			DeliveryService:  "myds",
+			CreatedBy:        "want_refresh",
+			ID:               42,
+			TTLHours:         24,
+			InvalidationType: tc.REFRESH,
 		},
 	}
 
