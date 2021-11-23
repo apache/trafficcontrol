@@ -31,3 +31,8 @@ t3c-update/t3c-update
 # generated documentation
 *.1
 *.rst
+
+# RPMs used for testing
+testing/docker/traffic_ops/traffic_ops*.rpm
+testing/docker/yumserver/test-rpms/*.rpm
+testing/docker/ort_test/trafficcontrol-cache-config*.rpm
