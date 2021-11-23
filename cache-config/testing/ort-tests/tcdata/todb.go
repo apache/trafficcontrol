@@ -35,7 +35,7 @@ func (r *TCData) OpenConnection() (*sql.DB, error) {
 		sslStr = "disable"
 	}
 
-	fmt.Printf("User: %s, Password: len %d, Hostname: %s, DB: %s\n", r.Config.TrafficOpsDB.User, len(r.Config.TrafficOpsDB.Password), r.Config.TrafficOpsDB.Hostname, r.Config.TrafficOpsDB.Name)
+	log.Debugf("User: %s, Password: len %d, Hostname: %s, DB: %s\n", r.Config.TrafficOpsDB.User, len(r.Config.TrafficOpsDB.Password), r.Config.TrafficOpsDB.Hostname, r.Config.TrafficOpsDB.Name)
 	db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", r.Config.TrafficOpsDB.User, r.Config.TrafficOpsDB.Password, r.Config.TrafficOpsDB.Hostname, r.Config.TrafficOpsDB.Name, sslStr))
 
 	if err != nil {
