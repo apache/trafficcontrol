@@ -36,14 +36,14 @@ func TestT3cCreateEmptyFile(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		err := t3cUpdateCreateEmptyFile(cacheHostName, "badass")
+		err := t3cUpdateCreateEmptyFile(DefaultCacheHostName, "badass")
 		if err != nil {
 			t.Fatalf("t3c badass failed: %v", err)
 		}
 
 		const emptyFileName = `empty-file.config`
 
-		filePath := filepath.Join(test_config_dir, emptyFileName)
+		filePath := filepath.Join(TestConfigDir, emptyFileName)
 
 		if !util.FileExists(filePath) {
 			t.Fatalf("missing empty config file, %s,  empty files must still be created", filePath)

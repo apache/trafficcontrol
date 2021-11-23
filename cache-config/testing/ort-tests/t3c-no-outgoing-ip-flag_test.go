@@ -30,13 +30,13 @@ import (
 const outgoingIPToBind = "outgoing_ip_to_bind"
 
 func testNoOutgoingIPAfterUpdate(t *testing.T, noOutgoingIP *bool) {
-	if err := t3cUpdateNoOutgoingIP(cacheHostName, noOutgoingIP); err != nil {
+	if err := t3cUpdateNoOutgoingIP(DefaultCacheHostName, noOutgoingIP); err != nil {
 		t.Fatalf("t3c badass failed: %v", err)
 	}
 
-	recordsDotConfig, err := ioutil.ReadFile(recordsConfigFileName)
+	recordsDotConfig, err := ioutil.ReadFile(RecordsConfigFileName)
 	if err != nil {
-		t.Fatalf("reading %s: %v", recordsConfigFileName, err)
+		t.Fatalf("reading %s: %v", RecordsConfigFileName, err)
 	}
 	contents := string(recordsDotConfig)
 

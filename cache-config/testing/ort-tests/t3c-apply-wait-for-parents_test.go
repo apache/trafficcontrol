@@ -30,7 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-const childCacheHostName = cacheHostName
+const childCacheHostName = DefaultCacheHostName
 
 func TestWaitForParentsTrue(t *testing.T) {
 	tcd.WithObjs(t, []tcdata.TCObj{
@@ -48,7 +48,7 @@ func TestWaitForParentsTrue(t *testing.T) {
 			t.Fatalf("t3c badass failed: %v", err)
 		}
 
-		fileNameToRemove := filepath.Join(test_config_dir, "records.config")
+		fileNameToRemove := filepath.Join(TestConfigDir, "records.config")
 
 		if !testutil.FileExists(fileNameToRemove) {
 			t.Fatalf("expected: '%s' to exist after badass, actual: doesn't exist", fileNameToRemove)
@@ -157,7 +157,7 @@ func TestWaitForParentsDefaultReval(t *testing.T) {
 			t.Fatalf("t3c badass failed: %v", err)
 		}
 
-		fileNameToRemove := filepath.Join(test_config_dir, "records.config")
+		fileNameToRemove := filepath.Join(TestConfigDir, "records.config")
 
 		if !testutil.FileExists(fileNameToRemove) {
 			t.Fatalf("expected: '%s' to exist after badass, actual: doesn't exist", fileNameToRemove)
@@ -225,7 +225,7 @@ func TestWaitForParentsFalse(t *testing.T) {
 			t.Fatalf("t3c badass failed: %v", err)
 		}
 
-		fileNameToRemove := filepath.Join(test_config_dir, "records.config")
+		fileNameToRemove := filepath.Join(TestConfigDir, "records.config")
 
 		if !testutil.FileExists(fileNameToRemove) {
 			t.Fatalf("expected: '%s' to exist after badass, actual: doesn't exist", fileNameToRemove)

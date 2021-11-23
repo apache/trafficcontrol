@@ -28,24 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 )
 
-const trafficServerOwner = "ats"
-
-var (
-	base_line_dir   = "baseline-configs"
-	test_config_dir = "/opt/trafficserver/etc/trafficserver"
-
-	testFiles = [8]string{
-		"astats.config",
-		"hdr_rw_first_ds-top.config",
-		"hosting.config",
-		"parent.config",
-		"records.config",
-		"remap.config",
-		"storage.config",
-		"volume.config",
-	}
-)
-
 func verifyPluginConfigs(t *testing.T) {
 	err := runCheckRefs("/opt/trafficserver/etc/trafficserver/remap.config")
 	if err != nil {
@@ -60,13 +42,13 @@ func verifyPluginConfigs(t *testing.T) {
 
 func syncDSTest(t *testing.T) {
 	// remove the remap.config in preparation for running syncds
-	remap := filepath.Join(test_config_dir, "remap.config")
+	remap := filepath.Join(TestConfigDir, "remap.config")
 	err := os.Remove(remap)
 	if err != nil {
 		t.Fatalf("unable to remove %s: %v", remap, err)
 	}
 	// prepare for running syncds.
-	err = ExecTOUpdater(cacheHostName, false, true)
+	err = ExecTOUpdater(DefaultCacheHostName, false, true)
 	if err != nil {
 		t.Fatalf("queue updates failed: %v", err)
 	}
@@ -74,7 +56,7 @@ func syncDSTest(t *testing.T) {
 	// remap.config is removed and atlanta-edge-03 should have
 	// queue updates enabled.  run t3c to verify a new remap.config
 	// is pulled down.
-	err = runApply(cacheHostName, "syncds")
+	err = runApply(DefaultCacheHostName, "syncds")
 	if err != nil {
 		t.Fatalf("t3c syncds failed: %v", err)
 	}
@@ -117,28 +99,28 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		}()
 
 		// run badass and check config files.
-		if err := runApply(cacheHostName, "badass"); err != nil {
+		if err := runApply(DefaultCacheHostName, "badass"); err != nil {
 			t.Fatalf("t3c badass failed: %v", err)
 		}
 
 		// Use this for uid/gid file check
-		atsUser, err := user.Lookup(trafficServerOwner)
+		atsUser, err := user.Lookup(TrafficServerOwner)
 		var atsUid string
 		var atsGid string
 
 		if err != nil {
-			t.Logf("Unable to look up user: %s: %v", trafficServerOwner, err)
+			t.Logf("Unable to look up user: %s: %v", TrafficServerOwner, err)
 		} else {
 			atsUid = atsUser.Uid
 			atsGid = atsUser.Gid
 		}
 
-		for _, v := range testFiles {
-			bfn := filepath.Join(base_line_dir, v)
+		for _, v := range TestFiles {
+			bfn := filepath.Join(BaselineConfigDir, v)
 			if !util.FileExists(bfn) {
 				t.Fatalf("missing baseline config file, %s,  needed for tests", bfn)
 			}
-			tfn := filepath.Join(test_config_dir, v)
+			tfn := filepath.Join(TestConfigDir, v)
 			if !util.FileExists(tfn) {
 				t.Fatalf("missing the expected config file, %s", tfn)
 			}

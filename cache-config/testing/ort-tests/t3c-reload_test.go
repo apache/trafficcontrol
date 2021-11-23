@@ -42,22 +42,22 @@ func TestT3cReload(t *testing.T) {
 }
 
 func doTestT3cReloadHeaderRewrite(t *testing.T) {
-	if stdOut, exitCode := t3cUpdateReload(cacheHostName, "badass"); exitCode != 0 {
+	if stdOut, exitCode := t3cUpdateReload(DefaultCacheHostName, "badass"); exitCode != 0 {
 		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
 	}
 
 	// delete a file that we know should trigger a reload.
-	fileNameToRemove := filepath.Join(test_config_dir, "hdr_rw_first_ds-top.config")
+	fileNameToRemove := filepath.Join(TestConfigDir, "hdr_rw_first_ds-top.config")
 	if err := os.Remove(fileNameToRemove); err != nil {
 		t.Fatalf("failed to remove file '%s': %v", fileNameToRemove, err)
 	}
 
 	// set the update flag, so syncds will run
-	if err := ExecTOUpdater(cacheHostName, false, true); err != nil {
+	if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
 		t.Fatalf("t3c-update failed: %v", err)
 	}
 
-	stdOut, _ := t3cUpdateReload(cacheHostName, "syncds")
+	stdOut, _ := t3cUpdateReload(DefaultCacheHostName, "syncds")
 	// Ignore the exit code error for now, because the ORT Integration Test Framework doesn't currently start ATS.
 	// TODO check err, after running ATS is added to the tests.
 	// if err != nil {
@@ -70,22 +70,22 @@ func doTestT3cReloadHeaderRewrite(t *testing.T) {
 }
 
 func doTestT3cReloadAnythingInTrafficserverDir(t *testing.T) {
-	if stdOut, exitCode := t3cUpdateReload(cacheHostName, "badass"); exitCode != 0 {
+	if stdOut, exitCode := t3cUpdateReload(DefaultCacheHostName, "badass"); exitCode != 0 {
 		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
 	}
 
 	// delete a random file in etc/trafficserver which should trigger a reload
-	fileNameToRemove := filepath.Join(test_config_dir, "non-empty-file.config")
+	fileNameToRemove := filepath.Join(TestConfigDir, "non-empty-file.config")
 	if err := os.Remove(fileNameToRemove); err != nil {
 		t.Fatalf("failed to remove file '%s': %v", fileNameToRemove, err)
 	}
 
 	// set the update flag, so syncds will run
-	if err := ExecTOUpdater(cacheHostName, false, true); err != nil {
+	if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
 		t.Fatalf("t3c-update failed: %v", err)
 	}
 
-	stdOut, _ := t3cUpdateReload(cacheHostName, "syncds")
+	stdOut, _ := t3cUpdateReload(DefaultCacheHostName, "syncds")
 	// Ignore the exit code error for now, because the ORT Integration Test Framework doesn't currently start ATS.
 	// TODO check err, after running ATS is added to the tests.
 	// if err != nil {
@@ -98,18 +98,18 @@ func doTestT3cReloadAnythingInTrafficserverDir(t *testing.T) {
 }
 
 func doTestT3cReloadNoChange(t *testing.T) {
-	if stdOut, exitCode := t3cUpdateReload(cacheHostName, "badass"); exitCode != 0 {
+	if stdOut, exitCode := t3cUpdateReload(DefaultCacheHostName, "badass"); exitCode != 0 {
 		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
 	}
 
 	// no change, should not trigger a reload
 
 	// set the update flag, so syncds will run
-	if err := ExecTOUpdater(cacheHostName, false, true); err != nil {
+	if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
 		t.Fatalf("t3c-update failed: %v", err)
 	}
 
-	stdOut, _ := t3cUpdateReload(cacheHostName, "syncds")
+	stdOut, _ := t3cUpdateReload(DefaultCacheHostName, "syncds")
 	// Ignore the exit code error for now, because the ORT Integration Test Framework doesn't currently start ATS.
 	// TODO check err, after running ATS is added to the tests.
 	// if err != nil {
@@ -122,22 +122,22 @@ func doTestT3cReloadNoChange(t *testing.T) {
 }
 
 func doTestT3cRevalCallsReload(t *testing.T) {
-	if stdOut, exitCode := t3cUpdateReload(cacheHostName, "badass"); exitCode != 0 {
+	if stdOut, exitCode := t3cUpdateReload(DefaultCacheHostName, "badass"); exitCode != 0 {
 		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
 	}
 
 	// delete a regex_revalidate.config to trigger a reval change and reload
-	fileNameToRemove := filepath.Join(test_config_dir, "regex_revalidate.config")
+	fileNameToRemove := filepath.Join(TestConfigDir, "regex_revalidate.config")
 	if err := os.Remove(fileNameToRemove); err != nil {
 		t.Fatalf("failed to remove file '%s': %v", fileNameToRemove, err)
 	}
 
 	// set the update flag, so reval will run
-	if err := ExecTOUpdater(cacheHostName, true, false); err != nil {
+	if err := ExecTOUpdater(DefaultCacheHostName, true, false); err != nil {
 		t.Fatalf("t3c-update failed: %v", err)
 	}
 
-	stdOut, _ := t3cUpdateReload(cacheHostName, "revalidate")
+	stdOut, _ := t3cUpdateReload(DefaultCacheHostName, "revalidate")
 	// Ignore the exit code error for now, because the ORT Integration Test Framework doesn't currently start ATS.
 	// TODO check err, after running ATS is added to the tests.
 	// if err != nil {
@@ -150,18 +150,18 @@ func doTestT3cRevalCallsReload(t *testing.T) {
 }
 
 func doTestT3cReloadState(t *testing.T) {
-	if stdOut, exitCode := t3cUpdateReload(cacheHostName, "badass"); exitCode != 0 {
+	if stdOut, exitCode := t3cUpdateReload(DefaultCacheHostName, "badass"); exitCode != 0 {
 		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
 	}
 
 	// delete header rewrite so we know should trigger a remap.config touch and reload.
-	fileNameToRemove := filepath.Join(test_config_dir, "hdr_rw_first_ds-top.config")
+	fileNameToRemove := filepath.Join(TestConfigDir, "hdr_rw_first_ds-top.config")
 	if err := os.Remove(fileNameToRemove); err != nil {
 		t.Fatalf("failed to remove file '%s': %v", fileNameToRemove, err)
 	}
 
 	// create plugin.config to trigger restart directive
-	pluginConfigPath := filepath.Join(test_config_dir, "plugin.config")
+	pluginConfigPath := filepath.Join(TestConfigDir, "plugin.config")
 	contents := []byte("remap_stats.so")
 	err := ioutil.WriteFile(pluginConfigPath, contents, 0666)
 	if err != nil {
@@ -169,11 +169,11 @@ func doTestT3cReloadState(t *testing.T) {
 	}
 
 	// set the update flag, so syncds will run
-	if err := ExecTOUpdater(cacheHostName, false, true); err != nil {
+	if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
 		t.Fatalf("t3c-update failed: %v", err)
 	}
 
-	stdOut, _ := t3cUpdateReload(cacheHostName, "syncds")
+	stdOut, _ := t3cUpdateReload(DefaultCacheHostName, "syncds")
 
 	if !strings.Contains(stdOut, "Final state: remap.config: true reload: true restart: true ntpd: false sysctl: false") {
 		t.Errorf("expected t3c Final reload state for remap.config, reload and restart, actual: %s", stdOut)

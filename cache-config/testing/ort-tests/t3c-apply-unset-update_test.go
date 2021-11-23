@@ -25,11 +25,10 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const cacheHostName = `atlanta-edge-03`
 const cmdUpdateStatus = `update-status`
 
 func verifyUpdateStatus(t *testing.T) {
-	output, err := runRequest(cacheHostName, cmdUpdateStatus)
+	output, err := runRequest(DefaultCacheHostName, cmdUpdateStatus)
 	if err != nil {
 		t.Fatalf("t3c-request failed: %v", err)
 	}
@@ -37,8 +36,8 @@ func verifyUpdateStatus(t *testing.T) {
 	if err = json.Unmarshal([]byte(output), &serverStatus); err != nil {
 		t.Fatalf("failed to parse t3c-request output: %v", err)
 	}
-	if serverStatus.HostName != cacheHostName {
-		t.Errorf("expected update-status host '%s', actual: '%s'", cacheHostName, serverStatus.HostName)
+	if serverStatus.HostName != DefaultCacheHostName {
+		t.Errorf("expected update-status host '%s', actual: '%s'", DefaultCacheHostName, serverStatus.HostName)
 	} else if serverStatus.RevalPending {
 		t.Error("expected RevalPending false after syncds run")
 	} else if serverStatus.UpdatePending {
@@ -55,26 +54,26 @@ func TestT3cUnsetsUpdateFlag(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		if stdOut, exitCode := t3cUpdateUnsetFlag(cacheHostName, "badass"); exitCode != 0 {
+		if stdOut, exitCode := t3cUpdateUnsetFlag(DefaultCacheHostName, "badass"); exitCode != 0 {
 			t.Fatalf("t3c badass failed with code %d output: %s", exitCode, stdOut)
 		}
 
 		// delete a file that we know should trigger a reload.
-		fileNameToRemove := filepath.Join(test_config_dir, "hdr_rw_first_ds-top.config")
+		fileNameToRemove := filepath.Join(TestConfigDir, "hdr_rw_first_ds-top.config")
 		if err := os.Remove(fileNameToRemove); err != nil {
 			t.Fatalf("failed to remove file '%s': %v", fileNameToRemove, err)
 		}
 
 		t.Logf("DEBUG TestT3cReload setting upate flag")
 		// set the update flag, so syncds will run
-		if err := ExecTOUpdater(cacheHostName, false, true); err != nil {
+		if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
 			t.Fatalf("t3c-update failed: %v", err)
 		}
 
 		{
 			// verify update status is now true
 
-			output, err := runRequest(cacheHostName, cmdUpdateStatus)
+			output, err := runRequest(DefaultCacheHostName, cmdUpdateStatus)
 			if err != nil {
 				t.Fatalf("to_requester run failed: %v", err)
 			}
@@ -82,8 +81,8 @@ func TestT3cUnsetsUpdateFlag(t *testing.T) {
 			if err = json.Unmarshal([]byte(output), &serverStatus); err != nil {
 				t.Fatalf("failed to parse to_requester output: %v", err)
 			}
-			if serverStatus.HostName != cacheHostName {
-				t.Fatalf("expected request update-status host '%s', actual: '%s'", cacheHostName, serverStatus.HostName)
+			if serverStatus.HostName != DefaultCacheHostName {
+				t.Fatalf("expected request update-status host '%s', actual: '%s'", DefaultCacheHostName, serverStatus.HostName)
 			} else if serverStatus.RevalPending {
 				t.Fatal("expected RevalPending false after update")
 			} else if !serverStatus.UpdatePending {
@@ -115,7 +114,7 @@ func TestT3cUnsetsUpdateFlag(t *testing.T) {
 			}
 		}()
 
-		stdOut, _ := t3cUpdateUnsetFlag(cacheHostName, "syncds")
+		stdOut, _ := t3cUpdateUnsetFlag(DefaultCacheHostName, "syncds")
 		// Ignore the exit code error for now, because the ORT Integration Test Framework doesn't currently start ATS.
 		// TODO check err, after running ATS is added to the tests.
 		// if err != nil {

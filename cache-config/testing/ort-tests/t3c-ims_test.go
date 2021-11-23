@@ -46,7 +46,7 @@ func TestIMS(t *testing.T) {
 }
 
 func doTestIMS(t *testing.T) {
-	if stdOut, exitCode := t3cApplyCache(cacheHostName, false); exitCode != 0 {
+	if stdOut, exitCode := t3cApplyCache(DefaultCacheHostName, false); exitCode != 0 {
 		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
 	}
 
@@ -54,13 +54,13 @@ func doTestIMS(t *testing.T) {
 		t.Fatalf("expected: cache '%s' to exist after badass, actual: doesn't exist", t3cutil.ApplyCachePath)
 	}
 
-	if stdOut, exitCode := t3cApplyCache(cacheHostName, false); exitCode != 0 {
+	if stdOut, exitCode := t3cApplyCache(DefaultCacheHostName, false); exitCode != 0 {
 		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
 	} else if !strings.Contains(stdOut, "not modified, using old config") {
 		t.Errorf("expected t3c second badass to have a successful IMS 304, actual: code %d output: %s", exitCode, stdOut)
 	}
 
-	if stdOut, exitCode := t3cApplyCache(cacheHostName, true); exitCode != 0 {
+	if stdOut, exitCode := t3cApplyCache(DefaultCacheHostName, true); exitCode != 0 {
 		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
 	} else if strings.Contains(stdOut, "not modified, using old config") {
 		t.Errorf("expected t3c second badass with --no-cache to not use the cache, actual: code %d output: %s", exitCode, stdOut)
@@ -74,7 +74,7 @@ const (
 )
 
 func checkRemapConfigHasInitialCDN(t *testing.T) {
-	remapName := filepath.Join(test_config_dir, "remap.config")
+	remapName := filepath.Join(TestConfigDir, "remap.config")
 	remapDotConfig, err := ioutil.ReadFile(remapName)
 	if err != nil {
 		t.Fatalf("reading %s: %v", remapName, err)
@@ -109,7 +109,7 @@ func changeServerCDN(t *testing.T) {
 	cdn2ID := cdns[0].ID
 	cdn2ProfileID := profiles[0].ID
 
-	sv, _, err := GetServer(tcdata.TOSession, cacheHostName)
+	sv, _, err := GetServer(tcdata.TOSession, DefaultCacheHostName)
 	if err != nil {
 		t.Fatalf("getting server: %v", err)
 	}
@@ -126,7 +126,7 @@ func changeServerCDN(t *testing.T) {
 }
 
 func checkChangedCDN(t *testing.T) {
-	remapName := filepath.Join(test_config_dir, "remap.config")
+	remapName := filepath.Join(TestConfigDir, "remap.config")
 	remapDotConfig, err := ioutil.ReadFile(remapName)
 	if err != nil {
 		t.Fatalf("reading %s: %v", remapName, err)
@@ -144,7 +144,7 @@ func checkChangedCDN(t *testing.T) {
 
 // doTestIMSChangedCDN tests that after caching, requests which use the CDN as a key don't use the invalid cache.
 func doTestIMSChangedCDN(t *testing.T) {
-	if stdOut, exitCode := t3cApplyCache(cacheHostName, false); exitCode != 0 {
+	if stdOut, exitCode := t3cApplyCache(DefaultCacheHostName, false); exitCode != 0 {
 		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
 	}
 
@@ -152,7 +152,7 @@ func doTestIMSChangedCDN(t *testing.T) {
 		t.Fatalf("expected: config data file '%s' to exist after badass, actual: doesn't exist", t3cutil.ApplyCachePath)
 	}
 
-	if stdOut, exitCode := t3cApplyCache(cacheHostName, false); exitCode != 0 {
+	if stdOut, exitCode := t3cApplyCache(DefaultCacheHostName, false); exitCode != 0 {
 		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
 	} else if !strings.Contains(stdOut, "not modified, using old config") {
 		t.Errorf("expected t3c second badass to have a successful IMS 304, actual: code %d output: %s", exitCode, stdOut)
@@ -164,7 +164,7 @@ func doTestIMSChangedCDN(t *testing.T) {
 
 	// run t3c after changing the cdn
 
-	stdOut, exitCode := t3cApplyCache(cacheHostName, false)
+	stdOut, exitCode := t3cApplyCache(DefaultCacheHostName, false)
 	if exitCode != 0 {
 		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
 	}

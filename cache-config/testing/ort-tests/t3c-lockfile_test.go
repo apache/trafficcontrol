@@ -41,13 +41,13 @@ func TestLockfile(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			t.Logf("TestLockFile first t3c starting %s", time.Now())
-			firstOut, firstCode = t3cUpdateReload(cacheHostName, "badass")
+			firstOut, firstCode = t3cUpdateReload(DefaultCacheHostName, "badass")
 			t.Logf("TestLockFile first t3c finished %s", time.Now())
 		}()
 
 		time.Sleep(time.Millisecond * 100) // sleep long enough to ensure the concurrent t3c starts
 		t.Logf("TestLockFile second t3c starting %s", time.Now())
-		out, code := t3cUpdateReload(cacheHostName, "badass")
+		out, code := t3cUpdateReload(DefaultCacheHostName, "badass")
 		t.Logf("TestLockFile second t3c finished %s", time.Now())
 		if code != 0 {
 			t.Fatalf("second t3c apply badass failed with exit code %d, output: %s", code, out)

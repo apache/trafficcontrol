@@ -31,7 +31,7 @@ func TestT3cTOUpdates(t *testing.T) {
 		tcdata.DeliveryServices}, func() {
 
 		// retrieve the current server status
-		output, err := runRequest(cacheHostName, "update-status")
+		output, err := runRequest(DefaultCacheHostName, "update-status")
 		if err != nil {
 			t.Fatalf("to_requester run failed: %v", err)
 		}
@@ -40,8 +40,8 @@ func TestT3cTOUpdates(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unmarshalling json output: %v", err)
 		}
-		if serverStatus.HostName != cacheHostName {
-			t.Fatalf("incorrect server status hostname, expected '%s', got '%s'", cacheHostName, serverStatus.HostName)
+		if serverStatus.HostName != DefaultCacheHostName {
+			t.Fatalf("incorrect server status hostname, expected '%s', got '%s'", DefaultCacheHostName, serverStatus.HostName)
 		}
 		if serverStatus.RevalPending != false {
 			t.Fatal("expected RevalPending to be 'false'")
@@ -51,12 +51,12 @@ func TestT3cTOUpdates(t *testing.T) {
 		}
 
 		// change the server update status
-		err = ExecTOUpdater(cacheHostName, true, true)
+		err = ExecTOUpdater(DefaultCacheHostName, true, true)
 		if err != nil {
 			t.Fatalf("to_updater run failed: %v", err)
 		}
 		// verify the update status is now 'true'
-		output, err = runRequest(cacheHostName, "update-status")
+		output, err = runRequest(DefaultCacheHostName, "update-status")
 		if err != nil {
 			t.Fatalf("to_requester run failed: %v", err)
 		}
@@ -72,11 +72,11 @@ func TestT3cTOUpdates(t *testing.T) {
 		}
 
 		// run t3c syncds and verify only the queue update flag is reset to 'false'
-		err = runApply(cacheHostName, "syncds")
+		err = runApply(DefaultCacheHostName, "syncds")
 		if err != nil {
 			t.Fatalf("t3c syncds failed: %v", err)
 		}
-		output, err = runRequest(cacheHostName, "update-status")
+		output, err = runRequest(DefaultCacheHostName, "update-status")
 		if err != nil {
 			t.Fatalf("to_requester run failed: %v", err)
 		}
@@ -93,11 +93,11 @@ func TestT3cTOUpdates(t *testing.T) {
 
 		// run t3c revalidate and verify only the queue update flag is still 'false'
 		// and that the revalidate flag is now 'false'
-		err = runApply(cacheHostName, "revalidate")
+		err = runApply(DefaultCacheHostName, "revalidate")
 		if err != nil {
 			t.Fatalf("t3c syncds failed: %v", err)
 		}
-		output, err = runRequest(cacheHostName, "update-status")
+		output, err = runRequest(DefaultCacheHostName, "update-status")
 		if err != nil {
 			t.Fatalf("to_requester run failed: %v", err)
 		}

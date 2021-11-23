@@ -34,12 +34,12 @@ func TestT3CDNSLocalBind(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		err := t3cUpdateDNSLocalBind(cacheHostName, "badass")
+		err := t3cUpdateDNSLocalBind(DefaultCacheHostName, "badass")
 		if err != nil {
 			t.Fatalf("t3c badass failed: %v", err)
 		}
 
-		recordsName := filepath.Join(test_config_dir, "records.config")
+		recordsName := filepath.Join(TestConfigDir, "records.config")
 		recordsDotConfig, err := ioutil.ReadFile(recordsName)
 		if err != nil {
 			t.Fatalf("reading %s: %v", recordsName, err)

@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -26,37 +25,35 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 )
 
-var recordsConfigFileName = filepath.Join(test_config_dir, "records.config")
-
 func writeComment(t *testing.T) {
-	f, err := os.OpenFile(recordsConfigFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(RecordsConfigFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		t.Fatalf("opening file '%s': %v", recordsConfigFileName, err)
+		t.Fatalf("opening file '%s': %v", RecordsConfigFileName, err)
 	}
 	defer f.Close()
 	_, err = f.Write([]byte(" #mycomment\n"))
 	if err != nil {
-		t.Fatalf("writing comment to file '%s': %v", recordsConfigFileName, err)
+		t.Fatalf("writing comment to file '%s': %v", RecordsConfigFileName, err)
 	}
 
 }
 
 func writeNonComment(t *testing.T) {
-	f, err := os.OpenFile(recordsConfigFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(RecordsConfigFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		t.Fatalf("opening file '%s': %v", recordsConfigFileName, err)
+		t.Fatalf("opening file '%s': %v", RecordsConfigFileName, err)
 	}
 	_, err = f.Write([]byte("\nmynocomment this line isn't a comment\n"))
 	f.Close()
 	if err != nil {
-		t.Fatalf("writing line to file '%s': %v", recordsConfigFileName, err)
+		t.Fatalf("writing line to file '%s': %v", RecordsConfigFileName, err)
 	}
 }
 
 func verifyOverwritten(t *testing.T) {
-	recordsDotConfig, err := ioutil.ReadFile(recordsConfigFileName)
+	recordsDotConfig, err := ioutil.ReadFile(RecordsConfigFileName)
 	if err != nil {
-		t.Fatalf("reading %s: %v", recordsConfigFileName, err)
+		t.Fatalf("reading %s: %v", RecordsConfigFileName, err)
 	}
 	content := string(recordsDotConfig)
 	if strings.Contains(content, "#mycomment") {
@@ -76,31 +73,31 @@ func TestApplyDiff(t *testing.T) {
 
 		// badass to get initial config files
 
-		if out, code := t3cUpdateReload(cacheHostName, "badass"); code != 0 {
+		if out, code := t3cUpdateReload(DefaultCacheHostName, "badass"); code != 0 {
 			t.Fatalf("t3c apply badass failed with exit code %d, output: %s", code, out)
 		}
 
-		if !util.FileExists(recordsConfigFileName) {
-			t.Fatalf("missing config file '%s' needed to test", recordsConfigFileName)
+		if !util.FileExists(RecordsConfigFileName) {
+			t.Fatalf("missing config file '%s' needed to test", RecordsConfigFileName)
 		}
 
 		t.Run("write a comment, which should diff as unchanged", writeComment)
 
 		// queue and syncds to get changes
 
-		if err := ExecTOUpdater(cacheHostName, false, true); err != nil {
+		if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
 			t.Fatalf("updating queue status failed: %v", err)
 		}
-		out, code := t3cUpdateReload(cacheHostName, "syncds")
+		out, code := t3cUpdateReload(DefaultCacheHostName, "syncds")
 		if code != 0 {
 			t.Fatalf("t3c apply failed with exit code %d, output: %s", code, out)
 		}
 
 		// verify the file wasn't overwritten, as it would be if there were a diff
 
-		recordsDotConfig, err := ioutil.ReadFile(recordsConfigFileName)
+		recordsDotConfig, err := ioutil.ReadFile(RecordsConfigFileName)
 		if err != nil {
-			t.Fatalf("reading %s: %v", recordsConfigFileName, err)
+			t.Fatalf("reading %s: %v", RecordsConfigFileName, err)
 		}
 		if !bytes.Contains(recordsDotConfig, []byte("#mycomment")) {
 			t.Fatalf("expected records.config to diff clean and not be replaced with comment difference, actual: '%s' t3c-apply output: %s", string(recordsDotConfig), out)
@@ -110,10 +107,10 @@ func TestApplyDiff(t *testing.T) {
 
 		// queue and syncds to get changes
 
-		if err := ExecTOUpdater(cacheHostName, false, true); err != nil {
+		if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
 			t.Fatalf("updating queue status failed: %v", err)
 		}
-		out, code = t3cUpdateReload(cacheHostName, "syncds")
+		out, code = t3cUpdateReload(DefaultCacheHostName, "syncds")
 		if code != 0 {
 			t.Fatalf("t3c apply failed with exit code %d, output: %s", code, out)
 		}

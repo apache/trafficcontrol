@@ -40,8 +40,6 @@ var tcd *tcdata.TCData
 
 var TCD *tcdata.TCData
 
-const TestAPIBase = "/api/3.0"
-
 const cfgFmt = `Using Config values:
 	TO Config File:              %s
 	TO Fixtures:                 %s

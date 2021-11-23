@@ -46,7 +46,7 @@ func doTestT3cApplyOSHostnameShort(t *testing.T) {
 
 	t.Logf("original host is %s", startingHost)
 
-	if msg, code := setHostName(cacheHostName); code != 0 {
+	if msg, code := setHostName(DefaultCacheHostName); code != 0 {
 		t.Fatalf("setting the hostname failed with exit code %d, message: %s", code, msg)
 	}
 
@@ -61,18 +61,18 @@ func doTestT3cApplyOSHostnameShort(t *testing.T) {
 	// verify the host was really set
 	if newHost, errCode := getHostName(); errCode != 0 {
 		t.Fatalf("getting the hostname failed with exit code %d, message: %s", errCode, newHost)
-	} else if newHost != cacheHostName {
-		t.Fatalf("setting hostname claimed it succeeded, but was '%s' expected '%s'", newHost, cacheHostName)
+	} else if newHost != DefaultCacheHostName {
+		t.Fatalf("setting hostname claimed it succeeded, but was '%s' expected '%s'", newHost, DefaultCacheHostName)
 	} else {
 		t.Logf("set hostname to '%s'", newHost)
 	}
 
 	t.Logf("calling t3c-apply with no host flag, with a short hostname")
 	if stdOut, exitCode := t3cApplyNoHost(); exitCode != 0 {
-		t.Fatalf("t3c-apply with no hostname arg and and system hostname '%s' failed with exit code %d, output: %s", cacheHostName, exitCode, stdOut)
+		t.Fatalf("t3c-apply with no hostname arg and and system hostname '%s' failed with exit code %d, output: %s", DefaultCacheHostName, exitCode, stdOut)
 	}
 
-	fqdnHostName := cacheHostName + ".fqdn.example.test"
+	fqdnHostName := DefaultCacheHostName + ".fqdn.example.test"
 	if msg, code := setHostName(fqdnHostName); code != 0 {
 		t.Fatalf("setting the hostname failed with exit code %d, message: %s", code, msg)
 	}
@@ -88,7 +88,7 @@ func doTestT3cApplyOSHostnameShort(t *testing.T) {
 
 	t.Logf("calling t3c-apply with no host flag, with a fqdn hostname")
 	if stdOut, exitCode := t3cApplyNoHost(); exitCode != 0 {
-		t.Fatalf("t3c-apply with no hostname arg and and system hostname '%s' failed with exit code %d, output: %s", cacheHostName, exitCode, stdOut)
+		t.Fatalf("t3c-apply with no hostname arg and and system hostname '%s' failed with exit code %d, output: %s", DefaultCacheHostName, exitCode, stdOut)
 	}
 }
 

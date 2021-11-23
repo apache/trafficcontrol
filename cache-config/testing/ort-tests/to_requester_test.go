@@ -40,7 +40,7 @@ func TestTORequester(t *testing.T) {
 		tcdata.DeliveryServices}, func() {
 
 		// chkconfig test
-		output, err := ExecTORequester(cacheHostName, "chkconfig")
+		output, err := ExecTORequester(DefaultCacheHostName, "chkconfig")
 		if err != nil {
 			t.Fatalf("t3c-request exec failed: %v", err)
 		}
@@ -58,7 +58,7 @@ func TestTORequester(t *testing.T) {
 		}
 
 		// get system-info test
-		output, err = ExecTORequester(cacheHostName, "system-info")
+		output, err = ExecTORequester(DefaultCacheHostName, "system-info")
 		if err != nil {
 			t.Fatalf("t3c-request exec failed: %v", err)
 		}
@@ -73,7 +73,7 @@ func TestTORequester(t *testing.T) {
 		}
 
 		// statuses test
-		output, err = ExecTORequester(cacheHostName, "statuses")
+		output, err = ExecTORequester(DefaultCacheHostName, "statuses")
 		if err != nil {
 			t.Fatalf("t3c-request exec failed: %v", err)
 		}
@@ -85,7 +85,7 @@ func TestTORequester(t *testing.T) {
 		}
 
 		// packages test
-		output, err = ExecTORequester(cacheHostName, "packages")
+		output, err = ExecTORequester(DefaultCacheHostName, "packages")
 		if err != nil {
 			t.Fatalf("t3c-request exec failed: %v", err)
 		}
@@ -107,7 +107,7 @@ func TestTORequester(t *testing.T) {
 		}
 
 		// update-status test
-		output, err = ExecTORequester(cacheHostName, "update-status")
+		output, err = ExecTORequester(DefaultCacheHostName, "update-status")
 		if err != nil {
 			t.Fatalf("t3c-request exec failed: %v", err)
 		}
@@ -116,8 +116,8 @@ func TestTORequester(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to parse t3c-request output: %v", err)
 		}
-		if serverStatus.HostName != cacheHostName {
-			t.Fatalf("expected server status hosname to be '%s', actual: %s", cacheHostName, serverStatus.HostName)
+		if serverStatus.HostName != DefaultCacheHostName {
+			t.Fatalf("expected server status hosname to be '%s', actual: %s", DefaultCacheHostName, serverStatus.HostName)
 		}
 
 	})

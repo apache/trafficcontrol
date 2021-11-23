@@ -51,13 +51,13 @@ func TestT3CJobs(t *testing.T) {
 			t.Fatalf("create refresh job failed: %v", err)
 		}
 
-		out, err := t3cUpdateWaitForParents(cacheHostName, "badass", util.StrPtr("false"))
+		out, err := t3cUpdateWaitForParents(DefaultCacheHostName, "badass", util.StrPtr("false"))
 		if err != nil {
 			t.Fatalf("t3c badass failed: %v", err)
 		}
 		t.Logf("t3c badass output: %s", out)
 
-		fileName := filepath.Join(test_config_dir, "regex_revalidate.config")
+		fileName := filepath.Join(TestConfigDir, "regex_revalidate.config")
 		revalFileBts, err := ioutil.ReadFile(fileName)
 		if err != nil {
 			t.Fatalf("reading %s: %v", fileName, err)

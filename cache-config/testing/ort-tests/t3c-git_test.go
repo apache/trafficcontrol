@@ -36,21 +36,21 @@ func TestT3cGit(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		if err := util.RMGit(test_config_dir); err != nil {
+		if err := util.RMGit(TestConfigDir); err != nil {
 			t.Fatalf("removing existing git directory: %v", err)
 		}
 
 		// run badass and check config files.
-		err := t3cUpdateGit(cacheHostName, "badass")
+		err := t3cUpdateGit(DefaultCacheHostName, "badass")
 		if err != nil {
 			t.Fatalf("t3c badass failed: %v", err)
 		}
-		for _, v := range testFiles {
-			bfn := filepath.Join(base_line_dir, v)
+		for _, v := range TestFiles {
+			bfn := filepath.Join(BaselineConfigDir, v)
 			if !util.FileExists(bfn) {
 				t.Fatalf("missing baseline config file, '%s' needed for tests", bfn)
 			}
-			tfn := filepath.Join(test_config_dir, v)
+			tfn := filepath.Join(TestConfigDir, v)
 			if !util.FileExists(tfn) {
 				t.Fatalf("missing the expected config file, %s", tfn)
 			}
@@ -65,12 +65,12 @@ func TestT3cGit(t *testing.T) {
 			}
 		}
 
-		gitLog, err := gitLogOneline(test_config_dir)
+		gitLog, err := gitLogOneline(TestConfigDir)
 		if err != nil {
 			t.Fatalf("getting git log: %v", err)
 		}
 
-		numCommits, err := gitNumCommits(test_config_dir)
+		numCommits, err := gitNumCommits(TestConfigDir)
 		if err != nil {
 			t.Errorf("checking number of git commits: %v", err)
 		} else if numCommits != 3 {
@@ -78,7 +78,7 @@ func TestT3cGit(t *testing.T) {
 			t.Errorf("git commits expected >=3 actual: %d - git log: %s", numCommits, gitLog)
 
 			for i := 0; i < numCommits; i++ {
-				showTxt, err := gitShow(i, test_config_dir)
+				showTxt, err := gitShow(i, TestConfigDir)
 				if err != nil {
 					t.Errorf("git show: %v", err)
 				} else {
