@@ -63,7 +63,44 @@ func syncDSTest(t *testing.T) {
 	if !util.FileExists(remap) {
 		t.Fatalf("syncds failed to pull down %s", remap)
 	}
+}
 
+// given a filename checks that the baseline and generated files diff clean and
+// that the generated files have the given user and owner group IDs
+func checkDiff(fName, atsUid, atsGid string, t *testing.T) {
+	bfn := filepath.Join(BaselineConfigDir, fName)
+	if !util.FileExists(bfn) {
+		t.Fatalf("missing baseline config file, %s,  needed for tests", bfn)
+	}
+	tfn := filepath.Join(TestConfigDir, fName)
+	if !util.FileExists(tfn) {
+		t.Fatalf("missing the expected config file, %s", tfn)
+	}
+
+	diffStr, err := util.DiffFiles(bfn, tfn)
+	if err != nil {
+		t.Fatalf("diffing %s and %s: %v", tfn, bfn, err)
+	} else if diffStr != "" {
+		t.Errorf("%s and %s differ: %v", tfn, bfn, diffStr)
+	} else {
+		t.Logf("%s and %s diff clean", tfn, bfn)
+	}
+
+	fileInfo, err := os.Stat(tfn)
+	if err != nil {
+		t.Errorf("Error getting stats on %s: %v", tfn, err)
+	} else {
+		if statStruct, ok := fileInfo.Sys().(*syscall.Stat_t); ok {
+			uid := strconv.Itoa(int(statStruct.Uid))
+			if uid != atsUid {
+				t.Errorf("Unexpected uid for file: %s: %s, expected %s", fName, uid, atsUid)
+			}
+			gid := strconv.Itoa(int(statStruct.Gid))
+			if gid != atsGid {
+				t.Errorf("Unexpected gid for file: %s: %s, expected %s", fName, gid, atsGid)
+			}
+		}
+	}
 }
 
 func TestT3cBadassAndSyncDs(t *testing.T) {
@@ -116,39 +153,7 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		}
 
 		for _, v := range TestFiles {
-			bfn := filepath.Join(BaselineConfigDir, v)
-			if !util.FileExists(bfn) {
-				t.Fatalf("missing baseline config file, %s,  needed for tests", bfn)
-			}
-			tfn := filepath.Join(TestConfigDir, v)
-			if !util.FileExists(tfn) {
-				t.Fatalf("missing the expected config file, %s", tfn)
-			}
-
-			diffStr, err := util.DiffFiles(bfn, tfn)
-			if err != nil {
-				t.Fatalf("diffing %s and %s: %v", tfn, bfn, err)
-			} else if diffStr != "" {
-				t.Errorf("%s and %s differ: %v", tfn, bfn, diffStr)
-			} else {
-				t.Logf("%s and %s diff clean", tfn, bfn)
-			}
-
-			fileInfo, err := os.Stat(tfn)
-			if err != nil {
-				t.Errorf("Error getting stats on %s: %v", tfn, err)
-			} else {
-				if statStruct, ok := fileInfo.Sys().(*syscall.Stat_t); ok {
-					uid := strconv.Itoa(int(statStruct.Uid))
-					if uid != atsUid {
-						t.Errorf("Unexpected uid for file: %s: %s, expected %s", v, uid, atsUid)
-					}
-					gid := strconv.Itoa(int(statStruct.Gid))
-					if gid != atsGid {
-						t.Errorf("Unexpected gid for file: %s: %s, expected %s", v, gid, atsGid)
-					}
-				}
-			}
+			t.Run("check diff of "+v+" between baseline and badass-generated", func(t *testing.T) { checkDiff(v, atsUid, atsGid, t) })
 		}
 
 		time.Sleep(time.Second * 5)
