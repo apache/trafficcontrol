@@ -91,6 +91,10 @@ func (r *TCData) SetupTestData(*sql.DB) error {
 	return nil
 }
 
+func execError(sql string, err error) error {
+	return fmt.Errorf("encountered error '%w' during execution of query: %s", err, sql)
+}
+
 // SetupRoles ...
 func SetupRoles(db *sql.DB) error {
 
@@ -105,7 +109,7 @@ INSERT INTO role (name, description, priv_level) VALUES ('federation','Role for 
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %w", err)
+		return execError(sqlStmt, err)
 	}
 	return nil
 }
@@ -121,7 +125,7 @@ INSERT INTO capability (name, description) VALUES ('cache-groups-read', 'Read CG
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %w", err)
+		return execError(sqlStmt, err)
 	}
 	return nil
 }
@@ -135,7 +139,7 @@ INSERT INTO api_capability (http_method, route, capability) VALUES ('GET', '/cac
 
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %w", err)
+		return execError(sqlStmt, err)
 	}
 	return nil
 }
@@ -147,7 +151,7 @@ INSERT INTO role_capability (role_id, cap_name) VALUES (4,'all-read') ON CONFLIC
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %w", err)
+		return execError(sqlStmt, err)
 	}
 	return nil
 }
@@ -173,7 +177,7 @@ INSERT INTO tm_user (username, local_passwd, role, tenant_id) VALUES ('` + r.Con
 `
 	err = execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %w", err)
+		return execError(sqlStmt, err)
 	}
 	return nil
 }
@@ -189,7 +193,7 @@ INSERT INTO tenant (name, active, parent_id, last_updated) VALUES ('badtenant', 
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %w", err)
+		return execError(sqlStmt, err)
 	}
 	return nil
 }
@@ -202,7 +206,7 @@ INSERT INTO deliveryservice_tmuser (deliveryservice, tm_user_id, last_updated) V
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %w", err)
+		return execError(sqlStmt, err)
 	}
 	return nil
 }
@@ -217,7 +221,7 @@ INSERT INTO job (id, ttl_hr, asset_url, start_time, entered_time, job_user, last
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %w", err)
+		return execError(sqlStmt, err)
 	}
 	return nil
 }
@@ -232,7 +236,7 @@ INSERT INTO type (name, description, use_in_table) VALUES ('CHECK_EXTENSION_OPEN
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %w", err)
+		return execError(sqlStmt, err)
 	}
 	return nil
 }
@@ -246,7 +250,7 @@ INSERT INTO to_extension (name, version, info_url, isactive, script_file, server
 	`
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %w", err)
+		return execError(sqlStmt, err)
 	}
 	return nil
 }
@@ -298,7 +302,7 @@ func (r *TCData) Teardown(db *sql.DB) error {
 `
 	err := execSQL(db, sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %w", err)
+		return execError(sqlStmt, err)
 	}
 	return err
 }
@@ -309,17 +313,17 @@ func execSQL(db *sql.DB, sqlStmt string) error {
 
 	tx, err := db.Begin()
 	if err != nil {
-		return fmt.Errorf("transaction begin failed %w ", err)
+		return fmt.Errorf("transaction begin failed: %w", err)
 	}
 
 	res, err := tx.Exec(sqlStmt)
 	if err != nil {
-		return fmt.Errorf("exec failed %w %v", err, res)
+		return execError(sqlStmt, err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return fmt.Errorf("commit failed %w %v", err, res)
+		return fmt.Errorf("transaction commit failed %w %v", err, res)
 	}
 	return nil
 }
