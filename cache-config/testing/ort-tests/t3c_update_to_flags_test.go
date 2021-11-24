@@ -31,7 +31,7 @@ func TestT3cTOUpdates(t *testing.T) {
 		tcdata.DeliveryServices}, func() {
 
 		// retrieve the current server status
-		output, err := runRequest(DefaultCacheHostName, "update-status")
+		output, err := runRequest(DefaultCacheHostName, CMDUpdateStatus)
 		if err != nil {
 			t.Fatalf("update-status run failed: %v", err)
 		}
@@ -56,7 +56,7 @@ func TestT3cTOUpdates(t *testing.T) {
 			t.Fatalf("to_updater run failed: %v", err)
 		}
 		// verify the update status is now 'true'
-		output, err = runRequest(DefaultCacheHostName, "update-status")
+		output, err = runRequest(DefaultCacheHostName, CMDUpdateStatus)
 		if err != nil {
 			t.Fatalf("update-status run failed: %v", err)
 		}
@@ -76,7 +76,7 @@ func TestT3cTOUpdates(t *testing.T) {
 		if err != nil {
 			t.Fatalf("t3c syncds failed: %v", err)
 		}
-		output, err = runRequest(DefaultCacheHostName, "update-status")
+		output, err = runRequest(DefaultCacheHostName, CMDUpdateStatus)
 		if err != nil {
 			t.Fatalf("update-status run failed: %v", err)
 		}
@@ -97,7 +97,7 @@ func TestT3cTOUpdates(t *testing.T) {
 		if err != nil {
 			t.Fatalf("t3c syncds failed: %v", err)
 		}
-		output, err = runRequest(DefaultCacheHostName, "update-status")
+		output, err = runRequest(DefaultCacheHostName, CMDUpdateStatus)
 		if err != nil {
 			t.Fatalf("update-status run failed: %v", err)
 		}

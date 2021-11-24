@@ -27,10 +27,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const cmdUpdateStatus = `update-status`
-
 func verifyUpdateStatusIsFalse() error {
-	output, err := runRequest(DefaultCacheHostName, cmdUpdateStatus)
+	output, err := runRequest(DefaultCacheHostName, CMDUpdateStatus)
 	if err != nil {
 		return fmt.Errorf("t3c-request failed: %w", err)
 	}
@@ -51,7 +49,7 @@ func verifyUpdateStatusIsFalse() error {
 }
 
 func verifyUpdateStatusIsTrue() error {
-	output, err := runRequest(DefaultCacheHostName, cmdUpdateStatus)
+	output, err := runRequest(DefaultCacheHostName, CMDUpdateStatus)
 	if err != nil {
 		return fmt.Errorf("update-status run failed: %w", err)
 	}

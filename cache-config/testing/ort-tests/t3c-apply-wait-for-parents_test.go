@@ -303,7 +303,7 @@ func TestWaitForParentsFalse(t *testing.T) {
 
 func getUpdateStatus(hostName string) (tc.ServerUpdateStatus, error) {
 	st := tc.ServerUpdateStatus{}
-	if output, err := runRequest(hostName, "update-status"); err != nil {
+	if output, err := runRequest(hostName, CMDUpdateStatus); err != nil {
 		return tc.ServerUpdateStatus{}, errors.New("t3c-request failed: " + err.Error())
 	} else if err = json.Unmarshal([]byte(output), &st); err != nil {
 		return tc.ServerUpdateStatus{}, errors.New("unmarshalling t3c-request json output: " + err.Error())

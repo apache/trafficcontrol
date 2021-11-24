@@ -107,7 +107,7 @@ func TestTORequester(t *testing.T) {
 		}
 
 		// update-status test
-		output, err = ExecTORequester(DefaultCacheHostName, "update-status")
+		output, err = ExecTORequester(DefaultCacheHostName, CMDUpdateStatus)
 		if err != nil {
 			t.Fatalf("t3c-request exec failed: %v", err)
 		}
