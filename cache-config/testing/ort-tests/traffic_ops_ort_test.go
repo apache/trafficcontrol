@@ -84,7 +84,6 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	// TODO: does this test suite need logging?
 	log.Infof(cfgFmt, *configFileName, *tcFixturesFileName, tcd.Config.TrafficOps.URL, tcd.Config.Default.Session.TimeoutInSecs, tcd.Config.TrafficOpsDB.Hostname, tcd.Config.TrafficOpsDB.User, tcd.Config.TrafficOpsDB.Name, tcd.Config.TrafficOpsDB.SSL, tcd.Config.UseIMS)
 
 	//Load the test data
