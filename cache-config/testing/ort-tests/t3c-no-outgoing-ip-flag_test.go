@@ -40,6 +40,8 @@ func testNoOutgoingIPAfterUpdate(t *testing.T, noOutgoingIP *bool) {
 	}
 	contents := string(recordsDotConfig)
 
+	// The default behavior when --no-outgoing-ip isn't given is equivalent to
+	// passing --no-outgoing-ip=false
 	if noOutgoingIP == nil || !*noOutgoingIP {
 		if !strings.Contains(contents, outgoingIPToBind) {
 			t.Errorf("expected t3c to add records.config outgoing_ip_to_bind, actual: %s", contents)
