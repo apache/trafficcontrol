@@ -29,6 +29,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -103,7 +104,7 @@ func Getv40(w http.ResponseWriter, r *http.Request) {
 
 // GetNewCount is the handler for GET requests to /logs/newcount.
 func GetNewCount(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"days", "limit"})
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -118,10 +119,14 @@ func GetNewCount(w http.ResponseWriter, r *http.Request) {
 	}
 	newCount, err := getLogCountSince(inf.Tx.Tx, lastSeen)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting log new count: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("getting log new count: %w", err))
 		return
 	}
-	api.WriteResp(w, r, tc.NewLogCountResp{NewLogCount: newCount})
+	if inf.Version.Major >= 4 {
+		api.WriteResp(w, r, newCount)
+	} else {
+		api.WriteResp(w, r, tc.NewLogCountResp{NewLogCount: newCount})
+	}
 }
 
 // LastSeenLogCookieName is the name of the HTTP cookie that stores the
@@ -146,6 +151,7 @@ func getLastSeenCookie(r *http.Request) (time.Time, bool) {
 	}
 	lastSeen, err := time.Parse(time.RFC3339Nano, cookie.Value)
 	if err != nil {
+		log.Warnf("Malformed '%s' cookie: %v", LastSeenLogCookieName, err)
 		return time.Time{}, false
 	}
 	return lastSeen, true
@@ -275,7 +281,7 @@ func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 func getLogCountSince(tx *sql.Tx, since time.Time) (uint64, error) {
 	count := uint64(0)
 	if err := tx.QueryRow(`SELECT count(*) from log where last_updated > $1`, since).Scan(&count); err != nil {
-		return 0, errors.New("querying log last seen count: " + err.Error())
+		return 0, fmt.Errorf("querying log last seen count: %w", err)
 	}
 	return count, nil
 }
