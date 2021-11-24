@@ -51,6 +51,9 @@ Request Structure
 .. versionadded:: ATCv6
 	The ``username``, ``page``, ``offset`` query parameters were added to this in endpoint across across all API versions in :abbr:`ATC (Apache Traffic Control)` version 6.0.0.
 
+.. versionchanged:: 4.0
+	The ``username`` query string parameter was renamed to ``user`` so that it has the same name as the response property by which it filters.
+
 .. code-block:: http
 	:caption: Request Example
 
@@ -62,9 +65,9 @@ Request Structure
 
 Response Structure
 ------------------
-:date:    Date and time at which the change was made, in :rfc:`3339` format
-:message: Log detail about what occurred
-:user:    username of the user who made the change
+:lastUpdated: Date and time at which the change was made, in :rfc:`3339` format (the name was chosen for consistency for the rest of the API; changelog entries are never "updated")
+:message:     Log detail about what occurred
+:user:        username of the user who made the change
 
 .. code-block:: http
 	:caption: Response Example
@@ -81,12 +84,12 @@ Response Structure
 
 	{ "response": [
 		{
-			"date": "2021-11-22T01:59:32.692767Z",
+			"lastUpdated": "2021-11-22T01:59:32.692767Z",
 			"message": "CDN: CDN-in-a-Box, ID: 2, ACTION: server updates queued on 6 servers",
 			"user": "admin"
 		},
 		{
-			"date": "2021-11-22T01:59:30.624049Z",
+			"lastUpdated": "2021-11-22T01:59:30.624049Z",
 			"message": "CDN: CDN-in-a-Box, ID: -1, ACTION: Snapshot of CRConfig and Monitor",
 			"user": "admin"
 		}

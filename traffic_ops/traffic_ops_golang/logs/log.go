@@ -152,7 +152,7 @@ func getLastSeenCookie(r *http.Request) (time.Time, bool) {
 }
 
 const selectFromQuery = `
-SELECT l.message, u.username as user, l.date
+SELECT l.message, u.username as user, l.last_updated
 FROM "log" as l JOIN tm_user as u ON l.user = u.id`
 
 const countQuery = `SELECT count(l.user) FROM log as l`
@@ -172,7 +172,7 @@ func getLogV40(inf *api.APIInfo, days int) ([]tc.LogV4, uint64, error) {
 	}
 
 	if days > 0 {
-		timeInterval := fmt.Sprintf("l.date > now() - INTERVAL '%d' DAY", days)
+		timeInterval := fmt.Sprintf("l.last_updated > now() - INTERVAL '%d' DAY", days)
 		if where != "" {
 			whereCount = ", tm_user as u\n" + where + " AND l.user = u.id"
 			where = where + " AND " + timeInterval
@@ -193,7 +193,7 @@ func getLogV40(inf *api.APIInfo, days int) ([]tc.LogV4, uint64, error) {
 		}
 	}
 
-	query := selectFromQuery + where + "\n ORDER BY date DESC" + pagination
+	query := selectFromQuery + where + "\n ORDER BY last_updated DESC" + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, count, fmt.Errorf("querying logs: %w", err)
@@ -202,7 +202,7 @@ func getLogV40(inf *api.APIInfo, days int) ([]tc.LogV4, uint64, error) {
 	ls := []tc.LogV4{}
 	for rows.Next() {
 		var l tc.LogV4
-		if err = rows.Scan(&l.Message, &l.User, &l.Date); err != nil {
+		if err = rows.Scan(&l.Message, &l.User, &l.LastUpdated); err != nil {
 			return nil, count, fmt.Errorf("scanning logs: %w", err)
 		}
 		ls = append(ls, l)
@@ -230,7 +230,7 @@ func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 		return nil, 0, util.JoinErrs(errs)
 	}
 
-	timeInterval := fmt.Sprintf("l.date > now() - INTERVAL '%v' DAY", days)
+	timeInterval := fmt.Sprintf("l.last_updated > now() - INTERVAL '%v' DAY", days)
 	if where != "" {
 		whereCount = ", tm_user as u\n" + where + " AND l.user = u.id"
 		where = where + " AND " + timeInterval
@@ -251,7 +251,7 @@ func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
 		}
 	}
 
-	query := selectFromQuery + where + "\n ORDER BY date DESC" + pagination
+	query := selectFromQuery + where + "\n ORDER BY last_updated DESC" + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, count, errors.New("querying logs: " + err.Error())

@@ -46,9 +46,11 @@ type NewLogCountResp struct {
 
 // LogV40 represents a changelog entry in version 4.0 of the Traffic Ops API.
 type LogV40 struct {
-	Date    time.Time `json:"date"`
-	Message string    `json:"message"`
-	User    string    `json:"user"`
+	// LastUpdated is the date/time at which the changelog event occurred (the
+	// name was chosen for consistency with the rest of the API).
+	LastUpdated time.Time `json:"lastUpdated"`
+	Message     string    `json:"message"`
+	User        string    `json:"user"`
 }
 
 // LogV4 represents a changelog entry in the latest minor version of version 4

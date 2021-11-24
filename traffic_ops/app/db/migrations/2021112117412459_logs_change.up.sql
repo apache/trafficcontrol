@@ -18,14 +18,14 @@
 CREATE TABLE public.log_new (
 	"message" text NOT NULL,
 	"user" bigint NOT NULL,
-	"date" timestamp with time zone NOT NULL DEFAULT NOW()
+	last_updated timestamp with time zone NOT NULL DEFAULT NOW()
 );
 
 ALTER TABLE public.log_new
 ADD CONSTRAINT log_user_fk
 FOREIGN KEY ("user") REFERENCES public.tm_user;
 
-INSERT INTO public.log_new("message", "user", "date")
+INSERT INTO public.log_new("message", "user", last_updated)
 SELECT "message", tm_user, last_updated
 FROM public.log;
 

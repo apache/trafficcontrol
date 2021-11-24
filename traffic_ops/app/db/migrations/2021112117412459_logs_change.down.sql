@@ -59,9 +59,9 @@ INSERT INTO public.log_old(
 	tm_user,
 	last_updated
 )
-SELECT 'APICHANGE', "message", "user", "date"
+SELECT 'APICHANGE', "message", "user", last_updated
 FROM public.log
-ORDER BY "date" ASC;
+ORDER BY last_updated ASC;
 
 DROP TABLE public.log CASCADE;
 
