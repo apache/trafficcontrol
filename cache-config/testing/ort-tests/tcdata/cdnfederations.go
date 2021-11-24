@@ -37,7 +37,7 @@ func (r *TCData) CreateTestCDNFederations(t *testing.T) {
 			t.Errorf("could not POST federations: %v", err)
 		}
 		bytes, _ := json.Marshal(data)
-		t.Logf("POST Response: %s", string(bytes))
+		t.Logf("POST Response: %s", bytes)
 
 		// need to save the ids, otherwise the other tests won't be able to reference the federations
 		if data.Response.ID == nil {
