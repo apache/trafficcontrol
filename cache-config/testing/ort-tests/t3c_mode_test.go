@@ -40,7 +40,7 @@ func verifyPluginConfigs(t *testing.T) {
 
 }
 
-func syncDSTest(t *testing.T) {
+func verifyRemapConfigPlaced(t *testing.T) {
 	// remove the remap.config in preparation for running syncds
 	remap := filepath.Join(TestConfigDir, "remap.config")
 	err := os.Remove(remap)
@@ -159,6 +159,6 @@ func TestT3cBadassAndSyncDs(t *testing.T) {
 		time.Sleep(time.Second * 5)
 
 		t.Run("Verify Plugin Configs", verifyPluginConfigs)
-		t.Run("SyncDS Test", syncDSTest)
+		t.Run("Verify remap.config placed as expected after SYNCDS run", verifyRemapConfigPlaced)
 	})
 }
