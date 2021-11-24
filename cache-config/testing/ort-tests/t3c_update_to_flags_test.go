@@ -33,7 +33,7 @@ func TestT3cTOUpdates(t *testing.T) {
 		// retrieve the current server status
 		output, err := runRequest(DefaultCacheHostName, "update-status")
 		if err != nil {
-			t.Fatalf("to_requester run failed: %v", err)
+			t.Fatalf("update-status run failed: %v", err)
 		}
 		var serverStatus tc.ServerUpdateStatus
 		err = json.Unmarshal([]byte(output), &serverStatus)
@@ -58,11 +58,11 @@ func TestT3cTOUpdates(t *testing.T) {
 		// verify the update status is now 'true'
 		output, err = runRequest(DefaultCacheHostName, "update-status")
 		if err != nil {
-			t.Fatalf("to_requester run failed: %v", err)
+			t.Fatalf("update-status run failed: %v", err)
 		}
 		err = json.Unmarshal([]byte(output), &serverStatus)
 		if err != nil {
-			t.Fatalf("failed to parse to_requester output: %v", err)
+			t.Fatalf("failed to parse update-status run output: %v", err)
 		}
 		if serverStatus.RevalPending != true {
 			t.Fatal("expected RevalPending to be 'true'")
@@ -78,11 +78,11 @@ func TestT3cTOUpdates(t *testing.T) {
 		}
 		output, err = runRequest(DefaultCacheHostName, "update-status")
 		if err != nil {
-			t.Fatalf("to_requester run failed: %v", err)
+			t.Fatalf("update-status run failed: %v", err)
 		}
 		err = json.Unmarshal([]byte(output), &serverStatus)
 		if err != nil {
-			t.Fatalf("failed to parse to_requester output: %v", err)
+			t.Fatalf("failed to parse update-status run output: %v", err)
 		}
 		if serverStatus.RevalPending != true {
 			t.Fatal("expected RevalPending to be 'true'")
@@ -99,11 +99,11 @@ func TestT3cTOUpdates(t *testing.T) {
 		}
 		output, err = runRequest(DefaultCacheHostName, "update-status")
 		if err != nil {
-			t.Fatalf("to_requester run failed: %v", err)
+			t.Fatalf("update-status run failed: %v", err)
 		}
 		err = json.Unmarshal([]byte(output), &serverStatus)
 		if err != nil {
-			t.Fatalf("failed to parse to_requester output: %v", err)
+			t.Fatalf("failed to parse update-status run output: %v", err)
 		}
 		if serverStatus.RevalPending != false {
 			t.Error("expected RevalPending to be 'false'")
