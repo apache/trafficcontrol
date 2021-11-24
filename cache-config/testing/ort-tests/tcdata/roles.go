@@ -16,7 +16,6 @@ package tcdata
 */
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -30,36 +29,13 @@ const (
 )
 
 func (r *TCData) CreateTestRoles(t *testing.T) {
-	expectedAlerts := []tc.Alerts{
-		{
-			Alerts: []tc.Alert{{
-				Text:  "role was created.",
-				Level: "success",
-			}},
-		},
-		{
-			Alerts: []tc.Alert{{
-				Text:  "can not add non-existent capabilities: [invalid-capability]",
-				Level: "error",
-			}},
-		},
-		{
-			Alerts: []tc.Alert{{
-				Text:  "role was created.",
-				Level: "success"}},
-		},
-	}
-	for i, role := range r.TestData.Roles {
+	for _, role := range r.TestData.Roles {
 		var alerts tc.Alerts
 		alerts, _, status, err := TOSession.CreateRole(role)
 		t.Log("Status Code: ", status)
 		t.Log("Response: ", alerts)
 		if err != nil {
-			// TODO: Why is this not a failure condition?
-			t.Logf("error: %v", err)
-		}
-		if !reflect.DeepEqual(alerts, expectedAlerts[i]) {
-			t.Errorf("got alerts: %v but expected alerts: %v", alerts, expectedAlerts[i])
+			t.Errorf("creating Role failed: %v", err)
 		}
 	}
 }
