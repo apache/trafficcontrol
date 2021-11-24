@@ -73,7 +73,23 @@ const (
 	cdn2ProfileName = "ATS_EDGE_TIER_CACHE_CDN2"
 )
 
-func checkRemapConfigHasInitialCDN(t *testing.T) {
+// doTestIMSChangedCDN tests that after caching, requests which use the CDN as a key don't use the invalid cache.
+func doTestIMSChangedCDN(t *testing.T) {
+	if stdOut, exitCode := t3cApplyCache(DefaultCacheHostName, false); exitCode != 0 {
+		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
+	}
+
+	if !testutil.FileExists(t3cutil.ApplyCachePath) {
+		t.Fatalf("expected: config data file '%s' to exist after badass, actual: doesn't exist", t3cutil.ApplyCachePath)
+	}
+
+	if stdOut, exitCode := t3cApplyCache(DefaultCacheHostName, false); exitCode != 0 {
+		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
+	} else if !strings.Contains(stdOut, "not modified, using old config") {
+		t.Errorf("expected t3c second badass to have a successful IMS 304, actual: code %d output: %s", exitCode, stdOut)
+	}
+
+	// check that remap.config has the initial cdn1
 	remapName := filepath.Join(TestConfigDir, "remap.config")
 	remapDotConfig, err := ioutil.ReadFile(remapName)
 	if err != nil {
@@ -85,9 +101,6 @@ func checkRemapConfigHasInitialCDN(t *testing.T) {
 		t.Errorf("expected remap.config to contain cdn1 domain '%s', actual: '%s'", cdn1Domain, contents)
 	}
 
-}
-
-func changeServerCDN(t *testing.T) {
 	cdn2Name := "cdn2"
 	cdns, _, err := tcdata.TOSession.GetCDNByNameWithHdr(cdn2Name, nil)
 	if err != nil {
@@ -123,44 +136,6 @@ func changeServerCDN(t *testing.T) {
 	if err != nil {
 		t.Fatalf("updating server: %v", err)
 	}
-}
-
-func checkChangedCDN(t *testing.T) {
-	remapName := filepath.Join(TestConfigDir, "remap.config")
-	remapDotConfig, err := ioutil.ReadFile(remapName)
-	if err != nil {
-		t.Fatalf("reading %s: %v", remapName, err)
-	}
-	contents := string(remapDotConfig)
-
-	if !strings.Contains(contents, cdn2Domain) {
-		t.Errorf("expected after changing server to cdn2 for remap.config to contain cdn2 domain '%s', actual: '%s'", cdn2Domain, contents)
-	}
-
-	if strings.Contains(contents, cdn1Domain) {
-		t.Errorf("expected after changing server to cdn2 for remap.config to not contain cdn1 domain '%s', actual: '%s'", cdn1Domain, remapDotConfig)
-	}
-}
-
-// doTestIMSChangedCDN tests that after caching, requests which use the CDN as a key don't use the invalid cache.
-func doTestIMSChangedCDN(t *testing.T) {
-	if stdOut, exitCode := t3cApplyCache(DefaultCacheHostName, false); exitCode != 0 {
-		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
-	}
-
-	if !testutil.FileExists(t3cutil.ApplyCachePath) {
-		t.Fatalf("expected: config data file '%s' to exist after badass, actual: doesn't exist", t3cutil.ApplyCachePath)
-	}
-
-	if stdOut, exitCode := t3cApplyCache(DefaultCacheHostName, false); exitCode != 0 {
-		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
-	} else if !strings.Contains(stdOut, "not modified, using old config") {
-		t.Errorf("expected t3c second badass to have a successful IMS 304, actual: code %d output: %s", exitCode, stdOut)
-	}
-
-	t.Run("check that remap.config has the initial cdn1", checkRemapConfigHasInitialCDN)
-
-	t.Run("change the server's CDN", changeServerCDN)
 
 	// run t3c after changing the cdn
 
@@ -169,7 +144,19 @@ func doTestIMSChangedCDN(t *testing.T) {
 		t.Fatalf("t3c badass failed with exit code %d, output: %s", exitCode, stdOut)
 	}
 
-	t.Run("check that remap.config has the changed cdn2, and does not have the old cdn1", checkChangedCDN)
+	remapDotConfig, err = ioutil.ReadFile(remapName)
+	if err != nil {
+		t.Fatalf("reading %s: %v", remapName, err)
+	}
+	contents = string(remapDotConfig)
+
+	if !strings.Contains(contents, cdn2Domain) {
+		t.Errorf("expected after changing server to cdn2 for remap.config to contain cdn2 domain '%s', actual: '%s'", cdn2Domain, contents)
+	}
+
+	if strings.Contains(contents, cdn1Domain) {
+		t.Errorf("expected after changing server to cdn2 for remap.config to not contain cdn1 domain '%s', actual: '%s'", cdn1Domain, remapDotConfig)
+	}
 }
 
 func t3cApplyCache(host string, noCache bool) (string, int) {
