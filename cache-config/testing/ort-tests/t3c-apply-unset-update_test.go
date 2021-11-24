@@ -16,6 +16,8 @@ package orttest
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -27,23 +29,47 @@ import (
 
 const cmdUpdateStatus = `update-status`
 
-func verifyUpdateStatus(t *testing.T) {
+func verifyUpdateStatusIsFalse() error {
 	output, err := runRequest(DefaultCacheHostName, cmdUpdateStatus)
 	if err != nil {
-		t.Fatalf("t3c-request failed: %v", err)
+		return fmt.Errorf("t3c-request failed: %w", err)
 	}
 	serverStatus := tc.ServerUpdateStatus{}
 	if err = json.Unmarshal([]byte(output), &serverStatus); err != nil {
-		t.Fatalf("failed to parse t3c-request output: %v", err)
+		return fmt.Errorf("failed to parse t3c-request output: %w", err)
 	}
 	if serverStatus.HostName != DefaultCacheHostName {
-		t.Errorf("expected update-status host '%s', actual: '%s'", DefaultCacheHostName, serverStatus.HostName)
-	} else if serverStatus.RevalPending {
-		t.Error("expected RevalPending false after syncds run")
-	} else if serverStatus.UpdatePending {
-		t.Error("expected UpdatePending false after syncds run")
+		return fmt.Errorf("expected update-status host '%s', actual: '%s'", DefaultCacheHostName, serverStatus.HostName)
+	}
+	if serverStatus.RevalPending {
+		return fmt.Errorf("expected RevalPending false after syncds run")
+	}
+	if serverStatus.UpdatePending {
+		return fmt.Errorf("expected UpdatePending false after syncds run")
+	}
+	return nil
+}
+
+func verifyUpdateStatusIsTrue() error {
+	output, err := runRequest(DefaultCacheHostName, cmdUpdateStatus)
+	if err != nil {
+		return fmt.Errorf("update-status run failed: %w", err)
+	}
+	serverStatus := tc.ServerUpdateStatus{}
+	if err = json.Unmarshal([]byte(output), &serverStatus); err != nil {
+		return fmt.Errorf("failed to parse update-status output: %w", err)
+	}
+	if serverStatus.HostName != DefaultCacheHostName {
+		return fmt.Errorf("expected request update-status host '%s', actual: '%s'", DefaultCacheHostName, serverStatus.HostName)
+	}
+	if serverStatus.RevalPending {
+		return errors.New("expected RevalPending false after update")
+	}
+	if !serverStatus.UpdatePending {
+		return errors.New("expected UpdatePending true after update")
 	}
 
+	return nil
 }
 
 func TestT3cUnsetsUpdateFlag(t *testing.T) {
@@ -64,30 +90,13 @@ func TestT3cUnsetsUpdateFlag(t *testing.T) {
 			t.Fatalf("failed to remove file '%s': %v", fileNameToRemove, err)
 		}
 
-		t.Logf("DEBUG TestT3cReload setting upate flag")
 		// set the update flag, so syncds will run
 		if err := ExecTOUpdater(DefaultCacheHostName, false, true); err != nil {
 			t.Fatalf("t3c-update failed: %v", err)
 		}
 
-		{
-			// verify update status is now true
-
-			output, err := runRequest(DefaultCacheHostName, cmdUpdateStatus)
-			if err != nil {
-				t.Fatalf("to_requester run failed: %v", err)
-			}
-			serverStatus := tc.ServerUpdateStatus{}
-			if err = json.Unmarshal([]byte(output), &serverStatus); err != nil {
-				t.Fatalf("failed to parse to_requester output: %v", err)
-			}
-			if serverStatus.HostName != DefaultCacheHostName {
-				t.Fatalf("expected request update-status host '%s', actual: '%s'", DefaultCacheHostName, serverStatus.HostName)
-			} else if serverStatus.RevalPending {
-				t.Fatal("expected RevalPending false after update")
-			} else if !serverStatus.UpdatePending {
-				t.Fatal("expected UpdatePending true after update")
-			}
+		if err := verifyUpdateStatusIsTrue(); err != nil {
+			t.Errorf("verification that update status after syncds is true failed: %v", err)
 		}
 
 		// traffic_ctl doesn't work because the test framework doesn't currently run ATS.
@@ -122,7 +131,9 @@ func TestT3cUnsetsUpdateFlag(t *testing.T) {
 		// }
 
 		t.Logf("TestT3cTOUpdates t3cUpdateUnsetFlag stdout: %s", stdOut)
-		t.Run("verify update status after syncds is now false", verifyUpdateStatus)
+		if err := verifyUpdateStatusIsFalse(); err != nil {
+			t.Errorf("verification that update status after syncds is false failed: %v", err)
+		}
 	})
 }
 
