@@ -602,12 +602,12 @@ SELECT
 
 const readQuery = readBaseQuery + `
 u.last_authenticated,
-(SELECT count(l.tm_user) FROM log as l WHERE l.tm_user = u.id) as change_log_count,
+(SELECT count(l.user) FROM public.log as l WHERE l.user = u.id) as change_log_count,
 r.name as role
-FROM tm_user u
-LEFT JOIN tenant t ON u.tenant_id = t.id
-LEFT JOIN role r ON u.role = r.id
-LEFT JOIN role_capability rc on rc.role_id = r.id
+FROM public.tm_user u
+LEFT JOIN public.tenant t ON u.tenant_id = t.id
+LEFT JOIN public.role r ON u.role = r.id
+LEFT JOIN public.role_capability rc on rc.role_id = r.id
 `
 
 const legacyReadQuery = readBaseQuery + `
