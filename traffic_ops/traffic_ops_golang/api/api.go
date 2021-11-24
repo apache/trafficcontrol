@@ -585,7 +585,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 const createChangeLogQuery = `
 INSERT INTO log (
 	message,
-	user
+	"user"
 ) VALUES (
 	$1,
 	$2
