@@ -85,8 +85,8 @@ require (
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
-	github.com/lestrrat-go/jwx v1.2.12-0.20211124231049-1a1ea73babfe
-	github.com/lestrrat/go-jwx v0.0.0-20210302221443-a9d01c1b7121
+	github.com/lestrrat-go/jwx v1.2.12-0.20211125230033-881a53637884
+	github.com/lestrrat/go-jwx v0.0.0-20210302221443-a9d01c1b7121 // indirect
 	github.com/lestrrat/go-pdebug v0.0.0-20180220043741-569c97477ae8 // indirect
 	github.com/nxadm/tail v1.4.4 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect

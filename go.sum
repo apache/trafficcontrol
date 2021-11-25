@@ -274,6 +274,8 @@ github.com/lestrrat-go/jwx v1.2.11 h1:e9BS5NQ003hxXogNsgf5fEWf01ZJvj4Aj1qy7Dykqm
 github.com/lestrrat-go/jwx v1.2.11/go.mod h1:25DcLbNWArPA/Ew5CcBmewl32cJKxOk5cbepBsIJFzw=
 github.com/lestrrat-go/jwx v1.2.12-0.20211124231049-1a1ea73babfe h1:EFklWBQhu1dH0uIFWDEV/CqCRUwU1I4mVZodwNaE8m4=
 github.com/lestrrat-go/jwx v1.2.12-0.20211124231049-1a1ea73babfe/go.mod h1:25DcLbNWArPA/Ew5CcBmewl32cJKxOk5cbepBsIJFzw=
+github.com/lestrrat-go/jwx v1.2.12-0.20211125230033-881a53637884 h1:3o0vWB6NHNhgtxVwQdgFvqGFf8BWyS/urvmLONVsUeI=
+github.com/lestrrat-go/jwx v1.2.12-0.20211125230033-881a53637884/go.mod h1:25DcLbNWArPA/Ew5CcBmewl32cJKxOk5cbepBsIJFzw=
 github.com/lestrrat-go/option v1.0.0 h1:WqAWL8kh8VcSoD6xjSH34/1m8yxluXQbDeKNfvFeEO4=
 github.com/lestrrat-go/option v1.0.0/go.mod h1:5ZHFbivi4xwXxhxY9XHDe2FHo6/Z7WWmtT7T5nBBp3I=
 github.com/lestrrat/go-jwx v0.0.0-20171104074836-2857e17763b6 h1:Cs+QtIlpsE/GOhCr/54qhec3cg9a+IjOgqdhNl1yumA=
@@ -359,6 +361,7 @@ github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81P
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/stretchr/testify v1.6.1 h1:hDPOHmpOpP40lSULcqw7IrRb/u7w6RpDC9399XyoNd0=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/tidwall/pretty v0.0.0-20180105212114-65a9db5fad51/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/xanzy/go-gitlab v0.15.0/go.mod h1:8zdQa/ri1dfn8eS3Ir1SyfvOKlw7WBJ8DVThkpGiXrs=

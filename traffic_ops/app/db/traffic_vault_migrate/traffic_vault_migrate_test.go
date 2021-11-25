@@ -26,7 +26,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lestrrat/go-jwx/jwk"
+	"github.com/lestrrat-go/jwx/jwk"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -48,18 +48,15 @@ func testBackend(t *testing.T, backend TVBackend) {
 		},
 		Version: "1",
 	}
+
+	set := jwk.NewSet()
+	_ = set.Set(`renewal_kid`, util.StrPtr("h"))
+	key, _ := jwk.New([]byte("foobar"))
+	set.Add(key)
 	uri := URISignKey{
 		DeliveryService: "defaultDS2",
 		Keys: tc.JWKSMap{
-			"defaultDS2": {
-				RenewalKid: util.StrPtr("h"),
-				Keys: []jwk.EssentialHeader{
-					{
-						Algorithm: "a",
-						KeyID:     "h",
-					},
-				},
-			},
+			"defaultDS2": set,
 		},
 	}
 	url := URLSigKey{
