@@ -50,7 +50,7 @@ func testBackend(t *testing.T, backend TVBackend) {
 	}
 	uri := URISignKey{
 		DeliveryService: "defaultDS2",
-		Keys: map[string]tc.URISignerKeyset{
+		Keys: tc.JWKSMap{
 			"defaultDS2": {
 				RenewalKid: util.StrPtr("h"),
 				Keys: []jwk.EssentialHeader{

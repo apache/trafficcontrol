@@ -129,7 +129,7 @@ const (
 )
 
 func TestValidateURIKeyset(t *testing.T) {
-	var keyset map[string]tc.URISignerKeyset
+	var keyset tc.JWKSMap
 
 	// unmarshal a good URISignerKeyset
 	if err := json.Unmarshal([]byte(goodKeyset), &keyset); err != nil {

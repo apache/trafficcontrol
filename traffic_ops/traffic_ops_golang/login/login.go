@@ -331,17 +331,18 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				return nil, errors.New("Key URL from token is not included in the whitelisted urls. Received: " + publicKeyUrl)
 			}
 
-			keys, err := jwk.FetchHTTP(publicKeyUrl)
+			keys, err := jwk.Fetch(context.TODO(), publicKeyUrl)
 			if err != nil {
 				return nil, errors.New("Error fetching JSON key set with message: " + err.Error())
 			}
 
-			keyById := keys.LookupKeyID(publicKeyId)
-			if len(keyById) == 0 {
+			keyById, ok := keys.LookupKeyID(publicKeyId)
+			if !ok {
 				return nil, errors.New("No public key found for id: " + publicKeyId + " at url: " + publicKeyUrl)
 			}
 
-			selectedKey, err := keyById[0].Materialize()
+			var selectedKey interface{}
+			err = keyById.Raw(&selectedKey)
 			if err != nil {
 				return nil, errors.New("Error materializing key from JSON key set with message: " + err.Error())
 			}

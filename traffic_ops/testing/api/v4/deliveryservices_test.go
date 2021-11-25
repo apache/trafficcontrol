@@ -2378,7 +2378,7 @@ func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 		t.Fatal("Found a Delivery Service in testing data with a null or undefined XMLID")
 	}
 
-	var keyset map[string]tc.URISignerKeyset
+	var keyset tc.JWKSMap
 
 	if err := json.Unmarshal([]byte(keySet1), &keyset); err != nil {
 		t.Errorf("json.UnMarshal(): expected nil error, actual: %v", err)
@@ -2394,7 +2394,7 @@ func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 		t.Error("failed to get uri sig keys: " + err.Error())
 	}
 
-	firstKeys := map[string]tc.URISignerKeyset{}
+	firstKeys := tc.JWKSMap{}
 	if err := json.Unmarshal(firstKeysBytes, &firstKeys); err != nil {
 		t.Errorf("failed to unmarshal uri sig keys")
 	}
@@ -2408,7 +2408,7 @@ func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 	}
 
 	// Create new keys again and check that they are different
-	var keyset2 map[string]tc.URISignerKeyset
+	var keyset2 tc.JWKSMap
 
 	if err := json.Unmarshal([]byte(keySet2), &keyset2); err != nil {
 		t.Errorf("json.UnMarshal(): expected nil error, actual: %v", err)
@@ -2424,7 +2424,7 @@ func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 		t.Error("failed to get uri sig keys: " + err.Error())
 	}
 
-	secondKeys := map[string]tc.URISignerKeyset{}
+	secondKeys := tc.JWKSMap{}
 	if err := json.Unmarshal(secondKeysBytes, &secondKeys); err != nil {
 		t.Errorf("failed to unmarshal uri sig keys")
 	}
