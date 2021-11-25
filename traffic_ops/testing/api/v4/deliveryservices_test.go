@@ -2403,7 +2403,7 @@ func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 	if !ok {
 		t.Fatal("failed to create uri sig keys: 'Kabletown URI Authority 1' not found in response after creation")
 	}
-	if len(kabletownFirstKeys.Keys) < 1 {
+	if kabletownFirstKeys.Len() < 1 {
 		t.Fatal("failed to create URI signing keys: 'Kabletown URI Authority 1' had zero keys after creation")
 	}
 
@@ -2433,11 +2433,20 @@ func CreateTestDeliveryServicesURISigningKeys(t *testing.T) {
 	if !ok {
 		t.Fatal("failed to create uri sig keys: 'Kabletown URI Authority 1' not found in response after creation")
 	}
-	if len(kabletownSecondKeys.Keys) < 1 {
+	if kabletownSecondKeys.Len() < 1 {
 		t.Fatal("failed to create URI signing keys: 'Kabletown URI Authority 1' had zero keys after creation")
 	}
 
-	if kabletownSecondKeys.Keys[0].KeyID == kabletownFirstKeys.Keys[0].KeyID {
+	k1, ok := kabletownFirstKeys.Get(0)
+	if !ok {
+		t.Errorf(`failed to get key 0 from kabletownFirstKeys`)
+	}
+	k2, ok := kabletownSecondKeys.Get(0)
+	if !ok {
+		t.Errorf(`failed to get key 0 from kabletownSecondKeys`)
+	}
+
+	if k2.KeyID() == k1.KeyID() {
 		t.Errorf("second create did not generate new uri sig keys - key mismatch")
 	}
 }
