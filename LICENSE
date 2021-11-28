@@ -412,9 +412,45 @@ This product bundles go-sqlmock, which is available under a BSD-3-Clause license
 ./vendor/gopkg.in/DATA-DOG/go-sqlmock.v1/LICENSE
 Refer to the above license for the full text.
 
-This product bundles go-jwx, which is available under an MIT license.
-@vendor/github.com/lestrrat/go-jwx/*
-./vendor/github.com/lestrrat/go-jwx/LICENSE
+This product bundles jwx, which is available under an MIT license.
+@vendor/github.com/lestrrat-go/jwx/*
+./vendor/github.com/lestrrat-go/jwx/LICENSE
+Refer to the above license for the full text.
+
+This product bundles dcrd/dcrec/secp256k1/v4, which is available under an Artistic 2.0 license.
+@vendor/github.com/decred/dcrd/dcrec/secp256k1/v4/*
+./vendor/github.com/decred/dcrd/dcrec/secp256k1/v4/LICENSE
+Refer to the above license for the full text.
+
+
+This product bundles backoff/v2, which is available under an MIT license.
+@vendor/github.com/lestrrat-go/backoff/v2/*
+./vendor/github.com/lestrrat-go/backoff/v2/LICENSE
+Refer to the above license for the full text.
+
+This product bundles blackmagic, which is available under an MIT license.
+@vendor/github.com/lestrrat-go/blackmagic/*
+./vendor/github.com/lestrrat-go/blackmagic/LICENSE
+Refer to the above license for the full text.
+
+This product bundles httpcc, which is available under an MIT license.
+@vendor/github.com/lestrrat-go/httpcc/*
+./vendor/github.com/lestrrat-go/httpcc/LICENSE
+Refer to the above license for the full text.
+
+This product bundles iter, which is available under an MIT license.
+@vendor/github.com/lestrrat-go/iter/*
+./vendor/github.com/lestrrat-go/iter/LICENSE
+Refer to the above license for the full text.
+
+This product bundles blackmagic, which is available under an MIT license.
+@vendor/github.com/lestrrat-go/option/*
+./vendor/github.com/lestrrat-go/option/LICENSE
+Refer to the above license for the full text.
+
+This product bundles go-json, which is available under an MIT license.
+@vendor/github.com/goccy/go-json/*
+./vendor/github.com/goccy/go-json/LICENSE
 Refer to the above license for the full text.
 
 This product bundles protobuf, which is available under a BSD-3-Clause license.
