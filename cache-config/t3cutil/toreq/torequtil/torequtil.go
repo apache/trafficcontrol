@@ -75,6 +75,18 @@ func MaybeIPStr(addr net.Addr) string {
 	return ""
 }
 
+// MaybeHdrStr returns the header text if hdr isn't nil, or the empty string if it is.
+// This is intended for logging, to allow logging with one line, whether a header object is nil or not.
+//
+// The hdrName must be the canonically-capitalized header name.
+//
+func MaybeHdrStr(hdr http.Header, hdrName string) string {
+	if hdr != nil {
+		return hdr.Get(hdrName)
+	}
+	return ""
+}
+
 func StringToCookies(cookiesStr string) []*http.Cookie {
 	hdr := http.Header{}
 	hdr.Add("Cookie", cookiesStr)
