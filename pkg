@@ -163,7 +163,7 @@ Usage: $SELF [options] [projects]
   -d           Disable compiler optimizations for debugging.
   -f <file>    Use <file> as the docker-compose. Default: $COMPOSE_FILE
   -h           Print help message and exit
-  -L           Don't write logs to files - respects output levels on stderr/stdout as set by -q/-v
+  -L           Don$(echo \')t write logs to files - respects output levels on stderr/stdout as set by -q/-v
   -l           List available projects.
   -o           Build from the optional list. Same as -f "$COMPOSE_FILE_OPT"
   -p           Pull builder Docker images, do not build them (default)
