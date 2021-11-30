@@ -37,6 +37,13 @@ import (
 	"github.com/lestrrat-go/jwx/jwk"
 )
 
+// backcompat: an "empty" uri signing key needs to have explicit null's
+// see https://github.com/apache/trafficcontrol/pull/6380/files/a3adfe95f2f86b6187c9dda559d9dba397c689fb#r758857475
+var emptyURISigningKey struct {
+	RenewalKid *string   `json:"renewal_kid"`
+	Keys       []jwk.Key `json:"keys"`
+}
+
 // endpoint handler for fetching uri signing keys from riak
 func GetURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -63,7 +70,8 @@ func GetURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(ro) == 0 {
-		ro, err = json.Marshal(jwk.NewSet())
+		ro, err = json.Marshal(emptyURISigningKey)
+		panic(ro)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("marshalling empty URISignerKeyset: "+err.Error()))
 			return
