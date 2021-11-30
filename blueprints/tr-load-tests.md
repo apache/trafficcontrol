@@ -65,7 +65,14 @@ No Traffic Portal impact is anticipated.
 <!--
 *How* will this impact Traffic Ops (at a high level)?
 -->
-No Traffic Ops impact is anticipated.
+The Operations-level TR Ultimate Test Harness user will update the status of any Traffic Router that is currently undergoing load testing to `"OFFLINE"` in Traffic Ops. It should also update the status of that Traffic Router to its previous status once the load testing is complete, regardless of whether the test failed or succeeded.
+
+The Operations-level TR Ultimate Test Harness user will also be used to get
+* CDN snapshots
+* CDN information
+* information about Traffic Router-type Servers in those CDNs
+* Type information
+* Delivery Service information
 
 #### REST API Impact
 <!--
@@ -102,7 +109,7 @@ How will existing tables and columns be changed?
 What are the column data types and modifiers?
 What are the FK references and constraints?
 -->
-No Data Model impact is anticipated.
+A database migration should be added to seed a new Operations-level user for use with the TR Ultimate Test Harness.
 
 ### Cache Config Impact
 <!--
