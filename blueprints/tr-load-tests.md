@@ -32,7 +32,7 @@ Important times to run performance tests:
 * When making harware changes to the server hosting the Traffic Router instance
 * When upgrading Traffic Router to a new Apache Traffic Control version
 * When developing or maintaining a Traffic Router feature that could have an impact on any aspect of Traffic Router performance, including before, during, and after pull request review
-* When a commit that modifies Traffic Router to a GitHub branch, for all Apache Traffic Control branches
+* When a commit that modifies Traffic Router is pushed to a GitHub branch, for all Apache Traffic Control branches
 
 A load test for Delivery Services exists in the project at [`/test/router`](https://github.com/apache/trafficcontrol/tree/RELEASE-6.0.1/test/router), but
 - It has not been maintained over time, currently does not work
@@ -135,7 +135,7 @@ How will changes in Traffic Ops data be reflected in the CRConfig?
 Will Traffic Router remain backwards-compatible with old CRConfigs?
 Will old Traffic Routers remain forwards-compatible with new CRConfigs?
 -->
-The addition of the TR Ultimate Test Harness themselves will not change Traffic Router functionality in any way. For visibility, however, the TR Ultimate Test Harness should reside in a directory within the `traffic_router` directory. this will be the first time that Golang sources will exist in the `traffic_router` directory, so any assumption that all sources within the `traffic_router` directory directly impact Traffic Router's ability to compile should be abandoned.
+The addition of the TR Ultimate Test Harness themselves will not change Traffic Router functionality in any way. For visibility, however, the TR Ultimate Test Harness should reside in a directory within the `traffic_router` directory. This will be the first time since 545929f7cc that Golang sources will exist in the `traffic_router` directory, so any assumption that all sources within the `traffic_router` directory directly impact Traffic Router's ability to compile should be abandoned.
 
 The TR Ultimate Test Harness should not be included in the Traffic Router RPM, as it is meant to be run on a host separate from Traffic Routers.
 
