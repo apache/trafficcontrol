@@ -71,7 +71,6 @@ func GetURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(ro) == 0 {
 		ro, err = json.Marshal(emptyURISigningKey)
-		panic(ro)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("marshalling empty URISignerKeyset: "+err.Error()))
 			return
