@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.InetAddresses;
 import com.maxmind.geoip2.model.AnonymousIpResponse;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import org.apache.traffic_control.traffic_router.core.edge.Cache;
 import org.apache.traffic_control.traffic_router.core.ds.DeliveryService;

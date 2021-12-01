@@ -24,7 +24,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.Channels;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.Message;
 import org.xbill.DNS.WireParseException;
 

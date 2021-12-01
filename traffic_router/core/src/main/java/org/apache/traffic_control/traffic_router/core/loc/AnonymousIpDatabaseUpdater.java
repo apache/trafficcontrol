@@ -17,7 +17,7 @@ package org.apache.traffic_control.traffic_router.core.loc;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 @SuppressWarnings({ "PMD.AvoidDuplicateLiterals" })
 public class AnonymousIpDatabaseUpdater extends AbstractServiceUpdater {

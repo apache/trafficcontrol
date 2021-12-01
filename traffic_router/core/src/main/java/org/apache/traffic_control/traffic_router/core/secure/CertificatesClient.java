@@ -21,7 +21,7 @@ import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import org.apache.traffic_control.traffic_router.shared.CertificateData;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import java.net.HttpURLConnection;
 import java.util.ArrayList;

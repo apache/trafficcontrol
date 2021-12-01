@@ -16,7 +16,7 @@
 package org.apache.traffic_control.traffic_router.neustar.configuration;
 
 import org.apache.traffic_control.traffic_router.configuration.ConfigurationListener;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 

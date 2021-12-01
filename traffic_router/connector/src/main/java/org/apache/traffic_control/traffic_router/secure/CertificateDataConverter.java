@@ -16,7 +16,7 @@
 package org.apache.traffic_control.traffic_router.secure;
 
 import org.apache.traffic_control.traffic_router.shared.CertificateData;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPrivateCrtKey;
 
 import java.math.BigInteger;

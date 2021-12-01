@@ -56,7 +56,7 @@ import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
 import org.apache.traffic_control.traffic_router.geolocation.GeolocationException;
 import org.apache.traffic_control.traffic_router.geolocation.GeolocationService;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.util.UriComponentsBuilder;

@@ -22,7 +22,7 @@ import org.apache.traffic_control.traffic_router.core.router.StatTracker;
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouter;
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import org.apache.traffic_control.traffic_router.geolocation.GeolocationException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.filter.OncePerRequestFilter;
 

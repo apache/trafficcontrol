@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.traffic_control.traffic_router.core.ds.SteeringRegistry;
 import org.apache.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import org.apache.traffic_control.traffic_router.core.edge.CacheRegister;
 import org.apache.traffic_control.traffic_router.core.dns.NameServer;

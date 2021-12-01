@@ -27,7 +27,7 @@ import org.apache.traffic_control.traffic_router.shared.CertificateData;
 import org.apache.traffic_control.traffic_router.shared.DeliveryServiceCertificatesMBean;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import javax.management.Attribute;
 import javax.management.ObjectName;

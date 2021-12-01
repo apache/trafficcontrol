@@ -21,7 +21,7 @@ import org.apache.traffic_control.traffic_router.shared.DeliveryServiceCertifica
 import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleListener;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 
 import javax.management.MBeanServer;

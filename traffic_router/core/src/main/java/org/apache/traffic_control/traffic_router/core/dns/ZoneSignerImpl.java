@@ -15,7 +15,7 @@
 
 package org.apache.traffic_control.traffic_router.core.dns;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.DNSKEYRecord;
 import org.xbill.DNS.DNSSEC;
 import org.xbill.DNS.DSRecord;

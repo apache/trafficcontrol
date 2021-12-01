@@ -15,7 +15,7 @@
 
 package org.apache.traffic_control.traffic_router.utils;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;

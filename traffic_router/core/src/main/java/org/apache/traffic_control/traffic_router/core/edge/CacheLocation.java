@@ -25,7 +25,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
 

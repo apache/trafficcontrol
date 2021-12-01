@@ -16,7 +16,7 @@
 package org.apache.traffic_control.traffic_router.core.loc;
 
 import org.apache.traffic_control.traffic_router.core.util.AbstractResourceWatcher;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 public class FederationsWatcher extends AbstractResourceWatcher {
     private static final Logger LOGGER = Logger.getLogger(FederationsWatcher.class);

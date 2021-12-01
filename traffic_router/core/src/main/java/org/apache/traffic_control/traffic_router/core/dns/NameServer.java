@@ -18,7 +18,7 @@ package org.apache.traffic_control.traffic_router.core.dns;
 import java.net.InetAddress;
 import java.util.*;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.DClass;
 import org.xbill.DNS.ExtendedFlags;
 import org.xbill.DNS.Flags;

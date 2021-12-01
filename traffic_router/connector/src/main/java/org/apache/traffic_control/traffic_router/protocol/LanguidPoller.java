@@ -15,7 +15,7 @@
 
 package org.apache.traffic_control.traffic_router.protocol;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.management.ManagementFactory;
 import javax.management.MBeanServer;

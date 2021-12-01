@@ -35,7 +35,7 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
 

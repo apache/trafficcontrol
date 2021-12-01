@@ -15,7 +15,7 @@
 
 package org.apache.traffic_control.traffic_router.secure;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.security.cert.CertificateFactory;

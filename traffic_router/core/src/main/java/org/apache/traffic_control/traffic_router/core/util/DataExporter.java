@@ -28,7 +28,7 @@ import java.util.Properties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.cache.CacheStats;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import org.apache.traffic_control.traffic_router.core.edge.Cache;
 import org.apache.traffic_control.traffic_router.core.edge.CacheLocation;

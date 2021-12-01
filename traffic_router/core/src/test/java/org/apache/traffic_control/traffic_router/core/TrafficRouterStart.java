@@ -15,10 +15,10 @@
 
 package org.apache.traffic_control.traffic_router.core;
 
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.PatternLayout;
+import org.apache.logging.log4j.ConsoleAppender;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.PatternLayout;
 
 public class TrafficRouterStart {
 

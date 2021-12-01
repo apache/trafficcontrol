@@ -18,7 +18,7 @@ package org.apache.traffic_control.traffic_router.secure;
 import org.apache.traffic_control.traffic_router.protocol.RouterNioEndpoint;
 import org.apache.traffic_control.traffic_router.shared.CertificateData;
 import org.apache.traffic_control.traffic_router.utils.HttpsProperties;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;

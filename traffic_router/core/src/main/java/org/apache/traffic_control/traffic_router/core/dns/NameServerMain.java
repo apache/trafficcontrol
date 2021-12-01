@@ -18,7 +18,7 @@ package org.apache.traffic_control.traffic_router.core.dns;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import org.apache.traffic_control.traffic_router.core.dns.protocol.Protocol;

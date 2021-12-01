@@ -15,7 +15,7 @@
 
 package org.apache.traffic_control.traffic_router.secure;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import javax.net.ssl.ExtendedSSLSession;
 import javax.net.ssl.SNIServerName;

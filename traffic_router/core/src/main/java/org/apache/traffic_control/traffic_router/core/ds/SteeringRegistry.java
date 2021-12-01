@@ -18,7 +18,7 @@ package org.apache.traffic_control.traffic_router.core.ds;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Collection;

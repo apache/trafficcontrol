@@ -18,7 +18,7 @@ package org.apache.traffic_control.traffic_router.core.util;
 import org.apache.traffic_control.traffic_router.core.config.WatcherConfig;
 import org.apache.traffic_control.traffic_router.core.loc.AbstractServiceUpdater;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileReader;

@@ -19,7 +19,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.OptionalLong;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.RRSIGRecord;
 import org.xbill.DNS.Record;

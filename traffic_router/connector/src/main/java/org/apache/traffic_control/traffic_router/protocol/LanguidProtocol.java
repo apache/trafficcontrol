@@ -17,7 +17,7 @@ package org.apache.traffic_control.traffic_router.protocol;
 
 
 import org.apache.coyote.http11.Http11NioProtocol;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 public class LanguidProtocol extends Http11NioProtocol implements RouterProtocolHandler {
 	private static final Logger log = Logger.getLogger(LanguidProtocol.class);

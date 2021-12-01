@@ -22,7 +22,7 @@ import org.apache.traffic_control.traffic_router.geolocation.GeolocationService;
 import com.quova.bff.reader.exception.AddressNotFoundException;
 import com.quova.bff.reader.io.GPDatabaseReader;
 import com.quova.bff.reader.model.GeoPointResponse;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

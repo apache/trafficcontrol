@@ -18,7 +18,7 @@ package org.apache.traffic_control.traffic_router.core.dns.protocol;
 import org.apache.traffic_control.traffic_router.core.dns.DNSAccessEventBuilder;
 import org.apache.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import org.apache.traffic_control.traffic_router.core.dns.NameServer;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.Message;
 import org.xbill.DNS.Rcode;
 import org.xbill.DNS.Section;

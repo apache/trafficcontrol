@@ -16,7 +16,7 @@
 package org.apache.traffic_control.traffic_router.core.router;
 
 import org.apache.traffic_control.traffic_router.core.util.IntegrationTest;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
