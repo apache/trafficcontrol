@@ -151,8 +151,11 @@ public class RouterNioEndpoint extends NioEndpoint {
 		*/
 		@Override
 		protected void doRun(){
+			@SuppressWarnings("PMD.CloseResource")
+			// The socket must be stored before calling super.doRun() because it sets socketWrapper to null
+			final NioChannel socket = socketWrapper.getSocket();
 			super.doRun();
-			if (!socketWrapper.getSocket().isOpen()){
+			if (!socket.isOpen()){
 				SSL.getLastErrorNumber();
 			}
 		}
