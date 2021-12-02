@@ -48,8 +48,9 @@ export class LoginComponent implements OnInit {
 	 * string parameters.
 	 */
 	public ngOnInit(): void {
-		this.returnURL = this.route.snapshot.queryParams.returnUrl || "/core";
-		const token = this.route.snapshot.queryParams.token;
+		const params = this.route.snapshot.queryParamMap;
+		this.returnURL = params.get("returnUrl") ?? "core";
+		const token = params.get("token");
 		if (token) {
 			this.auth.login(token).then(
 				response => {
