@@ -15,6 +15,7 @@
 
 package org.apache.traffic_control.traffic_router.core.external;
 
+import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.traffic_control.traffic_router.core.CatalinaTrafficRouter;
 import org.apache.traffic_control.traffic_router.core.util.ExternalTest;
 import org.apache.catalina.LifecycleException;
@@ -137,12 +138,12 @@ public class ExternalTestSuite {
 		File dbDirectory = new File(tmpDeployDir, "db");
 		dbDirectory.mkdir();
 
-		LogManager.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
-		LogManager.getLogger("org.springframework").setLevel(Level.WARN);
+		LoggerContext.getContext().getLogger("org.eclipse.jetty").setLevel(Level.WARN);
+		LoggerContext.getContext().getLogger("org.springframework").setLevel(Level.WARN);
 
-		ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{ISO8601} [%-5p] %c{4}: %m%n"));
-		LogManager.getRootLogger().addAppender(consoleAppender);
-		LogManager.getRootLogger().setLevel(Level.INFO);
+		ConsoleAppender consoleAppender = ConsoleAppender.newBuilder().setLayout(PatternLayout.newBuilder().withPattern("%d{ISO8601} [%-5p] %c{4}: %m%n").build()).build();
+		LoggerContext.getContext().getRootLogger().addAppender(consoleAppender);
+		LoggerContext.getContext().getRootLogger().setLevel(Level.INFO);
 
 		// This one test the actual war that is output by the build process
 		catalinaTrafficRouter = new CatalinaTrafficRouter("src/main/conf/server.xml", "target/ROOT");
