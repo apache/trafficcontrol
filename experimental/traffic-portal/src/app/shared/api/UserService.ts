@@ -237,4 +237,13 @@ export class UserService extends APIService {
 		);
 	}
 
+	/**
+	 * Requests a password reset for a user.
+	 *
+	 * @param email The email of the user for whom to reset a password.
+	 */
+	public async resetPassword(email: string): Promise<void> {
+		await this.post("user/reset_password", {email}).toPromise();
+	}
+
 }
