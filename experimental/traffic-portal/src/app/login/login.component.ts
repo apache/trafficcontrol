@@ -13,8 +13,10 @@
 */
 import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
+import { MatDialog } from "@angular/material/dialog";
 import { Router, ActivatedRoute } from "@angular/router";
 import {CurrentUserService} from "src/app/shared/currentUser/current-user.service";
+import { ResetPasswordDialogComponent } from "./reset-password-dialog/reset-password-dialog.component";
 
 
 /**
@@ -34,13 +36,12 @@ export class LoginComponent implements OnInit {
 	/** The user-entered password. */
 	public p = new FormControl("");
 
-	/**
-	 * Constructor.
-	 */
 	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
-		private readonly auth: CurrentUserService) { }
+		private readonly auth: CurrentUserService,
+		private readonly dialog: MatDialog
+	) { }
 
 	/**
 	 * Runs initialization, setting up the post-login redirection from the query
@@ -79,6 +80,11 @@ export class LoginComponent implements OnInit {
 				console.error("login failed:", err);
 			}
 		);
+	}
+
+	/** Opens the "reset password" dialog. */
+	public resetPassword(): void {
+		this.dialog.open(ResetPasswordDialogComponent, {width: "30%"});
 	}
 
 }
