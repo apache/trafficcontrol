@@ -140,14 +140,14 @@ export class ServersTableComponent implements OnInit {
 			field: "iloIpAddress",
 			headerName: "ILO IP Address",
 			hide: true,
-			onCellClicked: null
+			onCellClicked: undefined
 		},
 		{
 			cellRenderer: "sshCellRenderer",
 			field: "iloIpGateway",
 			headerName: "ILO IP Gateway",
 			hide: true,
-			onCellClicked: null
+			onCellClicked: undefined
 		},
 		{
 			field: "iloIpNetmask",
@@ -191,7 +191,7 @@ export class ServersTableComponent implements OnInit {
 			filter: true,
 			headerName: "Mgmt IP Gateway",
 			hide: true,
-			onCellClicked: null
+			onCellClicked: undefined
 		},
 		{
 			cellRenderer: "sshCellRenderer",
@@ -199,7 +199,7 @@ export class ServersTableComponent implements OnInit {
 			filter: true,
 			headerName: "Mgmt IP Netmask",
 			hide: true,
-			onCellClicked: null
+			onCellClicked: undefined
 		},
 		{
 			cellRenderer: "sshCellRenderer",
@@ -207,7 +207,7 @@ export class ServersTableComponent implements OnInit {
 			filter: true,
 			headerName: "IPv4 Gateway",
 			hide: true,
-			onCellClicked: null
+			onCellClicked: undefined
 		},
 		{
 			cellRenderer: "sshCellRenderer",
@@ -215,7 +215,7 @@ export class ServersTableComponent implements OnInit {
 			filter: true,
 			headerName: "IPv4 Address",
 			hide: false,
-			onCellClicked: null
+			onCellClicked: undefined
 		},
 		{
 			field: "interfaceMtu",
@@ -269,9 +269,9 @@ export class ServersTableComponent implements OnInit {
 			field: "status",
 			headerName: "Status",
 			hide: false,
-			tooltipValueGetter(params: ITooltipParams): string | undefined {
+			tooltipValueGetter(params: ITooltipParams): string {
 				if (!params.value || params.value === "ONLINE" || params.value === "REPORTED") {
-					return;
+					return "";
 				}
 				return `${params.value}: ${params.data.offlineReason}`;
 			}

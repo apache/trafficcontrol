@@ -20,28 +20,6 @@ import { Chart } from "chart.js"; // TODO: use plotly instead for WebGL-capabale
 import { DataSet } from "../../models/data";
 
 /**
- * LineChartType enumerates the valid types of charts.
- */
-export enum LineChartType {
-	/**
-	 * Plots category proportions.
-	 */
-	CATEGORY = "category",
-	/**
-	 * Scatter plots.
-	 */
-	LINEAR = "linear",
-	/**
-	 * Logarithmic-scale scatter plots.
-	 */
-	LOGARITHMIC = "logarithmic",
-	/**
-	 * Time-series data.
-	 */
-	TIME = "time"
-}
-
-/**
  * LinechartDirective decorates canvases by creating a rendering context for
  * ChartJS charts.
  */
@@ -60,9 +38,9 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	/** Labels for the datasets. */
 	@Input() public chartLabels?: unknown[];
 	/** Data to be plotted by the chart. */
-	@Input() public chartDataSets: Observable<DataSet[]> = from([]);
+	@Input() public chartDataSets: Observable<Array<DataSet | null> | null> = from([]);
 	/** The type of the chart. */
-	@Input() public chartType?: LineChartType;
+	@Input() public chartType?: "category" | "linear" | "logarithmic" | "time";
 	/** A label for the X-axis of the chart. */
 	@Input() public chartXAxisLabel?: string;
 	/** A label for the Y-axis of the chart. */
@@ -102,7 +80,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		this.ctx = ctx;
 
 		if (!this.chartType) {
-			this.chartType = LineChartType.LINEAR;
+			this.chartType = "linear";
 		}
 
 		if (this.chartDisplayLegend === null || this.chartDisplayLegend === undefined) {
@@ -150,7 +128,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 		};
 
 		this.subscription = this.chartDataSets.subscribe(
-			(data: DataSet[]) => {
+			data => {
 				this.dataLoad(data);
 			},
 			(e: Error) => {
@@ -180,10 +158,12 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	 *
 	 * @param data The new data sets for the new chart.
 	 */
-	private dataLoad(data: DataSet[]): void {
+	private dataLoad(data: Array<DataSet | null> | null): void {
 		this.destroyChart();
 
-		if (data === null || data === undefined || data.some(x => x === null)) {
+		const hasNoNulls = (arr: Array<DataSet | null>): arr is Array<DataSet> => !arr.some(x=>x===null);
+
+		if (data === null || data === undefined || !hasNoNulls(data)) {
 			this.noData();
 			return;
 		}

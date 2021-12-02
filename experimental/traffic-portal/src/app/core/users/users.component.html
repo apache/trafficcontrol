@@ -26,10 +26,10 @@ limitations under the License.
 							<h2 class="color-primary-inverted">{{user.fullName ? user.fullName : user.username}}&nbsp;({{user.id}})</h2>
 							<p *ngIf="user.fullName">{{user.username}}</p>
 							<p>{{user.rolename}}&nbsp;({{user.role}})</p>
-							<p *ngIf="user.lastUpdated"><time datetime="{{user.lastUpdated.toISOString()}}">{{user.lastUpdated.toLocaleString()}}</time></p>
+							<p *ngIf="user.lastUpdated"><time [attr.datetime]="user.lastUpdated.toISOString()">{{user.lastUpdated.toLocaleString()}}</time></p>
 							<mat-expansion-panel *ngIf="user.publicSshKey">
 								<mat-expansion-panel-header>Public SSH Key</mat-expansion-panel-header>
-								<mat-expansion-panel-content><pre>{{user.publicSshKey}}</pre></mat-expansion-panel-content>
+								<ng-template matExpansionPanelContent><pre>{{user.publicSshKey}}</pre></ng-template>
 							</mat-expansion-panel>
 						</div>
 						<div>
