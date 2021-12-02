@@ -18,8 +18,8 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { GenericTableComponent } from "./generic-table.component";
 
 describe("GenericTableComponent", () => {
-	let component: GenericTableComponent;
-	let fixture: ComponentFixture<GenericTableComponent>;
+	let component: GenericTableComponent<unknown>;
+	let fixture: ComponentFixture<GenericTableComponent<unknown>>;
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
