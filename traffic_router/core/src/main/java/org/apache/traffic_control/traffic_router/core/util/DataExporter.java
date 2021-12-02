@@ -15,10 +15,22 @@
 
 package org.apache.traffic_control.traffic_router.core.util;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.cache.CacheStats;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import org.apache.traffic_control.traffic_router.core.edge.Cache;
 import org.apache.traffic_control.traffic_router.core.edge.CacheLocation;
 import org.apache.traffic_control.traffic_router.core.edge.CacheRegister;
@@ -33,17 +45,6 @@ import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManage
 import org.apache.traffic_control.traffic_router.core.status.model.CacheModel;
 import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
 import org.apache.traffic_control.traffic_router.geolocation.GeolocationException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 
 public class DataExporter {
 	private static final Logger LOGGER = LogManager.getLogger(DataExporter.class);

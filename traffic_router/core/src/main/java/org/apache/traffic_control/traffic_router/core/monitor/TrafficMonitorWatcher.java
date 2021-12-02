@@ -15,19 +15,6 @@
 
 package org.apache.traffic_control.traffic_router.core.monitor;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.traffic_control.traffic_router.core.config.ConfigHandler;
-import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
-import org.apache.traffic_control.traffic_router.core.util.AbstractUpdatable;
-import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
-import org.apache.traffic_control.traffic_router.core.util.PeriodicResourceUpdater;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ApplicationContextEvent;
-import org.springframework.context.event.ContextClosedEvent;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -38,6 +25,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import org.apache.traffic_control.traffic_router.core.config.ConfigHandler;
+import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
+import org.apache.traffic_control.traffic_router.core.util.AbstractUpdatable;
+import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
+import org.apache.traffic_control.traffic_router.core.util.PeriodicResourceUpdater;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ApplicationContextEvent;
+import org.springframework.context.event.ContextClosedEvent;
 
 @SuppressWarnings("PMD.TooManyFields")
 public class TrafficMonitorWatcher implements ApplicationListener<ApplicationContextEvent> {
