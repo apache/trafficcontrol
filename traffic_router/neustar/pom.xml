@@ -50,9 +50,10 @@ under the License.
 			<version>${project.parent.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>log4j</groupId>
+			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>${log4j.version}</version>
+			<type>pom</type>
 		</dependency>
 		<dependency>
 			<groupId>com.maxmind.geoip2</groupId>
