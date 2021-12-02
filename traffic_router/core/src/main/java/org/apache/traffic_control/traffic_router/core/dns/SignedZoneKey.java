@@ -15,17 +15,18 @@
 
 package org.apache.traffic_control.traffic_router.core.dns;
 
-import java.util.Calendar;
-import java.util.List;
-import java.util.OptionalLong;
-
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.RRSIGRecord;
 import org.xbill.DNS.Record;
 
+import java.util.Calendar;
+import java.util.List;
+import java.util.OptionalLong;
+
 public class SignedZoneKey extends ZoneKey {
-	private static final Logger LOGGER = Logger.getLogger(SignedZoneKey.class);
+	private static final Logger LOGGER = LogManager.getLogger(SignedZoneKey.class);
 
 	private Calendar minimumSignatureExpiration;
 	private Calendar kskExpiration;

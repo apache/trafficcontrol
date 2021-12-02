@@ -16,6 +16,7 @@
 package org.apache.traffic_control.traffic_router.secure;
 
 import org.apache.traffic_control.traffic_router.shared.CertificateData;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.management.AttributeChangeNotification;
@@ -25,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CertificateDataListener implements NotificationListener {
-	private static final Logger log = Logger.getLogger(CertificateDataListener.class);
+	private static final Logger log = LogManager.getLogger(CertificateDataListener.class);
 
 	@SuppressWarnings("PMD.AvoidCatchingThrowable")
 	@Override

@@ -15,26 +15,20 @@
 
 package org.apache.traffic_control.traffic_router.core.edge;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
+
+import java.util.*;
 
 /**
  * A physical location that has caches.
  */
 public class CacheLocation extends Location {
 
-	public static final Logger LOGGER = Logger.getLogger(CacheLocation.class);
+	public static final Logger LOGGER = LogManager.getLogger(CacheLocation.class);
 
 	private final Map<String, Cache> caches;
 	private List<String> backupCacheGroups = null;

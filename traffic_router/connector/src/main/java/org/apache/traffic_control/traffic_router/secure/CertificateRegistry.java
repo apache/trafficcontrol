@@ -18,6 +18,7 @@ package org.apache.traffic_control.traffic_router.secure;
 import org.apache.traffic_control.traffic_router.protocol.RouterNioEndpoint;
 import org.apache.traffic_control.traffic_router.shared.CertificateData;
 import org.apache.traffic_control.traffic_router.utils.HttpsProperties;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
@@ -55,7 +56,7 @@ import java.util.Map;
 
 public class CertificateRegistry {
 	public static final String DEFAULT_SSL_KEY = "default.invalid";
-	private static final Logger log = Logger.getLogger(CertificateRegistry.class);
+	private static final Logger log = LogManager.getLogger(CertificateRegistry.class);
 	private CertificateDataConverter certificateDataConverter = new CertificateDataConverter();
 	volatile private Map<String, HandshakeData> handshakeDataMap = new HashMap<>();
 	private RouterNioEndpoint sslEndpoint = null;

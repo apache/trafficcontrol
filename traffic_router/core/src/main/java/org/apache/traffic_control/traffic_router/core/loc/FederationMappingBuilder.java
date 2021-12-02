@@ -21,12 +21,13 @@ import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
 public class FederationMappingBuilder {
-    private final static Logger LOGGER = Logger.getLogger(FederationMapping.class);
+    private final static Logger LOGGER = LogManager.getLogger(FederationMapping.class);
 
 
     public FederationMapping fromJSON(final String json) throws JsonUtilsException, IOException {

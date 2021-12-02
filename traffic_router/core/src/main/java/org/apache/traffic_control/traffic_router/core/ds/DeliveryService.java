@@ -15,51 +15,38 @@
 
 package org.apache.traffic_control.traffic_router.core.ds;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.traffic_control.traffic_router.core.edge.Cache;
+import org.apache.traffic_control.traffic_router.core.edge.Cache.DeliveryServiceReference;
+import org.apache.traffic_control.traffic_router.core.edge.CacheLocation;
+import org.apache.traffic_control.traffic_router.core.edge.InetRecord;
+import org.apache.traffic_control.traffic_router.core.edge.Location;
+import org.apache.traffic_control.traffic_router.core.request.DNSRequest;
+import org.apache.traffic_control.traffic_router.core.request.HTTPRequest;
+import org.apache.traffic_control.traffic_router.core.router.StatTracker.Track;
+import org.apache.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
+import org.apache.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
+import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
+import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
+import org.apache.traffic_control.traffic_router.core.util.StringProtector;
+import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.Iterator;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.logging.log4j.Logger;
-
-import org.apache.traffic_control.traffic_router.core.edge.Cache;
-import org.apache.traffic_control.traffic_router.core.edge.InetRecord;
-import org.apache.traffic_control.traffic_router.core.edge.Location;
-import org.apache.traffic_control.traffic_router.core.edge.Cache.DeliveryServiceReference;
-import org.apache.traffic_control.traffic_router.core.edge.CacheLocation;
-import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
-import org.apache.traffic_control.traffic_router.core.request.DNSRequest;
-import org.apache.traffic_control.traffic_router.core.request.HTTPRequest;
-import org.apache.traffic_control.traffic_router.core.router.StatTracker.Track;
-import org.apache.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
-import org.apache.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
-import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
-import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
-import org.apache.traffic_control.traffic_router.core.util.StringProtector;
-
 @SuppressWarnings({"PMD.TooManyFields","PMD.CyclomaticComplexity", "PMD.AvoidDuplicateLiterals", "PMD.ExcessivePublicCount"})
 public class DeliveryService {
-	protected static final Logger LOGGER = Logger.getLogger(DeliveryService.class);
+	protected static final Logger LOGGER = LogManager.getLogger(DeliveryService.class);
 	private final String id;
 	@JsonIgnore
 	private final JsonNode ttls;

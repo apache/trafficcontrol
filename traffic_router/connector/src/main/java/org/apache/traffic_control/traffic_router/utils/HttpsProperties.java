@@ -15,6 +15,7 @@
 
 package org.apache.traffic_control.traffic_router.utils;
 
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Files;
@@ -23,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HttpsProperties {
-    private static final Logger log = Logger.getLogger(HttpsProperties.class);
+    private static final Logger log = LogManager.getLogger(HttpsProperties.class);
     private static final String HTTPS_PROPERTIES_FILE = "/opt/traffic_router/conf/https.properties";
     private final Map<String, String> httpsPropertiesMap;
 

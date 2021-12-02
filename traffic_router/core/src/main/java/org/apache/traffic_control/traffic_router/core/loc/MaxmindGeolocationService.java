@@ -15,22 +15,21 @@
 
 package org.apache.traffic_control.traffic_router.core.loc;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.InetAddress;
-
-import org.apache.logging.log4j.Logger;
-
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.AddressNotFoundException;
 import com.maxmind.geoip2.model.CityResponse;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
 import org.apache.traffic_control.traffic_router.geolocation.GeolocationException;
 import org.apache.traffic_control.traffic_router.geolocation.GeolocationService;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.InetAddress;
+
 public class MaxmindGeolocationService implements GeolocationService {
-	private static final Logger LOGGER = Logger.getLogger(MaxmindGeolocationService.class);
+	private static final Logger LOGGER = LogManager.getLogger(MaxmindGeolocationService.class);
 	private boolean initialized = false;
 	private DatabaseReader databaseReader;
 	private File databaseFile;

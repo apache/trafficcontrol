@@ -15,6 +15,7 @@
 
 package org.apache.traffic_control.traffic_router.secure;
 
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.net.ssl.ExtendedSSLSession;
@@ -36,7 +37,7 @@ import java.util.stream.Collectors;
 // once the JVM loads the default classes.
 public class KeyManager extends X509ExtendedKeyManager implements X509KeyManager {
 	private final CertificateRegistry certificateRegistry = CertificateRegistry.getInstance();
-	private static final Logger log = Logger.getLogger(KeyManager.class);
+	private static final Logger log = LogManager.getLogger(KeyManager.class);
 	// To date this method is not getting exercised while running the router
 	@Override
 	public String chooseClientAlias(final String[] strings, final Principal[] principals, final Socket socket) {

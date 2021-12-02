@@ -15,44 +15,30 @@
 
 package org.apache.traffic_control.traffic_router.core.dns;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.traffic_control.traffic_router.core.dns.ZoneManager.ZoneCacheType;
+import org.apache.traffic_control.traffic_router.core.edge.CacheRegister;
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouter;
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.logging.log4j.Logger;
-import org.xbill.DNS.DSRecord;
-import org.xbill.DNS.Name;
-import org.xbill.DNS.Record;
-import org.xbill.DNS.RRSIGRecord;
-import org.xbill.DNS.TextParseException;
-import org.apache.traffic_control.traffic_router.core.edge.CacheRegister;
-import org.apache.traffic_control.traffic_router.core.dns.ZoneManager.ZoneCacheType;
-import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import org.apache.traffic_control.traffic_router.core.util.ProtectedFetcher;
+import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.*;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
+import java.util.concurrent.*;
 
 
 public final class SignatureManager {
-	private static final Logger LOGGER = Logger.getLogger(SignatureManager.class);
+	private static final Logger LOGGER = LogManager.getLogger(SignatureManager.class);
 	private int expirationMultiplier;
 	private CacheRegister cacheRegister;
 	private static ConcurrentMap<RRSIGCacheKey, ConcurrentMap<RRsetKey, RRSIGRecord>> RRSIGCache = new ConcurrentHashMap<>();

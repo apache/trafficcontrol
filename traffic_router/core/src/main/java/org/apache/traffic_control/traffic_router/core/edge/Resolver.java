@@ -15,16 +15,17 @@
 
 package org.apache.traffic_control.traffic_router.core.edge;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.Logger;
-
 public class Resolver {
-	private static final Logger LOGGER = Logger.getLogger(Resolver.class);
+	private static final Logger LOGGER = LogManager.getLogger(Resolver.class);
 
 	public List<InetRecord> resolve(final String fqdn) {
 		List<InetRecord> ipAddresses = null;

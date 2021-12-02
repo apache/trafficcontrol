@@ -15,8 +15,8 @@
 
 package org.apache.traffic_control.traffic_router.secure;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;

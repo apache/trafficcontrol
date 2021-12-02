@@ -14,19 +14,14 @@
 
 package org.apache.traffic_control.traffic_router.core.loc;
 
-import java.io.File;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.InetAddresses;
 import com.maxmind.geoip2.model.AnonymousIpResponse;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import org.apache.traffic_control.traffic_router.core.edge.Cache;
 import org.apache.traffic_control.traffic_router.core.ds.DeliveryService;
+import org.apache.traffic_control.traffic_router.core.edge.Cache;
 import org.apache.traffic_control.traffic_router.core.request.HTTPRequest;
 import org.apache.traffic_control.traffic_router.core.request.Request;
 import org.apache.traffic_control.traffic_router.core.router.HTTPRouteResult;
@@ -36,9 +31,14 @@ import org.apache.traffic_control.traffic_router.core.router.TrafficRouter;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
 
+import java.io.File;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 public final class AnonymousIp {
 
-	private static final Logger LOGGER = Logger.getLogger(AnonymousIp.class);
+	private static final Logger LOGGER = LogManager.getLogger(AnonymousIp.class);
 
 	private static AnonymousIp currentConfig = new AnonymousIp();
 

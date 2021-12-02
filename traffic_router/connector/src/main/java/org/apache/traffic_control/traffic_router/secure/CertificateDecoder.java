@@ -15,6 +15,7 @@
 
 package org.apache.traffic_control.traffic_router.secure;
 
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
@@ -25,7 +26,7 @@ import java.util.Base64;
 import java.util.List;
 
 public class CertificateDecoder {
-	private static final Logger log = Logger.getLogger(CertificateDecoder.class);
+	private static final Logger log = LogManager.getLogger(CertificateDecoder.class);
 
 	private static final String CRT_HEADER = "-----BEGIN CERTIFICATE-----";
 	private static final String CRT_FOOTER = "-----END CERTIFICATE-----";

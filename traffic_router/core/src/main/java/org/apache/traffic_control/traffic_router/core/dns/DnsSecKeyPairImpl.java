@@ -19,6 +19,7 @@ import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
 import org.apache.traffic_control.traffic_router.secure.BindPrivateKey;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.DNSKEYRecord;
 import org.xbill.DNS.DNSSEC;
@@ -39,7 +40,7 @@ import java.util.Date;
 import static java.util.Base64.getMimeDecoder;
 
 public class DnsSecKeyPairImpl implements DnsSecKeyPair {
-	private static final Logger LOGGER = Logger.getLogger(DnsSecKeyPairImpl.class);
+	private static final Logger LOGGER = LogManager.getLogger(DnsSecKeyPairImpl.class);
 	private long ttl;
 	private Date inception;
 	private Date effective;

@@ -14,19 +14,19 @@
 
 package org.apache.traffic_control.traffic_router.core.loc;
 
+import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.exception.GeoIp2Exception;
+import com.maxmind.geoip2.model.AnonymousIpResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 
-import org.apache.logging.log4j.Logger;
-
-import com.maxmind.geoip2.DatabaseReader;
-import com.maxmind.geoip2.exception.GeoIp2Exception;
-import com.maxmind.geoip2.model.AnonymousIpResponse;
-
 @SuppressWarnings({ "PMD.AvoidDuplicateLiterals" })
 public class AnonymousIpDatabaseService {
-	private static final Logger LOGGER = Logger.getLogger(AnonymousIpDatabaseService.class);
+	private static final Logger LOGGER = LogManager.getLogger(AnonymousIpDatabaseService.class);
 
 	private boolean initialized = false;
 	private File databaseFile;

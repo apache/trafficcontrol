@@ -15,14 +15,15 @@
 
 package org.apache.traffic_control.traffic_router.protocol;
 
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.lang.management.ManagementFactory;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
+import java.lang.management.ManagementFactory;
 
 public class LanguidPoller extends Thread {
-	private static final Logger log = Logger.getLogger(LanguidPoller.class);
+	private static final Logger log = LogManager.getLogger(LanguidPoller.class);
 	final private RouterProtocolHandler protocolHandler;
 
 	public LanguidPoller(final RouterProtocolHandler protocolHandler) {

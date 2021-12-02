@@ -15,29 +15,15 @@
 
 package org.apache.traffic_control.traffic_router.core.dns;
 
-import java.net.InetAddress;
-import java.util.*;
-
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.xbill.DNS.DClass;
-import org.xbill.DNS.ExtendedFlags;
-import org.xbill.DNS.Flags;
-import org.xbill.DNS.Message;
-import org.xbill.DNS.Name;
-import org.xbill.DNS.OPTRecord;
-import org.xbill.DNS.RRset;
-import org.xbill.DNS.Rcode;
-import org.xbill.DNS.Record;
-import org.xbill.DNS.SOARecord;
-import org.xbill.DNS.Section;
-import org.xbill.DNS.SetResponse;
-import org.xbill.DNS.Type;
-import org.xbill.DNS.Zone;
-import org.xbill.DNS.EDNSOption;
-import org.xbill.DNS.ClientSubnetOption;
-
 import org.apache.traffic_control.traffic_router.core.ds.DeliveryService;
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.*;
+
+import java.net.InetAddress;
+import java.util.*;
 
 
 public class NameServer {
@@ -47,7 +33,7 @@ public class NameServer {
 	private static final int FLAG_DNSSECOK = 1;
 	private static final int FLAG_SIGONLY = 2;
 
-	private static final Logger LOGGER = Logger.getLogger(NameServer.class);
+	private static final Logger LOGGER = LogManager.getLogger(NameServer.class);
 	private boolean ecsEnable = false;
 	private Set<DeliveryService> ecsEnabledDses = new HashSet<>();
 	/**
