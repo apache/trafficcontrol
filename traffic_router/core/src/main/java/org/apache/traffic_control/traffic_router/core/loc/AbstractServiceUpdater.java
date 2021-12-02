@@ -15,13 +15,12 @@
 
 package org.apache.traffic_control.traffic_router.core.loc;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
-import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
-
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
@@ -33,6 +32,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
+
+import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
+import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
 
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 

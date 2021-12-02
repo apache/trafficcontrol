@@ -15,16 +15,16 @@
 
 package org.apache.traffic_control.traffic_router.core.dns.protocol;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.Message;
 import org.xbill.DNS.OPTRecord;
 import org.xbill.DNS.WireParseException;
-
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 
 public class UDP extends AbstractProtocol {
     private static final Logger LOGGER = LogManager.getLogger(UDP.class);

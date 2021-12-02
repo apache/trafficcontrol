@@ -19,12 +19,13 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
 public class HttpClient {
-	private final Logger LOGGER = Logger.getLogger(HttpClient.class);
+	private final Logger LOGGER = LogManager.getLogger(HttpClient.class);
 
 	private CloseableHttpClient httpClient;
 

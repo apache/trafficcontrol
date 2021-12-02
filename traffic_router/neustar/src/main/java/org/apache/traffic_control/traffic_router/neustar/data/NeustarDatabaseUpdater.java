@@ -22,6 +22,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -36,7 +37,7 @@ import java.util.zip.GZIPInputStream;
 import static java.lang.Long.parseLong;
 
 public class NeustarDatabaseUpdater {
-	private final Logger LOGGER = Logger.getLogger(NeustarDatabaseUpdater.class);
+	private final Logger LOGGER = LogManager.getLogger(NeustarDatabaseUpdater.class);
 
 	@Autowired
 	private Integer neustarPollingTimeout;

@@ -15,11 +15,11 @@
 
 package org.apache.traffic_control.traffic_router.core.loc;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.io.File;
 import java.io.IOException;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class RegionalGeoUpdater extends AbstractServiceUpdater {
     private static final Logger LOGGER = LogManager.getLogger(RegionalGeoUpdater.class);

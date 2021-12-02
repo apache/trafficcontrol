@@ -15,27 +15,25 @@
 
 package org.apache.traffic_control.traffic_router.core.router;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import org.apache.traffic_control.traffic_router.core.dns.NameServer;
-import org.apache.traffic_control.traffic_router.core.ds.SteeringRegistry;
-import org.apache.traffic_control.traffic_router.core.edge.CacheRegister;
-import org.apache.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService;
-import org.apache.traffic_control.traffic_router.core.loc.FederationRegistry;
-import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
-import org.apache.traffic_control.traffic_router.geolocation.GeolocationService;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
-
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.traffic_control.traffic_router.core.ds.SteeringRegistry;
+import org.apache.traffic_control.traffic_router.core.loc.FederationRegistry;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import org.apache.traffic_control.traffic_router.core.edge.CacheRegister;
+import org.apache.traffic_control.traffic_router.core.dns.NameServer;
+import org.apache.traffic_control.traffic_router.geolocation.GeolocationService;
+import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.apache.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService;
 
 public class TrafficRouterManager implements ApplicationListener<ContextRefreshedEvent> {
 	private static final Logger LOGGER = LogManager.getLogger(TrafficRouterManager.class);

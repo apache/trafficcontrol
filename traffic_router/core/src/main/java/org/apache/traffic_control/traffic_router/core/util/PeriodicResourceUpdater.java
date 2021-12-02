@@ -15,6 +15,16 @@
 
 package org.apache.traffic_control.traffic_router.core.util;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.asynchttpclient.AsyncCompletionHandler;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClientConfig;
+import org.asynchttpclient.Request;
+import org.asynchttpclient.Response;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,16 +43,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.Logger;
-
-import org.asynchttpclient.AsyncCompletionHandler;
-import org.asynchttpclient.AsyncHttpClient;
-import org.asynchttpclient.DefaultAsyncHttpClient;
-import org.asynchttpclient.DefaultAsyncHttpClientConfig;
-import org.asynchttpclient.Request;
-import org.asynchttpclient.Response;
-
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
 /**
@@ -51,7 +51,7 @@ import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
  *
  */
 public class PeriodicResourceUpdater {
-	private static final Logger LOGGER = Logger.getLogger(PeriodicResourceUpdater.class);
+	private static final Logger LOGGER = LogManager.getLogger(PeriodicResourceUpdater.class);
 
 	private AsyncHttpClient asyncHttpClient;
 	protected String databaseLocation;

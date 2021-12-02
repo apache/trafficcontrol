@@ -17,11 +17,12 @@ package org.apache.traffic_control.traffic_router.neustar.configuration;
 
 import org.apache.traffic_control.traffic_router.neustar.NeustarGeolocationService;
 import org.apache.traffic_control.traffic_router.neustar.data.NeustarDatabaseUpdater;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class ServiceRefresher implements Runnable {
-	private final Logger logger = Logger.getLogger(ServiceRefresher.class);
+	private final Logger logger = LogManager.getLogger(ServiceRefresher.class);
 
 	@Autowired
 	NeustarDatabaseUpdater neustarDatabaseUpdater;

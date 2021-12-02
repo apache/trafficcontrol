@@ -14,6 +14,11 @@
 
 package org.apache.traffic_control.traffic_router.core.loc;
 
+import java.io.File;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.InetAddresses;
@@ -30,11 +35,6 @@ import org.apache.traffic_control.traffic_router.core.router.StatTracker.Track.R
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouter;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
-
-import java.io.File;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 public final class AnonymousIp {
 

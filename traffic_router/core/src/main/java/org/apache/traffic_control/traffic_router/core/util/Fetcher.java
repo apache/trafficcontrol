@@ -15,6 +15,16 @@
 
 package org.apache.traffic_control.traffic_router.core.util;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -29,19 +39,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.Logger;
-
 
 public class Fetcher {
-	private static final Logger LOGGER = Logger.getLogger(Fetcher.class);
+	private static final Logger LOGGER = LogManager.getLogger(Fetcher.class);
 	protected static final String GET_STR = "GET";
 	protected static final String POST_STR = "POST";
 	protected static final String UTF8_STR = "UTF-8";

@@ -21,6 +21,7 @@ import org.apache.traffic_control.traffic_router.neustar.data.TarExtractor;
 import org.apache.traffic_control.traffic_router.neustar.files.FilesMover;
 
 import org.apache.traffic_control.traffic_router.configuration.ConfigurationListener;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -36,7 +37,7 @@ import java.util.concurrent.ScheduledExecutorService;
 @Configuration
 @PropertySource(value = "neustar.properties", ignoreResourceNotFound = true)
 public class NeustarConfiguration {
-	private final Logger LOGGER = Logger.getLogger(NeustarConfiguration.class);
+	private final Logger LOGGER = LogManager.getLogger(NeustarConfiguration.class);
 	@Autowired
 	private Environment environment;
 

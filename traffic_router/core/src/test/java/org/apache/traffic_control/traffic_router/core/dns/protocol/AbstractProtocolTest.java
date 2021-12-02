@@ -18,6 +18,7 @@ package org.apache.traffic_control.traffic_router.core.dns.protocol;
 import org.apache.traffic_control.traffic_router.core.dns.DNSAccessEventBuilder;
 import org.apache.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import org.apache.traffic_control.traffic_router.core.dns.NameServer;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,7 +76,7 @@ public class AbstractProtocolTest {
         when(System.currentTimeMillis()).then(currentTimeAnswer);
 
         mockStatic(Logger.class);
-        when(Logger.getLogger("org.apache.traffic_control.traffic_router.core.access")).thenAnswer(invocation -> accessLogger);
+        when(LogManager.getLogger("org.apache.traffic_control.traffic_router.core.access")).thenAnswer(invocation -> accessLogger);
 
         header = new Header();
         header.setID(65535);

@@ -18,11 +18,11 @@ package org.apache.traffic_control.traffic_router.core;
 import org.apache.traffic_control.traffic_router.core.external.HttpDataServer;
 import org.apache.traffic_control.traffic_router.shared.DeliveryServiceCertificates;
 import org.apache.traffic_control.traffic_router.shared.DeliveryServiceCertificatesMBean;
-import org.apache.logging.log4j.ConsoleAppender;
+import org.apache.logging.log4j.core.appender.ConsoleAppender;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.PatternLayout;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
@@ -41,7 +41,7 @@ import static org.springframework.util.SocketUtils.findAvailableTcpPort;
 import static org.springframework.util.SocketUtils.findAvailableUdpPort;
 
 public class TestBase {
-	private static final Logger LOGGER = Logger.getLogger(TestBase.class);
+	private static final Logger LOGGER = LogManager.getLogger(TestBase.class);
 
 	private static int testHttpServerPort = findAvailableTcpPort();
 	private static HttpDataServer httpDataServer = new HttpDataServer(testHttpServerPort);

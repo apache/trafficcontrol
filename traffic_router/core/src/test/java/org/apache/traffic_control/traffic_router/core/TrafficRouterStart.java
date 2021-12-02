@@ -15,10 +15,10 @@
 
 package org.apache.traffic_control.traffic_router.core;
 
-import org.apache.logging.log4j.ConsoleAppender;
+import org.apache.logging.log4j.core.appender.ConsoleAppender;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.PatternLayout;
 
 public class TrafficRouterStart {
 
@@ -38,8 +38,8 @@ public class TrafficRouterStart {
 		LogManager.getLogger("org.springframework").setLevel(Level.WARN);
 
 		ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{ISO8601} [%-5p] %c{4}: %m%n"));
-		LogManager.getRootLogger().addAppender(consoleAppender);
-		LogManager.getRootLogger().setLevel(Level.INFO);
+		Logger.getRootLogger().addAppender(consoleAppender);
+		Logger.getRootLogger().setLevel(Level.INFO);
 
 		System.out.println("[" + System.currentTimeMillis() + "] >>>>>>>>>>>>>>>> Embedded Tomcat loading Traffic Router");
 		CatalinaTrafficRouter catalinaTrafficRouter = new CatalinaTrafficRouter(prefix + "/src/main/conf/server.xml", prefix + "/src/main/webapp" );

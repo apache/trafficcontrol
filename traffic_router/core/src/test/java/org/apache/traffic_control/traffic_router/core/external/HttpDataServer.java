@@ -45,7 +45,7 @@ public class HttpDataServer implements HttpHandler {
 
 // Useful for producing an access log
 //	static {
-//		Logger logger = Logger.getLogger("com.sun.net.httpserver");
+//		Logger logger = LogManager.getLogger("com.sun.net.httpserver");
 //		logger.setLevel(java.util.logging.Level.ALL);
 //
 //		java.util.logging.Handler[] handlers = logger.getHandlers();

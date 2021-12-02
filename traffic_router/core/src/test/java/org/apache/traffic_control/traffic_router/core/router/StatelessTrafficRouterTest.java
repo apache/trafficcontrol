@@ -16,6 +16,7 @@
 package org.apache.traffic_control.traffic_router.core.router;
 
 import org.apache.traffic_control.traffic_router.core.util.IntegrationTest;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -32,7 +33,7 @@ import org.apache.traffic_control.traffic_router.core.router.StatTracker.Track;
 
 @Category(IntegrationTest.class)
 public class StatelessTrafficRouterTest {
-	private static final Logger LOGGER = Logger.getLogger(StatelessTrafficRouterTest.class);
+	private static final Logger LOGGER = LogManager.getLogger(StatelessTrafficRouterTest.class);
 	private TrafficRouterManager trafficRouterManager;
 	private GeolocationDatabaseUpdater geolocationDatabaseUpdater;
 	private NetworkUpdater networkUpdater;
