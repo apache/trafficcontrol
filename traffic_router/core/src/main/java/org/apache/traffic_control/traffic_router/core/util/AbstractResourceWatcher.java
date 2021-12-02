@@ -35,7 +35,7 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 	protected TrafficOpsUtils trafficOpsUtils;
 	private int timeout = 15000;
 
-	@SuppressWarnings("PMD")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public void configure(final JsonNode config) {
 		URL authUrl;
 		String credentials;

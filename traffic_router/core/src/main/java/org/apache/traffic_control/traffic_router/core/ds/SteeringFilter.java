@@ -49,12 +49,11 @@ public class SteeringFilter {
 	}
 
 	@Override
-	@SuppressWarnings("PMD")
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		SteeringFilter that = (SteeringFilter) o;
+		final SteeringFilter that = (SteeringFilter) o;
 
 		if (pattern != null ? !pattern.equals(that.pattern) : that.pattern != null) return false;
 		return deliveryService != null ? deliveryService.equals(that.deliveryService) : that.deliveryService == null;
@@ -62,7 +61,6 @@ public class SteeringFilter {
 	}
 
 	@Override
-	@SuppressWarnings("PMD")
 	public int hashCode() {
 		int result = pattern != null ? pattern.hashCode() : 0;
 		result = 31 * result + (deliveryService != null ? deliveryService.hashCode() : 0);
