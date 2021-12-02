@@ -29,7 +29,12 @@ under the License.
         <div class="helptext">
             <aside class="warning">
                 <h6>Warning</h6>
-                <p>Delivery service origin(s) must support IMS in order to safely invalidate content</p>
+                <p>REFRESH (preferred default) will mark the matching asset(s) as STALE and an IMS request of the asset(s) from the origin will be performed. Origins that fully adhere 
+                    to the <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.25">If-Modified-Since</a> 
+                    and <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.26">If-None-Match</a> specification can safely invalidate content using REFRESH.</p>
+                <p>REFETCH will mark the matching asset(s) as a cache MISS and a new full request of the asset(s) from the origin will be performed. 
+                    This operation is expensive and it is HIGHLY RECOMMENDED that the specified regex is very specific when using REFETCH.</p>
+                <p>For additional information please see the documentation for <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/jobs.html">Content Invalidation Jobs.</a></p>
             </aside>
         </div>
         <br>
