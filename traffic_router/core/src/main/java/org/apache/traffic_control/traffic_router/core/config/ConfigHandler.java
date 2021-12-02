@@ -15,65 +15,41 @@
 
 package org.apache.traffic_control.traffic_router.core.config;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.traffic_control.traffic_router.core.ds.DeliveryService;
+import org.apache.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
+import org.apache.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher.Type;
+import org.apache.traffic_control.traffic_router.core.ds.LetsEncryptDnsChallengeWatcher;
+import org.apache.traffic_control.traffic_router.core.ds.SteeringWatcher;
+import org.apache.traffic_control.traffic_router.core.edge.*;
+import org.apache.traffic_control.traffic_router.core.edge.Cache.DeliveryServiceReference;
+import org.apache.traffic_control.traffic_router.core.loc.*;
+import org.apache.traffic_control.traffic_router.core.monitor.TrafficMonitorWatcher;
+import org.apache.traffic_control.traffic_router.core.request.HTTPRequest;
+import org.apache.traffic_control.traffic_router.core.router.StatTracker;
+import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
+import org.apache.traffic_control.traffic_router.core.secure.CertificatesPoller;
+import org.apache.traffic_control.traffic_router.core.secure.CertificatesPublisher;
+import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
+import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
+import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
+import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
+
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.Iterator;
+import java.net.UnknownHostException;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.traffic_control.traffic_router.core.ds.LetsEncryptDnsChallengeWatcher;
-import org.apache.traffic_control.traffic_router.core.ds.SteeringWatcher;
-import org.apache.traffic_control.traffic_router.core.loc.FederationsWatcher;
-import org.apache.traffic_control.traffic_router.core.loc.GeolocationDatabaseUpdater;
-import org.apache.traffic_control.traffic_router.core.loc.NetworkNode;
-import org.apache.traffic_control.traffic_router.core.loc.NetworkUpdater;
-import org.apache.traffic_control.traffic_router.core.loc.DeepNetworkUpdater;
-import org.apache.traffic_control.traffic_router.core.loc.RegionalGeoUpdater;
-
-import org.apache.traffic_control.traffic_router.core.secure.CertificatesPoller;
-import org.apache.traffic_control.traffic_router.core.secure.CertificatesPublisher;
-import org.apache.traffic_control.traffic_router.core.util.JsonUtils;
-import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.logging.log4j.Logger;
-
-import org.apache.traffic_control.traffic_router.core.edge.Cache.DeliveryServiceReference;
-import org.apache.traffic_control.traffic_router.core.edge.Cache;
-import org.apache.traffic_control.traffic_router.core.edge.CacheLocation;
-import org.apache.traffic_control.traffic_router.core.edge.Location;
-import org.apache.traffic_control.traffic_router.core.edge.CacheRegister;
-import org.apache.traffic_control.traffic_router.core.edge.Node;
-import org.apache.traffic_control.traffic_router.core.edge.TrafficRouterLocation;
-import org.apache.traffic_control.traffic_router.core.ds.DeliveryService;
-import org.apache.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
-import org.apache.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher.Type;
-import org.apache.traffic_control.traffic_router.core.monitor.TrafficMonitorWatcher;
-import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
-import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
-import org.apache.traffic_control.traffic_router.core.router.StatTracker;
-import org.apache.traffic_control.traffic_router.geolocation.Geolocation;
-import org.apache.traffic_control.traffic_router.core.request.HTTPRequest;
-import org.apache.traffic_control.traffic_router.core.loc.AnonymousIp;
-import org.apache.traffic_control.traffic_router.core.loc.AnonymousIpConfigUpdater;
-import org.apache.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseUpdater;
-
 @SuppressWarnings("PMD.TooManyFields")
 public class ConfigHandler {
-	private static final Logger LOGGER = Logger.getLogger(ConfigHandler.class);
+	private static final Logger LOGGER = LogManager.getLogger(ConfigHandler.class);
 
 	private static long lastSnapshotTimestamp = 0;
 	private static Object configSync = new Object();
