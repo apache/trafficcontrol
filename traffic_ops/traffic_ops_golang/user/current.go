@@ -33,8 +33,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-
-	"github.com/jmoiron/sqlx"
 )
 
 const replacePasswordQuery = `
@@ -169,7 +167,6 @@ WHERE u.id=$1
 
 func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 	var useV4User bool
-	var userV4 tc.UserV4
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
@@ -316,16 +313,7 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if useV4User {
-		userV4 = user.Upgrade()
-	}
-
-	if useV4User {
-		err = updateUserV4(userV4, inf.Tx)
-	} else {
-		err = updateUser(&user, tx, changePasswd, changeConfirmPasswd)
-	}
-	if err != nil {
+	if err = updateUser(&user, tx, changePasswd, changeConfirmPasswd); err != nil {
 		errCode = http.StatusInternalServerError
 		sysErr = fmt.Errorf("updating user: %v", err)
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
@@ -333,26 +321,10 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if useV4User {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "User profile was successfully updated", userV4)
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "User profile was successfully updated", user.Upgrade())
 	} else {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "User profile was successfully updated", user)
 	}
-}
-
-func updateUserV4(u tc.UserV4, tx *sqlx.Tx) error {
-	resultRows, err := tx.NamedQuery(UpdateQueryV40(), u)
-	if err != nil {
-		return err
-	}
-	defer resultRows.Close()
-
-	for resultRows.Next() {
-		if err := resultRows.Scan(&u.LastUpdated, &u.Tenant, &u.Role); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func updateUser(u *tc.User, tx *sql.Tx, changePassword bool, changeConfirmPasswd bool) error {
