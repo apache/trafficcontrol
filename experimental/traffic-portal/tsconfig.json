@@ -6,11 +6,14 @@
 		"baseUrl": "./",
 		"declaration": false,
 		"downlevelIteration": true,
-		"exactOptionalPropertyTypes": true,
 		"experimentalDecorators": true,
 		"importHelpers": true,
-		"emitDecoratorMetadata": true,
 		"module": "es2020",
+		"moduleResolution": "node",
+		"noImplicitReturns": true,
+		"noImplicitOverride": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
 		"outDir": "./dist/out-tsc",
 		"strict": true,
 		"target": "es2017",
@@ -18,5 +21,13 @@
 			"es2020",
 			"dom"
 		]
+	},
+	"angularCompilerOptions": {
+		"enableI18nLegacyMessageIdFormat": false,
+		"strictInjectionParameters": true,
+		"strictInputAccessModifiers": true,
+		"strictTemplates": true,
+		"strictInputTypes": true,
+		"strictNullInputTypes": false
 	}
 }
