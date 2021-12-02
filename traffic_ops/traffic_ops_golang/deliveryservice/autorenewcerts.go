@@ -243,6 +243,7 @@ func RunAutorenewal(existingCerts []ExistingCerts, cfg *config.Config, ctx conte
 					CDN:             &keyObj.CDN,
 					Version:         &newVersion,
 					AuthType:        &keyObj.AuthType,
+					Key:             &keyObj.Key,
 				},
 			}
 
