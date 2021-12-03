@@ -12,20 +12,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Router: Add support for `file`-protocol URLs for the `geolocation.polling.url` for the Geolocation database.
 
 ### Fixed
-- Update traffic_portal dependencies to mitigate `npm audit` issues.
+- Update traffic\_portal dependencies to mitigate `npm audit` issues.
 - Fixed a cdn-in-a-box build issue when using `RHEL_VERSION=7`
 - [#6580](https://github.com/apache/trafficcontrol/issues/6580) Fixed cache config generation remap.config targets for MID-type servers in a Topology with other caches as parents and HTTPS origins.
-- Traffic Router: fixed a null pointer exception that caused snapshots to be rejected if a topology cachegroup did not have any online/reported/admin_down caches
+- Traffic Router: fixed a null pointer exception that caused snapshots to be rejected if a topology cachegroup did not have any online/reported/admin\_down caches
 - [#6549](https://github.com/apache/trafficcontrol/issues/6549) Fixed internal server error while deleting a delivery service created from a DSR (Traafic Ops).
 - [#6538](https://github.com/apache/trafficcontrol/pull/6538) Fixed the incorrect use of secure.port on TrafficRouter and corrected to the httpsPort value from the TR server configuration.
 - [#6562](https://github.com/apache/trafficcontrol/pull/6562) Fixed incorrect template in Ansible dataset loader role when fallbackToClosest is defined.
-- [#6590](https://github.com/apache/trafficcontrol/pull/6590) Python client: Corrected parameter name in decorator for get_parameters_by_profile_id
+- [#6590](https://github.com/apache/trafficcontrol/pull/6590) Python client: Corrected parameter name in decorator for get\_parameters\_by\_profile\_id
 - [#6368](https://github.com/apache/trafficcontrol/pull/6368) Fixed validation response message from `/acme_accounts`
 - [#6603](https://github.com/apache/trafficcontrol/issues/6603) Fixed users with "admin" "Priv Level" not having Permission to view or delete DNSSEC keys.
 - [#6370](https://github.com/apache/trafficcontrol/pull/6370) Fixed docs for `POST` and response code for `PUT` to `/acme_accounts` endpoint
 
 ### Removed
-- Remove traffic_portal dependencies to mitigate `npm audit` issues, specifically `grunt-concurrent`, `grunt-contrib-concat`, `grunt-contrib-cssmin`, `grunt-contrib-jsmin`, `grunt-contrib-uglify`, `grunt-contrib-htmlmin`, `grunt-newer`, and `grunt-wiredep`
+- Remove traffic\_portal dependencies to mitigate `npm audit` issues, specifically `grunt-concurrent`, `grunt-contrib-concat`, `grunt-contrib-cssmin`, `grunt-contrib-jsmin`, `grunt-contrib-uglify`, `grunt-contrib-htmlmin`, `grunt-newer`, and `grunt-wiredep`
 - Replace `forever` with `pm2` for process management of the traffic portal node server to remediate security issues.
 - Removed the Traffic Monitor `peer_polling_protocol` option. Traffic Monitor now just uses hostnames to request peer states, which can be handled via IPv4 or IPv6 depending on the underlying IP version in use.
 - Dropped CentOS 8 support
@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Added permissions to the role form in traffic portal
 - Updated the Cache Stats Traffic Portal page to use a more performant AG-Grid-based table.
 - Updated the CDNs Traffic Portal page to use a more performant AG-Grid-based table.
+- Updated the Profiles Traffic Portal page to use a more performant AG-Grid-based table.
 
 ## [6.1.0] - 2022-01-18
 ### Added
