@@ -178,7 +178,6 @@ var CacheStatsController = function(cacheStats, $scope, userModel) {
 			 * @returns {string} The formatted value.
 			 */
 			valueFormatter: ({value}) => {
-				console.log("formatting a kbps:", value);
 				if (!value || value <= 0 || !isFinite(value)) {
 					return "0bps";
 				}
