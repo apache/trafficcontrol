@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser } from 'protractor'
+import { browser } from "protractor"
 
-import { LoginPage } from '../PageObjects/LoginPage.po'
-import { ProfilesPage } from '../PageObjects/ProfilesPage.po';
-import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
+import { LoginPage } from "../PageObjects/LoginPage.po"
+import { ProfilesPage } from "../PageObjects/ProfilesPage.po";
+import { TopNavigationPage } from "../PageObjects/TopNavigationPage.po";
 import { api } from "../config";
 import { profiles } from "../Data";
 
@@ -29,76 +29,53 @@ const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const profilesPage = new ProfilesPage();
 
-describe('Setup API for Profiles', () => {
-    it('Setup', async () => {
-        await api.UseAPI(profiles.setup);
-    });
-});
+describe("Profiles Pages", ()=>{
+	beforeAll(()=>api.UseAPI(profiles.setup));
 
-profiles.tests.forEach(async profilesData => {
-    profilesData.logins.forEach(login => {
-        describe(`Traffic Portal - Profiles - ${login.description}`, () => {
-            afterEach(async function () {
-                await profilesPage.OpenProfilesPage();
-            });
-            afterAll(async function () {
-                expect(await topNavigation.Logout()).toBeTruthy();
-            })
-            it('can login', async () => {
-                browser.get(browser.params.baseUrl);
-                await loginPage.Login(login);
-                expect(await loginPage.CheckUserName(login)).toBeTruthy();
-                await profilesPage.OpenConfigureMenu();
-            });
-            it('can perform check test suits', async () => {
-                profilesData.check.forEach(check => {
-                    it(check.description, async () => {
-                        expect(await profilesPage.CheckCSV(check.Name)).toBe(true);
-                    });
-                });
-            })
-            it('can perform toggle test suits', async () => {
-                profilesData.toggle.forEach(toggle => {
-                    it(toggle.description, async () => {
-                        if (toggle.description.includes('hide')) {
-                            expect(await profilesPage.ToggleTableColumn(toggle.Name)).toBe(false);
-                        } else {
-                            expect(await profilesPage.ToggleTableColumn(toggle.Name)).toBe(true);
-                        }
-                    });
-                })
-            })
-            it('can perform add test suits', async () => {
-                profilesData.add.forEach(add => {
-                    it(add.description, async () => {
-                        expect(await profilesPage.CreateProfile(add)).toBeTruthy();
-                    });
-                });
-            })
-            it('can perform update test suits', async () => {
-                profilesData.update.forEach(update => {
-                    it(update.description, async () => {
-                        await profilesPage.SearchProfile(update.Name);
-                        expect(await profilesPage.UpdateProfile(update)).toBeTruthy();
-                    });
-                });
-            })
-            it('can perform remove test suits', async () => {
-                profilesData.remove.forEach(remove => {
-                    it(remove.description, async () => {
-                        await profilesPage.SearchProfile(remove.Name);
-                        expect(await profilesPage.DeleteProfile(remove)).toBeTruthy();
-                    });
-                });
-            })
-        });
-    });
-});
-describe('Clean up API for Profiles', () => {
-    afterAll(async () => {
-        await api.UseAPI(profiles.cleanup);
-    });
-    it('Cleanup', async() => {
-      expect(true).toBeTruthy();
-    });
+	for (const profilesData of profiles.tests) {
+		for (const login of profilesData.logins) {
+			describe(`Traffic Portal - Profiles - ${login.description}`, () => {
+				beforeAll(async () => {
+				   browser.get(browser.params.baseUrl);
+				   await loginPage.Login(login);
+				   expect(await loginPage.CheckUserName(login)).toBeTruthy();
+				   await profilesPage.ClickConfigureMenu();
+				});
+				afterEach(async function () {
+					await profilesPage.NavigateToProfilesPage();
+				});
+				afterAll(async function () {
+					expect(await topNavigation.Logout()).toBeTruthy();
+				});
+
+				for (const toggle of profilesData.toggle) {
+					it(toggle.description, async () => {
+						expect(await profilesPage.toggleTableColumn(toggle.name)).toBe(!toggle.description.includes("hide"));
+					});
+				};
+
+				for(const add of profilesData.add) {
+					it(add.description, async () => {
+						expect(await profilesPage.createProfile(add)).toBeTruthy();
+					});
+				}
+
+				for (const update of profilesData.update) {
+					it(update.description, async () => {
+						await profilesPage.searchProfile(update.name);
+						expect(await profilesPage.updateProfile(update.type, update.validationMessage)).toBeTruthy();
+					});
+				}
+
+				for (const remove of profilesData.remove) {
+					it(remove.description, async () => {
+						await profilesPage.searchProfile(remove.name);
+						expect(await profilesPage.deleteProfile(remove.name, remove.description)).toBeTruthy();
+					});
+				}
+			});
+		}
+	}
+
+	afterAll(()=>api.UseAPI(profiles.cleanup));
 });
