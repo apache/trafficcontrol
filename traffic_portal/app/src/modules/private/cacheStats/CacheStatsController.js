@@ -44,7 +44,7 @@ class CacheStatsHealthyCellRenderer {
 	 * 	column: any;
 	 * 	columnApi: any;
 	 * 	context: any;
-	 * 	data: CacheStat
+	 * 	data: CacheStat;
 	 * 	eGridCell: HTMLElement;
 	 * 	eParentOfValue: HTMLElement;
 	 * 	formatValue: function;
@@ -98,7 +98,7 @@ var CacheStatsController = function(cacheStats, $scope, userModel) {
 		 * 	column: any;
 		 * 	columnApi: any;
 		 * 	context: any;
-		 * 	data: CacheStat
+		 * 	data: CacheStat;
 		 * 	eGridCell: HTMLElement;
 		 * 	eParentOfValue: HTMLElement;
 		 * 	formatValue: function;
