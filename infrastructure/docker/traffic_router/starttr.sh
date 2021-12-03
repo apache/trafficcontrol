@@ -23,7 +23,7 @@
 # Therefore it is important to keep this script up to date with any changes that are
 # made to traffic_router/build/build_rpm.sh and traffic_router/build/pom.xml
 
-export JAVA_HOME=/usr/java/jdk1.8.0_92/jre
+export JAVA_HOME="$(command -v java | xargs realpath | xargs dirname)/.."
 export CATALINA_PID=/opt/traffic_router/temp/tomcat.pid
 export CATALINA_HOME=/opt/tomcat
 export CATALINA_BASE=/opt/traffic_router

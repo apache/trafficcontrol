@@ -361,24 +361,19 @@ public abstract class AbstractServiceUpdater {
 			}
 		}
 
-		InputStream in = conn.getInputStream();
-		eTag = conn.getHeaderField("ETag");
-
-		if (conn.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
-			LOGGER.info("[" + getClass().getSimpleName() + "] " + url + " not modified since our existing database's last update time of " + new Date(existingDb.lastModified()));
-			return existingDb;
-		}
-
-		if (sourceCompressed) {
-			in = new GZIPInputStream(in);
-		}
-
 		final File outputFile = File.createTempFile(tmpPrefix, tmpSuffix);
-		final OutputStream out = new FileOutputStream(outputFile);
+		try (InputStream in = conn.getInputStream();
+			 OutputStream out = new FileOutputStream(outputFile)
+		) {
+			eTag = conn.getHeaderField("ETag");
 
-		IOUtils.copy(in, out);
-		IOUtils.closeQuietly(in);
-		IOUtils.closeQuietly(out);
+			if (conn.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
+				LOGGER.info("[" + getClass().getSimpleName() + "] " + url + " not modified since our existing database's last update time of " + new Date(existingDb.lastModified()));
+				return existingDb;
+			}
+
+			IOUtils.copy(sourceCompressed ? new GZIPInputStream(in) : in, out);
+		}
 
 		return outputFile;
 	}

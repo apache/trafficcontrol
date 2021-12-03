@@ -59,7 +59,7 @@ public class CertificateDataConverter {
 			}
 			if (hostMatch && modMatch) {
 				return new HandshakeData(certificateData.getDeliveryservice(), certificateData.getHostname(),
-						x509Chain.toArray(new X509Certificate[x509Chain.size()]), privateKey);
+						x509Chain.toArray(new X509Certificate[0]), privateKey);
 			}
 			else if (!hostMatch) {
 				log.warn("Service name doesn't match the subject of the certificate = "+certificateData.getHostname());

@@ -156,9 +156,9 @@ public class CertificateRegistry {
 			final String selfSignedKeystoreFile = httpsProperties.get("https.certificate.location");
 			if (new File(selfSignedKeystoreFile).exists()) {
 				final String password = httpsProperties.get("https.password");
-				final InputStream readStream = new FileInputStream(selfSignedKeystoreFile);
-				ks.load(readStream, password.toCharArray());
-				readStream.close();
+				try (InputStream readStream = new FileInputStream(selfSignedKeystoreFile)) {
+					ks.load(readStream, password.toCharArray());
+				}
 				final Certificate[] certs = ks.getCertificateChain(defaultAlias);
 				final List<X509Certificate> x509certs = new ArrayList<>();
 

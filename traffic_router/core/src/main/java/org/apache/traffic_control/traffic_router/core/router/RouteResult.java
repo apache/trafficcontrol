@@ -16,5 +16,5 @@
 package org.apache.traffic_control.traffic_router.core.router;
 
 public interface RouteResult {
-	public Object getResult();
+	Object getResult();
 }

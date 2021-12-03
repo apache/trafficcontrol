@@ -22,7 +22,7 @@ After=syslog.target network.target
 [Service]
 Type=forking
 
-Environment=JAVA_HOME=/usr/lib/jvm/jre
+Environment=JAVA_HOME=/usr/lib/jvm/jre-11-openjdk
 Environment=CATALINA_PID=/opt/tomcat/temp/tomcat.pid
 Environment=CATALINA_HOME=/opt/tomcat
 Environment=CATALINA_BASE=/opt/tomcat

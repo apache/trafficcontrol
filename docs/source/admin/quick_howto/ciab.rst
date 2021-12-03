@@ -36,7 +36,7 @@ The CDN in a Box directory is found within the Traffic Control repository at :fi
 * Traffic Portal - at :file:`infrastructure/cdn-in-a-box/traffic_portal/traffic_portal.rpm`
 * Traffic Router - at :file:`infrastructure/cdn-in-a-box/traffic_router/traffic_router.rpm` - also requires an Apache Tomcat RPM at :file:`infrastructure/cdn-in-a-box/traffic_router/tomcat.rpm`
 
-.. note:: These can also be specified via the ``RPM`` variable to a direct Docker build of the component - with the exception of Traffic Router, which instead accepts ``JDK8_RPM`` to specify a Java Development Kit RPM,  ``TRAFFIC_ROUTER_RPM`` to specify a Traffic Router RPM, and  ``TOMCAT_RPM`` to specify an Apache Tomcat RPM.
+.. note:: These can also be specified via the ``RPM`` variable to a direct Docker build of the component - with the exception of Traffic Router, which instead accepts ``TRAFFIC_ROUTER_RPM`` to specify a Traffic Router RPM and ``TOMCAT_RPM`` to specify an Apache Tomcat RPM.
 
 These can all be supplied manually via the steps in :ref:`dev-building` (for Traffic Control component RPMs) or via some external source. Alternatively, the :file:`infrastructure/cdn-in-a-box/Makefile` file contains recipes to build all of these - simply run :manpage:`make(1)` from the :file:`infrastructure/cdn-in-a-box/` directory. Once all RPM dependencies have been satisfied, run ``docker-compose build --parallel`` from the :file:`infrastructure/cdn-in-a-box/` directory to construct the images needed to run CDN in a Box.
 

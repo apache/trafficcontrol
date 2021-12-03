@@ -39,7 +39,7 @@ import org.xbill.DNS.ClientSubnetOption;
 import org.apache.traffic_control.traffic_router.core.ds.DeliveryService;
 import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManager;
 
-
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public class NameServer {
 	private static final int MAX_SUPPORTED_EDNS_VERS = 0;
 	private static final int MAX_ITERATIONS = 6;
