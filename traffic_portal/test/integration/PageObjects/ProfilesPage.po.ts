@@ -134,8 +134,7 @@ export class ProfilesPage extends SideNavigationPage {
 		await element(by.buttonText("Delete")).click();
 		await element(by.name("confirmWithNameInput")).sendKeys(`${name}${randomize}`);
 		await this.ClickDeletePermanently();
-		const result = await this.GetOutputMessage();
-		return result === validationMessage;
+		return await this.GetOutputMessage() === validationMessage;
 	}
 
 	/**
@@ -147,7 +146,7 @@ export class ProfilesPage extends SideNavigationPage {
 	 * @returns Whether or not the column is visible after being toggled.
 	 */
 	public async toggleTableColumn(name: string): Promise<boolean> {
-		const btnTableColumn = element(by.className("caret"));
+		const btnTableColumn = element(by.className("fa-columns"));
 		await btnTableColumn.click();
 		try {
 			await element(by.cssContainingText("label", name)).click();

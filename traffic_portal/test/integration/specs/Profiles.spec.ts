@@ -40,13 +40,10 @@ describe("Profiles Pages", ()=>{
 				   await loginPage.Login(login);
 				   expect(await loginPage.CheckUserName(login)).toBeTruthy();
 				   await profilesPage.ClickConfigureMenu();
+				   await profilesPage.NavigateToProfilesPage();
 				});
-				afterEach(async function () {
-					await profilesPage.NavigateToProfilesPage();
-				});
-				afterAll(async function () {
-					expect(await topNavigation.Logout()).toBeTruthy();
-				});
+				afterEach(() => profilesPage.NavigateToProfilesPage());
+				afterAll(() => expect(topNavigation.Logout()).toBeTruthy());
 
 				for (const toggle of profilesData.toggle) {
 					it(toggle.description, async () => {
@@ -70,7 +67,7 @@ describe("Profiles Pages", ()=>{
 				for (const remove of profilesData.remove) {
 					it(remove.description, async () => {
 						await profilesPage.searchProfile(remove.name);
-						expect(await profilesPage.deleteProfile(remove.name, remove.description)).toBeTruthy();
+						expect(await profilesPage.deleteProfile(remove.name, remove.validationMessage)).toBeTruthy();
 					});
 				}
 			});
