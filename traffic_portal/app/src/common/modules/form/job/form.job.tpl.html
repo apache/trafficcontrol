@@ -29,12 +29,16 @@ under the License.
         <div class="helptext">
             <aside class="warning">
                 <h6>Warning</h6>
-                <p>REFRESH (preferred default) will mark the matching asset(s) as STALE and an IMS request of the asset(s) from the origin will be performed. Origins that fully adhere 
-                    to the <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.25">If-Modified-Since</a> 
-                    and <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.26">If-None-Match</a> specification can safely invalidate content using REFRESH.</p>
-                <p>REFETCH will mark the matching asset(s) as a cache MISS and a new full request of the asset(s) from the origin will be performed. 
-                    This operation is expensive and it is HIGHLY RECOMMENDED that the specified regex is very specific when using REFETCH.</p>
-                <p>For additional information please see the documentation for <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/jobs.html">Content Invalidation Jobs.</a></p>
+                <dl>
+                    <dt>Refresh (preferred default)</dt>
+                    <dd>Marks the matching asset(s) as "stale" and an IMS request of the asset(s) from the origin will be performed. Origins that fully adhere 
+                    to the <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.25" target="_blank" rel="external">If-Modified-Since</a> 
+                    and <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.26" target="_blank" rel="external">If-None-Match</a> specification can safely invalidate content using Refresh.</dd>
+                    <dt>Refetch</dt>
+                    <dd>Marks the matching asset(s) as a cache "miss" and a new full request of the asset(s) from the origin will be performed. 
+                    This operation is expensive and it is <em>highly recommended</em> that the specified regex is very specific when using Refetch.</dd>
+                    <p>For additional information please see the documentation for <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/jobs.html" target="_blank" rel="external">Content Invalidation Jobs.</a></p>
+                </dl>
             </aside>
         </div>
         <br>
