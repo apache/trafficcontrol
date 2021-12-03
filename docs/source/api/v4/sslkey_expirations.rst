@@ -49,12 +49,12 @@ Request Structure
 
 Response Structure
 ------------------
-:deliveryservice:    The :ref:`ds-xmlid` for the :term:`Delivery Service` corresponding to this SSL certificate.
-:deliveryservice_id: The ID for the :term:`Delivery Service` corresponding to this SSL certificate.
-:cdn:                The ID for the :abbr:`CDN (Content Delivery Network)` corresponding to this SSL certificate.
-:provider:           The provider of this SSL certificate, generally the name of the Certificate Authority or the :abbr:`ACME (Automatic Certificate Management Environment)` account.
-:expiration:         The expiration date of this SSL certificate.
-:federated:          A boolean indicating if this SSL certificate is use in a federated :term:`Delivery Service`.
+:deliveryservice:   The :ref:`ds-xmlid` for the :term:`Delivery Service` corresponding to this SSL certificate.
+:deliveryserviceId: The ID for the :term:`Delivery Service` corresponding to this SSL certificate.
+:cdn:               The ID for the :abbr:`CDN (Content Delivery Network)` corresponding to this SSL certificate.
+:provider:          The provider of this SSL certificate, generally the name of the Certificate Authority or the :abbr:`ACME (Automatic Certificate Management Environment)` account.
+:expiration:        The expiration date of this SSL certificate.
+:federated:         A boolean indicating if this SSL certificate is use in a federated :term:`Delivery Service`.
 
 .. code-block:: http
 	:caption: Response Example

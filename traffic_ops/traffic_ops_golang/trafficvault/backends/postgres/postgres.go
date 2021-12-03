@@ -187,7 +187,7 @@ func (p *Postgres) GetExpirationInformation(tx *sql.Tx, ctx context.Context, day
 		query = query + " AND expiration <= (now() + '" + days + " days'::interval)"
 	}
 
-	var expirationInfos []tc.SSLKeyExpirationInformation
+	expirationInfos := []tc.SSLKeyExpirationInformation{}
 
 	rows, err := tvTx.Query(query)
 	if err != nil {
@@ -200,20 +200,20 @@ func (p *Postgres) GetExpirationInformation(tx *sql.Tx, ctx context.Context, day
 		if err = rows.Scan(&expirationInfo.DeliveryService, &expirationInfo.Cdn, &expirationInfo.Provider, &expirationInfo.Expiration); err != nil {
 			return []tc.SSLKeyExpirationInformation{}, false, err
 		}
-		expirationInfo.Federated = util.BoolPtr(false)
+		expirationInfo.Federated = false
 		for _, fed := range fedList {
-			if fed == *expirationInfo.DeliveryService {
-				expirationInfo.Federated = util.BoolPtr(true)
+			if fed == expirationInfo.DeliveryService {
+				expirationInfo.Federated = true
 			}
 		}
 
-		dsID, _, ok, err := dbhelpers.GetDSIDAndCDNFromName(tx, *expirationInfo.DeliveryService)
+		dsID, _, ok, err := dbhelpers.GetDSIDAndCDNFromName(tx, expirationInfo.DeliveryService)
 		if err != nil {
-			return []tc.SSLKeyExpirationInformation{}, false, fmt.Errorf("deliveryservice.GenerateLetsEncryptCertificates: getting DS ID from name: %v", err)
+			return []tc.SSLKeyExpirationInformation{}, false, fmt.Errorf("deliveryservice.GenerateLetsEncryptCertificates: getting DS ID from name: %w", err)
 		} else if !ok {
-			return []tc.SSLKeyExpirationInformation{}, false, errors.New("no DS with name " + *expirationInfo.DeliveryService)
+			return []tc.SSLKeyExpirationInformation{}, false, errors.New("no DS with name " + expirationInfo.DeliveryService)
 		}
-		expirationInfo.DeliveryServiceId = &dsID
+		expirationInfo.DeliveryServiceId = dsID
 
 		expirationInfos = append(expirationInfos, expirationInfo)
 	}
@@ -248,7 +248,7 @@ func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *
 
 	err = deliveryservice.Base64DecodeCertificate(&key.Certificate)
 	if err != nil {
-		return errors.New(fmt.Sprintf("decoding SSL keys, %s", err.Error()))
+		return fmt.Errorf("decoding SSL keys, %w", err)
 	}
 	expiration, _, err := deliveryservice.ParseExpirationAndSansFromCert([]byte(key.Certificate.Crt), key.Hostname)
 	if err != nil {
