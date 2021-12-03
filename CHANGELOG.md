@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Monitors now peer with other Traffic Monitors of the same status (e.g. ONLINE with ONLINE, OFFLINE with OFFLINE), instead of all peering with ONLINE.
 - Added permissions to the role form in traffic portal
 - Updated the Cache Stats Traffic Portal page to use a more performant AG-Grid-based table.
+- Updated the CDNs Traffic Portal page to use a more performant AG-Grid-based table.
 
 ## [6.1.0] - 2022-01-18
 ### Added
