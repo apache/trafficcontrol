@@ -42,7 +42,7 @@ import static org.powermock.api.mockito.PowerMockito.*;
 
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({AbstractProtocolTest.FakeAbstractProtocol.class, Logger.class, DNSAccessEventBuilder.class, Header.class, NameServer.class, DNSAccessRecord.class})
+@PrepareForTest({AbstractProtocolTest.FakeAbstractProtocol.class, Logger.class, LogManager.class, DNSAccessEventBuilder.class, Header.class, NameServer.class, DNSAccessRecord.class})
 public class AbstractProtocolTest {
     private static Logger accessLogger = mock(Logger.class);
     private NameServer nameServer;
@@ -75,8 +75,8 @@ public class AbstractProtocolTest {
         };
         when(System.currentTimeMillis()).then(currentTimeAnswer);
 
-        mockStatic(Logger.class);
-        when(LogManager.getLogger("org.apache.traffic_control.traffic_router.core.access")).thenReturn(accessLogger);
+        mockStatic(LogManager.class);
+        when(LogManager.getLogger("org.apache.traffic_control.traffic_router.core.access")).thenAnswer(invocation -> accessLogger);
 
         header = new Header();
         header.setID(65535);
