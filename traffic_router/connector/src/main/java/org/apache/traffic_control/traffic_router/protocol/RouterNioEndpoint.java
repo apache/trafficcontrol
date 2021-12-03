@@ -127,40 +127,6 @@ public class RouterNioEndpoint extends NioEndpoint {
 		return super.getSSLHostConfig(sniHostName == null ? null : sniHostName.toLowerCase());
 	}
 
-	@Override
-	protected SocketProcessorBase<NioChannel> createSocketProcessor(
-			final SocketWrapperBase<NioChannel> socketWrapper, final SocketEvent event){
-		return new RouterSocketProcessor(socketWrapper, event);
-	}
-
-	/**
-	 * This class is the equivalent of the Worker, but will simply use in an
-	 * external Executor thread pool.
-	 */
-	protected class RouterSocketProcessor extends SocketProcessor {
-
-		public RouterSocketProcessor(final SocketWrapperBase<NioChannel> socketWrapper, final SocketEvent event){
-			super(socketWrapper, event);
-		}
-
-		/* This override has been added as a temporary hack to resolve an issue in Tomcat.
-		Once the issue has been corrected in Tomcat then this can be removed. The
-		'SSL.getLastErrorNumber()' removes an unwanted error condition from the error stack
-		in those cases where some error condition has caused the socket to get closed and
-		then the processor was put back on the processor stack for reuse in a future connection.
-		*/
-		@Override
-		protected void doRun(){
-			@SuppressWarnings("PMD.CloseResource")
-			// The socket must be stored before calling super.doRun() because it sets socketWrapper to null
-			final NioChannel socket = socketWrapper.getSocket();
-			super.doRun();
-			if (!socket.isOpen()){
-				SSL.getLastErrorNumber();
-			}
-		}
-	}
-
 	public String getProtocols() {
 		return protocols;
 	}
