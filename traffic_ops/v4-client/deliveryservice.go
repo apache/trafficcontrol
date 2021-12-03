@@ -323,7 +323,7 @@ func (to *Session) GetDeliveryServiceURISigningKeys(dsName string, opts RequestO
 
 // CreateDeliveryServiceURISigningKeys creates new URI-signing keys used by the Delivery Service
 // identified by the XMLID 'dsXMLID'.
-func (to *Session) CreateDeliveryServiceURISigningKeys(dsXMLID string, body map[string]tc.URISignerKeyset, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateDeliveryServiceURISigningKeys(dsXMLID string, body tc.JWKSMap, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(fmt.Sprintf(apiDeliveryServicesURISigningKeys, url.PathEscape(dsXMLID)), opts, body, &alerts)
 	return alerts, reqInf, err
