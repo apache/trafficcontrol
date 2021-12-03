@@ -29,7 +29,6 @@ import org.mockito.stubbing.Answer;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.xbill.DNS.*;
-import org.xbill.DNS.Record;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
