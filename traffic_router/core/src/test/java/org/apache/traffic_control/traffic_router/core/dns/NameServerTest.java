@@ -46,6 +46,7 @@ import java.util.*;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.xbill.DNS.Record;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Header.class, NameServer.class, TrafficRouterManager.class, TrafficRouter.class, CacheRegister.class})
