@@ -76,7 +76,7 @@ public class AbstractProtocolTest {
         when(System.currentTimeMillis()).then(currentTimeAnswer);
 
         mockStatic(Logger.class);
-        when(LogManager.getLogger("org.apache.traffic_control.traffic_router.core.access")).thenAnswer(invocation -> accessLogger);
+        when(LogManager.getLogger("org.apache.traffic_control.traffic_router.core.access")).thenReturn(accessLogger);
 
         header = new Header();
         header.setID(65535);
