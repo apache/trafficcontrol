@@ -36,7 +36,7 @@ func (r *TCData) DeleteTestPhysLocations(t *testing.T) {
 		// Retrieve the PhysLocation by name so we can get the id for the Update
 		resp, _, err := TOSession.GetPhysLocationByName(cdn.Name)
 		if err != nil {
-			t.Errorf("cannot GET PhysLocation by name: %v - %v", cdn.Name, err)
+			t.Errorf("cannot GET PhysLocation by name: %s - %v", cdn.Name, err)
 		}
 		if len(resp) > 0 {
 			respPhysLocation := resp[0]
@@ -49,7 +49,7 @@ func (r *TCData) DeleteTestPhysLocations(t *testing.T) {
 			// Retrieve the PhysLocation to see if it got deleted
 			cdns, _, err := TOSession.GetPhysLocationByName(cdn.Name)
 			if err != nil {
-				t.Errorf("error deleting PhysLocation name: %s", err.Error())
+				t.Errorf("error deleting PhysLocation name: %v", err)
 			}
 			if len(cdns) > 0 {
 				t.Errorf("expected PhysLocation name: %s to be deleted", cdn.Name)

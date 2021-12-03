@@ -26,7 +26,7 @@ func (r *TCData) CreateTestDeliveryServiceRequestComments(t *testing.T) {
 
 	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.XMLID)
 	if err != nil {
-		t.Errorf("cannot GET delivery service request by xml id: %v - %v", dsr.XMLID, err)
+		t.Errorf("cannot GET delivery service request by xml id: %s - %v", dsr.XMLID, err)
 	}
 	if len(resp) != 1 {
 		t.Errorf("found %d delivery service request by xml id, expected %d: %s", len(resp), 1, dsr.XMLID)
@@ -57,7 +57,7 @@ func (r *TCData) DeleteTestDeliveryServiceRequestComments(t *testing.T) {
 		// Retrieve the delivery service request comment to see if it got deleted
 		comments, _, err := TOSession.GetDeliveryServiceRequestCommentByID(comment.ID)
 		if err != nil {
-			t.Errorf("error deleting delivery service request comment: %s", err.Error())
+			t.Errorf("error deleting delivery service request comment: %v", err)
 		}
 		if len(comments) > 0 {
 			t.Errorf("expected delivery service request comment: %d to be deleted", comment.ID)

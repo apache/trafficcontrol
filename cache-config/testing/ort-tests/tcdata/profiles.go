@@ -1,3 +1,5 @@
+package tcdata
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,13 +15,11 @@
    limitations under the License.
 */
 
-package tcdata
-
 import (
 	"strings"
 	"testing"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // CreateBadProfiles ensures that profiles can't be created with bad values
@@ -38,7 +38,7 @@ func (r *TCData) CreateBadProfiles(t *testing.T) {
 		resp, _, err := TOSession.CreateProfile(pr)
 
 		if err == nil {
-			t.Errorf("Creating bad profile succeeded: %+v\nResponse is %+v", pr, resp)
+			t.Errorf("Creating bad profile %+v succeeded, response: %+v", pr, resp)
 		}
 	}
 }
@@ -70,20 +70,20 @@ func (r *TCData) CreateTestProfiles(t *testing.T) {
 			if err != nil {
 				// ok if already exists
 				if !strings.Contains(err.Error(), "already exists") {
-					t.Errorf("could not CREATE parameter %+v: %s", param, err.Error())
+					t.Errorf("could not CREATE parameter %+v: %v", param, err)
 					continue
 				}
 			}
 			p, _, err := TOSession.GetParameterByNameAndConfigFileAndValue(*param.Name, *param.ConfigFile, *param.Value)
 			if err != nil {
-				t.Errorf("could not GET parameter %+v: %s", param, err.Error())
+				t.Errorf("could not GET parameter %+v: %v", param, err)
 			}
 			if len(p) == 0 {
 				t.Errorf("could not GET parameter %+v: not found", param)
 			}
 			_, _, err = TOSession.CreateProfileParameter(tc.ProfileParameter{ProfileID: profileID, ParameterID: p[0].ID})
 			if err != nil {
-				t.Errorf("could not CREATE profile_parameter %+v: %s", param, err.Error())
+				t.Errorf("could not CREATE profile_parameter %+v: %v", param, err)
 			}
 		}
 
@@ -115,19 +115,18 @@ func (r *TCData) DeleteTestProfiles(t *testing.T) {
 		for _, param := range resp[0].Parameters {
 			_, _, err := TOSession.DeleteParameterByID(*param.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE parameter with parameterID %d: %s", *param.ID, err.Error())
+				t.Errorf("cannot DELETE parameter with parameterID %d: %v", *param.ID, err)
 			}
 		}
 		delResp, _, err := TOSession.DeleteProfileByID(profileID)
 		if err != nil {
 			t.Errorf("cannot DELETE Profile by name: %v - %v", err, delResp)
 		}
-		//time.Sleep(1 * time.Second)
 
 		// Retrieve the Profile to see if it got deleted
 		prs, _, err := TOSession.GetProfileByName(pr.Name)
 		if err != nil {
-			t.Errorf("error deleting Profile name: %s", err.Error())
+			t.Errorf("error deleting Profile name: %v", err)
 		}
 		if len(prs) > 0 {
 			t.Errorf("expected Profile Name: %s to be deleted", pr.Name)

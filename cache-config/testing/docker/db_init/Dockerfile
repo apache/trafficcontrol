@@ -16,7 +16,7 @@
 # under the License.
 
 ############################################################
-# Dockerfile to initialized Traffic Ops Database container 
+# Dockerfile to initialized Traffic Ops Database container
 # Based on CentOS 7.2
 ############################################################
 
@@ -26,15 +26,14 @@ RUN yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x
 
 RUN yum -y install \
   postgresql13 \
-  nmap-ncat \
-  cpanminus && \
+  nmap-ncat && \
   yum clean all
 
 ENV POSTGRES_HOME $POSTGRES_HOME
-ENV PGPASSWORD $PGPASSWORD 
+ENV PGPASSWORD $PGPASSWORD
 ENV DB_USERNAME $DB_USERNAME
 ENV DB_NAME $DB_NAME
-ENV DB_USER_PASS $DB_USER_PASS 
+ENV DB_USER_PASS $DB_USER_PASS
 ENV DB_SERVER $DB_SERVER
 ENV DB_PORT $DB_PORT
 

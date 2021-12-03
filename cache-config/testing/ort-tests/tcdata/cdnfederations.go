@@ -34,10 +34,10 @@ func (r *TCData) CreateTestCDNFederations(t *testing.T) {
 
 		data, _, err := TOSession.CreateCDNFederationByName(f, r.TestData.CDNs[i].Name)
 		if err != nil {
-			t.Errorf("could not POST federations: " + err.Error())
+			t.Errorf("could not POST federations: %v", err)
 		}
 		bytes, _ := json.Marshal(data)
-		t.Logf("POST Response: %s\n", bytes)
+		t.Logf("POST Response: %s", bytes)
 
 		// need to save the ids, otherwise the other tests won't be able to reference the federations
 		if data.Response.ID == nil {
@@ -56,7 +56,7 @@ func (r *TCData) DeleteTestCDNFederations(t *testing.T) {
 			t.Errorf("cannot DELETE federation by id: '%d' %v", id, err)
 		}
 		bytes, err := json.Marshal(resp)
-		t.Logf("DELETE Response: %s\n", bytes)
+		t.Logf("DELETE Response: %s", string(bytes))
 
 		data, _, err := TOSession.GetCDNFederationsByID("foo", id)
 		if len(data.Response) != 0 {

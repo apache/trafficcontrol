@@ -15,6 +15,7 @@ package orttest
 */
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"testing"
@@ -24,8 +25,6 @@ import (
 )
 
 func TestLockfile(t *testing.T) {
-	testName := "TestLockfile"
-	t.Logf("------------- Starting " + testName + " ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -33,7 +32,6 @@ func TestLockfile(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		const hostName = `atlanta-edge-03`
 		const fileName = `records.config`
 
 		firstOut := ""
@@ -43,21 +41,21 @@ func TestLockfile(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			t.Logf("TestLockFile first t3c starting %s", time.Now())
-			firstOut, firstCode = t3cUpdateReload(hostName, "badass")
+			firstOut, firstCode = t3cUpdateReload(DefaultCacheHostName, "badass")
 			t.Logf("TestLockFile first t3c finished %s", time.Now())
 		}()
 
 		time.Sleep(time.Millisecond * 100) // sleep long enough to ensure the concurrent t3c starts
 		t.Logf("TestLockFile second t3c starting %s", time.Now())
-		out, code := t3cUpdateReload(hostName, "badass")
+		out, code := t3cUpdateReload(DefaultCacheHostName, "badass")
 		t.Logf("TestLockFile second t3c finished %s", time.Now())
 		if code != 0 {
-			t.Fatalf("second t3c apply badass failed: output '''%s''' code %d", out, code)
+			t.Fatalf("second t3c apply badass failed with exit code %d, output: %s", code, out)
 		}
 
 		wg.Wait()
 		if firstCode != 0 {
-			t.Fatalf("first t3c apply badass failed: output '''%s''' code %d", firstOut, firstCode)
+			t.Fatalf("first t3c apply badass failed with exit code %d, output: %s", firstCode, firstOut)
 		}
 
 		outStr := string(out)
@@ -76,16 +74,16 @@ func TestLockfile(t *testing.T) {
 		}
 
 		if acquireStartLine == "" || acquireEndLine == "" {
-			t.Fatalf("t3c apply output expected to contain 'Trying to acquire app lock' and 'Acquired app lock', actual: '''%s'''", out)
+			t.Fatalf("t3c apply output expected to contain 'Trying to acquire app lock' and 'Acquired app lock', actual: %s", out)
 		}
 
-		acquireStart := parseLogLineTime(acquireStartLine)
-		if acquireStart == nil {
-			t.Fatalf("t3c apply acquire line failed to parse time, line '" + acquireStartLine + "'")
+		acquireStart, err := parseLogLineTime(acquireStartLine)
+		if acquireStart == nil || err != nil {
+			t.Fatalf("t3c apply acquire line failed to parse time, line '%s': %v", acquireStartLine, err)
 		}
-		acquireEnd := parseLogLineTime(acquireEndLine)
-		if acquireEnd == nil {
-			t.Fatalf("t3c apply acquire line failed to parse time, line '" + acquireEndLine + "'")
+		acquireEnd, err := parseLogLineTime(acquireEndLine)
+		if acquireEnd == nil || err != nil {
+			t.Fatalf("t3c apply acquire line failed to parse time, line '%s': %v", acquireEndLine, err)
 		}
 
 		minDiff := time.Second * 1 // checking the file lock should never take 1s, so that's enough to verify it was hit
@@ -93,21 +91,19 @@ func TestLockfile(t *testing.T) {
 			t.Fatalf("t3c apply expected time to acquire while another t3c is running to be at least %s, actual %s start line '%s' end line '%s'", minDiff, diff, acquireStartLine, acquireEndLine)
 		}
 
-		t.Logf(testName + " succeeded")
 	})
-	t.Logf("------------- End of " + testName + " ---------------")
 }
 
-func parseLogLineTime(line string) *time.Time {
+func parseLogLineTime(line string) (*time.Time, error) {
 	fields := strings.Fields(line)
 	if len(fields) < 3 {
-		return nil
+		return nil, fmt.Errorf("expected at least 3 fields, got: %d", len(fields))
 	}
 	timeStr := fields[2]
 	timeStr = strings.TrimSuffix(timeStr, ":")
 	tm, err := time.Parse(time.RFC3339Nano, timeStr)
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("parsing '%s' as an RFC3339 timestamp: %w", timeStr, err)
 	}
-	return &tm
+	return &tm, nil
 }

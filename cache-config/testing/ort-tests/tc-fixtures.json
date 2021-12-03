@@ -2393,16 +2393,6 @@
         "all-write",
         "cdn-read"
       ]
-    },
-    {
-      "name": "bad_admin",
-      "description": "super-user 3",
-      "privLevel": 30,
-      "capabilities": [
-        "all-read",
-        "all-write",
-        "invalid-capability"
-      ]
     }
   ],
   "servers": [
