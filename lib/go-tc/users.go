@@ -317,7 +317,7 @@ type UserResponseV4 struct {
 // "undefined" values.
 type CurrentUserUpdateRequest struct {
 	// User, for whatever reason, contains all of the actual data.
-	User CurrentUserUpdateRequestUser `json:"user"`
+	User *CurrentUserUpdateRequestUser `json:"user"`
 }
 
 // CurrentUserUpdateRequestUser holds all of the actual data in a request to update the current user.

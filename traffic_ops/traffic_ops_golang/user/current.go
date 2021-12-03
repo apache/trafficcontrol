@@ -167,7 +167,6 @@ WHERE u.id=$1
 
 func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 	var useV4User bool
-	var userV4 tc.UserV4
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
@@ -183,13 +182,18 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, errCode, userErr, nil)
 		return
 	}
+
+	if userRequest.User == nil {
+		errCode = http.StatusBadRequest
+		userErr = fmt.Errorf("missing required 'user' object")
+		api.HandleErr(w, r, tx, errCode, userErr, nil)
+		return
+	}
+
 	if inf.Version.Major >= 4 {
 		useV4User = true
 	}
 	user, exists, err := dbhelpers.GetUserByID(inf.User.ID, tx)
-	if useV4User {
-		userV4 = user.Upgrade()
-	}
 	if err != nil {
 		sysErr = fmt.Errorf("getting user by ID %d: %v", inf.User.ID, err)
 		errCode = http.StatusInternalServerError
@@ -317,7 +321,7 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if useV4User {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "User profile was successfully updated", userV4)
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "User profile was successfully updated", user.Upgrade())
 	} else {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "User profile was successfully updated", user)
 	}
