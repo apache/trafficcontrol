@@ -478,7 +478,7 @@ type DNSSecKey struct {
 // URISignKey is the common representation of an URI Signing Key.
 type URISignKey struct {
 	DeliveryService string
-	Keys            map[string]tc.URISignerKeyset
+	Keys            tc.JWKSMap
 }
 
 // URLSigKey is the common representation of an URL Sig Key.

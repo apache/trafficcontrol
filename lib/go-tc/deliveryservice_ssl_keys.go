@@ -17,13 +17,13 @@ package tc
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
-
-	"github.com/lestrrat/go-jwx/jwk"
+	"github.com/lestrrat-go/jwx/jwk"
 )
 
 // Authentication methods used for signing Delivery Service SSL certificates.
@@ -291,12 +291,6 @@ func checkNilOrEmpty(s *string) bool {
 	return s == nil || *s == ""
 }
 
-// URISignerKeyset is the container for the CDN URI signing keys.
-type URISignerKeyset struct {
-	RenewalKid *string               `json:"renewal_kid"`
-	Keys       []jwk.EssentialHeader `json:"keys"`
-}
-
 // TrafficVaultPing represents the status of a given Traffic Vault server.
 type TrafficVaultPing struct {
 	Status string `json:"status"`
@@ -378,4 +372,36 @@ func (r *CDNGenerateKSKReq) Sanitize() {
 		now := time.Now()
 		r.EffectiveDate = &now
 	}
+}
+
+func GetRenewalKid(set jwk.Set) *string {
+	v, ok := set.Field(`renewal_kid`)
+	if !ok {
+		return nil
+	}
+	switch v := v.(type) {
+	case string:
+		return &v
+	default:
+		return nil
+	}
+}
+
+type JWKSMap map[string]jwk.Set
+
+func (ksm *JWKSMap) UnmarshalJSON(data []byte) error {
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
+	}
+
+	*ksm = make(map[string]jwk.Set)
+	for k, v := range m {
+		set, err := jwk.Parse(v)
+		if err != nil {
+			return err
+		}
+		(*ksm)[k] = set
+	}
+	return nil
 }

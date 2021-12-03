@@ -47,8 +47,6 @@ require (
 	github.com/json-iterator/go v1.1.6-0.20181024152841-05d041de1043
 	github.com/kelseyhightower/envconfig v1.3.1-0.20180308190516-b2c5c876e265
 	github.com/kylelemons/godebug v1.1.1-0.20201107061927-e693023230a4
-	github.com/lestrrat-go/jwx v0.9.1-0.20190702045520-e35178ac2b1f
-	github.com/lestrrat/go-jwx v0.0.0-20171104074836-2857e17763b6
 	github.com/lib/pq v1.8.0
 	github.com/mattn/go-sqlite3 v1.14.5 // indirect
 	github.com/miekg/dns v1.0.6-0.20180406150955-01d59357d468
@@ -58,7 +56,6 @@ require (
 	github.com/onsi/gomega v1.10.3
 	github.com/pborman/getopt/v2 v2.1.0
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.6.1 // indirect
 	go.etcd.io/bbolt v1.3.5
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/net v0.0.0-20211104170005-ce137452f963
@@ -72,11 +69,22 @@ require (
 require github.com/go-ldap/ldap/v3 v3.4.1
 
 require (
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.0-20210816181553-5444fa50b93d // indirect
+	github.com/goccy/go-json v0.7.10 // indirect
+	github.com/lestrrat-go/backoff/v2 v2.0.8 // indirect
+	github.com/lestrrat-go/blackmagic v1.0.0 // indirect
+	github.com/lestrrat-go/httpcc v1.0.0 // indirect
+	github.com/lestrrat-go/iter v1.0.1 // indirect
+	github.com/lestrrat-go/option v1.0.0 // indirect
+)
+
+require (
 	github.com/Azure/go-ntlmssp v0.0.0-20200615164410-66371956d46c // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.1 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
+	github.com/lestrrat-go/jwx v1.2.12
 	github.com/nxadm/tail v1.4.4 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect

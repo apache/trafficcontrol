@@ -34,7 +34,15 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/lestrrat-go/jwx/jwk"
 )
+
+// backcompat: an "empty" uri signing key needs to have explicit null's
+// see https://github.com/apache/trafficcontrol/pull/6380/files/a3adfe95f2f86b6187c9dda559d9dba397c689fb#r758857475
+var emptyURISigningKey struct {
+	RenewalKid *string   `json:"renewal_kid"`
+	Keys       []jwk.Key `json:"keys"`
+}
 
 // endpoint handler for fetching uri signing keys from riak
 func GetURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +70,7 @@ func GetURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(ro) == 0 {
-		ro, err = json.Marshal(tc.URISignerKeyset{})
+		ro, err = json.Marshal(emptyURISigningKey)
 		if err != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("marshalling empty URISignerKeyset: "+err.Error()))
 			return
@@ -178,7 +186,7 @@ func SaveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, errors.New("failed to read body"), errors.New("failed to read body: "+err.Error()))
 		return
 	}
-	keySet := map[string]tc.URISignerKeyset{}
+	keySet := tc.JWKSMap{}
 	if err := json.Unmarshal(data, &keySet); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON"), nil)
 		return
@@ -210,13 +218,13 @@ func getDSIDFromName(tx *sql.Tx, xmlID string) (int, bool, error) {
 }
 
 // validateURIKeyset validates URISigingKeyset json.
-func validateURIKeyset(msg map[string]tc.URISignerKeyset) error {
+func validateURIKeyset(msg tc.JWKSMap) error {
 	var renewalKidFound int
 	var renewalKidMatched = false
 
 	for key, value := range msg {
 		issuer := key
-		renewalKid := value.RenewalKid
+		renewalKid := tc.GetRenewalKid(value)
 		if issuer == "" {
 			return errors.New("JSON Keyset has no issuer")
 		}
@@ -225,14 +233,15 @@ func validateURIKeyset(msg map[string]tc.URISignerKeyset) error {
 			renewalKidFound++
 		}
 
-		for _, skey := range value.Keys {
-			if skey.Algorithm == "" {
+		for i := 0; i < value.Len(); i++ {
+			skey, _ := value.Get(i)
+			if skey.Algorithm() == "" {
 				return errors.New("A Key has no algorithm, alg, specified")
 			}
-			if skey.KeyID == "" {
+			if skey.KeyID() == "" {
 				return errors.New("A Key has no key id, kid, specified")
 			}
-			if renewalKid != nil && strings.Compare(*renewalKid, skey.KeyID) == 0 {
+			if renewalKid != nil && strings.Compare(*renewalKid, skey.KeyID()) == 0 {
 				renewalKidMatched = true
 			}
 		}
