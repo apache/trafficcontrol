@@ -21,7 +21,8 @@ package main
 
 import (
 	"encoding/json"
-
+	"fmt"
+	"io"
 	"net"
 	"os"
 	"regexp"
@@ -33,7 +34,19 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-log"
+
+	"github.com/pborman/getopt/v2"
 )
+
+const AppName = "t3c-preprocess"
+
+// Version is the application version.
+// This is overwritten by the build with the current project version.
+var Version = "0.4"
+
+// GitRevision is the git revision the application was built from.
+// This is overwritten by the build with the current project version.
+var GitRevision = "nogit"
 
 var returnRegex = regexp.MustCompile(`\s*__RETURN__\s*`)
 
@@ -87,6 +100,37 @@ func PreprocessConfigFile(server *atscfg.Server, cfgFile string) string {
 }
 
 func main() {
+	flagHelp := getopt.BoolLong("help", 'h', "Print usage information and exit")
+	flagVersion := getopt.BoolLong("version", 'V', "Print version information and exit.")
+	flagVerbose := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
+	flagSilent := getopt.BoolLong("silent", 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
+
+	getopt.Parse()
+	if *flagHelp {
+		fmt.Println(usageStr())
+		os.Exit(0)
+	} else if *flagVersion {
+		fmt.Println(t3cutil.VersionStr(AppName, Version, GitRevision))
+		os.Exit(0)
+	}
+
+	logErr := io.WriteCloser(os.Stderr)
+	logWarn := io.WriteCloser(nil)
+	logInf := io.WriteCloser(nil)
+	logDebug := io.WriteCloser(nil)
+	if *flagSilent {
+		logErr = io.WriteCloser(nil)
+	} else {
+		if *flagVerbose >= 1 {
+			logWarn = os.Stderr
+		}
+		if *flagVerbose >= 2 {
+			logInf = os.Stderr
+			logDebug = os.Stderr
+		}
+	}
+	log.Init(nil, logErr, logWarn, logInf, logDebug)
+
 	// TODO read log location arguments
 	dataFiles := &DataAndFiles{}
 	if err := json.NewDecoder(os.Stdin).Decode(dataFiles); err != nil {
@@ -113,4 +157,14 @@ const ExitCodeErrGeneric = 1
 type DataAndFiles struct {
 	Data  t3cutil.ConfigData      `json:"data"`
 	Files []t3cutil.ATSConfigFile `json:"files"`
+}
+
+func usageStr() string {
+	return `usage: t3c-preprocess [--help] [--version]
+       <command> [<args>]
+
+The 't3c-preprocess' app preprocesses generated config files, replacing directives with relevant data.
+
+The stdin must be the JSON '{"data": \<data\>, "files": \<files\>}' where \<data\> is the output of 't3c-request --get-data=config' and \<files\> is the output of 't3c-generate'.
+`
 }

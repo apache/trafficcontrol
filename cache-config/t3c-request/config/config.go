@@ -34,8 +34,6 @@ import (
 )
 
 const AppName = "t3c-request"
-const Version = "0.1"
-const UserAgent = AppName + "/" + Version
 
 type Cfg struct {
 	CommandArgs      []string
@@ -45,7 +43,12 @@ type Cfg struct {
 	LogLocationInfo  string
 	LoginDispersion  time.Duration
 	t3cutil.TCCfg
+	Version     string
+	GitRevision string
 }
+
+func (cfg Cfg) AppVersion() string { return t3cutil.VersionStr(AppName, cfg.Version, cfg.GitRevision) }
+func (cfg Cfg) UserAgent() string  { return t3cutil.UserAgentStr(AppName, cfg.Version, cfg.GitRevision) }
 
 func (cfg Cfg) DebugLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationDebug) }
 func (cfg Cfg) ErrorLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationError) }
@@ -60,7 +63,7 @@ func Usage() {
 }
 
 // InitConfig() intializes the configuration variables and loggers.
-func InitConfig() (Cfg, error) {
+func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	dispersionPtr := getopt.IntLong("login-dispersion", 'l', 0, "[seconds] wait a random number of seconds between 0 and [seconds] before login to traffic ops, default 0")
 	cacheHostNamePtr := getopt.StringLong("cache-host-name", 'H', "", "Host name of the cache to generate config for. Must be the server host name in Traffic Ops, not a URL, and not the FQDN")
 	getDataPtr := getopt.StringLong("get-data", 'D', "system-info", "non-config-file Traffic Ops Data to get. Valid values are update-status, packages, chkconfig, system-info, and statuses")
@@ -81,9 +84,9 @@ func InitConfig() (Cfg, error) {
 
 	if *helpPtr == true {
 		Usage()
-	}
-	if *versionPtr == true {
-		fmt.Println(AppName + " v" + Version)
+	} else if *versionPtr == true {
+		cfg := &Cfg{Version: appVersion, GitRevision: gitRevision}
+		fmt.Println(cfg.AppVersion())
 		os.Exit(0)
 	}
 
@@ -157,10 +160,11 @@ func InitConfig() (Cfg, error) {
 			TOUser:         toUser,
 			TOPass:         toPass,
 			TOURL:          toURLParsed,
-			UserAgent:      UserAgent,
 			RevalOnly:      *revalOnlyPtr,
 			TODisableProxy: *disableProxyPtr,
 		},
+		Version:     appVersion,
+		GitRevision: gitRevision,
 	}
 
 	if err := log.InitCfg(cfg); err != nil {

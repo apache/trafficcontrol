@@ -196,3 +196,20 @@ func ValidateURL(u *url.URL) error {
 	}
 	return nil
 }
+
+// VersionStr returns a common version string format for all t3c apps.
+// The appName is the command itself, e.g. t3c-apply.
+// The versionNum is the version number from the build system. It should include the major, minor, git revision, and a monotonically increasing number, e.g. '4.2.1234.abc123'.
+func VersionStr(appName string, versionNum string, gitRevision string) string {
+	if len(gitRevision) > 8 {
+		gitRevision = gitRevision[:8]
+	}
+	return appName + " " + versionNum + ".." + gitRevision
+}
+
+func UserAgentStr(appName string, versionNum string, gitRevision string) string {
+	if len(gitRevision) > 8 {
+		gitRevision = gitRevision[:8]
+	}
+	return appName + "/" + versionNum + ".." + gitRevision
+}

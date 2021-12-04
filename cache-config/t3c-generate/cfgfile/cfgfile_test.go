@@ -91,7 +91,7 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 	cfg.Dir = cfgPath
 	cfg.RevalOnly = revalOnly
 
-	configs, err := GetAllConfigs(toData, "", cfg)
+	configs, err := GetAllConfigs(toData, cfg)
 	if err != nil {
 		t.Fatalf("error getting configs: " + err.Error())
 	}
@@ -103,7 +103,7 @@ func TestGetAllConfigsWriteConfigsDeterministic(t *testing.T) {
 	configStr = removeComments(configStr)
 
 	for i := 0; i < 10; i++ {
-		configs2, err := GetAllConfigs(toData, "", cfg)
+		configs2, err := GetAllConfigs(toData, cfg)
 		if err != nil {
 			t.Fatalf("error getting configs2: " + err.Error())
 		}
