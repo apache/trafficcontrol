@@ -136,7 +136,10 @@ var CacheStatsController = function(cacheStats, $scope, userModel) {
 		}
 	}
 
-	/** The columns of the ag-grid table */
+	/**
+	 * The columns of the ag-grid table.
+	 * @type CGC.ColumnDefinition[]
+	 */
 	$scope.columns = [
 		{
 			headerName: "Cache Group",
