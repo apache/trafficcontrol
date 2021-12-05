@@ -17,4 +17,52 @@
     under the License.
 -->
 
+# Traffic Router 
+
 This is a prototype of Traffic Router's HTTP side in Golang.
+
+# How to build
+
+To get this app running locally:
+
+- Clone this repo
+- Install Golang programming language ([instructions](https://golang.org/doc/install))
+
+
+# Configuration
+
+Sample configuration file(cfg.json) available in traffic_router_golang directory, please add coveragezone files to path specified in cfg.json
+   
+
+# Build
+
+Compile and generate binary:
+
+   - `cd traffic_router_goland`
+   - Optional: Run `go install ` will get the dependency packages (Go mod take care of this anyway)
+   - Run `go build -o traffic_router . `(This will generate binary file traffic_router)
+
+
+# Unit Test
+    
+   - Run `go test ./...` from traffic_router_golang directory
+     
+     ```$ go test ./...
+		?       traffic_router_golang   [no test files]
+		?       traffic_router_golang/availableservers  [no test files]
+		?       traffic_router_golang/cgsrch    [no test files]
+		?       traffic_router_golang/config    [no test files]
+		?       traffic_router_golang/coveragezone      [no test files]
+		?       traffic_router_golang/crconfig  [no test files]
+		?       traffic_router_golang/crconfigdsservers [no test files]
+		?       traffic_router_golang/crconfigpoller    [no test files]
+		?       traffic_router_golang/crconfigregex     [no test files]
+		?       traffic_router_golang/crstates  [no test files]
+		?       traffic_router_golang/crstatespoller    [no test files]
+		?       traffic_router_golang/fetch     [no test files]
+		?       traffic_router_golang/httpsrvr  [no test files]
+		?       traffic_router_golang/ipmap     [no test files]
+		?       traffic_router_golang/nextcache [no test files]
+		ok      traffic_router_golang/quadtree  0.526s
+		?       traffic_router_golang/toutil    [no test files]
+```
