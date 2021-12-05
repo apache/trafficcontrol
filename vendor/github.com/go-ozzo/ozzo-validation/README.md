@@ -21,7 +21,7 @@ It has the following features:
 
 ## Requirements
 
-Go 1.6 or above.
+Go 1.8 or above.
 
 
 ## Getting Started
@@ -272,10 +272,9 @@ fmt.Println(err)
 Sometimes, you may want to skip the invocation of a type's `Validate` method. To do so, simply associate
 a `validation.Skip` rule with the value being validated.
 
-
 ### Maps/Slices/Arrays of Validatables
 
-When validating a map, slice, or array, whose element type implements the `validation.Validatable` interface,
+When validating an iterable (map, slice, or array), whose element type implements the `validation.Validatable` interface,
 the `validation.Validate` method will call the `Validate` method of every non-nil element.
 The validation errors of the elements will be returned as `validation.Errors` which maps the keys of the
 invalid elements to their corresponding validation errors. For example,
@@ -295,6 +294,39 @@ fmt.Println(err)
 When using `validation.ValidateStruct` to validate a struct, the above validation procedure also applies to those struct 
 fields which are map/slices/arrays of validatables. 
 
+#### Each
+
+An other option is to use the `validation.Each` method.
+This method allows you to define the rules for the iterables within a struct.
+
+```go
+type Customer struct {
+    Name      string
+    Emails    []string
+}
+
+func (c Customer) Validate() error {
+    return validation.ValidateStruct(&c,
+        // Name cannot be empty, and the length must be between 5 and 20.
+		validation.Field(&c.Name, validation.Required, validation.Length(5, 20)),
+		// Emails are optional, but if given must be valid.
+		validation.Field(&c.Emails, validation.Each(is.Email)),
+    )
+}
+
+c := Customer{
+    Name:   "Qiang Xue",
+    Emails: []Email{
+        "valid@example.com",
+        "invalid",
+    },
+}
+
+err := c.Validate()
+fmt.Println(err)
+// Output:
+// Emails: (1: must be a valid email address.).
+```
 
 ### Pointers
 
@@ -395,6 +427,8 @@ The following rules are provided in the `validation` package:
 * `NotNil`: checks if a pointer value is not nil. Non-pointer values are considered valid.
 * `NilOrNotEmpty`: checks if a value is a nil pointer or a non-empty value. This differs from `Required` in that it treats a nil pointer as valid.
 * `Skip`: this is a special rule used to indicate that all rules following it should be skipped (including the nested ones).
+* `MultipleOf`: checks if the value is a multiple of the specified range.
+* `Each(rules ...Rule)`: checks the elements within an iterable (map/slice/array) with other rules.
 
 The `is` sub-package provides a list of commonly used string validation rules that can be used to check if the format
 of a value satisfies certain requirements. Note that these rules only handle strings and byte slices and if a string
@@ -436,6 +470,7 @@ Below is the whole list of the rules provided by the `is` package:
 * `VariableWidth`: validates if a string contains both full-width and half-width characters
 * `Base64`: validates if a string is encoded in Base64
 * `DataURI`: validates if a string is a valid base64-encoded data URI
+* `E164`: validates if a string is a valid E164 phone number (+19251232233)
 * `CountryCode2`: validates if a string is a valid ISO3166 Alpha 2 country code
 * `CountryCode3`: validates if a string is a valid ISO3166 Alpha 3 country code
 * `DialString`: validates if a string is a valid dial string that can be passed to Dial()
@@ -443,6 +478,8 @@ Below is the whole list of the rules provided by the `is` package:
 * `IP`: validates if a string is a valid IP address (either version 4 or 6)
 * `IPv4`: validates if a string is a valid version 4 IP address
 * `IPv6`: validates if a string is a valid version 6 IP address
+* `Subdomain`: validates if a string is valid subdomain
+* `Domain`: validates if a string is valid domain
 * `DNSName`: validates if a string is valid DNS name
 * `Host`: validates if a string is a valid IP (both v4 and v6) or a valid DNS name
 * `Port`: validates if a string is a valid port number
@@ -494,6 +531,24 @@ func checkAbc(value interface{}) error {
 err := validation.Validate("xyz", validation.By(checkAbc))
 fmt.Println(err)
 // Output: must be abc
+```
+
+If your validation function takes additional parameters, you can use the following closure trick:
+
+```go
+func stringEquals(str string) validation.RuleFunc {
+	return func(value interface{}) error {
+		s, _ := value.(string)
+        if s != str {
+            return errors.New("unexpected string")
+        }
+        return nil
+    }
+}
+
+err := validation.Validate("xyz", validation.By(stringEquals("abc")))
+fmt.Println(err)
+// Output: unexpected string
 ```
 
 
