@@ -23,10 +23,10 @@ require (
 	code.cloudfoundry.org/bytefmt v0.0.0-20211005130812-5bb3c17173e5
 	github.com/GehirnInc/crypt v0.0.0-20200316065508-bb7000b8a962
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
-	github.com/basho/riak-go-client v1.7.0
+	github.com/basho/riak-go-client v1.7.1-0.20170327205844-5587c16e0b8b
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575
 	github.com/dchest/siphash v1.2.2
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/dgrijalva/jwt-go v3.2.1-0.20190620180102-5e25c22bd5d6+incompatible
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/go-acme/lego v2.7.2+incompatible
 	github.com/go-ldap/ldap/v3 v3.4.1
@@ -39,7 +39,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/json-iterator/go v1.1.12
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/kylelemons/godebug v1.1.0
+	github.com/kylelemons/godebug v1.1.1-0.20201107061927-e693023230a4
 	github.com/lestrrat-go/jwx v1.2.12
 	github.com/lib/pq v1.10.4
 	github.com/miekg/dns v1.1.43
