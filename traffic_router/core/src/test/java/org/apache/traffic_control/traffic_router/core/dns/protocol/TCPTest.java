@@ -55,8 +55,8 @@ import org.apache.traffic_control.traffic_router.core.dns.protocol.TCP.TCPSocket
 import org.apache.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore("javax.management.*")
 @PrepareForTest({AbstractProtocol.class, Message.class})
+@PowerMockIgnore("javax.management.*")
 public class TCPTest {
     private Socket socket;
     private ThreadPoolExecutor executorService;

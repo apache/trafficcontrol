@@ -48,6 +48,7 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({TarExtractor.class, File.class, TarArchiveInputStream.class})
+@PowerMockIgnore("javax.management.*")
 public class TarExtractorTest {
 
 	@Before

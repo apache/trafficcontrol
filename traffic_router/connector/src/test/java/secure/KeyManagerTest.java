@@ -43,8 +43,8 @@ import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore("javax.management.*")
 @PrepareForTest({CertificateRegistry.class})
+@PowerMockIgnore("javax.management.*")
 public class KeyManagerTest {
 	private KeyManager keyManager;
 	private X509Certificate x509Certificate;

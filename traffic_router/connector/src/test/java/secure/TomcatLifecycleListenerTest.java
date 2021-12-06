@@ -39,8 +39,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore("javax.management.*")
 @PrepareForTest({TomcatLifecycleListener.class, ManagementFactory.class, LifecycleEvent.class})
+@PowerMockIgnore("javax.management.*")
 public class TomcatLifecycleListenerTest {
 	@Before
 	public void before() {

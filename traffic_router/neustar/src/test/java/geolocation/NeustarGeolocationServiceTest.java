@@ -47,6 +47,7 @@ import static org.springframework.test.util.AssertionErrors.fail;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({NeustarGeolocationService.class, GPDatabaseReader.class, Reader.class})
+@PowerMockIgnore("javax.management.*")
 public class NeustarGeolocationServiceTest {
 	@Mock
 	File neustarDatabaseDirectory;

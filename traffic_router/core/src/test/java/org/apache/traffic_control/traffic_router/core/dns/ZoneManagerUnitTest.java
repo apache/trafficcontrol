@@ -53,8 +53,8 @@ import static org.powermock.api.mockito.PowerMockito.doCallRealMethod;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore("javax.management.*")
 @PrepareForTest({ZoneManager.class, SignatureManager.class})
+@PowerMockIgnore("javax.management.*")
 public class ZoneManagerUnitTest {
     ZoneManager zoneManager;
 

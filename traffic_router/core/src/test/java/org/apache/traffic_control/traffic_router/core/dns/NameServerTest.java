@@ -49,8 +49,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore("javax.management.*")
 @PrepareForTest({Header.class, NameServer.class, TrafficRouterManager.class, TrafficRouter.class, CacheRegister.class})
+@PowerMockIgnore("javax.management.*")
 public class NameServerTest {
     private NameServer nameServer;
     private InetAddress client;
