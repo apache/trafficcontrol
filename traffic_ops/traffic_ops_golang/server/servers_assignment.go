@@ -79,7 +79,7 @@ WHERE d.id IN (
 AND NOT (dss.deliveryservice = ANY($2::BIGINT[]))
 AND (st.name = '` + string(tc.CacheStatusOnline) + `' OR st.name = '` + string(tc.CacheStatusReported) + `')
 AND t.name LIKE $3
-GROUP BY d.id, d.multi_site_origin
+GROUP BY d.id, d.multi_site_origin, d.topology
 HAVING COUNT(dss.server) = 1
 `
 

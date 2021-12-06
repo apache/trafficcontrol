@@ -1914,7 +1914,7 @@ JOIN server s ON dss.server = s.id
 JOIN type t ON s.type = t.id
 JOIN deliveryservice ds ON dss.deliveryservice = ds.id
 WHERE t.name LIKE $1 AND ds.active
-GROUP BY ds.id, ds.multi_site_origin
+GROUP BY ds.id, ds.multi_site_origin, ds.topology
 HAVING COUNT(dss.server) = 1 AND $2 = ANY(ARRAY_AGG(dss.server));
 `
 
