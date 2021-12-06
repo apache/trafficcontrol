@@ -63,7 +63,7 @@ func getConfigFile(prefix string, xmlId string) string {
 }
 
 const lastServerInActiveDeliveryServicesQuery = `
-SELECT d.id, d.multi_site_origin
+SELECT d.id, d.multi_site_origin, d.topology
 FROM deliveryservice d
 INNER JOIN deliveryservice_server dss ON dss.deliveryservice = d.id
 INNER JOIN server s ON s.id = dss.server
@@ -100,15 +100,16 @@ func checkForLastServerInActiveDeliveryServices(serverID int, serverType string,
 	if err != nil {
 		return violations, fmt.Errorf("querying: %v", err)
 	}
-	defer rows.Close()
+	defer log.Close(rows, "closing rows in checkForLastServerInActiveDeliveryServices")
 
 	for rows.Next() {
 		var violation int
 		var mso bool
-		if err = rows.Scan(&violation, &mso); err != nil {
+		var topology *string
+		if err = rows.Scan(&violation, &mso, &topology); err != nil {
 			return violations, fmt.Errorf("scanning: %v", err)
 		}
-		if isEdge || (isOrigin && mso) {
+		if (isEdge && topology == nil) || (isOrigin && mso) {
 			violations = append(violations, violation)
 		}
 	}
