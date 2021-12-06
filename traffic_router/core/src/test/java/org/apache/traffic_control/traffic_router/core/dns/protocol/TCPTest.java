@@ -39,6 +39,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.xbill.DNS.DClass;
@@ -54,6 +55,7 @@ import org.apache.traffic_control.traffic_router.core.dns.protocol.TCP.TCPSocket
 import org.apache.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 
 @RunWith(PowerMockRunner.class)
+@PowerMockIgnore("javax.management.*")
 @PrepareForTest({AbstractProtocol.class, Message.class})
 public class TCPTest {
     private Socket socket;

@@ -36,7 +36,7 @@ import static org.powermock.api.support.membermodification.MemberModifier.stub;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Fetcher.class, URL.class, InputStreamReader.class})
-@PowerMockIgnore("javax.net.ssl.*")
+@PowerMockIgnore({"javax.net.ssl.*", "javax.management.*"})
 public class FetcherTest {
 
     @Test

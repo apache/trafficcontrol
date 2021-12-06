@@ -15,7 +15,8 @@
 
 package org.apache.traffic_control.traffic_router.shared;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.Section;
 
@@ -571,7 +572,7 @@ public class SigningData {
 
 	public static List<Record> signedList, postZoneList, dsRecordList = new ArrayList<>();
 
-	private static final Logger LOGGER = Logger.getLogger(SigningData.class);
+	private static final Logger LOGGER = LogManager.getLogger(SigningData.class);
 
 	public static List<String> getStringsNamedLike(final String name, final Class clazz) {
 		return Arrays.asList(clazz.getDeclaredFields()).stream()
