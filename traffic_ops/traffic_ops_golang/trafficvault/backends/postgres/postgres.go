@@ -33,7 +33,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
 
@@ -206,14 +205,6 @@ func (p *Postgres) GetExpirationInformation(tx *sql.Tx, ctx context.Context, day
 				expirationInfo.Federated = true
 			}
 		}
-
-		dsID, _, ok, err := dbhelpers.GetDSIDAndCDNFromName(tx, expirationInfo.DeliveryService)
-		if err != nil {
-			return []tc.SSLKeyExpirationInformation{}, false, fmt.Errorf("deliveryservice.GenerateLetsEncryptCertificates: getting DS ID from name: %w", err)
-		} else if !ok {
-			return []tc.SSLKeyExpirationInformation{}, false, errors.New("no DS with name " + expirationInfo.DeliveryService)
-		}
-		expirationInfo.DeliveryServiceId = dsID
 
 		expirationInfos = append(expirationInfos, expirationInfo)
 	}

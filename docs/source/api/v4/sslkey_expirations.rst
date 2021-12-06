@@ -50,7 +50,6 @@ Request Structure
 Response Structure
 ------------------
 :deliveryservice:   The :ref:`ds-xmlid` for the :term:`Delivery Service` corresponding to this SSL certificate.
-:deliveryserviceId: The ID for the :term:`Delivery Service` corresponding to this SSL certificate.
 :cdn:               The ID for the :abbr:`CDN (Content Delivery Network)` corresponding to this SSL certificate.
 :provider:          The provider of this SSL certificate, generally the name of the Certificate Authority or the :abbr:`ACME (Automatic Certificate Management Environment)` account.
 :expiration:        The expiration date of this SSL certificate.
@@ -76,7 +75,6 @@ Response Structure
 	{ "response": [
 		{
 			"deliveryservice": "foo1",
-			"deliveryservice_id": 1,
 			"cdn": "cdn1",
 			"provider": "Self Signed",
 			"expiration": "2022-08-02T15:38:06-06:00",
@@ -84,7 +82,6 @@ Response Structure
 		},
 		{
 			"deliveryservice": "foo2",
-			"deliveryservice_id": 2,
 			"cdn": "cdn2",
 			"provider": "Lets Encrypt",
 			"expiration": "2022-07-12T12:14:00-06:00",
