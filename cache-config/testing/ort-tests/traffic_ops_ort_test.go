@@ -40,7 +40,16 @@ var tcd *tcdata.TCData
 
 var TCD *tcdata.TCData
 
-const TestAPIBase = "/api/3.0"
+const cfgFmt = `Using Config values:
+	TO Config File:              %s
+	TO Fixtures:                 %s
+	TO URL:                      %s
+	TO Session Timeout In Secs:  %d
+	DB Server:                   %s
+	DB User:                     %s
+	DB Name:                     %s
+	DB Ssl:                      %t
+	UseIMS:                      %t`
 
 func TestMain(m *testing.M) {
 	tcd = tcdata.NewTCData()
@@ -75,16 +84,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	log.Infof(`Using Config values:
-			   TO Config File:       %s
-			   TO Fixtures:          %s
-			   TO URL:               %s
-			   TO Session Timeout In Secs:  %d
-			   DB Server:            %s
-			   DB User:              %s
-			   DB Name:              %s
-			   DB Ssl:               %t
-               UseIMS:               %v`, *configFileName, *tcFixturesFileName, tcd.Config.TrafficOps.URL, tcd.Config.Default.Session.TimeoutInSecs, tcd.Config.TrafficOpsDB.Hostname, tcd.Config.TrafficOpsDB.User, tcd.Config.TrafficOpsDB.Name, tcd.Config.TrafficOpsDB.SSL, tcd.Config.UseIMS)
+	log.Infof(cfgFmt, *configFileName, *tcFixturesFileName, tcd.Config.TrafficOps.URL, tcd.Config.Default.Session.TimeoutInSecs, tcd.Config.TrafficOpsDB.Hostname, tcd.Config.TrafficOpsDB.User, tcd.Config.TrafficOpsDB.Name, tcd.Config.TrafficOpsDB.SSL, tcd.Config.UseIMS)
 
 	//Load the test data
 	tcd.LoadFixtures(*tcFixturesFileName)
@@ -105,7 +105,7 @@ func TestMain(m *testing.M) {
 
 	err = tcd.SetupTestData(db)
 	if err != nil {
-		log.Errorf("\nError setting up data %s - %s, %v\n", tcd.Config.TrafficOps.URL, tcd.Config.TrafficOpsDB.User, err)
+		log.Errorf("setting up data on TO instance %s as DB user '%s' failed: %v\n", tcd.Config.TrafficOps.URL, tcd.Config.TrafficOpsDB.User, err)
 		os.Exit(1)
 	}
 

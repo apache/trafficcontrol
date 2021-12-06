@@ -39,10 +39,10 @@ func (r *TCData) CreateTestCacheGroups(t *testing.T) {
 			t.Error("Parent cachegroup is null in response when it should have a value")
 		}
 		if cg.SecondaryParentName != nil && resp.Response.SecondaryParentName == nil {
-			t.Error("Secondary parent cachegroup is null in response when it should have a value\n")
+			t.Error("Secondary parent cachegroup is null in response when it should have a value")
 		}
 		if cg.Type != nil && resp.Response.Type == nil {
-			t.Error("Type is null in response when it should have a value\n")
+			t.Error("Type is null in response when it should have a value")
 		}
 		if resp.Response.LocalizationMethods == nil {
 			t.Error("Localization methods are null")
@@ -62,7 +62,7 @@ func (r *TCData) DeleteTestCacheGroups(t *testing.T) {
 		// Retrieve the CacheGroup by name so we can get the id for the Update
 		resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 		if err != nil {
-			t.Errorf("cannot GET CacheGroup by name: %v - %v", *cg.Name, err)
+			t.Errorf("cannot GET CacheGroup by name: %s - %v", *cg.Name, err)
 		}
 		cg = resp[0]
 
@@ -81,7 +81,7 @@ func (r *TCData) DeleteTestCacheGroups(t *testing.T) {
 			// Retrieve the CacheGroup to see if it got deleted
 			cgs, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 			if err != nil {
-				t.Errorf("error deleting CacheGroup by name: %s", err.Error())
+				t.Errorf("error deleting CacheGroup by name: %v", err)
 			}
 			if len(cgs) > 0 {
 				t.Errorf("expected CacheGroup name: %s to be deleted", *cg.Name)
@@ -94,7 +94,7 @@ func (r *TCData) DeleteTestCacheGroups(t *testing.T) {
 		// Retrieve the CacheGroup by name so we can get the id for the Update
 		resp, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 		if err != nil {
-			t.Errorf("cannot GET CacheGroup by name: %v - %v", *cg.Name, err)
+			t.Errorf("cannot GET CacheGroup by name: %s - %v", *cg.Name, err)
 		}
 		if len(resp) > 0 {
 			respCG := resp[0]
@@ -106,7 +106,7 @@ func (r *TCData) DeleteTestCacheGroups(t *testing.T) {
 			// Retrieve the CacheGroup to see if it got deleted
 			cgs, _, err := TOSession.GetCacheGroupNullableByName(*cg.Name)
 			if err != nil {
-				t.Errorf("error deleting CacheGroup name: %s", err.Error())
+				t.Errorf("error deleting CacheGroup name: %v", err)
 			}
 			if len(cgs) > 0 {
 				t.Errorf("expected CacheGroup name: %s to be deleted", *cg.Name)

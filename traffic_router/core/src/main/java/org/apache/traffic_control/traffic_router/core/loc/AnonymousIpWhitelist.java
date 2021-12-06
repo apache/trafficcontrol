@@ -18,6 +18,8 @@ import org.apache.log4j.Logger;
 import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 
+import java.util.Objects;
+
 public class AnonymousIpWhitelist {
 	private static final Logger LOGGER = Logger.getLogger(AnonymousIpWhitelist.class);
 
@@ -52,7 +54,7 @@ public class AnonymousIpWhitelist {
 
 		try {
 			final NetworkNode nn = whitelist.getNetwork(address);
-			if (nn.getLoc() == AnonymousIp.WHITE_LIST_LOC) {
+			if (Objects.equals(nn.getLoc(), AnonymousIp.WHITE_LIST_LOC)) {
 				return true;
 			}
 		} catch (NetworkNodeException e) {

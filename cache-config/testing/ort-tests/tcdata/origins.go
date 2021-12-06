@@ -33,7 +33,7 @@ func (r *TCData) DeleteTestOrigins(t *testing.T) {
 	for _, origin := range r.TestData.Origins {
 		resp, _, err := TOSession.GetOriginByName(*origin.Name)
 		if err != nil {
-			t.Errorf("cannot GET Origin by name: %v - %v", *origin.Name, err)
+			t.Errorf("cannot GET Origin by name: %s - %v", *origin.Name, err)
 		}
 		if len(resp) > 0 {
 			respOrigin := resp[0]
@@ -46,7 +46,7 @@ func (r *TCData) DeleteTestOrigins(t *testing.T) {
 			// Retrieve the Origin to see if it got deleted
 			org, _, err := TOSession.GetOriginByName(*origin.Name)
 			if err != nil {
-				t.Errorf("error deleting Origin name: %s", err.Error())
+				t.Errorf("error deleting Origin name: %v", err)
 			}
 			if len(org) > 0 {
 				t.Errorf("expected Origin name: %s to be deleted", *origin.Name)

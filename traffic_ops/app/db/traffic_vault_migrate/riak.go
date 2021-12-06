@@ -483,7 +483,7 @@ func (tbl *riakURLSigKeyTable) validate() []string {
 }
 
 type riakURISignKeyRecord struct {
-	Key             map[string]tc.URISignerKeyset
+	Key             tc.JWKSMap
 	DeliveryService string
 }
 type riakURISignKeyTable struct {
@@ -497,7 +497,7 @@ func (tbl *riakURISignKeyTable) gatherKeys(cluster *riak.Cluster, timeout int) e
 		return fmt.Errorf("RiakURISignKey gatherKeys: %w", err)
 	}
 	for _, obj := range objs {
-		key := map[string]tc.URISignerKeyset{}
+		key := tc.JWKSMap{}
 		if err := json.Unmarshal(obj.Value, &key); err != nil {
 			return fmt.Errorf("RiakURISignKey gatherKeys '%s' unable to unmarshal object into map[string]tc.URISignerKeySet: %w", obj.Key, err)
 		}

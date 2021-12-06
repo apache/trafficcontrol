@@ -29,7 +29,7 @@
 - name: Install TR Dependencies
   yum:
     name:
-      - java-1.8.0-openjdk
+      - java-11-openjdk
       - tomcat-native-1.2.23
     state: present
     update_cache: yes

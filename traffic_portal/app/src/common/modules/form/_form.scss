@@ -222,10 +222,14 @@ div.helptext aside.warning {
 		}
 	}
 
-	p {
+	p, dl, dt {
 		background: #ffedcc;
 		padding: 5px;
 		margin-bottom: 0;
+	}
+
+	em {
+		text-transform: uppercase;
 	}
 }
 

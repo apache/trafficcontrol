@@ -16,7 +16,6 @@ package tcdata
 */
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -30,18 +29,13 @@ const (
 )
 
 func (r *TCData) CreateTestRoles(t *testing.T) {
-	expectedAlerts := []tc.Alerts{tc.Alerts{Alerts: []tc.Alert{tc.Alert{Text: "role was created.", Level: "success"}}}, tc.Alerts{Alerts: []tc.Alert{tc.Alert{Text: "can not add non-existent capabilities: [invalid-capability]", Level: "error"}}}, tc.Alerts{Alerts: []tc.Alert{tc.Alert{Text: "role was created.", Level: "success"}}}}
-	for i, role := range r.TestData.Roles {
+	for _, role := range r.TestData.Roles {
 		var alerts tc.Alerts
 		alerts, _, status, err := TOSession.CreateRole(role)
 		t.Log("Status Code: ", status)
 		t.Log("Response: ", alerts)
 		if err != nil {
-			t.Logf("error: %v", err)
-			//t.Errorf("could not CREATE role: %v", err)
-		}
-		if !reflect.DeepEqual(alerts, expectedAlerts[i]) {
-			t.Errorf("got alerts: %v but expected alerts: %v", alerts, expectedAlerts[i])
+			t.Errorf("creating Role failed: %v", err)
 		}
 	}
 }
@@ -53,7 +47,7 @@ func (r *TCData) DeleteTestRoles(t *testing.T) {
 	resp, _, status, err := TOSession.GetRoleByName(*role.Name)
 	t.Log("Status Code: ", status)
 	if err != nil {
-		t.Errorf("cannot GET Role by name: %v - %v", role.Name, err)
+		t.Errorf("cannot GET Role by name: %s - %v", *role.Name, err)
 	}
 	respRole := resp[0]
 
@@ -69,7 +63,7 @@ func (r *TCData) DeleteTestRoles(t *testing.T) {
 	t.Log("Status Code: ", status)
 
 	if err != nil {
-		t.Errorf("error deleting Role role: %s", err.Error())
+		t.Errorf("error deleting Role role: %v", err)
 	}
 	if len(roleResp) > 0 {
 		t.Errorf("expected Role : %s to be deleted", *role.Name)

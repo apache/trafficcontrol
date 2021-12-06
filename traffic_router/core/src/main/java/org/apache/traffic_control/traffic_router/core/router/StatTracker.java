@@ -113,7 +113,7 @@ public class StatTracker {
 		/**
 		 * RouteType represents the type of routing performed/to be performed by Traffic Router.
 		 */
-		public static enum RouteType {
+		public enum RouteType {
 			/**
 			 * This value indicates DNS routing is taking/has taken/will take place.
 			 */
@@ -127,7 +127,7 @@ public class StatTracker {
 		/**
 		 * ResultType represents the final result of attempting to route a request.
 		 */
-		public static enum ResultType {
+		public enum ResultType {
 			/**
 			 * This value indicates that an error occurred and routing could not be successfully completed.
 			 */

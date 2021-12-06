@@ -38,7 +38,7 @@ func (r *TCData) DeleteTestServiceCategories(t *testing.T) {
 		params.Add("name", sc.Name)
 		resp, _, err := TOSession.GetServiceCategories(&params)
 		if err != nil {
-			t.Errorf("cannot GET Service Category by name: %v - %v", sc.Name, err)
+			t.Errorf("cannot GET Service Category by name: %s - %v", sc.Name, err)
 		}
 		if len(resp) > 0 {
 			respServiceCategory := resp[0]
@@ -51,10 +51,10 @@ func (r *TCData) DeleteTestServiceCategories(t *testing.T) {
 			// Retrieve the Service Category to see if it got deleted
 			respDelServiceCategory, _, err := TOSession.GetServiceCategories(&params)
 			if err != nil {
-				t.Errorf("error deleting Service Category: %s", err.Error())
+				t.Errorf("error deleting Service Category: %v", err)
 			}
 			if len(respDelServiceCategory) > 0 {
-				t.Errorf("expected Service Category : %s to be deleted", sc.Name)
+				t.Errorf("expected Service Category %s to be deleted", sc.Name)
 			}
 		}
 	}

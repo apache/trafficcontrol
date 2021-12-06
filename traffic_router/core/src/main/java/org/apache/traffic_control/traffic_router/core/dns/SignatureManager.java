@@ -50,7 +50,7 @@ import org.apache.traffic_control.traffic_router.core.dns.ZoneManager.ZoneCacheT
 import org.apache.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import org.apache.traffic_control.traffic_router.core.util.ProtectedFetcher;
 
-
+@SuppressWarnings("PMD.CyclomaticComplexity")
 public final class SignatureManager {
 	private static final Logger LOGGER = Logger.getLogger(SignatureManager.class);
 	private int expirationMultiplier;
