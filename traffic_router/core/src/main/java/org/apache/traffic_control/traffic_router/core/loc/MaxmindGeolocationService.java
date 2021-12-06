@@ -69,9 +69,8 @@ public class MaxmindGeolocationService implements GeolocationService {
 		}
 
 		if (databaseFile != null) {
-			final DatabaseReader reader = createDatabaseReader(databaseFile);
-			if (reader != null) {
-				databaseReader = reader;
+			databaseReader = createDatabaseReader(databaseFile);
+			if (databaseReader != null) {
 				initialized = true;
 			}
 		}

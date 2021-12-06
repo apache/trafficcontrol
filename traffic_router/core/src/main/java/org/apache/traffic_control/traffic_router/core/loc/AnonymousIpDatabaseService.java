@@ -42,9 +42,8 @@ public class AnonymousIpDatabaseService {
 		}
 
 		if (databaseFile != null) {
-			final DatabaseReader reader = createDatabaseReader(databaseFile);
-			if (reader != null) {
-				databaseReader = reader;
+			databaseReader = createDatabaseReader(databaseFile);
+			if (databaseReader != null) {
 				initialized = true;
 			} else {
 				throw new IOException("Could not create database reader");

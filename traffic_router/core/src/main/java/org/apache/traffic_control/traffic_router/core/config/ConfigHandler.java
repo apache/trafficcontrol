@@ -72,7 +72,7 @@ import org.apache.traffic_control.traffic_router.core.loc.AnonymousIp;
 import org.apache.traffic_control.traffic_router.core.loc.AnonymousIpConfigUpdater;
 import org.apache.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseUpdater;
 
-@SuppressWarnings("PMD.TooManyFields")
+@SuppressWarnings({"PMD.TooManyFields", "PMD.CyclomaticComplexity"})
 public class ConfigHandler {
 	private static final Logger LOGGER = LogManager.getLogger(ConfigHandler.class);
 
@@ -593,7 +593,7 @@ public class ConfigHandler {
 				ds.setGeoRedirectFile(url.getFile());
 				//try select the ds by the redirect fake HTTPRequest
 				final DeliveryService rds = cacheRegister.getDeliveryService(req);
-				if (rds == null || rds.getId() != ds.getId()) {
+				if (rds == null || !Objects.equals(rds.getId(), ds.getId())) {
 					//the redirect url not belongs to this ds
 					ds.setGeoRedirectUrlType("NOT_DS_URL");
 					continue;

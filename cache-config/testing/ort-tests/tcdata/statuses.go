@@ -41,7 +41,7 @@ func (r *TCData) DeleteTestStatuses(t *testing.T) {
 		// Retrieve the Status by name so we can get the id for the Update
 		resp, _, err := TOSession.GetStatusByName(*status.Name)
 		if err != nil {
-			t.Errorf("cannot GET Status by name: %v - %v", status.Name, err)
+			t.Errorf("cannot GET Status by name: %s - %v", *status.Name, err)
 		}
 		respStatus := resp[0]
 
@@ -53,7 +53,7 @@ func (r *TCData) DeleteTestStatuses(t *testing.T) {
 		// Retrieve the Status to see if it got deleted
 		types, _, err := TOSession.GetStatusByName(*status.Name)
 		if err != nil {
-			t.Errorf("error deleting Status name: %s", err.Error())
+			t.Errorf("error deleting Status name: %v", err)
 		}
 		if len(types) > 0 {
 			t.Errorf("expected Status name: %s to be deleted", *status.Name)

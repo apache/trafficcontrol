@@ -171,12 +171,12 @@ Install the Dependencies
 	| macOS\ [#mac-jdk]_         | - rpm               | - go                       | - go                   | - npm                     | - maven                   | - go                     | - go     | - go                         | - python3                |
 	| (homebrew_)                |                     |                            |                        | - grunt-cli               |                           |                          |          |                              |                          |
 	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	| CentOS\ [#centos-go]_,     | - git               |                            |                        | - epel-release            | - java-1.8.0-openjdk      |                          |          |                              | - python3-devel          |
+	| CentOS\ [#centos-go]_,     | - git               |                            |                        | - epel-release            | - java-11-openjdk         |                          |          |                              | - python3-devel          |
 	| Red Hat,                   | - rpm-build         |                            |                        | - npm                     | - maven                   |                          |          |                              | - gcc                    |
 	| Fedora                     | - rsync             |                            |                        | - nodejs-grunt-cli        |                           |                          |          |                              | - make                   |
 	| (yum_)                     |                     |                            |                        |                           |                           |                          |          |                              |                          |
 	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	| Arch Linux,                | - git               | - go                       | - go                   | - npm                     | - jdk8-openjdk            | - go                     | - go     | - go                         | - python-pip             |
+	| Arch Linux,                | - git               | - go                       | - go                   | - npm                     | - jdk11-openjdk           | - go                     | - go     | - go                         | - python-pip             |
 	| Manjaro                    | - rpm-tools         |                            |                        | - grunt-cli               | - maven                   |                          |          |                              | - python-sphinx          |
 	| (pacman_)                  | - diff              |                            |                        |                           |                           |                          |          |                              | - make                   |
 	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
@@ -184,7 +184,7 @@ Install the Dependencies
 	| (cygwin_)\ [#windeps]_     | - rpm-build         |                            |                        |                           |                           |                          |          |                              |                          |
 	|                            | - rsync             |                            |                        |                           |                           |                          |          |                              |                          |
 	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
-	| Windows                    |                     | - golang                   | - golang               | - nodejs                  | - openjdk8                | - golang                 | - golang | - golang                     | - python                 |
+	| Windows                    |                     | - golang                   | - golang               | - nodejs                  | - openjdk11               | - golang                 | - golang | - golang                     | - python                 |
 	| (chocolatey_)\ [#windeps]_ |                     |                            |                        |                           | - maven                   |                          |          |                              | - pip                    |
 	|                            |                     |                            |                        |                           |                           |                          |          |                              | - make                   |
 	+----------------------------+---------------------+----------------------------+------------------------+---------------------------+---------------------------+--------------------------+----------+------------------------------+--------------------------+
@@ -194,9 +194,6 @@ Install the Dependencies
 .. _pacman:     https://www.archlinux.org/pacman/
 .. _cygwin:     https://cygwin.com/
 .. _chocolatey: https://chocolatey.org/
-
-.. |AdoptOpenJDK instructions| replace:: add the AdoptOpenJDK tap and install the ``adoptopenjdk8`` cask
-.. _AdoptOpenJDK instructions: https://github.com/AdoptOpenJDK/homebrew-openjdk#other-versions
 
 After installing the packages using your platform's package manager,
 

@@ -70,6 +70,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 5
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -86,6 +88,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 5
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
@@ -95,7 +99,7 @@ jobs:
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/trafficcontrol-${{ github.job }}-*.x86_64.rpm
-    
+
   trafficserver:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
@@ -120,9 +124,6 @@ jobs:
         uses: ./.github/actions/build-ats-test-rpm
         env:
           ATC_COMPONENT: ${{ github.job }}
-      - name: Display structure of dist directory
-        run: ls -lR
-        working-directory: ${{ github.workspace }}/dist
       - name: Upload RPM
         uses: actions/upload-artifact@v2
         with:
@@ -132,7 +133,7 @@ jobs:
   cache-config_tests:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    needs: 
+    needs:
       - traffic_ops
       - cache-config
       - trafficserver
@@ -145,25 +146,16 @@ jobs:
       with:
         name: traffic_ops
         path: ${{ github.workspace }}/cache-config/testing/docker/traffic_ops
-    - name: Display structure of TO downloaded files
-      run: ls -lR
-      working-directory: ${{ github.workspace }}/cache-config/testing/docker/traffic_ops
     - name: Download Cache Config RPM
       uses: actions/download-artifact@v2
       with:
         name: cache-config
         path: ${{ github.workspace }}/cache-config/testing/docker/ort_test
-    - name: Display structure of cache config downloaded files
-      run: ls -lR
-      working-directory: ${{ github.workspace }}/cache-config/testing/docker/ort_test
     - name: Download ATS RPM
       uses: actions/download-artifact@v2
       with:
         name: trafficserver
         path: ${{ github.workspace }}/cache-config/testing/docker/yumserver/test-rpms
-    - name: Display structure of ATS downloaded files
-      run: ls -lR
-      working-directory: ${{ github.workspace }}/cache-config/testing/docker/yumserver
     - name: Build cache config test containers
       run: docker-compose -f ${{ github.workspace }}/cache-config/testing/docker/docker-compose.yml build --parallel
     - name: Run cache config integration tests

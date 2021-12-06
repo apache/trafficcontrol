@@ -84,7 +84,7 @@ func (r *TCData) CreateTestServerWithoutProfileId(t *testing.T) {
 	response, reqInfo, errs := TOSession.CreateServerWithHdr(server, nil)
 	t.Log("Response: ", *server.HostName, " ", response)
 	if reqInfo.StatusCode != 400 {
-		t.Fatalf("Expected status code: %v but got: %v", "400", reqInfo.StatusCode)
+		t.Fatalf("Expected status code 400 but got: %d", reqInfo.StatusCode)
 	}
 
 	//Reverting it back for further tests

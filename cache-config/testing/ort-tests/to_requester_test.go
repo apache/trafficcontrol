@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os/exec"
 	"strings"
 	"testing"
@@ -33,7 +32,6 @@ type Package struct {
 }
 
 func TestTORequester(t *testing.T) {
-	fmt.Println("------------- Starting TestTORequester tests ---------------")
 	tcd.WithObjs(t, []tcdata.TCObj{
 		tcdata.CDNs, tcdata.Types, tcdata.Tenants, tcdata.Parameters,
 		tcdata.Profiles, tcdata.ProfileParameters, tcdata.Statuses,
@@ -42,76 +40,87 @@ func TestTORequester(t *testing.T) {
 		tcdata.DeliveryServices}, func() {
 
 		// chkconfig test
-		output, err := ExecTORequester("atlanta-edge-03", "chkconfig")
+		output, err := ExecTORequester(DefaultCacheHostName, "chkconfig")
 		if err != nil {
-			t.Fatalf("ERROR: t3c-request exec failed: %v\n", err)
+			t.Fatalf("t3c-request exec failed: %v", err)
 		}
 		var chkConfig []map[string]interface{}
 		err = json.Unmarshal([]byte(output), &chkConfig)
 		if err != nil {
-			t.Fatalf("ERROR unmarshalling json output: " + err.Error())
+			t.Fatalf("failed to parse t3c-request output: %v", err)
 		}
-		if chkConfig[0]["name"] != "trafficserver" {
-			t.Fatal("ERROR unexpected result, expected 'trafficserver'")
+		if len(chkConfig) < 1 {
+			t.Fatal("expected at least one chkconfig entry, got zero")
+		}
+		firstName := chkConfig[0]["name"]
+		if firstName != "trafficserver" {
+			t.Fatalf("expected the name of the first chkconfig entry to be 'trafficserver', actual: %s", firstName)
 		}
 
 		// get system-info test
-		output, err = ExecTORequester("atlanta-edge-03", "system-info")
+		output, err = ExecTORequester(DefaultCacheHostName, "system-info")
 		if err != nil {
-			t.Fatalf("ERROR: t3c-request exec failed: %v\n", err)
+			t.Fatalf("t3c-request exec failed: %v", err)
 		}
 		var sysInfo map[string]interface{}
 		err = json.Unmarshal([]byte(output), &sysInfo)
 		if err != nil {
-			t.Fatalf("ERROR unmarshalling json output: " + err.Error())
+			t.Fatalf("failed to parse t3c-request output: %v", err)
 		}
-		if sysInfo["tm.instance_name"] != "Traffic Ops ORT Tests" {
-			t.Fatalf("ERROR: unexpected 'tm.instance_name'")
+		instanceName := sysInfo["tm.instance_name"]
+		if instanceName != "Traffic Ops ORT Tests" {
+			t.Fatalf("expected 'tm.instance_name' to be 'Traffic Ops ORT Tests', actual: %s", instanceName)
 		}
 
 		// statuses test
-		output, err = ExecTORequester("atlanta-edge-03", "statuses")
+		output, err = ExecTORequester(DefaultCacheHostName, "statuses")
 		if err != nil {
-			t.Fatalf("ERROR: t3c-request exec failed: %v\n", err)
+			t.Fatalf("t3c-request exec failed: %v", err)
 		}
 		// should parse json to an array of 'tc.Status'
 		var statuses []tc.Status
 		err = json.Unmarshal([]byte(output), &statuses)
 		if err != nil {
-			t.Fatalf("ERROR unmarshalling json output: " + err.Error())
+			t.Fatalf("failed to parse t3c-request output: %v", err)
 		}
 
 		// packages test
-		output, err = ExecTORequester("atlanta-edge-03", "packages")
+		output, err = ExecTORequester(DefaultCacheHostName, "packages")
 		if err != nil {
-			t.Fatalf("ERROR: t3c-request exec failed: %v\n", err)
+			t.Fatalf("t3c-request exec failed: %v", err)
 		}
 		// should parse to an array of 'Package'
 		var packages []Package
 		err = json.Unmarshal([]byte(output), &packages)
 		if err != nil {
-			t.Fatalf("ERROR unmarshalling json output: " + err.Error())
+			t.Fatalf("failed to parse t3c-request output: %v", err)
 		}
-		if *packages[0].Name != "trafficserver" {
-			t.Fatal("ERROR unexpected result, expected 'trafficserver'")
+		if len(packages) < 1 {
+			t.Fatal("expected at least one package, got zero")
+		}
+		if packages[0].Name == nil {
+			t.Fatal("null or undefined name for the first package in t3c-request output")
+		}
+		pkgName := *packages[0].Name
+		if pkgName != "trafficserver" {
+			t.Fatalf("expected first package to be named 'trafficserver', actual: %s", pkgName)
 		}
 
 		// update-status test
-		output, err = ExecTORequester("atlanta-edge-03", "update-status")
+		output, err = ExecTORequester(DefaultCacheHostName, CMDUpdateStatus)
 		if err != nil {
-			t.Fatalf("ERROR: t3c-request exec failed: %v\n", err)
+			t.Fatalf("t3c-request exec failed: %v", err)
 		}
 		var serverStatus tc.ServerUpdateStatus
 		err = json.Unmarshal([]byte(output), &serverStatus)
 		if err != nil {
-			t.Fatalf("ERROR unmarshalling json output: " + err.Error())
+			t.Fatalf("failed to parse t3c-request output: %v", err)
 		}
-		if serverStatus.HostName != "atlanta-edge-03" {
-			t.Fatal("ERROR unexpected result, expected 'atlanta-edge-03'")
+		if serverStatus.HostName != DefaultCacheHostName {
+			t.Fatalf("expected server status hosname to be '%s', actual: %s", DefaultCacheHostName, serverStatus.HostName)
 		}
 
 	})
-	fmt.Println("------------- End of TestTORequester tests ---------------")
 }
 
 func ExecTORequester(host string, data_req string) (string, error) {

@@ -23,6 +23,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.Map;
 
+@SuppressWarnings("PMD.ClassNamingConventions")
 public class HTTPAccessEventBuilder {
     private static String formatRequest(final HttpServletRequest request) {
         String url = formatObject(request.getRequestURL());

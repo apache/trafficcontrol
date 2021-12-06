@@ -16,24 +16,44 @@ package orttest
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 )
 
-func TestCheckReload(t *testing.T) {
-	type ChangedCfg struct {
-		ChangedFiles     string `json:"changed_files"`
-		InstalledPlugins string `json:"installed_plugins"`
-	}
+type ChangedCfg struct {
+	ChangedFiles     string `json:"changed_files"`
+	InstalledPlugins string `json:"installed_plugins"`
+}
 
-	type argsResults struct {
-		configs     ChangedCfg
-		mode        string
-		expected    string
-		expectedErr bool
+type argsResults struct {
+	configs     ChangedCfg
+	mode        string
+	expected    string
+	expectedErr bool
+}
+
+func testCheckReload(t *testing.T, ae argsResults) {
+	config, err := json.Marshal(ae.configs)
+	if err != nil {
+		t.Errorf("failed to encode configs: %v", err)
 	}
+	out, code := t3cCheckReload(config)
+	out = strings.TrimSpace(out)
+	if !ae.expectedErr && code != 0 {
+		t.Fatalf("expected non-error exit code, actual: %d - output: %s", code, out)
+	}
+	if ae.expectedErr && code == 0 {
+		t.Fatal("expected check-reload to exit with an error, actual: no error")
+	}
+	if out != ae.expected {
+		t.Errorf("expected required action '%s', actual: '%s'", ae.expected, out)
+	}
+}
+
+func TestCheckReload(t *testing.T) {
 
 	argsExpected := []argsResults{
 		{
@@ -130,25 +150,9 @@ func TestCheckReload(t *testing.T) {
 	}
 
 	for _, ae := range argsExpected {
-		config, err := json.Marshal(ae.configs)
-		if err != nil {
-			t.Errorf("Error: %s", err)
-		}
-		out, code := t3cCheckReload(config)
-		out = strings.TrimSpace(out)
-		if !ae.expectedErr && code != 0 {
-			t.Errorf("expected configs %+v packages %+v would not error, actual: code %v output '%v'",
-				ae.configs.ChangedFiles, ae.configs.InstalledPlugins, code, out)
-			continue
-		} else if ae.expectedErr && code == 0 {
-			t.Errorf("expected configs %+v packages %+v would error, actual: no error",
-				ae.configs.ChangedFiles, ae.configs.InstalledPlugins)
-			continue
-		}
-		if out != ae.expected {
-			t.Errorf("expected configs %+v packages %+v would need '%v', actual: '%v'",
-				ae.configs.ChangedFiles, ae.configs.InstalledPlugins, ae.expected, out)
-		}
+		testName := fmt.Sprintf("testing check-reload with changed files %+v and installed plugins %+v", ae.configs.ChangedFiles, ae.configs.InstalledPlugins)
+		t.Run(testName, func(t *testing.T) { testCheckReload(t, ae) })
+
 	}
 }
 

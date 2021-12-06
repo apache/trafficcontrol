@@ -36,7 +36,6 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -127,7 +126,7 @@ public class Fetcher {
 			if (method.equals(POST_STR) && data != null) {
 				http.setDoOutput(true); // Triggers POST.
 
-				try (final OutputStream output = http.getOutputStream()) {
+				try (OutputStream output = http.getOutputStream()) {
 					output.write(data.getBytes(UTF8_STR));
 				}
 			}
@@ -151,55 +150,44 @@ public class Fetcher {
 	}
 
 	private String fetchIfModifiedSince(final String url, final String data, final String method, final long lastFetchTime) throws IOException {
-		final OutputStream out = null;
 		String ifModifiedSince = null;
-		try {
-			final HttpURLConnection connection = getConnection(url, data, method, lastFetchTime);
-			if (connection != null) {
-				if (connection.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
-					return null;
-				}
-
-				if (connection.getResponseCode() > 399) {
-					LOGGER.warn("Failed Http Request to " + url + " Status " + connection.getResponseCode());
-					return null;
-				}
-
-				final StringBuilder sb = new StringBuilder();
-				createStringBuilderFromResponse(sb, connection);
-				ifModifiedSince = sb.toString();
+		final HttpURLConnection connection = getConnection(url, data, method, lastFetchTime);
+		if (connection != null) {
+			if (connection.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
+				return null;
 			}
 
-		} finally {
-			IOUtils.closeQuietly(out);
+			if (connection.getResponseCode() > 399) {
+				LOGGER.warn("Failed Http Request to " + url + " Status " + connection.getResponseCode());
+				return null;
+			}
+
+			final StringBuilder sb = new StringBuilder();
+			createStringBuilderFromResponse(sb, connection);
+			ifModifiedSince = sb.toString();
 		}
 		return ifModifiedSince;
 	}
 
 	public int getIfModifiedSince(final String url, final long lastFetchTime, final StringBuilder stringBuilder) throws IOException {
-		final OutputStream out = null;
 		int status = 0;
-		try {
-			final HttpURLConnection connection = getConnection(url, null, "GET", lastFetchTime);
-			if (connection != null) {
-				status = connection.getResponseCode();
+		final HttpURLConnection connection = getConnection(url, null, "GET", lastFetchTime);
+		if (connection != null) {
+			status = connection.getResponseCode();
 
-				if (status == HttpURLConnection.HTTP_NOT_MODIFIED) {
-					return status;
-				}
-
-				if (connection.getResponseCode() > 399) {
-					LOGGER.warn("Failed Http Request to " + url + " Status " + connection.getResponseCode());
-					return status;
-				}
-
-				createStringBuilderFromResponse(stringBuilder, connection);
-
+			if (status == HttpURLConnection.HTTP_NOT_MODIFIED) {
+				return status;
 			}
-			return status;
-		} finally {
-			IOUtils.closeQuietly(out);
+
+			if (connection.getResponseCode() > 399) {
+				LOGGER.warn("Failed Http Request to " + url + " Status " + connection.getResponseCode());
+				return status;
+			}
+
+			createStringBuilderFromResponse(stringBuilder, connection);
+
 		}
+		return status;
 	}
 
 	public String fetch(final String url, final String data, final String method) throws IOException {
@@ -228,14 +216,15 @@ public class Fetcher {
 
 	public void createStringBuilderFromResponse (final StringBuilder sb, final HttpURLConnection connection) throws IOException {
 		if (GZIP_ENCODING_STRING.equals(connection.getContentEncoding())) {
-			final GZIPInputStream zippedInputStream =  new GZIPInputStream(connection.getInputStream());
-			final BufferedReader r = new BufferedReader(new InputStreamReader(zippedInputStream));
-			String input;
-			while((input = r.readLine()) != null) {
-				sb.append(input);
+			try (GZIPInputStream zippedInputStream =  new GZIPInputStream(connection.getInputStream());
+				 BufferedReader r = new BufferedReader(new InputStreamReader(zippedInputStream))) {
+				String input;
+				while ((input = r.readLine()) != null) {
+					sb.append(input);
+				}
 			}
 		} else {
-			try (final BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+			try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
 				String input;
 
 				while ((input = in.readLine()) != null) {

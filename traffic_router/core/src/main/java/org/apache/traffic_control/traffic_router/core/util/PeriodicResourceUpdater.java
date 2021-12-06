@@ -238,9 +238,9 @@ public class PeriodicResourceUpdater {
 	}
 
 	protected synchronized void copyDatabase(final File existingDB, final String newDB) throws IOException {
-		try (final StringReader in = new StringReader(newDB);
-			final FileOutputStream out = new FileOutputStream(existingDB);
-			final FileLock lock = out.getChannel().tryLock()) {
+		try (StringReader in = new StringReader(newDB);
+			FileOutputStream out = new FileOutputStream(existingDB);
+			FileLock lock = out.getChannel().tryLock()) {
 
 			if (lock == null) {
 				LOGGER.error("Database " + existingDB.getAbsolutePath() + " locked by another process.");
@@ -282,11 +282,12 @@ public class PeriodicResourceUpdater {
 			final String responseBody;
 			if (GZIP_ENCODING_STRING.equals(response.getHeader("Content-Encoding"))) {
 				final StringBuilder stringBuilder = new StringBuilder();
-				final GZIPInputStream zippedInputStream =  new GZIPInputStream(response.getResponseBodyAsStream());
-				final BufferedReader r = new BufferedReader(new InputStreamReader(zippedInputStream));
-				String line;
-				while((line = r.readLine()) != null) {
-					stringBuilder.append(line);
+				try (GZIPInputStream zippedInputStream =  new GZIPInputStream(response.getResponseBodyAsStream());
+					 BufferedReader r = new BufferedReader(new InputStreamReader(zippedInputStream))) {
+					String line;
+					while ((line = r.readLine()) != null) {
+						stringBuilder.append(line);
+					}
 				}
 				responseBody = stringBuilder.toString();
 			} else {

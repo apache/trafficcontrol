@@ -36,7 +36,7 @@ To work on Traffic Router you need a \*nix (MacOS and Linux are most commonly us
 
 * Eclipse >= Kepler SR2 (or another Java IDE)
 * Maven >= 3.3.1
-* JDK >= 8.0 (OpenJDK suggested, but not required)
+* JDK >= 11 (OpenJDK suggested, but not required)
 * OpenSSL >= 1.0.2
 * :abbr:`APR (Apache Portable Runtime)` >= 1.4.8-3
 * Tomcat Native >= 1.2.23
@@ -44,27 +44,21 @@ To work on Traffic Router you need a \*nix (MacOS and Linux are most commonly us
 
 .. _dev-tr-mac-jdk:
 
-Get OpenJDK 8 on macOS
+Get OpenJDK 11 on macOS
 --------------------------
-If you are on macOS, OpenJDK 8 is not available from Homebrew by default, but it can still be installed using Homebrew with little effort.
-
-Using Homebrew, |AdoptOpenJDK instructions|_
+Using Homebrew:
 
 .. code-block:: shell
-	:caption: Install OpenJDK 8 on macOS
+	:caption: Install OpenJDK 11 on macOS
 
-	brew tap AdoptOpenJDK/openjdk
-	brew cask install adoptopenjdk8
+	brew install openjdk@11
 
 Next, set the JAVA_HOME environment variable. Add this line to your ``~/.bash_profile``:
 
 .. code-block:: shell
 	:caption: Set JAVA_HOME environment variable
 
-	export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
-
-.. |AdoptOpenJDK instructions| replace:: add the AdoptOpenJDK tap and install the ``adoptopenjdk8`` cask
-.. _AdoptOpenJDK instructions: https://github.com/AdoptOpenJDK/homebrew-openjdk#other-versions
+	export JAVA_HOME=$(/usr/libexec/java_home -v11)
 
 Traffic Router Project Tree Overview
 ====================================

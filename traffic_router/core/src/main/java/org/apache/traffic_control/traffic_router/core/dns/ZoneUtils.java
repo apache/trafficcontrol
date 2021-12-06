@@ -76,11 +76,11 @@ public class ZoneUtils {
 	protected static String getAdminString(final JsonNode jo, final String key, final String d, final String domain) {
 
 		if (jo == null) {
-			return new StringBuffer(d).append(".").append(domain).toString();
+			return new StringBuffer(d).append('.').append(domain).toString();
 		}
 
 		if (!jo.has(key)) {
-			return new StringBuffer(d).append(".").append(domain).toString();
+			return new StringBuffer(d).append('.').append(domain).toString();
 		}
 
 		// check for @ sign in string
@@ -88,7 +88,7 @@ public class ZoneUtils {
 		if (admin.contains("@")) {
 			admin = admin.replace("@",".");
 		} else {
-			admin = new StringBuffer(admin).append(".").append(domain).toString();
+			admin = new StringBuffer(admin).append('.').append(domain).toString();
 		}
 
 		return admin;

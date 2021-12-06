@@ -19,6 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -28,7 +29,7 @@ public class RegionalGeoRule {
 
     public static final String WHITE_LIST_NODE_LOCATION = "w";
 
-    public static enum PostalsType {
+    public enum PostalsType {
         EXCLUDE, INCLUDE, UNDEFINED
     }
 
@@ -99,7 +100,7 @@ public class RegionalGeoRule {
 
         try {
             final NetworkNode nn = whiteListRoot.getNetwork(ip);
-            if (nn.getLoc() == WHITE_LIST_NODE_LOCATION) {
+            if (Objects.equals(nn.getLoc(), WHITE_LIST_NODE_LOCATION)) {
                 return true;
             }
         } catch (NetworkNodeException e) {

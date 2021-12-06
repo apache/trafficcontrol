@@ -74,7 +74,7 @@ public class DataExporter {
 
 		final Properties props = new Properties();
 
-		try (final InputStream stream = getClass().getResourceAsStream("/version.prop")){
+		try (InputStream stream = getClass().getResourceAsStream("/version.prop")){
 			props.load(stream);
 		} catch (IOException e) {
 			LOGGER.warn(e,e);

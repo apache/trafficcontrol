@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - [#6197](https://github.com/apache/trafficcontrol/issues/6197) - TO `/deliveryservices/:id/routing` makes requests to all TRs instead of by CDN.
 - Fixed Traffic Router crs/stats to prevent overflow and to correctly record the time used in averages.
+- [#6209](https://github.com/apache/trafficcontrol/pull/6209) Updated Traffic Router to use Java 11 to compile and run
 - [#5893](https://github.com/apache/trafficcontrol/issues/5893) - A self signed certificate is created when an HTTPS delivery service is created or an HTTP delivery service is updated to HTTPS.
 - [#6125](https://github.com/apache/trafficcontrol/issues/6125) - Fix `/cdns/{name}/federations?id=#` to search for CDN.
 - [#6255](https://github.com/apache/trafficcontrol/issues/6255) - Unreadable Prod Mode CDN Notifications in Traffic Portal
@@ -34,6 +35,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6285](https://github.com/apache/trafficcontrol/issues/6285) - The Traffic Ops Postinstall script will work in CentOS 7, even if Python 3 is installed
 - [#5373](https://github.com/apache/trafficcontrol/issues/5373) - Traffic Monitor logs not consistent
 - Traffic Ops: Sanitize username before executing LDAP query
+- [#6367](https://github.com/apache/trafficcontrol/issues/6367) - Fix PUT `user/current` to work with v4 User Roles and Permissions
 
 ### Changed
 - Updated `log4j` module in Traffic Router from version 1.2.17 to 2.14.1
@@ -44,6 +46,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Portal no longer uses `ruby compass` to compile sass and now uses `dart-sass`.
 - Changed Invalidation Jobs throughout (TO, TP, T3C, etc.) to account for the ability to do both REFRESH and REFETCH requests for resources.
 - The `admin` Role is now always guaranteed to exist, and can't be deleted or modified.
+- Updated `t3c-apply` to reduce mutable state in `TrafficOpsReq` struct.
 
 ### Deprecated
 - Deprecated the endpoints and docs associated with `api_capability`.

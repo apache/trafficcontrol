@@ -29,23 +29,25 @@ ARG RHEL_VERSION=8
 # Makes RHEL_VERSION available in later layers without needing to specify it again
 ENV RHEL_VERSION=$RHEL_VERSION
 MAINTAINER dev@trafficcontrol.apache.org
-
-RUN echo "Image Version: ${RHEL_VERSION}"
+EXPOSE 80 443
 
 RUN yum install -y epel-release && yum repolist && \
-  yum install -y initscripts git jq gcc lua 
+  yum install -y initscripts git jq gcc lua && \
+  yum clean all
 
+# Note that if more than one t3c RPM matches this wildcard, this Dockerfile will
+# break because this will create a directory instead of an RPM file, which it
+# will then fail to install.
 ADD ort_test/trafficcontrol-cache-config*.rpm /trafficcontrol-cache-config.rpm
-RUN yum install -y /trafficcontrol-cache-config.rpm
+RUN yum install -y /trafficcontrol-cache-config.rpm && yum clean all
 
-RUN sed -i 's/HOME\/bin/HOME\/bin:\/usr\/local\/go\/bin:/g' /root/.bash_profile
-RUN echo "GOPATH=/root/go; export GOPATH" >> /root/.bash_profile
-RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
-RUN mkdir /root/go
+RUN sed -i 's/HOME\/bin/HOME\/bin:\/usr\/local\/go\/bin:/g' /root/.bash_profile &&\
+  echo "GOPATH=/root/go; export GOPATH" >> /root/.bash_profile &&\
+  echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config &&\
+  mkdir /root/go
 
-EXPOSE 80 443
-ADD ort_test/run.sh /
 ADD ort_test/Ort-test.repo /etc/yum.repos.d
+ADD ort_test/run.sh ort_test/systemctl.sh /
 ADD ort_test/systemctl.sh /
 
 ENTRYPOINT /run.sh

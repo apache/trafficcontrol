@@ -318,7 +318,7 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 			} else if (!isLocalConfig() && isBootstrapped()) {
 				synchronized(monitorSync) {
 					if (!onlineMonitors.isEmpty()) {
-						setHosts(onlineMonitors.toArray(new String[onlineMonitors.size()]));
+						setHosts(onlineMonitors.toArray(new String[0]));
 					}
 				}
 			}
@@ -370,7 +370,7 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 
 			TrafficMonitorWatcher.onlineMonitors = onlineMonitors;
 			setBootstrapped(true);
-			setHosts(onlineMonitors.toArray(new String[onlineMonitors.size()]));
+			setHosts(onlineMonitors.toArray(new String[0]));
 		}
 	}
 

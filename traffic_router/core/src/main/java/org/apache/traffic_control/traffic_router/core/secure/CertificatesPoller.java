@@ -74,7 +74,7 @@ public class CertificatesPoller implements ConfigurationListener {
 		final Runnable runnable = () -> {
 			try {
 				trafficRouterManager.trackEvent("lastHttpsCertificatesCheck");
-				List<CertificateData> certificateDataList = certificatesClient.refreshData();
+				final List<CertificateData> certificateDataList = certificatesClient.refreshData();
 				if (certificateDataList == null) {
 					return;
 				}

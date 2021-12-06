@@ -26,7 +26,7 @@ tr_tomcat_base_dir: '/opt/tomcat'
 tr_tomcat_logs_dir: "{{ tr_tomcat_base_dir }}/logs"
 
 # JAVA_HOME to use in order to specify the desired JRE
-tr_java_home_dir: '/usr/lib/jvm/jre'
+tr_java_home_dir: '/usr/lib/jvm/jre-11-openjdk'
 
 # Remove any locally cached copy of a CRConfig
 tr_purge_crconfig_cache: False
