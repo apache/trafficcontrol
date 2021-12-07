@@ -63,7 +63,7 @@ Options
 
 		Previously, :option:`-7` was implicit if not given. As of ATC version 6.0.0, this is no longer the case, and :option:`-8` is implicit instead.
 
-.. option:: a
+.. option:: -a
 
 	Build all projects, including optional ones.
 
