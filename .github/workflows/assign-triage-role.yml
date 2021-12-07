@@ -1,0 +1,47 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: Assign Triage Role
+
+on:
+  # run manually
+  workflow_dispatch:
+  schedule:
+    # 14:00 UTC on the first day of each month
+    - cron: '0 14 1 * *'
+
+jobs:
+  assign-triage-role:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@master
+        if: ${{ (github.repository_owner == 'apache' && github.ref == 'refs/heads/master' ) || github.event_name != 'schedule' }}
+        id: checkout
+      - name: Install Python 3.10
+        uses: actions/setup-python@v2
+        if: ${{ steps.checkout.outcome == 'success' }}
+        with: { python-version: '3.10' } # Must be quoted to include the trailing 0
+      - name: Install assign_triage_role Python module and dependencies
+        if: ${{ steps.checkout.outcome == 'success' }}
+        run: pip install .github/actions/assign-triage-role
+      - name: Assign Triage Role
+        if: ${{ steps.checkout.outcome == 'success' }}
+        run: python3 -m assign_triage_role
+        env:
+          GIT_AUTHOR_NAME: asfgit
+          GITHUB_TOKEN: ${{ github.token }}
