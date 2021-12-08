@@ -39,9 +39,17 @@ Sample configuration file(cfg.json) available in traffic_router_golang directory
 Compile and generate binary:
 
    - `cd traffic_router_goland`
-   - Optional: Run `go install ` will get the dependency packages (Go mod take care of this anyway)
-   - Run `go build -o traffic_router . `(This will generate binary file traffic_router)
+   - `go mod download`
+   - `go build` #This will generate binary file traffic_router_golang)
 
+# Known issues in build
+   - if you find errors similar to below,
+	``` go build
+	..\..\vendor\github.com\lestrrat-go\jwx\x25519\x25519.go:9:2: cannot find package "." in:
+	        C:\users\moham\go\src\github.com\apache\trafficcontrol\vendor\golang.org\x\crypto\curve25519
+	..\..\traffic_ops\toclientlib\toclientlib.go:36:2: cannot find package "." in:
+	        C:\users\moham\go\src\github.com\apache\trafficcontrol\vendor\golang.org\x\net\publicsuffix```
+    plese run `go mod vendor` which will sync vendor directory, now run go build will build and generate binary
 
 # Unit Test
     
