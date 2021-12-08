@@ -102,7 +102,7 @@ How will existing tables and columns be changed?
 What are the column data types and modifiers?
 What are the FK references and constraints?
 -->
-A database migration should be added to seed a new Operations-level user for use with the TR Ultimate Test Harness.
+No Data Model impact is anticipated.
 
 ### Cache Config Impact
 <!--
