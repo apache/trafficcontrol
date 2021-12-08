@@ -195,6 +195,7 @@ Benchmark time | The duration of each load test, in seconds | HTTP, DNS | 300
 Thread count | The number of threads to spawn for each test | HTTP, DNS | 12
 Path count | The number of paths to generate for use in requests to Delivery Services | HTTP | 10000
 Maximum path length | The maximum string length for each generated path | HTTP | 100
+Use location header | Whether the HTTP HTTP Delivery service should redirect the user or server the routing information as a JSON response. | HTTP | True
 
 #### Other Tests
 
