@@ -47,21 +47,21 @@ Compile and generate binary:
    - Run `go test ./...` from traffic_router_golang directory
      
      ```$ go test ./...
-		?       traffic_router_golang   [no test files]
-		?       traffic_router_golang/availableservers  [no test files]
-		?       traffic_router_golang/cgsrch    [no test files]
-		?       traffic_router_golang/config    [no test files]
-		?       traffic_router_golang/coveragezone      [no test files]
-		?       traffic_router_golang/crconfig  [no test files]
-		?       traffic_router_golang/crconfigdsservers [no test files]
-		?       traffic_router_golang/crconfigpoller    [no test files]
-		?       traffic_router_golang/crconfigregex     [no test files]
-		?       traffic_router_golang/crstates  [no test files]
-		?       traffic_router_golang/crstatespoller    [no test files]
-		?       traffic_router_golang/fetch     [no test files]
-		?       traffic_router_golang/httpsrvr  [no test files]
-		?       traffic_router_golang/ipmap     [no test files]
-		?       traffic_router_golang/nextcache [no test files]
-		ok      traffic_router_golang/quadtree  0.526s
-		?       traffic_router_golang/toutil    [no test files]
-```
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang     [no test files]
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/availableservers    [no test files]
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/cgsrch      [no test files]
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/config      [no test files]
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/coveragezone        [no test files]
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/crconfig    [no test files]
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/crconfigdsservers   [no test files]
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/crconfigpoller      [no test files]
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/crconfigregex       [no test files]
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/crstates    [no test files]
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/crstatespoller      [no test files]
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/fetch       [no test files]
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/httpsrvr    [no test files]
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/ipmap       [no test files]
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/nextcache   [no test files]
+		ok      github.com/apache/trafficcontrol/experimental/traffic_router_golang/quadtree    1.190s
+		?       github.com/apache/trafficcontrol/experimental/traffic_router_golang/toutil      [no test files]
+     ```
