@@ -62,13 +62,12 @@ type TrafficOpsReq struct {
 	changedFiles  []string            // list of config files which were changed
 
 	configFiles          map[string]*ConfigFile
-	TrafficCtlReload     bool   // a traffic_ctl_reload is required
-	SysCtlReload         bool   // a reload of the sysctl.conf is required
-	NtpdRestart          bool   // ntpd needs restarting
-	TeakdRestart         bool   // a restart of teakd is required
-	TrafficServerRestart bool   // a trafficserver restart is required
-	RemapConfigReload    bool   // remap.config should be reloaded
-	unixTimeStr          string // unix time string at program startup.
+	TrafficCtlReload     bool // a traffic_ctl_reload is required
+	SysCtlReload         bool // a reload of the sysctl.conf is required
+	NtpdRestart          bool // ntpd needs restarting
+	TeakdRestart         bool // a restart of teakd is required
+	TrafficServerRestart bool // a trafficserver restart is required
+	RemapConfigReload    bool // remap.config should be reloaded
 }
 
 type ShouldReloadRestart struct {
@@ -180,8 +179,6 @@ func (r *TrafficOpsReq) DumpConfigFiles() {
 
 // NewTrafficOpsReq returns a new TrafficOpsReq object.
 func NewTrafficOpsReq(cfg config.Cfg) *TrafficOpsReq {
-	unixTimeString := strconv.FormatInt(time.Now().Unix(), 10)
-
 	return &TrafficOpsReq{
 		Cfg:           cfg,
 		pkgs:          map[string]bool{},
@@ -189,7 +186,6 @@ func NewTrafficOpsReq(cfg config.Cfg) *TrafficOpsReq {
 		configFiles:   map[string]*ConfigFile{},
 		installedPkgs: map[string]struct{}{},
 		pluginPkgs:    map[string]struct{}{},
-		unixTimeStr:   unixTimeString,
 	}
 }
 
