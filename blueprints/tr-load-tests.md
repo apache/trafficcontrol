@@ -293,4 +293,4 @@ No additional dependencies are anticipated. If additional Go dependencies are re
 <!--
 Include any references to external links here.
 -->
-- Comment in the [#traffic-control-traffic_router](https://the-asf.slack.com/archives/C023PVBLWE4) channel of the ASF Slack where @limited recommends `wrk` and `flamethrower`: https://the-asf.slack.com/archives/C023PVBLWE4/p1631639255008200
+- Comment in the [#traffic-control-traffic_router](https://the-asf.slack.com/archives/C023PVBLWE4) channel of the ASF Slack where [@limited](https://github.com/limited) recommends `wrk` and `flamethrower`: https://the-asf.slack.com/archives/C023PVBLWE4/p1631639255008200
