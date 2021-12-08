@@ -67,13 +67,6 @@ No Traffic Portal impact is anticipated.
 -->
 The Operations-level TR Ultimate Test Harness user will update the status of any Traffic Router that is currently undergoing load testing to `"OFFLINE"` in Traffic Ops. It should also update the status of that Traffic Router to its previous status once the load testing is complete, regardless of whether the test failed or succeeded.
 
-The Operations-level TR Ultimate Test Harness user will also be used to get
-* CDN snapshots
-* CDN information
-* information about Traffic Router-type Servers in those CDNs
-* Type information
-* Delivery Service information
-
 #### REST API Impact
 <!--
 *How* will this impact the Traffic Ops REST API?
@@ -164,8 +157,14 @@ What existing documentation will need to be updated?
 Instructions for using the Traffic Router Ultimate Test Harness should be added to the documentation. This should include:
 - Small rationale for inclusion of TR Ultimate Test Harness
 - Setup instructions
-- Documentation of each CLI option
-- Example commands
+    * The permissions that a user running the Traffic Router Test Harness should have:
+        - CDN snapshots
+        - CDN information
+        - information about Traffic Router-type Servers in those CDNs
+        - Type information
+        - Delivery Service information
+    - Documentation of each CLI option
+    - Example commands
 
 ### Testing Impact
 <!--
