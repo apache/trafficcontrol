@@ -94,6 +94,19 @@ func New(c Crypt) Crypter {
 	return c.New()
 }
 
+// IsHashSupported returns true if hashedKey has a supported prefix.
+// NewFromHash will not panic for this hashedKey
+func IsHashSupported(hashedKey string) bool {
+	for i := range cryptPrefixes {
+		prefix := cryptPrefixes[i]
+		if crypts[i] != nil && strings.HasPrefix(hashedKey, prefix) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // NewFromHash returns a new Crypter using the prefix in the given hashed key.
 func NewFromHash(hashedKey string) Crypter {
 	for i := range cryptPrefixes {

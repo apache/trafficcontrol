@@ -19,6 +19,9 @@ import (
 // ErrInvalidSpecification indicates that a specification is of the wrong type.
 var ErrInvalidSpecification = errors.New("specification must be a struct pointer")
 
+var gatherRegexp = regexp.MustCompile("([^A-Z]+|[A-Z]+[^A-Z]+|[A-Z]+)")
+var acronymRegexp = regexp.MustCompile("([A-Z]+)([A-Z][^A-Z]+)")
+
 // A ParseError occurs when an environment variable cannot be converted to
 // the type required by a struct field during assignment.
 type ParseError struct {
@@ -56,7 +59,6 @@ type varInfo struct {
 
 // GatherInfo gathers information about the specified struct
 func gatherInfo(prefix string, spec interface{}) ([]varInfo, error) {
-	expr := regexp.MustCompile("([^A-Z]+|[A-Z][^A-Z]+|[A-Z]+)")
 	s := reflect.ValueOf(spec)
 
 	if s.Kind() != reflect.Ptr {
@@ -102,11 +104,15 @@ func gatherInfo(prefix string, spec interface{}) ([]varInfo, error) {
 
 		// Best effort to un-pick camel casing as separate words
 		if isTrue(ftype.Tag.Get("split_words")) {
-			words := expr.FindAllStringSubmatch(ftype.Name, -1)
+			words := gatherRegexp.FindAllStringSubmatch(ftype.Name, -1)
 			if len(words) > 0 {
 				var name []string
 				for _, words := range words {
-					name = append(name, words[0])
+					if m := acronymRegexp.FindStringSubmatch(words[0]); len(m) == 3 {
+						name = append(name, m[1], m[2])
+					} else {
+						name = append(name, words[0])
+					}
 				}
 
 				info.Key = strings.Join(name, "_")
@@ -123,7 +129,7 @@ func gatherInfo(prefix string, spec interface{}) ([]varInfo, error) {
 
 		if f.Kind() == reflect.Struct {
 			// honor Decode if present
-			if decoderFrom(f) == nil && setterFrom(f) == nil && textUnmarshaler(f) == nil && binaryUnmarshaler(f) == nil  {
+			if decoderFrom(f) == nil && setterFrom(f) == nil && textUnmarshaler(f) == nil && binaryUnmarshaler(f) == nil {
 				innerPrefix := prefix
 				if !ftype.Anonymous {
 					innerPrefix = info.Key
@@ -197,12 +203,16 @@ func Process(prefix string, spec interface{}) error {
 		req := info.Tags.Get("required")
 		if !ok && def == "" {
 			if isTrue(req) {
-				return fmt.Errorf("required key %s missing value", info.Key)
+				key := info.Key
+				if info.Alt != "" {
+					key = info.Alt
+				}
+				return fmt.Errorf("required key %s missing value", key)
 			}
 			continue
 		}
 
-		err := processField(value, info.Field)
+		err = processField(value, info.Field)
 		if err != nil {
 			return &ParseError{
 				KeyName:   info.Key,
@@ -292,12 +302,17 @@ func processField(value string, field reflect.Value) error {
 		}
 		field.SetFloat(val)
 	case reflect.Slice:
-		vals := strings.Split(value, ",")
-		sl := reflect.MakeSlice(typ, len(vals), len(vals))
-		for i, val := range vals {
-			err := processField(val, sl.Index(i))
-			if err != nil {
-				return err
+		sl := reflect.MakeSlice(typ, 0, 0)
+		if typ.Elem().Kind() == reflect.Uint8 {
+			sl = reflect.ValueOf([]byte(value))
+		} else if len(strings.TrimSpace(value)) != 0 {
+			vals := strings.Split(value, ",")
+			sl = reflect.MakeSlice(typ, len(vals), len(vals))
+			for i, val := range vals {
+				err := processField(val, sl.Index(i))
+				if err != nil {
+					return err
+				}
 			}
 		}
 		field.Set(sl)

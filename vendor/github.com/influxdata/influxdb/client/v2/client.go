@@ -3,13 +3,20 @@ package client // import "github.com/influxdata/influxdb/client/v2"
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime"
+	"net"
 	"net/http"
 	"net/url"
+	"path"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/influxdata/influxdb/models"
@@ -40,6 +47,13 @@ type HTTPConfig struct {
 	// TLSConfig allows the user to set their own TLS config for the HTTP
 	// Client. If set, this option overrides InsecureSkipVerify.
 	TLSConfig *tls.Config
+
+	// Proxy configures the Proxy function on the HTTP client.
+	Proxy func(req *http.Request) (*url.URL, error)
+
+	// DialContext specifies the dial function for creating unencrypted TCP connections.
+	// If DialContext is nil then the transport dials using package net.
+	DialContext func(ctx context.Context, network, addr string) (net.Conn, error)
 }
 
 // BatchPointsConfig is the config data needed to create an instance of the BatchPoints struct.
@@ -66,17 +80,34 @@ type Client interface {
 	// Write takes a BatchPoints object and writes all Points to InfluxDB.
 	Write(bp BatchPoints) error
 
+	// WriteCtx takes a BatchPoints object and writes all Points to InfluxDB.
+	WriteCtx(ctx context.Context, bp BatchPoints) error
+
 	// Query makes an InfluxDB Query on the database. This will fail if using
 	// the UDP client.
 	Query(q Query) (*Response, error)
+
+	// QueryCtx makes an InfluxDB Query on the database. This will fail if using
+	// the UDP client.
+	QueryCtx(ctx context.Context, q Query) (*Response, error)
+
+	// QueryAsChunk makes an InfluxDB Query on the database. This will fail if using
+	// the UDP client.
+	QueryAsChunk(q Query) (*ChunkedResponse, error)
 
 	// Close releases any resources a Client may be using.
 	Close() error
 }
 
+// For added performance users may want to send pre-serialized points.
+type HTTPClient interface {
+	Client
+	WriteRawCtx(ctx context.Context, bp BatchPoints, reqBody io.Reader) error
+}
+
 // NewHTTPClient returns a new Client from the provided config.
 // Client is safe for concurrent use by multiple goroutines.
-func NewHTTPClient(conf HTTPConfig) (Client, error) {
+func NewHTTPClient(conf HTTPConfig) (HTTPClient, error) {
 	if conf.UserAgent == "" {
 		conf.UserAgent = "InfluxDBClient"
 	}
@@ -94,9 +125,13 @@ func NewHTTPClient(conf HTTPConfig) (Client, error) {
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: conf.InsecureSkipVerify,
 		},
+		Proxy:       conf.Proxy,
+		DialContext: conf.DialContext,
 	}
 	if conf.TLSConfig != nil {
 		tr.TLSClientConfig = conf.TLSConfig
+		// Make sure to preserve the InsecureSkipVerify setting from the config.
+		tr.TLSClientConfig.InsecureSkipVerify = conf.InsecureSkipVerify
 	}
 	return &client{
 		url:       *u,
@@ -115,8 +150,9 @@ func NewHTTPClient(conf HTTPConfig) (Client, error) {
 // Ping returns how long the request took, the version of the server it connected to, and an error if one occurred.
 func (c *client) Ping(timeout time.Duration) (time.Duration, string, error) {
 	now := time.Now()
+
 	u := c.url
-	u.Path = "ping"
+	u.Path = path.Join(u.Path, "ping")
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
@@ -147,7 +183,7 @@ func (c *client) Ping(timeout time.Duration) (time.Duration, string, error) {
 	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		var err = fmt.Errorf(string(body))
+		var err = errors.New(string(body))
 		return 0, "", err
 	}
 
@@ -165,7 +201,7 @@ func (c *client) Close() error {
 // once the client is instantiated.
 type client struct {
 	// N.B - if url.UserInfo is accessed in future modifications to the
-	// methods on client, you will need to syncronise access to url.
+	// methods on client, you will need to synchronize access to url.
 	url        url.URL
 	username   string
 	password   string
@@ -315,13 +351,13 @@ func (p *Point) String() string {
 
 // PrecisionString returns a line-protocol string of the Point,
 // with the timestamp formatted for the given precision.
-func (p *Point) PrecisionString(precison string) string {
-	return p.pt.PrecisionString(precison)
+func (p *Point) PrecisionString(precision string) string {
+	return p.pt.PrecisionString(precision)
 }
 
 // Name returns the measurement name of the point.
 func (p *Point) Name() string {
-	return p.pt.Name()
+	return string(p.pt.Name())
 }
 
 // Tags returns the tags associated with the point.
@@ -350,9 +386,16 @@ func NewPointFrom(pt models.Point) *Point {
 }
 
 func (c *client) Write(bp BatchPoints) error {
+	return c.WriteCtx(context.Background(), bp)
+}
+
+func (c *client) WriteCtx(ctx context.Context, bp BatchPoints) error {
 	var b bytes.Buffer
 
 	for _, p := range bp.Points() {
+		if p == nil {
+			continue
+		}
 		if _, err := b.WriteString(p.pt.PrecisionString(bp.Precision())); err != nil {
 			return err
 		}
@@ -361,10 +404,15 @@ func (c *client) Write(bp BatchPoints) error {
 			return err
 		}
 	}
+	return c.WriteRawCtx(ctx, bp, &b)
+}
 
+// WriteRawCtx uses reqBody instead of parsing bp.Points. Metadata still comes from bp.
+func (c *client) WriteRawCtx(ctx context.Context, bp BatchPoints, reqBody io.Reader) error {
 	u := c.url
-	u.Path = "write"
-	req, err := http.NewRequest("POST", u.String(), &b)
+	u.Path = path.Join(u.Path, "write")
+
+	req, err := http.NewRequestWithContext(ctx, "POST", u.String(), reqBody)
 	if err != nil {
 		return err
 	}
@@ -393,7 +441,7 @@ func (c *client) Write(bp BatchPoints) error {
 	}
 
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
-		var err = fmt.Errorf(string(body))
+		var err = errors.New(string(body))
 		return err
 	}
 
@@ -402,11 +450,17 @@ func (c *client) Write(bp BatchPoints) error {
 
 // Query defines a query to send to the server.
 type Query struct {
-	Command    string
-	Database   string
-	Precision  string
-	Parameters map[string]interface{}
+	Command         string
+	Database        string
+	RetentionPolicy string
+	Precision       string
+	Chunked         bool
+	ChunkSize       int
+	Parameters      map[string]interface{}
 }
+
+// Params is a type alias to the query parameters.
+type Params map[string]interface{}
 
 // NewQuery returns a query object.
 // The database and precision arguments can be empty strings if they are not needed for the query.
@@ -416,6 +470,19 @@ func NewQuery(command, database, precision string) Query {
 		Database:   database,
 		Precision:  precision,
 		Parameters: make(map[string]interface{}),
+	}
+}
+
+// NewQueryWithRP returns a query object.
+// The database, retention policy, and precision arguments can be empty strings if they are not needed
+// for the query. Setting the retention policy only works on InfluxDB versions 1.6 or greater.
+func NewQueryWithRP(command, database, retentionPolicy, precision string) Query {
+	return Query{
+		Command:         command,
+		Database:        database,
+		RetentionPolicy: retentionPolicy,
+		Precision:       precision,
+		Parameters:      make(map[string]interface{}),
 	}
 }
 
@@ -441,11 +508,11 @@ type Response struct {
 // It returns nil if no errors occurred on any statements.
 func (r *Response) Error() error {
 	if r.Err != "" {
-		return fmt.Errorf(r.Err)
+		return errors.New(r.Err)
 	}
 	for _, result := range r.Results {
 		if result.Err != "" {
-			return fmt.Errorf(result.Err)
+			return errors.New(result.Err)
 		}
 	}
 	return nil
@@ -466,11 +533,135 @@ type Result struct {
 
 // Query sends a command to the server and returns the Response.
 func (c *client) Query(q Query) (*Response, error) {
+	return c.QueryCtx(context.Background(), q)
+}
+
+// QueryCtx sends a command to the server and returns the Response.
+func (c *client) QueryCtx(ctx context.Context, q Query) (*Response, error) {
+	req, err := c.createDefaultRequest(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	params := req.URL.Query()
+	if q.Chunked {
+		params.Set("chunked", "true")
+		if q.ChunkSize > 0 {
+			params.Set("chunk_size", strconv.Itoa(q.ChunkSize))
+		}
+		req.URL.RawQuery = params.Encode()
+	}
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if err := checkResponse(resp); err != nil {
+		return nil, err
+	}
+
+	var response Response
+	if q.Chunked {
+		cr := NewChunkedResponse(resp.Body)
+		for {
+			r, err := cr.NextResponse()
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				// If we got an error while decoding the response, send that back.
+				return nil, err
+			}
+
+			if r == nil {
+				break
+			}
+
+			response.Results = append(response.Results, r.Results...)
+			if r.Err != "" {
+				response.Err = r.Err
+				break
+			}
+		}
+	} else {
+		dec := json.NewDecoder(resp.Body)
+		dec.UseNumber()
+		decErr := dec.Decode(&response)
+
+		// ignore this error if we got an invalid status code
+		if decErr != nil && decErr.Error() == "EOF" && resp.StatusCode != http.StatusOK {
+			decErr = nil
+		}
+		// If we got a valid decode error, send that back
+		if decErr != nil {
+			return nil, fmt.Errorf("unable to decode json: received status code %d err: %s", resp.StatusCode, decErr)
+		}
+	}
+
+	// If we don't have an error in our json response, and didn't get statusOK
+	// then send back an error
+	if resp.StatusCode != http.StatusOK && response.Error() == nil {
+		return &response, fmt.Errorf("received status code %d from server", resp.StatusCode)
+	}
+	return &response, nil
+}
+
+// QueryAsChunk sends a command to the server and returns the Response.
+func (c *client) QueryAsChunk(q Query) (*ChunkedResponse, error) {
+	req, err := c.createDefaultRequest(context.Background(), q)
+	if err != nil {
+		return nil, err
+	}
+	params := req.URL.Query()
+	params.Set("chunked", "true")
+	if q.ChunkSize > 0 {
+		params.Set("chunk_size", strconv.Itoa(q.ChunkSize))
+	}
+	req.URL.RawQuery = params.Encode()
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := checkResponse(resp); err != nil {
+		return nil, err
+	}
+	return NewChunkedResponse(resp.Body), nil
+}
+
+func checkResponse(resp *http.Response) error {
+	// If we lack a X-Influxdb-Version header, then we didn't get a response from influxdb
+	// but instead some other service. If the error code is also a 500+ code, then some
+	// downstream loadbalancer/proxy/etc had an issue and we should report that.
+	if resp.Header.Get("X-Influxdb-Version") == "" && resp.StatusCode >= http.StatusInternalServerError {
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil || len(body) == 0 {
+			return fmt.Errorf("received status code %d from downstream server", resp.StatusCode)
+		}
+
+		return fmt.Errorf("received status code %d from downstream server, with response body: %q", resp.StatusCode, body)
+	}
+
+	// If we get an unexpected content type, then it is also not from influx direct and therefore
+	// we want to know what we received and what status code was returned for debugging purposes.
+	if cType, _, _ := mime.ParseMediaType(resp.Header.Get("Content-Type")); cType != "application/json" {
+		// Read up to 1kb of the body to help identify downstream errors and limit the impact of things
+		// like downstream serving a large file
+		body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1024))
+		if err != nil || len(body) == 0 {
+			return fmt.Errorf("expected json response, got empty body, with status: %v", resp.StatusCode)
+		}
+
+		return fmt.Errorf("expected json response, got %q, with status: %v and response body: %q", cType, resp.StatusCode, body)
+	}
+	return nil
+}
+
+func (c *client) createDefaultRequest(ctx context.Context, q Query) (*http.Request, error) {
 	u := c.url
-	u.Path = "query"
+	u.Path = path.Join(u.Path, "query")
 
 	jsonParameters, err := json.Marshal(q.Parameters)
-
 	if err != nil {
 		return nil, err
 	}
@@ -478,6 +669,10 @@ func (c *client) Query(q Query) (*Response, error) {
 	req, err := http.NewRequest("POST", u.String(), nil)
 	if err != nil {
 		return nil, err
+	}
+
+	if ctx != nil {
+		req = req.WithContext(ctx)
 	}
 
 	req.Header.Set("Content-Type", "")
@@ -490,6 +685,9 @@ func (c *client) Query(q Query) (*Response, error) {
 	params := req.URL.Query()
 	params.Set("q", q.Command)
 	params.Set("db", q.Database)
+	if q.RetentionPolicy != "" {
+		params.Set("rp", q.RetentionPolicy)
+	}
 	params.Set("params", string(jsonParameters))
 
 	if q.Precision != "" {
@@ -497,30 +695,70 @@ func (c *client) Query(q Query) (*Response, error) {
 	}
 	req.URL.RawQuery = params.Encode()
 
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+	return req, nil
 
+}
+
+// duplexReader reads responses and writes it to another writer while
+// satisfying the reader interface.
+type duplexReader struct {
+	r io.ReadCloser
+	w io.Writer
+}
+
+func (r *duplexReader) Read(p []byte) (n int, err error) {
+	n, err = r.r.Read(p)
+	if err == nil {
+		r.w.Write(p[:n])
+	}
+	return n, err
+}
+
+// Close closes the response.
+func (r *duplexReader) Close() error {
+	return r.r.Close()
+}
+
+// ChunkedResponse represents a response from the server that
+// uses chunking to stream the output.
+type ChunkedResponse struct {
+	dec    *json.Decoder
+	duplex *duplexReader
+	buf    bytes.Buffer
+}
+
+// NewChunkedResponse reads a stream and produces responses from the stream.
+func NewChunkedResponse(r io.Reader) *ChunkedResponse {
+	rc, ok := r.(io.ReadCloser)
+	if !ok {
+		rc = ioutil.NopCloser(r)
+	}
+	resp := &ChunkedResponse{}
+	resp.duplex = &duplexReader{r: rc, w: &resp.buf}
+	resp.dec = json.NewDecoder(resp.duplex)
+	resp.dec.UseNumber()
+	return resp
+}
+
+// NextResponse reads the next line of the stream and returns a response.
+func (r *ChunkedResponse) NextResponse() (*Response, error) {
 	var response Response
-	dec := json.NewDecoder(resp.Body)
-	dec.UseNumber()
-	decErr := dec.Decode(&response)
+	if err := r.dec.Decode(&response); err != nil {
+		if err == io.EOF {
+			return nil, err
+		}
+		// A decoding error happened. This probably means the server crashed
+		// and sent a last-ditch error message to us. Ensure we have read the
+		// entirety of the connection to get any remaining error text.
+		io.Copy(ioutil.Discard, r.duplex)
+		return nil, errors.New(strings.TrimSpace(r.buf.String()))
+	}
 
-	// ignore this error if we got an invalid status code
-	if decErr != nil && decErr.Error() == "EOF" && resp.StatusCode != http.StatusOK {
-		decErr = nil
-	}
-	// If we got a valid decode error, send that back
-	if decErr != nil {
-		return nil, fmt.Errorf("unable to decode json: received status code %d err: %s", resp.StatusCode, decErr)
-	}
-	// If we don't have an error in our json response, and didn't get statusOK
-	// then send back an error
-	if resp.StatusCode != http.StatusOK && response.Error() == nil {
-		return &response, fmt.Errorf("received status code %d from server",
-			resp.StatusCode)
-	}
+	r.buf.Reset()
 	return &response, nil
+}
+
+// Close closes the response.
+func (r *ChunkedResponse) Close() error {
+	return r.duplex.Close()
 }
