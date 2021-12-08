@@ -792,24 +792,17 @@ func (r *TrafficOpsReq) CheckSyncDSState() (UpdateStatus, error) {
 }
 
 // CheckReloadRestart determines the final reload/restart state after all config files are processed.
-func (r *TrafficOpsReq) CheckReloadRestart(data []FileRestartData) (bool, bool, bool, bool, bool, bool) {
-	trafficCtlReload := false
-	sysCtlReload := false
-	ntpdRestart := false
-	teakdRestart := false
-	trafficServerRestart := false
-	remapConfigReload := false
-
+func (r *TrafficOpsReq) CheckReloadRestart(data []FileRestartData) RestartData {
+	rd := RestartData{}
 	for _, changedFile := range data {
-		trafficCtlReload = trafficCtlReload || changedFile.TrafficCtlReload
-		sysCtlReload = sysCtlReload || changedFile.SysCtlReload
-		ntpdRestart = ntpdRestart || changedFile.NtpdRestart
-		teakdRestart = teakdRestart || changedFile.TeakdRestart
-		trafficServerRestart = trafficServerRestart || changedFile.TrafficServerRestart
-		remapConfigReload = remapConfigReload || changedFile.RemapConfigReload
+		rd.TrafficCtlReload = rd.TrafficCtlReload || changedFile.TrafficCtlReload
+		rd.SysCtlReload = rd.SysCtlReload || changedFile.SysCtlReload
+		rd.NtpdRestart = rd.NtpdRestart || changedFile.NtpdRestart
+		rd.TeakdRestart = rd.TeakdRestart || changedFile.TeakdRestart
+		rd.TrafficServerRestart = rd.TrafficServerRestart || changedFile.TrafficServerRestart
+		rd.RemapConfigReload = rd.RemapConfigReload || changedFile.RemapConfigReload
 	}
-
-	return trafficCtlReload, sysCtlReload, ntpdRestart, teakdRestart, trafficServerRestart, remapConfigReload
+	return rd
 }
 
 // ProcessConfigFiles processes all config files retrieved from Traffic Ops.
@@ -881,7 +874,7 @@ func (r *TrafficOpsReq) ProcessConfigFiles() (UpdateStatus, error) {
 		}
 	}
 
-	r.TrafficCtlReload, r.SysCtlReload, r.NtpdRestart, r.TeakdRestart, r.TrafficServerRestart, r.RemapConfigReload = r.CheckReloadRestart(shouldRestartReload.ReloadRestart)
+	r.RestartData = r.CheckReloadRestart(shouldRestartReload.ReloadRestart)
 
 	if 0 < len(r.changedFiles) {
 		log.Infof("Final state: remap.config: %t reload: %t restart: %t ntpd: %t sysctl: %t", r.RemapConfigReload, r.TrafficCtlReload, r.TrafficServerRestart, r.NtpdRestart, r.SysCtlReload)
