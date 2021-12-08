@@ -137,4 +137,14 @@ describe("NewDeliveryServiceComponent", () => {
 	// 	component.cdnObject.setValue({ name: 'testCDN', id: 1 } as CDN);
 	// 	component.dsType.setValue({ name: 'testType', id: 1 } as Type);
 	// });
+
+	it("should match hostnames", async () => {
+		const invalidHostnames: Array<string> = ["h.", "h-", "h-.o", "-h.o"];
+		invalidHostnames.forEach((invalidHostname: string) => void expect(() => component.setDNSBypass(invalidHostname)).toThrow());
+		const validHostnames: Array<string> = ["h", "h.o.s.T.n.a.m.e", "h-O-------s.tNaMe"];
+		expect(() => validHostnames.forEach((hostname: string) => {
+			component.setDNSBypass(hostname);
+			expect(component.deliveryService.dnsBypassCname).toBe(hostname);
+		})).not.toThrow();
+	});
 });

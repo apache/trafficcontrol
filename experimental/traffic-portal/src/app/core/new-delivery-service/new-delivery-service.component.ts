@@ -53,7 +53,7 @@ const VALID_IPV6 = /^((((((([\da-fA-F]{1,4})):){6})((((([\da-fA-F]{1,4})):(([\da
 /**
  * A regular expression that matches a valid hostname
  */
-const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])*(\.[A-z\d]([A-z0-9\-]*[A-z0-9])*)*$/;
+const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])?(\.[A-z\d]([A-z0-9\-]*[A-z0-9])?)*$/;
 
 /**
  * NewDeliveryServiceComponent is the controller for the new Delivery Service
