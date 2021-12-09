@@ -158,46 +158,46 @@ func (p *Postgres) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *s
 }
 
 // GetExpirationInformation returns the expiration information for all SSL Keys.
-func (p *Postgres) GetExpirationInformation(tx *sql.Tx, ctx context.Context, days string) ([]tc.SSLKeyExpirationInformation, bool, error) {
+func (p *Postgres) GetExpirationInformation(tx *sql.Tx, ctx context.Context, days int) ([]tc.SSLKeyExpirationInformation, error) {
 	tvTx, dbCtx, cancelFunc, err := p.beginTransaction(ctx)
 	if err != nil {
-		return []tc.SSLKeyExpirationInformation{}, false, err
+		return []tc.SSLKeyExpirationInformation{}, err
 	}
 	defer p.commitTransaction(tvTx, dbCtx, cancelFunc)
 
 	var fedList []string
 	fedRows, err := tx.Query("SELECT DISTINCT(ds.xml_id) FROM federation_deliveryservice AS fd JOIN deliveryservice AS ds ON ds.id = fd.deliveryservice")
 	if err != nil {
-		return []tc.SSLKeyExpirationInformation{}, false, err
+		return []tc.SSLKeyExpirationInformation{}, err
 	}
 	defer fedRows.Close()
 
 	for fedRows.Next() {
 		var fedString string
 		if err = fedRows.Scan(&fedString); err != nil {
-			return []tc.SSLKeyExpirationInformation{}, false, err
+			return []tc.SSLKeyExpirationInformation{}, err
 		}
 		fedList = append(fedList, fedString)
 	}
 
 	query := "SELECT deliveryservice, cdn, provider, expiration FROM sslkey WHERE version='latest'"
 
-	if days != "" {
-		query = query + " AND expiration <= (now() + '" + days + " days'::interval)"
+	if days != 0 {
+		query = query + fmt.Sprintf(" AND expiration <= (now() + '%d days'::interval)", days)
 	}
 
 	expirationInfos := []tc.SSLKeyExpirationInformation{}
 
 	rows, err := tvTx.Query(query)
 	if err != nil {
-		return []tc.SSLKeyExpirationInformation{}, false, err
+		return []tc.SSLKeyExpirationInformation{}, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var expirationInfo tc.SSLKeyExpirationInformation
-		if err = rows.Scan(&expirationInfo.DeliveryService, &expirationInfo.Cdn, &expirationInfo.Provider, &expirationInfo.Expiration); err != nil {
-			return []tc.SSLKeyExpirationInformation{}, false, err
+		if err = rows.Scan(&expirationInfo.DeliveryService, &expirationInfo.CDN, &expirationInfo.Provider, &expirationInfo.Expiration); err != nil {
+			return []tc.SSLKeyExpirationInformation{}, err
 		}
 		expirationInfo.Federated = false
 		for _, fed := range fedList {
@@ -209,7 +209,7 @@ func (p *Postgres) GetExpirationInformation(tx *sql.Tx, ctx context.Context, day
 		expirationInfos = append(expirationInfos, expirationInfo)
 	}
 
-	return expirationInfos, true, nil
+	return expirationInfos, nil
 }
 
 // PutDeliveryServiceSSLKeys stores the given SSL keys for a delivery service.
@@ -234,7 +234,7 @@ func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *
 
 	encryptedKey, err := util.AESEncrypt(keyJSON, p.aesKey)
 	if err != nil {
-		return errors.New("encrypting keys: " + err.Error())
+		return fmt.Errorf("encrypting keys: %w", err)
 	}
 
 	err = deliveryservice.Base64DecodeCertificate(&key.Certificate)
@@ -243,7 +243,7 @@ func (p *Postgres) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *
 	}
 	expiration, _, err := deliveryservice.ParseExpirationAndSansFromCert([]byte(key.Certificate.Crt), key.Hostname)
 	if err != nil {
-		return errors.New("parsing expiration from certificate: " + err.Error())
+		return fmt.Errorf("parsing expiration from certificate: %w", err)
 	}
 
 	// insert the new ssl keys now

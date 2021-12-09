@@ -45,8 +45,8 @@ func (d *Disabled) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *s
 	return tc.DeliveryServiceSSLKeysV15{}, false, disabledErr
 }
 
-func (d *Disabled) GetExpirationInformation(tx *sql.Tx, ctx context.Context, days string) ([]tc.SSLKeyExpirationInformation, bool, error) {
-	return []tc.SSLKeyExpirationInformation{}, false, disabledErr
+func (d *Disabled) GetExpirationInformation(tx *sql.Tx, ctx context.Context, days int) ([]tc.SSLKeyExpirationInformation, error) {
+	return []tc.SSLKeyExpirationInformation{}, disabledErr
 }
 
 func (d *Disabled) PutDeliveryServiceSSLKeys(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, ctx context.Context) error {

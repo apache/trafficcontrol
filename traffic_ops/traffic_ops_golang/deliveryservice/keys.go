@@ -138,7 +138,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 
 // GetSSlKeyExpirationInformation gets expiration information for all SSL certificates.
 func GetSSlKeyExpirationInformation(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"days"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -149,23 +149,17 @@ func GetSSlKeyExpirationInformation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	daysParam := inf.Params["days"]
-	if daysParam != "" {
-		if _, err := strconv.Atoi(daysParam); err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("days parameter must be an integer"), nil)
-			return
-		}
+	daysParam := 0
+	if days, ok := inf.IntParams["days"]; ok {
+		daysParam = days
 	}
 
-	expirationInfos, ok, err := inf.Vault.GetExpirationInformation(inf.Tx.Tx, r.Context(), daysParam)
+	expirationInfos, err := inf.Vault.GetExpirationInformation(inf.Tx.Tx, r.Context(), daysParam)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys expiration information from Traffic Vault: "+err.Error()))
 		return
 	}
-	if !ok {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys expiration information from Traffic Vault: "))
-		return
-	}
+
 	api.WriteResp(w, r, expirationInfos)
 }
 
