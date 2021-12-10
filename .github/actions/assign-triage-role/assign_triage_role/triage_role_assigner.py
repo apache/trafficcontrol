@@ -12,13 +12,18 @@
 # limitations under the License.
 #
 import os
+import re
 import sys
 from datetime import date, timedelta
 from typing import Optional, Final
 
 import yaml
 from github import TimelineEvent
-from github.GithubException import BadCredentialsException
+from github.Branch import Branch
+from github.Commit import Commit
+from github.ContentFile import ContentFile
+from github.GithubException import BadCredentialsException, GithubException
+from github.InputGitAuthor import InputGitAuthor
 from github.Issue import Issue
 from github.MainClass import Github
 from github.NamedUser import NamedUser
@@ -26,7 +31,7 @@ from github.PaginatedList import PaginatedList
 from github.Repository import Repository
 from yaml import YAMLError
 
-from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ENV_GITHUB_TOKEN, ENV_GITHUB_REPOSITORY, ENV_SINCE_DAYS_AGO, ENV_MINIMUM_COMMITS, ASF_YAML_FILE, APACHE_LICENSE_YAML
+from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ENV_GITHUB_TOKEN, ENV_GITHUB_REPOSITORY, ENV_SINCE_DAYS_AGO, ENV_MINIMUM_COMMITS, ASF_YAML_FILE, APACHE_LICENSE_YAML, ENV_GITHUB_REF_NAME, GIT_AUTHOR_EMAIL_TEMPLATE, ENV_GIT_AUTHOR_NAME
 
 
 class TriageRoleAssigner:
@@ -133,6 +138,50 @@ class TriageRoleAssigner:
 			stream.write(apache_license)
 			yaml.dump(asf_yaml, stream)
 
+	def push_changes(self, target_branch_name: str, source_branch_name: str, commit_message: str) -> Commit:
+		target_branch: Branch = self.repo.get_branch(target_branch_name)
+		sha: str = target_branch.commit.sha
+		source_branch_ref: str = f'refs/heads/{source_branch_name}'
+		self.repo.create_git_ref(source_branch_ref, sha)
+		print(f'Created branch {source_branch_name}')
+
+		with open(ASF_YAML_FILE) as stream:
+			asf_yaml = stream.read()
+
+		asf_yaml_contentfile: ContentFile = self.repo.get_contents(ASF_YAML_FILE, source_branch_ref)
+		kwargs = {'path': ASF_YAML_FILE,
+			'message': commit_message,
+			'content': asf_yaml,
+			'sha': asf_yaml_contentfile.sha,
+			'branch': source_branch_name,
+		}
+		try:
+			git_author_name = self.getenv(ENV_GIT_AUTHOR_NAME)
+			git_author_email = GIT_AUTHOR_EMAIL_TEMPLATE.format(git_author_name=git_author_name)
+			author: InputGitAuthor = InputGitAuthor(name=git_author_name, email=git_author_email)
+			kwargs['author'] = author
+			kwargs['committer'] = author
+		except KeyError:
+			print('Committing using the default author')
+
+		commit: Commit = self.repo.update_file(**kwargs).get('commit')
+		print(f'Updated {ASF_YAML_FILE} on {self.repo.name} branch {source_branch_name}')
+		return commit
+
+	def get_repo_file_contents(self, branch: str) -> str:
+		return self.repo.get_contents(ASF_YAML_FILE,
+			f'refs/heads/{branch}').decoded_content.rstrip().decode()
+
+	def branch_exists(self, branch: str) -> bool:
+		try:
+			self.get_repo_file_contents(branch)
+			return True
+		except GithubException as e:
+			message = e.data.get('message')
+			if not re.match(r'No commit found for the ref', message):
+				raise e
+		return False
+
 	def run(self) -> None:
 		committers: dict[str, None] = self.get_committers()
 		today: date = date.today()
@@ -141,3 +190,10 @@ class TriageRoleAssigner:
 		prs_by_contributor: dict[str, list[(Issue, Issue)]] = self.ones_who_meet_threshold(prs_by_contributor)
 		description: str = f'ATC Collaborators for {today.strftime("%B %Y")}'
 		self.set_collaborators_in_asf_yaml(prs_by_contributor, description)
+
+		source_branch_name: Final[str] = f'collaborators-{today.strftime("%Y-%m")}'
+		commit_message: str = description
+		target_branch_name: str = self.getenv(ENV_GITHUB_REF_NAME)
+		if not self.branch_exists(source_branch_name):
+			self.push_changes(target_branch_name, source_branch_name, commit_message)
+		self.repo.get_git_ref(f'heads/{source_branch_name}')
