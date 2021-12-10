@@ -51,7 +51,12 @@ class TriageRoleAssigner:
 			sys.exit(1)
 		return repo
 
-	def prs_by_contributor(self) -> dict[NamedUser, list[(Issue, Issue)]]:
+	def get_committers(self) -> dict[str, None]:
+		committers: list[str] = sorted([user.login for user in self.repo.get_collaborators() if user.permissions.push])
+		committers_dict: dict[str, None] = {committer: None for committer in committers}
+		return committers_dict
+
+	def prs_by_contributor(self, committers: dict[str, None]) -> dict[NamedUser, list[(Issue, Issue)]]:
 		# Search for PRs and Issues on the parent repo if running on a fork
 		repo_name = self.repo.full_name if self.repo.parent is None else self.repo.parent.full_name
 
@@ -77,10 +82,13 @@ class TriageRoleAssigner:
 			if pull_request is None:
 				raise Exception(f'Unable to find a linked Pull Request for Issue {self.repo.full_name}#{linked_issue.number}')
 			author: NamedUser = pull_request.user
+			if author.login in committers:
+				continue
 			if author not in prs_by_contributor:
 				prs_by_contributor[author] = list[(Issue, Issue)]()
 			prs_by_contributor[author].append((pull_request, linked_issue))
 		return prs_by_contributor
 
 	def run(self) -> None:
-		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = self.prs_by_contributor()
+		committers: dict[str, None] = self.get_committers()
+		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = self.prs_by_contributor(committers)
