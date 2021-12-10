@@ -21,6 +21,10 @@ on:
   # run manually
   workflow_dispatch:
     inputs:
+      minimum-commits:
+        description: Minimum Issue-closing commit count
+        required: true
+        default: '2'
       since-days-ago:
         description: Count commits starting X days ago
         required: true
@@ -50,4 +54,5 @@ jobs:
         env:
           GIT_AUTHOR_NAME: asfgit
           GITHUB_TOKEN: ${{ github.token }}
+          MINIMUM_COMMITS: '${{ github.event.inputs.minimum-commits }}'
           SINCE_DAYS_AGO: '${{ github.event.inputs.since-days-ago }}'

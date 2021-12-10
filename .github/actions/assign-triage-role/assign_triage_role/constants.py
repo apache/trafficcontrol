@@ -14,6 +14,7 @@ from typing import Final
 
 ENV_GITHUB_REPOSITORY: Final[str] = 'GITHUB_REPOSITORY'
 ENV_GITHUB_TOKEN: Final[str] = 'GITHUB_TOKEN'
+ENV_MINIMUM_COMMITS: Final[str] = 'MINIMUM_COMMITS'
 ENV_SINCE_DAYS_AGO: Final[str] = 'SINCE_DAYS_AGO'
 
 GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE: Final[str] = 'cross-referenced'

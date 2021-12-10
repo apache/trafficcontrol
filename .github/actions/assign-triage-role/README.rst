@@ -29,6 +29,9 @@ Environment Variables
 +----------------------------+----------------------------------------------------------------------------------+
 | ``GIT_AUTHOR_NAME``        | Optional. The username to associate with the commit that updates the Go version. |
 +----------------------------+----------------------------------------------------------------------------------+
+| ``MINIMUM_COMMITS``        | Required. The lowest number of Issue-closing Pull Requests a Contributor can     |
+|                            | have in order to be granted *Collaborator* status.                               |
++----------------------------+----------------------------------------------------------------------------------+
 | ``SINCE_DAYS_AGO``         | The number of days ago to start counting Issue-closing Commits since             |
 +----------------------------+----------------------------------------------------------------------------------+
 
@@ -50,4 +53,5 @@ Example usage
 	  env:
 	    GIT_AUTHOR_NAME: asfgit
 	    GITHUB_TOKEN: ${{ github.token }}
+	    MINIMUM_COMMITS: 5
 	    SINCE_DAYS_AGO: 45

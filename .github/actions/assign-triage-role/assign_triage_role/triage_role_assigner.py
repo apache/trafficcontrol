@@ -24,12 +24,13 @@ from github.NamedUser import NamedUser
 from github.PaginatedList import PaginatedList
 from github.Repository import Repository
 
-from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ENV_GITHUB_TOKEN, ENV_GITHUB_REPOSITORY, ENV_SINCE_DAYS_AGO
+from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ENV_GITHUB_TOKEN, ENV_GITHUB_REPOSITORY, ENV_SINCE_DAYS_AGO, ENV_MINIMUM_COMMITS
 
 
 class TriageRoleAssigner:
 	gh: Github
 	repo: Repository
+	minimum_commits: int
 	since_days_ago: int
 
 	def __init__(self, gh: Github) -> None:
@@ -37,6 +38,7 @@ class TriageRoleAssigner:
 		repo_name: str = self.get_repo_name()
 		self.repo = self.get_repo(repo_name)
 
+		self.minimum_commits = int(self.getenv(ENV_MINIMUM_COMMITS))
 		self.since_days_ago = int(self.getenv(ENV_SINCE_DAYS_AGO))
 
 	@staticmethod
@@ -93,8 +95,24 @@ class TriageRoleAssigner:
 			prs_by_contributor[author].append((pull_request, linked_issue))
 		return prs_by_contributor
 
+	def ones_who_meet_threshold(self, prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]]) -> dict[str, list[(Issue, Issue)]]:
+		prs_by_contributor: dict[str, list[(Issue, Issue)]] = {
+			# use only the username as the dict key
+			contributor.login: pull_requests
+			# sort contributors by commit count
+			for contributor, pull_requests in sorted(
+				prs_by_contributor.items(),
+				key=lambda item: len(item[1]),
+				# highest commit count first
+				reverse=True)
+			# only include contributors who had at least self.minimum_commits Issue-closing Pull Requests merged in the past self.since_days_ago days
+			if len(pull_requests) >= self.minimum_commits
+		}
+		return prs_by_contributor
+
 	def run(self) -> None:
 		committers: dict[str, None] = self.get_committers()
 		today: date = date.today()
 		since_day: date = today - timedelta(days=self.since_days_ago)
 		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = self.prs_by_contributor(since_day, today, committers)
+		prs_by_contributor: dict[str, list[(Issue, Issue)]] = self.ones_who_meet_threshold(prs_by_contributor)
