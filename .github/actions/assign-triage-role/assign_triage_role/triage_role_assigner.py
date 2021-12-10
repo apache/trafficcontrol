@@ -22,16 +22,18 @@ from github import TimelineEvent
 from github.Branch import Branch
 from github.Commit import Commit
 from github.ContentFile import ContentFile
-from github.GithubException import BadCredentialsException, GithubException
+from github.GithubException import BadCredentialsException, GithubException, UnknownObjectException
 from github.InputGitAuthor import InputGitAuthor
 from github.Issue import Issue
+from github.Label import Label
 from github.MainClass import Github
 from github.NamedUser import NamedUser
 from github.PaginatedList import PaginatedList
+from github.PullRequest import PullRequest
 from github.Repository import Repository
 from yaml import YAMLError
 
-from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ENV_GITHUB_TOKEN, ENV_GITHUB_REPOSITORY, ENV_SINCE_DAYS_AGO, ENV_MINIMUM_COMMITS, ASF_YAML_FILE, APACHE_LICENSE_YAML, ENV_GITHUB_REF_NAME, GIT_AUTHOR_EMAIL_TEMPLATE, ENV_GIT_AUTHOR_NAME, SINGLE_PR_TEMPLATE_FILE, SINGLE_CONTRIBUTOR_TEMPLATE_FILE, PR_TEMPLATE_FILE, EMPTY_CONTRIB_LIST_LIST, EMPTY_LIST_OF_CONTRIBUTORS, CONGRATS, EXPIRE
+from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ENV_GITHUB_TOKEN, ENV_GITHUB_REPOSITORY, ENV_SINCE_DAYS_AGO, ENV_MINIMUM_COMMITS, ASF_YAML_FILE, APACHE_LICENSE_YAML, ENV_GITHUB_REF_NAME, GIT_AUTHOR_EMAIL_TEMPLATE, ENV_GIT_AUTHOR_NAME, SINGLE_PR_TEMPLATE_FILE, SINGLE_CONTRIBUTOR_TEMPLATE_FILE, PR_TEMPLATE_FILE, EMPTY_CONTRIB_LIST_LIST, EMPTY_LIST_OF_CONTRIBUTORS, CONGRATS, EXPIRE, ENV_GITHUB_REPOSITORY_OWNER
 
 
 class TriageRoleAssigner:
@@ -228,6 +230,36 @@ class TriageRoleAssigner:
 		print('Templated PR body')
 		return pr_body
 
+	def create_pr(self, prs_by_contributor: dict[str, list[(Issue, Issue)]], commit_message: str, owner: str,
+			source_branch_name: str, target_branch: str, since_day: date, today: date) -> None:
+		prs: PaginatedList = self.gh.search_issues(f'repo:{self.repo.full_name} is:pr is:open head:{source_branch_name}')
+		for list_item in prs:
+			pr: PullRequest = self.repo.get_pull(list_item.number)
+			if pr.head.ref != source_branch_name:
+				continue
+			print(f'Pull request for branch {source_branch_name} already exists:\n{pr.html_url}')
+			return
+
+		pr_body: str = self.get_pr_body(prs_by_contributor, since_day, today)
+		pr: PullRequest = self.repo.create_pull(
+			title=commit_message,
+			body=pr_body,
+			head=f'{owner}:{source_branch_name}',
+			base=target_branch,
+			maintainer_can_modify=True,
+		)
+		try:
+			collaborators_label: Label = self.repo.get_label('collaborators')
+			process_label: Label = self.repo.get_label('process')
+			pr.add_to_labels(collaborators_label, process_label)
+		except UnknownObjectException:
+			print('Unable to find a label named "collaborators".')
+		print(f'Created pull request {pr.html_url}')
+
+	def get_repo_owner(self) -> str:
+		repo_name: str = self.getenv(ENV_GITHUB_REPOSITORY_OWNER)
+		return repo_name
+
 	def run(self) -> None:
 		committers: dict[str, None] = self.get_committers()
 		today: date = date.today()
@@ -243,3 +275,5 @@ class TriageRoleAssigner:
 		if not self.branch_exists(source_branch_name):
 			self.push_changes(target_branch_name, source_branch_name, commit_message)
 		self.repo.get_git_ref(f'heads/{source_branch_name}')
+		owner: str = self.get_repo_owner()
+		self.create_pr(prs_by_contributor, commit_message, owner, source_branch_name, target_branch_name, since_day, today)
