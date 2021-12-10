@@ -31,7 +31,7 @@ from github.PaginatedList import PaginatedList
 from github.Repository import Repository
 from yaml import YAMLError
 
-from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ENV_GITHUB_TOKEN, ENV_GITHUB_REPOSITORY, ENV_SINCE_DAYS_AGO, ENV_MINIMUM_COMMITS, ASF_YAML_FILE, APACHE_LICENSE_YAML, ENV_GITHUB_REF_NAME, GIT_AUTHOR_EMAIL_TEMPLATE, ENV_GIT_AUTHOR_NAME
+from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ENV_GITHUB_TOKEN, ENV_GITHUB_REPOSITORY, ENV_SINCE_DAYS_AGO, ENV_MINIMUM_COMMITS, ASF_YAML_FILE, APACHE_LICENSE_YAML, ENV_GITHUB_REF_NAME, GIT_AUTHOR_EMAIL_TEMPLATE, ENV_GIT_AUTHOR_NAME, SINGLE_PR_TEMPLATE_FILE, SINGLE_CONTRIBUTOR_TEMPLATE_FILE, PR_TEMPLATE_FILE, EMPTY_CONTRIB_LIST_LIST, EMPTY_LIST_OF_CONTRIBUTORS, CONGRATS, EXPIRE
 
 
 class TriageRoleAssigner:
@@ -181,6 +181,52 @@ class TriageRoleAssigner:
 			if not re.match(r'No commit found for the ref', message):
 				raise e
 		return False
+
+	@staticmethod
+	def list_of_contributors(prs_by_contributor: dict[str, list[(Issue, Issue)]], today: date) -> tuple[str, str, str]:
+		if len(prs_by_contributor) > 0:
+			joiner: str = ', ' if len(prs_by_contributor) > 2 else ' '
+			list_of_contributors: list[str] = [f'@{contributor}' for contributor in prs_by_contributor.keys()]
+			if len(list_of_contributors) > 1:
+				list_of_contributors[-1] = f'and {list_of_contributors[-1]}'
+			list_of_contributors: str = joiner.join(list_of_contributors)
+			congrats: str = CONGRATS
+			expire: str = EXPIRE.format(MONTH=today.strftime('%B'))
+		else:
+			list_of_contributors: str = EMPTY_LIST_OF_CONTRIBUTORS
+			congrats: str = ''
+			expire: str = ''
+
+		return list_of_contributors, congrats, expire
+
+	def get_pr_body(self, prs_by_contributor: dict[str, list[(Issue, Issue)]], since_day: date, today: date) -> str:
+		with open(os.path.join(os.path.dirname(__file__), SINGLE_PR_TEMPLATE_FILE)) as stream:
+			pr_line_template = stream.read()
+		with open(os.path.join(os.path.dirname(__file__), SINGLE_CONTRIBUTOR_TEMPLATE_FILE)) as stream:
+			contrib_list_template = stream.read()
+		with open(os.path.join(os.path.dirname(__file__), PR_TEMPLATE_FILE)) as stream:
+			pr_template = stream.read()
+
+		contrib_list_list: str = str()
+		for contributor, pr_tuples in prs_by_contributor.items():
+			pr_list: str = ''
+			for pr, linked_issue in pr_tuples:
+				pr_line = pr_line_template.format(ISSUE_NUMBER=linked_issue.number, PR_NUMBER=pr.number)
+				pr_list += pr_line + '\n'
+			contrib_list: str = contrib_list_template.format(CONTRIBUTOR_USERNAME=contributor, CONTRIBUTION_COUNT=len(pr_tuples), PR_LIST=pr_list)
+			contrib_list_list += contrib_list + '\n'
+		if contrib_list_list == '':
+			contrib_list_list = EMPTY_CONTRIB_LIST_LIST
+
+		list_of_contributors, congrats, expire = self.list_of_contributors(prs_by_contributor, today)
+
+		pr_body: str = pr_template.format(CONTRIB_LIST_LIST=contrib_list_list, MONTH=today.strftime('%B'), CONGRATS=congrats, LIST_OF_CONTRIBUTORS=list_of_contributors, EXPIRE=expire, ISSUE_THRESHOLD=self.minimum_commits, SINCE_DAYS_AGO=self.since_days_ago, SINCE_DAY=since_day, TODAY=today)
+		# If on a fork, do not ping users or reference Issues or Pull Requests
+		if self.repo.parent is not None:
+			pr_body = re.sub(r'@(?!trafficcontrol)([A-Za-z0-9]+)', r'＠\1', pr_body)
+			pr_body = re.sub(r'#([0-9])', r'⌗\1', pr_body)
+		print('Templated PR body')
+		return pr_body
 
 	def run(self) -> None:
 		committers: dict[str, None] = self.get_committers()

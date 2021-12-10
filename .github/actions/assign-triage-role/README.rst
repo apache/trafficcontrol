@@ -55,3 +55,12 @@ Example usage
 	    GITHUB_TOKEN: ${{ github.token }}
 	    MINIMUM_COMMITS: 5
 	    SINCE_DAYS_AGO: 45
+
+Tests
+=====
+
+To run the unit tests:
+
+.. code-block:: shell
+
+	python3 -m unittest discover ./tests

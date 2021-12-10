@@ -1,0 +1,1 @@
+    - #{ISSUE_NUMBER}, fixed by #{PR_NUMBER}
