@@ -29,6 +29,8 @@ Environment Variables
 +----------------------------+----------------------------------------------------------------------------------+
 | ``GIT_AUTHOR_NAME``        | Optional. The username to associate with the commit that updates the Go version. |
 +----------------------------+----------------------------------------------------------------------------------+
+| ``SINCE_DAYS_AGO``         | The number of days ago to start counting Issue-closing Commits since             |
++----------------------------+----------------------------------------------------------------------------------+
 
 Outputs
 =======
@@ -48,3 +50,4 @@ Example usage
 	  env:
 	    GIT_AUTHOR_NAME: asfgit
 	    GITHUB_TOKEN: ${{ github.token }}
+	    SINCE_DAYS_AGO: 45

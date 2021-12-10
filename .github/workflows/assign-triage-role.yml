@@ -20,6 +20,11 @@ name: Assign Triage Role
 on:
   # run manually
   workflow_dispatch:
+    inputs:
+      since-days-ago:
+        description: Count commits starting X days ago
+        required: true
+        default: '31'
   schedule:
     # 14:00 UTC on the first day of each month
     - cron: '0 14 1 * *'
@@ -45,3 +50,4 @@ jobs:
         env:
           GIT_AUTHOR_NAME: asfgit
           GITHUB_TOKEN: ${{ github.token }}
+          SINCE_DAYS_AGO: '${{ github.event.inputs.since-days-ago }}'
