@@ -944,7 +944,7 @@ The following is an example of the command line parameters set in :file:`/opt/tr
 
 	CATALINA_OPTS="\
 	-server -Xms2g -Xmx8g \
-	-Dlog4j.configuration=file://$CATALINA_BASE/conf/log4j.properties \
+	-Dlog4j.configuration=$CATALINA_BASE/conf/log4j.properties \
 	-Djava.library.path=/usr/lib64 \
 	-XX:+UseG1GC \
 	-XX:+UnlockExperimentalVMOptions \

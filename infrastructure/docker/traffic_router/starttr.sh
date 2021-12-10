@@ -30,7 +30,7 @@ export CATALINA_BASE=/opt/traffic_router
 export CATALINA_OUT=/opt/tomcat/logs/catalina.log
 export CATALINA_OPTS="\
   -server -Xms512m -Xmx1g \
-  -Dlog4j.configuration=file://$CATALINA_BASE/conf/log4j.properties \
+  -Dlog4j.configuration=$CATALINA_BASE/conf/log4j.properties \
   -Djava.library.path=/usr/lib64 \
   -Dorg.apache.catalina.connector.Response.ENFORCE_ENCODING_IN_GET_WRITER=false \
   -XX:+UseG1GC \
