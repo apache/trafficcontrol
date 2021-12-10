@@ -10,22 +10,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import os
-import sys
+from typing import Final
 
-from github.MainClass import Github
+ENV_GITHUB_REPOSITORY: Final[str] = 'GITHUB_REPOSITORY'
+ENV_GITHUB_TOKEN: Final[str] = 'GITHUB_TOKEN'
 
-from assign_triage_role.constants import ENV_GITHUB_TOKEN
-from assign_triage_role.triage_role_assigner import TriageRoleAssigner
-
-
-def main() -> None:
-	try:
-		github_token: str = os.environ[ENV_GITHUB_TOKEN]
-	except KeyError:
-		print(f'Environment variable {ENV_GITHUB_TOKEN} must be defined.')
-		sys.exit(1)
-	gh = Github(login_or_token=github_token)
-	TriageRoleAssigner(gh).run()
-
-main()
+GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE: Final[str] = 'cross-referenced'
