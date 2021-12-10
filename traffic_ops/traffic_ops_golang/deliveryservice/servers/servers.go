@@ -564,26 +564,28 @@ func validateDSSAssignments(tx *sql.Tx, ds DSInfo, serverInfos []tc.ServerInfo, 
 				}
 			}
 		}
-		// Prevent the user from deleting all the servers in an active DS
-		if len(ids) == 0 {
+		// Prevent the user from deleting all the servers in an active, non-topology-based DS
+		if len(ids) == 0 && ds.Topology == nil {
 			return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
 		}
 		// prevent the user from deleting all ORG servers from an active, MSO-enabled DS
 		if ds.UseMultiSiteOrigin && newOrgCount < 1 {
 			return fmt.Errorf("this server assignment leaves Active, MSO-enabled Delivery Service #%d without any '%s' or '%s' %s servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported, tc.OriginTypeName), nil, http.StatusConflict
 		}
-		// The following check is necessary because of the following:
-		// Consider a brand new active DS that has no server assignments.
-		// Now, you wish to assign an online/ reported ORG server to it.
-		// Since this is a new DS and it didnt have any "pre existing" online/ reported EDGEs, this should be possible.
-		// However, if that DS had a couple of online/ reported EDGEs assigned to it, and now if you wanted to "replace"
-		// that assignment with the new assignment of an online/ reported ORG, this should be prohibited by TO.
-		currentlyHasAvailableEdgesAssigned, err := hasAvailableEdgesCurrentlyAssigned(tx, ds.ID)
-		if err != nil {
-			return nil, fmt.Errorf("checking for pre existing ONLINE/ REPORTED EDGES: %v", err), http.StatusInternalServerError
-		}
-		if (currentlyHasAvailableEdgesAssigned && newAvailableEdgeCount < 1) || !anyAvailableServers {
-			return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+		if ds.Topology == nil {
+			// The following check is necessary because of the following:
+			// Consider a brand new active DS that has no server assignments.
+			// Now, you wish to assign an online/ reported ORG server to it.
+			// Since this is a new DS and it didnt have any "pre existing" online/ reported EDGEs, this should be possible.
+			// However, if that DS had a couple of online/ reported EDGEs assigned to it, and now if you wanted to "replace"
+			// that assignment with the new assignment of an online/ reported ORG, this should be prohibited by TO.
+			currentlyHasAvailableEdgesAssigned, err := hasAvailableEdgesCurrentlyAssigned(tx, ds.ID)
+			if err != nil {
+				return nil, fmt.Errorf("checking for pre existing ONLINE/ REPORTED EDGES: %v", err), http.StatusInternalServerError
+			}
+			if (currentlyHasAvailableEdgesAssigned && newAvailableEdgeCount < 1) || !anyAvailableServers {
+				return fmt.Errorf("this server assignment leaves Active Delivery Service #%d without any '%s' or '%s' servers", ds.ID, tc.CacheStatusOnline, tc.CacheStatusReported), nil, http.StatusConflict
+			}
 		}
 	}
 

@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6255](https://github.com/apache/trafficcontrol/issues/6255) - Unreadable Prod Mode CDN Notifications in Traffic Portal
 - Fixed broken `GET /cdns/routing` Traffic Ops API
 - [#6259](https://github.com/apache/trafficcontrol/issues/6259) - Traffic Portal No Longer Allows Spaces in Server Object "Router Port Name"
+- [#6392](https://github.com/apache/trafficcontrol/issues/6392) - Traffic Ops prevents assigning ORG servers to topology-based delivery services (as well as a number of other valid operations being prohibited by "last server assigned to DS" validations which don't apply to topology-based delivery services)
 - [#6175](https://github.com/apache/trafficcontrol/issues/6175) - POST request to /api/4.0/phys_locations accepts mismatch values for regionName.
 - [#6285](https://github.com/apache/trafficcontrol/issues/6285) - The Traffic Ops Postinstall script will work in CentOS 7, even if Python 3 is installed
 - [#5373](https://github.com/apache/trafficcontrol/issues/5373) - Traffic Monitor logs not consistent
@@ -47,6 +48,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Changed Invalidation Jobs throughout (TO, TP, T3C, etc.) to account for the ability to do both REFRESH and REFETCH requests for resources.
 - The `admin` Role is now always guaranteed to exist, and can't be deleted or modified.
 - Updated `t3c-apply` to reduce mutable state in `TrafficOpsReq` struct.
+- Updated Golang dependencies
 
 ### Deprecated
 - Deprecated the endpoints and docs associated with `api_capability`.

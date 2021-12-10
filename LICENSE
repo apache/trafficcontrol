@@ -637,3 +637,8 @@ This product bundles google.golang.org/protobuf, which is available under a BSD-
 @vendor/google.golang.org/protobuf/*
 ./vendor/google.golang.org/protobuf/LICENSE
 Refer to the above license for the full text.
+
+This product bundles go.uber.org/atomic, which is available under an MIT license.
+@vendor/go.uber.org/atomic/*
+./vendor/go.uber.org/atomic/LICENSE.txt
+Refer to the above license for the full text.
