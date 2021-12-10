@@ -21,6 +21,7 @@ package parameter
 
 import (
 	"errors"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"net/http"
 	"strconv"
 	"time"
@@ -31,7 +32,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
@@ -175,8 +175,14 @@ func (param *TOParameter) Read(h http.Header, useIMS bool) ([]interface{}, error
 		if err = rows.StructScan(&p); err != nil {
 			return nil, nil, errors.New("scanning " + param.GetType() + ": " + err.Error()), http.StatusInternalServerError, nil
 		}
-		if p.Secure != nil && *p.Secure && param.ReqInfo.User.PrivLevel < auth.PrivLevelAdmin {
-			p.Value = &HiddenField
+		if p.Secure != nil && *p.Secure {
+			if param.ReqInfo.Config.RoleBasedPermissions {
+				if !param.ReqInfo.User.Can("PARAMETER-SECURE:READ") {
+					p.Value = &HiddenField
+				}
+			} else if param.ReqInfo.User.PrivLevel < auth.PrivLevelAdmin {
+				p.Value = &HiddenField
+			}
 		}
 		params = append(params, p)
 	}
