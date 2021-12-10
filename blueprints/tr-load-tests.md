@@ -65,7 +65,7 @@ No Traffic Portal impact is anticipated.
 <!--
 *How* will this impact Traffic Ops (at a high level)?
 -->
-The Operations-level TR Ultimate Test Harness user will update the status of any Traffic Router that is currently undergoing load testing to `"OFFLINE"` in Traffic Ops. It should also update the status of that Traffic Router to its previous status once the load testing is complete, regardless of whether the test failed or succeeded.
+No Traffic Ops impact is anticipated.
 
 #### REST API Impact
 <!--
@@ -257,7 +257,7 @@ Can the changes be easily automated?
 Do the changes have known limitations or risks that operators should be made aware of?
 Will the changes introduce new steps to be followed for existing operations?
 -->
-Needless to say, the Traffic Router Ultimate Test Harness should not be run against a Traffic Router that is simultaneously being used to route production traffic. In order to avoid this but still test a Traffic Router instance, an operator operator may choose to set the [Status](https://traffic-control-cdn.readthedocs.io/en/RELEASE-6.0.0/glossary.html#term-Statuses) of the Traffic Router to `ADMIN_DOWN` or `OFFLINE` in Traffic Ops.
+Needless to say, the Traffic Router Ultimate Test Harness should not be run against a Traffic Router that is simultaneously being used to route production traffic. In order to avoid this. the Traffic Router Ultimate Test Harness should only be run in non-production environments.
 
 ### Developer Impact
 <!--
