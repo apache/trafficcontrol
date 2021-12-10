@@ -18,3 +18,5 @@ ENV_MINIMUM_COMMITS: Final[str] = 'MINIMUM_COMMITS'
 ENV_SINCE_DAYS_AGO: Final[str] = 'SINCE_DAYS_AGO'
 
 GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE: Final[str] = 'cross-referenced'
+ASF_YAML_FILE: Final[str] = '.asf.yaml'
+APACHE_LICENSE_YAML: Final[str] = 'templates/apache_license.yml'

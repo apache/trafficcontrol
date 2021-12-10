@@ -14,8 +14,9 @@
 import os
 import sys
 from datetime import date, timedelta
-from typing import Optional
+from typing import Optional, Final
 
+import yaml
 from github import TimelineEvent
 from github.GithubException import BadCredentialsException
 from github.Issue import Issue
@@ -23,8 +24,9 @@ from github.MainClass import Github
 from github.NamedUser import NamedUser
 from github.PaginatedList import PaginatedList
 from github.Repository import Repository
+from yaml import YAMLError
 
-from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ENV_GITHUB_TOKEN, ENV_GITHUB_REPOSITORY, ENV_SINCE_DAYS_AGO, ENV_MINIMUM_COMMITS
+from assign_triage_role.constants import GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ENV_GITHUB_TOKEN, ENV_GITHUB_REPOSITORY, ENV_SINCE_DAYS_AGO, ENV_MINIMUM_COMMITS, ASF_YAML_FILE, APACHE_LICENSE_YAML
 
 
 class TriageRoleAssigner:
@@ -110,9 +112,32 @@ class TriageRoleAssigner:
 		}
 		return prs_by_contributor
 
+	def set_collaborators_in_asf_yaml(self, prs_by_contributor: dict[str, list[(Issue, Issue)]], description: str):
+		collaborators: list[str] = [contributor for contributor in prs_by_contributor]
+		with open(ASF_YAML_FILE) as stream:
+			github_key: Final[str] = 'github'
+			collaborators_key: Final[str] = 'collaborators'
+			try:
+				asf_yaml: dict[str, dict] = yaml.safe_load(stream)
+			except YAMLError as e:
+				print(f'Could not load YAML file {ASF_YAML_FILE}: {e}')
+				sys.exit(1)
+		if github_key not in asf_yaml:
+			asf_yaml[github_key] = dict[str, dict]()
+		asf_yaml[github_key][collaborators_key] = collaborators
+
+		with open(os.path.join(os.path.dirname(__file__), APACHE_LICENSE_YAML)) as stream:
+			apache_license = stream.read().format(DESCRIPTION=description, ISSUE_THRESHOLD=self.minimum_commits, SINCE_DAYS_AGO=self.since_days_ago)
+
+		with open(ASF_YAML_FILE, 'w') as stream:
+			stream.write(apache_license)
+			yaml.dump(asf_yaml, stream)
+
 	def run(self) -> None:
 		committers: dict[str, None] = self.get_committers()
 		today: date = date.today()
 		since_day: date = today - timedelta(days=self.since_days_ago)
 		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = self.prs_by_contributor(since_day, today, committers)
 		prs_by_contributor: dict[str, list[(Issue, Issue)]] = self.ones_who_meet_threshold(prs_by_contributor)
+		description: str = f'ATC Collaborators for {today.strftime("%B %Y")}'
+		self.set_collaborators_in_asf_yaml(prs_by_contributor, description)
