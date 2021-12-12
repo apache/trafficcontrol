@@ -81,7 +81,9 @@ Go is a compiled language so any local changes will require you to CTRL-C the co
 
 To cross compile the code in windows to generate binaryt to run on linux, Please replace GOARCH for architecture to build
 
-`env GOOS=linux GOARCH=arm64 go build && ./traffic_ops_golang -cfg $HOME/cdn.conf -dbcfg ../app/conf/development/database.conf`
+`env GOOS=linux GOARCH=arm64 go build `
+
+Once binary generated, can be copied into linux machine to run
 
 
 
