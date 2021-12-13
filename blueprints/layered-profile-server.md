@@ -288,7 +288,6 @@ No impact
 These changes will affect the Snapshot generation (both crconfig and monitoring). Even though that is more of a TO impact.
 Reason being that Snapshots and Monitoring Configurations for a CDN include Profile and Parameter information for the servers, Traffic Monitors, and Traffic Routersz.
 
-
 ### Traffic Stats Impact
 No impact
 
@@ -310,7 +309,7 @@ We do not anticipate any impact on security.
 ### Upgrade Impact
 - A Database Migration to:
   - drop profile column in existing server table
-  - insert existing server and DS profiles along with their order into the new table(server_profiles)
+  - insert existing server profiles along with their order into the new table(server_profiles)
 
 ### Operations Impact
 The profile-parameter relationship will change based on new sets of profile and Operations will have to learn on how to assign profile order to a server.
