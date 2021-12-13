@@ -10,6 +10,11 @@ github.com/GehirnInc/crypt
 github.com/GehirnInc/crypt/common
 github.com/GehirnInc/crypt/internal
 github.com/GehirnInc/crypt/md5_crypt
+# github.com/Shopify/sarama v1.27.2
+## explicit; go 1.13
+github.com/Shopify/sarama
+# github.com/andybalholm/brotli v1.0.1
+## explicit; go 1.12
 # github.com/asaskevich/govalidator v0.0.0-20180319081651-7d2e70ef918f
 ## explicit
 github.com/asaskevich/govalidator
@@ -35,12 +40,24 @@ github.com/cihub/seelog/archive
 github.com/cihub/seelog/archive/gzip
 github.com/cihub/seelog/archive/tar
 github.com/cihub/seelog/archive/zip
+# github.com/davecgh/go-spew v1.1.1
+## explicit
+github.com/davecgh/go-spew/spew
 # github.com/dchest/siphash v1.1.0
 ## explicit
 github.com/dchest/siphash
 # github.com/dgrijalva/jwt-go v3.2.1-0.20190620180102-5e25c22bd5d6+incompatible
 ## explicit
 github.com/dgrijalva/jwt-go
+# github.com/eapache/go-resiliency v1.2.0
+## explicit
+github.com/eapache/go-resiliency/breaker
+# github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21
+## explicit
+github.com/eapache/go-xerial-snappy
+# github.com/eapache/queue v1.1.0
+## explicit
+github.com/eapache/queue
 # github.com/fsnotify/fsnotify v1.4.9 => github.com/fsnotify/fsnotify v1.3.0
 ## explicit
 github.com/fsnotify/fsnotify
@@ -72,6 +89,8 @@ github.com/go-ldap/ldap/v3
 ## explicit
 github.com/go-ozzo/ozzo-validation
 github.com/go-ozzo/ozzo-validation/is
+# github.com/gofiber/fiber/v2 v2.3.2
+## explicit; go 1.14
 # github.com/gofrs/flock v0.7.2-0.20190320160742-5135e617513b
 ## explicit
 github.com/gofrs/flock
@@ -87,6 +106,9 @@ github.com/golang-migrate/migrate/v4/source/httpfs
 # github.com/golang/protobuf v1.4.3
 ## explicit; go 1.9
 github.com/golang/protobuf/proto
+# github.com/golang/snappy v0.0.1
+## explicit
+github.com/golang/snappy
 # github.com/google/uuid v1.1.2
 ## explicit
 github.com/google/uuid
@@ -96,6 +118,9 @@ github.com/hashicorp/errwrap
 # github.com/hashicorp/go-multierror v1.1.0
 ## explicit; go 1.14
 github.com/hashicorp/go-multierror
+# github.com/hashicorp/go-uuid v1.0.2
+## explicit
+github.com/hashicorp/go-uuid
 # github.com/hydrogen18/stoppableListener v0.0.0-20151210151943-dadc9ccc400c
 ## explicit
 github.com/hydrogen18/stoppableListener
@@ -104,6 +129,10 @@ github.com/hydrogen18/stoppableListener
 github.com/influxdata/influxdb/client/v2
 github.com/influxdata/influxdb/models
 github.com/influxdata/influxdb/pkg/escape
+# github.com/jcmturner/gofork v1.0.0
+## explicit
+github.com/jcmturner/gofork/encoding/asn1
+github.com/jcmturner/gofork/x/crypto/pbkdf2
 # github.com/jmoiron/sqlx v1.2.0
 ## explicit
 github.com/jmoiron/sqlx
@@ -114,6 +143,13 @@ github.com/json-iterator/go
 # github.com/kelseyhightower/envconfig v1.3.1-0.20180308190516-b2c5c876e265
 ## explicit
 github.com/kelseyhightower/envconfig
+# github.com/klauspost/compress v1.11.6
+## explicit; go 1.13
+github.com/klauspost/compress/fse
+github.com/klauspost/compress/huff0
+github.com/klauspost/compress/snappy
+github.com/klauspost/compress/zstd
+github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/kylelemons/godebug v1.1.1-0.20201107061927-e693023230a4
 ## explicit; go 1.11
 github.com/kylelemons/godebug/diff
@@ -190,11 +226,24 @@ github.com/onsi/gomega/types
 # github.com/pborman/getopt/v2 v2.1.0
 ## explicit; go 1.13
 github.com/pborman/getopt/v2
+# github.com/pierrec/lz4 v2.5.2+incompatible
+## explicit
+github.com/pierrec/lz4
+github.com/pierrec/lz4/internal/xxh32
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
+# github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0
+## explicit
+github.com/rcrowley/go-metrics
 # github.com/stretchr/testify v1.6.1
 ## explicit; go 1.13
+# github.com/valyala/bytebufferpool v1.0.0
+## explicit
+# github.com/valyala/fasthttp v1.19.0
+## explicit; go 1.11
+# github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
+## explicit
 # go.etcd.io/bbolt v1.3.5
 ## explicit; go 1.12
 go.etcd.io/bbolt
@@ -206,7 +255,7 @@ golang.org/x/crypto/md4
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
-# golang.org/x/net v0.0.0-20211104170005-ce137452f963
+# golang.org/x/net v0.0.0-20211116231205-47ca1ff31462
 ## explicit; go 1.17
 golang.org/x/net/bpf
 golang.org/x/net/html
@@ -218,8 +267,10 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/iana
 golang.org/x/net/internal/socket
+golang.org/x/net/internal/socks
 golang.org/x/net/ipv4
 golang.org/x/net/ipv6
+golang.org/x/net/proxy
 golang.org/x/net/publicsuffix
 # golang.org/x/sys v0.0.0-20211103235746-7861aae1554b
 ## explicit; go 1.17
@@ -283,6 +334,48 @@ google.golang.org/protobuf/runtime/protoimpl
 # gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 ## explicit
 gopkg.in/DATA-DOG/go-sqlmock.v1
+# gopkg.in/jcmturner/aescts.v1 v1.0.1
+## explicit
+gopkg.in/jcmturner/aescts.v1
+# gopkg.in/jcmturner/dnsutils.v1 v1.0.1
+## explicit
+gopkg.in/jcmturner/dnsutils.v1
+# gopkg.in/jcmturner/gokrb5.v7 v7.5.0
+## explicit
+gopkg.in/jcmturner/gokrb5.v7/asn1tools
+gopkg.in/jcmturner/gokrb5.v7/client
+gopkg.in/jcmturner/gokrb5.v7/config
+gopkg.in/jcmturner/gokrb5.v7/credentials
+gopkg.in/jcmturner/gokrb5.v7/crypto
+gopkg.in/jcmturner/gokrb5.v7/crypto/common
+gopkg.in/jcmturner/gokrb5.v7/crypto/etype
+gopkg.in/jcmturner/gokrb5.v7/crypto/rfc3961
+gopkg.in/jcmturner/gokrb5.v7/crypto/rfc3962
+gopkg.in/jcmturner/gokrb5.v7/crypto/rfc4757
+gopkg.in/jcmturner/gokrb5.v7/crypto/rfc8009
+gopkg.in/jcmturner/gokrb5.v7/gssapi
+gopkg.in/jcmturner/gokrb5.v7/iana
+gopkg.in/jcmturner/gokrb5.v7/iana/addrtype
+gopkg.in/jcmturner/gokrb5.v7/iana/adtype
+gopkg.in/jcmturner/gokrb5.v7/iana/asnAppTag
+gopkg.in/jcmturner/gokrb5.v7/iana/chksumtype
+gopkg.in/jcmturner/gokrb5.v7/iana/errorcode
+gopkg.in/jcmturner/gokrb5.v7/iana/etypeID
+gopkg.in/jcmturner/gokrb5.v7/iana/flags
+gopkg.in/jcmturner/gokrb5.v7/iana/keyusage
+gopkg.in/jcmturner/gokrb5.v7/iana/msgtype
+gopkg.in/jcmturner/gokrb5.v7/iana/nametype
+gopkg.in/jcmturner/gokrb5.v7/iana/patype
+gopkg.in/jcmturner/gokrb5.v7/kadmin
+gopkg.in/jcmturner/gokrb5.v7/keytab
+gopkg.in/jcmturner/gokrb5.v7/krberror
+gopkg.in/jcmturner/gokrb5.v7/messages
+gopkg.in/jcmturner/gokrb5.v7/pac
+gopkg.in/jcmturner/gokrb5.v7/types
+# gopkg.in/jcmturner/rpc.v1 v1.1.0
+## explicit
+gopkg.in/jcmturner/rpc.v1/mstypes
+gopkg.in/jcmturner/rpc.v1/ndr
 # gopkg.in/square/go-jose.v2 v2.3.1
 ## explicit
 gopkg.in/square/go-jose.v2

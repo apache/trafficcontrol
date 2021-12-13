@@ -24,6 +24,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/Shopify/sarama"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -89,11 +90,12 @@ var defaultLogger Logger = Logger{
 
 // StartupConfig contains all fields necessary to create a traffic stats session.
 type StartupConfig struct {
-	ToUser                      string   `json:"toUser"`
-	ToPasswd                    string   `json:"toPasswd"`
-	ToURL                       string   `json:"toUrl"`
-	InfluxUser                  string   `json:"influxUser"`
-	InfluxPassword              string   `json:"influxPassword"`
+	ToUser                      string `json:"toUser"`
+	ToPasswd                    string `json:"toPasswd"`
+	ToURL                       string `json:"toUrl"`
+	InfluxUser                  string `json:"influxUser"`
+	InfluxPassword              string `json:"influxPassword"`
+	KafkaConfig                 KafkaConfig
 	InfluxURLs                  []string `json:"influxUrls"`
 	PollingInterval             int      `json:"pollingInterval"`
 	DailySummaryPollingInterval int      `json:"dailySummaryPollingInterval"`
@@ -108,6 +110,18 @@ type StartupConfig struct {
 	DailySummaryRetentionPolicy string   `json:"dailySummaryRetentionPolicy"`
 	BpsChan                     chan influx.BatchPoints
 	InfluxDBs                   []*InfluxDBProps
+}
+
+type KafkaConfig struct {
+	config     string `json:"config"`
+	brokersURL string `json:"brokersURL"`
+}
+
+type KafkaJSON struct {
+	Name   string                 `json:"name"`
+	Tags   map[string]string      `json:"tags"`
+	Fields map[string]interface{} `json:"fields"`
+	Time   time.Time              `json:"time"`
 }
 
 var useSeelog bool = true
@@ -243,6 +257,7 @@ func main() {
 		case <-termChan:
 			info("Shutdown Request Received - Sending stored metrics then quitting")
 			for _, val := range Bps {
+				publishToKafka(config, val)
 				sendMetrics(config, val, false)
 			}
 			os.Exit(0)
@@ -278,6 +293,74 @@ func main() {
 			}
 		}
 	}
+}
+
+func ConnectProducer(brokersUrl []string) (sarama.SyncProducer, error) {
+	config := sarama.NewConfig()
+	config.Producer.Return.Successes = true
+	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Producer.Retry.Max = 5
+	// NewSyncProducer creates a new SyncProducer using the given broker addresses and configuration.
+	conn, err := sarama.NewSyncProducer(brokersUrl, config)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+func publishToKafka(config StartupConfig, bps influx.BatchPoints) error {
+
+	brokersUrl := []string{"localhost:9092"}
+
+	producer, err := ConnectProducer(brokersUrl)
+	if err != nil {
+		return err
+	}
+	defer producer.Close()
+
+	for _, point := range bps.Points() {
+
+		var KafkaJSON KafkaJSON
+		KafkaJSON.Name = point.Name()
+		KafkaJSON.Tags = point.Tags()
+		KafkaJSON.Fields, _ = point.Fields()
+		KafkaJSON.Time = point.Time()
+
+		message, err := json.Marshal(KafkaJSON)
+
+		topic := "trafficstats"
+
+		msg := &sarama.ProducerMessage{
+			Topic: topic,
+			Value: sarama.StringEncoder(message),
+		}
+		partition, offset, err := producer.SendMessage(msg)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Message is stored in topic(%s)/partition(%d)/offset(%d)\n", topic, partition, offset)
+		return nil
+
+		/*
+			fmt.Println("\nKafka JSON")
+			fmt.Print(KafkaJSON)
+
+
+			fmt.Println("\nName")
+			fmt.Print(point.Name())
+			fmt.Println("\nTags")
+			fmt.Print(point.Tags())
+			fmt.Println("\nFields")
+			fmt.Print(point.Fields())
+			fmt.Println("\nTime")
+			fmt.Print(point.Time())
+			fmt.Println("\nString")
+			fmt.Print(point.String())
+			fmt.Println("\nNext")
+			break
+		*/
+	}
+	return nil
 }
 
 func setTimers(config StartupConfig) Timers {
