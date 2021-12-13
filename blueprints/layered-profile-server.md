@@ -88,13 +88,11 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 - JSON **response** with the proposed change will look as follows:
 `/servers?id=5`
 ```JSON
-{ 
-  "id": 5,
-  ⋮
-  "requested": {
-    "profiles": [
-      "MID"
-    ],
+{
+  "response": [{
+    "id": 5,
+    ⋮
+    "profiles": ["MID"],
     ⋮
   }
 }
@@ -102,14 +100,11 @@ With Layered Profiles, hundreds of profiles become a few dozen, each representin
 
 `/servers`
 ```JSON
-{ 
-  "requested": {
-    "profiles": [
-      "MID"
-    ],
-    ⋮
-  },
-  ⋮
+{
+  "response": [{
+      "profiles": ["MID"]
+      ⋮,
+  }
 }
 ```
 
@@ -162,29 +157,21 @@ returns a **400** **response** with
 - JSON **response** with the proposed change will look as follows:
   `/servers?id=5`
 ```JSON
-{ 
+{
+  "response": [{
   "id": 5,
   ⋮
-  "requested": {
-    "profiles": [
-      "MID",
-      "AMIGA_123",
-      "CDN_FOO"
-    ],
-    ⋮
+  "profiles": ["MID", "AMIGA_123", "CDN_FOO"],
+  ⋮
   }
 }
 ```
 
 `/servers`
 ```JSON
-{ 
-  "requested": {
-    "profiles": [
-      "MID",
-      "AMIGA_123",
-      "CDN_FOO"
-    ],
+{
+  "response": [{
+    "profiles": ["MID", "AMIGA_123", "CDN_FOO"],
     ⋮
   },
   ⋮
@@ -238,13 +225,7 @@ return following **response**
     "cdnId": 2,
     ⋮
     "id": 5,
-    "profiles": [
-      "MID",
-      "AMIGA_123",
-      "CDN_FOO"
-    ],
-    "profileDesc": "Mid Cache - Apache Traffic Server, Amiga 123 Machine, CDN Foo",
-    "profileIds": [10, 11, 15],
+    "profiles": ["MID", "AMIGA_123", "CDN_FOO"],
     ⋮
   }
 }
@@ -282,13 +263,13 @@ But the advantage is that it solves both concerns:
      Column    |  Type                    | Collation | Nullable | Default
 ---------------+--------------------------+-----------+----------+--------
  server        | bigint                   |           | not null |
- profile_names | text                     |           | not null |
+ profile_name  | text                     |           | not null |
  order         | bigint                   |           | not null |
 Indexes:
-    "pk_server_profile" PRIMARY KEY(profile_names, server, order)
+    "pk_server_profile" PRIMARY KEY(profile_name, server, order)
 Foreign-key constraints:
     "fk_server" FOREIGN KEY (server) REFERENCES server(id)
-    "fk_server" FOREIGN KEY (profile_names) REFERENCES profile(name)
+    "fk_server" FOREIGN KEY (profile_name) REFERENCES profile(name)
 ```
 
 All profiles assigned to a given server will have the same values of:
