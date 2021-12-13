@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - cache config t3c-apply retrying when another t3c-apply is running.
 - IMS warnings to Content Invalidation requests in Traffic Portal and documentation.
 - [#6032](https://github.com/apache/trafficcontrol/issues/6032) Add t3c setting mode 0600 for secure files
+- [#6405](https://github.com/apache/trafficcontrol/issues/6405) Added cache config version to all t3c apps and config file headers
 - Traffic Vault: Added additional flag to TV Riak (Deprecated) Util
 
 ### Fixed

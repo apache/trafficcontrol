@@ -30,15 +30,29 @@ import (
 	"github.com/pborman/getopt/v2"
 )
 
+const AppName = "t3c-check-reload"
+
+// Version is the application version.
+// This is overwritten by the build with the current project version.
+var Version = "0.4"
+
+// GitRevision is the git revision the application was built from.
+// This is overwritten by the build with the current project version.
+var GitRevision = "nogit"
+
 func main() {
 	// presumably calculated by by t3c-check-refs
 	// TODO remove? The blueprint says t3c/ORT will no longer install packages
 
+	version := getopt.BoolLong("version", 'V', "Print version information and exit.")
 	help := getopt.BoolLong("help", 'h', "Print usage information and exit")
 	getopt.Parse()
 
 	if *help {
 		fmt.Println(usageStr())
+		os.Exit(0)
+	} else if *version {
+		fmt.Println(t3cutil.VersionStr(AppName, Version, GitRevision))
 		os.Exit(0)
 	}
 
