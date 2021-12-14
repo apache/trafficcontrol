@@ -39,6 +39,8 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/toreqold"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
@@ -127,4 +129,24 @@ func IsLatestSupported(toClient *toclient.Session) (bool, net.Addr, error) {
 		return false, inf.RemoteAddr, err
 	}
 	return true, inf.RemoteAddr, nil
+}
+
+// RequestInfoStr returns a loggable string with info about the Traffic Ops request.
+//
+// The returned string does not have a trailing newline, nor anything in the standard
+// logger prefix (time, level, etc).
+// If the string isn't going to be logged via lib/go-log, it's advisable to add a timestamp.
+//
+// This is safe to call even if the function returning a ReqInf returned an error;
+// it checks for nil values in all cases, and the TO Client guarantees even if a non-nil
+// error is returned, all ReqInf values are either nil or valid.
+//
+func RequestInfoStr(inf toclientlib.ReqInf, reqPath string) string {
+	return fmt.Sprintf(`requestinfo path=%v ip=%v code=%v, date="%v" age=%v`,
+		reqPath,
+		torequtil.MaybeIPStr(inf.RemoteAddr),
+		inf.StatusCode,
+		torequtil.MaybeHdrStr(inf.RespHeaders, rfc.Date),
+		torequtil.MaybeHdrStr(inf.RespHeaders, rfc.Age),
+	)
 }

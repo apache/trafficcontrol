@@ -23,6 +23,7 @@ import (
 	"errors"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -185,6 +186,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			reqHdr = MakeReqHdr(oldCfg.MetaData.GlobalParams)
 		}
 		globalParams, reqInf, err := toClient.GetGlobalParameters(reqHdr)
+		log.Infoln(toreq.RequestInfoStr(reqInf, "GetGlobalParameters"))
 		if err != nil {
 			return nil, errors.New("getting global parameters: " + err.Error())
 		}
@@ -242,6 +244,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				reqHdr = MakeReqHdr(oldCfg.MetaData.Servers)
 			}
 			servers, reqInf, err := toClient.GetServers(reqHdr)
+			log.Infoln(toreq.RequestInfoStr(reqInf, "GetServers"))
 			if err != nil {
 				return errors.New("getting servers: " + err.Error())
 			}
@@ -285,6 +288,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					reqHdr = MakeReqHdr(oldCfg.MetaData.SSLKeys)
 				}
 				keys, reqInf, err := toClient.GetCDNSSLKeys(tc.CDNName(*server.CDNName), reqHdr)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetCDNSSLKeys("+*server.CDNName+")"))
 				if err != nil {
 					return errors.New("getting cdn '" + *server.CDNName + "': " + err.Error())
 				}
@@ -310,6 +314,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					reqHdr = MakeReqHdr(oldCfg.MetaData.DeliveryServices)
 				}
 				dses, reqInf, err := toClient.GetCDNDeliveryServices(*server.CDNID, reqHdr)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetCDNDeliveryServices("+strconv.Itoa(*server.CDNID)+")"))
 				if err != nil {
 					return errors.New("getting delivery services: " + err.Error())
 				}
@@ -346,6 +351,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 						reqHdr = MakeReqHdr(oldCfg.MetaData.DeliveryServiceServers)
 					}
 					dss, reqInf, err := toClient.GetDeliveryServiceServers(nil, nil, *server.CDNName, reqHdr)
+					log.Infoln(toreq.RequestInfoStr(reqInf, "GetDeliveryServiceServers("+*server.CDNName+")"))
 					if err != nil {
 						return errors.New("getting delivery service servers: " + err.Error())
 					}
@@ -381,6 +387,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 						reqHdr = MakeReqHdr(oldCfg.MetaData.URISigningKeys[tc.DeliveryServiceName(*ds.XMLID)])
 					}
 					keys, reqInf, err := toClient.GetURISigningKeys(*ds.XMLID, reqHdr)
+					log.Infoln(toreq.RequestInfoStr(reqInf, "GetURISigningKeys("+*ds.XMLID+")"))
 					if err != nil {
 						if strings.Contains(strings.ToLower(err.Error()), "not found") {
 							log.Errorln("Delivery service '" + *ds.XMLID + "' is uri_signing, but keys not found! Skipping!")
@@ -422,6 +429,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 						reqHdr = MakeReqHdr(oldCfg.MetaData.URLSigKeys[tc.DeliveryServiceName(*ds.XMLID)])
 					}
 					keys, reqInf, err := toClient.GetURLSigKeys(*ds.XMLID, reqHdr)
+					log.Infoln(toreq.RequestInfoStr(reqInf, "GetURLSigKeys("+*ds.XMLID+")"))
 					if err != nil {
 						if strings.Contains(strings.ToLower(err.Error()), "not found") {
 							log.Errorln("Delivery service '" + *ds.XMLID + "' is url_sig, but keys not found! Skipping!: " + err.Error())
@@ -464,6 +472,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					reqHdr = MakeReqHdr(oldCfg.MetaData.ServerParams)
 				}
 				params, reqInf, err := toClient.GetServerProfileParameters(*server.Profile, reqHdr)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetURLSigKeys("+*server.Profile+")"))
 				if err != nil {
 					return errors.New("getting server profile '" + *server.Profile + "' parameters: " + err.Error())
 				} else if len(params) == 0 {
@@ -490,6 +499,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					reqHdr = MakeReqHdr(oldCfg.MetaData.CDN)
 				}
 				cdn, reqInf, err := toClient.GetCDN(tc.CDNName(*server.CDNName), reqHdr)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetCDN("+*server.CDNName+")"))
 				if err != nil {
 					return errors.New("getting cdn '" + *server.CDNName + "': " + err.Error())
 				}
@@ -513,6 +523,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					reqHdr = MakeReqHdr(oldCfg.MetaData.Profile)
 				}
 				profile, reqInf, err := toClient.GetProfileByName(*server.Profile, reqHdr)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetProfileByName("+*server.Profile+")"))
 				if err != nil {
 					return errors.New("getting profile '" + *server.Profile + "': " + err.Error())
 				}
@@ -536,6 +547,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 					reqHdr = MakeReqHdr(oldCfg.MetaData.Jobs)
 				}
 				jobs, reqInf, err := toClient.GetJobs(reqHdr, *server.CDNName)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetJobs("+*server.CDNName+")"))
 				if err != nil {
 					return errors.New("getting jobs: " + err.Error())
 				}
@@ -566,6 +578,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				reqHdr = MakeReqHdr(oldCfg.MetaData.CacheGroups)
 			}
 			cacheGroups, reqInf, err := toClient.GetCacheGroups(reqHdr)
+			log.Infoln(toreq.RequestInfoStr(reqInf, "GetCacheGroups"))
 			if err != nil {
 				return errors.New("getting cachegroups: " + err.Error())
 			}
@@ -590,6 +603,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			}
 			log.Infof("Getting config: ServerCapabilities reqHdr %+v", reqHdr)
 			caps, reqInf, err := toClient.GetServerCapabilitiesByID(nil, reqHdr) // TODO change to not take a param; it doesn't use it to request TO anyway.
+			log.Infoln(toreq.RequestInfoStr(reqInf, "GetServerCapabilitiesByID"))
 			if err != nil {
 				log.Errorln("Server Capabilities error, skipping!")
 				// return errors.New("getting server caps from Traffic Ops: " + err.Error())
@@ -615,6 +629,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				reqHdr = MakeReqHdr(oldCfg.MetaData.DSRequiredCapabilities)
 			}
 			caps, reqInf, err := toClient.GetDeliveryServiceRequiredCapabilitiesByID(nil, reqHdr)
+			log.Infoln(toreq.RequestInfoStr(reqInf, "GetDeliveryServiceRequiredCapabilitiesByID"))
 			if err != nil {
 				log.Errorln("DS Required Capabilities error, skipping!")
 				// return errors.New("getting DS required capabilities: " + err.Error())
@@ -640,6 +655,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				reqHdr = MakeReqHdr(oldCfg.MetaData.DeliveryServiceRegexes)
 			}
 			dsr, reqInf, err := toClient.GetDeliveryServiceRegexes(reqHdr)
+			log.Infoln(toreq.RequestInfoStr(reqInf, "GetDeliveryServiceRegexes"))
 			if err != nil {
 				return errors.New("getting delivery service regexes: " + err.Error())
 			}
@@ -664,6 +680,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				reqHdr = MakeReqHdr(oldCfg.MetaData.CacheKeyConfigParams)
 			}
 			params, reqInf, err := toClient.GetConfigFileParameters("cachekey.config", reqHdr)
+			log.Infoln(toreq.RequestInfoStr(reqInf, "GetConfigFileParameters(cachekey.config)"))
 			if err != nil {
 				return errors.New("getting cache key parameters: " + err.Error())
 			}
@@ -688,6 +705,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				reqHdr = MakeReqHdr(oldCfg.MetaData.RemapConfigParams)
 			}
 			params, reqInf, err := toClient.GetConfigFileParameters("remap.config", reqHdr)
+			log.Infoln(toreq.RequestInfoStr(reqInf, "GetConfigFileParameters(remap.config)"))
 			if err != nil {
 				return errors.New("getting cache key parameters: " + err.Error())
 			}
@@ -712,6 +730,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				reqHdr = MakeReqHdr(oldCfg.MetaData.ParentConfigParams)
 			}
 			parentConfigParams, reqInf, err := toClient.GetConfigFileParameters("parent.config", reqHdr) // TODO make const in lib/go-atscfg
+			log.Infoln(toreq.RequestInfoStr(reqInf, "GetConfigFileParameters(parent.config)"))
 			if err != nil {
 				return errors.New("getting parent.config parameters: " + err.Error())
 			}
@@ -736,6 +755,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				reqHdr = MakeReqHdr(oldCfg.MetaData.Topologies)
 			}
 			topologies, reqInf, err := toClient.GetTopologies(reqHdr)
+			log.Infoln(toreq.RequestInfoStr(reqInf, "GetTopologies"))
 			if err != nil {
 				return errors.New("getting topologies: " + err.Error())
 			}
