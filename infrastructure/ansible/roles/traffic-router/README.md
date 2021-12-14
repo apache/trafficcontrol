@@ -53,7 +53,7 @@ Example Playbook
         - "-server"
         - "-Xms2g"
         - "-Xmx{{ [(ansible_memtotal_mb * (tr_java_heap_max_percent/100))|int, tr_java_heap_max_mb]|min }}m"
-        - "-Dlog4j.configuration=$CATALINA_BASE/conf/log4j.properties"
+        - "-Dlog4j.configurationFile=$CATALINA_BASE/conf/log4j2.xml"
         - "-Djava.library.path=/usr/lib64"
         - "-Dorg.apache.catalina.connector.Response.ENFORCE_ENCODING_IN_GET_WRITER=false"
         - "-XX:+UseG1GC"
